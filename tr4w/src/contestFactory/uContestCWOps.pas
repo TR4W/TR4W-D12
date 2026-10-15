@@ -72,6 +72,9 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -107,6 +110,10 @@ type
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
                                    out aKey: PrefixMultiplierString): boolean; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesDomesticQTH: boolean; override;
    end;
 
 implementation
@@ -185,6 +192,18 @@ end;
 function TContestCWOps.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsNameQTH;
+end;
+
+function TContestCWOps.ParseReceivedExchangeFormat(const aText: string;
+                                                   aParsers: TExchangeParsers;
+                                                   var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseNameAndDomesticOrDXQTH(aText, aExch);
+end;
+
+function TContestCWOps.ExchangeCarriesDomesticQTH: boolean;
+begin
+   Result := True;
 end;
 
 function TContestCWOps.GetADIFSentExchange(const aMy: TMyStationExchange;

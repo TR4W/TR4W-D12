@@ -31,6 +31,9 @@ interface
 uses
    (* VC: the kind enums the transcribed row getters return (M10 S5). *)
    VC,
+   (* uContestBase: TExchangeParsers, which the format's signature
+      names (M11 S9d). *)
+   uContestBase,
    uContestCQWPXBase;
 
 type
@@ -56,6 +59,9 @@ type
       function GetSubmissionEmail: string; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
    public
    end;
 
@@ -114,6 +120,13 @@ end;
 function TContestCQWPXCW.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTQSONumber;
+end;
+
+function TContestCQWPXCW.ParseReceivedExchangeFormat(const aText: string;
+                                                     aParsers: TExchangeParsers;
+                                                     var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTQSONumber(aText, aExch);
 end;
 
 initialization

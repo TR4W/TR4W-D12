@@ -89,6 +89,9 @@ type
       function GetDomesticFileName: string; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
       function GetFlags: TContestFlags; override;
       (* ARRL DXCC WITHOUT THE ARRL SECTIONS -- see the implementation. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
@@ -158,6 +161,10 @@ type
    public
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesDomesticQTH: boolean; override;
    end;
 
 implementation
@@ -383,6 +390,18 @@ end;
 function TContestWinterFieldDay.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsClassQTH;
+end;
+
+function TContestWinterFieldDay.ParseReceivedExchangeFormat(const aText: string;
+                                                            aParsers: TExchangeParsers;
+                                                            var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseClassDomesticOrDXQTH(aText, aExch);
+end;
+
+function TContestWinterFieldDay.ExchangeCarriesDomesticQTH: boolean;
+begin
+   Result := True;
 end;
 
 function TContestWinterFieldDay.GetFlags: TContestFlags;

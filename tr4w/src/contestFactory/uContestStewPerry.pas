@@ -82,6 +82,9 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -106,6 +109,10 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesGridSquare: boolean; override;
    end;
 
 implementation
@@ -200,6 +207,18 @@ end;
 function TContestStewPerry.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTQTH;
+end;
+
+function TContestStewPerry.ParseReceivedExchangeFormat(const aText: string;
+                                                       aParsers: TExchangeParsers;
+                                                       var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTAndOrGrid(aText, aExch);
+end;
+
+function TContestStewPerry.ExchangeCarriesGridSquare: boolean;
+begin
+   Result := True;
 end;
 
 function TContestStewPerry.GetADIFSentExchange(const aMy: TMyStationExchange;

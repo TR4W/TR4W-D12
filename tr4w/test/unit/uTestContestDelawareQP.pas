@@ -72,7 +72,8 @@ uses
    Classes, SysUtils, VC, uContestBase, uContestRegistry,
    uContestStateQSOPartyBase, uContestDelawareQP, uDomFileKeys,
    uAppStrings, uTR4WStrings,
-   uTestContestObjects;
+   uTestContestObjects,
+   uTestExchangeParserStub;
 
 (* ---------------------------------------------------------------------------
    HELPERS
@@ -117,7 +118,7 @@ var
    GShapeSetsQTH: string;
    GDomesticKeys: string;
 
-function StubParseShape(aShape: ExchangeType; const aText: string;
+function StubParseShape(const aHelper: string; const aText: string;
                         var aExch: ContestExchange): boolean;
 begin
    aExch.QTHString := ShortString(GShapeSetsQTH);
@@ -132,8 +133,7 @@ end;
 function Session: TReceivedExchangeSession;
 begin
    FillChar(Result, SizeOf(Result), 0);
-   Result.Exchange := RSTDomesticOrDXQTHExchange;
-   Result.ParseShape := @StubParseShape;
+   Result.Parsers := StubExchangeParsers(@StubParseShape);
    Result.IsDomesticQTH := @StubIsDomesticQTH;
    Result.CallWindowHasCall := True;
 end;

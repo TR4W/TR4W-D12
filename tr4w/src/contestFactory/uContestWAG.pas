@@ -74,6 +74,9 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -127,6 +130,10 @@ type
       (* DOES IT HAVE A DOMESTIC MULTIPLIER AT THIS STATION? -- see
          TContestBase.HasDomesticMultiplier (M11 S6 part 2). *)
       function HasDomesticMultiplier: boolean; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesDomesticQTH: boolean; override;
    end;
 
 implementation
@@ -235,6 +242,18 @@ end;
 function TContestWAG.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTQSONumberQTH;
+end;
+
+function TContestWAG.ParseReceivedExchangeFormat(const aText: string;
+                                                 aParsers: TExchangeParsers;
+                                                 var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTAndQSONumberOrDomesticQTH(aText, aExch);
+end;
+
+function TContestWAG.ExchangeCarriesDomesticQTH: boolean;
+begin
+   Result := True;
 end;
 
 function TContestWAG.GetADIFSentExchange(const aMy: TMyStationExchange;

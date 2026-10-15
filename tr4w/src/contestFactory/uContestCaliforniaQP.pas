@@ -92,6 +92,9 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -118,6 +121,11 @@ type
                                 aSession: TSessionDefaults); override;
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesDomesticQTH: boolean; override;
+      function PerQSOExchangeLeadsWithSerial: boolean; override;
    end;
 
 implementation
@@ -234,6 +242,30 @@ end;
 function TContestCaliforniaQP.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsQSONumberQTH;
+end;
+
+function TContestCaliforniaQP.ParseReceivedExchangeFormat(const aText: string;
+                                                          aParsers: TExchangeParsers;
+                                                          var aExch: ContestExchange): boolean;
+begin
+   if Station.InHostState then
+      begin
+      Result := aParsers.ParseQSONumberDomesticOrDXQTH(aText, aExch);
+      end
+   else
+      begin
+      Result := aParsers.ParseQSONumberDomesticQTH(aText, aExch);
+      end;
+end;
+
+function TContestCaliforniaQP.ExchangeCarriesDomesticQTH: boolean;
+begin
+   Result := True;
+end;
+
+function TContestCaliforniaQP.PerQSOExchangeLeadsWithSerial: boolean;
+begin
+   Result := True;
 end;
 
 function TContestCaliforniaQP.GetADIFSentExchange(const aMy: TMyStationExchange;

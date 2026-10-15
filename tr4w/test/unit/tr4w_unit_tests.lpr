@@ -639,6 +639,15 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
       station, frozen against the old FormatCabrilloExchangeOfKind before it
       moved into the classes. *)
    uTestCabrilloColumns in 'uTestCabrilloColumns.pas',
+   (* M11 S9d: how every contest parses a typed exchange at every roster
+      station -- which engine parser it asks for and every rule around it --
+      frozen against the old ParseExchangeShape before it moved into the
+      classes. *)
+   uTestExchangeParse in 'uTestExchangeParse.pas',
+   (* M11 S9d: the engine's parsers as a stub the parse tests share -- each
+      installs what its parsers "do" and sees which one a contest asked for,
+      by name. *)
+   uTestExchangeParserStub in 'uTestExchangeParserStub.pas',
    (* POTA as a contest class (design Q6, 2026-10-13). *)
    uTestContestPOTA     in 'uTestContestPOTA.pas',
    (* The Delaware QSO Party, a new contest (design 7.14, 8.2q). *)
@@ -733,6 +742,7 @@ begin
    RegisterSuite(TExchangeFieldsTests.Create('ExchangeFields'));
    RegisterSuite(TADIFSentExchangeTests.Create('ADIFSentExchange'));
    RegisterSuite(TCabrilloColumnsTests.Create('CabrilloColumns'));
+   RegisterSuite(TExchangeParseTests.Create('ExchangeParse'));
    RegisterSuite(TContestPOTATests.Create('ContestPOTA'));
    RegisterSuite(TContestDelawareQPTests.Create('ContestDelawareQP'));
    RegisterSuite(TContestIN7QPNETests.Create('ContestIN7QPNE'));

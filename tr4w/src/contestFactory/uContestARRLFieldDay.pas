@@ -82,6 +82,9 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -172,6 +175,10 @@ type
    public
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesDomesticQTH: boolean; override;
    end;
 
 implementation
@@ -353,6 +360,18 @@ end;
 function TContestARRLFieldDay.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsClassQTH;
+end;
+
+function TContestARRLFieldDay.ParseReceivedExchangeFormat(const aText: string;
+                                                          aParsers: TExchangeParsers;
+                                                          var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseClassDomesticOrDXQTH(aText, aExch);
+end;
+
+function TContestARRLFieldDay.ExchangeCarriesDomesticQTH: boolean;
+begin
+   Result := True;
 end;
 
 function TContestARRLFieldDay.GetFlags: TContestFlags;

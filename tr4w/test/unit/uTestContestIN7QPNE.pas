@@ -65,7 +65,8 @@ implementation
 uses
    Classes, SysUtils, VC, uContestBase, uContestRegistry,
    uContestIN7QPNE, uDomFileKeys, uAppStrings,
-   uTestContestObjects;
+   uTestContestObjects,
+   uTestExchangeParserStub;
 
 (* ---------------------------------------------------------------------------
    HELPERS
@@ -179,7 +180,7 @@ var
    GShapeAccepts: boolean;
    GDomesticKeys: string;
 
-function StubParseShape(aShape: ExchangeType; const aText: string;
+function StubParseShape(const aHelper: string; const aText: string;
                         var aExch: ContestExchange): boolean;
 begin
    aExch.QTHString := ShortString(GShapeSetsQTH);
@@ -196,8 +197,7 @@ end;
 function Session: TReceivedExchangeSession;
 begin
    FillChar(Result, SizeOf(Result), 0);
-   Result.Exchange := RSTDomesticQTHExchange;
-   Result.ParseShape := @StubParseShape;
+   Result.Parsers := StubExchangeParsers(@StubParseShape);
    Result.IsDomesticQTH := @StubIsDomesticQTH;
    Result.CallWindowHasCall := True;
 end;

@@ -31,6 +31,9 @@ interface
 uses
    (* VC: the kind enums the transcribed row getters return (M10 S5). *)
    VC,
+   (* uContestBase: TExchangeParsers, which the format's signature
+      names (M11 S9d). *)
+   uContestBase,
    uContestCQWWBase;
 
 type
@@ -57,7 +60,14 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
    public
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesZone: boolean; override;
    end;
 
 implementation
@@ -123,6 +133,18 @@ end;
 function TContestCQWWCW.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTZone;
+end;
+
+function TContestCQWWCW.ParseReceivedExchangeFormat(const aText: string;
+                                                    aParsers: TExchangeParsers;
+                                                    var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTZone(aText, aExch);
+end;
+
+function TContestCQWWCW.ExchangeCarriesZone: boolean;
+begin
+   Result := True;
 end;
 
 initialization

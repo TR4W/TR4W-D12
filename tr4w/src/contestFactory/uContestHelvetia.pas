@@ -72,6 +72,9 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -115,6 +118,10 @@ type
    public
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesDomesticQTH: boolean; override;
    end;
 
 implementation
@@ -203,6 +210,18 @@ end;
 function TContestHelvetia.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTQSONumberQTH;
+end;
+
+function TContestHelvetia.ParseReceivedExchangeFormat(const aText: string;
+                                                      aParsers: TExchangeParsers;
+                                                      var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTDomesticQTHOrQSONumber(aText, aExch);
+end;
+
+function TContestHelvetia.ExchangeCarriesDomesticQTH: boolean;
+begin
+   Result := True;
 end;
 
 function TContestHelvetia.GetADIFSentExchange(const aMy: TMyStationExchange;

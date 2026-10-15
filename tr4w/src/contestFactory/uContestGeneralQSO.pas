@@ -59,6 +59,9 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
       function GetFlags: TContestFlags; override;
    public
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -142,6 +145,13 @@ end;
 function TContestGeneralQSO.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTNameQTH;
+end;
+
+function TContestGeneralQSO.ParseReceivedExchangeFormat(const aText: string;
+                                                        aParsers: TExchangeParsers;
+                                                        var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTNameAndQTH(aText, aExch);
 end;
 
 function TContestGeneralQSO.GetFlags: TContestFlags;

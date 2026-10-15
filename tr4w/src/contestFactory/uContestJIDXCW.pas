@@ -84,6 +84,9 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -137,6 +140,10 @@ type
    public
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesZone: boolean; override;
    end;
 
 implementation
@@ -265,6 +272,25 @@ begin
       begin
       Result := ExchangeFieldsRSTQSONumberQTH;
       end;
+end;
+
+function TContestJIDXCW.ParseReceivedExchangeFormat(const aText: string;
+                                                    aParsers: TExchangeParsers;
+                                                    var aExch: ContestExchange): boolean;
+begin
+   if IsJapaneseEntrant then
+      begin
+      Result := aParsers.ParseRSTZone(aText, aExch);
+      end
+   else
+      begin
+      Result := aParsers.ParseRSTPrefecture(aText, aExch);
+      end;
+end;
+
+function TContestJIDXCW.ExchangeCarriesZone: boolean;
+begin
+   Result := IsJapaneseEntrant;
 end;
 
 function TContestJIDXCW.GetADIFSentExchange(const aMy: TMyStationExchange;

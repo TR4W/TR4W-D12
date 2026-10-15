@@ -80,6 +80,9 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -208,6 +211,13 @@ end;
 function TContestRAEM.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsQSONumberQTH;
+end;
+
+function TContestRAEM.ParseReceivedExchangeFormat(const aText: string;
+                                                  aParsers: TExchangeParsers;
+                                                  var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseQSONumberAndGeoCoordinates(aText, aExch);
 end;
 
 function TContestRAEM.GetADIFSentExchange(const aMy: TMyStationExchange;

@@ -73,6 +73,9 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -98,6 +101,10 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesZone: boolean; override;
    end;
 
 implementation
@@ -189,6 +196,18 @@ end;
 function TContestR9WUW9WKMemorial.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsQSONumberZone;
+end;
+
+function TContestR9WUW9WKMemorial.ParseReceivedExchangeFormat(const aText: string;
+                                                              aParsers: TExchangeParsers;
+                                                              var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseQSONumberAndZone(aText, aExch);
+end;
+
+function TContestR9WUW9WKMemorial.ExchangeCarriesZone: boolean;
+begin
+   Result := True;
 end;
 
 function TContestR9WUW9WKMemorial.GetADIFSentExchange(const aMy: TMyStationExchange;

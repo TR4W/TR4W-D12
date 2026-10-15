@@ -78,6 +78,9 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -173,6 +176,13 @@ end;
 function TContestKidsDay.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsKids;
+end;
+
+function TContestKidsDay.ParseReceivedExchangeFormat(const aText: string;
+                                                     aParsers: TExchangeParsers;
+                                                     var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseKidsDay(aText, aExch);
 end;
 
 function TContestKidsDay.GetADIFSentExchange(const aMy: TMyStationExchange;

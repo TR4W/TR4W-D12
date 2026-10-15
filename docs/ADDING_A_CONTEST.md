@@ -126,7 +126,7 @@ now, the row's `AE:` before S8:
 
 | field | leads to |
 |---|---|
-| `GetExchangeKind` (the row's `AE:` before S8) | the arm for that shape in `LOGSTUFF.ParseExchangeShape` (ProcessExchange's old `case ActiveExchange of`, keyed since M5b on the shape it is handed), which names a `Process...Exchange` function -- the exchange parsing |
+| `GetExchangeKind` (the row's `AE:` before S8) | nothing in the parse any more (M11 S9d): the PARSER is your class's `ParseReceivedExchangeFormat`, which calls the engine's parser for your format by name (`aParsers.ParseRSTZone`, ...). Until S9d the kind chose an arm of `LOGSTUFF.ParseExchangeShape`, now deleted; the kind is set-up data until S9e deletes it |
 
 The exchange kind no longer decides what the contest's EXPORT looks like. **The ADIF
 `STX_STRING` is YOUR CLASS'S since M11 S9b**: you state `GetADIFSentExchange` by calling one
@@ -390,7 +390,10 @@ the wrongness.
 | `UsesBand` | **every band**, which is today's behaviour. A contest that states its bands overrides it, and a QSO on any other band is then logged, scores 0 (even under a `QSO POINTS ...` override) and earns no multiplier. Asked through `ContestCreditsBand` by `ScoreQSO` and `logdupe.SetMultFlags` -- and since M8 by the dupe sheet (`TCallsignsList.AddCallsign` marks no dupe bit for it, `CallsignIsDupe` calls none a dupe) and the need-multiplier hint (`LogEdit`, through `CreditedBands`). Idaho is the first overrider (`CONTEST_OWNERSHIP_DESIGN.md` §7.4) |
 | `CountsAsMultiplier` | **True for every QSO and kind** -- whether a QSO earns a multiplier of a kind AT ALL, asked by `logdupe.SetMultFlags` (through `ContestCountsMultiplier`) before the sheet says whether it is new. The BC, New York and Indiana parties (a `DX` QTH), the PCC (its own country's prefix) and the Jock White Field Day (its own branch, and branch 00) override it (M8, below) |
 | `DomesticMultiplierFromCall` | `''` -- the domestic multiplier a CALL implies before any exchange is typed, for the need-multiplier hint (`LogEdit.GetMultArray`). The Russian DX contest and the RF Championships (a Russian call's oblast), the Ural Cup (CTY.DAT's grid), RDA and YO DX (the remembered exchange) override it (M8, below) |
-| `ParseReceivedExchange` | the engine's shared parse for the SESSION's exchange shape, `aSession.ParseShape(aSession.Exchange, ...)` -- see "How a contest parses and validates" below (M5b) |
+| `ParseReceivedExchange` | the plain parse in the contest's format: `ParseReceivedExchangeFormat`, of the contest the session names in `ExchangeFormatOf`, else of this one -- see "How a contest parses and validates" below (M5b, M11 S9d) |
+| `ParseReceivedExchangeFormat` | **protected; parses NOTHING and answers False** (what the classless DUMMYCONTEST gets). EVERY CONTEST STATES IT: call the engine's parser for your format on `aParsers` by name. `uTestExchangeParse` fails for a contest that does not (M11 S9d) |
+| `ExchangeCarriesDomesticQTH` / `ExchangeCarriesZone` / `ExchangeCarriesGridSquare` | False -- does the exchange carry a domestic QTH, a zone, a grid square? The readiness check asks all three (an empty MY STATE, MY ZONE, MY GRID), LOGSTUFF's improper-QTH refusal the first. State True where your exchange carries one (M11 S9d; plan F28 says why the answers are still transcriptions) |
+| `PerQSOExchangeLeadsWithSerial` | False -- the per-QSO SRX_STRING of a multi-county or multi-park entry leads with the RST. True where your exchange leads with a serial (the California, Pennsylvania and Virginia parties) (M11 S9d) |
 | `MayBeACallsign` | every word may be a call (the PCC says `N/X` is not) |
 | `InitialExchangeFromCall` | no answer (the Russian DX contests give a Russian station's oblast) |
 | `FormatADIFReceivedExchange` | the ADIF `SRX_STRING`: the received RST in front of the typed exchange when the session's exchange carries an RST, else the typed exchange (the Field Days write a DX station's `1D DX`; POTA the park worked, else the typed exchange) |
@@ -503,28 +506,37 @@ puts it in `aErrorMessage`, and the engine shows it exactly as it shows an
 improper county or a bad ARRL section (`ExchangeErrorMessage`, the main
 window's notice line).
 
-- **Do nothing** and you get the base: `aSession.ParseShape(aSession.Exchange,
-  ...)` -- the engine's shared parser for the SESSION's exchange shape
-  (`LOGSTUFF.ParseExchangeShape`, the old `case ActiveExchange of`, which names
-  no contest).
-- **Your own rule**: override and call `inherited` (or `aSession.ParseShape`
-  with another shape) for what you do not decide yourself. The worked examples:
-  RAC's `uContestCanadaDay` (a VE0 station's serial), `uContestPCC` and
-  `uContestArktikaSpring` (choose between two shapes), `uContestLABRE` (a PY
-  station's state), `uContestIARU` (fills the zone after the parse),
-  `uContestUKEI` and `uContestSACCW` (refuse before it), `uContestARRLSSBase`
-  (names a missing precedence after it), `uContestStateQSOPartyBase` (refuses an
-  out-of-state station working another one -- NY4I's ruling, design 7.10).
-- **Apply your rule under the shape it was written for** -- test
-  `aSession.Exchange` -- and defer otherwise. Every rule that moved at M5b was
-  a branch inside one shape's parser; guarding on the shape is what kept the
-  move exact.
-- **The session is DATA** (`TReceivedExchangeSession`): the session's exchange,
-  the shape parser, and the engine services a rule needs -- `ZoneOfCall` (CTY),
-  `IsDomesticQTH` (the loaded domestic table), `CallWindowHasCall` and
+- **State your FORMAT** (M11 S9d): override `ParseReceivedExchangeFormat` and
+  call the engine's parser for it by name on `aParsers` -- one line,
+  `Result := aParsers.ParseRSTQSONumber(aText, aExch);`. The 51 parsers are the
+  methods of `uContestBase.TExchangeParsers`, named for the exchange kind each
+  answered ('Parse' + the `ExchangeType` member, less 'Exchange'); LOGSTUFF's
+  `TEngineExchangeParsers` implements them and names no contest. Where the
+  STATION decides your exchange, test it with the same predicate as your field
+  list and Cabrillo columns (`uContestARRL160`, `uContestJIDXCW`); where the
+  TEXT does, choose by the text (`uContestArktikaSpring`, `uContestPCC`). There
+  is no shared machine left to fall back on: **the base format parses nothing**.
+- **Your own RULE**: override `ParseReceivedExchange` and call `inherited` (the
+  plain parse in your format) or a parser by name (`aSession.Parsers.Parse...`)
+  for what you do not decide yourself. The worked examples: RAC's
+  `uContestCanadaDay` (a VE0 station's serial), `uContestLABRE` (a PY station's
+  state), `uContestIARU` (fills the zone after the parse), `uContestUKEI` and
+  `uContestSACCW` (refuse before it), `uContestARRLSSBase` (names a missing
+  precedence after it), `uContestStateQSOPartyBase` (refuses an out-of-state
+  station working another one -- NY4I's ruling, design 7.10), `uContestIN7QPNE`
+  (lets its judging party's rules judge the exchange in IN7QPNE's own format,
+  through `ExchangeFormatOf`).
+- **A rule never tests the exchange kind** -- the session carries none since
+  S9d. M5b's rules were branches inside one shape's parser and tested the
+  session's shape to stay exact; M11 S2 found every such test always true and
+  deleted them (plan F11).
+- **The session is DATA** (`TReceivedExchangeSession`): the engine's parsers,
+  `ExchangeFormatOf`, and the engine services a rule needs -- `ZoneOfCall`
+  (CTY), `IsDomesticQTH` (the loaded domestic table), `CallWindowHasCall` and
   `AbandonEntry` (live entry). Your class reads no global; a unit test hands it
-  stubs (`uTestContestParse`). **A service is added when the first rule needs
-  one**, like a `TStationContext` field.
+  the shared stub `uTestExchangeParserStub`, which records which parser was
+  asked. **A service is added when the first rule needs one**, like a
+  `TStationContext` field.
 - **Word cutting a class needs is in `uExchangeTokens`**, LIFTED from LOGSTUFF
   line for line (`SplitExchangeInThree`, `ProcessSweepstakesEntry`,
   `IsSingleNonNumericToken`) and called by both, so the engine and the class
@@ -534,8 +546,10 @@ window's notice line).
   call and is not one -- the PCC's `N/X`) and `InitialExchangeFromCall` (an
   initial exchange known from the call alone -- the Russian DX contests'
   oblast).
-- **Pin it** in `uTestContestParse`, and know the matrix's `parse` section
-  (section 4) sees what the engine did with the same typed text.
+- **Pin it** in `uTestContestParse` (your rule) and `uTestExchangeParse` (your
+  format, and every contest's at seven stations x 66 typed rows -- add your
+  contest to its tables), and know the matrix's `parse` section (section 4)
+  sees what the engine's real parsers did with the same typed text.
 
 Typed entry itself -- that a refusal SHOWS its message, that a valid exchange
 logs -- is seen by no gate; `docs/BENCH_QUEUE.md` carries it.
@@ -1000,7 +1014,7 @@ our CTY.DAT is not the one D7 used. That is unexplored and recorded in
 | what does this contest score | its class's `ScoreQSO` (asked by `LOGSTUFF.CalculateQSOPoints`); the classless DUMMYCONTEST scores the four `QSO POINTS ...` overrides, then 0 (the legacy case is deleted, M10 S3) |
 | what does its session start from | its traits (`FCONTEST.ApplyContestTraits`), the operator's statements, then its class's `DescribeSession` applied by `FCONTEST.ApplySessionDefaults` (M7a); no classless arm remains (2026-10-14). LogCfg's default CQ exchange is `CQExchangeDefault` |
 | what is its final score | its class's `FinalScore` (asked by `LOGEDIT.TotalScore`, which every score reader reads), else the base's general formula through its identity -- section 3, M6 |
-| what is its exchange | its class's `ExchangeKind` (the SESSION's exchange, after its `DescribeSession`; the row's `AE` until M10 S8) → `LOGSTUFF.ProcessExchange` → its class's `ParseReceivedExchange` (M5b), whose base parses that shape with `LOGSTUFF.ParseExchangeShape` |
+| what is its exchange | its class's `ExchangeKind` (the SESSION's exchange, after its `DescribeSession`; the row's `AE` until M10 S8) → `LOGSTUFF.ProcessExchange` → its class's `ParseReceivedExchange` (M5b), whose base asks its `ParseReceivedExchangeFormat` -- the engine's parser for its format, called by name (M11 S9d) |
 | its Cabrillo / ADIF name, friendly name, calendar ids | **`uContestRegistry.ContestIdentity(c)`** — its class, else a plain `TContestBase` answering the neutral row (only DUMMYCONTEST has no class). Never nil, owned by the registry, and every consumer outside the factory asks it (M1). Do not spell `ContestTypeSA` as a fallback for one of these: that is the copy M1 removed seven of (`ContestsArray`, the other source, is deleted -- M10 S8) |
 | what D7 did | the D7 tree at `C:\TR4W` — read it, never mirror a fix back into it |
 | how TR4QT decomposes a contest | `C:\projects\tr4qt\docs\CONTEST_DEVELOPMENT.md` and `src/contests/` |

@@ -28,7 +28,9 @@ best-proven and least-covered code in the tree.
 3. Dupe check → `logdupe.pas`
 4. Country/multiplier → `uctydat.pas`, `uMults.pas`
 5. Exchange parsing → `logstuff.ProcessExchange()` → the contest's
-   `ParseReceivedExchange` (M5b), whose base is `logstuff.ParseExchangeShape`
+   `ParseReceivedExchange` (M5b), whose base asks the contest's
+   `ParseReceivedExchangeFormat`, which calls the engine's parser for its
+   format by name (`TExchangeParsers`, M11 S9d)
 6. Validation → `ContestExchange`
 7. Network broadcast → `uNet.pas`
 8. Display update → `logwind.pas`
@@ -178,15 +180,21 @@ its end, so a malformed-grid QSO's distance follows the heap.
 **`ProcessExchange` ASKS THE CONTEST (M5b).** It keeps the contest-blind
 tokenising gate (`ParseArray`), then calls
 `ExchangeContest.ParseReceivedExchange` (the active contest's object, else its
-identity -- never nil) with a `TReceivedExchangeSession`: the session's
-exchange, `ParseExchangeShape` (the old `case ActiveExchange of`, now keyed on
-the shape it is HANDED and naming no contest), and engine services
-(`ZoneOfCall`, `IsDomesticQTH`, `CallWindowHasCall`, `AbandonEntry`). **Do not
-put a contest test back inside a shape parser** -- a contest's parse rule is an
-override on its class, under the shape it was written for. The one still named,
-with its reason: the UA4W Championship in `ProcessRSTAndGridSquareOrRDAExchange`
-(its class would have to score it, and its arm asks `ctyGetCQZone(MY CALL)`).
-`ValidClass` and the Field Day DX check ask the contest with no fallback (D1/D2
+identity -- never nil) with a `TReceivedExchangeSession`: the engine's parsers
+(`Parsers`, a `uContestBase.TExchangeParsers` -- one named method per format,
+LOGSTUFF's `TEngineExchangeParsers`), `ExchangeFormatOf` (nil from the engine;
+IN7QPNE alone sets it, so its judging party's rules judge IN7QPNE's format),
+and engine services (`ZoneOfCall`, `IsDomesticQTH`, `CallWindowHasCall`,
+`AbandonEntry`). **THE PARSER MACHINE IS GONE (M11 S9d, 2026-10-15)**:
+`ParseExchangeShape`, the `case` over the kind, became those 51 named methods
+(its five unreached arms and the four parsers only they called are deleted),
+and every registered contest states `ParseReceivedExchangeFormat` (184
+overrides; the base parses nothing and answers False, DUMMYCONTEST's answer).
+A FORMAT goes there; a RULE goes on `ParseReceivedExchange`, around it, calling
+`inherited` or a parser by name. **Do not put a contest test back inside an
+engine parser, and do not add a kind parameter to the seam.** No parser names a
+contest any more (the UA4W Championship's QTH-is-domestic rule is its class's,
+2026-10-14). `ValidClass` and the Field Day DX check ask the contest with no fallback (D1/D2
 deleted). Word cutting a class also needs (`ParseExchange`, `ProcessSSEntry`,
 the single-word test) is LIFTED to `uExchangeTokens` and called by both.
 **Two refusals NY4I ruled (design 7.10)**: Sweepstakes without a precedence
@@ -363,10 +371,12 @@ S&P entry (`LogsSeveralQTHsFromOneEntry`), a blank exchange
 and FISTS's points-alone (its own `CombineWithMultipliers`;
 `TScoreTotals.SessionExchange` is deleted). `ProcessReturn`'s split into
 the `s1..s4` globals was deleted: its only reader re-splits first. **Still
-reading the shape: the four machines, the history renders (LOGEDIT,
-LOGDUPE), FCONTEST's sent-message `case`, `PerQSOExchString`,
-`LooksLikeAGrid` and the data hand-offs -- S9's -- and `SetColumnsWidth`'s
-SS columns (F15, blocked on S1/Q50).** Do not add a new rule test of
+reading the shape after S9d (26 reads in 6 files, plan "WHAT S9e
+INHERITS"): the history renders (LOGEDIT's `InitialExchangeEntry`, LOGDUPE's
+`GetInitialExchangeStringFromContestExchange` -- S8/Q50), FCONTEST's
+sent-message `case` (F30, a design decision), `LooksLikeAGrid` (S9f), the
+matrix's `active.exchange` line, `SetColumnsWidth`'s SS columns (F15/F15a)
+and LOGDUPE's dead FISTS log-line read (F29).** Do not add a new rule test of
 `ContestSession.Exchange`; add a class answer. **S9 MOVES THE FOUR MACHINES
 ONE PER STAGE (Q92, NY4I option 2): each becomes NAMED HELPERS the class's
 own override CALLS -- no enum selects one.** **S9a IS DONE (2026-10-14): THE
@@ -396,6 +406,27 @@ plus one warning per export (F25 fixed, F26 reported, 2026-10-14; the Cup RF x3,
 CQ WW RTTY and the Youth Championship RF now export what their Cabrillo sent
 column prints). The ADIF import's kind test became the open
 contest's `ReceivesGridSquareExchange`. Pinned by `uTestADIFSentExchange`.
+**S9c IS DONE (2026-10-14): THE CABRILLO COLUMNS** -- each contest states
+`GetCabrilloSentExchange` / `GetCabrilloReceivedExchange`, calling
+`uCabrilloExchange` helpers; pinned by `uTestCabrilloColumns`.
+**S9d IS DONE (2026-10-15): THE PARSER.** `LOGSTUFF.ParseExchangeShape` is
+DELETED: its 51 reached arms are the named methods of
+`uContestBase.TExchangeParsers` (LOGSTUFF's `TEngineExchangeParsers`, one
+instance, made in LOGSTUFF's `initialization`), and every registered contest
+states `ParseReceivedExchangeFormat` -- 171 call one parser, 11 test the
+station with their field list's predicate, Arktika Spring and the PCC choose
+by the text (their `ParseReceivedExchange` overrides are gone). The session
+carries `Parsers` and `ExchangeFormatOf`, no kind. The other parse/entry-path
+kind readers are class answers: `ExchangeCarriesDomesticQTH` (the readiness
+MY STATE rule and LOGSTUFF's improper-QTH attribution), `ExchangeCarriesZone`,
+`ExchangeCarriesGridSquare` (the readiness rules; `uContestReadiness` takes
+booleans and its three kind sets are deleted -- transcribed, not judged, F28:
+the tree has three grid sets that disagree) and `PerQSOExchangeLeadsWithSerial`
+(`MainUnit.PerQSOExchString`). Pinned by `uTestExchangeParse` (every ContestType
+at seven stations x 66 typed rows through a stub of the parsers,
+`uTestExchangeParserStub`, shared with `uTestContestParse` and the Delaware and
+IN7QPNE tests). **IN7QPNE's trap (F31):** its party parsed in IN7QPNE's
+KIND because the session carried it; `ExchangeFormatOf` keeps that.
 **The CTY country list (`ctyCountryMode`) is set in the
 CONTEST setting's effect, straight after `FoundContest` returns** (plan F5)
 -- from the contest's `CountryMode` (`ContestCountryMode(ActiveContest(
@@ -427,10 +458,10 @@ anywhere to go stale. Do not bring one back. Pinned by
 FROM them -- `NumberDifferentMults`, `RemainingMultDisplay`,
 `Sheet.SheetInitAndLoad` (LogCfg) and the `ExchangeInformation`
 assignment (the contest's `ReceivedExchangeFields` since M11 S9a) /
-`SetColumnsWidth` (`uProgramMain`). **A parse rule does not test
-`aSession.Exchange` for its own shape (M11 S2, F11):** a class's session
-shape is its own, so such a test is always true; test it only when the class
-does NOT always run that shape. **`ZoneSentForThisContest`
+`SetColumnsWidth` (`uProgramMain`). **A parse rule does not test the
+session's shape (M11 S2, F11), and since S9d cannot:** the session carries
+no kind. A rule that depends on the station or the text tests those, as the
+format overrides do. **`ZoneSentForThisContest`
 and the ADIF CQZ/ITUZ tag have ONE source** -- the session since S9c (plan
 F4), the contest's `ZoneMultiplierZones` since M11 S5 (and whether it
 has a zone multiplier at all, `ContestHasZoneMultiplier`, on the same

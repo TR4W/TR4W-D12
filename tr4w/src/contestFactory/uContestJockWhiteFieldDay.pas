@@ -107,6 +107,9 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -245,6 +248,13 @@ end;
 function TContestJockWhiteFieldDay.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTQSONumberZone;
+end;
+
+function TContestJockWhiteFieldDay.ParseReceivedExchangeFormat(const aText: string;
+                                                               aParsers: TExchangeParsers;
+                                                               var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseNZFieldDay(aText, aExch);
 end;
 
 function TContestJockWhiteFieldDay.GetADIFSentExchange(const aMy: TMyStationExchange;

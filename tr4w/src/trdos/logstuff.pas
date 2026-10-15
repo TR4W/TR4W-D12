@@ -2498,44 +2498,6 @@ begin
 
 end;
 
-function ProcessRSTAndGrid3Exchange(Exchange: ShortString {Str80}; var RXData:
-  // 4.96.3
-  ContestExchange): boolean;
-var
-  FirstString, SecondString, ThirdString: Str10;
-
-begin
-
-  Result := False;
-  if Exchange = '' then
-     begin
-     Exit;
-     end;
-
-  ParseExchange(Exchange, FirstString, SecondString, ThirdString);
-  if SecondString = '' then
-     begin
-     Exchange := FirstString;
-     RXData.RSTReceived := DefaultRST;
-     end
-  else
-     begin
-     RXData.RSTReceived := StrToIntDef(FirstString, 0);
-     Exchange := SecondString;
-     end;
-
-  if GoodLookingGrid3(Exchange) then
-     begin
-     //    if RXData.DomesticQTH = '' then
-     RXData.DomesticQTH := leftstr(Exchange, 2);
-
-     RXData.QTHString := Exchange;
-     Result := True;
-
-     end
-
-end;
-
 function ProcessRSTAndGridSquareExchange(Exchange: ShortString {Str80}; var
   RXData: ContestExchange): boolean;
 
@@ -2908,46 +2870,6 @@ begin
      end;
 
   ProcessQSONumberNameChapterAndQTHExchange := True;
-end;
-
-function ProcessCheckAndChapterOrQTHExchange(Exchange: Str80; var RXData:
-  ContestExchange): boolean;
-
-{ Used for the QCWA Golden Anniversay contest.  The Chapter might be 2 or 3
-  integers, or AL for At Large with QTH.  The CHECK is two numbers (year).
-
-  Valid formats:
-      CHECK CHAPTER or CHECK QTH
-
-  }
-
-var
-  FirstString, SecondString, ThirdString, FourthString: Str20;
-  //    Result1: INTEGER;
-
-begin
-  ProcessCheckAndChapterOrQTHExchange := False;
-
-  if length(Exchange) < 4 then
-     begin
-     Exit;
-     end;
-
-  ParseFourFields(Exchange, FirstString, SecondString, ThirdString,
-    FourthString);
-
-  if StringIsAllNumbers(FirstString) then
-     begin
-     RXData.Check := StrToIntDef(FirstString, 0);
-
-     if SecondString <> '' then
-        begin
-        RXData.DomesticQTH := SecondString;
-        RXData.QTHString := SecondString;
-        ProcessCheckAndChapterOrQTHExchange := True;
-        Exit;
-        end;
-     end;
 end;
 
 function ProcessQSONumberNameAndDomesticOrDXQTHExchange(Exchange: Str80; var
@@ -3796,42 +3718,6 @@ begin
   Result := True;
 end;
 
-function ProcessQSONumberAndAgeExchange(Exchange: ShortString; var RXData:
-  ContestExchange): boolean;
-var
-  firststring, secondstring, thirdstring: str10;
-
-begin
-  ParseExchange(exchange, FirstString, SecondString, ThirdString);
-  Result := False;
-  if (SecondString = '') then
-     begin
-     exit; //
-     end;
-  if length(Exchange) < 3 then
-     begin
-     Exit;
-     end;
-  if (not StringIsAllNumbers(FirstString)) or (not
-    StringIsAllNumbers(SecondString)) then
-     begin
-     Exit;
-     end;
-  RXData.NumberReceived := StrToIntDef(FirstString, 0);
-  RXData.Age := StrToIntDef(SecondString, 0);
-  if (ActiveMode = CW) or (ActiveMode = Digital) then
-     begin
-     RXData.RSTReceived := 599;
-     RXData.RSTSent := 599;
-     end
-  else
-     begin
-     RXData.RSTReceived := 59;
-     RXData.RSTSent := 59;
-     end;
-  Result := True;
-end;
-
 function ProcessRSTAndDomesticQTHExchange(Exchange: ShortString {Str80}; var
   RXData: ContestExchange): boolean;
 
@@ -3857,6 +3743,7 @@ var
   NumericTokens : TStringList;
   ValidQTHs     : TStringList;
   UnknownTokens : TStringList;
+  carriesDomesticQTH: boolean;
 
 begin
   ProcessRSTAndDomesticQTHExchange := False;
@@ -3905,17 +3792,21 @@ begin
 
           The attribution is empty for the exchanges no setting chose, and
           then the message is exactly what it was. *)
+        (* Whether the contest's exchange carries a domestic QTH is its own
+          answer since M11 S9d (it was the session's kind, in a set of
+          uContestReadiness). Asked once, on the refusal path only. *)
+        carriesDomesticQTH := ExchangeContest.ExchangeCarriesDomesticQTH;
         logger.Error('[ProcessRSTAndDomesticQTHExchange] Improper domestic ' +
                      'QTH - Exchange = (%s). %s',
                      [Exchange,
-                      ExchangeModeAttribution(ContestSession.Exchange,
+                      ExchangeModeAttribution(carriesDomesticQTH,
                                               Settings.My.Country, False)]);
         (* THE BRIEF FORM ON SCREEN. QuickDisplayError writes into a
           main-window element, not a dialog, so what goes there has to be a
           few words -- '(MY COUNTRY is empty)' rather than the sentence the
           log gets. *)
         ExchangeErrorMessage := TC_IMPROPERDOMESITCQTH +
-           ExchangeModeAttribution(ContestSession.Exchange, Settings.My.Country, True);
+           ExchangeModeAttribution(carriesDomesticQTH, Settings.My.Country, True);
         end;
      (* IARU's ZONE FROM THE CALL, for a member society's single-word exchange,
        stood here as `if Contest = IARU` (NY4I 2026JUL07). It is the IARU
@@ -4594,85 +4485,6 @@ begin
        end;
 end;
 // n4af 4.51.2
-
-function ProcessRSTQSONumberOrDomesticQTHExchange(Exchange: Str80; var RXData:
-  ContestExchange): boolean;
-var
-  NumberString, FirstString, SecondString, ThirdString: Str10;
-  //n: integer;
-begin
-  ProcessRSTQSONumberOrDomesticQTHExchange := False;
-
-  if Exchange = '' then
-     begin
-     Exit;
-     end;
-
-  ParseExchange(Exchange, FirstString, SecondString, ThirdString);
-  { n := pos('/',SecondString) ;
-   if n > 0 then
-
-     RXData.QTHString := Rightstr(SecondString,n+1)
-     else
-      rxdata.QTHString := SecondString;
-
-  }
-  if not StringIsAllNumbers(FirstString) then // n4af 4.40.5
-    if SecondString = '' then
-       begin
-       ProcessRSTAndDomesticQTHExchange(Exchange, RXData); // n4af 4.40.5
-       Result := True;
-       exit;
-       end;
-  if not StringIsAllNumbers(FirstString) then // n4af 4.42.7
-     begin
-     RXData.QTHString := FirstString;
-     RXData.NumberReceived := StrToIntDef(SecondString, 0);
-     ProcessRSTQSONumberOrDomesticQTHExchange := FoundDomesticQTH(RXData);
-     Result := True;
-     exit;
-     end;
-  if ThirdString <> '' then
-     begin
-     NumberString := SecondString + ' ' + ThirdString;
-     end;
-  //  else                                           // N4AF 4.42.9
-  //    NumberString := SecondString;
-
-  if (not StringIsAllNumbers(SecondString)) and (SecondString <> '') then
-     begin
-     RXData.QTHString := SecondString;
-     if ThirdString <> '' then
-        begin
-        NumberString := FirstString + ' ' + ThirdString
-        end
-     else
-        begin
-        NumberString := FirstString;
-        end;
-     end
-  else
-     begin
-     RXData.QTHString := ThirdString;
-     NumberString := FirstString + ' ' + SecondString;
-     end;
-
-  if ProcessRSTAndQSONumberExchange(NumberString, RXData) then
-     begin
-     if RXData.QTHString = '' then
-        begin
-        ProcessRSTQSONumberOrDomesticQTHExchange := True
-        end
-     else
-        begin
-        ProcessRSTQSONumberOrDomesticQTHExchange := FoundDomesticQTH(RXData)
-        end
-     end
-  else
-     begin
-     ExchangeErrorMessage := TC_NOQSONUMBERFOUND;
-     end;
-end;
 
 function ProcessRSTQSONumberAndPossibleDomesticQTHExchange(Exchange: Str80; var
   RXData: ContestExchange): boolean;
@@ -6694,270 +6506,384 @@ begin
     it. The same rule as the dead export arms M4 deleted. *)
 end;
 
-(* ONE EXCHANGE SHAPE, PARSED -- the engine's half of M5b (2026-10-02).
+(* THE ENGINE'S PARSERS, ONE NAMED METHOD PER FORMAT -- M11 S9d, 2026-10-15
+  (docs/CONTEST_FACTORY_M11_PLAN.md S9d). See uContestBase.TExchangeParsers.
 
-  THIS IS ProcessExchange's OLD `case ActiveExchange of`, keyed on the shape it
-  is HANDED rather than on the global, and with the one contest test it held
-  (LABRE) moved to LABRE's class. One parser per exchange shape, none naming a
-  contest. A contest reaches it only through the TReceivedExchangeSession the
-  engine hands it (its ParseShape) -- the base's default parses the session's
-  own shape, and an override may ask for another (RAC, the PCC, Arktika
-  Spring and LABRE do).
+  THIS WAS ParseExchangeShape, the `case` over the exchange kind that M5b made
+  of ProcessExchange's `case ActiveExchange of`. Each reached arm is a method
+  here, its body unchanged, named for the kind it answered ('Parse' + the
+  member, less 'Exchange'); the contest calls the one for its format by name
+  (TContestBase.ParseReceivedExchangeFormat), and no enum selects it.
+
+  FIVE ARMS NO REGISTERED CONTEST REACHED WENT WITH THE MACHINE:
+  CheckAndChapterOrQTHExchange, QSONumberAndAgeExchange, RSTAndGrid3Exchange,
+  RSTAndFOCNumberExchange (n4af; it called the power parser) and
+  RSTQSONumberOrDomesticQTHExchange (n4af 4.53.2), and the four parsers only
+  they called. Their members stay in VC for the deletion stage (S9e).
 
   THE TEXT ARRIVES AS A string AND IS PUT BACK INTO THE Str80 IT WAS TYPED AS
-  -- a typed exchange, ANSI and at most 80 characters, so the explicit cast
-  loses nothing. *)
-function ParseExchangeShape(aShape: ExchangeType; const aText: string;
-  var RData: ContestExchange): boolean;
+  (TypedExchange) -- a typed exchange, ANSI and at most 80 characters, so the
+  explicit cast loses nothing; the machine did the same, once, at its head. *)
+type
+   TEngineExchangeParsers = class(TExchangeParsers)
+   public
+      function ParseAgeAndQSONumber(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseClassDomesticOrDXQTH(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseGrid(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseGrid2(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseKidsDay(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseNZFieldDay(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseNameAndDomesticOrDXQTH(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseNameAndPossibleGridSquare(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseNameQTHAndPossibleTenTenNumber(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseQSONumberAndCoordinatesSum(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseQSONumberAndGeoCoordinates(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseQSONumberAndGridSquare(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseQSONumberAndName(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseQSONumberAndPossibleDomesticQTH(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseQSONumberAndPreviousQSONumber(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseQSONumberAndZone(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseQSONumberDomesticOrDXQTH(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseQSONumberDomesticQTH(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseQSONumberNameChapterAndQTH(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseQSONumberNameDomesticOrDXQTH(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseQSONumberPrecedenceCheckDomesticQTH(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTALLJAPrefectureAndPrecedence(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTAge(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTAgeAndPossibleSK(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTAndContinent(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTAndGrid(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTAndGridSquareOrRDA(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTAndOrGrid(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTAndPOTAPark(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTAndPostalCode(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTAndQSONumberOrDomesticQTH(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTAndQSONumberOrFrenchDepartment(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTDomesticOrDXQTH(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTDomesticQTH(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTDomesticQTHOrQSONumber(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTLongJAPrefecture(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTNameAndQTH(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTPossibleDomesticQTHAndPower(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTPower(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTPrefecture(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTQSONumber(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTQSONumberAndDomesticQTH(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTQSONumberAndGridSquare(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTQSONumberAndPossibleDomesticQTH(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTQSONumberAndRandomCharacters(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTQTH(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTQTHNameAndFistsNumberOrPower(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTZone(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTZoneAndPossibleDomesticQTH(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTZoneOrDomesticQTH(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTZoneOrSociety(const aText: string; var aExch: ContestExchange): boolean; override;
+   end;
+
 var
-  ExchangeString: Str80;
+   (* THE ONE INSTANCE ProcessExchange hands every contest. Created in this
+     unit's initialization, freed in its finalization; it holds no state. *)
+   EngineExchangeParsers: TEngineExchangeParsers;
+
+function TypedExchange(const aText: string): Str80;
 begin
-  Result := False;
-  ExchangeString := ShortString(aText);
+   Result := ShortString(aText);
+end;
 
-  case aShape of
+function TEngineExchangeParsers.ParseAgeAndQSONumber(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessAgeAndQSONumberExchange(TypedExchange(aText), aExch);
+end;
 
-    RSTAndGridSquareOrRDAExchange:
-      ParseExchangeShape := ProcessRSTAndGridSquareOrRDAExchange(ExchangeString,
-        RData);
+function TEngineExchangeParsers.ParseClassDomesticOrDXQTH(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   logger.debug('Calling ProcessClassAndDomesticOrDXQTHExchange from ParseClassDomesticOrDXQTH');
+   Result := ProcessClassAndDomesticOrDXQTHExchange(TypedExchange(aText), aExch);
+end;
 
-    CheckAndChapterOrQTHExchange:
-      ParseExchangeShape := ProcessCheckAndChapterOrQTHExchange(ExchangeString,
-        RData);
+function TEngineExchangeParsers.ParseGrid(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessGridSquareExchange(TypedExchange(aText), aExch);
+end;
 
-    ClassDomesticOrDXQTHExchange:
+function TEngineExchangeParsers.ParseGrid2(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessGrid2Exchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseKidsDay(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessKidsExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseNZFieldDay(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessNZFieldDayExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseNameAndDomesticOrDXQTH(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessNameAndDomesticOrDXQTHExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseNameAndPossibleGridSquare(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessNameAndPossibleGridSquareExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseNameQTHAndPossibleTenTenNumber(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessNameQTHAndPossibleTenTenNumberExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseQSONumberAndCoordinatesSum(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessQSONumberAndCoordinatesSumExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseQSONumberAndGeoCoordinates(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessQSONumberAndGeoCoordinatesExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseQSONumberAndGridSquare(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessQSONumberAndGridSquareExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseQSONumberAndName(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessQSONumberAndNameExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseQSONumberAndPossibleDomesticQTH(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessQSONumberAndPossibleDomesticQTHExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseQSONumberAndPreviousQSONumber(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessQSONumberAndPreviousQSONumber(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseQSONumberAndZone(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessQSONumberAndZoneExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseQSONumberDomesticOrDXQTH(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessQSONumberAndDomesticOrDXQTHExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseQSONumberDomesticQTH(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessQSONumberAndDomesticQTHExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseQSONumberNameChapterAndQTH(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessQSONumberNameChapterAndQTHExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseQSONumberNameDomesticOrDXQTH(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessQSONumberNameAndDomesticOrDXQTHExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseQSONumberPrecedenceCheckDomesticQTH(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessQSONumberPrecedenceCheckDomesticQTHExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTALLJAPrefectureAndPrecedence(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTAllJAPrefectureAndPrecedenceExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTAge(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTAndAgeExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTAgeAndPossibleSK(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTAgeAndPossibleSK(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTAndContinent(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTAndContinentExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTAndGrid(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTAndGridSquareExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTAndGridSquareOrRDA(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTAndGridSquareOrRDAExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTAndOrGrid(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTAndOrGridSquareExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTAndPOTAPark(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTAndPOTAPark(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTAndPostalCode(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTAndPostalCodeExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTAndQSONumberOrDomesticQTH(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTAndQSONumberOrDomesticQTHExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTAndQSONumberOrFrenchDepartment(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTAndQSONumberOrFrenchDepartmentExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTDomesticOrDXQTH(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   (* LABRE's 'a PY station sends a state' stood in this arm as
+     `if Contest = LABRE`; it is TContestLABRE's rule since M5b. *)
+   Result := ProcessRSTAndDomesticOrDXQTHExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTDomesticQTH(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTAndDomesticQTHExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTDomesticQTHOrQSONumber(const aText: string; var aExch: ContestExchange): boolean;
+var
+   ExchangeString: Str80;
+begin
+   ExchangeString := TypedExchange(aText);
+   if DomesticCountryCall(aExch.Callsign) and
+      (StringHasLetters(ExchangeString))  then //n4af 4.44.4 HADX
       begin
-        logger.debug('Calling ProcessClassAndDomesticOrDXQTHExchange from ParseExchangeShape');
-        ParseExchangeShape :=
-          ProcessClassAndDomesticOrDXQTHExchange(ExchangeString, RData);
-      end;
-
-    KidsDayExchange:
-      ParseExchangeShape := ProcessKidsExchange(ExchangeString, RData);
-
-    NameQTHAndPossibleTenTenNumber:
-      ParseExchangeShape :=
-        ProcessNameQTHAndPossibleTenTenNumberExchange(ExchangeString, RData);
-
-    NameAndDomesticOrDXQTHExchange:
-      ParseExchangeShape := ProcessNameAndDomesticOrDXQTHExchange(ExchangeString,
-        RData);
-
-    NameAndPossibleGridSquareExchange:
-      ParseExchangeShape :=
-        ProcessNameAndPossibleGridSquareExchange(ExchangeString, RData);
-
-    QSONumberAndNameExchange:
-      ParseExchangeShape := ProcessQSONumberAndNameExchange(ExchangeString, RData);
-
-    QSONumberAndGeoCoordinates:
-      ParseExchangeShape :=
-        ProcessQSONumberAndGeoCoordinatesExchange(ExchangeString, RData);
-
-    QSONumberAndCoordinatesSum:
-      ParseExchangeShape :=
-        ProcessQSONumberAndCoordinatesSumExchange(ExchangeString, RData);
-
-    QSONumberAndZone:
-      ParseExchangeShape := ProcessQSONumberAndZoneExchange(ExchangeString, RData);
-
-    QSONumberDomesticOrDXQTHExchange:
-      ParseExchangeShape :=
-        ProcessQSONumberAndDomesticOrDXQTHExchange(ExchangeString, RData);
-
-    QSONumberDomesticQTHExchange:
-      ParseExchangeShape := ProcessQSONumberAndDomesticQTHExchange(ExchangeString,
-        RData);
-
-    QSONumberAndGridSquare:
-      ParseExchangeShape := ProcessQSONumberAndGridSquareExchange(ExchangeString,
-        RData);
-
-    QSONumberNameChapterAndQTHExchange:
-      ParseExchangeShape :=
-        ProcessQSONumberNameChapterAndQTHExchange(ExchangeString, RData);
-
-    QSONumberNameDomesticOrDXQTHExchange:
-      ParseExchangeShape :=
-        ProcessQSONumberNameAndDomesticOrDXQTHExchange(ExchangeString, RData);
-
-    RSTAgeExchange:
-      ParseExchangeShape := ProcessRSTAndAgeExchange(ExchangeString, RData);
-
-    RSTAndFOCNumberExchange: //n4af
-      ParseExchangeShape := ProcessRSTAndPowerExchange(ExchangeString, RData);
-    //n4af
-
-    AgeAndQSONumberExchange: ParseExchangeShape :=
-      ProcessAgeAndQSONumberExchange(ExchangeString, RData);
-
-    QSONumberAndAgeExchange: ParseExchangeShape :=
-      ProcessQSONumberAndAgeExchange(ExchangeString, Rdata);
-
-    RSTAgeAndPossibleSK:
-      ParseExchangeShape := ProcessRSTAgeAndPossibleSK(ExchangeString, RData);
-
-    RSTAndContinentExchange:
-      ParseExchangeShape := ProcessRSTAndContinentExchange(ExchangeString, RData);
-
-    RSTALLJAPrefectureAndPrecedenceExchange:
-      ParseExchangeShape :=
-        ProcessRSTAllJAPrefectureAndPrecedenceExchange(ExchangeString, RData);
-
-    RSTAndGridExchange:
-      ParseExchangeShape := ProcessRSTAndGridSquareExchange(ExchangeString, RData);
-
-    RSTAndOrGridExchange:
-      ParseExchangeShape := ProcessRSTAndOrGridSquareExchange(ExchangeString,
-        RData);
-
-    GridExchange:
-      ParseExchangeShape := ProcessGridSquareExchange(ExchangeString, RData);
-
-    Grid2Exchange:
-      ParseExchangeShape := ProcessGrid2Exchange(ExchangeString, RData);
-
-    RSTAndGrid3Exchange:
-      ParseExchangeShape := ProcessRSTAndGrid3Exchange(ExchangeString, RData);
-    // 4.96.3
-
-    RSTAndPostalCodeExchange:
-      ParseExchangeShape := ProcessRSTAndPostalCodeExchange(ExchangeString, RData);
-
-    RSTAndPOTAPark:
-      ParseExchangeShape := ProcessRSTAndPOTAPark(ExchangeString, RData);
-
-    RSTAndQSONumberOrDomesticQTHExchange:
-      ParseExchangeShape :=
-        ProcessRSTAndQSONumberOrDomesticQTHExchange(ExchangeString, RData);
-
-    RSTAndQSONumberOrFrenchDepartmentExchange:
-      ParseExchangeShape :=
-        ProcessRSTAndQSONumberOrFrenchDepartmentExchange(ExchangeString, RData);
-
-    RSTDomesticQTHExchange:
-      ParseExchangeShape := ProcessRSTAndDomesticQTHExchange(ExchangeString, RData);
-
-    RSTDomesticOrDXQTHExchange:
-      (* LABRE's 'a PY station sends a state' stood here as
-        `if Contest = LABRE`; it is TContestLABRE's rule since M5b. *)
-      ParseExchangeShape := ProcessRSTAndDomesticOrDXQTHExchange(ExchangeString,
-        RData);
-
-    RSTDomesticQTHOrQSONumberExchange:
-      if DomesticCountryCall(RData.Callsign) and
-        (StringHasLetters(ExchangeString)) then //n4af 4.44.4 HADX
-         begin
-         ParseExchangeShape := ProcessRSTAndDomesticQTHExchange(ExchangeString,
-           RData)
-         end
-      else
-         begin
-         ParseExchangeShape := ProcessRSTAndQSONumberExchange(ExchangeString,
-           RData);
-         end;
-
-    RSTNameAndQTHExchange:
-      ParseExchangeShape := ProcessRSTNameAndQTHExchange(ExchangeString, RData);
-
-    RSTPossibleDomesticQTHAndPower:
-      ParseExchangeShape :=
-        ProcessRSTPossibleDomesticQTHAndPowerExchange(ExchangeString, RData);
-
-    RSTPowerExchange:
-      ParseExchangeShape := ProcessRSTAndPowerExchange(ExchangeString, RData);
-
-    RSTPrefectureExchange:
-      ParseExchangeShape := ProcessRSTAndPrefectureExchange(ExchangeString, RData);
-
-    RSTQSONumberExchange:
-      ParseExchangeShape := ProcessRSTAndQSONumberExchange(ExchangeString, RData);
-
-    NZFieldDayExchange:
-      ParseExchangeShape := ProcessNZFieldDayExchange(ExchangeString, RData);
-
-    RSTQSONumberAndDomesticQTHExchange:
-      ParseExchangeShape :=
-        ProcessRSTQSONumberAndDomesticQTHExchange(ExchangeString, RData);
-
-    QSONumberAndPreviousQSONumber:
-      ParseExchangeShape := ProcessQSONumberAndPreviousQSONumber(ExchangeString,
-        RData);
-
-    RSTQSONumberAndGridSquareExchange:
-      ParseExchangeShape :=
-        ProcessRSTQSONumberAndGridSquareExchange(ExchangeString, RData);
-
-    RSTQSONumberOrDomesticQTHExchange:
-      ParseExchangeShape :=
-        ProcessRSTQSONumberorDomesticQTHExchange(ExchangeString, RData);
-    // 4.53.2
-
-    RSTQSONumberAndPossibleDomesticQTHExchange:
-      ParseExchangeShape :=
-        ProcessRSTQSONumberAndPossibleDomesticQTHExchange(ExchangeString,
-        RData);
-
-    QSONumberAndPossibleDomesticQTHExchange:
-      ParseExchangeShape :=
-        ProcessQSONumberAndPossibleDomesticQTHExchange(ExchangeString, RData);
-    {KK1L: 6.73}
-
-    RSTQSONumberAndRandomCharactersExchange:
-      ParseExchangeShape :=
-        ProcessRSTQSONumberAndRandomCharactersExchange(ExchangeString, RData);
-
-    RSTQTHNameAndFistsNumberOrPowerExchange:
-      ParseExchangeShape :=
-        ProcessRSTQTHNameAndFistsNumberOrPowerExchange(ExchangeString, RData);
-
-    RSTQTHExchange:
-      ParseExchangeShape := ProcessRSTAndQTHExchange(ExchangeString, RData);
-
-    RSTZoneAndPossibleDomesticQTHExchange:
-      ParseExchangeShape :=
-        ProcessRSTZoneAndPossibleDomesticQTHExchange(ExchangeString, RData);
-
-    RSTZoneExchange:
-      ParseExchangeShape := ProcessRSTAndZoneExchange(ExchangeString, RData);
-
-    RSTZoneOrSocietyExchange:
-      if StringIsAllNumbersOrSpaces(ExchangeString) then
-         begin
-         ParseExchangeShape := ProcessRSTAndZoneExchange(ExchangeString, RData)
-         end
-      else
-         begin
-         ExchangeString := UpperCase(ExchangeString);
-         ParseExchangeShape := ProcessRSTAndDomesticQTHExchange(ExchangeString,
-           RData);
-         end;
-
-    QSONumberPrecedenceCheckDomesticQTHExchange:
-      ParseExchangeShape :=
-        ProcessQSONumberPrecedenceCheckDomesticQTHExchange(ExchangeString,
-        RData);
-
-    RSTLongJAPrefectureExchange: {KK1L: 6.72 JA}
+      Result := ProcessRSTAndDomesticQTHExchange(ExchangeString, aExch);
+      end
+   else
       begin
-        ExchangeString := UpperCase(ExchangeString);
-        ParseExchangeShape := ProcessRSTAndJAPrefectureExchange(ExchangeString,
-          RData);
+      Result := ProcessRSTAndQSONumberExchange(ExchangeString, aExch);
       end;
+end;
 
-    RSTZoneOrDomesticQTH:
-      if (DomesticCountryCall(RData.Callsign) or (not
-        (StringisAllNumbersorSpaces(exchangestring)))) then // 4.77.6
-         begin
-         ParseExchangeShape := ProcessRSTAndDomesticQTHExchange(ExchangeString,
-           RData)
-         end
-      else
-         begin
-         ParseExchangeShape := ProcessRSTAndZoneExchange(ExchangeString, RData);
-         end;
+function TEngineExchangeParsers.ParseRSTLongJAPrefecture(const aText: string; var aExch: ContestExchange): boolean;
+var
+   ExchangeString: Str80;
+begin
+   (* KK1L: 6.72 JA *)
+   ExchangeString := TypedExchange(aText);
+   ExchangeString := UpperCase(ExchangeString);
+   Result := ProcessRSTAndJAPrefectureExchange(ExchangeString, aExch);
+end;
 
-  end; { of case }
+function TEngineExchangeParsers.ParseRSTNameAndQTH(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTNameAndQTHExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTPossibleDomesticQTHAndPower(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTPossibleDomesticQTHAndPowerExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTPower(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTAndPowerExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTPrefecture(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTAndPrefectureExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTQSONumber(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTAndQSONumberExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTQSONumberAndDomesticQTH(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTQSONumberAndDomesticQTHExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTQSONumberAndGridSquare(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTQSONumberAndGridSquareExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTQSONumberAndPossibleDomesticQTH(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTQSONumberAndPossibleDomesticQTHExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTQSONumberAndRandomCharacters(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTQSONumberAndRandomCharactersExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTQTH(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTAndQTHExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTQTHNameAndFistsNumberOrPower(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTQTHNameAndFistsNumberOrPowerExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTZone(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTAndZoneExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTZoneAndPossibleDomesticQTH(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTZoneAndPossibleDomesticQTHExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTZoneOrDomesticQTH(const aText: string; var aExch: ContestExchange): boolean;
+var
+   ExchangeString: Str80;
+begin
+   ExchangeString := TypedExchange(aText);
+   if (DomesticCountryCall(aExch.Callsign) or (not
+      (StringisAllNumbersorSpaces(exchangestring)))) then // 4.77.6
+      begin
+      Result := ProcessRSTAndDomesticQTHExchange(ExchangeString, aExch);
+      end
+   else
+      begin
+      Result := ProcessRSTAndZoneExchange(ExchangeString, aExch);
+      end;
+end;
+
+function TEngineExchangeParsers.ParseRSTZoneOrSociety(const aText: string; var aExch: ContestExchange): boolean;
+var
+   ExchangeString: Str80;
+begin
+   ExchangeString := TypedExchange(aText);
+   if StringIsAllNumbersOrSpaces(ExchangeString) then
+      begin
+      Result := ProcessRSTAndZoneExchange(ExchangeString, aExch);
+      end
+   else
+      begin
+      ExchangeString := UpperCase(ExchangeString);
+      Result := ProcessRSTAndDomesticQTHExchange(ExchangeString, aExch);
+      end;
 end;
 
 (* CTY.DAT's zone for a call -- the TReceivedExchangeSession service IARU's
@@ -7003,8 +6929,9 @@ end;
   session's shape, RSTNameAndQTH or RSTAndPOTAPark). ONE contest is fetched
   for that and the parse, after ParseArray as before.
   Then the CONTEST is asked (TContestBase.ParseReceivedExchange), handed the
-  session -- its exchange, the shape parser above and two engine services --
-  as data. A refusal it names goes where every exchange error goes,
+  session -- the engine's parsers above (M11 S9d; it was the session's
+  exchange kind and one parser taking it) and the engine services -- as
+  data. A refusal it names goes where every exchange error goes,
   ExchangeErrorMessage, which ParametersOkay shows exactly as it shows an
   improper county. *)
 function ProcessExchange(ExchangeString: Str80; var RData: ContestExchange):
@@ -7023,8 +6950,8 @@ begin
      Exit;
      end;
 
-  session.Exchange := ContestSession.Exchange;
-  session.ParseShape := @ParseExchangeShape;
+  session.Parsers := EngineExchangeParsers;
+  session.ExchangeFormatOf := nil;
   session.ZoneOfCall := @ParseSessionZoneOfCall;
   session.IsDomesticQTH := @ParseSessionIsDomesticQTH;
   session.CallWindowHasCall := CallWindowString <> '';
@@ -7493,8 +7420,16 @@ begin
       end;
 end;
 
-begin
+initialization
+  (* `initialization`, not the old-style `begin`, since M11 S9d: the
+    engine's parsers need a finalization to be freed in, and a unit with a
+    bare `begin` block cannot have one. The two mean the same. *)
   CD.CellBuffer.MaximumMemoryToUse := 40000 * ua4wliscpconst {*4 - ua4wli};
   StuffInit;
+  EngineExchangeParsers := TEngineExchangeParsers.Create;
+
+finalization
+  FreeAndNil(EngineExchangeParsers);
+
 end.
 

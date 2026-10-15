@@ -325,7 +325,12 @@ the target shape, the M-step migration order and the open questions.
   `OffersParkTools`; FISTS overrides `CombineWithMultipliers`. STATED PER
   CLASS, and where the entrant decides the shape, through the station test
   its `DescribeSession` uses (NEQP, 7QP, Arizona, the Salmon Run, Texas for
-  the several-QTH rule). **THE ROVER IS A QSO PARTY'S (Q94 with Q90, NY4I,
+  the several-QTH rule). S9d (2026-10-15) added four more on the same
+  pattern, transcribed from kind sets: `ExchangeCarriesDomesticQTH`,
+  `ExchangeCarriesZone`, `ExchangeCarriesGridSquare` (the readiness check;
+  the first also LOGSTUFF's improper-QTH attribution) and
+  `PerQSOExchangeLeadsWithSerial` (`MainUnit.PerQSOExchString`) -- plan F28
+  says why they are transcriptions. **THE ROVER IS A QSO PARTY'S (Q94 with Q90, NY4I,
   2026-10-14: "yes QSO parties allow it but in any contest NY4I/7 or
   VP9/NY4I is a valid call")**: `StripsRoverCountyFromCall` and the export's
   `SplitsRoverCallOnExport` (a `TContestBase` virtual since then) are True
@@ -357,13 +362,21 @@ the target shape, the M-step migration order and the open questions.
   2026-10-02). `LOGSTUFF.ProcessExchange` runs the contest-blind gate, then
   asks `TContestBase.ParseReceivedExchange(aText, aSession, var aExch, out
   aErrorMessage)` of the active contest (its identity when classless). The
-  session is DATA (`TReceivedExchangeSession`): the session's exchange, the
-  engine's per-shape parser `ParseShape`, and services `ZoneOfCall`,
-  `IsDomesticQTH`, `CallWindowHasCall`, `AbandonEntry` -- the class reads no
-  global and `uTestContestParse` hands it stubs. **The base parses the
-  session's shape; an override applies its rule UNDER THE SHAPE IT WAS
-  WRITTEN FOR** (test `aSession.Exchange`) and defers otherwise -- that is what
-  kept every move exact. A refusal's reason goes in `aErrorMessage` and shows
+  session is DATA (`TReceivedExchangeSession`): the engine's parsers
+  (`Parsers`, a `TExchangeParsers` -- one named method per format, since M11
+  S9d), `ExchangeFormatOf` (nil but in IN7QPNE's party hand-off), and
+  services `ZoneOfCall`, `IsDomesticQTH`, `CallWindowHasCall`,
+  `AbandonEntry` -- the class reads no global and the tests hand it the
+  shared stub `uTestExchangeParserStub`. **The base parses in the contest's
+  FORMAT: `ParseReceivedExchangeFormat`, a protected virtual every registered
+  contest states (184 overrides, M11 S9d) by calling the parser for its format
+  by name -- testing the station where its field list does, the text where the
+  format is chosen by the text (Arktika Spring, the PCC). The base format
+  parses nothing and answers False.** A RULE overrides `ParseReceivedExchange`
+  and calls `inherited`, or a parser by name (RAC's VE0 serial, LABRE's PY
+  state); it never tests a kind -- the session has none since S9d. Until then
+  the base parsed the session's kind through one machine
+  (`LOGSTUFF.ParseExchangeShape`, deleted). A refusal's reason goes in `aErrorMessage` and shows
   like an improper county. Seven contests gained classes for it (Canada Day,
   Canada Winter, SAC CW/SSB, LABRE, Russian DX, RU3AX -- siblings, copies,
   design 1.4); NY4I's two rulings (design 7.10) live on

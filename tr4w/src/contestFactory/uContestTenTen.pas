@@ -79,6 +79,9 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -175,6 +178,13 @@ end;
 function TContestTenTen.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsNameQTHTenTenNumber;
+end;
+
+function TContestTenTen.ParseReceivedExchangeFormat(const aText: string;
+                                                    aParsers: TExchangeParsers;
+                                                    var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseNameQTHAndPossibleTenTenNumber(aText, aExch);
 end;
 
 function TContestTenTen.GetADIFSentExchange(const aMy: TMyStationExchange;

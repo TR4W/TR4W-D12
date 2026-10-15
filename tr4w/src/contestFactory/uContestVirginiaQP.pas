@@ -97,6 +97,9 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -116,6 +119,11 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesDomesticQTH: boolean; override;
+      function PerQSOExchangeLeadsWithSerial: boolean; override;
    end;
 
 implementation
@@ -196,6 +204,23 @@ end;
 function TContestVirginiaQP.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsQSONumberQTH;
+end;
+
+function TContestVirginiaQP.ParseReceivedExchangeFormat(const aText: string;
+                                                        aParsers: TExchangeParsers;
+                                                        var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseQSONumberDomesticOrDXQTH(aText, aExch);
+end;
+
+function TContestVirginiaQP.ExchangeCarriesDomesticQTH: boolean;
+begin
+   Result := True;
+end;
+
+function TContestVirginiaQP.PerQSOExchangeLeadsWithSerial: boolean;
+begin
+   Result := True;
 end;
 
 function TContestVirginiaQP.GetADIFSentExchange(const aMy: TMyStationExchange;

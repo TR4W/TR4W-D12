@@ -90,6 +90,9 @@ type
          here, as DescribeSession is; each mode's GetExchangeKind still
          states the trait. *)
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
    public
 
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -128,6 +131,10 @@ type
       function UsesDomesticFile: boolean; override;
       (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
       function LogsSeveralQTHsFromOneEntry: boolean; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesDomesticQTH: boolean; override;
    end;
 
 implementation
@@ -222,6 +229,25 @@ begin
       begin
       Result := ExchangeFieldsRSTQSONumberQTH;
       end;
+end;
+
+function TContestARRLDXBase.ParseReceivedExchangeFormat(const aText: string;
+                                                        aParsers: TExchangeParsers;
+                                                        var aExch: ContestExchange): boolean;
+begin
+   if CountsDXMultiplier then
+      begin
+      Result := aParsers.ParseRSTPower(aText, aExch);
+      end
+   else
+      begin
+      Result := aParsers.ParseRSTDomesticQTH(aText, aExch);
+      end;
+end;
+
+function TContestARRLDXBase.ExchangeCarriesDomesticQTH: boolean;
+begin
+   Result := not CountsDXMultiplier;
 end;
 
 (* NOTHING IS REGISTERED HERE. A family base is not a contest an operator can

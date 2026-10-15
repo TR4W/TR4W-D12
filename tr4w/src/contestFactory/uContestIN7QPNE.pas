@@ -171,6 +171,9 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -227,6 +230,10 @@ type
       function SplitsRoverCallOnExport: boolean; override;
       (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
       function LogsSeveralQTHsFromOneEntry: boolean; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesDomesticQTH: boolean; override;
    end;
 
 implementation
@@ -384,9 +391,9 @@ end;
 
 (* THE JUDGING PARTY PARSES THE EXCHANGE.
 
-   1. The session's shape parses it (inherited) -- every component's parse
+   1. This contest's format parses it (inherited) -- every component's parse
       starts there, and the county it finds is what routes the QSO. A refusal
-      here stands exactly as the shape left it.
+      here stands exactly as the format left it.
    2. A QSO in no party is refused with the out-of-area reason -- the
       out-of-state rule every single-state party applies (design 7.10). It is
       reached only when the entrant is in no party, and the session's
@@ -394,11 +401,17 @@ end;
       RECEIVED line): out of area, the session's table holds the four
       parties' counties and nothing else, so the shape refuses first.
    3. Otherwise the judging party's own ParseReceivedExchange runs, from the
-      record as it arrived, and its answer is the answer.
+      record as it arrived, and its answer is the answer -- ITS RULES, IN THIS
+      CONTEST'S FORMAT. The party is handed the session with this contest
+      named in ExchangeFormatOf (unless a caller already named one), so a
+      party whose own format differs (Delaware's RSTDomesticOrDXQTH, the 7QP
+      and NEQP at a host station) still parses IN7QPNE's. Until M11 S9d that
+      was implicit: the party parsed the session's exchange KIND, which was
+      this contest's.
 
-   THE SHAPE RUNS TWICE ON SUCCESS. That is safe because every shape parser
-   starts by clearing the county-line queue (LOGSTUFF's ClearPendingCounties)
-   and writes the same fields from the same text. *)
+   THE FORMAT RUNS TWICE ON SUCCESS. That is safe because every format's
+   parser starts by clearing the county-line queue (LOGSTUFF's
+   ClearPendingCounties) and writes the same fields from the same text. *)
 function TContestIN7QPNE.ParseReceivedExchange(const aText: string;
                                                const aSession: TReceivedExchangeSession;
                                                var aExch: ContestExchange;
@@ -406,6 +419,7 @@ function TContestIN7QPNE.ParseReceivedExchange(const aText: string;
 var
    arrived: ContestExchange;
    party: TIN7QPNEParty;
+   partySession: TReceivedExchangeSession;
 begin
    arrived := aExch;
    Result := inherited ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
@@ -422,7 +436,12 @@ begin
       end;
 
    aExch := arrived;
-   Result := PartyContest(party).ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
+   partySession := aSession;
+   if partySession.ExchangeFormatOf = nil then
+      begin
+      partySession.ExchangeFormatOf := Self;
+      end;
+   Result := PartyContest(party).ParseReceivedExchange(aText, partySession, aExch, aErrorMessage);
 end;
 
 function TContestIN7QPNE.GetDisplayName: string;
@@ -484,6 +503,18 @@ end;
 function TContestIN7QPNE.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTQSONumberQTH;
+end;
+
+function TContestIN7QPNE.ParseReceivedExchangeFormat(const aText: string;
+                                                     aParsers: TExchangeParsers;
+                                                     var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTDomesticQTH(aText, aExch);
+end;
+
+function TContestIN7QPNE.ExchangeCarriesDomesticQTH: boolean;
+begin
+   Result := True;
 end;
 
 function TContestIN7QPNE.GetADIFSentExchange(const aMy: TMyStationExchange;

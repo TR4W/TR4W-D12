@@ -75,6 +75,9 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -105,6 +108,10 @@ type
          ZoneMultiplierZones (M11 S5). *)
       function ZoneMultiplierCount: integer; override;
       function ZoneMultiplierZones: TZoneMultiplierZones; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesZone: boolean; override;
    end;
 
 implementation
@@ -195,6 +202,18 @@ end;
 function TContestWWIH.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTZone;
+end;
+
+function TContestWWIH.ParseReceivedExchangeFormat(const aText: string;
+                                                  aParsers: TExchangeParsers;
+                                                  var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTZone(aText, aExch);
+end;
+
+function TContestWWIH.ExchangeCarriesZone: boolean;
+begin
+   Result := True;
 end;
 
 function TContestWWIH.GetADIFSentExchange(const aMy: TMyStationExchange;

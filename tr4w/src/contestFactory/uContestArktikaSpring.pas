@@ -59,6 +59,18 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+
+      (* DIGITS AND BLANKS ARE A SERIAL, ANYTHING ELSE A QTH -- M5b.
+
+         It stood in LOGSTUFF.ProcessRSTAndQSONumberOrDomesticQTHExchange as a
+         test of ActiveQSOPointMethod = ArktikaSpringQSOPointMethod, ahead of
+         that shape's own rule. M5b stated it as this class's
+         ParseReceivedExchange; it is the FORMAT, so since M11 S9d it is
+         stated here, and Arktika Spring never asks the parser of the shape
+         it was carried in. *)
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -107,16 +119,6 @@ type
          THE ROW IS NOT DELETED AND MUST NOT BE. It still answers for every
          contest that has no class, and TContestBase still reads it for the ones
          that do not override. *)
-
-      (* DIGITS AND BLANKS ARE A SERIAL, ANYTHING ELSE A QTH -- M5b.
-
-         It stood in LOGSTUFF.ProcessRSTAndQSONumberOrDomesticQTHExchange as a
-         test of ActiveQSOPointMethod = ArktikaSpringQSOPointMethod, ahead of
-         that shape's own rule; stated here under that shape. *)
-      function ParseReceivedExchange(const aText: string;
-                                     const aSession: TReceivedExchangeSession;
-                                     var aExch: ContestExchange;
-                                     out aErrorMessage: string): boolean; override;
    public
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
@@ -130,6 +132,10 @@ type
                                          var aFound: boolean): TDomesticQTHAnswer; override;
       (* see TContestBase.DomesticQTHReplacesDXMultiplier (M11 S6). *)
       function DomesticQTHReplacesDXMultiplier: boolean; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesDomesticQTH: boolean; override;
    end;
 
 implementation
@@ -142,26 +148,6 @@ uses
    (* StringIsAllNumbersOrSpaces -- the test the arm made. *)
    utils_text,
    uTR4WStrings;
-
-function TContestArktikaSpring.ParseReceivedExchange(const aText: string;
-                                                    const aSession: TReceivedExchangeSession;
-                                                    var aExch: ContestExchange;
-                                                    out aErrorMessage: string): boolean;
-begin
-   (* NO SHAPE TEST -- THIS CONTEST'S SESSION ALWAYS PARSES
-      RSTAndQSONumberOrDomesticQTHExchange, its trait, and no DescribeSession
-      states another, so the test that stood here was always true.
-      Deleted at M11 S2 (plan F11). *)
-   aErrorMessage := '';
-   if StringIsAllNumbersOrSpaces(aText) then
-      begin
-      Result := aSession.ParseShape(RSTQSONumberExchange, aText, aExch);
-      end
-   else
-      begin
-      Result := aSession.ParseShape(RSTDomesticQTHExchange, aText, aExch);
-      end;
-end;
 
 procedure TContestArktikaSpring.CalculateQSOPoints(var aQso: ContestExchange);
 begin
@@ -261,6 +247,28 @@ end;
 function TContestArktikaSpring.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTQSONumberQTH;
+end;
+
+function TContestArktikaSpring.ParseReceivedExchangeFormat(const aText: string;
+                                                           aParsers: TExchangeParsers;
+                                                           var aExch: ContestExchange): boolean;
+begin
+   (* DIGITS AND BLANKS ARE A SERIAL, ANYTHING ELSE A QTH -- the format
+      itself, so it is stated here; it stood in ParseReceivedExchange until
+      M11 S9d. *)
+   if StringIsAllNumbersOrSpaces(aText) then
+      begin
+      Result := aParsers.ParseRSTQSONumber(aText, aExch);
+      end
+   else
+      begin
+      Result := aParsers.ParseRSTDomesticQTH(aText, aExch);
+      end;
+end;
+
+function TContestArktikaSpring.ExchangeCarriesDomesticQTH: boolean;
+begin
+   Result := True;
 end;
 
 function TContestArktikaSpring.GetADIFSentExchange(const aMy: TMyStationExchange;

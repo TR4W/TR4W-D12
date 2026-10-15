@@ -199,9 +199,13 @@ SITE_OVERRIDES = [
 # ~~("uCabrilloExchange.pas", "SetHisEx")~~ is DELETED too (M11 S9c,
 # 2026-10-14) -- each class states TContestBase.GetCabrilloSentExchange and
 # GetCabrilloReceivedExchange, calling uCabrilloExchange helpers.
-SHAPE_MACHINES = {
-   ("logstuff.pas", "ParseExchangeShape"),
-}
+# ~~("logstuff.pas", "ParseExchangeShape")~~ is DELETED too (M11 S9d,
+# 2026-10-15) -- each class states TContestBase.ParseReceivedExchangeFormat,
+# calling the engine's parser for its format by name on
+# uContestBase.TExchangeParsers (LOGSTUFF's TEngineExchangeParsers). NO
+# SHAPE MACHINE IS LEFT: the set is empty and stays so; a routine keyed on
+# the exchange kind is a reader for the deletion stage (S9e), not a machine.
+SHAPE_MACHINES = set()
 
 # Reach 1 is unambiguous. Reach 2-3 is kept as a proxy because it is almost
 # always a CW/SSB pair or one sponsor's family. 4 or more is shared behaviour.

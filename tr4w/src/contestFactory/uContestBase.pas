@@ -528,17 +528,85 @@ type
       DoingDomesticMults: boolean;
    end;
 
-   (* THE ENGINE'S PARSE OF ONE EXCHANGE SHAPE -- M5b, 2026-10-02.
+   (* THE ENGINE'S EXCHANGE PARSERS, ONE NAMED METHOD PER FORMAT -- M11 S9d,
+      2026-10-15 (plan S9d; NY4I's Q92, option 2).
 
-      An exchange SHAPE is what an RST-and-serial, a name-and-QTH or a
+      An exchange FORMAT is what an RST-and-serial, a name-and-QTH or a
       class-and-section looks like typed: which word is which, and what the
-      domestic-QTH table makes of a QTH. LOGSTUFF holds one parser per shape
-      (ParseExchangeShape) and they name no contest. They read the engine's
-      tables -- the domestic QTH table, CTY.DAT -- so a contest class cannot
-      call them directly; the engine hands this function in, as DATA, and the
-      class calls it with the shape it wants. *)
-   TExchangeShapeParser = function(aShape: ExchangeType; const aText: string;
-                                   var aExch: ContestExchange): boolean;
+      domestic-QTH table makes of a QTH. LOGSTUFF holds one parser per format
+      and they name no contest. They read the engine's tables -- the domestic
+      QTH table, CTY.DAT -- so a contest class cannot link them; the engine
+      hands an object that implements this class in, through the session, and
+      a contest CALLS THE METHOD FOR ITS FORMAT BY NAME
+      (TContestBase.ParseReceivedExchangeFormat). No enum selects one.
+
+      UNTIL S9d this was one function taking the exchange KIND --
+      LOGSTUFF.ParseExchangeShape, a `case` over ExchangeType -- and the base
+      class handed it the session's kind. Each method here is one of that
+      machine's reached arms, unchanged and named for the kind it answered
+      ('Parse' + the member, less 'Exchange'), so a reader can find the old
+      arm. Five arms no registered contest reached went with the machine.
+
+      AN ABSTRACT CLASS, NOT A RECORD OF FUNCTION POINTERS: fifty-one
+      parsers, and a test double that forgets one fails by name
+      (EAbstractError) instead of calling nil. LOGSTUFF's
+      TEngineExchangeParsers is the one implementation the program uses; the
+      unit tests hand stubs (uTestExchangeParserStub). Each method parses
+      aText into aExch and answers whether the exchange is acceptable. *)
+   TExchangeParsers = class
+   public
+      function ParseAgeAndQSONumber(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseClassDomesticOrDXQTH(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseGrid(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseGrid2(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseKidsDay(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseNZFieldDay(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseNameAndDomesticOrDXQTH(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseNameAndPossibleGridSquare(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseNameQTHAndPossibleTenTenNumber(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseQSONumberAndCoordinatesSum(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseQSONumberAndGeoCoordinates(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseQSONumberAndGridSquare(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseQSONumberAndName(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseQSONumberAndPossibleDomesticQTH(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseQSONumberAndPreviousQSONumber(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseQSONumberAndZone(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseQSONumberDomesticOrDXQTH(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseQSONumberDomesticQTH(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseQSONumberNameChapterAndQTH(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseQSONumberNameDomesticOrDXQTH(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseQSONumberPrecedenceCheckDomesticQTH(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTALLJAPrefectureAndPrecedence(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTAge(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTAgeAndPossibleSK(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTAndContinent(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTAndGrid(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTAndGridSquareOrRDA(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTAndOrGrid(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTAndPOTAPark(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTAndPostalCode(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTAndQSONumberOrDomesticQTH(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTAndQSONumberOrFrenchDepartment(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTDomesticOrDXQTH(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTDomesticQTH(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTDomesticQTHOrQSONumber(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTLongJAPrefecture(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTNameAndQTH(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTPossibleDomesticQTHAndPower(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTPower(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTPrefecture(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTQSONumber(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTQSONumberAndDomesticQTH(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTQSONumberAndGridSquare(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTQSONumberAndPossibleDomesticQTH(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTQSONumberAndRandomCharacters(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTQTH(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTQTHNameAndFistsNumberOrPower(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTZone(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTZoneAndPossibleDomesticQTH(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTZoneOrDomesticQTH(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      function ParseRSTZoneOrSociety(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+   end;
 
    (* CTY.DAT's zone for a callsign, in the session's zone list. *)
    TCallZoneLookup = function(const aCall: string): Byte;
@@ -551,28 +619,6 @@ type
    (* What live entry does to give up on the QSO being typed: the call and
       exchange windows are cleared and the cursor goes back to the call. *)
    TEntryAbandon = procedure;
-
-   (* WHAT A CONTEST IS HANDED WITH A TYPED EXCHANGE -- M5b, 2026-10-02.
-
-      The counterpart of TADIFImportSession: the contest reads no global, so
-      the engine passes in what it knows about the session, and the two
-      engine services a rule needs. A RECORD BECAUSE IT IS AN INTERFACE
-      PARAMETER, the exemption CLAUDE.md grants.
-
-      Exchange IS THE SESSION'S EXCHANGE, NOT THE CONTEST'S ExchangeKind
-      TRAIT, for the reason TCabrilloQSOContext records: set-up chooses
-      it per station (DescribeSession), and an operator's EXCHANGE RECEIVED line moves it.
-
-      CallWindowHasCall says the exchange is being entered against a call in
-      the call window -- live entry. SAC's rule acts only then. *)
-   TReceivedExchangeSession = record
-      Exchange: ExchangeType;
-      ParseShape: TExchangeShapeParser;
-      ZoneOfCall: TCallZoneLookup;
-      IsDomesticQTH: TDomesticQTHTest;
-      CallWindowHasCall: boolean;
-      AbandonEntry: TEntryAbandon;
-   end;
 
    (* A TEXT ANSWER ABOUT A CALL THAT ONLY THE ENGINE HOLDS -- M8. '' when the
       engine has none. *)
@@ -627,6 +673,39 @@ const
    ITU_ZONE_MULTIPLIERS = 75;
 
 type
+   (* Declared below; the session record names it. *)
+   TContestBase = class;
+
+   (* WHAT A CONTEST IS HANDED WITH A TYPED EXCHANGE -- M5b, 2026-10-02.
+
+      The counterpart of TADIFImportSession: the contest reads no global, so
+      the engine passes in what it knows about the session, its parsers and
+      the engine services a rule needs. A RECORD BECAUSE IT IS AN INTERFACE
+      PARAMETER, the exemption CLAUDE.md grants.
+
+      Parsers IS THE ENGINE'S PARSER FOR EACH FORMAT (M11 S9d) -- see
+      TExchangeParsers. It replaced the session's exchange KIND and the one
+      function that took it: a contest no longer says which kind it runs, it
+      calls the parser for its format.
+
+      ExchangeFormatOf SAYS WHOSE FORMAT TO PARSE IN, and nil -- what the
+      engine hands -- means the contest being asked. It exists for one
+      contest: IN7QPNE hands its judging party the session with itself
+      named here, so the party's rules judge an exchange parsed in IN7QPNE's
+      format. Until S9d that came for free: the party parsed the session's
+      KIND, which was IN7QPNE's.
+
+      CallWindowHasCall says the exchange is being entered against a call in
+      the call window -- live entry. SAC's rule acts only then. *)
+   TReceivedExchangeSession = record
+      Parsers: TExchangeParsers;
+      ExchangeFormatOf: TContestBase;
+      ZoneOfCall: TCallZoneLookup;
+      IsDomesticQTH: TDomesticQTHTest;
+      CallWindowHasCall: boolean;
+      AbandonEntry: TEntryAbandon;
+   end;
+
    (* A LIST OF IDENTIFIERS A CONTEST ANSWERS TO -- see FormerADIFContestIds. *)
    TContestIdList = array of string;
 
@@ -1206,6 +1285,28 @@ type
          DUMMYCONTEST (UnknownExchange had no arm). Every registered contest
          states its list, on its class or its family base. *)
       function GetReceivedExchangeFields: ExchangeInformationRecord; virtual;
+
+      (* THE FORMAT A TYPED EXCHANGE IS PARSED IN -- M11 S9d, 2026-10-15
+         (docs/CONTEST_FACTORY_M11_PLAN.md S9d). The base ParseReceivedExchange
+         asks this for the plain parse; a rule a contest adds goes on
+         ParseReceivedExchange, around it.
+
+         It was LOGSTUFF.ParseExchangeShape, a `case` over the session's
+         exchange shape that the base handed the session's kind. Each contest
+         now calls the engine's parser for its format by name, on aParsers
+         (NY4I's ruling on Q92: no enum selects one). A contest whose format
+         depends on the station tests the station here as DescribeSession
+         does, through the same predicate as its field list (Station is
+         ActiveContest's); one whose format depends on the TEXT chooses by the
+         text (Arktika Spring, the PCC).
+
+         THE BASE PARSES NOTHING AND ANSWERS False -- what the machine gave
+         the classless DUMMYCONTEST (UnknownExchange had no arm). Every
+         registered contest states its format, on its class or its family
+         base; uTestExchangeParse fails for one that does not. *)
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; virtual;
 
       (* THE ADIF STX_STRING -- OUR SIDE OF THE EXCHANGE -- M11 S9b,
          2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S9b). The getter behind
@@ -2105,6 +2206,41 @@ type
          RSTZoneAndPossibleDomesticQTH shape: CQ WW RTTY. *)
       function SendsStateAfterZone: boolean; virtual;
 
+      (* WHAT THE EXCHANGE CARRIES -- M11 S9d, 2026-10-15
+         (docs/CONTEST_FACTORY_M11_PLAN.md S9d). The S7 treatment for the
+         last readers of the session's shape that decided a rule: each was a
+         set of exchange kinds, now the contest's own answer, stated per
+         class for exactly the contests whose session ran a kind in the set,
+         asking Station where the entrant decides it. Pinned for every
+         contest at every roster station by uTestExchangeRules, with a
+         cross-check against the old sets until S9e deletes the kind.
+
+         THE BASE ANSWERS FALSE TO EACH.
+
+         DOES THE EXCHANGE CARRY A DOMESTIC QTH? uContestReadiness's
+         DOMESTIC_QTH_EXCHANGES: the readiness check reports an empty MY
+         STATE for it, and LOGSTUFF's improper-domestic-QTH refusal names MY
+         COUNTRY as the setting that chose the exchange (ExchangeModeAttribution).
+         A ZONE? ZONE_EXCHANGES: the readiness check reports an empty MY
+         ZONE. A GRID SQUARE? GRID_EXCHANGES: an empty MY GRID. ALL THREE
+         ARE TRANSCRIBED, NOT JUDGED (plan F28): they are sets of RECEIVED
+         kinds standing for what the station SENDS, and the grid one is the
+         third grid set in the tree, which disagrees with the other two
+         (ReceivesGridSquareExchange, uGridShape.GRID_CARRYING_EXCHANGES). *)
+      function ExchangeCarriesDomesticQTH: boolean; virtual;
+      function ExchangeCarriesZone: boolean; virtual;
+      function ExchangeCarriesGridSquare: boolean; virtual;
+
+      (* DOES THE PER-QSO EXCHANGE STRING LEAD WITH THE SERIAL? --
+         MainUnit.PerQSOExchString, which writes each QSO of a multi-county or
+         multi-park entry its own SRX_STRING (Issue #889), leads with the
+         received serial where the sponsor's exchange does (the California,
+         Pennsylvania and Virginia parties, as its comment says) and with
+         the RST everywhere else. It asked for the QSONumberDomesticQTH and
+         QSONumberDomesticOrDXQTH shapes (M11 S9d), which the Ural Cup and the
+         Ukraine Championship run too. *)
+      function PerQSOExchangeLeadsWithSerial: boolean; virtual;
+
       (* IS THIS CONTEST RUN IN THIS MODE? -- an IDENTITY question, asked of
          an ADIF record, and of nothing else (M7b batch 2, 2026-10-02).
 
@@ -2182,26 +2318,25 @@ type
          accepts and False refuses; a refusal that names a reason puts it in
          aErrorMessage, which the engine shows exactly as it shows an
          improper county or a bad ARRL section. An empty message leaves
-         whatever the shape parser said.
+         whatever the format's parser said.
 
-         THE BASE IS TODAY'S SHARED PARSE FOR THE SESSION'S SHAPE:
-         aSession.ParseShape(aSession.Exchange, ...). It names no contest. A
-         contest whose rule differs overrides, and calls inherited, or
-         aSession.ParseShape with another shape, for what it does not decide
-         itself -- RAC takes a VE0 station's serial, PCC chooses between a
-         serial and a QTH, a state party refuses an out-of-state station
-         working another out-of-state one (NY4I, design 7.10).
+         THE BASE IS THE PLAIN PARSE IN THE CONTEST'S FORMAT --
+         ParseReceivedExchangeFormat, of the contest the session names in
+         ExchangeFormatOf, else of this one (M11 S9d; it was
+         aSession.ParseShape(aSession.Exchange, ...), the session's kind
+         handed to one shared machine). It names no contest. A contest whose
+         RULE differs overrides this, and calls inherited, or one of
+         aSession.Parsers by name, for what it does not decide itself -- RAC
+         takes a VE0 station's serial, LABRE a PY station's state, a state
+         party refuses an out-of-state station working another out-of-state
+         one (NY4I, design 7.10). A contest whose FORMAT differs overrides
+         ParseReceivedExchangeFormat instead.
 
-         AN OVERRIDE APPLIES ITS RULE UNDER THE SHAPE THAT CARRIED IT. Every
+         AN OVERRIDE APPLIES ITS RULE UNDER THE FORMAT THAT CARRIED IT. Every
          rule that moved here was a branch inside one shape's parser, reached
-         only when the session ran that shape. Until M10 S2 an operator's
-         EXCHANGE RECEIVED line could run a contest under another shape, so
-         each override tested aSession.Exchange and otherwise deferred. That
-         setting is retired, a session's shape is now its class's own (the
-         trait, or what its DescribeSession states), and no class with a
-         parse rule states one, so every such test was always true: they
-         were deleted at M11 S2 (plan F11). A rule a class writes for a shape
-         it does not always run must still test aSession.Exchange. *)
+         only when the session ran that shape; the shape is the class's own
+         format now, so no rule tests it (M11 S2 deleted the tests, plan F11;
+         S9d the session's kind). *)
       function ParseReceivedExchange(const aText: string;
                                      const aSession: TReceivedExchangeSession;
                                      var aExch: ContestExchange;
@@ -2890,6 +3025,15 @@ function ContestStripsRoverCountyFromCall(aContest: TContestBase): boolean;
 function ContestLogsSeveralQTHsFromOneEntry(aContest: TContestBase): boolean;
 function ContestAcceptsBlankExchange(aContest: TContestBase): boolean;
 
+(* WHAT aContest's EXCHANGE CARRIES, AND HOW ITS PER-QSO STRING LEADS -- see
+   TContestBase.ExchangeCarriesDomesticQTH and its neighbours (M11 S9d). nil
+   answers False to each: the classless DUMMYCONTEST ran UnknownExchange,
+   which none of the old sets held. *)
+function ContestExchangeCarriesDomesticQTH(aContest: TContestBase): boolean;
+function ContestExchangeCarriesZone(aContest: TContestBase): boolean;
+function ContestExchangeCarriesGridSquare(aContest: TContestBase): boolean;
+function ContestPerQSOExchangeLeadsWithSerial(aContest: TContestBase): boolean;
+
 (* THE FIELDS aContest's RECEIVED EXCHANGE CARRIES -- see
    TContestBase.ReceivedExchangeFields (M11 S9a). nil marks nothing: the
    classless DUMMYCONTEST ran UnknownExchange, which had no arm. Start-up
@@ -3477,6 +3621,54 @@ begin
       end;
 end;
 
+function ContestExchangeCarriesDomesticQTH(aContest: TContestBase): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.ExchangeCarriesDomesticQTH;
+      end;
+end;
+
+function ContestExchangeCarriesZone(aContest: TContestBase): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.ExchangeCarriesZone;
+      end;
+end;
+
+function ContestExchangeCarriesGridSquare(aContest: TContestBase): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.ExchangeCarriesGridSquare;
+      end;
+end;
+
+function ContestPerQSOExchangeLeadsWithSerial(aContest: TContestBase): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.PerQSOExchangeLeadsWithSerial;
+      end;
+end;
+
 function ContestReceivedExchangeFields(aContest: TContestBase): ExchangeInformationRecord;
 begin
    if aContest = nil then
@@ -3920,6 +4112,30 @@ begin
    Result := False;
 end;
 
+function TContestBase.ExchangeCarriesDomesticQTH: boolean;
+begin
+   (* None -- see the declaration. *)
+   Result := False;
+end;
+
+function TContestBase.ExchangeCarriesZone: boolean;
+begin
+   (* None -- see the declaration. *)
+   Result := False;
+end;
+
+function TContestBase.ExchangeCarriesGridSquare: boolean;
+begin
+   (* None -- see the declaration. *)
+   Result := False;
+end;
+
+function TContestBase.PerQSOExchangeLeadsWithSerial: boolean;
+begin
+   (* The RST leads -- see the declaration. *)
+   Result := False;
+end;
+
 function TContestBase.SendsStateAfterZone: boolean;
 begin
    (* The zone alone -- see the declaration. *)
@@ -4096,10 +4312,26 @@ function TContestBase.ParseReceivedExchange(const aText: string;
                                             const aSession: TReceivedExchangeSession;
                                             var aExch: ContestExchange;
                                             out aErrorMessage: string): boolean;
+var
+   formatOwner: TContestBase;
 begin
-   (* The shared parse for the session's shape -- see the declaration. *)
+   (* The plain parse in the contest's format -- see the declaration. *)
    aErrorMessage := '';
-   Result := aSession.ParseShape(aSession.Exchange, aText, aExch);
+   formatOwner := aSession.ExchangeFormatOf;
+   if formatOwner = nil then
+      begin
+      formatOwner := Self;
+      end;
+   Result := formatOwner.ParseReceivedExchangeFormat(aText, aSession.Parsers, aExch);
+end;
+
+function TContestBase.ParseReceivedExchangeFormat(const aText: string;
+                                                  aParsers: TExchangeParsers;
+                                                  var aExch: ContestExchange): boolean;
+begin
+   (* No format: what the machine gave UnknownExchange -- see the
+      declaration. *)
+   Result := False;
 end;
 
 function TContestBase.MayBeACallsign(const aWord: string): boolean;

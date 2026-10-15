@@ -87,6 +87,9 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -186,6 +189,13 @@ end;
 function TContestRSGBRoPoCoSSB.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTQTH;
+end;
+
+function TContestRSGBRoPoCoSSB.ParseReceivedExchangeFormat(const aText: string;
+                                                           aParsers: TExchangeParsers;
+                                                           var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTAndPostalCode(aText, aExch);
 end;
 
 function TContestRSGBRoPoCoSSB.GetADIFSentExchange(const aMy: TMyStationExchange;

@@ -84,6 +84,9 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -180,6 +183,13 @@ end;
 function TContestCountyHunter.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTQTH;
+end;
+
+function TContestCountyHunter.ParseReceivedExchangeFormat(const aText: string;
+                                                          aParsers: TExchangeParsers;
+                                                          var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTQTH(aText, aExch);
 end;
 
 function TContestCountyHunter.GetADIFSentExchange(const aMy: TMyStationExchange;

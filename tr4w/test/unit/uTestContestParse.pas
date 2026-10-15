@@ -22,14 +22,16 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 (* EACH CONTEST PARSES AND VALIDATES ITS OWN RECEIVED EXCHANGE -- milestone
   M5b, 2026-10-02 (docs/CONTEST_OWNERSHIP_DESIGN.md 3.1, 7.10).
 
-  The engine hands a contest a TReceivedExchangeSession -- the session's
-  exchange shape, its per-shape parser and two engine services -- as DATA.
-  The tests hand it STUBS, so what is pinned is the contest's own decision:
-  which shape it asks for, what it does before and after, and what a refusal
-  says. The engine's per-shape parsers are the contest matrix's to pin (its
-  parse section, frozen before anything moved).
+  The engine hands a contest a TReceivedExchangeSession -- the engine's
+  parser for each format (M11 S9d; it was the session's exchange shape and
+  one parser taking it) and the engine services -- as DATA. The tests hand
+  it STUBS (uTestExchangeParserStub), so what is pinned is the contest's own
+  decision: which parser it asks for, by name, what it does before and
+  after, and what a refusal says. The engine's parsers are the contest
+  matrix's to pin (its parse section, frozen before anything moved);
+  uTestExchangeParse pins every contest's choice at every roster station.
 
-    * THE BASE parses the session's own shape and adds nothing.
+    * THE BASE parses in the contest's own format and adds nothing.
     * EVERY RULE THAT MOVED -- RAC, the PCC, Arktika Spring, LABRE, IARU,
       UK/EI, SAC, the Russian DX initial exchange -- applies under the shape
       it was written for. Each tested that shape and deferred under another
@@ -57,7 +59,7 @@ type
    public
       procedure RunAllTests; override;
    private
-      procedure Test_BaseParsesTheSessionsShape;
+      procedure Test_BaseParsesTheContestsFormat;
       procedure Test_RACVE0SendsASerial;
       procedure Test_PCCLettersAreAQTH;
       procedure Test_ArktikaDigitsAreASerial;
@@ -85,7 +87,8 @@ uses
    uContestStateQSOPartyBase, uExchangeTokens, uCallSignRoutines,
    uDomFileKeys, uAppStrings, uTR4WStrings,
    (* ShippedDomDir -- the test binary's view of target\dom. *)
-   uTestContestObjects;
+   uTestContestObjects,
+   uTestExchangeParserStub;
 
 (* ---------------------------------------------------------------------------
    THE STUBBED ENGINE -- what each service was asked, and what it answers
@@ -93,7 +96,7 @@ uses
 
 var
    GShapeCalls: integer;
-   GShapeAsked: ExchangeType;
+   GShapeAsked: string;
    GShapeText: string;
    GShapeResult: boolean;
    GShapeSetsQTH: string;
@@ -102,11 +105,12 @@ var
    GAbandoned: integer;
    GDomesticKeys: string;
 
-function StubParseShape(aShape: ExchangeType; const aText: string;
+(* The stubbed parsers' behaviour: aHelper is the parser asked for. *)
+function StubParseShape(const aHelper: string; const aText: string;
                         var aExch: ContestExchange): boolean;
 begin
    inc(GShapeCalls);
-   GShapeAsked := aShape;
+   GShapeAsked := aHelper;
    GShapeText := aText;
    if GShapeSetsQTH <> '' then
       begin
@@ -139,7 +143,7 @@ end;
 procedure ResetStub;
 begin
    GShapeCalls := 0;
-   GShapeAsked := NoExchangeReceived;
+   GShapeAsked := '';
    GShapeText := '';
    GShapeResult := True;
    GShapeSetsQTH := '';
@@ -149,10 +153,10 @@ begin
    GDomesticKeys := '';
 end;
 
-function Session(aShape: ExchangeType; aLive: boolean): TReceivedExchangeSession;
+function Session(aLive: boolean): TReceivedExchangeSession;
 begin
-   Result.Exchange := aShape;
-   Result.ParseShape := @StubParseShape;
+   Result.Parsers := StubExchangeParsers(@StubParseShape);
+   Result.ExchangeFormatOf := nil;
    Result.ZoneOfCall := @StubZoneOfCall;
    Result.IsDomesticQTH := @StubIsDomesticQTH;
    Result.CallWindowHasCall := aLive;
@@ -179,9 +183,9 @@ begin
    Result.SetStation(station);
 end;
 
-(* One parse through aContest's class: the result, with the shape asked and
+(* One parse through aContest's class: the result, with the parser asked and
    the message given for the caller to check. *)
-function Parse(aContest: ContestType; aShape: ExchangeType; aLive: boolean;
+function Parse(aContest: ContestType; aLive: boolean;
                const aText: string; var aExch: ContestExchange;
                out aMessage: string): boolean;
 var
@@ -189,39 +193,34 @@ var
 begin
    contestObject := Make(aContest, False);
    try
-      Result := contestObject.ParseReceivedExchange(aText, Session(aShape, aLive),
+      Result := contestObject.ParseReceivedExchange(aText, Session(aLive),
                                                     aExch, aMessage);
    finally
       contestObject.Free;
    end;
 end;
 
-function ShapeName(aShape: ExchangeType): string;
-begin
-   Result := IntToStr(Ord(aShape));
-end;
-
 (* ---------------------------------------------------------------------------
    THE BASE
    --------------------------------------------------------------------------- *)
 
-procedure TContestParseTests.Test_BaseParsesTheSessionsShape;
+procedure TContestParseTests.Test_BaseParsesTheContestsFormat;
 var
    exch: ContestExchange;
    msg: string;
    ok: boolean;
 begin
-   BeginTest('Test_BaseParsesTheSessionsShape');
+   BeginTest('Test_BaseParsesTheContestsFormat');
    ResetStub;
    GShapeResult := False;
    exch := NewExch('W1AW', 'K');
    (* WRTC's class (M7b batch 2) states no parse rule: it inherits the
       base's, which is what this pins. *)
    ok := ContestIdentity(WRTC).ParseReceivedExchange('599 ARRL',
-            Session(RSTZoneOrSocietyExchange, True), exch, msg);
+            Session(True), exch, msg);
    CheckFalse(ok, 'the base returns the shape''s answer');
    CheckEquals(1, GShapeCalls, 'the base parses once');
-   CheckEquals(Ord(RSTZoneOrSocietyExchange), Ord(GShapeAsked), 'the session''s own shape');
+   CheckEquals('ParseRSTZoneOrSociety', GShapeAsked, 'the contest''s own format');
    CheckEquals('599 ARRL', GShapeText, 'the text as typed');
    CheckEquals('', msg, 'the base names no reason of its own');
    CheckEquals(Ord(DUMMYZONE), Ord(exch.Zone), 'the base fills no zone -- that is IARU''s rule');
@@ -242,15 +241,15 @@ begin
       begin
       ResetStub;
       exch := NewExch('VE0ABC', 'VE');
-      Parse(c, RSTAndQSONumberOrDomesticQTHExchange, True, '599 123', exch, msg);
-      CheckEquals(Ord(RSTQSONumberExchange), Ord(GShapeAsked),
+      Parse(c, True, '599 123', exch, msg);
+      CheckEquals('ParseRSTQSONumber', GShapeAsked,
                   string(ContestTypeSA[c]) + ': a VE0 station''s serial');
 
       ResetStub;
       exch := NewExch('VE3ABC', 'VE');
-      Parse(c, RSTAndQSONumberOrDomesticQTHExchange, True, '59 ON', exch, msg);
-      CheckEquals(Ord(RSTAndQSONumberOrDomesticQTHExchange), Ord(GShapeAsked),
-                  string(ContestTypeSA[c]) + ': anybody else, the shape''s own rule');
+      Parse(c, True, '59 ON', exch, msg);
+      CheckEquals('ParseRSTAndQSONumberOrDomesticQTH', GShapeAsked,
+                  string(ContestTypeSA[c]) + ': anybody else, the contest''s own format');
       end;
 end;
 
@@ -262,12 +261,12 @@ begin
    BeginTest('Test_PCCLettersAreAQTH');
    ResetStub;
    exch := NewExch('PA3ABC', 'PA');
-   Parse(PCC, RSTAndQSONumberOrDomesticQTHExchange, True, '123', exch, msg);
-   CheckEquals(Ord(RSTQSONumberExchange), Ord(GShapeAsked), 'digits: a serial');
+   Parse(PCC, True, '123', exch, msg);
+   CheckEquals('ParseRSTQSONumber', GShapeAsked, 'digits: a serial');
 
    ResetStub;
-   Parse(PCC, RSTAndQSONumberOrDomesticQTHExchange, True, '599 GR', exch, msg);
-   CheckEquals(Ord(RSTDomesticQTHExchange), Ord(GShapeAsked), 'letters: a QTH');
+   Parse(PCC, True, '599 GR', exch, msg);
+   CheckEquals('ParseRSTDomesticQTH', GShapeAsked, 'letters: a QTH');
 
 
    CheckFalse(ContestIdentity(PCC).MayBeACallsign('N/X'), 'PCC: N/X is not a call');
@@ -284,12 +283,12 @@ begin
    BeginTest('Test_ArktikaDigitsAreASerial');
    ResetStub;
    exch := NewExch('UA9ABC', 'UA9');
-   Parse(ARKTIKA_SPRING, RSTAndQSONumberOrDomesticQTHExchange, True, '599 123', exch, msg);
-   CheckEquals(Ord(RSTQSONumberExchange), Ord(GShapeAsked), 'digits and blanks: a serial');
+   Parse(ARKTIKA_SPRING, True, '599 123', exch, msg);
+   CheckEquals('ParseRSTQSONumber', GShapeAsked, 'digits and blanks: a serial');
 
    ResetStub;
-   Parse(ARKTIKA_SPRING, RSTAndQSONumberOrDomesticQTHExchange, True, '599 KO85', exch, msg);
-   CheckEquals(Ord(RSTDomesticQTHExchange), Ord(GShapeAsked), 'anything else: a QTH');
+   Parse(ARKTIKA_SPRING, True, '599 KO85', exch, msg);
+   CheckEquals('ParseRSTDomesticQTH', GShapeAsked, 'anything else: a QTH');
 end;
 
 procedure TContestParseTests.Test_LABREPYSendsAState;
@@ -300,13 +299,13 @@ begin
    BeginTest('Test_LABREPYSendsAState');
    ResetStub;
    exch := NewExch('PY2ABC', 'PY');
-   Parse(LABRE, RSTDomesticOrDXQTHExchange, True, '599 SP', exch, msg);
-   CheckEquals(Ord(RSTDomesticQTHExchange), Ord(GShapeAsked), 'a PY station: a domestic QTH');
+   Parse(LABRE, True, '599 SP', exch, msg);
+   CheckEquals('ParseRSTDomesticQTH', GShapeAsked, 'a PY station: a domestic QTH');
 
    ResetStub;
    exch := NewExch('DL1ABC', 'DL');
-   Parse(LABRE, RSTDomesticOrDXQTHExchange, True, '599 DL', exch, msg);
-   CheckEquals(Ord(RSTDomesticOrDXQTHExchange), Ord(GShapeAsked), 'anybody else: the shape''s');
+   Parse(LABRE, True, '599 DL', exch, msg);
+   CheckEquals('ParseRSTDomesticOrDXQTH', GShapeAsked, 'anybody else: the contest''s format');
 end;
 
 (* THE UA4W CHAMPIONSHIP'S QTH IS ITS DOMESTIC QTH -- LOGSTUFF's rule inside
@@ -324,9 +323,9 @@ begin
    ResetStub;
    GShapeSetsQTH := 'UD45';
    exch := NewExch('UA4WAA', 'UA');
-   ok := Parse(UA4WCHAMPIONSHIP, RSTAndGridSquareOrRDAExchange, True, '599 UD45', exch, msg);
+   ok := Parse(UA4WCHAMPIONSHIP, True, '599 UD45', exch, msg);
    CheckTrue(ok, 'the shape''s answer');
-   CheckEquals(Ord(RSTAndGridSquareOrRDAExchange), Ord(GShapeAsked), 'the session''s shape is parsed');
+   CheckEquals('ParseRSTAndGridSquareOrRDA', GShapeAsked, 'the contest''s format is parsed');
    CheckEquals('UD45', string(exch.DomesticQTH), 'the QTH is the domestic QTH');
    CheckEquals('', msg, 'no refusal');
 
@@ -334,7 +333,7 @@ begin
    GShapeSetsQTH := 'UD45';
    GShapeResult := False;
    exch := NewExch('UA4WAA', 'UA');
-   ok := Parse(UA4WCHAMPIONSHIP, RSTAndGridSquareOrRDAExchange, True, '599 UD45', exch, msg);
+   ok := Parse(UA4WCHAMPIONSHIP, True, '599 UD45', exch, msg);
    CheckFalse(ok, 'a failed parse stays failed');
    CheckEquals('', string(exch.DomesticQTH), 'a failed parse: no domestic QTH');
 end;
@@ -347,35 +346,35 @@ begin
    BeginTest('Test_IARUSocietyGetsItsZone');
    ResetStub;
    exch := NewExch('W1AW', 'K');
-   Parse(IARU, RSTZoneOrSocietyExchange, True, 'ARRL', exch, msg);
+   Parse(IARU, True, 'ARRL', exch, msg);
    CheckEquals(8, exch.Zone, 'a society''s one word: the zone from the call');
    CheckEquals('W1AW', GZoneAsked, 'asked of the worked call');
 
    ResetStub;
    GShapeResult := False;
    exch := NewExch('W1AW', 'K');
-   Parse(IARU, RSTZoneOrSocietyExchange, True, 'XYZ', exch, msg);
+   Parse(IARU, True, 'XYZ', exch, msg);
    CheckEquals(8, exch.Zone, 'whatever the parse answered, as it was');
 
    ResetStub;
    exch := NewExch('W1AW', 'K');
-   Parse(IARU, RSTZoneOrSocietyExchange, True, '599 ARRL', exch, msg);
+   Parse(IARU, True, '599 ARRL', exch, msg);
    CheckEquals(Ord(DUMMYZONE), Ord(exch.Zone), 'two words: no zone');
 
    ResetStub;
    exch := NewExch('W1AW', 'K');
-   Parse(IARU, RSTZoneOrSocietyExchange, True, '8', exch, msg);
+   Parse(IARU, True, '8', exch, msg);
    CheckEquals(Ord(DUMMYZONE), Ord(exch.Zone), 'a zone: the zone path, untouched');
 
    ResetStub;
    exch := NewExch('W1AW', 'K');
    exch.Zone := 7;
-   Parse(IARU, RSTZoneOrSocietyExchange, True, 'ARRL', exch, msg);
+   Parse(IARU, True, 'ARRL', exch, msg);
    CheckEquals(7, exch.Zone, 'a zone already set stands');
 
    ResetStub;
    exch := NewExch('W1AW', 'K');
-   ContestIdentity(WRTC).ParseReceivedExchange('ARRL', Session(RSTZoneOrSocietyExchange, True),
+   ContestIdentity(WRTC).ParseReceivedExchange('ARRL', Session(True),
                                                exch, msg);
    CheckEquals(Ord(DUMMYZONE), Ord(exch.Zone), 'WRTC runs the shape and not the rule');
 end;
@@ -389,19 +388,19 @@ begin
    BeginTest('Test_UKEIStationMustSendTwoWords');
    ResetStub;
    exch := NewExch('G3ABC', 'G');
-   ok := Parse(UKEI, RSTQSONumberAndPossibleDomesticQTHExchange, True, '123', exch, msg);
+   ok := Parse(UKEI, True, '123', exch, msg);
    CheckFalse(ok, 'a UK station sending one word is refused');
    CheckEquals(string(TC_INVALID), msg, 'with the message it always had');
    CheckEquals(0, GShapeCalls, 'before the shape is parsed');
 
    ResetStub;
-   ok := Parse(UKEI, RSTQSONumberAndPossibleDomesticQTHExchange, True, '599 123 LN', exch, msg);
+   ok := Parse(UKEI, True, '599 123 LN', exch, msg);
    CheckTrue(ok, 'two words or more: the shape decides');
    CheckEquals(1, GShapeCalls, 'parsed');
 
    ResetStub;
    exch := NewExch('DL1ABC', 'DL');
-   ok := Parse(UKEI, RSTQSONumberAndPossibleDomesticQTHExchange, True, '123', exch, msg);
+   ok := Parse(UKEI, True, '123', exch, msg);
    CheckTrue(ok, 'a station outside the UK and Ireland: the shape decides');
 end;
 
@@ -424,7 +423,7 @@ begin
          country := RUSSIAN_COUNTRIES[i];
          ResetStub;
          exch := NewExch('UA3ABC', country);
-         ok := Parse(c, RSTQSONumberExchange, True, '599 123', exch, msg);
+         ok := Parse(c, True, '599 123', exch, msg);
          CheckFalse(ok, string(ContestTypeSA[c]) + ' ' + country + ': refused');
          CheckEquals(1, GAbandoned, string(ContestTypeSA[c]) + ' ' + country + ': the entry is abandoned');
          CheckEquals(0, GShapeCalls, string(ContestTypeSA[c]) + ' ' + country + ': not parsed');
@@ -433,13 +432,13 @@ begin
 
       ResetStub;
       exch := NewExch('UA3ABC', 'UA');
-      ok := Parse(c, RSTQSONumberExchange, False, '599 123', exch, msg);
+      ok := Parse(c, False, '599 123', exch, msg);
       CheckTrue(ok, string(ContestTypeSA[c]) + ': not live entry -- parsed');
       CheckEquals(0, GAbandoned, string(ContestTypeSA[c]) + ': nothing abandoned');
 
       ResetStub;
       exch := NewExch('SM5ABC', 'SM');
-      ok := Parse(c, RSTQSONumberExchange, True, '599 123', exch, msg);
+      ok := Parse(c, True, '599 123', exch, msg);
       CheckTrue(ok, string(ContestTypeSA[c]) + ': a Scandinavian station is parsed');
       end;
 end;
@@ -459,19 +458,19 @@ begin
       ResetStub;
       GShapeResult := False;
       exch := NewExch('W1AW', 'K');
-      ok := Parse(c, QSONumberPrecedenceCheckDomesticQTHExchange, True, '123 99 CT', exch, msg);
+      ok := Parse(c, True, '123 99 CT', exch, msg);
       CheckFalse(ok, string(ContestTypeSA[c]) + ': refused');
       CheckEquals(SExchangeNoPrecedence, msg, string(ContestTypeSA[c]) + ': and says why');
 
       ResetStub;
       GShapeResult := False;
-      ok := Parse(c, QSONumberPrecedenceCheckDomesticQTHExchange, True, '123 A CT', exch, msg);
+      ok := Parse(c, True, '123 A CT', exch, msg);
       CheckFalse(ok, string(ContestTypeSA[c]) + ': refused for its missing check');
       CheckEquals('', msg, string(ContestTypeSA[c]) + ': a precedence was there -- not that reason');
 
       ResetStub;
       GShapeResult := True;
-      ok := Parse(c, QSONumberPrecedenceCheckDomesticQTHExchange, True, '123 A 99 CT', exch, msg);
+      ok := Parse(c, True, '123 A 99 CT', exch, msg);
       CheckTrue(ok, string(ContestTypeSA[c]) + ': a whole exchange is accepted');
       CheckEquals('', msg, string(ContestTypeSA[c]) + ': with nothing to say');
       end;
@@ -494,7 +493,7 @@ begin
       GDomesticKeys := 'ALAC,BAKE';
       GShapeSetsQTH := 'DL';
       exch := NewExch('DL1ABC', 'DL');
-      ok := contestObject.ParseReceivedExchange('599 DL', Session(RSTDomesticOrDXQTHExchange, True),
+      ok := contestObject.ParseReceivedExchange('599 DL', Session(True),
                                                 exch, msg);
       CheckFalse(ok, 'out of state, a DX station: refused');
       CheckEquals(Format(SExchangeOutOfStateWorksHostOnly, ['FL']), msg, 'with the reason');
@@ -503,7 +502,7 @@ begin
       GDomesticKeys := 'ALAC,BAKE';
       GShapeSetsQTH := 'ALAC';
       exch := NewExch('W4ABC', 'K');
-      ok := contestObject.ParseReceivedExchange('599 ALAC', Session(RSTDomesticOrDXQTHExchange, True),
+      ok := contestObject.ParseReceivedExchange('599 ALAC', Session(True),
                                                 exch, msg);
       CheckTrue(ok, 'out of state, a host county: accepted');
       CheckEquals('', msg, 'nothing to say');
@@ -515,14 +514,14 @@ begin
       exch := NewExch('DL1ABC', 'DL');
       exch.DomesticQTH := 'BAKE';
       GShapeSetsQTH := 'DL';
-      ok := contestObject.ParseReceivedExchange('599 DL', Session(RSTDomesticOrDXQTHExchange, True),
+      ok := contestObject.ParseReceivedExchange('599 DL', Session(True),
                                                 exch, msg);
       CheckFalse(ok, 'a domestic QTH left from an earlier attempt does not make DX a host county');
 
       ResetStub;
       GShapeResult := False;
       exch := NewExch('W4ABC', 'K');
-      ok := contestObject.ParseReceivedExchange('599 ZZZ', Session(RSTDomesticOrDXQTHExchange, True),
+      ok := contestObject.ParseReceivedExchange('599 ZZZ', Session(True),
                                                 exch, msg);
       CheckFalse(ok, 'a county the shape refused stays refused');
       CheckEquals('', msg, 'with the shape''s own message, not this one');
@@ -536,7 +535,7 @@ begin
       GDomesticKeys := 'ALAC,BAKE';
       GShapeSetsQTH := 'DL';
       exch := NewExch('DL1ABC', 'DL');
-      ok := contestObject.ParseReceivedExchange('599 DL', Session(RSTDomesticOrDXQTHExchange, True),
+      ok := contestObject.ParseReceivedExchange('599 DL', Session(True),
                                                 exch, msg);
       CheckTrue(ok, 'in state, a DX station: accepted -- in-state stations work everyone');
    finally
@@ -574,7 +573,7 @@ begin
          GShapeSetsQTH := 'DX';
          exch := NewExch('DL1ABC', 'DL');
          ok := contestObject.ParseReceivedExchange('599 DX',
-                  Session(contestObject.ExchangeKind, True), exch, msg);
+                  Session(True), exch, msg);
          CheckFalse(ok, string(ContestTypeSA[c]) + ': out of state, a DX station is refused');
          CheckTrue(msg <> '', string(ContestTypeSA[c]) + ': and the refusal says why');
       finally
@@ -814,7 +813,7 @@ end;
 
 procedure TContestParseTests.RunAllTests;
 begin
-   Test_BaseParsesTheSessionsShape;
+   Test_BaseParsesTheContestsFormat;
    Test_RACVE0SendsASerial;
    Test_PCCLettersAreAQTH;
    Test_ArktikaDigitsAreASerial;

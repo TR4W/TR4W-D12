@@ -78,6 +78,9 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -102,6 +105,10 @@ type
                                          var aFound: boolean): TDomesticQTHAnswer; override;
       (* see TContestBase.DomesticQTHReplacesDXMultiplier (M11 S6). *)
       function DomesticQTHReplacesDXMultiplier: boolean; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesGridSquare: boolean; override;
    end;
 
 implementation
@@ -180,6 +187,18 @@ end;
 function TContestGridLoc.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsNameQTH;
+end;
+
+function TContestGridLoc.ParseReceivedExchangeFormat(const aText: string;
+                                                     aParsers: TExchangeParsers;
+                                                     var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseNameAndPossibleGridSquare(aText, aExch);
+end;
+
+function TContestGridLoc.ExchangeCarriesGridSquare: boolean;
+begin
+   Result := True;
 end;
 
 function TContestGridLoc.GetADIFSentExchange(const aMy: TMyStationExchange;

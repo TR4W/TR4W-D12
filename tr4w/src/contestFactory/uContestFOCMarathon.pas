@@ -81,6 +81,9 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -230,6 +233,13 @@ end;
 function TContestFOCMarathon.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTPower;
+end;
+
+function TContestFOCMarathon.ParseReceivedExchangeFormat(const aText: string;
+                                                         aParsers: TExchangeParsers;
+                                                         var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTPower(aText, aExch);
 end;
 
 function TContestFOCMarathon.GetFlags: TContestFlags;

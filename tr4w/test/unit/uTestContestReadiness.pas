@@ -308,6 +308,13 @@ end;
 
 { ------------------------------------------------ the readiness rules ------ }
 
+(* WHAT THE EXCHANGE CARRIES -- a domestic QTH, a zone, a grid square -- is
+   the contest's answer since M11 S9d (TContestBase.ExchangeCarriesDomesticQTH
+   and its neighbours), so the rules take three booleans where they took the
+   session's exchange kind. Each call below hands in what a contest running
+   the kind it used to name answers; uTestExchangeParse pins every contest's
+   answers. *)
+
 procedure TContestReadinessTests.Test_Readiness_SilentWhenNoContest;
 var
    gaps: TStringList;
@@ -317,7 +324,7 @@ begin
    try
       (* aContestActive False is DUMMYCONTEST: nothing is set up, so there is
         nothing to be ready for. Everything else here is missing on purpose. *)
-      CollectContestSettingsGaps(False, RSTDomesticQTHExchange, True,
+      CollectContestSettingsGaps(False, True, False, False, True,
                                  '', '', '', '', '', '', gaps);
       CheckEquals(0, gaps.Count, 'no contest, nothing reported');
    finally
@@ -334,7 +341,7 @@ begin
    try
       (* NY4I's session: ARRL DX SSB on the DX arm -- RSTDomesticQTHExchange
         with the S48P14DC file -- and an empty MY COUNTRY. *)
-      CollectContestSettingsGaps(True, RSTDomesticQTHExchange, True,
+      CollectContestSettingsGaps(True, True, False, False, True,
                                  'NY4I', '', 'FL', '5', 'EL88',
                                  's48p14dc.dom', gaps);
       CheckTrue(gaps.Count > 0, 'an empty MY COUNTRY is reported');
@@ -354,7 +361,7 @@ begin
    try
       (* THE SAME CONTEST, CONFIGURED. It must not nag: this is the state
         every correctly set up station is in. *)
-      CollectContestSettingsGaps(True, RSTPowerExchange, False,
+      CollectContestSettingsGaps(True, False, False, False, False,
                                  'NY4I', 'K', 'FL', '5', 'EL88', '', gaps);
       CheckEquals(0, gaps.Count, 'nothing to report: ' + gaps.Text);
    finally
@@ -371,7 +378,7 @@ begin
    try
       (* A serial-number contest with no state, no zone and no grid. The
         rules are derived from the EXCHANGE, so none of them fires. *)
-      CollectContestSettingsGaps(True, RSTQSONUMBEREXCHANGE, False,
+      CollectContestSettingsGaps(True, False, False, False, False,
                                  'NY4I', 'K', '', '', '', '', gaps);
       CheckEquals(0, gaps.Count,
                   'a serial-number contest asks for none of it: ' + gaps.Text);
@@ -387,7 +394,7 @@ begin
    BeginTest('Test_Readiness_DomesticFileContestWithNoFile');
    gaps := TStringList.Create;
    try
-      CollectContestSettingsGaps(True, RSTQSONUMBEREXCHANGE, True,
+      CollectContestSettingsGaps(True, False, False, False, True,
                                  'NY4I', 'K', 'FL', '5', 'EL88', '', gaps);
       CheckEquals(1, gaps.Count, 'exactly the domestic-file gap');
       CheckTrue(Pos('.DOM', gaps.Text) > 0, 'and it says which file');
@@ -403,13 +410,13 @@ begin
    BeginTest('Test_Readiness_ZoneAndGrid');
    gaps := TStringList.Create;
    try
-      CollectContestSettingsGaps(True, RSTZoneExchange, False,
+      CollectContestSettingsGaps(True, False, True, False, False,
                                  'NY4I', 'K', '', '', '', '', gaps);
       CheckEquals(1, gaps.Count, 'a zone contest with no zone');
       CheckTrue(Pos('MY ZONE', gaps.Text) > 0, 'names MY ZONE');
 
       gaps.Clear;
-      CollectContestSettingsGaps(True, GridExchange, False,
+      CollectContestSettingsGaps(True, False, False, True, False,
                                  'NY4I', 'K', '', '', '', '', gaps);
       CheckEquals(1, gaps.Count, 'a grid contest with no grid');
       CheckTrue(Pos('MY GRID', gaps.Text) > 0, 'names MY GRID');
@@ -424,14 +431,14 @@ procedure TContestReadinessTests.Test_Attribution_NamesMyCountry;
 begin
    BeginTest('Test_Attribution_NamesMyCountry');
    CheckTrue(Pos('MY COUNTRY',
-                 ExchangeModeAttribution(RSTDomesticQTHExchange, '', False)) > 0,
+                 ExchangeModeAttribution(True, '', False)) > 0,
              'the long form names the setting');
    CheckTrue(Pos('MY COUNTRY',
-                 ExchangeModeAttribution(RSTDomesticQTHExchange, '', True)) > 0,
+                 ExchangeModeAttribution(True, '', True)) > 0,
              'so does the brief form shown on screen');
    (* The brief form is APPENDED to an error message, so it carries its own
      leading space -- see the note on ExchangeModeAttribution. *)
-   CheckEquals(' ', Copy(ExchangeModeAttribution(RSTDomesticQTHExchange, '',
+   CheckEquals(' ', Copy(ExchangeModeAttribution(True, '',
                                                  True), 1, 1),
                'brief form leads with a space');
 end;
@@ -441,9 +448,9 @@ begin
    BeginTest('Test_Attribution_EmptyForAnUnrelatedExchange');
    (* NOTHING TO SAY IS SAID AS NOTHING. A serial-number exchange was not put
      into its mode by a setting, so the rejection reads exactly as it did. *)
-   CheckEquals('', ExchangeModeAttribution(RSTQSONUMBEREXCHANGE, 'K', False),
+   CheckEquals('', ExchangeModeAttribution(False, 'K', False),
                'no attribution, long form');
-   CheckEquals('', ExchangeModeAttribution(RSTQSONUMBEREXCHANGE, 'K', True),
+   CheckEquals('', ExchangeModeAttribution(False, 'K', True),
                'no attribution, brief form');
 end;
 

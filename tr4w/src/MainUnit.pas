@@ -839,42 +839,46 @@ end;
 // the RST exchanges carry an RS(T).  Emitting the RST for a serial-number
 // contest would put the defaulted 599 into the log in place of the number
 // the station actually sent.
-function PerQSOExchString(const RXData: ContestExchange): string;
+//
+// Which leads is the contest's answer since M11 S9d
+// (TContestBase.PerQSOExchangeLeadsWithSerial); this was a `case` over the
+// session's exchange kind. The caller asks the contest once and hands it in.
+function PerQSOExchString(aLeadsWithSerial: boolean;
+                          const RXData: ContestExchange): string;
 begin
-  case ContestSession.Exchange of
-    QSONumberDomesticQTHExchange,
-    QSONumberDomesticOrDXQTHExchange:
-       begin
-       Result := IntToStr(RXData.NumberReceived) + ' ' + string(RXData.QTHString);
-       end;
+  if aLeadsWithSerial then
+     begin
+     Result := IntToStr(RXData.NumberReceived) + ' ' + string(RXData.QTHString);
+     end
   else
      begin
      Result := IntToStr(RXData.RSTReceived) + ' ' + string(RXData.QTHString);
      end;
-  end;
 end;
 
 procedure DrainPendingMultiQSORefs;
 var
   TempRX : ContestExchange;
+  leadsWithSerial: boolean;
 begin
-  if (not HasPendingParks)     and 
+  if (not HasPendingParks)     and
      (not HasPendingCounties) then
      begin
      Exit;
      end;
+  leadsWithSerial := ContestPerQSOExchangeLeadsWithSerial(ActiveContest(Contest));
   TempRX := ReceivedData;
   while HasPendingParks do
      begin
      TempRX.QTHString := DequeuePendingPark;
-     TempRX.ExchString := PerQSOExchString(TempRX);   // Issue #889
+     TempRX.ExchString := PerQSOExchString(leadsWithSerial, TempRX);   // Issue #889
      LogContact(TempRX, True);
      end;
   while HasPendingCounties do
      begin
      TempRX.QTHString := DequeuePendingCounty;
      FoundDomesticQTH(TempRX);  // refresh DomMultQTH/DomesticQTH
-     TempRX.ExchString := PerQSOExchString(TempRX);   // Issue #889
+     TempRX.ExchString := PerQSOExchString(leadsWithSerial, TempRX);   // Issue #889
      // QSO-party rule: a station that changes county is a new station and
      // is NOT a dupe of an earlier QSO with the same call.  The follow-up
      // county records share callsign+band+mode with the first one, so the
@@ -1117,7 +1121,9 @@ begin
     // each ADIF SRX_STRING reflects only its own ref.
       if HasPendingParks or HasPendingCounties then
          begin
-         ReceivedData.ExchString := PerQSOExchString(ReceivedData);
+         ReceivedData.ExchString :=
+            PerQSOExchString(ContestPerQSOExchangeLeadsWithSerial(ActiveContest(Contest)),
+                             ReceivedData);
          end;
 
       LogContact(ReceivedData, True);

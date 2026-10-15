@@ -79,6 +79,9 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
       function GetFlags: TContestFlags; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
@@ -144,6 +147,10 @@ type
                                          var aFound: boolean): TDomesticQTHAnswer; override;
       (* see TContestBase.DomesticQTHReplacesDXMultiplier (M11 S6). *)
       function DomesticQTHReplacesDXMultiplier: boolean; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesZone: boolean; override;
    end;
 
 implementation
@@ -262,6 +269,18 @@ end;
 function TContestIARU.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTZoneQTH;
+end;
+
+function TContestIARU.ParseReceivedExchangeFormat(const aText: string;
+                                                  aParsers: TExchangeParsers;
+                                                  var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTZoneOrSociety(aText, aExch);
+end;
+
+function TContestIARU.ExchangeCarriesZone: boolean;
+begin
+   Result := True;
 end;
 
 function TContestIARU.GetFlags: TContestFlags;

@@ -80,6 +80,19 @@ type
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
+      (* LETTERS ARE A QTH, DIGITS A SERIAL -- M5b, 2026-10-02 (4.83.2).
+
+         It stood in LOGSTUFF.ProcessRSTAndQSONumberOrDomesticQTHExchange as a
+         test of ActiveQSOPointMethod = PCCQSOPointMethod, ahead of that
+         shape's own rule (a domestic station's QTH, anybody else's serial),
+         so an operator's QSO POINT METHOD line reached it in any contest.
+         M5b stated it as this class's ParseReceivedExchange; it is the
+         FORMAT, so since M11 S9d it is stated here, and the PCC never asks
+         the parser of the shape it was carried in. *)
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
       function GetIsUSQSOParty: boolean; override;
@@ -95,18 +108,6 @@ type
       function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                            const aQso: ContestExchange;
                                            const aCtx: TCabrilloQSOContext): string; override;
-
-      (* LETTERS ARE A QTH, DIGITS A SERIAL -- M5b, 2026-10-02 (4.83.2).
-
-         It stood in LOGSTUFF.ProcessRSTAndQSONumberOrDomesticQTHExchange as a
-         test of ActiveQSOPointMethod = PCCQSOPointMethod, ahead of that
-         shape's own rule (a domestic station's QTH, anybody else's serial),
-         so an operator's QSO POINT METHOD line reached it in any contest.
-         Stated here under that shape, the only one PCC runs. *)
-      function ParseReceivedExchange(const aText: string;
-                                     const aSession: TReceivedExchangeSession;
-                                     var aExch: ContestExchange;
-                                     out aErrorMessage: string): boolean; override;
 
       (* 'N/X' IS NOT A CALLSIGN IN THE PCC (4.83.7) -- a three-character
          word with '/' in the middle. It stood in LOGSTUFF.LooksLikeACallSign
@@ -138,6 +139,10 @@ type
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
                                    out aKey: PrefixMultiplierString): boolean; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesDomesticQTH: boolean; override;
    end;
 
 implementation
@@ -154,26 +159,6 @@ function TContestPCC.CountsAsMultiplier(const aQso: ContestExchange;
                                         aKind: RemainingMultiplierType): boolean;
 begin
    Result := not ((aKind = rmPrefix) and (aQso.QTH.CountryID = Station.MyCountry));
-end;
-
-function TContestPCC.ParseReceivedExchange(const aText: string;
-                                          const aSession: TReceivedExchangeSession;
-                                          var aExch: ContestExchange;
-                                          out aErrorMessage: string): boolean;
-begin
-   (* NO SHAPE TEST -- THIS CONTEST'S SESSION ALWAYS PARSES
-      RSTAndQSONumberOrDomesticQTHExchange, its trait, and no DescribeSession
-      states another, so the test that stood here was always true.
-      Deleted at M11 S2 (plan F11). *)
-   aErrorMessage := '';
-   if not StringIsAllNumbers(aText) then
-      begin
-      Result := aSession.ParseShape(RSTDomesticQTHExchange, aText, aExch);
-      end
-   else
-      begin
-      Result := aSession.ParseShape(RSTQSONumberExchange, aText, aExch);
-      end;
 end;
 
 function TContestPCC.MayBeACallsign(const aWord: string): boolean;
@@ -304,6 +289,27 @@ end;
 function TContestPCC.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTQSONumberQTH;
+end;
+
+function TContestPCC.ParseReceivedExchangeFormat(const aText: string;
+                                                 aParsers: TExchangeParsers;
+                                                 var aExch: ContestExchange): boolean;
+begin
+   (* LETTERS ARE A QTH, DIGITS ALONE A SERIAL -- the format itself, so it
+      is stated here; it stood in ParseReceivedExchange until M11 S9d. *)
+   if not StringIsAllNumbers(aText) then
+      begin
+      Result := aParsers.ParseRSTDomesticQTH(aText, aExch);
+      end
+   else
+      begin
+      Result := aParsers.ParseRSTQSONumber(aText, aExch);
+      end;
+end;
+
+function TContestPCC.ExchangeCarriesDomesticQTH: boolean;
+begin
+   Result := True;
 end;
 
 function TContestPCC.GetFlags: TContestFlags;

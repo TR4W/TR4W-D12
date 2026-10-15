@@ -480,10 +480,10 @@ uses
   uStrSearch,
   NetworkMessageUtils,
   uTR4WStrings,
-   uContestFileKind,   (* what kind of file did the operator pick as a contest *)
-  uContestSession;    (* ContestSession.Exchange -- the settings-gap check
-                         after set-up (M10 S9e); its domestic kind is the
-                         contest's answer since M11 S6 part 1b *)
+   uContestFileKind;   (* what kind of file did the operator pick as a contest *)
+  (* ~~uContestSession~~ was here for ContestSession.Exchange, which the
+     settings-gap check handed in; it asks the contest what its exchange
+     carries since M11 S9d, so nothing here reads the session. *)
 
 (* A resourcestring, NOT a TC_ constant in the language tables.
 
@@ -1103,6 +1103,7 @@ var
     below. `i` in this routine is a tLogLevels, so the walk needs its own. *)
   readinessGaps                         : TStringList;
   gapIndex                              : integer;
+  readinessContest                      : TContestBase;
   // What /IMPORT tells the operator, for the headless run's own trace.
   importReport                          : string;
    //  P                                   : Pchar; //n4af
@@ -2616,10 +2617,16 @@ begin
   readinessGaps := TStringList.Create;
   try
      (* Whether the contest reads a domestic file is its own answer (M11 S6
-       part 1b); this read the session's domestic kind. *)
+       part 1b); this read the session's domestic kind. What its exchange
+       carries -- a domestic QTH, a zone, a grid square -- is its own answer
+       too (M11 S9d); this handed in the session's exchange kind. One fetch
+       for all four. *)
+     readinessContest := ActiveContest(Contest);
      CollectContestSettingsGaps(Contest <> DUMMYCONTEST,
-                                ContestSession.Exchange,
-                                ContestUsesDomesticFile(ActiveContest(Contest)),
+                                ContestExchangeCarriesDomesticQTH(readinessContest),
+                                ContestExchangeCarriesZone(readinessContest),
+                                ContestExchangeCarriesGridSquare(readinessContest),
+                                ContestUsesDomesticFile(readinessContest),
                                 Settings.My.Call,
                                 Settings.My.Country,
                                 (* The state SENT -- design 7.11 (M9a). *)

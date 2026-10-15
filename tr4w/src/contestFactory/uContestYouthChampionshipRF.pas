@@ -101,6 +101,9 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -216,6 +219,13 @@ end;
 function TContestYouthChampionshipRF.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsQSONumberAge;
+end;
+
+function TContestYouthChampionshipRF.ParseReceivedExchangeFormat(const aText: string;
+                                                                 aParsers: TExchangeParsers;
+                                                                 var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseAgeAndQSONumber(aText, aExch);
 end;
 
 function TContestYouthChampionshipRF.GetADIFSentExchange(const aMy: TMyStationExchange;
