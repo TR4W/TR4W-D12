@@ -393,18 +393,6 @@ closes it; anything else reopens it.
   `MY_CNTY`, and the dormant-county bonus counts from it.
   **Answer:**
 
-- **Q76** In every single-state party, an in-state station's ADIF export
-  labels every QSO with the HOST state: a DE station working a PA station
-  exports `STATE:DE` beside `QTH:PA`. Should `STATE` be the host state only
-  for a host county, and the worked state otherwise? This changes the
-  ADIF of every in-state party log, so it would be its own step.
-  *Recommended: yes, separately.*
-  **Proposed answer:** SETTLED BY "don't reuse fields; use distinct station
-  fields" (2026-10-15, F26): `STATE` is the WORKED station's state, `MY_STATE`
-  ours. So a DE station working a PA station exports `STATE:PA` (and
-  `MY_STATE:DE`), never the host state beside `QTH:PA`.
-  **Answer:**
-
 - **Q89** British Columbia QSO Party ADIF export: TR4W writes NO `STATE`
   (and no `CNTY`) for a BCQP QSO, because the old table named BC's area
   `VE7` -- not two letters -- and the export only writes a two-letter
@@ -633,8 +621,22 @@ closes it; anything else reopens it.
 | Q65 | MY CALL is a station fact a contest may override; the contest's call lives in its database | not built (own stage) |
 | Q74 | Cabrillo LOCATION is seeded from the station at New Contest time and stored in the contest | not built |
 | Q68 | On reopen, the station-fact rows are applied before the contest row | not built |
+| Q76 | ADIF `STATE` is the worked station's state, `MY_STATE` ours -- fix the host-state export | not built |
 
 ### Answered since the table was last updated (full text)
+
+- **Q76** **A DEFECT IN TODAY'S EXPORT:** in every single-state party, an
+  in-state station's ADIF labels every QSO with the HOST state -- a DE
+  station working a PA station exports `STATE:DE` beside `QTH:PA`, which
+  puts our state in the worked station's field.
+  **Answer:** (NY4I, 2026-10-15) *"ADIF typically prefaces the local station
+  fields with MY_ (as in MY_STATE). So if you write STATE in ADIF, that is the
+  state of the worked station."* So `STATE` is always the WORKED station's
+  state and our own goes in `MY_STATE`: a DE station working PA exports
+  `STATE:PA` and `MY_STATE:DE`; working a Kent County station exports
+  `STATE:DE` because HE is in DE. The rule for every `MY_` field is the same
+  (`MY_CNTY`, `MY_GRIDSQUARE`, ...). Not built; it changes the ADIF of every
+  in-state party log.
 
 - **Q68** Reopening a log with no `.cfg` sets up the contest before the
   log's own rows are applied. The in-state test and the exchange messages
