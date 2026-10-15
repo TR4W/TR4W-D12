@@ -448,11 +448,6 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   rest.*
   **Answer:**
 
-- **Q13** Oregon QSO Party scores by the radio's current mode, not the QSO's, so a
-  rescore follows the radio. Fix when OQP gets its class? *Recommended: yes* (the
-  same kind of fix as the Croatian clock).
-  **Answer:**
-
 - **Q44** Three contests keep their band rule inside their scoring, not as the
   contest's bands: RTC (0 points and no multiplier off 40/20/15/10 m or off
   CW/SSB), and CQMM and WRTC (0 points off 80-10 m, but the multiplier still
@@ -629,8 +624,25 @@ closes it; anything else reopens it.
 | Q7 | Base + CW/SSB children only where the pair is one rule today | design rule; Q43 lists the pairs |
 | Q9 | An edited CQ memory survives re-selecting the contest | not built |
 | Q37 | A malformed grid is refused at entry (and import); the read made safe | not built |
+| Q13 | A logged QSO is scored from its record, never from live state (radio mode, operator) | rule; audit in progress |
 
 ### Answered since the table was last updated (full text)
+
+- **Q13** Oregon QSO Party scores by the radio's current mode, not the QSO's, so a
+  rescore follows the radio. Fix when OQP gets its class? *Recommended: yes* (the
+  same kind of fix as the Croatian clock).
+  **Answer:** (NY4I, 2026-10-15) *"a rescore should never follow the radio.
+  The whole idea of capturing the event source was the mode at the point in
+  time it was logged. The current radio mode is irrelevant (as is the current
+  operator for example). Once in the database as the event of logging a QSO is
+  captured, that is kept. A subsequent edit simply updates what the operator
+  edits."* A RULE FOR EVERY CONTEST, not only OQP: scoring, dupes, multipliers
+  and exports of a logged QSO read the QSO record and nothing live. **The OQP
+  arm itself is already gone:** it was the Ontario QSO Party's
+  `OQPQSOPointMethod`, which no D7 contest row named, reachable only through
+  an operator's `QSO POINT METHOD`, and deleted at M10 (Q11). An audit of
+  every path that handles an already-logged QSO for reads of live state (the
+  exchange parser reads `ActiveMode`) is in progress.
 
 - **Q7** Apply the NRAU pattern (a base + CW/SSB children) to every two-mode pair?
   So far only NRAU-Baltic has it; NA Sprint CW/RTTY and the other pairs are
