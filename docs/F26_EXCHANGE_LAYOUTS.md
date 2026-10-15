@@ -80,6 +80,36 @@ DXLog. Old to new:
   - **Its name is `FFMA`**, a placeholder (the ARRL Fred Fish Memorial Award, for
     working the 488 grids on 6 m, is the grid-tracking use the class serves). Used
     wherever the contest has to name itself, e.g. ADIF CONTEST_ID.
+- **[Q10] NZ Field Day (JW-FD) -- ANSWERED by the sponsor's page, supplied by NY4I
+  2026-10-15:** https://nzart.org.nz/activities/contests/jwfd/ (rules updated
+  21 April 2025) `[NZART jwfd]`.
+  - **When:** normally the last full weekend of February, Sat 1500-2400 and Sun
+    0600-1500 NZDT; 18 one-hour operating periods. (2026: 28 Feb / 1 Mar.)
+  - **Bands/modes:** 80 and 40 m, SSB and CW, 100 W PEP; one transmitter per band.
+  - **Exchange:** RS(T) + serial from 001 + NZART branch number; **a home station
+    sends `00`**. **A two-band station keeps a separate serial series per band**;
+    phone and CW on one band share it.
+  - **Points:** **phone 3, CW 5, the same inside and outside ZL since October 2023**;
+    overseas contacts must be in Oceania.
+  - **Multipliers:** each branch once per band and mode (so at most four per
+    branch); a QSO between two stations of the same branch scores points but no
+    multiplier, **which answers design Q18: our own branch does not count**. A field
+    station needs 50 phone or 20 CW QSOs on a band before its multipliers there count.
+  - **Dupes:** once **per operating period (hour)**, per band, per mode.
+  - **Logs:** paper sheets, one log per band, a summary sheet, **by post** to ZL2TW.
+    Cabrillo is not mentioned, so **JW-FD writes no Cabrillo file** (decision 1).
+    Its name stays `JW-FD`.
+  - **TR4W DEFECTS this exposes** (scoring work, not export -- to fix in their own
+    commits, each with a matrix re-freeze):
+    1. **Points:** TR4W gives **10 for any non-ZL QSO**; the rule is 5/3 everywhere,
+       and an overseas station outside Oceania does not count.
+    2. **Dupes:** TR4W dupes once per band and mode for the whole contest; the rule
+       allows a repeat every hour.
+    3. **Serial:** one series per BAND, which TR4W does not do.
+    4. **Field-station minimum** (50 phone / 20 CW per band before multipliers count)
+       is not implemented.
+    Multipliers per band and mode, and no multiplier for one's own branch, already
+    match.
 - **[Q17, Q18] XMAS -- ANSWERED (NY4I, 2026-10-15): RETIRE.** Its identity (SSA
   Jultest or not) and its name no longer need settling. Retired as the others are: off
   the New Contest list, but its enum member, spelling and class stay, so an existing
@@ -153,12 +183,6 @@ the part still owed. The `[Qn]` tag is the number the question has been cited by
   ruling? If it does, they get `MY JA PREFECTURE` and `MY JA CITY CODE`. (Same
   question for UA4W's RDA, below.)
 
-**NZ Field Day (JW-FD)**
-
-- **[Q10] Rules:** (a) RS(T) + serial + branch, a home station sending `00`?
-  (b) 5 points ZL CW, 3 ZL phone, 10 non-ZL? (c) branches as multipliers -- does our
-  own count? (d) Cabrillo accepted, and one log per band?
-
 **UA4W**
 
 - **[Q15] Schedule.** One 2-hour window, 1600-1800 UTC, with 15-minute periods
@@ -168,7 +192,7 @@ the part still owed. The `[Qn]` tag is the number the question has been cited by
   (`MY RDA`?). Only Udmurtia stations send one; everyone else sends `MY GRID`.
 
 (Decision 1, a way for a contest to say "no Cabrillo file", is no longer owed: with
-POTA, Kids Day, Grid Loc, TEN-TEN and the six ARCI events all writing none, it is
+POTA, Kids Day, Grid Loc, TEN-TEN, JW-FD and the six ARCI events all writing none, it is
 decided -- a `TContestBase` answer, False by default, that those contests state; the Cabrillo writer then refuses
 with a message instead of writing error-marker lines. A design call under the
 delegation, not a sponsor rule.)
