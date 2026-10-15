@@ -102,7 +102,15 @@ Three groups:
 - **Q18** Jock White Field Day (https://www.nzart.org.nz/activities/contests/jwfd):
   are ZL contacts 5 CW / 3 phone and non-ZL 10 still the rule? Digital and FM score
   3 today. Your own branch is never a multiplier -- does the sponsor count it?
-  **Answer:**
+  **Answer:** (2026-10-15, from NZART's own page, which NY4I supplied; rules updated
+  21 April 2025.) **No to the 10:** since October 2023 contacts score the same
+  inside and outside ZL -- **CW 5, phone 3** -- and overseas contacts must be in
+  Oceania. **Own branch: does NOT count**, which matches TR4W today (a same-branch
+  QSO scores points, no multiplier). The page names only phone and CW (80/40 m), so
+  digital and FM are not modes of this contest. Three further defects came out of
+  the same page -- hourly dupe periods, a serial per band, the field-station QSO
+  minimum -- recorded in `docs/F26_EXCHANGE_LAYOUTS.md` (Q10). To fix in its own
+  commit with a matrix re-freeze.
 
 - **Q22** PACC: the row says `RSTAndQSONumberOrDomesticQTHExchange`, but every PACC
   session runs `RSTDomesticQTHExchange`. Which is the contest's exchange?
