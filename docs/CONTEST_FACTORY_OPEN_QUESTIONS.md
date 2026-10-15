@@ -79,11 +79,6 @@ moves to section 4 in the commit that records it.
   enforces it today.
   **Answer:** **IN7QPNE RULED 2026-10-13: a composite of four parties (IN, 7QP, NE, DE), per-QSO rules of the worked station's party; one Cabrillo; no score posting -- design 7.14. 7QP/NEQP multi-state rules otherwise still open.**
 
-- **Q41** ARRL VHF: September is set up with the contest name `'VHF QSO JUNE'`
-  (the old code named both runnings), and January has never had any setup at
-  all -- no 6 m start, HF bands left on. Intended?
-  **Answer:**
-
 - **Q42** OZCHR: both session names are literal `?` characters; the Cyrillic was
   lost before this tree (D7 too). Restore the Cyrillic, or use Latin names?
   **Answer:**
@@ -435,6 +430,21 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
 
 Each carries a **Proposed answer** with its source. "Yes" (or "yes to all")
 closes it; anything else reopens it.
+
+- **Q41** ARRL VHF: September is set up with the contest name `'VHF QSO JUNE'`
+  (the old code named both runnings), and January has never had any setup at
+  all -- no 6 m start, HF bands left on. Intended?
+  **Proposed answer (checked 2026-10-15 against ARRL's public logs,
+  tools/public-logs/fetch_arrl_public_logs.py):** the Cabrillo `CONTEST:`
+  lines are already right -- the 2026 January and June and 2025 September logs
+  say `ARRL-VHF-JAN`, `ARRL-VHF-JUN` and `ARRL-VHF-SEP`, which the three
+  classes write. The defect is the set-up: September's `'VHF QSO JUNE'` is not
+  cosmetic, it heads the summary sheet (`postunit.pas:992-993`: "VHF QSO JUNE
+  SUMMARY SHEET", "CONTEST: VHF QSO JUNE"); and January has none. Every
+  January public log sampled starts on 6 m. So: all three runnings get June's
+  set-up (start on 6 m, HF bands off), each with its own name -- `VHF QSO
+  JANUARY`, `VHF QSO JUNE`, `VHF QSO SEPTEMBER`.
+  **Answer:**
 
 - **Q10** May a `ContestType` nobody runs be deleted instead of given a class?
   *Recommended: yes, with the list shown to you first.*
