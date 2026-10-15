@@ -49,7 +49,7 @@ which side of that seam you are on before you change anything.
 
 | job | doc |
 |---|---|
-| the **data** — a new `ContestType` in `VC.pas`, `fcontest.pas` init, a `.cfg` in `target/dom/` | `docs/ADDING_A_NEW_CONTEST.md` |
+| the **data** — a new `ContestType` in `VC.pas`, `fcontest.pas` init, its `.dom` files in `target/dom/` (no `.cfg` -- that folder is `.dom` only, NY4I 2026-10-15) | `docs/ADDING_A_NEW_CONTEST.md` |
 | the **class** in this factory | `docs/ADDING_A_CONTEST.md` |
 
 **No `.cfg` borrows another contest's type** (NY4I, 2026-10-01: *"The only

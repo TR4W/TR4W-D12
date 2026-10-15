@@ -1705,7 +1705,10 @@ a model check to a base class. **Never** add it to `logradio.pas`.
 Read [`docs/ADDING_A_NEW_CONTEST.md`](docs/ADDING_A_NEW_CONTEST.md) and
 [`docs/ADDING_A_CONTEST.md`](docs/ADDING_A_CONTEST.md). A new `ContestType` member and its
 `ContestTypeSA` spelling in `VC.pas` (appended), a class in `src/contestFactory/` that states its
-rules -- set-up in its `DescribeSession`, not in `fcontest.pas` -- and a `.cfg` in `target/dom/`.
+rules -- set-up in its `DescribeSession`, not in `fcontest.pas` -- and its `.dom` files in
+`target/dom/` if it has domestic multipliers. **No `.cfg` goes there** -- `target/dom` holds
+`.dom` files only, the New Contest dialog creates a contest's `.cfg`, and the two templates
+that sat there (Idaho, Delaware) never shipped and were deleted 2026-10-15 (NY4I).
 **There is no metadata row**: `ContestsArray`, `ContestsBooleanArray` and `QSOParties` were deleted
 at M10 S8 (2026-10-14). Then verify exchange parsing, multiplier tracking, scoring, and Cabrillo
 export — and run the corpus, the factory check and the contest matrix.

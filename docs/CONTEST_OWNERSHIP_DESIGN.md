@@ -3290,7 +3290,7 @@ assumed: the ordinal is written as `Ord(RxData.ceContest)` into HamScore's
 | the class, one `RegisterContest` | `uContestDelawareQP`; both `.lpr` files |
 | `delaware.dom` (NEW, in state): the county file FIRST, then `S50`, `P13` | `target/dom`, `full.nsi` (`Lint-DomCoverage`) |
 | `delaware_cty.dom` (rewritten): `NDE > De = NDE,^New Castle` etc. | it said `NDE = NDE,...`, so an in-state include would have made each county its own multiplier; the `>` form maps all three to `De` in state and keeps each county out of state (`MultipliersIsCounties`), as Idaho's file does |
-| a template `.cfg`, `CONTEST = DELAWARE QSO PARTY`, overriding nothing | `target/dom/Delaware QSO Party.cfg` -- **`*.CFG` is gitignored; it needs `git add -f`, as Idaho's did** |
+| a template `.cfg`, `CONTEST = DELAWARE QSO PARTY`, overriding nothing | ~~`target/dom/Delaware QSO Party.cfg`~~ -- **DELETED 2026-10-15** with Idaho's: NY4I, *"Why would we ship any .cfg files in the dom folder? Those are only DOM files"*. The New Contest dialog creates the contest |
 
 **THE RULES AND WHERE EACH LANDED** (the class header carries them in full):
 

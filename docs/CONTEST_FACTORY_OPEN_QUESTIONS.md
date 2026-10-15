@@ -33,11 +33,6 @@ moves to section 4 in the commit that records it.
   is the sponsor's?
   **Answer:**
 
-- **Idaho-cfg** The template `target/dom/Idaho QSO Party.cfg` has never shipped in
-  the installer. Ship it, or delete it now that the New Contest dialog creates the
-  contest?
-  **Answer:**
-
 ### Other contests
 
 - **Q15** NRAU-Baltic: the contest calendar lists Cabrillo names `NRAU-CW` /
@@ -48,15 +43,6 @@ moves to section 4 in the commit that records it.
   `NA-SPRINT-SSB` and its friendly name "North American Sprint, SSB". Change to the
   sponsor's name (https://ssbsprint.com/rules/)? Its multipliers come from the
   `naqp` file with no DXCC, unlike the NA Sprints' North American DXCC. Intended?
-  **Answer:**
-
-- **Q17** Locust (inactive): the calendar says CW only, 80 and 40 m, no
-  multipliers. TR4W scores every band and mode and counts domestic multipliers.
-  State its bands and drop the multipliers, or leave an inactive contest as it was?
-  **Answer:**
-
-- **Q36** Locust: 5000 points per QSO with K6VVA or name LOCUST, multiplied like
-  any QSO point. Is that the rule, or a one-time bonus after multiplication?
   **Answer:**
 
 - **Q22** PACC: the row says `RSTAndQSONumberOrDomesticQTHExchange`, but every PACC
@@ -188,7 +174,7 @@ moves to section 4 in the commit that records it.
   listed last, as you said. Any others? (A contest marked inactive still
   opens and scores an old log; it only moves to the bottom of the list.)
   *Partly answered in F26 (2026-10-15): MARAC, Ten-Ten, FISTS and QCWA are
-  inactive; FISTS, QCWA Golden, WWL and XMAS retire. Any others?*
+  inactive; FISTS, QCWA Golden, WWL, XMAS and Locust retire. Any others?*
   **Answer:**
 
 - **Q61** CATEGORY-POWER is now one value (design 7.6). Four other Cabrillo
@@ -601,8 +587,37 @@ closes it; anything else reopens it.
 | Q32 | Missouri peak-hour bonus is real; computed from each QSO's logged time over the whole log, cap 250 | not built |
 | Q29 | Out-of-state works only the host state: true for QSO parties in general | already so |
 | Idaho-DC | DC is not a state, so not an Idaho multiplier | already so |
+| Idaho-cfg | No `.cfg` in `target/dom` -- the Idaho and Delaware templates deleted | done 2026-10-15 |
+| Q17 | Moot: Locust is retired | -- |
+| Q36 | Moot: Locust is retired | -- |
 
 ### Answered since the table was last updated (full text)
+
+- **Q17** Locust (inactive): the calendar says CW only, 80 and 40 m, no
+  multipliers. TR4W scores every band and mode and counts domestic multipliers.
+  State its bands and drop the multipliers, or leave an inactive contest as it was?
+  **Answer:** (NY4I, 2026-10-15) *"Q17 and Q36 are retired so not needed."*
+  MOOT: Locust is RETIRED, joining FISTS, QCWA Golden, WWL and XMAS (F26).
+  Retired = off the New Contest list; its enum member and `ContestTypeSA`
+  spelling stay so old logs open (Q10 asks whether its class goes to a generic
+  one). Its bands, multipliers and K6VVA bonus stay as they are.
+
+- **Q36** Locust: 5000 points per QSO with K6VVA or name LOCUST, multiplied like
+  any QSO point. Is that the rule, or a one-time bonus after multiplication?
+  **Answer:** (NY4I, 2026-10-15) *"Q17 and Q36 are retired so not needed."*
+  MOOT: Locust is RETIRED, joining FISTS, QCWA Golden, WWL and XMAS (F26).
+  Retired = off the New Contest list; its enum member and `ContestTypeSA`
+  spelling stay so old logs open (Q10 asks whether its class goes to a generic
+  one). Its bands, multipliers and K6VVA bonus stay as they are.
+
+- **Idaho-cfg** The template `target/dom/Idaho QSO Party.cfg` has never shipped in
+  the installer. Ship it, or delete it now that the New Contest dialog creates the
+  contest?
+  **Answer:** (NY4I, 2026-10-15) *"Why would we ship any .cfg files in the dom
+  folder? Those are only DOM files."* Neither: DELETED, with `Delaware QSO
+  Party.cfg`, the same kind of template added at 8.2q. Nothing read either
+  (the installer lists its `dom` files by name and names no `.cfg`); the New
+  Contest dialog creates a contest's `.cfg`.
 
 - **Idaho-DC** Idaho's in-state multipliers include the states and provinces but
   not DC; the sponsor says "each US state". Should DC count?

@@ -217,7 +217,8 @@ exercise, log a short session from an IN7QPNE `.cfg`:
 `DELAWAREQSOPARTY` is a new contest type with its own class
 (`uContestDelawareQP`, design 8.2q). Unit tests pin the class; **nothing
 automated types a Delaware exchange or loads its `.dom` files**, and the
-contest matrix shows it unfrozen. To exercise, from `Delaware QSO Party.cfg`:
+contest matrix shows it unfrozen. To exercise, create it from the New Contest
+dialog (the template `.cfg` was deleted 2026-10-15):
 
 - **In-state** (`MY STATE` a county: NDE, KDE or SDE): states, provinces and
   DX countries are multipliers **per band**; working another DE county counts
@@ -573,7 +574,8 @@ the rules; nothing automated drives live entry. To exercise:
 ## Added 2026-10-01 -- THE IDAHO QSO PARTY HAS ITS OWN CONTEST
 
 `IDAHOQSOPARTY` is a new contest type with its own class (`uContestIdahoQP`); the
-shipped `Idaho QSO Party.cfg` no longer borrows `CONTEST = NEQP`. Unit tests pin
+template `Idaho QSO Party.cfg` no longer borrowed `CONTEST = NEQP` (and was deleted
+2026-10-15; create the contest from the New Contest dialog). Unit tests pin
 the class; **nothing automated types an Idaho exchange**, and the multiplier
 lists come from `.dom` files no gate loads. To exercise:
 

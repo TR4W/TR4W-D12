@@ -334,8 +334,9 @@ classless: its points read the sheet (`mo.isdmmult`), Q33.
 
 **Its spelling table WAS rotated** -- `QSOPointMethodArray` selected the wrong
 method for 46 spellings, a D7 defect -- **and is DELETED at M10 S2** with the
-setting. The one shipped `.cfg` it reached,
-`target/dom/Idaho QSO Party.cfg`, no longer names a point method: Idaho is
+setting. The one `.cfg` it reached, `target/dom/Idaho QSO Party.cfg`
+(never shipped, and deleted 2026-10-15 -- `target/dom` is `.dom` only), had
+stopped naming a point method: Idaho is
 `IDAHOQSOPARTY` with its own class since 2026-10-01 (ownership doc §7.2). **No
 `.cfg` borrows another contest's type** -- an event is a `ContestType` and a
 class.

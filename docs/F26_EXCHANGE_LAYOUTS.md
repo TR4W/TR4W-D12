@@ -216,7 +216,9 @@ they need no rule research; scoring items each change a contest's score.
    `KIDS-DAY`, `TEN-TEN`, `QCWA`, `FFMA` (Grid Loc), `JW-FD` (unchanged). (All Asian's
    `AADX-CW` / `AADX-SSB` is done separately, 2026-10-15.)
 3. **Retirement (Q8, Q12, Q16, Q17):** FISTS, QCWA Golden, WWL and XMAS leave the New
-   Contest list. Their enum members, spellings and classes stay, so old logs open.
+   Contest list -- **and Locust** (NY4I, 2026-10-15, answering open-questions Q17/Q36 in
+   `docs/CONTEST_FACTORY_OPEN_QUESTIONS.md`). Their enum members, spellings and classes
+   stay, so old logs open (open-questions Q10 asks whether the classes go to a generic one).
 4. **Cabrillo layouts for the contests that keep one:**
    - MARAC: RST + state + county (existing helpers);
    - ALL JA and ACAG: JARL's e-log layout, power letter joined (`599 10H`);
