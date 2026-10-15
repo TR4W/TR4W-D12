@@ -232,6 +232,17 @@ moves to section 4 in the commit that records it.
   first for the same reason. Should the station-fact rows be applied first
   too? *Recommended: yes.* That would change set-up on reopen for a log
   whose override differs from the station.
+  *Reworded 2026-10-15.* NY4I read this as moot ("we have an external program
+  to convert cfg files. We should not have cfg files for contests going
+  forward"). It is the opposite: "with no `.cfg`" is the ONLY reopen path from
+  now on, because the contest database is the only source. On reopen, contest
+  set-up (`FoundContest`) runs when the stored contest row is applied
+  (`uSettingsEffects.pas:354`), and builds the in-state test and the exchange
+  messages then -- before a MY STATE or MY ZONE override row is applied. So
+  every reopened log whose contest overrides the station's state or zone sets
+  up with the STATION's values until something re-runs set-up. The question is
+  only the order: apply the station-fact rows (and, with Q65, MY CALL) before
+  the contest row? *Recommended: yes.*
   **Answer:**
 
 ### Added with the UA4W Championship's and RSGB 1.8's classes (2026-10-14)
