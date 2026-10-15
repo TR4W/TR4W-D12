@@ -158,10 +158,8 @@ ROUTINES = {
    ("uExchangeBuilder.pas", "BuildSentExchangeText"): ("networking", "CanonicalSentExchange (existing, M9a)"),
    ("uExchangeBuilder.pas", "BuildRxExchangeText"): ("networking", "CanonicalReceivedExchange (existing, M9a)"),
    # ------------------------------------------------------------------ other
-   ("logddx.pas", "GetRandomDDXCallsign"): ("other", new("SimulatorRules (DDX)")),
-   ("logddx.pas", "GetRandomDomesticQTH"): ("other", new("SimulatorRules (DDX)")),
-   ("logddx.pas", "GetNextCallFromReadInLog"): ("other", new("SimulatorRules (DDX)")),
-   ("logddx.pas", "DDXExchange"): ("other", new("SimulatorRules (DDX)")),
+   # The four logddx (DDX simulator) rows went with the unit, deleted by
+   # NY4I's Q91 ruling (2026-10-14): nothing had compiled it since D7.
 }
 
 # A site that does not belong to its routine's category. Keyed by (file base,
@@ -228,9 +226,8 @@ SHAPE3 = [
    # The logstuff entries here (TRC, DL-DX-RTTY, EURASIA, YBDXDI-FT8 and the
    # G4FOC/N4T/RAEM/LOCUST bonus calls) went with the legacy scoring case at
    # M10 S3 (2026-10-14); the classes own those rules.
-   ("tr4w/src/trdos/logddx.pas", r"Settings\.Contest\.Name\s*=\s*'Scandinavian Contest'", 1,
-    ["SACCW", "SACSSB"],
-    "`Settings.Contest.Name = 'Scandinavian Contest'` -- see dead code"),
+   # logddx's `Settings.Contest.Name = 'Scandinavian Contest'` went with the
+   # unit (Q91, 2026-10-14).
    # postunit's `Settings.Contest.Name = 'WWDIGI'` went at M4 (2026-10-01):
    # TContestWWDigi chooses its own received QTH.
    ("tr4w/src/trdos/postunit.pas", r"Settings\.Contest\.Name\s*=\s*'LABRE'", 1, ["LABRE"],

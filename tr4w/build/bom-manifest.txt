@@ -35,7 +35,6 @@ src\radioFactory\uRadioRegistry.pas
 src\trdos\cfgdef.pas
 src\trdos\LogCfg.pas
 src\trdos\LogCW.pas
-src\trdos\logddx.pas
 src\trdos\logdupe.pas
 src\trdos\logedit.pas
 src\trdos\logk1ea.pas
