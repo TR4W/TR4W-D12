@@ -115,14 +115,6 @@ moves to section 4 in the commit that records it.
   rather than districts?) in the sponsor's rules?
   **Answer:**
 
-- **Q49** BC QSO Party: "a DX station earns no multiplier" tests the
-  multiplier for lower-case `dx`, but the in-province file maps `dx=DX`
-  (`target/dom/ve7.dom` line 2), so the multiplier is always upper-case `DX`
-  and the rule never fires -- an in-province station gets a `DX` domestic
-  multiplier. New York and Indiana test `DX` and do fire. Should BC's be
-  `DX` like theirs? (A scoring change for in-province BC logs with DX QSOs.)
-  **Answer:**
-
 ### Added after M9a (the display and the reports)
 
 - **Q52** Every contest's display name is now its row's friendly name, as you
@@ -284,13 +276,6 @@ moves to section 4 in the commit that records it.
   *Recommended: yes.*
   **Answer:**
 
-- **Q84** Indiana's rule is "a DX station is not a multiplier", and it looks
-  for `DX` in capitals. Indiana's own file says `DX = DX`, but IN7QPNE's
-  file says `dx = dx`, so in IN7QPNE an Indiana entrant's DX contact still
-  earns the one `dx` multiplier. Change IN7QPNE's file to `DX`, or make the
-  rule ignore case? *Recommended: change the file.*
-  **Answer:**
-
 ### Found while the classes took over the table's values (M10 S5, 2026-10-14)
 
 These were copied into the classes exactly as the old table had them, so
@@ -357,6 +342,19 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
 
 Each carries a **Proposed answer** with its source. "Yes" (or "yes to all")
 closes it; anything else reopens it.
+
+- **Q49** BC QSO Party: "a DX station earns no multiplier" tests the
+  multiplier for lower-case `dx`, but the in-province file maps `dx=DX`
+  (`target/dom/ve7.dom` line 2), so the multiplier is always upper-case `DX`
+  and the rule never fires -- an in-province station gets a `DX` domestic
+  multiplier. New York and Indiana test `DX` and do fire. Should BC's be
+  `DX` like theirs? (A scoring change for in-province BC logs with DX QSOs.)
+  **Proposed answer:** SETTLED BY Q84 ("ignore case", 2026-10-15): BC's rule
+  tests `dx`, its file maps to `DX`; compared ignoring case, the rule fires,
+  so an in-province BC station's DX contact earns no domestic multiplier -- as
+  New York and Indiana already do. A scoring change for in-province BC logs
+  with DX QSOs.
+  **Answer:**
 
 - **Q67** The New Contest dialog's rows start empty, and every row has to be
   filled before OK is enabled. So every contest that asks for MY ZONE
@@ -616,8 +614,20 @@ closes it; anything else reopens it.
 | Q68 | On reopen, the station-fact rows are applied before the contest row | not built |
 | Q76 | ADIF `STATE` is the worked station's state, `MY_STATE` ours -- fix the host-state export | not built |
 | Q82 | IN7QPNE county-line count left as is; future fix | issue #85 |
+| Q84 | A party's DX-multiplier test ignores case (files unchanged) | not built |
 
 ### Answered since the table was last updated (full text)
+
+- **Q84** Indiana's rule is "a DX station is not a multiplier", and it looks
+  for `DX` in capitals. Indiana's own file says `DX = DX`, but IN7QPNE's
+  file says `dx = dx`, so in IN7QPNE an Indiana entrant's DX contact still
+  earns the one `dx` multiplier. Change IN7QPNE's file to `DX`, or make the
+  rule ignore case? *Recommended: change the file.*
+  **Answer:** (NY4I, 2026-10-15) *"ignore case."* The RULE ignores case, not
+  the file: a `DX` multiplier test matches `dx`, `Dx` and `DX` alike, so
+  IN7QPNE's `dx = dx` stays and an Indiana entrant's DX contact earns no
+  multiplier there. One rule for every party that tests for DX (Indiana, New
+  York, BC -- see Q49). Not built.
 
 - **Q82** County lines in IN7QPNE: Indiana and Delaware allow two counties,
   7QP four. TR4W checks the COUNT before it knows the counties, so IN7QPNE
