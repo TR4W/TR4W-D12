@@ -287,6 +287,33 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   COUNTRY), and the Region 1 RCC runnings (a one-character call scores 4). Bound
   them the next time each contest is touched? *Recommended: yes* -- no real QSO's
   score moves.
+  *Detail added 2026-10-15 (re-read in the code):* each reads text without
+  checking its length, copied exactly from the old code. In plain terms:
+  1. **MWC** (`uContestMWC.pas:118`) -- the multiplier is a character of the
+     worked call: the one before a `/`-letter suffix, else the call's last
+     character. The call is copied into a 10-character buffer, then walked to
+     its FULL length. A call of 11 or more characters (`PA/W1ABCD/P`) is read
+     past the buffer, so the multiplier is a leftover memory byte; a call
+     ending in `/` reads one past it; a call starting with `/` reads the
+     string's length byte. **"Harmless" above is wrong here**: long portable
+     calls are legal, so a real QSO can get a garbage multiplier -- rarely.
+  2. **Region 1 Field Day** (`uContestRegion1FieldDay.pas:266`) -- doubles
+     points on 160 and 10 m when MY COUNTRY starts with `G`, reading its
+     first character unchecked. With no MY COUNTRY it reads a leftover byte
+     (almost never `G`, so in practice no doubling). Only a station with no
+     country configured is affected.
+  3. **Region 1 Field Day RCC CW/SSB** (`uContestRegion1FieldDayRCCCW.pas:141`,
+     the same in SSB) -- a `/P` or `/M` station scores 4, tested as "the
+     position of `/P` = the call's length minus 1". For a one-character call,
+     "not found" (0) equals 1 - 1, so it scores 4. Not a memory read, a wrong
+     comparison, and unreachable with a real call: entry refuses
+     one-character calls.
+  *Revised recommendation: fix all three NOW, one small commit* -- MWC can
+  touch a real QSO, each is a line or two, and Q37's ruling points the same
+  way (bad input is refused or bounded, never read out of memory). MWC walks
+  the whole call and never reads outside it; an empty MY COUNTRY is simply
+  not `G`; RCC scores 4 only when `/P` or `/M` is actually present. The
+  contest matrix confirms no frozen QSO moves before the commit.
   **Answer:**
 
 - **Q51** An off-band QSO no longer marks the dupe sheet at all (M8), so the
