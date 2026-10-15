@@ -589,7 +589,12 @@ var
    c: ContestType;
 begin
    BeginTest('Test_RussianDXInitialExchangeIsTheOblast');
-   for c in [RUSSIANDX, RU3AXMEMORIAL] do
+   (* Q50, ruled 2026-10-15: one rule, uCallSignRoutines.RussianStationOblast
+      -- RussianID of the CTY.DAT country, then GetRussiaOblastID of the call,
+      the call as typed. RDA answers too: LOGEDIT's fallback, the rule that
+      ran in D7 and here, named it beside the other two. *)
+   CheckTrue(GetRussiaOblastID('R1FJL') <> '', 'the control: R1FJL has an oblast to find');
+   for c in [RUSSIANDX, RU3AXMEMORIAL, RDA] do
       begin
       CheckTrue(ContestIdentity(c).InitialExchangeFromCall('UA3ABC', 'UA', answer),
                 string(ContestTypeSA[c]) + ': a Russian station has an answer');
@@ -597,13 +602,30 @@ begin
                   string(ContestTypeSA[c]) + ': its oblast');
       CheckTrue(ContestIdentity(c).InitialExchangeFromCall('UA9ABC', 'UA9', answer),
                 string(ContestTypeSA[c]) + ': Asiatic Russia too');
+      CheckEquals(GetRussiaOblastID('UA9ABC'), answer,
+                  string(ContestTypeSA[c]) + ': with its oblast');
+      (* WHAT MOVED: a Russian entity outside UA. The 'UA' test of the M5b
+         transcription refused it; the country's RussianID does not. *)
+      CheckTrue(ContestIdentity(c).InitialExchangeFromCall('R1FJL', 'R1FJ', answer),
+                string(ContestTypeSA[c]) + ': Franz Josef Land is Russian (Q50)');
+      CheckEquals(GetRussiaOblastID('R1FJL'), answer,
+                  string(ContestTypeSA[c]) + ': and gets the call''s oblast');
+      CheckTrue(ContestIdentity(c).InitialExchangeFromCall('UA3ABC/P', 'UA', answer),
+                string(ContestTypeSA[c]) + ': a portable Russian station is Russian');
+      CheckEquals('', answer,
+                  string(ContestTypeSA[c]) + ': but a call with a slash has no oblast');
       CheckFalse(ContestIdentity(c).InitialExchangeFromCall('DL1ABC', 'DL', answer),
                  string(ContestTypeSA[c]) + ': anybody else, none');
+      CheckEquals('', answer, string(ContestTypeSA[c]) + ': and nothing written');
       CheckFalse(ContestIdentity(c).InitialExchangeFromCall('VE3ABC', 'VE', answer),
-                 string(ContestTypeSA[c]) + ': and a Canadian is the province rule''s');
+                 string(ContestTypeSA[c]) + ': and a Canadian, none');
+      CheckFalse(ContestIdentity(c).InitialExchangeFromCall('UA3ABC', '', answer),
+                 string(ContestTypeSA[c]) + ': a call CTY.DAT does not know, none');
       end;
    CheckFalse(ContestIdentity(WRTC).InitialExchangeFromCall('UA3ABC', 'UA', answer),
               'the base has no answer');
+   CheckFalse(ContestIdentity(RFCHAMPIONSHIPCW).InitialExchangeFromCall('UA3ABC', 'UA', answer),
+              'the RF Championship has no initial exchange from a call -- LOGEDIT never named it');
 end;
 
 (* ---------------------------------------------------------------------------

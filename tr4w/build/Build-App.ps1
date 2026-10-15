@@ -378,7 +378,11 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # 1260 -> 1251, 2026-10-15: M11 S9e part 1 -- the dead FISTS log-line parse
 # (LOGDUPE.ParseExchangeIntoContestExchange) and its dead callers deleted.
 # Measured by the full build.
-$NARROW_CEILING = 1251
+# 1251 -> 1250, 2026-10-15: Q50 -- LOGEDIT.InitialExchangeEntry's Russian
+# fallback assigned GetRussiaOblastID's string to a ShortString; it is the
+# contest's InitialExchangeFromCall now, converted once and explicitly.
+# Measured by the full build.
+$NARROW_CEILING = 1250
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

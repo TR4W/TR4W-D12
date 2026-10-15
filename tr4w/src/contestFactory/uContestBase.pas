@@ -670,10 +670,16 @@ type
       initial-exchange file), and CTY.DAT's grid for a call. A RECORD BECAUSE
       IT IS AN INTERFACE PARAMETER, the exemption CLAUDE.md grants -- the
       same shape as TReceivedExchangeSession. A nil lookup is "no service",
-      which a rule answers as ''. *)
+      which a rule answers as ''.
+
+      CountryOfCall (Q50, 2026-10-15) is CTY.DAT's country ID for a call --
+      what uCallSignRoutines.RussianStationOblast and RussianID are asked of,
+      so "is this a Russian station" is the country's answer, never the
+      call's first letters. *)
    TMultiplierHintLookups = record
       InitialExchangeOf: TCallTextLookup;
       GridOfCall: TCallTextLookup;
+      CountryOfCall: TCallTextLookup;
    end;
 
    (* WHICH ZONE LIST A CONTEST'S ZONE MULTIPLIER COUNTS -- M11 S5,
@@ -2429,14 +2435,19 @@ type
       function MayBeACallsign(const aWord: string): boolean; virtual;
 
       (* THE INITIAL EXCHANGE A CONTEST KNOWS FROM THE WORKED CALL ALONE --
-         M5b.
+         M5b; its caller moved when Q50 was ruled (2026-10-15).
 
-         Asked by ZoneCont.GetVEInitialExchange, the routine behind the
-         SECTION and QTH initial exchanges, with the call in standard format
-         and its CTY.DAT country, BEFORE its own Canadian-province rule. True
-         and aExchange when the contest has an answer; the base has none.
-         The Russian DX contests answer a Russian station's oblast. *)
-      function InitialExchangeFromCall(const aStandardCall: string;
+         Asked by LOGEDIT.InitialExchangeEntry when nothing else -- the
+         callsigns list, then the session's initial-exchange arm -- gave an
+         answer, with the call AS TYPED and its CTY.DAT country. True and
+         aExchange when the contest has an answer; the base has none. The
+         Russian DX contest, the RU3AX Memorial and RDA answer a Russian
+         station's oblast (uCallSignRoutines.RussianStationOblast) -- the
+         fallback D7's InitialExchangeEntry ran for exactly those three.
+
+         Until Q50 ZoneCont.GetVEInitialExchange asked it, which no shipped
+         contest reached. *)
+      function InitialExchangeFromCall(const aCall: string;
                                        const aCountryID: string;
                                        out aExchange: string): boolean; virtual;
 
@@ -4487,7 +4498,7 @@ begin
    Result := True;
 end;
 
-function TContestBase.InitialExchangeFromCall(const aStandardCall: string;
+function TContestBase.InitialExchangeFromCall(const aCall: string;
                                               const aCountryID: string;
                                               out aExchange: string): boolean;
 begin

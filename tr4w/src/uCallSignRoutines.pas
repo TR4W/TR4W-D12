@@ -70,6 +70,22 @@ function MarineOrAirMobileStation(Call: string): boolean;
 function StandardCallFormat(Call: string; Complete: boolean): string;
 function GetRussiaOblastID(Call: string): string; //
 
+(* A RUSSIAN STATION'S OBLAST -- THE ONE RULE (Q50, NY4I, 2026-10-15).
+
+   GetRussiaOblastID of the call when RussianID of its CTY.DAT COUNTRY says
+   the station is Russian, else ''. So any 'R...' entity counts (Franz Josef
+   Land's R1FJ, for instance), and a Russian call in the UB..UI blocks does
+   too -- the country decides, never the call's first letters.
+
+   It was written three ways that disagreed: the dead initial exchange from a
+   call (country beginning 'UA'), LOGEDIT's initial-exchange fallback (this
+   rule -- the one that ran, in D7 and here) and the need-multiplier hint
+   (RussianID of the raw CALL, which missed UB..UI). Each contest that wants a
+   Russian oblast calls this from its own code; nothing selects it.
+
+   aCall may be raw: GetRussiaOblastID answers '' for a call holding '/'. *)
+function RussianStationOblast(const aCall: string; const aCountryID: string): string;
+
 (* ARE THE TWO CALLS IN THE SAME RUSSIAN FEDERAL OKRUG? -- the CQ-M contest's
    one-point rule for a Russian station working another.
 
@@ -534,6 +550,15 @@ begin
   reg := GetRussiaOblastByTwoChars(Char(Oblast[1]), Char(Oblast[2]));
   if reg = rtUnknownRegion then Exit;
   Result := Char(RussianRegionsTypeIdArray[reg][0]) + Char(RussianRegionsTypeIdArray[reg][1]);   // was Result[0]:=#2; Result[1]:=AnsiChar(r[0]); Result[2]:=AnsiChar(r[1]);
+end;
+
+function RussianStationOblast(const aCall: string; const aCountryID: string): string;
+begin
+   Result := '';
+   if RussianID(aCountryID) then
+      begin
+      Result := GetRussiaOblastID(aCall);
+      end;
 end;
 function CaliforniaCall(Call: string): boolean;
 begin

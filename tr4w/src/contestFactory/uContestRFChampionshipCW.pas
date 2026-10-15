@@ -106,11 +106,13 @@ type
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
 
-      (* A RUSSIAN CALL'S OBLAST, FOR THE NEED-MULTIPLIER HINT -- the arm
+      (* A RUSSIAN STATION'S OBLAST, FOR THE NEED-MULTIPLIER HINT -- the arm
          LOGEDIT.GetMultArray held for this contest beside the Russian DX
-         contest and the SSB running, moved here at M8 and transcribed
-         exactly: RussianID of the CALL (not of its country), and its
-         oblast from GetRussiaOblastID. *)
+         contest and the SSB running, moved here at M8. It asked RussianID
+         of the raw CALL; since Q50 was ruled (NY4I, 2026-10-15) it is the
+         one rule, uCallSignRoutines.RussianStationOblast, with the call's
+         CTY.DAT country from aLookups.CountryOfCall -- the test the scoring
+         below always made. No country service, no hint. *)
       function DomesticMultiplierFromCall(const aCall: string;
                                           const aLookups: TMultiplierHintLookups): string; override;
    public
@@ -144,7 +146,8 @@ uses
    uCabrilloExchange,
    uADIFExchange,
    uContestRegistry,
-   (* RussianID, GetRussiaOblastID -- the leaves the arm asked. *)
+   (* RussianID, GetRussiaOblastID -- the leaves the arm asked;
+      RussianStationOblast, the one oblast rule (Q50). *)
    uCallSignRoutines,
    (* The Championship's points table, one copy for both runnings. *)
    uRFChampionshipPoints,
@@ -154,9 +157,9 @@ function TContestRFChampionshipCW.DomesticMultiplierFromCall(const aCall: string
                                                              const aLookups: TMultiplierHintLookups): string;
 begin
    Result := '';
-   if RussianID(aCall) then
+   if Assigned(aLookups.CountryOfCall) then
       begin
-      Result := GetRussiaOblastID(aCall);
+      Result := RussianStationOblast(aCall, aLookups.CountryOfCall(aCall));
       end;
 end;
 

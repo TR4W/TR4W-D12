@@ -48,7 +48,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   scores 5 for another continent, 3 for another country of its own continent
   and 2 for its own country. Anybody else scores 10 for a Russian station,
   then 5, 3 and 2 the same way.
-  ITS INITIAL EXCHANGE: a Russian station's oblast, from its call. *)
+  ITS INITIAL EXCHANGE AND ITS NEED-MULTIPLIER HINT: a Russian station's
+  oblast, from its call -- uCallSignRoutines.RussianStationOblast, the one
+  rule NY4I ruled on Q50 (2026-10-15): RussianID of the CTY.DAT country
+  decides, and GetRussiaOblastID of the call answers. LOGEDIT's
+  InitialExchangeEntry asks it once nothing else has filled the exchange. *)
 unit uContestRussianDX;
 
 {$I tr4w.inc}
@@ -96,16 +100,17 @@ type
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
       (* A RUSSIAN STATION'S OBLAST -- see the header. *)
-      function InitialExchangeFromCall(const aStandardCall: string;
+      function InitialExchangeFromCall(const aCall: string;
                                        const aCountryID: string;
                                        out aExchange: string): boolean; override;
 
-      (* A RUSSIAN CALL'S OBLAST, FOR THE NEED-MULTIPLIER HINT -- the arm
+      (* A RUSSIAN STATION'S OBLAST, FOR THE NEED-MULTIPLIER HINT -- the arm
          LOGEDIT.GetMultArray held for this contest beside the two RF
-         Championships, moved here at M8 and transcribed exactly: RussianID
-         of the CALL, then GetRussiaOblastID. NOT InitialExchangeFromCall
-         above, which tests the CTY.DAT country for 'UA' -- two rules that
-         answer differently for an 'R...' entity outside UA (design Q50). *)
+         Championships, moved here at M8. It asked RussianID of the raw CALL;
+         since Q50 was ruled (NY4I, 2026-10-15) it asks the same one rule as
+         InitialExchangeFromCall above -- uCallSignRoutines.RussianStationOblast,
+         with the call's CTY.DAT country from aLookups.CountryOfCall. No
+         country service, no hint. *)
       function DomesticMultiplierFromCall(const aCall: string;
                                           const aLookups: TMultiplierHintLookups): string; override;
    public
@@ -144,7 +149,8 @@ uses
    uCabrilloExchange,
    uADIFExchange,
    uContestRegistry,
-   (* RussianID, GetRussiaOblastID -- the leaves the arm and ZoneCont asked. *)
+   (* RussianID, RussianStationOblast -- the scoring arm's leaf, and the one
+      oblast rule (Q50). *)
    uCallSignRoutines,
    uTR4WStrings;
 
@@ -187,25 +193,24 @@ begin
       end;
 end;
 
-function TContestRussianDX.InitialExchangeFromCall(const aStandardCall: string;
+(* Q50 (NY4I, 2026-10-15): the one rule, RussianStationOblast. True for any
+   Russian station, as LOGEDIT's fallback was -- the CTY.DAT country, not
+   'UA' alone as the M5b transcription of ZoneCont's dead arm said. *)
+function TContestRussianDX.InitialExchangeFromCall(const aCall: string;
                                                    const aCountryID: string;
                                                    out aExchange: string): boolean;
 begin
-   aExchange := '';
-   Result := (Copy(aCountryID, 1, 1) = 'U') and (Copy(aCountryID, 2, 1) = 'A');
-   if Result then
-      begin
-      aExchange := GetRussiaOblastID(aStandardCall);
-      end;
+   Result := RussianID(aCountryID);
+   aExchange := RussianStationOblast(aCall, aCountryID);
 end;
 
 function TContestRussianDX.DomesticMultiplierFromCall(const aCall: string;
                                                       const aLookups: TMultiplierHintLookups): string;
 begin
    Result := '';
-   if RussianID(aCall) then
+   if Assigned(aLookups.CountryOfCall) then
       begin
-      Result := GetRussiaOblastID(aCall);
+      Result := RussianStationOblast(aCall, aLookups.CountryOfCall(aCall));
       end;
 end;
 

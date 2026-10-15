@@ -251,7 +251,7 @@ correct rather than a gap.
   |---|---|---|
   | dupe marking, `logsubs2` (`AlwaysOnePointPerQSO`) | the contest's dupe-policy property (`MarksDupes`). Internet Sprint and Youth Championship RF reach it today | **MOVED, M3** (§8.2d) |
   | exchange parsing, `logstuff` `ProcessRSTAndQSONumberOrDomesticQTHExchange` x3 (RAC: CANADA_WINTER/CANADA_DAY; PCC; Arktika Spring) | that contest's `ParseReceivedExchange` | **MOVED, M5b** (§8.2g) |
-  | initial exchange, `zonecont.GetVEInitialExchange` (RussianDX: RDXC, RU3AX MEMORIAL -- a UA oblast) | that contest's `InitialExchangeFromCall` | **MOVED, M5b** (§8.2g) |
+  | initial exchange, `zonecont.GetVEInitialExchange` (RussianDX: RDXC, RU3AX MEMORIAL -- a UA oblast) | that contest's `InitialExchangeFromCall` | **MOVED, M5b** (§8.2g); **Q50 (2026-10-15):** asked from LOGEDIT's fallback, not ZoneCont, and RDA answers too -- one rule, `RussianStationOblast` |
   | total-score formulas, `logedit.TotalScore` x5 (WAE weighted mults; CupRF +100, ALRS +300, ChampionshipRF +50, OZHCR +1000 per mult) | that contest's `CombineWithMultipliers` (§5) | **MOVED, M6** (§8.2h) |
 
   Measured 2026-10-01 at M3 with `rg -i -w ActiveQSOPointMethod tr4w/src`:

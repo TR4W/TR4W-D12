@@ -5,11 +5,14 @@ lives with its full evidence, under the same Q number) and from the session.
 Branch `contestFactory`. Fill in the **Answer:** line; anything left blank keeps
 today's behaviour.
 
-Three groups:
+Four groups. **Sections 1 and 2 hold ONLY open questions**; an answered one
+moves to section 4 in the commit that records it.
 
 1. **Sponsor rules** -- only you can answer these.
 2. **Design** -- each has a recommendation; "accept" is a valid answer.
-3. **Already answered** -- listed so nothing is asked twice.
+3. **Awaiting only your yes** -- answered from the sponsor's own page (your
+   source rule) or decided under the delegation; a "yes" closes each.
+4. **Already answered** -- listed so nothing is asked twice.
 
 ---
 
@@ -99,19 +102,6 @@ Three groups:
   any QSO point. Is that the rule, or a one-time bonus after multiplication?
   **Answer:**
 
-- **Q18** Jock White Field Day (https://www.nzart.org.nz/activities/contests/jwfd):
-  are ZL contacts 5 CW / 3 phone and non-ZL 10 still the rule? Digital and FM score
-  3 today. Your own branch is never a multiplier -- does the sponsor count it?
-  **Answer:** (2026-10-15, from NZART's own page, which NY4I supplied; rules updated
-  21 April 2025.) **No to the 10:** since October 2023 contacts score the same
-  inside and outside ZL -- **CW 5, phone 3** -- and overseas contacts must be in
-  Oceania. **Own branch: does NOT count**, which matches TR4W today (a same-branch
-  QSO scores points, no multiplier). The page names only phone and CW (80/40 m), so
-  digital and FM are not modes of this contest. Three further defects came out of
-  the same page -- hourly dupe periods, a serial per band, the field-station QSO
-  minimum -- recorded in `docs/F26_EXCHANGE_LAYOUTS.md` (Q10). To fix in its own
-  commit with a matrix re-freeze.
-
 - **Q22** PACC: the row says `RSTAndQSONumberOrDomesticQTHExchange`, but every PACC
   session runs `RSTDomesticQTHExchange`. Which is the contest's exchange?
   **Answer:**
@@ -132,6 +122,15 @@ Three groups:
 - **Q27** SAC silently clears the entry when a Russian station (UA, UA2, UA9, EU) is
   typed. Should it show an error, like other invalid stations? And is a Russian
   station really not workable in SAC, or only not a multiplier?
+  **Answer:**
+
+- **Q97** (found implementing Q50, 2026-10-15) Franz Josef Land (`R1FJ`)
+  is a Russian entity, so the Russian DX contests now pre-fill and hint an
+  oblast for it -- but `GetRussiaOblastID('R1FJL')` reads the `1F` after the
+  prefix and answers `SP`, St Petersburg. D7's live fallback pre-filled the
+  same `SP`; the hint is new. What does the RDXC sponsor count FJL as --
+  Arkhangelsk (`AR`, its administrative oblast), its own multiplier, or no
+  oblast? Malyj Vysotskij (`R1MV`) has the same shape.
   **Answer:**
 
 ### Added after M7b batch 1
@@ -170,11 +169,6 @@ Three groups:
   contact -- 10 points (2 for our own country when we are in an EU region). The
   sponsor's table needs a real EU test. What should decide it (the domestic
   file's region code?), and should it be fixed now? Both contests' scores move.
-  **Answer:**
-
-- **Q46** Ten-Ten scores 2 for every QSO: the "2 with a Ten-Ten number, else 1"
-  test can never be false (a 16-bit field compared with -1). Should a QSO with no
-  Ten-Ten number score 1, as the code was evidently meant to?
   **Answer:**
 
 ### Added after M8 (multipliers and dupes)
@@ -236,38 +230,9 @@ Three groups:
 - **Q59** Inactive contests: SA Sprint and Locust are marked inactive and
   listed last, as you said. Any others? (A contest marked inactive still
   opens and scores an old log; it only moves to the bottom of the list.)
+  *Partly answered in F26 (2026-10-15): MARAC, Ten-Ten, FISTS and QCWA are
+  inactive; FISTS, QCWA Golden, WWL and XMAS retire. Any others?*
   **Answer:**
-
-- **Q60** The off-time minimum (the gap that counts as a break) is 60 minutes
-  for CQ WW and 30 for everything else -- but the two places that use it
-  disagree about IARU: the main window's on-screen operating time uses 60 for
-  CQ WW **and IARU HF** (n4af, 4.115.4), the summary sheet's OPERATING TIME
-  uses 60 for CQ WW only (and reads it from the contest NAME, so a stated
-  `CONTEST NAME` changes it). Same in D7. The IARU HF rules have no off-time
-  rule that I know of. Which is right for IARU -- 60 or 30? Once you say, it
-  becomes one value on the contest and both places use it.
-  **Answer:** (NY4I, 2026-10-15, from DXLog.net's contest definitions.) CQ WW is
-  **60** -- `CQWW.txt` has `MIN_OFF_TIME=60`, which NY4I called confirmation. IARU HF
-  is **not** 60: `IARUHF.txt` sets no `MIN_OFF_TIME` at all (33 of DXLog's 543 files
-  set one, and IARU's own are its VHF/UHF and field-day events, at 120). So IARU HF
-  takes the default 30, and the main window's IARU arm (n4af, 4.115.4) is the one that
-  is wrong. Implementation: the off-time becomes one value the contest states, which
-  both the main window and the summary sheet read, so the summary sheet no longer
-  derives it from the contest NAME.
-  **IMPLEMENTED 2026-10-15.** `TContestBase.MinimumOffTimeMinutes` (base 30);
-  `TContestCQWWBase` (CW and SSB) and its sibling `TContestCQWWRTTY` say 60 --
-  the three tokens `Pos('CQ-WW', ...)` matched. `PostUnit.CalculateTotals`
-  (the summary sheet's OPERATING TIME and the CT1BOH window's per-band times)
-  asks `ContestIdentity(Contest)`, and its rule is `GapIsOperatingTime`. Its
-  `CONTEST NAME` test is deleted: a stated name no longer changes the break.
-  **THE MAIN WINDOW'S COPY WAS DEAD, NOT WRONG IN EFFECT**: it wrote
-  `MainUnit.T1`, and nothing read it -- LOGWIND's reader sat inside a `{ }`
-  comment in D7 as well. It is deleted, not pointed at the contest, so the
-  on-screen times do not change for IARU or any contest (the on-air counter
-  has no break rule). Pinned by `uTestContestUI`
-  (`Test_OnlyCQWWHasASixtyMinuteBreak`, `Test_AGapCountsUpToTheBreak`).
-  Still open: whether CQ WW RTTY's own rules set a different off time --
-  the answer quotes `CQWW.txt` only, so RTTY keeps the 60 it always had.
 
 - **Q61** CATEGORY-POWER is now one value (design 7.6). Four other Cabrillo
   categories have the same two-store shape: ASSISTED, BAND, MODE and OPERATOR
@@ -367,17 +332,6 @@ Three groups:
 
 ### Added with the Delaware QSO Party's class (2026-10-14)
 
-- **Q72** Delaware's bands: "all HF bands except WARC, plus 6 m and up".
-  The class counts 160 m and light as well as 80-10 m (no WARC) and 6 m up.
-  Both are my reading of the summary, not of the sponsor's page. Are they
-  in? A QSO on a band that is out scores 0 and earns no multiplier.
-  *Checked against the sponsor's 2024 page (2026-10-14):* it says "All HF
-  bands excluding WARC bands" and "6 meters and up", so **light is in**.
-  160 m is not named either way, and the page's suggested frequencies do
-  not list it. 1.8 MHz is strictly MF, not HF. So only 160 m is open.
-  *Recommended: keep 160 m in unless you know the sponsor excludes it.*
-  **Answer:**
-
 - **Q73** "A DE mobile that changes county is a new station." TR4W's dupe
   check uses the call, band and mode, and no contest can change that today.
   So a mobile's second county shows as a dupe unless worked as a county
@@ -393,10 +347,6 @@ Three groups:
   `LOCATION:` (DE, your state or section, or DX). TR4W now refuses to write
   the file without a LOCATION, and you type it. Should TR4W fill it in from
   where you are? *Recommended: yes -- DE in state, else your state, else DX.*
-  **Answer:**
-
-- **Q75** What are the Delaware QSO Party's WA7BNM calendar id and log
-  submission address? Both are blank, so its calendar menu item is greyed.
   **Answer:**
 
 - **Q76** In every single-state party, an in-state station's ADIF export
@@ -444,14 +394,6 @@ Three groups:
   naming the multiplier, Q4). Wanted? *Recommended: yes, when Q4 is done.*
   **Answer:**
 
-- **Q81** New England county abbreviations: IN7QPNE's file spells them
-  state first (`MEAND`) and uses Connecticut's new planning regions
-  (`CTCAP`); NEQP's own file spells them county first (`ANDME`) with the
-  eight old CT counties. Which does the NEQP sponsor use now? IN7QPNE works
-  out the party from its own file's spelling, so it is right either way;
-  this is about the two files agreeing.
-  **Answer:**
-
 - **Q82** County lines in IN7QPNE: Indiana and Delaware allow two counties,
   7QP four. TR4W checks the COUNT before it knows the counties, so IN7QPNE
   allows any number, as it always did. Teach the check which party the
@@ -473,38 +415,10 @@ Three groups:
   rule ignore case? *Recommended: change the file.*
   **Answer:**
 
-- **Q85** Does 7QP allow the WARC bands? The 7QP class scores a 30 m CW QSO
-  at 3 points (frozen matrix, `SEVENQP.matrix` QSO 09), and IN7QPNE now
-  inherits that for every 7QP-judged QSO. Delaware excludes WARC by its
-  sponsor's rules; nothing in TR4W says whether 7QP does. If it does not,
-  the 7QP class should declare its bands the way Delaware's does, and
-  WARC QSOs then score 0 (logged, never refused).
-  *Recommended: check the 7QP rules page and tell me which bands.*
-  **Answer:**
-
 ### Found while the classes took over the table's values (M10 S5, 2026-10-14)
 
 These were copied into the classes exactly as the old table had them, so
 nothing changed. Each looks wrong; none was fixed without your answer.
-
-- **Q86** The Minnesota QSO Party is the only state party whose table row
-  marks it "RTC capable" (live score posting through the RTC uploader).
-  No other party has it. Intended, or a typo in the row?
-  *Recommended: remove it unless Minnesota is posted to a scoreboard.*
-  **Answer:**
-
-- **Q87** IN7QPNE's New Contest prompt names its "area" as `IN7QPNE` -- a
-  token, not a place -- and the prompt shows it twice. Should it read
-  something like "Indiana, 7th area, New England or Delaware"?
-  *Recommended: yes; the composite class can state its own prompt.*
-  **Answer:** (NY4I, 2026-10-14) *"Your recommendation."* The composite
-  class states its own prompt naming the four areas, shown once.
-
-- **Q88** The NA Sprint CW and RTTY rows name different domestic files:
-  CW uses `naqp`, RTTY uses `s49p8`. Both are the same sprint exchange
-  (states, provinces, NA). Is one of them wrong, and which file should
-  both use?
-  **Answer:**
 
 - **Q89** British Columbia QSO Party ADIF export: TR4W writes NO `STATE`
   (and no `CNTY`) for a BCQP QSO, because the old table named BC's area
@@ -516,67 +430,181 @@ nothing changed. Each looks wrong; none was fixed without your answer.
   *Recommended: yes, export BC.*
   **Answer:**
 
-- **Q91** `tr4w/src/trdos/logddx.pas` (TR's DX simulator, "DDX") is compiled
-  by nothing, and was not compiled in D7 either: every `uses LOGDDX` is
-  commented out in both trees (`MainUnit`, `LogCfg`, `logsubs2`), and it
-  uses a `Country9` unit that exists in neither. Its 26+ references to
-  the `Active*` globals therefore go stale as M10 S9 deletes them, with no
-  compiler to notice. Delete it (git history keeps it, and design §2's
-  `SampleExchange` row is the end-state plan for a simulator), or keep it
-  as reference? I tried to delete it and the session's safety check
-  refused an irreversible delete without you, so it is untouched; the
-  remaining S9 stages leave it alone.
-  **Same question for `tr4w/src/trdos/logmenu.pas`** (found at S9d): every
-  `uses LOGMENU` is commented out (`MainUnit`, `LogCfg`, `logedit`,
-  `logsubs1`, `logsubs2`) and `tr4w.lpr` does not list it, yet it holds a
-  second textual caller of `FoundContest` -- which made the country-mode
-  ordering check (F5) look riskier than it is.
-  *Recommended: delete both.*
-  **Answer:** (NY4I, 2026-10-14) *"delete both."*
-
 ### Raised by the M11 plan (2026-10-14; `docs/CONTEST_FACTORY_M11_PLAN.md`)
 
 M10 is complete. M11 moves the multiplier and exchange "kind" rules into
 the classes. These decide how far it goes. M11's early stages (pins,
 dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
 
-- **Q92 -- THE DESIGN QUESTION.** Keep `ExchangeType` as a vocabulary of
-  exchange SHAPES that a class selects? The design says the kind enums
-  "die with the engine" and that a helper is "never selected ... by an
-  enum". Measured: 162 of `ExchangeType`'s 168 `case` arms are four
-  contest-blind machines keyed on the shape -- the parser (56 arms), the
-  field list (43), ADIF (32) and Cabrillo (31). Deleting the enum means
-  every one of 186 classes overrides all four and keeps them agreeing, or
-  a per-shape object, which is a strategy and is forbidden. It is not
-  stored and does not cross the network, so the whole price is code. The
-  other five kinds (initial exchange, domestic/DX/prefix/zone
-  multipliers) ARE rules and M11 deletes them either way.
-  *Recommended: keep it, documented as shapes -- like CountryModeType
-  and ZoneModeType, it describes data, not a rule.*
-  **Answer (NY4I, 2026-10-14): OPTION 2 -- the CLASS chooses, explicitly.** Not
-  the recommendation above. The four shape `case`s become plain named
-  helper functions (e.g. `ADIFRstAndState(rst, state)`), and each class's
-  `FormatADIF*` / `FormatCabrillo*` / parse / field-list override CALLS the
-  helper it wants -- once on a family base where a family shares one.
-  The enum stops selecting anything, which is what design §1.3 already
-  says ("a helper is never selected ... by an enum"). Shared formats stay
-  in one place, so there are no copies. Asked by NY4I while reading
-  `uADIFExchange.pas:357`: "Shouldn't the ADIF process call the contest
-  class and ask it to build the exchange for ADIF and Cabrillo?"
+*All answered (Q50, Q90-Q96): see section 4.*
 
-- **Q93** (MOOT under Q92's option 2 -- every shape becomes a helper a class calls, so a single-contest shape is simply a helper with one caller; nothing extra moves.) Originally: if Q92 is yes: should the 20 shapes that exactly one contest uses
-  still move into their contest (about 80 arms, one contest per commit)?
-  It buys a smaller vocabulary, not ownership.
-  *Recommended: no, unless you want the vocabulary small.*
+---
+
+## 2. Design (recommendation given; "accept" is enough)
+
+- **Q7** Apply the NRAU pattern (a base + CW/SSB children) to every two-mode pair?
+  So far only NRAU-Baltic has it; NA Sprint CW/RTTY and the other pairs are
+  siblings or copies. *Recommended: only where the two rows are genuinely one rule
+  today; otherwise copies.*
   **Answer:**
 
-- **Q94** (with Q90) "Is a slash suffix a county?" is answered two ways
-  that disagree: by exchange shape on the live path (25 contests) and by
-  the class on export (15). Split on export but not stripped live: CA,
-  CO, MN, OH, PA. Stripped live but not split on export: ALRS, ARRL 160,
-  ARRL DX x2, AZ, BC, County Hunter, IN7QPNE, LABRE, NEQP, NY, PACC,
-  Salmon Run, 7QP, TOEC. Which contests really have /county rovers? M11
-  will transcribe today's two sets exactly until you say.
+- **Q37** `LOGGRID.ConvertGridToLatLon` reads past the end of a grid shorter than 4
+  characters, so a malformed grid's score depends on leftover memory (identical
+  ALRS QSOs scored 43, 42, 42). Tesla and European VHF read short grids the same
+  way. Fixing it changes scores for malformed grids in every grid contest. What should a malformed grid score? *Recommended: fix the
+  read; a grid that is not a grid scores as no distance.*
+  **Answer:**
+
+- **Q8** Events with no `ContestType` that the code still identifies by name:
+  `'TRC'`, `'PGA'`, `'EURASIA'`, `'DL-DX-RTTY'`. Give each a type and class, or
+  delete the tests? *Recommended: give a type to any that is still run; delete the
+  rest.*
+  **Answer:**
+
+- **Q9** Should an operator-edited CQ memory survive re-selecting the contest?
+  *Recommended: yes -- an edited memory is an operator statement.*
+  **Answer:**
+
+- **Q10** May a `ContestType` nobody runs be deleted instead of given a class?
+  *Recommended: yes, with the list shown to you first.*
+  **Answer:**
+
+- **Q13** Oregon QSO Party scores by the radio's current mode, not the QSO's, so a
+  rescore follows the radio. Fix when OQP gets its class? *Recommended: yes* (the
+  same kind of fix as the Croatian clock).
+  **Answer:**
+
+- **Q44** Three contests keep their band rule inside their scoring, not as the
+  contest's bands: RTC (0 points and no multiplier off 40/20/15/10 m or off
+  CW/SSB), and CQMM and WRTC (0 points off 80-10 m, but the multiplier still
+  counts). Your off-band ruling is 0 points and no multiplier. State each one's
+  bands the standard way? *Recommended: yes* -- RTC changes nothing visible; CQMM
+  and WRTC stop crediting a multiplier from an off-band QSO.
+  **Answer:**
+
+- **Q47** Three harmless read-past-the-end shapes were kept exactly: MWC (a call
+  longer than ten characters, or ending in `/`), the Region 1 Field Day (no MY
+  COUNTRY), and the Region 1 RCC runnings (a one-character call scores 4). Bound
+  them the next time each contest is touched? *Recommended: yes* -- no real QSO's
+  score moves.
+  **Answer:**
+
+- **Q51** An off-band QSO no longer marks the dupe sheet at all (M8), so the
+  30 m dupe sheet and the Stations window's `+` do not show it -- consistent
+  with "not a dupe", but they are also "have I worked him there" displays.
+  Keep it so, or keep a worked-there mark that is not a dupe? *Recommended:
+  keep it so* -- one rule, and no shipped contest but Idaho states bands.
+  **Answer:**
+
+---
+
+### Added after M9a
+
+- **Q54** HamScore's one-QSO Cabrillo line writes Winter Field Day's FM
+  contacts as `FM`; the Cabrillo file writes `PH`. Should HamScore ask the
+  contest too? *Recommended: yes* -- one rule for both; it changes what
+  HamScore receives for WFD FM QSOs.
+  **Answer:**
+
+---
+
+## 3. Awaiting only your yes
+
+Each carries a **Proposed answer** with its source. "Yes" (or "yes to all")
+closes it; anything else reopens it.
+
+- **Q46** Ten-Ten scores 2 for every QSO: the "2 with a Ten-Ten number, else 1"
+  test can never be false (a 16-bit field compared with -1). Should a QSO with no
+  Ten-Ten number score 1, as the code was evidently meant to?
+  **Proposed answer:** From the F26 research (`docs/F26_EXCHANGE_LAYOUTS.md`):
+  2 points with a 10-10 number, 1 without, as WA7BNM and DXLog `TENTENQP.txt`
+  state it. It is item C11 of F26's build list.
+  **Answer:**
+
+- **Q56** (decided under the delegation; please confirm) A contest's sent
+  state now stands for the whole session: a MY STATE line after CONTEST in a
+  `.cfg`, or a Preferences edit mid-contest, no longer changes what Canada
+  Day/Winter, the Russian DX contests or the Cup RF send. The alternative
+  would have sent a stale state after reopening a log (design 8.2m).
+  *Recommended: accept.*
+  **Proposed answer:** Decided under the delegation and implemented (design
+  8.2m).
+  **Answer:**
+
+- **Q57** CQ WW RTTY's set-up writes MY ZONE as "zone state" while it builds
+  its messages, then puts it back -- and the write marks MY ZONE as yours, so
+  it no longer follows MY CALL. Build the messages without touching MY ZONE?
+  *Recommended: yes* (the messages are identical; only a later MY CALL change
+  behaves differently).
+  **Implemented with 7.12 (2026-10-13), by necessity:** with the readers on the
+  resolver, the transient write would have dropped the state whenever a zone
+  override was stated. The messages are built from a local; MY ZONE is never
+  written. Please confirm.
+  **Proposed answer:** Implemented with 7.12 (2026-10-13); the messages are
+  unchanged.
+  **Answer:**
+
+- **Q72** Delaware's bands: "all HF bands except WARC, plus 6 m and up".
+  The class counts 160 m and light as well as 80-10 m (no WARC) and 6 m up.
+  Both are my reading of the summary, not of the sponsor's page. Are they
+  in? A QSO on a band that is out scores 0 and earns no multiplier.
+  *Checked against the sponsor's 2024 page (2026-10-14):* it says "All HF
+  bands excluding WARC bands" and "6 meters and up", so **light is in**.
+  160 m is not named either way, and the page's suggested frequencies do
+  not list it. 1.8 MHz is strictly MF, not HF. So only 160 m is open.
+  *Recommended: keep 160 m in unless you know the sponsor excludes it.*
+  **Proposed answer:** From the sponsor's page (researched 2026-10-14): its
+  suggested frequencies include 1860 kHz, so 160 m is in -- what the class
+  already does. Light is in too. No change.
+  **Answer:**
+
+- **Q75** What are the Delaware QSO Party's WA7BNM calendar id and log
+  submission address? Both are blank, so its calendar menu item is greyed.
+  **Proposed answer:** From WA7BNM (researched 2026-10-14): calendar id
+  **240**; logs go to the sponsor's Gmail address on its page, to be copied
+  exactly when the class is filled in.
+  **Answer:**
+
+- **Q81** New England county abbreviations: IN7QPNE's file spells them
+  state first (`MEAND`) and uses Connecticut's new planning regions
+  (`CTCAP`); NEQP's own file spells them county first (`ANDME`) with the
+  eight old CT counties. Which does the NEQP sponsor use now? IN7QPNE works
+  out the party from its own file's spelling, so it is right either way;
+  this is about the two files agreeing.
+  **Proposed answer:** From the NEQP sponsor (researched 2026-10-14): state
+  first (`MEAND`) and the Connecticut planning regions. So IN7QPNE's file is
+  current and NEQP's `neqso.dom` is stale, to be brought into line.
+  **Answer:**
+
+- **Q85** Does 7QP allow the WARC bands? The 7QP class scores a 30 m CW QSO
+  at 3 points (frozen matrix, `SEVENQP.matrix` QSO 09), and IN7QPNE now
+  inherits that for every 7QP-judged QSO. Delaware excludes WARC by its
+  sponsor's rules; nothing in TR4W says whether 7QP does. If it does not,
+  the 7QP class should declare its bands the way Delaware's does, and
+  WARC QSOs then score 0 (logged, never refused).
+  *Recommended: check the 7QP rules page and tell me which bands.*
+  **Proposed answer:** From the 7QP sponsor (researched 2026-10-14): 7QP
+  **excludes WARC**, so the 7QP class declares its bands and WARC QSOs score
+  0. The same page scores SSB 2 / CW 3 / **digital 4**; TR4W gives digital 2
+  -- a second defect, fixed in the same commit.
+  **Answer:**
+
+- **Q86** The Minnesota QSO Party is the only state party whose table row
+  marks it "RTC capable" (live score posting through the RTC uploader).
+  No other party has it. Intended, or a typo in the row?
+  *Recommended: remove it unless Minnesota is posted to a scoreboard.*
+  **Proposed answer:** From HamScore (researched 2026-10-14): the Minnesota
+  QSO Party IS on its real-time scoreboard, so the flag is correct. No change.
+  **Answer:**
+
+- **Q88** The NA Sprint CW and RTTY rows name different domestic files:
+  CW uses `naqp`, RTTY uses `s49p8`. Both are the same sprint exchange
+  (states, provinces, NA). Is one of them wrong, and which file should
+  both use?
+  **Proposed answer:** From the sponsor (researched 2026-10-14): the sprint
+  counts the 50 states, DC and 14 Canadian provinces and territories. `naqp`
+  has 12 provinces and `s49p8` has 49 + 8, so **both are wrong**: one
+  corrected file, used by both.
   **Answer:**
 
 - **Q95** Croatian counts ITU zones but looks zones up with CQ zones, so it
@@ -584,25 +612,109 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   CW Open is the reverse (CQ zones over an ITU lookup). Defects? Which
   system does each sponsor want?
   *Recommended: Croatian ITU throughout; check CW Open's rules.*
+  **Proposed answer:** From the sponsors (researched 2026-10-14): Croatian
+  (9A) uses **ITU zones** in the exchange and the multipliers, so the CQ
+  lookup is the defect. CW Open has **no zones**: serial + name, and the
+  multiplier is each call once per session, so TR4W's 40 CQ-zone multipliers
+  are a scoring defect.
   **Answer:**
 
-- **Q96** CQ WW CW starts the exchange field with a Custom initial exchange,
-  CQ WW SSB with the zone -- one family, two answers. Intended?
-  *Recommended: both Zone, unless the CW Custom was deliberate.*
-  **Answer:** (NY4I, 2026-10-14) *"Yes both should fill zone if that option
-  is set for initial exchange."* CQ WW CW becomes `ZoneInitialExchange`, as
-  SSB and RTTY already are. Note for the record: the CW `Custom` came from D7
-  (`VC.pas` row 4.105.17), and with the default empty CUSTOM INITIAL EXCHANGE
-  STRING it filled nothing. No setting gates the zone fill itself -- the
-  per-contest INITIAL EXCHANGE command retired at M10 S2 -- so "that option"
-  is the contest's own initial-exchange kind; REVERSE INITIAL EX still
-  prefers the callsigns list where it is set.
+---
 
-- **Q50 is now an M11 blocker.** The Russian DX / RU3AX "initial exchange
-  from a call" has not run since M10 S2 -- the only arms that reach it are
-  used by no contest -- while LOGEDIT's fallback is the live rule, and a
-  unit test pins the dead one. M11's S1 (dead members) and S8 (initial
-  exchange) wait on Q50.
+## 4. Already answered (for reference)
+
+| Q | Answer | Where it landed |
+|---|---|---|
+| Q4 | Retire all seven shared-set settings at the endpoint; user-defined contests to be revisited another way | M10 |
+| Q6 | POTA becomes a contest class, treated like General QSO | `TContestPOTA`, 2026-10-13 (design 8.2o) |
+| Q11 | Delete the QSO-POINT-METHOD-only arms at M10 | M10 |
+| Q28 | Station facts default from station config, overridable per contest | design 7.12; LANDED 2026-10-13 (`TMySettings.Resolved*`); UA4W's class 2026-10-14 (design 8.2p) |
+| Q33 | RSGB 1.8 gets a read-only new-multiplier answer | design 7.13; its class 2026-10-14 (design 8.2p) |
+| -- | IN7QPNE is a composite of IN/7QP/NE/DE; Delaware becomes a contest | design 7.14; Delaware 2026-10-14 (8.2q); the composite `TContestIN7QPNE` 2026-10-14 (8.2r; Q77-Q84) |
+| Q1 | Field Day has no multipliers; DX is never an ARRL section | M2 |
+| Q2 | No interim fix for the rotated point-method spellings | design 7.2 |
+| Q3 | The log stores only what the operator stated | M2a (decided under delegation) |
+| Q5 | Salmon Run W7DX bonus: implement | M6 |
+| Q12 | `TContestFixedPoints` retired, `FixedModePoints` kept | M3 |
+| Q14 | Out-of-state works only the host state; `nc_cty.dom` = 100 counties | M5b |
+| Q19 | No Sweepstakes QSO without a precedence (refused) | M5b |
+| Q20 | FD DX exports `CLASS` as logged, `SRX_STRING` `1D DX`, never `ARRL_SECT` | M5b |
+| Q21 | Night rules read the QSO's recorded time | after M4 |
+| Q25 | FD DX import is not a section | M5b |
+| Q39 | A contest never writes a station setting | design 7.11 (decided); LANDED at M9a for MY STATE (Q57 is MY ZONE) |
+| -- | Out-of-state x out-of-state in a QSO party: refuse with an error | M5b |
+| -- | Off-band QSO: logged, 0 points, no mult, no need-mult hint, not a dupe | 1e4f66f9 (points, mults); M8 (dupes, hints) |
+| -- | QRP = our power; last touch point wins; may change mid-contest with a reminder | Idaho, design 7.6; LANDED at M9b (the summary writes the one setting, a change with QSOs rescores and shows a notice) |
+| -- | The New Contest drop-down shows the display name | M9b (Q52 still asks which words) |
+| -- | Inactive contests go at the bottom of the drop-down (SA Sprint, Locust) | M9b (`IsActive`; Q59 asks for others) |
+| -- | ALL ASIAN SSB is `ALL-ASIAN-DX-PHONE` | e1c6f873 |
+| -- | RSGB RoPoCo: an ADIF record is the SSB running's when its mode is phone (one ADIF id, `RSGB-ROLO`) | M7b batch 2 (decided under delegation, design 8.2k) |
+| Q18 | JW-FD: CW 5 / phone 3 everywhere, Oceania only; own branch not a multiplier | F26 build list (C) |
+| Q50 | A Russian call's oblast: `RussianID` of the country, one helper | M11, 2026-10-15 |
+| Q60 | Off time 60 for CQ WW (CW, SSB, RTTY), 30 elsewhere incl. IARU HF | `a7e8fe41` |
+| Q87 | IN7QPNE prompt names the four areas | `ed4ad807` |
+| Q90 | A slash suffix is a county rover only in a state QSO party | `bb07fd06` |
+| Q91 | Delete `logddx.pas` and `logmenu.pas` | `32bcadb9` |
+| Q92 | Option 2: shapes become named helpers each class calls | M11 S9 |
+| Q93 | Moot under Q92 | -- |
+| Q94 | Answered by Q90 | `bb07fd06` |
+| Q96 | CQ WW CW fills the zone, like SSB and RTTY | `c9caaa08` |
+
+### Answered since the table was last updated (full text)
+
+- **Q18** Jock White Field Day (https://www.nzart.org.nz/activities/contests/jwfd):
+  are ZL contacts 5 CW / 3 phone and non-ZL 10 still the rule? Digital and FM score
+  3 today. Your own branch is never a multiplier -- does the sponsor count it?
+  **Answer:** (2026-10-15, from NZART's own page, which NY4I supplied; rules updated
+  21 April 2025.) **No to the 10:** since October 2023 contacts score the same
+  inside and outside ZL -- **CW 5, phone 3** -- and overseas contacts must be in
+  Oceania. **Own branch: does NOT count**, which matches TR4W today (a same-branch
+  QSO scores points, no multiplier). The page names only phone and CW (80/40 m), so
+  digital and FM are not modes of this contest. Three further defects came out of
+  the same page -- hourly dupe periods, a serial per band, the field-station QSO
+  minimum -- recorded in `docs/F26_EXCHANGE_LAYOUTS.md` (Q10). To fix in its own
+  commit with a matrix re-freeze.
+
+- **Q60** The off-time minimum (the gap that counts as a break) is 60 minutes
+  for CQ WW and 30 for everything else -- but the two places that use it
+  disagree about IARU: the main window's on-screen operating time uses 60 for
+  CQ WW **and IARU HF** (n4af, 4.115.4), the summary sheet's OPERATING TIME
+  uses 60 for CQ WW only (and reads it from the contest NAME, so a stated
+  `CONTEST NAME` changes it). Same in D7. The IARU HF rules have no off-time
+  rule that I know of. Which is right for IARU -- 60 or 30? Once you say, it
+  becomes one value on the contest and both places use it.
+  **Answer:** (NY4I, 2026-10-15, from DXLog.net's contest definitions.) CQ WW is
+  **60** -- `CQWW.txt` has `MIN_OFF_TIME=60`, which NY4I called confirmation. IARU HF
+  is **not** 60: `IARUHF.txt` sets no `MIN_OFF_TIME` at all (33 of DXLog's 543 files
+  set one, and IARU's own are its VHF/UHF and field-day events, at 120). So IARU HF
+  takes the default 30, and the main window's IARU arm (n4af, 4.115.4) is the one that
+  is wrong. Implementation: the off-time becomes one value the contest states, which
+  both the main window and the summary sheet read, so the summary sheet no longer
+  derives it from the contest NAME.
+  **IMPLEMENTED 2026-10-15.** `TContestBase.MinimumOffTimeMinutes` (base 30);
+  `TContestCQWWBase` (CW and SSB) and its sibling `TContestCQWWRTTY` say 60 --
+  the three tokens `Pos('CQ-WW', ...)` matched. `PostUnit.CalculateTotals`
+  (the summary sheet's OPERATING TIME and the CT1BOH window's per-band times)
+  asks `ContestIdentity(Contest)`, and its rule is `GapIsOperatingTime`. Its
+  `CONTEST NAME` test is deleted: a stated name no longer changes the break.
+  **THE MAIN WINDOW'S COPY WAS DEAD, NOT WRONG IN EFFECT**: it wrote
+  `MainUnit.T1`, and nothing read it -- LOGWIND's reader sat inside a `{ }`
+  comment in D7 as well. It is deleted, not pointed at the contest, so the
+  on-screen times do not change for IARU or any contest (the on-air counter
+  has no break rule). Pinned by `uTestContestUI`
+  (`Test_OnlyCQWWHasASixtyMinuteBreak`, `Test_AGapCountsUpToTheBreak`).
+  ~~Still open: whether CQ WW RTTY's own rules set a different off time.~~
+  **Answered (NY4I, 2026-10-15, quoting the CQ WW RTTY rules):** the Classic
+  overlay's *"off times are a minimum of 60 minutes during which no QSO is
+  logged"*. So CQ WW RTTY stays at 60, which is what it already uses.
+  No code change.
+
+- **Q87** IN7QPNE's New Contest prompt names its "area" as `IN7QPNE` -- a
+  token, not a place -- and the prompt shows it twice. Should it read
+  something like "Indiana, 7th area, New England or Delaware"?
+  *Recommended: yes; the composite class can state its own prompt.*
+  **Answer:** (NY4I, 2026-10-14) *"Your recommendation."* The composite
+  class states its own prompt naming the four areas, shown once.
 
 - **Q90** Rover calls on ADIF export. TR4W writes a state party's rover
   (`KG1S/MON`, suffix = the QSO's county) as the bare call plus
@@ -632,86 +744,83 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   exchange IS a county and its mobiles run county lines) -- flag it if that
   is wrong.
 
----
+- **Q91** `tr4w/src/trdos/logddx.pas` (TR's DX simulator, "DDX") is compiled
+  by nothing, and was not compiled in D7 either: every `uses LOGDDX` is
+  commented out in both trees (`MainUnit`, `LogCfg`, `logsubs2`), and it
+  uses a `Country9` unit that exists in neither. Its 26+ references to
+  the `Active*` globals therefore go stale as M10 S9 deletes them, with no
+  compiler to notice. Delete it (git history keeps it, and design §2's
+  `SampleExchange` row is the end-state plan for a simulator), or keep it
+  as reference? I tried to delete it and the session's safety check
+  refused an irreversible delete without you, so it is untouched; the
+  remaining S9 stages leave it alone.
+  **Same question for `tr4w/src/trdos/logmenu.pas`** (found at S9d): every
+  `uses LOGMENU` is commented out (`MainUnit`, `LogCfg`, `logedit`,
+  `logsubs1`, `logsubs2`) and `tr4w.lpr` does not list it, yet it holds a
+  second textual caller of `FoundContest` -- which made the country-mode
+  ordering check (F5) look riskier than it is.
+  *Recommended: delete both.*
+  **Answer:** (NY4I, 2026-10-14) *"delete both."*
 
-## 2. Design (recommendation given; "accept" is enough)
+- **Q92 -- THE DESIGN QUESTION.** Keep `ExchangeType` as a vocabulary of
+  exchange SHAPES that a class selects? The design says the kind enums
+  "die with the engine" and that a helper is "never selected ... by an
+  enum". Measured: 162 of `ExchangeType`'s 168 `case` arms are four
+  contest-blind machines keyed on the shape -- the parser (56 arms), the
+  field list (43), ADIF (32) and Cabrillo (31). Deleting the enum means
+  every one of 186 classes overrides all four and keeps them agreeing, or
+  a per-shape object, which is a strategy and is forbidden. It is not
+  stored and does not cross the network, so the whole price is code. The
+  other five kinds (initial exchange, domestic/DX/prefix/zone
+  multipliers) ARE rules and M11 deletes them either way.
+  *Recommended: keep it, documented as shapes -- like CountryModeType
+  and ZoneModeType, it describes data, not a rule.*
+  **Answer (NY4I, 2026-10-14): OPTION 2 -- the CLASS chooses, explicitly.** Not
+  the recommendation above. The four shape `case`s become plain named
+  helper functions (e.g. `ADIFRstAndState(rst, state)`), and each class's
+  `FormatADIF*` / `FormatCabrillo*` / parse / field-list override CALLS the
+  helper it wants -- once on a family base where a family shares one.
+  The enum stops selecting anything, which is what design §1.3 already
+  says ("a helper is never selected ... by an enum"). Shared formats stay
+  in one place, so there are no copies. Asked by NY4I while reading
+  `uADIFExchange.pas:357`: "Shouldn't the ADIF process call the contest
+  class and ask it to build the exchange for ADIF and Cabrillo?"
 
-- **Q6** POTA as a contest class, following the General QSO precedent. Its park
-  "n-fer" is stored the same way as a county line. *Recommended: yes.*
-  **Answer:** **RULED 2026-10-13 (NY4I): YES -- POTA becomes a contest class.** "While it is not a contest per se, just like with GENERAL QSO, we treat it that way." **Built the same day: `TContestPOTA` (design 8.2o).**
+- **Q93** (MOOT under Q92's option 2 -- every shape becomes a helper a class calls, so a single-contest shape is simply a helper with one caller; nothing extra moves.) Originally: if Q92 is yes: should the 20 shapes that exactly one contest uses
+  still move into their contest (about 80 arms, one contest per commit)?
+  It buys a smaller vocabulary, not ownership.
+  *Recommended: no, unless you want the vocabulary small.*
+  **Answer:** MOOT -- Q92 option 2 (a helper each class calls) leaves nothing
+  for this question to decide.
 
-- **Q7** Apply the NRAU pattern (a base + CW/SSB children) to every two-mode pair?
-  So far only NRAU-Baltic has it; NA Sprint CW/RTTY and the other pairs are
-  siblings or copies. *Recommended: only where the two rows are genuinely one rule
-  today; otherwise copies.*
-  **Answer:**
+- **Q94** (with Q90) "Is a slash suffix a county?" is answered two ways
+  that disagree: by exchange shape on the live path (25 contests) and by
+  the class on export (15). Split on export but not stripped live: CA,
+  CO, MN, OH, PA. Stripped live but not split on export: ALRS, ARRL 160,
+  ARRL DX x2, AZ, BC, County Hunter, IN7QPNE, LABRE, NEQP, NY, PACC,
+  Salmon Run, 7QP, TOEC. Which contests really have /county rovers? M11
+  will transcribe today's two sets exactly until you say.
+  **Answer:** answered by NY4I's Q90 ruling (2026-10-14): a slash suffix is a
+  county rover only in a state QSO party. **IMPLEMENTED `bb07fd06`.**
 
-- **Q28** UA4W: may the station context carry MY CALL's CQ zone, so UA4W can get a
-  class? *Recommended: yes* (the same service shape ARRL 160 is getting).
-  **Answer:** **RULED 2026-10-13: yes, and station facts (CQ zone, state, section) are a station default a contest may override at selection time -- design 7.12.** **Built 2026-10-14: `TContestUA4WChampionship`, reading the `MyCQZone` service (design 8.2p; Q69, Q70).**
+- **Q96** CQ WW CW starts the exchange field with a Custom initial exchange,
+  CQ WW SSB with the zone -- one family, two answers. Intended?
+  *Recommended: both Zone, unless the CW Custom was deliberate.*
+  **Answer:** (NY4I, 2026-10-14) *"Yes both should fill zone if that option
+  is set for initial exchange."* CQ WW CW becomes `ZoneInitialExchange`, as
+  SSB and RTTY already are. Note for the record: the CW `Custom` came from D7
+  (`VC.pas` row 4.105.17), and with the default empty CUSTOM INITIAL EXCHANGE
+  STRING it filled nothing. No setting gates the zone fill itself -- the
+  per-contest INITIAL EXCHANGE command retired at M10 S2 -- so "that option"
+  is the contest's own initial-exchange kind; REVERSE INITIAL EX still
+  prefers the callsigns list where it is set.
 
-- **Q33** RSGB 1.8 MHz scores 7 for a contact that is a new multiplier. May a class
-  be handed the multiplier sheet's "is this a new multiplier?" answer, so it can
-  get a class? *Recommended: yes, as a read-only question at M8.*
-  **M8 did not build it, on purpose (unanswered):** M8's seam is the contest
-  DECLARING which QSOs count; this is the contest READING the sheet while
-  scoring one QSO -- a history-dependent point rule, which design 7.7 says to
-  allow only by widening stage 1 deliberately. What it needs, measured: a
-  read-only query handed in with the station (is domestic key X / DX country
-  N unworked over ALL bands and BOTH modes -- the arm ignores the session's
-  by-band and by-mode keys and whether DX multipliers are on at all).
-  **Answer:** **RULED 2026-10-13: yes, a read-only new-multiplier answer -- design 7.13.** **Built 2026-10-14: `TContestRSGB18`, reading the `IsNewMultiplierAnywhere` service (design 8.2p; Q71).**
-
-- **Q37** `LOGGRID.ConvertGridToLatLon` reads past the end of a grid shorter than 4
-  characters, so a malformed grid's score depends on leftover memory (identical
-  ALRS QSOs scored 43, 42, 42). Tesla and European VHF read short grids the same
-  way. Fixing it changes scores for malformed grids in every grid contest. What should a malformed grid score? *Recommended: fix the
-  read; a grid that is not a grid scores as no distance.*
-  **Answer:**
-
-- **Q4** Retire `EXCHANGE RECEIVED`, the four multiplier commands and `INITIAL
-  EXCHANGE` along with `QSO POINT METHOD` at the end? They select from shared sets
-  the same way. *Recommended: yes.*
-  **Answer:** **RULED 2026-10-13 (NY4I): YES, all seven retire.** "Since we will be able to enter contests faster, we can retire the user entering their own contests. That is a desired feature by the user community but we can revisit another way to do it."
-
-- **Q8** Events with no `ContestType` that the code still identifies by name:
-  `'TRC'`, `'PGA'`, `'EURASIA'`, `'DL-DX-RTTY'`. Give each a type and class, or
-  delete the tests? *Recommended: give a type to any that is still run; delete the
-  rest.*
-  **Answer:**
-
-- **Q9** Should an operator-edited CQ memory survive re-selecting the contest?
-  *Recommended: yes -- an edited memory is an operator statement.*
-  **Answer:**
-
-- **Q10** May a `ContestType` nobody runs be deleted instead of given a class?
-  *Recommended: yes, with the list shown to you first.*
-  **Answer:**
-
-- **Q11** Legacy scoring arms reachable only through an operator's `QSO POINT
-  METHOD`, and three point kinds with no arm (`SouthAmerican`, `IN`, `NYQPQP`):
-  delete them together when the setting retires. *Recommended: yes.*
-  **Answer:** **RULED 2026-10-13: yes, delete them at M10 -- design 7.15.**
-
-- **Q13** Oregon QSO Party scores by the radio's current mode, not the QSO's, so a
-  rescore follows the radio. Fix when OQP gets its class? *Recommended: yes* (the
-  same kind of fix as the Croatian clock).
-  **Answer:**
-
-- **Q44** Three contests keep their band rule inside their scoring, not as the
-  contest's bands: RTC (0 points and no multiplier off 40/20/15/10 m or off
-  CW/SSB), and CQMM and WRTC (0 points off 80-10 m, but the multiplier still
-  counts). Your off-band ruling is 0 points and no multiplier. State each one's
-  bands the standard way? *Recommended: yes* -- RTC changes nothing visible; CQMM
-  and WRTC stop crediting a multiplier from an off-band QSO.
-  **Answer:**
-
-- **Q47** Three harmless read-past-the-end shapes were kept exactly: MWC (a call
-  longer than ten characters, or ending in `/`), the Region 1 Field Day (no MY
-  COUNTRY), and the Region 1 RCC runnings (a one-character call scores 4). Bound
-  them the next time each contest is touched? *Recommended: yes* -- no real QSO's
-  score moves.
-  **Answer:**
+- **Q50 is now an M11 blocker.** The Russian DX / RU3AX "initial exchange
+  from a call" has not run since M10 S2 -- the only arms that reach it are
+  used by no contest -- while LOGEDIT's fallback is the live rule, and a
+  unit test pins the dead one. M11's S1 (dead members) and S8 (initial
+  exchange) wait on Q50.
+  **Unblocked 2026-10-15:** Q50 is answered (next entry).
 
 - **Q50** "A Russian call's oblast" is written three ways that disagree: the
   initial exchange from a call (Russian DX, RU3AX -- CTY.DAT country starting
@@ -723,74 +832,14 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   each contest calls? *Recommended: yes* -- `RussianID` of the country is the
   likely intent; only `R...` entities outside `UA` (e.g. Franz Josef Land)
   move, and only in what is pre-filled or hinted.
-  **Answer:**
-
-- **Q51** An off-band QSO no longer marks the dupe sheet at all (M8), so the
-  30 m dupe sheet and the Stations window's `+` do not show it -- consistent
-  with "not a dupe", but they are also "have I worked him there" displays.
-  Keep it so, or keep a worked-there mark that is not a dupe? *Recommended:
-  keep it so* -- one rule, and no shipped contest but Idaho states bands.
-  **Answer:**
-
----
-
-### Added after M9a
-
-- **Q54** HamScore's one-QSO Cabrillo line writes Winter Field Day's FM
-  contacts as `FM`; the Cabrillo file writes `PH`. Should HamScore ask the
-  contest too? *Recommended: yes* -- one rule for both; it changes what
-  HamScore receives for WFD FM QSOs.
-  **Answer:**
-
-- **Q56** (decided under the delegation; please confirm) A contest's sent
-  state now stands for the whole session: a MY STATE line after CONTEST in a
-  `.cfg`, or a Preferences edit mid-contest, no longer changes what Canada
-  Day/Winter, the Russian DX contests or the Cup RF send. The alternative
-  would have sent a stale state after reopening a log (design 8.2m).
-  *Recommended: accept.*
-  **Answer:**
-
-- **Q57** CQ WW RTTY's set-up writes MY ZONE as "zone state" while it builds
-  its messages, then puts it back -- and the write marks MY ZONE as yours, so
-  it no longer follows MY CALL. Build the messages without touching MY ZONE?
-  *Recommended: yes* (the messages are identical; only a later MY CALL change
-  behaves differently).
-  **Implemented with 7.12 (2026-10-13), by necessity:** with the readers on the
-  resolver, the transient write would have dropped the state whenever a zone
-  override was stated. The messages are built from a local; MY ZONE is never
-  written. Please confirm.
-  **Answer:**
-
----
-
-## 3. Already answered (for reference)
-
-| Q | Answer | Where it landed |
-|---|---|---|
-| Q4 | Retire all seven shared-set settings at the endpoint; user-defined contests to be revisited another way | M10 |
-| Q6 | POTA becomes a contest class, treated like General QSO | `TContestPOTA`, 2026-10-13 (design 8.2o) |
-| Q11 | Delete the QSO-POINT-METHOD-only arms at M10 | M10 |
-| Q28 | Station facts default from station config, overridable per contest | design 7.12; LANDED 2026-10-13 (`TMySettings.Resolved*`); UA4W's class 2026-10-14 (design 8.2p) |
-| Q33 | RSGB 1.8 gets a read-only new-multiplier answer | design 7.13; its class 2026-10-14 (design 8.2p) |
-| -- | IN7QPNE is a composite of IN/7QP/NE/DE; Delaware becomes a contest | design 7.14; Delaware 2026-10-14 (8.2q); the composite `TContestIN7QPNE` 2026-10-14 (8.2r; Q77-Q84) |
-| Q1 | Field Day has no multipliers; DX is never an ARRL section | M2 |
-| Q2 | No interim fix for the rotated point-method spellings | design 7.2 |
-| Q3 | The log stores only what the operator stated | M2a (decided under delegation) |
-| Q5 | Salmon Run W7DX bonus: implement | M6 |
-| Q12 | `TContestFixedPoints` retired, `FixedModePoints` kept | M3 |
-| Q14 | Out-of-state works only the host state; `nc_cty.dom` = 100 counties | M5b |
-| Q19 | No Sweepstakes QSO without a precedence (refused) | M5b |
-| Q20 | FD DX exports `CLASS` as logged, `SRX_STRING` `1D DX`, never `ARRL_SECT` | M5b |
-| Q21 | Night rules read the QSO's recorded time | after M4 |
-| Q25 | FD DX import is not a section | M5b |
-| Q39 | A contest never writes a station setting | design 7.11 (decided); LANDED at M9a for MY STATE (Q57 is MY ZONE) |
-| -- | Out-of-state x out-of-state in a QSO party: refuse with an error | M5b |
-| -- | Off-band QSO: logged, 0 points, no mult, no need-mult hint, not a dupe | 1e4f66f9 (points, mults); M8 (dupes, hints) |
-| -- | QRP = our power; last touch point wins; may change mid-contest with a reminder | Idaho, design 7.6; LANDED at M9b (the summary writes the one setting, a change with QSOs rescores and shows a notice) |
-| -- | The New Contest drop-down shows the display name | M9b (Q52 still asks which words) |
-| -- | Inactive contests go at the bottom of the drop-down (SA Sprint, Locust) | M9b (`IsActive`; Q59 asks for others) |
-| -- | ALL ASIAN SSB is `ALL-ASIAN-DX-PHONE` | e1c6f873 |
-| -- | RSGB RoPoCo: an ADIF record is the SSB running's when its mode is phone (one ADIF id, `RSGB-ROLO`) | M7b batch 2 (decided under delegation, design 8.2k) |
+  **Answer:** (NY4I, 2026-10-15) *"go with recommendation."* One rule:
+  `RussianID` of the CTY.DAT **country**, then `GetRussiaOblastID` of the call,
+  as a named helper each contest calls (Russian DX, RU3AX, RDA for the initial
+  exchange; Russian DX, both RF Championships and RDA for the hint). D7 had the
+  same three disagreeing sites: ZONECONT's `UA` test never ran (both contests'
+  rows said `NoInitialExchange`), LOGEDIT's country-based fallback was the live
+  rule, and the hint tested the raw CALL, so Russian `UB`..`UI` calls got no
+  hint. D7's Russian DX scoring also tests the country.
 
 ---
 

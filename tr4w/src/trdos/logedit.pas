@@ -980,6 +980,13 @@ begin
   Result := ctyGetGrid(aCall, id);
 end;
 
+(* CTY.DAT's country ID for a call, '' when CTY.DAT does not know it -- Q50
+  (2026-10-15): "is this a Russian station" is asked of the country. *)
+function EngineCountryOfCall(const aCall: string): string;
+begin
+  Result := ctyGetCountryID(aCall);
+end;
+
 function EditableLog.GetMultArray(Call: CallString; Mode: ModeType; TempMult:
   Str10): Cardinal;
 var
@@ -1099,6 +1106,7 @@ begin
            the arms did, so a longer answer is cut where it always was. *)
         hintLookups.InitialExchangeOf := @EngineInitialExchangeOf;
         hintLookups.GridOfCall := @EngineGridOfCall;
+        hintLookups.CountryOfCall := @EngineCountryOfCall;
         TempDomMult := ShortString(ContestIdentity(Contest).DomesticMultiplierFromCall(string(Call),
                                                                                        hintLookups));
         end;
@@ -2272,7 +2280,9 @@ function InitialExchangeEntry(Call: CallString): string;
 
 var
   CharPosition, Zone {, Result1}: integer;
-  TempQTH: QTHRecord;
+  (* The contest's InitialExchangeFromCall answer (Q50). TempQTH, which the
+    Russian fallback located the call into, went with it. *)
+  contestAnswer: string;
   TestString: ShortString;
   StandardCall, Command: Str20;
   Exchange: Str80;
@@ -2704,15 +2714,23 @@ begin
 
      end; { if case }
 
+     (* THE CONTEST'S OWN ANSWER FROM THE CALL, WHEN NOTHING ELSE GAVE ONE --
+       Q50, ruled 2026-10-15. This was `Contest in [RUSSIANDX, RDA,
+       RU3AXMEMORIAL]` with RussianID of the CTY.DAT country and the call's
+       oblast (D7's rule, the one that ran); each of those three contests
+       states it now as InitialExchangeFromCall, through
+       uCallSignRoutines.RussianStationOblast, and every other contest answers
+       False. The call goes as typed, as before. ContestIdentity: the rule
+       needs no station. *)
      if TempString = '' then
-       if Contest in [RUSSIANDX, RDA, RU3AXMEMORIAL] then
-          begin
-          ctyLocateCall(Call, TempQTH);
-          if RussianID(TempQTH.CountryID) then
-             begin
-             TempString := GetRussiaOblastID(Call);
-             end;
-          end;
+        begin
+        if ContestIdentity(Contest).InitialExchangeFromCall(string(Call),
+                                                            ctyGetCountryID(string(Call)),
+                                                            contestAnswer) then
+           begin
+           TempString := ShortString(contestAnswer);
+           end;
+        end;
      if Settings.InitialExchange.Reverse then
         begin
         TempString := CallsignsList.GetIniitialExchange(Call)

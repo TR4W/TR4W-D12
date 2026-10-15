@@ -32,9 +32,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
       Each class answers it now; every other contest answers True for every
       kind (the base), and this suite checks every registered contest.
     * DomesticMultiplierFromCall -- LOGEDIT.GetMultArray's `case Contest of`
-      for the need-multiplier hint: a Russian call's oblast (Russian DX, RF
-      Championship CW and SSB), CTY.DAT's grid (Ural Cup), the remembered
-      exchange of a Russian (RDA) or 'Y' (YO DX) call. The engine's answers
+      for the need-multiplier hint: a Russian station's oblast (Russian DX, RF
+      Championship CW and SSB -- uCallSignRoutines.RussianStationOblast since
+      Q50), CTY.DAT's grid (Ural Cup), the remembered exchange of a Russian
+      (RDA, by its CTY.DAT country) or 'Y' (YO DX) call. The engine's answers
       are handed in as lookups, stubbed here, so what is pinned is the
       contest's own rule.
 
@@ -239,20 +240,62 @@ begin
    Result := 'GR:' + aCall;
 end;
 
+(* CTY.DAT's country for the calls these tests use -- a fixed table, so no
+   test depends on a loaded country file. UB3ABC is a Russian call whose
+   first letters RussianID refuses; R1FJL is Franz Josef Land, a Russian
+   entity outside UA. Q50 (2026-10-15). *)
+function StubCountry(const aCall: string): string;
+begin
+   Result := '';
+   if (aCall = 'UA3ABC') or (aCall = 'UB3ABC') then
+      begin
+      Result := 'UA';
+      end
+   else if aCall = 'RA9XYZ' then
+      begin
+      Result := 'UA9';
+      end
+   else if aCall = 'R1FJL' then
+      begin
+      Result := 'R1FJ';
+      end
+   else if aCall = 'DL1ABC' then
+      begin
+      Result := 'DL';
+      end
+   else if aCall = 'YO3ABC' then
+      begin
+      Result := 'YO';
+      end;
+end;
+
 function Lookups: TMultiplierHintLookups;
 begin
    Result.InitialExchangeOf := @StubExchange;
    Result.GridOfCall := @StubGrid;
+   Result.CountryOfCall := @StubCountry;
 end;
 
+(* Q50, ruled 2026-10-15: the hint is uCallSignRoutines.RussianStationOblast
+   -- RussianID of the call's CTY.DAT COUNTRY, then GetRussiaOblastID of the
+   call. Until then it was RussianID of the raw CALL, which refused UB3ABC. *)
 procedure TContestMultipliersTests.Test_RussianCallsImplyTheirOblast;
 const
    CONTESTS: array[0..2] of ContestType = (RUSSIANDX, RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB);
 var
    i: integer;
    c: TContestBase;
+   none: TMultiplierHintLookups;
 begin
    BeginTest('Test_RussianCallsImplyTheirOblast');
+   FillChar(none, SizeOf(TMultiplierHintLookups), 0);
+
+   (* The controls: each call below has an oblast to find, so an empty
+      answer is the contest's, not GetRussiaOblastID's. *)
+   CheckTrue(GetRussiaOblastID('UA3ABC') <> '', 'the control: UA3ABC has an oblast to find');
+   CheckTrue(GetRussiaOblastID('RA9XYZ') <> '', 'the control: RA9XYZ has an oblast to find');
+   CheckTrue(GetRussiaOblastID('UB3ABC') <> '', 'the control: UB3ABC has an oblast to find');
+   CheckFalse(RussianID('UB3ABC'), 'the control: RussianID of the CALL refuses UB3ABC');
 
    for i := Low(CONTESTS) to High(CONTESTS) do
       begin
@@ -261,14 +304,17 @@ begin
          CheckEquals(GetRussiaOblastID('UA3ABC'), c.DomesticMultiplierFromCall('UA3ABC', Lookups),
                      string(ContestTypeSA[CONTESTS[i]]) + ': a UA call implies its oblast');
          CheckEquals(GetRussiaOblastID('RA9XYZ'), c.DomesticMultiplierFromCall('RA9XYZ', Lookups),
-                     string(ContestTypeSA[CONTESTS[i]]) + ': so does an R call -- RussianID of the CALL');
+                     string(ContestTypeSA[CONTESTS[i]]) + ': so does an R call in Asiatic Russia');
+         CheckEquals(GetRussiaOblastID('UB3ABC'), c.DomesticMultiplierFromCall('UB3ABC', Lookups),
+                     string(ContestTypeSA[CONTESTS[i]]) + ': and a UB call -- the COUNTRY decides (Q50)');
          CheckEquals('', c.DomesticMultiplierFromCall('DL1ABC', Lookups),
                      string(ContestTypeSA[CONTESTS[i]]) + ': another call implies nothing');
+         CheckEquals('', c.DomesticMultiplierFromCall('UA3ABC', none),
+                     string(ContestTypeSA[CONTESTS[i]]) + ': no country service, no hint');
       finally
          c.Free;
          end;
       end;
-   CheckTrue(GetRussiaOblastID('UA3ABC') <> '', 'the control: UA3ABC has an oblast to find');
 end;
 
 procedure TContestMultipliersTests.Test_LookupContestsAskTheEngine;
@@ -277,7 +323,7 @@ var
    none: TMultiplierHintLookups;
 begin
    BeginTest('Test_LookupContestsAskTheEngine');
-   FillChar(none, SizeOf(none), 0);
+   FillChar(none, SizeOf(TMultiplierHintLookups), 0);
 
    c := Make(CUPURAL);
    try
@@ -290,7 +336,10 @@ begin
    c := Make(RDA);
    try
       CheckEquals('EX:UA3ABC', c.DomesticMultiplierFromCall('UA3ABC', Lookups), 'RDA: a Russian call''s remembered exchange');
+      CheckEquals('EX:UB3ABC', c.DomesticMultiplierFromCall('UB3ABC', Lookups),
+                  'RDA: a UB call is Russian too -- the COUNTRY decides (Q50)');
       CheckEquals('', c.DomesticMultiplierFromCall('DL1ABC', Lookups), 'RDA: not for another call');
+      CheckEquals('', c.DomesticMultiplierFromCall('UA3ABC', none), 'RDA: no service, no answer');
    finally
       c.Free;
       end;

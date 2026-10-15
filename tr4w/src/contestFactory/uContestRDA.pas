@@ -51,12 +51,13 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   multiplier. The Russian station's DX multiplier is left as the head set
   it, as the arm left it.
 
-  NOT MOVED, ON PURPOSE: LOGEDIT names this contest twice -- in the
-  new-multiplier check that reads the initial exchange of a Russian call,
-  and in the initial exchange's oblast fallback beside the Russian DX
-  contests. Both are seams not built yet (M8, the multiplier sheet; the
-  Russian DX contests, registered since M5b, are still named in the same
-  routines). *)
+  BOTH OF LOGEDIT'S RULES FOR THIS CONTEST ARE ITS OWN NOW. The
+  need-multiplier hint (the district the log remembers for a Russian
+  station) moved at M8 as DomesticMultiplierFromCall; the initial exchange's
+  oblast fallback, which LOGEDIT ran for this contest beside the Russian DX
+  contests, is InitialExchangeFromCall since Q50 was ruled (NY4I,
+  2026-10-15). Both ask "is this a Russian station" of the CTY.DAT COUNTRY
+  -- the hint asked RussianID of the raw call until then. *)
 unit uContestRDA;
 
 {$I tr4w.inc}
@@ -107,13 +108,23 @@ type
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
 
-      (* THE DISTRICT THE LOG REMEMBERS FOR A RUSSIAN CALL, FOR THE
+      (* THE DISTRICT THE LOG REMEMBERS FOR A RUSSIAN STATION, FOR THE
          NEED-MULTIPLIER HINT -- the arm LOGEDIT.GetMultArray held for this
-         contest, moved here at M8 and transcribed exactly: RussianID of the
-         CALL, then the initial exchange the session holds for it
-         (CallsignsList, through aLookups.InitialExchangeOf). *)
+         contest, moved here at M8: the initial exchange the session holds
+         for the call (CallsignsList, through aLookups.InitialExchangeOf).
+         Whether the station is Russian was RussianID of the raw CALL; since
+         Q50 (2026-10-15) it is RussianID of its CTY.DAT country, through
+         aLookups.CountryOfCall. Either service missing, no hint. *)
       function DomesticMultiplierFromCall(const aCall: string;
                                           const aLookups: TMultiplierHintLookups): string; override;
+
+      (* A RUSSIAN STATION'S OBLAST AS THE INITIAL EXCHANGE -- LOGEDIT's
+         fallback for this contest (D7's too), the contest's own since Q50
+         (NY4I, 2026-10-15): uCallSignRoutines.RussianStationOblast. See
+         TContestBase.InitialExchangeFromCall. *)
+      function InitialExchangeFromCall(const aCall: string;
+                                       const aCountryID: string;
+                                       out aExchange: string): boolean; override;
    public
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
@@ -168,10 +179,22 @@ function TContestRDA.DomesticMultiplierFromCall(const aCall: string;
                                                 const aLookups: TMultiplierHintLookups): string;
 begin
    Result := '';
-   if RussianID(aCall) and Assigned(aLookups.InitialExchangeOf) then
+   if Assigned(aLookups.CountryOfCall)     and
+      Assigned(aLookups.InitialExchangeOf) then
       begin
-      Result := aLookups.InitialExchangeOf(aCall);
+      if RussianID(aLookups.CountryOfCall(aCall)) then
+         begin
+         Result := aLookups.InitialExchangeOf(aCall);
+         end;
       end;
+end;
+
+function TContestRDA.InitialExchangeFromCall(const aCall: string;
+                                             const aCountryID: string;
+                                             out aExchange: string): boolean;
+begin
+   Result := RussianID(aCountryID);
+   aExchange := RussianStationOblast(aCall, aCountryID);
 end;
 
 (* RDAQSOPointMethod -- the legacy LOGSTUFF arm for this

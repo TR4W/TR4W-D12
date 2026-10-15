@@ -211,8 +211,13 @@ $CEILINGS = @{
    # M10 S3, 2026-10-14 -- the legacy scoring case is deleted: logstuff 1 -> 0
    # (the RU3AX doubling in its RussianDX arm, the last D3 arm named above).
    # Unlisted now, so any contest test in logstuff fails.
+   #
+   # Q50, 2026-10-15 -- a Russian station's oblast is one rule
+   # (uCallSignRoutines.RussianStationOblast): logedit 4 -> 3 (the initial
+   # exchange's `Contest in [RUSSIANDX, RDA, RU3AXMEMORIAL]` fallback is each
+   # contest's InitialExchangeFromCall).
    'mainunit.pas'          = 1
-   'trdos\logedit.pas'     = 4
+   'trdos\logedit.pas'     = 3
    'trdos\postunit.pas'    = 1
 }
 

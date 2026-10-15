@@ -49,7 +49,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   and 2 for its own country. Anybody else scores 10 for a Russian station,
   then 5, 3 and 2 the same way. A phone QSO scores double -- the line the
   shared arm asked `if Contest = RU3AXMEMORIAL` for.
-  ITS INITIAL EXCHANGE: a Russian station's oblast, from its call. *)
+  ITS INITIAL EXCHANGE: a Russian station's oblast, from its call --
+  uCallSignRoutines.RussianStationOblast, the one rule NY4I ruled on Q50
+  (2026-10-15). LOGEDIT's InitialExchangeEntry asks it once nothing else
+  has filled the exchange. *)
 unit uContestRU3AXMemorial;
 
 {$I tr4w.inc}
@@ -97,7 +100,7 @@ type
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
       (* A RUSSIAN STATION'S OBLAST -- see the header. *)
-      function InitialExchangeFromCall(const aStandardCall: string;
+      function InitialExchangeFromCall(const aCall: string;
                                        const aCountryID: string;
                                        out aExchange: string): boolean; override;
    public
@@ -141,7 +144,8 @@ uses
    uCabrilloExchange,
    uADIFExchange,
    uContestRegistry,
-   (* RussianID, GetRussiaOblastID -- the leaves the arm and ZoneCont asked. *)
+   (* RussianID, RussianStationOblast -- the scoring arm's leaf, and the one
+      oblast rule (Q50). *)
    uCallSignRoutines,
    uTR4WStrings;
 
@@ -189,16 +193,15 @@ begin
       end;
 end;
 
-function TContestRU3AXMemorial.InitialExchangeFromCall(const aStandardCall: string;
-                                                   const aCountryID: string;
-                                                   out aExchange: string): boolean;
+(* Q50 (NY4I, 2026-10-15): the one rule, RussianStationOblast. True for any
+   Russian station, as LOGEDIT's fallback was -- the CTY.DAT country, not
+   'UA' alone as the M5b transcription of ZoneCont's dead arm said. *)
+function TContestRU3AXMemorial.InitialExchangeFromCall(const aCall: string;
+                                                       const aCountryID: string;
+                                                       out aExchange: string): boolean;
 begin
-   aExchange := '';
-   Result := (Copy(aCountryID, 1, 1) = 'U') and (Copy(aCountryID, 2, 1) = 'A');
-   if Result then
-      begin
-      aExchange := GetRussiaOblastID(aStandardCall);
-      end;
+   Result := RussianID(aCountryID);
+   aExchange := RussianStationOblast(aCall, aCountryID);
 end;
 
 function TContestRU3AXMemorial.GetDisplayName: string;
