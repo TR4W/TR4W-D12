@@ -459,7 +459,26 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   30 m dupe sheet and the Stations window's `+` do not show it -- consistent
   with "not a dupe", but they are also "have I worked him there" displays.
   Keep it so, or keep a worked-there mark that is not a dupe? *Recommended:
-  keep it so* -- one rule, and no shipped contest but Idaho states bands.
+  keep it so* -- one rule.
+  *Reworded 2026-10-15 (NY4I: "ambiguous as every contest states bands"):*
+  every contest has bands; what was meant is that the OFF-BAND rule fires only
+  for a class that overrides `TContestBase.UsesBand`, and measured today only
+  **Idaho and Delaware** do. Every other class inherits the base's answer --
+  every band is credited -- so this question only affects those two today.
+  Q98 asks about the other contests.
+  **Answer:**
+
+- **Q98** (raised by Q51's wording, 2026-10-15) Off-band crediting is
+  enforced for 2 of 186 contests. `UsesBand` (and, for Q44's RTC, a mode
+  equivalent that does not exist yet) is overridden only by Idaho and
+  Delaware; every other class credits every band, so a 30 m QSO in CQ WW
+  or an FT8 QSO in a CW-only contest scores like any other. Your 7.4 ruling
+  says the off-band rule "applies to basically any contest". Sweep every
+  class to state the bands (and modes) its sponsor allows, one family per
+  commit, with each changed matrix record re-frozen? *Recommended: yes* --
+  bands from the same sources as F26 (Cabrillo spec, WA7BNM, DXLog's
+  definition files), Q44's three first, and any contest whose sponsor
+  page is silent left as every band and listed to you.
   **Answer:**
 
 ---
