@@ -670,8 +670,9 @@ closes it; anything else reopens it.
   **Answer:** (NY4I, 2026-10-15) *"Why would we ship any .cfg files in the dom
   folder? Those are only DOM files."* Neither: DELETED, with `Delaware QSO
   Party.cfg`, the same kind of template added at 8.2q. Nothing read either
-  (the installer lists its `dom` files by name and names no `.cfg`); the New
-  Contest dialog creates a contest's `.cfg`.
+  (the installer lists its `dom` files by name and names no `.cfg`); a new contest
+  is its SQLite file alone -- the New Contest dialog writes no `.cfg` (since
+  `66ac1ebe`); a `.cfg` is only read, to import an old or external contest.
 
 - **Idaho-DC** Idaho's in-state multipliers include the states and provinces but
   not DC; the sponsor says "each US state". Should DC count?

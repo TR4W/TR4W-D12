@@ -1707,8 +1707,16 @@ Read [`docs/ADDING_A_NEW_CONTEST.md`](docs/ADDING_A_NEW_CONTEST.md) and
 `ContestTypeSA` spelling in `VC.pas` (appended), a class in `src/contestFactory/` that states its
 rules -- set-up in its `DescribeSession`, not in `fcontest.pas` -- and its `.dom` files in
 `target/dom/` if it has domestic multipliers. **No `.cfg` goes there** -- `target/dom` holds
-`.dom` files only, the New Contest dialog creates a contest's `.cfg`, and the two templates
-that sat there (Idaho, Delaware) never shipped and were deleted 2026-10-15 (NY4I).
+`.dom` files only, and the two templates that sat there (Idaho, Delaware) never shipped and
+were deleted 2026-10-15 (NY4I).
+
+**A NEW CONTEST IS ITS SQLITE FILE AND NOTHING ELSE. NO `.cfg`.** NY4I, 2026-10-15: *"the
+standard going forward is we absolutely open a contest database file without a CFG file. CFG
+file is purely a historical artifact if I want to import an external contest. If you have cfg
+files still for a brand new contest (as opposed to simply the contest sqlite file), something
+is wrong in our design."* The New Contest dialog writes none (since `66ac1ebe`): it queues its
+values (`uNewContestCommands`) and they are applied into the new log's database. A `.cfg` is
+only ever READ, as an import of an old or external contest.
 **There is no metadata row**: `ContestsArray`, `ContestsBooleanArray` and `QSOParties` were deleted
 at M10 S8 (2026-10-14). Then verify exchange parsing, multiplier tracking, scoring, and Cabrillo
 export — and run the corpus, the factory check and the contest matrix.
