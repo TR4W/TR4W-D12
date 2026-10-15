@@ -119,8 +119,9 @@ const
        Display: 'All Asian DX Contest, CW'; DomesticFile: ''),
       (* ALLASIANSSB *)
       (Token: 'ALL-ASIAN-DX-SSB'; WA7BNM: 102; QRZRUID: 146; Email: '';
-       Friendly: 'All Asian DX Contest, Phone';
-       Display: 'All Asian DX Contest, Phone'; DomesticFile: ''),
+       (* 'SSB', not 'Phone': JARL's own name (NY4I, 2026-10-15) *)
+       Friendly: 'All Asian DX Contest, SSB';
+       Display: 'All Asian DX Contest, SSB'; DomesticFile: ''),
       (* ALLJA *)
       (Token: 'ALL JA'; WA7BNM: 0; QRZRUID: 0; Email: '';
        Friendly: 'ALL JA';

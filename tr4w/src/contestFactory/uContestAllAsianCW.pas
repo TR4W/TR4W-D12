@@ -238,9 +238,11 @@ end;
 
 function TContestAllAsianCW.GetCabrilloName: string;
 begin
-   (* The row's CABName is blank; this is the enum's spelling it resolves
-      to. *)
-   Result := 'ALL-ASIAN-DX-CW';
+   (* THE SPONSOR'S NAME -- JARL's Cabrillo page (NY4I, 2026-10-15):
+      https://www.jarl.org/English/4_Library/A-4-3_Contests/cabrilloformat.html
+      gives CONTEST: AADX-CW. This wrote the enum's spelling,
+      ALL-ASIAN-DX-CW, which is still the ADIF CONTEST_ID below. *)
+   Result := 'AADX-CW';
 end;
 
 function TContestAllAsianCW.GetADIFContestId: string;

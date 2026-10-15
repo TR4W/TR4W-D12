@@ -240,14 +240,17 @@ end;
 
 function TContestAllAsianSSB.GetDisplayName: string;
 begin
-   Result := 'All Asian DX Contest, Phone';
+   Result := 'All Asian DX Contest, SSB';
 end;
 
 function TContestAllAsianSSB.GetCabrilloName: string;
 begin
-   (* The row's CABName is blank; this is the enum's spelling it resolves
-      to. *)
-   Result := 'ALL-ASIAN-DX-SSB';
+   (* THE SPONSOR'S NAME -- JARL's Cabrillo page (NY4I, 2026-10-15):
+      https://www.jarl.org/English/4_Library/A-4-3_Contests/cabrilloformat.html
+      gives CONTEST: AADX-SSB ("SSB", not "PHONE"; the QSO lines' mode is still
+      PH). This wrote the enum's spelling, ALL-ASIAN-DX-SSB. The ADIF CONTEST_ID
+      stays ALL-ASIAN-DX-PHONE, ADIF's own enumeration value (NY4I, 2026-10-01). *)
+   Result := 'AADX-SSB';
 end;
 
 function TContestAllAsianSSB.GetADIFContestId: string;
@@ -284,7 +287,7 @@ end;
 
 function TContestAllAsianSSB.GetFriendlyName: string;
 begin
-   Result := 'All Asian DX Contest, Phone';
+   Result := 'All Asian DX Contest, SSB';
 end;
 
 function TContestAllAsianSSB.GetInitialExchangeKind: InitialExchangeType;
