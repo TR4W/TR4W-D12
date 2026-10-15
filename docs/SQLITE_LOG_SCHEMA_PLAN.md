@@ -1568,7 +1568,10 @@ warning for it.
   sites are untouched.
 
 **The store stays ENABLED after a rolled-back import -- a deliberate difference
-from `LogStoreUpdateQSOsByRowId`.**
+from `LogStoreUpdateQSOsByRowId`.** **CONFIRMED by NY4I, 2026-10-14:** *"If an
+ADIF record fails to import, notify the user with the callsign, band, mode and
+timestamp. Then abort the import but let the user keep logging new contacts."*
+The failure report names all four (band and mode added that day).
 
 - The realistic failure is a record with no `CALL`: `callsign` is NOT NULL, and
   a line holding only `<EOR>` is such a record. That is a fact about the FILE.

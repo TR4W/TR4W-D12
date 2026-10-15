@@ -10176,6 +10176,7 @@ var
   failedRec: ContestExchange;
   failedCall: string;
   failedWhen: string;
+  failedBandMode: string;
   // County-line detection during import.  Within a single ImportFromADIF
   // pass we remember the first QTHString seen for each (call|band|mode)
   // tuple.  When a later record reuses the same (call|band|mode) with a
@@ -10424,9 +10425,15 @@ begin
                               [failedRec.tSysTime.qtHour,
                                failedRec.tSysTime.qtMinute]);
              end;
+          (* THE BAND AND MODE TOO -- NY4I, 2026-10-14: "notify the user with
+            the callsign, band, mode and timestamp". The spellings the log
+            window and the edit dialog use. *)
+          failedBandMode := Trim(BandStringsArrayWithOutSpaces[failedRec.Band]) + ' ' +
+                            ModeStringArray[failedRec.Mode];
           ReportNothingImported(SysUtils.Format(
-             'record %d of %d (%s, %s) could not be written to the log: %s',
-             [FailedIndex + 1, Pending.Count, failedCall, failedWhen, Failure]));
+             'record %d of %d (%s, %s, %s) could not be written to the log: %s',
+             [FailedIndex + 1, Pending.Count, failedCall, failedBandMode,
+              failedWhen, Failure]));
           end
        else
           begin
