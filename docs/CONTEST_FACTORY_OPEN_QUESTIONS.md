@@ -20,12 +20,6 @@ moves to section 4 in the commit that records it.
 
 ### QSO parties
 
-- **Q34** Idaho rovers earn the dormant-county bonus per county they activate, but
-  no QSO records the county it was sent from. Add a per-QSO "my county" (log
-  field, entry, ADIF `MY_CNTY`), or keep scoring a rover as a fixed station in its
-  MY STATE county?
-  **Answer:**
-
 - **Q35** Idaho dormant-county threshold: the rovers page says "makes 10 valid
   QSO's", the rules page "MORE THAN 10 contacts". 10 is implemented. The rovers
   page also says "only counties listed in RED are eligible", but the table has
@@ -37,12 +31,18 @@ moves to section 4 in the commit that records it.
 
 - **Q15** NRAU-Baltic: the contest calendar lists Cabrillo names `NRAU-CW` /
   `NRAU-SSB`; TR4W sends `NRAU-BALTIC-CW` / `NRAU-BALTIC-SSB`. Which is right?
+  *Now answerable from the sources: the Cabrillo spec's contest list and the
+  sponsor's public logs say which name is current.*
   **Answer:**
 
 - **Q16** Sprint SSB is its own contest, but its ADIF/Cabrillo name is
   `NA-SPRINT-SSB` and its friendly name "North American Sprint, SSB". Change to the
   sponsor's name (https://ssbsprint.com/rules/)? Its multipliers come from the
   `naqp` file with no DXCC, unlike the NA Sprints' North American DXCC. Intended?
+  *Partly settled: the Cabrillo name is the class's own definition (Q52), by
+  the name rule (D7's, else the enumeration), so `NA-SPRINT-SSB` stays unless
+  the sponsor's page or its public logs say otherwise; the friendly name is
+  Q52/Q53's. The multiplier half goes to the DXLog cross-check.*
   **Answer:**
 
 - **Q22** PACC: the row says `RSTAndQSONumberOrDomesticQTHExchange`, but every PACC
@@ -53,13 +53,12 @@ moves to section 4 in the commit that records it.
   runnings but not for CUP RF DIGITAL. Intended?
   **Answer:**
 
-- **Q26** WAG: an imported record with no `DOK` keeps its received RST (`599`) as
-  the QTH. Should it be empty?
-  **Answer:**
-
 - **Q27** SAC silently clears the entry when a Russian station (UA, UA2, UA9, EU) is
   typed. Should it show an error, like other invalid stations? And is a Russian
   station really not workable in SAC, or only not a multiplier?
+  *Partly settled by 7.10 and FD-DX (2026-10-15): a station the contest does
+  not accept is REFUSED WITH AN ERROR, never silently cleared. Still open: is
+  a Russian station really not workable in SAC, or only not a multiplier?*
   **Answer:**
 
 - **Q97** (found implementing Q50, 2026-10-15) Franz Josef Land (`R1FJ`)
@@ -87,6 +86,9 @@ moves to section 4 in the commit that records it.
   (a base with children) rather than separate contests: JIDX CW/SSB (identical
   but for names), All Asian CW/SSB, Oceania CW/SSB, the four EU Sprints, the
   three ARRL VHF runnings?
+  *Now decidable under Q7's rule ("one rule today" = a base; otherwise
+  copies): the rows named here are measurably identical or not, so I can
+  propose each pair from the evidence for a yes.*
   **Answer:**
 
 ### Added after M7b batch 2
@@ -154,6 +156,7 @@ moves to section 4 in the commit that records it.
 - **Q55** WRTC's live-score XML has never carried a multiplier: its rule
   posts HQ and country on an "all modes" row the writer never produces. Post
   them per mode, add the row, or leave it (WRTC forbids score posting anyway)?
+  *Moot if Q83 is yes (WRTC posts no live score at all).*
   **Answer:**
 
 ### Added after M9b (the New Contest drop-down and CATEGORY-POWER)
@@ -177,27 +180,6 @@ moves to section 4 in the commit that records it.
   inactive; FISTS, QCWA Golden, WWL, XMAS and Locust retire. Any others?*
   **Answer:**
 
-- **Q61** CATEGORY-POWER is now one value (design 7.6). Four other Cabrillo
-  categories have the same two-store shape: ASSISTED, BAND, MODE and OPERATOR
-  start from the setting the New Contest dialog wrote, but the summary window
-  writes MODE to a copy of its own and the other three nowhere, so a headless
-  export reads a stale or empty copy. Make them one value each, the same way
-  (no rescore -- no contest scores by them)?
-  **Answer:**
-
-- **Q62** (POTA's class, 2026-10-13) A POTA hunter who sends a Canadian
-  province is exported with `DXCC 291` -- the USA -- beside `STATE ON`. The
-  export always wrote 291 for anything that looked like a state, and that list
-  includes the provinces. Moved exactly as it was. Should a province write
-  Canada (1), or should POTA leave DXCC to the callsign's country like every
-  other contest?
-  **Answer:**
-
-- **Q63** The New Contest dialog captions POTA's box "Activator" as plain
-  English text, so no translation can reach it. Moved as it was. Give it a
-  translatable string?
-  **Answer:**
-
 - **Q64** The New Contest drop-down now lists POTA as "Parks on the Air(r)
   Logging" (its friendly name -- every contest class shows its human name,
   your M9a ruling) where it used to say "POTA". Keep that, or should POTA's
@@ -212,37 +194,6 @@ moves to section 4 in the commit that records it.
   page show the contest's value beside the field, with a way to clear it?
   *Recommended: yes, a hint that names the contest's value.* This is
   `lcl-ui` work.
-  **Answer:**
-
-- **Q67** The New Contest dialog's rows start empty, and every row has to be
-  filled before OK is enabled. So every contest that asks for MY ZONE
-  states a zone override, even when you type your station's own zone. That
-  contest then ignores a later Preferences change to the zone. Should the
-  rows start with your station's values (read from the file, because the
-  dialog runs before the settings load)? And should a row you leave
-  unchanged count as "use the station's value" rather than as an override?
-  *Recommended: yes to both.*
-  **Answer:**
-
-- **Q68** Reopening a log with no `.cfg` sets up the contest before the
-  log's own rows are applied. The in-state test and the exchange messages
-  are built then, so they use the station's state and zone rather than this
-  contest's override. Before 7.12 this was the same, with the contest's
-  value written into the station after set-up. MY CALL is already applied
-  first for the same reason. Should the station-fact rows be applied first
-  too? *Recommended: yes.* That would change set-up on reopen for a log
-  whose override differs from the station.
-  *Reworded 2026-10-15.* NY4I read this as moot ("we have an external program
-  to convert cfg files. We should not have cfg files for contests going
-  forward"). It is the opposite: "with no `.cfg`" is the ONLY reopen path from
-  now on, because the contest database is the only source. On reopen, contest
-  set-up (`FoundContest`) runs when the stored contest row is applied
-  (`uSettingsEffects.pas:354`), and builds the in-state test and the exchange
-  messages then -- before a MY STATE or MY ZONE override row is applied. So
-  every reopened log whose contest overrides the station's state or zone sets
-  up with the STATION's values until something re-runs set-up. The question is
-  only the order: apply the station-fact rows (and, with Q65, MY CALL) before
-  the contest row? *Recommended: yes.*
   **Answer:**
 
 ### Added with the UA4W Championship's and RSGB 1.8's classes (2026-10-14)
@@ -272,6 +223,8 @@ moves to section 4 in the commit that records it.
   `TC_ENTERYOURRDAIDORGRID` ("for UA1A stations" against "for Russian
   stations"). Which wording, and should it be translatable?
   *Recommended: 160 m only; use the translated string with your wording.*
+  *The band half is now Q98's (every contest states its bands; 7.4, Q44).
+  Still open here: the UA4W prompt's wording.*
   **Answer:**
 
 ### Added with the Delaware QSO Party's class (2026-10-14)
@@ -285,20 +238,6 @@ moves to section 4 in the commit that records it.
   Add a way for a QSO party to put the county into the dupe check, or
   leave it to the operator? *Recommended: add it, as its own step, for every
   state party with mobiles.*
-  **Answer:**
-
-- **Q74** Delaware's Cabrillo header must have `ARRL-SECTION:` or
-  `LOCATION:` (DE, your state or section, or DX). TR4W now refuses to write
-  the file without a LOCATION, and you type it. Should TR4W fill it in from
-  where you are? *Recommended: yes -- DE in state, else your state, else DX.*
-  **Answer:**
-
-- **Q76** In every single-state party, an in-state station's ADIF export
-  labels every QSO with the HOST state: a DE station working a PA station
-  exports `STATE:DE` beside `QTH:PA`. Should `STATE` be the host state only
-  for a host county, and the worked state otherwise? This changes the
-  ADIF of every in-state party log, so it would be its own step.
-  *Recommended: yes, separately.*
   **Answer:**
 
 ### Added with the IN7QPNE composite (2026-10-14)
@@ -364,16 +303,6 @@ moves to section 4 in the commit that records it.
 These were copied into the classes exactly as the old table had them, so
 nothing changed. Each looks wrong; none was fixed without your answer.
 
-- **Q89** British Columbia QSO Party ADIF export: TR4W writes NO `STATE`
-  (and no `CNTY`) for a BCQP QSO, because the old table named BC's area
-  `VE7` -- not two letters -- and the export only writes a two-letter
-  state. The BC class itself says its host is `BC`, and ADIF's `STATE`
-  field does carry Canadian provinces. Should BCQP export `STATE:BC` (and
-  the county) like the US parties do? M10 S6 deliberately kept today's
-  output; this would change BCQP's ADIF, so it waits for you.
-  *Recommended: yes, export BC.*
-  **Answer:**
-
 ### Raised by the M11 plan (2026-10-14; `docs/CONTEST_FACTORY_M11_PLAN.md`)
 
 M10 is complete. M11 moves the multiplier and exchange "kind" rules into
@@ -429,18 +358,112 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
 
 ### Added after M9a
 
-- **Q54** HamScore's one-QSO Cabrillo line writes Winter Field Day's FM
-  contacts as `FM`; the Cabrillo file writes `PH`. Should HamScore ask the
-  contest too? *Recommended: yes* -- one rule for both; it changes what
-  HamScore receives for WFD FM QSOs.
-  **Answer:**
-
 ---
 
 ## 3. Awaiting only your yes
 
 Each carries a **Proposed answer** with its source. "Yes" (or "yes to all")
 closes it; anything else reopens it.
+
+- **Q67** The New Contest dialog's rows start empty, and every row has to be
+  filled before OK is enabled. So every contest that asks for MY ZONE
+  states a zone override, even when you type your station's own zone. That
+  contest then ignores a later Preferences change to the zone. Should the
+  rows start with your station's values (read from the file, because the
+  dialog runs before the settings load)? And should a row you leave
+  unchanged count as "use the station's value" rather than as an override?
+  *Recommended: yes to both.*
+  **Proposed answer:** SETTLED BY Q65 + Q74 + "a contest is its SQLite file"
+  (2026-10-15): the rows start with the station's values (the seed), and
+  whatever a row holds at OK -- changed or not -- is the CONTEST's value,
+  stored in its database. So yes to seeding; and an unchanged row is NOT "use
+  the station's value" but the contest's own copy -- a later Preferences
+  change does not reach an existing contest, which is what makes the database
+  self-contained.
+  **Answer:**
+
+- **Q34** Idaho rovers earn the dormant-county bonus per county they activate, but
+  no QSO records the county it was sent from. Add a per-QSO "my county" (log
+  field, entry, ADIF `MY_CNTY`), or keep scoring a rover as a fixed station in its
+  MY STATE county?
+  **Proposed answer:** SETTLED BY the Q13 audit (finding C) and the MY_CNTY
+  ruling (Q19): yes, a per-QSO "my county". The log already has `my_county`
+  (and `my_state`, `my_grid`) per QSO for exactly this and nothing writes
+  them; a rover's QSO records the county it was sent from, ADIF exports it as
+  `MY_CNTY`, and the dormant-county bonus counts from it.
+  **Answer:**
+
+- **Q76** In every single-state party, an in-state station's ADIF export
+  labels every QSO with the HOST state: a DE station working a PA station
+  exports `STATE:DE` beside `QTH:PA`. Should `STATE` be the host state only
+  for a host county, and the worked state otherwise? This changes the
+  ADIF of every in-state party log, so it would be its own step.
+  *Recommended: yes, separately.*
+  **Proposed answer:** SETTLED BY "don't reuse fields; use distinct station
+  fields" (2026-10-15, F26): `STATE` is the WORKED station's state, `MY_STATE`
+  ours. So a DE station working a PA station exports `STATE:PA` (and
+  `MY_STATE:DE`), never the host state beside `QTH:PA`.
+  **Answer:**
+
+- **Q89** British Columbia QSO Party ADIF export: TR4W writes NO `STATE`
+  (and no `CNTY`) for a BCQP QSO, because the old table named BC's area
+  `VE7` -- not two letters -- and the export only writes a two-letter
+  state. The BC class itself says its host is `BC`, and ADIF's `STATE`
+  field does carry Canadian provinces. Should BCQP export `STATE:BC` (and
+  the county) like the US parties do? M10 S6 deliberately kept today's
+  output; this would change BCQP's ADIF, so it waits for you.
+  *Recommended: yes, export BC.*
+  **Proposed answer:** SETTLED BY Q19 (2026-10-15): STATE is ADIF's primary
+  subdivision, provinces included. So BCQP exports `STATE:BC` and the county
+  like the US parties.
+  **Answer:**
+
+- **Q62** (POTA's class, 2026-10-13) A POTA hunter who sends a Canadian
+  province is exported with `DXCC 291` -- the USA -- beside `STATE ON`. The
+  export always wrote 291 for anything that looked like a state, and that list
+  includes the provinces. Moved exactly as it was. Should a province write
+  Canada (1), or should POTA leave DXCC to the callsign's country like every
+  other contest?
+  **Proposed answer:** SETTLED BY "don't reuse fields" and Q13 (the record,
+  not a guess): POTA leaves DXCC to the callsign's country like every other
+  contest; a Canadian province is never written as DXCC 291.
+  **Answer:**
+
+- **Q61** CATEGORY-POWER is now one value (design 7.6). Four other Cabrillo
+  categories have the same two-store shape: ASSISTED, BAND, MODE and OPERATOR
+  start from the setting the New Contest dialog wrote, but the summary window
+  writes MODE to a copy of its own and the other three nowhere, so a headless
+  export reads a stale or empty copy. Make them one value each, the same way
+  (no rescore -- no contest scores by them)?
+  **Proposed answer:** SETTLED BY "a contest is its SQLite file" and 7.6: each
+  of ASSISTED, BAND, MODE and OPERATOR is ONE value, set at New Contest time
+  and stored in the contest database, which the summary window edits and a
+  headless export reads -- no copies.
+  **Answer:**
+
+- **Q54** HamScore's one-QSO Cabrillo line writes Winter Field Day's FM
+  contacts as `FM`; the Cabrillo file writes `PH`. Should HamScore ask the
+  contest too? *Recommended: yes* -- one rule for both; it changes what
+  HamScore receives for WFD FM QSOs.
+  **Proposed answer:** SETTLED BY Q52's ruling (the Cabrillo form is the
+  contest class's own definition): HamScore's one-QSO Cabrillo line asks the
+  contest, as the file does, so WFD FM goes as `PH` in both.
+  **Answer:**
+
+- **Q63** The New Contest dialog captions POTA's box "Activator" as plain
+  English text, so no translation can reach it. Moved as it was. Give it a
+  translatable string?
+  **Proposed answer:** SETTLED BY the i18n rule (CLAUDE.md: a caption typed as
+  plain English reaches no catalogue): "Activator" becomes a translatable
+  string.
+  **Answer:**
+
+- **Q26** WAG: an imported record with no `DOK` keeps its received RST (`599`) as
+  the QTH. Should it be empty?
+  **Proposed answer:** SETTLED BY Q3 (the log stores only what the operator
+  stated) and Q13 (an import keeps the record): an imported WAG record with no
+  DOK has an EMPTY QTH -- an RST is not a DOK.
+  **Answer:**
 
 - **Q41** ARRL VHF: September is set up with the contest name `'VHF QSO JUNE'`
   (the old code named both runnings), and January has never had any setup at
@@ -608,8 +631,45 @@ closes it; anything else reopens it.
 | Q36 | Moot: Locust is retired | -- |
 | Q24 | FOC reads N1MM's APP_N1MM_EXCHANGE1 only when the record's CONTEST_ID is FOC's | not built; needs N1MM's id spelling |
 | Q65 | MY CALL is a station fact a contest may override; the contest's call lives in its database | not built (own stage) |
+| Q74 | Cabrillo LOCATION is seeded from the station at New Contest time and stored in the contest | not built |
+| Q68 | On reopen, the station-fact rows are applied before the contest row | not built |
 
 ### Answered since the table was last updated (full text)
+
+- **Q68** Reopening a log with no `.cfg` sets up the contest before the
+  log's own rows are applied. The in-state test and the exchange messages
+  are built then, so they use the station's state and zone rather than this
+  contest's override. Before 7.12 this was the same, with the contest's
+  value written into the station after set-up. MY CALL is already applied
+  first for the same reason. Should the station-fact rows be applied first
+  too? *Recommended: yes.* That would change set-up on reopen for a log
+  whose override differs from the station.
+  *Reworded 2026-10-15.* NY4I read this as moot ("we have an external program
+  to convert cfg files. We should not have cfg files for contests going
+  forward"). It is the opposite: "with no `.cfg`" is the ONLY reopen path from
+  now on, because the contest database is the only source. On reopen, contest
+  set-up (`FoundContest`) runs when the stored contest row is applied
+  (`uSettingsEffects.pas:354`), and builds the in-state test and the exchange
+  messages then -- before a MY STATE or MY ZONE override row is applied. So
+  every reopened log whose contest overrides the station's state or zone sets
+  up with the STATION's values until something re-runs set-up. The question is
+  only the order: apply the station-fact rows (and, with Q65, MY CALL) before
+  the contest row? *Recommended: yes.*
+  **Answer:** (NY4I, 2026-10-15) *Yes.* On reopen, the station-fact rows (MY
+  STATE, MY ZONE, LOCATION and, with Q65, MY CALL) are applied BEFORE the
+  contest row, so set-up builds the in-state test and the messages from the
+  contest's own values. Not built.
+
+- **Q74** Delaware's Cabrillo header must have `ARRL-SECTION:` or
+  `LOCATION:` (DE, your state or section, or DX). TR4W now refuses to write
+  the file without a LOCATION, and you type it. Should TR4W fill it in from
+  where you are? *Recommended: yes -- DE in state, else your state, else DX.*
+  **Answer:** (NY4I, 2026-10-15) *"arrl section for LOCATION is set at new
+  contest definition time as with the other values seeded from MY STATION."*
+  So LOCATION is a station fact seeded into the New Contest dialog (from the
+  station's section or state, as Q65/7.12 seed MY CALL, MY STATE and MY ZONE),
+  and what the dialog holds at OK is the contest's value, stored in its
+  database. The Cabrillo writer reads it from there. Not built.
 
 - **Q65** MY CALL has the problem 7.12 just fixed for MY STATE and MY ZONE.
   When a contest is run under a club call (W4TA), the call is written into
