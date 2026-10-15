@@ -104,7 +104,7 @@ DXLog. Old to new:
    and the sponsor page says the sprints will not continue in 2026. (DXLog still
    ships a FISTS Sprint definition, updated 2025-12-28 `[DXLog FISTSSPR.txt]`; that
    is a logger keeping a file, not evidence the event runs.)
-9. **GRIDLOC:** retire the class? Not on WA7BNM, not in DXLog.
+9. **GRIDLOC: ANSWERED -- KEEP** (NY4I, 2026-10-15; it shows whether a grid is needed or worked, which General QSO does not). Open remainder: Cabrillo file or none, and its name.
 10. **NZFIELDDAY (JW-FD):** from NZART's rules: (a) RS(T) + serial from 001 +
     branch number, a home station sending `00`? (b) 5 points for a ZL CW QSO, 3 for
     ZL phone, 10 for non-ZL? (c) multiplier is branches; does our own branch count?
@@ -635,6 +635,13 @@ Score with a bonus is `(QSO points x mults x power mult) + bonus points` (refs 3
       POTA and Kids Day (decision 1).
 
     Recommended: (a), unless an operator is known to use it.
+  - **ANSWERED (NY4I, 2026-10-15): KEEP IT** -- option (c). *"I can see where someone
+    may want to know if they have worked the same grid. so while general qso will
+    allow logging of grid and name, grid loc would show if the grid is needed or
+    worked so keep it."* Its purpose is the grid multiplier's worked/needed display,
+    which General QSO does not have. Still to settle: whether it writes a Cabrillo
+    file at all (decision 1's "no Cabrillo" hook, as POTA and Kids Day), and if it
+    does, its name (`GRID-LOC` would follow the TEN-TEN / KIDS-DAY pattern).
 
 ### JALONGPREFECT: JARL All Cities All Guns (ACAG)
 
