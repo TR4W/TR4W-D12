@@ -73,6 +73,13 @@ DXLog. Old to new:
   file at all, and if so is its name `GRID-LOC`?
   - **NZFIELDDAY** keeps `JW-FD` (NY4I's own choice of 2026-09-29), and the
     remaining names are those of the CONTEST: table.
+- **Q9a, Grid Loc's Cabrillo and name -- ANSWERED (NY4I, 2026-10-15):** *"Grid Loc
+  not needed as we would not create CABRILLO for it. So use FFMA for it as a place
+  holder (Fred Fish Memorial Award is about tracking grids)."*
+  - **No Cabrillo file** for Grid Loc -- it joins POTA and Kids Day under decision 1.
+  - **Its name is `FFMA`**, a placeholder (the ARRL Fred Fish Memorial Award, for
+    working the 488 grids on 6 m, is the grid-tracking use the class serves). Used
+    wherever the contest has to name itself, e.g. ADIF CONTEST_ID.
 - **Q4-Q7, County Hunter (MARAC) -- DELEGATED (NY4I, 2026-10-15): "MARAC is
   inactive so just pick a reasonable default."** The default chosen:
   - **Scoring stays as it is:** one point per QSO, no multipliers, dupes as today --
@@ -115,11 +122,6 @@ the part still owed. The `[Qn]` tag is the number the question has been cited by
 
 - **[Q3] Log format.** Does the qrpcontest.com upload take a Cabrillo file?
 
-**Grid Loc**
-
-- **[Q9a] Cabrillo or none?** It has no sponsor to send a log to. Write no Cabrillo
-  file (like POTA and Kids Day), or write one named `GRID-LOC`?
-
 **NZ Field Day (JW-FD)**
 
 - **[Q10] Rules:** (a) RS(T) + serial + branch, a home station sending `00`?
@@ -159,8 +161,11 @@ General QSO does not?
 - **[Q12] QCWA Golden:** no source names this event at all. What is it?
 - **[Q16] WWL:** no source names it, and no DXLog file has its scoring rule.
 
-**Also owed, from elsewhere in this document:** decision 1 (a way for a contest to
-say "no Cabrillo file" -- POTA, Kids Day, and Grid Loc if 9a says so).
+(Decision 1, a way for a contest to say "no Cabrillo file", is no longer owed: with
+POTA, Kids Day and Grid Loc all writing none, it is decided -- a `TContestBase`
+answer, False by default, that those three state; the Cabrillo writer then refuses
+with a message instead of writing error-marker lines. A design call under the
+delegation, not a sponsor rule.)
 
 ## Sources, and how each fact is marked
 
