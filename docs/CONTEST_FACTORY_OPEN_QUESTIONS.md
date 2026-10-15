@@ -26,8 +26,6 @@ moves to section 4 in the commit that records it.
   be none? Only the remaining-multiplier display would change.
   **Answer:**
 
-### Sweepstakes
-
 ### QSO parties
 
 - **Q29** "Out-of-state stations work only the host state" is now the default for
