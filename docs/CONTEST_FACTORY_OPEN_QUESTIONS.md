@@ -20,12 +20,6 @@ moves to section 4 in the commit that records it.
 
 ### Field Day
 
-- **Q38** Winter Field Day's score is points x band-modes x power factor, with no
-  DX multiplier, yet its session counts DXCC multipliers
-  (`ARRLDXCCWithNoARRLSections`). Like Field Day (no multipliers at all), should it
-  be none? Only the remaining-multiplier display would change.
-  **Answer:**
-
 ### QSO parties
 
 - **Q29** "Out-of-state stations work only the host state" is now the default for
@@ -623,8 +617,23 @@ closes it; anything else reopens it.
 | FD-DX | `DX` from a W (or other sectioned) station is refused; a DX station is still `1D DX` | not built |
 | Q30 | Winter FD: `MX` is a section (Cabrillo, SRX_STRING, ARRL_SECT), as D7 does | already so; no change |
 | Q31 | `Missing precedence (Q A B U M S)` is acceptable wording | already so |
+| Q38 | Winter FD has no DXCC multiplier (D7 tracked one but never scored it) | not built |
 
 ### Answered since the table was last updated (full text)
+
+- **Q38** Winter Field Day's score is points x band-modes x power factor, with no
+  DX multiplier, yet its session counts DXCC multipliers
+  (`ARRLDXCCWithNoARRLSections`). Like Field Day (no multipliers at all), should it
+  be none? Only the remaining-multiplier display would change.
+  **Answer:** (NY4I, 2026-10-15) *"Winter FD does not count DXCC multipliers
+  or at least it did not in D7."* So: none, like Field Day. **For the record,
+  D7 did TRACK them** -- `FCONTEST.PAS:414` sets `ActiveDXMult :=
+  ARRLDXCCWithNoARRLSections` for Winter Field Day, so the multiplier sheet
+  and the remaining-multiplier window counted DXCC countries -- but never
+  SCORED them: the score is points x band-modes x power factor (the summary
+  report's Winter FD case, `PostUnit.PAS:871`). The ruling removes the
+  tracking too. Not built: `TContestWinterFieldDay.HasDXMultiplier` becomes
+  False; only the multiplier displays change, no score moves.
 
 - **Q30** Winter Field Day accepts `MX` as a QTH. It still exports as `ARRL_SECT`
   and imports as a section. Is `MX` "DX" under the "DX is never a section" rule?
