@@ -105,9 +105,12 @@ begin
    Result := 'cw@cqww.com';
 end;
 
+(* THE ZONE, AS CQ WW SSB AND RTTY FILL IT -- Q96, NY4I 2026-10-14: "both
+  should fill zone". This was CustomInitialExchange, carried from D7, which
+  with the default empty CUSTOM INITIAL EXCHANGE STRING filled nothing. *)
 function TContestCQWWCW.GetInitialExchangeKind: InitialExchangeType;
 begin
-   Result := CustomInitialExchange;
+   Result := ZoneInitialExchange;
 end;
 
 function TContestCQWWCW.GetExchangeKind: ExchangeType;

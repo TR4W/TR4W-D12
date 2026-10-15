@@ -333,10 +333,10 @@ const
        AtVE: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange);
        AtDX: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange)),
       (* CQWWCW *)
-      (Token: 'CQ-WW-CW';
-       AtUS: (Exchange: RSTZoneExchange; InitialExchange: CustomInitialExchange);
-       AtVE: (Exchange: RSTZoneExchange; InitialExchange: CustomInitialExchange);
-       AtDX: (Exchange: RSTZoneExchange; InitialExchange: CustomInitialExchange)),
+      (Token: 'CQ-WW-CW';  (* Zone since Q96 (2026-10-14); was Custom *)
+       AtUS: (Exchange: RSTZoneExchange; InitialExchange: ZoneInitialExchange);
+       AtVE: (Exchange: RSTZoneExchange; InitialExchange: ZoneInitialExchange);
+       AtDX: (Exchange: RSTZoneExchange; InitialExchange: ZoneInitialExchange)),
       (* CQWWSSB *)
       (Token: 'CQ-WW-SSB';
        AtUS: (Exchange: RSTZoneExchange; InitialExchange: ZoneInitialExchange);
