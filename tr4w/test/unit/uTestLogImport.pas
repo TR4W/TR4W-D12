@@ -29,10 +29,25 @@ type
    TLogImportTests = class(TTestCase)
    private
       FDir: string;
+      (* The record FailAtRecord raises on; 0 never. *)
+      FFailAt: integer;
+      (* A second connection HoldStagedOpen keeps on FHeldPath. *)
+      FHeld: TObject;
+      FHeldPath: string;
       function TempDb(const aLeaf: string): string;
       procedure Scrub(const aFileName: string);
       function BinaryLogFixture(const aSet: string): string;
+      (* The import's fault seam (TLogImportRecordHook). *)
+      procedure FailAtRecord(aRecordNumber: integer);
+      procedure HoldStagedOpen(aRecordNumber: integer);
+      function StagedLeftover(const aTarget: string): string;
+      function RowsIn(const aFileName: string): Int64;
    protected
+      procedure TestAFailedImportLeavesNoLogAndImportsAgain;
+      procedure TestALeftoverStagedImportIsDiscardedAndImportedAgain;
+      procedure TestASuccessfulImportLeavesNothingStaged;
+      procedure TestARenameThatFailsLeavesNoLog;
+      procedure TestASidecarLeftBesideTheImportStopsThePublish;
       procedure TestImportsEveryRecordOfEveryFixtureLog;
       procedure TestImportKeepsWhatExportWouldFilterOut;
       procedure TestImportRefusesAnExistingTarget;
@@ -110,6 +125,299 @@ begin
      fails where the separator is not a backslash. *)
    Result := ExtractFilePath(ParamStr(0)) + 'fixtures' + PathDelim +
              'binarylog' + PathDelim + aSet + '.trw';
+end;
+
+procedure TLogImportTests.FailAtRecord(aRecordNumber: integer);
+begin
+   if aRecordNumber = FFailAt then
+      begin
+      raise Exception.Create(AnsiString('injected failure'));
+      end;
+end;
+
+(* A SECOND CONNECTION ON THE STAGED FILE, opened during the import and held.
+  The import's close is then not the last one, so SQLite neither checkpoints
+  nor deletes the -wal -- the one way to make it leave a sidecar without
+  killing a process. *)
+procedure TLogImportTests.HoldStagedOpen(aRecordNumber: integer);
+var
+   db: TLogDatabase;
+begin
+   if (aRecordNumber = 1) and (FHeld = nil) then
+      begin
+      db := TLogDatabase.Create;
+      FHeld := db;
+      db.OpenReadOnly(FHeldPath);
+      end;
+end;
+
+(* The first of the staged import, a sidecar of it, or a sidecar of the
+  target that exists -- or empty when there is none. *)
+function TLogImportTests.StagedLeftover(const aTarget: string): string;
+const
+   SUFFIXES: array[0..5] of string = ('.importing', '.importing-wal',
+      '.importing-shm', '.importing-journal', '-wal', '-shm');
+var
+   i: integer;
+begin
+   (* Named, not merely counted: a failure here has to say WHICH file. *)
+   Result := '';
+   for i := Low(SUFFIXES) to High(SUFFIXES) do
+      begin
+      if FileExists(aTarget + SUFFIXES[i]) then
+         begin
+         Result := aTarget + SUFFIXES[i];
+         Exit;
+         end;
+      end;
+end;
+
+(* How many rows a log holds, read through a fresh read-only connection --
+  nothing the import did is still in a cache this can see. -1 when there is
+  no log: a missing file has to fail the check that asked, not take the
+  whole suite down (which is what a mutation test found it doing). *)
+function TLogImportTests.RowsIn(const aFileName: string): Int64;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+begin
+   Result := -1;
+   if not FileExists(aFileName) then
+      begin
+      Exit;
+      end;
+   db := TLogDatabase.Create;
+   try
+      db.OpenReadOnly(aFileName);
+      repo := TLogRepository.Create(db);
+      try
+         Result := repo.RecordCount;
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+end;
+
+(* A FAULT PART WAY THROUGH LEAVES NO LOG, AND THE NEXT IMPORT DOES IT ALL.
+
+  The failure is injected after record 50 of cqww_ssb's 101 has been written.
+  Before staging (section 9c, ruling of 2026-10-14) the target FILE existed
+  from CreateNew's commit onwards whatever happened next, so uLogStore's next
+  EnsureOpen adopted it as the log. Now there must be no target and nothing
+  staged. EnsureOpen's own rule -- migrate when the .db does not exist -- is
+  what then runs the import again; uLogStore is not linkable here, so this
+  calls ImportBinaryLog a second time, which is all that rule does. *)
+procedure TLogImportTests.TestAFailedImportLeavesNoLogAndImportsAgain;
+var
+   fn: string;
+   res: TLogImportResult;
+begin
+   BeginTest('a failed import leaves no log, and the next import does it all');
+
+   fn := TempDb('faulted.db');
+   Scrub(fn);
+
+   FFailAt := 50;
+   res := ImportBinaryLog(BinaryLogFixture('cqww_ssb_2025_ny4i'), fn, FailAtRecord);
+   FFailAt := 0;
+
+   CheckFalse(res.Ok, 'an import with a failed record is not Ok');
+   CheckEquals(1, res.RecordsFailed, 'one record failed');
+   CheckFalse(FileExists(fn), 'and NO log exists at the target');
+   CheckEquals('', StagedLeftover(fn), 'nor anything staged or beside it');
+   CheckTrue(Pos('NOTHING was imported', res.Message) > 0,
+             'the report says nothing was imported: ' + res.Message);
+   CheckTrue(Pos('record 50 ', res.Message) > 0,
+             'and names the record that failed: ' + res.Message);
+   CheckTrue(Pos('injected failure', res.Message) > 0,
+             'and why: ' + res.Message);
+
+   res := ImportBinaryLog(BinaryLogFixture('cqww_ssb_2025_ny4i'), fn);
+   CheckTrue(res.Ok, 'the next import succeeds: ' + res.Message);
+   CheckEquals('', res.DiscardedStaged,
+               'with nothing left over to discard -- the failure cleaned up');
+   (* BEFORE RowsIn: a read-only connection to a WAL-mode file leaves its
+     own -wal behind when it closes (measured 2026-10-14), which is a fact
+     about the inspection, not about the import. *)
+   CheckEquals('', StagedLeftover(fn), 'with nothing staged left behind');
+   CheckEquals(101, integer(RowsIn(fn)), 'and the log holds every record');
+
+   Scrub(fn);
+end;
+
+(* A STAGED FILE LEFT BY A CRASH IS DISCARDED, AND THE IMPORT STARTS AGAIN.
+
+  The crash is made the way the section 9c audit makes one: a staged database
+  is created and committed (as CreateNew does), rows are written and the
+  database is freed WITHOUT a commit. A -wal and -shm are then put beside it,
+  standing for what a process killed mid-write leaves. The next import must
+  delete all three, say so, and produce the whole log. *)
+procedure TLogImportTests.TestALeftoverStagedImportIsDiscardedAndImportedAgain;
+var
+   fn, staged: string;
+   db: TLogDatabase;
+   repo: TLogRepository;
+   reader: TLogBinaryReader;
+   rec: ContestExchange;
+   res: TLogImportResult;
+   junk: TextFile;
+begin
+   BeginTest('a staged import left by a crash is discarded and imported again');
+
+   fn := TempDb('leftover.db');
+   Scrub(fn);
+   staged := StagedImportFileName(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(staged);
+      repo := TLogRepository.Create(db);
+      try
+         reader := TLogBinaryReader.Create(BinaryLogFixture('cqwpx_cw_2026_ny4i'));
+         try
+            while reader.ReadNext(rec) do
+               begin
+               repo.SaveQSOGroupingByExchangeId(rec);
+               end;
+         finally
+            reader.Free;
+         end;
+         (* NO COMMIT: the import died here. *)
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   AssignFile(junk, staged + '-wal');
+   Rewrite(junk);
+   WriteLn(junk, 'left by a process that was killed');
+   CloseFile(junk);
+   AssignFile(junk, staged + '-shm');
+   Rewrite(junk);
+   WriteLn(junk, 'left by a process that was killed');
+   CloseFile(junk);
+   CheckTrue(FileExists(staged), 'the crash left a staged file');
+   CheckFalse(FileExists(fn), 'and no log');
+
+   res := ImportBinaryLog(BinaryLogFixture('cqwpx_cw_2026_ny4i'), fn);
+   CheckTrue(res.Ok, 'the import succeeds over the leftover: ' + res.Message);
+   CheckEquals(staged, res.DiscardedStaged, 'and says what it discarded');
+   CheckEquals('', StagedLeftover(fn), 'and nothing staged is left');
+   CheckEquals(6, integer(RowsIn(fn)), 'the log holds every record, once');
+
+   Scrub(fn);
+end;
+
+(* SUCCESS: the log at the target, sound, and nothing under the staged name --
+  no -wal and no -shm left pointing at a file that no longer exists. *)
+procedure TLogImportTests.TestASuccessfulImportLeavesNothingStaged;
+var
+   fn: string;
+   res: TLogImportResult;
+   db: TLogDatabase;
+begin
+   BeginTest('a successful import leaves the log and nothing staged');
+
+   fn := TempDb('published.db');
+   Scrub(fn);
+
+   res := ImportBinaryLog(BinaryLogFixture('arrl_fd_2026_ny4i'), fn);
+   CheckTrue(res.Ok, 'the import succeeds: ' + res.Message);
+   CheckEquals('', res.DiscardedStaged, 'with nothing to discard');
+   CheckTrue(FileExists(fn), 'the log is at the target');
+   CheckEquals('', StagedLeftover(fn),
+               'and no staged file or sidecar of either name is left');
+
+   db := TLogDatabase.Create;
+   try
+      db.OpenReadOnly(fn);
+      CheckTrue(db.CheckIntegrity.Ok, 'the published log passes its integrity check');
+   finally
+      db.Free;
+   end;
+
+   Scrub(fn);
+end;
+
+(* A PUBLISH THAT FAILS IS SAID, AND NEVER ADOPTED. A directory at the target
+  makes the rename fail on every platform (rename(2) replaces a FILE on Unix,
+  but not a directory). The finished import stays at the staged name, and the
+  next import -- once the obstacle is gone -- discards it and runs again. *)
+procedure TLogImportTests.TestARenameThatFailsLeavesNoLog;
+var
+   fn: string;
+   res: TLogImportResult;
+begin
+   BeginTest('a publish rename that fails leaves no log and says so');
+
+   fn := TempDb('blocked.db');
+   Scrub(fn);
+   ForceDirectories(fn);
+
+   res := ImportBinaryLog(BinaryLogFixture('arktika_2026_ny4i'), fn);
+   CheckFalse(res.Ok, 'an import that cannot be published is not Ok');
+   CheckTrue(Pos('could not be renamed', res.Message) > 0,
+             'and says the rename failed: ' + res.Message);
+   CheckTrue(Pos(StagedImportFileName(fn), res.Message) > 0,
+             'naming where the finished import is: ' + res.Message);
+   CheckTrue(FileExists(StagedImportFileName(fn)),
+             'which is left there, not adopted');
+
+   RemoveDir(fn);
+   res := ImportBinaryLog(BinaryLogFixture('arktika_2026_ny4i'), fn);
+   CheckTrue(res.Ok, 'with the obstacle gone the import succeeds: ' + res.Message);
+   CheckEquals(StagedImportFileName(fn), res.DiscardedStaged,
+               'discarding the import the failed publish left');
+   CheckEquals('', StagedLeftover(fn), 'with nothing staged left behind');
+   CheckEquals(1, integer(RowsIn(fn)), 'and the log holds its one record');
+
+   Scrub(fn);
+end;
+
+(* A SIDECAR STILL BESIDE THE STAGED FILE STOPS THE PUBLISH.
+
+  Renaming the database away from a -wal that holds committed pages would
+  publish a log without them, so ImportBinaryLog checks after its close
+  rather than trusting that the close removed it. Here it did not, because
+  another connection was still open on the file; the import must refuse to
+  publish, say why, and leave no log. *)
+procedure TLogImportTests.TestASidecarLeftBesideTheImportStopsThePublish;
+var
+   fn, staged: string;
+   res: TLogImportResult;
+begin
+   BeginTest('a sidecar left beside the staged import stops the publish');
+
+   fn := TempDb('sidecar.db');
+   Scrub(fn);
+   staged := StagedImportFileName(fn);
+   FHeldPath := staged;
+   FHeld := nil;
+   try
+      res := ImportBinaryLog(BinaryLogFixture('cqwpx_cw_2026_ny4i'), fn,
+                             HoldStagedOpen);
+      CheckTrue(FHeld <> nil, 'the second connection was opened during the import');
+      CheckFalse(res.Ok, 'an import with a sidecar left beside it is not Ok');
+      CheckTrue(Pos('was still beside it', res.Message) > 0,
+                'and says a sidecar stopped it: ' + res.Message);
+      CheckTrue(Pos(staged + '-', res.Message) > 0,
+                'naming the sidecar: ' + res.Message);
+      CheckFalse(FileExists(fn), 'and NO log exists at the target');
+   finally
+      FHeld.Free;
+      FHeld := nil;
+   end;
+
+   (* With the other connection gone, what is left is an ordinary leftover. *)
+   res := ImportBinaryLog(BinaryLogFixture('cqwpx_cw_2026_ny4i'), fn);
+   CheckTrue(res.Ok, 'the next import succeeds: ' + res.Message);
+   CheckEquals('', StagedLeftover(fn), 'with nothing staged left behind');
+   CheckEquals(6, integer(RowsIn(fn)), 'and the log holds every record');
+
+   Scrub(fn);
 end;
 
 procedure TLogImportTests.TestImportsEveryRecordOfEveryFixtureLog;
@@ -556,6 +864,11 @@ begin
    TestImportedQSOsAreQueryable;
    TestAKnownQSOKeepsItsRealValues;
    TestCountyLineRowsShareOneSet;
+   TestAFailedImportLeavesNoLogAndImportsAgain;
+   TestALeftoverStagedImportIsDiscardedAndImportedAgain;
+   TestASuccessfulImportLeavesNothingStaged;
+   TestARenameThatFailsLeavesNoLog;
+   TestASidecarLeftBesideTheImportStopsThePublish;
 
    if (FDir <> '') and DirectoryExists(FDir) then
       begin

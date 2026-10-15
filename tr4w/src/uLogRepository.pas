@@ -136,18 +136,53 @@ type
       length of one rescore.
 
       Owns copies of the records, not references: the caller's local is
-      overwritten by the next row. *)
-   TLogRowUpdates = class(TObject)
+      overwritten by the next row.
+
+      THE RECORDS ARE KEPT BY TLogQsoList, which TLogQsoAppends shares: the
+      two batches differ only in whether each row already has an id. *)
+   TLogQsoList = class(TObject)
    private
-      FRowIds: array of Int64;
       FRows: array of ContestExchange;
       FCount: integer;
+   protected
       procedure CheckIndex(aIndex: integer);
+      (* A copy of aQso at the end; its index. Grows by doubling, so a
+         whole-log batch reallocates a handful of times rather than per row. *)
+      function AddRow(const aQso: ContestExchange): integer;
+   public
+      function Count: integer;
+      function Row(aIndex: integer): ContestExchange;
+   end;
+
+   TLogRowUpdates = class(TLogQsoList)
+   private
+      FRowIds: array of Int64;
    public
       procedure Add(aRowId: Int64; const aQso: ContestExchange);
-      function Count: integer;
       function RowId(aIndex: integer): Int64;
-      function Row(aIndex: integer): ContestExchange;
+   end;
+
+   (* QSOS TO APPEND IN ONE TRANSACTION -- TLogRepository.AppendBatch.
+
+      The ADIF import's batch (NY4I, 2026-10-14: all or nothing). Its rows
+      are new, so there is no row id; everything else is TLogRowUpdates'
+      list, and the collect-then-write shape is the rescore's. *)
+   TLogQsoAppends = class(TLogQsoList)
+   public
+      procedure Add(const aQso: ContestExchange);
+   end;
+
+   (* What a QSO SENT, for the row AppendBatch writes -- the live append's
+      SetNextSentExchange, supplied by a caller that knows the station. nil
+      writes none. *)
+   TSentExchangeText = function(const aQso: ContestExchange): AnsiString;
+
+   (* QSOs THAT CARRY NO EXCHANGE ID -- TLogRepository.QSOsWithoutExchangeId.
+      Count is every one; Sample is the first few, in log order, as
+      "CALL yyyy-mm-dd hh:mm" -- enough to find them, not a listing. *)
+   TMissingExchangeIds = record
+      Count: integer;
+      Sample: string;
    end;
 
    (* Reads and writes QSOs.  Owns its prepared statements and nothing else --
@@ -534,7 +569,39 @@ type
       procedure CommitBatch;
       procedure RollbackBatch;
       procedure WriteBatch(aUpdates: TLogRowUpdates);
+
+      (* APPENDS MANY QSOS IN ONE TRANSACTION -- ALL OR NONE. The ADIF
+         import's write (NY4I, 2026-10-14), on the batch above: BeginBatchUpdate,
+         every row, CommitBatch, and on ANY exception RollbackBatch and
+         re-raise. Not a second mechanism -- the same begin, commit and
+         rollback WriteBatch uses, with an insert where it has an update.
+
+         EACH ROW IS WRITTEN AS THE LIVE APPEND WRITES ONE
+         (uLogStore.LogStoreAppendQSO): the contest stamped from the record
+         when the log carries another, the sent exchange from
+         aSentExchangeOf when one is given, and SaveQSOGroupingByExchangeId.
+         The grouping lookup sees this transaction's own rows, so a county
+         line inside one file still groups.
+
+         aFailedIndex is the 0-based index of the row that failed, or -1
+         when the failure was not a row's -- the begin or the commit. Set
+         before the exception leaves, so a caller can name the record. *)
+      procedure AppendBatch(aQsos: TLogQsoAppends;
+                            aSentExchangeOf: TSentExchangeText;
+                            out aFailedIndex: integer);
       property InBatch: boolean read FInBatch;
+
+      (* QSO ROWS WITH NO EXCHANGE ID. Reads only.
+
+         A rescore no longer mints one (NY4I, 2026-10-14, open question F6):
+         an id is an identity, and inventing it in a scoring pass rewrote
+         every row of an imported log on its first rescore. So a log can
+         legitimately hold QSOs without one -- a .TRW migration, an ADIF from
+         a program that writes none -- and the validity check REPORTS them
+         rather than anything repairing them. Notes and QTC records are not
+         QSOs and are not counted; deleted QSOs are, since they are still
+         contacts in the log. aSampleSize caps the sample, not the count. *)
+      function QSOsWithoutExchangeId(aSampleSize: integer): TMissingExchangeIds;
 
       function LoadQSO(aRowId: Int64; out aQso: ContestExchange): boolean;
 
@@ -2636,36 +2703,126 @@ begin
    end;
 end;
 
+procedure TLogRepository.AppendBatch(aQsos: TLogQsoAppends;
+                                     aSentExchangeOf: TSentExchangeText;
+                                     out aFailedIndex: integer);
+var
+   i: integer;
+begin
+   aFailedIndex := -1;
+   BeginBatchUpdate;
+   try
+      for i := 0 to aQsos.Count - 1 do
+         begin
+         aFailedIndex := i;
+         if LogContest <> aQsos.FRows[i].ceContest then
+            begin
+            SetContest(aQsos.FRows[i].ceContest);
+            end;
+         if Assigned(aSentExchangeOf) then
+            begin
+            SetNextSentExchange(aSentExchangeOf(aQsos.FRows[i]));
+            end;
+         SaveQSOGroupingByExchangeId(aQsos.FRows[i]);
+         end;
+      (* Every row is in; a failure from here on is the transaction's. *)
+      aFailedIndex := -1;
+      CommitBatch;
+   except
+      (* As WriteBatch: ANY exception, and the log is left exactly as it was
+        before the batch. A sent exchange set for a row that then failed is
+        cleared with it, so it cannot attach itself to a later save. *)
+      SetNextSentExchange('');
+      RollbackBatch;
+      raise;
+   end;
+end;
+
+function TLogRepository.QSOsWithoutExchangeId(aSampleSize: integer): TMissingExchangeIds;
+var
+   q: TSQLQuery;
+   at: TDateTime;
+begin
+   Result := Default(TMissingExchangeIds);
+   q := NewReadQuery;
+   try
+      (* ONE READ, IN LOG ORDER. The sample is the first rows; the count is
+        all of them, read as the rows go by rather than by a second query.
+        '' is tested as well as NULL because a row written before BindText
+        stored the empty string would carry one. *)
+      q.SQL.Text := 'SELECT callsign, qso_at FROM qso ' +
+                    'WHERE record_kind = ''QSO'' ' +
+                    'AND (exchange_id IS NULL OR exchange_id = '''') ' +
+                    'ORDER BY id';
+      q.Open;
+      while not q.EOF do
+         begin
+         Inc(Result.Count);
+         if Result.Count <= aSampleSize then
+            begin
+            at := UnixToDateTime(q.Fields[1].AsLargeInt);
+            if Result.Sample <> '' then
+               begin
+               Result.Sample := Result.Sample + ', ';
+               end;
+            Result.Sample := Result.Sample + q.Fields[0].AsString + ' ' +
+                             FormatDateTime('yyyy-mm-dd hh:nn', at);
+            end;
+         q.Next;
+         end;
+      q.Close;
+   finally
+      q.Free;
+   end;
+end;
+
 (* --------------------------------------------------------------------------- *)
-(* TLogRowUpdates                                                               *)
+(* TLogQsoList, TLogRowUpdates, TLogQsoAppends                                  *)
 (* --------------------------------------------------------------------------- *)
 
-procedure TLogRowUpdates.CheckIndex(aIndex: integer);
+procedure TLogQsoList.CheckIndex(aIndex: integer);
 begin
    if (aIndex < 0) or (aIndex >= FCount) then
       begin
       raise ELogRepositoryError.Create(SysUtils.Format(
-         'TLogRowUpdates: index %d is outside 0..%d.', [aIndex, FCount - 1]));
+         '%s: index %d is outside 0..%d.', [ClassName, aIndex, FCount - 1]));
       end;
 end;
 
-procedure TLogRowUpdates.Add(aRowId: Int64; const aQso: ContestExchange);
+function TLogQsoList.AddRow(const aQso: ContestExchange): integer;
 begin
-   if FCount = Length(FRowIds) then
+   if FCount = Length(FRows) then
       begin
-      (* Doubling, so a whole-log rewrite reallocates a handful of times
-        rather than once per row. *)
-      SetLength(FRowIds, (FCount * 2) + 64);
-      SetLength(FRows, Length(FRowIds));
+      SetLength(FRows, (FCount * 2) + 64);
       end;
-   FRowIds[FCount] := aRowId;
    FRows[FCount] := aQso;
+   Result := FCount;
    Inc(FCount);
 end;
 
-function TLogRowUpdates.Count: integer;
+function TLogQsoList.Count: integer;
 begin
    Result := FCount;
+end;
+
+function TLogQsoList.Row(aIndex: integer): ContestExchange;
+begin
+   CheckIndex(aIndex);
+   Result := FRows[aIndex];
+end;
+
+procedure TLogRowUpdates.Add(aRowId: Int64; const aQso: ContestExchange);
+var
+   i: integer;
+begin
+   i := AddRow(aQso);
+   (* The ids keep step with the records' capacity, so one SetLength per
+     doubling serves both arrays. *)
+   if Length(FRowIds) < Length(FRows) then
+      begin
+      SetLength(FRowIds, Length(FRows));
+      end;
+   FRowIds[i] := aRowId;
 end;
 
 function TLogRowUpdates.RowId(aIndex: integer): Int64;
@@ -2674,10 +2831,9 @@ begin
    Result := FRowIds[aIndex];
 end;
 
-function TLogRowUpdates.Row(aIndex: integer): ContestExchange;
+procedure TLogQsoAppends.Add(const aQso: ContestExchange);
 begin
-   CheckIndex(aIndex);
-   Result := FRows[aIndex];
+   AddRow(aQso);
 end;
 
 procedure TLogRepository.CloseSequentialRead;

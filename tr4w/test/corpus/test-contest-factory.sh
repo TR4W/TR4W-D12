@@ -112,9 +112,20 @@ for d in "$CORPUS"/*/; do
    cbr=$(ls ./*.LOG 2>/dev/null | head -1)
    ok=1; detail=""
 
+   # AN EXCHANGE ID IS COMPARED ONLY WHERE THE FIXTURE HAS ONE (2026-10-14).
+   # The rescore no longer mints ids, so for a log with none the frozen
+   # placeholders are set aside on both sides -- see corpus_drop_app_id in
+   # corpus-lib.sh for why, and why this is not a regenerated reference.
+   adi_filter=cat
+   if [ "$(corpus_fixture_exchange_ids "$d/log.db")" = "0" ]; then
+      adi_filter=corpus_drop_app_id
+      detail=" (no exchange id in the fixture: APP_TR4W_ID set aside)"
+   fi
+
    if [ ! -f "$WORK.ADI" ]; then
       ok=0; detail=" (the factory pass produced no ADIF)"
-   elif ! diff <(corpus_norm_artifact "$WORK.ADI") "$d/rescored.adi" >/dev/null 2>&1; then
+   elif ! diff <(corpus_norm_artifact "$WORK.ADI" | $adi_filter) \
+               <($adi_filter < "$d/rescored.adi") >/dev/null 2>&1; then
       ok=0; detail="$detail rescored.adi"
    fi
 
@@ -132,7 +143,7 @@ for d in "$CORPUS"/*/; do
    fi
 
    if [ $ok -eq 1 ]; then
-      printf "  SAME  %-28s\n" "$name"; pass=$((pass+1))
+      printf "  SAME  %-28s%s\n" "$name" "$detail"; pass=$((pass+1))
    else
       printf "  DIFF  %-28s -->%s\n" "$name" "$detail"; fail=$((fail+1)); failed="$failed $name"
    fi

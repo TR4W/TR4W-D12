@@ -112,3 +112,38 @@ corpus_norm_artifact(){
            s/(<CREATED_TIMESTAMP:15>).*/\1TIME/;
            s/<APP_TR4W_ID:32>[0-9a-f]*/<APP_TR4W_ID:32>ID/g' "$1" 2>/dev/null
 }
+
+# corpus_fixture_exchange_ids <log.db>
+# How many QSO rows of a fixture log carry an exchange id (an ERROR: line when
+# the file cannot be read -- which is not "0", so nothing is relaxed by it).
+#
+# corpus_drop_app_id
+# stdin to stdout with every APP_TR4W_ID field deleted, value and separating
+# space with it -- the same shape test-adif-roundtrip.sh's strip_tags uses.
+#
+# WHY BOTH EXIST (2026-10-14, NY4I's ruling on open question F6): a rescore no
+# longer MINTS an exchange id for a QSO that has none.  Six fixtures carry no id
+# at all, and their frozen rescored.adi still holds an <APP_TR4W_ID:32>ID
+# placeholder on every record -- 1,772 of them -- because the legacy rescore
+# minted one.  That placeholder records the very behaviour the ruling removed,
+# not anything about scoring.  So test-contest-factory.sh sets the field aside
+# on BOTH sides, and ONLY for a fixture whose log holds no id: where a log does
+# carry ids, whether they survive the rescore is still compared exactly.  The
+# same rule test-adif-roundtrip.sh already applies to a minted identity: it is
+# ignored only where the reference has none to compare.  The frozen files are
+# NOT regenerated.
+corpus_fixture_exchange_ids(){
+   python - "$1" <<'PY'
+import sqlite3, sys
+try:
+   c = sqlite3.connect('file:' + sys.argv[1].replace('\\', '/') + '?mode=ro', uri=True)
+   print(c.execute("SELECT COUNT(*) FROM qso WHERE exchange_id IS NOT NULL "
+                   "AND exchange_id <> ''").fetchone()[0])
+except Exception as e:
+   print('ERROR:%s' % e)
+PY
+}
+
+corpus_drop_app_id(){
+   sed -E 's/<APP_TR4W_ID:[0-9]*>[^<]*//Ig'
+}

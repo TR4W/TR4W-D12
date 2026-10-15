@@ -1311,6 +1311,10 @@ exchange id, Z changed only in fields the per-record line does not itemise`.
 A second rescore prints `0 of 1316`. What is written is unchanged, and the
 exchange-id minting (open question F6) is untouched.
 
+**F6 was ruled on the same day: the rescore no longer mints.** The `IdMinted`
+field and the "given an exchange id" clause left the two lines with it; see
+[the rulings below](#ny4is-three-rulings-of-2026-10-14-and-how-they-were-met).
+
 **Measured on `winter_fd_2025_w4ta`, base `f0c54f4c` against this change,
 alternated run by run, 9 runs each, warmed up, logging at Warn:**
 
@@ -1395,12 +1399,12 @@ original error is raised. No message text is matched. `RollbackBatch` and
 | `uLogStore.LogStoreAppendQSO`: optional `SetContest`, insert, `Commit` | yes when `SetContest` ran first (it BEGINs). Otherwise the insert was durable before the acknowledging `Commit` | yes | **fixed** (finding 1): a failure before the `Commit` no longer leaves an unacknowledged QSO in the log |
 | `CaptureContestStatements` / `CaptureStationFactRows`, inside `CaptureConfiguration` (one `Commit`) | yes. Pinned by injecting a failure through `aIsRetired` | yes | pinned: `Test_ACaptureThatFailsPartWayLeavesNothingOfItself` |
 | `logdupe.SaveRestartFile` (N session rows, one `Commit`) | yes: fresh statements, matrix row `SaveSessionValue` | yes | covered by the matrix. `logdupe` is not linkable |
-| `ImportBinaryLog` (one transaction for the whole import) | yes for rows. The transaction opens when the repository is constructed | yes | pinned: `TestAFreshRepositoryHoldsItsWritesUntilCommit` (the import's shape; the routine has no fault seam). Two file-level gaps are **open**, below |
+| `ImportBinaryLog` (one transaction for the whole import) | yes for rows. The transaction opens when the repository is constructed | yes | pinned: `TestAFreshRepositoryHoldsItsWritesUntilCommit` (the import's shape). The two file-level gaps below were **fixed the same day** -- staged name, rename on success; see the rulings |
 | `LogStoreUpdateNewestQSO` / `UpdateQSOAtIndex` / `UpdateQSOBySessionIds`, `LogStoreClearAllQSOs` | single statement | — | nothing to make atomic |
 | `EnsureOpen` on a new log: declaration and capture, `Commit`, then `SetContest`, `Commit` | two transactions | acceptable | left. A crash between them leaves a log with no contest row, which the "carried no contest" arm in `LogStoreApplyContestConfig` repairs on the next open |
 | `ApplySchema` (`CreateNew`) | tables in one transaction. The identity stamp follows it | — | left. A failure deletes the file; a crash between the commit and the stamp is a window of microseconds |
 | `MigrateSchema` | `CREATE ... IF NOT EXISTS`, then the version stamp | — | left on purpose: idempotent, and the version is stamped last |
-| ADIF import (`MainUnit.ImportFromADIF`, one `LogStoreAppendQSO` per record) | **no**, one commit per record | a decision | **left: deliberately per record** ("COUNTED ONLY IF IT COMMITTED"). Measured cost below |
+| ADIF import (`MainUnit.ImportFromADIF`, one `LogStoreAppendQSO` per record) | **no**, one commit per record | a decision | ~~left: deliberately per record~~ **ruled all-or-nothing by NY4I the same day, and done**: `LogStoreAppendQSOs` / `TLogRepository.AppendBatch`, one transaction. See the rulings |
 | a county-line contact (one `LogStoreAppendQSO` per county) | **no**, one commit per QSO | a decision | **left: deliberately per QSO** (section 9b: "the commit is the contact") |
 
 **Pins and mutations.** Five pins:
@@ -1439,7 +1443,9 @@ record and about 109 ms in one transaction (8×)**. That is the cost of the
 per-record design above, and it is the number to weigh if the import is made
 all-or-none.
 
-**Open, not fixed: the migration import's file is not atomic.**
+**~~Open, not fixed~~ FIXED THE SAME DAY: the migration import's file is not
+atomic.** Both items are closed by staging (ruling 1, below). Kept as written,
+because it is the reasoning the fix answers.
 
 1. `CreateNew` commits the empty file before the import's transaction begins,
    and `EnsureOpen` adopts any existing file as the log. So a crash mid-import
@@ -1452,6 +1458,274 @@ all-or-none.
    autocommit and the final `Commit` raises out of a routine documented never
    to raise. This is reasoned from the batch measurement. The routine has no
    seam for injecting a fault, so it was not injected there.
+
+### NY4I's three rulings of 2026-10-14, and how they were met
+
+The audit above left two decisions open, and F1/F4 left a third (F6). NY4I
+ruled on all three the same day.
+
+#### Ruling 1 -- a crash mid-migration must not leave an empty log
+
+**Done: the import is built under a STAGED name and published by rename.**
+`uLogImport.ImportBinaryLog` writes `<log>.db.importing`
+(`StagedImportFileName`), and only when every record is written, the one
+transaction has committed and the database is CLOSED does it rename that file
+to `<log>.db`. So the log's name either does not exist or names a complete
+import; there is no moment at which it names a partial one, and
+`uLogStore.EnsureOpen`'s rule -- migrate when the `.db` does not exist -- is
+exactly the recovery. The test seam is an optional per-record callback
+(`TLogImportRecordHook`), the same device as `aIsRetired`.
+
+- **Sidecars: CLOSE, THEN CHECK -- no explicit checkpoint.** On a clean close of
+  the last connection SQLite checkpoints the `-wal` into the file and deletes
+  `-wal` and `-shm`. A `PRAGMA wal_checkpoint` first would only repeat that.
+  What makes it a guarantee is the check AFTER the close: if any of `-wal`,
+  `-shm` or `-journal` is still beside the staged file, nothing is published,
+  because renaming the database away from a `-wal` that holds committed pages
+  publishes a log without them.
+  - **The check is load-bearing on Unix, not on Windows.** Pinned by holding a
+    second connection open on the staged file, so the import's close is not the
+    last (`TestASidecarLeftBesideTheImportStopsThePublish`). With the check
+    removed, Windows still refused, because `MoveFileW` will not rename an open
+    file; `rename(2)` on Unix would have succeeded.
+- **A leftover from an earlier crash is discarded, then the import starts
+  again.** Its path comes back in `TLogImportResult.DiscardedStaged`.
+  - `EnsureOpen` logs it at **Error**: `[LogStore] RECOVERED FROM AN
+    INTERRUPTED MIGRATION: discarded the unfinished import ... and migrated
+    ... again from the start`. Error rather than Warn, so `DEBUG LOG LEVEL =
+    ERROR` cannot hide the one trace that a session ended badly.
+  - `/IMPORTLOG` traces the same.
+  - **The sidecars are deleted first, and one that will not go is a refusal.**
+    A `-wal` carries no record of which database it belongs to, so a new file
+    created beside an old `-wal` could have its frames recovered into it.
+- **A rename that fails is said in full and never adopted.** The finished
+  import is left at the staged name, which the message gives, and the next
+  import discards it.
+- **A failed RECORD now publishes nothing either.** This was the second gap
+  above, and it was worse than recorded. `EnsureOpen` already treated `not
+  res.Ok` as a failure and disabled the store, but the partial file stayed on
+  disk, and the NEXT start adopted it. Now `ImportBinaryLog` is all-or-nothing
+  at the file level for every caller. That is the same rule as ruling 2, and
+  it is a behaviour change for `/IMPORTLOG`: a `.TRW` with one record that
+  will not insert produces no `.db`, where it used to produce one without that
+  record (and exit 2 either way). The loop still finishes, so the report says
+  how many records failed. `ImportBinaryLog`'s result record is now made with
+  `Default()`, no longer `FillChar`: it holds managed strings.
+
+Pins (`uTestLogImport`):
+
+- `TestAFailedImportLeavesNoLogAndImportsAgain`: a fault after record 50 of
+  101 leaves no `.db` and nothing staged; the next import gives all 101.
+- `TestALeftoverStagedImportIsDiscardedAndImportedAgain`: an uncommitted
+  staged log plus a junk `-wal` and `-shm` is discarded, said, and replaced by
+  the whole log.
+- `TestASuccessfulImportLeavesNothingStaged`
+- `TestARenameThatFailsLeavesNoLog`
+- `TestASidecarLeftBesideTheImportStopsThePublish`
+
+Mutations, all caught:
+
+- never discarding a leftover
+- skipping the rename
+- skipping the sidecar check
+
+End to end through the real startup path, which no unit test can link: a
+contest with a `.TRW`, no `.db`, a junk `migt.db.importing` and `-wal`, run
+`/EXPORT`. The result: the Error line above, `migt.db` with 6 rows, nothing
+staged left.
+
+**Measured on the way, and not obvious: a READ-ONLY connection to a WAL-mode
+log leaves its own `-wal` behind when it closes.** `TLogDatabase.OpenReadOnly`
+and Python's `?mode=ro` both did it. A test that inspects a published log must
+check for sidecars BEFORE it opens one. This is not the stray-`-wal` worry of
+2026-09-19, which was about a rollback-journal snapshot; that one still does
+not reproduce.
+
+**Residual, not fixed:** a crash under a build from BEFORE this change can
+already have left an empty, committed `.db`, and that is still adopted. An
+empty log beside a `.TRW` with records is the signature, if anyone wants a
+warning for it.
+
+#### Ruling 2 -- the ADIF import is all or nothing, "with ample notification"
+
+**Done, on the F4 batch, with no second mechanism.**
+
+- `TLogRepository.AppendBatch` is `BeginBatchUpdate`, every row, `CommitBatch`,
+  and on ANY exception `RollbackBatch` and re-raise. It is the same
+  begin/commit/rollback `WriteBatch` uses, with an insert where `WriteBatch`
+  has an update. Each row is written as the live append writes one: the contest
+  stamped from the record, the sent exchange from a caller-supplied function
+  (`BuildSentExchangeText`'s, via the store), and
+  `SaveQSOGroupingByExchangeId`, whose lookup sees the batch's own uncommitted
+  rows, so a county line inside one file still groups. `aFailedIndex` names the
+  row that failed (-1 when it was the begin or the commit).
+- The rows are collected in a `TLogQsoAppends`. `TLogRowUpdates` and it now
+  share `TLogQsoList`, the record list, so there is one copy of the
+  grow-by-doubling code.
+- `uLogStore.LogStoreAppendQSOs` is the store's door.
+- `MainUnit.ImportFromADIF` reads the whole file, collecting, then writes once.
+  The change is confined to that routine plus an overload; the two menu call
+  sites are untouched.
+
+**The store stays ENABLED after a rolled-back import -- a deliberate difference
+from `LogStoreUpdateQSOsByRowId`.**
+
+- The realistic failure is a record with no `CALL`: `callsign` is NOT NULL, and
+  a line holding only `<EOR>` is such a record. That is a fact about the FILE.
+  The log is provably as it was.
+  - The OLD import disabled the store on it, so one bad line stopped logging
+    for the session, half way through the file.
+- If the failure was the disk, the next QSO's own append meets it and fails
+  closed there.
+- The store IS disabled when the ROLLBACK itself fails (`InBatch` still True).
+  Then nobody knows what the log holds.
+
+**Notification -- what the program already used for an import result.**
+
+- **The count** goes to the quick-command line: the 30-second non-modal notice
+  that `N Qs imported.` always used.
+- **A failure** goes to the same `showwarning` dialog the import's failure report
+  always used. It is modal on the desktop, logs at Warn, and opens no dialog in
+  a headless run. Beside it go a quick-command notice (`ADIF import FAILED --
+  nothing was imported`) and a `logger.Error` line carrying the full sentence.
+- **The sentence:** `NOTHING was imported from <file>: record N of M (<call>,
+  <date> <hhmm>z) could not be written to the log: <SQLite's reason>. The
+  contest log is unchanged.`
+  - A record with no CALL or date says `(no CALL, no QSO_DATE)`.
+  - "Unchanged" is said only while the store is usable. After a failed rollback
+    it says the log is not being written.
+- **`/IMPORT`** exits **2** on failure, where it used to `Halt(0)` whatever
+  happened. It traces the same sentence to `tr4w-early.log`
+  (`[Import] FAILED: ...` / `[Import] done: ...`).
+  - A file that does not exist was a `ShowMessage` -- modal even headless, so
+    `/IMPORT` of a missing file HUNG. It is the same failure report now.
+
+**What counts as a skip -- the classification as found, NOT changed:**
+
+| a line ... | treated as | change |
+|---|---|---|
+| before `<EOH>` | the header; not a record | none |
+| after `<EOH>`, where `ParseADIFRecord` is False (no `<EOR>`, or a malformed tag) | **skipped**, as it always was | now COUNTED (non-blank lines only) and reported, in the success sentence and in a warning. One record per line has always been this importer's reading, so a multi-line record would be split -- unchanged, and worth knowing |
+| a parsed record that will not insert | a **failure** | was: counted, store disabled, the rest failed too. Now: nothing imported, record named |
+| a duplicate | **not skipped -- there is no dupe skip.** Dupes are written and flagged by the rescore after the import | none |
+
+Also as found and not changed: a file with no `<EOH>` imports nothing, since
+the loop waits for the header that ends it.
+
+Pins (`uTestLogRepository`):
+
+- `TestAnAppendBatchLandsInOneCommit`: every row in, no transaction left open,
+  durable across a close with no further commit.
+- `TestAFailedAppendBatchLeavesTheLogAsItWas`: three failures at the third of
+  four rows -- a QSO with no callsign (NOT NULL), `RAISE(FAIL)` and
+  `RAISE(ROLLBACK)`, the last being SQLite ending the transaction itself. Each
+  must raise with SQLite's reason, report index 2, leave no batch or
+  transaction open, show the seed's fingerprint through the SAME connection,
+  and leave the FILE's MD5 equal to before.
+- `TestAnAppendBatchWritesRowsAsTheLiveAppendDoes`: the contest stamp, the
+  sent exchange, county-line grouping inside the batch.
+
+Mutations, both caught:
+
+- a commit per row (9 failures)
+- no rollback (all three variants)
+
+**Byte equality is pinned at the batch, and is NOT attainable across a program
+run.** Measured: a plain `/EXPORT` of the same log changed the file's MD5 too
+(the open's writes). So the end-to-end check compares the `qso` rows, and they
+are unchanged:
+
+| run | exit | rows | digest |
+|---|---:|---:|---|
+| winter_fd's `ref.adi` | 0 | 1316 | -- |
+| then the same file with a bare `<EOR>` as record 700 | **2** | 1316 | unchanged |
+
+The report for the second run names record 700 of 1,317.
+
+**Measured, `winter_fd_2025_w4ta`'s `ref.adi` (1,316 records), headless
+`/IMPORT` into a fresh contest, base `17902292` against this change, alternated,
+9 runs each, corpus settings (DEBUG logging):**
+
+| | before | after |
+|---|---:|---:|
+| parse + write (from `[Import] no binary log` to the first `[actRescore]` line) | 1,268 ms (1,193-1,349) | 429 ms (401-457) |
+| the whole `/IMPORT` run, wall clock | 1,927 ms (1,842-2,035) | 1,029 ms (979-1,138) |
+
+The parse is the same code in both, so the 839 ms is the write: one fsync
+instead of 1,316. That agrees with the audit's 920 -> 109 ms unit-harness
+figure.
+
+#### Ruling 3 (F6) -- a rescore must not mint an exchange id
+
+**Done.** `tUpdateLog` gave a fresh GUID to every QSO whose `exchange_id` was
+empty, so the first rescore of any imported or migrated log rewrote every row,
+and invented an identity no other program knew the contact by.
+
+- Only `actRescore` minted. `actSetClearDupesheetBit` and `actClearMults`
+  never did (read, not assumed: the `GetGUID` sat inside the `actRescore` arm,
+  and the only other caller in the tree is a QSO being logged).
+- The per-record change line lost `IdMinted`. The summary is now `N of M
+  records rewritten in one transaction: X itemised above, Y changed only in
+  fields the per-record line does not itemise`.
+- **Not every row-write of an imported log was the minting.** After a
+  `winter_fd` ADIF import the rescore still rewrites all 1,316 rows: 99
+  itemised, 1,217 in un-itemised fields. That is the import storing values
+  the rescore then recomputes. It is unchanged here and not investigated.
+
+**The validity check.** The Tools menu's verification window
+(`uVerificationChecks`, built 2026-09-11 with one check) gains a second:
+`Every QSO has an exchange id`.
+
+- `uLogStore.LogStoreCheckExchangeIds` runs
+  `TLogRepository.QSOsWithoutExchangeId`.
+- **It fails when any QSO lacks one**, giving the count and the first five as
+  `CALL yyyy-mm-dd hh:nn`, and saying the QSOs export with no `APP_TR4W_ID` and
+  that nothing has been changed.
+- **It REPORTS and never repairs.** Minting from a menu item would be the
+  ruled-out behaviour moved somewhere else.
+- **What counts:** notes and QTC records are not QSOs and are not counted;
+  deleted QSOs are.
+- Pinned by `TestQSOsWithoutAnExchangeIdAreReported`; a mutation counting notes
+  was caught.
+
+`test-rescore.sh` now also fails a log whose exchange-id count changes across
+the FIRST rescore, which is the pass that minted; the second rescore could
+never see it. Run against the base binary, it reports MINT for exactly the six
+id-less sets:
+
+| set | ids minted by the old rescore |
+|---|---:|
+| `arrl_dx_cw_2025_ny4i` | 66 |
+| `arrl_ss_ssb_2024_w4ta` | 206 |
+| `cqww_ssb_2025_ny4i` | 101 |
+| `general_qso_2026_w1aw4` | 79 |
+| `michigan_qp_2026_ny4i` | 4 (of 5 rows) |
+| `winter_fd_2025_w4ta` | 1,316 |
+| **total** | **1,772** |
+
+**Corpus and matrix impact, exactly:**
+
+- **`test-contest-factory.sh`, unmodified, failed those same six sets, in
+  `rescored.adi` only.** All 13 Cabrillo files were identical.
+  - Their frozen baselines carry an `<APP_TR4W_ID:32>ID` placeholder on every
+    record, 1,772 in all, because the legacy rescore minted them. No fixture
+    `log.db` holds one.
+  - Measured set by set: deleting that one field, with its separating space,
+    makes the fresh export byte-identical to the frozen baseline.
+  - The seven sets whose fixtures carry ids are byte-identical as they stand,
+    ids and all.
+- **The frozen files were NOT regenerated.** The gate now sets `APP_TR4W_ID`
+  aside on both sides ONLY for a set whose fixture holds no exchange id
+  (`corpus_fixture_exchange_ids`, `corpus_drop_app_id` in `corpus-lib.sh`). That
+  is the rule `test-adif-roundtrip.sh` already applied: a minted identity is
+  ignored only where the reference has none to compare. Where a log carries
+  ids, their survival is still compared exactly. The gate prints which sets
+  had the field set aside.
+- **Golden corpus:** unaffected -- `/EXPORT` never rescored -- 24/0/2, exit 0.
+- **`test-adif-roundtrip.sh`:** 13 passed. It already ignored `APP_TR4W_ID`
+  when `ref.adi` has none.
+- **Contest matrix:** 186 identical. It uses a fixed id and
+  `RecomputeQSOScoring`, which never minted.
 
 ---
 

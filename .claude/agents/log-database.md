@@ -73,6 +73,11 @@ verifier uses it, so a published backup is now byte-identical to the snapshot
 old code left nothing behind. The exposure was only a crash mid-check, and a
 read-only connection to a rollback-journal file creates no WAL at all.
 
+**BUT A READ-ONLY CONNECTION TO A WAL-MODE LOG LEAVES ITS `-wal` BEHIND**
+(measured 2026-10-14, `OpenReadOnly` and Python's `?mode=ro` alike). A test
+that asserts "nothing beside the file" must check BEFORE it opens the file to
+inspect it.
+
 **NEVER `FieldByName` IN A PER-ROW READ.** In FPC 3.2.2 `TFields.FindField` is
 a linear scan that upper-cases both names on every comparison. `ReadRecord` paid
 about 190 µs a row for it, on every read path (measured 2026-10-14), and that
@@ -145,11 +150,48 @@ is. On failure, nothing commits, and `TLogDatabase.Close` rolls back.
      leaves.
   5. Reopen and compare with the seed.
   6. Mutation-test the pin.
-- **Open (§9c):** the migration import's FILE is not atomic. A crash leaves an
-  empty log that `EnsureOpen` adopts. Its per-record catch also assumes the
-  transaction outlives a failed record. The ADIF import and a county-line
-  contact commit per QSO **on purpose**. A batched ADIF import measured 8×
-  faster: 109 ms against 920 ms for 1,316 QSOs.
+- ~~**Open (§9c):** the migration import's FILE is not atomic~~ and ~~the ADIF
+  import commits per QSO on purpose~~ -- **both RULED AND DONE by NY4I,
+  2026-10-14.** Section 9c, "NY4I's three rulings", has the detail and the
+  numbers. A county-line contact still commits per QSO on purpose: the commit
+  is the contact.
+
+**A `.TRW` MIGRATION IS BUILT UNDER `<log>.db.importing` AND PUBLISHED BY
+RENAME (ruling 1, 2026-10-14).** `ImportBinaryLog` renames the staged file to
+the log only after every record is written, the transaction has committed,
+and the database is CLOSED with no `-wal`, `-shm` or `-journal` left beside it.
+So the log's name never names a partial import, and `EnsureOpen`'s "migrate
+when the `.db` is missing" IS the recovery.
+- A leftover from a crash is discarded and the import starts again; `EnsureOpen`
+  logs it at Error (`RECOVERED FROM AN INTERRUPTED MIGRATION`).
+- **A failed record publishes nothing**, for every caller, `/IMPORTLOG`
+  included.
+- **The sidecar check after the close is the guarantee**, and it is load-bearing
+  on Unix. `rename(2)` happily moves an open file away from its `-wal`;
+  `MoveFileW` refuses.
+- **Delete sidecars before the database, and refuse if one will not go.** A
+  `-wal` carries no record of which database it belongs to.
+
+**AN ADIF IMPORT IS ONE TRANSACTION -- ALL OR NOTHING (ruling 2).**
+- `ImportFromADIF` collects a `TLogQsoAppends` and writes it with
+  `LogStoreAppendQSOs` -> `TLogRepository.AppendBatch`. That is the F4 batch's
+  begin/commit/rollback, with an insert where `WriteBatch` has an update.
+  `TLogRowUpdates` and `TLogQsoAppends` share `TLogQsoList`.
+- **The store stays enabled after a rolled-back import** -- unlike the
+  rescore's batch. The usual cause is a record with no `CALL` (NOT NULL), which
+  is a fact about the file. Only a ROLLBACK that fails (`InBatch` still True)
+  disables it.
+- `/IMPORT` exits 2 on failure.
+- **Do not "restore" per-record commits.** 1,316 records: 1,268 -> 429 ms for
+  parse and write.
+
+**A RESCORE NEVER MINTS AN EXCHANGE ID (ruling 3, F6).** An id is an identity,
+not scoring. A QSO without one is REPORTED by the Tools-menu verification check
+`Every QSO has an exchange id` (`LogStoreCheckExchangeIds` ->
+`QSOsWithoutExchangeId`) and never repaired. `test-rescore.sh` fails a log
+whose id count changes across the FIRST rescore. `test-contest-factory.sh`
+sets `APP_TR4W_ID` aside only for a fixture that holds no id at all
+(`corpus-lib.sh`). The frozen baselines were NOT regenerated.
 
 **`SysUtils.RenameFile` differs by platform:** `MoveFileW` on Windows refuses an
 existing target; `rename(2)` on Unix replaces it. A directory at the target

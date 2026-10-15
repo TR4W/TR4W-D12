@@ -118,6 +118,48 @@ type
   which is what /RESCORE's exit code reads. Never raises. *)
 function LogStoreUpdateQSOsByRowId(aUpdates: TLogRowUpdates): boolean;
 
+type
+   (* Re-exported for the same reason as TLogRowUpdates. *)
+   TLogQsoAppends = uLogRepository.TLogQsoAppends;
+
+(* APPENDS MANY QSOS IN ONE TRANSACTION -- ALL OR NONE.
+
+  The ADIF import's write. NY4I, 2026-10-14: the import is all or nothing --
+  one record that will not go in, and nothing goes in. Each QSO is written as
+  LogStoreAppendQSO writes one (its sent exchange captured from the live
+  station, the contest stamped from the record, county-line grouping), all in
+  TLogRepository.AppendBatch's one transaction.
+
+  True when every QSO was written and the transaction committed (also for an
+  empty list). On failure the batch is ROLLED BACK and the log holds exactly
+  what it held before; aFailedIndex is the 0-based index of the QSO that
+  failed, or -1 when the failure was not one QSO's (the log would not open,
+  the commit failed), and aFailure is the reason, fit to show.
+
+  THE STORE STAYS ENABLED WHEN THE ROLLBACK SUCCEEDED, which is a deliberate
+  difference from LogStoreUpdateQSOsByRowId. A record that will not insert --
+  an ADIF record with no CALL is the realistic one, since callsign is NOT
+  NULL -- says something about the FILE, not about the log, and the log is
+  provably as it was. Disabling would stop the operator logging for the rest
+  of the session over a bad line in a file. If the failure was the disk, the
+  next QSO's own append meets it and fails closed there, which is the moment
+  that matters. When the ROLLBACK itself fails the log's state is not known,
+  and then the store is disabled exactly as every other write failure
+  disables it. Never raises. *)
+function LogStoreAppendQSOs(aQsos: TLogQsoAppends; out aFailedIndex: integer;
+                            out aFailure: string): boolean;
+
+(* THE VALIDITY CHECK FOR EXCHANGE IDS: are there QSOs in the log with none?
+
+  NY4I, 2026-10-14: a rescore no longer mints an exchange id, and a missing
+  one is REPORTED on validity check rather than invented. False when there
+  are any, with aReport giving the count and the first few (call and time);
+  True with a sentence saying so when there are none. A log that cannot be
+  opened is a False with the reason -- a check that cannot run has not
+  passed. Reads only. Registered with uVerificationChecks, which is the Tools
+  menu's verification window. *)
+function LogStoreCheckExchangeIds(out aReport: string): boolean;
+
 (* Rewrites the row the multi-op network identifies by (ceQSOID1, ceQSOID2).
   Does nothing when that pair is unset.  Never raises. *)
 (* True when a QSO with that network key was found and rewritten.
@@ -795,6 +837,23 @@ var
          DeleteFile(dbName);
          end;
       res := ImportBinaryLog(CharBufferText(TR4W_LOG_FILENAME), dbName);
+
+      (* AN EARLIER MIGRATION DIED PART WAY, AND THIS ONE STARTED AGAIN.
+        ImportBinaryLog builds under a staged name and publishes by rename, so
+        a crash mid-import leaves that staged file and no log -- which is why
+        we are here at all -- and it has just been discarded. Nothing is lost:
+        the .TRW it came from is what is being imported again.
+
+        AT ERROR LEVEL, ON PURPOSE. It is a recovery rather than a failure,
+        but it is the one trace an operator has that a previous session ended
+        badly, and DEBUG LOG LEVEL = ERROR must not hide it. *)
+      if (res.DiscardedStaged <> '') and (logger <> nil) then
+         begin
+         logger.Error('[LogStore] RECOVERED FROM AN INTERRUPTED MIGRATION: ' +
+                      'discarded the unfinished import %s and migrated %s ' +
+                      'again from the start', [res.DiscardedStaged, dbName]);
+         end;
+
       Result := res.Ok;
       if (not Result) and (logger <> nil) then
          begin
@@ -1148,6 +1207,57 @@ begin
       end;
 end;
 
+function LogStoreCheckExchangeIds(out aReport: string): boolean;
+const
+   (* Enough to find them in the log window, not a listing. *)
+   SAMPLE_SIZE = 5;
+var
+   missing: TMissingExchangeIds;
+begin
+   Result := False;
+   aReport := '';
+
+   if not LogStoreEnsureOpen then
+      begin
+      aReport := 'The contest log is not open, so it could not be checked. '
+                 + 'Details are in tr4w.log.';
+      Exit;
+      end;
+
+   try
+      missing := GRepository.QSOsWithoutExchangeId(SAMPLE_SIZE);
+   except
+      (* As the integrity check: a check that raises has answered, and the
+        answer is no. *)
+      on E: Exception do
+         begin
+         aReport := 'The check could not be completed: ' + E.Message;
+         Exit;
+         end;
+   end;
+
+   if missing.Count = 0 then
+      begin
+      aReport := 'Every QSO in ' + LogStoreFileName + ' carries an exchange id.';
+      Result := True;
+      Exit;
+      end;
+
+   (* REPORTED, NOT REPAIRED. Minting ids here would be the rescore's old
+     behaviour moved to a menu item, and it is the minting that was ruled
+     out: an id is an identity, and one invented now is not the one any
+     other program knew this contact by. *)
+   aReport := string(IntToStr(missing.Count)) + ' QSO(s) in ' + LogStoreFileName
+              + ' carry no exchange id. They export with no APP_TR4W_ID, so '
+              + 'other software cannot match them across an export and a '
+              + 're-import. Nothing has been changed. The first: '
+              + missing.Sample + '.';
+   if logger <> nil then
+      begin
+      logger.Warn('[LogStore] validity check: %s', [aReport]);
+      end;
+end;
+
 (* THE LIVE LOG, AS A BACKUP SOURCE. Everything else about a backup -- the
   staging, the verification, the .bak displacement, the publish-by-rename and
   every report sentence -- is TLogBackup's, in uLogBackup, where the unit tests
@@ -1441,6 +1551,69 @@ begin
          Disable('rewriting ' + string(IntToStr(aUpdates.Count)) + ' QSOs in one ' +
                  'transaction -- ROLLED BACK, so the log is as it was ' +
                  'before this pass', E);
+         end;
+   end;
+end;
+
+(* LogStoreAppendQSO's own capture of what was sent, in the shape
+  TLogRepository.AppendBatch takes. *)
+function SentExchangeOfQSO(const aQso: ContestExchange): AnsiString;
+begin
+   Result := AnsiString(BuildSentExchangeText(aQso));
+end;
+
+function LogStoreAppendQSOs(aQsos: TLogQsoAppends; out aFailedIndex: integer;
+                            out aFailure: string): boolean;
+var
+   rebuilt: boolean;
+begin
+   Result := False;
+   aFailedIndex := -1;
+   aFailure := '';
+
+   if GDisabled then
+      begin
+      aFailure := 'the contest log is not being written -- an earlier ' +
+                  'failure stopped it. See tr4w.log.';
+      Exit;
+      end;
+
+   try
+      (* False: no QSO is part way through being added, so a log built from
+        the .TRW here is simply the log these QSOs join. *)
+      if not EnsureOpen(rebuilt, False) then
+         begin
+         aFailure := 'the contest log could not be opened. See tr4w.log.';
+         Exit;
+         end;
+
+      if aQsos.Count = 0 then
+         begin
+         Result := True;
+         Exit;
+         end;
+
+      GRepository.AppendBatch(aQsos, SentExchangeOfQSO, aFailedIndex);
+      Result := True;
+   except
+      on E: Exception do
+         begin
+         aFailure := E.Message;
+         (* InBatch stays True only when the ROLLBACK ITSELF failed (see
+           TLogRepository.RollbackBatch). Then nobody knows what the log
+           holds, and that is a write failure like any other. *)
+         if (GRepository <> nil) and GRepository.InBatch then
+            begin
+            Disable('appending ' + string(IntToStr(aQsos.Count)) + ' QSOs ' +
+                    'in one transaction -- and its ROLLBACK FAILED, so what ' +
+                    'the log holds is not known', E);
+            end
+         else if logger <> nil then
+            begin
+            logger.Error('[LogStore] %d QSOs were ROLLED BACK and none ' +
+                         'written; the log is as it was. %s: %s',
+                         [aQsos.Count, AnsiString(E.ClassName), E.Message]);
+            end;
          end;
    end;
 end;

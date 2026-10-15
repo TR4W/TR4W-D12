@@ -310,8 +310,17 @@ procedure SetCommand(const c: string);
   script and an import that runs from the menu must be the SAME import, or
   the one nobody watches is the one that drifts. Only the two questions --
   which file, and append to a log that already has QSOs -- differ, and both
-  are asked here rather than duplicated. *)
-procedure ImportFromADIF(const aFileName: string = '');
+  are asked here rather than duplicated.
+
+  ALL OR NOTHING (NY4I, 2026-10-14). Every record is read first and the lot
+  is written in ONE transaction (uLogStore.LogStoreAppendQSOs); one record
+  that will not go in, and none does. The operator is told either way --
+  how many were imported, or that NOTHING was, which record failed and why,
+  and that the log is unchanged. False only when the import FAILED;
+  cancelling is not a failure. aReport is that sentence, for /IMPORT, which
+  has no dialog to show it in. *)
+function ImportFromADIF(const aFileName: string = ''): boolean; overload;
+function ImportFromADIF(const aFileName: string; out aReport: string): boolean; overload;
 procedure CheckQuestionMark;
 (* TelnetWantsClipboardKey IS GONE (2026-09-07) -- it had no caller.
 
@@ -8710,9 +8719,10 @@ end;
   program does what it did before". Country and prefix are looked up again,
   the mult flags are set against the current sheet, then the points.
 
-  What it deliberately does NOT do: mint an id (GetGUID is a clock and a random
-  number, so the caller owns it), or mark dupes (that needs the log walked in
-  order, which is the rescore loop's business). *)
+  What it deliberately does NOT do: mint an id (and since 2026-10-14 the
+  rescore loop does not either -- an id is an identity, not scoring), or mark
+  dupes (that needs the log walked in order, which is the rescore loop's
+  business). *)
 procedure RecomputeQSOScoring(var aRX: ContestExchange);
 var
   (* ONE ActiveContest FOR THE PREFIX AND THE DX QTH -- M11 S4. It rebuilds
@@ -8788,9 +8798,7 @@ var
     collected rather than written as the pass goes. *)
   Pending: TLogRowUpdates;
   (* What the write covers, for the closing summary line. *)
-  MintedId: Boolean;
   Itemised: Boolean;
-  MintedCount: integer;
   ItemisedCount: integer;
   UnitemisedCount: integer;
 begin
@@ -8834,7 +8842,6 @@ begin
      end;
   Pending := TLogRowUpdates.Create;
   try
-     MintedCount := 0;
      ItemisedCount := 0;
      UnitemisedCount := 0;
      (* Read by the summary line, which an empty log also reaches. *)
@@ -8857,7 +8864,6 @@ begin
         goto 4;
         end;
      RescoredBefore := RescoredRXData;
-     MintedId := False;
      Itemised := False;
 
      if RescoredRXData.ceRecordKind = rkQSO then
@@ -8908,16 +8914,15 @@ begin
                beforeQTHCountry := RescoredRXData.QTH.Country;
                beforeQTHZone    := RescoredRXData.QTH.Zone;
 
-               (* THE ID IS MINTED BEFORE THE SCORING, where it used to follow the
-                 country lookups. Nothing in RecomputeQSOScoring reads it, so the
-                 order is immaterial -- and keeping GetGUID out of that routine is
-                 what lets the contest matrix call it and stay deterministic. *)
-               if RescoredRXData.id = '' then
-                  begin
-                  RescoredRXData.id := GetGUID;
-                  MintedId := True;
-                  end;
-
+               (* NO EXCHANGE ID IS MINTED HERE (NY4I, 2026-10-14; open
+                 question F6 in docs/SQLITE_LOG_SCHEMA_PLAN.md section 9c).
+                 This pass gave a fresh GUID to every QSO whose id was empty,
+                 so the first rescore of any imported or migrated log
+                 rewrote every row -- 1,772 rows across the corpus -- and
+                 invented an identity no other program knew the contact by.
+                 A rescore recomputes SCORING; an id is not scoring. A QSO
+                 without one is reported by the validity check
+                 (uLogStore.LogStoreCheckExchangeIds) and left alone. *)
                RecomputeQSOScoring(RescoredRXData);
                if (not tAllowDupeQSOs) and (RescoredRXData.ceClearDupeSheet = False)
                  and (VisibleLog.CallIsADupe(RescoredRXData.Callsign,
@@ -8952,7 +8957,7 @@ begin
                      'CountryID [%s]->[%s] Prefix [%s]->[%s] DXQTH [%s]->[%s] ' +
                      'DomMult %s->%s DXMult %s->%s PrefixMult %s->%s ZoneMult %s->%s ' +
                      'QSOPoints %d->%d Dupe %s->%s ' +
-                     'DXCCPrefix [%s]->[%s] DXCC %d->%d CQZone %d->%d IdMinted %s',
+                     'DXCCPrefix [%s]->[%s] DXCC %d->%d CQZone %d->%d',
                      [string(RescoredRXData.Callsign), QSOCounter,
                       string(beforeCountryID),  string(RescoredRXData.QTH.CountryID),
                       string(beforePrefix),     string(RescoredRXData.Prefix),
@@ -8965,8 +8970,7 @@ begin
                       BoolToStr(beforeDupe, True), BoolToStr(RescoredRXData.ceDupe, True),
                       string(beforeQTHPrefix),  string(RescoredRXData.QTH.Prefix),
                       beforeQTHCountry, RescoredRXData.QTH.Country,
-                      beforeQTHZone,    RescoredRXData.QTH.Zone,
-                      BoolToStr(MintedId, True)]);
+                      beforeQTHZone,    RescoredRXData.QTH.Zone]);
                   end;
 
                Sheet.AddQSOToSheets(@RescoredRXData, False);
@@ -8989,15 +8993,11 @@ begin
      if not CompareMem(@RescoredBefore, @RescoredRXData, SizeOf(ContestExchange)) then
         begin
         Pending.Add(RowId, RescoredRXData);
-        if MintedId then
-           begin
-           Inc(MintedCount);
-           end;
         if Itemised then
            begin
            Inc(ItemisedCount);
-           end;
-        if (not MintedId) and (not Itemised) then
+           end
+        else
            begin
            Inc(UnitemisedCount);
            end;
@@ -9018,17 +9018,16 @@ begin
         begin
         (* WHAT WAS WRITTEN, IN ONE LINE. The per-record line above itemises
           what scoring and the country lookup changed; a row can also be
-          rewritten because it was given an exchange id, or for a difference
-          outside those fields, and without this nothing said so. Logged when
-          nothing was rewritten too: "0 of N" is how an idempotent second
-          rescore shows that it was one. *)
+          rewritten for a difference outside those fields, and without this
+          nothing said so. Logged when nothing was rewritten too: "0 of N" is
+          how an idempotent second rescore shows that it was one. "Given an
+          exchange id" left this line with the minting (F6, 2026-10-14). *)
         if UpdAction = actRescore then
            begin
            logger.Info('[actRescore] %d of %d records rewritten in one ' +
-              'transaction: %d itemised above, %d given an exchange id, ' +
+              'transaction: %d itemised above, ' +
               '%d changed only in fields the per-record line does not itemise',
-              [Pending.Count, QSOCounter, ItemisedCount, MintedCount,
-               UnitemisedCount]);
+              [Pending.Count, QSOCounter, ItemisedCount, UnitemisedCount]);
            end
         else
            begin
@@ -10145,18 +10144,38 @@ begin
 end; // of ParseADIFRecord
 (*----------------------------------------------------------------------------*)
 
-procedure ImportFromADIF(const aFileName: string = '');
+function ImportFromADIF(const aFileName: string = ''): boolean;
+var
+  report: string;
+begin
+  (* The menu's door. The report has already been shown to the operator. *)
+  Result := ImportFromADIF(aFileName, report);
+end;
+
+function ImportFromADIF(const aFileName: string; out aReport: string): boolean;
 var
   adif: TextFile;
   adifFileName: string;
   sBuffer: string;
   FoundEOH: boolean;
+  (* RECORDS READ FROM THE FILE -- collected, and in the log only once the one
+    transaction below commits. *)
   QSOCounter: integer;
-  (* RECORDS THAT DID NOT COMMIT. An import is exactly where a disk fills up,
-    and until 2026-09-11 the append was fire-and-forget -- so a run that failed
-    halfway still reported every record as imported. *)
-  QSOFailed: integer;
-  lpNumberOfBytesWritten: Cardinal;
+  (* LINES AFTER <EOH> THAT HELD NO COMPLETE RECORD. ParseADIFRecord answers
+    False for a line with no <EOR> or with a malformed tag, and those lines
+    have always been passed over -- this import reads one record per line.
+    That is unchanged; what is new is that they are COUNTED and said, because
+    a silent skip makes the imported count quietly wrong. Blank lines are not
+    counted: they are not records. *)
+  LinesSkipped: integer;
+  (* THE RECORDS, collected rather than written as they are read -- section 9c,
+    the ADIF ruling. Written in one transaction once the file is read. *)
+  Pending: TLogQsoAppends;
+  FailedIndex: integer;
+  Failure: string;
+  failedRec: ContestExchange;
+  failedCall: string;
+  failedWhen: string;
   // County-line detection during import.  Within a single ImportFromADIF
   // pass we remember the first QTHString seen for each (call|band|mode)
   // tuple.  When a later record reuses the same (call|band|mode) with a
@@ -10179,31 +10198,51 @@ var
     SetTextInQuickCommandWindow(SysUtils.Format(AnsiString(LclText('%u ' + TC_QSO_IMPORTED)), [QSOCounter]));
   end;
 
-  (* SAID AT THE END, AND SAID LOUDLY. A count that silently excludes what
-    failed is not better than a count that includes it -- the operator has to
-    know the file and the log now disagree, and by how much. *)
-  procedure ReportAnyThatFailed;
+  (* THE SKIPPED LINES, as a clause both reports end with. Empty when none. *)
+  function SkippedClause: string;
   begin
-    if QSOFailed > 0 then
+    Result := '';
+    if LinesSkipped > 0 then
       begin
-      logger.Error('[Import] %d of %d records did NOT commit to the contest log',
-                   [QSOFailed, QSOCounter + QSOFailed]);
-      (* THE LOG LINE ABOVE IS THE HEADLESS REPORT. The dialog below is for
-        an operator, and a headless run has none -- see the note on the
-        append question. *)
-      if tSilentExport then
-         begin
-         Exit;
-         end;
-      ShowWarning(AnsiString(SysUtils.Format(
-         AnsiString('%d record(s) in this file did NOT reach the contest log. '
-                    + '%d were imported. See tr4w.log.'),
-         [QSOFailed, QSOCounter])));
+      Result := ' ' + string(IntToStr(LinesSkipped)) + ' line(s) after the ADIF ' +
+                'header held no complete record (no <EOR>, or a malformed tag) ' +
+                'and were skipped, as they always have been.';
       end;
+  end;
+
+  (* NOTHING WAS IMPORTED, SAID LOUDLY AND IN FULL -- NY4I, 2026-10-14: "all
+    or nothing, with ample notification". The sentence names the file, the
+    record that failed (its number in the file, its call and its time) and
+    why, and says what the log is now. It goes to the log at Error, and to the
+    operator in the same dialog the import's failure report has always used
+    (showwarning -- which never opens a dialog in a headless run), with a
+    notice in the quick-command line beside it that does not need dismissing. *)
+  procedure ReportNothingImported(const aWhy: string);
+  var
+    logNow: string;
+  begin
+    (* SAID ONLY WHEN IT IS TRUE. A rolled-back batch leaves the log as it
+      was and the store running; a rollback that itself failed disables the
+      store, and then "unchanged" is a claim nobody checked. *)
+    if LogStoreIsUsable then
+      begin
+      logNow := ' The contest log is unchanged.';
+      end
+    else
+      begin
+      logNow := ' The contest log is not being written -- see tr4w.log.';
+      end;
+    aReport := 'NOTHING was imported from ' + adifFileName + ': ' + aWhy + '.' +
+               logNow + SkippedClause;
+    logger.Error('[Import] %s', [aReport]);
+    SetTextInQuickCommandWindow('ADIF import FAILED -- nothing was imported');
+    showwarning(aReport);
   end;
 begin
   { This is a total rewrite of the ADIF import processing. - NY4I 2020 Jul 2
   }
+  Result := True;
+  aReport := '';
   FoundEOH := false;
   // TR4W's own GetOpenFileNameA wrapper, not VCL's TOpenDialog.  This restores
   // the house pattern that was here before -- it survived in comments at the
@@ -10243,18 +10282,22 @@ begin
         end;
      end;
 
+  (* A FAILURE, REPORTED LIKE THE OTHERS. This was a ShowMessage, which is
+    modal even in a headless run -- so /IMPORT naming a missing file hung
+    rather than failing. showwarning skips the dialog there. *)
   if not FileExists(adifFileName) then
      begin
-     ShowMessage({TC_IMPORTFILENOTFOUND} 'The import file is not available' + ' '
-       + adifFileName);
-     exit;
+     LinesSkipped := 0;
+     ReportNothingImported('the file is not available');
+     Result := False;
+     Exit;
      end;
 
   (* THE BINARY LOG IS OPTIONAL HERE, AND THAT IS THE WHOLE POINT OF THIS
     ROUTINE NOW.
 
     Nothing between here and CloseLogFile writes a byte to it -- the records go
-    to the contest database through LogStoreAppendQSO below, which is the only
+    to the contest database through LogStoreAppendQSOs below, which is the only
     append path left. The open and the seek are what remain of the days when an
     import appended to the .TRW.
 
@@ -10276,19 +10319,12 @@ begin
      logger.Info('[Import] no binary log to open -- importing into the '
                  + 'contest database only, which is where the QSOs go anyway');
      end;
-  // Now open te file and process
-
-  if not FileExists(adifFileName) then
-     begin
-     DebugMsg('In ImportADIF, ADIF file ' + adifFilename + ' does not exists');
-     Exit;
-     end;
 
   AssignFile(adif, adifFileName);
-  //ReWrite(adif);
   QSOCounter := 0;
-  QSOFailed  := 0;
+  LinesSkipped := 0;
   Reset(adif);
+  Pending := TLogQsoAppends.Create;
   seenCallBandMode := TStringList.Create;
   try
     seenCallBandMode.CaseSensitive := False;
@@ -10338,43 +10374,87 @@ begin
                 end;
 
              CalculateQSOPoints(TempRXData);
-             (* Into the log -- which is the database. The binary write that
-                followed this is gone with the .TRW.
-
-                COUNTED ONLY IF IT COMMITTED. The append used to be
-                fire-and-forget, so an import that failed partway still
-                reported every record as loaded -- and an import is precisely
-                where a disk fills up. The count now describes what is in the
-                log, which is what the operator is about to trust. *)
-             if LogStoreAppendQSO(TempRXData) then
-                begin
-                inc(QSOCounter);
-                end
-             else
-                begin
-                inc(QSOFailed);
-                end;
-             if QSOCounter mod 100 = 0 then
-                begin
-                DisplayLoadedQSOs;
-                end;
+             (* COLLECTED, NOT WRITTEN. The write is one transaction, below,
+               once the whole file has been read. Nothing in this loop reads
+               the log, so holding the records back changes no record. *)
+             Pending.Add(TempRXData);
+             inc(QSOCounter);
+             end
+          else if Trim(sBuffer) <> '' then
+             begin
+             inc(LinesSkipped);
              end;
           end;
        end;
+    CloseFile(adif);
+
+    if binaryLogOpen then
+       begin
+       CloseLogFile;
+       end;
+
+    (* ONE TRANSACTION FOR THE WHOLE FILE -- ALL OR NOTHING (NY4I,
+      2026-10-14). This committed one record at a time ("counted only if it
+      committed"), which made a failure part way a log holding part of a
+      file. Now a failure rolls every record back, and the log is exactly
+      as it was before the import began. *)
+    if not LogStoreAppendQSOs(Pending, FailedIndex, Failure) then
+       begin
+       if (FailedIndex >= 0) and (FailedIndex < Pending.Count) then
+          begin
+          failedRec := Pending.Row(FailedIndex);
+          (* NAMED AS THE FILE HAS IT. The realistic failure is a record with
+            no CALL -- callsign is NOT NULL -- and such a record often has no
+            date either, so "( , 00-00-00 0000z)" would describe nothing. *)
+          failedCall := string(failedRec.Callsign);
+          if failedCall = '' then
+             begin
+             failedCall := 'no CALL';
+             end;
+          if (failedRec.tSysTime.qtYear = 0) and
+             (failedRec.tSysTime.qtMonth = 0) and
+             (failedRec.tSysTime.qtDay = 0) then
+             begin
+             failedWhen := 'no QSO_DATE';
+             end
+          else
+             begin
+             failedWhen := tGetDateFormat(failedRec.tSysTime) +
+                           SysUtils.Format(' %.2d%.2dz',
+                              [failedRec.tSysTime.qtHour,
+                               failedRec.tSysTime.qtMinute]);
+             end;
+          ReportNothingImported(SysUtils.Format(
+             'record %d of %d (%s, %s) could not be written to the log: %s',
+             [FailedIndex + 1, Pending.Count, failedCall, failedWhen, Failure]));
+          end
+       else
+          begin
+          ReportNothingImported('its ' + string(IntToStr(Pending.Count)) +
+                                ' record(s) could not be written to the log: ' +
+                                Failure);
+          end;
+       Result := False;
+       ClearThread(ImportFromADIFThreadID);
+       Exit;
+       end;
   finally
     seenCallBandMode.Free;
+    Pending.Free;
   end;
-
-  CloseFile(adif);
-
-  if binaryLogOpen then
-     begin
-     CloseLogFile;
-     end;
 
   RescoreLog;
   DisplayLoadedQSOs;
-  ReportAnyThatFailed;
+  aReport := string(IntToStr(QSOCounter)) + ' QSO(s) imported from ' +
+             adifFileName + ' in one transaction.' + SkippedClause;
+  logger.Info('[Import] %s', [aReport]);
+  (* SKIPPED LINES ARE SAID TO THE OPERATOR TOO. They are not a failure --
+    they never were -- but each one is something in the file that is not in
+    the log, and the count above does not show it. *)
+  if LinesSkipped > 0 then
+     begin
+     showwarning(aReport);
+     end;
   ClearThread(ImportFromADIFThreadID);
 
 end; // of ImportFromADIF

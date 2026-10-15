@@ -44,6 +44,37 @@ Nothing should look different:
 - [ ] **CQ WW RTTY** with `MY STATE` set: the F3 exchange memory is
   `599 <zone> <state>`; CQ WW CW's has no state.
 
+## Added 2026-10-14 -- THE ADIF IMPORT IS ALL OR NOTHING, AND SAYS SO
+
+NY4I's ruling: an ADIF import is one transaction -- one record that will not
+go in, and none does -- "with ample notification". `File > Import ADIF`
+(`MainUnit.ImportFromADIF`) now reads the whole file, then writes it in one
+transaction (`uLogStore.LogStoreAppendQSOs`). Headless `/IMPORT` is proven
+(exit 2 on failure, the `qso` rows unchanged, the report in
+`tr4w-early.log`); what the OPERATOR sees is not. Make a bad file by adding a
+line holding only `<EOR>` after a few records of any ADIF -- a record with no
+CALL, which the log refuses (`callsign` is NOT NULL).
+
+- [ ] **Import the bad file into a log that already has QSOs.** A warning
+  dialog says NOTHING was imported, names the record (`record N of M (no CALL,
+  no QSO_DATE)`), the reason (`NOT NULL constraint failed: qso.callsign`) and
+  that the contest log is unchanged; the quick-command line reads `ADIF import
+  FAILED -- nothing was imported` behind it. The log window, totals and score
+  are exactly what they were. Is it unmissable, and is it clear?
+- [ ] **Then log a QSO by hand.** It logs: a rolled-back import no longer stops
+  the log (only a rollback that itself fails does -- see
+  `docs/SQLITE_LOG_SCHEMA_PLAN.md` 9c). There is no second dialog saying THE
+  CONTEST LOG IS NOT BEING SAVED.
+- [ ] **Import a good file.** The quick-command line shows `N Qs imported.` as
+  before, the log window fills once, and on a large file (a few thousand
+  records) the wait is noticeably shorter than before -- the progress count
+  every 100 records is GONE, because nothing is in the log until the end.
+- [ ] **Import a file with a stray non-record line after the header** (any text
+  with no `<EOR>`). It imports, and a warning names how many lines were
+  skipped. Those lines were always dropped; now the operator is told.
+
+---
+
 ## Added 2026-10-14 -- WSJT-X MESSAGES ARE EVALUATED ON THE MAIN THREAD
 
 `uWSJTX` ran the dupe and new-multiplier test for a CQ decode on Indy's UDP

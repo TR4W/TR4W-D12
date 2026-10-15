@@ -33,8 +33,9 @@ unit uVerificationChecks;
   A FRAMEWORK WITH ONE CHECK IN IT, NOT A MENU ITEM WIRED TO ONE ROUTINE
   ------------------------------------------------------------------------
 
-  There is exactly one check today -- the contest log's integrity check -- and
-  building it as a list anyway is deliberate rather than speculative. The
+  It was built with one check in it -- the contest log's integrity check --
+  and building it as a list anyway was deliberate rather than speculative; the
+  second, QSOs with no exchange id, arrived on 2026-10-14. The
   questions an operator wants answered before a contest are all the same SHAPE:
   a name, a verdict, and a sentence explaining it. The CTY.DAT vintage, whether
   the settings file is writable, whether the configured serial ports still
@@ -98,7 +99,7 @@ implementation
 
 uses
    SysUtils,
-   uLogStore;   // LogStoreCheckIntegrity -- the first and, today, only check
+   uLogStore;   // LogStoreCheckIntegrity and LogStoreCheckExchangeIds
 
 type
    TRegisteredCheck = record
@@ -171,8 +172,21 @@ begin
 end;
 
 
+(* THE SECOND CHECK: QSOs WITH NO EXCHANGE ID (NY4I, 2026-10-14).
+
+  A rescore used to mint one for every QSO that lacked it, so the first rescore
+  of an imported log rewrote every row. It no longer does; a missing id is
+  reported here instead, and nothing repairs it. *)
+function CheckContestLogExchangeIds(out aDetail: string): boolean;
+begin
+   Result := LogStoreCheckExchangeIds(aDetail);
+end;
+
+
 initialization
    RegisterVerificationCheck('Contest log database integrity',
                              @CheckContestLogIntegrity);
+   RegisterVerificationCheck('Every QSO has an exchange id',
+                             @CheckContestLogExchangeIds);
 
 end.

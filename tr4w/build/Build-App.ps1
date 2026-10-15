@@ -369,7 +369,11 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # Measured by a scratch -B compile with Build-App's arguments, per unit.
 # 1264 -> 1263, 2026-10-14: M11 S6 part 1a, measured by the full build
 # (the domestic-key move through the classes and uDomesticKey).
-$NARROW_CEILING = 1263
+# 1263 -> 1262, 2026-10-14: the ADIF import's "file not available" report.
+# It was a ShowMessage of 'literal' + the file name, which narrowed; it goes
+# through the import's one failure report now. Measured by a full build with
+# Build-App's arguments; the all-or-nothing import itself added none.
+$NARROW_CEILING = 1262
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

@@ -815,6 +815,15 @@ begin
 
    res := ImportBinaryLog(source, target);
 
+   (* An earlier /IMPORTLOG to this target died part way; its staged file was
+     discarded and the import ran again from the start. *)
+   if res.DiscardedStaged <> '' then
+      begin
+      EarlyTrace(SysUtils.Format('[ImportLog] discarded the unfinished ' +
+                                 'import %s left by an earlier run',
+                                 [res.DiscardedStaged]));
+      end;
+
    if not res.Ok then
       begin
       EarlyTrace(SysUtils.Format('[ImportLog] FAILED: %s', [res.Message]));
@@ -1094,6 +1103,8 @@ var
     below. `i` in this routine is a tLogLevels, so the walk needs its own. *)
   readinessGaps                         : TStringList;
   gapIndex                              : integer;
+  // What /IMPORT tells the operator, for the headless run's own trace.
+  importReport                          : string;
    //  P                                   : Pchar; //n4af
    //   P1                                   : boolean; //n4af
    // S1                                   : String; //n4af
@@ -2398,8 +2409,17 @@ begin
   if ImportFileFromCommandLine <> '' then
      begin
      EarlyTrace('[Import] importing ' + ImportFileFromCommandLine);
-     ImportFromADIF(ImportFileFromCommandLine);
-     EarlyTrace('[Import] done');
+     (* ALL OR NOTHING, AND THE EXIT CODE SAYS WHICH (NY4I, 2026-10-14).
+       This used to Halt(0) whatever happened, so a script was told the file
+       was imported when part of it, or none of it, was. The report is the
+       sentence the operator's dialog carries; it is in tr4w.log as well.
+       2 for failure, /IMPORTLOG's and /RESCORE's convention. *)
+     if not ImportFromADIF(ImportFileFromCommandLine, importReport) then
+        begin
+        EarlyTrace('[Import] FAILED: ' + importReport);
+        Halt(2);
+        end;
+     EarlyTrace('[Import] done: ' + importReport);
      Halt(0);
      end;
 
