@@ -234,23 +234,6 @@ moves to section 4 in the commit that records it.
 
 ### Added with the IN7QPNE composite (2026-10-14)
 
-- **Q77** IN7QPNE's score. You said a combined score is not needed, and it
-  would be nice to see the score of the party just worked. Nothing on screen
-  can show more than one score today, so the window, the summary sheet and
-  the Cabrillo `CLAIMED-SCORE` show points x multipliers over the whole
-  combined log -- a number that is no sponsor's score. Should TR4W get a way
-  to show one score per party, or should the Cabrillo claim nothing?
-  *Recommended: a per-party score, as its own step; until then leave it.*
-  **Answer:**
-
-- **Q78** An Indiana, 7QP, NE or DE entrant who works a station in ANOTHER of
-  the four parties: TR4W scores it by the worked party's rules only, as you
-  ruled. The entrant's own sponsor may count it too (an Indiana station
-  working Arizona earns an Arizona multiplier in the Indiana QSO Party).
-  Each sponsor scores the shared log itself, so their results are not
-  affected; only TR4W's points show one party's view. Is that right?
-  **Answer:**
-
 - **Q79** Some settings hold one value for the whole session, so IN7QPNE
   keeps its own old values where the parties differ:
   multipliers once per contest (Delaware counts per band); no VHF (7QP and
@@ -615,8 +598,37 @@ closes it; anything else reopens it.
 | Q76 | ADIF `STATE` is the worked station's state, `MY_STATE` ours -- fix the host-state export | not built |
 | Q82 | IN7QPNE county-line count left as is; future fix | issue #85 |
 | Q84 | A party's DX-multiplier test ignores case (files unchanged) | not built |
+| Q77 | IN7QPNE per-party score: deferred | issue #86 |
+| Q78 | IN7QPNE cross-party scoring view: deferred with Q77 | issue #86 |
 
 ### Answered since the table was last updated (full text)
+
+- **Q77** IN7QPNE's score. You said a combined score is not needed, and it
+  would be nice to see the score of the party just worked. Nothing on screen
+  can show more than one score today, so the window, the summary sheet and
+  the Cabrillo `CLAIMED-SCORE` show points x multipliers over the whole
+  combined log -- a number that is no sponsor's score. Should TR4W get a way
+  to show one score per party, or should the Cabrillo claim nothing?
+  *Recommended: a per-party score, as its own step; until then leave it.*
+  **Answer:** (NY4I, 2026-10-15, on Q78; it covers Q77 too) *"defer how to
+  display the score in each contest for in7qpne. I am undecided if it is
+  important or how we would display this short of a tooltip over score with
+  the breakdown or a new scoring window."* DEFERRED, both: TR4W keeps today's
+  combined score and the worked party's view. Tracked as issue #86
+  (https://github.com/TR4W/TR4W-D12/issues/86).
+
+- **Q78** An Indiana, 7QP, NE or DE entrant who works a station in ANOTHER of
+  the four parties: TR4W scores it by the worked party's rules only, as you
+  ruled. The entrant's own sponsor may count it too (an Indiana station
+  working Arizona earns an Arizona multiplier in the Indiana QSO Party).
+  Each sponsor scores the shared log itself, so their results are not
+  affected; only TR4W's points show one party's view. Is that right?
+  **Answer:** (NY4I, 2026-10-15, on Q78; it covers Q77 too) *"defer how to
+  display the score in each contest for in7qpne. I am undecided if it is
+  important or how we would display this short of a tooltip over score with
+  the breakdown or a new scoring window."* DEFERRED, both: TR4W keeps today's
+  combined score and the worked party's view. Tracked as issue #86
+  (https://github.com/TR4W/TR4W-D12/issues/86).
 
 - **Q84** Indiana's rule is "a DX station is not a multiplier", and it looks
   for `DX` in capitals. Indiana's own file says `DX = DX`, but IN7QPNE's
