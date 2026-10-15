@@ -73,6 +73,19 @@ DXLog. Old to new:
   file at all, and if so is its name `GRID-LOC`?
   - **NZFIELDDAY** keeps `JW-FD` (NY4I's own choice of 2026-09-29), and the
     remaining names are those of the CONTEST: table.
+- **Q4-Q7, County Hunter (MARAC) -- DELEGATED (NY4I, 2026-10-15): "MARAC is
+  inactive so just pick a reasonable default."** The default chosen:
+  - **Scoring stays as it is:** one point per QSO, no multipliers, dupes as today --
+    D7's "General County Hunting Log". No MARAC scoring is implemented for a contest
+    that is not run, so Q5 (points, mults, bonuses) and Q7 (dupe rule) fall away,
+    and so does Q4's choice between ref 3 and ref 20.
+  - **Cabrillo (Q6): yes,** so a county log can still be submitted somewhere.
+    `CONTEST: MARAC` (Q20). Columns, from helpers that already exist: sent
+    `CabrilloSentRSTState` (RST + MY STATE), received `CabrilloReceivedRSTQTH` (RST +
+    the QTH as typed, e.g. `FL ORA`); ADIF STX_STRING `ADIFSentRSTState`.
+  - **Our own county:** a distinct `MY COUNTY` station field (decision 2), sent after
+    the state, rather than putting the county in MY STATE.
+  - Revisit only if MARAC runs a contest again.
 - **Q2, ARCI event names -- APPROVED (NY4I, 2026-10-15):** `ARCI-SPRING` (WA7BNM
   315), `ARCI-FALL` (168), `ARCI-HOOTOWL` (31), `ARCI-SUMMER-HB` (69),
   `ARCI-TOPBAND` (193), `ARCI-HOLIDAY-HB` (198). Each is its own contest and is also
@@ -101,19 +114,6 @@ the part still owed. The `[Qn]` tag is the number the question has been cited by
 **ARCI**
 
 - **[Q3] Log format.** Does the qrpcontest.com upload take a Cabrillo file?
-
-**County Hunter (MARAC)** -- you called it inactive, so the first question decides
-whether the rest matter:
-
-- **[Q4] Score it as MARAC, or not?** Keep today's one-point county log under the
-  `MARAC` name (then Q5-Q7 fall away), or implement MARAC's scoring? If MARAC: the
-  US Counties QSO Party (ref 3, last 2025) or the SSB QSO Party (ref 20, last 2010)?
-- **[Q5] If MARAC:** (a) points for working a portable; (b) what a DX entrant
-  scores; (c) does a county-line mobile count once per county; (d) multiplier per
-  mode or per contest, and do states or DX count; (e) bonus points.
-- **[Q6] If MARAC:** is the log Cabrillo?
-- **[Q7] If MARAC:** the dupe rule -- once per band per mode, or once per county per
-  band?
 
 **Grid Loc**
 
