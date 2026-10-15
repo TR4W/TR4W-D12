@@ -2,7 +2,7 @@
 
 **GENERATED. Do not edit outside the marked hand-maintained blocks.**
 Regenerate with `python tools/contest-rules-inventory/generate.py` (any working
-directory). This copy was generated from commit `98393bcb` (2026-10-14), **plus uncommitted changes under `tr4w/`**.
+directory). This copy was generated from commit `d23b6772` (2026-10-14).
 Owner: `contest-factory`, with `contest-scoring` (the engine side of every row
 below), `file-formats` (ADIF and Cabrillo rows) and `lcl-ui` (the UI rows).
 
@@ -260,7 +260,7 @@ None found.
 
 | file:line | routine | shape | contest(s) -- **bold = has a class** | class? | seam | what |
 |---|---|---|---|---|---|---|
-| `MainUnit.pas:8070` | LoadinLog | 1 | **RADIOYOC** | all | new seam needed: SessionExchangeState (previous QSO number) | `contest` compare |
+| `MainUnit.pas:8079` | LoadinLog | 1 | **RADIOYOC** | all | new seam needed: SessionExchangeState (previous QSO number) | `contest` compare |
 | `trdos/logdupe.pas:1862` | ParseExchangeIntoContestExchange | 4 | **FISTS** | all | new seam needed: ParseReceivedExchange (s6) | reach 1: `AE` = RSTQTHNameAndFistsNumberOrPowerExchange |
 | `trdos/logdupe.pas:1975` | GetInitialExchangeStringFromContestExchange | 4 | **ALLJA** | all | new seam needed: InitialExchangeFromHistory | reach 1: `AE` = RSTALLJAPrefectureAndPrecedenceExchange |
 | `trdos/logdupe.pas:1998` | GetInitialExchangeStringFromContestExchange | 4 | **FISTS** | all | new seam needed: InitialExchangeFromHistory | reach 1: `AE` = RSTQTHNameAndFistsNumberOrPowerExchange |
@@ -319,9 +319,9 @@ None found.
 
 | file:line | routine | shape | contest(s) -- **bold = has a class** | class? | seam | what |
 |---|---|---|---|---|---|---|
-| `MainUnit.pas:4471` | CreateMainWindow | 3 | **CQWWCW**, **CQWWRTTY**, **CQWWSSB**, **IARU** | all | PermittedOperatingAids / OffersQTCs (existing, M9a) / OffersParkTools (existing, POTA 2026-10-13) + new seam needed: UIFeatures (off-time) | `Pos('CQ-WW'` / `'IARU-HF'` in `ContestTypeSA[Contest]` -- 60-minute off-time |
-| `MainUnit.pas:9648` | SetColumnsWidth | 4 | **ARRLSSCW**, **ARRLSSSSB** | all | new seam needed: LogColumns | reach 2: `AE` = QSONumberPrecedenceCheckDomesticQTHExchange |
-| `MainUnit.pas:9650` | SetColumnsWidth | 4 | **ARRLSSCW**, **ARRLSSSSB** | all | new seam needed: LogColumns | reach 2: `AE` = QSONumberPrecedenceCheckDomesticQTHExchange |
+| `MainUnit.pas:4480` | CreateMainWindow | 3 | **CQWWCW**, **CQWWRTTY**, **CQWWSSB**, **IARU** | all | PermittedOperatingAids / OffersQTCs (existing, M9a) / OffersParkTools (existing, POTA 2026-10-13) + new seam needed: UIFeatures (off-time) | `Pos('CQ-WW'` / `'IARU-HF'` in `ContestTypeSA[Contest]` -- 60-minute off-time |
+| `MainUnit.pas:9647` | SetColumnsWidth | 4 | **ARRLSSCW**, **ARRLSSSSB** | all | new seam needed: LogColumns | reach 2: `AE` = QSONumberPrecedenceCheckDomesticQTHExchange |
+| `MainUnit.pas:9649` | SetColumnsWidth | 4 | **ARRLSSCW**, **ARRLSSSSB** | all | new seam needed: LogColumns | reach 2: `AE` = QSONumberPrecedenceCheckDomesticQTHExchange |
 
 ### Setup (FoundContest / LogCfg) (0 rows)
 
@@ -401,15 +401,15 @@ Worth reading first, because they are the ones the brief named:
 
 | contest | sites outside the factory, by category |
 |---|---|
-| ARRLSSCW | **exchange** `trdos/logedit.pas:2613`, `trdos/logedit.pas:2761`; **ui** `MainUnit.pas:9648`, `MainUnit.pas:9650` |
-| ARRLSSSSB | **exchange** `trdos/logedit.pas:2613`, `trdos/logedit.pas:2761`; **ui** `MainUnit.pas:9648`, `MainUnit.pas:9650` |
-| CQWWCW | **score-summary** `trdos/postunit.pas:1188`; **ui** `MainUnit.pas:4471` |
-| CQWWRTTY | **score-summary** `trdos/postunit.pas:1188`; **ui** `MainUnit.pas:4471` |
-| CQWWSSB | **score-summary** `trdos/postunit.pas:1188`; **ui** `MainUnit.pas:4471` |
+| ARRLSSCW | **exchange** `trdos/logedit.pas:2613`, `trdos/logedit.pas:2761`; **ui** `MainUnit.pas:9647`, `MainUnit.pas:9649` |
+| ARRLSSSSB | **exchange** `trdos/logedit.pas:2613`, `trdos/logedit.pas:2761`; **ui** `MainUnit.pas:9647`, `MainUnit.pas:9649` |
+| CQWWCW | **score-summary** `trdos/postunit.pas:1188`; **ui** `MainUnit.pas:4480` |
+| CQWWRTTY | **score-summary** `trdos/postunit.pas:1188`; **ui** `MainUnit.pas:4480` |
+| CQWWSSB | **score-summary** `trdos/postunit.pas:1188`; **ui** `MainUnit.pas:4480` |
 | CUPRFCW | **exchange** `trdos/logedit.pas:2739`; **cabrillo-export** `trdos/postunit.pas:3055` |
 | CUPRFSSB | **exchange** `trdos/logedit.pas:2739`; **cabrillo-export** `trdos/postunit.pas:3055` |
 | FISTS | **exchange** `trdos/logdupe.pas:1862`, `trdos/logdupe.pas:1998` |
-| IARU | **exchange** `trdos/logedit.pas:2773`; **ui** `MainUnit.pas:4471` |
+| IARU | **exchange** `trdos/logedit.pas:2773`; **ui** `MainUnit.pas:4480` |
 | ALLJA | **exchange** `trdos/logdupe.pas:1975` |
 | CALQSOPARTY | **exchange** `trdos/logedit.pas:2736` |
 | CQIR | **exchange** `trdos/logedit.pas:2745` |
@@ -423,7 +423,7 @@ Worth reading first, because they are the ones the brief named:
 | OZCR_O | **exchange** `trdos/logedit.pas:2475` |
 | OZCR_Z | **exchange** `trdos/logedit.pas:2475` |
 | POTA | **adif-import** `uPOTAReference.pas:163` |
-| RADIOYOC | **exchange** `MainUnit.pas:8070` |
+| RADIOYOC | **exchange** `MainUnit.pas:8079` |
 | RAEM | **exchange** `uCallSignRoutines.pas:699` |
 | RDA | **exchange** `trdos/logedit.pas:2708` |
 | RFCHAMPIONSHIPCW | **exchange** `trdos/logedit.pas:2493` |
