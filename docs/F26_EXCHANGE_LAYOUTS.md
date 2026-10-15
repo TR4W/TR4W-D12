@@ -65,8 +65,12 @@ DXLog. Old to new:
   - **QCWA and QCWAGOLDEN:** *"Use QCWA."* `QCWA` for both. (Whether QCWA GOLDEN is
     kept at all is still Q12.)
   - **GRIDLOC:** NY4I: *"I need more info on grid loc as that does not sound like a
-    contest (more like general qso)."* See [the GRIDLOC section](#gridloc-grid-loc);
-    the information he asked for is there, and the choice is now Q9.
+    contest (more like general qso)."* The information is in
+    [the GRIDLOC section](#gridloc-grid-loc). Its name follows from Q9's remainder.
+- **Q9, GRIDLOC -- ANSWERED (NY4I, 2026-10-15): KEEP IT.** *"while general qso will
+  allow logging of grid and name, grid loc would show if the grid is needed or worked
+  so keep it."* What remains is small and stays open as Q9a: does it write a Cabrillo
+  file at all, and if so is its name `GRID-LOC`?
   - **NZFIELDDAY** keeps `JW-FD` (NY4I's own choice of 2026-09-29), and the
     remaining names are those of the CONTEST: table.
 - **Earlier, kept for the record:** COUNTYHUNTER is the MARAC contest, and missing
@@ -74,6 +78,19 @@ DXLog. Old to new:
   COUNTYHUNTER section and [decision 2](#decisions-owed)).
 
 ### Open
+
+**Reviewed 2026-10-15** (after NY4I's Q20 and Q9 answers). The numbers are kept as
+they were, because they have been cited; an answered item is struck through and
+points to [Answered](#answered). Still open: 1-5, 6 (part), 7, 8, 9a, 10, 11 (part),
+12 (part), 13-19. Two notes apply across the list:
+
+- **COUNTYHUNTER (4-7):** NY4I calls the MARAC contest **inactive** (2026-10-15),
+  and both WA7BNM refs are Inactive. So the first question is whether TR4W
+  implements MARAC's scoring at all, or keeps today's one-point general county
+  log under the `MARAC` name. If it keeps today's log, 4, 5 and 7 fall away.
+- **Retire-or-keep (8, 11, 12, 16):** Grid Loc (9) was kept for a feature the
+  generic mode lacks. The same test applies to these four: is there something an
+  operator gets from the class that General QSO does not give?
 
 1. **JARL log format (ALL JA and ACAG).** Both rules ask for a JARL e-log (summary
    sheet + log sheet); ACAG's rules do not mention Cabrillo `[contestclock jarl-acag
@@ -96,26 +113,31 @@ DXLog. Old to new:
    **portable**; (b) what a **DX** entrant scores; (c) does a county-line mobile
    score and count once per county; (d) is the multiplier US counties once per mode
    (ref 3) or once per contest (ref 20), and do states or DX count; (e) bonus points.
-6. **COUNTYHUNTER:** is the log Cabrillo, and with what CONTEST: value? WA7BNM gives
-   only contest-logs@marac.org.
+6. **COUNTYHUNTER:** is the log Cabrillo? WA7BNM gives only contest-logs@marac.org.
+   ~~And with what CONTEST: value?~~ **Answered (Q20): `MARAC`.**
 7. **COUNTYHUNTER:** dupe rule: once per band per mode (ref 3), or once per county
    per band (ref 20)?
 8. **FISTS:** retire the class? WA7BNM ref 251 is Inactive, last held 8 Feb 2020,
    and the sponsor page says the sprints will not continue in 2026. (DXLog still
    ships a FISTS Sprint definition, updated 2025-12-28 `[DXLog FISTSSPR.txt]`; that
    is a logger keeping a file, not evidence the event runs.)
-9. **GRIDLOC: ANSWERED -- KEEP** (NY4I, 2026-10-15; it shows whether a grid is needed or worked, which General QSO does not). Open remainder: Cabrillo file or none, and its name.
+9. ~~**GRIDLOC:** retire the class?~~ **Answered: KEEP** (see [Answered](#answered)).
+   - **9a, still open:** does Grid Loc write a Cabrillo file at all (it has no
+     sponsor to send one to), or none, like POTA and Kids Day (decision 1)? If it
+     does, is the name `GRID-LOC`?
 10. **NZFIELDDAY (JW-FD):** from NZART's rules: (a) RS(T) + serial from 001 +
     branch number, a home station sending `00`? (b) 5 points for a ZL CW QSO, 3 for
     ZL phone, 10 for non-ZL? (c) multiplier is branches; does our own branch count?
     (d) is Cabrillo accepted, and one log per band? Not on WA7BNM, not in DXLog.
 11. **QCWA:** retire, or re-model the exchange? WA7BNM ref 332 is Inactive since
-    March 2021. Not in DXLog.
-12. **QCWAGOLDEN:** what event is it? On neither WA7BNM nor DXLog. Retire?
+    March 2021. Not in DXLog. (Its name is answered: `QCWA`, Q20.)
+12. **QCWAGOLDEN:** what event is it? On neither WA7BNM nor DXLog. Retire? (If kept,
+    its name is answered: `QCWA`, the same as QCWA's, Q20.)
 13. **TENTEN -- by the same principle as ARCI, confirm:** split the class into the
     four WA7BNM events, Winter SSB (ref 237), Summer SSB (81), 10-10 Day Sprint (156)
     and Fall Digital (464), each its own contest with its own ref and its WA7BNM
-    Cabrillo name (`10-10-WINTER-PHONE` etc.)?
+    Cabrillo name (`10-10-WINTER-PHONE` etc.)? Note that NY4I's Q20 answer for the
+    class as it stands is `TEN-TEN`; a split needs one name per event.
 14. **TENTEN:** does 10-10 accept a Cabrillo file (by email to
     tentencontest@ten-ten.org)? The WA7BNM-referred rules name no electronic format.
     DXLog writes one, in the order name, number, QTH `[DXLog TENTENQP.txt]`.
@@ -140,15 +162,9 @@ DXLog. Old to new:
     Udmurtia RDA district through `MY STATE` count as reuse? If it does, they need
     `MY JA PREFECTURE`, `MY JA CITY CODE` and `MY RDA`. (DXLog shows only Udmurtia
     stations send an RDA; everyone else sends a grid, `MY GRID`.)
-20. **ANSWERED 2026-10-15, per contest -- see [Answered](#answered).** (Kept for the
-    record.) **Which "name in the enumeration"?** D7's own fallback for a blank `CABName`
-    was the **`ContestTypeSA` spelling** (C:\TR4W `PostUnit.PAS` and `LOGSUBS2.PAS`,
-    `T3 := ContestTypeSA[Contest]`), and today's classes return that spelling. Seven
-    of those break the Cabrillo character rule (A-Z, 0-9, hyphen): `ALL JA`,
-    `COUNTY HUNTER`, `GRID LOC`, `JA LONG PREFECT`, `KIDS DAY`, `QCWA GOLDEN`,
-    `TEN TEN`. The **enum identifiers** (`ALLJA`, `COUNTYHUNTER`, ...) break none.
-    Which does the rule mean, and does NZFIELDDAY keep `JW-FD`, NY4I's explicit
-    choice of 2026-09-29, over D7's blank?
+20. ~~**Which "name in the enumeration"?**~~ **Answered per contest** (see
+    [Answered](#answered)): MARAC, ALL-JA, ACAG, KIDS-DAY, TEN-TEN, QCWA, and
+    NZFIELDDAY keeps JW-FD. Grid Loc's name waits on 9a; XMAS's on 17-18; ARCI's on 2.
 
 ## Sources, and how each fact is marked
 
