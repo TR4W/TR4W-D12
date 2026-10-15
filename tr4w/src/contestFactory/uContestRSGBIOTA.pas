@@ -80,6 +80,8 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -122,6 +124,7 @@ implementation
 
 uses
    uExchangeFields,
+   uADIFExchange,
    (* GetContinentFromString, StringIsAllNumbers, UpperCase -- the IOTA
       arm's own three (M11 S6). *)
    utils_text,
@@ -233,6 +236,12 @@ end;
 function TContestRSGBIOTA.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTQSONumberQTH;
+end;
+
+function TContestRSGBIOTA.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                              const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentRSTQSONumberState(aMy, aQso);
 end;
 
 function TContestRSGBIOTA.GetFlags: TContestFlags;

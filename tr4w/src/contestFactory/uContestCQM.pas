@@ -77,6 +77,8 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -101,6 +103,7 @@ implementation
 
 uses
    uExchangeFields,
+   uADIFExchange,
    uContestRegistry,
    (* RussianID, InSameFederalOkrug -- the leaves the arm asks. *)
    uCallSignRoutines;
@@ -220,6 +223,12 @@ end;
 function TContestCQM.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTQSONumber;
+end;
+
+function TContestCQM.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                         const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentRSTQSONumber(aMy, aQso);
 end;
 
 function TContestCQM.GetFlags: TContestFlags;

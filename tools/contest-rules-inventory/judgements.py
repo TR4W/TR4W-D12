@@ -120,7 +120,12 @@ ROUTINES = {
    # these three seams exist. FormatsExchange is gone.
    ("postunit.pas", "EmitContestSpecificTailForExport"): ("adif-export", "EmitADIFContestFields (existing)"),
    ("uADIF.pas", "EmitADIFRecord"): ("adif-export", "ADIFContestId / WritesADIFContestId / ADIFPowerTag (existing)"),
-   ("uADIFExchange.pas", "FormatADIFExchangeOfKind"): ("adif-export", "FormatADIFSentExchange (existing; this is the base's default)"),
+   # uADIFExchange.FormatADIFExchangeOfKind was DELETED (M11 S9b, 2026-10-14):
+   # each class states TContestBase.GetADIFSentExchange, calling a uADIFExchange
+   # helper; the file holds named helpers and no routine keyed on a kind.
+   # The one contest test left in those helpers is the TRC Digital state, which
+   # has no ContestType (SHAPE3 below): a class of its own when it is a contest.
+   ("uADIFExchange.pas", "ADIFSentRSTQSONumberState"): ("adif-export", "GetADIFSentExchange (existing, M11 S9b; TRC Digital has no ContestType)"),
    # -------------------------------------------------------- Cabrillo export
    ("postunit.pas", "GetCabrilloTagText"): ("cabrillo-export", "CabrilloContestName / RequiresCabrilloLocation / CabrilloHeaderLinesBeforeTag (existing, M9a)"),
    ("postunit.pas", "tGenerateLogPortionOfCabrilloFile"): ("cabrillo-export", "FormatCabrilloReceivedExchange / CabrilloQSOLineFormat / CabrilloModeString (existing; CabrilloModeString M9a)"),
@@ -177,15 +182,17 @@ SITE_OVERRIDES = [
 # so a reach-1 arm there is a data format one contest uses, not a contest rule
 # in disguise. Q92 (NY4I, option 2) turns each into named helpers the classes
 # call, one machine per stage; until a machine goes its arms are judged SHAPE,
-# counted and never tabled as PROXY. Keyed (file base, routine). The three
+# counted and never tabled as PROXY. Keyed (file base, routine). The two
 # left take the shape as a parameter the scan does not follow, and are named
 # so that widening the scan cannot table their arms as contest rules.
 # ~~("logdupe.pas", "SetUpExchangeInformation")~~ was the one the scan reached
 # (through scan.KIND_PARAMETERS); it is DELETED (M11 S9a, 2026-10-14) -- each
 # class states TContestBase.ReceivedExchangeFields, calling uExchangeFields.
+# ~~("uADIFExchange.pas", "FormatADIFExchangeOfKind")~~ is DELETED too (M11
+# S9b, 2026-10-14) -- each class states TContestBase.GetADIFSentExchange,
+# calling a uADIFExchange helper.
 SHAPE_MACHINES = {
    ("logstuff.pas", "ParseExchangeShape"),
-   ("uADIFExchange.pas", "FormatADIFExchangeOfKind"),
    ("uCabrilloExchange.pas", "SetHisEx"),
 }
 
@@ -223,8 +230,8 @@ SHAPE3 = [
     "`cMyState = 'TRC'` -- TRC Digital, no ContestType"),
    ("tr4w/src/uCabrilloExchange.pas", r"\bcsQTHString\s*=\s*'TRC'", 1, [],
     "`csQTHString = 'TRC'`"),
-   ("tr4w/src/uADIFExchange.pas", r"\bcMyState\s*=\s*'TRC'", 1, [],
-    "`cMyState = 'TRC'`"),
+   ("tr4w/src/uADIFExchange.pas", r"\bClippedState\s*\(\s*aMy\s*\)\s*=\s*'TRC'", 1, [],
+    "`ClippedState(aMy) = 'TRC'` (was `cMyState = 'TRC'` until M11 S9b)"),
    # The logstuff entries here (TRC, DL-DX-RTTY, EURASIA, YBDXDI-FT8 and the
    # G4FOC/N4T/RAEM/LOCUST bonus calls) went with the legacy scoring case at
    # M10 S3 (2026-10-14); the classes own those rules.

@@ -384,7 +384,18 @@ predicate as its other answers. `uProgramMain` assigns
 ActiveContest(Contest))` once, as before; the matrix prints it through
 `uExchangeFields.ExchangeFieldsText`. Pinned by `uTestExchangeFields`
 (every ContestType at seven stations, and a frozen copy of the machine as
-the cross-check until S9's deletion stage). **The CTY country list (`ctyCountryMode`) is set in the
+the cross-check until S9's deletion stage). **S9b IS DONE (2026-10-14): THE
+ADIF `STX_STRING`.** `uADIFExchange.FormatADIFExchangeOfKind` is DELETED;
+every registered contest states `GetADIFSentExchange` (public non-virtual
+caller `FormatADIFSentExchange(aMy, aQso)` -- the kind parameter is gone from
+it and from `EmitADIFExchangeFields`), calling one of 24 `uADIFExchange`
+helpers named for what they print (one per OUTPUT: the RST-and-state layout
+served five arms). The base prints the error marker, so a new contest that
+forgets it exports `Error generating my exchange` on every QSO; five
+contests do today by transcription (the Cup RF x3, CQ WW RTTY, the Youth
+Championship RF -- F25). The ADIF import's kind test became the open
+contest's `ReceivesGridSquareExchange`. Pinned by `uTestADIFSentExchange`.
+**The CTY country list (`ctyCountryMode`) is set in the
 CONTEST setting's effect, straight after `FoundContest` returns** (plan F5)
 -- from the contest's `CountryMode` (`ContestCountryMode(ActiveContest(
 Contest))`) since M11 S4, from `ContestSession.DXMult` before -- its only

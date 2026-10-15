@@ -70,6 +70,8 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -86,6 +88,7 @@ implementation
 
 uses
    uExchangeFields,
+   uADIFExchange,
    uContestRegistry,
    (* StringIsAllNumbers -- the leaf the arm asked. *)
    utils_text;
@@ -161,6 +164,12 @@ end;
 function TContestBWQP.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTNameQTH;
+end;
+
+function TContestBWQP.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                          const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentRSTNameQTH(aMy, aQso);
 end;
 
 function TContestBWQP.GetFlags: TContestFlags;

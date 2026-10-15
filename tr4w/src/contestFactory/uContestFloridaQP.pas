@@ -90,9 +90,8 @@ type
       function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange;
                                               const aCtx: TCabrilloQSOContext): string; override;
-      function FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                      const aQso: ContestExchange;
-                                      aSessionExchange: ExchangeType): string; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
    public
       (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
          TContestBase.HasDXMultiplier (M11 S4 part 2). *)
@@ -258,9 +257,8 @@ begin
       end;
 end;
 
-function TContestFloridaQP.FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                                  const aQso: ContestExchange;
-                                                  aSessionExchange: ExchangeType): string;
+function TContestFloridaQP.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                               const aQso: ContestExchange): string;
 begin
    Result := Format('%-3d %-7s', [aQso.RSTSent, aMy.MyState]);
 end;

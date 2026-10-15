@@ -68,9 +68,8 @@ type
       function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange;
                                               const aCtx: TCabrilloQSOContext): string; override;
-      function FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                      const aQso: ContestExchange;
-                                      aSessionExchange: ExchangeType): string; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
    public
       (* THE CANONICAL RECEIVED EXCHANGE -- see
          TContestBase.CanonicalReceivedExchange (M9a). *)
@@ -115,9 +114,8 @@ begin
    Result := Format('%-3s %-3.3u', [aCtx.RSTReceived, aQso.NumberReceived]);
 end;
 
-function TContestCQWPXBase.FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                                  const aQso: ContestExchange;
-                                                  aSessionExchange: ExchangeType): string;
+function TContestCQWPXBase.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                               const aQso: ContestExchange): string;
 begin
    Result := Format('%-3d %03d ', [aQso.RSTSent, aQso.NumberSent]);
 end;

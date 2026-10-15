@@ -131,10 +131,12 @@ now, the row's `AE:` before S8:
 The exchange kind is also what the contest's EXPORT looks like by default -- through the
 SESSION's exchange (`ContestSession.Exchange`, since M10 S9f), which is the
 class's kind unless its `DescribeSession` states another -- the operator's
-EXCHANGE RECEIVED was retired at M10 S2: `TContestBase` formats the Cabrillo columns and the ADIF
-`STX_STRING` with the shared arm for that exchange
-(`uCabrilloExchange.FormatCabrilloExchangeOfKind`,
-`uADIFExchange.FormatADIFExchangeOfKind`). Those arms name no contest; a rule
+EXCHANGE RECEIVED was retired at M10 S2: `TContestBase` formats the Cabrillo columns with the shared arm
+for that exchange (`uCabrilloExchange.FormatCabrilloExchangeOfKind`). **The ADIF
+`STX_STRING` is YOUR CLASS'S since M11 S9b**: you state `GetADIFSentExchange` by calling one
+of the named helpers in `uADIFExchange` (`ADIFSentRSTState`, `ADIFSentRSTQSONumber`, ...), or
+by formatting it yourself -- the base prints the error marker, so a class that forgets it
+exports `Error generating my exchange` on every QSO. The arms name no contest; a rule
 of your contest's goes in your class (section 3, "How a contest formats its
 export").
 
@@ -392,7 +394,8 @@ the wrongness.
 | `ValidateDXQTH` | accepts nothing. Asked of every contest the same way; the fallback copy in LOGSTUFF is deleted (inventory D2) |
 | `ValidateQTHCount` | **always True, and that is behaviour-preserving by construction.** TR4W has never counted QTHs for any contest, so "no opinion" states what the program does rather than being a permissive placeholder. Takes a COUNT and never a list: the application tokenised the exchange and already has the number, so handing the contest the QTHs would be the first step toward handing it the log. **Virtual**, and `TContestStateQSOPartyBase` is its only overrider |
 | `FormatCabrilloSentExchange` / `FormatCabrilloReceivedExchange` | the shared arm for the session's exchange (`TCabrilloQSOContext.SessionExchange`) -- `uCabrilloExchange.FormatCabrilloExchangeOfKind` |
-| `FormatADIFSentExchange` | the shared arm for the session's exchange -- `uADIFExchange.FormatADIFExchangeOfKind` |
+| `GetADIFSentExchange` (behind the public `FormatADIFSentExchange(aMy, aQso)`) | **the error marker** (`uADIFExchange.ADIFSentNotBuilt`) -- every contest states its `STX_STRING`, by calling a `uADIFExchange` helper (M11 S9b). Protected, beside `GetExchangeKind` / `GetReceivedExchangeFields` |
+| `GetReceivesGridSquareExchange` (property `ReceivesGridSquareExchange`) | false -- true when the received exchange IS a grid (the Digi contests, the RST-and-grid VHF ones): the generic ADIF import then reads `GRIDSQUARE` into it (M11 S9b) |
 | `EmitADIFContestFields` | nothing -- `uADIF.EmitADIFRecord` has already written the generic `QTH` |
 | `FinalScore` | **not virtual** -- the one final score: `CombineScore` + `BonusPoints`. `LogEdit.TotalScore` is its only caller (M6, below) |
 | `CombineScore` | **not virtual** -- the points for a session with no multiplier or the FISTS exchange, else `CombineWithMultipliers` |
@@ -410,13 +413,14 @@ the wrongness.
 `uADIF.EmitADIFRecord`, call `uContestRegistry.ContestIdentity(c)` -- your
 class, or a plain `TContestBase` for a contest with none -- and there is no
 opt-in switch any more. A contest with no export rule of its own simply
-inherits the base's answer, which is the shared arm for its session's
-exchange: what an RST-and-serial or a name-and-QTH line LOOKS LIKE. Those arms
-name no contest, and must not start to: **a rule that is your contest's goes
-in your class.**
+inherits the base's answer for the Cabrillo columns, which is the shared arm for
+its session's exchange: what an RST-and-serial or a name-and-QTH line LOOKS LIKE
+(the ADIF `STX_STRING` is stated by every class since M11 S9b: see
+`GetADIFSentExchange`). Those arms name no contest, and must not start to:
+**a rule that is your contest's goes in your class.**
 
 - **Your own columns**: override `FormatCabrilloSentExchange` and/or
-  `FormatCabrilloReceivedExchange`, and `FormatADIFSentExchange` for the
+  `FormatCabrilloReceivedExchange`, and `GetADIFSentExchange` for the
   `STX_STRING`. Reproduce the widths exactly -- Cabrillo is a column format.
   `uContestFOCMarathon`, `uContestPCC`, `uContestARRLSSBase` are examples.
 - **Only an input differs** (a placeholder for an absent QTH, the QSO's own

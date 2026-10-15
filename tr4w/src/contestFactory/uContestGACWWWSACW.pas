@@ -68,6 +68,8 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -96,6 +98,7 @@ implementation
 
 uses
    uExchangeFields,
+   uADIFExchange,
    uContestRegistry;
 
 procedure TContestGACWWWSACW.CalculateQSOPoints(var aQso: ContestExchange);
@@ -180,6 +183,12 @@ end;
 function TContestGACWWWSACW.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTZone;
+end;
+
+function TContestGACWWWSACW.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                                const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentRSTZone(aMy, aQso);
 end;
 
 function TContestGACWWWSACW.GetFlags: TContestFlags;

@@ -88,6 +88,8 @@ type
       function GetFriendlyName: string; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -114,6 +116,7 @@ implementation
 
 uses
    uExchangeFields,
+   uADIFExchange,
    uContestRegistry, uContestFixedPoints,
    uTR4WStrings;
 
@@ -178,6 +181,12 @@ end;
 function TContestCQIR.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTQSONumberQTH;
+end;
+
+function TContestCQIR.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                          const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentRSTQSONumberState(aMy, aQso);
 end;
 
 function TContestCQIR.GetFlags: TContestFlags;

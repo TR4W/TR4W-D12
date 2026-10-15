@@ -80,6 +80,9 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+      function GetReceivesGridSquareExchange: boolean; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -100,6 +103,7 @@ implementation
 
 uses
    uExchangeFields,
+   uADIFExchange,
    uContestRegistry,
    LOGGRID,
    uTR4WStrings;
@@ -189,6 +193,17 @@ end;
 function TContestMakrothen.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsQTH;
+end;
+
+function TContestMakrothen.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                               const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentGrid(aMy, aQso);
+end;
+
+function TContestMakrothen.GetReceivesGridSquareExchange: boolean;
+begin
+   Result := True;
 end;
 
 function TContestMakrothen.GetFlags: TContestFlags;

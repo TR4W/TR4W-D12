@@ -3354,8 +3354,10 @@ type
 const
   (* NO LONGER A CONFIG VOCABULARY -- M10 S2, 2026-10-14. EXCHANGE RECEIVED is
     retired (uCFG.RETIRED_COMMANDS, NY4I's Q4), so nothing registers this as
-    an allow-list any more. KEPT because uADIFExchange names an exchange kind
-    with it in a log line; it goes with the kind enums at M11. *)
+    an allow-list any more. NOTHING READS IT since M11 S9b (2026-10-14): its
+    last two readers were uADIFExchange's log lines, which went with that
+    machine. It goes with the kind enums in the deletion stage, and
+    Lint-SpellingTables' floor of 24 falls with it. *)
   ActiveExchangeArray                   : array[ExchangeType] of string =
     (
      'UNKNOWN',

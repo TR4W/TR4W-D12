@@ -19,22 +19,47 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  *)
 
-(* THE MY-EXCHANGE AS ADIF SEES IT, ONE ARM PER EXCHANGE SHAPE -- the twin of
-  uCabrilloExchange, extracted for the same reasons and by the same recipe,
-  and pinned arm by arm in uTestADIFExchange.
+(* THE MY-EXCHANGE AS ADIF SEES IT -- NAMED HELPERS, ONE PER DISTINCT OUTPUT.
+  M11 S9b, 2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S9b; NY4I's ruling
+  on Q92, option 2).
 
-  SINCE M4 (2026-10-01) IT IS THE BASE'S DEFAULT. PostUnit asks the contest
-  (uContestRegistry.ContestIdentity) for its STX_STRING, and
-  TContestBase.FormatADIFSentExchange calls this with the session's exchange.
-  Nothing here names a contest any more: FOC Marathon's membership number,
-  PACC's serial and the PCC's sent branches are those classes' overrides, and
-  CQ VHF's and SP DX's branches were dead (uCabrilloExchange's header has the
-  measurement). The two arms inventory D4 listed -- Sweepstakes' and the Field
-  Days' exchanges, owned by their classes since phase F -- are deleted.
+  WHAT IT REPLACES. FormatADIFExchangeOfKind was a `case` over the session's
+  exchange shape (ExchangeType) with one arm per shape -- the third of the
+  four exchange-shape machines. It was TContestBase's default, so every
+  contest without an override of its own reached it through the base. Now
+  each contest class states its STX_STRING (TContestBase.FormatADIFSentExchange,
+  through the protected GetADIFSentExchange) by CALLING one of the helpers
+  below. No enum selects a helper, and nothing here names a contest or an
+  exchange shape (CONTEST_OWNERSHIP_DESIGN.md 1.3).
 
-  THE BODY IS OTHERWISE THE ONE THAT MOVED OUT OF PostUnit. Every global the
-  arms read is a local of the SAME type, assigned once at the top, so the arms
-  could come across unedited. *)
+  ONE HELPER PER OUTPUT, NOT PER SHAPE. The classes that reached the
+  machine run 49 shapes; the 26 arms that built a string printed 22 distinct
+  layouts for them, because several arms already shared a body ('%-3d %-7s'
+  of the RST and the state served five). A helper per shape would have been
+  that body written five times. A helper is named for what it prints.
+
+  EACH BODY IS ITS ARM, AS IT STOOD -- INCLUDING THE WIDTH OF WHAT IT READS.
+  The machine copied MY STATE, MY NAME, MY GRID, MY PARK and MY ZONE into
+  ShortStrings first (twenty characters, a grid seven, a park ten), so a
+  longer value was cut before it reached the format. The Clipped... functions
+  below do the same cut, so a helper prints exactly what the arm printed for
+  every input; the pin (uTestADIFSentExchange) feeds a 26-character state to
+  prove it.
+
+  THE ARMS NO REGISTERED CONTEST REACHED went with the machine: the n4af
+  RSTQSONumberOrDomesticQTH arm and QSONumberAndAge, and six labels of the
+  'not yet implemented' arm. Their enum members stay until the deletion
+  stage.
+
+  THREE LAYOUTS WERE NEVER BUILT, AND ARE TRANSCRIBED, NOT FIXED (plan
+  F25). The machine's format for QSONumberAndGridSquare ('%-3s' of a
+  number), RSTZoneAndPossibleDomesticQTH ('%02u' of a ShortString) and
+  AgeAndQSONumber (three specifiers, two arguments) raised, its own
+  try/except swallowed it, and the caller got ADIFMyExchangeErrorMarker. So
+  the Cup RF's three runnings, CQ WW RTTY and the Youth Championship RF
+  export 'Error generating my exchange' as STX_STRING, and still do:
+  ADIFSentNotBuilt is that answer, by name, for the class that owns the
+  exchange to replace with the layout it means. *)
 unit uADIFExchange;
 
 {$I tr4w.inc}
@@ -44,8 +69,7 @@ interface
 uses
   VC,
   SysUtils,
-  uCabrilloExchange,   // TMyStationExchange -- ONE record, not a second copy
-  uContestBase;
+  uContestBase;   // TMyStationExchange and nothing else
 
 const
   (* WHAT STX_STRING CARRIES WHEN THE EXCHANGE COULD NOT BE BUILT -- a QSO
@@ -53,369 +77,344 @@ const
      PostUnit writes it too, for a contest's own formatter that raises. *)
   ADIFMyExchangeErrorMarker = 'Error generating my exchange';
 
-(* Builds the ADIF MY-exchange string for one QSO from the shared arm for
-  aKind. The caller has decided the QSO is a good one.
+(* Each helper is one contest's STX_STRING, built from the worked QSO (the
+  RST and serial SENT) and the station's own exchange. The caller has decided
+  the QSO is a good one. *)
 
-  An exchange with no arm returns ADIFMyExchangeErrorMarker and logs an Error;
-  one on the not-yet-implemented list returns 'None', also logged; a format
-  that raises returns the marker. Unhandled is REPORTED, not silently blank. *)
-function FormatADIFExchangeOfKind(
-    aKind          : ExchangeType;
-    const rx       : ContestExchange;
-    const my       : TMyStationExchange) : string;
+(* The grid alone: the Grid and Grid2 exchanges. *)
+function ADIFSentGrid(const aMy: TMyStationExchange;
+                      const aQso: ContestExchange): string;
+
+(* The state alone: a geographic coordinate or a coordinate sum is typed into
+   MY STATE. *)
+function ADIFSentState(const aMy: TMyStationExchange;
+                       const aQso: ContestExchange): string;
+
+(* The park reference alone. *)
+function ADIFSentPark(const aMy: TMyStationExchange;
+                      const aQso: ContestExchange): string;
+
+(* '%-3d %-7s' of the RST and the state: the Power, Age, Continent and
+   Domestic-or-DX exchanges. *)
+function ADIFSentRSTState(const aMy: TMyStationExchange;
+                          const aQso: ContestExchange): string;
+
+(* '%-3d %-7s' of the RST and the grid. *)
+function ADIFSentRSTGrid(const aMy: TMyStationExchange;
+                         const aQso: ContestExchange): string;
+
+(* '%-3d %-5s %-7s' of the RST, the name and the state. *)
+function ADIFSentRSTNameQTH(const aMy: TMyStationExchange;
+                            const aQso: ContestExchange): string;
+
+(* '%-3d %-16s' of the RST and the age (and a possible SK). *)
+function ADIFSentRSTAgeSK(const aMy: TMyStationExchange;
+                          const aQso: ContestExchange): string;
+
+(* '%-3d %-4d %-7s' of the RST, the serial and the grid. *)
+function ADIFSentRSTQSONumberGrid(const aMy: TMyStationExchange;
+                                  const aQso: ContestExchange): string;
+
+(* '%-3d %03d ' of the RST and the serial. *)
+function ADIFSentRSTQSONumber(const aMy: TMyStationExchange;
+                              const aQso: ContestExchange): string;
+
+(* The RST and the serial and the state: '%-3d %d%-6s' with the serial run
+   into a state of TRC, '%-3d %-4d %-6s ' otherwise. *)
+function ADIFSentRSTQSONumberState(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string;
+
+(* '%-3d %-7d' of the RST and the zone as a plain number. *)
+function ADIFSentRSTPrefecture(const aMy: TMyStationExchange;
+                               const aQso: ContestExchange): string;
+
+(* '%-3d %-7.2d' of the RST and the zone to two digits. *)
+function ADIFSentRSTZone(const aMy: TMyStationExchange;
+                         const aQso: ContestExchange): string;
+
+(* The state when there is one, else the zone: '%-3d %-7s' or '%-3d %-7d'. *)
+function ADIFSentRSTZoneOrState(const aMy: TMyStationExchange;
+                                const aQso: ContestExchange): string;
+
+(* The state when there is one, else the serial: '%-3d %-7s' or
+   '%-4d %03u   '. *)
+function ADIFSentRSTStateOrQSONumber(const aMy: TMyStationExchange;
+                                     const aQso: ContestExchange): string;
+
+(* '%-3d %-10s' of the RST and the previous postal code, which the export
+   never had: always blank. *)
+function ADIFSentRSTPostalCode(const aMy: TMyStationExchange;
+                               const aQso: ContestExchange): string;
+
+(* '%-3d %-7s' of the serial and the name. *)
+function ADIFSentQSONumberName(const aMy: TMyStationExchange;
+                               const aQso: ContestExchange): string;
+
+(* '%-4d %-7s %-8s' of the serial, the name and the state -- 'DX' when the
+   station has none. *)
+function ADIFSentQSONumberNameState(const aMy: TMyStationExchange;
+                                    const aQso: ContestExchange): string;
+
+(* '  %-10s %-4s' of the name and the state. *)
+function ADIFSentNameState(const aMy: TMyStationExchange;
+                           const aQso: ContestExchange): string;
+
+(* '%-4s %-6d' of the state then the serial. *)
+function ADIFSentStateThenQSONumber(const aMy: TMyStationExchange;
+                                    const aQso: ContestExchange): string;
+
+(* '%-3s %03d    ' of the state then the serial. *)
+function ADIFSentStateAndQSONumberSum(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange): string;
+
+(* '  %s    %03d ' of the state then the serial. *)
+function ADIFSentIndentedStateAndQSONumber(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange): string;
+
+(* '%-.3u%-7.3d' of the previous serial received (never carried by the
+   export: always 0) and the serial sent. *)
+function ADIFSentQSONumberPreviousQSONumber(const aMy: TMyStationExchange;
+                                            const aQso: ContestExchange): string;
+
+(* 'None', logged as an Error: an exchange whose STX_STRING was never
+   written. Nineteen shapes were on the machine's "not yet implemented" list;
+   registered contests run thirteen of them, and fourteen contests answer
+   this. *)
+function ADIFSentNotImplemented(const aMy: TMyStationExchange;
+                                const aQso: ContestExchange): string;
+
+(* ADIFMyExchangeErrorMarker: the answer for an exchange with no layout, and
+   for the three layouts that were never built (see the unit header). The
+   base class answers it too -- a contest that states nothing prints
+   nothing it could be wrong about. *)
+function ADIFSentNotBuilt(const aMy: TMyStationExchange;
+                          const aQso: ContestExchange): string;
 
 implementation
 
 uses
   Log4D;   // the same single concession uCabrilloExchange makes, and for the
-           // same reason: an unhandled arm must say so.
+           // same reason: an unhandled exchange must say so.
 
 var
   logger: TLogLogger;
 
-function FormatADIFExchangeOfKind(
-    aKind          : ExchangeType;
-    const rx       : ContestExchange;
-    const my       : TMyStationExchange) : string;
-      var
-        cMyZone: integer;
-        cMyState: string;
-        cMyPark: string;
-        cMyName: string;
-        cMyGrid: string;
-        nrSent: integer;
-        contacts: integer;
-        PreviousQTHString: Str10;
-        pnr: integer;
+(* THE MACHINE'S SHORTSTRINGS. It copied each station field into a ShortString
+   of the width VC gives it, once, at the top, and every arm read the copy.
+   Str20 for the state, name and zone, GridString (7) for the grid and Str10
+   for the park. The cut is reproduced here so a longer value prints as it
+   did. *)
+function ClippedState(const aMy: TMyStationExchange): string;
+begin
+  Result := string(Str20(aMy.MyState));
+end;
 
-        (* THE OLD GLOBALS, AS LOCALS.
+function ClippedName(const aMy: TMyStationExchange): string;
+begin
+  Result := string(Str20(aMy.MyName));
+end;
 
-          Every one of these was a unit-scope global the arms read directly.
-          Declaring them here with the SAME TYPES -- they are all ShortStrings,
-          not `string` -- let the whole body move across UNCHANGED. *)
-        MyGrid: GridString;
-        MyName: Str20;
-        MyState: Str20;
-        MyPark: Str10;
-        MyZone: Str20;
-        MyPostalCode: Str20;
-        TempRXData: ContestExchange;
-      begin
-      MyGrid       := GridString(my.MyGrid);
-      MyName       := Str20(my.MyName);
-      MyState      := Str20(my.MyState);
-      MyPark       := Str10(my.MyPark);
-      MyZone       := Str20(my.MyZone);
-      MyPostalCode := Str20(my.MyPostalCode);
-      TempRXData   := rx;
+function ClippedGrid(const aMy: TMyStationExchange): string;
+begin
+  Result := string(GridString(aMy.MyGrid));
+end;
 
-      (* THE OLD GLOBALS WERE ZERO.  THESE LOCALS ARE NOT.
+function ClippedPark(const aMy: TMyStationExchange): string;
+begin
+  Result := string(Str10(aMy.MyPark));
+end;
 
-        A global IS zero-initialised and a local is NOT, so moving them in
-        silently changed what the arms read before anything assigns them --
-        and nothing ever assigns these three here. Zero and empty are what
-        they held as globals, so this restores the behaviour rather than
-        choosing new values. *)
-      contacts          := 0;
-      pnr               := 0;
-      PreviousQTHString := '';
+function ClippedZone(const aMy: TMyStationExchange): integer;
+begin
+  Result := StrToIntDef(AnsiString(Str20(aMy.MyZone)), 0);
+end;
 
-      Result := ADIFMyExchangeErrorMarker;
-      try
-        cMyGrid := string( MyGrid );
+function ADIFSentGrid(const aMy: TMyStationExchange;
+                      const aQso: ContestExchange): string;
+begin
+  Result := ClippedGrid(aMy);
+end;
 
-        cMyName := string(MyName);
+function ADIFSentState(const aMy: TMyStationExchange;
+                       const aQso: ContestExchange): string;
+begin
+  Result := ClippedState(aMy);
+end;
 
-        cMyZone  := StrToIntDef( MyZone, 0 );
-        cMyState := MyState;
-        cMyPark  := MyPark;
+function ADIFSentPark(const aMy: TMyStationExchange;
+                      const aQso: ContestExchange): string;
+begin
+  Result := ClippedPark(aMy);
+end;
 
-        nrSent        := TempRXData.NumberSent;
+function ADIFSentRSTState(const aMy: TMyStationExchange;
+                          const aQso: ContestExchange): string;
+begin
+  Result := Format('%-3d %-7s', [aQso.RSTSent, ClippedState(aMy)]);
+end;
 
-        case aKind of
-          GridExchange, Grid2Exchange:
-            begin
-            Result := cMyGrid;
-            end;
+function ADIFSentRSTGrid(const aMy: TMyStationExchange;
+                         const aQso: ContestExchange): string;
+begin
+  Result := Format('%-3d %-7s', [aQso.RSTSent, ClippedGrid(aMy)]);
+end;
 
-          RSTNameAndQTHExchange:
-            begin
-            Result := sysutils.Format( '%-3d %-5s %-7s',
-               [ TempRXData.RSTSent, cMyName, cMyState ] );
-            end;
+function ADIFSentRSTNameQTH(const aMy: TMyStationExchange;
+                            const aQso: ContestExchange): string;
+begin
+  Result := Format('%-3d %-5s %-7s',
+     [aQso.RSTSent, ClippedName(aMy), ClippedState(aMy)]);
+end;
 
-          QSONumberAndNameExchange:
-            begin
-            Result := sysutils.Format( '%-3d %-7s', [ nrSent, cMyName ] );
-            end;
+function ADIFSentRSTAgeSK(const aMy: TMyStationExchange;
+                          const aQso: ContestExchange): string;
+begin
+  Result := Format('%-3d %-16s', [aQso.RSTSent, ClippedState(aMy)]);
+end;
 
-          RSTAndPostalCodeExchange:
-            begin
-            if contacts = 1 then
-               begin
-               Result := sysutils.Format( '%-3d %-10s',
-                  [ TempRXData.RSTSent, MyPostalCode ] );
-               end
-            else
-               begin
-               Result := sysutils.Format( '%-3d %-10s',
-                  [ TempRXData.RSTSent, PreviousQTHString ] );
-               end;
-            end;
+function ADIFSentRSTQSONumberGrid(const aMy: TMyStationExchange;
+                                  const aQso: ContestExchange): string;
+begin
+  Result := Format('%-3d %-4d %-7s',
+     [aQso.RSTSent, aQso.NumberSent, ClippedGrid(aMy)]);
+end;
 
-          RSTQSONumberAndGridSquareExchange:
-            begin
-            Result := sysutils.Format( '%-3d %-4d %-7s',
-               [ TempRXData.RSTSent, nrSent, cMyGrid ] );
-            end;
+(* '%03d' is a WIDTH in Pascal's Format, not a zero-pad flag: serial 7 prints
+   as '  7'. Issue 177 asked for the C spelling and got this. Pinned as it
+   prints. *)
+function ADIFSentRSTQSONumber(const aMy: TMyStationExchange;
+                              const aQso: ContestExchange): string;
+begin
+  Result := Format('%-3d %03d ', [aQso.RSTSent, aQso.NumberSent]);
+end;
 
-          RSTQSONumberOrDomesticQTHExchange: // n4af 4.40.6
-            begin
-            if cMyState[ 1 ] <> '' then
-               begin
-               Result := sysutils.Format( '%-3d  %-5s',
-                  [ TempRXData.RSTSent, cMyState ] );
-               end
-            else
-               begin
-               if cMyState[ 1 ] = '' then
-                  begin
-                  Result := sysutils.Format( '%-3d  %-6d',
-                     [ TempRXData.RSTSent, nrSent ] );
-                  end;
-               end;
-            end;
+function ADIFSentRSTQSONumberState(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string;
+begin
+  if ClippedState(aMy) = 'TRC' then
+     begin
+     Result := Format('%-3d %d%-6s',
+        [aQso.RSTSent, aQso.NumberSent, ClippedState(aMy)]);
+     end
+  else
+     begin
+     Result := Format('%-3d %-4d %-6s ',
+        [aQso.RSTSent, aQso.NumberSent, ClippedState(aMy)]);
+     end;
+end;
 
-          RSTPrefectureExchange:
-            begin
-            Result := sysutils.Format( '%-3d %-7d',
-               [ TempRXData.RSTSent, cMyZone ] );
-            end;
+function ADIFSentRSTPrefecture(const aMy: TMyStationExchange;
+                               const aQso: ContestExchange): string;
+begin
+  Result := Format('%-3d %-7d', [aQso.RSTSent, ClippedZone(aMy)]);
+end;
 
-          NameAndDomesticOrDXQTHExchange:
-            begin
-            Result := sysutils.Format( '  %-10s %-4s',
-               [ cMyName, cMyState ] );
-            end;
+function ADIFSentRSTZone(const aMy: TMyStationExchange;
+                         const aQso: ContestExchange): string;
+begin
+  Result := Format('%-3d %-7.2d', [aQso.RSTSent, ClippedZone(aMy)]);
+end;
 
-          QSONumberNameDomesticOrDXQTHExchange:
-            begin
-            cMyName := string(MyName);
-            if MyState = '' then
-               begin
-               cMyState := 'DX';
-               end;
-            Result        := sysutils.Format( '%-4d %-7s %-8s',
-               [ nrSent, cMyName, cMyState ] );
-            end;
+function ADIFSentRSTZoneOrState(const aMy: TMyStationExchange;
+                                const aQso: ContestExchange): string;
+begin
+  if ClippedState(aMy) <> '' then
+     begin
+     Result := Format('%-3d %-7s', [aQso.RSTSent, ClippedState(aMy)]);
+     end
+  else
+     begin
+     Result := Format('%-3d %-7d', [aQso.RSTSent, ClippedZone(aMy)]);
+     end;
+end;
 
-          QSONumberAndAgeExchange:
-            begin
-            Result := sysutils.Format( '%-4d %-8s', [ nrSent, cMyState ] );
-            end;
+function ADIFSentRSTStateOrQSONumber(const aMy: TMyStationExchange;
+                                     const aQso: ContestExchange): string;
+begin
+  if ClippedState(aMy) <> '' then
+     begin
+     Result := Format('%-3d %-7s', [aQso.RSTSent, ClippedState(aMy)]);
+     end
+  else
+     begin
+     Result := Format('%-4d %03u   ', [aQso.RSTSent, aQso.NumberSent]);
+     end;
+end;
 
-          RSTAgeAndPossibleSK:
-            begin
-            Result := sysutils.Format( '%-3d %-16s',
-               [ TempRXData.RSTSent, cMyState ] );
-            end;
+(* THE MACHINE'S POSTAL-CODE BRANCH NEVER RAN. It chose between MY POSTAL CODE
+   (the first contact) and the previous QSO's, by a count (`contacts`) and a
+   previous-QTH string that were variables nothing assigned, so it always
+   printed the empty previous code. That is what this prints. The RoPoCo's
+   postcode is the Cabrillo export's (it carries the previous QTH). *)
+function ADIFSentRSTPostalCode(const aMy: TMyStationExchange;
+                               const aQso: ContestExchange): string;
+begin
+  Result := Format('%-3d %-10s', [aQso.RSTSent, '']);
+end;
 
-          RSTAgeExchange:
-            begin
-            Result := sysutils.Format( '%-3d %-7s',
-               [ TempRXData.RSTSent, cMyState ] );
-            end;
+function ADIFSentQSONumberName(const aMy: TMyStationExchange;
+                               const aQso: ContestExchange): string;
+begin
+  Result := Format('%-3d %-7s', [aQso.NumberSent, ClippedName(aMy)]);
+end;
 
-          AgeAndQSONumberExchange: // 4.55.4
-            begin
-            (* THREE FORMAT SPECIFIERS AND TWO ARGUMENTS, so this raises and
-               the marker stands -- a DEFECT, pinned as such by
-               uTestADIFExchange, and left for the class that owns this
-               exchange to correct. *)
-            Result := sysutils.Format( '%-3d %-2s %03d      ',
-               [ cMyState, nrSent ] );
-            end;
+function ADIFSentQSONumberNameState(const aMy: TMyStationExchange;
+                                    const aQso: ContestExchange): string;
+var
+  state: string;
+begin
+  state := ClippedState(aMy);
+  if state = '' then
+     begin
+     state := 'DX';
+     end;
+  Result := Format('%-4d %-7s %-8s', [aQso.NumberSent, ClippedName(aMy), state]);
+end;
 
-          RSTAndPOTAPark:
-            begin
-            Result := cMyPark;
-            end;
+function ADIFSentNameState(const aMy: TMyStationExchange;
+                           const aQso: ContestExchange): string;
+begin
+  Result := Format('  %-10s %-4s', [ClippedName(aMy), ClippedState(aMy)]);
+end;
 
-          RSTPowerExchange:
-            begin
-            (* FOC Marathon's membership number is TContestFOCMarathon's. *)
-            Result := sysutils.Format( '%-3d %-7s',
-               [ TempRXData.RSTSent, cMyState ] );
-            end;
+function ADIFSentStateThenQSONumber(const aMy: TMyStationExchange;
+                                    const aQso: ContestExchange): string;
+begin
+  Result := Format('%-4s %-6d', [ClippedState(aMy), aQso.NumberSent]);
+end;
 
-          RSTAndOrGridExchange:
-            begin
-            Result := sysutils.Format( '%-3d %-7s',
-               [ TempRXData.RSTSent, cMyGrid ] );
-            end;
+function ADIFSentStateAndQSONumberSum(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange): string;
+begin
+  Result := Format('%-3s %03d    ', [ClippedState(aMy), aQso.NumberSent]);
+end;
 
-          QSONumberAndGridSquare:
-            begin
-            Result := sysutils.Format( '%-3s %-7s', [ nrSent, cMyState ] );
-            end;
+function ADIFSentIndentedStateAndQSONumber(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange): string;
+begin
+  Result := Format('  %s    %03d ', [ClippedState(aMy), aQso.NumberSent]);
+end;
 
-          QSONumberDomesticOrDXQTHExchange, QSONumberDomesticQTHExchange:
-            begin
-            Result := sysutils.Format( '%-4s %-6d', [ cMyState, nrSent ] );
-            end;
+(* The machine's `pnr` (the previous number received) was a variable nothing
+   assigned: 0. *)
+function ADIFSentQSONumberPreviousQSONumber(const aMy: TMyStationExchange;
+                                            const aQso: ContestExchange): string;
+begin
+  Result := Format('%-.3u%-7.3d', [0, aQso.NumberSent]);
+end;
 
-          QSONumberAndPossibleDomesticQTHExchange,
-             RSTQSONumberAndDomesticQTHExchange,
-             RSTQSONumberAndPossibleDomesticQTHExchange:
-            begin
-            if cMyState = 'TRC' then
-               begin
-               Result := sysutils.Format( '%-3d %d%-6s',
-                  [ TempRXData.RSTSent, nrSent, cMyState ] );
-               end
-            else
-               begin
-               Result := sysutils.Format( '%-3d %-4d %-6s ',
-                  [ TempRXData.RSTSent, nrSent, cMyState ] );
-               end;
-            end;
+function ADIFSentNotImplemented(const aMy: TMyStationExchange;
+                                const aQso: ContestExchange): string;
+begin
+  Result := 'None';
+  logger.Error('[] MyExchange ADIF not yet implemented for this exchange');
+end;
 
-          RSTZoneAndPossibleDomesticQTHExchange:
-            begin
-            if MyState = '' then
-               begin
-               cMyState := 'DX';
-               end;
-            Result := sysutils.Format( '%-3d %02u %-4s',
-               [ TempRXData.RSTSent, MyZone, cMyState ] );
-            end;
-
-          RSTZoneOrDomesticQTH, RSTZoneOrSocietyExchange:
-            begin
-            if MyState <> '' then
-               begin
-               Result := sysutils.Format( '%-3d %-7s',
-                  [ TempRXData.RSTSent, cMyState ] );
-               end
-            else
-               begin
-               Result := sysutils.Format( '%-3d %-7d',
-                  [ TempRXData.RSTSent, cMyZone ] );
-               end;
-            end;
-
-          QSONumberAndCoordinatesSum: (* RFASCHAMPIONSHIP *)
-            begin
-            Result := sysutils.Format( '%-3s %03d    ',
-               [ cMyState, nrSent ] );
-            end;
-
-          QSONumberAndGeoCoordinates:
-            begin
-            Result := cMyState;
-            end;
-
-          RSTQSONumberExchange:
-            begin
-            Result := sysutils.Format( '%-3d %03d ',
-               [ TempRXData.RSTSent, nrSent ] ); // issue 177
-            end;
-
-          RSTAndContinentExchange:
-            begin
-            Result := sysutils.Format( '%-3d %-7s',
-               [ TempRXData.RSTSent, cMyState ] );
-            end;
-
-          RSTDomesticQTHExchange:
-            begin
-            (* PACC's serial is TContestPACC's; CQ VHF's and SP DX's branches
-               were dead. THE 'DX' BELOW REACHES NOTHING: it is written to
-               cMyState and the format reads MyState (4.97.5). Kept, as the
-               arm always had it -- what it should print for a station with
-               no state is the owning contest's question. *)
-            if MyState = '' then
-               begin
-               cMyState := 'DX';
-               end;
-            Result := sysutils.Format( '%-3d %-7s',
-               [ TempRXData.RSTSent, MyState ] ); // 4.97.5
-            end;
-
-          RSTDomesticOrDXQTHExchange:
-            begin
-            Result := sysutils.Format( '%-3d %-7s',
-               [ TempRXData.RSTSent, cMyState ] );
-            end;
-
-          QSONumberAndZone:
-            begin
-            Result := sysutils.Format( '  %s    %03d ',
-               [ cMyState, nrSent ] );
-            end;
-
-          RSTZoneExchange:
-            begin
-            Result := sysutils.Format( '%-3d %-7.2d',
-               [ TempRXData.RSTSent, cMyZone ] );
-            end;
-
-          QSONumberAndPreviousQSONumber:
-            begin
-            Result := sysutils.Format( '%-.3u%-7.3d', [ pnr, nrSent ] );
-            end;
-
-          RSTAndQSONumberOrFrenchDepartmentExchange,
-             RSTAndQSONumberOrDomesticQTHExchange,
-             RSTDomesticQTHOrQSONumberExchange:
-            begin
-            (* The '/M' branch was the PCC's alone -- uCabrilloExchange's arm
-               says why -- and is TContestPCC's now. *)
-            if MyState <> '' then // 4.83.2
-               begin
-               Result := sysutils.Format( '%-3d %-7s',
-                  [ TempRXData.RSTSent, cMyState ] );
-               end
-            else
-               begin
-               Result := sysutils.Format( '%-4d %03u   ',
-                  [ TempRXData.RSTSent, nrSent ] );
-               end;
-            end;
-
-          // Exchanges not yet implemented
-          CheckAndChapterOrQTHExchange, KidsDayExchange,
-             NameQTHAndPossibleTenTenNumber,
-             NameAndPossibleGridSquareExchange, NZFieldDayExchange,
-             RSTAndGrid3Exchange, QSONumberNameChapterAndQTHExchange,
-             RSTALLJAPrefectureAndPrecedenceExchange, RSTAndDOMESTICQTH,
-             RSTAndFOCNumberExchange,
-             RSTAndGridExchange,
-             RSTAndSerialNumberAndGridandPossibleMemberNumber,
-             RSTNameAndPossibleFOCNumber, RSTPossibleDomesticQTHAndPower,
-             RSTQSONumberAndRandomCharactersExchange,
-             RSTQTHNameAndFistsNumberOrPowerExchange, RSTQTHExchange,
-             RSTLongJAPrefectureExchange, RSTAndGridSquareOrRDAExchange:
-            begin
-            Result := 'None';
-            logger.Error
-               ( '[] MyExchange ADIF not yet implemented for exchange %s',
-               [ ActiveExchangeArray[ aKind ] ] );
-            end;
-          else
-            begin
-            (* NO ARM -- which includes Sweepstakes' and the Field Days'
-               exchanges, whose classes format their own. The marker stands,
-               as it always did for an exchange with no arm; what is new is
-               that it is reported. *)
-            logger.Error
-               ( '[] MyExchange ADIF has no arm for exchange %s',
-               [ ActiveExchangeArray[ aKind ] ] );
-            end;
-        end; // of case aKind
-      except
-      end;
-      end;
+function ADIFSentNotBuilt(const aMy: TMyStationExchange;
+                          const aQso: ContestExchange): string;
+begin
+  Result := ADIFMyExchangeErrorMarker;
+end;
 
 initialization
   logger := TLogLogger.GetLogger('TR4WDebugLog.ADIFExchange');

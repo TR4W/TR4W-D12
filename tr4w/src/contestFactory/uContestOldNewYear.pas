@@ -71,6 +71,8 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -94,6 +96,7 @@ implementation
 
 uses
    uExchangeFields,
+   uADIFExchange,
    uContestRegistry,
    (* StrToIntDef -- the arm's own conversion. *)
    SysUtils,
@@ -163,6 +166,12 @@ end;
 function TContestOldNewYear.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTPower;
+end;
+
+function TContestOldNewYear.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                                const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentRSTState(aMy, aQso);
 end;
 
 function TContestOldNewYear.GetFlags: TContestFlags;

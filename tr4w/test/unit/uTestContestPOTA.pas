@@ -105,11 +105,10 @@ begin
    Result.MyPark := aPark;
 end;
 
-function ExchangeBlock(const aMy: TMyStationExchange; const aQso: ContestExchange;
-                       aSessionExchange: ExchangeType): string;
+function ExchangeBlock(const aMy: TMyStationExchange;
+                       const aQso: ContestExchange): string;
 begin
-   Result := ContestIdentity(POTA).EmitADIFExchangeFields(aMy, aQso,
-                                                          aSessionExchange, True);
+   Result := ContestIdentity(POTA).EmitADIFExchangeFields(aMy, aQso, True);
 end;
 
 procedure TContestPOTATests.Test_POTAIsAClassOnTheBase;
@@ -211,35 +210,32 @@ begin
 
    (* A PARK WORKED: it is the SRX_STRING, and nothing follows. *)
    CheckEquals(activation + EmitADIFField('SRX_STRING', 'US-1234'),
-               ExchangeBlock(my, POTAQso('US-1234', 'PA'), RSTAndPOTAPark),
+               ExchangeBlock(my, POTAQso('US-1234', 'PA')),
                'a park: activation, then the park');
 
    (* A HUNTER WHO SENT A STATE -- DXCC 291 and STATE, hard-coded to the US. *)
    CheckEquals(activation + EmitADIFField('SRX_STRING', 'PA') +
                EmitADIFField('DXCC', '291') + EmitADIFField('STATE', 'PA'),
-               ExchangeBlock(my, POTAQso('', 'PA'), RSTAndPOTAPark),
+               ExchangeBlock(my, POTAQso('', 'PA')),
                'a state: DXCC and STATE after it');
 
-   (* A HUNTER WHO SENT A GRID, in a session whose exchange carries one. *)
+   (* A HUNTER WHO SENT A GRID. (Until M11 S9b this was asked of the
+      session's exchange too, and a second case fed a session that carried no
+      grid; POTA's session exchange cannot be anything else, so that case is
+      gone with the argument.) *)
    CheckEquals(activation + EmitADIFField('SRX_STRING', 'FN31') +
                EmitADIFField('GRIDSQUARE', 'FN31'),
-               ExchangeBlock(my, POTAQso('', 'FN31'), RSTAndPOTAPark),
+               ExchangeBlock(my, POTAQso('', 'FN31')),
                'a grid: GRIDSQUARE after it');
-
-   (* ... AND NOT IN ONE WHOSE EXCHANGE CANNOT -- Tree.LooksLikeAGrid's
-      ActiveExchange test, now the session's exchange handed in. *)
-   CheckEquals(activation + EmitADIFField('SRX_STRING', 'FN31'),
-               ExchangeBlock(my, POTAQso('', 'FN31'), RSTQSONumberExchange),
-               'a grid in a session that carries none: no GRIDSQUARE');
 
    (* NOTHING RECOGNISABLE: the exchange as typed, nothing after it. *)
    CheckEquals(activation + EmitADIFField('SRX_STRING', 'JOE'),
-               ExchangeBlock(my, POTAQso('CT', 'JOE'), RSTAndPOTAPark),
+               ExchangeBlock(my, POTAQso('CT', 'JOE')),
                'neither: the typed exchange');
 
    (* NO MY PARK: MY_SIG alone, as the matrix's records show it. *)
    CheckEquals(EmitADIFField('MY_SIG', 'POTA'),
-               ExchangeBlock(MyPark(''), POTAQso('CT', ''), RSTAndPOTAPark),
+               ExchangeBlock(MyPark(''), POTAQso('CT', '')),
                'no park of our own, nothing received');
 
    (* THE RECEIVED EXCHANGE IGNORES THE RST FLAG. *)
@@ -275,7 +271,7 @@ begin
       qso.ceContest := c;
       contest := ContestIdentity(c);
       CheckEquals(EmitADIFField('SRX_STRING', contest.FormatADIFReceivedExchange(qso, True)),
-                  contest.EmitADIFExchangeFields(MyPark('US-0663'), qso, RSTAndPOTAPark, True),
+                  contest.EmitADIFExchangeFields(MyPark('US-0663'), qso, True),
                   string(ContestTypeSA[c]) + ': the SRX_STRING alone');
       end;
 end;

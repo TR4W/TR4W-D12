@@ -193,7 +193,7 @@ begin
    CheckEquals('599 5678   ', Sent(FOCMARATHON, my, qso, c), 'FOC MyEx: my FOC number');
    CheckEquals('599 1234   ', Received(FOCMARATHON, my, qso, c), 'FOC HisEx: his number, from Power');
    CheckEquals('599 5678   ',
-               ContestIdentity(FOCMARATHON).FormatADIFSentExchange(my, qso, RSTPowerExchange),
+               ContestIdentity(FOCMARATHON).FormatADIFSentExchange(my, qso),
                'FOC STX_STRING: my FOC number');
    CheckEquals('599 FL     ', Sent(ARRL10, my, qso, c),
                'the same exchange for any other contest sends the state');
@@ -279,7 +279,7 @@ begin
    CheckEquals('599 7      ', Sent(PACC, my, qso, c), 'PACC MyEx: the serial in the state column');
    CheckEquals('599 NH     ', Received(PACC, my, qso, c), 'PACC HisEx: the shared arm');
    CheckEquals('599 7      ',
-               ContestIdentity(PACC).FormatADIFSentExchange(my, qso, RSTDomesticQTHExchange),
+               ContestIdentity(PACC).FormatADIFSentExchange(my, qso),
                'PACC STX_STRING: the serial');
    CheckEquals('599 FL     ', Sent(ARRL10, my, qso, c), 'any other contest sends the state');
 end;
@@ -302,7 +302,7 @@ begin
    CheckEquals('599  0007/M   ', Sent(PCC, my, qso, c), 'PCC MyEx: an all-digit MY STATE adds /M');
    CheckEquals('599 031', Received(PCC, my, qso, c), 'PCC HisEx: the shared arm');
    CheckEquals('599    7/M   ',
-               ContestIdentity(PCC).FormatADIFSentExchange(my, qso, RSTAndQSONumberOrDomesticQTHExchange),
+               ContestIdentity(PCC).FormatADIFSentExchange(my, qso),
                'PCC STX_STRING: /M');
 
    my.MyState := 'FL';
@@ -397,7 +397,7 @@ begin
    CheckEquals('3A  GA      ', Sent(ARRLFIELDDAY, my, qso, c), 'FD MyEx');
    CheckEquals('2A  SC     ', Received(ARRLFIELDDAY, my, qso, c), 'FD HisEx');
    CheckEquals('3A  GA      ',
-               ContestIdentity(ARRLFIELDDAY).FormatADIFSentExchange(my, qso, ClassDomesticOrDXQTHExchange),
+               ContestIdentity(ARRLFIELDDAY).FormatADIFSentExchange(my, qso),
                'FD STX_STRING');
    CheckEquals('2A  SC     ', Received(WINTERFIELDDAY, my, qso, c), 'WFD HisEx');
 end;
@@ -535,8 +535,7 @@ var
 begin
    contest := ContestIdentity(aQso.ceContest);
    Result := EmitADIFField('STX_STRING',
-                           Trim(contest.FormatADIFSentExchange(GRoundTripMy, aQso,
-                                                               contest.ExchangeKind)));
+                           Trim(contest.FormatADIFSentExchange(GRoundTripMy, aQso)));
    if aQso.QTHString <> '' then
       begin
       Result := Result + contest.EmitADIFContestFields(aQso);
@@ -581,7 +580,7 @@ procedure TContestExportTests.Test_RoundTripThroughTodaysImport;
       qso.QTH.CountryID := 'K';
       qso.TenTenNum := $FFFF;
 
-      stx := Trim(contest.FormatADIFSentExchange(GRoundTripMy, qso, contest.ExchangeKind));
+      stx := Trim(contest.FormatADIFSentExchange(GRoundTripMy, qso));
       text := EmitADIFRecord(qso) + RoundTripTail(qso) + '<EOR>';
 
       CheckTrue(ParseADIFFieldsList(text, fields), what + ': the record lexes');

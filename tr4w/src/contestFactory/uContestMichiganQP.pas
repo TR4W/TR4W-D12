@@ -75,6 +75,8 @@ type
       function GetDomesticFileName: string; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
       function GetInStateDomesticFileName: string; override;
       function GetFlags: TContestFlags; override;
       function GetHostState: string; override;
@@ -116,6 +118,7 @@ implementation
 
 uses
    uExchangeFields,
+   uADIFExchange,
    uContestFixedPoints, uContestRegistry;
 
 function TContestMichiganQP.GetDisplayName: string;
@@ -162,6 +165,12 @@ end;
 function TContestMichiganQP.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTQSONumberQTH;
+end;
+
+function TContestMichiganQP.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                                const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentRSTState(aMy, aQso);
 end;
 
 function TContestMichiganQP.GetInStateDomesticFileName: string;

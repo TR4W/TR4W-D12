@@ -84,6 +84,8 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -135,6 +137,7 @@ implementation
 
 uses
    uExchangeFields,
+   uADIFExchange,
    uContestRegistry,
    uTR4WStrings;
 
@@ -254,6 +257,22 @@ begin
    else
       begin
       Result := ExchangeFieldsRSTQSONumberQTH;
+      end;
+end;
+
+function TContestJIDXCW.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                            const aQso: ContestExchange): string;
+begin
+   (* A JAPANESE ENTRANT RECEIVES A ZONE; ANYONE ELSE A PREFECTURE -- the
+      two shapes DescribeSession chooses between, by the station test
+      IsJapaneseEntrant. M11 S9b. *)
+   if IsJapaneseEntrant then
+      begin
+      Result := ADIFSentRSTZone(aMy, aQso);
+      end
+   else
+      begin
+      Result := ADIFSentRSTPrefecture(aMy, aQso);
       end;
 end;
 

@@ -89,9 +89,8 @@ type
       function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange;
                                               const aCtx: TCabrilloQSOContext): string; override;
-      function FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                      const aQso: ContestExchange;
-                                      aSessionExchange: ExchangeType): string; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
       function EmitADIFContestFields(const aQso: ContestExchange): string; override;
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
@@ -321,9 +320,8 @@ begin
       end;
 end;
 
-function TContestIARU.FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                             const aQso: ContestExchange;
-                                             aSessionExchange: ExchangeType): string;
+function TContestIARU.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                          const aQso: ContestExchange): string;
 begin
    if aMy.MyState <> '' then
       begin

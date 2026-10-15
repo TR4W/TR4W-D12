@@ -95,6 +95,8 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
 
       (* STATED AT M10 S5, transcribed from the rows the base read until
          then (ContestsArray, QSOParties, ContestsBooleanArray). The
@@ -112,6 +114,7 @@ implementation
 
 uses
    uExchangeFields,
+   uADIFExchange,
    uContestFixedPoints,   (* FixedModePoints *)
    uContestRegistry;
 
@@ -173,6 +176,12 @@ end;
 function TContestMinnesotaQP.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsNameQTH;
+end;
+
+function TContestMinnesotaQP.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                                 const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentNameState(aMy, aQso);
 end;
 
 function TContestMinnesotaQP.GetInStateDomesticFileName: string;

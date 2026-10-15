@@ -78,6 +78,8 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
 
       (* THE FLAG SET IS THE FAMILY'S RULE -- both modes run under one set
          of rules, so it is stated once, here (M10 S5). See
@@ -106,6 +108,7 @@ implementation
 
 uses
    uExchangeFields,
+   uADIFExchange,
    uContestFixedPoints,
    uTR4WStrings;
 
@@ -142,6 +145,12 @@ end;
 function TContestNRAUBalticBase.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTQSONumberQTH;
+end;
+
+function TContestNRAUBalticBase.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                                    const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentRSTQSONumberState(aMy, aQso);
 end;
 
 function TContestNRAUBalticBase.GetFlags: TContestFlags;

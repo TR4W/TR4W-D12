@@ -1327,7 +1327,7 @@ end;
 function NeutralADIFImportSession: TADIFImportSession;
 begin
    FillChar(Result, SizeOf(Result), 0);
-   Result.Exchange := UnknownExchange;
+   Result.ReceivesGridSquare := False;
    Result.CountsGridSquares := False;
    Result.DoingDomesticMults := False;
 end;

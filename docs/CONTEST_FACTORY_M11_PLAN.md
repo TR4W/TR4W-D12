@@ -1854,7 +1854,7 @@ kinds now.
   `uADIFExchange.FormatADIFExchangeOfKind` and
   `uCabrilloExchange.FormatCabrilloExchangeOfKind` -- become PLAIN NAMED
   HELPERS, one per shape, and each class's own overrides
-  (`ParseReceivedExchange`, the field list, `FormatADIFSentExchange` /
+  (`ParseReceivedExchange`, the field list, `GetADIFSentExchange` /
   `FormatCabrilloSentExchange` and their received halves) CALL the helper
   for its format explicitly -- once on a family base where a family shares
   one. No enum selects a helper (design 1.3). Then `ExchangeType`, the
@@ -2065,7 +2065,7 @@ stage for `ExchangeType`, `GetExchangeKind` and `ContestSession.Exchange`.
 - *Matrix:* identical. *Risk:* low-medium.
 - *Specialists:* `contest-scoring`, `build-release`.
 
-#### S9a DONE (2026-10-14, on `6edaffc3`, uncommitted at hand-back): THE FIELD LIST
+#### S9a DONE (2026-10-14, on `6edaffc3`, committed `68076954`): THE FIELD LIST
 
 The first machine: `LOGDUPE.SetUpExchangeInformation`, the `case` over the
 session's exchange shape that marked `ExchangeInformationRecord`'s fields.
@@ -2161,6 +2161,143 @@ session's exchange shape that marked `ExchangeInformationRecord`'s fields.
   is a later question. `GetExchangeKind` is still the trait every other
   machine reads.
 
+#### S9b DONE (2026-10-14, on `e7007b63`, uncommitted at hand-back): THE ADIF EXPORT MACHINE
+
+The third machine: `uADIFExchange.FormatADIFExchangeOfKind`, the `case` over
+the session's exchange shape that built the MY-exchange (`STX_STRING`) of an
+ADIF record -- plus the two other ADIF paths that read a kind.
+
+- **Measured first.**
+  - **Its arms: 31 shape arms and the "not yet implemented" arm (19 labels),
+    32 in all, carrying 57 labels of `ExchangeType`'s 61 members, and an
+    `else`.** Four members fell to the `else`: `UnknownExchange`,
+    `NoExchangeReceived`, `ClassDomesticOrDXQTHExchange` and
+    `QSONumberPrecedenceCheckDomesticQTHExchange` (the last two are the Field
+    Days' and Sweepstakes', whose classes format their own).
+  - **Reach.** 13 classes (4 family bases and 9 leaves) already overrode the
+    seam and 8 leaves inherit one of the bases'; **168 classes reached the
+    machine through `TContestBase`**, and between them run **49 distinct
+    shapes** (the frozen matrix's `active.exchange` lines, plus the stations'
+    `DescribeSession` values). **30 of the 32 arms are reached; 49 of the 57
+    labels.** Unreached: the n4af `RSTQSONumberOrDomesticQTH` arm and
+    `QSONumberAndAge`, and six labels of the not-implemented arm
+    (`CheckAndChapterOrQTH`, `RSTAndGrid3`, `RSTAndDOMESTICQTH`,
+    `RSTAndFOCNumber`, `RSTAndSerialNumberAndGridandPossibleMemberNumber`,
+    `RSTNameAndPossibleFOCNumber`). The `else` is reached only by the
+    classless DUMMYCONTEST. They go with the machine; their enum members stay
+    for the deletion stage.
+  - **By output.** The 26 working arms print **22 distinct layouts** (the
+    RST and the state, `'%-3d %-7s'`, serves five arms). **13 shapes land in
+    the not-implemented arm** (answer `None`, an Error logged each QSO; 14
+    contests), and **three arms print the marker** (plan F25): five
+    contests, plus DUMMYCONTEST.
+  - **Station-dependent:** the session's exchange moves with the station
+    for 12 contests (S9a), but **only the JIDX pair's STX_STRING moves with
+    it** (a Japanese entrant receives a zone, anyone else a prefecture:
+    `'%-3d %-7.2d'` versus `'%-3d %-7d'`). ARRL 160, 7QP, NEQP, Arizona,
+    Texas, the Salmon Run, California and the PACC choose between two shapes
+    that print the same text; ARRL DX has its own override.
+  - **Callers: ONE** -- `TContestBase.FormatADIFSentExchange`, itself called
+    once per record from `PostUnit.MyExchangeForExport`. **Overrides before
+    the stage: 13** (the CQ WW, CQ WPX, ARRL SS and ARRL DX family bases;
+    ARRL FD, Winter FD, FOC Marathon, Florida QP, General QSO, IARU, NA
+    Sprint CW, PACC, PCC) -- none used the kind it was handed, and none
+    called `inherited`.
+  - **Other ADIF code that dispatched on a kind (2):**
+    - **EXPORT:** `TContestPOTA.EmitADIFExchangeFields` asked
+      `aSessionExchange in GRID_CARRYING_EXCHANGES` before writing a
+      hunter's GRIDSQUARE. POTA's session exchange is `RSTAndPOTAPark`,
+      which is in that set, and nothing else can set it: **the test was
+      always true.** Deleted with the parameter.
+    - **IMPORT:** the base's `ApplyADIFImport` read
+      `aSession.Exchange in [RSTAndOrGrid, Grid2, RSTAndGrid3, Grid]`
+      through `TADIFImportSession.Exchange` -- the OPEN contest's exchange
+      (an operator can import another contest's log into the open one; that
+      quirk is reproduced, not corrected). Replaced by the open contest's
+      class answer, `TContestBase.ReceivesGridSquareExchange` (true for
+      the nine contests whose trait is one of those shapes: the three ARRL
+      VHF contests, CQ VHF, Stew Perry, ARRL Digi, WW Digi, Batavia FT8,
+      Makrothen -- `RSTAndGrid3` is unreached). It is not
+      `HasGridSquareMultiplier`: the five non-VHF contests carry a grid and
+      count no grid multiplier. No ADIF import override read the kind.
+- **The seam.** `TContestBase.GetADIFSentExchange(aMy, aQso)` (protected
+  virtual) behind the public, **non-virtual** `FormatADIFSentExchange(aMy,
+  aQso)` -- the same getter-behind-a-caller shape as S9a. **The kind
+  parameter is gone from the seam**, from `EmitADIFExchangeFields`, and
+  from `TADIFImportSession`. **The base answers `ADIFSentNotBuilt`** (the
+  error marker): what the machine's `else` gave the classless DUMMYCONTEST,
+  and the answer for a new contest that forgets it. Non-virtual wrapper,
+  protected virtual: 168 classes could state it in the protected section
+  beside `GetReceivedExchangeFields` without lowering a public method's
+  visibility (FPC notes that).
+- **The helpers: `uADIFExchange`, 24 -- one per distinct OUTPUT**, named for
+  what they print (`ADIFSentRSTState`, `ADIFSentRSTQSONumber`, ...), same
+  signature `(aMy, aQso)`. Two are not layouts: `ADIFSentNotImplemented`
+  (`None`, logged) and `ADIFSentNotBuilt` (the marker). Each reads the
+  station's fields through the machine's own width -- a `ShortString` of 20
+  for the state, name and zone, 7 for the grid, 10 for the park -- so an
+  over-long value is cut as it was (the pin feeds a 26-character state).
+- **The overrides: 181** -- **168 new** (`GetADIFSentExchange`, beside
+  `GetExchangeKind`/`GetReceivedExchangeFields`; 9 of them also
+  `GetReceivesGridSquareExchange`) and **the 13 that already existed,
+  renamed from `FormatADIFSentExchange` to `GetADIFSentExchange` with the
+  unused parameter dropped**. The JIDX pair test `IsJapaneseEntrant`; the
+  other 166 call one helper.
+  - **Not repointed, on purpose:** seven of the 13 own overrides print what
+    a helper prints (CQ WW, CQ WPX, Florida, ARRL DX, General QSO, IARU, NA
+    Sprint CW) -- but none clips to the machine's widths, so calling the
+    helper would change a 21-character state's output. They keep their own
+    bodies; folding them is a one-line change per class once a sponsor's
+    question (or NY4I) says a clipped value is fine.
+- **The repoint.** `PostUnit.MyExchangeForExport` and the tail emitter drop
+  `ContestSession.Exchange` from both calls; `MainUnit.ParseADIFRecord`
+  sets `session.ReceivesGridSquare` from `ContestReceivesGridSquareExchange(
+  ActiveContest(Contest))`. `FormatADIFExchangeOfKind` is DELETED, and
+  `uADIFExchange` no longer uses `uCabrilloExchange` (it was the alias for
+  `TMyStationExchange`; the type is `uContestBase`'s).
+- **Unreachable branches deleted with the machine** (none changes an output
+  any registered contest produces): the three arms above; the RoPoCo's
+  postal-code branch (`contacts = 1`, a variable nothing assigned -- the
+  helper prints the empty previous code the machine always printed); the
+  `cMyState := 'DX'` write in the `RSTDomesticQTH` arm that nothing read.
+  `ActiveExchangeArray` has no reader left (F13); it stays until the deletion
+  stage because `Lint-SpellingTables`' floor is 24.
+- **Pin: `uTestADIFSentExchange` (new).** Every ContestType at the seven
+  roster stations (`uTestExchangeFields.TPinStation`, now exported) with
+  **four inputs** -- a full exchange; an empty one; over-long values; a
+  state of `TRC` -- against **literals made by running the OLD machine**
+  (`TContestBase.FormatADIFSentExchange(my, qso, Kinds(c, station).Exchange)`,
+  dumped to a file and laid out grouped by output: 32 groups plus the JIDX
+  pair), a literal check of every helper, and the base's marker.
+  `uTestADIFExchange` (the old arm-by-arm unit) now pins the helpers.
+  **OLD code (a worktree of `e7007b63`, the pin with `ProgramSent` calling
+  the three-argument seam and the two helper tests cut): 199,823 passed, 0
+  failed -- 194,586 baseline + 5,236 STX_STRINGs + 1 count. NEW code: the
+  same 5,236 + 1 unchanged, plus the helper test (96) and the base (4): 199,921
+  passed, 0 failed.** The baseline's other deltas: `uTestADIFExchange` 12
+  -> 11 (Grid and Grid2 are one helper), `uTestContestPOTA` -1 (the
+  session-carries-no-grid case is unreachable and deleted).
+- **Build:** narrowing **1262** (ceiling 1262), range **3**, full `-B`. The
+  first build was 1263: `StrToIntDef(string(Str20(...)))` binds the
+  AnsiString overload and warns -- written `AnsiString(Str20(...))`, as CQ
+  WW's own override has it. Matrix, corpus and lints NOT run here.
+  **The matrix should be IDENTICAL** (it shows no STX_STRING); **the corpus
+  byte-diffs 13 contests' STX_STRING and the ADIF round-trip imports them
+  back -- both should be IDENTICAL**; `Lint-ContestNameTests`' ceiling for
+  `uADIFExchange` stays 0.
+- **Inventory** (generated to check the tool, then the tracked doc
+  restored): rows 29, contests 30 -- unchanged; shape-4 PROXY 12, SHARED
+  22, SHAPE 0, UNUSED 10 unchanged. `judgements.SHAPE_MACHINES` lost the
+  routine (two left: `ParseExchangeShape` and Cabrillo's `SetHisEx`), the
+  `ROUTINES` row for `FormatADIFExchangeOfKind` is gone, the one remaining
+  contest test in the file (TRC Digital, now in `ADIFSentRSTQSONumberState`)
+  has its own `ROUTINES` row and an updated `SHAPE3` pattern. The tracked
+  document needs a regeneration after the commit: the `uADIFExchange` row
+  and the `postunit` line numbers move by one.
+- **Not done here, on purpose.** The Cabrillo machine
+  (`FormatCabrilloExchangeOfKind`, S9c) and the parser (S9d) still read the
+  session's exchange; `TCabrilloQSOContext.SessionExchange` stays.
+
 ### S10 -- (optional, Q93) Reach-1 shapes become their contest's own
 
 - For each of the 20 members in 1.1, lift its parser out of LOGSTUFF and
@@ -2192,7 +2329,7 @@ Q91 deletes it. `Lint-ContestNameTests` is left with `MainUnit:8045` and
 | **F10** | 1.1 | 26 members have been unreachable since S2 retired their only selector. This includes `User1`..`User5` and the VE/Section/QTH initial exchanges -- operator features that S2 removed without removing their arms |
 | **F11** | 11 factory `ParseReceivedExchange` guards (1.2) | Each class's session exchange is the same in every matrix variant, and none states one in `DescribeSession` (L5), so `aSession.Exchange = X` is always True in the program. Only the unit tests' stub sessions reach the other branch. **FIXED at S2**: the 11 guards and the six test cases are deleted |
 | **F12** | `uContestBase.pas:2718` | A reach-1 rule (FISTS) sits in the base's non-virtual `CombineScore`. **CLOSED at S7 (2026-10-14):** it is `TContestFISTS.CombineWithMultipliers`, and `TScoreTotals.SessionExchange` went with it |
-| **F13** | `VC.pas:3406` | `ActiveExchangeArray` survives for two log lines (`uADIFExchange:403/413`) |
+| **F13** | `VC.pas:3359` | `ActiveExchangeArray` survived for two log lines (`uADIFExchange:403/413`). **Those went at S9b** (the machine is helpers now and its Error log no longer names the shape); the array has NO reader. It goes with the kind enums in the deletion stage, and `Lint-SpellingTables`' floor of 24 falls with it |
 | **F14** | `Lint-ContestNameTests.ps1` `$TOTAL_FLOOR = 5`, 6 found | S8 removes 4. The floor must fall in the same commit, or the lint fails with "broken parser" |
 | **F15** | `MainUnit:9514-9516`; `logdupe:1709-1715` | The SS-shape test duplicates `ExchangeInformation.Precedence`/`.Check`. They are equal once S1 removes `CheckAndChapterOrQTH`, the only other arm that sets `Check` |
 | **F16** | inventory section 9.1; `analyses.dead_arms` | (S0a) The "export arms dead by default" table is EMPTY, and not because there are none: it reads `SetHisEx` / `FormatADIFExchangeOfKind` records, and those machines left the scan when their selector became a parameter (`aCtx.SessionExchange`, `aKind`). The same blindness as F1's three unscanned machines. Not fixed at S0a, which judges the machines SHAPE |
@@ -2203,6 +2340,7 @@ Q91 deletes it. `Lint-ContestNameTests` is left with `MainUnit:8045` and
 | **F22** (**FIXED 2026-10-14**: `BestTwoLetters` zeroes `NumberBytes` on entry; 24 matrix records re-frozen, only `iex JA1ABC` moved, now showing its TRMASTER name/grid/zone) | `trdos/logscp.pas` `CallDatabase.BestTwoLetters` (also in D7, `C:\TR4W` logscp.pas:1196) | (S5 part 1, found by the matrix) **A call-history lookup of any call containing `JA` reads an uninitialised local.** The routine skips the `JA` pair with `Continue` and never assigns its `NumberBytes[CharPos]`, then returns the FIRST pair whose size equals the minimum -- so whatever the stack holds in that slot decides whether it picks the real smallest bucket or the `JA` bucket, which TRMASTER never fills (`trmaster_codec.bucket_pairs` excludes `JA`, as TR's own writer does), giving "not found". The residue is in practice the PREVIOUS lookup's `NumberBytes[1]`. Measured in the matrix fixture: DL1ABC's `DL` bucket is 23 bytes and JA1ABC's smallest real bucket (`A1`) is 23 bytes, so after a DL1ABC lookup JA1ABC is not found and the initial exchange falls through to CTY.DAT. In the frozen matrix JA1ABC's TRMASTER name is offered in ONE record (GRIDLOC, whose path leaves other residue), while DL1ABC's is offered in 22. S5 part 1's first build called `ActiveContest` between two lookups (InitialExchangeEntry's ITU test), which overwrote the slot, and JA1ABC was then FOUND in the Croatian, IRTS and WRTC (`trmaster=" 25"` -> `" 45"`, `" 45"` -> `" 25"`); proven by putting the old session test back beside an `ActiveContest` call, which moved the same lines. So the frozen JA1ABC `trmaster` value is the defect's, not a rule, and it holds only while nothing deep runs between lookups. Live effect: SCP partials (`LOGEDIT` :1812) and every TRMASTER field (name, zones, QTH, section, ...) for a JA-containing call depend on the call looked up before it. **Recommendation:** assign `NumberBytes[CharPos] := 0` before the `Continue` -- the routine's own convention ("we get zero if we had an illegal character"), so the `JA` pair is never chosen -- in its own commit with a deliberate matrix re-freeze (the JA1ABC `trmaster`/`logged`/`custom` columns move wherever TRMASTER contributes). After it, `InitialExchangeEntry` may ask `ActiveContest` like the other zone readers. **Held for S5:** that site asks `ContestIdentity` (shallow; its ITU answer is station-independent for every contest, pinned by `Test_TheITUQuestionDependsOnNoStation`), so S5 moves no output. **Done at S5 part 2:** it asks `ActiveContest`; the matrix moved nowhere. Related to Q95 only in that it surfaced on the zone question |
 | **F23** | `TContestALRSUA1DZCup`, `TContestWAG`, `TContestDARC10M` `DomesticMultiplierFromQTH` / `DomesticMultiplierHint` / `DomesticQTHReplacesDXMultiplier` / `DomesticQTHIsNeverAGrid` versus `ContestSession.DoingDomesticMults` | (S6 part 1a) F20's shape, for the domestic kind: the three station-dependent classes' answers ask `Station`, refreshed on every `ActiveContest` call, while whether GetDomQTH asks at all (`DoingDomesticMults`) still asks the session kind fixed at set-up. They agree unless the entrant's country changes mid-session without a CONTEST change (WAG begun at a DL call and switched away keeps no domestic multiplier; begun elsewhere and switched to DL, it looks a DOK up in a domestic file it has none of, where the kind kept reading DOKs). Part 2 makes "does this contest count a domestic multiplier" a class answer, as S3-S5 part 2 did. Not measured on a bench **CLOSED at S6 part 2 (2026-10-14):** `DoingDomesticMults` is `TContestBase.HasDomesticMultiplier` (through `ActiveContest`, or on the object a per-QSO caller holds), composed from the answers these classes already state and overridden by WAG and the DARC 10 m with the same station test, so the gate and the rules read the same `Station`. The mid-session change is still not bench-checked |
 | **F24** | `TContestUA4WChampionship.GetReceivedExchangeFields`; the deleted `LOGDUPE.SetUpExchangeInformation` | (S9a) **The UA4W Championship's received exchange marks no field.** Its shape, `RSTAndGridSquareOrRDAExchange`, had no arm in the machine, so start-up left `ExchangeInformation` all False for it: the log-string parses take no RST or QTH from a logged line, and the ADIF export's RST test (POSTUNIT) is False. Transcribed into its class as `ExchangeFieldsNone`, not fixed; the likely fix is `ExchangeFieldsRSTQTH` (it is an RST-and-grid-or-RDA exchange) -- a behaviour change for its own commit, with a matrix re-freeze. Three latent oddities of the machine, none observable: it cleared 13 of the record's 16 fields and left `Kids`, `TenTenNum` and `FOCNumber` (harmless -- it ran once over a zero-initialized global; every helper now clears all 16); its unreached `RSTAndGrid3Exchange` arm marked the QTH alone, no RST; and no arm ever marked `FOCNumber` or `ZoneOrSociety` (the FOC Marathon runs `RSTPower`, whose number lands in `Power`) |
+| **F25** | `TContestCupRFCW/SSB/DIG`, `TContestCQWWRTTY`, `TContestYouthChampionshipRF`; `uADIFExchange.ADIFSentNotBuilt` | (S9b) **Five contests export `Error generating my exchange` as the ADIF `STX_STRING` of every QSO** (and the classless DUMMYCONTEST). The old machine's format for three shapes raised, and its own `try`/`except` swallowed it: `QSONumberAndGridSquare` (the Cup RF's three runnings; `'%-3s %-7s'` of the serial, a number), `RSTZoneAndPossibleDomesticQTHExchange` (CQ WW RTTY; `'%-3d %02u %-4s'` of the zone as a `ShortString`) and `AgeAndQSONumberExchange` (the Youth Championship RF; three specifiers, two arguments -- pinned as a defect since the arm was extracted). Not fixed: it needs the sponsors' exchange layout. `ADIFSentNotBuilt` is that answer by name; each class calls it. Fourteen further contests print `None` (`ADIFSentNotImplemented`, an Error logged per QSO): ALL JA, ARCI, County Hunter, FISTS, Grid Loc, JA Long Prefecture, Kids Day, NZ Field Day, QCWA and QCWA Golden, TEN-TEN, UA4W Championship, WWL, Xmas (13 shapes). The Cabrillo export does not share the defect -- its own machine is S9c's |
 | **F18** | `MainUnit:7976`, `:8031` | (S0d) `LoadinLog` adds the logged initial-exchange history only while `IntitialExLoaded` is False, and latches it True at its end. A second `LoadinLog` in one session -- the matrix's totals reload, and any in-session reload -- adds no history. Whether a live reload path (an import, a rescore) loses history this way was not measured |
 
 Open questions to add to the design (next free number Q92):

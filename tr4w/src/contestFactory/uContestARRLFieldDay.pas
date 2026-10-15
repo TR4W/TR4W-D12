@@ -105,9 +105,8 @@ type
       function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange;
                                               const aCtx: TCabrilloQSOContext): string; override;
-      function FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                      const aQso: ContestExchange;
-                                      aSessionExchange: ExchangeType): string; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
 
       (* THE WORKED STATION'S ADIF FIELDS -- see the implementation. *)
       function EmitADIFContestFields(const aQso: ContestExchange): string; override;
@@ -295,9 +294,8 @@ begin
    Result := Result + EmitADIFField('CLASS', string(aQso.ceClass));
 end;
 
-function TContestARRLFieldDay.FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                                     const aQso: ContestExchange;
-                                                     aSessionExchange: ExchangeType): string;
+function TContestARRLFieldDay.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                                  const aQso: ContestExchange): string;
 begin
    Result := Format('%-3s %-7s ', [aMy.MyFDClass, aMy.MySection]);
 end;

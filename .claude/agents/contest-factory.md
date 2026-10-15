@@ -624,11 +624,12 @@ the target shape, the M-step migration order and the open questions.
   2026-10-01). PostUnit's Cabrillo writer and ADIF tail and
   `uADIF.EmitADIFRecord` call `ContestIdentity(c)`; **`FormatsExchange` is
   gone.** Seams: `FormatCabrilloSentExchange` / `...Received...` (with a
-  `TCabrilloQSOContext`), `FormatADIFSentExchange`, `EmitADIFContestFields`,
+  `TCabrilloQSOContext`), `FormatADIFSentExchange` (the class states `GetADIFSentExchange` -- a
+  `uADIFExchange` helper since M11 S9b), `EmitADIFContestFields`,
   `ADIFPowerTag`, `WritesADIFContestId`, `CabrilloQSOLineFormat`. **The base's
-  default is the shared arm for the SESSION's exchange**
-  (`uCabrilloExchange.FormatCabrilloExchangeOfKind`,
-  `uADIFExchange.FormatADIFExchangeOfKind`) -- the session's, not the
+  Cabrillo default is the shared arm for the SESSION's exchange**
+  (`uCabrilloExchange.FormatCabrilloExchangeOfKind`; the ADIF half is the
+  classes' since S9b) -- the session's, not the
   `ExchangeKind` trait, because FCONTEST's arms change it per station for
   twelve contests (design §8.2e). **Those arms name no contest and must not
   start to**: a contest's export rule is an override on its class, and one

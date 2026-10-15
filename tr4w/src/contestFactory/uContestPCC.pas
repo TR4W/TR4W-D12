@@ -90,9 +90,8 @@ type
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange;
                                           const aCtx: TCabrilloQSOContext): string; override;
-      function FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                      const aQso: ContestExchange;
-                                      aSessionExchange: ExchangeType): string; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
 
       (* LETTERS ARE A QTH, DIGITS A SERIAL -- M5b, 2026-10-02 (4.83.2).
 
@@ -222,9 +221,8 @@ begin
       end;
 end;
 
-function TContestPCC.FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                            const aQso: ContestExchange;
-                                            aSessionExchange: ExchangeType): string;
+function TContestPCC.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                         const aQso: ContestExchange): string;
 begin
    if StringIsAllNumbers(aMy.MyState) then
       begin

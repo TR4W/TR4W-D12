@@ -119,9 +119,22 @@ multipliers, CTY.DAT, band lookup and CRC32.
   send the bare enum spelling. A contest that gains an id still lists its old
   enum spelling as a former one.
 - **THE EXCHANGE COLUMNS AND CONTEST FIELDS ARE THE CONTEST'S (M4,
-  2026-10-01).** `uCabrilloExchange` and `uADIFExchange` are TContestBase's
-  default -- one arm per exchange SHAPE, naming no contest, keyed on the
-  session's exchange (`TCabrilloQSOContext.SessionExchange`). PostUnit asks
+  2026-10-01).** `uCabrilloExchange` is TContestBase's default for the
+  Cabrillo columns -- one arm per exchange SHAPE, naming no contest, keyed on
+  the session's exchange (`TCabrilloQSOContext.SessionExchange`; S9c moves it
+  the way S9b moved the ADIF half). **THE ADIF `STX_STRING` IS THE CLASSES'
+  SINCE M11 S9b (2026-10-14):** `uADIFExchange` holds 24 named helpers
+  (`ADIFSentRSTState`, `ADIFSentRSTQSONumber` ... one per distinct OUTPUT,
+  same `(aMy, aQso)` signature), and every contest class states
+  `GetADIFSentExchange` by calling one -- no enum selects it, the base prints
+  the error marker, and `FormatADIFSentExchange(aMy, aQso)` is the public
+  non-virtual caller. A helper reads the station's fields through the
+  machine's own widths (20 for the state, name and zone, 7 for the grid, 10 for
+  the park), so an over-long value is cut as it always was. Five contests
+  export the marker today and fourteen `None` (plan F25), transcribed.
+  Pinned by `uTestADIFSentExchange` (every ContestType x 7 stations x 4
+  inputs, literals made by the old machine). The ADIF import's grid test is
+  the open contest's `ReceivesGridSquareExchange`, not a kind. PostUnit asks
   `ContestIdentity(c)` for the two Cabrillo columns, the `QSO:` layout and the
   `STX_STRING`, and the tail asks `EmitADIFContestFields` for the worked
   station's fields (ARRL_SECT, CLASS, DOK, IOTA, APP_TR4W_HQ, GRIDSQUARE);
@@ -160,10 +173,11 @@ multipliers, CTY.DAT, band lookup and CRC32.
   every contest wants (the operator, the received RST off SRX_STRING) and
   `ApplyADIFContestImport` asks `ContestIdentity(exch.ceContest).ApplyADIFImport`
   -- the base's default is the old classless `else`, keyed on a
-  `TADIFImportSession` handed in as DATA (the session's exchange, the open
-  contest's grid-square and domestic-multiplier answers `CountsGridSquares`
-  and `DoingDomesticMults` -- the session's domestic KIND and its "not none"
-  until M11 S6 -- and the operator; the contest reads no global). **Do not read
+  `TADIFImportSession` handed in as DATA (the open contest's grid-square,
+  grid-exchange and domestic-multiplier answers `CountsGridSquares`,
+  `ReceivesGridSquare` and `DoingDomesticMults` -- the session's domestic KIND
+  and its "not none" until M11 S6, its exchange kind until S9b -- and the
+  operator; the contest reads no global). **Do not read
   `exch.ceContest` inside `ApplyADIFFieldsToExchange`**: ADIF fixes no field
   order, and the `APP_N1MM_EXCHANGE1` arm that did is the order bug this
   replaced (`uTestContestImport.Test_N1MMTagOrderDoesNotMatter`). A new tag

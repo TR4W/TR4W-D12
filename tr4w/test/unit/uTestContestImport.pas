@@ -525,7 +525,7 @@ begin
       CheckEquals('59 FN31', string(x.ExchString), 'grid multipliers: RST and grid');
 
       s := NeutralADIFImportSession;
-      s.Exchange := Grid2Exchange;
+      s.ReceivesGridSquare := True;
       x := NewExch(RSGB18);
       x.RSTReceived := 59;
       base.ApplyADIFImport(t, s, x);

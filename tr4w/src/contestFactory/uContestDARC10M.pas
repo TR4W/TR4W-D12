@@ -77,6 +77,8 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -125,6 +127,7 @@ implementation
 
 uses
    uExchangeFields,
+   uADIFExchange,
    (* RDADistrictKey, DOKKey, GridSquareKey, GridFieldKey -- the shared
       domestic-QTH shapes (M11 S6). *)
    uDomesticKey,
@@ -200,6 +203,12 @@ end;
 function TContestDARC10M.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTQSONumberQTH;
+end;
+
+function TContestDARC10M.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                             const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentRSTQSONumberState(aMy, aQso);
 end;
 
 function TContestDARC10M.GetFlags: TContestFlags;

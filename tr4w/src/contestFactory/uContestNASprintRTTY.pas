@@ -58,6 +58,8 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
       function GetFlags: TContestFlags; override;
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
@@ -86,6 +88,7 @@ implementation
 
 uses
    uExchangeFields,
+   uADIFExchange,
    uDXMultiplierKey,
    uContestRegistry, uContestFixedPoints,
    uTR4WStrings;
@@ -149,6 +152,12 @@ end;
 function TContestNASprintRTTY.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsQSONumberNameQTH;
+end;
+
+function TContestNASprintRTTY.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                                  const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentQSONumberNameState(aMy, aQso);
 end;
 
 function TContestNASprintRTTY.GetFlags: TContestFlags;

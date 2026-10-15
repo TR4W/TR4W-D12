@@ -78,6 +78,8 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -95,6 +97,7 @@ implementation
 
 uses
    uExchangeFields,
+   uADIFExchange,
    uContestRegistry,
    (* GetDistanceBetweenGrids -- the arm's own geodesic; see
       uContestARRLDigi for why it is the TRDOS unit. *)
@@ -205,6 +208,12 @@ end;
 function TContestTesla.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTQSONumberQTH;
+end;
+
+function TContestTesla.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentRSTQSONumberGrid(aMy, aQso);
 end;
 
 function TContestTesla.GetFlags: TContestFlags;

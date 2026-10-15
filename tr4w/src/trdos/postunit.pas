@@ -2321,8 +2321,9 @@ end;
   THE EXCHANGE IS THE CONTEST'S -- M4, 2026-10-01. What is left here is the
   part that needs PostUnit's globals: filling the record, and deciding the
   QSO is a good one. The format is asked through ContestIdentity, so a
-  classless contest answers with TContestBase's default -- the shared arm for
-  the session's exchange, in uADIFExchange. *)
+  classless contest answers with TContestBase's default -- the marker, since
+  S9b: each contest class states its own STX_STRING through a helper in
+  uADIFExchange. *)
 function MyExchangeForExport(aContest: TContestBase): string;
   var
     my: TMyStationExchange;
@@ -2341,7 +2342,7 @@ function MyExchangeForExport(aContest: TContestBase): string;
     down. *)
   try
      Result := ContestIdentity( Contest ).FormatADIFSentExchange( my,
-        TempRXData, ContestSession.Exchange );
+        TempRXData );
   except
      Result := ADIFMyExchangeErrorMarker;
   end;
@@ -2407,7 +2408,7 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
   // and a hunter's state or grid after it; those were two `ceContest = POTA`
   // tests here until POTA gained its class (design Q6).
   Result := Result + ContestIdentity( rec.ceContest ).EmitADIFExchangeFields(
-     CurrentMyStationExchange( contestRules ), rec, ContestSession.Exchange, ExchangeInformation.RST );
+     CurrentMyStationExchange( contestRules ), rec, ExchangeInformation.RST );
 
   // ----- CNTY (state QP with FAltName loaded from <state>_cty.dom) -----
   stateCode := GetStateForContest( rec.ceContest );

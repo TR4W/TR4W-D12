@@ -1514,7 +1514,7 @@ export; `FormatsExchange` is deleted, with every assertion about it.
 | seam on `TContestBase` | what it answers | the base's answer |
 |---|---|---|
 | `FormatCabrilloSentExchange` / `...Received...` `(aMy, aQso, aCtx: TCabrilloQSOContext)` | the two Cabrillo exchange columns | `uCabrilloExchange.FormatCabrilloExchangeOfKind` for `aCtx.SessionExchange` |
-| `FormatADIFSentExchange(aMy, aQso, aSessionExchange)` | ADIF `STX_STRING` | `uADIFExchange.FormatADIFExchangeOfKind` |
+| `FormatADIFSentExchange(aMy, aQso)` (states `GetADIFSentExchange`) | ADIF `STX_STRING` | the error marker; every class calls a `uADIFExchange` helper (M11 S9b) |
 | `EmitADIFContestFields(aQso)` | the worked station's contest fields, after `CNTY` | nothing |
 | `ADIFPowerTag` | which tag carries the QSO's `Power` | `RX_PWR` (FOC Marathon: `FOC_NUM`) |
 | `WritesADIFContestId` | whether `CONTEST_ID` is written | True (General QSO: False) |

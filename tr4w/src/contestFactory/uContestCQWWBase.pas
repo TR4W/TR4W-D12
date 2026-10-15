@@ -69,9 +69,8 @@ type
       function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange;
                                               const aCtx: TCabrilloQSOContext): string; override;
-      function FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                      const aQso: ContestExchange;
-                                      aSessionExchange: ExchangeType): string; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
                                 var aExch: ContestExchange); override;
@@ -139,9 +138,8 @@ begin
    Result := Format('%-3s %-7.2d', [aCtx.RSTReceived, aQso.Zone]);
 end;
 
-function TContestCQWWBase.FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                                 const aQso: ContestExchange;
-                                                 aSessionExchange: ExchangeType): string;
+function TContestCQWWBase.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                              const aQso: ContestExchange): string;
 begin
    Result := Format('%-3d %-7.2d', [aQso.RSTSent, StrToIntDef(AnsiString(aMy.MyZone), 0)]);
 end;

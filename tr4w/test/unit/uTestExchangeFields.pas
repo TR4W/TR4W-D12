@@ -51,9 +51,19 @@ unit uTestExchangeFields;
 interface
 
 uses
+   VC,
+   uContestBase,
    uTR4WTestFramework;
 
 type
+   (* The entrants. us, ve and dx are the matrix's (dx is German); host is a
+      Massachusetts station inside its party's host state (and in New
+      England); PA a Dutch station, the PACC's own; KH6 a station in an ARRL
+      section country that is neither the USA nor Canada; JA a Japanese
+      station, the JIDX's own. SHARED with uTestADIFSentExchange (M11 S9b), so
+      the pins that walk the roster agree on who the roster is. *)
+   TPinStation = (psUS, psVE, psDX, psHost, psPA, psKH6, psJA);
+
    TExchangeFieldsTests = class(TTestCase)
    public
       procedure RunAllTests; override;
@@ -63,25 +73,22 @@ type
       procedure Test_EachHelperMarksItsFields;
    end;
 
+(* The roster station, resolved the way the matrix resolves one, for aContest. *)
+function PinStation(aStation: TPinStation; aContest: ContestType): TStationContext;
+
+(* The roster station's call, for a failure message. *)
+function PinStationCall(aStation: TPinStation): string;
+
 implementation
 
 uses
    SysUtils,
-   VC,
-   uContestBase,
    uContestRegistry,
    uExchangeFields,
    uTestContestObjects,
    uTestContestKindPin;
 
 type
-   (* The entrants. us, ve and dx are the matrix's (dx is German); host is a
-      Massachusetts station inside its party's host state (and in New
-      England); PA a Dutch station, the PACC's own; KH6 a station in an ARRL
-      section country that is neither the USA nor Canada; JA a Japanese
-      station, the JIDX's own. *)
-   TPinStation = (psUS, psVE, psDX, psHost, psPA, psKH6, psJA);
-
    TStationRow = record
       Call: string;
       Country: string;
@@ -300,6 +307,11 @@ begin
                            STATIONS[aStation].Continent, STATIONS[aStation].State,
                            'DX', '', STATIONS[aStation].InHostState,
                            SessionContestName(aContest, STATIONS[aStation].InHostState));
+end;
+
+function PinStationCall(aStation: TPinStation): string;
+begin
+   Result := STATIONS[aStation].Call;
 end;
 
 function Who(aContest: ContestType; aStation: TPinStation): string;

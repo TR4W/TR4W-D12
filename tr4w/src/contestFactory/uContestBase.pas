@@ -520,7 +520,12 @@ type
       contest, before the contest is asked. *)
    TADIFImportSession = record
       Operator: OperatorType;
-      Exchange: ExchangeType;
+      (* Does the open contest's received exchange carry a grid square --
+         M11 S9b. It was the session's exchange KIND, of which the one
+         reader (the base's ApplyADIFImport) tested four members: the Grid
+         and Grid2 exchanges, RSTAndOrGrid and RSTAndGrid3. The open contest
+         answers it (TContestBase.ReceivesGridSquareExchange). *)
+      ReceivesGridSquare: boolean;
       (* The open contest's HasGridSquareMultiplier -- M11 S6 part 1b. It was
          the session's DomesticMult, of which the one reader (the base's
          ApplyADIFImport) tested one member, GridSquares. *)
@@ -1208,6 +1213,40 @@ type
          DUMMYCONTEST (UnknownExchange had no arm). Every registered contest
          states its list, on its class or its family base. *)
       function GetReceivedExchangeFields: ExchangeInformationRecord; virtual;
+
+      (* THE ADIF STX_STRING -- OUR SIDE OF THE EXCHANGE -- M11 S9b,
+         2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S9b). The getter behind
+         FormatADIFSentExchange: each contest states the string it sends by
+         calling a named helper in uADIFExchange (NY4I's ruling on Q92: no
+         enum selects one), or builds its own. It was a `case` over the
+         session's exchange shape,
+         uADIFExchange.FormatADIFExchangeOfKind, which this base called for
+         every contest without an override.
+
+         The worked QSO carries the RST and the serial SENT; aMy is the
+         station's own exchange. The caller has decided the QSO is a good
+         one, and reports an exception (PostUnit writes
+         uADIFExchange.ADIFMyExchangeErrorMarker).
+
+         A contest whose exchange depends on the station tests the station
+         here as DescribeSession does (Station is ActiveContest's).
+
+         THE BASE PRINTS NOTHING IT COULD BE WRONG ABOUT: the marker, what the
+         machine gave the classless DUMMYCONTEST (UnknownExchange had no arm).
+         Every registered contest states its string, on its class or its
+         family base. *)
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; virtual;
+
+      (* DOES THE RECEIVED EXCHANGE CARRY A GRID SQUARE? -- M11 S9b. The
+         generic ADIF import reads GRIDSQUARE into the exchange of a contest
+         that does (the base's ApplyADIFImport, through the import session).
+         True for the Grid and Grid2 exchanges (ARRL Digi, WW Digi, Batavia
+         FT8, Makrothen) and for the RST-and-grid exchange (the three ARRL
+         VHF contests, the CQ VHF, the Stew Perry). THE BASE ANSWERS FALSE.
+         Not HasGridSquareMultiplier: the Digi contests carry a grid and count
+         no grid multiplier. *)
+      function GetReceivesGridSquareExchange: boolean; virtual;
       function GetIsUSQSOParty: boolean; virtual;
       function GetHostState: string; virtual;
 
@@ -1438,6 +1477,7 @@ type
       property InitialExchangeKind: InitialExchangeType read GetInitialExchangeKind;
       property ExchangeKind: ExchangeType read GetExchangeKind;
       property ReceivedExchangeFields: ExchangeInformationRecord read GetReceivedExchangeFields;
+      property ReceivesGridSquareExchange: boolean read GetReceivesGridSquareExchange;
       property IsUSQSOParty: boolean read GetIsUSQSOParty;
 
       (* ADIF facts -- see the getters. *)
@@ -2190,12 +2230,11 @@ type
          order they wrote. A contest that only changes the SRX_STRING
          overrides FormatADIFReceivedExchange instead.
 
-         aSessionExchange is the session's exchange, for the reason
-         TCabrilloQSOContext records; aExchangeCarriesRST is
-         FormatADIFReceivedExchange's. *)
+         aExchangeCarriesRST is FormatADIFReceivedExchange's. (It took the
+         session's exchange too until M11 S9b; POTA's test of it was always
+         true, and no other contest read it.) *)
       function EmitADIFExchangeFields(const aMy: TMyStationExchange;
                                       const aQso: ContestExchange;
-                                      aSessionExchange: ExchangeType;
                                       aExchangeCarriesRST: boolean): string; virtual;
 
       (* THE CONTEST FORMATS ITS OWN EXPORT -- M4, 2026-10-01.
@@ -2206,15 +2245,16 @@ type
          contest formats its export: it always does, and FormatsExchange --
          the opt-in that stood here from phase F -- is gone.
 
-         THE BASE'S ANSWER IS THE SHARED ARM FOR THE SESSION'S EXCHANGE, and
-         only that. uCabrilloExchange.FormatCabrilloExchangeOfKind and
-         uADIFExchange.FormatADIFExchangeOfKind hold one arm per exchange SHAPE
-         -- what an RST-and-serial or a name-and-QTH line looks like -- and
-         NOTHING that names a contest: every `if Contest = ...` that stood
-         inside those arms is an override on that contest's class now. A base
-         that asked which contest it is would be the defect this factory
-         exists to remove. The kind is TCabrilloQSOContext.SessionExchange --
-         see that record for why it is the session's and not the trait.
+         THE CABRILLO BASE'S ANSWER IS THE SHARED ARM FOR THE SESSION'S
+         EXCHANGE, and only that. uCabrilloExchange.FormatCabrilloExchangeOfKind
+         holds one arm per exchange SHAPE -- what an RST-and-serial or a
+         name-and-QTH line looks like -- and NOTHING that names a contest:
+         every `if Contest = ...` that stood inside those arms is an override
+         on that contest's class now. A base that asked which contest it is
+         would be the defect this factory exists to remove. The kind is
+         TCabrilloQSOContext.SessionExchange -- see that record for why it is
+         the session's and not the trait. (THE ADIF HALF IS THE CLASSES' since
+         M11 S9b: GetADIFSentExchange, above, names a helper and no kind.)
 
          A CONTEST WITH ITS OWN RULE OVERRIDES, and owns the result whatever
          the session's exchange says -- as the classes that formatted their
@@ -2232,13 +2272,13 @@ type
                                               const aQso: ContestExchange;
                                               const aCtx: TCabrilloQSOContext): string; virtual;
 
-      (* THE ADIF STX_STRING -- our side of the exchange. aSessionExchange as
-         for Cabrillo. The caller has already decided the QSO is a good one;
-         an exception is the caller's to report (PostUnit writes the marker
-         uADIFExchange.ADIFMyExchangeErrorMarker, as it always did). *)
+      (* THE ADIF STX_STRING -- our side of the exchange; GetADIFSentExchange
+         is what a contest states. The caller has already decided the QSO is
+         a good one; an exception is the caller's to report (PostUnit writes
+         the marker uADIFExchange.ADIFMyExchangeErrorMarker, as it always
+         did). *)
       function FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                      const aQso: ContestExchange;
-                                      aSessionExchange: ExchangeType): string; virtual;
+                                      const aQso: ContestExchange): string;
 
       (* THE CONTEST'S OWN ADIF FIELDS FOR THE WORKED STATION -- M4.
 
@@ -2823,6 +2863,12 @@ function ContestAcceptsBlankExchange(aContest: TContestBase): boolean;
    (uProgramMain) asks it of the open contest. *)
 function ContestReceivedExchangeFields(aContest: TContestBase): ExchangeInformationRecord;
 
+(* DOES aContest'S RECEIVED EXCHANGE CARRY A GRID SQUARE? -- see
+   TContestBase.ReceivesGridSquareExchange (M11 S9b). nil answers False: the
+   classless DUMMYCONTEST ran UnknownExchange. The ADIF import asks it of the
+   open contest. *)
+function ContestReceivesGridSquareExchange(aContest: TContestBase): boolean;
+
 (* THE ZONE A CALL-HISTORY (TRMASTER) ENTRY OFFERS AS THE INITIAL EXCHANGE --
    M11 S5. LOGEDIT.InitialExchangeEntry's ZoneInitialExchange arm asks it
    once CD.GetEntry has found the call, with the zone list the contest's
@@ -3405,6 +3451,18 @@ begin
       end;
 end;
 
+function ContestReceivesGridSquareExchange(aContest: TContestBase): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.ReceivesGridSquareExchange;
+      end;
+end;
+
 function InitialZoneFromCallHistory(aZones: TZoneMultiplierZones;
                                     const aCQZone: ShortString;
                                     const aITUZone: ShortString;
@@ -3874,10 +3932,21 @@ begin
 end;
 
 function TContestBase.FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                             const aQso: ContestExchange;
-                                             aSessionExchange: ExchangeType): string;
+                                             const aQso: ContestExchange): string;
 begin
-   Result := FormatADIFExchangeOfKind(aSessionExchange, aQso, aMy);
+   Result := GetADIFSentExchange(aMy, aQso);
+end;
+
+function TContestBase.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                          const aQso: ContestExchange): string;
+begin
+   (* Nothing it could be wrong about -- see the declaration. *)
+   Result := ADIFSentNotBuilt(aMy, aQso);
+end;
+
+function TContestBase.GetReceivesGridSquareExchange: boolean;
+begin
+   Result := False;
 end;
 
 function TContestBase.EmitADIFContestFields(const aQso: ContestExchange): string;
@@ -3894,14 +3963,12 @@ var
 begin
    (* THE CLASSLESS FALLBACK, transcribed from the `else` of
       MainUnit.ApplyContestSpecificADIFTail. The first test is the open
-      contest's grid-square answer and the session's exchange kinds (it was
-      the session's domestic kind until M11 S6 part 1b), and the last two
-      are the session's multiplier flag, so none of it names a contest. *)
+      contest's grid-square answers (its multiplier, since M11 S6 part 1b;
+      its exchange, since S9b -- which were the session's exchange kinds),
+      and the last is the open contest's multiplier flag, so none of it
+      names a contest. *)
    if aSession.CountsGridSquares                            or
-      (aSession.Exchange = RSTAndOrGridExchange)            or
-      (aSession.Exchange = Grid2Exchange)                   or
-      (aSession.Exchange = RSTAndGrid3Exchange)             or
-      (aSession.Exchange = GridExchange)                    then
+      aSession.ReceivesGridSquare                           then
       begin
       aExch.QTHString   := ShortString(aTemps.GridSquare);
       aExch.DomesticQTH := ShortString(aTemps.GridSquare);
@@ -3977,7 +4044,6 @@ end;
 
 function TContestBase.EmitADIFExchangeFields(const aMy: TMyStationExchange;
                                              const aQso: ContestExchange;
-                                             aSessionExchange: ExchangeType;
                                              aExchangeCarriesRST: boolean): string;
 begin
    (* PostUnit's SRX_STRING line, moved -- see the declaration. *)

@@ -79,6 +79,8 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -121,6 +123,7 @@ implementation
 
 uses
    uExchangeFields,
+   uADIFExchange,
    uContestRegistry;
 
 (* WRTCQSOPointMethod -- the legacy LOGSTUFF arm for this
@@ -198,6 +201,12 @@ end;
 function TContestWRTC.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTZoneQTH;
+end;
+
+function TContestWRTC.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                          const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentRSTZoneOrState(aMy, aQso);
 end;
 
 function TContestWRTC.GetFlags: TContestFlags;

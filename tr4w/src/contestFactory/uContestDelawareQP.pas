@@ -152,6 +152,8 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
 
       (* STATED AT M10 S5, transcribed from the rows the base read until
          then (ContestsArray, QSOParties, ContestsBooleanArray). The
@@ -212,6 +214,7 @@ implementation
 
 uses
    uExchangeFields,
+   uADIFExchange,
    uDXMultiplierKey,
    uCabrilloFormat,   (* FormatCabrilloMode *)
    uContestRegistry;
@@ -299,6 +302,12 @@ end;
 function TContestDelawareQP.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsRSTQTH;
+end;
+
+function TContestDelawareQP.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                                const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentRSTState(aMy, aQso);
 end;
 
 function TContestDelawareQP.GetInStateDomesticFileName: string;

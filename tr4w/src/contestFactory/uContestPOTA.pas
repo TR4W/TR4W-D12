@@ -91,6 +91,8 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -106,7 +108,6 @@ type
                                           aExchangeCarriesRST: boolean): string; override;
       function EmitADIFExchangeFields(const aMy: TMyStationExchange;
                                       const aQso: ContestExchange;
-                                      aSessionExchange: ExchangeType;
                                       aExchangeCarriesRST: boolean): string; override;
       function EmitADIFContestFields(const aQso: ContestExchange): string; override;
       (* ADIF IMPORT. *)
@@ -128,12 +129,13 @@ implementation
 
 uses
    uExchangeFields,
+   uADIFExchange,
    SysUtils, uContestRegistry, uContestFixedPoints,
    (* EmitADIFField -- the tags this contest writes. *)
    uADIF,
    (* IsValidPOTAPark, ResolvePOTAParkFromADIF, LooksLikeAState. *)
    uPOTAReference,
-   (* GRID_CARRYING_EXCHANGES and LooksLikeGridSquare. *)
+   (* LooksLikeGridSquare. *)
    uGridShape,
    (* TC_ENTERYOURPARKREFERENCEDESIGNATOR. *)
    uTR4WStrings;
@@ -207,6 +209,12 @@ begin
    Result := ExchangeFieldsRSTQTH;
 end;
 
+function TContestPOTA.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                          const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentPark(aMy, aQso);
+end;
+
 function TContestPOTA.GetFlags: TContestFlags;
 begin
    Result := [cfQSOByBand, cfQSOByMode];
@@ -255,13 +263,16 @@ end;
      SRX_STRING                         FormatADIFReceivedExchange above
      DXCC 291 and STATE                 a hunter who sent a state -- DXCC is
                                         hard-coded to the US, as it was
-     GRIDSQUARE                         a hunter who sent a grid, in a session
-                                        whose exchange can carry one
+     GRIDSQUARE                         a hunter who sent a grid
 
-   The state or grid is looked for only when the QSO's QTH is not a park. *)
+   The state or grid is looked for only when the QSO's QTH is not a park.
+
+   A GRID IS ALWAYS LOOKED FOR (M11 S9b). This used to ask whether the
+   SESSION'S exchange could carry one (GRID_CARRYING_EXCHANGES, handed in as
+   data). POTA's session exchange is its own, RSTAndPOTAPark, which is in
+   that set, and nothing else can set it: the answer was always yes. *)
 function TContestPOTA.EmitADIFExchangeFields(const aMy: TMyStationExchange;
                                              const aQso: ContestExchange;
-                                             aSessionExchange: ExchangeType;
                                              aExchangeCarriesRST: boolean): string;
 begin
    Result := EmitADIFField('MY_SIG', 'POTA');
@@ -282,8 +293,7 @@ begin
       end
    else
       begin
-      if (aSessionExchange in GRID_CARRYING_EXCHANGES)    and
-         LooksLikeGridSquare(string(aQso.ExchString)) then
+      if LooksLikeGridSquare(string(aQso.ExchString)) then
          begin
          Result := Result + EmitADIFField('GRIDSQUARE', string(aQso.ExchString));
          end;

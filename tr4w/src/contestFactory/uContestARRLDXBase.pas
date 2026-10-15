@@ -98,9 +98,8 @@ type
       function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange;
                                               const aCtx: TCabrilloQSOContext): string; override;
-      function FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                      const aQso: ContestExchange;
-                                      aSessionExchange: ExchangeType): string; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
    public
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
@@ -168,9 +167,8 @@ begin
    Result := Format('%-3s %-7s', [aCtx.RSTReceived, string(aQso.Power)]);
 end;
 
-function TContestARRLDXBase.FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                                   const aQso: ContestExchange;
-                                                   aSessionExchange: ExchangeType): string;
+function TContestARRLDXBase.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                                const aQso: ContestExchange): string;
 begin
    Result := Format('%-3d %-7s', [aQso.RSTSent, aMy.MyState]);
 end;

@@ -79,6 +79,8 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -96,6 +98,7 @@ implementation
 
 uses
    uExchangeFields,
+   uADIFExchange,
    uContestRegistry;
 
 (* TenTenQSOPointMethod -- the legacy LOGSTUFF arm for this
@@ -165,6 +168,12 @@ end;
 function TContestTenTen.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsNameQTHTenTenNumber;
+end;
+
+function TContestTenTen.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                            const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentNotImplemented(aMy, aQso);
 end;
 
 function TContestTenTen.GetFlags: TContestFlags;

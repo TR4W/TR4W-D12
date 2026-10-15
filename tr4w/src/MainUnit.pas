@@ -10119,7 +10119,6 @@ begin
   (* WHAT THE OPEN CONTEST KNOWS, handed in as data: the contest that reads the
     record is the one it NAMES, and never reads a global itself. *)
   session.Operator           := CurrentOperator;
-  session.Exchange           := ContestSession.Exchange;
   (* The open contest's grid-square and domestic-multiplier answers (M11 S6
     part 1b and part 2) -- the base ApplyADIFImport's domestic tests; this
     handed it the session's domestic kind and its "not none". ONE
@@ -10127,6 +10126,7 @@ begin
     object. *)
   importContest := ActiveContest(Contest);
   session.CountsGridSquares  := ContestHasGridSquareMultiplier(importContest);
+  session.ReceivesGridSquare := ContestReceivesGridSquareExchange(importContest);
   session.DoingDomesticMults := ContestHasDomesticMultiplier(importContest);
 
   (* EVERY CONTEST INTERPRETS ITS OWN RECORD -- the one named by CONTEST_ID,
