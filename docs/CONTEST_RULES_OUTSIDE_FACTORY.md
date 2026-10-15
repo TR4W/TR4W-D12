@@ -2,7 +2,7 @@
 
 **GENERATED. Do not edit outside the marked hand-maintained blocks.**
 Regenerate with `python tools/contest-rules-inventory/generate.py` (any working
-directory). This copy was generated from commit `e2df6b4a` (2026-10-14).
+directory). This copy was generated from commit `67c608e9` (2026-10-14).
 Owner: `contest-factory`, with `contest-scoring` (the engine side of every row
 below), `file-formats` (ADIF and Cabrillo rows) and `lcl-ui` (the UI rows).
 
@@ -304,10 +304,10 @@ None found.
 | `trdos/postunit.pas:3042` | tGenerateLogPortionOfCabrilloFile | 3 | **LABRE** | all | FormatCabrilloReceivedExchange / CabrilloQSOLineFormat / CabrilloModeString (existing; CabrilloModeString M9a) | `Settings.Contest.Name = 'LABRE'` |
 | `trdos/postunit.pas:3056` | tGenerateLogPortionOfCabrilloFile | 1 | **CUPRFCW**, **CUPRFSSB** | all | FormatCabrilloReceivedExchange / CabrilloQSOLineFormat / CabrilloModeString (existing; CabrilloModeString M9a) | `Contest` in |
 | `trdos/postunit.pas:3061` | tGenerateLogPortionOfCabrilloFile | 3 | (none by default) | - | FormatCabrilloReceivedExchange / CabrilloQSOLineFormat / CabrilloModeString (existing; CabrilloModeString M9a) | `Settings.Contest.Name = 'EURASIA'` -- see dead code |
-| `uCabrilloExchange.pas:299` | SetHisEx | 3 | (none by default) | - | FormatCabrilloSentExchange / FormatCabrilloReceivedExchange (existing; this is the base's default) | `cMyState = 'TRC'` -- TRC Digital, no ContestType |
-| `uCabrilloExchange.pas:303` | SetHisEx | 3 | (none by default) | - | FormatCabrilloSentExchange / FormatCabrilloReceivedExchange (existing; this is the base's default) | `ContestTitle = 'PGA'` -- no ContestType; operator-titled |
-| `uCabrilloExchange.pas:314` | SetHisEx | 3 | (none by default) | - | FormatCabrilloSentExchange / FormatCabrilloReceivedExchange (existing; this is the base's default) | `ContestTitle = 'PGA'` -- no ContestType; operator-titled |
-| `uCabrilloExchange.pas:318` | SetHisEx | 3 | (none by default) | - | FormatCabrilloSentExchange / FormatCabrilloReceivedExchange (existing; this is the base's default) | `csQTHString = 'TRC'` |
+| `uCabrilloExchange.pas:549` | CabrilloSentRSTQSONumberState | 3 | (none by default) | - | GetCabrilloSentExchange (existing, M11 S9c; TRC Digital and PGA have no ContestType) | `aMy.MyState = 'TRC'` -- TRC Digital, no ContestType (was `cMyState = 'TRC'` until M11 S9c) |
+| `uCabrilloExchange.pas:553` | CabrilloSentRSTQSONumberState | 3 | (none by default) | - | GetCabrilloSentExchange (existing, M11 S9c; TRC Digital and PGA have no ContestType) | `ContestTitle = 'PGA'` -- no ContestType; operator-titled |
+| `uCabrilloExchange.pas:787` | CabrilloReceivedRSTQSONumberQTH | 3 | (none by default) | - | GetCabrilloReceivedExchange (existing, M11 S9c; TRC Digital and PGA have no ContestType) | `ContestTitle = 'PGA'` -- no ContestType; operator-titled |
+| `uCabrilloExchange.pas:791` | CabrilloReceivedRSTQSONumberQTH | 3 | (none by default) | - | GetCabrilloReceivedExchange (existing, M11 S9c; TRC Digital and PGA have no ContestType) | `aCtx.HisQTH = 'TRC'` (was `csQTHString = 'TRC'` until M11 S9c) |
 
 ### Score, summary and totals (1 rows)
 
@@ -748,10 +748,10 @@ probably been fixed; one whose rows have grown wants re-reading.
 ### 9.1 Legacy arms dead by default (D3, D4)
 
 A `case ActiveQSOPointMethod of` arm in `CalculateQSOPoints` reached only by
-registered contests (the class scores and `Exit`s first), and a `case
-ActiveExchange of` arm in the shared export arms (`uCabrilloExchange` /
-`uADIFExchange`, TContestBase's default since M4) reached only by classes that
-format their own exchange (19 classes).
+registered contests (the class scores and `Exit`s first). The export half is
+empty since M11 S9c: the shared export machines (`uCabrilloExchange` /
+`uADIFExchange`) are deleted, and each class states its own columns through
+`GetCabrilloSentExchange` (186 classes).
 
 | arm | routine | value | reached by |
 |---|---|---|---|
