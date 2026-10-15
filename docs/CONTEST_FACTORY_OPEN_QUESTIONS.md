@@ -596,7 +596,7 @@ closes it; anything else reopens it.
 | Q7 | Base + CW/SSB children only where the pair is one rule today | design rule; Q43 lists the pairs |
 | Q9 | An edited CQ memory survives re-selecting the contest | not built |
 | Q37 | A malformed grid is refused at entry (and import); the read made safe | not built |
-| Q13 | A logged QSO is scored from its record, never from live state (radio mode, operator) | rule; audit in progress |
+| Q13 | A logged QSO is scored from its record, never from live state (radio mode, operator) | rule; audit found A1-A3, B, C, E1-E2 (not fixed) |
 | Q44 | RTC, CQMM, WRTC state their bands; off-band/off-mode QSOs score 0, are not in HamScore's QSO counts, but advance the serial | not built |
 | FD-DX | `DX` from a W (or other sectioned) station is refused; a DX station is still `1D DX` | not built |
 | Q30 | Winter FD: `MX` is a section (Cabrillo, SRX_STRING, ARRL_SECT), as D7 does | already so; no change |
@@ -705,9 +705,34 @@ closes it; anything else reopens it.
   and exports of a logged QSO read the QSO record and nothing live. **The OQP
   arm itself is already gone:** it was the Ontario QSO Party's
   `OQPQSOPointMethod`, which no D7 contest row named, reachable only through
-  an operator's `QSO POINT METHOD`, and deleted at M10 (Q11). An audit of
-  every path that handles an already-logged QSO for reads of live state (the
-  exchange parser reads `ActiveMode`) is in progress.
+  an operator's `QSO POINT METHOD`, and deleted at M10 (Q11).
+  **AUDIT 2026-10-15 (contest-scoring, read-only).** Rescore, network receive,
+  `.TRW` import and the scoring classes read NO live state; the exchange
+  parser's `ActiveMode` reads are reached only from live entry (and the
+  contest matrix sets them first). D7's rescore read the clock (Croatian at
+  23:30 doubled every QSO); that is already fixed here. Found, none fixed yet:
+  - **A1 Alt-E (SO2R edit)** -- `so2r_swap` is cleared only after a
+    SUCCESSFUL save (`uEditQSO.pas:806`); cancel, Escape or a refused save
+    leaves it set, and the next ordinary Edit QSO writes the inactive radio's
+    band and frequency captured at that old Alt-E. While set, the form's own
+    Band and Frequency edits are ignored. D7 the same.
+  - **A2 ADIF import** stamps a record with no `OPERATOR` with whoever is
+    logged in now (`uADIF.pas:1294`). D7 the same.
+  - **A3 Cabrillo** prints a digital QSO's report as SNR-to-RST or `599`
+    depending on whether WSJT-X is enabled NOW (`postunit.pas:3041`), so one
+    log exports two ways. D7 the same.
+  - **B WSJT-X** -- a QSO logged in WSJT-X goes through live entry: its time
+    and operator are overwritten with the arrival time and the current
+    operator, RST checks follow the radio's mode, and under QSO NUMBER BY BAND
+    it takes the radio band's serial. D7 the same.
+  - **C rover / station facts** -- scoring reads the CURRENT grid, state,
+    power and county on a rescore. The schema has `my_grid`, `my_state` and
+    `my_county` per QSO for exactly this, and nothing writes or reads them.
+    Joins the known `exchange_sent`-never-written gap and F26 group B.
+  - **E1 Edit QSO** computes points BEFORE reading the edited fields
+    (`uEditQSO.pas:491`), so the copy sent to network peers carries pre-edit
+    points (the local rescore corrects it; a peer only with AllowAutoUpdate).
+  - **E2** the rescore keys FM dupes as FM; `LoadinLog` folds FM into Phone.
 
 - **Q7** Apply the NRAU pattern (a base + CW/SSB children) to every two-mode pair?
   So far only NRAU-Baltic has it; NA Sprint CW/RTTY and the other pairs are
