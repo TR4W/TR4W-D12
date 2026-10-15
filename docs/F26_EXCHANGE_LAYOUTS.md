@@ -80,6 +80,10 @@ DXLog. Old to new:
   - **Its name is `FFMA`**, a placeholder (the ARRL Fred Fish Memorial Award, for
     working the 488 grids on 6 m, is the grid-tracking use the class serves). Used
     wherever the contest has to name itself, e.g. ADIF CONTEST_ID.
+- **Q13, split TEN-TEN into its four events -- ANSWERED NO (NY4I, 2026-10-15):**
+  *"Ten Ten is also inactive so it seems redundant to break this further."* It stays
+  ONE contest, `TEN-TEN` (Q20), unlike ARCI. Its WA7BNM id stays 0, since one class
+  cannot carry four refs.
 - **Q4-Q7, County Hunter (MARAC) -- DELEGATED (NY4I, 2026-10-15): "MARAC is
   inactive so just pick a reasonable default."** The default chosen:
   - **Scoring stays as it is:** one point per QSO, no multipliers, dupes as today --
@@ -130,9 +134,6 @@ the part still owed. The `[Qn]` tag is the number the question has been cited by
 
 **TEN-TEN**
 
-- **[Q13] Split it?** Into the four WA7BNM events -- Winter SSB (237), Summer SSB (81),
-  10-10 Day Sprint (156), Fall Digital (464) -- each its own contest, as ARCI? If yes,
-  each event needs a name (WA7BNM's are `10-10-WINTER-PHONE` and so on).
 - **[Q14] Log format.** Does 10-10 accept a Cabrillo file?
 
 **UA4W**
