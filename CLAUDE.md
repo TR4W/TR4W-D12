@@ -24,7 +24,12 @@ matters in a multi-repo workspace — but it is a preference now, not a rule, an
 ## MANDATORY: Project guardrails live in the repo
 
 `.claude/settings.json` and `.claude/hooks/` are **tracked**. They carry the hooks every clone needs:
-the begin/end lint and the CRLF check. (The `git -C` rule is **gone as of
+the begin/end lint, the CRLF check, and **`block-stdin-readers.py`** (2026-10-15), which BLOCKS a
+Bash command that would wait on standard input — a heredoc, or a `cat` with no file. A
+background shell running `cat > /dev/null; python - <<'EOF'` waited for **1 day 0 h 21 m** and
+held up the agent that owned it; a background shell has no timeout, so the only control is to
+refuse the shape. NY4I: *"That should never be allowed to happen."* Write files with the Write
+tool and pass scripts as files. (The `git -C` rule is **gone as of
 2026-09-07** — see the section above. The Pascal glob rule
 is **gone as of 2026-09-07** -- it blocked `--include=*.pas` because 25 units had
 UPPERCASE extensions, and those are renamed. Its successor

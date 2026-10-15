@@ -13,7 +13,6 @@
     "the same place -- C:\\tr4w-d12 here, C:\\projects\\TR4W-D12 elsewhere -- and a",
     "hardcoded path is a hook that silently does not run in the other clone."
   ],
-
   "hooks": {
     "PreToolUse": [
       {
@@ -25,9 +24,18 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PROJECT_DIR/.claude/hooks/block-stdin-readers.py\"",
+            "timeout": 10
+          }
+        ]
       }
     ],
-
     "PostToolUse": [
       {
         "matcher": "Edit|Write|MultiEdit",
