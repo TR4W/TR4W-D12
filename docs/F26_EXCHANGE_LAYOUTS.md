@@ -80,6 +80,24 @@ DXLog. Old to new:
   - **Its name is `FFMA`**, a placeholder (the ARRL Fred Fish Memorial Award, for
     working the 488 grids on 6 m, is the grid-tracking use the class serves). Used
     wherever the contest has to name itself, e.g. ADIF CONTEST_ID.
+- **Retire or keep -- ANSWERED (NY4I, 2026-10-15):**
+  - **[Q8] FISTS: RETIRE.** *"FISTS is inactive so retire."*
+  - **[Q11] QCWA: KEEP, re-modelled to the 2021 exchange** -- year licensed + name +
+    chapter/state/province/country, no serial; CW/digital 2 points, phone 1; W2MM
+    bonus; chapters/states/provinces/countries once per contest; Cabrillo by email.
+    Its parser and scoring change before its export layout means anything.
+  - **[Q12] QCWA Golden: RETIRE.** *"QCWA Golden was a one time event."*
+  - **[Q16] WWL: RETIRE.** *"wwl retire."*
+  - *(Read as: "remodel QCWA to 2021 exchange but RETIRE [QCWA Golden]". If QCWA
+    itself was meant to be retired too, say so.)*
+  - **How a contest is retired is a design call (delegated), recorded here:** the
+    contest leaves the New Contest drop-down and gets no new work, but its
+    `ContestType` member, its `ContestTypeSA` spelling and its class stay, so a log
+    or `.cfg` that already names it still opens, rescores and exports. Deleting the
+    enum member would make such a log unreadable, and that is the one cost a
+    retirement must not have.
+- **[Q15, part] UA4W's address -- ANSWERED (NY4I, 2026-10-15):** r4w@narod.ru is
+  valid. The schedule question stays open.
 - **Q13, split TEN-TEN into its four events -- ANSWERED NO (NY4I, 2026-10-15):**
   *"Ten Ten is also inactive so it seems redundant to break this further."* It stays
   ONE contest, `TEN-TEN` (Q20), unlike ARCI. Its WA7BNM id stays 0, since one class
@@ -139,8 +157,8 @@ the part still owed. The `[Qn]` tag is the number the question has been cited by
 **UA4W**
 
 - **[Q15] Schedule.** One 2-hour window, 1600-1800 UTC, with 15-minute periods
-  (DXLog), or two tours ending 19:59 (earlier pass)? Is r4w@narod.ru still the
-  address?
+  (DXLog), or two tours ending 19:59 (earlier pass)? (The address is answered:
+  r4w@narod.ru is valid.)
 - **[Q19] Sent QTH field** -- the RDA district: same question as ALL JA/ACAG above
   (`MY RDA`?). Only Udmurtia stations send one; everyone else sends `MY GRID`.
 
@@ -151,16 +169,6 @@ the part still owed. The `[Qn]` tag is the number the question has been cited by
   fresh random one -- which does TR4W do?
 - **[Q18] Its name.** If it is the Jultest, `SSA-JULTEST` (DXLog's name), since `XMAS`
   is the DARC Christmas Contest's registered name?
-
-**Retire or keep** -- the Grid Loc test: does the class give an operator something
-General QSO does not?
-
-- **[Q8] FISTS:** inactive since 2020; the sponsor says the sprints will not return
-  in 2026.
-- **[Q11] QCWA:** inactive since 2021. Retire, or re-model to the 2021 exchange (year
-  licensed + name + chapter)?
-- **[Q12] QCWA Golden:** no source names this event at all. What is it?
-- **[Q16] WWL:** no source names it, and no DXLog file has its scoring rule.
 
 (Decision 1, a way for a contest to say "no Cabrillo file", is no longer owed: with
 POTA, Kids Day and Grid Loc all writing none, it is decided -- a `TContestBase`
