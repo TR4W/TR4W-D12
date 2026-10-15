@@ -329,19 +329,6 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   Q98 asks about the other contests.
   **Answer:**
 
-- **Q98** (raised by Q51's wording, 2026-10-15) Off-band crediting is
-  enforced for 2 of 186 contests. `UsesBand` (and, for Q44's RTC, a mode
-  equivalent that does not exist yet) is overridden only by Idaho and
-  Delaware; every other class credits every band, so a 30 m QSO in CQ WW
-  or an FT8 QSO in a CW-only contest scores like any other. Your 7.4 ruling
-  says the off-band rule "applies to basically any contest". Sweep every
-  class to state the bands (and modes) its sponsor allows, one family per
-  commit, with each changed matrix record re-frozen? *Recommended: yes* --
-  bands from the same sources as F26 (Cabrillo spec, WA7BNM, DXLog's
-  definition files), Q44's three first, and any contest whose sponsor
-  page is silent left as every band and listed to you.
-  **Answer:**
-
 ---
 
 ### Added after M9a
@@ -631,8 +618,49 @@ closes it; anything else reopens it.
 | Q84 | A party's DX-multiplier test ignores case (files unchanged) | not built |
 | Q77 | IN7QPNE per-party score: deferred | issue #86 |
 | Q78 | IN7QPNE cross-party scoring view: deferred with Q77 | issue #86 |
+| Q98 | Every contest states its bands and modes; an off-band/off-mode QSO is logged, scores nothing, and is an automatic X-QSO in the log and the export (flag OR off-band) | not built |
 
 ### Answered since the table was last updated (full text)
+
+- **Q98** (raised by Q51's wording, 2026-10-15) Off-band crediting is
+  enforced for 2 of 186 contests. `UsesBand` (and, for Q44's RTC, a mode
+  equivalent that does not exist yet) is overridden only by Idaho and
+  Delaware; every other class credits every band, so a 30 m QSO in CQ WW
+  or an FT8 QSO in a CW-only contest scores like any other. Your 7.4 ruling
+  says the off-band rule "applies to basically any contest". Sweep every
+  class to state the bands (and modes) its sponsor allows, one family per
+  commit, with each changed matrix record re-frozen? *Recommended: yes* --
+  bands from the same sources as F26 (Cabrillo spec, WA7BNM, DXLog's
+  definition files), Q44's three first, and any contest whose sponsor
+  page is silent left as every band and listed to you.
+  **Answer:** (NY4I, 2026-10-15, as a scenario) *"I am working in the CQ WW
+  SSB contest ... I see a DX station country I need on 17 meters (not a
+  contest band). I do not want to open up my regular logger (DXKeeper) just to
+  work this station. So I enter the DX callsign in TR4W. I work him and move
+  on back to the contest. When I import the contest ADIF file to DXKeeper, I
+  will get this 17m DX station. But since it is off-band, it should be marked
+  X-QSO so I do not send it to the sponsor for credit. It should not be in my
+  score totals or any of the other places if it were not an X-QSO."* So YES to
+  the sweep -- every contest states its bands (and modes) -- and it adds the
+  EXPORT half 7.4 did not have:
+  - An off-band or off-mode QSO is logged normally and kept in the ADIF, so
+    DXKeeper still gets it.
+  - It scores 0, earns no multiplier, is not a dupe, is left out of the score
+    totals and HamScore's counts (Q44), and is not a need-multiplier hint.
+  - On EXPORT it is an X-QSO: the Cabrillo line is `X-QSO:`, and the ADIF
+    carries `APP_TR4W_CLAIMEDQSO` `0`, the marker an X-QSO already gets.
+  - **AUTOMATIC X-QSO -- 7.4 REVERSED (NY4I, 2026-10-15: "I thought about it
+    and automatic X-QSO is OK.")** 7.4 had said an off-band QSO is "not an
+    automatic X-QSO (that would be confusing to an op)". Now it IS one, and
+    the log shows it as one too. Built as: a QSO is an X-QSO when the operator
+    flagged it OR the contest's band/mode rule says it is off-band -- worked
+    out, not written into the record, so a corrected band list re-classifies
+    old QSOs on the next rescore with no data change (Q13: the record is the
+    event).
+  - Today none of this happens for 184 of 186 contests (no `UsesBand`), and
+    even for Idaho and Delaware the export writes a plain `QSO:` line -- the
+    `X-QSO:` prefix reads only the stored flag (`postunit.pas:3166`).
+  Not built.
 
 - **Q77** IN7QPNE's score. You said a combined score is not needed, and it
   would be nice to see the score of the party just worked. Nothing on screen

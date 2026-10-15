@@ -613,6 +613,8 @@ longer treats them as statements.
 
 ### 7.4 A QSO on a band the contest does not use scores ZERO -- it is not refused
 
+**REVERSED IN PART 2026-10-15 (open questions Q98):** an off-band or off-mode QSO IS an automatic X-QSO -- NY4I: *"I thought about it and automatic X-QSO is OK."* -- shown as one in the log and exported as `X-QSO:` (Cabrillo) and `APP_TR4W_CLAIMEDQSO` `0` (ADIF), so it is never sent to the sponsor; it is still logged and still reaches DXKeeper in the ADIF. Worked out (operator flag OR off-band), not stored. The rest of 7.4 stands: 0 points, no multiplier, not a dupe, no hint.
+
 NY4I, 2026-10-01: *"No WARC so just mark it as zero points. That is useful if say
 during the contest, we want to work a new country we need unrelated to the
 contest. I would not want to disallow an operator from logging but we should not
