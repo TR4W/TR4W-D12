@@ -51,15 +51,28 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   'not yet implemented' arm. Their enum members stay until the deletion
   stage.
 
-  THREE LAYOUTS WERE NEVER BUILT, AND ARE TRANSCRIBED, NOT FIXED (plan
-  F25). The machine's format for QSONumberAndGridSquare ('%-3s' of a
-  number), RSTZoneAndPossibleDomesticQTH ('%02u' of a ShortString) and
+  THREE LAYOUTS WERE NEVER BUILT, AND ARE BUILT NOW (plan F25, fixed
+  2026-10-14, NY4I: "F25 was an artifact where the ADIF exchange generation
+  had an error ... report an error as the silent error is not good").
+  The machine's format for QSONumberAndGridSquare ('%-3s' of a number),
+  RSTZoneAndPossibleDomesticQTH ('%02u' of a ShortString) and
   AgeAndQSONumber (three specifiers, two arguments) raised, its own
-  try/except swallowed it, and the caller got ADIFMyExchangeErrorMarker. So
-  the Cup RF's three runnings, CQ WW RTTY and the Youth Championship RF
-  export 'Error generating my exchange' as STX_STRING, and still do:
-  ADIFSentNotBuilt is that answer, by name, for the class that owns the
-  exchange to replace with the layout it means. *)
+  try/except swallowed it, and the caller got a placeholder string,
+  'Error generating my exchange', as STX_STRING for the Cup RF's three
+  runnings, CQ WW RTTY and the Youth Championship RF. Each of those five
+  contests now exports what the SAME class prints in its Cabrillo sent column
+  (ADIFSentQSONumberStateShort, ADIFSentRSTZoneStateDX and
+  ADIFSentStateQSONumber2 below), because that column was never broken.
+
+  THERE IS NO PLACEHOLDER ANSWER ANY MORE. A contest that states no layout
+  (the base, and the fourteen registered contests whose exchange was on the
+  machine's "not yet implemented" list -- plan F26) calls ADIFSentNotImplemented,
+  which RAISES EADIFExchangeNotImplemented. TContestBase.TryFormatADIFSentExchange
+  catches it, and anything else a helper raises, logs an Error that names the
+  contest and the QSO, and answers failure; PostUnit then omits STX_STRING
+  from that record and tells the operator once per export. A field left out
+  is honest. 'None' and 'Error generating my exchange' were both a lie a
+  robot would read as an exchange. *)
 unit uADIFExchange;
 
 {$I tr4w.inc}
@@ -71,11 +84,12 @@ uses
   SysUtils,
   uContestBase;   // TMyStationExchange and nothing else
 
-const
-  (* WHAT STX_STRING CARRIES WHEN THE EXCHANGE COULD NOT BE BUILT -- a QSO
-     that is not a good one, or a format that raised. One spelling, because
-     PostUnit writes it too, for a contest's own formatter that raises. *)
-  ADIFMyExchangeErrorMarker = 'Error generating my exchange';
+type
+  (* RAISED BY A CONTEST THAT STATES NO STX_STRING LAYOUT -- see
+     ADIFSentNotImplemented. It is a distinct class so a test (and a reader of
+     the log) can tell "this contest has no layout" from a format that
+     raised. *)
+  EADIFExchangeNotImplemented = class(Exception);
 
 (* Each helper is one contest's STX_STRING, built from the worked QSO (the
   RST and serial SENT) and the station's own exchange. The caller has decided
@@ -176,28 +190,41 @@ function ADIFSentIndentedStateAndQSONumber(const aMy: TMyStationExchange;
 function ADIFSentQSONumberPreviousQSONumber(const aMy: TMyStationExchange;
                                             const aQso: ContestExchange): string;
 
-(* 'None', logged as an Error: an exchange whose STX_STRING was never
-   written. Nineteen shapes were on the machine's "not yet implemented" list;
-   registered contests run thirteen of them, and fourteen contests answer
-   this. *)
-function ADIFSentNotImplemented(const aMy: TMyStationExchange;
+(* '%.*d %-6.4s ' of the serial (three digits at least) and the state SENT,
+   cut to four characters: the Cup RF's three runnings, whose MY STATE is the
+   grid they send. The text the same classes print in their Cabrillo sent
+   column (CabrilloSentQSONumberStateShort). Plan F25, fixed 2026-10-14 (NY4I). *)
+function ADIFSentQSONumberStateShort(const aMy: TMyStationExchange;
+                                     const aQso: ContestExchange): string;
+
+(* '%-3d %.2u %-4s' of the RST, the zone to two digits and the state, 'DX'
+   when the station has none: CQ WW RTTY. The text the class prints in its
+   Cabrillo sent column (CabrilloSentRSTZoneStateDX). Plan F25, fixed
+   2026-10-14 (NY4I). *)
+function ADIFSentRSTZoneStateDX(const aMy: TMyStationExchange;
                                 const aQso: ContestExchange): string;
 
-(* ADIFMyExchangeErrorMarker: the answer for an exchange with no layout, and
-   for the three layouts that were never built (see the unit header). The
-   base class answers it too -- a contest that states nothing prints
-   nothing it could be wrong about. *)
-function ADIFSentNotBuilt(const aMy: TMyStationExchange;
-                          const aQso: ContestExchange): string;
+(* '%-2s %.*d ' of the state and the serial (three digits at least): the
+   Youth Championship RF. The text the class prints in its Cabrillo sent
+   column (CabrilloSentStateQSONumber2). Plan F25, fixed 2026-10-14 (NY4I). *)
+function ADIFSentStateQSONumber2(const aMy: TMyStationExchange;
+                                 const aQso: ContestExchange): string;
+
+(* A CONTEST WITH NO STX_STRING LAYOUT: RAISES EADIFExchangeNotImplemented.
+   Fourteen registered contests call it (plan F26: their exchange was on the
+   machine's "not yet implemented" list, and the layout needs the sponsor's
+   rules), and the base calls it for a contest that states nothing. It used
+   to answer 'None' and 'Error generating my exchange', a value a robot would
+   read as an exchange; the caller reports the failure and leaves the field
+   out instead. *)
+function ADIFSentNotImplemented(const aMy: TMyStationExchange;
+                                const aQso: ContestExchange): string;
 
 implementation
 
 uses
-  Log4D;   // the same single concession uCabrilloExchange makes, and for the
-           // same reason: an unhandled exchange must say so.
-
-var
-  logger: TLogLogger;
+  uCabrilloExchange;   // SerialWidth only: the three F25 layouts print the
+                       // same serial the Cabrillo column does.
 
 (* THE MACHINE'S SHORTSTRINGS. It copied each station field into a ShortString
    of the width VC gives it, once, at the top, and every arm read the copy.
@@ -403,20 +430,41 @@ begin
   Result := Format('%-.3u%-7.3d', [0, aQso.NumberSent]);
 end;
 
+(* The Cabrillo sent column's text for the Cup RF, with the ADIF unit's own
+   cut of the state (twenty characters) in front of the column's four. *)
+function ADIFSentQSONumberStateShort(const aMy: TMyStationExchange;
+                                     const aQso: ContestExchange): string;
+begin
+  Result := Format('%.*d %-6.4s ',
+     [SerialWidth(aQso.NumberSent, 3), aQso.NumberSent, ClippedState(aMy)]);
+end;
+
+function ADIFSentRSTZoneStateDX(const aMy: TMyStationExchange;
+                                const aQso: ContestExchange): string;
+var
+  state: string;
+begin
+  state := ClippedState(aMy);
+  if state = '' then
+     begin
+     state := 'DX';
+     end;
+  Result := Format('%-3d %.2u %-4s', [aQso.RSTSent, ClippedZone(aMy), state]);
+end;
+
+function ADIFSentStateQSONumber2(const aMy: TMyStationExchange;
+                                 const aQso: ContestExchange): string;
+begin
+  Result := Format('%-2s %.*d ',
+     [ClippedState(aMy), SerialWidth(aQso.NumberSent, 3), aQso.NumberSent]);
+end;
+
 function ADIFSentNotImplemented(const aMy: TMyStationExchange;
                                 const aQso: ContestExchange): string;
 begin
-  Result := 'None';
-  logger.Error('[] MyExchange ADIF not yet implemented for this exchange');
+  Result := '';
+  raise EADIFExchangeNotImplemented.Create(
+     'this contest states no ADIF STX_STRING layout');
 end;
-
-function ADIFSentNotBuilt(const aMy: TMyStationExchange;
-                          const aQso: ContestExchange): string;
-begin
-  Result := ADIFMyExchangeErrorMarker;
-end;
-
-initialization
-  logger := TLogLogger.GetLogger('TR4WDebugLog.ADIFExchange');
 
 end.

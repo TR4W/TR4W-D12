@@ -1629,8 +1629,9 @@ statement reaches, as M3's dupe policy was:
   did; it now also covers the FOC, Ukraine/Ural, PACC and PCC sent columns
   and the DARC 10 m, UK/EI, IOTA, California and WW Digi received ones;
 - an operator who states Sweepstakes' or the Field Days' exchange for another
-  contest gets the unhandled marker (Cabrillo) or `ADIFMyExchangeErrorMarker`
-  (ADIF) rather than a line laid out for a contest he is not running;
+  contest gets the unhandled marker (Cabrillo) or no `STX_STRING` and a logged
+  Error (ADIF; it was `ADIFMyExchangeErrorMarker` until 2026-10-14) rather than
+  a line laid out for a contest he is not running;
 - WW Digi's received QTH no longer follows an operator's `CONTEST NAME`;
 - an ADIF exchange with no shared arm now logs an Error; the bytes are the
   same marker as before.

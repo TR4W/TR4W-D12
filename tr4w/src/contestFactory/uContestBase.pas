@@ -1218,16 +1218,19 @@ type
 
          The worked QSO carries the RST and the serial SENT; aMy is the
          station's own exchange. The caller has decided the QSO is a good
-         one, and reports an exception (PostUnit writes
-         uADIFExchange.ADIFMyExchangeErrorMarker).
+         one. A getter that cannot build its string RAISES (a format that
+         fails, or uADIFExchange.ADIFSentNotImplemented for a contest with no
+         layout) and TryFormatADIFSentExchange reports it -- no placeholder
+         string stands in for an exchange any more (plan F25/F26, NY4I
+         2026-10-14).
 
          A contest whose exchange depends on the station tests the station
          here as DescribeSession does (Station is ActiveContest's).
 
-         THE BASE PRINTS NOTHING IT COULD BE WRONG ABOUT: the marker, what the
-         machine gave the classless DUMMYCONTEST (UnknownExchange had no arm).
-         Every registered contest states its string, on its class or its
-         family base. *)
+         THE BASE STATES NO LAYOUT: it raises, what the classless
+         DUMMYCONTEST (UnknownExchange had no arm) gets. Every registered
+         contest states its string, on its class or its family base, or calls
+         ADIFSentNotImplemented by name. *)
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; virtual;
 
@@ -2289,9 +2292,24 @@ type
 
       (* THE ADIF STX_STRING -- our side of the exchange; GetADIFSentExchange
          is what a contest states. The caller has already decided the QSO is
-         a good one; an exception is the caller's to report (PostUnit writes
-         the marker uADIFExchange.ADIFMyExchangeErrorMarker, as it always
-         did). *)
+         a good one.
+
+         TryFormatADIFSentExchange IS THE REPORTING FORM (2026-10-14, plan
+         F25/F27, NY4I: "we should report an error as the silent error is not
+         good"). A getter that raises, or a contest with no layout, is caught
+         HERE: an Error naming the contest, the QSO (call, band, mode, time)
+         and the exception is logged, aSent is '' and the answer is False,
+         with the reason in aFailure for the caller's once-per-export report.
+         The caller leaves STX_STRING out of that record -- a field left out
+         is honest, a made-up value is not. It is non-virtual on purpose: a
+         contest cannot opt out of being reported.
+
+         FormatADIFSentExchange is the same call for a caller that only wants
+         the text ('' on a failure, already logged). *)
+      function TryFormatADIFSentExchange(const aMy: TMyStationExchange;
+                                         const aQso: ContestExchange;
+                                         out aSent: string;
+                                         out aFailure: string): boolean;
       function FormatADIFSentExchange(const aMy: TMyStationExchange;
                                       const aQso: ContestExchange): string;
 
@@ -3924,6 +3942,17 @@ begin
    Result := True;
 end;
 
+(* A QSO AS A LOG LINE NAMES IT: call, band, mode and the UTC time. One
+   spelling for every export Error this unit logs. *)
+function DescribeQSOForLog(const aQso: ContestExchange): string;
+begin
+   Result := Format('%s %s %s %.4d-%.2d-%.2d %.2d%.2dZ',
+      [string(aQso.Callsign), ADIFBANDSTRINGSARRAY[aQso.Band],
+       ADIFModeString[aQso.Mode], aQso.tSysTime.qtYear + 2000,
+       aQso.tSysTime.qtMonth, aQso.tSysTime.qtDay, aQso.tSysTime.qtHour,
+       aQso.tSysTime.qtMinute]);
+end;
+
 (* THE CONTEST'S TWO CABRILLO COLUMNS -- see the declarations.
 
    Only the sent half reports a column with no layout, so it is logged once
@@ -3937,8 +3966,8 @@ begin
       begin
       logger.Error(Format(
         'FormatCabrilloSentExchange: contest "%s" states no Cabrillo exchange layout -- ' +
-        'wrote ERROR marker to the Cabrillo line. See Issue #1043.',
-        [string(ContestTypeSA[FContest])]));
+        'wrote ERROR marker to the Cabrillo line for QSO %s. See Issue #1043, plan F26.',
+        [string(ContestTypeSA[FContest]), DescribeQSOForLog(aQso)]));
       end;
 end;
 
@@ -3964,17 +3993,42 @@ begin
    Result := CabrilloReceivedNotHandled(aMy, aQso, aCtx);
 end;
 
+function TContestBase.TryFormatADIFSentExchange(const aMy: TMyStationExchange;
+                                                const aQso: ContestExchange;
+                                                out aSent: string;
+                                                out aFailure: string): boolean;
+begin
+   aSent := '';
+   aFailure := '';
+   try
+      aSent := GetADIFSentExchange(aMy, aQso);
+      Result := True;
+   except
+      on E: Exception do
+         begin
+         Result := False;
+         aSent := '';
+         aFailure := E.ClassName + ': ' + E.Message;
+         logger.Error(Format(
+            'ADIF STX_STRING not built for contest "%s", QSO %s -- left out of the record. %s',
+            [string(ContestTypeSA[FContest]), DescribeQSOForLog(aQso), aFailure]));
+         end;
+   end;
+end;
+
 function TContestBase.FormatADIFSentExchange(const aMy: TMyStationExchange;
                                              const aQso: ContestExchange): string;
+var
+   failure: string;
 begin
-   Result := GetADIFSentExchange(aMy, aQso);
+   TryFormatADIFSentExchange(aMy, aQso, Result, failure);
 end;
 
 function TContestBase.GetADIFSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange): string;
 begin
-   (* Nothing it could be wrong about -- see the declaration. *)
-   Result := ADIFSentNotBuilt(aMy, aQso);
+   (* The base states no layout -- see the declaration. *)
+   Result := ADIFSentNotImplemented(aMy, aQso);
 end;
 
 function TContestBase.GetReceivesGridSquareExchange: boolean;

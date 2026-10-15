@@ -131,8 +131,9 @@ now, the row's `AE:` before S8:
 The exchange kind no longer decides what the contest's EXPORT looks like. **The ADIF
 `STX_STRING` is YOUR CLASS'S since M11 S9b**: you state `GetADIFSentExchange` by calling one
 of the named helpers in `uADIFExchange` (`ADIFSentRSTState`, `ADIFSentRSTQSONumber`, ...), or
-by formatting it yourself -- the base prints the error marker, so a class that forgets it
-exports `Error generating my exchange` on every QSO. **THE TWO CABRILLO COLUMNS ARE YOUR
+by formatting it yourself -- the base RAISES (no placeholder string exists since 2026-10-14),
+so a class that forgets it exports NO `STX_STRING`, with an Error per QSO in `tr4w.log` and a
+warning once per export. **THE TWO CABRILLO COLUMNS ARE YOUR
 CLASS'S TOO, since M11 S9c**: you state `GetCabrilloSentExchange` and
 `GetCabrilloReceivedExchange` by calling a named helper in `uCabrilloExchange`
 (`CabrilloSentRSTState` / `CabrilloReceivedRSTQTH`, `CabrilloSentRSTQSONumber` /
@@ -398,7 +399,7 @@ the wrongness.
 | `ValidateDXQTH` | accepts nothing. Asked of every contest the same way; the fallback copy in LOGSTUFF is deleted (inventory D2) |
 | `ValidateQTHCount` | **always True, and that is behaviour-preserving by construction.** TR4W has never counted QTHs for any contest, so "no opinion" states what the program does rather than being a permissive placeholder. Takes a COUNT and never a list: the application tokenised the exchange and already has the number, so handing the contest the QTHs would be the first step toward handing it the log. **Virtual**, and `TContestStateQSOPartyBase` is its only overrider |
 | `GetCabrilloSentExchange` / `GetCabrilloReceivedExchange` (behind the public non-virtual `FormatCabrilloSentExchange` / `FormatCabrilloReceivedExchange(aMy, aQso, aCtx)`) | **the error marker** (`uCabrilloExchange.CabrilloExchangeErrorMarker`, both columns) -- every contest states its two columns, by calling a `uCabrilloExchange` helper (M11 S9c). Protected, beside `GetADIFSentExchange`. PostUnit asks the object `ActiveContest` returns, which holds the station |
-| `GetADIFSentExchange` (behind the public `FormatADIFSentExchange(aMy, aQso)`) | **the error marker** (`uADIFExchange.ADIFSentNotBuilt`) -- every contest states its `STX_STRING`, by calling a `uADIFExchange` helper (M11 S9b). Protected, beside `GetExchangeKind` / `GetReceivedExchangeFields` |
+| `GetADIFSentExchange` (behind the public `FormatADIFSentExchange(aMy, aQso)`) | **raises** (`uADIFExchange.ADIFSentNotImplemented`; reported, `STX_STRING` left out) -- every contest states its `STX_STRING`, by calling a `uADIFExchange` helper (M11 S9b). Protected, beside `GetExchangeKind` / `GetReceivedExchangeFields` |
 | `GetReceivesGridSquareExchange` (property `ReceivesGridSquareExchange`) | false -- true when the received exchange IS a grid (the Digi contests, the RST-and-grid VHF ones): the generic ADIF import then reads `GRIDSQUARE` into it (M11 S9b) |
 | `EmitADIFContestFields` | nothing -- `uADIF.EmitADIFRecord` has already written the generic `QTH` |
 | `FinalScore` | **not virtual** -- the one final score: `CombineScore` + `BonusPoints`. `LogEdit.TotalScore` is its only caller (M6, below) |

@@ -212,7 +212,11 @@ end;
 function TContestCQWWRTTY.GetADIFSentExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange): string;
 begin
-   Result := ADIFSentNotBuilt(aMy, aQso);
+   (* RST, ZONE, STATE OR 'DX' -- the same text the Cabrillo sent column
+      prints. Plan F25, fixed 2026-10-14 (NY4I): the machine's format for this
+      exchange ('%02u' of a ShortString zone) raised, and STX_STRING carried a
+      placeholder. *)
+   Result := ADIFSentRSTZoneStateDX(aMy, aQso);
 end;
 
 function TContestCQWWRTTY.GetCabrilloSentExchange(const aMy: TMyStationExchange;

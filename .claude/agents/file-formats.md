@@ -137,17 +137,39 @@ multipliers, CTY.DAT, band lookup and CRC32.
   SINCE M11 S9b (2026-10-14):** `uADIFExchange` holds 24 named helpers
   (`ADIFSentRSTState`, `ADIFSentRSTQSONumber` ... one per distinct OUTPUT,
   same `(aMy, aQso)` signature), and every contest class states
-  `GetADIFSentExchange` by calling one -- no enum selects it, the base prints
-  the error marker, and `FormatADIFSentExchange(aMy, aQso)` is the public
-  non-virtual caller. A helper reads the station's fields through the
-  machine's own widths (20 for the state, name and zone, 7 for the grid, 10 for
-  the park), so an over-long value is cut as it always was. Five contests
-  export the marker today and fourteen `None` (plan F25), transcribed.
-  Pinned by `uTestADIFSentExchange` (every ContestType x 7 stations x 4
-  inputs, literals made by the old machine). The ADIF import's grid test is
+  `GetADIFSentExchange` by calling one -- no enum selects it. A helper reads
+  the station's fields through the machine's own widths (20 for the state,
+  name and zone, 7 for the grid, 10 for the park), so an over-long value is
+  cut as it always was. **NO PLACEHOLDER STANDS IN FOR AN EXCHANGE (F25/F26/F27,
+  2026-10-14; NY4I: "report an error as the silent error is not good").** The
+  Cup RF CW/SSB/DIG, CQ WW RTTY and the Youth Championship RF export the text
+  their own Cabrillo sent column prints (`ADIFSentQSONumberStateShort`,
+  `ADIFSentRSTZoneStateDX`, `ADIFSentStateQSONumber2`); the old
+  `Error generating my exchange` and `None` answers and `ADIFSentNotBuilt` /
+  `ADIFMyExchangeErrorMarker` are DELETED. A contest with no layout (the base
+  and the fourteen of F26) calls `ADIFSentNotImplemented`, which RAISES
+  `EADIFExchangeNotImplemented`; the public non-virtual
+  `TryFormatADIFSentExchange(aMy, aQso, out aSent, out aFailure)` catches that
+  or any helper's exception, logs an Error naming the contest and the QSO
+  (call, band, mode, time), answers False and `''`, and PostUnit leaves
+  `STX_STRING` out of that record (`EmitADIFField` omits an empty value) and
+  warns ONCE per export (`BeginExchangeFailureReport` / `NoteExchangeFailure` /
+  `ReportExchangeFailures`, through `showwarning`, which is log-only in a
+  headless /EXPORT). The Cabrillo marker `ERROR EXCHANGE NOT HANDLED` stays in
+  the file (Issue #1043, deliberate) but is counted and reported the same way,
+  and the Cabrillo writer's `except` is an Error plus a warning now, not a
+  debug line. **A new `try ... except` returning a marker in an export path is
+  the defect this paragraph exists to prevent.** `FormatADIFSentExchange(aMy,
+  aQso)` is the same call for text only. **PostUnit's `ExchangeContest(aStation)`
+  picks the object that formats the exchange: the `ActiveContest` object (it
+  carries the station) when the contest has a class, else `ContestIdentity`** --
+  F27: S9b asked `ContestIdentity` for the ADIF string, so a Japanese JIDX
+  entrant exported the prefecture layout. Pinned by `uTestADIFSentExchange`
+  (every ContestType x 7 stations x 4 inputs, plus the reporting test). The
+  ADIF import's grid test is
   the open contest's `ReceivesGridSquareExchange`, not a kind. PostUnit asks
-  `ContestIdentity(c)` for the two Cabrillo columns, the `QSO:` layout and the
-  `STX_STRING`, and the tail asks `EmitADIFContestFields` for the worked
+  `ContestIdentity(c)` for the `QSO:` layout, and `ExchangeContest` for the
+  two Cabrillo columns and the `STX_STRING`, and the tail asks `EmitADIFContestFields` for the worked
   station's fields (ARRL_SECT, CLASS, DOK, IOTA, APP_TR4W_HQ, GRIDSQUARE);
   `uADIF.EmitADIFRecord` asks `ADIFPowerTag` (RX_PWR / FOC_NUM) and
   `WritesADIFContestId`. **Do not put a contest test back in these units** --

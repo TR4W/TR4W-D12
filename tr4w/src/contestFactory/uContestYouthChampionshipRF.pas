@@ -221,7 +221,11 @@ end;
 function TContestYouthChampionshipRF.GetADIFSentExchange(const aMy: TMyStationExchange;
                                                          const aQso: ContestExchange): string;
 begin
-   Result := ADIFSentNotBuilt(aMy, aQso);
+   (* THE STATE AND THE SERIAL -- the same text the Cabrillo sent column
+      prints. Plan F25, fixed 2026-10-14 (NY4I): the machine's format for this
+      exchange had three specifiers for two arguments, raised, and
+      STX_STRING carried a placeholder. *)
+   Result := ADIFSentStateQSONumber2(aMy, aQso);
 end;
 
 function TContestYouthChampionshipRF.GetCabrilloSentExchange(const aMy: TMyStationExchange;

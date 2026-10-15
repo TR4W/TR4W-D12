@@ -252,7 +252,11 @@ end;
 function TContestCupRFSSB.GetADIFSentExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange): string;
 begin
-   Result := ADIFSentNotBuilt(aMy, aQso);
+   (* THE SERIAL AND THE GRID SENT (MY STATE IS THE GRID THIS CONTEST SENDS,
+      design 7.11) -- the same text the Cabrillo sent column prints. Plan F25,
+      fixed 2026-10-14 (NY4I): the machine's format for this exchange
+      ('%-3s' of a number) raised, and STX_STRING carried a placeholder. *)
+   Result := ADIFSentQSONumberStateShort(aMy, aQso);
 end;
 
 function TContestCupRFSSB.GetCabrilloSentExchange(const aMy: TMyStationExchange;

@@ -47,10 +47,19 @@ http://www.gnu.org/licenses/gpl-3.0.txt
                                          uADIFExchange.Clipped...)
     3  a state of TRC                   (the one value an arm tests)
 
-  THE MARKER IS PART OF THE ORACLE. Five contests send ADIFMyExchangeErrorMarker
-  as STX_STRING today (plan F25), as does the classless DUMMYCONTEST: three
-  layouts were never built and the machine's own try/except swallowed the
-  failure. They are pinned as they are.
+  THE PLACEHOLDERS ARE GONE (2026-10-14, plan F25/F26/F27, NY4I: "F25 was an
+  artifact where the ADIF exchange generation had an error ... We should
+  report an error as the silent error is not good"). S9b pinned five
+  contests, and the classless DUMMYCONTEST, to 'Error generating my
+  exchange' (three layouts the machine never built), and fourteen more to
+  'None'. Now:
+    - the Cup RF CW/SSB/DIG, CQ WW RTTY and the Youth Championship RF pin the
+      text their own Cabrillo sent column prints (F25, FIXED);
+    - the DUMMYCONTEST and the fourteen contests with no layout pin '' -- the
+      field is LEFT OUT and TryFormatADIFSentExchange reports it (F26,
+      reported, not fixed: their layouts need the sponsors' rules);
+    - Test_AFailureIsReportedNotSwallowed pins the reporting itself.
+  Those are the only rows that differ from the S9b literals.
 
   NEVER REGENERATE IT TO CLEAR A FAILURE -- the uTestContestKindPin rule. A
   failure means a contest's STX_STRING changed. *)
@@ -70,13 +79,17 @@ type
    private
       procedure Test_EveryContestSendsItsPinnedSTXString;
       procedure Test_EachHelperPrintsItsLayout;
-      procedure Test_TheBaseSendsTheMarker;
+      procedure Test_TheBaseStatesNoLayoutAndSaysSo;
+      procedure Test_AFailureIsReportedNotSwallowed;
+      procedure Test_TheFiveF25ContestsSendTheirCabrilloText;
    end;
 
 implementation
 
 uses
+   Classes,
    SysUtils,
+   Log4D,
    VC,
    uContestBase,
    uADIFExchange,
@@ -86,6 +99,53 @@ uses
 type
    TADIFSentHelper = function(const aMy: TMyStationExchange;
                               const aQso: ContestExchange): string;
+
+   (* A CONTEST WHOSE getter RAISES -- the failure the machine's own
+      try/except used to swallow into a placeholder. *)
+   TFailingContest = class(TContestBase)
+   protected
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+   end;
+
+   (* AN APPENDER THAT KEEPS WHAT IT IS GIVEN, to prove an Error was written
+      and what it names. *)
+   TCaptureAppender = class(TLogCustomAppender)
+   private
+      FLines: TStringList;
+   protected
+      procedure DoAppend(const Message: string); override;
+   public
+      constructor Create(const aName: string); reintroduce;
+      destructor Destroy; override;
+      property Lines: TStringList read FLines;
+   end;
+
+function TFailingContest.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                             const aQso: ContestExchange): string;
+begin
+   Result := '';
+   raise EConvertError.Create('injected failure');
+end;
+
+constructor TCaptureAppender.Create(const aName: string);
+begin
+   inherited Create(aName);
+   FLines := TStringList.Create;
+end;
+
+destructor TCaptureAppender.Destroy;
+begin
+   (* inherited FIRST: the base destructor closes the appender, which writes
+      its footer through DoAppend -- into FLines, which must still exist. *)
+   inherited Destroy;
+   FLines.Free;
+end;
+
+procedure TCaptureAppender.DoAppend(const Message: string);
+begin
+   FLines.Add(Message);
+end;
 
 (* The four inputs -- see the header. *)
 function PinMy(aVariant: integer): TMyStationExchange;
@@ -200,12 +260,42 @@ begin
       end;
 
    case aContest of
-      DUMMYCONTEST, CUPRFCW, CUPRFSSB, CUPRFDIG, YOUTHCHAMPIONSHIPRF, CQWWRTTY:
+      (* F25, FIXED 2026-10-14 (NY4I: "F25 was an artifact ... we should
+         report an error as the silent error is not good"). These five WERE
+         pinned to the placeholder 'Error generating my exchange'. Each now
+         pins the text its own Cabrillo sent column prints. *)
+      CUPRFCW, CUPRFSSB, CUPRFDIG:
          begin
-         Result := Pick(aVariant, ADIFMyExchangeErrorMarker,
-                     ADIFMyExchangeErrorMarker,
-                     ADIFMyExchangeErrorMarker,
-                     ADIFMyExchangeErrorMarker);
+         (* '%.*d %-6.4s ' of the serial and MY STATE, the grid the Cup RF
+            sends (cut to four). *)
+         Result := Pick(aVariant, '007 FL     ',
+                     '123        ',
+                     '4567 ABCD   ',
+                     '007 TRC    ');
+         end;
+      CQWWRTTY:
+         begin
+         (* '%-3d %.2u %-4s' of the RST, the zone and the state or 'DX'. *)
+         Result := Pick(aVariant, '599 05 FL  ',
+                     '59  00 DX  ',
+                     '599 12 ABCDEFGHIJKLMNOPQRST',
+                     '599 05 TRC ');
+         end;
+      YOUTHCHAMPIONSHIPRF:
+         begin
+         (* '%-2s %.*d ' of the state and the serial. *)
+         Result := Pick(aVariant, 'FL 007 ',
+                     '   123 ',
+                     'ABCDEFGHIJKLMNOPQRST 4567 ',
+                     'TRC 007 ');
+         end;
+      (* F25/F26, 2026-10-14: NO PLACEHOLDER. The classless DUMMYCONTEST and
+         the fourteen contests below state no layout, so the field is
+         LEFT OUT ('') and the failure is reported -- it was 'Error
+         generating my exchange' for the base and 'None' for the fourteen. *)
+      DUMMYCONTEST:
+         begin
+         Result := '';
          end;
       SEVENQP, ALLASIANCW, ALLASIANSSB, ARRL160, ArizonaQsoParty, LABRE, MICHQSOPARTY,
       MOQSOPARTY, NEWENGLANDQSO, NCQSOPARTY, OLDNEWYEAR, SALMONRUN, SOUTHAMERICANWW,
@@ -220,10 +310,7 @@ begin
       ALLJA, ARCI, COUNTYHUNTER, FISTS, GRIDLOC, JALONGPREFECT, KIDSDAY, NZFIELDDAY, QCWA,
       QCWAGOLDEN, TENTEN, UA4WCHAMPIONSHIP, WWL, XMAS:
          begin
-         Result := Pick(aVariant, 'None',
-                     'None',
-                     'None',
-                     'None');
+         Result := '';   (* was 'None' -- plan F26, NY4I 2026-10-14 *)
          end;
       APSPRINT, BALTIC, CQM, CQWPXCW, CQWPXSSB, CQWPXRTTY, MARCONIMEMORIAL, MINITEST, MINI80,
       MINI40, OCEANIADXCW, OCEANIADXSSB, REGION1FIELDDAY, REGION1FIELDDAY_RCC_CW,
@@ -597,36 +684,169 @@ begin
                '000123    ',
                '0004567   ',
                '000007    ');
-   CheckHelper('ADIFSentNotImplemented', ADIFSentNotImplemented,
-               'None',
-               'None',
-               'None',
-               'None');
-   CheckHelper('ADIFSentNotBuilt', ADIFSentNotBuilt,
-               ADIFMyExchangeErrorMarker,
-               ADIFMyExchangeErrorMarker,
-               ADIFMyExchangeErrorMarker,
-               ADIFMyExchangeErrorMarker);
+   (* F25, FIXED 2026-10-14 (NY4I) -- the three layouts the machine never
+      built. The Cabrillo sent column's text, at the four inputs. *)
+   CheckHelper('ADIFSentQSONumberStateShort', ADIFSentQSONumberStateShort,
+               '007 FL     ',
+               '123        ',
+               '4567 ABCD   ',
+               '007 TRC    ');
+   CheckHelper('ADIFSentRSTZoneStateDX', ADIFSentRSTZoneStateDX,
+               '599 05 FL  ',
+               '59  00 DX  ',
+               '599 12 ABCDEFGHIJKLMNOPQRST',
+               '599 05 TRC ');
+   CheckHelper('ADIFSentStateQSONumber2', ADIFSentStateQSONumber2,
+               'FL 007 ',
+               '   123 ',
+               'ABCDEFGHIJKLMNOPQRST 4567 ',
+               'TRC 007 ');
 end;
 
-(* A CONTEST THAT STATES NOTHING PRINTS THE MARKER -- the base, which the
-   classless DUMMYCONTEST runs. *)
-procedure TADIFSentExchangeTests.Test_TheBaseSendsTheMarker;
+(* A CONTEST THAT STATES NO LAYOUT -- the base, which the classless
+   DUMMYCONTEST runs, and the helper the fourteen call by name. It used to
+   answer 'Error generating my exchange' (the base) and 'None' (the
+   fourteen). Both are gone: the helper RAISES, the caller reports it, and
+   the field is left out (F25/F26, NY4I 2026-10-14). *)
+procedure TADIFSentExchangeTests.Test_TheBaseStatesNoLayoutAndSaysSo;
 var
    obj: TContestBase;
+   sent, failure: string;
    v: integer;
+   raised: boolean;
 begin
-   BeginTest('Test_TheBaseSendsTheMarker');
+   BeginTest('Test_TheBaseStatesNoLayoutAndSaysSo');
+   raised := False;
+   try
+      ADIFSentNotImplemented(PinMy(0), PinQso(0));
+   except
+      on E: EADIFExchangeNotImplemented do
+         begin
+         raised := True;
+         end;
+   end;
+   CheckTrue(raised, 'ADIFSentNotImplemented raises EADIFExchangeNotImplemented');
+
    obj := TContestBase.Create(DUMMYCONTEST);
    try
       for v := 0 to 3 do
          begin
-         CheckEquals(ADIFMyExchangeErrorMarker,
-                     obj.FormatADIFSentExchange(PinMy(v), PinQso(v)),
-                     'the base, input ' + IntToStr(v));
+         CheckFalse(obj.TryFormatADIFSentExchange(PinMy(v), PinQso(v), sent, failure),
+                    'the base reports a failure, input ' + IntToStr(v));
+         CheckEquals('', sent, 'and answers no text, input ' + IntToStr(v));
+         CheckTrue(Pos('EADIFExchangeNotImplemented', failure) > 0,
+                   'and names why: ' + failure);
+         CheckEquals('', obj.FormatADIFSentExchange(PinMy(v), PinQso(v)),
+                     'FormatADIFSentExchange answers the same, input ' + IntToStr(v));
          end;
    finally
       obj.Free;
+      end;
+end;
+
+(* THE REPORTING ITSELF (NY4I 2026-10-14: "we should report an error as the
+   silent error is not good"). A getter that raises is not swallowed into a
+   made-up value: Try answers False with the reason, the text is '', and an
+   Error is WRITTEN that names the contest and the QSO (call, band, mode,
+   time). A getter that works answers True and writes nothing. *)
+procedure TADIFSentExchangeTests.Test_AFailureIsReportedNotSwallowed;
+var
+   failing, good: TContestBase;
+   capture: TCaptureAppender;
+   keep: ILogAppender;
+   lg: TLogLogger;
+   savedLevel: TLogLevel;
+   sent, failure, line: string;
+   qso: ContestExchange;
+begin
+   BeginTest('Test_AFailureIsReportedNotSwallowed');
+   qso := PinQso(0);
+   qso.Callsign := 'W1AW';
+   qso.Band := Band20;
+   qso.Mode := CW;
+   qso.tSysTime.qtYear := 26;
+   qso.tSysTime.qtMonth := 1;
+   qso.tSysTime.qtDay := 15;
+   qso.tSysTime.qtHour := 12;
+   qso.tSysTime.qtMinute := 1;
+
+   capture := TCaptureAppender.Create('capture');
+   keep := capture;
+   lg := TLogLogger.GetLogger('uContestBase');
+   savedLevel := lg.Level;
+   lg.Level := Log4D.Error;
+   lg.AddAppender(keep);
+   failing := TFailingContest.Create(CQWWRTTY);
+   good := Make(CUPRFCW, PinStation(psUS, CUPRFCW));
+   try
+      CheckFalse(failing.TryFormatADIFSentExchange(PinMy(0), qso, sent, failure),
+                 'a getter that raises is a reported failure');
+      CheckEquals('', sent, 'and no text stands in for the exchange');
+      CheckTrue(Pos('EConvertError', failure) > 0, 'the class is named: ' + failure);
+      CheckTrue(Pos('injected failure', failure) > 0, 'the message is named: ' + failure);
+      CheckEquals('', failing.FormatADIFSentExchange(PinMy(0), qso),
+                  'FormatADIFSentExchange answers no text either');
+
+      CheckTrue(capture.Lines.Count >= 1, 'an Error was written, not swallowed');
+      line := capture.Lines.Text;
+      CheckTrue(Pos('CQ-WW-RTTY', line) > 0, 'it names the contest: ' + line);
+      CheckTrue(Pos('W1AW', line) > 0, 'it names the call: ' + line);
+      CheckTrue(Pos('20m', line) > 0, 'it names the band: ' + line);
+      CheckTrue(Pos('CW', line) > 0, 'it names the mode: ' + line);
+      CheckTrue(Pos('2026-01-15 1201', line) > 0, 'it names the time: ' + line);
+      CheckTrue(Pos('injected failure', line) > 0, 'it carries the reason: ' + line);
+
+      capture.Lines.Clear;
+      CheckTrue(good.TryFormatADIFSentExchange(PinMy(0), qso, sent, failure),
+                'a contest that builds its string is not a failure');
+      CheckEquals('007 FL     ', sent, 'and its text is the text');
+      CheckEquals('', failure, 'with no reason');
+      CheckEquals(0, capture.Lines.Count, 'and nothing is written');
+   finally
+      lg.RemoveAppender(keep);
+      lg.Level := savedLevel;
+      keep := nil;
+      failing.Free;
+      good.Free;
+      end;
+end;
+
+(* F25: THE FIVE CONTESTS EXPORT WHAT THEIR CABRILLO SENT COLUMN PRINTS.
+   Variant 2 is left out on purpose: the ADIF export cuts a state to the
+   machine's twenty characters and the Cabrillo column does not, so the
+   26-character state differs (the pinned literals above say how). *)
+procedure TADIFSentExchangeTests.Test_TheFiveF25ContestsSendTheirCabrilloText;
+const
+   FIVE: array[0..4] of ContestType =
+      (CUPRFCW, CUPRFSSB, CUPRFDIG, CQWWRTTY, YOUTHCHAMPIONSHIPRF);
+var
+   i, v: integer;
+   obj: TContestBase;
+   ctx: TCabrilloQSOContext;
+   qso: ContestExchange;
+begin
+   BeginTest('Test_TheFiveF25ContestsSendTheirCabrilloText');
+   for i := Low(FIVE) to High(FIVE) do
+      begin
+      obj := Make(FIVE[i], PinStation(psUS, FIVE[i]));
+      try
+         for v := 0 to 3 do
+            begin
+            if v <> 2 then
+               begin
+               qso := PinQso(v);
+               ctx := Default(TCabrilloQSOContext);
+               ctx.RSTSent := IntToStr(qso.RSTSent);
+               CheckEquals(obj.FormatCabrilloSentExchange(PinMy(v), qso, ctx),
+                           obj.FormatADIFSentExchange(PinMy(v), qso),
+                           string(ContestTypeSA[FIVE[i]]) +
+                           ': STX_STRING is the Cabrillo sent column, input ' +
+                           IntToStr(v));
+               end;
+            end;
+      finally
+         obj.Free;
+         end;
       end;
 end;
 
@@ -634,7 +854,9 @@ procedure TADIFSentExchangeTests.RunAllTests;
 begin
    Test_EveryContestSendsItsPinnedSTXString;
    Test_EachHelperPrintsItsLayout;
-   Test_TheBaseSendsTheMarker;
+   Test_TheBaseStatesNoLayoutAndSaysSo;
+   Test_AFailureIsReportedNotSwallowed;
+   Test_TheFiveF25ContestsSendTheirCabrilloText;
 end;
 
 end.

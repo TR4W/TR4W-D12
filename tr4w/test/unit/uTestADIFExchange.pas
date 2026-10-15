@@ -115,7 +115,10 @@ var
 begin
    obj := TContestBase.Create(DUMMYCONTEST);
    try
-      CheckEquals(ADIFMyExchangeErrorMarker, obj.FormatADIFSentExchange(MakeMy, MakeRx),
+      (* F25/F26, 2026-10-14 (NY4I): it was the placeholder 'Error generating
+         my exchange'. The base states no layout, so the field is '' and the
+         failure is reported (uTestADIFSentExchange pins the reporting). *)
+      CheckEquals('', obj.FormatADIFSentExchange(MakeMy, MakeRx),
                   'a contest with no statement of its own');
    finally
       obj.Free;
@@ -146,17 +149,30 @@ begin
    CheckEquals('K-1234', ADIFSentPark(MakeMy, MakeRx), 'the park reference alone');
 end;
 
-(* A QSO PostUnit rejects never reaches a contest at all, and this marker is
-  what it writes into STX_STRING instead (since M4 the decision is PostUnit's,
-  which owns the log). Its spelling is pinned because it lands in exported
-  files: it is worth knowing it is this and not empty. *)
+(* A QSO PostUnit rejects never reaches a contest at all (since M4 the decision
+  is PostUnit's, which owns the log), and 2026-10-14 (NY4I: "report an error as
+  the silent error is not good") what it writes into STX_STRING is NOTHING:
+  the placeholder 'Error generating my exchange' this test pinned is deleted,
+  because a robot reads a placeholder as an exchange. A contest with no
+  layout raises instead, and the caller reports it. *)
 procedure TTestADIFExchange.Test_BadQSOYieldsTheErrorMarker;
+var
+   raised: boolean;
 begin
-   CheckEquals('Error generating my exchange', ADIFMyExchangeErrorMarker,
-               'a rejected QSO yields the marker, not a blank field');
+   raised := False;
+   try
+      ADIFSentNotImplemented(MakeMy, MakeRx);
+   except
+      on E: EADIFExchangeNotImplemented do
+         begin
+         raised := True;
+         end;
+   end;
+   CheckTrue(raised, 'no layout raises, it does not answer a placeholder');
 end;
 
-(* THIS PINS A DEFECT, DELIBERATELY.
+(* THIS PINNED A DEFECT UNTIL 2026-10-14, AND THE DEFECT IS FIXED (plan F25,
+  NY4I).
 
   The AgeAndQSONumber arm read:
 
@@ -164,24 +180,17 @@ end;
 
   THREE format specifiers, TWO arguments -- and the first specifier is %d while
   the first argument is a string. Format raised, the machine's own try/except
-  swallowed it, and the caller got the initialisation string. So the Youth
-  Championship RF (the one contest that runs that exchange) exports 'Error
-  generating my exchange' in that field -- and so do the Cup RF's three
-  runnings (QSONumberAndGridSquare: '%-3s' of a number) and CQ WW RTTY
-  (RSTZoneAndPossibleDomesticQTH: '%02u' of a ShortString). ADIFSentNotBuilt is
-  that answer, by name (plan F25).
+  swallowed it, and the caller got the initialisation string, so the Youth
+  Championship RF exported 'Error generating my exchange' in that field -- as
+  did the Cup RF's three runnings (QSONumberAndGridSquare: '%-3s' of a number)
+  and CQ WW RTTY (RSTZoneAndPossibleDomesticQTH: '%02u' of a ShortString).
 
-  It is pinned rather than fixed because S9b is a move and its claim is that
-  nothing changed. Fixing it needs somebody who knows what the field should say,
-  and that is a contest question, not a refactoring one. Recorded in the bench
-  queue.
-
-  If this test starts FAILING, someone has fixed it; update the expectation and
-  delete this comment. *)
+  Each of the five now exports what its own Cabrillo sent column prints; this
+  is the Youth Championship RF's: the state and the serial. *)
 procedure TTestADIFExchange.Test_DEFECT_AgeAndQSONumberHasThreeSpecsAndTwoArgs;
 begin
-   CheckEquals('Error generating my exchange', ADIFSentNotBuilt(MakeMy, MakeRx),
-               'DEFECT: three layouts were never built -- the marker stands');
+   CheckEquals('FL 007 ', ADIFSentStateQSONumber2(MakeMy, MakeRx),
+               'F25 fixed: the Youth Championship RF sends the state and the serial');
 end;
 
 procedure TTestADIFExchange.RunAllTests;

@@ -390,10 +390,11 @@ every registered contest states `GetADIFSentExchange` (public non-virtual
 caller `FormatADIFSentExchange(aMy, aQso)` -- the kind parameter is gone from
 it and from `EmitADIFExchangeFields`), calling one of 24 `uADIFExchange`
 helpers named for what they print (one per OUTPUT: the RST-and-state layout
-served five arms). The base prints the error marker, so a new contest that
-forgets it exports `Error generating my exchange` on every QSO; five
-contests do today by transcription (the Cup RF x3, CQ WW RTTY, the Youth
-Championship RF -- F25). The ADIF import's kind test became the open
+served five arms). The base RAISES (no placeholder string exists any more), so
+a new contest that forgets it exports NO `STX_STRING` and logs an Error per QSO
+plus one warning per export (F25 fixed, F26 reported, 2026-10-14; the Cup RF x3,
+CQ WW RTTY and the Youth Championship RF now export what their Cabrillo sent
+column prints). The ADIF import's kind test became the open
 contest's `ReceivesGridSquareExchange`. Pinned by `uTestADIFSentExchange`.
 **The CTY country list (`ctyCountryMode`) is set in the
 CONTEST setting's effect, straight after `FoundContest` returns** (plan F5)

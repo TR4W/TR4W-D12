@@ -75,8 +75,10 @@ function RegisteredContestCount: integer;
   values and set-up flags from this object, under the operator's
   statements -- what a contest IS, which is this accessor's whole job. And
   since M4 (2026-10-01) every EXPORTER asks it how the contest formats its
-  Cabrillo columns, its ADIF exchange and its ADIF contest fields: that
-  formatting needs the QSO and the exporter's context, never the station.
+  Cabrillo columns, its ADIF exchange and its ADIF contest fields. THAT
+  FORMATTING NEEDS THE STATION FOR NINE CONTESTS (JIDX's STX_STRING and the
+  Cabrillo columns of the rest), so a caller with a station asks the object
+  ActiveContest holds, not this one (F27, 2026-10-14: PostUnit.ExchangeContest).
 
   OWNED BY THIS UNIT. Do not free it. Built the first time a contest is asked
   about and kept until the program ends, so a caller asking per QSO -- ADIF

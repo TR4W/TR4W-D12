@@ -391,10 +391,15 @@ function CabrilloReceivedNotHandled(const aMy: TMyStationExchange;
                                     const aQso: ContestExchange;
                                     const aCtx: TCabrilloQSOContext): string;
 
+(* The serial sign rule several shapes share: a negative serial prints three
+   (or four) digits including the sign. Public since 2026-10-14 so the ADIF
+   STX_STRING of the five F25 contests (uADIFExchange) prints the same serial
+   their Cabrillo column does, from one function. *)
+function SerialWidth(aNumber, aWidth: integer): integer;
+
 implementation
 
-(* The serial sign rule several shapes share: a negative serial prints three
-   (or four) digits including the sign. *)
+(* See the declaration. *)
 function SerialWidth(aNumber, aWidth: integer): integer;
 begin
   Result := aWidth - Ord(aNumber < 0);

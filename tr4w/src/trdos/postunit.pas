@@ -56,9 +56,6 @@ uses
   LCLType,
   uCabrilloFormat,
   // tCabrilloFreqString / tCabrilloModeString + per-field formatters (extracted from this unit, see uCabrilloFormat.pas)
-  (* ADIFMyExchangeErrorMarker -- what STX_STRING carries when the exchange
-     cannot be built. The exchange itself is the contest's (M4). *)
-  uADIFExchange,
   uSuperCheckPartialFileUpload,
   uTR4WStrings;
 
@@ -427,6 +424,9 @@ uses
   (* TMyStationExchange and TCabrilloQSOContext -- what the exporter hands a
      contest when it asks for its exchange columns. *)
   uContestBase,
+  (* CabrilloExchangeErrorMarker -- what a Cabrillo column carries when the
+     contest states no layout; the export reports it (plan F26). *)
+  uCabrilloExchange,
   (* ContestIdentity -- the contest's names (M1) and, since M4, its export:
      every contest is asked, a classless one answering as a plain
      TContestBase. *)
@@ -2313,6 +2313,69 @@ begin
    Result.MyPark       := Settings.My.ResolvedPark;
 end;
 
+(* THE EXCHANGE FAILURES OF ONE EXPORT RUN -- plan F25/F26/F27, NY4I
+  2026-10-14: "we should report an error as the silent error is not good".
+
+  Every QSO whose exchange could not be built is logged where it happens (an
+  Error naming the contest and the QSO: TContestBase.TryFormatADIFSentExchange
+  for the ADIF STX_STRING, FormatCabrilloSentExchange for a Cabrillo column).
+  This is the OTHER half: the operator hears ONCE per export, not once per
+  QSO, through showwarning -- which logs the text and, for a headless /EXPORT
+  that has no one to dismiss a modal, stops there. An export run begins with
+  BeginExchangeFailureReport and ends with ReportExchangeFailures. *)
+var
+  ExportExchangeFailures: integer;
+  ExportExchangeFirstFailure: string;
+
+procedure BeginExchangeFailureReport;
+  begin
+  ExportExchangeFailures := 0;
+  ExportExchangeFirstFailure := '';
+  end;
+
+procedure NoteExchangeFailure( const aWhat: string );
+  begin
+  if ExportExchangeFailures = 0 then
+     begin
+     ExportExchangeFirstFailure := aWhat;
+     end;
+  inc( ExportExchangeFailures );
+  end;
+
+procedure ReportExchangeFailures( const aFileKind, aLeftOut: string );
+  var
+    msg: string;
+  begin
+  if ExportExchangeFailures = 0 then
+     begin
+     Exit;
+     end;
+  msg := sysutils.Format( '%s export: %d QSO(s) have no exchange of their own -- ' +
+     '%s. First failure: %s. Each QSO is named in tr4w.log.',
+     [ aFileKind, ExportExchangeFailures, aLeftOut, ExportExchangeFirstFailure ] );
+  logger.Error( msg );
+  showwarning( msg );
+  end;
+
+(* THE OBJECT THAT FORMATS THE EXCHANGE, WITH THE STATION when the contest has
+  a class (F27). ContestIdentity has no station, so a contest whose layout
+  moves with the entrant -- a Japanese JIDX entrant's ADIF STX_STRING and the
+  Cabrillo columns of the other eight -- must be asked of the object
+  ActiveContest holds. A classless contest has no ActiveContest, and the
+  plain base ContestIdentity answers for it. aStation is that
+  ActiveContest answer, nil or not. *)
+function ExchangeContest( aStation: TContestBase ): TContestBase;
+  begin
+  if aStation <> nil then
+     begin
+     Result := aStation;
+     end
+  else
+     begin
+     Result := ContestIdentity( Contest );
+     end;
+  end;
+
 (* THE STX_STRING FOR TempRXData, FOR THE CONTEST aContest -- the body of
   GetMyExchangeForExport, taking the active contest its caller already holds
   (M11 S5): the ADIF tail emitter asks it once per record beside the zone
@@ -2320,32 +2383,40 @@ end;
 
   THE EXCHANGE IS THE CONTEST'S -- M4, 2026-10-01. What is left here is the
   part that needs PostUnit's globals: filling the record, and deciding the
-  QSO is a good one. The format is asked through ContestIdentity, so a
-  classless contest answers with TContestBase's default -- the marker, since
-  S9b: each contest class states its own STX_STRING through a helper in
-  uADIFExchange. *)
+  QSO is a good one.
+
+  F27 (2026-10-14): THE FORMAT IS ASKED OF aContest, the object that holds
+  the station, through ExchangeContest. S9b had it asking ContestIdentity,
+  which has no station, so a Japanese JIDX entrant exported the prefecture
+  layout; S9c did the Cabrillo columns right.
+
+  A STX_STRING THAT CANNOT BE BUILT IS '' -- LEFT OUT OF THE RECORD, AND
+  REPORTED (NY4I 2026-10-14). It used to be the text 'Error generating my
+  exchange', which a robot reads as an exchange: a made-up value is worse
+  than a missing field. TryFormatADIFSentExchange has logged the contest,
+  the QSO and the reason; this counts it for the once-per-export warning. *)
 function MyExchangeForExport(aContest: TContestBase): string;
   var
     my: TMyStationExchange;
+    failure: string;
   begin
   my := CurrentMyStationExchange(aContest);
 
-  Result := ADIFMyExchangeErrorMarker;
+  Result := '';
   if not GoodLookingQSO then
      begin
+     (* Not an exchange failure: the QSO is deleted or has no band or mode.
+       ExportToADIF never offers one; the external logger can. *)
+     logger.Warn( 'STX_STRING left out: ' + string( TempRXData.Callsign ) +
+        ' is not a good QSO (deleted, or no band or mode)' );
      Exit;
      end;
 
-  (* A FORMAT THAT RAISES LEAVES THE MARKER, as it always did -- the
-    exchange was built inside a try/except that kept the initial value.
-    One contest's formatter raising must not take the whole export
-    down. *)
-  try
-     Result := ContestIdentity( Contest ).FormatADIFSentExchange( my,
-        TempRXData );
-  except
-     Result := ADIFMyExchangeErrorMarker;
-  end;
+  if not ExchangeContest( aContest ).TryFormatADIFSentExchange( my,
+     TempRXData, Result, failure ) then
+     begin
+     NoteExchangeFailure( failure );
+     end;
   end;
 
 // ---------------------------------------------------------------------------
@@ -2564,12 +2635,16 @@ procedure ExportToADIF;
   // write it as one block.  The per-record body lives in
   // uADIF.EmitADIFRecord; the contest-specific extras come from the
   // EmitContestSpecificTailForExport callback above.
+  BeginExchangeFailureReport;
   adifStr := uADIF.ExportADIFToString( records, string( TR4W_CURRENTVERSION ),
      @EmitContestSpecificTailForExport );
   sWriteFileFromString( tReportFileWrite, adifStr );
 
   FileClose(tReportFileWrite);
   LogSourceClose;
+  (* ONE WARNING FOR THE RUN, after the file is complete (F25/F26). *)
+  ReportExchangeFailures( 'ADIF',
+     'STX_STRING was left out of those records, their other fields are written' );
   PreviewFileNameAddress := CharBufferText(tReportsFilename);
   FilePreview;
   end;
@@ -2894,6 +2969,9 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
           exportContest; nothing in the loop switches the contest, so the
           object ActiveContest returned stays the active one. *)
         stationContest: TContestBase;
+        (* WHICH OBJECT FORMATS THE TWO COLUMNS -- stationContest when the
+          contest has a class, else exportContest (ExchangeContest). *)
+        columnsContest: TContestBase;
         cRandomCharsReceived: string;
         cKids: string;
         (* THE PREVIOUS GOOD QSO'S RECEIVED NUMBER, mod 1000 -- what Radio YOC
@@ -2917,6 +2995,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         contest test it carried. *)
       PreviousQTHString := '';
       contacts := 0;
+      BeginExchangeFailureReport;
       exportContest := ContestIdentity( Contest );
       stationContest := ActiveContest( Contest );
       Result   := False;
@@ -3115,19 +3194,24 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                   entrant (JIDX, PACC, ARRL 160, ...) test it. exportContest
                   has none. A classless contest has no ActiveContest, and
                   exportContest is then the plain base. *)
-                if stationContest <> nil then
+                columnsContest := ExchangeContest( stationContest );
+                CABRILLO_MYEX  := columnsContest.FormatCabrilloSentExchange(
+                   myStationEx, TempRXData, qsoContext );
+                CABRILLO_HISEX := columnsContest.FormatCabrilloReceivedExchange(
+                   myStationEx, TempRXData, qsoContext );
+
+                (* A COLUMN THE CONTEST HAS NO LAYOUT FOR (plan F26) STAYS
+                  LOUD IN THE FILE -- the marker is deliberate (Issue #1043),
+                  a robot rejects it -- and is counted here for the one
+                  warning per export. FormatCabrilloSentExchange has logged
+                  the contest and the QSO. *)
+                if ( CABRILLO_MYEX = CabrilloExchangeErrorMarker ) or
+                   ( CABRILLO_HISEX = CabrilloExchangeErrorMarker ) then
                    begin
-                   CABRILLO_MYEX  := stationContest.FormatCabrilloSentExchange(
-                      myStationEx, TempRXData, qsoContext );
-                   CABRILLO_HISEX := stationContest.FormatCabrilloReceivedExchange(
-                      myStationEx, TempRXData, qsoContext );
-                   end
-                else
-                   begin
-                   CABRILLO_MYEX  := exportContest.FormatCabrilloSentExchange(
-                      myStationEx, TempRXData, qsoContext );
-                   CABRILLO_HISEX := exportContest.FormatCabrilloReceivedExchange(
-                      myStationEx, TempRXData, qsoContext );
+                   NoteExchangeFailure( 'contest "' +
+                      string( ContestTypeSA[ Contest ] ) +
+                      '" states no Cabrillo exchange layout (first at ' +
+                      HisCallsign + ')' );
                    end;
 
                 // Issue #998: StrUpper (ASCII a-z only) on the old PChar buffer -> UpperCase
@@ -3205,10 +3289,20 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
 
           LogSourceClose;
           Result := true;
+          ReportExchangeFailures( 'Cabrillo',
+             'the marker ' + CabrilloExchangeErrorMarker +
+             ' is written in their exchange columns, which a robot rejects' );
         except
           on E: Exception do
              begin
-             DEBUGMSG( E.ClassName + ' error raised with message ' + E.Message );
+             (* NOT A DEBUG LINE (2026-10-14). The export stops here with a
+               truncated file and Result False; a debug message told nobody. *)
+             logger.Error( 'Cabrillo QSO lines stopped after ' +
+                IntToStr( contacts ) + ' record(s), at ' + HisCallsign + ': ' +
+                E.ClassName + ': ' + E.Message );
+             showwarning( 'The Cabrillo export stopped after ' +
+                IntToStr( contacts ) + ' record(s) (' + E.Message +
+                '). The file is incomplete. See tr4w.log.' );
              end;
         end;
       finally
