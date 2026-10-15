@@ -80,6 +80,12 @@ DXLog. Old to new:
   - **Its name is `FFMA`**, a placeholder (the ARRL Fred Fish Memorial Award, for
     working the 488 grids on 6 m, is the grid-tracking use the class serves). Used
     wherever the contest has to name itself, e.g. ADIF CONTEST_ID.
+- **[Q1] ALL JA and ACAG log format -- ANSWERED (NY4I, 2026-10-15):** *"JARL I would
+  defer to JARL's example being they are the sponsor."* The sponsor's example wins over
+  DXLog's: the power letter is **joined to the number** (`599 10H`, not `599 10 H`),
+  and the log follows **JARL's own e-log layout** (summary sheet + log sheet) as its
+  example shows, not a layout inferred from another logger. Writing that JARL format
+  is new export work, done when ALL JA and ACAG get their layouts.
 - **[Q10] NZ Field Day (JW-FD) -- ANSWERED by the sponsor's page, supplied by NY4I
   2026-10-15:** https://nzart.org.nz/activities/contests/jwfd/ (rules updated
   21 April 2025) `[NZART jwfd]`.
@@ -174,10 +180,6 @@ the part still owed. The `[Qn]` tag is the number the question has been cited by
 
 **ALL JA and ACAG**
 
-- **[Q1] Log format.** Does JARL accept a Cabrillo body inside its e-log, or must
-  TR4W write the JARL log-sheet format? And is the power letter its own column
-  (`599 10 H`, as DXLog writes it) or joined to the number (`599 10H`, as JARL's
-  example shows)?
 - **[Q19] Sent QTH field.** Does sending the JA prefecture number (ALL JA) or the
   ACAG city/gun/ku code through `MY STATE` count as reuse under the distinct-fields
   ruling? If it does, they get `MY JA PREFECTURE` and `MY JA CITY CODE`. (Same
