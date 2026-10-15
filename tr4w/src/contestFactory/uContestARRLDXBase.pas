@@ -93,6 +93,7 @@ type
       function ParseReceivedExchangeFormat(const aText: string;
                                            aParsers: TExchangeParsers;
                                            var aExch: ContestExchange): boolean; override;
+      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
    public
 
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -242,6 +243,18 @@ begin
    else
       begin
       Result := aParsers.ParseRSTDomesticQTH(aText, aExch);
+      end;
+end;
+
+procedure TContestARRLDXBase.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   (* The station test the parse format chooses by: a W or VE entrant
+      receives the power exchange and gets no default messages (the old
+      `case` had no arm for its shape); anyone else, KH6 included, the
+      state-or-serial set. *)
+   if not CountsDXMultiplier then
+      begin
+      aMessages.WriteRSTStateOrQSONumber;
       end;
 end;
 

@@ -97,6 +97,7 @@ type
       function ParseReceivedExchangeFormat(const aText: string;
                                            aParsers: TExchangeParsers;
                                            var aExch: ContestExchange): boolean; override;
+      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -232,6 +233,17 @@ begin
    else
       begin
       Result := aParsers.ParseRSTDomesticQTH(aText, aExch);
+      end;
+end;
+
+procedure TContestTexasQP.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   (* The station test the parse format chooses by: an entrant who
+      receives the domestic-or-DX exchange gets no default messages
+      (the old `case` had no arm for its shape). *)
+   if not CountsDXMultiplier then
+      begin
+      aMessages.WriteRSTStateOrQSONumber;
       end;
 end;
 

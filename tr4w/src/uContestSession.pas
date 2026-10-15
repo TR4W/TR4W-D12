@@ -70,9 +70,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
       -- but it may see a mixture of two contests' kinds during a set-up. A
       reader that needs them coherent must run on the main thread.
     * A LEAF. It uses VC alone, so every TRDOS unit can use it without a cycle.
-      No virtual, no allocation: a read is a function call and a field read,
-      cheap enough for the per-row repaint read of Exchange
-      (TREE.LooksLikeAGrid, S9f).
+      No virtual, no allocation: a read is a function call and a field read.
+      (TREE.LooksLikeAGrid read Exchange here until M11 S9e part 1; it asks
+      the contest now, and the "per-row repaint" it was said to run on was
+      never measured true -- plan F33.)
 
   ---------------------------------------------------------------------------
   WHAT IS HERE, AND WHAT IS STILL A GLOBAL
@@ -127,10 +128,10 @@ type
         NoInitialExchange, the zero the global it replaces started from. *)
       property InitialExchange: InitialExchangeType read FInitialExchange;
 
-      (* The received exchange the session parses -- ProcessExchange's shape,
-        the call window, the log grid's columns, the exporters, the sheet's
-        exchange information and TREE.LooksLikeAGrid (once per log row per
-        repaint). A fresh session holds UnknownExchange, the ordinal zero
+      (* The received exchange kind set-up resolved. Its readers left one by
+        one (M11 S9a-S9e part 1); what is left reads it for the initial
+        exchange history (LOGDUPE, LOGEDIT -- S8) and the contest matrix's
+        active.exchange line, and it goes with them (S9e part 2). A fresh session holds UnknownExchange, the ordinal zero
         LOGWIND.ActiveExchange started from -- its `= NoExchangeReceived`
         initializer was commented out, so NoExchangeReceived it never was
         (uLogRepository's open-without-a-contest note relies on that zero). *)

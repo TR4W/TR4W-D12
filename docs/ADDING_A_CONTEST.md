@@ -126,7 +126,7 @@ now, the row's `AE:` before S8:
 
 | field | leads to |
 |---|---|
-| `GetExchangeKind` (the row's `AE:` before S8) | nothing in the parse any more (M11 S9d): the PARSER is your class's `ParseReceivedExchangeFormat`, which calls the engine's parser for your format by name (`aParsers.ParseRSTZone`, ...). Until S9d the kind chose an arm of `LOGSTUFF.ParseExchangeShape`, now deleted; the kind is set-up data until S9e deletes it |
+| `GetExchangeKind` (the row's `AE:` before S8) | nothing in the parse any more (M11 S9d): the PARSER is your class's `ParseReceivedExchangeFormat`, which calls the engine's parser for your format by name (`aParsers.ParseRSTZone`, ...). Until S9d the kind chose an arm of `LOGSTUFF.ParseExchangeShape`, now deleted. Since M11 S9e part 1 the default CW exchange messages (`WriteDefaultExchangeMessages`), the log's Sweepstakes columns (the field list) and the grid question (`ExchangeTextMayHoldGridSquare`) do not read it either: the kind is read only for the initial-exchange history (S8) and the matrix's `active.exchange` line, until S9e part 2 deletes it |
 
 The exchange kind no longer decides what the contest's EXPORT looks like. **The ADIF
 `STX_STRING` is YOUR CLASS'S since M11 S9b**: you state `GetADIFSentExchange` by calling one
@@ -394,6 +394,8 @@ the wrongness.
 | `ParseReceivedExchangeFormat` | **protected; parses NOTHING and answers False** (what the classless DUMMYCONTEST gets). EVERY CONTEST STATES IT: call the engine's parser for your format on `aParsers` by name. `uTestExchangeParse` fails for a contest that does not (M11 S9d) |
 | `ExchangeCarriesDomesticQTH` / `ExchangeCarriesZone` / `ExchangeCarriesGridSquare` | False -- does the exchange carry a domestic QTH, a zone, a grid square? The readiness check asks all three (an empty MY STATE, MY ZONE, MY GRID), LOGSTUFF's improper-QTH refusal the first. State True where your exchange carries one (M11 S9d; plan F28 says why the answers are still transcriptions) |
 | `PerQSOExchangeLeadsWithSerial` | False -- the per-QSO SRX_STRING of a multi-county or multi-park entry leads with the RST. True where your exchange leads with a serial (the California, Pennsylvania and Virginia parties) (M11 S9d) |
+| `WriteDefaultExchangeMessages(aMessages)` (protected; behind the public non-virtual `SetUpDefaultExchangeMessages`) | **writes nothing.** The default CW exchange messages set-up installs (CQ/S&P/repeat exchange, exchange memories F3-F5, Alt-F3/F4) after your `DescribeSession`: call ONE of the engine's writers on `aMessages` by name -- `WriteNameAndState`, `WriteRSTQSONumber`, `WriteRSTStateOrQSONumber` (the state you send, else the serial), `WriteRSTZone(SendsStateAfterZone)`, `WriteRSTStateOrZone(SendsStateAfterZone)` -- or none, if your `DescribeSession` memories and LogCfg's defaults are your messages (94 of 187 contests). Where the station decides it, test the station as your parse format does. FoundContest asks `ActiveContest`; `uTestExchangeKindReaders` pins every contest at seven stations (M11 S9e part 1, plan F30) |
+| `ExchangeTextMayHoldGridSquare` | False -- may a word of your exchange (a QTH, the typed exchange, a domestic QTH) be read as a grid square? `TREE.LooksLikeAGrid` asks it first, for the beam heading in the call-history windows, the VHF beam heading and the ADIF/external-logger `GRIDSQUARE`. State True where your exchange can carry a grid (18 contests: the VHF/grid and Digi contests, BWQP, General QSO, POTA). It is asked of your IDENTITY, so it must not depend on `Station` (M11 S9e part 1; plan F34 lists the four grid answers that disagree) |
 | `MayBeACallsign` | every word may be a call (the PCC says `N/X` is not) |
 | `InitialExchangeFromCall` | no answer (the Russian DX contests give a Russian station's oblast) |
 | `FormatADIFReceivedExchange` | the ADIF `SRX_STRING`: the received RST in front of the typed exchange when the session's exchange carries an RST, else the typed exchange (the Field Days write a DX station's `1D DX`; POTA the park worked, else the typed exchange) |
@@ -640,9 +642,10 @@ reads `aStation` only: the identity object it is asked of carries no station.
     the session's, never MY STATE itself, since M9a), the contest name;
   - since M7b: the initial exchange and the zone multiplier
     (`InitialExchange`, `ZoneMult`), the DX multiplier limit (`DXMultLimit`),
-    the R150S list (`R150SMode`), and `SuppressZoneExchangeMessages` -- the
-    JIDX contests' refusal of the zone-exchange messages FoundContest's
-    closing set-up would otherwise write (it named them there);
+    the R150S list (`R150SMode`), and ~~`SuppressZoneExchangeMessages`~~ --
+    deleted at M11 S9e part 1: which default exchange messages set-up
+    writes is your class's `WriteDefaultExchangeMessages` now, and the
+    JIDX contests simply write none;
   - since M7b batch 2: the initial exchange's cursor at the start
     (`InitialExchangeCursorAtStart` -- IRTS, RAEM), the DXCC multiplier by
     band (`DXCCMultByBand` -- CQMM), and an exchange memory's CAPTION

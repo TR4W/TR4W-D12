@@ -12,8 +12,11 @@ shape but the domestic file) on `ef8241fa`, part 1b (the domestic file) on
 `69a2740a`, part 2 (the deletion) on `a37c3100`, uncommitted at its
 hand-back, all 2026-10-14 -- so ALL FOUR MULTIPLIER KINDS ARE GONE; S7 is
 DONE (2026-10-14, on `17902292`, uncommitted at its hand-back) except the
-SS columns (F15, blocked on S1); S1, S8 and on are not built (see "WHAT S7,
-S8 AND S9 INHERIT" after S6).** See section 4 S0 for
+SS columns (F15), which S9e part 1 closed; S9a-S9d are DONE (the four
+exchange-shape machines); S9e part 1 is DONE (2026-10-15, on `f7379b26`,
+uncommitted at its hand-back -- every kind reader but S8's and the matrix
+line); S1, S8 and S9e part 2 are not built (see "WHAT S7, S8 AND S9
+INHERIT" after S6, and "WHAT S8 + S9e PART 2 DELETE").** See section 4 S0 for
 what each did and the corrections it made to the figures below. The plan was
 measured READ-ONLY at HEAD `f006acb2` (branch `contestFactory`, 2026-10-14,
 "M10 COMPLETE"). Re-measure before you act on a number. Every count below
@@ -2648,6 +2651,168 @@ compiled by nothing, excluded -- it names `ActiveExchange` 26 times, Q91).**
 | tests | the frozen cross-checks on `uTestContestKindPin.Kinds` -- `uTestExchangeFields` (`LegacyFields`), `uTestExchangeRules` (`LegacyAnswer`), `uTestExchangeParse` (`LegacyHelper`, `LegacyCarries`) -- and `uTestContestSession`, `uTestContestFactory`, `uTestContestPOTA`, `uTestContestDelawareQP`, `uTestDomesticMultiplier`, `uTestDXMultiplierKey`, `uTestPrefixMultiplierKey` (each names a kind or `Kinds`) | the cross-checks go with the kind, as each says; the literal pins stay |
 | tools | `scan.SESSION`'s `EXCHANGE`; `tools/contest-factory-m11/kind-reach.py` | update with the deletion |
 
+#### S9e part 1 DONE (2026-10-15, on `f7379b26`; uncommitted at hand-back): THE LAST READERS OUTSIDE THE INITIAL EXCHANGE
+
+Every reader in the table above but S8's (the two initial-exchange history
+renders, blocked on Q50), the matrix line, and the declarations, writers,
+traits and statements that S8 and S9e part 2 delete.
+
+- **Pin first: `uTestExchangeKindReaders` (new).** Every ContestType (187) at
+  the seven roster stations (`uTestExchangeFields.TPinStation`), against
+  literals made by running the OLD tests, frozen in the unit
+  (`LegacyColumns`, `LegacyMessages`, `LegacyGrid`) on the session shape
+  `uTestContestKindPin.Kinds` resolves, dumped and laid out grouped by
+  answer. **OLD code (the program's answer = the frozen test): 331,341
+  passed, 0 failed -- 320,864 baseline + 10,477** (columns 2,619, messages
+  1,311, grid 1,310, cross-checks 5,237). **NEW code: 332,645 passed, 0
+  failed** -- the same 10,477 unchanged, plus `Test_TheGridReadingDependsOnNoStation`
+  (1,310), less the four `uTestContestSession` checks of the deleted
+  `SuppressZoneExchangeMessages` and two of `uTestContestDelawareQP`'s
+  checks over `TSessionValue`, which lost that member. The cross-checks stay
+  until S9e part 2.
+- **1. The Sweepstakes columns (F15/F15a) -- CLOSED.**
+  `MainUnit.SetColumnsWidth` asks the field list start-up assigned
+  (`ExchangeInformation`, the active contest's `ReceivedExchangeFields`)
+  through two `uExchangeFields` functions: `ExchangeFieldsShowCheckColumn` =
+  `.Check`; `ExchangeFieldsShowPrecedenceColumn` = `.Precedence and .Check`
+  -- NOT `.Precedence` alone, which ALL JA's set marks too and would show a
+  column ALL JA never had (F15a; NY4I's call if he wants it). **Equivalence:**
+  both are True for exactly ARRL SS CW and SSB at every station, as the kind
+  test was (14 of 1,309 pairs; pinned and cross-checked). Timing unchanged:
+  `SetColumnsWidth` still runs once, straight after the assignment (F19).
+  MainUnit no longer uses `uContestSession`.
+- **2. The dead FISTS log-line parse (F29) -- DELETED.** Proved dead by a
+  call-graph walk over every tracked file in the repository (`rg -i`, which
+  covers `tr4w.lpr`, the server, the tests and tools, backups excluded):
+  `LOGDUPE.ParseExchangeIntoContestExchange`'s one caller was
+  `LOGSUBS2.PushLogStringIntoEditableLogAndLogPopedQSO`, whose callers were
+  `LOGSUBS2.LogBackCopy` (declared only in LOGSUBS2's implementation, called
+  by nothing) and two lines inside a `{ }` comment block (`Disabled in
+  6.46`), plus a `//` line; and `LogBackCopy` handed it a `;` note line,
+  which the routine's head rejects. Deleted: the routine and its interface
+  declaration (LOGDUPE), `PushLogStringIntoEditableLogAndLogPopedQSO` and its
+  declaration, the empty `PutContactIntoLogFile` (its only caller),
+  `LogBackCopy`, the two `//` lines naming them (LOGSUBS2), and
+  `LOGSTUFF.ProcessPartialCallAndInitialExchange` and its declaration, whose
+  only caller was the deleted push. Nothing else named any of them. Narrowing
+  1260 -> **1251** (nine conversions lived in the deleted code); the ceiling
+  in `Build-App.ps1` is lowered to match.
+- **3. The default CW exchange messages (F30) -- DECIDED AND MOVED.** The
+  `case ContestSession.Exchange of` at the foot of `FCONTEST.FoundContest` is
+  gone.
+  - **The design (Q92 option 2, the S9d technique).** `uContestBase.
+    TExchangeMessageWriters`, an abstract class with one named method per
+    arm: `WriteNameAndState`, `WriteRSTQSONumber`, `WriteRSTStateOrQSONumber`,
+    `WriteRSTZone(aStateAfterZone)`, `WriteRSTStateOrZone(aStateAfterZone)`.
+    FCONTEST's `TEngineExchangeMessageWriters` implements it, each body the
+    arm unchanged (the two "or" methods keep the arm's own `SentMyState = ''`
+    test, which is engine state). `TContestBase.WriteDefaultExchangeMessages
+    (aMessages)` is the protected virtual, behind the public non-virtual
+    `SetUpDefaultExchangeMessages` and the nil-safe
+    `ContestSetUpDefaultExchangeMessages`. **The base writes nothing**, which
+    is what the `case` did for every kind it had no arm for.
+  - **Why not a second mechanism, and why not methods on `TExchangeParsers`.**
+    Same reason as S9d -- the writers touch the settings and CW memory banks,
+    which a contest class cannot link -- so the same technique, an engine
+    object handed in. A separate class rather than five more methods on the
+    parsers, because a parser that writes CW memories would make one
+    interface carry two unrelated services and every parser test double grow
+    five stubs it never calls.
+  - **Why not every class states it.** Unlike the four machines, "none" is the
+    common answer (94 of 187 contests), and their messages come from
+    `DescribeSession`'s memories and LogCfg. A class that forgets writes none
+    -- the old `case`'s answer for an unlisted kind -- and the pin names it.
+  - **Asked of `ActiveContest(Contest)`, at the same place, last.** The set
+    moves with the station for eight contests, and the classes test `Station`
+    with the predicate their parse format uses; the identity has no station.
+    `ActiveContest` is built from the same globals `DescribeSession` was handed
+    (country, host state), so the branches agree (pinned at the seven
+    stations).
+  - **The overrides: 92**, beside `ParseReceivedExchangeFormat` in the same
+    holder classes, covering 93 contests: `WriteNameAndState` 8,
+    `WriteRSTQSONumber` 23, `WriteRSTStateOrQSONumber` 41 unconditional (the
+    PACC's two station formats both took that arm) + 7 behind the station
+    test (`not CountsDXMultiplier`: ARRL 160, the ARRL DX family base, 7QP,
+    NEQP, Texas, the Salmon Run; `not Station.InHostState`: Arizona),
+    `WriteRSTStateOrZone(SendsStateAfterZone)` 6, `WriteRSTZone(
+    SendsStateAfterZone)` 8 (CQ WW RTTY's answer True). Helpers: 5.
+  - **Two session/contest answers lost their only reader.**
+    `TSessionDefaults.SuppressZoneExchangeMessages` (and
+    `svSuppressZoneExchangeMessages`) is DELETED: the JIDX stated it
+    unconditionally, and now simply state no messages (a Japanese entrant's
+    zone set was refused; anyone else's prefecture shape had no arm).
+    `SendsStateAfterZone` STAYS: the zone classes pass it to the writer, so
+    it is still CQ WW RTTY's one statement of the rule (and
+    `uTestExchangeRules` still pins it).
+  - **Equivalence:** the pin's message column -- 93 contests write one set
+    each at some station, uniform but for the eight -- matches the frozen
+    `case` at all 1,309 pairs. **The matrix's `memory.cw.*` lines are the
+    oracle for the engine bodies and should be IDENTICAL**; one path changes,
+    and the matrix does not run it (F32).
+- **4. The grid question (S9f) -- MOVED; `GRID_CARRYING_EXCHANGES` DELETED.**
+  `TREE.LooksLikeAGrid` asks `ContestIdentity(Contest).
+  ExchangeTextMayHoldGridSquare` first, before any string work.
+  `TContestBase.ExchangeTextMayHoldGridSquare` (base False; nil-safe
+  `ContestExchangeTextMayHoldGridSquare`) is overridden True by **18
+  classes** -- exactly the contests whose session ran one of the set's eight
+  kinds, the same at every station: ARRL Digi, ARRL VHF x3, BWQP, CQ VHF,
+  European VHF, Tesla, General QSO, POTA, Radio VHF FD, Stew Perry, WWL,
+  OZHCR VHF, Makrothen, Batavia FT8, WW Digi, RTC. **It transcribes TREE's
+  set, not the other two** (F28; the differences are F34).
+  - **Not "once per paint", because there is no paint (F33).** The brief and
+    the plan said the per-row-per-repaint reader should read it once per
+    paint. No caller of `LooksLikeAGrid` runs per row and none ever did:
+    the comment's `logwind.pas:3042` was `DisplayUserInfo` at the commit
+    that wrote it (`e8f70dad`) and still is. So it is read once per CALL,
+    on the identity: a locked table lookup with no station to rebuild
+    (`ActiveContest` would rebuild the station on every call, and the
+    external logger's caller is not known to be main-thread). Safe only
+    while no class answers it from `Station`, so
+    `Test_TheGridReadingDependsOnNoStation` pins the station-bearing object
+    against the identity for every contest at every station.
+  - `uGridShape` no longer holds the set or uses VC; `uTestContestPOTA`
+    asks POTA's and CQ WPX CW's identities instead of the set;
+    `uTestExchangeKindReaders` keeps a frozen copy for its cross-check.
+    TREE now uses `PostUnit` and `uContestRegistry` (FIRST in its
+    implementation uses, so neither shadows a name it took from the units
+    below) and no longer uses `uContestSession`.
+- **Build:** narrowing **1251** (ceiling lowered 1260 -> 1251), range **3**,
+  full `-B`. Matrix, corpus, factory check and lints NOT run here. **All
+  should be IDENTICAL:** the matrix prints the columns' source (the field
+  list), the default memories, and parses through no changed seam; the corpus
+  exports ADIF through `LooksLikeAGrid` (the PostUnit tail) with the same
+  answer per contest.
+- **Inventory** (generated to check the tool, then the tracked doc restored):
+  rows 29 -> **26** (the FISTS log-line row, the two SS-column rows),
+  contests 30 -- unchanged; shape-4 sites 26 -> **22** (`case`s 2 -> 1:
+  FoundContest's went; the one left is LOGEDIT.InitialExchangeEntry's over
+  the INITIAL exchange kind, S8's), records 43 -> **35** (PROXY 12 -> **9**, SHARED 21 ->
+  **16**, SHAPE 0, UNUSED 10). TREE's `in` test was never a scanned site.
+  `judgements.py` lost the `ParseExchangeIntoContestExchange` and
+  `SetColumnsWidth` rows (comments say why); `scan.SESSION`'s `EXCHANGE`
+  entry stays for S8 and part 2.
+
+**WHAT S8 + S9e PART 2 DELETE -- EVERY REMAINING READER OF THE KIND (measured
+after part 1; code only, logddx -- compiled by nothing -- excluded).**
+
+| where | reads | what it needs |
+|---|---|---|
+| `LOGDUPE.GetInitialExchangeStringFromContestExchange` | 5 `ContestSession.Exchange` | S8 (Q50) |
+| `LOGEDIT.InitialExchangeEntry` | 15 `ContestSession.Exchange` | S8 (Q50) |
+| `uContestMatrix` `active.exchange` | 1 | DATA; dropping it re-freezes all 186 frozen files -- NY4I's call |
+| `uContestSession` | `FExchange`, `Exchange`, `WriteExchange` | delete with the last reader |
+| `FCONTEST` writers | `ApplyContestTraits` (`WriteExchange(aContest.ExchangeKind)`), `ApplySessionDefaults` (`IsStated(svExchange)` / `WriteExchange(aSession.Exchange)`) | delete with the last reader |
+| `uContestBase` | `GetExchangeKind` / `ExchangeKind`; `TSessionDefaults.FExchange` / `SetExchange` / `Exchange`; `svExchange` | delete |
+| the trait and the statements | **186** `GetExchangeKind` overrides; **20** `aSession.Exchange :=` statements in **11** classes' `DescribeSession` | delete; each station test already states the choice in its format, field list, columns and (now) messages |
+| VC | `ExchangeType` (61 members); `ActiveExchangeArray` (F13; `Lint-SpellingTables`' floor of 24) | delete |
+| tests -- the frozen cross-checks on `Kinds` | `uTestExchangeFields` (`LegacyFields`), `uTestExchangeRules` (`LegacyAnswer`), `uTestExchangeParse` (`LegacyHelper`, `LegacyCarries`), `uTestExchangeKindReaders` (`LegacyColumns`, `LegacyMessages`, `LegacyGrid`) | go with the kind, as each says; the literal pins stay |
+| tests -- naming a kind or `Kinds` | `uTestContestKindPin` (`Kinds`, `KIND_PINS`), `uTestContestSession`, `uTestContestFactory`, `uTestContestPOTA`, `uTestContestDelawareQP`, `uTestDomesticMultiplier`, `uTestDXMultiplierKey`, `uTestPrefixMultiplierKey` | rewrite or delete with the kind |
+| tools | `scan.SESSION`'s `EXCHANGE` (and `ACTIVEEXCHANGE`); `tools/contest-factory-m11/kind-reach.py` | update with the deletion |
+| comments only | `uADIFExchange`, `uCabrilloExchange`, `uExchangeFields`, `uLogSchema`, `uSettingsModel`, `VC`'s "add a handler" note, `logwind`, `uProgramMain`, TREE, `uContestBase` | reword when the enum goes |
+
+**After part 1: 21 reads of `ContestSession.Exchange` in 3 files** (LOGDUPE
+5, LOGEDIT 15, uContestMatrix 1), down from 26 in 6.
+
 ### S10 -- (optional, Q93) Reach-1 shapes become their contest's own
 
 - For each of the 20 members in 1.1, lift its parser out of LOGSTUFF and
@@ -2681,8 +2846,8 @@ Q91 deletes it. `Lint-ContestNameTests` is left with `MainUnit:8045` and
 | **F12** | `uContestBase.pas:2718` | A reach-1 rule (FISTS) sits in the base's non-virtual `CombineScore`. **CLOSED at S7 (2026-10-14):** it is `TContestFISTS.CombineWithMultipliers`, and `TScoreTotals.SessionExchange` went with it |
 | **F13** | `VC.pas:3359` | `ActiveExchangeArray` survived for two log lines (`uADIFExchange:403/413`). **Those went at S9b** (the machine is helpers now and its Error log no longer names the shape); the array has NO reader. It goes with the kind enums in the deletion stage, and `Lint-SpellingTables`' floor of 24 falls with it |
 | **F14** | `Lint-ContestNameTests.ps1` `$TOTAL_FLOOR = 5`, 6 found | S8 removes 4. The floor must fall in the same commit, or the lint fails with "broken parser" |
-| **F15** | `MainUnit:9514-9516`; `logdupe:1709-1715` | The SS-shape test duplicates `ExchangeInformation.Precedence`/`.Check`. They are equal once S1 removes `CheckAndChapterOrQTH`, the only other arm that sets `Check` |
-| **F15a** | `MainUnit.SetColumnsWidth`; `uExchangeFields` | (S9d, an update to F15) **S9a removed F15's blocker for one column of two.** `ExchangeInformation.Check` is marked by one field set now, `ExchangeFieldsQSONumberPrecedenceCheckQTH` (Sweepstakes'), so the Check column's `= QSONumberPrecedenceCheckDomesticQTHExchange` equals `ExchangeInformation.Check` for every registered contest at every roster station. `.Precedence` is NOT a substitute for the Precedence column: `ExchangeFieldsRSTPrecedenceQTH` (ALL JA) marks it too, so asking it would show a precedence column in ALL JA -- a behaviour change for NY4I. Left for S9e: a class answer for both, or `.Check` for both with F19's once-at-start-up timing accepted |
+| **F15** | `MainUnit:9514-9516`; `logdupe:1709-1715` | The SS-shape test duplicates `ExchangeInformation.Precedence`/`.Check`. They are equal once S1 removes `CheckAndChapterOrQTH`, the only other arm that sets `Check`. **CLOSED at S9e part 1 (2026-10-15)** -- see F15a |
+| **F15a** | `MainUnit.SetColumnsWidth`; `uExchangeFields` | (S9d, an update to F15) **S9a removed F15's blocker for one column of two.** `ExchangeInformation.Check` is marked by one field set now, `ExchangeFieldsQSONumberPrecedenceCheckQTH` (Sweepstakes'), so the Check column's `= QSONumberPrecedenceCheckDomesticQTHExchange` equals `ExchangeInformation.Check` for every registered contest at every roster station. `.Precedence` is NOT a substitute for the Precedence column: `ExchangeFieldsRSTPrecedenceQTH` (ALL JA) marks it too, so asking it would show a precedence column in ALL JA -- a behaviour change for NY4I. Left for S9e: a class answer for both, or `.Check` for both with F19's once-at-start-up timing accepted. **CLOSED at S9e part 1 (2026-10-15):** the field list, with F19's timing (unchanged -- `SetColumnsWidth` always ran once): Check = `.Check`, Precedence = `.Precedence and .Check` (`uExchangeFields.ExchangeFieldsShow*Column`), so ALL JA still shows no precedence column. Showing it is NY4I's call, a one-word change |
 | **F16** | inventory section 9.1; `analyses.dead_arms` | (S0a) The "export arms dead by default" table is EMPTY, and not because there are none: it reads `SetHisEx` / `FormatADIFExchangeOfKind` records, and those machines left the scan when their selector became a parameter (`aCtx.SessionExchange`, `aKind`). The same blindness as F1's three unscanned machines. Not fixed at S0a, which judges the machines SHAPE |
 | **F17** | `uProgramMain:2701` versus `:2405` | (S0d) `CD.MasterFileExists` is set after the `/MATRIX` halt (and `/EXPORT`'s), so headless runs never open TRMASTER: `CD.GetEntry('W1AW')` answers "not found" while the shipped file holds W1AW. Every TRMASTER-sourced initial exchange is blank in the matrix |
 | **F19** | `LogCfg` (once, `uProgramMain:2318`); `uProgramMain:2306-2307` versus `uSettingsEffects:353` | (S2) After F9's fix the `Doing*` answers follow a run-time contest switch, but what start-up DERIVED from them and from the exchange does not: `NumberDifferentMults`, `RemainingMultDisplay`, `Sheet.SheetInitAndLoad`, `SetUpExchangeInformation` and `SetColumnsWidth` run once. A peer's CONTEST line still leaves those describing the previous contest. Not measured on a bench. (S9a: `SetUpExchangeInformation` is deleted; its successor, the `ExchangeInformation := ContestReceivedExchangeFields(ActiveContest(Contest))` assignment, still runs once, in the same place) |
@@ -2694,10 +2859,14 @@ Q91 deletes it. `Lint-ContestNameTests` is left with `MainUnit:8045` and
 | **F25** | `TContestCupRFCW/SSB/DIG`, `TContestCQWWRTTY`, `TContestYouthChampionshipRF`; `uADIFExchange` | **FIXED 2026-10-14 (NY4I: "F25 was an artifact where the ADIF exchange generation had an error. We should not have that now if the contest class works. We should report an error as the silent error is not good").** S9b found that five contests exported `Error generating my exchange` as the ADIF `STX_STRING` of every QSO: the old machine's format for three shapes raised and its own `try`/`except` swallowed it (`QSONumberAndGridSquare`, the Cup RF's three runnings, `'%-3s %-7s'` of a number; `RSTZoneAndPossibleDomesticQTHExchange`, CQ WW RTTY, `'%-3d %02u %-4s'` of a `ShortString` zone; `AgeAndQSONumberExchange`, the Youth Championship RF, three specifiers and two arguments). Each of the five now exports **what the same class prints in its Cabrillo sent column** (that column was never broken): Cup RF `ADIFSentQSONumberStateShort` (`'%.*d %-6.4s '`, serial then MY STATE, which is the grid the Cup RF sends), CQ WW RTTY `ADIFSentRSTZoneStateDX` (`'%-3d %.2u %-4s'`, state or `DX`), Youth Championship RF `ADIFSentStateQSONumber2` (`'%-2s %.*d '`). `ADIFSentNotBuilt` and `ADIFMyExchangeErrorMarker` are deleted: **no placeholder stands in for an exchange any more.** A getter that cannot build its string raises; `TContestBase.TryFormatADIFSentExchange` logs an Error naming the contest and the QSO, answers `''`, and PostUnit omits `STX_STRING` from that record and warns once per export. Open for NY4I: the Youth Championship RF's received column is `Age QSONumber`, so whether its SENT side really is state-and-serial (the Cabrillo column says so) is the sponsor's to confirm; the export now agrees with the Cabrillo file, which is the only content the tree knew |
 | **F26** | `TContestARCI`, `TContestAllJA`, `TContestCountyHunter`, `TContestFISTS`, `TContestGridLoc`, `TContestJALongPrefect`, `TContestKidsDay`, `TContestJockWhiteFieldDay`, `TContestPOTA`, `TContestQCWA`, `TContestQCWAGolden`, `TContestTenTen`, `TContestUA4WChampionship`, `TContestWWL`, `TContestXmas`; `uCabrilloExchange.CabrilloSentNotHandled` | (S9c) **Fifteen registered contests write `ERROR EXCHANGE NOT HANDLED` in BOTH exchange columns of every `QSO:` line.** The old machine had no arm for 14 of their shapes (`KidsDay`, `NZFieldDay`, `NameAndPossibleGridSquare`, `NameQTHAndPossibleTenTenNumber`, `QSONumberNameChapterAndQTH`, `RSTALLJAPrefectureAndPrecedence`, `RSTAndGrid`, `RSTAndGridSquareOrRDA`, `RSTAndPOTAPark`, `RSTLongJAPrefecture`, `RSTPossibleDomesticQTHAndPower`, `RSTQSONumberAndRandomCharacters`, `RSTQTH`, `RSTQTHNameAndFistsNumberOrPower`) and its `else` wrote the marker (Issue #1043, deliberately loud). The same 14 shapes are the ADIF `None` list (F25). Transcribed, not fixed: each class states `CabrilloSentNotHandled` / `CabrilloReceivedNotHandled`, which is that answer by name; a fix needs each sponsor's column layout (POTA has no Cabrillo at all, so its answer may be right). The classless DUMMYCONTEST gets it from the base. **UPDATE 2026-10-14 (REPORTED, NOT FIXED; NY4I: the silent error is not good):** the Cabrillo marker stays in the file (deliberate, Issue #1043), but every such `QSO:` line now logs an Error naming the contest AND the QSO, the writer counts them, and the operator is warned ONCE per export (`PostUnit.ReportExchangeFailures`; log-only in a headless /EXPORT). The same fourteen shapes' ADIF `STX_STRING` used to be `None`; it is now LEFT OUT of the record (`ADIFSentNotImplemented` raises `EADIFExchangeNotImplemented`, reported the same way), because `None` is a value a robot reads as an exchange. No format was invented: each needs the sponsor's layout. The Cabrillo writer's `except` used to write a DEBUG line and return False with a truncated file; it is an Error plus a warning now |
 | **F27** | `PostUnit.MyExchangeForExport:2344`, `TContestJIDXCW`/`TContestJIDXSSB.GetADIFSentExchange` | (S9c, found while reading how PostUnit reaches the station) **S9b's ADIF `STX_STRING` for the JIDX asks an object that has no station.** `MyExchangeForExport(aContest)` builds `my` from the active contest it is handed but then calls `ContestIdentity(Contest).FormatADIFSentExchange`, and the identity object is never given a station (`SetStation` runs only on `ActiveContest`'s object), so `IsJapaneseEntrant` is False at every entrant: a Japanese JIDX station exports the prefecture layout (`'%-3d %-7d'`) where the old machine, keyed on the session's exchange, exported the zone layout (`'%-3d %-7.2d'`). The other eight station-dependent contests print the same ADIF text at both shapes, so only JIDX moves. Neither the corpus (no JIDX set) nor the matrix (no STX_STRING) nor `uTestADIFSentExchange` (it builds the object WITH the station) sees it. **FIXED 2026-10-14: `PostUnit.MyExchangeForExport` asks `ExchangeContest(aContest)` -- the `ActiveContest` object when the contest has a class, else `ContestIdentity` -- and the Cabrillo writer asks the same function.** Only JIDX CW/SSB move (a scan of every `GetADIFSentExchange` found no other station test); the corpus and the matrix have no Japanese entrant, so neither sees it, and the unit pin builds the object with its station, so none of the three could. |
-| **F28** | `TContestBase.ExchangeCarriesDomesticQTH` / `ExchangeCarriesZone` / `ExchangeCarriesGridSquare` (were `uContestReadiness`'s three sets); `ReceivesGridSquareExchange`; `uGridShape.GRID_CARRYING_EXCHANGES` | (S9d) **TRANSCRIBED, NOT JUDGED.** The readiness check reports an empty MY STATE, MY ZONE or MY GRID -- what the station SENDS -- from sets of RECEIVED exchange kinds, and S9d made each set a class answer for exactly the contests it held, so nothing changed. Two consequences are worth a ruling: (1) the proxy can be wrong for a station, e.g. a W or VE entrant in the CQ 160 contests runs `RSTZoneOrDomesticQTH`, which sits in both the domestic and the zone sets, so both MY STATE and MY ZONE are required of it though (by the sponsor's rules, unverified here) it sends only a state, and the improper-QTH refusal names MY COUNTRY for every domestic-QTH contest, not only those whose exchange MY COUNTRY chose (ARRL DX; the comment says it was written for it); (2) **the tree now has THREE grid sets that disagree**: `ExchangeCarriesGridSquare` (20 contests: the VHF/grid, Cup RF, RTC/Tesla/EU VHF family, Grid Loc, UA4W, WWL...), `ReceivesGridSquareExchange` (9, the ADIF import's) and `GRID_CARRYING_EXCHANGES` (TREE's per-row grid test; it holds BWQP's/General QSO's `RSTNameAndQTH` and POTA, and not the Cup RF or Grid Loc). A sent-exchange model would answer (1); S9f decides (2) for TREE. Not measured on a bench |
-| **F29** | `LOGDUPE.ParseExchangeIntoContestExchange`; `LOGSUBS2.PushLogStringIntoEditableLogAndLogPopedQSO`, `LogBackCopy` | (S9d, found measuring the readers) **The FISTS log-line placement (`ContestSession.Exchange = RSTQTHNameAndFistsNumberOrPowerExchange`) is DEAD, and so is the routine.** `ParseExchangeIntoContestExchange`'s only caller is `PushLogStringIntoEditableLogAndLogPopedQSO`, whose callers are `LogBackCopy` -- which nothing calls -- and two lines inside a `{ }`-commented block; and `LogBackCopy` hands it a `;` note line, which the routine's head rejects. The plan's and the agent's list of `ExchangeInformation` readers (S9a: "`LOGDUPE.ParseExchangeIntoContestExchange` (via `LOGSUBS2`'s log-string read)") names a reader that never runs. S9e can delete the chain; not deleted here (no behaviour to move) |
-| **F30** | `FCONTEST.FoundContest`'s sent-message `case ContestSession.Exchange of` | (S9d) **Moving it needs a design decision.** It chooses which of FCONTEST's default CW exchange-message routines set-up runs (`SetUpNameAndStateExchange`, `SetUpRSTQSONumberExchange`, `SetUpRSTMyStateExchange`, `SetUpRSTMyZoneExchange`), with `SentMyState` and the contest's `SuppressZoneExchangeMessages` / `SendsStateAfterZone` around it -- engine routines that write the CW memories, which a contest class cannot link. The S9d answer for the parsers (an engine-implemented service class the contest calls by name) fits, as would a class answer naming the message set (an enum again, which Q92 rejected for the machines). Reach: 10 labels; 93 contests run one of them at some matrix station, 86 at all three |
+| **F28** | `TContestBase.ExchangeCarriesDomesticQTH` / `ExchangeCarriesZone` / `ExchangeCarriesGridSquare` (were `uContestReadiness`'s three sets); `ReceivesGridSquareExchange`; `uGridShape.GRID_CARRYING_EXCHANGES` | (S9d) **TRANSCRIBED, NOT JUDGED.** The readiness check reports an empty MY STATE, MY ZONE or MY GRID -- what the station SENDS -- from sets of RECEIVED exchange kinds, and S9d made each set a class answer for exactly the contests it held, so nothing changed. Two consequences are worth a ruling: (1) the proxy can be wrong for a station, e.g. a W or VE entrant in the CQ 160 contests runs `RSTZoneOrDomesticQTH`, which sits in both the domestic and the zone sets, so both MY STATE and MY ZONE are required of it though (by the sponsor's rules, unverified here) it sends only a state, and the improper-QTH refusal names MY COUNTRY for every domestic-QTH contest, not only those whose exchange MY COUNTRY chose (ARRL DX; the comment says it was written for it); (2) **the tree now has THREE grid sets that disagree**: `ExchangeCarriesGridSquare` (20 contests: the VHF/grid, Cup RF, RTC/Tesla/EU VHF family, Grid Loc, UA4W, WWL...), `ReceivesGridSquareExchange` (9, the ADIF import's) and `GRID_CARRYING_EXCHANGES` (TREE's per-row grid test; it holds BWQP's/General QSO's `RSTNameAndQTH` and POTA, and not the Cup RF or Grid Loc). A sent-exchange model would answer (1); S9f decides (2) for TREE. Not measured on a bench. **(2) for TREE, S9e part 1 (2026-10-15): TRANSCRIBED, NOT RECONCILED** -- TREE's set is the class answer `ExchangeTextMayHoldGridSquare` (18 contests) and the set is deleted; the tree now holds FOUR grid answers (F34) |
+| **F29** | `LOGDUPE.ParseExchangeIntoContestExchange`; `LOGSUBS2.PushLogStringIntoEditableLogAndLogPopedQSO`, `LogBackCopy` | (S9d, found measuring the readers) **The FISTS log-line placement (`ContestSession.Exchange = RSTQTHNameAndFistsNumberOrPowerExchange`) is DEAD, and so is the routine.** `ParseExchangeIntoContestExchange`'s only caller is `PushLogStringIntoEditableLogAndLogPopedQSO`, whose callers are `LogBackCopy` -- which nothing calls -- and two lines inside a `{ }`-commented block; and `LogBackCopy` hands it a `;` note line, which the routine's head rejects. The plan's and the agent's list of `ExchangeInformation` readers (S9a: "`LOGDUPE.ParseExchangeIntoContestExchange` (via `LOGSUBS2`'s log-string read)") names a reader that never runs. S9e can delete the chain; not deleted here (no behaviour to move). **DELETED at S9e part 1 (2026-10-15)**, with `ProcessPartialCallAndInitialExchange` (LOGSTUFF) and the empty `PutContactIntoLogFile`, whose only caller was the chain -- proof in the S9e part 1 section |
+| **F30** | `FCONTEST.FoundContest`'s sent-message `case ContestSession.Exchange of` | (S9d) **Moving it needs a design decision.** It chooses which of FCONTEST's default CW exchange-message routines set-up runs (`SetUpNameAndStateExchange`, `SetUpRSTQSONumberExchange`, `SetUpRSTMyStateExchange`, `SetUpRSTMyZoneExchange`), with `SentMyState` and the contest's `SuppressZoneExchangeMessages` / `SendsStateAfterZone` around it -- engine routines that write the CW memories, which a contest class cannot link. The S9d answer for the parsers (an engine-implemented service class the contest calls by name) fits, as would a class answer naming the message set (an enum again, which Q92 rejected for the machines). Reach: 10 labels; 93 contests run one of them at some matrix station, 86 at all three. **DECIDED AND MOVED at S9e part 1 (2026-10-15):** the S9d technique -- `uContestBase.TExchangeMessageWriters` (five named methods, one per arm), implemented by FCONTEST's `TEngineExchangeMessageWriters`, called by name from each contest's `WriteDefaultExchangeMessages` (92 overrides, 93 contests), asked of `ActiveContest` at the same place. No enum. `SuppressZoneExchangeMessages` deleted (JIDX state none) |
 | **F31** | `TContestIN7QPNE.ParseReceivedExchange`; `TReceivedExchangeSession.ExchangeFormatOf` | (S9d) **IN7QPNE's party parse depended on the session's kind, invisibly.** It hands its judging party's `ParseReceivedExchange` the session it was handed, and until S9d that carried IN7QPNE's kind (`RSTDomesticQTH`), so Delaware's QSOs parsed as `RSTDomesticQTH`, not Delaware's own `RSTDomesticOrDXQTH`. S9d kept that exactly (`ExchangeFormatOf`). Whether a Delaware QSO in IN7QPNE should parse in Delaware's format (which accepts a DX QTH) is a sponsor question; how often the two formats disagree inside IN7QPNE was not measured, on a bench or otherwise |
+| **F32** | `FCONTEST.FoundContest`'s sent-message `case` (deleted) | (S9e part 1) **The `case` ran for DUMMYCONTEST too, on a STALE kind.** It sat outside FoundContest's `if Contest <> DUMMYCONTEST` block, but `ApplyContestTraits` (the session's one writer at set-up) sits inside it, so choosing DUMMY CONTEST after another contest in one session wrote the PREVIOUS contest's default exchange messages. The class answer is asked of `ActiveContest(DUMMYCONTEST)`, which is nil, so it now writes none -- the answer for a fresh start. A behaviour change on that path only; the matrix skips DUMMYCONTEST and the corpus never selects it. Not measured on a bench |
+| **F33** | `TREE.LooksLikeAGrid`; commit `e8f70dad` | (S9e part 1) **"Once per log row per repaint" was never true.** The comment, the M10 plan, `uContestSession` and the `contest-scoring` agent all said it, citing `logwind.pas:3042`; that line was `DisplayUserInfo` (once per call shown) at the very commit that wrote the claim, and is now. No caller runs per row: the callers are the call-history displays (LOGWIND, LOGEDIT x3), MainUnit's VHF beam heading, PostUnit's ADIF tail (once per record) and the external logger (three per QSO). So S9f's "read once per paint" had no paint; the answer is read once per call, on the contest's identity. Where NY4I's eighty-lines-per-millisecond log came from was not re-measured -- an export or a full-log send are the candidates |
+| **F34** | `TContestBase.ExchangeTextMayHoldGridSquare` / `ExchangeCarriesGridSquare` / `ReceivesGridSquareExchange` / `HasGridSquareMultiplier` | (S9e part 1, F28 continued) **FOUR grid answers.** Measured from the overrides: TREE's (18) and the readiness check's (20) differ by BWQP, the General QSO and POTA (TREE's only: a name-and-QTH or park exchange whose word may be a grid) and the Cup RF x3, Grid Loc and the UA4W Championship (the readiness check's only); the ADIF import's (9) is a subset of TREE's. Each is transcribed; one sent/received exchange model would answer all of them |
+| **F35** | `CLAUDE.md` (Testing, 1), `contest-scoring` agent header | (S9e part 1) **"The unit-test binary links only leaf `src` units" is stale.** `tr4w_unit_tests.lpr` uses `MainUnit`, and the contest pins use `PostUnit`, `LogEdit` and `FCONTEST` (`uTestContestKindPin`, `uTestContestSession`, `uTestStationFactOverrides`) -- the engine is LINKED. What stays true is that the app's globals are not booted, so `ProcessExchange`, scoring and dupe are not exercised end to end. The agent file is corrected; CLAUDE.md is NY4I's to correct |
 | **F18** | `MainUnit:7976`, `:8031` | (S0d) `LoadinLog` adds the logged initial-exchange history only while `IntitialExLoaded` is False, and latches it True at its end. A second `LoadinLog` in one session -- the matrix's totals reload, and any in-session reload -- adds no history. Whether a live reload path (an import, a rescore) loses history this way was not measured |
 
 Open questions to add to the design (next free number Q92):

@@ -543,7 +543,10 @@ end;
 
 (* JIDX: A JA STATION SENDS ITS ZONE, EVERYONE ELSE A PREFECTURE -- and the
    closing set-up writes no zone-exchange messages either way, which was a
-   test of the contest's name in FoundContest until M7b. (Its zone kind,
+   test of the contest's name in FoundContest until M7b. (That refusal was a
+   session statement, SuppressZoneExchangeMessages, until M11 S9e part 1; it
+   is the class's choice of no default messages now, pinned at every
+   station by uTestExchangeKindReaders. Its zone kind,
    CQ zones for JA, left with the kind at M11 S5 part 2:
    uTestZoneMultiplier pins HasZoneMultiplier on both sides.) *)
 procedure TContestSessionTests.Test_JIDXDescribesBothSidesAndRefusesZoneMessages;
@@ -568,8 +571,6 @@ begin
          CheckTrue(session.InitialExchange = ZoneInitialExchange,
                    name + ' JA: zone initial exchange');
          CheckTrue(not session.IsStated(svDomesticFile), name + ' JA: no domestic file');
-         CheckTrue(session.SuppressZoneExchangeMessages,
-                   name + ' JA: no zone-exchange messages');
       finally
          session.Free;
          end;
@@ -577,8 +578,6 @@ begin
       try
          CheckTrue(session.Exchange = RSTPrefectureExchange, name + ' W: prefecture');
          CheckEquals('JIDX', session.DomesticFile, name + ' W: JIDX');
-         CheckTrue(session.SuppressZoneExchangeMessages,
-                   name + ' W: no zone-exchange messages');
       finally
          session.Free;
          end;

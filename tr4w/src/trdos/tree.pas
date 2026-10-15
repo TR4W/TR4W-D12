@@ -988,6 +988,12 @@ var
 implementation
 
 uses
+   (* LooksLikeAGrid's first question -- the open contest (PostUnit.Contest)
+     and its identity (uContestRegistry), M11 S9e part 1. FIRST, so that
+     neither can shadow a name this unit takes from the units below:
+     Pascal resolves an identifier to the LAST unit that declares it. *)
+   PostUnit,
+   uContestRegistry,
    uSettingsModel,     // Settings -- the settings that have left CFGCA
   Dialogs,         (* QuestionDlg -- OkayToDeleteExistingFile, was MessageBoxA *)
   Controls,        (* mrYes / mrNo -- the modal results QuestionDlg answers *)
@@ -1003,12 +1009,13 @@ uses
   ,
   uFreqTimeFormat   // Issue #997: golden-tested time formatter
   , uConfigValues
-  (* GRID_CARRYING_EXCHANGES and LooksLikeGridSquare -- the two halves of
-    LooksLikeAGrid, lifted to a leaf when POTA gained its class. *)
+  (* LooksLikeGridSquare -- the shape half of LooksLikeAGrid, lifted to a
+    leaf when POTA gained its class. *)
   , uGridShape
-  (* ContestSession -- the exchange kind set-up resolved, LooksLikeAGrid's
-    first question (M10 S9f). A leaf over VC, so no cycle. *)
-  , uContestSession;
+  (* ~~uContestSession~~ stood here for LooksLikeAGrid's first question,
+    the session's exchange kind (M10 S9f). The contest answers it since
+    M11 S9e part 1 -- PostUnit and uContestRegistry, FIRST in this list. *)
+  ;
 
 //{WLI}FUNCTION  BYTADDR  (Call: Pointer; NumberCalls: INTEGER; A: Pointer): INTEGER; EXTERNAL;
 //{WLI}FUNCTION  BYTDUPE  (Call: Pointer; NumberCalls: INTEGER; A: Pointer): BOOLEAN; EXTERNAL;
@@ -2501,13 +2508,25 @@ begin
 
     UpperCase(GridString) used to run above this test, so every call allocated
     and upper-cased a string even when the contest can never carry a grid and
-    the answer was already known to be False. This is called once per log row
-    per repaint (logwind.pas:3042), which is why NY4I saw it eighty times in a
-    millisecond on 2026-09-11.
+    the answer was already known to be False. NY4I saw this routine eighty
+    times in a millisecond on 2026-09-11.
 
-    Comparing an enum is free; allocating a string is not. Asking the cheap
-    question first is the whole fix. *)
-  if not (ContestSession.Exchange in GRID_CARRYING_EXCHANGES) then
+    ~~once per log row per repaint, logwind.pas:3042~~ -- NEVER TRUE
+    (measured 2026-10-15, plan F33): logwind.pas:3042 was then, and is now,
+    DisplayUserInfo -- once per call shown -- and no caller runs per row.
+    The callers are the call-history displays (LOGWIND, LOGEDIT), the VHF
+    beam heading (MainUnit), the ADIF export tail (PostUnit, once per
+    record) and the external logger (three per QSO).
+
+    THE QUESTION IS THE CONTEST'S -- M11 S9e part 1 (S9f), 2026-10-15. It
+    was `ContestSession.Exchange in uGridShape.GRID_CARRYING_EXCHANGES`;
+    it is TContestBase.ExchangeTextMayHoldGridSquare, asked of the
+    contest's IDENTITY. No station decides it (pinned by
+    uTestExchangeKindReaders), and the identity is a locked table lookup
+    with no station to rebuild, where ActiveContest would rebuild one on
+    every call and is main-thread only. Still one call ahead of any string
+    work. *)
+  if not ContestIdentity(Contest).ExchangeTextMayHoldGridSquare then
      begin
      (* NO LOG LINE HERE. "This contest has no grid" is the ordinary answer
        for most contests, not an anomaly, and it was being written once per

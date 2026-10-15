@@ -71,6 +71,7 @@ type
       function ParseReceivedExchangeFormat(const aText: string;
                                            aParsers: TExchangeParsers;
                                            var aExch: ContestExchange): boolean; override;
+      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -264,6 +265,11 @@ begin
       begin
       Result := aParsers.ParseRSTDomesticQTH(aText, aExch);
       end;
+end;
+
+procedure TContestArktikaSpring.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   aMessages.WriteRSTStateOrQSONumber;
 end;
 
 function TContestArktikaSpring.ExchangeCarriesDomesticQTH: boolean;

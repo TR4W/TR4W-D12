@@ -86,6 +86,7 @@ type
       function ParseReceivedExchangeFormat(const aText: string;
                                            aParsers: TExchangeParsers;
                                            var aExch: ContestExchange): boolean; override;
+      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -246,6 +247,13 @@ begin
       begin
       Result := aParsers.ParseRSTDomesticQTH(aText, aExch);
       end;
+end;
+
+procedure TContestPACC.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   (* At EVERY station: both of the formats the station chooses between
+      (above) took the same arm of the old `case`. *)
+   aMessages.WriteRSTStateOrQSONumber;
 end;
 
 function TContestPACC.ExchangeCarriesDomesticQTH: boolean;

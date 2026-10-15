@@ -77,7 +77,9 @@ ROUTINES = {
    # no session kind.
    # SetUpExchangeInformation is DELETED (M11 S9a): each contest states
    # ReceivedExchangeFields, calling a uExchangeFields helper.
-   ("logdupe.pas", "ParseExchangeIntoContestExchange"): ("exchange", new("ParseReceivedExchange (s6)")),
+   # ParseExchangeIntoContestExchange is DELETED (M11 S9e part 1, plan F29):
+   # its FISTS placement was dead code -- its only caller chain began at
+   # LogBackCopy, which nothing called.
    ("logdupe.pas", "GetInitialExchangeStringFromContestExchange"): ("exchange", new("InitialExchangeFromHistory")),
    ("logedit.pas", "InitialExchangeEntry"): ("exchange", new("InitialExchangeFromHistory (InitialExchangeKind is the existing trait)")),
    ("zonecont.pas", "GetVEInitialExchange"): ("exchange", new("InitialExchangeFromHistory")),
@@ -149,7 +151,10 @@ ROUTINES = {
    ("MainUnit.pas", "CreateMainWindow"): ("ui", "PermittedOperatingAids / OffersQTCs (existing, M9a) / OffersParkTools (existing, POTA 2026-10-13) + " + new("UIFeatures (off-time)")),
    ("MainUnit.pas", "OpenTR4WWindow"): ("ui", "PermittedOperatingAids (existing, M9a)"),
    ("MainUnit.pas", "BuildLogRow"): ("ui", new("LogColumns")),
-   ("MainUnit.pas", "SetColumnsWidth"): ("ui", new("LogColumns")),
+   # SetColumnsWidth's Sweepstakes columns left at M11 S9e part 1 (F15/F15a):
+   # they ask the contest's received-field list (uExchangeFields).
+   # TREE.LooksLikeAGrid's kind set left with them (S9f): the contest
+   # answers ExchangeTextMayHoldGridSquare.
    ("MainUnit.pas", "ReturnInCQOpMode"): ("ui", new("ShowsMultiplierStatus")),
    ("MainUnit.pas", "CallWindowChange"): ("ui", new("OnCallsignChanged")),
    ("logedit.pas", "ShowStationInformation"): ("ui", new("ShowsMultiplierStatus")),
@@ -162,7 +167,9 @@ ROUTINES = {
    # ------------------------------------------------------------------ setup
    ("fcontest.pas", "FoundContest"): ("setup", new("ConfigureSession (the FoundContest arm)")),
    # SetUpRSTMyZoneExchange's CQ WW RTTY state left at M11 S7: the contest
-   # answers SendsStateAfterZone, handed in by FoundContest.
+   # answers SendsStateAfterZone. FoundContest's closing sent-message case
+   # over the exchange kind left at M11 S9e part 1 (F30): each contest calls
+   # a TExchangeMessageWriters method from WriteDefaultExchangeMessages.
    # LogCfg.tSetupExchangeNumbers named the UA4W Championship until its class (2026-10-14); CQExchangeDefault now.
    # -------------------------------------------------------------- networking
    ("logsubs2.pas", "SendScoreToUDP"): ("networking", "ScorePostingMultiplierType (existing, M9a)"),

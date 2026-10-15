@@ -460,6 +460,61 @@ begin
   SetEXCaptionMemoryString(CW, F3, 'RST');
 end;
 
+(* THE ENGINE'S DEFAULT EXCHANGE-MESSAGE WRITERS -- M11 S9e part 1,
+  2026-10-15 (plan F30). See uContestBase.TExchangeMessageWriters: the
+  contest calls one by name from WriteDefaultExchangeMessages, and
+  FoundContest hands this object in at its foot. Each method is one arm of
+  the `case` that stood there, unchanged -- including the two arms' own test
+  of the state this contest sends. *)
+type
+  TEngineExchangeMessageWriters = class(TExchangeMessageWriters)
+  public
+    procedure WriteNameAndState; override;
+    procedure WriteRSTQSONumber; override;
+    procedure WriteRSTStateOrQSONumber; override;
+    procedure WriteRSTZone(aStateAfterZone: boolean); override;
+    procedure WriteRSTStateOrZone(aStateAfterZone: boolean); override;
+  end;
+
+procedure TEngineExchangeMessageWriters.WriteNameAndState;
+begin
+  SetUpNameAndStateExchange;
+end;
+
+procedure TEngineExchangeMessageWriters.WriteRSTQSONumber;
+begin
+  SetUpRSTQSONumberExchange;
+end;
+
+procedure TEngineExchangeMessageWriters.WriteRSTStateOrQSONumber;
+begin
+  if SentMyState = '' then
+     begin
+     SetUpRSTQSONumberExchange;
+     end
+  else
+     begin
+     SetUpRSTMyStateExchange;
+     end;
+end;
+
+procedure TEngineExchangeMessageWriters.WriteRSTZone(aStateAfterZone: boolean);
+begin
+  SetUpRSTMyZoneExchange(aStateAfterZone);
+end;
+
+procedure TEngineExchangeMessageWriters.WriteRSTStateOrZone(aStateAfterZone: boolean);
+begin
+  if SentMyState = '' then
+     begin
+     SetUpRSTMyZoneExchange(aStateAfterZone);
+     end
+  else
+     begin
+     SetUpRSTMyStateExchange;
+     end;
+end;
+
 (* ADDS EACH COUNTRY OF A LIST, IN ORDER -- the one loop behind the named
   groups below and the applier. The groups themselves are uContestBase's
   constants, which a contest class names too (M7a): one list, two readers. *)
@@ -813,21 +868,15 @@ var
   (* What the contest wants its session to start from -- owned here. *)
   session: TSessionDefaults;
 
-  (* The contest said the closing set-up writes no zone-exchange messages
-     for it -- TSessionDefaults.SuppressZoneExchangeMessages (M7b). *)
-  zoneExchangeMessagesSuppressed: boolean;
-
-  (* The contest's zone exchange carries the state it sends --
-     TContestBase.SendsStateAfterZone (M11 S7). *)
-  zoneExchangeSendsState: boolean;
+  (* The engine's message writers, handed to the contest at the foot --
+     owned here (M11 S9e part 1). *)
+  messages: TExchangeMessageWriters;
 
   TempDomesticQTHDataFileName: string;
   // i,j                                   : integer;
   // k                                     : str10;
 begin
   CTY.ctyCountryMode := ARRLCountryMode;
-  zoneExchangeMessagesSuppressed := False;
-  zoneExchangeSendsState := False;
 
   NoMultMarineMobile := False;
     {KK1L: 6.68 Added for WRTC 2002 as flag to not count /MM or /AM as mults or countries}
@@ -843,7 +892,6 @@ begin
      begin
      definition := ContestIdentity(Contest);
      ApplyContestTraits(definition);
-     zoneExchangeSendsState := definition.SendsStateAfterZone;
 
      RecalculateMyCountryContinentAndZoneNew(UTF8Encode(Settings.My.Call));
 
@@ -900,7 +948,6 @@ begin
      try
         definition.DescribeSession(CurrentStation, session);
         ApplySessionDefaults(session, TempDomesticQTHDataFileName);
-        zoneExchangeMessagesSuppressed := session.SuppressZoneExchangeMessages;
      finally
         session.Free;
         end;
@@ -932,46 +979,26 @@ begin
         TempDomesticQTHDataFileName + string(DOM_EXTENSION);
      end;
 
-  case ContestSession.Exchange of
-    NameAndDomesticOrDXQTHExchange: SetUpNameAndStateExchange;
+  (* THE DEFAULT CW EXCHANGE MESSAGES ARE THE CONTEST'S CHOICE -- M11 S9e
+    part 1, 2026-10-15 (plan F30). This was a `case` over the session's
+    exchange shape; each arm is a method of TEngineExchangeMessageWriters
+    now, and the contest calls the one for its set by name
+    (TContestBase.WriteDefaultExchangeMessages), or none.
 
-    RSTQSONumberExchange: SetUpRSTQSONumberExchange;
-
-    RSTDomesticQTHExchange,
-      RSTAndContinentExchange,
-      RSTAndQSONumberOrFrenchDepartmentExchange,
-      RSTAndQSONumberOrDomesticQTHExchange,
-      RSTDomesticQTHOrQSONumberExchange:
-
-      if SentMyState = '' then
-         begin
-         SetUpRSTQSONumberExchange
-         end
-      else
-         begin
-         SetUpRSTMyStateExchange;
-         end;
-
-    (* A CONTEST MAY REFUSE THESE MESSAGES -- the JIDX contests do, which was
-      a test of their names here until M7b (TSessionDefaults.
-      SuppressZoneExchangeMessages). *)
-    RSTZoneAndPossibleDomesticQTHExchange, RSTZoneExchange:
-      if not zoneExchangeMessagesSuppressed then
-         begin
-         SetUpRSTMyZoneExchange(zoneExchangeSendsState);
-         end;
-
-    RSTZoneOrSocietyExchange:
-      if SentMyState = '' then
-         begin
-         SetUpRSTMyZoneExchange(zoneExchangeSendsState)
-         end
-      else
-         begin
-         SetUpRSTMyStateExchange;
-         end;
-
-  end;
+    ASKED OF THE ACTIVE CONTEST, whose Station is the entrant's, because the
+    set moves with the station for eight contests (ARRL DX x2, ARRL 160, four
+    host-state parties and NEQP) -- the same predicate as their parse format.
+    Asked LAST, as the `case` ran: after the contest's DescribeSession has
+    been applied, so SentMyState is the state this contest sends. nil (no
+    class: DUMMYCONTEST) writes nothing. The JIDX's refusal of the zone
+    messages and CQ WW RTTY's state after the zone are the classes' own
+    choices since. *)
+  messages := TEngineExchangeMessageWriters.Create;
+  try
+     ContestSetUpDefaultExchangeMessages(ActiveContest(Contest), messages);
+  finally
+     messages.Free;
+     end;
 
   FoundContest := Contest <> DUMMYCONTEST;
 

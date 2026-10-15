@@ -362,8 +362,11 @@ begin
    CheckFalse(LooksLikeGridSquare('FN31P'), 'five');
    CheckFalse(LooksLikeGridSquare('FN3'), 'three');
    CheckFalse(LooksLikeGridSquare(''), 'empty');
-   CheckTrue(RSTAndPOTAPark in GRID_CARRYING_EXCHANGES, 'the POTA shape carries a grid');
-   CheckFalse(RSTQSONumberExchange in GRID_CARRYING_EXCHANGES, 'RST and serial does not');
+   (* The contest question LooksLikeAGrid asks first -- it was the POTA
+      shape's membership of uGridShape.GRID_CARRYING_EXCHANGES, deleted at
+      M11 S9e part 1 for the contest's own answer. *)
+   CheckTrue(ContestIdentity(POTA).ExchangeTextMayHoldGridSquare, 'POTA''s exchange word may be a grid');
+   CheckFalse(ContestIdentity(CQWPXCW).ExchangeTextMayHoldGridSquare, 'an RST-and-serial contest''s may not');
 end;
 
 procedure TContestPOTATests.RunAllTests;

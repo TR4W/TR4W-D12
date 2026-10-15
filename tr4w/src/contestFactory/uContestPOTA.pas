@@ -132,6 +132,10 @@ type
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
       (* A BLANK EXCHANGE -- see TContestBase.AcceptsBlankExchange (M11 S7). *)
       function AcceptsBlankExchange: boolean; override;
+   public
+      (* MAY AN EXCHANGE WORD BE A GRID? -- see
+         TContestBase.ExchangeTextMayHoldGridSquare (M11 S9e part 1). *)
+      function ExchangeTextMayHoldGridSquare: boolean; override;
    end;
 
 implementation
@@ -224,6 +228,11 @@ function TContestPOTA.ParseReceivedExchangeFormat(const aText: string;
                                                   var aExch: ContestExchange): boolean;
 begin
    Result := aParsers.ParseRSTAndPOTAPark(aText, aExch);
+end;
+
+function TContestPOTA.ExchangeTextMayHoldGridSquare: boolean;
+begin
+   Result := True;
 end;
 
 function TContestPOTA.GetADIFSentExchange(const aMy: TMyStationExchange;

@@ -82,6 +82,7 @@ type
       function ParseReceivedExchangeFormat(const aText: string;
                                            aParsers: TExchangeParsers;
                                            var aExch: ContestExchange): boolean; override;
+      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
       function GetFlags: TContestFlags; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
@@ -276,6 +277,11 @@ function TContestIARU.ParseReceivedExchangeFormat(const aText: string;
                                                   var aExch: ContestExchange): boolean;
 begin
    Result := aParsers.ParseRSTZoneOrSociety(aText, aExch);
+end;
+
+procedure TContestIARU.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   aMessages.WriteRSTStateOrZone(SendsStateAfterZone);
 end;
 
 function TContestIARU.ExchangeCarriesZone: boolean;

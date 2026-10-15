@@ -47,9 +47,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   SET-UP, both branches stated. A JA station counts DXCC, CQ zones and a
   zone initial exchange, and sends RST and its zone; everyone else counts
   prefectures from `JIDX` and sends RST and a prefecture. Either way the
-  closing set-up writes no zone-exchange messages for it (a test of this
-  contest's name in FoundContest until M7b, now
-  TSessionDefaults.SuppressZoneExchangeMessages). LogCfg's CQ exchange: 5NN
+  closing set-up writes no default exchange messages for it (a test of
+  this contest's name in FoundContest until M7b; since M11 S9e part 1 it
+  states no WriteDefaultExchangeMessages). LogCfg's CQ exchange: 5NN
   and MY STATE, or 5NN and MY ZONE with no state.
 
   A SIBLING, NOT A FAMILY MEMBER (M7b, DECIDED on evidence). The two runnings share every rule
@@ -365,10 +365,11 @@ begin
       aSession.DomesticFile := 'JIDX';
       end;
 
-   (* WITH EITHER EXCHANGE, the closing set-up writes no zone-exchange
+   (* WITH EITHER EXCHANGE, the closing set-up writes no default exchange
       messages for this contest: FoundContest named it there --
-      `if not (Contest in [JIDXCW, JIDXSSB])` -- until M7b. *)
-   aSession.SuppressZoneExchangeMessages := True;
+      `if not (Contest in [JIDXCW, JIDXSSB])` -- until M7b, then this
+      stated SuppressZoneExchangeMessages; since M11 S9e part 1 the class
+      simply does not override WriteDefaultExchangeMessages. *)
 end;
 
 (* LogCfg.tSetupExchangeNumbers' arm for this contest, moved at M7b -- see

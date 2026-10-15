@@ -82,6 +82,7 @@ type
       function ParseReceivedExchangeFormat(const aText: string;
                                            aParsers: TExchangeParsers;
                                            var aExch: ContestExchange): boolean; override;
+      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -222,6 +223,11 @@ function TContestWRTC.ParseReceivedExchangeFormat(const aText: string;
                                                   var aExch: ContestExchange): boolean;
 begin
    Result := aParsers.ParseRSTZoneOrSociety(aText, aExch);
+end;
+
+procedure TContestWRTC.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   aMessages.WriteRSTStateOrZone(SendsStateAfterZone);
 end;
 
 function TContestWRTC.ExchangeCarriesZone: boolean;

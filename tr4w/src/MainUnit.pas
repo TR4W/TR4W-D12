@@ -699,8 +699,11 @@ uses
      uses this unit back, which is legal: both edges are
      implementation-section. *)
   uLogSource,
-  (* ContestSession -- the prefix kind set-up resolved (M10 S9b). *)
-  uContestSession,
+  (* ~~uContestSession~~ stood here for SetColumnsWidth's reads of the
+     session's exchange shape, its last in this unit; the Sweepstakes
+     columns ask the field list now (M11 S9e part 1). *)
+  (* ExchangeFieldsShowPrecedenceColumn / ...ShowCheckColumn. *)
+  uExchangeFields,
 {$IF tDebugMode}
   // uDocumentation,
 {$IFEND}
@@ -9650,10 +9653,12 @@ var
   i: integer;
   TempColumn: LogColumnsType;
 begin
-  ColumnsArray[logColPrecedence].Enable := ContestSession.Exchange =
-    QSONumberPrecedenceCheckDomesticQTHExchange;
-  ColumnsArray[logColCheck].Enable := ContestSession.Exchange =
-    QSONumberPrecedenceCheckDomesticQTHExchange;
+  (* THE SWEEPSTAKES COLUMNS ASK THE CONTEST'S FIELD LIST, like every column
+    below -- M11 S9e part 1 (plan F15/F15a). They were a test of the
+    session's exchange shape; see uExchangeFields for why the precedence
+    column is not the precedence field alone (ALL JA). *)
+  ColumnsArray[logColPrecedence].Enable := ExchangeFieldsShowPrecedenceColumn(ExchangeInformation);
+  ColumnsArray[logColCheck].Enable := ExchangeFieldsShowCheckColumn(ExchangeInformation);
   ColumnsArray[logColQTC].Enable := Settings.Qtc.Enable;
   ColumnsArray[logColAge].Enable := ExchangeInformation.Age;
 

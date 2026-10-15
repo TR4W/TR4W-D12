@@ -63,6 +63,7 @@ type
       function ParseReceivedExchangeFormat(const aText: string;
                                            aParsers: TExchangeParsers;
                                            var aExch: ContestExchange): boolean; override;
+      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
    public
    public
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
@@ -140,6 +141,11 @@ function TContestCQWWCW.ParseReceivedExchangeFormat(const aText: string;
                                                     var aExch: ContestExchange): boolean;
 begin
    Result := aParsers.ParseRSTZone(aText, aExch);
+end;
+
+procedure TContestCQWWCW.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   aMessages.WriteRSTZone(SendsStateAfterZone);
 end;
 
 function TContestCQWWCW.ExchangeCarriesZone: boolean;

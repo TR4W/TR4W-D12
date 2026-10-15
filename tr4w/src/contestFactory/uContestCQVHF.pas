@@ -114,6 +114,10 @@ type
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesGridSquare: boolean; override;
+   public
+      (* MAY AN EXCHANGE WORD BE A GRID? -- see
+         TContestBase.ExchangeTextMayHoldGridSquare (M11 S9e part 1). *)
+      function ExchangeTextMayHoldGridSquare: boolean; override;
    end;
 
 implementation
@@ -206,6 +210,11 @@ function TContestCQVHF.ParseReceivedExchangeFormat(const aText: string;
                                                    var aExch: ContestExchange): boolean;
 begin
    Result := aParsers.ParseRSTAndOrGrid(aText, aExch);
+end;
+
+function TContestCQVHF.ExchangeTextMayHoldGridSquare: boolean;
+begin
+   Result := True;
 end;
 
 function TContestCQVHF.ExchangeCarriesGridSquare: boolean;

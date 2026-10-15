@@ -37,8 +37,11 @@ best-proven and least-covered code in the tree.
 
 ## What you must know before changing anything
 
-**THIS CODE IS NOT UNIT-COVERED.** The unit-test binary links only leaf `src`
-units; `ProcessExchange`, scoring and dupe need the app's globals booted. Your
+**THIS CODE IS NOT UNIT-COVERED.** ~~The unit-test binary links only leaf
+`src` units~~ -- it LINKS the engine (its `.lpr` uses `MainUnit`; the contest
+pins use `PostUnit`, `LogEdit`, `FCONTEST`; plan F35, 2026-10-15), but it does
+not boot the app's globals, so `ProcessExchange`, scoring and dupe are not
+exercised end to end. Your
 oracle is the **golden corpus**, and **the corpus is blind to scoring** — it
 byte-diffs ADIF and Cabrillo output. `tr4w/test/corpus/test-contest-factory.sh`
 is the only thing that sees points. **The contest matrix sees parsing** (its
@@ -353,9 +356,10 @@ part 2 -- no multiplier kind is left)
 M10 IS COMPLETE (2026-10-14).** Do not add one back: a new reader asks
 `ContestSession`, a new writer does not exist. `ContestSession.Exchange`'s
 zero is `UnknownExchange` (the global's `= NoExchangeReceived` initializer
-was commented out). `tree.LooksLikeAGrid` reads it once per log row per
-repaint -- one call and a field load, ahead of any string work; keep it
-first. **What M11 inherits:** the two EXCHANGE kind enums
+was commented out). ~~`tree.LooksLikeAGrid` reads it once per log row per
+repaint~~ -- it never ran per row (plan F33), and since M11 S9e part 1 it
+asks the contest (below); its contest question still comes first, ahead of
+any string work. **What M11 inherits:** the two EXCHANGE kind enums
 (`ExchangeType`, `InitialExchangeType`; S3-S6 deleted the four multiplier
 kinds) and their engine arms -- the four exchange-shape machines (parser,
 field list, ADIF, Cabrillo), the compare sites (S7) and the initial
@@ -367,17 +371,37 @@ S&P entry (`LogsSeveralQTHsFromOneEntry`), a blank exchange
 (`AcceptsBlankExchange`, ParametersOkay and ProcessExchange -- one
 `ExchangeContest` fetch, after `ParseArray` as before), the park lookup
 (`OffersParkTools`), CQ WW RTTY's state after the zone
-(`SendsStateAfterZone`, handed to `SetUpRSTMyZoneExchange` by FoundContest)
+(`SendsStateAfterZone`, which the zone classes now pass to the message
+writer themselves)
 and FISTS's points-alone (its own `CombineWithMultipliers`;
 `TScoreTotals.SessionExchange` is deleted). `ProcessReturn`'s split into
 the `s1..s4` globals was deleted: its only reader re-splits first. **Still
-reading the shape after S9d (26 reads in 6 files, plan "WHAT S9e
-INHERITS"): the history renders (LOGEDIT's `InitialExchangeEntry`, LOGDUPE's
-`GetInitialExchangeStringFromContestExchange` -- S8/Q50), FCONTEST's
-sent-message `case` (F30, a design decision), `LooksLikeAGrid` (S9f), the
-matrix's `active.exchange` line, `SetColumnsWidth`'s SS columns (F15/F15a)
-and LOGDUPE's dead FISTS log-line read (F29).** Do not add a new rule test of
-`ContestSession.Exchange`; add a class answer. **S9 MOVES THE FOUR MACHINES
+reading the shape after S9e part 1 (21 reads in 3 files, plan "WHAT S8 +
+S9e PART 2 DELETE"): the history renders (LOGEDIT's `InitialExchangeEntry`
+15, LOGDUPE's `GetInitialExchangeStringFromContestExchange` 5 -- S8/Q50)
+and the matrix's `active.exchange` line.** Do not add a new rule test of
+`ContestSession.Exchange`; add a class answer. **S9e PART 1 IS DONE
+(2026-10-15):** `SetColumnsWidth`'s SS columns ask the field list
+(`uExchangeFields.ExchangeFieldsShowPrecedenceColumn` = precedence AND
+check, so ALL JA still shows none; `...ShowCheckColumn`; F15/F15a);
+LOGDUPE's dead FISTS log-line parse and its dead chain (`LogBackCopy`,
+`PushLogStringIntoEditableLogAndLogPopedQSO`, `PutContactIntoLogFile`,
+LOGSTUFF's `ProcessPartialCallAndInitialExchange`) are DELETED (F29);
+**FoundContest's sent-message `case` is the contest's
+`WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters)`** (F30):
+five named writers (`WriteNameAndState`, `WriteRSTQSONumber`,
+`WriteRSTStateOrQSONumber`, `WriteRSTZone`, `WriteRSTStateOrZone`)
+implemented by FCONTEST's `TEngineExchangeMessageWriters`, the S9d
+technique; asked of `ActiveContest(Contest)` at FoundContest's foot; the
+base writes none; 92 overrides; `SuppressZoneExchangeMessages` is deleted
+(the JIDX simply write none); and **`TREE.LooksLikeAGrid` asks
+`ContestIdentity(Contest).ExchangeTextMayHoldGridSquare`** (18 contests;
+`uGridShape.GRID_CARRYING_EXCHANGES` is deleted). That one asks the
+IDENTITY on purpose -- a class ANSWER no station decides, pinned
+station-independent by `uTestExchangeKindReaders`, with no station rebuild
+per call; it is not a repointed kind read, and a class that ever answers
+it from `Station` must move it to `ActiveContest`. The tree now has FOUR
+grid answers that disagree (F28/F34). **S9 MOVES THE FOUR MACHINES
 ONE PER STAGE (Q92, NY4I option 2): each becomes NAMED HELPERS the class's
 own override CALLS -- no enum selects one.** **S9a IS DONE (2026-10-14): THE
 FIELD LIST.** `LOGDUPE.SetUpExchangeInformation` is DELETED; every
@@ -433,8 +457,9 @@ CONTEST setting's effect, straight after `FoundContest` returns** (plan F5)
 Contest))`) since M11 S4, from `ContestSession.DXMult` before -- its only
 live caller, so the order is right; a new caller of `FoundContest` must set
 it too.
-**Never repoint a kind reader to `ContestIdentity(Contest)`**: it is the
-SESSION's value, and 24 contests run a kind their trait does not state at a
+**Never repoint a kind reader to `ContestIdentity(Contest)`** (a class
+ANSWER pinned station-independent, like the grid one above, is not a kind
+read): the kind is the SESSION's value, and 24 contests run a kind their trait does not state at a
 matrix station, 32 at some station (M11 S2; counted with the prefix, DX
 and zone kinds, all since deleted) -- JIDX CW: trait
 `NoInitialExchange`, a JA station runs `ZoneInitialExchange`;

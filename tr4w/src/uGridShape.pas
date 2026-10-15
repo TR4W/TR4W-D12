@@ -27,8 +27,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   all (ActiveExchange), and does this text have a grid's shape. A contest
   class reads no global and no TRDOS unit, so TContestPOTA, whose ADIF export
   writes GRIDSQUARE for a hunter who sent one, could not ask it. The two
-  questions are separate here and the class is handed the session's exchange
-  as data, as every export seam is.
+  questions are separate here; the first is the contest's own answer since
+  M11 S9e part 1 (TContestBase.ExchangeTextMayHoldGridSquare).
 
   ONE COPY OF THE SHAPE. Tree's LooksLikeAGrid and LooksLikeAGridIgnoreAE
   each held the same character walk; both call this now and keep only what
@@ -42,22 +42,12 @@ unit uGridShape;
 
 interface
 
-uses
-   VC;
-
-const
-   (* THE EXCHANGE SHAPES THAT CAN CARRY A GRID -- Tree's set, in Tree's
-     order. RSTNameAndQTHExchange is General QSO's ("to find a grid in the
-     exchange", ny4i); RSTAndPOTAPark is the free-form POTA exchange. These
-     are exchange SHAPES, not contests. *)
-   GRID_CARRYING_EXCHANGES = [RSTAndOrGridExchange,
-                              Grid2Exchange,
-                              RSTAndGrid3Exchange,
-                              GridExchange,
-                              RSTQSONumberAndGridSquareExchange,
-                              RSTNameAndQTHExchange,
-                              RSTAndPOTAPark,
-                              RSTAndGridExchange];
+(* ~~GRID_CARRYING_EXCHANGES~~ stood here -- the exchange SHAPES Tree's
+  LooksLikeAGrid asked about before looking at the text. It went at M11
+  S9e part 1 (2026-10-15): each contest answers that question itself,
+  TContestBase.ExchangeTextMayHoldGridSquare, and the unit test that pins
+  it keeps a frozen copy of the set as its cross-check. So this unit no
+  longer uses VC. *)
 
 (* Four or six characters: two letters A..R in either case, then two digits.
   What follows the first four in a six-character grid is not examined --

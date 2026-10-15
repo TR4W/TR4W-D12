@@ -156,7 +156,6 @@ procedure ToggleStereoPin; {KK1L: 6.71}
 procedure OTRSPCommand;
 procedure LogContact(var RXData: ContestExchange; MyComputer: boolean);
 procedure SwapMultDisplay;
-procedure PushLogStringIntoEditableLogAndLogPopedQSO(LogString: ShortString {Str80}; MyQSO: boolean);
 procedure DeleteLastContact;
 //procedure MoveEditableLogIntoLogFile;
 procedure DoAltZ({var WindowString: string { VAR KeyChar: CHAR});
@@ -216,30 +215,6 @@ uses
      rules ask the contest (M11 S6). *)
   uContestBase,
   uContestFactory;
-procedure PutContactIntoLogFile(LogString: string {Str80});
-
-begin
-
-end;
-procedure PushLogStringIntoEditableLogAndLogPopedQSO(LogString: ShortString {Str80};
-  MyQSO: boolean);
-var
-  RData                                 : ContestExchange;
-
-begin
-
-  //  LogString := VisibleLog.PushLogEntry(LogString);
-     { LogString is now what popped off the top of the editable window }
-  GetRidOfPostcedingSpaces(LogString);
-  if LogString <> '' then
-     begin
-     PutContactIntoLogFile(LogString);
-     if ParseExchangeIntoContestExchange(LogString, RData) then
-        begin
-        ProcessPartialCallAndInitialExchange(RData);
-        end;
-     end;
-end;
 procedure ProcessCallWindowCommand(Command: Str80);
 { This procedure gets called if a command in the call window was typed in
   starting with a \ character. }
@@ -652,16 +627,6 @@ begin
   LoadinLog;
   ShowMessage(p);
   //  QuickDisplay(p);
-end;
-procedure LogBackCopy(Seconds: integer);
-var
-  SecString, TempString                 : Str80;
-begin
-  Str(Seconds, SecString);
-  Str(NextSerialToSend, TempString);  // Issue #954
-  TempString := '; Backcopy made for QSO #' + TempString + ' at ' +
-    GetTimeString + ' for ' + SecString + ' seconds.';
-  PushLogStringIntoEditableLogAndLogPopedQSO(TempString, True);
 end;
 // Wait for a thread handle to signal, pumping Windows messages so that
 // cross-thread SendMessage calls (e.g. SetDlgItemText from the polling
@@ -1792,8 +1757,6 @@ begin
      begin
      inc(LiveSessionTally);
      end;
-  //  ProcessPartialCallAndInitialExchange(RXData);
-    //  PushLogStringIntoEditableLogAndLogPopedQSO(LogString, True);
     //  if Trace then Write('&');
   if MyComputer then
     if not TailEnding then

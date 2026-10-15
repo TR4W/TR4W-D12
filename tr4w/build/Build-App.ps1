@@ -375,7 +375,10 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # Build-App's arguments; the all-or-nothing import itself added none.
 # 1262 -> 1260, 2026-10-15: M11 S9c, the Cabrillo columns as named helpers.
 # Measured by the full build.
-$NARROW_CEILING = 1260
+# 1260 -> 1251, 2026-10-15: M11 S9e part 1 -- the dead FISTS log-line parse
+# (LOGDUPE.ParseExchangeIntoContestExchange) and its dead callers deleted.
+# Measured by the full build.
+$NARROW_CEILING = 1251
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

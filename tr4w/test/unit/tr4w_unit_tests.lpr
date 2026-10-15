@@ -648,6 +648,12 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
       installs what its parsers "do" and sees which one a contest asked for,
       by name. *)
    uTestExchangeParserStub in 'uTestExchangeParserStub.pas',
+   (* M11 S9e part 1: the last three readers of the session's exchange kind
+      outside the initial exchange -- the Sweepstakes log columns, the default
+      CW exchange messages set-up writes, and whether an exchange word may be
+      a grid square -- frozen against the old kind tests before they moved
+      into the classes. *)
+   uTestExchangeKindReaders in 'uTestExchangeKindReaders.pas',
    (* POTA as a contest class (design Q6, 2026-10-13). *)
    uTestContestPOTA     in 'uTestContestPOTA.pas',
    (* The Delaware QSO Party, a new contest (design 7.14, 8.2q). *)
@@ -743,6 +749,7 @@ begin
    RegisterSuite(TADIFSentExchangeTests.Create('ADIFSentExchange'));
    RegisterSuite(TCabrilloColumnsTests.Create('CabrilloColumns'));
    RegisterSuite(TExchangeParseTests.Create('ExchangeParse'));
+   RegisterSuite(TExchangeKindReadersTests.Create('ExchangeKindReaders'));
    RegisterSuite(TContestPOTATests.Create('ContestPOTA'));
    RegisterSuite(TContestDelawareQPTests.Create('ContestDelawareQP'));
    RegisterSuite(TContestIN7QPNETests.Create('ContestIN7QPNE'));

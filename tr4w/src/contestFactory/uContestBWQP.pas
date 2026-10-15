@@ -91,6 +91,10 @@ type
    public
       (* A BLANK EXCHANGE -- see TContestBase.AcceptsBlankExchange (M11 S7). *)
       function AcceptsBlankExchange: boolean; override;
+   public
+      (* MAY AN EXCHANGE WORD BE A GRID? -- see
+         TContestBase.ExchangeTextMayHoldGridSquare (M11 S9e part 1). *)
+      function ExchangeTextMayHoldGridSquare: boolean; override;
    end;
 
 implementation
@@ -181,6 +185,11 @@ function TContestBWQP.ParseReceivedExchangeFormat(const aText: string;
                                                   var aExch: ContestExchange): boolean;
 begin
    Result := aParsers.ParseRSTNameAndQTH(aText, aExch);
+end;
+
+function TContestBWQP.ExchangeTextMayHoldGridSquare: boolean;
+begin
+   Result := True;
 end;
 
 function TContestBWQP.GetADIFSentExchange(const aMy: TMyStationExchange;

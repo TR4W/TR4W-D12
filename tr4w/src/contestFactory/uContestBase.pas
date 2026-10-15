@@ -608,6 +608,42 @@ type
       function ParseRSTZoneOrSociety(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
    end;
 
+   (* THE ENGINE'S DEFAULT CW EXCHANGE MESSAGES, ONE NAMED METHOD PER SET --
+      M11 S9e part 1, 2026-10-15 (plan F30; NY4I's Q92, option 2).
+
+      Set-up (FCONTEST.FoundContest) installs default CW exchange messages
+      -- the CQ, S&P and repeat exchanges and the exchange memories F3-F5,
+      Alt-F3 and Alt-F4 -- after the contest has described its session. The
+      routines that write them are FCONTEST's (they write the settings and
+      the CW memory banks, which a contest class cannot link), so the engine
+      hands an object implementing this class in and a contest CALLS THE
+      METHOD FOR ITS SET BY NAME (TContestBase.WriteDefaultExchangeMessages).
+      No enum selects one. The same technique as TExchangeParsers, for the
+      same reason.
+
+      UNTIL S9e this was a `case` over the session's exchange shape at the
+      foot of FoundContest. Each method is one of its arms, unchanged:
+        WriteNameAndState        -- NameAndDomesticOrDXQTH
+        WriteRSTQSONumber        -- RSTQSONumber
+        WriteRSTStateOrQSONumber -- RSTDomesticQTH, RSTAndContinent,
+                                    RSTAndQSONumberOrFrenchDepartment,
+                                    RSTAndQSONumberOrDomesticQTH,
+                                    RSTDomesticQTHOrQSONumber
+        WriteRSTZone             -- RSTZone, RSTZoneAndPossibleDomesticQTH
+        WriteRSTStateOrZone      -- RSTZoneOrSociety
+      The two "or" methods keep the arms' own test: the state the contest
+      sends (FCONTEST.SentMyState) when it sends one, else the serial or the
+      zone. aStateAfterZone is the contest's SendsStateAfterZone (CQ WW
+      RTTY's), which the arm was handed. *)
+   TExchangeMessageWriters = class
+   public
+      procedure WriteNameAndState; virtual; abstract;
+      procedure WriteRSTQSONumber; virtual; abstract;
+      procedure WriteRSTStateOrQSONumber; virtual; abstract;
+      procedure WriteRSTZone(aStateAfterZone: boolean); virtual; abstract;
+      procedure WriteRSTStateOrZone(aStateAfterZone: boolean); virtual; abstract;
+   end;
+
    (* CTY.DAT's zone for a callsign, in the session's zone list. *)
    TCallZoneLookup = function(const aCall: string): Byte;
 
@@ -824,7 +860,8 @@ type
       M7b (2026-10-02) brought the first of them: the initial exchange and
       the zone multiplier (JIDX, JTDX, KCJ), the DX multiplier limit (NEQP,
       7QP), the R150S list (CQ-M, Gagarin Cup, OZCHR teams), and JIDX's
-      refusal of the shared zone-exchange messages. M7b batch 2 brought the
+      refusal of the shared zone-exchange messages (gone at M11 S9e part 1:
+      the contest's own choice of messages). M7b batch 2 brought the
       last two the arms wrote: the initial-exchange cursor at the start (IRTS,
       RAEM) and the DXCC multiplier by band (CQMM). *)
    TSessionValue = (
@@ -832,7 +869,7 @@ type
       svBand, svMode, svDomesticMultByBand, svAllowDupeQSOs,
       svInitialExchange, svDXMultLimit,
       svInitialExchangeCursorAtStart, svDXCCMultByBand,
-      svR150SMode, svSuppressZoneExchangeMessages,
+      svR150SMode,
       svMultByBand, svQSOByMode, svQSOByBand,
       svWARCEnabled, svHFEnabled,
       svContestName, svSentState, svDomesticFile,
@@ -965,16 +1002,11 @@ type
       property DXCCMultByBand: TAdditionalMultByBand
          read FDXCCMultByBand write SetDXCCMultByBand;
 
-      (* THE CLOSING EXCHANGE SET-UP WRITES NO ZONE-EXCHANGE MESSAGES -- M7b.
-
-         FoundContest ends by writing the CW messages and memories of the
-         session's exchange SHAPE (FCONTEST.SetUpRSTMyZoneExchange for the two
-         zone exchanges). The JIDX contests were excluded from it BY NAME
-         (`if not (Contest in [JIDXCW, JIDXSSB])`); stated True here, that
-         exclusion is theirs. Only the zone exchanges' messages are withheld,
-         exactly what the named test withheld. *)
-      property SuppressZoneExchangeMessages: boolean
-         index Ord(svSuppressZoneExchangeMessages) read GetFlag write SetFlag;
+      (* ~~SuppressZoneExchangeMessages~~ (M7b) stood here: the JIDX contests
+         refused the closing set-up's zone-exchange messages. It went at M11
+         S9e part 1 -- the messages are each contest's own choice
+         (TContestBase.WriteDefaultExchangeMessages), and the JIDX choose
+         none. *)
 
       (* THE SESSION'S SETTINGS -- each is the setting of the same name. *)
       property MultByBand: boolean index Ord(svMultByBand) read GetFlag write SetFlag;
@@ -1307,6 +1339,25 @@ type
       function ParseReceivedExchangeFormat(const aText: string;
                                            aParsers: TExchangeParsers;
                                            var aExch: ContestExchange): boolean; virtual;
+
+      (* THE DEFAULT CW EXCHANGE MESSAGES SET-UP INSTALLS -- M11 S9e part 1,
+         2026-10-15 (docs/CONTEST_FACTORY_M11_PLAN.md F30). The procedure
+         behind SetUpDefaultExchangeMessages: a contest calls the engine's
+         writer for its set by name, on aMessages (TExchangeMessageWriters),
+         or calls none.
+
+         It was a `case` over the session's exchange shape at the foot of
+         FCONTEST.FoundContest. A contest whose set depends on the station
+         tests the station here as DescribeSession does, through the same
+         predicate as its field list and parse format (Station is
+         ActiveContest's).
+
+         THE BASE WRITES NOTHING -- what the `case` did for every shape it
+         had no arm for, the classless DUMMYCONTEST's among them. Most
+         contests write none: their messages come from DescribeSession's
+         memories and LogCfg's defaults. uTestExchangeKindReaders pins every
+         contest at every roster station. *)
+      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); virtual;
 
       (* THE ADIF STX_STRING -- OUR SIDE OF THE EXCHANGE -- M11 S9b,
          2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S9b). The getter behind
@@ -2226,10 +2277,35 @@ type
          ARE TRANSCRIBED, NOT JUDGED (plan F28): they are sets of RECEIVED
          kinds standing for what the station SENDS, and the grid one is the
          third grid set in the tree, which disagrees with the other two
-         (ReceivesGridSquareExchange, uGridShape.GRID_CARRYING_EXCHANGES). *)
+         (ReceivesGridSquareExchange, and ExchangeTextMayHoldGridSquare --
+         uGridShape.GRID_CARRYING_EXCHANGES until M11 S9e part 1). *)
       function ExchangeCarriesDomesticQTH: boolean; virtual;
       function ExchangeCarriesZone: boolean; virtual;
       function ExchangeCarriesGridSquare: boolean; virtual;
+
+      (* MAY A WORD OF THIS CONTEST'S EXCHANGE BE READ AS A GRID SQUARE? --
+         M11 S9e part 1 (S9f), 2026-10-15. TREE.LooksLikeAGrid asks it FIRST,
+         before any string work, and answers False without looking at the
+         text when it is False: the call-history window's beam heading
+         (LOGWIND, LOGEDIT), the VHF beam heading in the call window
+         (MainUnit), the ADIF tail's GRIDSQUARE (PostUnit) and the external
+         logger's (uExternalLogger).
+
+         It was `ContestSession.Exchange in uGridShape.GRID_CARRYING_EXCHANGES`
+         (RSTAndOrGrid, Grid2, RSTAndGrid3, Grid, RSTQSONumberAndGridSquare,
+         RSTNameAndQTH, RSTAndPOTAPark, RSTAndGrid), and each class states it
+         for exactly the contests whose session ran one of those kinds: 18,
+         the same at every station. TRANSCRIBED, NOT JUDGED (plan F28): it is
+         the FOURTH grid answer in the tree -- it holds BWQP, the General QSO
+         and POTA (a name-and-QTH or park exchange whose QTH word may be a
+         grid) and not the Cup RF or Grid Loc, which ExchangeCarriesGridSquare
+         does. THE BASE ANSWERS False.
+
+         NO STATION DECIDES IT, so LooksLikeAGrid asks the contest's IDENTITY
+         (uContestRegistry.ContestIdentity, no station, no rebuild) -- pinned
+         station-independent by uTestExchangeKindReaders. A contest that ever
+         answers it from Station must move that reader to ActiveContest. *)
+      function ExchangeTextMayHoldGridSquare: boolean; virtual;
 
       (* DOES THE PER-QSO EXCHANGE STRING LEAD WITH THE SERIAL? --
          MainUnit.PerQSOExchString, which writes each QSO of a multi-county or
@@ -2520,6 +2596,12 @@ type
          contest's FoundContest arm, moved line for line at M7a. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); virtual;
+
+      (* SET-UP'S DEFAULT CW EXCHANGE MESSAGES -- M11 S9e part 1. FoundContest
+         asks it of the ACTIVE contest (its Station is the entrant's) after
+         the contest's DescribeSession has been applied. Not virtual: a
+         contest states its set in WriteDefaultExchangeMessages. *)
+      procedure SetUpDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
 
       (* THE CQ EXCHANGE A CONTEST OFFERS WHEN THE OPERATOR HAS NONE -- M7a.
 
@@ -3045,6 +3127,19 @@ function ContestReceivedExchangeFields(aContest: TContestBase): ExchangeInformat
    classless DUMMYCONTEST ran UnknownExchange. The ADIF import asks it of the
    open contest. *)
 function ContestReceivesGridSquareExchange(aContest: TContestBase): boolean;
+
+(* MAY A WORD OF aContest's EXCHANGE BE A GRID SQUARE? -- see
+   TContestBase.ExchangeTextMayHoldGridSquare (M11 S9e part 1). nil answers
+   False: the classless DUMMYCONTEST ran UnknownExchange, outside the old
+   set. *)
+function ContestExchangeTextMayHoldGridSquare(aContest: TContestBase): boolean;
+
+(* SET-UP'S DEFAULT CW EXCHANGE MESSAGES FOR aContest -- see
+   TContestBase.SetUpDefaultExchangeMessages (M11 S9e part 1). nil writes
+   nothing: the classless DUMMYCONTEST ran UnknownExchange, which the old
+   `case` had no arm for. *)
+procedure ContestSetUpDefaultExchangeMessages(aContest: TContestBase;
+                                              aMessages: TExchangeMessageWriters);
 
 (* THE ZONE A CALL-HISTORY (TRMASTER) ENTRY OFFERS AS THE INITIAL EXCHANGE --
    M11 S5. LOGEDIT.InitialExchangeEntry's ZoneInitialExchange arm asks it
@@ -3693,6 +3788,27 @@ begin
       end;
 end;
 
+function ContestExchangeTextMayHoldGridSquare(aContest: TContestBase): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.ExchangeTextMayHoldGridSquare;
+      end;
+end;
+
+procedure ContestSetUpDefaultExchangeMessages(aContest: TContestBase;
+                                              aMessages: TExchangeMessageWriters);
+begin
+   if aContest <> nil then
+      begin
+      aContest.SetUpDefaultExchangeMessages(aMessages);
+      end;
+end;
+
 function InitialZoneFromCallHistory(aZones: TZoneMultiplierZones;
                                     const aCQZone: ShortString;
                                     const aITUZone: ShortString;
@@ -4130,6 +4246,12 @@ begin
    Result := False;
 end;
 
+function TContestBase.ExchangeTextMayHoldGridSquare: boolean;
+begin
+   (* None -- see the declaration. *)
+   Result := False;
+end;
+
 function TContestBase.PerQSOExchangeLeadsWithSerial: boolean;
 begin
    (* The RST leads -- see the declaration. *)
@@ -4332,6 +4454,17 @@ begin
    (* No format: what the machine gave UnknownExchange -- see the
       declaration. *)
    Result := False;
+end;
+
+procedure TContestBase.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   (* None: the old `case` had no arm for most shapes -- see the
+      declaration. *)
+end;
+
+procedure TContestBase.SetUpDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   WriteDefaultExchangeMessages(aMessages);
 end;
 
 function TContestBase.MayBeACallsign(const aWord: string): boolean;

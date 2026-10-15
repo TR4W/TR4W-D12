@@ -85,6 +85,7 @@ type
       function ParseReceivedExchangeFormat(const aText: string;
                                            aParsers: TExchangeParsers;
                                            var aExch: ContestExchange): boolean; override;
+      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -191,6 +192,11 @@ function TContestAPSprint.ParseReceivedExchangeFormat(const aText: string;
                                                       var aExch: ContestExchange): boolean;
 begin
    Result := aParsers.ParseRSTQSONumber(aText, aExch);
+end;
+
+procedure TContestAPSprint.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   aMessages.WriteRSTQSONumber;
 end;
 
 function TContestAPSprint.GetADIFSentExchange(const aMy: TMyStationExchange;

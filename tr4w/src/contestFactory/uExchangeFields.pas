@@ -97,6 +97,25 @@ function ExchangeFieldsRSTZoneQTH: ExchangeInformationRecord;
    differently. '' when nothing is marked. *)
 function ExchangeFieldsText(const aInfo: ExchangeInformationRecord): string;
 
+(* THE LOG'S SWEEPSTAKES COLUMNS, FROM THE FIELD LIST -- M11 S9e part 1,
+   2026-10-15 (plan F15/F15a). MainUnit.SetColumnsWidth asks both of the
+   field list start-up assigned to LOGDUPE.ExchangeInformation; they were
+   `ContestSession.Exchange = QSONumberPrecedenceCheckDomesticQTHExchange`.
+
+   THE CHECK COLUMN IS THE CHECK FIELD: only the Sweepstakes set
+   (ExchangeFieldsQSONumberPrecedenceCheckQTH) marks it, so this is the old
+   test exactly.
+
+   THE PRECEDENCE COLUMN IS NOT THE PRECEDENCE FIELD ALONE, ON PURPOSE. ALL
+   JA's set (ExchangeFieldsRSTPrecedenceQTH) marks a precedence and no check,
+   and its log never showed the column -- asking the field alone would show
+   it, a behaviour change that is NY4I's to make (F15a). So it asks for the
+   precedence AND the check: the old test's contests, Sweepstakes alone.
+   Pinned for every contest at every roster station by
+   uTestExchangeKindReaders. *)
+function ExchangeFieldsShowPrecedenceColumn(const aInfo: ExchangeInformationRecord): boolean;
+function ExchangeFieldsShowCheckColumn(const aInfo: ExchangeInformationRecord): boolean;
+
 implementation
 
 uses
@@ -342,6 +361,17 @@ begin
    Add(aInfo.Zone, 'Zone');
    Add(aInfo.ZoneOrSociety, 'ZoneOrSociety');
    Result := Trim(Result);
+end;
+
+function ExchangeFieldsShowPrecedenceColumn(const aInfo: ExchangeInformationRecord): boolean;
+begin
+   (* Not ALL JA's precedence -- see the declaration. *)
+   Result := aInfo.Precedence and aInfo.Check;
+end;
+
+function ExchangeFieldsShowCheckColumn(const aInfo: ExchangeInformationRecord): boolean;
+begin
+   Result := aInfo.Check;
 end;
 
 end.

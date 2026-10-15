@@ -330,7 +330,20 @@ the target shape, the M-step migration order and the open questions.
   `ExchangeCarriesZone`, `ExchangeCarriesGridSquare` (the readiness check;
   the first also LOGSTUFF's improper-QTH attribution) and
   `PerQSOExchangeLeadsWithSerial` (`MainUnit.PerQSOExchString`) -- plan F28
-  says why they are transcriptions. **THE ROVER IS A QSO PARTY'S (Q94 with Q90, NY4I,
+  says why they are transcriptions. **S9e part 1 (2026-10-15) moved the last
+  readers outside the initial exchange:** `WriteDefaultExchangeMessages(
+  aMessages: TExchangeMessageWriters)` (protected; the base writes none) --
+  the default CW exchange messages FoundContest's closing `case` chose by
+  kind, now a call to one of five engine writers BY NAME
+  (`WriteNameAndState`, `WriteRSTQSONumber`, `WriteRSTStateOrQSONumber`,
+  `WriteRSTZone`, `WriteRSTStateOrZone`; FCONTEST's
+  `TEngineExchangeMessageWriters`, the S9d technique), asked of
+  `ActiveContest`, 92 overrides; `ExchangeTextMayHoldGridSquare` (base
+  False, 18 overrides) -- `TREE.LooksLikeAGrid`'s first question, asked of
+  the IDENTITY because no station decides it (pinned); and the log's
+  Sweepstakes columns ask the field list (`uExchangeFields`). Pinned by
+  `uTestExchangeKindReaders`. `SuppressZoneExchangeMessages` and
+  `uGridShape.GRID_CARRYING_EXCHANGES` are deleted. **THE ROVER IS A QSO PARTY'S (Q94 with Q90, NY4I,
   2026-10-14: "yes QSO parties allow it but in any contest NY4I/7 or
   VP9/NY4I is a valid call")**: `StripsRoverCountyFromCall` and the export's
   `SplitsRoverCallOnExport` (a `TContestBase` virtual since then) are True
@@ -528,7 +541,8 @@ the target shape, the M-step migration order and the open questions.
   `TStationContext.IsDomesticCountryCall` (a SERVICE -- ARRL 160's CTY lookup;
   nil means not domestic) and `.ContestName`; `TSessionDefaults.InitialExchange`,
   `ZoneMult`, `DXMultLimit`, `R150SMode`, `SuppressZoneExchangeMessages` (the
-  JIDX name test in FoundContest's closing `case`); the sibling
+  JIDX name test in FoundContest's closing `case`; deleted at M11 S9e part 1 --
+  the JIDX state no `WriteDefaultExchangeMessages`); the sibling
   `RepeatSPExchangeDefault` (the EU Sprints). The CQ-M okrug test was lifted to
   `uCallSignRoutines.InSameFederalOkrug(aMyCall, aHisCall)`. Tesla's arm's
   `DisplayTotalScore` repaint did not move (display, not a rule).
@@ -673,8 +687,9 @@ the target shape, the M-step migration order and the open questions.
   set-up, import, export, prompts and park menu rows. Its three TRDOS helpers
   are LEAVES now -- `uPOTAReference` (`IsValidPOTAPark`,
   `ResolvePOTAParkFromADIF`, `LooksLikeAState`) and `uGridShape`
-  (`GRID_CARRYING_EXCHANGES`, `LooksLikeGridSquare`; Tree's `LooksLikeAGrid`
-  asks both). **The exchange SHAPE `RSTAndPOTAPark` and its parser stay
+  (`LooksLikeGridSquare`; `GRID_CARRYING_EXCHANGES` was deleted at M11 S9e
+  part 1 for the class answer `ExchangeTextMayHoldGridSquare`, which Tree's
+  `LooksLikeAGrid` asks first). **The exchange SHAPE `RSTAndPOTAPark` and its parser stay
   LOGSTUFF's** until M10 (Q4): the base's `ParseReceivedExchange` hands the
   shape to it, and the n-fer -- one contact, one row per park in one QSO set,
   like a county line -- is the engine's queue and `TryLogContact`'s drain.

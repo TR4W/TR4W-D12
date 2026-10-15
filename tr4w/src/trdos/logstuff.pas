@@ -645,7 +645,6 @@ function ParseArray(e: Str80): boolean;
 function ParseArray2(ExchangeString: Str80): boolean;
 function SetRST(Ex: integer; var RST: smallInt {Word}): boolean;
 
-procedure ProcessPartialCallAndInitialExchange(RXData: ContestExchange);
 function ProperSalutation(Call: CallString): string;
 
 
@@ -6980,16 +6979,6 @@ begin
      end;
   logger.debug('Calling ProcessExchange from LogStringToRXData - LogString = (%s)', [LogString]);
   ProcessExchange(ExchangeString, RXData);
-end;
-
-procedure ProcessPartialCallAndInitialExchange(RXData: ContestExchange);
-
-begin
-  if Settings.CallWindow.PartialCallEnable or Settings.Contest.ExchangeMemoryEnable then // n4af 40.40.1
-    //     AddCallToPartialList(RXData.Callsign, GetInitialExchangeStringFromContestExchange(RXData));
-     begin
-     GetInitialExchangeStringFromContestExchange(RXData); // n4af 40.40.1       }
-     end;
 end;
 
 procedure CreateAndSendSAPMultiInfoMessage;
