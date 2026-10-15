@@ -99,6 +99,7 @@ type
       function GetFriendlyName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* STATED AT M10 S5, transcribed from the rows the base read until
          then (ContestsArray, QSOParties, ContestsBooleanArray). The
@@ -126,6 +127,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    uDXMultiplierKey,
    uContestFixedPoints,   (* FixedModePoints *)
    uContestRegistry;
@@ -183,6 +185,22 @@ end;
 function TContestArizonaQP.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticOrDXQTHExchange;
+end;
+
+(* AN ARIZONA ENTRANT RECEIVES THE RST AND A COUNTY, STATE OR COUNTRY
+   (RSTDomesticOrDXQTH); ANYONE ELSE THE RST, A NUMBER AND A COUNTY
+   (RSTDomesticQTH) -- the two shapes DescribeSession chooses between, on
+   Station.InHostState as it does. M11 S9a. *)
+function TContestArizonaQP.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   if Station.InHostState then
+      begin
+      Result := ExchangeFieldsRSTQTH;
+      end
+   else
+      begin
+      Result := ExchangeFieldsRSTQSONumberQTH;
+      end;
 end;
 
 function TContestArizonaQP.GetInStateDomesticFileName: string;

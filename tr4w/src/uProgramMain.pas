@@ -2323,7 +2323,11 @@ begin
     a row. *)
   InstallSettingsEffects;
 
-  SetUpExchangeInformation(ContestSession.Exchange, ExchangeInformation);
+  (* THE CONTEST STATES WHICH FIELDS ITS RECEIVED EXCHANGE CARRIES (M11 S9a)
+    -- it was LOGDUPE.SetUpExchangeInformation, a `case` over the session's
+    exchange shape. Once, here, as before: a peer's run-time CONTEST line
+    does not re-ask it (plan F19). *)
+  ExchangeInformation := ContestReceivedExchangeFields(ActiveContest(Contest));
   SetColumnsWidth;
   CreateMainWindow;
 

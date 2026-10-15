@@ -75,6 +75,7 @@ type
       function GetFriendlyName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -94,6 +95,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    uContestRegistry;
 
 (* MWCQP -- the legacy LOGSTUFF arm for this
@@ -174,6 +176,11 @@ end;
 function TContestMWC.GetExchangeKind: ExchangeType;
 begin
    Result := RSTQSONumberExchange;
+end;
+
+function TContestMWC.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQSONumber;
 end;
 
 function TContestMWC.GetFlags: TContestFlags;

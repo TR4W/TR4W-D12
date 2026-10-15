@@ -90,6 +90,7 @@ uses
    VC,
    uContestBase,
    uContestRegistry,
+   uTestContestObjects,
    uTestContestKindPin;
 
 type
@@ -193,21 +194,6 @@ begin
    Result := string(ContestTypeSA[aContest]) + ' at ' + STATIONS[aStation].Call;
 end;
 
-(* A contest object holding the station, as ActiveContest hands it; nil for
-   the classless DUMMYCONTEST. The caller frees it. *)
-function MakeContest(aContest: ContestType; const aStation: TStationContext): TContestBase;
-var
-   cls: TContestClass;
-begin
-   Result := nil;
-   cls := ContestClassFor(aContest);
-   if cls <> nil then
-      begin
-      Result := cls.Create(aContest);
-      Result.SetStation(aStation);
-      end;
-end;
-
 (* WHAT THE PROGRAM ANSWERS -- what each engine site asks of the contest:
    MainUnit's rover routines, ReturnInSAPOpMode, ParametersOkay and
    LOGSTUFF.ProcessExchange through the nil-safe Contest... functions;
@@ -221,7 +207,7 @@ function ProgramAnswer(aRule: TExchangeRule;
 var
    obj: TContestBase;
 begin
-   obj := MakeContest(aContest, aStation);
+   obj := MakeContestOrNil(aContest, aStation);
    try
       case aRule of
          erRoverCounty:

@@ -195,6 +195,7 @@ type
       function GetFriendlyName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* STATED AT M10 S5, transcribed from the rows the base read until
          then (ContestsArray, QSOParties, ContestsBooleanArray). The
@@ -228,6 +229,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    uDXMultiplierKey,
    SysUtils, uContestRegistry;
 
@@ -332,6 +334,11 @@ end;
 function TContestIdahoQP.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticOrDXQTHExchange;
+end;
+
+function TContestIdahoQP.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQTH;
 end;
 
 function TContestIdahoQP.GetInStateDomesticFileName: string;

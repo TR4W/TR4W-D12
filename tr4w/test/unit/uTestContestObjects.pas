@@ -46,6 +46,17 @@ function Make(aContest: ContestType; const aStation: TStationContext): TContestB
 (* The same, with no station: every station field zero. *)
 function Make(aContest: ContestType): TContestBase; overload;
 
+(* aContest's registered class with the station given, as ActiveContest
+   hands it -- and nil for a classless contest (DUMMYCONTEST), which is what
+   the engine's nil-safe Contest... functions are handed for it. Caller
+   frees.
+
+   LIFTED 2026-10-14 (M11 S9a): uTestDomesticMultiplier,
+   uTestDXMultiplierKey, uTestZoneMultiplier and uTestExchangeRules each held
+   an identical private copy, and uTestExchangeFields would have been the
+   fifth. *)
+function MakeContestOrNil(aContest: ContestType; const aStation: TStationContext): TContestBase;
+
 (* A station with every field zero -- what an object holds before SetStation. *)
 function NoStation: TStationContext;
 
@@ -86,6 +97,19 @@ end;
 function Make(aContest: ContestType): TContestBase;
 begin
    Result := Make(aContest, NoStation);
+end;
+
+function MakeContestOrNil(aContest: ContestType; const aStation: TStationContext): TContestBase;
+var
+   cls: TContestClass;
+begin
+   Result := nil;
+   cls := ContestClassFor(aContest);
+   if cls <> nil then
+      begin
+      Result := cls.Create(aContest);
+      Result.SetStation(aStation);
+      end;
 end;
 
 function NoStation: TStationContext;

@@ -79,6 +79,7 @@ type
       function GetFriendlyName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -120,6 +121,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    (* GetContinentFromString, StringIsAllNumbers, UpperCase -- the IOTA
       arm's own three (M11 S6). *)
    utils_text,
@@ -226,6 +228,11 @@ end;
 function TContestRSGBIOTA.GetExchangeKind: ExchangeType;
 begin
    Result := RSTQSONumberAndPossibleDomesticQTHExchange;
+end;
+
+function TContestRSGBIOTA.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQSONumberQTH;
 end;
 
 function TContestRSGBIOTA.GetFlags: TContestFlags;

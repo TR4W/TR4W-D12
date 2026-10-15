@@ -108,7 +108,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
                frozen before the first total-score rule moved.
 
     keys       (M11 S0c) BETWEEN parse AND totals: the exchange fields
-               SetUpExchangeInformation chose and the zone count
+               the contest states (SetUpExchangeInformation chose them until
+               M11 S9a) and the zone count
                (MaxNumberOfZones), then MORE SYNTHETIC QSOs -- calls chosen so
                every live arm of SetPrefix and GetDXQTH meets a call it acts
                on (ON, YB, JT, Scandinavia, UA9/UA0, a Gagarin Cup station,
@@ -177,6 +178,7 @@ uses
    PostUnit,
    uSettingsModel,
    uContestBase,
+   uExchangeFields,
    uContestFactory,
    uContestRegistry,
    uContestStateQSOPartyBase,
@@ -1495,40 +1497,6 @@ const
       (Name: 'rda.short';         Call: 'UA3ABC'; Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 MO1')
       );
 
-(* THE FIELDS SetUpExchangeInformation MARKED, by name, in the record's own
-  order. Start-up runs it once on the session's exchange shape
-  (uProgramMain); LOGSTUFF and the history renders read the result. *)
-function ExchangeFieldsText: string;
-
-   procedure Add(aSet: boolean; const aName: string);
-   begin
-      if aSet then
-         begin
-         Result := Result + ' ' + aName;
-         end;
-   end;
-
-begin
-   Result := '';
-   Add(ExchangeInformation.Age, 'Age');
-   Add(ExchangeInformation.Chapter, 'Chapter');
-   Add(ExchangeInformation.Check, 'Check');
-   Add(ExchangeInformation.ClassEI, 'ClassEI');
-   Add(ExchangeInformation.FOCNumber, 'FOCNumber');
-   Add(ExchangeInformation.Kids, 'Kids');
-   Add(ExchangeInformation.Name, 'Name');
-   Add(ExchangeInformation.Power, 'Power');
-   Add(ExchangeInformation.Precedence, 'Precedence');
-   Add(ExchangeInformation.QSONumber, 'QSONumber');
-   Add(ExchangeInformation.QTH, 'QTH');
-   Add(ExchangeInformation.RandomChars, 'RandomChars');
-   Add(ExchangeInformation.RST, 'RST');
-   Add(ExchangeInformation.TenTenNum, 'TenTenNum');
-   Add(ExchangeInformation.Zone, 'Zone');
-   Add(ExchangeInformation.ZoneOrSociety, 'ZoneOrSociety');
-   Result := Trim(Result);
-end;
-
 (* THE KEY FUNCTIONS' INPUTS AND OUTPUTS, appended for M11 (plan S0c).
 
   BETWEEN parse AND totals, and NOTHING HERE IS LOGGED: the QSOs are scored
@@ -1545,7 +1513,12 @@ var
    first, second: string;
 begin
    Emit('== keys');
-   EmitField('exchange.fields', ExchangeFieldsText);
+   (* THE FIELDS THE CONTEST STATED (TContestBase.ReceivedExchangeFields,
+     M11 S9a), by name, in the record's own order -- start-up assigns
+     LOGDUPE.ExchangeInformation once (uProgramMain), and the log-string
+     parses, the age message and the ADIF export read it. It was
+     SetUpExchangeInformation's. *)
+   EmitField('exchange.fields', ExchangeFieldsText(ExchangeInformation));
    (* SET WHEN THE SESSION COUNTS ZONES (SetUpRemainingMultiplierArrays,
      which LoadinLog runs); otherwise the global's start-up value. *)
    EmitField('zones.max', IntToStr(MaxNumberOfZones));

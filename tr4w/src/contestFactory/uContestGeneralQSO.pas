@@ -58,6 +58,7 @@ type
          flags: see TContestBase.GetFlags. *)
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetFlags: TContestFlags; override;
    public
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -94,6 +95,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    SysUtils, uContestRegistry, uContestFixedPoints;
 
 procedure TContestGeneralQSO.CalculateQSOPoints(var aQso: ContestExchange);
@@ -135,6 +137,11 @@ end;
 function TContestGeneralQSO.GetExchangeKind: ExchangeType;
 begin
    Result := RSTNameAndQTHExchange;
+end;
+
+function TContestGeneralQSO.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTNameQTH;
 end;
 
 function TContestGeneralQSO.GetFlags: TContestFlags;

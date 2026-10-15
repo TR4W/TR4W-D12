@@ -83,6 +83,7 @@ type
       function GetFriendlyName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -133,6 +134,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    uContestRegistry,
    uTR4WStrings;
 
@@ -237,6 +239,22 @@ end;
 function TContestJIDXCW.GetExchangeKind: ExchangeType;
 begin
    Result := RSTZoneExchange;
+end;
+
+(* A JAPANESE ENTRANT RECEIVES THE RST AND A ZONE (RSTZone); EVERYONE
+   ELSE THE RST, A NUMBER AND A PREFECTURE (RSTPrefecture) -- the two shapes
+   DescribeSession chooses between, by the station test IsJapaneseEntrant
+   asks. M11 S9a. *)
+function TContestJIDXCW.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   if IsJapaneseEntrant then
+      begin
+      Result := ExchangeFieldsRSTZone;
+      end
+   else
+      begin
+      Result := ExchangeFieldsRSTQSONumberQTH;
+      end;
 end;
 
 function TContestJIDXCW.GetFlags: TContestFlags;

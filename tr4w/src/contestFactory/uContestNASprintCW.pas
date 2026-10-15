@@ -67,6 +67,7 @@ type
       function GetDomesticFileName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetFlags: TContestFlags; override;
    public
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -101,6 +102,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    uDXMultiplierKey,
    SysUtils, uContestRegistry, uContestFixedPoints,
    uTR4WStrings;
@@ -159,6 +161,11 @@ end;
 function TContestNASprintCW.GetExchangeKind: ExchangeType;
 begin
    Result := QSONumberNameDomesticOrDXQTHExchange;
+end;
+
+function TContestNASprintCW.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsQSONumberNameQTH;
 end;
 
 function TContestNASprintCW.GetFlags: TContestFlags;

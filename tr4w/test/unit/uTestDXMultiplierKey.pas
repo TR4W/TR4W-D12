@@ -98,6 +98,7 @@ uses
    VC,
    uContestBase,
    uContestRegistry,
+   uTestContestObjects,
    uTestContestKindPin;
 
 type
@@ -534,21 +535,6 @@ begin
    Result.QTH.StandardCall := CallString(QSOS[aQso].Call);
 end;
 
-(* A contest object holding the station, as ActiveContest hands it; nil for
-   the classless DUMMYCONTEST. The caller frees it. *)
-function MakeContest(aContest: ContestType; const aStation: TStationContext): TContestBase;
-var
-   cls: TContestClass;
-begin
-   Result := nil;
-   cls := ContestClassFor(aContest);
-   if cls <> nil then
-      begin
-      Result := cls.Create(aContest);
-      Result.SetStation(aStation);
-      end;
-end;
-
 (* WHAT THE PROGRAM GIVES -- what LOGDUPE.GetDXQTH, uSettingsEffects and
    uMults.FillVisibleBytes ask since the move: the contest's own rule, on a
    contest object holding the station, as ActiveContest hands it. nil (the
@@ -564,7 +550,7 @@ function ProgramKey(aContest: ContestType;
 var
    obj: TContestBase;
 begin
-   obj := MakeContest(aContest, aStation);
+   obj := MakeContestOrNil(aContest, aStation);
    try
       Result := ContestDXMultiplierKey(obj, aQso, aKey);
    finally
@@ -577,7 +563,7 @@ function ProgramCountryMode(aContest: ContestType;
 var
    obj: TContestBase;
 begin
-   obj := MakeContest(aContest, aStation);
+   obj := MakeContestOrNil(aContest, aStation);
    try
       Result := ContestCountryMode(obj);
    finally
@@ -591,7 +577,7 @@ function ProgramListsCountry(aContest: ContestType;
 var
    obj: TContestBase;
 begin
-   obj := MakeContest(aContest, aStation);
+   obj := MakeContestOrNil(aContest, aStation);
    try
       Result := ContestListsRemainingDXCountry(obj, aQso.QTH.CountryID, aQso.QTH.Continent);
    finally
@@ -606,7 +592,7 @@ function ProgramHas(aContest: ContestType; const aStation: TStationContext): boo
 var
    obj: TContestBase;
 begin
-   obj := MakeContest(aContest, aStation);
+   obj := MakeContestOrNil(aContest, aStation);
    try
       Result := ContestHasDXMultiplier(obj);
    finally

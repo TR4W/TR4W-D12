@@ -88,6 +88,7 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetFlags: TContestFlags; override;
       (* ARRL DXCC WITHOUT THE ARRL SECTIONS -- see the implementation. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
@@ -163,6 +164,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    uDXMultiplierKey,
    SysUtils, uTR4WStrings, uContestRegistry,
    (* EmitADIFField -- the tag spellings are ADIF's. *)
@@ -377,6 +379,11 @@ end;
 function TContestWinterFieldDay.GetExchangeKind: ExchangeType;
 begin
    Result := ClassDomesticOrDXQTHExchange;
+end;
+
+function TContestWinterFieldDay.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsClassQTH;
 end;
 
 function TContestWinterFieldDay.GetFlags: TContestFlags;

@@ -104,6 +104,7 @@ uses
    VC,
    uContestBase,
    uContestRegistry,
+   uTestContestObjects,
    uTestContestKindPin;
 
 type
@@ -518,21 +519,6 @@ begin
    Result := Result + ' [' + string(aMultiplier) + '] [' + string(aQTH) + ']';
 end;
 
-(* A contest object holding the station, as ActiveContest hands it; nil for
-   the classless DUMMYCONTEST. The caller frees it. *)
-function MakeContest(aContest: ContestType; const aStation: TStationContext): TContestBase;
-var
-   cls: TContestClass;
-begin
-   Result := nil;
-   cls := ContestClassFor(aContest);
-   if cls <> nil then
-      begin
-      Result := cls.Create(aContest);
-      Result.SetStation(aStation);
-      end;
-end;
-
 (* WHAT THE PROGRAM GIVES -- what LOGDOM.GetDomQTH, LOGSTUFF.DomStringParse
    and the flag sites ask. BEFORE THE MOVE each returned the frozen legacy
    rule above, selected by Kinds(aContest, aStation).DomesticMult -- the run
@@ -550,7 +536,7 @@ begin
    multiplier := '';
    qth := '';
    found := False;
-   obj := MakeContest(aContest, aStation);
+   obj := MakeContestOrNil(aContest, aStation);
    try
       follows := ContestDomesticMultiplierFromQTH(obj, aText, multiplier, qth, found) =
                  dqaLookUpDomesticFile;
@@ -566,7 +552,7 @@ function ProgramHint(aContest: ContestType;
 var
    obj: TContestBase;
 begin
-   obj := MakeContest(aContest, aStation);
+   obj := MakeContestOrNil(aContest, aStation);
    try
       Result := ContestDomesticMultiplierHint(obj, aText);
    finally
@@ -580,7 +566,7 @@ function ProgramFlag(aContest: ContestType;
 var
    obj: TContestBase;
 begin
-   obj := MakeContest(aContest, aStation);
+   obj := MakeContestOrNil(aContest, aStation);
    try
       case aFlag of
          pfGridSquare:
@@ -650,7 +636,7 @@ function ProgramUsesFile(aContest: ContestType; const aStation: TStationContext)
 var
    obj: TContestBase;
 begin
-   obj := MakeContest(aContest, aStation);
+   obj := MakeContestOrNil(aContest, aStation);
    try
       Result := ContestUsesDomesticFile(obj);
    finally
@@ -810,7 +796,7 @@ function ProgramHasDomestic(aContest: ContestType; const aStation: TStationConte
 var
    obj: TContestBase;
 begin
-   obj := MakeContest(aContest, aStation);
+   obj := MakeContestOrNil(aContest, aStation);
    try
       Result := ContestHasDomesticMultiplier(obj);
    finally

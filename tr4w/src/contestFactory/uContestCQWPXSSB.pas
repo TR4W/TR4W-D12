@@ -55,12 +55,14 @@ type
       function GetQRZRUId: integer; override;
       function GetSubmissionEmail: string; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
    public
    end;
 
 implementation
 
 uses
+   uExchangeFields,
    uContestRegistry;
 
 function TContestCQWPXSSB.GetDisplayName: string;
@@ -107,6 +109,11 @@ end;
 function TContestCQWPXSSB.GetExchangeKind: ExchangeType;
 begin
    Result := RSTQSONumberExchange;
+end;
+
+function TContestCQWPXSSB.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQSONumber;
 end;
 
 initialization

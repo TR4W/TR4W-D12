@@ -76,6 +76,7 @@ type
       function GetFriendlyName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -113,6 +114,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    SysUtils, uContestRegistry,
    (* IndonesianCountry -- the arm's own test, already a leaf. *)
    uCallSignRoutines,
@@ -210,6 +212,11 @@ end;
 function TContestBataviaFT8.GetExchangeKind: ExchangeType;
 begin
    Result := GridExchange;
+end;
+
+function TContestBataviaFT8.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsQTH;
 end;
 
 function TContestBataviaFT8.GetFlags: TContestFlags;

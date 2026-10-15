@@ -78,6 +78,7 @@ type
       function GetFriendlyName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -94,6 +95,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    uContestRegistry;
 
 (* TenTenQSOPointMethod -- the legacy LOGSTUFF arm for this
@@ -158,6 +160,11 @@ end;
 function TContestTenTen.GetExchangeKind: ExchangeType;
 begin
    Result := NameQTHAndPossibleTenTenNumber;
+end;
+
+function TContestTenTen.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsNameQTHTenTenNumber;
 end;
 
 function TContestTenTen.GetFlags: TContestFlags;

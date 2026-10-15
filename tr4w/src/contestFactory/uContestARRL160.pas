@@ -87,6 +87,7 @@ type
       function GetFriendlyName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -139,6 +140,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    uDXMultiplierKey,
    uContestRegistry,
    (* ARRLSectionCountry -- the leaf the set-up arm asked. *)
@@ -227,6 +229,23 @@ end;
 function TContestARRL160.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticOrDXQTHExchange;
+end;
+
+(* AN ENTRANT IN AN ARRL SECTION COUNTRY RECEIVES THE RST AND A SECTION OR
+   COUNTRY (RSTDomesticOrDXQTH); ANYONE ELSE THE RST, A NUMBER AND A SECTION
+   (RSTDomesticQTH) -- the two shapes
+   DescribeSession chooses between, by the station test CountsDXMultiplier
+   asks. M11 S9a. *)
+function TContestARRL160.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   if CountsDXMultiplier then
+      begin
+      Result := ExchangeFieldsRSTQTH;
+      end
+   else
+      begin
+      Result := ExchangeFieldsRSTQSONumberQTH;
+      end;
 end;
 
 function TContestARRL160.GetFlags: TContestFlags;

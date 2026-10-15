@@ -263,6 +263,7 @@ uses
    uPrefixMultiplierKey in '..\..\src\contestFactory\uPrefixMultiplierKey.pas',
    uDXMultiplierKey     in '..\..\src\contestFactory\uDXMultiplierKey.pas',
    uDomesticKey         in '..\..\src\contestFactory\uDomesticKey.pas',
+   uExchangeFields      in '..\..\src\contestFactory\uExchangeFields.pas',
    uContestARRLDXBase in '..\..\src\contestFactory\uContestARRLDXBase.pas',
    uContestARRLDXCW in '..\..\src\contestFactory\uContestARRLDXCW.pas',
    uContestARRLDXPhone in '..\..\src\contestFactory\uContestARRLDXPhone.pas',
@@ -626,6 +627,10 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
       state, the park lookup, the FISTS score -- frozen against the old
       compares before they moved. *)
    uTestExchangeRules   in 'uTestExchangeRules.pas',
+   (* M11 S9a: every contest's received-exchange field list, at stations
+      the matrix does not run, frozen against the old
+      SetUpExchangeInformation before it moved into the classes. *)
+   uTestExchangeFields  in 'uTestExchangeFields.pas',
    (* POTA as a contest class (design Q6, 2026-10-13). *)
    uTestContestPOTA     in 'uTestContestPOTA.pas',
    (* The Delaware QSO Party, a new contest (design 7.14, 8.2q). *)
@@ -717,6 +722,7 @@ begin
    RegisterSuite(TZoneMultiplierTests.Create('ZoneMultiplier'));
    RegisterSuite(TDomesticMultiplierTests.Create('DomesticMultiplier'));
    RegisterSuite(TExchangeRuleTests.Create('ExchangeRules'));
+   RegisterSuite(TExchangeFieldsTests.Create('ExchangeFields'));
    RegisterSuite(TContestPOTATests.Create('ContestPOTA'));
    RegisterSuite(TContestDelawareQPTests.Create('ContestDelawareQP'));
    RegisterSuite(TContestIN7QPNETests.Create('ContestIN7QPNE'));

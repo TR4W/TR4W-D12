@@ -367,7 +367,24 @@ reading the shape: the four machines, the history renders (LOGEDIT,
 LOGDUPE), FCONTEST's sent-message `case`, `PerQSOExchString`,
 `LooksLikeAGrid` and the data hand-offs -- S9's -- and `SetColumnsWidth`'s
 SS columns (F15, blocked on S1/Q50).** Do not add a new rule test of
-`ContestSession.Exchange`; add a class answer. **The CTY country list (`ctyCountryMode`) is set in the
+`ContestSession.Exchange`; add a class answer. **S9 MOVES THE FOUR MACHINES
+ONE PER STAGE (Q92, NY4I option 2): each becomes NAMED HELPERS the class's
+own override CALLS -- no enum selects one.** **S9a IS DONE (2026-10-14): THE
+FIELD LIST.** `LOGDUPE.SetUpExchangeInformation` is DELETED; every
+registered contest states `GetReceivedExchangeFields` (public property
+`ReceivedExchangeFields`), calling the `uExchangeFields` helper named for
+the fields it marks (one helper per FIELD SET -- 28 with the empty one --
+not per shape, since the machine's arms already grouped shapes by set).
+The base marks NOTHING, so a new contest that forgets it is silently
+fieldless -- the UA4W Championship is, transcribed (plan F24). Where the
+station decides the exchange (ARRL DX on its base, ARRL 160, JIDX x2, 7QP,
+NEQP, Arizona, Texas, the Salmon Run) the override tests the same `Station`
+predicate as its other answers. `uProgramMain` assigns
+`LOGDUPE.ExchangeInformation := ContestReceivedExchangeFields(
+ActiveContest(Contest))` once, as before; the matrix prints it through
+`uExchangeFields.ExchangeFieldsText`. Pinned by `uTestExchangeFields`
+(every ContestType at seven stations, and a frozen copy of the machine as
+the cross-check until S9's deletion stage). **The CTY country list (`ctyCountryMode`) is set in the
 CONTEST setting's effect, straight after `FoundContest` returns** (plan F5)
 -- from the contest's `CountryMode` (`ContestCountryMode(ActiveContest(
 Contest))`) since M11 S4, from `ContestSession.DXMult` before -- its only
@@ -396,7 +413,8 @@ anywhere to go stale. Do not bring one back. Pinned by
 -> ARRL SS pair) and the four `uTest*Multiplier*` units.
 **Still once-only after a run-time switch (F19):** what start-up derived
 FROM them -- `NumberDifferentMults`, `RemainingMultDisplay`,
-`Sheet.SheetInitAndLoad` (LogCfg) and `SetUpExchangeInformation` /
+`Sheet.SheetInitAndLoad` (LogCfg) and the `ExchangeInformation`
+assignment (the contest's `ReceivedExchangeFields` since M11 S9a) /
 `SetColumnsWidth` (`uProgramMain`). **A parse rule does not test
 `aSession.Exchange` for its own shape (M11 S2, F11):** a class's session
 shape is its own, so such a test is always true; test it only when the class
@@ -407,8 +425,9 @@ has a zone multiplier at all, `ContestHasZoneMultiplier`, on the same
 object); keep them on one. **`trdos/logddx.pas` is compiled by
 NOTHING** (it uses a `Country9` that never existed; plan F14): an edit
 there passes every build, so do not count a repoint in it as verified -- it
-still names `ActiveExchange` 26 times, untouched by NY4I's decision (Q91). `logdupe.SetUpExchangeInformation`'s parameter is
-`aExchangeKind` now -- it was named `ActiveExchange` and shadowed the global.
+still names `ActiveExchange` 26 times, untouched by NY4I's decision (Q91).
+~~`logdupe.SetUpExchangeInformation`'s parameter is `aExchangeKind`~~ -- the
+routine is deleted (M11 S9a), and `scan.py`'s `KIND_PARAMETERS` is empty.
 **Moving a kind? Add it to `tools/contest-rules-inventory/scan.py`'s
 `SESSION` map in the same commit**, or its shape-4 rows vanish from the
 inventory in silence.

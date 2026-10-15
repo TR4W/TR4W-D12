@@ -85,6 +85,7 @@ type
       function GetFriendlyName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -108,6 +109,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    uContestRegistry,
    uContestFixedPoints,
    uTR4WStrings;
@@ -168,6 +170,11 @@ end;
 function TContestRSGBRoPoCoCW.GetExchangeKind: ExchangeType;
 begin
    Result := RSTAndPostalCodeExchange;
+end;
+
+function TContestRSGBRoPoCoCW.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQTH;
 end;
 
 function TContestRSGBRoPoCoCW.GetFlags: TContestFlags;

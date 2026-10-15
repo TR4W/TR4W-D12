@@ -91,6 +91,7 @@ type
       function GetFriendlyName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* STATED AT M10 S5, transcribed from the rows the base read until
          then (ContestsArray, QSOParties, ContestsBooleanArray). The
@@ -117,6 +118,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    uContestFixedPoints,   (* FixedModePoints *)
    uContestRegistry;
 
@@ -216,6 +218,15 @@ end;
 function TContestCaliforniaQP.GetExchangeKind: ExchangeType;
 begin
    Result := QSONumberDomesticOrDXQTHExchange;
+end;
+
+(* THE NUMBER AND THE QTH AT EVERY STATION -- M11 S9a. DescribeSession
+   chooses between QSONumberDomesticOrDXQTH (in state) and
+   QSONumberDomesticQTH (outside), and both carry this one field set, so no
+   station test is needed here. *)
+function TContestCaliforniaQP.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsQSONumberQTH;
 end;
 
 function TContestCaliforniaQP.GetInStateDomesticFileName: string;

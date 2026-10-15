@@ -77,6 +77,7 @@ type
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -113,6 +114,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    SysUtils, uContestRegistry, uContestFixedPoints,
    uTR4WStrings;
 
@@ -182,6 +184,11 @@ end;
 function TContestARRLRTTYRoundup.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticQTHOrQSONumberExchange;
+end;
+
+function TContestARRLRTTYRoundup.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQSONumberQTH;
 end;
 
 function TContestARRLRTTYRoundup.GetFlags: TContestFlags;

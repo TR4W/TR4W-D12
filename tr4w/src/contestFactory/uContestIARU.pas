@@ -78,6 +78,7 @@ type
       function GetDomesticFileName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetFlags: TContestFlags; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
@@ -149,6 +150,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    SysUtils, uContestRegistry,
    (* EmitADIFField -- the tag spellings are ADIF's. *)
    uADIF,
@@ -255,6 +257,11 @@ end;
 function TContestIARU.GetExchangeKind: ExchangeType;
 begin
    Result := RSTZoneOrSocietyExchange;
+end;
+
+function TContestIARU.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTZoneQTH;
 end;
 
 function TContestIARU.GetFlags: TContestFlags;

@@ -78,6 +78,7 @@ type
       function GetFriendlyName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -101,6 +102,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    uContestRegistry, uContestFixedPoints,
    uTR4WStrings;
 
@@ -157,6 +159,11 @@ end;
 function TContestSprintSSB.GetExchangeKind: ExchangeType;
 begin
    Result := QSONumberNameDomesticOrDXQTHExchange;
+end;
+
+function TContestSprintSSB.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsQSONumberNameQTH;
 end;
 
 function TContestSprintSSB.GetFlags: TContestFlags;

@@ -1190,6 +1190,24 @@ type
       function GetQRZRUId: integer; virtual;
       function GetInitialExchangeKind: InitialExchangeType; virtual;
       function GetExchangeKind: ExchangeType; virtual;
+
+      (* WHICH FIELDS THE RECEIVED EXCHANGE CARRIES -- M11 S9a, 2026-10-14
+         (docs/CONTEST_FACTORY_M11_PLAN.md S9a). Start-up puts the answer
+         in LOGDUPE.ExchangeInformation, which the log-string parses
+         (LOGDUPE, LOGSTUFF), LOGSUBS2's age message, the ADIF RST and zone
+         tags (POSTUNIT) and the external logger read.
+
+         It was LOGDUPE.SetUpExchangeInformation, a `case` over the
+         session's exchange shape. Each contest now states its own list by
+         calling a named helper in uExchangeFields (NY4I's ruling on Q92):
+         no enum selects one. A contest whose exchange depends on the
+         station tests the station here as DescribeSession does, through
+         the same predicate (Station is ActiveContest's).
+
+         THE BASE MARKS NOTHING -- what the machine gave the classless
+         DUMMYCONTEST (UnknownExchange had no arm). Every registered contest
+         states its list, on its class or its family base. *)
+      function GetReceivedExchangeFields: ExchangeInformationRecord; virtual;
       function GetIsUSQSOParty: boolean; virtual;
       function GetHostState: string; virtual;
 
@@ -1419,6 +1437,7 @@ type
       property QRZRUId: integer read GetQRZRUId;
       property InitialExchangeKind: InitialExchangeType read GetInitialExchangeKind;
       property ExchangeKind: ExchangeType read GetExchangeKind;
+      property ReceivedExchangeFields: ExchangeInformationRecord read GetReceivedExchangeFields;
       property IsUSQSOParty: boolean read GetIsUSQSOParty;
 
       (* ADIF facts -- see the getters. *)
@@ -2798,6 +2817,12 @@ function ContestStripsRoverCountyFromCall(aContest: TContestBase): boolean;
 function ContestLogsSeveralQTHsFromOneEntry(aContest: TContestBase): boolean;
 function ContestAcceptsBlankExchange(aContest: TContestBase): boolean;
 
+(* THE FIELDS aContest's RECEIVED EXCHANGE CARRIES -- see
+   TContestBase.ReceivedExchangeFields (M11 S9a). nil marks nothing: the
+   classless DUMMYCONTEST ran UnknownExchange, which had no arm. Start-up
+   (uProgramMain) asks it of the open contest. *)
+function ContestReceivedExchangeFields(aContest: TContestBase): ExchangeInformationRecord;
+
 (* THE ZONE A CALL-HISTORY (TRMASTER) ENTRY OFFERS AS THE INITIAL EXCHANGE --
    M11 S5. LOGEDIT.InitialExchangeEntry's ZoneInitialExchange arm asks it
    once CD.GetEntry has found the call, with the zone list the contest's
@@ -2859,6 +2884,9 @@ uses
    (* CanonicalFromCQTemplate -- the base's canonical sent exchange (M9a). A
       leaf: VC, SysUtils and StrUtils only. *)
    uCanonicalExchange,
+   (* ExchangeFieldsNone -- the base's received-exchange field list (M11
+      S9a). A leaf: VC and SysUtils only. *)
+   uExchangeFields,
    (* ResolveSRXString -- the received-exchange half of the ADIF SRX_STRING
       the base's FormatADIFReceivedExchange writes (M5b). The Field Day
       classes already reach uADIF the same way, from their implementation. *)
@@ -2962,6 +2990,12 @@ end;
 function TContestBase.GetExchangeKind: ExchangeType;
 begin
    Result := UnknownExchange;
+end;
+
+function TContestBase.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   (* Nothing -- see the declaration. *)
+   Result := ExchangeFieldsNone;
 end;
 
 function TContestBase.GetIsUSQSOParty: boolean;
@@ -3356,6 +3390,18 @@ begin
    else
       begin
       Result := aContest.AcceptsBlankExchange;
+      end;
+end;
+
+function ContestReceivedExchangeFields(aContest: TContestBase): ExchangeInformationRecord;
+begin
+   if aContest = nil then
+      begin
+      Result := ExchangeFieldsNone;
+      end
+   else
+      begin
+      Result := aContest.ReceivedExchangeFields;
       end;
 end;
 

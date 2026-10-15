@@ -70,6 +70,7 @@ type
       function GetFriendlyName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -92,6 +93,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    uContestRegistry,
    (* StrToIntDef -- the arm's own conversion. *)
    SysUtils,
@@ -156,6 +158,11 @@ end;
 function TContestOldNewYear.GetExchangeKind: ExchangeType;
 begin
    Result := RSTPowerExchange;
+end;
+
+function TContestOldNewYear.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTPower;
 end;
 
 function TContestOldNewYear.GetFlags: TContestFlags;

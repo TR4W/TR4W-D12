@@ -84,6 +84,12 @@ type
          of rules, so it is stated once, here (M10 S5). See
          TContestBase.GetFlags. *)
       function GetFlags: TContestFlags; override;
+
+      (* THE RECEIVED-EXCHANGE FIELDS ARE THE FAMILY'S, AND THE STATION'S --
+         see TContestBase.GetReceivedExchangeFields (M11 S9a). Stated once,
+         here, as DescribeSession is; each mode's GetExchangeKind still
+         states the trait. *)
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
    public
 
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -129,6 +135,7 @@ implementation
 
 uses
    uDXMultiplierKey,
+   uExchangeFields,
    SysUtils,
    uCanonicalExchange;
 
@@ -202,6 +209,22 @@ end;
 function TContestARRLDXBase.GetFlags: TContestFlags;
 begin
    Result := [cfQSOByBand, cfMultByBand];
+end;
+
+(* A W OR VE ENTRANT RECEIVES THE RST AND A POWER (RSTPower); ANYONE ELSE THE
+   RST, A NUMBER AND A STATE OR PROVINCE (RSTDomesticQTH) -- the two shapes
+   DescribeSession chooses between, by the station test CountsDXMultiplier
+   asks. M11 S9a. *)
+function TContestARRLDXBase.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   if CountsDXMultiplier then
+      begin
+      Result := ExchangeFieldsRSTPower;
+      end
+   else
+      begin
+      Result := ExchangeFieldsRSTQSONumberQTH;
+      end;
 end;
 
 (* NOTHING IS REGISTERED HERE. A family base is not a contest an operator can

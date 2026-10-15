@@ -75,7 +75,8 @@ ROUTINES = {
    # answers DomesticMultiplierFromQTH (base: the domestic file); its
    # no-domestic exit asks HasDomesticMultiplier since M11 S6 part 2. It reads
    # no session kind.
-   ("logdupe.pas", "SetUpExchangeInformation"): ("exchange", new("ReceivedExchangeFields (s6) (which fields the exchange carries)")),
+   # SetUpExchangeInformation is DELETED (M11 S9a): each contest states
+   # ReceivedExchangeFields, calling a uExchangeFields helper.
    ("logdupe.pas", "ParseExchangeIntoContestExchange"): ("exchange", new("ParseReceivedExchange (s6)")),
    ("logdupe.pas", "GetInitialExchangeStringFromContestExchange"): ("exchange", new("InitialExchangeFromHistory")),
    ("logedit.pas", "InitialExchangeEntry"): ("exchange", new("InitialExchangeFromHistory (InitialExchangeKind is the existing trait)")),
@@ -174,14 +175,15 @@ SITE_OVERRIDES = [
 # THE EXCHANGE-SHAPE MACHINES (M11 S0a, plan F1 and 0.1). Each is keyed on the
 # exchange SHAPE -- how an exchange is spelled -- and holds one arm per shape,
 # so a reach-1 arm there is a data format one contest uses, not a contest rule
-# in disguise. M11 keeps them on purpose (open question Q92); their arms are
-# judged SHAPE, counted and never tabled as PROXY. Keyed (file base, routine).
-# Only SetUpExchangeInformation is reached by the scan today (through
-# scan.KIND_PARAMETERS); the other three take the shape as a parameter the
-# scan does not follow, and are named so that widening the scan cannot table
-# their arms as contest rules.
+# in disguise. Q92 (NY4I, option 2) turns each into named helpers the classes
+# call, one machine per stage; until a machine goes its arms are judged SHAPE,
+# counted and never tabled as PROXY. Keyed (file base, routine). The three
+# left take the shape as a parameter the scan does not follow, and are named
+# so that widening the scan cannot table their arms as contest rules.
+# ~~("logdupe.pas", "SetUpExchangeInformation")~~ was the one the scan reached
+# (through scan.KIND_PARAMETERS); it is DELETED (M11 S9a, 2026-10-14) -- each
+# class states TContestBase.ReceivedExchangeFields, calling uExchangeFields.
 SHAPE_MACHINES = {
-   ("logdupe.pas", "SetUpExchangeInformation"),
    ("logstuff.pas", "ParseExchangeShape"),
    ("uADIFExchange.pas", "FormatADIFExchangeOfKind"),
    ("uCabrilloExchange.pas", "SetHisEx"),

@@ -47,9 +47,10 @@ SESSION = {
 # shadowed the global, and this scanner read its `case` AS the global -- right
 # only because the one caller (uProgramMain) passes ActiveExchange. Renamed
 # at M10 S9a (plan F9); listed here so the rename does not drop its arms. The
-# caller passes ContestSession.Exchange since S9f.
+# caller passed ContestSession.Exchange from S9f. The routine is DELETED (M11
+# S9a, 2026-10-14) -- each contest states TContestBase.ReceivedExchangeFields --
+# so the map is empty; keep it for the next parameter that carries a kind.
 KIND_PARAMETERS = {
-   ("tr4w/src/trdos/logdupe.pas", "SETUPEXCHANGEINFORMATION", "AEXCHANGEKIND"): "AE",
 }
 
 

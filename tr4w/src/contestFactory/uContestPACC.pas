@@ -81,6 +81,7 @@ type
       function GetFriendlyName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -120,6 +121,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    uCallSignRoutines,
    utils_text,
    SysUtils, uContestRegistry, uContestFixedPoints,
@@ -197,6 +199,15 @@ end;
 function TContestPACC.GetExchangeKind: ExchangeType;
 begin
    Result := RSTAndQSONumberOrDomesticQTHExchange;
+end;
+
+(* THE RST, A NUMBER AND A QTH AT EVERY STATION -- M11 S9a.
+   DescribeSession chooses between RSTAndQSONumberOrDomesticQTH (a Dutch
+   entrant) and RSTDomesticQTH (anyone else), and both carry this one field
+   set, so no station test is needed here. *)
+function TContestPACC.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQSONumberQTH;
 end;
 
 function TContestPACC.GetFlags: TContestFlags;

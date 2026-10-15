@@ -106,6 +106,7 @@ uses
    VC,
    uContestBase,
    uContestRegistry,
+   uTestContestObjects,
    uTestContestKindPin;
 
 type
@@ -265,21 +266,6 @@ begin
                            SessionContestName(aContest, STATIONS[aStation].InHostState));
 end;
 
-(* A contest object holding the station, as ActiveContest hands it; nil for
-   the classless DUMMYCONTEST. The caller frees it. *)
-function MakeContest(aContest: ContestType; const aStation: TStationContext): TContestBase;
-var
-   cls: TContestClass;
-begin
-   Result := nil;
-   cls := ContestClassFor(aContest);
-   if cls <> nil then
-      begin
-      Result := cls.Create(aContest);
-      Result.SetStation(aStation);
-      end;
-end;
-
 (* The zone list as the literals spell it. *)
 function ZonesText(aZones: TZoneMultiplierZones): string;
 begin
@@ -310,7 +296,7 @@ function ProgramHas(aContest: ContestType; const aStation: TStationContext): boo
 var
    obj: TContestBase;
 begin
-   obj := MakeContest(aContest, aStation);
+   obj := MakeContestOrNil(aContest, aStation);
    try
       Result := ContestHasZoneMultiplier(obj);
    finally
@@ -322,7 +308,7 @@ function ProgramCount(aContest: ContestType; const aStation: TStationContext): i
 var
    obj: TContestBase;
 begin
-   obj := MakeContest(aContest, aStation);
+   obj := MakeContestOrNil(aContest, aStation);
    try
       Result := ContestZoneMultiplierCount(obj);
    finally
@@ -334,7 +320,7 @@ function ProgramZones(aContest: ContestType; const aStation: TStationContext): s
 var
    obj: TContestBase;
 begin
-   obj := MakeContest(aContest, aStation);
+   obj := MakeContestOrNil(aContest, aStation);
    try
       Result := ZonesText(ContestZoneMultiplierZones(obj));
    finally
@@ -346,7 +332,7 @@ function ProgramFromZero(aContest: ContestType; const aStation: TStationContext)
 var
    obj: TContestBase;
 begin
-   obj := MakeContest(aContest, aStation);
+   obj := MakeContestOrNil(aContest, aStation);
    try
       Result := ContestNumbersZonesFromZero(obj);
    finally

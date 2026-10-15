@@ -56,12 +56,14 @@ type
       function GetSubmissionEmail: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
    public
    end;
 
 implementation
 
 uses
+   uExchangeFields,
    uContestRegistry;
 
 function TContestCQWWSSB.GetDisplayName: string;
@@ -113,6 +115,11 @@ end;
 function TContestCQWWSSB.GetExchangeKind: ExchangeType;
 begin
    Result := RSTZoneExchange;
+end;
+
+function TContestCQWWSSB.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTZone;
 end;
 
 initialization

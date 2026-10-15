@@ -78,6 +78,7 @@ type
       function GetFriendlyName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -140,6 +141,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    SysUtils, uContestRegistry,
    (* StringIsAllNumbers -- the test the arm asks of MY STATE. *)
    utils_text,
@@ -288,6 +290,11 @@ end;
 function TContestPCC.GetExchangeKind: ExchangeType;
 begin
    Result := RSTAndQSONumberOrDomesticQTHExchange;
+end;
+
+function TContestPCC.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQSONumberQTH;
 end;
 
 function TContestPCC.GetFlags: TContestFlags;

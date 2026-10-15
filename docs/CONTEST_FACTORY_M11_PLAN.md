@@ -2052,12 +2052,114 @@ now agree, but for County Hunter.
 
 ### S9 -- The exchange shape becomes one class answer
 
-- `ExchangeShape(aStation)` replaces `GetExchangeKind` (373) and
-  `TSessionDefaults.Exchange`. FCONTEST caches it in `ContestSession.Exchange`.
+**RE-PLANNED BY Q92 (option 2) -- see "WHAT S7, S8 AND S9 INHERIT".** The
+first bullet below is the superseded single-answer design: the four
+machines become named helpers the classes call, one machine per stage
+(S9a the field list, then ADIF, Cabrillo and the parser), then a deletion
+stage for `ExchangeType`, `GetExchangeKind` and `ContestSession.Exchange`.
+
+- ~~`ExchangeShape(aStation)` replaces `GetExchangeKind` (373) and
+  `TSessionDefaults.Exchange`. FCONTEST caches it in `ContestSession.Exchange`.~~
 - `ActiveExchangeArray`: keep it, or replace its two log lines with RTTI
   `GetEnumName`. If deleted, check `Lint-SpellingTables`' floor of 24.
 - *Matrix:* identical. *Risk:* low-medium.
 - *Specialists:* `contest-scoring`, `build-release`.
+
+#### S9a DONE (2026-10-14, on `6edaffc3`, uncommitted at hand-back): THE FIELD LIST
+
+The first machine: `LOGDUPE.SetUpExchangeInformation`, the `case` over the
+session's exchange shape that marked `ExchangeInformationRecord`'s fields.
+
+- **Measured first.**
+  - **Its arms: 43**, carrying **55** labels of `ExchangeType`'s 61
+    members. Six members had no arm and marked nothing: `UnknownExchange`,
+    `NoExchangeReceived`, `RSTAndDOMESTICQTH`,
+    `RSTAndSerialNumberAndGridandPossibleMemberNumber`,
+    `RSTNameAndPossibleFOCNumber`, `RSTAndGridSquareOrRDAExchange`.
+  - **Reach** (the frozen matrix's `active.exchange` lines, 186 contests x 3
+    stations, which hold every value the 20 `DescribeSession` statements
+    write): registered contests run **51 shapes**. **50** hit an arm --
+    **39 live arms, 27 distinct field sets** -- and the 51st,
+    `RSTAndGridSquareOrRDAExchange` (the UA4W Championship), hit none and
+    marked nothing: **28 sets with the empty one**. Each shape's set was
+    the same at every matrix station (checked: no shape printed two
+    `exchange.fields`).
+  - **Unreachable: 4 arms** (5 labels): `CheckAndChapterOrQTHExchange`
+    (Chapter Check QTH -- the only set no live arm marks; S1/Q50),
+    `QSONumberAndAgeExchange` (Age QSONumber), `RSTAndGrid3Exchange` (QTH
+    alone), `RSTAndFOCNumberExchange` (RST Power); and the label
+    `RSTQSONumberOrDomesticQTHExchange` inside a live arm. They are gone
+    with the machine -- no helper was written for a set only they marked --
+    and the members stay for the deletion stage. Recorded literally in the
+    pin's frozen copy (`uTestExchangeFields.LegacyFields`).
+  - **Station-dependent:** 12 contests choose their exchange by the
+    station (11 classes, 20 `DescribeSession` statements). For **10** the
+    field set moves with it -- ARRL DX CW/SSB, ARRL 160, JIDX CW/SSB, 7QP,
+    NEQP, Arizona, Texas, the Salmon Run; California's and the PACC's two
+    shapes carry one set each.
+  - **Callers: ONE** -- `uProgramMain`, once at start-up, on
+    `ContestSession.Exchange` (F19: a run-time CONTEST switch does not
+    re-run it). Readers of the record it filled (unchanged):
+    `LOGDUPE.ParseExchangeIntoContestExchange` (via `LOGSUBS2`'s log-string
+    read), `LOGSTUFF.LogStringToRXData`, `LOGSUBS2`'s age message, POSTUNIT's
+    ADIF RST and zone tags, `uExternalLogger`, the matrix.
+- **The seam.** `TContestBase.GetReceivedExchangeFields:
+  ExchangeInformationRecord` (protected virtual) behind the public property
+  `ReceivedExchangeFields`, beside `GetExchangeKind`/`ExchangeKind` -- a
+  getter, because a field list is what the contest IS at its station; and
+  the nil-safe `ContestReceivedExchangeFields(aContest)`. A function
+  returning the existing record rather than a `var` procedure: the record
+  is replaced whole, so no field can survive from a previous answer. **The
+  base marks nothing** (what the machine gave the classless DUMMYCONTEST) and
+  dispatches on no enum.
+- **The helpers: `uExchangeFields` (new leaf, VC only), 28 -- one per FIELD
+  SET, not per shape.** The machine's arms already grouped shapes by set; a
+  helper per shape would have been the same body up to ten times. Named for
+  the fields they mark (`ExchangeFieldsRSTZone`,
+  `ExchangeFieldsRSTQSONumberQTH`, ...), plus `ExchangeFieldsNone` and
+  `ExchangeFieldsText` (the matrix's printer, lifted so the matrix and the
+  pin spell a set one way).
+- **The overrides: 184**, every registered contest stating its list.
+  - 175 classes call one helper beside their `GetExchangeKind`,
+    including the NRAU Baltic family base (two contests).
+  - The ARRL DX family base (two contests) and eight classes test the
+    station as their other answers do: ARRL DX `CountsDXMultiplier`; ARRL
+    160, 7QP, NEQP, Texas, the Salmon Run `CountsDXMultiplier`; Arizona
+    `Station.InHostState`; JIDX CW/SSB `IsJapaneseEntrant`.
+  - California and the PACC state one helper, with a comment that both
+    station shapes share it. The UA4W Championship states
+    `ExchangeFieldsNone`, transcribed (F24).
+- **The repoint.** `uProgramMain`: `ExchangeInformation :=
+  ContestReceivedExchangeFields(ActiveContest(Contest))`, once, where the
+  call stood. `SetUpExchangeInformation` is DELETED. The matrix prints
+  `ExchangeFieldsText(ExchangeInformation)`; its own copy of the printer is
+  deleted.
+- **Pin: `uTestExchangeFields` (new).** Every ContestType at seven
+  stations -- the matrix's three, a host-state MA station, a Dutch, a KH6
+  and a **Japanese** station (no matrix station reaches JIDX's JA branch)
+  -- against literals laid out from the frozen matrix's us column grouped
+  by set, plus the station branches by hand; a count of distinct sets
+  (28); a cross-check against a frozen copy of the machine on the session
+  shape `uTestContestKindPin.Kinds` resolves (stays until the deletion
+  stage); every helper's set literally. **OLD code (the program's answer
+  = the machine on `Kinds`): 2,649 passed, 0 failed. NEW code: 2,649
+  passed, 0 failed.** Suite **194,586 passed, 0 failed**, both runs. The
+  identical private `MakeContest` in four pin units (and the fifth this
+  would have been) is lifted to `uTestContestObjects.MakeContestOrNil`.
+- **Build:** narrowing **1262** (ceiling 1262), range **3**, full `-B`.
+  Matrix, corpus and lints NOT run here. **The matrix should be IDENTICAL:**
+  its `exchange.fields` line is the same record, printed by the same text
+  in the same order.
+- **Inventory** (generated to check the tool, then the tracked doc
+  restored): rows 29, contests 30 -- unchanged; shape-4 sites 28 -> **27**
+  (`case`s 4 -> 3); records 87 -> **44** (SHAPE 43 -> **0**; PROXY 12,
+  SHARED 22, UNUSED 10 unchanged). `scan.KIND_PARAMETERS` is empty,
+  `judgements.SHAPE_MACHINES` lost the routine, and `generate.py`'s guard
+  that the scan still reached it is deleted -- it would fail every run.
+- **Not done here, on purpose.** The readers of `ExchangeInformation` still
+  read the global start-up fills (F19); asking the contest at each reader
+  is a later question. `GetExchangeKind` is still the trait every other
+  machine reads.
 
 ### S10 -- (optional, Q93) Reach-1 shapes become their contest's own
 
@@ -2095,11 +2197,12 @@ Q91 deletes it. `Lint-ContestNameTests` is left with `MainUnit:8045` and
 | **F15** | `MainUnit:9514-9516`; `logdupe:1709-1715` | The SS-shape test duplicates `ExchangeInformation.Precedence`/`.Check`. They are equal once S1 removes `CheckAndChapterOrQTH`, the only other arm that sets `Check` |
 | **F16** | inventory section 9.1; `analyses.dead_arms` | (S0a) The "export arms dead by default" table is EMPTY, and not because there are none: it reads `SetHisEx` / `FormatADIFExchangeOfKind` records, and those machines left the scan when their selector became a parameter (`aCtx.SessionExchange`, `aKind`). The same blindness as F1's three unscanned machines. Not fixed at S0a, which judges the machines SHAPE |
 | **F17** | `uProgramMain:2701` versus `:2405` | (S0d) `CD.MasterFileExists` is set after the `/MATRIX` halt (and `/EXPORT`'s), so headless runs never open TRMASTER: `CD.GetEntry('W1AW')` answers "not found" while the shipped file holds W1AW. Every TRMASTER-sourced initial exchange is blank in the matrix |
-| **F19** | `LogCfg` (once, `uProgramMain:2318`); `uProgramMain:2306-2307` versus `uSettingsEffects:353` | (S2) After F9's fix the `Doing*` answers follow a run-time contest switch, but what start-up DERIVED from them and from the exchange does not: `NumberDifferentMults`, `RemainingMultDisplay`, `Sheet.SheetInitAndLoad`, `SetUpExchangeInformation` and `SetColumnsWidth` run once. A peer's CONTEST line still leaves those describing the previous contest. Not measured on a bench |
+| **F19** | `LogCfg` (once, `uProgramMain:2318`); `uProgramMain:2306-2307` versus `uSettingsEffects:353` | (S2) After F9's fix the `Doing*` answers follow a run-time contest switch, but what start-up DERIVED from them and from the exchange does not: `NumberDifferentMults`, `RemainingMultDisplay`, `Sheet.SheetInitAndLoad`, `SetUpExchangeInformation` and `SetColumnsWidth` run once. A peer's CONTEST line still leaves those describing the previous contest. Not measured on a bench. (S9a: `SetUpExchangeInformation` is deleted; its successor, the `ExchangeInformation := ContestReceivedExchangeFields(ActiveContest(Contest))` assignment, still runs once, in the same place) |
 | **F20** | `TContestBase.PrefixMultiplierKey` (UBA, SAC, WAEDC, All Asian, OK DX, CQ MM, SAWW, YB DX) versus `ContestSession.DoingPrefixMults` | (S3) The key now asks `Station`, which `ActiveContest` refreshes on every call; whether `SetPrefix` is called at all still asks the session kind, fixed at set-up. They agree unless the entrant's country or continent changes mid-session without a CONTEST change (FoundContest is not re-run for MY CALL): then e.g. a UBA log started outside Belgium and switched to an ON call keeps `DoingPrefixMults` but gets no key. YB DX already read the live `Settings.My.Country` before S3. The end state (part 2, §3) asks the class for both, so this closes then. Not measured on a bench. **CLOSED at S3 part 2 (2026-10-14):** both now read `Station` -- `DoingPrefixMults` is `TContestBase.HasPrefixMultiplier` through `ActiveContest`, and the station-dependent keys ask it. The mid-session change is still not bench-checked |
 | **F21** | `TContestBase.DXMultiplierKey` / `CountryMode` / `ListsRemainingDXCountry` (ARRL DX, ARRL 160, All Asian, JIDX, SAC, Helvetia, Croatian, WAG, UBA, WAE, PACC, RDA, ALRS, YU DX, the host-state parties) versus `ContestSession.DoingDXMults` | (S4 part 1) F20's shape, for the DX kind: the key and the remaining-mults filter ask `Station`, refreshed on every `ActiveContest` call, while whether `GetDXQTH` runs and whether the window lists DX countries at all still ask the session kind fixed at set-up. They agree unless the entrant's country, continent or host state changes mid-session without a CONTEST change. The country list is asked once, at set-up, so it cannot drift. Part 2 makes "does this contest count DX" a class answer, as S3 part 2 did for prefixes. Not measured on a bench. **CLOSED at S4 part 2 (2026-10-14):** all four read `Station` -- `DoingDXMults` is `TContestBase.HasDXMultiplier` (through `ActiveContest`, or on the object a per-QSO caller holds), and each station-dependent class's key, country list and answer ask one private predicate. The mid-session change is still not bench-checked |
 | **F22** (**FIXED 2026-10-14**: `BestTwoLetters` zeroes `NumberBytes` on entry; 24 matrix records re-frozen, only `iex JA1ABC` moved, now showing its TRMASTER name/grid/zone) | `trdos/logscp.pas` `CallDatabase.BestTwoLetters` (also in D7, `C:\TR4W` logscp.pas:1196) | (S5 part 1, found by the matrix) **A call-history lookup of any call containing `JA` reads an uninitialised local.** The routine skips the `JA` pair with `Continue` and never assigns its `NumberBytes[CharPos]`, then returns the FIRST pair whose size equals the minimum -- so whatever the stack holds in that slot decides whether it picks the real smallest bucket or the `JA` bucket, which TRMASTER never fills (`trmaster_codec.bucket_pairs` excludes `JA`, as TR's own writer does), giving "not found". The residue is in practice the PREVIOUS lookup's `NumberBytes[1]`. Measured in the matrix fixture: DL1ABC's `DL` bucket is 23 bytes and JA1ABC's smallest real bucket (`A1`) is 23 bytes, so after a DL1ABC lookup JA1ABC is not found and the initial exchange falls through to CTY.DAT. In the frozen matrix JA1ABC's TRMASTER name is offered in ONE record (GRIDLOC, whose path leaves other residue), while DL1ABC's is offered in 22. S5 part 1's first build called `ActiveContest` between two lookups (InitialExchangeEntry's ITU test), which overwrote the slot, and JA1ABC was then FOUND in the Croatian, IRTS and WRTC (`trmaster=" 25"` -> `" 45"`, `" 45"` -> `" 25"`); proven by putting the old session test back beside an `ActiveContest` call, which moved the same lines. So the frozen JA1ABC `trmaster` value is the defect's, not a rule, and it holds only while nothing deep runs between lookups. Live effect: SCP partials (`LOGEDIT` :1812) and every TRMASTER field (name, zones, QTH, section, ...) for a JA-containing call depend on the call looked up before it. **Recommendation:** assign `NumberBytes[CharPos] := 0` before the `Continue` -- the routine's own convention ("we get zero if we had an illegal character"), so the `JA` pair is never chosen -- in its own commit with a deliberate matrix re-freeze (the JA1ABC `trmaster`/`logged`/`custom` columns move wherever TRMASTER contributes). After it, `InitialExchangeEntry` may ask `ActiveContest` like the other zone readers. **Held for S5:** that site asks `ContestIdentity` (shallow; its ITU answer is station-independent for every contest, pinned by `Test_TheITUQuestionDependsOnNoStation`), so S5 moves no output. **Done at S5 part 2:** it asks `ActiveContest`; the matrix moved nowhere. Related to Q95 only in that it surfaced on the zone question |
 | **F23** | `TContestALRSUA1DZCup`, `TContestWAG`, `TContestDARC10M` `DomesticMultiplierFromQTH` / `DomesticMultiplierHint` / `DomesticQTHReplacesDXMultiplier` / `DomesticQTHIsNeverAGrid` versus `ContestSession.DoingDomesticMults` | (S6 part 1a) F20's shape, for the domestic kind: the three station-dependent classes' answers ask `Station`, refreshed on every `ActiveContest` call, while whether GetDomQTH asks at all (`DoingDomesticMults`) still asks the session kind fixed at set-up. They agree unless the entrant's country changes mid-session without a CONTEST change (WAG begun at a DL call and switched away keeps no domestic multiplier; begun elsewhere and switched to DL, it looks a DOK up in a domestic file it has none of, where the kind kept reading DOKs). Part 2 makes "does this contest count a domestic multiplier" a class answer, as S3-S5 part 2 did. Not measured on a bench **CLOSED at S6 part 2 (2026-10-14):** `DoingDomesticMults` is `TContestBase.HasDomesticMultiplier` (through `ActiveContest`, or on the object a per-QSO caller holds), composed from the answers these classes already state and overridden by WAG and the DARC 10 m with the same station test, so the gate and the rules read the same `Station`. The mid-session change is still not bench-checked |
+| **F24** | `TContestUA4WChampionship.GetReceivedExchangeFields`; the deleted `LOGDUPE.SetUpExchangeInformation` | (S9a) **The UA4W Championship's received exchange marks no field.** Its shape, `RSTAndGridSquareOrRDAExchange`, had no arm in the machine, so start-up left `ExchangeInformation` all False for it: the log-string parses take no RST or QTH from a logged line, and the ADIF export's RST test (POSTUNIT) is False. Transcribed into its class as `ExchangeFieldsNone`, not fixed; the likely fix is `ExchangeFieldsRSTQTH` (it is an RST-and-grid-or-RDA exchange) -- a behaviour change for its own commit, with a matrix re-freeze. Three latent oddities of the machine, none observable: it cleared 13 of the record's 16 fields and left `Kids`, `TenTenNum` and `FOCNumber` (harmless -- it ran once over a zero-initialized global; every helper now clears all 16); its unreached `RSTAndGrid3Exchange` arm marked the QTH alone, no RST; and no arm ever marked `FOCNumber` or `ZoneOrSociety` (the FOC Marathon runs `RSTPower`, whose number lands in `Power`) |
 | **F18** | `MainUnit:7976`, `:8031` | (S0d) `LoadinLog` adds the logged initial-exchange history only while `IntitialExLoaded` is False, and latches it True at its end. A second `LoadinLog` in one session -- the matrix's totals reload, and any in-session reload -- adds no history. Whether a live reload path (an import, a rescore) loses history this way was not measured |
 
 Open questions to add to the design (next free number Q92):

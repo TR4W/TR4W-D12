@@ -57,6 +57,7 @@ type
       function GetDomesticFileName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetFlags: TContestFlags; override;
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
@@ -84,6 +85,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    uDXMultiplierKey,
    uContestRegistry, uContestFixedPoints,
    uTR4WStrings;
@@ -142,6 +144,11 @@ end;
 function TContestNASprintRTTY.GetExchangeKind: ExchangeType;
 begin
    Result := QSONumberNameDomesticOrDXQTHExchange;
+end;
+
+function TContestNASprintRTTY.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsQSONumberNameQTH;
 end;
 
 function TContestNASprintRTTY.GetFlags: TContestFlags;

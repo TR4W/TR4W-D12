@@ -73,6 +73,7 @@ type
       function GetFriendlyName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -92,6 +93,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    uContestRegistry,
    SysUtils,
    utils_text,
@@ -176,6 +178,11 @@ end;
 function TContestRFASChampionshipCW.GetExchangeKind: ExchangeType;
 begin
    Result := QSONumberAndCoordinatesSum;
+end;
+
+function TContestRFASChampionshipCW.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsQSONumberQTH;
 end;
 
 function TContestRFASChampionshipCW.GetFlags: TContestFlags;

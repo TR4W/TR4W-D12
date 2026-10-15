@@ -151,6 +151,7 @@ type
       function GetFriendlyName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* STATED AT M10 S5, transcribed from the rows the base read until
          then (ContestsArray, QSOParties, ContestsBooleanArray). The
@@ -210,6 +211,7 @@ function DelawarePowerMultiplier(aPower: tCategoryPower): longint;
 implementation
 
 uses
+   uExchangeFields,
    uDXMultiplierKey,
    uCabrilloFormat,   (* FormatCabrilloMode *)
    uContestRegistry;
@@ -292,6 +294,11 @@ end;
 function TContestDelawareQP.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticOrDXQTHExchange;
+end;
+
+function TContestDelawareQP.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQTH;
 end;
 
 function TContestDelawareQP.GetInStateDomesticFileName: string;

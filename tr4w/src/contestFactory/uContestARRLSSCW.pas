@@ -56,12 +56,14 @@ type
       function GetDomesticFileName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
    public
    end;
 
 implementation
 
 uses
+   uExchangeFields,
    uContestRegistry;
 
 function TContestARRLSSCW.GetDisplayName: string;
@@ -113,6 +115,11 @@ end;
 function TContestARRLSSCW.GetExchangeKind: ExchangeType;
 begin
    Result := QSONumberPrecedenceCheckDomesticQTHExchange;
+end;
+
+function TContestARRLSSCW.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsQSONumberPrecedenceCheckQTH;
 end;
 
 initialization

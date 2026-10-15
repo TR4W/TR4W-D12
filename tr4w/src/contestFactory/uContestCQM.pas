@@ -76,6 +76,7 @@ type
       function GetFriendlyName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -99,6 +100,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    uContestRegistry,
    (* RussianID, InSameFederalOkrug -- the leaves the arm asks. *)
    uCallSignRoutines;
@@ -213,6 +215,11 @@ end;
 function TContestCQM.GetExchangeKind: ExchangeType;
 begin
    Result := RSTQSONumberExchange;
+end;
+
+function TContestCQM.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQSONumber;
 end;
 
 function TContestCQM.GetFlags: TContestFlags;

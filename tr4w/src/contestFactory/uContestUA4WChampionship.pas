@@ -86,6 +86,7 @@ type
       function GetFriendlyName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -122,6 +123,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    uContestRegistry,
    uCallSignRoutines;
 
@@ -264,6 +266,16 @@ end;
 function TContestUA4WChampionship.GetExchangeKind: ExchangeType;
 begin
    Result := RSTAndGridSquareOrRDAExchange;
+end;
+
+(* NO FIELD AT ALL -- M11 S9a, transcribed, NOT a rule. Its shape,
+   RSTAndGridSquareOrRDA, had no arm in LOGDUPE.SetUpExchangeInformation, so
+   start-up marked nothing for it: no RST or QTH for the log-string parses,
+   no RST for the ADIF export's RST test. Stated, so the gap is visible
+   here (docs/CONTEST_FACTORY_M11_PLAN.md F24). *)
+function TContestUA4WChampionship.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsNone;
 end;
 
 function TContestUA4WChampionship.GetFlags: TContestFlags;

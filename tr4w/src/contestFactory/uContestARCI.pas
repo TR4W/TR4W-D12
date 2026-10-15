@@ -69,6 +69,7 @@ type
       function GetFriendlyName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -97,6 +98,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    uDXMultiplierKey,
    uContestRegistry,
    (* StringIsAllNumbers -- the leaf the arm asked. *)
@@ -172,6 +174,11 @@ end;
 function TContestARCI.GetExchangeKind: ExchangeType;
 begin
    Result := RSTPossibleDomesticQTHAndPower;
+end;
+
+function TContestARCI.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQTHPower;
 end;
 
 function TContestARCI.GetFlags: TContestFlags;

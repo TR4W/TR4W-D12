@@ -77,6 +77,7 @@ type
       function GetFriendlyName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -97,6 +98,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    uContestRegistry,
    (* GetDistanceBetweenGrids -- the arm's own geodesic; see
       uContestARRLDigi for why it is the TRDOS unit. *)
@@ -193,6 +195,11 @@ end;
 function TContestEuropeanVHF.GetExchangeKind: ExchangeType;
 begin
    Result := RSTQSONumberAndGridSquareExchange;
+end;
+
+function TContestEuropeanVHF.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQSONumberQTH;
 end;
 
 function TContestEuropeanVHF.GetFlags: TContestFlags;

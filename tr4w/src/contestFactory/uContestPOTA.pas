@@ -90,6 +90,7 @@ type
       function GetFriendlyName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -126,6 +127,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    SysUtils, uContestRegistry, uContestFixedPoints,
    (* EmitADIFField -- the tags this contest writes. *)
    uADIF,
@@ -198,6 +200,11 @@ end;
 function TContestPOTA.GetExchangeKind: ExchangeType;
 begin
    Result := RSTAndPOTAPark;
+end;
+
+function TContestPOTA.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQTH;
 end;
 
 function TContestPOTA.GetFlags: TContestFlags;

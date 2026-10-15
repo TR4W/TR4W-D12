@@ -78,6 +78,7 @@ type
       function GetFriendlyName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -111,6 +112,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    (* RDADistrictKey, DOKKey, GridSquareKey, GridFieldKey -- the shared
       domestic-QTH shapes (M11 S6). *)
    uDomesticKey,
@@ -225,6 +227,11 @@ end;
 function TContestARRLVHFJun.GetExchangeKind: ExchangeType;
 begin
    Result := RSTAndOrGridExchange;
+end;
+
+function TContestARRLVHFJun.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQTH;
 end;
 
 function TContestARRLVHFJun.GetFlags: TContestFlags;

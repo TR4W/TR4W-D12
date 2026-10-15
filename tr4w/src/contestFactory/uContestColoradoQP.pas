@@ -102,6 +102,7 @@ type
       function GetFriendlyName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* STATED AT M10 S5, transcribed from the rows the base read until
          then (ContestsArray, QSOParties, ContestsBooleanArray). The
@@ -118,6 +119,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    uContestFixedPoints,   (* FixedModePoints *)
    uContestRegistry;
 
@@ -174,6 +176,11 @@ end;
 function TContestColoradoQP.GetExchangeKind: ExchangeType;
 begin
    Result := NameAndDomesticOrDXQTHExchange;
+end;
+
+function TContestColoradoQP.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsNameQTH;
 end;
 
 function TContestColoradoQP.GetInStateDomesticFileName: string;

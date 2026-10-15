@@ -74,6 +74,7 @@ type
       function GetWA7BNMId: integer; override;
       function GetDomesticFileName: string; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetInStateDomesticFileName: string; override;
       function GetFlags: TContestFlags; override;
       function GetHostState: string; override;
@@ -114,6 +115,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    uContestFixedPoints, uContestRegistry;
 
 function TContestMichiganQP.GetDisplayName: string;
@@ -155,6 +157,11 @@ end;
 function TContestMichiganQP.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticQTHExchange;
+end;
+
+function TContestMichiganQP.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQSONumberQTH;
 end;
 
 function TContestMichiganQP.GetInStateDomesticFileName: string;

@@ -77,6 +77,7 @@ type
       function GetDomesticFileName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* THE FLAG SET IS THE FAMILY'S RULE -- both modes run under one set
          of rules, so it is stated once, here (M10 S5). See
@@ -104,6 +105,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    uContestFixedPoints,
    uTR4WStrings;
 
@@ -135,6 +137,11 @@ end;
 function TContestNRAUBalticBase.GetExchangeKind: ExchangeType;
 begin
    Result := RSTQSONumberAndDomesticQTHExchange;
+end;
+
+function TContestNRAUBalticBase.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQSONumberQTH;
 end;
 
 function TContestNRAUBalticBase.GetFlags: TContestFlags;

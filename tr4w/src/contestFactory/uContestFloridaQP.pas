@@ -77,6 +77,7 @@ type
       function GetWA7BNMId: integer; override;
       function GetDomesticFileName: string; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetInStateDomesticFileName: string; override;
       function GetFlags: TContestFlags; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
@@ -106,6 +107,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    uDXMultiplierKey,
    SysUtils, uContestFixedPoints, uContestRegistry;
 
@@ -174,6 +176,11 @@ end;
 function TContestFloridaQP.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticOrDXQTHExchange;
+end;
+
+function TContestFloridaQP.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQTH;
 end;
 
 function TContestFloridaQP.GetInStateDomesticFileName: string;

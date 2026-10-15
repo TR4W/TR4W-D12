@@ -96,6 +96,7 @@ type
       function GetFriendlyName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* STATED AT M10 S5, transcribed from the rows the base read until
          then (ContestsArray, QSOParties, ContestsBooleanArray). The
@@ -112,6 +113,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    (* MarineOrAirMobileStation. IT IS NOT IN LOGSTUFF ANY MORE -- it was lifted
       into this leaf callsign unit on 2026-09-29 so that this class could ask
       the question without the TRDOS engine in its dependency cone. See the
@@ -179,6 +181,11 @@ end;
 function TContestVirginiaQP.GetExchangeKind: ExchangeType;
 begin
    Result := QSONumberDomesticOrDXQTHExchange;
+end;
+
+function TContestVirginiaQP.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsQSONumberQTH;
 end;
 
 function TContestVirginiaQP.GetInStateDomesticFileName: string;

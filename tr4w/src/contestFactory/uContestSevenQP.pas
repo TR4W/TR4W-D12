@@ -85,6 +85,7 @@ type
       function GetFriendlyName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
 
       (* STATED AT M10 S5, transcribed from the rows the base read until
          then (ContestsArray, QSOParties, ContestsBooleanArray). The
@@ -131,6 +132,7 @@ type
 implementation
 
 uses
+   uExchangeFields,
    uDXMultiplierKey,
    uContestRegistry,
    (* FixedModePoints -- the helper for a number per mode. *)
@@ -191,6 +193,23 @@ end;
 function TContestSevenQP.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticOrDXQTHExchange;
+end;
+
+(* AN ENTRANT IN THE 7TH AREA RECEIVES THE RST AND A STATE OR COUNTRY
+   (RSTDomesticOrDXQTH); ANYONE ELSE THE RST, A NUMBER AND A COUNTY
+   (RSTDomesticQTH) -- the two shapes
+   DescribeSession chooses between, by the station test CountsDXMultiplier
+   asks. M11 S9a. *)
+function TContestSevenQP.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   if CountsDXMultiplier then
+      begin
+      Result := ExchangeFieldsRSTQTH;
+      end
+   else
+      begin
+      Result := ExchangeFieldsRSTQSONumberQTH;
+      end;
 end;
 
 function TContestSevenQP.GetInStateDomesticFileName: string;
