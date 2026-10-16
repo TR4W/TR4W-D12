@@ -16,11 +16,63 @@ moves to section 4 in the commit that records it.
 
 ---
 
+## What is still open (index, 2026-10-16)
+
+Re-read 2026-10-16: every question below is genuinely unanswered; the rest are
+in section 4. One line each -- the full text is further down.
+
+**Sponsor rules (section 1)**
+- **Q102** SOUTHAMERICANWW vs GACW WWSA (ref 45): one contest or two?
+- **Q40** 7QP's 4-county line limit (and NEQP's) -- each class states it?
+- **Q23** CUP RF DIGITAL's Cabrillo QTH differs from CW/SSB -- intended?
+- **Q27** SAC: is a Russian station not workable, or only not a multiplier?
+- **Q97** Franz Josef Land (R1FJ) oblast reads as "SP" in Russian DX.
+- **Q42** OZCHR's lost Cyrillic session names.
+- **Q43** Which contest pairs are one contest under one rule (a family base)?
+- **Q45** EUDX / IRTS "in the EU?" test that can never be false.
+- **Q55** WRTC live-score XML has never carried a multiplier.
+- **Q70** UA4W Championship's 18/19 zone rule.
+- **Q79, Q80** IN7QPNE session values; IN7QPNE multipliers for in-area entrants.
+
+**Design (section 2) -- each has a recommendation; "accept" is enough**
+- **Q8** Events with no ContestType still named in code (TRC, PGA, EURASIA ...).
+- **Q47** Fix the three kept read-past-the-end shapes now?
+- **Q51** Does an off-band (X-QSO) contact still show as worked-there?
+- **Q100** `contest.last_opened_at`: write it and sort the chooser by it?
+- **Q101** Fill the typed `rcvd_*` columns from each class, or delete them?
+
+**Awaiting only your yes (section 3)**
+- **Q10** Retire unused ContestTypes through `TContestRetired` (MINITEST needs it).
+- **Q26** WAG import with no DOK: empty QTH.
+- **Q88** NA Sprint domestic file (13 vs 14 VE; the SSB Sprint too).
+- **Q95** Croatian ITU zones.
+
+**Not a question but open:** Q59 asks you to confirm GREY (unselectable) for an
+inactive contest in the New Contest list.
+
+---
+
 ## 1. Sponsor rules
 
-### QSO parties
-
 ### Other contests
+
+- **Q40** *Reworded 2026-10-16 -- what is still open.* IN7QPNE is ruled
+  (2026-10-13, design 7.14), and a shared multi-state base is answered by the
+  ownership rule (each class owns its rules; a look-alike starts as its own
+  copy). Left: **7QP's county-line limit.** 7QP's sponsor allows up to 4
+  counties on a line, and nothing enforces it -- 7QP and NEQP are not built on
+  the QSO-party base, so they state no `CountyLineCountiesMax` at all. That
+  number now also caps the ROVER dialog (Q34, issue #87). Should 7QP state 4,
+  and NEQP its own sponsor's number? *Recommended: yes, each states its own.*
+  **Answer:**
+
+- **Q102** (split from Q53) You named SOUTHAMERICANWW "GACW WWSA CW DX
+  Contest", WA7BNM ref 45. But `GACWWWSACW` already holds ref 45, and the two
+  exchanges differ: GACW is RST + CQ zone; SOUTHAMERICANWW is RST + continent
+  with 10 points across the South America boundary (TR Log's "South American
+  WW"). Are they one contest -- then SOUTHAMERICANWW retires like MINITEST --
+  or two?
+  **Answer:**
 
 - **Q23** CUP RF: the Cabrillo writer uses the QSO's own QTH for the CW and SSB
   runnings but not for CUP RF DIGITAL. Intended?
@@ -44,12 +96,6 @@ moves to section 4 in the commit that records it.
   **Answer:**
 
 ### Added after M7b batch 1
-
-- **Q40** Multi-state parties (7QP, NEQP, IN7QPNE): should they share a
-  multi-state party base? On a line between two states, whose county rule
-  applies? 7QP's sponsor allows up to 4 counties on a line -- enforce it? Nothing
-  enforces it today.
-  **Answer:** **IN7QPNE RULED 2026-10-13: a composite of four parties (IN, 7QP, NE, DE), per-QSO rules of the worked station's party; one Cabrillo; no score posting -- design 7.14. 7QP/NEQP multi-state rules otherwise still open.**
 
 - **Q42** OZCHR: both session names are literal `?` characters; the Cyrillic was
   lost before this tree (D7 too). Restore the Cyrillic, or use Latin names?
@@ -79,24 +125,7 @@ moves to section 4 in the commit that records it.
   file's region code?), and should it be fixed now? Both contests' scores move.
   **Answer:**
 
-### Added after M8 (multipliers and dupes)
-
 ### Added after M9a (the display and the reports)
-
-- **Q53** Forty-seven contests have no friendly name, so their display name is
-  still the internal spelling -- `ALRS-UA1DZ-CUP`, `RF-CUP-CW`, `UKEI`,
-  `YOUTHCHAMPIONSHIPRF` and the rest
-  (`uTestContestDisplay.ENUM_SPELLED_DISPLAY_NAMES`). Human names for them,
-  please; any you give leave that list.
-  *Cross-walked 2026-10-15 (NY4I: "the wa7bnm link should be embedded for
-  cross-walking"): the TR4W website lists a contest by a WA7BNM-linked name
-  only when its class has a WA7BNM ref, and all 49 here return 0. Research
-  table: `docs/Q53_WA7BNM_CROSSWALK.md`. WA7BNM's full database (719 contests,
-  active and inactive) lists 21 of the 49 -- each gets its ref and WA7BNM's
-  name as its friendly name; 28 are not listed at all (mostly Russian and
-  Danish contests), and those need names from you or another source.
-  EUSPRINT_SPRING_CW already has ref 317 and only lacks a name.*
-  **Answer:**
 
 - **Q55** WRTC's live-score XML has never carried a multiplier: its rule
   posts HQ and country on an "all modes" row the writer never produces. Post
@@ -110,8 +139,6 @@ moves to section 4 in the commit that records it.
   name, which is now the friendly name. Q52 still asks WHICH words; answering
   it changes the drop-down with no further code.
 
-### Added with 7.12 (station facts a contest may override, 2026-10-13)
-
 ### Added with the UA4W Championship's and RSGB 1.8's classes (2026-10-14)
 
 - **Q70** The UA4W Championship pays 10/20 on 80/160 m when your CQ zone is
@@ -120,8 +147,6 @@ moves to section 4 in the commit that records it.
   A zone typed for this contest is taken as a CQ zone, as MY ZONE's command
   says. *Recommended: confirm.*
   **Answer:**
-
-### Added with the Delaware QSO Party's class (2026-10-14)
 
 ### Added with the IN7QPNE composite (2026-10-14)
 
@@ -244,44 +269,10 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
 
 ---
 
-### Added after M9a
-
----
-
 ## 3. Awaiting only your yes
 
 Each carries a **Proposed answer** with its source. "Yes" (or "yes to all")
 closes it; anything else reopens it.
-
-- **Q49** BC QSO Party: "a DX station earns no multiplier" tests the
-  multiplier for lower-case `dx`, but the in-province file maps `dx=DX`
-  (`target/dom/ve7.dom` line 2), so the multiplier is always upper-case `DX`
-  and the rule never fires -- an in-province station gets a `DX` domestic
-  multiplier. New York and Indiana test `DX` and do fire. Should BC's be
-  `DX` like theirs? (A scoring change for in-province BC logs with DX QSOs.)
-  **Proposed answer:** SETTLED BY Q84 ("ignore case", 2026-10-15): BC's rule
-  tests `dx`, its file maps to `DX`; compared ignoring case, the rule fires,
-  so an in-province BC station's DX contact earns no domestic multiplier -- as
-  New York and Indiana already do. A scoring change for in-province BC logs
-  with DX QSOs.
-  **Answer:**
-
-- **Q67** The New Contest dialog's rows start empty, and every row has to be
-  filled before OK is enabled. So every contest that asks for MY ZONE
-  states a zone override, even when you type your station's own zone. That
-  contest then ignores a later Preferences change to the zone. Should the
-  rows start with your station's values (read from the file, because the
-  dialog runs before the settings load)? And should a row you leave
-  unchanged count as "use the station's value" rather than as an override?
-  *Recommended: yes to both.*
-  **Proposed answer:** SETTLED BY Q65 + Q74 + "a contest is its SQLite file"
-  (2026-10-15): the rows start with the station's values (the seed), and
-  whatever a row holds at OK -- changed or not -- is the CONTEST's value,
-  stored in its database. So yes to seeding; and an unchanged row is NOT "use
-  the station's value" but the contest's own copy -- a later Preferences
-  change does not reach an existing contest, which is what makes the database
-  self-contained.
-  **Answer:**
 
 - **Q26** WAG: an imported record with no `DOK` keeps its received RST (`599`) as
   the QTH. Should it be empty?
@@ -426,6 +417,9 @@ closes it; anything else reopens it.
 | Q99 | Each class states its schedule (typed); New Contest list alphabetical, a check box orders by next date; start/end seeded | not built |
 | Q35 | Idaho bonus: at least 10 QSOs (as built); all 25 table counties; one table per year, by the log's year | per-year table not built |
 | Q52 | The New Contest drop-down shows each friendly name in full (sized at run time); reconsider if too wide | not built |
+| Q53 | Names for the 43 unnamed contests: docs/Q53_CONTEST_NAMES.csv; MINITEST retired | not applied |
+| Q67 | New Contest rows seeded from the station; the values at OK are the contest's own | not built |
+| Q49 | BCQP: in-province DX contact earns no domestic mult (case-insensitive test) | not built |
 | Q73 | QSO party: CALL/<valid county> is its own station for dupes (K1AR/NHHIL in NEQP) | not built |
 | Q48 | YB DX: YB entrant counts all prefixes, others YB prefixes only -- already so (DXLog agrees) | no change |
 | Q66 | A Contest Details dialog edits the contest's stored values (seeded station facts, Cabrillo fields); a station change mid-contest offers to copy it | not built |
@@ -433,6 +427,65 @@ closes it; anything else reopens it.
 | Q59 | Inactive contests listed grey and unselectable for a NEW contest; old logs still open and import | not built (confirm grey) |
 
 ### Answered since the table was last updated (full text)
+
+- **Q67** The New Contest dialog's rows start empty, and every row has to be
+  filled before OK is enabled. So every contest that asks for MY ZONE
+  states a zone override, even when you type your station's own zone. That
+  contest then ignores a later Preferences change to the zone. Should the
+  rows start with your station's values (read from the file, because the
+  dialog runs before the settings load)? And should a row you leave
+  unchanged count as "use the station's value" rather than as an override?
+  *Recommended: yes to both.*
+  **Proposed answer:** SETTLED BY Q65 + Q74 + "a contest is its SQLite file"
+  (2026-10-15): the rows start with the station's values (the seed), and
+  whatever a row holds at OK -- changed or not -- is the CONTEST's value,
+  stored in its database. So yes to seeding; and an unchanged row is NOT "use
+  the station's value" but the contest's own copy -- a later Preferences
+  change does not reach an existing contest, which is what makes the database
+  self-contained.
+  **Answer:** (NY4I, 2026-10-16) *"yes"* -- as proposed: the New Contest rows
+  start with the station's values (the seed), and whatever a row holds at OK
+  is the CONTEST's value, stored in its database; a later Preferences change
+  does not reach an existing contest (Q66 adds the Contest Details dialog to
+  edit it, and the offer to copy a station change in). Not built.
+
+- **Q49** BC QSO Party: "a DX station earns no multiplier" tests the
+  multiplier for lower-case `dx`, but the in-province file maps `dx=DX`
+  (`target/dom/ve7.dom` line 2), so the multiplier is always upper-case `DX`
+  and the rule never fires -- an in-province station gets a `DX` domestic
+  multiplier. New York and Indiana test `DX` and do fire. Should BC's be
+  `DX` like theirs? (A scoring change for in-province BC logs with DX QSOs.)
+  **Proposed answer:** SETTLED BY Q84 ("ignore case", 2026-10-15): BC's rule
+  tests `dx`, its file maps to `DX`; compared ignoring case, the rule fires,
+  so an in-province BC station's DX contact earns no domestic multiplier -- as
+  New York and Indiana already do. A scoring change for in-province BC logs
+  with DX QSOs.
+  **Answer:** (NY4I, 2026-10-16) *"yes"* -- as proposed: compared ignoring
+  case (Q84), BC's rule fires, so an in-province BC station's DX contact earns
+  no domestic multiplier, as New York and Indiana. A scoring change for in-
+  province BC logs with DX QSOs. Not built.
+
+- **Q53** Forty-seven contests have no friendly name, so their display name is
+  still the internal spelling -- `ALRS-UA1DZ-CUP`, `RF-CUP-CW`, `UKEI`,
+  `YOUTHCHAMPIONSHIPRF` and the rest
+  (`uTestContestDisplay.ENUM_SPELLED_DISPLAY_NAMES`). Human names for them,
+  please; any you give leave that list.
+  *Cross-walked 2026-10-15 (NY4I: "the wa7bnm link should be embedded for
+  cross-walking"): the TR4W website lists a contest by a WA7BNM-linked name
+  only when its class has a WA7BNM ref, and all 49 here return 0. Research
+  table: `docs/Q53_WA7BNM_CROSSWALK.md`. WA7BNM's full database (719 contests,
+  active and inactive) lists 21 of the 49 -- each gets its ref and WA7BNM's
+  name as its friendly name; 28 are not listed at all (mostly Russian and
+  Danish contests), and those need names from you or another source.
+  EUSPRINT_SPRING_CW already has ref 317 and only lacks a name.*
+  **Answer:** (NY4I, 2026-10-16) given in `docs/Q53_CONTEST_NAMES.csv` (43
+  rows; the six already decided are left out): 15 WA7BNM names with refs
+  accepted; All JA Contest; DXLog names for seven, the three Russian ones in
+  English (Russian Cup Contest, CW / SSB; Udmurtia Open Championship);
+  "European VHF"; MINITEST RETIRED as a duplicate of MINI80; the 17 with no
+  name found keep their internal name, stated in each class. The CSV's
+  decision column says where each came from. SOUTHAMERICANWW is split out as
+  Q102. Not applied to the classes yet.
 
 - **Q73** "A DE mobile that changes county is a new station." TR4W's dupe
   check uses the call, band and mode, and no contest can change that today.
