@@ -143,6 +143,14 @@ moves to section 4 in the commit that records it.
   `YOUTHCHAMPIONSHIPRF` and the rest
   (`uTestContestDisplay.ENUM_SPELLED_DISPLAY_NAMES`). Human names for them,
   please; any you give leave that list.
+  *Cross-walked 2026-10-15 (NY4I: "the wa7bnm link should be embedded for
+  cross-walking"): the TR4W website lists a contest by a WA7BNM-linked name
+  only when its class has a WA7BNM ref, and all 49 here return 0. Research
+  table: `docs/Q53_WA7BNM_CROSSWALK.md`. WA7BNM's full database (719 contests,
+  active and inactive) lists 21 of the 49 -- each gets its ref and WA7BNM's
+  name as its friendly name; 28 are not listed at all (mostly Russian and
+  Danish contests), and those need names from you or another source.
+  EUSPRINT_SPRING_CW already has ref 317 and only lacks a name.*
   **Answer:**
 
 - **Q55** WRTC's live-score XML has never carried a multiplier: its rule
