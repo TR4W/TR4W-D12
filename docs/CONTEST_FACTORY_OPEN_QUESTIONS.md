@@ -442,19 +442,6 @@ closes it; anything else reopens it.
   class is deleted.
   **Answer:**
 
-- **Q85** Does 7QP allow the WARC bands? The 7QP class scores a 30 m CW QSO
-  at 3 points (frozen matrix, `SEVENQP.matrix` QSO 09), and IN7QPNE now
-  inherits that for every 7QP-judged QSO. Delaware excludes WARC by its
-  sponsor's rules; nothing in TR4W says whether 7QP does. If it does not,
-  the 7QP class should declare its bands the way Delaware's does, and
-  WARC QSOs then score 0 (logged, never refused).
-  *Recommended: check the 7QP rules page and tell me which bands.*
-  **Proposed answer:** From the 7QP sponsor (researched 2026-10-14): 7QP
-  **excludes WARC**, so the 7QP class declares its bands and WARC QSOs score
-  0. The same page scores SSB 2 / CW 3 / **digital 4**; TR4W gives digital 2
-  -- a second defect, fixed in the same commit.
-  **Answer:**
-
 - **Q86** The Minnesota QSO Party is the only state party whose table row
   marks it "RTC capable" (live score posting through the RTC uploader).
   No other party has it. Intended, or a typo in the row?
@@ -563,8 +550,27 @@ closes it; anything else reopens it.
 | Q57 | CQ WW RTTY messages built without writing MY ZONE | done with 7.12 |
 | Q63 | "Activator" stays untranslated -- a universal POTA term | no change |
 | Q72 | Delaware counts 160-10 m without WARC only; 6 m and up and light out | not built |
+| Q85 | 7QP excludes WARC (and the sponsor scores digital 4) | not built |
 
 ### Answered since the table was last updated (full text)
+
+- **Q85** Does 7QP allow the WARC bands? The 7QP class scores a 30 m CW QSO
+  at 3 points (frozen matrix, `SEVENQP.matrix` QSO 09), and IN7QPNE now
+  inherits that for every 7QP-judged QSO. Delaware excludes WARC by its
+  sponsor's rules; nothing in TR4W says whether 7QP does. If it does not,
+  the 7QP class should declare its bands the way Delaware's does, and
+  WARC QSOs then score 0 (logged, never refused).
+  *Recommended: check the 7QP rules page and tell me which bands.*
+  **Proposed answer:** From the 7QP sponsor (researched 2026-10-14): 7QP
+  **excludes WARC**, so the 7QP class declares its bands and WARC QSOs score
+  0. The same page scores SSB 2 / CW 3 / **digital 4**; TR4W gives digital 2
+  -- a second defect, fixed in the same commit.
+  **Answer:** (NY4I, 2026-10-15) *"7qp does not allow WARC."* So the 7QP class
+  states its bands (160-10 m without WARC, like Delaware) and a WARC QSO
+  scores 0 and, under Q98, is an automatic X-QSO; IN7QPNE inherits it for 7QP-
+  judged QSOs. The digital-4-points item in the proposal comes from the 7QP
+  sponsor's page (rule-source order) and is kept as a fix in the same commit
+  unless NY4I says otherwise. Not built.
 
 - **Q72** Delaware's bands: "all HF bands except WARC, plus 6 m and up".
   The class counts 160 m and light as well as 80-10 m (no WARC) and 6 m up.
