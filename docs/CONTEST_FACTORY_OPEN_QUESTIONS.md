@@ -30,8 +30,6 @@ in section 4. One line each -- the full text is further down.
 **Design (section 2) -- each has a recommendation; "accept" is enough**
 - **Q8** Events with no ContestType still named in code (TRC, PGA, EURASIA ...).
 - **Q47** Fix the three kept read-past-the-end shapes now?
-- **Q51** Does an off-band (X-QSO) contact still show as worked-there?
-- **Q103** New Contest list: search filter (recommended) or groups?
 - **Q100** `contest.last_opened_at`: write it and sort the chooser by it?
 - **Q101** Fill the typed `rcvd_*` columns from each class, or delete them?
 
@@ -150,45 +148,6 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   the whole call and never reads outside it; an empty MY COUNTRY is simply
   not `G`; RCC scores 4 only when `/P` or `/M` is actually present. The
   contest matrix confirms no frozen QSO moves before the commit.
-  **Answer:**
-
-- **Q51** An off-band QSO no longer marks the dupe sheet at all (M8), so the
-  30 m dupe sheet and the Stations window's `+` do not show it -- consistent
-  with "not a dupe", but they are also "have I worked him there" displays.
-  Keep it so, or keep a worked-there mark that is not a dupe? *Recommended:
-  keep it so* -- one rule.
-  *Reworded 2026-10-15 (NY4I: "ambiguous as every contest states bands"):*
-  every contest has bands; what was meant is that the OFF-BAND rule fires only
-  for a class that overrides `TContestBase.UsesBand`, and measured today only
-  **Idaho and Delaware** do. Every other class inherits the base's answer --
-  every band is credited -- so this question only affects those two today.
-  Q98 asks about the other contests.
-  *NY4I, 2026-10-15, on the sentence above: "As most contests are specifically
-  not WARC bands, and most HF do not allow 6m and up, HF only would be the
-  default. But I would feel better if contest classes just explicitly listed
-  the bands they allow."* Recorded on Q98 as its build rule. What stays open
-  here is only the display question: does an off-band QSO -- now an automatic
-  X-QSO (Q98) -- show as worked-there on the dupe sheet and in the Stations
-  window?
-  **Answer:**
-
-- **Q103** The New Contest list: group the QSO parties? (NY4I, 2026-10-16,
-  with DXLog's grouped list -- highlighted, self-drawn headings -- and N1MM's
-  Log Type then State.) His leaning: *"The N1MM shape seems good but with the
-  addition of the search filter. One could make an argument that we could do
-  what we have today but add the search then if I type QSO, I would see the
-  QSO parties."* *Recommended: SEARCH ONLY, groups later if missed.* A filter
-  box over a plain list (TEdit above a TListBox -- native, 15-20 rows visible,
-  no owner-draw; a self-filtering drop-down fights the control). It matches
-  the contest's NAME, case-insensitive, anywhere: "QSO" or "party" lists the
-  parties (every party's name says "QSO Party"), and CW / RTTY / VHF / Sprint
-  / Field Day become groups for free. Each row shows the name only -- NY4I,
-  2026-10-16: "let's leave out the internal name. Besides it is not an N1MM
-  clone..." Under it: "Show inactive contests" (Q59 -- a native list cannot
-  grey one item, so inactive ones are hidden unless asked for, never lost) and
-  "Order by next date" (Q99). An empty filter is today's alphabetical list.
-  Groups would need all 187 classes to state one (no inherited default), so
-  they wait until search proves short. Same dialog as Q52, Q59, Q99; lcl-ui.
   **Answer:**
 
 - **Q100** `contest.last_opened_at` is never written or read. The schema says
@@ -411,9 +370,70 @@ closes it; anything else reopens it.
 | Q105 | New England is `NEWEQP` (Cabrillo `NEWE-QSO-PARTY`, ADIF `NEQP`), `NEQP` kept as a read alias; Nebraska QSO Party added as `NE-QSO-PARTY` | building |
 | Q79 (LOCATION) | IN7QPNE requires no LOCATION; Cabrillo spec: section for W/VE, `DX` otherwise | no change |
 | Q79 (VHF) | IN7QPNE bands = the union of the four parties; a QSO scores on its party's bands. New England 80-10, 7QP and Indiana 160-10, Delaware 160-10 + 6 m up -- each states its own | building |
+| Q51 | An X-QSO never counts as worked: logged and exported only so the other station avoids a not-in-log penalty; no dupe, worked, mult or points mark | already so; the live path must share the predicate when Q98 lands |
+| Q103 | New Contest list: search filter over a plain list, names only; no groups | not built |
 | Q52 note | Settled by Q52 | removed |
 
 ### Answered since the table was last updated (full text)
+
+- **Q103** The New Contest list: group the QSO parties? (NY4I, 2026-10-16,
+  with DXLog's grouped list -- highlighted, self-drawn headings -- and N1MM's
+  Log Type then State.) His leaning: *"The N1MM shape seems good but with the
+  addition of the search filter. One could make an argument that we could do
+  what we have today but add the search then if I type QSO, I would see the
+  QSO parties."* *Recommended: SEARCH ONLY, groups later if missed.* A filter
+  box over a plain list (TEdit above a TListBox -- native, 15-20 rows visible,
+  no owner-draw; a self-filtering drop-down fights the control). It matches
+  the contest's NAME, case-insensitive, anywhere: "QSO" or "party" lists the
+  parties (every party's name says "QSO Party"), and CW / RTTY / VHF / Sprint
+  / Field Day become groups for free. Each row shows the name only -- NY4I,
+  2026-10-16: "let's leave out the internal name. Besides it is not an N1MM
+  clone..." Under it: "Show inactive contests" (Q59 -- a native list cannot
+  grey one item, so inactive ones are hidden unless asked for, never lost) and
+  "Order by next date" (Q99). An empty filter is today's alphabetical list.
+  Groups would need all 187 classes to state one (no inherited default), so
+  they wait until search proves short. Same dialog as Q52, Q59, Q99; lcl-ui.
+  **Answer:** (NY4I, 2026-10-16) *"search"*. SEARCH ONLY, as recommended:
+  a filter box over a plain list, matching the display name anywhere,
+  case-insensitive; rows show the name only; "Show inactive contests" (Q59)
+  and "Order by next date" (Q99) beneath; no groups unless search proves
+  short. Built with Q52, Q59 and Q99 as one New Contest dialog change
+  (lcl-ui). Not built.
+
+- **Q51** An off-band QSO no longer marks the dupe sheet at all (M8), so the
+  30 m dupe sheet and the Stations window's `+` do not show it -- consistent
+  with "not a dupe", but they are also "have I worked him there" displays.
+  Keep it so, or keep a worked-there mark that is not a dupe? *Recommended:
+  keep it so* -- one rule.
+  *Reworded 2026-10-15 (NY4I: "ambiguous as every contest states bands"):*
+  every contest has bands; what was meant is that the OFF-BAND rule fires only
+  for a class that overrides `TContestBase.UsesBand`, and measured today only
+  **Idaho and Delaware** do. Every other class inherits the base's answer --
+  every band is credited -- so this question only affects those two today.
+  Q98 asks about the other contests.
+  *NY4I, 2026-10-15, on the sentence above: "As most contests are specifically
+  not WARC bands, and most HF do not allow 6m and up, HF only would be the
+  default. But I would feel better if contest classes just explicitly listed
+  the bands they allow."* Recorded on Q98 as its build rule. What stays open
+  here is only the display question: does an off-band QSO -- now an automatic
+  X-QSO (Q98) -- show as worked-there on the dupe sheet and in the Stations
+  window?
+  **Answer:** (NY4I, 2026-10-16) *"x-qso never counts as worked. It is
+  simply so we do not leave it out of the log and potentially cause our QSO
+  partner to receive a Not-in-log penalty."* Kept so, and the PURPOSE is now
+  the rule: an X-QSO -- flagged by hand, or automatically off-band (Q98) --
+  is in the log and the exports for the other station's sake, and is
+  otherwise invisible: no dupe mark, no worked-there mark, no multiplier, no
+  points, and a later QSO with the same station on that band is NOT a dupe.
+  Checked 2026-10-16 that every path agrees today: the rescore skips a
+  flagged X-QSO (`MainUnit.pas` ~8902, zero points, no dupe, not added to the
+  sheets); a log's load adds only what `QSOCountsTowardTotals` admits, which
+  excludes X-QSOs; the X flag is set only by ADIF import, the database read
+  and Edit QSO. The live logging path (`logsubs2.pas` ~1728, `SetMultFlags` +
+  `AddQSOToSheets`) has no X-QSO test because nothing is an X-QSO when it is
+  first logged -- **when Q98's automatic off-band X-QSO is built, that path
+  must ask the same `QSOCountsTowardTotals`**, not a copy of the test. No
+  change now.
 
 - **Q79** *Reworded 2026-10-16 -- what is still open.* LOCATION is settled by
   your answer (section 4): IN7QPNE requires none. Left: IN7QPNE has **no VHF**,
