@@ -28,6 +28,24 @@ same place: three defects in one afternoon there all had the shape
 `if RadioModel in [FT857, FT897]`. Every `if contest = ...` inside shared code is
 a contest whose rule is written somewhere it cannot be found from its own file.
 
+### A contest RULE has no inherited default -- the class states it
+
+NY4I, 2026-10-15: *"inherited default can get us in trouble for some future
+programming adding a new contest"* -- and *"I would feel better if contest
+classes just explicitly listed the bands they allow."*
+
+A new contest that forgets to override a rule still compiles, runs and scores,
+using whatever the base says. Nothing reports it. **So for a contest RULE --
+which bands it credits first (open-questions Q98) -- the base gives no answer
+and a pin test fails any registered class that states none.** That holds even
+where most contests agree: "HF without WARC" describes most contests, but as a
+default it is still a guess for every class that forgot.
+
+The distinction from "the base states the general case" above: the base may
+hold a shared HELPER a class calls, and genuinely neutral plumbing, but not a
+value that decides how a contest scores or what it credits. When you add a
+contest, every such rule is a line in your class, not an inheritance.
+
 ### One class per contest, and one `RegisterContest` per unit
 
 Even when two contests are identical today. **ARRL Field Day and Winter Field
