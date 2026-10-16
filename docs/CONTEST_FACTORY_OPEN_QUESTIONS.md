@@ -415,14 +415,6 @@ closes it; anything else reopens it.
   contest, as the file does, so WFD FM goes as `PH` in both.
   **Answer:**
 
-- **Q63** The New Contest dialog captions POTA's box "Activator" as plain
-  English text, so no translation can reach it. Moved as it was. Give it a
-  translatable string?
-  **Proposed answer:** SETTLED BY the i18n rule (CLAUDE.md: a caption typed as
-  plain English reaches no catalogue): "Activator" becomes a translatable
-  string.
-  **Answer:**
-
 - **Q26** WAG: an imported record with no `DOK` keeps its received RST (`599`) as
   the QTH. Should it be empty?
   **Proposed answer:** SETTLED BY Q3 (the log stores only what the operator
@@ -583,8 +575,20 @@ closes it; anything else reopens it.
 | Q41 | ARRL VHF runnings named ARRL-VHF-JAN/JUN/SEP; all three get June's set-up | not built |
 | Q62 | POTA: the worked station's DXCC from its callsign; our MY_DXCC and MY_STATE from our park | not built |
 | Q57 | CQ WW RTTY messages built without writing MY ZONE | done with 7.12 |
+| Q63 | "Activator" stays untranslated -- a universal POTA term | no change |
 
 ### Answered since the table was last updated (full text)
+
+- **Q63** The New Contest dialog captions POTA's box "Activator" as plain
+  English text, so no translation can reach it. Moved as it was. Give it a
+  translatable string?
+  **Proposed answer:** SETTLED BY the i18n rule (CLAUDE.md: a caption typed as
+  plain English reaches no catalogue): "Activator" becomes a translatable
+  string.
+  **Answer:** (NY4I, 2026-10-15) *"activator is a universal term at least
+  until I find a pota translation that tells me otherwise."* NO: "Activator"
+  stays as it is, untranslated -- the proposal is withdrawn. Revisit only if a
+  POTA translation shows a different word.
 
 - **Q57** CQ WW RTTY's messages. A W/VE station sends RST, zone AND state
   (`599 05 FL`). D7 built those messages by briefly OVERWRITING MY ZONE with
