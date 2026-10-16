@@ -162,6 +162,7 @@ uses
    uTestWindowLayoutStore in 'uTestWindowLayoutStore.pas',
    uTestComputerID in 'uTestComputerID.pas',
    uTestUDPBroadcaster  in 'uTestUDPBroadcaster.pas',
+   uTestUDPContactXml   in 'uTestUDPContactXml.pas',
    uTestUtilsFile       in 'uTestUtilsFile.pas',
    uTestADIFRegression  in 'uTestADIFRegression.pas',
    uFreqTimeFormat      in '..\..\src\uFreqTimeFormat.pas',
@@ -731,6 +732,7 @@ begin
    WriteLn('');
 
    RegisterSuite(TUDPBroadcasterTests.Create('UDPBroadcaster'));
+   RegisterSuite(TUDPContactXmlTests.Create('UDPContactXml'));
    RegisterSuite(TIcomCIVTests.Create('IcomCIV'));
    RegisterSuite(TRadioBandTests.Create('RadioBand'));
    RegisterSuite(TComboTagTests.Create('ComboTags'));

@@ -384,6 +384,9 @@ Section "Domestic multiplier files" Secdom
    File ..\target\dom\p13.dom
    File ..\target\dom\p14.dom
    File ..\target\dom\p8.dom
+   ; newyork.dom says INCLUDE FILE PROV12.DOM -- it was never shipped, so an
+   ; installed New York QSO Party lacked its provinces (2026-10-16).
+   File ..\target\dom\prov12.dom
    File ..\target\dom\pa.dom
    File ..\target\dom\pa_cty.dom
    File ..\target\dom\pacc.dom

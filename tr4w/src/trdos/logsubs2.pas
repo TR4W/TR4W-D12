@@ -3011,7 +3011,7 @@ begin
              {#9 + '<contestname>' + ContestTypeSA[RxData.ceContest] + '</contestname>' + sLineBreak + }
              #9 + '<contestnr>' + IntToStr(Ord(RxData.ceContest)) + '</contestnr>' + sLineBreak +
              #9 + '<timestamp>' + sTimestamp + '</timestamp>' + sLineBreak +
-             #9 + '<Settings.My.Call>' + Settings.My.Call + '</Settings.My.Call>' + sLineBreak +
+             #9 + '<mycall>' + Settings.My.Call + '</mycall>' + sLineBreak +
              #9 + '<band>' + ConvertBandTypeToUDPContactBand(RXData.Band) + '</band>' + sLineBreak +
             #9 + '<rxfreq>' + Format('%d',[freq div 10]) + '</rxfreq>' + sLineBreak + // 1420100
             #9 + '<txfreq>' + Format('%d',[txFreq div 10]) + '</txfreq>' + sLineBreak +
