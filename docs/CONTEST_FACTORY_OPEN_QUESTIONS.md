@@ -442,20 +442,6 @@ closes it; anything else reopens it.
   class is deleted.
   **Answer:**
 
-- **Q72** Delaware's bands: "all HF bands except WARC, plus 6 m and up".
-  The class counts 160 m and light as well as 80-10 m (no WARC) and 6 m up.
-  Both are my reading of the summary, not of the sponsor's page. Are they
-  in? A QSO on a band that is out scores 0 and earns no multiplier.
-  *Checked against the sponsor's 2024 page (2026-10-14):* it says "All HF
-  bands excluding WARC bands" and "6 meters and up", so **light is in**.
-  160 m is not named either way, and the page's suggested frequencies do
-  not list it. 1.8 MHz is strictly MF, not HF. So only 160 m is open.
-  *Recommended: keep 160 m in unless you know the sponsor excludes it.*
-  **Proposed answer:** From the sponsor's page (researched 2026-10-14): its
-  suggested frequencies include 1860 kHz, so 160 m is in -- what the class
-  already does. Light is in too. No change.
-  **Answer:**
-
 - **Q85** Does 7QP allow the WARC bands? The 7QP class scores a 30 m CW QSO
   at 3 points (frozen matrix, `SEVENQP.matrix` QSO 09), and IN7QPNE now
   inherits that for every 7QP-judged QSO. Delaware excludes WARC by its
@@ -576,8 +562,28 @@ closes it; anything else reopens it.
 | Q62 | POTA: the worked station's DXCC from its callsign; our MY_DXCC and MY_STATE from our park | not built |
 | Q57 | CQ WW RTTY messages built without writing MY ZONE | done with 7.12 |
 | Q63 | "Activator" stays untranslated -- a universal POTA term | no change |
+| Q72 | Delaware counts 160-10 m without WARC only; 6 m and up and light out | not built |
 
 ### Answered since the table was last updated (full text)
+
+- **Q72** Delaware's bands: "all HF bands except WARC, plus 6 m and up".
+  The class counts 160 m and light as well as 80-10 m (no WARC) and 6 m up.
+  Both are my reading of the summary, not of the sponsor's page. Are they
+  in? A QSO on a band that is out scores 0 and earns no multiplier.
+  *Checked against the sponsor's 2024 page (2026-10-14):* it says "All HF
+  bands excluding WARC bands" and "6 meters and up", so **light is in**.
+  160 m is not named either way, and the page's suggested frequencies do
+  not list it. 1.8 MHz is strictly MF, not HF. So only 160 m is open.
+  *Recommended: keep 160 m in unless you know the sponsor excludes it.*
+  **Proposed answer:** From the sponsor's page (researched 2026-10-14): its
+  suggested frequencies include 1860 kHz, so 160 m is in -- what the class
+  already does. Light is in too. No change.
+  **Answer:** (NY4I, 2026-10-15) *"Light is in too" is not correct. Just HF
+  bands* -- and, asked which, **160-10 m without WARC**: 160, 80, 40, 20, 15,
+  10 m. 6 m and up and light are OUT, against the 2024 page recorded above,
+  which named "6 meters and up". A QSO on any other band scores 0 and, under
+  Q98, is an automatic X-QSO. Not built: TContestDelawareQP.UsesBand still
+  lists 6 m through 24 GHz and light.
 
 - **Q63** The New Contest dialog captions POTA's box "Activator" as plain
   English text, so no translation can reach it. Moved as it was. Give it a
