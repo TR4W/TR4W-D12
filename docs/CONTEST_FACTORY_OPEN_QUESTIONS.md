@@ -591,6 +591,11 @@ closes it; anything else reopens it.
   Delaware"*): *"oh....I did not see that line. Then it is DC to Daylight..."*
   FINAL: 160-10 m without WARC, plus 6 m and up THROUGH LIGHT -- exactly what
   TContestDelawareQP.UsesBand already states. No change.
+  NY4I: *"DC to daylight means all of the amateur radio spectrum including HF
+  (but no WARC)."* Measured: the class states every band TR4W has except 30, 17
+  and 12 m. TR4W has no 2200 m, 630 m or 60 m band (60 m is commented out of
+  BandType) and nothing above 24 GHz but light, so those cannot be logged at all.
+
 - **Q63** The New Contest dialog captions POTA's box "Activator" as plain
   English text, so no translation can reach it. Moved as it was. Give it a
   translatable string?
