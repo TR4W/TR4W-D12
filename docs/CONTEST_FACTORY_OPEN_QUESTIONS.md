@@ -558,7 +558,7 @@ closes it; anything else reopens it.
   is a different thing but the combined in7qpne would not be sent online since
   it is combined. WRTC could be for local competitors using TR4W."* Asked
   which for WRTC: **online scores yes, HamScore no.** So the two are SEPARATE
-  permissions, where today one flag (, read by ) gates both: (1) the online
+  permissions, where today one flag (`oaScorePosting`, read by `ContestPermitsScorePosting`) gates both: (1) the online
   scoreboard (post-scores window) -- IN7QPNE no, WRTC YES; (2) HamScore -- a
   very limited subset (RTC-capable, e.g. Minnesota); IN7QPNE and WRTC no. Not
   built. Q55 is live again (WRTC's posted XML carries no multiplier).
