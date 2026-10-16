@@ -327,6 +327,13 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   **Idaho and Delaware** do. Every other class inherits the base's answer --
   every band is credited -- so this question only affects those two today.
   Q98 asks about the other contests.
+  *NY4I, 2026-10-15, on the sentence above: "As most contests are specifically
+  not WARC bands, and most HF do not allow 6m and up, HF only would be the
+  default. But I would feel better if contest classes just explicitly listed
+  the bands they allow."* Recorded on Q98 as its build rule. What stays open
+  here is only the display question: does an off-band QSO -- now an automatic
+  X-QSO (Q98) -- show as worked-there on the dupe sheet and in the Stations
+  window?
   **Answer:**
 
 ---
@@ -704,7 +711,13 @@ closes it; anything else reopens it.
     even for Idaho and Delaware the export writes a plain `QSO:` line -- the
     `X-QSO:` prefix reads only the stored flag (`postunit.pas:3166`).
   Not built.
-
+  **BUILD RULE (NY4I, 2026-10-15): every contest class LISTS ITS BANDS
+  EXPLICITLY -- no inherited default.** Not even "HF without WARC", though
+  that is what most contests are: a default is a guess for every class that
+  forgets to override it. TContestBase.UsesBand stops answering True for every
+  band, and a pin test over every registered contest fails if a class states
+  no band list -- the way uTestCWFraming fails a radio that keys CW without a
+  frame rule.
 - **Q77** IN7QPNE's score. You said a combined score is not needed, and it
   would be nice to see the score of the party just worked. Nothing on screen
   can show more than one score today, so the window, the summary sheet and
