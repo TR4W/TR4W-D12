@@ -442,14 +442,6 @@ closes it; anything else reopens it.
   class is deleted.
   **Answer:**
 
-- **Q86** The Minnesota QSO Party is the only state party whose table row
-  marks it "RTC capable" (live score posting through the RTC uploader).
-  No other party has it. Intended, or a typo in the row?
-  *Recommended: remove it unless Minnesota is posted to a scoreboard.*
-  **Proposed answer:** From HamScore (researched 2026-10-14): the Minnesota
-  QSO Party IS on its real-time scoreboard, so the flag is correct. No change.
-  **Answer:**
-
 - **Q88** The NA Sprint CW and RTTY rows name different domestic files:
   CW uses `naqp`, RTTY uses `s49p8`. Both are the same sprint exchange
   (states, provinces, NA). Is one of them wrong, and which file should
@@ -551,8 +543,19 @@ closes it; anything else reopens it.
 | Q63 | "Activator" stays untranslated -- a universal POTA term | no change |
 | Q72 | Delaware: 160-10 m without WARC plus 6 m and up through light ("DC to daylight") | already so; no change |
 | Q85 | 7QP excludes WARC (and the sponsor scores digital 4) | not built |
+| Q86 | Minnesota is the only HamScore QSO party; its flag is right | no change |
 
 ### Answered since the table was last updated (full text)
+
+- **Q86** The Minnesota QSO Party is the only state party whose table row
+  marks it "RTC capable" (live score posting through the RTC uploader).
+  No other party has it. Intended, or a typo in the row?
+  *Recommended: remove it unless Minnesota is posted to a scoreboard.*
+  **Proposed answer:** From HamScore (researched 2026-10-14): the Minnesota
+  QSO Party IS on its real-time scoreboard, so the flag is correct. No change.
+  **Answer:** (NY4I, 2026-10-15) *"MNQP is indeed the only hamscore qso party
+  of which I am aware."* The flag is correct: Minnesota keeps live score
+  posting, and no other party gets it. No change.
 
 - **Q85** Does 7QP allow the WARC bands? The 7QP class scores a 30 m CW QSO
   at 3 points (frozen matrix, `SEVENQP.matrix` QSO 09), and IN7QPNE now
