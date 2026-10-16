@@ -26,6 +26,7 @@ in section 4. One line each -- the full text is further down.
 - **Q97** Franz Josef Land (R1FJ) oblast reads as "SP" in Russian DX.
 - **Q70** UA4W Championship's 18/19 zone rule.
 - **Q79** IN7QPNE: turn VHF on? (LOCATION is settled.)
+- **Q106** Nebraska: rare grid bonus, satellite points, FT8/FT4 competition.
 
 **Design (section 2) -- each has a recommendation; "accept" is enough**
 - **Q8** Events with no ContestType still named in code (TRC, PGA, EURASIA ...).
@@ -87,6 +88,19 @@ inactive contest in the New Contest list.
   still scores only where its party allows)? The rest (one `dx` multiplier,
   FT8 written `DG`, no power multiplier, no +50 bonus) stays.
   *Recommended: VHF on; keep the rest.*
+  **Answer:**
+
+- **Q106** (Nebraska, 2026-10-16) Three sponsor rules the new class does
+  not build yet. (1) **Rare grid bonus**: a station activating DN91CE, DN91DE
+  or DN91EE gets those QSOs' points x5 as a bonus. (2) **Satellite** QSOs are 4
+  points -- TR4W has no notion of a satellite QSO. (3) **FT8/FT4** is a
+  separate competition (grid-square exchange, 2 points, grid multipliers,
+  its own log); in this class an FT8/FT4 QSO is off-mode -- logged, scores
+  nothing. Also: the sponsor's start time says "1400 UTC (8:00 AM CDT)", but
+  8 AM CDT is 1300 UTC, which is what WA7BNM shows.
+  *Recommended: (1) build it -- it needs only our own grid, which the
+  contest already knows; (2) leave until satellite QSOs are a concept; (3) a
+  separate contest class later, if wanted.*
   **Answer:**
 
 ### Raised by the M11 plan (2026-10-14; `docs/CONTEST_FACTORY_M11_PLAN.md`)
@@ -397,10 +411,42 @@ closes it; anything else reopens it.
 | Q55 | WRTC posts no DynamicResults XML; no multiplier row; amends Q83 | no change |
 | Q80 | IN7QPNE in-area multipliers per party, after Q4 -- MOOT: Q104 keeps in-area stations out | moot |
 | Q104 | IN7QPNE is refused for a station inside IN, the 7th area, New England or DE; the message names the party (7QP for the 7th area). `NEQP` = New England, `NE-QSO-PARTY` = Nebraska (TR4W has none) | not built |
+| Q105 | New England is `NEWEQP` (Cabrillo `NEWE-QSO-PARTY`, ADIF `NEQP`), `NEQP` kept as a read alias; Nebraska QSO Party added as `NE-QSO-PARTY` | building |
 | Q79 (LOCATION) | IN7QPNE requires no LOCATION; Cabrillo spec: section for W/VE, `DX` otherwise | no change |
 | Q52 note | Settled by Q52 | removed |
 
 ### Answered since the table was last updated (full text)
+
+- **Q105** New England vs Nebraska: names, and a Nebraska QSO Party.
+  **Answer:** (NY4I, 2026-10-16) *"It will have a NE qso party as I do want to
+  implement all qso parties eventually"*; *"dxlog uses NEWEQP and cabrillo
+  name is NEWE-QSO-PARTY"*; *"go with your recommendation"*. Checked against
+  ADIF 3.1.7 (NY4I's screenshot: `NE-QSO-PARTY` Nebraska, `NEQP` New England),
+  WA7BNM (ref 10 New England: Cabrillo `NEQP`, alias `NEWE-QSO-PARTY`; ref 336
+  Nebraska: `NE-QSO-PARTY`) and DXLog (`NEWEQP.txt` New England writes
+  `NEWE-QSO-PARTY`; `NEQP.txt` is NEBRASKA and writes `NE-QSO-PARTY`):
+
+  | | New England | Nebraska (new) |
+  |---|---|---|
+  | TR4W name (stored in every log) | `NEWEQP` | `NE-QSO-PARTY` |
+  | old spelling still read | `NEQP`, permanently -- a read alias | -- |
+  | Cabrillo | `NEWE-QSO-PARTY` | `NE-QSO-PARTY` |
+  | ADIF | `NEQP` (ADIF enumeration) | `NE-QSO-PARTY` |
+
+  **Why `NEQP` is not reused for Nebraska:** it is stored data. Every New
+  England SQLite log holds it (`uLogRepository.SetContest`) and reopens
+  through `TF.GetContestFromString`, and D7 `.cfg` files say `CONTEST = NEQP`;
+  reassigning it would reopen them all as Nebraska, silently. The rule: a
+  contest name ever written to a file is never given to another contest.
+
+  Nebraska is built from the sponsor's 2026 rules (nebraskaqsoparty.com),
+  with DXLog's `NEQP.txt` for the bonus calls and the 93 county
+  abbreviations: digital 1, phone 2, CW 3; ONE power multiplier on the score
+  (x5 all QRP, x2 under 100 W); geo multipliers once per contest (out of
+  state: NE counties; in state: counties + states + provinces + countries);
+  bonus 100 for KA0BOJ, 50 for each of K0SMM K0RPT K0NEB NF0N N0FER KE0XQ;
+  160-10 m without WARC plus all VHF/UHF; county lines two counties. Where
+  DXLog differs (6 m only; power per QSO) the sponsor wins. Building.
 
 - **Q104** (raised 2026-10-16 by your Q40 answer) **IN7QPNE is for stations
   outside all four parties.** The 4QP page (stateqsoparty.com, "4QP Cabrillo
