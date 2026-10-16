@@ -148,7 +148,7 @@ moves to section 4 in the commit that records it.
 - **Q55** WRTC's live-score XML has never carried a multiplier: its rule
   posts HQ and country on an "all modes" row the writer never produces. Post
   them per mode, add the row, or leave it (WRTC forbids score posting anyway)?
-  *Moot if Q83 is yes (WRTC posts no live score at all).*
+  *No longer moot: Q83 (2026-10-15) lets WRTC post ONLINE scores, so the posted XML needs the multipliers -- this question is live.*
   **Answer:**
 
 ### Added after M9b (the New Contest drop-down and CATEGORY-POWER)
@@ -250,13 +250,6 @@ moves to section 4 in the commit that records it.
   own files differ: in 7QP, an in-state entrant's 7th-area counties count
   as their STATE. Making that per party needs a new piece (the contest
   naming the multiplier, Q4). Wanted? *Recommended: yes, when Q4 is done.*
-  **Answer:**
-
-- **Q83** HamScore now asks the contest whether its score may be posted.
-  Until now only the post-scores window asked, so WRTC (no live score
-  posting) still went to HamScore when HAMSCORE ENABLE was on. With this
-  change neither WRTC nor IN7QPNE is posted. Is that right for WRTC?
-  *Recommended: yes.*
   **Answer:**
 
 ### Found while the classes took over the table's values (M10 S5, 2026-10-14)
@@ -551,8 +544,24 @@ closes it; anything else reopens it.
 | Q72 | Delaware: 160-10 m without WARC plus 6 m and up through light ("DC to daylight") | already so; no change |
 | Q85 | 7QP excludes WARC (and the sponsor scores digital 4) | not built |
 | Q86 | Minnesota is the only HamScore QSO party; its flag is right | no change |
+| Q83 | Online-score posting and HamScore are separate permissions; WRTC online yes / HamScore no; IN7QPNE neither | not built |
 
 ### Answered since the table was last updated (full text)
+
+- **Q83** HamScore now asks the contest whether its score may be posted.
+  Until now only the post-scores window asked, so WRTC (no live score
+  posting) still went to HamScore when HAMSCORE ENABLE was on. With this
+  change neither WRTC nor IN7QPNE is posted. Is that right for WRTC?
+  *Recommended: yes.*
+  **Answer:** (NY4I, 2026-10-15) *"Correct. It is a very limited subset of
+  contests that allow the RTC data to go to hamscore. The contestOnline scores
+  is a different thing but the combined in7qpne would not be sent online since
+  it is combined. WRTC could be for local competitors using TR4W."* Asked
+  which for WRTC: **online scores yes, HamScore no.** So the two are SEPARATE
+  permissions, where today one flag (, read by ) gates both: (1) the online
+  scoreboard (post-scores window) -- IN7QPNE no, WRTC YES; (2) HamScore -- a
+  very limited subset (RTC-capable, e.g. Minnesota); IN7QPNE and WRTC no. Not
+  built. Q55 is live again (WRTC's posted XML carries no multiplier).
 
 - **Q86** The Minnesota QSO Party is the only state party whose table row
   marks it "RTC capable" (live score posting through the RTC uploader).
