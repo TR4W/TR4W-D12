@@ -29,26 +29,6 @@ moves to section 4 in the commit that records it.
 
 ### Other contests
 
-- **Q15** NRAU-Baltic: the contest calendar lists Cabrillo names `NRAU-CW` /
-  `NRAU-SSB`; TR4W sends `NRAU-BALTIC-CW` / `NRAU-BALTIC-SSB`. Which is right?
-  *Now answerable from the sources: the Cabrillo spec's contest list and the
-  sponsor's public logs say which name is current.*
-  **Answer:**
-
-- **Q16** Sprint SSB is its own contest, but its ADIF/Cabrillo name is
-  `NA-SPRINT-SSB` and its friendly name "North American Sprint, SSB". Change to the
-  sponsor's name (https://ssbsprint.com/rules/)? Its multipliers come from the
-  `naqp` file with no DXCC, unlike the NA Sprints' North American DXCC. Intended?
-  *Partly settled: the Cabrillo name is the class's own definition (Q52), by
-  the name rule (D7's, else the enumeration), so `NA-SPRINT-SSB` stays unless
-  the sponsor's page or its public logs say otherwise; the friendly name is
-  Q52/Q53's. The multiplier half goes to the DXLog cross-check.*
-  **Answer:**
-
-- **Q22** PACC: the row says `RSTAndQSONumberOrDomesticQTHExchange`, but every PACC
-  session runs `RSTDomesticQTHExchange`. Which is the contest's exchange?
-  **Answer:**
-
 - **Q23** CUP RF: the Cabrillo writer uses the QSO's own QTH for the CW and SSB
   runnings but not for CUP RF DIGITAL. Intended?
   **Answer:**
@@ -164,14 +144,6 @@ moves to section 4 in the commit that records it.
 - **Q52 note** -- M9b did what you asked: the drop-down shows the display
   name, which is now the friendly name. Q52 still asks WHICH words; answering
   it changes the drop-down with no further code.
-
-- **Q58** WRTC's row gives it IARU's friendly name, "IARU HF World
-  Championship", so the two were identical lines in the drop-down. They now
-  read "IARU HF World Championship [IARU-HF]" and "... [WRTC]" (the token in
-  brackets, only where a name is shared). A name of WRTC's own, please -- it
-  also becomes its friendly name, which the summary sheet's `CONTEST:` line
-  and the log database show.
-  **Answer:**
 
 - **Q59** Inactive contests: SA Sprint and Locust are marked inactive and
   listed last, as you said. Any others? (A contest marked inactive still
@@ -313,6 +285,30 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   here is only the display question: does an off-band QSO -- now an automatic
   X-QSO (Q98) -- show as worked-there on the dupe sheet and in the Stations
   window?
+  **Answer:**
+
+- **Q99** **A contest states when it runs** (raised by NY4I with Q15,
+  2026-10-16: *"we should be storing the times and relative dates of the
+  contest like the contest factory in TR4QT does"*). TR4W stores none today.
+  TR4QT's `ContestMetadata` holds a month plus a rule STRING ("2nd Saturday",
+  "Last full weekend") parsed at run time, and no time of day; it uses the
+  date only to list upcoming contests first, and never refuses a contest
+  outside it.
+  **Recommendation:** each class states one or more occurrences, TYPED rather
+  than parsed: month; anchor (Nth weekday, Nth full weekend, last full
+  weekend, or a fixed date); the start day within it; start UTC; duration. A
+  misspelt rule string yields no date and no error; a typed one does not
+  compile. Worked example, NRAU-Baltic SSB: January, 2nd full weekend, Sunday,
+  0600 UTC, 2 h (CW: the same at 0830 UTC). No inherited default (Q51's rule):
+  a class with no regular date (General QSO, POTA) says so explicitly, and a
+  pin test fails a class that states nothing.
+  **Uses, in order:** (a) the New Contest drop-down lists upcoming contests
+  first, as TR4QT does; (b) a new contest's start and end are seeded into its
+  SQLite file from the next occurrence. Later, and only on your word: (c) flag
+  a QSO logged outside the period. Like TR4QT, a contest always opens on any
+  date. Sources: the sponsor's rules, then WA7BNM (which lists dates for every
+  contest it carries, so a tool can propose each class's rule for checking by
+  hand). Accept (a) and (b)?
   **Answer:**
 
 ---
@@ -533,8 +529,87 @@ closes it; anything else reopens it.
 | Q83 | Online-score posting and HamScore are separate permissions; WRTC online yes / HamScore no; IN7QPNE neither | not built |
 | Q69 | MY ZONE is the CQ zone; ITU-zone contests read MY ITU ZONE | not built (own step) |
 | Q71 | RSGB 1.8, ARRL 160, CQ 160 credit 160 m only; UA4W prompt uses TC_ENTERYOURRDAIDORGRID | not built |
+| Q58 | WRTC is named "World Radiosport Team Championship" (display and friendly name) | built |
+| Q15 | NRAU Cabrillo names become WA7BNM's NRAU-CW / NRAU-SSB; ADIF keeps NRAU-BALTIC-*; sponsor times | not built |
+| Q16 | SSB Sprint is "North American SSB Sprint"; NA-SPRINT-SSB stays; gains the North American country multiplier | not built |
+| Q22 | PACC: both exchanges, one per station (PA receives either); a PA entrant's sent column must be its province, not a serial | not built (defect) |
 
 ### Answered since the table was last updated (full text)
+
+- **Q22** PACC: the row says `RSTAndQSONumberOrDomesticQTHExchange`, but every PACC
+  session runs `RSTDomesticQTHExchange`. Which is the contest's exchange?
+  **Answer:** (NY4I, 2026-10-16, with the PACC 2026 rules,
+  https://veron.nl/wp-content/uploads/2025/12/PACC_2026_rules_eng.pdf) *"I
+  believe the OR in RSTAndQSONumberOrDomesticQTHExchange is because Dutch
+  stations send signal report (59) and two-letter province code BUT non-Dutch
+  stations send signal report and a serial number."* Confirmed by rule 6 (non-
+  PA: RST + serial from 001; PA: RST + one of 12 province codes) and rule 7.1
+  (a foreign station scores only PA contacts; a PA station works everyone, PA
+  included). So both exchanges are right, one per station, and the class
+  already chooses them so: a PA entrant receives either (the row's OR
+  exchange), anyone else receives RST + province (`RSTDomesticQTHExchange`).
+  The question's "every session" was the contest matrix, which has no PA
+  station. **Defect found:** the class's Cabrillo and ADIF sent column writes
+  OUR SERIAL at every station. D7 did that only in the
+  `RSTDomesticQTHExchange` arm (non-PA); a PA entrant took the OR-exchange arm
+  and sent RST + its province (D7 `PostUnit.PAS:3372`,
+  `uCabrilloExchange.pas:474`). So a Dutch entrant's log today carries a
+  serial where the province belongs. Fix: the sent column chooses by station
+  as `DescribeSession` does, with a PA variant added to the pins. Not built.
+
+- **Q16** Sprint SSB is its own contest, but its ADIF/Cabrillo name is
+  `NA-SPRINT-SSB` and its friendly name "North American Sprint, SSB". Change to the
+  sponsor's name (https://ssbsprint.com/rules/)? Its multipliers come from the
+  `naqp` file with no DXCC, unlike the NA Sprints' North American DXCC. Intended?
+  *Partly settled: the Cabrillo name is the class's own definition (Q52), by
+  the name rule (D7's, else the enumeration), so `NA-SPRINT-SSB` stays unless
+  the sponsor's page or its public logs say otherwise; the friendly name is
+  Q52/Q53's. The multiplier half goes to the DXLog cross-check.*
+  **Answer:** (NY4I, 2026-10-16) *"Yes that website and name appears
+  correct."* The display and friendly name become the sponsor's, "North
+  American SSB Sprint" (the heading of https://ssbsprint.com/rules/). The
+  Cabrillo and ADIF name stays `NA-SPRINT-SSB`: WA7BNM (ref 242) gives that
+  Cabrillo name, the ADIF enumeration lists it, and the sponsor names none.
+  **Multipliers:** the sponsor's rule 10 settles the second half -- each US
+  state and DC (KL7 and KH6 count as states), each Canadian province or
+  territory, AND each North American country other than W and VE ("North
+  American" by the CQ WW list). TR4W counts no countries (`NoDXMults`), so it
+  undercounts; the class gets the North American DX multiplier the NA Sprint
+  CW class already has. The sponsor counts 13 Canadian multipliers with NT and
+  NU separate, and `naqp.dom` joins them as one (12): that is Q88's file
+  question, which now covers the SSB Sprint too.
+
+- **Q15** NRAU-Baltic: the contest calendar lists Cabrillo names `NRAU-CW` /
+  `NRAU-SSB`; TR4W sends `NRAU-BALTIC-CW` / `NRAU-BALTIC-SSB`. Which is right?
+  *Now answerable from the sources: the Cabrillo spec's contest list and the
+  sponsor's public logs say which name is current.*
+  **Answer:** (NY4I, 2026-10-16) *"Use the name from WA7BNM if it conflicts
+  with what TR4W has currently. So it should be NRAU-SSB for the SSB
+  contest."* So the Cabrillo `CONTEST:` names become WA7BNM's: `NRAU-SSB` (ref
+  222) and, by the same rule, `NRAU-CW` (ref 220). The ADIF Contest_ID stays
+  `NRAU-BALTIC-CW` / `NRAU-BALTIC-SSB`: those are the ADIF 3.1.6 enumeration's
+  names, and ADIF import matches them. The friendly names already match
+  WA7BNM's. TR4W has no Cabrillo import, so no older log is orphaned by the
+  rename. **Times**, from the sponsor text NY4I pasted: the Sunday of the 2nd
+  full weekend of January, SSB 0600-0800 UTC and CW 0830-1030 UTC, two
+  separate contests (the sponsor also lists combined CW+SSB results, which
+  needs no third class). WA7BNM's page contradicts itself (0630-0830 and
+  0900-1100 for 2027 onward), so the sponsor's times stand. How a class stores
+  its schedule is Q99.
+
+- **Q58** WRTC's row gives it IARU's friendly name, "IARU HF World
+  Championship", so the two were identical lines in the drop-down. They now
+  read "IARU HF World Championship [IARU-HF]" and "... [WRTC]" (the token in
+  brackets, only where a name is shared). A name of WRTC's own, please -- it
+  also becomes its friendly name, which the summary sheet's `CONTEST:` line
+  and the log database show.
+  **Answer:** (NY4I, 2026-10-16) *"World Radiosport Team Championship."*
+  Built: it is WRTC's display and friendly name, so the drop-down shows it
+  bare and IARU HF bare -- no two contests share a display name now, and the
+  bracketed-token rule stays only for a future pair. The summary sheet's
+  CONTEST: line adds the new name in parentheses after the contest name.
+  Unchanged: Cabrillo and ADIF name WRTC, WA7BNM ref 67 (the IARU HF event it
+  runs inside), domestic file iaruhq.
 
 - **Q71** RSGB 1.8 MHz is a 160 m contest, but its class credits every band,
   as its row always did. Should it credit 160 m only? An off-band QSO would

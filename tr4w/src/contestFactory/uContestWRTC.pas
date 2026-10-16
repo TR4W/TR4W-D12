@@ -32,6 +32,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   Blank CABName and ADIFName resolve to the enum's spelling, 'WRTC'.
 
+  THE NAME IS WRTC'S OWN SINCE 2026-10-16 (NY4I, design Q58): the friendly
+  and display name are 'World Radiosport Team Championship'. The row's
+  'IARU HF World Championship' quoted above is history -- it was the event
+  WRTC runs inside, and it gave WRTC and IARU-HF one name in the New Contest
+  drop-down.
+
   WHY IT HAS A CLASS. Milestone M7b (2026-10-02) gives every classless
   contest one -- this is batch 2 -- and a registered class is the contest's
   scorer, set-up, export, import, parse and final score from the moment it
@@ -161,7 +167,8 @@ end;
 
 function TContestWRTC.GetDisplayName: string;
 begin
-   Result := 'IARU HF World Championship';
+   (* NY4I, 2026-10-16, design Q58 -- see the header. *)
+   Result := 'World Radiosport Team Championship';
 end;
 
 function TContestWRTC.GetCabrilloName: string;
@@ -200,7 +207,8 @@ end;
 
 function TContestWRTC.GetFriendlyName: string;
 begin
-   Result := 'IARU HF World Championship';
+   (* NY4I, 2026-10-16, design Q58 -- see the header. *)
+   Result := 'World Radiosport Team Championship';
 end;
 
 function TContestWRTC.GetInitialExchangeKind: InitialExchangeType;

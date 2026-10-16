@@ -323,8 +323,9 @@ exactly as before.
     CW"*, *"CQ Worldwide DX Contest, SSB"*, *"General QSO/DX Logging"* -- and
     47 contests with no human name yet still show their token (`UKEI`,
     `RF-CUP-CW`, ...; design Q53);
-  - **IARU-HF and WRTC** share a display name, so they read *"IARU HF World
-    Championship [IARU-HF]"* and *"... [WRTC]"* (design Q58);
+  - **WRTC** reads *"World Radiosport Team Championship"* and **IARU-HF**
+    reads *"IARU HF World Championship"*, both bare -- no brackets on either,
+    since WRTC took its own name (NY4I, 2026-10-16, design Q58);
   - the **last two lines** are *"Locust QSO Party (inactive)"* and
     *"SA-SPRINT (inactive)"*, after every active contest;
   - choose a contest and press OK: **the log's file name and the contest that

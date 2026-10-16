@@ -678,10 +678,10 @@ const
       (Token: 'KING-OF-SPAIN-SSB'; WA7BNM: 59; QRZRUID: 308; Email: '';
        Friendly: 'His Maj. King of Spain Contest, SSB';
        Display: 'His Maj. King of Spain Contest, SSB'; DomesticFile: 'ea'),
-      (* WRTC *)
+      (* WRTC -- its name changed by hand, NY4I 2026-10-16, design Q58 *)
       (Token: 'WRTC'; WA7BNM: 67; QRZRUID: 0; Email: '';
-       Friendly: 'IARU HF World Championship';
-       Display: 'IARU HF World Championship'; DomesticFile: 'iaruhq'),
+       Friendly: 'World Radiosport Team Championship';
+       Display: 'World Radiosport Team Championship'; DomesticFile: 'iaruhq'),
       (* TENNESSEEQSOPARTY *)
       (Token: 'TENNESSEE QSO PARTY'; WA7BNM: 115; QRZRUID: 0; Email: '';
        Friendly: 'Tennessee QSO Party';

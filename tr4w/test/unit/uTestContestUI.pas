@@ -245,13 +245,19 @@ begin
       CheckEquals('SA-SPRINT (inactive)', ContestChoiceCaption(SASPRINT),
                   'SA Sprint is marked');
 
-      (* THE ONE SHARED NAME TODAY, told apart -- a RATCHET: a new pair fails
-         here and is a display name to ask NY4I for (design Q58). *)
-      CheckEquals(2, shared, 'exactly two lines share a display name');
-      CheckEquals('IARU HF World Championship [IARU-HF]', ContestChoiceCaption(IARU),
-                  'IARU-HF is told apart from WRTC');
-      CheckEquals('IARU HF World Championship [WRTC]', ContestChoiceCaption(WRTC),
-                  'WRTC is told apart from IARU-HF');
+      (* NO TWO LINES SHARE A DISPLAY NAME TODAY -- a RATCHET. The one pair
+         there was, IARU-HF and WRTC, ended when WRTC took a name of its own
+         (NY4I, 2026-10-16, design Q58). A new pair fails here and is a
+         display name to ask NY4I for. The bracket rule itself stays in
+         uContestChoices for such a pair, and the loop above states it
+         independently of that unit -- but with no pair it is exercised by
+         nothing, because the rule is inline in ContestChoiceCaption and
+         answers only for a real ContestType. *)
+      CheckEquals(0, shared, 'no two lines share a display name');
+      CheckEquals('IARU HF World Championship', ContestChoiceCaption(IARU),
+                  'IARU-HF is shown bare');
+      CheckEquals('World Radiosport Team Championship', ContestChoiceCaption(WRTC),
+                  'WRTC is shown bare, by its own name');
    finally
       choices.Free;
    end;

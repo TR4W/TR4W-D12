@@ -3025,6 +3025,13 @@ rejected: renaming WRTC here -- its display name is its friendly name (NY4I's
 M9a ruling), which is the summary sheet's `CONTEST:` line, so that is NY4I's
 (Q58). The pair is held as a ratchet.
 
+**Q58 ANSWERED, 2026-10-16 (NY4I): WRTC is *"World Radiosport Team
+Championship"*** -- its display and friendly name, so its summary sheet's
+`CONTEST:` line and the log database's friendly name change with it (its
+Cabrillo `CONTEST:` and ADIF id stay `WRTC`). No two contests share a display
+name now; the bracket rule stays for any future pair, and the ratchet in
+`uTestContestUI` holds the shared count at zero.
+
 **DECIDED (7.6): CATEGORY-POWER IS `Settings.Contest.CategoryPower`, AND THE
 SUMMARY WINDOW WRITES IT.**
 
@@ -3902,6 +3909,8 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
     tells them apart only by token ("... [IARU-HF]", "... [WRTC]"). A name of
     WRTC's own? It becomes its `FriendlyName` too -- the summary sheet's
     `CONTEST:` line and the log database's friendly name, an output change.
+    **Answered 2026-10-16 (NY4I): "World Radiosport Team Championship"** --
+    built; see §8.2n.
   - **Q59** `IsActive` is False for SA Sprint and Locust only. Any others?
   - **Q60** The off-time minimum: `MainUnit` uses 60 minutes for CQ WW and
     IARU HF, `PostUnit`'s operating time 60 for CQ WW only (by contest NAME).

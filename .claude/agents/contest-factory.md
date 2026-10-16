@@ -609,8 +609,9 @@ the target shape, the M-step migration order and the open questions.
   `IsActive` (base True; SA Sprint and Locust False, on NY4I's word only --
   `uTestContestUI.INACTIVE_CONTESTS` is the ratchet) places a contest in the
   New Contest drop-down, which shows `DisplayName` (`uContestChoices`;
-  a shared display name gets its token in brackets -- IARU-HF and WRTC
-  today, Q58). General QSO, a log, says False to `ShowsContestStatus`, 0 to
+  a shared display name gets its token in brackets -- no pair shares one
+  since WRTC became "World Radiosport Team Championship", Q58, 2026-10-16;
+  the ratchet holds the count at zero). General QSO, a log, says False to `ShowsContestStatus`, 0 to
   `MaximumContestDates` (base 10) and True to `BandStepIncludesWARC`; the FOC
   Marathon says True to `PowerFieldIsFOCNumber`; WAG answers
   `CallEntryFrequencyWarning(aFreqKHz)` from its seven exclusive windows.

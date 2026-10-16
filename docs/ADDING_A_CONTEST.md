@@ -268,9 +268,11 @@ the HUMAN name**, the row's `FriendlyName` where it has one -- **the New Contest
 drop-down shows it** (M9b, 2026-10-02; the token `ContestTypeSA` is still what
 the dialog writes); `FriendlyName` is stated too. **Give it a name no other
 contest has**: two contests with one display name are told apart in the
-drop-down only by their tokens in brackets (`IARU HF World Championship [WRTC]`),
-and `uTestContestUI.Test_ChoicesShowDisplayNamesAndMarkInactive` holds the one
-pair that shares a name today as a ratchet -- a new pair fails it.
+drop-down only by their tokens in brackets (`<name> [TOKEN]`), and
+`uTestContestUI.Test_ChoicesShowDisplayNamesAndMarkInactive` holds the count of
+lines sharing a name as a ratchet at **zero** -- a new pair fails it. (The one
+pair there was, IARU-HF and WRTC, ended when WRTC took its own name, *"World
+Radiosport Team Championship"*: NY4I, 2026-10-16, design Q58.)
 
 **IF THE CONTEST IS NO LONGER RUN, STATE `GetIsActive` = False** (M9b) -- on
 NY4I's word only. It stays in the factory so an old log still opens and scores;

@@ -44,13 +44,14 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   helps them find it.
 
   A SHARED DISPLAY NAME IS TOLD APART BY THE TOKEN (DECIDED). Two contests
-  can carry one display name -- WRTC's row gives it the friendly name 'IARU
-  HF World Championship', the event it runs inside, so it and IARU-HF were
-  two identical lines. Each such line adds its token in brackets ('IARU HF
-  World Championship [WRTC]'); a unique name is shown bare. Brackets, not
-  words, so nothing needs translating. The better answer is a name of WRTC's
-  own, which is NY4I's (design Q58) and would change its FriendlyName -- the
-  summary sheet's CONTEST: line -- so it is not taken here.
+  can carry one display name; each such line adds its token in brackets
+  ('<name> [TOKEN]'), and a unique name is shown bare. Brackets, not words,
+  so nothing needs translating. The one pair there was -- WRTC, whose row
+  gave it the friendly name 'IARU HF World Championship', the event it runs
+  inside, and IARU-HF -- ended when WRTC took a name of its own, 'World
+  Radiosport Team Championship' (NY4I, 2026-10-16, design Q58). So no pair
+  shares a name today; the rule stays for any future pair, and
+  uTestContestUI's ratchet fails if one appears.
 
   THE MARK (DECIDED): an inactive contest's caption is SContestInactive --
   '%s (inactive)' -- a resourcestring, so a translation reaches it. The
