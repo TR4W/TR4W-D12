@@ -450,19 +450,21 @@ closes it; anything else reopens it.
   class is deleted.
   **Answer:**
 
-- **Q57** CQ WW RTTY's set-up writes MY ZONE as "zone state" while it builds
-  its messages, then puts it back -- and the write marks MY ZONE as yours, so
-  it no longer follows MY CALL. Build the messages without touching MY ZONE?
-  *Recommended: yes* (the messages are identical; only a later MY CALL change
-  behaves differently).
-  **Implemented with 7.12 (2026-10-13), by necessity:** with the readers on the
-  resolver, the transient write would have dropped the state whenever a zone
-  override was stated. The messages are built from a local; MY ZONE is never
-  written. Please confirm.
-  **Proposed answer:** Implemented with 7.12 (2026-10-13); the messages are
-  unchanged.
+- **Q57** CQ WW RTTY's messages. A W/VE station sends RST, zone AND state
+  (`599 05 FL`). D7 built those messages by briefly OVERWRITING MY ZONE with
+  the zone, a space and MY STATE -- `05 FL` -- building the CQ, F3, F4, F5 and
+  S&P messages from it, then restoring the zone (D7 `FCONTEST.PAS:181-199`).
+  Since 7.12 a write to MY ZONE marks it as this contest's own value, so even
+  that brief write would stop MY ZONE following MY CALL. Build the messages
+  without touching MY ZONE?
+  *Reworded 2026-10-15 -- NY4I asked what "zone state" meant: it was shorthand
+  for that `05 FL` text, not a field. MY ZONE and MY STATE are the two
+  fields.*
+  **Already implemented with 7.12 (2026-10-13), by necessity:** the messages
+  are built in a local (`WriteRSTZone(SendsStateAfterZone)`); MY ZONE and MY
+  STATE are never written, and the messages are the same text D7 produced.
+  **Proposed answer:** confirm -- no further change.
   **Answer:**
-
 - **Q72** Delaware's bands: "all HF bands except WARC, plus 6 m and up".
   The class counts 160 m and light as well as 80-10 m (no WARC) and 6 m up.
   Both are my reading of the summary, not of the sponsor's page. Are they
