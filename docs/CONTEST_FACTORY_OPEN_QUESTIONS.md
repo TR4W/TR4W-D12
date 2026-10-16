@@ -190,16 +190,6 @@ moves to section 4 in the commit that records it.
 
 ### Added with the UA4W Championship's and RSGB 1.8's classes (2026-10-14)
 
-- **Q69** MY ZONE, when nobody states it, is worked out from your call in
-  the contest's own zone system. Most contests use ITU zones, so there it
-  is the ITU zone: K0AAA gets 7, not CQ zone 4, in the UA4W Championship.
-  7.12 calls MY ZONE your CQ zone, and IARU relies on the ITU answer. Should
-  MY ZONE always be the CQ zone, with ITU-zone contests reading MY ITU ZONE?
-  That would change IARU's set-up and messages when no zone is stated, so it
-  would be its own step. *Recommended: yes, separately.* Until then the UA4W
-  class asks a separate service for your CQ zone (design 8.2p).
-  **Answer:**
-
 - **Q70** The UA4W Championship pays 10/20 on 80/160 m when your CQ zone is
   18 or 19. It now uses a zone you stated first (your 7.12 ruling); the old
   code always used your call's CQ zone. With no zone stated, the two agree.
@@ -545,8 +535,26 @@ closes it; anything else reopens it.
 | Q85 | 7QP excludes WARC (and the sponsor scores digital 4) | not built |
 | Q86 | Minnesota is the only HamScore QSO party; its flag is right | no change |
 | Q83 | Online-score posting and HamScore are separate permissions; WRTC online yes / HamScore no; IN7QPNE neither | not built |
+| Q69 | MY ZONE is the CQ zone; ITU-zone contests read MY ITU ZONE | not built (own step) |
 
 ### Answered since the table was last updated (full text)
+
+- **Q69** MY ZONE, when nobody states it, is worked out from your call in
+  the contest's own zone system. Most contests use ITU zones, so there it
+  is the ITU zone: K0AAA gets 7, not CQ zone 4, in the UA4W Championship.
+  7.12 calls MY ZONE your CQ zone, and IARU relies on the ITU answer. Should
+  MY ZONE always be the CQ zone, with ITU-zone contests reading MY ITU ZONE?
+  That would change IARU's set-up and messages when no zone is stated, so it
+  would be its own step. *Recommended: yes, separately.* Until then the UA4W
+  class asks a separate service for your CQ zone (design 8.2p).
+  **Answer:** (NY4I, 2026-10-15) *"actually most contests when they mention
+  zone mean cq zone and not itu zone."* This also corrects the question's
+  premise ("most contests use ITU zones" was wrong). YES: MY ZONE is the CQ
+  zone, everywhere it is not stated otherwise; the few ITU-zone contests (IARU
+  HF, Croatian per Q95, and any other whose sponsor says ITU) read a separate
+  MY ITU ZONE. Its own step: it changes IARU's set-up and messages when no
+  zone is stated. Then the UA4W class's separate CQ-zone service (design 8.2p)
+  can go. Not built.
 
 - **Q83** HamScore now asks the contest whether its score may be posted.
   Until now only the post-scores window asked, so WRTC (no live score
