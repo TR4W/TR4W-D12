@@ -86,8 +86,15 @@ inactive contest in the New Contest list.
   points -- TR4W has no notion of a satellite QSO. (3) **FT8/FT4** is a
   separate competition (grid-square exchange, 2 points, grid multipliers,
   its own log); in this class an FT8/FT4 QSO is off-mode -- logged, scores
-  nothing. Also: the sponsor's start time says "1400 UTC (8:00 AM CDT)", but
-  8 AM CDT is 1300 UTC, which is what WA7BNM shows.
+  nothing. Also the sponsor's UTC times disagree with its own local times.
+  25-26 Apr 2026 is after US daylight time began (8 Mar 2026), so Nebraska's
+  Central zone is CDT, UTC-5: "1400 UTC (8:00 AM CDT)" -- 8 AM CDT is 1300
+  UTC; "Sunday April 27th at 0200 UTC (08:00 PM CDT)" -- 8 PM CDT Sunday the
+  26th is 0100 UTC Monday the 27th (27 Apr 2026 is a Monday). The UTC figures
+  are CST arithmetic. WA7BNM ref 336 gives 1300Z Apr 25 - 0100Z Apr 27,
+  matching the CDT times. A schedule is stored in UTC (Q99); which figure the
+  sponsor means is theirs to say -- *recommended: WA7BNM's, which agrees with
+  the sponsor's own local times.*
   *Recommended: (1) build it -- it needs only our own grid, which the
   contest already knows; (2) leave until satellite QSOs are a concept; (3) a
   separate contest class later, if wanted.*
