@@ -471,6 +471,11 @@ uses
      verified by rebuilding it in code is not verified at all -- so it reaches
      the LCL, which this binary already links. *)
    uTestStatusAndNotice in 'uTestStatusAndNotice.pas',
+   (* THE NEW CONTEST DIALOG'S TITLE NAMES THE BUILD.  Streams
+     uNewContestForm.lfm and fires its OnShow; the form arrives here for the
+     first time, the LCL it needs is already linked. *)
+   uNewContestForm      in '..\..\src\ui\lcl\uNewContestForm.pas',
+   uTestNewContestForm  in 'uTestNewContestForm.pas',
    (* THE WSJT-X CQ DECODE'S THREAD HAND-OFF.  Links MainUnit, which already
      brings uWSJTX in; no new dependency. *)
    uTestWSJTXThreading in 'uTestWSJTXThreading.pas',
@@ -799,6 +804,7 @@ begin
    RegisterSuite(TOffBandCreditTests.Create('OffBandCredit'));
    RegisterSuite(TRadioLinkRetryTests.Create('RadioLinkRetry'));
    RegisterSuite(TStatusAndNoticeTests.Create('StatusAndNotice'));
+   RegisterSuite(TNewContestFormTests.Create('NewContestForm'));
    RegisterSuite(TWSJTXThreadingTests.Create('WSJTXThreading'));
    RegisterSuite(TAcceleratorTests.Create('Accelerators'));
    RegisterSuite(TMenuShortcutTests.Create('MenuShortcuts'));

@@ -25,7 +25,6 @@ interface
 
 uses
   TF,
-  Version,
   VC,
   (* LCLType, not Windows (2026-09-08): only TYPES and constants were
     wanted here, and LCLType declares them -- on Windows AS the Windows
@@ -460,7 +459,10 @@ var
    myCall: string;
    i     : integer;
 begin
-   frmNewContest.Caption := TR4W_CURRENTVERSION + TC_OPENCONFIGURATIONFILE;
+   (* The title is NOT set here: the form owns it (HandleShow, through
+      uNewContestForm.NewContestFormCaption), and OnShow runs after this, so a
+      write here was overwritten -- by a bare TC_OPENCONFIGURATIONFILE that
+      dropped the version. One writer. *)
    (* ContestDir, NOT TR4W_PATH_NAME -- the same distinction the .db creation
       site records at length above, missed at the LISTING site. TR4W_PATH_NAME
       is uAppPaths.DataDir, which on macOS is the read-only Contents/Resources

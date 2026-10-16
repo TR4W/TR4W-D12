@@ -164,6 +164,13 @@ var
   OnIAmInChanged:   TNewContestNotify = nil;
   OnFieldsChanged:  TNewContestNotify = nil;
 
+(* THE DIALOG'S TITLE: the program name and version, then what it is for.
+   TC_OPENCONFIGURATIONFILE begins with ' - ' because it was written to FOLLOW
+   the version (D7 did exactly this), so it must never be assigned bare -- that
+   showed NY4I " - Open configuration file or start a new contest" with no way
+   to tell which build he was running. HandleShow is the only writer. *)
+function NewContestFormCaption: string;
+
 implementation
 
 {$R *.lfm}
@@ -173,8 +180,14 @@ uses
   uSettingsModel,   // the Cabrillo category settings and their spellings
   MainUnit,   // logger
   Log4D,
+  Version,    (* TR4W_CURRENTVERSION -- the title names the build *)
   (* The drop-down's contests, in order, with their display names -- M9b. *)
   uContestChoices;
+
+function NewContestFormCaption: string;
+begin
+   Result := TR4W_CURRENTVERSION + TC_OPENCONFIGURATIONFILE;
+end;
 
 const
   { Client coordinates of gbNew, not of the form -- the rows are its children,
@@ -271,7 +284,7 @@ begin
    // caption typed into a .lfm ships as English in every language -- 469 of
    // them do today (CLAUDE.md). The designer shows the English default; the
    // run time shows the operator's language.
-   Caption          := TC_OPENCONFIGURATIONFILE;
+   Caption          := NewContestFormCaption;
    lblMyCall.Caption := RC_CALLSIGN;
    btnOK.Caption    := rsMbOK;
    btnCancel.Caption := rsMbCancel;

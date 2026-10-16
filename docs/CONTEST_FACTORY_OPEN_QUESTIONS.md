@@ -38,6 +38,7 @@ in section 4. One line each -- the full text is further down.
 - **Q8** Events with no ContestType still named in code (TRC, PGA, EURASIA ...).
 - **Q47** Fix the three kept read-past-the-end shapes now?
 - **Q51** Does an off-band (X-QSO) contact still show as worked-there?
+- **Q103** New Contest list: search filter (recommended) or groups?
 - **Q100** `contest.last_opened_at`: write it and sort the chooser by it?
 - **Q101** Fill the typed `rcvd_*` columns from each class, or delete them?
 
@@ -243,6 +244,25 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   here is only the display question: does an off-band QSO -- now an automatic
   X-QSO (Q98) -- show as worked-there on the dupe sheet and in the Stations
   window?
+  **Answer:**
+
+- **Q103** The New Contest list: group the QSO parties? (NY4I, 2026-10-16,
+  with DXLog's grouped list -- highlighted, self-drawn headings -- and N1MM's
+  Log Type then State.) His leaning: *"The N1MM shape seems good but with the
+  addition of the search filter. One could make an argument that we could do
+  what we have today but add the search then if I type QSO, I would see the
+  QSO parties."* *Recommended: SEARCH ONLY, groups later if missed.* A filter
+  box over a plain list (TEdit above a TListBox -- native, 15-20 rows visible,
+  no owner-draw; a self-filtering drop-down fights the control). It matches
+  the contest's NAME, case-insensitive, anywhere: "QSO" or "party" lists the
+  parties (every party's name says "QSO Party"), and CW / RTTY / VHF / Sprint
+  / Field Day become groups for free. Each row shows the name only -- NY4I,
+  2026-10-16: "let's leave out the internal name. Besides it is not an N1MM
+  clone..." Under it: "Show inactive contests" (Q59 -- a native list cannot
+  grey one item, so inactive ones are hidden unless asked for, never lost) and
+  "Order by next date" (Q99). An empty filter is today's alphabetical list.
+  Groups would need all 187 classes to state one (no inherited default), so
+  they wait until search proves short. Same dialog as Q52, Q59, Q99; lcl-ui.
   **Answer:**
 
 - **Q100** `contest.last_opened_at` is never written or read. The schema says

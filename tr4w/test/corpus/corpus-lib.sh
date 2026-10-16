@@ -102,13 +102,23 @@ corpus_stage_set(){
 # NOTHING ELSE IS NORMALISED, and that is the whole point: every other byte has
 # to match exactly.
 #
+# ...EXCEPT THE PROGRAM VERSION, added 2026-10-16. It is in three header lines
+# (ADIF "Created by TR4W version ...", <PROGRAMVERSION:n>, Cabrillo CREATED-BY)
+# and changes on every release bump -- NY4I bumps it every ten answered
+# questions -- so without this every bump turned all 13 sets red and forced a
+# re-freeze of 26 files that changed nothing but that string. A re-freeze for
+# no reason is exactly the noise a real scoring change would hide in. Only
+# those three header fields are touched; no QSO line is.
+#
 # IT LIVES HERE BECAUSE TWO SCRIPTS NEED IT AND A SECOND COPY WOULD DRIFT.
 # freeze-rescore-baseline.sh writes the frozen bytes through it and
 # test-contest-factory.sh compares fresh output through it, so if the two ever
 # disagreed about what is volatile, every set would report a difference that is
 # not one -- on the only gate that watches scoring.
 corpus_norm_artifact(){
-   sed -E 's/(Created by TR4W version .* on ).*/\1TIME/;
+   sed -E 's/(Created by TR4W version ).* on .*/\1VERSION on TIME/;
+           s/<PROGRAMVERSION:[0-9]+>TR4W v\.[^ <\r]*/<PROGRAMVERSION>TR4W v.VERSION/;
+           s/^(CREATED-BY: TR4W v\.)[^ \r]*/\1VERSION/;
            s/(<CREATED_TIMESTAMP:15>).*/\1TIME/;
            s/<APP_TR4W_ID:32>[0-9a-f]*/<APP_TR4W_ID:32>ID/g' "$1" 2>/dev/null
 }
