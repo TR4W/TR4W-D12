@@ -22,17 +22,11 @@ Re-read 2026-10-16: every question below is genuinely unanswered; the rest are
 in section 4. One line each -- the full text is further down.
 
 **Sponsor rules (section 1)**
-- **Q102** SOUTHAMERICANWW vs GACW WWSA (ref 45): one contest or two?
-- **Q40** 7QP's 4-county line limit (and NEQP's) -- each class states it?
-- **Q23** CUP RF DIGITAL's Cabrillo QTH differs from CW/SSB -- intended?
 - **Q27** SAC: is a Russian station not workable, or only not a multiplier?
 - **Q97** Franz Josef Land (R1FJ) oblast reads as "SP" in Russian DX.
-- **Q42** OZCHR's lost Cyrillic session names.
-- **Q43** Which contest pairs are one contest under one rule (a family base)?
-- **Q45** EUDX / IRTS "in the EU?" test that can never be false.
-- **Q55** WRTC live-score XML has never carried a multiplier.
 - **Q70** UA4W Championship's 18/19 zone rule.
-- **Q79, Q80** IN7QPNE session values; IN7QPNE multipliers for in-area entrants.
+- **Q104** (new) Refuse IN7QPNE for a station inside one of the four parties?
+- **Q79** IN7QPNE: turn VHF on? (LOCATION is settled.)
 
 **Design (section 2) -- each has a recommendation; "accept" is enough**
 - **Q8** Events with no ContestType still named in code (TRC, PGA, EURASIA ...).
@@ -47,6 +41,8 @@ in section 4. One line each -- the full text is further down.
 - **Q26** WAG import with no DOK: empty QTH.
 - **Q88** NA Sprint domestic file (13 vs 14 VE; the SSB Sprint too).
 - **Q95** Croatian ITU zones.
+- **Q23** CUP RF: the QSO line, and the difference never reached a file -- close.
+- **Q40** County-line limits: 7QP 4, NEQP none (stated); a rover logs its own party.
 
 **Not a question but open:** Q59 asks you to confirm GREY (unselectable) for an
 inactive contest in the New Contest list.
@@ -56,28 +52,6 @@ inactive contest in the New Contest list.
 ## 1. Sponsor rules
 
 ### Other contests
-
-- **Q40** *Reworded 2026-10-16 -- what is still open.* IN7QPNE is ruled
-  (2026-10-13, design 7.14), and a shared multi-state base is answered by the
-  ownership rule (each class owns its rules; a look-alike starts as its own
-  copy). Left: **7QP's county-line limit.** 7QP's sponsor allows up to 4
-  counties on a line, and nothing enforces it -- 7QP and NEQP are not built on
-  the QSO-party base, so they state no `CountyLineCountiesMax` at all. That
-  number now also caps the ROVER dialog (Q34, issue #87). Should 7QP state 4,
-  and NEQP its own sponsor's number? *Recommended: yes, each states its own.*
-  **Answer:**
-
-- **Q102** (split from Q53) You named SOUTHAMERICANWW "GACW WWSA CW DX
-  Contest", WA7BNM ref 45. But `GACWWWSACW` already holds ref 45, and the two
-  exchanges differ: GACW is RST + CQ zone; SOUTHAMERICANWW is RST + continent
-  with 10 points across the South America boundary (TR Log's "South American
-  WW"). Are they one contest -- then SOUTHAMERICANWW retires like MINITEST --
-  or two?
-  **Answer:**
-
-- **Q23** CUP RF: the Cabrillo writer uses the QSO's own QTH for the CW and SSB
-  runnings but not for CUP RF DIGITAL. Intended?
-  **Answer:**
 
 - **Q27** SAC silently clears the entry when a Russian station (UA, UA2, UA9, EU) is
   typed. Should it show an error, like other invalid stations? And is a Russian
@@ -96,50 +70,6 @@ inactive contest in the New Contest list.
   oblast? Malyj Vysotskij (`R1MV`) has the same shape.
   **Answer:**
 
-### Added after M7b batch 1
-
-- **Q42** OZCHR: both session names are literal `?` characters; the Cyrillic was
-  lost before this tree (D7 too). Restore the Cyrillic, or use Latin names?
-  **Answer:**
-
-- **Q43** (Q7 made concrete) Which of these pairs are ONE contest under one rule
-  (a base with children) rather than separate contests: JIDX CW/SSB (identical
-  but for names), All Asian CW/SSB, Oceania CW/SSB, the four EU Sprints, the
-  three ARRL VHF runnings?
-  *Now decidable under Q7's rule ("one rule today" = a base; otherwise
-  copies): the rows named here are measurably identical or not, so I can
-  propose each pair from the evidence for a yes.*
-  **Answer:**
-
-### Added after M7b batch 2
-
-- **Q43, extended** Batch 2 added four more sibling pairs to the same question:
-  King of Spain CW/SSB and REF CW/SSB (identical rows but for names and ids),
-  RSGB RoPoCo CW/SSB (one shared set-up), and the Region 1 Field Day RCC CW/SSB
-  runnings (identical rows). Are any of them one contest under one rule?
-  **Answer:**
-
-- **Q45** EUDX and IRTS score "is the worked station in the EU?" with a test that
-  can never be false (`DomMultQTH[4] <> ''`), so every contact scores as an EU
-  contact -- 10 points (2 for our own country when we are in an EU region). The
-  sponsor's table needs a real EU test. What should decide it (the domestic
-  file's region code?), and should it be fixed now? Both contests' scores move.
-  **Answer:**
-
-### Added after M9a (the display and the reports)
-
-- **Q55** WRTC's live-score XML has never carried a multiplier: its rule
-  posts HQ and country on an "all modes" row the writer never produces. Post
-  them per mode, add the row, or leave it (WRTC forbids score posting anyway)?
-  *No longer moot: Q83 (2026-10-15) lets WRTC post ONLINE scores, so the posted XML needs the multipliers -- this question is live.*
-  **Answer:**
-
-### Added after M9b (the New Contest drop-down and CATEGORY-POWER)
-
-- **Q52 note** -- M9b did what you asked: the drop-down shows the display
-  name, which is now the friendly name. Q52 still asks WHICH words; answering
-  it changes the drop-down with no further code.
-
 ### Added with the UA4W Championship's and RSGB 1.8's classes (2026-10-14)
 
 - **Q70** The UA4W Championship pays 10/20 on 80/160 m when your CQ zone is
@@ -151,28 +81,31 @@ inactive contest in the New Contest list.
 
 ### Added with the IN7QPNE composite (2026-10-14)
 
-- **Q79** Some settings hold one value for the whole session, so IN7QPNE
-  keeps its own old values where the parties differ:
-  multipliers once per contest (Delaware counts per band); no VHF (7QP and
-  Delaware use 6 m and up); DX is one `dx` multiplier (7QP, NEQP and
-  Delaware in-state count DXCC entities); no Cabrillo LOCATION required and
-  FT8 written `DG` (Delaware: LOCATION required, every digital mode `RY`);
-  no power multiplier and no +50 bonus (Delaware has both). Which of these
-  should IN7QPNE take? *Recommended: turn VHF on (a QSO still scores only
-  where its party allows); keep the rest.*
+- **Q104** (raised 2026-10-16 by your Q40 answer) **IN7QPNE is for stations
+  outside all four parties.** The 4QP page (stateqsoparty.com, "4QP Cabrillo
+  log parsing"): *"If you are out-of-state for all contests this weekend,
+  select the IN7QPNE option"*; an in-state station selects its own party.
+  DXLog's `IN7QPNEDE.txt` agrees: *"4QP is the collection of INQP, 7QP, NEWEQP
+  and DEQP for out-of-state stations"*, and its entry error says *"INQP, 7QP,
+  NEWEQP, and DEQP in-state stations should use the respective QP."*
+  So a New England rover logs **NEQP**, never IN7QPNE, and New Contest needs
+  no extra question -- the contest's MY STATE already names the party.
+  Should New Contest refuse IN7QPNE when MY STATE is in Indiana, a 7th-area
+  state (AZ ID MT NV OR UT WA WY), New England (CT MA ME NH RI VT) or
+  Delaware, with a message naming that party?
+  *Recommended: yes.* Consequence: your Q80 "yes" (in-area entrants'
+  multipliers inside IN7QPNE) becomes moot -- no in-area entrant reaches it --
+  and Q79 shrinks to what an out-of-area station needs.
   **Answer:**
 
-- **Q80** In IN7QPNE every county is its own multiplier for everyone, and an
-  in-area entrant also counts states, provinces and one `dx`. The parties'
-  own files differ: in 7QP, an in-state entrant's 7th-area counties count
-  as their STATE. Making that per party needs a new piece (the contest
-  naming the multiplier, Q4). Wanted? *Recommended: yes, when Q4 is done.*
+- **Q79** *Reworded 2026-10-16 -- what is still open.* LOCATION is settled by
+  your answer (section 4): IN7QPNE requires none. Left: IN7QPNE has **no VHF**,
+  while 7QP and Delaware accept 6 m and up -- so an out-of-area station's 6 m
+  QSO with a 7QP or Delaware station is refused today. Turn VHF on (a QSO
+  still scores only where its party allows)? The rest (one `dx` multiplier,
+  FT8 written `DG`, no power multiplier, no +50 bonus) stays.
+  *Recommended: VHF on; keep the rest.*
   **Answer:**
-
-### Found while the classes took over the table's values (M10 S5, 2026-10-14)
-
-These were copied into the classes exactly as the old table had them, so
-nothing changed. Each looks wrong; none was fixed without your answer.
 
 ### Raised by the M11 plan (2026-10-14; `docs/CONTEST_FACTORY_M11_PLAN.md`)
 
@@ -294,6 +227,35 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
 Each carries a **Proposed answer** with its source. "Yes" (or "yes to all")
 closes it; anything else reopens it.
 
+- **Q23** CUP RF: the Cabrillo writer takes the QSO's own QTH for the CW and
+  SSB runnings but not for CUP RF DIGITAL. Intended?
+  You asked (2026-10-16): *"Do you mean the QSO record in cabrillo or the
+  contest header?"* -- **the QSO line**: the RECEIVED exchange's QTH column
+  (his grid), not the header. D7's `postunit.pas` picked that column's text
+  in two steps: with domestic multipliers on, the typed QTH when LITERAL
+  DOMESTIC QTH is TRUE, else the matched domestic value; then
+  `if Contest in [CUPRFCW, CUPRFSSB]` forced the typed QTH. DIGITAL was left
+  out of the second step -- but all three runnings set LITERAL DOMESTIC QTH
+  = TRUE, so the first step already gave DIGITAL the typed QTH. **The
+  difference never reached a file.** Today the three classes call the same
+  writer (`CabrilloReceivedQSONumberQTHShort`), and the frozen matrix's QSO
+  lines for CUPRFCW and CUPRFDIG are identical (`0101 CT`).
+  **Proposed answer:** no change; close.
+  **Answer:**
+
+- **Q40** *Reworded 2026-10-16.* Your answer: IN7QPNE has no rules of its
+  own -- it is an umbrella; the open item was whether a rover in, say, New
+  England uses IN7QPNE or NEQP. **Answered by the sponsor's page: NEQP** --
+  IN7QPNE is for stations outside all four areas (now Q104, which asks to
+  enforce it). So a rover's county list and cap always come from its own
+  party, and only the per-party county-line limits are left:
+  **Proposed answer:** each party states its own. **7QP: 4** (the figure on
+  record in design section 8.2r; 7qp.org refused the connection today, so it
+  was not re-read). **NEQP: no maximum, stated explicitly** -- neqp.org/rules:
+  *"County line QSOs should be logged as two separate QSOs"*, and no limit is
+  given. (Indiana and Delaware already state 2.)
+  **Answer:**
+
 - **Q26** WAG: an imported record with no `DOK` keeps its received RST (`599`) as
   the QTH. Should it be empty?
   **Proposed answer:** SETTLED BY Q3 (the log stores only what the operator
@@ -373,7 +335,7 @@ closes it; anything else reopens it.
 | -- | Out-of-state x out-of-state in a QSO party: refuse with an error | M5b |
 | -- | Off-band QSO: logged, 0 points, no mult, no need-mult hint, not a dupe | 1e4f66f9 (points, mults); M8 (dupes, hints) |
 | -- | QRP = our power; last touch point wins; may change mid-contest with a reminder | Idaho, design 7.6; LANDED at M9b (the summary writes the one setting, a change with QSOs rescores and shows a notice) |
-| -- | The New Contest drop-down shows the display name | M9b (Q52 still asks which words) |
+| -- | The New Contest drop-down shows the display name | M9b (Q52 settles the words) |
 | -- | Inactive contests go at the bottom of the drop-down (SA Sprint, Locust) | M9b (`IsActive`; Q59 asks for others) |
 | -- | ALL ASIAN SSB is `ALL-ASIAN-DX-PHONE` | e1c6f873 |
 | -- | RSGB RoPoCo: an ADIF record is the SSB running's when its mode is phone (one ADIF id, `RSGB-ROLO`) | M7b batch 2 (decided under delegation, design 8.2k) |
@@ -408,7 +370,7 @@ closes it; anything else reopens it.
 | Q36 | Moot: Locust is retired | -- |
 | Q24 | FOC reads N1MM's APP_N1MM_EXCHANGE1 only when the record's CONTEST_ID is FOC's | not built; needs N1MM's id spelling |
 | Q65 | MY CALL is a station fact a contest may override; the contest's call lives in its database | not built (own stage) |
-| Q74 | Cabrillo LOCATION is seeded from the station at New Contest time and stored in the contest | not built |
+| Q74 | Cabrillo LOCATION is seeded from the station at New Contest time and stored in the contest; the seed is the ARRL section for W/VE, `DX` otherwise (Q79) | not built |
 | Q68 | On reopen, the station-fact rows are applied before the contest row | not built |
 | Q76 | ADIF `STATE` is the worked station's state, `MY_STATE` ours -- fix the host-state export | not built |
 | Q82 | IN7QPNE county-line count left as is; future fix | issue #85 |
@@ -423,7 +385,7 @@ closes it; anything else reopens it.
 | Q72 | Delaware: 160-10 m without WARC plus 6 m and up through light ("DC to daylight") | already so; no change |
 | Q85 | 7QP excludes WARC (and the sponsor scores digital 4) | not built |
 | Q86 | Minnesota is the only HamScore QSO party; its flag is right | no change |
-| Q83 | Online-score posting and HamScore are separate permissions; WRTC online yes / HamScore no; IN7QPNE neither | not built |
+| Q83 | Online-score posting and HamScore are separate permissions; WRTC and IN7QPNE neither (WRTC amended by Q55) | split not built; WRTC as built |
 | Q69 | MY ZONE is the CQ zone; ITU-zone contests read MY ITU ZONE | not built (own step) |
 | Q71 | RSGB 1.8, ARRL 160, CQ 160 credit 160 m only; UA4W prompt uses TC_ENTERYOURRDAIDORGRID | not built |
 | Q58 | WRTC is named "World Radiosport Team Championship" (display and friendly name) | built |
@@ -445,8 +407,111 @@ closes it; anything else reopens it.
 | Q66 | A Contest Details dialog edits the contest's stored values (seeded station facts, Cabrillo fields); a station change mid-contest offers to copy it | not built |
 | Q64 | POTA shows as "Parks on the Air(r) Logging" | as built |
 | Q59 | Inactive contests listed grey and unselectable for a NEW contest; old logs still open and import | not built (confirm grey) |
+| Q102 | SOUTHAMERICANWW retires (GACW WWSA is ref 45) | not built (needs Q10) |
+| Q42 | OZCHR session names restored in Cyrillic, recovered from D7 `b90ba930` | not built |
+| Q43 | Sibling pairs follow DXLog: one definition file = one contest, a base with per-mode (or per-date) children | not built |
+| Q45 | EUDX/IRTS "in the EU" reads the worked station's resolved region, not `DomMultQTH` | not built |
+| Q55 | WRTC posts no DynamicResults XML; no multiplier row; amends Q83 | no change |
+| Q80 | IN7QPNE in-area multipliers per party, after Q4 (moot if Q104 is yes) | not built |
+| Q79 (LOCATION) | IN7QPNE requires no LOCATION; Cabrillo spec: section for W/VE, `DX` otherwise | no change |
+| Q52 note | Settled by Q52 | removed |
 
 ### Answered since the table was last updated (full text)
+
+- **Q102** (split from Q53) SOUTHAMERICANWW vs GACW WWSA CW (WA7BNM ref 45):
+  one contest or two?
+  **Answer:** (NY4I, 2026-10-16) *"Retire"*. SOUTHAMERICANWW retires, like
+  MINITEST; `GACWWWSACW` stays the ref-45 contest. Both retirements go
+  through Q10's `TContestRetired` (awaiting your yes): an old log still opens
+  and imports. Not built.
+
+- **Q42** OZCHR: both session names were literal `?` characters. Restore the
+  Cyrillic, or use Latin names?
+  **Answer:** (NY4I, 2026-10-16) *"Restore Cyrillic."* **The text is
+  recovered, not guessed:** D7's first commit (`C:\TR4W`, `b90ba930`,
+  `tr4w/src/trdos/FCONTEST.PAS`) still holds the cp1251 bytes, so the loss
+  came later. Decoded, and matching the `?` patterns letter for letter:
+  - OZCR_Z (individual, "заочные" -- remote entrants):
+    **Очно-заочный чемпионат России - заочные участники**
+  - OZCR_O (teams, "очные" -- on-site entrants):
+    **Очно-заочный чемпионат России - очные участники**
+
+  The same commit also has a third, shorter name, `ОЗЧР - Очный тур`, used
+  by a `CMD = 'OZCR'` arm. Not built. Before building, check where
+  `ContestName` reaches a file: a Cabrillo or ADIF header must not carry
+  Cyrillic, and the source literal needs the i18n agent's encoding rule
+  (UTF-8 in a unit compiled in Delphi mode).
+
+- **Q43** Which sibling pairs are one contest under one rule (a base with
+  children)? First list: JIDX, All Asian, Oceania CW/SSB, the four EU
+  Sprints, the three ARRL VHF runnings. Extended: King of Spain, REF and RSGB
+  RoPoCo CW/SSB, and the Region 1 Field Day RCC CW/SSB runnings.
+  **Answer:** (NY4I, 2026-10-16) first list *"Yes"*; extended: *"Region 1 is
+  its own so I think these should be unique. If DXNet [DXLog.net] has unique
+  ones, then we should as well."* So **DXLog decides**, one definition file
+  for one contest. Read 2026-10-16 from `C:\Program Files (x86)\DXLog.net\Contest`:
+
+  | pair | DXLog | so in TR4W |
+  |---|---|---|
+  | JIDX CW/SSB | `JIDXC.txt`, `MODES=CW;SSB` | one base, CW and SSB children |
+  | All Asian CW/SSB | `AllAsian.txt`, `MODES=CW;SSB` | one base, two children |
+  | Oceania CW/SSB | `OceaniaDX.txt`, `MODES=CW;SSB` | one base, two children |
+  | the four EU Sprints | `EUSPRINT.txt`, `CABRILLO_CONTEST_NAME=EU-SPRINT-{MODE}` | one base, four children |
+  | King of Spain CW/SSB | `HMKOS.txt`, `MODES=CW;SSB` | one base, two children |
+  | REF CW/SSB | `REF.txt`, `MODES=CW;SSB` | one base, two children |
+  | RSGB RoPoCo CW/SSB | `RSGB_RoLo.txt`, `MODES=CW;SSB` | one base, two children |
+  | Region 1 FD, RCC CW/SSB | `RCCFD.txt`, `MODES=CW;SSB` -- separate from DXLog's national R1 FD files (`IARU1FD_DL`, `IARU1FD_RUS`) | its own contest (your "Region 1 is its own"); one base for its two runnings |
+  | ARRL VHF Jan/Jun/Sep | three files, one per date | one base, three children (Q41 already gives all three June's set-up) |
+
+  A child keeps its own name, ids and dates; only the shared rule moves up.
+  If "unique" meant the R1 FD CW and SSB runnings should stay two separate
+  classes, say so -- DXLog's single `RCCFD.txt` is why this reads them as one.
+  Not built.
+
+- **Q45** EUDX and IRTS test "is the worked station in the EU?" with
+  `DomMultQTH[4] <> ''`, which can never be false. What should decide it?
+  **Answer:** (NY4I, 2026-10-16) *"DomMultQTH is a catch-all left over from
+  the D7 shared fields implementation. I would expect in the new
+  implementation to use the discrete values."* So the test reads the worked
+  station's own resolved EU region -- the domestic value his exchange matched
+  in the contest's `.dom` -- and is false when he sent none (a non-EU
+  station). Both contests' scores move (non-EU contacts stop scoring 10); the
+  matrix rows for EUDX and IRTS are re-frozen with that reason. Not built.
+
+- **Q55** WRTC's live-score XML has never carried a multiplier.
+  **Answer:** (NY4I, 2026-10-16) *"WRTC score posting is not done with the
+  DynamicResults score summary the WRTC local aggregators use. Recall that
+  WRTC is just for the competitors and IARU-HF is the contest non-WRTC event
+  competitors use."* TR4W's online post IS the DynamicResults XML
+  (`uGetScores.BuildDynamicResultsXml`), so WRTC does not post through it:
+  **leave the XML; no multiplier row is needed.** This **amends Q83**: WRTC
+  posts NEITHER online nor to HamScore -- which is what the build does today
+  (one flag, `oaScorePosting`, off for WRTC). The split into two permissions
+  still stands for other contests. No change.
+
+- **Q80** IN7QPNE multipliers for in-area entrants per party, once Q4's
+  piece exists?
+  **Answer:** (NY4I, 2026-10-16) *"Yes per the recommendation."* **But see
+  Q104**: the sponsor's page sends in-area stations to their own party, so if
+  Q104 is yes this has no entrant to apply to. Not built.
+
+- **Q79 (LOCATION half)** IN7QPNE: no Cabrillo LOCATION required.
+  **Answer:** (NY4I, 2026-10-16), quoting the Cabrillo specification:
+  *"LOCATION: Used to indicate the location where the station was operating
+  from. ARRL/RAC Sections: For USA and Canada stations LOCATION must be the
+  ARRL section abbreviation. For foreign stations LOCATION must be 'DX'. This
+  information is required for IARU-HF and for all ARRL and CQ contests. IOTA
+  Island Name: required for RSGB-IOTA ... RDA Number: required for RDXC. For
+  others, like DX, I checked the public logs for dx stations from here:
+  Location: DX."* So IN7QPNE keeps "not required" (no change). It also fixes
+  **Q74's seed value**: a US or Canadian station's LOCATION is its ARRL
+  section, any other station's is `DX`. A contest whose sponsor asks for
+  LOCATION (Delaware does) still requires it. The VHF half of Q79 is still
+  open (section 1).
+
+- **Q52 note** (does the drop-down still need Q52's wording?)
+  **Answer:** (NY4I, 2026-10-16) *"This seems like it was answered."* Yes --
+  Q52 (the friendly name in full, sized at run time). Note removed.
 
 - **Q67** The New Contest dialog's rows start empty, and every row has to be
   filled before OK is enabled. So every contest that asks for MY ZONE
