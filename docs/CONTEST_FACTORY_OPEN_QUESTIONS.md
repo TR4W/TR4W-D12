@@ -25,7 +25,6 @@ in section 4. One line each -- the full text is further down.
 - **Q27** SAC: is a Russian station not workable, or only not a multiplier?
 - **Q97** Franz Josef Land (R1FJ) oblast reads as "SP" in Russian DX.
 - **Q70** UA4W Championship's 18/19 zone rule.
-- **Q79** IN7QPNE: turn VHF on? (LOCATION is settled.)
 - **Q106** Nebraska: rare grid bonus, satellite points, FT8/FT4 competition.
 
 **Design (section 2) -- each has a recommendation; "accept" is enough**
@@ -80,15 +79,6 @@ inactive contest in the New Contest list.
   **Answer:**
 
 ### Added with the IN7QPNE composite (2026-10-14)
-
-- **Q79** *Reworded 2026-10-16 -- what is still open.* LOCATION is settled by
-  your answer (section 4): IN7QPNE requires none. Left: IN7QPNE has **no VHF**,
-  while 7QP and Delaware accept 6 m and up -- so an out-of-area station's 6 m
-  QSO with a 7QP or Delaware station is refused today. Turn VHF on (a QSO
-  still scores only where its party allows)? The rest (one `dx` multiplier,
-  FT8 written `DG`, no power multiplier, no +50 bonus) stays.
-  *Recommended: VHF on; keep the rest.*
-  **Answer:**
 
 - **Q106** (Nebraska, 2026-10-16) Three sponsor rules the new class does
   not build yet. (1) **Rare grid bonus**: a station activating DN91CE, DN91DE
@@ -413,9 +403,30 @@ closes it; anything else reopens it.
 | Q104 | IN7QPNE is refused for a station inside IN, the 7th area, New England or DE; the message names the party (7QP for the 7th area). `NEQP` = New England, `NE-QSO-PARTY` = Nebraska (TR4W has none) | not built |
 | Q105 | New England is `NEWEQP` (Cabrillo `NEWE-QSO-PARTY`, ADIF `NEQP`), `NEQP` kept as a read alias; Nebraska QSO Party added as `NE-QSO-PARTY` | building |
 | Q79 (LOCATION) | IN7QPNE requires no LOCATION; Cabrillo spec: section for W/VE, `DX` otherwise | no change |
+| Q79 (VHF) | IN7QPNE bands = the union of the four parties; a QSO scores on its party's bands. New England 80-10, 7QP and Indiana 160-10, Delaware 160-10 + 6 m up -- each states its own | building |
 | Q52 note | Settled by Q52 | removed |
 
 ### Answered since the table was last updated (full text)
+
+- **Q79** *Reworded 2026-10-16 -- what is still open.* LOCATION is settled by
+  your answer (section 4): IN7QPNE requires none. Left: IN7QPNE has **no VHF**,
+  while 7QP and Delaware accept 6 m and up -- so an out-of-area station's 6 m
+  QSO with a 7QP or Delaware station is refused today. Turn VHF on (a QSO
+  still scores only where its party allows)? The rest (one `dx` multiplier,
+  FT8 written `DG`, no power multiplier, no +50 bonus) stays.
+  *Recommended: VHF on; keep the rest.*
+  **Answer:** (NY4I, 2026-10-16) *"NEWEQP is only 80-40-20-15-10m. 7QP is
+  160, 80, 40, 20, 15 and 10m. We already know DE allows 6m and up in
+  addition to HF. So this means that to answer the question, you look at the
+  4 qso parties to see which bands are valid. And finally, INQP is 160, 80,
+  40, 20, 15 and 10 meter."* **Correction:** the question said "7QP and
+  Delaware accept 6 m and up" -- only Delaware does. So IN7QPNE's bands are
+  the UNION of the four (160-10 without WARC, plus Delaware's 6 m and up),
+  and each QSO scores only on its judging party's bands -- the routing
+  `uContestIN7QPNE` already has. Checking it found three parties that state
+  NO bands (so every band counted, WARC and VHF included): New England
+  (should be 80-10, no 160), 7QP (160-10; its flags even enabled VHF bands),
+  and Indiana (160-10). Each now states its own. Building.
 
 - **Q105** New England vs Nebraska: names, and a Nebraska QSO Party.
   **Answer:** (NY4I, 2026-10-16) *"It will have a NE qso party as I do want to
