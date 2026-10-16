@@ -39,7 +39,6 @@ in section 4. One line each -- the full text is further down.
 - **Q95** Croatian ITU zones.
 - **Q23** CUP RF: the QSO line, and the difference never reached a file -- close.
 - **Q40** County-line limits: 7QP 4, NEQP none (stated); a rover logs its own party.
-- **Q100** The last-contest button covers it: delete `last_opened_at`? (Caption "Last Contest": yes.)
 
 **Not a question but open:** Q59 asks you to confirm GREY (unselectable) for an
 inactive contest in the New Contest list.
@@ -170,32 +169,6 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
 
 Each carries a **Proposed answer** with its source. "Yes" (or "yes to all")
 closes it; anything else reopens it.
-
-- **Q100** `contest.last_opened_at` is never written or read. The schema says
-  it is "written every time the log is OPENED, and it is the chooser's default
-  sort key: recent activity floats up" -- neither is true. Write it at open
-  and sort the log chooser by it, or delete it? *Recommended: write it* --
-  "the contest I was just working" first is the chooser's most useful order,
-  and the comment states the intent.
-  You answered (2026-10-16): *"The button for last contest file would get
-  quick access to the last one."* That button exists: New Contest's
-  "Latest config file" (Alt+A) reopens the one path `settings/tr4w.json`
-  records at every start (`uProgramMain` -> `SetLatestConfigFile`), and is
-  hidden, with a log line, when that file is gone. The path is the contest's
-  `.db` now, not a `.cfg`.
-  **Proposed answer:** the button IS "quick access to the last one", so
-  nothing needs a per-database open time: **delete `contest.last_opened_at`**
-  and the schema comment that promises a sort no chooser performs (log-
-  database). And, found checking it: the button's caption says "Latest config
-  file" and `uProgramMain`'s comment says it "names the contest .cfg" --
-  both stale since a contest became its SQLite file. Rename the caption to
-  "Last contest" (`TC_LATEST_CONFIG_FILE`, through the i18n catalogues, not a
-  retyped `.lfm` string) and fix the comment.
-  **Answer (caption half):** (NY4I, 2026-10-16) *"change that from Last
-  config file to Last Contest"* -- the caption becomes **"Last Contest"**,
-  through the catalogues (i18n). Being built. Still open: deleting
-  `last_opened_at`.
-  **Answer (column half):**
 
 - **Q23** CUP RF: the Cabrillo writer takes the QSO's own QTH for the CW and
   SSB runnings but not for CUP RF DIGITAL. Intended?
@@ -390,9 +363,37 @@ closes it; anything else reopens it.
 | Q79 (VHF) | IN7QPNE bands = the union of the four parties; a QSO scores on its party's bands. New England 80-10, 7QP and Indiana 160-10, Delaware 160-10 + 6 m up -- each states its own | building |
 | Q51 | An X-QSO never counts as worked: logged and exported only so the other station avoids a not-in-log penalty; no dupe, worked, mult or points mark | already so; the live path must share the predicate when Q98 lands |
 | Q103 | New Contest list: search filter over a plain list, names only; no groups | not built |
+| Q100 | `contest.last_opened_at` deleted (the last-contest button gives quick access); the button reads "Last Contest" | building |
 | Q52 note | Settled by Q52 | removed |
 
 ### Answered since the table was last updated (full text)
+
+- **Q100** `contest.last_opened_at` is never written or read. The schema says
+  it is "written every time the log is OPENED, and it is the chooser's default
+  sort key: recent activity floats up" -- neither is true. Write it at open
+  and sort the log chooser by it, or delete it? *Recommended: write it* --
+  "the contest I was just working" first is the chooser's most useful order,
+  and the comment states the intent.
+  You answered (2026-10-16): *"The button for last contest file would get
+  quick access to the last one."* That button exists: New Contest's
+  "Latest config file" (Alt+A) reopens the one path `settings/tr4w.json`
+  records at every start (`uProgramMain` -> `SetLatestConfigFile`), and is
+  hidden, with a log line, when that file is gone. The path is the contest's
+  `.db` now, not a `.cfg`.
+  **Proposed answer:** the button IS "quick access to the last one", so
+  nothing needs a per-database open time: **delete `contest.last_opened_at`**
+  and the schema comment that promises a sort no chooser performs (log-
+  database). And, found checking it: the button's caption says "Latest config
+  file" and `uProgramMain`'s comment says it "names the contest .cfg" --
+  both stale since a contest became its SQLite file. Rename the caption to
+  "Last contest" (`TC_LATEST_CONFIG_FILE`, through the i18n catalogues, not a
+  retyped `.lfm` string) and fix the comment.
+  **Answer (caption half):** (NY4I, 2026-10-16) *"change that from Last
+  config file to Last Contest"* -- the caption becomes **"Last Contest"**,
+  through the catalogues (i18n). Being built. Still open: deleting
+  `last_opened_at`.
+  **Answer (column half):** (NY4I, 2026-10-16) *"yes, delete
+  last_opened_at"*. Being built (log-database).
 
 - **Q103** The New Contest list: group the QSO parties? (NY4I, 2026-10-16,
   with DXLog's grouped list -- highlighted, self-drawn headings -- and N1MM's
