@@ -25,7 +25,6 @@ in section 4. One line each -- the full text is further down.
 - **Q27** SAC: is a Russian station not workable, or only not a multiplier?
 - **Q97** Franz Josef Land (R1FJ) oblast reads as "SP" in Russian DX.
 - **Q70** UA4W Championship's 18/19 zone rule.
-- **Q104** (new) Refuse IN7QPNE for a station inside one of the four parties?
 - **Q79** IN7QPNE: turn VHF on? (LOCATION is settled.)
 
 **Design (section 2) -- each has a recommendation; "accept" is enough**
@@ -80,23 +79,6 @@ inactive contest in the New Contest list.
   **Answer:**
 
 ### Added with the IN7QPNE composite (2026-10-14)
-
-- **Q104** (raised 2026-10-16 by your Q40 answer) **IN7QPNE is for stations
-  outside all four parties.** The 4QP page (stateqsoparty.com, "4QP Cabrillo
-  log parsing"): *"If you are out-of-state for all contests this weekend,
-  select the IN7QPNE option"*; an in-state station selects its own party.
-  DXLog's `IN7QPNEDE.txt` agrees: *"4QP is the collection of INQP, 7QP, NEWEQP
-  and DEQP for out-of-state stations"*, and its entry error says *"INQP, 7QP,
-  NEWEQP, and DEQP in-state stations should use the respective QP."*
-  So a New England rover logs **NEQP**, never IN7QPNE, and New Contest needs
-  no extra question -- the contest's MY STATE already names the party.
-  Should New Contest refuse IN7QPNE when MY STATE is in Indiana, a 7th-area
-  state (AZ ID MT NV OR UT WA WY), New England (CT MA ME NH RI VT) or
-  Delaware, with a message naming that party?
-  *Recommended: yes.* Consequence: your Q80 "yes" (in-area entrants'
-  multipliers inside IN7QPNE) becomes moot -- no in-area entrant reaches it --
-  and Q79 shrinks to what an out-of-area station needs.
-  **Answer:**
 
 - **Q79** *Reworded 2026-10-16 -- what is still open.* LOCATION is settled by
   your answer (section 4): IN7QPNE requires none. Left: IN7QPNE has **no VHF**,
@@ -246,12 +228,13 @@ closes it; anything else reopens it.
 - **Q40** *Reworded 2026-10-16.* Your answer: IN7QPNE has no rules of its
   own -- it is an umbrella; the open item was whether a rover in, say, New
   England uses IN7QPNE or NEQP. **Answered by the sponsor's page: NEQP** --
-  IN7QPNE is for stations outside all four areas (now Q104, which asks to
-  enforce it). So a rover's county list and cap always come from its own
+  IN7QPNE is for stations outside all four areas (Q104, answered yes: New
+  Contest enforces it). So a rover's county list and cap always come from its own
   party, and only the per-party county-line limits are left:
   **Proposed answer:** each party states its own. **7QP: 4** (the figure on
   record in design section 8.2r; 7qp.org refused the connection today, so it
-  was not re-read). **NEQP: no maximum, stated explicitly** -- neqp.org/rules:
+  was not re-read). **NEQP (New England -- not Nebraska, see Q104): no
+  maximum, stated explicitly** -- neqp.org/rules:
   *"County line QSOs should be logged as two separate QSOs"*, and no limit is
   given. (Indiana and Delaware already state 2.)
   **Answer:**
@@ -412,11 +395,50 @@ closes it; anything else reopens it.
 | Q43 | Sibling pairs follow DXLog: one definition file = one contest, a base with per-mode (or per-date) children | not built |
 | Q45 | EUDX/IRTS "in the EU" reads the worked station's resolved region, not `DomMultQTH` | not built |
 | Q55 | WRTC posts no DynamicResults XML; no multiplier row; amends Q83 | no change |
-| Q80 | IN7QPNE in-area multipliers per party, after Q4 (moot if Q104 is yes) | not built |
+| Q80 | IN7QPNE in-area multipliers per party, after Q4 -- MOOT: Q104 keeps in-area stations out | moot |
+| Q104 | IN7QPNE is refused for a station inside IN, the 7th area, New England or DE; the message names the party (7QP for the 7th area). `NEQP` = New England, `NE-QSO-PARTY` = Nebraska (TR4W has none) | not built |
 | Q79 (LOCATION) | IN7QPNE requires no LOCATION; Cabrillo spec: section for W/VE, `DX` otherwise | no change |
 | Q52 note | Settled by Q52 | removed |
 
 ### Answered since the table was last updated (full text)
+
+- **Q104** (raised 2026-10-16 by your Q40 answer) **IN7QPNE is for stations
+  outside all four parties.** The 4QP page (stateqsoparty.com, "4QP Cabrillo
+  log parsing"): *"If you are out-of-state for all contests this weekend,
+  select the IN7QPNE option"*; an in-state station selects its own party.
+  DXLog's `IN7QPNEDE.txt` agrees: *"4QP is the collection of INQP, 7QP, NEWEQP
+  and DEQP for out-of-state stations"*, and its entry error says *"INQP, 7QP,
+  NEWEQP, and DEQP in-state stations should use the respective QP."*
+  So a New England rover logs **NEQP** (New England), never IN7QPNE, and New Contest needs
+  no extra question -- the contest's MY STATE already names the party.
+  Should New Contest refuse IN7QPNE when MY STATE is in Indiana, a 7th-area
+  state (AZ ID MT NV OR UT WA WY), New England (CT MA ME NH RI VT) or
+  Delaware, with a message naming that party?
+  *Recommended: yes.* Consequence: your Q80 "yes" (in-area entrants'
+  multipliers inside IN7QPNE) becomes moot -- no in-area entrant reaches it --
+  and Q79 shrinks to what an out-of-area station needs.
+  **Answer:** (NY4I, 2026-10-16), from the New England QSO Party's own
+  page (its N1MM set-up note): *"Most stations from outside of New England
+  should choose Log Type: QSOPARTY ... and choose IN7QPNE. Stations from
+  Indiana, pick IN, from Delaware pick DE, and from the 7th Call Area, pick
+  7QP"* -- *"it tells me that a station in one of the states should use
+  their respective qso party. Note for 7th area, they would select 7QP and
+  not their individual state qso parties like Utah or WA. Same for New
+  England picking NEQP."* **YES:** New Contest refuses IN7QPNE when the
+  contest's MY STATE is inside one of the four, and names the party to use:
+  IN -> Indiana QSO Party; AZ ID MT NV OR UT WA WY -> **7QP** (never a
+  single-state party such as Utah's or the Salmon Run); CT MA ME NH RI VT ->
+  New England QSO Party; DE -> Delaware QSO Party. Q80 becomes moot. Not
+  built.
+
+  **New England vs Nebraska -- you asked how we tell them apart.** By the
+  ADIF Contest-ID list (adif.org 3.1.6): **`NEQP` is the New England QSO
+  Party** and **`NE-QSO-PARTY` is Nebraska**. TR4W's `NEWENGLANDQSO` writes
+  `NEQP` to Cabrillo and ADIF (WA7BNM id 10), which is right, and TR4W has
+  **no Nebraska QSO Party at all**. The trap is DXLog: its `NEQP.txt` is
+  NEBRASKA and New England is `NEWEQP.txt` (`tools/dom-crosscheck` already
+  carries that warning). The neqp.org rules quoted under Q40 are New
+  England's -- first full weekend of May, 2000Z-0500Z and 1300Z-2400Z.
 
 - **Q102** (split from Q53) SOUTHAMERICANWW vs GACW WWSA CW (WA7BNM ref 45):
   one contest or two?
@@ -493,7 +515,8 @@ closes it; anything else reopens it.
   piece exists?
   **Answer:** (NY4I, 2026-10-16) *"Yes per the recommendation."* **But see
   Q104**: the sponsor's page sends in-area stations to their own party, so if
-  Q104 is yes this has no entrant to apply to. Not built.
+  Q104 is yes this has no entrant to apply to. **Q104 is yes (same day), so
+  this is moot.**
 
 - **Q79 (LOCATION half)** IN7QPNE: no Cabrillo LOCATION required.
   **Answer:** (NY4I, 2026-10-16), quoting the Cabrillo specification:
