@@ -450,21 +450,6 @@ closes it; anything else reopens it.
   class is deleted.
   **Answer:**
 
-- **Q57** CQ WW RTTY's messages. A W/VE station sends RST, zone AND state
-  (`599 05 FL`). D7 built those messages by briefly OVERWRITING MY ZONE with
-  the zone, a space and MY STATE -- `05 FL` -- building the CQ, F3, F4, F5 and
-  S&P messages from it, then restoring the zone (D7 `FCONTEST.PAS:181-199`).
-  Since 7.12 a write to MY ZONE marks it as this contest's own value, so even
-  that brief write would stop MY ZONE following MY CALL. Build the messages
-  without touching MY ZONE?
-  *Reworded 2026-10-15 -- NY4I asked what "zone state" meant: it was shorthand
-  for that `05 FL` text, not a field. MY ZONE and MY STATE are the two
-  fields.*
-  **Already implemented with 7.12 (2026-10-13), by necessity:** the messages
-  are built in a local (`WriteRSTZone(SendsStateAfterZone)`); MY ZONE and MY
-  STATE are never written, and the messages are the same text D7 produced.
-  **Proposed answer:** confirm -- no further change.
-  **Answer:**
 - **Q72** Delaware's bands: "all HF bands except WARC, plus 6 m and up".
   The class counts 160 m and light as well as 80-10 m (no WARC) and 6 m up.
   Both are my reading of the summary, not of the sponsor's page. Are they
@@ -597,8 +582,25 @@ closes it; anything else reopens it.
 | Q98 | Every contest states its bands and modes; an off-band/off-mode QSO is logged, scores nothing, and is an automatic X-QSO in the log and the export (flag OR off-band) | not built |
 | Q41 | ARRL VHF runnings named ARRL-VHF-JAN/JUN/SEP; all three get June's set-up | not built |
 | Q62 | POTA: the worked station's DXCC from its callsign; our MY_DXCC and MY_STATE from our park | not built |
+| Q57 | CQ WW RTTY messages built without writing MY ZONE | done with 7.12 |
 
 ### Answered since the table was last updated (full text)
+
+- **Q57** CQ WW RTTY's messages. A W/VE station sends RST, zone AND state
+  (`599 05 FL`). D7 built those messages by briefly OVERWRITING MY ZONE with
+  the zone, a space and MY STATE -- `05 FL` -- building the CQ, F3, F4, F5 and
+  S&P messages from it, then restoring the zone (D7 `FCONTEST.PAS:181-199`).
+  Since 7.12 a write to MY ZONE marks it as this contest's own value, so even
+  that brief write would stop MY ZONE following MY CALL. Build the messages
+  without touching MY ZONE?
+  *Reworded 2026-10-15 -- NY4I asked what "zone state" meant: it was shorthand
+  for that `05 FL` text, not a field. MY ZONE and MY STATE are the two
+  fields.*
+  **Already implemented with 7.12 (2026-10-13), by necessity:** the messages
+  are built in a local (`WriteRSTZone(SendsStateAfterZone)`); MY ZONE and MY
+  STATE are never written, and the messages are the same text D7 produced.
+  **Proposed answer:** confirm -- no further change.
+  **Answer:** (NY4I, 2026-10-15) *Yes* -- confirmed; already built with 7.12.
 
 - **Q62** POTA ADIF export: WHOSE DXCC. We are the activator, in our park; our
   park goes out as `MY_SIG_INFO` / `MY_POTA_REF` and is right. The defect is
