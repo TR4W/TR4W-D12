@@ -197,24 +197,6 @@ moves to section 4 in the commit that records it.
   says. *Recommended: confirm.*
   **Answer:**
 
-- **Q71** RSGB 1.8 MHz is a 160 m contest, but its class credits every band,
-  as its row always did. Should it credit 160 m only? An off-band QSO would
-  then score 0 and earn no multiplier (7.4). Separately, the UA4W
-  Championship's New Contest prompt is a fixed English text that no
-  catalogue translates. It also differs from the translated
-  `TC_ENTERYOURRDAIDORGRID` ("for UA1A stations" against "for Russian
-  stations"). Which wording, and should it be translatable?
-  *Recommended: 160 m only; use the translated string with your wording.*
-  *The band half is now Q98's (every contest states its bands; 7.4, Q44).
-  Still open here: the UA4W prompt's wording.*
-  **Band half ANSWERED (NY4I, 2026-10-15):** *"a 1.8 MHz contest like this
-  (and ARRL-160 or CQ-160) would only allow points for 160."* So RSGB 1.8 MHz,
-  ARRL 160 and the CQ 160 CW and SSB runnings each list 160 m as their only
-  band (Q98's rule); a QSO on any other band scores 0 and is an automatic
-  X-QSO. Today none of the four states a band. Not built. Still open below:
-  the UA4W prompt's wording.
-  **Answer:**
-
 ### Added with the Delaware QSO Party's class (2026-10-14)
 
 - **Q73** "A DE mobile that changes county is a new station." TR4W's dupe
@@ -542,8 +524,29 @@ closes it; anything else reopens it.
 | Q86 | Minnesota is the only HamScore QSO party; its flag is right | no change |
 | Q83 | Online-score posting and HamScore are separate permissions; WRTC online yes / HamScore no; IN7QPNE neither | not built |
 | Q69 | MY ZONE is the CQ zone; ITU-zone contests read MY ITU ZONE | not built (own step) |
+| Q71 | RSGB 1.8, ARRL 160, CQ 160 credit 160 m only; UA4W prompt uses TC_ENTERYOURRDAIDORGRID | not built |
 
 ### Answered since the table was last updated (full text)
+
+- **Q71** RSGB 1.8 MHz is a 160 m contest, but its class credits every band,
+  as its row always did. Should it credit 160 m only? An off-band QSO would
+  then score 0 and earn no multiplier (7.4). Separately, the UA4W
+  Championship's New Contest prompt is a fixed English text that no
+  catalogue translates. It also differs from the translated
+  `TC_ENTERYOURRDAIDORGRID` ("for UA1A stations" against "for Russian
+  stations"). Which wording, and should it be translatable?
+  *Recommended: 160 m only; use the translated string with your wording.*
+  *The band half is now Q98's (every contest states its bands; 7.4, Q44).
+  Still open here: the UA4W prompt's wording.*
+  **Band half ANSWERED (NY4I, 2026-10-15):** *"a 1.8 MHz contest like this
+  (and ARRL-160 or CQ-160) would only allow points for 160."* So RSGB 1.8 MHz,
+  ARRL 160 and the CQ 160 CW and SSB runnings each list 160 m as their only
+  band (Q98's rule); a QSO on any other band scores 0 and is an automatic
+  X-QSO. Today none of the four states a band. Not built. Still open below:
+  the UA4W prompt's wording.
+  **Answer:** (NY4I, 2026-10-15) *"Da."* The UA4W prompt uses the translated
+  `TC_ENTERYOURRDAIDORGRID` as it stands ("for Russian stations"), replacing
+  the fixed English text. Bands: 160 m only, above. Not built.
 
 - **Q69** MY ZONE, when nobody states it, is worked out from your call in
   the contest's own zone system. Most contests use ITU zones, so there it
