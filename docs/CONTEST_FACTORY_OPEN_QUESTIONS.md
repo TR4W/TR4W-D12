@@ -549,7 +549,7 @@ closes it; anything else reopens it.
 | Q62 | POTA: the worked station's DXCC from its callsign; our MY_DXCC and MY_STATE from our park | not built |
 | Q57 | CQ WW RTTY messages built without writing MY ZONE | done with 7.12 |
 | Q63 | "Activator" stays untranslated -- a universal POTA term | no change |
-| Q72 | Delaware counts 160-10 m without WARC only; 6 m and up and light out | not built |
+| Q72 | Delaware: 160-10 m without WARC plus 6 m and up through light ("DC to daylight") | already so; no change |
 | Q85 | 7QP excludes WARC (and the sponsor scores digital 4) | not built |
 
 ### Answered since the table was last updated (full text)
@@ -584,13 +584,13 @@ closes it; anything else reopens it.
   **Proposed answer:** From the sponsor's page (researched 2026-10-14): its
   suggested frequencies include 1860 kHz, so 160 m is in -- what the class
   already does. Light is in too. No change.
-  **Answer:** (NY4I, 2026-10-15) *"Light is in too" is not correct. Just HF
-  bands* -- and, asked which, **160-10 m without WARC**: 160, 80, 40, 20, 15,
-  10 m. 6 m and up and light are OUT, against the 2024 page recorded above,
-  which named "6 meters and up". A QSO on any other band scores 0 and, under
-  Q98, is an automatic X-QSO. Not built: TContestDelawareQP.UsesBand still
-  lists 6 m through 24 GHz and light.
-
+  **Answer:** (NY4I, 2026-10-15) First *"Light is in too" is not correct. Just
+  HF bands* (160-10 m, no WARC). Then, shown the 2024 rules page
+  (https://www.fsarc.org/qsoparty/rules-2024.html: *"DEQP also allows contacts
+  on any band and mode 6 meters and up to include repeater contacts within
+  Delaware"*): *"oh....I did not see that line. Then it is DC to Daylight..."*
+  FINAL: 160-10 m without WARC, plus 6 m and up THROUGH LIGHT -- exactly what
+  TContestDelawareQP.UsesBand already states. No change.
 - **Q63** The New Contest dialog captions POTA's box "Activator" as plain
   English text, so no translation can reach it. Moved as it was. Give it a
   translatable string?
