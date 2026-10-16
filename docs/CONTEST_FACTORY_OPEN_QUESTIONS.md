@@ -39,7 +39,7 @@ in section 4. One line each -- the full text is further down.
 - **Q95** Croatian ITU zones.
 - **Q23** CUP RF: the QSO line, and the difference never reached a file -- close.
 - **Q40** County-line limits: 7QP 4, NEQP none (stated); a rover logs its own party.
-- **Q100** The last-contest button covers it: delete `last_opened_at`; caption "Last contest".
+- **Q100** The last-contest button covers it: delete `last_opened_at`? (Caption "Last Contest": yes.)
 
 **Not a question but open:** Q59 asks you to confirm GREY (unselectable) for an
 inactive contest in the New Contest list.
@@ -191,7 +191,11 @@ closes it; anything else reopens it.
   both stale since a contest became its SQLite file. Rename the caption to
   "Last contest" (`TC_LATEST_CONFIG_FILE`, through the i18n catalogues, not a
   retyped `.lfm` string) and fix the comment.
-  **Answer:**
+  **Answer (caption half):** (NY4I, 2026-10-16) *"change that from Last
+  config file to Last Contest"* -- the caption becomes **"Last Contest"**,
+  through the catalogues (i18n). Being built. Still open: deleting
+  `last_opened_at`.
+  **Answer (column half):**
 
 - **Q23** CUP RF: the Cabrillo writer takes the QSO's own QTH for the CW and
   SSB runnings but not for CUP RF DIGITAL. Intended?
