@@ -3638,6 +3638,376 @@ S0c is DONE too (plan S0c; it was open when this paragraph was written).
 
 **S7 DONE 2026-10-14 (plan S7): the exchange RULES the engine decided by the session's shape are each class's own answer.** `TContestBase.StripsRoverCountyFromCall` (MainUnit's two rover routines; 25 contests), `LogsSeveralQTHsFromOneEntry` (`ReturnInSAPOpMode`; 21), `AcceptsBlankExchange` (ParametersOkay and ProcessExchange; BWQP, the General QSO, POTA) and `SendsStateAfterZone` (FCONTEST's zone messages; CQ WW RTTY), base False, are stated per class -- the state-party base does not hold the rover answer, five of its parties never having stripped (F4; Q94 and Q90 open, today's sets kept exactly) -- and where the entrant decides the shape, through the station test its `DescribeSession` uses. The park lookup asks `OffersParkTools`; FISTS's points-alone is its own `CombineWithMultipliers` (F12 closed) and `TScoreTotals.SessionExchange` is deleted. Pinned before the move against the old compares (`uTestExchangeRules`, six entrants, a cross-check kept until S9). Left reading the shape: the four machines, the history renders and the data hand-offs (S9), and the SS columns (F15, after S1).
 
+### 8.2u Q108 -- a contest registers by its string id: the staged plan (2026-10-16)
+
+**DESIGN, measured at `34c75865` (5.0.28). Nothing is built.** NY4I,
+2026-10-16: *"minimize the things a new contest needs to touch beyond its data
+files (like a DOM, tests, and the class itself)"* -- *"a registry similar to
+when we Add a new radio so the simple fact that the radio class exists allows
+the table for the drop-down to be built."* And the cleanup and the registry
+are ONE piece of work (*"We could end up with throw-away work otherwise"*).
+The decisions already taken are in the open-questions entry Q108; this section
+is how to build them, in stages that each leave every gate green.
+
+#### What a new contest touches today -- Nebraska, measured
+
+Besides its class, its two `.dom` files, its own test unit, the two `.lpr`
+files and its `VC.pas` member and spelling, the Nebraska QSO Party
+(`34c75865`) edited **twelve existing test units** -- `uTestADIFSentExchange`,
+`uTestCabrilloColumns`, `uTestContestDisplay`, `uTestContestExport`,
+`uTestContestFactory`, `uTestContestIdentityPin`, `uTestContestKindPin`,
+`uTestDXMultiplierKey`, `uTestDomesticMultiplier`, `uTestExchangeFields`,
+`uTestExchangeParse`, `uTestExchangeRules` -- and `full.nsi` (two `File` lines).
+Every one of those edits was either a hand-maintained COUNT (187 -> 188, 79 ->
+80, 36 -> 37, 68 -> 69 in a 14-station table, 23 -> 24, every domestic-file
+count +1, `COUNT_ANYWHERE` 24 -> 25), a row in a per-contest PIN TABLE, an arm
+in a per-contest `case` of expected output, or an exception list
+(`CONTESTS_BORN_WITHOUT_A_ROW`, the band-rule list in
+`Test_EveryOtherContestStillCreditsEveryBand`). (`git show --stat 34c75865`,
+then each unit's diff; `uTestHostAreaRule` and `uTestContestNames` changed for
+Q107 and Q105, not for Nebraska.)
+
+#### The measurements the plan rests on
+
+Every count below is code only: `tr4w/build/PascalSource.psm1`
+(`Get-PascalCodeOnlyText -BlankStrings`), the member list from
+`Get-PascalEnumMembers -Path tr4w\src\VC.pas -TypeName ContestType`, over the
+TRACKED files of `Get-TR4WPascalFiles -Root tr4w`, each identifier token
+matched case-insensitively against the member set. The scripts are in the
+session scratchpad and go into the tree as `tools/contest-factory-q108/` with
+S1, so every number here can be re-run.
+
+| what | measured |
+|---|---|
+| `ContestType` members | **188**. D7's last release (`C:\TR4W` at `0d950993`, 4.151.0) has 185 and is an exact PREFIX of today's (ordinals 0-184 agree); Idaho, Delaware and Nebraska are appended |
+| member references in tests | 3,518 in 36 files (`uTestDomesticMultiplier` 402, `uTestExchangeParse` 367, `uTestContestFactory` 360, `uTestDXMultiplierKey` 333, `uTestContestDisplay` 310, ...) |
+| member references in the factory | 192 in 190 files: the 187 `RegisterContest` calls (one per unit), IN7QPNE's four parties, Florida's and the base's one each |
+| member references elsewhere in `src` | 57 hits in 23 files, of which **25 are not the enum** (`logscp`'s `TENTEN` field x12, a parameter named `rda` in `tree`/`logstuff` x11, a field `IOTA`, a parameter `pCC`). **32 are real, in 13 files: 23 are `DUMMYCONTEST`, 9 name a contest** -- `MainUnit` `RADIOYOC`; `logedit` `OZCR_O`, `OZCR_Z`, `RFCHAMPIONSHIPCW`, `RFCHAMPIONSHIPSSB`, `IARU`; `postunit` `CUPRFCW`, `CUPRFSSB`; `uContestNames` `NEWENGLANDQSO` (the alias) |
+| the TYPE NAME `ContestType` | tests 482; outside the factory 61 in 13 files; factory 45 (`uContestRegistry` 33); `VC.pas` 6 |
+| `ContestTypeSA` | outside `VC.pas` and the factory 25 code references in 14 files; factory 10; tests 213 |
+| enum walks in tests (`for c := Low(ContestType)` / `Succ(DUMMYCONTEST)`) | 87; in `src`, 8 (registry 4, `uContestChoices` 2, `uContestNames` 1, `uContestMatrix` 1) |
+| hand-maintained aggregate counts in tests | **35**: 27 `CheckEquals(<n>, ...)` on a number of contests or contest-station pairs (`uTestZoneMultiplier` 9, `uTestContestKindPin` 3, `uTestDXMultiplierKey` 3, `uTestExchangeKindReaders` 3, and 1-2 in five more) plus 8 count arrays (`uTestDomesticMultiplier` 3, `uTestExchangeRules` 2, `HAS_DX_COUNT`, `HAS_PREFIX_COUNT`, `uTestExchangeParse.COUNTS`) |
+| contest set and list constants in tests | 30 (`ROVER_SPLIT_PARTIES`, `CQ_ZONE_CONTESTS`, `HAS_DX`, `INACTIVE_CONTESTS`, `ENUM_SPELLED_DISPLAY_NAMES`, ...) |
+| `full.nsi` | **107** `File ..\target\dom\...` lines (not 105). All 90 domestic file names a class can load -- 64 `GetDomesticFileName` values (the identity pin), 23 in-state literals, 9 `DescribeSession` `DomesticFile` literals -- are on disk and packaged |
+| `target/dom` | 128 tracked files: 124 match `*.dom`, **17 of which are NOT packaged** (`bucuresti`, `continents`, `holyland`, `IRTS.DOM`, `mo`, `ont`, `p9`, `prov12`, `RPX.DOM`, `rudxc`, `spdx_rtty`, `SSBSPRINT.DOM`, `ubaold`, `ukr-ss`, `xe`, `yl`, and a junk name from a botched save ending `missouri_cty.dom`), plus 4 that are not `.dom` (`croat.dsm`, `eudx.dom.new`, `illinois.txt`, `nevada.txt`). **`build-unix.sh` already ships the whole directory** (`cp -R "$TARGET/dom"`), debris included |
+
+**WHERE THE ORDINAL LEAVES THE PROGRAM -- SIX PLACES, NOT THREE, AND ONE IS NOT
+HAMSCORE.**
+
+| # | where | what crosses |
+|---|---|---|
+| 1 | binary `.TRW` import -- `uLogImport` (first record's `ceContest` -> `SetContest`, the rest checked), `MainUnit`'s v1.5 and v1.6 record converters | the byte, as written by D7 |
+| 2 | multi-op `NET_QSOINFO` / `NET_EDITEDQSO` / `NET_OFFLINEQSO` -- a whole `ContestExchange` (`uNet` sends at `NetQSOInfoToSend.qiInformation := rec`, receives at the `NET_QSOINFO_ID` arm) | the byte, raw |
+| 3 | `tr4wserver`'s own server log -- it writes those records raw (`ServerLog.WriteBuffer`, four sites) and serves them back (`uGetServerLog`) | the byte, persisted by ANOTHER PROGRAM |
+| 4 | `NET_LOGCOMPARE` -- `TLogFileInformation.liContest`, the server log's first record's byte, compared in `uNet` and shown in `uLogCompareForm` | the byte |
+| 5 | the N1MM-format UDP broadcasts -- `<contestnr>` in `SendDeletedContactToUDP` and `BuildUDPContact` (`logsubs2`; contactinfo, contactreplace, lookupinfo, contactdelete) | `IntToStr(Ord(...))` |
+| 6 | in-process, but a byte cast all the same -- `uSettingsEffects.ApplyTokenSetting` writes `Byte(i)` through `PByte(@Contest)`, `i` being the index into `ContestTypeSA` | the index |
+
+**HamScore carries no ordinal**: `uHamScore` and `uGetScores` send the class's
+`ADIFContestId` in `<contest>`. Everything persisted by TR4W itself -- the
+SQLite `contest.contest_type`, a `.cfg`'s `CONTEST =`, `settings/tr4w.json`'s
+`Contest.ContestToken` -- is the `ContestTypeSA` SPELLING.
+
+**AND THE ORDINAL WAS NOT ALWAYS APPEND-ONLY.** The corpus's
+`winter_fd_2025_w4ta` -- a January 2025 D7 `.TRW` -- carries 167
+(`ALRS_UA1DZ_CUP` today) for Winter Field Day (168 today), which is why
+`uLogStore` corrects a log's stamp from a contest `.cfg` and why that set's
+`ref.adi` was re-frozen (`known-divergences.txt`, 2026-09-14). So the "frozen
+legacy table" is the 4.151.0 layout plus three appended members, and an older
+D7 layout maps wrongly today. Q108 neither causes nor fixes that; it is
+recorded so nobody believes the table covers every D7 file ever written.
+
+#### The finding that shapes S1: a frozen enum closes the pins by itself
+
+The radio factory already met this (`ADDING_A_RADIO.md` 3c): an id-only radio
+*"is invisible to [the enum-walking tests] already"*, and *"a test reading
+absence as False reports the factory as wrong for stating a fact the legacy
+record never had the chance to hold."*
+
+The same holds here. Once a new contest registers by id and has **no**
+`ContestType` member, every `array[ContestType]` pin table and every
+`for c := Low(ContestType) to High(ContestType)` walk is closed over the 188
+and NEVER GROWS AGAIN, without anyone editing it. So the brief's "convert the
+pin tables into registry-walking tests" is the wrong move for most of them,
+and the plan says so per table:
+
+- **A PIN TABLE FREEZES OUTPUT, NOT A DECLARATION.** `uTestDXMultiplierKey`'s
+  171 `KEY_PINS` rows say what each contest's key IS for a fixed QSO at
+  fourteen entrants, eleven of which the matrix never runs. An "every class
+  STATES X" test proves only that a getter is overridden, not that it answers
+  correctly. Converting would trade a value check for a presence check. **They
+  stay, keyed by the frozen enum, and a new contest adds no row.**
+- **WHAT A NEW CONTEST DOES NEED** is the cross-contest INVARIANTS -- today
+  written as enum walks, so blind to it. Those move to a registry walk: a key
+  only where `HasDXMultiplier`, `HasZoneMultiplier` exactly where the count is
+  above 0, a domestic-file contest states no shape, every party splits a rover
+  and nothing else does, every ADIF id resolves to its own contest and none is
+  claimed twice, every class states its identity, sits on the base or a
+  family, constructs, has a display name nobody shares. Plus the
+  no-inherited-default rule as an OVERRIDE check (the `GetterCode` technique of
+  `Test_EveryClassStatesItsIdentity`), so a new class that forgets its bands,
+  its Cabrillo columns, its `STX_STRING` or its parse format fails.
+- **THE 35 AGGREGATE COUNTS GO** -- not because a new contest would move them
+  (it would not, after S3) but because each restates the set or table beside
+  it in the same unit, so every rule change to a LEGACY contest costs several
+  edits (Nebraska's DX row moved four numbers; Q16's SSB Sprint moved every
+  `HAS_DX_COUNT`). Where a count guards something real it becomes the
+  invariant it was standing in for: "24 QSO parties split a rover call" is
+  `SplitsRoverCallOnExport = IsQSOParty` for every registered contest; "188
+  `ContestType` members" is the freeze lint (S3).
+
+| unit | what it holds | verdict |
+|---|---|---|
+| `uTestContestIdentityPin` | WA7BNM, QRZ.RU, e-mail, friendly, display, domestic file -- values no other gate reads | KEEP the table (frozen); delete the two 188 counts; the new-contest guard is the identity override walk |
+| `uTestContestKindPin` | the two remaining exchange kinds per contest and station | KEEP untouched; it dies with `ExchangeType` / `InitialExchangeType` in M11 -- editing it now is the throw-away work NY4I named |
+| `uTestDXMultiplierKey`, `uTestPrefixMultiplierKey`, `uTestZoneMultiplier`, `uTestDomesticMultiplier` | key / mode / list / hint pins at stations the matrix lacks; per-station sets; counts | KEEP pins and sets; DELETE the counts and count arrays; the "no key where Has* is False" and "a file contest states no shape" halves walk the registry |
+| `uTestCabrilloColumns`, `uTestADIFSentExchange`, `uTestExchangeFields`, `uTestExchangeParse`, `uTestExchangeKindReaders` | a `case` per contest of expected output for edge inputs (over-long values, negative serials, TRC/PGA) | KEEP (frozen); delete their counts; new contests: an override walk with a FROZEN exception set -- the contests that write the error marker today (fifteen for the Cabrillo columns) -- that a new contest may not join |
+| `uTestExchangeRules` | rover / several-QTH / blank / state-after-zone sets | KEEP the sets; DELETE `COUNTS` and `COUNT_ANYWHERE`; the strip-implies-party rule walks the registry |
+| `uTestContestExport` | `Pin(...)` rows of ADIF STATE / CNTY | KEEP rows; the 24 becomes `WritesState iff IsQSOParty`, walked |
+| `uTestContestFactory` | 17 walks, 8 sets | the invariants walk the registry; `CONTESTS_BORN_WITHOUT_A_ROW` stays as history (Nebraska has an ordinal) and never grows; the band exception list goes when Q98's build turns it into "every class states `UsesBand`" |
+| `uTestContestDisplay` | the dialog's generated prompt arms, `ExpectedHead`'s party areas | KEEP for legacy; a new party's head is checked against its own `QSOPartyArea` by the walk |
+| `uTestContestUI`, `uTestContestNames` | the choices list, the name resolver | walk the REGISTRY -- these are about the whole set, so a new contest must be in them |
+
+#### How a contest is represented once the enum is not the key -- DECIDED here, on evidence
+
+| option | for | against |
+|---|---|---|
+| A. the identity OBJECT (`TContestBase`) everywhere | the natural OO shape | cannot live in `ContestExchange`: a pointer in a record that goes over the wire raw (exits 2-4) and changes its size, which `uTestLogBinaryFile` pins at 376 bytes |
+| B. the string id everywhere | already what persists | a `ShortString` field changes the record layout; string compares on the per-QSO paths |
+| **C. a registry HANDLE, never persisted** | one byte -- the record keeps its layout; O(1); every call site that passes `Contest` today compiles unchanged | the in-memory byte IS persisted at exits 1-4, so the handle and the legacy number must agree for every contest that has one |
+
+**C, WITH THE HANDLE OF A LEGACY CONTEST EQUAL TO ITS LEGACY NUMBER.** That one
+rule makes the persisted byte correct for all 188 with no translation at any
+boundary: a D7 `.TRW`, a D7 peer, the server log and the log-compare packet
+keep meaning exactly what they mean today. A contest registered by id gets a
+handle from 188 up, assigned when the registry SEALS (first lookup), in id
+order, so it is the same in every program that links the same contests. It is
+never persisted: S4 refuses it at exits 2-4, gives exit 5 a derived number, and
+exit 1 cannot contain it (a `.TRW` predates the contest).
+
+**NOT THE RADIO'S SENTINEL.** An id-only radio carries `NoInterfacedRadio` in
+memory, which works because nothing asks a radio record which model wrote it.
+A QSO record IS asked -- export calls `ContestIdentity(rec.ceContest)` per QSO,
+and ADIF import resolves a record's contest per record (`ContestOfRecordMode`:
+the RoPoCo runnings) -- so a shared sentinel would lose WHICH new contest.
+
+**THE TYPE.** `TContestHandle` is declared in `VC.pas` (the record and the
+server need it, and the server links no factory unit) as a ONE-BYTE PACKED
+RECORD with `=` and `<>` operators, so a band or a mode cannot be passed where a
+contest is expected -- which the enum guarantees today and `type Byte` would
+not. Whether FPC 3.2.2 in this tree's mode accepts operator overloads on such a
+record, and keeps it one byte in the packed `ContestExchange`, is checked by a
+probe compile at the start of S2; if it does not, the fallback is
+`type Byte` and that loss of type safety is written down where it is declared.
+`NoContest` (handle 0) replaces `DUMMYCONTEST` in production.
+
+**THE CAP IS 255 CONTESTS** (188 today). `RegisterContestById` raises past it.
+The cap lives exactly as long as `ContestExchange` is both the in-memory QSO and
+the wire/file record; the row-based multi-op protocol removes exits 2-4, and the
+binary import then needs only its own frozen record type, at which point the
+in-memory field can widen. Recorded so the limit is a known deadline, not a
+surprise.
+
+#### The enum SURVIVES, frozen -- it cannot be deleted
+
+Production stops needing it as a KEY after S2, but three things still need the
+188 legacy numbers named: the 187 `RegisterContest(<member>, <class>)` calls
+(which keep their spelling via `ContestTypeSA`, so 187 units are untouched),
+`LegacyContestOf` at the nine ratcheted rule sites outside the factory, and the
+tests -- 3,518 member references, nearly all in the frozen pins above.
+Deleting it would mean rewriting those pins as strings for no gain. So it
+stays, FROZEN: `Lint-FrozenContestNumbers` (S3) fails if the ordered member list
+is not exactly today's 188 (a hash of the list, so an insertion, a reorder or an
+append all fail), and its message says *register by id -- `ADDING_A_CONTEST.md`*.
+`ContestTypeSA` stays frozen in LENGTH; a legacy contest may still be renamed
+under Step 3c's alias rule. Renaming the type (`TLegacyContestNumber`) is S6 --
+NY4I's call, because it is ~840 mechanical references for a name.
+
+#### The stages
+
+Every stage builds, passes every gate, and commits alone. "Gates" means: the
+unit tests and the checked unit tests (`Build-Tests.ps1 -Run`, `-Checked
+-Run`), the lints, the contest matrix (187 identical), the factory check (13
+identical) and the golden corpus (22/0/4, exit 0) -- the figures at
+`34c75865`. Sizes are measured where the tree can say, and marked ESTIMATE
+where only the compiler can.
+
+**S1 -- the cleanup that needs no identity change.** Tests, one read-only
+registry function, the installer, docs.
+- `uContestRegistry.RegisteredContests` (the registered identity objects in
+  registry order; over the enum today, over handles after S2) and a shared test
+  helper for "this class states getter X itself" (lifted from
+  `Test_EveryClassStatesItsIdentity`, not copied).
+- The invariant walks in the units above move to it; the 35 aggregate counts
+  are deleted or become the invariant they stood for; the "a new contest adds
+  its row here, by hand" prose goes from the units, `ADDING_A_CONTEST.md` and
+  `.claude/agents/contest-factory.md` (whose "79 contests", "24 strip, 23
+  split" and similar counts are the same rot).
+- **The installer**: `File ..\target\dom\*.dom` replaces the 107 lines -- AFTER
+  NY4I rules on the 17 unpackaged `*.dom` (ship, move out of `target/dom`, or
+  delete; `Lint-DomCoverage`'s own header says which of those ship is his
+  decision) and the 4 non-`.dom` files, which Unix ships today. The party-only
+  source scan in `Lint-DomCoverage` becomes a unit test over the registry:
+  every domestic file any contest can load -- `DomesticFileName` and
+  `InStateDomesticFileName` at every roster station, and `DescribeSession`'s
+  `DomesticFile` -- exists in `target/dom` (through `ShippedDomFilePath`, so
+  case is the lookup's, as on Linux). The lint keeps only "the section is the
+  wildcard" (it already honours one).
+- Oracles: unit tests green; matrix, factory and corpus identical by
+  construction (no behaviour changes); `RegisteredContests` is unused by
+  production.
+- **NO AUTOMATED ORACLE SEES THE INSTALLER'S PAYLOAD.** One
+  `FullBuild.ps1 -BuildInstaller` and a listing of the installed `dom`
+  directory, before and after, is the check; it goes in `BENCH_QUEUE.md`.
+- Size: about 20 test units; 35 count statements; which of the 87 enum walks
+  are invariants is classified loop by loop as S1's first task (no number is
+  claimed here); one `full.nsi` section; one test replaces most of one lint.
+
+**S2 -- the handle and the id inside the registry; legacy numbers unchanged.**
+No new contest yet, so nothing that is persisted changes.
+- `VC.pas`: `TContestHandle`, `NoContest`; the CURRENT `ContestExchange`'s
+  `ceContest` and `TLogFileInformation.liContest` become handles (the v1.5 and
+  v1.6 import layouts keep `ContestType` -- they are frozen formats); PostUnit's
+  `Contest` global becomes a handle.
+- `uContestRegistry`: handle-indexed storage; `RegisterContest(<member>, cls)`
+  registers id `ContestTypeSA[member]` at handle `Ord(member)`;
+  `ContestId(h)`, `FindContestById`, `ContestLegacyNumber(h, out n): boolean`,
+  `LegacyContestOf(h)` (for the nine rule sites only -- they keep comparing
+  members, so `Lint-ContestNameTests` still sees them); thin legacy overloads of
+  `ContestIdentity`, `ContestClassFor` and `ActiveContest` for the tests and
+  IN7QPNE.
+- `TContestBase.Create(aHandle)` with its id (three constructors: the base,
+  Florida, IN7QPNE); the base's name fallbacks read the id.
+- `uContestNames` walks the registry's ids, and `LEGACY_CONTEST_NAMES` maps a
+  name to an ID STRING, so a contest registered by id can be renamed too.
+- **A latent defect fixed before it can bite**: `ApplyTokenSetting` resolves
+  the CONTEST token by index into `ContestTypeSA` and writes the index through
+  `PByte(@Contest)` (exit 6), so a contest that is not in `ContestTypeSA` would
+  silently NOT be selected. It calls `TryContestFromName`, the one resolver.
+- `uCFG`'s CONTEST vocabulary, registered from an `initialization` section,
+  becomes a provider read when Preferences asks (see the first risk).
+- `uContestChoices`, `uNewContestForm` (writes `ContestId`), `uContestMatrix`
+  (still prints ordinal + enum name -- identical), `logdump`, the `.TRW`
+  importer (a byte above 187 is refused with a message instead of indexing
+  `ContestTypeSA` out of range -- the only behaviour change, for corrupt files).
+- Oracles: everything persisted is byte-identical by construction (handle =
+  legacy number), so the **matrix is 187 identical with NO re-freeze**, the
+  factory check 13, the corpus 22/0/4; `uTestLogBinaryFile`'s 376-byte and
+  field-offset pins prove the record layout did not move; the ADIF round trips
+  (`uTestContestExport.Test_RoundTripThroughTodaysImport`,
+  `uTestADIFRegression`) prove export/import.
+- Size: outside the factory, 61 type-name references + 32 member references +
+  25 `ContestTypeSA` references, in about 25 files; the registry (384 lines)
+  rewritten; ESTIMATE under 100 test sites, which the compiler lists
+  (`ceContest :=` assignments, `out ContestType` arguments, `choices.Contest[]`
+  comparisons).
+
+**S3 -- `RegisterContestById`, the seal, and the gates that know about it.**
+- `RegisterContestById(id, cls)`: refused for an id that is a `ContestTypeSA`
+  spelling or a legacy alias, a duplicate, or after the seal (the existing
+  "registered after the identity was asked" rule, generalised); handles from
+  188 assigned at the seal.
+- A TEST-ONLY contest, registered by id in a unit only the test program links,
+  proves the seal, the handle, the name resolver, the choices list, the walks
+  of S1 (they now see one more contest and must pass), and -- after S4 -- the
+  refusals and the broadcast number.
+- The matrix asks by id: `/MATRIXLIST` lists `id|...`, `/MATRIX` takes the id,
+  and the records' `contest.requested` / `contest.selected` lines carry the id
+  and the legacy number. That changes two lines per variant -- 6 or 8 per
+  record (three variants, four for a party) -- and NOTHING else -- **re-frozen with that reason, proved
+  first by a diff of every record excluding those lines, which must be empty**
+  (the M3 identity-line rule). One naming rule for the files: the id, blanks as
+  `_` -- so the 187 files are renamed (`git mv`, content otherwise identical);
+  keeping the enum names for legacy files and ids for new ones would be two
+  rules for one thing.
+- Lints and tools: `Lint-FrozenContestNumbers` (new); `Lint-ContestUnitsLinked`
+  (new -- every factory unit with a registration is in BOTH `tr4w.lpr` and the
+  test `.lpr`, reading the `in '...'` paths as `Lint-ProjectFiles` does);
+  `Lint-ContestNameTests` gains "no string literal handed to a contest-name
+  lookup outside the factory and the tests" (a by-id contest has no member for
+  it to count); the inventory's `model.py` parses `RegisterContestById`;
+  `tools/contest-factory-m11/kind-reach.py` and the dom cross-check read ids.
+- Oracles: unit tests (the fixture contest); matrix 187 identical after the
+  stated re-freeze; factory and corpus untouched.
+- **No real contest may register by id until S4 is in.** S3 makes one
+  possible; S4 makes it safe on the network.
+
+**S4 -- the boundaries for a contest with no legacy number.**
+- **Multi-op is refused** (decision 1), with one translatable message, at every
+  door: connecting (`TryConnectToNetwork` / `ConnectToTR4WServer`), switching
+  to such a contest while connected (`FoundContest`), a peer's `CONTEST`
+  parameter naming one (`NET_PARAMETER`), and -- defence in depth -- the send
+  path refuses a record whose handle has no legacy number and the receive path
+  refuses a byte above 187. The server needs no change: it never sees one.
+- **`<contestnr>`** is `ContestBroadcastNumber(h)` in the registry: the legacy
+  number where there is one, else `256 + CRC32(the id's UTF-8) mod (2^31 -
+  256)` (`uCRC32`) -- stable across builds and machines, never a byte value,
+  and a unit test asserts no two registered contests share one.
+- What was checked for decision 2: nothing in this tree consumes
+  `<contestnr>`, and HamScore never receives it (above). N1MM's published UDP
+  specification describes it as the logger's own number for the contest LOG,
+  echoed in `contactdelete` to identify a contact -- an identifier, not a
+  shared code -- so any stable per-contest number serves. **That is from the
+  specification as known, not verified here**: read N1MM's "External UDP
+  Broadcasts" appendix before S4 lands, and NY4I may know a listener that
+  decodes it.
+- **FOUND WHILE CHECKING IT, and not Q108's to fix**: the same broadcast writes
+  `<Settings.My.Call>...</Settings.My.Call>` where N1MM's format and D7 write
+  `<mycall>` -- a blanket rename (`c1463660`, 2026-09-12, "MY CALL leaves
+  CFGCA") rewrote the string literal, so no N1MM listener has read TR4W's call
+  since. It is `integrations`' (`logsubs2`, one line), with a test.
+- Oracles: unit tests on the predicates and the number, through the fixture
+  contest. **NO AUTOMATED ORACLE SEES THE NETWORK OR THE BROADCAST** -- the
+  refusal at connect and the UDP line go into `BENCH_QUEUE.md`.
+- Size: about six sites in `uNet` / `fcontest`, two in `logsubs2`, one
+  resourcestring (i18n: through the catalogues).
+
+**S5 -- the guides, and the first real contest.** `ADDING_A_CONTEST.md`,
+`ADDING_A_NEW_CONTEST.md`, CLAUDE.md's "Add a contest", and the agent
+definition rewritten to the list below. The next contest NY4I asks for is the
+proof: its commit's `--stat` is the definition of done, and it is compared with
+Nebraska's.
+
+**S6 -- OPTIONAL, NY4I's call: the names.** `ContestType` -> `TLegacyContestNumber`
+and `ContestTypeSA` -> `LEGACY_CONTEST_IDS`, so the type stops calling itself
+"the contest type" when a new contest has none. 594 type-name references and
+248 `ContestTypeSA` references (counted above), mechanical, on a word boundary,
+never inside a string literal; the compiler is the oracle, then every gate.
+
+#### Risks, and what catches each
+
+| risk | what catches it |
+|---|---|
+| **A unit READS the registry from its `initialization` before every contest unit has registered.** `uCFG`'s CONTEST vocabulary does today (`RegisterSettingAllowedValues` from `ContestTypeSA`); units initialise in `tr4w.lpr` uses order, dependencies first, and `uCFG` (line 248) uses no contest CLASS unit (only `uContestNames`, which uses `VC`), while the class units start at line 409 -- so a list built there from the registry would silently miss every contest | S2 makes the vocabulary a provider; S3's seal makes any later `RegisterContestById` RAISE at start-up, so the defect cannot be quiet -- both programs fail on launch, and the unit tests with them. The radio factory solved the same thing with an explicit `PopulateRadioTypeTokens` after initialization; a lazy seal needs no call to remember |
+| **A contest unit not linked** is a contest that does not exist, silently | `Lint-ContestUnitsLinked` (both `.lpr` files); the matrix fails closed on a frozen record with no fresh one (`MISSING`) and on a fresh one never frozen (`UNFROZEN`) |
+| a handle persisted by accident | its byte is read through ONE named accessor, called only by the registry and the legacy-number boundary (a ratcheted lint can hold that, as `Lint-ContestNameTests` holds member names); exits 2-4 refuse a handle with no legacy number; the fixture contest exercises every exit in the unit tests |
+| a new id equal to a legacy spelling or alias | `RegisterContestById` refuses it; `uTestContestNames` walks the registry |
+| a new contest's ADIF id collides with a legacy one | `Test_NoADIFIdIsClaimedTwice`, walking the registry since S1 |
+| the 255-handle cap | `RegisterContestById` raises; the deadline is written above |
+| the pins look complete while a new contest is unpinned | by design -- the S1 invariants and override checks, its own test unit and its frozen matrix record are what pin it; `ADDING_A_CONTEST.md` says so |
+| the test-only contest leaking into the application | it is in a unit only the test `.lpr` names, which `Lint-ContestUnitsLinked` checks in the other direction too |
+| older D7 `.TRW` layouts (Winter Field Day at 167) | not Q108's; unchanged, recorded above |
+
+#### What a new contest touches at the end -- the honest list
+
+1. **Its class** -- `src/contestFactory/uContest<Name>.pas`, stating its rules,
+   ending `initialization RegisterContestById('<ID>', TContest<Name>);`. The id
+   is stored data from that moment (Step 3c).
+2. **One uses line in each program file** -- `tr4w.lpr` and
+   `test/unit/tr4w_unit_tests.lpr` (the radio factory's price, and
+   `Lint-ContestUnitsLinked` holds the two together).
+3. **Its tests** -- its own `uTestContest<Name>.pas` and its uses /
+   `RegisterSuite` lines in the test `.lpr`; its frozen matrix record, written
+   by `freeze-contest-matrix.sh` with a reason (data, not hand-typed).
+4. **Its data** -- its `.dom` files in `target/dom` (a party: `<base>.dom` and
+   `<base>_cty.dom`); the installer's wildcard ships them.
+5. **One regeneration** -- `python tools/contest-rules-inventory/generate.py`
+   after the commit, because the generated inventory counts registrations.
+
+**Nothing in `VC.pas`, no pin table, no count, no `case` arm, no exception
+list, no `full.nsi` line.** The two `.lpr` lines and the regenerated report are
+the only shared files, and both are the same price a radio pays.
+
 ### 8.3 What "a contest has moved" means -- checkably
 
 A contest has moved when **all** of these hold:

@@ -726,8 +726,11 @@ comparisons).
 - The migration was gated set by set: each `.db` had to reproduce that set's existing `ref.adi` /
   `ref.cbr` before its `.trw` was deleted. All thirteen did, with the result below unchanged.
 
-- **Baseline: `24 passed, 0 failed, 2 known-divergence, 0 awaiting-candidate` = GREEN**, and
-  **every export run must also exit 0.**
+- **GREEN = `0 failed` and every known-divergence is a recorded pin** (`known-divergences.txt`,
+  or a per-artifact `<set>/known.<kind>.diff` that excuses EXACTLY its lines -- a stale pin
+  fails), **and every export run exits 0.** ~~`24 passed, 0 failed, 2 known-divergence`~~ stood
+  here and went stale when the Q54 and Q76/Q89 rulings were pinned (22/0/4 on 2026-10-16); the
+  numbers move with each ruling, so take the current line from the newest commit message.
 - **THE EXIT CODE IS PART OF THE RESULT, since 2026-09-06.** The corpus used to discard it, and
   for at least two days all THIRTEEN `/EXPORT` runs were dying with an `EAccessViolation` while it
   reported `24 passed, 0 failed` — the artifacts are written before the exit, so the byte
