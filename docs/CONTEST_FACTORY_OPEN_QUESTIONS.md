@@ -30,7 +30,6 @@ in section 4. One line each -- the full text is further down.
 **Design (section 2) -- each has a recommendation; "accept" is enough**
 - **Q8** Events with no ContestType still named in code (TRC, PGA, EURASIA ...).
 - **Q47** Fix the three kept read-past-the-end shapes now?
-- **Q100** `contest.last_opened_at`: write it and sort the chooser by it?
 - **Q101** Fill the typed `rcvd_*` columns from each class, or delete them?
 
 **Awaiting only your yes (section 3)**
@@ -40,6 +39,7 @@ in section 4. One line each -- the full text is further down.
 - **Q95** Croatian ITU zones.
 - **Q23** CUP RF: the QSO line, and the difference never reached a file -- close.
 - **Q40** County-line limits: 7QP 4, NEQP none (stated); a rover logs its own party.
+- **Q100** The last-contest button covers it: delete `last_opened_at`; caption "Last contest".
 
 **Not a question but open:** Q59 asks you to confirm GREY (unselectable) for an
 inactive contest in the New Contest list.
@@ -150,14 +150,6 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   contest matrix confirms no frozen QSO moves before the commit.
   **Answer:**
 
-- **Q100** `contest.last_opened_at` is never written or read. The schema says
-  it is "written every time the log is OPENED, and it is the chooser's default
-  sort key: recent activity floats up" -- neither is true. Write it at open
-  and sort the log chooser by it, or delete it? *Recommended: write it* --
-  "the contest I was just working" first is the chooser's most useful order,
-  and the comment states the intent.
-  **Answer:**
-
 - **Q101** Thirteen typed received-exchange columns are never written or read:
   `rcvd_state`, `rcvd_county`, `rcvd_section`, `rcvd_grid`,
   `rcvd_postal_code`, `rcvd_society`, `rcvd_department`, `rcvd_rda`,
@@ -178,6 +170,28 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
 
 Each carries a **Proposed answer** with its source. "Yes" (or "yes to all")
 closes it; anything else reopens it.
+
+- **Q100** `contest.last_opened_at` is never written or read. The schema says
+  it is "written every time the log is OPENED, and it is the chooser's default
+  sort key: recent activity floats up" -- neither is true. Write it at open
+  and sort the log chooser by it, or delete it? *Recommended: write it* --
+  "the contest I was just working" first is the chooser's most useful order,
+  and the comment states the intent.
+  You answered (2026-10-16): *"The button for last contest file would get
+  quick access to the last one."* That button exists: New Contest's
+  "Latest config file" (Alt+A) reopens the one path `settings/tr4w.json`
+  records at every start (`uProgramMain` -> `SetLatestConfigFile`), and is
+  hidden, with a log line, when that file is gone. The path is the contest's
+  `.db` now, not a `.cfg`.
+  **Proposed answer:** the button IS "quick access to the last one", so
+  nothing needs a per-database open time: **delete `contest.last_opened_at`**
+  and the schema comment that promises a sort no chooser performs (log-
+  database). And, found checking it: the button's caption says "Latest config
+  file" and `uProgramMain`'s comment says it "names the contest .cfg" --
+  both stale since a contest became its SQLite file. Rename the caption to
+  "Last contest" (`TC_LATEST_CONFIG_FILE`, through the i18n catalogues, not a
+  retyped `.lfm` string) and fix the comment.
+  **Answer:**
 
 - **Q23** CUP RF: the Cabrillo writer takes the QSO's own QTH for the CW and
   SSB runnings but not for CUP RF DIGITAL. Intended?
