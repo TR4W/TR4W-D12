@@ -82,7 +82,10 @@ uses
    LogEdit,
    LogWind,
    LogStuff,
-   PostUnit;
+   PostUnit,
+   (* StationInHostState -- set-up's in-state answer, which the QSO party's
+      host-area rule reads (Q107). *)
+   FCONTEST;
 
 (* A LIST OF THE TEST'S OWN -- zeroed first, because a local object's fields
    are not, and Init grows from the capacity it finds.
@@ -230,10 +233,7 @@ var
    needs: integer;
    call: CallString;
    (* Ada in the domestic table, as idaho.dom has it -- see below. *)
-   tableIndex: integer;
-   savedFirst: PrefixRecPtr;
-   savedLast: PrefixRecPtr;
-   added: PrefixRecPtr;
+   hadAda: boolean;
 begin
    BeginTest('Test_OffBandShowsNoMultiplierNeeded');
 
@@ -249,10 +249,7 @@ begin
    savedDXCCByBand := DXCCMultByBand;
    savedDomesticByBand := DomesticMultByBand;
    savedActiveBand := ActiveBand;
-   tableIndex := DomQTHTable.RecordPointerIndex('A');
-   savedFirst := DomQTHTable.FirstPrefixRecord[tableIndex];
-   savedLast := DomQTHTable.LastPrefixRecord[tableIndex];
-   added := nil;
+   hadAda := DomQTHTable.HasPrefix('ADA');
    try
       Contest := IDAHOQSOPARTY;
       Settings.Mult.ByBand := False;
@@ -288,7 +285,6 @@ begin
          domestic multiplier is its class's answer (HasDomesticMultiplier,
          M11 S6 part 2); this wrote the session's kind until then. *)
       DomQTHTable.AddNewPrefixRecord('ADA', 'ADA', 'ADA');
-      added := DomQTHTable.LastPrefixRecord[tableIndex];
       ActiveBand := Band20;
       VisibleLog.DetermineIfNewDomesticMult('ADA', AllBands, CW, needs);
       CheckEquals(1, needs, 'on 20 m, Ada is a needed county (was never, before M8)');
@@ -298,17 +294,10 @@ begin
       VisibleLog.DetermineIfNewDomesticMult('ADA', Band30, CW, needs);
       CheckEquals(0, needs, 'and asked for 30 m itself, neither');
    finally
-      (* The table as it was: AddNewPrefixRecord appended after the old last
-         record, if there was one, so that record ends the chain again. *)
-      if added <> nil then
+      (* The table as it was. *)
+      if not hadAda then
          begin
-         if savedLast <> nil then
-            begin
-            savedLast^.NextRecord := nil;
-            end;
-         DomQTHTable.FirstPrefixRecord[tableIndex] := savedFirst;
-         DomQTHTable.LastPrefixRecord[tableIndex] := savedLast;
-         Dispose(added);
+         DomQTHTable.RemovePrefix('ADA');
          end;
       mo.ClearAllMults;
       ActiveBand := savedActiveBand;
@@ -328,6 +317,7 @@ var
    savedByMode: boolean;
    savedDomesticByBand: TAdditionalMultByBand;
    savedRestart: RestartInfo;
+   savedInHostState: boolean;
 
    (* One QSO with Idaho's Ada county, as SetMultFlags leaves it -- then
       added to the sheets, as logsubs2 does next. Returns the domestic
@@ -357,8 +347,13 @@ begin
    savedByMode := Settings.Mult.ByMode;
    savedDomesticByBand := DomesticMultByBand;
    savedRestart := tRestartInfo;
+   savedInHostState := StationInHostState;
    try
       Contest := IDAHOQSOPARTY;
+      (* AN IDAHO ENTRANT, who works everyone: this is the band rule's test,
+         and the record carries no typed QTH for the host-area rule (Q107)
+         to look up. uTestHostAreaRule is that rule's. *)
+      StationInHostState := True;
       Settings.Mult.ByBand := False;
       Settings.Mult.ByMode := True;
       (* Idaho's domestic multiplier is its class's answer
@@ -388,6 +383,7 @@ begin
                   'and is not counted twice');
    finally
       mo.ClearAllMults;
+      StationInHostState := savedInHostState;
       tRestartInfo := savedRestart;
       DomesticMultByBand := savedDomesticByBand;
       Settings.Mult.ByMode := savedByMode;

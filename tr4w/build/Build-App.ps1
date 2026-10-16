@@ -83,6 +83,25 @@ catch
    exit 1
    }
 
+# THE LANGUAGE CATALOGUES ARE A BUILD INPUT TOO. tr4w.lpr links
+# res\tr4w_languages.res, a tracked binary generated from i18n\tr4w_<lang>.po,
+# and until 2026-10-16 nothing regenerated it: two catalogue commits never
+# reached any binary. Sync compares input hashes (not mtimes) with the stamp
+# beside the .res, regenerates on a mismatch, and THROWS rather than let a stale
+# .res be linked. This sits ABOVE the -Incremental split on purpose, so an
+# incremental build gets it too. See build\LanguageResStamp.ps1.
+. (Join-Path $PSScriptRoot 'LanguageResStamp.ps1')
+try
+   {
+   Sync-Tr4wLanguageRes -Repo $REPO
+   }
+catch
+   {
+   Write-Host ''
+   Write-Host "BUILD FAILED: $($_.Exception.Message)"
+   exit 1
+   }
+
 foreach ($d in $Defines) { $fpcArgs += "-d$d" }
 foreach ($p in (Get-Tr4wSearchPaths -Tr4wDir $TR4W_DIR -Toolchain $tc -For App)) { $fpcArgs += "-Fu$p" }
 foreach ($p in (Get-Tr4wIncludePaths -Tr4wDir $TR4W_DIR)) { $fpcArgs += "-Fi$p" }

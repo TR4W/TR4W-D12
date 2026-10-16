@@ -180,6 +180,24 @@ const
      of the .RST restart file. TLogDatabase.MigrateSchema creates it in an
      existing log; see there for why an added TABLE is safe to do on open
      where an added column would want more care. *)
+   (* contest.last_opened_at WAS REMOVED FROM THE DDL ON 2026-10-16 (NY4I,
+     Q100) WITHOUT A VERSION BUMP, and that is deliberate. Nothing ever
+     wrote or read it -- every corpus fixture holds NULL there -- so its
+     absence changes nothing any build reads, and a log made either way
+     opens in every build. A bump would have made each log this build
+     touches unopenable by every earlier one, for a NULL.
+
+     And a migration would not even have removed the false claim. Measured
+     on SQLite 3.42: ALTER TABLE DROP COLUMN cuts from the column's name to
+     the next column's name, so the stored CREATE text KEEPS the comment
+     above the column ("written every time the log is OPENED") and LOSES the
+     one after it. Only a table rebuild removes it, which is a plan, not a
+     migration line.
+
+     So a log created before that date still carries the column, NULL, and
+     that stale comment in its sqlite_master text. Leave it. If a column of
+     that name is ever wanted, ADD it guarded by PRAGMA table_info, as the
+     rule above already requires -- the old files have it already. *)
    LOG_SCHEMA_VERSION = 2;
 
    (* EXECUTED IN ORDER, ONE STATEMENT PER ELEMENT.
@@ -206,11 +224,6 @@ const
       '    created_at        INTEGER NOT NULL,   -- unix UTC'#10 +
       '    start_time        INTEGER,'#10 +
       '    end_time          INTEGER,'#10 +
-      '    -- Written every time the log is OPENED, and it is the chooser''s'#10 +
-      '    -- default sort key: recent activity floats up, not start date. A'#10 +
-      '    -- contest resumed on Sunday belongs above one created on Saturday'#10 +
-      '    -- and abandoned.'#10 +
-      '    last_opened_at    INTEGER,'#10 +
       '    -- tier 2: the entry declaration, as sent in the Cabrillo header.'#10 +
       '    -- NEVER re-read from configuration at export -- that is issue #2.'#10 +
       '    my_call           TEXT NOT NULL,'#10 +

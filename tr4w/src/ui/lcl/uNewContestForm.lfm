@@ -49,7 +49,7 @@ object frmNewContest: TfrmNewContest
       Top = 388
       Width = 276
       Anchors = [akLeft, akRight, akBottom]
-      Caption = 'Latest config file'
+      Caption = 'Last Contest'
       TabOrder = 2
       OnClick = btnLatestClick
     end

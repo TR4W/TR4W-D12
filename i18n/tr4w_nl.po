@@ -18,6 +18,7 @@ msgctxt "TC_TRANSLATION_LANGUAGE"
 msgid "ENGLISH"
 msgstr "Nederlands"
 
+# 2026-10-16: machine translation (LibreTranslate), no human translator to credit (NY4I, 2026-10-16). Was empty, which showed the English default "N4AF" in the About box.
 #. Section: General
 #: utr4wstrings:tc_translation_author
 #: tr4w/src/lang/tr4w_consts_eng.pas:8
@@ -25,7 +26,7 @@ msgstr "Nederlands"
 #, fuzzy
 msgctxt "TC_TRANSLATION_AUTHOR"
 msgid "N4AF"
-msgstr ""
+msgstr "LibreTranslate"
 
 #. Section: General
 #: utr4wstrings:tc_translator_email
@@ -653,6 +654,9 @@ msgctxt "TC_IRTS"
 msgid "EI/GI, enter your County"
 msgstr "EI/GI, kom binnen"
 
+# 2026-10-16: the English changed from "Latest config file" to "Last Contest" -- the button reopens the contest's database, not a config file.
+# Composed from this catalogue's own words, please review: last = 'Last status:' -> 'Laatste status:'; contest = 'Contest' -> 'Wedstrijd'.
+# Previous translation (of the old English): "Laatste configuratiebestand"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_latest_config_file
 #: tr4w/src/lang/tr4w_consts_eng.pas:100
@@ -660,8 +664,8 @@ msgstr "EI/GI, kom binnen"
 #: utr4wstrings.tc_latest_config_file
 #, fuzzy
 msgctxt "TC_LATEST_CONFIG_FILE"
-msgid "Latest config file"
-msgstr "Laatste configuratiebestand"
+msgid "Last Contest"
+msgstr "Laatste wedstrijd"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_openconfigurationfile
@@ -6353,6 +6357,16 @@ msgstr "Testpakket verzonden naar %s:%d. UDP kan het niet bevestigen -- controle
 msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
 msgstr "%s vertaling door %s"
+
+# 2026-10-16: new string -- the About box shows it under a machine translation's credit. Machine draft, please review.
+#. Section: General
+#: utr4wstrings:tc_translation_corrections
+#: tr4w/src/lang/tr4w_consts_eng.pas:14
+#: utr4wstrings.tc_translation_corrections
+#, fuzzy
+msgctxt "TC_TRANSLATION_CORRECTIONS"
+msgid "Corrections are appreciated."
+msgstr "Correcties worden op prijs gesteld."
 
 #. Section: UTELNET
 #: utr4wstrings:tc_telnet

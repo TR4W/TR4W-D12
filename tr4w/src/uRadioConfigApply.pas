@@ -229,8 +229,9 @@ function ActiveRadioSettingsChanged(const aStore: TRadioConfigStore;
   reverted the next time the operator pressed Save. }
 function ApplyPeerCommand(const aCommand, aValue: string): boolean;
 
-// The contest .cfg last opened, read from and written to the `general` section
-// of settings\tr4w.json.
+// The contest last opened -- its SQLite .db, which New Contest's "Last
+// Contest" button reopens (a .cfg until a contest became its database) --
+// read from and written to the `general` section of settings\tr4w.json.
 //
 // NOT a setting: it is bookkeeping, it is not registered, and it does not
 // appear in Preferences or in the search index (NY4I, 2026-08-16). It lives

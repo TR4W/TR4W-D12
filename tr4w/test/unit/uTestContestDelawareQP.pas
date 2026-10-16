@@ -79,9 +79,11 @@ uses
    HELPERS
    --------------------------------------------------------------------------- *)
 
+(* Every QSO these tests score is with a Delaware station, so the table
+   knows every QTH (Q107; the host-area rule is uTestHostAreaRule's). *)
 function StationAt(aInState: boolean): TStationContext;
 begin
-   Result := NoStation;
+   Result := WithHostAreaTable(NoStation);
    Result.InHostState := aInState;
    if aInState then
       begin

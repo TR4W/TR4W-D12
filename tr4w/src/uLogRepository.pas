@@ -1941,10 +1941,11 @@ begin
       if not q.EOF then
          begin
          token := q.Fields[0].AsString;
-         (* GetContestFromString scans ContestTypeSA, so the pair are true
-           inverses. It is reused rather than reimplemented -- though it does
-           contain an lstrcmpA and a string address, which the PChar sweep in
-           CLAUDE.md will want. Recorded there rather than forked here. *)
+         (* GetContestFromString reads ContestTypeSA (uContestNames), so the
+           pair are inverses for every current spelling -- AND it reads a
+           LEGACY name too: a New England log written before 2026-10-16
+           stores 'NEQP', which still means NEWENGLANDQSO (never Nebraska).
+           The row is not rewritten here; it is read as it stands. *)
          FContest := GetContestFromString(token);
          end;
       q.Close;

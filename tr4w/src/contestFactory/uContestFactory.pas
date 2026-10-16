@@ -128,6 +128,11 @@ uses
       (M11 S6); LogDom was used for that global alone and left with it at
       M10 S9e. *)
    uMults,
+   (* DomesticTableKnowsQTH -- the session's domestic table, behind the
+      station context's IsDomesticQTH service (Q107, 2026-10-16). The same
+      function LOGSTUFF hands a typed exchange's session. IMPLEMENTATION-
+      section, so no interface cycle. *)
+   LogDupe,
    uContestRegistry;
 
 (* THE ENGINE'S DOMESTIC-COUNTRY TEST, AS THE STATION CONTEXT'S SERVICE -- see
@@ -259,6 +264,9 @@ begin
       (2026-10-14) -- see TStationContext. *)
    Result.MyCQZone := @EngineMyCQZone;
    Result.IsNewMultiplierAnywhere := @EngineIsNewMultiplierAnywhere;
+   (* THE DOMESTIC TABLE, as a service (Q107) -- see TStationContext.
+      IsDomesticQTH. *)
+   Result.IsDomesticQTH := @DomesticTableKnowsQTH;
 
    (* MY ZONE, RESOLVED -- design 7.12. In the contest's zone mode when
       unstated; see TStationContext.MyZone. *)

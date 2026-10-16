@@ -139,8 +139,10 @@ handle by editing Station Info or as a future enhancement.
 **Scope 2 — Resume model:** **Hybrid.** Keep the single one-click **"Resume last"** button
 (zero-decision fast path) **and** make the existing-contests grid **sortable via clickable
 column headers**. No separate "recent contests" widget.
-*Nuance:* sort/surface by a **"Last Opened/Modified"** key, not the contest's Start Date, so
-the contest you were just working floats to the top.
+~~*Nuance:* sort/surface by a **"Last Opened/Modified"** key, not the contest's Start Date, so
+the contest you were just working floats to the top.~~ **DROPPED 2026-10-16 (NY4I, Q100):** the
+"Last Contest" button already gives one-click access to the contest just worked, so no
+per-database open time is kept -- `contest.last_opened_at` is deleted from the schema.
 
 ---
 
@@ -159,7 +161,7 @@ schedule, website, description, exchange definitions) from Qt/C++ into Delphi 12
 | Database-backed list (no filesystem browser)        | ✓      | 1    | Kill `[..]` and absolute paths                    |
 | Columned existing-contest grid (Name/Type/Date/Ver) | ✓      | 1    | From TR4QT                                        |
 | Clickable sortable columns                          | ✓      | 1    | Enables "recent"                                  |
-| "Last Opened" column / sort key                     | ✓      | 1    | Recent activity floats up, not start date         |
+| ~~"Last Opened" column / sort key~~ DROPPED (Q100)  | ✗      | --   | The "Last Contest" button covers it               |
 | Resume-vs-Create clearly separated                  | ✓      | 1    | Fixes the core two-tools flaw                     |
 | Delete / manage existing contests                   | ✓      | 1    | From TR4QT                                        |
 | One-click "Resume last" button (Alt+A)              | ✓      | 1    | Caption = friendly name, not file path            |
@@ -196,7 +198,7 @@ schedule, website, description, exchange definitions) from Qt/C++ into Delphi 12
 ## 7. Phased outcome
 
 - **At the TR4W port (Tier 1, no factory):** a clean two-zone dialog — sortable,
-  database-backed grid with last-opened surfacing + one-click resume on one side; a Create
+  database-backed grid ~~with last-opened surfacing~~ (dropped, Q100) + one-click resume on one side; a Create
   form with MY CALL override, type-ahead, native date picker, and populate-from-last on the
   other — plus full Win11 platform modernization. This alone retires every XP-era shortcoming
   that is not contest-knowledge-dependent.

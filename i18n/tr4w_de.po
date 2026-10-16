@@ -18,13 +18,14 @@ msgctxt "TC_TRANSLATION_LANGUAGE"
 msgid "ENGLISH"
 msgstr "Deutsch"
 
+# 2026-10-16: name from QRZ.com (DL4BBH) -- NY4I, 2026-10-16. Was "DL4BBH".
 #. Section: General
 #: utr4wstrings:tc_translation_author
 #: tr4w/src/lang/tr4w_consts_eng.pas:8
 #: utr4wstrings.tc_translation_author
 msgctxt "TC_TRANSLATION_AUTHOR"
 msgid "N4AF"
-msgstr "DL4BBH"
+msgstr "Friedrich zur Hellen DL4BBH"
 
 #. Section: General
 #: utr4wstrings:tc_translator_email
@@ -595,14 +596,18 @@ msgctxt "TC_IRTS"
 msgid "EI/GI, enter your County"
 msgstr "EI/GI, dein County eingeben"
 
+# 2026-10-16: the English changed from "Latest config file" to "Last Contest" -- the button reopens the contest's database, not a config file.
+# Composed from this catalogue's own words, please review: last = 'Last status:' -> 'Letzter Status:'; contest = 'Too many contest dates!!' -> 'Zu viele Contest Dates!!'.
+# Previous translation (of the old English): "Neueste Config Datei"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_latest_config_file
 #: tr4w/src/lang/tr4w_consts_eng.pas:100
 #: tfrmnewcontest.btnlatest.caption
 #: utr4wstrings.tc_latest_config_file
+#, fuzzy
 msgctxt "TC_LATEST_CONFIG_FILE"
-msgid "Latest config file"
-msgstr "Neueste Config Datei"
+msgid "Last Contest"
+msgstr "Letzter Contest"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_openconfigurationfile
@@ -6030,6 +6035,16 @@ msgstr "Testpaket gesendet an %s:%d. UDP kann nicht bestätigen, dass es angekom
 msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
 msgstr "%s übersetzung von %s"
+
+# 2026-10-16: new string -- the About box shows it only under a machine translation's credit, so this language does not show it today.
+#. Section: General
+#: utr4wstrings:tc_translation_corrections
+#: tr4w/src/lang/tr4w_consts_eng.pas:14
+#: utr4wstrings.tc_translation_corrections
+#, fuzzy
+msgctxt "TC_TRANSLATION_CORRECTIONS"
+msgid "Corrections are appreciated."
+msgstr ""
 
 #. Section: UTELNET
 #: utr4wstrings:tc_telnet

@@ -36,6 +36,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   Same number as Florida and arrived at independently, which is the argument
   for looking each party up rather than copying a neighbour: Michigan forbids
   the practice outright and California allows four.
+
+  BANDS (NY4I, 2026-10-16, from the four parties' rules): 160, 80, 40, 20,
+  15 and 10 m -- no WARC, no VHF. UsesBand states them; a QSO anywhere else
+  is logged, scores 0 and earns no multiplier (design 7.4).
  *)
 unit uContestIndianaQP;
 
@@ -108,6 +112,8 @@ type
       function GetCountyLineCountiesMax: integer; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
+      (* 160 to 10 m without WARC -- the header. *)
+      function UsesBand(aBand: BandType): boolean; override;
       (* A DX STATION EARNS NO MULTIPLIER -- logdupe's SetMultFlags rule for
          this contest (4.116.5), moved here at M8 and transcribed exactly: a
          multiplier QTH of 'DX' earns no multiplier of any kind. *)
@@ -237,6 +243,11 @@ end;
 function TContestIndianaQP.GetInStateDomesticFileName: string;
 begin
    Result := 'in';
+end;
+
+function TContestIndianaQP.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10];
 end;
 
 function TContestIndianaQP.GetFlags: TContestFlags;

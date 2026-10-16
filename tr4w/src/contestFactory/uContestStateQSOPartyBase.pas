@@ -312,11 +312,26 @@ type
          writes DomesticQTH, so a value left in the record by an earlier
          attempt would read as a host county. And the table's own
          placeholder, 'XXX' -- a QTH not yet copied -- is accepted by the
-         table as before: it says nothing about where the station is. *)
+         table as before: it says nothing about where the station is.
+
+         THE TEST IS uContestBase.HostAreaRuleCredits, and since Q107 it is
+         asked of a LOGGED QSO too -- CreditsWorkedStation below. *)
       function ParseReceivedExchange(const aText: string;
                                      const aSession: TReceivedExchangeSession;
                                      var aExch: ContestExchange;
                                      out aErrorMessage: string): boolean; override;
+
+      (* AND A LOGGED QSO IS HELD TO THE SAME RULE -- Q107 (NY4I,
+         2026-10-16). An out-of-state entrant's QSO whose received QTH the
+         session's table does not know (not a host county) is logged, scores
+         0 and earns no multiplier, however it arrived: an ADIF import, a
+         network peer, a rescore. The SAME predicate as the refusal above
+         (HostAreaRuleCredits), the same QTH text (the record's QTHString)
+         and the same table (Station.IsDomesticQTH is the engine function
+         the typed session carries), so a QSO refused when typed is exactly
+         a QSO that scores 0 when logged another way. Stated ONCE, here,
+         for every single-state party. See TContestBase.CreditsWorkedStation. *)
+      function CreditsWorkedStation(const aQso: ContestExchange): boolean; override;
    public
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
@@ -336,16 +351,26 @@ function TContestStateQSOPartyBase.ParseReceivedExchange(const aText: string;
                                                          out aErrorMessage: string): boolean;
 begin
    Result := inherited ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
-   if (not Result) or Station.InHostState then
+   if not Result then
       begin
       Exit;
       end;
 
-   if not aSession.IsDomesticQTH(string(aExch.QTHString)) then
+   if not HostAreaRuleCredits(Station.InHostState,
+                              string(aExch.QTHString),
+                              aSession.IsDomesticQTH) then
       begin
       Result := False;
       aErrorMessage := Format(SExchangeOutOfStateWorksHostOnly, [HostState]);
       end;
+end;
+
+function TContestStateQSOPartyBase.CreditsWorkedStation(const aQso: ContestExchange): boolean;
+begin
+   (* The refusal's predicate, on the record -- see the declaration. *)
+   Result := HostAreaRuleCredits(Station.InHostState,
+                                 string(aQso.QTHString),
+                                 Station.IsDomesticQTH);
 end;
 
 function TContestStateQSOPartyBase.GetIsUSQSOParty: boolean;

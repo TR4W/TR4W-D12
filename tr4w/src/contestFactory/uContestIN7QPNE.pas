@@ -84,9 +84,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     the composite's own     identity, the one Cabrillo log and the ADIF id,
                             set-up, the New Contest prompts, import, export,
                             the final score, no score posting
-    cannot, with today's    a band question asked with no QSO (UsesBand: the
-    seams                   dupe sheet and the need-multiplier hint), the
-                            county-line count (asked with a number, no QTH),
+    the union of the four   a band question asked with no QSO (UsesBand: the
+                            dupe sheet and the need-multiplier hint) --
+                            2026-10-16; it credited every band before
+    cannot, with today's    the
+    seams                   county-line count (asked with a number, no QTH),
                             the session's by-band / by-mode / VHF traits, and
                             WHICH multiplier a QTH counts as (the session's
                             one domestic table)
@@ -209,10 +211,26 @@ type
       function JudgingParty(const aQso: ContestExchange;
                             out aParty: TIN7QPNEParty): boolean;
 
+      (* THE BANDS ANY OF THE FOUR PARTIES CREDITS -- asked with no QSO (the
+         dupe sheet, the hint), so it cannot route; it is the UNION, asked
+         of the four party classes rather than copied (NY4I, 2026-10-16).
+         A QSO still scores and counts only on its JUDGING party's bands:
+         ScoreQSO and CountsAsMultiplier ask that party. *)
+      function UsesBand(aBand: BandType): boolean; override;
+
       (* THE JUDGING PARTY'S ANSWER, ON THE JUDGING PARTY'S BANDS. False for a
          QSO in no party. *)
       function CountsAsMultiplier(const aQso: ContestExchange;
                                   aKind: RemainingMultiplierType): boolean; override;
+
+      (* THE JUDGING PARTY'S HOST-AREA ANSWER -- Q107 (2026-10-16). Every
+         component states the rule (Indiana and Delaware on the state-party
+         base, the 7QP and NEQP their own), so the composite asks the party
+         that judges the QSO, handed the station that says whether the
+         entrant is in THAT party -- the answer its ScoreQSO and
+         ParseReceivedExchange already give. False for a QSO in no party,
+         which already scored 0 and earned nothing. *)
+      function CreditsWorkedStation(const aQso: ContestExchange): boolean; override;
 
       (* THE JUDGING PARTY PARSES THE EXCHANGE -- see the implementation. *)
       function ParseReceivedExchange(const aText: string;
@@ -352,6 +370,25 @@ begin
    Result.SetStation(partyStation);
 end;
 
+(* EVERY PARTY'S OWN UsesBand, through the one band seam. A band rule needs
+   no station, so the owned components are asked as they stand. Today that
+   is 160-10 m without WARC (Indiana, 7QP; New England's 80-10 m is inside
+   it) plus Delaware's 6 m and up. *)
+function TContestIN7QPNE.UsesBand(aBand: BandType): boolean;
+var
+   p: TIN7QPNEParty;
+begin
+   Result := False;
+   for p := Low(TIN7QPNEParty) to High(TIN7QPNEParty) do
+      begin
+      if ContestCreditsBand(FParties[p], aBand) then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
 function TContestIN7QPNE.JudgingParty(const aQso: ContestExchange;
                                       out aParty: TIN7QPNEParty): boolean;
 begin
@@ -395,12 +432,25 @@ begin
    (* THE PARTY'S BANDS ARE ASKED HERE, AND THAT IS NOT THE BAND RULE
       REPEATED. A contest never restates its OWN bands in this method, because
       SetMultFlags asks UsesBand first. This composite's UsesBand cannot route
-      -- it is asked with a band and no QSO -- so it credits every band, and
-      the judging party's bands can only be asked here, through the one
-      function that states the band rule. *)
+      -- it is asked with a band and no QSO -- so it credits the UNION of the
+      four parties' bands, and the judging party's own bands can only be
+      asked here, through the one function that states the band rule. *)
    component := PartyContest(party);
    Result := ContestCreditsBand(component, aQso.Band) and
              component.CountsAsMultiplier(aQso, aKind);
+end;
+
+function TContestIN7QPNE.CreditsWorkedStation(const aQso: ContestExchange): boolean;
+var
+   party: TIN7QPNEParty;
+begin
+   if not JudgingParty(aQso, party) then
+      begin
+      Result := False;
+      Exit;
+      end;
+
+   Result := PartyContest(party).CreditsWorkedStation(aQso);
 end;
 
 (* THE JUDGING PARTY PARSES THE EXCHANGE.
@@ -576,7 +626,10 @@ end;
 
 function TContestIN7QPNE.GetFlags: TContestFlags;
 begin
-   Result := [cfQSOByBand, cfQSOByMode];
+   (* cfVHFBandsEnabled SINCE 2026-10-16: UsesBand credits Delaware's 6 m and
+      up, so band stepping and the band map must reach them (design Q79's
+      recommendation). *)
+   Result := [cfQSOByBand, cfQSOByMode, cfVHFBandsEnabled];
 end;
 
 function TContestIN7QPNE.GetIsUSQSOParty: boolean;

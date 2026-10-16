@@ -18,13 +18,14 @@ msgctxt "TC_TRANSLATION_LANGUAGE"
 msgid "ENGLISH"
 msgstr "Čeština"
 
+# 2026-10-16: name from QRZ.com (OK1RR); silent key -- NY4I, 2026-10-16. Was "OK1RR".
 #. Section: General
 #: utr4wstrings:tc_translation_author
 #: tr4w/src/lang/tr4w_consts_eng.pas:8
 #: utr4wstrings.tc_translation_author
 msgctxt "TC_TRANSLATION_AUTHOR"
 msgid "N4AF"
-msgstr "OK1RR"
+msgstr "Martin Kratoska OK1RR (SK)"
 
 #. Section: General
 #: utr4wstrings:tc_translator_email
@@ -590,14 +591,18 @@ msgctxt "TC_IRTS"
 msgid "EI/GI, enter your County"
 msgstr "EI/GI, zadejte své hrabství"
 
+# 2026-10-16: the English changed from "Latest config file" to "Last Contest" -- the button reopens the contest's database, not a config file.
+# Composed from this catalogue's own words, please review: last = 'Delete the last QSO' -> 'Smaž poslední QSO'; contest = 'Too many contest dates!!' -> 'Příliš mnoho dat závodu!'.
+# Previous translation (of the old English): "poslední konfigurace"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_latest_config_file
 #: tr4w/src/lang/tr4w_consts_eng.pas:100
 #: tfrmnewcontest.btnlatest.caption
 #: utr4wstrings.tc_latest_config_file
+#, fuzzy
 msgctxt "TC_LATEST_CONFIG_FILE"
-msgid "Latest config file"
-msgstr "poslední konfigurace"
+msgid "Last Contest"
+msgstr "Poslední závod"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_openconfigurationfile
@@ -5985,6 +5990,16 @@ msgstr "Testovací paket odeslán na %s: %d. UDP nemůže potvrdit, že dorazil 
 msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
 msgstr "%s překlad do %s"
+
+# 2026-10-16: new string -- the About box shows it only under a machine translation's credit, so this language does not show it today.
+#. Section: General
+#: utr4wstrings:tc_translation_corrections
+#: tr4w/src/lang/tr4w_consts_eng.pas:14
+#: utr4wstrings.tc_translation_corrections
+#, fuzzy
+msgctxt "TC_TRANSLATION_CORRECTIONS"
+msgid "Corrections are appreciated."
+msgstr ""
 
 #. Section: UTELNET
 #: utr4wstrings:tc_telnet

@@ -170,6 +170,15 @@ type
       contest, on one branch. The UA4W Championship is its first reader. *)
    TMyCQZoneQuery = function: integer;
 
+   (* Does the session's domestic QTH table know this QTH? The table the
+      engine loaded for this contest and this station -- for a state QSO
+      party's out-of-state station, the host's county file. Handed to a
+      contest twice, by the same engine function (LOGDUPE.
+      DomesticTableKnowsQTH): in TReceivedExchangeSession when an exchange
+      is typed, and in TStationContext when a logged QSO is scored (Q107),
+      so the two can never answer differently. *)
+   TDomesticQTHTest = function(const aQTH: string): boolean;
+
    (* WHICH SHEET A "NEW MULTIPLIER" QUESTION IS ASKED OF. *)
    TNewMultiplierKind = (nmkDomestic, nmkDX);
 
@@ -373,6 +382,15 @@ type
          (nil) is "no sheet": nothing is new. RSGB 1.8 MHz is its first
          reader. *)
       IsNewMultiplierAnywhere: TNewMultiplierQuery;
+
+      (* DOES THE SESSION'S DOMESTIC TABLE KNOW THIS QTH? -- a READ-ONLY
+         SERVICE, Q107 (NY4I, 2026-10-16). See TDomesticQTHTest: the SAME
+         engine function the typed exchange's session carries, so scoring a
+         logged QSO and refusing a typed one ask one table one question. The
+         host-area rule (HostAreaRuleCredits) is its reader. The zero value
+         (nil) is "no table": it knows no QTH, so an out-of-area entrant
+         credits nothing -- the engine with no table loaded answers the same. *)
+      IsDomesticQTH: TDomesticQTHTest;
 
       (* THERE IS NO CLOCK HERE, AND THERE MUST NOT BE ONE.
 
@@ -646,11 +664,6 @@ type
 
    (* CTY.DAT's zone for a callsign, in the session's zone list. *)
    TCallZoneLookup = function(const aCall: string): Byte;
-
-   (* Does the session's domestic QTH table know this QTH? The table the
-      engine loaded for this contest and this station -- for a state QSO
-      party's out-of-state station, the host's county file. *)
-   TDomesticQTHTest = function(const aQTH: string): boolean;
 
    (* What live entry does to give up on the QSO being typed: the call and
       exchange windows are cleared and the cursor goes back to the call. *)
@@ -1782,6 +1795,9 @@ type
            1. QSOPoints := 0;
            2. a band the contest does not use (UsesBand) scores 0 -- NY4I,
               2026-10-01, design 7.4 -- and nothing below is asked;
+           2b. a worked station the entrant may not credit
+              (CreditsWorkedStation -- a QSO party's host-area rule, Q107,
+              2026-10-16) scores 0 the same way;
            3. the four QSO POINTS ... overrides the operator stated
               (Station.PointOverrides), each applying to the QSOs it matches;
            4. otherwise the contest's own rule, CalculateQSOPoints.
@@ -1862,6 +1878,33 @@ type
          SetMultFlags did for every contest it did not name. *)
       function CountsAsMultiplier(const aQso: ContestExchange;
                                   aKind: RemainingMultiplierType): boolean; virtual;
+
+      (* MAY THIS ENTRANT CREDIT A QSO WITH THIS WORKED STATION AT ALL? --
+         Q107 (NY4I, 2026-10-16: "yes, go with your recommendation").
+
+         A QSO party's out-of-area entrant works only the host area. That
+         was enforced only when a QSO was TYPED (the M5b refusal, design
+         7.10), so an imported, networked or rescored QSO scored against the
+         rule. Under Q13 a logged QSO is scored from its record by the
+         contest's rules, so the rule is asked here too.
+
+         FALSE MEANS THE QSO IS LOGGED, SCORES 0 AND EARNS NO MULTIPLIER --
+         exactly an off-band QSO (UsesBand), and asked in the same two
+         places: ScoreQSO, after the band check and BEFORE the four QSO
+         POINTS overrides (an override is a point value, not permission to
+         score a QSO the contest does not count), and logdupe's
+         SetMultFlags, after its band exit, through
+         ContestCreditsWorkedStation. So CalculateQSOPoints and
+         CountsAsMultiplier never see such a QSO, and a class must not repeat
+         the rule there. The dupe sheet is NOT asked (an uncredited QSO is
+         still a contact with that call), unlike the band rule.
+
+         A CLASS THAT STATES THE RULE CALLS HostAreaRuleCredits -- the ONE
+         predicate, which its ParseReceivedExchange refusal calls too, with
+         the same QTH text and the same table. THE BASE ANSWERS TRUE: a
+         contest with no host area credits every worked station, which is
+         what every contest did before this existed. *)
+      function CreditsWorkedStation(const aQso: ContestExchange): boolean; virtual;
 
       (* THE DOMESTIC MULTIPLIER A CALL IMPLIES BEFORE ANY EXCHANGE IS TYPED
          -- M8, 2026-10-02.
@@ -3088,6 +3131,32 @@ function CreditedBands(aContest: TContestBase; aBandMask: Cardinal): Cardinal;
 function ContestCountsMultiplier(aContest: TContestBase; const aQso: ContestExchange;
                                  aKind: RemainingMultiplierType): boolean;
 
+(* MAY aContest'S ENTRANT CREDIT aQso'S WORKED STATION? -- see
+   TContestBase.CreditsWorkedStation (Q107). nil answers True: a classless
+   contest has no host area. The one way the sheet asks, as
+   ContestCreditsBand is for the band. *)
+function ContestCreditsWorkedStation(aContest: TContestBase;
+                                     const aQso: ContestExchange): boolean;
+
+(* THE HOST-AREA RULE -- THE ONE PREDICATE, Q107 (NY4I, 2026-10-16) and
+   design 7.10 (2026-10-02): "In QSO parties, out of state stations usually
+   only log the state county" -- "true for qso parties in general" (Q29).
+
+   An entrant inside the host area works everyone (True). An entrant outside
+   it credits a QSO only when the worked station's received QTH, aWorkedQTH
+   (the record's QTHString, as typed or imported), is known to the session's
+   domestic table -- which, outside the host area, is the host's county file
+   and nothing else. A nil table knows nothing.
+
+   CALLED FROM BOTH SIDES with the same arguments' sources: a contest's
+   ParseReceivedExchange refusal hands it aSession.IsDomesticQTH, its
+   CreditsWorkedStation hands it Station.IsDomesticQTH -- the same engine
+   function (LOGDUPE.DomesticTableKnowsQTH) -- so a QSO refused when typed is
+   exactly a QSO that scores 0 when logged another way. *)
+function HostAreaRuleCredits(aEntrantInHostArea: boolean;
+                             const aWorkedQTH: string;
+                             aIsHostQTH: TDomesticQTHTest): boolean;
+
 (* THE PREFIX MULTIPLIER KEY aQso EARNS IN aContest -- see
    TContestBase.PrefixMultiplierKey. nil answers False, leaving the prefix as
    it was: the classless DUMMYCONTEST runs NoPrefixMults. *)
@@ -3531,6 +3600,37 @@ begin
       end;
 end;
 
+function ContestCreditsWorkedStation(aContest: TContestBase;
+                                     const aQso: ContestExchange): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := True;
+      end
+   else
+      begin
+      Result := aContest.CreditsWorkedStation(aQso);
+      end;
+end;
+
+function HostAreaRuleCredits(aEntrantInHostArea: boolean;
+                             const aWorkedQTH: string;
+                             aIsHostQTH: TDomesticQTHTest): boolean;
+begin
+   if aEntrantInHostArea then
+      begin
+      Result := True;
+      end
+   else if Assigned(aIsHostQTH) then
+      begin
+      Result := aIsHostQTH(aWorkedQTH);
+      end
+   else
+      begin
+      Result := False;
+      end;
+end;
+
 function ContestPrefixMultiplierKey(aContest: TContestBase; const aQso: ContestExchange;
                                    out aKey: PrefixMultiplierString): boolean;
 begin
@@ -3954,6 +4054,13 @@ begin
       Exit;
       end;
 
+   (* THE HOST-AREA RULE, Q107 -- before the overrides, as the band rule is.
+      See CreditsWorkedStation. *)
+   if not CreditsWorkedStation(aQso) then
+      begin
+      Exit;
+      end;
+
    if ApplyQSOPointOverride(FStation.PointOverrides, aQso) then
       begin
       Exit;
@@ -4157,6 +4264,12 @@ function TContestBase.CountsAsMultiplier(const aQso: ContestExchange;
 begin
    (* The sheet decides, as it did for every contest SetMultFlags did not
       name -- see the declaration. *)
+   Result := True;
+end;
+
+function TContestBase.CreditsWorkedStation(const aQso: ContestExchange): boolean;
+begin
+   (* No host area: every worked station is credited -- see the declaration. *)
    Result := True;
 end;
 

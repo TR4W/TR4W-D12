@@ -416,6 +416,21 @@ begin
          ok := False;
          msg := Format(SExchangeOutOfStateWorksHostOnly, [aHostState]);
          end;
+      'p', 'w':
+         begin
+         (* A MULTI-STATE PARTY'S OUT-OF-AREA STATION -- Q107: as 'o', naming
+            the 7th area ('p') or New England ('w'), which have no HostState. *)
+         PinBehaviour(aHelper, RowText(aRow), exch);
+         ok := False;
+         if aCode = 'p' then
+            begin
+            msg := Format(SExchangeOutOfStateWorksHostOnly, ['7th area']);
+            end
+         else
+            begin
+            msg := Format(SExchangeOutOfStateWorksHostOnly, ['New England']);
+            end;
+         end;
       'u':
          begin
          msg := string(TC_INVALID);
@@ -965,7 +980,7 @@ begin
 
 
 
-      FLORIDAQSOPARTY, LABRE, IDAHOQSOPARTY, DELAWAREQSOPARTY:
+      FLORIDAQSOPARTY, LABRE, IDAHOQSOPARTY, DELAWAREQSOPARTY, NEBRASKAQSO:
 
          begin
 
@@ -1175,6 +1190,14 @@ const
       the host-state station, which works everyone. *)
    CODES_OUT_OF_STATE  = '......oooooooooooooooooo............oooooo..................oooooo';
 
+   (* THE SAME RULE IN THE TWO MULTI-STATE PARTIES -- Q107 (NY4I,
+      2026-10-16): outside the 7th area ('p') or New England ('w') an accepted
+      exchange whose QTH the domestic table does not know is refused, through
+      the same predicate (uContestBase.HostAreaRuleCredits). Before Q107 both
+      were all '.'. *)
+   CODES_SEVENQP_OUT_OF_AREA = '......pppppppppppppppppp............pppppp..................pppppp';
+   CODES_NEQP_OUT_OF_AREA    = '......wwwwwwwwwwwwwwwwww............wwwwww..................wwwwww';
+
    (* Sweepstakes: a refused exchange with no precedence says so. *)
    CODES_SWEEPSTAKES   = 'nnnnnn..........................................nnnnnn............';
 
@@ -1219,7 +1242,7 @@ begin
          Result := StringOfChar('-', ROWS);
          end;
 
-      ArizonaQsoParty, BCQP, CALQSOPARTY, COLORADOQSOPARTY, DELAWAREQSOPARTY,
+      ArizonaQsoParty, BCQP, CALQSOPARTY, COLORADOQSOPARTY, DELAWAREQSOPARTY, NEBRASKAQSO,
       FLORIDAQSOPARTY, IDAHOQSOPARTY, INQSOPARTY, MICHQSOPARTY, MINNQSOPARTY,
       MOQSOPARTY, NCQSOPARTY, NYQP, OHIOQSOPARTY, PAQSOPARTY, SALMONRUN,
       TENNESSEEQSOPARTY, TEXASQSOPARTY, VAQP, WISCONSINQSOPARTY:
@@ -1227,6 +1250,26 @@ begin
          if aStation <> psHost then
             begin
             Result := CODES_OUT_OF_STATE;
+            end;
+         end;
+
+      (* In area: the 7QP's host station is set-up's in-state answer, NEQP's
+         is MY STATE in New England -- the roster's psHost is K1AAA in MA,
+         inside New England and outside the 7th area's MY STATE but marked in
+         state, so it is in area for both. *)
+      SEVENQP:
+         begin
+         if aStation <> psHost then
+            begin
+            Result := CODES_SEVENQP_OUT_OF_AREA;
+            end;
+         end;
+
+      NEWENGLANDQSO:
+         begin
+         if aStation <> psHost then
+            begin
+            Result := CODES_NEQP_OUT_OF_AREA;
             end;
          end;
 
@@ -1409,7 +1452,7 @@ const
       TENNESSEEQSOPARTY, COLORADOQSOPARTY, PCC, DARC10M, CWOPS, CANADA_DAY,
       CQWWRTTY, ARRL_RTTY_ROUNDUP, CQIR, ALRS_UA1DZ_CUP, WINTERFIELDDAY,
       PAQSOPARTY, INQSOPARTY, OKOMSSB, IRTS, EUDX, BCQP, VAQP, IN7QPNE, SST,
-      IDAHOQSOPARTY, DELAWAREQSOPARTY];
+      IDAHOQSOPARTY, DELAWAREQSOPARTY, NEBRASKAQSO];
 
    CARRIES_ZONE_EVERYWHERE = [
       CQ160CW, CQ160SSB, CQWWCW, CQWWSSB, CROATIAN, EUROPEANHFC, GACWWWSACW,
@@ -1549,9 +1592,11 @@ procedure TExchangeParseTests.Test_EveryContestStatesWhatItsExchangeCarries;
 const
    (* HOW MANY CONTESTS ANSWER EACH AT EACH ROSTER STATION, counted from the
       sets and branches above: the domestic QTH 87 everywhere and the two
-      ARRL DX outside W/VE; the zone 25 and the JIDX pair at JA. *)
+      ARRL DX outside W/VE; the zone 25 and the JIDX pair at JA. The domestic
+      QTH rose by one everywhere on 2026-10-16, by hand: the Nebraska QSO
+      Party. *)
    COUNTS: array[TExchangeCarry, TPinStation] of integer = (
-      (87, 87, 89, 87, 89, 89, 89),
+      (88, 88, 90, 88, 90, 90, 90),
       (25, 25, 25, 25, 25, 25, 27),
       (20, 20, 20, 20, 20, 20, 20),
       (5, 5, 5, 5, 5, 5, 5)

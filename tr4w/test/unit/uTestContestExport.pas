@@ -779,6 +779,11 @@ begin
    Pin(DELAWAREQSOPARTY, 'NDE', 'NDE', 'K', 'DE');
    Pin(DELAWAREQSOPARTY, 'MD', 'Md', 'K', 'MD');
 
+   (* NEBRASKA: its counties are four letters (2026-10-16). *)
+   Pin(NEBRASKAQSO, 'LNCS', 'LNCS', 'K', 'NE');
+   Pin(NEBRASKAQSO, 'KS', 'Ks', 'K', 'KS');
+   Pin(NEBRASKAQSO, 'DX', 'dx', 'DL', '');
+
    (* THE 7QP: keys lead with the state. *)
    Pin(SEVENQP, 'AZAPH', 'Azaph', 'K', 'AZ');
    Pin(SEVENQP, 'WAKIN', 'Wakin', 'K', 'WA');
@@ -863,9 +868,10 @@ begin
                      string(ContestTypeSA[c]) + ': a host county is the host''s state');
          end;
       end;
-   (* The 20 state parties and the three multi-state ones -- counted by
-      hand, so a party added or lost is a deliberate change here. *)
-   CheckEquals(23, parties, 'the QSO parties that write a worked station''s STATE');
+   (* The 21 state parties (Nebraska joined 2026-10-16) and the three
+      multi-state ones -- counted by hand, so a party added or lost is a
+      deliberate change here. *)
+   CheckEquals(24, parties, 'the QSO parties that write a worked station''s STATE');
 end;
 
 (* THE EXPORTED RECORD ITSELF: a worked BC station's QSO carries STATE:BC,

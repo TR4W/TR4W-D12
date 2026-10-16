@@ -368,6 +368,7 @@ uses Log4D, uFreqTimeFormat, uStrSearch,   // Issue #997: freq/time formatters +
        tests -- link already. *)
      Dialogs,
      uAppStrings,   // SFileNotFoundThere
+     uContestNames, // ContestFromName -- GetContestFromString's rule
      uMainThread;
 
 // Own Log4D logger (initialized at the foot of this unit), replacing the former
@@ -680,28 +681,13 @@ Jari OH6BG
 //     LoadKeyboardLayout('00000409', KLF_ACTIVATE);   // issue 178 force Latin
 end;
 function GetContestFromString(ContestString: ShortString): ContestType;
-var
-  TempContest                           : ContestType;
 begin
-  ContestString[Ord(ContestString[0]) + 1] := #0;
-  for TempContest := Succ(DUMMYCONTEST) to High(ContestType) do
-    (* A STRING COMPARISON, not StrComp over two pointers.
-
-      It was StrComp(table[i], @ContestString[1]) -- and before that
-      Windows.lstrcmpA, which additionally applied the user's LOCALE, wrong
-      here because these are contest identifiers rather than display text (a
-      Turkish locale famously does not fold 'I').
-
-      `=` on strings is exact and case-SENSITIVE, which is what StrComp was.
-      The @ContestString[1] goes with it: a ShortString is not NUL-terminated,
-      so that pointer was only ever safe because the tail happened to be
-      zeros. *)
-    if ContestTypeSA[TempContest] = string(ContestString) then
-       begin
-       Result := TempContest;
-       Exit;
-       end;
-  Result := DUMMYCONTEST;
+  (* uContestNames OWNS THE RULE (2026-10-16): a current ContestTypeSA
+    spelling, then a LEGACY name -- 'NEQP', the New England QSO Party's
+    spelling until it became NEWEQP, which every older log stores. This was a loop of its own, exact and case-sensitive, while the
+    CONTEST setting matched case-insensitively; one rule now serves both, and
+    no two spellings differ only by case (pinned in uTestContestNames). *)
+  Result := ContestFromName(string(ContestString));
 end;
 
 {

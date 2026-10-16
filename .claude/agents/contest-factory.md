@@ -67,7 +67,18 @@ Delaware (`uContestDelawareQP`, design 8.2q) is the second, and adds two traps:
 `.dom` line holding `=` is an ENTRY, comments included** (`logdom.EnumDOMFILE`
 has no comment syntax), so a header must not contain one. A county file an
 in-state file INCLUDEs maps each county with `KEY > Mult = ...` (Idaho's and
-Delaware's), or each county becomes its own in-state multiplier.
+Delaware's), or each county becomes its own in-state multiplier -- which is
+what Nebraska (`uContestNebraskaQP`, 2026-10-16, design Q105) wants: its
+`nebraska_cty.dom` maps none, so an in-state entrant counts each county.
+**A `ContestTypeSA` spelling is STORED DATA and is never given to another
+contest** (Q105): every SQLite log's `contest` row and every `.cfg` holds it.
+New England was `NEQP` and is `NEWEQP`; `NEQP` is a permanent READ alias in
+`uContestNames.LEGACY_CONTEST_NAMES` -- the ONE resolver of a contest name
+(`TryContestFromName`, behind `TF.GetContestFromString` and, through
+`uSettingsModel.RegisterSettingValueSpelling`, the CONTEST setting). Nebraska
+is `NE-QSO-PARTY` (Cabrillo and ADIF too); New England's Cabrillo is
+`NEWE-QSO-PARTY` and its ADIF id stays `NEQP`, stated in its class. A rename
+adds its alias in the same commit (`ADDING_A_CONTEST.md` Step 3c).
 `docs/CONTEST_RULES_OUTSIDE_FACTORY.md` is generated from `git ls-files`, so it
 cannot see a new unit until it is committed -- regenerate after the commit.
 
@@ -360,13 +371,45 @@ the target shape, the M-step migration order and the open questions.
   (`MainUnit.LocateCallStrippingRoverCounty`); a caller with none fetches it
   only for a call with a '/'.
 - **`ScoreQSO` is the ONE public scoring entry point** (M3, 2026-10-01):
-  non-virtual on `TContestBase` -- zero, band check, the four `QSO POINTS ...`
+  non-virtual on `TContestBase` -- zero, band check, the host-area check
+  (`CreditsWorkedStation`, Q107), the four `QSO POINTS ...`
   overrides (`TStationContext.PointOverrides`, filled by
   `uContestFactory.CurrentQSOPointOverrides`, applied by
   `uContestBase.ApplyQSOPointOverride` -- the same function the classless
   engine path calls), then the **protected** `CalculateQSOPoints`. Declare an
   override of it `protected`, never `public`. Tests call `ScoreQSO`. Design
   doc §7.7, §8.2d.
+- **A QSO PARTY'S HOST-AREA RULE IS TYPED AND SCORED (Q107, NY4I
+  2026-10-16).** An out-of-area entrant's QSO whose received QTH the session's
+  domestic table does not know is refused when typed AND, logged any other way
+  (import, peer, the Rescore menu, the matrix), scores 0 with no multiplier --
+  the off-band shape, but the dupe sheet is NOT asked. ONE predicate,
+  `uContestBase.HostAreaRuleCredits(inArea, QTHString, table)`, called by the
+  refusal (`aSession.IsDomesticQTH`) and by `CreditsWorkedStation` (base True;
+  `Station.IsDomesticQTH`, a new `TStationContext` service) -- both are
+  `LOGDUPE.DomesticTableKnowsQTH`. Stated once on `TContestStateQSOPartyBase`;
+  the 7QP (`InHostState`) and NEQP (MY STATE in New England) state it
+  themselves with their own in-area test; IN7QPNE asks its judging party.
+  Locust (not a party), NAQP, County Hunter, BWQP: no host area, not applied.
+  `SetMultFlags` exits on `ContestCreditsWorkedStation` after the band. A test
+  that scores party QSOs out of state needs a table: `uTestContestObjects.
+  WithHostAreaTable` (knows every QTH); `uTestHostAreaRule` pins the rule,
+  the one-answer property and the rescore through `RecomputeQSOScoring`.
+  THE MATRIX LOGS ONE HOST-AREA QSO FOR AN OUT-OF-AREA ENTRANT (QSO 37,
+  `K9HQP`, 2026-10-16): added only when the active contest refuses to credit
+  a station that sent no QTH (`ContestCreditsWorkedStation`), its QTH taken
+  from the file the session's domestic table was actually loaded from
+  (`SessionDomesticFileKeys`) -- nothing names a contest. Without it every
+  party's out-of-area record scored 0 after Q107, and out-of-area points
+  were seen by the unit tests only.
+- **The domestic (.dom) table is a CLASS over a dictionary** (`TDomQTHTable`
+  in `trdos/logdom.pas`, 2026-10-16): `TObjectDictionary` keyed by the
+  alias, which owns its entries. The DOS linked list (`PrefixRec`,
+  `NextRecord`, 36 buckets, `New`/`Dispose`) is deleted; its dispose loop
+  read through nil on any reload. Lookup is EXACT (uppercased, no prefix
+  match), FIRST ADDED WINS, aliases kept to ten characters, an empty alias is
+  never stored. A top-level load clears the table; INCLUDE FILE adds.
+  `uTestDomQTHTableReload` pins all of it.
 - **The dupe policy is `MarksDupes`** (M3): `logsubs2` asks
   `ContestIdentity(Contest).MarksDupes`, not `ActiveQSOPointMethod`. Since
   M10 S4 the base answers True; Internet Sprint and the Youth Championship
@@ -587,8 +630,13 @@ the target shape, the M-step migration order and the open questions.
   (MY STATE routed, when in state); neither -> 0 points, no multiplier,
   refused when typed. It delegates `ScoreQSO`, `CountsAsMultiplier` (with
   the party's bands) and `ParseReceivedExchange`; everything asked without
-  a QSO (`UsesBand`, `ValidateQTHCount`, set-up traits, which multiplier a
-  QTH counts as) stays the composite's, recorded as findings (Q79-Q82).
+  a QSO (`ValidateQTHCount`, set-up traits, which multiplier a QTH counts
+  as) stays the composite's, recorded as findings (Q79-Q82). **`UsesBand`
+  is the UNION of the four parties' own `UsesBand`** (2026-10-16, asked of
+  the owned components, never copied): New England 80-10 m, 7QP and
+  Indiana 160-10 m, Delaware 160-10 m and 6 m up, all without WARC -- so
+  IN7QPNE states `cfVHFBandsEnabled`; a QSO still scores only on its
+  judging party's bands. `uTestQSOPartyBands` pins all five.
   The NE spellings of `in7qpne_cty.dom` and `neqso.dom` DISAGREE (Q81) --
   route on the combined file's keys, never the components' files. No score
   posting: `PermittedOperatingAids`, and since 8.2r `uHamScore` asks it too

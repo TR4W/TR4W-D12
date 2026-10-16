@@ -604,14 +604,18 @@ msgctxt "TC_IRTS"
 msgid "EI/GI, enter your County"
 msgstr "EI/GI, enter your County"
 
+# 2026-10-16: the English changed from "Latest config file" to "Last Contest" -- the button reopens the contest's database, not a config file.
+# Composed from this catalogue's own words, please review: last = 'Last 60 = %d' -> 'Сvvлийн 60 = %d'; contest = NONE -- this catalogue has no word for contest; left for a translator.
+# Previous translation (of the old English): "Сvvлчийн Config File"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_latest_config_file
 #: tr4w/src/lang/tr4w_consts_eng.pas:100
 #: tfrmnewcontest.btnlatest.caption
 #: utr4wstrings.tc_latest_config_file
+#, fuzzy
 msgctxt "TC_LATEST_CONFIG_FILE"
-msgid "Latest config file"
-msgstr "Сvvлчийн Config File"
+msgid "Last Contest"
+msgstr ""
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_openconfigurationfile
@@ -5950,6 +5954,16 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
+msgstr ""
+
+# 2026-10-16: new string -- the About box shows it only under a machine translation's credit, so this language does not show it today.
+#. Section: General
+#: utr4wstrings:tc_translation_corrections
+#: tr4w/src/lang/tr4w_consts_eng.pas:14
+#: utr4wstrings.tc_translation_corrections
+#, fuzzy
+msgctxt "TC_TRANSLATION_CORRECTIONS"
+msgid "Corrections are appreciated."
 msgstr ""
 
 #. Section: UTELNET

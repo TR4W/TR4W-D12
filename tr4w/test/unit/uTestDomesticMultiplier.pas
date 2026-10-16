@@ -189,7 +189,7 @@ const
       ALLJA, ARCI, ARI_DX, ARRL10, ARRL160, ARRLFIELDDAY, ARRLSSCW,
       ARRLSSSSB, ARRL_RTTY_ROUNDUP, ArizonaQsoParty, BCQP, CALQSOPARTY,
       CANADA_DAY, CANADA_WINTER, CIS, COLORADOQSOPARTY, CQ160CW, CQ160SSB,
-      CQIR, CQWWRTTY, CROATIAN, CUPRFDIG, CUPURAL, DELAWAREQSOPARTY, EUDX,
+      CQIR, CQWWRTTY, CROATIAN, CUPRFDIG, CUPURAL, DELAWAREQSOPARTY, NEBRASKAQSO, EUDX,
       FISTS, FLORIDAQSOPARTY, FOCMARATHON, HADX, HELVETIA, IDAHOQSOPARTY,
       IN7QPNE, INQSOPARTY, INTERNETSPRINT, IRTS, JALONGPREFECT, KCJ,
       KINGOFSPAINCW, KINGOFSPAINSSB, LABRE, LQP, LZDX, MICHQSOPARTY,
@@ -687,19 +687,21 @@ const
    (* HOW MANY CONTESTS LOOK THEIR DOMESTIC QTH UP IN A FILE AT EACH STATION,
       counted by hand: the 85, plus each station-dependent one whose
       entrant test passes there. The matrix agrees at us, ve and dx (92, 92,
-      94 DomesticFile records). *)
+      94 DomesticFile records). EVERY COUNT ROSE BY ONE ON 2026-10-16, BY
+      HAND: the Nebraska QSO Party, a new state party (design Q105), uses
+      its county files at every station. *)
    COUNTS: array[TPinStation] of integer = (
-      92,    (* us -- not ARRL DX *)
-      92,    (* ve *)
-      94,    (* dx (DL) -- all nine *)
-      92,    (* host (K) *)
-      94,    (* UA *)
-      94,    (* UA1 *)
-      92,    (* JA -- not JIDX *)
-      93,    (* OK -- not OK DX *)
-      92,    (* ON -- not the two UBA *)
-      93,    (* UR -- not the Ukrainian DX *)
-      93     (* YU -- not YU DX *)
+      93,    (* us -- not ARRL DX *)
+      93,    (* ve *)
+      95,    (* dx (DL) -- all nine *)
+      93,    (* host (K) *)
+      95,    (* UA *)
+      95,    (* UA1 *)
+      93,    (* JA -- not JIDX *)
+      94,    (* OK -- not OK DX *)
+      93,    (* ON -- not the two UBA *)
+      94,    (* UR -- not the Ukrainian DX *)
+      94     (* YU -- not YU DX *)
    );
 var
    c: ContestType;
@@ -728,7 +730,7 @@ begin
       CheckEquals(COUNTS[s], count, 'contests using a domestic file at ' + STATIONS[s].Call);
       end;
 
-   (* 94 AT SOME STATION -- plan 2.6. *)
+   (* 94 AT SOME STATION -- plan 2.6; 95 since Nebraska (2026-10-16). *)
    total := 0;
    for c := Low(ContestType) to High(ContestType) do
       begin
@@ -737,7 +739,7 @@ begin
          Inc(total);
          end;
       end;
-   CheckEquals(94, total, 'contests using a domestic file at some roster station');
+   CheckEquals(95, total, 'contests using a domestic file at some roster station');
 end;
 
 (* A CONTEST THAT LOOKS ITS QTH UP IN THE FILE STATES NO SHAPE -- the two
@@ -808,21 +810,22 @@ end;
    It replaces the session's `kind <> NoDomesticMults`. The counts at us, ve
    and dx are the frozen matrix's (117, 117, 118 variants whose
    doing.domestic word is TRUE); a script predicted all 580 frozen variants
-   from the classes' source with 0 mismatches before the kind went. *)
+   from the classes' source with 0 mismatches before the kind went. Every
+   count rose by one on 2026-10-16, by hand: the Nebraska QSO Party's file. *)
 procedure TDomesticMultiplierTests.Test_EveryContestHasItsPinnedDomesticMultiplier;
 const
    COUNTS: array[TPinStation] of integer = (
-      117,   (* us -- 92 file, 25 shape *)
-      117,   (* ve *)
-      118,   (* dx (DL) -- 94 file, 24 shape: not WAG *)
-      117,   (* host *)
-      119,   (* UA *)
-      119,   (* UA1 *)
-      117,   (* JA *)
-      118,   (* OK *)
-      117,   (* ON *)
-      118,   (* UR *)
-      118    (* YU *)
+      118,   (* us -- 93 file, 25 shape *)
+      118,   (* ve *)
+      119,   (* dx (DL) -- 95 file, 24 shape: not WAG *)
+      118,   (* host *)
+      120,   (* UA *)
+      120,   (* UA1 *)
+      118,   (* JA *)
+      119,   (* OK *)
+      118,   (* ON *)
+      119,   (* UR *)
+      119    (* YU *)
    );
 var
    c: ContestType;

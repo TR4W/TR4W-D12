@@ -302,6 +302,7 @@ uses
    uContestWashingtonSalmonRun in '..\..\src\contestFactory\uContestWashingtonSalmonRun.pas',
    uContestIdahoQP in '..\..\src\contestFactory\uContestIdahoQP.pas',
    uContestDelawareQP in '..\..\src\contestFactory\uContestDelawareQP.pas',
+   uContestNebraskaQP in '..\..\src\contestFactory\uContestNebraskaQP.pas',
    uContestIN7QPNE in '..\..\src\contestFactory\uContestIN7QPNE.pas',
    uContestQCWA in '..\..\src\contestFactory\uContestQCWA.pas',
    uContestQCWAGolden in '..\..\src\contestFactory\uContestQCWAGolden.pas',
@@ -577,6 +578,7 @@ uses
    uTestWindowSnap      in 'uTestWindowSnap.pas',
    uAppPaths            in '..\..\src\uAppPaths.pas',
    uDomFileKeys         in '..\..\src\uDomFileKeys.pas',
+   uContestNames        in '..\..\src\uContestNames.pas',
    uTLSTrust            in '..\..\src\utils\uTLSTrust.pas',
    uHTTPDownload        in '..\..\src\utils\uHTTPDownload.pas',
    uLogBinaryFile       in '..\..\src\uLogBinaryFile.pas',
@@ -663,8 +665,19 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestContestPOTA     in 'uTestContestPOTA.pas',
    (* The Delaware QSO Party, a new contest (design 7.14, 8.2q). *)
    uTestContestDelawareQP in 'uTestContestDelawareQP.pas',
+   (* The Nebraska QSO Party, a new contest, and the New England rename
+      with its legacy name (design Q105, 2026-10-16). *)
+   uTestContestNebraskaQP in 'uTestContestNebraskaQP.pas',
+   uTestContestNames    in 'uTestContestNames.pas',
+   (* Every QSO party's stated bands (NY4I, 2026-10-16). *)
+   uTestQSOPartyBands   in 'uTestQSOPartyBands.pas',
    (* IN7QPNE, the composite of four parties (design 7.14, 8.2r). *)
    uTestContestIN7QPNE in 'uTestContestIN7QPNE.pas',
+   (* A QSO party's host-area rule, typed AND scored (Q107, 2026-10-16). *)
+   uTestHostAreaRule    in 'uTestHostAreaRule.pas',
+   (* A .dom loaded into a table that already holds one (LOGDOM's emptying
+      loop read through nil at the end of every list, D7 included). *)
+   uTestDomQTHTableReload in 'uTestDomQTHTableReload.pas',
    uTestSettingsFreshInstall in 'uTestSettingsFreshInstall.pas',
    uTestLegacyConversionCheck in 'uTestLegacyConversionCheck.pas',
    uLegacyConversionCheck in '..\..\src\uLegacyConversionCheck.pas',
@@ -757,7 +770,12 @@ begin
    RegisterSuite(TExchangeKindReadersTests.Create('ExchangeKindReaders'));
    RegisterSuite(TContestPOTATests.Create('ContestPOTA'));
    RegisterSuite(TContestDelawareQPTests.Create('ContestDelawareQP'));
+   RegisterSuite(TContestNebraskaQPTests.Create('ContestNebraskaQP'));
+   RegisterSuite(TContestNamesTests.Create('ContestNames'));
+   RegisterSuite(TQSOPartyBandsTests.Create('QSOPartyBands'));
    RegisterSuite(TContestIN7QPNETests.Create('ContestIN7QPNE'));
+   RegisterSuite(THostAreaRuleTests.Create('HostAreaRule'));
+   RegisterSuite(TDomQTHTableReloadTests.Create('DomQTHTableReload'));
    RegisterSuite(TCRC32Tests.Create('CRC32'));
    RegisterSuite(TK4SpectrumTests.Create('K4Spectrum'));
    RegisterSuite(TIcomScopeTests.Create('IcomScope'));

@@ -932,7 +932,7 @@ begin
                  aSent, aRec);
             end;
          end;
-      LABRE, IDAHOQSOPARTY, DELAWAREQSOPARTY:
+      LABRE, IDAHOQSOPARTY, DELAWAREQSOPARTY, NEBRASKAQSO:
          begin
          Take(aVariant,
               ['599 FL     ',

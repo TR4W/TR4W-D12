@@ -110,6 +110,21 @@ $test     = Join-Path $TR4W_DIR 'test\unit'
 $tc = Find-Tr4wToolchain -Fpc $Fpc -Laz $Laz -Cpu $Cpu -Os $Os -Quiet
 if (-not $tc) { exit 2 }
 
+# THE TEST BINARY LINKS THE SAME tr4w_languages.res THE APP DOES, and
+# uTestUILanguage checks what it carries -- so it must be current here too, not
+# only in Build-App.ps1. See build\LanguageResStamp.ps1.
+. (Join-Path $PSScriptRoot 'LanguageResStamp.ps1')
+try
+   {
+   Sync-Tr4wLanguageRes -Repo $REPO
+   }
+catch
+   {
+   Write-Host ''
+   Write-Host "BUILD FAILED: $($_.Exception.Message)"
+   exit 1
+   }
+
 # THE LEAK CEILING for -Checked: unfreed heap blocks at exit. Ratchets DOWN only.
 # Measured 2026-10-14 (79,026 tests, 119 suites): 13,469, identical on two runs.
 # -1 would mean "not yet measured" and is reported, never enforced.

@@ -203,7 +203,18 @@ the single-word test) is LIFTED to `uExchangeTokens` and called by both.
 **Two refusals NY4I ruled (design 7.10)**: Sweepstakes without a precedence
 says so; a state party's out-of-state station working a non-host station is
 refused. The matrix's `parse` section sees all of it; nothing sees the window
-(`BENCH_QUEUE.md`).
+(`BENCH_QUEUE.md`). **Since Q107 (2026-10-16) the host-area refusal is also
+SCORING**: a logged out-of-area x non-host QSO (import, peer, rescore) scores
+0 and earns no multiplier, through the class's `CreditsWorkedStation` --
+`ScoreQSO` asks it after the band, `SetMultFlags` exits on it after its band
+exit. Both sides call `uContestBase.HostAreaRuleCredits` with the record's
+`QTHString` and the engine's table, `LOGDUPE.DomesticTableKnowsQTH` (moved
+from LOGSTUFF's `ParseSessionIsDomesticQTH`; handed to the typed session AND
+to `TStationContext.IsDomesticQTH`). The rescore (`RecomputeQSOScoring`)
+reaches it with no extra code: it reads no stored flag or points. Note that
+`DomesticTableKnowsQTH` -> `GetDomQTH` calls `ActiveContest` itself, so it
+re-stamps the active object's station from inside that object's scoring --
+benign (same values), but it costs a `CurrentStation` per call.
 
 **THE SHEET KEEPS THE STATE; THE CONTEST DECLARES THE RULES (M8,
 2026-10-02, ownership doc §8.2l).** `logdupe.SetMultFlags` names no contest:

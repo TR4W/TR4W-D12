@@ -18,13 +18,14 @@ msgctxt "TC_TRANSLATION_LANGUAGE"
 msgid "ENGLISH"
 msgstr "中文"
 
+# 2026-10-16: the D7 Chinese translation by Li Jia Wei BA4WI (recovered by tools/i18n/salvage_lossy.py) with machine-translated gaps -- NY4I, 2026-10-16. Was "国家4AF", a machine rendering of N4AF. Left fuzzy with the rest of this catalogue.
 #. Section: General
 #. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
 #: tr4w/src/lang/tr4w_consts_eng.pas:8
 #: utr4wstrings.tc_translation_author
 #, fuzzy
 msgid "N4AF"
-msgstr "国家4AF"
+msgstr "Li Jia Wei BA4WI, LibreTranslate"
 
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:9
@@ -39,6 +40,14 @@ msgstr "ny4i@ny4i.com (中文(简体) )"
 #, fuzzy
 msgid "%s translation by %s"
 msgstr "%s翻译 %s"
+
+# 2026-10-16: new string -- the About box shows it under a machine translation's credit. Machine draft, please review.
+#. Section: General
+#: tr4w/src/lang/tr4w_consts_eng.pas:14
+#: utr4wstrings.tc_translation_corrections
+#, fuzzy
+msgid "Corrections are appreciated."
+msgstr "欢迎指正。"
 
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:14
@@ -541,14 +550,17 @@ msgstr "欧盟国家,请输入您的四个字符国家代码"
 msgid "EI/GI, enter your County"
 msgstr "EI/GI, 进入您的县"
 
+# 2026-10-16: the English changed from "Latest config file" to "Last Contest" -- the button reopens the contest's database, not a config file.
+# Composed from this catalogue's own words, please review: last = 'Recall last entry' -> '回顾上次条目'; contest = 'Start a new contest' -> '开始新比赛'.
+# Previous translation (of the old English): "最新配置文件"
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:104
 #: tfrmnewcontest.btnlatest.caption
 #: utr4wstrings.tc_latest_config_file
 #, fuzzy
 msgctxt "tfrmnewcontest.btnlatest.caption"
-msgid "Latest config file"
-msgstr "最新配置文件"
+msgid "Last Contest"
+msgstr "上次比赛"
 
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:105

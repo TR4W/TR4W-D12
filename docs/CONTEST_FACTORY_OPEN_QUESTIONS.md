@@ -95,6 +95,34 @@ inactive contest in the New Contest list.
   *Recommended: (1) build it -- it needs only our own grid, which the
   contest already knows; (2) leave until satellite QSOs are a concept; (3) a
   separate contest class later, if wanted.*
+  Three more, found building the class (2026-10-16):
+  (4) **Does a Nebraska entrant who works another Nebraska station also
+  earn NE as a STATE?** The sponsor: in-state multipliers are "Nebraska
+  counties worked plus ... States/Provinces/Countries ... The maximum number
+  of states worked is 50" -- 50 suggests NE counts. Built: the county only (a
+  Nebraska station sends its county, so NE as a state is never reached).
+  DXLog does the opposite: every county collapses into ONE "Nebraska"
+  multiplier, and counties do not count separately for an in-state entrant
+  -- which contradicts the sponsor's "counties plus S/P/C".
+  *Recommended: county AND NE (the first NE county worked also credits NE),
+  so the 50 is reachable.*
+  **Answer to (4):** (NY4I, 2026-10-16) *"the state of the contest is not
+  counted for an in-state station. line 15 of ... DXLog.net\Contest\NEQP.txt.
+  Many other QSO parties do the same to exclude its own state."* DXLog line 15
+  reads "# DX, states, and provinces except NE". So the recommendation was
+  wrong and **the class is right as built**: county plus S/P/C, NE never
+  credited as a state. No change. (Noted: DXLog's own file is inconsistent
+  here -- the regex under that comment includes `NE`, and its in-state list
+  maps every county to one "Nebraska" entry; the sponsor's "counties plus
+  S/P/C" and this ruling are the authority.)
+  (5) **Exactly 100 W**: the sponsor gives x2 for "less than 100 watts" and
+  x1 "for over 100 watts" -- 100 W itself is not covered. Built: x2, since
+  Cabrillo's LOW category is "100 W or less" and TR4W cannot tell 100 W from
+  99. *Recommended: keep.*
+  (6) Side finding, not Nebraska's alone: the shared `P13.DOM` lists `LA` as a
+  Labrador alias, which collides with Louisiana; S50 loads first, so `LA`
+  means Louisiana in every party that includes both. Labrador is `NL` (with
+  `LB`/`NF`). *Recommended: drop `LA` from P13.DOM.*
   **Answer:**
 
 ### Raised by the M11 plan (2026-10-14; `docs/CONTEST_FACTORY_M11_PLAN.md`)
@@ -364,9 +392,73 @@ closes it; anything else reopens it.
 | Q51 | An X-QSO never counts as worked: logged and exported only so the other station avoids a not-in-log penalty; no dupe, worked, mult or points mark | already so; the live path must share the predicate when Q98 lands |
 | Q103 | New Contest list: search filter over a plain list, names only; no groups | not built |
 | Q100 | `contest.last_opened_at` deleted (the last-contest button gives quick access); the button reads "Last Contest" | building |
+| Q107 | QSO parties: an out-of-state entrant's QSO with a non-host station scores 0 and no mult (scoring applies the entry rule; one predicate) | building |
+| Q108 | Contests register by string id like radios (no `VC.pas` line for a new contest); multi-op refused for a contest with no legacy number until the new protocol; `<contestnr>` open | design after the cleanup |
 | Q52 note | Settled by Q52 | removed |
 
 ### Answered since the table was last updated (full text)
+
+- **Q108** (NY4I, 2026-10-16) A new contest should not touch `VC.pas`:
+  *"I prefer we have a registry similar to when we Add a new radio so the
+  simple fact that the radio class exists allows the table for the drop-down
+  to be built ... The goal is to minimize the things a new contest needs to
+  touch beyond its data files (like a DOM, tests, and the class itself)."*
+  Measured with `tr4w/build/PascalSource.psm1` (comments and strings
+  excluded): `ContestType` has 188 members, named 3,499 times in tests
+  (mostly the pin tables the self-contained cleanup removes), 194 times in
+  the 188 contest classes (each its own), and only 70 times in 20 other
+  files, nearly all one default member each. The enum's ORDINAL leaves the
+  program in three places: the binary `.TRW` record (import-only history ->
+  a frozen legacy table), the multi-op packet's `ContestExchange`, and the
+  UDP/HamScore `<contestnr>` (N1MM's contact-broadcast format; any stable
+  number groups a logger's contacts).
+  Plan: a contest's identity becomes the string id it REGISTERS (today's
+  `ContestTypeSA` spelling, already what every SQLite log stores); each class
+  self-registers from its `initialization`, like `RegisterRadioById`; the
+  New Contest list comes from the registry; existing contests keep their
+  legacy number only where it leaves the program; a new contest has none.
+  No RTTI needed -- the `.lpr` uses line (as for radios) is what links a class.
+  Order: commit 5.0.28 -> the self-contained cleanup (counts, pins,
+  installer) -> this design written into `CONTEST_OWNERSHIP_DESIGN.md` for
+  NY4I's review -> build.
+  **Decision 1 -- multi-op:** (NY4I, 2026-10-16) *"refuse multi-op for new
+  contests until the new protocol."* A contest with no legacy number is
+  refused for multi-op, with a clear message, until the row-based
+  multi-station protocol replaces the packet.
+  **Decision 2 -- `<contestnr>`:** the legacy number where a contest has one,
+  a stable derived number otherwise, after confirming no consumer (HamScore,
+  N1MM listeners) treats it as a global contest code -- taken under NY4I's
+  go-ahead below.
+  **Go-ahead:** (NY4I, 2026-10-16) *"I'm not sure we can separate q108 from
+  our current work. We could end up with throw-away work otherwise so I
+  would be ok proceeding with that."* The self-contained cleanup (counts,
+  pin tables, installer wildcard) and this registry are ONE piece of work,
+  built after the 5.0.28 commit; the design goes into
+  `CONTEST_OWNERSHIP_DESIGN.md` as it is built, not ahead of it for review.
+
+- **Q107** (found checking Nebraska's first matrix record, 2026-10-16) **"An
+  out-of-state station works only the host state" is enforced only when a
+  QSO is TYPED.** The entry refusal (M5b) stops it at the keyboard; scoring
+  does not apply it. So a QSO that arrives any other way -- an ADIF import, a
+  network peer, the matrix's injected records -- scores against the rule.
+  Measured in the frozen matrix, the same injected QSOs for an out-of-state
+  (Kansas) entrant: W1AW sending `CT` scores 2-3 points AND counts `CT` as a
+  multiplier, and JA1ABC sending nothing scores 2-3 points -- in Idaho,
+  Delaware, Florida and the new Nebraska alike. The sponsors say otherwise
+  (Nebraska: an out-of-state station's multipliers are Nebraska counties,
+  and "each out-of-state station must copy the NE county"; DXLog scores such
+  a QSO invalid). Under Q13 a logged QSO is scored from its record by the
+  contest's rules, so the rule belongs in SCORING too: an out-of-state
+  entrant's QSO with a station that sent no host-state QTH scores 0 and
+  earns no multiplier (logged, like an off-band QSO -- an X-QSO under Q98?).
+  *Recommended: yes, once, in the QSO-party base, so every party gets it;
+  the matrix records of every state party move and are re-frozen with that
+  reason.*
+  **Answer:** (NY4I, 2026-10-16) *"Q107 yes, go with your
+  recommendation."* One predicate, asked by both the entry refusal and
+  scoring, once in the QSO-party base; the multi-state parties checked one
+  by one. Being built (contest-factory); every state party's matrix record
+  moves and is re-frozen with this reason.
 
 - **Q100** `contest.last_opened_at` is never written or read. The schema says
   it is "written every time the log is OPENED, and it is the chooser's default

@@ -578,7 +578,7 @@ const
        AtVE: (Exchange: QSONumberNameDomesticOrDXQTHExchange; InitialExchange: NameQTHInitialExchange);
        AtDX: (Exchange: QSONumberNameDomesticOrDXQTHExchange; InitialExchange: NameQTHInitialExchange)),
       (* NEWENGLANDQSO *)
-      (Token: 'NEQP';
+      (Token: 'NEWEQP';
        AtUS: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange);
        AtVE: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange);
        AtDX: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange)),
@@ -1111,12 +1111,17 @@ const
       (Token: 'DELAWARE QSO PARTY';
        AtUS: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange);
        AtVE: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange);
+       AtDX: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange)),
+      (* NEBRASKAQSO -- a new contest, its row added by hand (2026-10-16). *)
+      (Token: 'NE-QSO-PARTY';
+       AtUS: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange);
+       AtVE: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange);
        AtDX: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange))
    );
 
    (* GENERATED ONCE AT M11 S0b, with the table above. One row per party
       (IsUSQSOParty), ordered by the name of its frozen matrix record. *)
-   HOST_KIND_PINS: array[1..22] of THostKindPin = (
+   HOST_KIND_PINS: array[1..23] of THostKindPin = (
       (Contest: ArizonaQsoParty; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'APH';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange)),
@@ -1156,6 +1161,10 @@ const
       (Contest: NCQSOPARTY; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'ALA';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange)),
+      (* NEBRASKAQSO -- by hand, 2026-10-16. *)
+      (Contest: NEBRASKAQSO; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'LNCS';
+       MySection: 'KS'; MyGrid: 'EM17';
+       Kinds: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange)),
       (Contest: NYQP; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'Alb';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange)),
@@ -1338,10 +1347,10 @@ begin
    (* EXACT: every ContestType, DUMMYCONTEST included, two kinds at three
       stations (six until M11 S3 part 2, five until S4 part 2, four until
       S5 part 2, three until S6 part 2). *)
-   CheckEquals(187, contests, 'contests whose kinds were checked');
-   CheckEquals(187, Ord(High(ContestType)) + 1,
+   CheckEquals(188, contests, 'contests whose kinds were checked');
+   CheckEquals(188, Ord(High(ContestType)) + 1,
                'ContestType members -- a new contest adds its row here, by hand');
-   CheckEquals(187 * 2 * 3, checked, 'kind assertions at us, ve and dx');
+   CheckEquals(188 * 2 * 3, checked, 'kind assertions at us, ve and dx');
    (* THE STATION REACHES THE KINDS: at S0b these contests run another kind
       at one of us, ve and dx than at another -- ARRL160, ARRLDXCW,
       ARRLDXSSB, WAG, DARC10M. The rows determine this count, so it cannot
@@ -1411,8 +1420,8 @@ begin
          end;
       end;
 
-   CheckEquals(22, parties, 'parties -- a new party adds its us-host row here, by hand');
-   CheckEquals(22 * 2, checked, 'kind assertions at us-host');
+   CheckEquals(23, parties, 'parties -- a new party adds its us-host row here, by hand');
+   CheckEquals(23 * 2, checked, 'kind assertions at us-host');
    (* IN THE HOST STATE THE KINDS DIFFER FROM THE us STATION'S for these
       parties at S0b -- ArizonaQsoParty, CALQSOPARTY, SALMONRUN, SEVENQP,
       TEXASQSOPARTY. It was 6 until M11 S4 part 2 removed the DX column:

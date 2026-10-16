@@ -429,7 +429,7 @@ const
        Friendly: 'NCCC Sprint';
        Display: 'NCCC Sprint'; DomesticFile: 'naqp'),
       (* NEWENGLANDQSO *)
-      (Token: 'NEQP'; WA7BNM: 10; QRZRUID: 0; Email: '';
+      (Token: 'NEWEQP'; WA7BNM: 10; QRZRUID: 0; Email: '';
        Friendly: 'New England QSO Party';
        Display: 'New England QSO Party'; DomesticFile: ''),
       (* NCQSOPARTY *)
@@ -855,7 +855,11 @@ const
       (* DELAWAREQSOPARTY *)
       (Token: 'DELAWARE QSO PARTY'; WA7BNM: 0; QRZRUID: 0; Email: '';
        Friendly: 'Delaware QSO Party';
-       Display: 'Delaware QSO Party'; DomesticFile: 'delaware_cty')
+       Display: 'Delaware QSO Party'; DomesticFile: 'delaware_cty'),
+      (* NEBRASKAQSO -- added by hand, 2026-10-16, from the sponsor (design Q105). *)
+      (Token: 'NE-QSO-PARTY'; WA7BNM: 336; QRZRUID: 0; Email: 'nebraskaqsoparty@gmail.com';
+       Friendly: 'Nebraska QSO Party';
+       Display: 'Nebraska QSO Party'; DomesticFile: 'nebraska_cty')
    );
 
 procedure TContestIdentityPinTests.RunAllTests;
@@ -896,8 +900,8 @@ begin
       end;
 
    (* EXACT: every ContestType, DUMMYCONTEST included. *)
-   CheckEquals(187, checked, 'contests whose identity was checked');
-   CheckEquals(187, Ord(High(ContestType)) + 1,
+   CheckEquals(188, checked, 'contests whose identity was checked');
+   CheckEquals(188, Ord(High(ContestType)) + 1,
                'ContestType members -- a new contest adds its row here, by hand');
 end;
 

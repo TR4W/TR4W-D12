@@ -4,7 +4,8 @@ unit uAboutForm;
 {
   THE ABOUT BOX, AS A DESIGNED LCL FORM.
 
-  WHAT IT REPLACES.  A raw MessageBox showing tAboutText, with the OpenGL
+  WHAT IT REPLACES.  A raw MessageBox showing a text constant from MainUnit
+  (unreferenced once this form existed, deleted 2026-10-16), with the OpenGL
   "about" dialog (uAbout.pas, dialog 68) compiled out beside it behind
   a compile-time switch that was False for the life of this tree (deleted 2026-08-31,
   along with uAbout.pas, which no uses clause referenced).  So
@@ -61,6 +62,12 @@ const
   { The one place the site appears, so the label and the link cannot disagree. }
   TR4W_WEBSITE = 'https://tr4w.net';
 
+  (* WHO A MACHINE TRANSLATION IS CREDITED TO. A product name, so it is not
+    itself translated. A catalogue that credits nobody was seeded by it; one
+    whose credit NAMES it (fr, or zh_CN's 'Li Jia Wei BA4WI, LibreTranslate')
+    gets the corrections line too. *)
+  MACHINE_TRANSLATOR = 'LibreTranslate';
+
 procedure TfrmAbout.lblURLClick(Sender: TObject);
 begin
    // OpenURL, NOT ShellExecute: ShellExecute is Windows-only and is one of the
@@ -69,6 +76,8 @@ begin
 end;
 
 procedure TfrmAbout.HandleShow(Sender: TObject);
+var
+   author: string;
 begin
    // BUILT HERE, not typed into the .lfm.  These are the same constants the
    // MessageBox composed; putting them in the designer would mean a version bump
@@ -90,14 +99,28 @@ begin
       // catalogue, so ActiveUILanguage is empty and this adds nothing -- the
       // English build credits nobody for translating it into English.
       //
-      // All three constants are per-language and already translated, so they
-      // name whoever did THIS catalogue: es gives 'Jose L. Rami EB2CYQ'. They
-      // have been declared since the D7 tree and referenced nowhere until now.
+      // The language and the sentence are per-language constants; es gives
+      // 'Jose L. Rami EB2CYQ'. Name and callsign only -- never the email.
+      //
+      // THE AUTHOR COMES FROM THE CATALOGUE, NOT TC_TRANSLATION_AUTHOR: a
+      // catalogue that names nobody leaves that resourcestring at its English
+      // 'N4AF', which credited him for five machine translations (NY4I,
+      // 2026-10-16). Nobody named means machine-seeded, so it says so, and
+      // invites corrections. See uEmbeddedTranslations.ActiveTranslationAuthor.
       if ActiveUILanguage <> '' then
          begin
+         author := ActiveTranslationAuthor;
+         if author = '' then
+            begin
+            author := MACHINE_TRANSLATOR;
+            end;
          memAbout.Lines.Add('');
          memAbout.Lines.Add(SysUtils.Format(TC_TRANSLATION_CREDIT,
-                            [TC_TRANSLATION_LANGUAGE, TC_TRANSLATION_AUTHOR]));
+                            [TC_TRANSLATION_LANGUAGE, author]));
+         if Pos(MACHINE_TRANSLATOR, author) > 0 then
+            begin
+            memAbout.Lines.Add(TC_TRANSLATION_CORRECTIONS);
+            end;
          end;
    finally
       memAbout.Lines.EndUpdate;

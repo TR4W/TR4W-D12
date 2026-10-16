@@ -698,6 +698,30 @@ compile() {
 }
 
 # ---------------------------------------------------------------------------
+# STAGE 3b -- the language catalogues.
+#
+# tr4w_languages.res is a TRACKED binary the app and the tests link, generated
+# from i18n/tr4w_*.po by Make-LanguageRes.ps1.  Windows regenerates it on every
+# build; THIS platform cannot (PowerShell, and a Windows-hosted fpcres), so it
+# checks that the committed one matches the catalogues and FAILS the run when it
+# does not.  Without this, a .po committed without its .res shipped in no binary
+# and nothing said so -- two catalogue commits sat unlinked for two weeks.
+# The build still goes on to the app stage so the summary stays a worklist.
+# ---------------------------------------------------------------------------
+stage_languages() {
+   phase 'Language catalogues'
+   _lr=$(sh "$BUILD_DIR/check-language-res.sh" 2>&1)
+   _rc=$?
+   say "$_lr" | sed 's/^/  /'
+   case "$_rc" in
+      0) record PASS 'languages' 'tr4w_languages.res matches the catalogues' ;;
+      1) record FAIL 'languages' 'tr4w_languages.res is STALE: run Build-App.ps1 on Windows and commit the .res and .inputs' ;;
+      *) record FAIL 'languages' 'could not compare tr4w_languages.res with the catalogues' ;;
+   esac
+   return 0
+}
+
+# ---------------------------------------------------------------------------
 # STAGE 4 -- the application.
 # ---------------------------------------------------------------------------
 stage_app() {
@@ -2110,6 +2134,10 @@ fi
 APP_EXE="$OUTROOT/app-$ARCH/tr4w"
 SERVER_EXE="$OUTROOT/server-$ARCH/tr4wserver"
 TEST_EXE="$TEST_DIR/tr4w_unit_tests_$OS"
+
+case "$WANT" in
+   all|app|tests) stage_languages ;;
+esac
 
 case "$WANT" in
    all)

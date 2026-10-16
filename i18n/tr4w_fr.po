@@ -652,6 +652,9 @@ msgctxt "TC_IRTS"
 msgid "EI/GI, enter your County"
 msgstr "IE/GI, inscrivez votre comté"
 
+# 2026-10-16: the English changed from "Latest config file" to "Last Contest" -- the button reopens the contest's database, not a config file.
+# Composed from this catalogue's own words, please review: last = 'Last status:' -> 'Dernier statut :'; contest = 'Contest' -> 'Concours'.
+# Previous translation (of the old English): "Dernier fichier de configuration"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_latest_config_file
 #: tr4w/src/lang/tr4w_consts_eng.pas:100
@@ -659,8 +662,8 @@ msgstr "IE/GI, inscrivez votre comté"
 #: utr4wstrings.tc_latest_config_file
 #, fuzzy
 msgctxt "TC_LATEST_CONFIG_FILE"
-msgid "Latest config file"
-msgstr "Dernier fichier de configuration"
+msgid "Last Contest"
+msgstr "Dernier concours"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_openconfigurationfile
@@ -6352,6 +6355,16 @@ msgstr "Tester le paquet envoyé à %s:%d. UDP ne peut pas confirmer son arrivé
 msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
 msgstr "%s traduction par %s"
+
+# 2026-10-16: new string -- the About box shows it under a machine translation's credit. Machine draft, please review.
+#. Section: General
+#: utr4wstrings:tc_translation_corrections
+#: tr4w/src/lang/tr4w_consts_eng.pas:14
+#: utr4wstrings.tc_translation_corrections
+#, fuzzy
+msgctxt "TC_TRANSLATION_CORRECTIONS"
+msgid "Corrections are appreciated."
+msgstr "Les corrections sont les bienvenues."
 
 #. Section: UTELNET
 #: utr4wstrings:tc_telnet

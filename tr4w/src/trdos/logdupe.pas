@@ -329,6 +329,14 @@ procedure DupeInit;
 //function FindProperPartialCallAddress(Call: CallString): integer;
 function FoundDomesticQTH(var RXData: ContestExchange): boolean;
 
+(* DOES THE LOADED DOMESTIC QTH TABLE KNOW THIS QTH? -- uContestBase's
+  TDomesticQTHTest, the engine's one answer. Handed to a contest in the typed
+  exchange's session (LOGSTUFF, M5b) and in its station (uContestFactory.
+  CurrentStation, Q107), so the host-area refusal and the host-area score ask
+  the same thing. Moved here from LOGSTUFF (ParseSessionIsDomesticQTH) on
+  2026-10-16 when it gained its second caller. *)
+function DomesticTableKnowsQTH(const aQTH: string): boolean;
+
 (* THE QSO'S DX QTH -- the engine's head, then the contest's own rule
   (TContestBase.DXMultiplierKey, M11 S4). aContest is ActiveContest(Contest),
   fetched ONCE by the caller and shared with whatever else it asks of the
@@ -448,6 +456,25 @@ begin
 
 
  end;
+
+(* FoundDomesticQTH itself, on a scratch exchange, so the answer is the
+  table's own and no QSO is touched. See the declaration. *)
+function DomesticTableKnowsQTH(const aQTH: string): boolean;
+var
+  scratch: ContestExchange;
+begin
+  (* No QTH is no domestic QTH -- answered here so FoundDomesticQTH does not
+    log its blank-QTH error for a question nobody typed. *)
+  if aQTH = '' then
+     begin
+     Result := False;
+     Exit;
+     end;
+  FillChar(scratch, SizeOf(ContestExchange), 0);
+  (* The cast is a received QTH returning to the width it was typed in. *)
+  scratch.QTHString := ShortString(aQTH);
+  Result := FoundDomesticQTH(scratch);
+end;
 
 function GetInitialExchangeIndex(InitialExchange: CallString): integer;
 
@@ -1168,6 +1195,15 @@ begin
      QSO still records the QTH it was worked with -- only its credit goes. *)
   contestRules := ActiveContest(Contest);
   if not ContestCreditsBand(contestRules, RXData.Band) then
+     begin
+     Exit;
+     end;
+
+  (* NOR FOR A WORKED STATION THE ENTRANT MAY NOT CREDIT -- a QSO party's
+     host-area rule, Q107 (NY4I, 2026-10-16). The points half is ScoreQSO,
+     which asks the same contest the same question; see
+     TContestBase.CreditsWorkedStation. *)
+  if not ContestCreditsWorkedStation(contestRules, RXData) then
      begin
      Exit;
      end;

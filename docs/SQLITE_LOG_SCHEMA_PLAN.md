@@ -333,10 +333,8 @@ CREATE TABLE contest (
     created_at        INTEGER NOT NULL,   -- unix UTC
     start_time        INTEGER,
     end_time          INTEGER,
-    -- Written every time the log is OPENED, and it is the chooser's default
-    -- sort key: recent activity floats up, not start date (§11b). A contest
-    -- resumed on Sunday belongs above one created on Saturday and abandoned.
-    last_opened_at    INTEGER,
+    -- (last_opened_at stood here until 2026-10-16 and was never written or
+    --  read. REMOVED, Q100 -- see §11b.)
 
     -- tier 2: the entry declaration, as sent in the Cabrillo header
     my_call           TEXT NOT NULL,
@@ -1965,7 +1963,7 @@ work.** `docs/NEW_CONTEST_DIALOG_DESIGN_BRIEF.md` lists as **Tier 1**:
 | Database-backed list (no filesystem browser) | kill `[..]` and absolute paths |
 | Columned existing-contest grid (Name/Type/Date/Ver) | *"From TR4QT"* |
 | Clickable sortable columns | *"Enables recent"* |
-| "Last Opened" column / sort key | *"Recent activity floats up, not start date"* |
+| ~~"Last Opened" column / sort key~~ | *"Recent activity floats up, not start date"* -- **dropped 2026-10-16 (Q100): the last-contest button serves it; see "What the schema owes it" below** |
 | Delete / manage existing contests | *"From TR4QT"* |
 
 And the current LCL dialog says so itself, in the comment above `PopulateFiles`
@@ -1987,7 +1985,7 @@ rather than lucky:
   the data.
 - Everything the chooser wants except the QSO count is **one row**, because
   `contest` is a single-row table (question 1): `SELECT contest_name,
-  contest_type, my_call, start_time, created_at, last_opened_at FROM contest`.
+  contest_type, my_call, start_time, created_at FROM contest`.
 - The count is `SELECT COUNT(*) FROM qso WHERE deleted = 0`, which the partial
   index in §4 already serves.
 
@@ -1999,16 +1997,31 @@ that can drift from the log it describes (§9a).
 
 ### What the schema owes it
 
-One addition to the `contest` row, which the brief asks for and the draft did
-not have:
+~~One addition to the `contest` row: `last_opened_at`, written when the log is
+OPENED, as the chooser's default sort key.~~ **REMOVED 2026-10-16 (NY4I, Q100 in
+`docs/CONTEST_FACTORY_OPEN_QUESTIONS.md`).** The column was added, but nothing
+ever wrote or read it. All 13 corpus fixtures hold NULL there. The schema
+comment that called it "written every time the log is OPENED" and "the
+chooser's default sort key" was false on both counts. Quick access to the
+contest you were just working is the New Contest dialog's last-contest button,
+which reads the one path `settings/tr4w.json` records
+(`uRadioConfigApply.GetLatestConfigFile`). So no per-database open time is
+needed.
 
-```sql
-    last_opened_at    INTEGER,   -- unix UTC; written when the log is OPENED
-```
+**It was removed from the DDL WITHOUT a schema-version bump, and that is
+deliberate.** The reasoning is beside `LOG_SCHEMA_VERSION` in
+`src/domain/uLogSchema.pas`, in short:
 
-"Last opened" rather than "created" is deliberate and the brief is explicit
-about why: *recent activity floats up, not start date*. A contest resumed on
-Sunday morning should sort above one created on Saturday and abandoned.
+- Nothing reads the column, so either shape opens in every build. A bump would
+  make every log this build touches unopenable by every earlier build
+  ("written by a newer version"), for a NULL.
+- `ALTER TABLE ... DROP COLUMN` would not remove the false claim. Measured on
+  SQLite 3.42, it cuts the stored CREATE text from the column's name to the
+  next column's name. That keeps the comment ABOVE the column and deletes the
+  true `tier 2` comment after it. Only a table rebuild removes it.
+
+So a log created before 2026-10-16 still has the column, NULL, and the stale
+comment in its `sqlite_master` text. Leave both.
 
 The schema version for the "Ver" column is free — `PRAGMA user_version` (§8).
 

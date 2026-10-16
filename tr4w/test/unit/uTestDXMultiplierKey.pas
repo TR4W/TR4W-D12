@@ -43,6 +43,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   HAS_DX_COUNT rises by one, and its KEY_PINS rows pin XE and KP4 counted, K,
   VE, KL7 and KH6 (states, by the sponsor's rule) and a European not.
 
+  80 SINCE 2026-10-16, BY HAND: the Nebraska QSO Party, a new contest
+  (design Q105), counts DXCC entities for a Nebraska entrant only -- the
+  same rule as Delaware's. It joins HAS_DX at psHost (whose count rises by
+  one), and its KEY_PINS and MODE_PINS rows are Delaware's shape.
+
   HOW THE LITERALS WERE MADE. Written by hand from the old code, then RUN
   GREEN AGAINST THE OLD CODE before anything moved: the program's own case
   and set and filters, frozen here (Legacy...OfKind, deleted at part 2),
@@ -201,7 +206,7 @@ const
    (* WRITTEN BY HAND FROM THE OLD CASE AND RUN GREEN AGAINST IT -- see the
       unit header. Every one of the 79 DX contests has a row that gives a
       key, and every station branch its rule has. *)
-   KEY_PINS: array[0..167] of TKeyPin = (
+   KEY_PINS: array[0..170] of TKeyPin = (
       (* EVERY COUNTRY, AT EVERY STATION -- the old ARRLDXCC / CQDXCC kinds,
          the case's `else`. *)
       (Contest: ARRL_RTTY_ROUNDUP;       Station: psUS; Qso: pqW1AW; Assigns: True; Key: 'K'),
@@ -316,6 +321,9 @@ const
       (Contest: DELAWAREQSOPARTY;        Station: psHost; Qso: pqKH6;  Assigns: False; Key: ''),
       (Contest: DELAWAREQSOPARTY;        Station: psHost; Qso: pqON4;  Assigns: True;  Key: 'ON'),
       (Contest: DELAWAREQSOPARTY;        Station: psUS;   Qso: pqON4;  Assigns: False; Key: ''),
+      (Contest: NEBRASKAQSO;             Station: psHost; Qso: pqKH6;  Assigns: False; Key: ''),
+      (Contest: NEBRASKAQSO;             Station: psHost; Qso: pqON4;  Assigns: True;  Key: 'ON'),
+      (Contest: NEBRASKAQSO;             Station: psUS;   Qso: pqON4;  Assigns: False; Key: ''),
       (Contest: NEWENGLANDQSO;           Station: psHost; Qso: pqKL7;  Assigns: False; Key: ''),
       (Contest: NEWENGLANDQSO;           Station: psHost; Qso: pqXE1;  Assigns: True;  Key: 'XE'),
       (Contest: NEWENGLANDQSO;           Station: psUS;   Qso: pqXE1;  Assigns: False; Key: ''),
@@ -415,7 +423,7 @@ const
       six ARRL kinds, CQ (DXCC + WAE) for every other, NO DX MULTIPLIER
       INCLUDED; so a station that runs none gets the CQ list, and the North
       American kind, whatever its name, gets CQ. *)
-   MODE_PINS: array[0..41] of TModePin = (
+   MODE_PINS: array[0..43] of TModePin = (
       (Contest: ARRLDXCW;          Station: psUS;   Mode: ARRLCountryMode),
       (Contest: ARRLDXCW;          Station: psVE;   Mode: ARRLCountryMode),
       (Contest: ARRLDXCW;          Station: psDX;   Mode: CQCountryMode),
@@ -434,6 +442,8 @@ const
       (Contest: RDA;               Station: psUS;   Mode: CQCountryMode),
       (Contest: DELAWAREQSOPARTY;  Station: psHost; Mode: ARRLCountryMode),
       (Contest: DELAWAREQSOPARTY;  Station: psUS;   Mode: CQCountryMode),
+      (Contest: NEBRASKAQSO;       Station: psHost; Mode: ARRLCountryMode),
+      (Contest: NEBRASKAQSO;       Station: psUS;   Mode: CQCountryMode),
       (Contest: NEWENGLANDQSO;     Station: psHost; Mode: ARRLCountryMode),
       (Contest: NEWENGLANDQSO;     Station: psUS;   Mode: CQCountryMode),
       (Contest: SEVENQP;           Station: psHost; Mode: ARRLCountryMode),
@@ -514,7 +524,7 @@ const
                                           DARCWAEDCCW, DARCWAEDCSSB],
       (* psDX DL1AAA *)  DX_EVERYWHERE + [ALRS_UA1DZ_CUP, WAG],
       (* psHost K1AAA *) DX_EVERYWHERE + [ALRS_UA1DZ_CUP, ARRL160, ARRLDXCW, ARRLDXSSB,
-                                          DARCWAEDCCW, DARCWAEDCSSB, DELAWAREQSOPARTY,
+                                          DARCWAEDCCW, DARCWAEDCSSB, DELAWAREQSOPARTY, NEBRASKAQSO,
                                           NEWENGLANDQSO, SALMONRUN, SEVENQP, TEXASQSOPARTY],
       (* psPA PA3AAA *)  DX_EVERYWHERE + [ALRS_UA1DZ_CUP, PACC],
       (* psJA JA1AAA *)  DX_EVERYWHERE + [ALLASIANCW, ALLASIANSSB, ALRS_UA1DZ_CUP,
@@ -532,7 +542,7 @@ const
    (* How many contests each set holds -- stated so a set edited by mistake
       fails by count as well as by name. *)
    HAS_DX_COUNT: array[TPinStation] of integer =
-      (63, 63, 59, 68, 59, 64, 60, 59, 59, 58, 58, 58, 59, 58);
+      (63, 63, 59, 69, 59, 64, 60, 59, 59, 58, 58, 58, 59, 58);
 
 function PinStation(aStation: TPinStation; aContest: ContestType): TStationContext;
 begin
@@ -689,7 +699,7 @@ begin
          Inc(count);
          end;
       end;
-   CheckEquals(79, count, 'contests with a pinned DX key');
+   CheckEquals(80, count, 'contests with a pinned DX key');
 end;
 
 procedure TDXMultiplierKeyTests.Test_EveryContestHasItsPinnedDXMultiplier;
@@ -755,7 +765,7 @@ begin
          Inc(count);
          end;
       end;
-   CheckEquals(79, count, 'contests with a DX multiplier at some roster station');
+   CheckEquals(80, count, 'contests with a DX multiplier at some roster station');
 end;
 
 procedure TDXMultiplierKeyTests.Test_EveryContestGivesItsPinnedCountryMode;
@@ -800,7 +810,8 @@ begin
          Inc(count);
          end;
       end;
-   CheckEquals(36, count, 'contests choosing the ARRL country list at some roster station');
+   (* 37 since the Nebraska QSO Party (2026-10-16), ARRL for its entrant. *)
+   CheckEquals(37, count, 'contests choosing the ARRL country list at some roster station');
 end;
 
 procedure TDXMultiplierKeyTests.Test_RemainingCountriesFilterGivesItsPinnedAnswer;

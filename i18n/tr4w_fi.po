@@ -17,12 +17,13 @@ msgctxt "TC_TRANSLATION_LANGUAGE"
 msgid "ENGLISH"
 msgstr "Suomi"
 
+# 2026-10-16: machine translation (LibreTranslate), no human translator to credit (NY4I, 2026-10-16). Was "N4AF" -- the English msgid copied, which credited N4AF for it.
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:8
 #: utr4wstrings.tc_translation_author
 #, fuzzy
 msgid "N4AF"
-msgstr "N4AF"
+msgstr "LibreTranslate"
 
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:9
@@ -522,14 +523,17 @@ msgstr "EU-maa, kirjoita nelimerkkinen maakoodi"
 msgid "EI/GI, enter your County"
 msgstr "EI/GI, mene piirikuntaasi"
 
+# 2026-10-16: the English changed from "Latest config file" to "Last Contest" -- the button reopens the contest's database, not a config file.
+# Composed from this catalogue's own words, please review: last = 'Last status:' -> 'Viimeinen tila:'; contest = 'Contest' -> 'Kilpailu'.
+# Previous translation (of the old English): "Viimeisin config-tiedosto"
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:100
 #: tfrmnewcontest.btnlatest.caption
 #: utr4wstrings.tc_latest_config_file
 #, fuzzy
 msgctxt "tfrmnewcontest.btnlatest.caption"
-msgid "Latest config file"
-msgstr "Viimeisin config-tiedosto"
+msgid "Last Contest"
+msgstr "Viimeinen kilpailu"
 
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:101
@@ -5654,6 +5658,16 @@ msgstr "Testipaketti lähetetty osoitteeseen %s:%d. UDP ei voi vahvistaa sen saa
 msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
 msgstr "%s käännös %s"
+
+# 2026-10-16: new string -- the About box shows it under a machine translation's credit. Machine draft, please review.
+#. Section: General
+#: utr4wstrings:tc_translation_corrections
+#: tr4w/src/lang/tr4w_consts_eng.pas:14
+#: utr4wstrings.tc_translation_corrections
+#, fuzzy
+msgctxt "TC_TRANSLATION_CORRECTIONS"
+msgid "Corrections are appreciated."
+msgstr "Korjaukset otetaan mielellään vastaan."
 
 #. Section: UEDITMESSAGE
 #. 4.51.8

@@ -45,6 +45,8 @@ type
       procedure Test_TheCommandAcceptsOnlyWhatShips;
       procedure Test_TheListComesFromTheEmbeddedCatalogues;
       procedure Test_EachLanguageIsShownInItsOwnName;
+      procedure Test_NoCatalogueCreditsTheEnglishAuthor;
+      procedure Test_EveryIdentifierReachesTheEmbeddedCatalogue;
    public
       procedure RunAllTests; override;
    end;
@@ -52,7 +54,7 @@ type
 implementation
 
 uses
-   SysUtils, DateUtils, uJSON, uSettingsModel, uSettingsRegistry,
+   SysUtils, Classes, DateUtils, uJSON, uSettingsModel, uSettingsRegistry,
    uSettingsDeclarations, uTR4WConfigFile, uUILanguage, uEmbeddedTranslations;
 
 (* A stub catalogue list: German and English only. *)
@@ -498,6 +500,128 @@ begin
                                     [Length(offered), elapsed]));
 end;
 
+(* ---------------------------------------------------------------------
+  THE ABOUT BOX'S TRANSLATOR CREDIT.
+
+  A catalogue seeded by copying the English kept TC_TRANSLATION_AUTHOR's
+  msgid as its msgstr, so the About box said "Dansk oversaettelse af N4AF"
+  for a machine translation -- five catalogues did, until 2026-10-16 (NY4I).
+  An author that IS the English author is never a translator's credit: a
+  real one names the translator, and a machine one names nobody (the About
+  box then says LibreTranslate). English itself is exempt -- it is the
+  source, and loads no catalogue, so it is never credited.
+
+  Reads the EMBEDDED copies, so it checks what ships rather than what is on
+  disk.
+  --------------------------------------------------------------------- *)
+
+procedure TUILanguageTests.Test_NoCatalogueCreditsTheEnglishAuthor;
+var
+   codes: TStringList;
+   english, credit: string;
+   i, checked: integer;
+begin
+   BeginTest('no catalogue credits the English author as its translator');
+   codes := TStringList.Create;
+   try
+      codes.Delimiter := ' ';
+      codes.StrictDelimiter := True;
+      codes.DelimitedText := AvailableLanguages;
+      checked := 0;
+      for i := 0 to codes.Count - 1 do
+         begin
+         if (codes[i] = '') or (codes[i] = 'en') then
+            begin
+            Continue;
+            end;
+         if EmbeddedCatalogueEntry(codes[i], TRANSLATION_AUTHOR_IDENTIFIER,
+                                   english, credit) then
+            begin
+            Inc(checked);
+            CheckTrue(Trim(credit) <> Trim(english),
+                      codes[i] + ' credits "' + credit + '", which is the ' +
+                      'English msgid -- a copied author, not a translator. ' +
+                      'Name the translator, or leave it empty for a machine ' +
+                      'translation');
+            end;
+         end;
+      (* NOT ALLOWED TO PASS BY CHECKING NOTHING. Human-translated catalogues
+        (de, es, ...) always carry a credit, so finding none means the lookup
+        broke -- an identifier rename, or a .res without the catalogues. *)
+      CheckTrue(checked >= 5, Format('%d catalogue credits were checked', [checked]));
+      CheckTrue(EmbeddedCatalogueEntry('de', TRANSLATION_AUTHOR_IDENTIFIER,
+                                       english, credit),
+                'the German catalogue carries its translator credit');
+   finally
+      codes.Free;
+   end;
+end;
+
+(* ---------------------------------------------------------------------
+  EVERY IDENTIFIER REACHES THE EMBEDDED CATALOGUE, AND THE RIGHT TWIN WINS.
+
+  Make-LanguageRes used to lose keys three ways, all silently, and all of
+  them because of how LazUtils reads a .po (translations.pas, ReadPOText):
+  a `#:` line is the identifier WHOLE, every `#:` line overwrites the last,
+  and a later entry with the same identifier replaces the earlier one.
+
+    * It dropped any `#:` line ending in a line number, identifier and all.
+    * It passed a block naming a form property AND a resourcestring through
+      as one entry, so only the last `#:` survived.
+    * A stale fuzzy copy, appended by a merge, shadowed the reviewed entry.
+
+  Measured 2026-10-16 against tr4w_laz.pot's keys: 358 shadowed and 20
+  lost across the catalogues, 202 of them Polish entries whose
+  codepage-damaged copy shipped over the reviewed text. Polish showed
+  "POLISH" for its own name.
+
+  Each row below exercises one of those cases, through the same identifier
+  lookup the program uses. Every row must FIND its entry, so this cannot
+  pass by checking nothing.
+  --------------------------------------------------------------------- *)
+
+procedure TUILanguageTests.Test_EveryIdentifierReachesTheEmbeddedCatalogue;
+
+   procedure Expect(const aCode, aIdentifier, aWant, aWhy: string);
+   var
+      english, got: string;
+   begin
+      CheckTrue(EmbeddedCatalogueEntry(aCode, aIdentifier, english, got),
+                aCode + ' ' + aIdentifier + ' is in the embedded catalogue -- ' + aWhy);
+      CheckEquals(aWant, got, aCode + ' ' + aIdentifier + ' -- ' + aWhy);
+   end;
+
+var
+   english, got: string;
+begin
+   BeginTest('every identifier reaches the embedded catalogue, and the reviewed twin wins');
+
+   (* Its key sits on a line ending in a line number, and a fuzzy twin
+     ("POLISH") claims the same key later in the file. *)
+   Expect('pl', 'utr4wstrings.tc_translation_language', 'Polski',
+          'a key sharing its line with a source reference, shadowed by a fuzzy twin');
+
+   (* Keyed on a mixed line as well as on its own line. *)
+   Expect('es', TRANSLATION_AUTHOR_IDENTIFIER, 'Jose L. Rami EB2CYQ',
+          'the reviewed Spanish credit');
+   Expect('uk', TRANSLATION_AUTHOR_IDENTIFIER, 'Valery I. Smiyan UR7QM (SK)',
+          'the reviewed Ukrainian credit');
+
+   (* ONE ENTRY, TWO KEYS: the form property and the resourcestring the
+     helper assigns. Only the last `#:` used to survive, so the FORM key
+     was lost. The text is not pinned (it is a translator's to change),
+     only that the key resolves to a translation. *)
+   CheckTrue(EmbeddedCatalogueEntry('de', 'tradioeditform.lbltcpport.caption',
+                                    english, got),
+             'de: the form key of a two-key entry is in the embedded catalogue');
+   CheckTrue((got <> '') and (got <> english),
+             'de tradioeditform.lbltcpport.caption carries a translation, not "' +
+             got + '"');
+   CheckTrue(EmbeddedCatalogueEntry('de', 'ulclformhelpers.tc_radioedit_tcpport',
+                                    english, got),
+             'de: and the resourcestring key of the same entry');
+end;
+
 procedure TUILanguageTests.RunAllTests;
 begin
    Randomize;
@@ -518,6 +642,8 @@ begin
    Test_TheCommandAcceptsOnlyWhatShips;
    Test_TheListComesFromTheEmbeddedCatalogues;
    Test_EachLanguageIsShownInItsOwnName;
+   Test_NoCatalogueCreditsTheEnglishAuthor;
+   Test_EveryIdentifierReachesTheEmbeddedCatalogue;
 end;
 
 end.

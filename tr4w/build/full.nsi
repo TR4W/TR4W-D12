@@ -369,6 +369,8 @@ Section "Domestic multiplier files" Secdom
    File ..\target\dom\naqp.dom
    File ..\target\dom\nc.dom
    File ..\target\dom\nc_cty.dom
+   File ..\target\dom\nebraska.dom
+   File ..\target\dom\nebraska_cty.dom
    File ..\target\dom\neqso.dom
    File ..\target\dom\neqsow1.dom
    File ..\target\dom\nevada_cty.dom

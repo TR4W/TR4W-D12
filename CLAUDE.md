@@ -369,6 +369,13 @@ fuzzy entries with the `#,` line stripped, which clears both gates (its own, and
 `-ReviewedOnly` puts both gates back when review finishes. **The `.po` files keep their markers**;
 what changed is the BUILD, not the catalogues.
 
+**THE BUILD REGENERATES `tr4w/res/tr4w_languages.res` (2026-10-16).** Until then nothing ran
+`Make-LanguageRes.ps1` and two catalogue commits never reached a binary. `Build-App.ps1` and
+`Build-Tests.ps1` compare sha256 hashes of the `.po` files and the generator with
+`res/tr4w_languages.res.inputs` (content, not mtime) and rebuild on a mismatch; commit the `.res`
+and `.inputs` together. Linux and macOS run `build/check-language-res.sh` and FAIL a stale pair.
+`-ReviewedOnly` is an experiment: the next build restores the default.
+
 ## Build System
 
 **The toolchain is FreePascal 3.2.2 + the Lazarus LCL.** Delphi 12 is behind us (2026-08-13): the

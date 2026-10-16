@@ -69,6 +69,15 @@ python tools\i18n\po_lint.py i18n\tr4w_pl.po --fix    # only repairs the harmles
 Catches a changed `%s`, a dropped line break, and entries left empty but no longer
 flagged. Non-zero exit means a real defect.
 
+It also fails a catalogue whose `TC_TRANSLATION_AUTHOR` is the English msgid (`N4AF`),
+**fuzzy or not**, because fuzzy entries ship. That entry is the About box's
+"<language> translation by <author>" credit: name and callsign of the translator
+(never an email), `(SK)` after a silent key's callsign, and **empty or `LibreTranslate`
+for a machine translation**. The About box then says LibreTranslate and adds
+`TC_TRANSLATION_CORRECTIONS` ("Corrections are appreciated."). The unit test
+`uTestUILanguage.Test_NoCatalogueCreditsTheEnglishAuthor` pins the same rule against the
+embedded catalogues, which is the copy that gates a build (2026-10-16).
+
 ---
 
 ## Refresh the catalogues after the program changes
@@ -89,13 +98,27 @@ python tools\i18n\po_merge.py --pot tr4w\languages\tr4w_laz.pot --apply
 ## Put translations into the program
 
 ```powershell
-powershell -File tr4w\build\Make-LanguageRes.ps1     # catalogues -> res\tr4w_languages.res
-powershell -File tr4w\build\Build-App.ps1
+powershell -File tr4w\build\Build-App.ps1     # regenerates res\tr4w_languages.res itself
 ```
 
-Only entries a person has **approved** are embedded — anything still marked "Needs
-work" is dropped. So a language full of machine drafts adds nothing to the exe until
-someone reviews it.
+**`Build-App.ps1` and `Build-Tests.ps1` regenerate `res\tr4w_languages.res`
+automatically** (2026-10-16; before that nothing ran `Make-LanguageRes.ps1` and
+two catalogue commits never reached a binary). The trigger is CONTENT, not file
+times: `res\tr4w_languages.res.inputs` records a sha256 per `i18n\tr4w_*.po` plus
+the generator, and the build recompares them (~0.1 s when current, ~3 s to
+regenerate; the output is byte-identical for identical inputs). A failure to
+regenerate FAILS the build. **After changing a catalogue, build once and commit
+the `.res` AND the `.inputs` together** — the Linux and macOS builds cannot run
+the generator, so `build/check-language-res.sh` (stage `languages` in
+`build-unix.sh`) FAILS them if the committed pair does not match the
+catalogues. You can still run `Make-LanguageRes.ps1` by hand; do so after a
+Lazarus upgrade, whose `lclstrconsts` catalogues are embedded but deliberately
+not hashed.
+
+Unreviewed ("Needs work") entries ARE embedded since 2026-09-21, with their
+`#,` flag stripped in the shipped copy only; the `.po` keeps its marker.
+`Make-LanguageRes.ps1 -ReviewedOnly` is an experiment, not a setting: the next
+build puts the default back (the stamp's `mode` line no longer matches).
 
 Check it worked:
 

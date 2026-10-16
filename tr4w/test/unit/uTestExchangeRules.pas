@@ -136,7 +136,7 @@ const
       TContestStateQSOPartyBase, the three multi-state parties, County
       Hunter. *)
    ROVER_EVERYWHERE = [
-      ArizonaQsoParty, BCQP, CALQSOPARTY, COLORADOQSOPARTY, DELAWAREQSOPARTY,
+      ArizonaQsoParty, BCQP, CALQSOPARTY, COLORADOQSOPARTY, DELAWAREQSOPARTY, NEBRASKAQSO,
       FLORIDAQSOPARTY, IDAHOQSOPARTY, INQSOPARTY, MICHQSOPARTY, MINNQSOPARTY,
       MOQSOPARTY, NCQSOPARTY, NYQP, OHIOQSOPARTY, PAQSOPARTY,
       TENNESSEEQSOPARTY, TEXASQSOPARTY, VAQP, WISCONSINQSOPARTY, SALMONRUN,
@@ -290,9 +290,10 @@ const
       DX but at a W or VE -- 23/23/25/23/24/25, 25 anywhere). Several QTHs: 12
       everywhere; 7QP, Arizona, the Salmon Run and Texas out of their host
       state; ARRL 160 outside a section country; the ARRL DX at a non-W/VE;
-      NEQP outside New England; the PACC but at PA. *)
+      NEQP outside New England; the PACC but at PA. The rover is 25
+      everywhere since the Nebraska QSO Party (2026-10-16), a state party. *)
    COUNTS: array[TExchangeRule, TPinStation] of integer = (
-      (24, 24, 24, 24, 24, 24),
+      (25, 25, 25, 25, 25, 25),
       (18, 18, 21, 13, 20, 20),
       (3, 3, 3, 3, 3, 3),
       (1, 1, 1, 1, 1, 1),
@@ -300,7 +301,7 @@ const
    );
    (* At some roster station -- plan 2.1's 21 for several QTHs; the rover's
       25 is 24 since Q94. *)
-   COUNT_ANYWHERE: array[TExchangeRule] of integer = (24, 21, 3, 1, 1);
+   COUNT_ANYWHERE: array[TExchangeRule] of integer = (25, 21, 3, 1, 1);
 var
    r: TExchangeRule;
    s: TPinStation;

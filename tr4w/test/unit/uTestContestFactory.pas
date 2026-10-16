@@ -136,7 +136,12 @@ type
 implementation
 
 (* Builds the registered class for aContest, or nil. The caller frees it --
-   these are plain objects, not the factory's cached singleton. *)
+   these are plain objects, not the factory's cached singleton.
+
+   ITS STATION IS EMPTY BUT FOR A DOMESTIC TABLE THAT KNOWS EVERY QTH (Q107,
+   2026-10-16): the QSOs these tests score are host-area QSOs, so a QSO
+   party's host-area rule (out of state, InHostState False) credits them.
+   uTestHostAreaRule is the suite about that rule. *)
 function MakeContest(aContest: ContestType): TContestBase;
 var
    cls: TContestClass;
@@ -146,6 +151,7 @@ begin
    if cls <> nil then
       begin
       Result := cls.Create(aContest);
+      Result.SetStation(WithHostAreaTable(NoStation));
       end;
 end;
 
@@ -1579,6 +1585,7 @@ begin
       end;
    try
       FillChar(station, SizeOf(station), 0);
+      station := WithHostAreaTable(station);
       station.MyPower := cpQRP;
       obj.SetStation(station);
       CheckEquals(5, PointsFor(obj, CW, Band20), 'Idaho QRP CW is 5');
@@ -1634,8 +1641,11 @@ begin
    for c := Low(ContestType) to High(ContestType) do
       begin
       (* THE CONTESTS THAT STATE THEIR BANDS: Idaho, and Delaware (2026-10-14,
-         uTestContestDelawareQP pins its list). *)
-      if c in [IDAHOQSOPARTY, DELAWAREQSOPARTY] then
+         uTestContestDelawareQP pins its list); New England, 7QP, Indiana and
+         the IN7QPNE composite (2026-10-16, uTestQSOPartyBands); Nebraska
+         (2026-10-16, uTestContestNebraskaQP). *)
+      if c in [IDAHOQSOPARTY, DELAWAREQSOPARTY, NEWENGLANDQSO, SEVENQP,
+               INQSOPARTY, IN7QPNE, NEBRASKAQSO] then
          begin
          Continue;
          end;
@@ -1817,6 +1827,10 @@ const
       NCQSOPARTY, OHIOQSOPARTY, PAQSOPARTY, TENNESSEEQSOPARTY,
       TEXASQSOPARTY, WISCONSINQSOPARTY];
 
+   (* CONTESTS ADDED AFTER THE ROW WAS DELETED (M10 S8) HAD NO ROW, so they
+      have nothing to disagree with: the Nebraska QSO Party (2026-10-16). *)
+   CONTESTS_BORN_WITHOUT_A_ROW: set of ContestType = [NEBRASKAQSO];
+
 (* EVERY QSO PARTY SPLITS A ROVER'S CALL ON EXPORT, AND NOTHING ELSE DOES --
    NY4I's ruling on Q90 with Q94, 2026-10-14: "yes QSO parties allow it but
    in any contest NY4I/7 or VP9/NY4I is a valid call."
@@ -1839,7 +1853,7 @@ const
       FLORIDAQSOPARTY, IDAHOQSOPARTY, INQSOPARTY, MICHQSOPARTY, MINNQSOPARTY,
       MOQSOPARTY, NCQSOPARTY, NYQP, OHIOQSOPARTY, PAQSOPARTY,
       TENNESSEEQSOPARTY, TEXASQSOPARTY, VAQP, WISCONSINQSOPARTY, SALMONRUN,
-      SEVENQP, NEWENGLANDQSO, IN7QPNE];
+      SEVENQP, NEWENGLANDQSO, IN7QPNE, NEBRASKAQSO];
 
 procedure TContestFactoryTests.Test_EveryQSOPartySplitsARoverCallOnExport;
 var
@@ -1882,7 +1896,8 @@ begin
                    string(ContestTypeSA[c]) + ': a state party splits');
          end;
       end;
-   CheckEquals(23, splitting, 'QSO parties that split a rover''s call on export');
+   (* 24 since the Nebraska QSO Party (2026-10-16), a state party. *)
+   CheckEquals(24, splitting, 'QSO parties that split a rover''s call on export');
 
    (* By name: Arizona started (Q90), and a slash call is the call in the
       ARRL DX. *)
@@ -1935,9 +1950,16 @@ begin
          Continue;
          end;
       try
-         rowAllows := c in OLD_ROW_COUNTY_LINE_ALLOWED;
          classAllows := (obj is TContestStateQSOPartyBase) and
                         TContestStateQSOPartyBase(obj).CountyLineAllowed;
+         if c in CONTESTS_BORN_WITHOUT_A_ROW then
+            begin
+            rowAllows := classAllows;
+            end
+         else
+            begin
+            rowAllows := c in OLD_ROW_COUNTY_LINE_ALLOWED;
+            end;
          if rowAllows <> classAllows then
             begin
             Inc(disagreements);
@@ -2669,8 +2691,11 @@ begin
       Exit;
       end;
    try
-      (* No override stated: the contest's rule. *)
+      (* No override stated: the contest's rule. Every worked station is in
+         the host area (the table knows every QTH -- the host-area rule's
+         place in this order is uTestHostAreaRule's). *)
       FillChar(station, SizeOf(station), 0);
+      station := WithHostAreaTable(station);
       obj.SetStation(station);
       CheckEquals(2, Score(Band20, CW, 'ADA'), 'no override: Idaho CW is 2');
       CheckEquals(1, Score(Band20, Phone, 'ADA'), 'no override: Idaho phone is 1');

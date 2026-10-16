@@ -108,7 +108,11 @@ CABRILLO_OVERRIDES = {
    'CALIFORNIA QSO PARTY': 'CA-QSO-PARTY',       # CQP.txt
    'COQP': 'CO-QSO-PARTY',                       # COQP.txt
    'BCQP': 'BC-QSO-PARTY',                       # BCQP.txt
-   'NEQP': 'NEWE-QSO-PARTY',                     # NEWEQP.txt -- NOT NE-QSO-PARTY, which is Nebraska
+   # New England needs no entry since 2026-10-16 (design Q105): TR4W's
+   # Cabrillo name is NEWE-QSO-PARTY, DXLog's NEWEQP.txt's own, and the
+   # matrix was re-frozen with it the same day.
+   # Nebraska (NEBRASKAQSO, new 2026-10-16) is NE-QSO-PARTY on both sides and
+   # joins by name -- DXLog's NEQP.txt IS NEBRASKA despite its file name.
    'TEXAS QSO PARTY': 'TX-QSO-PARTY',            # TXQP.txt
    'WIQP': 'WI-QSO-PARTY',                       # WIQP.txt
    'NCCC-SPRINT': 'NCCC-SPRINT-CW',              # NCCCSprint.txt, NCCC-SPRINT-{MODE}

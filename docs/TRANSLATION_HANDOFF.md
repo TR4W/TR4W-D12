@@ -91,7 +91,7 @@ python -c "import sys;sys.path.insert(0,'tools/i18n');import pofile;e=[x for x i
 python tools\i18n\po_lint.py <their file>
 ```
 
-Three things it catches that neither Poedit nor the compiler will:
+What it catches that neither Poedit nor the compiler will:
 
 - **a changed `%s`/`%d`** — TR4W formats through `wsprintfA` with unchecked varargs, so
   a missing placeholder reads the next argument off the stack. This is a crash, not a
@@ -100,6 +100,9 @@ Three things it catches that neither Poedit nor the compiler will:
 - **a dropped or added line break** inside a message
 - **an entry left empty but no longer marked "Needs work"** — Poedit does this
   routinely, and it makes the entry invisible to the seeder afterwards
+- **a translator credit that is still `N4AF`** — `TC_TRANSLATION_AUTHOR` is what the
+  About box credits. Put the translator's name and callsign there (no email), and
+  `(SK)` after a silent key's callsign
 
 A non-zero exit means a real defect. Go back to the translator with the specific
 entry; do not repair a translation you cannot read.
@@ -123,13 +126,13 @@ copy <their file> i18n\tr4w_<lang>.po
 ### 3. Build it into the program
 
 ```powershell
-powershell -File tr4w\build\Make-LanguageRes.ps1     # .po -> res\tr4w_languages.res
-powershell -File tr4w\build\Build-App.ps1
+powershell -File tr4w\build\Build-App.ps1     # also regenerates res\tr4w_languages.res
 ```
 
-`Make-LanguageRes` embeds **only entries a person has approved** — anything still
-marked "Needs work" is dropped before it reaches the binary. So the size of the
-resource is a fair measure of how much real translation exists.
+`Build-App.ps1` regenerates the embedded resource itself when a catalogue
+changed (see `docs/I18N_TOOLS.md`); commit the `.res` and `.res.inputs` it
+rewrites. Since 2026-09-21 `Make-LanguageRes` embeds unreviewed ("Needs work")
+entries too, with the flag stripped in the shipped copy only.
 
 ### 4. Confirm it
 

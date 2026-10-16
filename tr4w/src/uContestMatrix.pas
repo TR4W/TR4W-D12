@@ -77,7 +77,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
                to list it
     scoring    per synthetic QSO, the fields /RESCORE recomputes, through
                MainUnit.RecomputeQSOScoring -- the rescore's own body, not a
-               copy of it
+               copy of it. Since Q107, for an entrant OUTSIDE a contest's
+               host area only, one more QSO (37) whose QTH is a key of the
+               contest's own domestic file -- see HOST_QSO
     export     the QSOs appended to the scratch log, then the REAL exporters
                (ExportToADIF, CreateCabrilloFile): the Cabrillo CONTEST: and
                QSO: lines, and every ADIF record after <EOH>
@@ -755,35 +757,135 @@ begin
                      string(aRX.DomesticQTH), aRX.Zone]);
 end;
 
+procedure SessionDomesticFileKeys(out aFirst, aSecond: string); forward;
+
+const
+   (* THE HOST-AREA QSO (Q107, 2026-10-16) -- a station INSIDE the contest's
+     host area, for an entrant OUTSIDE it.
+
+     Since Q107 an out-of-area entrant of a QSO party credits only a worked
+     station whose QTH the session's domestic table knows, and not one of the
+     17 above sends such a QTH -- so every out-of-area record scored 0 and
+     out-of-area scoring was seen by the unit tests alone. This QSO gives it
+     a QTH the table knows: one of the first two keys of the file that table
+     was loaded from (SessionDomesticFileKeys), read by the same line reader
+     parse.keys uses.
+
+     LOGGED ONLY WHERE THE RULE APPLIES, and asked of the contest, never
+     listed: HostAreaQSO adds it when the active contest refuses to credit a
+     worked station that sent NO QTH (ContestCreditsWorkedStation) -- which is
+     exactly an entrant outside a host area. A contest with no host area, and
+     an entrant inside one, credit that station, log nothing more and keep
+     every byte of their records.
+
+     NUMBERED AFTER THE keys SECTION'S QSOs (18 to 36), so no two lines of a
+     record share a number, and timed after every logged QSO. The call is not
+     in either QSO table, so it is no dupe of one. CHANGING THIS QSO CHANGES
+     EVERY RECORD THAT LOGS IT. *)
+   HOST_QSO_INDEX = 37;
+   HOST_QSO: TMatrixQSO =
+      (Call: 'K9HQP'; Band: Band20; Mode: CW; Ext: eCW; FreqHz: 14025000; QTH: ''; Zone: 4; Sparse: False);
+
+type
+   THostQSOAnswer = (hqaNoHostArea, hqaFound, hqaNoKeyCredited);
+
+(* THE HOST-AREA QSO FOR THIS CONTEST AND STATION, if it has one -- see
+  HOST_QSO. aSpec is HOST_QSO carrying the first key of the domestic file
+  that the contest credits; the record it builds is what is asked, so the
+  answer is the scoring path's own. *)
+function HostAreaQSO(out aSpec: TMatrixQSO): THostQSOAnswer;
+var
+   rx: ContestExchange;
+   keys: array[1..2] of string;
+   i: integer;
+begin
+   aSpec := HOST_QSO;
+   BuildQSO(HOST_QSO_INDEX, aSpec, rx);
+   if ContestCreditsWorkedStation(ActiveContest(Contest), rx) then
+      begin
+      Result := hqaNoHostArea;
+      Exit;
+      end;
+
+   Result := hqaNoKeyCredited;
+   SessionDomesticFileKeys(keys[1], keys[2]);
+   for i := Low(keys) to High(keys) do
+      begin
+      if keys[i] = '' then
+         begin
+         Continue;
+         end;
+      aSpec.QTH := keys[i];
+      BuildQSO(HOST_QSO_INDEX, aSpec, rx);
+      if ContestCreditsWorkedStation(ActiveContest(Contest), rx) then
+         begin
+         Result := hqaFound;
+         Exit;
+         end;
+      end;
+end;
+
+(* SCORE ONE QSO, THEN PUT IT IN THE LOG FOR THE EXPORTERS. *)
+procedure ScoreAndLogOne(aIndex: integer; const aSpec: TMatrixQSO);
+var
+   rx: ContestExchange;
+begin
+   try
+      BuildQSO(aIndex, aSpec, rx);
+      RecomputeQSOScoring(rx);
+      Emit(ScoreLine(aIndex, aSpec, rx));
+      if not LogStoreAppendQSO(rx) then
+         begin
+         Emit(Format('qso %.2d NOT APPENDED to the log -- the export below lacks it', [aIndex]));
+         end;
+   except
+      on E: Exception do
+         begin
+         EmitRaised(Format('qso %.2d', [aIndex]), E);
+         end;
+   end;
+end;
+
 (* SCORE EACH QSO, THEN PUT IT IN THE LOG FOR THE EXPORTERS.
 
   EACH QSO IS SCORED AGAINST AN EMPTY SHEET -- nothing is added to the dupe or
   multiplier sheets -- so every QSO is scored as the first of its kind and no
   record depends on the ones before it. The mult flags therefore read "would
-  be a new multiplier". *)
+  be a new multiplier". The host-area QSO, where there is one, comes last. *)
 procedure CaptureScoringAndLog;
 var
    i: integer;
-   rx: ContestExchange;
+   hostSpec: TMatrixQSO;
 begin
    Emit('== scoring');
    for i := Low(MATRIX_QSOS) to High(MATRIX_QSOS) do
       begin
-      try
-         BuildQSO(i, MATRIX_QSOS[i], rx);
-         RecomputeQSOScoring(rx);
-         Emit(ScoreLine(i, MATRIX_QSOS[i], rx));
-         if not LogStoreAppendQSO(rx) then
+      ScoreAndLogOne(i, MATRIX_QSOS[i]);
+      end;
+
+   try
+      case HostAreaQSO(hostSpec) of
+         hqaFound:
             begin
-            Emit(Format('qso %.2d NOT APPENDED to the log -- the export below lacks it', [i]));
+            ScoreAndLogOne(HOST_QSO_INDEX, hostSpec);
             end;
-      except
-         on E: Exception do
+         hqaNoKeyCredited:
             begin
-            EmitRaised(Format('qso %.2d', [i]), E);
+            Emit(Format('qso %.2d NOT LOGGED -- the entrant is outside a host ' +
+                        'area and the domestic table credits neither of its ' +
+                        'file''s first two keys', [HOST_QSO_INDEX]));
+            end;
+         hqaNoHostArea:
+            begin
+            (* Nothing: the record is what it was before Q107's QSO. *)
             end;
       end;
-      end;
+   except
+      on E: Exception do
+         begin
+         EmitRaised(Format('qso %.2d', [HOST_QSO_INDEX]), E);
+         end;
+   end;
 end;
 
 (* THE LINES OF AN EXPORTED FILE THAT THIS RECORD KEEPS. *)
@@ -1257,28 +1359,22 @@ const
       (Name: 'f.department';      Call: 'F5ABC';  Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 75')
       );
 
-(* THE FIRST TWO KEYS OF THE CONTEST'S DOMESTIC FILE, for <K1> and <K2>.
-  The reader is uDomFileKeys -- the rule FoundMyStateInDomFile applies -- so a
-  key here is one the contest's own tables know. *)
-procedure DomesticFileKeys(out aFirst, aSecond: string);
+(* THE FIRST TWO KEYS OF THE .dom FILE AT aPath, '' for each it lacks. The
+  reader is uDomFileKeys -- the rule FoundMyStateInDomFile applies -- so a
+  key here is one a table loaded from that file knows. *)
+procedure DomFileFirstKeys(const aPath: string; out aFirst, aSecond: string);
 var
-   path: string;
    lines: TStringList;
    i: integer;
    key: string;
 begin
    aFirst := '';
    aSecond := '';
-   path := '';
-   if ContestIdentity(Contest).DomesticFileName <> '' then
-      begin
-      path := ShippedDomFilePath(ContestIdentity(Contest).DomesticFileName + '.dom');
-      end;
-   if (path <> '') and FileExists(path) then
+   if (aPath <> '') and FileExists(aPath) then
       begin
       lines := TStringList.Create;
       try
-         lines.LoadFromFile(AnsiString(path));
+         lines.LoadFromFile(AnsiString(aPath));
          for i := 0 to lines.Count - 1 do
             begin
             key := DomFileLineKey(string(lines[i]));
@@ -1300,6 +1396,20 @@ begin
          lines.Free;
       end;
       end;
+end;
+
+(* THE FIRST TWO KEYS OF THE CONTEST'S DOMESTIC FILE, for <K1> and <K2> --
+  the file its IDENTITY names, so a contest with none gets CT and MA. *)
+procedure DomesticFileKeys(out aFirst, aSecond: string);
+var
+   path: string;
+begin
+   path := '';
+   if ContestIdentity(Contest).DomesticFileName <> '' then
+      begin
+      path := ShippedDomFilePath(ContestIdentity(Contest).DomesticFileName + '.dom');
+      end;
+   DomFileFirstKeys(path, aFirst, aSecond);
    if aFirst = '' then
       begin
       aFirst := 'CT';
@@ -1308,6 +1418,30 @@ begin
       begin
       aSecond := 'MA';
       end;
+end;
+
+(* THE FIRST TWO KEYS OF THE FILE THE SESSION'S DOMESTIC TABLE WAS LOADED
+  FROM -- DOMESTIC FILENAME, as LogCfg.SetUpGlobalsAndInitialize resolves it
+  through ShippedDomFilePath (the matrix's log directory holds no override
+  .dom). NOT the identity's file: a contest whose set-up chooses its file by
+  the entrant names none there (New England: NEQSO or NEQSOW1), and the
+  host-area rule asks THIS table. No stand-in: '' where there is no key. *)
+procedure SessionDomesticFileKeys(out aFirst, aSecond: string);
+var
+   name: string;
+   path: string;
+begin
+   name := Settings.Contest.DomesticFilename;
+   path := '';
+   if name <> '' then
+      begin
+      if ExtractFileExt(name) = '' then
+         begin
+         name := name + '.dom';
+         end;
+      path := ShippedDomFilePath(name);
+      end;
+   DomFileFirstKeys(path, aFirst, aSecond);
 end;
 
 (* ONE TYPED EXCHANGE THROUGH THE PATH LIVE ENTRY TAKES.

@@ -17,12 +17,13 @@ msgctxt "TC_TRANSLATION_LANGUAGE"
 msgid "ENGLISH"
 msgstr "Dansk"
 
+# 2026-10-16: machine translation (LibreTranslate), no human translator to credit (NY4I, 2026-10-16). Was "N4AF" -- the English msgid copied, which credited N4AF for it.
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:8
 #: utr4wstrings.tc_translation_author
 #, fuzzy
 msgid "N4AF"
-msgstr "N4AF"
+msgstr "LibreTranslate"
 
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:9
@@ -522,14 +523,17 @@ msgstr "EU-land, indtast din landekode med fire tegn"
 msgid "EI/GI, enter your County"
 msgstr "EI / GI, indtast din County"
 
+# 2026-10-16: the English changed from "Latest config file" to "Last Contest" -- the button reopens the contest's database, not a config file.
+# Composed from this catalogue's own words, please review: last = 'Last status:' -> 'Sidste status:'; contest = 'Contest Name' -> 'Contest navn'.
+# Previous translation (of the old English): "Seneste indstillingsfil"
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:100
 #: tfrmnewcontest.btnlatest.caption
 #: utr4wstrings.tc_latest_config_file
 #, fuzzy
 msgctxt "tfrmnewcontest.btnlatest.caption"
-msgid "Latest config file"
-msgstr "Seneste indstillingsfil"
+msgid "Last Contest"
+msgstr "Sidste contest"
 
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:101
@@ -5654,6 +5658,16 @@ msgstr "Testpakke sendt til %s: %d. UDP kan ikke bekræfte det ankom -- tjek mod
 msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
 msgstr "%s oversættelse af %s"
+
+# 2026-10-16: new string -- the About box shows it under a machine translation's credit. Machine draft, please review.
+#. Section: General
+#: utr4wstrings:tc_translation_corrections
+#: tr4w/src/lang/tr4w_consts_eng.pas:14
+#: utr4wstrings.tc_translation_corrections
+#, fuzzy
+msgctxt "TC_TRANSLATION_CORRECTIONS"
+msgid "Corrections are appreciated."
+msgstr "Rettelser modtages gerne."
 
 #. Section: UEDITMESSAGE
 #. 4.51.8

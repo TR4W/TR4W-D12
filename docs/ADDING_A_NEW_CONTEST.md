@@ -19,7 +19,7 @@ The vast majority of plumbing — exchange parsing, Cabrillo formatting, dupe ha
 | Where | What it holds |
 |---|---|
 | `ContestType` enum | The new enum value (e.g. `RTC`) -- **appended**, because the ordinal is persisted |
-| `ContestTypeSA` | The enum's spelling: what a `.cfg`'s `CONTEST =` line is matched against, and every name getter's neutral fallback |
+| `ContestTypeSA` | The enum's spelling: what a `.cfg`'s `CONTEST =` line is matched against, what the SQLite log stores, and every name getter's neutral fallback. **Never reuse a spelling for another contest**; a renamed one keeps its old spelling in `uContestNames.LEGACY_CONTEST_NAMES` (`ADDING_A_CONTEST.md` Step 3c) |
 
 Everything else is the contest's class, in `src/contestFactory/` -- read
 [`ADDING_A_CONTEST.md`](ADDING_A_CONTEST.md). A state QSO party also ships

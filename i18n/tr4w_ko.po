@@ -18,6 +18,7 @@ msgctxt "TC_TRANSLATION_LANGUAGE"
 msgid "ENGLISH"
 msgstr "한국어"
 
+# 2026-10-16: machine translation (LibreTranslate), no human translator to credit (NY4I, 2026-10-16). Was empty, which showed the English default "N4AF" in the About box.
 #. Section: General
 #: utr4wstrings:tc_translation_author
 #: tr4w/src/lang/tr4w_consts_eng.pas:8
@@ -25,7 +26,7 @@ msgstr "한국어"
 #, fuzzy
 msgctxt "TC_TRANSLATION_AUTHOR"
 msgid "N4AF"
-msgstr ""
+msgstr "LibreTranslate"
 
 #. Section: General
 #: utr4wstrings:tc_translator_email
@@ -653,6 +654,9 @@ msgctxt "TC_IRTS"
 msgid "EI/GI, enter your County"
 msgstr "EI / GI, 카운티에 입력"
 
+# 2026-10-16: the English changed from "Latest config file" to "Last Contest" -- the button reopens the contest's database, not a config file.
+# Composed from this catalogue's own words, please review: last = 'Last status:' -> '마지막 상태:'; contest = 'Start a new contest' -> '새로운 대회 시작'.
+# Previous translation (of the old English): "Config 파일"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_latest_config_file
 #: tr4w/src/lang/tr4w_consts_eng.pas:100
@@ -660,8 +664,8 @@ msgstr "EI / GI, 카운티에 입력"
 #: utr4wstrings.tc_latest_config_file
 #, fuzzy
 msgctxt "TC_LATEST_CONFIG_FILE"
-msgid "Latest config file"
-msgstr "Config 파일"
+msgid "Last Contest"
+msgstr "마지막 대회"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_openconfigurationfile
@@ -6343,6 +6347,16 @@ msgstr "%s:%d 로 전송된 패킷을 테스트합니다. UDP가 도착할 수 �
 msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
 msgstr "%s %s 번역"
+
+# 2026-10-16: new string -- the About box shows it under a machine translation's credit. Machine draft, please review.
+#. Section: General
+#: utr4wstrings:tc_translation_corrections
+#: tr4w/src/lang/tr4w_consts_eng.pas:14
+#: utr4wstrings.tc_translation_corrections
+#, fuzzy
+msgctxt "TC_TRANSLATION_CORRECTIONS"
+msgid "Corrections are appreciated."
+msgstr "수정 제안을 환영합니다."
 
 #. Section: UTELNET
 #: utr4wstrings:tc_telnet

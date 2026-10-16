@@ -236,6 +236,10 @@ begin
          begin
          state := 'DE';
          end;
+      NEBRASKAQSO:
+         begin
+         state := 'NE';
+         end;
    else
       begin
       Exit;

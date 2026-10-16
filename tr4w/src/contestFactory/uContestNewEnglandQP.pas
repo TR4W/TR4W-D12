@@ -30,7 +30,26 @@ http://www.gnu.org/licenses/gpl-3.0.txt
    ADIFName: '';  CABName: '';
    FriendlyName: 'New England QSO Party'
 
-  Blank CABName and ADIFName resolve to the enum's spelling, 'NEQP'.
+  Blank CABName and ADIFName resolved to the enum's spelling, 'NEQP'.
+
+  RENAMED 2026-10-16 (NY4I, design Q105). 'NEQP' is too close to
+  NE-QSO-PARTY, the Nebraska QSO Party (uContestNebraskaQP), so:
+
+    TR4W name (ContestTypeSA)  NEWEQP -- DXLog's name for this contest.
+                               'NEQP' stays a permanent READ alias
+                               (uContestNames.LEGACY_CONTEST_NAMES): every
+                               older .cfg and contest log says it.
+    Cabrillo CONTEST:          NEWE-QSO-PARTY -- what DXLog's NEWEQP.txt
+                               writes; WA7BNM ref 10 lists NEQP first and
+                               NEWE-QSO-PARTY as an accepted alias.
+    ADIF CONTEST_ID            NEQP, UNCHANGED -- the ADIF 3.1.7 enumeration's
+                               New England value (Nebraska is NE-QSO-PARTY).
+                               Stated here: the enum spelling it used to fall
+                               back to is NEWEQP now.
+
+  BANDS (NY4I, 2026-10-16, from the four parties' rules): 80, 40, 20, 15 and
+  10 m -- no 160, no WARC, no VHF. UsesBand states them; a QSO anywhere else
+  is logged, scores 0 and earns no multiplier (design 7.4).
 
   WHY IT HAS A CLASS. Milestone M7b (2026-10-02) gives every classless
   contest one, and a registered class is the contest's scorer, set-up,
@@ -99,6 +118,10 @@ type
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
       function GetIsUSQSOParty: boolean; override;
+   public
+      (* 80 to 10 m without WARC -- the header. *)
+      function UsesBand(aBand: BandType): boolean; override;
+   protected
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
@@ -128,6 +151,26 @@ type
                                out aKey: DXMultiplierString): boolean; override;
       (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
       function CountryMode: CountryModeType; override;
+   public
+      (* A STATION OUTSIDE NEW ENGLAND WORKS ONLY NEW ENGLAND STATIONS --
+         Q107 (NY4I, 2026-10-16), the rule he gave for "qso parties in
+         general" (Q29, 2026-10-15). Until Q107 this multi-state party was
+         never held to it (the header): out of New England its exchange
+         shape already refused a QTH NEQSO does not know, so typing barely
+         changes, but a logged QSO -- imported, networked, rescored -- scored
+         whoever it was with.
+
+         THE SAME PREDICATE AS EVERY STATE PARTY, uContestBase.
+         HostAreaRuleCredits, with this contest's own in-area answer: the
+         MY STATE test DescribeSession chooses the file by
+         (CountsDXMultiplier -- this is not a US state party, so set-up's
+         Station.InHostState is always False here). Out of New England the
+         table is NEQSO, the six states' counties. *)
+      function ParseReceivedExchange(const aText: string;
+                                     const aSession: TReceivedExchangeSession;
+                                     var aExch: ContestExchange;
+                                     out aErrorMessage: string): boolean; override;
+      function CreditsWorkedStation(const aQso: ContestExchange): boolean; override;
    public
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
@@ -166,7 +209,41 @@ uses
    uContestRegistry,
    (* FixedModePoints -- the helper for a number per mode. *)
    uContestFixedPoints,
-   uTR4WStrings;
+   uTR4WStrings,
+   (* SExchangeOutOfStateWorksHostOnly -- the host-area refusal (Q107). *)
+   uAppStrings;
+
+const
+   (* The area the host-area refusal names. *)
+   NEQP_HOST_AREA = 'New England';
+
+(* THE HOST-AREA RULE, BOTH SIDES -- see the declaration (Q107). *)
+function TContestNewEnglandQP.ParseReceivedExchange(const aText: string;
+                                                    const aSession: TReceivedExchangeSession;
+                                                    var aExch: ContestExchange;
+                                                    out aErrorMessage: string): boolean;
+begin
+   Result := inherited ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
+   if not Result then
+      begin
+      Exit;
+      end;
+
+   if not HostAreaRuleCredits(CountsDXMultiplier,
+                              string(aExch.QTHString),
+                              aSession.IsDomesticQTH) then
+      begin
+      Result := False;
+      aErrorMessage := Format(SExchangeOutOfStateWorksHostOnly, [NEQP_HOST_AREA]);
+      end;
+end;
+
+function TContestNewEnglandQP.CreditsWorkedStation(const aQso: ContestExchange): boolean;
+begin
+   Result := HostAreaRuleCredits(CountsDXMultiplier,
+                                 string(aQso.QTHString),
+                                 Station.IsDomesticQTH);
+end;
 
 procedure TContestNewEnglandQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
@@ -193,15 +270,16 @@ end;
 
 function TContestNewEnglandQP.GetCabrilloName: string;
 begin
-   (* The row's CABName is blank; this is the enum's spelling it resolves
-      to. *)
-   Result := 'NEQP';
+   (* NEWE-QSO-PARTY since 2026-10-16 (Q105) -- see the header. It was
+      'NEQP', the enum spelling the row's blank CABName resolved to. *)
+   Result := 'NEWE-QSO-PARTY';
 end;
 
 function TContestNewEnglandQP.GetADIFContestId: string;
 begin
-   (* The row's ADIFName is blank; export writes the enum's spelling, and
-      import matches it (M1). *)
+   (* ADIF 3.1.7's New England value, and what every TR4W export of this
+      contest has written since M1 -- so old exports still import here.
+      Stated, not the enum spelling: that is NEWEQP now (Q105). *)
    Result := 'NEQP';
 end;
 
@@ -324,6 +402,11 @@ end;
 function TContestNewEnglandQP.GetFlags: TContestFlags;
 begin
    Result := [cfQSOByBand, cfQSOByMode];
+end;
+
+function TContestNewEnglandQP.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand in [Band80, Band40, Band20, Band15, Band10];
 end;
 
 function TContestNewEnglandQP.GetIsUSQSOParty: boolean;

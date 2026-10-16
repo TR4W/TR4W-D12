@@ -60,6 +60,18 @@ function MakeContestOrNil(aContest: ContestType; const aStation: TStationContext
 (* A station with every field zero -- what an object holds before SetStation. *)
 function NoStation: TStationContext;
 
+(* A DOMESTIC TABLE THAT KNOWS EVERY QTH -- the TStationContext.IsDomesticQTH
+   service for a test whose QSOs are all with the host area, Q107
+   (2026-10-16). A QSO party's out-of-area entrant credits only a QSO whose
+   QTH the table knows (uContestBase.HostAreaRuleCredits); a test about
+   POINTS states, with this, that every QSO it scores is with a host-area
+   station, so the rule it is not about stays out of its way. A test ABOUT
+   the rule hands a table that knows some QTHs and not others. *)
+function StubEveryQTHIsAHostCounty(const aQTH: string): boolean;
+
+(* aStation with StubEveryQTHIsAHostCounty as its table. *)
+function WithHostAreaTable(const aStation: TStationContext): TStationContext;
+
 (* THE SHIPPED dom DIRECTORY, from the test binary -- ParamStr(0), never the
    working directory, as the CTY.DAT tests do. Ends in a separator.
 
@@ -121,6 +133,17 @@ begin
      count corrupted badly enough to segfault in a reproduction (M11 S0b,
      2026-10-14). Default(T) finalises and re-initialises properly. *)
    Result := Default(TStationContext);
+end;
+
+function StubEveryQTHIsAHostCounty(const aQTH: string): boolean;
+begin
+   Result := True;
+end;
+
+function WithHostAreaTable(const aStation: TStationContext): TStationContext;
+begin
+   Result := aStation;
+   Result.IsDomesticQTH := @StubEveryQTHIsAHostCounty;
 end;
 
 end.

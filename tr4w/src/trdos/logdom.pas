@@ -24,6 +24,7 @@ unit LogDom;
 interface
 
 uses
+  Generics.Collections,   // TObjectDictionary -- the domestic table
 utils_text,
   VC,
   TF,
@@ -38,13 +39,17 @@ type
   (* RemainingMultDisplayModeType MOVED to uSettingsModel, 2026-09-13. *)
  // ExternalLogType = (NoExternalLogger, DXKeeper, ACLog, HRD);
 
-  PrefixRecPtr = ^PrefixRec;
+  (* ONE ALIAS OF A DOMESTIC FILE: what a received text that equals the alias
+    resolves to. The alias itself is the table's key.
 
-  PrefixRec = record
-    Prefix: string[10];
-    DomQTH: string[10];
-    Multiplier: string[10];
-    NextRecord: PrefixRecPtr;
+    THE FIELDS ARE string[10], as PrefixRec's were, ON PURPOSE: a .dom name
+    longer than ten characters is truncated when it is stored (286 aliases in
+    the shipped files are), and every lookup has always answered with the
+    truncated text. *)
+  TDomQTHEntry = class
+  public
+    DomQTH: Str10;
+    Multiplier: Str10;
   end;
 
   RemainingDomMultRec = record
@@ -55,25 +60,51 @@ type
 //  RemainingDomMultArrayType = array[0..MaxNumberRemainingDomQTHs] of RemainingDomMultRec {string[7 + 8]};
 //  RemainingDomMultArrayPtr = ^RemainingDomMultArrayType;
 
-  DomQTHTableObject = object
+  (* THE SESSION'S DOMESTIC TABLE -- every alias of the loaded .dom file (and
+    the files it INCLUDEs), keyed by the alias. 2026-10-16.
 
-//   {?}ActiveDomQTHFile: ShortString;
-    FirstPrefixRecord: array[1..37] of PrefixRecPtr; {KK1L: 6.72 36 from 26. Allows for numbers in DOM}
-    LastPrefixRecord: array[1..37] of PrefixRecPtr; {KK1L: 6.72 36 from 26. Allows for numbers in DOM}
+    IT WAS AN OLD-STYLE object HOLDING 36 HAND-BUILT LINKED LISTS, bucketed by
+    the alias's first character, with New/Dispose. Emptying them before a
+    second load read through nil at the end of every list (D7's loop, line
+    for line), so loading a .dom into a table that already held one was an
+    access violation -- reached by nothing only because the one load runs
+    once per process into an empty table. The table owns a dictionary now:
+    a reload is Clear, and there is no pointer to walk.
+
+    THE LOOKUP IS WHAT IT WAS, which is why a dictionary is enough:
+      * a match is EXACT equality of the (uppercased) received text with an
+        alias -- never a prefix, never case-folded here;
+      * equal texts share a first character, so the per-character buckets
+        never changed an answer; they only partitioned the walk;
+      * among duplicate aliases the FIRST ADDED wins -- the walk stopped at
+        the first match -- so a later duplicate is not stored;
+      * an alias is stored only when it starts with 0-9 or A-Z (the buckets'
+        RecordPointerIndex refused every other first character);
+      * an EMPTY alias is not stored and an empty text finds nothing. Under
+        the lists both chose a bucket from a STALE byte (Str20[1] of an
+        empty string), so neither had a defined answer; eudx.dom's 26
+        " = " lines are the shipped instances. *)
+  TDomQTHTable = class
+  private
+    FEntries: TObjectDictionary<string, TDomQTHEntry>;
+  public
     NumberRemainingMults: integer;
-//    RemainingDomMults: RemainingDomMultArrayPtr;
+
+    constructor Create;
+    destructor Destroy; override;
 
     procedure AddNewPrefixRecord(Prefix: Str20; DomQTH: Str20; Multiplier: Str20);
-
-//    function GetDomMultInteger(InputString: Str20): integer;
-//    function GetDomMultName(DomMultInteger: integer): Str20;
+    (* THE ALIAS EQUAL TO aText, or False -- the file half of GetDomQTH,
+      which also asks the contest first. The entry stays the table's. *)
+    function FindAlias(const aText: string; out aEntry: TDomQTHEntry): boolean;
+    (* HasPrefix and RemovePrefix are the tests' -- a test that puts one
+      alias in the live table takes it out again. *)
+    function HasPrefix(const aPrefix: string): boolean;
+    procedure RemovePrefix(const aPrefix: string);
 
     function GetDomQTH(InputString: Str20; var Multiplier: Str10; var QTH: Str10): boolean;
-    function GetStandardDomesticQTH(InputString: Str20): Str20;
-//    procedure EnumDOMFILE(FileString: PShortString);
     function LoadInDomQTHFile(const FileName: string): boolean;
     function ReadDomQTHFile(const FileName: string; IncludedFile: boolean): boolean;
-    function RecordPointerIndex(FirstLetter: AnsiChar): integer;
   end;
 
 procedure EnumDOMFILE(FileString: PShortString);
@@ -87,7 +118,8 @@ var
     uContestSession.ContestSession.DomesticMult, and was DELETED with the
     domestic kind at M11 S6 part 2: each contest states its domestic rules
     (TContestBase.DomesticMultiplierFromQTH, HasDomesticMultiplier). *)
-  DomQTHTable                           : DomQTHTableObject;
+  (* Created in this unit's initialization, freed in its finalization. *)
+  DomQTHTable                           : TDomQTHTable;
   LiteralDomesticQTH                    : boolean; //QTHString (if true) or DomesticQTH {if false}
   MultipliersIsCounties                 : boolean;
 implementation
@@ -104,39 +136,74 @@ uses
   uContestBase,
   uContestFactory;
 
-procedure DomQTHTableObject.AddNewPrefixRecord(Prefix: Str20; DomQTH: Str20; Multiplier: Str20);
-
 var
-  Index                                 : integer;
+  (* THE TABLE A .dom IS BEING READ INTO. EnumDOMFILE is a line callback
+    with no context (TF.EnumerateLinesInFile), so ReadDomQTHFile names its
+    own table here for the duration of the read. It wrote to the global
+    DomQTHTable before, whatever object the read was called on -- the same
+    object in the program, which is why nothing saw it. nil between reads. *)
+  GLoadTarget: TDomQTHTable = nil;
 
+constructor TDomQTHTable.Create;
 begin
-  Index := RecordPointerIndex(Prefix[1]);
-
-  if Index <= 0 then Exit;
-
-  if FirstPrefixRecord[Index] = nil then
-     begin
-     FirstPrefixRecord[Index] := New(PrefixRecPtr);
-     FirstPrefixRecord[Index]^.DomQTH := DomQTH;
-     FirstPrefixRecord[Index]^.Multiplier := Multiplier;
-     FirstPrefixRecord[Index]^.Prefix := Prefix;
-     FirstPrefixRecord[Index]^.NextRecord := nil;
-     LastPrefixRecord[Index] := FirstPrefixRecord[Index];
-     end
-  else
-     begin
-     {?}
-         LastPrefixRecord[Index]^.NextRecord := New(PrefixRecPtr);
-         LastPrefixRecord[Index] := LastPrefixRecord[Index]^.NextRecord;
-         LastPrefixRecord[Index]^.Multiplier := Multiplier;
-         LastPrefixRecord[Index]^.DomQTH := DomQTH;
-         LastPrefixRecord[Index]^.Prefix := Prefix;
-         LastPrefixRecord[Index]^.NextRecord := nil;
-     end;
-
+  inherited Create;
+  FEntries := TObjectDictionary<string, TDomQTHEntry>.Create([doOwnsValues]);
 end;
 
-function DomQTHTableObject.LoadInDomQTHFile(const FileName: string): boolean;
+destructor TDomQTHTable.Destroy;
+begin
+  FEntries.Free;
+  inherited Destroy;
+end;
+
+procedure TDomQTHTable.AddNewPrefixRecord(Prefix: Str20; DomQTH: Str20; Multiplier: Str20);
+
+var
+  StoredPrefix                          : Str10;
+  Entry                                 : TDomQTHEntry;
+
+begin
+  (* THE RULES OF THE OLD BUCKETS -- see the class's declaration. *)
+  if Length(Prefix) = 0 then
+     begin
+     Exit;
+     end;
+
+  if not (Prefix[1] in ['0'..'9', 'A'..'Z']) then
+     begin
+     Exit;
+     end;
+
+  (* Truncated to ten, as PrefixRec.Prefix was. *)
+  StoredPrefix := Prefix;
+
+  if FEntries.ContainsKey(string(StoredPrefix)) then
+     begin
+     Exit;
+     end;
+
+  Entry := TDomQTHEntry.Create;
+  Entry.DomQTH := DomQTH;
+  Entry.Multiplier := Multiplier;
+  FEntries.Add(string(StoredPrefix), Entry);
+end;
+
+function TDomQTHTable.FindAlias(const aText: string; out aEntry: TDomQTHEntry): boolean;
+begin
+  Result := FEntries.TryGetValue(aText, aEntry);
+end;
+
+function TDomQTHTable.HasPrefix(const aPrefix: string): boolean;
+begin
+  Result := FEntries.ContainsKey(aPrefix);
+end;
+
+procedure TDomQTHTable.RemovePrefix(const aPrefix: string);
+begin
+  FEntries.Remove(aPrefix);
+end;
+
+function TDomQTHTable.LoadInDomQTHFile(const FileName: string): boolean;
 
 begin
 
@@ -150,7 +217,7 @@ begin
 
   //{WLI}    Directory := FindDirectory (FileName);
 
-  if not DomQTHTable.ReadDomQTHFile(FileName, False) then
+  if not ReadDomQTHFile(FileName, False) then
      begin
      //    ActiveDomQTHFile := '';
          Exit;
@@ -160,59 +227,14 @@ begin
 //  ActiveDomQTHFile := FileName;
 end;
 
-function DomQTHTableObject.GetStandardDomesticQTH(InputString: Str20): Str20;
-
-var
-  CurrentPrefixRecord                   : PrefixRecPtr;
-  Index                                 : integer;
-
-begin
-  GetStandardDomesticQTH := '';
-
-  strU(InputString);
-
-  Index := RecordPointerIndex(InputString[1]);
-
-  {IF (Index <= 0) OR (Index > 26) THEN Exit;}
-  {KK1L: 6.72 NOTE RecordPointerIndex returns 0-36 on its own. 0=0..9=9, A=10..Z=35.}
-  {                Why limit this to the numbers 0-9 and letters A-P??              }
-  {                BECAUSE the procedure used is in the object NOT the one in COUNTRY9.PAS!!!}
-  {                I modified local procedure to match the one in COUNTRY9.PAS so numbers can be used.}
-  if (Index <= 0) or (Index > 36) then Exit; {KK1L: 6.72}
-
-  if FirstPrefixRecord[Index] = nil then Exit;
-
-  while InputString <> '' do
-     begin
-     CurrentPrefixRecord := FirstPrefixRecord[Index];
-
-     repeat
-       if CurrentPrefixRecord^.Prefix = InputString then
-          begin
-          GetStandardDomesticQTH := CurrentPrefixRecord^.DomQTH;
-          Exit;
-          end;
-
-       if CurrentPrefixRecord <> nil then
-          begin
-          CurrentPrefixRecord := CurrentPrefixRecord^.NextRecord;
-          end;
-     until CurrentPrefixRecord = nil;
-
-     Delete(InputString, length(InputString), 1);
-     end;
-
-end;
-
-function DomQTHTableObject.GetDomQTH(InputString: Str20;
+function TDomQTHTable.GetDomQTH(InputString: Str20;
   var Multiplier: Str10;
   var QTH: Str10): boolean;
 
-{ Returns TRUE if found }
+(* Returns TRUE if found *)
 
 var
-  CurrentPrefixRecord                   : PrefixRecPtr;
-  Index                                 : integer;
+  Entry                                 : TDomQTHEntry;
   found                                 : boolean;
   contestRules                          : TContestBase;
 
@@ -264,77 +286,14 @@ begin
      end;
   GetDomQTH := found;
 
-  Index := RecordPointerIndex(InputString[1]);
-
-  {IF (Index <= 0) OR (Index > 26) THEN Exit;}
-  {KK1L: 6.72 NOTE RecordPointerIndex returns 0-36 on its own. 0=0..9=9, A=10..Z=35.}
-  {                Why limit this to the numbers 0-9 and letters A-P??              }
-  {                BECAUSE the procedure used is in the object NOT the one in COUNTRY9.PAS!!!}
-  {                I modified local procedure to match the one in COUNTRY9.PAS so numbers can be used.}
-
-  //  if (Index <= 0) or (Index > 36) then Exit; {KK1L: 6.72}
-  if not (Index in [0..36]) then Exit; {KK1L: 6.72}
-
-  if FirstPrefixRecord[Index] = nil then Exit;
-
-//  while InputString <> '' do
-  begin
-    CurrentPrefixRecord := FirstPrefixRecord[Index];
-
-    repeat
-      if CurrentPrefixRecord^.Prefix = InputString then
-         begin
-         QTH := CurrentPrefixRecord^.DomQTH;
-         Multiplier := CurrentPrefixRecord^.Multiplier;
-         GetDomQTH := True;
-         Exit;
-         end;
-
-      if CurrentPrefixRecord <> nil then
-         begin
-         CurrentPrefixRecord := CurrentPrefixRecord^.NextRecord;
-         end;
-    until CurrentPrefixRecord = nil;
-
-//    Delete(InputString, length(InputString), 1);
-  end;
-
-end;
-
-function DomQTHTableObject.RecordPointerIndex(FirstLetter: AnsiChar): integer;
-
-var
-  TempInt, Result1                      : integer;
-
-  {BEGIN
-  {IF (FirstLetter >= 'A') AND (FirstLetter <= 'Z') THEN  }
-  {    BEGIN                                              }
-  {    TempInt := Ord (FirstLetter) - Ord ('A') + 1;      }
-  {    RecordPointerIndex := TempInt;                     }
-  {    END                                                }
-  {ELSE                                                   }
-  {    RecordPointerIndex := -1;                          }
-  {END;                                                   }
- {KK1L: 6.72 Replaced above to allow use of numbers in the DOM file}
- {           Returns a value of 1 through 36 for 0-9, A-Z.         }
-begin
-  Val(FirstLetter, TempInt, Result1);
-
-  if Result1 = 0 then
+  (* THE FILE: the alias EQUAL to the text, or nothing -- see the class's
+    declaration for why this is the bucket walk's answer. *)
+  if FindAlias(string(InputString), Entry) then
      begin
-     RecordPointerIndex := TempInt + 1;
-     Exit;
-     end
-  else
-    if FirstLetter in ['A'..'Z'] then
-       begin
-       TempInt := Ord(FirstLetter) - Ord('A') + 11;
-       RecordPointerIndex := TempInt;
-       end
-    else
-       begin
-       RecordPointerIndex := -1;
-       end;
+     QTH := Entry.DomQTH;
+     Multiplier := Entry.Multiplier;
+     GetDomQTH := True;
+     end;
 end;
 
 function GetNextPrefix(var FileString: ShortString {Str160};
@@ -370,52 +329,33 @@ begin
   GetNextPrefix := PrefixString <> '';
 end;
 
-function DomQTHTableObject.ReadDomQTHFile(const FileName: string; IncludedFile: boolean): boolean;
-
-label
-  AlreadyInList;
+function TDomQTHTable.ReadDomQTHFile(const FileName: string; IncludedFile: boolean): boolean;
 
 var
-  RecordPointer          : integer;
-  CurrentRecord, NextRecord             : PrefixRecPtr;
-const incfile                           = 'INCLUDE FILE';
+  PreviousTarget                        : TDomQTHTable;
+  Enumerated                            : boolean;
 
 begin
   ReadDomQTHFile := False;
 
+  (* A TOP-LEVEL FILE REPLACES THE TABLE; an INCLUDEd one adds to it. *)
   if not IncludedFile then
      begin
      NumberRemainingMults := 0;
+     FEntries.Clear;
      end;
 
-//  if RemainingDomMults = nil then New(RemainingDomMults);
-//  if not IncludedFile then FillChar(RemainingDomMults^, SizeOf(RemainingDomMultArrayType), 0);
+  (* THE LINES GO INTO THIS TABLE -- see GLoadTarget. Restored after, so an
+    INCLUDE FILE (which re-enters here for the same table) leaves it set. *)
+  PreviousTarget := GLoadTarget;
+  GLoadTarget := Self;
+  try
+     Enumerated := EnumerateLinesInFile(FileName, EnumDOMFILE, False);
+  finally
+     GLoadTarget := PreviousTarget;
+  end;
 
-  if not IncludedFile then
-     begin
-     for RecordPointer := 1 to 36 do //KK1L: 6.72 1-36 from 1-26 to allow for numbers in DOM file
-        begin
-        if FirstPrefixRecord[RecordPointer] <> nil then
-           begin
-           CurrentRecord := FirstPrefixRecord[RecordPointer];
-           NextRecord := FirstPrefixRecord[RecordPointer]^.NextRecord;
-
-           while CurrentRecord <> nil do
-              begin
-              Dispose(CurrentRecord);
-              CurrentRecord := NextRecord;
-              NextRecord := CurrentRecord^.NextRecord;
-              end;
-           end;
-
-        FirstPrefixRecord[RecordPointer] := nil;
-        LastPrefixRecord[RecordPointer] := nil;
-        end;
-     end;
-
-  if not EnumerateLinesInFile(FileName, EnumDOMFILE, False) then
-
-//  if not OpenFileForRead(FileRead, FileName) then
+  if not Enumerated then
      begin
      (* THE ONLY SETTING THAT NAMES A .DOM IS DOMESTIC FILENAME, so the
        attribution is not a guess -- see TF.UnableToFindFileMessage. *)
@@ -455,7 +395,7 @@ begin
        in-state test had the same slip; all three dom readers compose the path
        in one place now, uAppPaths.ShippedDomFilePath. *)
      SetCharBuffer(TempFileName, ShippedDomFilePath(string(TempString)));
-     DomQTHTable.ReadDomQTHFile(CharBufferText(TempFileName), True);
+     GLoadTarget.ReadDomQTHFile(CharBufferText(TempFileName), True);
      end;
 //todo process ;
   if StringHas(FileString^, '=') then
@@ -537,7 +477,7 @@ begin
 
         if DomQTHString[1] <> '^' then
            begin
-           DomQTHTable.AddNewPrefixRecord(DomQTHString, DomQTHName, Multiplier)
+           GLoadTarget.AddNewPrefixRecord(DomQTHString, DomQTHName, Multiplier)
            end
         else
            begin
@@ -561,5 +501,16 @@ begin
      end;
 
 end;
+
+initialization
+  (* BEFORE ANY READER: the one load is LogCfg.SetUpGlobalsAndInitialize, at
+    run time, long after every unit's initialization. *)
+  DomQTHTable := TDomQTHTable.Create;
+
+finalization
+  (* Not FreeAndNil: SysUtils is not in this unit's uses, and adding it
+    would shadow utils_text's UpperCase, which EnumDOMFILE calls. *)
+  DomQTHTable.Free;
+  DomQTHTable := nil;
 
 end.

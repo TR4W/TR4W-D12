@@ -17,12 +17,13 @@ msgctxt "TC_TRANSLATION_LANGUAGE"
 msgid "ENGLISH"
 msgstr "Ελληνικά"
 
+# 2026-10-16: machine translation (LibreTranslate), no human translator to credit (NY4I, 2026-10-16). Was "N4AF" -- the English msgid copied, which credited N4AF for it.
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:8
 #: utr4wstrings.tc_translation_author
 #, fuzzy
 msgid "N4AF"
-msgstr "N4AF"
+msgstr "LibreTranslate"
 
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:9
@@ -522,14 +523,17 @@ msgstr "Χώρα της ΕΕ, εισάγετε τον κωδικό χώρας τ
 msgid "EI/GI, enter your County"
 msgstr "EI/GI, μπες στην κομητεία σου"
 
+# 2026-10-16: the English changed from "Latest config file" to "Last Contest" -- the button reopens the contest's database, not a config file.
+# Composed from this catalogue's own words, please review: last = 'Delete the last QSO' -> 'Διαγραφή του τελευταίου QSO'; contest = 'Contest' -> 'Διαγωνισμός'.
+# Previous translation (of the old English): "Τελευταίο αρχείο ρυθμίσεων"
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:100
 #: tfrmnewcontest.btnlatest.caption
 #: utr4wstrings.tc_latest_config_file
 #, fuzzy
 msgctxt "tfrmnewcontest.btnlatest.caption"
-msgid "Latest config file"
-msgstr "Τελευταίο αρχείο ρυθμίσεων"
+msgid "Last Contest"
+msgstr "Τελευταίος διαγωνισμός"
 
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:101
@@ -5654,6 +5658,16 @@ msgstr "Το πακέτο δοκιμής στάλθηκε στο %s: %d. Το UD
 msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
 msgstr "%s μετάφραση από %s"
+
+# 2026-10-16: new string -- the About box shows it under a machine translation's credit. Machine draft, please review.
+#. Section: General
+#: utr4wstrings:tc_translation_corrections
+#: tr4w/src/lang/tr4w_consts_eng.pas:14
+#: utr4wstrings.tc_translation_corrections
+#, fuzzy
+msgctxt "TC_TRANSLATION_CORRECTIONS"
+msgid "Corrections are appreciated."
+msgstr "Οι διορθώσεις είναι ευπρόσδεκτες."
 
 #. Section: UEDITMESSAGE
 #. 4.51.8

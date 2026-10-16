@@ -74,11 +74,23 @@ uses
 
 (* An entrant whose MY STATE is aMyState; aInArea is set-up's in-state
    answer (MY STATE is a key of in7qpne_cty.dom). *)
+(* THE SESSION'S TABLE AS in7qpne_cty.dom HOLDS IT -- the four parties'
+   counties and nothing else, the table an out-of-area entrant loads; the
+   routing rule's spelling test answers it. Q107: the components' host-area
+   rule asks it. *)
+function StubIN7QPNECountyTable(const aQTH: string): boolean;
+var
+   party: TIN7QPNEParty;
+begin
+   Result := IN7QPNEPartyOfQTH(aQTH, party);
+end;
+
 function Entrant(const aMyState: string; aInArea: boolean): TStationContext;
 begin
    Result := NoStation;
    Result.MyState := aMyState;
    Result.InHostState := aInArea;
+   Result.IsDomesticQTH := @StubIN7QPNECountyTable;
 end;
 
 function OutOfArea: TStationContext;
@@ -260,8 +272,8 @@ begin
    CheckEquals('7QP', PartyOf('Azaph'), 'an Arizona county, as the table spells it');
    CheckEquals('7QP', PartyOf('WYALB'), 'a Wyoming county, as typed');
    CheckEquals('7QP', PartyOf(' idada '), 'blanks and case ignored');
-   CheckEquals('NEQP', PartyOf('MEAnd'), 'a Maine county');
-   CheckEquals('NEQP', PartyOf('CTCap'), 'a Connecticut planning region');
+   CheckEquals('NEWEQP', PartyOf('MEAnd'), 'a Maine county');
+   CheckEquals('NEWEQP', PartyOf('CTCap'), 'a Connecticut planning region');
    CheckEquals('DELAWARE QSO PARTY', PartyOf('NDE'), 'New Castle');
    CheckEquals('DELAWARE QSO PARTY', PartyOf('kde'), 'Kent');
    CheckEquals('DELAWARE QSO PARTY', PartyOf('SDE'), 'Sussex');
@@ -355,7 +367,7 @@ begin
       neRouted := 0;
       for i := 0 to keys.Count - 1 do
          begin
-         if PartyOf(keys[i]) = 'NEQP' then
+         if PartyOf(keys[i]) = 'NEWEQP' then
             begin
             inc(neRouted);
             end;
@@ -497,8 +509,10 @@ begin
                 'a Delaware county on 20 m');
       CheckFalse(contestObject.CountsAsMultiplier(QsoAt('NDE', Band30, CW), rmDomestic),
                  'a Delaware county on 30 m: Delaware''s bands');
-      CheckTrue(contestObject.CountsAsMultiplier(QsoAt('Azaph', Band30, CW), rmDomestic),
-                'a 7QP county on 30 m: 7QP credits every band');
+      CheckFalse(contestObject.CountsAsMultiplier(QsoAt('Azaph', Band30, CW), rmDomestic),
+                 'a 7QP county on 30 m: 7QP''s bands have no WARC (2026-10-16)');
+      CheckTrue(contestObject.CountsAsMultiplier(QsoAt('Azaph', Band160, CW), rmDomestic),
+                'a 7QP county on 160 m');
       for i := Low(KINDS) to High(KINDS) do
          begin
          CheckFalse(contestObject.CountsAsMultiplier(QsoAt('FL', Band20, CW), KINDS[i]),
@@ -542,15 +556,19 @@ begin
          end;
       CheckTrue(contestObject.QSOByBand and contestObject.QSOByMode, 'per band, per mode');
 
+      (* THE UNION OF THE FOUR PARTIES' BANDS since 2026-10-16 -- it credited
+         every band before. uTestQSOPartyBands pins each party's set. *)
       for b := Low(BandType) to High(BandType) do
          begin
-         CheckTrue(ContestCreditsBand(contestObject, b),
-                   'the band question with no QSO credits band ' + IntToStr(Ord(b)));
+         CheckEquals(Ord(not (b in [Band30, Band17, Band12, AllBands, NoBand])),
+                     Ord(ContestCreditsBand(contestObject, b)),
+                     'the band question with no QSO: the union, band ' + IntToStr(Ord(b)));
          end;
 
       CheckFalse(contestObject.MultByBand, 'the session: once per contest (the row)');
       CheckTrue(ContestIdentity(DELAWAREQSOPARTY).MultByBand, 'Delaware alone: per band -- a finding');
-      CheckFalse(contestObject.VHFBandsEnabled, 'the session: no VHF (the row)');
+      CheckTrue(contestObject.VHFBandsEnabled,
+                'the session: VHF on since 2026-10-16, for Delaware''s 6 m up');
       CheckTrue(ContestIdentity(DELAWAREQSOPARTY).VHFBandsEnabled, 'Delaware alone: VHF on -- a finding');
    finally
       contestObject.Free;

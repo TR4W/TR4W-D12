@@ -59,7 +59,13 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   aStation.InHostState -- the arm asked FoundMyStateInDomFile again, which
   is the same question on the same data) sends RST and its county or DX
   and counts DXCC without W/VE/KH6/KL7, at most 20; everyone else sends RST
-  and a county. LogCfg's CQ exchange: 5NN and MY STATE. *)
+  and a county. LogCfg's CQ exchange: 5NN and MY STATE.
+
+  BANDS (NY4I, 2026-10-16, from the four parties' rules): 160, 80, 40, 20,
+  15 and 10 m -- no WARC, no VHF. UsesBand states them; a QSO anywhere else
+  is logged, scores 0 and earns no multiplier (design 7.4). The row's
+  cfVHFBandsEnabled went with that ruling: it put 6 m and up in band
+  stepping and the band map, for a contest that credits neither. *)
 unit uContestSevenQP;
 
 {$I tr4w.inc}
@@ -110,6 +116,8 @@ type
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
+      (* 160 to 10 m without WARC -- the header. *)
+      function UsesBand(aBand: BandType): boolean; override;
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
@@ -130,6 +138,26 @@ type
                                out aKey: DXMultiplierString): boolean; override;
       (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
       function CountryMode: CountryModeType; override;
+   public
+      (* A STATION OUTSIDE THE 7TH AREA WORKS ONLY 7TH-AREA STATIONS -- Q107
+         (NY4I, 2026-10-16), the rule he gave for "qso parties in general"
+         (Q29, 2026-10-15). Until Q107 this multi-state party was never held
+         to it (the header): out of area its exchange shape already refused
+         a QTH its county file does not know, so typing barely changes, but
+         a logged QSO -- imported, networked, rescored -- scored whoever it
+         was with.
+
+         THE SAME PREDICATE AS EVERY STATE PARTY, uContestBase.
+         HostAreaRuleCredits, with this contest's own in-area answer: the
+         station test DescribeSession and the DX multiplier ask
+         (CountsDXMultiplier, Station.InHostState -- set-up's in-state test
+         against seven_cty). Out of area the table is seven_cty, the 7th
+         area's counties. The refusal names QSOPartyArea ('7th area'). *)
+      function ParseReceivedExchange(const aText: string;
+                                     const aSession: TReceivedExchangeSession;
+                                     var aExch: ContestExchange;
+                                     out aErrorMessage: string): boolean; override;
+      function CreditsWorkedStation(const aQso: ContestExchange): boolean; override;
    public
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
@@ -166,8 +194,38 @@ uses
    uADIFExchange,
    uDXMultiplierKey,
    uContestRegistry,
+   (* SExchangeOutOfStateWorksHostOnly -- the host-area refusal (Q107). *)
+   uAppStrings,
    (* FixedModePoints -- the helper for a number per mode. *)
    uContestFixedPoints;
+
+(* THE HOST-AREA RULE, BOTH SIDES -- see the declaration (Q107). *)
+function TContestSevenQP.ParseReceivedExchange(const aText: string;
+                                               const aSession: TReceivedExchangeSession;
+                                               var aExch: ContestExchange;
+                                               out aErrorMessage: string): boolean;
+begin
+   Result := inherited ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
+   if not Result then
+      begin
+      Exit;
+      end;
+
+   if not HostAreaRuleCredits(CountsDXMultiplier,
+                              string(aExch.QTHString),
+                              aSession.IsDomesticQTH) then
+      begin
+      Result := False;
+      aErrorMessage := Format(SExchangeOutOfStateWorksHostOnly, [QSOPartyArea]);
+      end;
+end;
+
+function TContestSevenQP.CreditsWorkedStation(const aQso: ContestExchange): boolean;
+begin
+   Result := HostAreaRuleCredits(CountsDXMultiplier,
+                                 string(aQso.QTHString),
+                                 Station.IsDomesticQTH);
+end;
 
 procedure TContestSevenQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
@@ -319,7 +377,14 @@ end;
 
 function TContestSevenQP.GetFlags: TContestFlags;
 begin
-   Result := [cfQSOByBand, cfQSOByMode, cfVHFBandsEnabled];
+   (* NO cfVHFBandsEnabled since 2026-10-16 -- no VHF band is credited
+      (UsesBand). *)
+   Result := [cfQSOByBand, cfQSOByMode];
+end;
+
+function TContestSevenQP.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10];
 end;
 
 function TContestSevenQP.GetIsUSQSOParty: boolean;

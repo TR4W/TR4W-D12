@@ -2763,7 +2763,8 @@ begin
   // made "the ini is gone" untestable and untrue. Measured before changing it —
   // the recreated file was exactly `[COMMANDS]` and this one key.
   //
-  // It stays valid data (it names the contest .cfg to reopen) but it is NOT a
+  // It stays valid data (it names the contest's .db -- the SQLite log that IS
+  // the contest -- for New Contest's "Last Contest" button to reopen) but it is NOT a
   // setting, so it lives in the store's `general` section beside activeProfile
   // rather than in `commands`, and it is deliberately not registered — nothing
   // in Preferences edits it and it is absent from the search index.

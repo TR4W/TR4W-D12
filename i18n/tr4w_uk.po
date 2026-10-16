@@ -527,13 +527,17 @@ msgctxt "TC_IRTS"
 msgid "EI/GI, enter your County"
 msgstr "EI/GI, введіть ваше графство"
 
+# 2026-10-16: the English changed from "Latest config file" to "Last Contest" -- the button reopens the contest's database, not a config file.
+# Composed from this catalogue's own words, please review: last = 'Delete the last QSO' -> 'Видалити останній зв`язок'; contest = 'Start a new contest' -> 'Почати новий конкурс'.
+# Previous translation (of the old English): "Останній файл конфігурації"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_latest_config_file tr4w/src/lang/tr4w_consts_eng.pas:100
 #: tfrmnewcontest.btnlatest.caption
 #: utr4wstrings.tc_latest_config_file
+#, fuzzy
 msgctxt "TC_LATEST_CONFIG_FILE"
-msgid "Latest config file"
-msgstr "Останній файл конфігурації"
+msgid "Last Contest"
+msgstr "Останній конкурс"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_openconfigurationfile tr4w/src/lang/tr4w_consts_eng.pas:101
@@ -5705,6 +5709,15 @@ msgstr "Тестовий пакет, відправлений %s:%d. UDP не м
 msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
 msgstr "%s переклад %s"
+
+# 2026-10-16: new string -- the About box shows it only under a machine translation's credit, so this language does not show it today.
+#. Section: General
+#: utr4wstrings:tc_translation_corrections tr4w/src/lang/tr4w_consts_eng.pas:14
+#: utr4wstrings.tc_translation_corrections
+#, fuzzy
+msgctxt "TC_TRANSLATION_CORRECTIONS"
+msgid "Corrections are appreciated."
+msgstr ""
 
 #. Section: UTELNET
 #: utr4wstrings:tc_telnet tr4w/src/lang/tr4w_consts_eng.pas:195

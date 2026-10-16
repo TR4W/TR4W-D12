@@ -95,8 +95,24 @@ formatters take arguments and do work, so they stay methods.
 
 **`ScoreQSO(var aQso)` is the one public scoring entry point** -- non-virtual,
 on `TContestBase`. It zeroes the points, scores an off-band QSO 0
-(`UsesBand`), applies the operator's four `QSO POINTS ...` overrides
+(`UsesBand`), scores 0 a worked station the entrant may not credit
+(`CreditsWorkedStation` -- a QSO party's host-area rule, Q107, 2026-10-16),
+applies the operator's four `QSO POINTS ...` overrides
 (`Station.PointOverrides`), and only then calls the contest's rule.
+
+**A QSO PARTY'S OUT-OF-AREA ENTRANT WORKS ONLY THE HOST AREA, TYPED AND
+LOGGED (Q107).** One predicate, `uContestBase.HostAreaRuleCredits(inArea,
+QTHString, table)`, is called by the class's `ParseReceivedExchange` refusal
+(with `aSession.IsDomesticQTH`) AND its `CreditsWorkedStation` (with
+`Station.IsDomesticQTH`) -- the same engine function,
+`LOGDUPE.DomesticTableKnowsQTH`, on both sides. False: the QSO is logged,
+scores 0 and earns no multiplier (`SetMultFlags` asks it after the band),
+exactly as an off-band QSO -- but the dupe sheet is not asked. Stated once on
+`TContestStateQSOPartyBase`; the 7QP and NEQP state it themselves (their
+in-area test is their own); IN7QPNE asks its judging party. A new state party
+inherits it; a new multi-state party states both sides, and joins
+`uTestHostAreaRule`. Never repeat it in `CalculateQSOPoints` or
+`CountsAsMultiplier`.
 
 **A contest overrides `CalculateQSOPoints`, which is `protected`**, and
 declares its override in a **`protected`** section too -- a `public`
@@ -283,6 +299,25 @@ is its parent's, and holds the list of contests whose display name is still
 their enum spelling (no `FriendlyName` in the row -- design Q53) as a ratchet:
 **a new contest may not join it.**
 
+### Step 3c — a contest's `ContestTypeSA` spelling is STORED; never reuse one
+
+The spelling is what a `.cfg`'s `CONTEST =` line says and what every SQLite
+contest log stores in its `contest` table. **A name that was ever written to a
+file is never given to a different contest** (2026-10-16, design Q105). When a
+spelling must change, the old one goes into
+`uContestNames.LEGACY_CONTEST_NAMES` in the same commit, as a permanent READ
+alias: `TryContestFromName` / `ContestFromName` (what
+`TF.GetContestFromString` and the log's reopen call) resolve it, and the
+CONTEST setting stores the current spelling in its place
+(`uSettingsModel.RegisterSettingValueSpelling`, registered by uCFG). It is the
+ONE resolver of a contest name -- do not write another loop over
+`ContestTypeSA`. The worked example: New England was `NEQP`, is `NEWEQP`, and
+`NEQP` stays an alias for it for good (never Nebraska, `NE-QSO-PARTY`).
+`uTestContestNames` pins that no alias equals a live spelling and that no two
+live spellings differ only by case (the resolver ignores case, as the config
+file always did). The Cabrillo and ADIF names are the class's and are NOT
+this table -- New England's ADIF id stayed `NEQP`, stated in its class.
+
 ### Step 4 — register and list it
 
 ```pascal
@@ -405,10 +440,11 @@ the wrongness.
 
 | method | base behaviour |
 |---|---|
-| `ScoreQSO` | **not virtual** -- the one public scoring entry point: zero, band check, the four overrides, then `CalculateQSOPoints` (section 1) |
+| `ScoreQSO` | **not virtual** -- the one public scoring entry point: zero, band check, the host-area check (`CreditsWorkedStation`, Q107), the four overrides, then `CalculateQSOPoints` (section 1) |
 | `CalculateQSOPoints` | **protected**. Scores 0 (the legacy `NoQSOPointMethod` meant exactly this). Asked only by `ScoreQSO`, so never about a QSO on a band the contest does not use, nor one an override already scored |
 | `UsesBand` | **every band**, which is today's behaviour. A contest that states its bands overrides it, and a QSO on any other band is then logged, scores 0 (even under a `QSO POINTS ...` override) and earns no multiplier. Asked through `ContestCreditsBand` by `ScoreQSO` and `logdupe.SetMultFlags` -- and since M8 by the dupe sheet (`TCallsignsList.AddCallsign` marks no dupe bit for it, `CallsignIsDupe` calls none a dupe) and the need-multiplier hint (`LogEdit`, through `CreditedBands`). Idaho is the first overrider (`CONTEST_OWNERSHIP_DESIGN.md` §7.4) |
 | `CountsAsMultiplier` | **True for every QSO and kind** -- whether a QSO earns a multiplier of a kind AT ALL, asked by `logdupe.SetMultFlags` (through `ContestCountsMultiplier`) before the sheet says whether it is new. The BC, New York and Indiana parties (a `DX` QTH), the PCC (its own country's prefix) and the Jock White Field Day (its own branch, and branch 00) override it (M8, below) |
+| `CreditsWorkedStation` | **True** -- may this entrant credit this worked station at all (Q107, 2026-10-16). False: logged, 0 points, no multiplier, asked by `ScoreQSO` before the overrides and by `SetMultFlags` after the band (through `ContestCreditsWorkedStation`). `TContestStateQSOPartyBase`, the 7QP and NEQP answer `HostAreaRuleCredits` -- the predicate their typed refusal calls; IN7QPNE asks its judging party (section 1) |
 | `DomesticMultiplierFromCall` | `''` -- the domestic multiplier a CALL implies before any exchange is typed, for the need-multiplier hint (`LogEdit.GetMultArray`). The Russian DX contest and the RF Championships (a Russian call's oblast), the Ural Cup (CTY.DAT's grid), RDA and YO DX (the remembered exchange) override it (M8, below) |
 | `ParseReceivedExchange` | the plain parse in the contest's format: `ParseReceivedExchangeFormat`, of the contest the session names in `ExchangeFormatOf`, else of this one -- see "How a contest parses and validates" below (M5b, M11 S9d) |
 | `ParseReceivedExchangeFormat` | **protected; parses NOTHING and answers False** (what the classless DUMMYCONTEST gets). EVERY CONTEST STATES IT: call the engine's parser for your format on `aParsers` by name. `uTestExchangeParse` fails for a contest that does not (M11 S9d) |
@@ -545,7 +581,8 @@ window's notice line).
   state), `uContestIARU` (fills the zone after the parse), `uContestUKEI` and
   `uContestSACCW` (refuse before it), `uContestARRLSSBase` (names a missing
   precedence after it), `uContestStateQSOPartyBase` (refuses an out-of-state
-  station working another one -- NY4I's ruling, design 7.10), `uContestIN7QPNE`
+  station working another one -- NY4I's ruling, design 7.10 -- through
+  `HostAreaRuleCredits`, the predicate its scoring asks too since Q107), `uContestIN7QPNE`
   (lets its judging party's rules judge the exchange in IN7QPNE's own format,
   through `ExchangeFormatOf`).
 - **A rule never tests the exchange kind** -- the session carries none since

@@ -91,6 +91,21 @@ ratchet: `$LEAK_CEILING` in the script, printed every run, lower it when it drop
     no overrun of any live block, no long-lived thread, no stale or double
     free within a 400k-free quarantine.
 
+## The language resource is a build input (2026-10-16)
+
+`tr4w/res/tr4w_languages.res` is tracked and linked by the app and the tests.
+`Build-App.ps1` (incremental too) and `Build-Tests.ps1` call
+`Sync-Tr4wLanguageRes` (`build/LanguageResStamp.ps1`): sha256 of every
+`i18n/tr4w_*.po` plus `Make-LanguageRes.ps1` and the helper itself, compared with
+`res/tr4w_languages.res.inputs`; mismatch regenerates (~3 s, byte-identical for
+identical inputs), failure fails the build. **Content, not mtime** -- git sets
+mtimes at checkout. A dirty `.res` + `.inputs` after a build means commit both.
+Linux/macOS cannot run the generator, so `build-unix.sh` stage `languages` runs
+`build/check-language-res.sh` and records FAIL on a stale pair; the release job
+still publishes (it ignores that exit), so READ the summary. Keep the two hash
+definitions (PowerShell and sh) identical. The Lazarus `lclstrconsts` catalogues
+embedded in the `.res` are deliberately not hashed.
+
 ## The ceilings, and the rule about them
 
 `Build-App.ps1` enforces them. **Split a string in ShortString rather than raising

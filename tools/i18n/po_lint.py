@@ -132,6 +132,18 @@ def lcl_accelerators(lang):
    return out
 
 
+AUTHOR_KEY = "tc_translation_author"
+
+
+def is_author_credit(entry):
+   """Is this the TC_TRANSLATION_AUTHOR entry -- by msgctxt, or by reference
+   for the catalogues whose copy carries no msgctxt (da, el, fi, pt_BR, sv,
+   zh_CN, and Polish's second copy)."""
+   if entry.key and entry.key.lower() == AUTHOR_KEY:
+      return True
+   return any(r.strip().lower().endswith(AUTHOR_KEY) for r in entry.refs)
+
+
 def same_text(a, b):
    """Is this the English wearing a hat?
 
@@ -223,6 +235,7 @@ def check(path, fix):
    spaced = []
    entities = []
    accel_bad, by_form, english = [], {}, []
+   author_copied = []
    lang = code_of(name)
    is_source = lang == 'en'
    lcl = lcl_accelerators(lang)
@@ -230,6 +243,19 @@ def check(path, fix):
    for e in entries:
       if e.obsolete or not e.source.strip():
          continue
+
+      # THE TRANSLATOR CREDIT MAY NEVER BE THE ENGLISH AUTHOR -- fuzzy or not.
+      #
+      # The About box shows TC_TRANSLATION_AUTHOR as "<language> translation by
+      # <author>". A seeded catalogue that copied the msgid credited N4AF for a
+      # machine translation; five did until 2026-10-16 (NY4I). Fuzzy is no
+      # excuse here, because fuzzy entries SHIP. A real credit names the
+      # translator; a machine translation leaves it empty or says
+      # LibreTranslate. The unit test uTestUILanguage pins the same rule
+      # against the embedded catalogues, which is the copy that gates a build.
+      if ((not is_source) and is_author_credit(e) and
+            e.target.strip() == e.source.strip()):
+         author_copied.append(e)
 
       if not e.target.strip():
          # An empty msgstr is UNTRANSLATED, a different state from fuzzy, and
@@ -328,6 +354,11 @@ def check(path, fix):
             if lletter == letter and cap not in [x.replace("&", "").lower() for x in texts]:
                pass   # only reported when the form is known to use that button
 
+   for e in author_copied:
+      say("  %s: TRANSLATOR CREDIT is the English author %r -- name the "
+          "translator, or leave it empty for a machine translation"
+          % (name, e.target))
+
    for e in english:
       say("  %s: ENGLISH IN THE TRANSLATION, not flagged -- would ship as %s"
           % (name, lang))
@@ -372,12 +403,13 @@ def check(path, fix):
       pofile.write_po(path, entries, lang)
 
    ok = (not ctrl_bad and not fmt_bad and not accel_bad and not clashes
-         and not english and not spaced and not entities)
+         and not english and not spaced and not entities and not author_copied)
    if ok and not stranded:
       live = [e for e in entries if not e.obsolete and e.source.strip()]
       print("  %-16s %4d entries, no control-character or format defects"
             % (name, len(live)))
-   return len(ctrl_bad) + len(fmt_bad) + len(accel_bad) + clashes + len(english)
+   return (len(ctrl_bad) + len(fmt_bad) + len(accel_bad) + clashes + len(english)
+           + len(author_copied))
 
 
 def main():

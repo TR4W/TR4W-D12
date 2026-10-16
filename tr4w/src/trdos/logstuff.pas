@@ -6899,27 +6899,6 @@ begin
   InitializeQSO;
 end;
 
-(* Does the loaded domestic QTH table know this QTH? -- the
-  TReceivedExchangeSession service a state party's out-of-state rule asks
-  for. FoundDomesticQTH itself, on a scratch exchange, so the answer is the
-  table's own and the QSO being parsed is not touched. *)
-function ParseSessionIsDomesticQTH(const aQTH: string): boolean;
-var
-  scratch: ContestExchange;
-begin
-  (* No QTH is no domestic QTH -- answered here so FoundDomesticQTH does not
-    log its blank-QTH error for a question nobody typed. *)
-  if aQTH = '' then
-     begin
-     Result := False;
-     Exit;
-     end;
-  FillChar(scratch, SizeOf(scratch), 0);
-  (* The cast is a received QTH returning to the width it was typed in. *)
-  scratch.QTHString := ShortString(aQTH);
-  Result := FoundDomesticQTH(scratch);
-end;
-
 (* THE CONTEST PARSES AND VALIDATES ITS RECEIVED EXCHANGE -- M5b, 2026-10-02.
 
   The tokenising gate stays here, contest-blind: an exchange ParseArray cannot
@@ -6952,7 +6931,9 @@ begin
   session.Parsers := EngineExchangeParsers;
   session.ExchangeFormatOf := nil;
   session.ZoneOfCall := @ParseSessionZoneOfCall;
-  session.IsDomesticQTH := @ParseSessionIsDomesticQTH;
+  (* LOGDUPE's, shared with the station context so scoring asks the same
+    table (Q107). *)
+  session.IsDomesticQTH := @DomesticTableKnowsQTH;
   session.CallWindowHasCall := CallWindowString <> '';
   session.AbandonEntry := @ParseSessionAbandonEntry;
 

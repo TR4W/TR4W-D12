@@ -589,8 +589,8 @@ msgstr "EI/GI, enter your County"
 #: tfrmnewcontest.btnlatest.caption
 #: utr4wstrings.tc_latest_config_file
 msgctxt "TC_LATEST_CONFIG_FILE"
-msgid "Latest config file"
-msgstr "Latest config file"
+msgid "Last Contest"
+msgstr "Last Contest"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_openconfigurationfile
@@ -5978,6 +5978,16 @@ msgstr "Test packet sent to %s:%d.  UDP cannot confirm it arrived -- check the r
 msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
 msgstr "%s translation by %s"
+
+# 2026-10-16: new string -- the About box, under a machine translation's credit.
+#. Section: General
+#: utr4wstrings:tc_translation_corrections
+#: tr4w/src/lang/tr4w_consts_eng.pas:14
+#: utr4wstrings.tc_translation_corrections
+#, fuzzy
+msgctxt "TC_TRANSLATION_CORRECTIONS"
+msgid "Corrections are appreciated."
+msgstr "Corrections are appreciated."
 
 #. Section: UTELNET
 #: utr4wstrings:tc_telnet

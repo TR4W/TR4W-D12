@@ -3944,6 +3944,27 @@ type
 procedure RegisterSettingValueCheck(const aPath: string;
                                     const aCheck: TSettingValueCheck);
 
+(* A FORMER SPELLING OF A VALUE -- registered by the unit that knows it, as a
+  check is (2026-10-16).
+
+  The CONTEST setting is the first: 'NEQP' was the New England QSO Party's
+  spelling until it became NEWEQP, and every older .cfg and contest log
+  still says it. Its vocabulary (ContestTypeSA) lists only CURRENT spellings
+  -- it is also what a drop-down offers, and nobody should be offered a
+  retired name -- so the old one would be refused. A spelling function turns
+  it into the current spelling BEFORE the vocabulary and any check are
+  asked, and that is what is stored: the property only ever holds a current
+  spelling, so nothing downstream has to know an old one existed.
+
+  It TRANSLATES; it never refuses. Text it does not recognise comes back
+  unchanged and meets the vocabulary exactly as before. uCFG registers the
+  CONTEST one from uContestNames, which owns the legacy names. *)
+type
+   TSettingValueSpelling = function(const aValue: string): string;
+
+procedure RegisterSettingValueSpelling(const aPath: string;
+                                       const aSpelling: TSettingValueSpelling);
+
 (*
   THE VALUES A SETTING ACCEPTS, WHEN THEY ARE A LIST AND NOT A RANGE.
 
@@ -4064,6 +4085,15 @@ var
    GValueChecks: array of TRegisteredCheck;
 
 type
+   TRegisteredSpelling = record
+      Path: string;
+      Spelling: TSettingValueSpelling;
+   end;
+
+var
+   GValueSpellings: array of TRegisteredSpelling;
+
+type
    TRegisteredValues = record
       Path: string;
       Values: TArray<string>;
@@ -4163,6 +4193,49 @@ begin
    SetLength(GValueChecks, i + 1);
    GValueChecks[i].Path := aPath;
    GValueChecks[i].Check := aCheck;
+end;
+
+procedure RegisterSettingValueSpelling(const aPath: string;
+                                       const aSpelling: TSettingValueSpelling);
+var
+   i: integer;
+begin
+   if not Assigned(aSpelling) then
+      begin
+      Exit;
+      end;
+
+   (* REGISTERING A PATH TWICE REPLACES, as for a check. *)
+   for i := 0 to High(GValueSpellings) do
+      begin
+      if UnicodeSameText(GValueSpellings[i].Path, aPath) then
+         begin
+         GValueSpellings[i].Spelling := aSpelling;
+         Exit;
+         end;
+      end;
+
+   i := Length(GValueSpellings);
+   SetLength(GValueSpellings, i + 1);
+   GValueSpellings[i].Path := aPath;
+   GValueSpellings[i].Spelling := aSpelling;
+end;
+
+(* The value as it is spelled now -- unchanged for a path with no spelling
+  registered, which is every path but CONTEST. *)
+function CurrentSpellingOf(const aPath, aValue: string): string;
+var
+   i: integer;
+begin
+   Result := aValue;
+   for i := 0 to High(GValueSpellings) do
+      begin
+      if UnicodeSameText(GValueSpellings[i].Path, aPath) then
+         begin
+         Result := GValueSpellings[i].Spelling(aValue);
+         Exit;
+         end;
+      end;
 end;
 
 (* True when nothing objects -- which is the answer for every path that has
@@ -6372,7 +6445,10 @@ begin
       Exit;
       end;
 
-   text := Trim(aValue);
+   (* A FORMER SPELLING BECOMES THE CURRENT ONE FIRST, so the vocabulary,
+     the check and the property all see what is stored from now on. See
+     RegisterSettingValueSpelling. *)
+   text := CurrentSpellingOf(path, Trim(aValue));
 
    (* ASKED BEFORE ANY ARM ASSIGNS, so a refusal leaves the property exactly
      as it was. See RegisterSettingValueCheck. *)
@@ -6514,7 +6590,17 @@ begin
 
       tkString, tkLString, tkAString, tkUString, tkWString:
          begin
-         SetStrProp(owner, info, AnsiString(aValue));
+         (* THE TEXT AS GIVEN, untrimmed, as this arm always took it --
+           unless a registered spelling REPLACED it, when the current
+           spelling is what is stored. *)
+         if text <> Trim(aValue) then
+            begin
+            SetStrProp(owner, info, AnsiString(text));
+            end
+         else
+            begin
+            SetStrProp(owner, info, AnsiString(aValue));
+            end;
          Result := True;
          end;
    end;

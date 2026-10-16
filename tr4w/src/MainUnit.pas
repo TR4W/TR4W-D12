@@ -106,7 +106,6 @@ uses
   uWinManager,
   uBandmap,
   TF,
-  Version,
   VC,
   uGradient,
   uNet,
@@ -662,22 +661,10 @@ var
   debugstr: string;
 const
   CWByCATBufferTerminator = Chr(242);
-  tAboutText =
-    TR4W_CURRENTVERSION +
-    ' - ' +
-    TR4W_CURRENTVERSIONDATE +
-    #13 +
-    '2006 - 2012 Dmitriy Gulyaev UA4WLI' + #13 +
-    'TR4WSERVER version - ' + TR4WSERVER_CURRENTVERSION + #13#13 +
-    'https://tr4w.net'#13#10
-
-  // 'Log format version - v.1.' + LOGVERSION4 + #13 +
-  // 'Compiler directives: ['{$IFOPT I+} + 'I'{$ENDIF}{$IFOPT R+} + 'R'{$ENDIF}{$IFOPT Q+} + 'Q'{$ENDIF} + ']'
-{$IFNDEF LANG_ENG} + #13'Language: ' + TC_TRANSLATION_LANGUAGE + ' (by ' +
-  TC_TRANSLATION_AUTHOR + ')'{$ENDIF} + #13#10 +
-  'On basis of the source code of the TRLog v.6.80 UA4WLI + Larry Tyree N6TR' + #13
-    + //n4af 4.30.0
-  'Current development team = N4AF, NY4I, UR7QM '; //n4af 4.30.0
+  (* tAboutText WAS HERE -- the old MessageBox About text, with a
+    compile-time translator credit behind an IFNDEF on LANG_ENG. Unreferenced since
+    uAboutForm, which credits the translator at run time; deleted
+    2026-10-16. *)
   // Radio1AsPchar : PChar = TC_RADIO1;
   // Radio2AsPchar : PChar = TC_RADIO2;
 

@@ -1,0 +1,11 @@
+Entries for the Nebraska QSO Party used by in-state stations
+The 93 Nebraska counties (each its own multiplier) + 50 states + 13 Canadian provinces and territories.
+DXCC entities are the DX multiplier. NF and LB are read as NL (the last line).
+The county file comes FIRST and maps no county to Ne, so each county keeps its own multiplier.
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
+https://nebraskaqsoparty.com
+
+INCLUDE FILE nebraska_cty.dom
+INCLUDE FILE S50.DOM
+INCLUDE FILE P13.DOM
+Nl = NF,LB

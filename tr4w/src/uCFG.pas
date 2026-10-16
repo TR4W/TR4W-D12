@@ -369,6 +369,7 @@ procedure InitializeStrings;
 implementation
 uses MainUnit, SysUtils,   // Issue #997 -- SysUtils for Format/StrPCopy (asm-to-Pascal conversion)
      uSettingsModel,       // Settings -- the commands that have left this array
+     uContestNames,        // CurrentContestSpelling -- CONTEST's legacy names
      uStateBridge;         // RefreshWSJTXIndicator -- the box tracks WSJT-X ENABLED
 
 var
@@ -1767,6 +1768,11 @@ initialization
    RegisterSettingAllowedValues('Contest.SingleBandScore',
                                 BandStringsArrayWithOutSpaces);
    RegisterSettingAllowedValues('Contest.ContestToken', ContestTypeSA);
+   (* AND ITS LEGACY NAMES, read and stored as the current spelling --
+     CONTEST = NEQP is the New England QSO Party, NEWEQP since 2026-10-16.
+     The vocabulary above offers current spellings only. See
+     uContestNames. *)
+   RegisterSettingValueSpelling('Contest.ContestToken', @CurrentContestSpelling);
    RegisterSettingAllowedValues('Contest.InitialExchangeCursorPos',
                                 IECursorPosTypeStringArray);
    RegisterSettingAllowedValues('Contest.Mode', ModeStringArray);

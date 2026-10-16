@@ -1305,7 +1305,9 @@ type
     // ContestTypeSA spelling instead. See uContestIdahoQP.
     IDAHOQSOPARTY,
     (* APPENDED for the same reason, 2026-10-14. See uContestDelawareQP. *)
-    DELAWAREQSOPARTY
+    DELAWAREQSOPARTY,
+    (* APPENDED for the same reason, 2026-10-16. See uContestNebraskaQP. *)
+    NEBRASKAQSO
     );
 
     { NOTE: pls ensure VC INTERFACEDRADIOTYPE and LOGRADIO INTEFACEDRADIOTYPE ARE IN THE SAME ORDER }
@@ -3434,7 +3436,7 @@ const
   (S8; open question Q90). A new contest adds an enum member, its
   ContestTypeSA spelling below, and a class; no row. *)
   const
-  // Warning - Do not change names here without careful consideration. If you do, it will break old config files. Better to use the ADIFName or CABName fields if needed. In a perfect world, these would all be the ADIFNAME.
+  // Warning - Do not change names here without careful consideration. Every one is STORED: in old .cfg files and in every SQLite contest log's contest table. If one must change, its old spelling goes into uContestNames.LEGACY_CONTEST_NAMES in the same commit and is never given to another contest. The Cabrillo and ADIF names are the class's (CabrilloName, ADIFContestId), not these.
     ContestTypeSA                       : array[ContestType] of string =
 
     (
@@ -3518,7 +3520,10 @@ const
       'SSB-SPRINT',
       'NA-SPRINT-RTTY',
       'NCCC-SPRINT',
-      'NEQP',
+      (* NEW ENGLAND -- 'NEQP' until 2026-10-16 (design Q105). The old
+        spelling is a permanent READ alias, uContestNames.LEGACY_CONTEST_NAMES,
+        and must never be given to another contest. *)
+      'NEWEQP',
       'NC QSO PARTY',
       'NRAU-BALTIC-CW',
       'NRAU-BALTIC-SSB',
@@ -3624,7 +3629,8 @@ const
       'SST',
       'RTC',           // Issue #902
       'IDAHO QSO PARTY',
-      'DELAWARE QSO PARTY'
+      'DELAWARE QSO PARTY',
+      'NE-QSO-PARTY'
      );
 
   type

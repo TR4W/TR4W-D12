@@ -740,7 +740,7 @@ begin
          end;
 
       { STILL TOO LONG FOR THE WHOLE ALLOWANCE: shorten the PATH, and only the
-        path.  The caption is 'Latest config file, Alt+&A:' + a line break + the
+        path.  The caption is 'Last Contest, Alt+&A:' + a line break + the
         file name, and eliding into the label would damage the one part that
         says what the button does. Everything after the last line break is the
         path; if there is no line break there is nothing to protect and the

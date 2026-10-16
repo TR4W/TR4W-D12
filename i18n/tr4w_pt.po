@@ -18,6 +18,7 @@ msgctxt "TC_TRANSLATION_LANGUAGE"
 msgid "ENGLISH"
 msgstr "Português"
 
+# 2026-10-16: machine translation (LibreTranslate), no human translator to credit (NY4I, 2026-10-16). Was empty, which showed the English default "N4AF" in the About box.
 #. Section: General
 #: utr4wstrings:tc_translation_author
 #: tr4w/src/lang/tr4w_consts_eng.pas:8
@@ -25,7 +26,7 @@ msgstr "Português"
 #, fuzzy
 msgctxt "TC_TRANSLATION_AUTHOR"
 msgid "N4AF"
-msgstr ""
+msgstr "LibreTranslate"
 
 #. Section: General
 #: utr4wstrings:tc_translator_email
@@ -653,6 +654,9 @@ msgctxt "TC_IRTS"
 msgid "EI/GI, enter your County"
 msgstr "EI/GI, entrar no seu condado"
 
+# 2026-10-16: the English changed from "Latest config file" to "Last Contest" -- the button reopens the contest's database, not a config file.
+# Composed from this catalogue's own words, please review: last = 'Last status:' -> 'Último estado:'; contest = 'Contest' -> 'Concurso'.
+# Previous translation (of the old English): "Último arquivo de configuração"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_latest_config_file
 #: tr4w/src/lang/tr4w_consts_eng.pas:100
@@ -660,8 +664,8 @@ msgstr "EI/GI, entrar no seu condado"
 #: utr4wstrings.tc_latest_config_file
 #, fuzzy
 msgctxt "TC_LATEST_CONFIG_FILE"
-msgid "Latest config file"
-msgstr "Último arquivo de configuração"
+msgid "Last Contest"
+msgstr "Último concurso"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_openconfigurationfile
@@ -6353,6 +6357,16 @@ msgstr "Pacote de teste enviado para %s:%d. O UDP não pode confirmar que chegou
 msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
 msgstr "%s tradução por %s"
+
+# 2026-10-16: new string -- the About box shows it under a machine translation's credit. Machine draft, please review.
+#. Section: General
+#: utr4wstrings:tc_translation_corrections
+#: tr4w/src/lang/tr4w_consts_eng.pas:14
+#: utr4wstrings.tc_translation_corrections
+#, fuzzy
+msgctxt "TC_TRANSLATION_CORRECTIONS"
+msgid "Corrections are appreciated."
+msgstr "As correções são bem-vindas."
 
 #. Section: UTELNET
 #: utr4wstrings:tc_telnet
