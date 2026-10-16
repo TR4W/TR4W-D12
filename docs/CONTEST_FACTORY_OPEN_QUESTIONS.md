@@ -207,6 +207,12 @@ moves to section 4 in the commit that records it.
   *Recommended: 160 m only; use the translated string with your wording.*
   *The band half is now Q98's (every contest states its bands; 7.4, Q44).
   Still open here: the UA4W prompt's wording.*
+  **Band half ANSWERED (NY4I, 2026-10-15):** *"a 1.8 MHz contest like this
+  (and ARRL-160 or CQ-160) would only allow points for 160."* So RSGB 1.8 MHz,
+  ARRL 160 and the CQ 160 CW and SSB runnings each list 160 m as their only
+  band (Q98's rule); a QSO on any other band scores 0 and is an automatic
+  X-QSO. Today none of the four states a band. Not built. Still open below:
+  the UA4W prompt's wording.
   **Answer:**
 
 ### Added with the Delaware QSO Party's class (2026-10-14)
