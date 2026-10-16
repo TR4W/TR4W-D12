@@ -143,12 +143,17 @@ type
       (* THE CANONICAL RECEIVED EXCHANGE -- see
          TContestBase.CanonicalReceivedExchange (M9a). *)
       function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
-      (* THE CABRILLO HEADER AND MODE COLUMN -- M9a. *)
+      (* THE CABRILLO HEADER -- M9a.
+
+         THE MODE COLUMN IS THE BASE'S (Q54, NY4I 2026-10-16): FM is a valid
+         Cabrillo mode and the WFD rules list it, so an FM contact is written
+         `FM`, not `PH`. The override that wrote PH (D7's PostUnit test,
+         moved here at M9a) is deleted. Scoring is unchanged -- an FM contact
+         still scores as phone in CalculateQSOPoints; that is the points
+         rule, not the mode column. *)
       function CabrilloHeaderLinesBeforeTag(const aTagName: string;
                                             const aTagValue: string;
                                             const aStation: TStationContext): string; override;
-      function CabrilloModeString(aMode: ModeType;
-                                  aExtMode: ExtendedModeType): string; override;
    public
       (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
          TContestBase.HasDXMultiplier (M11 S4 part 2). *)
@@ -178,7 +183,6 @@ uses
    uADIF,
    (* STATE from the worked station's section -- a leaf, lifted at M4. *)
    uARRLSections,
-   uCabrilloFormat,
    uCanonicalExchange;
 
 (* THE DX MULTIPLIER IS DXCC WITHOUT THE ARRL SECTIONS -- M7a, 2026-10-02.
@@ -535,14 +539,6 @@ begin
       Result := 'ARRL-SECTION: ' + aTagValue + #13#10 +
                 'X-EXCHANGE: ' + aStation.MyFDClass + #13#10;
       end;
-end;
-
-(* FM IS WRITTEN AS PHONE -- PostUnit's WINTERFIELDDAY test in the QSO lines,
-   moved here at M9a: the sponsor scores FM as phone. *)
-function TContestWinterFieldDay.CabrilloModeString(aMode: ModeType;
-                                                   aExtMode: ExtendedModeType): string;
-begin
-   Result := FormatCabrilloMode(aMode, aExtMode, True);
 end;
 
 (* THE CANONICAL RECEIVED EXCHANGE -- uExchangeBuilder's arm for this

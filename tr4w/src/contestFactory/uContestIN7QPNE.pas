@@ -231,6 +231,16 @@ type
       function SplitsRoverCallOnExport: boolean; override;
       (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
       function LogsSeveralQTHsFromOneEntry: boolean; override;
+      (* THE WORKED STATION'S ADIF STATE -- see TContestBase.ADIFCountyState
+         and ADIFWorkedStationState (Q76/Q89, NY4I 2026-10-16). THE
+         COMPOSITE'S OWN, NOT A COMPONENT'S: the session holds
+         in7qpne_cty.dom's keys, whose spelling is not the components'
+         (Q81 -- neqso.dom puts the state last, this file first), so the
+         county's state comes from the same routing rule that judges the
+         QSO (IN7QPNEPartyOfQTH): the key's first two letters, or DE for
+         Delaware's NDE/KDE/SDE. No CNTY: WritesADIFCounty stays False. *)
+      function ADIFCountyState(const aQso: ContestExchange): string; override;
+      function ADIFWorkedStationState(const aQso: ContestExchange): string; override;
    public
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
@@ -240,6 +250,9 @@ type
 implementation
 
 uses
+   (* FIRST, so every later unit wins a shared name: ADIFPartyQTHKey and
+      ADIFStateOfPartyQSO (Q76/Q89). *)
+   uADIF,
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
@@ -618,6 +631,31 @@ end;
 function TContestIN7QPNE.LogsSeveralQTHsFromOneEntry: boolean;
 begin
    Result := True;
+end;
+
+function TContestIN7QPNE.ADIFCountyState(const aQso: ContestExchange): string;
+var
+   key: string;
+   party: TIN7QPNEParty;
+begin
+   Result := '';
+   key := UpperCase(ADIFPartyQTHKey(aQso));
+   if IN7QPNEPartyOfQTH(key, party) then
+      begin
+      if party = ipDelaware then
+         begin
+         Result := 'DE';
+         end
+      else
+         begin
+         Result := Copy(key, 1, 2);
+         end;
+      end;
+end;
+
+function TContestIN7QPNE.ADIFWorkedStationState(const aQso: ContestExchange): string;
+begin
+   Result := ADIFStateOfPartyQSO(ADIFCountyState(aQso), aQso);
 end;
 
 initialization

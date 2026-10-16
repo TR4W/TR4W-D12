@@ -2366,8 +2366,9 @@ procedure ReportExchangeFailures( const aFileKind, aLeftOut: string );
 
 (* THE OBJECT THAT FORMATS THE EXCHANGE, WITH THE STATION when the contest has
   a class (F27). ContestIdentity has no station, so a contest whose layout
-  moves with the entrant -- a Japanese JIDX entrant's ADIF STX_STRING and the
-  Cabrillo columns of the other eight -- must be asked of the object
+  moves with the entrant -- a Japanese JIDX entrant's ADIF STX_STRING (and a
+  Dutch PACC entrant's, since Q22, 2026-10-16) and the Cabrillo columns of
+  the other eight -- must be asked of the object
   ActiveContest holds. A classless contest has no ActiveContest, and the
   plain base ContestIdentity answers for it. aStation is that
   ActiveContest answer, nil or not. *)
@@ -2489,8 +2490,13 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
      CurrentMyStationExchange( contestRules ), rec, ExchangeInformation.RST );
 
   // ----- CNTY (state QP with FAltName loaded from <state>_cty.dom) -----
-  stateCode := GetStateForContest( rec.ceContest );
-  if ( stateCode <> '' ) and ( rec.QTHString <> '' ) and
+  // The party says whose county the QTH is (ADIFCountyState -- '' for a
+  // state, a province or DX, so an out-of-state QSO writes no CNTY), and
+  // whether ADIF has a county enumeration for it at all -- British
+  // Columbia writes STATE:BC and no CNTY (Q76/Q89, 2026-10-16).
+  stateCode := ContestIdentity( rec.ceContest ).ADIFCountyState( rec );
+  if ( stateCode <> '' ) and ContestIdentity( rec.ceContest ).WritesADIFCounty and
+     ( rec.QTHString <> '' ) and
      ( length( rec.QTHString ) <> 2 ) then
      begin
      if mo.DomList.FindMult( rec.QTHString, cntyIdx ) and

@@ -250,6 +250,18 @@ type
       function StripsRoverCountyFromCall: boolean; override;
       function SplitsRoverCallOnExport: boolean; override;
 
+      (* THE WORKED STATION'S ADIF STATE, AND ITS COUNTY AS CNTY -- Q76/Q89
+         (NY4I, 2026-10-16). See TContestBase.ADIFCountyState,
+         ADIFWorkedStationState and WritesADIFCounty. STATED ONCE, HERE: a
+         QTH key that is not two letters is one of this party's counties,
+         so the worked station is in the host (HostState -- 'BC' for British
+         Columbia, which wrote no STATE until Q89); anything else is judged
+         by uADIF.ADIFStateOfPartyQSO. British Columbia overrides
+         WritesADIFCounty -- ADIF has no Canadian county enumeration. *)
+      function ADIFCountyState(const aQso: ContestExchange): string; override;
+      function ADIFWorkedStationState(const aQso: ContestExchange): string; override;
+      function WritesADIFCounty: boolean; override;
+
       (* THE ONLY OVERRIDE OF THE BASE'S VALIDATOR IN THIS TREE.
 
          TContestBase.ValidateQTHCount always passes, because TR4W has never
@@ -315,7 +327,8 @@ implementation
 uses
    SysUtils,        (* Format *)
    uTR4WStrings,    (* TC_TOOMANYCOUNTIES *)
-   uAppStrings;     (* SExchangeOutOfStateWorksHostOnly *)
+   uAppStrings,     (* SExchangeOutOfStateWorksHostOnly *)
+   uADIF;           (* ADIFPartyQTHKey, ADIFStateOfPartyQSO -- Q76/Q89 *)
 
 function TContestStateQSOPartyBase.ParseReceivedExchange(const aText: string;
                                                          const aSession: TReceivedExchangeSession;
@@ -378,6 +391,34 @@ end;
 function TContestStateQSOPartyBase.SplitsRoverCallOnExport: boolean;
 begin
    (* Every state party -- see the declaration (Q90, 2026-10-14). *)
+   Result := True;
+end;
+
+function TContestStateQSOPartyBase.ADIFCountyState(const aQso: ContestExchange): string;
+var
+   key: string;
+begin
+   (* A key that is not two letters is a county of this party -- see the
+      declaration (Q76/Q89, 2026-10-16). *)
+   key := ADIFPartyQTHKey(aQso);
+   if (key <> '') and (Length(key) <> 2) then
+      begin
+      Result := HostState;
+      end
+   else
+      begin
+      Result := '';
+      end;
+end;
+
+function TContestStateQSOPartyBase.ADIFWorkedStationState(const aQso: ContestExchange): string;
+begin
+   Result := ADIFStateOfPartyQSO(ADIFCountyState(aQso), aQso);
+end;
+
+function TContestStateQSOPartyBase.WritesADIFCounty: boolean;
+begin
+   (* Every US state party -- see the declaration (Q89, 2026-10-16). *)
    Result := True;
 end;
 

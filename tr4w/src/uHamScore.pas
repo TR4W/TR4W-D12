@@ -42,8 +42,8 @@
   All entry points are cheap no-ops when the uploader is not running.
 
   Default decisions made without spec guidance, flagged for review:
-  - Mode map: CW->CW, Phone->PH, Digital->RTTY (FT8/FT4/PSK if ExtMode set),
-    FM->FM
+  - Mode: the QSO's contest's Cabrillo mode column (CabrilloModeString,
+    via uCabrillo) -- the file's spelling, so the two cannot drift (Q54)
   - X-QSO records are SENT with <x-qso>1</x-qso>, not skipped
   - No per-contest filtering -- the server returns "Contest not supported"
     for unknown contests; we log and stop trying for the rest of the cycle
@@ -275,42 +275,11 @@ begin
      end;
 end;
 
-// Map a QSO mode to the RTC <mode> string.  Spec examples list:
-//   CW, PH, RTTY, PSK, FT8, FT4
-// We prefer ExtMode when available for digital-mode specificity.
-function MapModeForRTC(const RXData: ContestExchange): AnsiString;
-begin
-  if RXData.ExtMode <> eNoMode then
-     begin
-     case RXData.ExtMode of
-       eCW, eCW_R:               Result := 'CW';
-       eRTTY, eRTTY_R:           Result := 'RTTY';
-       eFT8:                     Result := 'FT8';
-       eFT4:                     Result := 'FT4';
-       eJT65:                    Result := 'JT65';
-       ePSK31, ePSK63, ePSK_R:   Result := 'PSK';
-       eMFSK, eJS8:              Result := 'DATA';
-       eSSB, eUSB, eLSB:         Result := 'PH';
-       eFM, eFM_N, eData_FM:     Result := 'FM';
-       eAM, eAM_N:               Result := 'AM';
-       eC4FM:                    Result := 'C4FM';
-       eDStar:                   Result := 'DSTAR';
-     else
-       Result := 'CW';
-     end
-     end
-  else
-     begin
-     case RXData.Mode of
-       CW:      Result := 'CW';
-       Phone:   Result := 'PH';
-       Digital: Result := 'RTTY';   // generic digital fallback
-       FM:      Result := 'FM';
-     else
-       Result := 'CW';
-     end;
-     end;
-end;
+(* THE MODE IS THE CONTEST'S (Q54, NY4I 2026-10-16). MapModeForRTC, this
+   unit's own mode map from the RTC 2.4 structured body, had no caller once
+   RTC 3.0 sent the QSO as a Cabrillo line, and is deleted: the mode HamScore
+   sends is the one uCabrillo.BuildSingleQsoCabrilloLine asks of the QSO's
+   contest -- the same CabrilloModeString the Cabrillo file writes. *)
 
 // Map BandType to the MHz integer string the spec lists:
 // 1.8, 3.5, 7, 14, 21, 28, 50, 144 (also 10/18/24/...)

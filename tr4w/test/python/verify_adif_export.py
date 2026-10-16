@@ -391,9 +391,10 @@ def cross_check(log_records, adif_records):
             chk.expect(i, "QTH", log["QTHString"], adif.get("QTH"))
 
         # STATE is deliberately NOT checked here.  uADIF emits STATE only for
-        # the 13 single-state QSO parties (GetStateForContest -> the HOST
-        # state, e.g. Michigan QP => 'MI' for every QSO -- NOT the worked
-        # station's QTHString); every other contest emits no base STATE, and
+        # the QSO parties, and since Q76/Q89 (2026-10-16) it is the WORKED
+        # station's (ADIFWorkedStationState: a party county gives its state,
+        # an out-of-state state or VE province itself, DX none -- before
+        # that it was the HOST's on every QSO); every other contest emits no base STATE, and
         # Field-Day section->state is added by the PostUnit tail (MainUnit
         # globals).  A "2-letter QTHString => STATE" heuristic mislabels
         # section-based contests -- ARRL section 'EB' is not the state 'EB'

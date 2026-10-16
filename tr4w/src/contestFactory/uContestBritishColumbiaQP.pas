@@ -71,11 +71,19 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   cannot inherit a blank.
 
   'BC' is the province's postal code, which is what ADIF's STATE field carries
-  for a Canadian station. IT CHANGES NOTHING TODAY: since M10 S6
-  uADIF.GetStateForContest asks this class's QSOPartyArea ('VE7') with the
-  same two-letter test, not its HostState, so the exporter still emits no
-  STATE for a BCQP log. Asking HostState there would start emitting STATE=BC
-  (and CNTY) -- which is probably right and is NY4I's to confirm.
+  for a Canadian station. From M10 S6 until Q89 uADIF.GetStateForContest
+  asked this class's QSOPartyArea ('VE7') with a two-letter test, so a BCQP
+  log exported no STATE at all.
+
+  Q89 (NY4I, 2026-10-16): "so yes" -- STATE is "the contacted station's
+  Primary Administrative Subdivision (e.g. US State, JA Island, VE
+  Province)" -- the WORKED station's (Q76). So a BCQP QSO with a BC regional
+  district exports STATE:BC (the state-party base's ADIFCountyState is this
+  HostState), an out-of-province station its own state or province, and DX
+  none. THE COUNTY DOES NOT FOLLOW: ADIF's CNTY
+  is an enumeration with nothing defined for Canada, so WritesADIFCounty is
+  False below and the regional district reaches the sponsor in the Cabrillo
+  exchange only.
 
   ---------------------------------------------------------------------------
   NO COUNTY-LINE MAXIMUM IS ESTABLISHED FOR THIS PARTY, so it inherits
@@ -177,6 +185,9 @@ type
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
       (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
       function LogsSeveralQTHsFromOneEntry: boolean; override;
+      (* NO ADIF CNTY -- ADIF defines no Canadian secondary subdivision (Q89).
+         See TContestBase.WritesADIFCounty and the unit header. *)
+      function WritesADIFCounty: boolean; override;
    public
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
@@ -379,6 +390,15 @@ end;
 function TContestBritishColumbiaQP.LogsSeveralQTHsFromOneEntry: boolean;
 begin
    Result := True;
+end;
+
+(* ADIF's CNTY enumeration (3.1.6 III.B.22) defines Alaska, Hawaii, the USA,
+   the Russian entities, Ukraine, Japan, New Zealand and Spain -- nothing for
+   Canada (DXCC 1). A BC regional district written as CNTY would be a value
+   the specification does not allow (Q89, NY4I 2026-10-16). *)
+function TContestBritishColumbiaQP.WritesADIFCounty: boolean;
+begin
+   Result := False;
 end;
 
 initialization

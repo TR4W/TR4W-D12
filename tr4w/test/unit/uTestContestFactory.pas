@@ -26,8 +26,9 @@ interface
 
 uses
    SysUtils,
-   (* GetStateForContest -- the ADIF STATE a QSO party writes, asked of the
-      class since M10 S6. FIRST, so every later unit wins a shared name. *)
+   (* GetADIFStateForQSO -- the worked station's ADIF STATE, asked of the
+      class (M10 S6; per QSO since Q76/Q89). FIRST, so every later unit wins
+      a shared name. *)
    uADIF,
    (* Ceil and GetDistanceBetweenGrids -- the ARRL Digital distance rule is
       checked against the same geodesic the class uses, so the assertion pins
@@ -333,10 +334,25 @@ end;
    the class's QSOPartyArea and keeps it only when it is two letters, which is
    exactly what the table read answered.
 
-   BRITISH COLUMBIA IS THE ONE PLACE THE TWO DIFFER, AND THE EXPORT KEEPS ITS
-   OLD ANSWER. The class states HostState 'BC'; its area, and the table's
-   StateName, is 'VE7'. Export writes no STATE for BCQP, as it always has --
-   whether it should is NY4I's question, not a side effect of S6. *)
+   BRITISH COLUMBIA IS THE ONE PLACE THE TWO DIFFERED. The class states
+   HostState 'BC'; its area, and the table's StateName, is 'VE7', so export
+   wrote no STATE for BCQP until NY4I answered Q89 (2026-10-16). Since
+   Q76/Q89 the STATE is the WORKED station's, through the class's
+   ADIFWorkedStationState: a host county gives the host's state, BC's
+   included, and BC writes no CNTY. *)
+
+(* A QSO with a worked station in a host county -- a three-letter key, which
+   no state or province key is, CountryID K. *)
+function HostCountyQSO(aContest: ContestType): ContestExchange;
+begin
+   FillChar(Result, SizeOf(Result), 0);
+   Result.ceContest := aContest;
+   Result.Callsign := 'K1ABC';
+   Result.QTHString := 'XYZ';
+   Result.DomesticQTH := 'XYZ';
+   Result.QTH.CountryID := 'K';
+end;
+
 procedure TContestFactoryTests.Test_HostStateDerivationIsTheOneTable;
 begin
    BeginTest('Test_HostStateDerivationIsTheOneTable');
@@ -352,14 +368,18 @@ begin
    CheckEquals('', ContestIdentity(CQWWCW).HostState, 'CQ WW CW has no host state');
    CheckEquals('', ContestIdentity(ARRLFIELDDAY).HostState, 'Field Day has none');
 
-   (* WHAT ADIF EXPORT WRITES. *)
-   CheckEquals('FL', GetStateForContest(FLORIDAQSOPARTY), 'export: Florida');
-   CheckEquals('NY', GetStateForContest(NYQP), 'export: New York');
-   CheckEquals('', GetStateForContest(CQWWCW), 'export: CQ WW CW writes no STATE');
-   CheckEquals('', GetStateForContest(SEVENQP), 'export: the 7QP''s area is not a state');
+   (* WHAT ADIF EXPORT WRITES FOR A WORKED STATION IN A HOST COUNTY -- the
+      worked station's state since Q76/Q89 (2026-10-16), which for a host
+      county is the host's. The whole rule is pinned in
+      uTestContestExport.Test_ADIFStateIsTheWorkedStations. *)
+   CheckEquals('FL', GetADIFStateForQSO(HostCountyQSO(FLORIDAQSOPARTY)), 'export: Florida');
+   CheckEquals('NY', GetADIFStateForQSO(HostCountyQSO(NYQP)), 'export: New York');
+   CheckEquals('', GetADIFStateForQSO(HostCountyQSO(CQWWCW)), 'export: CQ WW CW writes no STATE');
+   CheckEquals('', GetADIFStateForQSO(HostCountyQSO(SEVENQP)),
+               'export: XYZ is not a 7QP county (its keys lead with the state)');
    CheckEquals('BC', ContestIdentity(BCQP).HostState, 'British Columbia states BC');
-   CheckEquals('', GetStateForContest(BCQP),
-               'export: BCQP writes no STATE, as before M10 S6 (its area is VE7)');
+   CheckEquals('BC', GetADIFStateForQSO(HostCountyQSO(BCQP)),
+               'export: BCQP writes STATE BC since Q89 (no CNTY)');
 end;
 
 procedure TContestFactoryTests.Test_FloridaIsAStatePartyWithATwoCountyLimit;
@@ -1465,7 +1485,7 @@ begin
       since M10 S8 deleted the QSOParties table its row indexed. *)
    CheckEquals('ID', ContestIdentity(IDAHOQSOPARTY).HostState,
                'Idaho states ID');
-   CheckEquals('ID', GetStateForContest(IDAHOQSOPARTY),
+   CheckEquals('ID', GetADIFStateForQSO(HostCountyQSO(IDAHOQSOPARTY)),
                'Idaho''s ADIF STATE is ID');
    CheckEquals('IDAHO QSO PARTY', string(ContestTypeSA[IDAHOQSOPARTY]),
                'the spelling a .cfg names');
@@ -2231,9 +2251,10 @@ procedure TContestFactoryTests.Test_NRAUAndJockWhiteRowsAreNotShifted;
 begin
    BeginTest('Test_NRAUAndJockWhiteRowsAreNotShifted');
    (* The NRAU rows' ADIFName is blank, so their ADIF id is the enum's
-      spelling -- what export writes (M1). *)
-   CheckRow(NRAUBALTICCW, 'NRAU-Baltic Contest, CW', 220, 'NRAU-BALTIC-CW', 'NRAU-BALTIC-CW');
-   CheckRow(NRAUBALTICSSB, 'NRAU-Baltic Contest, SSB', 222, 'NRAU-BALTIC-SSB', 'NRAU-BALTIC-SSB');
+      spelling -- what export writes (M1). Their Cabrillo names are WA7BNM's
+      since Q15 (2026-10-16, docs/CONTEST_FACTORY_OPEN_QUESTIONS.md). *)
+   CheckRow(NRAUBALTICCW, 'NRAU-Baltic Contest, CW', 220, 'NRAU-BALTIC-CW', 'NRAU-CW');
+   CheckRow(NRAUBALTICSSB, 'NRAU-Baltic Contest, SSB', 222, 'NRAU-BALTIC-SSB', 'NRAU-SSB');
    CheckRow(NZFIELDDAY, 'Jock White Memorial Field Day', 0, 'JW-FD', 'JW-FD');
 end;
 
@@ -2831,12 +2852,15 @@ end;
 
    IDENTITY. The four fields that differ between the two rows are stated per
    mode class; everything else is the family's. The calendar ids are the ones
-   bf395987 un-shifted (220 CW, 222 SSB). The Cabrillo names are what TR4W has
-   always sent; the calendar's NRAU-CW / NRAU-SSB is a question for NY4I. *)
+   bf395987 un-shifted (220 CW, 222 SSB). The Cabrillo names were what TR4W
+   had always sent (NRAU-BALTIC-CW / -SSB) until Q15 (NY4I, 2026-10-16,
+   docs/CONTEST_FACTORY_OPEN_QUESTIONS.md): they are now WA7BNM's NRAU-CW /
+   NRAU-SSB, and the ADIF ids stay the ADIF enumeration's NRAU-BALTIC-*. So
+   the two names are pinned apart. *)
 procedure TContestFactoryTests.Test_NRAUBalticIsOneContestInTwoModes;
 
-   procedure CheckRunning(aContest: ContestType; const aWhat, aName,
-                          aFriendly: string; aWA7BNM: integer);
+   procedure CheckRunning(aContest: ContestType; const aWhat, aCabrillo,
+                          aName, aFriendly: string; aWA7BNM: integer);
    var
       obj: TContestBase;
    begin
@@ -2854,7 +2878,7 @@ procedure TContestFactoryTests.Test_NRAUBalticIsOneContestInTwoModes;
          CheckEquals(2, PointsFor(obj, Digital), aWhat + ' digital');
          CheckEquals(2, PointsFor(obj, FM), aWhat + ' FM');
 
-         CheckEquals(aName, obj.CabrilloName, aWhat + ' Cabrillo name');
+         CheckEquals(aCabrillo, obj.CabrilloName, aWhat + ' Cabrillo name');
          CheckEquals(aName, obj.ADIFContestId, aWhat + ' ADIF id');
          CheckEquals(aFriendly, obj.FriendlyName, aWhat + ' friendly name');
          CheckEquals(aWA7BNM, obj.WA7BNMId, aWhat + ' WA7BNM id');
@@ -2869,9 +2893,9 @@ procedure TContestFactoryTests.Test_NRAUBalticIsOneContestInTwoModes;
 
 begin
    BeginTest('Test_NRAUBalticIsOneContestInTwoModes');
-   CheckRunning(NRAUBALTICCW, 'NRAU-Baltic CW', 'NRAU-BALTIC-CW',
+   CheckRunning(NRAUBALTICCW, 'NRAU-Baltic CW', 'NRAU-CW', 'NRAU-BALTIC-CW',
                 'NRAU-Baltic Contest, CW', 220);
-   CheckRunning(NRAUBALTICSSB, 'NRAU-Baltic SSB', 'NRAU-BALTIC-SSB',
+   CheckRunning(NRAUBALTICSSB, 'NRAU-Baltic SSB', 'NRAU-SSB', 'NRAU-BALTIC-SSB',
                 'NRAU-Baltic Contest, SSB', 222);
 end;
 
@@ -2881,8 +2905,10 @@ end;
    So it sits on TContestBase -- not under, and not beside as a family member
    of, the NCJ's NA Sprint classes -- and states OnePointPerQSO itself. Its
    ADIF and Cabrillo names are the ones its row STATES, NA-SPRINT-SSB, not its
-   enum spelling SSB-SPRINT; whether they should still say NA Sprint is a
-   question for NY4I, so the assertion pins today's. *)
+   enum spelling SSB-SPRINT. Q16 (NY4I, 2026-10-16,
+   docs/CONTEST_FACTORY_OPEN_QUESTIONS.md) kept them -- WA7BNM and the ADIF
+   enumeration say NA-SPRINT-SSB -- and made the friendly name the sponsor's,
+   "North American SSB Sprint". *)
 procedure TContestFactoryTests.Test_SprintSSBIsItsOwnContest;
 var
    obj: TContestBase;
@@ -2905,7 +2931,7 @@ begin
 
       CheckEquals('NA-SPRINT-SSB', obj.CabrilloName, 'Sprint SSB Cabrillo name');
       CheckEquals('NA-SPRINT-SSB', obj.ADIFContestId, 'Sprint SSB ADIF id');
-      CheckEquals('North American Sprint, SSB', obj.FriendlyName,
+      CheckEquals('North American SSB Sprint', obj.FriendlyName,
                   'Sprint SSB friendly name');
       CheckEquals(242, obj.WA7BNMId, 'Sprint SSB WA7BNM id');
    finally

@@ -93,7 +93,7 @@ qso 17 G3ABC Band20 Phone/eUSB sparse | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone
 CONTEST: WFD
 QSO: 14025 CW 2026-01-15 1201 K0AAA   1A  KS      W1AW           2A  CT           
 QSO: 14250 PH 2026-01-15 1202 K0AAA   1A  KS      W1AW           2A  CT           
-QSO:   144 PH 2026-01-15 1203 K0AAA   1A  KS      W1AW           2A  CT           
+QSO:   144 FM 2026-01-15 1203 K0AAA   1A  KS      W1AW           2A  CT           
 QSO:  7080 RY 2026-01-15 1204 K0AAA   1A  KS      W1AW           2A  CT           
 QSO: 14074 DG 2026-01-15 1205 K0AAA   1A  KS      W1AW           2A  CT           
 QSO:  1830 CW 2026-01-15 1206 K0AAA   1A  KS      K4ABC          2A  FL           
@@ -451,7 +451,7 @@ qso 17 G3ABC Band20 Phone/eUSB sparse | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone
 CONTEST: WFD
 QSO: 14025 CW 2026-01-15 1201 VE3AAA  1A  ON      W1AW           2A  CT           
 QSO: 14250 PH 2026-01-15 1202 VE3AAA  1A  ON      W1AW           2A  CT           
-QSO:   144 PH 2026-01-15 1203 VE3AAA  1A  ON      W1AW           2A  CT           
+QSO:   144 FM 2026-01-15 1203 VE3AAA  1A  ON      W1AW           2A  CT           
 QSO:  7080 RY 2026-01-15 1204 VE3AAA  1A  ON      W1AW           2A  CT           
 QSO: 14074 DG 2026-01-15 1205 VE3AAA  1A  ON      W1AW           2A  CT           
 QSO:  1830 CW 2026-01-15 1206 VE3AAA  1A  ON      K4ABC          2A  FL           
@@ -807,7 +807,7 @@ qso 17 G3ABC Band20 Phone/eUSB sparse | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone
 CONTEST: WFD
 QSO: 14025 CW 2026-01-15 1201 DL1AAA  1A  DX      W1AW           2A  CT           
 QSO: 14250 PH 2026-01-15 1202 DL1AAA  1A  DX      W1AW           2A  CT           
-QSO:   144 PH 2026-01-15 1203 DL1AAA  1A  DX      W1AW           2A  CT           
+QSO:   144 FM 2026-01-15 1203 DL1AAA  1A  DX      W1AW           2A  CT           
 QSO:  7080 RY 2026-01-15 1204 DL1AAA  1A  DX      W1AW           2A  CT           
 QSO: 14074 DG 2026-01-15 1205 DL1AAA  1A  DX      W1AW           2A  CT           
 QSO:  1830 CW 2026-01-15 1206 DL1AAA  1A  DX      K4ABC          2A  FL           

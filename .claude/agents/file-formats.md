@@ -23,8 +23,15 @@ You own every format TR4W reads from or writes to disk for interchange.
 
 **`bash tr4w/test/corpus/export-d12-corpus.sh` byte-diffs YOUR output** — 13 real
 contest logs × ADIF and Cabrillo = 26 comparisons, against frozen D7
-references. Baseline **`24 passed, 0 failed, 2 known-divergence, 0
-awaiting-candidate`, and every export run must exit 0.**
+references. Baseline **`22 passed, 0 failed, 4 known-divergence, 0
+awaiting-candidate`, and every export run must exit 0** (24/2 until
+2026-10-16: Q54 -- winter_fd's Cabrillo writes its one FM QSO as `FM` where D7
+wrote `PH` -- and Q76 -- michigan's ADIF writes four out-of-state stations'
+own STATE where D7 wrote the host's `MI`). **A known difference is pinned LINE FOR LINE where it can be** --
+`<set>/known.<kind>.diff`, read by `run-golden-diff.sh` AND `test-adif-roundtrip.sh` through ONE shared matcher, `tr4w/test/corpus/known-pin-lib.sh`: KNOWN only when the
+changed lines are exactly the pinned ones, FAIL otherwise, FAIL when the pin
+has gone stale. A slug row in `known-divergences.txt` excuses every difference
+in BOTH of a set's artifacts; use one only for a cause with no known edge.
 
 **THE INPUT IS A `log.db`, SINCE 2026-09-24 — a TR4W SQLite contest log, which
 is what a contest IS here.** The `log.trw` and the `.CFG` invocation are gone by
@@ -181,11 +188,26 @@ multipliers, CTY.DAT, band lookup and CRC32.
   import, WAG's DOK and the RSGB IOTA's IOTA included (M5a: both are read
   back by their classes).
 - **A QSO party's ADIF `STATE`/`CNTY` and the Cabrillo sent zone ask the
-  CONTEST, not a table (M10 S6, 2026-10-14).** `uADIF.GetStateForContest`
-  (read by `EmitADIFRecord` and PostUnit's CNTY) is the class's
-  `QSOPartyArea` when it is two letters -- deliberately NOT `HostState`:
-  British Columbia states 'BC' but its area is 'VE7', and asking HostState
-  would start writing STATE/CNTY on every BCQP QSO (open for NY4I).
+  CONTEST, not a table (M10 S6, 2026-10-14).** **STATE IS THE WORKED
+  STATION'S, PER QSO, since Q76/Q89 (NY4I, 2026-10-16: "if you write STATE in
+  ADIF, that is the state of the worked station"; the entrant's is
+  MY_STATE).** `EmitADIFRecord` asks `uADIF.GetADIFStateForQSO(rec)` -- the
+  class's `ADIFWorkedStationState` (base `''`): a party county gives its
+  state (`ADIFCountyState`), an out-of-state station's state or a VE's
+  province is written as itself when `uADIF.IsADIFPrimarySubdivision` allows
+  that code for the station's CTY country (K: 48 states + DC; KL: AK; KH6:
+  HI; VE: 13 provinces), DX or anything else gets none. The QTH judged is
+  `uADIF.ADIFPartyQTHKey` -- the domestic table's key, else the logged QTH --
+  because aliases (`CON`, NEQP's `AD`) can be any length while every county
+  key is longer than two letters and every state/province key is two. D7's
+  rule -- the HOST's state on every QSO with a QTH, `GetStateForContest` --
+  is deleted; British Columbia, which wrote no STATE at all, now writes it.
+  PostUnit's CNTY prefix is `ADIFCountyState` (so an out-of-state QSO writes
+  no CNTY) and it writes CNTY only where `WritesADIFCounty` is True: every
+  state party but BC (ADIF's CNTY enumeration defines nothing for Canada),
+  no multi-state party. Pinned by `uTestContestExport.Test_ADIFStateIsTheWorkedStations`
+  and `Test_EveryPartyAndOnlyAPartyWritesAState`. Corpus: michigan's four
+  out-of-state records are pinned in `michigan_qp_2026_ny4i/known.adi.diff`.
   `postunit.ZoneSentForThisContest(aContest)` and the ADIF CQZ/ITUZ block
   ask ONE source, the contest's `ZoneMultiplierZones` (M11 S5; plan F4,
   which once had them on two), and the block's CTY-zone-mode fallback asks
@@ -228,9 +250,12 @@ multipliers, CTY.DAT, band lookup and CRC32.
   used to be an implicit ANSI conversion, identical for every legal FD class)
   and `CabrilloModeString` for every QSO line; the base calls
   `uCabrilloFormat.FormatCabrilloMode`, and PostUnit's inline copy of that
-  helper is deleted. **HamScore's one-QSO line (`uCabrillo`) still calls the
-  helper with no override**, so Winter Field Day's FM is `FM` there and `PH`
-  in the file -- design Q54, not changed. The summary sheet asks
+  helper is deleted. **HamScore's one-QSO line (`uCabrillo`) asks the QSO's
+  contest's `CabrilloModeString` too, since Q54 (2026-10-16)**, so the file
+  and HamScore cannot spell a mode differently; Winter Field Day's PH
+  override is deleted (FM is `FM`, still scored as phone), and Delaware is
+  the one contest left writing FM as PH. HamScore's own mode map
+  (`MapModeForRTC`, dead since RTC 3.0) is deleted. The summary sheet asks
   `SummarySheet` and the hour report `ReportsRunningScore`. The corpus sees the
   header for its Winter Field Day and General QSO sets; nothing else does.
 - **THE STATE SENT IS NOT MY STATE (M9a, design 7.11).** The Cabrillo sent

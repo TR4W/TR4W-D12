@@ -70,13 +70,18 @@ type
       procedure Test_ContestFieldsOfTheOtherOwners;
       procedure Test_ADIFContestIdAndPowerTag;
       procedure Test_RoundTripThroughTodaysImport;
+      procedure Test_ADIFStateIsTheWorkedStations;
+      procedure Test_EveryPartyAndOnlyAPartyWritesAState;
+      procedure Test_BCQPExportsStateBCAndNoCounty;
    end;
 
 implementation
 
 uses
    SysUtils, VC, uContestBase, uContestRegistry, uADIF,
-   uARRLSections, uCabrilloExchange;
+   uARRLSections, uCabrilloExchange,
+   (* TContestStateQSOPartyBase -- which contests are state parties (Q76). *)
+   uContestStateQSOPartyBase;
 
 function EmptyQso(aContest: ContestType): ContestExchange;
 begin
@@ -706,6 +711,202 @@ begin
    RoundTrip(BATAVIA_FT8, 'FN31');
 end;
 
+(* Q76/Q89 (NY4I, 2026-10-16): THE ADIF STATE IS THE WORKED STATION'S.
+
+   "ADIF typically prefaces the local station fields with MY_ (as in
+   MY_STATE). So if you write STATE in ADIF, that is the state of the worked
+   station." Until then -- and in D7 -- a party wrote its HOST's state on every
+   QSO carrying a QTH (a Michigan log: STATE:MI for a station in DC), and
+   British Columbia wrote none.
+
+   THE RULE, PINNED PER PARTY AND PER WORKED STATION: a host county gives the
+   county's state; an out-of-state station's state or a VE's province gives
+   itself when ADIF allows that code for the station's country; DX, or a code
+   ADIF does not allow for that country, gives none. The key is the domestic
+   table's (DomesticQTH) when there is one, else the logged QTH. *)
+function PartyQSO(aContest: ContestType;
+                  const aQTH, aDomesticKey, aCountryID: string): ContestExchange;
+begin
+   FillChar(Result, SizeOf(Result), 0);
+   Result.ceContest := aContest;
+   Result.Callsign := 'K1ABC';
+   Result.Band := Band20;
+   Result.Mode := CW;
+   Result.QTHString := ShortString(aQTH);
+   Result.DomesticQTH := ShortString(aDomesticKey);
+   Result.QTH.CountryID := ShortString(aCountryID);
+end;
+
+procedure TContestExportTests.Test_ADIFStateIsTheWorkedStations;
+
+   procedure Pin(aContest: ContestType; const aQTH, aKey, aCountry, aExpected: string);
+   begin
+      CheckEquals(aExpected,
+                  GetADIFStateForQSO(PartyQSO(aContest, aQTH, aKey, aCountry)),
+                  string(ContestTypeSA[aContest]) + ': QTH ' + aQTH + ' key ' +
+                  aKey + ' country ' + aCountry);
+   end;
+
+begin
+   BeginTest('Test_ADIFStateIsTheWorkedStations');
+
+   (* A SINGLE-STATE PARTY: Florida. *)
+   Pin(FLORIDAQSOPARTY, 'LEE', 'Lee', 'K', 'FL');      (* in-state county *)
+   Pin(FLORIDAQSOPARTY, 'MON', '', 'K', 'FL');         (* no key: the logged QTH *)
+   Pin(FLORIDAQSOPARTY, 'CT', 'Ct', 'K', 'CT');        (* out-of-state station *)
+   Pin(FLORIDAQSOPARTY, 'CON', 'Ct', 'K', 'CT');       (* an alias: the key decides *)
+   Pin(FLORIDAQSOPARTY, 'DC', 'DC', 'K', 'DC');        (* DC is a 291 subdivision *)
+   Pin(FLORIDAQSOPARTY, 'AK', 'Ak', 'KL', 'AK');       (* Alaska, DXCC 6 *)
+   Pin(FLORIDAQSOPARTY, 'HI', 'Hi', 'KH6', 'HI');      (* Hawaii, DXCC 110 *)
+   Pin(FLORIDAQSOPARTY, 'ON', 'On', 'VE', 'ON');       (* a VE's province *)
+   Pin(FLORIDAQSOPARTY, 'DX', 'dx', 'DL', '');         (* DX: no STATE *)
+   Pin(FLORIDAQSOPARTY, 'ON', 'On', 'K', '');          (* not a US code: none invented *)
+   Pin(FLORIDAQSOPARTY, 'AK', 'Ak', 'K', '');          (* Alaska is not DXCC 291 *)
+   Pin(FLORIDAQSOPARTY, 'CT', 'Ct', '', '');           (* unknown country: none *)
+
+   (* THE CORPUS'S MICHIGAN LOG: four out-of-state stations. *)
+   Pin(MICHQSOPARTY, 'DC', 'DC', 'K', 'DC');
+   Pin(MICHQSOPARTY, 'OH', 'Oh', 'K', 'OH');
+   Pin(MICHQSOPARTY, 'MAR', 'Mar', 'K', 'MI');
+
+   (* BRITISH COLUMBIA: a regional district is BC. *)
+   Pin(BCQP, 'ABF', 'Abf', 'VE', 'BC');
+   Pin(BCQP, 'CT', 'Ct', 'K', 'CT');
+   Pin(BCQP, 'ON', 'On', 'VE', 'ON');
+   Pin(BCQP, 'DX', 'dx', 'DL', '');
+
+   (* DELAWARE: its counties are three letters. *)
+   Pin(DELAWAREQSOPARTY, 'NDE', 'NDE', 'K', 'DE');
+   Pin(DELAWAREQSOPARTY, 'MD', 'Md', 'K', 'MD');
+
+   (* THE 7QP: keys lead with the state. *)
+   Pin(SEVENQP, 'AZAPH', 'Azaph', 'K', 'AZ');
+   Pin(SEVENQP, 'WAKIN', 'Wakin', 'K', 'WA');
+   Pin(SEVENQP, 'CT', 'Ct', 'K', 'CT');
+   Pin(SEVENQP, 'BC', 'Bc', 'VE', 'BC');
+   Pin(SEVENQP, 'DX', 'dx', 'DL', '');
+   Pin(SEVENQP, 'CTCAP', 'CTCap', 'K', '');            (* not a 7th-area state *)
+
+   (* NEW ENGLAND: keys end with the state; NEQSOW1's alias is shorter. *)
+   Pin(NEWENGLANDQSO, 'ANDME', 'AndME', 'K', 'ME');
+   Pin(NEWENGLANDQSO, 'AD', 'AddVT', 'K', 'VT');
+   Pin(NEWENGLANDQSO, 'FL', 'Fl', 'K', 'FL');
+   Pin(NEWENGLANDQSO, 'QC', 'Qc', 'VE', 'QC');
+   Pin(NEWENGLANDQSO, 'DX', 'dx', 'DL', '');
+
+   (* IN7QPNE: the composite's own routing (in7qpne_cty.dom's spelling). *)
+   Pin(IN7QPNE, 'INADA', 'Inada', 'K', 'IN');
+   Pin(IN7QPNE, 'AZAPH', 'Azaph', 'K', 'AZ');
+   Pin(IN7QPNE, 'MEAND', 'MEAnd', 'K', 'ME');
+   Pin(IN7QPNE, 'NDE', 'NDE', 'K', 'DE');
+   Pin(IN7QPNE, 'TX', 'Tx', 'K', 'TX');
+   Pin(IN7QPNE, 'ON', 'On', 'VE', 'ON');
+   Pin(IN7QPNE, 'DX', 'dx', 'DL', '');
+
+   (* NOT A QSO PARTY: no STATE in the record body, whatever the QTH. *)
+   Pin(CQWWCW, 'CT', 'Ct', 'K', '');
+   Pin(ARRLDXCW, 'CT', 'Ct', 'K', '');
+   Pin(ARRLFIELDDAY, 'CT', 'Ct', 'K', '');
+
+   (* THE ENUMERATION ITSELF, at its edges. *)
+   CheckTrue(IsADIFPrimarySubdivision('K', 'DC'), 'DC is DXCC 291');
+   CheckFalse(IsADIFPrimarySubdivision('K', 'HI'), 'HI is not DXCC 291');
+   CheckTrue(IsADIFPrimarySubdivision('VE', 'NU'), 'Nunavut is DXCC 1');
+   CheckFalse(IsADIFPrimarySubdivision('VE', 'NF'), 'NF is not an ADIF code');
+   CheckFalse(IsADIFPrimarySubdivision('K', 'D'), 'one letter is no code');
+end;
+
+(* EVERY CONTEST: which ones answer at all, and where CNTY is written.
+
+   An out-of-state station in Connecticut gets STATE:CT from exactly the QSO
+   parties -- every state party (TContestStateQSOPartyBase), the 7QP, New
+   England and IN7QPNE -- and nothing from any other contest. CNTY is
+   written by every state party but British Columbia (ADIF has no Canadian
+   county enumeration), and by no multi-state party, as before. A state
+   party's host county is its HostState, a two-letter code. *)
+procedure TContestExportTests.Test_EveryPartyAndOnlyAPartyWritesAState;
+var
+   c: ContestType;
+   identity: TContestBase;
+   isStateParty: boolean;
+   isParty: boolean;
+   parties: integer;
+begin
+   BeginTest('Test_EveryPartyAndOnlyAPartyWritesAState');
+   parties := 0;
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      identity := ContestIdentity(c);
+      isStateParty := identity is TContestStateQSOPartyBase;
+      isParty := isStateParty or (c in [SEVENQP, NEWENGLANDQSO, IN7QPNE]);
+      if isParty then
+         begin
+         CheckEquals('CT', GetADIFStateForQSO(PartyQSO(c, 'CT', 'Ct', 'K')),
+                     string(ContestTypeSA[c]) + ': a Connecticut station is CT');
+         inc(parties);
+         end
+      else
+         begin
+         CheckEquals('', GetADIFStateForQSO(PartyQSO(c, 'CT', 'Ct', 'K')),
+                     string(ContestTypeSA[c]) + ': not a QSO party, no STATE');
+         end;
+
+      CheckEquals(Ord(isStateParty and (c <> BCQP)), Ord(identity.WritesADIFCounty),
+                  string(ContestTypeSA[c]) + ': CNTY exactly for the state parties but BC');
+
+      if isStateParty then
+         begin
+         CheckEquals(2, Length(identity.HostState),
+                     string(ContestTypeSA[c]) + ': the host is a two-letter code');
+         CheckEquals(identity.HostState,
+                     GetADIFStateForQSO(PartyQSO(c, 'XYZ', 'Xyz', 'K')),
+                     string(ContestTypeSA[c]) + ': a host county is the host''s state');
+         end;
+      end;
+   (* The 20 state parties and the three multi-state ones -- counted by
+      hand, so a party added or lost is a deliberate change here. *)
+   CheckEquals(23, parties, 'the QSO parties that write a worked station''s STATE');
+end;
+
+(* THE EXPORTED RECORD ITSELF: a worked BC station's QSO carries STATE:BC,
+   a Florida QSO still carries STATE:FL. (CNTY is PostUnit's tail, asked
+   through WritesADIFCounty above; the record here is uADIF's body.) *)
+procedure TContestExportTests.Test_BCQPExportsStateBCAndNoCounty;
+var
+   qso: ContestExchange;
+   text: string;
+begin
+   BeginTest('Test_BCQPExportsStateBCAndNoCounty');
+   FillChar(qso, SizeOf(qso), 0);
+   qso.ceContest := BCQP;
+   qso.Band := Band20;
+   qso.Mode := CW;
+   qso.Callsign := 'VE7ABC';
+   qso.QTHString := 'ABF';
+   qso.DomesticQTH := 'ABF';
+   text := EmitADIFRecord(qso);
+   CheckTrue(Pos('<STATE:2>BC ', text) > 0, 'BCQP writes STATE:BC: ' + text);
+   CheckTrue(Pos('<CNTY', text) = 0, 'and the body writes no CNTY: ' + text);
+
+   qso.ceContest := FLORIDAQSOPARTY;
+   qso.Callsign := 'K4ABC';
+   qso.QTHString := 'LEE';
+   qso.DomesticQTH := 'LEE';
+   text := EmitADIFRecord(qso);
+   CheckTrue(Pos('<STATE:2>FL ', text) > 0, 'Florida still writes STATE:FL: ' + text);
+
+   (* Q76: an out-of-state station's record carries ITS state, not the
+      host's -- the corpus's Michigan QSO with W3ED in DC. *)
+   qso.ceContest := MICHQSOPARTY;
+   qso.Callsign := 'W3ED';
+   qso.QTHString := 'DC';
+   qso.DomesticQTH := 'DC';
+   qso.QTH.CountryID := 'K';
+   text := EmitADIFRecord(qso);
+   CheckTrue(Pos('<STATE:2>DC ', text) > 0, 'Michigan, W3ED in DC: STATE:DC: ' + text);
+   CheckTrue(Pos('<STATE:2>MI ', text) = 0, 'and not the host''s MI: ' + text);
+end;
+
 procedure TContestExportTests.RunAllTests;
 begin
    Test_AContestWithNoRuleOfItsOwnCallsAHelper;
@@ -725,6 +926,9 @@ begin
    Test_ContestFieldsOfTheOtherOwners;
    Test_ADIFContestIdAndPowerTag;
    Test_RoundTripThroughTodaysImport;
+   Test_ADIFStateIsTheWorkedStations;
+   Test_EveryPartyAndOnlyAPartyWritesAState;
+   Test_BCQPExportsStateBCAndNoCounty;
 end;
 
 end.

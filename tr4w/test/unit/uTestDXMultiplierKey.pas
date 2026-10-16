@@ -37,6 +37,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   DX contests gives for a fixed set of QSOs at a fixed roster of stations,
   including those.
 
+  79 SINCE 2026-10-16, CHANGED BY HAND: the SSB Sprint gained the North
+  American DX multiplier its sponsor's rule 10 counts (Q16,
+  docs/CONTEST_FACTORY_OPEN_QUESTIONS.md). It joins DX_EVERYWHERE, every
+  HAS_DX_COUNT rises by one, and its KEY_PINS rows pin XE and KP4 counted, K,
+  VE, KL7 and KH6 (states, by the sponsor's rule) and a European not.
+
   HOW THE LITERALS WERE MADE. Written by hand from the old code, then RUN
   GREEN AGAINST THE OLD CODE before anything moved: the program's own case
   and set and filters, frozen here (Legacy...OfKind, deleted at part 2),
@@ -193,9 +199,9 @@ const
    );
 
    (* WRITTEN BY HAND FROM THE OLD CASE AND RUN GREEN AGAINST IT -- see the
-      unit header. Every one of the 78 DX contests has a row that gives a
+      unit header. Every one of the 79 DX contests has a row that gives a
       key, and every station branch its rule has. *)
-   KEY_PINS: array[0..160] of TKeyPin = (
+   KEY_PINS: array[0..167] of TKeyPin = (
       (* EVERY COUNTRY, AT EVERY STATION -- the old ARRLDXCC / CQDXCC kinds,
          the case's `else`. *)
       (Contest: ARRL_RTTY_ROUNDUP;       Station: psUS; Qso: pqW1AW; Assigns: True; Key: 'K'),
@@ -349,6 +355,15 @@ const
       (Contest: NAQSORTTY;               Station: psDX; Qso: pqKP4;  Assigns: True;  Key: 'KP4'),
       (Contest: NASPRINTCW;              Station: psUS; Qso: pqXE1;  Assigns: True;  Key: 'XE'),
       (Contest: NASPRINTRTTY;            Station: psUS; Qso: pqKP4;  Assigns: True;  Key: 'KP4'),
+      (* The SSB Sprint, its own copy of the rule since Q16 (2026-10-16):
+         KL7 and KH6 count as states, never as countries. *)
+      (Contest: SPRINTSSB;               Station: psUS; Qso: pqXE1;  Assigns: True;  Key: 'XE'),
+      (Contest: SPRINTSSB;               Station: psVE; Qso: pqKP4;  Assigns: True;  Key: 'KP4'),
+      (Contest: SPRINTSSB;               Station: psUS; Qso: pqW1AW; Assigns: False; Key: ''),
+      (Contest: SPRINTSSB;               Station: psUS; Qso: pqVE3;  Assigns: False; Key: ''),
+      (Contest: SPRINTSSB;               Station: psUS; Qso: pqKL7;  Assigns: False; Key: ''),
+      (Contest: SPRINTSSB;               Station: psUS; Qso: pqKH6;  Assigns: False; Key: ''),
+      (Contest: SPRINTSSB;               Station: psDX; Qso: pqON4;  Assigns: False; Key: ''),
       (Contest: INTERNETSPRINT;          Station: psUS; Qso: pqXE1;  Assigns: True;  Key: 'XE'),
       (Contest: SST;                     Station: psUS; Qso: pqXE1;  Assigns: True;  Key: 'XE'),
       (Contest: SST;                     Station: psUS; Qso: pqW1AW; Assigns: False; Key: ''),
@@ -470,7 +485,8 @@ type
 
 const
    (* A DX MULTIPLIER AT EVERY STATION: the 56 contests whose session ran a
-      DX kind wherever it ran. *)
+      DX kind wherever it ran, and the SSB Sprint since Q16 (2026-10-16) --
+      57. *)
    DX_EVERYWHERE = [ARCI, ARI_DX, ARRL10, ARRL_RTTY_ROUNDUP, ArizonaQsoParty,
                     BATAVIA_FT8, BSCI, CIS, CQ160CW, CQ160SSB, CQM, CQMM,
                     CQWWCW, CQWWRTTY, CQWWSSB, DARC10M, EUDX, FLORIDAQSOPARTY,
@@ -480,7 +496,7 @@ const
                     NASPRINTRTTY, OKDX, OKOMSSB, OZCR_O, RADIOYOC,
                     REGION1FIELDDAY, REGION1FIELDDAY_RCC_CW,
                     REGION1FIELDDAY_RCC_SSB, RSGB18, RU3AXMEMORIAL, RUSSIANDX,
-                    SST, UBACW, UBASSB, UKEI, UKRAINIAN, UNDX, WINTERFIELDDAY,
+                    SPRINTSSB, SST, UBACW, UBASSB, UKEI, UKRAINIAN, UNDX, WINTERFIELDDAY,
                     WRTC, WWIH, YBDX, YODX, YOUTHCHAMPIONSHIPRF, YUDX];
 
    (* WHO HAS A DX MULTIPLIER AT EACH ROSTER STATION -- see the unit header
@@ -516,7 +532,7 @@ const
    (* How many contests each set holds -- stated so a set edited by mistake
       fails by count as well as by name. *)
    HAS_DX_COUNT: array[TPinStation] of integer =
-      (62, 62, 58, 67, 58, 63, 59, 58, 58, 57, 57, 57, 58, 57);
+      (63, 63, 59, 68, 59, 64, 60, 59, 59, 58, 58, 58, 59, 58);
 
 function PinStation(aStation: TPinStation; aContest: ContestType): TStationContext;
 begin
@@ -663,7 +679,8 @@ begin
          end;
       end;
 
-   (* EVERY DX CONTEST HAS A ROW THAT GIVES A KEY -- 78, plan 1.5 / S4. *)
+   (* EVERY DX CONTEST HAS A ROW THAT GIVES A KEY -- 78, plan 1.5 / S4; 79
+      since the SSB Sprint's (Q16, 2026-10-16). *)
    count := 0;
    for c := Low(ContestType) to High(ContestType) do
       begin
@@ -672,7 +689,7 @@ begin
          Inc(count);
          end;
       end;
-   CheckEquals(78, count, 'contests with a pinned DX key');
+   CheckEquals(79, count, 'contests with a pinned DX key');
 end;
 
 procedure TDXMultiplierKeyTests.Test_EveryContestHasItsPinnedDXMultiplier;
@@ -729,7 +746,7 @@ begin
    CheckEquals((Ord(High(ContestType)) + 1) * (Ord(High(TPinStation)) + 1), checked,
                'contest x station answers compared');
 
-   (* THE 78 DX CONTESTS, AND NO OTHER, HAVE ONE SOMEWHERE ON THE ROSTER. *)
+   (* THE 79 DX CONTESTS, AND NO OTHER, HAVE ONE SOMEWHERE ON THE ROSTER. *)
    count := 0;
    for c := Low(ContestType) to High(ContestType) do
       begin
@@ -738,7 +755,7 @@ begin
          Inc(count);
          end;
       end;
-   CheckEquals(78, count, 'contests with a DX multiplier at some roster station');
+   CheckEquals(79, count, 'contests with a DX multiplier at some roster station');
 end;
 
 procedure TDXMultiplierKeyTests.Test_EveryContestGivesItsPinnedCountryMode;

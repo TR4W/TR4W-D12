@@ -60,6 +60,8 @@ type
       procedure Test_TotalsDisplay;
       procedure Test_SummarySheet;
       procedure Test_CabrilloHeaderAndMode;
+      procedure Test_WinterFieldDayFMIsWrittenFMAndScoredAsPhone;
+      procedure Test_HamScoreLineAsksTheContestForTheMode;
       procedure Test_HourTotalsRunningScore;
       procedure Test_OperatingAidsAndScorePosting;
       procedure Test_QTCMenu;
@@ -83,6 +85,8 @@ uses
    FCONTEST,
    (* BuildRxExchangeText / BuildSentExchangeText -- the real dispatchers. *)
    uExchangeBuilder,
+   (* BuildSingleQsoCabrilloLine -- HamScore's one-QSO line (Q54). *)
+   uCabrillo,
    uTestContestObjects;
 
 (* ------------------------------------------------------------------------ *)
@@ -1117,9 +1121,11 @@ begin
             CheckEquals('', obj.CabrilloHeaderLinesBeforeTag('LOCATION', 'FL', station),
                         string(ContestTypeSA[c]) + ': no lines before LOCATION');
             end;
-         (* FM AS PHONE AND EVERY DIGITAL MODE AS RY: Winter Field Day the
-            first, the Delaware QSO Party both (uTestContestDelawareQP). *)
-         if not (c in [WINTERFIELDDAY, DELAWAREQSOPARTY]) then
+         (* FM AS PHONE AND EVERY DIGITAL MODE AS RY: the Delaware QSO Party
+            alone (uTestContestDelawareQP). Winter Field Day wrote FM as PH
+            until Q54 (NY4I, 2026-10-16) and writes FM now, as every other
+            contest does. *)
+         if c <> DELAWAREQSOPARTY then
             begin
             CheckEquals('FM', obj.CabrilloModeString(FM, eFM),
                         string(ContestTypeSA[c]) + ': FM is FM');
@@ -1150,7 +1156,10 @@ begin
                   'Winter Field Day: section and class before LOCATION');
       CheckEquals('', obj.CabrilloHeaderLinesBeforeTag('CLUB', 'FL', station),
                   'and before no other tag');
-      CheckEquals('PH', obj.CabrilloModeString(FM, eFM), 'Winter Field Day writes FM as PH');
+      (* Q54: FM IS WRITTEN FM, NOT PH -- FM is a valid Cabrillo mode and the
+         WFD rules list it. Named here as well as in the loop above, so a
+         restored override fails on a line that says why. *)
+      CheckEquals('FM', obj.CabrilloModeString(FM, eFM), 'Winter Field Day writes FM as FM (Q54)');
    finally
       obj.Free;
       end;
@@ -1163,6 +1172,62 @@ begin
    finally
       obj.Free;
       end;
+end;
+
+(* ONE FM QSO FOR aContest on 2 m -- a band every contest here credits. *)
+function FMQSO(aContest: ContestType): ContestExchange;
+begin
+   FillChar(Result, SizeOf(Result), 0);
+   Result.ceContest := aContest;
+   Result.Callsign := 'W1AW';
+   Result.Band := Band2;
+   Result.Mode := FM;
+   Result.ExtMode := eFM;
+   Result.QSOPoints := 99;
+end;
+
+(* Q54 (NY4I, 2026-10-16): THE MODE COLUMN SAYS FM, THE POINTS SAY PHONE.
+   Deleting the PH override changed what the Cabrillo line writes; it must
+   not change the score, which counts FM as phone (1 point, CW and digital
+   2) -- that rule lives in CalculateQSOPoints, not the mode column. *)
+procedure TContestDisplayTests.Test_WinterFieldDayFMIsWrittenFMAndScoredAsPhone;
+var
+   obj: TContestBase;
+   q: ContestExchange;
+begin
+   BeginTest('Test_WinterFieldDayFMIsWrittenFMAndScoredAsPhone');
+   obj := Make(WINTERFIELDDAY);
+   try
+      CheckEquals('FM', obj.CabrilloModeString(FM, eFM), 'FM is written FM');
+      q := FMQSO(WINTERFIELDDAY);
+      obj.ScoreQSO(q);
+      CheckEquals(1, q.QSOPoints, 'an FM contact scores as phone, 1 point');
+      q := FMQSO(WINTERFIELDDAY);
+      q.Mode := CW;
+      q.ExtMode := eCW;
+      obj.ScoreQSO(q);
+      CheckEquals(2, q.QSOPoints, 'and CW still scores 2');
+   finally
+      obj.Free;
+      end;
+end;
+
+(* HAMSCORE'S ONE-QSO LINE ASKS THE QSO'S CONTEST FOR THE MODE (Q54) -- the
+   same CabrilloModeString the Cabrillo file writes, so the two cannot drift.
+   Delaware is the proof that it ASKS: it alone writes FM as PH, so a line
+   built from the base helper would say FM where the contest says PH. *)
+procedure TContestDisplayTests.Test_HamScoreLineAsksTheContestForTheMode;
+var
+   line: string;
+begin
+   BeginTest('Test_HamScoreLineAsksTheContestForTheMode');
+   line := string(BuildSingleQsoCabrilloLine(FMQSO(WINTERFIELDDAY)));
+   CheckTrue(Pos(' FM ', line) > 0, 'Winter Field Day FM goes to HamScore as FM: ' + line);
+   CheckTrue(Pos(' PH ', line) = 0, 'and not as PH: ' + line);
+
+   line := string(BuildSingleQsoCabrilloLine(FMQSO(DELAWAREQSOPARTY)));
+   CheckTrue(Pos(' PH ', line) > 0, 'Delaware FM goes to HamScore as PH, its file''s spelling: ' + line);
+   CheckTrue(Pos(' FM ', line) = 0, 'and not as FM: ' + line);
 end;
 
 (* ------------------------------------------------------------------------ *)
@@ -1602,6 +1667,8 @@ begin
    Test_TotalsDisplay;
    Test_SummarySheet;
    Test_CabrilloHeaderAndMode;
+   Test_WinterFieldDayFMIsWrittenFMAndScoredAsPhone;
+   Test_HamScoreLineAsksTheContestForTheMode;
    Test_HourTotalsRunningScore;
    Test_OperatingAidsAndScorePosting;
    Test_QTCMenu;

@@ -1042,15 +1042,21 @@ begin
             end
          else
             begin
+            (* A DUTCH ENTRANT SENDS RST AND ITS PROVINCE, or RST and the
+               serial when MY STATE is empty -- Q22 (NY4I, 2026-10-16,
+               docs/CONTEST_FACTORY_OPEN_QUESTIONS.md), D7's
+               RSTAndQSONumberOrDomesticQTHExchange arm. These eight were the
+               serial ('599 7      ' ...) until then: the defect, pinned
+               from the program as it stood at S9c. Changed by hand. *)
             Take(aVariant,
-                 ['599 7      ',
-                  '59  123    ',
-                  '599 4567   ',
-                  '599 7      ',
-                  '599 7      ',
-                  '599 -5     ',
-                  '599 7      ',
-                  '599 7      '],
+                 ['599 FL     ',
+                  '59   0123   ',
+                  '599 ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                  '599 TRC    ',
+                  '599 FL     ',
+                  '599 99     ',
+                  '599  0007   ',
+                  '599 FL     '],
                  ['579 GA ',
                   '58  000',
                   '579 ABCDEFGHIJ',

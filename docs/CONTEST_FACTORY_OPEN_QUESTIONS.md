@@ -20,13 +20,6 @@ moves to section 4 in the commit that records it.
 
 ### QSO parties
 
-- **Q35** Idaho dormant-county threshold: the rovers page says "makes 10 valid
-  QSO's", the rules page "MORE THAN 10 contacts". 10 is implemented. The rovers
-  page also says "only counties listed in RED are eligible", but the table has
-  blue 500-point and red 1000-point counties; all are paid today. Which reading
-  is the sponsor's?
-  **Answer:**
-
 ### Other contests
 
 - **Q23** CUP RF: the Cabrillo writer uses the QSO's own QTH for the CW and SSB
@@ -88,35 +81,7 @@ moves to section 4 in the commit that records it.
 
 ### Added after M8 (multipliers and dupes)
 
-- **Q48** YB DX: the program had a rule "for an Indonesian entrant, set the
-  prefix multiplier again" that set exactly the value it already had -- it did
-  nothing, here and in D7. It is deleted (nothing moved). What was it meant to
-  do -- does an Indonesian entrant count a different multiplier (prefixes
-  rather than districts?) in the sponsor's rules?
-  **Answer:**
-
 ### Added after M9a (the display and the reports)
-
-- **Q52** Every contest's display name is now its row's friendly name, as you
-  asked -- the name the New Contest drop-down will show at M9b. Twelve
-  classes had a longer hand-written one: "ARRL International DX Contest - CW"
-  is now "ARRL Inter. DX Contest, CW", "CQ World Wide DX - CW" is "CQ Worldwide
-  DX Contest, CW", "General QSO" is "General QSO/DX Logging" (and the
-  Sweepstakes, CQ WPX, NA Sprint and ARRL Digital ones). Which should the
-  drop-down show? If the longer ones, the friendly name changes with them,
-  and that also changes the summary sheet's `CONTEST:` line and the log
-  database's friendly name.
-  *Ruled in part (NY4I, 2026-10-15): "I disagree that the longer display name
-  should have anything to do with the CONTEST: name in Cabrillo. The cab name
-  should just be another definition in the contest class."* **It already is,
-  and the question above was wrong to suggest otherwise:** the Cabrillo file's
-  `CONTEST:` line is `GetCabrilloName` (`postunit.pas:2802`, through
-  `CabrilloContestName`), and the display and friendly names never reach it.
-  What a friendly-name change DOES reach is the printed summary sheet, whose
-  "CONTEST:" line is the session's contest name with the friendly name in
-  brackets (`postunit.pas:993`), and the log database's friendly-name column.
-  Still open: which WORDS the drop-down shows.
-  **Answer:**
 
 - **Q53** Forty-seven contests have no friendly name, so their display name is
   still the internal spelling -- `ALRS-UA1DZ-CUP`, `RF-CUP-CW`, `UKEI`,
@@ -145,28 +110,7 @@ moves to section 4 in the commit that records it.
   name, which is now the friendly name. Q52 still asks WHICH words; answering
   it changes the drop-down with no further code.
 
-- **Q59** Inactive contests: SA Sprint and Locust are marked inactive and
-  listed last, as you said. Any others? (A contest marked inactive still
-  opens and scores an old log; it only moves to the bottom of the list.)
-  *Partly answered in F26 (2026-10-15): MARAC, Ten-Ten, FISTS and QCWA are
-  inactive; FISTS, QCWA Golden, WWL, XMAS and Locust retire. Any others?*
-  **Answer:**
-
-- **Q64** The New Contest drop-down now lists POTA as "Parks on the Air(r)
-  Logging" (its friendly name -- every contest class shows its human name,
-  your M9a ruling) where it used to say "POTA". Keep that, or should POTA's
-  line stay "POTA"?
-  **Answer:**
-
 ### Added with 7.12 (station facts a contest may override, 2026-10-13)
-
-- **Q66** Preferences shows and edits the station's value. If this contest
-  overrides that field (zone 3 in Utah), an edit there changes the station
-  but not this contest, and nothing on the page says so. Should the Station
-  page show the contest's value beside the field, with a way to clear it?
-  *Recommended: yes, a hint that names the contest's value.* This is
-  `lcl-ui` work.
-  **Answer:**
 
 ### Added with the UA4W Championship's and RSGB 1.8's classes (2026-10-14)
 
@@ -178,17 +122,6 @@ moves to section 4 in the commit that records it.
   **Answer:**
 
 ### Added with the Delaware QSO Party's class (2026-10-14)
-
-- **Q73** "A DE mobile that changes county is a new station." TR4W's dupe
-  check uses the call, band and mode, and no contest can change that today.
-  So a mobile's second county shows as a dupe unless worked as a county
-  line. The sponsor's page confirms the rule: "Delaware Mobiles that change
-  counties are considered new stations, and can be worked for both
-  multiplier and QSO Point credit."
-  Add a way for a QSO party to put the county into the dupe check, or
-  leave it to the operator? *Recommended: add it, as its own step, for every
-  state party with mobiles.*
-  **Answer:**
 
 ### Added with the IN7QPNE composite (2026-10-14)
 
@@ -287,28 +220,26 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   window?
   **Answer:**
 
-- **Q99** **A contest states when it runs** (raised by NY4I with Q15,
-  2026-10-16: *"we should be storing the times and relative dates of the
-  contest like the contest factory in TR4QT does"*). TR4W stores none today.
-  TR4QT's `ContestMetadata` holds a month plus a rule STRING ("2nd Saturday",
-  "Last full weekend") parsed at run time, and no time of day; it uses the
-  date only to list upcoming contests first, and never refuses a contest
-  outside it.
-  **Recommendation:** each class states one or more occurrences, TYPED rather
-  than parsed: month; anchor (Nth weekday, Nth full weekend, last full
-  weekend, or a fixed date); the start day within it; start UTC; duration. A
-  misspelt rule string yields no date and no error; a typed one does not
-  compile. Worked example, NRAU-Baltic SSB: January, 2nd full weekend, Sunday,
-  0600 UTC, 2 h (CW: the same at 0830 UTC). No inherited default (Q51's rule):
-  a class with no regular date (General QSO, POTA) says so explicitly, and a
-  pin test fails a class that states nothing.
-  **Uses, in order:** (a) the New Contest drop-down lists upcoming contests
-  first, as TR4QT does; (b) a new contest's start and end are seeded into its
-  SQLite file from the next occurrence. Later, and only on your word: (c) flag
-  a QSO logged outside the period. Like TR4QT, a contest always opens on any
-  date. Sources: the sponsor's rules, then WA7BNM (which lists dates for every
-  contest it carries, so a tool can propose each class's rule for checking by
-  hand). Accept (a) and (b)?
+- **Q100** `contest.last_opened_at` is never written or read. The schema says
+  it is "written every time the log is OPENED, and it is the chooser's default
+  sort key: recent activity floats up" -- neither is true. Write it at open
+  and sort the log chooser by it, or delete it? *Recommended: write it* --
+  "the contest I was just working" first is the chooser's most useful order,
+  and the comment states the intent.
+  **Answer:**
+
+- **Q101** Thirteen typed received-exchange columns are never written or read:
+  `rcvd_state`, `rcvd_county`, `rcvd_section`, `rcvd_grid`,
+  `rcvd_postal_code`, `rcvd_society`, `rcvd_department`, `rcvd_rda`,
+  `rcvd_park`, `rcvd_summit`, `rcvd_iota`, `rcvd_coords`, `rcvd_continent` --
+  plus `snr_sent`, `snr_received` and `cty_itu_zone`. Everything they would
+  hold sits in `rcvd_qth` today, and the mapper refuses to guess the type
+  ("the contest factory decides"). Should each contest class fill the typed
+  column for its own exchange (so an export or a query can read `rcvd_county`
+  rather than parse `rcvd_qth`), or should the unused columns be deleted?
+  *Recommended: the class fills them* -- it is the one place that knows
+  whether a QTH is a county, a section or a grid, which is exactly the
+  question Q89's ADIF STATE fix had to answer.
   **Answer:**
 
 ---
@@ -350,51 +281,6 @@ closes it; anything else reopens it.
   the station's value" but the contest's own copy -- a later Preferences
   change does not reach an existing contest, which is what makes the database
   self-contained.
-  **Answer:**
-
-- **Q34** Idaho rovers earn the dormant-county bonus per county they activate, but
-  no QSO records the county it was sent from. Add a per-QSO "my county" (log
-  field, entry, ADIF `MY_CNTY`), or keep scoring a rover as a fixed station in its
-  MY STATE county?
-  **Proposed answer:** SETTLED BY the Q13 audit (finding C) and the MY_CNTY
-  ruling (Q19): yes, a per-QSO "my county". The log already has `my_county`
-  (and `my_state`, `my_grid`) per QSO for exactly this and nothing writes
-  them; a rover's QSO records the county it was sent from, ADIF exports it as
-  `MY_CNTY`, and the dormant-county bonus counts from it.
-  **Answer:**
-
-- **Q89** British Columbia QSO Party ADIF export: TR4W writes NO `STATE`
-  (and no `CNTY`) for a BCQP QSO, because the old table named BC's area
-  `VE7` -- not two letters -- and the export only writes a two-letter
-  state. The BC class itself says its host is `BC`, and ADIF's `STATE`
-  field does carry Canadian provinces. Should BCQP export `STATE:BC` (and
-  the county) like the US parties do? M10 S6 deliberately kept today's
-  output; this would change BCQP's ADIF, so it waits for you.
-  *Recommended: yes, export BC.*
-  **Proposed answer:** SETTLED BY Q19 (2026-10-15): STATE is ADIF's primary
-  subdivision, provinces included. So BCQP exports `STATE:BC` and the county
-  like the US parties.
-  **Answer:**
-
-- **Q61** CATEGORY-POWER is now one value (design 7.6). Four other Cabrillo
-  categories have the same two-store shape: ASSISTED, BAND, MODE and OPERATOR
-  start from the setting the New Contest dialog wrote, but the summary window
-  writes MODE to a copy of its own and the other three nowhere, so a headless
-  export reads a stale or empty copy. Make them one value each, the same way
-  (no rescore -- no contest scores by them)?
-  **Proposed answer:** SETTLED BY "a contest is its SQLite file" and 7.6: each
-  of ASSISTED, BAND, MODE and OPERATOR is ONE value, set at New Contest time
-  and stored in the contest database, which the summary window edits and a
-  headless export reads -- no copies.
-  **Answer:**
-
-- **Q54** HamScore's one-QSO Cabrillo line writes Winter Field Day's FM
-  contacts as `FM`; the Cabrillo file writes `PH`. Should HamScore ask the
-  contest too? *Recommended: yes* -- one rule for both; it changes what
-  HamScore receives for WFD FM QSOs.
-  **Proposed answer:** SETTLED BY Q52's ruling (the Cabrillo form is the
-  contest class's own definition): HamScore's one-QSO Cabrillo line asks the
-  contest, as the file does, so WFD FM goes as `PH` in both.
   **Answer:**
 
 - **Q26** WAG: an imported record with no `DOK` keeps its received RST (`599`) as
@@ -530,11 +416,338 @@ closes it; anything else reopens it.
 | Q69 | MY ZONE is the CQ zone; ITU-zone contests read MY ITU ZONE | not built (own step) |
 | Q71 | RSGB 1.8, ARRL 160, CQ 160 credit 160 m only; UA4W prompt uses TC_ENTERYOURRDAIDORGRID | not built |
 | Q58 | WRTC is named "World Radiosport Team Championship" (display and friendly name) | built |
-| Q15 | NRAU Cabrillo names become WA7BNM's NRAU-CW / NRAU-SSB; ADIF keeps NRAU-BALTIC-*; sponsor times | not built |
-| Q16 | SSB Sprint is "North American SSB Sprint"; NA-SPRINT-SSB stays; gains the North American country multiplier | not built |
-| Q22 | PACC: both exchanges, one per station (PA receives either); a PA entrant's sent column must be its province, not a serial | not built (defect) |
+| Q15 | NRAU Cabrillo names become WA7BNM's NRAU-CW / NRAU-SSB; ADIF keeps NRAU-BALTIC-*; sponsor times | built (names); times are Q99 |
+| Q16 | SSB Sprint is "North American SSB Sprint"; NA-SPRINT-SSB stays; gains the North American country multiplier | built |
+| Q22 | PACC: both exchanges, one per station (PA receives either); a PA entrant's sent column must be its province, not a serial | built |
+| Q61 | ASSISTED, BAND, MODE, OPERATOR: one value each, in the contest database | not built |
+| Q54 | WFD writes FM as FM (proposal reversed); HamScore asks the contest's mode spelling; one corpus divergence | built |
+| Q34 | Rover county/grid per QSO, set by a call-window command; sketched for later | issue #87 |
+| Q89 | BCQP ADIF exports STATE:BC; no CNTY (ADIF defines no Canadian secondary subdivision) | built -- and STATE is now the WORKED station's in every party (Q76) |
+| Q99 | Each class states its schedule (typed); New Contest list alphabetical, a check box orders by next date; start/end seeded | not built |
+| Q35 | Idaho bonus: at least 10 QSOs (as built); all 25 table counties; one table per year, by the log's year | per-year table not built |
+| Q52 | The New Contest drop-down shows each friendly name in full (sized at run time); reconsider if too wide | not built |
+| Q73 | QSO party: CALL/<valid county> is its own station for dupes (K1AR/NHHIL in NEQP) | not built |
+| Q48 | YB DX: YB entrant counts all prefixes, others YB prefixes only -- already so (DXLog agrees) | no change |
+| Q66 | A Contest Details dialog edits the contest's stored values (seeded station facts, Cabrillo fields); a station change mid-contest offers to copy it | not built |
+| Q64 | POTA shows as "Parks on the Air(r) Logging" | as built |
+| Q59 | Inactive contests listed grey and unselectable for a NEW contest; old logs still open and import | not built (confirm grey) |
 
 ### Answered since the table was last updated (full text)
+
+- **Q73** "A DE mobile that changes county is a new station." TR4W's dupe
+  check uses the call, band and mode, and no contest can change that today.
+  So a mobile's second county shows as a dupe unless worked as a county
+  line. The sponsor's page confirms the rule: "Delaware Mobiles that change
+  counties are considered new stations, and can be worked for both
+  multiplier and QSO Point credit."
+  Add a way for a QSO party to put the county into the dupe check, or
+  leave it to the operator? *Recommended: add it, as its own step, for every
+  state party with mobiles.*
+  **Answer:** (NY4I, 2026-10-16) *"yes NY4I/PIN in FQP should be considered a
+  different station than NY4I/HIL. This is a QSO party idea only where the
+  characters after the slash have to be a valid county. Note in the NEQP (or
+  IN7QPNE) that could be K1AR/NHHIL."* So yes, as its own step: in a QSO
+  party, a /suffix that is a valid county of THAT contest (its .dom spelling
+  -- NHHIL in NEQP and IN7QPNE, PIN in FQP) makes CALL/county a separate
+  station for the dupe check, so a mobile that changes county is workable
+  again. A suffix that is not a valid county keeps today's rule (it is not a
+  rover suffix). Same validity test as the rover county (issue #87). Not
+  built.
+
+- **Q48** YB DX: the program had a rule "for an Indonesian entrant, set the
+  prefix multiplier again" that set exactly the value it already had -- it did
+  nothing, here and in D7. It is deleted (nothing moved). What was it meant to
+  do -- does an Indonesian entrant count a different multiplier (prefixes
+  rather than districts?) in the sponsor's rules?
+  **Answer:** (NY4I, 2026-10-16) WA7BNM's page (ref 621) says nothing on
+  prefixes and the sponsor's site was down. DXLog's YBDXSSB.txt settles it:
+  "YB WPX prefixes are multipliers for non-YB stations. All WPX prefixes are
+  multipliers for YB stations", plus DXCC for all, per band. That is exactly
+  what TR4W already does: `IndonesianDistrict` (uPrefixMultiplierKey.pas:126)
+  keys the prefix when EITHER the worked station or the entrant is Indonesian,
+  and the class counts per band (cfMultByBand). The deleted rule was redundant
+  -- what it was for is already done. Points match DXLog too. No change.
+
+- **Q66** Preferences shows and edits the station's value. If this contest
+  overrides that field (zone 3 in Utah), an edit there changes the station
+  but not this contest, and nothing on the page says so. Should the Station
+  page show the contest's value beside the field, with a way to clear it?
+  *Recommended: yes, a hint that names the contest's value.* This is
+  `lcl-ui` work.
+  **Answer:** (NY4I, 2026-10-16) *"the idea is we need a way to edit the
+  contest details. So while the station info is used as a seed value for a new
+  contest, we should allow an edit dialog to edit the contest. That could also
+  be the place we edit cabrillo fields today. The zone 3 in Utah for NY4I/7
+  would be edited in this dialog. ... if I change the station info during a
+  live contest, we should advise this info will not update the contest (or
+  maybe we offer the opportunity to do so)?"* So: a CONTEST DETAILS dialog
+  edits the values the contest stores -- the seeded station facts (zone,
+  state, section, grid ...) and the Cabrillo header fields (Q61's categories)
+  -- in the contest database; the station page keeps editing the station.
+  Changing a station value while a contest is open says the contest keeps its
+  own value, and offers to copy the new value into it (recommended: offer,
+  never silently). This replaces the "hint beside the field" proposal. Its
+  storage half is Q61 and the declaration fix found by the column audit. lcl-
+  ui + log-database. Not built.
+
+- **Q64** The New Contest drop-down now lists POTA as "Parks on the Air(r)
+  Logging" (its friendly name -- every contest class shows its human name,
+  your M9a ruling) where it used to say "POTA". Keep that, or should POTA's
+  line stay "POTA"?
+  **Answer:** (NY4I, 2026-10-16) *"I like the Parks on the Air with the
+  trademark as you suggested."* Kept: POTA's line is its friendly name, "Parks
+  on the Air(r) Logging". No change.
+
+- **Q59** Inactive contests: SA Sprint and Locust are marked inactive and
+  listed last, as you said. Any others? (A contest marked inactive still
+  opens and scores an old log; it only moves to the bottom of the list.)
+  *Partly answered in F26 (2026-10-15): MARAC, Ten-Ten, FISTS and QCWA are
+  inactive; FISTS, QCWA Golden, WWL, XMAS and Locust retire. Any others?*
+  **Answer:** (NY4I, 2026-10-16) *"Should inactive contests be in gray in the
+  drop-down so they cannot be selected? ... I see no reason anyone would ever
+  select it. It allows a transition period to see our port did not simply
+  forget them."* Recommendation, for his yes: GREY AND NOT SELECTABLE in the
+  New Contest drop-down, still listed (so the port visibly kept them) -- but
+  an existing log of an inactive contest still OPENS, rescores and exports,
+  and its ADIF still imports, because those are old logs, not new contests. No
+  others named inactive. lcl-ui. Not built.
+
+- **Q52** Every contest's display name is now its row's friendly name, as you
+  asked -- the name the New Contest drop-down will show at M9b. Twelve
+  classes had a longer hand-written one: "ARRL International DX Contest - CW"
+  is now "ARRL Inter. DX Contest, CW", "CQ World Wide DX - CW" is "CQ Worldwide
+  DX Contest, CW", "General QSO" is "General QSO/DX Logging" (and the
+  Sweepstakes, CQ WPX, NA Sprint and ARRL Digital ones). Which should the
+  drop-down show? If the longer ones, the friendly name changes with them,
+  and that also changes the summary sheet's `CONTEST:` line and the log
+  database's friendly name.
+  *Ruled in part (NY4I, 2026-10-15): "I disagree that the longer display name
+  should have anything to do with the CONTEST: name in Cabrillo. The cab name
+  should just be another definition in the contest class."* **It already is,
+  and the question above was wrong to suggest otherwise:** the Cabrillo file's
+  `CONTEST:` line is `GetCabrilloName` (`postunit.pas:2802`, through
+  `CabrilloContestName`), and the display and friendly names never reach it.
+  What a friendly-name change DOES reach is the printed summary sheet, whose
+  "CONTEST:" line is the session's contest name with the friendly name in
+  brackets (`postunit.pas:993`), and the log database's friendly-name column.
+  Still open: which WORDS the drop-down shows.
+  **Answer:** (NY4I, 2026-10-16) *"Let's use the full friendly name in the
+  drop-down. If it gets too wide, we can reconsider."* The drop-down already
+  shows the friendly name (M9b); what it does not do is show it WHOLE.
+  `cboContest` (`uNewContestForm.lfm:96`) is 200 px at design time, stretched
+  by its anchors to the panel, and the list opens at the combo's width, so
+  long names are clipped. Measured across the 187 pinned friendly names: most
+  fit in 38 characters ("RSGB International Sprint Contest, SSB", "Yuri
+  Gagarin International DX Contest", "World Radiosport Team Championship");
+  one outlier is 67, the IN7QPNE composite ("Combined Indiana, 7th Call Area,
+  New England and Delaware QSO Party") -- the "too wide" case to reconsider if
+  it is. So: the list must show each name in full, sized from the names at run
+  time rather than a hard-coded width (lcl-ui). Not built.
+
+- **Q35** Idaho dormant-county threshold: the rovers page says "makes 10 valid
+  QSO's", the rules page "MORE THAN 10 contacts". 10 is implemented. The rovers
+  page also says "only counties listed in RED are eligible", but the table has
+  blue 500-point and red 1000-point counties; all are paid today. Which reading
+  is the sponsor's?
+  **Partly answered (NY4I, 2026-10-16):** *"Perhaps. This is an annual update
+  as the rare counties change each year"*, with the sponsor's "2027 Bonus"
+  table (25 counties, 500 or 1000). It matches the class's
+  `IdahoBonusCounties` row for row. **RED settled:** re-read 2026-10-16, "Only
+  counties listed in RED are eligible" refers to the MAP (idahomap2027.jpg);
+  the table is the bonus list, so all 25 are paid, as today. **Still open: the
+  threshold** -- the rovers page says "makes 10 valid QSO's", the rules page
+  "MORE THAN 10"; 10 stays until the sponsor says otherwise. **New, from
+  "annual update":** a table that changes every year cannot be one constant,
+  or rescoring a 2026 log after the 2027 update pays the wrong counties.
+  Proposal: the class keeps one table PER YEAR and picks it by the contest's
+  own year (the QSO dates), so an old log keeps its year's bonus -- "a logged
+  QSO reads its record". Adding a year is one new table, with a pin test that
+  the current year has one.
+  **Answer:** (NY4I, 2026-10-16) *"it is at least 10 qsos."* So the bonus
+  needs 10 or more valid QSOs from the county -- exactly what the class does
+  (`validQSOs >= IdahoBonusMinimumQSOs`, 10). No change there. All 25 table
+  counties are paid (RED is the map). Still to build: one bonus table per
+  year, chosen by the log's year, above.
+  **Where (NY4I, same day):** *"In the contest class? That would not be
+  terrible."* Yes -- in TContestIdahoQP, beside today's IdahoBonusCounties:
+  one typed table per year, a lookup by the log's contest year that REPORTS a
+  year with no table rather than paying nothing, and a pin test that fails
+  when the current year has none (the yearly reminder). Not a data file: the
+  class owns its scoring, and a typed table is checked before release.
+  **An old contest (NY4I, same day):** *"you have to handle reviewing an old
+  contest as you need to know which list of counties to use."* The year comes
+  from the LOG, never today's clock, so a 2026 log opened in 2029 still pays
+  the 2026 list; a log whose year has no table says so (no silent zero). NY4I:
+  *"That does imply that in the contest database file, we do log the original
+  start date of the contest."* Measured: the `contest` table HAS `start_time`
+  and `end_time` columns, and NOTHING writes or reads them. Q99(b) seeds them
+  at New Contest time; the lookup reads `start_time`, and for an older log
+  where it is empty, the first QSO's date. **Which year the current table
+  is:** the sponsor heads it "2027 Bonus", but the Wayback capture of
+  2026-05-11 -- four months BEFORE the 2026 contest -- shows the identical
+  table under the same heading (captures of 2026-03-15 and 2026-04-12 show the
+  page with no table). So it is the list that was in force for the 2026
+  contest, whatever the label says; an earlier claim here that TR4W pays 2026
+  logs the wrong list is WITHDRAWN. Which contest years it covers (2026 only,
+  or 2026 and 2027) is the sponsor's to say.
+
+- **Q99** **A contest states when it runs** (raised by NY4I with Q15,
+  2026-10-16: *"we should be storing the times and relative dates of the
+  contest like the contest factory in TR4QT does"*). TR4W stores none today.
+  TR4QT's `ContestMetadata` holds a month plus a rule STRING ("2nd Saturday",
+  "Last full weekend") parsed at run time, and no time of day; it uses the
+  date only to list upcoming contests first, and never refuses a contest
+  outside it.
+  **Recommendation:** each class states one or more occurrences, TYPED rather
+  than parsed: month; anchor (Nth weekday, Nth full weekend, last full
+  weekend, or a fixed date); the start day within it; start UTC; duration. A
+  misspelt rule string yields no date and no error; a typed one does not
+  compile. Worked example, NRAU-Baltic SSB: January, 2nd full weekend, Sunday,
+  0600 UTC, 2 h (CW: the same at 0830 UTC). No inherited default (Q51's rule):
+  a class with no regular date (General QSO, POTA) says so explicitly, and a
+  pin test fails a class that states nothing.
+  **Uses, in order:** (a) the New Contest drop-down lists upcoming contests
+  first, as TR4QT does; (b) a new contest's start and end are seeded into its
+  SQLite file from the next occurrence. Later, and only on your word: (c) flag
+  a QSO logged outside the period. Like TR4QT, a contest always opens on any
+  date. Sources: the sponsor's rules, then WA7BNM (which lists dates for every
+  contest it carries, so a tool can propose each class's rule for checking by
+  hand). Accept (a) and (b)?
+  **Answer:** (NY4I, 2026-10-16) *"Proceed with your recommendation. The idea
+  is when we present the new contest dialog, we can default to alphabetical
+  list of contests or a check to offer them in date order so the next contest
+  per the calendar are displayed first. That is what TR4QT was doing."*
+  Accepted as recommended: each class states its occurrences, typed (month,
+  anchor, start day, start UTC, duration), with no inherited default. Use (a),
+  refined: the New Contest drop-down stays ALPHABETICAL by default, and a
+  check box beside it re-orders by the next occurrence from today, so the
+  coming contests are listed first. Use (b): a new contest's start and end are
+  seeded from the next occurrence. Use (c), flagging out-of-period QSOs, is
+  not asked for. Not built; the bulk of it is data (a schedule per class, from
+  the sponsors, WA7BNM as the cross-check).
+
+- **Q89** British Columbia QSO Party ADIF export: TR4W writes NO `STATE`
+  (and no `CNTY`) for a BCQP QSO, because the old table named BC's area
+  `VE7` -- not two letters -- and the export only writes a two-letter
+  state. The BC class itself says its host is `BC`, and ADIF's `STATE`
+  field does carry Canadian provinces. Should BCQP export `STATE:BC` (and
+  the county) like the US parties do? M10 S6 deliberately kept today's
+  output; this would change BCQP's ADIF, so it waits for you.
+  *Recommended: yes, export BC.*
+  **Proposed answer:** SETTLED BY Q19 (2026-10-15): STATE is ADIF's primary
+  subdivision, provinces included. So BCQP exports `STATE:BC` and the county
+  like the US parties.
+  **Answer:** (NY4I, 2026-10-16) *"so yes"*, citing the ADIF specification:
+  `STATE` is "the code for the contacted station's Primary Administrative
+  Subdivision (e.g. US State, JA Island, VE Province)". So BCQP exports
+  `STATE:BC`. **The county half does NOT follow**: ADIF's `CNTY` is an
+  enumeration (Secondary Administrative Subdivision, ADIF 3.1.6 III.B.22)
+  defined only for Alaska, Hawaii, the USA, the Russian entities, Ukraine,
+  Japan, New Zealand and Spain -- nothing for Canada (DXCC 1). A BC regional
+  district written as `CNTY` would be a value the spec does not allow, so BCQP
+  writes no `CNTY`; the district still goes to the sponsor in the Cabrillo
+  exchange. Not built.
+
+- **Q34** Idaho rovers earn the dormant-county bonus per county they activate, but
+  no QSO records the county it was sent from. Add a per-QSO "my county" (log
+  field, entry, ADIF `MY_CNTY`), or keep scoring a rover as a fixed station in its
+  MY STATE county?
+  **Proposed answer:** SETTLED BY the Q13 audit (finding C) and the MY_CNTY
+  ruling (Q19): yes, a per-QSO "my county". The log already has `my_county`
+  (and `my_state`, `my_grid`) per QSO for exactly this and nothing writes
+  them; a rover's QSO records the county it was sent from, ADIF exports it as
+  `MY_CNTY`, and the dormant-county bonus counts from it.
+  **Answer:** (NY4I, 2026-10-16) *"We really do not have a mechanism for
+  rovers to change their county mid-contest in qso parties. If we did, then
+  that would drive this answer ... We could sketch that out for future
+  implementation if it answers this and handles it for other contests."*
+  Searched D7 and this tree for "rover" (case-insensitive): every hit handles
+  WORKING a rover (the `CALL/CTY` suffix, VHF `/R`), none BEING one. No `MY
+  COUNTY` setting exists; the per-QSO `my_county` / `my_grid` / `my_state`
+  columns exist and nothing writes them; the `\`-command hook
+  `logsubs2.ProcessCallWindowCommand` has no caller. So the answer is the
+  proposal, deferred: a per-QSO "my county" (and grid), written at logging
+  time, set mid-contest by a call-window command such as `\COUNTY BNV` or
+  `\GRID EM10`; the contest class decides what a move means (Idaho's dormant-
+  county bonus counts distinct `my_county`; a party's rover dupe rule; VHF
+  rover grids); ADIF writes `MY_CNTY` / `MY_GRIDSQUARE` per QSO. Sketch and
+  open points: issue #87 (https://github.com/TR4W/TR4W-D12/issues/87). Until
+  then Idaho scores a rover as a fixed station. Not built.
+  **Follow-up (NY4I, same day):** *"There is a UDP command for example that
+  goes in the callwindow, that should be processed in same case statement."*
+  Right -- the call window's live commands are
+  `MainUnit.CheckCommandInCallsignWindow` (ADIF, CAB, UDP, SCORE, PREF and ten
+  more), whose `case` arms are numbered by POSITION in the word list;
+  `TXON`/`TXOFF` sit in a separate `if` chain; the `\RADIO` procedure is dead.
+  Step 0 of issue #87: one command table keyed by NAME, holding all of them,
+  so the rover's `COUNTY`/`GRID` is one more entry. Open: an argument needs a
+  separator the call window keeps, since the space bar is already a dupe
+  check.
+  **Decided (NY4I, same day):** typing ROVER in the call window opens a dialog
+  listing THIS contest's counties from its .dom; typing filters, Enter picks
+  -- so only a valid county can be chosen and nothing is parsed (NY4I: "I am
+  not thrilled with finicky parsers"; ROVER=BNV, briefly agreed, is dropped).
+  The current county shows in a new status element beside WK. All call-window
+  commands move into one name -> handler table, guarded by unit tests and a
+  lint. Detail: issue #87.
+  **County line (NY4I, same day):** the dialog is a check-box list -- up to
+  the contest's own CountyLineCountiesMax (California states 4; NY4I: "CAQP
+  allows 4 for example"), so a county-line rover checks several. Each QSO
+  stores every county it was sent from.
+
+- **Q54** HamScore's one-QSO Cabrillo line writes Winter Field Day's FM
+  contacts as `FM`; the Cabrillo file writes `PH`. Should HamScore ask the
+  contest too? *Recommended: yes* -- one rule for both; it changes what
+  HamScore receives for WFD FM QSOs.
+  **Proposed answer:** SETTLED BY Q52's ruling (the Cabrillo form is the
+  contest class's own definition): HamScore's one-QSO Cabrillo line asks the
+  contest, as the file does, so WFD FM goes as `PH` in both.
+  **Answer:** (NY4I, 2026-10-16) *"FM is a valid Cabrillo mode
+  (https://wwrof.org/cabrillo/cabrillo-qso-data/). The WFD rules also state:
+  The mode should be one of the valid Cabrillo modes. CW, PH, FM, RY, DG. It
+  is preferred that you use RY or DG. So I am not sure what is in doubt."*
+  What was in doubt was which of the two spellings is right, and the proposal
+  picked the wrong one. So the PROPOSED ANSWER IS REVERSED: Winter Field Day
+  writes an FM contact as `FM`, in the Cabrillo file and in HamScore alike.
+  The class's `CabrilloModeString` override (FM written as PH, carried from
+  D7's PostUnit) is deleted, so WFD takes the base's spelling. Scoring is
+  untouched: an FM contact still scores as phone (1 point) -- that is the
+  points rule, not the mode column. HamScore already writes `FM`, so the two
+  agree once the override goes; it should still ask the contest's
+  `CabrilloModeString` rather than keep its own map, so they cannot drift
+  again. Corpus: `winter_fd_2025_w4ta` holds one FM QSO, so its `ref.cbr`
+  (D7-produced, never regenerated) will differ on that one line; it becomes a
+  recorded known divergence citing this answer. Not built.
+
+- **Q61** CATEGORY-POWER is now one value (design 7.6). Four other Cabrillo
+  categories have the same two-store shape: ASSISTED, BAND, MODE and OPERATOR
+  start from the setting the New Contest dialog wrote, but the summary window
+  writes MODE to a copy of its own and the other three nowhere, so a headless
+  export reads a stale or empty copy. Make them one value each, the same way
+  (no rescore -- no contest scores by them)?
+  **Proposed answer:** SETTLED BY "a contest is its SQLite file" and 7.6: each
+  of ASSISTED, BAND, MODE and OPERATOR is ONE value, set at New Contest time
+  and stored in the contest database, which the summary window edits and a
+  headless export reads -- no copies.
+  **Answer:** (NY4I, 2026-10-16) *"Yes."* As proposed: ASSISTED, BAND, MODE
+  and OPERATOR are one value each, set at New Contest time and stored in the
+  contest database, which the summary window edits and a headless export
+  reads. Not built.
+  **Found by the database column audit (2026-10-16), both confirmed by reading
+  the code -- neither has been run:** (1) the declaration is written on EVERY
+  open, not once: `uLogStore.pas:1025` calls `SetEntryDeclaration`
+  unconditionally, against its own "READ ONCE, WHEN THE LOG IS MADE" comment
+  (~415). Harmless only because nothing reads the columns back yet; the moment
+  Q61 reads them, every open would overwrite the operator's edits with the
+  live settings. It moves under the new-log branch as part of Q61. (2)
+  `qso.exchange_sent` is NULLed by every update: it is in
+  `QSO_COLUMNS_UPDATABLE`, `BindUpdate` binds it from
+  `FSentExchangeForNextSave`, and that is cleared after every save
+  (`uLogRepository.pas:1926`) and set again only by the live save and the
+  rebuild path -- so Edit QSO, the rescore and a network update each erase it.
+  Also latent (nothing reads the column). Fix: take it out of the updatable
+  list, as `qso_set_id` already was for the same reason, with a pin that an
+  edit keeps it.
 
 - **Q22** PACC: the row says `RSTAndQSONumberOrDomesticQTHExchange`, but every PACC
   session runs `RSTDomesticQTHExchange`. Which is the contest's exchange?
@@ -555,7 +768,10 @@ closes it; anything else reopens it.
   and sent RST + its province (D7 `PostUnit.PAS:3372`,
   `uCabrilloExchange.pas:474`). So a Dutch entrant's log today carries a
   serial where the province belongs. Fix: the sent column chooses by station
-  as `DescribeSession` does, with a PA variant added to the pins. Not built.
+  as `DescribeSession` does, with a PA variant added to the pins. **Built
+  2026-10-16:** `TContestPACC.IsDutchEntrant` (the one station test) chooses
+  the sent column; the PA rows of `uTestCabrilloColumns` and
+  `uTestADIFSentExchange` pin province, or serial when MY STATE is empty.
 
 - **Q16** Sprint SSB is its own contest, but its ADIF/Cabrillo name is
   `NA-SPRINT-SSB` and its friendly name "North American Sprint, SSB". Change to the
@@ -577,7 +793,9 @@ closes it; anything else reopens it.
   undercounts; the class gets the North American DX multiplier the NA Sprint
   CW class already has. The sponsor counts 13 Canadian multipliers with NT and
   NU separate, and `naqp.dom` joins them as one (12): that is Q88's file
-  question, which now covers the SSB Sprint too.
+  question, which now covers the SSB Sprint too. **Built 2026-10-16:** the
+  names, and the class's own `HasDXMultiplier` / `DXMultiplierKey` (North
+  America but K, VE, KL and KH6; once per contest -- no `cfMultByBand`).
 
 - **Q15** NRAU-Baltic: the contest calendar lists Cabrillo names `NRAU-CW` /
   `NRAU-SSB`; TR4W sends `NRAU-BALTIC-CW` / `NRAU-BALTIC-SSB`. Which is right?
@@ -595,7 +813,7 @@ closes it; anything else reopens it.
   separate contests (the sponsor also lists combined CW+SSB results, which
   needs no third class). WA7BNM's page contradicts itself (0630-0830 and
   0900-1100 for 2027 onward), so the sponsor's times stand. How a class stores
-  its schedule is Q99.
+  its schedule is Q99. **Names built 2026-10-16.**
 
 - **Q58** WRTC's row gives it IARU's friendly name, "IARU HF World
   Championship", so the two were identical lines in the drop-down. They now

@@ -28,7 +28,13 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   THE CABRILLO NAME IS A QUESTION FOR NY4I, NOT A DECISION MADE HERE. The
   contest calendar lists the Cabrillo names as NRAU-CW / NRAU-SSB, while TR4W
-  has always sent NRAU-BALTIC-CW / NRAU-BALTIC-SSB. Transcribed unchanged. *)
+  has always sent NRAU-BALTIC-CW / NRAU-BALTIC-SSB. Transcribed unchanged.
+
+  2026-10-16, Q15 (docs/CONTEST_FACTORY_OPEN_QUESTIONS.md): ANSWERED. NY4I --
+  use WA7BNM's name where it conflicts with TR4W's. The Cabrillo CONTEST:
+  name is now NRAU-CW (WA7BNM ref 220). The ADIF Contest_ID stays
+  NRAU-BALTIC-CW: that is the ADIF 3.1.6 enumeration's name, and ADIF import
+  matches it. TR4W has no Cabrillo import, so no older log is orphaned. *)
 unit uContestNRAUBalticCW;
 
 {$I tr4w.inc}
@@ -60,9 +66,9 @@ end;
 
 function TContestNRAUBalticCW.GetCabrilloName: string;
 begin
-   (* The row's CABName is blank; this is the enum's spelling it resolves
-      to. *)
-   Result := 'NRAU-BALTIC-CW';
+   (* The row's CABName was blank (the enum's spelling, NRAU-BALTIC-CW);
+      WA7BNM's name since Q15, 2026-10-16. *)
+   Result := 'NRAU-CW';
 end;
 
 function TContestNRAUBalticCW.GetADIFContestId: string;

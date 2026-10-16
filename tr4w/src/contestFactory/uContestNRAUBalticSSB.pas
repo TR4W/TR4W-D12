@@ -27,7 +27,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   enum's spelling, stated as such -- never ''.
 
   The Cabrillo name question (calendar NRAU-SSB, TR4W NRAU-BALTIC-SSB) is
-  recorded in uContestNRAUBalticCW's header and is NY4I's. *)
+  recorded in uContestNRAUBalticCW's header and is NY4I's.
+
+  2026-10-16, Q15 (docs/CONTEST_FACTORY_OPEN_QUESTIONS.md): ANSWERED. NY4I --
+  *"it should be NRAU-SSB for the SSB contest"* (WA7BNM's name, ref 222). The
+  ADIF Contest_ID stays NRAU-BALTIC-SSB, the ADIF 3.1.6 enumeration's name,
+  which ADIF import matches. *)
 unit uContestNRAUBalticSSB;
 
 {$I tr4w.inc}
@@ -59,9 +64,9 @@ end;
 
 function TContestNRAUBalticSSB.GetCabrilloName: string;
 begin
-   (* The row's CABName is blank; this is the enum's spelling it resolves
-      to. *)
-   Result := 'NRAU-BALTIC-SSB';
+   (* The row's CABName was blank (the enum's spelling, NRAU-BALTIC-SSB);
+      WA7BNM's name since Q15, 2026-10-16. *)
+   Result := 'NRAU-SSB';
 end;
 
 function TContestNRAUBalticSSB.GetADIFContestId: string;

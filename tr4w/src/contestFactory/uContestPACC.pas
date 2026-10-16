@@ -56,7 +56,20 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   The row's own AE is transcribed unchanged. M7a moved the arm into
   DescribeSession as it stood: a PA station runs the row's exchange and
   everyone else RSTDomesticQTHExchange -- the matrix has no PA variant, so
-  only the second is pinned there. *)
+  only the second is pinned there.
+
+  2026-10-16, Q22 (docs/CONTEST_FACTORY_OPEN_QUESTIONS.md): ANSWERED, and a
+  DEFECT FIXED. Both exchanges are right, one per station (PACC 2026 rules
+  6 and 7.1): a non-Dutch station sends RST + serial, a Dutch one RST + its
+  province. The sent column above wrote OUR SERIAL at every station; D7 did
+  that only in the RSTDomesticQTHExchange arm (non-PA). A PA entrant took
+  the OR-exchange arm -- RST + MY STATE, or RST + serial when MY STATE is
+  empty (D7 PostUnit.PAS:3372, uCabrilloExchange.pas:474). So the sent
+  column now chooses by station, through IsDutchEntrant -- the test
+  DescribeSession makes on aStation, asked of the station this object
+  holds (the exporters ask ActiveContest's object, PostUnit.ExchangeContest,
+  so it carries the entrant). A Dutch entrant's log had carried a serial
+  where its province belongs. *)
 unit uContestPACC;
 
 {$I tr4w.inc}
@@ -68,6 +81,12 @@ uses
 
 type
    TContestPACC = class(TContestBase)
+   private
+      (* THE ONE STATION TEST -- a Dutch entrant (MY COUNTRY 'PA'), exactly
+         as DescribeSession tests aStation. Every answer that moves with the
+         entrant asks it: the DX multiplier, the received format and column,
+         the several-QTH rule and, since Q22 (2026-10-16), the sent column. *)
+      function IsDutchEntrant: boolean;
    protected
       (* PROTECTED, MATCHING THE BASE -- callers use the properties,
          descendants override the getters. Every getter below states
@@ -133,6 +152,7 @@ implementation
 
 uses
    uCabrilloExchange,
+   uADIFExchange,
    uExchangeFields,
    uCallSignRoutines,
    utils_text,
@@ -144,25 +164,49 @@ begin
    aQso.QSOPoints := FixedModePoints(aQso.Mode, 1, 1, 1);
 end;
 
-(* RST AND OUR SERIAL, in RSTDomesticQTHExchange's state column. *)
+function TContestPACC.IsDutchEntrant: boolean;
+begin
+   Result := Station.MyCountry = 'PA';
+end;
+
+(* THE SENT COLUMN, BY STATION -- Q22, 2026-10-16 (see the header).
+   A Dutch entrant: RST and its province (MY STATE as this session sends
+   it), or RST and the serial when that is empty -- D7's
+   RSTAndQSONumberOrDomesticQTHExchange arm, which the shared helper
+   transcribes. Anyone else: RST and OUR SERIAL in RSTDomesticQTHExchange's
+   state column, as before. *)
 function TContestPACC.GetCabrilloSentExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange;
                                               const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := Format('%-3s %-7s', [aCtx.RSTSent, IntToStr(aQso.NumberSent)]);
+   if IsDutchEntrant then
+      begin
+      Result := CabrilloSentRSTStateOrQSONumber(aMy, aQso, aCtx);
+      end
+   else
+      begin
+      Result := Format('%-3s %-7s', [aCtx.RSTSent, IntToStr(aQso.NumberSent)]);
+      end;
 end;
 
 function TContestPACC.GetADIFSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange): string;
 begin
-   Result := Format('%-3d %-7s', [aQso.RSTSent, IntToStr(aQso.NumberSent)]);
+   if IsDutchEntrant then
+      begin
+      Result := ADIFSentRSTStateOrQSONumber(aMy, aQso);
+      end
+   else
+      begin
+      Result := Format('%-3d %-7s', [aQso.RSTSent, IntToStr(aQso.NumberSent)]);
+      end;
 end;
 
 function TContestPACC.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                                   const aQso: ContestExchange;
                                                   const aCtx: TCabrilloQSOContext): string;
 begin
-   if HasDXMultiplier then
+   if IsDutchEntrant then
       begin
       Result := CabrilloReceivedRSTQTHOrQSONumber(aMy, aQso, aCtx);
       end
@@ -239,7 +283,7 @@ function TContestPACC.ParseReceivedExchangeFormat(const aText: string;
                                                   aParsers: TExchangeParsers;
                                                   var aExch: ContestExchange): boolean;
 begin
-   if HasDXMultiplier then
+   if IsDutchEntrant then
       begin
       Result := aParsers.ParseRSTAndQSONumberOrDomesticQTH(aText, aExch);
       end
@@ -344,10 +388,11 @@ end;
    2026-10-14. Yes for a Dutch entrant; none for anyone else. This is the
    station test the session's DX kind was chosen by (the trait, then
    DescribeSession) until that kind was deleted; DXMultiplierKey asks it, so
-   the two cannot disagree. *)
+   the two cannot disagree. Since Q22 (2026-10-16) the test itself is
+   IsDutchEntrant, which the exchange answers ask too. *)
 function TContestPACC.HasDXMultiplier: boolean;
 begin
-   Result := Station.MyCountry = 'PA';
+   Result := IsDutchEntrant;
 end;
 
 (* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
@@ -409,7 +454,7 @@ end;
    TContestBase.LogsSeveralQTHsFromOneEntry. *)
 function TContestPACC.LogsSeveralQTHsFromOneEntry: boolean;
 begin
-   Result := not HasDXMultiplier;
+   Result := not IsDutchEntrant;
 end;
 
 initialization

@@ -56,6 +56,44 @@
 general_qso_2026_w1aw4  event-source: sent name missing (MyName '' under /EXPORT; D7 sent TOM)
 
 # ---------------------------------------------------------------------------
+# 2026-10-16 -- winter_fd_2025_w4ta's Cabrillo: ONE LINE, PINNED, NOT A ROW HERE.
+#
+# Q54 (NY4I, docs/CONTEST_FACTORY_OPEN_QUESTIONS.md): Winter Field Day writes
+# an FM contact as FM, not PH -- FM is a valid Cabrillo mode and the WFD rules
+# list it. D7's ref.cbr wrote PH, and references are never regenerated, so the
+# set's one FM QSO (AI4RJ, 2 m, 1925Z) now differs on that one line.
+#
+# A ROW HERE WOULD HAVE EXCUSED TOO MUCH. A slug row makes EVERY difference in
+# BOTH of the set's artifacts KNOWN -- right for general_qso, whose cause has no
+# known edge, and wrong for a ruled change of exactly one line. Listed here,
+# winter_fd's ADIF and every other Cabrillo line would have stopped being
+# compared. So the difference is pinned instead, line for line, in
+#
+#     winter_fd_2025_w4ta/known.cbr.diff
+#
+# which run-golden-diff.sh and test-adif-roundtrip.sh read, through the one
+# matcher both source (known-pin-lib.sh): the artifact is KNOWN only when its changed
+# lines are exactly the pinned ones (CLAIMED-SCORE included -- it must still be
+# 42364), a FAIL when they are anything else, and a FAIL when the difference
+# has gone and the pin is stale. winter_fd's ADIF is compared as before.
+#
+# ---------------------------------------------------------------------------
+# 2026-10-16 -- michigan_qp_2026_ny4i's ADIF: FOUR RECORDS, PINNED THE SAME WAY.
+#
+# Q76/Q89 (NY4I): ADIF STATE is the WORKED station's ("if you write STATE in
+# ADIF, that is the state of the worked station"; the entrant's is MY_STATE).
+# D7 wrote the party's host state on every QSO carrying a QTH, so this log's
+# four out-of-state QSOs said STATE:MI for stations in DC, MD, VA and OH. They
+# say their own state now; the four record lines are pinned in
+#
+#     michigan_qp_2026_ny4i/known.adi.diff
+#
+# florida_qp_2026_ny4i is NOT affected: its three QSOs are all Florida
+# counties, which still write STATE:FL.
+#
+# Expected baseline after Q54 and Q76: 22 passed, 0 failed, 4 known-divergence.
+
+# ---------------------------------------------------------------------------
 # 2026-09-14 -- winter_fd's ADIF contest: RULED AND CLOSED. NOT A DIVERGENCE.
 #
 # NY4I, 2026-09-14: "eliminate the divergence." Of the two ways to close it

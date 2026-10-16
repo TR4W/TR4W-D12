@@ -133,6 +133,14 @@ type
    public
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
+   public
+      (* THE WORKED STATION'S ADIF STATE -- see TContestBase.ADIFCountyState
+         and ADIFWorkedStationState (Q76/Q89, NY4I 2026-10-16). A county key
+         of seven_cty.dom is five letters, the state first (Azaph); the
+         county's state is those two letters when they are one of the eight
+         7th-area states. No CNTY: WritesADIFCounty stays False, as before. *)
+      function ADIFCountyState(const aQso: ContestExchange): string; override;
+      function ADIFWorkedStationState(const aQso: ContestExchange): string; override;
       (* THE ROVER COUNTY -- see TContestBase.StripsRoverCountyFromCall (M11 S7)
          and SplitsRoverCallOnExport (Q90/Q94). *)
       function StripsRoverCountyFromCall: boolean; override;
@@ -148,6 +156,11 @@ type
 implementation
 
 uses
+   (* FIRST, so every later unit wins a shared name: SysUtils for
+      UpperCase, uADIF for ADIFPartyQTHKey and ADIFStateOfPartyQSO
+      (Q76/Q89). *)
+   SysUtils,
+   uADIF,
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
@@ -421,6 +434,33 @@ end;
 function TContestSevenQP.LogsSeveralQTHsFromOneEntry: boolean;
 begin
    Result := not CountsDXMultiplier;
+end;
+
+const
+   (* THE EIGHT 7TH-AREA STATES -- the first two letters of a seven_cty.dom
+      county key. This class's own copy (design 1.4); IN7QPNE keeps its. *)
+   SEVENQP_COUNTY_STATES = ' AZ ID MT NV OR UT WA WY ';
+
+function TContestSevenQP.ADIFCountyState(const aQso: ContestExchange): string;
+var
+   key: string;
+   state: string;
+begin
+   Result := '';
+   key := UpperCase(ADIFPartyQTHKey(aQso));
+   if Length(key) = 5 then
+      begin
+      state := Copy(key, 1, 2);
+      if Pos(' ' + state + ' ', SEVENQP_COUNTY_STATES) > 0 then
+         begin
+         Result := state;
+         end;
+      end;
+end;
+
+function TContestSevenQP.ADIFWorkedStationState(const aQso: ContestExchange): string;
+begin
+   Result := ADIFStateOfPartyQSO(ADIFCountyState(aQso), aQso);
 end;
 
 initialization

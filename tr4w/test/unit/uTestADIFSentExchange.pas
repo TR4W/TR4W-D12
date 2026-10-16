@@ -245,7 +245,8 @@ function PinnedSent(aContest: ContestType; aStation: TPinStation;
                     aVariant: integer): string;
 begin
    (* THE JIDX: a Japanese entrant receives a zone, anyone else a
-      prefecture -- the one pair whose STX_STRING moves with the station. *)
+      prefecture -- the one pair whose STX_STRING moves with the station.
+      PACC moves with it too since Q22 (2026-10-16); its rows are below. *)
    if aContest in [JIDXCW, JIDXSSB] then
       begin
       if aStation = psJA then
@@ -462,10 +463,26 @@ begin
          end;
       PACC:
          begin
-         Result := Pick(aVariant, '599 7      ',
-                     '59  123    ',
-                     '599 4567   ',
-                     '599 7      ');
+         if aStation = psPA then
+            begin
+            (* A DUTCH ENTRANT SENDS RST AND ITS PROVINCE, or RST and the
+               serial when MY STATE is empty -- Q22 (NY4I, 2026-10-16,
+               docs/CONTEST_FACTORY_OPEN_QUESTIONS.md), D7's
+               RSTAndQSONumberOrDomesticQTHExchange arm. It was the serial
+               below at every station until then: the defect. Changed by
+               hand. *)
+            Result := Pick(aVariant, '599 FL     ',
+                        '59   123   ',
+                        '599 ABCDEFGHIJKLMNOPQRST',
+                        '599 TRC    ');
+            end
+         else
+            begin
+            Result := Pick(aVariant, '599 7      ',
+                        '59  123    ',
+                        '599 4567   ',
+                        '599 7      ');
+            end;
          end;
       POTA:
          begin

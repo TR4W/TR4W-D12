@@ -52,7 +52,23 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   CW class reproduces for itself. postunit's no-op arm that named this
   contest beside the NA Sprints (inventory D6) was deleted at M4. FCONTEST's
   set-up arm is this class's DescribeSession since M7a; uNewContest still
-  names it (M9). *)
+  names it (M9).
+
+  2026-10-16, Q16 (docs/CONTEST_FACTORY_OPEN_QUESTIONS.md): ANSWERED by NY4I
+  against the sponsor's rules (https://ssbsprint.com/rules/).
+    * The display and friendly name are the sponsor's, "North American SSB
+      Sprint" (the row above said "North American Sprint, SSB"). The Cabrillo
+      and ADIF name stay NA-SPRINT-SSB: WA7BNM (ref 242) gives that Cabrillo
+      name, the ADIF enumeration lists it, and the sponsor names none.
+    * The sponsor's rule 10 counts, besides each state and DC (KL7 and KH6
+      count as states) and each Canadian province or territory, EACH NORTH
+      AMERICAN COUNTRY OTHER THAN W AND VE, by the CQ WW list. The row said
+      XM: NoDXMults, so TR4W undercounted. This class now states that DX
+      multiplier itself (HasDXMultiplier, DXMultiplierKey) -- the rule the NA
+      Sprint CW class states, copied and owned here (design 1.4). Multipliers
+      count once per contest, as before: GetFlags states no cfMultByBand. The
+      Canadian count (13 by the sponsor, 12 in naqp.dom) is Q88's, not this
+      class's. *)
 unit uContestSprintSSB;
 
 {$I tr4w.inc}
@@ -112,6 +128,13 @@ type
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
+   public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier. Q16, 2026-10-16. *)
+      function HasDXMultiplier: boolean; override;
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey. Q16. *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
    end;
 
 implementation
@@ -120,6 +143,7 @@ uses
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
+   uDXMultiplierKey,
    uContestRegistry, uContestFixedPoints,
    uTR4WStrings;
 
@@ -130,7 +154,9 @@ end;
 
 function TContestSprintSSB.GetDisplayName: string;
 begin
-   Result := 'North American Sprint, SSB';
+   (* The sponsor's name since Q16, 2026-10-16 (was the row's "North American
+      Sprint, SSB"). *)
+   Result := 'North American SSB Sprint';
 end;
 
 function TContestSprintSSB.GetCabrilloName: string;
@@ -165,7 +191,8 @@ end;
 
 function TContestSprintSSB.GetFriendlyName: string;
 begin
-   Result := 'North American Sprint, SSB';
+   (* The sponsor's name since Q16, 2026-10-16. *)
+   Result := 'North American SSB Sprint';
 end;
 
 function TContestSprintSSB.GetInitialExchangeKind: InitialExchangeType;
@@ -286,6 +313,32 @@ end;
 function TContestSprintSSB.UsesDomesticFile: boolean;
 begin
    Result := True;
+end;
+
+(* A DX MULTIPLIER AT EVERY STATION -- the sponsor's rule 10 (Q16,
+   2026-10-16). Every entrant counts the same multipliers. *)
+function TContestSprintSSB.HasDXMultiplier: boolean;
+begin
+   Result := True;
+end;
+
+(* THE DX MULTIPLIER KEY: each North American country other than W and VE,
+   by the CQ WW list (rule 10). KL7 and KH6 count as STATES, so neither is a
+   country here: IsNorthAmericanDXCountry excludes K, VE and KL by name, and
+   KH6 only because CTY.DAT puts Hawaii in Oceania. The sponsor's rule names
+   KH6, so this class says so itself rather than leaning on the continent.
+   Copied from the NA Sprint CW's rule and owned here (design 1.4). *)
+function TContestSprintSSB.DXMultiplierKey(const aQso: ContestExchange;
+                                           out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if (IsNorthAmericanDXCountry(aQso.QTH.CountryID, aQso.QTH.Continent)) and
+      (aQso.QTH.CountryID <> 'KH6')                                       then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
 end;
 
 initialization

@@ -143,7 +143,21 @@ strip_tags() {
    fi
 }
 
-pass=0; fail=0; skip=0
+# A KNOWN DIFFERENCE PINNED LINE FOR LINE -- <set>/known.adi.diff, the SAME
+# file and the SAME meaning as run-golden-diff.sh, through the one shared
+# implementation (known-pin-lib.sh). The round trip imports ref.adi and
+# exports it, so where our export is ruled to differ from D7's (michigan's
+# four out-of-state STATE lines, Q76) it differs here in the same lines.
+#
+# TWO THINGS ARE HANDLED EXPLICITLY. This script compares a NORMALISED view
+# (records only; per-set tags and, where the reference has none,
+# APP_TR4W_ID removed from both sides), so the same normaliser is applied to
+# the pinned lines before matching -- pin_matches' filter. And its own diff
+# runs candidate-first for the failure listing; the pin is matched against a
+# reference-first unified diff, the orientation the pin is written in.
+. "$CORPUS/known-pin-lib.sh"
+
+pass=0; fail=0; skip=0; known=0
 for d in "$CORPUS"/*/; do
    name=$(basename "$d")
    [ -n "$ONLY" ] && [ "$ONLY" != "$name" ] && continue
@@ -191,12 +205,31 @@ for d in "$CORPUS"/*/; do
    records_only "$out"       | strip_tags "$drop" > "$WORK.cand.txt"
    records_only "$d/ref.adi" | strip_tags "$drop" > "$WORK.ref.txt"
 
+   pin="$d/known.adi.diff"
+   # The normaliser this set's view went through, for the pinned lines.
+   view_filter() { strip_tags "$drop"; }
+
    if diff -q "$WORK.cand.txt" "$WORK.ref.txt" >/dev/null 2>&1; then
-      n=$(grep -ci '<eor>' "$WORK.ref.txt")
-      printf "  PASS  %-28s %s record(s)%s\n" "$name" "$n" "$note"
-      pass=$((pass+1))
+      if [ -f "$pin" ]; then
+         # The pinned difference is GONE -- a stale pin fails, or it would
+         # excuse the difference coming back.
+         printf "  FAIL  %-28s identical, but known.adi.diff still pins a difference -- remove it\n" "$name"
+         fail=$((fail+1))
+      else
+         n=$(grep -ci '<eor>' "$WORK.ref.txt")
+         printf "  PASS  %-28s %s record(s)%s\n" "$name" "$n" "$note"
+         pass=$((pass+1))
+      fi
+   elif [ -f "$pin" ] &&
+        pin_matches "$pin" "$(diff -u "$WORK.ref.txt" "$WORK.cand.txt")" view_filter; then
+      printf "  KNOWN %-28s %s\n" "$name" "$(pin_reason "$pin")"
+      known=$((known+1))
    else
-      printf "  FAIL  %-28s records differ:\n" "$name"
+      if [ -f "$pin" ]; then
+         printf "  FAIL  %-28s records differ beyond known.adi.diff:\n" "$name"
+      else
+         printf "  FAIL  %-28s records differ:\n" "$name"
+      fi
       diff "$WORK.cand.txt" "$WORK.ref.txt" | head -6 | sed 's/^/          /'
       fail=$((fail+1))
    fi
@@ -205,5 +238,5 @@ done
 rm -f "$WORK".* ./*.LOG "$EXE"
 
 echo
-echo "=== $pass passed, $fail failed, $skip skipped ==="
+echo "=== $pass passed, $fail failed, $known known-divergence, $skip skipped ==="
 [ "$fail" -eq 0 ] || exit 1

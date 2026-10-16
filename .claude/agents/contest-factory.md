@@ -218,8 +218,8 @@ the target shape, the M-step migration order and the open questions.
   `CountryMode: CountryModeType` (base CQ -- the North American kind was
   never ARRL) and `ListsRemainingDXCountry(aCountryID, aContinent)` (base
   True; WAE and UBA only -- the window's old filters, not the DX rule, F7).
-  78 contests in 76 classes state a key (CQ WW and ARRL DX once, on their
-  family bases); 35 classes answer ARRL for some entrant. A rule that
+  79 contests in 77 classes state a key (CQ WW and ARRL DX once, on their
+  family bases; the SSB Sprint joined at Q16, 2026-10-16); 35 classes answer ARRL for some entrant. A rule that
   depends on the entrant asks `Station` as its `DescribeSession` asks
   `aStation`; where the key and the list both ask, ONE private predicate
   holds the test (`CountsDXMultiplier`, WAE's `CountsEuropeanCountries`,
@@ -230,12 +230,14 @@ the target shape, the M-step migration order and the open questions.
   PACC's split are written in the class. WAE's `CombineWithMultipliers`
   asks its station (`TScoreTotals.SessionDXMult` is deleted). Where the
   entrant decides, `HasDXMultiplier` returns the SAME private predicate the
-  key and the list ask (the Croatian, WAG and PACC hold the test in
-  `HasDXMultiplier` and their keys ask it), so the answers cannot disagree.
+  key and the list ask (the Croatian and WAG hold the test in
+  `HasDXMultiplier` and their keys ask it; PACC's is the private
+  `IsDutchEntrant`, which its DX answers, received AND sent exchange columns
+  ask since Q22), so the answers cannot disagree.
   A NEW DX contest overrides `HasDXMultiplier` AND `DXMultiplierKey` (and
   `CountryMode` if it counts DXCC only), adds rows to
   `uTestDXMultiplierKey`'s `KEY_PINS` (and `MODE_PINS`) and adds itself to
-  its `HAS_DX` sets: the counts (78 keyed and True somewhere, 36 ARRL, the
+  its `HAS_DX` sets: the counts (79 keyed and True somewhere, 36 ARRL, the
   per-station `HAS_DX_COUNT`) then change by hand, with the reason.
   `Test_EveryContestHasItsPinnedDXMultiplier` fails on a missing answer and
   on a key given where `HasDXMultiplier` is False. `LOGEDIT.DoingDXMults`
@@ -470,10 +472,18 @@ the target shape, the M-step migration order and the open questions.
   the enum's spelling), so a value a class does not state is NEUTRAL, not its
   row; `VC.USQSOPartyStateName` and `QSOPartyAreaName` are deleted, and the
   outside readers (MainUnit ERMAK, uHamScore RTC, `postunit.ZoneSentForThisContest`,
-  `/MATRIXLIST`, `uADIF.GetStateForContest`) ask the class. ADIF STATE asks
-  `QSOPartyArea` with a two-letter test, NOT `HostState` -- BCQP states 'BC'
-  but its area is 'VE7', and HostState would add STATE to its export (an open
-  question for NY4I, plan S6). **THE TABLES ARE DELETED (M10 S8,
+  `/MATRIXLIST`) ask the class. **ADIF STATE IS THE WORKED STATION'S, PER
+  QSO (Q76/Q89, NY4I 2026-10-16)** -- `TContestBase.ADIFWorkedStationState`
+  (base `''`), through `uADIF.GetADIFStateForQSO`: a party county gives its
+  state (`ADIFCountyState` -- HostState on `TContestStateQSOPartyBase` for a
+  key that is not two letters, BC's `BC` included; the 7QP, NEQP and IN7QPNE
+  read their own key spellings), an out-of-state station's state or a VE's
+  province is written as itself when `uADIF.IsADIFPrimarySubdivision` allows
+  it for the station's country, DX gets none (`uADIF.ADIFStateOfPartyQSO`
+  composes it). CNTY: `WritesADIFCounty`, every state party but BC. D7's
+  host-state-on-every-QSO and `GetStateForContest` are gone; a new QSO party
+  states both answers and joins `uTestContestExport`'s pins (the count 23
+  changes by hand). **THE TABLES ARE DELETED (M10 S8,
   2026-10-14)** -- `ContestsArray`, `ContestsBooleanArray`, `QSOParties`,
   `TContestInfo` and the `ci*`/`*_BIT` constants; `ContestTypeSA` stays. The
   county-line import asks the party class (S7); the rover split on ADIF

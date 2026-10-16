@@ -299,13 +299,40 @@ function ExportADIFToString(const records: TContestExchangeArray;
                             const programVersion: string;
                             tailEmitter: TContestTailEmitter): string;
 
-// Return the host state's 2-letter postal code for the 13 known
-// single-state QSO parties (CA/FL/MI/MN/MO/NC/OH/TX/WI/TN/CO/PA/IN).
-// Returns '' for any other contest.  Used by EmitADIFRecord to emit
-// STATE when QTHString carries a county code instead of a 2-letter
-// state code.  Originally lived in PostUnit; moved here so it is
-// reachable from both uADIF (export) and the test runner.
-function GetStateForContest(c: ContestType): string;
+// Return the ADIF STATE of the WORKED station of rec -- the class of
+// rec's contest decides (TContestBase.ADIFWorkedStationState; '' for
+// every contest but the QSO parties).  Used by EmitADIFRecord.  Was
+// GetStateForContest(c), which wrote the PARTY's state on every QSO --
+// D7's rule, fixed at Q76/Q89 (NY4I, 2026-10-16).
+function GetADIFStateForQSO(const rec: ContestExchange): string;
+
+// ADIF's Primary Administrative Subdivision enumeration, for the four
+// entities a North American QSO party hears from: is aCode (upper case)
+// a STATE value ADIF allows for the CTY country aCountryID?
+//   'K'   USA (DXCC 291)      the 48 contiguous states and DC
+//   'KL'  Alaska (DXCC 6)     AK
+//   'KH6' Hawaii (DXCC 110)   HI
+//   'VE'  Canada (DXCC 1)     the 13 provinces and territories
+// Any other country, or an unknown one, answers False: no value is
+// invented for it.
+function IsADIFPrimarySubdivision(const aCountryID, aCode: string): boolean;
+
+// THE QTH A QSO PARTY JUDGES A QSO BY: the domestic table's resolved key
+// (DomesticQTH -- 'Pin', 'AddVT', 'Md') when the record has one, else the
+// QTH as logged (QTHString), trimmed.  The key, not the typed text, because
+// an alias can be any length -- 'CON' is Connecticut, 'AD' an Addison
+// County, VT -- while every county key in target/dom is longer than two
+// letters and every state or province key is exactly two.
+function ADIFPartyQTHKey(const aQso: ContestExchange): string;
+
+// THE ADIF STATE OF A QSO PARTY'S WORKED STATION (Q76/Q89): aCountyState
+// when the class found the QTH to be one of its counties (it says whose);
+// else the QTH itself when it is a primary subdivision ADIF allows for the
+// worked station's country (an out-of-state station's state, a VE's
+// province); else '' -- DX, or anything else.  The rule every party class
+// calls from its ADIFWorkedStationState.
+function ADIFStateOfPartyQSO(const aCountyState: string;
+                             const aQso: ContestExchange): string;
 
 // Build the RST-normalized SRX_STRING value: if ExchString already
 // starts with the literal RSTReceived (e.g. operator typed `599 HIL`),
@@ -1442,16 +1469,96 @@ end;
    states 'BC' while its area is 'VE7', so asking HostState would start
    writing STATE and CNTY on every BCQP QSO. That may well be right -- ADIF's
    STATE holds a Canadian province -- but it is a behaviour change, and it
-   is an open question for NY4I, not a side effect of removing a table. *)
-function GetStateForContest(c: ContestType): string;
-var
-   area: string;
+   is an open question for NY4I, not a side effect of removing a table.
+
+   NY4I ANSWERED IT (Q89, 2026-10-16): STATE yes, CNTY no. The same day
+   (Q76) he fixed the rule itself: "if you write STATE in ADIF,
+   that is the state of the worked station" (the entrant's is MY_STATE).
+   The function above wrote the HOST's state on EVERY QSO carrying a QTH --
+   D7's `if (stateForQP <> '') and (rec.QTHString <> '')` -- so a Michigan
+   log said STATE:MI for a station in DC. It is replaced by the class's
+   per-QSO answer, TContestBase.ADIFWorkedStationState: a host county gives
+   the host's state, an out-of-state station's own state or province is
+   written as itself when ADIF allows it for that country, and DX gets
+   none. GetStateForContest is deleted with the contest-level answer.
+   uTestContestExport.Test_ADIFStateIsTheWorkedStations pins it. *)
+function GetADIFStateForQSO(const rec: ContestExchange): string;
 begin
-   Result := '';
-   area := ContestIdentity(c).QSOPartyArea;
-   if Length(area) = 2 then
+   Result := ContestIdentity(rec.ceContest).ADIFWorkedStationState(rec);
+end;
+
+const
+   (* ADIF 3.1 Primary_Administrative_Subdivision, DXCC 291: the 48
+      contiguous states and the District of Columbia. Alaska and Hawaii are
+      entities of their own (6 and 110) and are NOT in this list. *)
+   ADIF_US_STATES =
+      ' AL AR AZ CA CO CT DC DE FL GA IA ID IL IN KS KY LA MA MD ME MI MN' +
+      ' MO MS MT NC ND NE NH NJ NM NV NY OH OK OR PA RI SC SD TN TX UT VA' +
+      ' VT WA WI WV WY ';
+
+   (* DXCC 1: the ten provinces and three territories. *)
+   ADIF_CANADIAN_PROVINCES =
+      ' AB BC MB NB NL NS NT NU ON PE QC SK YT ';
+
+(* True when aCode is one blank-separated word of aList (which is padded
+   with blanks at both ends). *)
+function IsCodeInList(const aCode: string; const aList: string): boolean;
+begin
+   Result := (Length(aCode) = 2) and (Pos(' ' + aCode + ' ', aList) > 0);
+end;
+
+function IsADIFPrimarySubdivision(const aCountryID, aCode: string): boolean;
+begin
+   if aCountryID = 'K' then
       begin
-      Result := area;
+      Result := IsCodeInList(aCode, ADIF_US_STATES);
+      end
+   else if aCountryID = 'KL' then
+      begin
+      Result := aCode = 'AK';
+      end
+   else if aCountryID = 'KH6' then
+      begin
+      Result := aCode = 'HI';
+      end
+   else if aCountryID = 'VE' then
+      begin
+      Result := IsCodeInList(aCode, ADIF_CANADIAN_PROVINCES);
+      end
+   else
+      begin
+      Result := False;
+      end;
+end;
+
+function ADIFPartyQTHKey(const aQso: ContestExchange): string;
+begin
+   Result := Trim(string(aQso.DomesticQTH));
+   if Result = '' then
+      begin
+      Result := Trim(string(aQso.QTHString));
+      end;
+end;
+
+function ADIFStateOfPartyQSO(const aCountyState: string;
+                             const aQso: ContestExchange): string;
+var
+   code: string;
+begin
+   if aCountyState <> '' then
+      begin
+      Result := aCountyState;
+      Exit;
+      end;
+
+   code := UpperCase(ADIFPartyQTHKey(aQso));
+   if IsADIFPrimarySubdivision(string(aQso.QTH.CountryID), code) then
+      begin
+      Result := code;
+      end
+   else
+      begin
+      Result := '';
       end;
 end;
 
@@ -1734,18 +1841,22 @@ begin
    // ResolveSRXString below is exported as a helper for the tail
    // emitter's RST-normalizing branch.
 
-   // STATE - only for single-state QSO parties, where the host state is
-   // known from the contest type and QTHString is a county code.
+   // STATE - the WORKED station's, and only where the QSO's contest is a
+   // QSO party that can say what it is (Q76/Q89, NY4I 2026-10-16): the
+   // host's state for a host county, the station's own state or province
+   // for an out-of-state QSO when ADIF allows that code for its country,
+   // none for DX.  Until then this wrote the HOST's state on every QSO.
    //
-   // We deliberately do NOT infer STATE from a bare 2-char QTHString.
-   // QTHString means different things per contest (an ARRL section, a
-   // zone, a serial, a name, ...), so a "2 letters => it's a state"
-   // heuristic mislabels section-based contests -- e.g. ARRL section
-   // 'EB' (East Bay) is not the state 'EB'.  Contest-specific STATE that
-   // must be derived (e.g. Field Day: section -> state) is emitted by the
-   // PostUnit tail emitter, which has the contest knowledge to do it
-   // correctly.  See Issue #1050.
-   stateForQP := GetStateForContest(rec.ceContest);
+   // We deliberately do NOT infer STATE from a bare 2-char QTHString in
+   // any other contest.  QTHString means different things per contest (an
+   // ARRL section, a zone, a serial, a name, ...), so a "2 letters => it's
+   // a state" heuristic mislabels section-based contests -- e.g. ARRL
+   // section 'EB' (East Bay) is not the state 'EB'.  A party's QTH IS a
+   // county, state or province, which is why only the party classes
+   // answer.  Contest-specific STATE that must be derived (e.g. Field Day:
+   // section -> state) is emitted by the PostUnit tail emitter.  See
+   // Issue #1050.
+   stateForQP := GetADIFStateForQSO(rec);
    if (stateForQP <> '') and (rec.QTHString <> '') then
       begin
       Result := Result + EmitADIFField('STATE', stateForQP);

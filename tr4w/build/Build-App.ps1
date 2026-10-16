@@ -382,7 +382,11 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # fallback assigned GetRussiaOblastID's string to a ShortString; it is the
 # contest's InitialExchangeFromCall now, converted once and explicitly.
 # Measured by the full build.
-$NARROW_CEILING = 1250
+# 1250 -> 1249, 2026-10-16: Q54 -- uCabrillo's one-QSO mode column assigned
+# FormatCabrilloMode's string to an AnsiString; it asks the contest's
+# CabrilloModeString now, converted once and explicitly. Measured by the
+# full build.
+$NARROW_CEILING = 1249
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

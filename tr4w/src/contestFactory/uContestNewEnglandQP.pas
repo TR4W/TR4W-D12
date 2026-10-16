@@ -137,6 +137,14 @@ type
       function SplitsRoverCallOnExport: boolean; override;
       (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
       function LogsSeveralQTHsFromOneEntry: boolean; override;
+      (* THE WORKED STATION'S ADIF STATE -- see TContestBase.ADIFCountyState
+         and ADIFWorkedStationState (Q76/Q89, NY4I 2026-10-16). Both of this
+         contest's county files (NEQSO, NEQSOW1) key a county five letters,
+         the county first and the state LAST (AndME, AddVT); in NEQSOW1 the
+         typed alias is shorter (AD), which is why the key is read, not the
+         text. No CNTY: WritesADIFCounty stays False, as before. *)
+      function ADIFCountyState(const aQso: ContestExchange): string; override;
+      function ADIFWorkedStationState(const aQso: ContestExchange): string; override;
    public
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
@@ -146,6 +154,11 @@ type
 implementation
 
 uses
+   (* FIRST, so every later unit wins a shared name: SysUtils for
+      UpperCase, uADIF for ADIFPartyQTHKey and ADIFStateOfPartyQSO
+      (Q76/Q89). *)
+   SysUtils,
+   uADIF,
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
@@ -432,6 +445,33 @@ end;
 function TContestNewEnglandQP.LogsSeveralQTHsFromOneEntry: boolean;
 begin
    Result := not CountsDXMultiplier;
+end;
+
+const
+   (* THE SIX NEW ENGLAND STATES -- the last two letters of a county key of
+      NEQSO / NEQSOW1. This class's own copy (design 1.4). *)
+   NEQP_COUNTY_STATES = ' CT MA ME NH RI VT ';
+
+function TContestNewEnglandQP.ADIFCountyState(const aQso: ContestExchange): string;
+var
+   key: string;
+   state: string;
+begin
+   Result := '';
+   key := UpperCase(ADIFPartyQTHKey(aQso));
+   if Length(key) = 5 then
+      begin
+      state := Copy(key, 4, 2);
+      if Pos(' ' + state + ' ', NEQP_COUNTY_STATES) > 0 then
+         begin
+         Result := state;
+         end;
+      end;
+end;
+
+function TContestNewEnglandQP.ADIFWorkedStationState(const aQso: ContestExchange): string;
+begin
+   Result := ADIFStateOfPartyQSO(ADIFCountyState(aQso), aQso);
 end;
 
 initialization

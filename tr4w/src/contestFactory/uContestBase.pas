@@ -1514,9 +1514,10 @@ type
          table (VC.USQSOPartyStateName, deleted at M10 S6).
          Default '' -- not a QSO party (M10 S6). TContestStateQSOPartyBase
          answers its HostState, and the three that are not a two-letter state
-         state their own. ASKED BY: the base's DescribeNewContestPrompts,
-         uADIF.GetStateForContest (the two-letter ones only) and the
-         matrix's contest list -- all since M10 S6. *)
+         state their own. ASKED BY: the base's DescribeNewContestPrompts and
+         the matrix's contest list (since M10 S6). ADIF's STATE asked it too
+         (the two-letter ones only) until Q76/Q89, 2026-10-16; it is the
+         worked station's now -- ADIFWorkedStationState. *)
       function GetQSOPartyArea: string; virtual;
 
       (* THE LAST TWO BITS OF THE ROW'S FLAG WORD -- M10 S0, 2026-10-14.
@@ -2244,6 +2245,54 @@ type
          except County Hunter, which strips and does not split. *)
       function SplitsRoverCallOnExport: boolean; virtual;
 
+      (* WHOSE COUNTY IS THIS QSO'S QTH? -- the state (or province) of the
+         party county the QSO's QTH names, '' when it names none (a state, a
+         province, DX, nothing). Read by ADIFWorkedStationState, below, and
+         by PostUnit's CNTY block as the county's prefix (Q76/Q89, NY4I
+         2026-10-16). The QTH is uADIF.ADIFPartyQTHKey: the domestic table's
+         key, else the logged QTH.
+
+         EACH PARTY KNOWS ITS OWN SPELLING. A single-state party
+         (TContestStateQSOPartyBase) answers its HostState for any key that
+         is not two letters -- every county key in target/dom is longer,
+         every state and province key is two. The 7QP's keys lead with the
+         state (AZAPH), New England's end with it (ANDME), and IN7QPNE routes
+         its own (IN7QPNEPartyOfQTH; Delaware's NDE/KDE/SDE are DE).
+         Base ''. *)
+      function ADIFCountyState(const aQso: ContestExchange): string; virtual;
+
+      (* THE ADIF STATE OF THE WORKED STATION -- uADIF.GetADIFStateForQSO,
+         read by EmitADIFRecord for a QSO carrying a QTH. ADIF's STATE is
+         "the contacted station's Primary Administrative Subdivision (e.g.
+         US State, JA Island, VE Province)" (Q89), and the entrant's own is
+         MY_STATE (Q76, NY4I 2026-10-16).
+
+         A QSO PARTY ANSWERS uADIF.ADIFStateOfPartyQSO(ADIFCountyState(aQso),
+         aQso): the county's state for a party county, the QTH itself when
+         it is a code ADIF allows for the worked station's country (an
+         out-of-state station's state, a VE's province), else '' (DX). Stated
+         once on TContestStateQSOPartyBase, and by the 7QP, New England and
+         IN7QPNE classes.
+
+         D7, AND THIS PROGRAM UNTIL Q76, wrote the PARTY's state on every QSO
+         carrying a QTH -- a Michigan log said STATE:MI for a station in DC
+         -- and British Columbia none at all, because the old test wanted a
+         two-letter QSOPartyArea and BC's is 'VE7'. Base '': no other
+         contest's QTH is known to be a state, so none writes one here. *)
+      function ADIFWorkedStationState(const aQso: ContestExchange): string; virtual;
+
+      (* DOES ADIF EXPORT WRITE CNTY (state,county) FOR A QSO OF THIS PARTY?
+         -- PostUnit's CNTY block, beside ADIFCountyState, which is the
+         county's prefix (Q89, NY4I 2026-10-16). ADIF's CNTY is an
+         ENUMERATION (Secondary Administrative Subdivision, ADIF 3.1.6
+         III.B.22) defined for Alaska, Hawaii, the USA, the Russian entities,
+         Ukraine, Japan, New Zealand and Spain and NOTHING for Canada, so a
+         BC regional district written there is a value the spec does not
+         allow: British Columbia answers False and its district goes to the
+         sponsor in the Cabrillo exchange only. True on
+         TContestStateQSOPartyBase; base False. *)
+      function WritesADIFCounty: boolean; virtual;
+
       (* DOES ONE SEARCH-AND-POUNCE ENTRY CARRY SEVERAL QTHs? --
          MainUnit.ReturnInSAPOpMode, after logging, re-enters the first QTH of
          an exchange whose second field is a word. It asked for the
@@ -2683,8 +2732,10 @@ type
 
       (* THE CABRILLO MODE COLUMN for one QSO. The base is
          uCabrilloFormat.FormatCabrilloMode without the phone override -- RY or
-         DG for digital, else the mode's own spelling; Winter Field Day writes
-         FM as PH. *)
+         DG for digital, else the mode's own spelling (FM is `FM` -- Winter
+         Field Day's PH override was deleted at Q54); Delaware writes FM as
+         PH and every digital mode as RY. The one-QSO line HamScore uploads
+         (uCabrillo) asks this too, so the file and HamScore cannot differ. *)
       function CabrilloModeString(aMode: ModeType;
                                   aExtMode: ExtendedModeType): string; virtual;
 
@@ -4239,6 +4290,24 @@ end;
 function TContestBase.SplitsRoverCallOnExport: boolean;
 begin
    (* Not a QSO party: the slash call is the call -- see the declaration. *)
+   Result := False;
+end;
+
+function TContestBase.ADIFCountyState(const aQso: ContestExchange): string;
+begin
+   (* Not a QSO party: no county -- see the declaration. *)
+   Result := '';
+end;
+
+function TContestBase.ADIFWorkedStationState(const aQso: ContestExchange): string;
+begin
+   (* Not a QSO party: no ADIF STATE -- see the declaration. *)
+   Result := '';
+end;
+
+function TContestBase.WritesADIFCounty: boolean;
+begin
+   (* Not a party with an ADIF county enumeration -- see the declaration. *)
    Result := False;
 end;
 

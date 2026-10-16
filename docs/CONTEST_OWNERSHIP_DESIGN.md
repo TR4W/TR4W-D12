@@ -3373,6 +3373,13 @@ every QSO with a QTH.** `uADIF.EmitADIFRecord` writes
 DE station working Pennsylvania exports `STATE:DE` beside `QTH:PA`. That is
 every single-state party's behaviour today (Florida, Idaho, ...), not
 Delaware's; Q76 asks it.
+**RESOLVED 2026-10-16 (Q76/Q89, NY4I):** STATE is the WORKED station's.
+`GetStateForContest` is gone; `EmitADIFRecord` asks the class per QSO
+(`TContestBase.ADIFWorkedStationState`, through `uADIF.GetADIFStateForQSO`):
+a party county gives its state (`ADIFCountyState`), an out-of-state station's
+state or a VE's province is written as itself when ADIF allows the code for
+the station's country (`uADIF.IsADIFPrimarySubdivision`), DX gets none. The
+DE station working Pennsylvania now exports `STATE:PA`.
 
 **Questions this raised -- NY4I's:** Q72-Q76 (§9).
 

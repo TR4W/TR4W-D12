@@ -414,10 +414,12 @@ const
       (Token: 'NA-SPRINT-CW'; WA7BNM: 253; QRZRUID: 0; Email: 'cwsprint@ncjweb.com';
        Friendly: 'North American Sprint, CW';
        Display: 'North American Sprint, CW'; DomesticFile: 'naqp'),
-      (* SPRINTSSB *)
+      (* SPRINTSSB -- the sponsor's name since Q16 (NY4I, 2026-10-16,
+         docs/CONTEST_FACTORY_OPEN_QUESTIONS.md); was "North American
+         Sprint, SSB". Changed by hand, deliberately. *)
       (Token: 'SSB-SPRINT'; WA7BNM: 242; QRZRUID: 0; Email: '';
-       Friendly: 'North American Sprint, SSB';
-       Display: 'North American Sprint, SSB'; DomesticFile: 'naqp'),
+       Friendly: 'North American SSB Sprint';
+       Display: 'North American SSB Sprint'; DomesticFile: 'naqp'),
       (* NASPRINTRTTY *)
       (Token: 'NA-SPRINT-RTTY'; WA7BNM: 155; QRZRUID: 0; Email: 'rttysprint@ncjweb.com';
        Friendly: 'North American Sprint, RTTY';
