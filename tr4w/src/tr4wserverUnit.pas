@@ -119,9 +119,6 @@ type
     slaQSOTime: SYSTEMTIME;
   end;
 
-type
-  SocketPtr = ^Cardinal;
-
 //  ServerLogArray = array of ContestExchange;
 //  ServerLogArrayPtr = ^ServerLogArray;
 

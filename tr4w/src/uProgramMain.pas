@@ -384,8 +384,6 @@ uses
   uExternalLoggerBase,
   uExternalLogger,
   uExternalLoggerFactory,
-  // uExternalLoggerManager uses Generics.Collections (Delphi 2009+) - not Delphi 7 IDE compatible
-  //uExternalLoggerManager in 'src\uExternalLoggerManager.pas',
   uDXLabPathfinder,
   uYCCCSO2R,
   uCWKeyerBase,
@@ -452,8 +450,6 @@ uses
   uRadioKenwoodTS2000,
   uIcomCIV,
   uIcomScope,
-  // uRadioManager uses Generics.Collections (Delphi 2009+) - not Delphi 7 IDE compatible
-  //uRadioManager in 'src\radioFactory\uRadioManager.pas',
   // DELETED 2026-08-28: uRemMults_DOM/DX/Zone, uDXSSpotsFilter,
   // uSpotsFilter and uMultsFrequencies. Commented out of this uses clause
   // since the initial commit, so never compiled, and with no live reference

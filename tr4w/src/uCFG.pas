@@ -1275,13 +1275,6 @@ end;
 
 function CheckCommand(const Command: ShortString; CustomCMD: ShortString;
                       const aApplyJSONOwned: boolean = False): boolean;
-label
-   AdditionalProc;
-type
-   // Issue #997: every AdditionalProcsArray entry is a param-less boolean
-   // function (default register convention); this type lets us call Proc
-   // through a typed cast instead of inline asm.
-   TAdditionalProc = function: Boolean;
 var
    { The command as a STRING, so the tests below are Pos() on a value with a
      length rather than StrPos() on a pointer that runs to the first NUL.  See
@@ -1292,7 +1285,6 @@ var
    TempInteger2: integer;
    TempReal: REAL;
    code: integer;
-   Proc: Pointer;
    TempByte: Byte;
    //  TempString                            : Str10;
    TempElement: TMainWindowElement;

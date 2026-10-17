@@ -154,9 +154,6 @@ const
 
 type
 
-  EntryPointerListType = array[0..15000] of Pointer;
-  EntryPointerListPtr = ^EntryPointerListType;
-
   (* AN LPT BASE ADDRESS IS NOT A HANDLE (2026-09-08).
 
     These values -- $378, $278, $3BC -- are x86 I/O PORT ADDRESSES. They are
@@ -672,8 +669,6 @@ type
     {1}msComputerId: AnsiChar;
     {59}msCWMessage: array[0..CWMessageToNetworkLength] of AnsiChar;
   end;
-
-  TMessageStatePtr = ^TMessageState;
 
 type
   TSerialNumberType = (sntFree, sntReserved, sntUnknown);
@@ -1846,8 +1841,6 @@ type
     User4: CallString; { Control-X }
     User5: CallString; { Control-Y }
   end;
-
-  DataBaseEntryRecordPtr = ^DataBaseEntryRecord;
 
   TQSOTime = packed record
     {1}qtYear: Byte;

@@ -192,27 +192,6 @@ const
   R2F                                   = $20; { RX to A/D         }
   M2F                                   = $40; { Mic to A/D        }
 
-type
-  DVPSharedMemory = record
-    FileName: array[1..64] of AnsiChar;
-    FileOpen: integer; { + 40h bytes }
-    Command: integer; { + 42h bytes }
-    Handle: integer; { + 44h bytes }
-    RepeatDelay: integer; { + 46h bytes }
-    Start: LONGINT; { + 48h bytes }
-    length: LONGINT; { + 4Ch bytes }
-    InputGain: Byte; { + 50h bytes }
-    OutputGain: Byte; { + 51h bytes }
-    XmitControl: Byte; { + 52h bytes }
-    RecControl: Byte; { + 53h bytes }
-  end;
-
-  SharedMemoryPointer = ^DVPSharedMemory;
-
-//var
- // SharedMemorySegment, SharedMemoryOffset: Word;
-//  SharedMemory                          : SharedMemoryPointer;
-
 function DVPActive: boolean;
 begin
    (* THIS BODY WAS EMPTY -- in this tree AND in the D7 source it was copied

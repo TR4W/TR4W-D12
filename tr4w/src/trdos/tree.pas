@@ -85,10 +85,6 @@ const
   dcb_Reserveds                         = $FFFF8000;
 
 type
-  PDayTable = ^TDayTable;
-  TDayTable = array[1..12] of Word;
-
-type
   PBoolean = ^boolean;
 
 type
@@ -99,8 +95,6 @@ type
 
   // TwoBytes/FourBytes/EightBytes moved to VC.pas (pre-migration extraction of
   // callsign compression); tree.pas now gets them from VC (used in interface).
-  FourBytesPtr = ^FourBytes;
-
 const
   PortTypeSA                            : array[PortType] of string =
 
@@ -173,8 +167,6 @@ const
     'TCP/IP'
     );
 type
-  PPortType = ^PortType;
-
   (* ParallelInterface WENT WITH THE PARALLEL PORT, 2026-09-13.  What is left
     is the question tGetPortType actually answers now: serial, or nothing. *)
   PortInterface =
@@ -689,9 +681,6 @@ type
     NumberFiles: integer;
     List: array[0..MaximumFileNames - 1] of string[12];
   end;
-
-  BufferType = array[0..$FF] of Char;
-  BufferTypePtr = ^BufferType;
 
 const
   InitialCodeSpeed                      = 35;
@@ -3785,7 +3774,8 @@ end;
 
   Callers went with them: help.CheckForName (which had no caller of its own)
   and the else-arm of logname.NameDictionary.Init, which now says '' outright,
-  because that is what it has always computed. *)
+  because that is what it has always computed. (logname.pas itself was never
+  compiled and is deleted -- 2026-10-16, docs/POINTER_AUDIT.md D5.) *)
 
 procedure RenameFile(OldName: string; NewName: string);
 

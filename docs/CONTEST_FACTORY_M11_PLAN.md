@@ -200,7 +200,8 @@ lines**: `logedit` 12, `logdupe` 10, `logstuff` 7, `uADIFExchange` 3,
 | `trdos/logedit.pas:2905` `SetPrefix` | session | 14 | 3 dead; 5 reach 1; 4 reach 2-3 |
 
 **96 compare/`in` lines in 43 routines.** The member `Prefix` is excluded
-wherever it is a local or field of that name (`logname`, `logradio`,
+wherever it is a local or field of that name (`logname` -- never compiled,
+deleted 2026-10-16 --, `logradio`,
 `uRadioKenwoodSerial`, `uADIF` and others: name collisions, not kind tests).
 
 | enum | lines | routines |

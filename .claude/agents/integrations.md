@@ -15,7 +15,7 @@ You own TR4W's links to other programs on the operator's desk.
 | MMTTY — RTTY | `tr4w/src/uMMTTY.pas`, `src/ui/lcl/uMMTTYForm.pas` |
 | external logger factory | `uExternalLoggerFactory.pas` |
 | abstract base | `uExternalLoggerBase.pas` (`TExternalLoggerBase`) |
-| implementation | `uExternalLogger.pas`, `uExternalLoggerManager.pas` |
+| implementation | `uExternalLogger.pas` (~~`uExternalLoggerManager.pas`~~ was never linked; deleted 2026-10-16) |
 
 Globals in `MainUnit`: `wsjtx: TWSJTXServer`, `externalLogger: TExternalLogger`.
 

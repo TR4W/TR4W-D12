@@ -169,9 +169,6 @@ procedure DupeCheckOnInactiveRadio(Tune: boolean);
 function GotExchange: boolean;
 procedure ProcessExchangeFunctionKey(ExtendedKey: Char);
 procedure ExitProgram(Ask: boolean);
-procedure GoToNextMultBandMapFrequency;
-procedure GoToNextDisplayedBandMapFrequency;
-procedure GoToNextMultDisplayedBandMapFrequency;
 function tAddQSOToLog(RXData: ContestExchange): boolean;
 function ConvertBandTypeToUDPContactBand(band: BandType): string;
 implementation
@@ -1311,70 +1308,6 @@ begin
     end;
 end;
 
-{KK1L: 6.68}
-procedure GoToNextMultBandMapFrequency;
-
-begin
-  if (CommandUseInactiveRadio) and {KK1L: 6.73}
-    (NextMultiplierEntryInBandMap(InActiveRadioPtr.BandMemory {BandMemory[InactiveRadio]}, InActiveRadioPtr.ModeMemory {ModeMemory[InactiveRadio]})) then
-     begin
-     SetUpBandMapEntry(BandMapCursorData, InactiveRadio)
-     end
-  else
-    if NextMultiplierEntryInBandMap(ActiveBand, ActiveMode) then
-       begin
-       SetUpBandMapEntry(BandMapCursorData, ActiveRadio); {KK1L: Added ActiveRadio}
-       if ActiveWindow = ExchangeWindow then
-          begin
-          //{WLI}                 ClrScr;
-      ExchangeWindowString := '';
-          //        RestorePreviousWindow;
-          end;
-       end;
-end;
-procedure GoToNextDisplayedBandMapFrequency;
-
-begin
-  if (CommandUseInactiveRadio) and {KK1L: 6.73}
-    (NextNonDupeEntryInDisplayedBandMap(InActiveRadioPtr.BandMemory {BandMemory[InactiveRadio]},
-    InActiveRadioPtr.ModeMemory { ModeMemory[InactiveRadio]})) then
-     begin
-     SetUpBandMapEntry(BandMapCursorData, InactiveRadio)
-     end
-  else
-    if NextNonDupeEntryInDisplayedBandMap(ActiveBand, ActiveMode) then
-       begin
-       SetUpBandMapEntry(BandMapCursorData, ActiveRadio); {KK1L: Added ActiveRadio}
-       if ActiveWindow = ExchangeWindow then
-          begin
-          //{WLI}                 ClrScr;
-      ExchangeWindowString := '';
-          //        RestorePreviousWindow;
-          end;
-       end;
-end;
-{KK1L: 6.68}
-procedure GoToNextMultDisplayedBandMapFrequency;
-
-begin
-  if (CommandUseInactiveRadio) and {KK1L: 6.73}
-    (NextMultiplierEntryInDisplayedBandMap(InActiveRadioPtr.BandMemory {BandMemory[InactiveRadio]},
-    InActiveRadioPtr.ModeMemory {ModeMemory[InactiveRadio]})) then
-     begin
-     SetUpBandMapEntry(BandMapCursorData, InactiveRadio)
-     end
-  else
-    if NextMultiplierEntryInDisplayedBandMap(ActiveBand, ActiveMode) then
-       begin
-       SetUpBandMapEntry(BandMapCursorData, ActiveRadio); {KK1L: Added ActiveRadio}
-       if ActiveWindow = ExchangeWindow then
-          begin
-          //{WLI}                 ClrScr;
-      ExchangeWindowString := '';
-          //        RestorePreviousWindow;
-          end;
-       end;
-end;
 function FoundCommand(var SendString: Str160): boolean;
 
 begin
@@ -1829,7 +1762,6 @@ begin
       //UpdateBandMapMultiplierStatus;
     SpotsList.UpdateSpotsMultiplierStatus;
       //        KK1L: 6.64 Need to change dupe status for this contact as well
-//      UpdateBandMapDupeStatus(RXData.Callsign, RXData.Band, RXData.Mode, True);
     SpotsList.UpdateSpotsDupeStatus(RXData.Callsign, RXData.Band, TempMode {RXData.Mode});
   end;
   if UDPBroadcaster.Enabled(usScore) then

@@ -78,13 +78,6 @@ type
     CursorPosition: integer;
   end;
 
-  DataListEntryPointer = ^DataListEntryRecord;
-
-  DataListEntryRecord = record
-    data: DataBaseEntryRecord;
-    NextEntry: DataListEntryPointer;
-  end;
-
   MemoryBlock = array[0..MemoryBlockSize - 1] of Byte;
   MemoryBlockPtr = ^MemoryBlock;
 
@@ -119,13 +112,6 @@ type
     procedure LoadCellIntoBuffer(KeyString: CallString; {var } FileRead: THandle {file}; NumberBytes: LONGINT);
   end;
 
-  PartialCallListEntryPtr = ^PartialCallListEntryType;
-
-  PartialCallListEntryType = record
-    Call: CallString;
-    NextEntry: PartialCallListEntryPtr;
-  end;
-
   BytesWrittenArrayPtr = ^SCPIndexArrayType;
 
   CallDatabase = object
@@ -148,18 +134,12 @@ type
 
     { Used by TransferMergeDataToASCIIFile to delete some calls }
 
-    EntryPointerList: EntryPointerListPtr;
-
-    FirstMergeDataListEntry: DataListEntryPointer;
-
     IndexArrayAllocated: boolean;
 
     InitialPartialCall: CallString;
-    InitialPartialList: PartialCallListEntryPtr;
 
     LastCallRecord: DataBaseEntryRecord;
     LastPartialCall: CallString;
-    LastPartialList: PartialCallListEntryPtr;
 
     MemoryBlocks: array[0..MaxBlocks - 1] of MemoryBlockPtr;
     NumberEntries: LONGINT;
@@ -196,10 +176,8 @@ type
     TRMasterFileOpen: boolean;
 
     procedure AddInBytes(NumberBytes, X, Y: integer);
-    procedure AddRecordToMergeList(data: DataBaseEntryRecord);
     procedure ASCIIFileEditor;
     function BestTwoLetters(Partial: CallString): Str20;
-    procedure BlowAwayFirstLettersList;
     procedure CheckDTAFile;
     procedure ClearDataEntry(var data: DataBaseEntryRecord);
     procedure ClearField;
@@ -1426,27 +1404,6 @@ begin
 
 end;
 
-procedure CallDatabase.BlowAwayFirstLettersList;
-
-{ This procedure will clear out the InitialPartialList }
-
-var
-  NextRecord, ActiveRecord              : PartialCallListEntryPtr;
-
-begin
-  ActiveRecord := InitialPartialList;
-
-  while ActiveRecord <> nil do
-     begin
-     NextRecord := ActiveRecord^.NextEntry;
-     Dispose(ActiveRecord);
-     ActiveRecord := NextRecord;
-     end;
-
-  InitialPartialCall := '';
-  InitialPartialList := nil;
-end;
-
 procedure CallDatabase.ClearField;
 
 //var  Key: Char;
@@ -1971,7 +1928,10 @@ var
   KeyString                             : CallString;
 
 begin
-  BlowAwayFirstLettersList;
+  (* BlowAwayFirstLettersList stood here. It disposed InitialPartialList, a
+    DOS linked list nothing ever filled (docs/POINTER_AUDIT.md D6), and it
+    cleared the key below; the clear is the only part that ever did anything. *)
+  InitialPartialCall := '';
 
   { Get rid of old file buffer }
 
@@ -2600,38 +2560,6 @@ var
 }
 begin
 
-end;
-
-procedure CallDatabase.AddRecordToMergeList(data: DataBaseEntryRecord);
-
-var
-  ActiveRecord                          : DataListEntryPointer;
-
-begin
-  if FirstMergeDataListEntry = nil then
-     begin
-     FirstMergeDataListEntry := New(DataListEntryPointer);
-     FirstMergeDataListEntry^.NextEntry := nil;
-     FirstMergeDataListEntry^.data := data;
-     Exit;
-     end;
-
-  { We have some entries already - make sure it isn't a dupe }
-
-  ActiveRecord := FirstMergeDataListEntry;
-
-  repeat
-    if ActiveRecord^.data.Call = data.Call then Exit; { dupe - ignore it }
-    if ActiveRecord^.NextEntry = nil then Break;
-    ActiveRecord := ActiveRecord^.NextEntry;
-  until False;
-
-  { Okay, this call does not appear in the merge list, so add it }
-
-  ActiveRecord^.NextEntry := New(DataListEntryPointer);
-  ActiveRecord := ActiveRecord^.NextEntry;
-  ActiveRecord^.NextEntry := nil;
-  ActiveRecord^.data := data;
 end;
 
 function CallDatabase.OverwriteFlagStatus: boolean;
@@ -3394,8 +3322,6 @@ begin
 
 //  CD.CellBuffer.Key := '';
 //  CD.Settings.Scp.PossibleCallMode := OnlyCallsWithNames;
-//  CD.FirstMergeDataListEntry := nil;
-//  CD.InitialPartialList := nil;
 //  CD.SCPIndexArray := nil;
 //  CD.SectionOverwrite := False;
 //  CD.CQZoneOverwrite := False;

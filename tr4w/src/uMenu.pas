@@ -56,8 +56,6 @@ type
     mrId: Word;
   end;
 
-  PMenuRecord = ^MenuRecord;
-
 { Fill the menu captions from the resourcestrings. See the implementation. }
 procedure InitializeMenuText;
 

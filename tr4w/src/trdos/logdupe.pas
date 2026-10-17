@@ -153,13 +153,6 @@ type
     //    BigCallList: array[1..MaxBigCallBlocks] of BigCallBlockPtr;
   end;
 
-  VDEntry = record
-    Callsign: string[6];
-    NextEntry: Pointer;
-  end;
-
-  VDEntryPointer = ^VDEntry;
-
   //  CallDistrictTotalArray = array[1..11] of integer;
 
   DupeAndMultSheet = object
@@ -168,7 +161,6 @@ type
 //    MultSheet: MultList;
 
     function AddBigCallAddress(BigCall: EightBytes): integer;
-    procedure AddCallToVisibleDupeSheet(Callsign: CallString);
     procedure AddCompressedCallToDupeSheet(Call: FourBytes; Band: BandType; Mode: ModeType);
     procedure AddQSOToSheets(RXData: ContestExchangePtr; AddToPartials: boolean);
 
@@ -240,8 +232,6 @@ var
 
   ExchangeInformation                   : ExchangeInformationRecord;
 
-  FirstVDEntry                          : VDEntryPointer;
-
   GridSquareList                        : array[0..MaxGridSquaresInList - 1] of string[4];
 
 
@@ -258,7 +248,6 @@ var
   NumberInitialExchanges                : integer;
   NumberLongPartialCalls                : integer;
   NumberPartialCalls                    : integer;
-  NumberVDCalls                         : integer;
 
   OffTimeStart                          : TimeRecord;
 
@@ -325,7 +314,6 @@ function CallNotInPossibleCallList(Call: CallString; PossCallList: PossibleCallR
 procedure ClearContestExchange(var Exchange: ContestExchange);
 procedure CreateGridSquareList(Call: CallString; Band: BandType);
 
-procedure DupeInit;
 //function FindProperPartialCallAddress(Call: CallString): integer;
 function FoundDomesticQTH(var RXData: ContestExchange): boolean;
 
@@ -811,154 +799,6 @@ begin
         mo.SetZnMult(RXData.Zone, RXData.Band, RXData.Mode);
         end;
      end;
-end;
-
-procedure DupeAndMultSheet.AddCallToVisibleDupeSheet(Callsign: CallString);
-
-var
-  SuffixString, NumberString            : CallString;
-  NumberChar                            : AnsiChar;
-  Character                             : Char;
-  NextRecord, {Remember,} ActiveVDEntry : VDEntryPointer;
-  Count                                 : integer;
-
-begin
-  //{WLI}    IF MaxAvail <= SizeOf (VDEntry) THEN Exit;
-
-  {    StandardCall := StandardCallFormat (Callsign, True);
-
-      IF StringHas (StandardCall, '/') THEN
-          StandardCall := PostcedingString (StandardCall, '/');
-  }
-  Callsign := RootCall(Callsign);
-
-  NumberString := NumberPartOfString(Callsign);
-  NumberChar := NumberString[1];
-
-  if FirstVDEntry = nil then { Set up entries with 1 to 10 }
-     begin
-     FirstVDEntry := New(VDEntryPointer);
-     ActiveVDEntry := FirstVDEntry;
-
-     ActiveVDEntry^.Callsign := '1';
-     ActiveVDEntry^.NextEntry := New(VDEntryPointer);
-
-     for Count := 2 to 10 do
-        begin
-        if Count < 10 then
-           begin
-           Character := CHR(Ord('0') + Count)
-           end
-        else
-           begin
-           Character := '0';
-           end;
-
-        ActiveVDEntry := ActiveVDEntry^.NextEntry;
-
-        ActiveVDEntry^.Callsign := Character;
-
-        if Character <> '0' then
-           begin
-           ActiveVDEntry^.NextEntry := New(VDEntryPointer)
-           end
-        else
-           begin
-           ActiveVDEntry^.NextEntry := nil;
-           end;
-        end;
-
-     NumberVDCalls := 10;
-     end;
-
-  ActiveVDEntry := FirstVDEntry;
-
-  while ActiveVDEntry^.Callsign <> NumberChar do
-    if ActiveVDEntry^.NextEntry = nil then
-       begin
-       ActiveVDEntry^.NextEntry := New(VDEntryPointer);
-       ActiveVDEntry := ActiveVDEntry^.NextEntry;
-
-       ActiveVDEntry^.Callsign := Callsign;
-       ActiveVDEntry^.NextEntry := nil;
-       inc(NumberVDCalls);
-       Exit;
-       end
-    else
-       begin
-       ActiveVDEntry := ActiveVDEntry^.NextEntry;
-       end;
-
-  { We have found the Number Entry that matches the call we are adding. }
-
-  if ActiveVDEntry^.NextEntry = nil then { Adding the 1st 0 call? }
-     begin
-     if ActiveVDEntry^.Callsign <> '0' then
-        begin
-        //      SetWindow(WholeScreenWindow);
-             //{WLI}            ClrScr;
-    ShowMessage(TC_FINDINGZEROENDVISIBLEDUPESHEETLIST);
-    logger.Fatal('Not finding zero at end visible dupesheet list!!');
-    halt;
-        end;
-
-     ActiveVDEntry^.NextEntry := New(VDEntryPointer);
-     ActiveVDEntry := ActiveVDEntry^.NextEntry;
-
-     ActiveVDEntry^.Callsign := Callsign;
-     ActiveVDEntry^.NextEntry := nil;
-     inc(NumberVDCalls);
-     Exit; { All done - 1st 0 call added }
-     end;
-
-  { See if it is the first for this number }
-
-  NextRecord := ActiveVDEntry^.NextEntry;
-
-  if (length(NextRecord^.Callsign) = 1) and StringIsAllNumbers(ActiveVDEntry^.Callsign) then
-     begin
-     ActiveVDEntry^.NextEntry := New(VDEntryPointer);
-
-     ActiveVDEntry := ActiveVDEntry^.NextEntry;
-     ActiveVDEntry^.Callsign := Callsign;
-     ActiveVDEntry^.NextEntry := NextRecord;
-     inc(NumberVDCalls);
-     Exit;
-     end;
-
-  { We have to find the right place to squeeze it }
-
-  SuffixString := GetSuffix(Callsign);
-
-  while (SuffixString > GetSuffix(NextRecord^.Callsign)) and
-    (length(NextRecord^.Callsign) > 1) and
-    (ActiveVDEntry^.NextEntry <> nil) do
-     begin
-     ActiveVDEntry := NextRecord;
-     NextRecord := ActiveVDEntry^.NextEntry;
-     if NextRecord = nil then Break; {added by wli}
-     end;
-
-  if NextRecord <> nil then {added by wli}
-     begin {added by wli}
-     if (ActiveVDEntry^.NextEntry = nil) and (SuffixString > GetSuffix(NextRecord^.Callsign)) then
-        begin
-        ActiveVDEntry := NextRecord;
-
-        ActiveVDEntry^.NextEntry := New(VDEntryPointer);
-        ActiveVDEntry := ActiveVDEntry^.NextEntry;
-        ActiveVDEntry^.Callsign := Callsign;
-        ActiveVDEntry^.NextEntry := nil;
-        Exit;
-        end;
-     end; {added by wli}
-
-  ActiveVDEntry^.NextEntry := New(VDEntryPointer);
-
-  ActiveVDEntry := ActiveVDEntry^.NextEntry;
-  ActiveVDEntry^.Callsign := Callsign;
-  ActiveVDEntry^.NextEntry := NextRecord;
-  inc(NumberVDCalls);
 end;
 
 procedure DupeAndMultSheet.DisposeOfMemoryAndZeroTotals;
@@ -1526,25 +1366,6 @@ begin
   LoadinLog;
 end;
 
-procedure DupeInit;
-
-var
-  //Block                                 : integer;
-  NextEntry, ActiveVDEntry              : VDEntryPointer;
-  //Band                                  : BandType;
-  //Mode                                  : ModeType;
-
-begin
-  //  for Block := 1 to MaxPartialCallBlocks do PartialCallList[Block] := nil;
-  ActiveVDEntry := FirstVDEntry;
-  while ActiveVDEntry <> nil do
-     begin
-     NextEntry := ActiveVDEntry^.NextEntry;
-     Dispose(ActiveVDEntry);
-     ActiveVDEntry := NextEntry;
-     end;
-end;
-
 function GetInitialExchangeStringFromContestExchange(RData: ContestExchange): string;
 
 var
@@ -1754,9 +1575,6 @@ begin
 
 end;
 
-begin
-  //{WLI}    HeapError := @HeapFunc;
-  DupeInit;
 end.
 
 

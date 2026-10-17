@@ -153,7 +153,6 @@ var
   //  MTotals                               : MultTotalArrayType;
 
   OriginalTextMode: integer;
-  RememberHeap: Pointer;
   {
     RemainingMults                        : RemainingMultList;
     RemainingMultsDX                      : RemainingMultListPointer;
@@ -204,9 +203,6 @@ function DoingZoneMults: boolean;
 function DoingDomesticMults: boolean;
 (* Does aContest count any multiplier at all at this station? M11 S4. *)
 function DoingAnyMults(aContest: TContestHandle): boolean;
-{KK1L: 6.64 Added to keep BM up to date with changes made while logging}
-procedure UpdateBandMapDupeStatus(RXCall: CallString; RXBand: BandType; RXMode:
-  ModeType; MakeDupe: boolean);
 //procedure UpdateTotals_old;
 
 implementation
@@ -2885,50 +2881,6 @@ begin
 
   //{WLI}
 
-end;
-
-procedure UpdateBandMapDupeStatus(RXCall: CallString; RXBand: BandType; RXMode:
-  ModeType; MakeDupe: boolean);
-
-var
-  BandMapEntryRecord: BandMapEntryPointer;
-  ChangeMade: boolean;
-
-begin
-  ChangeMade := False;
-
-  BandMapEntryRecord := BandMapFirstEntryList[RXBand, RXMode];
-  while BandMapEntryRecord <> nil do
-     begin
-     with BandMapEntryRecord^ do
-        begin
-
-        {IF (RXCall = BandMapExpandedString(Call)) AND           } {KK1L: 6.73 Removed}
-        {   (RXBand = ActiveBand) AND (RXMode = ActiveMode) THEN }
-        {KK1L: 6.73 Don't limit compare to active band/mode. This keeps a contact made on the}
-        {           second radio from getting reset correctly. The BandMapFirstEntryList limits}
-        {           the check appropriately to the band/mode of the deleted contact.}
-        if (RXCall = BandMapExpandedString(Call)) then
-          if MakeDupe then
-             begin
-             StatusByte := StatusByte or $40; {KK1L: 6.64 Turn on dupe bit}
-             StatusByte := StatusByte and $7F;
-               {KK1L: 6.69 if it is a dupe it CAN'T be a mult}
-             ChangeMade := True;
-             end
-          else
-             begin
-             StatusByte := StatusByte and $BF; {KK1L: 6.64 Turn off dupe bit}
-             ChangeMade := True;
-             end;
-        end;
-     BandMapEntryRecord := BandMapEntryRecord^.NextEntry;
-     end;
-
-  if ChangeMade then
-     begin
-     DisplayBandMap;
-     end;
 end;
 
 (* THE ONE SCORE -- M6, 2026-10-02 (docs/CONTEST_OWNERSHIP_DESIGN.md 5, 7.7).

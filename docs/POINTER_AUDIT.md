@@ -3,6 +3,17 @@
 **Measured 2026-10-16 at `28599599` (branch `contestFactory`, working tree
 dirty). NOTHING WAS CHANGED: this is an inventory and a schedule.**
 
+> **STATUS, 2026-10-16 (on top of `7e3c209b`): P0 and P4 are DONE.**
+> P0 -- the counter is `tr4w/build/Count-LivePointers.ps1` (self-test, three
+> floors; a measurement, not in `Run-Lints`). P4 -- the dead pointer code is
+> deleted; what went, and the before/after counts, are under
+> [P4 -- what was deleted](#p4----what-was-deleted-2026-10-16). Every oracle
+> was unchanged (matrix 187 identical, factory 13, corpus 22/0/4, ADIF
+> 12/0/1, unit 360,205/0 plain and checked, heaptrc 13,469); narrowing fell
+> 1249 -> 1245 and its ceiling was lowered. **The tables below are the
+> 2026-10-16 inventory as measured; rows that P4 removed are marked, not
+> renumbered.** Re-measure with the counter before quoting any other row.
+
 NY4I, 2026-10-16, after `logdom.pas` turned out to hold a DOS-era hand-built
 linked list whose dispose loop read through nil:
 
@@ -132,7 +143,7 @@ normally starts with a callsign's first letter, which calls `Dit`/`Dah` --
 but nothing guarantees it. **Not confirmed on hardware.** A fixed array field
 of `K1EAKeyer` removes both the nil and the leak (packet P7).
 
-### D5. `logname.pas` is NOT COMPILED, and two audits count it
+### D5. `logname.pas` is NOT COMPILED, and two audits count it -- DELETED (P4)
 
 `tr4w/src/trdos/logname.pas` (1,791 lines, `unit LogName`) is named in **no**
 `uses` clause anywhere -- not `tr4w.lpr`, not the server, not a test (measured
@@ -148,9 +159,11 @@ Recommendation: delete the file (packet P4). The same scan also reports
 `src/radioFactory/uRadioManager.pas` and `src/uExternalLoggerManager.pas` as
 named in no `uses` clause -- out of this audit's scope, noted so it is not lost
 (CLAUDE.md section 7 describes `uExternalLoggerManager` as carrying the
-implementation).
+implementation). **Checked in P4 and DELETED too**: each was named only by a
+commented-out line in `tr4w.lpr` and `uProgramMain`'s `uses`, so neither was
+ever compiled; CLAUDE.md section 7 and the `integrations` agent are corrected.
 
-### D6. Three more DOS linked lists that nothing fills -- dead, one dangling
+### D6. Three more DOS linked lists that nothing fills -- dead, one dangling -- DELETED (P4)
 
 | list | evidence it is dead | latent defect |
 |---|---|---|
@@ -210,15 +223,26 @@ classes add more (`uContestALRSUA1DZCup.pas` 5). The rule in
 `64_BIT_TASKLIST.md` is `:= Default(T)`, and nothing enforces it. That
 counter prints a number and has no ceiling; packet P15 proposes one.
 
-### The new counter: `Measure-Pointers.ps1`
+### The new counter: `Measure-Pointers.ps1` -- committed as `Count-LivePointers.ps1` (P0)
 
-Not checked in (this audit writes one document only). Its rule table is
-reproduced in the appendix so it can be recreated verbatim; **packet P0
-proposes committing it as `tr4w/build/Count-LivePointers.ps1`.**
+~~Not checked in.~~ **Committed 2026-10-16 as
+`tr4w/build/Count-LivePointers.ps1`** with the appendix's rules verbatim:
 
 ```
-pwsh -NoProfile -File Measure-Pointers.ps1 -Repo C:\tr4w-d12 -Out hits.tsv
+pwsh -NoProfile -File tr4w/build/Count-LivePointers.ps1             # the table
+pwsh -NoProfile -File tr4w/build/Count-LivePointers.ps1 -Rule C3-deref -Detail
+pwsh -NoProfile -File tr4w/build/Count-LivePointers.ps1 -Out hits.tsv
+pwsh -NoProfile -File tr4w/build/Count-LivePointers.ps1 -SelfTest
 ```
+
+It counts a built-in fixture with a known, non-zero count for **every one of
+the 22 rules** before it reports anything, and refuses to report if any rule
+is off, if `src\MainUnit.pas` was not scanned, or if the tree total is zero.
+Its columns are `src`, `server` (the `tr4w/tr4wserver/` directory -- the
+server's unit `tr4wserverUnit.pas` lives in `src`), `test` and `other`
+(`build`, `tools`). It is a measurement: not in `Run-Lints`, no ceiling. The
+table below is the audit's original reading; the P4 section has the
+committed counter's before/after.
 
 | rule | what it matches | src | test | other | total |
 |---|---|---:|---:|---:|---:|
@@ -281,10 +305,10 @@ nothing automated; needs a [`BENCH_QUEUE.md`](BENCH_QUEUE.md) entry.
 | 1.1 | `trdos/logdom.pas` `PrefixRec` x 36 buckets | domestic QTH aliases | live | `TObjectDictionary` -- **IN PROGRESS** (D1) | high (every QSO party) | UT `uTestDomQTHTableReload`, MATRIX, CORPUS |
 | 1.2 | `trdos/zonecont.pas:42-50`, `AddDomesticCountry` `:156`, `DomesticCountryCall`, `ClearDomesticCountryList` `:255` | domestic COUNTRY list -- DX vs domestic for every domestic contest | **live, scoring-critical** | a `TStringList` (or `THashSet<string>`) owned by the unit; **`uContestMatrix.pas:502` walks `FirstDomesticCountryRecord` directly and must change with it** | high | MATRIX (reads the list), CORPUS, FACTORY, UT `uTestContestFactory` (stubs the call), `uTestContestSession` |
 | 1.3 | `trdos/logstuff.pas:252-258`, `EnumHelloDAT` `:1222`, `SendSalutation` `:1143` | `HELLO.DAT` per-country greeting | live **only when `HELLO.DAT` exists** (not shipped); loaded once (`LogCfg.pas:478`), never freed; `Greeting: string[6]` truncates a `Str20` (check D7 before calling that a regression) | `TStringList` `Values[]` | low | **none** -- write a UT first |
-| 1.4 | `trdos/logdupe.pas:156-160`, `:816`, `DupeInit` `:1529` | visible dupe sheet | **dead** (D6) | delete | none | COMPILER |
-| 1.5 | `trdos/logwind.pas:180-209, 491-518`, `DecrementBandMapTimes` `:1935`, the `Next*EntryIn*BandMap` walkers `:2425-2715`, `GetRecordForBandMapCursor` `:2893`; `logsubs2.pas:1313-1380` | DOS band map | **dead** (D6) | delete | none | COMPILER |
-| 1.6 | `trdos/logscp.pas:80-86, 121-127`, `AddRecordToMergeList` `:2605`, the partial-list clear `:1430` | SCP merge list, partial-call list | **dead** (D6) | delete | none | COMPILER |
-| 1.7 | `trdos/logname.pas` | name database | **not compiled** (D5) | delete the file | none | COMPILER |
+| 1.4 | `trdos/logdupe.pas:156-160`, `:816`, `DupeInit` `:1529` | visible dupe sheet | **dead** (D6) | **DELETED (P4)** | none | COMPILER |
+| 1.5 | `trdos/logwind.pas:180-209, 491-518`, `DecrementBandMapTimes` `:1935`, the `Next*EntryIn*BandMap` walkers `:2425-2715`, `GetRecordForBandMapCursor` `:2893`; `logsubs2.pas:1313-1380` | DOS band map | **dead** (D6) | **DELETED (P4)** | none | COMPILER |
+| 1.6 | `trdos/logscp.pas:80-86, 121-127`, `AddRecordToMergeList` `:2605`, the partial-list clear `:1430` | SCP merge list, partial-call list | **dead** (D6) | **DELETED (P4)** | none | COMPILER |
+| 1.7 | `trdos/logname.pas` | name database | **not compiled** (D5) | **DELETED (P4)** | none | COMPILER |
 
 ### Category 2 -- manual heap
 
@@ -377,8 +401,8 @@ audit's list finds them.
 | 6.8 | `TSortedStringList` | `uSortedStringList.pas:63` | **yes** | `TStringList` with `Sorted`, or `specialize TList<T>` (with 2.3) | as 6.7 |
 | 6.9 | `TCallsignsList` | `uCallsigns.pas:76` | **yes** | a class (with 2.3) | UT `uTestStringCompare`, `uTestOffBandCredit`; Alt-D screen BENCH |
 | 6.10 | `TDXSpotsList` (`SpotsList`) | `uSpots.pas:66` | **yes** | a class | UT `uTestDXSpotParse`, `uTestSpotAge` (partial); band map BENCH |
-| 6.11 | `NameDictionary` | `trdos/logname.pas:167` | no | **delete** (D5) | COMPILER |
-| 6.12 | `^record` type declarations with **one** mention in `src`/`tr4wserver`/`test` -- the declaration itself (`rg -c -i -w`, raw): `RememberHeap`, `OldInt08Vector`, `OldInt0BVector`, `FourBytesPtr`, `BufferTypePtr`, `PDayTable`, `PPortType`, `TMessageStatePtr`, `DataBaseEntryRecordPtr`, `PMenuRecord`, `SocketPtr`. Two mentions (declaration plus one use, possibly a dead variable): `EntryPointerListPtr`, `SCPIndexArrayPtr`, `MultiMessageListPointer`, `ReminderArrayPointer`, `SharedMemoryPointer`, `RealTimeMessagePointer`, `StringPointer`, `MultiMessage`, `FourBytePtr` | `VC.pas`, `tree.pas`, `logscp.pas`, `logstuff.pas`, `logwind.pas`, `logdvp.pas`, `logk1ea.pas`, `logedit.pas`, `uMenu.pas`, `tr4wserverUnit.pas` | -- | delete what the compiler lets you | COMPILER |
+| 6.11 | `NameDictionary` | `trdos/logname.pas:167` | no | **DELETED (P4)** with the file (D5) | COMPILER |
+| 6.12 | `^record` type declarations with **one** mention in `src`/`tr4wserver`/`test` -- the declaration itself (`rg -c -i -w`, raw): `RememberHeap`, `OldInt08Vector`, `OldInt0BVector`, `FourBytesPtr`, `BufferTypePtr`, `PDayTable`, `PPortType`, `TMessageStatePtr`, `DataBaseEntryRecordPtr`, `PMenuRecord`, `SocketPtr`. Two mentions (declaration plus one use, possibly a dead variable): `EntryPointerListPtr`, `SCPIndexArrayPtr`, `MultiMessageListPointer`, `ReminderArrayPointer`, `SharedMemoryPointer`, `RealTimeMessagePointer`, `StringPointer`, `MultiMessage`, `FourBytePtr` | `VC.pas`, `tree.pas`, `logscp.pas`, `logstuff.pas`, `logwind.pas`, `logdvp.pas`, `logk1ea.pas`, `logedit.pas`, `uMenu.pas`, `tr4wserverUnit.pas` | -- | **DONE (P4)**: all deleted except `SCPIndexArrayPtr`, `ReminderArrayPointer` and `StringPointer`, which have a live use (`SCPIndexArray`, `Reminders`, `ExchangeTemplateList`). See the P4 section | COMPILER |
 | 6.13 | `ContestExchangePtr` (4), `ContestExchangeArrayPtr` (5), the network `...Ptr` types | `VC.pas:2026-2440` | -- | follow 3.2 and the log-store work; `ContestExchangeArrayPtr` at `tr4wserverUnit.pas:1287` is pinned by `TestRecordArrayStrideIsOneRecord` | UT `uTestLogBinaryFile` |
 | 6.14 | `uCTYDAT.PrefixRecPtr` (`ctyAddNewPrefixRecord(pr: PrefixRecPtr; ...)`) | `uCTYDAT.pas:194, 287, 363` | -- | `const pr: PrefixRec` | UT `uTestCTYDAT` |
 
@@ -392,7 +416,7 @@ not work. The items are the **untyped** ones:
 |---|---|---|---|---|
 | 7.1 | `TF.pas:213` `TTR4WThreadStart = Pointer`; 15 live `tCreateThread` call sites | **D2** -- ten wrong signatures nothing checks | type the parameter `TWorkerProc`; fix each target; or `TThread` descendants | COMPILER (once typed), then BENCH: CPU keyer, WinKeyer open, DVP, multi-op connect and sync, NTP, Get Scores |
 | 7.2 | `uProcessCommand.pas:66` `caAddress: Pointer`, cast at `:270` to `procedure` | the CW-memory command table | `caAddress: TProcedure` -- every row already holds a parameterless procedure | COMPILER |
-| 7.3 | `uCFG.pas:1294` `Proc: Pointer` | declared, **never used** (`TAdditionalProc` beside it is the typed form) | delete | COMPILER |
+| 7.3 | `uCFG.pas:1294` `Proc: Pointer` | declared, **never used** (`TAdditionalProc` beside it is the typed form) | **DELETED (P4)** -- and so were `TAdditionalProc` and the label `AdditionalProc`, which were unused too | COMPILER |
 | 7.4 | `TF.pas:100` `TEnumLinesFunc = procedure(Line: PShortString)`; 10 callers of `EnumerateLinesInFile` | a callback that receives a POINTER to a ShortString and edits it in place | `procedure(var Line: ShortString)` now, `const Line: string` once the callbacks stop editing it | the callbacks load `.dom`, dupe, CFG, intercom, telnet and stations files: MATRIX, CORPUS, UT `uTestDomQTHTableReload` |
 | 7.5 | `trdos/logscp.pas:116, 550` `GetNextEntryAddress(var EntryAddress: Pointer)` | hands out a pointer into the cell buffer | an index into the buffer | MATRIX |
 | 7.6 | `uRadioPolling.pas:95, 113` `TRadioStatusTraceProc`/`TRadioStatusPublishedProc = procedure(rig: RadioPtr ...)` | typed, but on `RadioPtr` | follows 6.1 | UT `uTestRadioStatus` |
@@ -412,11 +436,11 @@ Owners follow CLAUDE.md's routing table.
 
 | order | packet | items | why here | oracle that tells us what broke | gate before starting | owner(s) |
 |---:|---|---|---|---|---|---|
-| **P0** | Commit the counter | appendix scripts as `tr4w/build/Count-LivePointers.ps1` (+ `-SelfTest`, a floor, and a refusal to report if `src\MainUnit.pas` was not scanned -- the `Count-LiveMove` pattern) | every later packet is measured by it | its own fixture | none | build-release |
+| **P0** | Commit the counter -- **DONE 2026-10-16** | appendix scripts as `tr4w/build/Count-LivePointers.ps1` (+ `-SelfTest`, a floor, and a refusal to report if `src\MainUnit.pas` was not scanned -- the `Count-LiveMove` pattern) | every later packet is measured by it | its own fixture -- all 22 rules exact | none | build-release |
 | **P1** | Type the thread start and the command table | 7.1, 7.2, 7.3 | D2 is undefined behaviour on **every** worker-thread start, and the fix makes the compiler enumerate the wrong ones | COMPILER; checked UT run (`Build-Tests.ps1 -Checked -Run`); then BENCH each thread's feature | disassemble `tWorkerThreadTrampoline` first and record what it shows (D2) | cw-keying, multi-op-network, integrations |
 | **P2** | 64-bit truncations + a lint | 3.1, 5.5 | D3: three live sites crash RichEdit on Win64; the lint stops a fourth | a new `Lint-PointerToInteger.ps1` in `Run-Lints.ps1` (comment-aware, `integer\|longint\|cardinal\|dword\|longword` applied to `@`); x64 COMPILER for the typed parameter | none | build-release, integrations, multi-op-network |
 | **P3** | `logdom` | 1.1 | D1 | UT `uTestDomQTHTableReload`, MATRIX, CORPUS | **IN PROGRESS** -- do not duplicate | contest-scoring |
-| **P4** | Delete the dead pointer code | 1.4, 1.5, 1.6, 1.7, 6.11, 6.12, 7.3 | removes ~250 dereferences, two dangling-pointer shapes and a whole uncompiled unit, at **zero** behaviour risk | COMPILER + full build + UT + CORPUS + MATRIX (a deletion that compiles cannot change behaviour, but run them) | none; **fix `64_BIT_TASKLIST.md`'s `logname` rows and CLAUDE.md's TRDOS table in the same commit** | contest-scoring, file-formats, dx-cluster, lcl-ui |
+| **P4** | Delete the dead pointer code -- **DONE 2026-10-16**, see below | 1.4, 1.5, 1.6, 1.7, 6.11, 6.12, 7.3 | removes ~250 dereferences, two dangling-pointer shapes and a whole uncompiled unit, at **zero** behaviour risk | COMPILER + full build + UT + CORPUS + MATRIX (a deletion that compiles cannot change behaviour, but run them) | none; **fix `64_BIT_TASKLIST.md`'s `logname` rows and CLAUDE.md's TRDOS table in the same commit** | contest-scoring, file-formats, dx-cluster, lcl-ui |
 | **P5** | `zonecont` domestic country list | 1.2 | live and scoring-critical, but the oracle is the strongest in the tree | MATRIX (change `uContestMatrix.pas:502` with it), CORPUS, FACTORY, UT `uTestContestFactory` / `uTestContestSession` | none | contest-scoring, contest-factory |
 | **P6** | CPU keyer buffer | 2.1, 6.5 | D4 nil write + leak | **TEST FIRST**: a UT that feeds `K1EAKeyer.AddCharacterToCWBuffer` (incl. `' '` first) and reads the element ring; then BENCH DTR/RTS keying | write the UT | cw-keying |
 | **P7** | SCP cell buffer | 2.2, 6.4, 7.5 | two allocators for one pointer; live on every partial-call lookup | MATRIX covers the TRMASTER initial-exchange path only. **TEST FIRST**: a UT over the shipped-format fixture (`contest-matrix/MATRIX-TRMASTER.DTA`) asserting partial-call results for a handful of keys | write the UT | file-formats |
@@ -434,6 +458,67 @@ Owners follow CLAUDE.md's routing table.
 or a bench entry: **P6** (CPU keyer), **P7** (SCP partials), **P8** (call and
 spot lists), **P9** (every window), **P10** (3.4, 3.6), **P11** (keying and
 polling), **P13** (reports, K4/Icom discovery), **P14** (every network message).
+
+### P4 -- what was deleted, 2026-10-16
+
+Every deletion was checked first with a case-insensitive whole-word `rg -i -w`
+over **all** of `tr4w/` (src, tr4wserver, every `.lpr`, test, tools, build) and
+the repository's `tools/`, plus `.lpi`, build scripts and include directives
+for the unit files. A routine went only when every reference was its own
+declaration, its own body, or another routine on this list.
+
+| what | where | why it was dead |
+|---|---|---|
+| `logname.pas` (whole unit, `NameDictionary`, `FourBytePtr`) | `src/trdos/` | named in no `uses` clause, `.lpi` or include anywhere (D5) |
+| `uRadioManager.pas`, `uExternalLoggerManager.pas` (whole units) | `src/radioFactory/`, `src/` | named only by commented-out lines in `tr4w.lpr` and `uProgramMain`'s `uses`; those lines went too |
+| `VDEntry`, `VDEntryPointer`, `FirstVDEntry`, `NumberVDCalls`, `DupeAndMultSheet.AddCallToVisibleDupeSheet`, `DupeInit` + the unit's initialization call | `logdupe` | the method had no caller and was the only writer of `FirstVDEntry`; `DupeInit` only walked that always-nil chain |
+| `BandMapEntry`, `tr4wBandMapEntry`, `BandMapEntryPointer`, `BandMapFirstEntryList`, `BandMapCursorData`, `BandMapBlinkingCallRecord`, `BandMapTotalCalls`, `SetUpBandMapEntry`, the four `Next*EntryIn*BandMap` walkers, `GetRecordForBandMapCursor`, `DecrementBandMapTimes`, `BandMapExpandedString` | `logwind` | a closed island: the three `GoToNext*BandMapFrequency` (`logsubs2`) had no caller, and everything else was reached only from them or from each other. `UpdateBlinkingBandMapCall` is live (footswitch) and **stays**; only its `if BandMapBlinkingCallRecord <> nil` block went -- that global was never assigned, so the block never ran |
+| `GoToNextMultBandMapFrequency`, `GoToNextDisplayedBandMapFrequency`, `GoToNextMultDisplayedBandMapFrequency` | `logsubs2` | no caller |
+| `UpdateBandMapDupeStatus`, `RememberHeap` | `logedit` | the only call was commented out; the field had one mention |
+| `DataListEntryPointer`/`Record`, `PartialCallListEntryPtr`/`Type`, `FirstMergeDataListEntry`, `InitialPartialList`, `LastPartialList`, `EntryPointerList`, `AddRecordToMergeList`, `BlowAwayFirstLettersList` | `logscp` | no `New` for the partial list, no caller for the merge list. `BlowAwayFirstLettersList` WAS called (`NewTwoLetters`); its loop never ran, so only its `InitialPartialCall := ''` was kept, inline, with a comment |
+| `MultiMessageMemoryRecord`, `MultiMessageListArrayType`, `MultiMessageListPointer`, `MultiRememberBuffer`, `First`/`LastMultiMessage`, `MultiRetryTime`, `MultiMessageBufferSize`, `CheckForLostMultiMessages` | `logstuff` | `CheckForLostMultiMessages` had no caller and was the only reader; the buffer was never allocated and its indices never written |
+| `EntryPointerListType`/`Ptr`, `TMessageStatePtr`, `DataBaseEntryRecordPtr` | `VC` | one mention each, or used only by a field deleted above |
+| `PDayTable`/`TDayTable`, `FourBytesPtr`, `PPortType`, `BufferType`/`BufferTypePtr` | `tree` | declaration only |
+| `OldInt0BVector`, `OldInt0CVector`, `OldInt08Vector` (DOS interrupt vectors), `RealTimeCWElementRecords`, `RealTimeMessageType`, `RealTimeMessagePointer`, `RealTimeCWMessageArrayType` | `logk1ea` | declaration only |
+| `DVPSharedMemory`, `SharedMemoryPointer` | `logdvp` | declaration only (its one variable was already commented out) |
+| `PMenuRecord` | `uMenu` | declaration only |
+| `SocketPtr` | `tr4wserverUnit` | declaration only |
+| `MultiMessage` | `logwind` | its one variable was already commented out |
+| `Proc: Pointer`, `TAdditionalProc`, label `AdditionalProc` | `uCFG.CheckCommand` | declared, never used (7.3) |
+
+Also: the `logwind.pas`/`SetUpBandMapEntry` row of
+`tools/contest-rules-inventory/judgements.py`. Regenerating
+`CONTEST_RULES_OUTSIDE_FACTORY.md` changes only line numbers and the file count
+(453 -> 450) -- same 23 rows, same 24 contests.
+
+**Left for their owners, not deleted here:** three resourcestrings whose only
+user went -- `TC_FINDINGZEROENDVISIBLEDUPESHEETLIST`,
+`TC_PLEASECHECKMULTINETWORK`, `TC_POSSIBLEDATALOSSMULTINETWORK` (`uTR4WStrings`,
+`lang/tr4w_consts_eng.pas`, the `.po` catalogues). Removing a resourcestring
+moves the catalogue harvest, which is `i18n`'s call.
+
+**Measured with `Count-LivePointers.ps1`**, at `7e3c209b` and after:
+
+| rule | before | after |
+|---|---:|---:|
+| C1-ptrtype-decl | 91 | 68 |
+| C1-link-field | 11 | 5 |
+| C2-new-dispose | 80 | 55 |
+| C3-deref | 1,145 | 823 |
+| C3-inc-dec-ptr | 50 | 42 |
+| C5-data | 19 | 17 |
+| C6-object-type | 12 | 11 |
+| C6-ptr-named | 581 | 552 |
+| C7-proc-type | 111 | 110 |
+| C7-pointer-word | 77 | 69 |
+| every other rule | unchanged | unchanged |
+| **all hits** | **3,144** (821 files) | **2,719** (818 files) |
+
+`logname` alone was 227 of the 322 dereferences. `Count-LiveMove`: **469 ->
+457** (exactly `logname`'s 12; `64_BIT_TASKLIST.md` is updated).
+`Count-LivePChar`: 71, unchanged. Narrowing conversions **1249 -> 1245**
+(ceiling lowered in `Build-App.ps1`); range warnings 3; heaptrc unfreed blocks
+13,469, unchanged.
 
 ---
 

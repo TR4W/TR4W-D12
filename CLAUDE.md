@@ -1463,8 +1463,10 @@ loudly.
 ### 7. External logger integration
 
 `src/uExternalLoggerFactory.pas` creates loggers; `uExternalLoggerBase.pas` (`TExternalLoggerBase`) is
-the abstract base; `uExternalLogger.pas` and `uExternalLoggerManager.pas` carry the implementation.
-Each logger runs its own reading/sender thread pair.
+the abstract base; `uExternalLogger.pas` carries the implementation. ~~`uExternalLoggerManager.pas`~~
+**was never linked and is DELETED (2026-10-16)** -- its only mention was a commented-out `uses`
+line, so it described a multi-logger manager the program has never had. `uRadioManager.pas` went
+with it for the same reason. Each logger runs its own reading/sender thread pair.
 
 | Type | Status |
 |---|---|

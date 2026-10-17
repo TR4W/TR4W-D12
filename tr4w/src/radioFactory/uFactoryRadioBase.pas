@@ -886,7 +886,7 @@ Type TFactoryRadioBase = class(TObject)
         returns, and a K4 has only opened its TCP socket.
 
         So do NOT test IsConnected immediately after calling this.  Two
-        callers in uRadioManager did exactly that and reported failure for
+        callers in uRadioManager (never linked; deleted 2026-10-16) did exactly that and reported failure for
         radios that connect perfectly well: IsConnected is deliberately
         LENIENT (true throughout the handshake, so the polling thread does
         not re-dial and abort it), and IsOperational -- the strict one --
@@ -1834,7 +1834,7 @@ end;
    Connect starts a handshake; IsOperational reports when it finished.  A caller
    that wants a yes/no -- "did this radio come up?" -- has to span that gap, and
    before this existed each one improvised.  Both sites in uRadioManager
-   improvised the same wrong thing: they read the LENIENT IsConnected one
+   (never linked; deleted 2026-10-16) improvised the same wrong thing: they read the LENIENT IsConnected one
    statement after Connect, where it is true for any attempt in flight, and so
    reported success or failure on a value that could not yet mean either.
 

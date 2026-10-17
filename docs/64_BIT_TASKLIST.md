@@ -335,6 +335,13 @@ routing.
 | of which tests and test tools | 68 | 17 |
 | raw word-bounded grep, same files and names | 740 | 175 |
 
+**Re-measured 2026-10-16** (`docs/POINTER_AUDIT.md` packet P4): **469 live
+across 113 units** at `7e3c209b`, **457 across 112** after
+`src/trdos/logname.pas` was deleted. The 12 that went are exactly the
+`logname` row below, which is struck: that unit was named in no `uses` clause,
+so those calls had never been compiled. The rise from 387 is new code, as the
+pointer audit records; it is not re-triaged here.
+
 By routine: `FillChar` 279, `Move` 108 (`System.Move` counts as `Move`).
 `ZeroMemory`, `CopyMemory`, `MoveMemory`, `RtlMoveMemory` and friends are
 **zero live** — every one of them is in a comment. They are counted anyway so a
@@ -382,7 +389,7 @@ large share: two thirds of the work is (a), and most of that is mechanical.
 | radio-factory | 69 | 30 | 0 | 28 | 11 |
 | log-database | 62 | 58 | 1 | 0 | 3 |
 | contest-scoring | 59 | 55 | 0 | 0 | 4 |
-| file-formats | 52 | 36 | 0 | 0 | 16 |
+| file-formats | ~~52~~ 40 | 36 | 0 | 0 | ~~16~~ 4 |
 | multi-op-network | 37 | 18 | 4 | 13 | 2 |
 | lcl-ui | 22 | 15 | 2 | 0 | 5 |
 | utils (no specialist; tests only) | 21 | 12 | 0 | 0 | 9 |
@@ -460,7 +467,8 @@ Write all four as `:= Default(T)`, or delete them.
 **Checked and NOT defects**, so nobody spends time on them again: every Icom
 LAN decode is length-guarded (`uIcomNetworkTransport.pas:954` by its
 dispatcher at 886); the `logname` shifts use the right multiplier for each
-element type; `uKeychainWindows.pas:276` is correct because that unit is
+element type (moot: `logname.pas` was never compiled and is deleted,
+2026-10-16); `uKeychainWindows.pas:276` is correct because that unit is
 UnicodeStrings; `uSuperCheckPartialFileUpload.pas:224` is correct because that
 unit is `-Mdelphi` AnsiString. **That last pair is the trap for a `(b)`
 conversion:** the right `SetString` depends on which string type the unit
@@ -538,7 +546,7 @@ coverage was checked mechanically against `Count-LiveMove -Detail`
 | dx-cluster | `src/uTelnet.pas` | 1861 | a |  | `TSpotRecord` |
 | file-formats | `src/MainUnit.pas` | 8353, 8358, 8413 | a |  | `CallString` locals in the callsign-list generators |
 | file-formats | `src/MainUnit.pas` | 10113 | a |  | a `MAX_PATH` char buffer the next line fills; the global buffer is the artifact, not the clear |
-| file-formats | `src/trdos/logname.pas` | 463, 467, 545, 549, 625, 629, 640, 644, 664, 668, 679, 683 | d list shift |  | insert/delete shifts in the name-database arrays; byte counts checked -- x2 `TwoBytes`, x1 `BYTE`, x4 `FourBytes` |
+| file-formats | ~~`src/trdos/logname.pas`~~ | ~~463, 467, 545, 549, 625, 629, 640, 644, 664, 668, 679, 683~~ | ~~d list shift~~ |  | **DELETED 2026-10-16** (`POINTER_AUDIT.md` P4): the unit was never compiled -- named in no `uses` clause -- so these 12 were never live. Struck, not removed, so the 387 above still adds up |
 | file-formats | `src/trdos/logscp.pas` | 1446, 3285 | a |  | `DataBaseEntryRecord` / `CellBufferObject` (no VMT) |
 | file-formats | `src/trdos/postunit.pas` | 553, 1184, 1341, 1354, 1839, 1840, 2022, 3196, 3382 | a |  | report totals; the pointer derefs size the POINTEE correctly |
 | file-formats | `src/trdos/tree.pas` | 1220, 1230 | d type pun |  | enum -> `Char` by copying one byte -> `Chr(Ord(Band))` |

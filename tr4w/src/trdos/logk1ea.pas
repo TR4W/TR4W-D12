@@ -164,8 +164,6 @@ type
 
     KeyerInitialized: boolean;
 
-    OldInt0BVector, OldInt0CVector: Pointer;
-
     //wli      SerialPortConfigured: array[Serial1..Serial9] of boolean;
     (* THE KEYER'S OWN SERIAL PORTS, as objects.
 
@@ -221,15 +219,6 @@ type
       alive. *)
     procedure UnInitializeKeyer;
   end;
-
-  RealTimeCWElementRecords = record
-    CWSendStatus: boolean;
-    ClockCount: Word;
-  end;
-
-  RealTimeMessageType = array[0..1024] of RealTimeCWElementRecords;
-
-  RealTimeMessagePointer = ^RealTimeMessageType;
 
   (* THE CONST SECTION HERE IS DELETED, not left empty: `const` with no
     members is a syntax error at the NEXT keyword.
@@ -391,7 +380,6 @@ var
   Radio2SerialInvert                    : boolean;
 //  RadioDebugWrite                       : file;
 
-  RealTimeCWMessageArrayType            : array[0..9] of RealTimeMessagePointer;
   RealTimeCWMessagePlaying              : boolean;
   RealTimeCWMessageRecording            : boolean;
   REalTimeCWMessageActive               : integer; { 0 through 9 }
@@ -534,8 +522,6 @@ var
 
 //  NumberInterruptsConstant              : integer;
 //  NumberInterrupts                      : integer;
-  OldInt08Vector                        : Pointer;
-
   PTTDelayCount                         : integer; { When non zero, indicates that
   PTT turn on delay is in progress }
 

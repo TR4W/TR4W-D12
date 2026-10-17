@@ -80,8 +80,6 @@ const
 
   { Control Byte Constants for Multi-Multi communications }
 
-  MultiMessageBufferSize = 32;
-
   MultiTalkMessage = 1; { TR6.75 - Supported by K1EANetwork }
   MultiPacketReceivedSpot = 2; { No longer used.  Uses 4 all the time }
   MultiPacketMessageToSend = 3;
@@ -341,18 +339,6 @@ type
     paElements: array[0..3] of ParserRecord;
   end;
 
-  MultiMessageMemoryRecord = record
-    Message: string[100];
-    TimeMark: QWord {TimeRecord};   // GetTickCount64
-    RetryCount: Byte;
-    QSL: boolean;
-    Warnings: Byte;
-  end;
-
-  MultiMessageListArrayType = array[0..MultiMessageBufferSize - 1] of
-    MultiMessageMemoryRecord;
-  MultiMessageListPointer = ^MultiMessageListArrayType;
-
 const
   ParameterOkayModeTypeStringArray: array[ParameterOkayModeType] of string = (
     'NONE',
@@ -431,7 +417,6 @@ var
   FakePacket: boolean;
   FakeBandMap: boolean;
   FirstHelloRecord: HelloRecPtr;
-  FirstMultiMessage: integer;
   //  FloppyFileSaveName                    : ShortString = 'LOGBACK.TRW';
   ForcedEntry: boolean;
   {KK1L: 6.70 switch used in JCTRL2 to add comments to LOGCFG}
@@ -449,7 +434,6 @@ var
   //  LastDeletedContestExchange       : ContestExchange;
   LastDisplayedBreakTime: integer = -1;
   LastHelloRecord: HelloRecPtr;
-  LastMultiMessage: integer;
   LastMultiInfoMessageSum: array[BandType, ModeType] of Byte;
   //  LastQSOLogged                    : ContestExchange;
 
@@ -462,8 +446,6 @@ var
   MultiInfoMessageTimeout: TimeRecord;
   MultiplierFileEnable: boolean;
   //  MultiMessageBuffer               : array[1..5] of Str80;
-  MultiRememberBuffer: MultiMessageListPointer;
-  MultiRetryTime: integer = 30;
   MultiSerialNumber: integer;
   MultiUpdateMultDisplay: boolean = True;
   (* MultReportMinimumBands DELETED 2026-09-14 -- it is
@@ -585,7 +567,6 @@ procedure CalculateQSOPoints(var RXData: ContestExchange);
 //procedure ChapterReceivedStamp(Exchange: ContestExchange; var LogString: Str80);
 //procedure ChapterReceivedHeader(var LogString: Str80; var Underline: Str80);
 
-procedure CheckForLostMultiMessages;
 procedure CreateAndSendCQMultiInfoMessage;
 procedure CreateAndSendSAPMultiInfoMessage;
 
@@ -5556,62 +5537,6 @@ begin
      begin
      WriteLn('Entry not found.');
      //RestorePreviousWindow;
-     end;
-end;
-
-procedure CheckForLostMultiMessages;
-
-{ This procedure will look at the MultiMessageMemory and see if there are
-  any entries that should either be resent or deleted.  It will stop after
-  it finds one to send so it doesn't hog the computer too long. }
-
-var
-  LookAddress: integer;
-
-begin
-  LookAddress := LastMultiMessage;
-
-  while LookAddress <> FirstMultiMessage do
-     begin
-     with MultiRememberBuffer^[LookAddress] do
-       if not QSL then
-          begin
-          if RetryCount <= 10 then
-             begin
-
-             if ((RetryCount < 2) and (ElaspedSec100(TimeMark) > MultiRetryTime *
-               100) or
-               (RetryCount >= 2) and (ElaspedSec100(TimeMark) > 3000)) then
-                begin
-                if RetryCount >= 3 then
-                   begin
-                   DoABeep(Beepsingle);
-                   end;
-                SendMultiMessage(Message);
-                MarkTime(TimeMark);
-                inc(RetryCount);
-                end;
-             end;
-
-          if (RetryCount >= 5) and (Warnings = 0) then
-             begin
-             DoABeep(Warning);
-             QuickDisplay(TC_PLEASECHECKMULTINETWORK);
-             //                        ReminderPostedCount := 60;
-             Warnings := 1;
-             end;
-
-          if (RetryCount > 10) and (Warnings = 1) then
-             begin
-             DoABeep(Warning);
-             QuickDisplay(TC_POSSIBLEDATALOSSMULTINETWORK);
-             //                        ReminderPostedCount := 60;
-             Warnings := 2;
-             end;
-
-          end;
-
-     LookAddress := (LookAddress + 1) mod MultiMessageBufferSize;
      end;
 end;
 

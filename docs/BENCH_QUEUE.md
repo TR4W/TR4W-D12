@@ -1324,8 +1324,15 @@ nothing ever passes to `DialogBox`.
 
 ### D. Decisions waiting on NY4I, not bench items
 
-- [ ] **`uExternalLoggerManager` and `uRadioManager` are excluded for an expired
-  reason.** `tr4w.lpr` says "uses Generics.Collections (Delphi 2009+) - not
+- [x] **DELETED 2026-10-16 (`docs/POINTER_AUDIT.md` P4), both units.** Neither
+  was named in any live `uses` clause -- `tr4w.lpr` and `uProgramMain` carried
+  only the commented-out lines quoted below -- so neither had ever been
+  compiled. The external logger NY4I describes as working runs through
+  `uExternalLoggerFactory` + `uExternalLogger`, which never used the manager.
+  A status panel, if wanted, is new work and starts from those.
+
+  ~~**`uExternalLoggerManager` and `uRadioManager` are excluded for an expired
+  reason.**~~ `tr4w.lpr` says "uses Generics.Collections (Delphi 2009+) - not
   Delphi 7 IDE compatible". Delphi 7 is gone and FPC has
   `Generics.Collections`. CLAUDE.md still describes `uExternalLoggerManager` as
   carrying the external-logger implementation, so this is either work to finish
@@ -4118,7 +4125,8 @@ Nothing here is a bench test. They need an answer, not a radio.
   branches."* Both routines are gone from `tree.pas`, with
   `help.CheckForName` (which had no caller of its own) and the else-arm of
   `logname.NameDictionary.Init`, which now assigns `''` outright because that
-  is what those calls always produced.
+  is what those calls always produced. (`logname.pas` itself was never
+  compiled and was deleted 2026-10-16 -- `POINTER_AUDIT.md` D5.)
 
   Two independent reasons it could never return anything else, either
   sufficient: `FoundDirectory` tested a local string nothing assigns, and

@@ -162,7 +162,6 @@ ROUTINES = {
    ("MainUnit.pas", "CallWindowChange"): ("ui", new("OnCallsignChanged")),
    ("logedit.pas", "ShowStationInformation"): ("ui", new("ShowsMultiplierStatus")),
    ("logedit.pas", "EditableLog.SuperCheckPartial"): ("ui", "PermittedOperatingAids (existing, M9a)"),
-   ("logwind.pas", "SetUpBandMapEntry"): ("ui", new("ShowsMultiplierStatus")),
    ("logsubs2.pas", "OperateContest"): ("ui", new("ShowsMultiplierStatus")),
    ("logstuff.pas", "BandChange"): ("ui", new("AllowsWARCBands")),
    # uNewContest.ClasslessPrompts was deleted when its last contests gained classes (RSGB 1.8, UA4W; 2026-10-14).
