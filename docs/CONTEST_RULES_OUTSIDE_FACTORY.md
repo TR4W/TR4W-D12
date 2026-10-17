@@ -2,7 +2,7 @@
 
 **GENERATED. Do not edit outside the marked hand-maintained blocks.**
 Regenerate with `python tools/contest-rules-inventory/generate.py` (any working
-directory). This copy was generated from commit `246d5101` (2026-10-16).
+directory). This copy was generated from commit `d329efe9` (2026-10-16).
 Owner: `contest-factory`, with `contest-scoring` (the engine side of every row
 below), `file-formats` (ADIF and Cabrillo rows) and `lcl-ui` (the UI rows).
 
@@ -133,7 +133,7 @@ into 35 comparison-or-arm records --
 
 **Scope.** `git ls-files 'tr4w/*.pas' 'tr4w/*.inc' 'tr4w/*.lpr'`, minus
 `tr4w/include/` (vendored) and `tr4w/test/`, minus `src/contestFactory/`:
-**453 files**. Using the tracked list excludes the gitignored `backup/`,
+**450 files**. Using the tracked list excludes the gitignored `backup/`,
 `graphify-out/` and `.claude/worktrees/` copies by construction.
 
 **Parsing.** Every file is first reduced to CODE ONLY by
@@ -261,18 +261,18 @@ None found.
 | file:line | routine | shape | contest(s) -- **bold = has a class** | class? | seam | what |
 |---|---|---|---|---|---|---|
 | `MainUnit.pas:8072` | LoadinLog | 2 | **RADIOYOC** | all | new seam needed: SessionExchangeState (previous QSO number) | `LegacyContestOf(Contest)` compare |
-| `trdos/logdupe.pas:1561` | GetInitialExchangeStringFromContestExchange | 4 | **ALLJA** | all | new seam needed: InitialExchangeFromHistory | reach 1: `AE` = RSTALLJAPrefectureAndPrecedenceExchange |
-| `trdos/logdupe.pas:1584` | GetInitialExchangeStringFromContestExchange | 4 | **FISTS** | all | new seam needed: InitialExchangeFromHistory | reach 1: `AE` = RSTQTHNameAndFistsNumberOrPowerExchange |
-| `trdos/logedit.pas:2485` | InitialExchangeEntry | 2 | **OZCR_O**, **OZCR_Z** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | `LegacyContestOf(Contest)` in |
-| `trdos/logedit.pas:2503` | InitialExchangeEntry | 2 | **RFCHAMPIONSHIPCW**, **RFCHAMPIONSHIPSSB** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | `LegacyContestOf(Contest)` in |
-| `trdos/logedit.pas:2623` | InitialExchangeEntry | 4 | **ARRLSSCW**, **ARRLSSSSB** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | reach 2: `AIE` = CheckSectionInitialExchange (arm of case @2336) |
-| `trdos/logedit.pas:2754` | InitialExchangeEntry | 4 | **CALQSOPARTY**, **VAQP** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | reach 2 GENERIC-NAMED: `AE` = QSONumberDomesticOrDXQTHExchange |
-| `trdos/logedit.pas:2757` | InitialExchangeEntry | 4 | **CUPRFCW**, **CUPRFDIG**, **CUPRFSSB** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | reach 3: `AE` = QSONumberAndGridSquare |
-| `trdos/logedit.pas:2762` | InitialExchangeEntry | 4 | **NRAUBALTICCW**, **NRAUBALTICSSB**, **OHIOQSOPARTY** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | reach 3 GENERIC-NAMED: `AE` = RSTQSONumberAndDomesticQTHExchange |
-| `trdos/logedit.pas:2763` | InitialExchangeEntry | 4 | **CQIR** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | reach 1: `AE` = QSONumberAndPossibleDomesticQTHExchange |
-| `trdos/logedit.pas:2779` | InitialExchangeEntry | 4 | **ARRLSSCW**, **ARRLSSSSB** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | reach 2: `AE` = QSONumberPrecedenceCheckDomesticQTHEXchange |
-| `trdos/logedit.pas:2791` | InitialExchangeEntry | 2 | **IARU** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | `LegacyContestOf(Contest)` compare |
-| `trdos/logedit.pas:2873` | InitialExchangeEntry | 4 | **JIDXCW**, **JIDXSSB** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | reach 2: `AE` = RSTPrefectureExchange |
+| `trdos/logdupe.pas:1382` | GetInitialExchangeStringFromContestExchange | 4 | **ALLJA** | all | new seam needed: InitialExchangeFromHistory | reach 1: `AE` = RSTALLJAPrefectureAndPrecedenceExchange |
+| `trdos/logdupe.pas:1405` | GetInitialExchangeStringFromContestExchange | 4 | **FISTS** | all | new seam needed: InitialExchangeFromHistory | reach 1: `AE` = RSTQTHNameAndFistsNumberOrPowerExchange |
+| `trdos/logedit.pas:2481` | InitialExchangeEntry | 2 | **OZCR_O**, **OZCR_Z** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | `LegacyContestOf(Contest)` in |
+| `trdos/logedit.pas:2499` | InitialExchangeEntry | 2 | **RFCHAMPIONSHIPCW**, **RFCHAMPIONSHIPSSB** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | `LegacyContestOf(Contest)` in |
+| `trdos/logedit.pas:2619` | InitialExchangeEntry | 4 | **ARRLSSCW**, **ARRLSSSSB** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | reach 2: `AIE` = CheckSectionInitialExchange (arm of case @2332) |
+| `trdos/logedit.pas:2750` | InitialExchangeEntry | 4 | **CALQSOPARTY**, **VAQP** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | reach 2 GENERIC-NAMED: `AE` = QSONumberDomesticOrDXQTHExchange |
+| `trdos/logedit.pas:2753` | InitialExchangeEntry | 4 | **CUPRFCW**, **CUPRFDIG**, **CUPRFSSB** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | reach 3: `AE` = QSONumberAndGridSquare |
+| `trdos/logedit.pas:2758` | InitialExchangeEntry | 4 | **NRAUBALTICCW**, **NRAUBALTICSSB**, **OHIOQSOPARTY** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | reach 3 GENERIC-NAMED: `AE` = RSTQSONumberAndDomesticQTHExchange |
+| `trdos/logedit.pas:2759` | InitialExchangeEntry | 4 | **CQIR** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | reach 1: `AE` = QSONumberAndPossibleDomesticQTHExchange |
+| `trdos/logedit.pas:2775` | InitialExchangeEntry | 4 | **ARRLSSCW**, **ARRLSSSSB** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | reach 2: `AE` = QSONumberPrecedenceCheckDomesticQTHEXchange |
+| `trdos/logedit.pas:2787` | InitialExchangeEntry | 2 | **IARU** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | `LegacyContestOf(Contest)` compare |
+| `trdos/logedit.pas:2869` | InitialExchangeEntry | 4 | **JIDXCW**, **JIDXSSB** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | reach 2: `AE` = RSTPrefectureExchange |
 | `uCallSignRoutines.pas:724` | IsAGoodCall | 3 | **RAEM** | all | new seam needed: IsAcceptableCallsign | `Call = 'RAEM'` accepted as a callsign |
 
 ### Dupe (0 rows)
@@ -393,30 +393,30 @@ Worth reading first, because they are the ones the brief named:
 
 | contest | sites outside the factory, by category |
 |---|---|
-| ARRLSSCW | **exchange** `trdos/logedit.pas:2623`, `trdos/logedit.pas:2779` |
-| ARRLSSSSB | **exchange** `trdos/logedit.pas:2623`, `trdos/logedit.pas:2779` |
-| CUPRFCW | **exchange** `trdos/logedit.pas:2757`; **cabrillo-export** `trdos/postunit.pas:3148` |
-| CUPRFSSB | **exchange** `trdos/logedit.pas:2757`; **cabrillo-export** `trdos/postunit.pas:3148` |
-| ALLJA | **exchange** `trdos/logdupe.pas:1561` |
-| CALQSOPARTY | **exchange** `trdos/logedit.pas:2754` |
-| CQIR | **exchange** `trdos/logedit.pas:2763` |
-| CUPRFDIG | **exchange** `trdos/logedit.pas:2757` |
-| FISTS | **exchange** `trdos/logdupe.pas:1584` |
-| IARU | **exchange** `trdos/logedit.pas:2791` |
-| JIDXCW | **exchange** `trdos/logedit.pas:2873` |
-| JIDXSSB | **exchange** `trdos/logedit.pas:2873` |
+| ARRLSSCW | **exchange** `trdos/logedit.pas:2619`, `trdos/logedit.pas:2775` |
+| ARRLSSSSB | **exchange** `trdos/logedit.pas:2619`, `trdos/logedit.pas:2775` |
+| CUPRFCW | **exchange** `trdos/logedit.pas:2753`; **cabrillo-export** `trdos/postunit.pas:3148` |
+| CUPRFSSB | **exchange** `trdos/logedit.pas:2753`; **cabrillo-export** `trdos/postunit.pas:3148` |
+| ALLJA | **exchange** `trdos/logdupe.pas:1382` |
+| CALQSOPARTY | **exchange** `trdos/logedit.pas:2750` |
+| CQIR | **exchange** `trdos/logedit.pas:2759` |
+| CUPRFDIG | **exchange** `trdos/logedit.pas:2753` |
+| FISTS | **exchange** `trdos/logdupe.pas:1405` |
+| IARU | **exchange** `trdos/logedit.pas:2787` |
+| JIDXCW | **exchange** `trdos/logedit.pas:2869` |
+| JIDXSSB | **exchange** `trdos/logedit.pas:2869` |
 | LABRE | **cabrillo-export** `trdos/postunit.pas:3134` |
-| NRAUBALTICCW | **exchange** `trdos/logedit.pas:2762` |
-| NRAUBALTICSSB | **exchange** `trdos/logedit.pas:2762` |
-| OHIOQSOPARTY | **exchange** `trdos/logedit.pas:2762` |
-| OZCR_O | **exchange** `trdos/logedit.pas:2485` |
-| OZCR_Z | **exchange** `trdos/logedit.pas:2485` |
+| NRAUBALTICCW | **exchange** `trdos/logedit.pas:2758` |
+| NRAUBALTICSSB | **exchange** `trdos/logedit.pas:2758` |
+| OHIOQSOPARTY | **exchange** `trdos/logedit.pas:2758` |
+| OZCR_O | **exchange** `trdos/logedit.pas:2481` |
+| OZCR_Z | **exchange** `trdos/logedit.pas:2481` |
 | POTA | **adif-import** `uPOTAReference.pas:163` |
 | RADIOYOC | **exchange** `MainUnit.pas:8072` |
 | RAEM | **exchange** `uCallSignRoutines.pas:724` |
-| RFCHAMPIONSHIPCW | **exchange** `trdos/logedit.pas:2503` |
-| RFCHAMPIONSHIPSSB | **exchange** `trdos/logedit.pas:2503` |
-| VAQP | **exchange** `trdos/logedit.pas:2754` |
+| RFCHAMPIONSHIPCW | **exchange** `trdos/logedit.pas:2499` |
+| RFCHAMPIONSHIPSSB | **exchange** `trdos/logedit.pas:2499` |
+| VAQP | **exchange** `trdos/logedit.pas:2750` |
 
 ### 6.2 Contests with no class
 
