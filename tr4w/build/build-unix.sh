@@ -1304,12 +1304,25 @@ stage_package() {
       bundle="$stage/TR4W.app"
       mkdir -p "$bundle/Contents/MacOS" "$bundle/Contents/Resources"
       # Move the data payload inside the bundle, where a Mac app finds it.
+      #
+      # A FAILED MOVE FAILS THE STAGE, naming the item. This was
+      # `mv ... 2>/dev/null || true`, which shipped a bundle missing whatever
+      # would not move, with no error anywhere (GitHub issue #90). Every item
+      # is still attempted, so one run names ALL of them, not just the first.
+      _mvfailed=''
       for item in "$stage"/*; do
          case "$item" in
             "$bundle") continue ;;
          esac
-            mv "$item" "$bundle/Contents/Resources/" 2>/dev/null || true
+         if ! mv "$item" "$bundle/Contents/Resources/"; then
+            _mvfailed="$_mvfailed $(basename "$item")"
+         fi
       done
+      if [ -n "$_mvfailed" ]; then
+         say "  FAILED: could not move into TR4W.app/Contents/Resources:$_mvfailed"
+         record FAIL 'package' "could not move into the bundle:$_mvfailed"
+         return 1
+      fi
       cp "$APP_EXE" "$bundle/Contents/MacOS/tr4w"
       chmod +x "$bundle/Contents/MacOS/tr4w"
 

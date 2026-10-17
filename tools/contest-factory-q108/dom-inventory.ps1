@@ -4,14 +4,10 @@
 param([string] $Repo = '')
 if ($Repo -eq '') { $Repo = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path }
 $nsi = Join-Path $Repo 'tr4w\build\full.nsi'
-$packaged = New-Object 'System.Collections.Generic.List[string]'
-foreach ($line in Get-Content $nsi) {
-   $m = [regex]::Match($line, '^\s*File\s+(?:/[^\s]+\s+)*"?(.*?dom[\\/][^"\s]+)"?\s*(?:;.*)?$')
-   if ($m.Success) { $packaged.Add((Split-Path $m.Groups[1].Value -Leaf)) }
-}
-"packaged File lines naming dom\: $($packaged.Count)"
-$pset = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
-foreach ($p in $packaged) { [void]$pset.Add($p) }
+. (Join-Path $PSScriptRoot 'NsiDom.ps1')
+$pset = Get-NsiDomPackaged -Nsi $nsi -DomDir (Join-Path $Repo 'tr4w\target\dom')
+$packaged = @($pset)
+"files packaged from dom\ (wildcards expanded against target\dom): $($packaged.Count)"
 $tracked = @(git -C $Repo -c core.quotepath=false ls-files 'tr4w/target/dom')
 "tracked files in target/dom: $($tracked.Count)"
 $names = $tracked | ForEach-Object { Split-Path $_ -Leaf }

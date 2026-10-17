@@ -470,6 +470,21 @@ jobs:
         shell: bash
         run: sh tr4w/build/build-unix.sh --symbols
 
+      # IS THE LANGUAGE RESOURCE CURRENT? (GitHub issue #90)
+      #
+      # UNMASKED, FOR THE SAME REASON AS THE SYMBOLS GATE. The build step above
+      # ends in `|| true`, so check-language-res.sh's FAIL is only a row in
+      # build-unix.sh's summary. A tr4w_languages.res older than the .po
+      # catalogues ships a binary missing translations that were committed, and
+      # nothing turned red. Run alone, a stale pair fails THIS step and so the
+      # job. Red here withholds nothing (continue-on-error, uploads done).
+      # Any non-zero exit fails: 1 is stale, 2 is "could not tell", and neither
+      # is a pass.
+      - name: Verify the language resource is current
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: sh tr4w/build/check-language-res.sh
+
   build-macos:
     name: macOS (aarch64)
     runs-on: [self-hosted, mac-ci]
@@ -893,6 +908,17 @@ jobs:
       - name: Verify symbols survived to the artifact
         shell: bash
         run: sh tr4w/build/build-unix.sh --symbols
+
+      # IS THE LANGUAGE RESOURCE CURRENT? (GitHub issue #90)
+      #
+      # UNMASKED: the build step ends in `|| true`, so a stale
+      # tr4w_languages.res was only a FAIL row in the summary. See the same
+      # step on the Linux job. The signed artifacts are already uploaded, so
+      # red here withholds nothing.
+      - name: Verify the language resource is current
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: sh tr4w/build/check-language-res.sh
 
       # A FAILED .pkg IS RED -- HERE, AT THE END, AFTER EVERYTHING ELSE HAS
       # BEEN UPLOADED.

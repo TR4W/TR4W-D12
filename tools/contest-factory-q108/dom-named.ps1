@@ -5,12 +5,9 @@ param([string] $Repo = '')
 if ($Repo -eq '') { $Repo = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path }
 Import-Module (Join-Path $Repo 'tr4w\build\PascalSource.psm1') -Force
 $nsi = Join-Path $Repo 'tr4w\build\full.nsi'
-$pset = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
-foreach ($line in Get-Content $nsi) {
-   $m = [regex]::Match($line, '^\s*File\s+(?:/[^\s]+\s+)*"?(.*?dom[\\/][^"\s]+)"?\s*(?:;.*)?$')
-   if ($m.Success) { [void]$pset.Add((Split-Path $m.Groups[1].Value -Leaf)) }
-}
-"distinct packaged dom names: $($pset.Count)"
+. (Join-Path $PSScriptRoot 'NsiDom.ps1')
+$pset = Get-NsiDomPackaged -Nsi $nsi -DomDir (Join-Path $Repo 'tr4w\target\dom')
+"distinct packaged dom names (wildcards expanded against target\dom): $($pset.Count)"
 $disk = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
 Get-ChildItem (Join-Path $Repo 'tr4w\target\dom') -File | ForEach-Object { [void]$disk.Add($_.Name) }
 

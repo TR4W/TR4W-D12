@@ -1,13 +1,15 @@
 # Shipped .dom files whose INCLUDE FILE names a file that is missing or not shipped.
 # Q108 S1 (docs/CONTEST_OWNERSHIP_DESIGN.md 8.2u) -- a measurement, not a gate.
+# "Shipped" comes from nsi_dom.py, which expands full.nsi's dom wildcard.
 import os
 import re
+import sys
 
-ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
-DOM = os.path.join(ROOT, 'tr4w', 'target', 'dom')
-nsi = open(os.path.join(ROOT, 'tr4w', 'build', 'full.nsi'), encoding='utf-8', errors='replace').read()
-BS = chr(92)
-shipped = set(m.lower() for m in re.findall('target' + re.escape(BS) + 'dom' + re.escape(BS) + r'([^\s"]+)', nsi))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import nsi_dom
+
+DOM = nsi_dom.DOM_DIR
+shipped = nsi_dom.shipped_names()
 present = set(f.lower() for f in os.listdir(DOM))
 problems = 0
 for f in sorted(os.listdir(DOM)):
