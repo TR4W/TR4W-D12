@@ -247,7 +247,8 @@ match against that text, **never a raw grep**.
 code: `test/unit/uTestContestFactory.pas` alone carries 44, and new contest
 classes add more (`uContestALRSUA1DZCup.pas` 5). The rule in
 `64_BIT_TASKLIST.md` is `:= Default(T)`, and nothing enforces it. That
-counter prints a number and has no ceiling; packet P15 proposes one.
+counter had no ceiling; packet P15 (2026-10-17) added `$MOVE_CEILING` to
+`Count-LiveMove.ps1` and runs it as `Count-LiveMove -Gate` from `Run-Lints.ps1`.
 
 ### The new counter: `Measure-Pointers.ps1` -- committed as `Count-LivePointers.ps1` (P0)
 
@@ -477,7 +478,7 @@ Owners follow CLAUDE.md's routing table.
 | **P12** | Untyped byte buffers -> open arrays | 3.5 | correct today; this is the "byte I/O stays byte I/O, the pointer goes" rule | UT `uTestCRC32`, `uTestSHA256`, `uTestNetFraming`, `uTestWebSocketFraming`, `uTestIcomCIV`; WinKeyer + server BENCH | none | serial-port-io, multi-op-network, tci-interface, cw-keying |
 | **P13** | Heap temporaries and queues | 2.4, 2.5, 2.7, 2.8 | leaks on exception, `^record` in `TList` | CORPUS (Cabrillo summary); UT `uTestFlexDiscovery`, `uTestIcomTeardown`; the two post-contest reports and K4/Icom discovery are BENCH; QTC per `QTC_BENCH_HANDOFF.md` | none | file-formats, radio-factory, contest-scoring |
 | **P14** | Wire overlays | 3.2, 6.13 | correct today, high blast radius, and possibly superseded | **TEST FIRST**: a decode pin per message type (bytes in, fields out) against the current overlay; then two-station BENCH | **SKIPPED -- NY4I, 2026-10-16: "skip P14, the new protocol replaces it."** The V1 wire overlays are left as they are and retire with the protocol | multi-op-network |
-| **P15** | Ratchet the Move counter | -- | 387 -> 464 in four weeks, all new `FillChar` | a `$MOVE_CEILING` in `Count-LiveMove.ps1`, ratcheting down, wired into `Run-Lints.ps1` | none | build-release |
+| **P15** | Ratchet the Move counter | -- | 387 -> 464 in four weeks, all new `FillChar` | **DONE 2026-10-17:** a `$MOVE_CEILING` in `Count-LiveMove.ps1`, ratcheting down, wired into `Run-Lints.ps1` as `Count-LiveMove -Gate` (fixture first, fails closed under file and count floors) | none | build-release |
 | **P16** | Remaining `src` `...EnumLines` callback | 7.4 | touches six loaders; do after P3 and P5, which own two of them | MATRIX, CORPUS, UT `uTestDomQTHTableReload` | P3, P5 | contest-scoring, settings-config |
 
 **Packets with NO automated oracle today** -- each needs its test written first

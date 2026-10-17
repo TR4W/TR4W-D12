@@ -255,6 +255,12 @@ $lints = @(
    # parameter only works while the call sites name the routine bare. Ten
    # thread bodies had the wrong signature, unchecked, until 2026-10-16.
    @{ Name = 'Lint-TypedCodePointers'; Arg = $Tr4wDir; NeedsFpc = $false }
+
+   # THE LIVE Move / FillChar COUNT, RATCHETED DOWN (pointer audit P15,
+   # 2026-10-17). It went 387 -> 464 in four weeks, all new FillChar, while the
+   # counter had no ceiling. Count-LiveMove.ps1 is both the measurement and, with
+   # -Gate, this lint: it runs its fixture first and fails below its floors.
+   @{ Name = 'Count-LiveMove'; Arg = $Tr4wDir; NeedsFpc = $false; Extra = @('-Gate') }
 )
 
 $failed  = 0

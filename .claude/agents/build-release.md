@@ -158,9 +158,12 @@ the same reason.
 first runs as a warn-only `PostToolUse` hook; the second is run by hand.
 
 **The `Count-Live*.ps1` scripts are measurements, not gates** — `Count-LiveAsm`,
-`Count-LivePChar`, `Count-LiveMove`, and `Count-LivePointers` (2026-10-16, the
+`Count-LivePChar`, and `Count-LivePointers` (2026-10-16, the
 22-category table that measures every `docs/POINTER_AUDIT.md` packet). They
-are not in `Run-Lints` and have no ceiling. **Never quote a raw grep in their
+are not in `Run-Lints` and have no ceiling. **The exception is
+`Count-LiveMove`** (P15, 2026-10-17): `-Gate` makes it a ratchet
+(`$MOVE_CEILING` in the script, lower it when the count drops, never raise it)
+and `Run-Lints.ps1` runs it that way. **Never quote a raw grep in their
 place**: this tree documents its conversions in comments, so a raw count is
 wrong, and by a lot. All four read
 through `PascalSource.psm1`, never a local regex. A new one takes
