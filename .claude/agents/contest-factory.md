@@ -456,6 +456,15 @@ the target shape, the M-step migration order and the open questions.
   match), FIRST ADDED WINS, aliases kept to ten characters, an empty alias is
   never stored. A top-level load clears the table; INCLUDE FILE adds.
   `uTestDomQTHTableReload` pins all of it.
+- **The domestic COUNTRY list is a CLASS over a list too** (`TDomesticCountryList`
+  in `trdos/zonecont.pas`, the global `DomesticCountries`; pointer audit P5,
+  2026-10-16). The linked list (`DomesticCountryRecord`, `NextRecord`,
+  `FirstDomesticCountryRecord`) is deleted. Kept exactly: insertion ORDER,
+  DUPLICATES kept, ASCII upper-case on add, EXACT case-sensitive compare,
+  stored as six characters, an empty ID stored (and matching an unknown
+  country), and only `Clear` resets it (re-arming the once-only "list is
+  EMPTY" log) -- `FoundContest` APPENDS. The matrix's `domestic.countries`
+  line reads `DomesticCountries.IDs[]`. `uTestDomesticCountryList` pins it.
 - **The dupe policy is `MarksDupes`** (M3): `logsubs2` asks
   `ContestIdentity(Contest).MarksDupes`, not `ActiveQSOPointMethod`. Since
   M10 S4 the base answers True; Internet Sprint and the Youth Championship

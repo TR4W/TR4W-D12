@@ -303,7 +303,7 @@ nothing automated; needs a [`BENCH_QUEUE.md`](BENCH_QUEUE.md) entry.
 | # | where | what | live? | native replacement | risk | oracle |
 |---|---|---|---|---|---|---|
 | 1.1 | `trdos/logdom.pas` `PrefixRec` x 36 buckets | domestic QTH aliases | live | `TObjectDictionary` -- **IN PROGRESS** (D1) | high (every QSO party) | UT `uTestDomQTHTableReload`, MATRIX, CORPUS |
-| 1.2 | `trdos/zonecont.pas:42-50`, `AddDomesticCountry` `:156`, `DomesticCountryCall`, `ClearDomesticCountryList` `:255` | domestic COUNTRY list -- DX vs domestic for every domestic contest | **live, scoring-critical** | a `TStringList` (or `THashSet<string>`) owned by the unit; **`uContestMatrix.pas:502` walks `FirstDomesticCountryRecord` directly and must change with it** | high | MATRIX (reads the list), CORPUS, FACTORY, UT `uTestContestFactory` (stubs the call), `uTestContestSession` |
+| 1.2 | `trdos/zonecont.pas:42-50`, `AddDomesticCountry` `:156`, `DomesticCountryCall`, `ClearDomesticCountryList` `:255` | domestic COUNTRY list -- DX vs domestic for every domestic contest | **live, scoring-critical** | **DONE (P5)**: `TDomesticCountryList` over a `TList<AnsiString>`, the unit's global `DomesticCountries`; `uContestMatrix.CaptureDomesticCountries` reads `DomesticCountries.IDs[]` | high | MATRIX (reads the list), CORPUS, FACTORY, UT `uTestContestFactory` (stubs the call), `uTestContestSession` |
 | 1.3 | `trdos/logstuff.pas:252-258`, `EnumHelloDAT` `:1222`, `SendSalutation` `:1143` | `HELLO.DAT` per-country greeting | live **only when `HELLO.DAT` exists** (not shipped); loaded once (`LogCfg.pas:478`), never freed; `Greeting: string[6]` truncates a `Str20` (check D7 before calling that a regression) | `TStringList` `Values[]` | low | **none** -- write a UT first |
 | 1.4 | `trdos/logdupe.pas:156-160`, `:816`, `DupeInit` `:1529` | visible dupe sheet | **dead** (D6) | **DELETED (P4)** | none | COMPILER |
 | 1.5 | `trdos/logwind.pas:180-209, 491-518`, `DecrementBandMapTimes` `:1935`, the `Next*EntryIn*BandMap` walkers `:2425-2715`, `GetRecordForBandMapCursor` `:2893`; `logsubs2.pas:1313-1380` | DOS band map | **dead** (D6) | **DELETED (P4)** | none | COMPILER |
@@ -441,7 +441,7 @@ Owners follow CLAUDE.md's routing table.
 | **P2** | 64-bit truncations + a lint | 3.1, 5.5 | D3: three live sites crash RichEdit on Win64; the lint stops a fourth | a new `Lint-PointerToInteger.ps1` in `Run-Lints.ps1` (comment-aware, `integer\|longint\|cardinal\|dword\|longword` applied to `@`); x64 COMPILER for the typed parameter | none | build-release, integrations, multi-op-network |
 | **P3** | `logdom` | 1.1 | D1 | UT `uTestDomQTHTableReload`, MATRIX, CORPUS | **IN PROGRESS** -- do not duplicate | contest-scoring |
 | **P4** | Delete the dead pointer code -- **DONE 2026-10-16**, see below | 1.4, 1.5, 1.6, 1.7, 6.11, 6.12, 7.3 | removes ~250 dereferences, two dangling-pointer shapes and a whole uncompiled unit, at **zero** behaviour risk | COMPILER + full build + UT + CORPUS + MATRIX (a deletion that compiles cannot change behaviour, but run them) | none; **fix `64_BIT_TASKLIST.md`'s `logname` rows and CLAUDE.md's TRDOS table in the same commit** | contest-scoring, file-formats, dx-cluster, lcl-ui |
-| **P5** | `zonecont` domestic country list | 1.2 | live and scoring-critical, but the oracle is the strongest in the tree | MATRIX (change `uContestMatrix.pas:502` with it), CORPUS, FACTORY, UT `uTestContestFactory` / `uTestContestSession` | none | contest-scoring, contest-factory |
+| **P5** | `zonecont` domestic country list -- **DONE 2026-10-16**, see below | 1.2 | live and scoring-critical, but the oracle is the strongest in the tree | MATRIX (change `uContestMatrix.pas:502` with it), CORPUS, FACTORY, UT `uTestContestFactory` / `uTestContestSession` | none | contest-scoring, contest-factory |
 | **P6** | CPU keyer buffer | 2.1, 6.5 | D4 nil write + leak | **TEST FIRST**: a UT that feeds `K1EAKeyer.AddCharacterToCWBuffer` (incl. `' '` first) and reads the element ring; then BENCH DTR/RTS keying | write the UT | cw-keying |
 | **P7** | SCP cell buffer | 2.2, 6.4, 7.5 | two allocators for one pointer; live on every partial-call lookup | MATRIX covers the TRMASTER initial-exchange path only. **TEST FIRST**: a UT over the shipped-format fixture (`contest-matrix/MATRIX-TRMASTER.DTA`) asserting partial-call results for a handful of keys | write the UT | file-formats |
 | **P8** | Old-style lists with a VMT | 2.3, 6.7, 6.8, 6.9, 6.10 | objects with a VMT are where `SizeOf` and `FillChar` go wrong (CLAUDE.md, the `0xC0000005` story) | `uSortedStringList`/`MultsObject`: UT `uTestMults` + MATRIX + CORPUS. `TCallsignsList`, `TDXSpotsList`: **TEST FIRST** (partials list; spot store add/age/remove) | write the two UTs | contest-scoring, dx-cluster |
@@ -519,6 +519,60 @@ moves the catalogue harvest, which is `i18n`'s call.
 `Count-LivePChar`: 71, unchanged. Narrowing conversions **1249 -> 1245**
 (ceiling lowered in `Build-App.ps1`); range warnings 3; heaptrc unfreed blocks
 13,469, unchanged.
+
+### P5 -- the domestic country list, 2026-10-16
+
+`trdos/zonecont.pas`'s hand-built list (`DomesticCountryRecord` with a
+`NextRecord` field, `FirstDomesticCountryRecord`, `New` per add after a walk to
+the tail, `Dispose` per entry on clear) is a class now:
+`TDomesticCountryList` over a `TList<AnsiString>`, created in the unit's
+`initialization`, freed in its `finalization`, global `DomesticCountries`. The
+three free routines (`AddDomesticCountry`, `ClearDomesticCountryList`,
+`DomesticCountryCall`) keep their signatures and delegate, so none of their
+twenty-odd call sites changed. `GEmptyDomesticListReported` became the list's own latch
+(`ClaimEmptyReport`); the unused `tAddDomesticCountryString` went.
+
+**The semantics kept, read from the old code** (the class header states them):
+insertion order; duplicates appended (UKEI adds `GM` twice); ASCII upper-case on
+add (`TF.strU`); an EXACT, case-sensitive compare (an `AnsiString` holds the
+ShortString bytes, so no code-page conversion enters the compare); stored as
+the first six characters (`string[6]`); an empty ID stored, and matching a call
+whose CTY ID is empty; an empty list logs once and answers False ("DX"), and the
+CTY lookup is still skipped for an empty list; only `Clear` resets -- it empties
+AND re-arms the once-only log -- and `FoundContest` still APPENDS, so a second
+`CONTEST` without a `.cfg` read accumulates, as it always did.
+
+**The one reader outside the unit**, `uContestMatrix.CaptureDomesticCountries`,
+iterates `DomesticCountries.IDs[]` and builds the identical line.
+
+**Pinned by `uTestDomesticCountryList`** (31 checks): order and duplicates;
+case and width; the empty ID; `Clear` emptying, re-arming the report and a
+reload after it; an add without `Clear` accumulating; and the free routines
+reaching the live list (restored after).
+
+**Oracles:** matrix 187 identical **without re-freeze**, and every fresh record
+byte-identical to a run of the pre-change binary; the matrix run's slice of
+`tr4w.log` holds **109** "domestic country list is EMPTY" lines before and 109
+after; factory 13 identical; corpus 22/0/4, exit 0; ADIF round trip 12/0/1;
+unit 360,236 / 0 failed, plain and `-Checked`; heaptrc unfreed 13,469,
+unchanged; narrowing 1245, range 3; 44 lints. **The corpus is blind to scoring
+and the matrix says "same", not "right"** -- the list decides DX vs domestic in
+every domestic contest, so this deserves a real-contest look.
+
+**`Count-LivePointers.ps1`**, at `5b1f838b` and after:
+
+| rule | before | after |
+|---|---:|---:|
+| C1-ptrtype-decl | 68 | 67 |
+| C1-link-field | 5 | 4 |
+| C2-new-dispose | 55 | 52 |
+| C3-deref | 823 | 810 |
+| every other rule | unchanged | unchanged |
+| **all hits** | **2,719** (818 files) | **2,701** (819 files) |
+
+What is left in `zonecont` under `C6-ptr-named` is `CharPtr`, an `integer` in
+`GetNumber` -- which, like `ClubCall` and `LastLocateQTH`, has no reader
+anywhere in the tree. Not deleted here; noted for a dead-code pass.
 
 ---
 

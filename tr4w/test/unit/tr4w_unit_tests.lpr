@@ -682,6 +682,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* A .dom loaded into a table that already holds one (LOGDOM's emptying
       loop read through nil at the end of every list, D7 included). *)
    uTestDomQTHTableReload in 'uTestDomQTHTableReload.pas',
+   (* ZONECONT's domestic COUNTRY list, once a hand-built linked list:
+      order, duplicates, case, width, and the reset (pointer audit P5). *)
+   uTestDomesticCountryList in 'uTestDomesticCountryList.pas',
    uTestSettingsFreshInstall in 'uTestSettingsFreshInstall.pas',
    uTestLegacyConversionCheck in 'uTestLegacyConversionCheck.pas',
    uLegacyConversionCheck in '..\..\src\uLegacyConversionCheck.pas',
@@ -783,6 +786,7 @@ begin
    RegisterSuite(TContestIN7QPNETests.Create('ContestIN7QPNE'));
    RegisterSuite(THostAreaRuleTests.Create('HostAreaRule'));
    RegisterSuite(TDomQTHTableReloadTests.Create('DomQTHTableReload'));
+   RegisterSuite(TDomesticCountryListTests.Create('DomesticCountryList'));
    RegisterSuite(TCRC32Tests.Create('CRC32'));
    RegisterSuite(TK4SpectrumTests.Create('K4Spectrum'));
    RegisterSuite(TIcomScopeTests.Create('IcomScope'));

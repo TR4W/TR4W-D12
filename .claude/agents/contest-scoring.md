@@ -57,6 +57,17 @@ prefer new units in `src/`. The no-LCL half of that boundary was rescinded
 (2026-08-23): TRDOS units may use the LCL directly. The rest stands — new
 *behaviour* belongs in `src/`, and increasingly in the contest factory.
 
+**THE DOMESTIC COUNTRY LIST IS `ZoneCont.DomesticCountries`, a
+`TDomesticCountryList` over a `TList<AnsiString>`** (pointer audit P5,
+2026-10-16; the `FirstDomesticCountryRecord` linked list is deleted). It
+decides DX vs domestic for every domestic contest (`DomesticCountryCall`).
+**`FoundContest` APPENDS to it and never clears it** -- only `LogCfg` (just
+before a text `.cfg` is parsed) and `ADD DOMESTIC COUNTRY = CLEAR` do, and
+`Clear` re-arms the once-only "domestic country list is EMPTY" error. Order
+and duplicates are kept, IDs are ASCII-uppercased and kept to six
+characters, the compare is exact. Read the class header before changing any
+of it; `uTestDomesticCountryList` pins it.
+
 **`VC.pas` is the source of truth** for `ContestType` (120+ values), band and mode
 enums, and colour schemes. **Since Q108 S2 (2026-10-16) `ContestType` is the
 FROZEN list of legacy contest numbers, not the in-memory key**: the global

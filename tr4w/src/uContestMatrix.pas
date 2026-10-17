@@ -507,15 +507,13 @@ end;
 
 procedure CaptureDomesticCountries;
 var
-   rec: DomesticCountryRecordPointer;
+   i: integer;
    line: string;
 begin
    line := '';
-   rec := FirstDomesticCountryRecord;
-   while rec <> nil do
+   for i := 0 to DomesticCountries.Count - 1 do
       begin
-      line := line + ' ' + string(rec^.CountryID);
-      rec := rec^.NextRecord;
+      line := line + ' ' + DomesticCountries.IDs[i];
       end;
    EmitField('domestic.countries', Trim(line));
 end;

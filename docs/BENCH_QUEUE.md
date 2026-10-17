@@ -23,6 +23,32 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-16 -- 5.0.28 AND AFTER: WHAT THE GATES CANNOT SEE
+
+Every item below passed every automated oracle; each is "same as before",
+not "right". Check on a real run:
+
+- **DX vs domestic in a domestic contest** (pointer audit P5): the domestic
+  country list is a class now (`TDomesticCountryList`). Log a few in-country
+  and DX contacts in a contest that uses it (e.g. a state QSO party from out
+  of state, ARRL DX from W) and confirm each is DX or domestic as before.
+- **County files** (`TDomQTHTable`, the logdom rewrite): a QSO party's county
+  abbreviations still resolve, including an INCLUDE FILE (New York in-state:
+  a Canadian province counts).
+- **Nebraska QSO Party** (new): out of state, only NE counties score; in
+  state, counties + states + provinces + countries, NE itself not a state;
+  KA0BOJ bonus 100.
+- **Out-of-area QSOs score 0** (Q107): as an out-of-state entrant, import an
+  ADIF holding a contact with another out-of-state station; it should log
+  but score 0 -- and Rescore from the menu keeps it 0.
+- **Polish UI** shows "Polski", the About box credits SP2EWQ, M0GIM and
+  G0DVJ; a machine-translated language credits LibreTranslate.
+- **N1MM listener** receives `<mycall>` again (UDP contact broadcast).
+- **The installer** (`dom\*.dom` wildcard): an installed copy has all 124
+  files in `dom\`, including `prov12.dom`.
+
+---
+
 ## Added 2026-10-15 -- THE MINIMUM OFF TIME IS THE CONTEST'S (Q60)
 
 NY4I's answer: a break is 60 minutes in CQ WW and 30 in every other contest,
