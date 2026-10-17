@@ -499,7 +499,7 @@ closes it; anything else reopens it.
 | Q34 | Rover county/grid per QSO, set by a call-window command; sketched for later | issue #87 |
 | Q89 | BCQP ADIF exports STATE:BC; no CNTY (ADIF defines no Canadian secondary subdivision) | built -- and STATE is now the WORKED station's in every party (Q76) |
 | Q99 | Each class states its schedule (typed); New Contest list alphabetical, a check box orders by next date; start/end seeded | not built |
-| Q35 | Idaho bonus: at least 10 QSOs (as built); all 25 table counties; one table per year, by the log's year | per-year table not built |
+| Q35 | Idaho bonus: at least 10 QSOs (as built); all 25 table counties; one table per year, by the log's year | built 2026-10-17 (2026 table only; 2027 coverage is the sponsor's) |
 | Q52 | The New Contest drop-down shows each friendly name in full (sized at run time); reconsider if too wide | not built |
 | Q53 | Names for the 43 unnamed contests: docs/Q53_CONTEST_NAMES.csv; MINITEST retired | built |
 | Q67 | New Contest rows seeded from the station; the values at OK are the contest's own | not built |
@@ -1172,6 +1172,25 @@ closes it; anything else reopens it.
   contest, whatever the label says; an earlier claim here that TR4W pays 2026
   logs the wrong list is WITHDRAWN. Which contest years it covers (2026 only,
   or 2026 and 2027) is the sponsor's to say.
+  **BUILT (2026-10-17).** `uContestBase.LogContestYear` is the one statement
+  of a log's contest year: `TScoreTotals.LogStartTime` (the contest row's
+  `start_time`, read once when the log opens -- `TLogRepository.LogStartTime`
+  -- and filled by `uScoreTotals.GatherScoreTotals`), else the EARLIEST dated
+  QSO in the view, else 0. Live entry, reload, rescore, the matrix and
+  `/EXPORT` all score through `LOGEDIT.TotalScore`, so all read the same year;
+  none reads the clock. Idaho's table is `IdahoBonusCounties2026`, registered
+  for **2026 only** (2027 stays the sponsor's question, said in the code);
+  `IdahoBonusCountyPoints` is where a year is added. A log with ten or more
+  valid QSOs whose year has no table pays NO county bonus and writes ONE
+  Error to `tr4w.log` naming the year and county (once per year per session);
+  a log with no year at all says that instead. Tests (`uTestContestTotals`):
+  `Test_LogContestYearReadsTheLog`, `Test_IdahoPaysTheTableOfTheLogsYear`,
+  `Test_IdahoYearWithNoTablePaysNothingAndSaysSo`,
+  `Test_IdahoStartTimeOutranksTheFirstQSO` and the yearly reminder
+  `Test_IdahoHasATableForTheCurrentYear` (fails on the first run of a year
+  with no table); `uTestLogRepository.TestTheContestStartTimeIsReadAtOpen`.
+  The operator sees only the score without the bonus and the log line --
+  no on-screen notice (a class touches no UI); whether one is wanted is open.
 
 - **Q99** **A contest states when it runs** (raised by NY4I with Q15,
   2026-10-16: *"we should be storing the times and relative dates of the

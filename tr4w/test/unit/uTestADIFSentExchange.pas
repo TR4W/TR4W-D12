@@ -95,7 +95,9 @@ uses
    uContestBase,
    uADIFExchange,
    uTestContestObjects,
-   uTestExchangeFields;
+   uTestExchangeFields,
+   (* TCaptureAppender -- lifted there 2026-10-17 (Q35, its second caller). *)
+   uTestLogCapture;
 
 type
    TADIFSentHelper = function(const aMy: TMyStationExchange;
@@ -109,43 +111,11 @@ type
                                    const aQso: ContestExchange): string; override;
    end;
 
-   (* AN APPENDER THAT KEEPS WHAT IT IS GIVEN, to prove an Error was written
-      and what it names. *)
-   TCaptureAppender = class(TLogCustomAppender)
-   private
-      FLines: TStringList;
-   protected
-      procedure DoAppend(const Message: string); override;
-   public
-      constructor Create(const aName: string); reintroduce;
-      destructor Destroy; override;
-      property Lines: TStringList read FLines;
-   end;
-
 function TFailingContest.GetADIFSentExchange(const aMy: TMyStationExchange;
                                              const aQso: ContestExchange): string;
 begin
    Result := '';
    raise EConvertError.Create('injected failure');
-end;
-
-constructor TCaptureAppender.Create(const aName: string);
-begin
-   inherited Create(aName);
-   FLines := TStringList.Create;
-end;
-
-destructor TCaptureAppender.Destroy;
-begin
-   (* inherited FIRST: the base destructor closes the appender, which writes
-      its footer through DoAppend -- into FLines, which must still exist. *)
-   inherited Destroy;
-   FLines.Free;
-end;
-
-procedure TCaptureAppender.DoAppend(const Message: string);
-begin
-   FLines.Add(Message);
 end;
 
 (* The four inputs -- see the header. *)

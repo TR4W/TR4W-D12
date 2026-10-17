@@ -69,6 +69,11 @@ type
       procedure Test_SalmonRunW7DXOncePerMode;
       procedure Test_SalmonRunSingleModeEntry;
       procedure Test_IdahoDormantCountyNeedsTenQSOs;
+      procedure Test_LogContestYearReadsTheLog;
+      procedure Test_IdahoPaysTheTableOfTheLogsYear;
+      procedure Test_IdahoYearWithNoTablePaysNothingAndSaysSo;
+      procedure Test_IdahoStartTimeOutranksTheFirstQSO;
+      procedure Test_IdahoHasATableForTheCurrentYear;
       procedure Test_QSOCountsTowardTotals;
       procedure Test_SummarySheetCountsWhatTheTotalsCount;
       procedure Test_RescoredXQSOKeepsNoScoring;
@@ -86,7 +91,12 @@ uses
    (* Make and NoStation -- lifted there at M8, the third copy being due. *)
    uTestContestObjects,
    (* TallySummaryTotals and the summary sheet's counts -- Q51. *)
-   PostUnit;
+   PostUnit,
+   (* Q35: Idaho's per-year table, and proof its "no table" report is
+      written. *)
+   uContestIdahoQP,
+   Log4D,
+   uTestLogCapture;
 
 (* ---------------------------------------------------------------------------
    HAND-BUILT INPUTS
@@ -123,6 +133,57 @@ function AsDupe(const aQso: ContestExchange): ContestExchange;
 begin
    Result := aQso;
    Result.ceDupe := True;
+end;
+
+(* aQso logged on 14 March of aYear (the Idaho QSO Party's second full
+   weekend in 2026), 12:00 UTC. qtYear is the year minus 2000. *)
+function OnDay(const aQso: ContestExchange; aYear, aMonth, aDay: integer): ContestExchange;
+begin
+   Result := aQso;
+   Result.tSysTime.qtYear := aYear - 2000;
+   Result.tSysTime.qtMonth := aMonth;
+   Result.tSysTime.qtDay := aDay;
+   Result.tSysTime.qtHour := 12;
+end;
+
+function InYear(const aQso: ContestExchange; aYear: integer): ContestExchange;
+begin
+   Result := OnDay(aQso, aYear, 3, 14);
+end;
+
+(* A view of aCount valid Idaho QSOs (20 m CW, distinct calls), all in
+   aYear. *)
+procedure AddIdahoQSOs(aView: TLoggedQSOList; aCount, aYear: integer);
+var
+   i: integer;
+begin
+   for i := 1 to aCount do
+      begin
+      aView.Add(InYear(LoggedQSO('K' + IntToStr(i mod 10) + 'A' + IntToStr(i), Band20, CW), aYear));
+      end;
+end;
+
+(* An in-state Idaho entrant in aCounty. *)
+function IdahoEntrant(const aCounty: string): TStationContext;
+begin
+   Result := NoStation;
+   Result.InHostState := True;
+   Result.MyState := aCounty;
+end;
+
+(* Idaho's bonus over aView with aTotals (so a test can state the log's
+   start time). *)
+function IdahoBonus(const aStation: TStationContext; const aTotals: TScoreTotals;
+                    aView: TLoggedQSOView): longint;
+var
+   contestObject: TContestBase;
+begin
+   contestObject := Make(IDAHOQSOPARTY, aStation);
+   try
+      Result := contestObject.BonusPoints(aTotals, aView);
+   finally
+      contestObject.Free;
+   end;
 end;
 
 (* The final score of aContest over aView, with aTotals. *)
@@ -661,16 +722,18 @@ begin
    station.MyState := 'BUT';
    view := TLoggedQSOList.Create;
    try
+      (* A 2026 LOG -- the year has a table (Q35); the year rule itself is
+         Test_IdahoPaysTheTableOfTheLogsYear's. *)
       for i := 1 to 9 do
          begin
-         view.Add(LoggedQSO('K' + IntToStr(i) + 'AAA', Band20, CW));
+         view.Add(InYear(LoggedQSO('K' + IntToStr(i) + 'AAA', Band20, CW), 2026));
          end;
       (* NOT VALID: a dupe, and a QSO on a band Idaho does not use. *)
-      view.Add(AsDupe(LoggedQSO('K1AAA', Band20, CW)));
-      view.Add(LoggedQSO('K0ZZZ', Band30, CW));
+      view.Add(InYear(AsDupe(LoggedQSO('K1AAA', Band20, CW)), 2026));
+      view.Add(InYear(LoggedQSO('K0ZZZ', Band30, CW), 2026));
       CheckEquals(0, Bonus(IDAHOQSOPARTY, station, view), 'nine valid QSOs: no bonus');
 
-      view.Add(LoggedQSO('K0AAA', Band40, Phone));
+      view.Add(InYear(LoggedQSO('K0AAA', Band40, Phone), 2026));
       CheckEquals(1000, Bonus(IDAHOQSOPARTY, station, view), 'ten from Butte: 1000');
 
       station.MyState := 'was';
@@ -685,6 +748,182 @@ begin
    finally
       view.Free;
    end;
+end;
+
+(* THE LOG'S CONTEST YEAR -- uContestBase.LogContestYear (Q35): the start
+   time when the log records one, else the EARLIEST dated QSO, else 0. *)
+procedure TContestTotalsTests.Test_LogContestYearReadsTheLog;
+var
+   view: TLoggedQSOList;
+   t: TScoreTotals;
+begin
+   BeginTest('Test_LogContestYearReadsTheLog');
+
+   t := Totals(0);
+   view := TLoggedQSOList.Create;
+   try
+      CheckEquals(0, LogContestYear(t, view), 'an empty log with no start has no year');
+      CheckEquals(0, LogContestYear(t, nil), 'nor does no view at all');
+
+      (* tree.pas's "no time": a zero month and day. *)
+      view.Add(LoggedQSO('K1AAA', Band20, CW));
+      CheckEquals(0, LogContestYear(t, view), 'an undated QSO says nothing about the year');
+
+      (* OUT OF LOG ORDER: the older QSO is added second. *)
+      view.Add(OnDay(LoggedQSO('K2AAA', Band20, CW), 2027, 1, 2));
+      view.Add(OnDay(LoggedQSO('K3AAA', Band20, CW), 2026, 12, 31));
+      CheckEquals(2026, LogContestYear(t, view), 'the EARLIEST dated QSO, not the first in the list');
+
+      t.LogStartTime := EncodeDate(2025, 3, 8) + EncodeTime(14, 0, 0, 0);
+      CheckEquals(2025, LogContestYear(t, view), 'a recorded start time outranks every QSO date');
+   finally
+      view.Free;
+   end;
+end;
+
+(* A 2026 LOG PAYS THE 2026 TABLE -- by the QSOs' dates, the only source of
+   the year until Q99 writes start_time. Butte 1000, Washington 500, and Ada
+   (in no table) nothing. *)
+procedure TContestTotalsTests.Test_IdahoPaysTheTableOfTheLogsYear;
+var
+   view: TLoggedQSOList;
+begin
+   BeginTest('Test_IdahoPaysTheTableOfTheLogsYear');
+
+   view := TLoggedQSOList.Create;
+   try
+      AddIdahoQSOs(view, 10, 2026);
+      CheckEquals(1000, IdahoBonus(IdahoEntrant('BUT'), Totals(0), view), '2026, Butte: 1000');
+      CheckEquals(500, IdahoBonus(IdahoEntrant('WAS'), Totals(0), view), '2026, Washington: 500');
+      CheckEquals(0, IdahoBonus(IdahoEntrant('ADA'), Totals(0), view), '2026, Ada is not dormant');
+   finally
+      view.Free;
+   end;
+end;
+
+(* A YEAR WITH NO TABLE PAYS NO COUNTY BONUS AND SAYS SO (Q35: "no silent
+   zero"). One Error in the Idaho unit's log naming the year and the county,
+   written ONCE per year however often the score is asked; a log too short to
+   earn a bonus is not reported; a log with no year at all is reported as
+   such. *)
+procedure TContestTotalsTests.Test_IdahoYearWithNoTablePaysNothingAndSaysSo;
+var
+   capture: TCaptureAppender;
+   keep: ILogAppender;
+   lg: TLogLogger;
+   savedLevel: TLogLevel;
+   idaho: TContestBase;
+   view: TLoggedQSOList;
+   i: integer;
+begin
+   BeginTest('Test_IdahoYearWithNoTablePaysNothingAndSaysSo');
+
+   capture := TCaptureAppender.Create('capture');
+   keep := capture;
+   lg := TLogLogger.GetLogger('uContestIdahoQP');
+   savedLevel := lg.Level;
+   lg.Level := Log4D.Error;
+   lg.AddAppender(keep);
+   view := TLoggedQSOList.Create;
+   idaho := Make(IDAHOQSOPARTY, IdahoEntrant('BUT'));
+   try
+      (* NINE QSOs: no list could pay, so nothing is reported. *)
+      AddIdahoQSOs(view, 9, 2031);
+      CheckEquals(0, idaho.BonusPoints(Totals(0), view), 'nine QSOs in 2031: no bonus');
+      CheckEquals(0, capture.Lines.Count, 'and nothing to report below ten');
+
+      view.Clear;
+      AddIdahoQSOs(view, 10, 2031);
+      CheckFalse(TContestIdahoQP.HasDormantCountyTable(2031), 'the fixture year has no table');
+      CheckEquals(0, idaho.BonusPoints(Totals(0), view), '2031 has no table: no county bonus');
+      CheckEquals(1, capture.Lines.Count, 'and it is REPORTED');
+      CheckTrue(Pos('2031', capture.Lines.Text) > 0, 'naming the year: ' + capture.Lines.Text);
+      CheckTrue(Pos('BUT', capture.Lines.Text) > 0, 'and the county: ' + capture.Lines.Text);
+      CheckTrue(Pos('NOT in the score', capture.Lines.Text) > 0,
+                'and saying the score leaves it out: ' + capture.Lines.Text);
+
+      CheckEquals(0, idaho.BonusPoints(Totals(0), view), 'asked again');
+      CheckEquals(1, capture.Lines.Count, 'reported once per year, not once per score');
+
+      (* NO YEAR AT ALL: ten undated QSOs and no start time. *)
+      view.Clear;
+      for i := 0 to 9 do
+         begin
+         view.Add(LoggedQSO('K' + IntToStr(i) + 'AAA', Band20, CW));
+         end;
+      CheckEquals(0, idaho.BonusPoints(Totals(0), view), 'a log with no year: no county bonus');
+      CheckEquals(2, capture.Lines.Count, 'and that is reported too');
+      CheckTrue(Pos('no contest year', capture.Lines[1]) > 0, 'as no year: ' + capture.Lines[1]);
+   finally
+      lg.RemoveAppender(keep);
+      lg.Level := savedLevel;
+      keep := nil;
+      idaho.Free;
+      view.Free;
+   end;
+end;
+
+(* THE LOG'S START TIME OUTRANKS ITS QSOs' DATES (Q35) -- end to end
+   through the bonus. QSOs dated 2031 in a log that says it started in 2026
+   are paid the 2026 list; QSOs dated 2026 in a log that says 2031 are not. *)
+procedure TContestTotalsTests.Test_IdahoStartTimeOutranksTheFirstQSO;
+var
+   capture: TCaptureAppender;
+   keep: ILogAppender;
+   lg: TLogLogger;
+   savedLevel: TLogLevel;
+   view: TLoggedQSOList;
+   t: TScoreTotals;
+begin
+   BeginTest('Test_IdahoStartTimeOutranksTheFirstQSO');
+
+   (* Captured only to keep the expected 2031 report out of the run's log. *)
+   capture := TCaptureAppender.Create('capture');
+   keep := capture;
+   lg := TLogLogger.GetLogger('uContestIdahoQP');
+   savedLevel := lg.Level;
+   lg.Level := Log4D.Error;
+   lg.AddAppender(keep);
+   view := TLoggedQSOList.Create;
+   try
+      AddIdahoQSOs(view, 10, 2031);
+      t := Totals(0);
+      t.LogStartTime := EncodeDate(2026, 3, 14) + EncodeTime(19, 0, 0, 0);
+      CheckEquals(1000, IdahoBonus(IdahoEntrant('BUT'), t, view),
+                  'a 2026 start pays the 2026 list, whatever the QSOs say');
+
+      view.Clear;
+      AddIdahoQSOs(view, 10, 2026);
+      t.LogStartTime := EncodeDate(2031, 3, 8);
+      CheckEquals(0, IdahoBonus(IdahoEntrant('BUT'), t, view),
+                  'a 2031 start is 2031, which has no table, though the QSOs are 2026');
+      CheckTrue(Pos('2031', capture.Lines.Text) > 0, 'and reports 2031: ' + capture.Lines.Text);
+   finally
+      lg.RemoveAppender(keep);
+      lg.Level := savedLevel;
+      keep := nil;
+      view.Free;
+   end;
+end;
+
+(* THE YEARLY REMINDER -- Q35, DELIBERATELY ON THE CLOCK. This is the ONE
+   place the current date is read, and it is a test, not a rule: on the first
+   run of a year with no Idaho table this FAILS, until the sponsor's table for
+   that year (https://www.idahoqsoparty.org/idaho_rovers.htm) is added to
+   uContestIdahoQP as a new table beside the old ones. Do not "fix" it by
+   registering an old table for a new year without the sponsor's word --
+   that pays a list nobody confirmed. *)
+procedure TContestTotalsTests.Test_IdahoHasATableForTheCurrentYear;
+begin
+   BeginTest('Test_IdahoHasATableForTheCurrentYear');
+
+   CheckTrue(TContestIdahoQP.HasDormantCountyTable(2026), 'the 2026 table is registered');
+   CheckFalse(TContestIdahoQP.HasDormantCountyTable(2025),
+              'and it is not claimed for an earlier contest');
+   CheckTrue(TContestIdahoQP.HasDormantCountyTable(CurrentYear),
+             Format('YEARLY REMINDER: uContestIdahoQP has no dormant-county bonus table for %d. ' +
+                    'Add the sponsor''s table for that contest (idaho_rovers.htm).',
+                    [CurrentYear]));
 end;
 
 procedure TContestTotalsTests.Test_QSOCountsTowardTotals;
@@ -991,6 +1230,11 @@ begin
    Test_SalmonRunW7DXOncePerMode;
    Test_SalmonRunSingleModeEntry;
    Test_IdahoDormantCountyNeedsTenQSOs;
+   Test_LogContestYearReadsTheLog;
+   Test_IdahoPaysTheTableOfTheLogsYear;
+   Test_IdahoYearWithNoTablePaysNothingAndSaysSo;
+   Test_IdahoStartTimeOutranksTheFirstQSO;
+   Test_IdahoHasATableForTheCurrentYear;
    Test_QSOCountsTowardTotals;
    Test_SummarySheetCountsWhatTheTotalsCount;
    Test_RescoredXQSOKeepsNoScoring;

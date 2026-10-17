@@ -217,6 +217,9 @@ type
       FSetIdForNextSave: AnsiString;
       FSentExchangeForNextSave: AnsiString;
       FContest: TContestHandle;
+      (* The contest row's start_time, read with the contest -- see
+         LogStartTime. *)
+      FStartTime: TDateTime;
 
       FUpdate: TSQLQuery;
       FSelectById: TSQLQuery;
@@ -489,6 +492,17 @@ type
       function ConfigCount: integer;
       function MessageCount: integer;
       function LogContest: TContestHandle;
+
+      (* WHEN THE LOG SAYS ITS CONTEST STARTED: the contest row's start_time
+         (unix UTC) as a UTC TDateTime, or 0 when the row has none. Q35
+         (2026-10-17) is the first reader -- the contest year a bonus table
+         is chosen by (uContestBase.LogContestYear).
+
+         READ ONCE, WHEN THE REPOSITORY OPENS (LoadContest), because the
+         score asks for it after every QSO and a query per score is the cost
+         uScoreTotals measured and refused. NOTHING WRITES start_time YET --
+         Q99 seeds it at New Contest -- so today this is 0 for every log. *)
+      function LogStartTime: TDateTime;
 
       function NewestRowId: Int64;
 
@@ -1978,12 +1992,20 @@ var
    token: ShortString;
 begin
    FContest := NoContest;
+   FStartTime := 0;
    q := NewReadQuery;
    try
-      q.SQL.Text := 'SELECT contest_type FROM contest WHERE id = 1';
+      q.SQL.Text := 'SELECT contest_type, start_time FROM contest WHERE id = 1';
       q.Open;
       if not q.EOF then
          begin
+         (* NULL, or a zero a writer left, is "not recorded" -- never
+            1 January 1970. *)
+         if (not q.Fields[1].IsNull) and
+            (q.Fields[1].AsLargeInt > 0) then
+            begin
+            FStartTime := UnixToDateTime(q.Fields[1].AsLargeInt);
+            end;
          token := q.Fields[0].AsString;
          (* ContestFromName reads the registry's ids (uContestNames), and
            SetContest writes ContestId, so the pair are inverses for every
@@ -2240,6 +2262,11 @@ end;
 function TLogRepository.LogContest: TContestHandle;
 begin
    Result := FContest;
+end;
+
+function TLogRepository.LogStartTime: TDateTime;
+begin
+   Result := FStartTime;
 end;
 
 procedure TLogRepository.SetContest(aContest: TContestHandle);

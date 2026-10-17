@@ -469,6 +469,7 @@ uses
    uTestContestParse in 'uTestContestParse.pas',
    uTestContestTotals in 'uTestContestTotals.pas',
    uTestContestObjects in 'uTestContestObjects.pas',
+   uTestLogCapture in 'uTestLogCapture.pas',
    uTestRegisteredContests in 'uTestRegisteredContests.pas',
    uTestContestStatesItsRules in 'uTestContestStatesItsRules.pas',
    (* A CONTEST REGISTERED BY ITS STRING ID, AND ONLY HERE (Q108 S3). The

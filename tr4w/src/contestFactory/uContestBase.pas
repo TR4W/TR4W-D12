@@ -808,6 +808,17 @@ type
          Active* multiplier kinds are all None. *)
       SessionCountsMultipliers: boolean;
 
+      (* WHEN THE LOG SAYS ITS CONTEST STARTED -- the contest row's
+         start_time, UTC, as TLogRepository.LogStartTime read it when the log
+         was opened; 0 when the row records none. Q35 (2026-10-17) is its
+         first reader, through LogContestYear below.
+
+         A LOG FACT, NOT A STATION FACT AND NOT THE CLOCK: a 2026 log reopened
+         in 2029 carries 2026 here. Nothing WRITES start_time yet (Q99 seeds
+         it at New Contest), so today it is 0 for every log and the year comes
+         from the QSOs. *)
+      LogStartTime: TDateTime;
+
       (* The session's exchange stood here until M11 S7 (2026-10-14): its one
          reader, CombineScore's FISTS test, is FISTS's own formula now. (Its
          DX multiplier kind stood beside it until M11 S4 part 2.) *)
@@ -3379,6 +3390,25 @@ procedure ClearXQSOScoring(var aQso: ContestExchange);
    it; every other mode is itself. *)
 function BonusModeOf(aMode: ModeType): ModeType;
 
+(* THE CONTEST YEAR OF A LOG -- Q35 (NY4I, 2026-10-16: "you have to handle
+   reviewing an old contest as you need to know which list of counties to
+   use"). The ONE statement of it, for any rule that changes from year to
+   year; Idaho's dormant-county table is the first reader.
+
+      1. aTotals.LogStartTime's year, when the log records a start;
+      2. else the year of the EARLIEST dated QSO in aView;
+      3. else 0 -- the log says nothing about its year (no start, and no QSO
+         with a date). A caller treats 0 as "unknown" and reports it.
+
+   NEVER THE CLOCK: "a logged QSO reads its record", so the answer is the
+   same live, after a reload, a rescore or an /EXPORT, and in 2029.
+
+   THE EARLIEST, NOT THE FIRST IN LOG ORDER: an import or a merge can put an
+   older QSO after a newer one, and the contest started with the older. For
+   an ordinary log the two are the same QSO. A QSO with no date (tree.pas
+   writes a zero month and day for "no time") is skipped. *)
+function LogContestYear(const aTotals: TScoreTotals; aView: TLoggedQSOView): integer;
+
 implementation
 
 uses
@@ -4198,6 +4228,53 @@ begin
    else
       begin
       Result := aMode;
+      end;
+end;
+
+function LogContestYear(const aTotals: TScoreTotals; aView: TLoggedQSOView): integer;
+var
+   year, month, day: word;
+   i: integer;
+   qso: ContestExchange;
+   key, earliest: longint;
+begin
+   if aTotals.LogStartTime > 0 then
+      begin
+      DecodeDate(aTotals.LogStartTime, year, month, day);
+      Result := year;
+      Exit;
+      end;
+
+   Result := 0;
+   if aView = nil then
+      begin
+      Exit;
+      end;
+
+   (* qtYear IS THE YEAR MINUS 2000 (uLogBinaryFile.QSOTimeToUnixUTC says
+      why), so year-month-day packs into one comparable number. *)
+   earliest := 0;
+   for i := 0 to aView.Count - 1 do
+      begin
+      qso := aView.QSO(i);
+      if (qso.tSysTime.qtMonth = 0) or
+         (qso.tSysTime.qtDay = 0) then
+         begin
+         Continue;
+         end;
+      key := (2000 + longint(qso.tSysTime.qtYear)) * 10000 +
+             longint(qso.tSysTime.qtMonth) * 100 +
+             longint(qso.tSysTime.qtDay);
+      if (earliest = 0) or
+         (key < earliest) then
+         begin
+         earliest := key;
+         end;
+      end;
+
+   if earliest <> 0 then
+      begin
+      Result := earliest div 10000;
       end;
 end;
 

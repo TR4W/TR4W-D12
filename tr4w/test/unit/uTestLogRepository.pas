@@ -56,6 +56,7 @@ type
       procedure TestAnAppendBatchWritesRowsAsTheLiveAppendDoes;
       procedure TestAnEditKeepsTheSentExchange;
       procedure TestQSOsWithoutAnExchangeIdAreReported;
+      procedure TestTheContestStartTimeIsReadAtOpen;
       procedure TestOneQSORoundTrips;
       procedure Test_LegacySkippedIsReadAsDeleted;
       procedure TestSentinelsBecomeNullAndComeBack;
@@ -85,6 +86,7 @@ uses
      never reach the log.  It was Windows; LCLType declares both and is what
      the rest of the tree now uses for them. *)
    LCLType, SysUtils, Classes, uLogDatabase, uLogSchema, uLogBinaryFile,
+   DateUtils,   (* DateTimeToUnix -- the contest row's start_time (Q35) *)
    sqldb,   (* TSQLQuery -- a reader built by hand to drift on purpose *)
    uLogRepository,
    utils_text,   (* CharBufferBytes -- the mapper's own read of ceOperator *)
@@ -2844,6 +2846,66 @@ begin
    Scrub(fn);
 end;
 
+(* THE CONTEST ROW'S start_time IS READ WHEN THE LOG OPENS (Q35) -- the
+   contest year a bonus table is chosen by. A new log has none (nothing
+   writes it until Q99) and answers 0, never 1 January 1970; a row that
+   carries one answers it, as a UTC TDateTime, from a repository opened
+   after it was written -- the reopened-old-log case. *)
+procedure TLogRepositoryTests.TestTheContestStartTimeIsReadAtOpen;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   fn: string;
+   start: TDateTime;
+begin
+   BeginTest('TestTheContestStartTimeIsReadAtOpen');
+   fn := TempLogName('starttime.db');
+   Scrub(fn);
+   start := EncodeDate(2026, 3, 14) + EncodeTime(19, 0, 0, 0);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         repo.SetContest(ContestHandleOf(IDAHOQSOPARTY));
+         repo.Commit;
+         CheckTrue(repo.LogStartTime = 0, 'a new log records no start');
+      finally
+         repo.Free;
+      end;
+
+      (* What Q99 will write at New Contest. *)
+      db.Connection.ExecuteDirect(
+         'UPDATE contest SET start_time = ' + IntToStr(DateTimeToUnix(start)) +
+         ' WHERE id = 1');
+      db.Transaction.Commit;
+
+      repo := TLogRepository.Create(db);
+      try
+         (* Within a second: the column holds whole unix seconds. *)
+         CheckTrue(Abs(repo.LogStartTime - start) < 1.0 / 86400,
+                   'a reopened log answers its recorded start: ' +
+                   DateTimeToStr(repo.LogStartTime));
+      finally
+         repo.Free;
+      end;
+
+      db.Connection.ExecuteDirect('UPDATE contest SET start_time = 0 WHERE id = 1');
+      db.Transaction.Commit;
+      repo := TLogRepository.Create(db);
+      try
+         CheckTrue(repo.LogStartTime = 0, 'a zero start is "not recorded", not 1970');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   Scrub(fn);
+end;
+
 procedure TLogRepositoryTests.RunAllTests;
 begin
    (* FIRST, AND ON EVERY PLATFORM: these need no D7 fixture, and they pin
@@ -2865,6 +2927,7 @@ begin
    TestAnAppendBatchWritesRowsAsTheLiveAppendDoes;
    TestAnEditKeepsTheSentExchange;
    TestQSOsWithoutAnExchangeIdAreReported;
+   TestTheContestStartTimeIsReadAtOpen;
 
 {$IFNDEF WINDOWS}
    (* SAID, NOT SILENT: a suite that quietly contributes nothing is

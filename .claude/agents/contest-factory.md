@@ -581,6 +581,24 @@ the target shape, the M-step migration order and the open questions.
   `uGridShape.IsGoodLookingGrid` calls a grid, so a malformed grid has no
   distance and each class scores it by its own rule at distance 0 (ALRS
   guards its logarithm; WWL and the Stew Perry give 1).
+- **A RULE THAT CHANGES BY YEAR ASKS THE LOG'S YEAR, NEVER THE CLOCK**
+  (Q35, built 2026-10-17). `uContestBase.LogContestYear(aTotals, aView)` is
+  the one statement: `TScoreTotals.LogStartTime` (the contest row's
+  `start_time`, read ONCE at open by `TLogRepository.LoadContest` /
+  `LogStartTime`, filled by `uScoreTotals.GatherScoreTotals`), else the
+  EARLIEST dated QSO in the view, else 0 (unknown). Nothing writes
+  `start_time` until Q99, so today the QSO dates decide. Live, reload,
+  rescore, matrix and `/EXPORT` all reach it through `LOGEDIT.TotalScore`,
+  so they agree. Idaho is the first reader: one typed table per contest year
+  (`IdahoBonusCounties2026` -- registered for 2026 ONLY; whether it also
+  covers 2027 is the sponsor's open question) chosen in
+  `IdahoBonusCountyPoints`; a year with no table pays no county bonus and
+  logs ONE Error naming the year (once per year per session --
+  `uTestLogCapture.TCaptureAppender` proves it). `Test_IdahoHasATableForTheCurrentYear`
+  reads the clock ON PURPOSE and fails on the first run of a year with no
+  table: that is the yearly reminder -- add the sponsor's table, never
+  register an old one for a new year without their word. The matrix's QSOs
+  are all 2026-01-15, so its records sit in the 2026 table year.
 - **A contest owns its identity, and everyone asks it** (M1, 2026-10-01).
   `uContestRegistry.ContestIdentity(h)` answers for EVERY contest handle --
   the class, else a plain `TContestBase` (only NoContest, and a byte that names

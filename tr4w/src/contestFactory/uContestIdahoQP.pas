@@ -116,7 +116,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     previous year", and "The bonus points will be given to stations in bonus
     county that makes 10 valid QSO's." The page's table is headed "2027
     Bonus" and lists twenty-five counties, 500 or 1000 each (none at 1500
-    this year); IdahoBonusCounties below is that table, abbreviation for
+    this year); IdahoBonusCounties2026 below is that table, abbreviation for
     abbreviation -- every one checked against idaho_cty.dom.
 
     WHOSE COUNTY: AN IDAHO STATION'S OWN, which TR4W records ONCE, as MY
@@ -135,8 +135,20 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
     THE SPONSOR'S TWO PAGES DIFFER ON THE THRESHOLD: the rovers page says
     "makes 10 valid QSO's", the rules page "if they make MORE THAN 10
-    contacts". Ten is what NY4I wrote (design 7.5) and what this does; the
-    eleventh-QSO reading is design Q35.
+    contacts". NY4I settled it (Q35, 2026-10-16): "it is at least 10 qsos."
+    So ten or more, as built.
+
+    ONE TABLE PER CONTEST YEAR (Q35, built 2026-10-17). NY4I: "This is an
+    annual update as the rare counties change each year", and "you have to
+    handle reviewing an old contest as you need to know which list of
+    counties to use." So the list is chosen by the LOG'S contest year --
+    uContestBase.LogContestYear: the contest row's start_time, else the
+    earliest QSO's date -- and never by today's clock, so a 2026 log rescored
+    in 2029 still pays the 2026 list. A year with no table PAYS NO COUNTY
+    BONUS, because there is no list to pay from, and SAYS SO: an Error in
+    tr4w.log naming the year, once per year per session (ReportNoTable). A
+    silent zero would be a wrong claimed score nobody could see.
+    TContestIdahoQP.HasDormantCountyTable is what the yearly pin test asks.
 
   NOT HERE: WA7BNM's "5 bonus points each for working K7S, K7P, K7U or K7D",
     which the sponsor's rules page does not mention; and the final score,
@@ -173,6 +185,13 @@ uses
 
 type
    TContestIdahoQP = class(TContestStateQSOPartyBase)
+   private
+      (* THE "NO TABLE" REPORT'S LATCH -- see ReportNoTable. The score is
+         asked after every QSO, so the Error is written once per year per
+         session, not once per QSO. Main thread only, as the score is. *)
+      FReportedNoTable: boolean;
+      FReportedNoTableYear: integer;
+      procedure ReportNoTable(aYear: integer; const aCounty: string);
    protected
       (* PROTECTED, MATCHING THE BASE -- callers use the property; descendants
          override the getter. *)
@@ -226,6 +245,11 @@ type
       (* THE DORMANT-COUNTY BONUS -- see the header. *)
       function BonusPoints(const aTotals: TScoreTotals;
                            aView: TLoggedQSOView): longint; override;
+
+      (* DOES THE CLASS HOLD THE SPONSOR'S DORMANT-COUNTY TABLE FOR aYear?
+         Q35 -- the yearly pin test asks it of the current year, so the first
+         run of a new year fails until that year's table is added. *)
+      class function HasDormantCountyTable(aYear: integer): boolean;
    public
       (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
          TContestBase.HasDXMultiplier (M11 S4 part 2). *)
@@ -248,6 +272,8 @@ uses
    uCabrilloExchange,
    uADIFExchange,
    uDXMultiplierKey,
+   (* The "no table for this year" Error -- Q35. *)
+   Log4D,
    SysUtils, uContestRegistry;
 
 type
@@ -257,10 +283,23 @@ type
    end;
 
 const
-   (* THE SPONSOR'S "2027 Bonus" TABLE, https://www.idahoqsoparty.org/
-      idaho_rovers.htm, read 2026-10-02 -- the dormant counties and what each
-      pays. THE LIST CHANGES EVERY YEAR, so this is the one place to edit. *)
-   IdahoBonusCounties: array[0..24] of TIdahoBonusCounty =
+   (* THE 2026 CONTEST'S TABLE -- the sponsor's table headed "2027 Bonus",
+      https://www.idahoqsoparty.org/idaho_rovers.htm, read 2026-10-02: the
+      dormant counties and what each pays.
+
+      WHY 2026 AND NOT 2027 (Q35): the Wayback capture of 2026-05-11 -- four
+      months BEFORE the 2026 contest -- shows this identical table under the
+      same heading (the captures of 2026-03-15 and 2026-04-12 show the page
+      with no table), so it is the list in force for the 2026 contest,
+      whatever the label says. IT IS REGISTERED FOR 2026 ONLY. Whether it
+      ALSO covers the 2027 contest is the SPONSOR'S question and is still
+      open; until they answer, a 2027 log reports that it has no table
+      rather than being paid a list nobody has confirmed for it.
+
+      A NEW YEAR IS A NEW TABLE BESIDE THIS ONE and one arm in
+      IdahoBonusCountyPoints -- never an edit to this one, which a 2026 log
+      reopened later must still be paid from. *)
+   IdahoBonusCounties2026: array[0..24] of TIdahoBonusCounty =
       (
       (County: 'ADM'; Points:  500),
       (County: 'BEA'; Points:  500),
@@ -289,8 +328,49 @@ const
       (County: 'WAS'; Points:  500)
       );
 
-   (* "stations in bonus county that makes 10 valid QSO's". *)
+   (* "stations in bonus county that makes 10 valid QSO's" -- ten or more
+      (NY4I, Q35: "it is at least 10 qsos"). *)
    IdahoBonusMinimumQSOs = 10;
+
+var
+   logger: TLogLogger;
+
+(* What aCounty pays in aTable; 0 when it is not listed. *)
+function PointsInTable(const aTable: array of TIdahoBonusCounty;
+                       const aCounty: string): longint;
+var
+   i: integer;
+begin
+   Result := 0;
+   for i := Low(aTable) to High(aTable) do
+      begin
+      if aTable[i].County = aCounty then
+         begin
+         Result := aTable[i].Points;
+         Exit;
+         end;
+      end;
+end;
+
+(* THE YEARS THAT HAVE A TABLE -- the one place a contest year is added.
+   False when aYear has none (aPoints 0); True with what aCounty pays in
+   that year's table, 0 when it is not a dormant county that year. *)
+function IdahoBonusCountyPoints(aYear: integer; const aCounty: string;
+                                out aPoints: longint): boolean;
+begin
+   aPoints := 0;
+   case aYear of
+      2026:
+         begin
+         aPoints := PointsInTable(IdahoBonusCounties2026, aCounty);
+         Result := True;
+         end;
+      else
+         begin
+         Result := False;
+         end;
+      end;
+end;
 
 function TContestIdahoQP.GetDisplayName: string;
 begin
@@ -458,33 +538,22 @@ begin
    Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10];
 end;
 
+(* THE ORDER IS DELIBERATE. In state, then the ten valid QSOs, THEN the
+   year's table: below ten no list could pay anything, so a log still being
+   started (no QSOs, no year yet) is not reported as missing a table. *)
 function TContestIdahoQP.BonusPoints(const aTotals: TScoreTotals;
                                      aView: TLoggedQSOView): longint;
 var
    county: string;
    countyBonus: longint;
    validQSOs: integer;
+   year: integer;
    i: integer;
    qso: ContestExchange;
 begin
    Result := inherited BonusPoints(aTotals, aView);
 
    if not Station.InHostState then
-      begin
-      Exit;
-      end;
-
-   county := UpperCase(Trim(Station.MyState));
-   countyBonus := 0;
-   for i := Low(IdahoBonusCounties) to High(IdahoBonusCounties) do
-      begin
-      if IdahoBonusCounties[i].County = county then
-         begin
-         countyBonus := IdahoBonusCounties[i].Points;
-         Break;
-         end;
-      end;
-   if countyBonus = 0 then
       begin
       Exit;
       end;
@@ -498,10 +567,57 @@ begin
          inc(validQSOs);
          end;
       end;
-
-   if validQSOs >= IdahoBonusMinimumQSOs then
+   if validQSOs < IdahoBonusMinimumQSOs then
       begin
-      Result := Result + countyBonus;
+      Exit;
+      end;
+
+   county := UpperCase(Trim(Station.MyState));
+   year := LogContestYear(aTotals, aView);
+   if not IdahoBonusCountyPoints(year, county, countyBonus) then
+      begin
+      ReportNoTable(year, county);
+      Exit;
+      end;
+
+   Result := Result + countyBonus;
+end;
+
+class function TContestIdahoQP.HasDormantCountyTable(aYear: integer): boolean;
+var
+   points: longint;
+begin
+   Result := IdahoBonusCountyPoints(aYear, '', points);
+end;
+
+(* AN ERROR, NOT A WARNING: Log4D's root level defaults to Error, so a Warn
+   would not reach tr4w.log on a default station, and a claimed score that
+   leaves out a bonus is worth an operator's attention. Year 0 is a log that
+   says nothing about its year (no start_time and no dated QSO). *)
+procedure TContestIdahoQP.ReportNoTable(aYear: integer; const aCounty: string);
+begin
+   if FReportedNoTable and
+      (FReportedNoTableYear = aYear) then
+      begin
+      Exit;
+      end;
+   FReportedNoTable := True;
+   FReportedNoTableYear := aYear;
+
+   if aYear = 0 then
+      begin
+      logger.Error(Format(
+         'Idaho QSO Party: the log records no contest year (no start time and no dated QSO), ' +
+         'so the dormant-county bonus for %s cannot be decided and is NOT in the score.',
+         [aCounty]));
+      end
+   else
+      begin
+      logger.Error(Format(
+         'Idaho QSO Party: TR4W has no dormant-county bonus table for the %d contest, ' +
+         'so the bonus for %s is NOT in the score. Each year''s table is the sponsor''s ' +
+         '(idahoqsoparty.org/idaho_rovers.htm) and is added to uContestIdahoQP.',
+         [aYear, aCounty]));
       end;
 end;
 
@@ -535,6 +651,7 @@ begin
 end;
 
 initialization
+   logger := TLogLogger.GetLogger('uContestIdahoQP');
    RegisterContest(IDAHOQSOPARTY, TContestIdahoQP);
 
 end.

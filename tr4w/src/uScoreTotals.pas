@@ -98,6 +98,8 @@ uses
    uMults,
    uContestFactory,
    uContestRegistry,
+   (* LogStoreRepository -- the open log's start_time (Q35). *)
+   uLogStore,
    (* DoingAnyMults -- "counts multipliers", one statement shared with the
       WSJT-X decode gate (M11 S4 part 2). *)
    LogEdit;
@@ -162,6 +164,14 @@ begin
 
    aTotals.ScoredBand := SingleBand;
    aTotals.SessionCountsMultipliers := DoingAnyMults(aContest);
+
+   (* THE LOG'S OWN START (Q35), read when the log was opened -- never the
+      clock. No open log, or one with no start_time (every log until Q99),
+      leaves 0, and LogContestYear falls back to the QSOs' dates. *)
+   if LogStoreRepository <> nil then
+      begin
+      aTotals.LogStartTime := LogStoreRepository.LogStartTime;
+      end;
 end;
 
 function ContestFinalScore(aContest: TContestHandle;
