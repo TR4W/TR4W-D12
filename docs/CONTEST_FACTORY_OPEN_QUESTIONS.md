@@ -31,7 +31,6 @@ in section 4. One line each -- the full text is further down.
 - **Q8** Events with no ContestType still named in code (TRC, PGA, EURASIA ...).
 - **Q47** Fix the three kept read-past-the-end shapes now?
 - **Q101** Fill the typed `rcvd_*` columns from each class, or delete them?
-- **Q109** UDP score message: no ALL row, inflated totals, no WRTC mults, no suppression (D7 too).
 
 **Awaiting only your yes (section 3)**
 - **Q10** Retire unused ContestTypes through `TContestRetired` (MINITEST needs it).
@@ -190,26 +189,6 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   *Recommended: the class fills them* -- it is the one place that knows
   whether a QTH is a county, a section or a grid, which is exactly the
   question Q89's ADIF STATE fix had to answer.
-  **Answer:**
-
-- **Q109** (found by the new end-to-end UDP tests, 2026-10-16) The N1MM-style
-  UDP **score** message (`dynamicresults`, `SendScoreToUDP`) has four
-  problems, ALL also in D7 4.151 (tag names and structure match D7):
-  1. **No `<point>` rows are ever sent.** The mode loop runs `CW to Phone`
-     (`{Both do}` is commented out), so the "ALL" mode row in the header's
-     own sample XML is never written.
-  2. **The `total` row is inflated when two modes are worked** -- a running
-     sum is reused: CW 5 on 20 m + Phone 3 on 15 m gives `total CW` = 8 and
-     `total PH` = 13 (should be 5 and 3). Single-mode contests come out right.
-  3. **WRTC sends no `<mult>` rows** -- its labels exist only for the
-     all-modes row that (1) never reaches.
-  4. **No suppression:** the UDP score goes out for a contest that forbids
-     score posting (WRTC) -- only HamScore and the menu ask the contest.
-  The tests pin today's output, (2) as a named known-defect test, so each
-  fix is a deliberate test edit. *Recommended: fix 1-3 (send the ALL row,
-  per-mode totals, WRTC's mults follow from 1); for 4, ask the contest the
-  same way HamScore does -- a local N1MM-style listener is arguably not
-  "posting", so this one is your call.*
   **Answer:**
 
 ---
@@ -415,9 +394,37 @@ closes it; anything else reopens it.
 | Q100 | `contest.last_opened_at` deleted (the last-contest button gives quick access); the button reads "Last Contest" | building |
 | Q107 | QSO parties: an out-of-state entrant's QSO with a non-host station scores 0 and no mult (scoring applies the entry rule; one predicate) | building |
 | Q108 | Contests register by string id like radios (no `VC.pas` line for a new contest); multi-op refused for a contest with no legacy number until the new protocol; `<contestnr>` open | design after the cleanup |
+| Q109 | UDP `dynamicresults`: send the ALL row, per-mode totals, WRTC mults; never suppressed (WRTC's local aggregators read it -- also settles Q55) | not built |
 | Q52 note | Settled by Q52 | removed |
 
 ### Answered since the table was last updated (full text)
+
+- **Q109** (found by the new end-to-end UDP tests, 2026-10-16) The N1MM-style
+  UDP **score** message (`dynamicresults`, `SendScoreToUDP`) has four
+  problems, ALL also in D7 4.151 (tag names and structure match D7):
+  1. **No `<point>` rows are ever sent.** The mode loop runs `CW to Phone`
+     (`{Both do}` is commented out), so the "ALL" mode row in the header's
+     own sample XML is never written.
+  2. **The `total` row is inflated when two modes are worked** -- a running
+     sum is reused: CW 5 on 20 m + Phone 3 on 15 m gives `total CW` = 8 and
+     `total PH` = 13 (should be 5 and 3). Single-mode contests come out right.
+  3. **WRTC sends no `<mult>` rows** -- its labels exist only for the
+     all-modes row that (1) never reaches.
+  4. **No suppression:** the UDP score goes out for a contest that forbids
+     score posting (WRTC) -- only HamScore and the menu ask the contest.
+  The tests pin today's output, (2) as a named known-defect test, so each
+  fix is a deliberate test edit. *Recommended: fix 1-3 (send the ALL row,
+  per-mode totals, WRTC's mults follow from 1); for 4, ask the contest the
+  same way HamScore does -- a local N1MM-style listener is arguably not
+  "posting", so this one is your call.*
+  **Answer:** (NY4I, 2026-10-16) *"q109 is ok except dynamicresults is
+  perfectly fine for wrtc. That was its original purpose."* So: FIX 1-3
+  (send the ALL row, per-mode totals, WRTC's mults) and do NOT suppress the
+  UDP score for WRTC -- the UDP `dynamicresults` message is what WRTC's local
+  aggregators read; that is what it was built for. This also settles Q55:
+  WRTC's multipliers belong in THIS message (fix 3), and Q83's "WRTC posts
+  neither" applies to the ONLINE scoreboard and HamScore, not to the local
+  UDP broadcast. Not built.
 
 - **Q108** (NY4I, 2026-10-16) A new contest should not touch `VC.pas`:
   *"I prefer we have a registry similar to when we Add a new radio so the
@@ -734,6 +741,13 @@ closes it; anything else reopens it.
   posts NEITHER online nor to HamScore -- which is what the build does today
   (one flag, `oaScorePosting`, off for WRTC). The split into two permissions
   still stands for other contests. No change.
+  **CORRECTED by Q109 (NY4I, same day):** *"dynamicresults is perfectly fine
+  for wrtc. That was its original purpose."* There are TWO dynamicresults
+  builders and this entry conflated them: the ONLINE one
+  (`uGetScores.BuildDynamicResultsXml`, scoreboard/HamScore -- WRTC posts
+  neither, as above) and the local UDP one (`logsubs2.BuildScoreUDPXml`), which
+  is what WRTC's local aggregators read. WRTC's multipliers DO belong in the
+  UDP message -- Q109 fix 3.
 
 - **Q80** IN7QPNE multipliers for in-area entrants per party, once Q4's
   piece exists?
