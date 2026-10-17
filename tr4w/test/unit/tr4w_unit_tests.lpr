@@ -180,6 +180,9 @@ uses
    uMults               in '..\..\src\uMults.pas',
    uTestMults           in 'uTestMults.pas',
    uTestOffBandCredit   in 'uTestOffBandCredit.pas',
+   uTestMalformedGrid   in 'uTestMalformedGrid.pas',
+   uTestRoverDupeKey    in 'uTestRoverDupeKey.pas',
+   uTestOperatorCQMemory in 'uTestOperatorCQMemory.pas',
    uCallSignRoutines    in '..\..\src\uCallSignRoutines.pas',
    uTestCallSignRoutines in 'uTestCallSignRoutines.pas',
    uFactoryRadioBase    in '..\..\src\radioFactory\uFactoryRadioBase.pas',
@@ -840,6 +843,9 @@ begin
    RegisterSuite(TCWFramingTests.Create('CWFraming'));
    RegisterSuite(TContestFactoryTests.Create('ContestFactory'));
    RegisterSuite(TOffBandCreditTests.Create('OffBandCredit'));
+   RegisterSuite(TMalformedGridTests.Create('MalformedGrid'));
+   RegisterSuite(TRoverDupeKeyTests.Create('RoverDupeKey'));
+   RegisterSuite(TOperatorCQMemoryTests.Create('OperatorCQMemory'));
    RegisterSuite(TRadioLinkRetryTests.Create('RadioLinkRetry'));
    RegisterSuite(TStatusAndNoticeTests.Create('StatusAndNotice'));
    RegisterSuite(TNewContestFormTests.Create('NewContestForm'));

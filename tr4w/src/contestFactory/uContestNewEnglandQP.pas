@@ -183,9 +183,12 @@ type
       (* THE WORKED STATION'S ADIF STATE -- see TContestBase.ADIFCountyState
          and ADIFWorkedStationState (Q76/Q89, NY4I 2026-10-16). Both of this
          contest's county files (NEQSO, NEQSOW1) key a county five letters,
-         the county first and the state LAST (AndME, AddVT); in NEQSOW1 the
-         typed alias is shorter (AD), which is why the key is read, not the
-         text. No CNTY: WritesADIFCounty stays False, as before. *)
+         the state FIRST and then the county (MEAnd, VTAdd, CTCap) -- the
+         sponsor's spelling and in7qpne_cty.dom's, since Q81 (2026-10-17;
+         it was county first, AndME, with Connecticut's eight old counties).
+         A typed alias may be shorter (NEQSOW1's AD) or the old county-first
+         spelling (ANDME), which is why the key is read, not the text. No
+         CNTY: WritesADIFCounty stays False, as before. *)
       function ADIFCountyState(const aQso: ContestExchange): string; override;
       function ADIFWorkedStationState(const aQso: ContestExchange): string; override;
    public
@@ -531,8 +534,11 @@ begin
 end;
 
 const
-   (* THE SIX NEW ENGLAND STATES -- the last two letters of a county key of
-      NEQSO / NEQSOW1. This class's own copy (design 1.4). *)
+   (* THE SIX NEW ENGLAND STATES -- the FIRST two letters of a county key of
+      NEQSO / NEQSOW1 since Q81 (2026-10-17), which spells a county state
+      first as the sponsor does (MEAND, CTCAP); it was the last two while
+      the files spelled it county first (ANDME). This class's own copy
+      (design 1.4). *)
    NEQP_COUNTY_STATES = ' CT MA ME NH RI VT ';
 
 function TContestNewEnglandQP.ADIFCountyState(const aQso: ContestExchange): string;
@@ -544,7 +550,7 @@ begin
    key := UpperCase(ADIFPartyQTHKey(aQso));
    if Length(key) = 5 then
       begin
-      state := Copy(key, 4, 2);
+      state := Copy(key, 1, 2);
       if Pos(' ' + state + ' ', NEQP_COUNTY_STATES) > 0 then
          begin
          Result := state;

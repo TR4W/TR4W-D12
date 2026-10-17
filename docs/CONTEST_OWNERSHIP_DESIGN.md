@@ -427,7 +427,7 @@ final score = contest.FinalScore(totals, view)
 | `CombineWithMultipliers` | protected virtual | the base is TotalScore's general case: points times the sum of every multiplier kind on the scored band |
 | `BonusPoints` | virtual | the base pays the DECLARED bonus stations over the view (`BonusStations`, `TBonusStation`: call, points, once or once per mode); a contest with a rule of its own overrides and adds `inherited` |
 | `CountsTowardBonus`, `CreditsBonusMode` | protected virtual | which contacts and which modes a declared station is paid for (base: every contact, every mode) |
-| `TalliesLiveQSO` | virtual | **a preserved defect, not a seam to use** -- Missouri's live-only peak-hour count (Q32) |
+| ~~`TalliesLiveQSO`~~ | -- | **DELETED at Q32 (2026-10-17)** -- Missouri's live-only peak-hour count; the bonus is Missouri's `BonusPoints` over the view |
 
 | today's `TotalScore` arm | went to |
 |---|---|
@@ -436,7 +436,7 @@ final score = contest.FinalScore(totals, view)
 | RSGB 1.8 MHz "times one" | ~~stays named in `TotalScore`~~ -- `CombineWithMultipliers` of RSGB 1.8, since 2026-10-14 (Q33 ruled; §8.2p) |
 | FISTS "mults don't work" short-circuit | **the template** -- it keys on the session's EXCHANGE, not on a contest |
 | Missouri W0MA/K0GQ +100 each | `BonusStations` of Missouri, counted over the whole log |
-| Missouri peak hour | `TalliesLiveQSO` + Missouri's `BonusPoints` -- **unchanged, including its defect** (Q32) |
+| Missouri peak hour | Missouri's `BonusPoints` over the view, from each QSO's logged time -- **Q32 built 2026-10-17**; the live tally and `TalliesLiveQSO` are deleted |
 | Salmon Run W7DX | **IMPLEMENTED** (Q5): a declared station, 500 once per mode, CW and phone, a single-mode entry once |
 | North Carolina +50 callsigns (D3) | **not a bonus** -- gone with the legacy arm (2026-09-29). The sponsor's Rarest-of-NC **sweep** (+500 once, five of ten counties) is **IMPLEMENTED** as NC's `BonusPoints` |
 | Idaho dormant county (7.5) | **IMPLEMENTED** as Idaho's `BonusPoints`, fixed stations; the rover is Q34 |

@@ -69,15 +69,26 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
 
 
-  THE PEAK-HOUR TALLY IS A PRESERVED DEFECT. Live entry counted each 80 or
+  THE PEAK-HOUR BONUS -- Q32 (NY4I, 2026-10-15; built 2026-10-17). The
+  sponsor's 2026 rules (w0ma.org, moqp-2026-rules-final.pdf, Points, rule 7):
+  "Any valid contacts made between the hours of 1400 UTC Saturday to 2000
+  UTC Saturday and 1400 UTC Sunday to 2000 UTC Sunday on the 40 and 80 meter
+  bands will count as an additional point each. Up to 250-point bonus can be
+  added to the total score." WA7BNM's summary omitted it.
 
-  40 m QSO logged from 1400 to 1959 UTC, up to 250, and TotalScore added the
+  NY4I: "The wall clock logged into the log record determines this." So it
+  is counted over the WHOLE LOG (the view), from each QSO's OWN logged time
+  and band -- never the clock now (Q13) -- and a reopened, rescored or
+  exported log scores it exactly as live entry did. A VALID contact only:
+  no dupe, and none the contest does not credit (an off-band QSO, or an
+  out-of-state entrant's QSO with a non-Missouri station, Q107 -- the same
+  two questions ScoreQSO asks before it scores). Its hour is 14 to 19 UTC on
+  any day: the contest runs 1400 Saturday to 0400 Sunday and 1400 to 2000
+  Sunday, so the hour alone names both windows. 2000 itself is out.
 
-  count; the log's loader never counted, so a reopened log lost it. That is
-
-  kept exactly (TalliesLiveQSO, TContestBase's header on it) and asked of NY4I
-
-  as design Q32: WA7BNM's summary of the sponsor's rules has no such bonus. *)
+  UNTIL Q32 THIS WAS A PRESERVED DEFECT: live entry counted it
+  (TalliesLiveQSO, LOGDUPE.LiveSessionTally) and the log's loader never did,
+  so a reopened log lost it. Both are deleted. *)
 unit uContestMissouriQP;
 
 {$I tr4w.inc}
@@ -146,11 +157,13 @@ type
 
       (* W0MA and K0GQ, 100 each, once -- see the header. *)
       function GetBonusStations: TBonusStationList; override;
-   public
-      (* An 80 or 40 m QSO logged from 1400 to 1959 UTC -- see the header. *)
-      function TalliesLiveQSO(const aQso: ContestExchange): boolean; override;
 
-      (* The bonus stations, plus the live tally capped at 250. *)
+      (* IS THIS LOGGED QSO A PEAK-HOUR CONTACT? -- a valid 80 or 40 m QSO
+         whose logged hour is 14 to 19 UTC. See the header (Q32). *)
+      function IsPeakHourContact(const aQso: ContestExchange): boolean;
+   public
+      (* The bonus stations, plus one point per peak-hour contact in the
+         log, capped at 250 -- see the header. *)
       function BonusPoints(const aTotals: TScoreTotals;
                            aView: TLoggedQSOView): longint; override;
       (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
@@ -286,8 +299,8 @@ begin
 end;
 
 const
-   (* The legacy tally stopped counting at 250. *)
-   MissouriLiveTallyCap = 250;
+   (* "Up to 250-point bonus can be added to the total score." *)
+   MissouriPeakHourBonusCap = 250;
 
 function TContestMissouriQP.GetBonusStations: TBonusStationList;
 begin
@@ -301,24 +314,37 @@ begin
    Result[1].OncePerMode := False;
 end;
 
-function TContestMissouriQP.TalliesLiveQSO(const aQso: ContestExchange): boolean;
+function TContestMissouriQP.IsPeakHourContact(const aQso: ContestExchange): boolean;
 begin
-   Result := (aQso.Band in [Band80, Band40])  and
-             (aQso.tSysTime.qtHour >= 14)    and
+   (* VALID FIRST, by the two questions ScoreQSO asks before it scores, so a
+      QSO that scores nothing earns no bonus point either. *)
+   Result := (not aQso.ceDupe)                        and
+             ContestCreditsBand(Self, aQso.Band)      and
+             CreditsWorkedStation(aQso)               and
+             (aQso.Band in [Band80, Band40])          and
+             (aQso.tSysTime.qtHour >= 14)             and
              (aQso.tSysTime.qtHour < 20);
 end;
 
 function TContestMissouriQP.BonusPoints(const aTotals: TScoreTotals;
                                         aView: TLoggedQSOView): longint;
 var
-   tally: longint;
+   peakHour: longint;
+   i: integer;
 begin
-   tally := aTotals.LiveSessionTally;
-   if tally > MissouriLiveTallyCap then
+   peakHour := 0;
+   for i := 0 to aView.Count - 1 do
       begin
-      tally := MissouriLiveTallyCap;
+      if IsPeakHourContact(aView.QSO(i)) then
+         begin
+         inc(peakHour);
+         if peakHour = MissouriPeakHourBonusCap then
+            begin
+            Break;
+            end;
+         end;
       end;
-   Result := inherited BonusPoints(aTotals, aView) + tally;
+   Result := inherited BonusPoints(aTotals, aView) + peakHour;
 end;
 
 (* ONE SEARCH-AND-POUNCE ENTRY MAY CARRY SEVERAL QTHs, at every station --

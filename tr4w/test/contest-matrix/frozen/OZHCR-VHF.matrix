@@ -55,7 +55,7 @@ setting.VHF BAND ENABLE = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
-qso 03 W1AW Band2 FM/eFM full | pts=9954 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
+qso 03 W1AW Band2 FM/eFM full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 04 W1AW Band40 Digital/eRTTY full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 05 W1AW Band20 Digital/eFT8 full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 06 K4ABC Band160 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=K4 pfx= dxqth= dommultqth=FL domqth=FL zone=5
@@ -261,7 +261,7 @@ parse grid6 W1AW Band20/CW "599 FN31PR" | ok=FALSE err="" token="" pending="" ca
 parse grid.field W1AW Band20/CW "599 FN" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=599 qth=FN cty=K/8/NorthAmerica/W1
 parse rda.short UA3ABC Band20/CW "599 MO1" | ok=FALSE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=599 qth=MO1 cty=UA/29/Europe/UA3
 == totals
-totals.qsopoints = 9954
+totals.qsopoints = 0
 totals.qtcs = 0
 totals.singleband = AllBands
 totals.qsos Band160 CW = 1
@@ -307,8 +307,8 @@ totals.mults AllBands CW = dom=2 dx=0 zone=0 pfx=0
 totals.mults AllBands Digital = dom=2 dx=0 zone=0 pfx=0
 totals.mults AllBands Phone = dom=4 dx=0 zone=0 pfx=0
 totals.mults AllBands Both = dom=8 dx=0 zone=0 pfx=0
-totals.totalscore = 17954
-totals.cabrillo = CLAIMED-SCORE: 17954
+totals.totalscore = 8000
+totals.cabrillo = CLAIMED-SCORE: 8000
 == initialexchange
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE
@@ -403,7 +403,7 @@ setting.VHF BAND ENABLE = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
-qso 03 W1AW Band2 FM/eFM full | pts=10533 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
+qso 03 W1AW Band2 FM/eFM full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 04 W1AW Band40 Digital/eRTTY full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 05 W1AW Band20 Digital/eFT8 full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 06 K4ABC Band160 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=K4 pfx= dxqth= dommultqth=FL domqth=FL zone=5
@@ -609,7 +609,7 @@ parse grid6 W1AW Band20/CW "599 FN31PR" | ok=FALSE err="" token="" pending="" ca
 parse grid.field W1AW Band20/CW "599 FN" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=599 qth=FN cty=K/8/NorthAmerica/W1
 parse rda.short UA3ABC Band20/CW "599 MO1" | ok=FALSE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=599 qth=MO1 cty=UA/29/Europe/UA3
 == totals
-totals.qsopoints = 10533
+totals.qsopoints = 0
 totals.qtcs = 0
 totals.singleband = AllBands
 totals.qsos Band160 CW = 1
@@ -655,8 +655,8 @@ totals.mults AllBands CW = dom=2 dx=0 zone=0 pfx=0
 totals.mults AllBands Digital = dom=2 dx=0 zone=0 pfx=0
 totals.mults AllBands Phone = dom=4 dx=0 zone=0 pfx=0
 totals.mults AllBands Both = dom=8 dx=0 zone=0 pfx=0
-totals.totalscore = 18533
-totals.cabrillo = CLAIMED-SCORE: 18533
+totals.totalscore = 8000
+totals.cabrillo = CLAIMED-SCORE: 8000
 == initialexchange
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE
@@ -749,7 +749,7 @@ setting.VHF BAND ENABLE = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
-qso 03 W1AW Band2 FM/eFM full | pts=14584 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
+qso 03 W1AW Band2 FM/eFM full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 04 W1AW Band40 Digital/eRTTY full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 05 W1AW Band20 Digital/eFT8 full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 06 K4ABC Band160 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=K4 pfx= dxqth= dommultqth=FL domqth=FL zone=5
@@ -955,7 +955,7 @@ parse grid6 W1AW Band20/CW "599 FN31PR" | ok=FALSE err="" token="" pending="" ca
 parse grid.field W1AW Band20/CW "599 FN" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=599 qth=FN cty=K/8/NorthAmerica/W1
 parse rda.short UA3ABC Band20/CW "599 MO1" | ok=FALSE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=599 qth=MO1 cty=UA/29/Europe/UA3
 == totals
-totals.qsopoints = 14584
+totals.qsopoints = 0
 totals.qtcs = 0
 totals.singleband = AllBands
 totals.qsos Band160 CW = 1
@@ -1001,8 +1001,8 @@ totals.mults AllBands CW = dom=2 dx=0 zone=0 pfx=0
 totals.mults AllBands Digital = dom=2 dx=0 zone=0 pfx=0
 totals.mults AllBands Phone = dom=4 dx=0 zone=0 pfx=0
 totals.mults AllBands Both = dom=8 dx=0 zone=0 pfx=0
-totals.totalscore = 22584
-totals.cabrillo = CLAIMED-SCORE: 22584
+totals.totalscore = 8000
+totals.cabrillo = CLAIMED-SCORE: 8000
 == initialexchange
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE

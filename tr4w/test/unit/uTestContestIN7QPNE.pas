@@ -297,12 +297,13 @@ end;
      * Indiana's, 7QP's and Delaware's OWN county files route to their
        party, so the combined file and theirs agree on those three.
 
-   NEW ENGLAND IS THE EXCEPTION, AND IT IS PINNED AS ONE (design Q81): NEQP's
-   own neqso.dom spells a county county-first (AndME), the combined file
-   state-first (MEAnd), so NEQP's own keys do not route as NEQP's -- a few
-   even read as another party's (WasVT starts WA). The session never loads
-   neqso.dom for IN7QPNE, so routing is not affected; when the two files are
-   reconciled, this assertion is the one to change. *)
+   NEW ENGLAND'S OWN FILE AGREES SINCE Q81 (NY4I, 2026-10-15; built
+   2026-10-17). Until then neqso.dom spelled a county county-first (AndME)
+   with Connecticut's eight old counties, so NEQP's own keys did not route as
+   NEQP's -- a few even read as another party's (WasVT starts WA). It now
+   carries the combined file's 68 New England entries, state first, as the
+   sponsor spells them: every key routes to New England, all 68 of them, and
+   the old county-first spelling is still TYPED (an alias), never a key. *)
 procedure TContestIN7QPNETests.Test_EveryCountyKeyRoutesToOneParty;
 var
    keys: TStringList;
@@ -363,7 +364,7 @@ begin
 
       keys.Clear;
       CollectDomKeys('neqso.dom', '', keys, 0);
-      CheckTrue(keys.Count > 0, 'NEQP''s own county file was read');
+      CheckEquals(68, keys.Count, 'NEQP''s own county file: the sponsor''s 68');
       neRouted := 0;
       for i := 0 to keys.Count - 1 do
          begin
@@ -372,9 +373,13 @@ begin
             inc(neRouted);
             end;
          end;
-      CheckTrue(neRouted < keys.Count, 'NEQP''s own spelling is not the combined file''s (Q81)');
-      CheckTrue(keys.IndexOf('ANDME') >= 0, 'NEQP spells Androscoggin ANDME');
-      CheckEquals('(none)', PartyOf('ANDME'), 'which the combined convention does not route');
+      CheckEquals(keys.Count, neRouted, 'every NEQP key routes to New England (Q81)');
+      CheckEquals(perParty[ipNewEngland], keys.Count,
+                  'the same 68 counties as the combined file''s New England');
+      CheckTrue(keys.IndexOf('MEAND') >= 0, 'NEQP spells Androscoggin MEAND');
+      CheckTrue(keys.IndexOf('CTCAP') >= 0, 'and Connecticut by planning region');
+      CheckTrue(keys.IndexOf('ANDME') < 0, 'the old county-first spelling is no key');
+      CheckTrue(keys.IndexOf('HARCT') < 0, 'nor an old Connecticut county');
    finally
       keys.Free;
    end;

@@ -566,14 +566,19 @@ the target shape, the M-step migration order and the open questions.
   W0MA/K0GQ, the Salmon Run's W7DX once per mode with the single-mode rule
   from `Station.MyCategoryMode`), otherwise the class's own `BonusPoints` over
   the view, adding `inherited` (NC's Rarest-of-NC sweep, Idaho's dormant
-  county). `TalliesLiveQSO` is Missouri's live-only peak-hour tally, a
-  preserved defect -- never a model (design Q32). Nine contests gained classes
+  county, and since Q32 -- 2026-10-17 -- Missouri's peak-hour bonus: one
+  point per valid 80/40 m QSO logged 1400-1959 UTC, to 250, from each QSO's
+  own logged time; `TalliesLiveQSO` and the live-only tally it fed are
+  DELETED, so no bonus is counted as QSOs are logged). Nine contests gained classes
   for their formula (RF Cup x3, RF Championship x2, WAE x2, OZHCR, ALRS);
   the RF Championship's table is the leaf `uRFChampionshipPoints`. The matrix
   gained a `totals` section (reload, counts, `TotalScore`, `CLAIMED-SCORE`)
   frozen first; `uTestContestTotals` pins every formula and every bonus edge.
-  **ALRS's empty-QTH QSO scores from heap garbage** (`LOGGRID`, design Q37) --
-  it moved under the class while the formula did not; see design §8.2h.
+  ~~ALRS's empty-QTH QSO scores from heap garbage~~ (`LOGGRID`, design Q37,
+  §8.2h) -- **fixed at Q37 (2026-10-17)**: LOGGRID measures only what
+  `uGridShape.IsGoodLookingGrid` calls a grid, so a malformed grid has no
+  distance and each class scores it by its own rule at distance 0 (ALRS
+  guards its logarithm; WWL and the Stew Perry give 1).
 - **A contest owns its identity, and everyone asks it** (M1, 2026-10-01).
   `uContestRegistry.ContestIdentity(h)` answers for EVERY contest handle --
   the class, else a plain `TContestBase` (only NoContest, and a byte that names
@@ -751,8 +756,12 @@ the target shape, the M-step migration order and the open questions.
   Indiana 160-10 m, Delaware 160-10 m and 6 m up, all without WARC -- so
   IN7QPNE states `cfVHFBandsEnabled`; a QSO still scores only on its
   judging party's bands. `uTestQSOPartyBands` pins all five.
-  The NE spellings of `in7qpne_cty.dom` and `neqso.dom` DISAGREE (Q81) --
-  route on the combined file's keys, never the components' files. No score
+  The NE spellings of `in7qpne_cty.dom` and `neqso.dom` AGREE since Q81
+  (2026-10-17): `neqso.dom` carries the combined file's 68 New England
+  entries exactly (state first, `MEAnd`; Connecticut's planning regions,
+  `CTCap`) and `neqsow1.dom` the same keys mapped to their states, so New
+  England's `ADIFCountyState` reads the FIRST two letters. Still route on
+  the combined file's keys -- it is the one the session loads. No score
   posting: `PermittedOperatingAids`, and since 8.2r `uHamScore` asks it too
   (`ContestPermitsScorePosting` -- it asked nothing before, so WRTC's rule
   never reached HamScore; Q83).

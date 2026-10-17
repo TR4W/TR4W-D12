@@ -999,7 +999,8 @@ uses
   uFreqTimeFormat   // Issue #997: golden-tested time formatter
   , uConfigValues
   (* LooksLikeGridSquare -- the shape half of LooksLikeAGrid, lifted to a
-    leaf when POTA gained its class. *)
+    leaf when POTA gained its class; and IsGoodLookingGrid, GoodLookingGrid's
+    rule, lifted at Q37. *)
   , uGridShape
   (* ~~uContestSession~~ stood here for LooksLikeAGrid's first question,
     the session's exchange kind (M10 S9f). The contest answers it since
@@ -3385,45 +3386,14 @@ function NewReadKey: Char;
 begin
 end;
 
+(* VERIFIES THAT THE GRID SQUARE IS LEGITIMATE -- the rule is
+  uGridShape.IsGoodLookingGrid's since Q37 (2026-10-17), lifted there
+  unchanged when LOGGRID's distance became its second user: four or six
+  characters, A..R twice, two digits, and A..Z twice in a six-character grid,
+  either case. *)
 function GoodLookingGrid(Grid: Str20): boolean;
-
-{ Verifies that the grid square is legitimate }
-
-var
-  CharPosition                          : integer;
-
 begin
-  GoodLookingGrid := False;
-
-  if not ((length(Grid) = 4) or (length(Grid) = 6)) then Exit;
-
-  strU(Grid);
-
-  for CharPosition := 1 to length(Grid) do
-     begin
-     case CharPosition of
-       1, 2:
-         if (Grid[CharPosition] < 'A') or (Grid[CharPosition] > 'R') then
-            begin
-            Exit;
-            end;
-
-       3, 4:
-         if (Grid[CharPosition] < '0') or (Grid[CharPosition] > '9') then
-            begin
-            Exit;
-            end;
-
-       5, 6:
-         if (Grid[CharPosition] < 'A') or (Grid[CharPosition] > 'Z') then
-            begin
-            Exit;
-            end;
-
-     end;
-     end;
-
-  GoodLookingGrid := True;
+  GoodLookingGrid := IsGoodLookingGrid(string(Grid));
 end;
 
 function GoodLookingGrid2(Grid: Str20): boolean;

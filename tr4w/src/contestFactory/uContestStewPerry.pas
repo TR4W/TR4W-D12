@@ -53,8 +53,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   DESIGN Q37 REACHES THIS CONTEST. LOGGRID.GetDistanceBetweenGrids pads a
   grid that is not six characters with 'LL', and ConvertGridToLatLon reads
   four characters of it: a grid shorter than four is read past its end, and
-  such a QSO's points follow the heap. Q37 is open; the grid handling is
-  transcribed untouched. Only a received grid
+  such a QSO's points followed the heap. Q37 (NY4I, 2026-10-15) is BUILT
+  (2026-10-17): the distance refuses a text that is not a grid and
+  answers 0, so this contest scores such a QSO by its own rule at no
+  distance -- and the grid exchange parsers refuse one when typed. Only a received grid
   that is non-empty and shorter than four characters reaches it. *)
 unit uContestStewPerry;
 

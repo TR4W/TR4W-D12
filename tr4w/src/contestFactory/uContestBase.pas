@@ -812,10 +812,11 @@ type
          reader, CombineScore's FISTS test, is FISTS's own formula now. (Its
          DX multiplier kind stood beside it until M11 S4 part 2.) *)
 
-      (* A COUNT KEPT WHILE THE PROGRAM RUNS, NOT FROM THE LOG -- see
-         TContestBase.TalliesLiveQSO, which says why it exists and that it is
-         a defect preserved on purpose. 0 after every reload. *)
-      LiveSessionTally: longint;
+      (* ~~LiveSessionTally~~ stood here: a count kept while the program ran,
+         not from the log -- Missouri's peak-hour tally, 0 after every reload.
+         DELETED with TContestBase.TalliesLiveQSO at Q32 (NY4I, 2026-10-15;
+         built 2026-10-17): the bonus is counted over the view, from each
+         QSO's own logged time, like every other bonus. *)
    end;
 
    (* A READ-ONLY VIEW OF THE LOGGED QSOs -- what a bonus rule reads (M6).
@@ -3018,22 +3019,14 @@ type
       function BonusPoints(const aTotals: TScoreTotals;
                            aView: TLoggedQSOView): longint; virtual;
 
-      (* DOES THIS LIVE QSO ADD TO THE SESSION'S RUNNING TALLY?
-
-         A PRESERVED DEFECT, AND THE ONE PLACE A BONUS IS STILL COUNTED AS QSOs
-         ARE LOGGED. Missouri's legacy score added one point for each 80 or
-         40 m QSO logged between 1400 and 1959 UTC, up to 250 -- but counted
-         them only in live entry (LOGSUBS2.LogContact). The log's loader never
-         did, so the same log scored the tally while it was being worked and
-         lost it on every reopen, /EXPORT's CLAIMED-SCORE included. M6 moved
-         that score with ZERO change, so the rule is the contest's here, the
-         count is still the engine's (TScoreTotals.LiveSessionTally), and the
-         defect is unchanged. Design Q32 asks NY4I whether the sponsor has the
-         bonus at all; if it stands, it becomes a rule over the view and this
-         seam is deleted.
-
-         The base tallies nothing. *)
-      function TalliesLiveQSO(const aQso: ContestExchange): boolean; virtual;
+      (* ~~TalliesLiveQSO~~ stood here -- "does this live QSO add to the
+         session's running tally?", Missouri's peak-hour count, kept only in
+         live entry (LOGSUBS2.LogContact) and so lost on every reopen and
+         /EXPORT. A defect preserved on purpose at M6 and asked as design
+         Q32. NY4I ruled the bonus real and from the log (2026-10-15: "The
+         wall clock logged into the log record determines this."), so it is
+         Missouri's BonusPoints over the view and the seam is DELETED
+         (2026-10-17). No bonus is counted as QSOs are logged any more. *)
 
       (* The contest's bonus stations -- see TBonusStation. *)
       property BonusStations: TBonusStationList read GetBonusStations;
@@ -4231,11 +4224,6 @@ end;
 function TContestBase.CreditsBonusMode(aMode: ModeType): boolean;
 begin
    Result := True;
-end;
-
-function TContestBase.TalliesLiveQSO(const aQso: ContestExchange): boolean;
-begin
-   Result := False;
 end;
 
 function TContestBase.BonusStationWorked(aView: TLoggedQSOView;

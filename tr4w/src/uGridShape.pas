@@ -54,6 +54,18 @@ interface
   Tree's test never did. *)
 function LooksLikeGridSquare(const aText: string): boolean;
 
+(* IS THIS A GRID SQUARE THE PROGRAM MAY LOG AND MEASURE? -- Q37 (NY4I,
+  2026-10-15: "a malformed grid should never have been logged").
+
+  LooksLikeGridSquare, and in a six-character grid characters 5 and 6 are
+  letters A..Z in either case. This is Tree.GoodLookingGrid's rule, LIFTED
+  here on 2026-10-17 when it gained its second user: the grid exchange
+  parsers refuse a typed grid that fails it, and LOGGRID's distance, heading
+  and lat/lon refuse to read one -- so "may it be logged" and "may it be
+  measured" are one predicate and cannot disagree. Tree.GoodLookingGrid calls
+  this. *)
+function IsGoodLookingGrid(const aText: string): boolean;
+
 implementation
 
 function LooksLikeGridSquare(const aText: string): boolean;
@@ -92,6 +104,32 @@ begin
       end;
 
    Result := True;
+end;
+
+function IsGoodLookingGrid(const aText: string): boolean;
+var
+   i: integer;
+   ch: Char;
+begin
+   Result := LooksLikeGridSquare(aText);
+   if (not Result) or (Length(aText) <> 6) then
+      begin
+      Exit;
+      end;
+
+   for i := 5 to 6 do
+      begin
+      ch := aText[i];
+      if (ch >= 'a') and (ch <= 'z') then
+         begin
+         ch := Char(Ord(ch) - 32);
+         end;
+      if (ch < 'A') or (ch > 'Z') then
+         begin
+         Result := False;
+         Exit;
+         end;
+      end;
 end;
 
 end.

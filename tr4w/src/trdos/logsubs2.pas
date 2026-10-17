@@ -1681,17 +1681,11 @@ begin
      TotalQSOPoints := TotalQSOPoints + RXData.QSOPoints;
      end;
 
-  (* THE CONTEST'S LIVE TALLY -- M6. Missouri's peak-hour count stood here
-     as `if Contest = MOQSOPARTY`, with its bonus-station check beside it. The
-     rule is the contest's own now (TalliesLiveQSO) and the cap is applied
-     where the bonus is paid; the bonus stations are counted over the whole
-     log at the final score, so nothing is decided here about them. The count
-     is still kept only here, in live entry -- a defect preserved on purpose,
-     see TContestBase.TalliesLiveQSO. *)
-  if ContestIdentity(Contest).TalliesLiveQSO(RXData) then
-     begin
-     inc(LiveSessionTally);
-     end;
+  (* ~~THE CONTEST'S LIVE TALLY~~ stood here -- Missouri's peak-hour count,
+     kept only in live entry and so lost on every reopen (M6's preserved
+     defect, TalliesLiveQSO). Q32 (NY4I, 2026-10-15) ruled it a rule over the
+     whole log, from each QSO's logged time: Missouri's BonusPoints counts it
+     over the view, and nothing is decided here about any bonus. *)
     //  if Trace then Write('&');
   if MyComputer then
     if not TailEnding then

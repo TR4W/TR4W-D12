@@ -34,6 +34,12 @@ in section 4. One line each -- the full text is further down.
 - **Q110** Multi-op: a peer's QSO is logged even when the peer is on a different contest.
 - **Q111** IRTS scores by the EUDX table but its file is Irish counties -- what does its sponsor score?
 - **Q112** Field Day's DX refusal holds only when typed -- apply it to imports/peers/Rescore (as Q107)?
+- **Q113** Edited memories are lost on restart (the message table is written, never read).
+- **Q114** ALRS-UA1DZ: is its exchange a grid (RDA entrants send a district)?
+- **Q115** VHF "RST and/or grid" parser drops a bad grid token silently -- is RST alone OK?
+- **Q116** A malformed grid has no distance -- should it score 0 (not the closest bucket)?
+- **Q117** Old Connecticut county codes: keep as aliases of planning regions, or refuse?
+- **Q118** A bare-call mobile in a new county: a new station for dupes?
 
 **Awaiting only your yes (section 3)**
 - **Q10** Retire unused ContestTypes through `TContestRetired` (MINITEST needs it).
@@ -233,6 +239,55 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   sections, through the one predicate the way Q107 did it.*
   **Answer:**
 
+- **Q113** (found building Q9, 2026-10-17) **Edited message memories are
+  lost on restart.** `uLogStore` writes every memory to the log's `message`
+  table at close, and NOTHING reads that table back (no read of it anywhere;
+  `uEditMessageForm`'s comment that says "that is where they come back from"
+  is wrong). Q9 now keeps an edited CQ memory across a contest re-select
+  within one run. Restoring at open needs a rule: the table holds the
+  contest's DEFAULTS too, so restoring everything would pin a default built
+  from an old MY STATE. *Recommended: store only memories the operator
+  edited (a flag per row), and restore only those at open.*
+  **Answer:**
+
+- **Q114** (Q37) **ALRS-UA1DZ Cup: is its exchange a grid?** Its QTH is
+  parsed as a domestic QTH, taken as typed, and then used as a GRID for
+  distance -- but an RDA entrant's QTH is a district code. A sponsor
+  question: what does an ALRS entrant send?
+  **Answer:**
+
+- **Q115** (Q37) **The "RST and/or grid" parser (ARRL VHF x3, CQ VHF, Stew
+  Perry) logs `599 FN3` as a QSO with NO grid**, silently dropping the bad
+  token. Should RST alone be accepted in those contests (then only the bad
+  token should be refused), or is a grid required?
+  **Answer:**
+
+- **Q116** (Q37) **What should "no distance" score?** After Q37 a malformed
+  grid has no distance, and each distance table then pays its CLOSEST
+  bucket: Cup RF 35 points (a QSO with no QTH at all gets 1), Tesla 10.
+  *Recommended: no distance = 0 points (and no multiplier) -- a QSO whose
+  grid cannot be read cannot have earned a distance-based score.* Typed
+  entry already refuses a malformed grid; this matters for imports and old
+  logs. (Q37's import half -- which field holds the received grid differs by
+  contest, e.g. ARRL Digi imports GRIDSQUARE into DomesticQTH but scores from
+  QTHString -- is not built until this and that are settled.)
+  **Answer:**
+
+- **Q117** (Q81) **Old Connecticut counties.** CT's 8 counties became 9
+  planning regions; `in7qpne_cty.dom` maps three old county codes onto
+  regions (HARCT and TOLCT -> Capital, NHVCT -> Naugatuck), which is not
+  one-to-one. Batch C copied that mapping into `neqso.dom` / `neqsow1.dom`
+  so the files agree. Keep the old codes as aliases, or refuse them? (Also:
+  the display name `Lower CT Rivier` has a typo, kept as is for now.)
+  **Answer:**
+
+- **Q118** (Q73) **A mobile signing its BARE call** and sending a new county
+  is still a dupe; NY4I's ruling covered `CALL/county` only (which is
+  already separate -- pinned by `uTestRoverDupeKey`). Should a QSO party
+  treat a bare-call mobile in a new county as a new station too (keyed on
+  call + county)?
+  **Answer:**
+
 ---
 
 ## 3. Awaiting only your yes
@@ -366,17 +421,17 @@ closes it; anything else reopens it.
 | Q46 | Ten-Ten: 2 points with a 10-10 number, 1 without | F26 build list C11 (not built) |
 | Q56 | A contest's sent state stands for the whole session | design 8.2m (already built) |
 | Q75 | Delaware: WA7BNM id 240; the log address from the sponsor's page | built |
-| Q81 | NEQP: state-first abbreviations and CT planning regions; `neqso.dom` to be brought into line | not built |
+| Q81 | NEQP: state-first abbreviations and CT planning regions; `neqso.dom` to be brought into line | built 2026-10-17 (`neqso.dom`/`neqsow1.dom` = in7qpne_cty.dom's 68 NE entries) |
 | Q7 | Base + CW/SSB children only where the pair is one rule today | design rule; Q43 lists the pairs |
-| Q9 | An edited CQ memory survives re-selecting the contest | not built |
-| Q37 | A malformed grid is refused at entry (and import); the read made safe | not built |
+| Q9 | An edited CQ memory survives re-selecting the contest | built 2026-10-17 (in a session; the edit is still lost on restart -- the `message` table is never read, reported) |
+| Q37 | A malformed grid is refused at entry (and import); the read made safe | read made safe: built 2026-10-17; entry: already so for every grid parser (ALRS and the RST-only parsers reported); import: not built (finding) |
 | Q13 | A logged QSO is scored from its record, never from live state (radio mode, operator) | rule; audit found A1-A3, B, C, E1-E2 (not fixed) |
 | Q44 | RTC, CQMM, WRTC state their bands; off-band/off-mode QSOs score 0, are not in HamScore's QSO counts, but advance the serial | not built |
 | FD-DX | `DX` from a W (or other sectioned) station is refused; a DX station is still `1D DX` | entry: already so (measured 2026-10-17); import/logged: proposal below, not built |
 | Q30 | Winter FD: `MX` is a section (Cabrillo, SRX_STRING, ARRL_SECT), as D7 does | already so; no change |
 | Q31 | `Missing precedence (Q A B U M S)` is acceptable wording | already so |
 | Q38 | Winter FD has no DXCC multiplier (D7 tracked one but never scored it) | built 2026-10-17 |
-| Q32 | Missouri peak-hour bonus is real; computed from each QSO's logged time over the whole log, cap 250 | not built |
+| Q32 | Missouri peak-hour bonus is real; computed from each QSO's logged time over the whole log, cap 250 | built 2026-10-17 |
 | Q29 | Out-of-state works only the host state: true for QSO parties in general | already so |
 | Idaho-DC | DC is not a state, so not an Idaho multiplier | already so |
 | Idaho-cfg | No `.cfg` in `target/dom` -- the Idaho and Delaware templates deleted | done 2026-10-15 |
@@ -416,7 +471,7 @@ closes it; anything else reopens it.
 | Q53 | Names for the 43 unnamed contests: docs/Q53_CONTEST_NAMES.csv; MINITEST retired | built |
 | Q67 | New Contest rows seeded from the station; the values at OK are the contest's own | not built |
 | Q49 | BCQP: in-province DX contact earns no domestic mult (case-insensitive test) | built 2026-10-17 |
-| Q73 | QSO party: CALL/<valid county> is its own station for dupes (K1AR/NHHIL in NEQP) | not built |
+| Q73 | QSO party: CALL/<valid county> is its own station for dupes (K1AR/NHHIL in NEQP) | already so (measured and pinned 2026-10-17) |
 | Q48 | YB DX: YB entrant counts all prefixes, others YB prefixes only -- already so (DXLog agrees) | no change |
 | Q66 | A Contest Details dialog edits the contest's stored values (seeded station facts, Cabrillo fields); a station change mid-contest offers to copy it | not built |
 | Q64 | POTA shows as "Parks on the Air(r) Logging" | as built |
@@ -935,6 +990,18 @@ closes it; anything else reopens it.
   again. A suffix that is not a valid county keeps today's rule (it is not a
   rover suffix). Same validity test as the rover county (issue #87). Not
   built.
+  **Measured 2026-10-17: ALREADY SO.** The dupe sheet (`TCallsignsList`)
+  keys a station on the call exactly as logged, and nothing between the call
+  window and the sheet strips a county: the rover strip touches only the
+  CTY.DAT lookup, live entry and the log keep `NY4I/PIN`, the loader and the
+  rescore hand the stored call to the sheet, and an import restores it from
+  `APP_TR4W_ROVERCALL`; n4af's mobile rule logs `CALL/M` as
+  `CALL/<county>`, the same key. So `NY4I/PIN` and `NY4I/HIL` (and
+  `K1AR/NHHIL` in NEQP or IN7QPNE) are different stations, and a non-county
+  suffix keeps the same exact key it always had. Nothing built; the key is
+  pinned by `uTestRoverDupeKey`, and the live window is a bench item. The
+  question's premise -- a mobile signing its BARE call and sending a new
+  county -- is still a dupe; that is not what the ruling covers.
 
 - **Q48** YB DX: the program had a rule "for an Indonesian entrant, set the
   prefix multiplier again" that set exactly the value it already had -- it did
@@ -1734,6 +1801,16 @@ closes it; anything else reopens it.
   log. The same page confirms the W0MA and K0GQ +100 each (rules 4-5); the
   +100 for an electronic Cabrillo log (rule 6) is the sponsor's to award. Not
   built: today the tally is counted at live entry only and is lost on reopen.
+  **Built 2026-10-17:** `TContestMissouriQP.BonusPoints` counts the view --
+  one point per QSO that is not a dupe, is credited (`UsesBand`, and Q107's
+  host-area rule -- the two questions `ScoreQSO` asks first), is on 80 or
+  40 m and has a logged hour of 14 to 19 UTC (both days: the contest runs
+  1400-0400 and 1400-2000), capped at 250, beside the W0MA/K0GQ stations.
+  `TalliesLiveQSO`, `TScoreTotals.LiveSessionTally` and
+  `LOGDUPE.LiveSessionTally` are deleted, so no bonus is counted as QSOs are
+  logged. No matrix record moved (its QSOs are logged at 12xx UTC); pinned
+  by `uTestContestTotals.Test_MissouriPeakHourBonus` (edges, both days,
+  every mode, dupe, out-of-state, the cap, the final score).
 
 - **Q38** Winter Field Day's score is points x band-modes x power factor, with no
   DX multiplier, yet its session counts DXCC multipliers
@@ -1860,6 +1937,24 @@ closes it; anything else reopens it.
   *Recommended: yes -- an edited memory is an operator statement.*
   **Answer:** (NY4I, 2026-10-15) *Accept.* An operator-edited CQ memory
   survives re-selecting the contest. Not built.
+  **Built 2026-10-17, within a session.** A CQ memory the operator states
+  (the Alt-P dialog's `TryApplyMessageCommand` -- its only caller -- and the
+  line-input edit) is latched in LogCW, and every default CQ memory set-up
+  writes (the contest's `TSessionDefaults` memories and the engine's default
+  exchange messages, CQ F3) goes through `SetContestDefaultCQMemoryString`,
+  which leaves a latched one alone. The latch belongs to the contest set up
+  last: FoundContest's head forgets it when a DIFFERENT contest is set up,
+  so one contest's edit is never carried into another (which then writes its
+  own default, as before). Exchange memories and the CQ EXCHANGE template
+  are not CQ memories and are unchanged. Pinned by `uTestOperatorCQMemory`;
+  no matrix record moved. The two memory setters' slot guards were lifted
+  into one `FunctionKeyMemorySlot` (third user). **Found, not fixed: an
+  edited memory is lost on RESTART** -- `uLogStore.CaptureConfiguration`
+  writes every memory to the log's `message` table at close and NOTHING
+  reads that table back (no `SELECT` from it anywhere; `uEditMessageForm`'s
+  "that is where they come back from" is wrong). Restoring it needs a
+  decision first: the table holds every memory, contest defaults included,
+  so restoring all of it would pin a default made from an old MY STATE.
 
 - **Q37** `LOGGRID.ConvertGridToLatLon` reads past the end of a grid shorter than 4
   characters, so a malformed grid's score depends on leftover memory (identical
@@ -1873,6 +1968,30 @@ closes it; anything else reopens it.
   and time named, nothing imported). The read past the end is still made safe,
   so a log that already holds one scores it as no distance instead of leftover
   memory. Not built.
+  **Built 2026-10-17 -- the read; the entry half measured; the import half
+  not built.** ONE predicate decides what a grid is:
+  `uGridShape.IsGoodLookingGrid` (Tree's `GoodLookingGrid` rule lifted
+  unchanged -- the one the grid parsers refuse a typed grid by). LOGGRID's
+  distance answers 0, the heading -1 and lat/lon 0/0 for anything it
+  refuses, and reads nothing; each class scores such a QSO by its own rule at
+  distance 0 (ALRS guards its logarithm: the distance term is 0). The matrix
+  moved points in 11 grid contests and nothing else, every moved QSO
+  carrying a grid field that is not a grid (empty, `CT`, `FL`, `ON`, `HI`, or
+  ALRS's MY STATE `KS`). **Entry, measured:** every grid FORMAT parser
+  already refuses a malformed grid through `GoodLookingGrid`; no grid
+  contest but ALRS stored a non-grid QTH in the frozen matrix. Two cases are
+  questions, not built: (a) ALRS parses its QTH as a domestic QTH, taken as
+  typed and used as a grid, and an RDA entrant's QTH is a district -- whether
+  its exchange is a grid is the sponsor's; (b) the RST-and/or-grid parser
+  (ARRL VHF x3, CQ VHF, Stew Perry) logs `599 FN3` as a QSO with NO grid,
+  dropping the token, because it accepts RST alone -- refusing the token
+  needs a ruling on RST alone. **Import, not built:** there is no
+  per-contest answer for which field holds the received grid, and two
+  disagree today -- ARRL Digi imports `GRIDSQUARE` into `DomesticQTH` but
+  scores `QTHString`; a refusal built on either field would refuse good
+  records or pass bad ones. Also noted: "no distance" scores the CLOSEST
+  bucket in the Cup RF (35, where no QTH at all scores 1) and Tesla (10).
+  Pinned by `uTestMalformedGrid`.
 
 - **Q46** Ten-Ten scores 2 for every QSO: the "2 with a Ten-Ten number, else 1"
   test can never be false (a 16-bit field compared with -1). Should a QSO with no
@@ -1913,6 +2032,23 @@ closes it; anything else reopens it.
   first (`MEAND`) and the Connecticut planning regions. So IN7QPNE's file is
   current and NEQP's `neqso.dom` is stale, to be brought into line.
   **Answer:** (NY4I, 2026-10-15) *Yes* -- the proposed answer stands.
+  **Built 2026-10-17.** The sponsor's list (neqp.org, "NEQP County
+  Abbreviations", read that day): 68 -- CT 9 planning regions, MA 14, ME 16,
+  NH 10, RI 5, VT 14 -- and DXLog's `NEWEQP.txt` names the same 68 codes.
+  `in7qpne_cty.dom`'s New England entries are exactly those 68, so
+  `neqso.dom` now carries them verbatim (keys state first, `MEAnd`; aliases
+  the sponsor code and the old county-first spelling, `MEAND, ANDME`; the
+  three old CT counties in7qpne maps to a region, `HARCT`/`TOLCT` Capital and
+  `NHVCT` Naugatuck, still typed), and `neqsow1.dom` the same keys mapped to
+  their state for a New England entrant, keeping its short aliases (two
+  defects fixed on the way: Windham and Windsor had each other's, and
+  `WAM. WASHM` was one alias with a full stop). New England's
+  `ADIFCountyState` reads the key's FIRST two letters. Matrix: NEWEQP's
+  host-area QSO 37 only (its QTH is the first key: `ADDVT` -> `CTCAP`, ADIF
+  `STATE` `VT` -> `CT`), in all three variants; its parse section still
+  types `CT`/`MA` because the identity names no domestic file (set-up picks
+  NEQSO or NEQSOW1). IN7QPNE unchanged. Not touched: in7qpne_cty.dom's own
+  `^Lower CT Rivier` display name, now copied into both files.
 
 - **Q18** Jock White Field Day (https://www.nzart.org.nz/activities/contests/jwfd):
   are ZL contacts 5 CW / 3 phone and non-ZL 10 still the rule? Digital and FM score

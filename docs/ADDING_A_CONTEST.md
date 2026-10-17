@@ -632,7 +632,7 @@ the wrongness.
 | `CombineWithMultipliers` | **protected** -- the points (QTCs included) times the sum of every multiplier kind on the scored band |
 | `BonusPoints` | the declared `BonusStations` over the view, else 0 |
 | `BonusStations` / `CountsTowardBonus` / `CreditsBonusMode` | none / every contact / every mode |
-| `TalliesLiveQSO` | false -- a preserved Missouri defect (design Q32); do not override it |
+| ~~`TalliesLiveQSO`~~ | **deleted at Q32 (2026-10-17)** -- Missouri's live-only peak-hour tally; its bonus is its `BonusPoints` over the view now |
 | `RunsInMode` | **every mode**. An IDENTITY question, asked only of an ADIF record whose `CONTEST_ID` two contests share: once the whole record is read, the first contest sharing the id that runs in the record's mode is its contest (`uContestRegistry.ContestOfADIFRecordMode`). The RSGB RoPoCo runnings are the only overriders (CW and phone; M7b batch 2, design §8.2k). It scores nothing |
 | `DescribeSession` | states nothing -- see "How a contest describes its session" (M7a) |
 | `CQExchangeDefault` / `RepeatSPExchangeDefault` | `''` -- LogCfg's default CQ and repeat S&P exchanges, used only where the operator has none (M7a; the repeat at M7b, for the EU Sprints) |
@@ -820,8 +820,9 @@ CombineScore: session with no multiplier, or the FISTS exchange -> the points  (
   cheap; do not cache anything from it in your class.
 - **A BONUS IS NEVER DECIDED AS A QSO IS LOGGED** (design 7.7): decided from
   the whole log at the end, it is the same however the log was reached --
-  live, reloaded, rescored, edited or merged. `TalliesLiveQSO` is the one
-  exception, and it is a defect kept for Missouri (design Q32): do not use it.
+  live, reloaded, rescored, edited or merged. There is no exception left:
+  Missouri's peak-hour tally, the one that was counted live (`TalliesLiveQSO`),
+  became a rule over the view at Q32 (2026-10-17) and the seam is deleted.
 - **A field you need and nobody has** goes into `TScoreTotals` (filled in
   `GatherScoreTotals`) or `TStationContext`, with the first rule that needs
   it. The Salmon Run's single-mode rule brought `MyCategoryMode`.

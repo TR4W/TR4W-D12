@@ -170,9 +170,10 @@ uses
    THE QUIRKS ARE THE ARM'S, NOT THIS CLASS'S: RussianID is asked of the
    worked station's CALLSIGN (the routine takes a country id), and a QTH that
    is not a grid is handed to the distance as if it were one -- which is why
-   the matrix's parse section records no points (design 8.2g). Both grids are
-   zero-filled first, as the arm did, so the field test reads zeros past a
-   short value. *)
+   the matrix's parse section records no points (design 8.2g). Since Q37
+   (2026-10-17) the distance refuses such a QTH and answers 0, and 0 scores
+   no distance points (above). Both grids are zero-filled first, as the arm
+   did, so the field test reads zeros past a short value. *)
 procedure TContestALRSUA1DZCup.CalculateQSOPoints(var aQso: ContestExchange);
 var
    grid1, grid2: GridString;
@@ -225,7 +226,20 @@ begin
    else
       begin
       distance := GetDistanceBetweenGrids(string(grid1), string(grid2));
-      aQso.QSOPoints := round(10 * ln(distance) / ln(10));
+      (* NO DISTANCE, NO DISTANCE POINTS -- Q37 (2026-10-17). A side that is
+         not a grid (an empty or typed-anything QTH, a MY STATE that is not a
+         grid) has no distance now, where it was read past its end and
+         scored from the heap. The logarithm of 0 is not a number, so it is
+         not taken: the distance term is 0, and the +50 below, which is about
+         the regions and not the grids, still applies. *)
+      if distance > 0 then
+         begin
+         aQso.QSOPoints := round(10 * ln(distance) / ln(10));
+         end
+      else
+         begin
+         aQso.QSOPoints := 0;
+         end;
       end;
 
    if not (region1 in [rtUA1A, rtUA1C]) then

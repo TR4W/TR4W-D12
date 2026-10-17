@@ -794,9 +794,15 @@ begin
    Pin(SEVENQP, 'DX', 'dx', 'DL', '');
    Pin(SEVENQP, 'CTCAP', 'CTCap', 'K', '');            (* not a 7th-area state *)
 
-   (* NEW ENGLAND: keys end with the state; NEQSOW1's alias is shorter. *)
-   Pin(NEWENGLANDQSO, 'ANDME', 'AndME', 'K', 'ME');
-   Pin(NEWENGLANDQSO, 'AD', 'AddVT', 'K', 'VT');
+   (* NEW ENGLAND: keys LEAD with the state since Q81 (2026-10-17), the
+      sponsor's spelling; NEQSOW1's alias is shorter, and the old
+      county-first spelling is typed but never the key. *)
+   Pin(NEWENGLANDQSO, 'MEAND', 'MEAnd', 'K', 'ME');
+   Pin(NEWENGLANDQSO, 'ANDME', 'MEAnd', 'K', 'ME');
+   Pin(NEWENGLANDQSO, 'AD', 'VTAdd', 'K', 'VT');
+   Pin(NEWENGLANDQSO, 'CTCAP', 'CTCap', 'K', 'CT');
+   Pin(NEWENGLANDQSO, 'VTWAS', 'VTWas', 'K', 'VT');    (* not read as WA *)
+   Pin(NEWENGLANDQSO, 'ADDVT', 'AddVT', 'K', '');      (* an old key names no state now *)
    Pin(NEWENGLANDQSO, 'FL', 'Fl', 'K', 'FL');
    Pin(NEWENGLANDQSO, 'QC', 'Qc', 'VE', 'QC');
    Pin(NEWENGLANDQSO, 'DX', 'dx', 'DL', '');

@@ -23,6 +23,48 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-17 -- BATCH C RULINGS (Q9, Q32, Q37, Q73, Q81)
+
+The unit tests reach each rule (`uTestOperatorCQMemory`, `uTestContestTotals.
+Test_MissouriPeakHourBonus`, `uTestMalformedGrid`, `uTestRoverDupeKey`,
+`uTestContestIN7QPNE` / `uTestContestExport` for the New England files) and the
+contest matrix reaches the scoring; nothing reaches a live entry window or the
+running program's contest re-selection, and the corpus is blind to points.
+
+- [ ] **An edited CQ memory survives re-selecting the contest (Q9).** Open a
+      CQ WPX (or any serial-number) log; Alt-P, edit CQ F3 to something of
+      your own; then re-select the SAME contest the way an operator does
+      (a peer's CONTEST line, or the CONTEST setting applied again). EXPECT:
+      CQ F3 keeps your text, while the other memories set-up writes are
+      written as before. Then open a log of a DIFFERENT contest: its own CQ F3
+      default appears (your edit is not carried over). **Known, separate:** an
+      edited memory is still lost when TR4W restarts -- the log's `message`
+      table is written at close and never read back (reported with Q9).
+- [ ] **Missouri's peak-hour bonus survives reopening (Q32).** In a Missouri
+      log, log a few 40 or 80 m QSOs with a logged time between 1400 and 1959
+      UTC (edit the time if it is not contest day), note the score, close and
+      reopen the log: the score is the SAME (it used to drop by the tally).
+      `/EXPORT`'s `CLAIMED-SCORE` matches the window.
+- [ ] **A malformed grid has no distance (Q37).** In WWL or the Stew Perry, a
+      logged QSO whose grid is not a grid (import one, or edit one to `FN3`)
+      scores the no-distance points (1 in both) every time it is rescored, and
+      the beam-heading display shows nothing for it. A real grid still shows
+      its heading and distance.
+- [ ] **A county rover is its own station (Q73).** In the Florida QSO Party,
+      work `NY4I/PIN`, then type `NY4I/HIL`: the call window does NOT say
+      dupe, and it logs. Type `NY4I/PIN` again on the same band and mode: it
+      IS a dupe. The same with `K1AR/NHHIL` then `K1AR/NHMER` in New England.
+- [ ] **New England's county spellings (Q81).** Out of New England, the
+      New England QSO Party accepts `MEAND`, `CTCAP` and the old `ANDME`; of
+      the eight old Connecticut counties only the three in7qpne_cty.dom maps
+      onto a planning region are still typed (`HARCT` and `TOLCT` give
+      Capital, `NHVCT` Naugatuck) and `FAICT`, `LITCT`, `MIDCT`, `NLNCT`,
+      `WINCT` are refused; the remaining-multiplier window lists 68 counties
+      under the state-first names. Inside New England (MY STATE `ME`),
+      `MEAND` counts Maine.
+
+---
+
 ## Added 2026-10-17 -- BATCH B SCORING RULINGS (Q38, Q45, Q49, Q71, Q84, Q85, Q104)
 
 The unit tests reach every rule (`uTestContestRulings2026Oct`) and the contest

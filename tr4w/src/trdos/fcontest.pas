@@ -403,7 +403,7 @@ begin
      end;
 
   Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Code599 + ' ' + zoneText);
-  SetCQMemoryString(CW, F3, UTF8Encode(' ' + Code599 + ' ' + zoneText));
+  SetContestDefaultCQMemoryString(CW, F3, UTF8Encode(' ' + Code599 + ' ' + zoneText));
   SetEXMemoryString(CW, F3, Code599);
   SetEXMemoryString(CW, F4, UTF8Encode(zoneText));
   SetEXMemoryString(CW, F5, UTF8Encode('@ DE \ ' + Code599 + ' ' + zoneText));
@@ -427,7 +427,7 @@ begin
   Settings.Messages.RepeatSpExchangeCw := UTF8Encode('5NN ' + SentMyState);
   Settings.Messages.SpExchangeCw := UTF8Encode('~ %5NN ' + SentMyState);
 
-  SetCQMemoryString(CW, F3, UTF8Encode('5NN ' + SentMyState));
+  SetContestDefaultCQMemoryString(CW, F3, UTF8Encode('5NN ' + SentMyState));
 
   SetEXMemoryString(CW, F3, '5NN');
   SetEXMemoryString(CW, F4, UTF8Encode(SentMyState));
@@ -441,7 +441,7 @@ begin
   Settings.Messages.CqExchangeCw := ' 5NN #';
   Settings.Messages.RepeatSpExchangeCw := ' 5NN #';
   Settings.Messages.SpExchangeCw := ' 5NN #';
-  SetCQMemoryString(CW, F3, '5NN #');
+  SetContestDefaultCQMemoryString(CW, F3, '5NN #');
 
   SetEXMemoryString(CW, F3, '5NN');
   SetEXMemoryString(CW, F4, 'NR #');
@@ -736,7 +736,7 @@ begin
      case memory.Bank of
        smbCQ:
          begin
-         SetCQMemoryString(memory.Mode, EngineMemoryKey(memory.Key), UTF8Encode(memory.Text));
+         SetContestDefaultCQMemoryString(memory.Mode, EngineMemoryKey(memory.Key), UTF8Encode(memory.Text));
          end;
        smbExchange:
          begin
@@ -884,6 +884,13 @@ begin
   (* A NEW SET-UP STARTS FROM MY STATE -- the previous contest's sent state
     is not this one's (design 7.11, M9a). *)
   ClearContestSentState;
+
+  (* AN OPERATOR-STATED CQ MEMORY SURVIVES RE-SELECTING THE CONTEST -- Q9
+    (NY4I, 2026-10-15). Every default CQ memory below is written through
+    SetContestDefaultCQMemoryString, which leaves a memory the operator
+    stated alone; a statement made under ANOTHER contest is forgotten here
+    first, so it is not carried into this one. See LogCW. *)
+  ForgetCQMemoryStatementsOfOtherContests(Contest);
 
   Settings.Contest.Name := CMD;
 

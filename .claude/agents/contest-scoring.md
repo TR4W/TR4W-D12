@@ -208,13 +208,20 @@ The one contest still named there, with its reason: RSGB 1.8 MHz, whose
 per-QSO arm reads the multiplier sheet (`mo.isdmmult`), which no class can be
 handed (design Q33). Off the main thread `TotalScore` returns the last
 main-thread score: the final score reads SQLite and `ActiveContest`, and the
-posting clients run on worker threads. **Missouri's peak-hour tally** is still
-counted in `LogContact` only (`LiveSessionTally`, asked through
-`TalliesLiveQSO`) -- a defect preserved on purpose, design Q32; the bonus
-stations are counted over the view. `LoadinLog` and the view share one
-predicate, `uContestBase.QSOCountsTowardTotals`. **Latent defect (Q37):**
-`LOGGRID.ConvertGridToLatLon` reads a grid shorter than four characters past
-its end, so a malformed-grid QSO's distance follows the heap.
+posting clients run on worker threads. **No bonus is counted as QSOs are
+logged (Q32, built 2026-10-17):** Missouri's peak-hour bonus is its
+`BonusPoints` over the view, from each QSO's logged time and band, valid QSOs
+only, capped at 250 -- `TalliesLiveQSO` and `LOGDUPE.LiveSessionTally`, the
+live-only tally a reopened log lost, are deleted. Do not bring a session
+count back. `LoadinLog` and the view share one predicate,
+`uContestBase.QSOCountsTowardTotals`. **A malformed grid is never measured
+(Q37, built 2026-10-17):** `uGridShape.IsGoodLookingGrid` (Tree's
+`GoodLookingGrid` rule, lifted -- the predicate the grid parsers refuse a typed
+grid by) gates LOGGRID's distance (0), heading (-1) and lat/lon; it read past
+the end of a short grid and followed the heap. ALRS's log of 0 is guarded in
+its class. Not built: the ADIF import refusal (no per-contest "which field is
+my grid" answer, and ARRL Digi imports into `DomesticQTH` while it scores
+`QTHString`), and RTC's `GridHaversineKm`, which was already bounded.
 
 **`ProcessExchange` ASKS THE CONTEST (M5b).** It keeps the contest-blind
 tokenising gate (`ParseArray`), then calls

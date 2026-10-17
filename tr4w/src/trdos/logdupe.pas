@@ -290,15 +290,11 @@ var
 
   TotalNamesSent                        : integer;
   TotalQSOPoints                        : LONGINT {= 0};
-  (* THE CONTEST'S LIVE TALLY -- the QSOs LOGSUBS2.LogContact logged that the
-     contest's TalliesLiveQSO accepts, counted while the program runs and
-     never by the log's loader. Missouri's peak-hour count, a defect kept on
-     purpose at M6: see TContestBase.TalliesLiveQSO. It was
-     MOQSOPartyPeakHourCount, beside two flags for Missouri's bonus stations
-     (W0MA, K0GQ); those are declared by the Missouri class now and counted
-     over the whole log, so the flags and CheckMOQSOPartyBonusStation are
-     gone. *)
-  LiveSessionTally                      : Integer;
+  (* ~~LiveSessionTally~~ stood here (it was MOQSOPartyPeakHourCount):
+     Missouri's peak-hour count, kept while the program ran and never by the
+     log's loader. Deleted at Q32 (2026-10-17) -- the Missouri class counts
+     the bonus over the whole log now, as it already counted its bonus
+     stations (W0MA, K0GQ). *)
 
   //  tTotalRecordsInLog               : integer;
   tRestartInfo                          : RestartInfo;
@@ -855,7 +851,6 @@ begin
      end;
 
   TotalQSOPoints := 0;
-  LiveSessionTally := 0;
   (* THE VIEW A BONUS RULE READS GOES WITH THE TOTALS -- see uScoreTotals. *)
   ResetLoggedQSOs;
   TotalNamesSent := 0;

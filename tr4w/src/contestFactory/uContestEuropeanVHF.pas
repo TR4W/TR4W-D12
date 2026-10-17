@@ -48,8 +48,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   on 3456/5760/10G, 100 on 24G.
 
   A GRID SHORTER THAN FOUR CHARACTERS is read past its end by
-  LOGGRID.ConvertGridToLatLon (design Q37), so such a QSO's points follow
+  LOGGRID.ConvertGridToLatLon (design Q37), so such a QSO's points followed
   the heap -- the same function as the arm, called from another frame.
+  Q37 is BUILT (2026-10-17): the distance refuses a text that is not a
+  grid and answers 0, the points this contest gives no distance.
 
   SET-UP: 6 m, and the HF bands off. *)
 unit uContestEuropeanVHF;

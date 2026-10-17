@@ -64,7 +64,7 @@ type
       procedure Test_RSGB18ScoresItsPointsAlone;
       procedure Test_FinalScoreIsFormulaPlusBonus;
       procedure Test_MissouriBonusStations;
-      procedure Test_MissouriLiveTally;
+      procedure Test_MissouriPeakHourBonus;
       procedure Test_NCSweepNeedsFiveRareCounties;
       procedure Test_SalmonRunW7DXOncePerMode;
       procedure Test_SalmonRunSingleModeEntry;
@@ -431,51 +431,102 @@ begin
    end;
 end;
 
-procedure TContestTotalsTests.Test_MissouriLiveTally;
+(* Q32 (NY4I, 2026-10-15; built 2026-10-17): MISSOURI'S PEAK-HOUR BONUS IS
+   COUNTED OVER THE WHOLE LOG, from each QSO's OWN logged time and band -- one
+   point per valid 80 or 40 m contact logged 1400 to 1959 UTC, on either day,
+   up to 250. It replaced a live-entry-only tally (TalliesLiveQSO, deleted)
+   that a reopened log lost, so the same view always scores the same bonus:
+   there is no session state left for it to depend on. *)
+procedure TContestTotalsTests.Test_MissouriPeakHourBonus;
 var
-   contestObject: TContestBase;
-   qso: ContestExchange;
-   t: TScoreTotals;
    view: TLoggedQSOList;
+   inState: TStationContext;
+   outOfState: TStationContext;
+   t: TScoreTotals;
+   i: integer;
 
-   function TalliesAt(aBand: BandType; aHour, aMinute: byte): boolean;
+   function At(const aCall: string; aBand: BandType; aMode: ModeType;
+               aDay, aHour, aMinute: byte): ContestExchange;
    begin
-      qso := LoggedQSO('K0AAA', aBand, CW);
-      qso.tSysTime.qtHour := aHour;
-      qso.tSysTime.qtMinute := aMinute;
-      Result := contestObject.TalliesLiveQSO(qso);
+      Result := LoggedQSO(aCall, aBand, aMode);
+      Result.tSysTime.qtYear := 26;
+      Result.tSysTime.qtMonth := 4;
+      Result.tSysTime.qtDay := aDay;
+      Result.tSysTime.qtHour := aHour;
+      Result.tSysTime.qtMinute := aMinute;
+      Result.QTHString := 'StL';
+      Result.DomesticQTH := 'StL';
+   end;
+
+   function OneQSO(const aStation: TStationContext; const aQso: ContestExchange): longint;
+   begin
+      FreeAndNil(view);
+      view := TLoggedQSOList.Create;
+      view.Add(aQso);
+      Result := Bonus(MOQSOPARTY, aStation, view);
    end;
 
 begin
-   BeginTest('Test_MissouriLiveTally');
+   BeginTest('Test_MissouriPeakHourBonus');
 
-   contestObject := Make(MOQSOPARTY, NoStation);
+   inState := NoStation;
+   inState.InHostState := True;
+   inState.MyState := 'StL';
+   outOfState := NoStation;
+   outOfState.MyState := 'KS';
+
    view := TLoggedQSOList.Create;
    try
-      CheckTrue(TalliesAt(Band80, 14, 0), '80 m at 1400');
-      CheckTrue(TalliesAt(Band40, 19, 59), '40 m at 1959');
-      CheckFalse(TalliesAt(Band40, 13, 59), '40 m at 1359');
-      CheckFalse(TalliesAt(Band80, 20, 0), '80 m at 2000');
-      CheckFalse(TalliesAt(Band20, 15, 0), '20 m at 1500');
+      (* THE WINDOW'S EDGES, FROM THE LOGGED TIME. *)
+      CheckEquals(1, OneQSO(inState, At('K0ABC', Band80, CW, 4, 14, 0)), '80 m at 1400 counts');
+      CheckEquals(1, OneQSO(inState, At('K0ABC', Band40, CW, 4, 19, 59)), '40 m at 1959 counts');
+      CheckEquals(0, OneQSO(inState, At('K0ABC', Band40, CW, 4, 13, 59)), '40 m at 1359 does not');
+      CheckEquals(0, OneQSO(inState, At('K0ABC', Band80, CW, 4, 20, 0)), '80 m at 2000 does not');
+      CheckEquals(0, OneQSO(inState, At('K0ABC', Band20, CW, 4, 15, 0)), '20 m at 1500 does not');
+      CheckEquals(0, OneQSO(inState, At('K0ABC', Band160, CW, 4, 15, 0)), '160 m at 1500 does not');
 
-      t := Totals(0);
-      t.LiveSessionTally := 249;
-      CheckEquals(249, contestObject.BonusPoints(t, view), 'the tally is paid');
-      t.LiveSessionTally := 250;
-      CheckEquals(250, contestObject.BonusPoints(t, view), 'up to 250');
-      t.LiveSessionTally := 251;
-      CheckEquals(250, contestObject.BonusPoints(t, view), 'and no further');
+      (* BOTH DAYS, EVERY MODE. *)
+      CheckEquals(1, OneQSO(inState, At('K0ABC', Band40, Phone, 5, 16, 30)), 'Sunday, phone');
+      CheckEquals(1, OneQSO(inState, At('K0ABC', Band80, Digital, 5, 19, 0)), 'Sunday, digital');
+
+      (* VALID CONTACTS ONLY: a dupe earns nothing, and neither does an
+         out-of-state entrant's QSO with a station the host table does not
+         know (Q107 -- it scores 0, so it is not a valid contact). *)
+      CheckEquals(0, OneQSO(inState, AsDupe(At('K0ABC', Band40, CW, 4, 15, 0))), 'a dupe does not');
+      CheckEquals(0, OneQSO(outOfState, At('K0ABC', Band40, CW, 4, 15, 0)),
+                  'out of state, a QSO the host table does not credit');
+      CheckEquals(1, OneQSO(WithHostAreaTable(outOfState), At('K0ABC', Band40, CW, 4, 15, 0)),
+                  'out of state, a Missouri station');
+
+      (* A COUNT OVER THE LOG, CAPPED AT 250, BESIDE THE BONUS STATIONS. *)
+      FreeAndNil(view);
+      view := TLoggedQSOList.Create;
+      for i := 1 to 249 do
+         begin
+         view.Add(At('K0ABC', Band40, CW, 4, 14 + (i mod 6), i mod 60));
+         end;
+      CheckEquals(249, Bonus(MOQSOPARTY, inState, view), '249 peak-hour contacts');
+      view.Add(At('K0ABD', Band80, CW, 5, 15, 0));
+      CheckEquals(250, Bonus(MOQSOPARTY, inState, view), 'up to 250');
+      view.Add(At('K0ABE', Band80, CW, 5, 15, 1));
+      CheckEquals(250, Bonus(MOQSOPARTY, inState, view), 'and no further');
+      view.Add(At('W0MA', Band20, CW, 5, 21, 0));
+      CheckEquals(350, Bonus(MOQSOPARTY, inState, view), 'W0MA''s 100 is added beside it');
+
+      (* THE SAME LOG GIVES THE SAME BONUS THROUGH THE FINAL SCORE, whatever
+         the session counted -- there is nothing kept outside the view. *)
+      t := Totals(10);
+      t.SessionCountsMultipliers := False;
+      CheckEquals(10 + 350, Final(MOQSOPARTY, inState, t, view),
+                  'the final score: points plus the bonus');
+
+      (* NO OTHER CONTEST PAYS IT. *)
+      FreeAndNil(view);
+      view := TLoggedQSOList.Create;
+      view.Add(At('K0ABC', Band40, CW, 4, 15, 0));
+      CheckEquals(0, Bonus(CQWWCW, inState, view), 'CQ WW has no peak-hour bonus');
    finally
       view.Free;
-      contestObject.Free;
-   end;
-
-   (* NO OTHER CONTEST TALLIES ANYTHING. *)
-   contestObject := Make(CQWWCW, NoStation);
-   try
-      CheckFalse(TalliesAt(Band80, 15, 0), 'CQ WW keeps no live tally');
-   finally
-      contestObject.Free;
    end;
 end;
 
@@ -808,7 +859,7 @@ begin
    Test_RSGB18ScoresItsPointsAlone;
    Test_FinalScoreIsFormulaPlusBonus;
    Test_MissouriBonusStations;
-   Test_MissouriLiveTally;
+   Test_MissouriPeakHourBonus;
    Test_NCSweepNeedsFiveRareCounties;
    Test_SalmonRunW7DXOncePerMode;
    Test_SalmonRunSingleModeEntry;

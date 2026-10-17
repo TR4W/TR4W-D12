@@ -52,12 +52,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   routes to any. uTestContestIN7QPNE reads the shipped files and holds both.
 
   WHY THE FILE'S SPELLING AND NOT THE COMPONENTS' OWN COUNTY FILES. The
-  components' files do not agree with this one: neqso.dom spells New England
-  county-first (AndME) where in7qpne_cty.dom spells it state-first (MEAnd),
-  and this file carries Connecticut's planning regions (CTCap) where NEQP's
-  carries its eight counties. The session can only ever hold THIS file's
-  keys, so routing reads this file's convention. The difference is sponsor
-  data, and a question (Q81).
+  session can only ever hold THIS file's keys, so routing reads this file's
+  convention. Until Q81 (2026-10-17) New England's own files disagreed with
+  it -- neqso.dom spelled a county county-first (AndME) with Connecticut's
+  eight old counties; it now carries this file's 68 New England entries
+  exactly (state first, MEAnd; the planning regions, CTCap), as the NEQP
+  sponsor spells them.
 
   A QSO WHOSE COUNTY IS IN NO PARTY -- a state, a province, DX, or nothing --
   belongs to the ENTRANT'S own party when the entrant is in one: an in-state
@@ -272,9 +272,10 @@ type
       (* THE WORKED STATION'S ADIF STATE -- see TContestBase.ADIFCountyState
          and ADIFWorkedStationState (Q76/Q89, NY4I 2026-10-16). THE
          COMPOSITE'S OWN, NOT A COMPONENT'S: the session holds
-         in7qpne_cty.dom's keys, whose spelling is not the components'
-         (Q81 -- neqso.dom puts the state last, this file first), so the
-         county's state comes from the same routing rule that judges the
+         in7qpne_cty.dom's keys (the components' own files spell theirs the
+         same way -- New England's only since Q81, 2026-10-17 -- but this
+         file is the one loaded), so the county's state comes from the same
+         routing rule that judges the
          QSO (IN7QPNEPartyOfQTH): the key's first two letters, or DE for
          Delaware's NDE/KDE/SDE. No CNTY: WritesADIFCounty stays False. *)
       function ADIFCountyState(const aQso: ContestExchange): string; override;

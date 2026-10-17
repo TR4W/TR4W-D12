@@ -162,7 +162,6 @@ begin
 
    aTotals.ScoredBand := SingleBand;
    aTotals.SessionCountsMultipliers := DoingAnyMults(aContest);
-   aTotals.LiveSessionTally := LiveSessionTally;
 end;
 
 function ContestFinalScore(aContest: TContestHandle;
