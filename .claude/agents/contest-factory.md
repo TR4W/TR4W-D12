@@ -599,6 +599,17 @@ the target shape, the M-step migration order and the open questions.
   table: that is the yearly reminder -- add the sponsor's table, never
   register an old one for a new year without their word. The matrix's QSOs
   are all 2026-01-15, so its records sit in the 2026 table year.
+- **A CONTEST OWNS WHICH ADIF EXCHANGE TAGS ITS RECORD CARRIES (2026-10-17,
+  design 8.2w).** `TContestBase.EmitADIFReportFields` (RST_SENT/RST_RCVD: EVERY QSO'S, NY4I
+  "Every QSO", not declared by the class) and
+  `EmitADIFReceivedFields` (QTH, PRECEDENCE, CHECK, NAME, the `ADIFPowerTag`,
+  SRX, STX, TEN_TEN, AGE) writes exactly what the class's
+  `ReceivedExchangeFields` declares -- so **a new contest's field list is also
+  its ADIF export**, and a field the list forgets silently leaves the file.
+  STX is ours and is not gated. `uADIF` no longer writes any of them itself.
+  A class with a rule of its own overrides either method; one that only moves
+  the power to another tag states `ADIFPowerTag`. Pinned by
+  `uTestADIFReceivedFields` over the registry -- no row to add per contest.
 - **A contest owns its identity, and everyone asks it** (M1, 2026-10-01).
   `uContestRegistry.ContestIdentity(h)` answers for EVERY contest handle --
   the class, else a plain `TContestBase` (only NoContest, and a byte that names

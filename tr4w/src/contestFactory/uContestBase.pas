@@ -1657,6 +1657,15 @@ type
          Create(ContestHandleOf(<member>)). *)
       constructor Create(aContest: TContestHandle); virtual;
 
+      (* IS THIS THE CONTEST aQso WAS LOGGED IN? -- 2026-10-17. For a caller
+         holding an object that carries the station (ActiveContest) and a
+         record that may belong to another contest: uADIF.EmitADIFRecord
+         asks the station-carrying object only for its own contest's QSOs,
+         and the identity object for any other ("a logged QSO reads its
+         record"). It is a question, not a handle: Contest stays protected so
+         that nothing branches on it. *)
+      function IsContestOfQso(const aQso: ContestExchange): boolean;
+
       property DisplayName: string read GetDisplayName;
       property CabrilloName: string read GetCabrilloName;
       property ADIFContestId: string read GetADIFContestId;
@@ -2667,6 +2676,55 @@ type
          the generic QTH, which is all most contests have ever exported. *)
       function EmitADIFContestFields(const aQso: ContestExchange): string; virtual;
 
+      (* THE ADIF FIELDS OF THE WORKED STATION'S EXCHANGE -- 2026-10-17, NY4I:
+         "We should not just be exporting all possible fields" and "Shouldn't
+         the uADIF exporter be calling the contest class to ask for the
+         specific fields it wants to include?"
+
+         Two virtuals, because the two blocks sit apart in the record and the
+         record's order is part of the golden corpus's bytes: uADIF.EmitADIFRecord
+         asks EmitADIFReportFields where the signal report goes (after the
+         timestamps) and EmitADIFReceivedFields where the exchange goes (after
+         STATE). Each returns ADIF text and is asked of the contest the QSO was
+         logged in (the object carrying the station when the caller has one,
+         else the identity object) -- never the live contest.
+
+         THE RST PAIR IS EVERY QSO'S (NY4I, 2026-10-17: "Every QSO"):
+         EmitADIFReportFields writes RST_SENT and RST_RCVD for every contest,
+         as D7 did, whether or not the class's exchange carries a report.
+
+         EmitADIFReceivedFields WRITES EXACTLY WHAT THE CLASS DECLARES in its
+         own ReceivedExchangeFields (ExchangeInformationRecord), field by field:
+           QTH            QTH
+           Precedence     PRECEDENCE
+           Check          CHECK
+           Name           NAME
+           Power          ADIFPowerTag (RX_PWR; FOC_NUM for the FOC Marathon)
+           QSONumber      SRX
+           TenTenNum      TEN_TEN
+           Age            AGE
+         a field the class does not declare is not written, however the
+         record happens to be filled (a stray value in the log is not an
+         exchange field). An empty or unset value (an empty text, a zero, the
+         $FFFF and -1 sentinels) is not written either. Chapter, ClassEI, Kids,
+         RandomChars, Zone and ZoneOrSociety have no tag here: the zone is
+         PostUnit's CQZ/ITUZ and the class is EmitADIFContestFields', as ever.
+
+         STX -- OUR OWN SENT SERIAL -- IS WRITTEN WHENEVER THE QSO HAS ONE, and
+         is in EmitADIFReceivedFields only because its place in the record is
+         between SRX and TEN_TEN. It is not a received field and the class's
+         received list says nothing about it: the log numbers every QSO, and
+         D7 wrote STX for every contest, serial exchange or not (the golden
+         corpus's ARRL DX, CQ WW, IARU and Field Day references all carry it
+         with an exchange that sends no serial). A contest that wants it
+         gated overrides this method.
+
+         A class with a rule of its own overrides either one and says so in the
+         override; one that only changes the tag a field goes to (the FOC
+         Marathon) states ADIFPowerTag. *)
+      function EmitADIFReportFields(const aQso: ContestExchange): string; virtual;
+      function EmitADIFReceivedFields(const aQso: ContestExchange): string; virtual;
+
       (* THE CONTEST INTERPRETS AN IMPORTED ADIF RECORD -- M5a, 2026-10-01.
 
          The other half of EmitADIFContestFields: export turns the QSO into
@@ -3466,6 +3524,11 @@ end;
 procedure TContestBase.SetStation(const aStation: TStationContext);
 begin
    FStation := aStation;
+end;
+
+function TContestBase.IsContestOfQso(const aQso: ContestExchange): boolean;
+begin
+   Result := FContest = aQso.ceContest;
 end;
 
 function TContestBase.GetDisplayName: string;
@@ -4735,6 +4798,95 @@ function TContestBase.EmitADIFContestFields(const aQso: ContestExchange): string
 begin
    (* Nothing beyond the generic QTH uADIF has already written. *)
    Result := '';
+end;
+
+function TContestBase.EmitADIFReportFields(const aQso: ContestExchange): string;
+begin
+   (* The RST pair, for EVERY QSO -- NY4I, 2026-10-17: "Every QSO". It is a
+      QSO attribute, as in D7, not a field of the contest's exchange. *)
+   Result := EmitADIFField('RST_SENT', IntToStr(aQso.RSTSent)) +
+             EmitADIFField('RST_RCVD', IntToStr(aQso.RSTReceived));
+end;
+
+function TContestBase.EmitADIFReceivedFields(const aQso: ContestExchange): string;
+var
+   declared: ExchangeInformationRecord;
+begin
+   (* The class's own statement of its exchange, asked once -- see the
+      declaration for the field-to-tag table. The order is the record's
+      order since D7: QTH, PRECEDENCE, CHECK, NAME, power, SRX, STX, TEN_TEN,
+      AGE. *)
+   declared := ReceivedExchangeFields;
+   Result := '';
+
+   if declared.QTH and
+      (aQso.QTHString <> '') then
+      begin
+      Result := Result + EmitADIFField('QTH', string(aQso.QTHString));
+      end;
+
+   if declared.Precedence and
+      (aQso.Precedence <> #0) then
+      begin
+      Result := Result + EmitADIFField('PRECEDENCE', string(aQso.Precedence));
+      end;
+   if declared.Check and
+      (aQso.Check <> 0) then
+      begin
+      Result := Result + EmitADIFField('CHECK', PadInt(aQso.Check, 2));
+      end;
+
+   if declared.Name and
+      (aQso.Name <> '') then
+      begin
+      Result := Result + EmitADIFField('NAME', string(aQso.Name));
+      end;
+
+   (* WHICH TAG THE POWER FIELD GOES TO IS THE CONTEST'S: it holds the FOC
+      membership number for the FOC Marathon, a power for everything else. *)
+   if declared.Power and
+      (aQso.Power <> '') then
+      begin
+      Result := Result + EmitADIFField(ADIFPowerTag, string(aQso.Power));
+      end;
+
+   (* SRX / STX, the numeric serials. Two "unset" sentinels are in use:
+        $FFFF (65535) -- set by uADIF.InitContestExchangeForParse for records
+                         built from imported ADIF
+        -1            -- left in place by live-entry and binary-log paths for
+                         contests that don't use a serial (Field Day on the SRX
+                         side: ExchString carries class and section)
+      Without the > 0 guard a Field Day record would write <SRX:5>000-1,
+      because PadInt(-1, 5) is the text "000-1". *)
+   if declared.QSONumber and
+      (aQso.NumberReceived > 0) and
+      (aQso.NumberReceived <> $FFFF) then
+      begin
+      Result := Result + EmitADIFField('SRX', PadInt(aQso.NumberReceived, 5));
+      end;
+
+   (* STX is OURS, not a received field -- see the declaration. *)
+   if (aQso.NumberSent > 0) and
+      (aQso.NumberSent <> $FFFF) then
+      begin
+      Result := Result + EmitADIFField('STX', PadInt(aQso.NumberSent, 5));
+      end;
+
+   (* A 10-10 number is never 0, so a zero is as unset as the $FFFF the parse
+      leaves for a non-member: the old test wrote <TEN_TEN:5>00000 for any
+      path that left the field 0. *)
+   if declared.TenTenNum and
+      (aQso.TenTenNum <> $FFFF) and
+      (aQso.TenTenNum <> 0) then
+      begin
+      Result := Result + EmitADIFField('TEN_TEN', PadInt(aQso.TenTenNum, 5));
+      end;
+
+   if declared.Age and
+      (aQso.Age <> 0) then
+      begin
+      Result := Result + EmitADIFField('AGE', PadInt(aQso.Age, 3));
+      end;
 end;
 
 procedure TContestBase.ApplyADIFImport(const aTemps: TADIFRecordTemps;

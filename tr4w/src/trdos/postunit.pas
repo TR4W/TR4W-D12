@@ -2565,7 +2565,8 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
 
   // ----- Contest-specific primary-location field -----
   //
-  // uADIF.EmitADIFRecord already emitted <QTH> when QTHString is non-empty.
+  // uADIF.EmitADIFRecord already emitted <QTH> when QTHString is non-empty
+  // and the contest declares a QTH field.
   // A grid goes to GRIDSQUARE here.  Anything else is the CONTEST'S to
   // place (M4, 2026-10-01): EmitADIFContestFields, asked of every contest
   // through ContestIdentity -- the Field Days' ARRL_SECT/CLASS/STATE,
@@ -2705,8 +2706,11 @@ procedure ExportToADIF;
   // uADIF.EmitADIFRecord; the contest-specific extras come from the
   // EmitContestSpecificTailForExport callback above.
   BeginExchangeFailureReport;
+  (* The active contest carries the station, which a contest's field list can
+    depend on (ARRL DX: does the entrant count the DX multiplier). uADIF asks
+    it only for QSOs of its own contest, and nil for a classless one. *)
   adifStr := uADIF.ExportADIFToString( records, string( TR4W_CURRENTVERSION ),
-     @EmitContestSpecificTailForExport );
+     @EmitContestSpecificTailForExport, ActiveContest( Contest ) );
   sWriteFileFromString( tReportFileWrite, adifStr );
 
   FileClose(tReportFileWrite);

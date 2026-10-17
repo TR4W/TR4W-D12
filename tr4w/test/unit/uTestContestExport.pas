@@ -563,6 +563,7 @@ procedure TContestExportTests.Test_RoundTripThroughTodaysImport;
       fields: TADIFFieldList;
       text, what, stx: string;
       contest: TContestBase;
+      declared: ExchangeInformationRecord;
    begin
       what := string(ContestTypeSA[aContest]);
       contest := ContestIdentity(aContest);
@@ -606,14 +607,47 @@ procedure TContestExportTests.Test_RoundTripThroughTodaysImport;
       CheckEquals('K1ABC', string(back.Callsign), what + ': CALL');
       CheckEquals(Ord(Band20), Ord(back.Band), what + ': BAND');
       CheckEquals(Ord(CW), Ord(back.Mode), what + ': MODE');
+      (* THE RECEIVED EXCHANGE COMES BACK EXACTLY AS FAR AS THE CLASS DECLARES
+         IT (2026-10-17): the QSO above has every field filled, and export
+         writes only the ones the contest's own ReceivedExchangeFields names
+         (TContestBase.EmitADIFReceivedFields). A declared field must come
+         back; an undeclared one must not have been written at all. *)
+      declared := contest.ReceivedExchangeFields;
+      CheckTrue(Pos('<RST_SENT:', text) > 0, what + ': RST_SENT, every QSO''s (NY4I, 2026-10-17)');
+      CheckTrue(Pos('<RST_RCVD:', text) > 0, what + ': RST_RCVD, every QSO''s (NY4I, 2026-10-17)');
+      CheckEquals(Ord(declared.QSONumber), Ord(Pos('<SRX:', text) > 0), what + ': SRX only if declared');
+      CheckEquals(Ord(declared.QTH), Ord(Pos('<QTH:', text) > 0), what + ': QTH only if declared');
+      CheckEquals(Ord(declared.Precedence), Ord(Pos('<PRECEDENCE:', text) > 0), what + ': PRECEDENCE only if declared');
+      CheckEquals(Ord(declared.Check), Ord(Pos('<CHECK:', text) > 0), what + ': CHECK only if declared');
+      CheckEquals(Ord(declared.Name), Ord(Pos('<NAME:', text) > 0), what + ': NAME only if declared');
+      CheckEquals(Ord(declared.Power),
+                  Ord((Pos('<RX_PWR:', text) > 0) or (Pos('<FOC_NUM:', text) > 0)),
+                  what + ': the power only if declared');
+      CheckTrue(Pos('<TEN_TEN:', text) = 0, what + ': no 10-10 number, none declared and none set');
+      CheckTrue(Pos('<AGE:', text) = 0, what + ': no age, none declared and none set');
       CheckEquals(599, back.RSTSent, what + ': RST_SENT');
       CheckEquals(579, back.RSTReceived, what + ': RST_RCVD');
       CheckEquals(7, back.NumberSent, what + ': STX');
-      CheckEquals(12, back.NumberReceived, what + ': SRX');
-      CheckEquals(aQTH, string(back.QTHString), what + ': QTH');
-      CheckEquals('A', string(back.Precedence), what + ': PRECEDENCE');
-      CheckEquals(72, back.Check, what + ': CHECK');
-      CheckEquals('JOE', string(back.Name), what + ': NAME');
+      if declared.QSONumber then
+         begin
+         CheckEquals(12, back.NumberReceived, what + ': SRX');
+         end;
+      if declared.QTH then
+         begin
+         CheckEquals(aQTH, string(back.QTHString), what + ': QTH');
+         end;
+      if declared.Precedence then
+         begin
+         CheckEquals('A', string(back.Precedence), what + ': PRECEDENCE');
+         end;
+      if declared.Check then
+         begin
+         CheckEquals(72, back.Check, what + ': CHECK');
+         end;
+      if declared.Name then
+         begin
+         CheckEquals('JOE', string(back.Name), what + ': NAME');
+         end;
       CheckEquals(stx, temps.STX_String, what + ': STX_STRING is the class''s sent exchange');
 
       if contest.WritesADIFContestId then
@@ -621,13 +655,16 @@ procedure TContestExportTests.Test_RoundTripThroughTodaysImport;
          CheckEquals(Ord(aContest), back.ceContest.ToByte, what + ': CONTEST_ID names it');
          end;
 
-      if contest.ADIFPowerTag = 'RX_PWR' then
+      if declared.Power then
          begin
-         CheckEquals('100', string(back.Power), what + ': RX_PWR');
-         end
-      else
-         begin
-         CheckEquals('100', temps.FOC_Num, what + ': the power field went to ' + contest.ADIFPowerTag);
+         if contest.ADIFPowerTag = 'RX_PWR' then
+            begin
+            CheckEquals('100', string(back.Power), what + ': RX_PWR');
+            end
+         else
+            begin
+            CheckEquals('100', temps.FOC_Num, what + ': the power field went to ' + contest.ADIFPowerTag);
+            end;
          end;
 
       if aContest in [ARRLFIELDDAY, WINTERFIELDDAY] then

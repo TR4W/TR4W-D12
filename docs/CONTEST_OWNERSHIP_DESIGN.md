@@ -4530,6 +4530,50 @@ with S1.
    `arrl_digi` corpus log holds one 20 m RTTY QSO, which would then export as
    `X-QSO:`.
 
+### 8.2w ADIF exchange-field selection moved into the class (2026-10-17)
+
+NY4I, on the contest matrix showing a POTA record with `PRECEDENCE`, `CHECK`,
+`TEN_TEN`, `AGE` and `NAME`: *"We should not just be exporting all possible
+fields"* and *"Shouldn't the uADIF exporter be calling the contest class to ask
+for the specific fields it wants to include?"* Yes -- this is the ownership
+rule (§1) applied to the one block of the record that had stayed generic.
+
+- `uADIF.EmitADIFRecord` wrote QTH, PRECEDENCE, CHECK, NAME, the power tag, SRX,
+  STX, TEN_TEN and AGE whenever the field was non-empty, and RST_SENT/RST_RCVD
+  always. D7 did exactly that (`C:\TR4W\tr4w\src\uADIF.pas`), so this is NOT a
+  port of D7 behaviour: it is a deliberate departure, and the golden corpus's
+  D7 references show it (see below).
+- Now `TContestBase.EmitADIFReportFields` (the RST pair) and
+  `TContestBase.EmitADIFReceivedFields` (QTH, PRECEDENCE, CHECK, NAME, the
+  `ADIFPowerTag`, SRX, STX, TEN_TEN, AGE) are asked of the QSO's own contest,
+  and the base writes exactly what the class's own `ReceivedExchangeFields`
+  declares -- the class's statement, not an inherited rule. Two methods, not
+  one, because the two blocks sit apart in the record and its order is part of
+  the corpus's bytes. A class with its own rule overrides either.
+- A contest's list can depend on the entrant (ARRL DX), which
+  `ContestIdentity` cannot know, so `EmitADIFRecord`/`ExportADIFToString` take
+  an optional `aContest` (PostUnit passes `ActiveContest(Contest)`). It is used
+  only for a QSO of its own contest (`TContestBase.IsContestOfQso`); any other
+  QSO is judged by `ContestIdentity(rec.ceContest)`.
+- **STX is not gated.** It is our own serial, not a received field, and D7
+  wrote it for every contest (the corpus's ARRL DX, CQ WW and IARU references
+  carry it with an exchange that sends no serial). Gating it on the contest
+  sending a serial would remove it from those sets.
+- A 10-10 number of 0 is treated as unset, as `$FFFF` always was.
+- `uTestADIFReceivedFields` pins it for EVERY registered contest at the
+  identity and at all seven roster stations.
+- **RULED (NY4I, 2026-10-17): "Every QSO".** `RST_SENT` and `RST_RCVD` are QSO
+  attributes written for every contest, as D7 did -- NOT gated by
+  `ReceivedExchangeFields.RST`. Gating them would have stripped the pair from
+  five corpus references (Sweepstakes, Field Day, Winter Field Day, NA Sprint,
+  ARRL Digi). `EmitADIFReportFields` stays a virtual so a class could own a
+  rule, but the base is unconditional.
+- **ACCEPTED AND PINNED (NY4I, 2026-10-17: "Accept and pin"): Winter Field
+  Day's five stray tags** -- four PRECEDENCE and one NAME in the D7 log, which
+  the class does not declare. `ref.adi` is never regenerated, so
+  `tr4w/test/corpus/winter_fd_2025_w4ta/known.adi.diff` pins the five records
+  line for line (read by `run-golden-diff.sh` and `test-adif-roundtrip.sh`).
+
 ### 8.3 What "a contest has moved" means -- checkably
 
 A contest has moved when **all** of these hold:

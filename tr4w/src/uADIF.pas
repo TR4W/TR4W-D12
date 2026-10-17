@@ -288,16 +288,41 @@ function EmitADIFHeader(const programVersion: string): string;
 // CQZ/ITUZ via the contest's ZoneMultiplierZones, POTA MY_* fields via MY PARK, ARRL-FD
 // CLASS via MyFDClass etc.).  PostUnit.ExportToADIF provides those
 // via the TContestTailEmitter callback.
-function EmitADIFRecord(const rec: ContestExchange): string;
+//
+// WHICH EXCHANGE FIELDS THE RECORD CARRIES IS THE CONTEST'S (2026-10-17,
+// NY4I: "We should not just be exporting all possible fields"): QTH,
+// PRECEDENCE, CHECK, NAME, the power tag, SRX, STX, TEN_TEN and AGE are
+// TContestBase.EmitADIFReceivedFields -- each only where the contest's
+// own ReceivedExchangeFields declares it.  The RST pair is
+// TContestBase.EmitADIFReportFields and is every QSO's (NY4I: "Every QSO").
+// This unit writes the fields
+// that belong to the QSO, whatever the contest.
+//
+// aContest is the contest object to ask when the caller holds one that
+// CARRIES THE STATION (uContestFactory.ActiveContest): a contest's field
+// list can depend on the entrant (ARRL DX asks whether the entrant counts
+// the DX multiplier), which ContestIdentity cannot know.  It is used only
+// when it IS the record's own contest -- a logged QSO reads its record,
+// never the live contest -- and nil, or another contest, asks
+// ContestIdentity(rec.ceContest).
+function EmitADIFRecord(const rec: ContestExchange;
+                        aContest: TContestBase = nil): string;
 
 // Build the entire ADIF document for the given records: header +
 // (EmitADIFRecord(r) + tailEmitter(r) + <EOR>) for each record.
 // `programVersion` is the value for the PROGRAMVERSION ADIF tag in
 // the header.  `tailEmitter` may be nil -- in which case no contest-
 // specific extras are added per record (suitable for tests).
+// aContest is EmitADIFRecord's.
 function ExportADIFToString(const records: TContestExchangeArray;
                             const programVersion: string;
-                            tailEmitter: TContestTailEmitter): string;
+                            tailEmitter: TContestTailEmitter;
+                            aContest: TContestBase = nil): string;
+
+// Format an integer with at least minLen digits (zero-padded) -- the
+// width of ADIF's SRX, STX, TEN_TEN, AGE and CHECK as TR4W writes them.
+// Public for TContestBase.EmitADIFReceivedFields.
+function PadInt(n: Integer; minLen: Integer): string;
 
 // Return the ADIF STATE of the WORKED station of rec -- the class of
 // rec's contest decides (TContestBase.ADIFWorkedStationState; '' for
@@ -1765,16 +1790,36 @@ end;
 
 // ----- EmitADIFRecord -------------------------------------------------
 
-function EmitADIFRecord(const rec: ContestExchange): string;
+(* THE CONTEST THAT SPEAKS FOR rec: aContest when it is rec's own contest
+  (it carries the station), else the identity object. Never the live
+  contest -- a QSO of another contest is judged by its own. *)
+function ContestForRecord(const rec: ContestExchange;
+                          aContest: TContestBase): TContestBase;
+begin
+   if (aContest <> nil) and
+      aContest.IsContestOfQso(rec) then
+      begin
+      Result := aContest;
+      end
+   else
+      begin
+      Result := ContestIdentity(rec.ceContest);
+      end;
+end;
+
+function EmitADIFRecord(const rec: ContestExchange;
+                        aContest: TContestBase): string;
 var
-   bareCall       : string;
+   bareCall      : string;
    roverFullCall  : string;
    bandStr        : string;
    modeStr        : string;
    subModeStr     : string;
    freqStr        : string;
    stateForQP     : string;
+   rules          : TContestBase;
 begin
+   rules := ContestForRecord(rec, aContest);
    ResolveRoverCall(rec, bareCall, roverFullCall);
 
    // BAND string -- mirror the legacy 70cm/23cm rewrites.
@@ -1812,9 +1857,9 @@ begin
           rec.tSysTime.qtMinute,
           rec.tSysTime.qtSecond]));
 
-   // RST and exchange
-   Result := Result + EmitADIFField('RST_SENT', IntToStr(rec.RSTSent));
-   Result := Result + EmitADIFField('RST_RCVD', IntToStr(rec.RSTReceived));
+   (* The signal report, for every QSO (NY4I, 2026-10-17) -- asked of the
+      contest all the same (EmitADIFReportFields), so a class can own a rule. *)
+   Result := Result + rules.EmitADIFReportFields(rec);
 
    // APP_TR4W_ROVERCALL (full rover form, e.g. KG1S/MON)
    if roverFullCall <> '' then
@@ -1879,69 +1924,19 @@ begin
       Result := Result + EmitADIFField('STATE', stateForQP);
       end;
 
-   // QTH - the "default" location field.  Always emit when QTHString
-   // is non-empty.  Contests that prefer GRIDSQUARE/IOTA/ARRL_SECT
-   // can override via the tail emitter.
-   if rec.QTHString <> '' then
-      begin
-      Result := Result + EmitADIFField('QTH', string(rec.QTHString));
-      end;
-
-   // PRECEDENCE / CHECK
-   if rec.Precedence <> #0 then
-      begin
-      Result := Result + EmitADIFField('PRECEDENCE', string(rec.Precedence));
-      end;
-   if rec.Check <> 0 then
-      begin
-      Result := Result + EmitADIFField('CHECK', PadInt(rec.Check, 2));
-      end;
-
-   // NAME / FOC_NUM / RX_PWR
-   if rec.Name <> '' then
-      begin
-      Result := Result + EmitADIFField('NAME', string(rec.Name));
-      end;
-
-   (* WHICH TAG THE POWER FIELD GOES TO IS THE CONTEST'S (M4): it holds the
-      FOC membership number for the FOC Marathon, a power for everything
-      else. This tested `ceContest = FOCMARATHON`. *)
-   if rec.Power <> '' then
-      begin
-      Result := Result + EmitADIFField(ContestIdentity(rec.ceContest).ADIFPowerTag,
-                                       string(rec.Power));
-      end;
-
-   // SRX / STX (numeric serials).  Two "unset" sentinels are in use:
-   //   $FFFF (65535) -- set by uADIF.InitContestExchangeForParse for
-   //                    records built from imported ADIF
-   //   -1            -- left in place by live-entry / binary-log
-   //                    paths for contests that don't use a serial
-   //                    (e.g. Field Day on the SRX side -- ExchString
-   //                    carries class+section, NumberReceived stays
-   //                    at its initialized value)
-   // Without the >0 guard, FD records emit garbage like <SRX:5>000-1
-   // because PadInt(-1, 5) produces the literal string "000-1".
-   if (rec.NumberReceived > 0)      and
-      (rec.NumberReceived <> $FFFF) then
-      begin
-      Result := Result + EmitADIFField('SRX', PadInt(rec.NumberReceived, 5));
-      end;
-   if (rec.NumberSent > 0)      and
-      (rec.NumberSent <> $FFFF) then
-      begin
-      Result := Result + EmitADIFField('STX', PadInt(rec.NumberSent, 5));
-      end;
-
-   if rec.TenTenNum <> $FFFF then
-      begin
-      Result := Result + EmitADIFField('TEN_TEN', PadInt(rec.TenTenNum, 5));
-      end;
-
-   if rec.Age <> 0 then
-      begin
-      Result := Result + EmitADIFField('AGE', PadInt(rec.Age, 3));
-      end;
+   (* THE WORKED STATION'S EXCHANGE -- QTH, PRECEDENCE, CHECK, NAME, the
+      power tag (RX_PWR, FOC_NUM for the FOC Marathon), SRX, STX, TEN_TEN and
+      AGE -- IS THE CONTEST'S TO WRITE (2026-10-17, NY4I: "Shouldn't the uADIF
+      exporter be calling the contest class to ask for the specific fields it
+      wants to include?"). Each is written only where the contest's own
+      ReceivedExchangeFields declares it. This block used to write whichever
+      of them was non-empty, so a POTA record carried a PRECEDENCE, a CHECK,
+      a TEN_TEN and an AGE that POTA has no such thing as. The unset
+      sentinels ($FFFF; -1 on a contest with no serial) are the class's to
+      read now: see TContestBase.EmitADIFReceivedFields.
+      Contests that prefer GRIDSQUARE/IOTA/ARRL_SECT add them through the
+      tail emitter (EmitADIFContestFields). *)
+   Result := Result + rules.EmitADIFReceivedFields(rec);
 
    // OPERATOR + APP_TR4W_ID
    if rec.ceOperator <> '' then
@@ -1970,14 +1965,15 @@ end;
 
 function ExportADIFToString(const records: TContestExchangeArray;
                             const programVersion: string;
-                            tailEmitter: TContestTailEmitter): string;
+                            tailEmitter: TContestTailEmitter;
+                            aContest: TContestBase): string;
 var
    i : Integer;
 begin
    Result := EmitADIFHeader(programVersion);
    for i := 0 to High(records) do
       begin
-      Result := Result + EmitADIFRecord(records[i]);
+      Result := Result + EmitADIFRecord(records[i], aContest);
       if Assigned(tailEmitter) then
          begin
          Result := Result + tailEmitter(records[i]);

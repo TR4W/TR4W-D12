@@ -659,6 +659,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
       frozen against the old FormatADIFExchangeOfKind before it moved into
       the classes. *)
    uTestADIFSentExchange in 'uTestADIFSentExchange.pas',
+   (* 2026-10-17: every contest's ADIF exchange tags are exactly the ones its
+      own ReceivedExchangeFields declares (TContestBase.EmitADIFReceivedFields). *)
+   uTestADIFReceivedFields in 'uTestADIFReceivedFields.pas',
    (* M11 S9c: every contest's two Cabrillo exchange columns at every roster
       station, frozen against the old FormatCabrilloExchangeOfKind before it
       moved into the classes. *)
@@ -793,6 +796,7 @@ begin
    RegisterSuite(TExchangeRuleTests.Create('ExchangeRules'));
    RegisterSuite(TExchangeFieldsTests.Create('ExchangeFields'));
    RegisterSuite(TADIFSentExchangeTests.Create('ADIFSentExchange'));
+   RegisterSuite(TADIFReceivedFieldsTests.Create('ADIFReceivedFields'));
    RegisterSuite(TCabrilloColumnsTests.Create('CabrilloColumns'));
    RegisterSuite(TExchangeParseTests.Create('ExchangeParse'));
    RegisterSuite(TExchangeKindReadersTests.Create('ExchangeKindReaders'));

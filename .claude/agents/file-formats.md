@@ -125,6 +125,27 @@ multipliers, CTY.DAT, band lookup and CRC32.
   external logger (DXKeeper) sends the same getter's id since M1 — it used to
   send the bare enum spelling. A contest that gains an id still lists its old
   enum spelling as a former one.
+- **WHICH ADIF EXCHANGE TAGS A RECORD CARRIES IS THE CLASS'S (2026-10-17,
+  NY4I: "We should not just be exporting all possible fields").**
+  `uADIF.EmitADIFRecord` writes only the QSO's own fields (CALL, BAND, times,
+  MODE, FREQ, STATE, OPERATOR, APP_TR4W_ID, the X-QSO flag) and asks the QSO's
+  contest for the rest: `EmitADIFReportFields` (RST_SENT/RST_RCVD -- EVERY
+  QSO'S, NY4I 2026-10-17 "Every QSO", never gated by the class) and
+  `EmitADIFReceivedFields` (QTH, PRECEDENCE, CHECK, NAME, the `ADIFPowerTag`,
+  SRX, STX, TEN_TEN, AGE). The latter's base writes exactly the fields the
+  class's `ReceivedExchangeFields` declares; STX is the exception (ours, written
+  whenever the QSO has a serial -- D7 wrote it for every contest). They are two
+  methods because the record's order is part of the corpus's bytes. A station-
+  dependent list (ARRL DX) needs the object that carries the station:
+  `EmitADIFRecord(rec, aContest)` takes it, PostUnit passes `ActiveContest`,
+  and it is used only for a QSO of its own contest (`IsContestOfQso`). D7
+  wrote every non-empty field, so this is NOT a port: Winter Field Day's
+  reference carries four stray PRECEDENCE and one stray NAME its class does
+  not declare, accepted and pinned (NY4I: "Accept and pin") in
+  `winter_fd_2025_w4ta/known.adi.diff` -- see
+  `docs/CONTEST_OWNERSHIP_DESIGN.md` 8.2w. Pinned by
+  `uTestADIFReceivedFields`. A new tag from the exchange goes in the class's
+  field list, never back into uADIF.
 - **THE EXCHANGE COLUMNS AND CONTEST FIELDS ARE THE CONTEST'S (M4,
   2026-10-01).** **THE CABRILLO COLUMNS ARE THE CLASSES' SINCE M11 S9c
   (2026-10-14):** `uCabrilloExchange` holds 56 named helpers (27 sent, 29
