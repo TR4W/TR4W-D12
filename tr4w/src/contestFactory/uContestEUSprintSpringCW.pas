@@ -139,7 +139,9 @@ end;
 
 function TContestEUSprintSpringCW.GetDisplayName: string;
 begin
-   Result := 'EU-SPRINT-SPRING-CW';
+   (* The contest's human name: WA7BNM, accepted (ref 317 was already stated) (design Q53,
+      docs/Q53_CONTEST_NAMES.csv). *)
+   Result := 'RSGB International Sprint Contest, CW';
 end;
 
 function TContestEUSprintSpringCW.GetCabrilloName: string;
@@ -178,9 +180,8 @@ end;
 
 function TContestEUSprintSpringCW.GetFriendlyName: string;
 begin
-   (* The row's FriendlyName is blank; this is the enum's spelling it
-      resolves to. *)
-   Result := 'EU-SPRINT-SPRING-CW';
+   (* The display name above -- design Q53. *)
+   Result := 'RSGB International Sprint Contest, CW';
 end;
 
 function TContestEUSprintSpringCW.GetInitialExchangeKind: InitialExchangeType;

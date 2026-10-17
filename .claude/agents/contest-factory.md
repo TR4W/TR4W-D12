@@ -593,6 +593,16 @@ the target shape, the M-step migration order and the open questions.
   `uTestContestDisplay.Test_EveryClassStatesItsIdentity` compares each
   getter with the parent class's (a negative control proves it can fail)
   and holds the enum-spelled display names as a ratchet (design Q53).
+  **Q53 was applied 2026-10-17**: 24 contests got NY4I's names (and 14 their
+  WA7BNM refs); the 17 with no name keep their internal one. A name change
+  is the class's two getters plus its `uTestContestIdentityPin` row, by hand.
+- **A NON-ASCII literal in a class is written as `#$xxxx` code points**
+  (Q42, 2026-10-17: the OZCHR session names in Cyrillic). The factory's units
+  carry no BOM, and a non-ASCII literal in a BOM-less unit is read in the
+  build machine's ANSI codepage (`Lint-BOM.ps1`); code points keep the source
+  ASCII. The session's `ContestName` is for people (title bar, summary sheet,
+  hour report): the Cabrillo `CONTEST:` line is `CabrilloName`, and the EDI
+  `TName` falls back to it for a non-ASCII name (`PostUnit.EDIContestName`).
 - **Set-up reads the contest** (M2, 2026-10-01). `FCONTEST.ApplyContestTraits`
   is the ONE writer (with `ApplySessionDefaults` after it) of the session's
   kinds (four since M11 S3 and S4) -- `ContestSession`, the `Active*` globals until M10 S9 -- the QSO/mult by band/mode

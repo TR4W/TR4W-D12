@@ -176,7 +176,9 @@ end;
 
 function TContestFOCMarathon.GetDisplayName: string;
 begin
-   Result := 'FOC MARATHON';
+   (* The contest's human name: the DXLog name (design Q53,
+      docs/Q53_CONTEST_NAMES.csv). *)
+   Result := 'FOC Marathon';
 end;
 
 function TContestFOCMarathon.GetCabrilloName: string;
@@ -215,9 +217,8 @@ end;
 
 function TContestFOCMarathon.GetFriendlyName: string;
 begin
-   (* The row's FriendlyName is blank; it resolves to the enum's
-      spelling. *)
-   Result := 'FOC MARATHON';
+   (* The display name above -- design Q53. *)
+   Result := 'FOC Marathon';
 end;
 
 function TContestFOCMarathon.GetInitialExchangeKind: InitialExchangeType;

@@ -114,8 +114,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   ADIF -- CONTEST_ID DE-QSO-PARTY; export and import are the base's.
 
-  IDENTITY -- no WA7BNM id or submission address is recorded for this
-    contest in TR4W yet: 0 and '' (design Q75). *)
+  IDENTITY -- WA7BNM ref 240 and the sponsor's log address, both from
+    design Q75 (they were 0 and '' until 2026-10-17). *)
 unit uContestDelawareQP;
 
 {$I tr4w.inc}
@@ -275,8 +275,8 @@ end;
 
 function TContestDelawareQP.GetWA7BNMId: integer;
 begin
-   (* Not recorded in TR4W -- design Q75. *)
-   Result := 0;
+   (* WA7BNM's calendar ref for the Delaware QSO Party -- design Q75. *)
+   Result := 240;
 end;
 
 function TContestDelawareQP.GetQRZRUId: integer;
@@ -286,8 +286,10 @@ end;
 
 function TContestDelawareQP.GetSubmissionEmail: string;
 begin
-   (* Not recorded in TR4W -- design Q75. *)
-   Result := '';
+   (* Design Q75: the sponsor's rules page (fsarc.org, qsoparty/rules-2024.html,
+      read 2026-10-17) says logs go by e-mail to "qsoparty at google's mail
+      system", and WA7BNM's ref 240 writes the same address. *)
+   Result := 'qsoparty@gmail.com';
 end;
 
 function TContestDelawareQP.GetDomesticFileName: string;

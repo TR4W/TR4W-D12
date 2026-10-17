@@ -188,7 +188,9 @@ end;
 
 function TContestIRTS.GetDisplayName: string;
 begin
-   Result := 'IRTS';
+   (* The contest's human name: WA7BNM, accepted (design Q53,
+      docs/Q53_CONTEST_NAMES.csv). *)
+   Result := 'IRTS 80m Counties Contest';
 end;
 
 function TContestIRTS.GetCabrilloName: string;
@@ -207,7 +209,8 @@ end;
 
 function TContestIRTS.GetWA7BNMId: integer;
 begin
-   Result := 0;
+   (* WA7BNM's ref, accepted by NY4I with its name (design Q53). *)
+   Result := 756;
 end;
 
 function TContestIRTS.GetQRZRUId: integer;
@@ -227,9 +230,8 @@ end;
 
 function TContestIRTS.GetFriendlyName: string;
 begin
-   (* The row's FriendlyName is blank; this is the enum's spelling it
-      resolves to. *)
-   Result := 'IRTS';
+   (* The display name above -- design Q53. *)
+   Result := 'IRTS 80m Counties Contest';
 end;
 
 function TContestIRTS.GetInitialExchangeKind: InitialExchangeType;

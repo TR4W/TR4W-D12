@@ -164,7 +164,9 @@ end;
 
 function TContestEuropeanVHF.GetDisplayName: string;
 begin
-   Result := 'EUROPEAN VHF';
+   (* The contest's human name: NY4I: "Use European VHF for now" (design Q53,
+      docs/Q53_CONTEST_NAMES.csv). *)
+   Result := 'European VHF';
 end;
 
 function TContestEuropeanVHF.GetCabrilloName: string;
@@ -203,9 +205,8 @@ end;
 
 function TContestEuropeanVHF.GetFriendlyName: string;
 begin
-   (* The row's FriendlyName is blank; this is the enum's spelling it
-      resolves to. *)
-   Result := 'EUROPEAN VHF';
+   (* The display name above -- design Q53. *)
+   Result := 'European VHF';
 end;
 
 function TContestEuropeanVHF.GetInitialExchangeKind: InitialExchangeType;

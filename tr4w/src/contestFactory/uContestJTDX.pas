@@ -157,7 +157,9 @@ end;
 
 function TContestJTDX.GetDisplayName: string;
 begin
-   Result := 'MONGOLIAN DX';
+   (* The contest's human name: WA7BNM, accepted (design Q53,
+      docs/Q53_CONTEST_NAMES.csv). *)
+   Result := 'Mongolian DX Contest, CW/SSB';
 end;
 
 function TContestJTDX.GetCabrilloName: string;
@@ -176,7 +178,8 @@ end;
 
 function TContestJTDX.GetWA7BNMId: integer;
 begin
-   Result := 0;
+   (* WA7BNM's ref, accepted by NY4I with its name (design Q53). *)
+   Result := 491;
 end;
 
 function TContestJTDX.GetQRZRUId: integer;
@@ -196,9 +199,8 @@ end;
 
 function TContestJTDX.GetFriendlyName: string;
 begin
-   (* The row's FriendlyName is blank; this is the enum's spelling it
-      resolves to. *)
-   Result := 'MONGOLIAN DX';
+   (* The display name above -- design Q53. *)
+   Result := 'Mongolian DX Contest, CW/SSB';
 end;
 
 function TContestJTDX.GetInitialExchangeKind: InitialExchangeType;

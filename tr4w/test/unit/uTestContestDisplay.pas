@@ -1588,22 +1588,23 @@ begin
 end;
 
 (* THE CONTESTS WHOSE DISPLAY NAME IS STILL THEIR ENUM SPELLING -- their row
-  has no FriendlyName, so there was no human name to state. A RATCHET: a
+  had no FriendlyName, so there was no human name to state. A RATCHET: a
   contest given a human name leaves this list, and a new contest may not join
-  it. Design Q57 asks NY4I for the names. *)
+  it.
+
+  DESIGN Q53 (NY4I, 2026-10-16; docs/Q53_CONTEST_NAMES.csv) named 24 of them
+  on 2026-10-17 and they left. What stays: the 17 for which no name was found
+  -- NY4I: they keep their internal name, which each class states --, MINITEST
+  (to be retired, Q10) and SOUTHAMERICANWW (Q102), and the six not in Q53's
+  CSV (ARCI, GRIDLOC, JALONGPREFECT, QCWAGOLDEN, WWL, XMAS). *)
 const
-   (* RSGB18 ('RSGB-160') and UA4WCHAMPIONSHIP ('R4W-CHAMP') joined on
-      2026-10-14, when they gained classes: neither row has a friendly
-      name. *)
-   ENUM_SPELLED_DISPLAY_NAMES: array[0..48] of ContestType = (
-      ALLJA, ALRS_UA1DZ_CUP, APSPRINT, ARCI, BWQP, CUPRFCW, CUPRFDIG, CUPRFSSB,
-      CUPURAL, EUDX, EUROPEANVHF, EUSPRINT_SPRING_CW, FOCMARATHON, GRIDLOC,
-      INTERNETSPRINT, IRTS, JALONGPREFECT, JTDX, KVP, MINITEST, MWC, OLDNEWYEAR,
-      OZCR_O, OZCR_Z, OZHCRVHF, PCC, QCWAGOLDEN, R9W_UW9WK_MEMORIAL, RADIOMEMORY,
-      RADIOVHFFD, RADIOYOC, REGION1FIELDDAY, REGION1FIELDDAY_RCC_CW,
-      REGION1FIELDDAY_RCC_SSB, RFASCHAMPIONSHIPCW, RFCHAMPIONSHIPCW,
-      RFCHAMPIONSHIPSSB, RSGB18, SASPRINT, SOUTHAMERICANWW, TOEC, UA4WCHAMPIONSHIP,
-      UCG, UKEI, UKRAINECHAMPIONSHIP, WWL, XMAS, YOUTHCHAMPIONSHIPRF, YUDX);
+   ENUM_SPELLED_DISPLAY_NAMES: array[0..24] of ContestType = (
+      APSPRINT, ARCI, GRIDLOC, JALONGPREFECT, MINITEST, OZCR_O, OZCR_Z,
+      OZHCRVHF, QCWAGOLDEN, R9W_UW9WK_MEMORIAL, RADIOMEMORY, RADIOVHFFD,
+      RADIOYOC, REGION1FIELDDAY, REGION1FIELDDAY_RCC_CW,
+      REGION1FIELDDAY_RCC_SSB, RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB,
+      SOUTHAMERICANWW, UCG, UKEI, UKRAINECHAMPIONSHIP, WWL, XMAS,
+      YOUTHCHAMPIONSHIPRF);
 
 function IsEnumSpelledDisplayName(aContest: ContestType): boolean;
 var

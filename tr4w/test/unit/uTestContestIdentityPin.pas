@@ -133,8 +133,8 @@ const
        Display: 'All Asian DX Contest, SSB'; DomesticFile: ''),
       (* ALLJA *)
       (Token: 'ALL JA'; WA7BNM: 0; QRZRUID: 0; Email: '';
-       Friendly: 'ALL JA';
-       Display: 'ALL JA'; DomesticFile: 'allja'),
+       Friendly: 'All JA Contest';
+       Display: 'All JA Contest'; DomesticFile: 'allja'),
       (* APSPRINT *)
       (Token: 'AP-SPRINT'; WA7BNM: 0; QRZRUID: 77; Email: '';
        Friendly: 'AP-SPRINT';
@@ -196,9 +196,9 @@ const
        Friendly: 'Baltic Contest';
        Display: 'Baltic Contest'; DomesticFile: ''),
       (* BWQP *)
-      (Token: 'BWQP'; WA7BNM: 0; QRZRUID: 0; Email: '';
-       Friendly: 'BWQP';
-       Display: 'BWQP'; DomesticFile: ''),
+      (Token: 'BWQP'; WA7BNM: 479; QRZRUID: 0; Email: '';
+       Friendly: 'Bill Windle QSO Party';
+       Display: 'Bill Windle QSO Party'; DomesticFile: ''),
       (* CIS *)
       (Token: 'CIS'; WA7BNM: 197; QRZRUID: 500; Email: '';
        Friendly: 'CIS DX Contest, CW';
@@ -253,32 +253,32 @@ const
        Display: 'Croatian DX Contest'; DomesticFile: 'croat'),
       (* CUPRFCW *)
       (Token: 'RF-CUP-CW'; WA7BNM: 0; QRZRUID: 27; Email: '';
-       Friendly: 'RF-CUP-CW';
-       Display: 'RF-CUP-CW'; DomesticFile: ''),
+       Friendly: 'Russian Cup Contest, CW';
+       Display: 'Russian Cup Contest, CW'; DomesticFile: ''),
       (* CUPRFSSB *)
       (Token: 'RF-CUP-SSB'; WA7BNM: 0; QRZRUID: 24; Email: '';
-       Friendly: 'RF-CUP-SSB';
-       Display: 'RF-CUP-SSB'; DomesticFile: ''),
+       Friendly: 'Russian Cup Contest, SSB';
+       Display: 'Russian Cup Contest, SSB'; DomesticFile: ''),
       (* CUPRFDIG *)
-      (Token: 'RF-CUP-DIG'; WA7BNM: 0; QRZRUID: 86; Email: '';
-       Friendly: 'RF-CUP-DIG';
-       Display: 'RF-CUP-DIG'; DomesticFile: 'grids'),
+      (Token: 'RF-CUP-DIG'; WA7BNM: 595; QRZRUID: 86; Email: '';
+       Friendly: 'Russian Cup Digital Contest';
+       Display: 'Russian Cup Digital Contest'; DomesticFile: 'grids'),
       (* CUPURAL *)
       (Token: 'URAL-CUP'; WA7BNM: 0; QRZRUID: 112; Email: '';
-       Friendly: 'URAL-CUP';
-       Display: 'URAL-CUP'; DomesticFile: 'grids'),
+       Friendly: 'Ural Cup';
+       Display: 'Ural Cup'; DomesticFile: 'grids'),
       (* EUSPRINT_SPRING_CW *)
       (Token: 'EU-SPRINT-SPRING-CW'; WA7BNM: 317; QRZRUID: 216; Email: '';
-       Friendly: 'EU-SPRINT-SPRING-CW';
-       Display: 'EU-SPRINT-SPRING-CW'; DomesticFile: ''),
+       Friendly: 'RSGB International Sprint Contest, CW';
+       Display: 'RSGB International Sprint Contest, CW'; DomesticFile: ''),
       (* EUROPEANHFC *)
       (Token: 'EUROPEAN HFC'; WA7BNM: 82; QRZRUID: 31; Email: '';
        Friendly: 'European HF Championship';
        Display: 'European HF Championship'; DomesticFile: ''),
       (* EUROPEANVHF *)
       (Token: 'EUROPEAN VHF'; WA7BNM: 0; QRZRUID: 0; Email: '';
-       Friendly: 'EUROPEAN VHF';
-       Display: 'EUROPEAN VHF'; DomesticFile: ''),
+       Friendly: 'European VHF';
+       Display: 'European VHF'; DomesticFile: ''),
       (* TESLA *)
       (Token: 'HF-TESLA'; WA7BNM: 566; QRZRUID: 0; Email: '';
        Friendly: 'TESLA Memorial HF CW Contest';
@@ -293,8 +293,8 @@ const
        Display: 'FISTS Winter Unlimited Sprint'; DomesticFile: 's49p8'),
       (* FOCMARATHON *)
       (Token: 'FOC MARATHON'; WA7BNM: 0; QRZRUID: 0; Email: '';
-       Friendly: 'FOC MARATHON';
-       Display: 'FOC MARATHON'; DomesticFile: ''),
+       Friendly: 'FOC Marathon';
+       Display: 'FOC Marathon'; DomesticFile: ''),
       (* FLORIDAQSOPARTY *)
       (Token: 'FLORIDA QSO PARTY'; WA7BNM: 325; QRZRUID: 0; Email: '';
        Friendly: 'Florida QSO Party';
@@ -320,9 +320,9 @@ const
        Friendly: 'Hungarian DX Contest';
        Display: 'Hungarian DX Contest'; DomesticFile: 'hungary'),
       (* YUDX *)
-      (Token: 'YUDX'; WA7BNM: 0; QRZRUID: 0; Email: '';
-       Friendly: 'YUDX';
-       Display: 'YUDX'; DomesticFile: 'yu'),
+      (Token: 'YUDX'; WA7BNM: 322; QRZRUID: 0; Email: '';
+       Friendly: 'YU DX Contest';
+       Display: 'YU DX Contest'; DomesticFile: 'yu'),
       (* UKEI *)
       (Token: 'UKEI'; WA7BNM: 0; QRZRUID: 0; Email: '';
        Friendly: 'UKEI';
@@ -336,9 +336,9 @@ const
        Friendly: 'IARU HF World Championship';
        Display: 'IARU HF World Championship'; DomesticFile: 'iaruhq'),
       (* INTERNETSPRINT *)
-      (Token: 'INTERNET SPRINT'; WA7BNM: 0; QRZRUID: 0; Email: '';
-       Friendly: 'INTERNET SPRINT';
-       Display: 'INTERNET SPRINT'; DomesticFile: 's49p13'),
+      (Token: 'INTERNET SPRINT'; WA7BNM: 18; QRZRUID: 0; Email: '';
+       Friendly: 'Internet CW Sprint Contest';
+       Display: 'Internet CW Sprint Contest'; DomesticFile: 's49p13'),
       (* IOTA *)
       (Token: 'RSGB-IOTA'; WA7BNM: 75; QRZRUID: 29; Email: '';
        Friendly: 'RSGB IOTA Contest';
@@ -356,9 +356,9 @@ const
        Friendly: 'JA LONG PREFECT';
        Display: 'JA LONG PREFECT'; DomesticFile: 'jacg3'),
       (* JTDX *)
-      (Token: 'MONGOLIAN DX'; WA7BNM: 0; QRZRUID: 0; Email: '';
-       Friendly: 'MONGOLIAN DX';
-       Display: 'MONGOLIAN DX'; DomesticFile: ''),
+      (Token: 'MONGOLIAN DX'; WA7BNM: 491; QRZRUID: 0; Email: '';
+       Friendly: 'Mongolian DX Contest, CW/SSB';
+       Display: 'Mongolian DX Contest, CW/SSB'; DomesticFile: ''),
       (* KCJ *)
       (Token: 'KCJ'; WA7BNM: 89; QRZRUID: 169; Email: '';
        Friendly: 'Keymans Club of Japan Contest';
@@ -369,8 +369,8 @@ const
        Display: 'ARRL Kids Day'; DomesticFile: ''),
       (* KVP *)
       (Token: 'KVP'; WA7BNM: 0; QRZRUID: 0; Email: '';
-       Friendly: 'KVP';
-       Display: 'KVP'; DomesticFile: ''),
+       Friendly: 'KV PRVENSTVO ZRS';
+       Display: 'KV PRVENSTVO ZRS'; DomesticFile: ''),
       (* LABRE *)
       (Token: 'LABRE'; WA7BNM: 761; QRZRUID: 0; Email: 'logs@labre.org.br';
        Friendly: 'LABRE DX Contest';
@@ -474,9 +474,9 @@ const
        Friendly: 'OK/OM DX Contest, CW';
        Display: 'OK/OM DX Contest, CW'; DomesticFile: 'okom'),
       (* OLDNEWYEAR *)
-      (Token: 'RADIO-ONY'; WA7BNM: 0; QRZRUID: 12; Email: '';
-       Friendly: 'RADIO-ONY';
-       Display: 'RADIO-ONY'; DomesticFile: ''),
+      (Token: 'RADIO-ONY'; WA7BNM: 554; QRZRUID: 12; Email: '';
+       Friendly: 'Old New Year Contest';
+       Display: 'Old New Year Contest'; DomesticFile: ''),
       (* OZCR_O *)
       (Token: 'OZCHR-TEAMS'; WA7BNM: 0; QRZRUID: 182; Email: '';
        Friendly: 'OZCHR-TEAMS';
@@ -539,8 +539,8 @@ const
        Display: 'RF-CHAMP-SSB'; DomesticFile: 'russian'),
       (* RFASCHAMPIONSHIPCW *)
       (Token: 'AS-CHAMP'; WA7BNM: 0; QRZRUID: 64; Email: '';
-       Friendly: 'AS-CHAMP';
-       Display: 'AS-CHAMP'; DomesticFile: ''),
+       Friendly: 'Asiatic Russia Championship';
+       Display: 'Asiatic Russia Championship'; DomesticFile: ''),
       (* RSGB_ROPOCO_CW *)
       (Token: 'RSGB-ROPOCO-CW'; WA7BNM: 77; QRZRUID: 0; Email: '';
        Friendly: 'RSGB RoLo CW';
@@ -550,9 +550,9 @@ const
        Friendly: 'RSGB RoLo SSB';
        Display: 'RSGB RoLo SSB'; DomesticFile: ''),
       (* RSGB18 *)
-      (Token: 'RSGB-160'; WA7BNM: 0; QRZRUID: 44; Email: '';
-       Friendly: 'RSGB-160';
-       Display: 'RSGB-160'; DomesticFile: 'rsgb'),
+      (Token: 'RSGB-160'; WA7BNM: 252; QRZRUID: 44; Email: '';
+       Friendly: 'RSGB 1.8 MHz Contest';
+       Display: 'RSGB 1.8 MHz Contest'; DomesticFile: 'rsgb'),
       (* RUSSIANDX *)
       (Token: 'RDXC'; WA7BNM: 310; QRZRUID: 7; Email: 'logs@rdxc.org';
        Friendly: 'Russian DX Contest';
@@ -594,13 +594,13 @@ const
        Friendly: 'Texas QSO Party';
        Display: 'Texas QSO Party'; DomesticFile: 'texas_cty'),
       (* TOEC *)
-      (Token: 'TOEC'; WA7BNM: 0; QRZRUID: 163; Email: '';
-       Friendly: 'TOEC';
-       Display: 'TOEC'; DomesticFile: ''),
+      (Token: 'TOEC'; WA7BNM: 97; QRZRUID: 163; Email: '';
+       Friendly: 'TOEC WW Grid Contest, CW';
+       Display: 'TOEC WW Grid Contest, CW'; DomesticFile: ''),
       (* UA4WCHAMPIONSHIP *)
       (Token: 'R4W-CHAMP'; WA7BNM: 0; QRZRUID: 132; Email: 'r4w@narod.ru';
-       Friendly: 'R4W-CHAMP';
-       Display: 'R4W-CHAMP'; DomesticFile: ''),
+       Friendly: 'Udmurtia Open Championship';
+       Display: 'Udmurtia Open Championship'; DomesticFile: ''),
       (* UBACW *)
       (Token: 'UBA-DX-CW'; WA7BNM: 261; QRZRUID: 59; Email: '';
        Friendly: 'UBA DX Contest, CW';
@@ -706,9 +706,9 @@ const
        Friendly: 'R9W-UW9WK-MEMORIAL';
        Display: 'R9W-UW9WK-MEMORIAL'; DomesticFile: ''),
       (* PCC *)
-      (Token: 'PCC'; WA7BNM: 0; QRZRUID: 35; Email: '';
-       Friendly: 'PCC';
-       Display: 'PCC'; DomesticFile: ''),
+      (Token: 'PCC'; WA7BNM: 266; QRZRUID: 35; Email: '';
+       Friendly: 'PRO CW Contest';
+       Display: 'PRO CW Contest'; DomesticFile: ''),
       (* RADIOMEMORY *)
       (Token: 'RADIO-MEMORY'; WA7BNM: 0; QRZRUID: 83; Email: '';
        Friendly: 'RADIO-MEMORY';
@@ -734,9 +734,9 @@ const
        Friendly: 'CQMM DX Contest';
        Display: 'CQMM DX Contest'; DomesticFile: ''),
       (* SASPRINT *)
-      (Token: 'SA-SPRINT'; WA7BNM: 0; QRZRUID: 0; Email: 'sa-sprint.com/enviar-log/';
-       Friendly: 'SA-SPRINT';
-       Display: 'SA-SPRINT'; DomesticFile: ''),
+      (Token: 'SA-SPRINT'; WA7BNM: 604; QRZRUID: 0; Email: 'sa-sprint.com/enviar-log/';
+       Friendly: 'SA Sprint Contest';
+       Display: 'SA Sprint Contest'; DomesticFile: ''),
       (* CWOPS *)
       (Token: 'CWOPS'; WA7BNM: 498; QRZRUID: 0; Email: '';
        Friendly: 'CWops Test (CWT)';
@@ -786,9 +786,9 @@ const
        Friendly: 'World Wide Iron Ham Contest';
        Display: 'World Wide Iron Ham Contest'; DomesticFile: ''),
       (* ALRS_UA1DZ_CUP *)
-      (Token: 'ALRS-UA1DZ-CUP'; WA7BNM: 0; QRZRUID: 543; Email: '';
-       Friendly: 'ALRS-UA1DZ-CUP';
-       Display: 'ALRS-UA1DZ-CUP'; DomesticFile: 'russian'),
+      (Token: 'ALRS-UA1DZ-CUP'; WA7BNM: 697; QRZRUID: 543; Email: '';
+       Friendly: 'UA1DZ Memorial Cup';
+       Display: 'UA1DZ Memorial Cup'; DomesticFile: 'russian'),
       (* WINTERFIELDDAY *)
       (Token: 'WINTER FIELD DAY'; WA7BNM: 421; QRZRUID: 0; Email: 'wfda@winterfieldday.com';
        Friendly: 'Winter Field Day';
@@ -818,17 +818,17 @@ const
        Friendly: 'World Wide Digi DX Contest';
        Display: 'World Wide Digi DX Contest'; DomesticFile: ''),
       (* MWC *)
-      (Token: 'MWC'; WA7BNM: 0; QRZRUID: 0; Email: 'memorial-ok1wc.cz/index.php?page=logs';
-       Friendly: 'MWC';
-       Display: 'MWC'; DomesticFile: 'mwc'),
+      (Token: 'MWC'; WA7BNM: 683; QRZRUID: 0; Email: 'memorial-ok1wc.cz/index.php?page=logs';
+       Friendly: 'OK1WC Memorial (MWC)';
+       Display: 'OK1WC Memorial (MWC)'; DomesticFile: 'mwc'),
       (* IRTS *)
-      (Token: 'IRTS'; WA7BNM: 0; QRZRUID: 0; Email: 'IRTS.contests@gmail.com';
-       Friendly: 'IRTS';
-       Display: 'IRTS'; DomesticFile: 'ireland'),
+      (Token: 'IRTS'; WA7BNM: 756; QRZRUID: 0; Email: 'IRTS.contests@gmail.com';
+       Friendly: 'IRTS 80m Counties Contest';
+       Display: 'IRTS 80m Counties Contest'; DomesticFile: 'ireland'),
       (* EUDX *)
-      (Token: 'EUDX'; WA7BNM: 0; QRZRUID: 0; Email: 'log.eudxc@gmail.com';
-       Friendly: 'EUDX';
-       Display: 'EUDX'; DomesticFile: 'EUDX'),
+      (Token: 'EUDX'; WA7BNM: 687; QRZRUID: 0; Email: 'log.eudxc@gmail.com';
+       Friendly: 'European Union DX Contest';
+       Display: 'European Union DX Contest'; DomesticFile: 'EUDX'),
       (* BCQP *)
       (Token: 'BCQP'; WA7BNM: 269; QRZRUID: 0; Email: '';
        Friendly: 'British Columbia QSO Party';
@@ -862,7 +862,7 @@ const
        Friendly: 'Idaho QSO Party';
        Display: 'Idaho QSO Party'; DomesticFile: 'idaho_cty'),
       (* DELAWAREQSOPARTY *)
-      (Token: 'DELAWARE QSO PARTY'; WA7BNM: 0; QRZRUID: 0; Email: '';
+      (Token: 'DELAWARE QSO PARTY'; WA7BNM: 240; QRZRUID: 0; Email: 'qsoparty@gmail.com';
        Friendly: 'Delaware QSO Party';
        Display: 'Delaware QSO Party'; DomesticFile: 'delaware_cty'),
       (* NEBRASKAQSO -- added by hand, 2026-10-16, from the sponsor (design Q105). *)

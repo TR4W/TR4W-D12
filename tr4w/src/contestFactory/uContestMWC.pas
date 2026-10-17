@@ -138,7 +138,9 @@ end;
 
 function TContestMWC.GetDisplayName: string;
 begin
-   Result := 'MWC';
+   (* The contest's human name: WA7BNM, accepted (design Q53,
+      docs/Q53_CONTEST_NAMES.csv). *)
+   Result := 'OK1WC Memorial (MWC)';
 end;
 
 function TContestMWC.GetCabrilloName: string;
@@ -157,7 +159,8 @@ end;
 
 function TContestMWC.GetWA7BNMId: integer;
 begin
-   Result := 0;
+   (* WA7BNM's ref, accepted by NY4I with its name (design Q53). *)
+   Result := 683;
 end;
 
 function TContestMWC.GetQRZRUId: integer;
@@ -177,9 +180,8 @@ end;
 
 function TContestMWC.GetFriendlyName: string;
 begin
-   (* The row's FriendlyName is blank; this is the enum's spelling it
-      resolves to. *)
-   Result := 'MWC';
+   (* The display name above -- design Q53. *)
+   Result := 'OK1WC Memorial (MWC)';
 end;
 
 function TContestMWC.GetInitialExchangeKind: InitialExchangeType;

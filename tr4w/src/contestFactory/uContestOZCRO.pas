@@ -44,10 +44,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   SET-UP: the contest name, and the R150S list on.
 
-  THE CONTEST NAME IS QUESTION MARKS, AND THAT IS TRANSCRIBED, NOT JUDGED.
-  FoundContest's arm held a Cyrillic name that reached this tree as literal
-  '?' characters (the bytes are 0x3F); the session has always been named
-  that. Restoring the Russian text is a data change for NY4I.
+  THE CONTEST NAME IS CYRILLIC AGAIN (design Q42, 2026-10-17). FoundContest's
+  arm held a Cyrillic name that reached this tree as literal '?' characters
+  (the bytes were 0x3F); NY4I ruled it restored, and D7's first commit still
+  held the cp1251 text -- see DescribeSession.
 
   LogCfg's CQ exchange: 5NN and MY STATE, or 5NN and MY ZONE with no state.
 
@@ -262,7 +262,25 @@ end;
 procedure TContestOZCRO.DescribeSession(const aStation: TStationContext;
                                         aSession: TSessionDefaults);
 begin
-   aSession.ContestName := '????-??????? ????????? ?????? - ????? ?????????';
+   (* THE SESSION'S NAME, restored in Cyrillic (design Q42; NY4I,
+      2026-10-16: "Restore Cyrillic."). The text is D7's own, recovered
+      from its first commit (C:\TR4W b90ba930, FCONTEST.PAS, the OZCR_O
+      arm), where it was cp1251; it had been literal '?' characters here.
+      It reads: Очно-заочный чемпионат России - очные участники
+      WRITTEN AS CODE POINTS, so the source is ASCII and no codepage can
+      mis-decode it -- a non-ASCII literal in a unit with no BOM is read in
+      the build machine's ANSI codepage (build/Lint-BOM.ps1). The name is
+      for people to read (the title bar, the summary sheet, the hour report);
+      the Cabrillo CONTEST: line is CabrilloName, which this class does not
+      tie to the session's name, and the EDI export writes an ASCII name
+      in place of a non-ASCII one (PostUnit.EDIContestName). Pinned by
+      uTestContestSession.Test_OZCHRSessionNamesAreCyrillic. *)
+   aSession.ContestName := #$041E#$0447#$043D#$043E#$002D#$0437#$0430#$043E#$0447#$043D#$044B#$0439#$0020
+      + #$0447#$0435#$043C#$043F#$0438#$043E#$043D#$0430#$0442#$0020
+      + #$0420#$043E#$0441#$0441#$0438#$0438#$0020
+      + #$002D#$0020
+      + #$043E#$0447#$043D#$044B#$0435#$0020
+      + #$0443#$0447#$0430#$0441#$0442#$043D#$0438#$043A#$0438;
    aSession.R150SMode := True;
 end;
 

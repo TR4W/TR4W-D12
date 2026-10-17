@@ -184,7 +184,9 @@ end;
 
 function TContestEUDX.GetDisplayName: string;
 begin
-   Result := 'EUDX';
+   (* The contest's human name: WA7BNM, accepted (design Q53,
+      docs/Q53_CONTEST_NAMES.csv). *)
+   Result := 'European Union DX Contest';
 end;
 
 function TContestEUDX.GetCabrilloName: string;
@@ -203,7 +205,8 @@ end;
 
 function TContestEUDX.GetWA7BNMId: integer;
 begin
-   Result := 0;
+   (* WA7BNM's ref, accepted by NY4I with its name (design Q53). *)
+   Result := 687;
 end;
 
 function TContestEUDX.GetQRZRUId: integer;
@@ -223,9 +226,8 @@ end;
 
 function TContestEUDX.GetFriendlyName: string;
 begin
-   (* The row's FriendlyName is blank; this is the enum's spelling it
-      resolves to. *)
-   Result := 'EUDX';
+   (* The display name above -- design Q53. *)
+   Result := 'European Union DX Contest';
 end;
 
 function TContestEUDX.GetInitialExchangeKind: InitialExchangeType;

@@ -244,7 +244,9 @@ end;
 
 function TContestALRSUA1DZCup.GetDisplayName: string;
 begin
-   Result := 'ALRS-UA1DZ-CUP';
+   (* The contest's human name: WA7BNM, accepted (design Q53,
+      docs/Q53_CONTEST_NAMES.csv). *)
+   Result := 'UA1DZ Memorial Cup';
 end;
 
 function TContestALRSUA1DZCup.GetCabrilloName: string;
@@ -261,7 +263,8 @@ end;
 
 function TContestALRSUA1DZCup.GetWA7BNMId: integer;
 begin
-   Result := 0;
+   (* WA7BNM's ref, accepted by NY4I with its name (design Q53). *)
+   Result := 697;
 end;
 
 function TContestALRSUA1DZCup.GetQRZRUId: integer;
@@ -281,8 +284,8 @@ end;
 
 function TContestALRSUA1DZCup.GetFriendlyName: string;
 begin
-   (* The row's FriendlyName is blank, which means the enum's spelling. *)
-   Result := 'ALRS-UA1DZ-CUP';
+   (* The display name above -- design Q53. *)
+   Result := 'UA1DZ Memorial Cup';
 end;
 
 function TContestALRSUA1DZCup.GetInitialExchangeKind: InitialExchangeType;

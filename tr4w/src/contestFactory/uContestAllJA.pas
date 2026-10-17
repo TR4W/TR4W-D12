@@ -120,7 +120,9 @@ end;
 
 function TContestAllJA.GetDisplayName: string;
 begin
-   Result := 'ALL JA';
+   (* The contest's human name: NY4I, the DXLog name (design Q53,
+      docs/Q53_CONTEST_NAMES.csv). *)
+   Result := 'All JA Contest';
 end;
 
 function TContestAllJA.GetCabrilloName: string;
@@ -163,9 +165,8 @@ end;
 
 function TContestAllJA.GetFriendlyName: string;
 begin
-   (* The row's FriendlyName is blank; this is the enum's
-      spelling it resolves to. *)
-   Result := 'ALL JA';
+   (* The display name above -- design Q53. *)
+   Result := 'All JA Contest';
 end;
 
 function TContestAllJA.GetInitialExchangeKind: InitialExchangeType;

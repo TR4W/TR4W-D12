@@ -119,7 +119,9 @@ end;
 
 function TContestOldNewYear.GetDisplayName: string;
 begin
-   Result := 'RADIO-ONY';
+   (* The contest's human name: WA7BNM, accepted (design Q53,
+      docs/Q53_CONTEST_NAMES.csv). *)
+   Result := 'Old New Year Contest';
 end;
 
 function TContestOldNewYear.GetCabrilloName: string;
@@ -138,7 +140,8 @@ end;
 
 function TContestOldNewYear.GetWA7BNMId: integer;
 begin
-   Result := 0;
+   (* WA7BNM's ref, accepted by NY4I with its name (design Q53). *)
+   Result := 554;
 end;
 
 function TContestOldNewYear.GetQRZRUId: integer;
@@ -158,9 +161,8 @@ end;
 
 function TContestOldNewYear.GetFriendlyName: string;
 begin
-   (* The row's FriendlyName is blank; this is the enum's spelling it
-      resolves to. *)
-   Result := 'RADIO-ONY';
+   (* The display name above -- design Q53. *)
+   Result := 'Old New Year Contest';
 end;
 
 function TContestOldNewYear.GetInitialExchangeKind: InitialExchangeType;

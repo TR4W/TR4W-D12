@@ -72,6 +72,8 @@ type
       procedure Test_TheRunningSessionIsOneObjectWithOneWriter;
       procedure Test_JIDXRunsAnInitialExchangeItsTraitDoesNotState;
       procedure Test_ARRLDXRunsAnExchangeItsTraitDoesNotState;
+      procedure Test_EveryARRLVHFRunningHasJunesSetUpAndItsOwnName;
+      procedure Test_OZCHRSessionNamesAreCyrillic;
    end;
 
 implementation
@@ -82,7 +84,9 @@ uses
    (* ContestSession -- the kinds set-up resolved (M10 S9a-f). *)
    uContestSession,
    (* Make and NoStation -- lifted there at M8. *)
-   uTestContestObjects;
+   uTestContestObjects,
+   (* EDIContestName -- the EDI header's name (design Q42). *)
+   PostUnit;
 
 (* A US station in Kansas, every exchange field filled. *)
 function KansasStation: TStationContext;
@@ -1048,6 +1052,125 @@ begin
       end;
 end;
 
+(* DESIGN Q41 (NY4I, 2026-10-15): ALL THREE ARRL VHF RUNNINGS GET JUNE'S
+   SET-UP -- 6 m, the HF bands off -- AND EACH ITS OWN NAME, its Cabrillo
+   name's spelling. September was named 'VHF QSO JUNE' and January had no
+   set-up at all until 2026-10-17. *)
+procedure TContestSessionTests.Test_EveryARRLVHFRunningHasJunesSetUpAndItsOwnName;
+const
+   RUNNINGS: array[0..2] of ContestType = (ARRLVHFJAN, ARRLVHFJUN, ARRLVHFSEP);
+   NAMES: array[0..2] of string = ('ARRL-VHF-JAN', 'ARRL-VHF-JUN', 'ARRL-VHF-SEP');
+var
+   session: TSessionDefaults;
+   c: ContestType;
+   i: integer;
+begin
+   BeginTest('Test_EveryARRLVHFRunningHasJunesSetUpAndItsOwnName');
+   for i := Low(RUNNINGS) to High(RUNNINGS) do
+      begin
+      c := RUNNINGS[i];
+      session := Describe(c, KansasStation);
+      try
+         CheckTrue(session.IsStated(svBand), ContestTypeSA[c] + ': a starting band');
+         CheckTrue(session.Band = Band6, ContestTypeSA[c] + ': starts on 6 m');
+         CheckTrue(session.IsStated(svHFEnabled), ContestTypeSA[c] + ': states the HF bands');
+         CheckFalse(session.HFEnabled, ContestTypeSA[c] + ': HF bands off');
+         CheckEquals(NAMES[i], session.ContestName, ContestTypeSA[c] + ': its own name');
+         CheckEquals(ContestIdentity(ContestHandleOf(c)).CabrilloName, session.ContestName,
+                     ContestTypeSA[c] + ': the name is the Cabrillo name''s spelling');
+      finally
+         session.Free;
+         end;
+      end;
+end;
+
+(* The UTF-8 bytes of aHex, decoded -- a second derivation of the expected
+   text, independent of how the class's source spells it. *)
+function DecodedUTF8(const aHex: string): string;
+var
+   bytes: RawByteString;
+   i: integer;
+begin
+   bytes := '';
+   i := 1;
+   while i < Length(aHex) do
+      begin
+      bytes := bytes + AnsiChar(StrToInt('$' + Copy(aHex, i, 2)));
+      Inc(i, 2);
+      end;
+   Result := UTF8Decode(bytes);
+end;
+
+(* DESIGN Q42 (NY4I, 2026-10-16: "Restore Cyrillic."): THE OZCHR SESSION
+   NAMES ARE D7's CYRILLIC TEXT, CHARACTER FOR CHARACTER. The expected text is
+   built from its UTF-8 bytes (Python's encoding of the strings decoded from
+   D7's cp1251 bytes in b90ba930), so a source that the compiler mis-decoded
+   -- the trap a non-ASCII literal in a BOM-less unit falls into -- fails
+   here code point by code point. And the EDI header, an interchange file,
+   writes the Cabrillo name in its place. *)
+procedure TContestSessionTests.Test_OZCHRSessionNamesAreCyrillic;
+const
+   (* Очно-заочный чемпионат России - заочные участники *)
+   OZCR_Z_UTF8 = 'd09ed187d0bdd0be2dd0b7d0b0d0bed187d0bdd18bd0b920d187d0b5d0bcd0bfd0b8d0bed0bd' +
+                 'd0b0d18220d0a0d0bed181d181d0b8d0b8202d20d0b7d0b0d0bed187d0bdd18bd0b520d183' +
+                 'd187d0b0d181d182d0bdd0b8d0bad0b8';
+   (* Очно-заочный чемпионат России - очные участники *)
+   OZCR_O_UTF8 = 'd09ed187d0bdd0be2dd0b7d0b0d0bed187d0bdd18bd0b920d187d0b5d0bcd0bfd0b8d0bed0bd' +
+                 'd0b0d18220d0a0d0bed181d181d0b8d0b8202d20d0bed187d0bdd18bd0b520d183d187d0b0' +
+                 'd181d182d0bdd0b8d0bad0b8';
+var
+   session: TSessionDefaults;
+   expected: string;
+   i: integer;
+begin
+   BeginTest('Test_OZCHRSessionNamesAreCyrillic');
+
+   expected := DecodedUTF8(OZCR_Z_UTF8);
+   CheckEquals(49, Length(expected), 'OZCR_Z: the expected text is 49 characters');
+   CheckEquals($041E, Ord(expected[1]), 'OZCR_Z: the expected text starts with U+041E');
+   session := Describe(OZCR_Z, KansasStation);
+   try
+      CheckEquals(Length(expected), Length(session.ContestName), 'OZCR_Z: the name''s length');
+      for i := 1 to Length(expected) do
+         begin
+         if i <= Length(session.ContestName) then
+            begin
+            CheckEquals(Ord(expected[i]), Ord(session.ContestName[i]),
+                        'OZCR_Z: code point ' + IntToStr(i));
+            end;
+         end;
+      CheckTrue(Pos('?', session.ContestName) = 0, 'OZCR_Z: no question mark is left');
+   finally
+      session.Free;
+      end;
+
+   expected := DecodedUTF8(OZCR_O_UTF8);
+   CheckEquals(47, Length(expected), 'OZCR_O: the expected text is 47 characters');
+   session := Describe(OZCR_O, KansasStation);
+   try
+      CheckEquals(Length(expected), Length(session.ContestName), 'OZCR_O: the name''s length');
+      for i := 1 to Length(expected) do
+         begin
+         if i <= Length(session.ContestName) then
+            begin
+            CheckEquals(Ord(expected[i]), Ord(session.ContestName[i]),
+                        'OZCR_O: code point ' + IntToStr(i));
+            end;
+         end;
+      CheckTrue(Pos('?', session.ContestName) = 0, 'OZCR_O: no question mark is left');
+   finally
+      session.Free;
+      end;
+
+   (* THE EDI HEADER: a non-ASCII session name gives way to the Cabrillo
+      name; an ASCII one is written as it is. *)
+   CheckEquals(ContestIdentity(ContestHandleOf(OZCR_Z)).CabrilloName,
+               EDIContestName(DecodedUTF8(OZCR_Z_UTF8), ContestHandleOf(OZCR_Z)),
+               'EDI: a Cyrillic session name gives way to the Cabrillo name');
+   CheckEquals('ARRL-VHF-JUN', EDIContestName('ARRL-VHF-JUN', ContestHandleOf(ARRLVHFJUN)),
+               'EDI: an ASCII session name is written as it is');
+end;
+
 procedure TContestSessionTests.RunAllTests;
 begin
    Test_TheBaseStatesNothing;
@@ -1068,6 +1191,8 @@ begin
    Test_TheRunningSessionIsOneObjectWithOneWriter;
    Test_JIDXRunsAnInitialExchangeItsTraitDoesNotState;
    Test_ARRLDXRunsAnExchangeItsTraitDoesNotState;
+   Test_EveryARRLVHFRunningHasJunesSetUpAndItsOwnName;
+   Test_OZCHRSessionNamesAreCyrillic;
 end;
 
 end.

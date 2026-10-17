@@ -132,7 +132,9 @@ end;
 
 function TContestSASprint.GetDisplayName: string;
 begin
-   Result := 'SA-SPRINT';
+   (* The contest's human name: WA7BNM, accepted (design Q53,
+      docs/Q53_CONTEST_NAMES.csv). *)
+   Result := 'SA Sprint Contest';
 end;
 
 function TContestSASprint.GetCabrilloName: string;
@@ -155,7 +157,8 @@ end;
 
 function TContestSASprint.GetWA7BNMId: integer;
 begin
-   Result := 0;
+   (* WA7BNM's ref, accepted by NY4I with its name (design Q53). *)
+   Result := 604;
 end;
 
 function TContestSASprint.GetQRZRUId: integer;
@@ -175,9 +178,8 @@ end;
 
 function TContestSASprint.GetFriendlyName: string;
 begin
-   (* The row's FriendlyName is blank; this is the enum's
-      spelling it resolves to. *)
-   Result := 'SA-SPRINT';
+   (* The display name above -- design Q53. *)
+   Result := 'SA Sprint Contest';
 end;
 
 function TContestSASprint.GetInitialExchangeKind: InitialExchangeType;

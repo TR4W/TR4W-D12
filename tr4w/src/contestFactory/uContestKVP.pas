@@ -151,7 +151,9 @@ end;
 
 function TContestKVP.GetDisplayName: string;
 begin
-   Result := 'KVP';
+   (* The contest's human name: the DXLog name (design Q53,
+      docs/Q53_CONTEST_NAMES.csv). *)
+   Result := 'KV PRVENSTVO ZRS';
 end;
 
 function TContestKVP.GetCabrilloName: string;
@@ -194,9 +196,8 @@ end;
 
 function TContestKVP.GetFriendlyName: string;
 begin
-   (* The row's FriendlyName is blank; this is the enum's
-      spelling it resolves to. *)
-   Result := 'KVP';
+   (* The display name above -- design Q53. *)
+   Result := 'KV PRVENSTVO ZRS';
 end;
 
 function TContestKVP.GetInitialExchangeKind: InitialExchangeType;

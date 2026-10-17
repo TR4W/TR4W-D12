@@ -247,7 +247,8 @@ begin
          end;
 
       (* THE ENGLISH MARK, as an operator without a catalogue reads it. *)
-      CheckEquals('SA-SPRINT (inactive)', ContestChoiceCaption(ContestHandleOf(SASPRINT)),
+      (* Its display name since design Q53 (2026-10-17); 'SA-SPRINT' before. *)
+      CheckEquals('SA Sprint Contest (inactive)', ContestChoiceCaption(ContestHandleOf(SASPRINT)),
                   'SA Sprint is marked');
 
       (* NO TWO LINES SHARE A DISPLAY NAME TODAY -- a RATCHET. The one pair

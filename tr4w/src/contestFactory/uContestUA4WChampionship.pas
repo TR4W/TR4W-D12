@@ -229,9 +229,9 @@ end;
 
 function TContestUA4WChampionship.GetDisplayName: string;
 begin
-   (* The row has no friendly name; the enum's spelling is the name shown
-      (design Q53). *)
-   Result := 'R4W-CHAMP';
+   (* The contest's human name: the DXLog name, in English (design Q53,
+      docs/Q53_CONTEST_NAMES.csv). *)
+   Result := 'Udmurtia Open Championship';
 end;
 
 function TContestUA4WChampionship.GetCabrilloName: string;
@@ -270,9 +270,8 @@ end;
 
 function TContestUA4WChampionship.GetFriendlyName: string;
 begin
-   (* The row's FriendlyName is blank; this is the enum's spelling it
-      resolves to. *)
-   Result := 'R4W-CHAMP';
+   (* The display name above -- design Q53. *)
+   Result := 'Udmurtia Open Championship';
 end;
 
 function TContestUA4WChampionship.GetInitialExchangeKind: InitialExchangeType;

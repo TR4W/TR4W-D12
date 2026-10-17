@@ -144,7 +144,9 @@ end;
 
 function TContestTOEC.GetDisplayName: string;
 begin
-   Result := 'TOEC';
+   (* The contest's human name: WA7BNM, accepted (design Q53,
+      docs/Q53_CONTEST_NAMES.csv). *)
+   Result := 'TOEC WW Grid Contest, CW';
 end;
 
 function TContestTOEC.GetCabrilloName: string;
@@ -163,7 +165,8 @@ end;
 
 function TContestTOEC.GetWA7BNMId: integer;
 begin
-   Result := 0;
+   (* WA7BNM's ref, accepted by NY4I with its name (design Q53). *)
+   Result := 97;
 end;
 
 function TContestTOEC.GetQRZRUId: integer;
@@ -183,9 +186,8 @@ end;
 
 function TContestTOEC.GetFriendlyName: string;
 begin
-   (* The row's FriendlyName is blank; this is the enum's spelling it
-      resolves to. *)
-   Result := 'TOEC';
+   (* The display name above -- design Q53. *)
+   Result := 'TOEC WW Grid Contest, CW';
 end;
 
 function TContestTOEC.GetInitialExchangeKind: InitialExchangeType;

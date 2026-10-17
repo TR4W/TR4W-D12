@@ -182,7 +182,9 @@ end;
 
 function TContestCupRFDIG.GetDisplayName: string;
 begin
-   Result := 'RF-CUP-DIG';
+   (* The contest's human name: WA7BNM, accepted (design Q53,
+      docs/Q53_CONTEST_NAMES.csv). *)
+   Result := 'Russian Cup Digital Contest';
 end;
 
 function TContestCupRFDIG.GetCabrilloName: string;
@@ -199,7 +201,8 @@ end;
 
 function TContestCupRFDIG.GetWA7BNMId: integer;
 begin
-   Result := 0;
+   (* WA7BNM's ref, accepted by NY4I with its name (design Q53). *)
+   Result := 595;
 end;
 
 function TContestCupRFDIG.GetQRZRUId: integer;
@@ -219,8 +222,8 @@ end;
 
 function TContestCupRFDIG.GetFriendlyName: string;
 begin
-   (* The row's FriendlyName is blank, which means the enum's spelling. *)
-   Result := 'RF-CUP-DIG';
+   (* The display name above -- design Q53. *)
+   Result := 'Russian Cup Digital Contest';
 end;
 
 function TContestCupRFDIG.GetInitialExchangeKind: InitialExchangeType;

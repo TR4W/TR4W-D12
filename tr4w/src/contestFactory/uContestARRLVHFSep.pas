@@ -43,9 +43,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   SCORING: ARRLVHFJUNPointMethod -- 1 on 6 m and 2 m, 2 on 222 and 432, 3
   on 902 and 1296, 4 on every band above; 0 on any other band.
 
-  SET-UP: 6 m, the contest name 'VHF QSO JUNE' -- the June running's name,
-  because the arm named both; transcribed, not judged -- and the HF bands
-  off.
+  SET-UP: 6 m, the contest name 'ARRL-VHF-SEP' -- its Cabrillo name (design
+  Q41; until 2026-10-17 it was the June running's 'VHF QSO JUNE', because
+  the old arm named both) -- and the HF bands off.
 
   A SIBLING, NOT A FAMILY MEMBER (M7b, DECIDED on evidence). The three ARRL VHF runnings are three
   contests of one sponsor on three weekends; they share a point table today,
@@ -320,7 +320,8 @@ procedure TContestARRLVHFSep.DescribeSession(const aStation: TStationContext;
                                              aSession: TSessionDefaults);
 begin
    aSession.Band := Band6;
-   aSession.ContestName := 'VHF QSO JUNE';
+   (* ITS OWN NAME, its Cabrillo name's spelling -- NY4I, design Q41. *)
+   aSession.ContestName := 'ARRL-VHF-SEP';
    aSession.HFEnabled := False;
 end;
 

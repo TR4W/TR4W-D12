@@ -233,7 +233,9 @@ end;
 
 function TContestPCC.GetDisplayName: string;
 begin
-   Result := 'PCC';
+   (* The contest's human name: WA7BNM, accepted (design Q53,
+      docs/Q53_CONTEST_NAMES.csv). *)
+   Result := 'PRO CW Contest';
 end;
 
 function TContestPCC.GetCabrilloName: string;
@@ -252,7 +254,8 @@ end;
 
 function TContestPCC.GetWA7BNMId: integer;
 begin
-   Result := 0;
+   (* WA7BNM's ref, accepted by NY4I with its name (design Q53). *)
+   Result := 266;
 end;
 
 function TContestPCC.GetQRZRUId: integer;
@@ -272,9 +275,8 @@ end;
 
 function TContestPCC.GetFriendlyName: string;
 begin
-   (* The row's FriendlyName is blank; it resolves to the enum's
-      spelling. *)
-   Result := 'PCC';
+   (* The display name above -- design Q53. *)
+   Result := 'PRO CW Contest';
 end;
 
 function TContestPCC.GetInitialExchangeKind: InitialExchangeType;

@@ -139,7 +139,9 @@ end;
 
 function TContestRFASChampionshipCW.GetDisplayName: string;
 begin
-   Result := 'AS-CHAMP';
+   (* The contest's human name: the DXLog name (design Q53,
+      docs/Q53_CONTEST_NAMES.csv). *)
+   Result := 'Asiatic Russia Championship';
 end;
 
 function TContestRFASChampionshipCW.GetCabrilloName: string;
@@ -178,9 +180,8 @@ end;
 
 function TContestRFASChampionshipCW.GetFriendlyName: string;
 begin
-   (* The row's FriendlyName is blank; this is the enum's spelling it
-      resolves to. *)
-   Result := 'AS-CHAMP';
+   (* The display name above -- design Q53. *)
+   Result := 'Asiatic Russia Championship';
 end;
 
 function TContestRFASChampionshipCW.GetInitialExchangeKind: InitialExchangeType;

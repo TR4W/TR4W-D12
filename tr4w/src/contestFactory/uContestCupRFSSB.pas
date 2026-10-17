@@ -199,7 +199,9 @@ end;
 
 function TContestCupRFSSB.GetDisplayName: string;
 begin
-   Result := 'RF-CUP-SSB';
+   (* The contest's human name: the DXLog name, in English (design Q53,
+      docs/Q53_CONTEST_NAMES.csv). *)
+   Result := 'Russian Cup Contest, SSB';
 end;
 
 function TContestCupRFSSB.GetCabrilloName: string;
@@ -237,8 +239,8 @@ end;
 
 function TContestCupRFSSB.GetFriendlyName: string;
 begin
-   (* The row's FriendlyName is blank, which means the enum's spelling. *)
-   Result := 'RF-CUP-SSB';
+   (* The display name above -- design Q53. *)
+   Result := 'Russian Cup Contest, SSB';
 end;
 
 function TContestCupRFSSB.GetInitialExchangeKind: InitialExchangeType;

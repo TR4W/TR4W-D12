@@ -43,9 +43,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   SCORING: ARRLVHFJUNPointMethod -- 1 on 6 m and 2 m, 2 on 222 and 432, 3
   on 902 and 1296, 4 on every band above; 0 on any other band.
 
-  SET-UP: none. FoundContest's ARRL VHF arm named June and September only,
-  so January has always started from its traits alone -- including the HF
-  bands, which the other two switch off. Transcribed, not judged.
+  SET-UP: June's -- 6 m and the HF bands off -- with its own contest name,
+  'ARRL-VHF-JAN', its Cabrillo name (design Q41, 2026-10-17). Until then it
+  had none: FoundContest's ARRL VHF arm named June and September only, so
+  January started from its traits alone, HF bands on.
 
   A SIBLING, NOT A FAMILY MEMBER (M7b, DECIDED on evidence). The three ARRL VHF runnings are three
   contests of one sponsor on three weekends; they share a point table today,
@@ -100,6 +101,10 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    public
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
@@ -305,6 +310,19 @@ function TContestARRLVHFJan.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- June's, with this running's own name (design Q41; NY4I,
+   2026-10-15: "each one gets its own name"). Every January public log
+   ARRL published that was sampled starts on 6 m. See
+   TContestBase.DescribeSession: this writes no global and reads only
+   aStation. *)
+procedure TContestARRLVHFJan.DescribeSession(const aStation: TStationContext;
+                                             aSession: TSessionDefaults);
+begin
+   aSession.Band := Band6;
+   aSession.ContestName := 'ARRL-VHF-JAN';
+   aSession.HFEnabled := False;
 end;
 
 (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two

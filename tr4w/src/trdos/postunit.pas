@@ -121,6 +121,7 @@ type
     );
   }
 function GetMyExchangeForExport: string;
+function EDIContestName(const aSessionName: string; aContest: TContestHandle): string;
 procedure ExportToEDI;
 procedure ExportToEDIByBand( Band: BandType );
 procedure ExportToADIF;
@@ -2164,6 +2165,30 @@ procedure PrintQSOsByCountry;
 
   end;
 
+(* THE EDI FILE'S TName: the session's contest name, or the contest's
+   Cabrillo name when the session's name is not 7-bit ASCII. Handed both
+   rather than reading the globals, so a test can ask it.
+
+   Design Q42 (2026-10-17) restored the OZCHR contests' session names in
+   Cyrillic. That name is for the screen; an interchange header is kept to
+   ASCII, as the Cabrillo CONTEST: line already is (it is CabrilloName, never
+   the session's name). Every other contest's session name is ASCII, so this
+   writes exactly what it wrote before for each of them. *)
+function EDIContestName(const aSessionName: string; aContest: TContestHandle): string;
+var
+   i: integer;
+begin
+   Result := aSessionName;
+   for i := 1 to Length( Result ) do
+      begin
+      if Ord( Result[ i ] ) > 127 then
+         begin
+         Result := ContestIdentity( aContest ).CabrilloName;
+         Exit;
+         end;
+      end;
+end;
+
 procedure ExportToEDI;
   var
     Band: BandType;
@@ -2226,7 +2251,7 @@ procedure ExportToEDIByBand( Band: BandType );
      sysutils.Format( '[REG1TEST;1]'#13#10 + 'TName=%s'#13#10 + 'PCall=%s'#13#10
      + 'PWWLo=%s'#13#10 + 'PBand=%s'#13#10 + 'RName=%s'#13#10 + 'PAdr1=%s'#13#10
      + 'PSect=%s'#13#10 + '[QSORecords;%u]'#13#10,
-     [ string(Settings.Contest.Name),
+     [ EDIContestName( string( Settings.Contest.Name ), Contest ),
      string(Settings.My.Call), Settings.My.ResolvedGrid,
      string( EDIFBANDSTRINGSARRAY[ Band ] ),
      CabrilloTagText( ctName ),

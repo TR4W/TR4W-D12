@@ -340,7 +340,7 @@ closes it; anything else reopens it.
 | Q96 | CQ WW CW fills the zone, like SSB and RTTY | `c9caaa08` |
 | Q46 | Ten-Ten: 2 points with a 10-10 number, 1 without | F26 build list C11 (not built) |
 | Q56 | A contest's sent state stands for the whole session | design 8.2m (already built) |
-| Q75 | Delaware: WA7BNM id 240; the log address from the sponsor's page | not built |
+| Q75 | Delaware: WA7BNM id 240; the log address from the sponsor's page | built |
 | Q81 | NEQP: state-first abbreviations and CT planning regions; `neqso.dom` to be brought into line | not built |
 | Q7 | Base + CW/SSB children only where the pair is one rule today | design rule; Q43 lists the pairs |
 | Q9 | An edited CQ memory survives re-selecting the contest | not built |
@@ -361,13 +361,13 @@ closes it; anything else reopens it.
 | Q65 | MY CALL is a station fact a contest may override; the contest's call lives in its database | not built (own stage) |
 | Q74 | Cabrillo LOCATION is seeded from the station at New Contest time and stored in the contest; the seed is the ARRL section for W/VE, `DX` otherwise (Q79) | not built |
 | Q68 | On reopen, the station-fact rows are applied before the contest row | not built |
-| Q76 | ADIF `STATE` is the worked station's state, `MY_STATE` ours -- fix the host-state export | not built |
+| Q76 | ADIF `STATE` is the worked station's state, `MY_STATE` ours -- fix the host-state export | built `35986731` (with Q89) |
 | Q82 | IN7QPNE county-line count left as is; future fix | issue #85 |
 | Q84 | A party's DX-multiplier test ignores case (files unchanged) | not built |
 | Q77 | IN7QPNE per-party score: deferred | issue #86 |
 | Q78 | IN7QPNE cross-party scoring view: deferred with Q77 | issue #86 |
 | Q98 | Every contest states its bands and modes; an off-band/off-mode QSO is logged, scores nothing, and is an automatic X-QSO in the log and the export (flag OR off-band) | not built |
-| Q41 | ARRL VHF runnings named ARRL-VHF-JAN/JUN/SEP; all three get June's set-up | not built |
+| Q41 | ARRL VHF runnings named ARRL-VHF-JAN/JUN/SEP; all three get June's set-up | built |
 | Q62 | POTA: the worked station's DXCC from its callsign; our MY_DXCC and MY_STATE from our park | not built |
 | Q57 | CQ WW RTTY messages built without writing MY ZONE | done with 7.12 |
 | Q63 | "Activator" stays untranslated -- a universal POTA term | no change |
@@ -388,7 +388,7 @@ closes it; anything else reopens it.
 | Q99 | Each class states its schedule (typed); New Contest list alphabetical, a check box orders by next date; start/end seeded | not built |
 | Q35 | Idaho bonus: at least 10 QSOs (as built); all 25 table counties; one table per year, by the log's year | per-year table not built |
 | Q52 | The New Contest drop-down shows each friendly name in full (sized at run time); reconsider if too wide | not built |
-| Q53 | Names for the 43 unnamed contests: docs/Q53_CONTEST_NAMES.csv; MINITEST retired | not applied |
+| Q53 | Names for the 43 unnamed contests: docs/Q53_CONTEST_NAMES.csv; MINITEST retired | built |
 | Q67 | New Contest rows seeded from the station; the values at OK are the contest's own | not built |
 | Q49 | BCQP: in-province DX contact earns no domestic mult (case-insensitive test) | not built |
 | Q73 | QSO party: CALL/<valid county> is its own station for dupes (K1AR/NHHIL in NEQP) | not built |
@@ -397,7 +397,7 @@ closes it; anything else reopens it.
 | Q64 | POTA shows as "Parks on the Air(r) Logging" | as built |
 | Q59 | Inactive contests listed grey and unselectable for a NEW contest; old logs still open and import | not built (confirm grey) |
 | Q102 | SOUTHAMERICANWW retires (GACW WWSA is ref 45) | not built (needs Q10) |
-| Q42 | OZCHR session names restored in Cyrillic, recovered from D7 `b90ba930` | not built |
+| Q42 | OZCHR session names restored in Cyrillic, recovered from D7 `b90ba930` | built |
 | Q43 | Sibling pairs follow DXLog: one definition file = one contest, a base with per-mode (or per-date) children | not built |
 | Q45 | EUDX/IRTS "in the EU" reads the worked station's resolved region, not `DomMultQTH` | not built |
 | Q55 | WRTC posts no DynamicResults XML; no multiplier row; amends Q83 | no change |
@@ -707,10 +707,20 @@ closes it; anything else reopens it.
     **Очно-заочный чемпионат России - очные участники**
 
   The same commit also has a third, shorter name, `ОЗЧР - Очный тур`, used
-  by a `CMD = 'OZCR'` arm. Not built. Before building, check where
-  `ContestName` reaches a file: a Cabrillo or ADIF header must not carry
-  Cyrillic, and the source literal needs the i18n agent's encoding rule
-  (UTF-8 in a unit compiled in Delphi mode).
+  by a `CMD = 'OZCR'` arm. **Built 2026-10-17** (both names checked
+  against `b90ba930` decoded as cp1251: OZCR_Z's arm at line 751, OZCR_O's
+  at 1361). The session's name is written as `#$xxxx` code points, so the
+  source stays ASCII and no build machine's codepage can mis-decode it
+  (a non-ASCII literal in a BOM-less unit is read in the ANSI codepage --
+  `Lint-BOM.ps1`). Where it reaches: the title bar, the summary sheet and
+  the hour report (display); NOT the Cabrillo `CONTEST:` line, which is
+  `CabrilloName` for both classes; and the EDI export's `TName`, which
+  now writes the Cabrillo name in place of a non-ASCII session name
+  (`PostUnit.EDIContestName` -- every other contest's session name is
+  ASCII, so it writes what it wrote). No ADIF field carries it.
+  Pinned by `uTestContestSession.Test_OZCHRSessionNamesAreCyrillic`,
+  which compares every code point with the text decoded from its UTF-8
+  bytes. The `OZCR` arm's third name was not asked for and is not used.
 
 - **Q43** Which sibling pairs are one contest under one rule (a base with
   children)? First list: JIDX, All Asian, Oceania CW/SSB, the four EU
@@ -852,7 +862,13 @@ closes it; anything else reopens it.
   "European VHF"; MINITEST RETIRED as a duplicate of MINI80; the 17 with no
   name found keep their internal name, stated in each class. The CSV's
   decision column says where each came from. SOUTHAMERICANWW is split out as
-  Q102. Not applied to the classes yet.
+  Q102. **Built 2026-10-17:** the 24 named contests state the name as
+  their display AND friendly name, and the 14 accepted WA7BNM refs that
+  were not yet stated (EUSPRINT_SPRING_CW already had 317); they left
+  `ENUM_SPELLED_DISPLAY_NAMES`, and `uTestContestIdentityPin`'s rows were
+  changed by hand. The 17 with no name already stated their internal
+  name and are unchanged. MINITEST's retirement waits on Q10 and is not
+  built; SOUTHAMERICANWW is Q102.
 
 - **Q73** "A DE mobile that changes county is a new station." TR4W's dupe
   check uses the call, band and mode, and no contest can change that today.
@@ -1417,7 +1433,12 @@ closes it; anything else reopens it.
   sheet -- is `ARRL-VHF-JAN`, `ARRL-VHF-JUN` and `ARRL-VHF-SEP`, the same
   spelling as each running's Cabrillo name (not the `VHF QSO ...` names
   proposed). All three get June's set-up (start on 6 m, HF bands off); January
-  gains one. Not built.
+  gains one. **Built 2026-10-17:** the Cabrillo names were already
+  right; June and September now name their sessions `ARRL-VHF-JUN` and
+  `ARRL-VHF-SEP`, and January gained June's `DescribeSession` (6 m, HF
+  bands off) -- its session name was already `ARRL-VHF-JAN`, the default.
+  January's matrix record is now June's line for line but for the ids.
+  Pinned by `uTestContestSession.Test_EveryARRLVHFRunningHasJunesSetUpAndItsOwnName`.
 
 - **Q98** (raised by Q51's wording, 2026-10-15) Off-band crediting is
   enforced for 2 of 186 contests. `UsesBand` (and, for Q44's RTC, a mode
@@ -1806,6 +1827,10 @@ closes it; anything else reopens it.
   **240**; logs go to the sponsor's Gmail address on its page, to be copied
   exactly when the class is filled in.
   **Answer:** (NY4I, 2026-10-15) *Yes* -- the proposed answer stands.
+  **Built 2026-10-17:** WA7BNM 240, and `qsoparty@gmail.com` -- the
+  sponsor's rules page (fsarc.org, `qsoparty/rules-2024.html`) says
+  "qsoparty at google's mail system", and WA7BNM's ref 240 page
+  writes `qsoparty[at]gmail[dot]com`; both read that day.
 
 - **Q81** New England county abbreviations: IN7QPNE's file spells them
   state first (`MEAND`) and uses Connecticut's new planning regions

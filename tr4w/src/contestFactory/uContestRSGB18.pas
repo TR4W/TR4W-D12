@@ -164,9 +164,9 @@ end;
 
 function TContestRSGB18.GetDisplayName: string;
 begin
-   (* The row has no friendly name; the enum's spelling is the name shown
-      (design Q53). *)
-   Result := 'RSGB-160';
+   (* The contest's human name: WA7BNM, accepted (design Q53,
+      docs/Q53_CONTEST_NAMES.csv). *)
+   Result := 'RSGB 1.8 MHz Contest';
 end;
 
 function TContestRSGB18.GetCabrilloName: string;
@@ -185,7 +185,8 @@ end;
 
 function TContestRSGB18.GetWA7BNMId: integer;
 begin
-   Result := 0;
+   (* WA7BNM's ref, accepted by NY4I with its name (design Q53). *)
+   Result := 252;
 end;
 
 function TContestRSGB18.GetQRZRUId: integer;
@@ -205,9 +206,8 @@ end;
 
 function TContestRSGB18.GetFriendlyName: string;
 begin
-   (* The row's FriendlyName is blank; this is the enum's spelling it
-      resolves to. *)
-   Result := 'RSGB-160';
+   (* The display name above -- design Q53. *)
+   Result := 'RSGB 1.8 MHz Contest';
 end;
 
 function TContestRSGB18.GetInitialExchangeKind: InitialExchangeType;
