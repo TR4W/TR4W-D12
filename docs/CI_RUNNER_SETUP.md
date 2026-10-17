@@ -76,6 +76,22 @@ Restart-Service actions.runner.TR4W-TR4W-D12.windows11-ci-d12
 NETWORK SERVICE **cannot update itself** -- see the third trap below. It keeps
 showing *online* while GitHub quietly stops giving it jobs.
 
+**AND AFTER CHANGING THE ACCOUNT, TELL GIT THE OLD CHECKOUT IS SAFE.** The
+work tree stays owned by the account that cloned it (NETWORK SERVICE), and git
+refuses a repository owned by another user: `detected dubious ownership in
+repository`. Nothing in the build noticed for three days -- only
+`Lint-NoSecrets` runs git, so every other step passed and FullBuild failed on
+that one lint (run 39007643891, 2026-10-17). Mark exactly the checkout path,
+system-wide so LocalSystem sees it:
+
+```powershell
+git config --system --add safe.directory C:/actions-runner-v334/_work/TR4W-D12/TR4W-D12
+```
+
+(Taking ownership of the whole `_work` tree with `takeown` would also work, but
+rewrites ownership of everything the runner ever made; the one-path entry is
+the smaller change.)
+
 One runner directory serves one repository. A box can host several — `win-ci` already runs separate
 services for `n4af/TR4W`, `ny4i/TR4QT` and `ny4i/QK4` — so give each its own directory, its own
 `--name`, and its own service.
