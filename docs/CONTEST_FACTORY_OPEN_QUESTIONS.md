@@ -31,6 +31,7 @@ in section 4. One line each -- the full text is further down.
 - **Q8** Events with no ContestType still named in code (TRC, PGA, EURASIA ...).
 - **Q47** Fix the three kept read-past-the-end shapes now?
 - **Q101** Fill the typed `rcvd_*` columns from each class, or delete them?
+- **Q110** Multi-op: a peer's QSO is logged even when the peer is on a different contest.
 
 **Awaiting only your yes (section 3)**
 - **Q10** Retire unused ContestTypes through `TContestRetired` (MINITEST needs it).
@@ -189,6 +190,22 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   *Recommended: the class fills them* -- it is the one place that knows
   whether a QTH is a county, a section or a grid, which is exactly the
   question Q89's ADIF STATE fix had to answer.
+  **Answer:**
+
+- **Q110** (found building Q108 S4, 2026-10-17) **Multi-op: a peer's QSO is
+  logged even when the peer is running a DIFFERENT contest.** `uNet`'s
+  `NET_QSOINFO` arm calls `LogContact` for every QSO from another station
+  (`uNet.pas` ~591) without comparing the packet's contest with this
+  station's -- so two stations on one server in different contests would
+  each log the other's QSOs, scored under the wrong contest's rules. D7 did
+  the same (`uNet.pas:355-365`), so this is not a regression. Is a mixed
+  network a real configuration (e.g. a multi-multi running two events), or
+  should a QSO from another contest be refused like a by-id contest is?
+  *Recommended: refuse it (logged, not added), through the same
+  `NetCarriesContest` door S4 added, and show the operator once that a peer
+  is on another contest -- a QSO scored under the wrong contest's rules is
+  never what anyone wants. If mixed networks are real, they belong to the
+  new row-based protocol, not to V1.*
   **Answer:**
 
 ---
