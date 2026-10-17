@@ -39,7 +39,8 @@ type
       procedure Test_DeletedContactIsAContactDelete;
       procedure Test_LookupGoesToTheLookupStream;
       procedure Test_ScoreIsADynamicResults;
-      procedure Test_ScoreTotalRowWithTwoModesIsInflated;
+      procedure Test_ScoreTotalRowWithTwoModesIsPerMode;
+      procedure Test_WRTCScoreIsSentWithItsMultipliers;
       procedure Test_AStreamNobodyListensToSendsNothing;
       procedure Test_TheMasterSwitchSilencesEveryMessage;
       procedure Test_ScoreEntryPointSendsNothingWhenOff;
@@ -84,6 +85,7 @@ var
    gSavedComputer: string;
    gSavedContest: TContestHandle;
    gSavedTotals: QSOTotalArray;
+   gSavedPoints: QSOTotalArray;
    gSavedMults: array[BandType, CW..Both, RemainingMultiplierType] of Word;
    gSavedConfig: TUDPBroadcastConfig;
 
@@ -299,8 +301,20 @@ procedure SetScoreGlobals;
 begin
    Contest := ContestHandleOf(CQWWCW);
    FillChar(QSOTotals, SizeOf(QSOTotals), 0);
+   FillChar(QSOPointTotals, SizeOf(QSOPointTotals), 0);
+   FillChar(mo.MTotals, SizeOf(mo.MTotals), 0);
    QSOTotals[Band20, CW] := 5;
    QSOTotals[AllBands, CW] := 5;
+   (* Q109: the ALL row is sent now, so the all-modes cells are set as the
+     loader sets them: a QSO adds to its mode AND to Both. *)
+   QSOTotals[Band20, Both] := 5;
+   QSOTotals[AllBands, Both] := 5;
+   QSOPointTotals[Band20, Both] := 10;
+   QSOPointTotals[AllBands, Both] := 10;
+   mo.MTotals[Band20, Both, rmDomestic] := 2;
+   mo.MTotals[Band20, Both, rmDX]       := 3;
+   mo.MTotals[AllBands, Both, rmDomestic] := 2;
+   mo.MTotals[AllBands, Both, rmDX]       := 3;
    mo.MTotals[Band20, CW, rmDomestic] := 2;
    mo.MTotals[Band20, CW, rmDX]       := 3;
    mo.MTotals[Band20, CW, rmZone]     := 4;
@@ -360,32 +374,72 @@ begin
              (Pos('<qso band="total"', xml) < pBreakEnd) and
              (pBreakEnd < pScore),
              'the rows sit inside <breakdown>, which comes before <score>');
-   (* PINNED, D7-IDENTICAL: the mode loop stops at Phone, so the mode "ALL"
-     rows -- the <point> elements in the sample at the head of SendScoreToUDP
-     -- are never written.  The loop says "Was Phone for a test do". *)
-   CheckEquals(0, Pos('<point', xml), 'no <point> rows are sent (known, D7-identical)');
+   (* Q109 (deliberate edit, 2026-10-16): this used to pin 'no <point> rows'
+     (D7-identical -- the mode loop stopped at Phone).  The ALL row of the
+     sample at the head of BuildScoreUDPXml is sent now, with values. *)
+   Has(xml, '<qso band="total" mode="ALL">5</qso>');
+   Has(xml, '<mult band="total" mode="ALL" type="state">2</mult>');
+   Has(xml, '<mult band="total" mode="ALL" type="country">3</mult>');
+   Has(xml, '<point band="20" mode="ALL">10</point>');
+   Has(xml, '<point band="total" mode="ALL">10</point>');
 end;
 
-procedure TUDPDatagramTests.Test_ScoreTotalRowWithTwoModesIsInflated;
+procedure TUDPDatagramTests.Test_ScoreTotalRowWithTwoModesIsPerMode;
 var
    xml: string;
 begin
-   (* KNOWN DEFECT, D7-IDENTICAL (4.151 sends the same).  The "total" row takes
-     its count from a running sum that already holds the previous modes' totals
-     AND the previous rows' own, so with CW and Phone worked the total rows
-     read 8 and 13 where the per-mode totals are 5 and 3.  This pins the
-     current output so that fixing it is a deliberate edit of this test. *)
-   BeginTest('known defect: the total row is inflated once a second mode is worked');
+   (* Q109 (deliberate edit, 2026-10-16).  This was the KNOWN-DEFECT test: the
+     "total" row took its count from one running sum reused for every mode, so
+     CW 5 on 20 m plus Phone 3 on 15 m read 8 and 13.  The correct values are
+     the per-mode totals, 5 and 3, and the ALL total is 8. *)
+   BeginTest('Q109: each total row is its own mode''s bands summed');
    ConfigureAllStreams(True);
    SetScoreGlobals;
    QSOTotals[Band15, Phone]   := 3;
    QSOTotals[AllBands, Phone] := 3;
+   QSOTotals[Band15, Both]    := 3;
+   QSOTotals[AllBands, Both]  := 8;
+   QSOTotals[Band20, Both]    := 5;
    ResetCapture;
    PostScoreToUDP(1);
    xml := string(gSent[0].Payload);
    Has(xml, '<qso band="15" mode="PH">3</qso>');
-   Has(xml, '<qso band="total" mode="CW">8</qso>');
-   Has(xml, '<qso band="total" mode="PH">13</qso>');
+   Has(xml, '<qso band="total" mode="CW">5</qso>');
+   Has(xml, '<qso band="total" mode="PH">3</qso>');
+   Has(xml, '<qso band="total" mode="ALL">8</qso>');
+   CheckEquals(0, Pos('mode="CW">8<', xml), 'the CW total is not inflated');
+   CheckEquals(0, Pos('mode="PH">13<', xml), 'the PH total is not inflated');
+end;
+
+procedure TUDPDatagramTests.Test_WRTCScoreIsSentWithItsMultipliers;
+var
+   xml: string;
+begin
+   (* Q109, NY4I 2026-10-16: "dynamicresults is perfectly fine for wrtc. That
+     was its original purpose."  WRTC forbids ONLINE score posting; this local
+     message is what its aggregators read, so it is sent, and it carries WRTC's
+     two multiplier kinds -- HQ and country -- on the ALL-modes rows and no
+     others.  Nothing here asks the contest for a posting permission. *)
+   BeginTest('Q109: WRTC''s UDP score IS sent, with HQ and country mults and points');
+   ConfigureAllStreams(True);
+   SetScoreGlobals;
+   Contest := ContestHandleOf(WRTC);
+   ResetCapture;
+   PostScoreToUDP(77);
+
+   CheckEquals(1, Length(gSent), 'the UDP score is sent for WRTC');
+   CheckEquals(SCORE_ADDRESS, gSent[0].Address, 'to the score listener');
+   xml := string(gSent[0].Payload);
+   CheckEquals('dynamicresults', RootOf(xml), 'root element');
+   CheckEquals('77', TagValue(xml, 'score'), 'score');
+   Has(xml, '<mult band="20" mode="ALL" type="HQ">2</mult>');
+   Has(xml, '<mult band="20" mode="ALL" type="country">3</mult>');
+   Has(xml, '<mult band="total" mode="ALL" type="HQ">2</mult>');
+   Has(xml, '<mult band="total" mode="ALL" type="country">3</mult>');
+   Has(xml, '<point band="total" mode="ALL">10</point>');
+   CheckEquals(0, Pos('type="zone"', xml), 'WRTC posts no zone multiplier');
+   CheckEquals(0, Pos('type="prefix"', xml), 'WRTC posts no prefix multiplier');
+   CheckEquals(0, Pos('mode="CW" type=', xml), 'and no multiplier on a single-mode row');
 end;
 
 procedure TUDPDatagramTests.Test_AStreamNobodyListensToSendsNothing;
@@ -453,6 +507,7 @@ begin
    gSavedComputer := Settings.Computer.Name;
    gSavedContest  := Contest;
    gSavedTotals   := QSOTotals;
+   Move(QSOPointTotals, gSavedPoints, SizeOf(gSavedPoints));
    Move(mo.MTotals, gSavedMults, SizeOf(gSavedMults));
    gSavedConfig   := UDPBroadcaster.Snapshot;
    try
@@ -464,7 +519,8 @@ begin
       Test_DeletedContactIsAContactDelete;
       Test_LookupGoesToTheLookupStream;
       Test_ScoreIsADynamicResults;
-      Test_ScoreTotalRowWithTwoModesIsInflated;
+      Test_ScoreTotalRowWithTwoModesIsPerMode;
+      Test_WRTCScoreIsSentWithItsMultipliers;
       Test_AStreamNobodyListensToSendsNothing;
       Test_TheMasterSwitchSilencesEveryMessage;
       Test_ScoreEntryPointSendsNothingWhenOff;
@@ -474,6 +530,7 @@ begin
       FreeAndNil(gSavedConfig);
       Move(gSavedMults, mo.MTotals, SizeOf(gSavedMults));
       QSOTotals := gSavedTotals;
+      Move(gSavedPoints, QSOPointTotals, SizeOf(QSOPointTotals));
       Contest := gSavedContest;
       Settings.Computer.Name := gSavedComputer;
       Settings.My.Call := gSavedCall;

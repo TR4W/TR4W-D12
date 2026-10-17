@@ -394,7 +394,7 @@ closes it; anything else reopens it.
 | Q100 | `contest.last_opened_at` deleted (the last-contest button gives quick access); the button reads "Last Contest" | building |
 | Q107 | QSO parties: an out-of-state entrant's QSO with a non-host station scores 0 and no mult (scoring applies the entry rule; one predicate) | building |
 | Q108 | Contests register by string id like radios (no `VC.pas` line for a new contest); multi-op refused for a contest with no legacy number until the new protocol; `<contestnr>` open | design after the cleanup |
-| Q109 | UDP `dynamicresults`: send the ALL row, per-mode totals, WRTC mults; never suppressed (WRTC's local aggregators read it -- also settles Q55) | not built |
+| Q109 | UDP `dynamicresults`: send the ALL row, per-mode totals, WRTC mults; never suppressed (WRTC's local aggregators read it -- also settles Q55) | built 2026-10-16 |
 | Q52 note | Settled by Q52 | removed |
 
 ### Answered since the table was last updated (full text)
@@ -425,6 +425,10 @@ closes it; anything else reopens it.
   WRTC's multipliers belong in THIS message (fix 3), and Q83's "WRTC posts
   neither" applies to the ONLINE scoreboard and HamScore, not to the local
   UDP broadcast. Not built.
+  **BUILT 2026-10-16:** the mode loop runs `CW to Both` (the ALL rows -- qso,
+  mult, point -- per band and `total`), each `total` row is its own mode's
+  bands summed (`nModeTotal`), WRTC's HQ/country rows follow from the ALL row,
+  and nothing suppresses the UDP score. Tests: `uTestUDPDatagrams`.
 
 - **Q108** (NY4I, 2026-10-16) A new contest should not touch `VC.pas`:
   *"I prefer we have a registry similar to when we Add a new radio so the
@@ -747,7 +751,7 @@ closes it; anything else reopens it.
   (`uGetScores.BuildDynamicResultsXml`, scoreboard/HamScore -- WRTC posts
   neither, as above) and the local UDP one (`logsubs2.BuildScoreUDPXml`), which
   is what WRTC's local aggregators read. WRTC's multipliers DO belong in the
-  UDP message -- Q109 fix 3.
+  UDP message -- Q109 fix 3 (built 2026-10-16).
 
 - **Q80** IN7QPNE multipliers for in-area entrants per party, once Q4's
   piece exists?

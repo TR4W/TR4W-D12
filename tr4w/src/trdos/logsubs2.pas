@@ -2630,8 +2630,11 @@ var
       string array now, and it is only ever concatenated into XML below. *)
     BandPchar                             : string;
     nQSOs                                 : integer;
-    nTotal                                : integer;
-    sContestName                          : string;
+    (* Q109: THE PER-MODE SUM OF THE BANDS, one slot per mode (the ALL slot sums
+      the ALL rows).  There used to be ONE running sum, reused for every mode,
+      so the total row of the second mode worked read the first mode's bands too. *)
+    nModeTotal                            : array[ModeType] of integer;
+    sContestName                         : string;
     (* The contest's type= label for one multiplier kind -- M9a. *)
     multType                              : string;
 const
@@ -2668,7 +2671,10 @@ begin
 You cannot use QSOTotals[TempBand, TempMode] for an accurate score for the total QSOs. QSOTotals[TempBand, TempMode] is not decremented for ALL as that is the log's total QSO count including deleted contacts.
 QSOTotals[TempBand, TempMode] is accurate for the individual bands so just sum those values to calculate the total
 }
-   nTotal := 0;
+   for TempMode := Low(ModeType) to High(ModeType) do
+      begin
+      nModeTotal[TempMode] := 0;
+      end;
    (* The contest's ADIF id, asked of the contest -- M1. *)
    sContestName := ContestIdentity(Contest).ADIFContestId;
    sBuf := '<?xml version="1.0"?>' + sLineBreak +
@@ -2685,26 +2691,28 @@ QSOTotals[TempBand, TempMode] is accurate for the individual bands so just sum t
           #9 + '<breakdown>' + sLineBreak;
    for TempBand := Band160 to AllBands do
       begin
-      for TempMode := CW to Phone do {Both do} // Was Phone for a test do
+      (* Q109: CW THROUGH Both, so the ALL row is sent.  The loop stopped at
+        Phone ("{Both do} // Was Phone for a test do") in D7 as well, and the
+        ALL rows in the sample above were never written. *)
+      for TempMode := CW to Both do
          begin
-         if QSOTotals[TempBand, TempMode] = 0 then Continue;
          BandPchar := BandStringsArrayWithOutSpaces[TempBand];
          if TempBand = AllBands then
             begin
             BandPchar := 'total';
-            nQSOs := nTotal;
+            (* The total is THIS MODE's bands summed -- QSOTotals[AllBands, m]
+              is not used, see the NOTE above. *)
+            nQSOs := nModeTotal[TempMode];
             end
          else
             begin
             nQSOs := QSOTotals[TempBand, TempMode];
+            nModeTotal[TempMode] := nModeTotal[TempMode] + nQSOs;
             end;
-         nTotal := nTotal + QSOTotals[TempBand, TempMode];
-         if GetScoresModesArray[TempMode] <> 'ALL' then
-            begin
-            sBuf := sBuf + #9#9 + '<qso band="' + BandPChar +
-                               '" mode="' + GetScoresModesArray[TempMode] +
-                               '">' + IntToStr(nQSOs) + '</qso>' + sLineBreak;
-            end;
+         if nQSOs = 0 then Continue;
+         sBuf := sBuf + #9#9 + '<qso band="' + BandPChar +
+                            '" mode="' + GetScoresModesArray[TempMode] +
+                            '">' + IntToStr(nQSOs) + '</qso>' + sLineBreak;
          (* ONE <mult> PER KIND THE CONTEST LABELS, IN KIND ORDER -- M9a. This
            was `if Contest <> WRTC` with two loops; the contest says which kinds
            it posts on this row, and under what label ('' posts none). *)
@@ -2724,7 +2732,6 @@ QSOTotals[TempBand, TempMode] is accurate for the individual bands so just sum t
             begin
             sBuf := sBuf + #9#9 + '<point band="' + BandPChar + '" mode="' + GetScoresModesArray[TempMode] + '">' +
                          IntToStr(QSOPointTotals[TempBand, TempMode]) + '</point>' + sLineBreak;
-            sBuf := sBuf + sLineBreak;
             end;
          end;
          // After mode loop...

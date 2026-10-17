@@ -295,9 +295,12 @@ end;
 
 (* THE WRTC SCORE COMPUTER WANTS HQ AND COUNTRY, ON THE ALL-MODES ROW ONLY --
    LOGSUBS2's `Contest = WRTC` branch of the dynamic-results XML, moved here at
-   M9a: rmDomestic and rmDX with their WRTC labels, nothing else. The rows the
-   writer walks are CW, digital and phone, so the all-modes row is never
-   reached and WRTC posts no multiplier at all -- as it never has. *)
+   M9a: rmDomestic and rmDX with their WRTC labels, nothing else. The writer
+   walked only CW, digital and phone until Q109 (2026-10-16), so this row was
+   never reached and WRTC posted no multiplier; it now walks the all-modes row
+   too, per band and in total, and WRTC's local aggregators receive HQ and
+   country there. The UDP score is NOT suppressed for WRTC (NY4I, Q109): this
+   message is what that class of listener was built to read. *)
 function TContestWRTC.ScorePostingMultiplierType(aKind: RemainingMultiplierType;
                                                  aAllModes: boolean): string;
 begin

@@ -64,6 +64,16 @@ writes `Settings.Ptt.ViaCommands`. That belongs to the radio-status snapshot wor
 never reaches it.** `TWSJTXServer`'s did not, so `FreeAndNil(wsjtx)` leaked the
 sockets until 2026-10-14. Check the keyword on any destructor you add.
 
+## The local UDP score (`dynamicresults`)
+
+`logsubs2.BuildScoreUDPXml` / `PostScoreToUDP` feed N1MM-style listeners and WRTC's
+local aggregators. **It is never suppressed by a contest's score-posting permission**
+(NY4I, Q109: *"dynamicresults is perfectly fine for wrtc. That was its original
+purpose"*) -- only the ONLINE builder (`uGetScores.BuildDynamicResultsXml`) and
+HamScore ask the contest. The mode loop runs `CW to Both`: the ALL rows carry
+qso/mult/point, and WRTC's HQ/country labels appear only there. Each `total` row is
+its own mode's bands summed. Pinned in `uTestUDPDatagrams`.
+
 ## MMTTY
 
 **MMTTY is out-of-process** — launched with `WinExec`, not loaded as a DLL. That
