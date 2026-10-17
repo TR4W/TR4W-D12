@@ -14,7 +14,10 @@ WHERE THE DATA COMES FROM -- each input is data a program produced or reads,
 never a regex over Pascal:
 
    * WHICH .dom A CONTEST LOADS, PER STATION: the frozen contest matrix,
-     tr4w/test/contest-matrix/frozen/<CONTEST>.matrix. Each record has
+     tr4w/test/contest-matrix/frozen/<record>.matrix. A record names its
+     contest by ID in its "contest.requested" line (Q108 S3), and that id is
+     what this reports -- never the file name, whose blanks the matrix writes
+     as '_'. Each record has
      station sections ("### variant us: MY CALL=... MY STATE=..."), and in
      each a "setting.DOMESTIC FILENAME = x.dom" line, the
      "multipliersarecounties" flag (an out-of-state QSO-party station counts
@@ -70,7 +73,7 @@ DX is reported apart from the rest: it is a DX multiplier in most of these
 contests, not a domestic one.
 
    python tools/dom-crosscheck/crosscheck_dom_dxlog.py              # the report
-   python tools/dom-crosscheck/crosscheck_dom_dxlog.py --contest NASPRINTCW
+   python tools/dom-crosscheck/crosscheck_dom_dxlog.py --contest NA-SPRINT-CW
    python tools/dom-crosscheck/crosscheck_dom_dxlog.py --new-party "C:\\...\\IDQP.txt" [--host Id]
 
 --new-party writes a STARTER .dom to stdout for a party TR4W does not have:
@@ -259,6 +262,8 @@ class DomLoad:
 # --------------------------------------------------------------------------
 
 VARIANT_RE = re.compile(r'^### variant (\S+): (.*)$')
+# THE CONTEST'S ID, from the record's own identity line (Q108 S3).
+REQUESTED_RE = re.compile(r'^contest\.requested = (.*?) \((?:legacy number \d+|no legacy number|no such contest)\)$')
 STATION_FIELD_RE = re.compile(r'(MY [A-Z]+)=(\S*)')
 
 
@@ -271,10 +276,13 @@ def read_matrix():
       raise InputError('only %d .matrix files in %s (floor %d)' % (len(files), MATRIX_DIR, MIN_MATRIX_FILES))
    records = []
    for path in files:
-      contest = os.path.splitext(os.path.basename(path))[0]
+      lines = [line.rstrip('\r\n') for line in open(path, encoding='utf-8', errors='replace')]
+      ids = [m.group(1) for m in map(REQUESTED_RE.match, lines) if m]
+      if not ids:
+         raise InputError('%s names no contest in a contest.requested line' % path)
+      contest = ids[0]
       current = None
-      for line in open(path, encoding='utf-8', errors='replace'):
-         line = line.rstrip('\r\n')
+      for line in lines:
          m = VARIANT_RE.match(line)
          if m:
             current = {'contest': contest, 'variant': m.group(1),
@@ -1079,7 +1087,7 @@ def new_party(args):
 
 def main():
    ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
-   ap.add_argument('--contest', help='report one TR4W contest (matrix file name, e.g. NASPRINTCW)')
+   ap.add_argument('--contest', help='report one TR4W contest (its id, e.g. NA-SPRINT-CW)')
    ap.add_argument('--new-party', metavar='DXLOG_FILE', help='write a starter .dom from a DXLog file')
    ap.add_argument('--host', help='with --new-party: emit "CODE > HOST = ..." (the _cty form)')
    args = ap.parse_args()

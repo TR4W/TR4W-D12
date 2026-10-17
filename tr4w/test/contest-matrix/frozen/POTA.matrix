@@ -1,7 +1,7 @@
 ### variant us: MY CALL=K0AAA MY STATE=KS MY SECTION=KS MY GRID=EM17
 == identity
-contest.requested = 93 POTA
-contest.selected = 93 POTA
+contest.requested = POTA (legacy number 93)
+contest.selected = POTA (legacy number 93)
 contest.class = TContestPOTA
 == setup
 active.exchange = RSTAndPOTAPark
@@ -331,8 +331,8 @@ iex R35AB | none=" " trmaster=" " logged=" " custom=" "
 iex K9ABC | none=" " trmaster=" " logged=" " custom=" "
 ### variant ve: MY CALL=VE3AAA MY STATE=ON MY SECTION=ON MY GRID=FN03
 == identity
-contest.requested = 93 POTA
-contest.selected = 93 POTA
+contest.requested = POTA (legacy number 93)
+contest.selected = POTA (legacy number 93)
 contest.class = TContestPOTA
 == setup
 active.exchange = RSTAndPOTAPark
@@ -662,8 +662,8 @@ iex R35AB | none=" " trmaster=" " logged=" " custom=" "
 iex K9ABC | none=" " trmaster=" " logged=" " custom=" "
 ### variant dx: MY CALL=DL1AAA MY STATE= MY SECTION=DX MY GRID=JO62
 == identity
-contest.requested = 93 POTA
-contest.selected = 93 POTA
+contest.requested = POTA (legacy number 93)
+contest.selected = POTA (legacy number 93)
 contest.class = TContestPOTA
 == setup
 active.exchange = RSTAndPOTAPark

@@ -1,7 +1,7 @@
 ### variant us: MY CALL=K0AAA MY STATE=KS MY SECTION=KS MY GRID=EM17
 == identity
-contest.requested = 176 IRTS
-contest.selected = 176 IRTS
+contest.requested = IRTS (legacy number 176)
+contest.selected = IRTS (legacy number 176)
 contest.class = TContestIRTS
 == setup
 active.exchange = RSTZoneOrDomesticQTH
@@ -346,8 +346,8 @@ iex R35AB | none=" 29" trmaster=" 29" logged=" 29" custom=" 29"
 iex K9ABC | none=" 8" trmaster=" 4" logged=" 4" custom=" 4"
 ### variant ve: MY CALL=VE3AAA MY STATE=ON MY SECTION=ON MY GRID=FN03
 == identity
-contest.requested = 176 IRTS
-contest.selected = 176 IRTS
+contest.requested = IRTS (legacy number 176)
+contest.selected = IRTS (legacy number 176)
 contest.class = TContestIRTS
 == setup
 active.exchange = RSTZoneOrDomesticQTH
@@ -692,8 +692,8 @@ iex R35AB | none=" 29" trmaster=" 29" logged=" 29" custom=" 29"
 iex K9ABC | none=" 8" trmaster=" 4" logged=" 4" custom=" 4"
 ### variant dx: MY CALL=DL1AAA MY STATE= MY SECTION=DX MY GRID=JO62
 == identity
-contest.requested = 176 IRTS
-contest.selected = 176 IRTS
+contest.requested = IRTS (legacy number 176)
+contest.selected = IRTS (legacy number 176)
 contest.class = TContestIRTS
 == setup
 active.exchange = RSTZoneOrDomesticQTH

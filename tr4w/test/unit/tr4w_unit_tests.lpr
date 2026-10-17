@@ -468,6 +468,11 @@ uses
    uTestContestObjects in 'uTestContestObjects.pas',
    uTestRegisteredContests in 'uTestRegisteredContests.pas',
    uTestContestStatesItsRules in 'uTestContestStatesItsRules.pas',
+   (* A CONTEST REGISTERED BY ITS STRING ID, AND ONLY HERE (Q108 S3). The
+      fixture has no ContestType member; it must never be in tr4w.lpr --
+      Lint-ContestUnitsLinked fails the build if it is. *)
+   uContestTestFixture in 'uContestTestFixture.pas',
+   uTestContestById in 'uTestContestById.pas',
    uTestContestMultipliers in 'uTestContestMultipliers.pas',
    uTestContestSession in 'uTestContestSession.pas',
    uTestContestDisplay in 'uTestContestDisplay.pas',
@@ -765,6 +770,7 @@ begin
    RegisterSuite(TContestSessionTests.Create('ContestSession'));
    RegisterSuite(TContestDisplayTests.Create('ContestDisplay'));
    RegisterSuite(TContestStatesItsRulesTests.Create('ContestStatesItsRules'));
+   RegisterSuite(TContestByIdTests.Create('ContestById'));
    RegisterSuite(TContestUITests.Create('ContestUI'));
    RegisterSuite(TContestIdentityPinTests.Create('ContestIdentityPin'));
    RegisterSuite(TContestKindPinTests.Create('ContestKindPin'));

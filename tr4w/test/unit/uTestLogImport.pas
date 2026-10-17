@@ -42,6 +42,8 @@ type
       procedure HoldStagedOpen(aRecordNumber: integer);
       function StagedLeftover(const aTarget: string): string;
       function RowsIn(const aFileName: string): Int64;
+      (* One damaged contest byte, imported and refused. *)
+      procedure CheckImportRefusesContestNumber(aNumber: Byte; const aWhat: string);
    protected
       procedure TestAFailedImportLeavesNoLogAndImportsAgain;
       procedure TestALeftoverStagedImportIsDiscardedAndImportedAgain;
@@ -63,7 +65,8 @@ type
 implementation
 
 uses
-   SysUtils, Classes, sqldb, VC, uLogDatabase, uLogRepository, uLogBinaryFile, uLogImport;
+   SysUtils, Classes, sqldb, VC, uLogDatabase, uLogRepository, uLogBinaryFile, uLogImport,
+   uContestRegistry;   (* FirstByIdContestHandle, IsKnownContest -- Q108 S3 *)
 
 (* TInt64Array comes from uLogRepository -- see RelatedRowIds. *)
 
@@ -583,10 +586,24 @@ end;
 
    The fixture is the one-record Arktika log with its contest byte patched:
    record k starts at (k + 1) * 376 (the header is one record long) and the
-   byte is at 265 -- both pinned in uTestLogBinaryFile. *)
+   byte is at 265 -- both pinned in uTestLogBinaryFile.
+
+   TWO NUMBERS (Q108 S3): one no contest holds, and the handle of a contest
+   registered by id -- the test program's fixture holds the first such
+   handle. A .TRW predates every such contest, so its byte is refused too,
+   not opened as the fixture. *)
 procedure TLogImportTests.TestImportRefusesAContestNumberItDoesNotKnow;
-const
-   UNKNOWN_CONTEST_NUMBER = 250;
+begin
+   BeginTest('TestImportRefusesAContestNumberItDoesNotKnow');
+   CheckImportRefusesContestNumber(250, 'a number no contest holds');
+   CheckTrue(IsKnownContest(FirstByIdContestHandle),
+             'the first by-id handle is a contest in this program (the fixture)');
+   CheckImportRefusesContestNumber(FirstByIdContestHandle.ToByte,
+                                   'a contest registered by id');
+end;
+
+procedure TLogImportTests.CheckImportRefusesContestNumber(aNumber: Byte;
+                                                          const aWhat: string);
 var
    source, fn: string;
    res: TLogImportResult;
@@ -594,9 +611,8 @@ var
    b: Byte;
    probe: ContestExchange;
 begin
-   BeginTest('TestImportRefusesAContestNumberItDoesNotKnow');
-   CheckTrue(UNKNOWN_CONTEST_NUMBER > Ord(High(ContestType)),
-             'the number is above every legacy contest');
+   CheckTrue(aNumber > Ord(High(ContestType)),
+             aWhat + ': the number is above every legacy contest');
 
    source := TempDb('unknown_contest.trw');
    fn := TempDb('unknown_contest.db');
@@ -609,7 +625,7 @@ begin
                   'the fixture is a header and one record');
       s.Position := SizeOf(ContestExchange) +
                     (PtrUInt(@probe.ceContest) - PtrUInt(@probe));
-      b := UNKNOWN_CONTEST_NUMBER;
+      b := aNumber;
       s.WriteBuffer(b, 1);
       s.SaveToFile(source);
    finally
@@ -617,10 +633,10 @@ begin
    end;
 
    res := ImportBinaryLog(source, fn);
-   CheckFalse(res.Ok, 'a contest number this TR4W does not know is refused');
-   CheckTrue(Pos('contest number ' + IntToStr(UNKNOWN_CONTEST_NUMBER), res.Message) > 0,
-             'and the message names it -- got: ' + res.Message);
-   CheckFalse(FileExists(fn), 'and no log is left behind');
+   CheckFalse(res.Ok, aWhat + ': a contest number with no legacy contest is refused');
+   CheckTrue(Pos('contest number ' + IntToStr(aNumber), res.Message) > 0,
+             aWhat + ': and the message names it -- got: ' + res.Message);
+   CheckFalse(FileExists(fn), aWhat + ': and no log is left behind');
    Scrub(fn);
    if FileExists(source) then
       begin

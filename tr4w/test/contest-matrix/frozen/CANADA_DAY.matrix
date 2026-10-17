@@ -1,7 +1,7 @@
 ### variant us: MY CALL=K0AAA MY STATE=KS MY SECTION=KS MY GRID=EM17
 == identity
-contest.requested = 157 CANADA_DAY
-contest.selected = 157 CANADA_DAY
+contest.requested = CANADA DAY (legacy number 157)
+contest.selected = CANADA DAY (legacy number 157)
 contest.class = TContestCanadaDay
 == setup
 active.exchange = RSTAndQSONumberOrDomesticQTHExchange
@@ -351,8 +351,8 @@ iex R35AB | none=" " trmaster=" " logged=" " custom=" "
 iex K9ABC | none=" " trmaster=" " logged=" " custom=" "
 ### variant ve: MY CALL=VE3AAA MY STATE=ON MY SECTION=ON MY GRID=FN03
 == identity
-contest.requested = 157 CANADA_DAY
-contest.selected = 157 CANADA_DAY
+contest.requested = CANADA DAY (legacy number 157)
+contest.selected = CANADA DAY (legacy number 157)
 contest.class = TContestCanadaDay
 == setup
 active.exchange = RSTAndQSONumberOrDomesticQTHExchange
@@ -702,8 +702,8 @@ iex R35AB | none=" " trmaster=" " logged=" " custom=" "
 iex K9ABC | none=" " trmaster=" " logged=" " custom=" "
 ### variant dx: MY CALL=DL1AAA MY STATE= MY SECTION=DX MY GRID=JO62
 == identity
-contest.requested = 157 CANADA_DAY
-contest.selected = 157 CANADA_DAY
+contest.requested = CANADA DAY (legacy number 157)
+contest.selected = CANADA DAY (legacy number 157)
 contest.class = TContestCanadaDay
 == setup
 active.exchange = RSTAndQSONumberOrDomesticQTHExchange

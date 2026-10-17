@@ -49,14 +49,18 @@ which side of that seam you are on before you change anything.
 
 | job | doc |
 |---|---|
-| the **data** — a new `ContestType` in `VC.pas`, `fcontest.pas` init, its `.dom` files in `target/dom/` (no `.cfg` -- that folder is `.dom` only, NY4I 2026-10-15) | `docs/ADDING_A_NEW_CONTEST.md` |
+| the **data** — its `.dom` files in `target/dom/` (no `.cfg` -- that folder is `.dom` only, NY4I 2026-10-15). **No `VC.pas` entry since Q108 S3: the `ContestType` enum is FROZEN** | `docs/ADDING_A_NEW_CONTEST.md` |
 | the **class** in this factory | `docs/ADDING_A_CONTEST.md` |
 
 **No `.cfg` borrows another contest's type** (NY4I, 2026-10-01: *"The only
 contest that should say CONTEST = NEQP is the NEQP."*). A new event is a new
-`ContestType` -- **appended**, because the ordinal is persisted (the `.TRW`
-record, the multi-op packet, HamScore's `<contestnr>`) -- plus a class. Idaho
-(`uContestIdahoQP`) is the worked example: the enum member and its
+CONTEST plus a class -- and **since Q108 S3 (2026-10-17) it is NOT a new
+`ContestType`**: the enum is frozen (`Lint-FrozenContestNumbers` fails on any
+member added -- appended included -- removed, reordered or renamed, because a
+member's position is the persisted number in the `.TRW` record and the
+multi-op packet). A new contest registers by its id (`RegisterContestById`),
+and **no real contest may until Q108 S4** (below). Idaho
+(`uContestIdahoQP`) is the worked example of a LEGACY addition: the enum member and its
 `ContestTypeSA` spelling (the ONLY two `VC.pas` entries since M10 S8 deleted
 `ContestsArray`, `ContestsBooleanArray` and `QSOParties`), the class -- a state
 party states its `InStateDomesticFileName` as one literal, and ships both
@@ -199,10 +203,9 @@ the target shape, the M-step migration order and the open questions.
   parties split", "188 members", ...) are deleted or became the per-contest
   assertion they stood for; **never add one back**. A new invariant walks
   `ContestsToWalk`; a frozen pin over the legacy contests keeps its enum
-  walk. Until S3 a new contest still appends a member, so it still adds its
-  `IDENTITY_PINS` and `KIND_PINS` rows (the compiler insists) and joins the
-  pin units' sets wherever it differs from the base -- but it moves no
-  count. The measuring scripts are `tools/contest-factory-q108/`.
+  walk. Since S3 a new contest has no member, so it adds NO pin row and joins
+  no enum-keyed set; the walks hold it. The measuring scripts are
+  `tools/contest-factory-q108/`.
 - **Q108 S2 IS BUILT (2026-10-16, design 8.2u): A CONTEST IS A ONE-BYTE
   HANDLE IN MEMORY, AND A LEGACY CONTEST'S HANDLE IS ITS LEGACY NUMBER.**
   `VC.TContestHandle` (packed record, `=`/`<>`, so a band, a mode or a
@@ -221,6 +224,33 @@ the target shape, the M-step migration order and the open questions.
   because contest units register AFTER uCFG initialises; the CONTEST token
   resolves through `TryContestFromName`, never by position. A `.TRW` naming
   a number above the legacy range is refused. `Test_AContestHandleIsItsLegacyNumber`.
+- **Q108 S3 IS BUILT (2026-10-17, design 8.2u): A CONTEST CAN REGISTER BY ITS
+  ID, THE ENUM IS FROZEN, AND THE REGISTRY SEALS.**
+  `RegisterContestById(id, cls)` (`ContestIdRefusal`: empty, blank-padded,
+  non-ASCII, a legacy spelling, a legacy alias, a duplicate). THE SEAL: the
+  first question that depends on which contests exist (an id, a class, an
+  identity, `KnownContests`) assigns every by-id contest a handle from
+  `FirstByIdContestHandle` (188) up in `CompareText` id order, and EVERY later
+  registration -- legacy too -- raises; only the legacy-number arithmetic
+  never seals. Such a contest has no legacy number (`LegacyContestOf` =
+  DUMMYCONTEST); the `.TRW` import refuses its byte (`ContestLegacyNumber`,
+  not `IsKnownContest`). **NO REAL CONTEST MAY REGISTER BY ID UNTIL S4** (the
+  multi-op refusal) -- and the frozen enum means none can be added at all
+  until then. The ONE by-id contest is the unit tests' fixture,
+  `test/unit/uContestTestFixture` (`TR4W-TEST-FIXTURE`, handle 188 in the test
+  program), pinned by `uTestContestById`; it is NEVER in `tr4w.lpr`.
+  `Lint-FrozenContestNumbers` (SHA-256 of the ordered member list) and
+  `Lint-ContestUnitsLinked` (a factory contest unit in BOTH `.lpr` files and
+  not the server's; a test fixture in the test `.lpr` only) gate it. THE
+  MATRIX IS KEYED BY ID: `/MATRIX <out> <id>`, `/MATRIXLIST` lists
+  `record-name|id|class-unit|P|DF|host` and refuses a contest whose class
+  unit is not in `src/contestFactory`; a record is `<id, blanks as _>.matrix`
+  (`uContestMatrix.MatrixRecordName`, the ONE derivation), its identity
+  lines `contest.requested/selected = <id> (legacy number N)`; readers take
+  the id from that line, never the file name. The inventory's `model.py`
+  REFUSES a by-id contest in the factory (S5 extends it). **Every "a NEW
+  contest adds rows to `<PIN>`" in the bullets below describes a LEGACY
+  addition**: a by-id contest adds no pin row -- the registry walks hold it.
 - **A contest owns its bands: `TContestBase.UsesBand`** (base: every band).
   An off-band QSO is logged normally, scores 0 and earns no multiplier (NY4I,
   2026-10-01). It is asked through `ContestCreditsBand` at every place a QSO

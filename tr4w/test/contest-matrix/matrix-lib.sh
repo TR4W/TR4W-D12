@@ -11,16 +11,35 @@
 # ---------------------------------------------------------------------------
 # WHAT A RUN IS
 # ---------------------------------------------------------------------------
-#   1. tr4w.exe /MATRIXLIST lists every ContestType (the enum, iterated by the
-#      program -- nothing here names a contest).
+#   1. tr4w.exe /MATRIXLIST lists every contest the registry knows (iterated
+#      by the program -- nothing here names a contest), one line each:
+#          record-name|id|class-unit|P|DF|host
 #   2. For each contest and each STATION VARIANT, a .cfg is written into a
 #      fresh scratch directory and the program is started on it with
-#          <cfg> /MATRIX <record> <ordinal> --settings <fixture copy>
+#          <cfg> /MATRIX <record> <id> --settings <fixture copy>
 #      so the contest is set up by the ordinary startup path, exactly as an
 #      operator opening it would.  ONE PROCESS PER RECORD: FoundContest is not
 #      idempotent, so a shared process would make each record depend on the
 #      contests run before it.  See uContestMatrix's header.
-#   3. The variant records are concatenated into <IDENTIFIER>.matrix.
+#   3. The variant records are concatenated into <record-name>.matrix.
+#
+# THE RECORD NAME IS THE CONTEST'S ID WITH EVERY BLANK WRITTEN '_' (Q108 S3,
+# 2026-10-17) -- 'NC QSO PARTY' is NC_QSO_PARTY.matrix -- one rule for a
+# legacy contest and one registered by id.  It is derived in ONE place, the
+# program's uContestMatrix.MatrixRecordName, and arrives here as the list's
+# first field; nothing in these scripts derives it again.  An id IS stored
+# with blanks (a log's contest row, a .cfg), and the scripts could carry them
+# with quoting, but a blank in a file name is a hazard for every reader of
+# this directory -- a word-split loop, an unquoted argument, a tool's path
+# list -- and the '_' costs nothing: no id holds one today, and the program
+# refuses two ids that map to one name.  Name records by that name (or by
+# their id) when freezing some of them.
+#
+# THE APPLICATION MUST HOLD ONLY THE FACTORY'S CONTESTS.  The list carries
+# each contest's class unit, and a unit that is not in src/contestFactory --
+# the unit tests' by-id fixture, linked into the wrong program -- refuses the
+# whole run.  This is the running application's own registry answering, which
+# no lint over the .lpr files can see.
 #
 # THE STATION VARIANTS, AND WHY THESE FOUR
 #   us       K0AAA, Kansas.  A US station that is the host of no state party.
@@ -65,6 +84,7 @@ MATRIX_FROZEN="$MATRIX_DIR/frozen"
 MATRIX_SETTINGS="$MATRIX_DIR/settings/tr4w.json"
 MATRIX_TRMASTER="$MATRIX_DIR/MATRIX-TRMASTER.DTA"
 MATRIX_TARGET="$MATRIX_REPO_ROOT/tr4w/target"
+MATRIX_FACTORY_SRC="$MATRIX_REPO_ROOT/tr4w/src/contestFactory"
 MATRIX_EXE_SRC="$MATRIX_REPO_ROOT/build-out/app-i386-win32/tr4w_fpc.exe"
 MATRIX_EXE="matrix-run.exe"
 MATRIX_WORK="$MATRIX_REPO_ROOT/build-out/contest-matrix-work"
@@ -149,24 +169,25 @@ matrix_write_cfg(){
    } > "$f"
 }
 
-# matrix_run_one <record-file> <ordinal> <spelling> <label> <call> <state> <section> <grid>
-# Appends one variant's record to <record-file>.  Returns 3 when another TR4W
-# holds the install's mutex, which the caller treats as fatal: every later run
-# would be refused the same way.
+# matrix_run_one <record-file> <id> <label> <call> <state> <section> <grid>
+# Appends one variant's record to <record-file>.  The id is both the .cfg's
+# CONTEST spelling and the contest /MATRIX is asked for.  Returns 3 when
+# another TR4W holds the install's mutex, which the caller treats as fatal:
+# every later run would be refused the same way.
 matrix_run_one(){
-   local rec="$1" ord="$2" spelling="$3" label="$4"
-   local call="$5" state="$6" section="$7" grid="$8"
+   local rec="$1" id="$2" label="$3"
+   local call="$4" state="$5" section="$6" grid="$7"
    local run="$MATRIX_WORK/run" rc
 
    rm -rf "$run"
    mkdir -p "$run" || return 1
-   matrix_write_cfg "$run/MATRIX.CFG" "$call" "$state" "$section" "$grid" "$spelling"
+   matrix_write_cfg "$run/MATRIX.CFG" "$call" "$state" "$section" "$grid" "$id"
    cp "$MATRIX_SETTINGS" "$run/tr4w.json" || return 1
    cp "$MATRIX_TRMASTER" "$run/MATRIX-TRMASTER.DTA" || return 1
 
    ( cd "$MATRIX_TARGET" && MSYS_NO_PATHCONV=1 timeout 60 "./$MATRIX_EXE" \
         "$(cygpath -w "$run/MATRIX.CFG")" /MATRIX "$(cygpath -w "$run/out.matrix")" \
-        "$ord" --settings "$(cygpath -w "$run/tr4w.json")" >/dev/null 2>&1 )
+        "$id" --settings "$(cygpath -w "$run/tr4w.json")" >/dev/null 2>&1 )
    rc=$?
 
    matrix_line "### variant $label: MY CALL=$call MY STATE=$state MY SECTION=$section MY GRID=$grid" >> "$rec"
@@ -184,14 +205,33 @@ matrix_run_one(){
    return 0
 }
 
-# matrix_run <out-dir> [IDENTIFIER ...]
-# Writes one <IDENTIFIER>.matrix per contest into <out-dir> (emptied first).
-# No identifiers means every contest.  Prints a progress dot per contest and a
+# matrix_check_units <list-file> -- every contest the application lists comes
+# from a unit in src/contestFactory.  Prints each one that does not and
+# returns 1; a contest with no class (an empty unit) is the engine's, not a
+# unit's, and passes.
+matrix_check_units(){
+   local list="$1" bad=0 name id unit rest
+   while IFS='|' read -r name id unit rest; do
+      [ -n "$unit" ] || continue
+      if [ -z "$(find "$MATRIX_FACTORY_SRC" -maxdepth 1 -iname "$unit.pas" 2>/dev/null | head -1)" ]; then
+         echo "contest-matrix: REFUSING -- the application registers '$id' from unit $unit," >&2
+         echo "                which is not in tr4w/src/contestFactory.  A test fixture" >&2
+         echo "                (tr4w/test/unit) linked into tr4w.lpr?  See Lint-ContestUnitsLinked." >&2
+         bad=1
+      fi
+   done < "$list"
+   return $bad
+}
+
+# matrix_run <out-dir> [RECORD-NAME-OR-ID ...]
+# Writes one <record-name>.matrix per contest into <out-dir> (emptied first).
+# No names means every contest; a name is a record name (NC_QSO_PARTY) or the
+# id it comes from ("NC QSO PARTY").  Prints a progress dot per contest and a
 # count at the end.  Non-zero when the run could not be done at all.
 matrix_run(){
    local out="$1"; shift
    local list="$MATRIX_WORK/contests.tsv"
-   local n=0 rc ord ident spelling p df host want s key hcall hsection hgrid
+   local n=0 rc name id unit p df host want s key hcall hsection hgrid
 
    matrix_preflight || return 1
    mkdir -p "$MATRIX_WORK" || return 1
@@ -210,24 +250,33 @@ matrix_run(){
       return 1
    fi
 
+   # The list is CRLF; the last field's CR is stripped in the loop below, and
+   # here, for the unit check, the whole file is read through tr.
+   tr -d '\r' < "$list" > "$list.lf"
+   if ! matrix_check_units "$list.lf"; then
+      rm -f "$MATRIX_TARGET/$MATRIX_EXE"
+      return 1
+   fi
+
    # '|', NOT A TAB: IFS whitespace collapses two adjacent separators, so an
-   # empty field (Colorado's DF) would shift every field after it.
-   while IFS='|' read -r ord ident spelling p df host; do
-      host="${host%$'\r'}"
-      [ -n "$ident" ] || continue
+   # empty field (Colorado's DF) would shift every field after it.  Every use
+   # of name and id below is QUOTED: an id holds blanks.
+   while IFS='|' read -r name id unit p df host; do
+      [ -n "$name" ] || continue
 
       if [ $# -gt 0 ]; then
          want=0
          for s in "$@"; do
-            [ "$s" = "$ident" ] && want=1
+            [ "$s" = "$name" ] && want=1
+            [ "$s" = "$id" ] && want=1
          done
          [ $want -eq 1 ] || continue
       fi
 
-      rec="$out/$ident.matrix"
+      rec="$out/$name.matrix"
       : > "$rec"
 
-      matrix_run_one "$rec" "$ord" "$spelling" us K0AAA KS KS EM17
+      matrix_run_one "$rec" "$id" us K0AAA KS KS EM17
       rc=$?
       [ $rc -eq 3 ] && break
 
@@ -238,23 +287,23 @@ matrix_run(){
          case "$host" in
             VE*) hcall=VE7AAA; hsection=BC; hgrid=CN89 ;;
          esac
-         matrix_run_one "$rec" "$ord" "$spelling" us-host "$hcall" "$key" "$hsection" "$hgrid"
+         matrix_run_one "$rec" "$id" us-host "$hcall" "$key" "$hsection" "$hgrid"
          rc=$?
          [ $rc -eq 3 ] && break
       fi
 
-      matrix_run_one "$rec" "$ord" "$spelling" ve VE3AAA ON ON FN03
+      matrix_run_one "$rec" "$id" ve VE3AAA ON ON FN03
       rc=$?
       [ $rc -eq 3 ] && break
 
-      matrix_run_one "$rec" "$ord" "$spelling" dx DL1AAA "" DX JO62
+      matrix_run_one "$rec" "$id" dx DL1AAA "" DX JO62
       rc=$?
       [ $rc -eq 3 ] && break
 
       n=$((n+1))
       printf '.'
       [ $((n % 50)) -eq 0 ] && printf ' %d\n' "$n"
-   done < "$list"
+   done < "$list.lf"
    printf '\n'
 
    rm -f "$MATRIX_TARGET/$MATRIX_EXE"

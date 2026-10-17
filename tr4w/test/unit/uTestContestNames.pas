@@ -290,8 +290,8 @@ begin
          end;
       CheckEquals(ContestId(known[k]), offered[k], 'value ' + IntToStr(k));
       end;
-   CheckEquals(Ord(High(ContestType)) + 1, Length(offered),
-               'today, exactly the legacy contests');
+   CheckTrue(Length(offered) >= Ord(High(ContestType)) + 1,
+             'every legacy contest, then any registered by id (Q108 S3)');
    for k := 0 to High(offered) do
       begin
       if k > Ord(High(ContestType)) then

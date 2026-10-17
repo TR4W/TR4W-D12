@@ -38,16 +38,24 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   ---------------------------------------------------------------------------
 
       tr4w.exe /MATRIXLIST <out-file>
-          Every ContestType but the first (DUMMYCONTEST, ordinal 0, which is
-          "no contest"), one per line, separated by '|':
-              ordinal  identifier  .cfg spelling  P  DF  host state
-          The script reads it to know what to run. It is THE ENUM ITERATED,
-          so no contest is named anywhere -- here or in the script.
+          Every contest the registry knows but NoContest ("no contest"), one
+          per line, separated by '|':
+              record-name  id  class-unit  P  DF  host state
+          The script reads it to know what to run. It is THE REGISTRY
+          ITERATED (KnownContests), so no contest is named anywhere -- here or
+          in the script -- and a contest registered by its id (Q108 S3) is
+          run like any other. The record name is MatrixRecordName(id), the
+          ONE place the frozen file's name is derived; the class's unit lets
+          the script refuse an application whose registry holds a contest
+          from outside src/contestFactory (the unit tests' fixture, say).
 
-      tr4w.exe <work>\<stem>.cfg /MATRIX <out-file> <requested-ordinal>
+      tr4w.exe <work>\<stem>.cfg /MATRIX <out-file> <requested-id>
           The contest the .cfg selects, booted by the ordinary startup path,
           captured, then Halt. Positioned where /EXPORT is, for the same
           reason: the config, the log and the contest are all set up by then.
+          The requested contest is named by its ID (Q108 S3; it was the
+          legacy ordinal), so a contest with no legacy number can be asked
+          for.
 
   ONE CONTEST PER PROCESS, AND THAT IS NOT A CONVENIENCE. FoundContest is not
   idempotent: it ADDS to the domestic country list (only ReadInConfigFile
@@ -66,7 +74,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   WHAT ONE RECORD CONTAINS
   ---------------------------------------------------------------------------
 
-    identity   requested vs selected ContestType, the class (or none)
+    identity   requested vs selected contest -- its id and its legacy number,
+               if it has one -- and the class (or none)
     setup      the session's kinds (six Active* at M0; four since M11 S3
                and S4 deleted the prefix and DX kinds), the doing.* flags,
                the CTY modes, every engine global
@@ -155,12 +164,19 @@ interface
 (* tr4w.exe /MATRIXLIST <out-file>. Returns the process exit code. *)
 function RunContestMatrixList(const aOutFile: string): integer;
 
-(* tr4w.exe <cfg> /MATRIX <out-file> <requested-ordinal>. Returns the process
+(* tr4w.exe <cfg> /MATRIX <out-file> <requested-id>. Returns the process
   exit code: 0 written, 1 misused, 2 the record could not be written. A
   contest whose capture RAISES still exits 0 -- the record says what raised,
   and that is the behaviour being frozen. *)
 function RunContestMatrix(const aOutFile: string;
                           const aRequested: string): integer;
+
+(* THE NAME OF A CONTEST'S FROZEN RECORD, from its id: the id with every blank
+  written '_' (tr4w/test/contest-matrix/frozen/<name>.matrix). ONE RULE for
+  every contest, legacy or registered by id -- Q108 S3. '' when the id cannot
+  be a portable file name (a character a file system or the '|'-separated
+  list refuses), which /MATRIXLIST refuses as a whole. *)
+function MatrixRecordName(const aId: string): string;
 
 implementation
 
@@ -376,6 +392,73 @@ begin
 end;
 
 
+function MatrixRecordName(const aId: string): string;
+var
+   i: integer;
+begin
+   Result := '';
+   if aId = '' then
+      begin
+      Exit;
+      end;
+   for i := 1 to Length(aId) do
+      begin
+      if (Ord(aId[i]) < 32) or (Ord(aId[i]) > 126) or
+         (Pos(aId[i], '\/:*?"<>|') > 0) then
+         begin
+         Result := '';
+         Exit;
+         end;
+      if aId[i] = ' ' then
+         begin
+         Result := Result + '_';
+         end
+      else
+         begin
+         Result := Result + aId[i];
+         end;
+      end;
+end;
+
+(* A CONTEST AS A RECORD SPELLS IT INSIDE AN EXCHANGE: its enum member's name
+  when it has a legacy number -- what every record has always printed -- and
+  its id when it was registered by id and has no member to print. *)
+function ContestText(aContest: TContestHandle): string;
+var
+   n: integer;
+begin
+   if ContestLegacyNumber(aContest, n) then
+      begin
+      Result := EnumText(TypeInfo(ContestType), n);
+      end
+   else if ContestId(aContest) <> '' then
+      begin
+      Result := ContestId(aContest);
+      end
+   else
+      begin
+      (* A byte that names no contest is said plainly, as it always was. *)
+      Result := EnumText(TypeInfo(ContestType), aContest.ToByte);
+      end;
+end;
+
+(* THE IDENTITY LINES' VALUE (Q108 S3): the id, then the legacy number in
+  brackets, or that there is none. *)
+function IdentityText(aContest: TContestHandle): string;
+var
+   n: integer;
+begin
+   if ContestLegacyNumber(aContest, n) then
+      begin
+      Result := ContestId(aContest) + ' (legacy number ' + IntToStr(n) + ')';
+      end
+   else
+      begin
+      Result := ContestId(aContest) + ' (no legacy number)';
+      end;
+end;
+
+
 (* ------------------------------------------------------------------------ *)
 (* /MATRIXLIST                                                              *)
 (* ------------------------------------------------------------------------ *)
@@ -383,11 +466,14 @@ end;
 function RunContestMatrixList(const aOutFile: string): integer;
 var
    list: TStringList;
+   names: TStringList;
    known: TContestHandleList;
-   k, number: integer;
+   k: integer;
    identity: TContestBase;
    hostState: string;
    partyFlag: string;
+   recordName: string;
+   classUnit: string;
 begin
    if aOutFile = '' then
       begin
@@ -397,24 +483,47 @@ begin
       end;
 
    list := TStringList.Create;
+   names := TStringList.Create;
    try
       list.LineBreak := MATRIX_LINE_BREAK;
+      names.Sorted := True;
+      names.CaseSensitive := False;
 
-      (* EVERY KNOWN CONTEST BUT NoContest, IN HANDLE ORDER -- Q108 S2. That
-        is every legacy number from 1 up, the order the enum walk this
-        replaced visited. NoContest is DUMMYCONTEST, "no contest" --
-        FoundContest itself treats it as not-a-contest and it cannot be
-        opened. The line still names the legacy number and the enum
-        member; a contest with no legacy number (Q108 S3) is listed by id
-        when S3 changes this format, so it is not listed here. *)
+      (* EVERY KNOWN CONTEST BUT NoContest, IN HANDLE ORDER -- every legacy
+        number from 1 up, the order the enum walk this replaced visited,
+        then (Q108 S3) every contest registered by id. NoContest is
+        DUMMYCONTEST, "no contest" -- FoundContest itself treats it as
+        not-a-contest and it cannot be opened. *)
       known := KnownContests;
       for k := 0 to High(known) do
          begin
-         if (known[k] = NoContest) or
-            (not ContestLegacyNumber(known[k], number)) then
+         if known[k] = NoContest then
             begin
             Continue;
             end;
+
+         (* THE RECORD'S FILE NAME, AND IT MUST BE ONE. An id no file system
+           can hold, or two ids that become the same file name (the
+           case-insensitive file systems this runs on included), would make
+           a record overwrite another or fail to be written -- refused
+           here, whole, before anything is run. *)
+         recordName := MatrixRecordName(ContestId(known[k]));
+         if recordName = '' then
+            begin
+            EarlyTrace('[Matrix] the id ''' + ContestId(known[k]) +
+                       ''' cannot be a record''s file name');
+            Result := 1;
+            Exit;
+            end;
+         if names.IndexOf(AnsiString(recordName)) >= 0 then
+            begin
+            EarlyTrace('[Matrix] two contests share the record name ''' +
+                       recordName + '''');
+            Result := 1;
+            Exit;
+            end;
+         names.Add(AnsiString(recordName));
+
          (* EVERY FIELD IS ASKED OF THE CONTEST (M10 S6). The fourth field
            was the row's party index P and is now 1 or 0 -- whether the
            contest is a QSO party. matrix-lib.sh only ever tested it against
@@ -432,13 +541,26 @@ begin
             begin
             partyFlag := '0';
             end;
+         (* THE UNIT THAT REGISTERED IT: the class's unit, so the script can
+           refuse an application whose registry holds a contest that does
+           not live in src/contestFactory -- the unit tests' fixture above
+           all. '' for a contest with no class. *)
+         if ContestClassFor(known[k]) <> nil then
+            begin
+            classUnit := string(ContestClassFor(known[k]).UnitName);
+            end
+         else
+            begin
+            classUnit := '';
+            end;
+
          (* '|', NOT A TAB. A shell reading with IFS=tab collapses two
            adjacent tabs into one, so an EMPTY field -- Colorado's DF -- moved
            every field after it one place left. '|' is not whitespace to the
-           shell and appears in no spelling. *)
-         list.Add(AnsiString(IntToStr(number) + '|' +
-                  EnumText(TypeInfo(ContestType), number) + '|' +
+           shell, and MatrixRecordName refuses an id holding one. *)
+         list.Add(AnsiString(recordName + '|' +
                   ContestId(known[k]) + '|' +
+                  classUnit + '|' +
                   partyFlag + '|' +
                   identity.DomesticFileName + '|' +
                   hostState));
@@ -455,6 +577,7 @@ begin
             end;
       end;
    finally
+      names.Free;
       list.Free;
    end;
 end;
@@ -464,32 +587,32 @@ end;
 (* /MATRIX -- identity and setup                                            *)
 (* ------------------------------------------------------------------------ *)
 
-procedure CaptureIdentity(aRequested: integer);
+procedure CaptureIdentity(const aRequested: string);
 var
    klass: TContestBase;
+   requested: TContestHandle;
+   found: boolean;
 begin
    Emit('== identity');
-   if (aRequested >= Ord(Low(ContestType))) and
-      (aRequested <= Ord(High(ContestType))) then
+   (* THE REQUEST IS AN ID (Q108 S3), resolved as the registry resolves one
+     -- exactly, case aside, never through an alias, so a legacy name cannot
+     stand in for the contest it now means. *)
+   found := FindContestById(aRequested, requested);
+   if found then
       begin
-      EmitField('contest.requested',
-                IntToStr(aRequested) + ' ' +
-                EnumText(TypeInfo(ContestType), aRequested));
+      EmitField('contest.requested', IdentityText(requested));
       end
    else
       begin
-      EmitField('contest.requested', IntToStr(aRequested) + ' (not a ContestType)');
+      EmitField('contest.requested', aRequested + ' (no such contest)');
       end;
 
    (* SELECTED IS WHAT THE .cfg's CONTEST LINE ACTUALLY CHOSE. A spelling that
-     two members share selects the first, so the second is unreachable from a
-     .cfg -- a difference between these two lines is that finding. *)
-   (* THE LEGACY NUMBER IS THE HANDLE'S BYTE (Q108 S2), so this line is
-     what Ord(Contest) printed. *)
-   EmitField('contest.selected',
-             IntToStr(Contest.ToByte) + ' ' +
-             EnumText(TypeInfo(ContestType), Contest.ToByte));
-   if Contest.ToByte <> aRequested then
+     two contests shared would select the first, so the second would be
+     unreachable from a .cfg -- a difference between these two lines is that
+     finding. *)
+   EmitField('contest.selected', IdentityText(Contest));
+   if (not found) or (Contest <> requested) then
       begin
       Emit('SELECTION MISMATCH: the .cfg spelling did not select the requested contest');
       end;
@@ -1024,7 +1147,7 @@ procedure DescribeExchange(const aRX: ContestExchange; aParts: TStringList);
    end;
 
 begin
-   Part('contest', EnumText(TypeInfo(ContestType), aRX.ceContest.ToByte));
+   Part('contest', ContestText(aRX.ceContest));
    Part('call', string(aRX.Callsign));
    Part('band', EnumText(TypeInfo(BandType), Ord(aRX.Band)));
    Part('mode', EnumText(TypeInfo(ModeType), Ord(aRX.Mode)) + '/' +
@@ -1966,13 +2089,10 @@ end;
 
 function RunContestMatrix(const aOutFile: string;
                           const aRequested: string): integer;
-var
-   requested: integer;
 begin
-   requested := StrToIntDef(AnsiString(aRequested), -1);
-   if (aOutFile = '') or (requested < 0) then
+   if (aOutFile = '') or (aRequested = '') then
       begin
-      logger.Error('[Matrix] usage: tr4w.exe <cfg> /MATRIX <out-file> <ordinal>');
+      logger.Error('[Matrix] usage: tr4w.exe <cfg> /MATRIX <out-file> <contest id>');
       Result := 1;
       Exit;
       end;
@@ -1988,7 +2108,7 @@ begin
         place is still recorded in the others -- and the record says it
         raised, which is the behaviour being frozen. *)
       try
-         CaptureIdentity(requested);
+         CaptureIdentity(aRequested);
       except
          on E: Exception do
             begin

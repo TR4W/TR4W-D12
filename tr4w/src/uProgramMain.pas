@@ -890,7 +890,7 @@ begin
       '  /EXPORT            headless ADIF and Cabrillo export, then exit' + sLineBreak +
       '  /IMPORT <file.adi> headless ADIF import into this contest, then exit' + sLineBreak +
       '  /RESCORE           recompute every QSO''s scoring, then exit' + sLineBreak +
-      '  /MATRIX <out> <n>  write this contest''s legacy-fixture record, then exit' + sLineBreak +
+      '  /MATRIX <out> <id> write this contest''s legacy-fixture record, then exit' + sLineBreak +
       '  /MATRIXLIST <out>  list every contest for the matrix, then exit' + sLineBreak +
       '  /IMPORTLOG <log.trw> [<log.db>]' + sLineBreak +
       '                     convert a binary log to a SQLite log, then exit' + sLineBreak +
@@ -1447,7 +1447,7 @@ begin
       Halt(RunLogImport);
       end;
 
-   (* /MATRIXLIST -- the contest matrix's list of every ContestType. It reads
+   (* /MATRIXLIST -- the contest matrix's list of every known contest. It reads
      only compiled tables, so it needs nothing below; see uContestMatrix. *)
    if UpperCase(ParamStr(1)) = '/MATRIXLIST' then
       begin
@@ -2424,7 +2424,8 @@ begin
      Halt(0);
      end;
 
-  (* /MATRIX <out-file> <ordinal> -- THE CONTEST MATRIX (milestone M0).
+  (* /MATRIX <out-file> <contest id> -- THE CONTEST MATRIX (milestone M0; the
+     contest is named by its id since Q108 S3).
 
      HERE, BESIDE /EXPORT, for /EXPORT's reason: the .cfg has been read, the
      contest set up and the log opened, by the same path an operator's start

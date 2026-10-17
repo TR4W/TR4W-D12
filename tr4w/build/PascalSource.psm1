@@ -236,19 +236,38 @@ function Get-PascalEnumMembers
       [Parameter(Mandatory = $true)][string] $TypeName
    )
 
+   $set = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
+   foreach ($member in (Get-PascalEnumMemberList -Path $Path -TypeName $TypeName))
+   {
+      [void]$set.Add($member)
+   }
+   return ,$set
+}
+
+# THE SAME MEMBERS, IN DECLARATION ORDER, as written (case kept) -- for a
+# question about the ORDER, which a set cannot answer: Lint-FrozenContestNumbers
+# (Q108 S3), where a member's position is its persisted number. The one parse
+# both functions share; an empty list when the type is not found.
+function Get-PascalEnumMemberList
+{
+   param(
+      [Parameter(Mandatory = $true)][string] $Path,
+      [Parameter(Mandatory = $true)][string] $TypeName
+   )
+
    $text = Get-PascalCodeOnlyText -Path $Path -BlankStrings
    $rx   = '(?<![\w.])' + [regex]::Escape($TypeName) + '\s*=\s*\((?<body>[^)]*)\)'
    $m    = [regex]::Match($text, $rx, 'IgnoreCase')
-   $set  = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
+   $list = New-Object 'System.Collections.Generic.List[string]'
    if ($m.Success)
    {
       foreach ($item in $m.Groups['body'].Value.Split(','))
       {
          $im = [regex]::Match($item, '^\s*([A-Za-z_]\w*)')
-         if ($im.Success) { [void]$set.Add($im.Groups[1].Value) }
+         if ($im.Success) { $list.Add($im.Groups[1].Value) }
       }
    }
-   return ,$set
+   return ,$list
 }
 
 # Fixtures for the parser itself. Exported so every consumer's -SelfTest can run
@@ -339,4 +358,5 @@ function Invoke-PascalSourceSelfTest
 
 Export-ModuleMember -Function Get-PascalCodeOnlyLine, Get-PascalCodeOnlyLines,
                               Get-PascalCodeOnlyText, Get-TR4WPascalFiles,
-                              Get-PascalEnumMembers, Invoke-PascalSourceSelfTest
+                              Get-PascalEnumMembers, Get-PascalEnumMemberList,
+                              Invoke-PascalSourceSelfTest

@@ -37,9 +37,25 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   HANDLE IS ITS LEGACY NUMBER, Ord(member). ContestHandleOf and
   LegacyContestOf state it, and they are the only conversion between the two
   in the program. So a D7 .TRW, a D7 peer, the server's log and the
-  log-compare packet keep meaning exactly what they meant. (S3 adds contests
-  that register by id alone; they will get handles above the legacy range at
-  the registry's seal, and S4 keeps those off the wire.)
+  log-compare packet keep meaning exactly what they meant.
+
+  A CONTEST WITH NO LEGACY NUMBER REGISTERS BY ITS ID (Q108 S3, 2026-10-17):
+  RegisterContestById. It has no ContestType member -- that enum is FROZEN
+  (Lint-FrozenContestNumbers) -- and its handle is assigned when the registry
+  SEALS, from Ord(High(ContestType)) + 1 up, in id order (CompareText), so the
+  same set of linked contests gives the same handles in every program. S4
+  keeps such a handle off the wire; until then no real contest may register
+  this way (design 8.2u), and the one that does is the unit-test program's
+  fixture.
+
+  THE SEAL. The first question that could depend on WHICH contests exist --
+  an id, a class, an identity, the known list -- seals the registry. After
+  that every registration RAISES, legacy or by id, so a unit that registers
+  too late (or one that asks too early, from its initialization section)
+  fails the program on launch instead of silently missing a contest. Only
+  the legacy-number arithmetic (ContestHandleOf, ContestLegacyNumber,
+  LegacyContestOf, ContestBroadcastNumber) never seals: its answer does not
+  depend on what is registered.
 
   A CONTEST'S ID IS HELD HERE. For a legacy contest it IS its ContestTypeSA
   spelling -- the name every SQLite log's contest row and every .cfg stores
@@ -49,9 +65,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   it.
 
   A DUPLICATE REGISTRATION IS REFUSED, and so is a registration after the
-  contest's identity was asked for -- the radio registry learned that the
-  hard way, where a duplicate display name made a model invisible in the list
-  rather than raising anything.
+  seal -- the radio registry learned that the hard way, where a duplicate
+  display name made a model invisible in the list rather than raising
+  anything.
 
   NOT EVERY CONTEST HAS A CLASS: DUMMYCONTEST ("no contest", NoContest) has
   none, and ContestClassFor answers nil for it. ContestIdentity still answers,
@@ -84,6 +100,29 @@ type
   and not something anyone reads as an ordering. *)
 procedure RegisterContest(aContest: ContestType; aCls: TContestClass);
 
+(* Registers aCls as the class serving the contest whose ID -- its stored
+  name, what a log's contest row and a .cfg's CONTEST = line hold -- is aId.
+  For a contest with NO legacy number (Q108 S3). Its handle is assigned at
+  the seal (see the unit header).
+
+  RAISES when ContestIdRefusal refuses aId, on a nil class, past the
+  255-handle cap, and after the seal. *)
+procedure RegisterContestById(const aId: string; aCls: TContestClass);
+
+(* WHY aId CANNOT BE A NEW CONTEST'S ID, or '' when it can. Refused: an
+  empty id; one with leading or trailing blanks (a name is trimmed when it is
+  read back, so it could never be found); a character outside printable
+  ASCII (it goes into a .cfg line and the matrix's file names); a legacy
+  contest's ContestTypeSA spelling; a legacy alias in
+  uContestNames.LEGACY_CONTEST_NAMES (an id once written to a file is never
+  given to another contest -- Q105); and an id already registered by id.
+  Every comparison ignores case, as the name resolver does. *)
+function ContestIdRefusal(const aId: string): string;
+
+(* THE FIRST HANDLE A CONTEST REGISTERED BY ID CAN HAVE -- one above the last
+  legacy number. *)
+function FirstByIdContestHandle: TContestHandle;
+
 (* THE LEGACY NUMBER RULE, BOTH WAYS -- Q108 S2.
 
   ContestHandleOf: the handle of a legacy contest, which is its legacy number.
@@ -113,7 +152,8 @@ function LegacyContestOf(aHandle: TContestHandle): ContestType;
 function ContestBroadcastNumber(aHandle: TContestHandle): integer;
 
 (* THE CONTEST'S ID -- its stored name. For a legacy contest, its
-  ContestTypeSA spelling; '' for a handle that names no contest. *)
+  ContestTypeSA spelling; for one registered by id, that id; '' for a handle
+  that names no contest. *)
 function ContestId(aHandle: TContestHandle): string;
 
 (* True when aHandle names a contest -- i.e. it has an id. NoContest does
@@ -129,8 +169,9 @@ function FindContestById(const aId: string;
 
 (* EVERY CONTEST THAT HAS AN ID, NoContest INCLUDED, IN HANDLE ORDER -- the
   walk for a question about every contest the program knows by name (the
-  matrix's list, the New Contest choices). Today that is every legacy number
-  in order, which is the order the enum walks it replaced visited. *)
+  matrix's list, the New Contest choices). Every legacy number in order --
+  the order the enum walks it replaced visited -- then every contest
+  registered by id, in handle order, which is id order. *)
 function KnownContests: TContestHandleList;
 
 (* The class serving aContest, or nil when nothing has been registered for it.
@@ -279,16 +320,206 @@ implementation
 uses
    SysUtils,
    SyncObjs,
+   uContestNames,      (* LEGACY_CONTEST_NAMES -- an alias is never a new id *)
    uContestStateQSOPartyBase;
+
+type
+   (* ONE REGISTRATION BY ID, HELD UNTIL THE SEAL gives it a handle. *)
+   TByIdRegistration = class
+   public
+      Id: string;
+      Cls: TContestClass;
+   end;
 
 var
    (* Indexed by the handle's byte: 256 slots, one per possible handle. *)
    GRegistry: array[Byte] of TContestClass;
 
+   (* The id of each contest registered by id, at its handle; '' elsewhere.
+      A legacy contest's id is ContestTypeSA's, read there. *)
+   GById: array[Byte] of string;
+
+   (* The registrations by id, in the order they arrived, until the seal. *)
+   GPending: array of TByIdRegistration;
+   GSealed: boolean;
+
    (* ContestIdentity's instances, one per handle asked about, built on first
-      ask, and the lock that serialises building them. *)
+      ask, and the lock that serialises building them -- and the seal. *)
    GIdentity: array[Byte] of TContestBase;
    GIdentityLock: TCriticalSection;
+
+function FirstByIdContestHandle: TContestHandle;
+begin
+   Result := TContestHandle.FromByte(Ord(High(ContestType)) + 1);
+end;
+
+(* SEAL THE REGISTRY: give every contest registered by id its handle, in id
+  order, from FirstByIdContestHandle up. Runs once, under the lock, from
+  EnsureSealed. A simple insertion sort: there are at most 68. *)
+procedure SealRegistry;
+var
+   i, j, b: integer;
+   t: TByIdRegistration;
+begin
+   for i := 1 to High(GPending) do
+      begin
+      t := GPending[i];
+      j := i - 1;
+      (* CompareText: ASCII case folding, no locale, so the order is the same
+         on every machine. The casts are lossless -- ContestIdRefusal admits
+         printable ASCII only. *)
+      while (j >= 0) and
+            (CompareText(AnsiString(GPending[j].Id), AnsiString(t.Id)) > 0) do
+         begin
+         GPending[j + 1] := GPending[j];
+         dec(j);
+         end;
+      GPending[j + 1] := t;
+      end;
+
+   for i := 0 to High(GPending) do
+      begin
+      b := FirstByIdContestHandle.ToByte + i;
+      GRegistry[b] := GPending[i].Cls;
+      GById[b] := GPending[i].Id;
+      GPending[i].Free;
+      end;
+   GPending := nil;
+   GSealed := True;
+end;
+
+(* THE FIRST LOOKUP SEALS. Double-checked: after the seal this is one read of
+  a boolean, so a per-QSO question pays nothing. GSealed is written last,
+  after every table it guards, and under the lock. *)
+procedure EnsureSealed;
+begin
+   if GSealed then
+      begin
+      Exit;
+      end;
+   GIdentityLock.Acquire;
+   try
+      if not GSealed then
+         begin
+         SealRegistry;
+         end;
+   finally
+      GIdentityLock.Release;
+      end;
+end;
+
+(* A registration after the seal -- one message for both kinds. *)
+procedure RefuseIfSealed(const aWhat: string; aCls: TContestClass);
+begin
+   if GSealed then
+      begin
+      raise Exception.CreateFmt(
+         '%s registered for %s after the contest registry was sealed -- ' +
+         'something already asked which contests exist. Register from the ' +
+         'unit''s initialization section, and ask nothing of the registry ' +
+         'from one.',
+         [aCls.ClassName, aWhat]);
+      end;
+end;
+
+function ContestIdRefusal(const aId: string): string;
+var
+   i: integer;
+   c: ContestType;
+begin
+   Result := '';
+   if aId = '' then
+      begin
+      Result := 'an empty id names no contest';
+      Exit;
+      end;
+   if Trim(aId) <> aId then
+      begin
+      Result := 'an id with leading or trailing blanks could never be found -- ' +
+                'a name is trimmed when it is read back';
+      Exit;
+      end;
+   for i := 1 to Length(aId) do
+      begin
+      if (Ord(aId[i]) < 32) or (Ord(aId[i]) > 126) then
+         begin
+         Result := 'an id is printable ASCII -- it goes into a .cfg line, a ' +
+                   'log''s contest row and a file name';
+         Exit;
+         end;
+      end;
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      if UnicodeSameText(string(ContestTypeSA[c]), aId) then
+         begin
+         Result := 'it is the stored name of a legacy contest, and a stored ' +
+                   'name is never given to another contest (Q105)';
+         Exit;
+         end;
+      end;
+   for i := Low(LEGACY_CONTEST_NAMES) to High(LEGACY_CONTEST_NAMES) do
+      begin
+      if UnicodeSameText(LEGACY_CONTEST_NAMES[i].Name, aId) then
+         begin
+         Result := 'it is a legacy alias of ' + LEGACY_CONTEST_NAMES[i].Id +
+                   ', and a stored name is never given to another contest (Q105)';
+         Exit;
+         end;
+      end;
+   for i := 0 to High(GPending) do
+      begin
+      if UnicodeSameText(GPending[i].Id, aId) then
+         begin
+         Result := 'another class has already registered it';
+         Exit;
+         end;
+      end;
+   for i := 0 to 255 do
+      begin
+      if UnicodeSameText(GById[i], aId) then
+         begin
+         Result := 'another class has already registered it';
+         Exit;
+         end;
+      end;
+end;
+
+procedure RegisterContestById(const aId: string; aCls: TContestClass);
+var
+   refusal: string;
+   r: TByIdRegistration;
+begin
+   if aCls = nil then
+      begin
+      raise Exception.CreateFmt('RegisterContestById(''%s'') was given a nil class.', [aId]);
+      end;
+
+   refusal := ContestIdRefusal(aId);
+   if refusal <> '' then
+      begin
+      raise Exception.CreateFmt('%s cannot register as ''%s'': %s.',
+                                [aCls.ClassName, aId, refusal]);
+      end;
+
+   RefuseIfSealed('''' + aId + '''', aCls);
+
+   (* THE CAP: one byte of handle, so 256 handles, the legacy ones first.
+      Design 8.2u: it lasts as long as ContestExchange is both the in-memory
+      QSO and the wire record. *)
+   if FirstByIdContestHandle.ToByte + Length(GPending) > 255 then
+      begin
+      raise Exception.CreateFmt(
+         '%s cannot register as ''%s'': every one-byte contest handle is taken ' +
+         '(the cap is 256, NoContest included -- design 8.2u).',
+         [aCls.ClassName, aId]);
+      end;
+
+   r := TByIdRegistration.Create;
+   r.Id := aId;
+   r.Cls := aCls;
+   SetLength(GPending, Length(GPending) + 1);
+   GPending[High(GPending)] := r;
+end;
 
 function ContestHandleOf(aContest: ContestType): TContestHandle;
 begin
@@ -329,13 +560,14 @@ function ContestId(aHandle: TContestHandle): string;
 var
    n: integer;
 begin
+   EnsureSealed;
    if ContestLegacyNumber(aHandle, n) then
       begin
       Result := string(ContestTypeSA[ContestType(n)]);
       end
    else
       begin
-      Result := '';
+      Result := GById[aHandle.ToByte];
       end;
 end;
 
@@ -387,14 +619,17 @@ end;
 procedure RegisterContest(aContest: ContestType; aCls: TContestClass);
 var
    h: TContestHandle;
+   who: string;
 begin
    h := ContestHandleOf(aContest);
+   (* THE SPELLING, NOT ContestId -- asking the registry would seal it. *)
+   who := string(ContestTypeSA[aContest]);
 
    if aCls = nil then
       begin
       raise Exception.CreateFmt(
          'RegisterContest(%s) was given a nil class.',
-         [ContestId(h)]);
+         [who]);
       end;
 
    if GRegistry[h.ToByte] <> nil then
@@ -402,26 +637,22 @@ begin
       raise Exception.CreateFmt(
          'Two classes claim %s: %s is already registered and %s tried to ' +
          'register as well. One contest, one class.',
-         [ContestId(h), GRegistry[h.ToByte].ClassName, aCls.ClassName]);
+         [who, GRegistry[h.ToByte].ClassName, aCls.ClassName]);
       end;
 
-   (* A REGISTRATION AFTER THE CONTEST WAS ASKED ABOUT. ContestIdentity would
-      already hold a plain TContestBase for it and keep answering from the
-      row, silently. Registration belongs in a unit's initialization, which
-      runs before anything asks. *)
-   if GIdentity[h.ToByte] <> nil then
-      begin
-      raise Exception.CreateFmt(
-         '%s registered for %s after the contest''s identity was already ' +
-         'asked for. Register from the unit''s initialization section.',
-         [aCls.ClassName, ContestId(h)]);
-      end;
+   (* A REGISTRATION AFTER THE SEAL (Q108 S3; before it, after this contest's
+      identity was asked). An identity already built would be a plain
+      TContestBase answering neutrally for the contest, silently.
+      Registration belongs in a unit's initialization, which runs before
+      anything asks. *)
+   RefuseIfSealed(who, aCls);
 
    GRegistry[h.ToByte] := aCls;
 end;
 
 function ContestClassFor(aContest: TContestHandle): TContestClass;
 begin
+   EnsureSealed;
    Result := GRegistry[aContest.ToByte];
 end;
 
@@ -454,6 +685,9 @@ function ContestIdentity(aContest: TContestHandle): TContestBase;
 var
    b: Byte;
 begin
+   (* SEALED BEFORE THE LOCK is taken: the constructor below asks ContestId,
+      which must then find the registry already sealed and take no lock. *)
+   EnsureSealed;
    b := aContest.ToByte;
    GIdentityLock.Acquire;
    try
@@ -592,6 +826,12 @@ begin
       begin
       FreeAndNil(GIdentity[i]);
       end;
+   (* A program that never asked anything never sealed. *)
+   for i := 0 to High(GPending) do
+      begin
+      GPending[i].Free;
+      end;
+   GPending := nil;
 end;
 
 initialization

@@ -169,6 +169,9 @@ class Registry:
 
    DECL_RX = re.compile(r"\b(T\w+)\s*=\s*class\s*\(\s*(T\w+)\s*\)", re.I)
    REG_RX = re.compile(r"RegisterContest\(\s*(\w+)\s*,\s*(T\w+)\s*\)", re.I)
+   # A CONTEST REGISTERED BY ITS STRING ID (Q108 S3) -- no ContestType member,
+   # so nothing below can key it. The declaration (`const aId`) is not a call.
+   BYID_RX = re.compile(r"RegisterContestById\(\s*(?!const\s)([^,()]+),\s*(T\w+)\s*\)", re.I)
    METH_RX = re.compile(r"^\s*(?:procedure|function)\s+(T\w+)\.(\w+)", re.I | re.M)
    BODY_RX = re.compile(r"^\s*function\s+(T\w+)\.(\w+)\s*:\s*\w+\s*;(.*?)^\s*end\s*;", re.I | re.M | re.S)
 
@@ -188,6 +191,14 @@ class Registry:
             if member is None:
                raise SystemExit(f"{rel}: RegisterContest names {m.group(1)}, which is not a ContestType member")
             regs.append((member, m.group(2).upper()))
+         # FAIL CLOSED, NOT SILENT: the inventory is keyed by the frozen enum,
+         # and a contest registered by id would simply vanish from it. No real
+         # contest registers that way before Q108 S4; the first one to (S5)
+         # extends Contests and Registry with an id-keyed entry, here.
+         for m in self.BYID_RX.finditer(code):
+            raise SystemExit(f"{rel}: {m.group(2)} registers by id (RegisterContestById) -- "
+                             "the inventory does not model a contest with no ContestType member yet; "
+                             "extend tools/contest-rules-inventory/model.py (design 8.2u, S5)")
          for m in self.METH_RX.finditer(code):
             methods.setdefault(m.group(1).upper(), set()).add(m.group(2).upper())
          for m in self.BODY_RX.finditer(dump.text(rel, strings=True)):

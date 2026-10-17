@@ -14,7 +14,16 @@ The vast majority of plumbing — exchange parsing, Cabrillo formatting, dupe ha
 
 ## 2. Anatomy of a contest definition
 
-`VC.pas` gets **two** entries, in the same position:
+> **SINCE Q108 S3 (2026-10-17) THE `ContestType` ENUM IS FROZEN, AND A NEW
+> CONTEST HAS NO ENTRY IN `VC.pas`.** `Lint-FrozenContestNumbers` fails the
+> build if a member is added -- appended included -- removed, reordered or
+> renamed. A new contest registers by its string id
+> (`RegisterContestById`), and **no real contest may do so until Q108 S4**
+> is in -- see `ADDING_A_CONTEST.md`, "A NEW CONTEST REGISTERS BY ITS ID".
+> The table below describes the 188 LEGACY contests, which is how every
+> existing contest was added; S5 rewrites this document.
+
+`VC.pas` holds **two** entries per LEGACY contest, in the same position:
 
 | Where | What it holds |
 |---|---|
@@ -32,7 +41,7 @@ spelling table and the row's `QP:` column are gone (M10 S2-S4, 2026-10-14): a
 contest's scoring is its class's `CalculateQSOPoints` -- see
 [`ADDING_A_CONTEST.md`](ADDING_A_CONTEST.md). There is no point method to set.
 
-**Adding to the end of the enum is the safe move** — appending keeps existing on-disk binary log files, config files and the multi-op packet compatible. Reordering the enum will break those files.
+~~**Adding to the end of the enum is the safe move**~~ — **not any more (Q108 S3): the enum is frozen.** Appending kept existing binary log files, config files and the multi-op packet compatible, but an appended member would now collide with the handles the registry gives contests registered by id, which start one above the last member. Reordering the enum would break those files, and still would.
 
 ### Where the old row's fields went (M10 S8)
 

@@ -191,7 +191,7 @@ var
    k: integer;
    obj: TContestBase;
    c: ContestType;
-   classes: integer;
+   classes, n: integer;
 begin
    BeginTest('Test_EveryRegisteredContestConstructs');
    (* THE REGISTRY'S CONTESTS (Q108 S1). ContestsToWalk raises below a floor,
@@ -224,6 +224,14 @@ begin
          end;
       CheckTrue(ContestClassFor(c) <> nil, string(ContestTypeSA[c]) + ' has a registered class');
       inc(classes);
+      end;
+   (* PLUS EVERY CONTEST REGISTERED BY ID, which no enum walk can count. *)
+   for k := 0 to High(contests) do
+      begin
+      if not ContestLegacyNumber(HandleOf(contests[k]), n) then
+         begin
+         inc(classes);
+         end;
       end;
    CheckEquals(classes, Length(contests), 'the registry walk visits every registered contest');
 end;
@@ -2147,25 +2155,40 @@ begin
       CheckTrue(ContestIdentity(h) = ContestIdentity(c), who + ': one identity object');
       end;
 
-   (* EVERY KNOWN CONTEST IS A LEGACY ONE TODAY, in handle order. *)
+   (* THE KNOWN CONTESTS BEGIN WITH EVERY LEGACY ONE, in handle order. A
+      contest registered by id follows them (Q108 S3); uTestContestById
+      walks that half. *)
    known := KnownContests;
-   CheckEquals(Ord(High(ContestType)) + 1, Length(known),
-               'today the registry knows exactly the legacy contests');
-   for k := 0 to High(known) do
+   CheckTrue(Length(known) >= Ord(High(ContestType)) + 1,
+             'the registry knows every legacy contest');
+   for k := 0 to Ord(High(ContestType)) do
       begin
+      if k > High(known) then
+         begin
+         Break;
+         end;
       CheckEquals(k, known[k].ToByte, 'known contest ' + IntToStr(k) + ' in handle order');
       end;
 
-   (* ABOVE THE LEGACY RANGE: nothing. *)
+   (* ABOVE THE LEGACY RANGE: no legacy number, ever -- and a handle no
+      contest registered by id holds names nothing. *)
    for k := Ord(High(ContestType)) + 1 to 255 do
       begin
       h := TContestHandle.FromByte(k);
       CheckFalse(ContestLegacyNumber(h, n), 'byte ' + IntToStr(k) + ' has no legacy number');
       CheckEquals(0, n, 'byte ' + IntToStr(k) + ': and the number is zeroed');
       CheckTrue(LegacyContestOf(h) = DUMMYCONTEST, 'byte ' + IntToStr(k) + ': no member');
-      CheckEquals('', ContestId(h), 'byte ' + IntToStr(k) + ': no id');
-      CheckFalse(IsKnownContest(h), 'byte ' + IntToStr(k) + ': not a known contest');
-      CheckTrue(ContestClassFor(h) = nil, 'byte ' + IntToStr(k) + ': no class');
+      if ContestClassFor(h) = nil then
+         begin
+         CheckEquals('', ContestId(h), 'byte ' + IntToStr(k) + ': no id');
+         CheckFalse(IsKnownContest(h), 'byte ' + IntToStr(k) + ': not a known contest');
+         end
+      else
+         begin
+         CheckTrue(ContestId(h) <> '', 'byte ' + IntToStr(k) + ': a by-id contest has its id');
+         CheckTrue(FindContestById(ContestId(h), found) and (found = h),
+                   'byte ' + IntToStr(k) + ': and its id finds it');
+         end;
       end;
    CheckFalse(FindContestById('', found), 'an empty id finds nothing');
    CheckTrue(found = NoContest, 'and answers NoContest');
@@ -2484,7 +2507,9 @@ begin
          Continue;
          end;
 
-      CheckEquals(Ord(c), found.ToByte,
+      (* THE HANDLE, NOT THE MEMBER: a contest registered by id has no
+         member, and its id must resolve to it all the same (Q108 S3). *)
+      CheckEquals(HandleOf(contests[k]).ToByte, found.ToByte,
                   who + ': its own id [' + id + '] resolves to ' +
                   ContestId(found));
       end;

@@ -39,6 +39,22 @@ def enum_members(vc, e):
    return re.findall(r"[A-Za-z_]\w*", body)
 
 
+def record_member(path, contests):
+   """The ContestType member a frozen matrix record is for. Since Q108 S3 a
+   record is named by the contest's ID (blanks as '_'), so the member is read
+   from the record's own identity line -- 'contest.requested = <id> (legacy
+   number N)' -- never from the file name. A record with no legacy number is
+   a contest registered by id, which this measurement (over the frozen kind
+   enums) does not model: refused, not skipped."""
+   for line in open(path, encoding="latin-1"):
+      m = re.match(r"contest\.requested = .* \(legacy number (\d+)\)\s*$", line)
+      if m:
+         return contests.enum[int(m.group(1))]
+      if line.startswith("contest.requested = "):
+         raise SystemExit(f"{path}: a contest with no legacy number -- kind-reach does not model one")
+   raise SystemExit(f"{path}: no contest.requested line")
+
+
 def session_reach(dump, contests, reg):
    """{enum: {VALUE: {contests}}} -- trait U matrix U DescribeSession."""
    session = {e: collections.defaultdict(set) for e in ENUMS}
@@ -48,7 +64,7 @@ def session_reach(dump, contests, reg):
          if v:
             session[e][v.upper()].add(c)
    for path in glob.glob(os.path.join(ROOT, "tr4w", "test", "contest-matrix", "frozen", "*.matrix")):
-      c = os.path.basename(path)[:-len(".matrix")]
+      c = record_member(path, contests)
       for line in open(path, encoding="latin-1"):
          m = re.match(r"active\.(\w+) = (\S+)", line)
          if not m:

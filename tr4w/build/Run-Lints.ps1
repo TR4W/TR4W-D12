@@ -58,6 +58,17 @@ $lints = @(
    # M10 S8 deleted the other two tables (a stale entry fails).
    # docs/CONTEST_FACTORY_M10_PLAN.md, S0 and S8.
    @{ Name = 'Lint-NoContestTables'; Arg = $src;   NeedsFpc = $false }
+   # THE ContestType ENUM IS FROZEN (Q108 S3, 2026-10-17). A member's position
+   # is a persisted contest number (.TRW, multi-op packet, server log), so no
+   # member is ever added, removed, reordered or renamed: a new contest
+   # registers by its id (RegisterContestById). Compares a hash of the ordered
+   # member list.
+   @{ Name = 'Lint-FrozenContestNumbers'; Arg = $src; NeedsFpc = $false }
+   # A CONTEST UNIT NOT LINKED IS A CONTEST THAT DOES NOT EXIST, silently
+   # (Q108 S3). Every factory unit that registers a contest is in tr4w.lpr AND
+   # the unit-test program; a test fixture contest is in the test program only
+   # and never reaches the application or the server.
+   @{ Name = 'Lint-ContestUnitsLinked'; Arg = $Tr4wDir; NeedsFpc = $false }
    # EVERY STATE QSO PARTY SHIPS BOTH ITS .dom FILES. Each party class's
    # InStateDomesticFileName names <base>.dom and <base>_cty.dom; both must be
    # in target\dom and named in full.nsi (PA, AZ and MO once shipped without

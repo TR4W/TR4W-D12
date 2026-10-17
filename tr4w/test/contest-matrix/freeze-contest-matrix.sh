@@ -8,7 +8,7 @@
 # ---------------------------------------------------------------------------
 #   1. ONCE, BEFORE THE FIRST MOVE (milestone M0).  The records then say what
 #      every contest did before any of its rules moved into a class.
-#   2. FOR A NEW ContestType, which has no record yet: name it, and only it.
+#   2. FOR A NEW CONTEST, which has no record yet: name it, and only it.
 #   3. WHEN A RULE GENUINELY CHANGED ON PURPOSE -- a sponsor changed it, or a
 #      defect was fixed deliberately -- for the contests that change reaches,
 #      and only those.
@@ -29,10 +29,12 @@
 # Build-App.ps1 first; the binary frozen from is printed below.
 #
 # Usage:
-#   bash tr4w/test/contest-matrix/freeze-contest-matrix.sh --reason "<why>" [IDENTIFIER ...]
-#     no identifiers   re-freeze EVERY contest (replaces the whole frozen set)
-#     identifiers      re-freeze only those contests (the ContestType names,
-#                      e.g. FLORIDAQSOPARTY), leaving every other record alone
+#   bash tr4w/test/contest-matrix/freeze-contest-matrix.sh --reason "<why>" [NAME ...]
+#     no names   re-freeze EVERY contest (replaces the whole frozen set)
+#     names      re-freeze only those contests, leaving every other record
+#                alone.  A name is a record's name -- the contest's id with
+#                every blank written '_', e.g. FLORIDA_QSO_PARTY -- or the id
+#                itself, quoted ("FLORIDA QSO PARTY").  See matrix-lib.sh.
 set -u
 
 . "$(dirname "${BASH_SOURCE[0]}")/matrix-lib.sh"
@@ -70,7 +72,7 @@ if [ "${MATRIX_CAPTURED:-0}" -eq 0 ]; then
 fi
 if [ $# -gt 0 ] && [ "$MATRIX_CAPTURED" -ne $# ]; then
    echo "=== freeze FAILED -- $# contest(s) named, $MATRIX_CAPTURED captured; nothing was written ==="
-   echo "    Name them by ContestType identifier, e.g. FLORIDAQSOPARTY."
+   echo "    Name them by record name (FLORIDA_QSO_PARTY) or quoted id ('FLORIDA QSO PARTY')."
    exit 1
 fi
 

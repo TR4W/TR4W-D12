@@ -128,9 +128,11 @@ in `UsesBand`. Tests call `ScoreQSO`, never the rule directly.
 
 **There is no row any more.** `ContestsArray`, `ContestsBooleanArray` and
 `QSOParties` were deleted at M10 S8 (2026-10-14): every contest's class states
-what its row held, and a NEW contest has no row to read -- it adds its
-`ContestType` member and its `ContestTypeSA` spelling (appended, both) and
-writes its class from the sponsor's rules. To see what an EXISTING contest's
+what its row held, and a NEW contest has no row to read -- and, since Q108 S3
+(2026-10-17), **no `ContestType` member either**: the enum is frozen
+(`Lint-FrozenContestNumbers`), and a new contest registers by its string id
+(see "A NEW CONTEST REGISTERS BY ITS ID" below). It writes its class from the
+sponsor's rules. To see what an EXISTING contest's
 row said, read it in git history (before S8) or in the class's own header,
 which quotes it. `ADDING_A_NEW_CONTEST.md` section 2 maps each old field to
 the getter that states it now. ARRL Field Day's row was:
@@ -428,16 +430,62 @@ registered contest's `DomesticFileName`, `InStateDomesticFileName` and its
 The installer ships the whole directory (`File ..\target\dom\*.*`), so a file
 there is a file shipped.
 
-**WHAT A NEW CONTEST STILL TOUCHES, UNTIL Q108 S3** (it still needs a
-`ContestType` member, appended): its class and its `RegisterContest`; the two
-`.lpr` lines; its own test unit; its `.dom` files; `VC.pas`'s member and
-`ContestTypeSA` spelling; a row in each `array[ContestType]` pin table (the
-compiler insists, and there are exactly two: `uTestContestIdentityPin`'s
-`IDENTITY_PINS` and `uTestContestKindPin`'s `KIND_PINS`); and its name in the per-contest SETS and `case`s
-of the pin units **wherever it answers other than the base** -- a set that
-leaves it out pins it as "has none" and fails. It no longer moves a single
-count. The rest goes with S3, when a contest can register by id: the frozen
-pins do not grow, and the invariants above are what hold it.
+### A NEW CONTEST REGISTERS BY ITS ID (Q108 S3, 2026-10-17)
+
+**THE `ContestType` ENUM IS FROZEN.** A member's position is a persisted
+contest number -- the byte in every `.TRW` record, multi-op packet and server
+log -- and `Lint-FrozenContestNumbers` fails the build if the ordered member
+list changes at all: no member added (appended included), removed, reordered
+or renamed. A new contest has no member and no `ContestTypeSA` spelling.
+
+**BUT NO REAL CONTEST MAY REGISTER BY ID UNTIL Q108 S4 IS IN** (design 8.2u):
+S4 refuses such a contest on the multi-op network and gives it a
+`<contestnr>`. Until then a new contest cannot be added at all -- the enum is
+frozen and the id route is not yet safe on the wire. The one contest that
+registers by id today is the unit tests' fixture, `uContestTestFixture`.
+
+**THE STEPS, once S4 is in:**
+
+1. **The class**, `src/contestFactory/uContest<Name>.pas`, stating its rules
+   (everything in sections 1 and 3), ending
+   `initialization RegisterContestById('<ID>', TContest<Name>);`. **The id is
+   stored data from that moment** (every log's contest row and every `.cfg`
+   holds it; Step 3c governs a rename). `uContestRegistry.ContestIdRefusal`
+   says what an id may not be: empty, blank-padded, non-ASCII, a legacy
+   contest's `ContestTypeSA` spelling, a legacy alias
+   (`uContestNames.LEGACY_CONTEST_NAMES`), or another by-id contest's id --
+   `RegisterContestById` raises on each, and on a registration after the
+   registry's SEAL (the first lookup). Its handle is assigned at the seal, from
+   `FirstByIdContestHandle` (one above the last legacy number) up, in id order;
+   it has no legacy number (`ContestLegacyNumber` answers False,
+   `LegacyContestOf` DUMMYCONTEST), so no enum-keyed pin table can name it.
+2. **One uses line in each program file**: `tr4w.lpr` and
+   `test/unit/tr4w_unit_tests.lpr`. `Lint-ContestUnitsLinked` fails the build
+   on a factory contest unit missing from either -- or present in
+   `tr4wserver.lpr`.
+3. **Its tests**: its own `uTestContest<Name>.pas` and its `RegisterSuite`
+   line. The registry walks (`ContestsToWalk`) hold it to every invariant
+   without an edit; the frozen pin tables (`IDENTITY_PINS`, `KIND_PINS`, the
+   key and column pins) are over the legacy contests and do NOT grow.
+4. **Its frozen matrix record**, by name: `freeze-contest-matrix.sh --reason
+   "..." "<ID>"`. The record file is the id with blanks as `_`.
+5. **Its data**: its `.dom` files in `target/dom` (a party: `<base>.dom` and
+   `<base>_cty.dom`); the installer's wildcard ships them.
+6. **One regeneration** after the commit:
+   `python tools/contest-rules-inventory/generate.py`. **Its `model.py`
+   refuses a by-id contest in the factory today** (it is keyed by the enum and
+   would otherwise drop it silently); the first real by-id contest (S5)
+   extends it.
+
+Nothing in `VC.pas`, no pin row, no count, no `case` arm, no exception list,
+no `full.nsi` line.
+
+**A TEST-ONLY CONTEST** registers by id from a unit under `tr4w/test/unit`,
+named in the test `.lpr` only. `Lint-ContestUnitsLinked` fails the build if
+`tr4w.lpr` or `tr4wserver.lpr` names it,
+`uTestContestById.Test_TheFixtureIsNotInTheApplication` reads `tr4w.lpr` for
+it, and the contest matrix refuses an application whose `/MATRIXLIST` names a
+contest from a unit outside `src/contestFactory`.
 
 ---
 
@@ -1077,7 +1125,7 @@ never recomputes them.
 | Cabrillo / ADIF exchange columns | **the golden corpus** — they are in the QSO lines, which `golden_diff.py` compares. Verified: `%-7s` → `%-8s` gives `FAIL arrl_fd cbr` |
 | Cabrillo *header* | **nothing, EXCEPT `CLAIMED-SCORE:`** — `golden_diff.py` drops every other header line (`golden_diff.py:87-88` keeps that one). It is arithmetic over the log's STORED points, so a per-QSO scoring change still does not move it; a change to the total-score formula or a bonus does (corrected 2026-10-01). For every contest, **the contest matrix's `totals` section** (M6) |
 | exchange validation and parsing | **the contest matrix's `parse` section** (M5b) -- a fixed list of typed exchanges through the real `ParametersOkay`, for every contest; and `uTestContestParse` for a class's own rule. **Nothing sees the window**: whether a refusal's message reaches the screen, and whether the caret lands after the bad token, are `BENCH_QUEUE.md`'s |
-| set-up, per-QSO scoring and export of **every** `ContestType`, classless included | **the contest matrix** — `bash tr4w/test/contest-matrix/run-contest-matrix.sh` (below) |
+| set-up, per-QSO scoring and export of **every** contest the registry knows (by id too, since Q108 S3) | **the contest matrix** — `bash tr4w/test/contest-matrix/run-contest-matrix.sh` (below) |
 
 So a parse change is seen as "same as before" by the matrix and as "right" by
 nobody -- a refusal NY4I ruled (design 7.10) is a re-freeze with that reason,
@@ -1085,16 +1133,17 @@ and the typed-entry check belongs in `BENCH_QUEUE.md`.
 
 ### The contest matrix -- the legacy fixture (milestone M0, built 2026-10-01)
 
-**What it is.** One headless harness, `tr4w.exe <cfg> /MATRIX <out> <ordinal>`
+**What it is.** One headless harness, `tr4w.exe <cfg> /MATRIX <out> <id>`
 (`src/uContestMatrix.pas`), driven by `tr4w/test/contest-matrix/`. For every
-`ContestType` but `DUMMYCONTEST` -- the program lists them itself with
-`/MATRIXLIST`, so nothing names a contest -- and for four station variants
+contest the registry knows but `DUMMYCONTEST` -- the program lists them itself
+with `/MATRIXLIST` (`KnownContests`), so nothing names a contest, and a
+contest registered by id is run like any other -- and for four station variants
 (`us` K0AAA/KS, `us-host` for a contest with a host state, `ve` VE3AAA/ON,
 `dx` DL1AAA), it boots the contest through the ordinary `.cfg` path and records:
 
 | section | what | the milestone it gates |
 |---|---|---|
-| `identity` | requested vs selected `ContestType`, the class or none | M1 |
+| `identity` | requested vs selected contest -- `<id> (legacy number N)` since Q108 S3 (it was `N MEMBER`), the class or none | M1 |
 | `setup` | the six `Active*` (seven before M10 S4; the point method's line left at S1), the CTY modes, every engine global `FoundContest` writes, the domestic countries, the county-line answer, the CW memories, **every setting that differs from a fresh settings object** | M2, M7a (185 identical, no re-freeze), M7b |
 | `scoring` | per synthetic QSO (17: CW, phone, FM, RTTY, FT8; 160 to 2 m incl. 30 m and 6 m; every continent; a sparse exchange), every field `/RESCORE` writes -- through `MainUnit.RecomputeQSOScoring`, the rescore's own body. The `keys` section below scores 19 more the same way | M3, M8 |
 | `export.adif` / `export.cabrillo` | those QSOs appended to a scratch log, then the **real** `ExportToADIF` and `CreateCabrilloFile`: every ADIF record, and the Cabrillo `CONTEST:` and `QSO:` lines | M1, M4 |
@@ -1145,9 +1194,21 @@ they reached (design §8.2c) -- the procedure below.
 and never writes the frozen files. A record that moved is a finding: find out
 why. Only a rule that changed **on purpose** -- a sponsor's change, or a defect
 fixed deliberately -- justifies `freeze-contest-matrix.sh --reason "..."
-IDENTIFIER...`, for the contests that change reaches and no others, with the
+NAME...`, for the contests that change reaches and no others, with the
 reason and what moved in the commit message. The script refuses to run without
-a reason. A new `ContestType` is frozen the same way, by name.
+a reason. A new contest is frozen the same way, by name.
+
+**A RECORD IS NAMED BY ITS CONTEST'S ID, BLANKS AS `_`** (Q108 S3,
+2026-10-17): `frozen/NC_QSO_PARTY.matrix` is `NC QSO PARTY`, one rule for a
+legacy contest and one registered by id. The name is derived ONCE, by the
+program (`uContestMatrix.MatrixRecordName`), and arrives as `/MATRIXLIST`'s
+first field; `/MATRIXLIST` refuses an id that is no portable file name and two
+ids that map to one. Name a record to freeze by that name or by its id, quoted.
+A reader that needs the contest reads the record's own `contest.requested`
+line, never the file name (`tools/dom-crosscheck`,
+`tools/contest-factory-m11/kind-reach.py`). The 187 files were renamed from the
+enum member with `git mv` and re-frozen for the identity lines alone, proved
+first: 1,168 identity lines over 584 variants changed, 0 other lines.
 
 It fails closed: no contests captured, a frozen record with no fresh one, a
 fresh record never frozen, or any byte difference exits 1. A record carrying

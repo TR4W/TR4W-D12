@@ -4,7 +4,7 @@
 # WHEN THE MATRIX WAS FROZEN?
 #
 # The legacy-fixture harness of docs/CONTEST_OWNERSHIP_DESIGN.md (milestone M0),
-# and the gate for M1 to M4: for every ContestType and every station variant it
+# and the gate for M1 to M4: for every contest and every station variant it
 # boots the contest headless (tr4w.exe <cfg> /MATRIX ...), records the set-up,
 # the per-QSO scoring of a fixed synthetic QSO table and the real exporters'
 # output, and byte-compares the result against tr4w/test/contest-matrix/frozen.
@@ -15,7 +15,7 @@
 #   export-d12-corpus.sh    13 registered contests; blind to set-up, per-QSO
 #                           points and every contest with no class
 #   test-contest-factory.sh scoring, but over the same 13 logs
-#   THIS                    EVERY ContestType, classless included, under four
+#   THIS                    EVERY contest the registry knows, under four
 #                           station variants: set-up (the seven Active*
 #                           values, every setting contest set-up writes, the
 #                           domestic countries, the county-line answer, the CW

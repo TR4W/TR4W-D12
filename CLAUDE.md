@@ -268,7 +268,7 @@ factory.~~ **SQLITE IS NO LONGER OUT OF SCOPE — IT IS THE LOG** (started 2026-
 compiled into `tr4w.lpr`. Read [`docs/ADDING_A_CONTEST.md`](docs/ADDING_A_CONTEST.md), and its
 section 4 before believing a green run: the golden corpus is blind to scoring, and
 `tr4w/test/corpus/test-contest-factory.sh` (13 logs) and the contest matrix
-(`tr4w/test/contest-matrix/run-contest-matrix.sh`, every `ContestType`) are what is not. **Count the units with
+(`tr4w/test/contest-matrix/run-contest-matrix.sh`, every contest the registry knows) are what is not. **Count the units with
 `ls tr4w/src/contestFactory` rather than writing a number here.**
 ~~Still out of scope: 64-bit.~~ **64-BIT IS NO LONGER OUT OF SCOPE, AND THE
 APP COMPILES AND LINKS FOR x86_64-win64** (2026-09-14):
@@ -1613,7 +1613,7 @@ Read the specific doc before acting in its area — these are current and this f
 | **Band plan: frequency memories and band-map cutoffs (DESIGN, nothing built)** | **[`docs/BAND_PLAN_SETTINGS_DESIGN.md`](docs/BAND_PLAN_SETTINGS_DESIGN.md)** -- the two rows that are unsafe to render as ordinary settings, and why |
 | Legacy removal plan | **archived** — `docs/migration_interim_artifacts/LEGACY_DEPENDENCY_AUDIT.md`, `.../PHASE_INVENTORIES.md`. The legacy radio path was deleted 2026-08-02 and live `asm` is zero |
 | CW keyer factory | `docs/CW_Keyer_Factory_Plan.md` |
-| Adding a contest -- the DATA (a new `ContestType` and its `ContestTypeSA` spelling, a `.cfg`; no `VC.pas` row since M10 S8) | `docs/ADDING_A_NEW_CONTEST.md` |
+| Adding a contest -- the DATA (the LEGACY contests' `ContestType` and `ContestTypeSA` -- FROZEN since Q108 S3, a new contest has no `VC.pas` entry; its `.dom` files) | `docs/ADDING_A_NEW_CONTEST.md` |
 | **Adding a contest to the FACTORY -- the class, and which oracle sees what** | **`docs/ADDING_A_CONTEST.md`** -- read section 4 before believing a green run: the golden corpus is BLIND to scoring; `test-contest-factory.sh` and the contest matrix (`tr4w/test/contest-matrix`) are not |
 | **What a contest OWNS -- the factory's target shape (DESIGN; NY4I's ruling 2026-10-01)** | **`docs/CONTEST_OWNERSHIP_DESIGN.md`** -- a contest class owns its rules outright through `TContestBase` virtuals (scoring, parsing, ADIF import interpretation, ADIF/Cabrillo export, setup, total score); NO shared strategies and NO registries; family bases only for one family under one rule; a look-alike contest starts as a COPY it owns. Holds the migration order M0-M10, the checkable definition of "a contest has moved", the rotated `QSOPointMethodArray` finding (moot: that table went at M10 S2, and the point method itself as a concept at M10 S4) and open questions Q1-Q13 |
 | **M10, the contest-factory endpoint -- the STAGED plan (S0-S9)** | **`docs/CONTEST_FACTORY_M10_PLAN.md`** -- measured at `de62e724` with `tools/contest-factory-m10/`; re-measure before acting on a number. Deleting the legacy scoring case changes no registered contest (checked two ways, design §8.2s); the six multiplier/exchange KIND enums outlive M10 and go at M11 |
@@ -1716,10 +1716,16 @@ a model check to a base class. **Never** add it to `logradio.pas`.
 
 ### Add a contest
 Read [`docs/ADDING_A_NEW_CONTEST.md`](docs/ADDING_A_NEW_CONTEST.md) and
-[`docs/ADDING_A_CONTEST.md`](docs/ADDING_A_CONTEST.md). A new `ContestType` member and its
-`ContestTypeSA` spelling in `VC.pas` (appended), a class in `src/contestFactory/` that states its
-rules -- set-up in its `DescribeSession`, not in `fcontest.pas` -- and its `.dom` files in
-`target/dom/` if it has domestic multipliers. **No `.cfg` goes there** -- `target/dom` holds
+[`docs/ADDING_A_CONTEST.md`](docs/ADDING_A_CONTEST.md). ~~A new `ContestType` member and its
+`ContestTypeSA` spelling in `VC.pas` (appended)~~ -- **THE ENUM IS FROZEN SINCE Q108 S3
+(2026-10-17)**: `Lint-FrozenContestNumbers` fails the build on any member added (appended
+included), removed, reordered or renamed, because a member's position is a persisted contest
+number. A new contest registers by its string id (`RegisterContestById`), with **no `VC.pas`
+entry** -- and **no real contest may do so until Q108 S4** (the multi-op refusal) is in, so
+until then no new contest can be added at all. Then: a class in `src/contestFactory/` that
+states its rules -- set-up in its `DescribeSession`, not in `fcontest.pas` -- one line in each
+of `tr4w.lpr` and the test `.lpr` (`Lint-ContestUnitsLinked` holds the two together), and its
+`.dom` files in `target/dom/` if it has domestic multipliers. **No `.cfg` goes there** -- `target/dom` holds
 `.dom` files only, and the two templates that sat there (Idaho, Delaware) never shipped and
 were deleted 2026-10-15 (NY4I).
 

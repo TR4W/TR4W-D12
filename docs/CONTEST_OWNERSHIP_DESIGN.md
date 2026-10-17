@@ -3984,6 +3984,84 @@ No new contest yet, so nothing that is persisted changes.
   comparisons).
 
 **S3 -- `RegisterContestById`, the seal, and the gates that know about it.**
+
+> **S3 IS BUILT (2026-10-17, uncommitted at hand-back).** `uContestRegistry`
+> (604 -> 844 lines): `RegisterContestById`, `ContestIdRefusal` (empty,
+> blank-padded, a character outside printable ASCII, a `ContestTypeSA`
+> spelling, a `LEGACY_CONTEST_NAMES` alias, a duplicate -- all
+> case-insensitive), `FirstByIdContestHandle` (188), and THE SEAL: the first
+> call that depends on what is registered (`ContestId`, `ContestClassFor`,
+> `ContestIdentity`, `KnownContests` and everything over them) sorts the
+> pending by-id registrations by `CompareText` and gives them handles 188 up;
+> every registration after it RAISES, legacy ones too (the old "after this
+> contest's identity was asked" rule, generalised). Only `ContestHandleOf`,
+> `ContestLegacyNumber`, `LegacyContestOf` and `ContestBroadcastNumber` never
+> seal. The cap (68 by-id contests) raises at registration. No init section
+> in either program asks the registry, measured -- both start.
+> **FOUND WHILE BUILDING, AND FIXED: the `.TRW` import's S2 check was
+> `IsKnownContest`**, which a by-id contest's handle passes, so a damaged
+> record byte of 188 would have opened as the fixture in the test program
+> (and as a real by-id contest after S5). It asks `ContestLegacyNumber` now
+> (exit 1 cannot contain such a contest), and `uTestLogImport` imports both a
+> byte no contest holds and the fixture's handle.
+> **THE FIXTURE** is `test/unit/uContestTestFixture` (`TR4W-TEST-FIXTURE`, an
+> RST + serial contest on `TContestBase`, every rule stated), linked by the
+> test `.lpr` only; `uTestContestById` (8 tests) pins its handle, the
+> known-list order, the resolver, the walk, the choices and the CONTEST
+> vocabulary, the refusals and the seal, and that `tr4w.lpr` does not name
+> it. EVERY S1 WALK MET IT: two needed a fix (`Test_EveryRegisteredContestConstructs`
+> counted only enum members; `Test_EveryContestResolvesItsOwnADIFId`
+> compared `Ord(member)` -- now the handle), and two S2 assertions of "today,
+> exactly the legacy contests" became "the legacy ones first". Every other
+> walk passed unchanged -- which is the S1 claim, now measured.
+> **THE MATRIX IS KEYED BY ID.** `/MATRIX <out> <id>`; `/MATRIXLIST` lists
+> `record-name|id|class-unit|P|DF|host` over `KnownContests`; the record
+> name is `uContestMatrix.MatrixRecordName` -- the id, blanks as `_`, the ONE
+> derivation (decided: the scripts could carry blanks with quoting, but a
+> blank in a file name is a hazard for every reader of the directory, no id
+> holds a `_`, and `/MATRIXLIST` refuses two ids that map to one name and an
+> id that is no portable file name). `matrix-lib.sh` refuses a run whose
+> application lists a contest from a unit outside `src/contestFactory` (the
+> application's own registry answering; control-tested both ways). The
+> identity lines are `contest.requested/selected = <id> (legacy number N)`;
+> an exchange's `contest=` part still prints the member for a legacy contest.
+> THE RENAME: 187 files, 141 `git mv` (46 ids already equalled the member),
+> content untouched; a script compared every renamed record with a fresh run
+> line by line -- **1,168 identity lines changed over 584 variants (2 per
+> variant), 0 other lines** -- then the whole set was re-frozen with that
+> reason; the frozen diff against HEAD is exactly 1,168 / 1,168 lines, all
+> identity lines. `tools/dom-crosscheck` and `kind-reach.py` read the id (or
+> the legacy number) from the record's identity line, never the file name;
+> `kind-reach.py`'s output is identical to HEAD's over the same dump.
+> **THE LINTS** (48 now): `Lint-FrozenContestNumbers` -- SHA-256 of the
+> upper-cased ordered member list, 188, `DUMMYCONTEST` .. `NEBRASKAQSO`;
+> fixture: append, removal, swap, rename and insert change the hash, case
+> and an in-declaration comment do not, and an appended member in a copy of
+> `VC.pas` fails it. `Lint-ContestUnitsLinked` -- a unit whose
+> initialization registers a contest: factory -> both `.lpr` files and not
+> the server's; `tr4w/test` -> the test `.lpr` only; elsewhere -> a failure;
+> floor 150 factory units (187 found); fixture: the readers and all six
+> violation kinds, and live negative controls (the fixture added to
+> `tr4w.lpr`, Xmas removed from the test `.lpr`) both fail it.
+> `PascalSource.psm1` gained `Get-PascalEnumMemberList` (ordered), which
+> `Get-PascalEnumMembers` now builds its set from. The inventory's
+> `model.py` REFUSES (SystemExit) a `RegisterContestById` call in the
+> factory rather than dropping the contest -- S5 extends it with the first
+> real one.
+> **NOT BUILT: `Lint-ContestNameTests`' "no string literal handed to a
+> contest-name lookup outside the factory and the tests"** -- measured at 0
+> sites today (`TryContestFromName`, `ContestFromName`, `FindContestById`,
+> `CurrentContestSpelling`, `FindContestByADIFContestId` with a `'` first
+> argument, over `src`, `tr4wserver`, `tools`), so it is a ceiling of zero
+> still to write.
+> **A CONSEQUENCE TO KNOW: UNTIL S4, NO NEW CONTEST CAN BE ADDED AT ALL** --
+> the enum is frozen and a real contest may not register by id yet.
+> MEASURED SIZE: 4 production units (+442 / -75), 4 tools, 3 matrix scripts,
+> 2 new lints and `Run-Lints`, 2 new test units (fixture 200 lines, suite 317)
+> and 4 changed test units (+71 / -24). Oracles: unit tests 361,288 / 0 plain
+> and checked, heaptrc 13,469 (the ceiling), narrowing 1,244, range 3, 48
+> lints; matrix 187 identical after the stated re-freeze; factory 13
+> identical; corpus 22/0/4 exit 0; ADIF round trip 12/0/1; server builds.
 - `RegisterContestById(id, cls)`: refused for an id that is a `ContestTypeSA`
   spelling or a legacy alias, a duplicate, or after the seal (the existing
   "registered after the identity was asked" rule, generalised); handles from

@@ -133,7 +133,7 @@ function ImportBinaryLog(const aSourceFile, aTargetFile: string;
 implementation
 
 uses
-   uContestRegistry;   (* IsKnownContest -- the first record's contest *)
+   uContestRegistry;   (* ContestLegacyNumber -- the first record's contest *)
 
 const
    (* WHAT SQLITE MAY LEAVE BESIDE A DATABASE. The write-ahead log and its
@@ -206,6 +206,7 @@ var
    db: TLogDatabase;
    repo: TLogRepository;
    rec: ContestExchange;
+   legacyNumber: integer;
 begin
    Result := False;
    aFailure := '';
@@ -259,8 +260,13 @@ begin
                     ContestTypeSA out of range when the log was stamped.
                     Counted as a failed record, so nothing is committed and
                     the staged file is discarded -- no log rather than a
-                    log that names no contest. *)
-                  if not IsKnownContest(rec.ceContest) then
+                    log that names no contest.
+
+                    A LEGACY NUMBER, NOT MERELY A KNOWN HANDLE (Q108 S3): a
+                    .TRW predates every contest registered by id, so a byte
+                    that is such a contest's handle in this build is damaged
+                    data too -- it must not open as that contest. *)
+                  if not ContestLegacyNumber(rec.ceContest, legacyNumber) then
                      begin
                      Inc(aResult.RecordsFailed);
                      aFailure := SysUtils.Format(
