@@ -456,6 +456,10 @@ closes it; anything else reopens it.
   pin tables, installer wildcard) and this registry are ONE piece of work,
   built after the 5.0.28 commit; the design goes into
   `CONTEST_OWNERSHIP_DESIGN.md` as it is built, not ahead of it for review.
+  **Progress (design 8.2u):** S1 committed (`3a375123`); S2 -- the one-byte
+  `TContestHandle`, ids in the registry, legacy numbers unchanged -- built
+  2026-10-16 with every oracle unchanged. S3 waits on NY4I's ruling on
+  renaming the matrix files.
 
 - **Q107** (found checking Nebraska's first matrix record, 2026-10-16) **"An
   out-of-state station works only the host state" is enforced only when a

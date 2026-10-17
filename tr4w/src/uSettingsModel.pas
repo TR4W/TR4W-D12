@@ -3985,6 +3985,25 @@ procedure RegisterSettingValueSpelling(const aPath: string;
 procedure RegisterSettingAllowedValues(const aPath: string;
                                        const aValues: array of string);
 
+(* THE SAME, FROM A FUNCTION ASKED EACH TIME THE VOCABULARY IS READ -- Q108
+  S2, 2026-10-16 (design 8.2u, its first risk).
+
+  FOR A VOCABULARY THAT IS NOT COMPLETE WHEN ITS OWNER'S initialization
+  RUNS. The CONTEST setting is the one: its values are the contest
+  registry's ids, and the contest units register in their own
+  initialization sections, which run AFTER uCFG's (tr4w.lpr uses order).
+  A list copied at registration would silently miss every contest that
+  registered later; a provider is read when Preferences, the refusal or
+  the binding asks, after every unit has initialised.
+
+  A later RegisterSettingAllowedValues for the path replaces the provider,
+  and the other way round -- one vocabulary per path. *)
+type
+   TSettingValuesProvider = function: TArray<string>;
+
+procedure RegisterSettingAllowedValuesProvider(const aPath: string;
+                                               const aProvider: TSettingValuesProvider);
+
 (* THE SPELLING OF A LOG LEVEL -- 'DEBUG' for llDebug -- from the table the
   setting's vocabulary is registered from, so there is still one list. For
   the startup bootstrap, which has to read the stored level out of the file
@@ -4097,6 +4116,9 @@ type
    TRegisteredValues = record
       Path: string;
       Values: TArray<string>;
+      (* When assigned, the vocabulary IS this function's answer and Values
+         is unused -- RegisterSettingAllowedValuesProvider. *)
+      Provider: TSettingValuesProvider;
    end;
 
 var
@@ -4120,6 +4142,7 @@ begin
       if UnicodeSameText(GAllowedValues[i].Path, aPath) then
          begin
          GAllowedValues[i].Values := copied;
+         GAllowedValues[i].Provider := nil;
          Exit;
          end;
       end;
@@ -4128,6 +4151,29 @@ begin
    SetLength(GAllowedValues, n + 1);
    GAllowedValues[n].Path := aPath;
    GAllowedValues[n].Values := copied;
+   GAllowedValues[n].Provider := nil;
+end;
+
+procedure RegisterSettingAllowedValuesProvider(const aPath: string;
+                                               const aProvider: TSettingValuesProvider);
+var
+   i, n: integer;
+begin
+   for i := 0 to High(GAllowedValues) do
+      begin
+      if UnicodeSameText(GAllowedValues[i].Path, aPath) then
+         begin
+         GAllowedValues[i].Values := nil;
+         GAllowedValues[i].Provider := aProvider;
+         Exit;
+         end;
+      end;
+
+   n := Length(GAllowedValues);
+   SetLength(GAllowedValues, n + 1);
+   GAllowedValues[n].Path := aPath;
+   GAllowedValues[n].Values := nil;
+   GAllowedValues[n].Provider := aProvider;
 end;
 
 (* The vocabulary registered for this path, or nil. *)
@@ -4140,7 +4186,14 @@ begin
       begin
       if UnicodeSameText(GAllowedValues[i].Path, aPath) then
          begin
-         Result := GAllowedValues[i].Values;
+         if Assigned(GAllowedValues[i].Provider) then
+            begin
+            Result := GAllowedValues[i].Provider();
+            end
+         else
+            begin
+            Result := GAllowedValues[i].Values;
+            end;
          Exit;
          end;
       end;

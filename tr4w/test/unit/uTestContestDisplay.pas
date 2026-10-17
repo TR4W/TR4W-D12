@@ -1184,7 +1184,7 @@ end;
 function FMQSO(aContest: ContestType): ContestExchange;
 begin
    FillChar(Result, SizeOf(Result), 0);
-   Result.ceContest := aContest;
+   Result.ceContest := ContestHandleOf(aContest);
    Result.Callsign := 'W1AW';
    Result.Band := Band2;
    Result.Mode := FM;
@@ -1320,7 +1320,7 @@ end;
 function CanonicalQSO(aContest: ContestType): ContestExchange;
 begin
    FillChar(Result, SizeOf(Result), 0);
-   Result.ceContest := aContest;
+   Result.ceContest := ContestHandleOf(aContest);
    Result.Callsign := 'W1AW';
    Result.Mode := CW;
    Result.RSTReceived := 0;
@@ -1664,8 +1664,8 @@ begin
    (* THE CHECK CAN FAIL -- a negative control. The ARRL DX family base states
       no display name, so it answers with TContestBase's getter, and the
       comparison above must see them as the same. *)
-   obj := TContestClass(ContestClassFor(ARRLDXCW).ClassParent).Create(ARRLDXCW);
-   parent := TContestBase.Create(ARRLDXCW);
+   obj := TContestClass(ContestClassFor(ARRLDXCW).ClassParent).Create(ContestHandleOf(ARRLDXCW));
+   parent := TContestBase.Create(ContestHandleOf(ARRLDXCW));
    try
       CheckFalse(ClassStatesItself(obj, DisplayNameCode),
                  'a class that states no display name is seen not to');

@@ -113,7 +113,7 @@ procedure TTestADIFExchange.Test_ClassAndSection;
 var
    obj: TContestBase;
 begin
-   obj := TContestBase.Create(DUMMYCONTEST);
+   obj := TContestBase.Create(NoContest);
    try
       (* F25/F26, 2026-10-14 (NY4I): it was the placeholder 'Error generating
          my exchange'. The base states no layout, so the field is '' and the

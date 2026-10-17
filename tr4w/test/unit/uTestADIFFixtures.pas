@@ -563,7 +563,7 @@ begin
    // (2026-10-14): "yes QSO parties allow it". A rover is not a county
    // line; every QSO party, multi-state included, splits a rover's
    // /county call on export, and IN7QPNE states it on its class.
-   CheckEquals(Ord(IN7QPNE), Ord(records[0].ceContest),
+   CheckEquals(Ord(IN7QPNE), records[0].ceContest.ToByte,
                'the fixture imports as IN7QPNE');
    CheckFalse(ContestAllowsCountyLineOnImport(records[0].ceContest),
               'IN7QPNE-style multi-state QP must NOT bypass the import '
@@ -632,7 +632,7 @@ begin
    CheckEquals(Integer(a.RSTReceived), Integer(b.RSTReceived), ctx + ' RSTReceived');
    CheckEquals(Integer(a.NumberSent),     Integer(b.NumberSent),     ctx + ' NumberSent');
    CheckEquals(Integer(a.NumberReceived), Integer(b.NumberReceived), ctx + ' NumberReceived');
-   CheckEquals(Integer(a.ceContest), Integer(b.ceContest), ctx + ' ceContest');
+   CheckEquals(a.ceContest.ToByte, b.ceContest.ToByte, ctx + ' ceContest');
    // Issue #750: X-QSO flag must round-trip through ADIF.  Export
    // emits APP_TR4W_CLAIMEDQSO=0 for X-QSO records (skipped for
    // normal records); import recognizes both that field and the

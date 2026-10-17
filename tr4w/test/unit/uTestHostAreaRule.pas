@@ -75,6 +75,7 @@ type
 implementation
 
 uses
+   uContestRegistry,   (* ContestHandleOf -- a legacy contest's handle, Q108 S2 *)
    SysUtils,
    uSettingsModel,
    uMults,
@@ -359,7 +360,7 @@ end;
    uTestOffBandCredit adds it; it is taken out again. *)
 procedure THostAreaRuleTests.Test_RescoreGivesAnOutOfStateQSOZero;
 var
-   savedContest: ContestType;
+   savedContest: TContestHandle;
    savedByBand: boolean;
    savedByMode: boolean;
    savedDomesticByBand: TAdditionalMultByBand;
@@ -399,7 +400,7 @@ begin
    savedInHostState := StationInHostState;
    hadAda := DomQTHTable.HasPrefix('ADA');
    try
-      Contest := IDAHOQSOPARTY;
+      Contest := ContestHandleOf(IDAHOQSOPARTY);
       StationInHostState := False;
       Settings.Mult.ByBand := False;
       Settings.Mult.ByMode := True;

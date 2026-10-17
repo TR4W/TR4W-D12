@@ -177,7 +177,7 @@ function Make(aContest: ContestType; aInHostState: boolean): TContestBase;
 var
    station: TStationContext;
 begin
-   Result := ContestClassFor(aContest).Create(aContest);
+   Result := ContestClassFor(aContest).Create(ContestHandleOf(aContest));
    FillChar(station, SizeOf(station), 0);
    station.InHostState := aInHostState;
    Result.SetStation(station);

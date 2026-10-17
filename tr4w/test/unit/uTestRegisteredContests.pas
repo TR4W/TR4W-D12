@@ -72,7 +72,7 @@ type
   contest added or removed ever edits it. *)
 function ContestsToWalk: TContestIdentityList;
 
-(* The same, with "no contest" (DUMMYCONTEST, the plain TContestBase the
+(* The same, with "no contest" (NoContest, the plain TContestBase the
   registry answers for it) FIRST -- for an invariant about every identity the
   program can answer with, such as "no ADIF id is claimed twice". *)
 function IdentitiesToWalk: TContestIdentityList;
@@ -83,16 +83,19 @@ function IdentitiesToWalk: TContestIdentityList;
 function NewContestLike(aIdentity: TContestBase;
                         const aStation: TStationContext): TContestBase;
 
+(* WHICH CONTEST aObj IS, as the registry's handle. TContestBase keeps
+  Contest protected on purpose, so that no class branches on it; a test
+  reads it through a descendant declared here (Q108 S2). *)
+function HandleOf(aObj: TContestBase): TContestHandle;
+
 (* WHICH LEGACY CONTEST aObj IS -- for a test that must look the contest up
-  again (a pin, ContestTypeSA, a set). TContestBase keeps Contest protected on
-  purpose, so that no class branches on it; a test reads it through a
-  descendant declared here. Q108 S2 replaces the answer with the contest's
-  handle and id. *)
+  in a pin table or a set keyed by the frozen enum. Its handle's legacy
+  number (uContestRegistry.LegacyContestOf); a contest with none (Q108 S3)
+  answers DUMMYCONTEST, which no pin names. *)
 function ContestOf(aObj: TContestBase): ContestType;
 
 (* "<contest> (<class>)" -- the name a failure message gives a contest. The
-  one place that spells a contest for a message, so the spelling moves once
-  when the contest's id replaces its enum member (Q108 S2). *)
+  one place that spells a contest for a message: its id, since Q108 S2. *)
 function ContestWho(aObj: TContestBase): string;
 
 (* DOES aObj's OWN CLASS STATE THE METHOD -- is the code behind it not the
@@ -137,35 +140,40 @@ begin
    contests := ContestsToWalk;
    Result := nil;
    SetLength(Result, Length(contests) + 1);
-   Result[0] := ContestIdentity(DUMMYCONTEST);
+   Result[0] := ContestIdentity(NoContest);
    for k := 0 to High(contests) do
       begin
       Result[k + 1] := contests[k];
       end;
 end;
 
-function ContestOf(aObj: TContestBase): ContestType;
+function HandleOf(aObj: TContestBase): TContestHandle;
 begin
    Result := TContestKeyReader(aObj).Contest;
+end;
+
+function ContestOf(aObj: TContestBase): ContestType;
+begin
+   Result := LegacyContestOf(HandleOf(aObj));
 end;
 
 function NewContestLike(aIdentity: TContestBase;
                         const aStation: TStationContext): TContestBase;
 begin
-   Result := TContestClass(aIdentity.ClassType).Create(ContestOf(aIdentity));
+   Result := TContestClass(aIdentity.ClassType).Create(HandleOf(aIdentity));
    Result.SetStation(aStation);
 end;
 
 function ContestWho(aObj: TContestBase): string;
 begin
-   Result := string(ContestTypeSA[ContestOf(aObj)]) + ' (' + aObj.ClassName + ')';
+   Result := ContestId(HandleOf(aObj)) + ' (' + aObj.ClassName + ')';
 end;
 
 function ClassStatesItself(aObj: TContestBase; aCodeOf: TContestMethodCode): boolean;
 var
    parent: TContestBase;
 begin
-   parent := TContestClass(aObj.ClassParent).Create(ContestOf(aObj));
+   parent := TContestClass(aObj.ClassParent).Create(HandleOf(aObj));
    try
       Result := aCodeOf(aObj) <> aCodeOf(parent);
    finally
@@ -177,7 +185,7 @@ function ClassOverridesTheBase(aObj: TContestBase; aCodeOf: TContestMethodCode):
 var
    base: TContestBase;
 begin
-   base := TContestBase.Create(ContestOf(aObj));
+   base := TContestBase.Create(HandleOf(aObj));
    try
       Result := aCodeOf(aObj) <> aCodeOf(base);
    finally

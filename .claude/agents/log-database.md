@@ -197,6 +197,16 @@ sets `APP_TR4W_ID` aside only for a fixture that holds no id at all
 existing target; `rename(2)` on Unix replaces it. A directory at the target
 fails on both, which is the portable way to make a publish rename fail in a test.
 
+## The contest row and the contest byte (Q108 S2, 2026-10-16)
+
+`contest.contest_type` holds the contest's ID (`uContestRegistry.ContestId`;
+for a legacy contest its `ContestTypeSA` spelling, so no stored row changed).
+`SetContest` / `LogContest` take a `TContestHandle`; the row is read back by
+`uContestNames.ContestFromName` (`TF.GetContestFromString` is deleted). The
+`.TRW` importer REFUSES a first record whose contest byte is above the legacy
+range -- a message, and no log -- instead of stamping the log through an
+out-of-range table index (`uTestLogImport.TestImportRefusesAContestNumberItDoesNotKnow`).
+
 ## The `config` table holds only what the operator STATED (2026-10-01)
 
 For a contest-scoped setting, a row means the operator stated it, and a

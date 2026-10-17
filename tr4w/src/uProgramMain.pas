@@ -2622,7 +2622,7 @@ begin
        too (M11 S9d); this handed in the session's exchange kind. One fetch
        for all four. *)
      readinessContest := ActiveContest(Contest);
-     CollectContestSettingsGaps(Contest <> DUMMYCONTEST,
+     CollectContestSettingsGaps(Contest <> NoContest,
                                 ContestExchangeCarriesDomesticQTH(readinessContest),
                                 ContestExchangeCarriesZone(readinessContest),
                                 ContestExchangeCarriesGridSquare(readinessContest),

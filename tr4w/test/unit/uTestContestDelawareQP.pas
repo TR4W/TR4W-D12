@@ -473,15 +473,15 @@ end;
 (* ADIF 3.1.7's DE-QSO-PARTY: what export writes is what import matches. *)
 procedure TContestDelawareQPTests.Test_DelawareADIFIdRoundTrips;
 var
-   c: ContestType;
+   c: TContestHandle;
 begin
    BeginTest('Test_DelawareADIFIdRoundTrips');
    CheckEquals('DE-QSO-PARTY', ContestIdentity(DELAWAREQSOPARTY).ADIFContestId, 'the ADIF id');
    CheckTrue(ContestIdentity(DELAWAREQSOPARTY).WritesADIFContestId, 'export writes it');
    CheckTrue(FindContestByADIFContestId('DE-QSO-PARTY', c), 'import resolves it');
-   CheckEquals(Ord(DELAWAREQSOPARTY), Ord(c), 'to the Delaware QSO Party');
+   CheckEquals(Ord(DELAWAREQSOPARTY), c.ToByte, 'to the Delaware QSO Party');
    CheckTrue(FindContestByADIFContestId('IN7QPNE-QSO-PARTY', c), 'the combined party keeps its own id');
-   CheckEquals(Ord(IN7QPNE), Ord(c), 'IN7QPNE is not Delaware');
+   CheckEquals(Ord(IN7QPNE), c.ToByte, 'IN7QPNE is not Delaware');
 end;
 
 (* The CQ exchange default: 5NN and the state the session SENDS -- a DE

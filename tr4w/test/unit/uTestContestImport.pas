@@ -95,7 +95,7 @@ end;
 procedure Interpret(aContest: ContestType; const aTemps: TADIFRecordTemps;
                     var aExch: ContestExchange);
 begin
-   aExch.ceContest := aContest;
+   aExch.ceContest := ContestHandleOf(aContest);
    ContestIdentity(aContest).ApplyADIFImport(aTemps, NeutralADIFImportSession, aExch);
 end;
 
@@ -114,7 +114,7 @@ end;
 function NewExch(aContest: ContestType): ContestExchange;
 begin
    InitContestExchangeForParse(Result);
-   Result.ceContest := aContest;
+   Result.ceContest := ContestHandleOf(aContest);
    Result.RSTReceived := 59;
 end;
 
@@ -153,8 +153,8 @@ procedure TContestImportTests.Test_N1MMTagOrderDoesNotMatter;
       after := Import(Head + Tag('CONTEST_ID', aId) + Tag('APP_N1MM_EXCHANGE1', '3a'),
                       NeutralADIFImportSession);
 
-      CheckEquals(Ord(aExpectContest), Ord(before.ceContest), aWhat + ': tag first, the contest');
-      CheckEquals(Ord(aExpectContest), Ord(after.ceContest), aWhat + ': tag last, the contest');
+      CheckEquals(Ord(aExpectContest), before.ceContest.ToByte, aWhat + ': tag first, the contest');
+      CheckEquals(Ord(aExpectContest), after.ceContest.ToByte, aWhat + ': tag last, the contest');
       CheckEquals(aExpectClass, string(before.ceClass), aWhat + ': tag first, the class');
       CheckEquals(aExpectClass, string(after.ceClass), aWhat + ': tag last, the class');
       CheckEquals(aExpectPower, string(before.Power), aWhat + ': tag first, the power');
@@ -434,7 +434,7 @@ begin
       x.RSTReceived := 59;
       t := NoTemps;
       t.SRX_String := '59 8';
-      Interpret(x.ceContest, t, x);
+      Interpret(LegacyContestOf(x.ceContest), t, x);
       CheckEquals(8, x.Zone, 'CQ WW: the zone');
       CheckEquals('', string(x.QTHString), 'CQ WW: no QTH');
       end;
@@ -506,7 +506,7 @@ var
    base: TContestBase;
 begin
    BeginTest('Test_ClasslessDefault');
-   base := TContestBase.Create(RSGB18);
+   base := TContestBase.Create(ContestHandleOf(RSGB18));
    try
 
       t := NoTemps;

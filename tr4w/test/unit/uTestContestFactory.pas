@@ -103,6 +103,7 @@ type
       procedure Test_RoverSplitAndCountyLineDisagreeOnlyForTheKnownSix;
       procedure Test_DummyContestScoresOnlyTheOverrides;
       procedure Test_ADIFIdsResolveOldAndNew;
+      procedure Test_AContestHandleIsItsLegacyNumber;
       procedure Test_NoADIFIdIsClaimedTwice;
       procedure Test_NRAUAndJockWhiteRowsAreNotShifted;
       procedure Test_IdentityIsWhatTheExportersWroteBeforeM1;
@@ -154,7 +155,7 @@ begin
    cls := ContestClassFor(aContest);
    if cls <> nil then
       begin
-      Result := cls.Create(aContest);
+      Result := cls.Create(ContestHandleOf(aContest));
       Result.SetStation(WithHostAreaTable(NoStation));
       end;
 end;
@@ -366,7 +367,7 @@ end;
 function HostCountyQSO(aContest: ContestType): ContestExchange;
 begin
    FillChar(Result, SizeOf(Result), 0);
-   Result.ceContest := aContest;
+   Result.ceContest := ContestHandleOf(aContest);
    Result.Callsign := 'K1ABC';
    Result.QTHString := 'XYZ';
    Result.DomesticQTH := 'XYZ';
@@ -449,7 +450,7 @@ var
    obj: TContestBase;
 begin
    BeginTest('Test_MichiganForbidsCountyLine');
-   CheckTrue(ContestSplitsRoverCallOnExport(MICHQSOPARTY),
+   CheckTrue(ContestSplitsRoverCallOnExport(ContestHandleOf(MICHQSOPARTY)),
              'Michigan splits a rover''s call on export -- every QSO party '
              + 'does since Q90');
 
@@ -574,7 +575,7 @@ begin
       single-state party with no class yet, so it is what the program still
       does for the majority of the table. Its four-county assertion is the same
       one, made where it is still true. *)
-   obj := TContestBase.Create(NYQP);
+   obj := TContestBase.Create(ContestHandleOf(NYQP));
    try
       CheckTrue(obj.ValidateQTHCount(3, msg), 'no class: three QTHs pass');
       CheckTrue(obj.ValidateQTHCount(4, msg),
@@ -584,7 +585,7 @@ begin
       obj.Free;
       end;
 
-   obj := TContestBase.Create(CQWWCW);
+   obj := TContestBase.Create(ContestHandleOf(CQWWCW));
    try
       CheckTrue(obj.ValidateQTHCount(1, msg), 'one QTH is always fine');
       CheckTrue(obj.ValidateQTHCount(2, msg),
@@ -698,7 +699,7 @@ begin
       obj.Free;
       end;
 
-   obj := TContestBase.Create(CQWWCW);
+   obj := TContestBase.Create(ContestHandleOf(CQWWCW));
    try
       CheckEquals(CabrilloQSOLineFormatDefault, obj.CabrilloQSOLineFormat,
                   'the base answers the default layout');
@@ -1464,7 +1465,7 @@ end;
 procedure TContestFactoryTests.Test_IdahoOwnsItsRules;
 var
    obj: TContestBase;
-   c: ContestType;
+   c: TContestHandle;
 begin
    BeginTest('Test_IdahoOwnsItsRules');
    obj := MakeContest(IDAHOQSOPARTY);
@@ -1514,12 +1515,12 @@ begin
 
    CheckTrue(FindContestByADIFContestId('ID-QSO-PARTY', c),
              'ID-QSO-PARTY resolves');
-   CheckEquals(Ord(IDAHOQSOPARTY), Ord(c), 'ID-QSO-PARTY -> Idaho');
+   CheckEquals(Ord(IDAHOQSOPARTY), c.ToByte, 'ID-QSO-PARTY -> Idaho');
    (* 'NEQP' IS NEQP'S OWN ID SINCE M1 -- its ADIFName is blank, and the id is
       the enum spelling export writes. So it resolves, and to NEQP: never to
       Idaho, whose pre-2026-10-01 logs were exported under that spelling. *)
    CheckTrue(FindContestByADIFContestId('NEQP', c), 'NEQP resolves');
-   CheckEquals(Ord(NEWENGLANDQSO), Ord(c), 'NEQP -> NEWENGLANDQSO, never Idaho');
+   CheckEquals(Ord(NEWENGLANDQSO), c.ToByte, 'NEQP -> NEWENGLANDQSO, never Idaho');
 end;
 
 (* IDAHO'S BANDS -- the sponsor's "160 - 80 - 40 - 20 - 15 - 10 meters", and
@@ -1883,7 +1884,7 @@ begin
       what the count of splitting parties beside the set used to restate. *)
    for c := Low(ContestType) to High(ContestType) do
       begin
-      CheckTrue(ContestSplitsRoverCallOnExport(c) = (c in ROVER_SPLIT_PARTIES),
+      CheckTrue(ContestSplitsRoverCallOnExport(ContestHandleOf(c)) = (c in ROVER_SPLIT_PARTIES),
                 string(ContestTypeSA[c]) + ': splits a rover''s call on export');
       end;
 
@@ -1936,8 +1937,8 @@ begin
 
    (* By name: Arizona started (Q90), and a slash call is the call in the
       ARRL DX. *)
-   CheckTrue(ContestSplitsRoverCallOnExport(ArizonaQsoParty), 'Arizona splits (Q90)');
-   CheckFalse(ContestSplitsRoverCallOnExport(ARRLDXCW), 'the ARRL DX does not');
+   CheckTrue(ContestSplitsRoverCallOnExport(ContestHandleOf(ArizonaQsoParty)), 'Arizona splits (Q90)');
+   CheckFalse(ContestSplitsRoverCallOnExport(ContestHandleOf(ARRLDXCW)), 'the ARRL DX does not');
    CheckFalse(ContestStripsRoverCountyFromCall(ContestIdentity(ARRLDXCW)),
               'the ARRL DX does not strip either (Q94)');
    CheckFalse(ContestIdentity(NEWENGLANDQSO).IsUSQSOParty,
@@ -2001,21 +2002,21 @@ begin
             begin
             Inc(disagreements);
             end;
-         CheckTrue(ContestAllowsCountyLineOnImport(c) = classAllows,
+         CheckTrue(ContestAllowsCountyLineOnImport(ContestHandleOf(c)) = classAllows,
                    string(ContestTypeSA[c]) + ': the import follows the class, not the row');
          case c of
             MICHQSOPARTY:
                begin
                CheckTrue(rowAllows, 'Michigan: the old row said CountyLineAllowed');
                CheckFalse(classAllows, 'Michigan: the class allows none');
-               CheckFalse(ContestAllowsCountyLineOnImport(c),
+               CheckFalse(ContestAllowsCountyLineOnImport(ContestHandleOf(c)),
                           'Michigan: an imported county-line repeat is a dupe again');
                end;
             ArizonaQsoParty, BCQP, VAQP, SALMONRUN, NYQP:
                begin
                CheckFalse(rowAllows, string(ContestTypeSA[c]) + ': the old row said no county line');
                CheckTrue(classAllows, string(ContestTypeSA[c]) + ': the class allows one');
-               CheckTrue(ContestAllowsCountyLineOnImport(c),
+               CheckTrue(ContestAllowsCountyLineOnImport(ContestHandleOf(c)),
                          string(ContestTypeSA[c]) + ': an imported county-line repeat now clears the dupe flag');
                end;
          else
@@ -2069,7 +2070,7 @@ begin
    CheckTrue(ContestIdentity(DUMMYCONTEST).ClassType = TContestBase,
              'DUMMYCONTEST''s identity is not a plain TContestBase');
 
-   obj := TContestBase.Create(DUMMYCONTEST);
+   obj := TContestBase.Create(NoContest);
    try
       (* No override: zero, on every band and in every mode. *)
       FillChar(station, SizeOf(station), 0);
@@ -2104,6 +2105,73 @@ begin
       end;
 end;
 
+(* A CONTEST HANDLE IS ITS LEGACY NUMBER, AND THE REGISTRY HOLDS THE IDS --
+   Q108 S2, 2026-10-16 (design 8.2u).
+
+   THE ONE RULE THAT KEEPS EVERY PERSISTED BYTE CORRECT. ceContest, the
+   global Contest and the log-compare packet's liContest hold a handle now;
+   they held the enum before, and a .TRW record, a multi-op peer and the
+   server's log all carry that byte. So for every legacy contest the handle's
+   byte must be Ord(member), both ways, and its id must be the ContestTypeSA
+   spelling the SQLite log and every .cfg store. A byte above the legacy
+   range names no contest: no number, no id, and asking about it answers
+   rather than indexing a table out of range. *)
+procedure TContestFactoryTests.Test_AContestHandleIsItsLegacyNumber;
+var
+   c: ContestType;
+   h, found: TContestHandle;
+   n, k: integer;
+   known: TContestHandleList;
+   who: string;
+begin
+   BeginTest('Test_AContestHandleIsItsLegacyNumber');
+   CheckEquals(1, SizeOf(TContestHandle), 'a handle is one byte');
+   CheckTrue(ContestHandleOf(DUMMYCONTEST) = NoContest, 'NoContest is DUMMYCONTEST''s number');
+
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      who := string(ContestTypeSA[c]);
+      h := ContestHandleOf(c);
+      CheckEquals(Ord(c), h.ToByte, who + ': the handle''s byte is the legacy number');
+      CheckTrue(LegacyContestOf(h) = c, who + ': and reads back as the member');
+      CheckTrue(ContestLegacyNumber(h, n), who + ': has a legacy number');
+      CheckEquals(Ord(c), n, who + ': which is its ordinal');
+      CheckEquals(who, ContestId(h), who + ': its id is its stored spelling');
+      CheckTrue(IsKnownContest(h), who + ': is known');
+      CheckEquals(Ord(c), ContestBroadcastNumber(h),
+                  who + ': <contestnr> is the legacy number, as Ord(ceContest) wrote');
+      CheckTrue(FindContestById(who, found) and (found = h), who + ': its id finds it');
+      CheckTrue(FindContestById(LowerCase(who), found) and (found = h),
+                who + ': whatever the case');
+      CheckTrue(ContestClassFor(h) = ContestClassFor(c), who + ': one class, asked either way');
+      CheckTrue(ContestIdentity(h) = ContestIdentity(c), who + ': one identity object');
+      end;
+
+   (* EVERY KNOWN CONTEST IS A LEGACY ONE TODAY, in handle order. *)
+   known := KnownContests;
+   CheckEquals(Ord(High(ContestType)) + 1, Length(known),
+               'today the registry knows exactly the legacy contests');
+   for k := 0 to High(known) do
+      begin
+      CheckEquals(k, known[k].ToByte, 'known contest ' + IntToStr(k) + ' in handle order');
+      end;
+
+   (* ABOVE THE LEGACY RANGE: nothing. *)
+   for k := Ord(High(ContestType)) + 1 to 255 do
+      begin
+      h := TContestHandle.FromByte(k);
+      CheckFalse(ContestLegacyNumber(h, n), 'byte ' + IntToStr(k) + ' has no legacy number');
+      CheckEquals(0, n, 'byte ' + IntToStr(k) + ': and the number is zeroed');
+      CheckTrue(LegacyContestOf(h) = DUMMYCONTEST, 'byte ' + IntToStr(k) + ': no member');
+      CheckEquals('', ContestId(h), 'byte ' + IntToStr(k) + ': no id');
+      CheckFalse(IsKnownContest(h), 'byte ' + IntToStr(k) + ': not a known contest');
+      CheckTrue(ContestClassFor(h) = nil, 'byte ' + IntToStr(k) + ': no class');
+      end;
+   CheckFalse(FindContestById('', found), 'an empty id finds nothing');
+   CheckTrue(found = NoContest, 'and answers NoContest');
+   CheckFalse(FindContestById('NOT A CONTEST', found), 'nonsense finds nothing');
+end;
+
 (* WHICH CONTEST ANSWERS TO AN ADIF CONTEST_ID -- the rule itself, asked
    directly of uContestRegistry. uTestADIFRegression asks the same through
    ADIF import; this is where a failure names the lookup rather than the
@@ -2115,16 +2183,16 @@ procedure TContestFactoryTests.Test_ADIFIdsResolveOldAndNew;
 
    procedure CheckFinds(const aId: string; aExpected: ContestType);
    var
-      c: ContestType;
+      c: TContestHandle;
    begin
       CheckTrue(FindContestByADIFContestId(aId, c),
                 '[' + aId + '] resolves to a contest');
-      CheckEquals(Ord(aExpected), Ord(c),
+      CheckEquals(Ord(aExpected), c.ToByte,
                   '[' + aId + '] -> ' + string(ContestTypeSA[aExpected]));
    end;
 
 var
-   c: ContestType;
+   c: TContestHandle;
 begin
    BeginTest('Test_ADIFIdsResolveOldAndNew');
 
@@ -2171,7 +2239,7 @@ begin
    (* A BLANK IS NOT AN ID. The old lookup matched it against the first
       contest whose ADIFName was blank. *)
    CheckFalse(FindContestByADIFContestId('', c), 'an empty id matches nothing');
-   CheckEquals(Ord(Low(ContestType)), Ord(c), 'no match answers the first contest');
+   CheckEquals(Ord(Low(ContestType)), c.ToByte, 'no match answers the first contest');
    CheckFalse(FindContestByADIFContestId('   ', c), 'an all-blank id matches nothing');
    CheckFalse(FindContestByADIFContestId('NOT-A-CONTEST', c),
               'an unknown id matches nothing');
@@ -2388,7 +2456,7 @@ var
    contests: TContestIdentityList;
    k: integer;
    c: ContestType;
-   found: ContestType;
+   found: TContestHandle;
    id: string;
    who: string;
 begin
@@ -2411,14 +2479,14 @@ begin
 
       if c = RSGB_ROPOCO_SSB then
          begin
-         CheckEquals(Ord(RSGB_ROPOCO_CW), Ord(found),
+         CheckEquals(Ord(RSGB_ROPOCO_CW), found.ToByte,
                      who + ': the shared RSGB-ROLO resolves to the CW running');
          Continue;
          end;
 
-      CheckEquals(Ord(c), Ord(found),
+      CheckEquals(Ord(c), found.ToByte,
                   who + ': its own id [' + id + '] resolves to ' +
-                  string(ContestTypeSA[found]));
+                  ContestId(found));
       end;
 end;
 
@@ -3787,7 +3855,7 @@ end;
 procedure TContestFactoryTests.Test_RoPoCoRunningsAreToldApartByMode;
 var
    cwRunning, ssbRunning: TContestBase;
-   found: ContestType;
+   found: TContestHandle;
 begin
    BeginTest('Test_RoPoCoRunningsAreToldApartByMode');
    cwRunning := MakeContest(RSGB_ROPOCO_CW);
@@ -3808,19 +3876,19 @@ begin
       end;
 
    CheckTrue(FindContestByADIFContestId('RSGB-ROLO', found), 'RSGB-ROLO resolves');
-   CheckEquals(Ord(RSGB_ROPOCO_CW), Ord(found), 'the id alone answers the CW running');
+   CheckEquals(Ord(RSGB_ROPOCO_CW), found.ToByte, 'the id alone answers the CW running');
 
-   CheckEquals(Ord(RSGB_ROPOCO_SSB), Ord(ContestOfADIFRecordMode(RSGB_ROPOCO_CW, Phone)),
+   CheckEquals(Ord(RSGB_ROPOCO_SSB), ContestOfADIFRecordMode(ContestHandleOf(RSGB_ROPOCO_CW), Phone).ToByte,
                'a phone record is the SSB running''s');
-   CheckEquals(Ord(RSGB_ROPOCO_CW), Ord(ContestOfADIFRecordMode(RSGB_ROPOCO_CW, CW)),
+   CheckEquals(Ord(RSGB_ROPOCO_CW), ContestOfADIFRecordMode(ContestHandleOf(RSGB_ROPOCO_CW), CW).ToByte,
                'a CW record is the CW running''s');
-   CheckEquals(Ord(RSGB_ROPOCO_CW), Ord(ContestOfADIFRecordMode(RSGB_ROPOCO_SSB, CW)),
+   CheckEquals(Ord(RSGB_ROPOCO_CW), ContestOfADIFRecordMode(ContestHandleOf(RSGB_ROPOCO_SSB), CW).ToByte,
                'from either side');
-   CheckEquals(Ord(RSGB_ROPOCO_CW), Ord(ContestOfADIFRecordMode(RSGB_ROPOCO_CW, Digital)),
+   CheckEquals(Ord(RSGB_ROPOCO_CW), ContestOfADIFRecordMode(ContestHandleOf(RSGB_ROPOCO_CW), Digital).ToByte,
                'a mode neither runs in keeps the id''s answer');
-   CheckEquals(Ord(CQWWCW), Ord(ContestOfADIFRecordMode(CQWWCW, Phone)),
+   CheckEquals(Ord(CQWWCW), ContestOfADIFRecordMode(ContestHandleOf(CQWWCW), Phone).ToByte,
                'a contest that shares no id is never moved');
-   CheckEquals(Ord(KINGOFSPAINCW), Ord(ContestOfADIFRecordMode(KINGOFSPAINCW, Phone)),
+   CheckEquals(Ord(KINGOFSPAINCW), ContestOfADIFRecordMode(ContestHandleOf(KINGOFSPAINCW), Phone).ToByte,
                'not even a CW contest by a phone record');
 end;
 
@@ -4206,6 +4274,7 @@ begin
    Test_RoverSplitAndCountyLineDisagreeOnlyForTheKnownSix;
    Test_DummyContestScoresOnlyTheOverrides;
    Test_ADIFIdsResolveOldAndNew;
+   Test_AContestHandleIsItsLegacyNumber;
    Test_NoADIFIdIsClaimedTwice;
    Test_NRAUAndJockWhiteRowsAreNotShifted;
    Test_IdentityIsWhatTheExportersWroteBeforeM1;

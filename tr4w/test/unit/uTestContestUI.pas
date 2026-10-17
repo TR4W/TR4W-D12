@@ -111,7 +111,7 @@ procedure TContestUITests.Test_ChoicesListEveryContestOnce;
 var
    choices: TContestChoices;
    contests: TContestIdentityList;
-   c: ContestType;
+   c: TContestHandle;
    k, i, seen: integer;
 begin
    BeginTest('Test_ChoicesListEveryContestOnce');
@@ -122,11 +122,11 @@ begin
          DUMMYCONTEST, which has no class, is never offered. *)
       contests := ContestsToWalk;
       CheckEquals(Length(contests), choices.Count, 'one line per registered contest');
-      CheckEquals(-1, choices.IndexOf(DUMMYCONTEST), 'DUMMYCONTEST is not offered');
+      CheckEquals(-1, choices.IndexOf(NoContest), 'DUMMYCONTEST is not offered');
 
       for k := 0 to High(contests) do
          begin
-         c := ContestOf(contests[k]);
+         c := HandleOf(contests[k]);
          seen := 0;
          for i := 0 to choices.Count - 1 do
             begin
@@ -193,7 +193,7 @@ begin
                    who + ': in display-name order');
          if UnicodeCompareText(prev.DisplayName, cur.DisplayName) = 0 then
             begin
-            CheckTrue(Ord(choices.Contest[i - 1]) < Ord(choices.Contest[i]),
+            CheckTrue(choices.Contest[i - 1].ToByte < choices.Contest[i].ToByte,
                       who + ': a tie in enum order');
             end;
          end;
@@ -216,7 +216,7 @@ begin
       for i := 0 to choices.Count - 1 do
          begin
          identity := ContestIdentity(choices.Contest[i]);
-         who := string(ContestTypeSA[choices.Contest[i]]);
+         who := ContestId(choices.Contest[i]);
 
          (* THE DISPLAY NAME, and the token in brackets only where another
             line carries the same name. *)
@@ -247,7 +247,7 @@ begin
          end;
 
       (* THE ENGLISH MARK, as an operator without a catalogue reads it. *)
-      CheckEquals('SA-SPRINT (inactive)', ContestChoiceCaption(SASPRINT),
+      CheckEquals('SA-SPRINT (inactive)', ContestChoiceCaption(ContestHandleOf(SASPRINT)),
                   'SA Sprint is marked');
 
       (* NO TWO LINES SHARE A DISPLAY NAME TODAY -- a RATCHET. The one pair
@@ -259,9 +259,9 @@ begin
          nothing, because the rule is inline in ContestChoiceCaption and
          answers only for a real ContestType. *)
       CheckEquals(0, shared, 'no two lines share a display name');
-      CheckEquals('IARU HF World Championship', ContestChoiceCaption(IARU),
+      CheckEquals('IARU HF World Championship', ContestChoiceCaption(ContestHandleOf(IARU)),
                   'IARU-HF is shown bare');
-      CheckEquals('World Radiosport Team Championship', ContestChoiceCaption(WRTC),
+      CheckEquals('World Radiosport Team Championship', ContestChoiceCaption(ContestHandleOf(WRTC)),
                   'WRTC is shown bare, by its own name');
    finally
       choices.Free;
@@ -284,8 +284,8 @@ begin
          for j := i + 1 to choices.Count - 1 do
             begin
             CheckFalse(UnicodeSameText(choices.Caption[i], choices.Caption[j]),
-                       string(ContestTypeSA[choices.Contest[i]]) + ' and ' +
-                       string(ContestTypeSA[choices.Contest[j]]) +
+                       ContestId(choices.Contest[i]) + ' and ' +
+                       ContestId(choices.Contest[j]) +
                        ' share the line "' + choices.Caption[i] + '"');
             end;
          end;

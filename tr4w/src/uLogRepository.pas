@@ -201,7 +201,7 @@ type
       FLastSetId: AnsiString;
       FSetIdForNextSave: AnsiString;
       FSentExchangeForNextSave: AnsiString;
-      FContest: ContestType;
+      FContest: TContestHandle;
 
       FUpdate: TSQLQuery;
       FSelectById: TSQLQuery;
@@ -388,7 +388,7 @@ type
         the contest's class about a county line from it during ADIF import, and
         HamScore emits it as <contestnr>. A QSO loaded with ceContest left at
         DUMMYCONTEST would export as the wrong contest, silently. *)
-      procedure SetContest(aContest: ContestType);
+      procedure SetContest(aContest: TContestHandle);
 
       (* Writes the entry declaration onto the contest row.  Call once, when
          the log is created -- see TLogEntryDeclaration for why never again. *)
@@ -462,7 +462,7 @@ type
 
       function ConfigCount: integer;
       function MessageCount: integer;
-      function LogContest: ContestType;
+      function LogContest: TContestHandle;
 
       function NewestRowId: Int64;
 
@@ -691,7 +691,8 @@ uses
    uADIF, uLogBinaryFile, ZONECONT, TF,
    utils_text,   (* CharBufferBytes -- a fixed char field read back *)
    uLogNote,   (* NoteText / SetNoteText -- where a note's text lives *)
-   uContestRegistry;   (* ContestIdentity -- the contest's friendly name *)
+   uContestRegistry,   (* ContestIdentity, ContestId -- the contest's names *)
+   uContestNames;      (* ContestFromName -- the contest row read back *)
 
 (* --------------------------------------------------------------------------- *)
 (* sentinels -- crosswalk finding 3                                            *)
@@ -1352,7 +1353,7 @@ begin
       raise ELogRepositoryError.Create(GQsoColumnTableProblem);
       end;
    FDatabase := aDatabase;
-   FContest := DUMMYCONTEST;
+   FContest := NoContest;
    FRecordCount := -1;
    PrepareStatements;
    LoadContest;
@@ -1933,7 +1934,7 @@ var
    q: TSQLQuery;
    token: ShortString;
 begin
-   FContest := DUMMYCONTEST;
+   FContest := NoContest;
    q := NewReadQuery;
    try
       q.SQL.Text := 'SELECT contest_type FROM contest WHERE id = 1';
@@ -1941,12 +1942,13 @@ begin
       if not q.EOF then
          begin
          token := q.Fields[0].AsString;
-         (* GetContestFromString reads ContestTypeSA (uContestNames), so the
-           pair are inverses for every current spelling -- AND it reads a
+         (* ContestFromName reads the registry's ids (uContestNames), and
+           SetContest writes ContestId, so the pair are inverses for every
+           current spelling -- AND it reads a
            LEGACY name too: a New England log written before 2026-10-16
            stores 'NEQP', which still means NEWENGLANDQSO (never Nebraska).
            The row is not rewritten here; it is read as it stands. *)
-         FContest := GetContestFromString(token);
+         FContest := ContestFromName(token);
          end;
       q.Close;
    finally
@@ -2190,19 +2192,19 @@ begin
    Result := CountRows('SELECT COUNT(*) FROM message');
 end;
 
-function TLogRepository.LogContest: ContestType;
+function TLogRepository.LogContest: TContestHandle;
 begin
    Result := FContest;
 end;
 
-procedure TLogRepository.SetContest(aContest: ContestType);
+procedure TLogRepository.SetContest(aContest: TContestHandle);
 var
    q: TSQLQuery;
    token: AnsiString;
    friendly: AnsiString;
 begin
    FContest := aContest;
-   token := AnsiString(ContestTypeSA[aContest]);
+   token := AnsiString(ContestId(aContest));
 
    (* Asked of the contest -- M1. Its FriendlyName already falls back to the
       enum spelling, which is the rule this used to restate. *)

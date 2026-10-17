@@ -158,7 +158,7 @@ function ADIFTimeStringToQSOTime(sTime: string;
   cannot recognise a former id -- and which accepted an EMPTY input as
   "found", landing on the first contest whose ADIFName was blank. *)
 function GetContestByADIFName(const sADIFName: string;
-                              out aContest: ContestType): Boolean;
+                              out aContest: TContestHandle): Boolean;
 
 // Validate an ADIF GUID/UUID string.  Accepts 32 hex characters with
 // optional 8-4-4-4-12 hyphens and optional `{...}` braces.  Used to gate
@@ -385,15 +385,15 @@ var
       answering for an empty input. *)
    saveLastValid    : boolean;
    saveLastADIFName : string;
-   saveLastContest  : ContestType;
+   saveLastContest  : TContestHandle;
    saveLastFound    : boolean;
 
    (* Single-entry cache for ContestOfRecordMode, for the same reason: a file
       is one contest and, nearly always, one or two modes. *)
    modeLastValid    : boolean;
-   modeLastContest  : ContestType;
+   modeLastContest  : TContestHandle;
    modeLastMode     : ModeType;
-   modeLastAnswer   : ContestType;
+   modeLastAnswer   : TContestHandle;
 
 // ---------------------------------------------------------------------------
 // Lexer helpers
@@ -804,7 +804,7 @@ begin
 end;
 
 function GetContestByADIFName(const sADIFName: string;
-                              out aContest: ContestType): Boolean;
+                              out aContest: TContestHandle): Boolean;
 begin
    if saveLastValid and (sADIFName = saveLastADIFName) then
       begin
@@ -823,7 +823,7 @@ end;
 
 (* THE RECORD'S CONTEST, NOW THAT ITS MODE IS KNOWN -- M7b batch 2. See
   uContestRegistry.ContestOfADIFRecordMode; this only caches it. *)
-function ContestOfRecordMode(aContest: ContestType; aMode: ModeType): ContestType;
+function ContestOfRecordMode(aContest: TContestHandle; aMode: ModeType): TContestHandle;
 begin
    if modeLastValid               and
       (aContest = modeLastContest) and
@@ -1020,7 +1020,7 @@ var
    tempRST              : string;
    neFreq               : Extended;
    msm                  : ModeAndExtendedModeType;
-   contest              : ContestType;
+   contest              : TContestHandle;
    saveDecimalSeparator : Char;
    haveRoverCall        : Boolean;
    contestFromId        : Boolean;

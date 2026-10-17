@@ -28,17 +28,18 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   its IsActive (TContestBase). This unit decides only the ORDER and the
   marking, which are the dialog's.
 
-  THE IDENTITY IS A ContestType, HELD BESIDE THE CAPTION -- never recovered
-  from the caption, and never carried in a combo's Objects[]. The token that
-  is persisted (the CONTEST command, the log's file name) is still
-  ContestTypeSA of that contest, so choosing by display name changes nothing
+  THE IDENTITY IS A CONTEST HANDLE (VC.TContestHandle, Q108 S2), HELD
+  BESIDE THE CAPTION -- never recovered from the caption, and never carried
+  in a combo's Objects[]. The token that is persisted (the CONTEST command,
+  the log's file name) is still that contest's id
+  (uContestRegistry.ContestId), so choosing by display name changes nothing
   that is written. Two contests with one display name would be one line an
   operator could not tell apart; uTestContestChoices fails if that happens.
 
   THE ORDER (DECIDED): every active contest, then every inactive one; within
   each, by display name, case-insensitively in the platform's collation
   (UnicodeCompareText -- what a sorted LCL list would use too); a tie by the
-  enum's order, so the list is the same on every run. The Win32 combo sorted by the enum's spelling
+  handle's order (the legacy number), so the list is the same on every run. The Win32 combo sorted by the enum's spelling
   (CBS_SORT), which put 'ARRL-10' beside 'ARRL-160' and every QSO party under
   its state's code; sorting by what the operator reads is the only order that
   helps them find it.
@@ -72,45 +73,54 @@ uses
 type
    TContestChoices = class
    private
-      FContests: array of ContestType;
+      FContests: array of TContestHandle;
       FCaptions: array of string;
       function GetCount: integer;
-      function GetContest(aIndex: integer): ContestType;
+      function GetContest(aIndex: integer): TContestHandle;
       function GetCaption(aIndex: integer): string;
    public
       (* Builds the whole list, in order, from the contest registry. *)
       constructor Create;
 
       (* Where a contest sits in the list, or -1. *)
-      function IndexOf(aContest: ContestType): integer;
+      function IndexOf(aContest: TContestHandle): integer;
 
       property Count: integer read GetCount;
-      property Contest[aIndex: integer]: ContestType read GetContest;
+      property Contest[aIndex: integer]: TContestHandle read GetContest;
       property Caption[aIndex: integer]: string read GetCaption;
    end;
 
 (* ONE CONTEST'S LINE: its display name -- with its token in brackets when
   another contest shares that name -- marked when it is inactive. *)
-function ContestChoiceCaption(aContest: ContestType): string;
+function ContestChoiceCaption(aContest: TContestHandle): string;
 
 implementation
 
 uses
    SysUtils,
    uContestBase,
-   uContestRegistry,   (* ContestIdentity -- the display name and the flag *)
+   uContestRegistry,   (* ContestIdentity -- the display name and the flag;
+                          KnownContests, ContestId -- the set and the token *)
    uAppStrings;        (* SContestInactive *)
 
 (* DOES ANOTHER OFFERED CONTEST CARRY THIS DISPLAY NAME? *)
-function DisplayNameIsShared(aContest: ContestType): boolean;
+function DisplayNameIsShared(aContest: TContestHandle): boolean;
 var
-   c: ContestType;
+   known: TContestHandleList;
+   k: integer;
+   c: TContestHandle;
    name: string;
 begin
    Result := False;
    name := ContestIdentity(aContest).DisplayName;
-   for c := Succ(DUMMYCONTEST) to High(ContestType) do
+   known := KnownContests;
+   for k := 0 to High(known) do
       begin
+      c := known[k];
+      if c = NoContest then
+         begin
+         Continue;
+         end;
       (* UnicodeSameText, NOT SameText: SysUtils' plain name takes AnsiString
          and this unit's string is UnicodeString. *)
       if (c <> aContest) and
@@ -122,7 +132,7 @@ begin
       end;
 end;
 
-function ContestChoiceCaption(aContest: ContestType): string;
+function ContestChoiceCaption(aContest: TContestHandle): string;
 var
    identity: TContestBase;
    name: string;
@@ -131,7 +141,7 @@ begin
    name := identity.DisplayName;
    if DisplayNameIsShared(aContest) then
       begin
-      name := name + ' [' + string(ContestTypeSA[aContest]) + ']';
+      name := name + ' [' + ContestId(aContest) + ']';
       end;
 
    if identity.IsActive then
@@ -144,8 +154,9 @@ begin
       end;
 end;
 
-(* DOES a COME BEFORE b? Active first, then the display name, then the enum. *)
-function ComesBefore(a, b: ContestType): boolean;
+(* DOES a COME BEFORE b? Active first, then the display name, then the
+  handle -- the legacy number, the enum order this used. *)
+function ComesBefore(a, b: TContestHandle): boolean;
 var
    ia, ib: TContestBase;
    byName: integer;
@@ -166,25 +177,32 @@ begin
       Exit;
       end;
 
-   Result := Ord(a) < Ord(b);
+   Result := a.ToByte < b.ToByte;
 end;
 
 constructor TContestChoices.Create;
 var
-   c, held: ContestType;
-   n, i, j: integer;
+   known: TContestHandleList;
+   held: TContestHandle;
+   n, i, j, k: integer;
 begin
    inherited Create;
 
-   (* THE RANGE THE WIN32 DIALOG OFFERED: every contest after DUMMYCONTEST. *)
-   n := Ord(High(ContestType)) - Ord(DUMMYCONTEST);
-   SetLength(FContests, n);
-   i := 0;
-   for c := Succ(DUMMYCONTEST) to High(ContestType) do
+   (* THE RANGE THE WIN32 DIALOG OFFERED: every contest but "no contest"
+      (NoContest, DUMMYCONTEST) -- every contest the registry knows by
+      name, in handle order, since Q108 S2. *)
+   known := KnownContests;
+   SetLength(FContests, Length(known));
+   n := 0;
+   for k := 0 to High(known) do
       begin
-      FContests[i] := c;
-      inc(i);
+      if known[k] <> NoContest then
+         begin
+         FContests[n] := known[k];
+         inc(n);
+         end;
       end;
+   SetLength(FContests, n);
 
    (* AN INSERTION SORT: under two hundred entries, built once per dialog,
       and stable, which the enum tie-break does not need but costs nothing. *)
@@ -212,7 +230,7 @@ begin
    Result := Length(FContests);
 end;
 
-function TContestChoices.GetContest(aIndex: integer): ContestType;
+function TContestChoices.GetContest(aIndex: integer): TContestHandle;
 begin
    Result := FContests[aIndex];
 end;
@@ -222,7 +240,7 @@ begin
    Result := FCaptions[aIndex];
 end;
 
-function TContestChoices.IndexOf(aContest: ContestType): integer;
+function TContestChoices.IndexOf(aContest: TContestHandle): integer;
 var
    i: integer;
 begin

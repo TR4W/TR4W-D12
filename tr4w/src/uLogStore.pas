@@ -282,6 +282,7 @@ uses
    (* uLogRepository is in the INTERFACE uses now -- LogStoreRepository's
       return type. *)
    SysUtils, Classes, MainUnit, uLogDatabase, uLogImport,
+   uContestRegistry,   (* ContestId -- a contest's stored name *)
    uLogBinaryFile,
    (* TLogBackup -- the ORDER of a backup's file operations, which is a leaf so
       the unit tests can hold it. LogStoreBackup supplies the live database. *)
@@ -1093,8 +1094,8 @@ begin
           were the answer. Better an empty row than a wrong one: an empty row
           is still fixable by the dialog. *)
       if isNewLog and
-         (GRepository.LogContest = DUMMYCONTEST) and
-         (Contest <> DUMMYCONTEST) then
+         (GRepository.LogContest = NoContest) and
+         (Contest <> NoContest) then
          begin
          GRepository.SetContest(Contest);
          (* COMMITTED, AND THE FIRST VERSION WAS NOT.
@@ -1113,7 +1114,7 @@ begin
          if logger <> nil then
             begin
             logger.Info('[LogStore] stamped the new log as contest %s',
-                        [ContestTypeSA[Contest]]);
+                        [ContestId(Contest)]);
             end;
          end;
 
@@ -1794,14 +1795,14 @@ begin
            So the table answers the case it exists for -- a log with no .cfg at
            all, which is every contest created by the New Contest dialog -- and
            stays out of the way otherwise. *)
-         if (GRepository.LogContest <> DUMMYCONTEST) and
+         if (GRepository.LogContest <> NoContest) and
             ((CFGCommandValueAsString('CONTEST') = '') or
              (CFGCommandValueAsString('CONTEST') =
-              string(ContestTypeSA[DUMMYCONTEST]))) then
+              ContestId(NoContest))) then
             begin
             cmdName := ShortString(AnsiString('CONTEST'));
             valName := ShortString(AnsiString(
-               ContestTypeSA[GRepository.LogContest]));
+               ContestId(GRepository.LogContest)));
             (* ONLY IF IT IS NOT ALREADY RIGHT. FoundContest is NOT
                idempotent -- re-running it appends to the domestic file name
                (dom\iaruhq.domiaruhq.dom), and applying it unconditionally on
@@ -1848,8 +1849,8 @@ begin
 
            NOTHING IS OVERWRITTEN. The arm above owns the case where the table
            already answered; this one runs only when it did not. *)
-         else if (GRepository.LogContest = DUMMYCONTEST) and
-                 (Contest <> DUMMYCONTEST) then
+         else if (GRepository.LogContest = NoContest) and
+                 (Contest <> NoContest) then
             begin
             GRepository.SetContest(Contest);
             (* See the note beside the stamp in EnsureOpen: SetContest does not
@@ -1862,7 +1863,7 @@ begin
                            'It was made before the log stored its own ' +
                            'contest, and would have scored every domestic ' +
                            'callsign as DX on its next open.',
-                           [ContestTypeSA[Contest]]);
+                           [ContestId(Contest)]);
                end;
             end
 
@@ -1890,7 +1891,7 @@ begin
 
            NOTHING IS GUESSED. The value written is the contest the program is
            already scoring with. *)
-         else if (Contest <> DUMMYCONTEST) and
+         else if (Contest <> NoContest) and
                  (GRepository.LogContest <> Contest) and
                  CommandCameFromContestCFG('CONTEST') then
             begin
@@ -1900,8 +1901,8 @@ begin
                            'says %s -- correcting the log. The stamp came ' +
                            'from a binary import, whose contest ordinal was ' +
                            'written under an older layout.',
-                           [ContestTypeSA[GRepository.LogContest],
-                            ContestTypeSA[Contest]]);
+                           [ContestId(GRepository.LogContest),
+                            ContestId(Contest)]);
                end;
             GRepository.SetContest(Contest);
             (* See the note beside the stamp in EnsureOpen: SetContest does not

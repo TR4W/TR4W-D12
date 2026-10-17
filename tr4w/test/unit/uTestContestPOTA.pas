@@ -81,7 +81,7 @@ uses
 function POTAQso(const aQTH, aExch: string): ContestExchange;
 begin
    FillChar(Result, SizeOf(Result), 0);
-   Result.ceContest := POTA;
+   Result.ceContest := ContestHandleOf(POTA);
    Result.Band := Band20;
    Result.Mode := CW;
    Result.RSTReceived := 599;
@@ -268,7 +268,7 @@ begin
          Continue;
          end;
       qso := POTAQso('CT', '123');
-      qso.ceContest := c;
+      qso.ceContest := ContestHandleOf(c);
       contest := ContestIdentity(c);
       CheckEquals(EmitADIFField('SRX_STRING', contest.FormatADIFReceivedExchange(qso, True)),
                   contest.EmitADIFExchangeFields(MyPark('US-0663'), qso, True),
@@ -289,7 +289,7 @@ procedure TContestPOTATests.Test_POTAImportsAParkOrAState;
       t.SIG_Info := aSIGInfo;
       t.State := aState;
       InitContestExchangeForParse(Result);
-      Result.ceContest := POTA;
+      Result.ceContest := ContestHandleOf(POTA);
       Result.QTHString := 'KEPT';
       Result.DomesticQTH := 'KEPT';
       ContestIdentity(POTA).ApplyADIFImport(t, NeutralADIFImportSession, Result);

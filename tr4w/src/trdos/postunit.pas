@@ -230,7 +230,7 @@ var
   PLeftOnBiState: PLEFTONBIStateType;
 
   CallSignLength: integer;
-  Contest: ContestType;
+  Contest: TContestHandle;   (* the active contest -- a registry handle since Q108 S2 *)
 
   NumberExchangeElementsToRecord: integer;
   ReverseExchangeNumber: boolean;
@@ -970,7 +970,7 @@ function ContestFriendlyParens: string;
     sFriendly: string;
   begin
   sFriendly := ContestIdentity( Contest ).FriendlyName;
-  if sFriendly <> string( ContestTypeSA[ Contest ] ) then
+  if sFriendly <> ContestId( Contest ) then
      begin
      Result := ' (' + sFriendly + ')';
      end
@@ -2714,7 +2714,7 @@ procedure ExportToCSV; // n4af 04/18/14 new procedure added
            + 2000, TempRXData.tSysTime.qtMonth, TempRXData.tSysTime.qtDay,
            TempRXData.tSysTime.qtHour, TempRXData.tSysTime.qtMinute,
            TempRXData.tSysTime.qtSecond, TempRXData.RSTSent,
-           TempRXData.RSTReceived, string( ContestTypeSA[ Contest ] ) ] ) );
+           TempRXData.RSTReceived, ContestId( Contest ) ] ) );
         end;
      goto 1;
      end;
@@ -3145,7 +3145,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 csQTHString := string( TempRXData.QTHString );
                 end;
 
-             if Contest in [ CUPRFCW, CUPRFSSB ] then
+             if LegacyContestOf( Contest ) in [ CUPRFCW, CUPRFSSB ] then
                 begin
                 csQTHString := string( TempRXData.QTHString );
                 end;
@@ -3222,7 +3222,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                    ( CABRILLO_HISEX = CabrilloExchangeErrorMarker ) then
                    begin
                    NoteExchangeFailure( 'contest "' +
-                      string( ContestTypeSA[ Contest ] ) +
+                      ContestId( Contest ) +
                       '" states no Cabrillo exchange layout (first at ' +
                       HisCallsign + ')' );
                    end;

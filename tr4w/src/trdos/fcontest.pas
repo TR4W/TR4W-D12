@@ -888,7 +888,7 @@ begin
   Settings.Contest.Name := CMD;
 
   //  Contest := GetContestFromString(CMD);
-  if Contest <> DUMMYCONTEST then
+  if Contest <> NoContest then
      begin
      definition := ContestIdentity(Contest);
      ApplyContestTraits(definition);
@@ -902,7 +902,7 @@ begin
         if StationInHostState then
            begin
            TempDomesticQTHDataFileName := definition.InStateDomesticFileName;
-           Settings.Contest.Name := ContestTypeSA[Contest] + ' (in state)';
+           Settings.Contest.Name := ContestId(Contest) + ' (in state)';
            end
         else
            begin
@@ -913,7 +913,7 @@ begin
              since Colorado's was corrected, and
              Test_EveryQSOPartyNamesBothDomesticFiles holds them together. *)
            TempDomesticQTHDataFileName := definition.DomesticFileName;
-           Settings.Contest.Name := ContestTypeSA[Contest] + ' (out of state)';
+           Settings.Contest.Name := ContestId(Contest) + ' (out of state)';
            MultipliersIsCounties := True;
            end;
         Add_KVEKH6KL;
@@ -1000,7 +1000,7 @@ begin
      messages.Free;
      end;
 
-  FoundContest := Contest <> DUMMYCONTEST;
+  FoundContest := Contest <> NoContest;
 
   SetContestTitle;
 
@@ -1147,7 +1147,7 @@ var
   countyFile: string;
 begin
   Result := False;
-  if Contest = DUMMYCONTEST then
+  if Contest = NoContest then
      begin
      Exit;
      end;

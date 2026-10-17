@@ -71,7 +71,7 @@ uses
 (* THE TOTALS AS THE PROGRAM HOLDS THEM NOW -- see TScoreTotals. aContest is
    the session's contest: whether it has a prefix or a DX multiplier is its
    answer (M11 S3, S4), not the session's. *)
-procedure GatherScoreTotals(aContest: ContestType; out aTotals: TScoreTotals);
+procedure GatherScoreTotals(aContest: TContestHandle; out aTotals: TScoreTotals);
 
 (* THE VIEW, KEPT WITH THE TOTALS -- see the header. Reset empties it; Add
    keeps aQso when QSOCountsTowardTotals accepts it. *)
@@ -84,7 +84,7 @@ function LoggedQSOView: TLoggedQSOView;
 (* THE FINAL SCORE of aContest's log, from aTotals: its class, else its
    identity (a plain TContestBase -- the general formula, no bonus), over the
    view above. Main thread only. *)
-function ContestFinalScore(aContest: ContestType;
+function ContestFinalScore(aContest: TContestHandle;
                            const aTotals: TScoreTotals): longint;
 
 implementation
@@ -134,7 +134,7 @@ begin
       end;
 end;
 
-procedure GatherScoreTotals(aContest: ContestType; out aTotals: TScoreTotals);
+procedure GatherScoreTotals(aContest: TContestHandle; out aTotals: TScoreTotals);
 var
    b: BandType;
    m: ModeType;
@@ -165,7 +165,7 @@ begin
    aTotals.LiveSessionTally := LiveSessionTally;
 end;
 
-function ContestFinalScore(aContest: ContestType;
+function ContestFinalScore(aContest: TContestHandle;
                            const aTotals: TScoreTotals): longint;
 var
    scorer: TContestBase;

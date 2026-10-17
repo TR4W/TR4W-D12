@@ -1464,16 +1464,16 @@ end;
   suites read). The peer path end to end is a bench check. *)
 procedure TContestKindPinTests.Test_DoingFlagsFollowEveryContestSwitch;
 var
-   savedContest: ContestType;
+   savedContest: TContestHandle;
 begin
    BeginTest('Test_DoingFlagsFollowEveryContestSwitch');
    savedContest := Contest;
    try
-      Contest := CQWWCW;
+      Contest := ContestHandleOf(CQWWCW);
       CheckFalse(DoingDomesticMults, 'CQ WW CW: no domestic multiplier');
-      Contest := ARRLSSCW;
+      Contest := ContestHandleOf(ARRLSSCW);
       CheckTrue(DoingDomesticMults, 'CQ WW CW switched to ARRL SS CW: a domestic multiplier');
-      Contest := CQWWCW;
+      Contest := ContestHandleOf(CQWWCW);
       CheckFalse(DoingDomesticMults, 'and back to CQ WW CW: none');
    finally
       Contest := savedContest;

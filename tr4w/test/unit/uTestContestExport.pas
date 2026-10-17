@@ -88,7 +88,7 @@ uses
 function EmptyQso(aContest: ContestType): ContestExchange;
 begin
    FillChar(Result, SizeOf(Result), 0);
-   Result.ceContest := aContest;
+   Result.ceContest := ContestHandleOf(aContest);
    Result.ceRecordKind := rkQSO;
 end;
 
@@ -228,7 +228,7 @@ begin
    CheckEquals('FL   0012  ', Sent(UKRAINECHAMPIONSHIP, my, qso, c), 'Ukraine MyEx');
    CheckEquals('GA   0034  ', Received(UKRAINECHAMPIONSHIP, my, qso, c), 'Ukraine HisEx');
 
-   qso.ceContest := CUPURAL;
+   qso.ceContest := ContestHandleOf(CUPURAL);
    CheckEquals('FL   0012  ', Sent(CUPURAL, my, qso, c), 'Ural Cup MyEx');
    CheckEquals('GA   0034  ', Received(CUPURAL, my, qso, c), 'Ural Cup HisEx');
 end;
@@ -250,10 +250,10 @@ begin
    CheckEquals('599 0034   --', Received(UKEI, my, qso, c), 'UK/EI: no QTH is --');
    CheckEquals('599 0012     FL      ', Sent(UKEI, my, qso, c), 'UK/EI MyEx: the shared arm');
 
-   qso.ceContest := IOTA;
+   qso.ceContest := ContestHandleOf(IOTA);
    CheckEquals('599 0034 ------', Received(IOTA, my, qso, c), 'IOTA: no island is ------');
 
-   qso.ceContest := UKEI;
+   qso.ceContest := ContestHandleOf(UKEI);
    qso.QTHString := 'EU';
    c := Ctx('599', 'EU');
    CheckEquals('599 0034   EU', Received(UKEI, my, qso, c), 'UK/EI: a QTH is itself');
@@ -618,7 +618,7 @@ procedure TContestExportTests.Test_RoundTripThroughTodaysImport;
 
       if contest.WritesADIFContestId then
          begin
-         CheckEquals(Ord(aContest), Ord(back.ceContest), what + ': CONTEST_ID names it');
+         CheckEquals(Ord(aContest), back.ceContest.ToByte, what + ': CONTEST_ID names it');
          end;
 
       if contest.ADIFPowerTag = 'RX_PWR' then
@@ -730,7 +730,7 @@ function PartyQSO(aContest: ContestType;
                   const aQTH, aDomesticKey, aCountryID: string): ContestExchange;
 begin
    FillChar(Result, SizeOf(Result), 0);
-   Result.ceContest := aContest;
+   Result.ceContest := ContestHandleOf(aContest);
    Result.Callsign := 'K1ABC';
    Result.Band := Band20;
    Result.Mode := CW;
@@ -896,7 +896,7 @@ var
 begin
    BeginTest('Test_BCQPExportsStateBCAndNoCounty');
    FillChar(qso, SizeOf(qso), 0);
-   qso.ceContest := BCQP;
+   qso.ceContest := ContestHandleOf(BCQP);
    qso.Band := Band20;
    qso.Mode := CW;
    qso.Callsign := 'VE7ABC';
@@ -906,7 +906,7 @@ begin
    CheckTrue(Pos('<STATE:2>BC ', text) > 0, 'BCQP writes STATE:BC: ' + text);
    CheckTrue(Pos('<CNTY', text) = 0, 'and the body writes no CNTY: ' + text);
 
-   qso.ceContest := FLORIDAQSOPARTY;
+   qso.ceContest := ContestHandleOf(FLORIDAQSOPARTY);
    qso.Callsign := 'K4ABC';
    qso.QTHString := 'LEE';
    qso.DomesticQTH := 'LEE';
@@ -915,7 +915,7 @@ begin
 
    (* Q76: an out-of-state station's record carries ITS state, not the
       host's -- the corpus's Michigan QSO with W3ED in DC. *)
-   qso.ceContest := MICHQSOPARTY;
+   qso.ceContest := ContestHandleOf(MICHQSOPARTY);
    qso.Callsign := 'W3ED';
    qso.QTHString := 'DC';
    qso.DomesticQTH := 'DC';

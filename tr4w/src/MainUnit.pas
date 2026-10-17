@@ -749,7 +749,7 @@ uses
   uWSJTXState,       // the state the WSJT-X indicator paints from
   uLogNote,          // NoteText / SetNoteText -- a note's text, spelled once
   uPanadapterForm,   // it is not a tw_ window, so it saves its own row
-  uContestRegistry,  // ContestIdentity -- the contest's calendar ids, M1
+  uContestRegistry,  // ContestIdentity -- the contest's calendar ids, M1; ContestId, the handle (Q108 S2)
   uContestBase,      // QSOCountsTowardTotals -- which records the loader counts, M6
   uContestFactory,   // ActiveContest -- the rescore's one lookup per QSO, M11 S4
   uScoreTotals;      // AddLoggedQSO -- the bonus view, kept with the totals, M6
@@ -4470,9 +4470,9 @@ begin
   (* THE CONTEST'S NAME IN TWO MENU CAPTIONS. Was ModifyMenuA, which rewrites
     the row through the menu handle; Caption is the property that row has. *)
   SetMenuCaption(menu_qrzru_calendar,
-                 SysUtils.Format(TC_RULESONQRZRU, [string(ContestTypeSA[Contest])]));
+                 SysUtils.Format(TC_RULESONQRZRU, [ContestId(Contest)]));
   SetMenuCaption(menu_WA7BNM_calendar,
-                 SysUtils.Format(TC_RULESONSM3CER, [string(ContestTypeSA[Contest])]));
+                 SysUtils.Format(TC_RULESONSM3CER, [ContestId(Contest)]));
   (* THE 60/30-MINUTE BREAK THAT STOOD HERE IS DELETED (Q60, 2026-10-15). It
     wrote T1 -- 60 minutes for CQ WW and IARU HF (n4af 4.35.5, 4.115.4) -- and
     NOTHING READ IT: LOGWIND's on-air-time reader sat inside a comment in D7
@@ -8069,7 +8069,7 @@ begin
   QuickDisplay(IntToStr(GetTickCount64 - T1));
   // showint(m);
 {$IFEND}
-  if contest = RADIOYOC then // 4.53.2 // 4.72.9
+  if LegacyContestOf(Contest) = RADIOYOC then // 4.53.2 // 4.72.9
      begin
      PrevNr := copy(IntToStr(TempRXData.NumberReceived), 1, 3); // 4.53.2
      end;
@@ -11336,7 +11336,7 @@ begin
         newRXData.Zone := oldRXData_v1_5.Zone;
         newRXData.NameSent := oldRXData_v1_5.NameSent;
         newRXData.Kids := oldRXData_v1_5.Kids;
-        newRXData.ceContest := oldRXData_v1_5.ceContest;
+        newRXData.ceContest := ContestHandleOf(oldRXData_v1_5.ceContest);  (* the same byte: a legacy contest's handle is its number *)
         newRXData.QSOPoints := oldRXData_v1_5.QSOPoints;
         newRXData.RandomCharsReceived := oldRXData_v1_5.RandomCharsReceived;
         newRXData.ceClearMultSheet := oldRXData_v1_5.ceClearMultSheet;
@@ -11432,7 +11432,7 @@ begin
         newRXData.Zone := oldRXData_v1_6.Zone;
         newRXData.NameSent := oldRXData_v1_6.NameSent;
         newRXData.Kids := oldRXData_v1_6.Kids;
-        newRXData.ceContest := oldRXData_v1_6.ceContest;
+        newRXData.ceContest := ContestHandleOf(oldRXData_v1_6.ceContest);  (* the same byte, as above *)
         newRXData.QSOPoints := oldRXData_v1_6.QSOPoints;
         newRXData.RandomCharsReceived := oldRXData_v1_6.RandomCharsReceived;
         newRXData.ceClearMultSheet := oldRXData_v1_6.ceClearMultSheet;

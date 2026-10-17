@@ -353,7 +353,7 @@ begin
    cls := ContestClassFor(aContest);
    if cls <> nil then
       begin
-      obj := cls.Create(aContest);
+      obj := cls.Create(ContestHandleOf(aContest));
       end;
    try
       if obj <> nil then
@@ -378,7 +378,7 @@ begin
    cls := ContestClassFor(aContest);
    if cls <> nil then
       begin
-      obj := cls.Create(aContest);
+      obj := cls.Create(ContestHandleOf(aContest));
       end;
    try
       if obj <> nil then

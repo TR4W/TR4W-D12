@@ -306,12 +306,14 @@ contest log stores in its `contest` table. **A name that was ever written to a
 file is never given to a different contest** (2026-10-16, design Q105). When a
 spelling must change, the old one goes into
 `uContestNames.LEGACY_CONTEST_NAMES` in the same commit, as a permanent READ
-alias: `TryContestFromName` / `ContestFromName` (what
-`TF.GetContestFromString` and the log's reopen call) resolve it, and the
-CONTEST setting stores the current spelling in its place
-(`uSettingsModel.RegisterSettingValueSpelling`, registered by uCFG). It is the
-ONE resolver of a contest name -- do not write another loop over
-`ContestTypeSA`. The worked example: New England was `NEQP`, is `NEWEQP`, and
+alias naming the contest by its CURRENT ID (a string, since Q108 S2 -- so a
+contest registered by id can be renamed the same way): `TryContestFromName` /
+`ContestFromName` (what the log's reopen calls; `TF.GetContestFromString` is
+deleted) resolve it, and the CONTEST setting stores the current spelling in
+its place (`uSettingsModel.RegisterSettingValueSpelling`, registered by uCFG).
+It is the ONE resolver of a contest name, over the registry's ids
+(`uContestRegistry.FindContestById`) -- do not write another loop over
+`ContestTypeSA`, and do not index it by a handle (`ContestId(h)` is the id). The worked example: New England was `NEQP`, is `NEWEQP`, and
 `NEQP` stays an alias for it for good (never Nebraska, `NE-QSO-PARTY`).
 `uTestContestNames` pins that no alias equals a live spelling and that no two
 live spellings differ only by case (the resolver ignores case, as the config
@@ -337,6 +339,48 @@ shared files a contest touches; the search path already covers
 
 **Run `test-contest-factory.sh` before and after.** It must stay
 `13 identical, 0 differing`.
+
+### Step 5a — a contest is a HANDLE in memory (Q108 S2, 2026-10-16)
+
+**THE IN-MEMORY KEY IS `VC.TContestHandle`, NOT `ContestType`.** The global
+`Contest`, `ContestExchange.ceContest`, `TLogFileInformation.liContest` and
+every registry and factory question take a one-byte handle (a packed record
+with `=` and `<>`, so a band, a mode or a bare number is refused where a
+contest is expected). `NoContest` is "no contest" (handle 0).
+
+**A LEGACY CONTEST'S HANDLE IS ITS LEGACY NUMBER** (`Ord(member)`), which is
+why nothing persisted moved: the `.TRW` byte, the multi-op packet, the
+server's log and the log-compare packet mean what they meant. The registry
+states that rule and is the only converter: `ContestHandleOf(member)`,
+`LegacyContestOf(h)` (DUMMYCONTEST for a handle with no legacy number),
+`ContestLegacyNumber(h, n)`, `ContestId(h)` (the stored name -- for a legacy
+contest its `ContestTypeSA` spelling), `FindContestById`, `KnownContests`
+(every contest with an id, `NoContest` first, handle order) and
+`ContestBroadcastNumber(h)` (`<contestnr>`). The handle's byte is reached
+through `TContestHandle.FromByte` / `ToByte` only, and only at the registry
+and the legacy-number boundaries (the `.TRW` reader, the matrix, logdump).
+
+- **A class is made with its handle**: `TContestBase.Create(aHandle)`; the
+  base reads its `Id` from the registry and its name fallbacks answer it. A
+  test writes `TFoo.Create(ContestHandleOf(FOO))`.
+- **`ContestIdentity`, `ContestClassFor` and `ActiveContest` keep a
+  `ContestType` overload** for the tests and IN7QPNE, which name legacy
+  contests. Nothing else does: pass `ContestHandleOf(X)`.
+- **A rule site outside the factory that still names a contest** compares
+  `LegacyContestOf(Contest) = MEMBER`, so `Lint-ContestNameTests` keeps
+  counting it (five, in MainUnit, logedit and postunit).
+- **The CONTEST setting's vocabulary is a PROVIDER**
+  (`RegisterSettingAllowedValuesProvider`, uCFG's `ContestIdVocabulary`),
+  read when asked: a list copied at uCFG's initialization would miss every
+  contest, because the contest units register later. The CONTEST token is
+  resolved by `TryContestFromName` (`uSettingsEffects`), not by position.
+- **A `.TRW` whose first record names a contest number above the legacy
+  range is refused** with a message, and no log is written
+  (`uTestLogImport.TestImportRefusesAContestNumberItDoesNotKnow`).
+
+`uTestContestFactory.Test_AContestHandleIsItsLegacyNumber` pins the rule for
+every member and every byte above them; `uTestLogBinaryFile` pins the byte's
+offset (265) and size (1) in the 376-byte record.
 
 ### Step 5b — what the unit tests hold a new contest to (Q108 S1, 2026-10-16)
 

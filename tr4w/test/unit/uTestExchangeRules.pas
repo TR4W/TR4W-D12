@@ -374,7 +374,7 @@ begin
       t.Mults[AllBands, Both, rmDX] := 9;
 
       station := PinStation(s, FISTS);
-      obj := ContestClassFor(FISTS).Create(FISTS);
+      obj := ContestClassFor(FISTS).Create(ContestHandleOf(FISTS));
       try
          obj.SetStation(station);
          CheckEquals(11, obj.CombineScore(t), Who(FISTS, s) + ' scores its points alone');
@@ -383,7 +383,7 @@ begin
          end;
 
       station := PinStation(s, CQWWCW);
-      obj := ContestClassFor(CQWWCW).Create(CQWWCW);
+      obj := ContestClassFor(CQWWCW).Create(ContestHandleOf(CQWWCW));
       try
          obj.SetStation(station);
          CheckEquals(99, obj.CombineScore(t), Who(CQWWCW, s) + ' multiplies');

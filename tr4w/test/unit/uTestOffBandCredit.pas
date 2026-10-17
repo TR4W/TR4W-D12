@@ -120,7 +120,7 @@ end;
 procedure TOffBandCreditTests.Test_OffBandQSOIsNoDupeAndMakesNone;
 var
    list: TCallsignsList;
-   savedContest: ContestType;
+   savedContest: TContestHandle;
    savedByBand: boolean;
    savedByMode: boolean;
 begin
@@ -131,7 +131,7 @@ begin
    savedByMode := Settings.Qso.ByMode;
    InitList(list);
    try
-      Contest := IDAHOQSOPARTY;
+      Contest := ContestHandleOf(IDAHOQSOPARTY);
       Settings.Qso.ByMode := True;
 
       (* A CONTEST WHOSE QSOs ARE NOT COUNTED PER BAND -- the case M3 found. *)
@@ -167,7 +167,7 @@ end;
 procedure TOffBandCreditTests.Test_EveryBandStillMarksDupesForAContestUsingThemAll;
 var
    list: TCallsignsList;
-   savedContest: ContestType;
+   savedContest: TContestHandle;
    savedByBand: boolean;
    savedByMode: boolean;
 begin
@@ -182,7 +182,7 @@ begin
    savedByMode := Settings.Qso.ByMode;
    InitList(list);
    try
-      Contest := CQWWCW;
+      Contest := ContestHandleOf(CQWWCW);
       CheckTrue(ContestCreditsBand(ContestIdentity(Contest), Band30),
                 'CQ WW CW states no bands, so it credits 30 m');
       Settings.Qso.ByMode := True;
@@ -223,7 +223,7 @@ end;
 
 procedure TOffBandCreditTests.Test_OffBandShowsNoMultiplierNeeded;
 var
-   savedContest: ContestType;
+   savedContest: TContestHandle;
    savedByBand: boolean;
    savedByMode: boolean;
    savedDXCCByBand: TAdditionalMultByBand;
@@ -251,7 +251,7 @@ begin
    savedActiveBand := ActiveBand;
    hadAda := DomQTHTable.HasPrefix('ADA');
    try
-      Contest := IDAHOQSOPARTY;
+      Contest := ContestHandleOf(IDAHOQSOPARTY);
       Settings.Mult.ByBand := False;
       Settings.Mult.ByMode := True;
       (* No zone multiplier: Idaho's class answers HasZoneMultiplier False
@@ -312,7 +312,7 @@ end;
 
 procedure TOffBandCreditTests.Test_OffBandMultiplierLeavesItNeededOnBand;
 var
-   savedContest: ContestType;
+   savedContest: TContestHandle;
    savedByBand: boolean;
    savedByMode: boolean;
    savedDomesticByBand: TAdditionalMultByBand;
@@ -349,7 +349,7 @@ begin
    savedRestart := tRestartInfo;
    savedInHostState := StationInHostState;
    try
-      Contest := IDAHOQSOPARTY;
+      Contest := ContestHandleOf(IDAHOQSOPARTY);
       (* AN IDAHO ENTRANT, who works everyone: this is the band rule's test,
          and the record carries no typed QTH for the host-area rule (Q107)
          to look up. uTestHostAreaRule is that rule's. *)

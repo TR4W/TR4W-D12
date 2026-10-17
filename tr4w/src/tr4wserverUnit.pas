@@ -1004,7 +1004,7 @@ var
 begin
   if not OpenServerLog(slOpenExisting) then Exit;
   ServerLogFileInformation.liServerLogSize := ServerLog.Size;
-  ServerLogFileInformation.liContest := DUMMYCONTEST;
+  ServerLogFileInformation.liContest := NoContest;
   if ServerLogFileInformation.liServerLogSize > SizeOfTLogHeader then
      begin
      ServerLog.Seek(SizeOfTLogHeader, soBeginning);

@@ -78,6 +78,7 @@ type
 implementation
 
 uses
+   uContestRegistry,   (* ContestHandleOf -- a legacy contest's handle, Q108 S2 *)
    (* LCLType for MAXBYTE / MAXWORD -- the not-set markers
      ClearContestExchange writes, and the values this suite exists to prove
      never reach the log.  It was Windows; LCLType declares both and is what
@@ -162,7 +163,7 @@ begin
      row. That is exactly why it needs checking: nothing else would notice a
      QSO coming back as DUMMYCONTEST, and PostUnit branches on
      `rec.ceContest = POTA` while exporting. *)
-   SameInt('ceContest', Ord(a.ceContest), Ord(b.ceContest));
+   SameInt('ceContest', a.ceContest.ToByte, b.ceContest.ToByte);
 
    (* when and what *)
    SameInt('tSysTime', integer(QSOTimeToUnixUTC(a.tSysTime)),
@@ -1295,7 +1296,7 @@ begin
      whole is safe; the reader does the same. *)
    FillChar(aQso, SizeOf(aQso), 0);
    aQso.ceRecordKind := rkQSO;
-   aQso.ceContest := DUMMYCONTEST;
+   aQso.ceContest := NoContest;
    aQso.id := 'exchange' + IntToStr(aSeed);
    aQso.ceQSOID1 := 1000 + aSeed;
    aQso.ceQSOID2 := 2000 + aSeed;
@@ -1955,7 +1956,7 @@ begin
             MakeDistinctQSO(seed, 0);
             seedId := repo.SaveQSO(seed);
             seedGuid := repo.LastGuid;
-            repo.SetContest(CQWWCW);
+            repo.SetContest(ContestHandleOf(CQWWCW));
             repo.SaveConfigValue('SEED COMMAND', 'seed', 'contest');
             repo.SaveSessionValue('seed', 'seed');
             repo.SaveMessage('CQ', 'CW', 'F1', 'seed', '');
@@ -2002,7 +2003,7 @@ begin
                   end;
                6:
                   begin
-                  repo.SetContest(CQWWSSB);
+                  repo.SetContest(ContestHandleOf(CQWWSSB));
                   end;
                7:
                   begin
@@ -2092,7 +2093,7 @@ begin
       db.CreateNew(fn);
       repo := TLogRepository.Create(db);
       try
-         repo.SetContest(CQWWCW);
+         repo.SetContest(ContestHandleOf(CQWWCW));
          for i := 0 to 2 do
             begin
             MakeDistinctQSO(qso, i);
@@ -2114,7 +2115,7 @@ begin
       repo := TLogRepository.Create(db);
       try
          CheckEquals(0, integer(repo.RecordCount), 'no QSO survives');
-         CheckTrue(repo.LogContest = DUMMYCONTEST, 'and no contest row');
+         CheckTrue(repo.LogContest = NoContest, 'and no contest row');
       finally
          repo.Free;
       end;
@@ -2601,9 +2602,9 @@ begin
          MakeDistinctQSO(a, 1);
          MakeDistinctQSO(b, 2);
          MakeDistinctQSO(c, 3);
-         a.ceContest := CQWWCW;
-         b.ceContest := CQWWCW;
-         c.ceContest := CQWWCW;
+         a.ceContest := ContestHandleOf(CQWWCW);
+         b.ceContest := ContestHandleOf(CQWWCW);
+         c.ceContest := ContestHandleOf(CQWWCW);
          (* A county line: one exchange, two QSOs. *)
          a.id := 'countyline';
          b.id := 'countyline';
@@ -2618,7 +2619,7 @@ begin
             appends.Free;
          end;
 
-         CheckTrue(repo.LogContest = CQWWCW, 'the log is stamped with the records'' contest');
+         CheckTrue(repo.LogContest = ContestHandleOf(CQWWCW), 'the log is stamped with the records'' contest');
 
          related := repo.RelatedRowIds(1);
          CheckEquals(1, integer(Length(related)), 'the first row has one relative');

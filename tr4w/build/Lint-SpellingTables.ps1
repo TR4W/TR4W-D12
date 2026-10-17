@@ -271,6 +271,15 @@ foreach ($p in $text.Keys)
       }
    }
 
+# THE CONTEST VOCABULARY IS A PROVIDER NOW (Q108 S2, 2026-10-16), so no
+# RegisterSettingAllowedValues call names its table any more -- uCFG registers
+# ContestIdVocabulary, which reads the contest registry's ids, and a legacy
+# contest's id IS its ContestTypeSA spelling. The table still decides which
+# contest a CONTEST line selects, so it keeps this guard by name; without this
+# line it would have lost it in silence, which is exactly what the floor below
+# exists to catch and could not here (one table of slack).
+[void] $wanted.Add('ContestTypeSA')
+
 foreach ($name in @($wanted | Sort-Object))
    {
    if ($generated -contains $name) { continue }

@@ -203,7 +203,7 @@ function DoingZoneMults: boolean;
   S6. *)
 function DoingDomesticMults: boolean;
 (* Does aContest count any multiplier at all at this station? M11 S4. *)
-function DoingAnyMults(aContest: ContestType): boolean;
+function DoingAnyMults(aContest: TContestHandle): boolean;
 {KK1L: 6.64 Added to keep BM up to date with changes made while logging}
 procedure UpdateBandMapDupeStatus(RXCall: CallString; RXBand: BandType; RXMode:
   ModeType; MakeDupe: boolean);
@@ -2482,7 +2482,7 @@ begin
 
        ZoneInitialExchange:
          begin
-           if Contest in [OZCR_O, OZCR_Z] then
+           if LegacyContestOf(Contest) in [OZCR_O, OZCR_Z] then
               begin
               //        if length(Call) = 3 then if Call[1] = 'R' then {if Call[2] in ['0'..'1'] then} Exit;
               if Call[1] = 'R' then
@@ -2500,7 +2500,7 @@ begin
                 Exit;
                 end;
 
-           if Contest in [RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB] then
+           if LegacyContestOf(Contest) in [RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB] then
               begin
               Result := '';
               Command := GetOblast(Call);
@@ -2788,7 +2788,7 @@ begin
      {           Both the zone and country are log entries, but only the zone is in the}
      {           exchange. This confused the parser. Only the first string (zone) is needed.}
 
-     if (ContestSession.InitialExchange = ZoneInitialExchange) or (Contest = IARU) then
+     if (ContestSession.InitialExchange = ZoneInitialExchange) or (LegacyContestOf(Contest) = IARU) then
        {KK1L: 6.71 The init exchange bug came back when I changed the Initital exchange default}
        {           for IARU and WRTC!! Added the second line above.}
         begin
@@ -3108,7 +3108,7 @@ end;
   ActiveContest rebuilds the station on every call. A domestic contest now
   pays that fetch here, where the session's field answered before; every DX,
   prefix and zone contest already did. *)
-function DoingAnyMults(aContest: ContestType): boolean;
+function DoingAnyMults(aContest: TContestHandle): boolean;
 var
    contestRules: TContestBase;
 begin

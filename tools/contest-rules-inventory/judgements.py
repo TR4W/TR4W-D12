@@ -188,7 +188,10 @@ ROUTINES = {
 # The logsubs2 dupe-marking site (ActiveQSOPointMethod = AlwaysOnePointPerQSO)
 # left this list at M3 (2026-10-01): it asks TContestBase.MarksDupes now.
 SITE_OVERRIDES = [
-   ("MainUnit.pas", "LoadinLog", r"\bcontest\s*=\s*RADIOYOC\b",
+   # Spelled `LegacyContestOf(Contest) = RADIOYOC` since Q108 S2 (2026-10-16):
+   # the global holds a registry handle and the rule site asks for its legacy
+   # member. Same site, same rule.
+   ("MainUnit.pas", "LoadinLog", r"\bLegacyContestOf\(\s*contest\s*\)\s*=\s*RADIOYOC\b",
     ("exchange", new("SessionExchangeState (previous QSO number)"))),
 ]
 

@@ -423,6 +423,7 @@ end;
 procedure TLogBinaryFileTests.TestTheRecordHasTheSameFIELD_OFFSETSEverywhere;
 var
    r: ContestExchange;
+   info: TLogFileInformation;
    base: PtrUInt;
 
    function Off(const aAddr): PtrUInt;
@@ -439,6 +440,20 @@ begin
    CheckEquals(7,   Off(r.Mode),            'Mode follows Band');
    CheckEquals(290, Off(r.id),              'id, a string[32], sits at 290');
    CheckEquals(376, SizeOf(ContestExchange), 'and the whole record is 376');
+
+   (* THE CONTEST BYTE -- a registry handle since Q108 S2, an enum before it.
+     Measured against HEAD's VC.pas and the handle's, 2026-10-16: offset 265
+     and one byte in both, so a .TRW record, a multi-op packet and the
+     server's log keep their layout. A legacy contest's handle IS its legacy
+     number, so the byte's MEANING is unchanged too. *)
+   CheckEquals(265, Off(r.ceContest),       'ceContest, the contest byte, sits at 265');
+   CheckEquals(1,   SizeOf(r.ceContest),    'and is one byte');
+   CheckEquals(1,   SizeOf(TContestHandle), 'a contest handle is one byte');
+   (* AND THE LOG-COMPARE PACKET (NET_LOGCOMPARE), the other record that
+     carries the byte over the wire: 19 bytes, the contest last. *)
+   CheckEquals(19, SizeOf(TLogFileInformation), 'TLogFileInformation is 19 bytes');
+   CheckEquals(18, PtrUInt(@info.liContest) - PtrUInt(@info),
+               'liContest, the contest byte, is its last');
 
    (* INSIDE THE NESTED RECORD, which is where the live defect was: the
      four offsets above all match on aarch64-darwin and QTH.Continent

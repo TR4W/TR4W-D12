@@ -1472,7 +1472,7 @@ var
    v: integer;
 begin
    BeginTest('Test_TheBaseWritesTheMarker');
-   obj := TContestBase.Create(DUMMYCONTEST);
+   obj := TContestBase.Create(NoContest);
    try
       for v := 0 to VARIANTS - 1 do
          begin

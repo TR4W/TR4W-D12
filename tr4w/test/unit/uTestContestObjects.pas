@@ -97,11 +97,11 @@ begin
    cls := ContestClassFor(aContest);
    if cls = nil then
       begin
-      Result := TContestBase.Create(aContest);
+      Result := TContestBase.Create(ContestHandleOf(aContest));
       end
    else
       begin
-      Result := cls.Create(aContest);
+      Result := cls.Create(ContestHandleOf(aContest));
       end;
    Result.SetStation(aStation);
 end;
@@ -119,7 +119,7 @@ begin
    cls := ContestClassFor(aContest);
    if cls <> nil then
       begin
-      Result := cls.Create(aContest);
+      Result := cls.Create(ContestHandleOf(aContest));
       Result.SetStation(aStation);
       end;
 end;

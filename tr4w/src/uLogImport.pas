@@ -132,6 +132,9 @@ function ImportBinaryLog(const aSourceFile, aTargetFile: string;
 
 implementation
 
+uses
+   uContestRegistry;   (* IsKnownContest -- the first record's contest *)
+
 const
    (* WHAT SQLITE MAY LEAVE BESIDE A DATABASE. The write-ahead log and its
      index, because every log runs in WAL mode (TLogDatabase.ApplyPragmas);
@@ -249,6 +252,25 @@ begin
                  says so rather than silently keeping the first answer. *)
                if aResult.RecordsRead = 1 then
                   begin
+                  (* A CONTEST NUMBER THIS PROGRAM DOES NOT KNOW IS REFUSED,
+                    NOT STORED (Q108 S2, design 8.2u). The byte is a D7
+                    ContestType ordinal; one above the last of them is a
+                    damaged file or one from a newer TR4W. It used to index
+                    ContestTypeSA out of range when the log was stamped.
+                    Counted as a failed record, so nothing is committed and
+                    the staged file is discarded -- no log rather than a
+                    log that names no contest. *)
+                  if not IsKnownContest(rec.ceContest) then
+                     begin
+                     Inc(aResult.RecordsFailed);
+                     aFailure := SysUtils.Format(
+                        'record 1 names contest number %d, and the last ' +
+                        'contest this TR4W knows is %d -- the file is ' +
+                        'damaged, or was written by a newer TR4W. Nothing ' +
+                        'was imported.',
+                        [rec.ceContest.ToByte, Ord(High(ContestType))]);
+                     Break;
+                     end;
                   repo.SetContest(rec.ceContest);
                   end
                else if (rec.ceContest <> repo.LogContest) and
@@ -258,8 +280,8 @@ begin
                      'Record %d is contest %d but the log started as %d. The ' +
                      'first one is what the log records; TR4W stores one ' +
                      'contest per log.',
-                     [aResult.RecordsRead, Ord(rec.ceContest),
-                      Ord(repo.LogContest)]);
+                     [aResult.RecordsRead, rec.ceContest.ToByte,
+                      repo.LogContest.ToByte]);
                   end;
                try
                   (* Grouped, so a county line or a POTA n-fer arrives as one

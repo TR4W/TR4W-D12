@@ -35,6 +35,7 @@ type
 implementation
 
 uses
+   uContestRegistry,   (* ContestHandleOf -- a legacy contest's handle, Q108 S2 *)
    VC,
    uSettingsModel,
    logsubs2;
@@ -44,7 +45,7 @@ var
    q: ContestExchange;
 begin
    FillChar(q, SizeOf(ContestExchange), 0);
-   q.ceContest := CQWWCW;
+   q.ceContest := ContestHandleOf(CQWWCW);
    q.Callsign := 'W1AW';
    q.Band := Band20;
    q.Mode := CW;

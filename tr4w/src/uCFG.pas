@@ -370,6 +370,7 @@ implementation
 uses MainUnit, SysUtils,   // Issue #997 -- SysUtils for Format/StrPCopy (asm-to-Pascal conversion)
      uSettingsModel,       // Settings -- the commands that have left this array
      uContestNames,        // CurrentContestSpelling -- CONTEST's legacy names
+     uContestRegistry,     // KnownContests, ContestId -- CONTEST's vocabulary
      uStateBridge;         // RefreshWSJTXIndicator -- the box tracks WSJT-X ENABLED
 
 var
@@ -1718,6 +1719,24 @@ begin
       end;
 end;
 
+(* THE CONTEST setting's vocabulary: every known contest's id, in handle
+  order -- NoContest's 'DUMMY CONTEST' first, as ContestTypeSA listed it
+  (Q108 S2). A PROVIDER, asked when the vocabulary is read, never at this
+  unit's initialization: see the registration below. *)
+function ContestIdVocabulary: TArray<string>;
+var
+   known: TContestHandleList;
+   i: integer;
+begin
+   Result := nil;
+   known := KnownContests;
+   SetLength(Result, Length(known));
+   for i := 0 to High(known) do
+      begin
+      Result[i] := ContestId(known[i]);
+      end;
+end;
+
 (* THE VALIDATOR THAT USED TO BE A HOOK INDEX.
 
   Registered HERE because this is the unit that knows about CTY.DAT, and
@@ -1767,7 +1786,13 @@ initialization
                                 BandStringsArrayWithOutSpaces);
    RegisterSettingAllowedValues('Contest.SingleBandScore',
                                 BandStringsArrayWithOutSpaces);
-   RegisterSettingAllowedValues('Contest.ContestToken', ContestTypeSA);
+   (* THE CONTEST VOCABULARY IS THE REGISTRY'S IDS, READ WHEN ASKED (Q108
+     S2, design 8.2u). It was ContestTypeSA, copied here; a list built
+     from the registry at this point would miss every contest, because
+     the contest units initialise after this one. ContestIdVocabulary is
+     asked each time instead. Same values, same order, today. *)
+   RegisterSettingAllowedValuesProvider('Contest.ContestToken',
+                                        @ContestIdVocabulary);
    (* AND ITS LEGACY NAMES, read and stored as the current spelling --
      CONTEST = NEQP is the New England QSO Party, NEWEQP since 2026-10-16.
      The vocabulary above offers current spellings only. See

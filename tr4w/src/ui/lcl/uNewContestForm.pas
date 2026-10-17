@@ -42,7 +42,7 @@ uses
   Classes, Controls, Forms, StdCtrls, ExtCtrls, Dialogs,
   uTR4WStrings,
   LCLStrConsts,   // RC_/TC_ captions -- see the note on SetRowLabels
-  VC;             (* ContestType -- the identity each contest line holds (M9b) *)
+  VC;             (* TContestHandle -- the identity each contest line holds (M9b; a handle since Q108 S2) *)
 
 type
   { The nine dynamic rows: three free-text fields then six CATEGORY-* choices.
@@ -103,7 +103,7 @@ type
        FContests[i]. A typed field the view owns, never the caption read
        back and never an Objects[] cast: the caption is the display name, and
        the contest is the identity. *)
-    FContests: array of ContestType;
+    FContests: array of TContestHandle;
     FChoice: TNewContestChoice;
     FDir: string;            { the directory lstFiles was filled from }
     FBrowsedFile: string;    { set only when Browse... was used }
@@ -134,7 +134,7 @@ type
     function  SelectedFile: string;
     function  MyCall: string;
     function  ContestName: string;
-    function  SelectedContest: ContestType;
+    function  SelectedContest: TContestHandle;
     function  ContestChosen: boolean;
     function  IAmIn: boolean;
     function  RowCaption(aRow: integer): string;
@@ -182,7 +182,8 @@ uses
   Log4D,
   Version,    (* TR4W_CURRENTVERSION -- the title names the build *)
   (* The drop-down's contests, in order, with their display names -- M9b. *)
-  uContestChoices;
+  uContestChoices,
+  uContestRegistry; (* ContestId -- the chosen contest's token, Q108 S2 *)
 
 function NewContestFormCaption: string;
 begin
@@ -872,13 +873,13 @@ begin
    Result := Trim(edtMyCall.Text);
 end;
 
-(* THE CHOSEN CONTEST, from the line's typed identity -- M9b. DUMMYCONTEST
+(* THE CHOSEN CONTEST, from the line's typed identity -- M9b. NoContest
   when none is chosen, which no line holds. *)
-function TfrmNewContest.SelectedContest: ContestType;
+function TfrmNewContest.SelectedContest: TContestHandle;
 var
    i: integer;
 begin
-   Result := DUMMYCONTEST;
+   Result := NoContest;
    i := cboContest.ItemIndex;
    if (i >= 0) and (i <= High(FContests)) then
       begin
@@ -895,7 +896,7 @@ begin
    Result := '';
    if ContestChosen then
       begin
-      Result := ContestTypeSA[SelectedContest];
+      Result := ContestId(SelectedContest);
       end;
 end;
 

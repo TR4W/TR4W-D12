@@ -19,23 +19,28 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  *)
 
-(* A CONTEST NAME, READ BACK INTO A ContestType -- the ONE place that does it
+(* A CONTEST NAME, READ BACK INTO A CONTEST -- the ONE place that does it
   (2026-10-16, design Q105).
 
-  WHAT A "CONTEST NAME" IS HERE. The ContestTypeSA spelling (VC.pas): what a
-  .cfg's CONTEST = line says, what the SQLite log stores in its contest table
+  WHAT A "CONTEST NAME" IS HERE. The contest's ID (uContestRegistry.ContestId;
+  for a legacy contest, its ContestTypeSA spelling in VC.pas): what a .cfg's
+  CONTEST = line says, what the SQLite log stores in its contest table
   (uLogRepository.SetContest writes it, LoadContest reads it back through
-  TF.GetContestFromString), and what the CONTEST setting holds. It is NOT the
+  ContestFromName), and what the CONTEST setting holds. It is NOT the
   Cabrillo CONTEST: name nor the ADIF CONTEST_ID -- those are the class's
   (CabrilloName, ADIFContestId) and ADIF import resolves them through
   uContestRegistry.FindContestByADIFContestId.
 
-  TWO READERS, ONE RULE. TF.GetContestFromString (the log's contest row) and
-  the CONTEST setting (uCFG registers CurrentContestSpelling for it, so a
-  config line, a stored config row or a peer is read the same way) both come
-  here. Before this unit they were two loops with two rules -- one exact, one
-  case-insensitive -- and a renamed contest would have had to be taught to
-  both.
+  THE REGISTRY HOLDS THE IDS (Q108 S2, 2026-10-16). This unit asks
+  uContestRegistry.FindContestById for a current name, so a contest that
+  registers by id alone (S3) is found the same way, and walks no table of
+  its own. The answer is a registry handle (VC.TContestHandle).
+
+  TWO READERS, ONE RULE. The log's contest row and the CONTEST setting (uCFG
+  registers CurrentContestSpelling for it, so a config line, a stored config
+  row or a peer is read the same way) both come here. Before this unit they
+  were two loops with two rules -- one exact, one case-insensitive -- and a
+  renamed contest would have had to be taught to both.
 
   ---------------------------------------------------------------------------
   THE LEGACY NAMES -- READ-ONLY, AND PERMANENT
@@ -47,10 +52,13 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   contest, silently. So when a contest's spelling changes, its OLD spelling
   goes into LEGACY_CONTEST_NAMES below and stays there for good: it is READ
   (resolved to its contest), and nothing ever WRITES it again -- writers use
-  ContestTypeSA, which holds only the current spelling.
+  the contest's id, which is only ever the current spelling.
 
-  An alias may never equal a current ContestTypeSA spelling (a live name would
-  then resolve two ways); uTestContestNames pins that for every entry.
+  AN ALIAS NAMES THE CONTEST BY ITS CURRENT ID, NOT BY A ContestType MEMBER
+  (Q108 S2), so a contest that registers by id alone can be renamed under
+  the same rule. An alias may never equal a current id (a live name would
+  then resolve two ways), and its id must resolve; uTestContestNames pins
+  both for every entry.
 
     NEQP   New England QSO Party, renamed NEWEQP on 2026-10-16 (NY4I, Q105):
            DXLog's name, and NE-QSO-PARTY -- the ADIF and Cabrillo name of the
@@ -74,77 +82,62 @@ uses
 type
    TLegacyContestName = record
       Name: string;
-      Contest: ContestType;
+      (* The CURRENT id of the contest the old name means. *)
+      Id: string;
    end;
 
 const
    LEGACY_CONTEST_NAMES: array[0..0] of TLegacyContestName = (
-      (Name: 'NEQP'; Contest: NEWENGLANDQSO)
+      (Name: 'NEQP'; Id: 'NEWEQP')
    );
 
-(* THE CONTEST A NAME MEANS. A current ContestTypeSA spelling first, then a
-  legacy name. Case and surrounding blanks are ignored -- the config file's
-  matcher always ignored them, and no two spellings differ only by case
-  (pinned). False, with aContest DUMMYCONTEST, for a name that is neither. *)
-function TryContestFromName(const aName: string; out aContest: ContestType): boolean;
+(* THE CONTEST A NAME MEANS. A current id first, then a legacy name. Case and
+  surrounding blanks are ignored -- the config file's matcher always ignored
+  them, and no two spellings differ only by case (pinned). False, with
+  aContest NoContest, for a name that is neither. *)
+function TryContestFromName(const aName: string;
+                            out aContest: TContestHandle): boolean;
 
-(* The same, DUMMYCONTEST for a name that means no contest -- what
-  TF.GetContestFromString has always answered. *)
-function ContestFromName(const aName: string): ContestType;
+(* The same, NoContest for a name that means no contest -- what the log's
+  contest row has always been read as. *)
+function ContestFromName(const aName: string): TContestHandle;
 
 (* THE SPELLING A NAME IS STORED UNDER FROM NOW ON. A legacy name becomes its
-  contest's current ContestTypeSA spelling; anything else -- a current
-  spelling, as typed, or text that is no contest at all -- comes back
-  unchanged, so the CONTEST setting's own refusal still sees what was
-  written. *)
+  contest's current id; anything else -- a current spelling, as typed, or
+  text that is no contest at all -- comes back unchanged, so the CONTEST
+  setting's own refusal still sees what was written. *)
 function CurrentContestSpelling(const aName: string): string;
 
 implementation
 
 uses
-   SysUtils;
-
-(* A CURRENT SPELLING -- the one loop over ContestTypeSA. *)
-function FindLiveName(const aName: string; out aContest: ContestType): boolean;
-var
-   c: ContestType;
-begin
-   aContest := DUMMYCONTEST;
-   Result := False;
-   for c := Low(ContestType) to High(ContestType) do
-      begin
-      if UnicodeSameText(ContestTypeSA[c], aName) then
-         begin
-         aContest := c;
-         Result := True;
-         Exit;
-         end;
-      end;
-end;
+   SysUtils,
+   uContestRegistry;
 
 (* A LEGACY NAME -- the one loop over LEGACY_CONTEST_NAMES. *)
-function FindLegacyName(const aName: string; out aContest: ContestType): boolean;
+function FindLegacyName(const aName: string;
+                        out aContest: TContestHandle): boolean;
 var
    i: integer;
 begin
-   aContest := DUMMYCONTEST;
+   aContest := NoContest;
    Result := False;
    for i := Low(LEGACY_CONTEST_NAMES) to High(LEGACY_CONTEST_NAMES) do
       begin
       if UnicodeSameText(LEGACY_CONTEST_NAMES[i].Name, aName) then
          begin
-         aContest := LEGACY_CONTEST_NAMES[i].Contest;
-         Result := True;
+         Result := FindContestById(LEGACY_CONTEST_NAMES[i].Id, aContest);
          Exit;
          end;
       end;
 end;
 
-function TryContestFromName(const aName: string; out aContest: ContestType): boolean;
+function TryContestFromName(const aName: string;
+                            out aContest: TContestHandle): boolean;
 var
    name: string;
 begin
-   aContest := DUMMYCONTEST;
+   aContest := NoContest;
    Result := False;
    name := Trim(aName);
    if name = '' then
@@ -152,32 +145,32 @@ begin
       Exit;
       end;
 
-   Result := FindLiveName(name, aContest);
+   Result := FindContestById(name, aContest);
    if not Result then
       begin
       Result := FindLegacyName(name, aContest);
       end;
 end;
 
-function ContestFromName(const aName: string): ContestType;
+function ContestFromName(const aName: string): TContestHandle;
 begin
    TryContestFromName(aName, Result);
 end;
 
 function CurrentContestSpelling(const aName: string): string;
 var
-   c: ContestType;
+   c: TContestHandle;
    name: string;
 begin
    Result := aName;
    name := Trim(aName);
-   if FindLiveName(name, c) then
+   if FindContestById(name, c) then
       begin
       Exit;
       end;
    if FindLegacyName(name, c) then
       begin
-      Result := ContestTypeSA[c];
+      Result := ContestId(c);
       end;
 end;
 

@@ -119,10 +119,24 @@ end;
    the contest's rules are pinned by the unit tests and the contest matrix.
    The old ADIF-name field was already wrong for every contest whose row had
    a blank ADIFName: it wrote CONTEST_<n> where export, since M1, writes the
-   enum's spelling. *)
-function ContestToString(c: ContestType): string;
+   enum's spelling.
+
+   THE RECORD HOLDS A CONTEST HANDLE SINCE Q108 S2, whose byte is the
+   legacy ContestType number for every legacy contest -- and a binary log
+   holds nothing else. The registry (uContestRegistry.ContestId) states
+   that rule for the program; this tool links no factory unit, so it reads
+   the byte as the legacy number itself, and names a byte above the last
+   of them rather than indexing ContestTypeSA out of range. *)
+function ContestToString(c: TContestHandle): string;
 begin
-   Result := string(ContestTypeSA[c]);
+   if c.ToByte <= Ord(High(ContestType)) then
+      begin
+      Result := string(ContestTypeSA[ContestType(c.ToByte)]);
+      end
+   else
+      begin
+      Result := Format('<no contest %d>', [c.ToByte]);
+      end;
 end;
 
 function RecordKindToString(k: LogRecordKind): string;
@@ -179,7 +193,7 @@ begin
    EmitField(first,    'ExtMode',      ExtModeToString(rec.ExtMode));
    EmitIntField(first, 'FrequencyHz',  rec.Frequency);
    EmitField(first,    'ContestToken', ContestToString(rec.ceContest));
-   EmitIntField(first, 'ContestOrdinal', Ord(rec.ceContest));
+   EmitIntField(first, 'ContestOrdinal', rec.ceContest.ToByte);
 
    // Time -- format as yyyymmdd / hhmmss to match ADIF directly
    EmitField(first,    'QSODate',

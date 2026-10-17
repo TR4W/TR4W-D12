@@ -383,7 +383,8 @@ end;
 function RunContestMatrixList(const aOutFile: string): integer;
 var
    list: TStringList;
-   c: ContestType;
+   known: TContestHandleList;
+   k, number: integer;
    identity: TContestBase;
    hostState: string;
    partyFlag: string;
@@ -399,12 +400,21 @@ begin
    try
       list.LineBreak := MATRIX_LINE_BREAK;
 
-      (* FROM THE SECOND MEMBER. The first is DUMMYCONTEST, "no contest" --
+      (* EVERY KNOWN CONTEST BUT NoContest, IN HANDLE ORDER -- Q108 S2. That
+        is every legacy number from 1 up, the order the enum walk this
+        replaced visited. NoContest is DUMMYCONTEST, "no contest" --
         FoundContest itself treats it as not-a-contest and it cannot be
-        opened. It is ordinal 0 and ordinals are persisted, so it cannot move;
-        skipping it by position keeps this unit free of any contest name. *)
-      for c := Succ(Low(ContestType)) to High(ContestType) do
+        opened. The line still names the legacy number and the enum
+        member; a contest with no legacy number (Q108 S3) is listed by id
+        when S3 changes this format, so it is not listed here. *)
+      known := KnownContests;
+      for k := 0 to High(known) do
          begin
+         if (known[k] = NoContest) or
+            (not ContestLegacyNumber(known[k], number)) then
+            begin
+            Continue;
+            end;
          (* EVERY FIELD IS ASKED OF THE CONTEST (M10 S6). The fourth field
            was the row's party index P and is now 1 or 0 -- whether the
            contest is a QSO party. matrix-lib.sh only ever tested it against
@@ -412,7 +422,7 @@ begin
            (Test_MovedRowValuesStillMatchTheArray), so the variants run and
            the records they produce are unchanged. The sixth is the party's
            area, which is the QSOParties StateName this read. *)
-         identity := ContestIdentity(c);
+         identity := ContestIdentity(known[k]);
          hostState := identity.QSOPartyArea;
          if identity.IsUSQSOParty then
             begin
@@ -426,9 +436,9 @@ begin
            adjacent tabs into one, so an EMPTY field -- Colorado's DF -- moved
            every field after it one place left. '|' is not whitespace to the
            shell and appears in no spelling. *)
-         list.Add(AnsiString(IntToStr(Ord(c)) + '|' +
-                  EnumText(TypeInfo(ContestType), Ord(c)) + '|' +
-                  ContestTypeSA[c] + '|' +
+         list.Add(AnsiString(IntToStr(number) + '|' +
+                  EnumText(TypeInfo(ContestType), number) + '|' +
+                  ContestId(known[k]) + '|' +
                   partyFlag + '|' +
                   identity.DomesticFileName + '|' +
                   hostState));
@@ -474,10 +484,12 @@ begin
    (* SELECTED IS WHAT THE .cfg's CONTEST LINE ACTUALLY CHOSE. A spelling that
      two members share selects the first, so the second is unreachable from a
      .cfg -- a difference between these two lines is that finding. *)
+   (* THE LEGACY NUMBER IS THE HANDLE'S BYTE (Q108 S2), so this line is
+     what Ord(Contest) printed. *)
    EmitField('contest.selected',
-             IntToStr(Ord(Contest)) + ' ' +
-             EnumText(TypeInfo(ContestType), Ord(Contest)));
-   if Ord(Contest) <> aRequested then
+             IntToStr(Contest.ToByte) + ' ' +
+             EnumText(TypeInfo(ContestType), Contest.ToByte));
+   if Contest.ToByte <> aRequested then
       begin
       Emit('SELECTION MISMATCH: the .cfg spelling did not select the requested contest');
       end;
@@ -1014,7 +1026,7 @@ procedure DescribeExchange(const aRX: ContestExchange; aParts: TStringList);
    end;
 
 begin
-   Part('contest', EnumText(TypeInfo(ContestType), Ord(aRX.ceContest)));
+   Part('contest', EnumText(TypeInfo(ContestType), aRX.ceContest.ToByte));
    Part('call', string(aRX.Callsign));
    Part('band', EnumText(TypeInfo(BandType), Ord(aRX.Band)));
    Part('mode', EnumText(TypeInfo(ModeType), Ord(aRX.Mode)) + '/' +

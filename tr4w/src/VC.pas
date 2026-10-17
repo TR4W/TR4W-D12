@@ -1310,6 +1310,56 @@ type
     NEBRASKAQSO
     );
 
+  (* A CONTEST, AS THE PROGRAM HOLDS ONE IN MEMORY -- Q108 S2, 2026-10-16
+    (docs/CONTEST_OWNERSHIP_DESIGN.md 8.2u).
+
+    WHAT IT IS. A one-byte handle the contest registry hands out. It is what
+    the global Contest, ContestExchange.ceContest and
+    TLogFileInformation.liContest hold, and what every contest-factory
+    question takes. ContestType above is the FROZEN list of LEGACY contest
+    numbers; it is no longer the in-memory key.
+
+    A LEGACY CONTEST'S HANDLE EQUALS ITS LEGACY NUMBER, Ord(member). That one
+    rule is why nothing that is persisted changes: the byte in a .TRW record,
+    a multi-op packet, the server's log and the log-compare packet means
+    exactly what it meant when the field was a ContestType. The registry
+    (uContestRegistry) states the rule -- ContestHandleOf / LegacyContestOf
+    -- and is the only unit that converts between the two.
+
+    A RECORD, NOT `type Byte`, so a band, a mode or a bare number cannot be
+    passed where a contest is expected -- the guarantee the enum gave. The
+    probe compile at the start of S2 measured it: FPC 3.2.2 in this tree's
+    mode keeps it ONE byte inside a packed record, at the same offset, and
+    refuses `h = aMode`, `h := 3` and `h := ARRLDXCW`.
+
+    THE BYTE IS REACHED THROUGH ONE PAIR OF NAMED ACCESSORS, FromByte and
+    ToByte, and only the registry and the legacy-number boundaries call
+    them. Nothing else should read a contest as a number.
+
+    NEVER PERSIST A HANDLE OF A CONTEST WITH NO LEGACY NUMBER (Q108 S3/S4):
+    such handles are assigned at the registry's seal and differ between
+    builds that link different contests. *)
+  TContestHandle = packed record
+  private
+    FNumber: Byte;
+  public
+    class operator Equal(const a, b: TContestHandle): boolean;
+    class operator NotEqual(const a, b: TContestHandle): boolean;
+
+    (* The handle whose byte is aNumber. For the registry and the
+      legacy-number boundaries (a .TRW record read back, the matrix's
+      requested number) only. *)
+    class function FromByte(aNumber: Byte): TContestHandle; static;
+
+    (* The handle's byte. Same rule. *)
+    function ToByte: Byte;
+  end;
+
+const
+  (* "No contest" -- handle 0, which is DUMMYCONTEST's legacy number, so a
+    zeroed record and an unset global already hold it. *)
+  NoContest: TContestHandle = (FNumber: 0);
+
     { NOTE: pls ensure VC INTERFACEDRADIOTYPE and LOGRADIO INTEFACEDRADIOTYPE ARE IN THE SAME ORDER }
 type
     InterfacedRadioType = (
@@ -1852,7 +1902,7 @@ type
     liLocalCRC32: Cardinal;
     liServerLogSize: Cardinal;
     liLocalLogSize: Cardinal;
-    liContest: ContestType;
+    liContest: TContestHandle;
   end;
 
 type
@@ -1980,7 +2030,7 @@ type
 {01}  NameSent:            boolean;
 
 {21}  Kids:                Str20; { Used for whole ex string }
-{01}  ceContest:           ContestType;
+{01}  ceContest:           TContestHandle;  (* Q108 S2: a legacy contest's handle IS its legacy number, so this byte is unchanged *)
 {02}  QSOPoints:           word{Smallint};
 
 {08}  RandomCharsReceived: string[7];
@@ -3684,6 +3734,26 @@ const
   procedure InitializeStringTables;
 
 implementation
+
+class operator TContestHandle.Equal(const a, b: TContestHandle): boolean;
+begin
+   Result := a.FNumber = b.FNumber;
+end;
+
+class operator TContestHandle.NotEqual(const a, b: TContestHandle): boolean;
+begin
+   Result := a.FNumber <> b.FNumber;
+end;
+
+class function TContestHandle.FromByte(aNumber: Byte): TContestHandle;
+begin
+   Result.FNumber := aNumber;
+end;
+
+function TContestHandle.ToByte: Byte;
+begin
+   Result := FNumber;
+end;
 
 procedure InitializeStringTables;
    { WHY THESE THREE TABLES ARE FILLED HERE AND NOT AT THEIR DECLARATION.

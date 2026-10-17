@@ -31,6 +31,10 @@ type
 
 implementation
 
+
+
+uses
+   uContestRegistry;   (* ContestHandleOf -- a legacy contest's handle, Q108 S2 *)
 procedure TADIFRegressionTests.Test_Import_CQZField_PopulatesZone;
 var
    records : TContestExchangeArray;
@@ -71,7 +75,7 @@ begin
    // ARRL-DX, ...).  It must fall back to the parallel ContestTypeSA[] string,
    // which is the standard ADIF Contest_ID for the majors.
    FillChar(rec, SizeOf(rec), 0);
-   rec.ceContest := CQWWCW;
+   rec.ceContest := ContestHandleOf(CQWWCW);
    rec.Band      := Band20;
    rec.Callsign  := 'KG1S';
    s := EmitADIFRecord(rec);
@@ -112,7 +116,7 @@ procedure TADIFRegressionTests.Test_Import_ContestID_OldAndNewSpellings;
          begin
          Exit;
          end;
-      CheckEquals(Ord(aExpected), Ord(records[0].ceContest),
+      CheckEquals(Ord(aExpected), records[0].ceContest.ToByte,
                   'CONTEST_ID [' + aId + '] -> ' + ContestTypeSA[aExpected]);
    end;
 
@@ -160,15 +164,15 @@ end;
    initial or previous state is exactly the shape the old one had. *)
 procedure TADIFRegressionTests.Test_Import_ContestID_BlankMatchesNothing;
 var
-   c : ContestType;
+   c : TContestHandle;
 begin
    BeginTest('Test_Import_ContestID_BlankMatchesNothing');
 
    CheckTrue(GetContestByADIFName('MST', c), 'MST resolves');
-   CheckEquals(Ord(MST), Ord(c), 'MST -> MST');
+   CheckEquals(Ord(MST), c.ToByte, 'MST -> MST');
 
    CheckFalse(GetContestByADIFName('', c), 'an empty id matches nothing');
-   CheckEquals(Ord(Low(ContestType)), Ord(c),
+   CheckEquals(Ord(Low(ContestType)), c.ToByte,
                'no match leaves the first contest, not a blank row''s');
 
    CheckFalse(GetContestByADIFName('   ', c), 'an all-blank id matches nothing');
@@ -176,7 +180,7 @@ begin
               'an unknown id matches nothing');
 
    CheckTrue(GetContestByADIFName('MST', c), 'MST still resolves after a miss');
-   CheckEquals(Ord(MST), Ord(c), 'MST -> MST, second time');
+   CheckEquals(Ord(MST), c.ToByte, 'MST -> MST, second time');
 end;
 
 (* EXPORT WRITES ONLY THE NEW SPELLING -- the other half of the ruling. Each
@@ -190,7 +194,7 @@ procedure TADIFRegressionTests.Test_Emit_ContestID_WritesOnlyTheNewSpelling;
       s   : string;
    begin
       FillChar(rec, SizeOf(rec), 0);
-      rec.ceContest := aContest;
+      rec.ceContest := ContestHandleOf(aContest);
       rec.Band      := Band20;
       rec.Callsign  := 'KG1S';
       s := EmitADIFRecord(rec);
@@ -252,7 +256,7 @@ begin
       who := string(ContestTypeSA[c]);
 
       FillChar(rec, SizeOf(rec), 0);
-      rec.ceContest := c;
+      rec.ceContest := ContestHandleOf(c);
       rec.Band      := Band20;
       rec.Callsign  := 'KG1S';
       if c = RSGB_ROPOCO_SSB then
@@ -277,10 +281,10 @@ begin
          end;
 
       expected := c;
-      CheckEquals(Ord(expected), Ord(records[0].ceContest),
+      CheckEquals(Ord(expected), records[0].ceContest.ToByte,
                   who + ' read back as ' +
-                  string(ContestTypeSA[records[0].ceContest]) + ' -- wrote: ' + s);
-      if records[0].ceContest = c then
+                  ContestId(records[0].ceContest) + ' -- wrote: ' + s);
+      if records[0].ceContest = ContestHandleOf(c) then
          begin
          inc(resolved);
          end;

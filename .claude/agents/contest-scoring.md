@@ -58,7 +58,12 @@ prefer new units in `src/`. The no-LCL half of that boundary was rescinded
 *behaviour* belongs in `src/`, and increasingly in the contest factory.
 
 **`VC.pas` is the source of truth** for `ContestType` (120+ values), band and mode
-enums, and colour schemes.
+enums, and colour schemes. **Since Q108 S2 (2026-10-16) `ContestType` is the
+FROZEN list of legacy contest numbers, not the in-memory key**: the global
+`Contest` and `ceContest` hold a `TContestHandle` (one byte, equal to the
+legacy number), and an engine rule that still names a contest writes
+`LegacyContestOf(Contest) = MEMBER` (uContestRegistry). See
+`docs/ADDING_A_CONTEST.md` Step 5a.
 
 **The sent exchange is reconstructed, not stored** — `exchange_sent` exists in the
 schema and nothing writes it (memory: `iaru-exchange-reads-station-state`). QTH is

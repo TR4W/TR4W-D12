@@ -52,6 +52,7 @@ type
       procedure TestImportKeepsWhatExportWouldFilterOut;
       procedure TestImportRefusesAnExistingTarget;
       procedure TestImportReportsAMissingSource;
+      procedure TestImportRefusesAContestNumberItDoesNotKnow;
       procedure TestImportedQSOsAreQueryable;
       procedure TestAKnownQSOKeepsItsRealValues;
       procedure TestCountyLineRowsShareOneSet;
@@ -62,7 +63,7 @@ type
 implementation
 
 uses
-   SysUtils, sqldb, VC, uLogDatabase, uLogRepository, uLogBinaryFile, uLogImport;
+   SysUtils, Classes, sqldb, VC, uLogDatabase, uLogRepository, uLogBinaryFile, uLogImport;
 
 (* TInt64Array comes from uLogRepository -- see RelatedRowIds. *)
 
@@ -574,6 +575,59 @@ begin
    CheckFalse(FileExists(fn), 'and no database is left behind');
 end;
 
+(* A CONTEST NUMBER ABOVE THE LAST LEGACY ONE IS REFUSED -- Q108 S2 (design
+   8.2u). The record's contest byte is a D7 ContestType ordinal; one this
+   program does not know is a damaged file or a newer TR4W's, and stamping
+   the log with it indexed ContestTypeSA out of range. The import now fails
+   with a message naming the number, and leaves no log.
+
+   The fixture is the one-record Arktika log with its contest byte patched:
+   record k starts at (k + 1) * 376 (the header is one record long) and the
+   byte is at 265 -- both pinned in uTestLogBinaryFile. *)
+procedure TLogImportTests.TestImportRefusesAContestNumberItDoesNotKnow;
+const
+   UNKNOWN_CONTEST_NUMBER = 250;
+var
+   source, fn: string;
+   res: TLogImportResult;
+   s: TMemoryStream;
+   b: Byte;
+   probe: ContestExchange;
+begin
+   BeginTest('TestImportRefusesAContestNumberItDoesNotKnow');
+   CheckTrue(UNKNOWN_CONTEST_NUMBER > Ord(High(ContestType)),
+             'the number is above every legacy contest');
+
+   source := TempDb('unknown_contest.trw');
+   fn := TempDb('unknown_contest.db');
+   Scrub(source);
+   Scrub(fn);
+   s := TMemoryStream.Create;
+   try
+      s.LoadFromFile(BinaryLogFixture('arktika_2026_ny4i'));
+      CheckEquals(2 * SizeOf(ContestExchange), s.Size,
+                  'the fixture is a header and one record');
+      s.Position := SizeOf(ContestExchange) +
+                    (PtrUInt(@probe.ceContest) - PtrUInt(@probe));
+      b := UNKNOWN_CONTEST_NUMBER;
+      s.WriteBuffer(b, 1);
+      s.SaveToFile(source);
+   finally
+      s.Free;
+   end;
+
+   res := ImportBinaryLog(source, fn);
+   CheckFalse(res.Ok, 'a contest number this TR4W does not know is refused');
+   CheckTrue(Pos('contest number ' + IntToStr(UNKNOWN_CONTEST_NUMBER), res.Message) > 0,
+             'and the message names it -- got: ' + res.Message);
+   CheckFalse(FileExists(fn), 'and no log is left behind');
+   Scrub(fn);
+   if FileExists(source) then
+      begin
+      DeleteFile(source);
+      end;
+end;
+
 procedure TLogImportTests.TestImportedQSOsAreQueryable;
 var
    fn: string;
@@ -861,6 +915,7 @@ begin
    TestImportKeepsWhatExportWouldFilterOut;
    TestImportRefusesAnExistingTarget;
    TestImportReportsAMissingSource;
+   TestImportRefusesAContestNumberItDoesNotKnow;
    TestImportedQSOsAreQueryable;
    TestAKnownQSOKeepsItsRealValues;
    TestCountyLineRowsShareOneSet;

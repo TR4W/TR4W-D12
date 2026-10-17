@@ -73,9 +73,13 @@ what Nebraska (`uContestNebraskaQP`, 2026-10-16, design Q105) wants: its
 **A `ContestTypeSA` spelling is STORED DATA and is never given to another
 contest** (Q105): every SQLite log's `contest` row and every `.cfg` holds it.
 New England was `NEQP` and is `NEWEQP`; `NEQP` is a permanent READ alias in
-`uContestNames.LEGACY_CONTEST_NAMES` -- the ONE resolver of a contest name
-(`TryContestFromName`, behind `TF.GetContestFromString` and, through
-`uSettingsModel.RegisterSettingValueSpelling`, the CONTEST setting). Nebraska
+`uContestNames.LEGACY_CONTEST_NAMES` (a name -> the contest's current ID
+string, since Q108 S2) -- the ONE resolver of a contest name
+(`TryContestFromName` over `uContestRegistry.FindContestById`, behind the
+log repository's `ContestFromName` and, through
+`uSettingsModel.RegisterSettingValueSpelling`, the CONTEST setting;
+`TF.GetContestFromString` is deleted -- it dragged the registry into
+`tr4wserver` through TF). Nebraska
 is `NE-QSO-PARTY` (Cabrillo and ADIF too); New England's Cabrillo is
 `NEWE-QSO-PARTY` and its ADIF id stays `NEQP`, stated in its class. A rename
 adds its alias in the same commit (`ADDING_A_CONTEST.md` Step 3c).
@@ -199,6 +203,24 @@ the target shape, the M-step migration order and the open questions.
   `IDENTITY_PINS` and `KIND_PINS` rows (the compiler insists) and joins the
   pin units' sets wherever it differs from the base -- but it moves no
   count. The measuring scripts are `tools/contest-factory-q108/`.
+- **Q108 S2 IS BUILT (2026-10-16, design 8.2u): A CONTEST IS A ONE-BYTE
+  HANDLE IN MEMORY, AND A LEGACY CONTEST'S HANDLE IS ITS LEGACY NUMBER.**
+  `VC.TContestHandle` (packed record, `=`/`<>`, so a band, a mode or a
+  number is refused where a contest goes) and `NoContest` (handle 0) are
+  what the global `Contest`, `ceContest` and `liContest` hold; the record
+  is still 376 bytes with the byte at 265 (pinned). The registry is the
+  ONLY converter: `ContestHandleOf(member)`, `LegacyContestOf(h)`,
+  `ContestLegacyNumber`, `ContestId(h)` (the stored name -- never index
+  `ContestTypeSA` by a handle), `FindContestById`, `KnownContests`,
+  `ContestBroadcastNumber` (`<contestnr>`). `TContestBase.Create(aHandle)`
+  (a test: `Create(ContestHandleOf(X))`); `ContestIdentity`,
+  `ContestClassFor` and `ActiveContest` keep a `ContestType` overload for
+  the tests and IN7QPNE. A rule site outside the factory compares
+  `LegacyContestOf(Contest) = MEMBER` (the lint still counts it). The
+  CONTEST vocabulary is a lazy provider (`RegisterSettingAllowedValuesProvider`)
+  because contest units register AFTER uCFG initialises; the CONTEST token
+  resolves through `TryContestFromName`, never by position. A `.TRW` naming
+  a number above the legacy range is refused. `Test_AContestHandleIsItsLegacyNumber`.
 - **A contest owns its bands: `TContestBase.UsesBand`** (base: every band).
   An off-band QSO is logged normally, scores 0 and earns no multiplier (NY4I,
   2026-10-01). It is asked through `ContestCreditsBand` at every place a QSO
@@ -497,8 +519,9 @@ the target shape, the M-step migration order and the open questions.
   **ALRS's empty-QTH QSO scores from heap garbage** (`LOGGRID`, design Q37) --
   it moved under the class while the formula did not; see design §8.2h.
 - **A contest owns its identity, and everyone asks it** (M1, 2026-10-01).
-  `uContestRegistry.ContestIdentity(c)` answers for EVERY `ContestType` --
-  the class, else a plain `TContestBase` (only DUMMYCONTEST); never nil, owned by
+  `uContestRegistry.ContestIdentity(h)` answers for EVERY contest handle --
+  the class, else a plain `TContestBase` (only NoContest, and a byte that names
+  no contest); never nil, owned by
   the registry, thread-safe, and carrying no station (ask it what a contest
   IS, never to score). The Cabrillo `CONTEST:` line, ADIF `CONTEST_ID`, both
   UDP broadcasts, both score-posting clients, the external logger, the

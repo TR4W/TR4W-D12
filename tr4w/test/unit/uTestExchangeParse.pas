@@ -79,6 +79,7 @@ type
 implementation
 
 uses
+   uContestRegistry,   (* ContestHandleOf -- a legacy contest's handle, Q108 S2 *)
    Classes,
    SysUtils,
    VC,
@@ -1337,7 +1338,7 @@ begin
    Result := MakeContestOrNil(aContest, aStation);
    if Result = nil then
       begin
-      Result := TContestBase.Create(aContest);
+      Result := TContestBase.Create(ContestHandleOf(aContest));
       Result.SetStation(aStation);
       end;
 end;

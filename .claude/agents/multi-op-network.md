@@ -37,6 +37,17 @@ would tell an operator their log matches when nothing was checked; reporting
 read. *"Are these two logs the same"* belongs to the new multi-station protocol
 and will be asked over **rows**.
 
+## The contest byte on the wire (Q108 S2, 2026-10-16)
+
+`ContestExchange.ceContest` and `TLogFileInformation.liContest` are a
+`TContestHandle` now, not the `ContestType` enum -- ONE byte at the same
+offsets (265 of 376; 18 of 19), pinned in `uTestLogBinaryFile`. A legacy
+contest's handle IS its legacy number, so a D7 peer, the server's log and
+the log-compare packet read exactly what they did. The server still links
+no contest-factory unit (it uses `NoContest` from `VC`). A contest with no
+legacy number (Q108 S3) must never reach these records -- that refusal is
+Q108 S4, not built.
+
 ## The transport, and its one sharp edge
 
 The client is **Indy**, not Winsock. `uNet` used to drive a raw socket and have

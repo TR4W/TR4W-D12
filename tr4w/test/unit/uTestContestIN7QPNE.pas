@@ -619,7 +619,7 @@ end;
 procedure TContestIN7QPNETests.Test_CabrilloAndADIFNameIN7QPNE;
 var
    contestObject: TContestBase;
-   c: ContestType;
+   c: TContestHandle;
    p: TIN7QPNEParty;
 begin
    BeginTest('Test_CabrilloAndADIFNameIN7QPNE');
@@ -640,7 +640,7 @@ begin
    end;
 
    CheckTrue(FindContestByADIFContestId('IN7QPNE-QSO-PARTY', c), 'import resolves it');
-   CheckEquals(Ord(IN7QPNE), Ord(c), 'to IN7QPNE');
+   CheckEquals(Ord(IN7QPNE), c.ToByte, 'to IN7QPNE');
 end;
 
 (* NOT POSTED TO HAMSCORE OR THE SCOREBOARD (design 7.14): the contest says

@@ -87,6 +87,7 @@ type
 implementation
 
 uses
+   uContestRegistry,   (* ContestHandleOf -- a legacy contest's handle, Q108 S2 *)
    Classes,
    SysUtils,
    Log4D,
@@ -744,7 +745,7 @@ begin
    end;
    CheckTrue(raised, 'ADIFSentNotImplemented raises EADIFExchangeNotImplemented');
 
-   obj := TContestBase.Create(DUMMYCONTEST);
+   obj := TContestBase.Create(NoContest);
    try
       for v := 0 to 3 do
          begin
@@ -793,7 +794,7 @@ begin
    savedLevel := lg.Level;
    lg.Level := Log4D.Error;
    lg.AddAppender(keep);
-   failing := TFailingContest.Create(CQWWRTTY);
+   failing := TFailingContest.Create(ContestHandleOf(CQWWRTTY));
    good := Make(CUPRFCW, PinStation(psUS, CUPRFCW));
    try
       CheckFalse(failing.TryFormatADIFSentExchange(PinMy(0), qso, sent, failure),

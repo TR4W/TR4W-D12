@@ -79,7 +79,11 @@ uses
   factory that reached for it would drag the Cabrillo/ADIF exporter into every
   unit that wants to score a QSO -- and could not be tested without booting the
   program's globals. Every caller already has the value in scope. *)
-function ActiveContest(aContest: ContestType): TContestBase;
+function ActiveContest(aContest: TContestHandle): TContestBase; overload;
+
+(* The same, for a legacy contest named by its member -- the tests'
+  spelling (Q108 S2). *)
+function ActiveContest(aContest: ContestType): TContestBase; overload;
 
 (* Drops the current instance.  Called at shutdown; safe at any time, because
   the next ActiveContest simply builds another. *)
@@ -174,7 +178,7 @@ end;
    station's services, because IsNewMultiplierAnywhere asks it (M11 S6). *)
 var
    GActive: TContestBase = nil;
-   GActiveFor: ContestType;
+   GActiveFor: TContestHandle;
    GHaveActive: boolean = False;
 
 (* THE SHEET'S READ-ONLY "IS THIS NEW" ANSWER, AS A SERVICE -- design 7.13.
@@ -278,7 +282,7 @@ begin
       end;
 end;
 
-function ActiveContest(aContest: ContestType): TContestBase;
+function ActiveContest(aContest: TContestHandle): TContestBase;
 var
    cls: TContestClass;
 begin
@@ -307,6 +311,11 @@ begin
       end;
 
    Result := GActive;
+end;
+
+function ActiveContest(aContest: ContestType): TContestBase;
+begin
+   Result := ActiveContest(ContestHandleOf(aContest));
 end;
 
 procedure ReleaseActiveContest;

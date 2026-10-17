@@ -2846,7 +2846,7 @@ begin
                        RxData.tSysTime.qtSecond]) +
              '</timestamp>' + sLineBreak +
              #9 + '<call>' + RXData.Callsign + '</call>' + sLineBreak +
-             #9 + '<contestnr>' + IntToStr(Ord(RxData.ceContest)) + '</contestnr>' + sLineBreak +
+             #9 + '<contestnr>' + IntToStr(ContestBroadcastNumber(RxData.ceContest)) + '</contestnr>' + sLineBreak +
              #9 + '<StationName>' +  Settings.Computer.Name + '</StationName>' + sLineBreak + // Issue 263 NY4I
              #9 + '<ID>' + RxData.id + '</ID>' + sLineBreak +
        '</contactdelete>'+ sLineBreak ;
@@ -3033,7 +3033,7 @@ begin
              #9 + '<app>TR4W</app>' + sLineBreak +
              #9 + '<contestname>' + sContestName + '</contestname>' + sLineBreak +
              {#9 + '<contestname>' + ContestTypeSA[RxData.ceContest] + '</contestname>' + sLineBreak + }
-             #9 + '<contestnr>' + IntToStr(Ord(RxData.ceContest)) + '</contestnr>' + sLineBreak +
+             #9 + '<contestnr>' + IntToStr(ContestBroadcastNumber(RxData.ceContest)) + '</contestnr>' + sLineBreak +
              #9 + '<timestamp>' + sTimestamp + '</timestamp>' + sLineBreak +
              #9 + '<mycall>' + Settings.My.Call + '</mycall>' + sLineBreak +
              #9 + '<band>' + ConvertBandTypeToUDPContactBand(RXData.Band) + '</band>' + sLineBreak +

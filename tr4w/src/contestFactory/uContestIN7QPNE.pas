@@ -202,7 +202,7 @@ type
       (* THE JUDGING PARTY'S OWN ScoreQSO, or 0 for a QSO in no party. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
-      constructor Create(aContest: ContestType); override;
+      constructor Create(aContest: TContestHandle); override;
       destructor Destroy; override;
 
       (* WHICH PARTY JUDGES THIS QSO? -- the routing rule in the header: the
@@ -319,7 +319,7 @@ begin
       end;
 end;
 
-constructor TContestIN7QPNE.Create(aContest: ContestType);
+constructor TContestIN7QPNE.Create(aContest: TContestHandle);
 var
    p: TIN7QPNEParty;
    cls: TContestClass;
@@ -335,9 +335,9 @@ begin
             and nothing would say why. The destructor frees what was made. *)
          raise Exception.CreateFmt(
             'IN7QPNE needs the %s class, and none is registered.',
-            [string(ContestTypeSA[IN7QPNEPartyContest[p]])]);
+            [ContestId(ContestHandleOf(IN7QPNEPartyContest[p]))]);
          end;
-      FParties[p] := cls.Create(IN7QPNEPartyContest[p]);
+      FParties[p] := cls.Create(ContestHandleOf(IN7QPNEPartyContest[p]));
       end;
 end;
 

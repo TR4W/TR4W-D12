@@ -88,6 +88,7 @@ uses
     and LCLType -- already in this clause -- declares them. *)
   TF,
   PostUnit,         // Contest, ContestExchange
+  uContestRegistry, // ContestId -- the two contests' names
   LogDupe,
   uNet,             // DifferentContests, tUSQ, tUSQE
   uServerLogForm,   // ShowServerLogSync -- a designed form since 2026-08-29
@@ -173,15 +174,15 @@ begin
       AddRow('USQE', '', IntToStr(tUSQE));
 
       AddRow('Contest',
-             string(ContestTypeSA[FInfo^.liContest]),
-             string(ContestTypeSA[Contest]));
+             ContestId(FInfo^.liContest),
+             ContestId(Contest));
 
       // SYNCHRONIZING ACROSS DIFFERENT CONTESTS IS THE ONE THING THIS DIALOG
       // MUST NOT ALLOW -- it would merge one contest's QSOs into another's log.
       // DUMMYCONTEST is the server not having told us yet, which is not a
       // mismatch.
       DifferentContests := FInfo^.liContest <> Contest;
-      if FInfo^.liContest = DUMMYCONTEST then
+      if FInfo^.liContest = NoContest then
          begin
          DifferentContests := False;
          end;

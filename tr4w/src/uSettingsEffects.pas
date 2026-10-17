@@ -119,7 +119,8 @@ uses
    LogDupe,        // SingleBand
    uCTYDAT,        (* CTY.ctyCountryMode -- which country list CTY.DAT
                      resolves against, set by the CONTEST arm *)
-   PostUnit,       // Contest -- the active ContestType
+   PostUnit,       // Contest -- the active contest (a registry handle)
+   uContestNames,  (* TryContestFromName -- the CONTEST arm's resolver *)
    LogWind,        (* Settings.My.Call -- the callsign the derivation starts
                      from; DispalayLogGridLines; DisplayInsertMode *)
                    // DisplayInsertMode, the INS/OVR panel;
@@ -328,6 +329,7 @@ end;
 procedure ApplyTokenSetting(const aPath: string);
 var
    i: tr4wColors;   // the ALERT COLOR token search, below
+   chosen: TContestHandle;   // the CONTEST arm's answer
 begin
    (* THE TEN ckList TOKENS, each assigning the ordinal its row assigned.
      ApplyMultiplierToken is named for the four it was written for; what it
@@ -341,8 +343,19 @@ begin
 
    if UnicodeSameText(aPath, CONTEST_TOKEN) then
       begin
-      ApplyMultiplierToken(Settings.Contest.ContestToken, ContestTypeSA,
-                           @Contest);
+      (* THE CONTEST IS RESOLVED BY THE ONE RESOLVER OF A CONTEST NAME, NOT
+        BY ITS POSITION IN ContestTypeSA (Q108 S2, design 8.2u). This was
+        ApplyMultiplierToken over ContestTypeSA, writing the matched index
+        through PByte(@Contest) -- an untyped write the compiler could not
+        check, and a lookup that a contest registered by id alone could
+        never match, so choosing one would silently NOT select it.
+        TryContestFromName matches a current id exactly as that loop did
+        (trimmed, case-insensitive), and a legacy name as well.
+        UNKNOWN STILL LEAVES Contest ALONE, as the loop did. *)
+      if TryContestFromName(Settings.Contest.ContestToken, chosen) then
+         begin
+         Contest := chosen;
+         end;
       (* AND THE CONTEST IS SET UP. This was the row's crA: 1 hook, F_CONTEST,
         and it is not a repaint: FoundContest chooses the exchange, the
         multipliers, the domestic file and the scoring for the whole contest.

@@ -50,6 +50,7 @@ type
 implementation
 
 uses
+   uContestRegistry,   (* ContestHandleOf -- a legacy contest's handle, Q108 S2 *)
    VC,
    uSettingsModel,
    uUDPBroadcastConfig,
@@ -81,7 +82,7 @@ var
 
    gSavedCall: string;
    gSavedComputer: string;
-   gSavedContest: ContestType;
+   gSavedContest: TContestHandle;
    gSavedTotals: QSOTotalArray;
    gSavedMults: array[BandType, CW..Both, RemainingMultiplierType] of Word;
    gSavedConfig: TUDPBroadcastConfig;
@@ -169,7 +170,7 @@ end;
 function SampleQSO: ContestExchange;
 begin
    FillChar(Result, SizeOf(ContestExchange), 0);
-   Result.ceContest := CQWWCW;
+   Result.ceContest := ContestHandleOf(CQWWCW);
    Result.Callsign  := 'W1AW';
    Result.Band      := Band20;
    Result.Mode      := CW;
@@ -296,7 +297,7 @@ end;
 
 procedure SetScoreGlobals;
 begin
-   Contest := CQWWCW;
+   Contest := ContestHandleOf(CQWWCW);
    FillChar(QSOTotals, SizeOf(QSOTotals), 0);
    QSOTotals[Band20, CW] := 5;
    QSOTotals[AllBands, CW] := 5;

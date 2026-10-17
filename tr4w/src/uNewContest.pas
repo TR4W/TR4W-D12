@@ -131,7 +131,7 @@ const
 var
   NewContestDisplayedCommands           : integer;
 //  NewContestAllowReturn                 : boolean;
-  SelectedContest                       : ContestType;
+  SelectedContest                       : TContestHandle;
 
 (* sfFLAG IS DELETED (2026-09-08), AND WITH IT AN EMPTY `const` BLOCK. It was DDL_ARCHIVE or DDL_READWRITE or
     DDL_DIRECTORY -- the flag set for a Win32 DlgDirList -- and NOTHING

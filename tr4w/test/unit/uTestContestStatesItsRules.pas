@@ -214,7 +214,7 @@ var
    base: TContestBase;
 begin
    BeginTest('Test_TheCheckSeesTheBase');
-   base := TContestBase.Create(DUMMYCONTEST);
+   base := TContestBase.Create(NoContest);
    try
       CheckFalse(ClassOverridesTheBase(base, CabrilloSentCode), 'the base states no Cabrillo column');
       CheckFalse(ClassOverridesTheBase(base, ScoringCode), 'the base states no scoring');

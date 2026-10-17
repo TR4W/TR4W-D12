@@ -85,7 +85,7 @@ type
       function GetFlags: TContestFlags; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
-      constructor Create(aContest: ContestType); override;
+      constructor Create(aContest: TContestHandle); override;
 
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
                                        const aQso: ContestExchange;
@@ -118,7 +118,7 @@ uses
    uDXMultiplierKey,
    SysUtils, uContestFixedPoints, uContestRegistry;
 
-constructor TContestFloridaQP.Create(aContest: ContestType);
+constructor TContestFloridaQP.Create(aContest: TContestHandle);
 begin
    inherited Create(aContest);
 end;

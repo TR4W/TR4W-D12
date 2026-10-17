@@ -3897,6 +3897,55 @@ registry function, the installer, docs.
 
 **S2 -- the handle and the id inside the registry; legacy numbers unchanged.**
 No new contest yet, so nothing that is persisted changes.
+
+> **S2 IS BUILT (2026-10-16, uncommitted at hand-back), in ONE stage -- no
+> S2a/S2b split was needed.** THE PROBE PASSED: FPC 3.2.2 in this tree's mode
+> (`{$MODE Delphi}` + UnicodeStrings) accepts a one-byte packed record with
+> `class operator Equal` / `NotEqual`, keeps it ONE byte at the same offset
+> inside a packed record, and REFUSES `h = aMode`, `h := 3` and
+> `h := ARRLDXCW` -- so the `type Byte` fallback was not used and no type
+> safety is lost. `VC.TContestHandle` (`FromByte` / `ToByte` the only byte
+> accessors) and `NoContest` are declared beside the frozen enum; `Contest`,
+> `ceContest` (the current record only; v1.5/v1.6 keep `ContestType`) and
+> `liContest` hold it. Layout MEASURED against HEAD's `VC.pas` by a probe:
+> `ContestExchange` 376 bytes, `ceContest` at 265, one byte;
+> `TLogFileInformation` 19, `liContest` at 18 -- identical, and now pinned in
+> `uTestLogBinaryFile`. The registry (`uContestRegistry`, 408 -> 604 lines)
+> is three `array[Byte]` tables, `ContestHandleOf` / `LegacyContestOf` /
+> `ContestLegacyNumber` / `ContestId` / `IsKnownContest` / `FindContestById`
+> / `KnownContests`, and `ContestBroadcastNumber` (exit 5's one place --
+> today the byte, S4 extends it); `ContestIdentity`, `ContestClassFor` and
+> `ActiveContest` keep a `ContestType` overload. `TContestBase.Create(aHandle)`
+> reads its `Id`. `uContestNames` resolves through `FindContestById` and
+> `LEGACY_CONTEST_NAMES` maps a name to an id string.
+> **`TF.GetContestFromString` IS DELETED** (found while building): its one
+> caller was the log repository, and keeping it would have made `TF` -- which
+> `tr4wserver` links -- pull the whole contest registry in behind
+> `uContestNames`. The server now links no `uContestNames` at all.
+> The three named fixes: `uSettingsEffects` resolves CONTEST through
+> `TryContestFromName` (the `PByte(@Contest)` write is gone -- and the
+> compiler did NOT catch it, because `@Contest` into an untyped `PByte`
+> compiles for a record too); a `.TRW` whose first record names a number
+> above the legacy range is refused with a message and no log
+> (`uTestLogImport`); the CONTEST vocabulary is
+> `RegisterSettingAllowedValuesProvider` (new in `uSettingsModel`) over
+> `KnownContests`, and `Lint-SpellingTables` names `ContestTypeSA` itself so
+> the table keeps its duplicate/blank guard. The nine rule sites (five
+> tests) read `LegacyContestOf(Contest) = MEMBER`; `Lint-ContestNameTests`'
+> ceilings are unchanged, and the rules inventory files them as shape 2
+> instead of shape 1 (its RADIOYOC override regex follows). MEASURED SIZE:
+> 25 files outside the factory (+401 / -196 lines), 5 in it, logdump, and 30
+> test units -- 128 changed test lines outside the rewritten
+> `uTestContestNames` and the `uTestRegisteredContests` helper, so the
+> "under 100" estimate was low by about a third. Oracles, all unchanged:
+> matrix 187 identical with NO re-freeze, factory 13, corpus 22/0/4 exit 0,
+> ADIF round trip 12/0/1, unit tests 360,205 / 0 plain and checked, heaptrc
+> 13,469 (the ceiling), narrowing 1249, range 3, 44 lints.
+> STILL NAMING THE ENUM, ON PURPOSE: the 187 `RegisterContest(<member>, ...)`
+> calls; IN7QPNE's party table; the frozen v1.5/v1.6 record layouts; the five
+> rule sites (through `LegacyContestOf`); the matrix's `EnumText` lines; the
+> pin tables and `ContestOf` in the tests; logdump (it links no factory unit,
+> so it reads the byte as the legacy number itself).
 - `VC.pas`: `TContestHandle`, `NoContest`; the CURRENT `ContestExchange`'s
   `ceContest` and `TLogFileInformation.liContest` become handles (the v1.5 and
   v1.6 import layouts keep `ContestType` -- they are frozen formats); PostUnit's

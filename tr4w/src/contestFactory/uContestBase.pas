@@ -1288,7 +1288,10 @@ type
 
    TContestBase = class
    private
-      FContest: ContestType;
+      FContest: TContestHandle;
+      (* The contest's id -- its stored name, uContestRegistry.ContestId,
+         read once at construction (Q108 S2). *)
+      FId: string;
       FStation: TStationContext;
    protected
       (* THE GETTERS BEHIND THE PROPERTIES BELOW.
@@ -1626,13 +1629,21 @@ type
          to name the contest in a message. A subclass that reads it to decide
          BEHAVIOUR has reintroduced the thing this class removes: state the
          behaviour as an override, or as a trait on the base. *)
-      property Contest: ContestType read FContest;
+      property Contest: TContestHandle read FContest;
+
+      (* THE CONTEST'S ID -- its stored name (for a legacy contest, its
+         ContestTypeSA spelling). The base's name fallbacks and its log
+         messages read it; the same rule as Contest applies. *)
+      property Id: string read FId;
 
       (* The station, as it was when this contest object was made or last
          refreshed.  Subclasses read this instead of the globals. *)
       property Station: TStationContext read FStation;
    public
-      constructor Create(aContest: ContestType); virtual;
+      (* aContest is the registry's handle (Q108 S2). The registry makes
+         the identity objects; a test makes one with
+         Create(ContestHandleOf(<member>)). *)
+      constructor Create(aContest: TContestHandle); virtual;
 
       property DisplayName: string read GetDisplayName;
       property CabrilloName: string read GetCabrilloName;
@@ -3333,6 +3344,9 @@ implementation
 
 uses
    SysUtils,
+   (* ContestId -- the contest's stored name, which the name fallbacks
+      answer (Q108 S2). *)
+   uContestRegistry,
    (* TC_IMPROPERTRANSMITTERCOUNT -- the one message that is NOT contest
       specific: every class-carrying contest counts transmitters the same way. *)
    uTR4WStrings,
@@ -3373,10 +3387,11 @@ begin
       end;
 end;
 
-constructor TContestBase.Create(aContest: ContestType);
+constructor TContestBase.Create(aContest: TContestHandle);
 begin
    inherited Create;
    FContest := aContest;
+   FId := ContestId(aContest);
 end;
 
 procedure TContestBase.SetStation(const aStation: TStationContext);
@@ -3386,7 +3401,7 @@ end;
 
 function TContestBase.GetDisplayName: string;
 begin
-   Result := string(ContestTypeSA[FContest]);
+   Result := FId;
 end;
 
 (* THE NEUTRAL DEFAULTS -- M10 S6, 2026-10-14.
@@ -3406,13 +3421,13 @@ function TContestBase.GetCabrilloName: string;
 begin
    (* The enum's spelling -- what PostUnit wrote for a blank CABName, and
       DUMMYCONTEST's is blank. See the note on the declaration. *)
-   Result := string(ContestTypeSA[FContest]);
+   Result := FId;
 end;
 
 function TContestBase.GetADIFContestId: string;
 begin
    (* The same default as CabrilloName -- see the note on the declaration. *)
-   Result := string(ContestTypeSA[FContest]);
+   Result := FId;
 end;
 
 function TContestBase.GetFormerADIFContestIds: TContestIdList;
@@ -3443,7 +3458,7 @@ function TContestBase.GetFriendlyName: string;
 begin
    (* Same default as CabrilloName: the array's own note said "If blank, use
       ContestTypeSA[ct]". *)
-   Result := string(ContestTypeSA[FContest]);
+   Result := FId;
 end;
 
 function TContestBase.GetQRZRUId: integer;
@@ -4513,7 +4528,7 @@ begin
       logger.Error(Format(
         'FormatCabrilloSentExchange: contest "%s" states no Cabrillo exchange layout -- ' +
         'wrote ERROR marker to the Cabrillo line for QSO %s. See Issue #1043, plan F26.',
-        [string(ContestTypeSA[FContest]), DescribeQSOForLog(aQso)]));
+        [FId, DescribeQSOForLog(aQso)]));
       end;
 end;
 
@@ -4557,7 +4572,7 @@ begin
          aFailure := E.ClassName + ': ' + E.Message;
          logger.Error(Format(
             'ADIF STX_STRING not built for contest "%s", QSO %s -- left out of the record. %s',
-            [string(ContestTypeSA[FContest]), DescribeQSOForLog(aQso), aFailure]));
+            [FId, DescribeQSOForLog(aQso), aFailure]));
          end;
    end;
 end;

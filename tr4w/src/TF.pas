@@ -192,7 +192,10 @@ function GetValueFromArray(const aSpellings: array of string; const CMD: string)
   RST through utils_text.LeadingInt now -- which stops at the string's length
   where this pointer walk did not. *)
 procedure tLoadKeyboardLayout;
-function GetContestFromString(ContestString: ShortString): ContestType;
+(* GetContestFromString IS GONE (Q108 S2, 2026-10-16). Its one caller, the
+  log repository, asks uContestNames.ContestFromName -- the rule it only
+  forwarded to. Keeping it would have made TF, which tr4wserver links, pull
+  the contest registry in behind uContestNames. *)
 function STToInt64(St: SYSTEMTIME): int64;
 function RealToStr2(Num: REAL): string;
 (* PCharToInt IS GONE -- it is utils_text.LeadingInt, which takes a string.
@@ -368,7 +371,6 @@ uses Log4D, uFreqTimeFormat, uStrSearch,   // Issue #997: freq/time formatters +
        tests -- link already. *)
      Dialogs,
      uAppStrings,   // SFileNotFoundThere
-     uContestNames, // ContestFromName -- GetContestFromString's rule
      uMainThread;
 
 // Own Log4D logger (initialized at the foot of this unit), replacing the former
@@ -679,15 +681,6 @@ Jari OH6BG
   }
 //  if LoWord(GetKeyboardLayout(0)) = $0419 then
 //     LoadKeyboardLayout('00000409', KLF_ACTIVATE);   // issue 178 force Latin
-end;
-function GetContestFromString(ContestString: ShortString): ContestType;
-begin
-  (* uContestNames OWNS THE RULE (2026-10-16): a current ContestTypeSA
-    spelling, then a LEGACY name -- 'NEQP', the New England QSO Party's
-    spelling until it became NEWEQP, which every older log stores. This was a loop of its own, exact and case-sensitive, while the
-    CONTEST setting matched case-insensitively; one rule now serves both, and
-    no two spellings differ only by case (pinned in uTestContestNames). *)
-  Result := ContestFromName(string(ContestString));
 end;
 
 {

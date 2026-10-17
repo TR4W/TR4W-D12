@@ -1476,7 +1476,7 @@ begin
        // yet); otherwise fall through to the existing dialog so the operator
        // sees the wrong-server warning.
        if Settings.Server.AutoSynchronizeLogOnConnect and
-          ((s^.liContest = Contest) or (s^.liContest = DUMMYCONTEST)) then
+          ((s^.liContest = Contest) or (s^.liContest = NoContest)) then
           begin
           logger.Info('Auto-synchronizing local log from server (CRC mismatch: local %x, server %x)',
                       [s^.liLocalCRC32, s^.liSeverCRC32]);

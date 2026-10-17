@@ -500,15 +500,15 @@ end;
    this contest's. *)
 procedure TContestNebraskaQPTests.Test_NebraskaNames;
 var
-   c: ContestType;
+   c: TContestHandle;
 begin
    BeginTest('Test_NebraskaNames');
    CheckEquals('NE-QSO-PARTY', ContestIdentity(NEBRASKAQSO).CabrilloName, 'the Cabrillo name');
    CheckEquals('NE-QSO-PARTY', ContestIdentity(NEBRASKAQSO).ADIFContestId, 'the ADIF id');
    CheckTrue(FindContestByADIFContestId('NE-QSO-PARTY', c), 'import resolves it');
-   CheckEquals(Ord(NEBRASKAQSO), Ord(c), 'to Nebraska');
+   CheckEquals(Ord(NEBRASKAQSO), c.ToByte, 'to Nebraska');
    CheckTrue(FindContestByADIFContestId('NEQP', c), 'NEQP resolves');
-   CheckEquals(Ord(NEWENGLANDQSO), Ord(c), 'to New England, never Nebraska');
+   CheckEquals(Ord(NEWENGLANDQSO), c.ToByte, 'to New England, never Nebraska');
    CheckEquals(' 5NN LNCS', ContestIdentity(NEBRASKAQSO).CQExchangeDefault(StationAt(True)),
                'in NE, the county');
    CheckEquals(' 5NN KS', ContestIdentity(NEBRASKAQSO).CQExchangeDefault(StationAt(False)),
