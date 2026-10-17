@@ -73,6 +73,8 @@ type
       procedure Test_RetiredRowsAreSetAsideInEitherEra;
       procedure Test_CaptureDeletesRetiredRowsOnce;
       procedure Test_ACaptureThatFailsPartWayLeavesNothingOfItself;
+      procedure Test_Q61_ACategoryChangeIsInTheLogAtOnce;
+      procedure Test_Q61_AReopenedLogKeepsItsEntryDeclaration;
    public
       procedure RunAllTests; override;
    end;
@@ -87,6 +89,8 @@ uses
    uLogRepository,
    uCFG,   (* CommandIsRetired -- the one list of withdrawn names, which the
              program passes into the leaf, so the tests pass it too *)
+   sqldb,             (* TSQLQuery -- reading the contest row back, Q61 *)
+   uContestRegistry,  (* ContestHandleOf -- a contest row to declare on *)
    uLogContestStatements;
 
 const
@@ -943,6 +947,203 @@ begin
    Scrub(fn);
 end;
 
+(* Q61: A CATEGORY CHANGE IS IN THE LOG WHEN IT IS MADE, not at the close.
+
+  ASSISTED, BAND, MODE and OPERATOR are one contest-scoped setting each, and
+  the log's config table is their one home. The Cabrillo summary window
+  applies a change and calls LogStoreRecordContestStatement, which is
+  CaptureContestStatement plus a commit -- modelled here as that pair. The
+  database is then freed with NO close capture, which is what a crash
+  leaves, and a fresh settings object reads the log back the way the
+  program does (ApplyRows). *)
+procedure TLogContestStatementsTests.Test_Q61_ACategoryChangeIsInTheLogAtOnce;
+const
+   COMMANDS: array[0..3] of string = (
+      'CATEGORY-ASSISTED', 'CATEGORY-BAND', 'CATEGORY-MODE', 'CATEGORY-OPERATOR');
+   (* Each differs from the constructor default, so an unmarked log reads it
+     as a statement rather than as a sentinel. *)
+   VALUES: array[0..3] of string = ('ASSISTED', '40M', 'SSB', 'MULTI-OP');
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   s, back: TR4WSettings;
+   fn: string;
+   found: boolean;
+   v: string;
+   i: integer;
+begin
+   BeginTest('Q61: a category change is in the log when it is made');
+   fn := TempLogName('q61categories.db');
+   Scrub(fn);
+   s := TR4WSettings.Create;
+   back := TR4WSettings.Create;
+   try
+      db := TLogDatabase.Create;
+      try
+         db.CreateNew(fn);
+         repo := TLogRepository.Create(db);
+         try
+            for i := Low(COMMANDS) to High(COMMANDS) do
+               begin
+               CheckTrue(s.TrySetByCommand(COMMANDS[i], VALUES[i]),
+                         COMMANDS[i] + ' is applied, as the window applies it');
+               CheckTrue(CaptureContestStatement(s, repo, COMMANDS[i]),
+                         COMMANDS[i] + ' is written at once');
+               repo.Commit;
+               end;
+
+            CheckFalse(CaptureContestStatement(s, repo, 'CATEGORY-POWER'),
+                       'an unstated category writes no row');
+            StoredValue(repo, 'CATEGORY-POWER', found);
+            CheckFalse(found, 'and has none');
+            CheckFalse(CaptureContestStatement(s, repo, 'CONTEST'),
+                       'CONTEST is never a config row');
+            CheckTrue(s.TrySetByCommand('MY CALL', 'NY4I'), 'a station setting...');
+            CheckFalse(CaptureContestStatement(s, repo, 'MY CALL'),
+                       '...is not this rule''s to write');
+            repo.Commit;
+            CheckFalse(LogHoldsStatementsOnly(repo),
+                       'one statement does not mark the log: its other rows ' +
+                       'vouch for nothing');
+            (* NO CLOSE CAPTURE. *)
+         finally
+            repo.Free;
+         end;
+      finally
+         db.Free;
+      end;
+
+      db := TLogDatabase.Create;
+      try
+         db.Open(fn);
+         repo := TLogRepository.Create(db);
+         try
+            ApplyRows(back, repo);
+            for i := Low(COMMANDS) to High(COMMANDS) do
+               begin
+               v := StoredValue(repo, COMMANDS[i], found);
+               CheckTrue(found, COMMANDS[i] + ' survived with no close');
+               CheckEquals(VALUES[i], v, COMMANDS[i] + ' holds what was chosen');
+               CheckTrue(back.TryGetByCommand(COMMANDS[i], v), COMMANDS[i] + ' reads back');
+               CheckEquals(VALUES[i], v, COMMANDS[i] + ' is in force on reopen');
+               CheckTrue(back.CommandIsStated(COMMANDS[i]),
+                         COMMANDS[i] + ' is the operator''s statement again');
+               end;
+         finally
+            repo.Free;
+         end;
+      finally
+         db.Free;
+      end;
+   finally
+      back.Free;
+      s.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* The contest row's declaration, as 'call|assisted|mode|name'. *)
+function DeclarationOnFile(aDatabase: TLogDatabase): string;
+var
+   q: TSQLQuery;
+begin
+   Result := '';
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := aDatabase.Connection;
+      q.UsePrimaryKeyAsKey := False;
+      q.SQL.Text := 'SELECT IFNULL(my_call, '''') || ''|'' || ' +
+                    'IFNULL(category_assisted, '''') || ''|'' || ' +
+                    'IFNULL(category_mode, '''') || ''|'' || ' +
+                    'IFNULL(op_name, '''') FROM contest WHERE id = 1';
+      q.Open;
+      if not q.EOF then
+         begin
+         Result := q.Fields[0].AsString;
+         end;
+      q.Close;
+   finally
+      q.Free;
+   end;
+end;
+
+(* Q61's LATENT DEFECT (1): A REOPENED LOG KEEPS ITS ENTRY DECLARATION.
+
+  uLogStore.EnsureOpen called SetEntryDeclaration on EVERY open, so a
+  reopened log's declaration became the values in force that day. It now
+  calls RecordEntryDeclaration with "this open made the log", which writes
+  only then. The log is created and declared, reopened with DIFFERENT
+  values the way the next session would offer them, and reopened again. *)
+procedure TLogContestStatementsTests.Test_Q61_AReopenedLogKeepsItsEntryDeclaration;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   made, today: TLogEntryDeclaration;
+   fn: string;
+begin
+   BeginTest('Q61: a reopened log keeps the entry declaration it was made with');
+   fn := TempLogName('q61declaration.db');
+   Scrub(fn);
+
+   made := Default(TLogEntryDeclaration);
+   made.MyCall := 'NY4I';
+   made.CategoryAssisted := 'ASSISTED';
+   made.CategoryMode := 'CW';
+   made.OpName := 'TOM';
+
+   today := Default(TLogEntryDeclaration);
+   today.MyCall := 'W1AW';
+   today.CategoryAssisted := 'NON-ASSISTED';
+   today.CategoryMode := 'SSB';
+   today.OpName := 'HIRAM';
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         CheckFalse(RecordEntryDeclaration(repo, True, made),
+                    'a new log with no contest row yet has nowhere to put it');
+         repo.SetContest(ContestHandleOf(CQWWCW));
+         CheckTrue(RecordEntryDeclaration(repo, True, made),
+                   'the open that made the log records its declaration');
+         repo.Commit;
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   (* THE NEXT SESSION: the same log, other values in force. *)
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      repo := TLogRepository.Create(db);
+      try
+         CheckFalse(RecordEntryDeclaration(repo, False, today),
+                    'a reopen records nothing');
+         repo.Commit;
+         CheckEquals('NY4I|ASSISTED|CW|TOM', DeclarationOnFile(db),
+                     'the declaration is still the one the log was made with');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      CheckEquals('NY4I|ASSISTED|CW|TOM', DeclarationOnFile(db),
+                  'and so is the file''s');
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
 procedure TLogContestStatementsTests.RunAllTests;
 begin
    Test_ByNameIsAStatement_UnstatedIsNot;
@@ -961,6 +1162,8 @@ begin
    Test_RetiredRowsAreSetAsideInEitherEra;
    Test_CaptureDeletesRetiredRowsOnce;
    Test_ACaptureThatFailsPartWayLeavesNothingOfItself;
+   Test_Q61_ACategoryChangeIsInTheLogAtOnce;
+   Test_Q61_AReopenedLogKeepsItsEntryDeclaration;
 
    if (FDir <> '') and DirectoryExists(FDir) then
       begin

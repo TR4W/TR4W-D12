@@ -84,6 +84,21 @@ type
       CATEGORY-ASSISTED, CATEGORY-BAND and CATEGORY-OPERATOR ABSENT and a
       CATEGORY-MODE of SSB where the log's own configuration says MIXED.
 
+      WHAT IT HOLDS: the entry's callsign and park; the nine Cabrillo
+      CATEGORY- tags; CLUB and SOAPBOX; and the station identity as declared
+      for this log (name, address, city, state, postcode, country, email).
+
+      WRITTEN ONCE, FOR A NEW (OR JUST-MIGRATED) LOG, AND NEVER ON A REOPEN
+      -- uLogContestStatements.RecordEntryDeclaration, Q61 (2026-10-17). It
+      had been written on EVERY open, which made it today's values rather
+      than the entry's.
+
+      IT IS A RECORD OF THE ENTRY AS MADE, NOT THE CURRENT VALUE, AND
+      NOTHING READS IT BACK. The CURRENT value of ASSISTED, BAND, MODE,
+      OPERATOR and POWER is ONE contest-scoped setting each, held in this
+      log's config table as the operator's statement (Q61, design 7.6) --
+      that is what the summary window edits and a headless export reads.
+
       A RECORD RATHER THAN NINETEEN PARAMETERS, and it is filled by the caller
       rather than read here: the values live in uCbrSum, which is the Cabrillo
       header's tag table and sits beside the window that edits it. The
@@ -303,7 +318,10 @@ type
          bug this column exists to fix, committed by the tool meant to fix it.
 
          Cleared after every save, like the QSO set, so one contact cannot
-         inherit another's exchange. *)
+         inherit another's exchange.
+
+         FOR AN INSERT ONLY. UpdateQSO does not read it, and an update keeps
+         the exchange_sent the row already holds -- see SetSentExchange. *)
       procedure SetNextSentExchange(const aSentExchange: AnsiString);
 
       procedure SetNextQSOSet(const aSetId: AnsiString);
@@ -370,6 +388,8 @@ type
       (* REPLACES the row.  Every column BindRecord writes is rewritten, so a
         partially-populated record blanks what it does not carry -- which is
         what the file-based code does too, since it rewrites the whole record.
+        EXCEPT guid, qso_set_id and exchange_sent, which the record does not
+        carry and an edit cannot change (QSO_COLUMNS_UPDATABLE).
         False when there is no such row. *)
       function UpdateQSO(aRowId: Int64; const aQso: ContestExchange): boolean;
 
@@ -391,8 +411,23 @@ type
       procedure SetContest(aContest: TContestHandle);
 
       (* Writes the entry declaration onto the contest row.  Call once, when
-         the log is created -- see TLogEntryDeclaration for why never again. *)
-      procedure SetEntryDeclaration(const aDeclaration: TLogEntryDeclaration);
+         the log is created -- see TLogEntryDeclaration for why never again.
+         uLogContestStatements.RecordEntryDeclaration is the guarded call.
+
+         False when there is no contest row to write it on: the UPDATE
+         invents no row, and a caller that meant to record the declaration
+         needs to know it did not. *)
+      function SetEntryDeclaration(const aDeclaration: TLogEntryDeclaration): boolean;
+
+      (* WRITE WHAT ONE EXISTING QSO SENT -- the one path that means to.
+
+         An UPDATE never touches exchange_sent (QSO_COLUMNS_UPDATABLE), so
+         an edit keeps what was sent. The exception is the live append that
+         found the log just rebuilt from a binary log: the import cannot know
+         what was sent and the live path can, so it attaches it here.
+
+         False when there is no such row. Does not commit. *)
+      function SetSentExchange(aRowId: Int64; const aSentExchange: AnsiString): boolean;
 
       (* CONFIGURATION AND PROGRAM MESSAGES INTO THE LOG -- phase E.
 
@@ -1048,21 +1083,30 @@ const
       'name_sent, mp3_recorded, clear_dupe_sheet, clear_mult_sheet, ' +
       'radio_nr, operator_call, deleted, sent_to_server, server_dirty, notes';
 
-   (* THE UPDATABLE COLUMNS: the same list WITHOUT guid and WITHOUT
-     qso_set_id.
+   (* THE UPDATABLE COLUMNS: the same list WITHOUT guid, WITHOUT
+     qso_set_id and WITHOUT exchange_sent.
 
-     Both are identity rather than content, and an edit changes what a QSO
-     SAYS, not which row it is or which contact it belonged to. Leaving
+     The first two are identity rather than content, and an edit changes what
+     a QSO SAYS, not which row it is or which contact it belonged to. Leaving
      qso_set_id in here was a real defect, caught by a live run: the update
      had no set id to bind, wrote an empty string, and the first QSO of the
      session lost its membership of the county-line pair it had just been
-     grouped into. Every subsequent edit would have done the same. *)
+     grouped into. Every subsequent edit would have done the same.
+
+     exchange_sent WENT FOR THE SAME REASON (Q61's column audit, 2026-10-16;
+     fixed 2026-10-17). It is what was SENT when the QSO was logged, and the
+     record has no field for it -- so an update had nothing to bind but
+     FSentExchangeForNextSave, which SaveQSO clears after every insert. Every
+     Edit QSO, every rescore and every network update therefore wrote NULL
+     over the sent exchange. An edit changes only what was edited (Q13), and
+     nothing an edit can reach is the sent exchange. The one path that does
+     mean to write it on an existing row says so: SetSentExchange. *)
    QSO_COLUMNS_UPDATABLE =
       'exchange_id, session_id, session_seq, ' +
       'computer_id, operator_id, record_kind, ' +
       'qso_at, callsign, standard_call, freq_tx_hz, freq_rx_hz, is_split, ' +
       'band, mode, submode, ' +
-      'exchange_sent, exchange_received, ' +
+      'exchange_received, ' +
       'rst_sent, rst_received, serial_sent, serial_received, ' +
       'rcvd_zone, rcvd_name, rcvd_age, rcvd_check, rcvd_precedence, rcvd_class, ' +
       'rcvd_power, rcvd_chapter, rcvd_prefecture, rcvd_member_no, rcvd_qth, ' +
@@ -1571,7 +1615,13 @@ begin
    (* The received exchange as rendered. There is no sent counterpart in the
      record -- crosswalk finding 1. *)
    BindText(P('exchange_received'), AnsiString(rec.ExchString));
-   BindText(P('exchange_sent'), FSentExchangeForNextSave);
+
+   (* INSERT ONLY, like qso_set_id: an update keeps what was sent -- see
+     QSO_COLUMNS_UPDATABLE. *)
+   if aInserting then
+      begin
+      BindText(P('exchange_sent'), FSentExchangeForNextSave);
+      end;
 
    P('rst_sent').AsInteger := rec.RSTSent;
    P('rst_received').AsInteger := rec.RSTReceived;
@@ -1956,11 +2006,12 @@ begin
    end;
 end;
 
-procedure TLogRepository.SetEntryDeclaration(
-   const aDeclaration: TLogEntryDeclaration);
+function TLogRepository.SetEntryDeclaration(
+   const aDeclaration: TLogEntryDeclaration): boolean;
 var
    q: TSQLQuery;
 begin
+   Result := False;
    q := TSQLQuery.Create(nil);
    try
       q.DataBase := FDatabase.Connection;
@@ -1998,6 +2049,29 @@ begin
       q.ParamByName('country').AsString := aDeclaration.Country;
       q.ParamByName('email').AsString := aDeclaration.Email;
       q.ExecSQL;
+      Result := q.RowsAffected > 0;
+   finally
+      q.Free;
+   end;
+end;
+
+function TLogRepository.SetSentExchange(aRowId: Int64;
+                                        const aSentExchange: AnsiString): boolean;
+var
+   q: TSQLQuery;
+begin
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      (* MADE PER CALL, NOT KEPT: one QSO per rebuild, which is rare. A
+        statement that prepares every time begins its own transaction
+        (sqldb.pp:1296), so the write still waits for the caller's Commit --
+        TestEveryWriteWaitsForItsCommit holds it to that. *)
+      q.SQL.Text := 'UPDATE qso SET exchange_sent = :sent WHERE id = :row_id';
+      BindText(q.ParamByName('sent'), aSentExchange);
+      q.ParamByName('row_id').AsLargeInt := aRowId;
+      q.ExecSQL;
+      Result := q.RowsAffected > 0;
    finally
       q.Free;
    end;

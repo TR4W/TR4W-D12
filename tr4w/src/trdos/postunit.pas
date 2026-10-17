@@ -795,7 +795,12 @@ procedure ExportTo3830Scores;
     because that was the stack buffer's size.  Nothing in a Cabrillo header
     is that long, and a silent truncation is not a property worth keeping. *)
   operatorsStr := HeaderValue( CABRILLOSECTION, '_OPERATORS' );
-  classStr     := HeaderValue( CABRILLOSECTION, '_CATEGORY-OPERATOR' );
+  (* CATEGORY-OPERATOR IS ONE SETTING TOO -- Q61. This read the header
+    store's '_CATEGORY-OPERATOR', which nothing writes (its ctrSave is
+    False), so the report's Class line showed whatever an older build left
+    there, or nothing. uCbrSum.CabrilloTagText answers the setting, as for
+    POWER. *)
+  classStr     := CabrilloTagText( ctCategoryOperator );
   (* CATEGORY-POWER IS THE ONE SETTING SCORING READS, not a header-store copy
     -- M9b, design 7.6; uCbrSum.CabrilloTagText answers it. *)
   powerStr     := CabrilloTagText( ctCategoryPower );

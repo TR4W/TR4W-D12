@@ -120,6 +120,41 @@ function CaptureContestStatements(aSettings: TR4WSettings;
                                   aRepository: TLogRepository;
                                   aIsRetired: TCommandTest = nil): integer;
 
+(* THE SAME RULE FOR ONE COMMAND -- written while stated, deleted otherwise.
+  True when a row was written. Does not commit, and does NOT set the mark.
+
+  WHY IT EXISTS: A CHANGE IS WRITTEN WHEN IT IS MADE (Q61, 2026-10-17). The
+  whole capture runs at log creation and at a clean close, so a statement
+  made mid-session -- CATEGORY-MODE in the Cabrillo summary window -- was in
+  the log only if the program closed cleanly. uLogStore's
+  LogStoreRecordContestStatement calls this the moment the window applies
+  the value. CaptureContestStatements loops over it, so the two are one rule.
+
+  NO MARK, DELIBERATELY. The mark says EVERY contest-scoped row is a
+  statement, and a single write vouches for one row only: an old log's
+  sentinels would become statements. Unmarked, the row is still read
+  correctly -- a non-default row is a statement, and a default one is
+  dropped as a sentinel, which leaves the setting at that same default. *)
+function CaptureContestStatement(aSettings: TR4WSettings;
+                                 aRepository: TLogRepository;
+                                 const aCommand: string): boolean;
+
+(* THE ENTRY DECLARATION, WRITTEN WHEN THE LOG IS MADE AND NEVER AGAIN --
+  Q61's latent defect (1), found by the column audit 2026-10-16.
+
+  uLogStore wrote it on EVERY open, against its own "READ ONCE, WHEN THE LOG
+  IS MADE" comment, so a reopened log's declaration was today's values. It
+  was also written BEFORE the new log's contest row existed, so for a new log
+  the UPDATE landed on nothing and the first real write was the first reopen.
+
+  aLogIsNew is True on the open that created the log, or that migrated it
+  from a binary log (which carries no declaration). Anything else writes
+  nothing. True when the declaration was written; False when aLogIsNew is
+  False or there is no contest row yet. Does not commit. *)
+function RecordEntryDeclaration(aRepository: TLogRepository;
+                                aLogIsNew: boolean;
+                                const aDeclaration: TLogEntryDeclaration): boolean;
+
 (* THE STATION FACTS A CONTEST MAY OVERRIDE -- design 7.12. For every command
   naming one (MY STATE and its alias MY QTH, MY ZONE, MY GRID...): the open
   contest's override, as source 'contest', while it stated one; otherwise the
@@ -173,6 +208,50 @@ begin
              (aRepository.SessionValue(STATEMENTS_ONLY_KEY, '') = '1');
 end;
 
+function CaptureContestStatement(aSettings: TR4WSettings;
+                                 aRepository: TLogRepository;
+                                 const aCommand: string): boolean;
+var
+   value: string;
+begin
+   Result := False;
+   if (aSettings = nil) or (aRepository = nil) or
+      (aCommand = '') or
+      (not aSettings.CommandIsContestScoped(aCommand)) or
+      UnicodeSameText(aCommand, 'CONTEST') then
+      begin
+      Exit;
+      end;
+
+   (* A STATED VALUE THAT CANNOT BE WRITTEN DOWN IS DELETED, not kept: the
+     renderer answers False only for a property kind it does not handle, and
+     a stale row for it would be applied on reopen as though it were
+     current. *)
+   if aSettings.CommandIsStated(aCommand) and
+      aSettings.TryGetByCommand(aCommand, value) then
+      begin
+      aRepository.SaveConfigValue(AnsiString(aCommand), AnsiString(value),
+                                  AnsiString('contest'));
+      Result := True;
+      end
+   else
+      begin
+      aRepository.DeleteConfigValue(AnsiString(aCommand));
+      end;
+end;
+
+function RecordEntryDeclaration(aRepository: TLogRepository;
+                                aLogIsNew: boolean;
+                                const aDeclaration: TLogEntryDeclaration): boolean;
+begin
+   Result := False;
+   if (aRepository = nil) or (not aLogIsNew) then
+      begin
+      Exit;
+      end;
+   Result := aRepository.SetEntryDeclaration(aDeclaration);
+end;
+
 function CaptureContestStatements(aSettings: TR4WSettings;
                                   aRepository: TLogRepository;
                                   aIsRetired: TCommandTest = nil): integer;
@@ -181,7 +260,6 @@ var
    stored: TStringList;
    i: integer;
    cmd: string;
-   value: string;
 begin
    Result := 0;
    if (aSettings = nil) or (aRepository = nil) then
@@ -194,27 +272,11 @@ begin
       for i := 0 to names.Count - 1 do
          begin
          cmd := string(names[i]);
-         if (cmd = '') or
-            (not aSettings.CommandIsContestScoped(cmd)) or
-            UnicodeSameText(cmd, 'CONTEST') then
+         (* ONE COMMAND'S RULE, which skips a name that is not contest-scoped
+           and CONTEST itself. *)
+         if CaptureContestStatement(aSettings, aRepository, cmd) then
             begin
-            Continue;
-            end;
-
-         (* A STATED VALUE THAT CANNOT BE WRITTEN DOWN IS DELETED, not kept:
-           the renderer answers False only for a property kind it does not
-           handle, and a stale row for it would be applied on reopen as
-           though it were current. *)
-         if aSettings.CommandIsStated(cmd) and
-            aSettings.TryGetByCommand(cmd, value) then
-            begin
-            aRepository.SaveConfigValue(AnsiString(cmd), AnsiString(value),
-                                        AnsiString('contest'));
             Inc(Result);
-            end
-         else
-            begin
-            aRepository.DeleteConfigValue(AnsiString(cmd));
             end;
          end;
    finally

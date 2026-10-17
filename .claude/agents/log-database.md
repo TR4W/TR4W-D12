@@ -137,6 +137,8 @@ is. On failure, nothing commits, and `TLogDatabase.Close` rolls back.
   `Transaction.Rollback`. It resyncs the two with a raw `BEGIN` and matches no
   message text. Pinned by `TestABatchSQLiteRollsBackItself...` and
   `TestALogSQLiteRolledBackClosesCleanly`.
+- **The pin covers 16 write paths** since `SetSentExchange` joined it
+  (2026-10-17); its fingerprint now includes `exchange_sent`.
 - **`BeginBatchUpdate` still commits what is pending and then starts its own
   transaction**, so a batch's rollback undoes the batch and nothing before it.
 - **How to test a "one transaction" claim:**
@@ -206,6 +208,44 @@ for a legacy contest its `ContestTypeSA` spelling, so no stored row changed).
 `.TRW` importer REFUSES a first record whose contest byte is above the legacy
 range -- a message, and no log -- instead of stamping the log through an
 out-of-range table index (`uTestLogImport.TestImportRefusesAContestNumberItDoesNotKnow`).
+
+## Q61 (2026-10-17): the categories, the declaration, and `exchange_sent`
+
+Detail and measurements: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12f.
+
+- **CATEGORY-ASSISTED, -BAND, -MODE, -OPERATOR and -POWER have ONE home: the
+  log's `config` row** -- each is a contest-scoped setting, so a stated value
+  is a statement row (below). NOT the `contest` row's `category_*` columns,
+  which nothing reads. `uCbrSum.CabrilloTagText` answers the setting when the
+  summary window is closed; the window commits through `SetCFGCommandValue`
+  and then `LogStoreRecordContestStatement`, which writes that ONE row and
+  commits, so the change survives a crash. The single-row rule is
+  `uLogContestStatements.CaptureContestStatement`; the full capture loops
+  over it. **A single write does NOT set the statements-only mark** -- it
+  vouches for one row, not the log.
+- **The entry declaration (`contest` row: my_call, my_park, the nine
+  CATEGORY tags, club, soapbox, op_name, address, city, state, postcode,
+  country, email) is written ONCE**, on the open that made or migrated the
+  log, after the contest stamp: `RecordEntryDeclaration(repo, isNewLog or
+  aRebuilt, ...)`. It had been rewritten on every open, and for a new log it
+  ran before the row existed. `SetEntryDeclaration` now returns whether a
+  row was written. It is the entry AS MADE; nothing reads it back.
+- **`exchange_sent` is INSERT-ONLY** -- out of `QSO_COLUMNS_UPDATABLE`, like
+  `qso_set_id`. Every update (Edit QSO, the rescore batch, the network
+  update, a re-import) used to NULL it. `SetNextSentExchange` is for the next
+  INSERT; the one path that writes an existing row's sent exchange is
+  `TLogRepository.SetSentExchange` (the append that found the log just
+  rebuilt from a `.TRW`).
+- **No schema change, no `user_version` bump**, fixtures byte-identical.
+- **`test-contest-factory.sh` compares the Cabrillo HEADER** (the golden
+  corpus does not), against frozen output that recorded the old missing
+  category lines -- it reports 13 DIFF on exactly those lines until NY4I
+  re-freezes. Do not re-freeze without him.
+- **Suspected, not fixed:** `LogStoreAppendQSO`'s `rebuilt` branch assumes
+  the `.TRW` already holds the QSO being appended (it updates the newest
+  imported row with it). `tAddQSOToLog` no longer writes the `.TRW`, so if
+  that branch is ever reached the newest imported QSO is overwritten.
+  Reasoned from the code, not run.
 
 ## The `config` table holds only what the operator STATED (2026-10-01)
 

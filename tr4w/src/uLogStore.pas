@@ -212,6 +212,20 @@ function LogStoreIsUsable: boolean;
   ONLY source = 'contest'. See TLogRepository.LoadContestConfig for why. *)
 function LogStoreApplyContestConfig: integer;
 
+(* RECORD ONE CONTEST-SCOPED STATEMENT IN THE LOG NOW, AND COMMIT IT -- Q61.
+
+  The contest database is the one home of a contest-scoped setting, and a
+  change is written when it is MADE: the Cabrillo summary window calls this
+  after it applies CATEGORY-ASSISTED, -BAND, -MODE, -OPERATOR or -POWER.
+  Before, such a change reached the log only through the capture at a clean
+  close, so a crash lost it. uLogContestStatements.CaptureContestStatement
+  is the rule (written while stated, deleted otherwise).
+
+  True when the row is committed. A batch /EXPORT writes nothing, like the
+  close capture. A write failure disables the store, as every write here
+  does. Never raises. *)
+function LogStoreRecordContestStatement(const aCommand: string): boolean;
+
 (* MAKES THE SQLITE LOG EXIST AND MATCH THE BINARY ONE, and returns whether it
   can be relied on.  Its file name is uLogDatabase.LogDatabaseFileName.
 
@@ -427,7 +441,14 @@ end;
    what made the interactive and headless paths agree in the first place.
 
    ONCE. Reading it again later would reintroduce the bug at the header level:
-   what an entry DECLARED is a fact about the entry, not about today. *)
+   what an entry DECLARED is a fact about the entry, not about today.
+
+   AND NOW IT IS ONCE (Q61, 2026-10-17). EnsureOpen wrote it on EVERY open
+   until then; RecordEntryDeclaration writes it only for a new or just-migrated
+   log. The five category tags here (ASSISTED, BAND, MODE, OPERATOR, POWER)
+   are the contest-scoped settings, which CabrilloTagText answers when the
+   window is closed -- so a new log records what the New Contest dialog
+   stated, not the tr4w.json header store's copy. *)
 function ReadEntryDeclaration: TLogEntryDeclaration;
 begin
    FillChar(Result, SizeOf(Result), 0);
@@ -1022,8 +1043,9 @@ begin
 
       GRepository := TLogRepository.Create(GDatabase);
 
-
-      GRepository.SetEntryDeclaration(ReadEntryDeclaration);
+      (* ~~GRepository.SetEntryDeclaration(ReadEntryDeclaration)~~ stood here
+        and ran on EVERY open -- see the entry declaration below the contest
+        stamp, which is where it runs now, and only for a new log. *)
 
       (* THE CONFIGURATION IS CAPTURED WHEN THE LOG IS MADE, AND ONLY THEN.
 
@@ -1116,6 +1138,37 @@ begin
             logger.Info('[LogStore] stamped the new log as contest %s',
                         [ContestId(Contest)]);
             end;
+         end;
+
+      (* THE ENTRY DECLARATION, ONCE: ON THE OPEN THAT MADE THE LOG -- Q61.
+
+        It was written on every open, just after the repository was made, so
+        a reopened log
+        carried today's values instead of what the entry declared; and for a
+        new log it ran BEFORE the contest stamp above, when there was no row
+        for its UPDATE to land on. So it runs here, after the stamp, and the
+        guard is the leaf's (RecordEntryDeclaration), where it is tested.
+
+        A MIGRATED LOG COUNTS AS NEW, for the reason the configuration capture
+        gives: a binary log carries no declaration, so this is the only one it
+        will ever have. Its contest row was written by the import. *)
+      if RecordEntryDeclaration(GRepository, isNewLog or aRebuilt,
+                                ReadEntryDeclaration) then
+         begin
+         GRepository.Commit;
+         if logger <> nil then
+            begin
+            logger.Info('[LogStore] recorded the entry declaration of the new log');
+            end;
+         end
+      else if (isNewLog or aRebuilt) and (logger <> nil) then
+         begin
+         (* A NEW LOG OPENED WITH NO CONTEST has no contest row -- the stamp
+           above refuses to write "no contest" -- so there is nowhere to put
+           the declaration. Said, because the declaration is then simply
+           absent from this log. *)
+         logger.Info('[LogStore] the new log has no contest row yet, so its ' +
+                     'entry declaration is not recorded');
          end;
 
       Result := True;
@@ -1343,12 +1396,15 @@ begin
             The record just written to the binary log is its LAST one, so the
             row the rebuild just imported is the newest -- update that one with
             what only the live path knows. *)
-         GRepository.SetNextSentExchange(
-            AnsiString(BuildSentExchangeText(aQso)));
+         (* SetSentExchange, NOT SetNextSentExchange + UpdateQSO: an update
+           keeps the row's exchange_sent (Q61's defect (2)), so the sent
+           exchange is written by the one call that means to. *)
          rowId := GRepository.NewestRowId;
          if rowId > 0 then
             begin
             GRepository.UpdateQSO(rowId, aQso);
+            GRepository.SetSentExchange(rowId,
+               AnsiString(BuildSentExchangeText(aQso)));
             GRepository.Commit;
             end;
 
@@ -1646,6 +1702,44 @@ begin
       on E: Exception do
          begin
          Disable('rewriting a QSO by its network key', E);
+         end;
+   end;
+end;
+
+function LogStoreRecordContestStatement(const aCommand: string): boolean;
+var
+   rebuilt: boolean;
+begin
+   Result := False;
+
+   (* /EXPORT is read-only for the log -- see CaptureConfigurationOnClose. *)
+   if tSilentExport or GDisabled then
+      begin
+      Exit;
+      end;
+
+   try
+      if not EnsureOpen(rebuilt, False) then
+         begin
+         Exit;
+         end;
+
+      (* COMMITTED EITHER WAY: an unstated setting's row is DELETED by the
+        same rule, and that is a write too. *)
+      Result := CaptureContestStatement(Settings, GRepository, aCommand);
+      GRepository.Commit;
+      if Result then
+         begin
+         if logger <> nil then
+            begin
+            logger.Info('[LogStore] %s recorded in the log as the contest''s ' +
+                        'statement', [aCommand]);
+            end;
+         end;
+   except
+      on E: Exception do
+         begin
+         Disable('recording a contest setting', E);
          end;
    end;
 end;

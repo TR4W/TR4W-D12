@@ -62,6 +62,7 @@ type
       procedure Test_FOCMarathonPowerColumn;
       procedure Test_WAGFrequencyWarning;
       procedure Test_CategoryPowerChange;
+      procedure Test_Q61_CategoriesAreOneValueEach;
       procedure Test_OnlyCQWWHasASixtyMinuteBreak;
       procedure Test_AGapCountsUpToTheBreak;
    end;
@@ -75,6 +76,8 @@ uses
    uContestRegistry,
    uContestChoices,
    uCategoryPowerChange,
+   (* CabrilloTagText -- what a closed summary window answers, Q61 *)
+   uCbrSum,
    uSettingsModel,
    uAppStrings,
    uTR4WStrings,
@@ -492,6 +495,78 @@ begin
 end;
 
 (* ------------------------------------------------------------------------ *)
+(* Q61 -- ASSISTED, BAND, MODE, OPERATOR: ONE VALUE EACH                     *)
+(* ------------------------------------------------------------------------ *)
+
+(* TWO HALVES, BOTH WITHOUT A FORM.
+
+  THE WINDOW'S RULE (CategoryChoiceIndex): a row commits only a spelling of
+  its category that differs from the value in force -- so closing the window
+  states nothing the operator did not change, and an ERMAK-only value such as
+  MULTI-OP-2, which no setting can hold, is not offered to one.
+
+  WHAT A CLOSED WINDOW ANSWERS (CabrilloTagText), which is what a headless
+  /EXPORT and the 3830 report read: the setting, for all five categories. It
+  answered the header store for four of them, so MODE was a stale copy and
+  ASSISTED, BAND and OPERATOR were empty. *)
+procedure TContestUITests.Test_Q61_CategoriesAreOneValueEach;
+var
+   m: tCategoryMode;
+   savedAssisted: tCategoryAssisted;
+   savedBand: tCategoryBand;
+   savedMode: tCategoryMode;
+   savedOperator: tCategoryOperator;
+   savedPower: tCategoryPower;
+begin
+   BeginTest('Test_Q61_CategoriesAreOneValueEach');
+
+   for m := Low(tCategoryMode) to High(tCategoryMode) do
+      begin
+      CheckEquals(-1, CategoryChoiceIndex(tCategoryModeSA, Ord(m), tCategoryModeSA[m]),
+                  tCategoryModeSA[m] + ' over itself: no change');
+      end;
+   CheckEquals(Ord(cmSSB),
+               CategoryChoiceIndex(tCategoryModeSA, Ord(cmCW), ' ssb '),
+               'CW -> a padded, lower-case SSB is SSB');
+   CheckEquals(Ord(caASSISTED),
+               CategoryChoiceIndex(tCategoryAssistedSA, Ord(caNONASSISTED), 'ASSISTED'),
+               'NON-ASSISTED -> ASSISTED');
+   CheckEquals(Ord(cb40M),
+               CategoryChoiceIndex(tCategoryBandSA, Ord(cbALL), '40M'),
+               'ALL -> 40M');
+   CheckEquals(-1, CategoryChoiceIndex(tCategoryOperatorSA, Ord(coSINGLEOP), 'MULTI-OP-2'),
+               'an ERMAK value no setting can hold changes nothing');
+   CheckEquals(-1, CategoryChoiceIndex(tCategoryBandSA, Ord(cbALL), ''),
+               'an empty row changes nothing');
+
+   (* THE CLOSED WINDOW. The test program never opens it. *)
+   CheckFalse(CabrilloSummaryIsOpen, 'the summary window is not open');
+   savedAssisted := Settings.Contest.CategoryAssisted;
+   savedBand := Settings.Contest.CategoryBand;
+   savedMode := Settings.Contest.CategoryMode;
+   savedOperator := Settings.Contest.CategoryOperator;
+   savedPower := Settings.Contest.CategoryPower;
+   try
+      Settings.Contest.CategoryAssisted := caASSISTED;
+      Settings.Contest.CategoryBand := cb20M;
+      Settings.Contest.CategoryMode := cmMIXED;
+      Settings.Contest.CategoryOperator := coMULTIOP;
+      Settings.Contest.CategoryPower := cpQRP;
+      CheckEquals('ASSISTED', CabrilloTagText(ctCategoryAssisted), 'ASSISTED is the setting');
+      CheckEquals('20M', CabrilloTagText(ctCategoryBand), 'BAND is the setting');
+      CheckEquals('MIXED', CabrilloTagText(ctCategoryMode), 'MODE is the setting');
+      CheckEquals('MULTI-OP', CabrilloTagText(ctCategoryOperator), 'OPERATOR is the setting');
+      CheckEquals('QRP', CabrilloTagText(ctCategoryPower), 'POWER is still the setting');
+   finally
+      Settings.Contest.CategoryAssisted := savedAssisted;
+      Settings.Contest.CategoryBand := savedBand;
+      Settings.Contest.CategoryMode := savedMode;
+      Settings.Contest.CategoryOperator := savedOperator;
+      Settings.Contest.CategoryPower := savedPower;
+   end;
+end;
+
+(* ------------------------------------------------------------------------ *)
 (* THE MINIMUM OFF TIME -- Q60, NY4I 2026-10-15                              *)
 (* ------------------------------------------------------------------------ *)
 
@@ -565,6 +640,7 @@ begin
    Test_FOCMarathonPowerColumn;
    Test_WAGFrequencyWarning;
    Test_CategoryPowerChange;
+   Test_Q61_CategoriesAreOneValueEach;
    Test_OnlyCQWWHasASixtyMinuteBreak;
    Test_AGapCountsUpToTheBreak;
 end;

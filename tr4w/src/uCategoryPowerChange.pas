@@ -69,6 +69,25 @@ function DecideCategoryPowerChange(aCurrent: tCategoryPower;
                                    aLoggedQSOs: integer;
                                    out aNewPower: tCategoryPower): TCategoryPowerChange;
 
+(* WHICH SPELLING A CATEGORY ROW NOW CHOOSES, OR -1 FOR "NO CHANGE" -- Q61.
+
+  aSpellings is the category's spelling table (tCategoryAssistedSA and the
+  rest), aCurrent the ordinal of the value in force, aChosen what the row
+  shows. The index of the chosen spelling, matched without case or spaces;
+  -1 when the text is no spelling at all (an empty row, or one of ERMAK's
+  extra values such as MULTI-OP-2, which no setting can hold) or is the value
+  already in force -- so closing the window re-saves nothing and makes no
+  statement the operator did not make.
+
+  ASSISTED, BAND, MODE and OPERATOR use this alone: none of them changes a
+  QSO's points, so a change is a set and never a rescore. (MODE does change
+  Washington Salmon Run's W7DX bonus, but that bonus is computed from the
+  setting each time the total is, not stored per QSO.) POWER rescores, which
+  is DecideCategoryPowerChange, built on this. *)
+function CategoryChoiceIndex(const aSpellings: array of string;
+                             aCurrent: integer;
+                             const aChosen: string): integer;
+
 implementation
 
 uses
@@ -79,32 +98,19 @@ function DecideCategoryPowerChange(aCurrent: tCategoryPower;
                                    aLoggedQSOs: integer;
                                    out aNewPower: tCategoryPower): TCategoryPowerChange;
 var
-   p: tCategoryPower;
-   found: boolean;
+   idx: integer;
 begin
    aNewPower := aCurrent;
    Result := cpcUnchanged;
 
    (* BY THE SPELLINGS THE ROW OFFERS -- tCategoryPowerSA, the table it is
      filled from. Anything else (an empty row) changes nothing. *)
-   found := False;
-   for p := Low(tCategoryPower) to High(tCategoryPower) do
+   idx := CategoryChoiceIndex(tCategoryPowerSA, Ord(aCurrent), aChosen);
+   if idx < 0 then
       begin
-      (* UnicodeSameText, NOT SameText: SysUtils' plain name takes
-         AnsiString and this unit's string is UnicodeString. *)
-      if UnicodeSameText(Trim(aChosen), tCategoryPowerSA[p]) then
-         begin
-         aNewPower := p;
-         found := True;
-         Break;
-         end;
-      end;
-
-   if (not found) or (aNewPower = aCurrent) then
-      begin
-      aNewPower := aCurrent;
       Exit;
       end;
+   aNewPower := tCategoryPower(idx);
 
    if aLoggedQSOs > 0 then
       begin
@@ -113,6 +119,28 @@ begin
    else
       begin
       Result := cpcSet;
+      end;
+end;
+
+function CategoryChoiceIndex(const aSpellings: array of string;
+                             aCurrent: integer;
+                             const aChosen: string): integer;
+var
+   i: integer;
+begin
+   Result := -1;
+   for i := 0 to High(aSpellings) do
+      begin
+      (* UnicodeSameText, NOT SameText: SysUtils' plain name takes
+         AnsiString and this unit's string is UnicodeString. *)
+      if UnicodeSameText(Trim(aChosen), aSpellings[i]) then
+         begin
+         if i <> aCurrent then
+            begin
+            Result := i;
+            end;
+         Exit;
+         end;
       end;
 end;
 

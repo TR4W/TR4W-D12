@@ -494,7 +494,7 @@ closes it; anything else reopens it.
 | Q15 | NRAU Cabrillo names become WA7BNM's NRAU-CW / NRAU-SSB; ADIF keeps NRAU-BALTIC-*; sponsor times | built (names); times are Q99 |
 | Q16 | SSB Sprint is "North American SSB Sprint"; NA-SPRINT-SSB stays; gains the North American country multiplier | built |
 | Q22 | PACC: both exchanges, one per station (PA receives either); a PA entrant's sent column must be its province, not a serial | built |
-| Q61 | ASSISTED, BAND, MODE, OPERATOR: one value each, in the contest database | not built |
+| Q61 | ASSISTED, BAND, MODE, OPERATOR: one value each, in the contest database | built 2026-10-17 (and both latent defects); factory check's frozen headers owed a re-freeze |
 | Q54 | WFD writes FM as FM (proposal reversed); HamScore asks the contest's mode spelling; one corpus divergence | built |
 | Q34 | Rover county/grid per QSO, set by a call-window command; sketched for later | issue #87 |
 | Q89 | BCQP ADIF exports STATE:BC; no CNTY (ADIF defines no Canadian secondary subdivision) | built -- and STATE is now the WORKED station's in every party (Q76) |
@@ -1330,6 +1330,36 @@ closes it; anything else reopens it.
   Also latent (nothing reads the column). Fix: take it out of the updatable
   list, as `qso_set_id` already was for the same reason, with a pin that an
   edit keeps it.
+  **BUILT 2026-10-17** (`docs/SQLITE_LOG_SCHEMA_PLAN.md` §12f has the detail).
+  The one home of each of the five categories is the log's `config` table --
+  they were already contest-scoped settings, stated values are config rows,
+  and that is where 7.6 put POWER -- so no schema change and no
+  `user_version` bump. `uCbrSum.CabrilloTagText` answers the setting for all
+  five when the window is closed; `_CATEGORY-MODE` no longer saves; the
+  summary window commits each row through `SetCFGCommandValue` and then
+  `LogStoreRecordContestStatement`, which writes that row into the log at
+  once rather than at the next clean close; the 3830 report's Class line is
+  repointed off the header store. No rescore (MODE's Salmon Run bonus is
+  computed at total time). Both latent defects are fixed as proposed: the
+  declaration is written only on the open that made (or migrated) the log,
+  and after the contest row exists; `exchange_sent` is insert-only, with
+  `TLogRepository.SetSentExchange` for the rebuild path. Pins:
+  `Test_Q61_AReopenedLogKeepsItsEntryDeclaration`,
+  `Test_Q61_ACategoryChangeIsInTheLogAtOnce`,
+  `TestAnEditKeepsTheSentExchange`, `Test_Q61_CategoriesAreOneValueEach`,
+  each run against the old code and seen to fail. **Measured:** every
+  corpus set's headless Cabrillo now carries the four lines and all 52 match
+  D7's `ref.cbr`; the corpus stays 22/0/4 (it ignores the header).
+  `test-contest-factory.sh` compares the header against frozen output that
+  recorded the defect and reports 13 DIFF on exactly those lines -- NOT
+  re-frozen; NY4I's call (`freeze-rescore-baseline.sh`).
+  **Left as it was:** `SetCFGCommandValue` still records a contest-scoped
+  command in the `tr4w.json` `commands/contest` bucket as a station default
+  (`ApplyAndStoreCommand`), as it does for POWER. It never overrides a
+  statement, and the log now always holds the statement once the window
+  changed it; retiring that bucket is Q-M2a. ERMAK's extra values
+  (MULTI-OP-2, 10M-15M-20M, 80M-40M-160M) cannot be held by any setting, so
+  they reach a Cabrillo file only while the window is open, as before.
 
 - **Q22** PACC: the row says `RSTAndQSONumberOrDomesticQTHExchange`, but every PACC
   session runs `RSTDomesticQTHExchange`. Which is the contest's exchange?

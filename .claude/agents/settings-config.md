@@ -98,6 +98,14 @@ that in both directions.
   present or absent; that is one information line in a log, not a prompt.
 - **The contest `.cfg` is deliberately exempt** from JSON: its parameters go to
   the **contest SQLite database**.
+- **The five Cabrillo categories (ASSISTED, BAND, MODE, OPERATOR, POWER) are
+  `Settings.Contest.Category*` and nothing else** (Q61, 2026-10-17; 7.6 for
+  POWER). Their home is the log's `config` statement row; the summary window
+  writes them through `SetCFGCommandValue` plus
+  `uLogStore.LogStoreRecordContestStatement`, and the Cabrillo header reads
+  them through `uCbrSum.CabrilloTagText`. A `_CATEGORY-*` key for these five
+  in `tr4w.json`'s Cabrillo header store is inert. `SetCFGCommandValue` still
+  drops a copy in the `commands/contest` bucket (a station default; Q-M2a).
 - **Credentials live in the OS vault**, not in settings.
 - **ONE HOME FOR THE LOG LEVEL: `Settings.Log.DebugLevel`** (default DEBUG,
   NY4I 2026-09-14). The radio store's `logging.level` is written only when an

@@ -54,6 +54,7 @@ type
       procedure TestAnAppendBatchLandsInOneCommit;
       procedure TestAFailedAppendBatchLeavesTheLogAsItWas;
       procedure TestAnAppendBatchWritesRowsAsTheLiveAppendDoes;
+      procedure TestAnEditKeepsTheSentExchange;
       procedure TestQSOsWithoutAnExchangeIdAreReported;
       procedure TestOneQSORoundTrips;
       procedure Test_LegacySkippedIsReadAsDeleted;
@@ -1871,7 +1872,8 @@ begin
       q.SQL.Text :=
          'SELECT (SELECT COUNT(*) FROM qso), ' +
          '(SELECT group_concat(c, '','') FROM (SELECT callsign || '':'' || ' +
-         'IFNULL(qso_points, '''') AS c FROM qso ORDER BY id)), ' +
+         'IFNULL(qso_points, '''') || '':'' || IFNULL(exchange_sent, '''') ' +
+         'AS c FROM qso ORDER BY id)), ' +
          '(SELECT contest_type || '':'' || my_call FROM contest WHERE id = 1), ' +
          '(SELECT group_concat(c, '','') FROM (SELECT command || ''='' || ' +
          'value AS c FROM config ORDER BY command)), ' +
@@ -1913,7 +1915,7 @@ end;
   in the -wal -- and the reopened file must match the seed exactly. *)
 procedure TLogRepositoryTests.TestEveryWriteWaitsForItsCommit;
 const
-   STEPS = 15;
+   STEPS = 16;
    NAMES: array[0..STEPS - 1] of string = (
       'SaveQSO',
       'UpdateQSO',
@@ -1929,7 +1931,8 @@ const
       'SaveMessage',
       'DeleteAllQSOs',
       'two SaveQSOs in a row',
-      'UpdateQSO and then SaveConfigValue');
+      'UpdateQSO and then SaveConfigValue',
+      'SetSentExchange');
 var
    db: TLogDatabase;
    repo: TLogRepository;
@@ -2040,6 +2043,10 @@ begin
                   begin
                   repo.UpdateQSO(seedId, changed);
                   repo.SaveConfigValue('SEED COMMAND', 'changed', 'contest');
+                  end;
+               15:
+                  begin
+                  repo.SetSentExchange(seedId, '599 CHANGED');
                   end;
             end;
 
@@ -2656,6 +2663,140 @@ begin
    Scrub(fn);
 end;
 
+(* exchange_sent of one row, '' for NULL, through the connection handed in. *)
+function SentExchangeOfRow(aDatabase: TLogDatabase; aRowId: Int64): string;
+var
+   q: TSQLQuery;
+begin
+   Result := '';
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := aDatabase.Connection;
+      q.UsePrimaryKeyAsKey := False;
+      q.SQL.Text := 'SELECT IFNULL(exchange_sent, '''') FROM qso WHERE id = :id';
+      q.ParamByName('id').AsLargeInt := aRowId;
+      q.Open;
+      if not q.EOF then
+         begin
+         Result := q.Fields[0].AsString;
+         end;
+      q.Close;
+   finally
+      q.Free;
+   end;
+end;
+
+(* AN EDIT CHANGES ONLY WHAT WAS EDITED -- Q61's latent defect (2), and Q13.
+
+  exchange_sent is what was SENT when the QSO was logged. The record has no
+  field for it, so every update bound the repository's next-save value, which
+  SaveQSO clears after each insert: Edit QSO, the rescore's batch, a network
+  update and a re-import each wrote NULL over it. Every one of those paths is
+  run here, and then the row is read back after a REOPEN, so it is the file
+  that keeps it.
+
+  And the one path that means to write it on an existing row
+  (SetSentExchange) does, and only that row. *)
+procedure TLogRepositoryTests.TestAnEditKeepsTheSentExchange;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   first, second, edited: ContestExchange;
+   firstId, secondId: Int64;
+   firstGuid: AnsiString;
+   updates: TLogRowUpdates;
+   wasNew: boolean;
+   fn: string;
+begin
+   BeginTest('an edit, a rescore, a network update and a re-import keep exchange_sent');
+   fn := TempLogName('keepsent.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         MakeDistinctQSO(first, 1);
+         MakeDistinctQSO(second, 2);
+         repo.SetNextSentExchange('599 05');
+         firstId := repo.SaveQSO(first);
+         firstGuid := repo.LastGuid;
+         repo.SetNextSentExchange('599 06');
+         secondId := repo.SaveQSO(second);
+         repo.Commit;
+         CheckEquals('599 05', SentExchangeOfRow(db, firstId),
+                     'the live append recorded what was sent');
+
+         edited := first;
+         edited.Callsign := 'EDITED';
+         edited.QSOPoints := 9;
+
+         (* Edit QSO and the newest-row rewrite. *)
+         CheckTrue(repo.UpdateQSO(firstId, edited), 'the edit found its row');
+         repo.Commit;
+         CheckEquals('599 05', SentExchangeOfRow(db, firstId),
+                     'Edit QSO keeps the sent exchange');
+
+         (* The network's update, keyed on the session pair. *)
+         CheckTrue(repo.UpdateQSOBySessionIds(first.ceQSOID1, first.ceQSOID2,
+                                              edited),
+                   'the network update found its row');
+         repo.Commit;
+         CheckEquals('599 05', SentExchangeOfRow(db, firstId),
+                     'a network update keeps it');
+
+         (* The rescore's batch. *)
+         updates := TLogRowUpdates.Create;
+         try
+            updates.Add(firstId, edited);
+            updates.Add(secondId, second);
+            repo.WriteBatch(updates);
+         finally
+            updates.Free;
+         end;
+         CheckEquals('599 05', SentExchangeOfRow(db, firstId),
+                     'a rescore keeps it');
+         CheckEquals('599 06', SentExchangeOfRow(db, secondId),
+                     'on every row of the batch');
+
+         (* A re-import of our own export: the same guid, an update. *)
+         repo.ImportQSOByGuid(firstGuid, edited, wasNew);
+         repo.Commit;
+         CheckFalse(wasNew, 'the re-import matched the row');
+         CheckEquals('599 05', SentExchangeOfRow(db, firstId),
+                     'a re-import keeps it');
+
+         (* THE ONE THAT MEANS TO. *)
+         CheckTrue(repo.SetSentExchange(secondId, '599 07'),
+                   'SetSentExchange found its row');
+         CheckFalse(repo.SetSentExchange(secondId + 1000, '599 08'),
+                    'and says so when there is none');
+         repo.Commit;
+         CheckEquals('599 07', SentExchangeOfRow(db, secondId),
+                     'SetSentExchange writes it');
+         CheckEquals('599 05', SentExchangeOfRow(db, firstId),
+                     'on that row only');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      CheckEquals('599 05', SentExchangeOfRow(db, firstId),
+                  'after a reopen, the edited QSO still carries what it sent');
+      CheckEquals('599 07', SentExchangeOfRow(db, secondId),
+                  'and the rewritten one what it was given');
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
 (* THE VALIDITY CHECK'S QUERY: QSOs with no exchange id, counted in full and
   sampled in log order. Notes are not QSOs and are not counted; a deleted QSO
   is still a contact and is. (F6, NY4I 2026-10-14: a rescore no longer mints
@@ -2737,6 +2878,7 @@ begin
    TestAnAppendBatchLandsInOneCommit;
    TestAFailedAppendBatchLeavesTheLogAsItWas;
    TestAnAppendBatchWritesRowsAsTheLiveAppendDoes;
+   TestAnEditKeepsTheSentExchange;
    TestQSOsWithoutAnExchangeIdAreReported;
 
 {$IFNDEF WINDOWS}

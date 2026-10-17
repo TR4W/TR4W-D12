@@ -93,6 +93,11 @@ type
       procedure ApplyErmakCategories;
       procedure LoadValues;
       procedure SaveValues;
+      procedure CommitCategory(const aTag: CabrilloTags;
+                               const aCommand: string;
+                               const aSpellings: array of string;
+                               aCurrent: integer);
+      procedure CommitCategories;
       procedure CommitCategoryPower;
    public
       { AnsiString, NOT string.  Every LCL caption and edit is a
@@ -135,6 +140,9 @@ uses
    uCFG,                  (* SetCFGCommandValue -- the settings screens' route *)
    LogDupe,               (* QSOTotals -- is anything logged yet *)
    LogWind,               (* QuickDisplay -- the main window's notice *)
+   (* LogStoreRecordContestStatement -- a category change is written into the
+     contest database when it is made (Q61). *)
+   uLogStore,
    uAppStrings;           (* SCategoryPowerChangedRescored *)
 
 var
@@ -443,6 +451,8 @@ begin
       begin
       Exit;
       end;
+   (* INTO THE CONTEST DATABASE NOW, not only at a clean close -- Q61. *)
+   LogStoreRecordContestStatement('CATEGORY-POWER');
 
    if change = cpcSetAndRescore then
       begin
@@ -450,6 +460,53 @@ begin
       QuickDisplay(SysUtils.Format(SCategoryPowerChangedRescored,
                                    [tCategoryPowerSA[chosen]]));
       end;
+end;
+
+(* ASSISTED, BAND, MODE AND OPERATOR WRITE THE ONE SETTING EACH -- Q61 (NY4I,
+  2026-10-16: "Yes."), the same way the POWER row does (7.6), and for the
+  same reason: the window used to write MODE to a copy in settings\tr4w.json
+  and the other three nowhere, so a change made here was lost on close and a
+  headless /EXPORT never saw it.
+
+  SetCFGCommandValue -- the route every settings screen takes: it applies the
+  value, records it as the operator's statement and tells a multi-op peer
+  (all four are SHARED_WITH_PEERS) -- then the statement goes into the contest
+  database at once. NO RESCORE: no contest scores a QSO by these
+  (uCategoryPowerChange.CategoryChoiceIndex says why MODE's bonus is not an
+  exception). An unchanged row, or a value no setting can hold, does nothing. *)
+procedure TfrmCabrilloSummary.CommitCategory(const aTag: CabrilloTags;
+                                             const aCommand: string;
+                                             const aSpellings: array of string;
+                                             aCurrent: integer);
+var
+   idx: integer;
+begin
+   idx := CategoryChoiceIndex(aSpellings, aCurrent, string(TagText(aTag)));
+   if idx < 0 then
+      begin
+      Exit;
+      end;
+
+   if SetCFGCommandValue(aCommand, aSpellings[idx]) then
+      begin
+      LogStoreRecordContestStatement(aCommand);
+      end;
+end;
+
+(* EVERY CATEGORY ROW, POWER LAST -- its rescore then scores with the other
+  four already in force. Run wherever POWER was: before the export action and
+  on close. *)
+procedure TfrmCabrilloSummary.CommitCategories;
+begin
+   CommitCategory(ctCategoryAssisted, 'CATEGORY-ASSISTED', tCategoryAssistedSA,
+                  Ord(Settings.Contest.CategoryAssisted));
+   CommitCategory(ctCategoryBand, 'CATEGORY-BAND', tCategoryBandSA,
+                  Ord(Settings.Contest.CategoryBand));
+   CommitCategory(ctCategoryMode, 'CATEGORY-MODE', tCategoryModeSA,
+                  Ord(Settings.Contest.CategoryMode));
+   CommitCategory(ctCategoryOperator, 'CATEGORY-OPERATOR', tCategoryOperatorSA,
+                  Ord(Settings.Contest.CategoryOperator));
+   CommitCategoryPower;
 end;
 
 function TfrmCabrilloSummary.TagText(const aTag: CabrilloTags): AnsiString;
@@ -563,7 +620,7 @@ begin
    { EVERY exit saves, including Cancel and the window button.  That is what the
      Win32 WM_CLOSE / ExitAndClose path did. }
    SaveValues;
-   CommitCategoryPower;
+   CommitCategories;
    Action := caHide;
 end;
 
@@ -596,8 +653,10 @@ begin
      incidental: the export reads the operator's answers back out of these
      controls through uCbrSum.CabrilloTagText while it runs. }
    (* AFTER THE POWER IS COMMITTED, though -- M9b: the export's
-     CLAIMED-SCORE must be scored with the power its header says. *)
-   CommitCategoryPower;
+     CLAIMED-SCORE must be scored with the power its header says. And the
+     other four categories with it (Q61): one value each, in force before
+     the file is written. *)
+   CommitCategories;
    act;
 
    { Issue #976: close after a successful export rather than dropping the

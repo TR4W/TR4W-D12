@@ -37,9 +37,13 @@
 >   `postunit.pas`, and referenced by the contest-factory units.
 > - **§12b** asks for three corrections to `known-divergences.txt`. They were
 >   made (the file carries a "CORRECTED 2026-09-01" block).
-> - **§12c** — the CAPTURE half shipped (`uLogStore.ReadEntryDeclaration` →
->   `uLogRepository.SetEntryDeclaration`); no export path reads it back, so the
->   Cabrillo header defect stands. Half the work is already committed.
+> - **§12c** — ~~the CAPTURE half shipped; no export path reads it back, so the
+>   Cabrillo header defect stands~~ **FIXED 2026-10-17 (Q61) by a different
+>   route than this plan drew — see [§12f](#12f-q61-built-2026-10-17--the-categories-are-one-value-each-and-two-latent-defects).**
+>   The four categories are contest-scoped settings whose one home is the
+>   log's `config` table; the header reads them. The `contest` row's
+>   declaration is now written once, for a new log, and is still read by
+>   nothing.
 > - **§11a** recommends a `TDBGrid` for View/Edit Log. That is **not** what
 >   shipped: `uLogEditForm` uses `TLogGrid`, a `TDrawGrid`. `uLogEdit.pas` is
 >   gone, and `tAddContestExchangeToLog` is deleted.
@@ -216,7 +220,7 @@ log?**
 | tier | what | where it lives |
 |---|---|---|
 | 1. durable station identity | name, address, city, state, postcode, country, email, club | `settings/tr4w.json` — cross-contest; **seeds** the export form and stays overridable at export |
-| 2. per-contest entry declaration | category, transmitters, assisted, overlay, power, station, mode, band, time, soapbox, my park | the **`contest` row**, captured when the log is created — never read live at export |
+| 2. per-contest entry declaration | category, transmitters, assisted, overlay, power, station, mode, band, time, soapbox, my park | the **`contest` row**, captured when the log is created — never read live at export. **Since Q61 (§12f) the CURRENT value of ASSISTED, BAND, MODE, OPERATOR and POWER is one contest-scoped setting each, in this log's `config` table**; the row records the entry as made |
 | 3. per-QSO event | what was **sent**; what was **copied**; my county; my grid | the **`qso` row** |
 
 There is a fourth thing that is not a tier but obeys the same law: values
@@ -2161,6 +2165,78 @@ log" is a **policy we would be introducing**, not a fact the code enforces.
 - `ctrCFG` is declared at line **76** and the array has **21** rows, not 22 —
   and it is **not** uniformly set: 11 `True`, 10 `False`. It is still never
   read, so it is still dead.
+
+### 12f. Q61, built 2026-10-17 — the categories are one value each, and two latent defects
+
+NY4I, 2026-10-16, Q61: *"Yes."* — CATEGORY-ASSISTED, -BAND, -MODE and
+-OPERATOR are ONE value each, stored in the contest database, which the
+summary window edits and a headless export reads. That is what design 7.6 did
+for CATEGORY-POWER.
+
+**Where each value lived before, measured:**
+
+| | the New Contest dialog | the summary window wrote | a closed window / headless `/EXPORT` read |
+|---|---|---|---|
+| ASSISTED, BAND, OPERATOR | `Settings.Contest.Category*` (queued, stated) | **nothing** (`ctrSave` False) — the edit was lost on close | the header store in `tr4w.json`, which nothing wrote: the line was **absent** |
+| MODE | the same | a copy, `_CATEGORY-MODE`, in `tr4w.json` | that copy — `SSB` in every corpus set, whatever the log said |
+| POWER (7.6) | the same | the setting | the setting |
+
+The setting is contest-scoped (`TContestSettings.IsContestScoped`, kept out of
+`tr4w.json`), so its persistent home was already the log: a stated value is a
+`config` row (`CaptureContestStatements`, design 7.8), applied on reopen. The
+defect was only that the window and the header read around it.
+
+**The home now, for all five: the `config` row, i.e. the contest database.**
+`uCbrSum.CabrilloTagText` answers the setting for all five when the window is
+closed; `_CATEGORY-MODE` no longer saves (a stored one is inert); the window
+commits each row through `SetCFGCommandValue` (apply, state, tell a peer) and
+then **`LogStoreRecordContestStatement`**, which writes that one row and commits
+— a change is in the file when it is made, not at the next clean close. The
+3830 report's Class line read `_CATEGORY-OPERATOR` straight from the header
+store and is repointed too. No rescore: no QSO's points depend on these (MODE
+feeds Washington Salmon Run's W7DX bonus, which is computed at total time).
+
+**Measured on the golden corpus:** every set's headless Cabrillo now carries
+the four lines, and **all 52 (13 × 4) match the D7 `ref.cbr`** — the 12c
+divergence is closed. The corpus is unchanged at 22/0/4 because
+`golden_diff.py` does not compare the header. `test-contest-factory.sh` DOES
+compare it, against frozen output that recorded the defect, so it reports 13
+DIFF on exactly those header lines (no QSO, ADIF or CLAIMED-SCORE difference).
+Not re-frozen; that is NY4I's call.
+
+**Why not the `contest` row's `category_*` columns**, which §3 names as tier 2's
+home: they were never read, every corpus fixture holds `('', '', 'HIGH', '',
+'SSB')` there (written by an `/EXPORT` open, from constructor defaults), and the
+config row was already where the program reads a contest-scoped value. Making
+the column the home would have meant a second copy in the same file plus a
+migration preferring the config row. The column stays the record of the entry
+**as made**.
+
+**NO SCHEMA CHANGE, so NO `user_version` BUMP.** Every column and table used
+existed; a log written by this build opens in any earlier 5.x, and every
+fixture is byte-identical after the corpus.
+
+**Latent defect (1), fixed — the declaration was written on EVERY open.**
+`EnsureOpen` called `SetEntryDeclaration` unconditionally, and for a new log it
+ran **before** the contest row existed, so its UPDATE landed nowhere until the
+first reopen. It now runs after the contest stamp, through
+`uLogContestStatements.RecordEntryDeclaration(repo, isNewLog or aRebuilt, …)`,
+and writes only on the open that made (or migrated) the log. The declaration
+holds MY CALL, MY PARK, the nine CATEGORY tags, CLUB, SOAPBOX and the station
+identity (name, address, city, state, postcode, country, email). Pinned by
+`uTestLogContestStatements.Test_Q61_AReopenedLogKeepsItsEntryDeclaration`.
+
+**Latent defect (2), fixed — every update NULLed `qso.exchange_sent`.**
+`exchange_sent` is out of `QSO_COLUMNS_UPDATABLE` (as `qso_set_id` already was)
+and bound on insert only, so Edit QSO, the rescore's batch, a network update and
+a re-import keep what was sent. The one path that meant to write it on an
+existing row — the append that found the log just rebuilt from a `.TRW` — now
+calls `TLogRepository.SetSentExchange`. Pinned by
+`uTestLogRepository.TestAnEditKeepsTheSentExchange`, and `SetSentExchange` is
+step 16 of `TestEveryWriteWaitsForItsCommit`.
+
+**Both pins were run against the old code and failed** (10 failures), then the
+fix was restored.
 
 ---
 

@@ -4821,7 +4821,11 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
     setting, but writes MODE to its header-store copy and the other three
     nowhere, so headless /EXPORT reads a stale or absent copy (`uLogStore`'s
     entry declaration says so). One value each, as 7.6 did for power (no
-    rescore -- no contest scores by them)?
+    rescore -- no contest scores by them)? **ANSWERED (NY4I, 2026-10-16:
+    "Yes.") AND BUILT 2026-10-17**: the one value is the contest-scoped
+    setting, whose home is the log's `config` table; see
+    `CONTEST_FACTORY_OPEN_QUESTIONS.md` Q61 and
+    `SQLITE_LOG_SCHEMA_PLAN.md` §12f.
 
 - **Q62-Q64** (POTA's class, §8.2o):
   - **Q62** A POTA hunter who sends a Canadian province exports `DXCC 291`
