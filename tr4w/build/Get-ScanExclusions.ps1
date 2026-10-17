@@ -6,12 +6,19 @@
 # the "copies drift, and the drift is invisible" case CLAUDE.md warns about,
 # already at two copies before this.
 #
-# WHAT IT EXCLUDES, and all three are IDE-generated copies of source that no
-# build compiles:
+# WHAT IT EXCLUDES -- generated copies of source that no build of THIS
+# checkout compiles:
 #
 #   __history\   Delphi's editor backups.
 #   __recovery\  Delphi's crash recovery.
 #   backup\      LAZARUS's editor backups, and the one that actually bit.
+#   .claude\worktrees\  whole additional CHECKOUTS of this repository, one per
+#                agent working in isolation. Not source of THIS tree: a lint
+#                run from the main checkout that recursed into them failed the
+#                build on an agent's half-finished docs edit (2026-10-17,
+#                Lint-MarkdownTables on a worktree's POINTER_AUDIT.md). Each
+#                worktree is linted from its own root when it is merged.
+#   graphify-out\  a generated cache (CLAUDE.md's snapshot-tree table).
 #
 # THE LAZARUS ONE, MEASURED 2026-08-31. src\ui\lcl\backup held 39 stale .lfm
 # copies, so the form lints reported 78 designed forms against 39 tracked and
@@ -33,7 +40,7 @@
 # Matched against a FULL PATH with backslash separators, case-insensitively
 # (PowerShell -notmatch is case-insensitive by default, which is what we want:
 # the IDEs are inconsistent about case).
-$script:TR4W_SCAN_EXCLUDE = '\\__history\\|\\__recovery\\|\\backup\\'
+$script:TR4W_SCAN_EXCLUDE = '\\__history\\|\\__recovery\\|\\backup\\|\\\.claude\\worktrees\\|\\graphify-out\\'
 
 function Test-Tr4wScannable
 {
