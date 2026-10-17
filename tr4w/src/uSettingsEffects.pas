@@ -384,6 +384,15 @@ begin
         here, straight after FoundContest -- its only live caller -- so the
         order is unchanged. *)
       CTY.ctyCountryMode := ContestCountryMode(ActiveContest(Contest));
+
+      (* A CONTEST THE MULTI-OP LINK CANNOT CARRY ENDS THE LINK (Q108 S4,
+        design 8.2u). THIS ARM IS EVERY WAY THE CONTEST CHANGES -- the CONTEST
+        setting from Preferences, a config or a new log's database, and a
+        peer's CONTEST command that PeerContestRefusal let through -- and it
+        holds the only live call of FoundContest, so it is the door the
+        design names as FoundContest. Last, after the set-up above, so a modal
+        notice never interrupts it. Nothing happens unless a link is up. *)
+      NetContestChanged(Contest);
       end;
 
    if UnicodeSameText(aPath, INITIAL_EXCHANGE_CURSOR_POS) then

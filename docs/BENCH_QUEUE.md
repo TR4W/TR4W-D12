@@ -23,6 +23,52 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-17 -- Q108 S4: A CONTEST WITH NO LEGACY NUMBER IS REFUSED ON MULTI-OP
+
+Nothing automated drives a socket, so no gate has seen any of this end to end
+(the unit tests reach the predicate, the message, `PeerContestRefusal`,
+`TryConnectToNetwork`'s refusal and a source read of every door). **WHAT YOU
+NEED:** a contest registered by id. The application links none until the first
+real one (design 8.2u S5); until then use a LOCAL build with
+`uContestTestFixture in '..\test\unit\uContestTestFixture.pas'` added to
+`tr4w.lpr` (`TR4W-TEST-FIXTURE`; it appears in the New Contest list) -- do not
+commit that, `Lint-ContestUnitsLinked` will fail it. **Two machines**, one
+running `tr4wserver`.
+
+- [ ] **Connect with such a contest selected is refused, once, and cleanly.**
+      Select `TR4W-TEST-FIXTURE`, open the Network window (or restart with it
+      active) with the server running. EXPECT: NO connection attempt (the
+      status never says "Connecting"), ONE warning dialog reading "TR4W-TEST-FIXTURE
+      cannot be used on the multi-op network yet -- the network protocol cannot
+      carry it. Use it only while this station is not connected to a multi-op
+      server.", and NOTHING more on the 5-second timer's retries (it is silent
+      after the first). `tr4w.log` has one `[Net] TryConnectToNetwork refused
+      contest "TR4W-TEST-FIXTURE" (handle 188)` line. Then switch to a legacy
+      contest: the next retry connects normally; switch back and the message
+      appears again once.
+- [ ] **A legacy contest still works exactly as before** on the same two
+      machines: connect, log QSOs at one station and see them arrive at the
+      other, edit one, change a shared setting. (This is the regression check
+      for the guards on the send and receive paths.)
+- [ ] **Switching to such a contest while connected drops the link, with the
+      message.** Connect on a legacy contest, then choose `TR4W-TEST-FIXTURE`
+      (New Contest, or CONTEST in Preferences). EXPECT: the link closes (the
+      Network window shows disconnected), one dialog with the same message, and
+      no QSO of the new contest ever reaches the server (`tr4wserver.log`).
+- [ ] **A peer's CONTEST change is not followed.** Station B, on a build that
+      CAN select it, changes the contest to `TR4W-TEST-FIXTURE` while station A
+      is connected on a legacy contest. EXPECT at A: the message, A keeps its
+      contest, and `tr4w.log` has `[Net] a peer's CONTEST command refused ...`.
+      (B itself is dropped from the network by the switch door above, so this
+      needs B to switch before it notices -- or a hand-sent packet.)
+- [ ] **`<contestnr>` on the wire.** With a UDP listener (N1MM-format) on the
+      contact stream and the fixture selected, log a QSO: the datagram carries
+      `<contestnr>1862707066</contestnr>`; a legacy contest still carries its
+      legacy number (the `ContestType` ordinal -- compare with a capture from
+      before this change). Wireshark on the contact stream's port will do.
+
+---
+
 ## Added 2026-10-16 -- 5.0.28 AND AFTER: WHAT THE GATES CANNOT SEE
 
 Every item below passed every automated oracle; each is "same as before",

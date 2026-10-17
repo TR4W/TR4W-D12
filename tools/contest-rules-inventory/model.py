@@ -192,9 +192,11 @@ class Registry:
                raise SystemExit(f"{rel}: RegisterContest names {m.group(1)}, which is not a ContestType member")
             regs.append((member, m.group(2).upper()))
          # FAIL CLOSED, NOT SILENT: the inventory is keyed by the frozen enum,
-         # and a contest registered by id would simply vanish from it. No real
-         # contest registers that way before Q108 S4; the first one to (S5)
-         # extends Contests and Registry with an id-keyed entry, here.
+         # and a contest registered by id would simply vanish from it. A real
+         # contest MAY register that way since Q108 S4 (2026-10-17), and the
+         # first one to (S5) extends Contests and Registry with an id-keyed
+         # entry, here -- THIS REFUSAL IS WHAT STOPS ITS COMMIT FROM
+         # REGENERATING THE INVENTORY UNTIL THAT IS DONE.
          for m in self.BYID_RX.finditer(code):
             raise SystemExit(f"{rel}: {m.group(2)} registers by id (RegisterContestById) -- "
                              "the inventory does not model a contest with no ContestType member yet; "

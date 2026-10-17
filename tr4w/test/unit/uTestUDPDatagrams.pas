@@ -19,9 +19,10 @@ unit uTestUDPDatagrams;
    driven only where it must send NOTHING, since that is decided before the
    log is touched.
 
-   <contestnr> IS PINNED AT ITS CURRENT VALUE, Ord of the contest enum.  Q108
-   S4 changes it; when it does, the edit to Test_ContactIsOnTheContactStream is
-   the deliberate, visible change.
+   <contestnr> IS PINNED FOR A LEGACY CONTEST AT ITS ORIGINAL VALUE, Ord of the
+   contest enum, and Q108 S4 (2026-10-17) did NOT move it: a contest with no
+   legacy number gets a DERIVED number instead, pinned for the unit-test
+   fixture in Test_AContestWithNoLegacyNumberGetsADerivedContestnr.
 *)
 
 interface
@@ -37,6 +38,7 @@ type
       procedure Test_ContactIsOnTheContactStream;
       procedure Test_EditedContactIsAContactReplace;
       procedure Test_DeletedContactIsAContactDelete;
+      procedure Test_AContestWithNoLegacyNumberGetsADerivedContestnr;
       procedure Test_LookupGoesToTheLookupStream;
       procedure Test_ScoreIsADynamicResults;
       procedure Test_ScoreTotalRowWithTwoModesIsPerMode;
@@ -52,6 +54,7 @@ implementation
 
 uses
    uContestRegistry,   (* ContestHandleOf -- a legacy contest's handle, Q108 S2 *)
+   uContestTestFixture, (* TEST_FIXTURE_CONTEST_ID -- a contest with no legacy number *)
    VC,
    uSettingsModel,
    uUDPBroadcastConfig,
@@ -219,7 +222,8 @@ begin
      not the QSO's own Frequency field: 14000 kHz, in 10 Hz units. *)
    CheckEquals('1400000', TagValue(xml, 'rxfreq'), 'rxfreq');
    CheckEquals('1400000', TagValue(xml, 'txfreq'), 'txfreq');
-   (* PINNED: Ord of the contest enum.  Q108 S4 changes this deliberately. *)
+   (* PINNED: Ord of the contest enum -- a legacy contest's number, which Q108
+     S4 left exactly as it was. *)
    CheckEquals(IntToStr(Ord(CQWWCW)), TagValue(xml, 'contestnr'), 'contestnr');
    CheckEquals(Settings.Computer.Name, TagValue(xml, 'StationName'), 'StationName');
    CheckEquals('W1AW', TagValue(xml, 'oldcall'), 'oldcall');
@@ -277,6 +281,55 @@ begin
    CheckEquals(Settings.Computer.Name, TagValue(xml, 'StationName'), 'StationName');
    CheckEquals(0, Pos('<mycall>', xml), 'a delete carries no contact body');
    CheckTrue(Pos('</contactdelete>', xml) > 0, 'and it is closed');
+end;
+
+(* Q108 S4. A contest registered by id has no legacy number, so its
+  <contestnr> is the registry's DERIVED number: 256 + CRC32(its id) mod
+  (2^31 - 256). The literal below is that arithmetic done independently
+  (Python zlib.crc32(b'TR4W-TEST-FIXTURE') = 1862706810, + 256 = 1862707066)
+  and is what a listener of today's build receives for it. It changes only if
+  the id or the rule does -- the point of deriving from the id and from nothing
+  assigned at the seal. All four messages that carry <contestnr> say the same. *)
+procedure TUDPDatagramTests.Test_AContestWithNoLegacyNumberGetsADerivedContestnr;
+const
+   FIXTURE_CONTESTNR = '1862707066';
+var
+   h: TContestHandle;
+   q: ContestExchange;
+   xml: string;
+begin
+   BeginTest('a contest with no legacy number broadcasts the derived <contestnr>');
+   CheckTrue(FindContestById(TEST_FIXTURE_CONTEST_ID, h), 'the fixture is registered');
+   q := SampleQSO;
+   q.ceContest := h;
+   ConfigureAllStreams(True);
+
+   ResetCapture;
+   LogContactToUDP(q);
+   CheckEquals(1, Length(gSent), 'a contactinfo');
+   xml := string(gSent[0].Payload);
+   CheckEquals(FIXTURE_CONTESTNR, TagValue(xml, 'contestnr'), 'contactinfo');
+
+   ResetCapture;
+   LogEditedContactToUDP(q);
+   CheckEquals(1, Length(gSent), 'a contactreplace');
+   CheckEquals(FIXTURE_CONTESTNR, TagValue(string(gSent[0].Payload), 'contestnr'),
+               'contactreplace');
+
+   ResetCapture;
+   SendDeletedContactToUDP(q);
+   CheckEquals(1, Length(gSent), 'a contactdelete');
+   CheckEquals(FIXTURE_CONTESTNR, TagValue(string(gSent[0].Payload), 'contestnr'),
+               'contactdelete');
+
+   ResetCapture;
+   LookupInfoToUDP(q);
+   CheckEquals(1, Length(gSent), 'a lookupinfo');
+   CheckEquals(FIXTURE_CONTESTNR, TagValue(string(gSent[0].Payload), 'contestnr'),
+               'lookupinfo');
+
+   CheckTrue(StrToInt(FIXTURE_CONTESTNR) > High(Byte),
+             'and it is never a byte value, so it cannot be mistaken for a legacy number');
 end;
 
 procedure TUDPDatagramTests.Test_LookupGoesToTheLookupStream;
@@ -517,6 +570,7 @@ begin
       Test_ContactIsOnTheContactStream;
       Test_EditedContactIsAContactReplace;
       Test_DeletedContactIsAContactDelete;
+      Test_AContestWithNoLegacyNumberGetsADerivedContestnr;
       Test_LookupGoesToTheLookupStream;
       Test_ScoreIsADynamicResults;
       Test_ScoreTotalRowWithTwoModesIsPerMode;

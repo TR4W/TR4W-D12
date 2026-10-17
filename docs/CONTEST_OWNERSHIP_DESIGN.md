@@ -4054,8 +4054,9 @@ No new contest yet, so nothing that is persisted changes.
 > `CurrentContestSpelling`, `FindContestByADIFContestId` with a `'` first
 > argument, over `src`, `tr4wserver`, `tools`), so it is a ceiling of zero
 > still to write.
-> **A CONSEQUENCE TO KNOW: UNTIL S4, NO NEW CONTEST CAN BE ADDED AT ALL** --
-> the enum is frozen and a real contest may not register by id yet.
+> **A CONSEQUENCE THAT LASTED UNTIL S4 (2026-10-17): NO NEW CONTEST COULD BE
+> ADDED AT ALL** -- the enum was frozen and a real contest might not register
+> by id yet. S4 lifted it.
 > MEASURED SIZE: 4 production units (+442 / -75), 4 tools, 3 matrix scripts,
 > 2 new lints and `Run-Lints`, 2 new test units (fixture 200 lines, suite 317)
 > and 4 changed test units (+71 / -24). Oracles: unit tests 361,288 / 0 plain
@@ -4089,9 +4090,64 @@ No new contest yet, so nothing that is persisted changes.
 - Oracles: unit tests (the fixture contest); matrix 187 identical after the
   stated re-freeze; factory and corpus untouched.
 - **No real contest may register by id until S4 is in.** S3 makes one
-  possible; S4 makes it safe on the network.
+  possible; S4 makes it safe on the network. (S4 is in -- 2026-10-17.)
 
 **S4 -- the boundaries for a contest with no legacy number.**
+
+> **S4 IS BUILT (2026-10-17, uncommitted at hand-back).** ONE PREDICATE,
+> `uContestRegistry.ContestCanUseMultiOp(h)` (= `ContestLegacyNumber`; True
+> for every legacy contest and `NoContest`; never seals), ONE MESSAGE,
+> `uAppStrings.SContestNotOnMultiOp` (formatted by
+> `MultiOpRefusalText(h)`, '' when the contest can), and ONE logging wrapper,
+> `uNet.NetCarriesContest(h, door)`, which every door calls. THE DOORS (all in
+> `uNet` unless named): **connect** -- `TryConnectToNetwork` (before any
+> thread exists; said ONCE per contest and silent on the timer's retries,
+> re-armed by choosing a contest that travels) and, second door and log only,
+> `ConnectToTR4WServer`; **switch** -- `NetContestChanged`, called from
+> `uSettingsEffects.ApplyTokenSetting`'s CONTEST arm, which is every way the
+> contest changes and the ONLY live caller of `FoundContest`, so the design's
+> "FoundContest" door is that arm (a live link is dropped, with the message;
+> no link, nothing happens); **a peer's CONTEST command** --
+> `PeerContestRefusal`, asked by the `NET_PARAMETER` arm before
+> `ApplyPeerCommand` (the parameter is NOT applied); **send** --
+> `SendRecordToServer`, the one place every QSO, edit and offline resend
+> passes (the record's flags are left untouched on a refusal); **receive** --
+> the `NET_QSOINFO` arm (all record kinds) and the `NET_EDITEDQSO` arm. A
+> received byte above the legacy range is refused by the same predicate, so
+> "a byte above 187" needed no second rule. The server needed no change.
+> **`<contestnr>`** is `ContestBroadcastNumber`: the legacy number, else `256 +
+> CRC32(id, UTF-8) mod (2^31 - 256)`, with the arithmetic in 64 bits so the
+> top of the range is 2^31 - 1. **WHAT N1MM SAYS IT IS** (its "External UDP
+> Broadcasts" appendix, read 2026-10-17): *"a unique number assigned to this
+> contest instance in this database. Do not expect the same contestnr to be
+> assigned to another computer running the same contest name."* A LOCAL log
+> identifier, no range stated -- so the derivation needed no adjustment, and it
+> is one per contest (`uTestContestById` asserts no two known contests share
+> one). The fixture's is **1862707066**, pinned as a literal in
+> `uTestUDPDatagrams` for all four messages that carry it; a legacy contest's
+> pin did not move. **TESTS:** seven new in `uTestContestById` (the predicate
+> walked over every known contest, the number walked and pinned, the wrapper
+> against the predicate, a peer's command in six shapes, `TryConnectToNetwork`
+> refusing with no thread started, `NetContestChanged` with no link, and
+> `Test_EveryMultiOpDoorIsWired`, which reads `uNet.pas` and
+> `uSettingsEffects.pas` for each door's call because the connect worker, the
+> send and the two receives need a socket) and one in `uTestUDPDatagrams`.
+> **NO AUTOMATED ORACLE SEES THE NETWORK** -- the two-station refusal and the
+> UDP line are BENCH_QUEUE items. THE MESSAGE is an `uAppStrings`
+> resourcestring (the documented home of new UI text -- not a `TC_` constant),
+> added to all 22 catalogues additively as a fuzzy machine draft (`English`'s
+> msgstr stays empty, as the last two were). **THE INTERIM BLOCK IS GONE: a real
+> contest MAY register by id.** MEASURED SIZE: 4 production units (+316 / -51:
+> registry 93, `uNet` 197, strings 16, `uSettingsEffects` 9), 3 changed test
+> units (+324 / -9), 22 catalogues (+110, nothing removed), the regenerated
+> `tr4w_languages.res` and `.inputs`. Oracles, unchanged: unit tests 379,861 / 0
+> plain and checked (the rise is the new walks' per-contest checks), heaptrc
+> 13,469 (the ceiling), narrowing 1,244, range 3, 48 lints, matrix 187
+> identical with NO re-freeze, factory 13, corpus 22/0/4 exit 0, ADIF round
+> trip 12/0/1, server builds. FOUND, NOT Q108's: `uNet` still has
+> `LogContact` run for a peer's QSO whose contest differs from this station's
+> (legacy or not) -- unchanged.
+
 - **Multi-op is refused** (decision 1), with one translatable message, at every
   door: connecting (`TryConnectToNetwork` / `ConnectToTR4WServer`), switching
   to such a contest while connected (`FoundContest`), a peer's `CONTEST`
@@ -4106,10 +4162,17 @@ No new contest yet, so nothing that is persisted changes.
   `<contestnr>`, and HamScore never receives it (above). N1MM's published UDP
   specification describes it as the logger's own number for the contest LOG,
   echoed in `contactdelete` to identify a contact -- an identifier, not a
-  shared code -- so any stable per-contest number serves. **That is from the
-  specification as known, not verified here**: read N1MM's "External UDP
-  Broadcasts" appendix before S4 lands, and NY4I may know a listener that
-  decodes it.
+  shared code -- so any stable per-contest number serves. ~~That is from the
+  specification as known, not verified here~~ **VERIFIED 2026-10-17 against
+  N1MM's "External UDP Broadcasts" appendix** (n1mmwp.hamdocs.com): *"contestnr
+  is a unique number assigned to this contest instance in this database. Do
+  not expect the same contestnr to be assigned to another computer running the
+  same contest name."* Its examples are 2 and 73; no range is stated. It rides in
+  AppInfo, contactinfo, contactreplace, contactdelete and lookupinfo; a contact
+  is identified by its `ID`, not by the number. (No `<AppInfo` message is built
+  anywhere in this tree -- the AppInfo stream is a destination setting only --
+  so TR4W's four messages are the ones that carry it.) NY4I may still know a listener that
+  decodes it differently; none is known.
 - **FOUND WHILE CHECKING IT, and not Q108's to fix**: the same broadcast writes
   `<Settings.My.Call>...</Settings.My.Call>` where N1MM's format and D7 write
   `<mycall>` -- a blanket rename (`c1463660`, 2026-09-12, "MY CALL leaves

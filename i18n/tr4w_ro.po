@@ -9035,3 +9035,8 @@ msgstr ""
 msgid "CATEGORY-POWER is now %s -- the scoring category changed and the log was rescored."
 msgstr ""
 
+#: uappstrings.scontestnotonmultiop
+#, fuzzy
+msgid "%s cannot be used on the multi-op network yet -- the network protocol cannot carry it. Use it only while this station is not connected to a multi-op server."
+msgstr "%s nu poate fi încă folosit în rețeaua multi-op -- protocolul de rețea nu îl poate transporta. Folosiți-l doar cât timp această stație nu este conectată la un server multi-op."
+

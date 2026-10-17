@@ -276,6 +276,22 @@ resourcestring
       'Change COMPUTER ID to a letter no other station is using, then ' +
       'reconnect.';
 
+   (* A CONTEST THE V1 MULTI-OP PACKET CANNOT CARRY -- Q108 S4, 2026-10-17
+     (NY4I: "refuse multi-op for new contests until the new protocol").
+
+     THE ONE MESSAGE for every door that refuses it: connecting while that
+     contest is selected, switching to it while connected (the link is
+     dropped), another station's CONTEST command naming it (not applied). So
+     it states the fact and the way out, and promises nothing about which door
+     it came through. A contest has no number in the packet unless it is one of
+     the legacy contests, and the packet is not being changed.
+
+     %s is the contest's display name. *)
+   SContestNotOnMultiOp =
+      '%s cannot be used on the multi-op network yet -- the network protocol ' +
+      'cannot carry it. Use it only while this station is not connected to a ' +
+      'multi-op server.';
+
    { --------------------------------------------------- verification checks - }
 
    (* Tools -> Run Verification Checks.  The window title names the thing an

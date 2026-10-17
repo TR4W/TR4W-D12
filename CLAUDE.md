@@ -1721,8 +1721,10 @@ Read [`docs/ADDING_A_NEW_CONTEST.md`](docs/ADDING_A_NEW_CONTEST.md) and
 (2026-10-17)**: `Lint-FrozenContestNumbers` fails the build on any member added (appended
 included), removed, reordered or renamed, because a member's position is a persisted contest
 number. A new contest registers by its string id (`RegisterContestById`), with **no `VC.pas`
-entry** -- and **no real contest may do so until Q108 S4** (the multi-op refusal) is in, so
-until then no new contest can be added at all. Then: a class in `src/contestFactory/` that
+entry** -- and **a real contest MAY do so since Q108 S4 (2026-10-17)**: such a contest is
+REFUSED on the multi-op network (`ContestCanUseMultiOp`; the V1 packet has no number for it, and
+the packet is not being changed) and its UDP `<contestnr>` is derived from its id, so a class
+writes neither. Then: a class in `src/contestFactory/` that
 states its rules -- set-up in its `DescribeSession`, not in `fcontest.pas` -- one line in each
 of `tr4w.lpr` and the test `.lpr` (`Lint-ContestUnitsLinked` holds the two together), and its
 `.dom` files in `target/dom/` if it has domestic multipliers. **No `.cfg` goes there** -- `target/dom` holds

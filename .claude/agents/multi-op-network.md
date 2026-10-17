@@ -44,9 +44,23 @@ and will be asked over **rows**.
 offsets (265 of 376; 18 of 19), pinned in `uTestLogBinaryFile`. A legacy
 contest's handle IS its legacy number, so a D7 peer, the server's log and
 the log-compare packet read exactly what they did. The server still links
-no contest-factory unit (it uses `NoContest` from `VC`). A contest with no
-legacy number (Q108 S3) must never reach these records -- that refusal is
-Q108 S4, not built.
+no contest-factory unit (it uses `NoContest` from `VC`) and needed no change.
+A contest with no legacy number (Q108 S3, registered by id) must never reach
+these records, and **since Q108 S4 (2026-10-17) it cannot**: the V1 packet is
+NOT being converted (NY4I), so every door is a GUARD -- one predicate,
+`uContestRegistry.ContestCanUseMultiOp`, one message, `SContestNotOnMultiOp`,
+and `uNet.NetCarriesContest` as the logging wrapper. The doors, all in `uNet`:
+`TryConnectToNetwork` (before any thread; said once per contest, silent on the
+5 s retries) and `ConnectToTR4WServer`; `NetContestChanged` (from
+`uSettingsEffects`' CONTEST arm, which drops a live link); `PeerContestRefusal`
+in the `NET_PARAMETER` arm (a peer's CONTEST naming one is NOT applied);
+`SendRecordToServer` (the one place every QSO, edit and offline resend goes
+out); and the `NET_QSOINFO` / `NET_EDITEDQSO` arms (a byte with no legacy
+number is dropped, whole). **Do not add a record path that writes to the
+socket without going through `SendRecordToServer`.** A unit test reaches the
+predicate, the wrapper, `PeerContestRefusal`, `TryConnectToNetwork`'s
+refusal and a source read of every door; the live link is two machines and a
+BENCH_QUEUE item.
 
 ## Worker threads and the log-compare record (pointer audit P1/P2, 2026-10-16)
 

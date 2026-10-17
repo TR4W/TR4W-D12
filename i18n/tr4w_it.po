@@ -9450,3 +9450,8 @@ msgstr ""
 msgid "CATEGORY-POWER is now %s -- the scoring category changed and the log was rescored."
 msgstr ""
 
+#: uappstrings.scontestnotonmultiop
+#, fuzzy
+msgid "%s cannot be used on the multi-op network yet -- the network protocol cannot carry it. Use it only while this station is not connected to a multi-op server."
+msgstr "%s non può ancora essere usato sulla rete multi-op -- il protocollo di rete non può trasportarlo. Usalo solo finché questa stazione non è collegata a un server multi-op."
+

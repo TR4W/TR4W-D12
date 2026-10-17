@@ -438,13 +438,28 @@ log -- and `Lint-FrozenContestNumbers` fails the build if the ordered member
 list changes at all: no member added (appended included), removed, reordered
 or renamed. A new contest has no member and no `ContestTypeSA` spelling.
 
-**BUT NO REAL CONTEST MAY REGISTER BY ID UNTIL Q108 S4 IS IN** (design 8.2u):
-S4 refuses such a contest on the multi-op network and gives it a
-`<contestnr>`. Until then a new contest cannot be added at all -- the enum is
-frozen and the id route is not yet safe on the wire. The one contest that
-registers by id today is the unit tests' fixture, `uContestTestFixture`.
+**A REAL CONTEST MAY REGISTER BY ID SINCE Q108 S4 (2026-10-17, design 8.2u),
+and what S4 did about the wire is worth knowing before you ship one:**
 
-**THE STEPS, once S4 is in:**
+- **MULTI-OP IS REFUSED for it, by design, until the row-based multi-station
+  protocol replaces the V1 packet** (NY4I: "refuse multi-op for new contests
+  until the new protocol"). The packet carries a contest as one byte that only
+  a legacy contest has, and it is not being changed. You write NOTHING for this:
+  `uContestRegistry.ContestCanUseMultiOp` is the one predicate and every door
+  in `uNet` asks it -- connecting while the contest is selected, switching to
+  it while connected (the link is dropped), another station's CONTEST command
+  naming it (not applied), and the send and receive of a QSO packet. The
+  operator reads one translatable message, `SContestNotOnMultiOp`, naming the
+  contest by its display name. Do not add a multi-op check to a contest class.
+- **`<contestnr>`** in the N1MM-format UDP broadcasts is derived from the id
+  (`ContestBroadcastNumber`: `256 + CRC32(id) mod (2^31 - 256)`), stable and
+  never a byte value. N1MM defines the number as local to a log, so any stable
+  per-contest number serves. Nothing to write; do not rename the id lightly --
+  the number moves with it.
+- The unit tests' fixture, `uContestTestFixture`, remains the subject of those
+  tests (`uTestContestById`, `uTestUDPDatagrams`).
+
+**THE STEPS:**
 
 1. **The class**, `src/contestFactory/uContest<Name>.pas`, stating its rules
    (everything in sections 1 and 3), ending

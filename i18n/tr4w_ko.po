@@ -9467,3 +9467,8 @@ msgstr ""
 msgid "CATEGORY-POWER is now %s -- the scoring category changed and the log was rescored."
 msgstr ""
 
+#: uappstrings.scontestnotonmultiop
+#, fuzzy
+msgid "%s cannot be used on the multi-op network yet -- the network protocol cannot carry it. Use it only while this station is not connected to a multi-op server."
+msgstr "%s은(는) 아직 멀티 오퍼레이터 네트워크에서 사용할 수 없습니다 -- 네트워크 프로토콜이 이를 전달할 수 없습니다. 이 스테이션이 멀티 오퍼레이터 서버에 연결되어 있지 않은 동안에만 사용하십시오."
+

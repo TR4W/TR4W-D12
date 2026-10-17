@@ -59,7 +59,8 @@ CONTEST plus a class -- and **since Q108 S3 (2026-10-17) it is NOT a new
 member added -- appended included -- removed, reordered or renamed, because a
 member's position is the persisted number in the `.TRW` record and the
 multi-op packet). A new contest registers by its id (`RegisterContestById`),
-and **no real contest may until Q108 S4** (below). Idaho
+and **a real contest may since Q108 S4** (2026-10-17, below): it is refused on
+the multi-op network and its `<contestnr>` is derived. Idaho
 (`uContestIdahoQP`) is the worked example of a LEGACY addition: the enum member and its
 `ContestTypeSA` spelling (the ONLY two `VC.pas` entries since M10 S8 deleted
 `ContestsArray`, `ContestsBooleanArray` and `QSOParties`), the class -- a state
@@ -234,9 +235,8 @@ the target shape, the M-step migration order and the open questions.
   registration -- legacy too -- raises; only the legacy-number arithmetic
   never seals. Such a contest has no legacy number (`LegacyContestOf` =
   DUMMYCONTEST); the `.TRW` import refuses its byte (`ContestLegacyNumber`,
-  not `IsKnownContest`). **NO REAL CONTEST MAY REGISTER BY ID UNTIL S4** (the
-  multi-op refusal) -- and the frozen enum means none can be added at all
-  until then. The ONE by-id contest is the unit tests' fixture,
+  not `IsKnownContest`). ~~NO REAL CONTEST MAY REGISTER BY ID UNTIL S4~~ --
+  **S4 IS IN (below)**. The ONE by-id contest today is the unit tests' fixture,
   `test/unit/uContestTestFixture` (`TR4W-TEST-FIXTURE`, handle 188 in the test
   program), pinned by `uTestContestById`; it is NEVER in `tr4w.lpr`.
   `Lint-FrozenContestNumbers` (SHA-256 of the ordered member list) and
@@ -251,6 +251,23 @@ the target shape, the M-step migration order and the open questions.
   REFUSES a by-id contest in the factory (S5 extends it). **Every "a NEW
   contest adds rows to `<PIN>`" in the bullets below describes a LEGACY
   addition**: a by-id contest adds no pin row -- the registry walks hold it.
+- **Q108 S4 IS BUILT (2026-10-17, design 8.2u): A CONTEST WITH NO LEGACY
+  NUMBER IS REFUSED ON THE MULTI-OP NETWORK, AND HAS A DERIVED `<contestnr>`;
+  A REAL CONTEST MAY NOW REGISTER BY ID.** You write neither. ONE predicate,
+  `uContestRegistry.ContestCanUseMultiOp(h)` (= has a legacy number; `NoContest`
+  can), ONE message, `uAppStrings.SContestNotOnMultiOp` via
+  `MultiOpRefusalText(h)`, ONE logging wrapper `uNet.NetCarriesContest(h,
+  door)`; the doors are `TryConnectToNetwork` / `ConnectToTR4WServer`,
+  `NetContestChanged` (from `uSettingsEffects`' CONTEST arm -- the only live
+  caller of `FoundContest`), `PeerContestRefusal` (the `NET_PARAMETER` arm),
+  `SendRecordToServer`, and the `NET_QSOINFO` / `NET_EDITEDQSO` arms. The V1
+  packet is NOT being converted (NY4I, P14) -- guards only. `<contestnr>` is
+  `ContestBroadcastNumber`: the legacy number, else `256 + CRC32(id) mod (2^31
+  - 256)`; N1MM defines it as local to a log (no range), the fixture's is
+  1862707066 and a legacy contest's did not move. `Test_EveryMultiOpDoorIsWired`
+  reads `uNet.pas` for each door because four need a socket. `model.py`
+  still REFUSES a by-id contest (S5 extends it with the first real one).
+  A contest class never tests multi-op; do not add one.
 - **A contest owns its bands: `TContestBase.UsesBand`** (base: every band).
   An off-band QSO is logged normally, scores 0 and earns no multiplier (NY4I,
   2026-10-01). It is asked through `ContestCreditsBand` at every place a QSO

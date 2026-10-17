@@ -29,8 +29,13 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   spelling, a legacy alias or a duplicate is refused; a registration after
   the seal raises; and the fixture is not in the application.
 
-  WHAT IS NOT HERE: S4's boundaries (multi-op refusal, the broadcast number)
-  -- not built yet. The .TRW import's refusal of such a handle is
+  Q108 S4 (2026-10-17) IS HERE TOO: the multi-op refusal and the broadcast
+  number. ContestCanUseMultiOp is the one predicate and NetCarriesContest the
+  one logging wrapper every uNet door calls; the doors that need a socket
+  (connect's second door, the send and the two receives) cannot be driven
+  from a unit test, so Test_EveryMultiOpDoorIsWired reads uNet.pas for each
+  call -- the wiring is also a BENCH_QUEUE item. The <contestnr> on the wire
+  is uTestUDPDatagrams'. The .TRW import's refusal of such a handle is
   uTestLogImport's. *)
 unit uTestContestById;
 
@@ -54,15 +59,26 @@ type
       procedure Test_AnIdIsRefusedForTheRightReasons;
       procedure Test_ARegistrationAfterTheSealRaises;
       procedure Test_TheFixtureIsNotInTheApplication;
+      procedure Test_AContestWithNoLegacyNumberCannotUseMultiOp;
+      procedure Test_TheBroadcastNumberIsTheLegacyNumberOrDerivedFromTheId;
+      procedure Test_NetCarriesContestAsksTheOnePredicate;
+      procedure Test_APeerCannotMoveThisStationOntoSuchAContest;
+      procedure Test_ConnectingIsRefusedWithNoAttemptMade;
+      procedure Test_ChangingContestWithNoLinkDropsNothing;
+      procedure Test_EveryMultiOpDoorIsWired;
    end;
 
 implementation
 
 uses
    SysUtils, Classes,
-   VC, uContestBase, uContestRegistry, uContestNames, uContestChoices,
+   VC, TF, uContestBase, uContestRegistry, uContestNames, uContestChoices,
    uSettingsModel,
    uCFG,                  (* registers the CONTEST setting's vocabulary *)
+   uCRC32,                (* the broadcast number's independent arithmetic *)
+   PostUnit,              (* Contest -- the active contest *)
+   uNet,                  (* the doors *)
+   uAppStrings,           (* SContestNotOnMultiOp *)
    uTestRegisteredContests,
    uContestTestFixture;
 
@@ -302,6 +318,242 @@ begin
    end;
 end;
 
+(* THE ONE PREDICATE. Exactly the contests with a legacy number can use the V1
+  multi-op packet -- walked over every KNOWN contest, so a contest added later
+  is held to it without an edit -- and the refusal text is non-empty exactly
+  where the predicate says no. *)
+procedure TContestByIdTests.Test_AContestWithNoLegacyNumberCannotUseMultiOp;
+var
+   h: TContestHandle;
+   known: TContestHandleList;
+   k, n: integer;
+   text: string;
+begin
+   BeginTest('Test_AContestWithNoLegacyNumberCannotUseMultiOp');
+   h := FixtureHandle;
+   CheckFalse(ContestCanUseMultiOp(h), 'the fixture cannot use multi-op');
+   CheckTrue(ContestCanUseMultiOp(ContestHandleOf(ARRLDXCW)), 'a legacy contest can');
+   CheckTrue(ContestCanUseMultiOp(NoContest),
+             'no contest chosen is not carrying one, so a station with none may connect');
+   CheckFalse(ContestCanUseMultiOp(TContestHandle.FromByte(255)),
+              'a byte that names no contest is no legacy number either');
+
+   known := KnownContests;
+   for k := 0 to High(known) do
+      begin
+      CheckTrue(ContestCanUseMultiOp(known[k]) = ContestLegacyNumber(known[k], n),
+                ContestId(known[k]) + ': can use multi-op exactly when it has a legacy number');
+      CheckTrue(ContestCanUseMultiOp(known[k]) = (MultiOpRefusalText(known[k]) = ''),
+                ContestId(known[k]) + ': the refusal text is empty exactly when it can');
+      end;
+
+   text := MultiOpRefusalText(h);
+   CheckTrue(Pos(ContestIdentity(h).DisplayName, text) > 0,
+             'the message names the contest by its display name: ' + text);
+   CheckEquals(Format(SContestNotOnMultiOp, [ContestIdentity(h).DisplayName]), text,
+               'and it is the one translatable resourcestring, formatted');
+   CheckEquals('', MultiOpRefusalText(ContestHandleOf(ARRLDXCW)), 'a legacy contest has none');
+end;
+
+(* <contestnr>: a legacy contest's is its legacy number (the broadcast is
+  byte-identical to before S4), every other is 256 + CRC32(id) mod (2^31 - 256).
+  The fixture's literal is zlib.crc32(b'TR4W-TEST-FIXTURE') + 256 done outside
+  this program. No two known contests share a number, and a derived one is never
+  a byte value. *)
+procedure TContestByIdTests.Test_TheBroadcastNumberIsTheLegacyNumberOrDerivedFromTheId;
+var
+   h: TContestHandle;
+   id: AnsiString;
+   known: TContestHandleList;
+   numbers: array of integer;
+   k, j, n: integer;
+begin
+   BeginTest('Test_TheBroadcastNumberIsTheLegacyNumberOrDerivedFromTheId');
+   h := FixtureHandle;
+   CheckEquals(1862707066, ContestBroadcastNumber(h), 'the fixture''s derived number, as a literal');
+   id := AnsiString(TEST_FIXTURE_CONTEST_ID);
+   CheckEquals(Integer(256 + Int64(GetCRC32(id[1], Length(id))) mod (Int64(2147483648) - 256)),
+               ContestBroadcastNumber(h),
+               'and it is 256 + CRC32(id) mod (2^31 - 256)');
+   CheckEquals(ContestBroadcastNumber(h), ContestBroadcastNumber(h), 'stable between calls');
+
+   known := KnownContests;
+   SetLength(numbers, Length(known));
+   for k := 0 to High(known) do
+      begin
+      numbers[k] := ContestBroadcastNumber(known[k]);
+      if ContestLegacyNumber(known[k], n) then
+         begin
+         CheckEquals(n, numbers[k], ContestId(known[k]) + ': a legacy contest broadcasts its legacy number');
+         end
+      else
+         begin
+         CheckTrue(numbers[k] > High(Byte), ContestId(known[k]) + ': a derived number is never a byte value');
+         CheckTrue(numbers[k] <= High(Integer), ContestId(known[k]) + ': it fits a signed 32-bit integer');
+         end;
+      end;
+   for k := 0 to High(numbers) do
+      begin
+      for j := k + 1 to High(numbers) do
+         begin
+         CheckTrue(numbers[k] <> numbers[j],
+                   ContestId(known[k]) + ' and ' + ContestId(known[j]) + ' share <contestnr> ' +
+                   IntToStr(numbers[k]));
+         end;
+      end;
+end;
+
+(* The wrapper every door calls: the predicate's answer, and nothing else. *)
+procedure TContestByIdTests.Test_NetCarriesContestAsksTheOnePredicate;
+var
+   h: TContestHandle;
+   known: TContestHandleList;
+   k: integer;
+begin
+   BeginTest('Test_NetCarriesContestAsksTheOnePredicate');
+   h := FixtureHandle;
+   CheckFalse(NetCarriesContest(h, 'the test'), 'the fixture is turned away');
+   CheckTrue(NetCarriesContest(ContestHandleOf(ARRLDXCW), 'the test'), 'a legacy contest is carried');
+   CheckTrue(NetCarriesContest(NoContest, 'the test'), 'no contest is carried');
+   known := KnownContests;
+   for k := 0 to High(known) do
+      begin
+      CheckTrue(NetCarriesContest(known[k], 'the test') = ContestCanUseMultiOp(known[k]),
+                ContestId(known[k]) + ': the wrapper never disagrees with the predicate');
+      end;
+end;
+
+(* A peer's CONTEST command naming a contest that cannot travel is refused with
+  the message and NOT applied; everything else is left to ApplyPeerCommand. *)
+procedure TContestByIdTests.Test_APeerCannotMoveThisStationOntoSuchAContest;
+var
+   h: TContestHandle;
+   text: string;
+begin
+   BeginTest('Test_APeerCannotMoveThisStationOntoSuchAContest');
+   h := FixtureHandle;
+   text := MultiOpRefusalText(h);
+   CheckTrue(text <> '', 'there is a message to give');
+   CheckEquals(text, PeerContestRefusal('CONTEST', TEST_FIXTURE_CONTEST_ID),
+               'the CONTEST command naming it is refused with that message');
+   CheckEquals(text, PeerContestRefusal(' contest ', '  ' + LowerCase(TEST_FIXTURE_CONTEST_ID) + ' '),
+               'whatever the case and the blanks, as the name resolver reads it');
+   CheckEquals('', PeerContestRefusal('CONTEST', 'ARRL-DX-CW'), 'a legacy contest is followed');
+   CheckEquals('', PeerContestRefusal('CONTEST', 'NEQP'), 'and so is a legacy alias');
+   CheckEquals('', PeerContestRefusal('CONTEST', 'NO SUCH CONTEST ANYWHERE'),
+               'a name this build cannot resolve is not judged here');
+   CheckEquals('', PeerContestRefusal('CONTEST NAME', TEST_FIXTURE_CONTEST_ID),
+               'CONTEST NAME is a different setting');
+   CheckEquals('', PeerContestRefusal('BAND', TEST_FIXTURE_CONTEST_ID),
+               'only the command that selects the contest is asked');
+   CheckEquals('', PeerContestRefusal('', ''), 'an empty parameter is nothing');
+end;
+
+(* The first connect door: with the fixture selected, TryConnectToNetwork makes
+  NO attempt -- no thread. (If the guard were missing this would start a real
+  connect thread, which is why the test is the failing direction only.) The
+  warning is shown through showwarning, silenced here as in a batch export. *)
+procedure TContestByIdTests.Test_ConnectingIsRefusedWithNoAttemptMade;
+var
+   savedContest: TContestHandle;
+   savedSilent: boolean;
+begin
+   BeginTest('Test_ConnectingIsRefusedWithNoAttemptMade');
+   savedContest := Contest;
+   savedSilent := tSilentExport;
+   tSilentExport := True;
+   try
+      Contest := FixtureHandle;
+      CheckFalse(NetIsConnected, 'there is no link to begin with');
+      TryConnectToNetwork;
+      CheckFalse(ThreadStarted(NetThreadID), 'no connect thread was started');
+      CheckFalse(NetIsConnected, 'and nothing connected');
+      TryConnectToNetwork;
+      CheckFalse(ThreadStarted(NetThreadID), 'the timer''s retry makes no attempt either');
+   finally
+      Contest := savedContest;
+      tSilentExport := savedSilent;
+   end;
+end;
+
+(* The switch door, as far as a unit test reaches it: with no link up, choosing
+  the contest drops nothing, says nothing and changes nothing. The branch that
+  drops a live link needs a socket -- BENCH_QUEUE. *)
+procedure TContestByIdTests.Test_ChangingContestWithNoLinkDropsNothing;
+var
+   savedContest: TContestHandle;
+begin
+   BeginTest('Test_ChangingContestWithNoLinkDropsNothing');
+   savedContest := Contest;
+   try
+      Contest := FixtureHandle;
+      NetContestChanged(Contest);
+      CheckTrue(Contest = FixtureHandle, 'the contest stays what the operator chose');
+      CheckFalse(NetIsConnected, 'and there is still no link');
+      NetContestChanged(ContestHandleOf(ARRLDXCW));
+   finally
+      Contest := savedContest;
+   end;
+end;
+
+(* THE DOORS A UNIT TEST CANNOT DRIVE (they need a socket) are checked by their
+  CALL SITES: each door string below is the aDoor argument of a
+  NetCarriesContest call in uNet.pas, so deleting a guard fails this test. It
+  is a source read, like Test_TheFixtureIsNotInTheApplication, and no
+  substitute for the two-station bench test in BENCH_QUEUE. *)
+procedure TContestByIdTests.Test_EveryMultiOpDoorIsWired;
+const
+   DOORS: array[0..6] of string = (
+      'NetCarriesContest(Contest, ''TryConnectToNetwork'')',
+      'NetCarriesContest(Contest, ''ConnectToTR4WServer'')',
+      '''send of a QSO packet''',
+      '''receive of a NET_QSOINFO packet''',
+      '''receive of a NET_EDITEDQSO packet''',
+      '''a peer''''s CONTEST command''',
+      '''a switch of contest while connected''');
+var
+   unitText, effectsText, root: string;
+   k: integer;
+
+   function Slurp(const aRelative: string): string;
+   var
+      lines: TStringList;
+      path: string;
+   begin
+      path := ExpandFileName(root + aRelative);
+      CheckTrue(FileExists(path), 'the source is beside the tests: ' + path);
+      Result := '';
+      if not FileExists(path) then
+         begin
+         Exit;
+         end;
+      lines := TStringList.Create;
+      try
+         lines.LoadFromFile(AnsiString(path));
+         Result := lines.Text;
+      finally
+         lines.Free;
+      end;
+   end;
+
+begin
+   BeginTest('Test_EveryMultiOpDoorIsWired');
+   root := ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' + PathDelim +
+           'src' + PathDelim;
+   unitText := Slurp('uNet.pas');
+   effectsText := Slurp('uSettingsEffects.pas');
+   for k := Low(DOORS) to High(DOORS) do
+      begin
+      CheckTrue(Pos(DOORS[k], unitText) > 0, 'uNet.pas has the door ' + DOORS[k]);
+      end;
+   CheckTrue(Pos('ContestCanUseMultiOp(Contest)', unitText) > 0,
+             'TryConnectToNetwork asks the predicate before it starts a thread');
+   CheckTrue(Pos('PeerContestRefusal(', unitText) > 0,
+             'the NET_PARAMETER arm asks PeerContestRefusal');
+   CheckTrue(Pos('NetContestChanged(Contest)', effectsText) > 0,
+             'the CONTEST setting''s effect (the only call of FoundContest) calls NetContestChanged');
+end;
+
 procedure TContestByIdTests.RunAllTests;
 begin
    Test_TheFixtureHasAHandleAboveTheLegacyRange;
@@ -312,6 +564,13 @@ begin
    Test_AnIdIsRefusedForTheRightReasons;
    Test_ARegistrationAfterTheSealRaises;
    Test_TheFixtureIsNotInTheApplication;
+   Test_AContestWithNoLegacyNumberCannotUseMultiOp;
+   Test_TheBroadcastNumberIsTheLegacyNumberOrDerivedFromTheId;
+   Test_NetCarriesContestAsksTheOnePredicate;
+   Test_APeerCannotMoveThisStationOntoSuchAContest;
+   Test_ConnectingIsRefusedWithNoAttemptMade;
+   Test_ChangingContestWithNoLinkDropsNothing;
+   Test_EveryMultiOpDoorIsWired;
 end;
 
 end.

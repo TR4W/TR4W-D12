@@ -18,8 +18,10 @@ The vast majority of plumbing — exchange parsing, Cabrillo formatting, dupe ha
 > CONTEST HAS NO ENTRY IN `VC.pas`.** `Lint-FrozenContestNumbers` fails the
 > build if a member is added -- appended included -- removed, reordered or
 > renamed. A new contest registers by its string id
-> (`RegisterContestById`), and **no real contest may do so until Q108 S4**
-> is in -- see `ADDING_A_CONTEST.md`, "A NEW CONTEST REGISTERS BY ITS ID".
+> (`RegisterContestById`), and **a real contest MAY do so since Q108 S4
+> (2026-10-17)** -- multi-op is refused for it (no legacy number for the V1
+> packet) and its `<contestnr>` is derived from its id; see
+> `ADDING_A_CONTEST.md`, "A NEW CONTEST REGISTERS BY ITS ID".
 > The table below describes the 188 LEGACY contests, which is how every
 > existing contest was added; S5 rewrites this document.
 

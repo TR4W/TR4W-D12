@@ -74,6 +74,14 @@ HamScore ask the contest. The mode loop runs `CW to Both`: the ALL rows carry
 qso/mult/point, and WRTC's HQ/country labels appear only there. Each `total` row is
 its own mode's bands summed. Pinned in `uTestUDPDatagrams`.
 
+**`<contestnr>` (contactinfo, contactreplace, contactdelete, lookupinfo) is
+`uContestRegistry.ContestBroadcastNumber`, the only place** (Q108 S4,
+2026-10-17): the legacy number for a legacy contest -- pinned, it did not move
+-- else `256 + CRC32(the id) mod (2^31 - 256)`. N1MM's appendix defines it as
+*"a unique number assigned to this contest instance in this database"*: local
+to a log, no range, never a shared contest code, so any stable per-contest
+number serves. Never write `Ord(...)` of a contest there again.
+
 ## MMTTY
 
 **MMTTY is out-of-process** — launched with `WinExec`, not loaded as a DLL. That
