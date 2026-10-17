@@ -31,6 +31,7 @@ in section 4. One line each -- the full text is further down.
 - **Q8** Events with no ContestType still named in code (TRC, PGA, EURASIA ...).
 - **Q47** Fix the three kept read-past-the-end shapes now?
 - **Q101** Fill the typed `rcvd_*` columns from each class, or delete them?
+- **Q109** UDP score message: no ALL row, inflated totals, no WRTC mults, no suppression (D7 too).
 
 **Awaiting only your yes (section 3)**
 - **Q10** Retire unused ContestTypes through `TContestRetired` (MINITEST needs it).
@@ -189,6 +190,26 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   *Recommended: the class fills them* -- it is the one place that knows
   whether a QTH is a county, a section or a grid, which is exactly the
   question Q89's ADIF STATE fix had to answer.
+  **Answer:**
+
+- **Q109** (found by the new end-to-end UDP tests, 2026-10-16) The N1MM-style
+  UDP **score** message (`dynamicresults`, `SendScoreToUDP`) has four
+  problems, ALL also in D7 4.151 (tag names and structure match D7):
+  1. **No `<point>` rows are ever sent.** The mode loop runs `CW to Phone`
+     (`{Both do}` is commented out), so the "ALL" mode row in the header's
+     own sample XML is never written.
+  2. **The `total` row is inflated when two modes are worked** -- a running
+     sum is reused: CW 5 on 20 m + Phone 3 on 15 m gives `total CW` = 8 and
+     `total PH` = 13 (should be 5 and 3). Single-mode contests come out right.
+  3. **WRTC sends no `<mult>` rows** -- its labels exist only for the
+     all-modes row that (1) never reaches.
+  4. **No suppression:** the UDP score goes out for a contest that forbids
+     score posting (WRTC) -- only HamScore and the menu ask the contest.
+  The tests pin today's output, (2) as a named known-defect test, so each
+  fix is a deliberate test edit. *Recommended: fix 1-3 (send the ALL row,
+  per-mode totals, WRTC's mults follow from 1); for 4, ask the contest the
+  same way HamScore does -- a local N1MM-style listener is arguably not
+  "posting", so this one is your call.*
   **Answer:**
 
 ---

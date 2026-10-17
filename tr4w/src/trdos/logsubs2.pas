@@ -144,6 +144,8 @@ uses
     'LIGHT'
     );
 procedure SendScoreToUDP;
+function BuildScoreUDPXml(aTotalScore: longint): AnsiString;
+procedure PostScoreToUDP(aTotalScore: longint);
 procedure LogContactToUDP(RXData: ContestExchange); // ny4i
 procedure SendFullLogToHamScore;  // Issue #783 -- enqueue every QSO for RTC resync
 procedure LogEditedContactToUDP(RXData: ContestExchange); // ny4i
@@ -2679,7 +2681,13 @@ begin
   Result := True;
 //  SendStationStatus;
 end;
-procedure SendScoreToUDP;
+(* THE dynamicresults XML, AS A STRING.  Split out of SendScoreToUDP so a test
+  can read exactly what an N1MM-format score listener is sent without a log
+  to read: the totals come from the globals CalculateTotals fills, and the
+  final score is a PARAMETER (TotalScore reads the contest, which is the
+  caller's business).  The output is byte-identical to what SendScoreToUDP
+  built inline before. *)
+function BuildScoreUDPXml(aTotalScore: longint): AnsiString;
 var
     sBuf: AnsiString;
 
@@ -2729,25 +2737,20 @@ You cannot use QSOTotals[TempBand, TempMode] for an accurate score for the total
 QSOTotals[TempBand, TempMode] is accurate for the individual bands so just sum those values to calculate the total
 }
    nTotal := 0;
-   // Enabled() here is an OPTIMISATION, not the rule -- Send tests it again.
-   // It guards CalculateTotals, which reads the whole log.
-   if UDPBroadcaster.Enabled(usScore) then    // Issue 304 NY4I
-      begin
-      CalculateTotals;    // This reads the log so be careful how often it is done.
-      (* The contest's ADIF id, asked of the contest -- M1. *)
-      sContestName := ContestIdentity(Contest).ADIFContestId;
-      sBuf := '<?xml version="1.0"?>' + sLineBreak +
-             '<dynamicresults>' +  sLineBreak +
-             #9 + '<soft>TR4W</soft>' + sLineBreak +
-             #9 + '<version>' + TR4W_CURRENTVERSION_NUMBER + '</version>' + sLineBreak +
-             #9 + '<contest>' + sContestName + '</contest>' +   sLineBreak +
-             #9 + '<call>' + Settings.My.Call + '</call>' + sLineBreak +
-             #9 + '<club>' + ' ' + '</club>' + sLineBreak +
-             #9 + '<class ops="' + tCategoryOperatorSA[Settings.Contest.CategoryOperator] + '" mode="' + tCategoryModeSA[Settings.Contest.CategoryMode] +
-                  '" power="' + tCategoryPowerSA[Settings.Contest.CategoryPower] + '" bands="' + tCategoryBandSA[Settings.Contest.CategoryBand] +
-                  '" transmitter="' + tCategoryTransmitterSA[Settings.Contest.CategoryTransmitter] +
-                  '" assisted="' + tCategoryAssistedSA[Settings.Contest.CategoryAssisted] + '"></class>' + sLineBreak +
-             #9 + '<breakdown>' + sLineBreak;
+   (* The contest's ADIF id, asked of the contest -- M1. *)
+   sContestName := ContestIdentity(Contest).ADIFContestId;
+   sBuf := '<?xml version="1.0"?>' + sLineBreak +
+          '<dynamicresults>' +  sLineBreak +
+          #9 + '<soft>TR4W</soft>' + sLineBreak +
+          #9 + '<version>' + TR4W_CURRENTVERSION_NUMBER + '</version>' + sLineBreak +
+          #9 + '<contest>' + sContestName + '</contest>' +   sLineBreak +
+          #9 + '<call>' + Settings.My.Call + '</call>' + sLineBreak +
+          #9 + '<club>' + ' ' + '</club>' + sLineBreak +
+          #9 + '<class ops="' + tCategoryOperatorSA[Settings.Contest.CategoryOperator] + '" mode="' + tCategoryModeSA[Settings.Contest.CategoryMode] +
+               '" power="' + tCategoryPowerSA[Settings.Contest.CategoryPower] + '" bands="' + tCategoryBandSA[Settings.Contest.CategoryBand] +
+               '" transmitter="' + tCategoryTransmitterSA[Settings.Contest.CategoryTransmitter] +
+               '" assisted="' + tCategoryAssistedSA[Settings.Contest.CategoryAssisted] + '"></class>' + sLineBreak +
+          #9 + '<breakdown>' + sLineBreak;
    for TempBand := Band160 to AllBands do
       begin
       for TempMode := CW to Phone do {Both do} // Was Phone for a test do
@@ -2795,11 +2798,32 @@ QSOTotals[TempBand, TempMode] is accurate for the individual bands so just sum t
          // After mode loop...
       end;
    sBuf := sBuf + #9 + '</breakdown>' + sLineBreak +
-                  #9 + '<score>' + IntToStr(TotalScore) + '</score>' + sLineBreak +
+                  #9 + '<score>' + IntToStr(aTotalScore) + '</score>' + sLineBreak +
                   #9 + '<timestamp>' + SystemTimeToString(UTC) + '</timestamp>' + sLineBreak +
                   '</dynamicresults>' + sLineBreak;
+   Result := sBuf;
+end;
+
+(* Builds the score message and sends it on the score stream.  Split from
+  SendScoreToUDP for the same reason as BuildScoreUDPXml: a test can drive
+  the send without a log to read. *)
+procedure PostScoreToUDP(aTotalScore: longint);
+var
+    sBuf: AnsiString;
+begin
+   sBuf := BuildScoreUDPXml(aTotalScore);
    logger.debug('[SendScoreToUDP] \n %s',[sBuf]);
    UDPBroadcaster.Send(usScore, sBuf);
+end;
+
+procedure SendScoreToUDP;
+begin
+   // Enabled() here is an OPTIMISATION, not the rule -- Send tests it again.
+   // It guards CalculateTotals, which reads the whole log.
+   if UDPBroadcaster.Enabled(usScore) then    // Issue 304 NY4I
+      begin
+      CalculateTotals;    // This reads the log so be careful how often it is done.
+      PostScoreToUDP(TotalScore);
       end;
 end;
 procedure SendDeletedContactToUDP(RXData: ContestExchange);
