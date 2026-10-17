@@ -54,10 +54,13 @@ type
    public
       procedure RunAllTests; override;
    private
+      procedure LoadParkFixture;
       procedure Test_POTAIsAClassOnTheBase;
       procedure Test_POTAScoresOnePointEveryMode;
       procedure Test_POTASessionIsFoundContestsArm;
       procedure Test_POTAExportsItsActivation;
+      procedure Test_POTAWorkedStationDXCCIsItsCallsigns;
+      procedure Test_POTAMyDXCCAndStateComeFromMyPark;
       procedure Test_TheBaseExchangeBlockIsTheSRXString;
       procedure Test_POTAImportsAParkOrAState;
       procedure Test_OnlyPOTAOffersTheParkTools;
@@ -75,6 +78,8 @@ uses
    uADIF,
    uPOTAReference,
    uGridShape,
+   uPOTAParks,
+   Classes,
    uTestContestObjects;
 
 (* A QSO WITH THE FIELDS THE POTA RULES READ, everything else zero. *)
@@ -87,6 +92,44 @@ begin
    Result.RSTReceived := 599;
    Result.QTHString := ShortString(aQTH);
    Result.ExchString := ShortString(aExch);
+end;
+
+(* THE SAME, WORKED FROM aCall, which CTY.DAT put in the entity aCountryID
+   (the primary prefix: 'K', 'VE', 'DL', '*GM/s') -- the one thing the
+   worked station's DXCC is read from (Q62). *)
+function POTAQsoFrom(const aCall, aCountryID, aQTH, aExch: string): ContestExchange;
+begin
+   Result := POTAQso(aQTH, aExch);
+   Result.Callsign := ShortString(aCall);
+   Result.QTH.CountryID := ShortString(aCountryID);
+end;
+
+(* THE PARK LIST OUR PARK IS LOOKED UP IN, in the real file's shape
+   (all_parks_ext.csv: entityId is POTA's own ADIF DXCC code, locationDesc the
+   subdivision or subdivisions). It REPLACES whatever list is loaded, so a
+   developer's downloaded list cannot change an answer here. *)
+procedure TContestPOTATests.LoadParkFixture;
+var
+   csv: TStringList;
+   path: string;
+begin
+   path := IncludeTrailingPathDelimiter(GetTempDir) + 'tr4w-pota-park-fixture.csv';
+   csv := TStringList.Create;
+   try
+      csv.Add('"reference","name","active","entityId","locationDesc","latitude","longitude","grid"');
+      csv.Add('"US-0663","A Georgia Park","1","291","US-GA","33.0","-84.0","EM83aa"');
+      csv.Add('"US-0002","An Alaska Park","1","6","US-AK","59.0","-156.4","BO19sc"');
+      csv.Add('"US-0100","A Hawaii Park","1","110","US-HI","19.5","-155.5","BL19aa"');
+      csv.Add('"US-0015","A Park In Three States","1","291","US-DC,US-MD,US-WV","39.6","-77.8","FM19co"');
+      csv.Add('"CA-0001","A British Columbia Park","1","1","CA-BC","49.1","-123.1","CN89jc"');
+      csv.Add('"GB-0349","An English Park","1","223","GB-ENG","50.5","-3.7","IO80cn"');
+      csv.Add('"VE-0001","A Row Without An Entity","1","","","","",""');
+      csv.SaveToFile(path);
+   finally
+      csv.Free;
+      end;
+   CheckEquals(7, LoadPOTAParks(path), 'the park fixture loads');
+   DeleteFile(path);
 end;
 
 (* OUR SIDE, WITH ONLY MY PARK SET. *)
@@ -203,20 +246,27 @@ var
    activation: string;
 begin
    BeginTest('Test_POTAExportsItsActivation');
+   LoadParkFixture;
    my := MyPark('US-0663');
+   (* OUR PARK IS IN GEORGIA (the fixture): MY_DXCC 291 and MY_STATE GA follow
+      the park tags, Q62. *)
    activation := EmitADIFField('MY_SIG', 'POTA') +
                  EmitADIFField('MY_SIG_INFO', 'US-0663') +
-                 EmitADIFField('MY_POTA_REF', 'US-0663');
+                 EmitADIFField('MY_POTA_REF', 'US-0663') +
+                 EmitADIFField('MY_DXCC', '291') +
+                 EmitADIFField('MY_STATE', 'GA');
 
-   (* A PARK WORKED: it is the SRX_STRING, and nothing follows. *)
+   (* A PARK WORKED: it is the SRX_STRING, and nothing follows. The QSO here
+      carries no country, so no DXCC. *)
    CheckEquals(activation + EmitADIFField('SRX_STRING', 'US-1234'),
                ExchangeBlock(my, POTAQso('US-1234', 'PA')),
                'a park: activation, then the park');
 
-   (* A HUNTER WHO SENT A STATE -- DXCC 291 and STATE, hard-coded to the US. *)
+   (* A HUNTER WHO SENT A STATE -- DXCC from his callsign's country (Q62; it
+      was the literal 291), STATE as sent. *)
    CheckEquals(activation + EmitADIFField('SRX_STRING', 'PA') +
                EmitADIFField('DXCC', '291') + EmitADIFField('STATE', 'PA'),
-               ExchangeBlock(my, POTAQso('', 'PA')),
+               ExchangeBlock(my, POTAQsoFrom('W3ABC', 'K', '', 'PA')),
                'a state: DXCC and STATE after it');
 
    (* A HUNTER WHO SENT A GRID. (Until M11 S9b this was asked of the
@@ -251,6 +301,107 @@ begin
                'a park: SIG, SIG_INFO and POTA_REF');
    CheckEquals('', ContestIdentity(POTA).EmitADIFContestFields(POTAQso('CT', '')),
                'not a park: nothing');
+end;
+
+(* Q62, THE WORKED STATION'S HALF: DXCC IS THE CALLSIGN'S COUNTRY, NEVER THE
+   SHAPE OF WHAT IT SENT. *)
+procedure TContestPOTATests.Test_POTAWorkedStationDXCCIsItsCallsigns;
+var
+   my: TMyStationExchange;
+   header: string;
+begin
+   BeginTest('Test_POTAWorkedStationDXCCIsItsCallsigns');
+   my := MyPark('');
+   header := EmitADIFField('MY_SIG', 'POTA');
+
+   (* A CANADIAN HUNTER who sent a province: Canada (1), not the US (291) the
+      old export wrote for anything that looked like a state. STATE stays ON. *)
+   CheckEquals(header + EmitADIFField('SRX_STRING', 'ON') +
+               EmitADIFField('DXCC', '1') + EmitADIFField('STATE', 'ON'),
+               ExchangeBlock(my, POTAQsoFrom('VE3ABC', 'VE', '', 'ON')),
+               'VE3ABC sending ON is DXCC 1');
+
+   (* A US HUNTER: 291, as before. *)
+   CheckEquals(header + EmitADIFField('SRX_STRING', 'PA') +
+               EmitADIFField('DXCC', '291') + EmitADIFField('STATE', 'PA'),
+               ExchangeBlock(my, POTAQsoFrom('W3ABC', 'K', '', 'PA')),
+               'W3ABC sending PA is DXCC 291');
+
+   (* PARK-TO-PARK: the hunter is in a park of his own, which used to get no
+      DXCC at all. His country is his callsign's, here Germany (230). *)
+   CheckEquals(header + EmitADIFField('SRX_STRING', 'DE-0123') +
+               EmitADIFField('DXCC', '230'),
+               ExchangeBlock(my, POTAQsoFrom('DL1ABC', 'DL', 'DE-0123', '')),
+               'a park-to-park QSO: DXCC 230 from the call');
+
+   (* ALASKA AND HAWAII ARE ENTITIES OF THEIR OWN IN CTY.DAT AND IN DXCC. *)
+   CheckEquals(header + EmitADIFField('SRX_STRING', 'AK') +
+               EmitADIFField('DXCC', '6') + EmitADIFField('STATE', 'AK'),
+               ExchangeBlock(my, POTAQsoFrom('KL7ABC', 'KL', '', 'AK')),
+               'KL7ABC is DXCC 6');
+
+   (* A SUB-ENTITY'S STARRED ID (Shetland) IS THE DXCC ENTITY IT COUNTS FOR. *)
+   CheckEquals(header + EmitADIFField('SRX_STRING', 'JOE') +
+               EmitADIFField('DXCC', '279'),
+               ExchangeBlock(my, POTAQsoFrom('GM3ABC', '*GM/s', 'CT', 'JOE')),
+               'Shetland is Scotland, 279');
+
+   (* NO COUNTRY, OR ONE THE TABLE DOES NOT KNOW: the tag is left out, never
+      guessed. *)
+   CheckEquals(header + EmitADIFField('SRX_STRING', 'JOE'),
+               ExchangeBlock(my, POTAQsoFrom('XX1ABC', '', 'CT', 'JOE')),
+               'no country: no DXCC');
+   CheckEquals(header + EmitADIFField('SRX_STRING', 'JOE'),
+               ExchangeBlock(my, POTAQsoFrom('XX1ABC', 'QQ9', 'CT', 'JOE')),
+               'an entity not in the table: no DXCC');
+end;
+
+(* Q62, OUR HALF: MY_DXCC AND MY_STATE FROM OUR PARK, in the park list. *)
+procedure TContestPOTATests.Test_POTAMyDXCCAndStateComeFromMyPark;
+
+   function Mine(const aPark: string): string;
+   begin
+      Result := ExchangeBlock(MyPark(aPark), POTAQso('CT', ''));
+   end;
+
+   function Tags(const aPark, aDXCC, aState: string): string;
+   begin
+      Result := EmitADIFField('MY_SIG', 'POTA') +
+                EmitADIFField('MY_SIG_INFO', aPark) +
+                EmitADIFField('MY_POTA_REF', aPark) +
+                EmitADIFField('MY_DXCC', aDXCC) +
+                EmitADIFField('MY_STATE', aState);
+   end;
+
+begin
+   BeginTest('Test_POTAMyDXCCAndStateComeFromMyPark');
+   LoadParkFixture;
+
+   (* A US PARK: the USA and its state. *)
+   CheckEquals(Tags('US-0663', '291', 'GA'), Mine('US-0663'), 'a Georgia park');
+
+   (* A CANADIAN PARK: Canada and its province. (The reference POTA gives
+      Canada is CA-, not VE-.) *)
+   CheckEquals(Tags('CA-0001', '1', 'BC'), Mine('CA-0001'), 'a British Columbia park');
+
+   (* THE LIST'S ENTITY, NOT THE REFERENCE'S TWO LETTERS: US-0002 is Alaska. *)
+   CheckEquals(Tags('US-0002', '6', 'AK'), Mine('US-0002'), 'an Alaska park is DXCC 6');
+   CheckEquals(Tags('US-0100', '110', 'HI'), Mine('US-0100'), 'a Hawaii park is DXCC 110');
+
+   (* A PARK IN SEVERAL STATES names no one state: MY_DXCC alone. *)
+   CheckEquals(Tags('US-0015', '291', ''), Mine('US-0015'),
+               'a three-state park: MY_DXCC, no MY_STATE');
+
+   (* A COUNTRY ADIF HAS NO STATE LIST FOR: MY_DXCC alone. *)
+   CheckEquals(Tags('GB-0349', '223', ''), Mine('GB-0349'),
+               'an English park: MY_DXCC, no MY_STATE');
+
+   (* A PARK THE LIST DOES NOT HOLD, OR HOLDS WITHOUT AN ENTITY: neither. *)
+   CheckEquals(Tags('US-9999', '', ''), Mine('US-9999'), 'a park not in the list');
+   CheckEquals(Tags('VE-0001', '', ''), Mine('VE-0001'), 'a row with no entity');
+
+   (* NO PARK OF OUR OWN: nothing to look up. *)
+   CheckEquals(Tags('', '', ''), Mine(''), 'no MY PARK');
 end;
 
 (* EVERY OTHER CONTEST'S BLOCK IS THE SRX_STRING THE TAIL ALWAYS WROTE. *)
@@ -375,6 +526,8 @@ begin
    Test_POTAScoresOnePointEveryMode;
    Test_POTASessionIsFoundContestsArm;
    Test_POTAExportsItsActivation;
+   Test_POTAWorkedStationDXCCIsItsCallsigns;
+   Test_POTAMyDXCCAndStateComeFromMyPark;
    Test_TheBaseExchangeBlockIsTheSRXString;
    Test_POTAImportsAParkOrAState;
    Test_OnlyPOTAOffersTheParkTools;

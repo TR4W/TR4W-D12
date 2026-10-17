@@ -152,7 +152,125 @@ uses
    (* LooksLikeGridSquare. *)
    uGridShape,
    (* TC_ENTERYOURPARKREFERENCEDESIGNATOR. *)
-   uTR4WStrings;
+   uTR4WStrings,
+   (* The worked station's DXCC, from its callsign's CTY entity. *)
+   uDXCCEntities,
+   (* Where OUR park is: the downloaded park list's entity and subdivision. *)
+   uPOTAParks,
+   Log4D;
+
+var
+   logger: TLogLogger;
+   (* The last park / CTY entity reported as unknown, so a log of a thousand
+      QSOs says it once and not a thousand times. *)
+   lastUnlocatedPark: string;
+   lastUnknownEntity: string;
+
+(* THE WORKED STATION'S DXCC, FROM ITS CALLSIGN -- Q62, NY4I 2026-10-17.
+   QTH.CountryID is the CTY entity the callsign was looked up to ('VE3ABC' is
+   'VE', 'KL7ABC' is 'KL'), and uDXCCEntities turns it into ADIF's number. It
+   is NEVER taken from what the station sent: a Canadian who sends 'ON' is
+   still Canada, and a hunter who sent a park reference is somewhere too.
+   '' when the QSO has no country or the entity is not in the table -- the tag
+   is left out, as an empty ADIF value always is, and a table gap is logged
+   once. *)
+function WorkedStationDXCC(const aQso: ContestExchange): string;
+var
+   entity: string;
+   code: integer;
+begin
+   Result := '';
+   entity := Trim(string(aQso.QTH.CountryID));
+   if entity = '' then
+      begin
+      Exit;
+      end;
+
+   code := ADIFDXCCOfCTYEntity(entity);
+   if code > 0 then
+      begin
+      Result := IntToStr(code);
+      end
+   else
+      begin
+      if entity <> lastUnknownEntity then
+         begin
+         lastUnknownEntity := entity;
+         logger.Warn(Format(
+            'POTA ADIF: no DXCC code for CTY entity "%s" (QSO with %s) -- ' +
+            'DXCC left out. uDXCCEntities predates this country file.',
+            [entity, string(aQso.Callsign)]));
+         end;
+      end;
+end;
+
+(* THE ONE SUBDIVISION A PARK'S locationDesc NAMES -- 'US-ME' is 'ME',
+   'CA-BC' is 'BC'. A park that spans several ('US-DC,US-MD,US-WV') names no
+   one state the activator is in, so it answers '' and the caller writes no
+   MY_STATE; it does not pick the first. *)
+function SoleSubdivision(const aLocations: string): string;
+var
+   dash: integer;
+begin
+   Result := '';
+   if (aLocations = '') or (Pos(',', aLocations) > 0) then
+      begin
+      Exit;
+      end;
+
+   dash := Pos('-', aLocations);
+   if dash > 0 then
+      begin
+      Result := UpperCase(Trim(Copy(aLocations, dash + 1, MaxInt)));
+      end;
+end;
+
+(* OUR OWN DXCC AND STATE, FROM OUR PARK -- Q62, NY4I 2026-10-17: "when they
+   set up and select their park ... we should see they are in Canada".
+   MY_DXCC is the park's entityId in POTA's park list (the list's own column,
+   not the reference's two letters: US-0002 is Alaska, 6). MY_STATE is the
+   park's subdivision when the park names exactly one AND ADIF has a Primary
+   Administrative Subdivision of that code for that DXCC entity (the US, Alaska,
+   Hawaii and Canada); otherwise MY_DXCC is written alone.
+
+   A park the list does not hold -- or no list at all -- writes neither, and
+   says so once in the log: the list is the park's only source here, and a
+   made-up entity is worse than a missing tag. EnsurePOTAParksLoaded reads the
+   CSV on first need, because a headless /EXPORT never starts the startup
+   load. *)
+function MyStationLocationFields(const aMyPark: string): string;
+var
+   dxcc: integer;
+   locations: string;
+   state: string;
+begin
+   Result := '';
+   if not IsValidPOTAPark(aMyPark) then
+      begin
+      Exit;
+      end;
+
+   EnsurePOTAParksLoaded;
+   if not GetPOTAParkEntity(aMyPark, dxcc, locations) then
+      begin
+      if aMyPark <> lastUnlocatedPark then
+         begin
+         lastUnlocatedPark := aMyPark;
+         logger.Warn(Format(
+            'POTA ADIF: park %s is not in the park list, so MY_DXCC and ' +
+            'MY_STATE are left out. Download the park list (Help menu).',
+            [aMyPark]));
+         end;
+      Exit;
+      end;
+
+   Result := EmitADIFField('MY_DXCC', IntToStr(dxcc));
+   state := SoleSubdivision(locations);
+   if (state <> '') and IsADIFPrimarySubdivisionOfDXCC(dxcc, state) then
+      begin
+      Result := Result + EmitADIFField('MY_STATE', state);
+      end;
+end;
 
 (* ONE POINT A CONTACT, whatever the mode -- the legacy LOGSTUFF
    OnePointPerQSO arm (deleted at M10 S3), `RXData.QSOPoints := 1`, through
@@ -300,12 +418,22 @@ end;
    PostUnit's tail, in the order it wrote them:
 
      MY_SIG, MY_SIG_INFO, MY_POTA_REF   our park, MY PARK
+     MY_DXCC, MY_STATE                  OUR place, from our park (Q62)
      SRX_STRING                         FormatADIFReceivedExchange above
-     DXCC 291 and STATE                 a hunter who sent a state -- DXCC is
-                                        hard-coded to the US, as it was
+     DXCC                               the worked station's, from its
+                                        CALLSIGN (Q62) -- every QSO, a park
+                                        hunter's too
+     STATE                              a hunter who sent a state, as sent
      GRIDSQUARE                         a hunter who sent a grid
 
    The state or grid is looked for only when the QSO's QTH is not a park.
+
+   Q62 (NY4I, 2026-10-17): DXCC used to be the literal 291 for anything that
+   LOOKED like a state, so a hunter in Ontario was the USA, and a hunter who
+   sent a park got none. STATE stays what the hunter sent. ADIF 3.1: DXCC is
+   the contacted station's entity code, MY_DXCC the logging station's; STATE
+   and MY_STATE are the contacted / logging station's Primary Administrative
+   Subdivision, an enumeration that exists only for some DXCC entities.
 
    A GRID IS ALWAYS LOOKED FOR (M11 S9b). This used to ask whether the
    SESSION'S exchange could carry one (GRID_CARRYING_EXCHANGES, handed in as
@@ -318,8 +446,10 @@ begin
    Result := EmitADIFField('MY_SIG', 'POTA');
    Result := Result + EmitADIFField('MY_SIG_INFO', aMy.MyPark);
    Result := Result + EmitADIFField('MY_POTA_REF', aMy.MyPark);
+   Result := Result + MyStationLocationFields(aMy.MyPark);
    Result := Result + EmitADIFField('SRX_STRING',
       FormatADIFReceivedExchange(aQso, aExchangeCarriesRST));
+   Result := Result + EmitADIFField('DXCC', WorkedStationDXCC(aQso));
 
    if IsValidPOTAPark(string(aQso.QTHString)) then
       begin
@@ -328,7 +458,6 @@ begin
 
    if LooksLikeAState(string(aQso.ExchString)) then
       begin
-      Result := Result + EmitADIFField('DXCC', '291');
       Result := Result + EmitADIFField('STATE', string(aQso.ExchString));
       end
    else
@@ -420,6 +549,7 @@ begin
 end;
 
 initialization
+   logger := TLogLogger.GetLogger('uContestPOTA');
    RegisterContest(POTA, TContestPOTA);
 
 end.

@@ -87,6 +87,7 @@ type
       procedure Test_Rule_KG4TwoCharacterSuffixIsGuantanamo;
       procedure Test_Rule_PortableSuffixRetargets;
       procedure Test_Rule_PortablePrefixWins;
+      procedure Test_Rule_PortableCountrySuffixWins;
       procedure Test_Rule_MaritimeMobileHasNoEntity;
       procedure Test_Rule_LookupIsCaseSensitive;
       procedure Test_Rule_GarbageAndBoundariesAreUnknown;
@@ -353,6 +354,25 @@ begin
          'and NOT the USA');
    CheckEquals(ctyGetCountry('F5ABC'), ctyGetCountry('F/DL1ABC'),
                'F/DL1ABC is France');
+end;
+
+procedure TCTYDATTests.Test_Rule_PortableCountrySuffixWins;
+begin
+   (* NY4I/VE7 is an American operating FROM British Columbia, written with
+     the location AFTER the call -- the usual form on the air, and the call a
+     POTA activation in a Canadian park is logged under (NY4I, 2026-10-17).
+     The country is the SUFFIX's.  Q62's export writes DXCC from this lookup,
+     so getting it backwards would export DXCC 291 beside a Canadian province. *)
+   BeginTest('a portable country suffix decides the country, not the home call');
+   EnsureCtyLoaded;
+   CheckEquals(ctyGetCountry('VE7ABC'), ctyGetCountry('NY4I/VE7'),
+               'NY4I/VE7 is Canada');
+   Check(ctyGetCountry('NY4I/VE7') <> ctyGetCountry('NY4I'),
+         'and NOT the USA');
+   CheckEquals('VE', ctyGetCountryID('NY4I/VE7'),
+               'its country id is VE, so the POTA export writes DXCC 1');
+   CheckEquals(ctyGetCountry('VE3ABC'), ctyGetCountry('W1ABC/VE3'),
+               'W1ABC/VE3 is Canada');
 end;
 
 procedure TCTYDATTests.Test_Rule_MaritimeMobileHasNoEntity;
@@ -914,6 +934,7 @@ begin
    Test_Rule_KG4TwoCharacterSuffixIsGuantanamo;
    Test_Rule_PortableSuffixRetargets;
    Test_Rule_PortablePrefixWins;
+   Test_Rule_PortableCountrySuffixWins;
    Test_Rule_MaritimeMobileHasNoEntity;
    Test_Rule_LookupIsCaseSensitive;
    Test_Rule_GarbageAndBoundariesAreUnknown;

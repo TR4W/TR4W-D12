@@ -77,6 +77,27 @@ function POTAParksLoaded: Boolean;
 // Returns '' if not found or database not loaded.
 function GetPOTAParkName(const AReference: string): string;
 
+(* WHERE A PARK IS, from the same CSV row as its name (Q62, 2026-10-17): the
+  row's entityId column is the park's ADIF DXCC entity code (291 USA, 6 Alaska,
+  110 Hawaii, 1 Canada, 223 England ...) and its locationDesc column is the
+  subdivision(s), 'US-ME', or 'US-DC,US-MD,US-WV' for a park that spans
+  several.  Both are POTA's data about the park, so the DXCC of OUR station is
+  read from it rather than guessed from the reference's two-letter prefix,
+  which cannot tell Alaska or Hawaii from the rest of 'US'.
+
+  True when the park is in the loaded list AND its row names an entity;
+  aLocations is the row's text ('' when the row has none).  False when the
+  list is not loaded, the park is not in it, or the row has no entity. *)
+function GetPOTAParkEntity(const AReference: string;
+                           out aDXCC: Integer;
+                           out aLocations: string): Boolean;
+
+(* Load the parks CSV now, on the calling thread, if no list is loaded and one
+  can be read (POTAParksFilePath).  The startup load is asynchronous and a
+  headless /EXPORT never starts it, so an export that needs the list asks for
+  it here.  A no-op when the list is already loaded. *)
+procedure EnsurePOTAParksLoaded;
+
 // Normalize a raw exchange token to canonical park reference form.
 // AMyPark is the operator's own park (e.g. 'US-0663'), used to derive the
 // country prefix for digits-only tokens.
@@ -265,6 +286,94 @@ begin
       end;
 end;
 
+(* ONE CSV ROW AS A LIST ENTRY -- the load, synchronous and asynchronous, both
+  build the list from it (they were two copies of the same loop).
+
+  The entry is  REFERENCE=Name<TAB>entityId<TAB>locationDesc , so a Values[]
+  lookup returns the name, a tab and the park's place.  A tab cannot occur in
+  a CSV field here, and the two readers below split on it and nowhere else.
+  The 5-column all_parks.csv carries the same two columns as all_parks_ext.csv
+  (entityId is 3, locationDesc 4), so both files give a place.  '' for a row
+  with no reference or no name, as before. *)
+const
+   PARK_ENTRY_SEPARATOR = #9;
+
+function ParkListEntry(const ALine: string): string;
+var
+   Ref, Name: string;
+begin
+   Result := '';
+   Ref := UpperCase(Trim(GetCSVField(ALine, 0)));
+   Name := Trim(GetCSVField(ALine, 1));
+   if (Ref <> '') and (Name <> '') then
+      begin
+      Result := Ref + '=' + Name + PARK_ENTRY_SEPARATOR +
+                Trim(GetCSVField(ALine, 3)) + PARK_ENTRY_SEPARATOR +
+                Trim(GetCSVField(ALine, 4));
+      end;
+end;
+
+(* The entry's name, entity and place, split.  aValue is what Values[] gave. *)
+procedure SplitParkValue(const aValue: string;
+                         out aName, aEntity, aLocations: string);
+var
+   p1, p2: Integer;
+begin
+   p1 := Pos(PARK_ENTRY_SEPARATOR, aValue);
+   if p1 = 0 then
+      begin
+      aName := aValue;
+      aEntity := '';
+      aLocations := '';
+      Exit;
+      end;
+   aName := Copy(aValue, 1, p1 - 1);
+   p2 := Pos(PARK_ENTRY_SEPARATOR, Copy(aValue, p1 + 1, MaxInt));
+   if p2 = 0 then
+      begin
+      aEntity := Copy(aValue, p1 + 1, MaxInt);
+      aLocations := '';
+      Exit;
+      end;
+   p2 := p1 + p2;
+   aEntity := Copy(aValue, p1 + 1, p2 - p1 - 1);
+   aLocations := Copy(aValue, p2 + 1, MaxInt);
+end;
+
+(* THE PARK LIST BUILT FROM A FILE'S LINES -- the one loop both loaders use,
+  the synchronous LoadPOTAParks and the asynchronous parse.  Row 0 is the CSV
+  header and is skipped.  The caller owns the result. *)
+function ParkListFromLines(aLines: TStringList): TStringList;
+var
+   I: Integer;
+   Entry: string;
+begin
+   Result := TStringList.Create;
+   Result.Sorted := True;
+   Result.CaseSensitive := False;
+   for I := 1 to aLines.Count - 1 do
+      begin
+      Entry := ParkListEntry(aLines[I]);
+      if Entry <> '' then
+         begin
+         Result.Add(Entry);
+         end;
+      end;
+end;
+
+(* The stored value of one park -- name, entity and place, still joined --
+  or '' when no list is loaded or the park is not in it.  The one place the
+  list is searched. *)
+function ParkValue(const aReference: string): string;
+begin
+   Result := '';
+   if not Assigned(FParks) then
+      begin
+      Exit;
+      end;
+   Result := FParks.Values[UpperCase(Trim(aReference))];
+end;
+
 // ---------------------------------------------------------------------------
 // Public implementation
 // ---------------------------------------------------------------------------
@@ -283,8 +392,6 @@ function LoadPOTAParks(const AFilename: string): Integer;
 var
    Lines: TStringList;
    NewParks: TStringList;
-   I: Integer;
-   Ref, Name: string;
 begin
    Result := -1;
    if not FileExists(AFilename) then
@@ -292,21 +399,10 @@ begin
       Exit;
       end;
    Lines := TStringList.Create;
-   NewParks := TStringList.Create;
+   NewParks := nil;
    try
-      NewParks.Sorted := True;
-      NewParks.CaseSensitive := False;
       Lines.LoadFromFile(AFilename);
-      // Row 0 is the CSV header — skip it
-      for I := 1 to Lines.Count - 1 do
-         begin
-         Ref := UpperCase(Trim(GetCSVField(Lines[I], 0)));
-         Name := Trim(GetCSVField(Lines[I], 1));
-         if (Ref <> '') and (Name <> '') then
-            begin
-            NewParks.Add(Ref + '=' + Name);
-            end;
-         end;
+      NewParks := ParkListFromLines(Lines);
       // Atomically swap in the new database
       FParks.Free;
       FParks := NewParks;
@@ -327,13 +423,35 @@ begin
 end;
 
 function GetPOTAParkName(const AReference: string): string;
+var
+   Entity, Locations: string;
 begin
-   Result := '';
-   if not Assigned(FParks) then
+   SplitParkValue(ParkValue(AReference), Result, Entity, Locations);
+end;
+
+function GetPOTAParkEntity(const AReference: string;
+                           out aDXCC: Integer;
+                           out aLocations: string): Boolean;
+var
+   Name, Entity: string;
+begin
+   SplitParkValue(ParkValue(AReference), Name, Entity, aLocations);
+   (* The entityId column holds digits only, so the narrowing is bounded. *)
+   aDXCC := StrToIntDef(AnsiString(Entity), 0);
+   Result := aDXCC > 0;
+   if not Result then
+      begin
+      aLocations := '';
+      end;
+end;
+
+procedure EnsurePOTAParksLoaded;
+begin
+   if POTAParksLoaded then
       begin
       Exit;
       end;
-   Result := FParks.Values[UpperCase(Trim(AReference))];
+   LoadPOTAParks(POTAParksFilePath);
 end;
 
 function NormalizePOTAPark(const AToken: string; const AMyPark: string): string;
@@ -499,8 +617,6 @@ procedure TPOTALoadThread.Execute;
 var
    Lines: TStringList;
    NewParks: TStringList;
-   I: Integer;
-   Ref, Name: string;
    Filename: string;
 begin
    Filename := POTAParksFilePath;
@@ -509,20 +625,10 @@ begin
       Exit;  // Nothing to load; no notification needed
       end;
    Lines := TStringList.Create;
-   NewParks := TStringList.Create;
+   NewParks := nil;
    try
-      NewParks.Sorted := True;
-      NewParks.CaseSensitive := False;
       Lines.LoadFromFile(Filename);
-      for I := 1 to Lines.Count - 1 do  // Row 0 is the CSV header
-         begin
-         Ref := UpperCase(Trim(GetCSVField(Lines[I], 0)));
-         Name := Trim(GetCSVField(Lines[I], 1));
-         if (Ref <> '') and (Name <> '') then
-            begin
-            NewParks.Add(Ref + '=' + Name);
-            end;
-         end;
+      NewParks := ParkListFromLines(Lines);
       (* Held for ReportParsed, which runs on the main thread. *)
       FParks := NewParks;
       NewParks := nil;

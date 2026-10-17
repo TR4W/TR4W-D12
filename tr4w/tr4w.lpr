@@ -112,6 +112,7 @@ uses
   uARRLSections in 'src\uARRLSections.pas',
   uPOTAReference in 'src\uPOTAReference.pas',
   uGridShape in 'src\uGridShape.pas',
+  uDXCCEntities in 'src\uDXCCEntities.pas',
   uInputQuery in 'src\uInputQuery.pas',
   uNewContestForm in 'src\ui\lcl\uNewContestForm.pas' {frmNewContest},
   uTextFitAudit in 'src\ui\lcl\uTextFitAudit.pas',

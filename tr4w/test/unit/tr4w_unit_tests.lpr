@@ -110,6 +110,7 @@ uses
    uARRLSections        in '..\..\src\uARRLSections.pas',
    uPOTAReference       in '..\..\src\uPOTAReference.pas',
    uGridShape           in '..\..\src\uGridShape.pas',
+   uDXCCEntities        in '..\..\src\uDXCCEntities.pas',
    uTestADIFExchange    in 'uTestADIFExchange.pas',
    uTestCabrilloExchange in 'uTestCabrilloExchange.pas',
    uCRC32               in '..\..\src\uCRC32.pas',
@@ -679,6 +680,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestExchangeKindReaders in 'uTestExchangeKindReaders.pas',
    (* POTA as a contest class (design Q6, 2026-10-13). *)
    uTestContestPOTA     in 'uTestContestPOTA.pas',
+   (* Q62: the CTY entity -> ADIF DXCC table, held to the shipped cty.dat. *)
+   uTestDXCCEntities    in 'uTestDXCCEntities.pas',
    (* The Delaware QSO Party, a new contest (design 7.14, 8.2q). *)
    uTestContestDelawareQP in 'uTestContestDelawareQP.pas',
    (* The Nebraska QSO Party, a new contest, and the New England rename
@@ -794,6 +797,7 @@ begin
    RegisterSuite(TExchangeParseTests.Create('ExchangeParse'));
    RegisterSuite(TExchangeKindReadersTests.Create('ExchangeKindReaders'));
    RegisterSuite(TContestPOTATests.Create('ContestPOTA'));
+   RegisterSuite(TDXCCEntitiesTests.Create('DXCCEntities'));
    RegisterSuite(TContestDelawareQPTests.Create('ContestDelawareQP'));
    RegisterSuite(TContestNebraskaQPTests.Create('ContestNebraskaQP'));
    RegisterSuite(TContestNamesTests.Create('ContestNames'));

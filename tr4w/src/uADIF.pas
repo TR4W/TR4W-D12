@@ -317,6 +317,11 @@ function GetADIFStateForQSO(const rec: ContestExchange): string;
 // invented for it.
 function IsADIFPrimarySubdivision(const aCountryID, aCode: string): boolean;
 
+// The same question by ADIF DXCC entity code (291, 6, 110, 1), for a caller
+// that holds the code and not the CTY entity -- POTA's MY_STATE, whose DXCC
+// comes from the park list.
+function IsADIFPrimarySubdivisionOfDXCC(aDXCC: integer; const aCode: string): boolean;
+
 // THE QTH A QSO PARTY JUDGES A QSO BY: the domestic table's resolved key
 // (DomesticQTH -- 'Pin', 'AddVT', 'Md') when the record has one, else the
 // QTH as logged (QTHString), trimmed.  The key, not the typed text, because
@@ -371,7 +376,9 @@ uses
       including the ids it was exported under before a rename -- and
       ContestIdentity, the contest's own id for export. The contest owns both
       answers; this unit only caches the first. *)
-   uContestRegistry;
+   uContestRegistry,
+   (* ADIFDXCCOfCTYEntity -- a CTY entity's ADIF DXCC code. *)
+   uDXCCEntities;
 
 var
    logger : TLogLogger;
@@ -1507,28 +1514,38 @@ begin
    Result := (Length(aCode) = 2) and (Pos(' ' + aCode + ' ', aList) > 0);
 end;
 
-function IsADIFPrimarySubdivision(const aCountryID, aCode: string): boolean;
+function IsADIFPrimarySubdivisionOfDXCC(aDXCC: integer; const aCode: string): boolean;
 begin
-   if aCountryID = 'K' then
-      begin
-      Result := IsCodeInList(aCode, ADIF_US_STATES);
-      end
-   else if aCountryID = 'KL' then
-      begin
-      Result := aCode = 'AK';
-      end
-   else if aCountryID = 'KH6' then
-      begin
-      Result := aCode = 'HI';
-      end
-   else if aCountryID = 'VE' then
-      begin
-      Result := IsCodeInList(aCode, ADIF_CANADIAN_PROVINCES);
-      end
+   case aDXCC of
+      291:
+         begin
+         Result := IsCodeInList(aCode, ADIF_US_STATES);
+         end;
+      6:
+         begin
+         Result := aCode = 'AK';
+         end;
+      110:
+         begin
+         Result := aCode = 'HI';
+         end;
+      1:
+         begin
+         Result := IsCodeInList(aCode, ADIF_CANADIAN_PROVINCES);
+         end;
    else
       begin
       Result := False;
       end;
+   end;
+end;
+
+(* The CTY country is turned into its DXCC code and the DXCC answer is asked --
+   'K' is 291, 'KL' 6, 'KH6' 110, 'VE' 1; every other CTY entity, and an
+   unknown one (code 0), answers False as before. *)
+function IsADIFPrimarySubdivision(const aCountryID, aCode: string): boolean;
+begin
+   Result := IsADIFPrimarySubdivisionOfDXCC(ADIFDXCCOfCTYEntity(aCountryID), aCode);
 end;
 
 function ADIFPartyQTHKey(const aQso: ContestExchange): string;

@@ -409,7 +409,7 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # (logwind SetUpBandMapEntry and its walkers, logedit UpdateBandMapDupeStatus)
 # and the visible dupe list were deleted, and their conversions with them.
 # Measured by the full build.
-$NARROW_CEILING = 1244
+$NARROW_CEILING = 1243
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"
