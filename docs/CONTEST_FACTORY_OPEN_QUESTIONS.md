@@ -40,6 +40,8 @@ in section 4. One line each -- the full text is further down.
 - **Q116** A malformed grid has no distance -- should it score 0 (not the closest bucket)?
 - **Q117** Old Connecticut county codes: keep as aliases of planning regions, or refuse?
 - **Q118** A bare-call mobile in a new county: a new station for dupes?
+- **Q119** Is a host-area-refused QSO (Q107) also an automatic X-QSO? (needed before Q98's mechanism)
+- **Q120** Bands and modes per contest: fill `docs/Q98_CONTEST_BANDS_MODES.csv` + five yes/no rulings.
 
 **Awaiting only your yes (section 3)**
 - **Q10** Retire unused ContestTypes through `TContestRetired` (MINITEST needs it).
@@ -286,6 +288,37 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   already separate -- pinned by `uTestRoverDupeKey`). Should a QSO party
   treat a bare-call mobile in a new county as a new station too (keyed on
   call + county)?
+  **Answer:**
+
+- **Q119** (Q98 design, 2026-10-17 -- needed BEFORE Q98's mechanism stage)
+  **Is a QSO that Q107's host-area rule refuses also an automatic X-QSO?**
+  Q98 makes an off-band or off-mode QSO an X-QSO in the log and in the
+  export (`X-QSO:` in Cabrillo). Q107 already logs an out-of-area x
+  out-of-area QSO with 0 points and no multiplier -- but today it exports as
+  a plain `QSO:` line. Same question for Q112 (Field Day DX) if you rule it
+  in. *Recommended: yes -- one rule: "logged, scores nothing, not this
+  contest's QSO" is exactly what X-QSO says to a log checker, and Q51 says
+  an X-QSO is in the log for the other station's sake.*
+  **Answer:**
+
+- **Q120** (Q98, 2026-10-17) **Bands and modes for every contest -- a CSV
+  to fill: `docs/Q98_CONTEST_BANDS_MODES.csv`** (one row per contest;
+  DXLog's BANDS/MODES and WA7BNM's Bands/Mode side by side; a proposed band
+  list where both agree; empty `your_bands` / `your_modes` columns). Rows
+  that need you sort first: **24 with no source** (AP Sprint, ARCI, County
+  Hunter, General QSO, Grid Loc, JA Long Prefecture, NZ Field Day, OZCHR x2,
+  OZHCR VHF, QCWA Golden, R9W-UW9WK Memorial, Radio Memory, Radio YOC,
+  Region 1 FD x3, RF VHF FD, South American WW, SRR Junior, Ten-Ten, UCG,
+  Ukraine Championship, WWL), **4 where the sources disagree** (CIS,
+  Michigan 6 m?, NAQP RTTY 160 m?, North Carolina QP 160/6/2 m?; also RSGB
+  1.8 CW vs CW+SSB and WRTC's WA7BNM id pointing at IARU HF), and 31 where
+  WA7BNM's wording needs a reading. Leave a row blank and the proposal (or
+  the both-agree value) is used. Plus five yes/no rulings:
+  (a) is FM credited in a PHONE contest (TR4W keeps FM as its own mode)?
+  (b) is an unknown digital submode credited? *proposed yes*;
+  (c) is CQMM CW only? (both sources say so; TR4W scores phone today);
+  (d) does ARRL Digi exclude RTTY?;
+  (e) General QSO and POTA state EVERY band and mode explicitly? *proposed yes*.
   **Answer:**
 
 ---
