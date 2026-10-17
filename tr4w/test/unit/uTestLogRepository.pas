@@ -1915,7 +1915,7 @@ end;
   in the -wal -- and the reopened file must match the seed exactly. *)
 procedure TLogRepositoryTests.TestEveryWriteWaitsForItsCommit;
 const
-   STEPS = 16;
+   STEPS = 15;
    NAMES: array[0..STEPS - 1] of string = (
       'SaveQSO',
       'UpdateQSO',
@@ -1931,8 +1931,7 @@ const
       'SaveMessage',
       'DeleteAllQSOs',
       'two SaveQSOs in a row',
-      'UpdateQSO and then SaveConfigValue',
-      'SetSentExchange');
+      'UpdateQSO and then SaveConfigValue');
 var
    db: TLogDatabase;
    repo: TLogRepository;
@@ -2043,10 +2042,6 @@ begin
                   begin
                   repo.UpdateQSO(seedId, changed);
                   repo.SaveConfigValue('SEED COMMAND', 'changed', 'contest');
-                  end;
-               15:
-                  begin
-                  repo.SetSentExchange(seedId, '599 CHANGED');
                   end;
             end;
 
@@ -2695,8 +2690,9 @@ end;
   run here, and then the row is read back after a REOPEN, so it is the file
   that keeps it.
 
-  And the one path that means to write it on an existing row
-  (SetSentExchange) does, and only that row. *)
+  ~~And the one path that means to write it on an existing row
+  (SetSentExchange) does~~ -- there is no such path since 2026-10-17:
+  exchange_sent is insert-only. *)
 procedure TLogRepositoryTests.TestAnEditKeepsTheSentExchange;
 var
    db: TLogDatabase;
@@ -2766,17 +2762,6 @@ begin
          CheckFalse(wasNew, 'the re-import matched the row');
          CheckEquals('599 05', SentExchangeOfRow(db, firstId),
                      'a re-import keeps it');
-
-         (* THE ONE THAT MEANS TO. *)
-         CheckTrue(repo.SetSentExchange(secondId, '599 07'),
-                   'SetSentExchange found its row');
-         CheckFalse(repo.SetSentExchange(secondId + 1000, '599 08'),
-                    'and says so when there is none');
-         repo.Commit;
-         CheckEquals('599 07', SentExchangeOfRow(db, secondId),
-                     'SetSentExchange writes it');
-         CheckEquals('599 05', SentExchangeOfRow(db, firstId),
-                     'on that row only');
       finally
          repo.Free;
       end;
@@ -2789,8 +2774,8 @@ begin
       db.Open(fn);
       CheckEquals('599 05', SentExchangeOfRow(db, firstId),
                   'after a reopen, the edited QSO still carries what it sent');
-      CheckEquals('599 07', SentExchangeOfRow(db, secondId),
-                  'and the rewritten one what it was given');
+      CheckEquals('599 06', SentExchangeOfRow(db, secondId),
+                  'and the other QSO what it sent');
    finally
       db.Free;
    end;

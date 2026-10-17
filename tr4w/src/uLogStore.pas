@@ -19,45 +19,30 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  *)
 
-(* THE SQLITE LOG, WRITTEN ALONGSIDE THE BINARY ONE -- STEP B2.
+(* THE CONTEST LOG -- THE ONE SQLITE DATABASE, AND EVERY WRITE TO IT.
 
-  The binary .TRW REMAINS AUTHORITATIVE. Nothing reads this database yet: it is
-  written so that a bench session produces a real SQLite log next to a real
-  binary one, which is the only way to find out whether the mapper survives
-  contact with live logging rather than with corpus fixtures.
+  THIS HEADER DESCRIBED STEP B2 UNTIL 2026-10-17: a shadow written alongside
+  an authoritative .TRW, opened lazily on the first append, each call made
+  AFTER the binary record was on disk. Every clause of that stopped being true
+  at B5 (2026-09-24), and the premise outlived it in two branches -- an append
+  that updated the newest imported row instead of inserting, and a rewrite
+  that returned without writing, both on the reasoning that the .TRW already
+  held the QSO. They are deleted; uTestLogStore pins what replaced them.
 
-  That is the strangler pattern this tree already used for the radio and CW
-  keyer factories, in CLAUDE.md's own words: "thin adapters over the existing
-  globals first, prove the seam on hardware, then delete the legacy path".
+  WHAT IS TRUE NOW:
 
-  THE RULE THAT OVERRIDES EVERYTHING ELSE HERE: A FAILURE IN THIS UNIT MUST
-  NEVER COST A QSO. Every entry point swallows its exceptions, reports once, and
-  switches the shadow OFF for the rest of the session. An operator in a contest
-  must not lose a contact because a database he does not yet use would not
-  write. That is also why nothing here is on the critical path of the log write
-  itself -- each call happens AFTER the binary record is safely on disk.
+    The database IS the log. tAddQSOToLog writes here and nowhere else; the
+    .TRW is IMPORT-ONLY, read once by EnsureOpen to migrate a contest this
+    build has never opened, and never written.
 
-  OPENED LAZILY, on the first append, so there is no startup wiring to get in
-  the wrong order and nothing happens at all in a session that logs nothing.
+    It is opened at STARTUP, by LogStoreApplyContestConfig, before anything
+    is logged. Every entry point still goes through EnsureOpen, so a caller
+    that comes first gets the same log.
 
-  WHAT IS SHADOWED, AND WHAT IS NOT -- because a partial shadow that pretends to
-  be complete would be worse than none:
-
-    shadowed      appending a QSO             (LOGSUBS2.tAddQSOToLog)
-                  rewriting the newest row    (DeleteLastContact,
-                                               uNet.UpdateRec,
-                                               uQTCS.SetSendedQSOs)
-
-                  editing an arbitrary QSO    (uEditQSO, by record position)
-                  the network's own update    (uNet.FindAndUpdateQSOInLog,
-                                               by (ceQSOID1, ceQSOID2))
-                  ADIF import                 (MainUnit.ImportFromADIF)
-
-  ALL EIGHT WRITE SITES ARE NOW SHADOWED. The drift rebuild in EnsureOpen stays
-  anyway, and not as a formality: a session that ran with the shadow switched
-  off after a failure, or a log edited by an older build, still leaves the two
-  out of step. Rebuilding is cheap (1,316 QSOs in 63 ms) and the .TRW is
-  authoritative, so disagreement is settled rather than hoped about. *)
+    A write failure DISABLES the store and is put in front of the operator
+    (see Disable): there is no fallback behind it, so a QSO that did not
+    commit is not acknowledged. docs/SQLITE_MIGRATION_TASKS.md has the
+    history. *)
 unit uLogStore;
 
 {$I tr4w.inc}
@@ -90,8 +75,10 @@ uses
   entry fields until this says True. Never raises. *)
 function LogStoreAppendQSO(const aQso: ContestExchange): boolean;
 
-(* Rewrites the shadow's newest row -- what the three "seek back one record"
-  sites do to the binary log.  Never raises. *)
+(* Rewrites the log's newest row -- the three sites that used to seek back one
+  record in the binary log (DeleteLastContact, uNet.UpdateRec,
+  uQTCS.SetSendedQSOs).  Writes even when this call migrated the log: the .TRW
+  never holds the rewrite.  Never raises. *)
 procedure LogStoreUpdateNewestQSO(const aQso: ContestExchange);
 
 (* Rewrites the row matching a record's POSITION in the binary log -- what the
@@ -226,19 +213,18 @@ function LogStoreApplyContestConfig: integer;
   does. Never raises. *)
 function LogStoreRecordContestStatement(const aCommand: string): boolean;
 
-(* MAKES THE SQLITE LOG EXIST AND MATCH THE BINARY ONE, and returns whether it
-  can be relied on.  Its file name is uLogDatabase.LogDatabaseFileName.
+(* MAKES THE LOG EXIST, and returns whether it can be relied on.  Its file
+  name is uLogDatabase.LogDatabaseFileName.
 
-  THIS IS WHAT A READER NEEDS AND A WRITER DID NOT. While only writes were
-  shadowed, the database was built lazily by the first append and no one else
-  cared. A READ can now come first -- a headless export of a log this build has
-  never appended to, or an operator opening the log window before working
-  anybody -- and it must not find an absent or stale file.
+  Opens the database when it exists; otherwise migrates the contest's .TRW
+  once, when there is one with records; otherwise creates a new log. It
+  checks integrity and writability after. A READ may be the first thing to come
+  here -- a headless export, or the log window before anybody is worked --
+  and gets the same log a write would. (The drift check this used to expose
+  went at B5, with the second store.)
 
-  Rebuild-when-absent and the drift check already existed for the write path;
-  this exposes them. Never raises: on failure the shadow disables itself and
-  this returns False, which is the caller's cue to say so rather than to
-  silently read the wrong store. *)
+  Never raises: on failure the store disables itself and this returns False,
+  which is the caller's cue to say so rather than to silently read nothing. *)
 function LogStoreEnsureOpen: boolean;
 
 (* A VERIFIED BACKUP OF THE CONTEST LOG, at aDestination.
@@ -809,28 +795,20 @@ begin
    end;
 end;
 
-(* True when the shadow is open and usable.
+(* True when the log is open and usable.
 
-  aRebuilt tells the caller the shadow was just built FROM THE BINARY LOG, which
-  matters more than it looks -- see LogStoreAppendQSO. *)
-(* aAppendPending -- THE CALLER IS PART WAY THROUGH ADDING A QSO.
+  aRebuilt is True on the one call that MIGRATED the log from a binary .TRW.
+  It says what happened to the log, not what the caller should do about the
+  write it is making: the .TRW is import-only, so it never holds a QSO this
+  build logged, and every write proceeds as written. Read here (the migrated
+  log is captured and declared as a new one) and logged by
+  LogStoreUpdateQSOAtIndex.
 
-   The binary record is written and the file CLOSED before LogStoreAppendQSO is
-   called (LOGSUBS2.tAddQSOToLog, and that order is deliberate: the contact must
-   be durable before anything else is attempted). So during an append the log
-   holds exactly ONE record more than the shadow, and that is AGREEMENT, not
-   drift.
-
-   Reading it as drift is what the first version did, and the cost was not
-   theoretical: EVERY RESUMED SESSION RE-IMPORTED THE WHOLE LOG on its first
-   QSO, and the plain-reopen path below was never once taken -- dead code that
-   looked live. Measured on the county-line harness with -KeepLog: "shadow holds
-   2 record(s), the log holds 3", on a shadow that was perfectly in step.
-
-   AN EXACT EXPECTATION, NOT A TOLERANCE. Accepting a difference of one in
-   either direction would have been fewer lines and would have made a genuinely
-   lost record invisible -- which is the one thing this check exists to catch. *)
-function EnsureOpen(out aRebuilt: boolean; aAppendPending: boolean): boolean;
+  ~~aAppendPending~~ went 2026-10-17. It told the old drift check that the
+  .TRW was one record ahead during an append -- because tAddQSOToLog wrote
+  the .TRW first -- and both that write and the drift check were gone; the
+  parameter was read by nothing. *)
+function EnsureOpen(out aRebuilt: boolean): boolean;
 var
    dbName: string;
    trwCount: Int64;
@@ -1192,9 +1170,7 @@ begin
       end;
 
    try
-      (* False: no append is in flight, so the store is expected to be exactly
-        in step rather than one record behind. *)
-      if not EnsureOpen(rebuilt, False) then
+      if not EnsureOpen(rebuilt) then
          begin
          Exit;
          end;
@@ -1348,7 +1324,6 @@ end;
 function LogStoreAppendQSO(const aQso: ContestExchange): boolean;
 var
    rebuilt: boolean;
-   rowId: Int64;
 begin
    (* FALSE UNTIL A COMMIT SAYS OTHERWISE. Every exit below that is not a
      completed commit leaves it here, which is the only default that cannot
@@ -1361,62 +1336,28 @@ begin
       end;
 
    try
-      (* True: tAddQSOToLog has already written this QSO to the binary log,
-         so the log being one ahead of the shadow is expected. *)
-      if not EnsureOpen(rebuilt, True) then
+      if not EnsureOpen(rebuilt) then
          begin
          Exit;
          end;
 
-      (* THE SHADOW IS OPENED LAZILY, ON THE FIRST APPEND -- AND THE BINARY
-        RECORD IS ALREADY ON DISK BY THEN.
+      (* AN APPEND ALWAYS INSERTS, WHETHER OR NOT THIS CALL MIGRATED THE LOG.
 
-        This call happens after tAddQSOToLog has written and closed the file,
-        which is deliberate: the contact must be safe before anything else is
-        attempted. But it means a rebuild-from-binary triggered HERE has already
-        imported the very QSO being appended, and appending it again duplicates
-        it.
+        ~~"if rebuilt then update the newest row and return True"~~ stood
+        here until 2026-10-17, and its premise was B2's: tAddQSOToLog wrote
+        the .TRW FIRST, so a migration triggered by this call had already
+        imported the QSO being appended, and inserting it again would have
+        duplicated it. Since B5 the .TRW is import-only -- tAddQSOToLog writes
+        here and nowhere else -- so a migration imports only what was logged
+        BEFORE this build, never the QSO in hand. The branch therefore
+        OVERWROTE the newest imported QSO with this one and acknowledged a
+        contact it had not stored. uTestLogStore drives that case (the append
+        as the first thing to open the log) and pins the insert.
 
-        Measured, not reasoned: the county-line UI harness logged two QSOs and
-        the shadow held THREE, with the first one twice.
-
-        The drift check in EnsureOpen would have repaired it at the next open,
-        which is some comfort -- but a shadow that is briefly wrong is a shadow
-        nobody can trust mid-contest, and "it fixes itself later" is not a
-        property to rely on. *)
-      if rebuilt then
-         begin
-         (* THE REBUILD ALREADY IMPORTED THIS QSO, so appending would duplicate
-            it -- but the import cannot know what was SENT, and this call can.
-            Skipping outright therefore lost the sent exchange of the first QSO
-            of every session, which is exactly the field this work exists to
-            capture. Measured: row 1 came back with exchange_sent NULL while
-            row 2 carried it.
-
-            The record just written to the binary log is its LAST one, so the
-            row the rebuild just imported is the newest -- update that one with
-            what only the live path knows. *)
-         (* SetSentExchange, NOT SetNextSentExchange + UpdateQSO: an update
-           keeps the row's exchange_sent (Q61's defect (2)), so the sent
-           exchange is written by the one call that means to. *)
-         rowId := GRepository.NewestRowId;
-         if rowId > 0 then
-            begin
-            GRepository.UpdateQSO(rowId, aQso);
-            GRepository.SetSentExchange(rowId,
-               AnsiString(BuildSentExchangeText(aQso)));
-            GRepository.Commit;
-            end;
-
-         (* TRUE EITHER WAY, and deliberately. The rebuild imported this QSO
-           from the binary log, so the contact IS in the database -- that is
-           what makes appending it again a duplicate. A failure to attach the
-           sent exchange on top of it loses a field, not a contact, and
-           reporting the QSO as unlogged here would have the operator work it
-           again. *)
-         Result := True;
-         Exit;
-         end;
+        The program never took the branch -- startup opens the log through
+        LogStoreApplyContestConfig before anything is logged, so a migration
+        happens there -- but the store's promise cannot rest on its caller
+        having opened it first. *)
 
       (* The contest comes from the records; a binary log has no header naming
         it, and the shadow must answer the same question the same way the
@@ -1477,19 +1418,18 @@ begin
       end;
 
    try
-      if not EnsureOpen(rebuilt, False) then
+      if not EnsureOpen(rebuilt) then
          begin
          Exit;
          end;
 
-      (* A rebuild has just re-read the binary log, which already contains this
-        rewrite -- the caller writes the record before calling here, exactly as
-        the append does. *)
-      if rebuilt then
-         begin
-         Exit;
-         end;
-
+      (* ~~"if rebuilt then Exit"~~ stood here until 2026-10-17, on the
+        reasoning that the caller had already written this rewrite to the
+        binary log and the migration had just re-read it. No caller writes the
+        .TRW any more, so the exit DROPPED the rewrite -- an Alt-Y delete, a
+        QTC mark, a network update. The rewrite proceeds onto the row the
+        migration produced; see the same note in LogStoreAppendQSO, and
+        uTestLogStore for the pin. *)
       rowId := GRepository.NewestRowId;
       if rowId <= 0 then
          begin
@@ -1519,7 +1459,7 @@ begin
       end;
 
    try
-      if not EnsureOpen(rebuilt, False) then
+      if not EnsureOpen(rebuilt) then
          begin
          Exit;
          end;
@@ -1548,13 +1488,14 @@ begin
       rowId := GRepository.RowIdAtIndex(aRecordIndex);
       if rowId <= 0 then
          begin
-         (* The shadow is short of that record. EnsureOpen's drift check will
-           rebuild at the next open; saying so here is what makes that visible
-           rather than mysterious. *)
+         (* The log holds no record at that position, so there is nothing to
+           rewrite. Said, because the edit is not saved -- and nothing will
+           rebuild it: the drift check that once would is gone with the
+           second store. *)
          if logger <> nil then
             begin
-            logger.Warn('[LogStore] no row at record index %d -- the shadow ' +
-                        'will be rebuilt from the binary log', [aRecordIndex]);
+            logger.Warn('[LogStore] no row at record index %d -- the edit to ' +
+                        'it was NOT saved', [aRecordIndex]);
             end;
          Exit;
          end;
@@ -1636,9 +1577,9 @@ begin
       end;
 
    try
-      (* False: no QSO is part way through being added, so a log built from
-        the .TRW here is simply the log these QSOs join. *)
-      if not EnsureOpen(rebuilt, False) then
+      (* A log migrated from the .TRW here is simply the log these QSOs join:
+        the .TRW holds none of them. *)
+      if not EnsureOpen(rebuilt) then
          begin
          aFailure := 'the contest log could not be opened. See tr4w.log.';
          Exit;
@@ -1686,7 +1627,7 @@ begin
       end;
 
    try
-      if not EnsureOpen(rebuilt, False) then
+      if not EnsureOpen(rebuilt) then
          begin
          Exit;
          end;
@@ -1719,7 +1660,7 @@ begin
       end;
 
    try
-      if not EnsureOpen(rebuilt, False) then
+      if not EnsureOpen(rebuilt) then
          begin
          Exit;
          end;
@@ -1770,7 +1711,7 @@ begin
       end;
 
    try
-      if not EnsureOpen(rebuilt, False) then
+      if not EnsureOpen(rebuilt) then
          begin
          Exit;
          end;
@@ -2269,9 +2210,7 @@ function LogStoreEnsureOpen: boolean;
 var
    rebuilt: boolean;
 begin
-   (* aAppendPending FALSE: nobody is part way through adding a QSO here, so the
-      log and the shadow should agree exactly. *)
-   Result := EnsureOpen(rebuilt, False);
+   Result := EnsureOpen(rebuilt);
 end;
 
 (* WHAT THE CONTEST'S CONFIGURATION IS WHEN THE OPERATOR STOPS.

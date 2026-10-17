@@ -321,7 +321,8 @@ type
          inherit another's exchange.
 
          FOR AN INSERT ONLY. UpdateQSO does not read it, and an update keeps
-         the exchange_sent the row already holds -- see SetSentExchange. *)
+         the exchange_sent the row already holds. exchange_sent is INSERT-ONLY:
+         nothing writes it on an existing row. *)
       procedure SetNextSentExchange(const aSentExchange: AnsiString);
 
       procedure SetNextQSOSet(const aSetId: AnsiString);
@@ -418,16 +419,6 @@ type
          invents no row, and a caller that meant to record the declaration
          needs to know it did not. *)
       function SetEntryDeclaration(const aDeclaration: TLogEntryDeclaration): boolean;
-
-      (* WRITE WHAT ONE EXISTING QSO SENT -- the one path that means to.
-
-         An UPDATE never touches exchange_sent (QSO_COLUMNS_UPDATABLE), so
-         an edit keeps what was sent. The exception is the live append that
-         found the log just rebuilt from a binary log: the import cannot know
-         what was sent and the live path can, so it attaches it here.
-
-         False when there is no such row. Does not commit. *)
-      function SetSentExchange(aRowId: Int64; const aSentExchange: AnsiString): boolean;
 
       (* CONFIGURATION AND PROGRAM MESSAGES INTO THE LOG -- phase E.
 
@@ -1099,8 +1090,10 @@ const
      FSentExchangeForNextSave, which SaveQSO clears after every insert. Every
      Edit QSO, every rescore and every network update therefore wrote NULL
      over the sent exchange. An edit changes only what was edited (Q13), and
-     nothing an edit can reach is the sent exchange. The one path that does
-     mean to write it on an existing row says so: SetSentExchange. *)
+     nothing an edit can reach is the sent exchange. NOTHING writes it on an
+     existing row: ~~SetSentExchange~~ did, for one caller -- uLogStore's
+     append-after-a-migration branch -- and went with that branch on
+     2026-10-17 (the .TRW never holds the QSO being appended). *)
    QSO_COLUMNS_UPDATABLE =
       'exchange_id, session_id, session_seq, ' +
       'computer_id, operator_id, record_kind, ' +
@@ -2048,28 +2041,6 @@ begin
       q.ParamByName('postcode').AsString := aDeclaration.Postcode;
       q.ParamByName('country').AsString := aDeclaration.Country;
       q.ParamByName('email').AsString := aDeclaration.Email;
-      q.ExecSQL;
-      Result := q.RowsAffected > 0;
-   finally
-      q.Free;
-   end;
-end;
-
-function TLogRepository.SetSentExchange(aRowId: Int64;
-                                        const aSentExchange: AnsiString): boolean;
-var
-   q: TSQLQuery;
-begin
-   q := TSQLQuery.Create(nil);
-   try
-      q.DataBase := FDatabase.Connection;
-      (* MADE PER CALL, NOT KEPT: one QSO per rebuild, which is rare. A
-        statement that prepares every time begins its own transaction
-        (sqldb.pp:1296), so the write still waits for the caller's Commit --
-        TestEveryWriteWaitsForItsCommit holds it to that. *)
-      q.SQL.Text := 'UPDATE qso SET exchange_sent = :sent WHERE id = :row_id';
-      BindText(q.ParamByName('sent'), aSentExchange);
-      q.ParamByName('row_id').AsLargeInt := aRowId;
       q.ExecSQL;
       Result := q.RowsAffected > 0;
    finally

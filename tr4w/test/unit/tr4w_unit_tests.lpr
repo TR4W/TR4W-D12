@@ -607,6 +607,9 @@ uContestFileKind           in '..\..\src\domain\uContestFileKind.pas',
 uTestContestFileKind       in 'uTestContestFileKind.pas',
    uLogImport           in '..\..\src\uLogImport.pas',
    uTestLogImport       in 'uTestLogImport.pas',
+   (* uLogStore itself, through its entry points -- a write never assumes the
+      .TRW already holds it. *)
+   uTestLogStore        in 'uTestLogStore.pas',
    uLogDatabase         in '..\..\src\domain\uLogDatabase.pas',
    uTestLogDatabase     in 'uTestLogDatabase.pas',
    uLogBackup           in '..\..\src\domain\uLogBackup.pas',
@@ -882,6 +885,7 @@ begin
    RegisterSuite(TLogNamingTests.Create('LogNaming'));
    RegisterSuite(TContestFileKindTests.Create('ContestFileKind'));
    RegisterSuite(TLogImportTests.Create('LogImport'));
+   RegisterSuite(TLogStoreTests.Create('LogStore'));
    RegisterSuite(TClusterTokensTests.Create('ClusterTokens'));
    RegisterSuite(TSplitReassertTests.Create('SplitReassert'));
    RegisterSuite(TCWByCATTimerTests.Create('CWByCATTimer'));

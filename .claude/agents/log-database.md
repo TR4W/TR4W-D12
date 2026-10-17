@@ -137,8 +137,9 @@ is. On failure, nothing commits, and `TLogDatabase.Close` rolls back.
   `Transaction.Rollback`. It resyncs the two with a raw `BEGIN` and matches no
   message text. Pinned by `TestABatchSQLiteRollsBackItself...` and
   `TestALogSQLiteRolledBackClosesCleanly`.
-- **The pin covers 16 write paths** since `SetSentExchange` joined it
-  (2026-10-17); its fingerprint now includes `exchange_sent`.
+- **The pin covers 15 write paths.** `SetSentExchange` joined it and left
+  again the same day (2026-10-17) when its only caller was deleted; the
+  fingerprint still includes `exchange_sent`.
 - **`BeginBatchUpdate` still commits what is pending and then starts its own
   transaction**, so a batch's rollback undoes the batch and nothing before it.
 - **How to test a "one transaction" claim:**
@@ -233,19 +234,41 @@ Detail and measurements: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12f.
 - **`exchange_sent` is INSERT-ONLY** -- out of `QSO_COLUMNS_UPDATABLE`, like
   `qso_set_id`. Every update (Edit QSO, the rescore batch, the network
   update, a re-import) used to NULL it. `SetNextSentExchange` is for the next
-  INSERT; the one path that writes an existing row's sent exchange is
-  `TLogRepository.SetSentExchange` (the append that found the log just
-  rebuilt from a `.TRW`).
+  INSERT, and **nothing writes an existing row's sent exchange** --
+  ~~`TLogRepository.SetSentExchange`~~ is deleted with the branch below.
 - **No schema change, no `user_version` bump**, fixtures byte-identical.
 - **`test-contest-factory.sh` compares the Cabrillo HEADER** (the golden
-  corpus does not), against frozen output that recorded the old missing
-  category lines -- it reports 13 DIFF on exactly those lines until NY4I
-  re-freezes. Do not re-freeze without him.
-- **Suspected, not fixed:** `LogStoreAppendQSO`'s `rebuilt` branch assumes
-  the `.TRW` already holds the QSO being appended (it updates the newest
-  imported row with it). `tAddQSOToLog` no longer writes the `.TRW`, so if
-  that branch is ever reached the newest imported QSO is overwritten.
-  Reasoned from the code, not run.
+  corpus does not). This said it reported 13 DIFF until NY4I re-froze;
+  **measured 2026-10-17 it reports 13 identical**, so treat the frozen
+  output as current. Do not re-freeze without him.
+
+## AN APPEND ALWAYS INSERTS; A REWRITE ALWAYS WRITES (2026-10-17)
+
+The suspected defect recorded here was REAL in the store and UNREACHED by the
+program. Detail: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12g.
+
+- **The defect.** `LogStoreAppendQSO`'s `if rebuilt` branch UPDATED the
+  newest imported row with the QSO in hand and returned True, on B2's
+  premise that `tAddQSOToLog` had written the `.TRW` first.
+  `LogStoreUpdateNewestQSO` had a twin, `if rebuilt then Exit`. Since B5
+  the `.TRW` holds nothing this build logs. Run against the old code, an
+  append that migrated `cqww_ssb` left 101 rows, with QSO 101 `KP4PR`
+  overwritten by `N0NEW`, and the rewrite was dropped.
+- **Why no QSO was lost.** `aRebuilt` is True only on the `EnsureOpen`
+  call that migrates. Startup's `LogStoreApplyContestConfig` is always that
+  call: it runs after `SetUpFileNames` and before every path that writes
+  (the GUI, `/IMPORT`, `/MATRIX`, `/RESCORE`), and it ignores the flag.
+  `/IMPORTLOG` halts earlier and never appends. `LogStoreClose` runs only
+  at shutdown and leaves the `.db` in place.
+- **Deleted:** both branches, `TLogRepository.SetSentExchange` (their only
+  caller), and `EnsureOpen`'s unread `aAppendPending`. `aRebuilt` stays:
+  it marks a migrated log as new for the capture and the declaration.
+- **`uLogStore` IS LINKABLE BY THE TEST PROGRAM now** (it links `MainUnit`).
+  `uTestLogStore` is the first suite that calls the store itself rather than
+  modelling it. It points `TR4W_LOG_FILENAME` at a scratch `.trw`, sets
+  `tSilentExport` so a failure is a log line and not a modal, and calls
+  `LogStoreClose` before and after each test. **`GDisabled` is never
+  cleared**, so a store test that disables the store breaks every later one.
 
 ## The `config` table holds only what the operator STATED (2026-10-01)
 
@@ -279,9 +302,11 @@ section 7.8.
 `/EXPORT` never captures, so the tracked fixtures keep their sentinels for
 good. The reader handles them; do not rewrite the fixtures to "clean" them.
 
-**Not linkable:** `uLogStore` still links `MainUnit`, so the tests model its
-apply as two steps, `KeepOnlyStatements` then `TrySetByCommand`. If you
-change the apply loop, keep it that pair.
+**Modelled, not called:** the statement tests model the store's apply as two
+steps, `KeepOnlyStatements` then `TrySetByCommand`. If you change the apply
+loop, keep it that pair. (They were written while `uLogStore` could not be
+linked; it can now -- see `uTestLogStore` -- so calling
+`LogStoreApplyContestConfig` directly is open to whoever next touches them.)
 
 ## Oracles
 
@@ -322,11 +347,13 @@ first; for the second, `TLogBackup.Run` now honours the displacement rename,
 stops before publishing when it fails, keeps the verified `.new` and names all
 three files. Do not re-report either as open.
 
-Still open: `uLogStore` itself is not linkable by the test program, and the
-fault-injection tests for the QSO acknowledgement contract are owed. The
-repository half of that contract is pinned as of 2026-10-14
+Still open: the store-level fault-injection tests for the QSO acknowledgement
+contract (a commit that fails must make `LogStoreAppendQSO` return False). The
+repository half is pinned as of 2026-10-14
 (`TestEveryWriteWaitsForItsCommit`): a QSO the store did not commit is no
-longer durable. The store-level test still needs `uLogStore` to be linkable.
+longer durable. ~~The store-level test still needs `uLogStore` to be
+linkable~~ -- **it IS linkable** (2026-10-17, `uTestLogStore`), so nothing
+blocks those tests now; they are simply not written.
 
 ## Coordinate with
 

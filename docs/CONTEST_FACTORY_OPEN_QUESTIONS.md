@@ -1343,7 +1343,9 @@ closes it; anything else reopens it.
   computed at total time). Both latent defects are fixed as proposed: the
   declaration is written only on the open that made (or migrated) the log,
   and after the contest row exists; `exchange_sent` is insert-only, with
-  `TLogRepository.SetSentExchange` for the rebuild path. Pins:
+  ~~`TLogRepository.SetSentExchange` for the rebuild path~~ (deleted
+  2026-10-17 with that path, which overwrote the newest imported QSO --
+  `docs/SQLITE_LOG_SCHEMA_PLAN.md` section 12g). Pins:
   `Test_Q61_AReopenedLogKeepsItsEntryDeclaration`,
   `Test_Q61_ACategoryChangeIsInTheLogAtOnce`,
   `TestAnEditKeepsTheSentExchange`, `Test_Q61_CategoriesAreOneValueEach`,

@@ -2229,14 +2229,47 @@ identity (name, address, city, state, postcode, country, email). Pinned by
 **Latent defect (2), fixed — every update NULLed `qso.exchange_sent`.**
 `exchange_sent` is out of `QSO_COLUMNS_UPDATABLE` (as `qso_set_id` already was)
 and bound on insert only, so Edit QSO, the rescore's batch, a network update and
-a re-import keep what was sent. The one path that meant to write it on an
+a re-import keep what was sent. ~~The one path that meant to write it on an
 existing row — the append that found the log just rebuilt from a `.TRW` — now
-calls `TLogRepository.SetSentExchange`. Pinned by
-`uTestLogRepository.TestAnEditKeepsTheSentExchange`, and `SetSentExchange` is
-step 16 of `TestEveryWriteWaitsForItsCommit`.
+calls `TLogRepository.SetSentExchange`~~ — **that path and `SetSentExchange`
+were deleted on 2026-10-17**: the branch assumed the `.TRW` already held the QSO
+being appended, which stopped being true at B5, so it OVERWROTE the newest
+imported QSO instead of inserting (see §12g). `exchange_sent` is now
+insert-only with no exception. Pinned by
+`uTestLogRepository.TestAnEditKeepsTheSentExchange`;
+`TestEveryWriteWaitsForItsCommit` covers 15 write paths.
 
 **Both pins were run against the old code and failed** (10 failures), then the
 fix was restored.
+
+### 12g. An append always inserts — the migrating-append branch is gone (2026-10-17)
+
+`uLogStore.LogStoreAppendQSO` had a branch for "`EnsureOpen` migrated the log
+from the `.TRW` on this very call". Its premise was B2's: `tAddQSOToLog` wrote
+the `.TRW` first, so the migration had already imported the QSO in hand, and
+the branch UPDATED the newest imported row with it (plus its sent exchange)
+and returned True. `LogStoreUpdateNewestQSO` had the twin: it returned without
+writing. Since B5 the `.TRW` is import-only, so **the append overwrote the last
+imported QSO and acknowledged a contact it never stored**, and the rewrite was
+dropped.
+
+**Reachability, traced:** `aRebuilt` is True only on the one `EnsureOpen` call
+that migrates (no `.db`, a `.TRW` with records, store not yet open). Startup
+calls `LogStoreApplyContestConfig` (`uProgramMain`, after `SetUpFileNames`) and
+it opens the log before anything can append, so a migration always happens
+there, and that caller discards the flag. `/IMPORTLOG` halts before it and
+never appends; `/MATRIX`, `/IMPORT` and the GUI come after it; `LogStoreClose`
+runs only at shutdown and does not delete the `.db`. **So the shipped program
+never took either branch and no QSO was lost.** The store's own contract was
+still wrong, and any caller that wrote first would have hit it.
+
+**Fixed by deletion:** both branches, `TLogRepository.SetSentExchange` (their
+only caller) and `EnsureOpen`'s unread `aAppendPending` parameter. Pinned by
+`uTestLogStore`, the first suite that drives `uLogStore` itself (the test
+program links `MainUnit` now): an append and a rewrite that each migrate a
+scratch copy of `cqww_ssb_2025_ny4i.trw`, and an append after an earlier open.
+**Run against the old code first:** 3 failures — 101 rows instead of 102,
+imported QSO 101 `KP4PR` overwritten with `N0NEW`, and the rewrite missing.
 
 ---
 
