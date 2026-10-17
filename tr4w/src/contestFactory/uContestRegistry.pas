@@ -59,10 +59,29 @@ procedure RegisterContest(aContest: ContestType; aCls: TContestClass);
   nil is an ORDINARY ANSWER during the migration, not a failure. *)
 function ContestClassFor(aContest: ContestType): TContestClass;
 
-(* How many contests have a class. For a lint or a test to assert against, so
-  that "the factory is empty" cannot be mistaken for "the factory agrees with
-  the legacy path". *)
-function RegisteredContestCount: integer;
+type
+   (* The registered contests' identity objects -- RegisteredContests' answer.
+      The list is the caller's; the OBJECTS in it are this unit's, exactly as
+      ContestIdentity's are. Never free one. *)
+   TContestIdentityList = array of TContestBase;
+
+(* EVERY REGISTERED CONTEST, AS THE OBJECT ContestIdentity ANSWERS WITH, IN
+  REGISTRY ORDER -- Q108 S1, 2026-10-16 (design 8.2u).
+
+  THE WALK FOR A QUESTION ABOUT THE WHOLE SET OF CONTESTS. A test that asks
+  "does every contest ..." walks this, not `for c := Low(ContestType)`: today
+  the two visit the same contests, but a contest that registers by its string
+  id (Q108 S3) will have no ContestType member, so an enum walk can never see
+  it and this can. A pin table keyed by the enum is the opposite case -- a
+  frozen value check over the legacy contests -- and keeps its enum walk.
+
+  ONLY CONTESTS WITH A CLASS. DUMMYCONTEST -- "no contest", the one classless
+  member -- is not in the list; ContestIdentity still answers for it.
+
+  Asking builds each identity object, as ContestIdentity does, so it belongs
+  after every unit's initialization -- a registration after it raises.
+  Nothing in production calls it today. *)
+function RegisteredContests: TContestIdentityList;
 
 (* THE OBJECT THAT SAYS WHAT aContest IS -- its names and ids, and the rest of
   its row. NEVER nil: a contest with a class answers from its class, one
@@ -227,18 +246,23 @@ begin
    Result := GRegistry[aContest];
 end;
 
-function RegisteredContestCount: integer;
+function RegisteredContests: TContestIdentityList;
 var
    c: ContestType;
+   n: integer;
 begin
-   Result := 0;
+   Result := nil;
+   SetLength(Result, Ord(High(ContestType)) + 1);
+   n := 0;
    for c := Low(ContestType) to High(ContestType) do
       begin
       if GRegistry[c] <> nil then
          begin
-         inc(Result);
+         Result[n] := ContestIdentity(c);
+         inc(n);
          end;
       end;
+   SetLength(Result, n);
 end;
 
 function ContestIdentity(aContest: ContestType): TContestBase;

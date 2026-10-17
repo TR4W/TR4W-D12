@@ -79,7 +79,9 @@ uses
    uAppStrings,
    uTR4WStrings,
    PostUnit,
-   uTestContestObjects;
+   uTestContestObjects,
+   (* ContestsToWalk -- the invariants walk the registry (Q108 S1). *)
+   uTestRegisteredContests;
 
 const
    (* NY4I, 2026-10-01/02: inactive, kept for old logs. Add one only on his
@@ -108,20 +110,23 @@ end;
 procedure TContestUITests.Test_ChoicesListEveryContestOnce;
 var
    choices: TContestChoices;
+   contests: TContestIdentityList;
    c: ContestType;
-   i, seen: integer;
+   k, i, seen: integer;
 begin
    BeginTest('Test_ChoicesListEveryContestOnce');
    choices := TContestChoices.Create;
    try
-      (* THE RANGE THE DIALOG ALWAYS OFFERED: every contest after
-         DUMMYCONTEST, which is never offered. *)
-      CheckEquals(Ord(High(ContestType)) - Ord(DUMMYCONTEST), choices.Count,
-                  'one line per contest after DUMMYCONTEST');
+      (* EVERY REGISTERED CONTEST IS OFFERED, ONCE -- walked over the registry
+         (Q108 S1), so a contest registered by its id must appear too.
+         DUMMYCONTEST, which has no class, is never offered. *)
+      contests := ContestsToWalk;
+      CheckEquals(Length(contests), choices.Count, 'one line per registered contest');
       CheckEquals(-1, choices.IndexOf(DUMMYCONTEST), 'DUMMYCONTEST is not offered');
 
-      for c := Succ(DUMMYCONTEST) to High(ContestType) do
+      for k := 0 to High(contests) do
          begin
+         c := ContestOf(contests[k]);
          seen := 0;
          for i := 0 to choices.Count - 1 do
             begin
@@ -130,12 +135,12 @@ begin
                inc(seen);
                end;
             end;
-         CheckEquals(1, seen, string(ContestTypeSA[c]) + ' is offered exactly once');
-         CheckTrue(choices.IndexOf(c) >= 0, string(ContestTypeSA[c]) + ': IndexOf finds it');
+         CheckEquals(1, seen, ContestWho(contests[k]) + ' is offered exactly once');
+         CheckTrue(choices.IndexOf(c) >= 0, ContestWho(contests[k]) + ': IndexOf finds it');
          if choices.IndexOf(c) >= 0 then
             begin
             CheckTrue(choices.Contest[choices.IndexOf(c)] = c,
-                      string(ContestTypeSA[c]) + ': IndexOf answers its own line');
+                      ContestWho(contests[k]) + ': IndexOf answers its own line');
             end;
          end;
    finally
@@ -291,13 +296,19 @@ end;
 
 procedure TContestUITests.Test_OnlyNamedContestsAreInactive;
 var
+   contests: TContestIdentityList;
+   k: integer;
    c: ContestType;
    obj: TContestBase;
 begin
    BeginTest('Test_OnlyNamedContestsAreInactive');
-   for c := Low(ContestType) to High(ContestType) do
+   (* EVERY REGISTERED CONTEST, BY THE REGISTRY -- an invariant, so a
+      contest registered by its id is held to it too (Q108 S1). *)
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
       begin
-      obj := Make(c);
+      obj := NewContestLike(contests[k], NoStation);
+      c := ContestOf(obj);
       try
          CheckEquals(Ord(not IsListedInactive(c)), Ord(obj.IsActive),
                      string(ContestTypeSA[c]) + ': IsActive');
@@ -313,15 +324,21 @@ end;
 
 procedure TContestUITests.Test_GeneralQSOIsALog;
 var
+   contests: TContestIdentityList;
+   k: integer;
    c: ContestType;
    obj: TContestBase;
    who: string;
    isLog: boolean;
 begin
    BeginTest('Test_GeneralQSOIsALog');
-   for c := Low(ContestType) to High(ContestType) do
+   (* EVERY REGISTERED CONTEST, BY THE REGISTRY -- an invariant, so a
+      contest registered by its id is held to it too (Q108 S1). *)
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
       begin
-      obj := Make(c);
+      obj := NewContestLike(contests[k], NoStation);
+      c := ContestOf(obj);
       try
          who := string(ContestTypeSA[c]);
          isLog := c = GENERALQSO;
@@ -345,13 +362,19 @@ end;
 
 procedure TContestUITests.Test_FOCMarathonPowerColumn;
 var
+   contests: TContestIdentityList;
+   k: integer;
    c: ContestType;
    obj: TContestBase;
 begin
    BeginTest('Test_FOCMarathonPowerColumn');
-   for c := Low(ContestType) to High(ContestType) do
+   (* EVERY REGISTERED CONTEST, BY THE REGISTRY -- an invariant, so a
+      contest registered by its id is held to it too (Q108 S1). *)
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
       begin
-      obj := Make(c);
+      obj := NewContestLike(contests[k], NoStation);
+      c := ContestOf(obj);
       try
          CheckEquals(Ord(c = FOCMARATHON), Ord(obj.PowerFieldIsFOCNumber),
                      string(ContestTypeSA[c]) + ': the power field is an FOC number');
@@ -382,15 +405,21 @@ const
       (kHz: 28226; warns: True),  (kHz: 28399; warns: True),
       (kHz: 28400; warns: False), (kHz: 0;     warns: False));
 var
+   contests: TContestIdentityList;
+   k: integer;
    c: ContestType;
    obj: TContestBase;
    i: integer;
    expected: string;
 begin
    BeginTest('Test_WAGFrequencyWarning');
-   for c := Low(ContestType) to High(ContestType) do
+   (* EVERY REGISTERED CONTEST, BY THE REGISTRY -- an invariant, so a
+      contest registered by its id is held to it too (Q108 S1). *)
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
       begin
-      obj := Make(c);
+      obj := NewContestLike(contests[k], NoStation);
+      c := ContestOf(obj);
       try
          for i := Low(EDGES) to High(EDGES) do
             begin
@@ -471,15 +500,20 @@ end;
   break fails here and joins the list on a rule's evidence. *)
 procedure TContestUITests.Test_OnlyCQWWHasASixtyMinuteBreak;
 var
+   q108Contests: TContestIdentityList;
+   k: integer;
    c: ContestType;
    obj: TContestBase;
-   expected, sixty: integer;
+   expected: integer;
 begin
    BeginTest('Test_OnlyCQWWHasASixtyMinuteBreak');
-   sixty := 0;
-   for c := Low(ContestType) to High(ContestType) do
+   (* EVERY REGISTERED CONTEST, BY THE REGISTRY -- an invariant, so a
+      contest registered by its id is held to it too (Q108 S1). *)
+   q108Contests := ContestsToWalk;
+   for k := 0 to High(q108Contests) do
       begin
-      obj := Make(c);
+      obj := NewContestLike(q108Contests[k], NoStation);
+      c := ContestOf(obj);
       try
          expected := 30;
          if c in [CQWWCW, CQWWSSB, CQWWRTTY] then
@@ -491,15 +525,10 @@ begin
          CheckEquals(obj.MinimumOffTimeMinutes,
                      ContestIdentity(c).MinimumOffTimeMinutes,
                      string(ContestTypeSA[c]) + ': the identity gives the same break');
-         if obj.MinimumOffTimeMinutes = 60 then
-            begin
-            inc(sixty);
-            end;
       finally
          obj.Free;
       end;
       end;
-   CheckEquals(3, sixty, 'exactly three contests break at 60 minutes');
    CheckEquals(30, ContestIdentity(IARU).MinimumOffTimeMinutes,
                'IARU HF takes the default 30 (DXLog IARUHF.txt states none)');
 end;

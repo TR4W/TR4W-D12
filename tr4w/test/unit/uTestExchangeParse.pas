@@ -1589,44 +1589,29 @@ begin
 end;
 
 procedure TExchangeParseTests.Test_EveryContestStatesWhatItsExchangeCarries;
-const
-   (* HOW MANY CONTESTS ANSWER EACH AT EACH ROSTER STATION, counted from the
-      sets and branches above: the domestic QTH 87 everywhere and the two
-      ARRL DX outside W/VE; the zone 25 and the JIDX pair at JA. The domestic
-      QTH rose by one everywhere on 2026-10-16, by hand: the Nebraska QSO
-      Party. *)
-   COUNTS: array[TExchangeCarry, TPinStation] of integer = (
-      (88, 88, 90, 88, 90, 90, 90),
-      (25, 25, 25, 25, 25, 25, 27),
-      (20, 20, 20, 20, 20, 20, 20),
-      (5, 5, 5, 5, 5, 5, 5)
-   );
 var
    e: TExchangeCarry;
    s: TPinStation;
    c: ContestType;
-   answer: boolean;
-   count: integer;
 begin
    BeginTest('Test_EveryContestStatesWhatItsExchangeCarries');
+   (* THE LEGACY CONTESTS, FROZEN: PinnedCarries, contest by contest, at every
+      roster station. The table of how many contests answered each at each
+      station is deleted (Q108 S1): it was counted from the sets and branches
+      PinnedCarries reads, so it restated them and moved by hand with every
+      contest added (Nebraska's domestic QTH raised a whole row). A contest
+      that gains or loses an answer fails here by name. *)
    for e := Low(TExchangeCarry) to High(TExchangeCarry) do
       begin
       for s := Low(TPinStation) to High(TPinStation) do
          begin
-         count := 0;
          for c := Low(ContestType) to High(ContestType) do
             begin
-            answer := ProgramCarries(e, c, PinStation(s, c));
-            CheckEquals(BoolToStr(PinnedCarries(e, c, s), True), BoolToStr(answer, True),
+            CheckEquals(BoolToStr(PinnedCarries(e, c, s), True),
+                        BoolToStr(ProgramCarries(e, c, PinStation(s, c)), True),
                         string(ContestTypeSA[c]) + ' at ' + PinStationCall(s) + ' ' +
                         CARRY_NAMES[e]);
-            if answer then
-               begin
-               Inc(count);
-               end;
             end;
-         CheckEquals(COUNTS[e, s], count,
-                     'contests that ' + CARRY_NAMES[e] + ' at ' + PinStationCall(s));
          end;
       end;
 end;

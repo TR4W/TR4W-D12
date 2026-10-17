@@ -3834,6 +3834,38 @@ where only the compiler can.
 
 **S1 -- the cleanup that needs no identity change.** Tests, one read-only
 registry function, the installer, docs.
+
+> **S1 IS BUILT (2026-10-16).** The installer half is `8b3d3e9a`
+> (`File ..\target\dom\*.*`, NY4I's approval; two debris files deleted). The
+> test half: `uContestRegistry.RegisteredContests`;
+> `test/unit/uTestRegisteredContests` (`ContestsToWalk` with a floor of 100,
+> `IdentitiesToWalk`, `NewContestLike`, `ContestOf`, `ContestWho`,
+> `ClassStatesItself`, `ClassOverridesTheBase`); the identity test repointed to
+> it; all 35 aggregate counts gone -- 25 deleted outright because the
+> per-contest pin beside each already fails by name; 3 made derived from the
+> loop (the identity pin's and the kind pin's "every member checked", the
+> kind pin's party count -- that unit's tables untouched, per the verdict
+> above); and 7 that stood for a real guard became per-contest assertions (a
+> key row exactly where `HAS_DX` / `HAS_PREFIX` / the zone sets / the
+> domestic shape sets name the contest -- four; the ARRL-list count became
+> the literal set `ARRL_LIST_SOMEWHERE`; "24 parties write STATE" became
+> STATE exactly where a contest splits a rover call; "24 parties split"
+> became "a splitter is a QSO party", New England the frozen exception).
+> `RegisteredContestCount` is deleted: "every member but `DUMMYCONTEST` has
+> a class" is asserted member by member. The invariants in `uTestContestFactory`,
+> `uTestContestExport`, `uTestContestDisplay`, `uTestDXMultiplierKey`,
+> `uTestPrefixMultiplierKey`, `uTestZoneMultiplier` and
+> `uTestDomesticMultiplier` walk the registry; the new suite
+> `uTestContestStatesItsRules` is the override walk (seven rules, NO
+> exception was needed -- every registered contest states all seven); and
+> `Test_EveryDomesticFileAContestCanLoadExists` replaces the party-only half
+> of `Lint-DomCoverage`'s scan (the lint itself is unchanged in S1). The
+> scripts are `tools/contest-factory-q108/`. `uTestContestUI`'s choices
+> list and its five "only these contests" walks walk the registry too (its
+> "exactly three break at 60 minutes" count went with them -- a 36th, the
+> design's measure counted only numbers of 14 and up). `uTestContestNames`
+> was NOT converted: its walks are over `ContestTypeSA`, the name table S2
+> replaces. Matrix, factory check and corpus unchanged.
 - `uContestRegistry.RegisteredContests` (the registered identity objects in
   registry order; over the enum today, over handles after S2) and a shared test
   helper for "this class states getter X itself" (lifted from

@@ -283,64 +283,32 @@ begin
 end;
 
 procedure TExchangeRuleTests.Test_EveryContestStatesItsPinnedExchangeRules;
-const
-   (* HOW MANY CONTESTS ANSWER EACH RULE AT EACH STATION, counted by hand
-      from the sets and branches above. The rover: 24 everywhere (Q94,
-      2026-10-14; it was 22 everywhere, the PACC but at PA and the two ARRL
-      DX but at a W or VE -- 23/23/25/23/24/25, 25 anywhere). Several QTHs: 12
-      everywhere; 7QP, Arizona, the Salmon Run and Texas out of their host
-      state; ARRL 160 outside a section country; the ARRL DX at a non-W/VE;
-      NEQP outside New England; the PACC but at PA. The rover is 25
-      everywhere since the Nebraska QSO Party (2026-10-16), a state party. *)
-   COUNTS: array[TExchangeRule, TPinStation] of integer = (
-      (25, 25, 25, 25, 25, 25),
-      (18, 18, 21, 13, 20, 20),
-      (3, 3, 3, 3, 3, 3),
-      (1, 1, 1, 1, 1, 1),
-      (1, 1, 1, 1, 1, 1)
-   );
-   (* At some roster station -- plan 2.1's 21 for several QTHs; the rover's
-      25 is 24 since Q94. *)
-   COUNT_ANYWHERE: array[TExchangeRule] of integer = (25, 21, 3, 1, 1);
 var
    r: TExchangeRule;
    s: TPinStation;
    c: ContestType;
-   answer: boolean;
-   count: integer;
-   anywhere: set of ContestType;
-   total: integer;
 begin
    BeginTest('Test_EveryContestStatesItsPinnedExchangeRules');
+   (* THE LEGACY CONTESTS, FROZEN: PinnedAnswer for every rule, contest by
+      contest, at every roster station. The tables of how many contests
+      answered each rule at each station (COUNTS) and at some station
+      (COUNT_ANYWHERE) are deleted (Q108 S1): they were counted from the sets
+      and branches PinnedAnswer reads, so they restated them, and every QSO
+      party added moved a whole row by hand. A contest that gains or loses a
+      rule fails here by name. That the rover strip belongs to a QSO party
+      and to nothing else is an invariant over every registered contest,
+      uTestContestFactory.Test_EveryQSOPartySplitsARoverCallOnExport. *)
    for r := Low(TExchangeRule) to High(TExchangeRule) do
       begin
-      anywhere := [];
       for s := Low(TPinStation) to High(TPinStation) do
          begin
-         count := 0;
          for c := Low(ContestType) to High(ContestType) do
             begin
-            answer := ProgramAnswer(r, c, PinStation(s, c));
-            CheckEquals(BoolToStr(PinnedAnswer(r, c, s), True), BoolToStr(answer, True),
+            CheckEquals(BoolToStr(PinnedAnswer(r, c, s), True),
+                        BoolToStr(ProgramAnswer(r, c, PinStation(s, c)), True),
                         Who(c, s) + ' ' + RULE_NAMES[r]);
-            if answer then
-               begin
-               Inc(count);
-               Include(anywhere, c);
-               end;
-            end;
-         CheckEquals(COUNTS[r, s], count,
-                     'contests that ' + RULE_NAMES[r] + ' at ' + STATIONS[s].Call);
-         end;
-      total := 0;
-      for c := Low(ContestType) to High(ContestType) do
-         begin
-         if c in anywhere then
-            begin
-            Inc(total);
             end;
          end;
-      CheckEquals(COUNT_ANYWHERE[r], total, 'contests that ' + RULE_NAMES[r] + ' at some station');
       end;
 end;
 

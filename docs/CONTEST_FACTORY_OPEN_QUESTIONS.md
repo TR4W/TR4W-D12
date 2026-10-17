@@ -694,6 +694,10 @@ closes it; anything else reopens it.
   in the contest's `.dom` -- and is false when he sent none (a non-EU
   station). Both contests' scores move (non-EU contacts stop scoring 10); the
   matrix rows for EUDX and IRTS are re-frozen with that reason. Not built.
+  **Check when building (found 2026-10-16):** `eudx.dom` spells one Belgian
+  region `BE011` where the raw code list it was built from (`eudx.dom.new`,
+  deleted in `8b3d3e9a`, in git history) has `BE11` -- so a station sending
+  BE11 may not match. Confirm against the sponsor's region list.
 
 - **Q55** WRTC's live-score XML has never carried a multiplier.
   **Answer:** (NY4I, 2026-10-16) *"WRTC score posting is not done with the

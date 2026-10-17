@@ -338,6 +338,63 @@ shared files a contest touches; the search path already covers
 **Run `test-contest-factory.sh` before and after.** It must stay
 `13 identical, 0 differing`.
 
+### Step 5b — what the unit tests hold a new contest to (Q108 S1, 2026-10-16)
+
+**TWO KINDS OF CROSS-CONTEST TEST, AND THEY WALK DIFFERENT THINGS** (design
+8.2u). A **pin table** freezes what each LEGACY contest answers, keyed by
+`ContestType` -- `uTestContestIdentityPin`, `uTestContestKindPin`, the key and
+mode rows of `uTestDXMultiplierKey` / `uTestPrefixMultiplierKey` /
+`uTestZoneMultiplier` / `uTestDomesticMultiplier`, the per-contest `case`s of
+`uTestCabrilloColumns`, `uTestADIFSentExchange`, `uTestExchangeFields`,
+`uTestExchangeParse`. An **invariant** says something about every contest, and
+walks the REGISTRY -- `uContestRegistry.RegisteredContests`, through the test
+helper `uTestRegisteredContests.ContestsToWalk` (which fails below a floor of a
+hundred, so an empty registry cannot pass) -- so a contest registered by its
+string id (Q108 S3, not built yet) is held to it too. A new invariant walks
+`ContestsToWalk`, never `for c := Low(ContestType)`.
+
+**NO HAND-KEPT COUNT OF CONTESTS IS LEFT** (two small facts stay: the
+NRAU-Baltic family has two members, and exactly one pair shares an ADIF id).
+The 35 counts of "how many contests do X" that
+stood beside the sets -- `HAS_DX_COUNT`, `HAS_PREFIX_COUNT`, the zone counts per
+station, the domestic-file counts, `COUNTS` / `COUNT_ANYWHERE`, "24 QSO parties
+split a rover", "188 `ContestType` members", ... -- are deleted. Each restated
+the set beside it; where one stood for something real it is now that thing,
+asserted contest by contest and failing by name: every `ContestType` but
+`DUMMYCONTEST` has a class (`Test_EveryRegisteredContestConstructs`), a key row
+exactly where `HAS_DX` / `HAS_PREFIX` has the contest somewhere, a contest
+writes a worked station's STATE exactly where it splits a rover call, a
+splitter is a QSO party (New England the one frozen exception). **Do not add a
+count back.**
+
+**THE RULES A NEW CONTEST MUST STATE, CHECKED WITHOUT AN EXPECTED VALUE.**
+`uTestContestStatesItsRules` asks every registered contest whether its class
+(or its family base) overrides the base for its Cabrillo sent and received
+columns, its STX_STRING, its parse format, its received-exchange fields, its
+`GetFlags` and its `CalculateQSOPoints` -- the comparison
+`uTestRegisteredContests.ClassOverridesTheBase` makes (the identity test's
+technique, lifted). No contest was excepted when it was written. A class that
+forgets one fails by name.
+
+**EVERY DOMESTIC FILE A CONTEST CAN LOAD EXISTS** --
+`uTestContestFactory.Test_EveryDomesticFileAContestCanLoadExists`: every
+registered contest's `DomesticFileName`, `InStateDomesticFileName` and its
+`DescribeSession` `DomesticFile` at nine entrants, plus every file those
+`INCLUDE`, found in `target/dom` by the program's own case-tolerant lookup.
+The installer ships the whole directory (`File ..\target\dom\*.*`), so a file
+there is a file shipped.
+
+**WHAT A NEW CONTEST STILL TOUCHES, UNTIL Q108 S3** (it still needs a
+`ContestType` member, appended): its class and its `RegisterContest`; the two
+`.lpr` lines; its own test unit; its `.dom` files; `VC.pas`'s member and
+`ContestTypeSA` spelling; a row in each `array[ContestType]` pin table (the
+compiler insists, and there are exactly two: `uTestContestIdentityPin`'s
+`IDENTITY_PINS` and `uTestContestKindPin`'s `KIND_PINS`); and its name in the per-contest SETS and `case`s
+of the pin units **wherever it answers other than the base** -- a set that
+leaves it out pins it as "has none" and fails. It no longer moves a single
+count. The rest goes with S3, when a contest can register by id: the frozen
+pins do not grow, and the invariants above are what hold it.
+
 ---
 
 ## 3. What the base offers today

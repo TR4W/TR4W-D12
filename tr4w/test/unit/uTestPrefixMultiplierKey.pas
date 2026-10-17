@@ -93,7 +93,9 @@ uses
    VC,
    uContestBase,
    uContestRegistry,
-   uTestContestKindPin;
+   uTestContestKindPin,
+   (* ContestsToWalk -- the invariant walks the registry (Q108 S1). *)
+   uTestRegisteredContests;
 
 type
    (* The entrants. us, ve and dx are the matrix's; the rest take the
@@ -302,9 +304,18 @@ const
       (* psYB YB1AAA *) PREFIX_EVERYWHERE + [UBACW, UBASSB, ALLASIANCW, ALLASIANSSB, SACCW, SACSSB]
    );
 
-   (* How many contests each set holds -- stated so a set edited by mistake
-      fails by count as well as by name. *)
-   HAS_PREFIX_COUNT: array[TPinStation] of integer = (29, 29, 31, 29, 29, 29, 27, 32, 29);
+(* THE CONTESTS WITH A PREFIX MULTIPLIER AT SOME ROSTER STATION -- the union
+   of the HAS_PREFIX sets, so it is never typed a second time. *)
+function PrefixSomewhere: TContestSet;
+var
+   s: TPinStation;
+begin
+   Result := [];
+   for s := Low(TPinStation) to High(TPinStation) do
+      begin
+      Result := Result + HAS_PREFIX[s];
+      end;
+end;
 
 function PinStation(aStation: TPinStation; aContest: ContestType): TStationContext;
 begin
@@ -408,7 +419,7 @@ var
    assigns: boolean;
    who: string;
    named: set of ContestType;
-   count: integer;
+   c: ContestType;
 begin
    BeginTest('Test_EveryPrefixContestGivesItsPinnedKey');
    named := [];
@@ -426,16 +437,15 @@ begin
          end;
       end;
 
-   (* EVERY PREFIX CONTEST HAS A ROW THAT GIVES A KEY -- 32, plan 1.1. *)
-   count := 0;
-   for i := Ord(Low(ContestType)) to Ord(High(ContestType)) do
+   (* EVERY PREFIX CONTEST HAS A ROW THAT GIVES A KEY, AND NOTHING ELSE DOES
+      -- contest by contest, against the HAS_PREFIX sets. This is what the
+      hand-kept count of keyed contests (32, plan 1.1) stood for until Q108
+      S1 deleted it. *)
+   for c := Low(ContestType) to High(ContestType) do
       begin
-      if ContestType(i) in named then
-         begin
-         Inc(count);
-         end;
+      CheckTrue((c in named) = (c in PrefixSomewhere),
+                string(ContestTypeSA[c]) + ': a key row exactly where there is a prefix multiplier');
       end;
-   CheckEquals(32, count, 'contests with a pinned key');
 end;
 
 procedure TPrefixMultiplierKeyTests.Test_EveryContestHasItsPinnedPrefixMultiplier;
@@ -443,68 +453,53 @@ var
    c: ContestType;
    s: TPinStation;
    q: TPinQso;
-   station: TStationContext;
    key: PrefixMultiplierString;
-   has: boolean;
    checked: integer;
-   counted: integer;
-   anywhere: TContestSet;
-   count: integer;
-   who: string;
+   contests: TContestIdentityList;
+   k: integer;
+   obj: TContestBase;
 begin
    BeginTest('Test_EveryContestHasItsPinnedPrefixMultiplier');
+   (* THE LEGACY CONTESTS, FROZEN: HAS_PREFIX at every roster station. The
+      per-station counts (HAS_PREFIX_COUNT) and the count of contests with
+      one somewhere are deleted (Q108 S1): each restated the set beside it,
+      and a set edited by mistake fails here by name. *)
    checked := 0;
-   anywhere := [];
    for s := Low(TPinStation) to High(TPinStation) do
       begin
-      counted := 0;
       for c := Low(ContestType) to High(ContestType) do
          begin
-         if c in HAS_PREFIX[s] then
-            begin
-            Inc(counted);
-            end;
-         end;
-      CheckEquals(HAS_PREFIX_COUNT[s], counted, 'contests in the set for ' + STATIONS[s].Call);
-
-      for c := Low(ContestType) to High(ContestType) do
-         begin
-         station := PinStation(s, c);
-         who := string(ContestTypeSA[c]) + ' at ' + STATIONS[s].Call;
-         has := ProgramHas(c, station);
-         CheckTrue(has = (c in HAS_PREFIX[s]), who + ' has a prefix multiplier');
-         if has then
-            begin
-            Include(anywhere, c);
-            end
-         else
-            begin
-            (* THE INVARIANT: a key only where there is a prefix multiplier. *)
-            for q := Low(TPinQso) to High(TPinQso) do
-               begin
-               CheckFalse(ProgramKey(c, station, PinQso(q), key),
-                          who + ' gives no key working ' + QSOS[q].Call);
-               end;
-            end;
+         CheckTrue(ProgramHas(c, PinStation(s, c)) = (c in HAS_PREFIX[s]),
+                   string(ContestTypeSA[c]) + ' at ' + STATIONS[s].Call + ' has a prefix multiplier');
          Inc(checked);
          end;
       end;
-
-   (* EXACT: every contest at every roster station. *)
    CheckEquals((Ord(High(ContestType)) + 1) * (Ord(High(TPinStation)) + 1), checked,
                'contest x station answers compared');
 
-   (* THE 32 PREFIX CONTESTS, AND NO OTHER, HAVE ONE SOMEWHERE ON THE ROSTER
-      -- plan 1.1. *)
-   count := 0;
-   for c := Low(ContestType) to High(ContestType) do
+   (* THE INVARIANT, FOR EVERY REGISTERED CONTEST (Q108 S1): a key only where
+      there is a prefix multiplier. *)
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
       begin
-      if c in anywhere then
+      for s := Low(TPinStation) to High(TPinStation) do
          begin
-         Inc(count);
+         obj := NewContestLike(contests[k], PinStation(s, ContestOf(contests[k])));
+         try
+            if not ContestHasPrefixMultiplier(obj) then
+               begin
+               for q := Low(TPinQso) to High(TPinQso) do
+                  begin
+                  CheckFalse(ContestPrefixMultiplierKey(obj, PinQso(q), key),
+                             ContestWho(obj) + ' at ' + STATIONS[s].Call +
+                             ' gives no key working ' + QSOS[q].Call);
+                  end;
+               end;
+         finally
+            obj.Free;
+            end;
          end;
       end;
-   CheckEquals(32, count, 'contests with a prefix multiplier at some roster station');
 end;
 
 end.

@@ -61,7 +61,16 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   THE ARRAY IS INDEXED BY ContestType, so the compiler refuses a table with a
   row missing or extra, and each row carries its ContestTypeSA spelling
   (Token), so a row out of order fails by name rather than silently shifting
-  every value after it. *)
+  every value after it.
+
+  A FROZEN VALUE CHECK OVER THE LEGACY CONTESTS (Q108 S1, 2026-10-16,
+  design 8.2u). It covers every ContestType and never grows: a contest that
+  registers by its string id (Q108 S3) has no member, so no row here, and is
+  held instead by the registry walks -- Test_EveryClassStatesItsIdentity
+  above all. The two counts of 188 that stood at the foot of the test are
+  deleted: the array's index already demands a row per member, so a count
+  of them guarded nothing the compiler does not. Freezing the member list
+  itself is Q108 S3's Lint-FrozenContestNumbers, not a test. *)
 unit uTestContestIdentityPin;
 
 {$I ..\..\src\tr4w.inc}
@@ -899,10 +908,8 @@ begin
       Inc(checked);
       end;
 
-   (* EXACT: every ContestType, DUMMYCONTEST included. *)
-   CheckEquals(188, checked, 'contests whose identity was checked');
-   CheckEquals(188, Ord(High(ContestType)) + 1,
-               'ContestType members -- a new contest adds its row here, by hand');
+   (* EVERY ContestType, DUMMYCONTEST included -- derived, never typed. *)
+   CheckEquals(Ord(High(ContestType)) + 1, checked, 'every ContestType''s identity was checked');
 end;
 
 (* THE THREE CONTESTS WHOSE ADIF ID OR CABRILLO NAME NO MATRIX LINE HOLDS --

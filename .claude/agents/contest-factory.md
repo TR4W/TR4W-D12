@@ -175,6 +175,30 @@ the target shape, the M-step migration order and the open questions.
     history after the first `LoadinLog` (the `IntitialExLoaded` latch, F18).
     And `Doing*` is derived ONCE at start-up while a peer's run-time
     `CONTEST` re-runs `FoundContest` -- measured to diverge (F9).
+- **Q108 S1 IS BUILT (2026-10-16, design 8.2u): A CROSS-CONTEST INVARIANT
+  WALKS THE REGISTRY, A PIN WALKS THE ENUM, AND NO TEST KEEPS A COUNT.**
+  `uContestRegistry.RegisteredContests` answers the registered contests'
+  identity objects in registry order (unused by production); tests walk it
+  through `uTestRegisteredContests.ContestsToWalk` (raises below 100 --
+  an emptied registry cannot pass) or `IdentitiesToWalk` (with "no
+  contest"). `ContestOf` reads an object's legacy member (the property is
+  protected on purpose), `ContestWho` names it in a message, and
+  `ClassStatesItself` / `ClassOverridesTheBase` ask whether a class states a
+  virtual (the identity test's `GetterCode` technique, lifted, not copied).
+  `uTestContestStatesItsRules` holds every registered contest to stating its
+  Cabrillo columns, STX_STRING, parse format, received fields, `GetFlags`
+  and `CalculateQSOPoints` -- no exception was needed.
+  `Test_EveryDomesticFileAContestCanLoadExists` checks every `.dom` any
+  contest can load (and every `INCLUDE`) is in `target/dom`. The 35
+  hand-kept counts (`HAS_DX_COUNT`, `HAS_PREFIX_COUNT`, the zone totals, the
+  domestic `COUNTS`, `uTestExchangeRules`' `COUNTS`/`COUNT_ANYWHERE`, "24
+  parties split", "188 members", ...) are deleted or became the per-contest
+  assertion they stood for; **never add one back**. A new invariant walks
+  `ContestsToWalk`; a frozen pin over the legacy contests keeps its enum
+  walk. Until S3 a new contest still appends a member, so it still adds its
+  `IDENTITY_PINS` and `KIND_PINS` rows (the compiler insists) and joins the
+  pin units' sets wherever it differs from the base -- but it moves no
+  count. The measuring scripts are `tools/contest-factory-q108/`.
 - **A contest owns its bands: `TContestBase.UsesBand`** (base: every band).
   An off-band QSO is logged normally, scores 0 and earns no multiplier (NY4I,
   2026-10-01). It is asked through `ContestCreditsBand` at every place a QSO
@@ -248,8 +272,8 @@ the target shape, the M-step migration order and the open questions.
   A NEW DX contest overrides `HasDXMultiplier` AND `DXMultiplierKey` (and
   `CountryMode` if it counts DXCC only), adds rows to
   `uTestDXMultiplierKey`'s `KEY_PINS` (and `MODE_PINS`) and adds itself to
-  its `HAS_DX` sets: the counts (79 keyed and True somewhere, 36 ARRL, the
-  per-station `HAS_DX_COUNT`) then change by hand, with the reason.
+  its `HAS_DX` sets (and `ARRL_LIST_SOMEWHERE` if it chooses the ARRL
+  list). No count moves -- they were deleted at Q108 S1.
   `Test_EveryContestHasItsPinnedDXMultiplier` fails on a missing answer and
   on a key given where `HasDXMultiplier` is False. `LOGEDIT.DoingDXMults`
   is that answer for the active contest -- live, so F21 is closed; there is
@@ -271,12 +295,12 @@ the target shape, the M-step migration order and the open questions.
   renamed `CountsDXMultiplier` its DX answers also ask). A NEW zone contest
   overrides `ZoneMultiplierCount` (and `ZoneMultiplierZones` for CQ or ITU
   zones, `NumbersZonesFromZero` if zero-based), adds rows to
-  `uTestZoneMultiplier`'s `ZONE_PINS` and itself to its sets; the count of
-  20 then changes by hand, with the reason. It overrides
+  `uTestZoneMultiplier`'s `ZONE_PINS` and itself to its sets (no count
+  moves since Q108 S1). It overrides
   `HasZoneMultiplier` too -- True exactly where the count is above 0, an
   invariant `Test_EveryContestHasItsPinnedZoneMultiplier` asserts for every
-  contest at every station, with literal per-station totals (18; 20 at
-  JA) that change by hand. Where the entrant decides, it returns the SAME
+  registered contest at every station (a registry walk since Q108 S1).
+  Where the entrant decides, it returns the SAME
   predicate the count asks (JIDX: `IsJapaneseEntrant`).
   `LOGEDIT.DoingZoneMults` is that answer for the active contest; there is
   no session flag for it.
@@ -298,7 +322,7 @@ the target shape, the M-step migration order and the open questions.
   no letter, in WAG and the DARC 10 m -- F6, transcribed on purpose; the fix
   is `Result := ''` in both, in its own commit. A new contest with such a
   shape overrides the answers and adds rows to `uTestDomesticMultiplier`
-  (`KEY_PINS`, `HINT_PINS`, its sets; the counts 25 and 16 change by hand).
+  (`KEY_PINS`, `HINT_PINS`, its sets; no count, since Q108 S1).
 - **THE DOMESTIC FILE IS THE CLASS'S ANSWER TOO (M11 S6 part 1b,
   2026-10-14).** `UsesDomesticFile: boolean` (base False; nil-safe
   `ContestUsesDomesticFile`) is True for the 94 contests whose domestic QTH
@@ -308,7 +332,7 @@ the target shape, the M-step migration order and the open questions.
   uses for ARRL DX, JIDX, OK DX, UBA, the Ukrainian DX and YU DX. A new
   domestic-file contest overrides it (or inherits it from its family) and
   joins `uTestDomesticMultiplier`'s `DOMESTIC_FILE_EVERYWHERE` or
-  `PinnedUsesFile`; the per-station counts and the 94 change by hand. A
+  `PinnedUsesFile` (no count, since Q108 S1). A
   contest that answers True must state NO shape -- pinned. It CANNOT be
   derived from the domestic file name (plan 2.6).
 - **"DOES IT COUNT A DOMESTIC MULTIPLIER" IS THE CLASS'S (M11 S6 part 2,
@@ -365,8 +389,8 @@ the target shape, the M-step migration order and the open questions.
   recorded decision, not the ruling); nothing else does either -- 24 strip,
   23 split, at every station. A new QSO party inherits both or states both;
   never add a strip to a contest that is not a QSO party. A new contest with a rover or a blank exchange
-  overrides them and joins `uTestExchangeRules`' literal sets; the
-  per-station counts change by hand. The rover strip takes the contest the
+  overrides them and joins `uTestExchangeRules`' literal sets (its counts
+  went at Q108 S1). The rover strip takes the contest the
   rescore and the ADIF record parse already hold
   (`MainUnit.LocateCallStrippingRoverCounty`); a caller with none fetches it
   only for a call with a '/'.
@@ -525,8 +549,9 @@ the target shape, the M-step migration order and the open questions.
   it for the station's country, DX gets none (`uADIF.ADIFStateOfPartyQSO`
   composes it). CNTY: `WritesADIFCounty`, every state party but BC. D7's
   host-state-on-every-QSO and `GetStateForContest` are gone; a new QSO party
-  states both answers and joins `uTestContestExport`'s pins (the count 23
-  changes by hand). **THE TABLES ARE DELETED (M10 S8,
+  states both answers and joins `uTestContestExport`'s pins (no count:
+  STATE exactly where it splits a rover call is walked over the registry
+  since Q108 S1). **THE TABLES ARE DELETED (M10 S8,
   2026-10-14)** -- `ContestsArray`, `ContestsBooleanArray`, `QSOParties`,
   `TContestInfo` and the `ci*`/`*_BIT` constants; `ContestTypeSA` stays. The
   county-line import asks the party class (S7); the rover split on ADIF

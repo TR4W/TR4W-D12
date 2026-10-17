@@ -81,7 +81,9 @@ uses
    SysUtils, VC, uContestBase, uContestRegistry, uADIF,
    uARRLSections, uCabrilloExchange,
    (* TContestStateQSOPartyBase -- which contests are state parties (Q76). *)
-   uContestStateQSOPartyBase;
+   uContestStateQSOPartyBase,
+   (* ContestsToWalk -- the invariants walk the registry (Q108 S1). *)
+   uTestRegisteredContests;
 
 function EmptyQso(aContest: ContestType): ContestExchange;
 begin
@@ -831,47 +833,57 @@ end;
    party's host county is its HostState, a two-letter code. *)
 procedure TContestExportTests.Test_EveryPartyAndOnlyAPartyWritesAState;
 var
+   contests: TContestIdentityList;
+   k: integer;
    c: ContestType;
    identity: TContestBase;
    isStateParty: boolean;
    isParty: boolean;
-   parties: integer;
 begin
    BeginTest('Test_EveryPartyAndOnlyAPartyWritesAState');
-   parties := 0;
-   for c := Low(ContestType) to High(ContestType) do
+   (* AN INVARIANT OVER THE REGISTRY (Q108 S1), not a count: a contest writes
+      a worked station's STATE exactly where it is a QSO party, and "is a QSO
+      party" is the rover-split answer, which uTestContestFactory pins for
+      every legacy contest (ROVER_SPLIT_PARTIES). So a party that forgets one
+      of the two answers fails here, by name, and no number moves when a
+      party is added. *)
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
       begin
-      identity := ContestIdentity(c);
+      identity := contests[k];
+      c := ContestOf(identity);
       isStateParty := identity is TContestStateQSOPartyBase;
-      isParty := isStateParty or (c in [SEVENQP, NEWENGLANDQSO, IN7QPNE]);
+      isParty := identity.SplitsRoverCallOnExport;
+      CheckTrue(isParty or not isStateParty,
+                ContestWho(identity) + ': a state party is a QSO party');
       if isParty then
          begin
          CheckEquals('CT', GetADIFStateForQSO(PartyQSO(c, 'CT', 'Ct', 'K')),
-                     string(ContestTypeSA[c]) + ': a Connecticut station is CT');
-         inc(parties);
+                     ContestWho(identity) + ': a Connecticut station is CT');
          end
       else
          begin
          CheckEquals('', GetADIFStateForQSO(PartyQSO(c, 'CT', 'Ct', 'K')),
-                     string(ContestTypeSA[c]) + ': not a QSO party, no STATE');
+                     ContestWho(identity) + ': not a QSO party, no STATE');
          end;
 
       CheckEquals(Ord(isStateParty and (c <> BCQP)), Ord(identity.WritesADIFCounty),
-                  string(ContestTypeSA[c]) + ': CNTY exactly for the state parties but BC');
+                  ContestWho(identity) + ': CNTY exactly for the state parties but BC');
 
       if isStateParty then
          begin
          CheckEquals(2, Length(identity.HostState),
-                     string(ContestTypeSA[c]) + ': the host is a two-letter code');
+                     ContestWho(identity) + ': the host is a two-letter code');
          CheckEquals(identity.HostState,
                      GetADIFStateForQSO(PartyQSO(c, 'XYZ', 'Xyz', 'K')),
-                     string(ContestTypeSA[c]) + ': a host county is the host''s state');
+                     ContestWho(identity) + ': a host county is the host''s state');
          end;
       end;
-   (* The 21 state parties (Nebraska joined 2026-10-16) and the three
-      multi-state ones -- counted by hand, so a party added or lost is a
-      deliberate change here. *)
-   CheckEquals(24, parties, 'the QSO parties that write a worked station''s STATE');
+
+   (* The three multi-state parties, by name -- they are not on the base. *)
+   CheckTrue(ContestIdentity(SEVENQP).SplitsRoverCallOnExport, '7QP is a QSO party');
+   CheckTrue(ContestIdentity(NEWENGLANDQSO).SplitsRoverCallOnExport, 'New England is a QSO party');
+   CheckTrue(ContestIdentity(IN7QPNE).SplitsRoverCallOnExport, 'IN7QPNE is a QSO party');
 end;
 
 (* THE EXPORTED RECORD ITSELF: a worked BC station's QSO carries STATE:BC,

@@ -73,8 +73,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   edit that is not to one row. Regenerating the tables would turn the pin
   into a copy of whatever the classes say today.
 
-  A NEW CONTEST adds its row to KIND_PINS by hand (and, if it is a party,
-  its row to HOST_KIND_PINS), with the kinds its matrix record shows.
+  A NEW CONTEST WITH A ContestType MEMBER adds its row to KIND_PINS by hand
+  -- the array's index demands it -- (and, if it is a party, its row to
+  HOST_KIND_PINS), with the kinds its matrix record shows. No count moves:
+  the counts that stood beside the tables went at Q108 S1 (2026-10-16). A
+  contest registered by its string id (Q108 S3) has no member and no row;
+  this unit dies with the two kind enums at M11 in any case.
 
   WHAT IS NOT HERE. Stations the matrix does not run -- a JA, OK/OM, ON,
   Scandinavian, Russian, YB, PY, 9A, HB, EI, YU or UR entrant, an Asian or a
@@ -1347,10 +1351,10 @@ begin
    (* EXACT: every ContestType, DUMMYCONTEST included, two kinds at three
       stations (six until M11 S3 part 2, five until S4 part 2, four until
       S5 part 2, three until S6 part 2). *)
-   CheckEquals(188, contests, 'contests whose kinds were checked');
-   CheckEquals(188, Ord(High(ContestType)) + 1,
-               'ContestType members -- a new contest adds its row here, by hand');
-   CheckEquals(188 * 2 * 3, checked, 'kind assertions at us, ve and dx');
+   (* Derived, never typed (Q108 S1): KIND_PINS is indexed by ContestType,
+      so the compiler already demands a row per member. *)
+   CheckEquals(Ord(High(ContestType)) + 1, contests, 'contests whose kinds were checked');
+   CheckEquals(contests * 2 * 3, checked, 'kind assertions at us, ve and dx');
    (* THE STATION REACHES THE KINDS: at S0b these contests run another kind
       at one of us, ve and dx than at another -- ARRL160, ARRLDXCW,
       ARRLDXSSB, WAG, DARC10M. The rows determine this count, so it cannot
@@ -1420,8 +1424,10 @@ begin
          end;
       end;
 
-   CheckEquals(23, parties, 'parties -- a new party adds its us-host row here, by hand');
-   CheckEquals(23 * 2, checked, 'kind assertions at us-host');
+   (* NO COUNT OF PARTIES (Q108 S1): the loop above already fails, by name,
+      for a party with no us-host row and for a row that is no party's. *)
+   CheckTrue(parties > 0, 'some contest is a QSO party');
+   CheckEquals(parties * 2, checked, 'kind assertions at us-host');
    (* IN THE HOST STATE THE KINDS DIFFER FROM THE us STATION'S for these
       parties at S0b -- ArizonaQsoParty, CALQSOPARTY, SALMONRUN, SEVENQP,
       TEXASQSOPARTY. It was 6 until M11 S4 part 2 removed the DX column:

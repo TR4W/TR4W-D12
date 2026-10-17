@@ -105,7 +105,9 @@ uses
    uContestBase,
    uContestRegistry,
    uTestContestObjects,
-   uTestContestKindPin;
+   uTestContestKindPin,
+   (* ContestsToWalk -- the invariants walk the registry (Q108 S1). *)
+   uTestRegisteredContests;
 
 type
    (* The entrants. us, ve and dx are the matrix's (dx is German); host is a
@@ -179,6 +181,13 @@ const
    GRID_FIELD_CONTESTS = [CUPRFCW, CUPRFSSB, TOEC, WWDIGI, WWL];
    WYSIWYG_EVERYWHERE = [ARKTIKA_SPRING, BSCI, DARCXMAS, GAGARINCUP, GRIDLOC,
                          IARU, OZCR_Z, UA4WCHAMPIONSHIP, WRTC];
+
+   (* THE CONTESTS THAT STATE A SHAPE OF THEIR OWN AT SOME STATION -- the
+      three sets above and the four whose shape has no flag (the ALRS cup,
+      the DARC 10 m, the RSGB IOTA, RDA) and WAG; the same sets
+      PinnedHasDomestic reads, so never a second list. *)
+   SHAPE_SOMEWHERE = GRID_SQUARE_CONTESTS + GRID_FIELD_CONTESTS + WYSIWYG_EVERYWHERE +
+                     [ALRS_UA1DZ_CUP, DARC10M, IOTA, RDA, WAG];
 
    (* THE CONTESTS WHOSE DOMESTIC QTH IS LOOKED UP IN THEIR DOMESTIC FILE AT
       EVERY STATION -- M11 S6 part 1b. 85 of the 94 that do at some station;
@@ -683,63 +692,25 @@ begin
 end;
 
 procedure TDomesticMultiplierTests.Test_EveryContestStatesItsPinnedDomesticFileAnswer;
-const
-   (* HOW MANY CONTESTS LOOK THEIR DOMESTIC QTH UP IN A FILE AT EACH STATION,
-      counted by hand: the 85, plus each station-dependent one whose
-      entrant test passes there. The matrix agrees at us, ve and dx (92, 92,
-      94 DomesticFile records). EVERY COUNT ROSE BY ONE ON 2026-10-16, BY
-      HAND: the Nebraska QSO Party, a new state party (design Q105), uses
-      its county files at every station. *)
-   COUNTS: array[TPinStation] of integer = (
-      93,    (* us -- not ARRL DX *)
-      93,    (* ve *)
-      95,    (* dx (DL) -- all nine *)
-      93,    (* host (K) *)
-      95,    (* UA *)
-      95,    (* UA1 *)
-      93,    (* JA -- not JIDX *)
-      94,    (* OK -- not OK DX *)
-      93,    (* ON -- not the two UBA *)
-      94,    (* UR -- not the Ukrainian DX *)
-      94     (* YU -- not YU DX *)
-   );
 var
    c: ContestType;
    s: TPinStation;
-   answer: boolean;
-   count: integer;
-   anywhere: set of ContestType;
-   total: integer;
 begin
    BeginTest('Test_EveryContestStatesItsPinnedDomesticFileAnswer');
-   anywhere := [];
+   (* THE LEGACY CONTESTS, FROZEN: PinnedUsesFile, contest by contest, at
+      every roster station. The per-station counts (93 to 95) and the count
+      at some station (95) that stood beside it are deleted (Q108 S1): each
+      restated the set, and moved by hand with every domestic-file contest
+      added. A contest that gains or loses its file fails here by name. *)
    for s := Low(TPinStation) to High(TPinStation) do
       begin
-      count := 0;
       for c := Low(ContestType) to High(ContestType) do
          begin
-         answer := ProgramUsesFile(c, PinStation(s, c));
-         CheckEquals(BoolToStr(PinnedUsesFile(c, s), True), BoolToStr(answer, True),
+         CheckEquals(BoolToStr(PinnedUsesFile(c, s), True),
+                     BoolToStr(ProgramUsesFile(c, PinStation(s, c)), True),
                      Who(c, s) + ' uses its domestic file');
-         if answer then
-            begin
-            Inc(count);
-            Include(anywhere, c);
-            end;
-         end;
-      CheckEquals(COUNTS[s], count, 'contests using a domestic file at ' + STATIONS[s].Call);
-      end;
-
-   (* 94 AT SOME STATION -- plan 2.6; 95 since Nebraska (2026-10-16). *)
-   total := 0;
-   for c := Low(ContestType) to High(ContestType) do
-      begin
-      if c in anywhere then
-         begin
-         Inc(total);
          end;
       end;
-   CheckEquals(95, total, 'contests using a domestic file at some roster station');
 end;
 
 (* A CONTEST THAT LOOKS ITS QTH UP IN THE FILE STATES NO SHAPE -- the two
@@ -748,6 +719,8 @@ end;
    four shape flags is set. *)
 procedure TDomesticMultiplierTests.Test_ADomesticFileContestStatesNoShape;
 var
+   q108Contests: TContestIdentityList;
+   k: integer;
    c: ContestType;
    s: TPinStation;
    t: TPinText;
@@ -757,8 +730,12 @@ var
 begin
    BeginTest('Test_ADomesticFileContestStatesNoShape');
    checked := 0;
-   for c := Low(ContestType) to High(ContestType) do
+   (* EVERY REGISTERED CONTEST, BY THE REGISTRY -- an invariant, so a
+      contest registered by its id is held to it too (Q108 S1). *)
+   q108Contests := ContestsToWalk;
+   for k := 0 to High(q108Contests) do
       begin
+      c := ContestOf(q108Contests[k]);
       for s := Low(TPinStation) to High(TPinStation) do
          begin
          station := PinStation(s, c);
@@ -810,44 +787,25 @@ end;
    It replaces the session's `kind <> NoDomesticMults`. The counts at us, ve
    and dx are the frozen matrix's (117, 117, 118 variants whose
    doing.domestic word is TRUE); a script predicted all 580 frozen variants
-   from the classes' source with 0 mismatches before the kind went. Every
-   count rose by one on 2026-10-16, by hand: the Nebraska QSO Party's file. *)
+   from the classes' source with 0 mismatches before the kind went. The
+   per-station counts that stood here went at Q108 S1 (2026-10-16). *)
 procedure TDomesticMultiplierTests.Test_EveryContestHasItsPinnedDomesticMultiplier;
-const
-   COUNTS: array[TPinStation] of integer = (
-      118,   (* us -- 93 file, 25 shape *)
-      118,   (* ve *)
-      119,   (* dx (DL) -- 95 file, 24 shape: not WAG *)
-      118,   (* host *)
-      120,   (* UA *)
-      120,   (* UA1 *)
-      118,   (* JA *)
-      119,   (* OK *)
-      118,   (* ON *)
-      119,   (* UR *)
-      119    (* YU *)
-   );
 var
    c: ContestType;
    s: TPinStation;
-   answer: boolean;
-   count: integer;
 begin
    BeginTest('Test_EveryContestHasItsPinnedDomesticMultiplier');
+   (* THE LEGACY CONTESTS, FROZEN: PinnedHasDomestic at every roster station.
+      The per-station counts (118 to 120) are deleted (Q108 S1): they
+      restated PinnedHasDomestic, which fails here by name. *)
    for s := Low(TPinStation) to High(TPinStation) do
       begin
-      count := 0;
       for c := Low(ContestType) to High(ContestType) do
          begin
-         answer := ProgramHasDomestic(c, PinStation(s, c));
-         CheckEquals(BoolToStr(PinnedHasDomestic(c, s), True), BoolToStr(answer, True),
+         CheckEquals(BoolToStr(PinnedHasDomestic(c, s), True),
+                     BoolToStr(ProgramHasDomestic(c, PinStation(s, c)), True),
                      Who(c, s) + ' has a domestic multiplier');
-         if answer then
-            begin
-            Inc(count);
-            end;
          end;
-      CheckEquals(COUNTS[s], count, 'contests with a domestic multiplier at ' + STATIONS[s].Call);
       end;
 end;
 
@@ -860,6 +818,8 @@ end;
    10 m) cannot drift from the shape answers. *)
 procedure TDomesticMultiplierTests.Test_ADomesticMultiplierIsWhereAQTHIsRead;
 var
+   contests: TContestIdentityList;
+   k: integer;
    c: ContestType;
    s: TPinStation;
    t: TPinText;
@@ -869,8 +829,12 @@ var
 begin
    BeginTest('Test_ADomesticMultiplierIsWhereAQTHIsRead');
    checked := 0;
-   for c := Low(ContestType) to High(ContestType) do
+   (* EVERY REGISTERED CONTEST, BY THE REGISTRY -- an invariant, so a
+      contest registered by its id is held to it too (Q108 S1). *)
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
       begin
+      c := ContestOf(contests[k]);
       for s := Low(TPinStation) to High(TPinStation) do
          begin
          station := PinStation(s, c);
@@ -887,8 +851,8 @@ begin
          Inc(checked);
          end;
       end;
-   CheckEquals((Ord(High(ContestType)) + 1) * (Ord(High(TPinStation)) + 1), checked,
-               'contest x station domestic answers compared');
+   CheckEquals(Length(contests) * (Ord(High(TPinStation)) + 1), checked,
+               'registered contest x station domestic answers compared');
 end;
 
 procedure TDomesticMultiplierTests.RunAllTests;
@@ -908,7 +872,6 @@ var
    i: integer;
    pin: TKeyPin;
    decided: set of ContestType;
-   count: integer;
    c: ContestType;
 begin
    BeginTest('Test_EveryContestGivesItsPinnedDomesticKey');
@@ -927,16 +890,14 @@ begin
       end;
 
    (* EVERY CONTEST WHOSE DOMESTIC QTH IS NOT A FILE LOOKUP HAS A ROW THAT
-      DECIDES -- 25, plan S6. *)
-   count := 0;
+      DECIDES, AND NO OTHER -- contest by contest, against the shape sets
+      PinnedHasDomestic reads. What the hand-kept count of them (25, plan S6)
+      stood for until Q108 S1 deleted it. *)
    for c := Low(ContestType) to High(ContestType) do
       begin
-      if c in decided then
-         begin
-         Inc(count);
-         end;
+      CheckTrue((c in decided) = (c in SHAPE_SOMEWHERE),
+                string(ContestTypeSA[c]) + ': a deciding key row exactly where it states a shape');
       end;
-   CheckEquals(25, count, 'contests with a pinned domestic answer of their own');
 end;
 
 procedure TDomesticMultiplierTests.Test_EveryContestGivesItsPinnedHint;
@@ -956,48 +917,27 @@ begin
 end;
 
 procedure TDomesticMultiplierTests.Test_EveryContestStatesItsPinnedDomesticAnswers;
-const
-   (* HOW MANY CONTESTS ANSWER EACH FLAG AT EACH STATION -- counted by hand
-      from the sets above, so a contest that gains a flag fails here even
-      if the sets were edited with it. *)
-   COUNTS: array[TPinStation, TPinFlag] of integer = (
-      (6, 5, 10, 1),     (* us   *)
-      (6, 5, 10, 1),     (* ve   *)
-      (6, 5, 11, 1),     (* dx -- the DARC 10 m is WYSIWYG for a German *)
-      (6, 5, 10, 1),     (* host *)
-      (6, 5,  9, 2),     (* UA -- the ALRS cup counts RDA districts *)
-      (6, 5, 10, 1),     (* UA1 *)
-      (6, 5, 10, 1),     (* JA *)
-      (6, 5, 10, 1),     (* OK *)
-      (6, 5, 10, 1),     (* ON *)
-      (6, 5, 10, 1),     (* UR *)
-      (6, 5, 10, 1)      (* YU *)
-   );
 var
    c: ContestType;
    s: TPinStation;
    f: TPinFlag;
-   answer: boolean;
-   count: integer;
 begin
    BeginTest('Test_EveryContestStatesItsPinnedDomesticAnswers');
+   (* THE LEGACY CONTESTS, FROZEN: PinnedFlag for every flag at every roster
+      station. The table of how many contests answered each flag at each
+      station is deleted (Q108 S1): it was counted from the sets PinnedFlag
+      reads, so it restated them, and a contest that gains a flag fails
+      here by name. *)
    for s := Low(TPinStation) to High(TPinStation) do
       begin
       for f := Low(TPinFlag) to High(TPinFlag) do
          begin
-         count := 0;
          for c := Low(ContestType) to High(ContestType) do
             begin
-            answer := ProgramFlag(c, PinStation(s, c), f);
-            CheckEquals(BoolToStr(PinnedFlag(c, s, f), True), BoolToStr(answer, True),
+            CheckEquals(BoolToStr(PinnedFlag(c, s, f), True),
+                        BoolToStr(ProgramFlag(c, PinStation(s, c), f), True),
                         Who(c, s) + ' ' + FLAG_NAMES[f]);
-            if answer then
-               begin
-               Inc(count);
-               end;
             end;
-         CheckEquals(COUNTS[s, f], count,
-                     'contests answering ' + FLAG_NAMES[f] + ' at ' + STATIONS[s].Call);
          end;
       end;
 end;

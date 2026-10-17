@@ -107,7 +107,9 @@ uses
    uContestBase,
    uContestRegistry,
    uTestContestObjects,
-   uTestContestKindPin;
+   uTestContestKindPin,
+   (* ContestsToWalk -- the invariant walks the registry (Q108 S1). *)
+   uTestRegisteredContests;
 
 type
    (* The entrants. us, ve and dx are the matrix's; host is a New England
@@ -360,7 +362,6 @@ var
    pin: TZonePin;
    station: TStationContext;
    named: set of ContestType;
-   count: integer;
    c: ContestType;
 begin
    BeginTest('Test_EveryZoneContestGivesItsPinnedAnswers');
@@ -386,16 +387,15 @@ begin
          end;
       end;
 
-   (* EVERY ZONE CONTEST HAS A ROW THAT COUNTS ZONES -- 20, plan S5. *)
-   count := 0;
+   (* EVERY ZONE CONTEST HAS A ROW THAT COUNTS ZONES, AND NOTHING ELSE DOES
+      -- contest by contest, against the literal sets. What the hand-kept
+      count of them (20, plan S5) stood for until Q108 S1 deleted it. *)
    for c := Low(ContestType) to High(ContestType) do
       begin
-      if c in named then
-         begin
-         Inc(count);
-         end;
+      CheckTrue((c in named) = (c in CQ_EVERYWHERE + CQ_FOR_JA_ONLY + ITU_EVERYWHERE +
+                                    YEAR_EVERYWHERE + BRANCH_EVERYWHERE + RF_EVERYWHERE),
+                string(ContestTypeSA[c]) + ': a zone row exactly where it counts zones somewhere');
       end;
-   CheckEquals(20, count, 'contests with a pinned zone multiplier');
 end;
 
 procedure TZoneMultiplierTests.Test_EveryContestHasItsPinnedZoneMultiplier;
@@ -405,19 +405,18 @@ var
    station: TStationContext;
    wantCount: integer;
    wantZones: string;
-   has: boolean;
-   counted: set of ContestType;
    checked: integer;
-   count: integer;
-   hasAt: array[TPinStation] of integer;
+   contests: TContestIdentityList;
+   k: integer;
+   obj: TContestBase;
 begin
    BeginTest('Test_EveryContestHasItsPinnedZoneMultiplier');
-   counted := [];
+   (* THE LEGACY CONTESTS, FROZEN: the literal sets, at every roster station,
+      contest by contest. The per-station counts of contests with a zone
+      multiplier and the count of those that count zones anywhere are
+      deleted (Q108 S1): each restated the sets above it, and a contest that
+      gains or loses one fails here by name. *)
    checked := 0;
-   for s := Low(TPinStation) to High(TPinStation) do
-      begin
-      hasAt[s] := 0;
-      end;
    for c := Low(ContestType) to High(ContestType) do
       begin
       for s := Low(TPinStation) to High(TPinStation) do
@@ -454,52 +453,33 @@ begin
          CheckEquals(BoolToStr(c in YEAR_EVERYWHERE, True),
                      BoolToStr(ProgramFromZero(c, station), True),
                      Who(c, s) + ' numbered from zero');
-
-         (* WHETHER IT HAS ONE AT ALL -- S5 part 2: the literal sets say so,
-            and the INVARIANT ties the answer to the count, so the two
-            statements a class makes cannot drift apart. *)
-         has := ProgramHas(c, station);
-         CheckEquals(BoolToStr(wantCount > 0, True), BoolToStr(has, True),
+         CheckEquals(BoolToStr(wantCount > 0, True), BoolToStr(ProgramHas(c, station), True),
                      Who(c, s) + ' has a zone multiplier');
-         CheckEquals(BoolToStr(ProgramCount(c, station) > 0, True), BoolToStr(has, True),
-                     Who(c, s) + ' has a zone multiplier exactly where it counts zones');
-         if has then
-            begin
-            Inc(hasAt[s]);
-            end;
-
-         if ProgramCount(c, station) > 0 then
-            begin
-            Include(counted, c);
-            end;
          Inc(checked);
          end;
       end;
-
-   (* HOW MANY CONTESTS HAVE A ZONE MULTIPLIER AT EACH STATION -- literal:
-      18 everywhere (the kind pin's us/ve/dx column), 20 at the JA station,
-      where JIDX CW and SSB join. *)
-   CheckEquals(18, hasAt[psUS], 'contests with a zone multiplier at us');
-   CheckEquals(18, hasAt[psVE], 'contests with a zone multiplier at ve');
-   CheckEquals(18, hasAt[psDX], 'contests with a zone multiplier at dx');
-   CheckEquals(18, hasAt[psHost], 'contests with a zone multiplier at host');
-   CheckEquals(20, hasAt[psJA], 'contests with a zone multiplier at JA');
-   CheckEquals(18, hasAt[ps9A], 'contests with a zone multiplier at 9A');
-   CheckEquals(18, hasAt[psUA], 'contests with a zone multiplier at UA');
-
    CheckEquals((Ord(High(ContestType)) + 1) * (Ord(High(TPinStation)) + 1), checked,
                'contest x station zone answers compared');
 
-   (* EXACTLY 20 CONTESTS COUNT ZONES ANYWHERE ON THE ROSTER. *)
-   count := 0;
-   for c := Low(ContestType) to High(ContestType) do
+   (* THE INVARIANT, FOR EVERY REGISTERED CONTEST AT EVERY ROSTER STATION
+      (Q108 S1): it has a zone multiplier exactly where it counts zones, so
+      the two statements a class makes cannot drift apart. *)
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
       begin
-      if c in counted then
+      for s := Low(TPinStation) to High(TPinStation) do
          begin
-         Inc(count);
+         obj := NewContestLike(contests[k], PinStation(s, ContestOf(contests[k])));
+         try
+            CheckEquals(BoolToStr(ContestZoneMultiplierCount(obj) > 0, True),
+                        BoolToStr(ContestHasZoneMultiplier(obj), True),
+                        ContestWho(obj) + ' at ' + STATIONS[s].Call +
+                        ' has a zone multiplier exactly where it counts zones');
+         finally
+            obj.Free;
+            end;
          end;
       end;
-   CheckEquals(20, count, 'contests that count zones at some roster station');
 end;
 
 (* PLAN F5, OPEN QUESTION Q95 -- see the unit header. Two facts per contest,

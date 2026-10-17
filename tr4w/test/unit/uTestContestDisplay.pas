@@ -87,7 +87,9 @@ uses
    uExchangeBuilder,
    (* BuildSingleQsoCabrilloLine -- HamScore's one-QSO line (Q54). *)
    uCabrillo,
-   uTestContestObjects;
+   uTestContestObjects,
+   (* ContestsToWalk, ContestWho, ClassStatesItself -- Q108 S1. *)
+   uTestRegisteredContests;
 
 (* ------------------------------------------------------------------------ *)
 (* THE NEW CONTEST PROMPTS                                                   *)
@@ -1453,20 +1455,21 @@ end;
 procedure TContestDisplayTests.Test_SetUpNeverWritesMyState;
 var
    stations: array[0..2] of TStationContext;
-   c: ContestType;
-   i: integer;
+   contests: TContestIdentityList;
+   k, i: integer;
    obj: TContestBase;
    session: TSessionDefaults;
    saved: string;
    who: string;
 
-   (* What one contest's set-up does to MY STATE, and what it sends. *)
-   procedure SetUpFor(aContest: ContestType; const aStation: TStationContext;
-                   out aSent: string; out aStated: boolean);
+   (* What one contest's set-up does to MY STATE, and what it sends. aObj is
+      a contest object of the test's own, and is freed here. *)
+   procedure SetUpWith(aObj: TContestBase; const aStation: TStationContext;
+                       out aSent: string; out aStated: boolean);
    begin
       Settings.My.State := aStation.MyState;
       ClearContestSentState;
-      obj := Make(aContest);
+      obj := aObj;
       session := TSessionDefaults.Create;
       try
          obj.DescribeSession(aStation, session);
@@ -1479,6 +1482,12 @@ var
       aSent := SentMyState;
    end;
 
+   procedure SetUpFor(aContest: ContestType; const aStation: TStationContext;
+                      out aSent: string; out aStated: boolean);
+   begin
+      SetUpWith(Make(aContest), aStation, aSent, aStated);
+   end;
+
 var
    sent: string;
    stated: boolean;
@@ -1489,18 +1498,28 @@ begin
    stations[2] := Station('DL1AAA', 'DL', '', 'JO62');
    saved := Settings.My.State;
    try
-      for c := Low(ContestType) to High(ContestType) do
+      (* AN INVARIANT, SO IT WALKS THE REGISTRY (Q108 S1): no contest's set-up
+         writes MY STATE, and one that states no SentState sends MY STATE. *)
+      contests := ContestsToWalk;
+      for k := 0 to High(contests) do
          begin
          for i := Low(stations) to High(stations) do
             begin
-            who := string(ContestTypeSA[c]) + ' for ' + stations[i].MyCall;
-            SetUpFor(c, stations[i], sent, stated);
+            who := ContestWho(contests[k]) + ' for ' + stations[i].MyCall;
+            SetUpWith(NewContestLike(contests[k], NoStation), stations[i], sent, stated);
             CheckEquals(stations[i].MyState, Settings.My.State, who + ': MY STATE is untouched');
             if not stated then
                begin
                CheckEquals(stations[i].MyState, sent, who + ': sends MY STATE');
                end;
             end;
+         end;
+      (* AND "NO CONTEST", WHICH HAS NO CLASS: the base states nothing. *)
+      for i := Low(stations) to High(stations) do
+         begin
+         SetUpFor(DUMMYCONTEST, stations[i], sent, stated);
+         CheckEquals(stations[i].MyState, Settings.My.State, 'no contest: MY STATE is untouched');
+         CheckTrue((not stated) and (sent = stations[i].MyState), 'no contest: sends MY STATE');
          end;
 
       (* THE SEVEN THAT STATE ONE, side by side. *)
@@ -1539,30 +1558,32 @@ end;
 type
    (* THE PROTECTED GETTERS, REACHED THE WAY A DESCENDANT REACHES THEM -- the
       only way to ask WHICH CLASS SUPPLIES a getter without a flag in every
-      class to keep in step. *)
+      class to keep in step. The comparison itself is
+      uTestRegisteredContests.ClassStatesItself (Q108 S1). *)
    TIdentityCracker = class(TContestBase);
    TIdentityGetter = function: string of object;
-   TIdentityGetterKind = (igDisplay, igCabrillo, igADIF);
 
-function GetterCode(aObj: TContestBase; aKind: TIdentityGetterKind): CodePointer;
+function DisplayNameCode(aObj: TContestBase): CodePointer;
 var
    getter: TIdentityGetter;
 begin
-   getter := nil;
-   case aKind of
-      igDisplay:
-         begin
-         getter := TIdentityCracker(aObj).GetDisplayName;
-         end;
-      igCabrillo:
-         begin
-         getter := TIdentityCracker(aObj).GetCabrilloName;
-         end;
-      igADIF:
-         begin
-         getter := TIdentityCracker(aObj).GetADIFContestId;
-         end;
-   end;
+   getter := TIdentityCracker(aObj).GetDisplayName;
+   Result := TMethod(getter).Code;
+end;
+
+function CabrilloNameCode(aObj: TContestBase): CodePointer;
+var
+   getter: TIdentityGetter;
+begin
+   getter := TIdentityCracker(aObj).GetCabrilloName;
+   Result := TMethod(getter).Code;
+end;
+
+function ADIFContestIdCode(aObj: TContestBase): CodePointer;
+var
+   getter: TIdentityGetter;
+begin
+   getter := TIdentityCracker(aObj).GetADIFContestId;
    Result := TMethod(getter).Code;
 end;
 
@@ -1600,65 +1621,58 @@ begin
 end;
 
 procedure TContestDisplayTests.Test_EveryClassStatesItsIdentity;
-var
-   c: ContestType;
-   cls: TContestClass;
-   obj, parent: TContestBase;
-   kind: TIdentityGetterKind;
-   who: string;
-   classes: integer;
 const
-   KIND_NAMES: array[TIdentityGetterKind] of string =
-      ('DisplayName', 'CabrilloName', 'ADIFContestId');
+   KIND_NAMES: array[0..2] of string = ('DisplayName', 'CabrilloName', 'ADIFContestId');
+var
+   contests: TContestIdentityList;
+   codeOf: array[0..2] of TContestMethodCode;
+   k, kind: integer;
+   obj, parent: TContestBase;
+   who: string;
 begin
    BeginTest('Test_EveryClassStatesItsIdentity');
-   classes := 0;
-   for c := Low(ContestType) to High(ContestType) do
-      begin
-      cls := ContestClassFor(c);
-      if cls = nil then
-         begin
-         Continue;
-         end;
-      inc(classes);
-      who := string(ContestTypeSA[c]) + ' (' + cls.ClassName + ')';
-      obj := cls.Create(c);
-      parent := TContestClass(cls.ClassParent).Create(c);
-      try
-         (* STATED IN THE CLASS ITSELF: the getter is not the one its parent
-            supplies -- a family base stating a name for its members would
-            give two contests one name. *)
-         for kind := Low(TIdentityGetterKind) to High(TIdentityGetterKind) do
-            begin
-            CheckTrue(GetterCode(obj, kind) <> GetterCode(parent, kind),
-                      who + ' states its ' + KIND_NAMES[kind]);
-            end;
+   codeOf[0] := DisplayNameCode;
+   codeOf[1] := CabrilloNameCode;
+   codeOf[2] := ADIFContestIdCode;
 
-         CheckTrue(obj.DisplayName <> '', who + ': a display name');
-         (* THE HUMAN NAME: the friendly name where the contest has one. *)
-         if obj.FriendlyName <> string(ContestTypeSA[c]) then
-            begin
-            CheckEquals(obj.FriendlyName, obj.DisplayName, who + ': display name is the friendly name');
-            end;
-         CheckEquals(Ord(IsEnumSpelledDisplayName(c)),
-                     Ord(obj.DisplayName = string(ContestTypeSA[c])),
-                     who + ': display name is the enum spelling only where listed');
-      finally
-         parent.Free;
-         obj.Free;
+   (* EVERY REGISTERED CONTEST, by the registry (Q108 S1), so a contest
+      registered by its id is asked too. *)
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
+      begin
+      obj := contests[k];
+      who := ContestWho(obj);
+      (* STATED IN THE CLASS ITSELF: the getter is not the one its parent
+         supplies -- a family base stating a name for its members would give
+         two contests one name. *)
+      for kind := Low(codeOf) to High(codeOf) do
+         begin
+         CheckTrue(ClassStatesItself(obj, codeOf[kind]), who + ' states its ' + KIND_NAMES[kind]);
          end;
+
+      CheckTrue(obj.DisplayName <> '', who + ': a display name');
+      (* THE HUMAN NAME: the friendly name where the contest has one. *)
+      if obj.FriendlyName <> string(ContestTypeSA[ContestOf(obj)]) then
+         begin
+         CheckEquals(obj.FriendlyName, obj.DisplayName, who + ': display name is the friendly name');
+         end;
+      CheckEquals(Ord(IsEnumSpelledDisplayName(ContestOf(obj))),
+                  Ord(obj.DisplayName = string(ContestTypeSA[ContestOf(obj)])),
+                  who + ': display name is the enum spelling only where listed');
       end;
-   CheckEquals(RegisteredContestCount, classes, 'every registered class was asked');
 
    (* THE CHECK CAN FAIL -- a negative control. The ARRL DX family base states
       no display name, so it answers with TContestBase's getter, and the
       comparison above must see them as the same. *)
-   cls := TContestClass(ContestClassFor(ARRLDXCW).ClassParent);
-   obj := cls.Create(ARRLDXCW);
+   obj := TContestClass(ContestClassFor(ARRLDXCW).ClassParent).Create(ARRLDXCW);
    parent := TContestBase.Create(ARRLDXCW);
    try
-      CheckTrue(GetterCode(obj, igDisplay) = GetterCode(parent, igDisplay),
-                'a class that states no display name is seen not to');
+      CheckFalse(ClassStatesItself(obj, DisplayNameCode),
+                 'a class that states no display name is seen not to');
+      CheckFalse(ClassOverridesTheBase(obj, DisplayNameCode),
+                 'and is seen to run the base''s getter');
+      CheckTrue(DisplayNameCode(obj) = DisplayNameCode(parent),
+                'the same code as a plain TContestBase');
    finally
       parent.Free;
       obj.Free;

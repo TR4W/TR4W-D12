@@ -409,10 +409,8 @@ var
    c: ContestType;
    s: TPinStation;
    station: TStationContext;
-   shown: integer;
 begin
    BeginTest('Test_EveryContestShowsItsPinnedColumns');
-   shown := 0;
    for c := Low(ContestType) to High(ContestType) do
       begin
       for s := Low(TPinStation) to High(TPinStation) do
@@ -422,25 +420,19 @@ begin
                      Who(c, s) + ' Precedence column');
          CheckTrue(PinnedColumns(c) = ProgramCheckColumn(c, station),
                      Who(c, s) + ' Check column');
-         if ProgramCheckColumn(c, station) then
-            begin
-            Inc(shown);
-            end;
          end;
       end;
-   (* Two contests at seven stations. *)
-   CheckEquals(14, shown, 'contest x station pairs showing the Sweepstakes columns');
+   (* NO COUNT OF THE PAIRS SHOWING THEM (Q108 S1): it was the two contests
+      PinnedColumns names, at every station, restated. *)
 end;
 
 procedure TExchangeKindReadersTests.Test_EveryContestWritesItsPinnedExchangeMessages;
 var
    c: ContestType;
    s: TPinStation;
-   writing: integer;
    checked: integer;
 begin
    BeginTest('Test_EveryContestWritesItsPinnedExchangeMessages');
-   writing := 0;
    checked := 0;
    for c := Low(ContestType) to High(ContestType) do
       begin
@@ -450,26 +442,21 @@ begin
                      Who(c, s) + ' default exchange messages');
          Inc(checked);
          end;
-      if PinnedMessages(c, psDX) <> '' then
-         begin
-         Inc(writing);
-         end;
       end;
    CheckEquals((Ord(High(ContestType)) + 1) * (Ord(High(TPinStation)) + 1), checked,
                'contest x station message sets pinned');
-   (* 93 contests write a set at some station, and every one of them writes
-      it at the German station -- the station-dependent ones included. *)
-   CheckEquals(93, writing, 'contests writing a set at the DX station');
+   (* NO COUNT OF THE CONTESTS WRITING A SET (Q108 S1): it was 93, counted
+      from PinnedMessages itself, so it restated the pins above. *)
 end;
 
 procedure TExchangeKindReadersTests.Test_EveryContestStatesItsPinnedGridReading;
 var
    c: ContestType;
    s: TPinStation;
-   reading: integer;
 begin
    BeginTest('Test_EveryContestStatesItsPinnedGridReading');
-   reading := 0;
+   (* THE LEGACY CONTESTS, FROZEN: PinnedGrid, contest by contest. The count
+      of contests it names (18) is deleted (Q108 S1) -- it restated the set. *)
    for c := Low(ContestType) to High(ContestType) do
       begin
       for s := Low(TPinStation) to High(TPinStation) do
@@ -477,12 +464,7 @@ begin
          CheckTrue(PinnedGrid(c) = ProgramGrid(c, PinStation(s, c)),
                      Who(c, s) + ' exchange word may be a grid');
          end;
-      if PinnedGrid(c) then
-         begin
-         Inc(reading);
-         end;
       end;
-   CheckEquals(18, reading, 'contests whose exchange word may be a grid');
 end;
 
 (* THE CROSS-CHECKS: the program's answers against the frozen tests on the

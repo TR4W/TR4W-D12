@@ -48,6 +48,13 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   same rule as Delaware's. It joins HAS_DX at psHost (whose count rises by
   one), and its KEY_PINS and MODE_PINS rows are Delaware's shape.
 
+  NO COUNT SINCE Q108 S1 (2026-10-16): HAS_DX_COUNT, the count of keyed
+  contests and the count choosing the ARRL list are deleted. Each restated a
+  set, so the sets are asserted contest by contest instead (a key row
+  exactly where HAS_DX has the contest somewhere; ARRL_LIST_SOMEWHERE), and
+  the "no key without a DX multiplier" invariant walks the REGISTRY, so a
+  contest registered by its string id is held to it too.
+
   HOW THE LITERALS WERE MADE. Written by hand from the old code, then RUN
   GREEN AGAINST THE OLD CODE before anything moved: the program's own case
   and set and filters, frozen here (Legacy...OfKind, deleted at part 2),
@@ -110,7 +117,9 @@ uses
    uContestBase,
    uContestRegistry,
    uTestContestObjects,
-   uTestContestKindPin;
+   uTestContestKindPin,
+   (* ContestsToWalk -- the invariant walks the registry (Q108 S1). *)
+   uTestRegisteredContests;
 
 type
    (* The entrants. us, ve and dx are the matrix's; host is a New England
@@ -539,10 +548,17 @@ const
       (* psEI EI2AAA *)  DX_EVERYWHERE + [ALRS_UA1DZ_CUP]
    );
 
-   (* How many contests each set holds -- stated so a set edited by mistake
-      fails by count as well as by name. *)
-   HAS_DX_COUNT: array[TPinStation] of integer =
-      (63, 63, 59, 69, 59, 64, 60, 59, 59, 58, 58, 58, 59, 58);
+   (* THE CONTESTS THAT CHOOSE THE ARRL COUNTRY LIST AT SOME ROSTER STATION
+      -- printed from the program at Q108 S1 (2026-10-16), when it replaced a
+      count of them (37) that the test had kept since M11 S4 part 2. NEVER
+      REGENERATE IT TO CLEAR A FAILURE. *)
+   ARRL_LIST_SOMEWHERE: TContestSet = [
+      ALLASIANCW, ALLASIANSSB, ARCI, ARI_DX, ARRL10, ARRL160, ARRLDXCW,
+      ARRLDXSSB, ARRL_RTTY_ROUNDUP, ArizonaQsoParty, CIS, DELAWAREQSOPARTY,
+      FLORIDAQSOPARTY, HELVETIA, IDAHOQSOPARTY, JIDXCW, JIDXSSB, JTDX, LABRE,
+      NEBRASKAQSO, NEWENGLANDQSO, RADIOYOC, RDA, RU3AXMEMORIAL, RUSSIANDX,
+      SACCW, SACSSB, SALMONRUN, SEVENQP, TEXASQSOPARTY, UNDX, WINTERFIELDDAY,
+      WRTC, YBDX, YODX, YOUTHCHAMPIONSHIPRF, YUDX];
 
 function PinStation(aStation: TPinStation; aContest: ContestType): TStationContext;
 begin
@@ -656,6 +672,19 @@ begin
    Result := string(ContestTypeSA[aContest]) + ' at ' + STATIONS[aStation].Call;
 end;
 
+(* THE CONTESTS WITH A DX MULTIPLIER AT SOME ROSTER STATION -- the union of
+   the HAS_DX sets, so it is never typed a second time. *)
+function DXSomewhere: TContestSet;
+var
+   s: TPinStation;
+begin
+   Result := [];
+   for s := Low(TPinStation) to High(TPinStation) do
+      begin
+      Result := Result + HAS_DX[s];
+      end;
+end;
+
 procedure TDXMultiplierKeyTests.RunAllTests;
 begin
    Test_EveryDXContestGivesItsPinnedKey;
@@ -671,7 +700,6 @@ var
    key: DXMultiplierString;
    assigns: boolean;
    named: set of ContestType;
-   count: integer;
    c: ContestType;
 begin
    BeginTest('Test_EveryDXContestGivesItsPinnedKey');
@@ -689,17 +717,17 @@ begin
          end;
       end;
 
-   (* EVERY DX CONTEST HAS A ROW THAT GIVES A KEY -- 78, plan 1.5 / S4; 79
-      since the SSB Sprint's (Q16, 2026-10-16). *)
-   count := 0;
+   (* EVERY DX CONTEST HAS A ROW THAT GIVES A KEY, AND NOTHING ELSE DOES --
+      contest by contest, against the HAS_DX sets (a DX contest is one with a
+      DX multiplier at some roster station). This is what the hand-kept count
+      of keyed contests stood for (80 when Q108 S1 deleted it): a DX contest
+      that lost its key rows, or a key row for a contest with no DX
+      multiplier, fails here by name. *)
    for c := Low(ContestType) to High(ContestType) do
       begin
-      if c in named then
-         begin
-         Inc(count);
-         end;
+      CheckTrue((c in named) = (c in DXSomewhere),
+                string(ContestTypeSA[c]) + ': a key row exactly where there is a DX multiplier');
       end;
-   CheckEquals(80, count, 'contests with a pinned DX key');
 end;
 
 procedure TDXMultiplierKeyTests.Test_EveryContestHasItsPinnedDXMultiplier;
@@ -709,63 +737,55 @@ var
    q: TPinQso;
    station: TStationContext;
    key: DXMultiplierString;
-   has: boolean;
+   obj: TContestBase;
+   contests: TContestIdentityList;
+   k: integer;
    checked: integer;
-   counted: integer;
-   anywhere: TContestSet;
-   count: integer;
 begin
    BeginTest('Test_EveryContestHasItsPinnedDXMultiplier');
+   (* THE LEGACY CONTESTS, FROZEN: HAS_DX at every roster station, contest by
+      contest. The per-station counts of each set (HAS_DX_COUNT) and the
+      count of contests with one somewhere are deleted (Q108 S1): each only
+      restated the set beside it, and a set edited by mistake fails here by
+      name. *)
    checked := 0;
-   anywhere := [];
    for s := Low(TPinStation) to High(TPinStation) do
       begin
-      counted := 0;
       for c := Low(ContestType) to High(ContestType) do
          begin
-         if c in HAS_DX[s] then
-            begin
-            Inc(counted);
-            end;
-         end;
-      CheckEquals(HAS_DX_COUNT[s], counted, 'contests in the set for ' + STATIONS[s].Call);
-
-      for c := Low(ContestType) to High(ContestType) do
-         begin
-         station := PinStation(s, c);
-         has := ProgramHas(c, station);
-         CheckTrue(has = (c in HAS_DX[s]), Who(c, s) + ' has a DX multiplier');
-         if has then
-            begin
-            Include(anywhere, c);
-            end
-         else
-            begin
-            (* THE INVARIANT: a key only where there is a DX multiplier. *)
-            for q := Low(TPinQso) to High(TPinQso) do
-               begin
-               CheckFalse(ProgramKey(c, station, PinQso(q), key),
-                          Who(c, s) + ' gives no key working ' + QSOS[q].Call);
-               end;
-            end;
+         CheckTrue(ProgramHas(c, PinStation(s, c)) = (c in HAS_DX[s]),
+                   Who(c, s) + ' has a DX multiplier');
          Inc(checked);
          end;
       end;
-
-   (* EXACT: every contest at every roster station. *)
    CheckEquals((Ord(High(ContestType)) + 1) * (Ord(High(TPinStation)) + 1), checked,
                'contest x station answers compared');
 
-   (* THE 79 DX CONTESTS, AND NO OTHER, HAVE ONE SOMEWHERE ON THE ROSTER. *)
-   count := 0;
-   for c := Low(ContestType) to High(ContestType) do
+   (* THE INVARIANT THE ENGINE RELIES ON, FOR EVERY REGISTERED CONTEST (Q108
+      S1, so a contest registered by its id is held to it too): a key only
+      where there is a DX multiplier. *)
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
       begin
-      if c in anywhere then
+      for s := Low(TPinStation) to High(TPinStation) do
          begin
-         Inc(count);
+         station := PinStation(s, ContestOf(contests[k]));
+         obj := NewContestLike(contests[k], station);
+         try
+            if not ContestHasDXMultiplier(obj) then
+               begin
+               for q := Low(TPinQso) to High(TPinQso) do
+                  begin
+                  CheckFalse(ContestDXMultiplierKey(obj, PinQso(q), key),
+                             ContestWho(obj) + ' at ' + STATIONS[s].Call +
+                             ' gives no key working ' + QSOS[q].Call);
+                  end;
+               end;
+         finally
+            obj.Free;
+            end;
          end;
       end;
-   CheckEquals(80, count, 'contests with a DX multiplier at some roster station');
 end;
 
 procedure TDXMultiplierKeyTests.Test_EveryContestGivesItsPinnedCountryMode;
@@ -774,8 +794,7 @@ var
    pin: TModePin;
    c: ContestType;
    s: TPinStation;
-   arrl: TContestSet;
-   count: integer;
+   arrl: boolean;
 begin
    BeginTest('Test_EveryContestGivesItsPinnedCountryMode');
    for i := Low(MODE_PINS) to High(MODE_PINS) do
@@ -786,32 +805,25 @@ begin
                   Who(pin.Contest, pin.Station));
       end;
 
-   (* 36 contests choose the ARRL list at some roster station: the 21 whose
-      trait was an ARRL kind and the 15 whose DescribeSession stated one for
-      some entrant. Measured on the old code at S4 part 1 (the hand count said
-      35); kept as a literal count when the cross-check that measured it went
-      with the kind (M11 S4 part 2). *)
-   arrl := [];
+   (* WHICH CONTESTS CHOOSE THE ARRL LIST AT SOME ROSTER STATION -- the 21
+      whose trait was an ARRL kind and the 15 whose DescribeSession stated one
+      for some entrant (measured on the old code at M11 S4 part 1), and the
+      Nebraska QSO Party since 2026-10-16. A literal SET since Q108 S1, where
+      it was a count of 37: a contest that starts or stops choosing it fails
+      here by name rather than as a number. *)
    for c := Low(ContestType) to High(ContestType) do
       begin
+      arrl := False;
       for s := Low(TPinStation) to High(TPinStation) do
          begin
          if ProgramCountryMode(c, PinStation(s, c)) = ARRLCountryMode then
             begin
-            Include(arrl, c);
+            arrl := True;
             end;
          end;
+      CheckTrue(arrl = (c in ARRL_LIST_SOMEWHERE),
+                string(ContestTypeSA[c]) + ' chooses the ARRL country list at some roster station');
       end;
-   count := 0;
-   for c := Low(ContestType) to High(ContestType) do
-      begin
-      if c in arrl then
-         begin
-         Inc(count);
-         end;
-      end;
-   (* 37 since the Nebraska QSO Party (2026-10-16), ARRL for its entrant. *)
-   CheckEquals(37, count, 'contests choosing the ARRL country list at some roster station');
 end;
 
 procedure TDXMultiplierKeyTests.Test_RemainingCountriesFilterGivesItsPinnedAnswer;

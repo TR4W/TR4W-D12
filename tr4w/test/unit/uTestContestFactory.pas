@@ -47,6 +47,9 @@ uses
    Classes, uAppPaths, uDomFileKeys,
    (* ShippedDomDir -- the test binary's view of target\dom. *)
    uTestContestObjects,
+   (* ContestsToWalk, NewContestLike, ContestWho -- the registry walk every
+      cross-contest invariant here uses (Q108 S1). *)
+   uTestRegisteredContests,
    (* InSameFederalOkrug -- the CQ-M rule lifted out of LOGSTUFF at M7b. *)
    uCallSignRoutines;
 
@@ -108,6 +111,7 @@ type
       procedure Test_ZoneModeIsCQOrITUForEveryContest;
       procedure Test_FieldDayHasNoDXMultiplier;
       procedure Test_EveryQSOPartyNamesBothDomesticFiles;
+      procedure Test_EveryDomesticFileAContestCanLoadExists;
       procedure Test_ShippedDomFilePathHasItsSeparator;
       procedure Test_DomFileKeysAreEnumDOM2sRule;
       procedure Test_AnInStateStationIsFoundInItsCountyFile;
@@ -182,39 +186,45 @@ end;
    would meet it before an operator did. *)
 procedure TContestFactoryTests.Test_EveryRegisteredContestConstructs;
 var
-   c: ContestType;
+   contests: TContestIdentityList;
+   k: integer;
    obj: TContestBase;
-   built: integer;
+   c: ContestType;
+   classes: integer;
 begin
    BeginTest('Test_EveryRegisteredContestConstructs');
-   built := 0;
-   for c := Low(ContestType) to High(ContestType) do
+   (* THE REGISTRY'S CONTESTS (Q108 S1). ContestsToWalk raises below a floor,
+      because a registry that silently emptied would pass every loop in this
+      file -- CLAUDE.md: a guard that reports "0 found" and passes is not a
+      guard. *)
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
       begin
-      obj := MakeContest(c);
-      if obj = nil then
-         begin
-         Continue;
-         end;
+      obj := NewContestLike(contests[k], WithHostAreaTable(NoStation));
       try
-         inc(built);
-         CheckTrue(obj.DisplayName <> '',
-                   'DisplayName is blank for ' + string(ContestTypeSA[c]));
-         CheckTrue(obj.CabrilloName <> '',
-                   'CabrilloName is blank for ' + string(ContestTypeSA[c]));
+         CheckTrue(obj.DisplayName <> '', 'DisplayName is blank for ' + ContestWho(obj));
+         CheckTrue(obj.CabrilloName <> '', 'CabrilloName is blank for ' + ContestWho(obj));
       finally
          obj.Free;
          end;
       end;
 
-   (* A FLOOR, BECAUSE A REGISTRY THAT SILENTLY EMPTIED WOULD PASS EVERY LOOP
-      IN THIS FILE. CLAUDE.md: a guard that reports "0 found" and passes is not
-      a guard. The number is deliberately well below the real count so adding a
-      contest never has to edit this line. *)
-   CheckTrue(built >= 10,
-             'only ' + IntToStr(built) + ' contest classes constructed -- is the'
-             + ' registry linked?');
-   CheckEquals(built, RegisteredContestCount,
-               'constructed count disagrees with RegisteredContestCount');
+   (* THE REGISTRY AND THE ENUM AGREE -- every legacy contest but "no
+      contest" has a class. A contest unit that stopped being linked, or lost
+      its registration, fails HERE, by name; this is what the hand-kept count
+      of registered contests used to stand for. *)
+   classes := 0;
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      if c = DUMMYCONTEST then
+         begin
+         CheckTrue(ContestClassFor(c) = nil, 'no contest has no class');
+         Continue;
+         end;
+      CheckTrue(ContestClassFor(c) <> nil, string(ContestTypeSA[c]) + ' has a registered class');
+      inc(classes);
+      end;
+   CheckEquals(classes, Length(contests), 'the registry walk visits every registered contest');
 end;
 
 (* THE NOTE-9 PIN. A state QSO party whose GetHostState was never overridden
@@ -224,19 +234,21 @@ end;
    present, and that nothing OUTSIDE the hierarchy claims to be one. *)
 procedure TContestFactoryTests.Test_EveryStatePartyNamesItsState;
 var
+   contests: TContestIdentityList;
+   k: integer;
    c: ContestType;
    obj: TContestBase;
    parties: integer;
 begin
    BeginTest('Test_EveryStatePartyNamesItsState');
    parties := 0;
-   for c := Low(ContestType) to High(ContestType) do
+   (* EVERY REGISTERED CONTEST, BY THE REGISTRY -- an invariant, so a
+      contest registered by its id is held to it too (Q108 S1). *)
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
       begin
-      obj := MakeContest(c);
-      if obj = nil then
-         begin
-         Continue;
-         end;
+      obj := NewContestLike(contests[k], WithHostAreaTable(NoStation));
+      c := ContestOf(obj);
       try
          if obj is TContestStateQSOPartyBase then
             begin
@@ -297,6 +309,8 @@ end;
    counties." *)
 procedure TContestFactoryTests.Test_CountyLineAllowedIsDerivedEverywhere;
 var
+   contests: TContestIdentityList;
+   k: integer;
    c: ContestType;
    obj: TContestBase;
    party: TContestStateQSOPartyBase;
@@ -304,13 +318,13 @@ var
 begin
    BeginTest('Test_CountyLineAllowedIsDerivedEverywhere');
    checked := 0;
-   for c := Low(ContestType) to High(ContestType) do
+   (* EVERY REGISTERED CONTEST, BY THE REGISTRY -- an invariant, so a
+      contest registered by its id is held to it too (Q108 S1). *)
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
       begin
-      obj := MakeContest(c);
-      if obj = nil then
-         begin
-         Continue;
-         end;
+      obj := NewContestLike(contests[k], WithHostAreaTable(NoStation));
+      c := ContestOf(obj);
       try
          if not (obj is TContestStateQSOPartyBase) then
             begin
@@ -1858,46 +1872,67 @@ const
 procedure TContestFactoryTests.Test_EveryQSOPartySplitsARoverCallOnExport;
 var
    c: ContestType;
-   splitting: integer;
+   contests: TContestIdentityList;
+   k: integer;
    obj: TContestBase;
-   strips: boolean;
+   strips, splits: boolean;
 begin
    BeginTest('Test_EveryQSOPartySplitsARoverCallOnExport');
-   splitting := 0;
+   (* THE LEGACY CONTESTS, FROZEN: exactly ROVER_SPLIT_PARTIES split. A party
+      that stops splitting, or a contest that starts, fails here by name --
+      what the count of splitting parties beside the set used to restate. *)
    for c := Low(ContestType) to High(ContestType) do
       begin
       CheckTrue(ContestSplitsRoverCallOnExport(c) = (c in ROVER_SPLIT_PARTIES),
                 string(ContestTypeSA[c]) + ': splits a rover''s call on export');
-      if ContestSplitsRoverCallOnExport(c) then
-         begin
-         Inc(splitting);
-         end;
+      end;
 
-      (* The live strip agrees, but for County Hunter. Neither answer reads
-         the station, so the identity object is enough. *)
-      obj := ContestIdentity(c);
+   (* THE RULE, FOR EVERY REGISTERED CONTEST (Q108 S1) -- so a contest
+      registered by its id is held to it too. Neither answer reads the
+      station, so the identity object is enough. *)
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
+      begin
+      obj := contests[k];
+      c := ContestOf(obj);
+      splits := obj.SplitsRoverCallOnExport;
       strips := ContestStripsRoverCountyFromCall(obj);
+
+      (* The live strip agrees with the export split, but for County Hunter,
+         which strips and does not split -- a recorded decision on Q94. *)
       if c = COUNTYHUNTER then
          begin
          CheckTrue(strips, 'County Hunter strips a rover''s county live');
-         CheckFalse(ContestSplitsRoverCallOnExport(c),
-                    'County Hunter does not split on export -- not a QSO party');
+         CheckFalse(splits, 'County Hunter does not split on export -- not a QSO party');
          end
       else
          begin
-         CheckTrue(strips = ContestSplitsRoverCallOnExport(c),
-                   string(ContestTypeSA[c]) + ': strips live exactly where it splits on export');
+         CheckTrue(strips = splits,
+                   ContestWho(obj) + ': strips live exactly where it splits on export');
          end;
 
-      (* Every state party, by its base, whatever the literal says. *)
+      (* Every state party, by its base, whatever the literal says; and every
+         contest set-up treats as a party. *)
       if obj is TContestStateQSOPartyBase then
          begin
-         CheckTrue(ContestSplitsRoverCallOnExport(c),
-                   string(ContestTypeSA[c]) + ': a state party splits');
+         CheckTrue(splits, ContestWho(obj) + ': a state party splits');
+         end;
+      if obj.IsUSQSOParty then
+         begin
+         CheckTrue(splits, ContestWho(obj) + ': a contest set up as a QSO party splits');
+         end;
+
+      (* AND NOTHING ELSE DOES (NY4I on Q90/Q94: "in any contest NY4I/7 or
+         VP9/NY4I is a valid call"). A splitter is a QSO party to set-up --
+         but for New England, a multi-state party set-up has never run the
+         party head for (its row's P was 0). That exception is frozen: a new
+         contest may not join it. *)
+      if splits and (c <> NEWENGLANDQSO) then
+         begin
+         CheckTrue(obj.IsUSQSOParty,
+                   ContestWho(obj) + ': splits a rover call, so it must be a QSO party');
          end;
       end;
-   (* 24 since the Nebraska QSO Party (2026-10-16), a state party. *)
-   CheckEquals(24, splitting, 'QSO parties that split a rover''s call on export');
 
    (* By name: Arizona started (Q90), and a slash call is the call in the
       ARRL DX. *)
@@ -1905,6 +1940,8 @@ begin
    CheckFalse(ContestSplitsRoverCallOnExport(ARRLDXCW), 'the ARRL DX does not');
    CheckFalse(ContestStripsRoverCountyFromCall(ContestIdentity(ARRLDXCW)),
               'the ARRL DX does not strip either (Q94)');
+   CheckFalse(ContestIdentity(NEWENGLANDQSO).IsUSQSOParty,
+              'New England is the one splitter set-up does not treat as a party');
 end;
 
 (* THE DELETED ROW AND THE CLASS'S COUNTY LINE DISAGREE FOR SIX CONTESTS --
@@ -2157,65 +2194,52 @@ end;
    resolves it to the first, as it always has. *)
 procedure TContestFactoryTests.Test_NoADIFIdIsClaimedTwice;
 var
-   c, d: ContestType;
+   identities: TContestIdentityList;
+   k, m: integer;
    a, b: TContestBase;
    former, other: TContestIdList;
    i, j: integer;
    formerCount: integer;
    who: string;
-
-   function Make(aContest: ContestType): TContestBase;
-   begin
-      Result := MakeContest(aContest);
-      if Result = nil then
-         begin
-         Result := TContestBase.Create(aContest);
-         end;
-   end;
-
 begin
    BeginTest('Test_NoADIFIdIsClaimedTwice');
+   (* EVERY IDENTITY THE PROGRAM CAN ANSWER WITH, by the registry (Q108 S1):
+      a contest registered by its id must not take another's ADIF id either.
+      The shared identity objects -- the ADIF ids read no station. *)
+   identities := IdentitiesToWalk;
    formerCount := 0;
-   for c := Low(ContestType) to High(ContestType) do
+   for k := 0 to High(identities) do
       begin
-      who := string(ContestTypeSA[c]);
-      a := Make(c);
-      try
-         CheckEquals(Trim(a.ADIFContestId), a.ADIFContestId,
-                     who + ': ADIF id carries whitespace');
+      a := identities[k];
+      who := ContestWho(a);
+      CheckEquals(Trim(a.ADIFContestId), a.ADIFContestId,
+                  who + ': ADIF id carries whitespace');
 
-         former := a.FormerADIFContestIds;
-         for i := 0 to High(former) do
+      former := a.FormerADIFContestIds;
+      for i := 0 to High(former) do
+         begin
+         inc(formerCount);
+         CheckTrue(former[i] <> '', who + ': a blank former id');
+         CheckEquals(Trim(former[i]), former[i],
+                     who + ': former id carries whitespace');
+
+         for m := 0 to High(identities) do
             begin
-            inc(formerCount);
-            CheckTrue(former[i] <> '', who + ': a blank former id');
-            CheckEquals(Trim(former[i]), former[i],
-                        who + ': former id carries whitespace');
-
-            for d := Low(ContestType) to High(ContestType) do
+            b := identities[m];
+            CheckTrue(former[i] <> b.ADIFContestId,
+                      who + ': former id [' + former[i] +
+                      '] is the current id of ' + ContestWho(b));
+            if m <> k then
                begin
-               b := Make(d);
-               try
-                  CheckTrue(former[i] <> b.ADIFContestId,
-                            who + ': former id [' + former[i] +
-                            '] is the current id of ' + string(ContestTypeSA[d]));
-                  if d <> c then
-                     begin
-                     other := b.FormerADIFContestIds;
-                     for j := 0 to High(other) do
-                        begin
-                        CheckTrue(former[i] <> other[j],
-                                  '[' + former[i] + '] is a former id of both ' +
-                                  who + ' and ' + string(ContestTypeSA[d]));
-                        end;
-                     end;
-               finally
-                  b.Free;
+               other := b.FormerADIFContestIds;
+               for j := 0 to High(other) do
+                  begin
+                  CheckTrue(former[i] <> other[j],
+                            '[' + former[i] + '] is a former id of both ' +
+                            who + ' and ' + ContestWho(b));
                   end;
                end;
             end;
-      finally
-         a.Free;
          end;
       end;
 
@@ -2361,21 +2385,26 @@ end;
    an ADIF RECORD is then told apart by its mode (Test_RoPoCoRunningsAreToldApartByMode). *)
 procedure TContestFactoryTests.Test_EveryContestResolvesItsOwnADIFId;
 var
+   contests: TContestIdentityList;
+   k: integer;
    c: ContestType;
    found: ContestType;
    id: string;
    who: string;
-   resolved: integer;
 begin
    BeginTest('Test_EveryContestResolvesItsOwnADIFId');
    CheckEquals(Ord(DUMMYCONTEST), Ord(Low(ContestType)),
                'DUMMYCONTEST is the first ContestType');
 
-   resolved := 0;
-   for c := Succ(Low(ContestType)) to High(ContestType) do
+   (* EVERY REGISTERED CONTEST (Q108 S1). "No contest" has no class, so it is
+      not walked; the count of contests that resolve went with the enum walk
+      -- each one is asserted by name below. *)
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
       begin
-      who := string(ContestTypeSA[c]);
-      id := ContestIdentity(c).ADIFContestId;
+      c := ContestOf(contests[k]);
+      who := ContestWho(contests[k]);
+      id := contests[k].ADIFContestId;
       CheckTrue(id <> '', who + ' has an ADIF id');
       CheckTrue(FindContestByADIFContestId(id, found),
                 who + ': its own id [' + id + '] resolves to nothing');
@@ -2390,15 +2419,7 @@ begin
       CheckEquals(Ord(c), Ord(found),
                   who + ': its own id [' + id + '] resolves to ' +
                   string(ContestTypeSA[found]));
-      if found = c then
-         begin
-         inc(resolved);
-         end;
       end;
-
-   (* Every contest except DUMMYCONTEST and RSGB_ROPOCO_SSB. *)
-   CheckEquals(Ord(High(ContestType)) + 1 - 2, resolved,
-               'contests whose own ADIF id resolves to them');
 end;
 
 (* ONE ID, TWO CONTESTS -- AND ONLY ONE SUCH PAIR.
@@ -2411,28 +2432,35 @@ end;
    the second contest of it could never be re-imported. *)
 procedure TContestFactoryTests.Test_OnlyRSGBRoloSharesACurrentADIFId;
 var
+   identities: TContestIdentityList;
+   k, m: integer;
    c, d: ContestType;
    pairs: integer;
    idC: string;
 begin
    BeginTest('Test_OnlyRSGBRoloSharesACurrentADIFId');
+   (* EVERY IDENTITY, by the registry (Q108 S1), each pair once. *)
+   identities := IdentitiesToWalk;
    pairs := 0;
-   (* To Pred(High): Succ of the last member would be out of range. *)
-   for c := Low(ContestType) to Pred(High(ContestType)) do
+   for k := 0 to High(identities) - 1 do
       begin
-      idC := ContestIdentity(c).ADIFContestId;
-      for d := Succ(c) to High(ContestType) do
+      idC := identities[k].ADIFContestId;
+      c := ContestOf(identities[k]);
+      for m := k + 1 to High(identities) do
          begin
-         if idC = ContestIdentity(d).ADIFContestId then
+         if idC = identities[m].ADIFContestId then
             begin
             inc(pairs);
-            CheckTrue((c = RSGB_ROPOCO_CW) and (d = RSGB_ROPOCO_SSB),
+            d := ContestOf(identities[m]);
+            CheckTrue(((c = RSGB_ROPOCO_CW) and (d = RSGB_ROPOCO_SSB)) or
+                      ((c = RSGB_ROPOCO_SSB) and (d = RSGB_ROPOCO_CW)),
                       '[' + idC + '] is the ADIF id of both ' +
-                      string(ContestTypeSA[c]) + ' and ' +
-                      string(ContestTypeSA[d]));
+                      ContestWho(identities[k]) + ' and ' + ContestWho(identities[m]));
             end;
          end;
       end;
+   (* THE ONE PAIR STILL EXISTS -- a fact about the RoPoCo runnings, not a
+      count of contests. *)
    CheckEquals(1, pairs, 'contest pairs sharing a current ADIF id');
 end;
 
@@ -2463,28 +2491,30 @@ var
    c: ContestType;
    mode: ZoneModeType;
    cqBit: boolean;
-   cqCount: integer;
+   contests: TContestIdentityList;
+   k: integer;
 begin
    BeginTest('Test_ZoneModeIsCQOrITUForEveryContest');
-   cqCount := 0;
+   (* THE LEGACY CONTESTS, FROZEN: the CQ bit, contest by contest. A class
+      that gained or lost a CQ zone mode fails here by name. *)
    for c := Low(ContestType) to High(ContestType) do
       begin
       mode := ContestIdentity(c).ZoneMode;
-      CheckTrue(Ord(mode) <= Ord(High(ZoneModeType)),
-                string(ContestTypeSA[c]) + ' zone mode is out of range: ' +
-                IntToStr(Ord(mode)));
       cqBit := c in CQ_ZONE_CONTESTS;
       CheckTrue((mode = CQZoneMode) = cqBit,
                 string(ContestTypeSA[c]) + ' zone mode follows the CQ bit');
-      if mode = CQZoneMode then
-         begin
-         inc(cqCount);
-         end;
       end;
 
-   (* EXACT, now that the expected side is a literal: a class that gained or
-      lost a CQ zone mode fails above, and this says how many. *)
-   CheckEquals(25, cqCount, 'contests that use CQ zones');
+   (* THE INVARIANT, FOR EVERY REGISTERED CONTEST (Q108 S1): the answer is a
+      member of ZoneModeType -- defect #2's 255 cannot come back. *)
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
+      begin
+      mode := contests[k].ZoneMode;
+      CheckTrue(Ord(mode) <= Ord(High(ZoneModeType)),
+                ContestWho(contests[k]) + ' zone mode is out of range: ' +
+                IntToStr(Ord(mode)));
+      end;
 
    CheckTrue(ContestIdentity(CQWWCW).ZoneMode = CQZoneMode, 'CQ WW CW uses CQ zones');
    CheckTrue(ContestIdentity(CQWWSSB).ZoneMode = CQZoneMode, 'CQ WW SSB uses CQ zones');
@@ -2518,6 +2548,8 @@ end;
    ship. *)
 procedure TContestFactoryTests.Test_EveryQSOPartyNamesBothDomesticFiles;
 var
+   contests: TContestIdentityList;
+   k: integer;
    c: ContestType;
    obj: TContestBase;
    who: string;
@@ -2525,9 +2557,13 @@ var
 begin
    BeginTest('Test_EveryQSOPartyNamesBothDomesticFiles');
    parties := 0;
-   for c := Low(ContestType) to High(ContestType) do
+   (* EVERY REGISTERED CONTEST, BY THE REGISTRY -- an invariant, so a
+      contest registered by its id is held to it too (Q108 S1). *)
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
       begin
-      obj := ContestIdentity(c);
+      obj := contests[k];
+      c := ContestOf(obj);
       if not obj.IsUSQSOParty then
          begin
          CheckEquals('', obj.InStateDomesticFileName,
@@ -2550,6 +2586,133 @@ begin
                'Colorado names its county file');
    CheckEquals('', ContestIdentity(COLORADOQSOPARTY).SubmissionEmail,
                'and a file name is no longer its e-mail address');
+end;
+
+(* EVERY DOMESTIC FILE A CONTEST CAN LOAD IS IN target\dom -- Q108 S1,
+   2026-10-16 (design 8.2u). It replaces the party-only half of
+   Lint-DomCoverage's source scan with the program's own answers, for EVERY
+   registered contest: DomesticFileName (the file every other station loads),
+   InStateDomesticFileName (a party's in-state file) and the DomesticFile its
+   DescribeSession states, at a roster of entrants on four continents, in and
+   out of the host state -- and every file those INCLUDE, as logdom follows
+   them. Each name gets '.dom', as FCONTEST appends DOM_EXTENSION, and is
+   looked up through uAppPaths.ExistingDataFile, the case-tolerant match
+   ShippedDomFilePath uses, so a name that differs from the file only in case
+   passes exactly where the program finds it (Linux included).
+
+   WHAT SHIPS is the installer's question, not this one: full.nsi takes the
+   whole directory. *)
+procedure TContestFactoryTests.Test_EveryDomesticFileAContestCanLoadExists;
+const
+   ROSTER_COUNT = 9;
+var
+   roster: array[0..ROSTER_COUNT - 1] of TStationContext;
+   contests: TContestIdentityList;
+   k, s, i: integer;
+   obj: TContestBase;
+   session: TSessionDefaults;
+   names: TStringList;
+   checked: integer;
+
+   function Entrant(const aCall, aCountry: string; aContinent: ContinentType;
+                    const aState: string; aInHost: boolean): TStationContext;
+   begin
+      Result := NoStation;
+      Result.MyCall := aCall;
+      Result.MyCountry := CallString(aCountry);
+      Result.MyContinent := aContinent;
+      Result.MyState := aState;
+      Result.InHostState := aInHost;
+   end;
+
+   procedure Want(const aName, aWhy: string);
+   begin
+      if (aName <> '') and (names.IndexOf(aName + '|' + aWhy) < 0) then
+         begin
+         names.Add(aName + '|' + aWhy);
+         end;
+   end;
+
+   (* The file, and every file it INCLUDEs -- logdom.incfile's rule: the
+      text after 'INCLUDE FILE' and one character, a file name. *)
+   procedure CheckFile(const aFile, aWhy: string; aDepth: integer);
+   var
+      path: string;
+      lines: TStringList;
+      j: integer;
+      line: string;
+   begin
+      path := ExistingDataFile(ShippedDomDir + aFile);
+      Inc(checked);
+      CheckTrue(FileExists(path), aWhy + ': ' + aFile + ' is in target' + PathDelim + 'dom');
+      if (not FileExists(path)) or (aDepth > 4) then
+         begin
+         Exit;
+         end;
+      lines := TStringList.Create;
+      try
+         lines.LoadFromFile(AnsiString(path));
+         for j := 0 to lines.Count - 1 do
+            begin
+            line := TrimLeft(lines[j]);
+            if Copy(line, 1, Length('INCLUDE FILE')) = 'INCLUDE FILE' then
+               begin
+               CheckFile(Trim(Copy(line, Length('INCLUDE FILE') + 2, 200)),
+                         aWhy + ', included by ' + aFile, aDepth + 1);
+               end;
+            end;
+      finally
+         lines.Free;
+         end;
+   end;
+
+begin
+   BeginTest('Test_EveryDomesticFileAContestCanLoadExists');
+   roster[0] := Entrant('K0AAA', 'K', NorthAmerica, 'KS', False);
+   roster[1] := Entrant('K0AAA', 'K', NorthAmerica, 'KS', True);
+   roster[2] := Entrant('VE3AAA', 'VE', NorthAmerica, 'ON', False);
+   roster[3] := Entrant('DL1AAA', 'DL', Europe, '', False);
+   roster[4] := Entrant('JA1AAA', 'JA', Asia, '', False);
+   roster[5] := Entrant('UA3AAA', 'UA', Europe, '', False);
+   roster[6] := Entrant('OK1AAA', 'OK', Europe, '', False);
+   roster[7] := Entrant('ON4AAA', 'ON', Europe, '', False);
+   roster[8] := Entrant('PY1AAA', 'PY', SouthAmerica, '', False);
+
+   names := TStringList.Create;
+   try
+      contests := ContestsToWalk;
+      for k := 0 to High(contests) do
+         begin
+         obj := contests[k];
+         Want(obj.DomesticFileName, ContestWho(obj) + ' DomesticFileName');
+         Want(obj.InStateDomesticFileName, ContestWho(obj) + ' InStateDomesticFileName');
+         for s := Low(roster) to High(roster) do
+            begin
+            session := TSessionDefaults.Create;
+            try
+               obj.DescribeSession(roster[s], session);
+               if session.IsStated(svDomesticFile) then
+                  begin
+                  Want(session.DomesticFile, ContestWho(obj) + ' DescribeSession at ' +
+                       roster[s].MyCall);
+                  end;
+            finally
+               session.Free;
+               end;
+            end;
+         end;
+
+      checked := 0;
+      for i := 0 to names.Count - 1 do
+         begin
+         CheckFile(Copy(names[i], 1, Pos('|', names[i]) - 1) + '.dom',
+                   Copy(names[i], Pos('|', names[i]) + 1, MaxInt), 0);
+         end;
+      (* A FLOOR: the loop cannot pass by finding nothing to check. *)
+      CheckTrue(checked >= 50, 'only ' + IntToStr(checked) + ' domestic files checked');
+   finally
+      names.Free;
+      end;
 end;
 
 (* M2 -- DEFECT #1, THE SEPARATOR ITSELF. FCONTEST built 'DOM' + name and no
@@ -2605,6 +2768,8 @@ end;
    for any party, because the file was never found. *)
 procedure TContestFactoryTests.Test_AnInStateStationIsFoundInItsCountyFile;
 var
+   contests: TContestIdentityList;
+   k: integer;
    c: ContestType;
    obj: TContestBase;
    lines: TStringList;
@@ -2612,9 +2777,13 @@ var
    i: integer;
 begin
    BeginTest('Test_AnInStateStationIsFoundInItsCountyFile');
-   for c := Low(ContestType) to High(ContestType) do
+   (* EVERY REGISTERED CONTEST, BY THE REGISTRY -- an invariant, so a
+      contest registered by its id is held to it too (Q108 S1). *)
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
       begin
-      obj := ContestIdentity(c);
+      obj := contests[k];
+      c := ContestOf(obj);
       if not obj.IsUSQSOParty then
          begin
          Continue;
@@ -2761,15 +2930,21 @@ end;
    stops, fails here rather than in a contest. *)
 procedure TContestFactoryTests.Test_EveryContestMarksDupesButTheTwoThatIgnoreThem;
 var
+   identities: TContestIdentityList;
+   k: integer;
    c: ContestType;
    ignoresDupes: boolean;
 begin
    BeginTest('Test_EveryContestMarksDupesButTheTwoThatIgnoreThem');
-   for c := Low(ContestType) to High(ContestType) do
+   (* EVERY IDENTITY, BY THE REGISTRY (Q108 S1): the two are a frozen
+      exception set, and a contest registered by its id may not join it. *)
+   identities := IdentitiesToWalk;
+   for k := 0 to High(identities) do
       begin
+      c := ContestOf(identities[k]);
       ignoresDupes := (c = INTERNETSPRINT) or (c = YOUTHCHAMPIONSHIPRF);
-      CheckTrue(ContestIdentity(c).MarksDupes = not ignoresDupes,
-                string(ContestTypeSA[c]) + ' MarksDupes');
+      CheckTrue(identities[k].MarksDupes = not ignoresDupes,
+                ContestWho(identities[k]) + ' MarksDupes');
       end;
    CheckFalse(ContestIdentity(INTERNETSPRINT).MarksDupes,
               'Internet Sprint ignores dupes');
@@ -2801,6 +2976,8 @@ procedure TContestFactoryTests.Test_EveryClassSitsOnTheBaseOrAFamily;
 const
    FamilyCount = 6;
 var
+   q108Contests: TContestIdentityList;
+   k: integer;
    families: array[0..FamilyCount - 1] of TClass;
    c: ContestType;
    obj: TContestBase;
@@ -2826,13 +3003,13 @@ begin
 
    direct := 0;
    nrau := 0;
-   for c := Low(ContestType) to High(ContestType) do
+   (* EVERY REGISTERED CONTEST, BY THE REGISTRY -- an invariant, so a
+      contest registered by its id is held to it too (Q108 S1). *)
+   q108Contests := ContestsToWalk;
+   for k := 0 to High(q108Contests) do
       begin
-      obj := MakeContest(c);
-      if obj = nil then
-         begin
-         Continue;
-         end;
+      obj := NewContestLike(q108Contests[k], WithHostAreaTable(NoStation));
+      c := ContestOf(obj);
       try
          parent := obj.ClassParent;
          known := parent = TContestBase;
@@ -4037,6 +4214,7 @@ begin
    Test_ZoneModeIsCQOrITUForEveryContest;
    Test_FieldDayHasNoDXMultiplier;
    Test_EveryQSOPartyNamesBothDomesticFiles;
+   Test_EveryDomesticFileAContestCanLoadExists;
    Test_ShippedDomFilePathHasItsSeparator;
    Test_DomFileKeysAreEnumDOM2sRule;
    Test_AnInStateStationIsFoundInItsCountyFile;

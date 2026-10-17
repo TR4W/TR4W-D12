@@ -465,6 +465,8 @@ uses
    uTestContestParse in 'uTestContestParse.pas',
    uTestContestTotals in 'uTestContestTotals.pas',
    uTestContestObjects in 'uTestContestObjects.pas',
+   uTestRegisteredContests in 'uTestRegisteredContests.pas',
+   uTestContestStatesItsRules in 'uTestContestStatesItsRules.pas',
    uTestContestMultipliers in 'uTestContestMultipliers.pas',
    uTestContestSession in 'uTestContestSession.pas',
    uTestContestDisplay in 'uTestContestDisplay.pas',
@@ -757,6 +759,7 @@ begin
    RegisterSuite(TContestMultipliersTests.Create('ContestMultipliers'));
    RegisterSuite(TContestSessionTests.Create('ContestSession'));
    RegisterSuite(TContestDisplayTests.Create('ContestDisplay'));
+   RegisterSuite(TContestStatesItsRulesTests.Create('ContestStatesItsRules'));
    RegisterSuite(TContestUITests.Create('ContestUI'));
    RegisterSuite(TContestIdentityPinTests.Create('ContestIdentityPin'));
    RegisterSuite(TContestKindPinTests.Create('ContestKindPin'));
