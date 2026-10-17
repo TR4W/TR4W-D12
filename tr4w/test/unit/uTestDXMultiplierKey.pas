@@ -290,8 +290,11 @@ const
       (Contest: ARRL10;                  Station: psUS; Qso: pqKH6;  Assigns: False; Key: ''),
       (Contest: ARRL10;                  Station: psUS; Qso: pqXE1;  Assigns: True;  Key: 'XE'),
       (Contest: ARRL10;                  Station: psDX; Qso: pqON4;  Assigns: True;  Key: 'ON'),
+      (* WINTER FIELD DAY HAS NO DX MULTIPLIER -- Q38 (NY4I, 2026-10-15): it
+         counted every country but the ARRL section ones until 2026-10-17,
+         and never scored them. Neither QSO assigns a key now. *)
       (Contest: WINTERFIELDDAY;          Station: psUS; Qso: pqVE3;  Assigns: False; Key: ''),
-      (Contest: WINTERFIELDDAY;          Station: psUS; Qso: pqJA1;  Assigns: True;  Key: 'JA'),
+      (Contest: WINTERFIELDDAY;          Station: psUS; Qso: pqJA1;  Assigns: False; Key: ''),
       (Contest: ARRL160;                 Station: psUS; Qso: pqKL7;  Assigns: False; Key: ''),
       (Contest: ARRL160;                 Station: psUS; Qso: pqON4;  Assigns: True;  Key: 'ON'),
       (Contest: ARRL160;                 Station: psVE; Qso: pqXE1;  Assigns: True;  Key: 'XE'),
@@ -505,7 +508,8 @@ type
 const
    (* A DX MULTIPLIER AT EVERY STATION: the 56 contests whose session ran a
       DX kind wherever it ran, and the SSB Sprint since Q16 (2026-10-16) --
-      57. *)
+      57; then 56 again, BY HAND, when Winter Field Day left it (Q38, NY4I
+      2026-10-15: it has no DX multiplier, at any station). *)
    DX_EVERYWHERE = [ARCI, ARI_DX, ARRL10, ARRL_RTTY_ROUNDUP, ArizonaQsoParty,
                     BATAVIA_FT8, BSCI, CIS, CQ160CW, CQ160SSB, CQM, CQMM,
                     CQWWCW, CQWWRTTY, CQWWSSB, DARC10M, EUDX, FLORIDAQSOPARTY,
@@ -515,7 +519,7 @@ const
                     NASPRINTRTTY, OKDX, OKOMSSB, OZCR_O, RADIOYOC,
                     REGION1FIELDDAY, REGION1FIELDDAY_RCC_CW,
                     REGION1FIELDDAY_RCC_SSB, RSGB18, RU3AXMEMORIAL, RUSSIANDX,
-                    SPRINTSSB, SST, UBACW, UBASSB, UKEI, UKRAINIAN, UNDX, WINTERFIELDDAY,
+                    SPRINTSSB, SST, UBACW, UBASSB, UKEI, UKRAINIAN, UNDX,
                     WRTC, WWIH, YBDX, YODX, YOUTHCHAMPIONSHIPRF, YUDX];
 
    (* WHO HAS A DX MULTIPLIER AT EACH ROSTER STATION -- see the unit header

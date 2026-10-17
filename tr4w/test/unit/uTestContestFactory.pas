@@ -1666,9 +1666,12 @@ begin
       (* THE CONTESTS THAT STATE THEIR BANDS: Idaho, and Delaware (2026-10-14,
          uTestContestDelawareQP pins its list); New England, 7QP, Indiana and
          the IN7QPNE composite (2026-10-16, uTestQSOPartyBands); Nebraska
-         (2026-10-16, uTestContestNebraskaQP). *)
+         (2026-10-16, uTestContestNebraskaQP); and the four 160 m contests,
+         RSGB 1.8 MHz, ARRL 160 and the CQ 160 CW and SSB runnings
+         (2026-10-17, Q71, uTestContestRulings2026Oct). *)
       if c in [IDAHOQSOPARTY, DELAWAREQSOPARTY, NEWENGLANDQSO, SEVENQP,
-               INQSOPARTY, IN7QPNE, NEBRASKAQSO] then
+               INQSOPARTY, IN7QPNE, NEBRASKAQSO,
+               RSGB18, ARRL160, CQ160CW, CQ160SSB] then
          begin
          Continue;
          end;
@@ -4065,15 +4068,16 @@ begin
       Fresh(Band40, CW, 'F', Europe);
       CheckEquals(1, Scored, 'REF: French on our continent, 1');
 
-      (* EUDX: the arm's DomMultQTH[4] <> '' -- design Q45. With MY STATE not
-         a four-character region, a station from another country on our
-         continent scores as an EU station. *)
+      (* EUDX: the arm's DomMultQTH[4] <> '' was never false, so this VE
+         scored 10 as an EU station. Q45 (NY4I, 2026-10-16) reads his
+         resolved region instead: he sent none, so he is another country on
+         our continent, 3. uTestContestRulings2026Oct pins the rest. *)
       station.MyCountry := 'K';
       station.MyContinent := NorthAmerica;
       station.MyState := 'KS';
       Use(EUDX);
       Fresh(Band20, CW, 'VE', NorthAmerica);
-      CheckEquals(10, Scored, 'EUDX: the EU test is never false (Q45)');
+      CheckEquals(3, Scored, 'EUDX: a VE with no EU region scores 3 (Q45)');
    finally
       obj.Free;
       end;

@@ -51,23 +51,23 @@ setting.MY ZONE = 7
 setting.S&P CW EXCHANGE = _@_ 5NN KS
 setting.S&P EXCHANGE = _@_ 5NN KS
 == scoring
-qso 01 W1AW Band20 CW/eCW full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
-qso 02 W1AW Band20 Phone/eUSB full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
-qso 03 W1AW Band2 FM/eFM full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
-qso 04 W1AW Band40 Digital/eRTTY full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
-qso 05 W1AW Band20 Digital/eFT8 full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
+qso 01 W1AW Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
+qso 02 W1AW Band20 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
+qso 03 W1AW Band2 FM/eFM full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
+qso 04 W1AW Band40 Digital/eRTTY full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
+qso 05 W1AW Band20 Digital/eFT8 full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 06 K4ABC Band160 CW/eCW full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=K4 pfx= dxqth= dommultqth=FL domqth=FL zone=5
-qso 07 VE3ABC Band15 Phone/eUSB full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=VE qthzone=9 cont=NorthAmerica qthpfx=VE3 pfx= dxqth= dommultqth=ON domqth=ON zone=4
-qso 08 XE1ABC Band10 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=XE qthzone=10 cont=NorthAmerica qthpfx=XE1 pfx= dxqth=XE dommultqth= domqth= zone=6
-qso 09 G3ABC Band30 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=G qthzone=27 cont=Europe qthpfx=G3 pfx= dxqth=G dommultqth= domqth= zone=14
-qso 10 DL1ABC Band40 Phone/eLSB full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=DL qthzone=28 cont=Europe qthpfx=DL1 pfx= dxqth=DL dommultqth= domqth= zone=14
-qso 11 JA1ABC Band15 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=JA qthzone=45 cont=Asia qthpfx=JA1 pfx= dxqth=JA dommultqth= domqth= zone=25
-qso 12 PY2ABC Band6 Phone/eUSB full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=PY qthzone=15 cont=SouthAmerica qthpfx=PY2 pfx= dxqth=PY dommultqth= domqth= zone=11
-qso 13 VK2ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=VK qthzone=59 cont=Oceania qthpfx=VK2 pfx= dxqth=VK dommultqth= domqth= zone=30
-qso 14 ZS6ABC Band10 Phone/eUSB full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=ZS qthzone=57 cont=Africa qthpfx=ZS6 pfx= dxqth=ZS dommultqth= domqth= zone=38
-qso 15 KH6ABC Band20 Phone/eUSB full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=KH6 qthzone=61 cont=Oceania qthpfx=KH6 pfx= dxqth= dommultqth=HI domqth=HI zone=31
-qso 16 W1AW Band80 CW/eCW sparse | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth= domqth= zone=0
-qso 17 G3ABC Band20 Phone/eUSB sparse | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=G qthzone=27 cont=Europe qthpfx=G3 pfx= dxqth=G dommultqth= domqth= zone=0
+qso 07 VE3ABC Band15 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=VE qthzone=9 cont=NorthAmerica qthpfx=VE3 pfx= dxqth= dommultqth=ON domqth=ON zone=4
+qso 08 XE1ABC Band10 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=XE qthzone=10 cont=NorthAmerica qthpfx=XE1 pfx= dxqth=XE dommultqth= domqth= zone=6
+qso 09 G3ABC Band30 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=G qthzone=27 cont=Europe qthpfx=G3 pfx= dxqth=G dommultqth= domqth= zone=14
+qso 10 DL1ABC Band40 Phone/eLSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=DL qthzone=28 cont=Europe qthpfx=DL1 pfx= dxqth=DL dommultqth= domqth= zone=14
+qso 11 JA1ABC Band15 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=JA qthzone=45 cont=Asia qthpfx=JA1 pfx= dxqth=JA dommultqth= domqth= zone=25
+qso 12 PY2ABC Band6 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=PY qthzone=15 cont=SouthAmerica qthpfx=PY2 pfx= dxqth=PY dommultqth= domqth= zone=11
+qso 13 VK2ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=VK qthzone=59 cont=Oceania qthpfx=VK2 pfx= dxqth=VK dommultqth= domqth= zone=30
+qso 14 ZS6ABC Band10 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=ZS qthzone=57 cont=Africa qthpfx=ZS6 pfx= dxqth=ZS dommultqth= domqth= zone=38
+qso 15 KH6ABC Band20 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=KH6 qthzone=61 cont=Oceania qthpfx=KH6 pfx= dxqth= dommultqth=HI domqth=HI zone=31
+qso 16 W1AW Band80 CW/eCW sparse | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth= domqth= zone=0
+qso 17 G3ABC Band20 Phone/eUSB sparse | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=G qthzone=27 cont=Europe qthpfx=G3 pfx= dxqth=G dommultqth= domqth= zone=0
 == export.adif
 <CALL:4>W1AW <BAND:3>20m <QSO_DATE:8>20260115 <TIME_ON:6>120100 <TIME_OFF:6>120100 <RST_SENT:3>599 <RST_RCVD:3>599 <CONTEST_ID:8>ARRL-160 <MODE:2>CW <FREQ:6>14.025 <QTH:2>CT <PRECEDENCE:1>A <CHECK:2>99 <NAME:3>JOE <RX_PWR:3>100 <SRX:5>00101 <STX:5>00001 <TEN_TEN:5>00000 <AGE:3>040 <APP_TR4W_ID:32>00000000000000000000000000000001 <STX_STRING:6>599 KS <SRX_STRING:3>599 <ARRL_SECT:2>CT <EOR>
 <CALL:4>W1AW <BAND:3>20m <QSO_DATE:8>20260115 <TIME_ON:6>120200 <TIME_OFF:6>120200 <RST_SENT:2>59 <RST_RCVD:2>59 <CONTEST_ID:8>ARRL-160 <MODE:3>SSB <SUBMODE:3>USB <FREQ:5>14.25 <QTH:2>CT <PRECEDENCE:1>A <CHECK:2>99 <NAME:3>JOE <RX_PWR:3>100 <SRX:5>00102 <STX:5>00002 <TEN_TEN:5>00000 <AGE:3>040 <APP_TR4W_ID:32>00000000000000000000000000000002 <STX_STRING:5>59 KS <SRX_STRING:2>59 <ARRL_SECT:2>CT <EOR>
@@ -231,25 +231,25 @@ parse f.department F5ABC Band20/CW "599 75" | ok=TRUE err="" token="" pending=""
 == keys
 exchange.fields = QTH RST
 zones.max = 0
-qso 18 ON4ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=ON qthzone=27 cont=Europe qthpfx=ON4 pfx= dxqth=ON dommultqth= domqth= zone=14
-qso 19 YB1ABC Band15 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=YB qthzone=54 cont=Oceania qthpfx=YB1 pfx= dxqth=YB dommultqth= domqth= zone=28
-qso 20 JT1ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=JT qthzone=32 cont=Asia qthpfx=JT1 pfx= dxqth=JT dommultqth= domqth= zone=23
-qso 21 SM5ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=SM qthzone=18 cont=Europe qthpfx=SM5 pfx= dxqth=SM dommultqth= domqth= zone=14
-qso 22 LA1ABC Band40 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=LA qthzone=18 cont=Europe qthpfx=LA1 pfx= dxqth=LA dommultqth= domqth= zone=14
-qso 23 OH2ABC Band20 Phone/eUSB full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=OH qthzone=18 cont=Europe qthpfx=OH2 pfx= dxqth=OH dommultqth= domqth= zone=15
-qso 24 OH0ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=OH0 qthzone=18 cont=Europe qthpfx=OH0 pfx= dxqth=OH0 dommultqth= domqth= zone=15
-qso 25 OX3ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=OX qthzone=5 cont=NorthAmerica qthpfx=OX3 pfx= dxqth=OX dommultqth= domqth= zone=40
-qso 26 UA9ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=UA9 qthzone=30 cont=Asia qthpfx=UA9 pfx= dxqth=UA9 dommultqth= domqth= zone=17
-qso 27 UA0ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=UA9 qthzone=30 cont=Asia qthpfx=UA0 pfx= dxqth=UA9 dommultqth= domqth= zone=18
-qso 28 RK1G Band40 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=UA qthzone=29 cont=Europe qthpfx=RK1 pfx= dxqth=UA dommultqth= domqth= zone=16
-qso 29 I1ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=I qthzone=28 cont=Europe qthpfx=I1 pfx= dxqth=I dommultqth= domqth= zone=15
-qso 30 IS0ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=IS qthzone=28 cont=Europe qthpfx=IS0 pfx= dxqth=IS dommultqth= domqth= zone=15
-qso 31 LZ1ABC Band40 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=LZ qthzone=28 cont=Europe qthpfx=LZ1 pfx= dxqth=LZ dommultqth= domqth= zone=20
-qso 32 UR5ABC Band40 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=UR qthzone=29 cont=Europe qthpfx=UR5 pfx= dxqth=UR dommultqth= domqth= zone=16
-qso 33 9A2ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=9A qthzone=28 cont=Europe qthpfx=9A2 pfx= dxqth=9A dommultqth= domqth= zone=15
-qso 34 KL7ABC Band20 CW/eCW full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=KL qthzone=1 cont=NorthAmerica qthpfx=KL7 pfx= dxqth= dommultqth= domqth= zone=1
-qso 35 HB9ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=HB qthzone=28 cont=Europe qthpfx=HB9 pfx= dxqth=HB dommultqth= domqth= zone=14
-qso 36 OK1ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=OK qthzone=28 cont=Europe qthpfx=OK1 pfx= dxqth=OK dommultqth= domqth= zone=15
+qso 18 ON4ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=ON qthzone=27 cont=Europe qthpfx=ON4 pfx= dxqth=ON dommultqth= domqth= zone=14
+qso 19 YB1ABC Band15 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=YB qthzone=54 cont=Oceania qthpfx=YB1 pfx= dxqth=YB dommultqth= domqth= zone=28
+qso 20 JT1ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=JT qthzone=32 cont=Asia qthpfx=JT1 pfx= dxqth=JT dommultqth= domqth= zone=23
+qso 21 SM5ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=SM qthzone=18 cont=Europe qthpfx=SM5 pfx= dxqth=SM dommultqth= domqth= zone=14
+qso 22 LA1ABC Band40 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=LA qthzone=18 cont=Europe qthpfx=LA1 pfx= dxqth=LA dommultqth= domqth= zone=14
+qso 23 OH2ABC Band20 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=OH qthzone=18 cont=Europe qthpfx=OH2 pfx= dxqth=OH dommultqth= domqth= zone=15
+qso 24 OH0ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=OH0 qthzone=18 cont=Europe qthpfx=OH0 pfx= dxqth=OH0 dommultqth= domqth= zone=15
+qso 25 OX3ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=OX qthzone=5 cont=NorthAmerica qthpfx=OX3 pfx= dxqth=OX dommultqth= domqth= zone=40
+qso 26 UA9ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=UA9 qthzone=30 cont=Asia qthpfx=UA9 pfx= dxqth=UA9 dommultqth= domqth= zone=17
+qso 27 UA0ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=UA9 qthzone=30 cont=Asia qthpfx=UA0 pfx= dxqth=UA9 dommultqth= domqth= zone=18
+qso 28 RK1G Band40 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=UA qthzone=29 cont=Europe qthpfx=RK1 pfx= dxqth=UA dommultqth= domqth= zone=16
+qso 29 I1ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=I qthzone=28 cont=Europe qthpfx=I1 pfx= dxqth=I dommultqth= domqth= zone=15
+qso 30 IS0ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=IS qthzone=28 cont=Europe qthpfx=IS0 pfx= dxqth=IS dommultqth= domqth= zone=15
+qso 31 LZ1ABC Band40 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=LZ qthzone=28 cont=Europe qthpfx=LZ1 pfx= dxqth=LZ dommultqth= domqth= zone=20
+qso 32 UR5ABC Band40 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=UR qthzone=29 cont=Europe qthpfx=UR5 pfx= dxqth=UR dommultqth= domqth= zone=16
+qso 33 9A2ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=9A qthzone=28 cont=Europe qthpfx=9A2 pfx= dxqth=9A dommultqth= domqth= zone=15
+qso 34 KL7ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=KL qthzone=1 cont=NorthAmerica qthpfx=KL7 pfx= dxqth= dommultqth= domqth= zone=1
+qso 35 HB9ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=HB qthzone=28 cont=Europe qthpfx=HB9 pfx= dxqth=HB dommultqth= domqth= zone=14
+qso 36 OK1ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=OK qthzone=28 cont=Europe qthpfx=OK1 pfx= dxqth=OK dommultqth= domqth= zone=15
 parse iota G3ABC Band20/CW "599 123 EU005" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=123 EU005 exch=599 123 EU005 cty=G/27/Europe/G3 dxqth=G
 parse iota.dash G3ABC Band20/CW "599 123 EU-005" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=123 EU-005 exch=599 123 EU-005 cty=G/27/Europe/G3 dxqth=G
 parse iota.short G3ABC Band20/CW "599 EU5" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=EU5 exch=599 EU5 cty=G/27/Europe/G3 dxqth=G
@@ -259,7 +259,7 @@ parse grid6 W1AW Band20/CW "599 FN31PR" | ok=TRUE err="" token="" pending="" cal
 parse grid.field W1AW Band20/CW "599 FN" | ok=FALSE err="Improper domestic QTH!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse rda.short UA3ABC Band20/CW "599 MO1" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=MO1 exch=599 MO1 cty=UA/29/Europe/UA3 dxqth=UA
 == totals
-totals.qsopoints = 58
+totals.qsopoints = 2
 totals.qtcs = 0
 totals.singleband = AllBands
 totals.qsos Band160 CW = 1
@@ -291,31 +291,10 @@ totals.qsos AllBands Phone = 8
 totals.qsos AllBands Both = 17
 totals.mults Band160 CW = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band160 Both = dom=1 dx=0 zone=0 pfx=0
-totals.mults Band40 Digital = dom=1 dx=0 zone=0 pfx=0
-totals.mults Band40 Phone = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band40 Both = dom=1 dx=1 zone=0 pfx=0
-totals.mults Band20 CW = dom=1 dx=1 zone=0 pfx=0
-totals.mults Band20 Digital = dom=1 dx=0 zone=0 pfx=0
-totals.mults Band20 Phone = dom=2 dx=1 zone=0 pfx=0
-totals.mults Band20 Both = dom=4 dx=2 zone=0 pfx=0
-totals.mults Band15 CW = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band15 Phone = dom=1 dx=0 zone=0 pfx=0
-totals.mults Band15 Both = dom=1 dx=1 zone=0 pfx=0
-totals.mults Band10 CW = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band10 Phone = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band10 Both = dom=0 dx=2 zone=0 pfx=0
-totals.mults Band30 CW = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band30 Both = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band6 Phone = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band6 Both = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band2 Phone = dom=1 dx=0 zone=0 pfx=0
-totals.mults Band2 Both = dom=1 dx=0 zone=0 pfx=0
-totals.mults AllBands CW = dom=2 dx=4 zone=0 pfx=0
-totals.mults AllBands Digital = dom=2 dx=0 zone=0 pfx=0
-totals.mults AllBands Phone = dom=4 dx=4 zone=0 pfx=0
-totals.mults AllBands Both = dom=8 dx=8 zone=0 pfx=0
-totals.totalscore = 928
-totals.cabrillo = CLAIMED-SCORE: 928
+totals.mults AllBands CW = dom=1 dx=0 zone=0 pfx=0
+totals.mults AllBands Both = dom=1 dx=0 zone=0 pfx=0
+totals.totalscore = 2
+totals.cabrillo = CLAIMED-SCORE: 2
 == initialexchange
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE
@@ -406,23 +385,23 @@ setting.MY ZONE = 4
 setting.S&P CW EXCHANGE = _@_ 5NN ON
 setting.S&P EXCHANGE = _@_ 5NN ON
 == scoring
-qso 01 W1AW Band20 CW/eCW full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
-qso 02 W1AW Band20 Phone/eUSB full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
-qso 03 W1AW Band2 FM/eFM full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
-qso 04 W1AW Band40 Digital/eRTTY full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
-qso 05 W1AW Band20 Digital/eFT8 full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
+qso 01 W1AW Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
+qso 02 W1AW Band20 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
+qso 03 W1AW Band2 FM/eFM full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
+qso 04 W1AW Band40 Digital/eRTTY full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
+qso 05 W1AW Band20 Digital/eFT8 full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 06 K4ABC Band160 CW/eCW full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=K4 pfx= dxqth= dommultqth=FL domqth=FL zone=5
-qso 07 VE3ABC Band15 Phone/eUSB full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=VE qthzone=9 cont=NorthAmerica qthpfx=VE3 pfx= dxqth= dommultqth=ON domqth=ON zone=4
-qso 08 XE1ABC Band10 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=XE qthzone=10 cont=NorthAmerica qthpfx=XE1 pfx= dxqth=XE dommultqth= domqth= zone=6
-qso 09 G3ABC Band30 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=G qthzone=27 cont=Europe qthpfx=G3 pfx= dxqth=G dommultqth= domqth= zone=14
-qso 10 DL1ABC Band40 Phone/eLSB full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=DL qthzone=28 cont=Europe qthpfx=DL1 pfx= dxqth=DL dommultqth= domqth= zone=14
-qso 11 JA1ABC Band15 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=JA qthzone=45 cont=Asia qthpfx=JA1 pfx= dxqth=JA dommultqth= domqth= zone=25
-qso 12 PY2ABC Band6 Phone/eUSB full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=PY qthzone=15 cont=SouthAmerica qthpfx=PY2 pfx= dxqth=PY dommultqth= domqth= zone=11
-qso 13 VK2ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=VK qthzone=59 cont=Oceania qthpfx=VK2 pfx= dxqth=VK dommultqth= domqth= zone=30
-qso 14 ZS6ABC Band10 Phone/eUSB full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=ZS qthzone=57 cont=Africa qthpfx=ZS6 pfx= dxqth=ZS dommultqth= domqth= zone=38
-qso 15 KH6ABC Band20 Phone/eUSB full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=KH6 qthzone=61 cont=Oceania qthpfx=KH6 pfx= dxqth= dommultqth=HI domqth=HI zone=31
-qso 16 W1AW Band80 CW/eCW sparse | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth= domqth= zone=0
-qso 17 G3ABC Band20 Phone/eUSB sparse | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=G qthzone=27 cont=Europe qthpfx=G3 pfx= dxqth=G dommultqth= domqth= zone=0
+qso 07 VE3ABC Band15 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=VE qthzone=9 cont=NorthAmerica qthpfx=VE3 pfx= dxqth= dommultqth=ON domqth=ON zone=4
+qso 08 XE1ABC Band10 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=XE qthzone=10 cont=NorthAmerica qthpfx=XE1 pfx= dxqth=XE dommultqth= domqth= zone=6
+qso 09 G3ABC Band30 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=G qthzone=27 cont=Europe qthpfx=G3 pfx= dxqth=G dommultqth= domqth= zone=14
+qso 10 DL1ABC Band40 Phone/eLSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=DL qthzone=28 cont=Europe qthpfx=DL1 pfx= dxqth=DL dommultqth= domqth= zone=14
+qso 11 JA1ABC Band15 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=JA qthzone=45 cont=Asia qthpfx=JA1 pfx= dxqth=JA dommultqth= domqth= zone=25
+qso 12 PY2ABC Band6 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=PY qthzone=15 cont=SouthAmerica qthpfx=PY2 pfx= dxqth=PY dommultqth= domqth= zone=11
+qso 13 VK2ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=VK qthzone=59 cont=Oceania qthpfx=VK2 pfx= dxqth=VK dommultqth= domqth= zone=30
+qso 14 ZS6ABC Band10 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=ZS qthzone=57 cont=Africa qthpfx=ZS6 pfx= dxqth=ZS dommultqth= domqth= zone=38
+qso 15 KH6ABC Band20 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=KH6 qthzone=61 cont=Oceania qthpfx=KH6 pfx= dxqth= dommultqth=HI domqth=HI zone=31
+qso 16 W1AW Band80 CW/eCW sparse | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth= domqth= zone=0
+qso 17 G3ABC Band20 Phone/eUSB sparse | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=G qthzone=27 cont=Europe qthpfx=G3 pfx= dxqth=G dommultqth= domqth= zone=0
 == export.adif
 <CALL:4>W1AW <BAND:3>20m <QSO_DATE:8>20260115 <TIME_ON:6>120100 <TIME_OFF:6>120100 <RST_SENT:3>599 <RST_RCVD:3>599 <CONTEST_ID:8>ARRL-160 <MODE:2>CW <FREQ:6>14.025 <QTH:2>CT <PRECEDENCE:1>A <CHECK:2>99 <NAME:3>JOE <RX_PWR:3>100 <SRX:5>00101 <STX:5>00001 <TEN_TEN:5>00000 <AGE:3>040 <APP_TR4W_ID:32>00000000000000000000000000000001 <STX_STRING:6>599 ON <SRX_STRING:3>599 <ARRL_SECT:2>CT <EOR>
 <CALL:4>W1AW <BAND:3>20m <QSO_DATE:8>20260115 <TIME_ON:6>120200 <TIME_OFF:6>120200 <RST_SENT:2>59 <RST_RCVD:2>59 <CONTEST_ID:8>ARRL-160 <MODE:3>SSB <SUBMODE:3>USB <FREQ:5>14.25 <QTH:2>CT <PRECEDENCE:1>A <CHECK:2>99 <NAME:3>JOE <RX_PWR:3>100 <SRX:5>00102 <STX:5>00002 <TEN_TEN:5>00000 <AGE:3>040 <APP_TR4W_ID:32>00000000000000000000000000000002 <STX_STRING:5>59 ON <SRX_STRING:2>59 <ARRL_SECT:2>CT <EOR>
@@ -586,25 +565,25 @@ parse f.department F5ABC Band20/CW "599 75" | ok=TRUE err="" token="" pending=""
 == keys
 exchange.fields = QTH RST
 zones.max = 0
-qso 18 ON4ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=ON qthzone=27 cont=Europe qthpfx=ON4 pfx= dxqth=ON dommultqth= domqth= zone=14
-qso 19 YB1ABC Band15 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=YB qthzone=54 cont=Oceania qthpfx=YB1 pfx= dxqth=YB dommultqth= domqth= zone=28
-qso 20 JT1ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=JT qthzone=32 cont=Asia qthpfx=JT1 pfx= dxqth=JT dommultqth= domqth= zone=23
-qso 21 SM5ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=SM qthzone=18 cont=Europe qthpfx=SM5 pfx= dxqth=SM dommultqth= domqth= zone=14
-qso 22 LA1ABC Band40 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=LA qthzone=18 cont=Europe qthpfx=LA1 pfx= dxqth=LA dommultqth= domqth= zone=14
-qso 23 OH2ABC Band20 Phone/eUSB full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=OH qthzone=18 cont=Europe qthpfx=OH2 pfx= dxqth=OH dommultqth= domqth= zone=15
-qso 24 OH0ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=OH0 qthzone=18 cont=Europe qthpfx=OH0 pfx= dxqth=OH0 dommultqth= domqth= zone=15
-qso 25 OX3ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=OX qthzone=5 cont=NorthAmerica qthpfx=OX3 pfx= dxqth=OX dommultqth= domqth= zone=40
-qso 26 UA9ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=UA9 qthzone=30 cont=Asia qthpfx=UA9 pfx= dxqth=UA9 dommultqth= domqth= zone=17
-qso 27 UA0ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=UA9 qthzone=30 cont=Asia qthpfx=UA0 pfx= dxqth=UA9 dommultqth= domqth= zone=18
-qso 28 RK1G Band40 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=UA qthzone=29 cont=Europe qthpfx=RK1 pfx= dxqth=UA dommultqth= domqth= zone=16
-qso 29 I1ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=I qthzone=28 cont=Europe qthpfx=I1 pfx= dxqth=I dommultqth= domqth= zone=15
-qso 30 IS0ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=IS qthzone=28 cont=Europe qthpfx=IS0 pfx= dxqth=IS dommultqth= domqth= zone=15
-qso 31 LZ1ABC Band40 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=LZ qthzone=28 cont=Europe qthpfx=LZ1 pfx= dxqth=LZ dommultqth= domqth= zone=20
-qso 32 UR5ABC Band40 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=UR qthzone=29 cont=Europe qthpfx=UR5 pfx= dxqth=UR dommultqth= domqth= zone=16
-qso 33 9A2ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=9A qthzone=28 cont=Europe qthpfx=9A2 pfx= dxqth=9A dommultqth= domqth= zone=15
-qso 34 KL7ABC Band20 CW/eCW full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=KL qthzone=1 cont=NorthAmerica qthpfx=KL7 pfx= dxqth= dommultqth= domqth= zone=1
-qso 35 HB9ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=HB qthzone=28 cont=Europe qthpfx=HB9 pfx= dxqth=HB dommultqth= domqth= zone=14
-qso 36 OK1ABC Band20 CW/eCW full | pts=5 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=OK qthzone=28 cont=Europe qthpfx=OK1 pfx= dxqth=OK dommultqth= domqth= zone=15
+qso 18 ON4ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=ON qthzone=27 cont=Europe qthpfx=ON4 pfx= dxqth=ON dommultqth= domqth= zone=14
+qso 19 YB1ABC Band15 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=YB qthzone=54 cont=Oceania qthpfx=YB1 pfx= dxqth=YB dommultqth= domqth= zone=28
+qso 20 JT1ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=JT qthzone=32 cont=Asia qthpfx=JT1 pfx= dxqth=JT dommultqth= domqth= zone=23
+qso 21 SM5ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=SM qthzone=18 cont=Europe qthpfx=SM5 pfx= dxqth=SM dommultqth= domqth= zone=14
+qso 22 LA1ABC Band40 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=LA qthzone=18 cont=Europe qthpfx=LA1 pfx= dxqth=LA dommultqth= domqth= zone=14
+qso 23 OH2ABC Band20 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=OH qthzone=18 cont=Europe qthpfx=OH2 pfx= dxqth=OH dommultqth= domqth= zone=15
+qso 24 OH0ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=OH0 qthzone=18 cont=Europe qthpfx=OH0 pfx= dxqth=OH0 dommultqth= domqth= zone=15
+qso 25 OX3ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=OX qthzone=5 cont=NorthAmerica qthpfx=OX3 pfx= dxqth=OX dommultqth= domqth= zone=40
+qso 26 UA9ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=UA9 qthzone=30 cont=Asia qthpfx=UA9 pfx= dxqth=UA9 dommultqth= domqth= zone=17
+qso 27 UA0ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=UA9 qthzone=30 cont=Asia qthpfx=UA0 pfx= dxqth=UA9 dommultqth= domqth= zone=18
+qso 28 RK1G Band40 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=UA qthzone=29 cont=Europe qthpfx=RK1 pfx= dxqth=UA dommultqth= domqth= zone=16
+qso 29 I1ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=I qthzone=28 cont=Europe qthpfx=I1 pfx= dxqth=I dommultqth= domqth= zone=15
+qso 30 IS0ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=IS qthzone=28 cont=Europe qthpfx=IS0 pfx= dxqth=IS dommultqth= domqth= zone=15
+qso 31 LZ1ABC Band40 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=LZ qthzone=28 cont=Europe qthpfx=LZ1 pfx= dxqth=LZ dommultqth= domqth= zone=20
+qso 32 UR5ABC Band40 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=UR qthzone=29 cont=Europe qthpfx=UR5 pfx= dxqth=UR dommultqth= domqth= zone=16
+qso 33 9A2ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=9A qthzone=28 cont=Europe qthpfx=9A2 pfx= dxqth=9A dommultqth= domqth= zone=15
+qso 34 KL7ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=KL qthzone=1 cont=NorthAmerica qthpfx=KL7 pfx= dxqth= dommultqth= domqth= zone=1
+qso 35 HB9ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=HB qthzone=28 cont=Europe qthpfx=HB9 pfx= dxqth=HB dommultqth= domqth= zone=14
+qso 36 OK1ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=OK qthzone=28 cont=Europe qthpfx=OK1 pfx= dxqth=OK dommultqth= domqth= zone=15
 parse iota G3ABC Band20/CW "599 123 EU005" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=123 EU005 exch=599 123 EU005 cty=G/27/Europe/G3 dxqth=G
 parse iota.dash G3ABC Band20/CW "599 123 EU-005" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=123 EU-005 exch=599 123 EU-005 cty=G/27/Europe/G3 dxqth=G
 parse iota.short G3ABC Band20/CW "599 EU5" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=EU5 exch=599 EU5 cty=G/27/Europe/G3 dxqth=G
@@ -614,7 +593,7 @@ parse grid6 W1AW Band20/CW "599 FN31PR" | ok=TRUE err="" token="" pending="" cal
 parse grid.field W1AW Band20/CW "599 FN" | ok=FALSE err="Improper domestic QTH!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse rda.short UA3ABC Band20/CW "599 MO1" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=MO1 exch=599 MO1 cty=UA/29/Europe/UA3 dxqth=UA
 == totals
-totals.qsopoints = 58
+totals.qsopoints = 2
 totals.qtcs = 0
 totals.singleband = AllBands
 totals.qsos Band160 CW = 1
@@ -646,31 +625,10 @@ totals.qsos AllBands Phone = 8
 totals.qsos AllBands Both = 17
 totals.mults Band160 CW = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band160 Both = dom=1 dx=0 zone=0 pfx=0
-totals.mults Band40 Digital = dom=1 dx=0 zone=0 pfx=0
-totals.mults Band40 Phone = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band40 Both = dom=1 dx=1 zone=0 pfx=0
-totals.mults Band20 CW = dom=1 dx=1 zone=0 pfx=0
-totals.mults Band20 Digital = dom=1 dx=0 zone=0 pfx=0
-totals.mults Band20 Phone = dom=2 dx=1 zone=0 pfx=0
-totals.mults Band20 Both = dom=4 dx=2 zone=0 pfx=0
-totals.mults Band15 CW = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band15 Phone = dom=1 dx=0 zone=0 pfx=0
-totals.mults Band15 Both = dom=1 dx=1 zone=0 pfx=0
-totals.mults Band10 CW = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band10 Phone = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band10 Both = dom=0 dx=2 zone=0 pfx=0
-totals.mults Band30 CW = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band30 Both = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band6 Phone = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band6 Both = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band2 Phone = dom=1 dx=0 zone=0 pfx=0
-totals.mults Band2 Both = dom=1 dx=0 zone=0 pfx=0
-totals.mults AllBands CW = dom=2 dx=4 zone=0 pfx=0
-totals.mults AllBands Digital = dom=2 dx=0 zone=0 pfx=0
-totals.mults AllBands Phone = dom=4 dx=4 zone=0 pfx=0
-totals.mults AllBands Both = dom=8 dx=8 zone=0 pfx=0
-totals.totalscore = 928
-totals.cabrillo = CLAIMED-SCORE: 928
+totals.mults AllBands CW = dom=1 dx=0 zone=0 pfx=0
+totals.mults AllBands Both = dom=1 dx=0 zone=0 pfx=0
+totals.totalscore = 2
+totals.cabrillo = CLAIMED-SCORE: 2
 == initialexchange
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE
@@ -761,13 +719,13 @@ setting.REPEAT S&P EXCHANGE =  5NN #
 setting.S&P CW EXCHANGE =  5NN #
 setting.S&P EXCHANGE =  5NN #
 == scoring
-qso 01 W1AW Band20 CW/eCW full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
-qso 02 W1AW Band20 Phone/eUSB full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
-qso 03 W1AW Band2 FM/eFM full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
-qso 04 W1AW Band40 Digital/eRTTY full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
-qso 05 W1AW Band20 Digital/eFT8 full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
+qso 01 W1AW Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
+qso 02 W1AW Band20 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
+qso 03 W1AW Band2 FM/eFM full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
+qso 04 W1AW Band40 Digital/eRTTY full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
+qso 05 W1AW Band20 Digital/eFT8 full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 06 K4ABC Band160 CW/eCW full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=K4 pfx= dxqth= dommultqth=FL domqth=FL zone=5
-qso 07 VE3ABC Band15 Phone/eUSB full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=VE qthzone=9 cont=NorthAmerica qthpfx=VE3 pfx= dxqth= dommultqth=ON domqth=ON zone=4
+qso 07 VE3ABC Band15 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=VE qthzone=9 cont=NorthAmerica qthpfx=VE3 pfx= dxqth= dommultqth=ON domqth=ON zone=4
 qso 08 XE1ABC Band10 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=XE qthzone=10 cont=NorthAmerica qthpfx=XE1 pfx= dxqth= dommultqth= domqth= zone=6
 qso 09 G3ABC Band30 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=G qthzone=27 cont=Europe qthpfx=G3 pfx= dxqth= dommultqth= domqth= zone=14
 qso 10 DL1ABC Band40 Phone/eLSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=DL qthzone=28 cont=Europe qthpfx=DL1 pfx= dxqth= dommultqth= domqth= zone=14
@@ -775,8 +733,8 @@ qso 11 JA1ABC Band15 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALS
 qso 12 PY2ABC Band6 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=PY qthzone=15 cont=SouthAmerica qthpfx=PY2 pfx= dxqth= dommultqth= domqth= zone=11
 qso 13 VK2ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=VK qthzone=59 cont=Oceania qthpfx=VK2 pfx= dxqth= dommultqth= domqth= zone=30
 qso 14 ZS6ABC Band10 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=ZS qthzone=57 cont=Africa qthpfx=ZS6 pfx= dxqth= dommultqth= domqth= zone=38
-qso 15 KH6ABC Band20 Phone/eUSB full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=KH6 qthzone=61 cont=Oceania qthpfx=KH6 pfx= dxqth= dommultqth=HI domqth=HI zone=31
-qso 16 W1AW Band80 CW/eCW sparse | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth= domqth= zone=0
+qso 15 KH6ABC Band20 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=KH6 qthzone=61 cont=Oceania qthpfx=KH6 pfx= dxqth= dommultqth=HI domqth=HI zone=31
+qso 16 W1AW Band80 CW/eCW sparse | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth= domqth= zone=0
 qso 17 G3ABC Band20 Phone/eUSB sparse | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=G qthzone=27 cont=Europe qthpfx=G3 pfx= dxqth= dommultqth= domqth= zone=0
 == export.adif
 <CALL:4>W1AW <BAND:3>20m <QSO_DATE:8>20260115 <TIME_ON:6>120100 <TIME_OFF:6>120100 <RST_SENT:3>599 <RST_RCVD:3>599 <CONTEST_ID:8>ARRL-160 <MODE:2>CW <FREQ:6>14.025 <QTH:2>CT <PRECEDENCE:1>A <CHECK:2>99 <NAME:3>JOE <RX_PWR:3>100 <SRX:5>00101 <STX:5>00001 <TEN_TEN:5>00000 <AGE:3>040 <APP_TR4W_ID:32>00000000000000000000000000000001 <STX_STRING:3>599 <SRX_STRING:3>599 <ARRL_SECT:2>CT <EOR>
@@ -957,7 +915,7 @@ qso 30 IS0ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALS
 qso 31 LZ1ABC Band40 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=LZ qthzone=28 cont=Europe qthpfx=LZ1 pfx= dxqth= dommultqth= domqth= zone=20
 qso 32 UR5ABC Band40 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=UR qthzone=29 cont=Europe qthpfx=UR5 pfx= dxqth= dommultqth= domqth= zone=16
 qso 33 9A2ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=9A qthzone=28 cont=Europe qthpfx=9A2 pfx= dxqth= dommultqth= domqth= zone=15
-qso 34 KL7ABC Band20 CW/eCW full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=KL qthzone=1 cont=NorthAmerica qthpfx=KL7 pfx= dxqth= dommultqth= domqth= zone=1
+qso 34 KL7ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=KL qthzone=1 cont=NorthAmerica qthpfx=KL7 pfx= dxqth= dommultqth= domqth= zone=1
 qso 35 HB9ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=HB qthzone=28 cont=Europe qthpfx=HB9 pfx= dxqth= dommultqth= domqth= zone=14
 qso 36 OK1ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=OK qthzone=28 cont=Europe qthpfx=OK1 pfx= dxqth= dommultqth= domqth= zone=15
 parse iota G3ABC Band20/CW "599 123 EU005" | ok=FALSE err="Improper domestic QTH!!" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 cty=G/27/Europe/G3
@@ -969,7 +927,7 @@ parse grid6 W1AW Band20/CW "599 FN31PR" | ok=FALSE err="Improper domestic QTH!!"
 parse grid.field W1AW Band20/CW "599 FN" | ok=FALSE err="Improper domestic QTH!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse rda.short UA3ABC Band20/CW "599 MO1" | ok=FALSE err="Improper domestic QTH!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=UA/29/Europe/UA3
 == totals
-totals.qsopoints = 18
+totals.qsopoints = 2
 totals.qtcs = 0
 totals.singleband = AllBands
 totals.qsos Band160 CW = 1
@@ -1001,22 +959,10 @@ totals.qsos AllBands Phone = 8
 totals.qsos AllBands Both = 17
 totals.mults Band160 CW = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band160 Both = dom=1 dx=0 zone=0 pfx=0
-totals.mults Band40 Digital = dom=1 dx=0 zone=0 pfx=0
-totals.mults Band40 Both = dom=1 dx=0 zone=0 pfx=0
-totals.mults Band20 CW = dom=1 dx=0 zone=0 pfx=0
-totals.mults Band20 Digital = dom=1 dx=0 zone=0 pfx=0
-totals.mults Band20 Phone = dom=2 dx=0 zone=0 pfx=0
-totals.mults Band20 Both = dom=4 dx=0 zone=0 pfx=0
-totals.mults Band15 Phone = dom=1 dx=0 zone=0 pfx=0
-totals.mults Band15 Both = dom=1 dx=0 zone=0 pfx=0
-totals.mults Band2 Phone = dom=1 dx=0 zone=0 pfx=0
-totals.mults Band2 Both = dom=1 dx=0 zone=0 pfx=0
-totals.mults AllBands CW = dom=2 dx=0 zone=0 pfx=0
-totals.mults AllBands Digital = dom=2 dx=0 zone=0 pfx=0
-totals.mults AllBands Phone = dom=4 dx=0 zone=0 pfx=0
-totals.mults AllBands Both = dom=8 dx=0 zone=0 pfx=0
-totals.totalscore = 144
-totals.cabrillo = CLAIMED-SCORE: 144
+totals.mults AllBands CW = dom=1 dx=0 zone=0 pfx=0
+totals.mults AllBands Both = dom=1 dx=0 zone=0 pfx=0
+totals.totalscore = 2
+totals.cabrillo = CLAIMED-SCORE: 2
 == initialexchange
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE

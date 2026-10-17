@@ -762,7 +762,11 @@ the target shape, the M-step migration order and the open questions.
   canvas or a global. Seams: `DescribeNewContestPrompts(TNewContestPrompts)`
   -- the New Contest dialog's two `case`s, ordered steps (rows go out in the
   order asked, the last comment wins), the QSO-party head on the base from
-  `QSOPartyArea` (not `HostState`: 7QP's area is '7th area'); `TotalsDisplay` (uTotal); `SummarySheet` (PostUnit);
+  `QSOPartyArea` (not `HostState`: 7QP's area is '7th area');
+  `NewContestValueRefusal(field, value)` (Q104, 2026-10-17: '' accepts, any
+  other answer is the message `uNewContest.BeginNewContest` shows while OK stays
+  disabled; the base accepts everything, IN7QPNE refuses an in-area MY STATE);
+  `TotalsDisplay` (uTotal); `SummarySheet` (PostUnit);
   `ReportsRunningScore` (hour totals); `CabrilloContestName`,
   `RequiresCabrilloLocation`, `CabrilloHeaderLinesBeforeTag` (keyed on the
   Cabrillo tag NAME -- `CabrilloTags` is a UI unit's),

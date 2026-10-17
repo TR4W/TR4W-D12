@@ -11004,3 +11004,8 @@ msgstr ""
 msgid "%s cannot be used on the multi-op network yet -- the network protocol cannot carry it. Use it only while this station is not connected to a multi-op server."
 msgstr "%s nie może jeszcze być używany w sieci multi-op -- protokół sieciowy nie potrafi go przesłać. Używaj go tylko wtedy, gdy ta stacja nie jest połączona z serwerem multi-op."
 
+#: uappstrings.snewcontestin7qpneinsideaparty
+#, fuzzy
+msgid "IN7QPNE is for stations outside Indiana, the 7th call area, New England and Delaware. From %s, choose the %s instead."
+msgstr "IN7QPNE jest dla stacji spoza Indiany, 7. obszaru znaków, Nowej Anglii i Delaware. Z %s wybierz zamiast tego %s."
+

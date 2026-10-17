@@ -115,8 +115,11 @@ type
       (* 160 to 10 m without WARC -- the header. *)
       function UsesBand(aBand: BandType): boolean; override;
       (* A DX STATION EARNS NO MULTIPLIER -- logdupe's SetMultFlags rule for
-         this contest (4.116.5), moved here at M8 and transcribed exactly: a
-         multiplier QTH of 'DX' earns no multiplier of any kind. *)
+         this contest (4.116.5), moved here at M8: a multiplier QTH of 'DX'
+         earns no multiplier of any kind. IN ANY CASE since Q84 (NY4I,
+         2026-10-15: "ignore case") -- IN7QPNE's file maps `dx = dx`, so an
+         Indiana-judged DX contact there earned the one 'dx' multiplier.
+         uContestBase.DomesticMultiplierIsDX is the test. *)
       function CountsAsMultiplier(const aQso: ContestExchange;
                                   aKind: RemainingMultiplierType): boolean; override;
       (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
@@ -140,7 +143,7 @@ function TContestIndianaQP.CountsAsMultiplier(const aQso: ContestExchange;
                                               aKind: RemainingMultiplierType): boolean;
 begin
    (* Every kind: the legacy rule returned before any flag was set. *)
-   Result := aQso.DomMultQTH <> 'DX';
+   Result := not DomesticMultiplierIsDX(string(aQso.DomMultQTH));
 end;
 
 function TContestIndianaQP.GetDisplayName: string;

@@ -8305,3 +8305,8 @@ msgstr ""
 msgid "%s cannot be used on the multi-op network yet -- the network protocol cannot carry it. Use it only while this station is not connected to a multi-op server."
 msgstr "%s 目前还不能在多操作员网络上使用 -- 网络协议无法承载它。请仅在本电台未连接到多操作员服务器时使用。"
 
+#: uappstrings.snewcontestin7qpneinsideaparty
+#, fuzzy
+msgid "IN7QPNE is for stations outside Indiana, the 7th call area, New England and Delaware. From %s, choose the %s instead."
+msgstr "IN7QPNE 适用于印第安纳、第 7 呼号区、新英格兰和特拉华以外的电台。在 %s，请改选 %s。"
+

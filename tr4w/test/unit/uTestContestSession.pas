@@ -388,7 +388,10 @@ procedure TContestSessionTests.Test_FieldDayDXMultipliersAreWhatTheSessionRuns;
 begin
    BeginTest('Test_FieldDayDXMultipliersAreWhatTheSessionRuns');
    Check(ARRLFIELDDAY, False);
-   Check(WINTERFIELDDAY, True);
+   (* False since 2026-10-17: Q38, NY4I -- "Winter FD does not count DXCC
+      multipliers". It was True (ARRLDXCCWithNoARRLSections), tracked and
+      never scored. *)
+   Check(WINTERFIELDDAY, False);
 end;
 
 (* FIELD DAY'S MESSAGES ARE BUILT FROM THE STATION IT IS HANDED, and its

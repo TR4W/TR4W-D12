@@ -674,8 +674,10 @@ begin
          end;
       UA4WCHAMPIONSHIP:
          begin
-         Result := StepComment('Enter your RDA (for Russian stations) or four digit grid square:',
-                               ncfMyQTH);
+         (* The translated constant since 2026-10-17 (Q71, NY4I "Da"); it was
+            the fixed literal 'Enter your RDA (for Russian stations) or four
+            digit grid square:'. *)
+         Result := StepComment(TC_ENTERYOURRDAIDORGRID, ncfMyQTH);
          end;
       UBACW:
          begin

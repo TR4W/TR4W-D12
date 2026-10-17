@@ -130,6 +130,14 @@ const
 
 var
   NewContestDisplayedCommands           : integer;
+  (* WHICH FIELD EACH CONTEST ROW HOLDS -- Q104. DisplayInitialCommand hands
+    rows out in order and records the field here, so BeginNewContest can ask
+    the contest about a row's value by what it IS, not by its caption. Only
+    1..NewContestDisplayedCommands are meaningful. *)
+  NewContestRowFields                   : array[1..CSAS] of TNewContestField;
+  (* THE CONTEST'S OWN COMMENT for its rows (the prompt text), kept so a
+    refusal shown in the same place can be taken down again -- Q104. *)
+  NewContestPromptComment               : string;
 //  NewContestAllowReturn                 : boolean;
   SelectedContest                       : TContestHandle;
 
@@ -214,6 +222,7 @@ procedure ApplyIAmIn;
 begin
    ClearFields;
    frmNewContest.SetComment('');
+   NewContestPromptComment := '';
 
    (* Unticked: the prompts are what ticking it ASKS FOR, so there is nothing
      to put up. Was an Exit out of the dialog procedure. *)
@@ -235,6 +244,7 @@ begin
    SelectedContest := frmNewContest.SelectedContest;
    ClearFields;
    frmNewContest.SetComment('');
+   NewContestPromptComment := '';
    frmNewContest.ResetIAmIn;
 
    (* THE QSO-PARTY HEAD IS THE CONTEST'S TOO -- TContestBase asks a US state
@@ -263,12 +273,14 @@ end;
 { WHETHER OK IS LEGAL YET. Same four rules, asked of the form instead of of
   control handles: a contest is chosen, the callsign is at least three
   characters and passes IsAGoodCall, and every row this contest asked for has
-  been filled in. }
+  been filled in -- and, since Q104, with a value the contest does not refuse
+  (TContestBase.NewContestValueRefusal). }
 procedure BeginNewContest;
 var
   res  : boolean;
   i    : integer;
   Call : string;
+  refusal: string;
 begin
   res  := frmNewContest.ContestChosen;
   Call := frmNewContest.MyCall;
@@ -290,6 +302,32 @@ begin
         begin
         res := False;
         end;
+     end;
+
+  (* A FILLED ROW THE CONTEST REFUSES -- Q104. The refusal replaces the
+    prompt's comment while it stands and OK stays disabled; the prompt comes
+    back when the value is changed to one the contest accepts. *)
+  refusal := '';
+  if frmNewContest.ContestChosen then
+     begin
+     for i := 1 to NewContestDisplayedCommands do
+        begin
+        if (i <= CSAS) and (refusal = '') and
+           (Trim(frmNewContest.RowText(i)) <> '') then
+           begin
+           refusal := ContestIdentity(SelectedContest).NewContestValueRefusal(
+                         NewContestRowFields[i], Trim(frmNewContest.RowText(i)));
+           end;
+        end;
+     end;
+  if refusal <> '' then
+     begin
+     res := False;
+     frmNewContest.SetComment(refusal);
+     end
+  else
+     begin
+     frmNewContest.SetComment(NewContestPromptComment);
      end;
 
   frmNewContest.EnableOK(res);
@@ -436,6 +474,7 @@ procedure SetCommentAndEnableEditControl(comment: string; EditControl: TNewConte
 begin
   DisplayInitialCommand(EditControl);
   frmNewContest.SetComment(comment);
+  NewContestPromptComment := comment;
 end;
 
 (* ~~EnterCountyOrState~~ IS GONE -- M9a. The QSO-party head it put up is
@@ -447,6 +486,10 @@ end;
 procedure DisplayInitialCommand(Command: TNewContestField);
 begin
   inc(NewContestDisplayedCommands);
+  if NewContestDisplayedCommands <= CSAS then
+     begin
+     NewContestRowFields[NewContestDisplayedCommands] := Command;
+     end;
   frmNewContest.EnableRow(NewContestDisplayedCommands,
                           InitialCommandsSA[Command]);
 end;

@@ -136,11 +136,14 @@ begin
       c.Free;
       end;
 
-   (* TRANSCRIBED, NOT CORRECTED: BC's arm tests the lower-case 'dx' (Q49). *)
+   (* CORRECTED 2026-10-17 (Q49, Q84 "ignore case"): BC's arm tested the
+      lower-case 'dx' and its file maps to 'DX', so the rule never fired.
+      Either case earns nothing now; a county still counts. *)
    c := Make(BCQP);
    try
-      CheckTrue(CountsNone(c, Qso('dx', 'DL', 14)), 'BC: the arm''s lower-case ''dx'' earns nothing');
-      CheckTrue(CountsAll(c, Qso('DX', 'DL', 14)), 'BC: an upper-case ''DX'' is the sheet''s, as before');
+      CheckTrue(CountsNone(c, Qso('dx', 'DL', 14)), 'BC: a lower-case ''dx'' earns nothing');
+      CheckTrue(CountsNone(c, Qso('DX', 'DL', 14)), 'BC: an upper-case ''DX'' earns nothing (Q49)');
+      CheckTrue(CountsAll(c, Qso('VAN', 'VE', 3)), 'BC: a county does');
    finally
       c.Free;
       end;

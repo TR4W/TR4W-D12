@@ -2768,6 +2768,19 @@ type
          not (British Columbia, which the dialog named out of it). *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); virtual;
 
+      (* DOES THIS CONTEST REFUSE THIS VALUE FOR ONE OF ITS NEW CONTEST ROWS?
+         -- Q104 (NY4I, 2026-10-16). '' accepts it; any other answer is the
+         message the dialog shows, and OK stays disabled while it stands.
+         aValue is the row's text as typed, trimmed. IN7QPNE is the first: a
+         station inside one of its four parties is sent to that party.
+
+         THE BASE ACCEPTS EVERY VALUE, and that is not a rule default: it is
+         exactly what the dialog did for every contest before Q104 -- it
+         checked only that a row was filled -- and it decides no score. Asked
+         of ContestIdentity, like the prompts: a value, no station. *)
+      function NewContestValueRefusal(aField: TNewContestField;
+                                      const aValue: string): string; virtual;
+
       (* THE CABRILLO CONTEST: NAME, given the session's contest title and
          name. The base is CabrilloName; General QSO, a log rather than a
          contest, names the title the operator gave it, else the session's
@@ -3167,6 +3180,19 @@ function ContestCreditsWorkedStation(aContest: TContestBase;
 function HostAreaRuleCredits(aEntrantInHostArea: boolean;
                              const aWorkedQTH: string;
                              aIsHostQTH: TDomesticQTHTest): boolean;
+
+(* IS THIS DOMESTIC MULTIPLIER A PARTY'S "DX"? -- THE ONE TEST, Q84 (NY4I,
+   2026-10-15: "ignore case") and Q49 (2026-10-16).
+
+   A QSO party whose rule is "a DX station is not a multiplier" -- Indiana,
+   New York, British Columbia -- asks this of the QSO's domestic multiplier
+   (DomMultQTH, the value the session's .dom mapped the QTH to). The files
+   spell it as they please: Indiana's says `DX = DX`, IN7QPNE's `dx = dx`,
+   British Columbia's `dx=DX`. The RULE ignores case, not the files, so all
+   three match 'DX', 'dx' and 'Dx' alike. Until Q84 each tested its own
+   spelling with `<>`: BC tested 'dx' against a file that maps to 'DX', so its
+   rule never fired (Q49), and Indiana's 'DX' missed IN7QPNE's 'dx'. *)
+function DomesticMultiplierIsDX(const aMultiplier: string): boolean;
 
 (* THE PREFIX MULTIPLIER KEY aQso EARNS IN aContest -- see
    TContestBase.PrefixMultiplierKey. nil answers False, leaving the prefix as
@@ -3644,6 +3670,14 @@ begin
       begin
       Result := False;
       end;
+end;
+
+function DomesticMultiplierIsDX(const aMultiplier: string): boolean;
+begin
+   (* UnicodeSameText, not SameText: SysUtils' SameText takes AnsiString, and
+      `string` is UnicodeString here -- the registry's compare for the same
+      reason. *)
+   Result := UnicodeSameText(aMultiplier, 'DX');
 end;
 
 function ContestPrefixMultiplierKey(aContest: TContestBase; const aQso: ContestExchange;
@@ -4886,6 +4920,13 @@ begin
    (* Not a QSO party: no area. Every one of the 22 parties answers for
       itself (M10 S5). The free function QSOPartyAreaName that read the
       QSOParties entry is deleted (M10 S6). *)
+   Result := '';
+end;
+
+function TContestBase.NewContestValueRefusal(aField: TNewContestField;
+                                             const aValue: string): string;
+begin
+   (* Every value accepted -- see the declaration. *)
    Result := '';
 end;
 

@@ -53,7 +53,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   sponsor's rule (ADDING_A_CONTEST.md's worksheet) and is NOT enforced --
   nothing enforced it before.
 
-  SCORING: TwoPhoneThreeCW -- 3 on CW, 2 otherwise.
+  SCORING: 3 on CW, 4 on digital (Q85, the sponsor's), 2 otherwise. It was
+  TwoPhoneThreeCW -- digital 2 -- until 2026-10-17.
 
   SET-UP: an in-state station (FoundContest's own in-state answer,
   aStation.InHostState -- the arm asked FoundMyStateInDomFile again, which
@@ -227,9 +228,21 @@ begin
                                  Station.IsDomesticQTH);
 end;
 
+(* CW 3, DIGITAL 4, PHONE 2 -- Q85 (2026-10-15). The 7QP sponsor's page
+   scores SSB 2, CW 3 and digital 4, and DXLog's 7QP.txt agrees ("CW QSO give
+   3 points, SSB QSO give 2 points, digital mode QSO give 4 points"). TR4W
+   gave digital 2 (TwoPhoneThreeCW). FM and anything else stays 2, as it was
+   -- the sponsor's phone value; FM on 10 m is phone. *)
 procedure TContestSevenQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   aQso.QSOPoints := FixedModePoints(aQso.Mode, 3, 2, 2);
+   if aQso.Mode = Digital then
+      begin
+      aQso.QSOPoints := 4;
+      end
+   else
+      begin
+      aQso.QSOPoints := FixedModePoints(aQso.Mode, 3, 2, 2);
+      end;
 end;
 
 function TContestSevenQP.GetDisplayName: string;

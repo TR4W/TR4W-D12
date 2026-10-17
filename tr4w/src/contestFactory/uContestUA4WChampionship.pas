@@ -142,7 +142,8 @@ uses
    uCabrilloExchange,
    uADIFExchange,
    uContestRegistry,
-   uCallSignRoutines;
+   uCallSignRoutines,
+   uTR4WStrings;   (* TC_ENTERYOURRDAIDORGRID -- the New Contest prompt, Q71 *)
 
 const
    (* Udmurtia, the sponsor's oblast, as GetOblast spells it. *)
@@ -354,13 +355,15 @@ end;
 
 (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest.ClasslessPrompts' arm
    for this contest, moved here as it stood (2026-10-14): on choosing it,
-   the RDA or grid in MY QTH. Nothing on ticking a box; it offers none. The
-   text is a literal, as it was -- it has no TC_ constant, so it is not
-   translated (TC_ENTERYOURRDAIDORGRID says something else). *)
+   the RDA or grid in MY QTH. Nothing on ticking a box; it offers none.
+
+   THE TEXT IS THE TRANSLATED TC_ENTERYOURRDAIDORGRID, AS IT STANDS -- Q71,
+   NY4I 2026-10-15 ("Da"). It was a fixed English literal that no catalogue
+   translates, worded differently ("for Russian stations"); the constant is
+   the one the ALRS UA1DZ Cup already shows. *)
 procedure TContestUA4WChampionship.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
-   aPrompts.AskFieldWithComment('Enter your RDA (for Russian stations) or four digit grid square:',
-                                ncfMyQTH);
+   aPrompts.AskFieldWithComment(TC_ENTERYOURRDAIDORGRID, ncfMyQTH);
 end;
 
 

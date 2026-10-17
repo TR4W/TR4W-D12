@@ -46,10 +46,17 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   own, 5 off its continent, 3 on it; anyone else 10 for the EU, 5 off its
   continent, 3 for another country, 2 for its own.
 
-  THE "HE IS IN THE EU" TEST IS `DomMultQTH[4] <> ''`, the arm's own
-  expression: a character compared with the empty string. Transcribed
-  exactly, so the scores do not move; what it was meant to test is design
-  Q45.
+  "HE IS IN THE EU" IS HIS RESOLVED DOMESTIC QTH -- Q45 (NY4I, 2026-10-16:
+  "DomMultQTH is a catch-all left over from the D7 shared fields
+  implementation. I would expect in the new implementation to use the
+  discrete values."). The arm tested `DomMultQTH[4] <> ''`, never false, so
+  every worked station scored as an EU one. It is WorkedStationIsInEU now:
+  the QTH his exchange matched in THIS contest's file, false when he sent
+  none. THIS CONTEST'S FILE IS ireland.dom -- the 32 Irish counties, the
+  six of Northern Ireland among them -- so here "in the EU" means "sent an
+  Irish county". That is the ruling applied to the file this contest has;
+  whether the EUDX table is IRTS's scoring at all is the sponsor's question
+  (see the report of 2026-10-17).
 
   NOT IRTSQSOPointMethod: the row names EUDXQSOPointMethod, and that is what
   this contest has always scored by. The IRTS arm in LOGSTUFF was reached
@@ -106,6 +113,9 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   private
+      (* IS THE WORKED STATION "IN THE EU"? -- Q45; see the body. *)
+      function WorkedStationIsInEU(const aQso: ContestExchange): boolean;
    public
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
@@ -133,9 +143,21 @@ uses
    uContestRegistry,
    uTR4WStrings;
 
+(* THE DISCRETE VALUE -- Q45: the record's DomesticQTH, which the domestic
+   lookup writes ONLY when the received QTH matched an entry of the contest's
+   file (ireland.dom; LOGDUPE.FoundDomesticQTH). Empty when he sent a zone.
+   Not DomMultQTH, the shared multiplier string. A logged QSO is judged from
+   its record (Q13): the field is stored with it. A copy of the EUDX class's
+   test, owned here (design 1.4). *)
+function TContestIRTS.WorkedStationIsInEU(const aQso: ContestExchange): boolean;
+begin
+   Result := aQso.DomesticQTH <> '';
+end;
+
 (* EUDXQSOPointMethod -- the legacy LOGSTUFF arm for this
-   contest's point method, moved here as it stood (M7b batch 2). The arm
-   was deleted at M10 S3; see git history or the D7 tree. *)
+   contest's point method, moved here as it stood (M7b batch 2), its "he is
+   in the EU" test made real at Q45 (WorkedStationIsInEU). The arm was
+   deleted at M10 S3; see git history or the D7 tree. *)
 procedure TContestIRTS.CalculateQSOPoints(var aQso: ContestExchange);
 var
    rxCty: CallString;
@@ -145,7 +167,7 @@ begin
    if Length(Station.MyState) = 4 then
       begin
       (* We are in an EU region. *)
-      if aQso.DomMultQTH[4] <> '' then
+      if WorkedStationIsInEU(aQso) then
          begin
          (* He is in the EU. *)
          if rxCty <> Station.MyCountry then
@@ -167,7 +189,7 @@ begin
          aQso.QSOPoints := 3;
          end;
       end
-   else if aQso.DomMultQTH[4] <> '' then
+   else if WorkedStationIsInEU(aQso) then
       begin
       (* We are not in the EU, and he is. *)
       aQso.QSOPoints := 10;

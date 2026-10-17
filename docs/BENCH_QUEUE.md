@@ -23,6 +23,37 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-17 -- BATCH B SCORING RULINGS (Q38, Q45, Q49, Q71, Q84, Q85, Q104)
+
+The unit tests reach every rule (`uTestContestRulings2026Oct`) and the contest
+matrix reaches the scoring; NOTHING reaches the New Contest dialog's window or a
+live entry window, and the corpus is blind to points.
+
+- [ ] **IN7QPNE is refused at New Contest for an in-area station (Q104).** Pick
+      IN7QPNE and type each of `IN`, `UT`, `ME`, `DE` (and one county, e.g.
+      `INADA`) into MY STATE. EXPECT: OK stays DISABLED and the comment under the
+      rows reads *"IN7QPNE is for stations outside Indiana, the 7th call area,
+      New England and Delaware. From UT, choose the 7th Call Area QSO Party
+      instead."* -- the 7QP for every 7th-area state, Indiana / New England /
+      Delaware QSO Party for the others. Then type `KS`: the prompt text comes
+      BACK in the comment and OK enables. Check the message fits the comment
+      area without clipping (it is longer than the prompt).
+- [ ] **The UA4W Championship's prompt (Q71).** Pick it: the comment is the
+      translated `TC_ENTERYOURRDAIDORGRID` ("Enter your RDA ID (for UA1A
+      stations) or four digit grid square:" in English); in Russian it should be
+      the existing Russian text.
+- [ ] **A 160 m contest scores nothing off 160 m (Q71).** In RSGB 1.8 MHz, ARRL
+      160 or CQ 160, log one QSO on 80 m: it is logged, scores 0, earns no
+      multiplier and is not a dupe on 160 m; the need-multiplier hint on 80 m
+      says nothing is needed.
+- [ ] **Winter Field Day shows no DXCC multipliers (Q38).** The remaining-DX
+      window and the multiplier totals show none; the score is unchanged.
+- [ ] **EUDX from outside the EU (Q45).** A W station working a European who
+      sends a ZONE scores 5 (3 on our continent, 2 for our own country), not
+      10; one who sends a region scores 10.
+
+---
+
 ## Added 2026-10-17 -- Q108 S4: A CONTEST WITH NO LEGACY NUMBER IS REFUSED ON MULTI-OP
 
 Nothing automated drives a socket, so no gate has seen any of this end to end

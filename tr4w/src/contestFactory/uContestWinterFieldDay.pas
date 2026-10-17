@@ -93,7 +93,7 @@ type
                                            aParsers: TExchangeParsers;
                                            var aExch: ContestExchange): boolean; override;
       function GetFlags: TContestFlags; override;
-      (* ARRL DXCC WITHOUT THE ARRL SECTIONS -- see the implementation. *)
+      (* THE POINTS -- see the implementation. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
 
       (* THE FINAL SCORE -- Issue 301 (NY4I): the points times the band-mode
@@ -158,9 +158,6 @@ type
       (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
          TContestBase.HasDXMultiplier (M11 S4 part 2). *)
       function HasDXMultiplier: boolean; override;
-      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
-      function DXMultiplierKey(const aQso: ContestExchange;
-                               out aKey: DXMultiplierString): boolean; override;
       (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
       function CountryMode: CountryModeType; override;
    public
@@ -177,7 +174,6 @@ implementation
 uses
    uCabrilloExchange,
    uExchangeFields,
-   uDXMultiplierKey,
    SysUtils, uTR4WStrings, uContestRegistry,
    (* EmitADIFField -- the tag spellings are ADIF's. *)
    uADIF,
@@ -185,17 +181,10 @@ uses
    uARRLSections,
    uCanonicalExchange;
 
-(* THE DX MULTIPLIER IS DXCC WITHOUT THE ARRL SECTIONS -- M7a, 2026-10-02.
+(* ONE POINT FOR PHONE (FM INCLUDED), TWO OTHERWISE.
 
-   THE ROW SAID ARRLDXCC AND NO SESSION EVER RAN IT. FCONTEST.FoundContest's
-   Winter Field Day arm set ARRLDXCCWithNoARRLSections after the head had
-   written the row's value, every time, so the row was a value nothing used --
-   the shape of inventory D8, as Field Day's was before Q1. When the arm moved
-   into DescribeSession the class, the row and the session were made to say
-   the one value that is actually in force, as Field Day's were at M2. A
-   sponsor rule is not being changed: the multiplier every Winter Field Day
-   session has counted is now also what the contest SAYS it counts.
-   Test_WinterFieldDayDXMultiplierIsWhatTheSessionRuns pins the three. *)
+   (The DX multiplier this comment described -- DXCC without the ARRL
+   sections, M7a -- is gone: Q38, see HasDXMultiplier.) *)
 procedure TContestWinterFieldDay.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    if aQso.Mode in [Phone, FM] then
@@ -551,27 +540,20 @@ begin
    Result := Trim(string(aQso.ceClass)) + ' ' + Trim(string(aQso.QTHString));
 end;
 
-(* A DX MULTIPLIER AT EVERY STATION -- M11 S4 part 2, 2026-10-14: the trait
-   this class stated (`ARRLDXCCWithNoARRLSections`) until the kind was
-   deleted. *)
+(* NO DX MULTIPLIER, AT ANY STATION -- Q38, NY4I 2026-10-15: "Winter FD does
+   not count DXCC multipliers or at least it did not in D7." D7 TRACKED them
+   -- FCONTEST.PAS:414 set ActiveDXMult := ARRLDXCCWithNoARRLSections, so the
+   multiplier sheet and the remaining-multiplier window counted DXCC
+   countries -- but never SCORED them: the score is points x band-modes x
+   the power factor (CombineWithMultipliers). The ruling removes the tracking
+   too, as Field Day has none (Q1). This said True, the trait the class
+   stated (`ARRLDXCCWithNoARRLSections`) until the kind was deleted at M11 S4
+   part 2; its DXMultiplierKey (every country but the ARRL section ones) went
+   with it, so the base answers "no key". No score moves; the multiplier
+   displays do. *)
 function TContestWinterFieldDay.HasDXMultiplier: boolean;
 begin
-   Result := True;
-end;
-
-(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
-   Every country but the ARRL section countries -- the
-   ARRLDXCCWithNoARRLSections arm. *)
-function TContestWinterFieldDay.DXMultiplierKey(const aQso: ContestExchange;
-                                                out aKey: DXMultiplierString): boolean;
-begin
-   aKey := '';
    Result := False;
-   if not IsARRLSectionCountry(aQso.QTH.CountryID) then
-      begin
-      aKey := aQso.QTH.CountryID;
-      Result := True;
-      end;
 end;
 
 (* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.

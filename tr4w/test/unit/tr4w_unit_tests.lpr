@@ -682,6 +682,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestQSOPartyBands   in 'uTestQSOPartyBands.pas',
    (* IN7QPNE, the composite of four parties (design 7.14, 8.2r). *)
    uTestContestIN7QPNE in 'uTestContestIN7QPNE.pas',
+   (* NY4I's rulings Q45, Q49, Q84, Q71, Q85 and Q104, built 2026-10-17. *)
+   uTestContestRulings2026Oct in 'uTestContestRulings2026Oct.pas',
    (* A QSO party's host-area rule, typed AND scored (Q107, 2026-10-16). *)
    uTestHostAreaRule    in 'uTestHostAreaRule.pas',
    (* A .dom loaded into a table that already holds one (LOGDOM's emptying
@@ -790,6 +792,7 @@ begin
    RegisterSuite(TContestNamesTests.Create('ContestNames'));
    RegisterSuite(TQSOPartyBandsTests.Create('QSOPartyBands'));
    RegisterSuite(TContestIN7QPNETests.Create('ContestIN7QPNE'));
+   RegisterSuite(TContestRulings2026OctTests.Create('ContestRulings2026Oct'));
    RegisterSuite(THostAreaRuleTests.Create('HostAreaRule'));
    RegisterSuite(TDomQTHTableReloadTests.Create('DomQTHTableReload'));
    RegisterSuite(TDomesticCountryListTests.Create('DomesticCountryList'));

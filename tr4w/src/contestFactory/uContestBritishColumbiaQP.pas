@@ -172,11 +172,13 @@ type
                                 aSession: TSessionDefaults); override;
 
       (* A DX STATION EARNS NO MULTIPLIER -- logdupe's SetMultFlags rule for
-         this contest (4.98.2, "no mults for dx"), moved here at M8 and
-         transcribed exactly: it tests the multiplier QTH for the LOWER-CASE
-         'dx', case-sensitively, where the New York and Indiana parties test
-         'DX'. A typed exchange is upper-cased, so this may never match --
-         design Q49 asks; nothing is corrected here. *)
+         this contest (4.98.2, "no mults for dx"), moved here at M8. It
+         tested the multiplier QTH for the LOWER-CASE 'dx', case-sensitively,
+         against a file (ve7.dom) that maps `dx=DX` -- so it never fired, and
+         an in-province station's DX contact earned a DX domestic multiplier.
+         Q49 (NY4I, 2026-10-16) with Q84 ("ignore case"): the rule asks
+         uContestBase.DomesticMultiplierIsDX, the one case-blind test New
+         York and Indiana ask too. *)
       function CountsAsMultiplier(const aQso: ContestExchange;
                                   aKind: RemainingMultiplierType): boolean; override;
    public
@@ -208,7 +210,7 @@ function TContestBritishColumbiaQP.CountsAsMultiplier(const aQso: ContestExchang
                                                       aKind: RemainingMultiplierType): boolean;
 begin
    (* Every kind: the legacy rule returned before any flag was set. *)
-   Result := aQso.DomMultQTH <> 'dx';
+   Result := not DomesticMultiplierIsDX(string(aQso.DomMultQTH));
 end;
 
 function TContestBritishColumbiaQP.GetDisplayName: string;

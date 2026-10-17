@@ -357,6 +357,16 @@ resourcestring
       'England or Delaware. Enter your state, Canadian Province or "DX" ' +
       'if outside all four:';
 
+   (* IN7QPNE REFUSED FOR A STATION INSIDE ONE OF ITS FOUR PARTIES -- Q104,
+     NY4I 2026-10-16: an in-state station uses its own party, and a 7th-area
+     station the 7QP, never its single state's party. Shown in the New
+     Contest dialog's comment while OK stays disabled. The first %s is the
+     MY STATE as typed, the second the party's contest name (e.g. "7th Call
+     Area QSO Party"). *)
+   SNewContestIN7QPNEInsideAParty =
+      'IN7QPNE is for stations outside Indiana, the 7th call area, New ' +
+      'England and Delaware. From %s, choose the %s instead.';
+
    (* --------------------------------------------- the contest UI (M9b) - *)
 
    (* AN INACTIVE CONTEST'S LINE IN THE NEW CONTEST DROP-DOWN. NY4I,

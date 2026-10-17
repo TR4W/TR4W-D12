@@ -46,10 +46,14 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   own, 5 off its continent, 3 on it; anyone else 10 for the EU, 5 off its
   continent, 3 for another country, 2 for its own.
 
-  THE "HE IS IN THE EU" TEST IS `DomMultQTH[4] <> ''`, the arm's own
-  expression: a character compared with the empty string. Transcribed
-  exactly, so the scores do not move; what it was meant to test is design
-  Q45.
+  "HE IS IN THE EU" IS HIS RESOLVED REGION -- Q45 (NY4I, 2026-10-16:
+  "DomMultQTH is a catch-all left over from the D7 shared fields
+  implementation. I would expect in the new implementation to use the
+  discrete values."). The arm tested `DomMultQTH[4] <> ''` -- a character
+  compared with the empty string, which is never false -- so every worked
+  station scored as an EU one. It is WorkedStationIsInEU now: the region his
+  exchange matched in eudx.dom (the record's DomesticQTH), false when he sent
+  none -- a zone, from a station outside the EU.
 
   SET-UP: nothing; FoundContest's arm for it was empty.
 
@@ -99,6 +103,9 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   private
+      (* IS THE WORKED STATION IN THE EU? -- Q45; see the body. *)
+      function WorkedStationIsInEU(const aQso: ContestExchange): boolean;
    public
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
@@ -129,9 +136,24 @@ uses
    uContestRegistry,
    uTR4WStrings;
 
+(* HE IS IN THE EU WHEN HIS EXCHANGE MATCHED AN EU REGION -- Q45 (NY4I,
+   2026-10-16), the discrete value: the record's DomesticQTH, which the
+   domestic lookup writes ONLY when the received QTH matched an entry of the
+   contest's file (eudx.dom, the sponsor's regions; LOGDUPE.FoundDomesticQTH).
+   A station outside the EU sends a zone, which leaves it empty. NOT
+   DomMultQTH, the shared multiplier string ("a catch-all left over from the
+   D7 shared fields implementation"), and NOT `DomMultQTH[4] <> ''`, which was
+   never false. A logged QSO is judged from its record (Q13): the field is
+   stored with it. *)
+function TContestEUDX.WorkedStationIsInEU(const aQso: ContestExchange): boolean;
+begin
+   Result := aQso.DomesticQTH <> '';
+end;
+
 (* EUDXQSOPointMethod -- the legacy LOGSTUFF arm for this
-   contest's point method, moved here as it stood (M7b batch 2). The arm
-   was deleted at M10 S3; see git history or the D7 tree. *)
+   contest's point method, moved here as it stood (M7b batch 2), its "he is
+   in the EU" test made real at Q45 (WorkedStationIsInEU). The arm was
+   deleted at M10 S3; see git history or the D7 tree. *)
 procedure TContestEUDX.CalculateQSOPoints(var aQso: ContestExchange);
 var
    rxCty: CallString;
@@ -141,7 +163,7 @@ begin
    if Length(Station.MyState) = 4 then
       begin
       (* We are in an EU region. *)
-      if aQso.DomMultQTH[4] <> '' then
+      if WorkedStationIsInEU(aQso) then
          begin
          (* He is in the EU. *)
          if rxCty <> Station.MyCountry then
@@ -163,7 +185,7 @@ begin
          aQso.QSOPoints := 3;
          end;
       end
-   else if aQso.DomMultQTH[4] <> '' then
+   else if WorkedStationIsInEU(aQso) then
       begin
       (* We are not in the EU, and he is. *)
       aQso.QSOPoints := 10;

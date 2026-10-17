@@ -81,6 +81,26 @@ schema and nothing writes it (memory: `iaru-exchange-reads-station-state`). QTH 
 a polymorphic field. Know which `MY` fields belong to the station and which to the
 contest before moving one.
 
+**A `.dom` LINE IS `MULTIPLIER = alias, alias...` -- THE LEFT SIDE IS WHAT LANDS
+IN `DomMultQTH`/`DomesticQTH`** (measured 2026-10-17): `ve7.dom`'s `dx=DX` makes
+the multiplier lower-case `dx`, `in.dom`'s `DX = DX` upper-case. A rule that tests
+for DX asks `uContestBase.DomesticMultiplierIsDX` (case-blind, Q84) -- never a
+literal compare. `DomesticQTH` is non-empty exactly when the received QTH matched
+the contest's file; it is the "discrete value" NY4I asked for (Q45), where
+`DomMultQTH` is the shared catch-all.
+
+**Measure before you build a refusal.** FD-DX was recorded "not built" and typed
+entry already refused it: a domestic call goes to `FoundDomesticQTH`, and
+`arrlsect.dom` has no `DX`. Run the typed text through the matrix's parse section
+(a temporary row in `uContestMatrix.MATRIX_PARSE_CASES`, removed before the
+freeze) first.
+
+**The rescore re-derives a record's country ONLY for a contest with a prefix,
+zone or DX multiplier** (`MainUnit.RecomputeQSOScoring`). Taking a multiplier away
+(Winter FD's DX, Q38) therefore also stops the rescore re-stamping the country --
+the record's stored one stands, and anything exported from it (WFD's `DXCC` tag)
+follows the stored value.
+
 ## `FoundContest` READS STATION STATE, so what it reads must already be set
 
 **`MY COUNTRY` IS DERIVED — do not "add" a derivation.** `FoundContest` calls

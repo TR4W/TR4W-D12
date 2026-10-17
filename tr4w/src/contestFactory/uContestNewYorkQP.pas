@@ -124,8 +124,10 @@ type
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
       (* A DX STATION EARNS NO MULTIPLIER -- logdupe's SetMultFlags rule for
-         this contest (4.116.5), moved here at M8 and transcribed exactly: a
-         multiplier QTH of 'DX' earns no multiplier of any kind. *)
+         this contest (4.116.5), moved here at M8: a multiplier QTH of 'DX'
+         earns no multiplier of any kind -- in any case since Q84 (NY4I,
+         2026-10-15: "ignore case"), through uContestBase.DomesticMultiplierIsDX,
+         the one test Indiana and British Columbia ask too. *)
       function CountsAsMultiplier(const aQso: ContestExchange;
                                   aKind: RemainingMultiplierType): boolean; override;
       (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
@@ -149,7 +151,7 @@ function TContestNewYorkQP.CountsAsMultiplier(const aQso: ContestExchange;
                                               aKind: RemainingMultiplierType): boolean;
 begin
    (* Every kind: the legacy rule returned before any flag was set. *)
-   Result := aQso.DomMultQTH <> 'DX';
+   Result := not DomesticMultiplierIsDX(string(aQso.DomMultQTH));
 end;
 
 function TContestNewYorkQP.GetDisplayName: string;

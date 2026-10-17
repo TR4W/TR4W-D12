@@ -398,8 +398,8 @@ setting.S&P EXCHANGE = _@_ 5NN AZAPH
 qso 01 W1AW Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 03 W1AW Band2 FM/eFM full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
-qso 04 W1AW Band40 Digital/eRTTY full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
-qso 05 W1AW Band20 Digital/eFT8 full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
+qso 04 W1AW Band40 Digital/eRTTY full | pts=4 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
+qso 05 W1AW Band20 Digital/eFT8 full | pts=4 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 06 K4ABC Band160 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=K4 pfx= dxqth= dommultqth=FL domqth=FL zone=5
 qso 07 VE3ABC Band15 Phone/eUSB full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=VE qthzone=9 cont=NorthAmerica qthpfx=VE3 pfx= dxqth= dommultqth=ON domqth=ON zone=4
 qso 08 XE1ABC Band10 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=XE qthzone=10 cont=NorthAmerica qthpfx=XE1 pfx= dxqth=XE dommultqth= domqth= zone=6
@@ -603,7 +603,7 @@ parse grid6 W1AW Band20/CW "599 FN31PR" | ok=TRUE err="" token="" pending="" cal
 parse grid.field W1AW Band20/CW "599 FN" | ok=FALSE err="Improper domestic QTH!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse rda.short UA3ABC Band20/CW "599 MO1" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=MO1 exch=599 MO1 cty=UA/29/Europe/UA3 dxqth=UA
 == totals
-totals.qsopoints = 34
+totals.qsopoints = 38
 totals.qtcs = 0
 totals.singleband = AllBands
 totals.qsos Band160 CW = 1
@@ -652,8 +652,8 @@ totals.mults AllBands CW = dom=2 dx=3 zone=0 pfx=0
 totals.mults AllBands Digital = dom=2 dx=0 zone=0 pfx=0
 totals.mults AllBands Phone = dom=3 dx=3 zone=0 pfx=0
 totals.mults AllBands Both = dom=7 dx=6 zone=0 pfx=0
-totals.totalscore = 442
-totals.cabrillo = CLAIMED-SCORE: 442
+totals.totalscore = 494
+totals.cabrillo = CLAIMED-SCORE: 494
 == initialexchange
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE

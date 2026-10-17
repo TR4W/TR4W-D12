@@ -32,6 +32,8 @@ in section 4. One line each -- the full text is further down.
 - **Q47** Fix the three kept read-past-the-end shapes now?
 - **Q101** Fill the typed `rcvd_*` columns from each class, or delete them?
 - **Q110** Multi-op: a peer's QSO is logged even when the peer is on a different contest.
+- **Q111** IRTS scores by the EUDX table but its file is Irish counties -- what does its sponsor score?
+- **Q112** Field Day's DX refusal holds only when typed -- apply it to imports/peers/Rescore (as Q107)?
 
 **Awaiting only your yes (section 3)**
 - **Q10** Retire unused ContestTypes through `TContestRetired` (MINITEST needs it).
@@ -208,6 +210,29 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   new row-based protocol, not to V1.*
   **Answer:**
 
+- **Q111** (found building Q45, 2026-10-17) **IRTS scores by the EUDX table,
+  but its domestic file is `ireland.dom`.** The IRTS class has always used
+  EUDX's point method (10 for an EU contact, 2 for own country, ...). After
+  Q45 the "in the EU" test reads the worked station's resolved region, and
+  IRTS's file holds Irish counties (Northern Ireland's included) -- so for
+  IRTS "in the EU" now means "sent an Irish county". Before Q45 the test
+  was never false, so every IRTS contact scored as EU. Which contest is
+  this, and what does its sponsor score? (WA7BNM/DXLog had no IRTS rule to
+  check against in this tree.) *Needs the sponsor's rules: if IRTS is the
+  Irish Radio Transmitters Society's contest scoring by Irish county, the
+  EUDX point method was never its rule and the class wants its own.*
+  **Answer:**
+
+- **Q112** (found building FD-DX, 2026-10-17) **Field Day's "`DX` from a
+  sectioned station is refused" holds only when TYPED.** Measured: typed
+  entry already refuses `2A DX` from W1AW / VE3ABC (and `1D DX` from KH6),
+  because `arrlsect.dom` has no `DX`. A record that arrives another way
+  (ADIF import, a peer, Rescore) is not refused -- the same shape as Q107.
+  *Recommended: Field Day's CreditsWorkedStation returns False (logged,
+  scores 0) when the QTH is DX and the station's country has ARRL/RAC
+  sections, through the one predicate the way Q107 did it.*
+  **Answer:**
+
 ---
 
 ## 3. Awaiting only your yes
@@ -347,10 +372,10 @@ closes it; anything else reopens it.
 | Q37 | A malformed grid is refused at entry (and import); the read made safe | not built |
 | Q13 | A logged QSO is scored from its record, never from live state (radio mode, operator) | rule; audit found A1-A3, B, C, E1-E2 (not fixed) |
 | Q44 | RTC, CQMM, WRTC state their bands; off-band/off-mode QSOs score 0, are not in HamScore's QSO counts, but advance the serial | not built |
-| FD-DX | `DX` from a W (or other sectioned) station is refused; a DX station is still `1D DX` | not built |
+| FD-DX | `DX` from a W (or other sectioned) station is refused; a DX station is still `1D DX` | entry: already so (measured 2026-10-17); import/logged: proposal below, not built |
 | Q30 | Winter FD: `MX` is a section (Cabrillo, SRX_STRING, ARRL_SECT), as D7 does | already so; no change |
 | Q31 | `Missing precedence (Q A B U M S)` is acceptable wording | already so |
-| Q38 | Winter FD has no DXCC multiplier (D7 tracked one but never scored it) | not built |
+| Q38 | Winter FD has no DXCC multiplier (D7 tracked one but never scored it) | built 2026-10-17 |
 | Q32 | Missouri peak-hour bonus is real; computed from each QSO's logged time over the whole log, cap 250 | not built |
 | Q29 | Out-of-state works only the host state: true for QSO parties in general | already so |
 | Idaho-DC | DC is not a state, so not an Idaho multiplier | already so |
@@ -363,7 +388,7 @@ closes it; anything else reopens it.
 | Q68 | On reopen, the station-fact rows are applied before the contest row | not built |
 | Q76 | ADIF `STATE` is the worked station's state, `MY_STATE` ours -- fix the host-state export | built `35986731` (with Q89) |
 | Q82 | IN7QPNE county-line count left as is; future fix | issue #85 |
-| Q84 | A party's DX-multiplier test ignores case (files unchanged) | not built |
+| Q84 | A party's DX-multiplier test ignores case (files unchanged) | built 2026-10-17 |
 | Q77 | IN7QPNE per-party score: deferred | issue #86 |
 | Q78 | IN7QPNE cross-party scoring view: deferred with Q77 | issue #86 |
 | Q98 | Every contest states its bands and modes; an off-band/off-mode QSO is logged, scores nothing, and is an automatic X-QSO in the log and the export (flag OR off-band) | not built |
@@ -372,11 +397,11 @@ closes it; anything else reopens it.
 | Q57 | CQ WW RTTY messages built without writing MY ZONE | done with 7.12 |
 | Q63 | "Activator" stays untranslated -- a universal POTA term | no change |
 | Q72 | Delaware: 160-10 m without WARC plus 6 m and up through light ("DC to daylight") | already so; no change |
-| Q85 | 7QP excludes WARC (and the sponsor scores digital 4) | not built |
+| Q85 | 7QP excludes WARC (and the sponsor scores digital 4) | built (WARC 2026-10-16; digital 4 2026-10-17) |
 | Q86 | Minnesota is the only HamScore QSO party; its flag is right | no change |
 | Q83 | Online-score posting and HamScore are separate permissions; WRTC and IN7QPNE neither (WRTC amended by Q55) | split not built; WRTC as built |
 | Q69 | MY ZONE is the CQ zone; ITU-zone contests read MY ITU ZONE | not built (own step) |
-| Q71 | RSGB 1.8, ARRL 160, CQ 160 credit 160 m only; UA4W prompt uses TC_ENTERYOURRDAIDORGRID | not built |
+| Q71 | RSGB 1.8, ARRL 160, CQ 160 credit 160 m only; UA4W prompt uses TC_ENTERYOURRDAIDORGRID | built 2026-10-17 |
 | Q58 | WRTC is named "World Radiosport Team Championship" (display and friendly name) | built |
 | Q15 | NRAU Cabrillo names become WA7BNM's NRAU-CW / NRAU-SSB; ADIF keeps NRAU-BALTIC-*; sponsor times | built (names); times are Q99 |
 | Q16 | SSB Sprint is "North American SSB Sprint"; NA-SPRINT-SSB stays; gains the North American country multiplier | built |
@@ -390,7 +415,7 @@ closes it; anything else reopens it.
 | Q52 | The New Contest drop-down shows each friendly name in full (sized at run time); reconsider if too wide | not built |
 | Q53 | Names for the 43 unnamed contests: docs/Q53_CONTEST_NAMES.csv; MINITEST retired | built |
 | Q67 | New Contest rows seeded from the station; the values at OK are the contest's own | not built |
-| Q49 | BCQP: in-province DX contact earns no domestic mult (case-insensitive test) | not built |
+| Q49 | BCQP: in-province DX contact earns no domestic mult (case-insensitive test) | built 2026-10-17 |
 | Q73 | QSO party: CALL/<valid county> is its own station for dupes (K1AR/NHHIL in NEQP) | not built |
 | Q48 | YB DX: YB entrant counts all prefixes, others YB prefixes only -- already so (DXLog agrees) | no change |
 | Q66 | A Contest Details dialog edits the contest's stored values (seeded station facts, Cabrillo fields); a station change mid-contest offers to copy it | not built |
@@ -399,10 +424,10 @@ closes it; anything else reopens it.
 | Q102 | SOUTHAMERICANWW retires (GACW WWSA is ref 45) | not built (needs Q10) |
 | Q42 | OZCHR session names restored in Cyrillic, recovered from D7 `b90ba930` | built |
 | Q43 | Sibling pairs follow DXLog: one definition file = one contest, a base with per-mode (or per-date) children | not built |
-| Q45 | EUDX/IRTS "in the EU" reads the worked station's resolved region, not `DomMultQTH` | not built |
+| Q45 | EUDX/IRTS "in the EU" reads the worked station's resolved region, not `DomMultQTH` | built 2026-10-17 |
 | Q55 | WRTC posts no DynamicResults XML; no multiplier row; amends Q83 | no change |
 | Q80 | IN7QPNE in-area multipliers per party, after Q4 -- MOOT: Q104 keeps in-area stations out | moot |
-| Q104 | IN7QPNE is refused for a station inside IN, the 7th area, New England or DE; the message names the party (7QP for the 7th area). `NEQP` = New England, `NE-QSO-PARTY` = Nebraska (TR4W has none) | not built |
+| Q104 | IN7QPNE is refused for a station inside IN, the 7th area, New England or DE; the message names the party (7QP for the 7th area). `NEQP` = New England, `NE-QSO-PARTY` = Nebraska (TR4W has none) | built 2026-10-17 (bench: BENCH_QUEUE) |
 | Q105 | New England is `NEWEQP` (Cabrillo `NEWE-QSO-PARTY`, ADIF `NEQP`), `NEQP` kept as a read alias; Nebraska QSO Party added as `NE-QSO-PARTY` | building |
 | Q79 (LOCATION) | IN7QPNE requires no LOCATION; Cabrillo spec: section for W/VE, `DX` otherwise | no change |
 | Q79 (VHF) | IN7QPNE bands = the union of the four parties; a QSO scores on its party's bands. New England 80-10, 7QP and Indiana 160-10, Delaware 160-10 + 6 m up -- each states its own | building |
@@ -678,6 +703,14 @@ closes it; anything else reopens it.
   single-state party such as Utah's or the Salmon Run); CT MA ME NH RI VT ->
   New England QSO Party; DE -> Delaware QSO Party. Q80 becomes moot. Not
   built.
+  **Built 2026-10-17:** `TContestBase.NewContestValueRefusal` (base: accepts
+  everything, which is what the dialog did); IN7QPNE refuses a MY STATE that
+  is one of the fourteen states or a county key of a party
+  (`IN7QPNEPartyOfEntrantState`), and names the party by its class's display
+  name. `uNewContest.BeginNewContest` shows the refusal in the comment and keeps
+  OK disabled. One string, `SNewContestIN7QPNEInsideAParty`, added to the 22
+  catalogues as fuzzy drafts. Pinned in `uTestContestRulings2026Oct`. The
+  prompt (Q87) still invites an in-area county; see the report.
 
   **New England vs Nebraska -- you asked how we tell them apart.** By the
   ADIF Contest-ID list (adif.org 3.1.6): **`NEQP` is the New England QSO
@@ -761,6 +794,13 @@ closes it; anything else reopens it.
   region `BE011` where the raw code list it was built from (`eudx.dom.new`,
   deleted in `8b3d3e9a`, in git history) has `BE11` -- so a station sending
   BE11 may not match. Confirm against the sponsor's region list.
+  **Built 2026-10-17:** each class's `WorkedStationIsInEU` = the record's
+  `DomesticQTH` is not empty (written only when the QTH matched the contest's
+  file). Matrix: EUDX and IRTS -- QSO points and totals only. IRTS's file is
+  ireland.dom, so there "in the EU" means "sent an Irish county". BE011: the
+  sponsor's site was unreachable; DXLog's EUDXC.txt and the deleted
+  eudx.dom.new both say BE11, and eudx.dom alone also carries DK06 -- not
+  changed, reported.
 
 - **Q55** WRTC's live-score XML has never carried a multiplier.
   **Answer:** (NY4I, 2026-10-16) *"WRTC score posting is not done with the
@@ -841,6 +881,12 @@ closes it; anything else reopens it.
   case (Q84), BC's rule fires, so an in-province BC station's DX contact earns
   no domestic multiplier, as New York and Indiana. A scoring change for in-
   province BC logs with DX QSOs. Not built.
+  **Built 2026-10-17** with Q84 (`uContestBase.DomesticMultiplierIsDX`).
+  **The premise was wrong, measured:** `ve7.dom` line 2 `dx=DX` makes the
+  multiplier `dx` (the left side is the multiplier), and the frozen matrix's
+  BC parse rows show `dommultqth=dx` -- so the old `'dx'` test DID fire for a
+  typed QSO. The fix changes only a record holding an upper-case `DX`
+  (import, peer); no matrix line moved.
 
 - **Q53** Forty-seven contests have no friendly name, so their display name is
   still the internal spelling -- `ALRS-UA1DZ-CUP`, `RF-CUP-CW`, `UKEI`,
@@ -1284,6 +1330,9 @@ closes it; anything else reopens it.
   **Answer:** (NY4I, 2026-10-15) *"Da."* The UA4W prompt uses the translated
   `TC_ENTERYOURRDAIDORGRID` as it stands ("for Russian stations"), replacing
   the fixed English text. Bands: 160 m only, above. Not built.
+  **Built 2026-10-17:** the four classes state `UsesBand = Band160`; the UA4W
+  prompt is `TC_ENTERYOURRDAIDORGRID` as it stands -- which reads "(for UA1A
+  stations)", not "for Russian stations" as the recorded answer says.
 
 - **Q69** MY ZONE, when nobody states it, is worked out from your call in
   the contest's own zone system. Most contests use ITU zones, so there it
@@ -1344,6 +1393,9 @@ closes it; anything else reopens it.
   judged QSOs. The digital-4-points item in the proposal comes from the 7QP
   sponsor's page (rule-source order) and is kept as a fix in the same commit
   unless NY4I says otherwise. Not built.
+  **Digital 4 built 2026-10-17** (CW 3, phone and FM 2), from the sponsor and
+  DXLog's 7QP.txt (`POINTS_FIELD_BAND_MODE=ALL;ALL;ALL;ALL;4`). Matrix: 7QP and
+  IN7QPNE, the host variant's two digital QSOs 2 -> 4, and totals.
 
 - **Q72** Delaware's bands: "all HF bands except WARC, plus 6 m and up".
   The class counts 160 m and light as well as 80-10 m (no WARC) and 6 m up.
@@ -1523,6 +1575,10 @@ closes it; anything else reopens it.
   IN7QPNE's `dx = dx` stays and an Indiana entrant's DX contact earns no
   multiplier there. One rule for every party that tests for DX (Indiana, New
   York, BC -- see Q49). Not built.
+  **Built 2026-10-17:** Indiana, New York and BC ask
+  `uContestBase.DomesticMultiplierIsDX` (UnicodeSameText). No matrix line moved
+  (no fixture QSO carries a lower-case `dx` multiplier to a scoring line);
+  pinned in `uTestContestRulings2026Oct`.
 
 - **Q82** County lines in IN7QPNE: Indiana and Delaware allow two counties,
   7QP four. TR4W checks the COUNT before it knows the counties, so IN7QPNE
@@ -1692,6 +1748,12 @@ closes it; anything else reopens it.
   report's Winter FD case, `PostUnit.PAS:871`). The ruling removes the
   tracking too. Not built: `TContestWinterFieldDay.HasDXMultiplier` becomes
   False; only the multiplier displays change, no score moves.
+  **Built 2026-10-17:** `HasDXMultiplier` False, `DXMultiplierKey` deleted. No
+  score moved (matrix, corpus). Also moved, by the same cause: the rescore
+  re-derives a record's country only for a contest with a prefix, zone or DX
+  multiplier (`RecomputeQSOScoring`), so a Winter FD rescore now keeps each
+  record's stored country -- the factory oracle's one W4I record (stored KP4)
+  loses the `DXCC:291` tag in the rescored ADIF, matching the D7 reference.
 
 - **Q30** Winter Field Day accepts `MX` as a QTH. It still exports as `ARRL_SECT`
   and imports as a section. Is `MX` "DX" under the "DX is never a section" rule?
@@ -1720,6 +1782,15 @@ closes it; anything else reopens it.
   is REFUSED at entry with an error (7.10). Not built: today Field Day accepts
   `DX` from anyone (`ParseClassDomesticOrDXQTH`). How an ADIF import holding
   such a record behaves is to be proposed with the change.
+  **Measured 2026-10-17: typed entry ALREADY refuses it.** `W1AW`, `VE3ABC`
+  and `KH6ABC` sending `2A DX` / `1D DX` were run through `ParametersOkay` in
+  both Field Days (temporary matrix rows, removed): all refused, "Invalid ARRL
+  Section" -- a domestic call goes to `FoundDomesticQTH`, and `arrlsect.dom`
+  has no `DX`. Nothing was built. **Proposed for a logged one** (import, peer,
+  rescore), the Q107 shape: Field Day's `CreditsWorkedStation` answers False
+  when the record's QTH is `DX` and its country has ARRL/RAC sections, so it is
+  logged and exported but scores 0 and earns nothing -- the one predicate
+  shared with entry. Awaiting NY4I.
 
 - **Q44** Three contests keep their band rule inside their scoring, not as the
   contest's bands: RTC (0 points and no multiplier off 40/20/15/10 m or off

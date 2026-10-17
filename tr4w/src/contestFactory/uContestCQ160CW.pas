@@ -95,6 +95,9 @@ type
                                 const aSession: TADIFImportSession;
                                 var aExch: ContestExchange); override;
    public
+      (* 160 m and nothing else -- Q71; see the body. *)
+      function UsesBand(aBand: BandType): boolean; override;
+   public
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
@@ -267,6 +270,16 @@ function TContestCQ160CW.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* 160 M AND NOTHING ELSE -- Q71, NY4I 2026-10-15: "a 1.8 MHz contest like
+   this (and ARRL-160 or CQ-160) would only allow points for 160." The class
+   credited every band, as its row always had. A QSO on any other band is
+   logged, scores 0 and earns no multiplier (design 7.4). The SSB running
+   states the same in its own class (design 1.4). *)
+function TContestCQ160CW.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand = Band160;
 end;
 
 (* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as

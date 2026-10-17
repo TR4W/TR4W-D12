@@ -146,6 +146,22 @@ const
   back the key as written ('Azaph'), an operator types 'AZAPH'. *)
 function IN7QPNEPartyOfQTH(const aQTH: string; out aParty: TIN7QPNEParty): boolean;
 
+const
+   (* THE STATES INSIDE EACH PARTY -- Q104 (NY4I, 2026-10-16). Indiana's,
+      the 7th call area's eight, New England's six, Delaware. The first three
+      are IN7QPNEPartyCountyStates; Delaware's state is stated here, because
+      its county keys do not start with it. *)
+   IN7QPNEPartyStates: array[TIN7QPNEParty] of string =
+      ('IN', 'AZ ID MT NV OR UT WA WY', 'CT MA ME NH RI VT', 'DE');
+
+(* IS THIS ENTRANT'S MY STATE INSIDE ONE OF THE FOUR PARTIES? -- Q104. True
+  with aParty when aMyState is one of IN7QPNEPartyStates, or a county key
+  of a party (IN7QPNEPartyOfQTH) -- the New Contest prompt (Q87) still
+  invites an in-area station to type its county. Case and blanks ignored.
+  False for any other state, a province, DX or nothing. *)
+function IN7QPNEPartyOfEntrantState(const aMyState: string;
+                                    out aParty: TIN7QPNEParty): boolean;
+
 type
    TContestIN7QPNE = class(TContestBase)
    private
@@ -241,6 +257,10 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPT, IN ITS OWN WORDS -- Q87. See the
          implementation. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+      (* AN IN-AREA STATION IS SENT TO ITS OWN PARTY -- Q104. See the
+         implementation. *)
+      function NewContestValueRefusal(aField: TNewContestField;
+                                      const aValue: string): string; override;
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
       (* THE ROVER COUNTY -- see TContestBase.StripsRoverCountyFromCall (M11 S7)
@@ -275,7 +295,8 @@ uses
    uCabrilloExchange,
    uADIFExchange,
    SysUtils,
-   uAppStrings,      (* SExchangeOutOfStateWorksHostOnly, SNewContestIN7QPNECountyOrState *)
+   uAppStrings,      (* SExchangeOutOfStateWorksHostOnly, SNewContestIN7QPNECountyOrState,
+                        SNewContestIN7QPNEInsideAParty *)
    uContestRegistry;
 
 (* True when aWord is one of the blank-separated words of aList. *)
@@ -617,6 +638,66 @@ end;
 procedure TContestIN7QPNE.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.AskFieldWithComment(SNewContestIN7QPNECountyOrState, ncfMyState);
+end;
+
+function IN7QPNEPartyOfEntrantState(const aMyState: string;
+                                    out aParty: TIN7QPNEParty): boolean;
+var
+   state: string;
+   p: TIN7QPNEParty;
+begin
+   if IN7QPNEPartyOfQTH(aMyState, aParty) then
+      begin
+      Result := True;
+      Exit;
+      end;
+
+   Result := False;
+   aParty := ipIndiana;
+   state := UpperCase(Trim(aMyState));
+   if Length(state) <> 2 then
+      begin
+      Exit;
+      end;
+   for p := Low(TIN7QPNEParty) to High(TIN7QPNEParty) do
+      begin
+      if IsWordOf(state, IN7QPNEPartyStates[p]) then
+         begin
+         aParty := p;
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
+(* IN7QPNE IS FOR STATIONS OUTSIDE ALL FOUR PARTIES -- Q104 (NY4I,
+   2026-10-16), from the New England QSO Party's own set-up note: "Stations
+   from Indiana, pick IN, from Delaware pick DE, and from the 7th Call Area,
+   pick 7QP" -- "Note for 7th area, they would select 7QP and not their
+   individual state qso parties like Utah or WA. Same for New England
+   picking NEQP." DXLog's IN7QPNEDE.txt says the same: "INQP, 7QP, NEWEQP,
+   and DEQP in-state stations should use the respective QP."
+
+   So a MY STATE inside a party is refused, and the message names that
+   party's contest by its display name -- the 7QP for all eight 7th-area
+   states, never a single state's party. The party is the component this
+   object already owns, so the name cannot drift from the class that runs
+   it. Every other row, and every other value, is accepted. *)
+function TContestIN7QPNE.NewContestValueRefusal(aField: TNewContestField;
+                                                const aValue: string): string;
+var
+   party: TIN7QPNEParty;
+begin
+   Result := '';
+   if aField <> ncfMyState then
+      begin
+      Exit;
+      end;
+   if IN7QPNEPartyOfEntrantState(aValue, party) then
+      begin
+      Result := Format(SNewContestIN7QPNEInsideAParty,
+                       [UpperCase(Trim(aValue)), FParties[party].DisplayName]);
+      end;
 end;
 
 function TContestIN7QPNE.GetQSOPartyArea: string;
