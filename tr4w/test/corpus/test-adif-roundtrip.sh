@@ -79,7 +79,9 @@ if [ ! -f "$SETTINGS" ]; then
 fi
 
 cd "$TARGET" || exit 1
+. "$CORPUS/corpus-lib.sh"
 cp "$EXE_SRC" "$EXE" || exit 1
+corpus_logs_snapshot
 SETTINGS_WIN="$(cygpath -d "$SETTINGS")"
 
 # Everything from the first ADIF record onward.  <EOH> ends the header, and a
@@ -166,7 +168,7 @@ for d in "$CORPUS"/*/; do
 
    # A FRESH CONTEST WITH NO BINARY LOG -- which is what a converted contest is,
    # and what made the import refuse before /IMPORT stopped requiring one.
-   rm -f "$WORK".* ./*.LOG
+   rm -f "$WORK".*; corpus_remove_new_logs
    cp "$d/log.cfg" "$WORK.CFG" || continue
 
    MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /IMPORT "$(cygpath -d "$d/ref.adi")" \
@@ -235,7 +237,7 @@ for d in "$CORPUS"/*/; do
    fi
 done
 
-rm -f "$WORK".* ./*.LOG "$EXE"
+rm -f "$WORK".* "$EXE"; corpus_remove_new_logs
 
 echo
 echo "=== $pass passed, $fail failed, $known known-divergence, $skip skipped ==="

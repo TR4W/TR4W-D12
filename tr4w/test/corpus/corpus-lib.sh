@@ -157,3 +157,44 @@ PY
 corpus_drop_app_id(){
    sed -E 's/<APP_TR4W_ID:[0-9]*>[^<]*//Ig'
 }
+
+# ---------------------------------------------------------------------------
+# THE CABRILLO .LOG FILES IN tr4w/target ARE NOT OURS (2026-10-17).
+# ---------------------------------------------------------------------------
+# The scripts that run the app in tr4w/target (test-contest-factory,
+# test-rescore, test-adif-roundtrip, freeze-rescore-baseline) used to clean
+# up with `rm -f ./*.LOG` -- deleting EVERY Cabrillo export an operator had in
+# that folder -- and to take "the" Cabrillo output as `ls ./*.LOG | head -1`,
+# which picks an unrelated file whenever one is there. Now:
+#
+#   corpus_logs_snapshot   once, after cd to the target folder and BEFORE the
+#                          first run: remembers which .LOG files exist, and
+#                          says so loudly if any do.
+#   corpus_new_logs        the .LOG files that appeared since the snapshot.
+#   corpus_remove_new_logs deletes those, and only those.
+#
+# A pre-existing file is never deleted. If a run's Cabrillo has the SAME name
+# as a pre-existing one the app overwrites it -- nothing here can prevent that,
+# which is why the snapshot names every file it found.
+corpus_list_logs(){
+   ls -1 ./*.LOG 2>/dev/null | sort
+}
+
+corpus_logs_snapshot(){
+   CORPUS_LOGS_BEFORE=$(corpus_list_logs)
+   if [ -n "$CORPUS_LOGS_BEFORE" ]; then
+      echo "NOTE: .LOG files already in $(pwd) are left alone (a run's Cabrillo of the same name would overwrite one):" >&2
+      printf '%s\n' "$CORPUS_LOGS_BEFORE" | sed 's/^/   /' >&2
+   fi
+}
+
+corpus_new_logs(){
+   comm -13 <(printf '%s\n' "${CORPUS_LOGS_BEFORE:-}" | sed '/^$/d') \
+            <(corpus_list_logs) | sed '/^$/d'
+}
+
+corpus_remove_new_logs(){
+   corpus_new_logs | while IFS= read -r f; do
+      rm -f -- "$f"
+   done
+}

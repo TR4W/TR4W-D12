@@ -69,6 +69,7 @@ fi
 
 cd "$TARGET" || exit 1
 cp "$EXE_SRC" "$EXE" || exit 1
+corpus_logs_snapshot
 
 pass=0; fail=0; failed=""
 for d in "$CORPUS"/*/; do
@@ -85,7 +86,7 @@ for d in "$CORPUS"/*/; do
    # memories, carried between sessions -- so leaving one behind means this run
    # starts from the previous set's state and the comparison measures that
    # instead of the scoring.
-   rm -f "$WORK".* ./*.LOG
+   rm -f "$WORK".*; corpus_remove_new_logs
    cp "$d/log.cfg" "$WORK.CFG" || continue
    # A FRESH COPY OF THE FIXTURE: /RESCORE writes back into the database it is
    # given, so the run must start from the untouched tracked log.
@@ -106,10 +107,10 @@ for d in "$CORPUS"/*/; do
    # The golden corpus is NOT affected and is right to name the .db: /EXPORT
    # reads stored values and never rescores.
    MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /RESCORE >/dev/null 2>&1
-   rm -f "$WORK.ADI" ./*.LOG
+   rm -f "$WORK.ADI"; corpus_remove_new_logs
    MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT >/dev/null 2>&1
 
-   cbr=$(ls ./*.LOG 2>/dev/null | head -1)
+   cbr=$(corpus_new_logs | head -1)
    ok=1; detail=""
 
    # AN EXCHANGE ID IS COMPARED ONLY WHERE THE FIXTURE HAS ONE (2026-10-14).
@@ -149,7 +150,7 @@ for d in "$CORPUS"/*/; do
    fi
 done
 
-rm -f "$WORK".* ./*.LOG "$EXE"
+rm -f "$WORK".* "$EXE"; corpus_remove_new_logs
 
 echo "=== factory vs frozen legacy: $pass identical, $fail differing ==="
 if [ $fail -ne 0 ]; then

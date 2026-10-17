@@ -37,7 +37,9 @@ if [ ! -f "$EXE_SRC" ]; then
 fi
 
 cd "$TARGET" || exit 1
+. "$REPO_ROOT/tr4w/test/corpus/corpus-lib.sh"
 cp "$EXE_SRC" "$EXE" || exit 1
+corpus_logs_snapshot
 
 # Every QSO row, ordered, hashed -- the whole log's content in one value.
 digest() {
@@ -82,7 +84,7 @@ for d in "$REPO_ROOT"/tr4w/test/corpus/*/; do
 
    # The corpus fixture IS the log since 2026-09-24, so there is no binary log
    # to migrate in first -- copy it and rescore it.
-   rm -f "$WORK".* ./*.LOG
+   rm -f "$WORK".*; corpus_remove_new_logs
    cp "$d/log.cfg" "$WORK.CFG" || continue
    cp "$d/log.db" "$WORK.db" || continue
 
@@ -120,7 +122,7 @@ for d in "$REPO_ROOT"/tr4w/test/corpus/*/; do
    fi
 done
 
-rm -f "$WORK".* ./*.LOG "$EXE"
+rm -f "$WORK".* "$EXE"; corpus_remove_new_logs
 
 if [ $fail -ne 0 ]; then
    echo "=== test-rescore: $fail log(s) changed on a SECOND rescore, or had exchange ids MINTED by the first ==="

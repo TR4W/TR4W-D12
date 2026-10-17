@@ -84,6 +84,7 @@ echo "               $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 
 cd "$TARGET" || exit 1
 cp "$EXE_SRC" "$EXE" || exit 1
+corpus_logs_snapshot
 
 froze=0; skipped=0; failed=""
 
@@ -100,7 +101,7 @@ for d in "$CORPUS"/*/; do
       [ $want -eq 1 ] || continue
    fi
 
-   rm -f "$WORK".* ./*.LOG
+   rm -f "$WORK".*; corpus_remove_new_logs
    cp "$d/log.cfg" "$WORK.CFG" || { skipped=$((skipped+1)); continue; }
    cp "$d/log.db"  "$WORK.db"  || { skipped=$((skipped+1)); continue; }
 
@@ -111,10 +112,10 @@ for d in "$CORPUS"/*/; do
    # a contest that has no domestic countries.  Freezing THAT would bake the
    # crippled answer into the gate permanently.
    MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /RESCORE /NOFACTORY >/dev/null 2>&1
-   rm -f "$WORK.ADI" ./*.LOG
+   rm -f "$WORK.ADI"; corpus_remove_new_logs
    MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT >/dev/null 2>&1
 
-   cbr=$(ls ./*.LOG 2>/dev/null | head -1)
+   cbr=$(corpus_new_logs | head -1)
    if [ ! -f "$WORK.ADI" ] || [ -z "$cbr" ]; then
       printf "  FAIL  %-28s (produced nothing)\n" "$name"
       failed="$failed $name"
@@ -129,7 +130,7 @@ for d in "$CORPUS"/*/; do
    froze=$((froze+1))
 done
 
-rm -f "$WORK".* ./*.LOG "$EXE"
+rm -f "$WORK".* "$EXE"; corpus_remove_new_logs
 
 echo "=== froze $froze set(s), skipped $skipped ==="
 if [ -n "$failed" ]; then

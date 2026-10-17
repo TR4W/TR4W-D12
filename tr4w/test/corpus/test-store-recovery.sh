@@ -47,8 +47,10 @@ if [ ! -f "$EXE_SRC" ]; then
 fi
 
 cd "$TARGET" || exit 1
+. "$REPO_ROOT/tr4w/test/corpus/corpus-lib.sh"
 cp "$EXE_SRC" "$EXE" || exit 1
-rm -f "$WORK".* ./*.LOG
+corpus_logs_snapshot
+rm -f "$WORK".*; corpus_remove_new_logs
 cp "$FIXTURE/log.cfg" "$WORK.CFG" || exit 1
 cp "$BINLOG" "$WORK.TRW" || exit 1
 
@@ -60,7 +62,7 @@ before_rows=$(rows); before_qsos=$(qsos)
 
 # The loss.  Not a truncation -- the file simply is not there, which is what an
 # operator sees after a bad copy, a wrong folder, or a restore that missed it.
-rm -f "$WORK.ADI" ./*.LOG "$WORK.TRW"
+rm -f "$WORK.ADI" "$WORK.TRW"; corpus_remove_new_logs
 
 MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT >/dev/null 2>&1
 after_rows=$(rows); after_qsos=$(qsos)
@@ -69,7 +71,7 @@ echo "  with the binary log:   $before_rows row(s), $before_qsos QSO(s) exported
 echo "  after losing it:       $after_rows row(s), $after_qsos QSO(s) exported"
 
 orphan=$(ls -1 "$WORK".db.orphaned-* 2>/dev/null | head -1)
-rm -f "$WORK".* "$WORK".db.orphaned-* ./*.LOG "$EXE"
+rm -f "$WORK".* "$WORK".db.orphaned-* "$EXE"; corpus_remove_new_logs
 
 if [ "$before_rows" -lt 1 ]; then
    echo "test-store-recovery: FAIL -- the fixture produced no rows to begin with; the test proves nothing"
