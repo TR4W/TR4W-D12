@@ -510,6 +510,7 @@ uses
    uCWKeyerYCCC in '..\..\src\uCWKeyerYCCC.pas',
    uCWKeyerCPU in '..\..\src\uCWKeyerCPU.pas',
    uTestCWKeyer in 'uTestCWKeyer.pas',
+   uTestCPUKeyerRing in 'uTestCPUKeyerRing.pas',
    uRadioIcom78 in '..\..\src\radioFactory\uRadioIcom78.pas',
    uRadioIcom707 in '..\..\src\radioFactory\uRadioIcom707.pas',
    uRadioIcom725 in '..\..\src\radioFactory\uRadioIcom725.pas',
@@ -851,6 +852,7 @@ begin
    RegisterSuite(TConfigDefaultsTests.Create('ConfigDefaults'));
    RegisterSuite(THamLibIDTests.Create('HamLibIDs'));
    RegisterSuite(TCWKeyerTests.Create('CWKeyer'));
+   RegisterSuite(TCPUKeyerRingTests.Create('CPUKeyerRing'));
    RegisterSuite(TSHA256Tests.Create('SHA256'));
    RegisterSuite(TCWFramingTests.Create('CWFraming'));
    RegisterSuite(TContestFactoryTests.Create('ContestFactory'));

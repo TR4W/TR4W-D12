@@ -23,6 +23,57 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-17 -- THE CPU KEYER'S ELEMENT RING IS A FIELD (pointer audit P6, defect D4)
+
+`uTestCPUKeyerRing` pins every element the DTR/RTS keyer's text-to-element
+translation writes, and it passed unchanged across the change -- so what
+reaches the ring is the same. What the tests cannot see is the CW THREAD
+keying it: `SendCWBufferStart` now reads `CPUKeyer.CWBuffer[...]` instead of
+`CWBuffer^[...]`, including the Farnsworth arm that rewrites an element's
+length in place, and the thread and Esc (`FlushCWBuffer`) step the ring
+through `NextRingSlot` / `PreviousRingSlot` -- with one deliberate change,
+the Esc wrap fix in the long-run item below. Set up: CW through the **CPU keyer** -- keyer port on a
+serial adapter with DTR (or RTS) = CW, no WinKeyer, CW-by-CAT off, a radio
+or a sidetone monitor you can hear. **A YCCC box's autosend characters go
+this way too**, so the same checks cover it.
+
+- [ ] **A message keys exactly as before.** F1 (CQ) and the exchange memory:
+      every character correct by ear, letter spacing and word spacing
+      unchanged, PTT drops at the end. Include a memory with `^` (half space)
+      and one with a speed change (Ctrl-F / Ctrl-S inside the memory) if you
+      use them.
+- [ ] **Autosend, starting from a FRESH start of TR4W.** Before keying
+      anything else, put the call window in autosend and type a call: it
+      keys as you type. (The D4 crash needed the very first character into
+      the keyer to be a space, `^`, a control character or an unmapped one,
+      which the UI does not readily produce -- the unit test reached it and
+      reproduced the access violation; this checks the ordinary path.)
+- [ ] **Farnsworth** (if you use it: FARNSWORTH ENABLE with a code speed
+      below FARNSWORTH SPEED): the character and word gaps stretch as before.
+- [ ] **Backspace while autosending** retracts the last unsent character, as
+      before -- and only that: it never brings back CW that was already sent
+      or flushed. **FIXED in this packet (NY4I, 2026-10-17):** when the ring
+      stood at slot 0, the retraction walk used to go round the whole OLD
+      ring and could resume keying stale CW. Rare for the same reason as
+      the Esc item below, so a clean run does not prove it -- the unit test
+      does -- but stale CW after a Backspace is now a defect: note the time
+      and send `tr4w.log`. **Esc** stops sending mid-message.
+- [ ] **A long run, with Esc.** Send forty or more CQs/exchanges in one
+      session -- the ring holds 2,047 elements and wraps, so this crosses the
+      wrap several times -- and press **Esc mid-message on a good number of
+      them**. Every message keys clean, and **every Esc stops sending
+      cleanly**: at most the element in progress finishes, then silence and
+      PTT off. **FIXED in this packet (NY4I, 2026-10-17):** `FlushCWBuffer`
+      used to wrap to `CWBufferSize`, not `CWBufferSize - 1`, so an Esc at
+      the moment the ring stood at slot 0 replayed up to 2,046 OLD elements
+      instead of stopping. That moment is rare (once per 2,047 elements), so
+      a clean run does not prove the fix -- the unit tests do -- but **a
+      burst of old CW after an Esc is now a defect**: note the time and send
+      `tr4w.log`.
+- [ ] Exit TR4W: no `worker thread` exception line in `tr4w.log`.
+
+---
+
 ## Added 2026-10-17 -- BATCH C RULINGS (Q9, Q32, Q37, Q73, Q81)
 
 The unit tests reach each rule (`uTestOperatorCQMemory`, `uTestContestTotals.

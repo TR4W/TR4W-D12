@@ -77,6 +77,44 @@ SEH chain head (`docs/POINTER_AUDIT.md`, D2). **Pass the routine BARE --
 untyped pointer the compiler does not check; `Lint-TypedCodePointers` fails
 the build on it. The bench check for each is in `docs/BENCH_QUEUE.md`.
 
+## The CPU keyer's element ring is a FIELD, and it is pinned (2026-10-17)
+
+`K1EAKeyer.CWBuffer` (private, `logk1ea.pas`) is a fixed
+`array[0..CWBufferSize] of CWElementRecord` inside the keyer. Until pointer
+audit P6 it was a unit-global `^array` that `Dit`/`Dah`/`Dat`/
+`AddStringToCWBuffer` `New()`'d lazily and nothing disposed -- and the
+space, `^`, control-character and unmapped-character arms wrote through it
+unchecked, so a first autosend `' '` (`TCWKeyerCPU.SendChar`) was an
+`EAccessViolation` (D4, reproduced by the test before the fix). **Do not
+reintroduce a lazily-allocated ring.** Read it through
+`CPUKeyer.BufferedElement(i)`; only `SendCWBufferStart` touches the field
+directly. `test/unit/uTestCPUKeyerRing.pas` pins every element the text
+produces (A-Z, 0-9, punctuation, the prosigns, the accented letters, the
+control characters, the Esc command escape, the wrap, retraction) against
+international Morse written out independently.
+
+**Step the ring with `NextRingSlot` / `PreviousRingSlot` (`logk1ea`
+interface), never by hand.** They are the ring's modulus written once, and
+`IncrementBufferEnd`, `CWThreadProc`, `DeleteLastCharacter`'s retraction and
+`FlushCWBuffer` use them. The reason: `FlushCWBuffer`, with the CW thread
+running, puts Start one slot behind End, and it used to wrap -1 to
+`CWBufferSize` by hand -- but the ring runs modulo `CWBufferSize`, so from
+End = 0 the thread stepped to slot 1, not 0, and keyed the STALE ring from
+slot 1 round to 0 (about 2,046 old elements) instead of stopping on Esc.
+**FIXED in P6 (NY4I, 2026-10-17)**; identical for every End <> 0.
+`Test_RingSlotArithmetic` and `Test_FlushedStartStopsInOneStep` pin it
+without the thread. **`DeleteLastCharacter` had the same shape, also FIXED
+in P6 (NY4I, 2026-10-17):** it started its walk from `CWBufferEnd - 1`
+written by hand, -1 when End is 0, which never equals Start -- so with Start
+just before End the walk went round the whole STALE ring and could make an
+old gap the new End (Backspace un-retracting into old CW). It now starts at
+`PreviousRingSlot(CWBufferEnd)` and steps with `PreviousRingSlot`; identical
+for every End <> 0. Pinned by `Test_DeleteLastCharacterAtEndZero`.
+
+`CWBufferStart`/`CWBufferEnd` are still interface globals
+(`uNet` reads them), and `K1EAKeyer` is still an old-style `object` -- audit
+item 6.5, its conversion to a class, was not part of P6.
+
 ## Open, and decided
 
 **Open (NY4I — design, not refactor):** `ActiveCWKeyer`'s precedence chain
@@ -95,7 +133,8 @@ output lapses until OTRSP AUX is wired.
 
 ## Oracle
 
-`.\tr4w\build\Build-Tests.ps1 -Run` covers CW framing and keyer logic. Actual
+`.\tr4w\build\Build-Tests.ps1 -Run` covers CW framing and keyer logic, and
+the CPU keyer's text-to-element translation (`uTestCPUKeyerRing`). Actual
 keying is bench-only — no oracle in this repo proves a rig keys.
 
 ## Coordinate with

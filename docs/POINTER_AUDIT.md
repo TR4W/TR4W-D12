@@ -20,6 +20,13 @@ dirty). NOTHING WAS CHANGED: this is an inventory and a schedule.**
 > `Lint-PointerTruncation` and `Lint-TypedCodePointers`. See
 > [P1 and P2](#p1-and-p2----typed-code-pointers-and-the-64-bit-truncations-2026-10-16).
 > Every oracle unchanged; counter 2,701 -> 2,622.
+>
+> **P6 is DONE (2026-10-17), item 2.1 only**: the CPU keyer's element ring
+> is a private array field of `K1EAKeyer`, D4 is gone, and
+> `uTestCPUKeyerRing` was written FIRST and reproduced D4 as an
+> `EAccessViolation` against the old code. Two wrap off-by-ones found on the
+> way, in `FlushCWBuffer` and `DeleteLastCharacter`, are fixed too (NY4I). Item 6.5 (`K1EAKeyer` -> class) is
+> NOT done. See [P6](#p6----the-cpu-keyers-element-ring-2026-10-17).
 
 NY4I, 2026-10-16, after `logdom.pas` turned out to hold a DOS-era hand-built
 linked list whose dispose loop read through nil:
@@ -152,7 +159,15 @@ a `PLogFileInformation` parameter instead of an `lParam`. A comment-aware lint
 for `(integer|longint|cardinal|dword|longword)\s*\(\s*@` is exact for the
 `@` form and cheap -- see packet P2.
 
-### D4. The CPU keyer's CW buffer can be written through nil -- latent
+### D4. The CPU keyer's CW buffer can be written through nil -- FIXED (P6)
+
+> **Confirmed and fixed 2026-10-17.** `uTestCPUKeyerRing.Test_SpaceFirstWritesAGap`,
+> run against the unchanged code, got `EAccessViolation: Access violation`
+> for a first `' '`; the same test passes on the field. The unmapped-character
+> path (`'@'`, anything printable with no arm) was a nil write too -- it
+> reaches only the trailing-gap assignment. The text below is the finding as
+> written (its packet number corrected from P7, a slip -- P7 is the SCP
+> buffer).
 
 `logk1ea.CWBuffer: CWBufferPtr` is allocated lazily, by `New(CWBuffer)`, in
 `Dit`, `Dah`, the third element routine and `AddStringToCWBuffer`
@@ -167,7 +182,7 @@ a space, `^` or a control character and arrives through `SendChar` (autosend)
 rather than a message, writes to address 0. Likelihood is low -- autosend
 normally starts with a callsign's first letter, which calls `Dit`/`Dah` --
 but nothing guarantees it. **Not confirmed on hardware.** A fixed array field
-of `K1EAKeyer` removes both the nil and the leak (packet P7).
+of `K1EAKeyer` removes both the nil and the leak (packet P6).
 
 ### D5. `logname.pas` is NOT COMPILED, and two audits count it -- DELETED (P4)
 
@@ -341,7 +356,7 @@ nothing automated; needs a [`BENCH_QUEUE.md`](BENCH_QUEUE.md) entry.
 
 | # | where | what | live? | native replacement | risk | oracle |
 |---|---|---|---|---|---|---|
-| 2.1 | `trdos/logk1ea.pas:498-503`, `New(CWBuffer)` x 4 | CPU keyer element ring | live (CPU / YCCC keyer) | a fixed `array` field of `K1EAKeyer` -- no heap, no nil (D4) | medium (keys the radio) | **none** for the buffer; write a UT that feeds `AddCharacterToCWBuffer` and reads the ring, then BENCH (DTR/RTS keying) |
+| 2.1 | `trdos/logk1ea.pas:498-503`, `New(CWBuffer)` x 4 | CPU keyer element ring | live (CPU / YCCC keyer) | **DONE (P6)**: a private `array` field of `K1EAKeyer` (`CWBuffer: CWBufferType`), read through `BufferedElement` -- no heap, no nil (D4) | medium (keys the radio) | UT `uTestCPUKeyerRing` (written first, against the old code); BENCH (DTR/RTS keying) |
 | 2.2 | `trdos/logscp.pas:305-400` `CellBufferObject.Initialize`/`GoAway`: `New(Buffer1..3)` in POST mode, `GetMem(Buffer1, NumberBytes)` otherwise; `New/Dispose(CallsAlreadySaved)` `:1170/1273`, `:2382/2469`; `New/Dispose(SCPIndexArray)` `:1949/2975` | the TRMASTER cell buffer | live (SCP, initial-exchange lookup) | `TBytes` / dynamic arrays sized by `SetLength`; one allocation strategy instead of two | medium -- **two allocators for one pointer**, chosen by `MaximumMemoryToUse`; `GoAway` must pick the matching free | MATRIX (opens `MATRIX-TRMASTER.DTA`, emits `initialexchange.trmaster.*`); **partial-call SCP itself has no UT** |
 | 2.3 | `uCallsigns.pas:426`, `uSortedStringList.pas:261` `ReallocMem(FList, ...)` | hand-rolled growable arrays inside old-style objects | live (`CallsignsList` partials; `mo.PrfList`/`DomList` multipliers) | `array of T` + `SetLength`, or `specialize TList<T>` | medium | `uSortedStringList`: UT `uTestMults`, `uTestHostAreaRule`, `uTestOffBandCredit`, MATRIX, CORPUS. `uCallsigns`: UT `uTestStringCompare`, `uTestOffBandCredit` (partial) |
 | 2.4 | `trdos/postunit.pas:1346/1351` (`ScoreByHour`), `:2027/2034` (`QSOsByCountryByBand`), `:3340/3345`, `:3440/3447` (`tGenerateSummaryPortionOfCabrilloFile`) | temporary report arrays, `New` ... `Dispose` with **no `try/finally`** | live | a local dynamic array or class instance | low | the Cabrillo summary: CORPUS. The two reports: **none** |
@@ -469,7 +484,7 @@ Owners follow CLAUDE.md's routing table.
 | **P3** | `logdom` | 1.1 | D1 | UT `uTestDomQTHTableReload`, MATRIX, CORPUS | **IN PROGRESS** -- do not duplicate | contest-scoring |
 | **P4** | Delete the dead pointer code -- **DONE 2026-10-16**, see below | 1.4, 1.5, 1.6, 1.7, 6.11, 6.12, 7.3 | removes ~250 dereferences, two dangling-pointer shapes and a whole uncompiled unit, at **zero** behaviour risk | COMPILER + full build + UT + CORPUS + MATRIX (a deletion that compiles cannot change behaviour, but run them) | none; **fix `64_BIT_TASKLIST.md`'s `logname` rows and CLAUDE.md's TRDOS table in the same commit** | contest-scoring, file-formats, dx-cluster, lcl-ui |
 | **P5** | `zonecont` domestic country list -- **DONE 2026-10-16**, see below | 1.2 | live and scoring-critical, but the oracle is the strongest in the tree | MATRIX (change `uContestMatrix.pas:502` with it), CORPUS, FACTORY, UT `uTestContestFactory` / `uTestContestSession` | none | contest-scoring, contest-factory |
-| **P6** | CPU keyer buffer | 2.1, 6.5 | D4 nil write + leak | **TEST FIRST**: a UT that feeds `K1EAKeyer.AddCharacterToCWBuffer` (incl. `' '` first) and reads the element ring; then BENCH DTR/RTS keying | write the UT | cw-keying |
+| **P6** | CPU keyer buffer -- **DONE 2026-10-17 for 2.1**, see below; **6.5 still open** | 2.1, 6.5 | D4 nil write + leak | **TEST FIRST**: a UT that feeds `K1EAKeyer.AddCharacterToCWBuffer` (incl. `' '` first) and reads the element ring; then BENCH DTR/RTS keying -- the UT is `uTestCPUKeyerRing`, the bench entry is in `BENCH_QUEUE.md` (2026-10-17) | write the UT | cw-keying |
 | **P7** | SCP cell buffer | 2.2, 6.4, 7.5 | two allocators for one pointer; live on every partial-call lookup | MATRIX covers the TRMASTER initial-exchange path only. **TEST FIRST**: a UT over the shipped-format fixture (`contest-matrix/MATRIX-TRMASTER.DTA`) asserting partial-call results for a handful of keys | write the UT | file-formats |
 | **P8** | Old-style lists with a VMT | 2.3, 6.7, 6.8, 6.9, 6.10 | objects with a VMT are where `SizeOf` and `FillChar` go wrong (CLAUDE.md, the `0xC0000005` story) | `uSortedStringList`/`MultsObject`: UT `uTestMults` + MATRIX + CORPUS. `TCallsignsList`, `TDXSpotsList`: **TEST FIRST** (partials list; spot store add/age/remove) | write the two UTs | contest-scoring, dx-cluster |
 | **P9** | Identity in `Objects[]` / `Data` / `lParam` | 5.1, 5.2, 5.3, 5.4, 5.6 | the `WIN32_ARTIFACT_SWEEP` pattern; display-only, so low crash risk but invisible breakage | **no automated oracle** -- each conversion writes its typed-payload test with the change (the sweep doc's own rule) AND a BENCH entry per window | none | lcl-ui |
@@ -482,7 +497,7 @@ Owners follow CLAUDE.md's routing table.
 | **P16** | Remaining `src` `...EnumLines` callback | 7.4 | touches six loaders; do after P3 and P5, which own two of them | MATRIX, CORPUS, UT `uTestDomQTHTableReload` | P3, P5 | contest-scoring, settings-config |
 
 **Packets with NO automated oracle today** -- each needs its test written first
-or a bench entry: **P6** (CPU keyer), **P7** (SCP partials), **P8** (call and
+or a bench entry: ~~**P6** (CPU keyer)~~ (has `uTestCPUKeyerRing` now), **P7** (SCP partials), **P8** (call and
 spot lists), **P9** (every window), **P10** (3.4, 3.6), **P11** (keying and
 polling), **P13** (reports, K4/Icom discovery), **P14** (every network message).
 
@@ -670,6 +685,86 @@ in `BENCH_QUEUE.md`.
 of each thread body and declaration. That `Pointer` is the RTL's
 `BeginThread` contract, the same reason 7.7 keeps one -- the untyped part
 that went is the CODE pointer, which the compiler now checks.
+
+### P6 -- the CPU keyer's element ring, 2026-10-17
+
+**Test first, and it saw D4.** `test/unit/uTestCPUKeyerRing.pas` (suite
+`CPUKeyerRing`, 12 tests, 96 checks) feeds `AddCharacterToCWBuffer` and
+`AddStringToCWBuffer` and reads the ring back by index through a new
+read-only `K1EAKeyer.BufferedElement` -- the only change made before the
+run. Every letter, digit, punctuation mark, prosign (`+ < = !`) and the
+twelve accented-letter codes are checked against international Morse
+written out as dots and dashes in the test, not copied from the case
+statement; plus `-` (Dat), `&` (nothing), space, `^`, an unmapped `@`, the
+start-sending-now key, all fourteen control-character elements, the dah
+ratio read at write time, the Esc command escape, the wrap modulo
+`CWBufferSize`, and `DeleteLastCharacter`. Against the **old** code: 94
+pass, and exactly two fail -- the D4 case (`EAccessViolation: Access
+violation` for a first `' '`) and the structural pin
+(`SizeOf(K1EAKeyer) = 268`, so the ring was not in it).
+
+**The change.** `CWBuffer: CWBufferPtr` (a unit global, `New()`'d in four
+places, never disposed) and `CWBufferAvailable` are gone; `CWBufferType`
+moved to the interface and is a **private field** of `K1EAKeyer`, zeroed with
+the typed constant `CPUKeyer`. 81 `CWBuffer^[` became `CWBuffer[` (the
+methods) or `CPUKeyer.CWBuffer[` (`SendCWBufferStart`, a plain procedure). The
+same 96 checks pass unchanged.
+
+**Oracles.** Unit 381,762 / 0 failed, plain and `-Checked` (152 suites);
+with the flush and delete fixes and their three tests, 381,779 / 0 plain
+and `-Checked` (suite `CPUKeyerRing`: 15 tests, 113 checks), heaptrc
+unfreed 13,469. 0 heaptrc corruption reports.
+One `-Checked` run failed `SettingsPrecedence.Test_TheCollapseIsIdempotent`
+and passed on the immediate re-run of the same binary: that test uses a
+FIXED temp directory (`%TEMP%\tr4wprec_idempotent`) that parallel test runs
+on one machine share -- unrelated to P6, worth fixing on its own. **heaptrc unfreed: 13,469 on the field, 13,470
+-- +1 block of 16,384 bytes, exactly `2048 x SizeOf(CWElementRecord)` -- for
+the same suite on the old ring**, so the leak is measured, not argued. The
+ceiling stays at 13,469 because the suite before P6 never keyed, so it
+never allocated the ring. No new warning in `logk1ea` (the same two
+widening conversions before and after). The app, corpus, matrix and
+x86_64 build were NOT run (compile-and-unit-test packet).
+
+**Pointer counts for `logk1ea.pas`.** `Count-LivePointers.ps1` could not be
+run in the agent that did this (PowerShell refused); these are the same
+rule regexes over the comment-stripped file by a stand-in script, so
+re-measure with the real counter before quoting them: `C3-deref` 106 -> 23,
+`C2-new-dispose` 4 -> 0, `C1-ptrtype-decl` 1 -> 0, `C6-ptr-named` 11 -> 9;
+every other rule unchanged. The 23 derefs left are `aRadio^` /
+`ActiveRadioPtr^` -- the `RadioObject` pointer, packet P11.
+
+**Not done, and why.** Item **6.5**, `K1EAKeyer` as a class, is a lifetime
+change (who constructs `CPUKeyer`, and before which unit's initialization),
+which the ring did not need. **`CWBufferStart` / `CWBufferEnd`** are still
+interface globals, read by `uNet`.
+
+**A second, older ring defect, found here and FIXED in P6 (NY4I,
+2026-10-17: "Fix it in P6").** `FlushCWBuffer`, with the CW thread running,
+puts Start one slot behind End and wrapped -1 to `CWBufferSize` by hand --
+but the ring's modulus is `CWBufferSize`, so it needed `CWBufferSize - 1`.
+From End = 0 the thread's next step (`2048 mod 2047`) landed on 1, not on
+End, and it keyed the stale ring from slot 1 round to 0 -- about 2,046 old
+elements -- instead of stopping on Esc. The ring's two steps are now
+`NextRingSlot` / `PreviousRingSlot` in `logk1ea`'s interface, the modulus
+written once; `IncrementBufferEnd`, `CWThreadProc`, `DeleteLastCharacter`'s
+new End and `FlushCWBuffer` all use them, and the flush is
+`PreviousRingSlot(CWBufferEnd)` -- identical for every End <> 0. Pinned
+without the thread by `Test_RingSlotArithmetic` (End 0 -> 2046, 5 -> 4, the
+two steps inverse on every slot and never reaching `CWBufferSize`) and
+`Test_FlushedStartStopsInOneStep` (from the flushed Start, the send loop's
+own stepping reaches End in exactly ONE step, End = 0 included).
+
+**The same shape in `DeleteLastCharacter`, also FIXED in P6 (NY4I,
+2026-10-17: "Fix it too").** Its backward walk started from `CWBufferEnd - 1`
+written by hand -- -1 when End is 0, a value that never equals Start -- so
+with Start just before End it went round the whole stale ring and could cut
+the ring at an old gap, i.e. Backspace resuming old CW. It now starts at
+`PreviousRingSlot(CWBufferEnd)` and steps with `PreviousRingSlot`; identical
+for every End <> 0. `Test_DeleteLastCharacterAtEndZero` plants a stale gap
+behind the live ring, sets End = 0 with Start just before it, and asserts no
+retraction and End unchanged; then a real retraction across the wrap
+(E E space ending at 0) cuts at `CWBufferSize - 1`, the answer the old code
+gave too. The keying itself is in `BENCH_QUEUE.md`.
 
 ---
 
