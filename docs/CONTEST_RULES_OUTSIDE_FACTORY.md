@@ -2,7 +2,7 @@
 
 **GENERATED. Do not edit outside the marked hand-maintained blocks.**
 Regenerate with `python tools/contest-rules-inventory/generate.py` (any working
-directory). This copy was generated from commit `98bfcde5` (2026-10-17).
+directory). This copy was generated from commit `fe0a1720` (2026-10-17).
 Owner: `contest-factory`, with `contest-scoring` (the engine side of every row
 below), `file-formats` (ADIF and Cabrillo rows) and `lcl-ui` (the UI rows).
 
@@ -261,8 +261,8 @@ None found.
 | file:line | routine | shape | contest(s) -- **bold = has a class** | class? | seam | what |
 |---|---|---|---|---|---|---|
 | `MainUnit.pas:8072` | LoadinLog | 2 | **RADIOYOC** | all | new seam needed: SessionExchangeState (previous QSO number) | `LegacyContestOf(Contest)` compare |
-| `trdos/logdupe.pas:1382` | GetInitialExchangeStringFromContestExchange | 4 | **ALLJA** | all | new seam needed: InitialExchangeFromHistory | reach 1: `AE` = RSTALLJAPrefectureAndPrecedenceExchange |
-| `trdos/logdupe.pas:1405` | GetInitialExchangeStringFromContestExchange | 4 | **FISTS** | all | new seam needed: InitialExchangeFromHistory | reach 1: `AE` = RSTQTHNameAndFistsNumberOrPowerExchange |
+| `trdos/logdupe.pas:1377` | GetInitialExchangeStringFromContestExchange | 4 | **ALLJA** | all | new seam needed: InitialExchangeFromHistory | reach 1: `AE` = RSTALLJAPrefectureAndPrecedenceExchange |
+| `trdos/logdupe.pas:1400` | GetInitialExchangeStringFromContestExchange | 4 | **FISTS** | all | new seam needed: InitialExchangeFromHistory | reach 1: `AE` = RSTQTHNameAndFistsNumberOrPowerExchange |
 | `trdos/logedit.pas:2481` | InitialExchangeEntry | 2 | **OZCR_O**, **OZCR_Z** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | `LegacyContestOf(Contest)` in |
 | `trdos/logedit.pas:2499` | InitialExchangeEntry | 2 | **RFCHAMPIONSHIPCW**, **RFCHAMPIONSHIPSSB** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | `LegacyContestOf(Contest)` in |
 | `trdos/logedit.pas:2619` | InitialExchangeEntry | 4 | **ARRLSSCW**, **ARRLSSSSB** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | reach 2: `AIE` = CheckSectionInitialExchange (arm of case @2332) |
@@ -299,9 +299,9 @@ None found.
 
 | file:line | routine | shape | contest(s) -- **bold = has a class** | class? | seam | what |
 |---|---|---|---|---|---|---|
-| `trdos/postunit.pas:3134` | tGenerateLogPortionOfCabrilloFile | 3 | **LABRE** | all | FormatCabrilloReceivedExchange / CabrilloQSOLineFormat / CabrilloModeString (existing; CabrilloModeString M9a) | `Settings.Contest.Name = 'LABRE'` |
-| `trdos/postunit.pas:3148` | tGenerateLogPortionOfCabrilloFile | 2 | **CUPRFCW**, **CUPRFSSB** | all | FormatCabrilloReceivedExchange / CabrilloQSOLineFormat / CabrilloModeString (existing; CabrilloModeString M9a) | `LegacyContestOf(Contest)` in |
-| `trdos/postunit.pas:3153` | tGenerateLogPortionOfCabrilloFile | 3 | (none by default) | - | FormatCabrilloReceivedExchange / CabrilloQSOLineFormat / CabrilloModeString (existing; CabrilloModeString M9a) | `Settings.Contest.Name = 'EURASIA'` -- see dead code |
+| `trdos/postunit.pas:3159` | tGenerateLogPortionOfCabrilloFile | 3 | **LABRE** | all | FormatCabrilloReceivedExchange / CabrilloQSOLineFormat / CabrilloModeString (existing; CabrilloModeString M9a) | `Settings.Contest.Name = 'LABRE'` |
+| `trdos/postunit.pas:3173` | tGenerateLogPortionOfCabrilloFile | 2 | **CUPRFCW**, **CUPRFSSB** | all | FormatCabrilloReceivedExchange / CabrilloQSOLineFormat / CabrilloModeString (existing; CabrilloModeString M9a) | `LegacyContestOf(Contest)` in |
+| `trdos/postunit.pas:3178` | tGenerateLogPortionOfCabrilloFile | 3 | (none by default) | - | FormatCabrilloReceivedExchange / CabrilloQSOLineFormat / CabrilloModeString (existing; CabrilloModeString M9a) | `Settings.Contest.Name = 'EURASIA'` -- see dead code |
 | `uCabrilloExchange.pas:554` | CabrilloSentRSTQSONumberState | 3 | (none by default) | - | GetCabrilloSentExchange (existing, M11 S9c; TRC Digital and PGA have no ContestType) | `aMy.MyState = 'TRC'` -- TRC Digital, no ContestType (was `cMyState = 'TRC'` until M11 S9c) |
 | `uCabrilloExchange.pas:558` | CabrilloSentRSTQSONumberState | 3 | (none by default) | - | GetCabrilloSentExchange (existing, M11 S9c; TRC Digital and PGA have no ContestType) | `ContestTitle = 'PGA'` -- no ContestType; operator-titled |
 | `uCabrilloExchange.pas:792` | CabrilloReceivedRSTQSONumberQTH | 3 | (none by default) | - | GetCabrilloReceivedExchange (existing, M11 S9c; TRC Digital and PGA have no ContestType) | `ContestTitle = 'PGA'` -- no ContestType; operator-titled |
@@ -395,17 +395,17 @@ Worth reading first, because they are the ones the brief named:
 |---|---|
 | ARRLSSCW | **exchange** `trdos/logedit.pas:2619`, `trdos/logedit.pas:2775` |
 | ARRLSSSSB | **exchange** `trdos/logedit.pas:2619`, `trdos/logedit.pas:2775` |
-| CUPRFCW | **exchange** `trdos/logedit.pas:2753`; **cabrillo-export** `trdos/postunit.pas:3148` |
-| CUPRFSSB | **exchange** `trdos/logedit.pas:2753`; **cabrillo-export** `trdos/postunit.pas:3148` |
-| ALLJA | **exchange** `trdos/logdupe.pas:1382` |
+| CUPRFCW | **exchange** `trdos/logedit.pas:2753`; **cabrillo-export** `trdos/postunit.pas:3173` |
+| CUPRFSSB | **exchange** `trdos/logedit.pas:2753`; **cabrillo-export** `trdos/postunit.pas:3173` |
+| ALLJA | **exchange** `trdos/logdupe.pas:1377` |
 | CALQSOPARTY | **exchange** `trdos/logedit.pas:2750` |
 | CQIR | **exchange** `trdos/logedit.pas:2759` |
 | CUPRFDIG | **exchange** `trdos/logedit.pas:2753` |
-| FISTS | **exchange** `trdos/logdupe.pas:1405` |
+| FISTS | **exchange** `trdos/logdupe.pas:1400` |
 | IARU | **exchange** `trdos/logedit.pas:2787` |
 | JIDXCW | **exchange** `trdos/logedit.pas:2869` |
 | JIDXSSB | **exchange** `trdos/logedit.pas:2869` |
-| LABRE | **cabrillo-export** `trdos/postunit.pas:3134` |
+| LABRE | **cabrillo-export** `trdos/postunit.pas:3159` |
 | NRAUBALTICCW | **exchange** `trdos/logedit.pas:2758` |
 | NRAUBALTICSSB | **exchange** `trdos/logedit.pas:2758` |
 | OHIOQSOPARTY | **exchange** `trdos/logedit.pas:2758` |
