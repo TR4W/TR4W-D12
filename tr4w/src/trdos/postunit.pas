@@ -102,6 +102,11 @@ type
   LogHourTotalArray        = array [ 0 .. 49 ] of HourTotalsRecord;
   LogHourTotalArrayPointer = ^LogHourTotalArray;
 
+  (* WHERE THE SUMMARY SHEET'S RECORDS COME FROM: the next record into aQso,
+     False at the end -- uLogSource.LogSourceNext's shape, which is what
+     CalculateTotals hands TallySummaryTotals. A test hands its own. *)
+  TSummaryRecordReader = function( out aQso: ContestExchange ): boolean;
+
 type
   QTCEntryRecord = record
     Time: CallString;
@@ -139,6 +144,11 @@ function GenerateAllTotalsPerHour: boolean;
 procedure ScoreByHour;
 // function DetermineNumberOfQTCs: integer;
 function CalculateTotals: boolean;
+(* THE SUMMARY SHEET'S COUNTS -- RawQSOTotals, PostQSOTotals, QSOPointTotals,
+   TimeSpentByBand and the contest dates -- zeroed, then tallied over every
+   record aNext yields. CalculateTotals' body, over the log; exported for its
+   pin (uTestContestTotals), which hands it records directly. *)
+procedure TallySummaryTotals( aNext: TSummaryRecordReader );
 (* DOES A GAP BETWEEN TWO QSOs COUNT AS OPERATING TIME? -- CalculateTotals'
    rule, exported for its pin (uTestContestUI). At most the contest's
    MinimumOffTimeMinutes counts; a longer gap is off time. *)
@@ -1181,15 +1191,27 @@ begin
    Result := aGapSeconds <= aMinimumOffTimeMinutes * 60;
 end;
 
-function CalculateTotals: boolean;
-
-  { Returns TRUE if successful }
-  label
-    1;
+procedure ZeroSummaryTotals;
   var
     Band: BandType;
-    PreviousBand: BandType;
     Mode: ModeType;
+  begin
+  NumberDates := 0;
+  FillChar(TimeSpentByBand, SizeOf( TimeSpentByBand ), 0);
+  for Band   := Band160 to AllBands do
+     begin
+     for Mode := CW to Both do
+        begin
+        PostQSOTotals[ Band, Mode ]  := 0;
+        RawQSOTotals[ Band, Mode ]   := 0;
+        QSOPointTotals[ Band, Mode ] := 0;
+        end;
+     end;
+  end;
+
+procedure TallySummaryTotals( aNext: TSummaryRecordReader );
+  var
+    PreviousBand: BandType;
     FirstRecord: boolean;
     TempMode: ModeType;
     TimeDifference: integer;
@@ -1201,41 +1223,29 @@ function CalculateTotals: boolean;
      `Pos('CQ-WW', Settings.Contest.Name)` (n4af 4.35.3) -- the session's
      NAME, so a stated CONTEST NAME changed it. *)
   MinimumOffTime := ContestIdentity( Contest ).MinimumOffTimeMinutes;
-  NumberDates := 0;
   // OperatingTime := 0;
-  CalculateTotals := False;
-  FillChar(TimeSpentByBand, SizeOf( TimeSpentByBand ), 0);
-  for Band   := Band160 to AllBands do
-     begin
-     for Mode := CW to Both do
-        begin
-        PostQSOTotals[ Band, Mode ]  := 0;
-        RawQSOTotals[ Band, Mode ]   := 0;
-        QSOPointTotals[ Band, Mode ] := 0;
-        end;
-     end;
-
-  (* THE SOURCE SEAM -- step B3.  See ExportToADIF above. *)
-  if not LogSourceOpen then
-     begin
-     Exit;
-     end;
+  ZeroSummaryTotals;
   FirstRecord  := true;
   PreviousBand := NoBand;
+  FillChar( PreviousQSOTime, SizeOf( TQSOTime ), 0 );
 
-  LogSourceRewind;
-1:
-  if LogSourceNext( TempRXData ) then
+  (* INTO TempRXData, as before: the record read is the unit's scratch
+     record, and nothing here needs a second one. *)
+  while aNext( TempRXData ) do
      begin
-     if TempRXData.ceQSO_Deleted = true then
+     (* WHICH RECORDS THE SUMMARY COUNTS IS THE ONE PREDICATE THE LOADER AND
+        THE BONUS VIEW ASK -- uContestBase.QSOCountsTowardTotals: a QSO
+        record, not deleted, with a band and a mode, and NOT AN X-QSO (Q51,
+        NY4I: "x-qso never counts as worked"). This tested deleted and the
+        record kind itself, then GoodLookingQSO (band and mode) for the valid
+        column only, and never ceXQSO -- so a flagged X-QSO was counted in
+        both columns (CONTEST_OWNERSHIP_DESIGN.md 8.2v). A record with no
+        band or no mode is now left out of the raw column as well, as the
+        loader leaves it out of every total. ceQSO_Skiped was tested here as a
+        SECOND delete flag once; one flag now. *)
+     if not QSOCountsTowardTotals( TempRXData ) then
         begin
-        goto 1;
-        end;
-     (* ceQSO_Skiped was tested here as a SECOND delete flag, immediately
-        after ceQSO_Deleted and doing the same thing. One flag now. *)
-     if TempRXData.ceRecordKind <> rkQSO then
-        begin
-        goto 1;
+        Continue;
         end;
 
      TempMode := TempRXData.Mode;
@@ -1249,49 +1259,65 @@ function CalculateTotals: boolean;
      inc( RawQSOTotals[ AllBands, TempMode ] );
      inc( RawQSOTotals[ AllBands, Both ] );
 
-     if GoodLookingQSO then
-       if TempRXData.ceDupe = False then
-          begin
+     if TempRXData.ceDupe = False then
+        begin
 
-          if not FirstRecord then
-             begin
-             TimeDifference := QSOTimeToSeconds( TempRXData.tSysTime ) -
-                QSOTimeToSeconds( PreviousQSOTime );
-             if GapIsOperatingTime( TimeDifference, MinimumOffTime ) then
-               // OperatingTime := OperatingTime + TimeDifference;
-                begin
-                if PreviousBand = TempRXData.Band then
-                   begin
-                   inc( TimeSpentByBand[ TempRXData.Band ], TimeDifference );
-                   end;
-                inc( TimeSpentByBand[ AllBands ], TimeDifference );
-                end;
-             PreviousBand := TempRXData.Band;
-             end;
+        if not FirstRecord then
+           begin
+           TimeDifference := QSOTimeToSeconds( TempRXData.tSysTime ) -
+              QSOTimeToSeconds( PreviousQSOTime );
+           if GapIsOperatingTime( TimeDifference, MinimumOffTime ) then
+             // OperatingTime := OperatingTime + TimeDifference;
+              begin
+              if PreviousBand = TempRXData.Band then
+                 begin
+                 inc( TimeSpentByBand[ TempRXData.Band ], TimeDifference );
+                 end;
+              inc( TimeSpentByBand[ AllBands ], TimeDifference );
+              end;
+           PreviousBand := TempRXData.Band;
+           end;
 
-          PreviousQSOTime := TempRXData.tSysTime;
+        PreviousQSOTime := TempRXData.tSysTime;
 
-          FirstRecord := False;
-          CheckForNewContestDate( TempRXData.tSysTime );
+        FirstRecord := False;
+        CheckForNewContestDate( TempRXData.tSysTime );
 
-          inc( PostQSOTotals[ TempRXData.Band, TempMode ] );
-          inc( PostQSOTotals[ TempRXData.Band, Both ] );
-          inc( PostQSOTotals[ AllBands, TempMode ] );
-          inc( PostQSOTotals[ AllBands, Both ] );
+        inc( PostQSOTotals[ TempRXData.Band, TempMode ] );
+        inc( PostQSOTotals[ TempRXData.Band, Both ] );
+        inc( PostQSOTotals[ AllBands, TempMode ] );
+        inc( PostQSOTotals[ AllBands, Both ] );
 
-          QSOPointTotals[ TempRXData.Band, TempMode ] :=
-             QSOPointTotals[ TempRXData.Band, TempMode ] + TempRXData.QSOPoints;
-          QSOPointTotals[ TempRXData.Band, Both ] :=
-             QSOPointTotals[ TempRXData.Band, Both ] + TempRXData.QSOPoints;
-          QSOPointTotals[ AllBands, TempMode ] :=
-             QSOPointTotals[ AllBands, TempMode ] + TempRXData.QSOPoints;
-          QSOPointTotals[ AllBands, Both ] := QSOPointTotals[ AllBands, Both ] +
-             TempRXData.QSOPoints;
-          end;
-     goto 1;
+        QSOPointTotals[ TempRXData.Band, TempMode ] :=
+           QSOPointTotals[ TempRXData.Band, TempMode ] + TempRXData.QSOPoints;
+        QSOPointTotals[ TempRXData.Band, Both ] :=
+           QSOPointTotals[ TempRXData.Band, Both ] + TempRXData.QSOPoints;
+        QSOPointTotals[ AllBands, TempMode ] :=
+           QSOPointTotals[ AllBands, TempMode ] + TempRXData.QSOPoints;
+        QSOPointTotals[ AllBands, Both ] := QSOPointTotals[ AllBands, Both ] +
+           TempRXData.QSOPoints;
+        end;
      end;
-  LogSourceClose;
   // OperatingTime := OperatingTime div 60;
+  end;
+
+function CalculateTotals: boolean;
+
+  (* Returns TRUE if successful *)
+  begin
+  CalculateTotals := False;
+
+  (* THE SOURCE SEAM -- step B3.  See ExportToADIF above. *)
+  if not LogSourceOpen then
+     begin
+     (* Zeroed even so, as the counts always were before the source opened. *)
+     ZeroSummaryTotals;
+     Exit;
+     end;
+
+  LogSourceRewind;
+  TallySummaryTotals( @LogSourceNext );
+  LogSourceClose;
   CalculateTotals := true;
   end;
 

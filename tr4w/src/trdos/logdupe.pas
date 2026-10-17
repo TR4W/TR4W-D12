@@ -1004,10 +1004,7 @@ begin
       end;
 
   if RXData.ceClearMultSheet then Exit;
-  RXData.DomesticMult := False;
-  RXData.DXMult := False;
-  RXData.PrefixMult := False;
-  RXData.ZoneMult := False;
+  ClearMultiplierFlags(RXData);
 
   if Settings.Mult.ByBand then MultBand := RXData.Band else MultBand := AllBands;
   if Settings.Mult.ByMode then MultMode := RXData.Mode else MultMode := Both;

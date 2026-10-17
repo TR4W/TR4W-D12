@@ -890,6 +890,115 @@ begin
                      string(aRX.DomesticQTH), aRX.Zone]);
 end;
 
+const
+   (* THE BANDS A KEY OR HOST-AREA QSO MOVES TO, in order (Q98 stage S0,
+     docs/CONTEST_OWNERSHIP_DESIGN.md 8.2v). *)
+   MATRIX_CREDITED_BAND_PREFERENCE: array[1..8] of BandType =
+      (Band20, Band40, Band15, Band10, Band80, Band160, Band6, Band2);
+
+(* THE FIXED FREQUENCY OF A MOVED QSO: the CW or the phone end of aBand, the
+  values the base QSOs use where one of them is on that band. Phone and FM
+  take the phone end; every other mode the CW end -- only CW and phone QSOs
+  are moved today (see CreditedMatrixQSO). *)
+function PickHz(aPhone: boolean; aPhoneHz, aCWHz: longint): longint;
+begin
+   if aPhone then
+      begin
+      Result := aPhoneHz;
+      end
+   else
+      begin
+      Result := aCWHz;
+      end;
+end;
+
+function MatrixBandFrequencyHz(aBand: BandType; aMode: ModeType): longint;
+var
+   isPhone: boolean;
+begin
+   isPhone := aMode in [Phone, FM];
+   case aBand of
+      Band160:
+         begin
+         Result := PickHz(isPhone, 1850000, 1830000);
+         end;
+      Band80:
+         begin
+         Result := PickHz(isPhone, 3800000, 3530000);
+         end;
+      Band40:
+         begin
+         Result := PickHz(isPhone, 7150000, 7025000);
+         end;
+      Band20:
+         begin
+         Result := PickHz(isPhone, 14250000, 14025000);
+         end;
+      Band15:
+         begin
+         Result := PickHz(isPhone, 21300000, 21025000);
+         end;
+      Band10:
+         begin
+         Result := PickHz(isPhone, 28400000, 28025000);
+         end;
+      Band6:
+         begin
+         Result := PickHz(isPhone, 50150000, 50090000);
+         end;
+      Band2:
+         begin
+         Result := PickHz(isPhone, 146520000, 144050000);
+         end;
+   else
+      begin
+      Result := 0;
+      end;
+   end;
+end;
+
+(* aSpec ON A BAND THE CONTEST CREDITS (Q98 stage S0, 8.2v).
+
+  THE keys SECTION (18-36) AND THE HOST-AREA QSO (37) EXIST TO REACH KEY
+  DERIVATION AND THE HOST-AREA RULE, NOT TO TEST THE BAND RULE -- the 17
+  base QSOs are that test, and they never move. An off-band QSO stops at
+  ScoreQSO's and SetMultFlags' band exits before any key is derived, so a
+  key QSO the contest does not credit pins nothing: the four 160 m
+  contests' keys sections had exercised no multiplier key at all. And every
+  contest that states its bands later would have lost its keys the same
+  way, in silence.
+
+  So: aSpec as it is when the contest credits its band (every record that
+  credits 20/40/15 m keeps its bytes), else aSpec moved to the first
+  credited band of MATRIX_CREDITED_BAND_PREFERENCE at that band's fixed
+  frequency; unchanged when the contest credits none of them. Asked of the
+  contest the scoring path asks (ActiveContest), through the same
+  ContestCreditsBand.
+
+  THE MODE HALF IS NOT HERE YET: no mode seam exists until Q98's S1 adds
+  ContestCreditsMode, and the mode preference (CW, Phone, FM, Digital) is
+  added beside the band one in that stage. *)
+function CreditedMatrixQSO(aContest: TContestBase; const aSpec: TMatrixQSO): TMatrixQSO;
+var
+   i: integer;
+begin
+   Result := aSpec;
+   if ContestCreditsBand(aContest, aSpec.Band) then
+      begin
+      Exit;
+      end;
+
+   for i := Low(MATRIX_CREDITED_BAND_PREFERENCE) to High(MATRIX_CREDITED_BAND_PREFERENCE) do
+      begin
+      if ContestCreditsBand(aContest, MATRIX_CREDITED_BAND_PREFERENCE[i]) then
+         begin
+         Result.Band := MATRIX_CREDITED_BAND_PREFERENCE[i];
+         Result.FreqHz := MatrixBandFrequencyHz(Result.Band, Result.Mode);
+         Exit;
+         end;
+      end;
+end;
+
 procedure SessionDomesticFileKeys(out aFirst, aSecond: string); forward;
 
 const
@@ -932,7 +1041,8 @@ var
    keys: array[1..2] of string;
    i: integer;
 begin
-   aSpec := HOST_QSO;
+   (* ON A BAND THE CONTEST CREDITS (Q98 S0) -- see CreditedMatrixQSO. *)
+   aSpec := CreditedMatrixQSO(ActiveContest(Contest), HOST_QSO);
    BuildQSO(HOST_QSO_INDEX, aSpec, rx);
    if ContestCreditsWorkedStation(ActiveContest(Contest), rx) then
       begin
@@ -1771,15 +1881,22 @@ const
   the class's points, as the scoring section scores -- and never appended to
   the log, so the export, the import read-back and the totals reload describe
   exactly the log they described before this section existed. Each is scored
-  against the same untouched sheet the scoring section used. *)
+  against the same untouched sheet the scoring section used, and on a band
+  the contest credits (Q98 S0, CreditedMatrixQSO) -- the record's line names
+  the band it was scored on. *)
 procedure CaptureKeys;
 var
    i: integer;
    n: integer;
    rx: ContestExchange;
+   spec: TMatrixQSO;
    first, second: string;
+   contestRules: TContestBase;
 begin
    Emit('== keys');
+   (* ONE ActiveContest FOR THE BAND QUESTION -- it rebuilds the station on
+     every call, and the answer cannot change within this section. *)
+   contestRules := ActiveContest(Contest);
    (* THE FIELDS THE CONTEST STATED (TContestBase.ReceivedExchangeFields,
      M11 S9a), by name, in the record's own order -- start-up assigns
      LOGDUPE.ExchangeInformation once (uProgramMain), and the log-string
@@ -1794,9 +1911,11 @@ begin
       begin
       n := High(MATRIX_QSOS) + i;
       try
-         BuildQSO(n, MATRIX_KEY_QSOS[i], rx);
+         (* ON A BAND THE CONTEST CREDITS (Q98 S0) -- see CreditedMatrixQSO. *)
+         spec := CreditedMatrixQSO(contestRules, MATRIX_KEY_QSOS[i]);
+         BuildQSO(n, spec, rx);
          RecomputeQSOScoring(rx);
-         Emit(ScoreLine(n, MATRIX_KEY_QSOS[i], rx));
+         Emit(ScoreLine(n, spec, rx));
       except
          on E: Exception do
             begin

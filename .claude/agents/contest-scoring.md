@@ -213,8 +213,12 @@ logged (Q32, built 2026-10-17):** Missouri's peak-hour bonus is its
 `BonusPoints` over the view, from each QSO's logged time and band, valid QSOs
 only, capped at 250 -- `TalliesLiveQSO` and `LOGDUPE.LiveSessionTally`, the
 live-only tally a reopened log lost, are deleted. Do not bring a session
-count back. `LoadinLog` and the view share one predicate,
-`uContestBase.QSOCountsTowardTotals`. **A malformed grid is never measured
+count back. `LoadinLog`, the view and the summary sheet
+(`postunit.TallySummaryTotals`, 2026-10-17 -- it had counted flagged X-QSOs)
+share one predicate, `uContestBase.QSOCountsTowardTotals`; never re-test the
+record kind, deleted or `ceXQSO` beside it. A rescored X-QSO keeps no points,
+dupe or multiplier flag (`uContestBase.ClearXQSOScoring`, Q51), and the
+four-flag clear is ONE routine, `ClearMultiplierFlags`. **A malformed grid is never measured
 (Q37, built 2026-10-17):** `uGridShape.IsGoodLookingGrid` (Tree's
 `GoodLookingGrid` rule, lifted -- the predicate the grid parsers refuse a typed
 grid by) gates LOGGRID's distance (0), heading (-1) and lat/lon; it read past

@@ -70,6 +70,8 @@ type
       procedure Test_SalmonRunSingleModeEntry;
       procedure Test_IdahoDormantCountyNeedsTenQSOs;
       procedure Test_QSOCountsTowardTotals;
+      procedure Test_SummarySheetCountsWhatTheTotalsCount;
+      procedure Test_RescoredXQSOKeepsNoScoring;
       procedure Test_ApplicationViewIsTheLoadersSet;
       procedure Test_NewClassesScoreTheirArms;
       procedure Test_OnlyBonusContestsDeclareStations;
@@ -82,7 +84,9 @@ uses
    (* The application's view, kept beside the totals. *)
    uScoreTotals,
    (* Make and NoStation -- lifted there at M8, the third copy being due. *)
-   uTestContestObjects;
+   uTestContestObjects,
+   (* TallySummaryTotals and the summary sheet's counts -- Q51. *)
+   PostUnit;
 
 (* ---------------------------------------------------------------------------
    HAND-BUILT INPUTS
@@ -709,6 +713,129 @@ begin
    CheckFalse(QSOCountsTowardTotals(qso), 'a QTC record');
 end;
 
+(* THE RECORDS THE SUMMARY-SHEET TEST HANDS TallySummaryTotals, in order --
+   PostUnit.TSummaryRecordReader is a plain function, so its state is here. *)
+var
+   GSummaryRecords: array of ContestExchange;
+   GSummaryNext: integer;
+
+function NextSummaryRecord(out aQso: ContestExchange): boolean;
+begin
+   Result := GSummaryNext <= High(GSummaryRecords);
+   if Result then
+      begin
+      aQso := GSummaryRecords[GSummaryNext];
+      Inc(GSummaryNext);
+      end
+   else
+      begin
+      FillChar(aQso, SizeOf(ContestExchange), 0);
+      end;
+end;
+
+(* THE SUMMARY SHEET COUNTS WHAT THE TOTALS COUNT (Q51, NY4I: "x-qso never
+   counts as worked"; CONTEST_OWNERSHIP_DESIGN.md 8.2v). It tested deleted
+   and the record kind, then band and mode for the valid column, and never
+   ceXQSO, so a flagged X-QSO was counted in both columns. Now its filter is
+   QSOCountsTowardTotals itself: the raw column counts exactly the records
+   that predicate accepts (dupes included), the valid column those of them
+   that are not dupes, and an X-QSO adds to neither, nor to the points. *)
+procedure TContestTotalsTests.Test_SummarySheetCountsWhatTheTotalsCount;
+var
+   i: integer;
+   counted: integer;
+   savedContest: TContestHandle;
+begin
+   BeginTest('Test_SummarySheetCountsWhatTheTotalsCount');
+
+   SetLength(GSummaryRecords, 6);
+   GSummaryRecords[0] := LoggedQSO('W1AW', Band20, CW);
+   GSummaryRecords[0].QSOPoints := 2;
+   GSummaryRecords[1] := AsDupe(LoggedQSO('W1AW', Band20, CW));
+   (* The X-QSO carries points and a flag, as a stored record can: neither
+      may reach the sheet. *)
+   GSummaryRecords[2] := LoggedQSO('K1ABC', Band20, CW);
+   GSummaryRecords[2].ceXQSO := True;
+   GSummaryRecords[2].QSOPoints := 3;
+   GSummaryRecords[2].DXMult := True;
+   GSummaryRecords[3] := LoggedQSO('K2ABC', Band20, CW);
+   GSummaryRecords[3].ceQSO_Deleted := True;
+   GSummaryRecords[4] := LoggedQSO('K3ABC', NoBand, CW);
+   (* An X-QSO on another band: no row may appear for it at all. *)
+   GSummaryRecords[5] := LoggedQSO('K4ABC', Band40, Phone);
+   GSummaryRecords[5].ceXQSO := True;
+   GSummaryRecords[5].QSOPoints := 1;
+
+   counted := 0;
+   for i := Low(GSummaryRecords) to High(GSummaryRecords) do
+      begin
+      if QSOCountsTowardTotals(GSummaryRecords[i]) then
+         begin
+         Inc(counted);
+         end;
+      end;
+
+   (* A NAMED CONTEST, so the operating-time break it reads is a known one;
+      the counts asserted here do not depend on it. *)
+   savedContest := Contest;
+   try
+      Contest := ContestHandleOf(CQWWCW);
+      GSummaryNext := 0;
+      TallySummaryTotals(@NextSummaryRecord);
+   finally
+      Contest := savedContest;
+   end;
+
+   CheckEquals(counted, RawQSOTotals[AllBands, Both],
+               'the raw column is exactly what QSOCountsTowardTotals accepts');
+   CheckEquals(2, RawQSOTotals[Band20, CW], 'raw 20 m CW: the QSO and its dupe, not the X-QSO');
+   CheckEquals(1, PostQSOTotals[Band20, CW], 'valid 20 m CW: the QSO alone');
+   CheckEquals(2, QSOPointTotals[Band20, CW], 'points 20 m CW: the QSO''s, never the X-QSO''s');
+   CheckEquals(0, RawQSOTotals[Band40, Phone], 'an X-QSO alone on a band makes no row');
+   CheckEquals(2, QSOPointTotals[AllBands, Both], 'all points: the QSO''s alone, no X-QSO''s');
+   CheckEquals(0, RawQSOTotals[NoBand, CW], 'a record with no band counts nowhere');
+
+   SetLength(GSummaryRecords, 0);
+end;
+
+(* A RESCORED X-QSO KEEPS NO SCORING (Q51; 8.2v's finding): the rescore's
+   X-QSO arm (MainUnit.tUpdateLog) zeroed the points and the dupe and left
+   the stored multiplier flags set, so a reader of DXMult/ZoneMult could
+   report a multiplier for it. ClearXQSOScoring is that arm. The record keeps
+   what it was worked with -- only its credit goes. *)
+procedure TContestTotalsTests.Test_RescoredXQSOKeepsNoScoring;
+var
+   qso: ContestExchange;
+begin
+   BeginTest('Test_RescoredXQSOKeepsNoScoring');
+
+   qso := LoggedQSO('W1AW', Band20, CW);
+   qso.ceXQSO := True;
+   qso.QSOPoints := 3;
+   qso.ceDupe := True;
+   qso.DomesticMult := True;
+   qso.DXMult := True;
+   qso.PrefixMult := True;
+   qso.ZoneMult := True;
+   qso.DomesticQTH := 'CT';
+   qso.DomMultQTH := 'CT';
+   qso.Zone := 5;
+
+   ClearXQSOScoring(qso);
+
+   CheckEquals(0, qso.QSOPoints, 'no points');
+   CheckFalse(qso.ceDupe, 'no dupe mark');
+   CheckFalse(qso.DomesticMult, 'no domestic multiplier');
+   CheckFalse(qso.DXMult, 'no DX multiplier');
+   CheckFalse(qso.PrefixMult, 'no prefix multiplier');
+   CheckFalse(qso.ZoneMult, 'no zone multiplier');
+   CheckTrue(qso.ceXQSO, 'still an X-QSO');
+   CheckEquals('CT', string(qso.DomesticQTH), 'the QTH it was worked with stays');
+   CheckEquals('CT', string(qso.DomMultQTH), 'the multiplier QTH it sent stays');
+   CheckEquals(5, qso.Zone, 'the zone it sent stays');
+   CheckEquals('W1AW', string(qso.Callsign), 'the call stays');
+end;
+
 (* THE APPLICATION'S VIEW KEEPS WHAT THE LOADER COUNTS, AND RESETS WITH THE
    TOTALS. Read through a contest, which is the only way a rule sees it: the
    Missouri class pays W0MA only while a counted W0MA contact is in the view.
@@ -865,6 +992,8 @@ begin
    Test_SalmonRunSingleModeEntry;
    Test_IdahoDormantCountyNeedsTenQSOs;
    Test_QSOCountsTowardTotals;
+   Test_SummarySheetCountsWhatTheTotalsCount;
+   Test_RescoredXQSOKeepsNoScoring;
    Test_ApplicationViewIsTheLoadersSet;
    Test_NewClassesScoreTheirArms;
    Test_OnlyBonusContestsDeclareStations;

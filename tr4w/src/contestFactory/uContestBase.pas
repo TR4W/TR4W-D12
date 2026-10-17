@@ -3352,8 +3352,28 @@ function ApplyQSOPointOverride(const aOverrides: TQSOPointOverrides;
    it. A QSO record, not deleted, with a band and a mode, and not an X-QSO:
    what MainUnit.LoadinLog adds to the sheet and the counters, and so what the
    view a bonus rule reads holds. LoadinLog asks this too, so the totals and
-   the view cannot disagree about which QSOs exist. *)
+   the view cannot disagree about which QSOs exist. So does the summary
+   sheet (POSTUNIT.CalculateTotals, Q51: "x-qso never counts as worked"). *)
 function QSOCountsTowardTotals(const aQso: ContestExchange): boolean;
+
+(* aQso EARNS NO MULTIPLIER: its four flags -- domestic, DX, prefix, zone --
+   cleared. The one statement of "no multiplier on this record", for the
+   three engine sites that said it in four assignments: LOGDUPE.SetMultFlags
+   (before it decides the flags), the rescore's actClearMults and its X-QSO
+   arm (MainUnit.tUpdateLog, through ClearXQSOScoring). *)
+procedure ClearMultiplierFlags(var aQso: ContestExchange);
+
+(* WHAT A RESCORED X-QSO KEEPS OF ITS SCORING: nothing (Q51, NY4I: "x-qso
+   never counts as worked ... simply so we do not leave it out of the log").
+   Its points 0, no dupe mark and no multiplier flag.
+
+   THE FLAGS ARE THE FINDING (CONTEST_OWNERSHIP_DESIGN.md 8.2v): the rescore
+   zeroed the points and the dupe and left the stored flags as they were, so
+   every reader of a record's DXMult/ZoneMult -- HamScore's CountMultipliers,
+   the UDP and score-posting multiplier fields -- could report a multiplier
+   for a flagged X-QSO. The record keeps everything else, the QTH it was
+   worked with included. *)
+procedure ClearXQSOScoring(var aQso: ContestExchange);
 
 (* THE MODE A BONUS IS COUNTED IN: FM is phone, as the engine's totals count
    it; every other mode is itself. *)
@@ -4152,6 +4172,21 @@ begin
              (aQso.Band <> NoBand)        and
              (aQso.Mode <> NoMode)        and
              (not aQso.ceXQSO);
+end;
+
+procedure ClearMultiplierFlags(var aQso: ContestExchange);
+begin
+   aQso.DomesticMult := False;
+   aQso.DXMult := False;
+   aQso.PrefixMult := False;
+   aQso.ZoneMult := False;
+end;
+
+procedure ClearXQSOScoring(var aQso: ContestExchange);
+begin
+   aQso.QSOPoints := 0;
+   aQso.ceDupe := False;
+   ClearMultiplierFlags(aQso);
 end;
 
 function BonusModeOf(aMode: ModeType): ModeType;

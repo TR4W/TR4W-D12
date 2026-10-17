@@ -35,7 +35,9 @@ corpus logs, and **the contest matrix** (`tr4w/test/contest-matrix/run-contest-m
 M0, 2026-10-01) sees set-up, scoring, export, ADIF import (M5a) and typed-exchange
 parsing (M5b) for **every** `ContestType` on synthetic QSOs -- and since M11 S0c
 its `keys` section (19 more QSOs and 8 more exchanges, scored and parsed but NOT
-logged, so export/import/totals are untouched) and its `initialexchange` section
+logged, so export/import/totals are untouched -- each scored on a band the
+contest CREDITS since Q98 S0, `CreditedMatrixQSO`, as is the host-area QSO 37,
+so stating a band list never silently drops key coverage) and its `initialexchange` section
 (`InitialExchangeEntry` with no file, with the matrix's OWN
 `MATRIX-TRMASTER.DTA` -- never the shipped one -- with logged history, and with a
 custom string). Run them, and say which ones you ran. **Never re-freeze the matrix
