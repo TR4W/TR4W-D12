@@ -49,7 +49,7 @@ uses
 procedure HeadlessSyncFinished(aData: PtrInt);
 
 procedure ReplaceLogByServerLog(Replace: boolean);
-procedure RunSyncThread;
+function RunSyncThread(aParameter: Pointer): DWORD; stdcall;
 
 { HOW THE DOWNLOAD THREAD TALKS TO THE WINDOW.
 
@@ -425,7 +425,7 @@ begin
    end;
 end;
 
-procedure RunSyncThread;
+function RunSyncThread(aParameter: Pointer): DWORD; stdcall;
 label
   e, 2;
 var
@@ -435,6 +435,7 @@ var
   ServerLogFillIndex                    : integer;
   LogSize                               : integer;
 begin
+  Result := 0;   (* the thread exit code -- see TF.TTR4WThreadStart *)
 
   CommitChangesInLocalLog;
 

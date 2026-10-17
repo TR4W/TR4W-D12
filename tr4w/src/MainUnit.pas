@@ -4968,7 +4968,7 @@ begin
         begin
         if QSOTotals[All, Both] > 0 then
         if YesOrNo(TC_APPENDIMPORTEDQSOSTOCURRENTLOG) = IDno then Exit;
-       // if ImportFromADIFThreadID = 0 then tCreateThread(@ImportFromADIF, ImportFromADIFThreadID);
+       // if ImportFromADIFThreadID = 0 then tCreateThread(ImportFromADIF, ImportFromADIFThreadID);
         ImportFromADIF;
         end;
         *)
@@ -7738,7 +7738,7 @@ begin
      end;
   tExitFromPaddleFootSwitchThread := False;
   logger.Info('Calling tCreateThread from tRuntPaddleAndFootSwitchThread');
-  tPaddleFootSwitchThread := tCreateThread(@tPaddleFootSwitchThreadProc,
+  tPaddleFootSwitchThread := tCreateThread(tPaddleFootSwitchThreadProc,
     tPaddleThreadID);
   logger.Info('Created PaddleAndFootSwitch thread with threadid of %d',
     [tPaddleThreadID]);

@@ -29,12 +29,10 @@ uses
   TF,
 
   PostUnit,
-  LCLType,
   LogDupe
-  (* Messages went 2026-09-08. It was here for ONE type -- the lParam on
-    ShowLogCompare -- and LCLType, already imported above, declares LPARAM
-    for every widget set (lcltype.pp:119, a distinct PtrInt). Verified by
-    removing the import and compiling for x86_64-linux, not by grepping. *)
+  (* Messages went 2026-09-08, and LCLType on 2026-10-16: both were here for
+    ONE type, the lParam that ShowLogCompare used to take. It takes the
+    record's typed pointer now (pointer audit P2) -- see the declaration. *)
   ;
 
 {
@@ -63,16 +61,21 @@ var
 // When the dialog becomes an LCL form, this body changes and nothing else does.
 //
 // Phase 4b, 2026-08-19: that is exactly what happened, and no call site moved.
-procedure ShowLogCompare(const aInitParam: lParam);
+//
+// A TYPED POINTER, NOT AN lParam (pointer audit P2 / D3, 2026-10-16). The
+// parameter was the dialog's Win32 lParam, kept after the dialog became a
+// form, and uNet filled it with integer(s) -- a pointer cut to 32 bits on
+// x86_64. The record's own pointer type carries it with no cast at all.
+procedure ShowLogCompare(const aInfo: PLogFileInformation);
 
 implementation
 
 uses
   uLogCompareForm;
 
-procedure ShowLogCompare(const aInitParam: lParam);
+procedure ShowLogCompare(const aInfo: PLogFileInformation);
 begin
-   uLogCompareForm.ShowLogCompare(aInitParam);
+   uLogCompareForm.ShowLogCompare(aInfo);
 end;
 
 end.

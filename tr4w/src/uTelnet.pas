@@ -1224,7 +1224,7 @@ begin
 
   TelnetStopRequested := False;
   logger.Debug('Starting DX cluster I/O thread');
-  TelThreadHandle := tCreateThread(@TelnetThreadProc, TelThreadID);
+  TelThreadHandle := tCreateThread(TelnetThreadProc, TelThreadID);
   logger.Debug('Created DX cluster thread with threadid of %u', [PtrUInt(TelThreadID)]);
 end;
 

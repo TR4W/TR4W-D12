@@ -48,6 +48,19 @@ no contest-factory unit (it uses `NoContest` from `VC`). A contest with no
 legacy number (Q108 S3) must never reach these records -- that refusal is
 Q108 S4, not built.
 
+## Worker threads and the log-compare record (pointer audit P1/P2, 2026-10-16)
+
+`uNet.ConnectThread` and `uGetServerLog.RunSyncThread` are
+`function(aParameter: Pointer): DWORD; stdcall` (`TF.TTR4WThreadStart`) and
+are started BARE -- `tCreateThread(ConnectThread, ...)`, never `@ConnectThread`,
+which Delphi mode passes unchecked (`Lint-TypedCodePointers`). They were
+parameterless procedures until 2026-10-16, which on i386 corrupted the
+thread's SEH chain head at exit (`docs/POINTER_AUDIT.md`, D2).
+`ShowLogCompare` takes `PLogFileInformation`, not an `lParam` filled with
+`integer(s)` -- that cut the pointer in half on x86_64.
+`Lint-PointerTruncation` keeps the integer form out. (The dialog is still
+unreachable: `ProcessServerLogInfo` compares nothing, as above.)
+
 ## The transport, and its one sharp edge
 
 The client is **Indy**, not Winsock. `uNet` used to drive a raw socket and have

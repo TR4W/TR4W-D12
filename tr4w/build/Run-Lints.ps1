@@ -229,6 +229,21 @@ $lints = @(
    # `Contest = X`, `Contest in [...]` and `case Contest of` outside
    # src\contestFactory\: what differs about a contest belongs in its class.
    @{ Name = 'Lint-ContestNameTests'; Arg = $src; NeedsFpc = $false }
+
+   # A POINTER NARROWED TO A 32-BIT INTEGER (pointer audit D3 / P2,
+   # 2026-10-16). integer(@x) and integer(<a pointer>) are exact on i386 and
+   # cut an address in half on x86_64, and neither compiler says a word. Five
+   # were live when this was written; 64_BIT_TASKLIST had recorded zero,
+   # because its scan looked only for the widening direction. The whole tr4w
+   # tree, so the server and the tests are held to it too.
+   @{ Name = 'Lint-PointerTruncation'; Arg = $Tr4wDir; NeedsFpc = $false }
+
+   # `@Routine` IN A PROCEDURAL-TYPED SLOT (pointer audit D2 / P1). Delphi mode
+   # makes @Routine an UNTYPED pointer, which FPC accepts for a procedural
+   # parameter without checking the signature -- so typing tCreateThread's
+   # parameter only works while the call sites name the routine bare. Ten
+   # thread bodies had the wrong signature, unchecked, until 2026-10-16.
+   @{ Name = 'Lint-TypedCodePointers'; Arg = $Tr4wDir; NeedsFpc = $false }
 )
 
 $failed  = 0

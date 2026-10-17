@@ -137,7 +137,7 @@ function FindAndUpdateQSOInLog(var RXData: ContestExchange): boolean;
 //procedure SendEditedQSOToNetwork(var CE: ContestExchange);
 procedure ShowConnectionStatus(Operation: string);
 procedure AddNewClient(ClientID: integer);
-procedure ConnectThread;
+function ConnectThread(aParameter: Pointer): DWORD; stdcall;
 procedure DisplayClientStatus(Index: integer);
 procedure DisplayMessageStatus(Index: integer; Msg: TMessageState);
 procedure EnableNetworkMenuItem(const aEnabled: boolean);
@@ -1133,7 +1133,7 @@ begin
   if not ThreadStarted(NetThreadID) then
      begin
      FConnectThreadAnnounced := announce;
-     tCreateThread(@ConnectThread, NetThreadID, not announce {Quiet on silent retries});
+     tCreateThread(ConnectThread, NetThreadID, not announce {Quiet on silent retries});
      end;
 end;
 
@@ -1172,12 +1172,13 @@ begin
       end;
 end;
 
-procedure ConnectThread;
+function ConnectThread(aParameter: Pointer): DWORD; stdcall;
 label
   1, 2;
 var
   i                                     : integer;
 begin
+  Result := 0;   (* the thread exit code -- see TF.TTR4WThreadStart *)
   DifferentContests := False;
   ShowConnectionStatus(TC_CONNECTINGTO);
 
@@ -1488,20 +1489,20 @@ begin
              begin
              logger.Error('Auto-sync: could not create %s', [TR4W_SYN_FILENAME]);
              // Fall through to the existing dialog so the operator can react.
-             ShowLogCompare(integer(s));
+             ShowLogCompare(s);
              end
           else
              begin
              HeadlessSyncMode := True;
              if not ThreadStarted(LogSyncThreadID) then
                 begin
-                tCreateThread(@RunSyncThread, LogSyncThreadID);
+                tCreateThread(RunSyncThread, LogSyncThreadID);
                 end;
              end;
           end
        else
           begin
-          ShowLogCompare(integer(s));
+          ShowLogCompare(s);
           end;
        end
     else

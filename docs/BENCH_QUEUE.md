@@ -46,6 +46,44 @@ not "right". Check on a real run:
 - **N1MM listener** receives `<mycall>` again (UDP contact broadcast).
 - **The installer** (`dom\*.dom` wildcard): an installed copy has all 124
   files in `dom\`, including `prov12.dom`.
+- **Every worker thread has a new signature** (pointer audit P1, defect D2).
+  `tCreateThread` is typed now, and eleven thread bodies changed from
+  parameterless procedures to `function(aParameter: Pointer): DWORD;
+  stdcall`. Before, each of them, ON EXIT, wrote nil into its own SEH chain
+  head and restored three registers from the wrong stack slots -- so a
+  crash or hang AT THE END of one of these is what to watch for, not at the
+  start. For each: use the feature, let the thread finish (or exit TR4W),
+  and check `tr4w.log` holds no `worker thread ... ` exception line:
+  - **CW through the DTR/RTS (CPU) keyer** -- send a CQ and an exchange
+    (`CWThreadProc`).
+  - **The dupe / new-multiplier beep** (`tDoABeep`).
+  - **Paddle and foot switch** read through the control port
+    (`tPaddleFootSwitchThreadProc`).
+  - **DVP voice playback** -- play a `.wav` memory to its end, and stop one
+    mid-message (`tDVPPlayThreadproc`).
+  - **WinKeyer** -- open at startup with WINKEYER ENABLE on, key a message,
+    exit (`wkOpenThreadProc`, the new entry for `wkOpen`, and
+    `wkReadThreadProc`).
+  - **Any CAT radio** -- polling starts, frequency and mode follow, and
+    Reset Radio Ports rebuilds it (`BeginPolling`, which now receives its
+    RadioObject as the thread parameter).
+  - **Multi-op** -- connect to `tr4wserver`, including a retry while the
+    server is down (`ConnectThread`), and **Synchronize** the server log,
+    both from the Network window and with SERVER AUTO SYNCHRONIZE LOG ON
+    CONNECT (`RunSyncThread`).
+  - **Post / Get Scores** upload (`CreateConnectionAndSendReportToGetScores`).
+  - **The NTP check at startup** (`NTPStartupCheck`).
+- **The CW-memory command table** (pointer audit P1): its handler column is a
+  typed procedure now and every row names its routine bare. No row changed
+  its target, and the compiler checked all 81; still, run two or three
+  memory commands (e.g. `SWAPRADIOS`, `BANDUP`, `CQMODE` in a function-key
+  message) and confirm each does what it did.
+- **MMTTY RTTY text** (pointer audit P2, defect D3): with MMTTY running,
+  received characters appear in the RTTY window in Lucida Console, in
+  colour, and the callsign grab still works. Three `SendMessage` addresses
+  are `LPARAM` instead of `integer` -- identical on i386; on x86_64 the
+  `integer` form handed RichEdit half an address (the 64-bit image is based
+  at `$100000000`).
 
 ---
 

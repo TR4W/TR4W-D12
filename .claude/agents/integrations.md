@@ -74,6 +74,14 @@ boolean controls it now"*). It had been `True` for the life of this tree, so all
 20 of its `{$IF}` blocks always compiled and one `{$IF NOT MMTTYMODE}` block never
 did. Do not reintroduce a compile-time gate here.
 
+**An address handed to the RichEdit is `LPARAM(@...)`, never `integer(@...)`**
+(pointer audit P2, 2026-10-16). Three `SendMessage` sites in `uMMTTY` and
+`uMMTTYForm` used `integer`, which is exact on i386 and, with the x86_64
+image based at `$100000000`, would have handed RichEdit half the address of
+`MMTTY.mmttyCF` / `mmttyTwoBytes`. `Lint-PointerTruncation` fails the build on
+the integer form. RTTY text display has no automated oracle -- it is in
+`docs/BENCH_QUEUE.md`.
+
 ## External loggers
 
 | type | status |

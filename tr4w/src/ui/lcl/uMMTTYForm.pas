@@ -234,7 +234,7 @@ begin
    MMTTY.mmttyCF.szFaceName := 'Lucida Console';
    MMTTY.mmttyCF.dwMask := CFM_COLOR + CFM_FACE + CFM_BOLD;
    SendMessage(MMTTY.MMTTYRichEdit, EM_SETCHARFORMAT, SCF_SELECTION,
-               integer(@MMTTY.mmttyCF));
+               LPARAM(@MMTTY.mmttyCF));
 {$ELSE}
    MMTTY.mmttyCallProcess.cpEnable := True;
 {$ENDIF}

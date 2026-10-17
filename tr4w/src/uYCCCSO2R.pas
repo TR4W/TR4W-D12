@@ -559,7 +559,7 @@ begin
       end;
 
    { Start write thread first so queued init commands get sent immediately }
-   FWriteThread := tCreateThread(@YCCCWriteThreadProc, FWriteThID);
+   FWriteThread := tCreateThread(YCCCWriteThreadProc, FWriteThID);
    if not ThreadStarted(FWriteThread) then
       begin
       logger.Debug('YCCC write thread creation failed');
@@ -573,7 +573,7 @@ begin
    YCCCSendCmd(CMD_KEYER_CONFIG, 0);
 
    { Start read thread }
-   FReadThread := tCreateThread(@YCCCReadThreadProc, FReadThID);
+   FReadThread := tCreateThread(YCCCReadThreadProc, FReadThID);
    if not ThreadStarted(FReadThread) then
       begin
       logger.Debug('YCCC read thread creation failed');

@@ -47,7 +47,7 @@ uses
   Tree
   ,
   uTR4WStrings;
-procedure CreateConnectionAndSendReportToGetScores;
+function CreateConnectionAndSendReportToGetScores(aParameter: Pointer): DWORD; stdcall;
 procedure RunPOSTGetScoresThread;
 //function MakePOSTRequest: integer;
 //function MakePOSTRequestForRDXC2010: integer;
@@ -99,13 +99,13 @@ begin
   if not ThreadStarted(GetScoresThreadID) then
      begin
      logger.Debug('Calling tCreateThread from RunPOSTGetScoresThread');
-     GetScoresThreadHandle := tCreateThread(@CreateConnectionAndSendReportToGetScores, GetScoresThreadID);
+     GetScoresThreadHandle := tCreateThread(CreateConnectionAndSendReportToGetScores, GetScoresThreadID);
      logger.Debug('Created GetScores thread with threadid of %u',[PtrUInt(GetScoresThreadID)] );
      end;
 //  CreateConnectionAndSendReportToGetScores;
 end;
 
-procedure CreateConnectionAndSendReportToGetScores;
+function CreateConnectionAndSendReportToGetScores(aParameter: Pointer): DWORD; stdcall;
 var
    post      : THttpPost;
    sURL      : string;
@@ -113,6 +113,7 @@ var
      window, and never was. *)
    h         : THandle;
 begin
+   Result := 0;   (* the thread exit code -- see TF.TTR4WThreadStart *)
    ShowGetScoresStatus(TC_CONNECT);
    MakePOSTRequestNew; // fills GetScoresBuffer with the URL-encoded POST body
 

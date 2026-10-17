@@ -271,7 +271,7 @@ end;
     exactly the swap that compiles and quietly changes meaning.  Moving this to
     TDateTime means moving the epoch arithmetic with it, and that deserves pin
     tests of its own rather than being folded into a cleanup. }
-procedure NTPStartupCheck;
+function NTPStartupCheck(aParameter: Pointer): DWORD; stdcall;
 var
    ntpServer: string;
    udp: TIdUDPClient;
@@ -282,6 +282,7 @@ var
    offset: int64;
    i: integer;
 begin
+   Result := 0;   (* the thread exit code -- see TF.TTR4WThreadStart *)
    // Wait for the main window to finish initialising before touching the
    // network: a DNS failure can block for 10-15 s and must not delay startup.
    Sleep(3000);
@@ -359,7 +360,7 @@ end;
 procedure CheckNTPAtStartup;
 begin
    logger.Info('[NTP] Scheduling startup NTP time check');
-   tCreateThread(@NTPStartupCheck, NTPStartupThreadID);
+   tCreateThread(NTPStartupCheck, NTPStartupThreadID);
 end;
 
 

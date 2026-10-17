@@ -81,6 +81,13 @@ Disconnection sets the `radioWasDisconnected` flag rather than tearing the objec
 down. Note `TReadingThread` owns its own copy of that flag and holds **no radio
 reference** — per-radio reset work belongs in `Connect`.
 
+**`uRadioPolling.BeginPolling` is `function(aParameter: Pointer): DWORD;
+stdcall`** (`TF.TTR4WThreadStart`, pointer audit P1, 2026-10-16) and reads its
+RadioObject as `RadioPtr(aParameter)` -- `SetUpRadioInterface` passes `@Self`
+as `tCreateThread`'s parameter. It was `procedure(rig: RadioPtr); stdcall`,
+which the untyped thread start never checked. Start it bare,
+`tCreateThread(BeginPolling, ...)`; `Lint-TypedCodePointers` fails on `@`.
+
 ## Before any "behaviour-preserving" swap
 
 Prove equivalence **in both directions**, and expect the first check to say no.

@@ -13,6 +13,13 @@ dirty). NOTHING WAS CHANGED: this is an inventory and a schedule.**
 > 1249 -> 1245 and its ceiling was lowered. **The tables below are the
 > 2026-10-16 inventory as measured; rows that P4 removed are marked, not
 > renumbered.** Re-measure with the counter before quoting any other row.
+>
+> **P5 is DONE too** (on top of `5b1f838b`), and **P1 and P2 are DONE** (on
+> top of `e19b9f9e`): the thread start and the command table are typed, the
+> five 64-bit truncations are gone, and two new lints hold both --
+> `Lint-PointerTruncation` and `Lint-TypedCodePointers`. See
+> [P1 and P2](#p1-and-p2----typed-code-pointers-and-the-64-bit-truncations-2026-10-16).
+> Every oracle unchanged; counter 2,701 -> 2,622.
 
 NY4I, 2026-10-16, after `logdom.pas` turned out to hold a DOS-era hand-built
 linked list whose dispose loop read through nil:
@@ -56,7 +63,20 @@ the working tree already carries the change and
 currently **LF** (201 bare LF, reported by the CRLF hook). It is the other
 agent's file and was not touched here; it needs CRLF before it is committed.
 
-### D2. `tCreateThread` starts ten thread bodies through the WRONG calling convention
+### D2. `tCreateThread` starts ten thread bodies through the WRONG calling convention -- FIXED (P1)
+
+> **Settled by disassembly, 2026-10-16, and it was WORSE than the paragraph
+> below expected.** `tWorkerThreadTrampoline` (`TF.o`, FPC 3.2.2 i386) does
+> have an EBP frame -- but it pops its two SEH records **by ESP**
+> (`pop %edx; add $0xc,%esp; mov %edx,%fs:(%eax)`, twice) and restores
+> EBX/ESI/EDI with `pop` **before** `mov %ebp,%esp`. A target returning with
+> a plain `ret` (confirmed for `tDoABeep`) left ESP four bytes low, so on
+> every such thread's EXIT the trampoline (1) wrote the pushed thread
+> parameter -- nil -- into `FS:[0]`, the head of the thread's exception
+> chain, and (2) restored EBX, ESI and EDI from the wrong slots, before
+> handing back to the RTL's thread epilogue. It "worked" because nothing
+> after that point raised. Fixed at the type; see P1 below. After the fix,
+> `tDoABeep` returns with `ret $0x4`.
 
 `TF.tCreateThread` takes `lpStartAddress: TTR4WThreadStart`, and
 `TTR4WThreadStart = Pointer` (`TF.pas:213`). The trampoline casts it to
@@ -101,7 +121,13 @@ a `leave` before `ret`. **Whatever that shows, the fix is the same** and the
 compiler becomes the oracle: declare the parameter `TWorkerProc` (or move each
 body to a `TThread` descendant) and let every wrong target fail to compile.
 
-### D3. 64-bit pointer truncation is NOT at zero
+### D3. 64-bit pointer truncation is NOT at zero -- FIXED (P2)
+
+> **Confirmed and fixed, 2026-10-16.** `objdump -p` on the x86_64-win64
+> `tr4w_fpc.exe` reports `ImageBase 0000000100000000` -- above 4 GB -- so
+> every one of the three MMTTY sites WOULD have handed RichEdit a truncated
+> address. All five sites are fixed (P2 below) and `Lint-PointerTruncation`
+> fails the build on a sixth.
 
 [`64_BIT_TASKLIST.md`](64_BIT_TASKLIST.md) records *"pointer truncation --
 casts: 0, DONE"*. That scan looked for `Pointer(Integer(`/`Pointer(Cardinal(`.
@@ -331,7 +357,7 @@ The `Move`/`FillChar` half of this category is triaged in full in
 
 | # | where | what | live? | native replacement | risk | oracle |
 |---|---|---|---|---|---|---|
-| 3.1 | `uMMTTY.pas:253, 384`, `ui/lcl/uMMTTYForm.pas:237`, `uNet.pas:1491, 1504` | pointer narrowed to `integer` | see D3 | `LPARAM(@x)`; a typed parameter for `ShowLogCompare` | **high on Win64** | x64 COMPILER does not catch it; a lint does (P2); MMTTY is BENCH |
+| 3.1 | `uMMTTY.pas:253, 384`, `ui/lcl/uMMTTYForm.pas:237`, `uNet.pas:1491, 1504` | pointer narrowed to `integer` | see D3 | **DONE (P2)**: `LPARAM(@x)`; `ShowLogCompare` takes `PLogFileInformation` | **high on Win64** | `Lint-PointerTruncation` (P2); MMTTY is BENCH |
 | 3.2 | `uNet.pas:421-699` (12 overlays: `StationStPtr := @NetBuffer[Bufindex]` and the rest), `tr4wserverUnit.pas:642-716` (4 overlays) and `:691, 697, 703, 1287` (`XPtr(@ServerBuffer[...])^`) | a wire message read by laying a packed record over the receive buffer | live, multi-op | a decoder that reads each record from a `TBytes` slice with its length checked -- **the bytes stay identical, the overlay goes** (CLAUDE.md: *the contract is the encoding, not the type*) | high for multi-op; **ask NY4I first** -- the new multi-station protocol may replace these messages, and refactoring a protocol about to be retired is waste | UT `uTestNetFraming` covers FRAMING only; per-message decode pins must be written FIRST; then BENCH (two stations + `tr4wserver`) |
 | 3.3 | `uTelnet.pas:1981, 1988`, `uBandmap.pas:212, 216`, `uSpots.pas:297` | `PInteger(@Call[1])^` 4-byte pun | live | string comparison (D7) | low | UT `uTestDXSpotParse`, `uTestSpotAge` -- add short-call pins first |
 | 3.4 | `uWinKey.pas:370` `PCardinal(@wkREADBuffer[0])^ := 0`; `tr4wserverUnit.pas:1173` `PInteger(@ServerBuffer[0])^ = 542393671 {'GET '}` | integer puns on byte buffers | live | index the bytes / compare a 4-byte `Copy` | low | WinKeyer: BENCH. Server: **none** |
@@ -381,7 +407,7 @@ audit's list finds them.
 | 5.2 | `ui/lcl/uLogSearchForm.pas:395-522` | band and mode stored as `TObject(PtrInt(Ord(x)) + 1)` in combo items, `+1` so 0 can mean "any" | a typed array parallel to the items, or `ItemIndex - 1` against the list the form built | **none** -- BENCH the log search window |
 | 5.3 | `ui/lcl/uTelnetForm.pas:796, 1025, 1072` | each console line's `TelnetStringType` as `TObject(PtrUInt(Ord(aKind)))` | the `TStringGrid`/model shape the band map already uses; or a parallel `array of TelnetStringType` | UT `uTestTelnetTrace` (the ring, not the colours) -- BENCH the colours |
 | 5.4 | `ui/lcl/uAltPForm.pas:189, 253, 270` | a function-key number in `TListItem.Data`, `+1` | a typed field the view owns | **none** -- BENCH Alt-P |
-| 5.5 | `uEditMessage.ShowEditMessage(const aMessage: lParam)` (`uEditMessage.pas:99`, `ui/lcl/uEditMessageForm.pas:456`), `ShowLogCompare(const aInitParam: lParam)` (`uLogCompare.pas:73`, `ui/lcl/uLogCompareForm.pas:225`) | a dialog's Win32 `lParam` kept as the parameter type after the dialog became an LCL form; one of them carries a pointer (D3) | `ShowEditMessage(aRow: integer)`, `ShowLogCompare(aInfo: PLogFileInformation)` -- or better, a value | COMPILER |
+| 5.5 | `uEditMessage.ShowEditMessage(const aMessage: lParam)` (`uEditMessage.pas:99`, `ui/lcl/uEditMessageForm.pas:456`), `ShowLogCompare(const aInitParam: lParam)` (`uLogCompare.pas:73`, `ui/lcl/uLogCompareForm.pas:225`) | a dialog's Win32 `lParam` kept as the parameter type after the dialog became an LCL form; one of them carries a pointer (D3) | `ShowLogCompare(aInfo: PLogFileInformation)` -- **DONE (P2)**. `ShowEditMessage(aRow: integer)` -- still open: it carries a row number, not a pointer, so it truncates nothing | COMPILER |
 | 5.6 | `uMainWindowProc.pas:605` `ApplyLoadedParks(LPARAM(aParks))`, `uPOTAParks.pas:582` | a `TStringList` passed as `LPARAM` between two units of ours | `ApplyLoadedParks(aParks: TStringList)` | UT `uTestContestPOTA` (contest, not the download); COMPILER |
 | 5.7 | `.Tag` (70): 44 in `ui/lcl/uPrefsForm.pas` | Preferences navigation dispatches by `Tag` | **a recorded decision** (agent memory `prefs-designed-form-and-nav-tags`; `uPrefsForm.pas:1519` explains why) -- not a target | -- |
 | 5.8 | `Objects[]` holding real objects: `uCabrilloHeader`, `uGridLookup`, `uRadioConfigStore`, `uWinManagerForm` | genuine object ownership through `TStringList.Objects` | **already native** -- listed so nobody "fixes" them | -- |
@@ -414,8 +440,8 @@ not work. The items are the **untyped** ones:
 
 | # | where | what | native replacement | oracle |
 |---|---|---|---|---|
-| 7.1 | `TF.pas:213` `TTR4WThreadStart = Pointer`; 15 live `tCreateThread` call sites | **D2** -- ten wrong signatures nothing checks | type the parameter `TWorkerProc`; fix each target; or `TThread` descendants | COMPILER (once typed), then BENCH: CPU keyer, WinKeyer open, DVP, multi-op connect and sync, NTP, Get Scores |
-| 7.2 | `uProcessCommand.pas:66` `caAddress: Pointer`, cast at `:270` to `procedure` | the CW-memory command table | `caAddress: TProcedure` -- every row already holds a parameterless procedure | COMPILER |
+| 7.1 | `TF.pas:213` `TTR4WThreadStart = Pointer`; 15 live `tCreateThread` call sites | **D2** -- ten wrong signatures nothing checks | **DONE (P1)**: `TTR4WThreadStart` is the procedural type; every target has its shape | COMPILER + `Lint-TypedCodePointers`, then BENCH: CPU keyer, WinKeyer open, DVP, multi-op connect and sync, NTP, Get Scores |
+| 7.2 | `uProcessCommand.pas:66` `caAddress: Pointer`, cast at `:270` to `procedure` | the CW-memory command table | **DONE (P1)**: `caAddress: TCommandHandler`; all 81 rows were already parameterless procedures | COMPILER + `Lint-TypedCodePointers` |
 | 7.3 | `uCFG.pas:1294` `Proc: Pointer` | declared, **never used** (`TAdditionalProc` beside it is the typed form) | **DELETED (P4)** -- and so were `TAdditionalProc` and the label `AdditionalProc`, which were unused too | COMPILER |
 | 7.4 | `TF.pas:100` `TEnumLinesFunc = procedure(Line: PShortString)`; 10 callers of `EnumerateLinesInFile` | a callback that receives a POINTER to a ShortString and edits it in place | `procedure(var Line: ShortString)` now, `const Line: string` once the callbacks stop editing it | the callbacks load `.dom`, dupe, CFG, intercom, telnet and stations files: MATRIX, CORPUS, UT `uTestDomQTHTableReload` |
 | 7.5 | `trdos/logscp.pas:116, 550` `GetNextEntryAddress(var EntryAddress: Pointer)` | hands out a pointer into the cell buffer | an index into the buffer | MATRIX |
@@ -437,8 +463,8 @@ Owners follow CLAUDE.md's routing table.
 | order | packet | items | why here | oracle that tells us what broke | gate before starting | owner(s) |
 |---:|---|---|---|---|---|---|
 | **P0** | Commit the counter -- **DONE 2026-10-16** | appendix scripts as `tr4w/build/Count-LivePointers.ps1` (+ `-SelfTest`, a floor, and a refusal to report if `src\MainUnit.pas` was not scanned -- the `Count-LiveMove` pattern) | every later packet is measured by it | its own fixture -- all 22 rules exact | none | build-release |
-| **P1** | Type the thread start and the command table | 7.1, 7.2, 7.3 | D2 is undefined behaviour on **every** worker-thread start, and the fix makes the compiler enumerate the wrong ones | COMPILER; checked UT run (`Build-Tests.ps1 -Checked -Run`); then BENCH each thread's feature | disassemble `tWorkerThreadTrampoline` first and record what it shows (D2) | cw-keying, multi-op-network, integrations |
-| **P2** | 64-bit truncations + a lint | 3.1, 5.5 | D3: three live sites crash RichEdit on Win64; the lint stops a fourth | a new `Lint-PointerToInteger.ps1` in `Run-Lints.ps1` (comment-aware, `integer\|longint\|cardinal\|dword\|longword` applied to `@`); x64 COMPILER for the typed parameter | none | build-release, integrations, multi-op-network |
+| **P1** | Type the thread start and the command table -- **DONE 2026-10-16**, see below | 7.1, 7.2, 7.3 | D2 is undefined behaviour on **every** worker-thread start, and the fix makes the compiler enumerate the wrong ones | COMPILER; checked UT run (`Build-Tests.ps1 -Checked -Run`); then BENCH each thread's feature | disassemble `tWorkerThreadTrampoline` first and record what it shows (D2) | cw-keying, multi-op-network, integrations |
+| **P2** | 64-bit truncations + a lint -- **DONE 2026-10-16** (the lint is `Lint-PointerTruncation.ps1`), see below | 3.1, 5.5 | D3: three live sites crash RichEdit on Win64; the lint stops a fourth | a new `Lint-PointerToInteger.ps1` in `Run-Lints.ps1` (comment-aware, `integer\|longint\|cardinal\|dword\|longword` applied to `@`); x64 COMPILER for the typed parameter | none | build-release, integrations, multi-op-network |
 | **P3** | `logdom` | 1.1 | D1 | UT `uTestDomQTHTableReload`, MATRIX, CORPUS | **IN PROGRESS** -- do not duplicate | contest-scoring |
 | **P4** | Delete the dead pointer code -- **DONE 2026-10-16**, see below | 1.4, 1.5, 1.6, 1.7, 6.11, 6.12, 7.3 | removes ~250 dereferences, two dangling-pointer shapes and a whole uncompiled unit, at **zero** behaviour risk | COMPILER + full build + UT + CORPUS + MATRIX (a deletion that compiles cannot change behaviour, but run them) | none; **fix `64_BIT_TASKLIST.md`'s `logname` rows and CLAUDE.md's TRDOS table in the same commit** | contest-scoring, file-formats, dx-cluster, lcl-ui |
 | **P5** | `zonecont` domestic country list -- **DONE 2026-10-16**, see below | 1.2 | live and scoring-critical, but the oracle is the strongest in the tree | MATRIX (change `uContestMatrix.pas:502` with it), CORPUS, FACTORY, UT `uTestContestFactory` / `uTestContestSession` | none | contest-scoring, contest-factory |
@@ -573,6 +599,76 @@ every domestic contest, so this deserves a real-contest look.
 What is left in `zonecont` under `C6-ptr-named` is `CharPtr`, an `integer` in
 `GetNumber` -- which, like `ClubCall` and `LastLocateQTH`, has no reader
 anywhere in the tree. Not deleted here; noted for a dead-code pass.
+
+### P1 and P2 -- typed code pointers and the 64-bit truncations, 2026-10-16
+
+**P1. `TF.TTR4WThreadStart` is `function(aParameter: Pointer): DWORD;
+stdcall` -- the shape the trampoline always called -- instead of `Pointer`.**
+`TWorkerProc`, its private twin, is gone. **Typing the parameter was not
+enough by itself, and that is the finding worth keeping:** in
+`{$MODE Delphi}`, `@Routine` is an UNTYPED pointer, and FPC 3.2.2 accepts it
+for a procedural parameter without checking the signature, with or without
+`{$T+}`. Measured with a three-line probe -- `Take(@Bad)` compiles, `Take(Bad)`
+is *"Incompatible type for arg no. 1"*. The first build after typing the
+parameter was green with all ten wrong targets still in place. So every call
+site now names its routine bare, and **`Lint-TypedCodePointers`** fails the
+build on an `@` put back (it reported 96 on `e19b9f9e`: 15 thread starts and
+81 command rows).
+
+With the `@` dropped, the compiler rejected `tPaddleFootSwitchThreadProc`
+(`MainUnit.pas:7741`) first -- FPC stops at the first unit in error, so the
+rest were fixed from the D2 table and then confirmed by a clean build, which
+type-checks all fifteen call sites. **What changed per target:**
+
+| target | was | now |
+|---|---|---|
+| `CWThreadProc`, `tDoABeep`, `tPaddleFootSwitchThreadProc` (`logk1ea`) | `procedure;` | the thread shape, `Result := 0` |
+| `tDVPPlayThreadproc` (`logdvp`, both the Windows body and the off-Windows stub) | `procedure;` | the same |
+| `ConnectThread` (`uNet`), `RunSyncThread` (`uGetServerLog`), `CreateConnectionAndSendReportToGetScores` (`uGetScores`), `NTPStartupCheck` (`uSynTime`), `wkReadThreadProc` (`uWinKey`) | `procedure;` | the same |
+| `wkOpen` (`uWinKey`) | `function: boolean;`, started directly | **unchanged** -- `MainUnit` also calls it directly -- and started through a new `wkOpenThreadProc` |
+| `BeginPolling` (`uRadioPolling`) | `procedure(rig: RadioPtr); stdcall` -- stack right, exit code garbage | the thread shape; it reads `RadioPtr(aParameter)` |
+| `TelnetThreadProc`, `YCCCReadThreadProc`, `YCCCWriteThreadProc` | already right | only the `@` at the call site went |
+
+**The command table (7.2):** `caAddress` is `TCommandHandler = procedure`;
+the 81 rows name their handler bare, and the compiler accepted every one --
+**no row had a wrong signature.** The dispatch site assigns with no cast.
+
+**P2.** The five sites in D3: `LPARAM(@MMTTY.mmttyCF)` (twice) and
+`LPARAM(@MMTTY.mmttyTwoBytes)` with `WPARAM(False)`; `ShowLogCompare` takes
+`const aInfo: PLogFileInformation` in `uLogCompare` and `uLogCompareForm`, so
+`uNet` passes `s` with no cast, and `uLogCompare` no longer needs `LCLType`.
+**`Lint-PointerTruncation`** fails on a cast to `integer`, `longint`,
+`cardinal`, `longword`, `dword`, `word`, `smallint`, `shortint` or `byte` of
+an address (`integer(@x)`), of `Pointer(...)` or `Self`, or of a name the same
+file declares with a pointer type. It reads code only, carries a fixture (7
+hits, 11 non-hits) and three floors, and scans all of `tr4w` -- on
+`e19b9f9e` it reports exactly the five D3 sites, and nothing else. The
+"pointer truncation: 0" row in `64_BIT_TASKLIST.md` is corrected.
+
+**Oracles:** matrix 187 identical **without re-freeze**; factory 13
+identical; corpus 22/0/4, exit 0; ADIF round trip 12/0/1; unit 360,236 / 0
+failed, plain and `-Checked`; heaptrc unfreed 13,469, unchanged, 0
+corruption reports; narrowing 1245, range 3; **46 lints** (44 + the two new).
+`tr4wserver` builds. x86_64-win64 compiles and links, 0 errors, at the same
+ceilings. **No thread and no MMTTY path has an automated oracle** -- each is
+in `BENCH_QUEUE.md`.
+
+**`Count-LivePointers.ps1`**, at `e19b9f9e`, after P1, after P2:
+
+| rule | before | after P1 | after P2 |
+|---|---:|---:|---:|
+| C3-addr-of | 495 | 399 | 399 |
+| C3-pointer-cast | 9 | 8 | 8 |
+| C3-int-of-ptr | 20 | 20 | 17 |
+| C7-proc-type | 110 | 111 | 111 |
+| C7-pointer-word | 69 | 89 | 89 |
+| every other rule | unchanged | unchanged | unchanged |
+| **all hits** | **2,701** | **2,625** | **2,622** |
+
+`C7-pointer-word` RISES by 20, and should: it is the `aParameter: Pointer`
+of each thread body and declaration. That `Pointer` is the RTL's
+`BeginThread` contract, the same reason 7.7 keeps one -- the untyped part
+that went is the CODE pointer, which the compiler now checks.
 
 ---
 

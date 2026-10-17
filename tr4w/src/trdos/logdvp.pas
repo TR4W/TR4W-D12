@@ -122,7 +122,7 @@ procedure SetMicGain(Gain: Byte);
 procedure SetOutGain(Gain: Byte);
 
 function tGetWAVDurationFromHeader(const FileName: AnsiString; var Duration: Cardinal; DisplayError: boolean): boolean;
-procedure tDVPPlayThreadproc;
+function tDVPPlayThreadproc(aParameter: Pointer): DWORD; stdcall;
 procedure tWriteCallsignToMissingCallsignsFile(const Callsign: Str40);
 
 procedure EnumMISSINGCALLSIGNSTXT(FileString: PShortString);
@@ -429,7 +429,7 @@ begin
      end;
 end;
 
-procedure tDVPPlayThreadproc;
+function tDVPPlayThreadproc(aParameter: Pointer): DWORD; stdcall;
 label
   ExitLabel, PlayNextMessage, NextMessage;
 var
@@ -443,6 +443,7 @@ var
 const
   DOTWAVASINTEGER                       = 1447122734;
 begin
+  Result := 0;   (* the thread exit code -- see TF.TTR4WThreadStart *)
   Index := 1;
 
   PlayNextMessage:
@@ -864,8 +865,9 @@ begin
    Result := False;
 end;
 
-procedure tDVPPlayThreadproc;
+function tDVPPlayThreadproc(aParameter: Pointer): DWORD; stdcall;
 begin
+  Result := 0;   (* the thread exit code -- see TF.TTR4WThreadStart *)
 end;
 
 procedure tWriteCallsignToMissingCallsignsFile(const Callsign: Str40);

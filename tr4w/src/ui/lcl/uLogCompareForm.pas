@@ -73,8 +73,9 @@ type
 // the log-comparison dialog.  Two call sites in uNet pass the same shape.
 //
 // THE SEAM established in Phase 1: the caller does not know what this is, only
-// that the window opens.
-procedure ShowLogCompare(const aInitParam: lParam);
+// that the window opens. A typed pointer since pointer audit P2 (2026-10-16);
+// it was an lParam that uNet filled with integer(s).
+procedure ShowLogCompare(const aInfo: PLogFileInformation);
 
 implementation
 
@@ -223,7 +224,7 @@ begin
    Close;
 end;
 
-procedure ShowLogCompare(const aInitParam: lParam);
+procedure ShowLogCompare(const aInfo: PLogFileInformation);
 begin
    // The try/except is permanent and deliberate: under FPC an exception that
    // escapes into the main loop is a bare RTE with no class, and it takes the
@@ -234,9 +235,8 @@ begin
          frmLogCompare := TfrmLogCompare.Create(Application);
          end;
 
-      // The init param IS the server's log information -- uNet passes the
-      // record's address through the dialog's lParam.
-      frmLogCompare.FInfo := PLogFileInformation(aInitParam);
+      // The server's log information, as uNet received it.
+      frmLogCompare.FInfo := aInfo;
       // THROUGH THE ONE DOOR, parent 0.  There is no raw Win32 parent to
       // disable here, but ShowModalOverWin32Parent is also where the main
       // window is made the owner and the form is centred over it -- see

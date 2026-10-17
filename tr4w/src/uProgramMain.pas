@@ -2725,7 +2725,7 @@ begin
    if WinKeySettings.wksWinKey2Enable then
       begin
       logger.Info('Calling tCreateThread from WinKeyer');
-      tCreateThread(@wkOpen, wkThreadID);
+      tCreateThread(wkOpenThreadProc, wkThreadID);
       logger.Info('Created WinKeyer thread with threadid of %u',[PtrUInt(wkThreadID)] );
       end;
 

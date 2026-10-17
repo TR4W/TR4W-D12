@@ -64,6 +64,19 @@ still stands. Three things to know before extending it:
   clock** (a `GetTickCount64` fallback off Windows). Repoint it to `uHPTimer`
   and its gated `uses Windows` goes with it.
 
+## Thread bodies have ONE shape, and it is compiler-checked (2026-10-16)
+
+`CWThreadProc`, `tDoABeep`, `tPaddleFootSwitchThreadProc`,
+`tDVPPlayThreadproc`, `wkReadThreadProc` and `wkOpenThreadProc` (the thread
+entry for `wkOpen`, which `MainUnit` also calls directly) are all
+`function(aParameter: Pointer): DWORD; stdcall` -- `TF.TTR4WThreadStart`.
+Until pointer audit P1 they were parameterless procedures started through an
+untyped `Pointer`, and on i386 each one's EXIT wrote nil into the thread's
+SEH chain head (`docs/POINTER_AUDIT.md`, D2). **Pass the routine BARE --
+`tCreateThread(CWThreadProc, id)`.** In Delphi mode `@CWThreadProc` is an
+untyped pointer the compiler does not check; `Lint-TypedCodePointers` fails
+the build on it. The bench check for each is in `docs/BENCH_QUEUE.md`.
+
 ## Open, and decided
 
 **Open (NY4I — design, not refactor):** `ActiveCWKeyer`'s precedence chain

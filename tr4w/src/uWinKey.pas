@@ -48,6 +48,7 @@ uses
   uTR4WStrings;
 
 function wkOpen: boolean;
+function wkOpenThreadProc(aParameter: Pointer): DWORD; stdcall;   (* wkOpen, as a tCreateThread body *)
 function wkOpenPort: boolean;
 function wkSend(const Buffer; nNumberOfBytesToWrite: DWORD): Cardinal;
 procedure wkSendAdminCommand(const Buffer);
@@ -65,9 +66,9 @@ procedure wkSetupSpeedPot;
 //procedure wkLoadSettings;
 function wkTurnPTT(Turn: boolean): boolean;
 procedure wkDispayState;
-procedure wkReadThreadProc;
+function wkReadThreadProc(aParameter: Pointer): DWORD; stdcall;
 // DEAD CODE.  Nothing starts this thread -- wkInit creates wkReadThreadProc
-// (tCreateThread(@wkReadThreadProc, ...)) and wkReadThreadProc1 is referenced
+// (tCreateThread(wkReadThreadProc, ...)) and wkReadThreadProc1 is referenced
 // nowhere else.  Kept only as the older parsing variant.  Beware: its status
 // handling DIFFERS from the live one -- it sets wkBUSY True for ANY byte below
 // $C0 and detects end-of-buffer with byte = 192, where the live parser uses the
@@ -450,8 +451,21 @@ begin
   // and HOST OPEN) both run earlier, and the GETPOT response simply waits in the
   // driver's receive buffer until the thread starts.
   logger.Info('Calling tCreateThread from WkOpen');
-  tCreateThread(@wkReadThreadProc, wkThreadID);
+  tCreateThread(wkReadThreadProc, wkThreadID);
   logger.Info('Created WK thread with id %u',[PtrUInt(wkThreadId)]);
+end;
+
+(* wkOpen ON A WORKER THREAD (pointer audit P1, 2026-10-16). uProgramMain
+  started wkOpen itself as the thread body, through the untyped thread start,
+  although it is a parameterless register-convention function -- the shape
+  that, on i386, made the trampoline write nil into the thread's SEH chain
+  head on exit. MainUnit also calls wkOpen directly, so it keeps its own
+  signature and this is the thread's entry. wkOpen's boolean was never read
+  by anything on this path. *)
+function wkOpenThreadProc(aParameter: Pointer): DWORD; stdcall;
+begin
+  Result := 0;
+  wkOpen;
 end;
 
 function wkSend(const Buffer; nNumberOfBytesToWrite: DWORD): Cardinal;
@@ -739,13 +753,14 @@ begin
   Result := Length(got);
 end;
 
-procedure wkReadThreadProc;
+function wkReadThreadProc(aParameter: Pointer): DWORD; stdcall;
 label
   1, 2;
 var
   lpNumberOfBytesRead                   : DWORD;
   i                                     : integer;
 begin
+  Result := 0;   (* the thread exit code -- see TF.TTR4WThreadStart *)
   wkActive := True;
   wkDispayState;
   while wkActive = True do

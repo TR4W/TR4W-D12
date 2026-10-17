@@ -211,19 +211,30 @@ function IntegerBetween(v: integer; i: integer; k: integer): boolean;
 // the RTL `Val` intrinsic, which is what uCTYDAT already does.
 
 type
-   (* FPC's Windows unit declares TFNThreadStartRoutine as a bare Pointer, so
-     this is the same type under a name TF owns -- see tCreateThread. *)
-   TTR4WThreadStart = Pointer;
+   (* THE SHAPE OF A WORKER THREAD'S BODY, STATED SO THE COMPILER CHECKS IT
+     (pointer audit P1 / defect D2, 2026-10-16).
+
+     This was `Pointer` until 2026-10-16 -- the same as FPC's Windows-unit
+     TFNThreadStartRoutine -- and the trampoline CALLED it as this type. So
+     the compiler checked nothing, and ten of the fifteen targets were
+     parameterless register-convention procedures. Disassembling
+     tWorkerThreadTrampoline showed what that did on i386: the trampoline
+     pushes one argument and, after the call, pops its SEH frame by ESP, not
+     by EBP. A callee returning with a plain `ret` left ESP four bytes low, so
+     on every such thread's EXIT the trampoline wrote the thread parameter
+     (nil) into FS:[0] -- the head of that thread's exception chain -- and
+     restored EBX/ESI/EDI from the wrong slots. The thread's exit code was
+     whatever happened to be in EAX.
+
+     Typed, every wrong target is a compile error, so it cannot come back. The
+     parameter is whatever tCreateThread's aParameter carried (nil unless the
+     caller passed one); the result is the thread's exit code, 0 by
+     convention. stdcall is meaningful on i386 and ignored on x86_64. *)
+   TTR4WThreadStart = function(aParameter: Pointer): DWORD; stdcall;
 
 { START A WORKER THREAD WHOSE FAULTS ARE NOT SILENT, AND WHOSE ALLOCATIONS ARE
   NOT A RACE.  Two defects, both measured on 2026-08-23, both fixed by routing
   through the RTL instead of calling CreateThread directly.  See the body. }
-(* TTR4WThreadStart, not Windows' TFNThreadStartRoutine.
-
-  FPC declares that as a bare Pointer -- see the note in the body -- so this is
-  the same type under a name TF owns, and every one of the seventeen call sites
-  passes @SomeProc, which is Pointer-compatible either way. It was the only
-  reason this declaration needed the Windows unit. *)
 function tCreateThread(lpStartAddress: TTR4WThreadStart; var lpThreadId: TThreadID; Quiet: boolean = False; aParameter: Pointer = nil): TThreadID;
 
 (* "IS THERE A THREAD" AND "THERE IS NO THREAD", AS FUNCTIONS (2026-09-08).
@@ -910,13 +921,9 @@ end;
   disposed by the trampoline itself, because the two run on different threads
   and the parent does not wait. }
 type
-   { TFNThreadStartRoutine is a bare Pointer in FPC's Windows unit, not a
-     procedural type, so the shape has to be stated here to be callable. }
-   TWorkerProc = function(aParameter: Pointer): DWORD; stdcall;
-
    PWorkerStart = ^TWorkerStart;
    TWorkerStart = record
-      Proc: TWorkerProc;
+      Proc: TTR4WThreadStart;
       Parameter: Pointer;
       { The same address again, untyped.  Delphi mode CALLS a procedural
         variable when you name it, so Proc cannot also be read as a value --
@@ -996,8 +1003,10 @@ begin
     The return value is the thread HANDLE, as before; lpThreadId gets the id,
     as before.  Callers see no change. }
   New(start);
-  start^.Proc := TWorkerProc(lpStartAddress);
-  start^.Address := Pointer(lpStartAddress);
+  start^.Proc := lpStartAddress;
+  (* @ of a procedural variable is the ROUTINE's address in Delphi mode (@@
+     would be the variable's), which is what the crash line resolves. *)
+  start^.Address := @lpStartAddress;
   start^.Parameter := aParameter;
 
   id := 0;

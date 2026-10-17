@@ -142,6 +142,18 @@ lesson: **a rewrite of a build script must carry every gate across, and the
 place to put one is the `Run-Lints.ps1` array**, never a step inline in a
 build script, where it can be lost with the script.
 
+**Two pointer gates (pointer audit P1/P2, 2026-10-16), both over all of
+`tr4w`, both with a fixture and floors:** `Lint-PointerTruncation` fails on a
+cast to a 32-bit-or-narrower integer of `@x`, `Pointer(...)`, `Self`, or a
+name the same file declares with a pointer type -- the narrowing direction
+`64_BIT_TASKLIST`'s old scan could not see, and the x86_64 compiler accepts.
+`Lint-TypedCodePointers` fails on `tCreateThread(@X` and `caAddress: @X`:
+**in Delphi mode `@Routine` is an untyped pointer and FPC 3.2.2 does not
+check it against a procedural parameter** (measured, with or without `{$T+}`),
+so a typed slot is only checked while callers name the routine bare. Add a
+slot to its `$Slots` table when another procedural type is introduced for
+the same reason.
+
 **`Lint-PascalBeginEnd` and `Lint-ChangedPascal` do NOT gate the build.** The
 first runs as a warn-only `PostToolUse` hook; the second is run by hand.
 

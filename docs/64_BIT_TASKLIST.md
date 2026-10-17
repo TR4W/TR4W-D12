@@ -49,7 +49,7 @@ launched a 64-bit TR4W.**
 | gate | source doc | first measure | now | state |
 |---|---|---|---|---|
 | PChar-family in live code | 751 raw mentions | 578 in 69 files | **44 in src, 69 tree-wide** | **AT ITS FLOOR** -- audited line by line 2026-09-16; measure with `build/Count-LivePChar.ps1`, never a raw grep |
-| pointer truncation -- casts | 2 named P0s | 4 sites, 2 units | **0** | **DONE** |
+| pointer truncation -- casts | 2 named P0s | 4 sites, 2 units | **0** -- ~~"0" from 2026-09 until 2026-10-16~~ was WRONG: the scan saw only the widening direction, and 5 pointers narrowed to `integer` were live (`POINTER_AUDIT.md` D3). Fixed in P2 | **DONE, and GATED** -- `build/Lint-PointerTruncation.ps1` fails the build on a new one |
 | pointer truncation -- **handles in 32-bit storage** | not in the source doc | **not measured** | **0** (4 fixed) | **DONE** |
 | live `asm` blocks | "much disabled… confirm each" | 0 | **0** | **DONE** |
 | `Move`/`FillChar`/`ZeroMemory` | not in the source doc | 348 (no command; not reproducible) | **387 live** (319 `src`, 68 tests) | **TRIAGED 2026-09-18** -- measure with `build/Count-LiveMove.ps1`; routed per owner in the P0 section below, 4 defects found |
@@ -167,10 +167,20 @@ all thirteen sets open.
   `NativeUInt` merely avoids the truncation. Add a rescore test that touches
   more than one record.
 
-**These four are the whole of it.** A comment-aware scan for
-`Pointer(Integer(`, `Pointer(Cardinal(` and `X(ident) +` over `src` and
-`tr4wserver` finds ten hits, and six are `GetSCPCharFromInteger(X) + ...` in
-`logscp` — string concatenation, not casts.
+~~**These four are the whole of it.**~~ **They were not** (corrected
+2026-10-16). A comment-aware scan for `Pointer(Integer(`, `Pointer(Cardinal(`
+and `X(ident) +` over `src` and `tr4wserver` finds ten hits, and six are
+`GetSCPCharFromInteger(X) + ...` in `logscp` — string concatenation, not
+casts. That scan looks for an integer WIDENED back into a pointer, and cannot
+see the opposite direction: a pointer NARROWED to fit an integer parameter.
+Five of those were live -- `integer(@MMTTY.mmttyCF)` twice and
+`integer(@MMTTY.mmttyTwoBytes)` handed to RichEdit, and
+`ShowLogCompare(integer(s))` twice -- and the x86_64 image is based at
+`$100000000`, so the three MMTTY ones would have truncated a real address.
+All five are fixed (`POINTER_AUDIT.md`, D3 and packet P2), and
+**`build/Lint-PointerTruncation.ps1` is in `Run-Lints.ps1`**: it fails on a
+narrowing cast of `@x`, of `Pointer(...)`/`Self`, or of any name the same file
+declares with a pointer type. Ask it, not this paragraph.
 
 ### P0 — the PChar-family removal: DONE, at 44 in `src` (was 578)
 

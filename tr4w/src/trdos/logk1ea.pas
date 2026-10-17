@@ -412,11 +412,11 @@ procedure SetDVKDelay(Delay: integer);
 procedure StartDVK(MemorySwitch: integer);
 
 procedure SendCWBufferStart;
-procedure CWThreadProc;
-procedure tDoABeep;
+function CWThreadProc(aParameter: Pointer): DWORD; stdcall;
+function tDoABeep(aParameter: Pointer): DWORD; stdcall;
 procedure AutoCQTick;
 procedure tCWSleep(millsec: Cardinal; myEvent: System.THandle);   (* myEvent is a HANDLE -- see the note on tCW_Event *)
-procedure tPaddleFootSwitchThreadProc;
+function tPaddleFootSwitchThreadProc(aParameter: Pointer): DWORD; stdcall;
 
 procedure tSetPaddleElementLength;
 function DisplayByte(b: Byte): string;
@@ -1601,7 +1601,7 @@ begin
   if not Settings.Operating.BeepEnable then Exit;
   ActiveBeep := TypeOfBeep;
   logger.Info('Calling tCreateThread from DoABeep');
-  TR4W_BeepThread := tCreateThread(@tDoABeep, TR4W_BeepThreadID);
+  TR4W_BeepThread := tCreateThread(tDoABeep, TR4W_BeepThreadID);
   logger.Info('Created Beep thread with threadid of %u',[PtrUInt(TR4W_BeepThreadID)] );
   (* Issue #997: asm SetThreadPriority -> Pascal call. The old `push eax` pushed
     a stale handle (clobbered by the preceding logger.Info), so this never
@@ -1916,12 +1916,13 @@ begin
 {$IFEND}
 end;
 
-procedure CWThreadProc;
+function CWThreadProc(aParameter: Pointer): DWORD; stdcall;
 label
   SendNext, ExitAndPTTof;
 var
   b                                     : boolean;
 begin
+  Result := 0;   (* the thread exit code -- see TF.TTR4WThreadStart *)
 //tCWSleep(15, tCW_Event);
 
 {$IFDEF WINDOWS}
@@ -2070,10 +2071,11 @@ begin
 
 end;
 
-procedure tDoABeep;
+function tDoABeep(aParameter: Pointer): DWORD; stdcall;
 var
   OldBeat                               : integer;
 begin
+  Result := 0;   (* the thread exit code -- see TF.TTR4WThreadStart *)
 
   case ActiveBeep of
     ThreeHarmonics:
@@ -2265,7 +2267,7 @@ begin
                 + 'Use an LPT port, or a keyer that provides them.');
 end;
 
-procedure tPaddleFootSwitchThreadProc;
+function tPaddleFootSwitchThreadProc(aParameter: Pointer): DWORD; stdcall;
 label
   Start;
 var
@@ -2275,6 +2277,7 @@ var
   DahContact                            : boolean;
   CWElementLength                       : Cardinal;
 begin
+  Result := 0;   (* the thread exit code -- see TF.TTR4WThreadStart *)
   tDispalyPaddleAndFootSwitchStatus;
 
   tPTTOnCounter := 0;

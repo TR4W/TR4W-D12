@@ -248,9 +248,14 @@ uses
   utils_text;         // CharBufferBytes -- the captured callsign
 
 
+(* LPARAM, NOT integer (pointer audit P2 / D3, 2026-10-16). The address of
+  MMTTY's char-format record went through integer(), which on x86_64 cuts a
+  pointer to 32 bits -- the record is a unit global in the image, so RichEdit
+  would have been handed a truncated address. LPARAM is pointer-sized on
+  every target. Lint-PointerTruncation keeps the integer form out. *)
 procedure mmttyUpdateCharFormat();
 begin
-  SendMessage(MMTTY.MMTTYRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, integer(@MMTTY.mmttyCF));
+  SendMessage(MMTTY.MMTTYRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, LPARAM(@MMTTY.mmttyCF));
 end;
 
 procedure mmttyProcessChar(c: AnsiChar);
@@ -381,7 +386,7 @@ begin
         MMTTY.mmttyTwoBytes[0] := AnsiChar(lp);
         h := MMTTY.MMTTYRichEdit;
         SendMessage(h, EM_SETSEL, -1, -1);
-        SendMessageA(h, EM_REPLACESEL, integer(False), integer(@MMTTY.mmttyTwoBytes));
+        SendMessageA(h, EM_REPLACESEL, WPARAM(False), LPARAM(@MMTTY.mmttyTwoBytes));
         mmttyProcessChar(AnsiChar(lp));
         inc(MMTTY.mmttyCurrentPos);
       end;
