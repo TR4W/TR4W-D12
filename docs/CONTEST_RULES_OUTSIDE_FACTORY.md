@@ -2,7 +2,7 @@
 
 **GENERATED. Do not edit outside the marked hand-maintained blocks.**
 Regenerate with `python tools/contest-rules-inventory/generate.py` (any working
-directory). This copy was generated from commit `d329efe9` (2026-10-16).
+directory). This copy was generated from commit `98bfcde5` (2026-10-17).
 Owner: `contest-factory`, with `contest-scoring` (the engine side of every row
 below), `file-formats` (ADIF and Cabrillo rows) and `lcl-ui` (the UI rows).
 
