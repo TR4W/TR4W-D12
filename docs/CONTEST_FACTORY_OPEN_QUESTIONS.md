@@ -38,7 +38,6 @@ in section 4. One line each -- the full text is further down.
 - **Q114** ALRS-UA1DZ: is its exchange a grid (RDA entrants send a district)?
 - **Q115** VHF "RST and/or grid" parser drops a bad grid token silently -- is RST alone OK?
 - **Q116** A malformed grid has no distance -- should it score 0 (not the closest bucket)?
-- **Q117** Old Connecticut county codes: keep as aliases of planning regions, or refuse?
 - **Q119** Is a host-area-refused QSO (Q107) also an automatic X-QSO? (needed before Q98's mechanism)
 - **Q120** Bands and modes per contest: fill `docs/Q98_CONTEST_BANDS_MODES.csv` + five yes/no rulings.
 
@@ -326,7 +325,10 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   one-to-one. Batch C copied that mapping into `neqso.dom` / `neqsow1.dom`
   so the files agree. Keep the old codes as aliases, or refuse them? (Also:
   the display name `Lower CT Rivier` has a typo, kept as is for now.)
-  **Answer:**
+  **Answer:** (NY4I, 2026-10-18) *"Keep for historical review of an old
+  file on windows"* -- the old county codes stay as ALIASES of the planning
+  regions, so an old log still reads. That is what in7qpne_cty.dom,
+  neqso.dom and neqsow1.dom already do (Batch C); nothing to build. CLOSED.
 
 - **Q119** (Q98 design, 2026-10-17 -- needed BEFORE Q98's mechanism stage)
   **Is a QSO that Q107's host-area rule refuses also an automatic X-QSO?**
