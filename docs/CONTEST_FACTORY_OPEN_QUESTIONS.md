@@ -25,7 +25,7 @@ in section 4. One line each -- the full text is further down.
 - **Q27** SAC: is a Russian station not workable, or only not a multiplier?
 - **Q97** Franz Josef Land (R1FJ) oblast reads as "SP" in Russian DX.
 - **Q70** UA4W Championship's 18/19 zone rule.
-- **Q106** Nebraska: rare grid bonus, satellite points, FT8/FT4 competition.
+- **Q106** Nebraska: rare grid bonus, satellite points, which UTC times (FT8/FT4 answered 2026-10-18: left out of the score, as built).
 
 **Design (section 2) -- each has a recommendation; "accept" is enough**
 - **Q8** Events with no ContestType still named in code (TRC, PGA, EURASIA ...).
@@ -105,6 +105,13 @@ inactive contest in the New Contest list.
   *Recommended: (1) build it -- it needs only our own grid, which the
   contest already knows; (2) leave until satellite QSOs are a concept; (3) a
   separate contest class later, if wanted.*
+  **Answer to (3):** (NY4I, 2026-10-18) *"It appears FT8/FT4 is scored
+  separately but it is not clear if we just send in one log. I would tend
+  to ignore the ft8/ft4 from the score."* -- which is what is built: an
+  FT8/FT4 QSO is off-mode, logged but 0 points, no multiplier, no bonus
+  (uContestNebraskaQP). No separate FT8/FT4 competition is built. Whether
+  such a QSO appears in the Cabrillo as an X-QSO line follows Q98's off-mode
+  rule. (1), (2) and the UTC-times question stay open.
   Three more, found building the class (2026-10-16):
   (4) **Does a Nebraska entrant who works another Nebraska station also
   earn NE as a STATE?** The sponsor: in-state multipliers are "Nebraska
