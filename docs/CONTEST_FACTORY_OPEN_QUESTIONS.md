@@ -25,7 +25,7 @@ in section 4. One line each -- the full text is further down.
 - **Q27** SAC: is a Russian station not workable, or only not a multiplier?
 - **Q97** Franz Josef Land (R1FJ) oblast reads as "SP" in Russian DX.
 - **Q70** UA4W Championship's 18/19 zone rule.
-- **Q106** Nebraska: rare grid bonus, satellite points, which UTC times (FT8/FT4 answered 2026-10-18: left out of the score, as built).
+- **Q106** Nebraska: rare grid bonus, satellite points (answered 2026-10-18: FT8/FT4 left out of the score, as built; times are the sponsor's UTC, 1400Z-0200Z).
 
 **Design (section 2) -- each has a recommendation; "accept" is enough**
 - **Q8** Events with no ContestType still named in code (TRC, PGA, EURASIA ...).
@@ -111,7 +111,16 @@ inactive contest in the New Contest list.
   FT8/FT4 QSO is off-mode, logged but 0 points, no multiplier, no bonus
   (uContestNebraskaQP). No separate FT8/FT4 competition is built. Whether
   such a QSO appears in the Cabrillo as an X-QSO line follows Q98's off-mode
-  rule. (1), (2) and the UTC-times question stay open.
+  rule. (1) and (2) stay open.
+  **Answer, UTC times:** (NY4I, 2026-10-18) *"Go with the sponsor's doc as
+  it states 2026 Nebraska QSO Party rules and has UTC (Saturday, April 25th,
+  1400 UTC (8:00 AM CDT Sat, ) and end Sunday April 27th at 0200 UTC (08:00
+  PM CDT))"* -- the schedule is 1400Z 25 Apr to 0200Z 27 Apr 2026, the
+  sponsor's UTC figures, not WA7BNM's 1300Z-0100Z. And the general rule:
+  *"utc is the gospel, not the rules author's mistaken conversion"* -- where
+  a sponsor states UTC, the UTC is authoritative and a disagreeing local
+  time is the sponsor's conversion error, for every contest. Applied when
+  schedules are built (Q99).
   Three more, found building the class (2026-10-16):
   (4) **Does a Nebraska entrant who works another Nebraska station also
   earn NE as a STATE?** The sponsor: in-state multipliers are "Nebraska

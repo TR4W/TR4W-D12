@@ -50,9 +50,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   ---------------------------------------------------------------------------
   WHAT EACH RULE SAYS, AND WHERE IT LANDED
 
-  DATES -- Saturday 25 April 2026 to Sunday 26 April. The sponsor writes
-    "1400 UTC (8:00 AM CDT)", but 8 AM CDT is 1300 UTC, which is what WA7BNM
-    gives. Contest schedules are not built yet (design Q99); recorded only.
+  DATES -- Saturday 25 April 2026, 1400 UTC, to Monday 27 April, 0200 UTC:
+    the sponsor's UTC figures (NY4I, 2026-10-18, Q106: "Go with the
+    sponsor's doc"; "utc is the gospel, not the rules author's mistaken
+    conversion"). The sponsor's CDT times disagree by an hour, and WA7BNM
+    follows the CDT times with 1300Z-0100Z; the stated UTC wins. Contest
+    schedules are not built yet (design Q99); recorded only.
 
   MODES -- CW; phone (SSB, AM, FM); digital (RTTY, PSK and other digital
     modes) but NOT FT8 or FT4: "FT8/FT4 is a SEPARATE competition with a
