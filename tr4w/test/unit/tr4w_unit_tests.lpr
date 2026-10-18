@@ -642,6 +642,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
       numbering, at stations the matrix does not run (a JA entrant), frozen
       against the old session-kind readers before the rule moved. *)
    uTestZoneMultiplier  in 'uTestZoneMultiplier.pas',
+   (* P7: the Super Check Partial cell buffer, over the matrix's TRMASTER fixture. *)
+   uTestLogSCP          in 'uTestLogSCP.pas',
    (* M11 S6 part 1: every contest's domestic QTH rule that is not the
       domestic file, its hint and its four yes/no answers, at stations the
       matrix does not run, frozen against the old GetDomQTH, DomStringParse
@@ -813,6 +815,7 @@ begin
    RegisterSuite(TDomQTHTableReloadTests.Create('DomQTHTableReload'));
    RegisterSuite(TDomesticCountryListTests.Create('DomesticCountryList'));
    RegisterSuite(TCRC32Tests.Create('CRC32'));
+   RegisterSuite(TLogSCPTests.Create('LogSCP'));
    RegisterSuite(TK4SpectrumTests.Create('K4Spectrum'));
    RegisterSuite(TIcomScopeTests.Create('IcomScope'));
    RegisterSuite(TIcomScopeSeamTests.Create('IcomScopeSeam'));

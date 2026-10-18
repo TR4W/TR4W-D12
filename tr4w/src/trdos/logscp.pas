@@ -81,35 +81,28 @@ type
   MemoryBlock = array[0..MemoryBlockSize - 1] of Byte;
   MemoryBlockPtr = ^MemoryBlock;
 
-  BufferArray = array[0..BufferArraySize - 1] of AnsiChar;
-  BufferPtr = ^BufferArray;
-
-  CellBufferObject = object
+  (* THE CELL BUFFER IS A CLASS HOLDING ONE DYNAMIC ARRAY (P7, 2026-10-17;
+    docs/POINTER_AUDIT.md 2.2, 6.4, 7.5). It was an old-style object of three
+    pointers to 260,000-byte arrays with TWO allocators for one pointer --
+    New/Dispose in the "post" mode, GetMem/FreeMem in the running program's --
+    a "this much memory is allocated" counter beside them, and a routine that
+    handed out an ADDRESS INTO the buffer (GetNextEntryAddress, no caller).
+    The array is sized to the cell and kept between loads, so a lookup that
+    meets a cell no larger than the last one allocates nothing. *)
+  TSCPCellBuffer = class
+  private
+    FData: array of AnsiChar; { capacity: only ever grows, until GoAway }
+    FEntries: LONGINT; { bytes of FData holding the cell just read }
+  public
     MaximumMemoryToUse: LONGINT; { TR should set this to a low # }
     ReadAddress: LONGINT;
-    MemoryAllocated: LONGINT;
     Key: Str20;
 
-    NumberBufferEntries: LONGINT;
-
-    Buffer1Bytes: LONGINT;
-    Buffer2Bytes: LONGINT;
-    Buffer3Bytes: LONGINT;
-
-    Buffer1: BufferPtr;
-    Buffer2: BufferPtr;
-    Buffer3: BufferPtr;
-
-    Buffer1Used: boolean;
-    Buffer2Used: boolean;
-    Buffer3Used: boolean;
-
-    procedure FigureOutBufferSizes(NumberBytes: LONGINT);
     function GetNextEntry(var EntryString: ShortString {string}): boolean;
-    function GetNextEntryAddress(var EntryAddress: Pointer): boolean;
-    procedure Initialize(var NumberBytes: LONGINT);
     procedure GoAway;
     procedure LoadCellIntoBuffer(KeyString: CallString; {var } FileRead: THandle {file}; NumberBytes: LONGINT);
+
+    property NumberBufferEntries: LONGINT read FEntries;
   end;
 
   BytesWrittenArrayPtr = ^SCPIndexArrayType;
@@ -123,7 +116,7 @@ type
     ASCIIFileCrunchWrite: Text;
     ASCIIFileIsCurrent: boolean; { Handy if successive AddEntries }
 
-    CellBuffer: CellBufferObject; { The big and great File Buffer }
+    CellBuffer: TSCPCellBuffer; { The big and great File Buffer; made by this unit's initialization }
     (* CountryString MOVED to Settings.Scp.CountryString, 2026-09-13. *)
 
     DTAFileSize: LONGINT;
@@ -281,314 +274,121 @@ begin
   DoubleIndexCall := False;
 end;
 
-procedure CellBufferObject.Initialize(var NumberBytes: LONGINT);
+procedure TSCPCellBuffer.GoAway;
+
 begin
-  if MaximumMemoryToUse = 3 * BufferArraySize then { POST mode }
+  SetLength(FData, 0);
+  FEntries := 0;
+  Key := '';
+end;
+
+procedure TSCPCellBuffer.LoadCellIntoBuffer(KeyString: CallString;
+  {var }FileRead: THandle {file};
+  NumberBytes: LONGINT);
+
+const
+  PostModeMemory                        = 3 * BufferArraySize;
+
+begin
+  Key := '';
+  FEntries := 0;
+  ReadAddress := 0;
+
+  if MaximumMemoryToUse = PostModeMemory then { POST mode: a cell up to three buffers }
      begin
-     if MemoryAllocated = 0 then
+     if NumberBytes < 0 then
         begin
-        //{WLI}            IF MaxAvail > BufferArraySize THEN
-    begin
-      Buffer1Used := True;
-      New(Buffer1);
-    end;
-
-        //{WLI}            IF MaxAvail > BufferArraySize THEN
-    begin
-      Buffer2Used := True;
-      New(Buffer2);
-    end;
-
-        //{WLI}            IF MaxAvail > BufferArraySize THEN
-    begin
-      Buffer3Used := True;
-      New(Buffer3);
-    end;
+        NumberBytes := 0;
         end;
 
-     MemoryAllocated := 3 * BufferArraySize;
+     if NumberBytes > PostModeMemory then
+        begin
+        logger.Fatal('In TSCPCellBuffer.LoadCellIntoBuffer, the cell is too big');
+        halt;
+        end;
      end
-
   else { TR has set the max memory to something else }
      begin
-     if MemoryAllocated > 0 then
-        begin
-        FreeMem(Buffer1, MemoryAllocated);
-        end;
-       {wli ������ 216 �� FreeMem}
      if (NumberBytes > MaximumMemoryToUse) or
        (NumberBytes < 0) then
         begin
         NumberBytes := MaximumMemoryToUse;
         end;
-
-       { Runtime error 201 here with K5KG - 0D73:0139 }
-
-    //{WLI}        IF NumberBytes < MaxAvail THEN
-     begin
-       GetMem(Buffer1, NumberBytes);
-       MemoryAllocated := NumberBytes;
-     end
-       //{WLI}        ELSE
-       //{WLI}            MemoryAllocated := 0;
      end;
 
-  Key := '';
-  NumberBufferEntries := 0;
-  Buffer1Bytes := 0;
-  Buffer2Bytes := 0;
-  Buffer3Bytes := 0;
-end;
-
-procedure CellBufferObject.GoAway;
-
-begin
-  if MaximumMemoryToUse = 3 * BufferArraySize then { Post mode }
+  if NumberBytes > Length(FData) then
      begin
-     if MemoryAllocated > 0 then
-        begin
-        if Buffer1Used then
-           begin
-           Dispose(Buffer1);
-           end;
-        if Buffer2Used then
-           begin
-           Dispose(Buffer2);
-           end;
-        if Buffer3Used then
-           begin
-           Dispose(Buffer3);
-           end;
-
-        Buffer1Used := False;
-        Buffer2Used := False;
-        Buffer3Used := False;
-        end;
-     end
-  else
-    if MemoryAllocated > 0 then
-       begin
-       FreeMem(Buffer1, MemoryAllocated);
-       end;
-
-  MemoryAllocated := 0;
-  Key := '';
-  NumberBufferEntries := 0;
-  Buffer1Bytes := 0;
-  Buffer2Bytes := 0;
-  Buffer3Bytes := 0;
-end;
-
-procedure CellBufferObject.FigureOutBufferSizes(NumberBytes: LONGINT);
-
-begin
-  Buffer2Bytes := 0;
-  Buffer3Bytes := 0;
-
-  if NumberBytes > BufferArraySize then
-     begin
-     Buffer1Bytes := BufferArraySize;
-
-     NumberBytes := NumberBytes - BufferArraySize;
-
-     if NumberBytes > BufferArraySize then
-        begin
-        Buffer2Bytes := BufferArraySize;
-        NumberBytes := NumberBytes - BufferArraySize;
-
-        if NumberBytes > BufferArraySize then
-           begin
-           //{WLI}                ReportError ('This cell is too big!');
-     logger.Fatal('In FigureOutBufferSizes, the cell is too big');
-     halt;
-           end
-        else
-           begin
-           Buffer3Bytes := NumberBytes;
-           end;
-
-        end
-     else
-        begin
-        Buffer2Bytes := NumberBytes;
-        end;
-     end
-  else
-     begin
-     Buffer1Bytes := NumberBytes;
+     SetLength(FData, NumberBytes);
      end;
 
-end;
-
-procedure CellBufferObject.LoadCellIntoBuffer(KeyString: CallString;
-  {var }FileRead: THandle {file};
-  NumberBytes: LONGINT);
-
-begin
-  Initialize(NumberBytes);
-
-  if MaximumMemoryToUse <= BufferArraySize then { TR mode }
+  if NumberBytes > 0 then
      begin
-     sReadFile(FileRead, Buffer1^, NumberBytes);
- //    BlockRead(FileRead, Buffer1^, NumberBytes, BytesRead);
-     Key := KeyString;
-     NumberBufferEntries := NumberBytes;
-     ReadAddress := 0;
-     Exit;
-     end;
-
-  FigureOutBufferSizes(NumberBytes);
-
-  if (Buffer1Bytes > 0) and Buffer1Used then
-     begin
-     (* ASK sReadFile WHETHER IT WORKED, WHICH IS WHAT IT RETURNS.
-
-       This read `if BytesRead < Buffer1Bytes`, and NOTHING EVER SET BytesRead:
-       the BlockRead that once did is commented out two routines up, and
-       sReadFile's signature is `(hFile; var Buffer; nNumberOfBytesToRead):
-       boolean` -- it reports success, not a count.  So a stack value decided
-       whether to HALT THE PROGRAM, at three sites in this routine.  FPC
-       reports it.
-
-       The boolean is the check that was wanted, and BytesRead is gone with the
-       last of these three. *)
-     if not sReadFile(FileRead, Buffer1^, Buffer1Bytes) then
+     (* ASK sReadFile WHETHER IT WORKED, WHICH IS WHAT IT RETURNS. The old
+       code ignored it in the running program's mode and halted the whole
+       program on it in the other; a cell that could not be read is an empty
+       cell with no key, so the next lookup tries the file again. *)
+     if not sReadFile(FileRead, FData[0], NumberBytes) then
         begin
-        //{WLI}            ReportError ('File read error!!  Line #721 in logscp.pas.');
-    halt;
-        end;
-     end;
-
-  if (Buffer2Bytes > 0) and Buffer2Used then
-     begin
-     if not sReadFile(FileRead, Buffer2^, Buffer2Bytes) then
-        begin
-        //                 ReportError ('File read error!!  Line #721 in logscp.pas.');
-    halt;
-        end;
-     end;
-
-  if (Buffer3Bytes > 0) and Buffer3Used then
-     begin
-     if not sReadFile(FileRead, Buffer3^, Buffer3Bytes) then
-        begin
-        //{WLI}            ReportError ('File read error!!  Line #721 in logscp.pas.');
-    halt;
+        logger.Error('TSCPCellBuffer.LoadCellIntoBuffer: the read of cell %s (%d bytes) failed',
+           [string(KeyString), NumberBytes]);
+        Exit;
         end;
      end;
 
   Key := KeyString;
-  NumberBufferEntries := NumberBytes;
-  ReadAddress := 0;
+  FEntries := NumberBytes;
 end;
 
-function CellBufferObject.GetNextEntry(var EntryString: ShortString {string}): boolean;
+function TSCPCellBuffer.GetNextEntry(var EntryString: ShortString {string}): boolean;
 
 { Returns FALSE when no more entries left in the cell buffer }
 
 var
-  CellChar                              : AnsiChar;
+  EntryStart                            : LONGINT;
+  EntryEnd                              : LONGINT;
+  EntryLength                           : LONGINT;
+  CharIndex                             : LONGINT;
 
 begin
   EntryString := '';
 
-  while ReadAddress <= NumberBufferEntries - 1 do
+  EntryStart := ReadAddress;
+  EntryEnd := EntryStart;
+
+  while (EntryEnd < FEntries) and (FData[EntryEnd] <> CHR(0)) do
      begin
-     if ReadAddress < BufferArraySize then
-        begin
-        CellChar := Buffer1^[ReadAddress]
-        end
-     else
-       if ReadAddress < BufferArraySize * 2 then
-          begin
-          CellChar := Buffer2^[ReadAddress - BufferArraySize]
-          end
-       else
-          begin
-          CellChar := Buffer3^[ReadAddress - (2 * BufferArraySize)];
-          end;
-
-     inc(ReadAddress);
-
-     if CellChar = CHR(0) then
-        begin
-        GetNextEntry := True;
-        Exit;
-        end;
-
-     EntryString := EntryString + CellChar;
+     inc(EntryEnd);
      end;
 
-  { We didn't find a null character at the end - return a null string }
-
-  EntryString := '';
-  GetNextEntry := False;
-end;
-
-function CellBufferObject.GetNextEntryAddress(var EntryAddress: Pointer): boolean;
-
-{ Returns FALSE when no more entries left in the cell buffer }
-
-var
-  CellChar                              : AnsiChar;
-
-begin
-  { Find address of first byte in the record to be read }
-
-  if ReadAddress < BufferArraySize then
+  if EntryEnd >= FEntries then
      begin
-     EntryAddress := Addr(Buffer1^[ReadAddress])
-     end
-  else
-    if ReadAddress < BufferArraySize * 2 then
-       begin
-       if not Buffer2Used then
-          begin
-          GetNextEntryAddress := False;
-          Exit;
-          end;
+     { We didn't find a null character at the end - return a null string }
 
-       EntryAddress := Addr(Buffer2^[ReadAddress - BufferArraySize])
-       end
-    else
-       begin
-       if not Buffer3Used then
-          begin
-          GetNextEntryAddress := False;
-          Exit;
-          end;
-
-       EntryAddress := Addr(Buffer3^[ReadAddress - (2 * BufferArraySize)]);
-       end;
-
-  while ReadAddress <= NumberBufferEntries - 1 do
-     begin
-     if ReadAddress < BufferArraySize then
+     if ReadAddress < FEntries then
         begin
-        CellChar := Buffer1^[ReadAddress]
-        end
-     else
-       if ReadAddress < BufferArraySize * 2 then
-          begin
-          CellChar := Buffer2^[ReadAddress - BufferArraySize]
-          end
-       else
-          begin
-          CellChar := Buffer3^[ReadAddress - (2 * BufferArraySize)];
-          end;
-
-     inc(ReadAddress);
-
-     if CellChar = CHR(0) then
-        begin
-        GetNextEntryAddress := True;
-        Exit;
+        ReadAddress := FEntries;
         end;
+     GetNextEntry := False;
+     Exit;
      end;
 
-  { We didn't find a null character at the end - return a null string }
+  { A ShortString holds 255; the entry is cut there, as the char-by-char
+    append it replaces cut it. }
 
-  GetNextEntryAddress := False;
+  EntryLength := EntryEnd - EntryStart;
+  if EntryLength > 255 then
+     begin
+     EntryLength := 255;
+     end;
+
+  SetLength(EntryString, EntryLength);
+  for CharIndex := 0 to EntryLength - 1 do
+     begin
+     EntryString[CharIndex + 1] := FData[EntryStart + CharIndex];
+     end;
+
+  ReadAddress := EntryEnd + 1;
+  GetNextEntry := True;
 end;
 
 function GetRandomLetter: Char;
@@ -1143,7 +943,10 @@ begin
   //{WLI}    GoToXY (1, WhereY);
   //{WLI}    Write ('Saving .DTA file to ASCII file.  Processing cell   ');
 
-  CellBuffer.Initialize(CellSize); { Only works in POST mode }
+  (* CellBuffer.Initialize(CellSize) stood here, "only works in POST mode",
+    with CellSize not yet assigned. The cell buffer sizes itself when a cell
+    is loaded (P7), and this routine's load is commented out below, so the
+    buffer it walks is empty exactly as before. No caller. *)
 
   New(CallsAlreadySaved);
 
@@ -3208,7 +3011,7 @@ procedure CallDatabase.BuildOperatorNameSet(Names: TStringList);
   The shared TRMasterFileRead handle and CellBuffer state are untouched. }
 var
    FileHandle  : THandle;
-   LocalBuf    : CellBufferObject;
+   LocalBuf    : TSCPCellBuffer;
    X           : Integer;
    Y           : Integer;
    StartOffset : LONGINT;
@@ -3225,7 +3028,7 @@ begin
       begin
       Exit;
       end;
-   FillChar(LocalBuf, SizeOf(LocalBuf), 0);
+   LocalBuf := TSCPCellBuffer.Create;
    LocalBuf.MaximumMemoryToUse := BufferArraySize;
    try
       for X := 0 to 36 do
@@ -3268,7 +3071,7 @@ begin
             end;
          end;
    finally
-      LocalBuf.GoAway;
+      LocalBuf.Free;
       FileClose(FileHandle);
       end;
 end;
@@ -3303,15 +3106,10 @@ begin
       (OperatorNameSet.IndexOf(UpperCase(AName)) >= 0);
 end;
 
-begin
+initialization
 
-//  CD.CellBuffer.Buffer1Used := False;
-//  CD.CellBuffer.Buffer2Used := False;
-//  CD.CellBuffer.Buffer3Used := False;
-
+  CD.CellBuffer := TSCPCellBuffer.Create;
   CD.CellBuffer.MaximumMemoryToUse := 3 * BufferArraySize;
-
-//  CD.CellBuffer.MemoryAllocated := 0;
 
 //  CD.SCPDisabledByApplication := False;
 
@@ -3343,6 +3141,10 @@ begin
 //  CD.User3Overwrite := False;
 //  CD.User4Overwrite := False;
 //  CD.User5Overwrite := False;
+
+finalization
+
+  FreeAndNil(CD.CellBuffer);
 
 end.
 
