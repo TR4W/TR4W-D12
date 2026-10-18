@@ -112,6 +112,25 @@ inactive contest in the New Contest list.
   (uContestNebraskaQP). No separate FT8/FT4 competition is built. Whether
   such a QSO appears in the Cabrillo as an X-QSO line follows Q98's off-mode
   rule. (1) and (2) stay open.
+  **Answer to (1) and (2):** (NY4I, 2026-10-18) *"yes to rare grid and
+  leave satellite alone."* The sponsor's 2026 text (embedded in the page's
+  HTML, `window._BLOG_DATA`): *"RARE GRID BONUS For the following grid
+  squares (DN91CE, DN91DE, DN91EE) if you activate in them you will receive
+  a bonus of 5 points per QSO. Example if you make a phone QSO that is 2
+  points and a CW QSO that is 3 points for a total of 5 points. Then you take
+  your total score from the unique grid only QSO's ... 5 points times the
+  rare grid multiplier of 5 for a bonus of 25 points. (No mobile multiplier
+  of 3 in the RARE GRID BONUS)"* -- so: bonus = 5 x the QSO points of the
+  QSOs made FROM a rare grid, added beside the other bonus points (outside
+  the power/county multipliers), per QSO; the grid list is per YEAR (2025's
+  summary sheet named EN01mi/ni/mh/nh). **BLOCKED, then unblocked by a
+  ruling:** no logged QSO records the grid WE were in (`qso.my_grid` is
+  declared, never written), and live settings are forbidden for a logged
+  QSO. NY4I: *"our grid is an event source along with all the MY_ values for
+  the contest where needed. The QSO record should have all the MY_ values
+  (such as MY_GRID)"* -- every QSO records our MY_ values as they were for
+  that QSO; the bonus reads MY_GRID from the record. Being measured and
+  staged first (log-database); the bonus is built on it.
   **Answer, UTC times:** (NY4I, 2026-10-18) *"Go with the sponsor's doc as
   it states 2026 Nebraska QSO Party rules and has UTC (Saturday, April 25th,
   1400 UTC (8:00 AM CDT Sat, ) and end Sunday April 27th at 0200 UTC (08:00
@@ -254,7 +273,16 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   *Recommended: Field Day's CreditsWorkedStation returns False (logged,
   scores 0) when the QTH is DX and the station's country has ARRL/RAC
   sections, through the one predicate the way Q107 did it.*
-  **Answer:**
+  **Reworded 2026-10-18:** NY4I asked why Field Day would refuse DX -- it
+  does not: the matrix pins DL1ABC "1D DX" as accepted (ARRL-FD.matrix:205)
+  and "1D MX" from a DX station as refused. The question is only a
+  SECTIONED station (W/VE/KH6) whose logged exchange is DX.
+  **Answer:** (NY4I, 2026-10-18) *"on import if W1AW has 1D CT, that is an
+  import error to stop the import (all or nothing)."* -- read as W1AW with
+  **1D DX** (1D CT is a valid Connecticut section; confirmation asked): a
+  Field Day record that would be refused if typed is an ADIF IMPORT ERROR
+  and the whole import is rolled back (the atomic import of log-db ruling
+  2). Not built yet. Peers and Rescore are not covered by this answer.
 
 - **Q113** (found building Q9, 2026-10-17) **Edited message memories are
   lost on restart.** `uLogStore` writes every memory to the log's `message`
@@ -288,7 +316,9 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   logs. (Q37's import half -- which field holds the received grid differs by
   contest, e.g. ARRL Digi imports GRIDSQUARE into DomesticQTH but scores from
   QTHString -- is not built until this and that are settled.)
-  **Answer:**
+  **Answer:** (NY4I, 2026-10-18) *"A malformed grid would have to be
+  malformed on import but yes we cannot calculate anything for it."* --
+  no distance = 0 points and no multiplier, as recommended. Not built yet.
 
 - **Q117** (Q81) **Old Connecticut counties.** CT's 8 counties became 9
   planning regions; `in7qpne_cty.dom` maps three old county codes onto
