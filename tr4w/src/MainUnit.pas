@@ -1939,6 +1939,7 @@ label
   loop;
 var
   n: integer;
+  WorkedQTHs: string;
  // TempString: Str10;
 begin
   n := 0;
@@ -1974,6 +1975,17 @@ begin
   // is empty, copy the county to the exchange and move focus there so
   // the operator can confirm with another Enter.
   PrefillExchangeFromRoverCallSuffix;
+
+  (* HINT, DON'T BLOCK -- Q118 (NY4I, 2026-10-17). Where the received QTH is
+    part of the dupe key (every state party) the answer depends on the
+    exchange, which may have changed since ShowInformation asked (typed, or
+    prefilled just above), so it is asked again here. Every other contest
+    keeps ShowInformation's answer, exactly as before. *)
+  WorkedQTHs := '';
+  if ContestDupeKeyIncludesReceivedQTH(ContestIdentity(Contest)) then
+     begin
+     tCallWindowStringIsDupe := CallWindowIsADupe(WorkedQTHs);
+     end;
 
   // if tr4w_CallWindowActive then
   if (length(CallWindowString) >= 3) then
@@ -2013,6 +2025,7 @@ begin
      // if WindowDupeCheck then
      Exit;
      end;
+  ShowWorkedFromOtherQTHs(string(CallWindowString), WorkedQTHs);
 
   DisplayGridSquareStatus(CallWindowString);
   ShowStationInformation(CallWindowString);
@@ -3817,7 +3830,7 @@ begin
 
   tUpdateLog(actSetClearDupesheetBit);
   UpdateTotals2;
-  CallsignsList.ClearDupes;
+  ClearAllDupeSheets;
 
   QuickDisplay(TC_DUPESHEETCLEARED
     { To restore, delete RESTART.BIN and start program over.'});
@@ -7998,8 +8011,7 @@ begin
              (* AND TO THE VIEW THE FINAL SCORE'S BONUSES READ (M6) -- kept
                 beside the totals; see uScoreTotals. *)
              AddLoggedQSO(TempRXData);
-             CallsignsList.AddCallsign(TempRXData.Callsign, TempMode,
-               TempRXData.Band, TempRXData.ceClearDupeSheet);
+             AddQSOToDupeSheets(TempRXData, TempRXData.ceClearDupeSheet);
              if not IntitialExLoaded then
                 begin
                 CallsignsList.AddIniitialExchange(TempRXData.Callsign,
@@ -8921,8 +8933,7 @@ begin
                 (uLogStore.LogStoreCheckExchangeIds) and left alone. *)
               RecomputeQSOScoring(RescoredRXData);
               if (not tAllowDupeQSOs) and (RescoredRXData.ceClearDupeSheet = False)
-                and (VisibleLog.CallIsADupe(RescoredRXData.Callsign,
-                RescoredRXData.Band, RescoredRXData.Mode)) then
+                and VisibleLog.QSOIsADupe(RescoredRXData) then
                  begin
                  RescoredRXData.QSOPoints := 0;
                  RescoredRXData.ceDupe := True;
@@ -8970,9 +8981,7 @@ begin
                  end;
 
               Sheet.AddQSOToSheets(@RescoredRXData, False);
-              CallsignsList.AddCallsign(RescoredRXData.Callsign,
-                RescoredRXData.Mode, RescoredRXData.Band,
-                RescoredRXData.ceClearDupeSheet);
+              AddQSOToDupeSheets(RescoredRXData, RescoredRXData.ceClearDupeSheet);
               end;
            end;
 
@@ -9138,15 +9147,19 @@ var
   // TempBand : BandType;
   Index: integer;
   QSOs: integer;
+  WorkedQTHs: string;
 begin
 
   DisplayCountryName(CallWindowString);
 
   DisplayBeamHeading(CallWindowString, '');
 
-  tCallWindowStringIsDupe := VisibleLog.CallIsADupe(CallWindowString,
-    ActiveBand, ActiveMode);
+  (* HINT, DON'T BLOCK -- Q118 (NY4I, 2026-10-17): a call worked only from
+    another QTH in a state party is not "B4"; it gets the hint, and the
+    logged QSO decides (LOGEDIT.CallWindowIsADupe). *)
+  tCallWindowStringIsDupe := CallWindowIsADupe(WorkedQTHs);
   DispalayB4(integer(tCallWindowStringIsDupe));
+  ShowWorkedFromOtherQTHs(string(CallWindowString), WorkedQTHs);
 
   if not CallsignsList.FindCallsign(CallWindowString, Index) then
      begin

@@ -185,6 +185,7 @@ uses
    uTestOffBandCredit   in 'uTestOffBandCredit.pas',
    uTestMalformedGrid   in 'uTestMalformedGrid.pas',
    uTestRoverDupeKey    in 'uTestRoverDupeKey.pas',
+   uTestNYQPRover       in 'uTestNYQPRover.pas',
    uTestOperatorCQMemory in 'uTestOperatorCQMemory.pas',
    uCallSignRoutines    in '..\..\src\uCallSignRoutines.pas',
    uTestCallSignRoutines in 'uTestCallSignRoutines.pas',
@@ -867,6 +868,7 @@ begin
    RegisterSuite(TOffBandCreditTests.Create('OffBandCredit'));
    RegisterSuite(TMalformedGridTests.Create('MalformedGrid'));
    RegisterSuite(TRoverDupeKeyTests.Create('RoverDupeKey'));
+   RegisterSuite(TNYQPRoverTests.Create('NYQPRover'));
    RegisterSuite(TOperatorCQMemoryTests.Create('OperatorCQMemory'));
    RegisterSuite(TRadioLinkRetryTests.Create('RadioLinkRetry'));
    RegisterSuite(TStatusAndNoticeTests.Create('StatusAndNotice'));

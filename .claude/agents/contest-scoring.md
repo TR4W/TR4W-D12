@@ -89,6 +89,28 @@ literal compare. `DomesticQTH` is non-empty exactly when the received QTH matche
 the contest's file; it is the "discrete value" NY4I asked for (Q45), where
 `DomMultQTH` is the shared catch-all.
 
+**THE DUPE KEY IS THE CALL AS LOGGED -- PLUS, WHERE THE CONTEST SAYS SO, WHAT
+IT SENT (Q118, 2026-10-17).** `CALL/county` is its own key already (Q73,
+`uTestRoverDupeKey`). NY4I: *"New QSO per county"*, then *"All state parties"* --
+in every state QSO party the same call on the same band and mode with a
+different received QTH is a new QSO. The one virtual is
+`TContestBase.DupeKeyIncludesReceivedQTH` (base False,
+`TContestStateQSOPartyBase` True); the non-virtual `DupeKeyQualifier` derives the
+key text from the record (`DomesticQTH`, else `QTHString`). 7QP, NEQP and IN7QPNE
+are not on that base and are not covered (open). **A logged QSO's dupe question
+is `EditableLog.QSOIsADupe(rx)` and its write is `LOGEDIT.AddQSOToDupeSheets`**
+-- LogContact, the loader and the rescore all go through them; never call
+`CallsignsList.AddCallsign` or `CallIsADupe` for a logged QSO again, or the
+qualified sheet (`uCallsigns.QualifiedDupes`) falls out of step. Clear with
+`ClearAllDupeSheets`. **"Hint, don't block"** (NY4I): a check that can STOP the
+operator before the exchange exists asks `EditableLog.CallIsADupeBeforeExchange`
+/ `CallWindowIsADupe` -- WindowDupeCheck, ShowInformation (B4, so AUTO DUPE CQ's
+B4 send), ReturnInSAPOpMode (AUTO DUPE S&P) and the inactive-radio dupe panel; a
+call worked only from other QTHs is not a dupe there and gets
+`ShowWorkedFromOtherQTHs` (`TC_YOUALREADYWORKEDIN`). `CallIsADupe` stays the
+CALL-ONLY answer for colour-only sites (band map, SCP, spots, WSJT-X, MMTTY).
+The bit rule both sheets share is `MarkDupeBits` / `DupeBitsSay`.
+
 **Measure before you build a refusal.** FD-DX was recorded "not built" and typed
 entry already refused it: a domestic call goes to `FoundDomesticQTH`, and
 `arrlsect.dom` has no `DX`. Run the typed text through the matrix's parse section

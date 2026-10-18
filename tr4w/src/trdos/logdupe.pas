@@ -806,7 +806,7 @@ procedure DupeAndMultSheet.DisposeOfMemoryAndZeroTotals;
   //TempRemainingMultiplierType           : RemainingMultiplierType;
 begin
 
-  CallsignsList.ClearDupes;
+  ClearAllDupeSheets;
 
   mo.ClearAllMults;
 {

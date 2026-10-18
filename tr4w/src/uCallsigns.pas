@@ -46,7 +46,7 @@ uses
   LogSCP,
   uTR4WStrings,
   utils_text,
-  Generics.Collections;   (* TObjectList -- the entries, owned *)
+  Generics.Collections;   (* TObjectList -- the entries, owned; the qualified sheet's dictionaries *)
 
 const
   MAXCALLSIGNSINLIST                    = 100000;           // 4.115.6
@@ -117,11 +117,74 @@ type
     property Count: integer read GetCount;
   end;
 
+  (* One station's qualifiers and their dupe bits. *)
+  TQualifierMarks = TDictionary<string, TDupesArray>;
+  (* Qualifiers, as WorkedQualifiers answers them. A string array of THIS
+    unit's string, not TStrings/SysUtils.TStringArray, whose elements are the
+    RTL's AnsiString -- every crossing would be a narrowing conversion. *)
+  TQualifierArray = array of string;
+
+  (* THE CALL + QUALIFIER DUPE SHEET -- Q118; see QualifiedDupes below.
+
+    A CLASS OVER DICTIONARIES, NOT A SECOND TCallsignsList: that list keys
+    on a CallString (13 characters), and a call plus a county overruns it --
+    'KC2ABC/STE SCH' would be cut to 'KC2ABC/STE SC' and collide with SCO
+    and SCU. Here the call (upper-cased: TCallsignsList compares case-blind)
+    keys the station, and each station holds its qualifiers, so "which QTHs
+    was this call worked from on this band and mode" -- the pre-exchange
+    hint, LOGEDIT.EditableLog.CallIsADupeBeforeExchange -- is a lookup, not
+    a walk of the log. The bits are the same TDupesArray, read and written
+    by the same MarkDupeBits / DupeBitsSay. *)
+  TQualifiedDupeSheet = class
+  private
+    FCalls: TObjectDictionary<string, TQualifierMarks>;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure AddQSO(const aCall: string; const aQualifier: string;
+                     Mode: ModeType; Band: BandType);
+    function QSOIsDupe(const aCall: string; const aQualifier: string;
+                       Band: BandType; Mode: ModeType): boolean;
+    (* THE QUALIFIERS aCall WAS WORKED FROM ON THIS BAND AND MODE, as the
+      dupe rule reads them (DupeBitsSay), sorted. *)
+    function WorkedQualifiers(const aCall: string; Band: BandType;
+                              Mode: ModeType): TQualifierArray;
+    procedure ClearDupes;
+  end;
+
 const
   MaxCallsignsInPossibleCallsList       = 9;
 var
   (* Created in this unit's initialization, freed in its finalization. *)
   CallsignsList                         : TCallsignsList;
+  (* THE DUPE SHEET FOR A CONTEST WHOSE DUPE KEY IS MORE THAN THE CALL --
+    Q118 (TContestBase.DupeKeyQualifier: a state party's received QTH).
+    Used ONLY for the dupe question of a logged QSO (LOGEDIT.QSOIsADupe)
+    and the pre-exchange hint (EditableLog.CallIsADupeBeforeExchange's
+    WorkedQualifiers), never for partials, the dupe-sheet window or the
+    worked-station count, which stay on CallsignsList. Written beside
+    CallsignsList by LOGEDIT.AddQSOToDupeSheets; cleared with it by
+    ClearAllDupeSheets. Empty for every other contest. Created in this
+    unit's initialization, freed in its finalization. *)
+  QualifiedDupes                        : TQualifiedDupeSheet;
+
+(* THE DUPE BITS OF ONE STATION, AND THE ONE RULE FOR READING AND WRITING
+  THEM -- shared by TCallsignsList and TQualifiedDupeSheet so the two sheets
+  cannot disagree about band, mode, FM or an off-band QSO. Lifted out of
+  TCallsignsList.AddCallsign / CallsignIsDupe unchanged (Q118); FM is
+  uSortedStringList.DupeSlot's, the one FM rule (P8).
+
+  MarkDupeBits: an off-band QSO (the contest does not use the band) marks
+  nothing; otherwise the band and AllBands bits of the mode's slot and of
+  Both. DupeBitsSay: an off-band question (Band <> AllBands) is never a
+  dupe; otherwise the QSO-by-band and QSO-by-mode settings choose the bit. *)
+procedure MarkDupeBits(var aDupes: TDupesArray; Mode: ModeType; Band: BandType);
+function DupeBandIsOffBand(Band: BandType): boolean;
+function DupeBitsSay(const aDupes: TDupesArray; Band: BandType; Mode: ModeType): boolean;
+
+(* CLEARS EVERY DUPE SHEET'S MARKS -- CallsignsList and QualifiedDupes,
+  which must never disagree about what has been worked. *)
+procedure ClearAllDupeSheets;
 
 implementation
 uses
@@ -213,7 +276,6 @@ end;
 function TCallsignsList.AddCallsign(const s: string; Mode: ModeType; Band: BandType; JustAddToList: boolean): integer;
 var
   entry                                 : TCallsignEntry;
-  slot                                  : ModeType;
 begin
   if not FindCallsign(s, Result) then
      begin
@@ -235,6 +297,16 @@ begin
      Exit;
      end;
 
+  (* THE BITS, THE OFF-BAND RULE AND THE FM SLOT ARE MarkDupeBits'S --
+    shared with TQualifiedDupeSheet since Q118. The QSO still counts as a
+    QSO with the station (QSOs above) when it is off-band: it is in the log. *)
+  MarkDupeBits(entry.Dupes, Mode, Band);
+end;
+
+procedure MarkDupeBits(var aDupes: TDupesArray; Mode: ModeType; Band: BandType);
+var
+  slot                                  : ModeType;
+begin
   (* AN OFF-BAND QSO MARKS NO DUPE BIT -- M8, design 7.4. NY4I, 2026-10-01:
     an off-band QSO "is not a dupe and makes no later on-band QSO a dupe".
 
@@ -243,44 +315,82 @@ begin
     station a dupe on 20 m. The same question scoring and SetMultFlags ask
     (ContestCreditsBand), of the session's contest; ContestIdentity, which
     carries no station and is safe off the main thread, because the band
-    list is what the contest IS. The QSO still counts as a QSO with the
-    station (QSOs above): it is in the log. *)
+    list is what the contest IS. *)
   if not ContestCreditsBand(ContestIdentity(Contest), Band) then
      begin
      Exit;
      end;
 
-  (* FM SHARES PHONE'S SLOT, as CallsignIsDupe reads it. Until P8 this
+  (* FM SHARES PHONE'S SLOT, as DupeBitsSay reads it. Until P8 this
     indexed the bits with Mode itself, and TDupesArray stops at NoMode, so
     an FM QSO wrote four bytes PAST the array -- into the length and first
     characters of the entry's call. The loader and LogContact remap FM
     before calling; the rescore (MainUnit.RecomputeQSOScoring) passes the
     record's mode as stored, and GetModeFromExtendedMode stores FM. *)
   slot := DupeSlot(Mode);
-  entry.Dupes[slot] := entry.Dupes[slot] or (1 shl Ord(Band));
-  entry.Dupes[Both] := entry.Dupes[Both] or (1 shl Ord(Band));
-  entry.Dupes[slot] := entry.Dupes[slot] or (1 shl Ord(AllBands));
-  entry.Dupes[Both] := entry.Dupes[Both] or (1 shl Ord(AllBands));
+  aDupes[slot] := aDupes[slot] or (1 shl Ord(Band));
+  aDupes[Both] := aDupes[Both] or (1 shl Ord(Band));
+  aDupes[slot] := aDupes[slot] or (1 shl Ord(AllBands));
+  aDupes[Both] := aDupes[Both] or (1 shl Ord(AllBands));
+end;
+
+function DupeBandIsOffBand(Band: BandType): boolean;
+begin
+  (* AllBands from a caller is a key, not a band, and asks nothing -- see
+    TCallsignsList.CallsignIsDupe. *)
+  Result := (Band <> AllBands) and
+            (not ContestCreditsBand(ContestIdentity(Contest), Band));
+end;
+
+function DupeBitsSay(const aDupes: TDupesArray; Band: BandType; Mode: ModeType): boolean;
+var
+  TempMode                              : ModeType;
+  TempBand                              : BandType;
+begin
+  if DupeBandIsOffBand(Band) then
+     begin
+     Result := False;
+     Exit;
+     end;
+
+  if Settings.Qso.ByMode then
+     begin
+     TempMode := Mode;
+     end
+  else
+     begin
+     TempMode := Both;
+     end;
+  if Settings.Qso.ByBand then
+     begin
+     TempBand := Band;
+     end
+  else
+     begin
+     TempBand := AllBands;
+     end;
+
+  TempMode := DupeSlot(TempMode);
+
+  Result := (aDupes[TempMode] and (1 shl Ord(TempBand))) <> 0;
 end;
 
 function TCallsignsList.CallsignIsDupe(const s: string; Band: BandType; Mode: ModeType; var IndexInList: integer): boolean;
 var
   Index                                 : integer;
-  TempMode                              : ModeType;
-  TempBand                              : BandType;
 begin
   Result := False;
 
   (* AN OFF-BAND QSO IS NOT A DUPE -- M8, design 7.4; the other half of the
-    rule in AddCallsign, asked the same way. Band is the REAL band here:
+    rule in AddCallsign, asked the same way (DupeBandIsOffBand, shared with
+    TQualifiedDupeSheet since Q118). Band is the REAL band here:
     EditableLog.CallIsADupe used to turn it into the AllBands key before
     calling, which hid the band this asks about; it passes it through now and
-    the key is made below, once. AllBands from a caller (the QSO-needs strip
-    of a contest not counted per band) is a key, not a band, and asks
-    nothing. IndexInList is still reported, so a caller can still show the
-    station's history. *)
-  if (Band <> AllBands) and
-     (not ContestCreditsBand(ContestIdentity(Contest), Band)) then
+    the key is made in DupeBitsSay, once. AllBands from a caller (the
+    QSO-needs strip of a contest not counted per band) is a key, not a band,
+    and asks nothing. IndexInList is still reported, so a caller can still
+    show the station's history. *)
+  if DupeBandIsOffBand(Band) then
      begin
      if not FindCallsign(s, IndexInList) then
         begin
@@ -291,26 +401,7 @@ begin
 
   if FindCallsign(s, Index) then
      begin
-     if Settings.Qso.ByMode then
-        begin
-        TempMode := Mode;
-        end
-     else
-        begin
-        TempMode := Both;
-        end;
-     if Settings.Qso.ByBand then
-        begin
-        TempBand := Band;
-        end
-     else
-        begin
-        TempBand := AllBands;
-        end;
-
-     TempMode := DupeSlot(TempMode);
-
-     Result := (FItems[Index].Dupes[TempMode] and (1 shl Ord(TempBand))) <> 0;
+     Result := DupeBitsSay(FItems[Index].Dupes, Band, Mode);
      IndexInList := Index;
      end
   else
@@ -733,11 +824,104 @@ begin
      end;
 end;
 
+{ TQualifiedDupeSheet }
+
+constructor TQualifiedDupeSheet.Create;
+begin
+  inherited Create;
+  FCalls := TObjectDictionary<string, TQualifierMarks>.Create([doOwnsValues]);
+end;
+
+destructor TQualifiedDupeSheet.Destroy;
+begin
+  FCalls.Free;
+  inherited Destroy;
+end;
+
+procedure TQualifiedDupeSheet.AddQSO(const aCall: string; const aQualifier: string;
+                                     Mode: ModeType; Band: BandType);
+var
+  marks                                 : TQualifierMarks;
+  dupes                                 : TDupesArray;
+begin
+  if not FCalls.TryGetValue(UpperCase(aCall), marks) then
+     begin
+     marks := TQualifierMarks.Create;
+     FCalls.Add(UpperCase(aCall), marks);
+     end;
+  if not marks.TryGetValue(aQualifier, dupes) then
+     begin
+     dupes := Default(TDupesArray);
+     end;
+  MarkDupeBits(dupes, Mode, Band);
+  marks.AddOrSetValue(aQualifier, dupes);
+end;
+
+function TQualifiedDupeSheet.QSOIsDupe(const aCall: string; const aQualifier: string;
+                                       Band: BandType; Mode: ModeType): boolean;
+var
+  marks                                 : TQualifierMarks;
+  dupes                                 : TDupesArray;
+begin
+  Result := False;
+  if FCalls.TryGetValue(UpperCase(aCall), marks) and
+     marks.TryGetValue(aQualifier, dupes) then
+     begin
+     Result := DupeBitsSay(dupes, Band, Mode);
+     end;
+end;
+
+function TQualifiedDupeSheet.WorkedQualifiers(const aCall: string; Band: BandType;
+                                              Mode: ModeType): TQualifierArray;
+var
+  marks                                 : TQualifierMarks;
+  pair                                  : TPair<string, TDupesArray>;
+  count                                 : integer;
+  i                                     : integer;
+begin
+  Result := nil;
+  if not FCalls.TryGetValue(UpperCase(aCall), marks) then
+     begin
+     Exit;
+     end;
+  count := 0;
+  SetLength(Result, marks.Count);
+  for pair in marks do
+     begin
+     if DupeBitsSay(pair.Value, Band, Mode) then
+        begin
+        (* An insertion into the sorted part: a station has a handful. *)
+        i := count;
+        while (i > 0) and (Result[i - 1] > pair.Key) do
+           begin
+           Result[i] := Result[i - 1];
+           Dec(i);
+           end;
+        Result[i] := pair.Key;
+        Inc(count);
+        end;
+     end;
+  SetLength(Result, count);
+end;
+
+procedure TQualifiedDupeSheet.ClearDupes;
+begin
+  FCalls.Clear;
+end;
+
+procedure ClearAllDupeSheets;
+begin
+  CallsignsList.ClearDupes;
+  QualifiedDupes.ClearDupes;
+end;
+
 initialization
   CallsignsList := TCallsignsList.Create;
+  QualifiedDupes := TQualifiedDupeSheet.Create;
   RegisterDupeSheetSeams;
 
 finalization
+  FreeAndNil(QualifiedDupes);
   FreeAndNil(CallsignsList);
 
 end.

@@ -39,7 +39,6 @@ in section 4. One line each -- the full text is further down.
 - **Q115** VHF "RST and/or grid" parser drops a bad grid token silently -- is RST alone OK?
 - **Q116** A malformed grid has no distance -- should it score 0 (not the closest bucket)?
 - **Q117** Old Connecticut county codes: keep as aliases of planning regions, or refuse?
-- **Q118** A bare-call mobile in a new county: a new station for dupes?
 - **Q119** Is a host-area-refused QSO (Q107) also an automatic X-QSO? (needed before Q98's mechanism)
 - **Q120** Bands and modes per contest: fill `docs/Q98_CONTEST_BANDS_MODES.csv` + five yes/no rulings.
 
@@ -283,13 +282,6 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   the display name `Lower CT Rivier` has a typo, kept as is for now.)
   **Answer:**
 
-- **Q118** (Q73) **A mobile signing its BARE call** and sending a new county
-  is still a dupe; NY4I's ruling covered `CALL/county` only (which is
-  already separate -- pinned by `uTestRoverDupeKey`). Should a QSO party
-  treat a bare-call mobile in a new county as a new station too (keyed on
-  call + county)?
-  **Answer:**
-
 - **Q119** (Q98 design, 2026-10-17 -- needed BEFORE Q98's mechanism stage)
   **Is a QSO that Q107's host-area rule refuses also an automatic X-QSO?**
   Q98 makes an off-band or off-mode QSO an X-QSO in the log and in the
@@ -505,6 +497,7 @@ closes it; anything else reopens it.
 | Q67 | New Contest rows seeded from the station; the values at OK are the contest's own | not built |
 | Q49 | BCQP: in-province DX contact earns no domestic mult (case-insensitive test) | built 2026-10-17 |
 | Q73 | QSO party: CALL/<valid county> is its own station for dupes (K1AR/NHHIL in NEQP) | already so (measured and pinned 2026-10-17) |
+| Q118 | Every state party: a new QSO per county (QTH) received -- same call, band and mode with a different QTH is not a dupe; before the exchange, hint, don't block; Cabrillo keeps W2TZ/STE as logged | built 2026-10-17 on `TContestStateQSOPartyBase` (`DupeKeyIncludesReceivedQTH`); 7QP/NEQP/IN7QPNE not on that base -- open |
 | Q48 | YB DX: YB entrant counts all prefixes, others YB prefixes only -- already so (DXLog agrees) | no change |
 | Q66 | A Contest Details dialog edits the contest's stored values (seeded station facts, Cabrillo fields); a station change mid-contest offers to copy it | not built |
 | Q64 | POTA shows as "Parks on the Air(r) Logging" | as built |
@@ -528,6 +521,42 @@ closes it; anything else reopens it.
 | Q52 note | Settled by Q52 | removed |
 
 ### Answered since the table was last updated (full text)
+
+- **Q118** (Q73; NY4I's NYQP field report, 2026-10-17, the contest running
+  that day) **A mobile signing its BARE call** and sending a new county was a
+  dupe -- TR4W keyed dupes on the call alone; Q73 covered `CALL/county`
+  only (already separate, `uTestRoverDupeKey`). Should a bare-call mobile
+  in a new county be a new QSO (keyed on call + county)?
+  **Answer:** (NY4I, 2026-10-17) *"New QSO per county"* -- a station worked
+  again on the same band and mode with a DIFFERENT county received is a new
+  QSO, not a dupe (DXLog's `DOUBLE_QSO=PER_BAND_MODE_RCVD` for NYQP). And
+  for Cabrillo: *"Keep W2TZ/STE"* -- the call column stays as logged; no
+  change. Then, the same day: *"All state parties"* -- every state QSO
+  party (every one's DXLog definition says `PER_BAND_MODE_RCVD`, or
+  `PER_BAND_MODE_RECINFO` for California, Pennsylvania and Virginia, the
+  same rule with the QTH after a serial) -- and *"Hint, don't block"*:
+  before the exchange is entered, a call worked only from another QTH must
+  not be blocked or called a dupe; show a "worked: KIN" hint, and let the
+  logged QSO decide.
+  **BUILT 2026-10-17:** `TContestBase.DupeKeyIncludesReceivedQTH` (base
+  False; `TContestStateQSOPartyBase` True) and the non-virtual
+  `DupeKeyQualifier` derived from it -- the record's received QTH
+  (`DomesticQTH`, else `QTHString`, upper case). LOGEDIT's
+  `EditableLog.QSOIsADupe` and `AddQSOToDupeSheets` are the one
+  question and the one writer for LogContact, the log loader and the
+  rescore; a qualified QSO is kept on `uCallsigns.QualifiedDupes` (a
+  per-call dictionary -- a call plus a county overruns a 13-character
+  `CallString`). Before the exchange: `EditableLog.CallIsADupeBeforeExchange`
+  (and `CallWindowIsADupe`) -- a dupe only when the exchange typed so far
+  names a QTH the call was worked from; otherwise the hint
+  `TC_YOUALREADYWORKEDIN` ("You already worked %s in %s!!") with those
+  QTHs. Asked by WindowDupeCheck, ShowInformation (the B4 indicator, and
+  so AUTO DUPE ENABLE CQ's B4), ReturnInSAPOpMode (AUTO DUPE ENABLE S&P)
+  and the inactive radio's dupe panel. Still call-only (colour, no stop):
+  the band map and its spots, SCP, the QSO-needs strip, telnet spots,
+  WSJT-X, MMTTY. **Not covered:** 7QP, New England and IN7QPNE, which are
+  not on the state-party base (their DXLog definitions say
+  `PER_BAND_MODE_RCVD` too). Pinned by `uTestNYQPRover`.
 
 - **Q109** (found by the new end-to-end UDP tests, 2026-10-16) The N1MM-style
   UDP **score** message (`dynamicresults`, `SendScoreToUDP`) has four

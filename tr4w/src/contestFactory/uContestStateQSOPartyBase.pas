@@ -250,6 +250,18 @@ type
       function StripsRoverCountyFromCall: boolean; override;
       function SplitsRoverCallOnExport: boolean; override;
 
+      (* A NEW QSO PER COUNTY RECEIVED, IN EVERY STATE PARTY -- Q118. NY4I,
+         2026-10-17: "New QSO per county" (for NYQP), then "All state
+         parties". The same call on the same band and mode is a new QSO when
+         the QTH it sent differs -- a mobile signing its bare call that has
+         moved county. Every one of these parties' DXLog definitions says
+         DOUBLE_QSO=PER_BAND_MODE_RCVD, or _RECINFO (California, Pennsylvania,
+         Virginia, whose QTH follows a serial). STATED ONCE, HERE, for the
+         same reason the rover answers above are. The multi-state parties
+         (7QP, New England, IN7QPNE) are not on this base and do not answer
+         it. See TContestBase.DupeKeyIncludesReceivedQTH. *)
+      function DupeKeyIncludesReceivedQTH: boolean; override;
+
       (* THE WORKED STATION'S ADIF STATE, AND ITS COUNTY AS CNTY -- Q76/Q89
          (NY4I, 2026-10-16). See TContestBase.ADIFCountyState,
          ADIFWorkedStationState and WritesADIFCounty. STATED ONCE, HERE: a
@@ -416,6 +428,12 @@ end;
 function TContestStateQSOPartyBase.SplitsRoverCallOnExport: boolean;
 begin
    (* Every state party -- see the declaration (Q90, 2026-10-14). *)
+   Result := True;
+end;
+
+function TContestStateQSOPartyBase.DupeKeyIncludesReceivedQTH: boolean;
+begin
+   (* Every state party -- see the declaration (Q118, 2026-10-17). *)
    Result := True;
 end;
 

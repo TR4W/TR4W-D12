@@ -2320,6 +2320,36 @@ type
          except County Hunter, which strips and does not split. *)
       function SplitsRoverCallOnExport: boolean; virtual;
 
+      (* IS THE RECEIVED QTH PART OF THE DUPE KEY? -- False (the base): the
+         dupe key is the call as logged, on the band and mode, as it has
+         always been. True says the same call on the same band and mode is a
+         NEW QSO when the QTH it SENT differs: Q118, NY4I 2026-10-17, "New
+         QSO per county" for the New York QSO Party, then "All state
+         parties" -- TContestStateQSOPartyBase answers True (DXLog's
+         DOUBLE_QSO=PER_BAND_MODE_RCVD / _RECINFO for every one of them).
+
+         THE ONE VIRTUAL; DupeKeyQualifier, below, is derived from it and is
+         deliberately not virtual, so a class cannot say "qualified" while
+         answering no qualifier, or the reverse -- the shape CountyLineAllowed
+         uses. Asked of ContestIdentity (the answer must not depend on the
+         station; a class that ever makes it so must move LOGEDIT's callers to
+         ActiveContest). Pinned by uTestNYQPRover. *)
+      function DupeKeyIncludesReceivedQTH: boolean; virtual;
+
+      (* THE TEXT, BESIDES THE CALL, THAT MAKES aQso A NEW QSO FOR DUPES --
+         '' when DupeKeyIncludesReceivedQTH is False, else the QSO's own
+         received QTH: the domestic QTH the contest's file resolved it to,
+         else the text as typed (a DX station's DX), upper case; '' when
+         nothing was received, which is the call alone.
+
+         READ FROM THE RECORD, never from live state ("a logged QSO reads its
+         record"), so the live check at LogContact, the log loader and the
+         rescore build one dupe sheet (LOGEDIT.QSOIsADupe and
+         AddQSOToDupeSheets). A check made BEFORE the exchange exists has no
+         record: LOGEDIT's EditableLog.CallIsADupeBeforeExchange hints rather
+         than blocks ("Hint, don't block", NY4I 2026-10-17). *)
+      function DupeKeyQualifier(const aQso: ContestExchange): string;
+
       (* WHOSE COUNTY IS THIS QSO'S QTH? -- the state (or province) of the
          party county the QSO's QTH names, '' when it names none (a state, a
          province, DX, nothing). Read by ADIFWorkedStationState, below, and
@@ -3352,6 +3382,12 @@ function ContestStripsRoverCountyFromCall(aContest: TContestBase): boolean;
 function ContestLogsSeveralQTHsFromOneEntry(aContest: TContestBase): boolean;
 function ContestAcceptsBlankExchange(aContest: TContestBase): boolean;
 
+(* aContest's TContestBase.DupeKeyQualifier for aQso, and its
+   DupeKeyIncludesReceivedQTH; nil (the classless DUMMYCONTEST) answers ''
+   and False -- the call alone. *)
+function ContestDupeKeyQualifier(aContest: TContestBase; const aQso: ContestExchange): string;
+function ContestDupeKeyIncludesReceivedQTH(aContest: TContestBase): boolean;
+
 (* WHAT aContest's EXCHANGE CARRIES, AND HOW ITS PER-QSO STRING LEADS -- see
    TContestBase.ExchangeCarriesDomesticQTH and its neighbours (M11 S9d). nil
    answers False to each: the classless DUMMYCONTEST ran UnknownExchange,
@@ -4048,6 +4084,30 @@ begin
       end;
 end;
 
+function ContestDupeKeyQualifier(aContest: TContestBase; const aQso: ContestExchange): string;
+begin
+   if aContest = nil then
+      begin
+      Result := '';
+      end
+   else
+      begin
+      Result := aContest.DupeKeyQualifier(aQso);
+      end;
+end;
+
+function ContestDupeKeyIncludesReceivedQTH(aContest: TContestBase): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.DupeKeyIncludesReceivedQTH;
+      end;
+end;
+
 function ContestExchangeCarriesDomesticQTH(aContest: TContestBase): boolean;
 begin
    if aContest = nil then
@@ -4616,6 +4676,26 @@ function TContestBase.SplitsRoverCallOnExport: boolean;
 begin
    (* Not a QSO party: the slash call is the call -- see the declaration. *)
    Result := False;
+end;
+
+function TContestBase.DupeKeyIncludesReceivedQTH: boolean;
+begin
+   (* The call alone is the dupe key -- see the declaration. *)
+   Result := False;
+end;
+
+function TContestBase.DupeKeyQualifier(const aQso: ContestExchange): string;
+begin
+   Result := '';
+   if not DupeKeyIncludesReceivedQTH then
+      begin
+      Exit;
+      end;
+   Result := UpperCase(Trim(string(aQso.DomesticQTH)));
+   if Result = '' then
+      begin
+      Result := UpperCase(Trim(string(aQso.QTHString)));
+      end;
 end;
 
 function TContestBase.ADIFCountyState(const aQso: ContestExchange): string;
