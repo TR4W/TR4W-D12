@@ -1939,7 +1939,6 @@ label
   loop;
 var
   n: integer;
-  WorkedQTHs: string;
  // TempString: Str10;
 begin
   n := 0;
@@ -1975,17 +1974,6 @@ begin
   // is empty, copy the county to the exchange and move focus there so
   // the operator can confirm with another Enter.
   PrefillExchangeFromRoverCallSuffix;
-
-  (* HINT, DON'T BLOCK -- Q118 (NY4I, 2026-10-17). Where the received QTH is
-    part of the dupe key (every state party) the answer depends on the
-    exchange, which may have changed since ShowInformation asked (typed, or
-    prefilled just above), so it is asked again here. Every other contest
-    keeps ShowInformation's answer, exactly as before. *)
-  WorkedQTHs := '';
-  if ContestDupeKeyIncludesReceivedQTH(ContestIdentity(Contest)) then
-     begin
-     tCallWindowStringIsDupe := CallWindowIsADupe(WorkedQTHs);
-     end;
 
   // if tr4w_CallWindowActive then
   if (length(CallWindowString) >= 3) then
@@ -2025,7 +2013,6 @@ begin
      // if WindowDupeCheck then
      Exit;
      end;
-  ShowWorkedFromOtherQTHs(string(CallWindowString), WorkedQTHs);
 
   DisplayGridSquareStatus(CallWindowString);
   ShowStationInformation(CallWindowString);
@@ -9147,19 +9134,15 @@ var
   // TempBand : BandType;
   Index: integer;
   QSOs: integer;
-  WorkedQTHs: string;
 begin
 
   DisplayCountryName(CallWindowString);
 
   DisplayBeamHeading(CallWindowString, '');
 
-  (* HINT, DON'T BLOCK -- Q118 (NY4I, 2026-10-17): a call worked only from
-    another QTH in a state party is not "B4"; it gets the hint, and the
-    logged QSO decides (LOGEDIT.CallWindowIsADupe). *)
-  tCallWindowStringIsDupe := CallWindowIsADupe(WorkedQTHs);
+  tCallWindowStringIsDupe := VisibleLog.CallIsADupe(CallWindowString,
+    ActiveBand, ActiveMode);
   DispalayB4(integer(tCallWindowStringIsDupe));
-  ShowWorkedFromOtherQTHs(string(CallWindowString), WorkedQTHs);
 
   if not CallsignsList.FindCallsign(CallWindowString, Index) then
      begin

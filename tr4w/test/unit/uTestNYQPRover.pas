@@ -46,17 +46,22 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     2. W2TZ/KIN sending KIN, same band and mode, is NOT a dupe and IS a new
        multiplier; W2TZ/STE again on the same band and mode IS a dupe;
        W2TZ/KIN on another band or mode is not.
-    3. Q118: the plain W2TZ sending KIN, then STE, on the same band and mode
-       are two QSOs, each scoring; the plain W2TZ sending KIN again IS a
-       dupe. The call-only hint (VisibleLog.CallIsADupe, what the call
-       window asks before an exchange exists) still says "worked".
+    3. Q118, as narrowed by NY4I on 2026-10-18: after the plain W2TZ
+       sending KIN, the CALL WINDOW'S check (VisibleLog.CallIsADupe on the
+       call window, band and mode -- the expression ShowInformation and
+       WindowDupeCheck evaluate) reports W2TZ a DUPE on the same band and
+       mode; logging W2TZ sending STE is NOT a dupe and scores; W2TZ
+       sending KIN again IS a dupe. "If we consider it a dupe until that
+       second contact with a new county comes in, that is a reasonable
+       compromise."
     4. A rescore of that log marks exactly the dupes the live path marked.
     5. NYQP is in the rover set (TContestStateQSOPartyBase, Q90/Q94); every
        state party, and no other contest, qualifies its dupe key by the
        received QTH ("All state parties").
-    6. "Hint, don't block": before the exchange, a call worked only from
-       other QTHs is not a dupe and is hinted with them; typed one of them,
-       it is. *)
+
+  "Hint, don't block" (2026-10-17) was WITHDRAWN on 2026-10-18 and its
+  pins with it: no check made before the exchange exists consults the
+  received QTH. *)
 unit uTestNYQPRover;
 
 {$I ..\..\src\tr4w.inc}
@@ -214,6 +219,7 @@ var
    savedDomesticByBand: TAdditionalMultByBand;
    savedInHostState: boolean;
    savedActiveMode: ModeType;
+   savedActiveBand: BandType;
    savedCallWindow: CallString;
    savedTable: TDomQTHTable;
    savedList: TCallsignsList;
@@ -224,8 +230,6 @@ var
    accepted: boolean;
    dupe: boolean;
    adif: string;
-   call: CallString;
-   worked: string;
    (* The log as written, and the dupe each QSO was marked with live. *)
    logged: array[0..LOGGED_MAX - 1] of ContestExchange;
    liveDupe: array[0..LOGGED_MAX - 1] of boolean;
@@ -286,6 +290,7 @@ begin
    savedDomesticByBand := DomesticMultByBand;
    savedInHostState := StationInHostState;
    savedActiveMode := ActiveMode;
+   savedActiveBand := ActiveBand;
    savedCallWindow := CallWindowString;
    (* THE ENGINE'S TABLES, swapped for the test's own and put back: the
       domestic table every lookup reads, and both dupe sheets. *)
@@ -348,13 +353,27 @@ begin
       CheckFalse(dupe, '2: W2TZ/KIN on 20 m phone is not a dupe');
       CheckEquals(1, Integer(rx.QSOPoints), '2: a phone QSO scores 1');
 
-      (* 3. The plain call -- Q118, a new QSO per county. *)
+      (* 3. The plain call -- Q118, a new QSO per county; the call window
+         still says DUPE (the 2026-10-18 compromise). *)
       dupe := Enter('W2TZ', 'KIN', Band20, CW, accepted, rx);
       CheckTrue(accepted, '3: plain W2TZ sending KIN is accepted');
       CheckFalse(dupe, '3: plain W2TZ is not a dupe of W2TZ/STE or W2TZ/KIN');
       CheckEquals('W2TZ', string(rx.Callsign), '3: and is stored as W2TZ');
       CheckEquals(2, Integer(rx.QSOPoints), '3: it scores 2');
       CheckFalse(rx.DomesticMult, '3: Kings on 20 m CW is already worked');
+
+      (* THE CALL WINDOW, BEFORE ANY EXCHANGE: the expression ShowInformation
+         (B4, and so AUTO DUPE) and WindowDupeCheck evaluate, on the call
+         window, the active band and the active mode -- the call alone. *)
+      ActiveBand := Band20;
+      ActiveMode := CW;
+      CallWindowString := 'W2TZ';
+      CheckTrue(VisibleLog.CallIsADupe(CallWindowString, ActiveBand, ActiveMode),
+                '3: the call window reports W2TZ a DUPE on 20 m CW');
+      ActiveBand := Band40;
+      CheckFalse(VisibleLog.CallIsADupe(CallWindowString, ActiveBand, ActiveMode),
+                 '3: and not on 40 m, where plain W2TZ was never worked');
+      ActiveBand := Band20;
 
       dupe := Enter('W2TZ', 'STE', Band20, CW, accepted, rx);
       CheckTrue(accepted, '3: plain W2TZ sending STE is accepted');
@@ -364,42 +383,6 @@ begin
       dupe := Enter('W2TZ', 'KIN', Band20, CW, accepted, rx);
       CheckTrue(dupe, '3: plain W2TZ sending KIN again IS a dupe');
       CheckEquals(0, Integer(rx.QSOPoints), '3: and scores 0');
-
-      (* THE CALL-ONLY SHEET still says worked: it is the question asked
-         where no exchange can exist. *)
-      call := 'W2TZ';
-      CheckTrue(VisibleLog.CallIsADupe(call, Band20, CW),
-                '3: the call-only sheet says W2TZ is worked on 20 m CW');
-
-      (* HINT, DON'T BLOCK (Q118, NY4I 2026-10-17): before the exchange,
-         W2TZ is not a dupe and is hinted with the QTHs it was worked from;
-         typed STE or KIN it is a dupe; typed a new county it is not. *)
-      CheckFalse(VisibleLog.CallIsADupeBeforeExchange(call, Band20, CW, '', worked),
-                 'hint: W2TZ with no exchange is not a dupe on 20 m CW');
-      CheckEquals('KIN, STE', worked, 'hint: it was worked from KIN and STE');
-      CheckTrue(VisibleLog.CallIsADupeBeforeExchange(call, Band20, CW, 'STE', worked),
-                'hint: W2TZ with STE typed IS a dupe');
-      CheckEquals('', worked, 'hint: and a dupe carries no hint');
-      CheckTrue(VisibleLog.CallIsADupeBeforeExchange(call, Band20, CW, '599 kin', worked),
-                'hint: W2TZ with 599 kin typed IS a dupe (words, case-blind)');
-      CheckFalse(VisibleLog.CallIsADupeBeforeExchange(call, Band20, CW, 'ALB', worked),
-                 'hint: W2TZ with a new county typed is not a dupe');
-      CheckFalse(VisibleLog.CallIsADupeBeforeExchange(call, Band40, CW, '', worked),
-                 'hint: W2TZ on 40 m, never worked there, is not a dupe');
-      CheckEquals('', worked, 'hint: and has nothing to hint');
-      call := 'W2TZ/STE';
-      CheckFalse(VisibleLog.CallIsADupeBeforeExchange(call, Band20, CW, '', worked),
-                 'hint: W2TZ/STE with no exchange is not blocked');
-      CheckEquals('STE', worked, 'hint: W2TZ/STE was worked from STE');
-
-      (* A CONTEST WITH NO QUALIFIER IS UNCHANGED -- the control: NAQP CW, no
-         state party, asked through the same routine over the same sheet. *)
-      Contest := ContestHandleOf(NAQSOCW);
-      call := 'W2TZ';
-      CheckTrue(VisibleLog.CallIsADupeBeforeExchange(call, Band20, CW, '', worked),
-                'non-party: the call-only answer, a dupe');
-      CheckEquals('', worked, 'non-party: no hint');
-      Contest := ContestHandleOf(NYQP);
 
       (* 4. THE RESCORE of the same log: every dupe sheet emptied, each record
          rescored and re-asked in log order, as tUpdateLog(actRescore). *)
@@ -427,6 +410,7 @@ begin
       DomQTHTable := savedTable;
       CallWindowString := savedCallWindow;
       ActiveMode := savedActiveMode;
+      ActiveBand := savedActiveBand;
       StationInHostState := savedInHostState;
       DomesticMultByBand := savedDomesticByBand;
       Settings.Mult.ByMode := savedMultByMode;

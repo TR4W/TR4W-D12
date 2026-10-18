@@ -497,7 +497,7 @@ closes it; anything else reopens it.
 | Q67 | New Contest rows seeded from the station; the values at OK are the contest's own | not built |
 | Q49 | BCQP: in-province DX contact earns no domestic mult (case-insensitive test) | built 2026-10-17 |
 | Q73 | QSO party: CALL/<valid county> is its own station for dupes (K1AR/NHHIL in NEQP) | already so (measured and pinned 2026-10-17) |
-| Q118 | Every state party: a new QSO per county (QTH) received -- same call, band and mode with a different QTH is not a dupe; before the exchange, hint, don't block; Cabrillo keeps W2TZ/STE as logged | built 2026-10-17 on `TContestStateQSOPartyBase` (`DupeKeyIncludesReceivedQTH`); 7QP/NEQP/IN7QPNE not on that base -- open |
+| Q118 | Every state party: a new QSO per county (QTH) received -- the LOGGED QSO with a different QTH is not a dupe; before the exchange the call window shows DUPE on the call alone, as always (~~hint, don't block~~ WITHDRAWN 2026-10-18); Cabrillo keeps W2TZ/STE as logged | built 2026-10-17 on `TContestStateQSOPartyBase` (`DupeKeyIncludesReceivedQTH`), hint removed 2026-10-18; 7QP/NEQP/IN7QPNE not on that base -- open |
 | Q48 | YB DX: YB entrant counts all prefixes, others YB prefixes only -- already so (DXLog agrees) | no change |
 | Q66 | A Contest Details dialog edits the contest's stored values (seeded station facts, Cabrillo fields); a station change mid-contest offers to copy it | not built |
 | Q64 | POTA shows as "Parks on the Air(r) Logging" | as built |
@@ -534,10 +534,10 @@ closes it; anything else reopens it.
   change. Then, the same day: *"All state parties"* -- every state QSO
   party (every one's DXLog definition says `PER_BAND_MODE_RCVD`, or
   `PER_BAND_MODE_RECINFO` for California, Pennsylvania and Virginia, the
-  same rule with the QTH after a serial) -- and *"Hint, don't block"*:
+  same rule with the QTH after a serial) -- and ~~*"Hint, don't block"*:
   before the exchange is entered, a call worked only from another QTH must
   not be blocked or called a dupe; show a "worked: KIN" hint, and let the
-  logged QSO decide.
+  logged QSO decide.~~ **WITHDRAWN 2026-10-18** -- see the narrowing below.
   **BUILT 2026-10-17:** `TContestBase.DupeKeyIncludesReceivedQTH` (base
   False; `TContestStateQSOPartyBase` True) and the non-virtual
   `DupeKeyQualifier` derived from it -- the record's received QTH
@@ -546,17 +546,39 @@ closes it; anything else reopens it.
   question and the one writer for LogContact, the log loader and the
   rescore; a qualified QSO is kept on `uCallsigns.QualifiedDupes` (a
   per-call dictionary -- a call plus a county overruns a 13-character
-  `CallString`). Before the exchange: `EditableLog.CallIsADupeBeforeExchange`
+  `CallString`). ~~Before the exchange: `EditableLog.CallIsADupeBeforeExchange`
   (and `CallWindowIsADupe`) -- a dupe only when the exchange typed so far
   names a QTH the call was worked from; otherwise the hint
   `TC_YOUALREADYWORKEDIN` ("You already worked %s in %s!!") with those
   QTHs. Asked by WindowDupeCheck, ShowInformation (the B4 indicator, and
   so AUTO DUPE ENABLE CQ's B4), ReturnInSAPOpMode (AUTO DUPE ENABLE S&P)
-  and the inactive radio's dupe panel. Still call-only (colour, no stop):
+  and the inactive radio's dupe panel.~~ (built 2026-10-17, removed
+  2026-10-18 -- below.) Still call-only (colour, no stop):
   the band map and its spots, SCP, the QSO-needs strip, telnet spots,
   WSJT-X, MMTTY. **Not covered:** 7QP, New England and IN7QPNE, which are
   not on the state-party base (their DXLog definitions say
   `PER_BAND_MODE_RCVD` too). Pinned by `uTestNYQPRover`.
+  **NARROWED (NY4I, 2026-10-18):** *"I do not want to completely rework
+  dupe checking for the rare occurrence where a county line op does not
+  send /<county> but switches county. If we consider it a dupe until that
+  second contact with a new county comes in, that is a reasonable
+  compromise."* And: *"while there is an option to block entering a dupe,
+  I rarely use it (most contesters do not anymore). It is easier to just
+  work the dupe than argue the point."* -- the call-window DUPE is
+  information, not a gate, which is why the compromise is cheap.
+  **So "hint, don't block" is WITHDRAWN.** Every check made before the
+  exchange exists -- WindowDupeCheck, ShowInformation (B4, so AUTO DUPE
+  ENABLE CQ), ReturnInSAPOpMode (AUTO DUPE ENABLE S&P) and the inactive
+  radio's dupe panel -- is back to the call alone
+  (`VisibleLog.CallIsADupe`), byte for byte its pre-Q118 line. The LOGGED
+  QSO keeps the rule: `QSOIsADupe` / `AddQSOToDupeSheets` /
+  `QualifiedDupes`, live and on rescore. `CallIsADupeBeforeExchange`,
+  `CallWindowIsADupe`, `ShowWorkedFromOtherQTHs`, the typed-text matcher
+  and `TQualifiedDupeSheet.WorkedQualifiers` are deleted, and the sheet is
+  one flat dictionary keyed call + #0 + QTH (the per-call grouping served
+  only the hint). Pinned: after plain W2TZ sending KIN, the call window
+  says DUPE on 20 m CW; W2TZ sending STE logs as no dupe and scores; W2TZ
+  sending KIN again is a dupe.
 
 - **Q109** (found by the new end-to-end UDP tests, 2026-10-16) The N1MM-style
   UDP **score** message (`dynamicresults`, `SendScoreToUDP`) has four

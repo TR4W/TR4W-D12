@@ -2346,8 +2346,10 @@ type
          record"), so the live check at LogContact, the log loader and the
          rescore build one dupe sheet (LOGEDIT.QSOIsADupe and
          AddQSOToDupeSheets). A check made BEFORE the exchange exists has no
-         record: LOGEDIT's EditableLog.CallIsADupeBeforeExchange hints rather
-         than blocks ("Hint, don't block", NY4I 2026-10-17). *)
+         record and asks the call alone (EditableLog.CallIsADupe), as it
+         always has: a call worked from one county shows DUPE until the QSO
+         from the new county is logged -- NY4I, 2026-10-18, "a reasonable
+         compromise" (Q118). *)
       function DupeKeyQualifier(const aQso: ContestExchange): string;
 
       (* WHOSE COUNTY IS THIS QSO'S QTH? -- the state (or province) of the

@@ -266,21 +266,13 @@ function WindowDupeCheck: boolean;
 var
   RememberTime                          : QWord {TimeRecord};   // GetTickCount64
   Dupe                                  : boolean;
-  WorkedQTHs                            : string;
 begin
   WindowDupeCheck := False;
   if length(CallWindowString) < 2 then Exit;
   WindowDupeCheckCall := CallWindowString;
   BandMapBand := ActiveBand;
   BandMapMode := ActiveMode; {KK1L: 6.69 should be here too for no radio connected.}
-  (* HINT, DON'T BLOCK -- Q118 (NY4I, 2026-10-17). A call worked only from
-    another QTH in a state party is not a dupe here: it gets the hint
-    below, and the logged QSO decides (LOGEDIT.CallWindowIsADupe). *)
-  Dupe := CallWindowIsADupe(WorkedQTHs);
-  if not Dupe then
-     begin
-     ShowWorkedFromOtherQTHs(string(CallWindowString), WorkedQTHs);
-     end;
+  Dupe := VisibleLog.CallIsADupe(CallWindowString, ActiveBand, ActiveMode);
   {if not Dupe then }tCreateAndAddNewSpot(CallWindowString, Dupe, ActiveRadioPtr);
   if Dupe then
      begin
@@ -469,7 +461,6 @@ procedure DupeCheckOnInactiveRadio(Tune: boolean);
 var
 
   isDupe                                : boolean;
-  WorkedQTHs                            : string;
 
 begin
   if not Settings.So2r.TwoRadioMode then
@@ -502,13 +493,7 @@ begin
      begin
      DisplayGridSquareStatus(CallWindowString);
      ShowStationInformation(DupeInfoCall);                                          //gav 4.44.8
-     (* HINT, DON'T BLOCK -- Q118: no exchange exists for the inactive
-       radio's call, so a call worked only from another QTH in a state
-       party is not reported DUPE (EditableLog.CallIsADupeBeforeExchange). *)
-     isDupe := VisibleLog.CallIsADupeBeforeExchange(DupeInfoCall,
-                                                    InActiveRadioPtr.BandMemory,
-                                                    InActiveRadioPtr.ModeMemory,
-                                                    '', WorkedQTHs);
+     isDupe := VisibleLog.CallIsADupe(DupeInfoCall, InActiveRadioPtr.BandMemory, InActiveRadioPtr.ModeMemory);
      if not Tune then
         begin
         tCreateAndAddNewSpot(DupeInfoCall, isDupe, InActiveRadioPtr);
@@ -547,18 +532,6 @@ begin
                            [DupeInfoCall,
                             BandStringsArray[InActiveRadioPtr.BandMemory],
                             ModeStringArray[InActiveRadioPtr.ModeMemory]]);
-        (* WORKED ONLY FROM ANOTHER QTH (Q118): the hint replaces "OK". *)
-        if WorkedQTHs <> '' then
-           begin
-           (* AnsiString: the caption's type; the text is ASCII calls, QTH
-             codes and band/mode names, so the narrowing is bounded. *)
-           TR4WMainForm.pnlDupeInfoCall.Caption := AnsiString(
-              SysUtils.Format(AnsiString(LclText(TC_YOUALREADYWORKEDIN)),
-                              [DupeInfoCall, WorkedQTHs]) + #13#10 +
-              SysUtils.Format(AnsiString('Space bar for %s%s'),
-                              [BandStringsArray[InActiveRadioPtr.BandMemory],
-                               ModeStringArray[InActiveRadioPtr.ModeMemory]]));
-           end;
         if TwoRadioState <> TwoRadiosDisabled then
            begin
            TwoRadioState := CallReady;

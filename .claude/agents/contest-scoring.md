@@ -102,14 +102,18 @@ is `EditableLog.QSOIsADupe(rx)` and its write is `LOGEDIT.AddQSOToDupeSheets`**
 -- LogContact, the loader and the rescore all go through them; never call
 `CallsignsList.AddCallsign` or `CallIsADupe` for a logged QSO again, or the
 qualified sheet (`uCallsigns.QualifiedDupes`) falls out of step. Clear with
-`ClearAllDupeSheets`. **"Hint, don't block"** (NY4I): a check that can STOP the
-operator before the exchange exists asks `EditableLog.CallIsADupeBeforeExchange`
-/ `CallWindowIsADupe` -- WindowDupeCheck, ShowInformation (B4, so AUTO DUPE CQ's
-B4 send), ReturnInSAPOpMode (AUTO DUPE S&P) and the inactive-radio dupe panel; a
-call worked only from other QTHs is not a dupe there and gets
-`ShowWorkedFromOtherQTHs` (`TC_YOUALREADYWORKEDIN`). `CallIsADupe` stays the
-CALL-ONLY answer for colour-only sites (band map, SCP, spots, WSJT-X, MMTTY).
-The bit rule both sheets share is `MarkDupeBits` / `DupeBitsSay`.
+`ClearAllDupeSheets`. **BEFORE THE EXCHANGE EXISTS, THE CALL ALONE (NY4I,
+2026-10-18, narrowing Q118):** *"If we consider it a dupe until that second
+contact with a new county comes in, that is a reasonable compromise"* -- and
+*"It is easier to just work the dupe than argue the point"*: the call-window DUPE
+is information, not a gate. WindowDupeCheck, ShowInformation (B4, so AUTO DUPE
+CQ), ReturnInSAPOpMode (AUTO DUPE S&P), the inactive-radio dupe panel and every
+colour-only site (band map, SCP, spots, WSJT-X, MMTTY) ask `CallIsADupe`, exactly
+their pre-Q118 lines. The 2026-10-17 "hint, don't block" layer
+(`CallIsADupeBeforeExchange`, `CallWindowIsADupe`, `ShowWorkedFromOtherQTHs`,
+`WorkedQualifiers`) is WITHDRAWN and deleted -- do not bring a received-QTH test
+back to a pre-exchange site. `QualifiedDupes` is one flat dictionary keyed call +
+#0 + QTH. The bit rule both sheets share is `MarkDupeBits` / `DupeBitsSay`.
 
 **Measure before you build a refusal.** FD-DX was recorded "not built" and typed
 entry already refused it: a domestic call goes to `FoundDomesticQTH`, and

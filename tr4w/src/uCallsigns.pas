@@ -46,7 +46,7 @@ uses
   LogSCP,
   uTR4WStrings,
   utils_text,
-  Generics.Collections;   (* TObjectList -- the entries, owned; the qualified sheet's dictionaries *)
+  Generics.Collections;   (* TObjectList -- the entries, owned; TDictionary -- the qualified sheet *)
 
 const
   MAXCALLSIGNSINLIST                    = 100000;           // 4.115.6
@@ -117,27 +117,24 @@ type
     property Count: integer read GetCount;
   end;
 
-  (* One station's qualifiers and their dupe bits. *)
-  TQualifierMarks = TDictionary<string, TDupesArray>;
-  (* Qualifiers, as WorkedQualifiers answers them. A string array of THIS
-    unit's string, not TStrings/SysUtils.TStringArray, whose elements are the
-    RTL's AnsiString -- every crossing would be a narrowing conversion. *)
-  TQualifierArray = array of string;
-
   (* THE CALL + QUALIFIER DUPE SHEET -- Q118; see QualifiedDupes below.
 
-    A CLASS OVER DICTIONARIES, NOT A SECOND TCallsignsList: that list keys
+    A CLASS OVER ONE DICTIONARY, NOT A SECOND TCallsignsList: that list keys
     on a CallString (13 characters), and a call plus a county overruns it --
     'KC2ABC/STE SCH' would be cut to 'KC2ABC/STE SC' and collide with SCO
-    and SCU. Here the call (upper-cased: TCallsignsList compares case-blind)
-    keys the station, and each station holds its qualifiers, so "which QTHs
-    was this call worked from on this band and mode" -- the pre-exchange
-    hint, LOGEDIT.EditableLog.CallIsADupeBeforeExchange -- is a lookup, not
-    a walk of the log. The bits are the same TDupesArray, read and written
-    by the same MarkDupeBits / DupeBitsSay. *)
+    and SCU. Here the key is the whole call (upper-cased: TCallsignsList
+    compares case-blind), a #0 that neither a call nor a QTH can hold, and
+    the whole qualifier. The bits are the same TDupesArray, read and written
+    by the same MarkDupeBits / DupeBitsSay.
+
+    FLAT, NOT GROUPED BY CALL (2026-10-18): the per-call index served only
+    the pre-exchange "which QTHs was it worked from" hint, which NY4I
+    withdrew (Q118's narrowing). The one question left is "call AND
+    qualifier on this band and mode", a single lookup. *)
   TQualifiedDupeSheet = class
   private
-    FCalls: TObjectDictionary<string, TQualifierMarks>;
+    FMarks: TDictionary<string, TDupesArray>;
+    class function KeyOf(const aCall: string; const aQualifier: string): string; static;
   public
     constructor Create;
     destructor Destroy; override;
@@ -145,10 +142,6 @@ type
                      Mode: ModeType; Band: BandType);
     function QSOIsDupe(const aCall: string; const aQualifier: string;
                        Band: BandType; Mode: ModeType): boolean;
-    (* THE QUALIFIERS aCall WAS WORKED FROM ON THIS BAND AND MODE, as the
-      dupe rule reads them (DupeBitsSay), sorted. *)
-    function WorkedQualifiers(const aCall: string; Band: BandType;
-                              Mode: ModeType): TQualifierArray;
     procedure ClearDupes;
   end;
 
@@ -159,10 +152,10 @@ var
   CallsignsList                         : TCallsignsList;
   (* THE DUPE SHEET FOR A CONTEST WHOSE DUPE KEY IS MORE THAN THE CALL --
     Q118 (TContestBase.DupeKeyQualifier: a state party's received QTH).
-    Used ONLY for the dupe question of a logged QSO (LOGEDIT.QSOIsADupe)
-    and the pre-exchange hint (EditableLog.CallIsADupeBeforeExchange's
-    WorkedQualifiers), never for partials, the dupe-sheet window or the
-    worked-station count, which stay on CallsignsList. Written beside
+    Used ONLY for the dupe question of a logged QSO (LOGEDIT.QSOIsADupe),
+    never for partials, the dupe-sheet window, the worked-station count or
+    a check made before the exchange exists (the call window, AUTO DUPE,
+    the inactive radio -- NY4I 2026-10-18), which stay on CallsignsList. Written beside
     CallsignsList by LOGEDIT.AddQSOToDupeSheets; cleared with it by
     ClearAllDupeSheets. Empty for every other contest. Created in this
     unit's initialization, freed in its finalization. *)
@@ -824,89 +817,57 @@ begin
      end;
 end;
 
-{ TQualifiedDupeSheet }
+(* TQualifiedDupeSheet *)
 
 constructor TQualifiedDupeSheet.Create;
 begin
   inherited Create;
-  FCalls := TObjectDictionary<string, TQualifierMarks>.Create([doOwnsValues]);
+  FMarks := TDictionary<string, TDupesArray>.Create;
 end;
 
 destructor TQualifiedDupeSheet.Destroy;
 begin
-  FCalls.Free;
+  FMarks.Free;
   inherited Destroy;
+end;
+
+class function TQualifiedDupeSheet.KeyOf(const aCall: string; const aQualifier: string): string;
+begin
+  (* The whole call, upper case, and the whole qualifier: #0 cannot occur
+    in either, so 'W2TZ' + 'STE' can never meet another pair's key. *)
+  Result := UpperCase(aCall) + #0 + aQualifier;
 end;
 
 procedure TQualifiedDupeSheet.AddQSO(const aCall: string; const aQualifier: string;
                                      Mode: ModeType; Band: BandType);
 var
-  marks                                 : TQualifierMarks;
+  key                                   : string;
   dupes                                 : TDupesArray;
 begin
-  if not FCalls.TryGetValue(UpperCase(aCall), marks) then
-     begin
-     marks := TQualifierMarks.Create;
-     FCalls.Add(UpperCase(aCall), marks);
-     end;
-  if not marks.TryGetValue(aQualifier, dupes) then
+  key := KeyOf(aCall, aQualifier);
+  if not FMarks.TryGetValue(key, dupes) then
      begin
      dupes := Default(TDupesArray);
      end;
   MarkDupeBits(dupes, Mode, Band);
-  marks.AddOrSetValue(aQualifier, dupes);
+  FMarks.AddOrSetValue(key, dupes);
 end;
 
 function TQualifiedDupeSheet.QSOIsDupe(const aCall: string; const aQualifier: string;
                                        Band: BandType; Mode: ModeType): boolean;
 var
-  marks                                 : TQualifierMarks;
   dupes                                 : TDupesArray;
 begin
   Result := False;
-  if FCalls.TryGetValue(UpperCase(aCall), marks) and
-     marks.TryGetValue(aQualifier, dupes) then
+  if FMarks.TryGetValue(KeyOf(aCall, aQualifier), dupes) then
      begin
      Result := DupeBitsSay(dupes, Band, Mode);
      end;
 end;
 
-function TQualifiedDupeSheet.WorkedQualifiers(const aCall: string; Band: BandType;
-                                              Mode: ModeType): TQualifierArray;
-var
-  marks                                 : TQualifierMarks;
-  pair                                  : TPair<string, TDupesArray>;
-  count                                 : integer;
-  i                                     : integer;
-begin
-  Result := nil;
-  if not FCalls.TryGetValue(UpperCase(aCall), marks) then
-     begin
-     Exit;
-     end;
-  count := 0;
-  SetLength(Result, marks.Count);
-  for pair in marks do
-     begin
-     if DupeBitsSay(pair.Value, Band, Mode) then
-        begin
-        (* An insertion into the sorted part: a station has a handful. *)
-        i := count;
-        while (i > 0) and (Result[i - 1] > pair.Key) do
-           begin
-           Result[i] := Result[i - 1];
-           Dec(i);
-           end;
-        Result[i] := pair.Key;
-        Inc(count);
-        end;
-     end;
-  SetLength(Result, count);
-end;
-
 procedure TQualifiedDupeSheet.ClearDupes;
 begin
-  FCalls.Clear;
+  FMarks.Clear;
 end;
 
 procedure ClearAllDupeSheets;

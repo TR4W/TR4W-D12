@@ -78,21 +78,14 @@ type
       '' is CallIsADupe on the call as logged, exactly as before; a text is
       the call PLUS that text, on QualifiedDupes (the New York QSO Party's
       received county). Asked of ContestIdentity(Contest) -- see
-      TContestBase.DupeKeyQualifier. *)
+      TContestBase.DupeKeyQualifier.
+
+      A CHECK MADE BEFORE THE EXCHANGE EXISTS (the call window, AUTO DUPE,
+      the inactive radio) asks CallIsADupe, the call alone, as it always
+      has: a call worked from one county shows DUPE until the QSO with the
+      new county is logged (NY4I, 2026-10-18, narrowing Q118 -- "a
+      reasonable compromise"). *)
     function QSOIsADupe(const aRX: ContestExchange): boolean;
-    (* THE DUPE QUESTION BEFORE THE EXCHANGE EXISTS -- "Hint, don't block"
-      (NY4I, 2026-10-17, Q118). For a contest whose dupe key is the call
-      alone it is CallIsADupe, unchanged. Where the received QTH is part of
-      the key (every state party), a call already worked on this band and
-      mode is a dupe HERE only when aExchangeText already names one of the
-      QTHs it was worked from (or when it was worked from none, which is
-      the call-only answer); otherwise it is not a dupe, and aWorkedQTHs
-      lists the QTHs it WAS worked from ("KIN, STE") for the caller to show
-      as a hint. aWorkedQTHs is '' whenever there is nothing to hint.
-      QSOIsADupe decides the logged QSO. *)
-    function CallIsADupeBeforeExchange(var Call: CallString; Band: BandType;
-      Mode: ModeType; const aExchangeText: string;
-      out aWorkedQTHs: string): boolean;
     //    procedure CancelOutMultsThatAreInEditableWindow(var Exchange: ContestExchange);
     //    function CallIsInEditableLog(Call: CallString; Band: BandType; Mode: ModeType): boolean;
 
@@ -216,7 +209,7 @@ procedure SetDXQTHAndPrefix(var RData: ContestExchange);
 (* A LOGGED QSO, ADDED TO THE DUPE SHEETS -- Q118. The ONE writer for the
   three places a QSO reaches the sheets: LogContact, the log loader and the
   rescore. Always CallsignsList.AddCallsign (the station's QSO count, the
-  partials, the call-only dupe hint), with aJustAddToList as each caller
+  partials, the call-only dupe the call window shows), with aJustAddToList as each caller
   passed it; and, where the contest's DupeKeyQualifier answers a text and
   the QSO marks dupes (not aJustAddToList), QualifiedDupes too -- the sheet
   EditableLog.QSOIsADupe reads. THE MODE IS THE RECORD'S, IN ITS DUPE SLOT
@@ -224,14 +217,6 @@ procedure SetDXQTHAndPrefix(var RData: ContestExchange);
   callers cannot record different slots -- LogContact and the loader
   remapped FM themselves and the rescore did not. *)
 procedure AddQSOToDupeSheets(const aRX: ContestExchange; aJustAddToList: boolean);
-(* THE CALL WINDOW'S DUPE QUESTION, before the exchange is logged -- the call
-  and exchange windows on the active band and mode, through
-  EditableLog.CallIsADupeBeforeExchange. The one question the call-window
-  checks ask (WindowDupeCheck, ShowInformation, ReturnInSAPOpMode). *)
-function CallWindowIsADupe(out aWorkedQTHs: string): boolean;
-(* THE HINT for a call worked only from other QTHs: "You already worked
-  <call> in <QTHs>!!" (TC_YOUALREADYWORKEDIN). Shows nothing for ''. *)
-procedure ShowWorkedFromOtherQTHs(const aCall: string; const aWorkedQTHs: string);
 (* Does the active contest have a prefix multiplier at this station? M11 S3. *)
 function DoingPrefixMults: boolean;
 (* Does the active contest have a DX multiplier at this station? M11 S4. *)
@@ -569,111 +554,6 @@ begin
     qualified is a state QSO party, never a grid-square contest (Q118). *)
   Result := (call <> '') and
             QualifiedDupes.QSOIsDupe(string(call), qualifier, aRX.Band, aRX.Mode);
-end;
-
-(* IS ONE OF aCandidates A WORD OF aText? -- the exchange as typed, cut at
-  spaces and slashes (a county line is typed STE/KIN), upper case. A typed
-  alias the file would resolve (STEUBEN for STE) does not match; the answer
-  is the hint, not the block, and the logged QSO is still decided by
-  QSOIsADupe on the resolved record. *)
-function TextNamesOneOf(const aText: string; const aCandidates: TQualifierArray): boolean;
-var
-  text: string;
-  word: string;
-  i: integer;
-
-  function IsCandidate(const aWord: string): boolean;
-  var
-     k: integer;
-  begin
-     Result := False;
-     for k := 0 to High(aCandidates) do
-        begin
-        if aCandidates[k] = aWord then
-           begin
-           Result := True;
-           Exit;
-           end;
-        end;
-  end;
-
-begin
-  Result := False;
-  text := UpperCase(aText) + ' ';
-  word := '';
-  for i := 1 to Length(text) do
-     begin
-     if (text[i] = ' ') or (text[i] = '/') then
-        begin
-        if (word <> '') and IsCandidate(word) then
-           begin
-           Result := True;
-           Exit;
-           end;
-        word := '';
-        end
-     else
-        begin
-        word := word + text[i];
-        end;
-     end;
-end;
-
-function EditableLog.CallIsADupeBeforeExchange(var Call: CallString; Band: BandType;
-  Mode: ModeType; const aExchangeText: string; out aWorkedQTHs: string): boolean;
-var
-  worked: TQualifierArray;
-  i: integer;
-begin
-  aWorkedQTHs := '';
-  Result := CallIsADupe(Call, Band, Mode);
-  if not Result then
-     begin
-     Exit;
-     end;
-  if not ContestDupeKeyIncludesReceivedQTH(ContestIdentity(Contest)) then
-     begin
-     Exit;
-     end;
-  worked := QualifiedDupes.WorkedQualifiers(string(Call), Band, Mode);
-  (* WORKED FROM NO QTH (every earlier QSO received none): the call-only
-    answer stands, as QSOIsADupe gives a QSO that again receives none. *)
-  if Length(worked) = 0 then
-     begin
-     Exit;
-     end;
-  Result := TextNamesOneOf(aExchangeText, worked);
-  if not Result then
-     begin
-     for i := 0 to High(worked) do
-        begin
-        if i > 0 then
-           begin
-           aWorkedQTHs := aWorkedQTHs + ', ';
-           end;
-        aWorkedQTHs := aWorkedQTHs + worked[i];
-        end;
-     end;
-end;
-
-function CallWindowIsADupe(out aWorkedQTHs: string): boolean;
-var
-  call: CallString;
-begin
-  call := CallWindowString;
-  Result := VisibleLog.CallIsADupeBeforeExchange(call, ActiveBand, ActiveMode,
-                                                 string(ExchangeWindowString),
-                                                 aWorkedQTHs);
-end;
-
-procedure ShowWorkedFromOtherQTHs(const aCall: string; const aWorkedQTHs: string);
-begin
-  if aWorkedQTHs = '' then
-     begin
-     Exit;
-     end;
-  QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_YOUALREADYWORKEDIN)),
-                               [aCall, aWorkedQTHs]));
 end;
 
 procedure AddQSOToDupeSheets(const aRX: ContestExchange; aJustAddToList: boolean);
