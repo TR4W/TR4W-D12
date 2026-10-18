@@ -65,12 +65,10 @@ uses
    uContestRegistry,
    PostUnit;
 
-(* A LIST OF THE TEST'S OWN, zeroed by its TYPE's size -- see
-   uTestOffBandCredit.InitList for why never the instance's. *)
+(* A LIST OF THE TEST'S OWN, freed in the test's finally. *)
 procedure InitList(var aList: TCallsignsList);
 begin
-   FillChar(aList, SizeOf(TCallsignsList), 0);
-   aList.Init;
+   aList := TCallsignsList.Create;
 end;
 
 function IsDupe(var aList: TCallsignsList; const aCall: string): boolean;
@@ -124,7 +122,7 @@ begin
       CheckTrue(IsDupe(list, 'W1AW/P'), 'W1AW/P again is a dupe');
       CheckFalse(IsDupe(list, 'W1AW'), 'W1AW/P is not W1AW, as it never was');
    finally
-      list.Done;
+      list.Free;
       Settings.Qso.ByMode := savedByMode;
       Settings.Qso.ByBand := savedByBand;
       Contest := savedContest;

@@ -73,7 +73,7 @@ The contest-specific tail fields, because they depend on MainUnit/trdos
 globals (not the log record):
 
 - `STX_STRING` (built from `MyCall`/`MyFDClass`/`MySection`/`MyPark`)
-- `CNTY` (from `mo.DomList[].FAltName`)
+- `CNTY` (from `mo.DomList.AltName[]`)
 - `CQZ` / `ITUZ` (from `ContestSession.ZoneMult`)
 - `MY_POTA_REF`, `MY_SIG`, `MY_SIG_INFO`
 - `STATION_CALLSIGN`, `CLASS`

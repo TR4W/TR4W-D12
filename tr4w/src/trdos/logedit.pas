@@ -1073,7 +1073,7 @@ begin
         begin
         if mo.PrfList.FindMult(TempRXData.Prefix, Index) then
            begin
-           TempCardinal := $FFFFFFFF xor mo.PrfList.FList[Index].FArray[Mode];
+           TempCardinal := $FFFFFFFF xor mo.PrfList.Dupes[Index][Mode];
              //1000000000000000000000
            Result := TempCardinal or Result;
            end
@@ -1112,12 +1112,12 @@ begin
         if mo.DomList.FindMult(TempDomMult, Index) then
            begin
            if DomesticMultByBand = dmbbAllBand then
-             if mo.DomList.FList[Index].FArray[Mode] > 0 then
+             if mo.DomList.Dupes[Index][Mode] > 0 then
                 begin
                 Exit;
                 end;
 
-           TempCardinal := $FFFFFFFF xor mo.DomList.FList[Index].FArray[Mode];
+           TempCardinal := $FFFFFFFF xor mo.DomList.Dupes[Index][Mode];
            Result := TempCardinal or Result;
 
            end

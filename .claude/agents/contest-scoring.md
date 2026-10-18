@@ -559,6 +559,19 @@ routine is deleted (M11 S9a), and `scan.py`'s `KIND_PARAMETERS` is empty.
 `SESSION` map in the same commit**, or its shape-4 rows vanish from the
 inventory in silence.
 
+## The three dupe/multiplier stores are classes (pointer audit P8, 2026-10-17)
+
+`uMults.mo` (`TMultsObject`), its `PrfList`/`DomList` (`TSortedStringList`)
+and `uCallsigns.CallsignsList` (`TCallsignsList`) are classes over
+`TObjectList`s, created in their units' `initialization` and freed at
+`finalization`; a test makes its own with `Create`/`Free`, never
+`FillChar` + `Init`. Nobody reaches their storage: ask `AltName[]`,
+`Dupes[]`, `Get`, `Count`. **A `TDupesArray` stops at `NoMode`, so any
+mode that indexes one goes through `uSortedStringList.DupeSlot`** (FM ->
+Phone) -- `AddCallsign` indexed it with FM until P8 and wrote into the
+entry's CALL, reached by the rescore, which passes a record's stored mode.
+Pinned by `uTestSortedStringList` and `uTestCallsignsList`.
+
 ## Coordinate with
 
 `contest-factory` (behaviour is migrating there — check which side you are on) ·

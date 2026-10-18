@@ -485,7 +485,7 @@ begin
               begin
               tRemMultsColumnWidth := length(DomName);
               end;
-           mo.DomList.FList[MultIndex].FAltName := Copy(DomQTHString, 2, 32);
+           mo.DomList.AltName[MultIndex] := Copy(DomQTHString, 2, 32);
    //          RemainingDomMults^[NumberRemainingMults - 1].Name := Copy(DomName, 2, 32);
            end;
 

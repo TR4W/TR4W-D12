@@ -2556,10 +2556,10 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
      ( length( rec.QTHString ) <> 2 ) then
      begin
      if mo.DomList.FindMult( rec.QTHString, cntyIdx ) and
-        ( mo.DomList.FList[ cntyIdx ].FAltName <> '' ) then
+        ( mo.DomList.AltName[ cntyIdx ] <> '' ) then
         begin
         Result := Result + EmitADIFField( 'CNTY',
-           stateCode + ',' + mo.DomList.FList[ cntyIdx ].FAltName );
+           stateCode + ',' + mo.DomList.AltName[ cntyIdx ] );
         end;
      end;
 

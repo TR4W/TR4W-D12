@@ -105,9 +105,9 @@ begin
     rmDomestic:
       begin
         if Settings.RemainingMults.ShowDomesticName and
-           (mo.DomList.FList[Index].FAltName <> '') then
+           (mo.DomList.AltName[Index] <> '') then
            begin
-           TempCall := mo.DomList.FList[Index].FAltName;
+           TempCall := mo.DomList.AltName[Index];
            end
         else
            begin

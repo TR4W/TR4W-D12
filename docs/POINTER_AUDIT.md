@@ -358,7 +358,7 @@ nothing automated; needs a [`BENCH_QUEUE.md`](BENCH_QUEUE.md) entry.
 |---|---|---|---|---|---|---|
 | 2.1 | `trdos/logk1ea.pas:498-503`, `New(CWBuffer)` x 4 | CPU keyer element ring | live (CPU / YCCC keyer) | **DONE (P6)**: a private `array` field of `K1EAKeyer` (`CWBuffer: CWBufferType`), read through `BufferedElement` -- no heap, no nil (D4) | medium (keys the radio) | UT `uTestCPUKeyerRing` (written first, against the old code); BENCH (DTR/RTS keying) |
 | 2.2 | `trdos/logscp.pas:305-400` `CellBufferObject.Initialize`/`GoAway`: `New(Buffer1..3)` in POST mode, `GetMem(Buffer1, NumberBytes)` otherwise; `New/Dispose(CallsAlreadySaved)` `:1170/1273`, `:2382/2469`; `New/Dispose(SCPIndexArray)` `:1949/2975` | the TRMASTER cell buffer | live (SCP, initial-exchange lookup) | `TBytes` / dynamic arrays sized by `SetLength`; one allocation strategy instead of two | medium -- **two allocators for one pointer**, chosen by `MaximumMemoryToUse`; `GoAway` must pick the matching free | MATRIX (opens `MATRIX-TRMASTER.DTA`, emits `initialexchange.trmaster.*`); **partial-call SCP itself has no UT** -- **`TSCPCellBuffer` + `uTestLogSCP` DONE 2026-10-17 (P7): the cell buffer is one dynamic array; `New/Dispose(CallsAlreadySaved)` and `SCPIndexArray` are left, in dead or index-table code** |
-| 2.3 | `uCallsigns.pas:426`, `uSortedStringList.pas:261` `ReallocMem(FList, ...)` | hand-rolled growable arrays inside old-style objects | live (`CallsignsList` partials; `mo.PrfList`/`DomList` multipliers) | `array of T` + `SetLength`, or `specialize TList<T>` | medium | `uSortedStringList`: UT `uTestMults`, `uTestHostAreaRule`, `uTestOffBandCredit`, MATRIX, CORPUS. `uCallsigns`: UT `uTestStringCompare`, `uTestOffBandCredit` (partial) |
+| 2.3 | `uCallsigns.pas:426`, `uSortedStringList.pas:261` `ReallocMem(FList, ...)` | hand-rolled growable arrays inside old-style objects | live (`CallsignsList` partials; `mo.PrfList`/`DomList` multipliers) | **DONE (P8 part A)**: classes over `TObjectList` of class items -- see the P8 section | medium | `uSortedStringList`: UT `uTestMults`, `uTestHostAreaRule`, `uTestOffBandCredit`, MATRIX, CORPUS. `uCallsigns`: UT `uTestStringCompare`, `uTestOffBandCredit` (partial) |
 | 2.4 | `trdos/postunit.pas:1346/1351` (`ScoreByHour`), `:2027/2034` (`QSOsByCountryByBand`), `:3340/3345`, `:3440/3447` (`tGenerateSummaryPortionOfCabrilloFile`) | temporary report arrays, `New` ... `Dispose` with **no `try/finally`** | live | a local dynamic array or class instance | low | the Cabrillo summary: CORPUS. The two reports: **none** |
 | 2.5 | `trdos/logstuff.pas:1068`, `trdos/LogCfg.pas:347` | `QTCDataArray` | live (WAE) | a dynamic array owned by the contest | low | **none** for QTC; `docs/QTC_BENCH_HANDOFF.md` is the bench script |
 | 2.6 | `uSettingsModel.pas:5727, 5832, 7058, 7166` `FreeMem(props)` | frees `GetPropList`'s result | live | **keep** -- `TypInfo.GetPropList` allocates and the caller frees; that is the RTL's contract. Add the comment | none | UT `uTestSettingsModel`, `uTestAllSettings` |
@@ -439,9 +439,9 @@ audit's list finds them.
 | 6.4 | `CallDatabase` (`CD`), `CellBufferObject` | `trdos/logscp.pas:94, 131` | no | classes, with 2.2 -- **`CellBufferObject` is `TSCPCellBuffer`, a class, since P7 (2026-10-17); `CallDatabase` stays an old-style object** | MATRIX (TRMASTER initial exchange) |
 | 6.5 | `K1EAKeyer` (`CPUKeyer`) | `trdos/logk1ea.pas:159` | no | a class, with 2.1 | BENCH |
 | 6.6 | `PacketObject` (`Packet`) | `trdos/logpack.pas:71` | no | a class -- **check first whether TNC packet is still a feature** | none |
-| 6.7 | `MultsObject` (`mo`) | `uMults.pas:50` | no, but holds two `TSortedStringList` that DO | a class | UT `uTestMults`, MATRIX, CORPUS |
-| 6.8 | `TSortedStringList` | `uSortedStringList.pas:63` | **yes** | `TStringList` with `Sorted`, or `specialize TList<T>` (with 2.3) | as 6.7 |
-| 6.9 | `TCallsignsList` | `uCallsigns.pas:76` | **yes** | a class (with 2.3) | UT `uTestStringCompare`, `uTestOffBandCredit`; Alt-D screen BENCH |
+| 6.7 | `MultsObject` (`mo`) | `uMults.pas:50` | no, but holds two `TSortedStringList` that DO | **DONE (P8 part A)**: `TMultsObject`, a class owning its lists | UT `uTestMults`, MATRIX, CORPUS |
+| 6.8 | `TSortedStringList` | `uSortedStringList.pas:63` | **yes** | **DONE (P8 part A)**: a class over `TObjectList<TSortedStringItem>` | as 6.7 |
+| 6.9 | `TCallsignsList` | `uCallsigns.pas:76` | **yes** | **DONE (P8 part A)**: a class over `TObjectList<TCallsignEntry>`; UT `uTestCallsignsList` | UT `uTestStringCompare`, `uTestOffBandCredit`; Alt-D screen BENCH |
 | 6.10 | `TDXSpotsList` (`SpotsList`) | `uSpots.pas:66` | **yes** | a class -- **DONE (P8 part B)**: a `class` over `Generics.Collections.TList<TSpotRecord>`; `uTestSpotStore` pins it | UT `uTestSpotStore`, `uTestDXSpotParse`, `uTestSpotAge`; band map BENCH |
 | 6.11 | `NameDictionary` | `trdos/logname.pas:167` | no | **DELETED (P4)** with the file (D5) | COMPILER |
 | 6.12 | `^record` type declarations with **one** mention in `src`/`tr4wserver`/`test` -- the declaration itself (`rg -c -i -w`, raw): `RememberHeap`, `OldInt08Vector`, `OldInt0BVector`, `FourBytesPtr`, `BufferTypePtr`, `PDayTable`, `PPortType`, `TMessageStatePtr`, `DataBaseEntryRecordPtr`, `PMenuRecord`, `SocketPtr`. Two mentions (declaration plus one use, possibly a dead variable): `EntryPointerListPtr`, `SCPIndexArrayPtr`, `MultiMessageListPointer`, `ReminderArrayPointer`, `SharedMemoryPointer`, `RealTimeMessagePointer`, `StringPointer`, `MultiMessage`, `FourBytePtr` | `VC.pas`, `tree.pas`, `logscp.pas`, `logstuff.pas`, `logwind.pas`, `logdvp.pas`, `logk1ea.pas`, `logedit.pas`, `uMenu.pas`, `tr4wserverUnit.pas` | -- | **DONE (P4)**: all deleted except `SCPIndexArrayPtr`, `ReminderArrayPointer` and `StringPointer`, which have a live use (`SCPIndexArray`, `Reminders`, `ExchangeTemplateList`). See the P4 section | COMPILER |
@@ -486,7 +486,7 @@ Owners follow CLAUDE.md's routing table.
 | **P5** | `zonecont` domestic country list -- **DONE 2026-10-16**, see below | 1.2 | live and scoring-critical, but the oracle is the strongest in the tree | MATRIX (change `uContestMatrix.pas:502` with it), CORPUS, FACTORY, UT `uTestContestFactory` / `uTestContestSession` | none | contest-scoring, contest-factory |
 | **P6** | CPU keyer buffer -- **DONE 2026-10-17 for 2.1**, see below; **6.5 still open** | 2.1, 6.5 | D4 nil write + leak | **TEST FIRST**: a UT that feeds `K1EAKeyer.AddCharacterToCWBuffer` (incl. `' '` first) and reads the element ring; then BENCH DTR/RTS keying -- the UT is `uTestCPUKeyerRing`, the bench entry is in `BENCH_QUEUE.md` (2026-10-17) | write the UT | cw-keying |
 | **P7** | SCP cell buffer -- **DONE 2026-10-17**: `TSCPCellBuffer` (a class over one dynamic array, kept between loads), `GetNextEntryAddress` deleted; `uTestLogSCP` written FIRST and green against the pointer buffer, unchanged after (both memory modes: the running program's 160,000 and the unit's 3 x 260,000). Lookup loop (50,000 `GeneratePossibleCallList`): 438-485 ms before, 469-515 ms after -- no difference above noise; the cost is the index and parse work, not the allocation. `logscp` pointer-rule hits **127 -> 97**, measured with `Count-LivePointers.ps1 -Detail` on both trees (the agent's ad-hoc estimate, 103 -> 79, under-counted) | 2.2, 6.4, 7.5 | two allocators for one pointer; live on every partial-call lookup | MATRIX covers the TRMASTER initial-exchange path only. **TEST FIRST**: a UT over the shipped-format fixture (`contest-matrix/MATRIX-TRMASTER.DTA`) asserting partial-call results for a handful of keys | write the UT | file-formats |
-| **P8** | Old-style lists with a VMT | 2.3, 6.7, 6.8, 6.9, 6.10 | objects with a VMT are where `SizeOf` and `FillChar` go wrong (CLAUDE.md, the `0xC0000005` story) | `uSortedStringList`/`MultsObject`: UT `uTestMults` + MATRIX + CORPUS. `TCallsignsList`, `TDXSpotsList`: **TEST FIRST** (partials list; spot store add/age/remove). **Part B (`TDXSpotsList`) DONE 2026-10-17**: `uTestSpotStore` (20 tests, 75 checks) written and green against the old object, then the object became a `class` over `TList<TSpotRecord>` with the same test unchanged; it did not explain the `ERangeError` (that routine, `Display`, no longer exists), and it found that the radio polling thread reads the store, so its two scans now take the lock | write the two UTs | contest-scoring, dx-cluster |
+| **P8** | Old-style lists with a VMT -- **part A DONE 2026-10-17** (2.3, 6.7, 6.8, 6.9; see below); part B (`TDXSpotsList`, 6.10) **DONE 2026-10-17** | 2.3, 6.7, 6.8, 6.9, 6.10 | objects with a VMT are where `SizeOf` and `FillChar` go wrong (CLAUDE.md, the `0xC0000005` story) | `uSortedStringList`/`MultsObject`: UT `uTestMults` + MATRIX + CORPUS. `TCallsignsList`, `TDXSpotsList`: **TEST FIRST** (partials list; spot store add/age/remove). **Part B (`TDXSpotsList`) DONE 2026-10-17**: `uTestSpotStore` (20 tests, 75 checks) written and green against the old object, then the object became a `class` over `TList<TSpotRecord>` with the same test unchanged; it did not explain the `ERangeError` (that routine, `Display`, no longer exists), and it found that the radio polling thread reads the store, so its two scans now take the lock | write the two UTs | contest-scoring, dx-cluster |
 | **P9** | Identity in `Objects[]` / `Data` / `lParam` | 5.1, 5.2, 5.3, 5.4, 5.6 | the `WIN32_ARTIFACT_SWEEP` pattern; display-only, so low crash risk but invisible breakage | **no automated oracle** -- each conversion writes its typed-payload test with the change (the sweep doc's own rule) AND a BENCH entry per window | none | lcl-ui |
 | **P10** | Small puns and terminators | 3.3, 3.4, 3.6, 6.14 | low risk, easy to pin | **TEST FIRST** for 3.3 (short-call pins in `uTestDXSpotParse`); `uTestCTYDAT` for 6.14; 3.4 and 3.6 BENCH | write the 3.3 pins | dx-cluster, cw-keying, multi-op-network, file-formats |
 | **P11** | `RadioObject` -> class | 6.1, 7.6 | the largest item (363 pointer mentions) and the widest blast radius; every radio | UT `uTestRadioStatus` / `uTestCWKeyer` / `uTestStatusAndNotice` / `uTestTCIServer`, then BENCH one rig per verified family (`RADIO_BENCH_STATUS.md`) | P1 done (`BeginPolling` takes `RadioPtr`) | radio-factory, cw-keying |
@@ -615,6 +615,130 @@ every domestic contest, so this deserves a real-contest look.
 What is left in `zonecont` under `C6-ptr-named` is `CharPtr`, an `integer` in
 `GetNumber` -- which, like `ClubCall` and `LastLocateQTH`, has no reader
 anywhere in the tree. Not deleted here; noted for a dead-code pass.
+
+### P8 part A -- the multiplier lists and the worked-calls list, 2026-10-17
+
+Three old-style `object`s are classes now. `TDXSpotsList` (6.10) is part B,
+the dx-cluster side's.
+
+| type | was | is |
+|---|---|---|
+| `uSortedStringList.TSortedStringList` (`mo.PrfList`, `mo.DomList`) | `object` with a VMT over a `ReallocMem`'d `array[0..10000] of TStringItem` behind a public `FList` pointer; `System.Move` to shift, `FillChar` to zero | `class` over a `TObjectList<TSortedStringItem>` (owned); consumers ask `Count`, `Get`, `AltName[]`, `Dupes[]` |
+| `uMults.MultsObject` (`mo`) | `object` held by value in the global, its lists `Init`'d from a bare `begin` block | `TMultsObject`, a `class` that owns its two lists; `mo` is created in `initialization`, freed in `finalization`; `ClearAllMults` assigns `Default()` to three named table types |
+| `uCallsigns.TCallsignsList` (`CallsignsList`) | `object` with a VMT over a `ReallocMem`'d array of records; `Init`/`Done` | `class` over a `TObjectList<TCallsignEntry>` (owned); `Create`/`Free` |
+
+**Why class items, not a `TList<record>`:** FPC 3.2.2's
+`Generics.Collections.TList<T>` has no in-place element access (`Items[]`
+returns a copy; there is no `List` property), and both lists are written in
+place on every QSO. A class entry costs one allocation per key and is written
+where it lives; the insert shifts pointers instead of 48-byte records.
+
+**Value semantics -- every site that relied on them:**
+- `uMults.mo` -- never copied, never passed by value, never `@`-addressed;
+  every reader is `mo.X`, which a class reference reads the same way. Created
+  before any reader runs (the unit's own `initialization`; no unit start-up
+  code reads it -- checked over every unit that names it).
+- `uCallsigns.CallsignsList` -- likewise; it was `Init`'d in a bare `begin`
+  block, now `initialization`/`finalization`.
+- `uTestMults` kept a sheet of its own as a module-level `MultsObject` and
+  `Init`'d its lists once: now created on first use, freed at finalization.
+- `uTestOffBandCredit` and `uTestRoverDupeKey` built local lists with
+  `FillChar(list, SizeOf(TCallsignsList), 0); list.Init` and released them
+  with `Done` -- the shape behind the 2026-10-13/14 `0xC0000005`. Now
+  `Create`/`Free`.
+- Four units indexed the sorted list's storage directly
+  (`mo.DomList.FList[i].FAltName` in `logdom`, `postunit`'s ADIF `CNTY`,
+  `uRemMults`; `.FArray[Mode]` in `logedit`'s need-multiplier hint): repointed
+  to `AltName[i]` and `Dupes[i][Mode]`, one line each.
+
+**Found and fixed on the way (all undefined behaviour in the old code):**
+- **An FM QSO corrupted the call it was logged against.**
+  `TCallsignsList.AddCallsign` indexed the dupe bits with the mode itself, and
+  `TDupesArray` stops at `NoMode`, so `FM` wrote four bytes past the array --
+  into the entry's call. Reproduced with the old record layout: `K1AR` on
+  20 m FM became the 12-character `KqAR` plus NULs, which also breaks the
+  list's order and so every later binary search. The loader and `LogContact`
+  remap FM before calling; **the rescore (`MainUnit.RecomputeQSOScoring`)
+  passes the record's mode as stored, and `GetModeFromExtendedMode` stores
+  FM.** `DisplayDupeSheet` read past it the same way. Both use
+  `uSortedStringList.DupeSlot` now -- the one FM-to-Phone remap, which had
+  been written out nine times across the three stores. Pinned by
+  `uTestCallsignsList.Test_AnFMQSOMarksPhoneAndLeavesTheCallAlone` (a fix, so
+  not run against the old code; the layout probe is what showed the defect).
+- `FindNumber` (the member-number reverse lookup) looped `0..Count`, reading
+  one entry past the end. `AddIniitialExchange` returned an unassigned boolean
+  when the list was full.
+- `DisplayDupeSheet`'s call-area loop read `Call[-1]` under
+  `{$RangeChecks OFF}`, and the `{$RangeChecks ON}` closing it switched range
+  checking on for the rest of `uCallsigns`. Neither index could match; the
+  loop starts at 2 and both directives went.
+- `uMults` declared a record TYPE `DXMultsArray` (unused) beside a FIELD of the
+  same name, and `ClearAllMults` cleared the field with
+  `FillChar(DXMultsArray, SizeOf(DXMultsArray), 0)` -- correct only because a
+  method resolves its own fields first. Deleted; pinned by
+  `Test_MultsClearAllClearsTheWholeDXTable` (the LAST country is cleared).
+
+**One deliberate difference:** an index out of range now raises
+`EArgumentOutOfRangeException` where the array read whatever lay there. Every
+caller passes an index from `FindMult`/`FindCallsign`/`StringIsDupe` or a
+`0..Count-1` loop.
+
+**Tests first.** `uTestSortedStringList` (15 tests: order, duplicates and
+first case, the ten-character key, miss = insertion point, dupe bits per mode
+and band, FM, JustAdd, ClearDupes, Delete/Clear, growth to 12,050 past the old
+type's 10,001 with names travelling under shifts, and `TMultsObject`'s prefix,
+domestic, grid-field-fallback, ClearAll and DX-table paths) and
+`uTestCallsignsList` (12 tests: order, case, the 255 cap, the 13-character
+call, dupe bits under every by-band/by-mode setting, initial exchange
+add/replace/14-character cut, worked count, ClearDupes, FindNumber, the
+possible-calls strip's substring, order, case-sensitivity and nine-call limit,
+and the 100,000-station cap) were written and run GREEN against the unchanged
+code, then pass unchanged after each conversion; only their construct/free
+helpers differ between the shapes. Unit tests 381,666 -> **381,894 / 0
+failed**, plain and `-Checked` (0 heaptrc corruption reports; unfreed 13,464,
+ceiling 13,469). Narrowing **1243 -> 1235** (`uSortedStringList` 2 -> 0,
+`uCallsigns` 7 -> 1; each converts its lookup key once, explicitly). Range 3.
+
+**Performance**, a temporary timing suite (not committed), 5,000 calls / 3,000
+keys, three runs each, a machine shared with other builds (+/-25 %):
+
+| hot path | before (us/op) | after (us/op) |
+|---|---:|---:|
+| `AddCallsign`, building a 5,000-call list | 2.0 - 2.8 | 0.9 - 1.1 |
+| `FindCallsign` | 1.28 - 1.70 | 0.84 - 0.86 |
+| `CallsignIsDupe` | 1.28 - 1.75 | 0.87 - 0.88 |
+| `CreatePartialsList` over 5,000 (per keystroke) | 242 - 320 | 273 - 281 |
+| `AddString`, building 3,000 keys | 1.82 | 0.78 - 1.05 |
+| `StringIsDupe` | 1.20 | 0.80 - 1.02 |
+| `StringIsDupeByIndex`, the remaining-mults scan | 0.002 | 0.003 - 0.007 |
+
+The lookups are faster because the key is converted to its ShortString width
+once rather than at every comparison. The partials strip is unchanged: its
+cost is `Pos` converting each `CallString` to a `UnicodeString`, untouched
+here. The by-index scan pays `TList.GetItem`'s range check (~5 ns an item, so
+~20 us over 3,000 multipliers).
+
+**Counters**, before and after (`Count-LiveMove.ps1` and `Count-LivePointers.ps1`
+rules, run through a port that reproduced the gate's 466 exactly on the
+unchanged tree):
+
+| | before | after |
+|---|---:|---:|
+| live `Move`/`FillChar` | 466 | **453** (`$MOVE_CEILING` lowered) |
+| C1-ptrtype-decl | | -4 |
+| C2-heap | | -2 |
+| C3-deref | | -56 |
+| C6-object-type | | -3 |
+| **pointer hits** | | **-65** |
+
+What is left in `uCallsigns` under the pointer rules is `RadioPtr` and
+`@Radio1`/`@Radio2` in the dupe-sheet seams -- P11's.
+
+**Oracles still to run:** contest matrix (expected identical), corpus,
+factory, rescore. The corpus is blind to scoring and the matrix says "same",
+not "right"; the FM fix changes the dupe sheet only for a log holding FM QSOs
+that is RESCORED -- no fixture has one that I know of, so nothing is expected
+to move.
 
 ### P1 and P2 -- typed code pointers and the 64-bit truncations, 2026-10-16
 

@@ -128,7 +128,7 @@ catch
 # THE LEAK CEILING for -Checked: unfreed heap blocks at exit. Ratchets DOWN only.
 # Measured 2026-10-14 (79,026 tests, 119 suites): 13,469, identical on two runs.
 # -1 would mean "not yet measured" and is reported, never enforced.
-$LEAK_CEILING = 13468
+$LEAK_CEILING = 13463
 
 if ($Checked)
    {

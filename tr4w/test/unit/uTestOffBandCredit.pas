@@ -87,27 +87,18 @@ uses
       host-area rule reads (Q107). *)
    FCONTEST;
 
-(* A LIST OF THE TEST'S OWN -- zeroed first, because a local object's fields
-   are not, and Init grows from the capacity it finds.
+(* A LIST OF THE TEST'S OWN -- created here and freed in each test's finally.
 
-   SizeOf(TCallsignsList), THE TYPE, NEVER SizeOf(aList), THE INSTANCE. This
-   is an old-style `object` WITH VIRTUAL METHODS, so FPC computes the size of
-   an INSTANCE at run time by reading it out of the instance's VMT pointer --
-   and an uninitialised local's VMT pointer is whatever the stack held. The
-   generated code was `mov eax,[aList+12]; mov edx,[eax]`: a read through
-   garbage, then a FillChar of a garbage length over the stack.
-
-   That was the intermittent unit-test crash of 2026-10-13/14 (exit
-   0xC0000005, nothing on stderr, no PASSED line -- the stack was smashed
-   before the framework's handler could run). It depended on what earlier
-   suites had left in that stack slot, which is why an unrelated change made
-   it appear. Building with -gt (trash locals) makes it fail EVERY time, at
-   this line, on the commit before that change too. The type's size is a
-   compile-time constant. *)
+   IT WAS ZEROED BY ITS TYPE'S SIZE AND THEN Init'd, while TCallsignsList was
+   an old-style `object` with virtual methods: FPC computes the size of an
+   INSTANCE of such an object at run time from the instance's VMT pointer,
+   and an uninitialised local's VMT pointer is whatever the stack held --
+   the intermittent unit-test crash of 2026-10-13/14 (exit 0xC0000005), which
+   -gt made fail every time. It is a class since pointer audit P8
+   (2026-10-17), so there is no size to get wrong. *)
 procedure InitList(var aList: TCallsignsList);
 begin
-   FillChar(aList, SizeOf(TCallsignsList), 0);
-   aList.Init;
+   aList := TCallsignsList.Create;
 end;
 
 function IsDupe(var aList: TCallsignsList; aBand: BandType): boolean;
@@ -157,7 +148,7 @@ begin
       CheckFalse(IsDupe(list, Band40), 'per band: 40 m is new');
       CheckFalse(IsDupe(list, Band30), 'per band: 30 m is still no dupe');
    finally
-      list.Done;
+      list.Free;
       Settings.Qso.ByMode := savedByMode;
       Settings.Qso.ByBand := savedByBand;
       Contest := savedContest;
@@ -192,7 +183,7 @@ begin
       CheckTrue(IsDupe(list, Band20), 'a 30 m QSO still marks the station worked');
       CheckTrue(IsDupe(list, Band30), 'and 30 m again is a dupe');
    finally
-      list.Done;
+      list.Free;
       Settings.Qso.ByMode := savedByMode;
       Settings.Qso.ByBand := savedByBand;
       Contest := savedContest;

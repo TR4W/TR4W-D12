@@ -409,7 +409,12 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # (logwind SetUpBandMapEntry and its walkers, logedit UpdateBandMapDupeStatus)
 # and the visible dupe list were deleted, and their conversions with them.
 # Measured by the full build.
-$NARROW_CEILING = 1243
+# 1243 -> 1235, 2026-10-17: POINTER_AUDIT P8 -- TSortedStringList and
+# TCallsignsList are classes; each converts a lookup key to its ShortString
+# width ONCE and explicitly, where every comparison's parameter did it
+# implicitly (uSortedStringList 2 -> 0, uCallsigns 7 -> 1). Measured by a
+# full compile of every unit, file for file against the 1243 build's log.
+$NARROW_CEILING = 1235
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

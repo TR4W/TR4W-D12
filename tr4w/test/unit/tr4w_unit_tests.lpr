@@ -180,6 +180,8 @@ uses
    uTestContestReadiness in 'uTestContestReadiness.pas',
    uMults               in '..\..\src\uMults.pas',
    uTestMults           in 'uTestMults.pas',
+   uTestSortedStringList in 'uTestSortedStringList.pas',
+   uTestCallsignsList   in 'uTestCallsignsList.pas',
    uTestOffBandCredit   in 'uTestOffBandCredit.pas',
    uTestMalformedGrid   in 'uTestMalformedGrid.pas',
    uTestRoverDupeKey    in 'uTestRoverDupeKey.pas',
@@ -831,6 +833,8 @@ begin
    RegisterSuite(TCTYDATTests.Create('CTYDAT'));
    RegisterSuite(TContestReadinessTests.Create('ContestReadiness'));
    RegisterSuite(TMultsTests.Create('Mults'));
+   RegisterSuite(TSortedStringListTests.Create('SortedStringList'));
+   RegisterSuite(TCallsignsListTests.Create('CallsignsList'));
    RegisterSuite(TTestNetFraming.Create('NetFraming'));
    RegisterSuite(TTestADIFExchange.Create('ADIFExchange'));
    RegisterSuite(TCallSignRoutinesTests.Create('CallSignRoutines'));

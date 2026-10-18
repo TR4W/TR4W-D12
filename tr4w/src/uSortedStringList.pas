@@ -14,18 +14,17 @@
  GNU General Public License for more details.
 
  You should have received a copy of the GNU General
-     Public License along with TR4W in  GPL_License.TXT. 
-If not, ref: 
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uSortedStringList;
 
 (* RENAMED FROM uSSL / TSSL ON 2026-09-07, AND THE OLD NAME COST REAL TIME.
 
-  This is a SORTED STRING LIST -- a hand-rolled sorted array of
-  (multiplier, per-band/mode dupe flags, alternate name), with a binary search
-  over it. It is the multiplier and dupe store, and it has nothing whatever to
-  do with TLS.
+  This is a SORTED STRING LIST -- a sorted list of (multiplier, per-band/mode
+  dupe flags, alternate name), with a binary search over it. It is the
+  multiplier and dupe store, and it has nothing whatever to do with TLS.
 
   "uSSL" reads as OpenSSL, and it misled NY4I in the very session that renamed
   it: he read a report that this unit still named Windows and answered "uSSL
@@ -36,6 +35,36 @@ unit uSortedStringList;
 
   NY4I: "It is terribly misnamed. USortedStringList.pas would avoid repeating
   this mistake." *)
+
+(* A CLASS OVER A TObjectList SINCE 2026-10-17 -- pointer audit P8
+  (docs/POINTER_AUDIT.md 2.3, 6.8).
+
+  IT WAS AN OLD-STYLE `object` WITH A VMT (two virtual methods nothing
+  overrode) over a ReallocMem'd `array[0..10000] of TStringItem` reached
+  through a pointer, grown and shifted by hand with System.Move, and cleared
+  with FillChar. An `object` with a VMT is the shape whose instance SizeOf
+  goes through the VMT pointer (CLAUDE.md's 0xC0000005 story), and its
+  storage was public: four units indexed `FList^[i]` directly.
+
+  NOW each multiplier is a TSortedStringItem and the list owns them in a
+  Generics.Collections TObjectList (already linked: zonecont and logdom use
+  the same unit). Consumers ask Count, Get, AltName[] and Dupes[]; nobody
+  reaches the storage. Measured before and after over 3000 keys: the same
+  per-operation cost to within noise (P8 in the audit). A record list would
+  have been one allocation fewer per key, but FPC 3.2.2's TList<T> hands out
+  COPIES of an item and has no in-place access, so every dupe-bit write would
+  have been a read-modify-write of the whole record; a class item is written
+  where it lives.
+
+  SEMANTICS KEPT EXACTLY, and pinned by uTestSortedStringList against the old
+  code first: ordinal case-insensitive order, a key cut to ten characters on
+  insert AND lookup, a miss reporting its insertion point, the first spelling
+  of a key kept, FM sharing Phone's slot, JustAdd marking nothing.
+
+  ONE DIFFERENCE, DELIBERATE: an index out of range now raises
+  (EArgumentOutOfRangeException, from the list) where the old array read
+  whatever lay there. Every caller passes an index it was given by FindMult,
+  StringIsDupe or a 0..Count-1 loop. *)
 {$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
@@ -44,38 +73,32 @@ uses
   VC,
   // Issue #1034: dropped 'TF' (unused here) -- it pulled TF -> MainUnit -> LogStuff,
   // which blocked uSortedStringList (and its uMults consumer) from linking into the test EXE.
-  //Country9,
-  uStringCompare;   (* CompareKeyIgnoreCase -- the shared comparator *)
+  Generics.Collections,   (* TObjectList -- the items, owned *)
+  uStringCompare;         (* CompareKeyIgnoreCase -- the shared comparator *)
 
 type
 
-  PStringItem = ^TStringItem;
-
-  TStringItem = record
-    FMult: Str10;
-    FArray: TDupesArray;
-    FAltName: Str30;
+  (* ONE MULTIPLIER: its key, its dupe bits per mode (a bit per band), and
+    the display name a domestic file gave it ('^' lines, LOGDOM). *)
+  TSortedStringItem = class
+  public
+    Mult: Str10;
+    Dupes: TDupesArray;
+    AltName: Str30;
   end;
 
-  PStringItemList = ^TStringItemList;
-  TStringItemList = array[0..10000] of TStringItem;
-
-  TSortedStringList = object {class}
+  TSortedStringList = class
   private
-    FCount: integer;
-    FCapacity: integer;
-//    FTotalMults: array[ModeType] of integer;
-    procedure Grow;
-  protected
-    function GetCapacity: integer;
-    procedure SetCapacity(NewCapacity: integer);
+    FItems: TObjectList<TSortedStringItem>;
     function CompareStrings(const s1, s2: Str10): integer;
-    procedure InsertMult(Index: integer; const s: Str10; Band: BandType; Mode: ModeType); virtual;
+    procedure InsertMult(Index: integer; const s: Str10);
+    function GetCount: integer;
+    function GetAltName(Index: integer): Str30;
+    procedure SetAltName(Index: integer; const aName: Str30);
+    function GetDupes(Index: integer): TDupesArray;
   public
-    FList: PStringItemList;
-    TotalMults: integer;
-//    destructor Destroy; override;
-    constructor Init;
+    constructor Create;
+    destructor Destroy; override;
     function StringIsDupeByIndex(IndexInList: integer; Band: BandType; Mode: ModeType): boolean;
     function StringIsDupe(const s: string; Band: BandType; Mode: ModeType; var IndexInList: integer): boolean;
     function Get(Index: integer): string;
@@ -83,108 +106,110 @@ type
     procedure Clear;
     procedure Delete(Index: integer);
     procedure ClearDupes;
-    function FindMult(const s: string; var Index: integer): boolean; virtual;
-    property Count: integer read FCount;
-//    property TotalMults: integer read FTotalMults;
-
+    function FindMult(const s: string; var Index: integer): boolean;
+    property Count: integer read GetCount;
+    property AltName[Index: integer]: Str30 read GetAltName write SetAltName;
+    (* A COPY of the item's bits -- read-only; AddString and ClearDupes write. *)
+    property Dupes[Index: integer]: TDupesArray read GetDupes;
   end;
+
+(* FM SHARES PHONE'S SLOT. TDupesArray is array[CW..NoMode] and FM is outside
+  it, so FM must be remapped before it indexes one -- an out-of-bounds write
+  in D7, a range error under checking. One routine for the three dupe stores
+  (this list, uMults' tables, uCallsigns); it was written out nine times. *)
+function DupeSlot(aMode: ModeType): ModeType;
 
 implementation
 
-constructor TSortedStringList.Init;
+function DupeSlot(aMode: ModeType): ModeType;
 begin
-  Grow;
+  Result := aMode;
+  if Result = FM then
+     begin
+     Result := Phone;
+     end;
 end;
 
-{
+constructor TSortedStringList.Create;
+begin
+  inherited Create;
+  FItems := TObjectList<TSortedStringItem>.Create(True);
+end;
+
 destructor TSortedStringList.Destroy;
 begin
+  FItems.Free;
   inherited Destroy;
-  if FCount <> 0 then Finalize(FList^[0], FCount);
-  FCount := 0;
-  SetCapacity(0);
 end;
-}
+
+function TSortedStringList.GetCount: integer;
+begin
+  Result := FItems.Count;
+end;
+
+function TSortedStringList.GetAltName(Index: integer): Str30;
+begin
+  Result := FItems[Index].AltName;
+end;
+
+procedure TSortedStringList.SetAltName(Index: integer; const aName: Str30);
+begin
+  FItems[Index].AltName := aName;
+end;
+
+function TSortedStringList.GetDupes(Index: integer): TDupesArray;
+begin
+  Result := FItems[Index].Dupes;
+end;
 
 function TSortedStringList.AddString(const s: string; Band: BandType; Mode: ModeType; JustAdd: boolean): integer;
-label
-  Add;
 var
-  TempMode                              : ModeType;
+  item                                  : TSortedStringItem;
+  slot                                  : ModeType;
 begin
-  if FindMult(s, Result) then
+  if not FindMult(s, Result) then
      begin
-     goto Add;
+     InsertMult(Result, ShortString(s));
      end;
-  InsertMult(Result, s, Band, Mode);
-  Add:
-  if JustAdd then Exit;
-  // FM shares the Phone dupe/mult slot.  FArray is array[CW..NoMode]; FM
-  // (ordinal 5) is OUTSIDE it, so FArray[FM] is out of bounds -- a range
-  // error under D12 range-checking (a silent past-the-array write in D7).
-  // StringIsDupe already remaps FM->Phone; mirror it here.
-  TempMode := Mode;
-  if TempMode = FM then
+  if JustAdd then
      begin
-     TempMode := Phone;
+     Exit;
      end;
-  FList^[Result].FArray[TempMode] := FList^[Result].FArray[TempMode] or (1 shl Ord(Band));
-  FList^[Result].FArray[Both] := FList^[Result].FArray[Both] or (1 shl Ord(Band));
-  FList^[Result].FArray[TempMode] := FList^[Result].FArray[TempMode] or (1 shl Ord(AllBands));
-  FList^[Result].FArray[Both] := FList^[Result].FArray[Both] or (1 shl Ord(AllBands));
+  slot := DupeSlot(Mode);
+  item := FItems[Result];
+  item.Dupes[slot] := item.Dupes[slot] or (1 shl Ord(Band));
+  item.Dupes[Both] := item.Dupes[Both] or (1 shl Ord(Band));
+  item.Dupes[slot] := item.Dupes[slot] or (1 shl Ord(AllBands));
+  item.Dupes[Both] := item.Dupes[Both] or (1 shl Ord(AllBands));
 end;
 
 procedure TSortedStringList.Clear;
 begin
-  if FCount <> 0 then
-     begin
-
-     FCount := 0;
-     FillChar(TotalMults, SizeOf(TotalMults), 0);
- //    FTotalMults := 0;
-     SetCapacity(0);
-     end;
+  FItems.Clear;
 end;
 
 procedure TSortedStringList.Delete(Index: integer);
 begin
-  if (Index < 0) or (Index >= FCount) then Exit; //Error(@SListIndexError, Index);
- 
-  dec(FCount);
-  if Index < FCount then
+  if (Index < 0) or (Index >= FItems.Count) then
      begin
-     System.Move(FList^[Index + 1], FList^[Index], (FCount - Index) * SizeOf(TStringItem));
+     Exit;
      end;
+  FItems.Delete(Index);
 end;
 
 function TSortedStringList.StringIsDupeByIndex(IndexInList: integer; Band: BandType; Mode: ModeType): boolean;
-var
-  TempMode                              : ModeType;
 begin
-  // FM shares the Phone slot (see AddString): FArray is array[CW..NoMode] and
-  // FM is outside it, so remap before indexing to avoid an out-of-bounds read.
-  TempMode := Mode;
-  if TempMode = FM then
-     begin
-     TempMode := Phone;
-     end;
-  Result := (FList^[IndexInList].FArray[TempMode] and (1 shl Ord(Band))) <> 0;
+  Result := (FItems[IndexInList].Dupes[DupeSlot(Mode)] and (1 shl Ord(Band))) <> 0;
 end;
 
 function TSortedStringList.StringIsDupe(const s: string; Band: BandType; Mode: ModeType; var IndexInList: integer): boolean;
 var
   Index                                 : integer;
-  TempMode                              : ModeType;
 begin
   Result := False;
   if FindMult(s, Index) then
      begin
-     TempMode := Mode;
-     if TempMode = FM then
-        begin
-        TempMode := Phone;
-        end;
-     Result := (FList^[Index].FArray[TempMode] and (1 shl Ord(Band))) <> 0;
+     Result := (FItems[Index].Dupes[DupeSlot(Mode)] and (1 shl Ord(Band))) <> 0;
      IndexInList := Index;
      end
   else
@@ -193,73 +218,52 @@ begin
      end;
 end;
 
+(* THE KEY IS CUT TO TEN CHARACTERS ONCE, here, where the old code had each
+  comparison's Str10 parameter cut it -- the same conversion, made once. *)
 function TSortedStringList.FindMult(const s: string; var Index: integer): boolean;
 var
   l, h, i, c                            : integer;
+  key                                   : Str10;
 begin
   Result := False;
+  key := ShortString(s);
   l := 0;
-  h := FCount - 1;
+  h := FItems.Count - 1;
   while l <= h do
      begin
      i := (l + h) shr 1;
-     c := CompareStrings(FList^[i].FMult, s);
-     if c < 0 then l := i + 1 else
-                                 begin
-                                 h := i - 1;
-                                 if c = 0 then
-                                    begin
-                                    Result := True;
-                                    l := i;
-                                    end;
-                                 end;
+     c := CompareStrings(FItems[i].Mult, key);
+     if c < 0 then
+        begin
+        l := i + 1;
+        end
+     else
+        begin
+        h := i - 1;
+        if c = 0 then
+           begin
+           Result := True;
+           l := i;
+           end;
+        end;
      end;
   Index := l;
 end;
 
 function TSortedStringList.Get(Index: integer): string;
 begin
-  Result := FList^[Index].FMult;
+  Result := string(FItems[Index].Mult);
 end;
 
-function TSortedStringList.GetCapacity: integer;
-begin
-  Result := FCapacity;
-end;
-
-procedure TSortedStringList.Grow;
+(* A NEW ITEM IS ZERO -- a class instance's fields are, which is what the
+  FillChar over the array slot did. *)
+procedure TSortedStringList.InsertMult(Index: integer; const s: Str10);
 var
-  delta                                 : integer;
+  item                                  : TSortedStringItem;
 begin
-  if FCapacity > 64 then delta := FCapacity div 4 else
-    if FCapacity > 8 then delta := 16 else
-                                         begin
-                                         delta := 4;
-                                         end;
-  SetCapacity(FCapacity + delta);
-end;
-
-procedure TSortedStringList.InsertMult(Index: integer; const s: Str10; Band: BandType; Mode: ModeType);
-begin
-  if FCount = FCapacity then
-     begin
-     Grow;
-     end;
-  if Index < FCount then
-     begin
-     System.Move(FList^[Index], FList^[Index + 1],
-       (FCount - Index) * SizeOf(TStringItem));
-     end;
-
-  FillChar(FList^[Index], SizeOf(FList^[Index]), 0);
-  FList^[Index].FMult := s;
-  inc(FCount);
-end;
-
-procedure TSortedStringList.SetCapacity(NewCapacity: integer);
-begin
-  ReallocMem(FList, NewCapacity * SizeOf(TStringItem));
-  FCapacity := NewCapacity;
+  item := TSortedStringItem.Create;
+  item.Mult := s;
+  FItems.Insert(Index, item);
 end;
 
 function TSortedStringList.CompareStrings(const s1, s2: Str10): integer;
@@ -299,12 +303,17 @@ end;
 procedure TSortedStringList.ClearDupes;
 var
   Index                                 : integer;
+  m                                     : ModeType;
+  item                                  : TSortedStringItem;
 begin
-  for Index := 0 to FCount - 1 do
+  for Index := 0 to FItems.Count - 1 do
      begin
-     FillChar(FList^[Index].FArray, SizeOf(TDupesArray), 0);
+     item := FItems[Index];
+     for m := Low(TDupesArray) to High(TDupesArray) do
+        begin
+        item.Dupes[m] := 0;
+        end;
      end;
 end;
 
 end.
-

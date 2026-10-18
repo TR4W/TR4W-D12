@@ -42,18 +42,34 @@ const
   ZoneMultArraySize                     = 100;
 
 type
-  DXMultsArray = record
-    dxmaArray: TDupesArray;
-    dxmaVisible: boolean;
-  end;
+  (* THE THREE TABLES, NAMED so ClearAllMults can assign Default() to each
+    rather than FillChar it. A record TYPE called DXMultsArray (28 bytes,
+    used nowhere) stood here beside a FIELD of the same name -- and the
+    FillChar's SizeOf(DXMultsArray) resolved to the field only because a
+    method searches its own fields first. Deleted, with the ambiguity
+    (uTestSortedStringList pins that the last country is cleared). *)
+  TDXMultsTable = array[0..MaxCountries - 1] of TDupesArray;
+  TZoneMultsTable = array[0..ZoneMultArraySize] of TDupesArray;
+  TMultTotals = array[BandType, CW..Both, RemainingMultiplierType] of Word;
 
-  MultsObject = object
-    DXMultsArray: array[0..MaxCountries - 1] of TDupesArray;
-    ZoneMultsArray: array[0..ZoneMultArraySize] of TDupesArray;
+  (* THE MULTIPLIER SHEET -- a CLASS since 2026-10-17 (pointer audit P8,
+    docs/POINTER_AUDIT.md 6.7). It was an old-style `object` held by value in
+    the global `mo`, with its two sorted lists Init'd from this unit's
+    initialization block. Now `mo` is created there and freed at
+    finalization, and the instance owns its lists. Nothing ever copied `mo`
+    or took its address, so no caller depended on the value semantics; the
+    tests that kept a sheet of their own create one. *)
+  TMultsObject = class
+  public
+    DXMultsArray: TDXMultsTable;
+    ZoneMultsArray: TZoneMultsTable;
     PrfList: TSortedStringList;
     DomList: TSortedStringList;
 
-    MTotals: array[BandType, CW..Both, RemainingMultiplierType] of Word;
+    MTotals: TMultTotals;
+
+    constructor Create;
+    destructor Destroy; override;
 
     procedure IncrementTotals(Band: BandType; Mode: ModeType; m: RemainingMultiplierType);
     procedure ClearAllMults;
@@ -80,7 +96,8 @@ type
   end;
 
 var
-  mo                                    : MultsObject;
+  (* Created in this unit's initialization, freed in its finalization. *)
+  mo                                    : TMultsObject;
   
 implementation
 
@@ -96,14 +113,25 @@ implementation
 var
   logger: TLogLogger;
 
-procedure MultsObject.IncrementTotals(Band: BandType; Mode: ModeType; m: RemainingMultiplierType);
+constructor TMultsObject.Create;
+begin
+  inherited Create;
+  PrfList := TSortedStringList.Create;
+  DomList := TSortedStringList.Create;
+end;
+
+destructor TMultsObject.Destroy;
+begin
+  DomList.Free;
+  PrfList.Free;
+  inherited Destroy;
+end;
+
+procedure TMultsObject.IncrementTotals(Band: BandType; Mode: ModeType; m: RemainingMultiplierType);
 begin
   // MTotals mode dim is CW..Both; FM (ordinal 5) is outside it -> remap to
   // Phone (FM counts as Phone) so MTotals[Band, FM, m] is not out of bounds.
-  if Mode = FM then
-     begin
-     Mode := Phone;
-     end;
+  Mode := DupeSlot(Mode);
   inc(MTotals[Band, Mode, m]);
 
   if Mode <> Both then
@@ -122,19 +150,22 @@ begin
       end;
 end;
 
-procedure MultsObject.ClearAllMults;
+procedure TMultsObject.ClearAllMults;
 begin
-  FillChar(ZoneMultsArray, SizeOf(ZoneMultsArray), 0);
-  FillChar(DXMultsArray, SizeOf(DXMultsArray), 0);
-  FillChar(MTotals, SizeOf(MTotals), 0);
+  ZoneMultsArray := Default(TZoneMultsTable);
+  DXMultsArray := Default(TDXMultsTable);
+  MTotals := Default(TMultTotals);
   PrfList.ClearDupes;
   DomList.ClearDupes;
 end;
 
-procedure MultsObject.SetZnMult(Zone: Word; Band: BandType; Mode: ModeType);
+procedure TMultsObject.SetZnMult(Zone: Word; Band: BandType; Mode: ModeType);
 begin
-  if Mode = FM then Mode := Phone;   // FM shares the Phone slot (TDupesArray is CW..NoMode)
-  if not (Zone in [0..ZoneMultArraySize]) then Exit;
+  Mode := DupeSlot(Mode);   // FM shares the Phone slot (TDupesArray is CW..NoMode)
+  if not (Zone in [0..ZoneMultArraySize]) then
+     begin
+     Exit;
+     end;
   ZoneMultsArray[Zone][Mode] := ZoneMultsArray[Zone][Mode] or (1 shl Ord(Band));
   ZoneMultsArray[Zone][Both] := ZoneMultsArray[Zone][Both] or (1 shl Ord(Band));
   ZoneMultsArray[Zone][Mode] := ZoneMultsArray[Zone][Mode] or (1 shl Ord(AllBands));
@@ -142,10 +173,13 @@ begin
   IncrementTotals(Band, Mode, rmZone);
 end;
 
-procedure MultsObject.SetDXMult(Cntr: Word; Band: BandType; Mode: ModeType);
+procedure TMultsObject.SetDXMult(Cntr: Word; Band: BandType; Mode: ModeType);
 begin
-  if Mode = FM then Mode := Phone;   // FM shares the Phone slot (TDupesArray is CW..NoMode)
-  if Cntr >= CTY.ctyNumberCountries then Exit;
+  Mode := DupeSlot(Mode);   // FM shares the Phone slot (TDupesArray is CW..NoMode)
+  if Cntr >= CTY.ctyNumberCountries then
+     begin
+     Exit;
+     end;
 
   DXMultsArray[Cntr][Mode] := DXMultsArray[Cntr][Mode] or (1 shl Ord(Band));
   DXMultsArray[Cntr][Both] := DXMultsArray[Cntr][Both] or (1 shl Ord(Band));
@@ -154,7 +188,7 @@ begin
   IncrementTotals(Band, Mode, rmDX);
 end;
 
-procedure MultsObject.SetPxMult(const Prfx: string; Band: BandType; Mode: ModeType);
+procedure TMultsObject.SetPxMult(const Prfx: string; Band: BandType; Mode: ModeType);
 begin
   // (dropped the ShortString null-terminator Prfx[Ord(Prfx[0])+1]:=#0 -- a native
   //  string carries its own length, and uSortedStringList.AddString now takes a string.)
@@ -162,16 +196,16 @@ begin
   IncrementTotals(Band, Mode, rmPrefix);
 end;
 
-procedure MultsObject.SetDmMult(const Dom: string; Band: BandType; Mode: ModeType);
+procedure TMultsObject.SetDmMult(const Dom: string; Band: BandType; Mode: ModeType);
 begin
   // (dropped the ShortString null-terminator; native string + uSortedStringList.AddString(string).)
   DomList.AddString(Dom, Band, Mode, False);
   IncrementTotals(Band, Mode, rmDomestic);
 end;
 
-function MultsObject.IsZnMult(Zone: Word; Band: BandType; Mode: ModeType): boolean;
+function TMultsObject.IsZnMult(Zone: Word; Band: BandType; Mode: ModeType): boolean;
 begin
-  if Mode = FM then Mode := Phone;   // FM shares the Phone slot (TDupesArray is CW..NoMode)
+  Mode := DupeSlot(Mode);   // FM shares the Phone slot (TDupesArray is CW..NoMode)
   if Zone in [0..ZoneMultArraySize] then
      begin
      Result := (ZoneMultsArray[Zone][Mode] and (1 shl Ord(Band))) = 0
@@ -182,9 +216,9 @@ begin
      end;
 end;
 
-function MultsObject.IsDXMult(Country: Word; Band: BandType; Mode: ModeType): boolean;
+function TMultsObject.IsDXMult(Country: Word; Band: BandType; Mode: ModeType): boolean;
 begin
-  if Mode = FM then Mode := Phone;   // FM shares the Phone slot (TDupesArray is CW..NoMode)
+  Mode := DupeSlot(Mode);   // FM shares the Phone slot (TDupesArray is CW..NoMode)
   if Country < MaxCountries then
      begin
      Result := (DXMultsArray[Country][Mode] and (1 shl Ord(Band))) = 0
@@ -195,19 +229,19 @@ begin
        end;
 end;
 
-function MultsObject.IsPxMult(const Prfx: string; Band: BandType; Mode: ModeType): boolean;
+function TMultsObject.IsPxMult(const Prfx: string; Band: BandType; Mode: ModeType): boolean;
 var
   Index                                 : integer;
 begin
   Result := not PrfList.StringIsDupe(Prfx, Band, Mode, Index);
   if Index = -1 then
      begin
-     logger.debug('In MultsObject.IsPxMult, for Prfx of ' + Prfx + ', Result = true');
+     logger.debug('In TMultsObject.IsPxMult, for Prfx of ' + Prfx + ', Result = true');
      Result := True;
      end;
 end;
 
-function MultsObject.IsDmMult(const Dom: string; Band: BandType; Mode: ModeType; aKeyedOnGridField: boolean): boolean;
+function TMultsObject.IsDmMult(const Dom: string; Band: BandType; Mode: ModeType; aKeyedOnGridField: boolean): boolean;
 var
   Index                                 : integer;
   InsertPos                             : integer;
@@ -252,12 +286,12 @@ begin
 
 end;
 
-procedure MultsObject.FillRemMultsBytes(rm: RemainingMultiplierType);
+procedure TMultsObject.FillRemMultsBytes(rm: RemainingMultiplierType);
 begin
 
 end;
 
-procedure MultsObject.FillVisibleBytes(aContest: TContestBase);
+procedure TMultsObject.FillVisibleBytes(aContest: TContestBase);
 label
   1;
 var
@@ -303,11 +337,13 @@ begin
      end;
 end;
 
-begin
+initialization
   logger := TLogLogger.GetLogger('uMults');   // Issue #1034: own logger (was MainUnit.logger)
-  mo.PrfList.Init;
-  mo.DomList.Init;
-//  mo.PrfList := TSortedStringList.Create;
-//  mo.DomList := TSortedStringList.Create;
+  mo := TMultsObject.Create;
+
+finalization
+  mo.Free;
+  mo := nil;
+
 end.
 

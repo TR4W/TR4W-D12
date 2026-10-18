@@ -69,7 +69,10 @@ param(
 # count falls, lower this to the new number in the same commit; never raise it.
 # Split a clear into field initialisation rather than raising it. The count
 # went 387 -> 464 in four weeks, all new FillChar, before anything held it.
-$MOVE_CEILING = 466
+# 466 -> 453, 2026-10-17: P8 -- TSortedStringList, TMultsObject and
+# TCallsignsList are classes over TObjectList; their hand shifts and clears
+# went, and so did the tests' FillChar of an object by its type's size.
+$MOVE_CEILING = 453
 # Floors for -Gate: the tree has ~800 Pascal files and several hundred live
 # calls, so fewer than these means the reader failed, not that the tree is clean.
 $FILE_FLOOR  = 300
