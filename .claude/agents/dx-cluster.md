@@ -63,10 +63,20 @@ You own how spots reach TR4W and how they are shown.
   managed fields; a raw byte shift does not. The same trap exists wherever a
   record carries an `AnsiString`, not only here.
 
+- **`SpotsList` is a `class` over `TList<TSpotRecord>` (2026-10-17), pinned by
+  `uTestSpotStore`.** Only the MAIN thread changes it (the cluster reader queues
+  events; `ProcessDX` and so `AddSpot` run from the drain). The RADIO POLLING
+  thread READS it -- `DisplayCallsignOnThisFreq`, `TuneDupeCheck` -- so those
+  two scans hold `FCriticalSection`; a list that shrinks under an unlocked
+  reader now raises (the list range-checks) instead of reading stale bytes.
+  `Items[i]` of a record list is a COPY: edit by read, change, write back.
+
 ## Open
 
 **`uSpots` `ERangeError` is STILL OPEN** — see the `winter-fd-corpus-crash`
-memory. Do not close it from inspection.
+memory. Do not close it from inspection. The routine it named,
+`TDXSpotsList.Display`, no longer exists, and the 2026-10-17 conversion to a
+list class did not reproduce or explain it.
 
 ## Test assets
 

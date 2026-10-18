@@ -72,6 +72,30 @@ this way too**, so the same checks cover it.
       `tr4w.log`.
 - [ ] Exit TR4W: no `worker thread` exception line in `tr4w.log`.
 
+## Added 2026-10-17 -- THE SPOT STORE IS A CLASS OVER A GENERIC LIST (pointer audit P8, part B)
+
+`uTestSpotStore` pins the store itself (add, same-frequency replace, order,
+find, delete, clear, 600-spot growth, ageing and the minutes-versus-seconds
+decay, dupe and repaint bookkeeping). It cannot reach the band map window, the
+cluster, or the radio polling thread, which now takes the store's lock.
+
+- [ ] **Spots arrive, age and leave.** Connect to a cluster (Telnet window)
+      with the band map open. EXPECT: spots appear, in frequency order, within
+      a repaint tick of arriving; with `BAND MAP DECAY TIME` set to 2 they fall
+      off one at a time about two minutes after THEY arrived, not all in one
+      tick. The band map's delete removes the right row; its clear empties
+      the map and new spots still arrive afterwards.
+- [ ] **Click-to-tune.** Click a spot: the radio tunes to that spot's
+      frequency and the call window fills (search-and-pounce). Spin the VFO
+      across a spot's frequency with the band map open: the call window shows
+      that spot's call inside the guard band and clears outside it. With
+      the Tune Alt-D option on and a second radio, tuning the INACTIVE radio onto a
+      spot fills the Alt-D call. These last two run on the radio polling
+      thread and are the paths that gained the lock -- watch for a stall or an
+      exception in `tr4w.log` while spots are arriving and being deleted.
+- [ ] **Persistence.** Close and reopen TR4W with spots on the map: they come
+      back (SaveBandMap / LoadBandMap), still ordered, with their ages kept.
+
 ---
 
 ## Added 2026-10-17 -- BATCH C RULINGS (Q9, Q32, Q37, Q73, Q81)

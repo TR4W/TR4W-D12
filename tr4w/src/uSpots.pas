@@ -36,40 +36,56 @@ uses
   LogRadio,
   LogSCP,
   Tree,
-  SyncObjs;
+  SyncObjs,
+  Generics.Collections;
 
 type
 
-  (* A REAL DYNAMIC ARRAY (2026-09-14).
+  (* THE SPOT STORE'S CONTAINER (2026-10-17).
 
-    This was
+    History, because each step removed a hand-managed thing:
 
         PSpotsList = ^TSpotsList;
-        TSpotsList = array[0..1000] of TSpotRecord;
+        TSpotsList = array[0..1000] of TSpotRecord;     (a pointer to a block)
 
-    -- a POINTER to a fixed 1001-element block, ReallocMem'd to whatever size
-    was wanted and indexed as FList[i]. It is a dynamic array written by hand:
-    the declared bound was a fiction (nothing stopped index 1500, and nothing
-    would have said so), the capacity lived in a separate field, and growing
-    and shifting were done with ReallocMem and System.Move.
+    became `array of TSpotRecord` on 2026-09-14 (NY4I: "the band map which uses
+    an array for an unknown reason FList[i] in bandmap code. All that has to go
+    away."), and that is now a generic list. The list owns the count, the
+    capacity and the shifting of records on insert and delete, so this unit no
+    longer carries Grow / SetCapacity / an indexed-copy loop of its own, and an
+    index outside the list RAISES instead of reading whatever was there.
 
-    NY4I, 2026-09-14: "the band map which uses an array for an unknown reason
-    FList[i] in bandmap code. All that has to go away."
+    A list of RECORDS returns a copy from Items[], so a field cannot be assigned
+    through it: every in-place edit below reads the record, changes the copy and
+    writes it back. TSpotRecord holds only ShortStrings, AnsiChar arrays and
+    ordinals, so the copy is a plain byte copy and nothing managed is involved. *)
+  TSpotsList = TList<TSpotRecord>;
 
-    `array of TSpotRecord` IS the same structure with the compiler doing the
-    bookkeeping: SetLength grows it, Length knows how big it is, the bounds are
-    real, and FList[i] needs no dereference. TSpotRecord holds no managed
-    fields -- ShortStrings, AnsiChar arrays and ordinals -- so nothing about
-    the element copies changes. *)
-  TSpotsList = array of TSpotRecord;
+  (* WHICH THREAD TOUCHES THE STORE -- the invariant this class keeps.
 
-  TDXSpotsList = object {class}
+    The MAIN thread is the only one that CHANGES the list: the cluster's reader
+    thread never touches it (it queues events; TClusterEvents.Drain runs
+    ProcessDX, and so AddSpot, on the main thread via QueueAsyncCall), uNet's
+    DX-spot arm and LoadBandMap run on the main thread, and the ageing tick, the
+    band map form's Delete / Clear and the dupe / multiplier refreshes are all
+    main-thread work.
+
+    The RADIO POLLING thread READS it: uRadioPolling calls
+    DisplayCallsignOnThisFreq and TuneDupeCheck, and RequestRepaint. Those two
+    scans therefore take FCriticalSection -- a list that shrinks under an unlocked
+    reader would otherwise raise out of the poller -- and every mutator takes it
+    for the part that changes the list. The main thread's own reads (Get,
+    BuildVisibleSpots, IndexOfSpot) are unlocked, which is safe exactly because
+    only the main thread writes.
+
+    The token is bumped from either thread with a plain Inc. A lost increment
+    needs two bumps to collide and still leaves the token different from the
+    painted one, so the only cost would be one coalesced repaint. *)
+  TDXSpotsList = class
 
   private
     FList: TSpotsList;
-    FCount{, j}: integer;
     FCurrentCursorFreq: integer;
-    FCapacity: integer;
     FCriticalSection: TCriticalSection;
     // THE REPAINT TOKEN.  Bumped by every mutator and by RequestRepaint; the
     // band map compares it against what it last painted.  It replaces the
@@ -79,17 +95,14 @@ type
     // spot that had not arrived.  A counter cannot be missed or double-cleared.
     FRepaintToken: cardinal;
     FPaintedToken: cardinal;
-    procedure Grow;
+    function GetCount: integer;
 
   protected
-    function GetCapacity: integer;
-    procedure SetCapacity(NewCapacity: integer);
     function CompareStrings(const s1, s2: CallString): integer;
-    procedure InsertSpot(Index: integer; const Spot: TSpotRecord); virtual;
 
   public
-    //destructor Destroy; override;
-    constructor Init;
+    constructor Create;
+    destructor Destroy; override;
     function Get(Index: integer): TSpotRecord;
     function AddSpot(var Spot: TSpotRecord; SendToNetwork: boolean): integer;
     procedure Clear;
@@ -105,8 +118,8 @@ type
     //
     // FList INDEXES, NOT COPIES, because the Win32 list box stores them as item
     // data and reads them back through Get().  A caller that keeps them past
-    // the call must copy: InsertSpot Moves the array, so an insert renumbers
-    // every index above it.  The LCL form takes copies immediately.
+    // the call must copy: an insert shifts the list, so it renumbers every
+    // index above it.  The LCL form takes copies immediately.
     function BuildVisibleSpots(var aIndex: array of integer;
                                var aCursorRow: integer): integer;
     procedure Delete(Index: integer);
@@ -117,8 +130,7 @@ type
     procedure DisplayCallsignOnThisFreq(Freq: integer);
     procedure TuneDupeCheck(Freq: integer);
     function FindSpot(const Spot: TSpotRecord; var Index: integer): boolean;
-      virtual;
-    property Count: integer read FCount;
+    property Count: integer read GetCount;
 
     // Ask for a repaint WITHOUT changing the list -- the VFO moved, or a filter
     // was toggled.  Mutators do this for themselves; this is for the callers
@@ -132,7 +144,7 @@ type
     procedure MarkPainted;
 
     // WHERE A SPOT IS NOW, found by identity rather than trusted from an index
-    // the caller kept.  InsertSpot Moves the array, so an index taken a quarter
+    // the caller kept.  An insert shifts the list, so an index taken a quarter
     // second ago may name a different spot -- which is exactly how the old band
     // map could paint, and delete, the wrong row.  Frequency AND callsign,
     // because the list may legitimately hold the same call twice on different
@@ -171,21 +183,28 @@ end;
 
 { TStringList }
 
-constructor TDXSpotsList.Init;
+constructor TDXSpotsList.Create;
 begin
-  Grow;
+  inherited Create;
+  FList := TSpotsList.Create;
   FCriticalSection := TCriticalSection.Create;
+  FCurrentCursorFreq := -1;
 end;
 
-//destructor TDXSpotsList.Destroy;
-//begin
-//   FreeAndNil(FCriticalSection);
-//end;
+destructor TDXSpotsList.Destroy;
+begin
+  FreeAndNil(FCriticalSection);
+  FreeAndNil(FList);
+  inherited Destroy;
+end;
+
+function TDXSpotsList.GetCount: integer;
+begin
+  Result := FList.Count;
+end;
 
 function TDXSpotsList.AddSpot(var Spot: TSpotRecord; SendToNetwork: boolean):
   integer;
-label
-  add;
 var
   i: integer;
   //ie: str80;
@@ -213,7 +232,7 @@ begin
          begin
          exit; // 4.105.14
          end;
-  for i := 0 to FCount - 1 do
+  for i := 0 to FList.Count - 1 do
      begin
      // 4.102.5 - filter the added spots to match the actual bm display
 
@@ -276,18 +295,23 @@ begin
         end;
      end;
 
-  if FindSpot(Spot, Result) then
-     begin
-     goto Add;
-     end;
+  // A spot on a frequency the list already holds REPLACES that entry (FindSpot
+  // keys on frequency alone); otherwise it goes in at the insertion point.  The
+  // search is inside the lock with the change it decides, so the index it
+  // returns cannot go stale between the two.
   FCriticalSection.Enter;
   try
-     InsertSpot(Result, Spot);
+     if FindSpot(Spot, Result) then
+        begin
+        FList[Result] := Spot;
+        end
+     else
+        begin
+        FList.Insert(Result, Spot);
+        end;
   finally
      FCriticalSection.Leave;
   end;
-  Add:    // How to experienced programmers write GoTo statements? I don't get it! // ny4i
-  FList[Result] := Spot;
   RequestRepaint;
   //  if CallWinKeyDown then
   //   Windows.SetFocus(wh[mweCall]);
@@ -315,7 +339,7 @@ var
   centrefound: boolean;
   NumberEntriesDisplayed: integer;
   // Diagnostic counters -- per-filter rejection tallies (issue: bandmap-startup-clear).
-  // Total of all reject* + rejNoNext + NumberEntriesDisplayed should equal FCount.
+  // Total of all reject* + rejNoNext + NumberEntriesDisplayed should equal FList.Count.
   rejDupeNext, rejBand, rejMode, rejDupeFlag, rejCQ, rejWARC, rejMultsOnly, rejVHF: Integer;
 begin
   bottom := 0;
@@ -328,15 +352,15 @@ begin
   UpdateSpotsMultiplierStatus;
   NumberEntriesDisplayed := 0;
   k := 0;
-  for i := 0 to FCount - 1 do
+  for i := 0 to FList.Count - 1 do
      begin
      // Drop a spot whose call matches the NEXT one in the frequency-sorted list.
-     // The last element has no next: `FList[i + 1]` at i = FCount - 1 read one
+     // The last element has no next: `FList[i + 1]` at i = FList.Count - 1 read one
      // past the live entries, and past the declared array[0..1000] altogether
      // once the list was full, comparing against whatever happened to be there.
      // Usually that garbage did not match and the spot survived, so the bug was
      // invisible -- but a chance match silently dropped the highest spot.
-     if (i < FCount - 1) and (FList[i].FCall = FList[i + 1].FCall) then
+     if (i < FList.Count - 1) and (FList[i].FCall = FList[i + 1].FCall) then
         begin
         Inc(rejDupeNext);
         continue;
@@ -393,8 +417,8 @@ begin
      inc(k);
 
      end;
-  logger.Trace('[BuildVisibleSpots] filter pass: FCount=%d, passed=%d, rejected by: NextDup=%d Band=%d Mode=%d DupeFlag=%d CQ=%d WARC=%d MultsOnly=%d VHF=%d',
-    [FCount, NumberEntriesDisplayed, rejDupeNext, rejBand, rejMode, rejDupeFlag,
+  logger.Trace('[BuildVisibleSpots] filter pass: FList.Count=%d, passed=%d, rejected by: NextDup=%d Band=%d Mode=%d DupeFlag=%d CQ=%d WARC=%d MultsOnly=%d VHF=%d',
+    [FList.Count, NumberEntriesDisplayed, rejDupeNext, rejBand, rejMode, rejDupeFlag,
      rejCQ, rejWARC, rejMultsOnly, rejVHF]);
 
   //Gav   Start of added section to limit and centre bandmap on vfo, using pointers to Flist stored in aIndex arrray
@@ -491,7 +515,7 @@ begin
   // and no unit here turns it on, so a negative index is a SILENT bad read, not
   // a raised exception.  With $R-, an ERangeError comes from the RTL itself --
   // chiefly SetLength with a NEGATIVE length, which in this routine means
-  // `setlength(aIndex, FCount)` above with FCount < 0.  That crash is
+  // `setlength(aIndex, FList.Count)` above with FList.Count < 0.  That crash is
   // still unexplained; do not treat it as fixed by this clamp.
   if bottom < 0 then
      begin
@@ -526,11 +550,7 @@ begin
   RequestRepaint;
   FCriticalSection.Enter;
   try
-     if FCount <> 0 then
-        begin
-        FCount := 0;
-        SetCapacity(0);
-        end;
+     FList.Clear;
   finally
      FCriticalSection.Leave;
   end;
@@ -556,11 +576,7 @@ var
   i: integer;
 begin
   Result := -1;
-  if (Length(FList) = 0) then
-     begin
-     Exit;
-     end;
-  for i := 0 to FCount - 1 do
+  for i := 0 to FList.Count - 1 do
      begin
      if (FList[i].FFrequency = aSpot.FFrequency) and
         (FList[i].FCall = aSpot.FCall) then
@@ -572,33 +588,21 @@ begin
 end;
 
 procedure TDXSpotsList.Delete(Index: integer);
-var
-   i: integer;
 begin
-  if (Index < 0) or (Index >= FCount) then
-     begin
-     Exit; //Error(@SListIndexError, Index);
-     end;
-  // THE Enter WAS MISSING.  This routine has always had `try ... finally
+  // THE Enter WAS MISSING once.  This routine had `try ... finally
   // FCriticalSection.Leave end` with nothing acquiring the section first, so it
   // called LeaveCriticalSection on a section this thread did not own -- which
   // decrements the recursion count of whoever DOES own it and can hand the list
-  // to two threads at once.  Every sibling (InsertSpot, Clear, SetCursor) pairs
-  // them correctly; this one was the odd man out.
+  // to two threads at once.  The range test is inside the lock for the same
+  // reason the search in AddSpot is: the count it tests must be the count it
+  // deletes from.
   FCriticalSection.Enter;
   try
-     dec(FCount);
-     if Index < FCount then
+     if (Index < 0) or (Index >= FList.Count) then
         begin
-        (* An indexed copy, not System.Move. The compiler copies a
-          TSpotRecord correctly whatever is in it; a byte move is only right
-          for as long as the record stays free of managed fields, and
-          nothing would report the day that changed. *)
-        for i := Index to FCount - 1 do
-           begin
-           FList[i] := FList[i + 1];
-           end;
+        Exit;
         end;
+     FList.Delete(Index);
   finally
      FCriticalSection.Leave;
   end;
@@ -612,7 +616,7 @@ var
 begin
   Result := False;
   l := 0;
-  h := FCount - 1;
+  h := FList.Count - 1;
   while l <= h do
      begin
      i := (l + h) shr 1;
@@ -637,33 +641,38 @@ end;
 
 function TDXSpotsList.Get(Index: integer): TSpotRecord;
 begin
-  FillChar(Result, SizeOf(Result), 0); // ny4i Test to return null Issue #115
-  if (Index < 0) or (Index >= FCount) then
+  Result := Default(TSpotRecord); // ny4i Test to return null Issue #115
+  if (Index < 0) or (Index >= FList.Count) then
      begin
-     Exit; //ERROR(@SListIndexError, Index);
+     Exit;
      end;
   Result := FList[Index];
-end;
-
-function TDXSpotsList.GetCapacity: integer;
-begin
-  Result := FCapacity;
 end;
 
 procedure TDXSpotsList.UpdateSpotsMultiplierStatus;
 var
   i: integer;
+  Spot: TSpotRecord;
 begin
-  for i := 0 to FCount - 1 do
+  for i := 0 to FList.Count - 1 do
      begin
-
-     if PInteger(@FList[i].FCall[1])^ <> tCQAsInteger then
-       if PInteger(@FList[i].FCall[1])^ <> tNEWAsInteger then
-          begin
-          FList[i].FMult := VisibleLog.DetermineIfNewMult(FList[i].FCall,
-            FList[i].FBand, FList[i].FMode);
-          end;
-     //    FList[i].FMult := MultString <> 0;
+     Spot := FList[i];
+     if (PInteger(@Spot.FCall[1])^ <> tCQAsInteger) and
+        (PInteger(@Spot.FCall[1])^ <> tNEWAsInteger) then
+        begin
+        // The multiplier question is asked OUTSIDE the lock (it walks the
+        // log); only the write-back is locked, so the poller never sees a
+        // half-written record.  Only the main thread changes the list, so
+        // entry i is still the one that was read.
+        Spot.FMult := VisibleLog.DetermineIfNewMult(Spot.FCall, Spot.FBand,
+          Spot.FMode);
+        FCriticalSection.Enter;
+        try
+           FList[i] := Spot;
+        finally
+           FCriticalSection.Leave;
+        end;
+        end;
      end;
   RequestRepaint;
 end;
@@ -676,111 +685,65 @@ end;
   the whole difference between spots falling off one at a time and the map
   emptying in one tick. }
 procedure TDXSpotsList.DecrementSpotsTimes;
-label
-  NextSpot;
 var
   i: integer;
-  Difference: integer;
+  Spot: TSpotRecord;
 begin
-  if FCount = 0 then
+  if FList.Count = 0 then
      begin
      Exit;
      end;
-  // Up here, not at the end: the loop below leaves through a goto and two
-  // Exits, so there is no single end to hang it on.  Past the empty-list guard,
-  // every remaining path changes FAgeSeconds.
+  // Past the empty-list guard, every remaining path changes FAgeSeconds.
   RequestRepaint;
 
-  i := 0;
-  NextSpot:
-
-  Difference := SpotAgeSeconds(FList[i]);
-  FList[i].FAgeSeconds := Difference;
-  if Difference >= Settings.BandMap.DecayTime * 60 then
-     begin
-     Delete(i)
-     end
-  else
-     begin
-     inc(i);
-     end;
-  if i = FCount then
-     begin
-     Exit;
-     end;
-  goto NextSpot;
+  FCriticalSection.Enter;
+  try
+     i := 0;
+     while i < FList.Count do
+        begin
+        Spot := FList[i];
+        Spot.FAgeSeconds := SpotAgeSeconds(Spot);
+        if Spot.FAgeSeconds >= Settings.BandMap.DecayTime * 60 then
+           begin
+           // The next spot has just moved into slot i, so i does not advance.
+           FList.Delete(i);
+           end
+        else
+           begin
+           FList[i] := Spot;
+           Inc(i);
+           end;
+        end;
+  finally
+     FCriticalSection.Leave;
+  end;
 end;
 
 procedure TDXSpotsList.UpdateSpotsDupeStatus(const RXCall: string; RXBand:
   BandType; RXMode: ModeType);
 var
   i: integer;
-begin
-  for i := 0 to FCount - 1 do
-     begin
-     if FList[i].FBand = RXBand then
-       if FList[i].FMode = RXMode then
-         if FList[i].FCall = RXCall then
-            begin
-            FList[i].FDupe := True;
-            end;
-     end;
-  // Was `Display` -- a model routine painting a control.  Its caller
-  // (logsubs2.pas:1710) calls DisplayBandMap immediately afterwards anyway.
-  RequestRepaint;
-end;
-
-procedure TDXSpotsList.Grow;
-var
-  delta: integer;
-begin
-  if FCapacity > 64 then
-     begin
-     delta := FCapacity div 4
-     end
-  else if FCapacity > 8 then
-     begin
-     delta := 16
-     end
-  else
-     begin
-     delta := 4;
-     end;
-  SetCapacity(FCapacity + delta);
-end;
-
-procedure TDXSpotsList.InsertSpot(Index: integer; const Spot: TSpotRecord);
-var
-   i: integer;
+  Spot: TSpotRecord;
 begin
   FCriticalSection.Enter;
   try
-     if FCount = FCapacity then
+     for i := 0 to FList.Count - 1 do
         begin
-        Grow;
-        end;
-     if Index < FCount then
-        begin
-        (* Downwards, so a record is never overwritten before it is read.
-          See the note in Delete about why this is not System.Move. *)
-        for i := FCount downto Index + 1 do
+        Spot := FList[i];
+        if (Spot.FBand = RXBand) and
+           (Spot.FMode = RXMode) and
+           (Spot.FCall = RXCall) then
            begin
-           FList[i] := FList[i - 1];
+           Spot.FDupe := True;
+           FList[i] := Spot;
            end;
         end;
-     FList[Index] := Spot;
-     inc(FCount);
   finally
      FCriticalSection.Leave;
   end;
-end;
-
-procedure TDXSpotsList.SetCapacity(NewCapacity: integer);
-begin
-  (* SetLength, not ReallocMem: it owns the block, it zeroes what it adds,
-    and it cannot be handed a byte count that disagrees with the element. *)
-  SetLength(FList, NewCapacity);
-  FCapacity := NewCapacity;
+  // Was `Display` -- a model routine painting a control.  Its caller
+  // (logsubs2.pas:1710) calls DisplayBandMap immediately afterwards anyway.
+  RequestRepaint;
 end;
 
 function TDXSpotsList.CompareStrings(const s1, s2: CallString): integer;
@@ -817,15 +780,15 @@ end;
 procedure TDXSpotsList.ResetSpotsTimes;
 var
   Index: integer;
+  Spot: TSpotRecord;
 begin
   FCriticalSection.Enter;
   try
-     if (Length(FList) > 0) then
+     for Index := 0 to FList.Count - 1 do
         begin
-        for Index := 0 to FCount - 1 do
-           begin
-           FList[Index].FAgeSeconds := 0;
-           end;
+        Spot := FList[Index];
+        Spot.FAgeSeconds := 0;
+        FList[Index] := Spot;
         end;
   finally
      FCriticalSection.Leave;
@@ -836,15 +799,15 @@ end;
 procedure TDXSpotsList.ResetSpotsDupes;
 var
   Index: integer;
+  Spot: TSpotRecord;
 begin
   FCriticalSection.Enter;
   try
-     if (Length(FList) > 0) then
+     for Index := 0 to FList.Count - 1 do
         begin
-        for Index := 0 to FCount - 1 do
-           begin
-           FList[Index].FDupe := False;
-           end;
+        Spot := FList[Index];
+        Spot.FDupe := False;
+        FList[Index] := Spot;
         end;
   finally
      FCriticalSection.Leave;
@@ -863,8 +826,7 @@ begin
      if Assigned(BandMapSelected) then
         begin
         FCurrentCursorFreq := BandMapSelected;
-        if (FCurrentCursorFreq >= 0) and (FCurrentCursorFreq < FCount) and
-           (Length(FList) > 0) then
+        if (FCurrentCursorFreq >= 0) and (FCurrentCursorFreq < FList.Count) then
            begin
            FCurrentCursorFreq := FList[FCurrentCursorFreq].FFrequency;
            end;
@@ -877,7 +839,8 @@ end;
 procedure TDXSpotsList.TuneDupeCheck(Freq: integer);
 var
   Index: integer;
-  Index2: integer;
+  FoundCall: CallString;
+  Spot: TSpotRecord;
   d: integer;
   a: integer;
 begin
@@ -885,33 +848,38 @@ begin
      begin
      Exit;
      end;
-  if (Length(FList) = 0) then
-     begin
-     exit;
-     end;
 
   d := MaxLongint  { was Windows.MaxLongint: same $7FFFFFFF, declared by System };
-  //  Index2 := 0; // 4.79.3
-  for Index := 0 to FCount - 1 do
-     begin
-     a := Abs(FList[Index].FFrequency - Freq);
-     if a = 0 then
+  FoundCall := '';
+  // THE POLLING THREAD RUNS THIS, so the scan holds the lock: the main thread
+  // may delete from the list while it walks.  Everything that touches the call
+  // window happens after the lock is released, off the copy in FoundCall.
+  FCriticalSection.Enter;
+  try
+     for Index := 0 to FList.Count - 1 do
         begin
-        exit;
-        end;
-     if (a < Settings.BandMap.GuardBand) and (PInteger(@FList[Index].FCall[1])^ <>
-       tCQAsInteger) then
-        begin
-        if (a < d) then
+        Spot := FList[Index];
+        a := Abs(Spot.FFrequency - Freq);
+        if a = 0 then
            begin
-           d := a;
-           Index2 := Index;
+           Exit;
            end;
-        DupeInfoCall := FList[Index2].FCall;
-        break; // stop search on match 4.130.1
+        if (a < Settings.BandMap.GuardBand) and
+           (PInteger(@Spot.FCall[1])^ <> tCQAsInteger) then
+           begin
+           if (a < d) then
+              begin
+              d := a;
+              FoundCall := Spot.FCall;
+              end;
+           DupeInfoCall := FoundCall;
+           break; // stop search on match 4.130.1
+           end;
         end;
-     end;
-  if (d >= Settings.BandMap.GuardBand) or (Pos(UTF8Encode(Settings.My.Call), FList[Index2].FCall) > 0) then
+  finally
+     FCriticalSection.Leave;
+  end;
+  if (d >= Settings.BandMap.GuardBand) or (Pos(UTF8Encode(Settings.My.Call), FoundCall) > 0) then
     // 4.57.8  // 4.72.1
      begin
      ClearAltD;
@@ -928,7 +896,7 @@ begin
        end;   }
      tClearDupeInfoCall; // 4.57.10
      ClearAltD; // 4.65.2
-     DupeInfoCall := FList[Index2].FCall; // 4.65.2
+     DupeInfoCall := FoundCall; // 4.65.2
      DupeCheckOnInactiveRadio(True);
      DupeInfoCallWindowCleared := False;
      tCallWindowSetFocus;
@@ -938,7 +906,8 @@ end;
 procedure TDXSpotsList.DisplayCallsignOnThisFreq(Freq: integer);
 var
   Index: integer;
-  Index2: integer;
+  FoundCall: CallString;
+  Spot: TSpotRecord;
   d: integer;
   a: integer;
 begin
@@ -956,36 +925,42 @@ begin
      end;
 
   d := MaxLongint;
-  //  index2 := 0; // 4.79.3
-  for Index := 0 to FCount - 1 do
-     begin
-     a := Abs(FList[Index].FFrequency - Freq);
-     {logger.debug('[TDXSpotsList.DisplayCallsignOnThisFreq] a = %d, Settings.BandMap.GuardBand = %d,  PInteger(@FList[Index].FCall[1])^ = %d, tCQAsInteger = %d',
-                  [a, Settings.BandMap.GuardBand, PInteger(@FList[Index].FCall[1])^, tCQAsInteger]);}
-     if (a < Settings.BandMap.GuardBand) and (PInteger(@FList[Index].FCall[1])^ <>  tCQAsInteger) then
+  FoundCall := '';
+  // THE POLLING THREAD RUNS THIS -- see TuneDupeCheck for why the scan is
+  // locked and the call window is touched only after it.
+  FCriticalSection.Enter;
+  try
+     for Index := 0 to FList.Count - 1 do
         begin
-        if a < d then
+        Spot := FList[Index];
+        a := Abs(Spot.FFrequency - Freq);
+        if (a < Settings.BandMap.GuardBand) and
+           (PInteger(@Spot.FCall[1])^ <> tCQAsInteger) then
            begin
-           d := a;
-           Index2 := Index;
+           if a < d then
+              begin
+              d := a;
+              FoundCall := Spot.FCall;
+              end;
            end;
         end;
-     end;
+  finally
+     FCriticalSection.Leave;
+  end;
 
   if d <= Settings.BandMap.GuardBand then
      begin
-     //if (Pos(Settings.My.Call,FList[Index2].FCall)>0) then continue;
-     if FList[Index2].FCall <> Settings.My.Call then
-       if OpMode = SearchAndPounceOpMode then // n4af 4.45.10
-          begin
-          tCleareCallWindow;
-          tClearDupeInfoCall; // 4.55.6
-          PutCallToCallWindow(FList[Index2].FCall);
-          SetEntrySel(TR4WCallEdit, 0, -1);
-          CallsignIsPastedFromBandMap := True;
-         // tSetExchWindInitExchangeEntry ; // 4.139.1
-         // Windows.SetFocus(wh[mweCall]);      // 4.139.2
-          end;
+     if (FoundCall <> Settings.My.Call) and
+        (OpMode = SearchAndPounceOpMode) then // n4af 4.45.10
+        begin
+        tCleareCallWindow;
+        tClearDupeInfoCall; // 4.55.6
+        PutCallToCallWindow(FoundCall);
+        SetEntrySel(TR4WCallEdit, 0, -1);
+        CallsignIsPastedFromBandMap := True;
+        // tSetExchWindInitExchangeEntry ; // 4.139.1
+        // Windows.SetFocus(wh[mweCall]);      // 4.139.2
+        end;
 
 
     Exit;
@@ -1008,11 +983,12 @@ begin
 
 end;
 
-begin
-  //  SpotsList := TDXSpotsList.Create;
-  SpotsList.Init;
-  SpotsList.FCurrentCursorFreq := -1;
+initialization
+  SpotsList := TDXSpotsList.Create;
   tCallWindowSetFocus;    // 4.139.1
+
+finalization
+  FreeAndNil(SpotsList);
 end.
 
 

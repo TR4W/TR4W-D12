@@ -587,6 +587,7 @@ uses
    uClusterTokens       in '..\..\src\uClusterTokens.pas',
    uTestDXSpotParse     in 'uTestDXSpotParse.pas',
    uTestSpotAge         in 'uTestSpotAge.pas',
+   uTestSpotStore       in 'uTestSpotStore.pas',
    uTestTelnetTrace     in 'uTestTelnetTrace.pas',
    uTestCrashContext    in 'uTestCrashContext.pas',
    uTestKeychain     in 'uTestKeychain.pas',
@@ -880,6 +881,7 @@ begin
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TSpotAgeTests.Create('SpotAge'));
+   RegisterSuite(TSpotStoreTests.Create('SpotStore'));
    RegisterSuite(TTelnetTraceTests.Create('TelnetTrace'));
    RegisterSuite(TCrashContextTests.Create('CrashContext'));
    RegisterSuite(THPTimerTests.Create('HPTimer'));
