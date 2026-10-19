@@ -226,5 +226,60 @@ class Sample(unittest.TestCase):
       self.assertEqual(out, expected, first_difference(expected, out))
 
 
+class CatalogueTools(unittest.TestCase):
+   """The writers that build entries rather than edit them must not lose what
+   pofile now keeps, and po_merge must not add a twin of an entry it has."""
+
+   def test_dedupe_keeps_comments_flags_and_previous(self):
+      import po_dedupe
+      winner = pofile.Entry("", "Cancel", "Anuluj", False, refs=["utr4wstrings:tc_cancel"],
+                            comments=["# 2026-10-16: reviewed by G0DVJ"],
+                            flags=["object-pascal-format"],
+                            previous=['#| msgid "Cancel it"'])
+      loser = pofile.Entry("", "Cancel", "", True, refs=["tfrmx.btncancel.caption"],
+                           comments=["# a note on the form copy"])
+      merged, collapsed, removed = po_dedupe.dedupe([winner, loser])
+      self.assertEqual((collapsed, removed, len(merged)), (1, 1, 1))
+      m = merged[0]
+      self.assertEqual(m.target, "Anuluj")
+      self.assertEqual(m.comments, ["# 2026-10-16: reviewed by G0DVJ", "# a note on the form copy"])
+      self.assertEqual(m.flags, ["object-pascal-format"])
+      self.assertEqual(m.previous, ['#| msgid "Cancel it"'])
+
+   def test_merge_knows_an_identifier_named_anywhere_on_an_entry(self):
+      # The two shapes the real catalogues use: a second identifier on the same
+      # '#:' line, and one on a second '#:' line under a msgctxt. Both were
+      # missed until 2026-10-18 and twinned in all 22 catalogues.
+      import po_merge
+      catalogue = (
+         "msgid \"\"\nmsgstr \"\"\n\"Language: pl\\n\"\n\n"
+         "#: tfrminiretire.caption uappstrings.siniretiretitle\n"
+         "msgctxt \"tfrminiretire.caption\"\nmsgid \"Old settings file\"\n"
+         "msgstr \"Stary plik ustawień\"\n\n"
+         "#: tfrminputquery.caption\n#: uappstrings.salreadyrunningtitle\n"
+         "msgctxt \"tfrminputquery.caption\"\nmsgid \"TR4W\"\nmsgstr \"TR4W\"\n\n"
+      ).replace("\n", "\r\n").encode("utf-8")
+      template = [
+         pofile.Entry("", "Old settings file", refs=["uappstrings.siniretiretitle"]),
+         pofile.Entry("", "TR4W", refs=["uappstrings.salreadyrunningtitle"]),
+         pofile.Entry("", "Verification checks", refs=["uappstrings.sverifytitle"]),
+      ]
+      tmp = tempfile.mkdtemp()
+      try:
+         path = os.path.join(tmp, "tr4w_pl.po")
+         with open(path, "wb") as fh:
+            fh.write(catalogue)
+         added, carried, retired, total = po_merge.merge(path, template, {"uappstrings"}, True)
+         with open(path, "rb") as fh:
+            out = fh.read()
+      finally:
+         shutil.rmtree(tmp)
+      self.assertEqual((added, retired, total), (1, 0, 3))
+      self.assertTrue(out.startswith(catalogue), "the merge rewrote what was there")
+      self.assertEqual(out.count(b"uappstrings.siniretiretitle"), 1)
+      self.assertEqual(out.count(b"uappstrings.salreadyrunningtitle"), 1)
+      self.assertIn(b"#: uappstrings.sverifytitle\r\n#, fuzzy\r\n", out)
+
+
 if __name__ == "__main__":
    unittest.main(verbosity=2)

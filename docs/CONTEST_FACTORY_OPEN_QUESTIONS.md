@@ -2471,17 +2471,18 @@ closes it; anything else reopens it.
 
 ## Not questions, but waiting on you
 
-- **Translations:** 38 of `uAppStrings`' 56 strings are in no catalogue and show
-  in English everywhere (measured 2026-10-18, after the Q110/Q115 strings were
-  added by hand). `tr4w/languages/tr4w_laz.pot` was last changed 2026-10-16
-  (34c75865) and carries only 12 `uAppStrings` entries. **The IDE is not needed
-  for these**: `C:\Lazarus\tools\updatepofiles.exe` on the build's
-  `uAppStrings.rsj`, written to a SCRATCH `.pot`, produces the resourcestring
-  half, and `po_merge --pot <scratch>` adds the 38 (dry run: +38 fuzzy entries
-  per catalogue, no other line changed). Recipe in `docs/I18N_TOOLS.md`. **Never
-  point `updatepofiles` at `tr4w_laz.pot`** -- it deletes every entry not in its
-  inputs, and the `.lfm` half comes from `.lrj` files only the IDE writes. The
-  `.lfm` half still needs the IDE. Waiting on your approval to apply.
+- **Translations -- the `.lfm` half only, and it needs the Lazarus IDE.** All 56
+  of `uAppStrings`' strings are in every catalogue now (2026-10-18: the 36 that
+  were missing went in as fuzzy, untranslated entries, from
+  `C:\Lazarus\tools\updatepofiles.exe` on the build's `uAppStrings.rsj` into a
+  scratch `.pot`, then `po_merge`; recipe in `docs/I18N_TOOLS.md`). What is left
+  is the form captions: `tr4w/languages/tr4w_laz.pot` was last changed
+  2026-10-16 (34c75865), and its `.lfm` entries come from `.lrj` files that only
+  the IDE writes (Project Options -> i18n -> "Resave forms with enabled i18n",
+  then Clean up and Build). **Never point `updatepofiles` at `tr4w_laz.pot`** --
+  it deletes every entry not in its inputs. Measured against the tracked `.pot`
+  as it stands (dry run): 6 entries missing from each catalogue, and 253 from
+  Polish (226 of them `usettingscaptions`).
 - **Bench checks** (`docs/BENCH_QUEUE.md`): Idaho in-state and out-of-state
   multipliers; live Croatian and UK/EI logging by day and night; DXKeeper
   receiving `ARRL-FIELD-DAY`; typed-entry refusals; the score display with

@@ -37,10 +37,12 @@ Measured before writing this: of 709 harvest strings, 22 have an existing
 Spanish translation, and several of those are junk matches ('Band' -> 'Band').
 So the carry-over is small and the flag matters more than the saving.
 
-IDENTITY IS (msgctxt, msgid) where a msgctxt exists, else the `#:` identifier,
-else the msgid. That is gettext's own rule plus the Lazarus convention, and it
-is what keeps the legacy TC_-keyed entries distinct from the new form-keyed ones
-even when the English is identical.
+IDENTITY IS THE IDENTIFIERS an entry answers for -- its msgctxt and every
+identifier token on every `#:` line (claimed_identifiers) -- else, for an entry
+naming none, the msgid. A template entry is already known when it shares ANY
+identifier with an existing one. That is the Lazarus convention (LazUtils loads
+each `#:` identifier), and it is what keeps the legacy TC_-keyed entries
+distinct from the new form-keyed ones even when the English is identical.
 
 Usage
 -----
@@ -123,20 +125,50 @@ def is_third_party(entry, ours):
    return False
 
 
-def identity(entry):
-   """What makes two entries the same entry."""
+def claimed_identifiers(entry):
+   """EVERY identifier an entry answers for: its msgctxt, and each token on
+   each `#:` line that is an identifier rather than a `path:line` reference.
+
+   ALL OF THEM, NOT THE FIRST (2026-10-18). This used to be the msgctxt alone
+   when there was one, else the first `#:` line taken whole. But an entry
+   routinely names two identifiers -- `#: tfrminiretire.caption
+   uappstrings.siniretiretitle` on one line, or `uappstrings.salreadyrunningtitle`
+   on a second `#:` line under a form caption's msgctxt -- because the same
+   English is a caption and a resourcestring. Measured on the first merge of a
+   uAppStrings template: 2 of the 38 'new' strings were already claimed that
+   way in all 22 catalogues, and the merge added a twin of each. LazUtils loads
+   every `#:` identifier (translations.pas), and Make-LanguageRes ships one
+   entry per identifier, so the twin added nothing but debt."""
+   ids = set()
    if entry.key:
-      return ('ctx', entry.key.lower())
+      ids.add(entry.key.lower())
    for r in (entry.refs or []):
-      # a rekey/Lazarus identifier, not a source reference ending in a line number
-      if not r.rsplit(':', 1)[-1].isdigit():
-         return ('id', r.lower().replace(':', '.'))
-   return ('src', entry.source)
+      for tok in r.split():
+         # a rekey/Lazarus identifier, not a source reference ending in a line number
+         if not tok.rsplit(':', 1)[-1].isdigit():
+            ids.add(tok.lower().replace(':', '.'))
+   return ids
+
+
+def is_known(entry, seen_ids, seen_sources):
+   """True when the catalogue already holds this entry: it shares an
+   identifier with one, or -- for an entry naming no identifier at all --
+   its English matches one that names none either."""
+   ids = claimed_identifiers(entry)
+   if ids:
+      return not ids.isdisjoint(seen_ids)
+   return entry.source in seen_sources
 
 
 def merge(path, template, ours, apply_changes):
    existing = pofile.read_po(path)
-   seen = set(identity(e) for e in existing)
+   seen_ids = set()
+   seen_sources = set()
+   for e in existing:
+      ids = claimed_identifiers(e)
+      seen_ids |= ids
+      if not ids:
+         seen_sources.add(e.source)
 
    # An English string already translated here, for the carry-over.
    by_source = {}
@@ -186,7 +218,7 @@ def merge(path, template, ours, apply_changes):
    for t in template:
       if not t.source.strip():
          continue                      # the header
-      if identity(t) in seen:
+      if is_known(t, seen_ids, seen_sources):
          continue                      # already known -- leave it alone
       if is_third_party(t, ours):
          skipped += 1
@@ -206,6 +238,11 @@ def merge(path, template, ours, apply_changes):
          carried += 1
       existing.append(new)
       added += 1
+      # Known from here on, so a template naming one identifier twice adds it once.
+      ids = claimed_identifiers(new)
+      seen_ids |= ids
+      if not ids:
+         seen_sources.add(new.source)
 
    if apply_changes and (added or retired):
       # The code is everything between the 'tr4w_' prefix and '.po'. Splitting
