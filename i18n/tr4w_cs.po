@@ -5999,7 +5999,7 @@ msgstr "%s překlad do %s"
 #, fuzzy
 msgctxt "TC_TRANSLATION_CORRECTIONS"
 msgid "Corrections are appreciated."
-msgstr ""
+msgstr "Opravy si cením."
 
 #. Section: UTELNET
 #: utr4wstrings:tc_telnet
@@ -8980,22 +8980,22 @@ msgstr "Zatím nejsou definovány žádné DX klastry -- klikněte na Nastavení
 #: uappstrings.sexchangenoprecedence
 #, fuzzy
 msgid "Missing precedence (Q A B U M S)"
-msgstr ""
+msgstr "Chybějící precedence (Q A B U M S)"
 
 #: uappstrings.sexchangeoutofstateworkshostonly
 #, fuzzy
 msgid "Out of state: work %s stations only"
-msgstr ""
+msgstr "Mimo stát: práce %s pouze stanice"
 
 #: uappstrings.scontestinactive
 #, fuzzy
 msgid "%s (inactive)"
-msgstr ""
+msgstr "%s (neaktivní)"
 
 #: uappstrings.scategorypowerchangedrescored
 #, fuzzy
 msgid "CATEGORY-POWER is now %s -- the scoring category changed and the log was rescored."
-msgstr ""
+msgstr "KATEGORY- POWER je nyní %s -- kategorie bodování se změnila a záznam byl obnoven."
 
 #: uappstrings.scontestnotonmultiop
 #, fuzzy
@@ -9031,6 +9031,9 @@ msgid ""
 "\n"
 "Check that it still exists.  tr4w.log records what was tried."
 msgstr ""
+"TR4W nemohl otevřít tuto pozici ve Vašem správci souborů:\n"
+"\n"
+"%sZkontrolujte, zda stále existuje. Tr4w.log zaznamenává, co bylo vyzkoušeno."
 
 #: uappstrings.sdownloadcannotverify
 #, fuzzy
@@ -9039,36 +9042,39 @@ msgid ""
 "\n"
 "The request was REFUSED rather than sent unverified. Turn off Preferences > Network > verify server certificates if you want to proceed without checking."
 msgstr ""
+"nebylo možno ověřit certifikát serveru (%s).\n"
+"\n"
+"Žádost byla zamítnuta spíše než zaslána neověřená. Vypnout preference > Síť > ověřte certifikáty serveru, pokud chcete pokračovat bez kontroly."
 
 #: uappstrings.sexchangemodebriefcountry
 #, fuzzy
 msgid "(MY COUNTRY = %s)"
-msgstr ""
+msgstr "(MY country = %s)"
 
 #: uappstrings.sexchangemodebriefemptycountry
 #, fuzzy
 msgid "(MY COUNTRY is empty)"
-msgstr ""
+msgstr "(Moje země je prázdná)"
 
 #: uappstrings.sexchangemodefromcountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is %s."
-msgstr ""
+msgstr "Tato soutěž žádá stát, provincii nebo sekci, protože MÁ ZEMĚ je %s."
 
 #: uappstrings.sexchangemodefromemptycountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is empty."
-msgstr ""
+msgstr "Tato soutěž žádá stát, provincii nebo sekci, protože MÁ ZEMĚ je prázdná."
 
 #: uappstrings.sfilenamecamefromsetting
 #, fuzzy
 msgid "The name came from the %s setting for this contest."
-msgstr ""
+msgstr "Jméno pochází z %s nastavení pro tuto soutěž."
 
 #: uappstrings.sfilenotfoundthere
 #, fuzzy
 msgid "TR4W could not find this file:"
-msgstr ""
+msgstr "TR4W nemohl najít tento soubor:"
 
 #: uappstrings.sfirstrunconvertmissing
 #, fuzzy
@@ -9078,6 +9084,8 @@ msgid ""
 "\n"
 "It is installed beside TR4W itself. TR4W will start with its defaults, and your old settings file is left untouched."
 msgstr ""
+"TR4W nemohl najít konverzní program:\n"
+" %sJe instalován vedle samotného TR4W. TR4W začne s vadami a váš starý soubor s nastavením zůstane nedotčen."
 
 #: uappstrings.sfirstrunconvertnothingdone
 #, fuzzy
@@ -9089,11 +9097,15 @@ msgid ""
 "\n"
 "from a command prompt in that folder. Converting then replaces whatever you have configured in the meantime with the old values."
 msgstr ""
+"Nic nebylo přeměněno.\n"
+"\n"
+"TR4W začne s vadami a váš starý soubor nastavení je nedotčen. Můžete převést kdykoliv spuštěním\n"
+" %sz příkazu v této složce. Převod pak nahrazuje vše, co jste nakonfigurovali v mezidobí se starými hodnotami."
 
 #: uappstrings.sfirstrunconvertnow
 #, fuzzy
 msgid "Convert now"
-msgstr ""
+msgstr "Převést"
 
 #: uappstrings.sfirstrunconvertprompt
 #, fuzzy
@@ -9110,16 +9122,23 @@ msgid ""
 "\n"
 "What is worth knowing is the ORDER. If you continue now and then set TR4W up by hand, converting afterwards overwrites that work with the values from the old file. Converting first avoids the question."
 msgstr ""
+"TR4W našel nastavení z dřívější verze:\n"
+" %sa ještě nenapsal svůj vlastní soubor nastavení:\n"
+" %sTR4W může přenášet tuto starou konfiguraci napříč. Konverze uvádí, co se změní a zeptá se, než něco napíšete, takže se můžete nejdříve podívat a stále říct ne.\n"
+"\n"
+"Nemusíš to dělat teď. Nic není ztraceno pokračováním: TR4W začíná se svými vadami, váš starý soubor je ponechán nedotčený a později jednoduše tyto vady nahradí vašimi starými hodnotami.\n"
+"\n"
+"Co stojí za to vědět, je rozkaz. Pokud budete pokračovat tu a tam nastavit TR4W ručně, konvertuje poté přepíše, že pracovat s hodnotami ze starého souboru. Převod první otázky se vyhýbá."
 
 #: uappstrings.sfirstrunconvertskip
 #, fuzzy
 msgid "Continue without converting"
-msgstr ""
+msgstr "Pokračovat bez převodu"
 
 #: uappstrings.sfirstrunconverttitle
 #, fuzzy
 msgid "TR4W -- settings from an earlier version"
-msgstr ""
+msgstr "TR4W -- nastavení z dřívější verze"
 
 #: uappstrings.slogfileunavailable
 #, fuzzy
@@ -9130,6 +9149,9 @@ msgid ""
 "\n"
 "TR4W will keep running and keep trying to open it. Until it can, nothing from this session is written to the log."
 msgstr ""
+"TR4W nemohl otevřít svůj soubor záznamu.\n"
+"\n"
+"%sTR4W bude dál utíkat a snažit se ho otevřít. Dokud to nebude možné, nic z tohoto sezení není zapsáno do deníku."
 
 #: uappstrings.snetcomputeridinuse
 #, fuzzy
@@ -9138,106 +9160,109 @@ msgid ""
 "\n"
 "Change COMPUTER ID to a letter no other station is using, then reconnect."
 msgstr ""
+"Identifikace počítače %s je již v provozu jinou stanicí v této síti.\n"
+"\n"
+"Změnit počítač Identifikace k dopisu, který žádná jiná stanice nepoužívá, pak se znovu spojí."
 
 #: uappstrings.snewcontestin7qpnecountyorstate
 #, fuzzy
 msgid "Enter your county if you are in Indiana, the 7th call area, New England or Delaware. Enter your state, Canadian Province or \"DX\" if outside all four:"
-msgstr ""
+msgstr "Zadejte svůj kraj, pokud jste v Indianě, 7. call oblasti, New England nebo Delaware. Zadejte svůj stát, kanadská provincie nebo \"DX\", pokud mimo všechny čtyři:"
 
 #: uappstrings.sqsonotlogged
 #, fuzzy
 msgid "NOT LOGGED -- the contest log would not accept this QSO. See tr4w.log. Do not clear the entry."
-msgstr ""
+msgstr "NOT LOGGGED -- Záznamy o soutěži by tento QSO nepřijaly. Viz Tr4w.log. Neuvolněte vstup."
 
 #: uappstrings.sreadinessdomesticfilemissing
 #, fuzzy
 msgid "This contest scores domestic multipliers from a .DOM file and none is named, so no domestic multiplier will be counted."
-msgstr ""
+msgstr "Tato soutěž skóre domácí násobitele z .DOM souboru a žádný není pojmenován, takže žádný domácí násobitel se nepočítá."
 
 #: uappstrings.sreadinessfooter
 #, fuzzy
 msgid "Set these in Preferences > Station, then restart TR4W: they are read once when the contest is set up, so changing them now will not change this contest."
-msgstr ""
+msgstr "Nastavte je v Preferences > Station, pak restartujte TR4W: budou přečteny jednou, když je soutěž nastavena, takže jejich změna tuto soutěž nezmění."
 
 #: uappstrings.sreadinessheading
 #, fuzzy
 msgid "This contest is set up, but TR4W is missing information it needs:"
-msgstr ""
+msgstr "Tato soutěž je nastavena, ale TR4W chybí informace, které potřebuje:"
 
 #: uappstrings.sreadinessmycallmissing
 #, fuzzy
 msgid "MY CALL is empty. TR4W cannot work out your country, continent or zone without it, and nothing that depends on them will be right."
-msgstr ""
+msgstr "Můj hovor je prázdný. TR4W nemůže vyřešit vaši zemi, kontinent nebo zónu bez ní, a nic, co na nich závisí, nebude správné."
 
 #: uappstrings.sreadinessmycountrymissing
 #, fuzzy
 msgid "MY COUNTRY is empty. It is normally worked out from MY CALL through CTY.DAT. Until it has a value TR4W treats this station as DX -- in ARRL DX that means it will ask every station for a state or province and refuse a power such as K or 100."
-msgstr ""
+msgstr "Moje země je prázdná. Obvykle se to pracuje z MÉHO CALL přes CTY.DAT. Dokud nebude mít hodnotu TR4W zachází s touto stanicí jako s DX -- v ARRL DX znamená, že požádá každou stanici o stát nebo provincii a odmítne moc jako K nebo100."
 
 #: uappstrings.sreadinessmygridmissing
 #, fuzzy
 msgid "MY GRID is empty and this contest sends your grid square."
-msgstr ""
+msgstr "MŮJ GRID je prázdný a tahle soutěž ti pošle čtverec."
 
 #: uappstrings.sreadinessmystatemissing
 #, fuzzy
 msgid "MY STATE is empty and this contest sends your state, province or section. TR4W will send a serial number instead."
-msgstr ""
+msgstr "Můj stát je prázdný a tato soutěž posílá váš stát, provincii nebo sekci. TR4W místo toho pošle sériové číslo."
 
 #: uappstrings.sreadinessmyzonemissing
 #, fuzzy
 msgid "MY ZONE is empty and this contest sends your zone."
-msgstr ""
+msgstr "Moje zóna je prázdná a tahle soutěž posílá tvou zónu."
 
 #: uappstrings.sverifyallpassed
 #, fuzzy
 msgid "All %d check(s) passed."
-msgstr ""
+msgstr "Všechny %d kontrola prošla."
 
 #: uappstrings.sverifyclose
 #, fuzzy
 msgid "&Close"
-msgstr ""
+msgstr "&Zavřít"
 
 #: uappstrings.sverifycolumncheck
 #, fuzzy
 msgid "Check"
-msgstr ""
+msgstr "Kontrola"
 
 #: uappstrings.sverifycolumnresult
 #, fuzzy
 msgid "Result"
-msgstr ""
+msgstr "Výsledek"
 
 #: uappstrings.sverifyfailed
 #, fuzzy
 msgid "FAILED"
-msgstr ""
+msgstr "PRAVDĚPODOBNOST"
 
 #: uappstrings.sverifypassed
 #, fuzzy
 msgid "Passed"
-msgstr ""
+msgstr "Prošlo"
 
 #: uappstrings.sverifyrun
 #, fuzzy
 msgid "&Run checks"
-msgstr ""
+msgstr "& Spustit kontroly"
 
 #: uappstrings.sverifyrunning
 #, fuzzy
 msgid "Running %d check(s)..."
-msgstr ""
+msgstr "Běžící %d kontrola (kontroly)..."
 
 #: uappstrings.sverifysomefailed
 #, fuzzy
 msgid "%d of %d check(s) FAILED. Select a row for details."
-msgstr ""
+msgstr "%d z %d ZKOUŠKY Pro podrobnosti vyberte řádek."
 
 #: uappstrings.sverifytitle
 #, fuzzy
 msgid "Verification checks"
-msgstr ""
+msgstr "Ověřovací kontroly"
 
 #: uprogrammain.scontestfileforeigndatabase
 #, fuzzy
@@ -9248,6 +9273,9 @@ msgid ""
 "\n"
 "TR4W cannot open another program's log. Choose a TR4W log (.db) or a contest configuration file (.cfg)."
 msgstr ""
+"Tento soubor je databáze, ale nebyl vytvořen TR4W:\n"
+"\n"
+"%sTR4W nemůže otevřít deník jiného programu. Vyberte protokol TR4W (.db) nebo konfigurační soubor soutěže (.cfg)."
 
 #: uprogrammain.scontestfilenotrecognised
 #, fuzzy
@@ -9258,24 +9286,27 @@ msgid ""
 "\n"
 "Choose a TR4W log (.db) or a contest configuration file (.cfg)."
 msgstr ""
+"Tento soubor není logem TR4W a není konfiguračním souborem soutěže:\n"
+"\n"
+"%sVyberte protokol TR4W (.db) nebo konfigurační soubor soutěže (.cfg)."
 
 #: utr4wstrings.tc_bankalt
 #, fuzzy
 msgid "Alt"
-msgstr ""
+msgstr "Alt"
 
 #: utr4wstrings.tc_bankcontrol
 #, fuzzy
 msgid "Control"
-msgstr ""
+msgstr "Kontrola"
 
 #: utr4wstrings.tc_bankstandard
 #, fuzzy
 msgid "Standard"
-msgstr ""
+msgstr "Standardní"
 
 #: utr4wstrings.tc_ignoredunknownqth
 #, fuzzy
 msgid "Ignored, not a known QTH:"
-msgstr ""
+msgstr "Ignorovaný, žádný známý QTH:"
 

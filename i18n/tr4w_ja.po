@@ -9450,22 +9450,22 @@ msgstr "DX クラスターはまだ定義されていません。 Configure を�
 #: uappstrings.sexchangenoprecedence
 #, fuzzy
 msgid "Missing precedence (Q A B U M S)"
-msgstr ""
+msgstr "ミス優先(Q A B U M S)"
 
 #: uappstrings.sexchangeoutofstateworkshostonly
 #, fuzzy
 msgid "Out of state: work %s stations only"
-msgstr ""
+msgstr "状態から: 仕事 %s ステーションのみ"
 
 #: uappstrings.scontestinactive
 #, fuzzy
 msgid "%s (inactive)"
-msgstr ""
+msgstr "%s (非アクティブ)"
 
 #: uappstrings.scategorypowerchangedrescored
 #, fuzzy
 msgid "CATEGORY-POWER is now %s -- the scoring category changed and the log was rescored."
-msgstr ""
+msgstr "CATEGORY-POWER がリリースされました %s -- スコアリングカテゴリが変更され、ログは再scoredでした。"
 
 #: uappstrings.scontestnotonmultiop
 #, fuzzy
@@ -9501,6 +9501,9 @@ msgid ""
 "\n"
 "Check that it still exists.  tr4w.log records what was tried."
 msgstr ""
+"TR4W はファイルマネージャでこの場所を開くことができません。\n"
+"\n"
+"%s存在していることを確認してください。 tr4w.log が試したレコードを記録しました。"
 
 #: uappstrings.sdownloadcannotverify
 #, fuzzy
@@ -9509,36 +9512,39 @@ msgid ""
 "\n"
 "The request was REFUSED rather than sent unverified. Turn off Preferences > Network > verify server certificates if you want to proceed without checking."
 msgstr ""
+"サーバの証明書は検証できません()%s)。\n"
+"\n"
+"未確認の送信ではなく、再承認されました。 設定をオフにする > ネットワーク > チェックせずに続行したい場合は、サーバー証明書を確認します。"
 
 #: uappstrings.sexchangemodebriefcountry
 #, fuzzy
 msgid "(MY COUNTRY = %s)"
-msgstr ""
+msgstr "(マイカントリー= %s)"
 
 #: uappstrings.sexchangemodebriefemptycountry
 #, fuzzy
 msgid "(MY COUNTRY is empty)"
-msgstr ""
+msgstr "(MY COUNTRY は空)"
 
 #: uappstrings.sexchangemodefromcountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is %s."
-msgstr ""
+msgstr "このコンテストは、MY COUNTRY が %sお問い合わせ"
 
 #: uappstrings.sexchangemodefromemptycountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is empty."
-msgstr ""
+msgstr "このコンテストは、MY COUNTRY が空いているため、状態、地域、セクションを要求しています。"
 
 #: uappstrings.sfilenamecamefromsetting
 #, fuzzy
 msgid "The name came from the %s setting for this contest."
-msgstr ""
+msgstr "お名前が由来 %s このコンテストの設定"
 
 #: uappstrings.sfilenotfoundthere
 #, fuzzy
 msgid "TR4W could not find this file:"
-msgstr ""
+msgstr "TR4W はこのファイルが見つかりませんでした:"
 
 #: uappstrings.sfirstrunconvertmissing
 #, fuzzy
@@ -9548,6 +9554,8 @@ msgid ""
 "\n"
 "It is installed beside TR4W itself. TR4W will start with its defaults, and your old settings file is left untouched."
 msgstr ""
+"TR4W は変換プログラムが見つかりませんでした:\n"
+" %sTR4W自体の横に設置されています。 TR4W はデフォルトで起動し、古い設定ファイルはそのまま残します。"
 
 #: uappstrings.sfirstrunconvertnothingdone
 #, fuzzy
@@ -9559,11 +9567,15 @@ msgid ""
 "\n"
 "from a command prompt in that folder. Converting then replaces whatever you have configured in the meantime with the old values."
 msgstr ""
+"何も変換されません。\n"
+"\n"
+"TR4W はデフォルトで起動し、古い設定ファイルは非接触となります。 実行することでいつでも変換できます\n"
+" %sそのフォルダ内のコマンドプロンプトから。 変換すると、古い値で意味で設定した値に置き換えられます。"
 
 #: uappstrings.sfirstrunconvertnow
 #, fuzzy
 msgid "Convert now"
-msgstr ""
+msgstr "今すぐ変換"
 
 #: uappstrings.sfirstrunconvertprompt
 #, fuzzy
@@ -9580,16 +9592,23 @@ msgid ""
 "\n"
 "What is worth knowing is the ORDER. If you continue now and then set TR4W up by hand, converting afterwards overwrites that work with the values from the old file. Converting first avoids the question."
 msgstr ""
+"TR4W は以前のバージョンから設定を見つけました。\n"
+" %s独自の設定ファイルはまだ書かれていません。\n"
+" %sTR4W は、古い設定を現在実行できます。 変換は、何かを書いている前に変更して尋ねるもののリストをリストしますので、最初に見ても、何も言わないことができます。\n"
+"\n"
+"今はやらなければいけません。 継続して失われるもの: TR4W はデフォルトで始まり、古いファイルが削除されず、後で変換することで、古い値でそれらのデフォルトを置き換えるだけです。\n"
+"\n"
+"知っておく価値は、ORDERです。 これで TR4W を手作業で設定したら、後方から古いファイルから値を扱うオーバーライトを変換します。 最初に変換すると、問題を回避します。"
 
 #: uappstrings.sfirstrunconvertskip
 #, fuzzy
 msgid "Continue without converting"
-msgstr ""
+msgstr "変換せずに続行"
 
 #: uappstrings.sfirstrunconverttitle
 #, fuzzy
 msgid "TR4W -- settings from an earlier version"
-msgstr ""
+msgstr "TR4W -- 以前のバージョンからの設定"
 
 #: uappstrings.slogfileunavailable
 #, fuzzy
@@ -9600,6 +9619,9 @@ msgid ""
 "\n"
 "TR4W will keep running and keep trying to open it. Until it can, nothing from this session is written to the log."
 msgstr ""
+"TR4W はログファイルを開くことができません。\n"
+"\n"
+"%sTR4W は実行し続けます。 できるまで、このセッションから何もログに書かれていません。"
 
 #: uappstrings.snetcomputeridinuse
 #, fuzzy
@@ -9608,106 +9630,109 @@ msgid ""
 "\n"
 "Change COMPUTER ID to a letter no other station is using, then reconnect."
 msgstr ""
+"コンピュータID %s このネットワーク上の別のステーションで既に使用しています。\n"
+"\n"
+"コンピューターの変更 他のステーションが使用されていないレターへのIDが再接続されます。"
 
 #: uappstrings.snewcontestin7qpnecountyorstate
 #, fuzzy
 msgid "Enter your county if you are in Indiana, the 7th call area, New England or Delaware. Enter your state, Canadian Province or \"DX\" if outside all four:"
-msgstr ""
+msgstr "インディアナ、第7回コールエリア、ニューイングランド、またはデラウェアにいる場合は、あなたの郡を入力してください。 外部の4つの場合、州、カナダ、または「DX」を入力してください。"
 
 #: uappstrings.sqsonotlogged
 #, fuzzy
 msgid "NOT LOGGED -- the contest log would not accept this QSO. See tr4w.log. Do not clear the entry."
-msgstr ""
+msgstr "ログなし - コンテストログはこのQSOを受け入れません。 tr4w.log を参照してください。 エントリーをクリアしないでください。"
 
 #: uappstrings.sreadinessdomesticfilemissing
 #, fuzzy
 msgid "This contest scores domestic multipliers from a .DOM file and none is named, so no domestic multiplier will be counted."
-msgstr ""
+msgstr "このコンテストは.DOMファイルから国内のマルチプライヤーをスコアし、どれも名付けられませんので、国内のマルチプライヤーはカウントされません。"
 
 #: uappstrings.sreadinessfooter
 #, fuzzy
 msgid "Set these in Preferences > Station, then restart TR4W: they are read once when the contest is set up, so changing them now will not change this contest."
-msgstr ""
+msgstr "これらを Preferences > Station で設定し、 TR4W を再起動します: コンテストがセットアップされると、一度読んでいるので、それらを変更すると、このコンテストは変更されません。"
 
 #: uappstrings.sreadinessheading
 #, fuzzy
 msgid "This contest is set up, but TR4W is missing information it needs:"
-msgstr ""
+msgstr "このコンテストはセットアップされますが、TR4W は必要な情報が不足しています。"
 
 #: uappstrings.sreadinessmycallmissing
 #, fuzzy
 msgid "MY CALL is empty. TR4W cannot work out your country, continent or zone without it, and nothing that depends on them will be right."
-msgstr ""
+msgstr "私のCALLは空です。 TR4Wは、あなたの国、大陸、またはそれなしでゾーンを動作させることはできません。それらに依存するものは何もありません。"
 
 #: uappstrings.sreadinessmycountrymissing
 #, fuzzy
 msgid "MY COUNTRY is empty. It is normally worked out from MY CALL through CTY.DAT. Until it has a value TR4W treats this station as DX -- in ARRL DX that means it will ask every station for a state or province and refuse a power such as K or 100."
-msgstr ""
+msgstr "マイアカウントは空です。 通常、MY CALL から CTY.DAT 経由で動作します。 TR4W がこのステーションを DX として扱うまで、ARRL では DXは、州や州の各駅に尋ね、Kや100などの電力を拒絶することを意味します。"
 
 #: uappstrings.sreadinessmygridmissing
 #, fuzzy
 msgid "MY GRID is empty and this contest sends your grid square."
-msgstr ""
+msgstr "MY GRIDは空で、このコンテストはグリッドスクエアを送信します。"
 
 #: uappstrings.sreadinessmystatemissing
 #, fuzzy
 msgid "MY STATE is empty and this contest sends your state, province or section. TR4W will send a serial number instead."
-msgstr ""
+msgstr "MY STATEは空で、このコンテストはあなたの状態、州またはセクションを送信します。 TR4W はシリアル番号を代わりに送信します。"
 
 #: uappstrings.sreadinessmyzonemissing
 #, fuzzy
 msgid "MY ZONE is empty and this contest sends your zone."
-msgstr ""
+msgstr "MY ZONEは空で、このコンテストはゾーンを送信します。"
 
 #: uappstrings.sverifyallpassed
 #, fuzzy
 msgid "All %d check(s) passed."
-msgstr ""
+msgstr "すべて %d チェックイン"
 
 #: uappstrings.sverifyclose
 #, fuzzy
 msgid "&Close"
-msgstr ""
+msgstr "閉じる(&C)"
 
 #: uappstrings.sverifycolumncheck
 #, fuzzy
 msgid "Check"
-msgstr ""
+msgstr "チェックイン"
 
 #: uappstrings.sverifycolumnresult
 #, fuzzy
 msgid "Result"
-msgstr ""
+msgstr "結果発表"
 
 #: uappstrings.sverifyfailed
 #, fuzzy
 msgid "FAILED"
-msgstr ""
+msgstr "フィードバック"
 
 #: uappstrings.sverifypassed
 #, fuzzy
 msgid "Passed"
-msgstr ""
+msgstr "渡された"
 
 #: uappstrings.sverifyrun
 #, fuzzy
 msgid "&Run checks"
-msgstr ""
+msgstr "&Run チェック"
 
 #: uappstrings.sverifyrunning
 #, fuzzy
 msgid "Running %d check(s)..."
-msgstr ""
+msgstr "ランニング %d チェックイン"
 
 #: uappstrings.sverifysomefailed
 #, fuzzy
 msgid "%d of %d check(s) FAILED. Select a row for details."
-msgstr ""
+msgstr "%d インフォメーション %d チェック(s) FAILED. 詳細は行を選択します。"
 
 #: uappstrings.sverifytitle
 #, fuzzy
 msgid "Verification checks"
-msgstr ""
+msgstr "検証チェック"
 
 #: uprogrammain.scontestfileforeigndatabase
 #, fuzzy
@@ -9718,6 +9743,9 @@ msgid ""
 "\n"
 "TR4W cannot open another program's log. Choose a TR4W log (.db) or a contest configuration file (.cfg)."
 msgstr ""
+"このファイルはデータベースですが、TR4W によって作成されていない:\n"
+"\n"
+"%sTR4W は別のプログラムのログを開くことができません。 TR4W ログ (.db) または コンテスト構成ファイル (.cfg) を選択します。"
 
 #: uprogrammain.scontestfilenotrecognised
 #, fuzzy
@@ -9728,24 +9756,27 @@ msgid ""
 "\n"
 "Choose a TR4W log (.db) or a contest configuration file (.cfg)."
 msgstr ""
+"このファイルはTR4Wログではなく、コンテスト構成ファイルではありません。\n"
+"\n"
+"%sTR4W ログ (.db) または コンテスト構成ファイル (.cfg) を選択します。"
 
 #: utr4wstrings.tc_bankalt
 #, fuzzy
 msgid "Alt"
-msgstr ""
+msgstr "Alt"
 
 #: utr4wstrings.tc_bankcontrol
 #, fuzzy
 msgid "Control"
-msgstr ""
+msgstr "コントロール"
 
 #: utr4wstrings.tc_bankstandard
 #, fuzzy
 msgid "Standard"
-msgstr ""
+msgstr "スタンダード"
 
 #: utr4wstrings.tc_ignoredunknownqth
 #, fuzzy
 msgid "Ignored, not a known QTH:"
-msgstr ""
+msgstr "知られた QTH ではなく無視される:"
 

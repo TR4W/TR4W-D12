@@ -8283,22 +8283,22 @@ msgstr "尚未定义 DX 集群 -- 单击配置以添加一个 。"
 #: uappstrings.sexchangenoprecedence
 #, fuzzy
 msgid "Missing precedence (Q A B U M S)"
-msgstr ""
+msgstr "缺少优先级(问题A B U M S)"
 
 #: uappstrings.sexchangeoutofstateworkshostonly
 #, fuzzy
 msgid "Out of state: work %s stations only"
-msgstr ""
+msgstr "州外:工作 %s 仅限台站"
 
 #: uappstrings.scontestinactive
 #, fuzzy
 msgid "%s (inactive)"
-msgstr ""
+msgstr "%s (不活动)"
 
 #: uappstrings.scategorypowerchangedrescored
 #, fuzzy
 msgid "CATEGORY-POWER is now %s -- the scoring category changed and the log was rescored."
-msgstr ""
+msgstr "现在轮到POWER了 %s - 得分类别改变,日志被重新记分。"
 
 #: uappstrings.scontestnotonmultiop
 #, fuzzy
@@ -8334,6 +8334,9 @@ msgid ""
 "\n"
 "Check that it still exists.  tr4w.log records what was tried."
 msgstr ""
+"TR4W 无法打开您文件管理器中的此位置 :\n"
+"\n"
+"%s请检查它是否存在。 tr4w.log记录了所尝试的."
 
 #: uappstrings.sdownloadcannotverify
 #, fuzzy
@@ -8342,36 +8345,39 @@ msgid ""
 "\n"
 "The request was REFUSED rather than sent unverified. Turn off Preferences > Network > verify server certificates if you want to proceed without checking."
 msgstr ""
+"无法校验服务器的证书( I)%s) (中文(简体) ).\n"
+"\n"
+"请求得到答复,而不是未经核实。 关闭首选项 > 网络 > 验证服务器证书, 如果您想要不检查就进行 。"
 
 #: uappstrings.sexchangemodebriefcountry
 #, fuzzy
 msgid "(MY COUNTRY = %s)"
-msgstr ""
+msgstr "(我国 = %s页:1"
 
 #: uappstrings.sexchangemodebriefemptycountry
 #, fuzzy
 msgid "(MY COUNTRY is empty)"
-msgstr ""
+msgstr "(MY国家是空的)"
 
 #: uappstrings.sexchangemodefromcountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is %s."
-msgstr ""
+msgstr "比赛要求州、省或区 因为我的国家是 %s。 。 。 。"
 
 #: uappstrings.sexchangemodefromemptycountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is empty."
-msgstr ""
+msgstr "这场比赛需要州、省或区,"
 
 #: uappstrings.sfilenamecamefromsetting
 #, fuzzy
 msgid "The name came from the %s setting for this contest."
-msgstr ""
+msgstr "名字来自 %s 设置此比赛。"
 
 #: uappstrings.sfilenotfoundthere
 #, fuzzy
 msgid "TR4W could not find this file:"
-msgstr ""
+msgstr "TR4W 无法找到此文件 :"
 
 #: uappstrings.sfirstrunconvertmissing
 #, fuzzy
@@ -8381,6 +8387,8 @@ msgid ""
 "\n"
 "It is installed beside TR4W itself. TR4W will start with its defaults, and your old settings file is left untouched."
 msgstr ""
+"TR4W 找不到转换程序 :\n"
+" %s它安装在TR4W本身旁边. TR4W会从它的默认开始,而您的旧设置文件则未受影响 。"
 
 #: uappstrings.sfirstrunconvertnothingdone
 #, fuzzy
@@ -8392,11 +8400,15 @@ msgid ""
 "\n"
 "from a command prompt in that folder. Converting then replaces whatever you have configured in the meantime with the old values."
 msgstr ""
+"没有改变。\n"
+"\n"
+"TR4W会从默认开始, 您的旧设置文件没有被更改 。 您可以随时通过运行转换\n"
+" %s从文件夹中的命令提示。 转换后以旧值替换您同时配置的任意内容 。"
 
 #: uappstrings.sfirstrunconvertnow
 #, fuzzy
 msgid "Convert now"
-msgstr ""
+msgstr "现在转换"
 
 #: uappstrings.sfirstrunconvertprompt
 #, fuzzy
@@ -8413,16 +8425,23 @@ msgid ""
 "\n"
 "What is worth knowing is the ORDER. If you continue now and then set TR4W up by hand, converting afterwards overwrites that work with the values from the old file. Converting first avoids the question."
 msgstr ""
+"TR4W从较早的版本中找到了设置:\n"
+" %s而且它尚未写入自己的设置文件 :\n"
+" %sTR4W现在可以把旧配置带过 转换中列出它会改变什么,在写东西之前询问什么,这样你就可以先看,还是说不.\n"
+"\n"
+"你不必现在做。 没有东西会因为继续而丢失:TR4W从它的默认开始,你的旧文件没有受到任何影响,后来的转换只是用你的旧值来替换这些默认.\n"
+"\n"
+"值得知道的是命令。 如果您现在继续, 然后用手设置 TR4W , 转换后将覆盖与旧文件中的值一起工作 。 先转换可以避免这个问题。"
 
 #: uappstrings.sfirstrunconvertskip
 #, fuzzy
 msgid "Continue without converting"
-msgstr ""
+msgstr "不转换而继续"
 
 #: uappstrings.sfirstrunconverttitle
 #, fuzzy
 msgid "TR4W -- settings from an earlier version"
-msgstr ""
+msgstr "TR4W - 早先版本的设置"
 
 #: uappstrings.slogfileunavailable
 #, fuzzy
@@ -8433,6 +8452,9 @@ msgid ""
 "\n"
 "TR4W will keep running and keep trying to open it. Until it can, nothing from this session is written to the log."
 msgstr ""
+"TR4W 无法打开日志文件 。\n"
+"\n"
+"%sTR4W会继续运行并不断尝试打开. 在它能够做到之前,本次会话中没有任何内容被写入日志."
 
 #: uappstrings.snetcomputeridinuse
 #, fuzzy
@@ -8441,106 +8463,109 @@ msgid ""
 "\n"
 "Change COMPUTER ID to a letter no other station is using, then reconnect."
 msgstr ""
+"计算机标识 %s 已经被这个网络上的另一台站使用。\n"
+"\n"
+"更改计算机 ID到一个字母 没有其他的车站使用, 然后重新连接。"
 
 #: uappstrings.snewcontestin7qpnecountyorstate
 #, fuzzy
 msgid "Enter your county if you are in Indiana, the 7th call area, New England or Delaware. Enter your state, Canadian Province or \"DX\" if outside all four:"
-msgstr ""
+msgstr "如果你在印第安纳州 第七呼叫区 新英格兰或特拉华州 输入您的州、 加拿大省或“ DX ” , 如果所有四个省之外:"
 
 #: uappstrings.sqsonotlogged
 #, fuzzy
 msgid "NOT LOGGED -- the contest log would not accept this QSO. See tr4w.log. Do not clear the entry."
-msgstr ""
+msgstr "不是LOGGED——比赛日志不会接受这个QSO. 见tr4w.log. 不清除条目。"
 
 #: uappstrings.sreadinessdomesticfilemissing
 #, fuzzy
 msgid "This contest scores domestic multipliers from a .DOM file and none is named, so no domestic multiplier will be counted."
-msgstr ""
+msgstr "这场比赛从一个.DOM文件中对国内乘数进行评分,但没有一个被点名,因此不会计算国内乘数."
 
 #: uappstrings.sreadinessfooter
 #, fuzzy
 msgid "Set these in Preferences > Station, then restart TR4W: they are read once when the contest is set up, so changing them now will not change this contest."
-msgstr ""
+msgstr "在 Phition > station 中设置这些选项,然后重新启动 TR4W : 当比赛设置时它们会被读取一次,所以现在更改它们不会改变这场比赛."
 
 #: uappstrings.sreadinessheading
 #, fuzzy
 msgid "This contest is set up, but TR4W is missing information it needs:"
-msgstr ""
+msgstr "但TR4W缺少它需要的信息:"
 
 #: uappstrings.sreadinessmycallmissing
 #, fuzzy
 msgid "MY CALL is empty. TR4W cannot work out your country, continent or zone without it, and nothing that depends on them will be right."
-msgstr ""
+msgstr "我的电话是空的。 TR4W没有它就无法解决你的国家,大陆或地区,任何依赖它们的东西都不会是正确的."
 
 #: uappstrings.sreadinessmycountrymissing
 #, fuzzy
 msgid "MY COUNTRY is empty. It is normally worked out from MY CALL through CTY.DAT. Until it has a value TR4W treats this station as DX -- in ARRL DX that means it will ask every station for a state or province and refuse a power such as K or 100."
-msgstr ""
+msgstr "我的国家是空的。 通常通过CTY.DAT通过我的电话解决 在它有价值之前,TR4W将这个车站当作DX--在ARRL中 DX意味着它会向每个车站要求一个州或省,拒绝K或100这样的权力."
 
 #: uappstrings.sreadinessmygridmissing
 #, fuzzy
 msgid "MY GRID is empty and this contest sends your grid square."
-msgstr ""
+msgstr "我的GRID是空的,本次比赛 发送您的网格广场。"
 
 #: uappstrings.sreadinessmystatemissing
 #, fuzzy
 msgid "MY STATE is empty and this contest sends your state, province or section. TR4W will send a serial number instead."
-msgstr ""
+msgstr "我的状态是空的,这次比赛 发送你的州,省或部分。 TR4W会发送序列号代替."
 
 #: uappstrings.sreadinessmyzonemissing
 #, fuzzy
 msgid "MY ZONE is empty and this contest sends your zone."
-msgstr ""
+msgstr "我的ZONE是空的,这场比赛 发送你的区域。"
 
 #: uappstrings.sverifyallpassed
 #, fuzzy
 msgid "All %d check(s) passed."
-msgstr ""
+msgstr "全体 %d 检查通过。"
 
 #: uappstrings.sverifyclose
 #, fuzzy
 msgid "&Close"
-msgstr ""
+msgstr "关闭( C)"
 
 #: uappstrings.sverifycolumncheck
 #, fuzzy
 msgid "Check"
-msgstr ""
+msgstr "检查"
 
 #: uappstrings.sverifycolumnresult
 #, fuzzy
 msgid "Result"
-msgstr ""
+msgstr "结果"
 
 #: uappstrings.sverifyfailed
 #, fuzzy
 msgid "FAILED"
-msgstr ""
+msgstr "失败"
 
 #: uappstrings.sverifypassed
 #, fuzzy
 msgid "Passed"
-msgstr ""
+msgstr "已经通过"
 
 #: uappstrings.sverifyrun
 #, fuzzy
 msgid "&Run checks"
-msgstr ""
+msgstr "运行检查( R)"
 
 #: uappstrings.sverifyrunning
 #, fuzzy
 msgid "Running %d check(s)..."
-msgstr ""
+msgstr "运行 %d 检查..."
 
 #: uappstrings.sverifysomefailed
 #, fuzzy
 msgid "%d of %d check(s) FAILED. Select a row for details."
-msgstr ""
+msgstr "%d 页:1 %d 检查失败。 为细节选择一行。"
 
 #: uappstrings.sverifytitle
 #, fuzzy
 msgid "Verification checks"
-msgstr ""
+msgstr "核查检查"
 
 #: uprogrammain.scontestfileforeigndatabase
 #, fuzzy
@@ -8551,6 +8576,9 @@ msgid ""
 "\n"
 "TR4W cannot open another program's log. Choose a TR4W log (.db) or a contest configuration file (.cfg)."
 msgstr ""
+"这个文件是一个数据库,但它不是由TR4W创建的:\n"
+"\n"
+"%sTR4W无法打开另一个程序的日志. 选择TR4W日志(.db)或比赛配置文件(.cfg)."
 
 #: uprogrammain.scontestfilenotrecognised
 #, fuzzy
@@ -8561,24 +8589,27 @@ msgid ""
 "\n"
 "Choose a TR4W log (.db) or a contest configuration file (.cfg)."
 msgstr ""
+"此文件不是一个 TR4W 日志, 也不是一个比赛配置文件 :\n"
+"\n"
+"%s选择TR4W日志(.db)或比赛配置文件(.cfg)."
 
 #: utr4wstrings.tc_bankalt
 #, fuzzy
 msgid "Alt"
-msgstr ""
+msgstr "备选案文"
 
 #: utr4wstrings.tc_bankcontrol
 #, fuzzy
 msgid "Control"
-msgstr ""
+msgstr "控件"
 
 #: utr4wstrings.tc_bankstandard
 #, fuzzy
 msgid "Standard"
-msgstr ""
+msgstr "标准"
 
 #: utr4wstrings.tc_ignoredunknownqth
 #, fuzzy
 msgid "Ignored, not a known QTH:"
-msgstr ""
+msgstr "被忽略, 不是已知的 QTH :"
 

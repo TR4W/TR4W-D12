@@ -9462,22 +9462,22 @@ msgstr "Nenhum cluster DX ainda está definido -- clique em Configurar para adic
 #: uappstrings.sexchangenoprecedence
 #, fuzzy
 msgid "Missing precedence (Q A B U M S)"
-msgstr ""
+msgstr "Preferência em falta (Q A B U M S)"
 
 #: uappstrings.sexchangeoutofstateworkshostonly
 #, fuzzy
 msgid "Out of state: work %s stations only"
-msgstr ""
+msgstr "Fora de estado: trabalho %s apenas estações"
 
 #: uappstrings.scontestinactive
 #, fuzzy
 msgid "%s (inactive)"
-msgstr ""
+msgstr "%s (inactivo)"
 
 #: uappstrings.scategorypowerchangedrescored
 #, fuzzy
 msgid "CATEGORY-POWER is now %s -- the scoring category changed and the log was rescored."
-msgstr ""
+msgstr "CATEGORIA-POWER é agora %s -- a categoria de pontuação mudou e o log foi remarcado."
 
 #: uappstrings.scontestnotonmultiop
 #, fuzzy
@@ -9513,6 +9513,9 @@ msgid ""
 "\n"
 "Check that it still exists.  tr4w.log records what was tried."
 msgstr ""
+"Não foi possível abrir este local no seu gestor de ficheiros:\n"
+"\n"
+"%sVerifica se ainda existe. tr4w.log registra o que foi tentado."
 
 #: uappstrings.sdownloadcannotverify
 #, fuzzy
@@ -9521,36 +9524,39 @@ msgid ""
 "\n"
 "The request was REFUSED rather than sent unverified. Turn off Preferences > Network > verify server certificates if you want to proceed without checking."
 msgstr ""
+"o certificado do servidor não pôde ser verificado (%s).\n"
+"\n"
+"O pedido foi rejeitado em vez de enviado sem verificação. Desligar as Preferências > Rede > verificar certificados de servidor se você deseja prosseguir sem verificar."
 
 #: uappstrings.sexchangemodebriefcountry
 #, fuzzy
 msgid "(MY COUNTRY = %s)"
-msgstr ""
+msgstr "(MEU PAÍS = %s)"
 
 #: uappstrings.sexchangemodebriefemptycountry
 #, fuzzy
 msgid "(MY COUNTRY is empty)"
-msgstr ""
+msgstr "(MY PAÍS está vazio)"
 
 #: uappstrings.sexchangemodefromcountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is %s."
-msgstr ""
+msgstr "Este concurso está pedindo um estado, província ou seção porque o MEU PAÍS é %s."
 
 #: uappstrings.sexchangemodefromemptycountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is empty."
-msgstr ""
+msgstr "Este concurso está pedindo um estado, província ou seção porque o MEU país está vazio."
 
 #: uappstrings.sfilenamecamefromsetting
 #, fuzzy
 msgid "The name came from the %s setting for this contest."
-msgstr ""
+msgstr "O nome veio da %s Preparando para este concurso."
 
 #: uappstrings.sfilenotfoundthere
 #, fuzzy
 msgid "TR4W could not find this file:"
-msgstr ""
+msgstr "Não foi possível encontrar este arquivo:"
 
 #: uappstrings.sfirstrunconvertmissing
 #, fuzzy
@@ -9560,6 +9566,8 @@ msgid ""
 "\n"
 "It is installed beside TR4W itself. TR4W will start with its defaults, and your old settings file is left untouched."
 msgstr ""
+"Não foi possível encontrar o programa de conversão TR4W:\n"
+" %sEstá instalado ao lado do próprio TR4W. TR4W começará com seus padrões, e seu arquivo de configurações antigo fica intocado."
 
 #: uappstrings.sfirstrunconvertnothingdone
 #, fuzzy
@@ -9571,11 +9579,15 @@ msgid ""
 "\n"
 "from a command prompt in that folder. Converting then replaces whatever you have configured in the meantime with the old values."
 msgstr ""
+"Nada foi convertido.\n"
+"\n"
+"TR4W começará com seus padrões e seu arquivo de configurações antigo está intocado. Você pode converter a qualquer momento executando\n"
+" %sa partir de um prompt de comando nessa pasta. Convertendo então substitui o que você configurou enquanto isso com os valores antigos."
 
 #: uappstrings.sfirstrunconvertnow
 #, fuzzy
 msgid "Convert now"
-msgstr ""
+msgstr "Converter agora"
 
 #: uappstrings.sfirstrunconvertprompt
 #, fuzzy
@@ -9592,16 +9604,23 @@ msgid ""
 "\n"
 "What is worth knowing is the ORDER. If you continue now and then set TR4W up by hand, converting afterwards overwrites that work with the values from the old file. Converting first avoids the question."
 msgstr ""
+"TR4W encontrou configurações de uma versão anterior:\n"
+" %se ainda não escreveu o seu próprio ficheiro de configuração:\n"
+" %sTR4W pode carregar essa configuração antiga através agora. A conversão lista o que mudaria e pediria antes de escrever qualquer coisa, para que você possa olhar primeiro e ainda dizer não.\n"
+"\n"
+"Não tens de o fazer agora. Nada é perdido continuando: TR4W começa com seus padrões, seu arquivo antigo é deixado intocado, e converter mais tarde simplesmente substitui esses padrões por seus valores antigos.\n"
+"\n"
+"O que vale a pena saber é a Ordem. Se você continuar de vez em quando, configure TR4W manualmente, convertendo depois sobrescreverá que funciona com os valores do arquivo antigo. Converter primeiro evita a pergunta."
 
 #: uappstrings.sfirstrunconvertskip
 #, fuzzy
 msgid "Continue without converting"
-msgstr ""
+msgstr "Continuar sem converter"
 
 #: uappstrings.sfirstrunconverttitle
 #, fuzzy
 msgid "TR4W -- settings from an earlier version"
-msgstr ""
+msgstr "TR4W -- configurações de uma versão anterior"
 
 #: uappstrings.slogfileunavailable
 #, fuzzy
@@ -9612,6 +9631,9 @@ msgid ""
 "\n"
 "TR4W will keep running and keep trying to open it. Until it can, nothing from this session is written to the log."
 msgstr ""
+"O TR4W não conseguiu abrir o seu ficheiro de registo.\n"
+"\n"
+"%sTR4W vai continuar correndo e continuar tentando abri-lo. Até que possa, nada desta sessão está escrito no diário de bordo."
 
 #: uappstrings.snetcomputeridinuse
 #, fuzzy
@@ -9620,106 +9642,109 @@ msgid ""
 "\n"
 "Change COMPUTER ID to a letter no other station is using, then reconnect."
 msgstr ""
+"ID do computador %s já está em uso por outra estação nesta rede.\n"
+"\n"
+"Alterar o COMPUTADOR ID para uma letra nenhuma outra estação está usando, em seguida, reconectar."
 
 #: uappstrings.snewcontestin7qpnecountyorstate
 #, fuzzy
 msgid "Enter your county if you are in Indiana, the 7th call area, New England or Delaware. Enter your state, Canadian Province or \"DX\" if outside all four:"
-msgstr ""
+msgstr "Entre no seu condado se você estiver em Indiana, a 7a área de chamada, Nova Inglaterra ou Delaware. Digite seu estado, Província Canadense ou \"DX\" se fora dos quatro:"
 
 #: uappstrings.sqsonotlogged
 #, fuzzy
 msgid "NOT LOGGED -- the contest log would not accept this QSO. See tr4w.log. Do not clear the entry."
-msgstr ""
+msgstr "NÃO LAGADO -- o registro do concurso não aceitaria este QSO. Ver tr4w.log. Não limpar a entrada."
 
 #: uappstrings.sreadinessdomesticfilemissing
 #, fuzzy
 msgid "This contest scores domestic multipliers from a .DOM file and none is named, so no domestic multiplier will be counted."
-msgstr ""
+msgstr "Este concurso pontua multiplicadores domésticos de um arquivo .DOM e nenhum é nomeado, então nenhum multiplicador doméstico será contado."
 
 #: uappstrings.sreadinessfooter
 #, fuzzy
 msgid "Set these in Preferences > Station, then restart TR4W: they are read once when the contest is set up, so changing them now will not change this contest."
-msgstr ""
+msgstr "Configure estes em Preferências > Station, então reinicie TR4W: eles são lidos uma vez quando o concurso é configurado, então mudá-los agora não vai mudar este concurso."
 
 #: uappstrings.sreadinessheading
 #, fuzzy
 msgid "This contest is set up, but TR4W is missing information it needs:"
-msgstr ""
+msgstr "Este concurso está configurado, mas TR4W está faltando informações que precisa:"
 
 #: uappstrings.sreadinessmycallmissing
 #, fuzzy
 msgid "MY CALL is empty. TR4W cannot work out your country, continent or zone without it, and nothing that depends on them will be right."
-msgstr ""
+msgstr "A minha chamada está vazia. TR4W não pode trabalhar o seu país, continente ou zona sem ele, e nada que depende deles estará certo."
 
 #: uappstrings.sreadinessmycountrymissing
 #, fuzzy
 msgid "MY COUNTRY is empty. It is normally worked out from MY CALL through CTY.DAT. Until it has a value TR4W treats this station as DX -- in ARRL DX that means it will ask every station for a state or province and refuse a power such as K or 100."
-msgstr ""
+msgstr "O meu país está vazio. Normalmente é trabalhado para fora de MINHA CHAMADA através de CTY.DAT. Até que tenha um valor TR4W trata esta estação como DX -- em ARRL DX que significa que vai pedir a cada estação para um estado ou província e recusar um poder como K ou 100."
 
 #: uappstrings.sreadinessmygridmissing
 #, fuzzy
 msgid "MY GRID is empty and this contest sends your grid square."
-msgstr ""
+msgstr "Meu grid está vazio e este concurso envia sua grade quadrada."
 
 #: uappstrings.sreadinessmystatemissing
 #, fuzzy
 msgid "MY STATE is empty and this contest sends your state, province or section. TR4W will send a serial number instead."
-msgstr ""
+msgstr "O MEU ESTADO está vazio e este concurso envia o seu estado, província ou secção. TR4W irá enviar um número de série."
 
 #: uappstrings.sreadinessmyzonemissing
 #, fuzzy
 msgid "MY ZONE is empty and this contest sends your zone."
-msgstr ""
+msgstr "A minha zona está vazia e este concurso envia a tua zona."
 
 #: uappstrings.sverifyallpassed
 #, fuzzy
 msgid "All %d check(s) passed."
-msgstr ""
+msgstr "Tudo %d verificação( s) aprovada( s)."
 
 #: uappstrings.sverifyclose
 #, fuzzy
 msgid "&Close"
-msgstr ""
+msgstr "&Fechar"
 
 #: uappstrings.sverifycolumncheck
 #, fuzzy
 msgid "Check"
-msgstr ""
+msgstr "Verificar"
 
 #: uappstrings.sverifycolumnresult
 #, fuzzy
 msgid "Result"
-msgstr ""
+msgstr "Resultado"
 
 #: uappstrings.sverifyfailed
 #, fuzzy
 msgid "FAILED"
-msgstr ""
+msgstr "FALHO"
 
 #: uappstrings.sverifypassed
 #, fuzzy
 msgid "Passed"
-msgstr ""
+msgstr "Passado"
 
 #: uappstrings.sverifyrun
 #, fuzzy
 msgid "&Run checks"
-msgstr ""
+msgstr "&Executar verificações"
 
 #: uappstrings.sverifyrunning
 #, fuzzy
 msgid "Running %d check(s)..."
-msgstr ""
+msgstr "Em execução %d verificação( s)..."
 
 #: uappstrings.sverifysomefailed
 #, fuzzy
 msgid "%d of %d check(s) FAILED. Select a row for details."
-msgstr ""
+msgstr "%d de %d verificação(s) falhou. Selecione uma linha para detalhes."
 
 #: uappstrings.sverifytitle
 #, fuzzy
 msgid "Verification checks"
-msgstr ""
+msgstr "Verificação dos controlos"
 
 #: uprogrammain.scontestfileforeigndatabase
 #, fuzzy
@@ -9730,6 +9755,9 @@ msgid ""
 "\n"
 "TR4W cannot open another program's log. Choose a TR4W log (.db) or a contest configuration file (.cfg)."
 msgstr ""
+"Este arquivo é um banco de dados, mas não foi criado por TR4W:\n"
+"\n"
+"%sTR4W não pode abrir o log de outro programa. Escolha um log TR4W (.db) ou um arquivo de configuração do concurso (.cfg)."
 
 #: uprogrammain.scontestfilenotrecognised
 #, fuzzy
@@ -9740,24 +9768,27 @@ msgid ""
 "\n"
 "Choose a TR4W log (.db) or a contest configuration file (.cfg)."
 msgstr ""
+"Este ficheiro não é um registo TR4W e não é um ficheiro de configuração do concurso:\n"
+"\n"
+"%sEscolha um log TR4W (.db) ou um arquivo de configuração do concurso (.cfg)."
 
 #: utr4wstrings.tc_bankalt
 #, fuzzy
 msgid "Alt"
-msgstr ""
+msgstr "Alt"
 
 #: utr4wstrings.tc_bankcontrol
 #, fuzzy
 msgid "Control"
-msgstr ""
+msgstr "Controlo"
 
 #: utr4wstrings.tc_bankstandard
 #, fuzzy
 msgid "Standard"
-msgstr ""
+msgstr "Padrão"
 
 #: utr4wstrings.tc_ignoredunknownqth
 #, fuzzy
 msgid "Ignored, not a known QTH:"
-msgstr ""
+msgstr "Ignorado, nenhum QTH conhecido:"
 
