@@ -8769,3 +8769,18 @@ msgstr "Το %s δεν μπορεί ακόμη να χρησιμοποιηθεί
 msgid "IN7QPNE is for stations outside Indiana, the 7th call area, New England and Delaware. From %s, choose the %s instead."
 msgstr "Το IN7QPNE είναι για σταθμούς εκτός Indiana, 7ης περιοχής κλήσης, New England και Delaware. Από %s, επιλέξτε το %s."
 
+#: uappstrings.speeronanothercontest
+#, fuzzy
+msgid "Station %s is on %s, this station is on %s -- its QSOs are NOT being logged here. All stations must run the same contest."
+msgstr "Ο σταθμός %s είναι στον διαγωνισμό %s, αυτός ο σταθμός είναι στον %s -- τα QSO του ΔΕΝ καταγράφονται εδώ. Όλοι οι σταθμοί πρέπει να τρέχουν τον ίδιο διαγωνισμό."
+
+#: uappstrings.sexchangenotagridorreport
+#, fuzzy
+msgid "%s is not a grid square or a signal report"
+msgstr "Το %s δεν είναι locator ούτε αναφορά σήματος"
+
+#: uappstrings.sexchangegridrequired
+#, fuzzy
+msgid "Grid square required"
+msgstr "Απαιτείται locator"
+

@@ -8310,3 +8310,18 @@ msgstr "%s 目前还不能在多操作员网络上使用 -- 网络协议无法�
 msgid "IN7QPNE is for stations outside Indiana, the 7th call area, New England and Delaware. From %s, choose the %s instead."
 msgstr "IN7QPNE 适用于印第安纳、第 7 呼号区、新英格兰和特拉华以外的电台。在 %s，请改选 %s。"
 
+#: uappstrings.speeronanothercontest
+#, fuzzy
+msgid "Station %s is on %s, this station is on %s -- its QSOs are NOT being logged here. All stations must run the same contest."
+msgstr "电台 %s 正在参加 %s，本电台正在参加 %s -- 它的 QSO 不会在这里记录。所有电台必须运行同一个比赛。"
+
+#: uappstrings.sexchangenotagridorreport
+#, fuzzy
+msgid "%s is not a grid square or a signal report"
+msgstr "%s 不是网格坐标，也不是信号报告"
+
+#: uappstrings.sexchangegridrequired
+#, fuzzy
+msgid "Grid square required"
+msgstr "需要网格坐标"
+

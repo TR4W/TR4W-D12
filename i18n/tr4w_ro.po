@@ -9045,3 +9045,18 @@ msgstr "%s nu poate fi încă folosit în rețeaua multi-op -- protocolul de re�
 msgid "IN7QPNE is for stations outside Indiana, the 7th call area, New England and Delaware. From %s, choose the %s instead."
 msgstr "IN7QPNE este pentru stațiile din afara Indianei, a zonei a 7-a de indicativ, a New England și a Delaware. Din %s, alegeți în schimb %s."
 
+#: uappstrings.speeronanothercontest
+#, fuzzy
+msgid "Station %s is on %s, this station is on %s -- its QSOs are NOT being logged here. All stations must run the same contest."
+msgstr "Stația %s este pe %s, această stație este pe %s -- QSO-urile ei NU sunt înregistrate aici. Toate stațiile trebuie să lucreze în același concurs."
+
+#: uappstrings.sexchangenotagridorreport
+#, fuzzy
+msgid "%s is not a grid square or a signal report"
+msgstr "%s nu este nici QTH locator, nici raport de semnal"
+
+#: uappstrings.sexchangegridrequired
+#, fuzzy
+msgid "Grid square required"
+msgstr "Este necesar QTH locatorul"
+

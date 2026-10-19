@@ -9477,3 +9477,18 @@ msgstr "%s은(는) 아직 멀티 오퍼레이터 네트워크에서 사용할 �
 msgid "IN7QPNE is for stations outside Indiana, the 7th call area, New England and Delaware. From %s, choose the %s instead."
 msgstr "IN7QPNE는 인디애나, 제7 콜 지역, 뉴잉글랜드, 델라웨어 밖의 국을 위한 것입니다. %s에서는 대신 %s을(를) 선택하십시오."
 
+#: uappstrings.speeronanothercontest
+#, fuzzy
+msgid "Station %s is on %s, this station is on %s -- its QSOs are NOT being logged here. All stations must run the same contest."
+msgstr "스테이션 %s은(는) %s에 있고, 이 스테이션은 %s에 있습니다 -- 해당 스테이션의 QSO는 여기에 기록되지 않습니다. 모든 스테이션은 같은 콘테스트를 운용해야 합니다."
+
+#: uappstrings.sexchangenotagridorreport
+#, fuzzy
+msgid "%s is not a grid square or a signal report"
+msgstr "%s은(는) 그리드 스퀘어도 신호 리포트도 아닙니다"
+
+#: uappstrings.sexchangegridrequired
+#, fuzzy
+msgid "Grid square required"
+msgstr "그리드 스퀘어가 필요합니다"
+

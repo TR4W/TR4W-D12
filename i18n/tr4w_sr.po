@@ -8919,3 +8919,18 @@ msgstr "%s se još ne može koristiti na multi-op mreži -- mrežni protokol ne 
 msgid "IN7QPNE is for stations outside Indiana, the 7th call area, New England and Delaware. From %s, choose the %s instead."
 msgstr "IN7QPNE je za stanice van Indijane, 7. pozivne oblasti, Nove Engleske i Delavera. Iz %s umesto toga izaberite %s."
 
+#: uappstrings.speeronanothercontest
+#, fuzzy
+msgid "Station %s is on %s, this station is on %s -- its QSOs are NOT being logged here. All stations must run the same contest."
+msgstr "Stanica %s je na %s, ova stanica je na %s -- njene veze se ovde NE beleže. Sve stanice moraju raditi isto takmičenje."
+
+#: uappstrings.sexchangenotagridorreport
+#, fuzzy
+msgid "%s is not a grid square or a signal report"
+msgstr "%s nije ni lokator ni raport"
+
+#: uappstrings.sexchangegridrequired
+#, fuzzy
+msgid "Grid square required"
+msgstr "Potreban je lokator"
+

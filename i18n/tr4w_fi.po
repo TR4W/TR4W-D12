@@ -8769,3 +8769,18 @@ msgstr "%s ei ole vielä käytettävissä multi-op-verkossa -- verkkoprotokolla 
 msgid "IN7QPNE is for stations outside Indiana, the 7th call area, New England and Delaware. From %s, choose the %s instead."
 msgstr "IN7QPNE on Indianan, 7. kutsualueen, New Englandin ja Delawaren ulkopuolisille asemille. Valitse %s:sta sen sijaan %s."
 
+#: uappstrings.speeronanothercontest
+#, fuzzy
+msgid "Station %s is on %s, this station is on %s -- its QSOs are NOT being logged here. All stations must run the same contest."
+msgstr "Asema %s on kilpailussa %s, tämä asema on kilpailussa %s -- sen QSO:ita EI kirjata tänne. Kaikkien asemien on ajettava samaa kilpailua."
+
+#: uappstrings.sexchangenotagridorreport
+#, fuzzy
+msgid "%s is not a grid square or a signal report"
+msgstr "%s ei ole lokaattori eikä signaaliraportti"
+
+#: uappstrings.sexchangegridrequired
+#, fuzzy
+msgid "Grid square required"
+msgstr "Lokaattori vaaditaan"
+

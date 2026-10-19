@@ -9007,3 +9007,18 @@ msgstr "%s zatím nelze použít v síti multi-op -- síťový protokol jej nedo
 msgid "IN7QPNE is for stations outside Indiana, the 7th call area, New England and Delaware. From %s, choose the %s instead."
 msgstr "IN7QPNE je pro stanice mimo Indianu, 7. volací oblast, Novou Anglii a Delaware. Z %s zvolte místo toho %s."
 
+#: uappstrings.speeronanothercontest
+#, fuzzy
+msgid "Station %s is on %s, this station is on %s -- its QSOs are NOT being logged here. All stations must run the same contest."
+msgstr "Stanice %s je na závodě %s, tato stanice je na závodě %s -- její spojení se zde NEZAPISUJÍ. Všechny stanice musí jet stejný závod."
+
+#: uappstrings.sexchangenotagridorreport
+#, fuzzy
+msgid "%s is not a grid square or a signal report"
+msgstr "%s není WW lokátor ani report signálu"
+
+#: uappstrings.sexchangegridrequired
+#, fuzzy
+msgid "Grid square required"
+msgstr "Je vyžadován WW lokátor"
+

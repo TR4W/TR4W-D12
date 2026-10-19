@@ -9489,3 +9489,18 @@ msgstr "%s kan nog niet worden gebruikt op het multi-op-netwerk -- het netwerkpr
 msgid "IN7QPNE is for stations outside Indiana, the 7th call area, New England and Delaware. From %s, choose the %s instead."
 msgstr "IN7QPNE is voor stations buiten Indiana, het 7e roepnaamgebied, New England en Delaware. Kies vanuit %s in plaats daarvan %s."
 
+#: uappstrings.speeronanothercontest
+#, fuzzy
+msgid "Station %s is on %s, this station is on %s -- its QSOs are NOT being logged here. All stations must run the same contest."
+msgstr "Station %s doet mee aan %s, dit station aan %s -- de QSO's ervan worden hier NIET gelogd. Alle stations moeten dezelfde contest draaien."
+
+#: uappstrings.sexchangenotagridorreport
+#, fuzzy
+msgid "%s is not a grid square or a signal report"
+msgstr "%s is geen locator en geen rapport"
+
+#: uappstrings.sexchangegridrequired
+#, fuzzy
+msgid "Grid square required"
+msgstr "Locator vereist"
+
