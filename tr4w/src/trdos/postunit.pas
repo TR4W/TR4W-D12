@@ -2361,7 +2361,7 @@ procedure ExportToEDIByBand( Band: BandType );
   Cabrillo copy never set MyPark. Nothing in Cabrillo reads it, so no file
   changes; the third reader, POTA's ADIF activation fields, is why it is one
   function now. *)
-function CurrentMyStationExchange(aContest: TContestBase): TMyStationExchange;
+function CurrentMyStationExchange(aContest: TContestBase): TMyStationExchange; overload;
 begin
    (* The state SENT in this contest, NOT MY STATE -- design 7.11 (M9a). A
      contest that sends nothing there, or the grid, says so for the session;
@@ -2377,6 +2377,58 @@ begin
    Result.MyFOCNumber  := Settings.My.ResolvedFocNumber;
    Result.MyPostalCode := Settings.My.ResolvedPostalCode;
    Result.MyPark       := Settings.My.ResolvedPark;
+end;
+
+(* THE SAME, FOR ONE LOGGED QSO -- FROM ITS RECORD (log schema 3, stage 4).
+
+  A LOGGED QSO READS ITS RECORD (Q13): the exchange an export says we sent is
+  built from where the station was for THAT QSO, not from today's settings.
+
+  A ROW THAT RECORDED NO STATION (my_source NULL) IS THE SESSION'S, exactly as
+  before (NY4I, ruling A) -- which is every corpus fixture, so no reference
+  moves.
+
+  A ROW THAT DID overlays the fields it records:
+    MyGrid, MySection, MyPark   the row's
+    MyZone                      the row's zone of the kind this contest sends
+                                (ITU for an ITU-zone contest, else the CTY
+                                zone mode's), '' when unknown
+    MyState                     the row's my_state, BUT ONLY WHEN THE SESSION
+                                SENDS MY STATE ITSELF in that slot: a contest
+                                whose set-up sends something else there (the
+                                Cup of the RF sends the grid) keeps it -- my_state
+                                is the place, not that slot
+  and keeps the session's for the rest -- name, FD class, check, precedence,
+  FOC number, postal code -- which the record holds no column for: they do not
+  change within a log.
+
+  A VALUE THAT HAS NOT CHANGED KEEPS THE SESSION'S TEXT. The record holds a
+  zone as a number, so a stated '05' would come back '5'; asking "is it the
+  same zone" first means a QSO whose station did not move writes exactly what
+  it did. *)
+function CurrentMyStationExchange(aContest: TContestBase;
+                                  const aFacts: TQsoMyFacts): TMyStationExchange; overload;
+begin
+   (* The rule is uContestBase.MyStationExchangeOfQSO, pinned there; this
+     hands it the session's values and the two facts only the session knows:
+     does it send MY STATE in the state slot, and which zone does the contest
+     send. *)
+   Result := MyStationExchangeOfQSO( CurrentMyStationExchange( aContest ), aFacts,
+      SentMyState = Settings.My.ResolvedState,
+      ( ContestZoneMultiplierZones( aContest ) = zmzITUZones ) or
+      ( CTY.ctyZoneMode <> CQZoneMode ) );
+end;
+
+(* OUR CALL FOR ONE LOGGED QSO -- D5 (log schema 3, stage 4): the call the QSO
+  recorded (my_call); else the call the log's entry DECLARED (contest.my_call);
+  and only when neither is known, today's MY CALL. Never today's ahead of the
+  record. In every corpus fixture the three agree (measured), so no reference
+  moves. *)
+function ExportCallFor( const aFacts: TQsoMyFacts ): string;
+begin
+   (* The rule is uQsoMyFacts.ExportCallOf, pinned there. *)
+   Result := string( ExportCallOf( aFacts, LogSourceDeclaredCall,
+      UTF8Encode( Settings.My.Call ) ) );
 end;
 
 (* THE EXCHANGE FAILURES OF ONE EXPORT RUN -- plan F25/F26/F27, NY4I
@@ -2462,12 +2514,25 @@ function ExchangeContest( aStation: TContestBase ): TContestBase;
   exchange', which a robot reads as an exchange: a made-up value is worse
   than a missing field. TryFormatADIFSentExchange has logged the contest,
   the QSO and the reason; this counts it for the once-per-export warning. *)
-function MyExchangeForExport(aContest: TContestBase): string;
+function MyExchangeForExport(aContest: TContestBase; const aMyFacts: TQsoMyFacts;
+   const aSentExchange: AnsiString): string;
   var
     my: TMyStationExchange;
     failure: string;
   begin
-  my := CurrentMyStationExchange(aContest);
+  (* AN IMPORTED QSO SENT WHAT ITS FILE SAYS (log schema 3, stage 4). Its
+    exchange_sent IS that file's STX_STRING, verbatim (stage 2's D3 fix), and
+    rebuilding it from parts would rewrite what the file states -- a file can
+    name MY_STATE NE beside an STX_STRING that sent FL. A row logged HERE is
+    not this case: its exchange_sent is the contest's CANONICAL form (the RTC
+    and UDP spelling), not the ADIF one, so it is rebuilt -- from its record. *)
+  if Length( RecordedSentExchange( aMyFacts, aSentExchange ) ) > 0 then
+     begin
+     Result := string( RecordedSentExchange( aMyFacts, aSentExchange ) );
+     Exit;
+     end;
+
+  my := CurrentMyStationExchange(aContest, aMyFacts);
 
   Result := '';
   if not GoodLookingQSO then
@@ -2494,7 +2559,7 @@ function MyExchangeForExport(aContest: TContestBase): string;
 // reinterpretation of QTHString.  Called once per record.
 // ---------------------------------------------------------------------------
 function EmitContestSpecificTailForExport( const rec: ContestExchange;
-   const aMyFacts: TQsoMyFacts ): string;
+   const aMyFacts: TQsoMyFacts; const aSentExchange: AnsiString ): string;
   var
     (* What the contest is handed for its own MY fields (POTA's park). *)
     myStation: TMyStationExchange;
@@ -2527,7 +2592,7 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange;
   // round-trip tests rely on it being present without a tail emitter.
 
   // ----- STX_STRING (always, from MY side) -----
-  stxString := MyExchangeForExport( contestRules );
+  stxString := MyExchangeForExport( contestRules, aMyFacts, aSentExchange );
   Result    := Result + EmitADIFField( 'STX_STRING',
      Trim( DeleteRepeatedSpaces( stxString ) ) );
 
@@ -2549,15 +2614,12 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange;
   // and a hunter's state or grid after it; those were two `ceContest = POTA`
   // tests here until POTA gained its class (design Q6).
   //
-  // OUR PARK FROM THE RECORD when the row recorded one (log schema 3, stage
-  // 2): POTA writes its MY_SIG_INFO, MY_POTA_REF, MY_DXCC and MY_STATE from
-  // this park, and a logged QSO says where IT was activated. A row that never
-  // recorded its station keeps the session's park (ruling A).
-  myStation := CurrentMyStationExchange( contestRules );
-  if aMyFacts.Source <> mfsNotCaptured then
-     begin
-     myStation.MyPark := string( aMyFacts.Park );
-     end;
+  // OUR STATION FROM THE RECORD when the row recorded one (log schema 3,
+  // stages 2 and 4): POTA writes its MY_SIG_INFO, MY_POTA_REF, MY_DXCC and
+  // MY_STATE from this park, and every contest's exchange fields from where
+  // the station was for THIS QSO. A row that never recorded its station
+  // keeps the session's (ruling A).
+  myStation := CurrentMyStationExchange( contestRules, aMyFacts );
   Result := Result + ContestIdentity( rec.ceContest ).EmitADIFExchangeFields(
      myStation, rec, ExchangeInformation.RST );
 
@@ -2656,15 +2718,16 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange;
             end;
      end;
 
-  // ----- STATION_CALLSIGN (when operator differs from Settings.My.Call) -----
-  // ONLY FOR A ROW THAT NEVER RECORDED ITS STATION -- the session fallback
-  // NY4I ruled for (A). A row that did gets it from its own my_call, by the
-  // same rule, in uADIF.EmitADIFMyStationFields (log schema 3, stage 2).
+  // ----- STATION_CALLSIGN (when the operator is not the station) -----
+  // ONLY FOR A ROW THAT NEVER RECORDED ITS STATION. A row that did gets it
+  // from its own my_call, by the same rule, in uADIF.EmitADIFMyStationFields
+  // (log schema 3, stage 2). For this one the call is the LOG'S -- the call
+  // its entry declared -- not today's MY CALL (D5, stage 4): ExportCallFor.
   if ( aMyFacts.Source = mfsNotCaptured ) and
-     ( rec.ceOperator <> '' ) and ( string( rec.ceOperator ) <> string( Settings.My.Call ) )
+     ( rec.ceOperator <> '' ) and ( string( rec.ceOperator ) <> ExportCallFor( aMyFacts ) )
   then
      begin
-     Result := Result + EmitADIFField( 'STATION_CALLSIGN', string( Settings.My.Call ) );
+     Result := Result + EmitADIFField( 'STATION_CALLSIGN', ExportCallFor( aMyFacts ) );
      end;
   end;
 
@@ -2673,6 +2736,9 @@ procedure ExportToADIF;
     records: TContestExchangeArray;
     (* records[i]'s own station, and how many never recorded one. *)
     myFacts: TQsoMyFactsArray;
+    (* records[i]'s exchange_sent -- an imported row's file STX_STRING. *)
+    sentExchanges: TSentExchangeArray;
+    rowSent: AnsiString;
     rowFacts: TQsoMyFacts;
     notRecorded: integer;
     dtReportTime: TDateTime;
@@ -2721,7 +2787,8 @@ procedure ExportToADIF;
 
      AND EACH ROW'S OWN STATION BESIDE IT (log schema 3, stage 2), in step, for
      the MY_* tags. *)
-  while LogSourceNext( TempRXData, rowFacts ) do
+  SetLength( sentExchanges, 0 );
+  while LogSourceNext( TempRXData, rowFacts, rowSent ) do
      begin
      if GoodLookingQSO then
         begin
@@ -2729,6 +2796,8 @@ procedure ExportToADIF;
         records[ High( records ) ] := TempRXData;
         SetLength( myFacts, length( myFacts ) + 1 );
         myFacts[ High( myFacts ) ] := rowFacts;
+        SetLength( sentExchanges, length( sentExchanges ) + 1 );
+        sentExchanges[ High( sentExchanges ) ] := rowSent;
         if rowFacts.Source = mfsNotCaptured then
            begin
            Inc( notRecorded );
@@ -2754,7 +2823,7 @@ procedure ExportToADIF;
   (* The active contest carries the station, which a contest's field list can
     depend on (ARRL DX: does the entrant count the DX multiplier). uADIF asks
     it only for QSOs of its own contest, and nil for a classless one. *)
-  adifStr := uADIF.ExportADIFToString( records, myFacts, string( TR4W_CURRENTVERSION ),
+  adifStr := uADIF.ExportADIFToString( records, myFacts, sentExchanges, string( TR4W_CURRENTVERSION ),
      @EmitContestSpecificTailForExport, ActiveContest( Contest ) );
   sWriteFileFromString( tReportFileWrite, adifStr );
 
@@ -3077,6 +3146,9 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         sCall1: string; // Issue #998: QTC from-call (QTCR/QTCS swap)
         sCall2: string; // Issue #998: QTC to-call (QTCR/QTCS swap)
         myStationEx: TMyStationExchange;
+        (* The row's own station (log schema 3, stage 4) -- its sent
+          columns, and its call on the QSO: line. *)
+        rowMyFacts: TQsoMyFacts;
         (* What this routine has decided about the QSO before it asks the
           contest for the two columns -- see TCabrilloQSOContext. *)
         qsoContext: TCabrilloQSOContext;
@@ -3137,7 +3209,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
 
           previousqsonr := 0;
         1:
-          if LogSourceNext( TempRXData ) then
+          if LogSourceNext( TempRXData, rowMyFacts ) then
              begin
              inc( contacts );
              // slOperators.Add(TempRXData.ceOperator);
@@ -3289,7 +3361,9 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                    TempRXData.tSysTime.qtYear + 2000, TempRXData.tSysTime.qtMonth,
                    TempRXData.tSysTime.qtDay, TempRXData.tSysTime.qtHour,
                    TempRXData.tSysTime.qtMinute,
-                   string(Settings.My.Call) ] );
+                   (* THE QSO'S OWN CALL -- D5: its my_call, else the log's
+                     declared call, never today's MY CALL ahead of them. *)
+                   ExportCallFor( rowMyFacts ) ] );
                 {
                 ActiveExchange := RSTQSONumberExchange;
                 nrReceived := StrToIntDef(TempRXData.ceClass, 0);
@@ -3299,7 +3373,8 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 (* THE TWO EXCHANGE COLUMNS, ASKED OF THE CONTEST -- M4. This
                   routine fills the My-station record and the per-QSO inputs
                   it has decided; the contest arranges them. *)
-                myStationEx := CurrentMyStationExchange( stationContest );
+                (* FROM WHERE THE STATION WAS FOR THIS QSO (stage 4). *)
+                myStationEx := CurrentMyStationExchange( stationContest, rowMyFacts );
                 qsoContext.RSTSent                := RSTSent;
                 qsoContext.RSTReceived            := RSTReceived;
                 qsoContext.HisQTH                 := csQTHString;
@@ -3383,13 +3458,13 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 // %02d -> %.2d (date/time), %04u -> %.4u (sent number).
                 if TempRXData.ceRecordKind = rkQTCR then
                    begin
-                   sCall1 := string(Settings.My.Call);
+                   sCall1 := ExportCallFor( rowMyFacts );
                    sCall2 := string( HisCallsign );
                    end
                 else
                    begin
                    sCall1 := string( HisCallsign );
-                   sCall2 := string(Settings.My.Call);
+                   sCall2 := ExportCallFor( rowMyFacts );
                    end;
                 sWriteFileFromString( tReportFileWrite,
                    sysutils.Format
@@ -3959,7 +4034,8 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       (* The external logger's entry (one call per QSO it sends): it holds no
         contest, so the active one is fetched here. See MyExchangeForExport,
         which the ADIF export calls with the contest it already holds. *)
-      Result := MyExchangeForExport( ActiveContest( Contest ) );
+      (* A QSO BEING LOGGED NOW (the external logger's): the session's. *)
+      Result := MyExchangeForExport( ActiveContest( Contest ), NotCapturedMyFacts, '' );
       end;
   (* ---------------------------------------------------------------------------- *)
     function GetOperatorsFromLog: string;

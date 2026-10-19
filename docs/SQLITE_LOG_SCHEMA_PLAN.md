@@ -2326,10 +2326,8 @@ with `my_source` NULL on every row, and the tracked fixtures stay at 2,
 byte-unchanged. **No D7 reference changes.** Corpus 21/0/5, factory 13
 identical, matrix 187 identical, ADIF 11/0/2, rescore unchanged.
 
-**Not yet (stages 4 and 5):** exports reading the record for the SENT
-exchange (stage 4 -- STX_STRING and the Cabrillo sent column are still built
-from the session); explicit network provenance (stage 5, only if the
-computer-id rule proves too weak).
+**Not yet (stage 5):** explicit network provenance -- only if the computer-id
+rule for a peer's QSO proves too weak.
 
 Pinned in `uTestLogMyFacts` (16 tests) and mutation-tested five ways, each
 caught: the per-save clear removed, a peer never marked assumed, the editor
@@ -2450,6 +2448,44 @@ a migration that adds nothing.
   13 sets, and a headless import that takes the contest's values fails the
   MY_ case.
 - **The question itself is GUI-only:** `docs/BENCH_QUEUE.md`.
+
+#### Stage 4 (2026-10-18): an export writes what each QSO's record says it sent
+
+- **The sent exchange is built from the QSO's own station.**
+  `uContestBase.MyStationExchangeOfQSO` lays the row's recorded station over
+  the session's `TMyStationExchange`, and the ADIF STX_STRING, every
+  contest's own ADIF exchange fields (POTA's park included) and the Cabrillo
+  sent columns are built from it (`postunit.CurrentMyStationExchange(aContest,
+  aFacts)`, at the three call sites).
+  - **Overlaid:** grid, section, park, and the zone of the kind the contest
+    sends (ITU for an ITU-zone contest or an ITU CTY zone mode, else CQ).
+  - **The state slot only when the session sends MY STATE itself:** a contest
+    whose set-up sends something else there keeps it (the Cup of the RF sends
+    the grid). `my_state` is the place, not the slot.
+  - **A zone that is the same number keeps the session's text** (`05`, not
+    `5`), so a QSO whose station did not move writes what it always did.
+  - **Name, FD class, check, precedence, FOC number and postal code stay the
+    session's:** no per-QSO column, and they do not change within a log.
+- **`exchange_sent` IS the source for one case, and only one.** An imported or
+  stamped row's `exchange_sent` is its file's STX_STRING verbatim (stage 2's
+  D3 fix), and the ADIF export writes it back unchanged
+  (`uQsoMyFacts.RecordedSentExchange`). Rebuilding it would rewrite what the
+  file states: the round trip's MY_ case names `MY_STATE NE` beside an
+  STX_STRING that sent `FL`. A QSO logged HERE is not this case, because its
+  `exchange_sent` is the contest's CANONICAL spelling (the RTC and UDP form),
+  not the ADIF one, so it is rebuilt from its record. **The Cabrillo sent
+  column is always rebuilt**: a file's STX_STRING is not in Cabrillo's
+  column layout.
+- **D5: our call is the record's.** STATION_CALLSIGN, the Cabrillo `QSO:`
+  line's call and both QTC calls are the QSO's `my_call`, else the call the
+  log's entry DECLARED (`contest.my_call`, now read with the contest row:
+  `TLogRepository.DeclaredCall`), and only then today's MY CALL
+  (`uQsoMyFacts.ExportCallOf`). Measured: in all 13 corpus fixtures the
+  declared call, the `.cfg`'s MY CALL and the reference's QSO-line call are the
+  same, so no reference moves.
+- **A never-captured row is the session's, exactly as before (ruling A).**
+- **The external logger's live send** (`GetMyExchangeForExport`) is a QSO
+  logged now: the session's.
 
 ---
 

@@ -3551,6 +3551,25 @@ function ApplyQSOPointOverride(const aOverrides: TQSOPointOverrides;
    sheet (POSTUNIT.CalculateTotals, Q51: "x-qso never counts as worked"). *)
 function QSOCountsTowardTotals(const aQso: ContestExchange): boolean;
 
+(* OUR SIDE OF ONE LOGGED QSO'S EXCHANGE -- log schema 3, stage 4: the session's
+   values (aSession) with the QSO's own recorded station laid over them.
+
+   A ROW THAT RECORDED NO STATION (aFacts never captured) is aSession, exactly
+   as before (ruling A). One that did takes its grid, section and park; its
+   zone of the kind the contest sends (aSendsITUZone: the ITU zone, else the CQ
+   zone); and its state ONLY when aSessionSendsMyState -- the session sends MY
+   STATE itself in that slot, where a contest that sends something else there
+   (the Cup of the RF sends the grid) keeps it. Name, FD class, check,
+   precedence, FOC number and postal code stay the session's: the record holds
+   no column for them, and they do not change within a log.
+
+   A ZONE THAT IS THE SAME NUMBER KEEPS THE SESSION'S TEXT: the record holds a
+   number, so a stated '05' would otherwise come back '5'. *)
+function MyStationExchangeOfQSO(const aSession: TMyStationExchange;
+                                const aFacts: TQsoMyFacts;
+                                aSessionSendsMyState: boolean;
+                                aSendsITUZone: boolean): TMyStationExchange;
+
 (* aQso EARNS NO MULTIPLIER: its four flags -- domestic, DX, prefix, zone --
    cleared. The one statement of "no multiplier on this record", for the
    three engine sites that said it in four assignments: LOGDUPE.SetMultFlags
@@ -4458,6 +4477,49 @@ end;
 function TLoggedQSOList.QSO(aIndex: integer): ContestExchange;
 begin
    Result := FQSOs[aIndex];
+end;
+
+function MyStationExchangeOfQSO(const aSession: TMyStationExchange;
+                                const aFacts: TQsoMyFacts;
+                                aSessionSendsMyState: boolean;
+                                aSendsITUZone: boolean): TMyStationExchange;
+var
+   zone, sessionZone, code: integer;
+begin
+   Result := aSession;
+   if aFacts.Source = mfsNotCaptured then
+      begin
+      Exit;
+      end;
+
+   if aSessionSendsMyState then
+      begin
+      Result.MyState := string(aFacts.State);
+      end;
+   Result.MyGrid := string(aFacts.Grid);
+   Result.MySection := string(aFacts.Section);
+   Result.MyPark := string(aFacts.Park);
+
+   if aSendsITUZone then
+      begin
+      zone := aFacts.ITUZone;
+      end
+   else
+      begin
+      zone := aFacts.CQZone;
+      end;
+   Val(Result.MyZone, sessionZone, code);
+   if (code <> 0) or (sessionZone <> zone) then
+      begin
+      if zone > 0 then
+         begin
+         Result.MyZone := string(IntToStr(zone));
+         end
+      else
+         begin
+         Result.MyZone := '';
+         end;
+      end;
 end;
 
 function QSOCountsTowardTotals(const aQso: ContestExchange): boolean;

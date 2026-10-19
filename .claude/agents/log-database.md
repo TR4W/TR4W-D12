@@ -331,6 +331,12 @@ Detail, rulings A to E, and measurements: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12h
   each row's facts (`LogSourceNextWithRowId(rowId, qso, facts)`) and hands
   them to `RecomputeQSOScoring`; `LoadinLog` and live entry fill
   `TLoggedQSOView.MyFacts`. Detail: §12h.
+- **Stage 4: an export writes what each QSO's record says it sent.** The sent
+  exchange is built from the row's station (`uContestBase.MyStationExchangeOfQSO`);
+  an imported row's `exchange_sent` (its file's STX_STRING) is written back
+  verbatim; our call is the row's `my_call`, else `contest.my_call`
+  (`TLogRepository.DeclaredCall`), else today's. A never-captured row is the
+  session's. Detail: §12h.
 - **The lints scan nothing in a `.claude\worktrees\` checkout** (by design,
   `Get-ScanExclusions.ps1`), and twenty of them then FAIL as "no files
   scanned". Lint a copy of the change from a checkout outside that path.

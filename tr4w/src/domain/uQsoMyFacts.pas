@@ -132,6 +132,26 @@ function MyFactFieldTag(aField: TMyFactField): string;
 function MyFactsForImport(const aFile, aContest: TQsoMyFacts;
                           aUseFile: boolean): TQsoMyFacts;
 
+(* ---------------------------------------------------------------------------
+  WHAT AN EXPORT WRITES FOR A LOGGED QSO -- log schema 3, stage 4: a logged
+  QSO reads its record, never today's settings (Q13).
+  --------------------------------------------------------------------------- *)
+
+(* OUR CALL ON A LOGGED QSO -- D5: the call it recorded (my_call); else the call
+   the log's entry declared (contest.my_call); and only when neither is known,
+   aSessionCall -- today's MY CALL. *)
+function ExportCallOf(const aFacts: TQsoMyFacts;
+                      const aDeclaredCall, aSessionCall: AnsiString): AnsiString;
+
+(* WHAT AN IMPORTED QSO SAID IT SENT, to be written back VERBATIM: its
+   exchange_sent, when the row was imported (its file's or the contest's
+   station) and the file carried an STX_STRING. '' means "build it" -- every
+   QSO logged here, whose exchange_sent is the contest's CANONICAL spelling
+   (the RTC and UDP one) rather than the ADIF one, and every row that never
+   recorded its station. *)
+function RecordedSentExchange(const aFacts: TQsoMyFacts;
+                              const aExchangeSent: AnsiString): AnsiString;
+
 implementation
 
 uses
@@ -269,6 +289,33 @@ begin
          begin
          Include(Result, f);
          end;
+      end;
+end;
+
+function ExportCallOf(const aFacts: TQsoMyFacts;
+                      const aDeclaredCall, aSessionCall: AnsiString): AnsiString;
+begin
+   if (aFacts.Source <> mfsNotCaptured) and (Length(aFacts.Call) > 0) then
+      begin
+      Result := aFacts.Call;
+      end
+   else if Length(aDeclaredCall) > 0 then
+      begin
+      Result := aDeclaredCall;
+      end
+   else
+      begin
+      Result := aSessionCall;
+      end;
+end;
+
+function RecordedSentExchange(const aFacts: TQsoMyFacts;
+                              const aExchangeSent: AnsiString): AnsiString;
+begin
+   Result := '';
+   if aFacts.Source in [mfsImported, mfsStamped] then
+      begin
+      Result := aExchangeSent;
       end;
 end;
 

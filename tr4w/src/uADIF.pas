@@ -320,11 +320,17 @@ type
    // aMyFacts is the record's OWN station (log schema 3): a tail that writes
    // something about our station writes it from there when the row captured
    // one, and from the session only for a row that never did (ruling A).
+   //
+   // aSentExchange is the row's exchange_sent (stage 4) -- for an imported
+   // row, its file's STX_STRING verbatim; '' when the row has none.
    TContestTailEmitter = function(const rec: ContestExchange;
-                                  const aMyFacts: TQsoMyFacts): string;
+                                  const aMyFacts: TQsoMyFacts;
+                                  const aSentExchange: AnsiString): string;
 
    (* One TQsoMyFacts per record, in the records' order. *)
    TQsoMyFactsArray = array of TQsoMyFacts;
+   (* One exchange_sent per record, in the records' order. *)
+   TSentExchangeArray = array of AnsiString;
 
 // Build one ADIF field as `<NAME:LEN>VALUE ` (trailing space for tag
 // separation).  Empty value returns ''.
@@ -381,6 +387,7 @@ function ExportADIFToString(const records: TContestExchangeArray;
 // records, or nil, means the records past its end were never captured.
 function ExportADIFToString(const records: TContestExchangeArray;
                             const aMyFacts: TQsoMyFactsArray;
+                            const aSentExchanges: TSentExchangeArray;
                             const programVersion: string;
                             tailEmitter: TContestTailEmitter;
                             aContest: TContestBase = nil): string; overload;
@@ -2288,18 +2295,20 @@ function ExportADIFToString(const records: TContestExchangeArray;
                             tailEmitter: TContestTailEmitter;
                             aContest: TContestBase): string;
 begin
-   Result := ExportADIFToString(records, nil, programVersion, tailEmitter,
+   Result := ExportADIFToString(records, nil, nil, programVersion, tailEmitter,
                                 aContest);
 end;
 
 function ExportADIFToString(const records: TContestExchangeArray;
                             const aMyFacts: TQsoMyFactsArray;
+                            const aSentExchanges: TSentExchangeArray;
                             const programVersion: string;
                             tailEmitter: TContestTailEmitter;
                             aContest: TContestBase): string;
 var
    i : Integer;
    facts: TQsoMyFacts;
+   sent: AnsiString;
    body: string;
 begin
    Result := EmitADIFHeader(programVersion);
@@ -2310,11 +2319,16 @@ begin
          begin
          facts := aMyFacts[i];
          end;
+      sent := '';
+      if i <= High(aSentExchanges) then
+         begin
+         sent := aSentExchanges[i];
+         end;
 
       body := EmitADIFRecord(records[i], aContest);
       if Assigned(tailEmitter) then
          begin
-         body := body + tailEmitter(records[i], facts);
+         body := body + tailEmitter(records[i], facts, sent);
          end;
       (* AFTER THE TAIL, so the contest's own fields win any tag both would
         write, and a never-captured row's line is byte for byte what it was. *)

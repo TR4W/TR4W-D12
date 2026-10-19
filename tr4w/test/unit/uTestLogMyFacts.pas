@@ -82,6 +82,10 @@ type
       procedure TestATagTheContestWroteIsNotWrittenTwice;
       procedure TestTheStationCallFollowsTheOperatorRule;
       procedure TestTheMYTagsSurviveARoundTrip;
+      (* the export reads the record -- stage 4 *)
+      procedure TestTheExportCallFollowsTheRecord;
+      procedure TestAnImportedQSOSentWhatItsFileSays;
+      procedure TestTheSentExchangeIsBuiltFromTheRecord;
       (* the store *)
       procedure TestTheStoreCapturesOurStationAtTheMomentOfTheQSO;
       procedure TestTheEditorReadsAndWritesThroughTheStore;
@@ -96,6 +100,8 @@ uses
    (* The ADIF readers and writer -- FIRST, so the units below still win
      any name it shares with them. *)
    uADIF,
+   (* TMyStationExchange and MyStationExchangeOfQSO -- the stage-4 builder. *)
+   uContestBase,
    SysUtils, sqldb, utils_text, uSettingsModel,
    uLogDatabase, uLogSchema, uLogRepository, uLogStore;
 
@@ -1072,7 +1078,7 @@ begin
    records[0] := qso;
    SetLength(recordFacts, 1);
    recordFacts[0] := facts;
-   adif := ExportADIFToString(records, recordFacts, 'roundtrip', nil);
+   adif := ExportADIFToString(records, recordFacts, nil, 'roundtrip', nil);
 
    (* The record after the header. *)
    at := Pos('<EOH>', UpperCase(adif));
@@ -1081,6 +1087,98 @@ begin
    ParseOneRecord(body, again, back, sent);
    CheckFactsEqual(facts, back, 'the station after the round trip');
    CheckEquals('W1AW', string(again.Callsign), 'and the QSO is the same QSO');
+end;
+
+(* ------------------------------------------- the export reads the record *)
+
+(* D5: OUR CALL ON A LOGGED QSO IS THE RECORD'S, then the log's, then today's. *)
+procedure TLogMyFactsTests.TestTheExportCallFollowsTheRecord;
+var
+   facts: TQsoMyFacts;
+begin
+   BeginTest('a logged QSO''s call is its own, else the log''s declared, else today''s');
+   facts := SampleFacts;
+   CheckEquals('NY4I/R', string(ExportCallOf(facts, 'NY4I', 'K9NOW')),
+               'the call the QSO recorded -- a rover''s, suffix and all');
+   facts.Call := '';
+   CheckEquals('NY4I', string(ExportCallOf(facts, 'NY4I', 'K9NOW')),
+               'a QSO that recorded no call: the call the log declared');
+   CheckEquals('NY4I', string(ExportCallOf(NotCapturedMyFacts, 'NY4I', 'K9NOW')),
+               'a QSO from before schema 3: the log''s, not today''s');
+   CheckEquals('K9NOW', string(ExportCallOf(NotCapturedMyFacts, '', 'K9NOW')),
+               'and today''s only when the log declared none');
+end;
+
+(* AN IMPORTED QSO'S STX_STRING IS WRITTEN BACK AS ITS FILE SAID IT. *)
+procedure TLogMyFactsTests.TestAnImportedQSOSentWhatItsFileSays;
+var
+   facts: TQsoMyFacts;
+begin
+   BeginTest('an imported QSO''s sent exchange is its file''s; a live one''s is rebuilt');
+   facts := SampleFacts;
+   facts.Source := mfsImported;
+   CheckEquals('1 TOM FL', string(RecordedSentExchange(facts, '1 TOM FL')),
+               'imported with the file''s station: what the file sent');
+   facts.Source := mfsStamped;
+   CheckEquals('1 TOM FL', string(RecordedSentExchange(facts, '1 TOM FL')),
+               'imported and given the contest''s station: still what the file sent');
+   CheckEquals('', string(RecordedSentExchange(facts, '')),
+               'a file that carried no STX_STRING: built');
+   facts.Source := mfsLogged;
+   CheckEquals('', string(RecordedSentExchange(facts, '599 05')),
+               'logged here: exchange_sent is the canonical spelling, so built');
+   facts.Source := mfsEdited;
+   CheckEquals('', string(RecordedSentExchange(facts, '1 TOM FL')),
+               'an operator corrected its station: built from the correction');
+   CheckEquals('', string(RecordedSentExchange(NotCapturedMyFacts, '1 TOM FL')),
+               'a row from before schema 3: the session''s, as before');
+end;
+
+(* THE SENT EXCHANGE OF A LOGGED QSO, FROM ITS RECORD. *)
+procedure TLogMyFactsTests.TestTheSentExchangeIsBuiltFromTheRecord;
+var
+   session, got: TMyStationExchange;
+   facts: TQsoMyFacts;
+begin
+   BeginTest('a logged QSO''s sent exchange is built from where its station was');
+   session := Default(TMyStationExchange);
+   session.MyState := 'FL';
+   session.MyGrid := 'EL88';
+   session.MyName := 'TOM';
+   session.MyZone := '05';
+   session.MySection := 'WCF';
+   session.MyPark := 'US-0001';
+   session.MyCheck := '72';
+
+   got := MyStationExchangeOfQSO(session, NotCapturedMyFacts, True, False);
+   CheckEquals('FL', got.MyState, 'never captured: the session''s state');
+   CheckEquals('EL88', got.MyGrid, 'never captured: the session''s grid');
+   CheckEquals('05', got.MyZone, 'never captured: the session''s zone, as typed');
+
+   facts := SampleFacts;   (* EN01AB, NE, section NE, park US-1234, CQ 4, ITU 7 *)
+   got := MyStationExchangeOfQSO(session, facts, True, False);
+   CheckEquals('EN01AB', got.MyGrid, 'the QSO''s grid');
+   CheckEquals('NE', got.MyState, 'the QSO''s state, where the session sends MY STATE');
+   CheckEquals('NE', got.MySection, 'the QSO''s section');
+   CheckEquals('US-1234', got.MyPark, 'the QSO''s park');
+   CheckEquals('4', got.MyZone, 'the QSO''s CQ zone');
+   CheckEquals('TOM', got.MyName, 'the name the record holds no column for: the session''s');
+   CheckEquals('72', got.MyCheck, 'and the check');
+
+   got := MyStationExchangeOfQSO(session, facts, False, True);
+   CheckEquals('FL', got.MyState,
+               'a contest that sends something else in the state slot keeps it');
+   CheckEquals('7', got.MyZone, 'an ITU-zone contest sends the QSO''s ITU zone');
+
+   facts.CQZone := 5;
+   got := MyStationExchangeOfQSO(session, facts, True, False);
+   CheckEquals('05', got.MyZone, 'the same zone keeps the session''s text: 05, not 5');
+
+   facts.CQZone := 0;
+   facts.Grid := '';
+   got := MyStationExchangeOfQSO(session, facts, True, False);
+   CheckEquals('', got.MyZone, 'an unknown zone is sent as none, never the session''s');
+   CheckEquals('', got.MyGrid, 'an unknown grid likewise');
 end;
 
 (* -------------------------------------------------------------- the store *)
@@ -1378,6 +1476,9 @@ begin
    TestATagTheContestWroteIsNotWrittenTwice;
    TestTheStationCallFollowsTheOperatorRule;
    TestTheMYTagsSurviveARoundTrip;
+   TestTheExportCallFollowsTheRecord;
+   TestAnImportedQSOSentWhatItsFileSays;
+   TestTheSentExchangeIsBuiltFromTheRecord;
 
 {$IFDEF WINDOWS}
    (* As the LogStore suite: these migrate a D7 binary log, which is a

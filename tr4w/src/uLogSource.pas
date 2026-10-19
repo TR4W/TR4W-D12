@@ -97,6 +97,10 @@ function LogSourceNext(out aQso: ContestExchange): boolean; overload;
   NotCapturedMyFacts for a row written before. *)
 function LogSourceNext(out aQso: ContestExchange;
                        out aFacts: TQsoMyFacts): boolean; overload;
+(* AND WHAT IT SENT -- exchange_sent, '' for none (the export's read). *)
+function LogSourceNext(out aQso: ContestExchange;
+                       out aFacts: TQsoMyFacts;
+                       out aSentExchange: AnsiString): boolean; overload;
 
 (* LogSourceNext, and the ROW ID of what it read -- the handle
   uLogStore.LogStoreUpdateQSOsByRowId writes by. For a pass that reads the
@@ -112,6 +116,11 @@ function LogSourceNextWithRowId(out aRowId: Int64;
                                 out aFacts: TQsoMyFacts): boolean; overload;
 
 procedure LogSourceClose;
+
+(* THE CALL THE LOG'S ENTRY DECLARED -- contest.my_call; '' when the source is
+  shut or the log declared none. What an export writes for a QSO that recorded
+  no call of its own (log schema 3, stage 4). *)
+function LogSourceDeclaredCall: AnsiString;
 
 (* HOW MANY QSO RECORDS THE LOG HOLDS.  -1 if it cannot be read.
 
@@ -299,6 +308,15 @@ begin
    Result := (Repo <> nil) and Repo.ReadNext(aQso, aFacts);
 end;
 
+function LogSourceNext(out aQso: ContestExchange;
+                       out aFacts: TQsoMyFacts;
+                       out aSentExchange: AnsiString): boolean;
+begin
+   aFacts := NotCapturedMyFacts;
+   aSentExchange := '';
+   Result := (Repo <> nil) and Repo.ReadNextForExport(aQso, aFacts, aSentExchange);
+end;
+
 function LogSourceNextWithRowId(out aRowId: Int64;
                                 out aQso: ContestExchange): boolean;
 begin
@@ -325,6 +343,15 @@ begin
    if Repo <> nil then
       begin
       Repo.CloseSequentialRead;
+      end;
+end;
+
+function LogSourceDeclaredCall: AnsiString;
+begin
+   Result := '';
+   if Repo <> nil then
+      begin
+      Result := Repo.DeclaredCall;
       end;
 end;
 

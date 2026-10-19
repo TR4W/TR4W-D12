@@ -298,7 +298,11 @@ multipliers, CTY.DAT, band lookup and CRC32.
   them AFTER the contest's tail (`EmitADIFMyStationFields`), and **a tag the
   contest already wrote wins** (POTA's park, MY_STATE, MY_DXCC). A row written
   before schema 3 writes exactly what it always did. `TContestTailEmitter` now
-  takes the row's `TQsoMyFacts`. Detail: `docs/SQLITE_LOG_SCHEMA_PLAN.md`
+  takes the row's `TQsoMyFacts` and its `exchange_sent`. **Since stage 4 the
+  sent exchange and our call are the record's too**: STX_STRING and the Cabrillo
+  sent columns are built from the row's station, an imported row's STX_STRING
+  is written back verbatim, and STATION_CALLSIGN / the `QSO:` call are the
+  row's `my_call`, else the log's declared call, never today's ahead of them. Detail: `docs/SQLITE_LOG_SCHEMA_PLAN.md`
   §12h. `test-adif-roundtrip.sh` has a MY_ case.
 
 ## Coordinate with

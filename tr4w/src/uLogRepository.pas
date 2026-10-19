@@ -246,6 +246,9 @@ type
       (* The contest row's start_time, read with the contest -- see
          LogStartTime. *)
       FStartTime: TDateTime;
+      (* The contest row's my_call -- the call the entry DECLARED (see
+         DeclaredCall), read with the contest. *)
+      FDeclaredCall: AnsiString;
 
       FUpdate: TSQLQuery;
       (* THE ONE WRITE OF A ROW'S my_* COLUMNS AFTER ITS INSERT -- Edit QSO
@@ -301,6 +304,10 @@ type
       procedure BindMyFacts(aQuery: TSQLQuery; const aFacts: TQsoMyFacts);
       (* PRECONDITION as ReadRecord's: opened by OpenQsoReader. *)
       procedure ReadMyFacts(aQuery: TSQLQuery; out aFacts: TQsoMyFacts);
+      (* THE ONE CURSOR STEP -- every sequential read is this. *)
+      function ReadNextRow(out aRowId: Int64; out aQso: ContestExchange;
+                           out aFacts: TQsoMyFacts;
+                           out aSentExchange: AnsiString): boolean;
       function CountRows(const aSQL: AnsiString): integer;
    public
       constructor Create(aDatabase: TLogDatabase);
@@ -566,6 +573,12 @@ type
          Q99 seeds it at New Contest -- so today this is 0 for every log. *)
       function LogStartTime: TDateTime;
 
+      (* THE CALL THIS LOG'S ENTRY DECLARED -- contest.my_call, written once
+         when the log was made (RecordEntryDeclaration). What an export writes
+         for a QSO that recorded no call of its own (log schema 3, stage 4: a
+         logged QSO reads the log, not today's MY CALL). '' when none. *)
+      function DeclaredCall: AnsiString;
+
       function NewestRowId: Int64;
 
       (* The id of the Nth row in id order, counting from zero -- 0 for a log
@@ -624,6 +637,12 @@ type
       function ReadNextWithMyFacts(out aRowId: Int64;
                                    out aQso: ContestExchange;
                                    out aFacts: TQsoMyFacts): boolean;
+      (* ReadNext, the row's station, and WHAT IT SENT -- exchange_sent, '' for
+         none. For the export: an imported row's exchange_sent is its file's
+         STX_STRING, verbatim (log schema 3, stage 4). *)
+      function ReadNextForExport(out aQso: ContestExchange;
+                                 out aFacts: TQsoMyFacts;
+                                 out aSentExchange: AnsiString): boolean;
 
       (* ReadNext, and the ROW ID of the record it read -- the handle
          UpdateQSOByRowId takes. The cursor SELECTs it after QSO_COLUMNS, so
@@ -2192,9 +2211,10 @@ var
 begin
    FContest := NoContest;
    FStartTime := 0;
+   FDeclaredCall := '';
    q := NewReadQuery;
    try
-      q.SQL.Text := 'SELECT contest_type, start_time FROM contest WHERE id = 1';
+      q.SQL.Text := 'SELECT contest_type, start_time, my_call FROM contest WHERE id = 1';
       q.Open;
       if not q.EOF then
          begin
@@ -2204,6 +2224,10 @@ begin
             (q.Fields[1].AsLargeInt > 0) then
             begin
             FStartTime := UnixToDateTime(q.Fields[1].AsLargeInt);
+            end;
+         if not q.Fields[2].IsNull then
+            begin
+            FDeclaredCall := AnsiString(q.Fields[2].AsString);
             end;
          token := q.Fields[0].AsString;
          (* ContestFromName reads the registry's ids (uContestNames), and
@@ -2264,6 +2288,10 @@ begin
       q.ParamByName('email').AsString := aDeclaration.Email;
       q.ExecSQL;
       Result := q.RowsAffected > 0;
+      if Result then
+         begin
+         FDeclaredCall := aDeclaration.MyCall;
+         end;
    finally
       q.Free;
    end;
@@ -2461,6 +2489,11 @@ end;
 function TLogRepository.LogContest: TContestHandle;
 begin
    Result := FContest;
+end;
+
+function TLogRepository.DeclaredCall: AnsiString;
+begin
+   Result := FDeclaredCall;
 end;
 
 function TLogRepository.LogStartTime: TDateTime;
@@ -2921,14 +2954,38 @@ end;
 function TLogRepository.ReadNextWithMyFacts(out aRowId: Int64;
                                             out aQso: ContestExchange;
                                             out aFacts: TQsoMyFacts): boolean;
+var
+   ignored: AnsiString;
+begin
+   Result := ReadNextRow(aRowId, aQso, aFacts, ignored);
+end;
+
+function TLogRepository.ReadNextForExport(out aQso: ContestExchange;
+                                          out aFacts: TQsoMyFacts;
+                                          out aSentExchange: AnsiString): boolean;
+var
+   ignored: Int64;
+begin
+   Result := ReadNextRow(ignored, aQso, aFacts, aSentExchange);
+end;
+
+function TLogRepository.ReadNextRow(out aRowId: Int64;
+                                    out aQso: ContestExchange;
+                                    out aFacts: TQsoMyFacts;
+                                    out aSentExchange: AnsiString): boolean;
 begin
    aRowId := 0;
    aFacts := NotCapturedMyFacts;
+   aSentExchange := '';
    Result := (FCursor <> nil) and (not FCursor.EOF);
    if Result then
       begin
       ReadRecord(FCursor, aQso);
       ReadMyFacts(FCursor, aFacts);
+      if not FCursor.Fields[Ord(qc_exchange_sent)].IsNull then
+         begin
+         aSentExchange := AnsiString(FCursor.Fields[Ord(qc_exchange_sent)].AsString);
+         end;
       aRowId := FCursor.Fields[QSO_COLUMN_COUNT].AsLargeInt;
       FCursor.Next;
       end
