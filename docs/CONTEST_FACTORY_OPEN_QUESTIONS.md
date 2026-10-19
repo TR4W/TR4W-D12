@@ -31,7 +31,6 @@ in section 4. One line each -- the full text is further down.
 - **Q8** Events with no ContestType still named in code (TRC, PGA, EURASIA ...).
 - **Q47** Fix the three kept read-past-the-end shapes now?
 - **Q101** Fill the typed `rcvd_*` columns from each class, or delete them?
-- **Q110** Multi-op: a peer's QSO is logged even when the peer is on a different contest.
 - **Q111** IRTS scores by the EUDX table but its file is Irish counties -- what does its sponsor score?
 - **Q112** Field Day's DX refusal holds only when typed -- apply it to imports/peers/Rescore (as Q107)?
 - **Q113** Edited memories are lost on restart (the message table is written, never read).
@@ -233,22 +232,6 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   *Recommended: the class fills them* -- it is the one place that knows
   whether a QTH is a county, a section or a grid, which is exactly the
   question Q89's ADIF STATE fix had to answer.
-  **Answer:**
-
-- **Q110** (found building Q108 S4, 2026-10-17) **Multi-op: a peer's QSO is
-  logged even when the peer is running a DIFFERENT contest.** `uNet`'s
-  `NET_QSOINFO` arm calls `LogContact` for every QSO from another station
-  (`uNet.pas` ~591) without comparing the packet's contest with this
-  station's -- so two stations on one server in different contests would
-  each log the other's QSOs, scored under the wrong contest's rules. D7 did
-  the same (`uNet.pas:355-365`), so this is not a regression. Is a mixed
-  network a real configuration (e.g. a multi-multi running two events), or
-  should a QSO from another contest be refused like a by-id contest is?
-  *Recommended: refuse it (logged, not added), through the same
-  `NetCarriesContest` door S4 added, and show the operator once that a peer
-  is on another contest -- a QSO scored under the wrong contest's rules is
-  never what anyone wants. If mixed networks are real, they belong to the
-  new row-based protocol, not to V1.*
   **Answer:**
 
 - **Q111** (found building Q45, 2026-10-17) **IRTS scores by the EUDX table,
@@ -566,9 +549,35 @@ closes it; anything else reopens it.
 | Q107 | QSO parties: an out-of-state entrant's QSO with a non-host station scores 0 and no mult (scoring applies the entry rule; one predicate) | building |
 | Q108 | Contests register by string id like radios (no `VC.pas` line for a new contest); multi-op refused for a contest with no legacy number until the new protocol; `<contestnr>` open | design after the cleanup |
 | Q109 | UDP `dynamicresults`: send the ALL row, per-mode totals, WRTC mults; never suppressed (WRTC's local aggregators read it -- also settles Q55) | built 2026-10-16 |
+| Q110 | Peers must be on the same contest; a QSO from a peer on another contest is refused (not logged, scored or applied) and reported | built 2026-10-18 (bench: BENCH_QUEUE) |
 | Q52 note | Settled by Q52 | removed |
 
 ### Answered since the table was last updated (full text)
+
+- **Q110** (found building Q108 S4, 2026-10-17) **Multi-op: a peer's QSO is
+  logged even when the peer is running a DIFFERENT contest.** `uNet`'s
+  `NET_QSOINFO` arm called `LogContact` for every QSO from another station
+  without comparing the packet's contest with this station's -- so two
+  stations on one server in different contests would each log the other's
+  QSOs, scored under the wrong contest's rules. D7 did the same, so it was
+  not a regression. Is a mixed network a real configuration, or should a QSO
+  from another contest be refused like a by-id contest is?
+  **Answer:** (NY4I, 2026-10-18) *"Peers have to be on the same contest and
+  that is a flagged error to be reported."*
+  **BUILT 2026-10-18:** `uNet.PeerRecordInOurContest`, asked by the
+  `NET_QSOINFO` arm (QSO, note and both QTC kinds) and the `NET_EDITEDQSO`
+  arm, after `NetCarriesContest`. A record whose contest byte is not this
+  station's `Contest` is dropped whole. Reported two ways: one `logger.Error`
+  per record (peer letter, its contest, ours, the call -- the audit trail, not
+  rate-limited) and one `QuickDisplay` notice (`SPeerOnAnotherContest`) per
+  peer and per peer contest per link session (forgotten when the link comes
+  up). The wire is untouched; mixed networks, if ever wanted, belong to the
+  row-based protocol. `tr4wserver` stores and relays every QSO regardless of
+  contest: `tr4wserverUnit` relays each `NET_QSOINFO` / `NET_EDITEDQSO` to the
+  other clients and appends it to its one binary server log without looking at
+  `ceContest` (that byte is read only for the log-compare header,
+  `ServerLogFileInformation.liContest`). It is not a contest log, so nothing
+  was changed there; the check is the client's.
 
 - **Q118** (Q73; NY4I's NYQP field report, 2026-10-17, the contest running
   that day) **A mobile signing its BARE call** and sending a new county was a

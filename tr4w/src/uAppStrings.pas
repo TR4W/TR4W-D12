@@ -292,6 +292,14 @@ resourcestring
       'cannot carry it. Use it only while this station is not connected to a ' +
       'multi-op server.';
 
+   (* PEERS MUST BE ON THE SAME CONTEST -- Q110, NY4I 2026-10-18. A QSO from
+     another station on a different contest is refused and this is the
+     notice, raised once per station and contest per link. %s: the station
+     letter, its contest, this station's contest. *)
+   SPeerOnAnotherContest =
+      'Station %s is on %s, this station is on %s -- its QSOs are NOT being ' +
+      'logged here. All stations must run the same contest.';
+
    { --------------------------------------------------- verification checks - }
 
    (* Tools -> Run Verification Checks.  The window title names the thing an

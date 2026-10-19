@@ -262,6 +262,21 @@ running `tr4wserver`.
 
 ---
 
+## Added 2026-10-18 -- Q110: PEERS ON DIFFERENT CONTESTS
+
+Two machines, one `tr4wserver`, two LEGACY contests (e.g. ARRL DX CW and CQ WW CW).
+Unit tests feed the real receive arms but cannot log a QSO or show a panel.
+
+- [ ] **A QSO from a peer on another contest is refused and reported.** Station
+      A on contest X, station B on contest Y, both connected; log a QSO at B.
+      EXPECT at A: the QSO is NOT in A's log or totals; the quick-command panel
+      shows "Station B is on Y, this station is on X -- its QSOs are NOT being
+      logged here. ..." ; `tr4w.log` has one `[Net] NET_QSOINFO from station B
+      REFUSED` Error line naming both contests and the call. Log three more at
+      B: three more log lines, NO second panel notice. Edit one at B: a
+      `NET_EDITEDQSO ... REFUSED` line, still no second notice.
+- [ ] **Same contest on both is unchanged**, and a reconnect re-arms the notice.
+
 ## Added 2026-10-16 -- 5.0.28 AND AFTER: WHAT THE GATES CANNOT SEE
 
 Every item below passed every automated oracle; each is "same as before",

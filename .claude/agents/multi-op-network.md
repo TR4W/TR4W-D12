@@ -62,6 +62,24 @@ predicate, the wrapper, `PeerContestRefusal`, `TryConnectToNetwork`'s
 refusal and a source read of every door; the live link is two machines and a
 BENCH_QUEUE item.
 
+## Peers must be on the same contest (Q110, NY4I 2026-10-18)
+
+*"Peers have to be on the same contest and that is a flagged error to be
+reported."* `uNet.PeerRecordInOurContest(rec, door)` is asked by the
+`NET_QSOINFO` arm (QSO, note and QTC records) and the `NET_EDITEDQSO` arm,
+after `NetCarriesContest`: a record whose `ceContest` is not this station's
+`Contest` is dropped whole -- not logged, scored or applied. It is REPORTED,
+not silent: a `logger.Error` per record (the audit trail, not rate-limited)
+and one `QuickDisplay` notice (`SPeerOnAnotherContest`) per peer and per peer
+contest per link session (`ForgetPeerContestNotices` runs when the link
+comes up). The wire is untouched. Those two arms are the only places a
+received QSO is logged or edited -- do not add a receive path that skips
+the check. `tr4wserver` relays and stores every QSO whatever its contest
+(one binary server log, `ceContest` read only for the compare header); the
+check is the client's. Tests: `uTestContestById` (the judge, the arms fed
+through `NetBuffer` by `ConsumeNetBuffer`, now in `uNet`'s interface, and a
+source-order read).
+
 ## Worker threads and the log-compare record (pointer audit P1/P2, 2026-10-16)
 
 `uNet.ConnectThread` and `uGetServerLog.RunSyncThread` are

@@ -66,6 +66,9 @@ type
       procedure Test_ConnectingIsRefusedWithNoAttemptMade;
       procedure Test_ChangingContestWithNoLinkDropsNothing;
       procedure Test_EveryMultiOpDoorIsWired;
+      procedure Test_APeerOnOurContestIsAccepted;
+      procedure Test_APeerOnAnotherContestIsRefusedAndReportedOncePerContest;
+      procedure Test_ThePeerContestGateIsAheadOfEveryLoggingCall;
    end;
 
 implementation
@@ -554,6 +557,134 @@ begin
              'the CONTEST setting''s effect (the only call of FoundContest) calls NetContestChanged');
 end;
 
+var
+   GNoticeTexts: TStringList = nil;
+
+procedure RecordNotice(const aText: string);
+begin
+   GNoticeTexts.Add(aText);
+end;
+
+(* Q110 (NY4I 2026-10-18: "Peers have to be on the same contest and that is a
+  flagged error to be reported"). The judge, on its own: a record in OUR
+  contest passes and raises nothing. The LogContact that follows it in the real
+  arm needs a booted contest session, so the pass-through is read from the
+  source in Test_ThePeerContestGateIsAheadOfEveryLoggingCall. *)
+procedure TContestByIdTests.Test_APeerOnOurContestIsAccepted;
+var
+   savedContest: TContestHandle;
+   rec: ContestExchange;
+begin
+   BeginTest('Test_APeerOnOurContestIsAccepted');
+   savedContest := Contest;
+   ForgetPeerContestNotices;
+   try
+      Contest := ContestHandleOf(ARRLDXCW);
+      rec := Default(ContestExchange);
+      rec.ceContest := ContestHandleOf(ARRLDXCW);
+      rec.ceComputerID := 'B';
+      CheckTrue(PeerRecordInOurContest(rec, 'the test'), 'the same contest is accepted');
+      CheckEquals(0, PeerContestNoticeCount, 'and nothing is reported');
+   finally
+      Contest := savedContest;
+      ForgetPeerContestNotices;
+   end;
+end;
+
+(* The real NET_QSOINFO and NET_EDITEDQSO arms, fed through NetBuffer. Had the
+  gate been missing, the QSO arm would call LogContact in a session with no
+  contest booted -- the test would not pass quietly. What the test reads is the
+  report: one notice per (peer, contest), however many QSOs, and a second peer
+  or a second contest is its own. *)
+procedure TContestByIdTests.Test_APeerOnAnotherContestIsRefusedAndReportedOncePerContest;
+var
+   savedContest: TContestHandle;
+   savedID: Cardinal;
+   desync: boolean;
+   pkt: NetQSOInformationPtr;
+
+   procedure Feed(aMessage: Word; aPeer: AnsiChar; aPeerContest: ContestType);
+   var
+      used: integer;
+   begin
+      pkt := NetQSOInformationPtr(@NetBuffer[1]);
+      pkt^ := Default(TNetQSOInformation);
+      pkt^.qiID := aMessage;
+      pkt^.qiComputerID := 2;              (* not this station's id *)
+      pkt^.qiInformation.ceContest := ContestHandleOf(aPeerContest);
+      pkt^.qiInformation.ceRecordKind := rkQSO;
+      pkt^.qiInformation.ceComputerID := aPeer;
+      pkt^.qiInformation.Callsign := 'K1ABC';
+      used := ConsumeNetBuffer(SizeOf(TNetQSOInformation), desync);
+      CheckEquals(SizeOf(TNetQSOInformation), used, 'the whole packet was consumed');
+      CheckFalse(desync, 'and the stream stayed on a message boundary');
+   end;
+
+begin
+   BeginTest('Test_APeerOnAnotherContestIsRefusedAndReportedOncePerContest');
+   savedContest := Contest;
+   savedID := NetQSOInfoToSend.qiComputerID;
+   ForgetPeerContestNotices;
+   GNoticeTexts := TStringList.Create;
+   PeerContestNoticeSink := RecordNotice;
+   try
+      Contest := ContestHandleOf(ARRLDXCW);
+      NetQSOInfoToSend.qiComputerID := 1;
+
+      Feed(NET_QSOINFO_ID, 'B', CQWWCW);
+      CheckEquals(1, PeerContestNoticeCount, 'the first mismatched QSO raises the notice');
+      CheckEquals(1, GNoticeTexts.Count, 'one notice reached the operator');
+      CheckTrue(Pos('Station B', GNoticeTexts[0]) = 1, 'and it names the peer');
+      Feed(NET_QSOINFO_ID, 'B', CQWWCW);
+      CheckEquals(1, PeerContestNoticeCount, 'a second one from the same peer does not');
+      Feed(NET_EDITEDQSO_ID, 'B', CQWWCW);
+      CheckEquals(1, PeerContestNoticeCount, 'nor does that peer''s edit: one latch for both arms');
+      Feed(NET_QSOINFO_ID, 'C', CQWWCW);
+      CheckEquals(2, PeerContestNoticeCount, 'another peer is its own notice');
+      Feed(NET_QSOINFO_ID, 'B', ARRLDXSSB);
+      CheckEquals(3, PeerContestNoticeCount, 'and so is the same peer on a third contest');
+
+      ForgetPeerContestNotices;
+      CheckEquals(0, PeerContestNoticeCount, 'a new link starts the count over');
+      Feed(NET_QSOINFO_ID, 'B', CQWWCW);
+      CheckEquals(1, PeerContestNoticeCount, 'and the notice can be raised again');
+      CheckEquals(4, GNoticeTexts.Count, 'four notices reached the operator in all');
+   finally
+      PeerContestNoticeSink := nil;
+      GNoticeTexts.Free;
+      GNoticeTexts := nil;
+      Contest := savedContest;
+      NetQSOInfoToSend.qiComputerID := savedID;
+      ForgetPeerContestNotices;
+   end;
+end;
+
+(* The arm itself: in uNet.pas, each judge call stands before the logging call
+  it guards, so deleting or moving it fails here even though a unit test cannot
+  drive LogContact. *)
+procedure TContestByIdTests.Test_ThePeerContestGateIsAheadOfEveryLoggingCall;
+var
+   lines: TStringList;
+   text: string;
+   gate, log: integer;
+begin
+   BeginTest('Test_ThePeerContestGateIsAheadOfEveryLoggingCall');
+   lines := TStringList.Create;
+   try
+      lines.LoadFromFile(AnsiString(ExpandFileName(ExtractFilePath(ParamStr(0)) +
+         '..' + PathDelim + '..' + PathDelim + 'src' + PathDelim + 'uNet.pas')));
+      text := lines.Text;
+   finally
+      lines.Free;
+   end;
+   gate := Pos('''NET_QSOINFO'')', text);
+   log := Pos('LogContact(NetQSOInfoPtr', text);
+   CheckTrue((gate > 0) and (log > gate), 'NET_QSOINFO: the gate stands before LogContact');
+   gate := Pos('''NET_EDITEDQSO'')', text);
+   log := Pos('FindAndUpdateQSOInLog(NetQSOInfoPtr', text);
+   CheckTrue((gate > 0) and (log > gate), 'NET_EDITEDQSO: the gate stands before the update');
+end;
+
 procedure TContestByIdTests.RunAllTests;
 begin
    Test_TheFixtureHasAHandleAboveTheLegacyRange;
@@ -571,6 +702,9 @@ begin
    Test_ConnectingIsRefusedWithNoAttemptMade;
    Test_ChangingContestWithNoLinkDropsNothing;
    Test_EveryMultiOpDoorIsWired;
+   Test_APeerOnOurContestIsAccepted;
+   Test_APeerOnAnotherContestIsRefusedAndReportedOncePerContest;
+   Test_ThePeerContestGateIsAheadOfEveryLoggingCall;
 end;
 
 end.

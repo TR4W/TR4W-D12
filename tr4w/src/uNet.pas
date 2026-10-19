@@ -211,6 +211,45 @@ procedure NetContestChanged(aContest: TContestHandle);
   CONTEST command naming a contest that cannot travel is refused. *)
 function PeerContestRefusal(const aCommand, aValue: string): string;
 
+(* PEERS HAVE TO BE ON THE SAME CONTEST -- Q110, NY4I 2026-10-18: "Peers have to
+  be on the same contest and that is a flagged error to be reported."
+
+  A record from another station whose contest is not THIS station's is never
+  logged, scored or applied: the NET_QSOINFO arm (QSO, note, QTC) and the
+  NET_EDITEDQSO arm both ask here first, after NetCarriesContest has judged the
+  byte. There is no other receive path -- the server's log sync reads no QSO
+  packet in this client. The wire is untouched.
+
+  False means REFUSED, and the refusal is REPORTED, not silent:
+    the log     one Error line per record (peer, its contest, ours, the call);
+                the lines ARE the audit trail of what was dropped, so they are
+                not rate-limited
+    the screen  one QuickDisplay notice per (peer, peer's contest) per link
+                session, so a busy peer cannot flood the operator; the latch is
+                forgotten when the link comes up (ForgetPeerContestNotices)
+
+  aDoor names the arm for the log. *)
+function PeerRecordInOurContest(const aRec: ContestExchange;
+                                const aDoor: string): boolean;
+
+(* How many operator notices PeerRecordInOurContest has raised since the last
+  ForgetPeerContestNotices -- the test's way to read "raised once". *)
+function PeerContestNoticeCount: integer;
+procedure ForgetPeerContestNotices;
+
+type
+  TPeerNoticeProc = procedure(const aText: string);
+
+(* Where the operator notice goes; nil means QuickDisplay. A unit test points it
+  at a recorder, because QuickDisplay needs a main window and a notice armer
+  that live for the whole process. *)
+var
+  PeerContestNoticeSink: TPeerNoticeProc = nil;
+
+(* The walk over NetBuffer, one arm per message id. In the interface so the
+  unit tests can put a packet in NetBuffer and hand it to the real arms. *)
+function ConsumeNetBuffer(const i: integer; out aDesync: boolean): integer;
+
 procedure CommitChangesInLocalLog;
 function SendRecordToServer(RecordType: Word; var rec: ContestExchange): boolean;
 procedure SendFullStationStatus;
@@ -582,7 +621,9 @@ var
                 with a contest this one lacks, or a damaged packet. It is
                 dropped and the log says so; nothing is logged from it. *)
               if NetCarriesContest(NetQSOInfoPtr^.qiInformation.ceContest,
-                                   'receive of a NET_QSOINFO packet') then
+                                   'receive of a NET_QSOINFO packet') and
+                 PeerRecordInOurContest(NetQSOInfoPtr^.qiInformation,
+                                        'NET_QSOINFO') then
                  begin
                  if NetQSOInfoPtr^.qiInformation.ceRecordKind = rkQSO then
                     begin
@@ -632,7 +673,9 @@ var
 
               if (NetQSOInfoPtr^.qiComputerID <> NetQSOInfoToSend.qiComputerID) and
                  NetCarriesContest(NetQSOInfoPtr^.qiInformation.ceContest,
-                                   'receive of a NET_EDITEDQSO packet') then
+                                   'receive of a NET_EDITEDQSO packet') and
+                 PeerRecordInOurContest(NetQSOInfoPtr^.qiInformation,
+                                        'NET_EDITEDQSO') then
                  begin
                  if FindAndUpdateQSOInLog(NetQSOInfoPtr^.qiInformation) then
                     begin
@@ -1292,6 +1335,7 @@ begin
      // now, and the handshake happens inside Connect because a link the server
      // has not acknowledged is not a link.
      FillChar(StatusArray, SizeOf(StatusArray), 0);
+     ForgetPeerContestNotices;   (* a new link is a new session (Q110) *)
      (* Cardinal(GetTickCount64) -- TRUNCATED DELIBERATELY. qiComputerID is a
     field of TNetQSOInformation, which is a PACKED RECORD SENT BETWEEN
     STATIONS, so its width is on the wire and is not ours to widen. The
@@ -1801,6 +1845,80 @@ begin
       Exit;
       end;
    Result := MultiOpRefusalText(chosen);
+end;
+
+type
+   TPeerNoticeLatch = array[0..26, 0..255] of boolean;
+
+var
+   (* [peer slot 0..26, the peer's contest byte]. Slot 0 is a peer whose
+     ceComputerID is not a letter. Zero-initialised, like every unit variable. *)
+   FPeerContestNoticed: TPeerNoticeLatch;
+   FPeerContestNotices: integer;
+
+function PeerRecordInOurContest(const aRec: ContestExchange;
+                                const aDoor: string): boolean;
+var
+   slot: integer;
+   peer, notice: string;
+begin
+   Result := (aRec.ceContest = Contest);
+   if Result then
+      begin
+      Exit;
+      end;
+
+   if aRec.ceComputerID in ['A'..'Z'] then
+      begin
+      slot := Ord(aRec.ceComputerID) - Ord('A') + 1;
+      peer := string(aRec.ceComputerID);
+      end
+   else
+      begin
+      slot := 0;
+      peer := '?';
+      end;
+
+   (* EVERY RECORD IS LOGGED, ONCE PER LINK IS SHOWN. The log line is the only
+     record of which QSOs were dropped, so it is not rate-limited; the screen
+     is, because a peer logging a QSO a minute would otherwise bury every other
+     notice for the length of the contest. *)
+   if logger <> nil then
+      begin
+      logger.Error('[Net] %s from station %s REFUSED: it is on contest "%s" and ' +
+                   'this station is on "%s" (call %s). Peers must run the same ' +
+                   'contest (Q110).',
+                   [aDoor, peer, ContestId(aRec.ceContest), ContestId(Contest),
+                    string(aRec.Callsign)]);
+      end;
+
+   if not FPeerContestNoticed[slot, aRec.ceContest.ToByte] then
+      begin
+      FPeerContestNoticed[slot, aRec.ceContest.ToByte] := True;
+      inc(FPeerContestNotices);
+      notice := SysUtils.Format(SPeerOnAnotherContest,
+                          [peer, ContestIdentity(aRec.ceContest).DisplayName,
+                           ContestIdentity(Contest).DisplayName]);
+      if Assigned(PeerContestNoticeSink) then
+         begin
+         PeerContestNoticeSink(notice);
+         end
+      else
+         begin
+         QuickDisplay(notice);
+         end;
+      end;
+end;
+
+function PeerContestNoticeCount: integer;
+begin
+   Result := FPeerContestNotices;
+end;
+
+procedure ForgetPeerContestNotices;
+begin
+   FPeerContestNotices := 0;
+   FPeerContestNoticed := Default(TPeerNoticeLatch);
 end;
 
 procedure CommitChangesInLocalLog;
