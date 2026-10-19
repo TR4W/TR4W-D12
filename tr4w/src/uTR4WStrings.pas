@@ -773,6 +773,19 @@ resourcestring
    HELP_WORD  = 'Help';
    EXIT_WORD  = 'E&xit';
 
+   // EDIT QSO -- OUR STATION AS RECORDED FOR THE QSO (log schema 3)
+   SEditQSOMyStation            = 'Our station for this QSO';
+   SEditQSOMyStationNotRecorded = 'Our station for this QSO (not recorded)';
+   SEditQSOMyStationAssumed     = 'Our station for this QSO (assumed: a network QSO)';
+   SEditQSOMyCall               = 'Call';
+   SEditQSOMyGrid               = 'Grid';
+   SEditQSOMyState              = 'State';
+   SEditQSOMyCounty             = 'County';
+   SEditQSOMySection            = 'Section';
+   SEditQSOMyPark               = 'Park';
+   SEditQSOMyCQZone             = 'CQ zone';
+   SEditQSOMyITUZone            = 'ITU zone';
+
 implementation
 
 end.

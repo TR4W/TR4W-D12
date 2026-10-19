@@ -18,6 +18,7 @@ You own the contest log. **It is SQLite, and has been since 2026-09-01.**
 | the read seam — SQLite only, no source selection | `tr4w/src/uLogSource.pas` |
 | store, search, compare, notes, naming, config | `uLogStore.pas`, `uLogSearch.pas`, `uLogCompare.pas`, `uLogNote.pas`, `uLogNaming.pas`, `uLogConfig.pas` (**the Log4D layout, NOT the config table**) |
 | which contest-scoped `config` rows are written, and which stored ones are statements | `uLogContestStatements.pas`, a leaf so the rules are unit-tested (`uTestLogContestStatements`) |
+| our station as it was for one QSO (the my_* columns, schema 3) | `tr4w/src/domain/uQsoMyFacts.pas`, a leaf (`uTestLogMyFacts`) |
 | import only | `uLogImport.pas`, `uLogBinaryFile.pas` |
 | docs | `docs/SQLITE_MIGRATION_TASKS.md` (**read before touching log storage**), `docs/SQLITE_LOG_SCHEMA_PLAN.md` |
 
@@ -130,16 +131,18 @@ is. On failure, nothing commits, and `TLogDatabase.Close` rolls back.
   not. **Every execution of a kept write statement goes through
   `TLogRepository.ExecuteKeptWrite`**, which begins the transaction. A new
   kept write statement must do the same. Pinned by
-  `TestEveryWriteWaitsForItsCommit` (15 write paths).
+  `TestEveryWriteWaitsForItsCommit` (16 write paths).
 - **SQLite can end a transaction itself** (on FULL, IOERR, NOMEM or BUSY), and
   sqldb is not told. Its `ROLLBACK` then raises "no transaction is active" and
   it stays `Active`. **Roll back through `TLogDatabase.Rollback`**, never
   `Transaction.Rollback`. It resyncs the two with a raw `BEGIN` and matches no
   message text. Pinned by `TestABatchSQLiteRollsBackItself...` and
   `TestALogSQLiteRolledBackClosesCleanly`.
-- **The pin covers 15 write paths.** `SetSentExchange` joined it and left
+- **The pin covers 16 write paths.** `SetSentExchange` joined it and left
   again the same day (2026-10-17) when its only caller was deleted; the
-  fingerprint still includes `exchange_sent`.
+  fingerprint still includes `exchange_sent`. `UpdateQSOMyFacts` (the Edit
+  QSO write of the my_* columns) joined on 2026-10-18, and the fingerprint
+  now also includes `my_grid` and `my_source`.
 - **`BeginBatchUpdate` still commits what is pending and then starts its own
   transaction**, so a batch's rollback undoes the batch and nothing before it.
 - **How to test a "one transaction" claim:**
@@ -269,6 +272,47 @@ program. Detail: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12g.
   `tSilentExport` so a failure is a log line and not a modal, and calls
   `LogStoreClose` before and after each test. **`GDisabled` is never
   cleared**, so a store test that disables the store breaks every later one.
+
+## SCHEMA 3: EVERY QSO RECORDS OUR STATION AS IT WAS (2026-10-18, stage 1)
+
+NY4I: *"The QSO record should have all the MY_ values (such as MY_GRID)."*
+Detail, rulings A to E, and measurements: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12h.
+
+- **`LOG_SCHEMA_VERSION = 3`. ONCE A SCHEMA-3 BUILD HAS OPENED A LOG, NO
+  EARLIER 5.0.x BUILD CAN OPEN IT** (accepted by NY4I). `Open` migrates;
+  `OpenReadOnly` does not. The corpus is safe because every script works on a
+  COPY of the tracked `log.db`. Never point a writing `Open` at a tracked
+  fixture.
+- **The migration adds each column of `uLogSchema.LOG_V3_QSO_COLUMNS` that
+  `pragma_table_info` does not show, all before one commit.** It ASKS FIRST
+  because `PragmaAsString` ends the transaction around itself; asking between
+  two ALTERs would commit the first one alone. The CREATE TABLE ends with the
+  same columns in the same order, and a test compares a migrated table with a
+  new one.
+- **`my_source` is the "captured?" marker, not the NULL in each value.**
+  `BindText` stores `''` as NULL, so a value column cannot tell "never
+  captured" from "unknown". NULL source means fall back to the session (ruling
+  A); otherwise the source is `logged`, `assumed` (a multi-op peer's QSO
+  stamped with THIS station's values, ruling D), `imported` or `edited`.
+- **The my_* columns are INSERT-ONLY, like `exchange_sent`**: in `QSO_COLUMNS`
+  (as `QSO_MY_COLUMNS`) and NOT in `QSO_COLUMNS_UPDATABLE`. Set them with
+  `SetNextMyFacts`; it is cleared after every save. The only later write is
+  `UpdateQSOMyFacts`, from Edit QSO.
+- **`TQsoMyFacts` lives in the leaf `src/domain/uQsoMyFacts.pas`**, so the
+  repository, the store, the editor and (at stage 3) the contest classes share
+  it without sqldb.
+- **The capture is `uLogStore.CaptureMyFactsNow`**, and it reads what scoring
+  reads: `Settings.My.Resolved*` plus `uContestFactory.CurrentStation`.
+  `my_state` is MY STATE (the place), **not** `SentMyState`.
+- **A peer QSO is told apart by its computer id** (`QsoWasLoggedHere`): every
+  local path stamps `Settings.Computer.Id` before logging.
+- **`test-contest-factory.sh` reads `tr4w/target/settings/tr4w.json` (it
+  passes no `--settings`).** In a fresh worktree that file is the program's
+  defaults, and the check reports 0 identical and 13 differing for that reason
+  alone. Measured 2026-10-18: with the station's file copied in, 13 identical.
+- **The lints scan nothing in a `.claude\worktrees\` checkout** (by design,
+  `Get-ScanExclusions.ps1`), and twenty of them then FAIL as "no files
+  scanned". Lint a copy of the change from a checkout outside that path.
 
 ## The `config` table holds only what the operator STATED (2026-10-01)
 

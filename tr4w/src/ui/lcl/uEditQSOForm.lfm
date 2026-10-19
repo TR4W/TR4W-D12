@@ -1,12 +1,12 @@
 object frmEditQSO: TfrmEditQSO
   Left = 0
-  Height = 413
+  Height = 498
   Top = 0
   Width = 584
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   Caption = 'Edit QSO'
-  ClientHeight = 413
+  ClientHeight = 498
   ClientWidth = 584
   Position = poMainFormCenter
   LCLVersion = '4.8.0.0'
@@ -650,5 +650,162 @@ object frmEditQSO: TfrmEditQSO
     Caption = 'Cancel'
     TabOrder = 39
     OnClick = btnCancelClick
+  end
+  object grpMyStation: TGroupBox
+    Left = 8
+    Height = 80
+    Top = 410
+    Width = 568
+    Caption = 'Our station for this QSO'
+    ClientHeight = 62
+    ClientWidth = 564
+    TabOrder = 40
+    object lblMyCall: TLabel
+      Left = 6
+      Height = 17
+      Top = 6
+      Width = 52
+      AutoSize = False
+      Caption = 'Call'
+      Layout = tlCenter
+    end
+    object edtMyCall: TEdit
+      Left = 60
+      Height = 21
+      Top = 4
+      Width = 76
+      CharCase = ecUppercase
+      MaxLength = 13
+      TabOrder = 0
+      OnChange = FieldChanged
+    end
+    object lblMyGrid: TLabel
+      Left = 146
+      Height = 17
+      Top = 6
+      Width = 52
+      AutoSize = False
+      Caption = 'Grid'
+      Layout = tlCenter
+    end
+    object edtMyGrid: TEdit
+      Left = 200
+      Height = 21
+      Top = 4
+      Width = 76
+      MaxLength = 8
+      TabOrder = 1
+      OnChange = FieldChanged
+    end
+    object lblMyState: TLabel
+      Left = 286
+      Height = 17
+      Top = 6
+      Width = 52
+      AutoSize = False
+      Caption = 'State'
+      Layout = tlCenter
+    end
+    object edtMyState: TEdit
+      Left = 340
+      Height = 21
+      Top = 4
+      Width = 76
+      CharCase = ecUppercase
+      TabOrder = 2
+      OnChange = FieldChanged
+    end
+    object lblMyCounty: TLabel
+      Left = 426
+      Height = 17
+      Top = 6
+      Width = 52
+      AutoSize = False
+      Caption = 'County'
+      Layout = tlCenter
+    end
+    object edtMyCounty: TEdit
+      Left = 480
+      Height = 21
+      Top = 4
+      Width = 76
+      CharCase = ecUppercase
+      TabOrder = 3
+      OnChange = FieldChanged
+    end
+    object lblMySection: TLabel
+      Left = 6
+      Height = 17
+      Top = 34
+      Width = 52
+      AutoSize = False
+      Caption = 'Section'
+      Layout = tlCenter
+    end
+    object edtMySection: TEdit
+      Left = 60
+      Height = 21
+      Top = 32
+      Width = 76
+      CharCase = ecUppercase
+      TabOrder = 4
+      OnChange = FieldChanged
+    end
+    object lblMyPark: TLabel
+      Left = 146
+      Height = 17
+      Top = 34
+      Width = 52
+      AutoSize = False
+      Caption = 'Park'
+      Layout = tlCenter
+    end
+    object edtMyPark: TEdit
+      Left = 200
+      Height = 21
+      Top = 32
+      Width = 76
+      CharCase = ecUppercase
+      TabOrder = 5
+      OnChange = FieldChanged
+    end
+    object lblMyCQZone: TLabel
+      Left = 286
+      Height = 17
+      Top = 34
+      Width = 52
+      AutoSize = False
+      Caption = 'CQ zone'
+      Layout = tlCenter
+    end
+    object edtMyCQZone: TEdit
+      Left = 340
+      Height = 21
+      Top = 32
+      Width = 76
+      MaxLength = 2
+      NumbersOnly = True
+      TabOrder = 6
+      OnChange = FieldChanged
+    end
+    object lblMyITUZone: TLabel
+      Left = 426
+      Height = 17
+      Top = 34
+      Width = 52
+      AutoSize = False
+      Caption = 'ITU zone'
+      Layout = tlCenter
+    end
+    object edtMyITUZone: TEdit
+      Left = 480
+      Height = 21
+      Top = 32
+      Width = 76
+      MaxLength = 2
+      NumbersOnly = True
+      TabOrder = 7
+      OnChange = FieldChanged
+    end
   end
 end

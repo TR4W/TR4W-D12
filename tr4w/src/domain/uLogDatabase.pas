@@ -1335,11 +1335,39 @@ end;
 procedure TLogDatabase.MigrateSchema;
 var
    version: integer;
+   i: integer;
+   missing: array of integer;
 begin
    version := PragmaAsInteger('PRAGMA user_version');
    if version >= LOG_SCHEMA_VERSION then
       begin
       Exit;
+      end;
+
+   (* v2 -> v3: WHICH my_* COLUMNS ARE MISSING, asked BEFORE anything is
+     changed. PragmaAsString ends the transaction around itself, so asking
+     between two ALTERs would commit the first on its own; asking first keeps
+     the whole migration one transaction. GUARDED BY table_info, as the note
+     on LOG_SCHEMA_VERSION requires, so a column already present -- a
+     half-finished hand repair, a log created by this build and stamped back
+     -- is left alone rather than failing the open. *)
+   SetLength(missing, 0);
+   if version < 3 then
+      begin
+      for i := Low(LOG_V3_QSO_COLUMNS) to High(LOG_V3_QSO_COLUMNS) do
+         begin
+         (* UTF8Encode LAST, as for the version stamp below: the names are
+           our own ASCII, and an encode of the whole is exact where an
+           AnsiString cast of a UnicodeString expression is a narrowing the
+           build counts. *)
+         if PragmaAsString(UTF8Encode('SELECT name FROM pragma_table_info(''qso'') ' +
+                           'WHERE name = ''' + string(LOG_V3_QSO_COLUMNS[i].Name) +
+                           '''')) = '' then
+            begin
+            SetLength(missing, Length(missing) + 1);
+            missing[High(missing)] := i;
+            end;
+         end;
       end;
 
    (* NO LOG LINE HERE. This unit has no logger by design -- it is a leaf
@@ -1356,7 +1384,23 @@ begin
          + ' saved_at INTEGER)');
       end;
 
-   FTransaction.Commit;
+   (* v2 -> v3: the my_* columns, NULL in every existing row -- which is what
+     "never captured" is (my_source NULL), so no row needs touching. ADD
+     COLUMN appends, and the CREATE TABLE ends with these columns in the same
+     order, so a migrated table and a new one match column for column. *)
+   for i := 0 to High(missing) do
+      begin
+      FConnection.ExecuteDirect(UTF8Encode(
+         'ALTER TABLE qso ADD COLUMN ' + string(LOG_V3_QSO_COLUMNS[missing[i]].Name) +
+         ' ' + string(LOG_V3_QSO_COLUMNS[missing[i]].Declaration)));
+      end;
+
+   (* ExecuteDirect is what begins a transaction; with nothing to do there is
+     none to commit. *)
+   if FTransaction.Active then
+      begin
+      FTransaction.Commit;
+      end;
    (* The version is a small integer, so its digits are ASCII and UTF8Encode
      is exact where an AnsiString cast would be a narrowing the build
      counts. Encoded LAST: concatenating onto the result would promote it

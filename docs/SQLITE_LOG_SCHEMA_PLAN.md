@@ -2237,7 +2237,8 @@ being appended, which stopped being true at B5, so it OVERWROTE the newest
 imported QSO instead of inserting (see §12g). `exchange_sent` is now
 insert-only with no exception. Pinned by
 `uTestLogRepository.TestAnEditKeepsTheSentExchange`;
-`TestEveryWriteWaitsForItsCommit` covers 15 write paths.
+`TestEveryWriteWaitsForItsCommit` covers 15 write paths (16 since §12h added
+`UpdateQSOMyFacts`).
 
 **Both pins were run against the old code and failed** (10 failures), then the
 fix was restored.
@@ -2270,6 +2271,70 @@ program links `MainUnit` now): an append and a rewrite that each migrate a
 scratch copy of `cqww_ssb_2025_ny4i.trw`, and an append after an earlier open.
 **Run against the old code first:** 3 failures — 101 rows instead of 102,
 imported QSO 101 `KP4PR` overwritten with `N0NEW`, and the rewrite missing.
+
+### 12h. Schema 3 — every QSO records OUR station as it was (2026-10-18, stage 1)
+
+NY4I, 2026-10-18: *"our grid is an event source along with all the MY_ values
+for the contest where needed. The QSO record should have all the MY_ values
+(such as MY_GRID)."* The Nebraska rare-grid bonus (Q106(1)) is the first
+consumer: a rover moves, and a logged QSO reads its record, never live
+settings (Q13).
+
+**Measured before building:** `my_county`, `my_grid` and `my_state` were in
+the v1 DDL and nothing wrote or read them; all thirteen corpus fixtures hold
+NULL there and an empty `exchange_sent`.
+
+**NY4I's rulings, 2026-10-18:**
+
+| | ruling | as built |
+|---|---|---|
+| A | NULL = never captured, and falls back to the session (logged once); `''` = captured but unknown, and never borrows today's value | **`my_source` carries it**, because `BindText` stores `''` as NULL in every optional column, so the per-value NULL cannot. `my_source` NULL = never captured (every pre-v3 row, every `.TRW` migration); otherwise `logged` / `assumed` / `imported` / `edited`, and an empty value is unknown |
+| B | editable now | Edit QSO has a group "Our station for this QSO" (call, grid, state, county, section, park, CQ zone, ITU zone), written only when changed, marked `edited`, in the QSO's own transaction |
+| C | an ADIF import writes `exchange_sent` from STX_STRING, else `''`, never live | **stage 2**; the batch already carries each row's own MY values (`TLogQsoAppends.Add(qso, facts)`) |
+| D | a peer's QSO records THIS station's values, marked assumed | `my_source = 'assumed'`; the store tells a peer QSO by its computer id (`QsoWasLoggedHere`), so no `uNet` or `logsubs2` change was needed |
+| E | all the columns now, schema 3 | `LOG_SCHEMA_VERSION = 3`; `MigrateSchema` adds each column in `LOG_V3_QSO_COLUMNS` that `pragma_table_info` does not show, in one transaction |
+
+**The columns** (at the END of `CREATE TABLE qso`, so a migrated table and a
+new one match column for column): `my_call` (as signed), `my_section`,
+`my_park`, `my_iota`, `my_country`, `my_continent`, `my_cq_zone`,
+`my_itu_zone`, `my_source`, beside v1's `my_county`, `my_grid`, `my_state`.
+**Insert-only, like `exchange_sent`**: they are in `QSO_COLUMNS` (every reader
+carries them) and NOT in `QSO_COLUMNS_UPDATABLE`, so `UpdateQSO`, the
+rescore's batch and the network update cannot reach them. The editor writes
+them through `UpdateQSOMyFacts`, a kept write (the 16th path pinned by
+`TestEveryWriteWaitsForItsCommit`).
+
+**Captured where scoring reads them** (`uLogStore.CaptureMyFactsNow`):
+`Settings.My.Resolved*` for grid, state, section, park and IOTA, and
+`uContestFactory.CurrentStation` for country, continent and MY CQ ZONE.
+`my_state` is MY STATE, the place we are (ADIF MY_STATE), **not**
+`SentMyState`: the Cup of the RF sends the grid in that slot. `my_county` is
+empty (unknown) until a MY COUNTY setting exists (F26 decision 2).
+
+> **THE CONSEQUENCE, ACCEPTED BY NY4I (ruling E):** `VerifyIdentity` refuses
+> a log whose `user_version` is above the build's own. **Once a schema-3 build
+> has OPENED a log, no earlier 5.0.x build can open it.** Opening is enough:
+> `TLogDatabase.Open` migrates, and an `/EXPORT` opens. Only `OpenReadOnly`
+> leaves the file at 2. Keep a copy of a log before trying a new build on it
+> if an older build must read it again.
+
+**The corpus fixtures are not rewritten.** Every script copies the tracked
+`log.db` into `build-out` first (`corpus-lib.sh`, `test-rescore.sh`,
+`test-contest-factory.sh`, `test-cfg-not-needed.sh`, the freeze script), so
+the COPY migrates. Measured: the thirteen work copies read `user_version` 3
+with `my_source` NULL on every row, and the tracked fixtures stay at 2,
+byte-unchanged. **No D7 reference changes.** Corpus 21/0/5, factory 13
+identical, matrix 187 identical, ADIF 11/0/2, rescore unchanged.
+
+**Not yet (stages 2 to 5):** ADIF MY_* import and export, rulings C and the
+D3 fix (stage 2); the per-QSO overlay in scoring (stage 3, where Nebraska's
+bonus reads the record); exports reading the record (stage 4); explicit
+network provenance (stage 5, only if the computer-id rule proves too weak).
+
+Pinned in `uTestLogMyFacts` (16 tests) and mutation-tested five ways, each
+caught: the per-save clear removed, a peer never marked assumed, the editor
+write outside `ExecuteKeptWrite`, `my_grid` added to the updatable list, and
+a migration that adds nothing.
 
 ---
 

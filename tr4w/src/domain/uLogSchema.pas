@@ -198,7 +198,41 @@ const
      that stale comment in its sqlite_master text. Leave it. If a column of
      that name is ever wanted, ADD it guarded by PRAGMA table_info, as the
      rule above already requires -- the old files have it already. *)
-   LOG_SCHEMA_VERSION = 2;
+   (* 3 SINCE 2026-10-18 (NY4I, ruling E): the QSO records OUR station as it
+     was for that QSO -- the my_* columns listed in LOG_V3_QSO_COLUMNS, and
+     my_source, which says whether they were captured at all. my_county,
+     my_grid and my_state were already in the v1 DDL; nothing wrote them.
+
+     THE CONSEQUENCE, ACCEPTED BY NY4I: VerifyIdentity refuses a log whose
+     user_version is above the build's own, so A LOG THAT A SCHEMA-3 BUILD
+     HAS OPENED CAN NO LONGER BE OPENED BY ANY EARLIER 5.0.x BUILD. Opening is
+     enough: TLogDatabase.Open migrates. Keep a copy of a log before trying a
+     new build on it if an older build must read it again. *)
+   LOG_SCHEMA_VERSION = 3;
+
+type
+   (* A COLUMN A MIGRATION ADDS to an existing table. *)
+   TLogAddedColumn = record
+      Name: AnsiString;
+      Declaration: AnsiString;
+   end;
+
+const
+   (* THE qso COLUMNS SCHEMA 3 ADDED, in the order the CREATE TABLE above ends
+     with them. TLogDatabase.MigrateSchema adds each one that PRAGMA
+     table_info does not already show; a test builds a schema-2 log by
+     dropping exactly these and checks that the migrated table matches a new
+     one column for column. *)
+   LOG_V3_QSO_COLUMNS: array[0..8] of TLogAddedColumn = (
+      (Name: 'my_call';      Declaration: 'TEXT'),
+      (Name: 'my_section';   Declaration: 'TEXT'),
+      (Name: 'my_park';      Declaration: 'TEXT'),
+      (Name: 'my_iota';      Declaration: 'TEXT'),
+      (Name: 'my_country';   Declaration: 'TEXT'),
+      (Name: 'my_continent'; Declaration: 'TEXT'),
+      (Name: 'my_cq_zone';   Declaration: 'INTEGER'),
+      (Name: 'my_itu_zone';  Declaration: 'INTEGER'),
+      (Name: 'my_source';    Declaration: 'TEXT'));
 
    (* EXECUTED IN ORDER, ONE STATEMENT PER ELEMENT.
 
@@ -404,8 +438,9 @@ const
       '    rcvd_extra        TEXT,               -- JSON. THE NARROW ESCAPE HATCH.'#10 +
       '                                          -- Scoring, multipliers and'#10 +
       '                                          -- Cabrillo MAY NOT read it.'#10 +
-      '    -- OURS, at the moment of this QSO (tier 3). These are the only'#10 +
-      '    -- things that can change WITHIN one log -- a rover.'#10 +
+      '    -- OURS, at the moment of this QSO (tier 3) -- a rover moves. Since'#10 +
+      '    -- schema 3 these are written at insert, with the rest of the my_*'#10 +
+      '    -- columns and my_source at the end of the table.'#10 +
       '    my_county         TEXT,'#10 +
       '    my_grid           TEXT,'#10 +
       '    my_state          TEXT,'#10 +
@@ -463,7 +498,25 @@ const
       '    sent_to_server    INTEGER DEFAULT 0,  -- the multi-op server has it'#10 +
       '    server_dirty      INTEGER DEFAULT 0,  -- edited since; needs re-sending'#10 +
       '    sent_udp          INTEGER DEFAULT 0,  -- the UDP broadcast went out'#10 +
-      '    udp_dirty         INTEGER DEFAULT 0'#10 +
+      '    udp_dirty         INTEGER DEFAULT 0,'#10 +
+      '    -- SCHEMA 3: THE REST OF OURS, AT THE MOMENT OF THIS QSO (tier 3),'#10 +
+      '    -- beside my_county / my_grid / my_state above. LAST, so a log'#10 +
+      '    -- migrated by ALTER TABLE ADD COLUMN has its columns in the same'#10 +
+      '    -- order as one created here. See LOG_V3_QSO_COLUMNS.'#10 +
+      '    my_call           TEXT,               -- as signed, rover suffix included'#10 +
+      '    my_section        TEXT,'#10 +
+      '    my_park           TEXT,'#10 +
+      '    my_iota           TEXT,'#10 +
+      '    my_country        TEXT,               -- our CTY.DAT prefix'#10 +
+      '    my_continent      TEXT,'#10 +
+      '    my_cq_zone        INTEGER,'#10 +
+      '    my_itu_zone       INTEGER,'#10 +
+      '    -- WHERE THE my_* VALUES CAME FROM, and whether there are any.'#10 +
+      '    -- NULL: never captured (a row from before schema 3) -- a reader'#10 +
+      '    -- falls back to the session. Otherwise logged / assumed (a'#10 +
+      '    -- multi-op peer''s QSO, stamped with this station''s values) /'#10 +
+      '    -- imported / edited, and an empty my_* value means UNKNOWN.'#10 +
+      '    my_source         TEXT'#10 +
       ')',
 
       'CREATE INDEX idx_qso_at       ON qso(qso_at)',

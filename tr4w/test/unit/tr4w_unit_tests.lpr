@@ -621,6 +621,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestLogDatabase     in 'uTestLogDatabase.pas',
    uLogBackup           in '..\..\src\domain\uLogBackup.pas',
    uTestLogBackup       in 'uTestLogBackup.pas',
+   uQsoMyFacts          in '..\..\src\domain\uQsoMyFacts.pas',
+   uTestLogMyFacts      in 'uTestLogMyFacts.pas',
    uNewContestCommands  in '..\..\src\uNewContestCommands.pas',
    uTestNewContestCommands in 'uTestNewContestCommands.pas',
    (* Design 7.12: a station fact is a default a contest may override. *)
@@ -912,6 +914,7 @@ begin
    RegisterSuite(TContestFileKindTests.Create('ContestFileKind'));
    RegisterSuite(TLogImportTests.Create('LogImport'));
    RegisterSuite(TLogStoreTests.Create('LogStore'));
+   RegisterSuite(TLogMyFactsTests.Create('LogMyFacts'));
    RegisterSuite(TClusterTokensTests.Create('ClusterTokens'));
    RegisterSuite(TSplitReassertTests.Create('SplitReassert'));
    RegisterSuite(TCWByCATTimerTests.Create('CWByCATTimer'));

@@ -79,8 +79,9 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, DateTimePicker,
-  LCLType, 
-  uTR4WStrings;
+  LCLType,
+  uTR4WStrings,
+  uQsoMyFacts;   // TQsoMyFacts -- our station as recorded for the QSO
 
 type
   TfrmEditQSO = class(TForm)
@@ -103,6 +104,17 @@ type
       chkInhibitMults, chkDupe, chkDeleted, chkSAP, chkXQSO: TCheckBox;
 
     dtpDateTime: TDateTimePicker;
+
+    // OUR STATION AS RECORDED FOR THIS QSO -- log schema 3 (NY4I, ruling B).
+    // NOT in EDITQSO_FIELDS: these are read and written BY NAME, through
+    // EditQSOShowMyFacts / EditQSOReadMyFacts, which is how a new control on
+    // this form is written. The id table is the Win32 save path's, and these
+    // never had an id.
+    grpMyStation: TGroupBox;
+    lblMyCall, lblMyGrid, lblMyState, lblMyCounty, lblMySection, lblMyPark,
+      lblMyCQZone, lblMyITUZone: TLabel;
+    edtMyCall, edtMyGrid, edtMyState, edtMyCounty, edtMySection, edtMyPark,
+      edtMyCQZone, edtMyITUZone: TEdit;
 
     btnSave, btnCancel: TButton;
 
@@ -216,6 +228,13 @@ function  EditQSOGetDateTime: TDateTime;
 procedure EditQSOSetDateTime(const aValue: TDateTime);
 procedure EditQSOSetFocusTo(const aId: integer);
 procedure EditQSOCloseForm;
+
+// OUR STATION AS RECORDED -- shown, and read back. A no-op (and aShown back)
+// when the form is not up. The read returns aShown with the typed values in
+// place of the shown ones: the fields the form does not show (IOTA, country,
+// continent) and the source are carried through untouched.
+procedure EditQSOShowMyFacts(const aFacts: TQsoMyFacts);
+function  EditQSOReadMyFacts(const aShown: TQsoMyFacts): TQsoMyFacts;
 // The window a message box should be parented on. 0 when the form is not up,
 // which is what MessageBox wants for "no owner" anyway.
 
@@ -502,9 +521,94 @@ begin
       end;
 end;
 
+// ------------------------------------------------- our station, as recorded
+// A zone of 0 is "unknown", and shows as an empty field, not as "0".
+// AnsiString, the type of the control's Text and of the RTL's IntToStr, so
+// nothing converts on the way in.
+function ZoneText(aZone: integer): AnsiString;
+begin
+   Result := '';
+   if aZone > 0 then
+      begin
+      Result := IntToStr(aZone);
+      end;
+end;
+
+procedure EditQSOShowMyFacts(const aFacts: TQsoMyFacts);
+begin
+   if frmEditQSO = nil then
+      begin
+      Exit;
+      end;
+
+   // WHERE THE VALUES CAME FROM IS SAID IN THE CAPTION, because an empty
+   // field means two different things: on a row recorded before log schema 3
+   // nothing was recorded at all, and on any other it is unknown. A peer's
+   // QSO carries this station's values, assumed.
+   case aFacts.Source of
+      mfsNotCaptured:
+         begin
+         frmEditQSO.grpMyStation.Caption := SEditQSOMyStationNotRecorded;
+         end;
+      mfsAssumed:
+         begin
+         frmEditQSO.grpMyStation.Caption := SEditQSOMyStationAssumed;
+         end;
+      else
+         begin
+         frmEditQSO.grpMyStation.Caption := SEditQSOMyStation;
+         end;
+   end;
+
+   frmEditQSO.edtMyCall.Text := aFacts.Call;
+   frmEditQSO.edtMyGrid.Text := aFacts.Grid;
+   frmEditQSO.edtMyState.Text := aFacts.State;
+   frmEditQSO.edtMyCounty.Text := aFacts.County;
+   frmEditQSO.edtMySection.Text := aFacts.Section;
+   frmEditQSO.edtMyPark.Text := aFacts.Park;
+   frmEditQSO.edtMyCQZone.Text := ZoneText(aFacts.CQZone);
+   frmEditQSO.edtMyITUZone.Text := ZoneText(aFacts.ITUZone);
+end;
+
+function EditQSOReadMyFacts(const aShown: TQsoMyFacts): TQsoMyFacts;
+begin
+   Result := aShown;
+   if frmEditQSO = nil then
+      begin
+      Exit;
+      end;
+
+   Result.Call := Trim(frmEditQSO.edtMyCall.Text);
+   Result.Grid := Trim(frmEditQSO.edtMyGrid.Text);
+   Result.State := Trim(frmEditQSO.edtMyState.Text);
+   Result.County := Trim(frmEditQSO.edtMyCounty.Text);
+   Result.Section := Trim(frmEditQSO.edtMySection.Text);
+   Result.Park := Trim(frmEditQSO.edtMyPark.Text);
+   // An empty or unreadable zone is unknown, 0 -- never a guess.
+   Result.CQZone := StrToIntDef(Trim(frmEditQSO.edtMyCQZone.Text), 0);
+   Result.ITUZone := StrToIntDef(Trim(frmEditQSO.edtMyITUZone.Text), 0);
+end;
+
 // ------------------------------------------------------------------- the form
+// THE CAPTIONS OF THE OUR-STATION GROUP COME FROM uTR4WStrings, so they are
+// translated; the .lfm text is a designer placeholder (uServerLogForm's
+// pattern). The group's own caption is set with the values, in
+// EditQSOShowMyFacts, because it says where they came from.
+procedure AssignMyStationCaptions(aForm: TfrmEditQSO);
+begin
+   aForm.lblMyCall.Caption := SEditQSOMyCall;
+   aForm.lblMyGrid.Caption := SEditQSOMyGrid;
+   aForm.lblMyState.Caption := SEditQSOMyState;
+   aForm.lblMyCounty.Caption := SEditQSOMyCounty;
+   aForm.lblMySection.Caption := SEditQSOMySection;
+   aForm.lblMyPark.Caption := SEditQSOMyPark;
+   aForm.lblMyCQZone.Caption := SEditQSOMyCQZone;
+   aForm.lblMyITUZone.Caption := SEditQSOMyITUZone;
+end;
+
 procedure TfrmEditQSO.HandleShow(Sender: TObject);
 begin
+   AssignMyStationCaptions(Self);
 
    // LoadQSOIntoEditForm answers False for the records this dialog refuses to
    // edit -- a note, a skipped QSO, anything that is not rkQSO, or a log that

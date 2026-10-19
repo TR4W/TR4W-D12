@@ -51,7 +51,8 @@ interface
 
 uses
    VC,
-   uLogRepository;   (* TLogRepository -- see LogStoreRepository *)
+   uLogRepository,   (* TLogRepository -- see LogStoreRepository *)
+   uQsoMyFacts;      (* TQsoMyFacts -- the editor's read and write below *)
 
 (* PUT A QSO IN THE LOG, AND SAY WHETHER IT IS ACTUALLY THERE.
 
@@ -83,7 +84,21 @@ procedure LogStoreUpdateNewestQSO(const aQso: ContestExchange);
 
 (* Rewrites the row matching a record's POSITION in the binary log -- what the
   QSO editor does with a byte offset.  Never raises. *)
-procedure LogStoreUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange);
+procedure LogStoreUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange); overload;
+
+(* THE SAME, AND OUR STATION FOR THAT QSO WITH IT -- Edit QSO when the operator
+  changed one of the my_* values (NY4I, ruling B). Both writes are ONE
+  transaction: one commit, or neither. aFacts.Source is written as given;
+  the editor passes mfsEdited. Never raises. *)
+procedure LogStoreUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange;
+                                   const aFacts: TQsoMyFacts); overload;
+
+(* OUR STATION AS RECORDED for the QSO at a record position -- what Edit QSO
+  shows. NotCapturedMyFacts for a row written before schema 3. False, with
+  NotCapturedMyFacts, when the log is not usable or holds no such row.
+  Never raises. *)
+function LogStoreReadMyFactsAtIndex(aRecordIndex: Int64;
+                                    out aFacts: TQsoMyFacts): boolean;
 
 type
    (* Re-exported so a caller can collect rows for LogStoreUpdateQSOsByRowId
@@ -279,9 +294,18 @@ function LogStoreCheckIntegrity(out aReport: string): boolean;
 implementation
 
 uses
+   (* FIRST, AFTER THE RTL, ON PURPOSE: this tree resolves a name to the LAST
+      unit that declares it, so these three go where every unit below still
+      wins any name they share. Qualified at their call sites anyway.
+
+      CurrentStation -- the station context scoring is handed, so the my_*
+      values a QSO records are the ones scoring saw at that moment (country,
+      continent, MY CQ ZONE); TStationContext is uContestBase's.
+      ctyGetITUZone -- MY ITU ZONE when the operator stated none. *)
+   SysUtils, Classes, uContestBase, uContestFactory, uCTYDAT,
    (* uLogRepository is in the INTERFACE uses now -- LogStoreRepository's
       return type. *)
-   SysUtils, Classes, MainUnit, uLogDatabase, uLogImport,
+   MainUnit, uLogDatabase, uLogImport,
    uContestRegistry,   (* ContestId -- a contest's stored name *)
    uLogBinaryFile,
    (* TLogBackup -- the ORDER of a backup's file operations, which is a leaf so
@@ -1321,6 +1345,72 @@ begin
    end;
 end;
 
+(* OUR STATION, AS IT IS AT THIS MOMENT -- what a QSO being logged now
+  records in its my_* columns (schema 3; NY4I 2026-10-18: "The QSO record
+  should have all the MY_ values").
+
+  THE VALUES SCORING SEES, read where scoring reads them: the contest's
+  override if it stated one, else the station's (Settings.My.Resolved*, design
+  7.12), and country, continent and MY CQ ZONE from the same station context
+  a contest class is handed (uContestFactory.CurrentStation). So a rescore
+  that later reads the record sees what the live entry saw.
+
+  my_state IS MY STATE, the place -- ADIF MY_STATE, the primary subdivision we
+  are in -- NOT the session's SentMyState, which is what the exchange sends in
+  that slot and for some contests is not a state at all (the Cup of the RF
+  sends the grid there). What was sent is exchange_sent.
+
+  my_county IS EMPTY, which here means UNKNOWN: there is no MY COUNTY setting
+  yet (docs/F26_EXCHANGE_LAYOUTS.md, decision 2). It arrives with that setting.
+
+  A PEER'S QSO IS MARKED ASSUMED (NY4I, ruling D). The V1 network packet
+  carries none of this, so a QSO another station logged is stamped with THIS
+  station's values -- usually the same site -- and my_source says so, so
+  nothing reads them as that station's own. The computer id on the record is
+  what tells the two apart; see uQsoMyFacts.QsoWasLoggedHere. *)
+function CaptureMyFactsNow(const aQso: ContestExchange): TQsoMyFacts;
+var
+   station: uContestBase.TStationContext;
+begin
+   station := uContestFactory.CurrentStation;
+
+   Result := NotCapturedMyFacts;
+   if QsoWasLoggedHere(aQso.ceComputerID, Settings.Computer.Id) then
+      begin
+      Result.Source := mfsLogged;
+      end
+   else
+      begin
+      Result.Source := mfsAssumed;
+      end;
+
+   (* UTF8Encode, as ReadEntryDeclaration: the settings are UTF-16 and the
+     fields AnsiString; callsigns, grids and references are ASCII. *)
+   Result.Call := UTF8Encode(Settings.My.Call);
+   Result.Grid := UTF8Encode(Settings.My.ResolvedGrid);
+   Result.State := UTF8Encode(Settings.My.ResolvedState);
+   Result.County := '';
+   Result.Section := UTF8Encode(Settings.My.ResolvedSection);
+   Result.Park := UTF8Encode(Settings.My.ResolvedPark);
+   Result.Iota := UTF8Encode(Settings.My.ResolvedIota);
+   Result.Country := AnsiString(station.MyCountry);
+   (* The stable two-letter token cty_continent stores, and only for a real
+     continent -- see the guard on cty_continent in uLogRepository. *)
+   if (station.MyContinent <> UnknownContinent) and
+      (Ord(station.MyContinent) <= Ord(High(ContinentType))) then
+      begin
+      Result.Continent := AnsiString(ContinentTypeSA[station.MyContinent]);
+      end;
+   Result.CQZone := station.MyCQZone();
+   (* 0 is "use CTY.DAT" in the setting, so CTY.DAT's answer for our call is
+     the zone in effect. 0 from there too is unknown, and is stored as NULL. *)
+   Result.ITUZone := Settings.My.ResolvedItuZone;
+   if Result.ITUZone = 0 then
+      begin
+      Result.ITUZone := uCTYDAT.ctyGetITUZone(Settings.My.Call);
+      end;
+end;
+
 function LogStoreAppendQSO(const aQso: ContestExchange): boolean;
 var
    rebuilt: boolean;
@@ -1383,6 +1473,10 @@ begin
         of it. *)
       GRepository.SetNextSentExchange(
          AnsiString(BuildSentExchangeText(aQso)));
+
+      (* AND OUR STATION, CAPTURED NOW, for the same reason: the QSO records
+        where we were, not where settings say we are when it is next read. *)
+      GRepository.SetNextMyFacts(CaptureMyFactsNow(aQso));
 
       (* The same grouping rule the importer uses -- a county line logged
         live must relate its rows exactly as an imported one does. *)
@@ -1448,7 +1542,10 @@ begin
    end;
 end;
 
-procedure LogStoreUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange);
+(* THE ONE BODY OF BOTH LogStoreUpdateQSOAtIndex OVERLOADS. aWriteFacts says
+  whether aFacts is written too, in the same transaction. *)
+procedure UpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange;
+                           aWriteFacts: boolean; const aFacts: TQsoMyFacts);
 var
    rowId: Int64;
    rebuilt: boolean;
@@ -1501,11 +1598,66 @@ begin
          end;
 
       GRepository.UpdateQSO(rowId, aQso);
+      if aWriteFacts then
+         begin
+         GRepository.UpdateQSOMyFacts(rowId, aFacts);
+         end;
       GRepository.Commit;
    except
       on E: Exception do
          begin
          Disable('rewriting a QSO by position', E);
+         end;
+   end;
+end;
+
+procedure LogStoreUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange);
+begin
+   UpdateQSOAtIndex(aRecordIndex, aQso, False, NotCapturedMyFacts);
+end;
+
+procedure LogStoreUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange;
+                                   const aFacts: TQsoMyFacts);
+begin
+   UpdateQSOAtIndex(aRecordIndex, aQso, True, aFacts);
+end;
+
+function LogStoreReadMyFactsAtIndex(aRecordIndex: Int64;
+                                    out aFacts: TQsoMyFacts): boolean;
+var
+   rowId: Int64;
+   rebuilt: boolean;
+begin
+   Result := False;
+   aFacts := NotCapturedMyFacts;
+   if GDisabled then
+      begin
+      Exit;
+      end;
+
+   try
+      if not EnsureOpen(rebuilt) then
+         begin
+         Exit;
+         end;
+      rowId := GRepository.RowIdAtIndex(aRecordIndex);
+      if rowId <= 0 then
+         begin
+         Exit;
+         end;
+      Result := GRepository.LoadQSOMyFacts(rowId, aFacts);
+   except
+      on E: Exception do
+         begin
+         (* A READ, so the store stays enabled: nothing was written, and the
+           editor shows the fields as not recorded. *)
+         aFacts := NotCapturedMyFacts;
+         Result := False;
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] could not read our station for record ' +
+                         '%d: %s', [aRecordIndex, E.Message]);
+            end;
          end;
    end;
 end;

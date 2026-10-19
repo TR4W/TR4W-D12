@@ -132,6 +132,8 @@ uses
   { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
     cycle. It never raises and never blocks logging: see uLogStore. }
   uLogStore,
+  (* TQsoMyFacts -- our station as recorded for the QSO being edited. *)
+  uQsoMyFacts,
   (* Which store a log READ comes from -- step B4/B5. *)
   uLogSource,
    uPlatformProcess,   // RunProgram / RunWindowsUtility -- the only launchers
@@ -141,6 +143,11 @@ uses
   uHamScore,         // Issue #783 -- HamScoreOnEdit / HamScoreOnDelete hooks
   uLogNote,         // NoteText -- the note's text
   uConfigValues;
+
+var
+  (* OUR STATION AS RECORDED for EditableQSORXData, read with it -- what the
+    save compares the form against, so an untouched set is not rewritten. *)
+  EditableMyFacts: TQsoMyFacts;
 
 // Fills the form from the log record under the edit cursor.
 //
@@ -363,6 +370,14 @@ begin
 
    EditQSOSetText(FLD_OPERATOR, string(EditableQSORXData.ceOperator));  // Issue 601 NY4I
 
+   (* OUR STATION AS RECORDED FOR THIS QSO (schema 3; NY4I, ruling B) --
+     editable, because a rover's grid typed wrong is a correction the
+     operator must be able to make. Read from the row, never from settings:
+     a row written before schema 3 shows as not recorded, with empty
+     fields, not as today's values. *)
+   LogStoreReadMyFactsAtIndex(IndexOfItemInLogForEdit, EditableMyFacts);
+   EditQSOShowMyFacts(EditableMyFacts);
+
    Result := True;
 end;
 
@@ -426,6 +441,7 @@ var
   //  TempPointer                           : PWORD;
   TempByte: Byte;
   qsoY, qsoMo, qsoD, qsoH, qsoMi, qsoS, qsoMs: word;
+  editedMyFacts: TQsoMyFacts;
 begin
   Result := True;
 
@@ -785,7 +801,20 @@ begin
 
      IndexInMap is the record index itself now, so there is nothing to
      convert. *)
-  LogStoreUpdateQSOAtIndex(IndexInMap, EditableQSORXData);
+  (* OUR STATION IS WRITTEN ONLY WHEN THE OPERATOR CHANGED IT, marked
+    edited, with the QSO, in one transaction. Left alone, the row keeps
+    exactly what it had, its source included: an edit changes only what was
+    edited (Q13). *)
+  editedMyFacts := EditQSOReadMyFacts(EditableMyFacts);
+  if MyFactsValuesDiffer(editedMyFacts, EditableMyFacts) then
+     begin
+     editedMyFacts.Source := mfsEdited;
+     LogStoreUpdateQSOAtIndex(IndexInMap, EditableQSORXData, editedMyFacts);
+     end
+  else
+     begin
+     LogStoreUpdateQSOAtIndex(IndexInMap, EditableQSORXData);
+     end;
   (* THE LOG EDIT WINDOW REFRESHES ITSELF NOW.
 
     This deleted a row out of the old Win32 dialog's listview and re-inserted

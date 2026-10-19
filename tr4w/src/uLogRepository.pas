@@ -67,7 +67,10 @@ interface
 uses
    (* Windows for MAXBYTE / MAXWORD, which are the sentinels
      ClearContestExchange writes. DateUtils for the unix epoch. *)
-   LCLType, Classes, SysUtils, DateUtils, db, sqldb, VC, uLogDatabase;
+   LCLType, Classes, SysUtils, DateUtils, db, sqldb, VC, uLogDatabase,
+   (* TQsoMyFacts -- our station as it was for one QSO, the my_* columns.
+      Last, and it declares nothing any unit above also does. *)
+   uQsoMyFacts;
 
 type
    ELogRepositoryError = class(Exception);
@@ -183,8 +186,20 @@ type
       are new, so there is no row id; everything else is TLogRowUpdates'
       list, and the collect-then-write shape is the rescore's. *)
    TLogQsoAppends = class(TLogQsoList)
+   private
+      (* OUR STATION FOR EACH ROW, kept in step with the records the way
+         TLogRowUpdates keeps its ids. *)
+      FMyFacts: array of TQsoMyFacts;
    public
-      procedure Add(const aQso: ContestExchange);
+      (* A row with no captured station: my_source NULL, as a row written
+         before schema 3 -- what an importer writes when its file carries
+         nothing to read them from. *)
+      procedure Add(const aQso: ContestExchange); overload;
+      (* A row with OUR STATION AS IT WAS for that QSO -- from the file it is
+         imported from, never from today's settings. *)
+      procedure Add(const aQso: ContestExchange;
+                    const aMyFacts: TQsoMyFacts); overload;
+      function MyFacts(aIndex: integer): TQsoMyFacts;
    end;
 
    (* What a QSO SENT, for the row AppendBatch writes -- the live append's
@@ -216,12 +231,19 @@ type
       FLastSetId: AnsiString;
       FSetIdForNextSave: AnsiString;
       FSentExchangeForNextSave: AnsiString;
+      (* OUR STATION FOR THE NEXT INSERT -- SetNextMyFacts. Cleared after every
+         save, like the sent exchange; mfsNotCaptured (the zero value) binds
+         every my_* column, my_source included, as NULL. *)
+      FMyFactsForNextSave: TQsoMyFacts;
       FContest: TContestHandle;
       (* The contest row's start_time, read with the contest -- see
          LogStartTime. *)
       FStartTime: TDateTime;
 
       FUpdate: TSQLQuery;
+      (* THE ONE WRITE OF A ROW'S my_* COLUMNS AFTER ITS INSERT -- Edit QSO
+         (NY4I, ruling B). Kept, so it executes through ExecuteKeptWrite. *)
+      FUpdateMyFacts: TSQLQuery;
       FSelectById: TSQLQuery;
 
       (* A CONTIGUOUS RUN OF ROWS, prepared once -- section 9b. A virtual grid
@@ -267,6 +289,11 @@ type
       procedure BindRecord(const aQso: ContestExchange; const aGuid: AnsiString);
       procedure BindUpdate(const aQso: ContestExchange);
       procedure ReadRecord(aQuery: TSQLQuery; out aQso: ContestExchange);
+      (* The my_* columns: the insert's (aQuery = FInsert) and the editor's
+         update's (FUpdateMyFacts), one binder so they cannot disagree. *)
+      procedure BindMyFacts(aQuery: TSQLQuery; const aFacts: TQsoMyFacts);
+      (* PRECONDITION as ReadRecord's: opened by OpenQsoReader. *)
+      procedure ReadMyFacts(aQuery: TSQLQuery; out aFacts: TQsoMyFacts);
       function CountRows(const aSQL: AnsiString): integer;
    public
       constructor Create(aDatabase: TLogDatabase);
@@ -327,6 +354,34 @@ type
          the exchange_sent the row already holds. exchange_sent is INSERT-ONLY:
          nothing writes it on an existing row. *)
       procedure SetNextSentExchange(const aSentExchange: AnsiString);
+
+      (* OUR STATION, AS IT WAS FOR THE NEXT SAVED QSO -- the my_* columns.
+
+         The same shape as SetNextSentExchange and for the same reason: the
+         record has no field for them, so the caller that knows supplies them
+         for the insert. uLogStore captures them at the moment of the QSO;
+         an importer passes what its file says, or nothing.
+
+         NOT SET MEANS NOT CAPTURED: my_source is NULL and every reader falls
+         back to the session (NY4I, ruling A). That is right for a .TRW
+         migration, whose records hold none of this, and wrong for anything
+         that knows better -- so a caller that knows MUST set it.
+
+         Cleared after every save. INSERT-ONLY: UpdateQSO, the rescore's
+         batch and the network update never touch these columns -- an edit
+         changes only what was edited (Q13). The editor writes them, on
+         purpose, through UpdateQSOMyFacts. *)
+      procedure SetNextMyFacts(const aFacts: TQsoMyFacts);
+
+      (* THE OPERATOR'S CORRECTION -- Edit QSO (NY4I, ruling B). Writes every
+         my_* column of the row, my_source included; the caller states the
+         source (mfsEdited for an operator's change). Does NOT commit. True
+         when the row exists. *)
+      function UpdateQSOMyFacts(aRowId: Int64; const aFacts: TQsoMyFacts): boolean;
+
+      (* The row's my_* columns; NotCapturedMyFacts for a row written before
+         schema 3. False, and NotCapturedMyFacts, when there is no such row. *)
+      function LoadQSOMyFacts(aRowId: Int64; out aFacts: TQsoMyFacts): boolean;
 
       procedure SetNextQSOSet(const aSetId: AnsiString);
 
@@ -1069,6 +1124,15 @@ end;
 (* --------------------------------------------------------------------------- *)
 
 const
+   (* OUR STATION AT THE MOMENT OF THE QSO -- schema 3. Named once and used
+     twice: at the end of QSO_COLUMNS, so every reader carries them and the
+     insert writes them, and as the whole SET clause of FUpdateMyFacts. NOT in
+     QSO_COLUMNS_UPDATABLE, like exchange_sent: no ordinary update can reach
+     them. *)
+   QSO_MY_COLUMNS =
+      'my_county, my_grid, my_state, my_call, my_section, my_park, my_iota, ' +
+      'my_country, my_continent, my_cq_zone, my_itu_zone, my_source';
+
    (* Named once. Adding a column means adding it here, in BindRecord and in
      ReadRecord, and the round-trip test fails if the three disagree. *)
    QSO_COLUMNS =
@@ -1086,10 +1150,13 @@ const
       'mult_domestic, mult_dx, mult_prefix, mult_zone, inhibit_mults, ' +
       'qso_points, is_dupe, is_run, is_xqso, is_skipped, sent_in_qtc, ' +
       'name_sent, mp3_recorded, clear_dupe_sheet, clear_mult_sheet, ' +
-      'radio_nr, operator_call, deleted, sent_to_server, server_dirty, notes';
+      'radio_nr, operator_call, deleted, sent_to_server, server_dirty, notes, ' +
+      QSO_MY_COLUMNS;
 
    (* THE UPDATABLE COLUMNS: the same list WITHOUT guid, WITHOUT
-     qso_set_id and WITHOUT exchange_sent.
+     qso_set_id, WITHOUT exchange_sent and WITHOUT QSO_MY_COLUMNS (schema 3,
+     for exchange_sent's reason: the record has no field for them, so an
+     update would bind nothing and erase what the insert captured).
 
      The first two are identity rather than content, and an edit changes what
      a QSO SAYS, not which row it is or which contact it belonged to. Leaving
@@ -1140,7 +1207,9 @@ const
       ':mult_domestic, :mult_dx, :mult_prefix, :mult_zone, :inhibit_mults, ' +
       ':qso_points, :is_dupe, :is_run, :is_xqso, :is_skipped, :sent_in_qtc, ' +
       ':name_sent, :mp3_recorded, :clear_dupe_sheet, :clear_mult_sheet, ' +
-      ':radio_nr, :operator_call, :deleted, :sent_to_server, :server_dirty, :notes';
+      ':radio_nr, :operator_call, :deleted, :sent_to_server, :server_dirty, :notes, ' +
+      ':my_county, :my_grid, :my_state, :my_call, :my_section, :my_park, :my_iota, ' +
+      ':my_country, :my_continent, :my_cq_zone, :my_itu_zone, :my_source';
 
 (* 'a, b, c' -> 'a = :a, b = :b, c = :c'.
 
@@ -1271,7 +1340,11 @@ type
       qc_sent_in_qtc,
       qc_name_sent, qc_mp3_recorded, qc_clear_dupe_sheet, qc_clear_mult_sheet,
       qc_radio_nr, qc_operator_call, qc_deleted, qc_sent_to_server,
-      qc_server_dirty, qc_notes);
+      qc_server_dirty, qc_notes,
+      (* QSO_MY_COLUMNS, in its order. *)
+      qc_my_county, qc_my_grid, qc_my_state, qc_my_call, qc_my_section,
+      qc_my_park, qc_my_iota, qc_my_country, qc_my_continent, qc_my_cq_zone,
+      qc_my_itu_zone, qc_my_source);
 
 const
    QC_PREFIX: AnsiString = 'qc_';
@@ -1421,6 +1494,7 @@ begin
    FSelectRange.Free;
    FRowIdAtIndex.Free;
    FUpdate.Free;
+   FUpdateMyFacts.Free;
    inherited Destroy;
 end;
 
@@ -1529,6 +1603,13 @@ begin
                        AssignmentsFor(QSO_COLUMNS_UPDATABLE) +
                        UPDATE_TAIL;
    FUpdate.Prepare;
+
+   FUpdateMyFacts := TSQLQuery.Create(nil);
+   FUpdateMyFacts.DataBase := FDatabase.Connection;
+   FUpdateMyFacts.SQL.Text := UPDATE_HEAD +
+                              AssignmentsFor(QSO_MY_COLUMNS) +
+                              UPDATE_TAIL;
+   FUpdateMyFacts.Prepare;
 end;
 
 (* ONE BINDER FOR BOTH STATEMENTS.
@@ -1628,6 +1709,8 @@ begin
    if aInserting then
       begin
       BindText(P('exchange_sent'), FSentExchangeForNextSave);
+      (* INSERT ONLY, the same rule: our station as it was for this QSO. *)
+      BindMyFacts(aQuery, FMyFactsForNextSave);
       end;
 
    P('rst_sent').AsInteger := rec.RSTSent;
@@ -1785,6 +1868,102 @@ end;
 procedure TLogRepository.BindUpdate(const aQso: ContestExchange);
 begin
    BindInto(FUpdate, aQso, '', False);
+end;
+
+procedure TLogRepository.BindMyFacts(aQuery: TSQLQuery;
+                                     const aFacts: TQsoMyFacts);
+
+   function P(const aName: AnsiString): TParam;
+   begin
+      Result := aQuery.ParamByName(aName);
+   end;
+
+   (* 0 is "unknown" for a zone, and unknown is NULL -- never zone 0. *)
+   procedure BindZone(aParam: TParam; aZone: integer);
+   begin
+      if aZone > 0 then
+         begin
+         aParam.AsInteger := aZone;
+         end
+      else
+         begin
+         aParam.Clear;
+         end;
+   end;
+
+begin
+   (* NOT CAPTURED IS NULL IN EVERY COLUMN, my_source included -- the shape a
+     row written before schema 3 has, so a reader cannot tell the two apart
+     and does not need to: both fall back to the session. Bound from the
+     zero record, which is exactly that. *)
+   BindText(P('my_county'), aFacts.County);
+   BindText(P('my_grid'), aFacts.Grid);
+   BindText(P('my_state'), aFacts.State);
+   BindText(P('my_call'), aFacts.Call);
+   BindText(P('my_section'), aFacts.Section);
+   BindText(P('my_park'), aFacts.Park);
+   BindText(P('my_iota'), aFacts.Iota);
+   BindText(P('my_country'), aFacts.Country);
+   BindText(P('my_continent'), aFacts.Continent);
+   BindZone(P('my_cq_zone'), aFacts.CQZone);
+   BindZone(P('my_itu_zone'), aFacts.ITUZone);
+   (* '' for mfsNotCaptured, which BindText stores as NULL. *)
+   BindText(P('my_source'), MyFactsSourceToken(aFacts.Source));
+end;
+
+procedure TLogRepository.ReadMyFacts(aQuery: TSQLQuery; out aFacts: TQsoMyFacts);
+
+   function F(aColumn: TQsoColumn): TField;
+   begin
+      Result := aQuery.Fields[Ord(aColumn)];
+   end;
+
+   function S(aColumn: TQsoColumn): AnsiString;
+   begin
+      if F(aColumn).IsNull then
+         begin
+         Result := '';
+         end
+      else
+         begin
+         Result := AnsiString(F(aColumn).AsString);
+         end;
+   end;
+
+   function Z(aColumn: TQsoColumn): integer;
+   begin
+      if F(aColumn).IsNull then
+         begin
+         Result := 0;
+         end
+      else
+         begin
+         Result := F(aColumn).AsInteger;
+         end;
+   end;
+
+begin
+   aFacts := NotCapturedMyFacts;
+   aFacts.Source := TokenToMyFactsSource(S(qc_my_source));
+   (* A ROW NEVER CAPTURED holds nothing to read -- and if a hand edit put a
+     value in one of its columns without a source, that value has no
+     provenance and is not reported as ours. *)
+   if aFacts.Source = mfsNotCaptured then
+      begin
+      Exit;
+      end;
+
+   aFacts.County := S(qc_my_county);
+   aFacts.Grid := S(qc_my_grid);
+   aFacts.State := S(qc_my_state);
+   aFacts.Call := S(qc_my_call);
+   aFacts.Section := S(qc_my_section);
+   aFacts.Park := S(qc_my_park);
+   aFacts.Iota := S(qc_my_iota);
+   aFacts.Country := S(qc_my_country);
+   aFacts.Continent := S(qc_my_continent);
+   aFacts.CQZone := Z(qc_my_cq_zone);
+   aFacts.ITUZone := Z(qc_my_itu_zone);
 end;
 
 (* PRECONDITION: aQuery was opened by OpenQsoReader, so its fields are
@@ -1982,6 +2161,8 @@ begin
      the next -- the same class of error against a different column. *)
    FSetIdForNextSave := '';
    FSentExchangeForNextSave := '';
+   (* And our station: one QSO's facts must not be the next one's. *)
+   FMyFactsForNextSave := NotCapturedMyFacts;
 
    Result := LastInsertedRowId;
 end;
@@ -2559,6 +2740,38 @@ begin
    FSentExchangeForNextSave := aSentExchange;
 end;
 
+procedure TLogRepository.SetNextMyFacts(const aFacts: TQsoMyFacts);
+begin
+   FMyFactsForNextSave := aFacts;
+end;
+
+function TLogRepository.UpdateQSOMyFacts(aRowId: Int64;
+                                         const aFacts: TQsoMyFacts): boolean;
+begin
+   BindMyFacts(FUpdateMyFacts, aFacts);
+   FUpdateMyFacts.ParamByName('row_id').AsLargeInt := aRowId;
+   ExecuteKeptWrite(FUpdateMyFacts);
+   Result := FUpdateMyFacts.RowsAffected > 0;
+end;
+
+function TLogRepository.LoadQSOMyFacts(aRowId: Int64;
+                                       out aFacts: TQsoMyFacts): boolean;
+begin
+   FSelectById.Close;
+   FSelectById.ParamByName('row_id').AsLargeInt := aRowId;
+   OpenQsoReader(FSelectById);
+   Result := not FSelectById.EOF;
+   if Result then
+      begin
+      ReadMyFacts(FSelectById, aFacts);
+      end
+   else
+      begin
+      aFacts := NotCapturedMyFacts;
+      end;
+   FSelectById.Close;
+end;
+
 function TLogRepository.RelatedRowIds(aRowId: Int64): TInt64Array;
 var
    q: TSQLQuery;
@@ -2636,6 +2849,8 @@ begin
    BindRecord(aQso, aGuid);
    ExecuteKeptWrite(FInsert);
    InvalidateRecordCount;
+   (* Our station is per QSO, as in SaveQSO -- never carried to the next. *)
+   FMyFactsForNextSave := NotCapturedMyFacts;
    Result := LastInsertedRowId;
 end;
 
@@ -2798,6 +3013,9 @@ begin
             begin
             SetNextSentExchange(aSentExchangeOf(aQsos.FRows[i]));
             end;
+         (* The row's own -- from its file, or not captured. Never the
+           session's: an import is not a QSO logged here. *)
+         SetNextMyFacts(aQsos.MyFacts(i));
          SaveQSOGroupingByExchangeId(aQsos.FRows[i]);
          end;
       (* Every row is in; a failure from here on is the transaction's. *)
@@ -2808,6 +3026,7 @@ begin
         before the batch. A sent exchange set for a row that then failed is
         cleared with it, so it cannot attach itself to a later save. *)
       SetNextSentExchange('');
+      SetNextMyFacts(NotCapturedMyFacts);
       RollbackBatch;
       raise;
    end;
@@ -2908,7 +3127,27 @@ end;
 
 procedure TLogQsoAppends.Add(const aQso: ContestExchange);
 begin
-   AddRow(aQso);
+   Add(aQso, NotCapturedMyFacts);
+end;
+
+procedure TLogQsoAppends.Add(const aQso: ContestExchange;
+                             const aMyFacts: TQsoMyFacts);
+var
+   i: integer;
+begin
+   i := AddRow(aQso);
+   (* In step with the records' capacity, as TLogRowUpdates' ids are. *)
+   if Length(FMyFacts) < Length(FRows) then
+      begin
+      SetLength(FMyFacts, Length(FRows));
+      end;
+   FMyFacts[i] := aMyFacts;
+end;
+
+function TLogQsoAppends.MyFacts(aIndex: integer): TQsoMyFacts;
+begin
+   CheckIndex(aIndex);
+   Result := FMyFacts[aIndex];
 end;
 
 procedure TLogRepository.CloseSequentialRead;

@@ -91,6 +91,7 @@ uses
    uLogRepository,
    utils_text,   (* CharBufferBytes -- the mapper's own read of ceOperator *)
    uLogNote,   (* NoteText / SetNoteText -- a note's text *)
+   uQsoMyFacts,   (* TQsoMyFacts -- the 16th write path, UpdateQSOMyFacts *)
    md5;   (* MD5File -- "the log is byte for byte as it was" *)
 
 function TLogRepositoryTests.TempLogName(const aLeaf: string): string;
@@ -1875,6 +1876,7 @@ begin
          'SELECT (SELECT COUNT(*) FROM qso), ' +
          '(SELECT group_concat(c, '','') FROM (SELECT callsign || '':'' || ' +
          'IFNULL(qso_points, '''') || '':'' || IFNULL(exchange_sent, '''') ' +
+         '|| '':'' || IFNULL(my_grid, '''') || '':'' || IFNULL(my_source, '''') ' +
          'AS c FROM qso ORDER BY id)), ' +
          '(SELECT contest_type || '':'' || my_call FROM contest WHERE id = 1), ' +
          '(SELECT group_concat(c, '','') FROM (SELECT command || ''='' || ' +
@@ -1917,7 +1919,7 @@ end;
   in the -wal -- and the reopened file must match the seed exactly. *)
 procedure TLogRepositoryTests.TestEveryWriteWaitsForItsCommit;
 const
-   STEPS = 15;
+   STEPS = 16;
    NAMES: array[0..STEPS - 1] of string = (
       'SaveQSO',
       'UpdateQSO',
@@ -1933,7 +1935,8 @@ const
       'SaveMessage',
       'DeleteAllQSOs',
       'two SaveQSOs in a row',
-      'UpdateQSO and then SaveConfigValue');
+      'UpdateQSO and then SaveConfigValue',
+      'UpdateQSOMyFacts');
 var
    db: TLogDatabase;
    repo: TLogRepository;
@@ -1942,6 +1945,7 @@ var
    seedGuid: AnsiString;
    seedPrint, written: string;
    decl: TLogEntryDeclaration;
+   facts: TQsoMyFacts;
    wasNew: boolean;
    fn: string;
    step: integer;
@@ -2044,6 +2048,13 @@ begin
                   begin
                   repo.UpdateQSO(seedId, changed);
                   repo.SaveConfigValue('SEED COMMAND', 'changed', 'contest');
+                  end;
+               15:
+                  begin
+                  facts := NotCapturedMyFacts;
+                  facts.Source := mfsEdited;
+                  facts.Grid := 'FN31PR';
+                  repo.UpdateQSOMyFacts(seedId, facts);
                   end;
             end;
 
