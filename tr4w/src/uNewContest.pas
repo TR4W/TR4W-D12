@@ -236,7 +236,8 @@ begin
    BeginNewContest;
 end;
 
-(* A contest was chosen in the combo. *)
+(* The chosen contest changed -- a row was chosen in the contest list, or the
+  search hid the one that was (then SelectedContest is NoContest). *)
 procedure ApplyContestChoice;
 begin
    (* THE LINE'S IDENTITY, not its caption read back through
@@ -247,11 +248,17 @@ begin
    NewContestPromptComment := '';
    frmNewContest.ResetIAmIn;
 
-   (* THE QSO-PARTY HEAD IS THE CONTEST'S TOO -- TContestBase asks a US state
-     party for its county or state, keyed on the IsUSQSOParty trait, and
-     British Columbia, which this named out of the head, says otherwise in
-     its own class. *)
-   ShowContestPrompts(False);
+   (* NO CONTEST IS CHOSEN ANY MORE -- the search box hid the one that was
+     (Q103). The previous contest's prompts are cleared above and there is no
+     contest to ask for new ones; BeginNewContest disables OK. *)
+   if SelectedContest <> NoContest then
+      begin
+      (* THE QSO-PARTY HEAD IS THE CONTEST'S TOO -- TContestBase asks a US state
+        party for its county or state, keyed on the IsUSQSOParty trait, and
+        British Columbia, which this named out of the head, says otherwise in
+        its own class. *)
+      ShowContestPrompts(False);
+      end;
 
    BeginNewContest;
 end;

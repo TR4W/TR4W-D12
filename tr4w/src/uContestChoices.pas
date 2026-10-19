@@ -60,6 +60,13 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   names, and the same names feed the summary sheet's CONTEST: line and the
   log database's friendly name, where a translation would change the output.
 
+  HIDDEN UNLESS ASKED FOR (DECIDED, Q59, NY4I 2026-10-19: "hide inactive
+  contests"). A native list cannot grey one row, so the dialog lists the
+  inactive contests only when its "Show inactive contests" box is ticked
+  (Matching's aIncludeInactive), and even then one cannot be chosen for a NEW
+  contest (ContestCanStartNew). The list itself still holds every contest, so
+  the order and the marks above are unchanged.
+
   NO FORM, NO LCL, so the unit tests build the same list the dialog shows. *)
 unit uContestChoices;
 
@@ -71,6 +78,9 @@ uses
    VC;
 
 type
+   (* Positions in a TContestChoices, in its order. *)
+   TContestChoiceIndexes = array of integer;
+
    TContestChoices = class
    private
       FContests: array of TContestHandle;
@@ -85,6 +95,17 @@ type
       (* Where a contest sits in the list, or -1. *)
       function IndexOf(aContest: TContestHandle): integer;
 
+      (* THE LINES A SEARCH KEEPS, in the list's own order -- Q103. Each
+         position whose Caption ContestChoiceMatches aFilter; every position
+         when the filter is empty.
+
+         AN INACTIVE CONTEST IS KEPT ONLY WHEN aIncludeInactive -- Q59, NY4I
+         2026-10-19: "hide inactive contests". The New Contest dialog passes
+         its "Show inactive contests" box; ticked, the inactive lines are kept
+         too, still last (the list's order) and still subject to aFilter. *)
+      function Matching(const aFilter: string;
+                        aIncludeInactive: boolean): TContestChoiceIndexes;
+
       property Count: integer read GetCount;
       property Contest[aIndex: integer]: TContestHandle read GetContest;
       property Caption[aIndex: integer]: string read GetCaption;
@@ -93,6 +114,29 @@ type
 (* ONE CONTEST'S LINE: its display name -- with its token in brackets when
   another contest shares that name -- marked when it is inactive. *)
 function ContestChoiceCaption(aContest: TContestHandle): string;
+
+(* DOES THIS LINE SURVIVE THE SEARCH? -- Q103, NY4I 2026-10-16: "search".
+
+  True when aFilter, trimmed, occurs ANYWHERE in aCaption, ignoring case; an
+  empty (or all-blank) filter keeps every line, which is the unfiltered,
+  alphabetical list. So "qso" keeps every QSO party, and "sprint" every
+  sprint.
+
+  IT MATCHES THE CAPTION, the words the operator is reading: the display name,
+  plus the inactive mark when there is one. A row never shows the contest's
+  internal id (NY4I: "let's leave out the internal name"), so the search
+  cannot find a contest by it either -- a search for words that are not on the
+  screen would answer with lines that do not appear to match. *)
+function ContestChoiceMatches(const aCaption, aFilter: string): boolean;
+
+(* CAN A NEW CONTEST BE STARTED AS THIS ONE? -- Q59, NY4I 2026-10-16: "I see
+  no reason anyone would ever select it." False for an inactive contest, and
+  for NoContest.
+
+  THE NEW CONTEST LIST ONLY. An existing log of an inactive contest still
+  opens, rescores, exports and imports; nothing else asks this. An inactive
+  contest is listed at all only so the transition shows the port kept it. *)
+function ContestCanStartNew(aContest: TContestHandle): boolean;
 
 implementation
 
@@ -238,6 +282,50 @@ end;
 function TContestChoices.GetCaption(aIndex: integer): string;
 begin
    Result := FCaptions[aIndex];
+end;
+
+function ContestChoiceMatches(const aCaption, aFilter: string): boolean;
+var
+   wanted: string;
+begin
+   wanted := Trim(aFilter);
+   if wanted = '' then
+      begin
+      Result := True;
+      Exit;
+      end;
+   (* UnicodeLowerCase, NOT LowerCase: LowerCase folds ASCII only, and a
+      sponsor's name need not be ASCII. *)
+   Result := Pos(UnicodeLowerCase(wanted), UnicodeLowerCase(aCaption)) > 0;
+end;
+
+function ContestCanStartNew(aContest: TContestHandle): boolean;
+begin
+   Result := (aContest <> NoContest) and ContestIdentity(aContest).IsActive;
+end;
+
+function TContestChoices.Matching(const aFilter: string;
+                                  aIncludeInactive: boolean): TContestChoiceIndexes;
+var
+   i, n: integer;
+begin
+   Result := nil;
+   SetLength(Result, Length(FContests));
+   n := 0;
+   for i := 0 to High(FCaptions) do
+      begin
+      if (not aIncludeInactive) and
+         (not ContestCanStartNew(FContests[i])) then
+         begin
+         Continue;
+         end;
+      if ContestChoiceMatches(FCaptions[i], aFilter) then
+         begin
+         Result[n] := i;
+         inc(n);
+         end;
+      end;
+   SetLength(Result, n);
 end;
 
 function TContestChoices.IndexOf(aContest: TContestHandle): integer;

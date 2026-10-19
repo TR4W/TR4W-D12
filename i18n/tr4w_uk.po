@@ -8836,3 +8836,53 @@ msgstr "Стандарти"
 msgid "Ignored, not a known QTH:"
 msgstr "Невідомий QTH:"
 
+# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output say КОНТАКТИ (contacts), a mistranslation; this catalogue's 'Contest' is 'Конкурси' (plural). Machine output was: "КОНТАКТИ"
+#: uappstrings.snewcontestcontestlabel
+#, fuzzy
+msgid "CONTEST"
+msgstr "КОНКУРС"
+
+#: uappstrings.snewcontestsearchhint
+#, fuzzy
+msgid "Search: type part of a name, e.g. QSO"
+msgstr "Пошук: тип частини назви, наприклад, QSO"
+
+#: uappstrings.simportmyfactsdifference
+#, fuzzy
+msgid "%s: %d QSO(s), e.g. %s (this contest: %s)"
+msgstr "%s: %d QSO(s), наприклад, %s (це конкурс: %sй"
+
+#: uappstrings.simportmyfactskept
+#, fuzzy
+msgid "The file's station was kept for %d QSO(s)."
+msgstr "Станція файлу збереглася %d QSO(s)."
+
+#: uappstrings.simportmyfactsquestion
+#, fuzzy
+msgid ""
+"This file names our station for %d of its %d QSO(s) (%s), and it is not what this contest has:%s\n"
+"\n"
+"Keep the file's values for those QSOs?\n"
+"Yes keeps the file's. No gives them this contest's, as a new QSO would get."
+msgstr ""
+
+#: uappstrings.simportmyfactsreplaced
+#, fuzzy
+msgid "%d QSO(s) were given this contest's station in place of the file's."
+msgstr "%d Згідно з даними, в рамках цього конкурсу було надано дільницю конкурсу."
+
+#: uappstrings.simportmyfactssame
+#, fuzzy
+msgid "%d QSO(s) named our station (%s), the same as this contest's."
+msgstr "%d QSO(s) названа нашою станцією (%s), як і цей конкурс."
+
+#: uappstrings.simportmyfactsstamped
+#, fuzzy
+msgid "%d QSO(s) named no station of ours and were given this contest's."
+msgstr "%d Згідно з даним конкурсом."
+
+#: uappstrings.snewcontestshowinactive
+#, fuzzy
+msgid "Show inactive contests"
+msgstr "Показати неактивні конкурси"
+

@@ -388,10 +388,27 @@ resourcestring
    (* --------------------------------------------- the contest UI (M9b) - *)
 
    (* AN INACTIVE CONTEST'S LINE IN THE NEW CONTEST DROP-DOWN. NY4I,
-     2026-10-02: "inactive contests go at the bottom of the drop down". They
-     stay listed so an old log can still be started again; the mark says why
-     they are last. %s is the contest's display name. *)
+     2026-10-02: "inactive contests go at the bottom of the drop down". Since
+     Q59 (2026-10-19) they are listed only when "Show inactive contests" is
+     ticked, and cannot be chosen for a new contest; the mark says why. %s is
+     the contest's display name. *)
    SContestInactive = '%s (inactive)';
+
+   (* THE NEW CONTEST DIALOG'S CONTEST LIST -- Q103 / Q52, 2026-10-19. The
+     label over the search box and the list, in the same capitals as the
+     MY CALL and CATEGORY-* labels beside it. *)
+   SNewContestContestLabel = 'CONTEST';
+
+   (* THE GREYED HINT INSIDE THE EMPTY SEARCH BOX. Typing filters the list
+     to the contests whose name contains the text, anywhere, ignoring case;
+     "QSO" is the example because it lists every QSO party. *)
+   SNewContestSearchHint = 'Search: type part of a name, e.g. QSO';
+
+   (* THE BOX UNDER THE NEW CONTEST LIST -- Q59, NY4I 2026-10-19: "hide
+     inactive contests". Unticked (the default) the list holds only contests
+     that can be started; ticked, the inactive ones are listed too, marked
+     SContestInactive, and still cannot be chosen for a new contest. *)
+   SNewContestShowInactive = 'Show inactive contests';
 
    (* CATEGORY-POWER CHANGED WITH QSOs IN THE LOG. NY4I, 2026-10-01: "Maybe
      we remind them of that mid-contest but let it be changed." A notice, not

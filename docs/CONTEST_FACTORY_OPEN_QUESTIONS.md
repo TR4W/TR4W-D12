@@ -22,12 +22,14 @@ Re-read 2026-10-16: every question below is genuinely unanswered; the rest are
 in section 4. One line each -- the full text is further down.
 
 **Sponsor rules (section 1)**
+
 - **Q27** SAC: is a Russian station not workable, or only not a multiplier?
 - **Q97** Franz Josef Land (R1FJ) oblast reads as "SP" in Russian DX.
 - **Q70** UA4W Championship's 18/19 zone rule.
 - **Q106** Nebraska: answered 2026-10-18 -- FT8/FT4 left out of the score; times are the sponsor's UTC, 1400Z-0200Z; rare grid bonus BUILT (three assumptions to confirm, in the entry); satellite left alone.
 
 **Design (section 2) -- each has a recommendation; "accept" is enough**
+
 - **Q8** Events with no ContestType still named in code (TRC, PGA, EURASIA ...).
 - **Q47** Fix the three kept read-past-the-end shapes now?
 - **Q101** Fill the typed `rcvd_*` columns from each class, or delete them?
@@ -40,6 +42,7 @@ in section 4. One line each -- the full text is further down.
 - **Q120** Bands and modes per contest: fill `docs/Q98_CONTEST_BANDS_MODES.csv` + five yes/no rulings.
 
 **Awaiting only your yes (section 3)**
+
 - **Q10** Retire unused ContestTypes through `TContestRetired` (MINITEST needs it).
 - **Q26** WAG import with no DOK: empty QTH.
 - **Q88** NA Sprint domestic file (13 vs 14 VE; the SSB Sprint too).
@@ -186,11 +189,11 @@ inactive contest in the New Contest list.
   x1 "for over 100 watts" -- 100 W itself is not covered. Built: x2, since
   Cabrillo's LOW category is "100 W or less" and TR4W cannot tell 100 W from
   99. *Recommended: keep.*
-  (6) Side finding, not Nebraska's alone: the shared `P13.DOM` lists `LA` as a
-  Labrador alias, which collides with Louisiana; S50 loads first, so `LA`
-  means Louisiana in every party that includes both. Labrador is `NL` (with
-  `LB`/`NF`). *Recommended: drop `LA` from P13.DOM.*
-  **Answer:**
+      (6) Side finding, not Nebraska's alone: the shared `P13.DOM` lists `LA` as a
+      Labrador alias, which collides with Louisiana; S50 loads first, so `LA`
+      means Louisiana in every party that includes both. Labrador is `NL` (with
+      `LB`/`NF`). *Recommended: drop `LA` from P13.DOM.*
+      **Answer:**
 
 ### Raised by the M11 plan (2026-10-14; `docs/CONTEST_FACTORY_M11_PLAN.md`)
 
@@ -217,6 +220,7 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   score moves.
   *Detail added 2026-10-15 (re-read in the code):* each reads text without
   checking its length, copied exactly from the old code. In plain terms:
+
   1. **MWC** (`uContestMWC.pas:118`) -- the multiplier is a character of the
      worked call: the one before a `/`-letter suffix, else the call's last
      character. The call is copied into a 10-character buffer, then walked to
@@ -236,13 +240,13 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
      "not found" (0) equals 1 - 1, so it scores 4. Not a memory read, a wrong
      comparison, and unreachable with a real call: entry refuses
      one-character calls.
-  *Revised recommendation: fix all three NOW, one small commit* -- MWC can
-  touch a real QSO, each is a line or two, and Q37's ruling points the same
-  way (bad input is refused or bounded, never read out of memory). MWC walks
-  the whole call and never reads outside it; an empty MY COUNTRY is simply
-  not `G`; RCC scores 4 only when `/P` or `/M` is actually present. The
-  contest matrix confirms no frozen QSO moves before the commit.
-  **Answer:**
+     *Revised recommendation: fix all three NOW, one small commit* -- MWC can
+     touch a real QSO, each is a line or two, and Q37's ruling points the same
+     way (bad input is refused or bounded, never read out of memory). MWC walks
+     the whole call and never reads outside it; an empty MY COUNTRY is simply
+     not `G`; RCC scores 4 only when `/P` or `/M` is actually present. The
+     contest matrix confirms no frozen QSO moves before the commit.
+     **Answer:**
 
 - **Q101** Thirteen typed received-exchange columns are never written or read:
   `rcvd_state`, `rcvd_county`, `rcvd_section`, `rcvd_grid`,
@@ -456,120 +460,121 @@ closes it; anything else reopens it.
 
 ## 4. Already answered (for reference)
 
-| Q | Answer | Where it landed |
-|---|---|---|
-| Q4 | Retire all seven shared-set settings at the endpoint; user-defined contests to be revisited another way | M10 |
-| Q6 | POTA becomes a contest class, treated like General QSO | `TContestPOTA`, 2026-10-13 (design 8.2o) |
-| Q11 | Delete the QSO-POINT-METHOD-only arms at M10 | M10 |
-| Q28 | Station facts default from station config, overridable per contest | design 7.12; LANDED 2026-10-13 (`TMySettings.Resolved*`); UA4W's class 2026-10-14 (design 8.2p) |
-| Q33 | RSGB 1.8 gets a read-only new-multiplier answer | design 7.13; its class 2026-10-14 (design 8.2p) |
-| -- | IN7QPNE is a composite of IN/7QP/NE/DE; Delaware becomes a contest | design 7.14; Delaware 2026-10-14 (8.2q); the composite `TContestIN7QPNE` 2026-10-14 (8.2r; Q77-Q84) |
-| Q1 | Field Day has no multipliers; DX is never an ARRL section | M2 |
-| Q2 | No interim fix for the rotated point-method spellings | design 7.2 |
-| Q3 | The log stores only what the operator stated | M2a (decided under delegation) |
-| Q5 | Salmon Run W7DX bonus: implement | M6 |
-| Q12 | `TContestFixedPoints` retired, `FixedModePoints` kept | M3 |
-| Q14 | Out-of-state works only the host state; `nc_cty.dom` = 100 counties | M5b |
-| Q19 | No Sweepstakes QSO without a precedence (refused) | M5b |
-| Q20 | FD DX exports `CLASS` as logged, `SRX_STRING` `1D DX`, never `ARRL_SECT` | M5b |
-| Q21 | Night rules read the QSO's recorded time | after M4 |
-| Q25 | FD DX import is not a section | M5b |
-| Q39 | A contest never writes a station setting | design 7.11 (decided); LANDED at M9a for MY STATE (Q57 is MY ZONE) |
-| -- | Out-of-state x out-of-state in a QSO party: refuse with an error | M5b |
-| -- | Off-band QSO: logged, 0 points, no mult, no need-mult hint, not a dupe | 1e4f66f9 (points, mults); M8 (dupes, hints) |
-| -- | QRP = our power; last touch point wins; may change mid-contest with a reminder | Idaho, design 7.6; LANDED at M9b (the summary writes the one setting, a change with QSOs rescores and shows a notice) |
-| -- | The New Contest drop-down shows the display name | M9b (Q52 settles the words) |
-| -- | Inactive contests go at the bottom of the drop-down (SA Sprint, Locust) | M9b (`IsActive`; Q59 asks for others) |
-| -- | ALL ASIAN SSB is `ALL-ASIAN-DX-PHONE` | e1c6f873 |
-| -- | RSGB RoPoCo: an ADIF record is the SSB running's when its mode is phone (one ADIF id, `RSGB-ROLO`) | M7b batch 2 (decided under delegation, design 8.2k) |
-| Q18 | JW-FD: CW 5 / phone 3 everywhere, Oceania only; own branch not a multiplier | F26 build list (C) |
-| Q50 | A Russian call's oblast: `RussianID` of the country, one helper | M11, 2026-10-15 |
-| Q60 | Off time 60 for CQ WW (CW, SSB, RTTY), 30 elsewhere incl. IARU HF | `a7e8fe41` |
-| Q87 | IN7QPNE prompt names the four areas | `ed4ad807` |
-| Q90 | A slash suffix is a county rover only in a state QSO party | `bb07fd06` |
-| Q91 | Delete `logddx.pas` and `logmenu.pas` | `32bcadb9` |
-| Q92 | Option 2: shapes become named helpers each class calls | M11 S9 |
-| Q93 | Moot under Q92 | -- |
-| Q94 | Answered by Q90 | `bb07fd06` |
-| Q96 | CQ WW CW fills the zone, like SSB and RTTY | `c9caaa08` |
-| Q46 | Ten-Ten: 2 points with a 10-10 number, 1 without | F26 build list C11 (not built) |
-| Q56 | A contest's sent state stands for the whole session | design 8.2m (already built) |
-| Q75 | Delaware: WA7BNM id 240; the log address from the sponsor's page | built |
-| Q81 | NEQP: state-first abbreviations and CT planning regions; `neqso.dom` to be brought into line | built 2026-10-17 (`neqso.dom`/`neqsow1.dom` = in7qpne_cty.dom's 68 NE entries) |
-| Q7 | Base + CW/SSB children only where the pair is one rule today | design rule; Q43 lists the pairs |
-| Q9 | An edited CQ memory survives re-selecting the contest | built 2026-10-17 (in a session; the edit is still lost on restart -- the `message` table is never read, reported) |
-| Q37 | A malformed grid is refused at entry (and import); the read made safe | read made safe: built 2026-10-17; entry: already so for every grid parser (ALRS and the RST-only parsers reported); import: not built (finding) |
-| Q13 | A logged QSO is scored from its record, never from live state (radio mode, operator) | rule; audit found A1-A3, B, C, E1-E2 (not fixed) |
-| Q44 | RTC, CQMM, WRTC state their bands; off-band/off-mode QSOs score 0, are not in HamScore's QSO counts, but advance the serial | not built |
-| FD-DX | `DX` from a W (or other sectioned) station is refused; a DX station is still `1D DX` | entry: already so (measured 2026-10-17); import/logged: proposal below, not built |
-| Q30 | Winter FD: `MX` is a section (Cabrillo, SRX_STRING, ARRL_SECT), as D7 does | already so; no change |
-| Q31 | `Missing precedence (Q A B U M S)` is acceptable wording | already so |
-| Q38 | Winter FD has no DXCC multiplier (D7 tracked one but never scored it) | built 2026-10-17 |
-| Q32 | Missouri peak-hour bonus is real; computed from each QSO's logged time over the whole log, cap 250 | built 2026-10-17 |
-| Q29 | Out-of-state works only the host state: true for QSO parties in general | already so |
-| Idaho-DC | DC is not a state, so not an Idaho multiplier | already so |
-| Idaho-cfg | No `.cfg` in `target/dom` -- the Idaho and Delaware templates deleted | done 2026-10-15 |
-| Q17 | Moot: Locust is retired | -- |
-| Q36 | Moot: Locust is retired | -- |
-| Q24 | FOC reads N1MM's APP_N1MM_EXCHANGE1 only when the record's CONTEST_ID is FOC's | not built; needs N1MM's id spelling |
-| Q65 | MY CALL is a station fact a contest may override; the contest's call lives in its database | not built (own stage) |
-| Q74 | Cabrillo LOCATION is seeded from the station at New Contest time and stored in the contest; the seed is the ARRL section for W/VE, `DX` otherwise (Q79) | not built |
-| Q68 | On reopen, the station-fact rows are applied before the contest row | not built |
-| Q76 | ADIF `STATE` is the worked station's state, `MY_STATE` ours -- fix the host-state export | built `35986731` (with Q89) |
-| Q82 | IN7QPNE county-line count left as is; future fix | issue #85 |
-| Q84 | A party's DX-multiplier test ignores case (files unchanged) | built 2026-10-17 |
-| Q77 | IN7QPNE per-party score: deferred | issue #86 |
-| Q78 | IN7QPNE cross-party scoring view: deferred with Q77 | issue #86 |
-| Q98 | Every contest states its bands and modes; an off-band/off-mode QSO is logged, scores nothing, and is an automatic X-QSO in the log and the export (flag OR off-band) | not built |
-| Q41 | ARRL VHF runnings named ARRL-VHF-JAN/JUN/SEP; all three get June's set-up | built |
-| Q62 | POTA: the worked station's DXCC from its callsign; our MY_DXCC and MY_STATE from our park | built |
-| Q57 | CQ WW RTTY messages built without writing MY ZONE | done with 7.12 |
-| Q63 | "Activator" stays untranslated -- a universal POTA term | no change |
-| Q72 | Delaware: 160-10 m without WARC plus 6 m and up through light ("DC to daylight") | already so; no change |
-| Q85 | 7QP excludes WARC (and the sponsor scores digital 4) | built (WARC 2026-10-16; digital 4 2026-10-17) |
-| Q86 | Minnesota is the only HamScore QSO party; its flag is right | no change |
-| Q83 | Online-score posting and HamScore are separate permissions; WRTC and IN7QPNE neither (WRTC amended by Q55) | split not built; WRTC as built |
-| Q69 | MY ZONE is the CQ zone; ITU-zone contests read MY ITU ZONE | not built (own step) |
-| Q71 | RSGB 1.8, ARRL 160, CQ 160 credit 160 m only; UA4W prompt uses TC_ENTERYOURRDAIDORGRID | built 2026-10-17 |
-| Q58 | WRTC is named "World Radiosport Team Championship" (display and friendly name) | built |
-| Q15 | NRAU Cabrillo names become WA7BNM's NRAU-CW / NRAU-SSB; ADIF keeps NRAU-BALTIC-*; sponsor times | built (names); times are Q99 |
-| Q16 | SSB Sprint is "North American SSB Sprint"; NA-SPRINT-SSB stays; gains the North American country multiplier | built |
-| Q22 | PACC: both exchanges, one per station (PA receives either); a PA entrant's sent column must be its province, not a serial | built |
-| Q61 | ASSISTED, BAND, MODE, OPERATOR: one value each, in the contest database | built 2026-10-17 (and both latent defects); factory check's frozen headers owed a re-freeze |
-| Q54 | WFD writes FM as FM (proposal reversed); HamScore asks the contest's mode spelling; one corpus divergence | built |
-| Q34 | Rover county/grid per QSO, set by a call-window command; sketched for later | issue #87 |
-| Q89 | BCQP ADIF exports STATE:BC; no CNTY (ADIF defines no Canadian secondary subdivision) | built -- and STATE is now the WORKED station's in every party (Q76) |
-| Q99 | Each class states its schedule (typed); New Contest list alphabetical, a check box orders by next date; start/end seeded | not built |
-| Q35 | Idaho bonus: at least 10 QSOs (as built); all 25 table counties; one table per year, by the log's year | built 2026-10-17 (2026 table only; 2027 coverage is the sponsor's) |
-| Q52 | The New Contest drop-down shows each friendly name in full (sized at run time); reconsider if too wide | not built |
-| Q53 | Names for the 43 unnamed contests: docs/Q53_CONTEST_NAMES.csv; MINITEST retired | built |
-| Q67 | New Contest rows seeded from the station; the values at OK are the contest's own | not built |
-| Q49 | BCQP: in-province DX contact earns no domestic mult (case-insensitive test) | built 2026-10-17 |
-| Q73 | QSO party: CALL/<valid county> is its own station for dupes (K1AR/NHHIL in NEQP) | already so (measured and pinned 2026-10-17) |
-| Q118 | Every state party: a new QSO per county (QTH) received -- the LOGGED QSO with a different QTH is not a dupe; before the exchange the call window shows DUPE on the call alone, as always (~~hint, don't block~~ WITHDRAWN 2026-10-18); Cabrillo keeps W2TZ/STE as logged | built 2026-10-17 on `TContestStateQSOPartyBase` (`DupeKeyIncludesReceivedQTH`), hint removed 2026-10-18; 7QP/NEQP/IN7QPNE not on that base -- open |
-| Q48 | YB DX: YB entrant counts all prefixes, others YB prefixes only -- already so (DXLog agrees) | no change |
-| Q66 | A Contest Details dialog edits the contest's stored values (seeded station facts, Cabrillo fields); a station change mid-contest offers to copy it | not built |
-| Q64 | POTA shows as "Parks on the Air(r) Logging" | as built |
-| Q59 | Inactive contests listed grey and unselectable for a NEW contest; old logs still open and import | not built (confirm grey) |
-| Q102 | SOUTHAMERICANWW retires (GACW WWSA is ref 45) | not built (needs Q10) |
-| Q42 | OZCHR session names restored in Cyrillic, recovered from D7 `b90ba930` | built |
-| Q43 | Sibling pairs follow DXLog: one definition file = one contest, a base with per-mode (or per-date) children | not built |
-| Q45 | EUDX/IRTS "in the EU" reads the worked station's resolved region, not `DomMultQTH` | built 2026-10-17 |
-| Q55 | WRTC posts no DynamicResults XML; no multiplier row; amends Q83 | no change |
-| Q80 | IN7QPNE in-area multipliers per party, after Q4 -- MOOT: Q104 keeps in-area stations out | moot |
-| Q104 | IN7QPNE is refused for a station inside IN, the 7th area, New England or DE; the message names the party (7QP for the 7th area). `NEQP` = New England, `NE-QSO-PARTY` = Nebraska (TR4W has none) | built 2026-10-17 (bench: BENCH_QUEUE) |
-| Q105 | New England is `NEWEQP` (Cabrillo `NEWE-QSO-PARTY`, ADIF `NEQP`), `NEQP` kept as a read alias; Nebraska QSO Party added as `NE-QSO-PARTY` | building |
-| Q79 (LOCATION) | IN7QPNE requires no LOCATION; Cabrillo spec: section for W/VE, `DX` otherwise | no change |
-| Q79 (VHF) | IN7QPNE bands = the union of the four parties; a QSO scores on its party's bands. New England 80-10, 7QP and Indiana 160-10, Delaware 160-10 + 6 m up -- each states its own | building |
-| Q51 | An X-QSO never counts as worked: logged and exported only so the other station avoids a not-in-log penalty; no dupe, worked, mult or points mark | already so; the live path must share the predicate when Q98 lands |
-| Q103 | New Contest list: search filter over a plain list, names only; no groups | not built |
-| Q100 | `contest.last_opened_at` deleted (the last-contest button gives quick access); the button reads "Last Contest" | building |
-| Q107 | QSO parties: an out-of-state entrant's QSO with a non-host station scores 0 and no mult (scoring applies the entry rule; one predicate) | building |
-| Q108 | Contests register by string id like radios (no `VC.pas` line for a new contest); multi-op refused for a contest with no legacy number until the new protocol; `<contestnr>` open | design after the cleanup |
-| Q109 | UDP `dynamicresults`: send the ALL row, per-mode totals, WRTC mults; never suppressed (WRTC's local aggregators read it -- also settles Q55) | built 2026-10-16 |
-| Q110 | Peers must be on the same contest; a QSO from a peer on another contest is refused (not logged, scored or applied) and reported | built 2026-10-18 (bench: BENCH_QUEUE) |
-| Q115 | The class states what its exchange requires; the five RST-and/or-grid contests require the grid, RST optional (all five sponsors); a word that is neither grid nor RST is refused and named, never dropped | built 2026-10-18 (typed entry); import: no seam, not built (finding) |
-| Q52 note | Settled by Q52 | removed |
+| Q              | Answer                                                                                                                                                                                                                                                                   | Where it landed                                                                                                                                    |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Q4             | Retire all seven shared-set settings at the endpoint; user-defined contests to be revisited another way                                                                                                                                                                  | M10                                                                                                                                                |
+| Q6             | POTA becomes a contest class, treated like General QSO                                                                                                                                                                                                                   | `TContestPOTA`, 2026-10-13 (design 8.2o)                                                                                                           |
+| Q11            | Delete the QSO-POINT-METHOD-only arms at M10                                                                                                                                                                                                                             | M10                                                                                                                                                |
+| Q28            | Station facts default from station config, overridable per contest                                                                                                                                                                                                       | design 7.12; LANDED 2026-10-13 (`TMySettings.Resolved*`); UA4W's class 2026-10-14 (design 8.2p)                                                    |
+| Q33            | RSGB 1.8 gets a read-only new-multiplier answer                                                                                                                                                                                                                          | design 7.13; its class 2026-10-14 (design 8.2p)                                                                                                    |
+| --             | IN7QPNE is a composite of IN/7QP/NE/DE; Delaware becomes a contest                                                                                                                                                                                                       | design 7.14; Delaware 2026-10-14 (8.2q); the composite `TContestIN7QPNE` 2026-10-14 (8.2r; Q77-Q84)                                                |
+| Q1             | Field Day has no multipliers; DX is never an ARRL section                                                                                                                                                                                                                | M2                                                                                                                                                 |
+| Q2             | No interim fix for the rotated point-method spellings                                                                                                                                                                                                                    | design 7.2                                                                                                                                         |
+| Q3             | The log stores only what the operator stated                                                                                                                                                                                                                             | M2a (decided under delegation)                                                                                                                     |
+| Q5             | Salmon Run W7DX bonus: implement                                                                                                                                                                                                                                         | M6                                                                                                                                                 |
+| Q12            | `TContestFixedPoints` retired, `FixedModePoints` kept                                                                                                                                                                                                                    | M3                                                                                                                                                 |
+| Q14            | Out-of-state works only the host state; `nc_cty.dom` = 100 counties                                                                                                                                                                                                      | M5b                                                                                                                                                |
+| Q19            | No Sweepstakes QSO without a precedence (refused)                                                                                                                                                                                                                        | M5b                                                                                                                                                |
+| Q20            | FD DX exports `CLASS` as logged, `SRX_STRING` `1D DX`, never `ARRL_SECT`                                                                                                                                                                                                 | M5b                                                                                                                                                |
+| Q21            | Night rules read the QSO's recorded time                                                                                                                                                                                                                                 | after M4                                                                                                                                           |
+| Q25            | FD DX import is not a section                                                                                                                                                                                                                                            | M5b                                                                                                                                                |
+| Q39            | A contest never writes a station setting                                                                                                                                                                                                                                 | design 7.11 (decided); LANDED at M9a for MY STATE (Q57 is MY ZONE)                                                                                 |
+| --             | Out-of-state x out-of-state in a QSO party: refuse with an error                                                                                                                                                                                                         | M5b                                                                                                                                                |
+| --             | Off-band QSO: logged, 0 points, no mult, no need-mult hint, not a dupe                                                                                                                                                                                                   | 1e4f66f9 (points, mults); M8 (dupes, hints)                                                                                                        |
+| --             | QRP = our power; last touch point wins; may change mid-contest with a reminder                                                                                                                                                                                           | Idaho, design 7.6; LANDED at M9b (the summary writes the one setting, a change with QSOs rescores and shows a notice)                              |
+| --             | The New Contest drop-down shows the display name                                                                                                                                                                                                                         | M9b (Q52 settles the words)                                                                                                                        |
+| --             | Inactive contests go at the bottom of the drop-down (SA Sprint, Locust)                                                                                                                                                                                                  | M9b (`IsActive`; Q59 asks for others)                                                                                                              |
+| --             | ALL ASIAN SSB is `ALL-ASIAN-DX-PHONE`                                                                                                                                                                                                                                    | e1c6f873                                                                                                                                           |
+| --             | RSGB RoPoCo: an ADIF record is the SSB running's when its mode is phone (one ADIF id, `RSGB-ROLO`)                                                                                                                                                                       | M7b batch 2 (decided under delegation, design 8.2k)                                                                                                |
+| Q18            | JW-FD: CW 5 / phone 3 everywhere, Oceania only; own branch not a multiplier                                                                                                                                                                                              | F26 build list (C)                                                                                                                                 |
+| Q50            | A Russian call's oblast: `RussianID` of the country, one helper                                                                                                                                                                                                          | M11, 2026-10-15                                                                                                                                    |
+| Q60            | Off time 60 for CQ WW (CW, SSB, RTTY), 30 elsewhere incl. IARU HF                                                                                                                                                                                                        | `a7e8fe41`                                                                                                                                         |
+| Q87            | IN7QPNE prompt names the four areas                                                                                                                                                                                                                                      | `ed4ad807`                                                                                                                                         |
+| Q90            | A slash suffix is a county rover only in a state QSO party                                                                                                                                                                                                               | `bb07fd06`                                                                                                                                         |
+| Q91            | Delete `logddx.pas` and `logmenu.pas`                                                                                                                                                                                                                                    | `32bcadb9`                                                                                                                                         |
+| Q92            | Option 2: shapes become named helpers each class calls                                                                                                                                                                                                                   | M11 S9                                                                                                                                             |
+| Q93            | Moot under Q92                                                                                                                                                                                                                                                           | --                                                                                                                                                 |
+| Q94            | Answered by Q90                                                                                                                                                                                                                                                          | `bb07fd06`                                                                                                                                         |
+| Q96            | CQ WW CW fills the zone, like SSB and RTTY                                                                                                                                                                                                                               | `c9caaa08`                                                                                                                                         |
+| Q46            | Ten-Ten: 2 points with a 10-10 number, 1 without                                                                                                                                                                                                                         | F26 build list C11 (not built)                                                                                                                     |
+| Q56            | A contest's sent state stands for the whole session                                                                                                                                                                                                                      | design 8.2m (already built)                                                                                                                        |
+| Q75            | Delaware: WA7BNM id 240; the log address from the sponsor's page                                                                                                                                                                                                         | built                                                                                                                                              |
+| Q81            | NEQP: state-first abbreviations and CT planning regions; `neqso.dom` to be brought into line                                                                                                                                                                             | built 2026-10-17 (`neqso.dom`/`neqsow1.dom` = in7qpne_cty.dom's 68 NE entries)                                                                     |
+| Q7             | Base + CW/SSB children only where the pair is one rule today                                                                                                                                                                                                             | design rule; Q43 lists the pairs                                                                                                                   |
+| Q9             | An edited CQ memory survives re-selecting the contest                                                                                                                                                                                                                    | built 2026-10-17 (in a session; the edit is still lost on restart -- the `message` table is never read, reported)                                  |
+| Q37            | A malformed grid is refused at entry (and import); the read made safe                                                                                                                                                                                                    | read made safe: built 2026-10-17; entry: already so for every grid parser (ALRS and the RST-only parsers reported); import: not built (finding)    |
+| Q13            | A logged QSO is scored from its record, never from live state (radio mode, operator)                                                                                                                                                                                     | rule; audit found A1-A3, B, C, E1-E2 (not fixed)                                                                                                   |
+| Q44            | RTC, CQMM, WRTC state their bands; off-band/off-mode QSOs score 0, are not in HamScore's QSO counts, but advance the serial                                                                                                                                              | not built                                                                                                                                          |
+| FD-DX          | `DX` from a W (or other sectioned) station is refused; a DX station is still `1D DX`                                                                                                                                                                                     | entry: already so (measured 2026-10-17); import/logged: proposal below, not built                                                                  |
+| Q30            | Winter FD: `MX` is a section (Cabrillo, SRX_STRING, ARRL_SECT), as D7 does                                                                                                                                                                                               | already so; no change                                                                                                                              |
+| Q31            | `Missing precedence (Q A B U M S)` is acceptable wording                                                                                                                                                                                                                 | already so                                                                                                                                         |
+| Q38            | Winter FD has no DXCC multiplier (D7 tracked one but never scored it)                                                                                                                                                                                                    | built 2026-10-17                                                                                                                                   |
+| Q32            | Missouri peak-hour bonus is real; computed from each QSO's logged time over the whole log, cap 250                                                                                                                                                                       | built 2026-10-17                                                                                                                                   |
+| Q29            | Out-of-state works only the host state: true for QSO parties in general                                                                                                                                                                                                  | already so                                                                                                                                         |
+| Idaho-DC       | DC is not a state, so not an Idaho multiplier                                                                                                                                                                                                                            | already so                                                                                                                                         |
+| Idaho-cfg      | No `.cfg` in `target/dom` -- the Idaho and Delaware templates deleted                                                                                                                                                                                                    | done 2026-10-15                                                                                                                                    |
+| Q17            | Moot: Locust is retired                                                                                                                                                                                                                                                  | --                                                                                                                                                 |
+| Q36            | Moot: Locust is retired                                                                                                                                                                                                                                                  | --                                                                                                                                                 |
+| Q24            | FOC reads N1MM's APP_N1MM_EXCHANGE1 only when the record's CONTEST_ID is FOC's                                                                                                                                                                                           | not built; needs N1MM's id spelling                                                                                                                |
+| Q65            | MY CALL is a station fact a contest may override; the contest's call lives in its database                                                                                                                                                                               | not built (own stage)                                                                                                                              |
+| Q74            | Cabrillo LOCATION is seeded from the station at New Contest time and stored in the contest; the seed is the ARRL section for W/VE, `DX` otherwise (Q79)                                                                                                                  | not built                                                                                                                                          |
+| Q68            | On reopen, the station-fact rows are applied before the contest row                                                                                                                                                                                                      | not built                                                                                                                                          |
+| Q76            | ADIF `STATE` is the worked station's state, `MY_STATE` ours -- fix the host-state export                                                                                                                                                                                 | built `35986731` (with Q89)                                                                                                                        |
+| Q82            | IN7QPNE county-line count left as is; future fix                                                                                                                                                                                                                         | issue #85                                                                                                                                          |
+| Q84            | A party's DX-multiplier test ignores case (files unchanged)                                                                                                                                                                                                              | built 2026-10-17                                                                                                                                   |
+| Q77            | IN7QPNE per-party score: deferred                                                                                                                                                                                                                                        | issue #86                                                                                                                                          |
+| Q78            | IN7QPNE cross-party scoring view: deferred with Q77                                                                                                                                                                                                                      | issue #86                                                                                                                                          |
+| Q98            | Every contest states its bands and modes; an off-band/off-mode QSO is logged, scores nothing, and is an automatic X-QSO in the log and the export (flag OR off-band)                                                                                                     | not built                                                                                                                                          |
+| Q41            | ARRL VHF runnings named ARRL-VHF-JAN/JUN/SEP; all three get June's set-up                                                                                                                                                                                                | built                                                                                                                                              |
+| Q62            | POTA: the worked station's DXCC from its callsign; our MY_DXCC and MY_STATE from our park                                                                                                                                                                                | built                                                                                                                                              |
+| Q57            | CQ WW RTTY messages built without writing MY ZONE                                                                                                                                                                                                                        | done with 7.12                                                                                                                                     |
+| Q63            | "Activator" stays untranslated -- a universal POTA term                                                                                                                                                                                                                  | no change                                                                                                                                          |
+| Q72            | Delaware: 160-10 m without WARC plus 6 m and up through light ("DC to daylight")                                                                                                                                                                                         | already so; no change                                                                                                                              |
+| Q85            | 7QP excludes WARC (and the sponsor scores digital 4)                                                                                                                                                                                                                     | built (WARC 2026-10-16; digital 4 2026-10-17)                                                                                                      |
+| Q86            | Minnesota is the only HamScore QSO party; its flag is right                                                                                                                                                                                                              | no change                                                                                                                                          |
+| Q83            | Online-score posting and HamScore are separate permissions; WRTC and IN7QPNE neither (WRTC amended by Q55)                                                                                                                                                               | split not built; WRTC as built                                                                                                                     |
+| Q69            | MY ZONE is the CQ zone; ITU-zone contests read MY ITU ZONE                                                                                                                                                                                                               | not built (own step)                                                                                                                               |
+| Q71            | RSGB 1.8, ARRL 160, CQ 160 credit 160 m only; UA4W prompt uses TC_ENTERYOURRDAIDORGRID                                                                                                                                                                                   | built 2026-10-17                                                                                                                                   |
+| Q58            | WRTC is named "World Radiosport Team Championship" (display and friendly name)                                                                                                                                                                                           | built                                                                                                                                              |
+| Q15            | NRAU Cabrillo names become WA7BNM's NRAU-CW / NRAU-SSB; ADIF keeps NRAU-BALTIC-*; sponsor times                                                                                                                                                                          | built (names); times are Q99                                                                                                                       |
+| Q16            | SSB Sprint is "North American SSB Sprint"; NA-SPRINT-SSB stays; gains the North American country multiplier                                                                                                                                                              | built                                                                                                                                              |
+| Q22            | PACC: both exchanges, one per station (PA receives either); a PA entrant's sent column must be its province, not a serial                                                                                                                                                | built                                                                                                                                              |
+| Q61            | ASSISTED, BAND, MODE, OPERATOR: one value each, in the contest database                                                                                                                                                                                                  | built 2026-10-17 (and both latent defects); factory check's frozen headers owed a re-freeze                                                        |
+| Q54            | WFD writes FM as FM (proposal reversed); HamScore asks the contest's mode spelling; one corpus divergence                                                                                                                                                                | built                                                                                                                                              |
+| Q34            | Rover county/grid per QSO, set by a call-window command; sketched for later                                                                                                                                                                                              | issue #87                                                                                                                                          |
+| Q89            | BCQP ADIF exports STATE:BC; no CNTY (ADIF defines no Canadian secondary subdivision)                                                                                                                                                                                     | built -- and STATE is now the WORKED station's in every party (Q76)                                                                                |
+| Q99            | Each class states its schedule (typed); New Contest list alphabetical, a check box orders by next date; start/end seeded                                                                                                                                                 | not built                                                                                                                                          |
+| Q35            | Idaho bonus: at least 10 QSOs (as built); all 25 table counties; one table per year, by the log's year                                                                                                                                                                   | built 2026-10-17 (2026 table only; 2027 coverage is the sponsor's)                                                                                 |
+| Q52            | The New Contest drop-down shows each friendly name in full (sized at run time); reconsider if too wide                                                                                                                                                                   | built 2026-10-19; 1111 px kept (NY4I)                                                                                                              |
+| Q53            | Names for the 43 unnamed contests: docs/Q53_CONTEST_NAMES.csv; MINITEST retired                                                                                                                                                                                          | built                                                                                                                                              |
+| Q67            | New Contest rows seeded from the station; the values at OK are the contest's own                                                                                                                                                                                         | not built                                                                                                                                          |
+| Q49            | BCQP: in-province DX contact earns no domestic mult (case-insensitive test)                                                                                                                                                                                              | built 2026-10-17                                                                                                                                   |
+| Q73            | QSO party: CALL/<valid county> is its own station for dupes (K1AR/NHHIL in NEQP)                                                                                                                                                                                         | already so (measured and pinned 2026-10-17)                                                                                                        |
+| Q118           | Every state party: a new QSO per county (QTH) received -- the LOGGED QSO with a different QTH is not a dupe; before the exchange the call window shows DUPE on the call alone, as always (~~hint, don't block~~ WITHDRAWN 2026-10-18); Cabrillo keeps W2TZ/STE as logged | built 2026-10-17 on `TContestStateQSOPartyBase` (`DupeKeyIncludesReceivedQTH`), hint removed 2026-10-18; 7QP/NEQP/IN7QPNE not on that base -- open |
+| Q48            | YB DX: YB entrant counts all prefixes, others YB prefixes only -- already so (DXLog agrees)                                                                                                                                                                              | no change                                                                                                                                          |
+| Q66            | A Contest Details dialog edits the contest's stored values (seeded station facts, Cabrillo fields); a station change mid-contest offers to copy it                                                                                                                       | not built                                                                                                                                          |
+| Q64            | POTA shows as "Parks on the Air(r) Logging"                                                                                                                                                                                                                              | as built                                                                                                                                           |
+| Q59            | Inactive contests listed grey and unselectable for a NEW contest; old logs still open and import                                                                                                                                                                         | built 2026-10-19: HIDDEN, not grey (NY4I)                                                                                                          |
+| Q102           | SOUTHAMERICANWW retires (GACW WWSA is ref 45)                                                                                                                                                                                                                            | not built (needs Q10)                                                                                                                              |
+| Q42            | OZCHR session names restored in Cyrillic, recovered from D7 `b90ba930`                                                                                                                                                                                                   | built                                                                                                                                              |
+| Q43            | Sibling pairs follow DXLog: one definition file = one contest, a base with per-mode (or per-date) children                                                                                                                                                               | not built                                                                                                                                          |
+| Q45            | EUDX/IRTS "in the EU" reads the worked station's resolved region, not `DomMultQTH`                                                                                                                                                                                       | built 2026-10-17                                                                                                                                   |
+| Q55            | WRTC posts no DynamicResults XML; no multiplier row; amends Q83                                                                                                                                                                                                          | no change                                                                                                                                          |
+| Q80            | IN7QPNE in-area multipliers per party, after Q4 -- MOOT: Q104 keeps in-area stations out                                                                                                                                                                                 | moot                                                                                                                                               |
+| Q104           | IN7QPNE is refused for a station inside IN, the 7th area, New England or DE; the message names the party (7QP for the 7th area). `NEQP` = New England, `NE-QSO-PARTY` = Nebraska (TR4W has none)                                                                         | built 2026-10-17 (bench: BENCH_QUEUE)                                                                                                              |
+| Q105           | New England is `NEWEQP` (Cabrillo `NEWE-QSO-PARTY`, ADIF `NEQP`), `NEQP` kept as a read alias; Nebraska QSO Party added as `NE-QSO-PARTY`                                                                                                                                | building                                                                                                                                           |
+| Q79 (LOCATION) | IN7QPNE requires no LOCATION; Cabrillo spec: section for W/VE, `DX` otherwise                                                                                                                                                                                            | no change                                                                                                                                          |
+| Q79 (VHF)      | IN7QPNE bands = the union of the four parties; a QSO scores on its party's bands. New England 80-10, 7QP and Indiana 160-10, Delaware 160-10 + 6 m up -- each states its own                                                                                             | building                                                                                                                                           |
+| Q51            | An X-QSO never counts as worked: logged and exported only so the other station avoids a not-in-log penalty; no dupe, worked, mult or points mark                                                                                                                         | already so; the live path must share the predicate when Q98 lands                                                                                  |
+| Q103           | New Contest list: search filter over a plain list, names only; no groups                                                                                                                                                                                                 | built 2026-10-19                                                                                                                                   |
+| Q100           | `contest.last_opened_at` deleted (the last-contest button gives quick access); the button reads "Last Contest"                                                                                                                                                           | building                                                                                                                                           |
+| Q107           | QSO parties: an out-of-state entrant's QSO with a non-host station scores 0 and no mult (scoring applies the entry rule; one predicate)                                                                                                                                  | building                                                                                                                                           |
+| Q108           | Contests register by string id like radios (no `VC.pas` line for a new contest); multi-op refused for a contest with no legacy number until the new protocol; `<contestnr>` open                                                                                         | design after the cleanup                                                                                                                           |
+| Q109           | UDP `dynamicresults`: send the ALL row, per-mode totals, WRTC mults; never suppressed (WRTC's local aggregators read it -- also settles Q55)                                                                                                                             | built 2026-10-16                                                                                                                                   |
+| Q110           | Peers must be on the same contest; a QSO from a peer on another contest is refused (not logged, scored or applied) and reported                                                                                                                                          | built 2026-10-18 (bench: BENCH_QUEUE)                                                                                                              |
+| Q115           | The class states what its exchange requires; the five RST-and/or-grid contests require the grid, RST optional (all five sponsors); a word that is neither grid nor RST is refused and named, never dropped                                                               | built 2026-10-18 (typed entry); import: no seam, not built (finding)                                                                               |
+| Q121           | The New Contest dialog presets CATEGORY-MODE from the contest's stated modes: one mode -> that mode, more than one -> MIXED ("yes start at mixed", 2026-10-19). Today every contest gets CW (first in the list)                                                          | Q98 stage S11 (design 8.2v); not built                                                                                                             |
+| Q52 note       | Settled by Q52                                                                                                                                                                                                                                                           | removed                                                                                                                                            |
 
 ### Answered since the table was last updated (full text)
 
@@ -597,6 +602,7 @@ closes it; anything else reopens it.
   `ceContest` (that byte is read only for the log-compare header,
   `ServerLogFileInformation.liContest`). It is not a contest log, so nothing
   was changed there; the check is the client's.
+
 - **Q115** (Q37) **The "RST and/or grid" parser (ARRL VHF x3, CQ VHF, Stew
   Perry) logs `599 FN3` as a QSO with NO grid**, silently dropping the bad
   token. Should RST alone be accepted in those contests (then only the bad
@@ -614,6 +620,7 @@ closes it; anything else reopens it.
   (i.e. CN85). RST is optional."* DXLog's five definitions agree
   (`FIELD_RCVD_MANDATORY=YES`, a grid type).
   **Built 2026-10-18, typed entry:**
+
   * THE FORMAT (LOGSTUFF `ProcessRSTAndOrGridSquareExchange`) reads every
     word first; the leftmost word that is neither a grid
     (`uGridShape.IsGoodLookingGrid`, Q37) nor all digits refuses the
@@ -632,13 +639,13 @@ closes it; anything else reopens it.
   * Pinned by `uTestGridExchange` (the real engine, per contest) and
     `uTestExchangeParse` (code `g`); the matrix's parse lines for these five
     move (see the commit).
-  **Import is NOT built and has no seam:** `ApplyADIFImport` is a procedure
-  that cannot refuse, and the base copies `GRIDSQUARE` into the record
-  without the parser -- so a record with no grid or `FN3` imports as it is.
-  NY4I's Q112 rule (a record typing would refuse is an import error that
-  rolls back the whole import) applies here too, and wants ONE mechanism for
-  both: a refusal out of `ApplyADIFImport` (or a validation virtual beside
-  it) and the importer's rollback.
+    **Import is NOT built and has no seam:** `ApplyADIFImport` is a procedure
+    that cannot refuse, and the base copies `GRIDSQUARE` into the record
+    without the parser -- so a record with no grid or `FN3` imports as it is.
+    NY4I's Q112 rule (a record typing would refuse is an import error that
+    rolls back the whole import) applies here too, and wants ONE mechanism for
+    both: a refusal out of `ApplyADIFImport` (or a validation virtual beside
+    it) and the importer's rollback.
 
 - **Q118** (Q73; NY4I's NYQP field report, 2026-10-17, the contest running
   that day) **A mobile signing its BARE call** and sending a new county was a
@@ -701,6 +708,7 @@ closes it; anything else reopens it.
 - **Q109** (found by the new end-to-end UDP tests, 2026-10-16) The N1MM-style
   UDP **score** message (`dynamicresults`, `SendScoreToUDP`) has four
   problems, ALL also in D7 4.151 (tag names and structure match D7):
+
   1. **No `<point>` rows are ever sent.** The mode loop runs `CW to Phone`
      (`{Both do}` is commented out), so the "ALL" mode row in the header's
      own sample XML is never written.
@@ -711,23 +719,23 @@ closes it; anything else reopens it.
      all-modes row that (1) never reaches.
   4. **No suppression:** the UDP score goes out for a contest that forbids
      score posting (WRTC) -- only HamScore and the menu ask the contest.
-  The tests pin today's output, (2) as a named known-defect test, so each
-  fix is a deliberate test edit. *Recommended: fix 1-3 (send the ALL row,
-  per-mode totals, WRTC's mults follow from 1); for 4, ask the contest the
-  same way HamScore does -- a local N1MM-style listener is arguably not
-  "posting", so this one is your call.*
-  **Answer:** (NY4I, 2026-10-16) *"q109 is ok except dynamicresults is
-  perfectly fine for wrtc. That was its original purpose."* So: FIX 1-3
-  (send the ALL row, per-mode totals, WRTC's mults) and do NOT suppress the
-  UDP score for WRTC -- the UDP `dynamicresults` message is what WRTC's local
-  aggregators read; that is what it was built for. This also settles Q55:
-  WRTC's multipliers belong in THIS message (fix 3), and Q83's "WRTC posts
-  neither" applies to the ONLINE scoreboard and HamScore, not to the local
-  UDP broadcast. Not built.
-  **BUILT 2026-10-16:** the mode loop runs `CW to Both` (the ALL rows -- qso,
-  mult, point -- per band and `total`), each `total` row is its own mode's
-  bands summed (`nModeTotal`), WRTC's HQ/country rows follow from the ALL row,
-  and nothing suppresses the UDP score. Tests: `uTestUDPDatagrams`.
+     The tests pin today's output, (2) as a named known-defect test, so each
+     fix is a deliberate test edit. *Recommended: fix 1-3 (send the ALL row,
+     per-mode totals, WRTC's mults follow from 1); for 4, ask the contest the
+     same way HamScore does -- a local N1MM-style listener is arguably not
+     "posting", so this one is your call.*
+     **Answer:** (NY4I, 2026-10-16) *"q109 is ok except dynamicresults is
+     perfectly fine for wrtc. That was its original purpose."* So: FIX 1-3
+     (send the ALL row, per-mode totals, WRTC's mults) and do NOT suppress the
+     UDP score for WRTC -- the UDP `dynamicresults` message is what WRTC's local
+     aggregators read; that is what it was built for. This also settles Q55:
+     WRTC's multipliers belong in THIS message (fix 3), and Q83's "WRTC posts
+     neither" applies to the ONLINE scoreboard and HamScore, not to the local
+     UDP broadcast. Not built.
+     **BUILT 2026-10-16:** the mode loop runs `CW to Both` (the ALL rows -- qso,
+     mult, point -- per band and `total`), each `total` row is its own mode's
+     bands summed (`nModeTotal`), WRTC's HQ/country rows follow from the ALL row,
+     and nothing suppresses the UDP score. Tests: `uTestUDPDatagrams`.
 
 - **Q108** (NY4I, 2026-10-16) A new contest should not touch `VC.pas`:
   *"I prefer we have a registry similar to when we Add a new radio so the
@@ -844,7 +852,10 @@ closes it; anything else reopens it.
   case-insensitive; rows show the name only; "Show inactive contests" (Q59)
   and "Order by next date" (Q99) beneath; no groups unless search proves
   short. Built with Q52, Q59 and Q99 as one New Contest dialog change
-  (lcl-ui). Not built.
+  (lcl-ui). **Built 2026-10-19 with Q52 and Q59** (Q99 not yet): a search
+  box over a `TListBox`; it matches the caption only, never the internal id;
+  a search that hides the chosen contest un-chooses it; a single match is
+  not chosen automatically; Down arrow moves into the list.
 
 - **Q51** An off-band QSO no longer marks the dupe sheet at all (M8), so the
   30 m dupe sheet and the Stations window's `+` do not show it -- consistent
@@ -910,12 +921,12 @@ closes it; anything else reopens it.
   Nebraska: `NE-QSO-PARTY`) and DXLog (`NEWEQP.txt` New England writes
   `NEWE-QSO-PARTY`; `NEQP.txt` is NEBRASKA and writes `NE-QSO-PARTY`):
 
-  | | New England | Nebraska (new) |
-  |---|---|---|
-  | TR4W name (stored in every log) | `NEWEQP` | `NE-QSO-PARTY` |
-  | old spelling still read | `NEQP`, permanently -- a read alias | -- |
-  | Cabrillo | `NEWE-QSO-PARTY` | `NE-QSO-PARTY` |
-  | ADIF | `NEQP` (ADIF enumeration) | `NE-QSO-PARTY` |
+  |                                 | New England                         | Nebraska (new) |
+  | ------------------------------- | ----------------------------------- | -------------- |
+  | TR4W name (stored in every log) | `NEWEQP`                            | `NE-QSO-PARTY` |
+  | old spelling still read         | `NEQP`, permanently -- a read alias | --             |
+  | Cabrillo                        | `NEWE-QSO-PARTY`                    | `NE-QSO-PARTY` |
+  | ADIF                            | `NEQP` (ADIF enumeration)           | `NE-QSO-PARTY` |
 
   **Why `NEQP` is not reused for Nebraska:** it is stored data. Every New
   England SQLite log holds it (`uLogRepository.SetContest`) and reopens
@@ -991,6 +1002,7 @@ closes it; anything else reopens it.
   recovered, not guessed:** D7's first commit (`C:\TR4W`, `b90ba930`,
   `tr4w/src/trdos/FCONTEST.PAS`) still holds the cp1251 bytes, so the loss
   came later. Decoded, and matching the `?` patterns letter for letter:
+
   - OZCR_Z (individual, "заочные" -- remote entrants):
     **Очно-заочный чемпионат России - заочные участники**
   - OZCR_O (teams, "очные" -- on-site entrants):
@@ -1021,17 +1033,17 @@ closes it; anything else reopens it.
   ones, then we should as well."* So **DXLog decides**, one definition file
   for one contest. Read 2026-10-16 from `C:\Program Files (x86)\DXLog.net\Contest`:
 
-  | pair | DXLog | so in TR4W |
-  |---|---|---|
-  | JIDX CW/SSB | `JIDXC.txt`, `MODES=CW;SSB` | one base, CW and SSB children |
-  | All Asian CW/SSB | `AllAsian.txt`, `MODES=CW;SSB` | one base, two children |
-  | Oceania CW/SSB | `OceaniaDX.txt`, `MODES=CW;SSB` | one base, two children |
-  | the four EU Sprints | `EUSPRINT.txt`, `CABRILLO_CONTEST_NAME=EU-SPRINT-{MODE}` | one base, four children |
-  | King of Spain CW/SSB | `HMKOS.txt`, `MODES=CW;SSB` | one base, two children |
-  | REF CW/SSB | `REF.txt`, `MODES=CW;SSB` | one base, two children |
-  | RSGB RoPoCo CW/SSB | `RSGB_RoLo.txt`, `MODES=CW;SSB` | one base, two children |
+  | pair                    | DXLog                                                                                                   | so in TR4W                                                                  |
+  | ----------------------- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+  | JIDX CW/SSB             | `JIDXC.txt`, `MODES=CW;SSB`                                                                             | one base, CW and SSB children                                               |
+  | All Asian CW/SSB        | `AllAsian.txt`, `MODES=CW;SSB`                                                                          | one base, two children                                                      |
+  | Oceania CW/SSB          | `OceaniaDX.txt`, `MODES=CW;SSB`                                                                         | one base, two children                                                      |
+  | the four EU Sprints     | `EUSPRINT.txt`, `CABRILLO_CONTEST_NAME=EU-SPRINT-{MODE}`                                                | one base, four children                                                     |
+  | King of Spain CW/SSB    | `HMKOS.txt`, `MODES=CW;SSB`                                                                             | one base, two children                                                      |
+  | REF CW/SSB              | `REF.txt`, `MODES=CW;SSB`                                                                               | one base, two children                                                      |
+  | RSGB RoPoCo CW/SSB      | `RSGB_RoLo.txt`, `MODES=CW;SSB`                                                                         | one base, two children                                                      |
   | Region 1 FD, RCC CW/SSB | `RCCFD.txt`, `MODES=CW;SSB` -- separate from DXLog's national R1 FD files (`IARU1FD_DL`, `IARU1FD_RUS`) | its own contest (your "Region 1 is its own"); one base for its two runnings |
-  | ARRL VHF Jan/Jun/Sep | three files, one per date | one base, three children (Q41 already gives all three June's set-up) |
+  | ARRL VHF Jan/Jun/Sep    | three files, one per date                                                                               | one base, three children (Q41 already gives all three June's set-up)        |
 
   A child keeps its own name, ids and dates; only the shared rule moves up.
   If "unique" meant the R1 FD CW and SSB runnings should stay two separate
@@ -1262,6 +1274,12 @@ closes it; anything else reopens it.
   an existing log of an inactive contest still OPENS, rescores and exports,
   and its ADIF still imports, because those are old logs, not new contests. No
   others named inactive. lcl-ui. Not built.
+  **Grey settled (NY4I, 2026-10-19): "hide inactive contests".** A native
+  list cannot grey one row, so inactive contests are HIDDEN from the New
+  Contest list by default; a "Show inactive contests" box under the list
+  lists them (the transition view -- the port visibly kept them), and one
+  listed that way still cannot be chosen for a NEW contest. Old logs open,
+  rescore, export and import as before.
 
 - **Q52** Every contest's display name is now its row's friendly name, as you
   asked -- the name the New Contest drop-down will show at M9b. Twelve
@@ -1293,7 +1311,11 @@ closes it; anything else reopens it.
   one outlier is 67, the IN7QPNE composite ("Combined Indiana, 7th Call Area,
   New England and Delaware QSO Party") -- the "too wide" case to reconsider if
   it is. So: the list must show each name in full, sized from the names at run
-  time rather than a hard-coded width (lcl-ui). Not built.
+  time rather than a hard-coded width (lcl-ui). **Built 2026-10-19** with
+  Q103: the list column is measured from the widest name at run time. The
+  IN7QPNE name is 378 px and makes the dialog about 1111 px wide (was 740)
+  -- the "too wide" case. **NY4I, 2026-10-19: "Keep full names at 1111
+  px".** Settled.
 
 - **Q35** Idaho dormant-county threshold: the rovers page says "makes 10 valid
   QSO's", the rules page "MORE THAN 10 contacts". 10 is implemented. The rovers
@@ -1606,16 +1628,17 @@ closes it; anything else reopens it.
   **Answer:** (NY4I, 2026-10-16) *"Use the name from WA7BNM if it conflicts
   with what TR4W has currently. So it should be NRAU-SSB for the SSB
   contest."* So the Cabrillo `CONTEST:` names become WA7BNM's: `NRAU-SSB` (ref
+
   222) and, by the same rule, `NRAU-CW` (ref 220). The ADIF Contest_ID stays
-  `NRAU-BALTIC-CW` / `NRAU-BALTIC-SSB`: those are the ADIF 3.1.6 enumeration's
-  names, and ADIF import matches them. The friendly names already match
-  WA7BNM's. TR4W has no Cabrillo import, so no older log is orphaned by the
-  rename. **Times**, from the sponsor text NY4I pasted: the Sunday of the 2nd
-  full weekend of January, SSB 0600-0800 UTC and CW 0830-1030 UTC, two
-  separate contests (the sponsor also lists combined CW+SSB results, which
-  needs no third class). WA7BNM's page contradicts itself (0630-0830 and
-  0900-1100 for 2027 onward), so the sponsor's times stand. How a class stores
-  its schedule is Q99. **Names built 2026-10-16.**
+       `NRAU-BALTIC-CW` / `NRAU-BALTIC-SSB`: those are the ADIF 3.1.6 enumeration's
+       names, and ADIF import matches them. The friendly names already match
+       WA7BNM's. TR4W has no Cabrillo import, so no older log is orphaned by the
+       rename. **Times**, from the sponsor text NY4I pasted: the Sunday of the 2nd
+       full weekend of January, SSB 0600-0800 UTC and CW 0830-1030 UTC, two
+       separate contests (the sponsor also lists combined CW+SSB results, which
+       needs no third class). WA7BNM's page contradicts itself (0630-0830 and
+       0900-1100 for 2027 onward), so the sponsor's times stand. How a class stores
+       its schedule is Q99. **Names built 2026-10-16.**
 
 - **Q58** WRTC's row gives it IARU's friendly name, "IARU HF World
   Championship", so the two were identical lines in the drop-down. They now
@@ -1705,17 +1728,18 @@ closes it; anything else reopens it.
   *Recommended: check the 7QP rules page and tell me which bands.*
   **Proposed answer:** From the 7QP sponsor (researched 2026-10-14): 7QP
   **excludes WARC**, so the 7QP class declares its bands and WARC QSOs score
+
   0. The same page scores SSB 2 / CW 3 / **digital 4**; TR4W gives digital 2
-  -- a second defect, fixed in the same commit.
-  **Answer:** (NY4I, 2026-10-15) *"7qp does not allow WARC."* So the 7QP class
-  states its bands (160-10 m without WARC, like Delaware) and a WARC QSO
-  scores 0 and, under Q98, is an automatic X-QSO; IN7QPNE inherits it for 7QP-
-  judged QSOs. The digital-4-points item in the proposal comes from the 7QP
-  sponsor's page (rule-source order) and is kept as a fix in the same commit
-  unless NY4I says otherwise. Not built.
-  **Digital 4 built 2026-10-17** (CW 3, phone and FM 2), from the sponsor and
-  DXLog's 7QP.txt (`POINTS_FIELD_BAND_MODE=ALL;ALL;ALL;ALL;4`). Matrix: 7QP and
-  IN7QPNE, the host variant's two digital QSOs 2 -> 4, and totals.
+     -- a second defect, fixed in the same commit.
+     **Answer:** (NY4I, 2026-10-15) *"7qp does not allow WARC."* So the 7QP class
+     states its bands (160-10 m without WARC, like Delaware) and a WARC QSO
+     scores 0 and, under Q98, is an automatic X-QSO; IN7QPNE inherits it for 7QP-
+     judged QSOs. The digital-4-points item in the proposal comes from the 7QP
+     sponsor's page (rule-source order) and is kept as a fix in the same commit
+     unless NY4I says otherwise. Not built.
+     **Digital 4 built 2026-10-17** (CW 3, phone and FM 2), from the sponsor and
+     DXLog's 7QP.txt (`POINTS_FIELD_BAND_MODE=ALL;ALL;ALL;ALL;4`). Matrix: 7QP and
+     IN7QPNE, the host variant's two digital QSOs 2 -> 4, and totals.
 
 - **Q72** Delaware's bands: "all HF bands except WARC, plus 6 m and up".
   The class counts 160 m and light as well as 80-10 m (no WARC) and 6 m up.
@@ -1843,6 +1867,7 @@ closes it; anything else reopens it.
   score totals or any of the other places if it were not an X-QSO."* So YES to
   the sweep -- every contest states its bands (and modes) -- and it adds the
   EXPORT half 7.4 did not have:
+
   - An off-band or off-mode QSO is logged normally and kept in the ADIF, so
     DXKeeper still gets it.
   - It scores 0, earns no multiplier, is not a dupe, is left out of the score
@@ -1860,14 +1885,15 @@ closes it; anything else reopens it.
   - Today none of this happens for 184 of 186 contests (no `UsesBand`), and
     even for Idaho and Delaware the export writes a plain `QSO:` line -- the
     `X-QSO:` prefix reads only the stored flag (`postunit.pas:3166`).
-  Not built.
-  **BUILD RULE (NY4I, 2026-10-15): every contest class LISTS ITS BANDS
-  EXPLICITLY -- no inherited default.** Not even "HF without WARC", though
-  that is what most contests are: a default is a guess for every class that
-  forgets to override it. TContestBase.UsesBand stops answering True for every
-  band, and a pin test over every registered contest fails if a class states
-  no band list -- the way uTestCWFraming fails a radio that keys CW without a
-  frame rule.
+    Not built.
+    **BUILD RULE (NY4I, 2026-10-15): every contest class LISTS ITS BANDS
+    EXPLICITLY -- no inherited default.** Not even "HF without WARC", though
+    that is what most contests are: a default is a guess for every class that
+    forgets to override it. TContestBase.UsesBand stops answering True for every
+    band, and a pin test over every registered contest fails if a class states
+    no band list -- the way uTestCWFraming fails a radio that keys CW without a
+    frame rule.
+
 - **Q77** IN7QPNE's score. You said a combined score is not needed, and it
   would be nice to see the score of the party just worked. Nothing on screen
   can show more than one score today, so the window, the summary sheet and
@@ -2165,6 +2191,7 @@ closes it; anything else reopens it.
   parser's `ActiveMode` reads are reached only from live entry (and the
   contest matrix sets them first). D7's rescore read the clock (Croatian at
   23:30 doubled every QSO); that is already fixed here. Found, none fixed yet:
+
   - **A1 Alt-E (SO2R edit)** -- `so2r_swap` is cleared only after a
     SUCCESSFUL save (`uEditQSO.pas:806`); cancel, Escape or a refused save
     leaves it set, and the next ordinary Edit QSO writes the inactive radio's

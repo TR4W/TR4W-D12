@@ -8613,3 +8613,53 @@ msgstr "标准"
 msgid "Ignored, not a known QTH:"
 msgstr "被忽略, 不是已知的 QTH :"
 
+# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output say 内容 (content), a mistranslation; this catalogue's 'Contest' is 竞技 (athletics) -- 竞赛 is contest. Machine output was: "内容"
+#: uappstrings.snewcontestcontestlabel
+#, fuzzy
+msgid "CONTEST"
+msgstr "竞赛"
+
+#: uappstrings.snewcontestsearchhint
+#, fuzzy
+msgid "Search: type part of a name, e.g. QSO"
+msgstr "搜索: 输入名称的一部分, 例如 QSO"
+
+#: uappstrings.simportmyfactsdifference
+#, fuzzy
+msgid "%s: %d QSO(s), e.g. %s (this contest: %s)"
+msgstr "%s编号 : %d QSO,例如: %s (本次比赛: %s页:1"
+
+#: uappstrings.simportmyfactskept
+#, fuzzy
+msgid "The file's station was kept for %d QSO(s)."
+msgstr "档案站被保存 %d QSO(s)."
+
+#: uappstrings.simportmyfactsquestion
+#, fuzzy
+msgid ""
+"This file names our station for %d of its %d QSO(s) (%s), and it is not what this contest has:%s\n"
+"\n"
+"Keep the file's values for those QSOs?\n"
+"Yes keeps the file's. No gives them this contest's, as a new QSO would get."
+msgstr ""
+
+#: uappstrings.simportmyfactsreplaced
+#, fuzzy
+msgid "%d QSO(s) were given this contest's station in place of the file's."
+msgstr "%d QSO被赋予本次比赛的站点代替了文件的站点."
+
+#: uappstrings.simportmyfactssame
+#, fuzzy
+msgid "%d QSO(s) named our station (%s), the same as this contest's."
+msgstr "%d QSO 命名我们的站(%s),与本次比赛相同."
+
+#: uappstrings.simportmyfactsstamped
+#, fuzzy
+msgid "%d QSO(s) named no station of ours and were given this contest's."
+msgstr "%d QSO没有命名我们的站 并得到了这次比赛。"
+
+#: uappstrings.snewcontestshowinactive
+#, fuzzy
+msgid "Show inactive contests"
+msgstr "显示不活动比赛"
+

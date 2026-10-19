@@ -104,11 +104,19 @@ and the "I am in" box is `uNewContest.RenderPrompt`.
 
 **Since M9b (2026-10-02) the UI asks the contest for the rest** (design 8.2n):
 
-- **The New Contest drop-down lists `DisplayName`s**, active contests first
-  (`IsActive`), built by `uContestChoices` (no LCL, unit tested). The combo
-  is **not `Sorted`** and must not be: `TfrmNewContest.FContests` holds the
-  `ContestType` of each line, filled in the same loop as `Items`, and a
-  sorted combo would reorder `Items` behind it. `SelectedContest` is the
+- **The New Contest list is a `TListBox` under a search box** (Q103 and Q52,
+  2026-10-19) listing `DisplayName`s, built by `uContestChoices` (no LCL,
+  unit tested; `TContestChoices.Matching` is the search -- the caption,
+  case-insensitive, anywhere). The list is **not `Sorted`** and must not be:
+  `TfrmNewContest.FShown` holds the `TContestHandle` of each row, filled in
+  the same pass as `Items`, and a sorted list would reorder `Items` behind
+  it. A search that hides the chosen contest UN-chooses it. Inactive
+  contests are HIDDEN unless "Show inactive contests" is ticked (Q59), and
+  one listed that way cannot start a new contest: the rule is
+  `uContestChoices.ContestCanStartNew`, applied in `SelectedContest`, so a
+  highlighted inactive row reads as `NoContest` (a `TListBox` cannot
+  disable one row). The list's
+  width is measured from the widest name at run time. `SelectedContest` is the
   identity; `ContestName` is still the TOKEN (`ContestTypeSA`) -- it names
   the log file and the `CONTEST` command, so it must not become the caption.
 - **CATEGORY-POWER is one value**: the Cabrillo summary window writes

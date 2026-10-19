@@ -2,13 +2,13 @@ object frmNewContest: TfrmNewContest
   Left = 0
   Height = 524
   Top = 0
-  Width = 740
+  Width = 952
   BorderIcons = [biSystemMenu]
   Caption = 'Open configuration file or start a new contest'
   ClientHeight = 524
-  ClientWidth = 740
+  ClientWidth = 952
   Constraints.MinHeight = 460
-  Constraints.MinWidth = 680
+  Constraints.MinWidth = 892
   Position = poScreenCenter
   LCLVersion = '4.8.0.0'
   OnCreate = HandleCreate
@@ -58,92 +58,143 @@ object frmNewContest: TfrmNewContest
     Left = 316
     Height = 468
     Top = 8
-    Width = 416
+    Width = 628
     Anchors = [akTop, akLeft, akRight, akBottom]
     Caption = 'Start a new contest'
     ClientHeight = 448
-    ClientWidth = 412
+    ClientWidth = 624
     TabOrder = 1
-    object lblMyCall: TLabel
-      Left = 12
-      Height = 20
-      Top = 14
-      Width = 140
-      Alignment = taRightJustify
-      AutoSize = False
-      Caption = 'MY CALL'
-      Layout = tlCenter
-    end
-    object edtMyCall: TEdit
-      Left = 160
-      Height = 26
-      Top = 11
-      Width = 200
-      Anchors = [akTop, akLeft, akRight]
-      CharCase = ecUppercase
-      TabOrder = 0
-    end
-    object lblContest: TLabel
-      Left = 12
-      Height = 20
-      Top = 48
-      Width = 140
-      Alignment = taRightJustify
-      AutoSize = False
-      Caption = 'CONTEST'
-      Layout = tlCenter
-    end
-    object cboContest: TComboBox
-      Left = 160
-      Height = 26
-      Top = 45
-      Width = 200
-      Anchors = [akTop, akLeft, akRight]
-      ItemHeight = 0
-      Style = csDropDownList
-      TabOrder = 1
-      OnChange = cboContestChange
-    end
-    object chkIAmIn: TCheckBox
-      Left = 160
-      Height = 23
-      Top = 78
-      Width = 272
-      Anchors = [akTop, akLeft, akRight]
-      Caption = ' '
-      TabOrder = 2
-      Visible = False
-      OnChange = chkIAmInChange
-    end
-    object pnlComment: TPanel
-      Left = 12
-      Height = 52
-      Top = 108
-      Width = 388
-      Anchors = [akTop, akLeft, akRight]
+    object pnlContestPick: TPanel
+      Left = 0
+      Height = 448
+      Top = 0
+      Width = 260
+      Align = alLeft
       BevelOuter = bvNone
-      BorderStyle = bsSingle
-      ClientHeight = 50
-      ClientWidth = 386
-      Color = clInfoBk
-      ParentBackground = False
-      ParentColor = False
-      TabOrder = 3
-      object lblComment: TLabel
+      ClientHeight = 448
+      ClientWidth = 260
+      TabOrder = 0
+      object lblContest: TLabel
         Left = 8
-        Height = 40
-        Top = 5
-        Width = 370
-        Alignment = taCenter
-        Anchors = [akTop, akLeft, akRight]
+        Height = 20
+        Top = 8
+        Width = 252
+        Align = alTop
         AutoSize = False
+        BorderSpacing.Left = 8
+        BorderSpacing.Top = 8
+        Caption = 'CONTEST'
+        FocusControl = edtContestFilter
         Layout = tlCenter
-        WordWrap = True
+      end
+      object edtContestFilter: TEdit
+        Left = 8
+        Height = 26
+        Top = 32
+        Width = 252
+        Align = alTop
+        BorderSpacing.Left = 8
+        BorderSpacing.Top = 4
+        TabOrder = 0
+        OnChange = edtContestFilterChange
+        OnKeyDown = edtContestFilterKeyDown
+      end
+      object lstContests: TListBox
+        Left = 8
+        Height = 355
+        Top = 62
+        Width = 252
+        Align = alClient
+        BorderSpacing.Left = 8
+        BorderSpacing.Top = 4
+        BorderSpacing.Bottom = 4
+        ItemHeight = 0
+        TabOrder = 1
+        OnSelectionChange = lstContestsSelectionChange
+      end
+      object chkShowInactive: TCheckBox
+        Left = 8
+        Height = 23
+        Top = 421
+        Width = 252
+        Align = alBottom
+        BorderSpacing.Left = 8
+        BorderSpacing.Bottom = 4
+        Caption = 'Show inactive contests'
+        TabOrder = 2
+        OnChange = chkShowInactiveChange
+      end
+    end
+    object pnlDetails: TPanel
+      Left = 260
+      Height = 448
+      Top = 0
+      Width = 364
+      Align = alClient
+      BevelOuter = bvNone
+      ClientHeight = 448
+      ClientWidth = 364
+      TabOrder = 1
+      object lblMyCall: TLabel
+        Left = 8
+        Height = 20
+        Top = 14
+        Width = 160
+        Alignment = taRightJustify
+        AutoSize = False
+        Caption = 'MY CALL'
+        Layout = tlCenter
+      end
+      object edtMyCall: TEdit
+        Left = 176
+        Height = 26
+        Top = 11
+        Width = 180
+        Anchors = [akTop, akLeft, akRight]
+        CharCase = ecUppercase
+        TabOrder = 0
+      end
+      object chkIAmIn: TCheckBox
+        Left = 176
+        Height = 23
+        Top = 44
+        Width = 180
+        Anchors = [akTop, akLeft, akRight]
+        Caption = ' '
+        TabOrder = 1
+        Visible = False
+        OnChange = chkIAmInChange
+      end
+      object pnlComment: TPanel
+        Left = 8
+        Height = 52
+        Top = 72
+        Width = 348
+        Anchors = [akTop, akLeft, akRight]
+        BevelOuter = bvNone
+        BorderStyle = bsSingle
+        ClientHeight = 50
+        ClientWidth = 346
+        Color = clInfoBk
+        ParentBackground = False
+        ParentColor = False
+        TabOrder = 2
+        object lblComment: TLabel
+          Left = 8
+          Height = 40
+          Top = 5
+          Width = 330
+          Alignment = taCenter
+          Anchors = [akTop, akLeft, akRight]
+          AutoSize = False
+          Layout = tlCenter
+          WordWrap = True
+        end
       end
     end
   end
   object btnOK: TButton
-    Left = 548
+    Left = 760
     Height = 30
     Top = 484
     Width = 88
@@ -154,7 +205,7 @@ object frmNewContest: TfrmNewContest
     OnClick = btnOKClick
   end
   object btnCancel: TButton
-    Left = 644
+    Left = 856
     Height = 30
     Top = 484
     Width = 88

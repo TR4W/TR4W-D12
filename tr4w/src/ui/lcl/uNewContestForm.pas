@@ -39,10 +39,11 @@ unit uNewContestForm;
 interface
 
 uses
-  Classes, Controls, Forms, StdCtrls, ExtCtrls, Dialogs,
+  Classes, Controls, Forms, StdCtrls, ExtCtrls, Dialogs, Graphics,
   uTR4WStrings,
   LCLStrConsts,   // RC_/TC_ captions -- see the note on SetRowLabels
-  VC;             (* TContestHandle -- the identity each contest line holds (M9b; a handle since Q108 S2) *)
+  VC,             (* TContestHandle -- the identity each contest line holds (M9b; a handle since Q108 S2) *)
+  uContestChoices; (* TContestChoices -- the list, its order and its search (Q103) *)
 
 type
   { The nine dynamic rows: three free-text fields then six CATEGORY-* choices.
@@ -80,8 +81,12 @@ type
     btnLatest: TButton;
     lblMyCall: TLabel;
     edtMyCall: TEdit;
+    pnlContestPick: TPanel;
     lblContest: TLabel;
-    cboContest: TComboBox;
+    edtContestFilter: TEdit;
+    lstContests: TListBox;
+    chkShowInactive: TCheckBox;
+    pnlDetails: TPanel;
     chkIAmIn: TCheckBox;
     pnlComment: TPanel;
     lblComment: TLabel;
@@ -93,17 +98,34 @@ type
     procedure btnLatestClick(Sender: TObject);
     procedure btnBrowseClick(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
-    procedure cboContestChange(Sender: TObject);
+    procedure edtContestFilterChange(Sender: TObject);
+    procedure edtContestFilterKeyDown(Sender: TObject; var Key: Word;
+                                      Shift: TShiftState);
+    procedure lstContestsSelectionChange(Sender: TObject; User: boolean);
+    procedure chkShowInactiveChange(Sender: TObject);
     procedure chkIAmInChange(Sender: TObject);
     procedure FieldChanged(Sender: TObject);
   private
     FRows: array[1..9] of TNewContestRow;
-    (* WHICH CONTEST EACH LINE OF cboContest IS -- M9b. Filled in the same
-       loop as the combo's Items, from one TContestChoices, so line i is
-       FContests[i]. A typed field the view owns, never the caption read
-       back and never an Objects[] cast: the caption is the display name, and
-       the contest is the identity. *)
-    FContests: array of TContestHandle;
+    (* EVERY CONTEST THE DIALOG OFFERS, in order, with its caption -- built
+       once (FillContests) and owned here. The search narrows what is SHOWN;
+       it never rebuilds this. *)
+    FChoices: TContestChoices;
+    (* WHICH CONTEST EACH ROW OF lstContests IS -- Q103. Filled in the same
+       pass as the list's Items (ShowMatchingContests), so row i is
+       FShown[i]. A typed field the view owns, never the caption read back
+       and never an Objects[] cast: the caption is the display name, and the
+       contest is the identity. *)
+    FShown: array of TContestHandle;
+    (* The contest OnContestChanged was last told about. The one place that
+       decides "the choice changed" (NotifyContestIfChanged) compares against
+       it, so a selection event the widget set raises twice, or raises for a
+       refill that kept the same contest, does not clear what the operator
+       has typed into the rows. *)
+    FNotified: TContestHandle;
+    (* True while ShowMatchingContests replaces the Items: a selection event
+       raised in the middle describes a half-built list. *)
+    FFilling: boolean;
     FChoice: TNewContestChoice;
     FDir: string;            { the directory lstFiles was filled from }
     FBrowsedFile: string;    { set only when Browse... was used }
@@ -122,8 +144,13 @@ type
     procedure ReassertLatestCaption;
     function  WrappedTextHeight(const aText: TCaption; const aWidth: integer): integer;
     function  WidestLine(const aText: TCaption): integer;
+    function  WidestText(aFont: TFont; aTexts: TStrings): integer;
     function  GetRowCount: integer;
+    procedure ShowMatchingContests;
+    procedure NotifyContestIfChanged;
+    procedure SizeContestList;
   public
+    destructor Destroy; override;
     { Population -- what WM_INITDIALOG used to do with CreateWindow calls. }
     procedure PopulateFiles(const aDir: string);
     procedure FillContests;
@@ -176,13 +203,15 @@ implementation
 {$R *.lfm}
 
 uses
-  SysUtils, Graphics,
+  SysUtils,
+  LCLType,          (* VK_DOWN, SM_CXVSCROLL *)
+  LCLIntf,          (* GetSystemMetrics -- the LCL's, on every widget set *)
   uSettingsModel,   // the Cabrillo category settings and their spellings
   MainUnit,   // logger
   Log4D,
   Version,    (* TR4W_CURRENTVERSION -- the title names the build *)
-  (* The drop-down's contests, in order, with their display names -- M9b. *)
-  uContestChoices,
+  uAppStrings,      (* SNewContestContestLabel, SNewContestSearchHint,
+                       SNewContestShowInactive *)
   uContestRegistry; (* ContestId -- the chosen contest's token, Q108 S2 *)
 
 function NewContestFormCaption: string;
@@ -191,9 +220,12 @@ begin
 end;
 
 const
-  { Client coordinates of gbNew, not of the form -- the rows are its children,
-    so the group box resizes them with it. }
-  ROW_TOP    = 174;   // first dynamic row, below the comment panel
+  (* Client coordinates of pnlDetails, not of the form -- the rows are its
+     children, so the panel resizes them with it. pnlDetails is the right-hand
+     column of gbNew since Q103: the contest search took the left one, and the
+     CONTEST row that stood under MY CALL went with it, which is why the rows
+     start 36 higher than they did. *)
+  ROW_TOP    = 138;   // first dynamic row, below the comment panel
   ROW_HEIGHT = 30;
   { THE LABEL COLUMN IS SIZED BY ITS LONGEST MEMBER, which is
     CATEGORY-TRANSMITTER. At 140 it fitted that label EXACTLY, so the text ran
@@ -208,7 +240,7 @@ const
   ROW_LABEL_LEFT  = 8;
   ROW_LABEL_WIDTH = 160;
   ROW_FIELD_LEFT  = 176;
-  ROW_FIELD_WIDTH = 200;
+  ROW_FIELD_WIDTH = 180;
   FIRST_CHOICE_ROW = 4;   // rows 1..3 are free text, 4..9 are CATEGORY-* lists
 
 function TfrmNewContest.GetRowCount: integer;
@@ -225,7 +257,7 @@ begin
       FRows[i].Caption := TLabel.Create(Self);
       with FRows[i].Caption do
          begin
-         Parent    := gbNew;
+         Parent    := pnlDetails;
          AutoSize  := False;
          Alignment := taRightJustify;
          Left      := ROW_LABEL_LEFT;
@@ -245,7 +277,7 @@ begin
          FRows[i].Field := TEdit.Create(Self);
          with FRows[i].Field do
             begin
-            Parent   := gbNew;
+            Parent   := pnlDetails;
             Left     := ROW_FIELD_LEFT;
             Top      := ROW_TOP + (i - 1) * ROW_HEIGHT;
             Width    := ROW_FIELD_WIDTH;
@@ -260,7 +292,7 @@ begin
          FRows[i].Choice := TComboBox.Create(Self);
          with FRows[i].Choice do
             begin
-            Parent := gbNew;
+            Parent := pnlDetails;
             Left   := ROW_FIELD_LEFT;
             Top    := ROW_TOP + (i - 1) * ROW_HEIGHT;
             Width   := ROW_FIELD_WIDTH;
@@ -275,8 +307,16 @@ procedure TfrmNewContest.HandleCreate(Sender: TObject);
 begin
    BuildRows;
    edtMyCall.OnChange := FieldChanged;
+   FNotified := NoContest;
    FillContests;
+   SizeContestList;
    FillCategories;
+end;
+
+destructor TfrmNewContest.Destroy;
+begin
+   FreeAndNil(FChoices);
+   inherited Destroy;
 end;
 
 procedure TfrmNewContest.HandleShow(Sender: TObject);
@@ -287,6 +327,9 @@ begin
    // run time shows the operator's language.
    Caption          := NewContestFormCaption;
    lblMyCall.Caption := RC_CALLSIGN;
+   lblContest.Caption := SNewContestContestLabel;
+   edtContestFilter.TextHint := SNewContestSearchHint;
+   chkShowInactive.Caption := SNewContestShowInactive;
    btnOK.Caption    := rsMbOK;
    btnCancel.Caption := rsMbCancel;
 
@@ -320,9 +363,9 @@ begin
 
    if logger.IsDebugEnabled then
       begin
-      logger.Debug('[NewContest] minimum height: gbNew client=%d, last row bottom=%d, ' +
+      logger.Debug('[NewContest] minimum height: pnlDetails client=%d, last row bottom=%d, ' +
                    'form Height=%d -> MinHeight=%d',
-                   [gbNew.ClientHeight,
+                   [pnlDetails.ClientHeight,
                     FRows[High(FRows)].Choice.Top + FRows[High(FRows)].Choice.Height,
                     Height, Constraints.MinHeight]);
       end;
@@ -425,41 +468,187 @@ begin
       end;
 end;
 
-(* THE CONTESTS, BY THEIR DISPLAY NAMES, ACTIVE FIRST -- M9b, 2026-10-02.
+(* THE CONTESTS, BY THEIR DISPLAY NAMES, ACTIVE FIRST -- M9b, 2026-10-02;
+  A SEARCH OVER A PLAIN LIST SINCE Q103, 2026-10-19.
 
-  NY4I: "i would like the display name in the drop down". The ORDER and the
-  inactive mark are uContestChoices' (unit tested there); this puts the
-  captions in the combo and keeps which contest each line is, line for line,
-  in FContests.
+  NY4I: "i would like the display name in the drop down", and then, of
+  DXLog's and N1MM's grouped lists, "search". The ORDER, the inactive mark and
+  the search rule are uContestChoices' (unit tested there); this builds that
+  list once and shows the rows the search keeps.
 
-  THE COMBO IS NOT Sorted ANY MORE (.lfm), and must not be: a sorted combo
-  reorders its Items behind FContests' back, and line i would stop being
-  FContests[i]. It sorted the enum's spellings, which is what the operator
-  used to read; uContestChoices sorts what they read now.
+  A PLAIN TListBox UNDER A TEdit, NOT A SELF-FILTERING DROP-DOWN. A combo that
+  narrows its own Items while the operator types fights the control -- its
+  drop-down, its autocomplete and its ItemIndex all assume the Items hold
+  still. Two native controls, each doing what it was built for, need no
+  owner-draw and no help.
 
-  ONE Assign, not one Add per line: Items proxies the widget. *)
+  THE LIST IS NOT Sorted (.lfm), and must not be: a sorted list reorders its
+  Items behind FShown's back, and row i would stop being FShown[i]. *)
 procedure TfrmNewContest.FillContests;
-var
-   choices: TContestChoices;
-   captions: TStringList;
-   i: integer;
 begin
-   choices := TContestChoices.Create;
+   FreeAndNil(FChoices);
+   FChoices := TContestChoices.Create;
+   ShowMatchingContests;
+end;
+
+(* THE ROWS THE SEARCH KEEPS, and the selection carried across the refill.
+
+  A CONTEST THAT IS STILL SHOWN STAYS CHOSEN. Narrowing "QSO" to "QSO P" must
+  not clear the rows the operator has already filled in for the party they
+  picked, so the contest is found again by its identity in the new rows --
+  never by its old row number, which the refill has just changed.
+
+  A CONTEST THE SEARCH HIDES IS UN-CHOSEN, and OnContestChanged hears it: OK
+  disables (ContestChosen is False) and the previous contest's prompts are
+  cleared. OK can never act on a contest the operator can no longer see.
+
+  ONE MATCH IS NOT CHOSEN FOR THE OPERATOR. Choosing a contest puts up its
+  prompts and clears the rows, and doing that because a search happened to
+  narrow to one line -- possibly while the operator is still typing -- would
+  be a choice they did not make. Down arrow or a click chooses it.
+
+  ONE Assign, not one Add per row: Items proxies the widget. FFilling keeps a
+  selection event raised mid-refill from reading a half-built list; the one
+  notification goes out afterwards, and only if the contest changed. *)
+procedure TfrmNewContest.ShowMatchingContests;
+var
+   was: TContestHandle;
+   rows: TContestChoiceIndexes;
+   captions: TStringList;
+   keep, i: integer;
+begin
+   if FChoices = nil then
+      begin
+      Exit;
+      end;
+
+   was  := SelectedContest;
+   rows := FChoices.Matching(UTF8Decode(edtContestFilter.Text),
+                             chkShowInactive.Checked);
+   keep := -1;
+
    captions := TStringList.Create;
    try
-      SetLength(FContests, choices.Count);
-      for i := 0 to choices.Count - 1 do
+      SetLength(FShown, Length(rows));
+      for i := 0 to High(rows) do
          begin
-         FContests[i] := choices.Contest[i];
+         FShown[i] := FChoices.Contest[rows[i]];
          (* UTF-8, stated: the LCL's strings are UTF-8 AnsiStrings and a
             display name is the sponsor's, not necessarily ASCII. *)
-         captions.Add(UTF8Encode(choices.Caption[i]));
+         captions.Add(UTF8Encode(FChoices.Caption[rows[i]]));
+         if FShown[i] = was then
+            begin
+            keep := i;
+            end;
          end;
-      cboContest.Items.Assign(captions);
+
+      FFilling := True;
+      try
+         lstContests.Items.Assign(captions);
+         lstContests.ItemIndex := keep;
+      finally
+         FFilling := False;
+      end;
    finally
       captions.Free;
-      choices.Free;
    end;
+
+   NotifyContestIfChanged;
+end;
+
+(* THE ONE PLACE THAT DECIDES THE CHOICE CHANGED. Every route -- a click, an
+  arrow key in the list, Down from the search box, a search that hides the
+  chosen contest -- ends here, and OnContestChanged runs only when the contest
+  is a different one. uNewContest's handler clears the rows, so running it for
+  an unchanged contest would throw away what the operator typed. *)
+procedure TfrmNewContest.NotifyContestIfChanged;
+var
+   current: TContestHandle;
+begin
+   current := SelectedContest;
+   if current = FNotified then
+      begin
+      Exit;
+      end;
+   FNotified := current;
+   if Assigned(OnContestChanged) then
+      begin
+      OnContestChanged;
+      end;
+end;
+
+(* EVERY NAME IN FULL -- Q52, NY4I 2026-10-16: the friendly name in full,
+  sized at run time.
+
+  MEASURED, NOT TYPED. The widest caption the list can ever hold, in the
+  list's own font, plus the list's frame, its text inset and a vertical
+  scroll bar (GetSystemMetrics -- the LCL's, which answers on every widget
+  set). A typed width is right for one font at one DPI in one language; this
+  is right for the one in use.
+
+  THE COLUMN ONLY GROWS. Its designed width in the .lfm is the floor; when a
+  name needs more, the column and the form widen by the same amount, so the
+  right-hand column keeps its width and nothing else moves. The minimum width
+  grows with it, or a resize could squeeze the names out again.
+
+  NO WIDER THAN THE SCREEN'S WORK AREA. Past that the column stops growing
+  and the list scrolls sideways (ScrollWidth) rather than clipping a name.
+
+  Measured from FChoices, ALL the captions, not the rows on show: the column
+  is sized once, and a search must not make the dialog jump. *)
+procedure TfrmNewContest.SizeContestList;
+const
+   (* The list's frame and the inset of its text from the frame, both sides
+      together. Not measurable without a shown handle; generous rather than
+      tight, because a pixel short clips the last letter. *)
+   LIST_CHROME = 16;
+var
+   captions: TStringList;
+   widest, need, grow, room, i: integer;
+begin
+   if FChoices = nil then
+      begin
+      Exit;
+      end;
+
+   captions := TStringList.Create;
+   try
+      for i := 0 to FChoices.Count - 1 do
+         begin
+         captions.Add(UTF8Encode(FChoices.Caption[i]));
+         end;
+      widest := WidestText(lstContests.Font, captions);
+   finally
+      captions.Free;
+   end;
+
+   lstContests.ScrollWidth := widest + LIST_CHROME;
+
+   (* What the panel must be: the list's text, its chrome and scroll bar,
+      plus whatever the panel keeps around the list (its BorderSpacing). *)
+   need := widest + LIST_CHROME + GetSystemMetrics(SM_CXVSCROLL) +
+           (pnlContestPick.Width - lstContests.Width);
+   grow := need - pnlContestPick.Width;
+
+   room := Screen.WorkAreaWidth - Width;
+   if grow > room then
+      begin
+      grow := room;
+      end;
+
+   if grow > 0 then
+      begin
+      pnlContestPick.Width  := pnlContestPick.Width + grow;
+      Width                 := Width + grow;
+      Constraints.MinWidth  := Constraints.MinWidth + grow;
+      end;
+
+   if logger.IsDebugEnabled then
+      begin
+      logger.Debug('[NewContest] contest list: widest name %d px, column needs %d, ' +
+                   'grew %d -> column %d, form %d',
+                   [widest, need, grow, pnlContestPick.Width, Width]);
+      end;
 end;
 
 { The six CATEGORY-* choices. Each list is the contest-INDEPENDENT set of legal
@@ -580,29 +769,41 @@ end;
   anything. }
 function TfrmNewContest.WidestLine(const aText: TCaption): integer;
 var
-   probe: TBitmap;
    lines: TStringList;
+begin
+   lines := TStringList.Create;
+   try
+      lines.Text := aText;
+      Result := WidestText(btnLatest.Font, lines);
+   finally
+      lines.Free;
+   end;
+end;
+
+(* THE WIDEST OF SEVERAL STRINGS, IN PIXELS, IN aFont -- the measurement
+  WidestLine always made, lifted out when the contest list (Q52) became its
+  second caller. *)
+function TfrmNewContest.WidestText(aFont: TFont; aTexts: TStrings): integer;
+var
+   probe: TBitmap;
    i, w:  integer;
 begin
    Result := 0;
 
    probe := TBitmap.Create;
-   lines := TStringList.Create;
    try
       probe.SetSize(1, 1);
-      probe.Canvas.Font := btnLatest.Font;
+      probe.Canvas.Font := aFont;
 
-      lines.Text := aText;
-      for i := 0 to lines.Count - 1 do
+      for i := 0 to aTexts.Count - 1 do
          begin
-         w := probe.Canvas.TextWidth(lines[i]);
+         w := probe.Canvas.TextWidth(aTexts[i]);
          if w > Result then
             begin
             Result := w;
             end;
          end;
    finally
-      lines.Free;
       probe.Free;
    end;
 end;
@@ -619,8 +820,8 @@ end;
   number into the .lfm, which requires knowing whether a form's Height includes
   its caption and borders -- and being wrong there is off by exactly one row,
   which looks like a rounding error rather than a mistake. This asks the form
-  what it currently has instead: SLACK is the unused space left inside gbNew
-  below the last row, and the form may give up precisely that much and no more.
+  what it currently has instead: SLACK is the unused space left inside
+  pnlDetails (gbNew's right-hand column) below the last row, and the form may give up precisely that much and no more.
 
   Both terms are read at the same moment, so the frame size cancels and never
   has to be known. It is also self-maintaining: add a tenth row and the minimum
@@ -636,7 +837,7 @@ begin
       Exit;
       end;
 
-   slack := gbNew.ClientHeight - (last.Top + last.Height);
+   slack := pnlDetails.ClientHeight - (last.Top + last.Height);
    if slack > 0 then
       begin
       Constraints.MinHeight := Height - slack;
@@ -873,17 +1074,30 @@ begin
    Result := Trim(edtMyCall.Text);
 end;
 
-(* THE CHOSEN CONTEST, from the line's typed identity -- M9b. NoContest
-  when none is chosen, which no line holds. *)
+(* THE CHOSEN CONTEST, from the row's typed identity -- M9b, a list row since
+  Q103. NoContest when none is chosen, which no row holds.
+
+  AN INACTIVE ROW IS NOT A CHOICE -- Q59, NY4I 2026-10-19. Listed when "Show
+  inactive contests" is ticked, it can still be selected like any row (a
+  TListBox has no per-row enable, and fighting the selection from inside its
+  own change event is not the native way), but it is not a contest a NEW
+  contest can be: SelectedContest answers NoContest for it, so ContestChosen
+  is False, OK stays disabled and no prompts are shown. Every route that asks
+  "which contest" -- uNewContest, ContestName, NotifyContestIfChanged, the
+  refill that keeps a choice -- comes through here, so this is the one place
+  the rule needs to live. *)
 function TfrmNewContest.SelectedContest: TContestHandle;
 var
    i: integer;
 begin
    Result := NoContest;
-   i := cboContest.ItemIndex;
-   if (i >= 0) and (i <= High(FContests)) then
+   i := lstContests.ItemIndex;
+   if (i >= 0) and (i <= High(FShown)) then
       begin
-      Result := FContests[i];
+      if ContestCanStartNew(FShown[i]) then
+         begin
+         Result := FShown[i];
+         end;
       end;
 end;
 
@@ -900,11 +1114,12 @@ begin
       end;
 end;
 
-{ CB_GETCURSEL = -1, named. Text that matches no entry is not a chosen contest,
-  which is why this asks the INDEX rather than the string. }
+(* A ROW IS SELECTED, asked through the identity it carries -- so a search
+  that hides the chosen contest (ShowMatchingContests clears the row) is "no
+  contest" here too, and OK cannot go ahead with one the operator cannot see. *)
 function TfrmNewContest.ContestChosen: boolean;
 begin
-   Result := cboContest.ItemIndex >= 0;
+   Result := SelectedContest <> NoContest;
 end;
 
 function TfrmNewContest.IAmIn: boolean;
@@ -1066,12 +1281,62 @@ begin
    ModalResult := mrOk;
 end;
 
-procedure TfrmNewContest.cboContestChange(Sender: TObject);
+(* The search text changed: show the rows it keeps. *)
+procedure TfrmNewContest.edtContestFilterChange(Sender: TObject);
 begin
-   if Assigned(OnContestChanged) then
+   ShowMatchingContests;
+end;
+
+(* DOWN ARROW LEAVES THE SEARCH BOX FOR THE LIST, as it does in every
+  search-over-a-list the operator has used. With no row chosen it chooses the
+  first, so one key both moves and selects; with one chosen it only moves
+  focus, and the next Down is the list's own.
+
+  ENTER NEEDS NOTHING HERE: OK is the form's Default button, so Enter in the
+  search box or in the list presses OK whenever OK is enabled -- exactly what
+  Enter did in the drop-down this replaces. *)
+procedure TfrmNewContest.edtContestFilterKeyDown(Sender: TObject; var Key: Word;
+                                                 Shift: TShiftState);
+begin
+   if (Key <> VK_DOWN) or (lstContests.Items.Count = 0) then
       begin
-      OnContestChanged;
+      Exit;
       end;
+
+   if lstContests.ItemIndex < 0 then
+      begin
+      lstContests.ItemIndex := 0;
+      NotifyContestIfChanged;
+      end;
+   (* CanSetFocus, NOT CanFocus: CanFocus answers for the control alone and
+      is True inside a form that is not showing, where SetFocus then raises.
+      CanSetFocus walks up to the form. *)
+   if lstContests.CanSetFocus then
+      begin
+      lstContests.SetFocus;
+      end;
+   Key := 0;
+end;
+
+(* A ROW WAS CHOSEN -- by click or by key. What cboContestChange drove before
+  Q103, through the same OnContestChanged, now via the one rule that decides
+  whether the contest really changed. *)
+procedure TfrmNewContest.lstContestsSelectionChange(Sender: TObject; User: boolean);
+begin
+   if FFilling then
+      begin
+      Exit;
+      end;
+   NotifyContestIfChanged;
+end;
+
+(* "SHOW INACTIVE CONTESTS" CHANGED -- Q59: list them, or stop listing them,
+  under the same search. The refill does the rest: un-ticking while an
+  inactive row is selected drops that row, so the selection clears with it;
+  an active contest that was chosen stays chosen, found by its identity. *)
+procedure TfrmNewContest.chkShowInactiveChange(Sender: TObject);
+begin
+   ShowMatchingContests;
 end;
 
 procedure TfrmNewContest.chkIAmInChange(Sender: TObject);

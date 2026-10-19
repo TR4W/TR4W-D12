@@ -9780,3 +9780,54 @@ msgstr "제품 정보"
 msgid "Ignored, not a known QTH:"
 msgstr "알려진 QTH가 아닌 무시 :"
 
+# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output say 공지사항 (notice), and this catalogue's 'Contest' says 회사연혁 (company history) -- both mistranslations; 콘테스트 is the loanword. Machine output was: "공지사항"
+#: uappstrings.snewcontestcontestlabel
+#, fuzzy
+msgid "CONTEST"
+msgstr "콘테스트"
+
+#: uappstrings.snewcontestsearchhint
+#, fuzzy
+msgid "Search: type part of a name, e.g. QSO"
+msgstr "검색: 이름의 유형 부분, 예를 들어 QSO"
+
+#: uappstrings.simportmyfactsdifference
+#, fuzzy
+msgid "%s: %d QSO(s), e.g. %s (this contest: %s)"
+msgstr "%s:: %d QSO(s), 예. %s (이 대회: %s·"
+
+#: uappstrings.simportmyfactskept
+#, fuzzy
+msgid "The file's station was kept for %d QSO(s)."
+msgstr "파일의 역은 보관되었습니다. %d 사이트맵"
+
+#: uappstrings.simportmyfactsquestion
+#, fuzzy
+msgid ""
+"This file names our station for %d of its %d QSO(s) (%s), and it is not what this contest has:%s\n"
+"\n"
+"Keep the file's values for those QSOs?\n"
+"Yes keeps the file's. No gives them this contest's, as a new QSO would get."
+msgstr ""
+
+#: uappstrings.simportmyfactsreplaced
+#, fuzzy
+msgid "%d QSO(s) were given this contest's station in place of the file's."
+msgstr "%d QSO(s)는 이 대회의 역을 제출했습니다."
+
+#: uappstrings.simportmyfactssame
+#, fuzzy
+msgid "%d QSO(s) named our station (%s), the same as this contest's."
+msgstr "%d QSO(s)는 우리 역(%s), 이 대회와 동일."
+
+#: uappstrings.simportmyfactsstamped
+#, fuzzy
+msgid "%d QSO(s) named no station of ours and were given this contest's."
+msgstr "%d QSO(s)는 우리들의 역을 지명하고 이 대회를 주었다."
+
+# 2026-10-19: machine output said 연락처 (contacts), unrelated to the English. Machine output was: "연락처"
+#: uappstrings.snewcontestshowinactive
+#, fuzzy
+msgid "Show inactive contests"
+msgstr "비활성 콘테스트 표시"
+
