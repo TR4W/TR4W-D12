@@ -62,6 +62,12 @@ type
       procedure Test_NebraskaScoreIsPowerTimesFormula;
       procedure Test_NebraskaBonusIsPerCountingQSO;
       procedure Test_NebraskaNames;
+      procedure Test_NebraskaRareGridTables;
+      procedure Test_NebraskaRareGridPaysOnlyTheQSOsMadeThere;
+      procedure Test_NebraskaRareGridReadsTheRowNotTheSession;
+      procedure Test_NebraskaRareGridNeverCapturedUsesTheSession;
+      procedure Test_NebraskaRareGridYearWithNoTablePaysNothingAndSaysSo;
+      procedure Test_NebraskaHasARareGridTableForTheCurrentYear;
    end;
 
 implementation
@@ -74,7 +80,12 @@ uses
    uContestStateQSOPartyBase, uContestNebraskaQP, uDomFileKeys,
    uAppStrings, uTR4WStrings,
    uTestContestObjects,
-   uTestExchangeParserStub;
+   uTestExchangeParserStub,
+   (* The rare grid bonus: each QSO's recorded station, and proof the "no
+      table" report is written. *)
+   uQsoMyFacts,
+   Log4D,
+   uTestLogCapture;
 
 (* ---------------------------------------------------------------------------
    HELPERS
@@ -192,6 +203,61 @@ begin
    Result := QsoOn(aBand, aMode, aExtMode);
    Result.Callsign := CallString(aCall);
    Result.ceDupe := aDupe;
+end;
+
+(* A QSO OF THE aYear CONTEST, SCORED AS THE RESCORE SCORES IT -- through
+   ScoreQSO with the row's own station -- so its QSOPoints are the class's,
+   not typed here. A Nebraska entrant; K0ABC is no bonus station. *)
+function RareGridQSO(aBand: BandType; aMode: ModeType; aExtMode: ExtendedModeType;
+                     aDupe: boolean; aYear: integer;
+                     const aFacts: TQsoMyFacts): ContestExchange;
+var
+   contestObject: TContestBase;
+begin
+   Result := Logged('K0ABC', aBand, aMode, aExtMode, aDupe);
+   Result.tSysTime.qtYear := aYear - 2000;
+   Result.tSysTime.qtMonth := 4;
+   Result.tSysTime.qtDay := 25;
+   Result.tSysTime.qtHour := 15;
+   contestObject := Make(NEBRASKAQSO, StationAt(True));
+   try
+      contestObject.ScoreQSO(Result, aFacts);
+   finally
+      contestObject.Free;
+   end;
+end;
+
+(* A ROW THAT RECORDED OUR GRID -- this station logged it. *)
+function FactsAt(const aGrid: string): TQsoMyFacts;
+begin
+   Result := NotCapturedMyFacts;
+   Result.Source := mfsLogged;
+   Result.Grid := AnsiString(aGrid);
+end;
+
+(* Adds a 2026 QSO made from aGrid. *)
+procedure AddFrom(aView: TLoggedQSOList; const aGrid: string; aBand: BandType;
+                  aMode: ModeType; aExtMode: ExtendedModeType; aDupe: boolean);
+begin
+   aView.Add(RareGridQSO(aBand, aMode, aExtMode, aDupe, 2026, FactsAt(aGrid)),
+             FactsAt(aGrid));
+end;
+
+(* THE BONUS POINTS, for a Nebraska entrant whose SESSION grid is
+   aSessionGrid (what a never-captured row reads). *)
+function BonusWithSessionGrid(const aSessionGrid: string; aView: TLoggedQSOView): longint;
+var
+   station: TStationContext;
+   contestObject: TContestBase;
+begin
+   station := StationAt(True);
+   station.MyGrid := aSessionGrid;
+   contestObject := Make(NEBRASKAQSO, station);
+   try
+      Result := contestObject.BonusPoints(Totals(0, 0), aView);
+   finally
+      contestObject.Free;
+   end;
 end;
 
 (* ---------------------------------------------------------------------------
@@ -515,6 +581,228 @@ begin
                'outside NE, the state');
 end;
 
+(* THE YEARS' LISTS. 2026: the sponsor's rules; 2025: the 2025 summary
+   sheet. SIX characters, case-blind; a four-character square is not a
+   subsquare, and an extended locator is read by its first six. *)
+procedure TContestNebraskaQPTests.Test_NebraskaRareGridTables;
+var
+   rare: boolean;
+begin
+   BeginTest('Test_NebraskaRareGridTables');
+   CheckTrue(TContestNebraskaQP.HasRareGridTable(2026), '2026 has a list');
+   CheckTrue(TContestNebraskaQP.HasRareGridTable(2025), '2025 has a list');
+   CheckFalse(TContestNebraskaQP.HasRareGridTable(2024), '2024 has none');
+   CheckFalse(TContestNebraskaQP.HasRareGridTable(0), 'nor an unknown year');
+
+   CheckTrue(NebraskaRareGrid(2026, 'DN91CE', rare) and rare, 'DN91CE');
+   CheckTrue(NebraskaRareGrid(2026, 'DN91DE', rare) and rare, 'DN91DE');
+   CheckTrue(NebraskaRareGrid(2026, 'DN91EE', rare) and rare, 'DN91EE');
+   CheckTrue(NebraskaRareGrid(2026, 'dn91ce', rare) and rare, 'case-blind');
+   CheckTrue(NebraskaRareGrid(2026, ' DN91EE ', rare) and rare, 'blanks trimmed');
+   CheckTrue(NebraskaRareGrid(2026, 'DN91CE12', rare) and rare, 'an extended locator by its first six');
+   CheckTrue(NebraskaRareGrid(2026, 'DN91', rare) and not rare, 'DN91 is a square, not a rare subsquare');
+   CheckTrue(NebraskaRareGrid(2026, 'DN91FE', rare) and not rare, 'the next subsquare east is not');
+   CheckTrue(NebraskaRareGrid(2026, 'DN92CE', rare) and not rare, 'DN92CE is not');
+   CheckTrue(NebraskaRareGrid(2026, 'EM17', rare) and not rare, 'EM17 is not');
+   CheckTrue(NebraskaRareGrid(2026, '', rare) and not rare, 'no grid is not');
+   CheckTrue(NebraskaRareGrid(2026, 'EN01MI', rare) and not rare, 'a 2025 grid is not rare in 2026');
+   CheckTrue(NebraskaRareGrid(2025, 'EN01MI', rare) and rare, 'EN01MI in 2025');
+   CheckTrue(NebraskaRareGrid(2025, 'EN01NI', rare) and rare, 'EN01NI in 2025');
+   CheckTrue(NebraskaRareGrid(2025, 'EN01MH', rare) and rare, 'EN01MH in 2025');
+   CheckTrue(NebraskaRareGrid(2025, 'EN01NH', rare) and rare, 'EN01NH in 2025');
+   CheckTrue(NebraskaRareGrid(2025, 'DN91CE', rare) and not rare, 'a 2026 grid is not rare in 2025');
+   CheckFalse(NebraskaRareGrid(2031, 'DN91CE', rare), 'a year with no list answers False');
+   CheckFalse(rare, 'and nothing is rare in it');
+   CheckEquals(5, NEBRASKA_RARE_GRID_MULTIPLIER, '"the rare grid multiplier of 5"');
+end;
+
+(* A ROVER: 5 x the points of the QSOs made FROM a rare subsquare, and of no
+   other. CW 3, phone 2, digital 1; a dupe, an FT8 QSO and a WARC QSO from
+   the rare grid pay nothing; a captured row with no grid pays nothing. The
+   bonus sits BESIDE the score: neither the power nor the county multiplier
+   touches it. *)
+procedure TContestNebraskaQPTests.Test_NebraskaRareGridPaysOnlyTheQSOsMadeThere;
+var
+   view: TLoggedQSOList;
+begin
+   BeginTest('Test_NebraskaRareGridPaysOnlyTheQSOsMadeThere');
+   view := TLoggedQSOList.Create;
+   try
+      (* THE SPONSOR'S EXAMPLE: "a phone QSO that is 2 points and a CW QSO
+         that is 3 points ... 5 points times the rare grid multiplier of 5
+         for a bonus of 25 points". *)
+      AddFrom(view, 'DN91CE', Band20, Phone, eUSB, False);
+      AddFrom(view, 'DN91CE', Band40, CW, eCW, False);
+      CheckEquals(25, BonusWithSessionGrid('EM17', view), 'the sponsor''s example: 25');
+
+      AddFrom(view, 'DN91DE', Band20, Digital, eRTTY, False);
+      CheckEquals(30, BonusWithSessionGrid('EM17', view), 'digital from DN91DE: 1 x 5 more');
+      AddFrom(view, 'DN91EE', Band80, CW, eCW, False);
+      CheckEquals(45, BonusWithSessionGrid('EM17', view), 'CW from DN91EE: 3 x 5 more');
+
+      (* THE ROVER MOVES ON: QSOs from ordinary grids pay nothing. *)
+      AddFrom(view, 'EM17', Band20, CW, eCW, False);
+      AddFrom(view, 'DN92CE', Band20, CW, eCW, False);
+      AddFrom(view, 'DN91', Band20, CW, eCW, False);
+      AddFrom(view, '', Band20, CW, eCW, False);
+      CheckEquals(45, BonusWithSessionGrid('DN91CE', view),
+                  'EM17, DN92CE, a four-character DN91 and a captured empty grid pay nothing -- ' +
+                  'not even with the session in DN91CE');
+
+      (* QSOs THAT DO NOT COUNT, FROM THE RARE GRID. *)
+      AddFrom(view, 'DN91CE', Band40, CW, eCW, True);
+      AddFrom(view, 'DN91CE', Band20, Digital, eFT8, False);
+      AddFrom(view, 'DN91CE', Band40, Digital, eFT4, False);
+      AddFrom(view, 'DN91CE', Band30, CW, eCW, False);
+      CheckEquals(45, BonusWithSessionGrid('EM17', view), 'a dupe, FT8, FT4 and 30 m pay nothing');
+
+      CheckEquals(45, FinalAt(cpHIGH, Totals(0, 0), view), 'the final score carries it');
+      CheckEquals(45, FinalAt(cpQRP, Totals(0, 0), view), 'and QRP does not multiply it');
+      CheckEquals(100 * 3 * 2 + 45, FinalAt(cpLOW, Totals(100, 3), view),
+                  'points x multipliers x power, PLUS the bonus');
+   finally
+      view.Free;
+   end;
+end;
+
+(* THE RESCORE: the same rows scored again, by the rescore's call, with the
+   session now somewhere else, give the same bonus -- the grid is the ROW'S.
+   And a session in a rare grid does not pay rows recorded elsewhere. *)
+procedure TContestNebraskaQPTests.Test_NebraskaRareGridReadsTheRowNotTheSession;
+var
+   view: TLoggedQSOList;
+   rescored: TLoggedQSOList;
+   i: integer;
+   qso: ContestExchange;
+   contestObject: TContestBase;
+   station: TStationContext;
+begin
+   BeginTest('Test_NebraskaRareGridReadsTheRowNotTheSession');
+   view := TLoggedQSOList.Create;
+   rescored := TLoggedQSOList.Create;
+   try
+      AddFrom(view, 'DN91CE', Band20, CW, eCW, False);
+      AddFrom(view, 'DN91DE', Band40, Phone, eLSB, False);
+      AddFrom(view, 'EM17', Band20, CW, eCW, False);
+      CheckEquals((3 + 2) * 5, BonusWithSessionGrid('DN91CE', view), 'as logged');
+
+      (* RESCORE every row from its own facts, the session moved to EM17. *)
+      station := StationAt(True);
+      station.MyGrid := 'EM17';
+      contestObject := Make(NEBRASKAQSO, station);
+      try
+         for i := 0 to view.Count - 1 do
+            begin
+            qso := view.QSO(i);
+            qso.QSOPoints := 0;
+            contestObject.ScoreQSO(qso, view.MyFacts(i));
+            rescored.Add(qso, view.MyFacts(i));
+            end;
+         CheckEquals((3 + 2) * 5, contestObject.BonusPoints(Totals(0, 0), rescored),
+                     'rescored with the session in EM17: the same bonus');
+      finally
+         contestObject.Free;
+      end;
+
+      rescored.Clear;
+      rescored.Add(view.QSO(2), view.MyFacts(2));
+      CheckEquals(0, BonusWithSessionGrid('DN91CE', rescored),
+                  'a row recorded in EM17 is not paid because the session is in DN91CE');
+   finally
+      rescored.Free;
+      view.Free;
+   end;
+end;
+
+(* RULING A: a row written before schema 3 recorded no station, and reads
+   the SESSION'S grid. *)
+procedure TContestNebraskaQPTests.Test_NebraskaRareGridNeverCapturedUsesTheSession;
+var
+   view: TLoggedQSOList;
+begin
+   BeginTest('Test_NebraskaRareGridNeverCapturedUsesTheSession');
+   view := TLoggedQSOList.Create;
+   try
+      view.Add(RareGridQSO(Band20, CW, eCW, False, 2026, NotCapturedMyFacts));
+      view.Add(RareGridQSO(Band40, Phone, eLSB, False, 2026, NotCapturedMyFacts),
+               NotCapturedMyFacts);
+      CheckEquals(Ord(mfsNotCaptured), Ord(view.MyFacts(0).Source), 'never captured');
+      CheckEquals((3 + 2) * 5, BonusWithSessionGrid('DN91EE', view), 'the session is in DN91EE: paid');
+      CheckEquals(0, BonusWithSessionGrid('EM17', view), 'the session is in EM17: not');
+      CheckEquals(0, BonusWithSessionGrid('', view), 'the session has no grid: not');
+   finally
+      view.Free;
+   end;
+end;
+
+(* A YEAR WITH NO LIST pays no rare-grid bonus and SAYS SO, once per year;
+   an empty log asks no year and reports nothing. The station bonus is still
+   paid. *)
+procedure TContestNebraskaQPTests.Test_NebraskaRareGridYearWithNoTablePaysNothingAndSaysSo;
+var
+   capture: TCaptureAppender;
+   keep: ILogAppender;
+   lg: TLogLogger;
+   savedLevel: TLogLevel;
+   station: TStationContext;
+   contestObject: TContestBase;
+   view: TLoggedQSOList;
+   bonusQso: ContestExchange;
+begin
+   BeginTest('Test_NebraskaRareGridYearWithNoTablePaysNothingAndSaysSo');
+
+   capture := TCaptureAppender.Create('capture');
+   keep := capture;
+   lg := TLogLogger.GetLogger('uContestNebraskaQP');
+   savedLevel := lg.Level;
+   lg.Level := Log4D.Error;
+   lg.AddAppender(keep);
+   view := TLoggedQSOList.Create;
+   station := StationAt(True);
+   station.MyGrid := 'DN91CE';
+   contestObject := Make(NEBRASKAQSO, station);
+   try
+      CheckEquals(0, contestObject.BonusPoints(Totals(0, 0), view), 'an empty log');
+      CheckEquals(0, capture.Lines.Count, 'asks no year, reports nothing');
+
+      view.Add(RareGridQSO(Band20, CW, eCW, False, 2031, FactsAt('DN91CE')), FactsAt('DN91CE'));
+      CheckEquals(0, contestObject.BonusPoints(Totals(0, 0), view), '2031 has no list: no rare grid bonus');
+      CheckEquals(1, capture.Lines.Count, 'and it is REPORTED');
+      CheckTrue(Pos('2031', capture.Lines.Text) > 0, 'naming the year: ' + capture.Lines.Text);
+      CheckTrue(Pos('NOT in the score', capture.Lines.Text) > 0,
+                'and saying the score leaves it out: ' + capture.Lines.Text);
+
+      CheckEquals(0, contestObject.BonusPoints(Totals(0, 0), view), 'asked again');
+      CheckEquals(1, capture.Lines.Count, 'reported once per year, not once per score');
+
+      bonusQso := RareGridQSO(Band40, CW, eCW, False, 2031, FactsAt('DN91CE'));
+      bonusQso.Callsign := CallString('KA0BOJ');
+      view.Add(bonusQso, FactsAt('DN91CE'));
+      CheckEquals(100, contestObject.BonusPoints(Totals(0, 0), view),
+                  'the station bonus is still paid in that year');
+   finally
+      lg.RemoveAppender(keep);
+      lg.Level := savedLevel;
+      keep := nil;
+      contestObject.Free;
+      view.Free;
+   end;
+end;
+
+(* THE YEARLY REMINDER, ON PURPOSE AGAINST THE CLOCK (Idaho's Q35 pattern):
+   the first run of a contest year with no rare-grid list fails until the
+   sponsor's list for that year is added to uContestNebraskaQP as a new
+   table. Never register an old list for a new year without the sponsor's
+   word. *)
+procedure TContestNebraskaQPTests.Test_NebraskaHasARareGridTableForTheCurrentYear;
+begin
+   BeginTest('Test_NebraskaHasARareGridTableForTheCurrentYear');
+   CheckTrue(TContestNebraskaQP.HasRareGridTable(CurrentYear),
+             Format('YEARLY REMINDER: uContestNebraskaQP has no rare-grid list for %d. ' +
+                    'Add the sponsor''s list for that contest (nebraskaqsoparty.com).',
+                    [CurrentYear]));
+end;
+
 procedure TContestNebraskaQPTests.RunAllTests;
 begin
    Test_NebraskaIsAnAppendedStateParty;
@@ -528,6 +816,12 @@ begin
    Test_NebraskaScoreIsPowerTimesFormula;
    Test_NebraskaBonusIsPerCountingQSO;
    Test_NebraskaNames;
+   Test_NebraskaRareGridTables;
+   Test_NebraskaRareGridPaysOnlyTheQSOsMadeThere;
+   Test_NebraskaRareGridReadsTheRowNotTheSession;
+   Test_NebraskaRareGridNeverCapturedUsesTheSession;
+   Test_NebraskaRareGridYearWithNoTablePaysNothingAndSaysSo;
+   Test_NebraskaHasARareGridTableForTheCurrentYear;
 end;
 
 end.

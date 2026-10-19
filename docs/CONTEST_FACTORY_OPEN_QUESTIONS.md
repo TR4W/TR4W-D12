@@ -25,7 +25,7 @@ in section 4. One line each -- the full text is further down.
 - **Q27** SAC: is a Russian station not workable, or only not a multiplier?
 - **Q97** Franz Josef Land (R1FJ) oblast reads as "SP" in Russian DX.
 - **Q70** UA4W Championship's 18/19 zone rule.
-- **Q106** Nebraska: rare grid bonus, satellite points (answered 2026-10-18: FT8/FT4 left out of the score, as built; times are the sponsor's UTC, 1400Z-0200Z).
+- **Q106** Nebraska: answered 2026-10-18 -- FT8/FT4 left out of the score; times are the sponsor's UTC, 1400Z-0200Z; rare grid bonus BUILT (three assumptions to confirm, in the entry); satellite left alone.
 
 **Design (section 2) -- each has a recommendation; "accept" is enough**
 - **Q8** Events with no ContestType still named in code (TRC, PGA, EURASIA ...).
@@ -128,6 +128,31 @@ inactive contest in the New Contest list.
   (such as MY_GRID)"* -- every QSO records our MY_ values as they were for
   that QSO; the bonus reads MY_GRID from the record. Being measured and
   staged first (log-database); the bonus is built on it.
+  **BUILT (2026-10-18)**, on schema 3's per-QSO station
+  (`TLoggedQSOView.MyFacts`): `TContestNebraskaQP.BonusPoints` adds 5 x the
+  scored QSO points of every counting QSO (not a dupe, on a credited band,
+  not FT8/FT4 -- the station bonus's rule) whose OWN recorded grid's first six
+  characters, case-blind, are on the log year's list; a row never captured
+  reads the session's grid (ruling A); a captured row with no grid pays
+  nothing; a four-character square (DN91) is not a rare subsquare. Beside the
+  station bonus, outside the power and county multipliers. The list is a
+  table per contest year through `LogContestYear`, as Idaho's: 2026 =
+  DN91CE, DN91DE, DN91EE (all three in Keith County, so only a Nebraska
+  station can earn it -- no in-state test); 2025 = EN01MI, EN01NI, EN01MH,
+  EN01NH (the 2025 summary sheet). A year with no list pays none and logs
+  one Error; `Test_NebraskaHasARareGridTableForTheCurrentYear` fails on the
+  first run of a year with no list (the yearly reminder). Pinned in
+  `uTestContestNebraskaQP`.
+  *ASSUMPTIONS for NY4I:* (a) the sentence "5 points per QSO" contradicts the
+  sponsor's own example and its 2025 worksheet ("CW 3 points per QSO x 5
+  (Rare points multiplier)"); the example and worksheet are built. (b)
+  "unique" = a QSO that counts. (c) the points are the QSO's SCORED points
+  before the power multiplier, so a QSO the score refuses (host area, an
+  override of 0) pays nothing here either.
+  *NOTED, NOT BUILT:* the 2025 sheet prints "Phone 1 points per QSO" (the
+  2026 rules say 2; a 2025 log scores 2026 points); and it carries "Mobile x
+  3", "NE0QP Bonus 100" and "Mobile Bonus 100" lines that no 2026 rule
+  states. Satellite stays not built, as ruled.
   **Answer, UTC times:** (NY4I, 2026-10-18) *"Go with the sponsor's doc as
   it states 2026 Nebraska QSO Party rules and has UTC (Saturday, April 25th,
   1400 UTC (8:00 AM CDT Sat, ) and end Sunday April 27th at 0200 UTC (08:00

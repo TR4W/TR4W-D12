@@ -123,9 +123,46 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   MULTI-TRANSMITTER -- one combined log; nothing for TR4W to do.
 
-  NOT BUILT (open question Q106): the rare-grid bonus (DN91CE, DN91DE and
-    DN91EE activators), satellite points, and the separate FT8/FT4
-    grid-square competition.
+  RARE GRID BONUS -- Q106(1), NY4I 2026-10-18: "yes to rare grid". The
+    sponsor's 2026 text: "For the following grid squares (DN91CE, DN91DE,
+    DN91EE) if you activate in them you will receive a bonus of 5 points per
+    QSO. Example if you make a phone QSO that is 2 points and a CW QSO that
+    is 3 points for a total of 5 points. Then you take your total score from
+    the unique grid only QSO's. Take that total and in this example 5 points
+    times the rare grid multiplier of 5 for a bonus of 25 points. (No mobile
+    multiplier of 3 in the RARE GRID BONUS)". So the bonus is 5 x the QSO
+    POINTS of the QSOs made FROM a rare subsquare, added BESIDE the other
+    bonus points -- "(QSO Points x Power Multiplier x Geo Multiplier) plus
+    Bonus points" -- so neither the power nor the county multiplier touches
+    it. PER QSO: a rover pays only for the QSOs it made there.
+      ASSUMPTION (recorded in Q106): the sentence "5 points per QSO"
+      contradicts the sponsor's own example and its 2025 summary-sheet
+      worksheet ("CW 3 points per QSO x 5 (Rare points multiplier)"); the
+      example and the worksheet are what is built.
+      "Unique" is read as a QSO that counts: not a dupe, on a credited band,
+      not FT8/FT4 -- the station bonus's rule. The points are the QSO's
+      SCORED points (QSOPoints), before the power multiplier, so a QSO the
+      score does not count (a host-area refusal, an override of 0) pays
+      nothing here either.
+      WHOSE GRID: OURS, AS RECORDED FOR THAT QSO -- TLoggedQSOView.MyFacts
+      (log schema 3), never today's setting; a row written before schema 3
+      ("not captured") reads the session's grid (ruling A); a captured row
+      with no grid is unknown and pays nothing. The first SIX characters,
+      case-blind: the rule names subsquares, so a four-character DN91 is not
+      a rare grid. The three 2026 subsquares lie in Keith County, Nebraska,
+      so only a Nebraska station can earn it and no in-state test is needed.
+      THE LIST CHANGES BY YEAR, so it is a table per contest year, chosen
+      through uContestBase.LogContestYear as Idaho's (Q35): 2026 is the three
+      above; 2025 is the 2025 summary sheet's EN01MI, EN01NI, EN01MH and
+      EN01NH. That sheet also prints "Phone 1 points per QSO" -- the 2026
+      rules say 2; NOTED, NOT BUILT (a 2025 log scores 2026 points). A year
+      with no table pays no rare-grid bonus and logs ONE Error naming it.
+      Also on the 2025 sheet and in no 2026 rule: "Mobile x 3", "NE0QP Bonus
+      100" and "Mobile Bonus 100" -- not built (Q106).
+
+  NOT BUILT (open question Q106): satellite points (NY4I, 2026-10-18:
+    "leave satellite alone"), and the separate FT8/FT4 grid-square
+    competition.
 
   CABRILLO -- CONTEST: NE-QSO-PARTY, the sponsor's and DXLog's. The QSO line
     is RST and the sent state or county, RST and the received QTH or DX, as
@@ -146,6 +183,16 @@ uses
 
 type
    TContestNebraskaQP = class(TContestStateQSOPartyBase)
+   private
+      (* THE "NO RARE-GRID TABLE" REPORT'S LATCH -- once per year per session,
+         not once per score. Main thread only, as the score is. *)
+      FReportedNoRareGridTable: boolean;
+      FReportedNoRareGridTableYear: integer;
+      procedure ReportNoRareGridTable(aYear: integer);
+
+      (* THE RARE GRID BONUS -- the header. *)
+      function RareGridBonus(const aTotals: TScoreTotals;
+                             aView: TLoggedQSOView): longint;
    protected
       (* PROTECTED, MATCHING THE BASE -- callers use the property; descendants
          override the getter. *)
@@ -197,9 +244,14 @@ type
       (* ' 5NN ' and the state or county this station sends. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
 
-      (* THE BONUS STATIONS, per QSO -- the header. *)
+      (* THE BONUS STATIONS, per QSO, and the rare grid bonus -- the header. *)
       function BonusPoints(const aTotals: TScoreTotals;
                            aView: TLoggedQSOView): longint; override;
+
+      (* DOES aYear HAVE A RARE-GRID TABLE? The yearly pin test asks it of the
+         current year, so the first run of a new year fails until the
+         sponsor's list for it is added. *)
+      class function HasRareGridTable(aYear: integer): boolean;
    private
       (* DOES THIS ENTRANT COUNT A DX MULTIPLIER? -- the one station test
          HasDXMultiplier, the key and the country list ask, so the answers
@@ -232,6 +284,16 @@ const
       (Call: 'KE0XQ';  Points: 50; OncePerMode: False)
    );
 
+   (* "5 points times the rare grid multiplier of 5" -- the header. *)
+   NEBRASKA_RARE_GRID_MULTIPLIER = 5;
+
+(* IS aGrid ONE OF aYear's RARE SUBSQUARES? False when aYear has no table
+   (aRare False); True with aRare saying whether the grid's first six
+   characters, case-blind, are on that year's list. Shorter than six is never
+   rare. Public so the tests assert the table itself. *)
+function NebraskaRareGrid(aYear: integer; const aGrid: string;
+                          out aRare: boolean): boolean;
+
 (* THE POWER MULTIPLIER FOR A CATEGORY-POWER -- HIGH x1, LOW x2, QRP x5.
    Public so the tests assert the mapping itself, not only a product. *)
 function NebraskaPowerMultiplier(aPower: tCategoryPower): longint;
@@ -246,7 +308,76 @@ uses
    uCabrilloExchange,
    uADIFExchange,
    uDXMultiplierKey,
-   uContestRegistry;
+   (* TQsoMyFacts -- each QSO's recorded station, for the rare grid. *)
+   uQsoMyFacts,
+   (* The "no rare-grid table for this year" Error. *)
+   Log4D,
+   SysUtils, uContestRegistry;
+
+const
+   (* THE 2026 CONTEST'S RARE SUBSQUARES -- the sponsor's "Rules for 2026
+      Nebraska QSO Party". A NEW YEAR IS A NEW TABLE BESIDE THESE and one arm
+      in NebraskaRareGrid -- never an edit to one of them, which a log of
+      that year reopened later must still be paid from. *)
+   NebraskaRareGrids2026: array[0..2] of string = ('DN91CE', 'DN91DE', 'DN91EE');
+
+   (* THE 2025 CONTEST'S -- the sponsor's "Nebraska QSO Party SummarySheet
+      2025.pdf", its Rare Grid Worksheet. *)
+   NebraskaRareGrids2025: array[0..3] of string = ('EN01MI', 'EN01NI', 'EN01MH', 'EN01NH');
+
+var
+   logger: TLogLogger;
+
+(* Is aSubsquare (already six upper-case characters) in aTable? *)
+function GridInTable(const aTable: array of string; const aSubsquare: string): boolean;
+var
+   i: integer;
+begin
+   Result := False;
+   for i := Low(aTable) to High(aTable) do
+      begin
+      if aTable[i] = aSubsquare then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
+(* THE YEARS THAT HAVE A TABLE -- the one place a contest year is added. *)
+function NebraskaRareGrid(aYear: integer; const aGrid: string;
+                          out aRare: boolean): boolean;
+var
+   subsquare: string;
+begin
+   aRare := False;
+   subsquare := UpperCase(Trim(aGrid));
+   if Length(subsquare) < 6 then
+      begin
+      subsquare := '';
+      end
+   else
+      begin
+      subsquare := Copy(subsquare, 1, 6);
+      end;
+
+   case aYear of
+      2025:
+         begin
+         aRare := (subsquare <> '') and GridInTable(NebraskaRareGrids2025, subsquare);
+         Result := True;
+         end;
+      2026:
+         begin
+         aRare := (subsquare <> '') and GridInTable(NebraskaRareGrids2026, subsquare);
+         Result := True;
+         end;
+      else
+         begin
+         Result := False;
+         end;
+      end;
+end;
 
 function NebraskaPowerMultiplier(aPower: tCategoryPower): longint;
 begin
@@ -446,7 +577,7 @@ end;
 
 (* EVERY COUNTING QSO WITH A BONUS STATION PAYS -- not a dupe, on a band the
    contest credits, not FT8/FT4. Decided from the whole log, never as a QSO
-   is logged (design 7.7). *)
+   is logged (design 7.7). Then the rare grid bonus, beside it. *)
 function TContestNebraskaQP.BonusPoints(const aTotals: TScoreTotals;
                                         aView: TLoggedQSOView): longint;
 var
@@ -471,6 +602,107 @@ begin
             Break;
             end;
          end;
+      end;
+
+   Result := Result + RareGridBonus(aTotals, aView);
+end;
+
+(* 5 x THE SCORED POINTS OF EVERY COUNTING QSO MADE FROM A RARE SUBSQUARE --
+   the header. The year is asked only once a QSO counts, so a log still being
+   started (no QSO, no year yet) is not reported as missing a table. *)
+function TContestNebraskaQP.RareGridBonus(const aTotals: TScoreTotals;
+                                          aView: TLoggedQSOView): longint;
+var
+   i: integer;
+   qso: ContestExchange;
+   facts: TQsoMyFacts;
+   grid: string;
+   year: integer;
+   yearKnown: boolean;
+   rare: boolean;
+   rarePoints: longint;
+begin
+   Result := 0;
+   rarePoints := 0;
+   year := 0;
+   yearKnown := False;
+
+   for i := 0 to aView.Count - 1 do
+      begin
+      qso := aView.QSO(i);
+      if qso.ceDupe                              or
+         IsNebraskaFTQSO(qso)                    or
+         (not ContestCreditsBand(Self, qso.Band)) or
+         (qso.QSOPoints <= 0) then
+         begin
+         Continue;
+         end;
+
+      if not yearKnown then
+         begin
+         year := LogContestYear(aTotals, aView);
+         if not HasRareGridTable(year) then
+            begin
+            ReportNoRareGridTable(year);
+            Exit;
+            end;
+         yearKnown := True;
+         end;
+
+      (* OUR GRID FOR THIS QSO: the row's, else -- never captured -- the
+         session's (ruling A). A captured empty grid stays empty. *)
+      facts := aView.MyFacts(i);
+      if facts.Source = mfsNotCaptured then
+         begin
+         grid := Station.MyGrid;
+         end
+      else
+         begin
+         grid := string(facts.Grid);
+         end;
+
+      if NebraskaRareGrid(year, grid, rare) and rare then
+         begin
+         rarePoints := rarePoints + qso.QSOPoints;
+         end;
+      end;
+
+   Result := rarePoints * NEBRASKA_RARE_GRID_MULTIPLIER;
+end;
+
+class function TContestNebraskaQP.HasRareGridTable(aYear: integer): boolean;
+var
+   rare: boolean;
+begin
+   Result := NebraskaRareGrid(aYear, '', rare);
+end;
+
+(* AN ERROR, NOT A WARNING -- Idaho's reasoning: Log4D's root level defaults
+   to Error, and a claimed score that leaves out a bonus is worth an
+   operator's attention. Year 0 is a log that says nothing about its year. *)
+procedure TContestNebraskaQP.ReportNoRareGridTable(aYear: integer);
+begin
+   if FReportedNoRareGridTable and
+      (FReportedNoRareGridTableYear = aYear) then
+      begin
+      Exit;
+      end;
+   FReportedNoRareGridTable := True;
+   FReportedNoRareGridTableYear := aYear;
+
+   if aYear = 0 then
+      begin
+      logger.Error(
+         'Nebraska QSO Party: the log records no contest year (no start time and no dated QSO), ' +
+         'so the rare grid bonus cannot be decided and is NOT in the score.');
+      end
+   else
+      begin
+      logger.Error(Format(
+         'Nebraska QSO Party: TR4W has no rare-grid list for the %d contest, ' +
+         'so the rare grid bonus is NOT in the score. Each year''s list is the sponsor''s ' +
+         '(nebraskaqsoparty.com) and is added to uContestNebraskaQP.',
+         [aYear]));
       end;
 end;
 
@@ -517,6 +749,7 @@ begin
 end;
 
 initialization
+   logger := TLogLogger.GetLogger('uContestNebraskaQP');
    RegisterContest(NEBRASKAQSO, TContestNebraskaQP);
 
 end.

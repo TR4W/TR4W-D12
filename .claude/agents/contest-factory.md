@@ -491,6 +491,14 @@ the target shape, the M-step migration order and the open questions.
   - **`TLoggedQSOView.MyFacts(i)`** is each QSO's own station, for a whole-log
     rule (the Nebraska rare-grid bonus). It is filled at log load and live
     entry. `NotCapturedMyFacts` means "use the session's".
+  - **A whole-log bonus reads `MyFacts(i)`, NOT `Station.MyGrid`.**
+    `BonusPoints` runs outside `ScoreQSO`, so no overlay is in force there and
+    `Station.MyGrid` is the SESSION'S grid -- correct only for a
+    never-captured row. Nebraska's rare grid bonus (Q106, built 2026-10-18,
+    `RareGridBonus`) is the worked example: the row's grid when captured, the
+    session's when not, nothing for a captured empty grid; a per-year list
+    through `LogContestYear` with Idaho's once-per-year Error and the
+    clock-reading yearly pin (`Test_NebraskaHasARareGridTableForTheCurrentYear`).
   - **With no grid, StewPerry and WWL score 1 and Tesla scores 10** (a distance
     of 0 falls in its 0..600 km band), not Q116's 0. Unchanged here; Q116's
     build settles it.
