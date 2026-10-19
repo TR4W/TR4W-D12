@@ -21,8 +21,9 @@ the translator from being asked twice about the same dialog.
 #     enabled i18n", then Run -> Clean up and Build.
 #     Produces tr4w\languages\tr4w_laz.pot
 
-# 1b. Merge anything new into all 16 catalogues. Existing translations are
-#     never touched -- it only ever adds.
+# 1b. Merge anything new into all the catalogues. Existing translations are
+#     never touched -- it only ever adds. Their comments and headers survive
+#     too since 2026-10-18 (tools\i18n\test_pofile.py; see I18N_TOOLS.md).
 python tools\i18n\po_merge.py --pot tr4w\languages\tr4w_laz.pot --apply
 ```
 

@@ -201,7 +201,7 @@ In `c:/tr4w-i18n/tools/i18n`, on branch `i18n-ts-poc`. Nothing in the build depe
 | tool | does |
 |---|---|
 | `pasconsts.py` | the shared line-oriented parser for the language fragments |
-| `pofile.py` | minimal `.po` reader/writer — `msgctxt`, `#,fuzzy`, `#.`, `#:`, `#~` |
+| `pofile.py` | minimal `.po` reader/writer — `msgctxt`, `#,fuzzy`, `#.`, `#:`, `#~`; keeps `# ` and `#|` lines and the header. A rewrite is byte-identical except where a caller changed an entry (`test_pofile.py`) |
 | `pas2po.py` | language tables → `.po` |
 | `po2pas.py` | `.po` → language tables, *surgical*; `--verify` proves byte-identical round-trip |
 | `po_rekey.py` | adds the `#:` run-time identifier beside the `msgctxt` key |

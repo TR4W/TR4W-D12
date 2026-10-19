@@ -93,6 +93,35 @@ Only needed when forms or strings have changed.
 python tools\i18n\po_merge.py --pot tr4w\languages\tr4w_laz.pot --apply
 ```
 
+**Only new RESOURCESTRINGS? No IDE needed.** FPC writes a `.rsj` for every unit
+with resourcestrings on every build (`build-out\app-i386-win32\uAppStrings.rsj`),
+and Lazarus' own `updatepofiles` turns one into a template. Write it to a
+**scratch** file, never to `tr4w_laz.pot`:
+
+```powershell
+New-Item -ItemType File <scratch>\uappstrings.pot -Force     # it refuses a missing .pot
+C:\Lazarus\tools\updatepofiles.exe build-out\app-i386-win32\uAppStrings.rsj <scratch>\uappstrings.pot
+python tools\i18n\po_merge.py --pot <scratch>\uappstrings.pot          # dry run first
+python tools\i18n\po_merge.py --pot <scratch>\uappstrings.pot --apply
+```
+
+**Never point `updatepofiles` at `tr4w\languages\tr4w_laz.pot`.** It deletes
+every template entry that is not in the files it was given
+(`translations.pas` `UpdatePOFile` -> `RemoveTaggedItems(0)`), and the form
+half of that template comes from `.lrj` files that only the IDE writes when it
+resaves forms -- so it would strip every `.lfm` caption out of the template.
+The `.lfm` half still needs step 1.
+
+**An `--apply` is lossless since 2026-10-18.** Before that, every catalogue
+rewrite -- `po_merge`, `po_lint --fix`, `po_rekey`, `po_prune`, `po_dedupe`,
+`mt_seed` -- went through a `pofile.write_po` that rebuilt the file from parsed
+fields, dropping every `# ` translator comment and replacing the header (4-5
+lines per catalogue, 36 in Polish, G0DVJ's Poedit header among them). It now
+writes unchanged entries from their own text, and
+`python tools\i18n\test_pofile.py` fails if any catalogue does not read and
+write back byte-identical. Check `git diff --numstat i18n` after an `--apply`:
+an add-only merge is additions and no deletions.
+
 ---
 
 ## Put translations into the program
@@ -211,7 +240,8 @@ is in `i18n\languages.json` and `--lang FIN` is enough.
 | `ini2po.py` | help INIs ⟷ `.po` |
 | `po_defuzz.py` | a copy with the "Needs work" flags removed, for testing only |
 | `salvage_lossy.py` | recovers what it can from a lang file that decodes under no codepage (CHN) |
-| `pofile.py`, `pasconsts.py` | shared readers — not run directly |
+| `pofile.py`, `pasconsts.py` | shared readers — not run directly. `pofile` rewrites losslessly |
+| `test_pofile.py` | the gate on that: every catalogue must read and write back byte-identical |
 
 ---
 

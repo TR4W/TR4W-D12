@@ -8,10 +8,22 @@ as untranslated entries so a translator gets ONE complete file instead of the
 THE ONE RULE: AN EXISTING TRANSLATION IS NEVER TOUCHED.
 
 ~417 strings per language are finished native-speaker work (NY4I: "we do not
-want to re-translate already completed items"). So this only ever ADDS. It does
-not delete, does not reword, does not clear a msgstr, and does not clear a fuzzy
-flag. Entries already in the catalogue are left exactly as they are, including
-their existing refs -- po_rekey.py owns those.
+want to re-translate already completed items"). So it ADDS. It does not reword,
+does not clear a msgstr, and does not clear a fuzzy flag. Entries already in the
+catalogue are left exactly as they are, including their existing refs --
+po_rekey.py owns those. The only deletions are the two kinds merge() explains: a
+dependency's string (a unit the .lpi does not list) and an obsolete (#~) entry.
+
+AND "EXACTLY AS THEY ARE" MEANS BYTE FOR BYTE -- TRUE ONLY SINCE 2026-10-18.
+Before then the rewrite went through a pofile.write_po that rebuilt every entry
+from its parsed fields and the header from gettext's template, so an --apply
+silently dropped every '# ' translator comment (the dated audit notes, each
+author credit's provenance) and G0DVJ's Poedit header in Polish: 4-5 lines per
+catalogue, 36 in Polish, measured on that day. The entries survived; the record
+around them did not. pofile now writes unchanged entries from their own text,
+and tools/i18n/test_pofile.py fails if any catalogue does not round-trip
+byte-identical. Check `git diff --numstat i18n` after an --apply: an add-only
+merge shows additions and no deletions.
 
 WHAT IT CARRIES OVER. A new entry whose ENGLISH already appears elsewhere in the
 same catalogue, translated and not fuzzy, is seeded with that translation and
@@ -200,6 +212,8 @@ def merge(path, template, ours, apply_changes):
       # on the LAST underscore instead turned tr4w_pt_BR.po into 'BR' and
       # tr4w_zh_CN.po into 'CN' in the written header (found 2026-10-01 by a
       # read/write round-trip of every catalogue; the other twenty matched).
+      # Since 2026-10-18 an existing catalogue keeps its OWN header, so this
+      # code only reaches a header when the catalogue had no entries to keep.
       name = os.path.basename(path)
       lang = name[len('tr4w_'):-len('.po')]
       pofile.write_po(path, existing, lang)
