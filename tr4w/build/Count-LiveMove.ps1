@@ -72,7 +72,10 @@ param(
 # 466 -> 453, 2026-10-17: P8 -- TSortedStringList, TMultsObject and
 # TCallsignsList are classes over TObjectList; their hand shifts and clears
 # went, and so did the tests' FillChar of an object by its type's size.
-$MOVE_CEILING = 453
+# 453 -> 444, 2026-10-18: P12 -- untyped byte buffers became open arrays:
+# uSHA256 (one Move, two FillChar), uWinKey.wkWriteRaw (one Move), and the
+# five FillChar in uTestNetFraming became a zeroing loop.
+$MOVE_CEILING = 444
 # Floors for -Gate: the tree has ~800 Pascal files and several hundred live
 # calls, so fewer than these means the reader failed, not that the tree is clean.
 $FILE_FLOOR  = 300

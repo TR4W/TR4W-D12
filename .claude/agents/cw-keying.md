@@ -137,6 +137,16 @@ output lapses until OTRSP AUX is wired.
 the CPU keyer's text-to-element translation (`uTestCPUKeyerRing`). Actual
 keying is bench-only — no oracle in this repo proves a rig keys.
 
+**The WinKeyer's wire bytes are pinned without a keyer** (`uTestWinKeyWire`,
+P12, 2026-10-18). `wkWriteRaw` takes `const aBytes: array of Byte`; an admin
+command is a `TwkAdminCommand` (exactly two bytes, so the D12-era
+"every command went out as CALIBRATE" width bug cannot recur); and the
+LOAD DEFAULTS value list goes out through `wkValueListBytes`, one wire byte
+per field — **not** as the packed record's memory, which had made the
+record's field order the wire format by accident. Adding or reordering a
+`TwkValueList` field no longer changes what the keyer receives; changing
+`wkValueListBytes` does, and the test says so.
+
 ## Coordinate with
 
 `radio-factory` (capabilities, the `TKYRadio` hierarchy) · `tci-interface`

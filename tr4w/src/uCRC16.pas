@@ -1,7 +1,7 @@
 unit uCRC16;
 {$I tr4w.inc}
 
-{
+(*
   CRC-16/X-25 -- the CRC carried in the footer of the Elecraft K4's panadapter
   frames.
 
@@ -9,7 +9,8 @@ unit uCRC16;
   reflected to $8408, initial value $FFFF, input and output reflected, final
   xor $FFFF.  The published "check" value -- what every conforming
   implementation must return for the ASCII string "123456789" -- is $906E, and
-  uTestCRC16 asserts exactly that.
+  uTestK4Spectrum asserts exactly that; uTestCRC16 checks every length 0..40
+  and the largest K4 frame against a one-bit-at-a-time reference.
 
   That vector is the point.  It makes this a NAMED, published algorithm rather
   than "whatever the radio appears to accept", and it was verified against the
@@ -34,13 +35,17 @@ unit uCRC16;
   near enough to justify the larger table.  It is a typed constant built at
   compile time; nothing is computed at unit initialization.  (The CRC-32 this
   replaced the shape of used to rebuild its 256-entry table on EVERY call.)
-}
+*)
 
 interface
 
-// Count = 0 returns $0000: init $FFFF complemented by the final xor $FFFF,
-// which is what the catalogue specifies for empty input.
-function GetCRC16X25(const data; Count: LongWord): Word;
+(* An empty array returns $0000: init $FFFF complemented by the final xor
+  $FFFF, which is what the catalogue specifies for empty input.
+
+  AN OPEN ARRAY, NOT AN UNTYPED BUFFER AND A COUNT (P12, 2026-10-18): it
+  carries its own length. To hash part of a buffer pass a slice --
+  `ABytes[AOffset..AOffset + n - 1]` -- which costs no copy. *)
+function GetCRC16X25(const aData: array of Byte): Word;
 
 implementation
 
@@ -52,12 +57,11 @@ const
       $8408, $9489, $A50A, $B58B,
       $C60C, $D68D, $E70E, $F78F);
 
-function GetCRC16X25(const data; Count: LongWord): Word;
+function GetCRC16X25(const aData: array of Byte): Word;
 var
    crc: LongWord;
-   i: LongWord;
+   i: integer;
    b: Byte;
-   p: PByte;
 begin
    // LongWord accumulator, not Word.  Every intermediate stays below $10000
    // anyway -- (crc shr 4) and $0FFF is twelve bits, xored with a sixteen-bit
@@ -66,18 +70,12 @@ begin
    // across two compilers.
    crc := $FFFF;
 
-   if Count > 0 then
+   for i := 0 to High(aData) do
       begin
-      p := PByte(@data);
-
-      for i := 0 to Count - 1 do
-         begin
-         b := p^;
-         crc := ((crc shr 4) and $0FFF) xor CRC16_NIBBLES[(crc xor b) and $0F];
-         b := b shr 4;
-         crc := ((crc shr 4) and $0FFF) xor CRC16_NIBBLES[(crc xor b) and $0F];
-         Inc(p);
-         end;
+      b := aData[i];
+      crc := ((crc shr 4) and $0FFF) xor CRC16_NIBBLES[(crc xor b) and $0F];
+      b := b shr 4;
+      crc := ((crc shr 4) and $0FFF) xor CRC16_NIBBLES[(crc xor b) and $0F];
       end;
 
    // Final xor $FFFF.  Word() truncates the 32-bit complement to the low

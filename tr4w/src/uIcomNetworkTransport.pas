@@ -364,7 +364,6 @@ begin
    Result := LongWord(GetTickCount64);
 end;
 
-function BytesToHexStr(const Data; DataLen: Integer): string; forward;
 
 (* THE SIX PROTOCOL TIMERS, AS ONE OWNED THREAD.
 
@@ -1210,26 +1209,6 @@ begin
 end;
 
 // ============================================================================
-// Hex dump helper (for debug logging)
-// ============================================================================
-
-function BytesToHexStr(const Data; DataLen: Integer): string;
-var
-  Bytes: array[0..1023] of Byte absolute Data;
-  I: Integer;
-begin
-  Result := '';
-  for I := 0 to DataLen - 1 do
-     begin
-     if I > 0 then
-        begin
-        Result := Result + ' ';
-        end;
-     Result := Result + IntToHex(Bytes[I], 2);
-     end;
-end;
-
-// ============================================================================
 // UDP Read Handlers (called from Indy listener threads)
 // ============================================================================
 
@@ -1833,7 +1812,7 @@ begin
 
            if logger.IsTraceEnabled then
               begin
-              logger.Trace(LogPrefix + ' CIV RX: %s', [BytesToHexStr(Data[FrameStart], FrameEnd - FrameStart + 1)]);
+              logger.Trace(LogPrefix + ' CIV RX: %s', [BinToHexStr(Data[FrameStart..FrameEnd], ' ')]);
               end;
 
            // Forward to callback

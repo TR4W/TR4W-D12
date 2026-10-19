@@ -66,27 +66,29 @@ type
   which is the difference between reporting a desync and spinning on it. }
 function NetMessageSize(const aId: word): integer;
 
-{ Walks one received buffer.
+(* Walks one received buffer.
 
-  aBuffer is 1-BASED, matching NetBuffer, because the caller passes that
-  directly and a translation would be one more place to be off by one.
-  aLength is the byte count recv returned.
+  aOffset is 1-BASED, matching NetBuffer, because the caller holds positions
+  that way and a translation at every call would be one more place to be off
+  by one. aBuffer is an OPEN ARRAY (P12, 2026-10-18): whatever its declared
+  bounds, its first byte is position 1, and it carries its own length.
+  aLength is the byte count recv returned; anything past the buffer's real
+  end is not read, so an over-stated length reads as a partial message
+  rather than as stale memory.
 
   aOffset is in/out: the 1-based position to read from, advanced past the
-  message that was returned.  aId receives the id found there.
+  message that was returned.  aId receives the id found there -- two bytes,
+  low byte first, which is how every V1 station writes it.
 
   Returns True when a COMPLETE message is available at aOffset -- and only
   then may the caller cast a record out of the buffer.  Returns False with
   aResult saying why: nwComplete (nothing left), nwPartial (a known message
-  that has not all arrived) or nwUnknownId. }
-function NextNetMessage(const aBuffer; const aLength: integer;
+  that has not all arrived) or nwUnknownId. *)
+function NextNetMessage(const aBuffer: array of Byte; const aLength: integer;
                         var aOffset: integer; out aId: word;
                         out aResult: TNetWalkResult): boolean;
 
 implementation
-
-type
-   PWordArray = ^word;
 
 function NetMessageSize(const aId: word): integer;
 begin
@@ -119,24 +121,33 @@ begin
    end;
 end;
 
-function NextNetMessage(const aBuffer; const aLength: integer;
+function NextNetMessage(const aBuffer: array of Byte; const aLength: integer;
                         var aOffset: integer; out aId: word;
                         out aResult: TNetWalkResult): boolean;
 var
+   available: integer;
    remaining: integer;
    size: integer;
-   p: PByte;
+   at: integer;       (* aOffset as an index into aBuffer, which is 0-based *)
 begin
    Result := False;
    aId := 0;
    aResult := nwComplete;
 
-   if (aOffset < 1) or (aLength < 1) then
+   (* The bytes that are really there: what recv said, but never more than
+     the buffer holds. *)
+   available := aLength;
+   if available > Length(aBuffer) then
+      begin
+      available := Length(aBuffer);
+      end;
+
+   if (aOffset < 1) or (available < 1) then
       begin
       Exit;
       end;
 
-   remaining := aLength - aOffset + 1;
+   remaining := available - aOffset + 1;
    if remaining <= 0 then
       begin
       Exit;      // ended exactly on a boundary -- nwComplete
@@ -151,9 +162,8 @@ begin
       Exit;
       end;
 
-   p := PByte(@aBuffer);
-   Inc(p, aOffset - 1);          // 1-based, like NetBuffer
-   aId := PWord(p)^;
+   at := aOffset - 1;            // 1-based position, 0-based array
+   aId := word(aBuffer[at]) or (word(aBuffer[at + 1]) shl 8);
 
    size := NetMessageSize(aId);
    if size = 0 then

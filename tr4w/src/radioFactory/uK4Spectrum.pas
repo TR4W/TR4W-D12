@@ -188,7 +188,7 @@ begin
       Exit;
       end;
 
-   computed := GetCRC16X25(ABytes[AOffset], K4_PACKET_SIZE - K4_FOOTER_SIZE);
+   computed := GetCRC16X25(ABytes[AOffset..AOffset + K4_PACKET_SIZE - K4_FOOTER_SIZE - 1]);
    received := (Word(ABytes[AOffset + K4_PACKET_SIZE - 2]) shl 8) or
                 Word(ABytes[AOffset + K4_PACKET_SIZE - 1]);
 

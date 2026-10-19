@@ -235,19 +235,19 @@ begin
    // implementation must return $906E for "123456789".  If this fails the
    // algorithm is wrong, independently of anything the K4 does.
    s := '123456789';
-   CheckEquals('906E', IntToHex(GetCRC16X25(s[1], Length(s)), 4),
+   CheckEquals('906E', IntToHex(GetCRC16X25(BytesOf(s)), 4),
                'CRC16/X-25("123456789")');
 end;
 
 procedure TK4SpectrumTests.Test_CRC16_EmptyIsZero;
 var
-   dummy: Byte;
+   empty: TBytes;
 begin
    BeginTest('Test_CRC16_EmptyIsZero');
-   // Init $FFFF complemented by the final xor $FFFF.  Count = 0 leaves the
-   // buffer unread, so any valid memory serves as `data`.
-   dummy := 0;
-   CheckEquals('0000', IntToHex(GetCRC16X25(dummy, 0), 4), 'CRC16/X-25("")');
+   // Init $FFFF complemented by the final xor $FFFF.  An empty array has no
+   // element 0, so this also pins that the routine never reads one.
+   SetLength(empty, 0);
+   CheckEquals('0000', IntToHex(GetCRC16X25(empty), 4), 'CRC16/X-25("")');
 end;
 
 // ---------------------------------------------------------------------------

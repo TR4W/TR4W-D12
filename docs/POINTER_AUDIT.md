@@ -27,6 +27,13 @@ dirty). NOTHING WAS CHANGED: this is an inventory and a schedule.**
 > `EAccessViolation` against the old code. Two wrap off-by-ones found on the
 > way, in `FlushCWBuffer` and `DeleteLastCharacter`, are fixed too (NY4I). Item 6.5 (`K1EAKeyer` -> class) is
 > NOT done. See [P6](#p6----the-cpu-keyers-element-ring-2026-10-17).
+>
+> **P12 is DONE for every buffer whose callers already hold bytes
+> (2026-10-18)**: CRC-32, CRC-16, SHA-256, the multi-op framer, the three hex
+> dumpers (now one) and the WinKeyer writer take `const aData: array of Byte`.
+> The record-carrying wire senders and the `utils_file` trio are left, each
+> for a stated reason. See
+> [P12](#p12----untyped-byte-buffers-to-open-arrays-2026-10-18).
 
 NY4I, 2026-10-16, after `logdom.pas` turned out to hold a DOS-era hand-built
 linked list whose dispose loop read through nil:
@@ -378,7 +385,7 @@ The `Move`/`FillChar` half of this category is triaged in full in
 | 3.2 | `uNet.pas:421-699` (12 overlays: `StationStPtr := @NetBuffer[Bufindex]` and the rest), `tr4wserverUnit.pas:642-716` (4 overlays) and `:691, 697, 703, 1287` (`XPtr(@ServerBuffer[...])^`) | a wire message read by laying a packed record over the receive buffer | live, multi-op | a decoder that reads each record from a `TBytes` slice with its length checked -- **the bytes stay identical, the overlay goes** (CLAUDE.md: *the contract is the encoding, not the type*) | high for multi-op; **ask NY4I first** -- the new multi-station protocol may replace these messages, and refactoring a protocol about to be retired is waste | UT `uTestNetFraming` covers FRAMING only; per-message decode pins must be written FIRST; then BENCH (two stations + `tr4wserver`) |
 | 3.3 | `uTelnet.pas:1981, 1988`, `uBandmap.pas:212, 216`, `uSpots.pas:321, 660, 661, 868, 938` (seven sites; the audit counted five) | `PInteger(@Call[1])^` 4-byte pun | **DONE (P10)**: `uDXSpotParse.SpotCallIsCQMarker` / `SpotCallIsNewMarker`; `tCQAsInteger` / `tNEWAsInteger` deleted from `VC.pas` | string comparison (D7) | low | UT `uTestDXSpotParse` `Test_Marker_*` (written first), BENCH |
 | 3.4 | `uWinKey.pas:370` `PCardinal(@wkREADBuffer[0])^ := 0`; `tr4wserverUnit.pas:1173` `PInteger(@ServerBuffer[0])^ = 542393671 {'GET '}` | integer puns on byte buffers | **DONE (P10)**: `wkREADBuffer[0] := 0` (only byte 0 is read); the server compares `CharBufferSlice(ServerBuffer, 0, 4) = 'GET '` and `(.., 6, 4) = 'PASS'` | index the bytes / compare a 4-byte `Copy` | low | WinKeyer: BENCH. Server: UT `uTestUtilsText` for the slices, BENCH for the handshake |
-| 3.5 | untyped buffer parameters: `uCRC16.GetCRC16X25`, `uCRC32.GetCRC32`, `uSHA256.SHA256Update`, `uNetFraming.NextNetMessage`, `uNet.SendToNet`, `uNetClient.Send`, `uServerNet.SendToClient`/`HexOf`, `tr4wserverUnit.sSend`, `uWinKey.wkSend`/`wkSendAdminCommand`/`wkWriteRaw`, `uIcomNetworkTransport.SendRawPacket`/`BytesToHexStr`, `utils_text.BinToHexStr`, `utils_file.sWriteFile`/`tWriteFile`/`sReadFile` (35 in `src`) | `const data; Count` | live | `const data: array of Byte` / `TBytes` -- an open array carries its bounds (CLAUDE.md strings table). Byte I/O stays byte I/O | medium (wire and serial bytes) | UT `uTestCRC32`, `uTestSHA256`, `uTestNetFraming`, `uTestWebSocketFraming`, `uTestIcomCIV`; WinKeyer and `tr4wserver`: BENCH |
+| 3.5 | untyped buffer parameters: `uCRC16.GetCRC16X25`, `uCRC32.GetCRC32`, `uSHA256.SHA256Update`, `uNetFraming.NextNetMessage`, `uNet.SendToNet`, `uNetClient.Send`, `uServerNet.SendToClient`/`HexOf`, `tr4wserverUnit.sSend`, `uWinKey.wkSend`/`wkSendAdminCommand`/`wkWriteRaw`, `uIcomNetworkTransport.SendRawPacket`/`BytesToHexStr`, `utils_text.BinToHexStr`, `utils_file.sWriteFile`/`tWriteFile`/`sReadFile` (35 in `src`) | `const data; Count` | live | `const data: array of Byte` / `TBytes` -- an open array carries its bounds (CLAUDE.md strings table). Byte I/O stays byte I/O | medium (wire and serial bytes) | UT `uTestCRC32`, `uTestSHA256`, `uTestNetFraming`, `uTestWebSocketFraming`, `uTestIcomCIV`; WinKeyer and `tr4wserver`: BENCH -- **P12 DONE 2026-10-18 for `GetCRC32`, `GetCRC16X25`, `SHA256Update`, `NextNetMessage`, `wkWriteRaw`, `wkSendAdminCommand`, `BinToHexStr` (now the only hex dumper: `BytesToHexStr` deleted, `HexOf` delegates); `wkSend` deleted (no caller). LEFT, with reasons: `SendToNet`, `TNetClient.Send`, `sSend`, `SendToClient`, `SendRawPacket` (every caller passes a packed wire RECORD -- the untyped parameter is where the record becomes bytes, i.e. P14 territory) and the `utils_file` trio (callers in `postunit.pas`, held by P10). See the P12 section** |
 | 3.6 | `uProcessCommand.pas:261` `scFileName[length(scFileName) + 1] := #0` | hand-written C terminator on a ShortString | **DONE (P10): deleted** | delete -- its last C-string consumer, `FileExists(@scFileName[1])` at `:416`, is inside a `{ }` comment (the comment-aware reader does not see it; a plain `rg` does), and every live use passes the ShortString itself | low | **none** |
 | 3.7 | `ui/lcl/uLogGrid.pas:1045, 1054, 1093` `@FCache[i mod CACHE_ROWS]` | a pointer into an array of records, returned to callers | live | return the index, or make the cache entry a class | low -- dangles only if `FCache` is resized while a caller holds one; check before converting | UT `uTestLogRepository` (data), screen is BENCH |
 | 3.8 | `MainUnit.pas:8986` `CompareMem(@RescoredBefore, @RescoredRXData, SizeOf(ContestExchange))` | byte compare of two records | live | **keep for now**: it is a deliberate "did anything change" that includes padding; the same rule as `RadioStatusRecord`'s `BYTES` flag | -- | CORPUS / rescore baseline |
@@ -491,7 +498,7 @@ Owners follow CLAUDE.md's routing table.
 | **P9** | Identity in `Objects[]` / `Data` / `lParam` | 5.1, 5.2, 5.3, 5.4, 5.6 | the `WIN32_ARTIFACT_SWEEP` pattern; display-only, so low crash risk but invisible breakage | **no automated oracle** -- each conversion writes its typed-payload test with the change (the sweep doc's own rule) AND a BENCH entry per window | none | lcl-ui |
 | **P10** | Small puns and terminators -- **DONE 2026-10-19**, see below | 3.3, 3.4, 3.6, 6.14 | low risk, easy to pin | **TEST FIRST** for 3.3 (short-call pins in `uTestDXSpotParse`); `uTestCTYDAT` for 6.14; 3.4 and 3.6 BENCH | write the 3.3 pins | dx-cluster, cw-keying, multi-op-network, file-formats |
 | **P11** | `RadioObject` -> class | 6.1, 7.6 | the largest item (363 pointer mentions) and the widest blast radius; every radio | UT `uTestRadioStatus` / `uTestCWKeyer` / `uTestStatusAndNotice` / `uTestTCIServer`, then BENCH one rig per verified family (`RADIO_BENCH_STATUS.md`) | P1 done (`BeginPolling` takes `RadioPtr`) | radio-factory, cw-keying |
-| **P12** | Untyped byte buffers -> open arrays | 3.5 | correct today; this is the "byte I/O stays byte I/O, the pointer goes" rule | UT `uTestCRC32`, `uTestSHA256`, `uTestNetFraming`, `uTestWebSocketFraming`, `uTestIcomCIV`; WinKeyer + server BENCH | none | serial-port-io, multi-op-network, tci-interface, cw-keying |
+| **P12** | Untyped byte buffers -> open arrays -- **DONE 2026-10-18 for the byte-holding callers; the record senders and `utils_file` LEFT, see [P12](#p12----untyped-byte-buffers-to-open-arrays-2026-10-18)**. Pins written first and green against the old code: `uTestCRC16` (new), `uTestWinKeyWire` (new), and additions to `uTestCRC32`, `uTestSHA256`, `uTestNetFraming`, `uTestUtilsText`. Move-family 453 -> 444 (ceiling lowered) | 3.5 | correct today; this is the "byte I/O stays byte I/O, the pointer goes" rule | UT `uTestCRC32`, `uTestSHA256`, `uTestNetFraming`, `uTestWebSocketFraming`, `uTestIcomCIV`; WinKeyer + server BENCH | none | serial-port-io, multi-op-network, tci-interface, cw-keying |
 | **P13** | Heap temporaries and queues | 2.4, 2.5, 2.7, 2.8 | leaks on exception, `^record` in `TList` | CORPUS (Cabrillo summary); UT `uTestFlexDiscovery`, `uTestIcomTeardown`; the two post-contest reports and K4/Icom discovery are BENCH; QTC per `QTC_BENCH_HANDOFF.md` | none | file-formats, radio-factory, contest-scoring |
 | **P14** | Wire overlays | 3.2, 6.13 | correct today, high blast radius, and possibly superseded | **TEST FIRST**: a decode pin per message type (bytes in, fields out) against the current overlay; then two-station BENCH | **SKIPPED -- NY4I, 2026-10-16: "skip P14, the new protocol replaces it."** The V1 wire overlays are left as they are and retire with the protocol | multi-op-network |
 | **P15** | Ratchet the Move counter | -- | 387 -> 464 in four weeks, all new `FillChar` | **DONE 2026-10-17:** a `$MOVE_CEILING` in `Count-LiveMove.ps1`, ratcheting down, wired into `Run-Lints.ps1` as `Count-LiveMove -Gate` (fixture first, fails closed under file and count floors) | none | build-release |
@@ -958,6 +965,89 @@ skips worktree paths), HEAD `d1fbac01` against the working tree: **2,472 ->
 `uSpots` 22 -> 2, `uctydat` 24 -> 0, `uBandmap` 15 -> 7, `uTelnet` 26 -> 18,
 `uWinKey` 22 -> 18, `tr4wserverUnit` 76 -> 69, `uProcessCommand` 14 -> 14
 (its removed line was a ShortString index, which no rule counts).
+### P12 -- untyped byte buffers to open arrays, 2026-10-18
+
+Item 3.5. **Test first**: every pin below was written against the untyped
+signatures, run green (385,712 passed, 0 failed), and then passed with its
+assertions unchanged after each unit was converted -- one unit at a time,
+the whole suite after each. Final: 385,761 / 0 plain; 385,761 / 0 checked
+(`-gt -gh`), 13,463 unfreed blocks (the ceiling), no heaptrc corruption.
+
+| unit | was | is |
+|---|---|---|
+| `uCRC32` | `GetCRC32(const data; Count: longword): longword; register` | `GetCRC32(const aData: array of Byte): longword` |
+| `uCRC16` | `GetCRC16X25(const data; Count: LongWord): Word` | `GetCRC16X25(const aData: array of Byte): Word` |
+| `uSHA256` (private) | `SHA256Update(var aState; const aData; const aCount: integer)` | `SHA256Update(var aState: TSHA256State; const aData: array of Byte)` |
+| `uNetFraming` | `NextNetMessage(const aBuffer; const aLength: integer; ...)` | `NextNetMessage(const aBuffer: array of Byte; const aLength: integer; ...)` -- and `aLength` beyond the buffer's real end is not read |
+| `utils_text` | `BinToHexStr(const Data; DataLen: integer): string` (no caller) | `BinToHexStr(const aData: array of Byte; const aSeparator: string = ''): string` -- the ONE hex dumper |
+| `uIcomNetworkTransport` | `BytesToHexStr(const Data; DataLen: Integer): string` over an `absolute array[0..1023]` | **deleted**; the CI-V trace calls `BinToHexStr(Data[FrameStart..FrameEnd], ' ')`, the same text |
+| `uServerNet` (private) | `HexOf(const aBuf; const aLen: integer): string` | `HexOf(const aBytes: array of Byte): string` over `BinToHexStr`; same text |
+| `uWinKey` | `wkWriteRaw(const Buffer; Count: DWORD): Cardinal`; `wkSendAdminCommand(const Buffer)` read through `absolute`; `wkSend(const Buffer; ...)` | `wkWriteRaw(const aBytes: array of Byte): Cardinal`; `wkSendAdminCommand(const aCommand: TwkAdminCommand)` (a named two-byte type); `wkValueListBytes`, the value list's sixteen wire bytes by field; `wkSend` and the scratch `wkBuffer` **deleted** (no caller) |
+
+**Callers.** `ContestBroadcastNumber` hashes `TEncoding.UTF8.GetBytes(id)` (the
+number is pinned as a literal in `uTestContestById`). The single-instance
+mutex name hashes `TEncoding.Unicode.GetBytes(dir)`: FPC 3.2.2's
+`TUnicodeEncoding.GetBytes` copies code units unvalidated in memory order
+(`sysencoding.inc:681`), so the bytes and the name are what `dir[1]` gave --
+`uTestCRC32.Test_UnicodeBytesAreTheCodeUnits` pins it, lone surrogate
+included, and `BENCH_QUEUE.md` asks for the cross-build check no test can
+make. The K4 decoder passes a slice. The one pointer left is `uCRC32`'s
+`@aData[0]` into the RTL's `crc.crc32(PByte, len)`, commented as such.
+
+**Pins added** (green on the old code first): `uTestCRC32` -- every length
+0..70 against an in-test bitwise CRC, zero bytes mid-buffer, 4,097 and
+65,536 bytes against Python `zlib.crc32`; `uTestCRC16` (new) -- every length
+0..40 against a bitwise reference, zeros mid-buffer, the 4,160-byte K4 frame;
+`uTestSHA256` -- one byte, one zero byte, `'a'#0'b'`, a block of zeros, 4,097
+varied bytes (Python `hashlib`); `uTestNetFraming` -- zero length, offset 0,
+the largest V1 message exact and one short, a trailing half-id, a message
+ending on the buffer's last byte; `uTestUtilsText` -- `BinToHexStr` digits,
+empty, zeros; `uTestWinKeyWire` (new) -- the value list's sixteen bytes in
+field order, every admin command's two bytes. The shared byte pattern is
+`test/unit/uTestBytePattern.pas`. Written AFTER, because they pin new
+contracts: an over-stated length never reads past the buffer; the hex
+separator; the UTF-16 code units.
+
+**Deliberately LEFT, and why.** The wire senders -- `uNet.SendToNet`,
+`TNetClient.Send`, `tr4wserverUnit.sSend`, `uServerNet.SendToClient`,
+`TIcomNetworkTransport.SendRawPacket` -- are called with packed RECORDS
+(`SendToNet(NetQSOInfoToSend, SizeOf(...))` and ~30 like it). There the
+untyped parameter is exactly where a record's layout becomes the wire
+encoding; an open array would push a `Move` or a `RawToBytes` into every
+caller and change nothing about the encoding. That is P14 (the overlays),
+which NY4I skipped for V1; Icom LAN's packet records are the same shape and
+the protocol is unproven on the bench. `SendToClient` does now build its
+bytes once and write and trace those. The `utils_file` trio
+(`sWriteFile`/`tWriteFile`/`sReadFile`) has callers in `postunit.pas`, which
+P10 holds, and its other callers write records and ShortStrings to files --
+a file-format question, not a signature one.
+
+**Found on the way.** `NextNetMessage` has **no caller in the program** --
+`uNet`'s walk asks only `NetMessageSize` and repeats the partial-message
+logic itself (a pickaxe search finds no commit where `uNet` or the server ever
+called it). It is converted because it is tested and cheap; whether `uNet`
+should use it or it should go is multi-op-network's question, and the V1
+walk is P14's.
+
+**Counts.** Narrowing unchanged: app 1,235 (the ceiling, also at HEAD),
+server 56, test build 1,371; range warnings 3. `Count-LiveMove.ps1` and
+`Count-LivePointers.ps1` **could not be run** -- the work was done in an
+isolated worktree where PowerShell is refused. The figures here come from a
+Python port of both (PascalSource's stripper and the counters' regexes,
+verbatim), which reproduces `$MOVE_CEILING = 453` exactly on pristine HEAD:
+Move-family **453 -> 444** (`uSHA256` -3, `uWinKey` -1, `uTestNetFraming` -5)
+and the ceiling is lowered to 444; pointer-rule hits **2,472 -> 2,430**
+tree-wide by the port (untyped parameters in the touched files 26 -> 6).
+**Re-run both counters from a checkout outside `.claude\worktrees\` before
+quoting these as theirs.**
+
+**Speed** (i386, best of five, `GetTickCount64`): CRC-32 of a 64-byte packet
+x 2,000,000 125 -> 141 ms and of 64 KB x 3,000 312 -> 328 ms (one tick each,
+noise); CRC-16 of a K4 frame x 20,000 281 -> 281 ms; the framer over a 4 KB
+buffer x 200,000 1,453 -> 1,265 ms; SHA-256 of 20 MB 125 -> 156 ms (the
+`BytesOf` copy and an indexed copy where `Move` was -- 1.5 ms a megabyte, on
+a hash taken once per SCP upload). A checksum over every result was identical
+before and after.
 
 ---
 

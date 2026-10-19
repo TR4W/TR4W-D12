@@ -1011,18 +1011,17 @@ begin
    (* Built natively and encoded ONCE at the assignment. Casting each piece
      and concatenating does not work: the '_' literal promotes the whole
      expression back to UTF-16 and the assignment narrows it again. *)
-   (* dir[1], NOT PWideChar(dir)^ -- THE SAME ADDRESS AND THE SAME BYTES, so
-     the mutex name does not change and an install keeps the identity it had.
-     GetCRC32 takes an untyped `const data`, which is a variable reference:
-     the pointer was never needed to hand it one.
-
-     THE EMPTY CASE IS UNCHANGED TOO. Count is Length(dir) * 2, so an empty
-     path hashes zero bytes either way, and range checks are off (tr4w.inc
-     sets only MODE/MODESWITCH; the build passes no -Cr), so dir[1] reads the
-     terminator exactly as the dereference did. *)
+   (* THE PATH'S UTF-16 BYTES, NAMED AS SUCH. This hashed dir[1] for
+     Length(dir) * 2 bytes -- the string's own UTF-16 code units as they lie
+     in memory. TEncoding.Unicode.GetBytes is exactly that: FPC 3.2.2's
+     TUnicodeEncoding.GetBytes copies the code units unvalidated, in memory
+     order, no BOM (sysencoding.inc:681) -- so the bytes are the same, a lone
+     surrogate included, the mutex name does not change and an install keeps
+     the identity it had. Pinned by uTestCRC32.Test_UnicodeBytesAreTheCodeUnits.
+     Stated as an encoding rather than borrowed from the string's layout (P12,
+     2026-10-18); an empty path is zero bytes and CRC 0, as before. *)
    Result := UTF8Encode(tr4w_ClassName + '_'
-                        + IntToHex(GetCRC32(dir[1],
-                                            Length(dir) * SizeOf(WideChar)), 8));
+                        + IntToHex(GetCRC32(TEncoding.Unicode.GetBytes(dir)), 8));
 end;
 
 

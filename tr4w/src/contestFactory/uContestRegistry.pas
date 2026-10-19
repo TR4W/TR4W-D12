@@ -599,7 +599,6 @@ const
    DERIVED_FLOOR = 256;
 var
    n: integer;
-   id: UTF8String;
    crc: longword;
 begin
    if ContestLegacyNumber(aHandle, n) then
@@ -610,14 +609,9 @@ begin
 
    (* A contest registered by id: the CRC of its id. The id is printable ASCII
       (ContestIdRefusal), so the UTF-8 bytes ARE the characters. A handle that
-      names no contest has the empty id and the number of an empty CRC; it is
-      not a contest anybody can log under. *)
-   id := UTF8Encode(ContestId(aHandle));
-   crc := 0;
-   if Length(id) > 0 then
-      begin
-      crc := GetCRC32(id[1], Length(id));
-      end;
+      names no contest has the empty id and the number of an empty CRC (0); it
+      is not a contest anybody can log under. *)
+   crc := GetCRC32(TEncoding.UTF8.GetBytes(ContestId(aHandle)));
    Result := DERIVED_FLOOR +
              Integer(Int64(crc) mod (Int64(High(Integer)) - DERIVED_FLOOR + 1));
 end;

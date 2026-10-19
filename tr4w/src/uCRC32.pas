@@ -21,7 +21,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 unit uCRC32;
 {$I tr4w.inc}
 
-{
+(*
   Standard CRC-32 (CRC-32/ISO-HDLC): polynomial $EDB88320, initial $FFFFFFFF,
   reflected, output one's-complemented.  The same CRC as PKZIP, Ethernet, PNG
   and gzip.  TR4WServer uses it for log and packet integrity, so a regression
@@ -48,22 +48,37 @@ unit uCRC32;
   on the exception path.  Neither problem can recur here.
 
   zlib's contract is that crc32(0, buf, len) computes the complete CRC: the
-  initial value and the final one's-complement are internal to it.  A zero
-  Count returns 0, matching the assembly's short-circuit.
-}
+  initial value and the final one's-complement are internal to it.  An empty
+  buffer returns 0, matching the assembly's short-circuit.
+*)
+
+(* AN OPEN ARRAY OF BYTES, NOT AN UNTYPED BUFFER AND A COUNT (P12,
+  docs/POINTER_AUDIT.md item 3.5, 2026-10-18). The array carries its own
+  length, so a caller can no longer hand over one variable and the size of
+  another. Pass a TBytes, a static byte array, or a slice of either --
+  `buf[i..j]` -- which costs no copy. Text is hashed as BYTES: the caller
+  chooses the encoding (TEncoding.UTF8.GetBytes, TEncoding.Unicode.GetBytes),
+  which is what keeps the same text hashing one way on every platform. *)
 
 interface
 
-function GetCRC32(const data; Count: longword): longword; register;
+function GetCRC32(const aData: array of Byte): longword;
 
 implementation
 
 uses
   crc;
 
-function GetCRC32(const data; Count: longword): longword; register;
+function GetCRC32(const aData: array of Byte): longword;
 begin
-  RESULT := crc32(0, PByte(@data), Count);
+  if Length(aData) = 0 then
+     begin
+     Result := 0;
+     Exit;
+     end;
+  (* THE ONE POINTER, AND IT IS THE RTL's: crc.crc32 takes a PByte and a
+    length. The bounds it needs come from the open array right here. *)
+  Result := crc32(0, @aData[0], Length(aData));
 end;
 
 end.

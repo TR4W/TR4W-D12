@@ -61,6 +61,55 @@ screen, the keyer and the multi-op handshake.
       cluster) and play it. EXPECT: the argument reaches the command intact.
       The removed line wrote a NUL one byte past the argument; no live consumer
       read it (the one that did is commented out), so nothing should differ.
+## Added 2026-10-18 -- UNTYPED BYTE BUFFERS ARE OPEN ARRAYS (pointer audit P12)
+
+`GetCRC32`, `GetCRC16X25`, `SHA256Update`, `NextNetMessage`, the hex dumpers
+and the WinKeyer writer take `const aData: array of Byte` now, not an untyped
+buffer and a count (`docs/POINTER_AUDIT.md`, P12). Every hash and framing pin
+was written first and passed unchanged after; what no test reaches is a real
+keyer and a real two-station link. **The wire bytes are meant to be identical
+-- anything that behaves differently is a defect, not a new behaviour.**
+
+**WinKeyer** (cw-keying). `wkWriteRaw` takes an open array, the admin
+commands are a two-byte type, and the 16-byte LOAD DEFAULTS value list is
+built field by field by `wkValueListBytes` instead of being sent as the
+record's memory (pinned by `uTestWinKeyWire`). Set `DEBUG LOG LEVEL = TRACE`.
+
+- [ ] **Enable the WinKeyer and let it open.** EXPECT: `tr4w.log` shows
+      `[wkSendAdminCommand] B1=$00 B2=$04` (ECHO TEST) and then
+      `B1=$00 B2=$02` (HOST OPEN), and the main window names WK2/WK3 and its
+      version. No answer to the echo test means an admin command's bytes
+      changed.
+- [ ] **The settings sent at open take effect before any change is made.**
+      Send a message straight away. EXPECT: the TR4W speed, the configured
+      sidetone pitch, and the configured paddle mode and swap. A wrong speed
+      or pitch at open (and right after a manual change) is a value-list
+      field out of order.
+- [ ] **Send a message; change speed during it; PTT; Escape to clear.**
+      EXPECT: all as before (`wkSendByte`, `wkSendTwoBytes`, `wkTurnPTT` and
+      `wkClearBuffer` now pass `[b]` / `[B1, B2]`).
+- [ ] **Disable and re-enable the keyer.** EXPECT: `B1=$00 B2=$03` (HOST
+      CLOSE), then a clean re-open.
+
+**Multi-op link** (multi-op-network). Two stations and `tr4wserver`. The
+server's `SendToClient` turns the record into bytes once and both writes and
+traces those; the wire format is unchanged (V1 is not being touched).
+
+- [ ] **Connect two clients and log a QSO on one.** EXPECT: it reaches the
+      other; neither `tr4w.log` nor `tr4wserver.log` reports an unrecognised
+      id or a desync.
+- [ ] **Server at TRACE.** EXPECT `[Net] rx <ip>:` and `[Net] tx <ip>:` lines
+      in the same shape as before: two upper-case hex digits and a space per
+      byte, at most 64 bytes, then `... (N more)`.
+
+**Single-instance lock** (serial-port-io; no hardware). The mutex name is a
+CRC of the install path's UTF-16 bytes, now taken with
+`TEncoding.Unicode.GetBytes` instead of read out of the string (pinned by
+`uTestCRC32.Test_UnicodeBytesAreTheCodeUnits`).
+
+- [ ] **Start the PREVIOUS release's exe, then this build's, from the SAME
+      directory.** EXPECT: the second is refused as a second instance. That
+      proves the name did not change between builds, which a test cannot.
 
 ---
 

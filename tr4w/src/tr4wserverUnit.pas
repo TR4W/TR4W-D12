@@ -1210,7 +1210,7 @@ begin
         begin
         ServerLog.Position := 0;
         ServerLog.ReadBuffer(buf[0], Length(buf));
-        ServerCRC32 := uCRC32.GetCRC32(buf[0], Length(buf));
+        ServerCRC32 := uCRC32.GetCRC32(buf);
         end;
      ServerCRC32Changed := False;
   finally

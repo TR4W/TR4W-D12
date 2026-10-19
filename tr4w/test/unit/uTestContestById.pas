@@ -375,7 +375,7 @@ begin
    h := FixtureHandle;
    CheckEquals(1862707066, ContestBroadcastNumber(h), 'the fixture''s derived number, as a literal');
    id := AnsiString(TEST_FIXTURE_CONTEST_ID);
-   CheckEquals(Integer(256 + Int64(GetCRC32(id[1], Length(id))) mod (Int64(2147483648) - 256)),
+   CheckEquals(Integer(256 + Int64(GetCRC32(BytesOf(id))) mod (Int64(2147483648) - 256)),
                ContestBroadcastNumber(h),
                'and it is 256 + CRC32(id) mod (2^31 - 256)');
    CheckEquals(ContestBroadcastNumber(h), ContestBroadcastNumber(h), 'stable between calls');

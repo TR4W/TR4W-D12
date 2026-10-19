@@ -142,6 +142,17 @@ step is.
 
 Real multi-op behaviour is bench-only — two machines, or it is unproven.
 
+**`uNetFraming.NextNetMessage` has no caller in the program** (found in
+pointer audit P12, 2026-10-18; no commit ever had `uNet` or the server call
+it). `uNet.ConsumeNetBuffer`'s walk asks only `NetMessageSize` and repeats the
+partial-message test itself, so `uTestNetFraming`'s walker pins cover a
+routine the link does not run. It takes an open array now and refuses to read
+past its buffer. Wire one in, or delete it, when the V1 walk is next touched —
+not as a side effect. **The record senders (`SendToNet`, `sSend`,
+`SendToClient`) keep their untyped buffer on purpose**: each caller hands in
+a packed V1 record and that parameter is where its layout becomes the
+encoding (P14, skipped for V1).
+
 `tr4wserver.ini` belongs to a different program and is out of scope for the JSON
 settings work.
 

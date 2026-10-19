@@ -118,6 +118,9 @@ uses
    uCRC16               in '..\..\src\uCRC16.pas',
    uSpectrumTypes       in '..\..\src\uSpectrumTypes.pas',
    uK4Spectrum          in '..\..\src\radioFactory\uK4Spectrum.pas',
+   uTestBytePattern     in 'uTestBytePattern.pas',
+   uTestCRC16           in 'uTestCRC16.pas',
+   uTestWinKeyWire      in 'uTestWinKeyWire.pas',
    uK4SpectrumThread    in '..\..\src\radioFactory\uK4SpectrumThread.pas',
    uTestK4Spectrum      in 'uTestK4Spectrum.pas',
    uIcomScope           in '..\..\src\radioFactory\uIcomScope.pas',
@@ -826,6 +829,8 @@ begin
    RegisterSuite(TDomQTHTableReloadTests.Create('DomQTHTableReload'));
    RegisterSuite(TDomesticCountryListTests.Create('DomesticCountryList'));
    RegisterSuite(TCRC32Tests.Create('CRC32'));
+   RegisterSuite(TCRC16Tests.Create('CRC16'));
+   RegisterSuite(TWinKeyWireTests.Create('WinKeyWire'));
    RegisterSuite(TLogSCPTests.Create('LogSCP'));
    RegisterSuite(TK4SpectrumTests.Create('K4Spectrum'));
    RegisterSuite(TIcomScopeTests.Create('IcomScope'));

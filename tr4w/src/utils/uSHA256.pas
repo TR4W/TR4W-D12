@@ -96,6 +96,9 @@ end;
 
 procedure SHA256Init(out aState: TSHA256State);
 begin
+   (* Everything zero -- the buffer, the counts -- and then the constants. *)
+   aState := Default(TSHA256State);
+
    (* The first 32 bits of the fractional parts of the square roots of the
      first eight primes -- FIPS 180-4 section 5.3.3. *)
    aState.H[0] := $6a09e667;
@@ -106,9 +109,6 @@ begin
    aState.H[5] := $9b05688c;
    aState.H[6] := $1f83d9ab;
    aState.H[7] := $5be0cd19;
-   aState.Used   := 0;
-   aState.Length := 0;
-   FillChar(aState.Buffer, SizeOf(aState.Buffer), 0);
 end;
 
 (* One 64-byte block. BIG-ENDIAN ON THE WAY IN, which is the whole of what
@@ -175,20 +175,24 @@ begin
    Inc(aState.H[7], h);
 end;
 
-procedure SHA256Update(var aState: TSHA256State; const aData; const aCount: integer);
+(* AN OPEN ARRAY, NOT AN UNTYPED BUFFER AND A COUNT (P12, 2026-10-18): the
+  bytes carry their own length. Feed part of a buffer as a slice --
+  `buf[0..n - 1]` -- which costs no copy. *)
+procedure SHA256Update(var aState: TSHA256State; const aData: array of Byte);
 var
-   p:    PByte;
+   next: integer;     (* index into aData of the next byte to take *)
    left: integer;
    take: integer;
+   i:    integer;
 begin
-   if aCount <= 0 then
+   left := Length(aData);
+   if left = 0 then
       begin
       Exit;
       end;
 
-   p := @aData;
-   left := aCount;
-   Inc(aState.Length, QWord(aCount));
+   next := 0;
+   Inc(aState.Length, QWord(left));
 
    while left > 0 do
       begin
@@ -198,9 +202,12 @@ begin
          take := left;
          end;
 
-      Move(p^, aState.Buffer[aState.Used], take);
+      for i := 0 to take - 1 do
+         begin
+         aState.Buffer[aState.Used + i] := aData[next + i];
+         end;
       Inc(aState.Used, take);
-      Inc(p, take);
+      Inc(next, take);
       Dec(left, take);
 
       if aState.Used = 64 then
@@ -226,8 +233,12 @@ begin
      message -- captured before any padding is added. *)
    bits := aState.Length * 8;
 
-   FillChar(pad, SizeOf(pad), 0);
+   (* $80 and then zeros -- FIPS 180-4 section 5.1.1. *)
    pad[0] := $80;
+   for i := 1 to High(pad) do
+      begin
+      pad[i] := 0;
+      end;
 
    (* Pad to 56 mod 64, leaving room for the 8-byte length. When Used is
      already 56..63 this spills into a second block, which is correct and is
@@ -240,14 +251,14 @@ begin
       begin
       n := 120 - aState.Used;
       end;
-   SHA256Update(aState, pad, n);
+   SHA256Update(aState, pad[0..n - 1]);
 
    (* SHA256Update counted those padding bytes into Length, which must not
      affect the value written here -- hence bits was taken above. *)
    for i := 7 downto 0 do
       begin
       v := Byte((bits shr (i * 8)) and $FF);
-      SHA256Update(aState, v, 1);
+      SHA256Update(aState, [v]);
       end;
 
    SetLength(Result, 64);
@@ -269,10 +280,11 @@ var
    st: TSHA256State;
 begin
    SHA256Init(st);
-   if System.Length(aBytes) > 0 then
-      begin
-      SHA256Update(st, aBytes[1], System.Length(aBytes));
-      end;
+   (* BytesOf copies the string's bytes once -- the RawByteString overload, so
+     no code-page conversion happens on the way. It is the cost of a typed
+     parameter: an AnsiString is not an array of Byte. Measured against the
+     pointer version on 20 MB (docs/POINTER_AUDIT.md, P12). *)
+   SHA256Update(st, BytesOf(aBytes));
    Result := SHA256Final(st);
 end;
 
@@ -290,7 +302,7 @@ begin
       n := aStream.Read(buf[0], CHUNK);
       if n > 0 then
          begin
-         SHA256Update(st, buf[0], n);
+         SHA256Update(st, buf[0..n - 1]);
          end;
    until n <= 0;
    Result := SHA256Final(st);

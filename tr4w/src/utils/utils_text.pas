@@ -170,10 +170,15 @@ function CompareCharBuffer(const a, b: array of AnsiChar): integer;
 // of them two bytes early).  A function that returns a string cannot get any
 // of that wrong, and it is what the logger wants anyway.
 //
-// Unseparated deliberately, to keep the existing log lines byte-identical.
-// uIcomNetworkTransport.BytesToHexStr is a SPACE-separated variant used for
-// packet dumps; the two formats are read by different eyes, so they stay apart.
-function BinToHexStr(const Data; DataLen: integer): string;
+// THE ONE HEX DUMPER (P12, 2026-10-18). There were three: this one, an
+// unseparated form with no caller left; uIcomNetworkTransport.BytesToHexStr,
+// space-separated, for CI-V packet traces; and uServerNet.HexOf, the
+// multi-op wire trace. All three walked an untyped buffer, and the Icom one
+// viewed it through an `absolute array[0..1023]`. The FORMATS differ and are
+// kept -- the separator is the caller's choice, '' by default -- but the
+// walking is done once. Upper-case digits, two a byte, never a trailing
+// separator. Pass a slice -- buf[i..j] -- to dump part of a buffer.
+function BinToHexStr(const aData: array of Byte; const aSeparator: string = ''): string;
 
 (* TEXT FOR AN LCL CONTROL OR DIALOG, which takes an AnsiString and wants
   UTF-8 in it.
@@ -697,25 +702,37 @@ begin
 
 end;
 
-function BinToHexStr(const Data; DataLen: integer): string;
+function BinToHexStr(const aData: array of Byte; const aSeparator: string = ''): string;
 const
    HexDigits: array[0..15] of Char = ('0','1','2','3','4','5','6','7',
                                       '8','9','A','B','C','D','E','F');
 var
-   bytes : array[0..MaxInt - 1] of Byte absolute Data;
-   i     : integer;
+   i, j, k : integer;
+   stride  : integer;
 begin
    Result := '';
-   if DataLen <= 0 then
+   if Length(aData) = 0 then
       begin
       Exit;
       end;
 
-   SetLength(Result, DataLen * 2);
-   for i := 0 to DataLen - 1 do
+   (* Sized once: two digits a byte, and a separator BETWEEN bytes. *)
+   stride := 2 + Length(aSeparator);
+   SetLength(Result, Length(aData) * stride - Length(aSeparator));
+   j := 1;
+   for i := 0 to High(aData) do
       begin
-      Result[(i * 2) + 1] := HexDigits[bytes[i] shr 4];
-      Result[(i * 2) + 2] := HexDigits[bytes[i] and $0F];
+      if i > 0 then
+         begin
+         for k := 1 to Length(aSeparator) do
+            begin
+            Result[j] := aSeparator[k];
+            Inc(j);
+            end;
+         end;
+      Result[j]     := HexDigits[aData[i] shr 4];
+      Result[j + 1] := HexDigits[aData[i] and $0F];
+      Inc(j, 2);
       end;
 end;
 
