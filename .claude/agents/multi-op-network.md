@@ -80,6 +80,17 @@ check is the client's. Tests: `uTestContestById` (the judge, the arms fed
 through `NetBuffer` by `ConsumeNetBuffer`, now in `uNet`'s interface, and a
 source-order read).
 
+## What a received QSO records about OUR station (log schema 3, stage 5, 2026-10-19)
+
+A peer's QSO (`NET_QSOINFO`, then `LogContact`, then `tAddQSOToLog`) is
+stamped with THIS station's MY_ values and marked `my_source = 'assumed'`
+(ruling D). The store tells it from ours by the record's computer id. It
+stores NO `exchange_sent`: the V1 packet carries the peer's serial
+(`NumberSent`, kept) but not its CQ template, so our template would be
+invented text. A `NET_EDITEDQSO` edit changes the QSO's fields and leaves
+the station and the sent exchange as they were. Nothing here changed the
+wire or `uNet`. Detail: `docs/SQLITE_LOG_SCHEMA_PLAN.md` section 12h.
+
 ## Worker threads and the log-compare record (pointer audit P1/P2, 2026-10-16)
 
 `uNet.ConnectThread` and `uGetServerLog.RunSyncThread` are

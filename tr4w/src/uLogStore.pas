@@ -1493,12 +1493,34 @@ begin
         stale grid if the operator changed one mid-contest, because that is
         what was sent. An event source records the event, not today's opinion
         of it. *)
-      GRepository.SetNextSentExchange(
-         AnsiString(BuildSentExchangeText(aQso)));
-
       (* AND OUR STATION, CAPTURED NOW, for the same reason: the QSO records
-        where we were, not where settings say we are when it is next read. *)
-      GPendingMyFacts := CaptureMyFactsNow(aQso);
+        where we were, not where settings say we are when it is next read.
+
+        ONLY A QSO HAS EITHER (log schema 3, stage 5). A note or a QTC record
+        is not a contact: it has no station of ours and no exchange we sent,
+        and stamping them (the CQ template rebuilt over a note's fields) put
+        invented text into the log. *)
+      GPendingMyFacts := NotCapturedMyFacts;
+      GRepository.SetNextSentExchange('');
+      if aQso.ceRecordKind = rkQSO then
+         begin
+         GPendingMyFacts := CaptureMyFactsNow(aQso);
+
+         (* A PEER'S QSO SENT WHAT THE PEER SENT, AND THE V1 PACKET DOES NOT
+           SAY WHAT THAT WAS (D4, stage 5). The serial is in the record, and
+           is stored as serial_sent; the rest of the sent exchange is the
+           peer's CQ template, which never crosses the wire. Building it from
+           THIS station's template would invent the peer's text, so a peer's
+           QSO stores none: unknown, not ours. Its station is still stamped
+           with ours, MARKED assumed (ruling D) -- the export rebuilds its
+           sent columns from that and from the record, and never reads an
+           assumed row's exchange_sent. *)
+         if GPendingMyFacts.Source = mfsLogged then
+            begin
+            GRepository.SetNextSentExchange(
+               AnsiString(BuildSentExchangeText(aQso)));
+            end;
+         end;
       GRepository.SetNextMyFacts(GPendingMyFacts);
 
       (* The same grouping rule the importer uses -- a county line logged

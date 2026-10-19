@@ -337,6 +337,11 @@ Detail, rulings A to E, and measurements: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12h
   verbatim; our call is the row's `my_call`, else `contest.my_call`
   (`TLogRepository.DeclaredCall`), else today's. A never-captured row is the
   session's. Detail: §12h.
+- **Stage 5: only OUR QSO records a sent exchange.** A peer's QSO
+  (`assumed`) stores none: the V1 packet does not carry the peer's template,
+  only its serial (kept as `serial_sent`). A note or QTC record captures
+  neither a station nor a sent exchange. A peer's edit keeps the row
+  `assumed`. Detail: section 12h.
 - **The lints scan nothing in a `.claude\worktrees\` checkout** (by design,
   `Get-ScanExclusions.ps1`), and twenty of them then FAIL as "no files
   scanned". Lint a copy of the change from a checkout outside that path.

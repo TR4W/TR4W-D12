@@ -2326,8 +2326,8 @@ with `my_source` NULL on every row, and the tracked fixtures stay at 2,
 byte-unchanged. **No D7 reference changes.** Corpus 21/0/5, factory 13
 identical, matrix 187 identical, ADIF 11/0/2, rescore unchanged.
 
-**Not yet (stage 5):** explicit network provenance -- only if the computer-id
-rule for a peer's QSO proves too weak.
+**All five stages are built** (2026-10-18/19). What remains open is listed
+under stage 5.
 
 Pinned in `uTestLogMyFacts` (16 tests) and mutation-tested five ways, each
 caught: the per-save clear removed, a peer never marked assumed, the editor
@@ -2486,6 +2486,36 @@ a migration that adds nothing.
 - **A never-captured row is the session's, exactly as before (ruling A).**
 - **The external logger's live send** (`GetMyExchangeForExport`) is a QSO
   logged now: the session's.
+
+#### Stage 5 (2026-10-19): network and import provenance
+
+**Measured first; most of it was already done.**
+- **A peer's edit keeps the row `assumed`.** `NET_EDITEDQSO` reaches
+  `FindAndUpdateQSOInLog`, then `LogStoreUpdateQSOBySessionIds`, then the
+  ordinary update, which cannot write the `my_*` columns or `exchange_sent`
+  (stage 1). Nothing is re-stamped. Now pinned for an `assumed` row
+  (`TestAPeersEditKeepsItsProvenance`).
+- **D3** (stage 2) and **ruling D** (stage 1) stand.
+- **A `.TRW` import** stays never-captured, by design.
+- **A re-import of our own export** comes back `imported` (the file names our
+  station) or `stamped`. That is correct for a row read from a file.
+
+**What was left, and is now built (in the store only; no `uNet` or
+`logsubs2` change):**
+- **D4: a peer's QSO stored THIS station's sent exchange.** `LogStoreAppendQSO`
+  built it from this station's CQ EXCHANGE template and grid. The serial was
+  already the peer's: `#` is the record's `NumberSent`, which the packet
+  carries, and it is stored as `serial_sent`. **The rest of a peer's sent
+  exchange -- its CQ template -- never crosses the V1 wire**, so building it
+  here invented the peer's text. A peer's QSO now stores NO `exchange_sent`
+  (unknown). Nothing reads one for an `assumed` row: the export rebuilds its
+  sent columns from the record (stage 4).
+  - **What is lost:** the peer's literal template text (a name or state it
+    typed into its own CQ exchange). It is recoverable only if the protocol
+    carries it, and the V1 wire is not being changed.
+- **A note or QTC record was stamped like a QSO:** our station, and a "sent
+  exchange" built from the CQ template over the note's fields. Only an
+  `rkQSO` captures either now.
 
 ---
 

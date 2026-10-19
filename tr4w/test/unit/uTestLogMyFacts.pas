@@ -90,6 +90,8 @@ type
       procedure TestTheStoreCapturesOurStationAtTheMomentOfTheQSO;
       procedure TestTheEditorReadsAndWritesThroughTheStore;
       procedure TestAnImportBatchNeverTakesTheLiveStation;
+      procedure TestANoteRecordsNoStation;
+      procedure TestAPeersEditKeepsItsProvenance;
    public
       procedure RunAllTests; override;
    end;
@@ -103,7 +105,8 @@ uses
    (* TMyStationExchange and MyStationExchangeOfQSO -- the stage-4 builder. *)
    uContestBase,
    SysUtils, sqldb, utils_text, uSettingsModel,
-   uLogDatabase, uLogSchema, uLogRepository, uLogStore;
+   uLogDatabase, uLogSchema, uLogRepository, uLogStore,
+   uLogNote;   (* SetNoteText -- a note's text *)
 
 const
    (* 101 records -- the store suite's log. *)
@@ -1238,6 +1241,8 @@ var
    logDb: TLogDatabase;
    repo: TLogRepository;
    ourGrid: AnsiString;
+   q: TSQLQuery;
+   qsoPeerSerial: integer;
 begin
    BeginTest('the store records our station as it was when each QSO was logged');
 
@@ -1253,11 +1258,18 @@ begin
 
       MakeQSO(qso, 1);
       qso.ceComputerID := Settings.Computer.Id;
+      (* What the exchange builder falls back to with no CQ template, so a
+        sent exchange is built for BOTH rows unless the store refuses one. *)
+      qso.ExchString := '599 05';
       CheckTrue(LogStoreAppendQSO(qso), 'our QSO is logged');
 
       (* THE ROVER MOVES -- and the next QSO is a peer's. *)
       Settings.My.Grid := 'EN02AB';
       MakeQSO(qso, 2);
+      (* THE PEER'S SERIAL, which only the packet's record knows. *)
+      qso.NumberSent := 4321;
+      qsoPeerSerial := qso.NumberSent;
+      qso.ExchString := '599 05';
       if Settings.Computer.Id = 'B' then
          begin
          qso.ceComputerID := 'C';
@@ -1296,6 +1308,29 @@ begin
                         'the values in effect here when it arrived');
          finally
             repo.Free;
+         end;
+
+         (* D4 (stage 5): WHAT EACH ROW SENT. Ours, built as it was logged;
+           the peer's, unknown -- the V1 packet does not carry it, and this
+           station's CQ template is not the peer's. *)
+         q := TSQLQuery.Create(nil);
+         try
+            q.DataBase := logDb.Connection;
+            q.UsePrimaryKeyAsKey := False;
+            q.SQL.Text := 'SELECT IFNULL(exchange_sent, ''<null>''), ' +
+                          'IFNULL(serial_sent, -1) FROM qso ORDER BY id ' +
+                          'LIMIT 2 OFFSET 101';
+            q.Open;
+            CheckTrue(q.Fields[0].AsString <> '<null>',
+                      'our QSO recorded the exchange it sent');
+            q.Next;
+            CheckEquals('<null>', q.Fields[0].AsString,
+                        'a peer''s QSO records no sent exchange of ours');
+            CheckEquals(qsoPeerSerial, q.Fields[1].AsInteger,
+                        'and keeps the peer''s own serial, from the packet''s record');
+            q.Close;
+         finally
+            q.Free;
          end;
       finally
          logDb.Free;
@@ -1444,6 +1479,118 @@ begin
    end;
 end;
 
+(* A NOTE IS NOT A QSO (stage 5): no station of ours, no exchange we sent. *)
+procedure TLogMyFactsTests.TestANoteRecordsNoStation;
+var
+   note: ContestExchange;
+   facts: TQsoMyFacts;
+   logDb: TLogDatabase;
+   repo: TLogRepository;
+   q: TSQLQuery;
+begin
+   BeginTest('a note in the log records no station of ours and no sent exchange');
+   StartStore(FIXTURE_SET + '-note.trw');
+   try
+      MakeQSO(note, 1);
+      note.ceRecordKind := rkNote;
+      note.ceComputerID := Settings.Computer.Id;
+      SetNoteText(note, 'a note, not a contact');
+      CheckTrue(LogStoreAppendQSO(note), 'the note is logged');
+      LogStoreClose;
+
+      logDb := TLogDatabase.Create;
+      try
+         logDb.OpenReadOnly(FDb);
+         repo := TLogRepository.Create(logDb);
+         try
+            CheckTrue(repo.LoadQSOMyFacts(repo.RowIdAtIndex(101), facts), 'the note''s row');
+            CheckEquals(Ord(mfsNotCaptured), Ord(facts.Source),
+                        'a note records no station of ours');
+         finally
+            repo.Free;
+         end;
+         q := TSQLQuery.Create(nil);
+         try
+            q.DataBase := logDb.Connection;
+            q.UsePrimaryKeyAsKey := False;
+            q.SQL.Text := 'SELECT IFNULL(exchange_sent, ''<null>''), record_kind ' +
+                          'FROM qso ORDER BY id LIMIT 1 OFFSET 101';
+            q.Open;
+            CheckEquals('NOTE', UpperCase(q.Fields[1].AsString), 'the row is the note');
+            CheckEquals('<null>', q.Fields[0].AsString, 'and it sent nothing');
+            q.Close;
+         finally
+            q.Free;
+         end;
+      finally
+         logDb.Free;
+      end;
+   finally
+      StopStore;
+   end;
+end;
+
+(* A PEER'S EDIT OF ITS OWN QSO (NET_EDITEDQSO -> FindAndUpdateQSOInLog ->
+  LogStoreUpdateQSOBySessionIds) changes what the QSO says and nothing about
+  our station: the row stays ASSUMED, its exchange_sent stays as it was, and
+  nothing is re-stamped from this station. *)
+procedure TLogMyFactsTests.TestAPeersEditKeepsItsProvenance;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   qso: ContestExchange;
+   facts, assumed: TQsoMyFacts;
+   q: TSQLQuery;
+   fn: string;
+   rowId: Int64;
+begin
+   BeginTest('a peer''s edit of its QSO keeps the row assumed and its sent exchange');
+   fn := TempLogName('peeredit.db');
+   Scrub(fn);
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         MakeQSO(qso, 1);
+         assumed := SampleFacts;
+         assumed.Source := mfsAssumed;
+         repo.SetNextMyFacts(assumed);
+         repo.SetNextSentExchange('599 KS');
+         rowId := repo.SaveQSO(qso);
+         repo.Commit;
+
+         (* THE PEER EDITS IT: a different serial and points. *)
+         qso.NumberSent := 77;
+         qso.QSOPoints := 3;
+         CheckTrue(repo.UpdateQSOBySessionIds(qso.ceQSOID1, qso.ceQSOID2, qso),
+                   'the network update found the row');
+         repo.Commit;
+
+         CheckTrue(repo.LoadQSOMyFacts(rowId, facts), 'the row is there');
+         CheckFactsEqual(assumed, facts, 'its station after the peer''s edit');
+         q := TSQLQuery.Create(nil);
+         try
+            q.DataBase := db.Connection;
+            q.UsePrimaryKeyAsKey := False;
+            q.SQL.Text := 'SELECT IFNULL(exchange_sent, ''<null>''), serial_sent ' +
+                          'FROM qso WHERE id = ' + IntToStr(rowId);
+            q.Open;
+            CheckEquals('599 KS', q.Fields[0].AsString, 'its sent exchange is untouched');
+            CheckEquals(77, q.Fields[1].AsInteger, 'and the edit itself landed');
+            q.Close;
+         finally
+            q.Free;
+         end;
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
 procedure TLogMyFactsTests.RunAllTests;
 begin
    TestEverySourceTokenRoundTrips;
@@ -1462,6 +1609,7 @@ begin
    TestTheEditorWriteChangesThem;
    TestARescoreAndANetworkUpdateKeepThem;
    TestAnAppendBatchCarriesEachRowsOwn;
+   TestAPeersEditKeepsItsProvenance;
 
    TestTheImportReadsEveryMYTag;
    TestAnAbsentTagIsUnknownNotTodaysValue;
@@ -1486,6 +1634,7 @@ begin
    TestTheStoreCapturesOurStationAtTheMomentOfTheQSO;
    TestTheEditorReadsAndWritesThroughTheStore;
    TestAnImportBatchNeverTakesTheLiveStation;
+   TestANoteRecordsNoStation;
 {$ELSE}
    WriteLn('  SKIPPED (store half): migrates a D7 binary log, a Windows migration path.');
 {$ENDIF}
