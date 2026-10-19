@@ -435,8 +435,11 @@ begin
       check (Delaware's WARC is 0) runs first, as it does when that contest
       runs on its own. The four QSO POINTS overrides it then applies are the
       operator's, the same ones this object's ScoreQSO has already found not
-      to match this QSO, so they cannot match there either. *)
-   PartyContest(party).ScoreQSO(aQso);
+      to match this QSO, so they cannot match there either.
+
+      AND THE QSO'S OWN STATION GOES WITH IT (log schema 3, stage 3): the
+      component scores by the same recorded facts this object was handed. *)
+   PartyContest(party).ScoreQSO(aQso, ScoringMyFacts);
 end;
 
 function TContestIN7QPNE.CountsAsMultiplier(const aQso: ContestExchange;

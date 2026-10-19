@@ -23,6 +23,34 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-18 -- AN ADIF IMPORT GIVES QSOs THIS CONTEST'S STATION, AND ASKS WHEN THE FILE NAMES ITS OWN (log schema 3)
+
+NY4I's ruling: *"I start a contest, then import. Therefore you apply the set my
+fields as if it were a new QSO. If the import has its own my fields, we should
+report that and ask the user if they should override the contest."* A headless
+`/IMPORT` keeps the file's values (the round trip pins that); the QUESTION only
+appears in the GUI, so nothing automated has seen it.
+
+Set up: an ARRL Digi log with MY GRID `EL88`. Two ADIF files: one with no MY_
+tags, and one whose records carry `<MY_GRIDSQUARE:4>JO65`.
+
+- [ ] **Import the file with no MY_ tags.** EXPECT: no question; the final
+      report ends "N QSO(s) named no station of ours and were given this
+      contest's." Edit QSO on one shows grid `EL88`; the claimed score is the
+      one EL88 gives.
+- [ ] **Import the JO65 file.** EXPECT: before anything is written, a Yes/No
+      naming "MY_GRIDSQUARE", the record count, and a line
+      `MY_GRIDSQUARE: N QSO(s), e.g. JO65 (this contest: EL88)`. The wording
+      and line breaks must read right; it is new text.
+- [ ] **Answer Yes.** EXPECT: Edit QSO shows `JO65`, and the score is the one
+      JO65 gives (measured headless: 522 against 231 for ARRL Digi's
+      reference).
+- [ ] **Answer No (on a fresh log).** EXPECT: Edit QSO shows `EL88`.
+- [ ] **A file whose MY_ values match the contest's.** EXPECT: no question,
+      only "...the same as this contest's." in the report.
+
+---
+
 ## Added 2026-10-18 -- A STATE QSO PARTY: A NEW COUNTY FROM THE SAME PLAIN CALL IS A NEW QSO (Q118, `91d6bc34`)
 
 NY4I's ruling: in a state QSO party a logged QSO whose received county differs

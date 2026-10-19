@@ -46,7 +46,17 @@ type
       mfsAssumed,       (* a multi-op PEER's QSO, stamped with THIS station's
                            values because the V1 packet carries none (ruling D) *)
       mfsImported,      (* read from an imported file's own MY_* fields *)
-      mfsEdited);       (* the operator changed them in Edit QSO (ruling B) *)
+      mfsEdited,        (* the operator changed them in Edit QSO (ruling B) *)
+      mfsStamped);      (* an IMPORTED QSO given THIS contest's values at import
+                           time, as a new QSO would be (NY4I, 2026-10-18: the
+                           file named none, or the operator chose the
+                           contest's over the file's) *)
+
+   (* ONE STATION FACT, for the import's report: which a file names, and
+      which differ from the contest's. *)
+   TMyFactField = (mffCall, mffGrid, mffState, mffCounty, mffSection, mffPark,
+                   mffIota, mffCountry, mffCQZone, mffITUZone);
+   TMyFactFields = set of TMyFactField;
 
    TQsoMyFacts = record
       Source: TQsoMyFactsSource;
@@ -87,11 +97,54 @@ function MyFactsValuesDiffer(const a, b: TQsoMyFacts): boolean;
    itself. *)
 function QsoWasLoggedHere(aQsoComputerID, aOurComputerID: AnsiChar): boolean;
 
+(* ---------------------------------------------------------------------------
+  THE IMPORT RULE -- NY4I, 2026-10-18, replacing stage 2's "an absent tag is
+  unknown" for an import:
+
+    "So the use case is I start a contest, then import. Therefore you apply
+     the set my fields as if it were a new QSO. If the import has its own my
+     fields, we should report that and ask the user if they should override
+     the contest."
+  --------------------------------------------------------------------------- *)
+
+(* The fields aFacts holds a value for -- what a file NAMED. *)
+function MyFactsFieldsPresent(const aFacts: TQsoMyFacts): TMyFactFields;
+
+(* The fields aFile names whose value is not aContest's. A field the file does
+   not name is not a difference: the file said nothing about it. *)
+function MyFactsFieldsDiffering(const aFile, aContest: TQsoMyFacts): TMyFactFields;
+
+(* A field's value as text, and the ADIF tag it travels in -- for the report. *)
+function MyFactFieldValue(const aFacts: TQsoMyFacts; aField: TMyFactField): AnsiString;
+function MyFactFieldTag(aField: TMyFactField): string;
+
+(* WHAT AN IMPORTED ROW RECORDS AS OUR STATION.
+
+    the file named none (aFile never captured)  -> the contest's, stamped
+    the operator chose the file's (aUseFile)    -> the file's, as named: a
+                                                   field it did not name is
+                                                   UNKNOWN, never filled in
+    the operator chose the contest's            -> the contest's, stamped,
+                                                   every field
+
+   aContest is this station's values at import time (uLogStore.
+   LogStoreCurrentMyFacts) -- what a QSO logged now would record. *)
+function MyFactsForImport(const aFile, aContest: TQsoMyFacts;
+                          aUseFile: boolean): TQsoMyFacts;
+
 implementation
+
+uses
+   SysUtils;   (* SameText *)
 
 const
    SOURCE_TOKENS: array[TQsoMyFactsSource] of AnsiString = (
-      '', 'logged', 'assumed', 'imported', 'edited');
+      '', 'logged', 'assumed', 'imported', 'edited', 'stamped');
+
+   FIELD_TAGS: array[TMyFactField] of string = (
+      'STATION_CALLSIGN', 'MY_GRIDSQUARE', 'MY_STATE', 'MY_CNTY',
+      'MY_ARRL_SECT', 'MY_POTA_REF', 'MY_IOTA', 'MY_DXCC', 'MY_CQ_ZONE',
+      'MY_ITU_ZONE');
 
 function NotCapturedMyFacts: TQsoMyFacts;
 begin
@@ -151,6 +204,87 @@ end;
 function QsoWasLoggedHere(aQsoComputerID, aOurComputerID: AnsiChar): boolean;
 begin
    Result := aQsoComputerID = aOurComputerID;
+end;
+
+function MyFactFieldValue(const aFacts: TQsoMyFacts; aField: TMyFactField): AnsiString;
+
+   function Zone(aZone: integer): AnsiString;
+   begin
+      Result := '';
+      if aZone > 0 then
+         begin
+         Str(aZone, Result);
+         end;
+   end;
+
+begin
+   case aField of
+      mffCall:    Result := aFacts.Call;
+      mffGrid:    Result := aFacts.Grid;
+      mffState:   Result := aFacts.State;
+      mffCounty:  Result := aFacts.County;
+      mffSection: Result := aFacts.Section;
+      mffPark:    Result := aFacts.Park;
+      mffIota:    Result := aFacts.Iota;
+      mffCountry: Result := aFacts.Country;
+      mffCQZone:  Result := Zone(aFacts.CQZone);
+      mffITUZone: Result := Zone(aFacts.ITUZone);
+   else
+      Result := '';
+   end;
+end;
+
+function MyFactFieldTag(aField: TMyFactField): string;
+begin
+   Result := FIELD_TAGS[aField];
+end;
+
+function MyFactsFieldsPresent(const aFacts: TQsoMyFacts): TMyFactFields;
+var
+   f: TMyFactField;
+begin
+   Result := [];
+   if aFacts.Source = mfsNotCaptured then
+      begin
+      Exit;
+      end;
+   for f := Low(TMyFactField) to High(TMyFactField) do
+      begin
+      if Length(MyFactFieldValue(aFacts, f)) > 0 then
+         begin
+         Include(Result, f);
+         end;
+      end;
+end;
+
+function MyFactsFieldsDiffering(const aFile, aContest: TQsoMyFacts): TMyFactFields;
+var
+   f: TMyFactField;
+begin
+   Result := [];
+   for f := Low(TMyFactField) to High(TMyFactField) do
+      begin
+      if (f in MyFactsFieldsPresent(aFile)) and
+         (not SameText(MyFactFieldValue(aFile, f), MyFactFieldValue(aContest, f))) then
+         begin
+         Include(Result, f);
+         end;
+      end;
+end;
+
+function MyFactsForImport(const aFile, aContest: TQsoMyFacts;
+                          aUseFile: boolean): TQsoMyFacts;
+begin
+   if (aFile.Source <> mfsNotCaptured) and aUseFile then
+      begin
+      Result := aFile;
+      Result.Source := mfsImported;
+      end
+   else
+      begin
+      Result := aContest;
+      Result.Source := mfsStamped;
+      end;
 end;
 
 end.

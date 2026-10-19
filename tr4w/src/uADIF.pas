@@ -239,10 +239,14 @@ function NeutralADIFImportSession: TADIFImportSession;
 
 (* OUR STATION AS THE RECORD STATES IT -- log schema 3, stage 2.
 
-  The row's my_* columns for an imported record: Source is mfsImported, and
-  each value is the record's own tag. A TAG THE RECORD DOES NOT CARRY IS
-  UNKNOWN -- empty, or a zone of 0 -- and is NEVER filled from today's
-  settings (NY4I, ruling A): an import is not a QSO logged here.
+  What the record says about our station: Source is mfsImported, and each
+  value is the record's own tag; a tag it does not carry is empty here.
+
+  A RECORD THAT NAMES NO MY_ TAG AT ALL ANSWERS NotCapturedMyFacts -- it says
+  nothing about our station, and the importer stamps the contest's values as
+  a new QSO would get (NY4I, 2026-10-18, replacing stage 2's "an absent tag
+  is unknown"). Whether a record that DOES name some keeps them is the
+  operator's choice at import (uQsoMyFacts.MyFactsForImport).
 
     STATION_CALLSIGN            my_call
     MY_GRIDSQUARE               my_grid
@@ -2154,6 +2158,27 @@ end;
 function MyFactsFromADIF(const temps: TADIFRecordTemps): TQsoMyFacts;
 begin
    Result := NotCapturedMyFacts;
+
+   (* A RECORD THAT NAMES NO MY_ FIELD SAYS NOTHING ABOUT OUR STATION, and
+     answers NotCapturedMyFacts -- so the importer stamps the contest's
+     values, as a new QSO would get (NY4I, 2026-10-18). STATION_CALLSIGN
+     alone is not a MY_ field: it is written whenever someone else
+     operated, and says nothing about where the station was. *)
+   if (Length(TagText(temps.MyGridSquare)) = 0) and
+      (Length(TagText(temps.MyState)) = 0) and
+      (Length(TagText(temps.MyCounty)) = 0) and
+      (Length(TagText(temps.MyARRLSect)) = 0) and
+      (Length(TagText(temps.MySig)) = 0) and
+      (Length(TagText(temps.MySigInfo)) = 0) and
+      (Length(TagText(temps.MyPOTARef)) = 0) and
+      (Length(TagText(temps.MyIOTA)) = 0) and
+      (Length(TagText(temps.MyDXCC)) = 0) and
+      (Length(TagText(temps.MyCQZone)) = 0) and
+      (Length(TagText(temps.MyITUZone)) = 0) then
+      begin
+      Exit;
+      end;
+
    Result.Source := mfsImported;
 
    Result.Call := TagUpper(temps.MyCall);

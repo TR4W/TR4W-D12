@@ -400,6 +400,34 @@ resourcestring
    SCategoryPowerChangedRescored =
       'CATEGORY-POWER is now %s -- the scoring category changed and the log was rescored.';
 
+   (* ---------------------- an ADIF import names our station (schema 3) - *)
+
+   (* ASKED BEFORE THE IMPORT COMMITS, when the file names our station for
+     some QSOs and any of it is not this contest's. NY4I, 2026-10-18: "If the
+     import has its own my fields, we should report that and ask the user if
+     they should override the contest." %d of %d: the QSOs that name our
+     station, of all the file's; %s: the MY_ tags they carry; the last %s:
+     one line per tag that differs, from SImportMyFactsDifference. *)
+   SImportMyFactsQuestion =
+      'This file names our station for %d of its %d QSO(s) (%s), and it is ' +
+      'not what this contest has:%s' + sLineBreak + sLineBreak +
+      'Keep the file''s values for those QSOs?' + sLineBreak +
+      'Yes keeps the file''s. No gives them this contest''s, as a new QSO ' +
+      'would get.';
+
+   (* One line of SImportMyFactsQuestion: the tag, how many QSOs differ, one
+     of the file's values and this contest's. *)
+   SImportMyFactsDifference = '%s: %d QSO(s), e.g. %s (this contest: %s)';
+
+   (* WHAT THE IMPORT DID WITH OUR STATION -- the end of its report. *)
+   SImportMyFactsSame =
+      '%d QSO(s) named our station (%s), the same as this contest''s.';
+   SImportMyFactsKept = 'The file''s station was kept for %d QSO(s).';
+   SImportMyFactsReplaced =
+      '%d QSO(s) were given this contest''s station in place of the file''s.';
+   SImportMyFactsStamped =
+      '%d QSO(s) named no station of ours and were given this contest''s.';
+
 implementation
 
 end.

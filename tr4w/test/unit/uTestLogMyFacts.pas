@@ -72,6 +72,9 @@ type
       procedure TestTheImportReadsEveryMYTag;
       procedure TestAnAbsentTagIsUnknownNotTodaysValue;
       procedure TestSigInfoIsAParkOnlyUnderPOTA;
+      procedure TestAStationCallAloneNamesNoStation;
+      procedure TestTheImportRule;
+      procedure TestTheImportReportsWhatDiffers;
       procedure TestADXCCCodeMapsToOnePlainEntity;
       procedure TestTheSentExchangeIsTheRecordsSTXString;
       procedure TestANeverCapturedRowWritesNoMYTags;
@@ -837,8 +840,10 @@ begin
    CheckEquals('K9OPS', string(qso.ceOperator), 'and OPERATOR is still the operator');
 end;
 
-(* RULING A: AN ABSENT TAG IS UNKNOWN, AND TODAY'S SETTINGS ARE NOT CONSULTED.
-  The station's grid is set while the record is read, to prove it. *)
+(* A RECORD THAT NAMES NO MY_ FIELD SAYS NOTHING ABOUT OUR STATION -- NY4I,
+  2026-10-18, replacing stage 2's "imported, unknown": the IMPORTER then gives
+  it this contest's values (TestTheImportRule...). The reader itself borrows
+  nothing: the station's grid is set while the record is read, to prove it. *)
 procedure TLogMyFactsTests.TestAnAbsentTagIsUnknownNotTodaysValue;
 var
    qso: ContestExchange;
@@ -846,7 +851,7 @@ var
    sent: AnsiString;
    savedGrid: string;
 begin
-   BeginTest('a record with no MY_ tags imports an unknown station, never today''s');
+   BeginTest('a record with no MY_ tags names no station, and the reader borrows none');
    savedGrid := Settings.My.Grid;
    Settings.My.Grid := 'FN31PR';
    try
@@ -854,11 +859,90 @@ begin
    finally
       Settings.My.Grid := savedGrid;
    end;
-   CheckEquals(Ord(mfsImported), Ord(facts.Source),
-               'captured -- from the file -- so a reader does NOT fall back');
+   CheckEquals(Ord(mfsNotCaptured), Ord(facts.Source),
+               'the file named no station of ours, and says so');
    CheckFalse(MyFactsValuesDiffer(facts, NotCapturedMyFacts),
-              'and every value is unknown: nothing was borrowed from settings');
+              'and nothing was borrowed from settings by the reader');
    CheckEquals('', string(sent), 'and it sent nothing the file says');
+end;
+
+procedure TLogMyFactsTests.TestAStationCallAloneNamesNoStation;
+var
+   qso: ContestExchange;
+   facts: TQsoMyFacts;
+   sent: AnsiString;
+begin
+   BeginTest('STATION_CALLSIGN alone is not a MY_ field: the record names no station');
+   ParseOneRecord('<CALL:4>W1AW <OPERATOR:5>K9OPS <STATION_CALLSIGN:4>NY4I <EOR>',
+                  qso, facts, sent);
+   CheckEquals(Ord(mfsNotCaptured), Ord(facts.Source),
+               'written whenever someone else operated; it says nothing of where');
+end;
+
+(* NY4I'S IMPORT RULE (2026-10-18), POINT BY POINT -- the pure part,
+  uQsoMyFacts.MyFactsForImport and the report's two questions. *)
+procedure TLogMyFactsTests.TestTheImportRule;
+var
+   contest, fileFacts, partial, got: TQsoMyFacts;
+begin
+   BeginTest('an import gives a QSO the contest''s station unless the operator keeps the file''s');
+   contest := SampleFacts;
+   contest.Grid := 'EM17';
+   contest.State := 'KS';
+
+   (* 1. THE FILE NAMED NONE: the contest's, stamped, as a new QSO. *)
+   got := MyFactsForImport(NotCapturedMyFacts, contest, True);
+   CheckEquals(Ord(mfsStamped), Ord(got.Source), '1: named none -- stamped');
+   CheckEquals('EM17', string(got.Grid), '1: with the contest''s grid');
+   got := MyFactsForImport(NotCapturedMyFacts, contest, False);
+   CheckEquals('EM17', string(got.Grid), '1: whatever the answer was');
+
+   (* 2. THE FILE NAMED SOME: yes keeps the file's, no stamps the contest's. *)
+   fileFacts := SampleFacts;
+   fileFacts.Source := mfsImported;
+   got := MyFactsForImport(fileFacts, contest, True);
+   CheckEquals(Ord(mfsImported), Ord(got.Source), '2 yes: imported');
+   CheckEquals('EN01AB', string(got.Grid), '2 yes: the file''s grid');
+   got := MyFactsForImport(fileFacts, contest, False);
+   CheckEquals(Ord(mfsStamped), Ord(got.Source), '2 no: stamped');
+   CheckEquals('EM17', string(got.Grid), '2 no: the contest''s grid');
+   CheckEquals('KS', string(got.State), '2 no: and every other field the contest''s');
+
+   (* 4. SOME MY_ TAGS BUT NO GRID: yes leaves the grid UNKNOWN; no stamps it. *)
+   partial := NotCapturedMyFacts;
+   partial.Source := mfsImported;
+   partial.State := 'NE';
+   got := MyFactsForImport(partial, contest, True);
+   CheckEquals('', string(got.Grid), '4 yes: the grid the file did not name is unknown');
+   CheckEquals('NE', string(got.State), '4 yes: and the state it named is kept');
+   got := MyFactsForImport(partial, contest, False);
+   CheckEquals('EM17', string(got.Grid), '4 no: the grid is the contest''s');
+   CheckEquals('KS', string(got.State), '4 no: as is the state');
+end;
+
+(* THE REPORT: which fields a file named, and where they differ from the
+  contest's -- only the fields it named, case aside. *)
+procedure TLogMyFactsTests.TestTheImportReportsWhatDiffers;
+var
+   contest, fileFacts: TQsoMyFacts;
+   differing: TMyFactFields;
+begin
+   BeginTest('the import reports the MY_ fields a file names and those that differ');
+   contest := SampleFacts;
+   fileFacts := NotCapturedMyFacts;
+   fileFacts.Source := mfsImported;
+   fileFacts.Grid := 'EN02AB';
+   fileFacts.State := 'ne';
+   CheckTrue(MyFactsFieldsPresent(fileFacts) = [mffGrid, mffState],
+             'the file named a grid and a state, nothing else');
+   differing := MyFactsFieldsDiffering(fileFacts, contest);
+   CheckTrue(differing = [mffGrid], 'the grid differs; NE against ne does not');
+   CheckTrue(MyFactsFieldsPresent(NotCapturedMyFacts) = [],
+             'a record that named nothing names no field');
+   CheckTrue(MyFactsFieldsDiffering(contest, contest) = [],
+             'the contest''s own values differ from nothing');
+   CheckEquals('MY_GRIDSQUARE', MyFactFieldTag(mffGrid), 'a field''s ADIF tag');
+   CheckEquals('4', string(MyFactFieldValue(contest, mffCQZone)), 'a zone as text');
 end;
 
 procedure TLogMyFactsTests.TestSigInfoIsAParkOnlyUnderPOTA;
@@ -1284,6 +1368,9 @@ begin
    TestTheImportReadsEveryMYTag;
    TestAnAbsentTagIsUnknownNotTodaysValue;
    TestSigInfoIsAParkOnlyUnderPOTA;
+   TestAStationCallAloneNamesNoStation;
+   TestTheImportRule;
+   TestTheImportReportsWhatDiffers;
    TestADXCCCodeMapsToOnePlainEntity;
    TestTheSentExchangeIsTheRecordsSTXString;
    TestANeverCapturedRowWritesNoMYTags;

@@ -290,8 +290,10 @@ multipliers, CTY.DAT, band lookup and CRC32.
   (`b56e1ef9`); the table is sized, and a reload is not a fresh start.
 - **OUR STATION'S ADIF TAGS ARE THE RECORD'S, not the session's (log schema 3,
   stage 2, 2026-10-18).** Import reads STATION_CALLSIGN and the MY_* tags into
-  the row's my_* columns (`uADIF.MyFactsFromADIF`); an absent tag is unknown,
-  never today's value. STX_STRING is the row's `exchange_sent`
+  the row's my_* columns (`uADIF.MyFactsFromADIF`). A record naming no MY_ tag
+  is STAMPED with this contest's values, as a new QSO would be; a file that
+  names some is reported, and the operator chooses (NY4I, 2026-10-18; headless
+  keeps the file's). STX_STRING is the row's `exchange_sent`
   (`SentExchangeFromADIF`), never rebuilt from the live station. Export writes
   them AFTER the contest's tail (`EmitADIFMyStationFields`), and **a tag the
   contest already wrote wins** (POTA's park, MY_STATE, MY_DXCC). A row written

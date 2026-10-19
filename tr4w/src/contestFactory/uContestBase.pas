@@ -75,7 +75,11 @@ uses
       the settings model's own enum rather than a copy here: a second
       HIGH/LOW/QRP list would be a second definition, free to drift. *)
    uSettingsModel,
-   VC;
+   VC,
+   (* TQsoMyFacts -- a logged QSO's own station (log schema 3), which
+      ScoreQSO scores by and TLoggedQSOView hands a whole-log rule. A leaf;
+      it declares nothing VC or the settings model does. *)
+   uQsoMyFacts;
 
 const
    (* THE SHAPE OF ONE QSO: LINE IN A CABRILLO FILE, for every contest that has
@@ -864,6 +868,12 @@ type
    public
       function Count: integer; virtual; abstract;
       function QSO(aIndex: integer): ContestExchange; virtual; abstract;
+      (* QSO aIndex's OWN STATION -- its my_* columns (log schema 3, stage 3),
+         which a whole-log rule reads instead of today's settings: where a
+         rover was for each QSO. NotCapturedMyFacts for a QSO that recorded
+         none, which a rule reads as "the session's" (ruling A). A view that
+         keeps no stations answers that for every QSO. *)
+      function MyFacts(aIndex: integer): TQsoMyFacts; virtual;
    end;
 
    (* A VIEW HELD IN MEMORY -- what a test fills, and what the application
@@ -871,9 +881,14 @@ type
    TLoggedQSOList = class(TLoggedQSOView)
    private
       FQSOs: array of ContestExchange;
+      (* In step with FQSOs. *)
+      FMyFacts: array of TQsoMyFacts;
       FCount: integer;
    public
-      procedure Add(const aQso: ContestExchange);
+      procedure Add(const aQso: ContestExchange); overload;
+      procedure Add(const aQso: ContestExchange;
+                    const aMyFacts: TQsoMyFacts); overload;
+      function MyFacts(aIndex: integer): TQsoMyFacts; override;
       (* Empties the list and keeps its storage, for the next fill. *)
       procedure Clear;
       function Count: integer; override;
@@ -1323,6 +1338,11 @@ type
          read once at construction (Q108 S2). *)
       FId: string;
       FStation: TStationContext;
+      (* THE STATION OF THE QSO BEING SCORED -- what ScoreQSO was handed, for
+         the length of that one call; NotCapturedMyFacts otherwise. *)
+      FScoringMyFacts: TQsoMyFacts;
+      (* ScoreQSO's steps against whatever FStation holds -- see ScoreQSO. *)
+      procedure ScoreQSOWithStation(var aQso: ContestExchange);
    protected
       (* THE GETTERS BEHIND THE PROPERTIES BELOW.
 
@@ -1867,7 +1887,39 @@ type
          InhibitMults, DomMultQTH, DomesticMult, ZoneMult, Prefix or DXQTH. A
          function returning an integer would read as pure and hide those
          writes; this is the shape the engine's own entry already has. *)
-      procedure ScoreQSO(var aQso: ContestExchange);
+      procedure ScoreQSO(var aQso: ContestExchange); overload;
+
+      (* SCORED BY THE QSO'S OWN STATION -- log schema 3, stage 3 (D1).
+
+         A LOGGED QSO READS ITS RECORD (Q13). A rescore, an import or an edit
+         hands in the row's my_* facts, and for a row that captured them
+         Station.MyGrid IS THE ROW'S GRID for the length of this one call --
+         so the thirteen distance rules that read Station.MyGrid score each
+         QSO from where it was worked, and none of them changes. Restored in
+         a finally, so an exception leaves the station as it found it.
+
+         ONLY THE GRID, ON PURPOSE. The other station facts are not overlaid:
+         Station.MyState is the state the session SENDS (FCONTEST.SentMyState),
+         not my_state, the place; and an ADIF import names our country and
+         call only when the file carries MY_DXCC and STATION_CALLSIGN, so
+         overlaying those would turn every other imported QSO's country to
+         unknown. Each wants its own decision.
+
+         A ROW NEVER CAPTURED (my_source NULL) IS SCORED AS IT ALWAYS WAS,
+         from the session (NY4I, ruling A). A captured row whose grid is
+         empty has NO grid -- '' is laid over the session's, never borrowed
+         from it -- and each rule then answers "no distance" its own way.
+
+         The one-argument form is live entry: the QSO being logged NOW, whose
+         station is the session's, so nothing is overlaid. *)
+      procedure ScoreQSO(var aQso: ContestExchange;
+                         const aMyFacts: TQsoMyFacts); overload;
+
+      (* What ScoreQSO is scoring by: the facts it was handed, for the length
+         of that call, else NotCapturedMyFacts. For a contest that delegates
+         its scoring to another contest object (the IN/7QP/NE party), which
+         must hand the same QSO's station on. *)
+      property ScoringMyFacts: TQsoMyFacts read FScoringMyFacts;
 
       (* DOES THIS CONTEST USE THIS BAND? -- the contest owns its bands.
 
@@ -4300,6 +4352,38 @@ end;
 
 procedure TContestBase.ScoreQSO(var aQso: ContestExchange);
 begin
+   ScoreQSO(aQso, NotCapturedMyFacts);
+end;
+
+procedure TContestBase.ScoreQSO(var aQso: ContestExchange;
+                                const aMyFacts: TQsoMyFacts);
+var
+   sessionGrid: string;
+   sessionFacts: TQsoMyFacts;
+begin
+   if aMyFacts.Source = mfsNotCaptured then
+      begin
+      ScoreQSOWithStation(aQso);
+      Exit;
+      end;
+
+   (* THE ROW'S GRID OVER THE SESSION'S, FOR THIS CALL ONLY. Both put back
+     whatever the rule does, an exception included. *)
+   sessionGrid := FStation.MyGrid;
+   sessionFacts := FScoringMyFacts;
+   FStation.MyGrid := string(aMyFacts.Grid);
+   FScoringMyFacts := aMyFacts;
+   try
+      ScoreQSOWithStation(aQso);
+   finally
+      FStation.MyGrid := sessionGrid;
+      FScoringMyFacts := sessionFacts;
+   end;
+end;
+
+(* THE STEPS THEMSELVES, against whatever FStation holds now. *)
+procedure TContestBase.ScoreQSOWithStation(var aQso: ContestExchange);
+begin
    aQso.QSOPoints := 0;
 
    (* THROUGH ContestCreditsBand, so the points and LOGDUPE.SetMultFlags's
@@ -4333,14 +4417,32 @@ end;
 (* STAGE 3 -- THE FINAL SCORE (M6)                                          *)
 (* ------------------------------------------------------------------------ *)
 
+function TLoggedQSOView.MyFacts(aIndex: integer): TQsoMyFacts;
+begin
+   Result := NotCapturedMyFacts;
+end;
+
 procedure TLoggedQSOList.Add(const aQso: ContestExchange);
+begin
+   Add(aQso, NotCapturedMyFacts);
+end;
+
+procedure TLoggedQSOList.Add(const aQso: ContestExchange;
+                             const aMyFacts: TQsoMyFacts);
 begin
    if FCount >= Length(FQSOs) then
       begin
       SetLength(FQSOs, FCount * 2 + 16);
+      SetLength(FMyFacts, Length(FQSOs));
       end;
    FQSOs[FCount] := aQso;
+   FMyFacts[FCount] := aMyFacts;
    inc(FCount);
+end;
+
+function TLoggedQSOList.MyFacts(aIndex: integer): TQsoMyFacts;
+begin
+   Result := FMyFacts[aIndex];
 end;
 
 procedure TLoggedQSOList.Clear;

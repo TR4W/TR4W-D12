@@ -76,6 +76,17 @@ uses
   entry fields until this says True. Never raises. *)
 function LogStoreAppendQSO(const aQso: ContestExchange): boolean;
 
+(* OUR STATION AS THE LAST SUCCESSFUL LogStoreAppendQSO RECORDED IT -- what
+  live entry hands the final score's view beside that QSO (log schema 3,
+  stage 3), so a whole-log rule reads the station the row holds. Ask it only
+  right after an append answered True; NotCapturedMyFacts before any. *)
+function LogStoreLastAppendedMyFacts: TQsoMyFacts;
+
+(* THIS STATION'S MY_ VALUES AS THEY ARE NOW -- exactly what a QSO logged at
+  this moment records (Source mfsLogged). What an ADIF import stamps on a
+  record that names none (NY4I, 2026-10-18). *)
+function LogStoreCurrentMyFacts: TQsoMyFacts;
+
 (* Rewrites the log's newest row -- the three sites that used to seek back one
   record in the binary log (DeleteLastContact, uNet.UpdateRec,
   uQTCS.SetSendedQSOs).  Writes even when this call migrated the log: the .TRW
@@ -352,6 +363,11 @@ var
    GDisabled: boolean = False;
 
    GTriedToOpen: boolean = False;
+
+   (* OUR STATION AS THE LAST COMMITTED APPEND RECORDED IT -- see
+     LogStoreLastAppendedMyFacts -- and the one being written. *)
+   GLastAppendedMyFacts: TQsoMyFacts;
+   GPendingMyFacts: TQsoMyFacts;
 
    (* THERE IS NO "written already" FLAG, ON PURPOSE -- see EnsureOpen. *)
 
@@ -1370,21 +1386,14 @@ end;
   station's values -- usually the same site -- and my_source says so, so
   nothing reads them as that station's own. The computer id on the record is
   what tells the two apart; see uQsoMyFacts.QsoWasLoggedHere. *)
-function CaptureMyFactsNow(const aQso: ContestExchange): TQsoMyFacts;
+function LogStoreCurrentMyFacts: TQsoMyFacts;
 var
    station: uContestBase.TStationContext;
 begin
    station := uContestFactory.CurrentStation;
 
    Result := NotCapturedMyFacts;
-   if QsoWasLoggedHere(aQso.ceComputerID, Settings.Computer.Id) then
-      begin
-      Result.Source := mfsLogged;
-      end
-   else
-      begin
-      Result.Source := mfsAssumed;
-      end;
+   Result.Source := mfsLogged;
 
    (* UTF8Encode, as ReadEntryDeclaration: the settings are UTF-16 and the
      fields AnsiString; callsigns, grids and references are ASCII. *)
@@ -1410,6 +1419,17 @@ begin
    if Result.ITUZone = 0 then
       begin
       Result.ITUZone := uCTYDAT.ctyGetITUZone(Settings.My.Call);
+      end;
+end;
+
+(* The capture for a QSO being logged now: this station's values, and whether
+  it was logged HERE or arrived from a multi-op peer (ruling D). *)
+function CaptureMyFactsNow(const aQso: ContestExchange): TQsoMyFacts;
+begin
+   Result := LogStoreCurrentMyFacts;
+   if not QsoWasLoggedHere(aQso.ceComputerID, Settings.Computer.Id) then
+      begin
+      Result.Source := mfsAssumed;
       end;
 end;
 
@@ -1478,7 +1498,8 @@ begin
 
       (* AND OUR STATION, CAPTURED NOW, for the same reason: the QSO records
         where we were, not where settings say we are when it is next read. *)
-      GRepository.SetNextMyFacts(CaptureMyFactsNow(aQso));
+      GPendingMyFacts := CaptureMyFactsNow(aQso);
+      GRepository.SetNextMyFacts(GPendingMyFacts);
 
       (* The same grouping rule the importer uses -- a county line logged
         live must relate its rows exactly as an imported one does. *)
@@ -1494,6 +1515,7 @@ begin
       GRepository.Commit;
 
       (* AND ONLY NOW. *)
+      GLastAppendedMyFacts := GPendingMyFacts;
       Result := True;
    except
       on E: Exception do
@@ -1501,6 +1523,11 @@ begin
          Disable('appending a QSO', E);
          end;
    end;
+end;
+
+function LogStoreLastAppendedMyFacts: TQsoMyFacts;
+begin
+   Result := GLastAppendedMyFacts;
 end;
 
 procedure LogStoreUpdateNewestQSO(const aQso: ContestExchange);

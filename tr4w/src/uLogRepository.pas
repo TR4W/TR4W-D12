@@ -203,6 +203,9 @@ type
                     const aMyFacts: TQsoMyFacts;
                     const aSentExchange: AnsiString = ''); overload;
       function MyFacts(aIndex: integer): TQsoMyFacts;
+      (* Replaces row aIndex's station -- the import's decision, made once the
+         whole file has been read (NY4I, 2026-10-18). *)
+      procedure SetMyFacts(aIndex: integer; const aMyFacts: TQsoMyFacts);
       function SentExchange(aIndex: integer): AnsiString;
    end;
 
@@ -3184,6 +3187,12 @@ function TLogQsoAppends.MyFacts(aIndex: integer): TQsoMyFacts;
 begin
    CheckIndex(aIndex);
    Result := FMyFacts[aIndex];
+end;
+
+procedure TLogQsoAppends.SetMyFacts(aIndex: integer; const aMyFacts: TQsoMyFacts);
+begin
+   CheckIndex(aIndex);
+   FMyFacts[aIndex] := aMyFacts;
 end;
 
 function TLogQsoAppends.SentExchange(aIndex: integer): AnsiString;

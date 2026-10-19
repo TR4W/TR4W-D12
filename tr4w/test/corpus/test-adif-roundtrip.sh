@@ -206,6 +206,25 @@ roundtrip_one() {
       drop="$drop APP_TR4W_ID"
    fi
 
+   # OUR STATION, BY THE SAME RULE (NY4I, 2026-10-18). A record that names no
+   # MY_ field is given THIS CONTEST'S station at import, as a new QSO would
+   # be, and the export then writes it -- so a reference with no MY_ tag at all
+   # comes back carrying the contest's. That is the import working, and it is
+   # set aside only where the reference has none to compare; the MY_ case below
+   # carries them and is compared tag for tag. STATION_CALLSIGN is NOT set
+   # aside: it is written by the same operator rule either way.
+   if ! grep -qi '<my_' "$input"; then
+      drop="$drop MY_GRIDSQUARE MY_STATE MY_CNTY MY_ARRL_SECT MY_IOTA MY_CQ_ZONE MY_ITU_ZONE MY_DXCC MY_SIG MY_SIG_INFO MY_POTA_REF"
+      # ...BUT THEY MUST BE THERE. Setting them aside must not hide an import
+      # that stamped nothing: every record is given the contest's station,
+      # which always knows its country, so every record carries MY_DXCC.
+      if [ "$(grep -ci '<my_dxcc:' "$out")" -ne "$(grep -ci '<eor>' "$out")" ]; then
+         printf "  FAIL  %-28s the import did not give every record this contest's station (MY_DXCC on %s of %s)\n" \
+            "$name" "$(grep -ci '<my_dxcc:' "$out")" "$(grep -ci '<eor>' "$out")"
+         fail=$((fail+1)); return
+      fi
+   fi
+
    records_only "$out"       | strip_tags "$drop" > "$WORK.cand.txt"
    records_only "$input" | strip_tags "$drop" > "$WORK.ref.txt"
 

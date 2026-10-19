@@ -104,7 +104,12 @@ function LogSourceNext(out aQso: ContestExchange;
   (an O(n) OFFSET walk and a 68-column Open, per row) until 2026-10-14.
   aRowId is 0 when this returns False. *)
 function LogSourceNextWithRowId(out aRowId: Int64;
-                                out aQso: ContestExchange): boolean;
+                                out aQso: ContestExchange): boolean; overload;
+(* LogSourceNextWithRowId, and the row's OWN STATION -- what a rescore scores
+  the row by (log schema 3, stage 3). *)
+function LogSourceNextWithRowId(out aRowId: Int64;
+                                out aQso: ContestExchange;
+                                out aFacts: TQsoMyFacts): boolean; overload;
 
 procedure LogSourceClose;
 
@@ -299,6 +304,15 @@ function LogSourceNextWithRowId(out aRowId: Int64;
 begin
    aRowId := 0;
    Result := (Repo <> nil) and Repo.ReadNextWithRowId(aRowId, aQso);
+end;
+
+function LogSourceNextWithRowId(out aRowId: Int64;
+                                out aQso: ContestExchange;
+                                out aFacts: TQsoMyFacts): boolean;
+begin
+   aRowId := 0;
+   aFacts := NotCapturedMyFacts;
+   Result := (Repo <> nil) and Repo.ReadNextWithMyFacts(aRowId, aQso, aFacts);
 end;
 
 procedure LogSourceClose;

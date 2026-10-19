@@ -650,7 +650,12 @@ function AskConvertLog(sVersion: string): boolean; // ny4i
 procedure UpdateWindows;
 procedure tUpdateLog(UpdAction: UpadateAction);
 (* The per-QSO body of the rescore -- see the implementation. *)
-procedure RecomputeQSOScoring(var aRX: ContestExchange);
+procedure RecomputeQSOScoring(var aRX: ContestExchange); overload;
+(* A STORED QSO, SCORED BY ITS OWN RECORDED STATION (log schema 3, stage 3) --
+  the rescore's. The one-argument form scores by the session's station: a QSO
+  being built now, as the contest matrix builds them. *)
+procedure RecomputeQSOScoring(var aRX: ContestExchange;
+                              const aMyFacts: TQsoMyFacts); overload;
 (* The country lookup live entry and ADIF import both run on a new QSO --
   exported for the contest matrix, which builds a stored QSO the same way. *)
 function ctyLocateCallStripRover(const Call: CallString; var QTH: QTHRecord): Boolean;
@@ -7872,6 +7877,8 @@ var
   Size: Int64;
   CurrentRecord, FirstRecord: integer;
   TempMode: ModeType;
+  (* The row's own station, read with it (log schema 3). *)
+  LoadedMyFacts: TQsoMyFacts;
 
 begin
 
@@ -7937,7 +7944,9 @@ begin
   Sheet.DisposeOfMemoryAndZeroTotals;
   // LoadingInLogFile := True;
   1:
-  if LogSourceNext(TempRXData) then
+  (* AND EACH ROW'S OWN STATION, for the view a whole-log rule reads (log
+    schema 3, stage 3). *)
+  if LogSourceNext(TempRXData, LoadedMyFacts) then
      begin
 
      if TempRXData.ceSendToServer = False then
@@ -8009,7 +8018,7 @@ begin
              Sheet.AddQSOToSheets(@TempRXData, True);
              (* AND TO THE VIEW THE FINAL SCORE'S BONUSES READ (M6) -- kept
                 beside the totals; see uScoreTotals. *)
-             AddLoggedQSO(TempRXData);
+             AddLoggedQSO(TempRXData, LoadedMyFacts);
              AddQSOToDupeSheets(TempRXData, TempRXData.ceClearDupeSheet);
              if not IntitialExLoaded then
                 begin
@@ -8728,6 +8737,12 @@ end;
   dupes (that needs the log walked in order, which is the rescore loop's
   business). *)
 procedure RecomputeQSOScoring(var aRX: ContestExchange);
+begin
+  RecomputeQSOScoring(aRX, NotCapturedMyFacts);
+end;
+
+procedure RecomputeQSOScoring(var aRX: ContestExchange;
+                              const aMyFacts: TQsoMyFacts);
 var
   (* ONE ActiveContest FOR THE PREFIX AND THE DX QTH -- M11 S4. It rebuilds
     the station on every call; this asked it through DoingPrefixMults and
@@ -8761,7 +8776,7 @@ begin
      end;
 
   Sheet.SetMultFlags(aRX);
-  CalculateQSOPoints(aRX);
+  CalculateQSOPoints(aRX, aMyFacts);
 end;
 
 procedure tUpdateLog(UpdAction: UpadateAction);
@@ -8805,6 +8820,9 @@ var
   Itemised: Boolean;
   ItemisedCount: integer;
   UnitemisedCount: integer;
+  (* The row's own station, and how many rows recorded none (stage 3). *)
+  RescoredMyFacts: TQsoMyFacts;
+  NotRecordedCount: integer;
 begin
 
   (* ROWS, NOT A MEMORY MAP -- step B5.
@@ -8848,6 +8866,7 @@ begin
   try
      ItemisedCount := 0;
      UnitemisedCount := 0;
+     NotRecordedCount := 0;
      (* Read by the summary line, which an empty log also reaches. *)
      QSOCounter := 0;
      LogSize := LogSourceRecordCount;
@@ -8863,7 +8882,8 @@ begin
         end;
      LogSourceRewind;
      1:
-     if not LogSourceNextWithRowId(RowId, RescoredRXData) then
+     (* AND THE ROW'S OWN STATION, which it is scored by (stage 3). *)
+     if not LogSourceNextWithRowId(RowId, RescoredRXData, RescoredMyFacts) then
         begin
         goto 4;
         end;
@@ -8930,7 +8950,14 @@ begin
                 A rescore recomputes SCORING; an id is not scoring. A QSO
                 without one is reported by the validity check
                 (uLogStore.LogStoreCheckExchangeIds) and left alone. *)
-              RecomputeQSOScoring(RescoredRXData);
+              (* BY ITS OWN RECORDED GRID -- log schema 3, stage 3 (D1). A row
+                that recorded none is scored by the session's, as it always
+                was, and counted for the line at the end of the pass. *)
+              if RescoredMyFacts.Source = mfsNotCaptured then
+                 begin
+                 Inc(NotRecordedCount);
+                 end;
+              RecomputeQSOScoring(RescoredRXData, RescoredMyFacts);
               if (not tAllowDupeQSOs) and (RescoredRXData.ceClearDupeSheet = False)
                 and VisibleLog.QSOIsADupe(RescoredRXData) then
                  begin
@@ -9030,6 +9057,15 @@ begin
               'transaction: %d itemised above, ' +
               '%d changed only in fields the per-record line does not itemise',
               [Pending.Count, QSOCounter, ItemisedCount, UnitemisedCount]);
+           (* RULING A'S LINE, ONCE PER PASS: these rows recorded no station of
+             their own (logged before log schema 3), so their distance and any
+             other rule that reads our grid used this session's. *)
+           if NotRecordedCount > 0 then
+              begin
+              logger.Info('[actRescore] %d of %d QSOs recorded no station of ' +
+                 'their own (logged before log schema 3) and were scored by this ' +
+                 'session''s grid', [NotRecordedCount, QSOCounter]);
+              end;
            end
         else
            begin
@@ -10193,6 +10229,17 @@ var
   (* THE RECORD'S OWN station and sent exchange, collected with it. *)
   recordMyFacts: TQsoMyFacts;
   recordSentExchange: AnsiString;
+  (* OUR STATION AND THE IMPORT (NY4I, 2026-10-18): this contest's values at
+    import time, what the records that name ours say, and the answer. *)
+  contestMyFacts: TQsoMyFacts;
+  namedCount, stampedCount: integer;
+  fieldsNamed: TMyFactFields;
+  differCount: array[TMyFactField] of integer;
+  differExample: array[TMyFactField] of AnsiString;
+  myField: TMyFactField;
+  myIndex: integer;
+  useFileMyFacts: boolean;
+  myFactsNote: string;
   FailedIndex: integer;
   Failure: string;
   failedRec: ContestExchange;
@@ -10219,6 +10266,55 @@ var
   procedure DisplayLoadedQSOs;
   begin
     SetTextInQuickCommandWindow(SysUtils.Format(AnsiString(LclText('%u ' + TC_QSO_IMPORTED)), [QSOCounter]));
+  end;
+
+  (* THE MY_ TAGS THE FILE NAMED, for the report: 'MY_GRIDSQUARE, MY_STATE'. *)
+  function ImportMyFactsTagList(const aFields: TMyFactFields): string;
+  var
+    f: TMyFactField;
+  begin
+    Result := '';
+    for f in aFields do
+      begin
+      if Result <> '' then
+        begin
+        Result := Result + ', ';
+        end;
+      Result := Result + MyFactFieldTag(f);
+      end;
+  end;
+
+  (* Does any record that names our station disagree with this contest? *)
+  function ImportMyFactsDiffer: boolean;
+  var
+    f: TMyFactField;
+  begin
+    Result := False;
+    for f := Low(TMyFactField) to High(TMyFactField) do
+      begin
+      if differCount[f] > 0 then
+        begin
+        Result := True;
+        end;
+      end;
+  end;
+
+  (* One line per tag that differs: the tag, how many QSOs, one of the file's
+    values and this contest's. *)
+  function ImportMyFactsDifferences: string;
+  var
+    f: TMyFactField;
+  begin
+    Result := '';
+    for f := Low(TMyFactField) to High(TMyFactField) do
+      begin
+      if differCount[f] > 0 then
+        begin
+        Result := Result + sLineBreak + '   ' + SysUtils.Format(SImportMyFactsDifference,
+           [MyFactFieldTag(f), differCount[f], string(differExample[f]),
+            string(MyFactFieldValue(contestMyFacts, f))]);
+        end;
+      end;
   end;
 
   (* THE SKIPPED LINES, as a clause both reports end with. Empty when none. *)
@@ -10332,6 +10428,20 @@ begin
     So it is opened if it is there, because an operator who still has one
     should keep whatever that buys, and its absence is a log line rather than
     a refusal. *)
+  (* THIS CONTEST'S STATION, AS A QSO LOGGED NOW WOULD RECORD IT -- what an
+    imported record that names none is given (NY4I, 2026-10-18). Taken once:
+    nothing in the import changes it. *)
+  contestMyFacts := LogStoreCurrentMyFacts;
+  namedCount := 0;
+  stampedCount := 0;
+  fieldsNamed := [];
+  for myField := Low(TMyFactField) to High(TMyFactField) do
+     begin
+     differCount[myField] := 0;
+     differExample[myField] := '';
+     end;
+  myFactsNote := '';
+
   binaryLogOpen := OpenLogFile;
   if binaryLogOpen then
      begin
@@ -10397,7 +10507,33 @@ begin
                 seenCallBandMode.Add(cbmKey + '=' + string(TempRXData.QTHString));
                 end;
 
-             CalculateQSOPoints(TempRXData);
+             (* OUR STATION FOR THIS RECORD (NY4I, 2026-10-18). One that names
+               none is given this contest's now, as a new QSO would be. One that
+               names some keeps them until the operator answers below, and is
+               counted for the report: which tags, and where they differ. *)
+             if recordMyFacts.Source = mfsNotCaptured then
+                begin
+                recordMyFacts := MyFactsForImport(recordMyFacts, contestMyFacts, False);
+                Inc(stampedCount);
+                end
+             else
+                begin
+                Inc(namedCount);
+                fieldsNamed := fieldsNamed + MyFactsFieldsPresent(recordMyFacts);
+                for myField in MyFactsFieldsDiffering(recordMyFacts, contestMyFacts) do
+                   begin
+                   if differCount[myField] = 0 then
+                      begin
+                      differExample[myField] := MyFactFieldValue(recordMyFacts, myField);
+                      end;
+                   Inc(differCount[myField]);
+                   end;
+                end;
+
+             (* BY THAT STATION (stage 3). RescoreLog, after the commit, scores
+               again by what was stored, so a row the answer below changes is
+               scored by its final station. *)
+             CalculateQSOPoints(TempRXData, recordMyFacts);
              (* COLLECTED, NOT WRITTEN. The write is one transaction, below,
                once the whole file has been read. Nothing in this loop reads
                the log, so holding the records back changes no record. *)
@@ -10415,6 +10551,70 @@ begin
     if binaryLogOpen then
        begin
        CloseLogFile;
+       end;
+
+    (* THE FILE NAMES OUR STATION: REPORT IT, AND ASK WHEN IT IS NOT THIS
+      CONTEST'S -- before anything is written (NY4I, 2026-10-18: "If the
+      import has its own my fields, we should report that and ask the user if
+      they should override the contest").
+
+        Yes  -> each such record keeps the file's values; a field it does not
+                name is unknown (MyFactsForImport)
+        No   -> each is given this contest's, every field, as a new QSO
+
+      ASKED ONLY WHEN SOMETHING DIFFERS: a file that agrees with the contest
+      gets the same answer either way, and is only reported. A HEADLESS
+      /IMPORT keeps the file's values -- nobody is there to ask, a script
+      that imports a file means its contents, and the round trip's MY_ case
+      depends on it -- and says so once in the log. *)
+    useFileMyFacts := True;
+    if namedCount > 0 then
+       begin
+       myFactsNote := ImportMyFactsTagList(fieldsNamed);
+       if ImportMyFactsDiffer then
+          begin
+          if tSilentExport then
+             begin
+             logger.Info('[Import] %d of %d record(s) name our station (%s) and ' +
+                'differ from this contest''s; a headless import keeps the ' +
+                'file''s values', [namedCount, QSOCounter, myFactsNote]);
+             end
+          else
+             begin
+             useFileMyFacts := YesOrNo(SysUtils.Format(SImportMyFactsQuestion,
+                [namedCount, QSOCounter, myFactsNote, ImportMyFactsDifferences])) = IDYES;
+             end;
+
+          if useFileMyFacts then
+             begin
+             myFactsNote := SysUtils.Format(SImportMyFactsKept, [namedCount]);
+             end
+          else
+             begin
+             for myIndex := 0 to Pending.Count - 1 do
+                begin
+                if Pending.MyFacts(myIndex).Source = mfsImported then
+                   begin
+                   Pending.SetMyFacts(myIndex,
+                      MyFactsForImport(Pending.MyFacts(myIndex), contestMyFacts, False));
+                   end;
+                end;
+             myFactsNote := SysUtils.Format(SImportMyFactsReplaced, [namedCount]);
+             end;
+          end
+       else
+          begin
+          myFactsNote := SysUtils.Format(SImportMyFactsSame, [namedCount, myFactsNote]);
+          end;
+       logger.Info('[Import] %s', [myFactsNote]);
+       end;
+    if stampedCount > 0 then
+       begin
+       if myFactsNote <> '' then
+          begin
+          myFactsNote := myFactsNote + ' ';
+          end;
+       myFactsNote := myFactsNote + SysUtils.Format(SImportMyFactsStamped, [stampedCount]);
        end;
 
     (* ONE TRANSACTION FOR THE WHOLE FILE -- ALL OR NOTHING (NY4I,
@@ -10477,6 +10677,12 @@ begin
   DisplayLoadedQSOs;
   aReport := string(IntToStr(QSOCounter)) + ' QSO(s) imported from ' +
              adifFileName + ' in one transaction.' + SkippedClause;
+  (* AND WHAT IT DID WITH OUR STATION -- reported every time a record named
+    it or was given the contest's (NY4I, 2026-10-18). *)
+  if myFactsNote <> '' then
+     begin
+     aReport := aReport + ' ' + myFactsNote;
+     end;
   logger.Info('[Import] %s', [aReport]);
   (* SKIPPED LINES ARE SAID TO THE OPERATOR TOO. They are not a failure --
     they never were -- but each one is something in the file that is not in

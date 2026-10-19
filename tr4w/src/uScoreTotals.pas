@@ -66,7 +66,8 @@ unit uScoreTotals;
 interface
 
 uses
-   VC, uContestBase;
+   VC, uContestBase,
+   uQsoMyFacts;   (* TQsoMyFacts -- a QSO's own station, kept in the view *)
 
 (* THE TOTALS AS THE PROGRAM HOLDS THEM NOW -- see TScoreTotals. aContest is
    the session's contest: whether it has a prefix or a DX multiplier is its
@@ -76,7 +77,11 @@ procedure GatherScoreTotals(aContest: TContestHandle; out aTotals: TScoreTotals)
 (* THE VIEW, KEPT WITH THE TOTALS -- see the header. Reset empties it; Add
    keeps aQso when QSOCountsTowardTotals accepts it. *)
 procedure ResetLoggedQSOs;
-procedure AddLoggedQSO(const aQso: ContestExchange);
+procedure AddLoggedQSO(const aQso: ContestExchange); overload;
+(* AND THE QSO'S OWN STATION -- what TLoggedQSOView.MyFacts answers for it,
+  so a whole-log rule reads where the QSO was worked (log schema 3). *)
+procedure AddLoggedQSO(const aQso: ContestExchange;
+                       const aMyFacts: TQsoMyFacts); overload;
 
 (* The view itself, as a contest receives it: read-only. *)
 function LoggedQSOView: TLoggedQSOView;
@@ -130,9 +135,15 @@ end;
 
 procedure AddLoggedQSO(const aQso: ContestExchange);
 begin
+   AddLoggedQSO(aQso, NotCapturedMyFacts);
+end;
+
+procedure AddLoggedQSO(const aQso: ContestExchange;
+                       const aMyFacts: TQsoMyFacts);
+begin
    if QSOCountsTowardTotals(aQso) then
       begin
-      LoggedQSOs.Add(aQso);
+      LoggedQSOs.Add(aQso, aMyFacts);
       end;
 end;
 

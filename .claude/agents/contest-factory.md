@@ -474,6 +474,26 @@ the target shape, the M-step migration order and the open questions.
   engine path calls), then the **protected** `CalculateQSOPoints`. Declare an
   override of it `protected`, never `public`. Tests call `ScoreQSO`. Design
   doc §7.7, §8.2d.
+- **A STORED QSO IS SCORED BY ITS OWN RECORDED GRID (log schema 3, stage 3,
+  2026-10-18; D1).** `ScoreQSO(aQso, aMyFacts)` lays the row's `my_grid` over
+  `Station.MyGrid` for that one call and restores it in a `finally`, so a
+  rule reads `Station.MyGrid` and never knows. The rescore, ADIF import and
+  Edit QSO pass the row's facts; live entry calls the one-argument form. **A
+  row that recorded none (`my_source` NULL) is scored by the session's, as
+  before.** A captured row with no grid gets `''`, never the session's.
+  - **Only the grid is overlaid.** `Station.MyState` is the SENT state, not
+    `my_state`; country and call would go unknown for every imported row that
+    names no MY_DXCC or STATION_CALLSIGN. Each wants its own ruling.
+  - **Never call `ActiveContest` inside a rule**: it runs `SetStation` and
+    would wipe the overlay (the engine already avoids it, see
+    `EngineIsNewMultiplierAnywhere`).
+  - **A delegating contest passes `ScoringMyFacts` on** (IN/7QP/NE does).
+  - **`TLoggedQSOView.MyFacts(i)`** is each QSO's own station, for a whole-log
+    rule (the Nebraska rare-grid bonus). It is filled at log load and live
+    entry. `NotCapturedMyFacts` means "use the session's".
+  - **With no grid, StewPerry and WWL score 1 and Tesla scores 10** (a distance
+    of 0 falls in its 0..600 km band), not Q116's 0. Unchanged here; Q116's
+    build settles it.
 - **A QSO PARTY'S HOST-AREA RULE IS TYPED AND SCORED (Q107, NY4I
   2026-10-16).** An out-of-area entrant's QSO whose received QTH the session's
   domestic table does not know is refused when typed AND, logged any other way

@@ -310,7 +310,12 @@ Detail, rulings A to E, and measurements: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12h
   passes no `--settings`).** In a fresh worktree that file is the program's
   defaults, and the check reports 0 identical and 13 differing for that reason
   alone. Measured 2026-10-18: with the station's file copied in, 13 identical.
-- **Stage 2 (ADIF): an import is `imported`, and an absent tag is UNKNOWN.**
+- **THE IMPORT RULE (NY4I, 2026-10-18; it REPLACED stage 2's "absent tag =
+  unknown"): a record naming no MY_ tag is STAMPED with this contest's values
+  at import time** (`LogStoreCurrentMyFacts`, `my_source = 'stamped'`). A
+  file that names some is reported, and the operator is asked when any differ:
+  Yes keeps the file's (a tag it lacks is unknown), No stamps. Headless
+  `/IMPORT` keeps the file's. The rule is `uQsoMyFacts.MyFactsForImport`.
   `uADIF.MyFactsFromADIF` reads the MY_* tags and STATION_CALLSIGN;
   `SentExchangeFromADIF` makes `exchange_sent` from STX_STRING, else NULL. The
   live sent-exchange callback is deleted (D3), and **a `TLogQsoAppends` row
@@ -322,6 +327,10 @@ Detail, rulings A to E, and measurements: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12h
   does not move. **The contest matrix DOES**: its rows are captured live, so
   every export gained the matrix station's MY_ tags. That is a re-freeze for
   NY4I, not a regression; strip the added tags and all 187 are identical.
+- **Stage 3: a stored QSO is scored by its recorded grid.** The rescore reads
+  each row's facts (`LogSourceNextWithRowId(rowId, qso, facts)`) and hands
+  them to `RecomputeQSOScoring`; `LoadinLog` and live entry fill
+  `TLoggedQSOView.MyFacts`. Detail: §12h.
 - **The lints scan nothing in a `.claude\worktrees\` checkout** (by design,
   `Get-ScanExclusions.ps1`), and twenty of them then FAIL as "no files
   scanned". Lint a copy of the change from a checkout outside that path.

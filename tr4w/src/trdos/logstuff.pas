@@ -28,7 +28,11 @@ unit LogStuff;
 {$IMPORTEDDATA OFF}
 interface
 
-uses {Dos, Printer,}Tree,
+uses {Dos, Printer,}
+  (* TQsoMyFacts -- a logged QSO's own station, CalculateQSOPoints below
+    (log schema 3). FIRST, so every unit after it wins any shared name. *)
+  uQsoMyFacts,
+  Tree,
   uConfigValues,   // Settings.Cw.SpeedIncrement
   utils_text,
   uCallSignRoutines,
@@ -563,7 +567,13 @@ var
 procedure BandChange(var ActiveBand: BandType; Direction: DirectionType;
                      Radio: RadioPtr = nil);
 
-procedure CalculateQSOPoints(var RXData: ContestExchange);
+procedure CalculateQSOPoints(var RXData: ContestExchange); overload;
+(* A LOGGED QSO, SCORED BY ITS OWN RECORDED STATION -- log schema 3, stage 3:
+  the rescore, the ADIF import and Edit QSO hand in the row's my_* facts, and
+  the contest's ScoreQSO scores by its grid. The one-argument form is live
+  entry, the QSO being logged now. *)
+procedure CalculateQSOPoints(var RXData: ContestExchange;
+                             const aMyFacts: TQsoMyFacts); overload;
 //procedure ChapterReceivedStamp(Exchange: ContestExchange; var LogString: Str80);
 //procedure ChapterReceivedHeader(var LogString: Str80; var Underline: Str80);
 
@@ -6110,6 +6120,12 @@ end;
 
 procedure CalculateQSOPoints(var RXData: ContestExchange);
 begin
+   CalculateQSOPoints(RXData, NotCapturedMyFacts);
+end;
+
+procedure CalculateQSOPoints(var RXData: ContestExchange;
+                             const aMyFacts: TQsoMyFacts);
+begin
    RXData.QSOPoints := 0;
 
    (* A CONTEST WITH A CLASS IS SCORED BY ITS ScoreQSO, AND NOTHING HERE RUNS
@@ -6122,7 +6138,7 @@ begin
       rather than a convention every caller has to repeat. *)
    if ActiveContest(Contest) <> nil then
       begin
-      ActiveContest(Contest).ScoreQSO(RXData);
+      ActiveContest(Contest).ScoreQSO(RXData, aMyFacts);
       Exit;
       end;
 

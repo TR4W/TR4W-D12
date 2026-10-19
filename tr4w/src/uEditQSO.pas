@@ -149,6 +149,23 @@ var
     save compares the form against, so an untouched set is not rewritten. *)
   EditableMyFacts: TQsoMyFacts;
 
+(* OUR STATION AS THE SAVE WILL LEAVE IT: the form's values over the recorded
+  ones -- marked edited when the operator changed any, and otherwise exactly
+  what was recorded, its source included. ONE answer for the two places that
+  need it: the points the save computes, and what the save writes. *)
+function MyFactsAsSaved: TQsoMyFacts;
+begin
+  Result := EditQSOReadMyFacts(EditableMyFacts);
+  if MyFactsValuesDiffer(Result, EditableMyFacts) then
+     begin
+     Result.Source := mfsEdited;
+     end
+  else
+     begin
+     Result := EditableMyFacts;
+     end;
+end;
+
 // Fills the form from the log record under the edit cursor.
 //
 // Answers FALSE for every record this dialog refuses to edit -- a note, a
@@ -504,7 +521,9 @@ begin
      end;
 
   //   Sheet.SetMultFlags(EditableQSORXData);
-  CalculateQSOPoints(EditableQSORXData);
+  (* BY THE STATION THIS QSO WILL HAVE ONCE SAVED (log schema 3, stage 3) --
+    its recorded one, or the operator's correction of it in this dialog. *)
+  CalculateQSOPoints(EditableQSORXData, MyFactsAsSaved);
 
   {Band}
   if SO2R_Swap then
@@ -805,10 +824,9 @@ begin
     edited, with the QSO, in one transaction. Left alone, the row keeps
     exactly what it had, its source included: an edit changes only what was
     edited (Q13). *)
-  editedMyFacts := EditQSOReadMyFacts(EditableMyFacts);
-  if MyFactsValuesDiffer(editedMyFacts, EditableMyFacts) then
+  editedMyFacts := MyFactsAsSaved;
+  if editedMyFacts.Source = mfsEdited then
      begin
-     editedMyFacts.Source := mfsEdited;
      LogStoreUpdateQSOAtIndex(IndexInMap, EditableQSORXData, editedMyFacts);
      end
   else

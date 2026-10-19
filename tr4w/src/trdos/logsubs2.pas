@@ -1664,7 +1664,8 @@ begin
      (* AND TO THE VIEW THE FINAL SCORE'S BONUSES READ (M6), as the log's
         loader does -- see uScoreTotals. It keeps only what
         QSOCountsTowardTotals accepts, which is the loader's test. *)
-     AddLoggedQSO(RXData);
+     (* WITH THE STATION THE STORE JUST RECORDED FOR IT (log schema 3). *)
+     AddLoggedQSO(RXData, LogStoreLastAppendedMyFacts);
      AddQSOToDupeSheets(RXData, False);
      CallsignsList.AddIniitialExchange(RXData.Callsign, GetInitialExchangeStringFromContestExchange(RXData));
      SendStationStatus(sstQSOs);

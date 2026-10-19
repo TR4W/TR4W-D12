@@ -2326,8 +2326,7 @@ with `my_source` NULL on every row, and the tracked fixtures stay at 2,
 byte-unchanged. **No D7 reference changes.** Corpus 21/0/5, factory 13
 identical, matrix 187 identical, ADIF 11/0/2, rescore unchanged.
 
-**Not yet (stages 3 to 5):** the per-QSO overlay in scoring (stage 3, where
-Nebraska's bonus reads the record); exports reading the record for the SENT
+**Not yet (stages 4 and 5):** exports reading the record for the SENT
 exchange (stage 4 -- STX_STRING and the Cabrillo sent column are still built
 from the session); explicit network provenance (stage 5, only if the
 computer-id rule proves too weak).
@@ -2376,6 +2375,81 @@ a migration that adds nothing.
 - **Still open, deliberately (NY4I declined the question for now):** editing
   our call does not re-derive country or zones; editing a never-captured row
   makes every untouched field unknown. Stage 1's behaviour, unchanged.
+
+#### Stage 3 (2026-10-18): a stored QSO is scored by its own recorded grid (D1)
+
+- **`TContestBase.ScoreQSO(aQso, aMyFacts)`** lays the row's `my_grid` over
+  `Station.MyGrid` for the one call, restored in a `finally`. All thirteen
+  distance rules read `Station.MyGrid` only inside their own
+  `CalculateQSOPoints` (measured), so none of them changed: ARRL Digi, Cup of
+  the RF CW/SSB/DIG, European VHF, Makrothen, OZHCR VHF, Radio VHF FD, RTC,
+  Stew Perry, Tesla, WW Digi, WWL.
+- **Who passes facts:** the rescore (`tUpdateLog`, through
+  `LogSourceNextWithRowId(..., facts)` and
+  `RecomputeQSOScoring(..., facts)`), the ADIF import (the record's own), Edit
+  QSO (the station as the save will leave it, `MyFactsAsSaved`), and IN/7QP/NE's
+  delegation (`ScoringMyFacts`). **Live entry and the contest matrix use the
+  one-argument form: the session's station, unchanged.**
+- **Ruling A:** a row with `my_source` NULL is scored by the session's grid,
+  as before, and the rescore says so once per pass. A captured row's `''` is
+  laid over the session's: no grid.
+- **Only the grid is overlaid.** `Station.MyState` is the state the session
+  SENDS, not `my_state`; overlaying country or call would make every imported
+  QSO that names no MY_DXCC or STATION_CALLSIGN score as an unknown country.
+  Each is its own decision.
+- **`TLoggedQSOView.MyFacts(i)`** gives a whole-log rule (Idaho's bonus, the
+  Nebraska rare-grid bonus) each QSO's own station. It is filled at log load
+  (`LoadinLog`) and at live entry (`LogStoreLastAppendedMyFacts`). A view with
+  none answers `NotCapturedMyFacts`.
+- **Q116 is not what every rule does yet:** with no grid of ours, Stew Perry and
+  WWL score 1 and Tesla 10 (distance 0 lands in its 0..600 km band). The rest
+  score 0. Left for Q116's build.
+- **THE IMPORT RULE -- NY4I, 2026-10-18, replacing stage 2's "an absent tag
+  is unknown" for an import:** *"So the use case is I start a contest, then
+  import. Therefore you apply the set my fields as if it were a new QSO. If the
+  import has its own my fields, we should report that and ask the user if they
+  should override the contest."*
+  1. **A record naming no MY_ tag** is given this contest's values at import
+     time -- `uLogStore.LogStoreCurrentMyFacts`, exactly what a QSO logged now
+     records -- with **`my_source = 'stamped'`**, a value of its own so a
+     stamped row is always told from one whose file named it (`imported`).
+     `STATION_CALLSIGN` alone is not a MY_ tag (it is written whenever someone
+     else operated).
+  2. **A file whose records name some** is REPORTED before the import commits:
+     the tags, how many records, and one line per tag that differs from the
+     contest's. The operator is ASKED only when one differs (`YesOrNo`, the
+     import's own prompt): **Yes** keeps the file's values, **No** stamps the
+     contest's. The answer and the stamp count end the import's report.
+  3. **Headless `/IMPORT` keeps the file's values** and logs that once -- nobody
+     to ask, and the round trip's MY_ case expects it.
+  4. **Some MY_ tags but no grid:** under Yes the grid is UNKNOWN (the file's
+     values as named, `MyFactsForImport`); under No every field is stamped.
+- **MEASURED THROUGH THE PROGRAM** (ARRL Digi's D7 reference, headless
+  `/IMPORT`, `/RESCORE`, `/EXPORT`; the contest's `.cfg` states MY GRID EL88):
+
+  | input | stage 2 | stage 3, first cut | stage 3 + the rule |
+  |---|---:|---:|---:|
+  | records naming no MY_ tag | 231 (session grid) | 0 (unknown) | **231** (stamped EL88) |
+  | records naming `MY_GRIDSQUARE` JO65 | 231 (session grid) | 522 | **522** (file kept) |
+
+- **A D7 `.TRW` is not affected either way:** `uLogImport.ImportBinaryLog`
+  sets no station, so its rows are never captured and fall back (ruling A),
+  which is why the corpus scored unchanged.
+- **Stamping exposes a data defect it does not fix:** Florida QP's stamped
+  `MY_STATE` is `PIN` -- the county, because that contest's MY STATE holds a
+  county, the field reuse NY4I ruled against (STATE is the primary
+  subdivision, COUNTY the secondary).
+- **Oracles:** corpus 21/0/5, rescore unchanged, factory 13 identical, matrix
+  187 identical -- none imports. **The ADIF round trip went 1/13 failed** (every
+  D7 reference's records now come back carrying the contest's MY_ tags), and
+  that is the rule working. So `test-adif-roundtrip.sh` sets the MY_ tags aside
+  only where the reference has none, by the rule it already applies to
+  APP_TR4W_ID -- **and fails a record that comes back WITHOUT the contest's
+  station** (MY_DXCC on every record). With that, 12/0/2; the MY_ case is
+  compared tag for tag. Mutation-tested: an import that stamps nothing fails
+  13 sets, and a headless import that takes the contest's values fails the
+  MY_ case.
+- **The question itself is GUI-only:** `docs/BENCH_QUEUE.md`.
 
 ---
 
