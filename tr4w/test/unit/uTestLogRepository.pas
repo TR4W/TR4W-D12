@@ -2395,7 +2395,7 @@ begin
                MakeDistinctQSO(qso, i);
                appends.Add(qso);
                end;
-            repo.AppendBatch(appends, nil, failedAt);
+            repo.AppendBatch(appends, failedAt);
          finally
             appends.Free;
          end;
@@ -2535,7 +2535,7 @@ begin
                raised := False;
                reason := '';
                try
-                  repo.AppendBatch(appends, nil, failedAt);
+                  repo.AppendBatch(appends, failedAt);
                except
                   on e: Exception do
                      begin
@@ -2626,10 +2626,12 @@ begin
 
          appends := TLogQsoAppends.Create;
          try
-            appends.Add(a);
-            appends.Add(b);
-            appends.Add(c);
-            repo.AppendBatch(appends, SentExchangeForTest, failedAt);
+            (* THE SENT EXCHANGE IS THE ROW'S OWN, handed in with it (stage 2:
+              the callback that rebuilt it from the live station is gone). *)
+            appends.Add(a, NotCapturedMyFacts, SentExchangeForTest(a));
+            appends.Add(b, NotCapturedMyFacts, SentExchangeForTest(b));
+            appends.Add(c, NotCapturedMyFacts, SentExchangeForTest(c));
+            repo.AppendBatch(appends, failedAt);
          finally
             appends.Free;
          end;

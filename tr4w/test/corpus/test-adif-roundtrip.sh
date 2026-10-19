@@ -160,23 +160,25 @@ strip_tags() {
 . "$CORPUS/known-pin-lib.sh"
 
 pass=0; fail=0; skip=0; known=0
-for d in "$CORPUS"/*/; do
-   name=$(basename "$d")
-   [ -n "$ONLY" ] && [ "$ONLY" != "$name" ] && continue
-   [ -f "$d/ref.adi" ] || continue
-   [ -f "$d/log.cfg" ] || continue
+
+# ONE ROUND TRIP: a fresh contest from $d's .CFG, $3 imported into it, the
+# log exported, and the records compared with $3. $1 is the label printed;
+# $2 the set's directory (its .CFG, its pin); $3 the ADIF file to import.
+roundtrip_one() {
+   local name="$1" d="$2" input="$3"
+   local rc out drop note pin n
 
    # A FRESH CONTEST WITH NO BINARY LOG -- which is what a converted contest is,
    # and what made the import refuse before /IMPORT stopped requiring one.
    rm -f "$WORK".*; corpus_remove_new_logs
-   cp "$d/log.cfg" "$WORK.CFG" || continue
+   cp "$d/log.cfg" "$WORK.CFG" || return
 
-   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /IMPORT "$(cygpath -d "$d/ref.adi")" \
+   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /IMPORT "$(cygpath -d "$input")" \
       --settings "$SETTINGS_WIN" >/dev/null 2>&1
    rc=$?
    if [ "$rc" -ne 0 ]; then
       printf "  FAIL  %-28s import exited %s\n" "$name" "$rc"
-      fail=$((fail+1)); continue
+      fail=$((fail+1)); return
    fi
 
    MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT \
@@ -184,13 +186,13 @@ for d in "$CORPUS"/*/; do
    rc=$?
    if [ "$rc" -ne 0 ]; then
       printf "  FAIL  %-28s export exited %s\n" "$name" "$rc"
-      fail=$((fail+1)); continue
+      fail=$((fail+1)); return
    fi
 
    out=$(ls "$WORK".ADI "$WORK".adi 2>/dev/null | head -1)
    if [ -z "$out" ]; then
       printf "  FAIL  %-28s the export wrote no ADIF\n" "$name"
-      fail=$((fail+1)); continue
+      fail=$((fail+1)); return
    fi
 
    drop=$(ignored_tags_for "$name")
@@ -200,12 +202,12 @@ for d in "$CORPUS"/*/; do
    fi
 
    # A minted identity is only ignored where the reference has none to compare.
-   if ! grep -qi '<app_tr4w_id:' "$d/ref.adi"; then
+   if ! grep -qi '<app_tr4w_id:' "$input"; then
       drop="$drop APP_TR4W_ID"
    fi
 
    records_only "$out"       | strip_tags "$drop" > "$WORK.cand.txt"
-   records_only "$d/ref.adi" | strip_tags "$drop" > "$WORK.ref.txt"
+   records_only "$input" | strip_tags "$drop" > "$WORK.ref.txt"
 
    pin="$d/known.adi.diff"
    # The normaliser this set's view went through, for the pinned lines.
@@ -235,9 +237,52 @@ for d in "$CORPUS"/*/; do
       diff "$WORK.cand.txt" "$WORK.ref.txt" | head -6 | sed 's/^/          /'
       fail=$((fail+1))
    fi
+}
+
+for d in "$CORPUS"/*/; do
+   name=$(basename "$d")
+   [ -n "$ONLY" ] && [ "$ONLY" != "$name" ] && continue
+   [ -f "$d/ref.adi" ] || continue
+   [ -f "$d/log.cfg" ] || continue
+   roundtrip_one "$name" "$d" "$d/ref.adi"
 done
 
-rm -f "$WORK".* "$EXE"; corpus_remove_new_logs
+# ---------------------------------------------------------------------------
+# OUR STATION SURVIVES THE TRIP -- log schema 3, stage 2 (2026-10-18).
+#
+# No D7 reference carries a MY_ tag, so the sets above prove only that a
+# record WITHOUT them comes back without them. This case is one set's
+# reference with every MY_ tag the import reads put before each <EOR>, in the
+# order the export writes them -- the export puts a QSO's own station after
+# the contest's fields -- so a record that came back the same in every tag is
+# one whose station the import stored and the export wrote from the row.
+#
+# NA Sprint because its records carry no MY_ tag of the contest's own (POTA
+# writes its park, MY_STATE and MY_DXCC itself, and those win), and because
+# it is two records. STATION_CALLSIGN is left out: the export writes it only
+# when someone else operated, which is the operator's rule, not this test's.
+# ---------------------------------------------------------------------------
+MY_SET="na_sprint_cw_2026_ny4i"
+MY_TAGS='<MY_GRIDSQUARE:6>EN01AB <MY_STATE:2>NE <MY_CNTY:3>LAN <MY_ARRL_SECT:2>NE <MY_IOTA:6>NA-001 <MY_CQ_ZONE:1>4 <MY_ITU_ZONE:1>7 <MY_DXCC:3>291 <MY_SIG:4>POTA <MY_SIG_INFO:7>US-1234 <MY_POTA_REF:7>US-1234 '
+if [ -z "$ONLY" ] || [ "$ONLY" = "$MY_SET" ]; then
+   if [ -f "$CORPUS/$MY_SET/ref.adi" ]; then
+      awk -v tags="$MY_TAGS" '
+         seen { gsub(/<[Ee][Oo][Rr]>/, tags "<EOR>") }
+         { print }
+         /<[Ee][Oo][Hh]>/ { seen = 1 }' "$CORPUS/$MY_SET/ref.adi" > "$WORK-my.adi"
+      if [ "$(grep -c '<MY_POTA_REF:' "$WORK-my.adi")" -eq 0 ]; then
+         printf "  FAIL  %-28s the MY_ input was not built\n" "MY_ tags ($MY_SET)"
+         fail=$((fail+1))
+      else
+         roundtrip_one "MY_ tags ($MY_SET)" "$CORPUS/$MY_SET/" "$TARGET/$WORK-my.adi"
+      fi
+   else
+      printf "  FAIL  %-28s no ref.adi to build the MY_ case from\n" "$MY_SET"
+      fail=$((fail+1))
+   fi
+fi
+
+rm -f "$WORK".* "$WORK-my.adi" "$EXE"; corpus_remove_new_logs
 
 echo
 echo "=== $pass passed, $fail failed, $known known-divergence, $skip skipped ==="

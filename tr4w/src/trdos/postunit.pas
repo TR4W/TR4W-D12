@@ -429,6 +429,9 @@ const
 implementation
 
 uses
+  (* TQsoMyFacts -- each logged QSO's own station (log schema 3). FIRST, so
+    every unit below still wins any name it might share. *)
+  uQsoMyFacts,
   uEmbeddedTranslations,   // ActiveUILanguage -- see CabrilloLanguageTag
   uSettingsModel,          // Settings.My -- the station's own facts
   uCabrilloHeader,   // the Cabrillo header, from settings\tr4w.json not tr4w.ini
@@ -2490,8 +2493,11 @@ function MyExchangeForExport(aContest: TContestBase): string;
 // MyPark, mo.DomList, the active contest's zone list, etc.) or are gated on contest-specific
 // reinterpretation of QTHString.  Called once per record.
 // ---------------------------------------------------------------------------
-function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
+function EmitContestSpecificTailForExport( const rec: ContestExchange;
+   const aMyFacts: TQsoMyFacts ): string;
   var
+    (* What the contest is handed for its own MY fields (POTA's park). *)
+    myStation: TMyStationExchange;
     stxString: string;
     cntyIdx: integer;
     stateCode: string;
@@ -2542,8 +2548,18 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
   // whose base is that SRX_STRING alone. POTA writes its activation before it
   // and a hunter's state or grid after it; those were two `ceContest = POTA`
   // tests here until POTA gained its class (design Q6).
+  //
+  // OUR PARK FROM THE RECORD when the row recorded one (log schema 3, stage
+  // 2): POTA writes its MY_SIG_INFO, MY_POTA_REF, MY_DXCC and MY_STATE from
+  // this park, and a logged QSO says where IT was activated. A row that never
+  // recorded its station keeps the session's park (ruling A).
+  myStation := CurrentMyStationExchange( contestRules );
+  if aMyFacts.Source <> mfsNotCaptured then
+     begin
+     myStation.MyPark := string( aMyFacts.Park );
+     end;
   Result := Result + ContestIdentity( rec.ceContest ).EmitADIFExchangeFields(
-     CurrentMyStationExchange( contestRules ), rec, ExchangeInformation.RST );
+     myStation, rec, ExchangeInformation.RST );
 
   // ----- CNTY (state QP with FAltName loaded from <state>_cty.dom) -----
   // The party says whose county the QTH is (ADIFCountyState -- '' for a
@@ -2641,7 +2657,11 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
      end;
 
   // ----- STATION_CALLSIGN (when operator differs from Settings.My.Call) -----
-  if ( rec.ceOperator <> '' ) and ( string( rec.ceOperator ) <> string( Settings.My.Call ) )
+  // ONLY FOR A ROW THAT NEVER RECORDED ITS STATION -- the session fallback
+  // NY4I ruled for (A). A row that did gets it from its own my_call, by the
+  // same rule, in uADIF.EmitADIFMyStationFields (log schema 3, stage 2).
+  if ( aMyFacts.Source = mfsNotCaptured ) and
+     ( rec.ceOperator <> '' ) and ( string( rec.ceOperator ) <> string( Settings.My.Call ) )
   then
      begin
      Result := Result + EmitADIFField( 'STATION_CALLSIGN', string( Settings.My.Call ) );
@@ -2651,6 +2671,10 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
 procedure ExportToADIF;
   var
     records: TContestExchangeArray;
+    (* records[i]'s own station, and how many never recorded one. *)
+    myFacts: TQsoMyFactsArray;
+    rowFacts: TQsoMyFacts;
+    notRecorded: integer;
     dtReportTime: TDateTime;
     adifStr: string;
     extName: AnsiString;
@@ -2687,18 +2711,39 @@ procedure ExportToADIF;
 
   // Read all "good" QSOs from the log into an in-memory array.
   SetLength( records, 0 );
+  SetLength( myFacts, 0 );
+  notRecorded := 0;
   LogSourceRewind;
   (* INTO TempRXData, not into a local: GoodLookingQSO reads that global. The
      same coupling the binary loop had, made visible rather than removed --
      removing it belongs to B4, and doing it here would put a second change
-     inside the one comparison this step exists to make. *)
-  while LogSourceNext( TempRXData ) do
+     inside the one comparison this step exists to make.
+
+     AND EACH ROW'S OWN STATION BESIDE IT (log schema 3, stage 2), in step, for
+     the MY_* tags. *)
+  while LogSourceNext( TempRXData, rowFacts ) do
      begin
      if GoodLookingQSO then
         begin
         SetLength( records, length( records ) + 1 );
         records[ High( records ) ] := TempRXData;
+        SetLength( myFacts, length( myFacts ) + 1 );
+        myFacts[ High( myFacts ) ] := rowFacts;
+        if rowFacts.Source = mfsNotCaptured then
+           begin
+           Inc( notRecorded );
+           end;
         end;
+     end;
+
+  (* RULING A'S LOG LINE, ONCE PER EXPORT: a row written before schema 3
+    recorded no station, so what is written about ours comes from this
+    session. *)
+  if notRecorded > 0 then
+     begin
+     logger.Info( 'ADIF export: %d QSO(s) recorded no station of their own ' +
+        '(logged before log schema 3); their station call and park are this ' +
+        'session''s, and no other MY_ field is written for them', [ notRecorded ] );
      end;
 
   // Build the whole ADIF document (header + records + tail extras) and
@@ -2709,7 +2754,7 @@ procedure ExportToADIF;
   (* The active contest carries the station, which a contest's field list can
     depend on (ARRL DX: does the entrant count the DX multiplier). uADIF asks
     it only for QSOs of its own contest, and nil for a classless one. *)
-  adifStr := uADIF.ExportADIFToString( records, string( TR4W_CURRENTVERSION ),
+  adifStr := uADIF.ExportADIFToString( records, myFacts, string( TR4W_CURRENTVERSION ),
      @EmitContestSpecificTailForExport, ActiveContest( Contest ) );
   sWriteFileFromString( tReportFileWrite, adifStr );
 

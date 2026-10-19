@@ -514,6 +514,24 @@ type
          as it goes by. *)
       N1MM_Exchange1: string;
 
+      (* OUR STATION, AS THE RECORD STATES IT -- log schema 3, stage 2. Not
+         the contest's to interpret: uADIF.MyFactsFromADIF turns these into
+         the row's my_* columns. Captured here because this is where a tag
+         the record carries beyond ContestExchange is kept. STATION_CALLSIGN
+         is MyCall; MY_POTA_REF, or MY_SIG_INFO under MY_SIG POTA, the park. *)
+      MyCall: string;
+      MyGridSquare: string;
+      MyState: string;
+      MyCounty: string;
+      MyARRLSect: string;
+      MySig: string;
+      MySigInfo: string;
+      MyPOTARef: string;
+      MyIOTA: string;
+      MyDXCC: string;
+      MyCQZone: string;
+      MyITUZone: string;
+
       FromWSJTX: boolean;
    end;
 

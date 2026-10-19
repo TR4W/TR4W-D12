@@ -28,6 +28,9 @@ unit MainUnit;
 interface
 
 uses
+  (* TQsoMyFacts -- an imported record's own station, ParseADIFRecord (log
+    schema 3). FIRST, so every unit below still wins any name it shares. *)
+  uQsoMyFacts,
   uMainWindowProc, // TTR4WEntryField -- CreateCallOrExchangeWin names the field
   Graphics,        // TFont -- ApplyMainFontTo, for controls the LCL draws
   uConfigValues,   // Settings.Cw.SpeedIncrement
@@ -351,7 +354,16 @@ procedure RunOptionsDialog(f: CFGFunc);
 // fixed rather than cast at the call site.  See CLAUDE.md on type honesty:
 // the program passes strings, and conversions belong at the real boundary.
 procedure OpenUrl(const url: string);
-function ParseADIFRecord(sADIF: string; var exch: ContestExchange): boolean;
+(* aMyFacts and aSentExchange are the RECORD'S OWN station and sent exchange
+  (log schema 3, stage 2) -- its MY_* tags and STX_STRING, and never today's
+  settings: uADIF.MyFactsFromADIF / SentExchangeFromADIF. *)
+function ParseADIFRecord(sADIF: string; var exch: ContestExchange;
+                         out aMyFacts: TQsoMyFacts;
+                         out aSentExchange: AnsiString): boolean; overload;
+(* WITHOUT THEM -- WSJT-X's logged QSO, which is a QSO logged HERE, NOW, and so
+  has its station captured live by the store (uLogStore.CaptureMyFactsNow),
+  not read from the message. *)
+function ParseADIFRecord(sADIF: string; var exch: ContestExchange): boolean; overload;
 // GetContestByADIFName moved to uADIF.pas (Issue #887).
 procedure SetExtendedModeFromMode(RData: ContestExchange);
 function GetTR4WBandFromNetworkBand(band: TRadioBand): BandType;
@@ -10093,7 +10105,9 @@ end;
 
 // GetADIFMode, GetADIFSubMode, GetADIFBand moved to uADIF.pas (Issue #887).
 
-function ParseADIFRecord(sADIF: string; var exch: ContestExchange): boolean;
+function ParseADIFRecord(sADIF: string; var exch: ContestExchange;
+                         out aMyFacts: TQsoMyFacts;
+                         out aSentExchange: AnsiString): boolean;
 var
   fields  : TADIFFieldList;
   temps   : TADIFRecordTemps;
@@ -10107,6 +10121,11 @@ begin
   // managed to parse -- same forgiving behaviour as the legacy
   // implementation, which logged at error but kept the partial exch.
   ApplyADIFFieldsToExchange(fields, exch, temps);
+
+  (* THE RECORD'S OWN STATION AND SENT EXCHANGE, read from the tags it
+    carries -- never this station's, and never rebuilt (stage 2, D3). *)
+  aMyFacts := MyFactsFromADIF(temps);
+  aSentExchange := SentExchangeFromADIF(temps);
 
   (* WHAT THE OPEN CONTEST KNOWS, handed in as data: the contest that reads the
     record is the one it NAMES, and never reads a global itself. *)
@@ -10136,6 +10155,14 @@ begin
 end; // of ParseADIFRecord
 (*----------------------------------------------------------------------------*)
 
+function ParseADIFRecord(sADIF: string; var exch: ContestExchange): boolean;
+var
+  ignoredFacts: TQsoMyFacts;
+  ignoredSent: AnsiString;
+begin
+  Result := ParseADIFRecord(sADIF, exch, ignoredFacts, ignoredSent);
+end;
+
 function ImportFromADIF(const aFileName: string = ''): boolean;
 var
   report: string;
@@ -10163,6 +10190,9 @@ var
   (* THE RECORDS, collected rather than written as they are read -- section 9c,
     the ADIF ruling. Written in one transaction once the file is read. *)
   Pending: TLogQsoAppends;
+  (* THE RECORD'S OWN station and sent exchange, collected with it. *)
+  recordMyFacts: TQsoMyFacts;
+  recordSentExchange: AnsiString;
   FailedIndex: integer;
   Failure: string;
   failedRec: ContestExchange;
@@ -10334,7 +10364,8 @@ begin
        else
           begin
           ClearContestExchange(TempRXData);
-          if ParseADIFRecord(sBuffer, TempRXData) then // processed a record if true
+          if ParseADIFRecord(sBuffer, TempRXData, recordMyFacts,
+                             recordSentExchange) then // processed a record if true
              begin
              // State-QP rover (KG1S/MON): strip suffix for country lookup so
              // the /M tail isn't misread as a GB prefix indicator.  Without
@@ -10370,7 +10401,7 @@ begin
              (* COLLECTED, NOT WRITTEN. The write is one transaction, below,
                once the whole file has been read. Nothing in this loop reads
                the log, so holding the records back changes no record. *)
-             Pending.Add(TempRXData);
+             Pending.Add(TempRXData, recordMyFacts, recordSentExchange);
              inc(QSOCounter);
              end
           else if Trim(sBuffer) <> '' then

@@ -51,7 +51,11 @@ uses
    (* TADIFRecordTemps and TADIFImportSession, the two records the generic
       importer hands to a contest -- see below. *)
    uContestBase,
-   utils_text;
+   utils_text,
+   (* TQsoMyFacts -- our station for one QSO, the row's my_* columns (log
+      schema 3): what an import reads from the MY_* tags and an export
+      writes back. A leaf; it declares nothing the units above do. *)
+   uQsoMyFacts;
 
 type
    TADIFField = record
@@ -95,7 +99,12 @@ type
       tAdifAPP_TR4W_CLAIMEDQSO, tAdifAPP_N1MM_CLAIMEDQSO,
       tAdifAPP_DXLOG_XQSO,
       // The WAG DOK, written by that contest's exporter (M5a).
-      tAdifDOK);
+      tAdifDOK,
+      // OUR STATION, AS THE RECORD STATES IT -- log schema 3, stage 2. Into
+      // the row's my_* columns (MyFactsFromADIF), never today's settings.
+      tAdifMY_GRIDSQUARE, tAdifMY_STATE, tAdifMY_CNTY, tAdifMY_ARRL_SECT,
+      tAdifMY_SIG, tAdifMY_SIG_INFO, tAdifMY_POTA_REF, tAdifMY_IOTA,
+      tAdifMY_DXCC, tAdifMY_CQ_ZONE, tAdifMY_ITU_ZONE);
 
 // =========================================================================
 // Lexer
@@ -228,6 +237,42 @@ procedure InterpretADIFRecord(const temps: TADIFRecordTemps;
   with no domestic multipliers and no grid exchange sees. *)
 function NeutralADIFImportSession: TADIFImportSession;
 
+(* OUR STATION AS THE RECORD STATES IT -- log schema 3, stage 2.
+
+  The row's my_* columns for an imported record: Source is mfsImported, and
+  each value is the record's own tag. A TAG THE RECORD DOES NOT CARRY IS
+  UNKNOWN -- empty, or a zone of 0 -- and is NEVER filled from today's
+  settings (NY4I, ruling A): an import is not a QSO logged here.
+
+    STATION_CALLSIGN            my_call
+    MY_GRIDSQUARE               my_grid
+    MY_STATE / MY_CNTY          my_state / my_county
+    MY_ARRL_SECT                my_section
+    MY_POTA_REF, else MY_SIG_INFO when MY_SIG is POTA      my_park
+    MY_IOTA                     my_iota
+    MY_DXCC                     my_country -- CTYEntityOfADIFDXCC, so only
+                                a code ONE plain CTY entity carries
+    MY_CQ_ZONE / MY_ITU_ZONE    my_cq_zone / my_itu_zone
+
+  MY_COUNTRY (an entity NAME) is not read: nothing here maps a name to a CTY
+  entity, and a guessed country is worse than an unknown one. my_continent is
+  never in ADIF and stays unknown. *)
+function MyFactsFromADIF(const temps: TADIFRecordTemps): TQsoMyFacts;
+
+(* WHAT THE RECORD SAYS WE SENT -- its STX_STRING, verbatim, for the row's
+  exchange_sent; '' when it has none. NEVER rebuilt from today's settings
+  (stage 2, the D3 fix): that is what an import used to do, which stamped
+  every imported QSO with the exchange the operator happens to send now. *)
+function SentExchangeFromADIF(const temps: TADIFRecordTemps): AnsiString;
+
+(* THE CTY ENTITY (its primary prefix, as cty.dat spells it) that ADIF DXCC
+  code aDXCC names -- or '' when no entity, or more than one, carries it.
+  The table maps prefix to code and several prefixes share a code ('*GM/s',
+  Shetland, is credited to 279 with 'GM'); a starred prefix is a CTY-only
+  region, so it is not counted, and a code still shared by two plain prefixes
+  answers '' rather than guessing between them. *)
+function CTYEntityOfADIFDXCC(aDXCC: integer): AnsiString;
+
 (* TRUE WHEN aText IS ONE OR MORE ASCII LETTERS AND NOTHING ELSE -- false for
   empty text, a digit, a space or a hyphen. It is what a contest asks of an
   SRX_STRING to tell a domestic QTH from a serial number ('CT' against '123'),
@@ -267,7 +312,15 @@ type
    // (GRIDSQUARE / IOTA / ARRL_SECT / POTA MY_SIG / CLASS / STATION_CALLSIGN /
    // STX_STRING built from MainUnit globals / CQZ/ITUZ / CNTY from mo.DomList).
    // Tests pass nil to skip the tail entirely.
-   TContestTailEmitter = function(const rec: ContestExchange): string;
+   //
+   // aMyFacts is the record's OWN station (log schema 3): a tail that writes
+   // something about our station writes it from there when the row captured
+   // one, and from the session only for a row that never did (ruling A).
+   TContestTailEmitter = function(const rec: ContestExchange;
+                                  const aMyFacts: TQsoMyFacts): string;
+
+   (* One TQsoMyFacts per record, in the records' order. *)
+   TQsoMyFactsArray = array of TQsoMyFacts;
 
 // Build one ADIF field as `<NAME:LEN>VALUE ` (trailing space for tag
 // separation).  Empty value returns ''.
@@ -317,7 +370,38 @@ function EmitADIFRecord(const rec: ContestExchange;
 function ExportADIFToString(const records: TContestExchangeArray;
                             const programVersion: string;
                             tailEmitter: TContestTailEmitter;
-                            aContest: TContestBase = nil): string;
+                            aContest: TContestBase = nil): string; overload;
+
+// THE SAME, WITH EACH RECORD'S OWN STATION -- aMyFacts[i] is records[i]'s,
+// and is what EmitADIFMyStationFields writes after the tail. Shorter than
+// records, or nil, means the records past its end were never captured.
+function ExportADIFToString(const records: TContestExchangeArray;
+                            const aMyFacts: TQsoMyFactsArray;
+                            const programVersion: string;
+                            tailEmitter: TContestTailEmitter;
+                            aContest: TContestBase = nil): string; overload;
+
+(* OUR STATION'S TAGS FOR ONE RECORD, FROM THE RECORD -- log schema 3, stage 2.
+
+  '' FOR A ROW NEVER CAPTURED (my_source NULL). Such a row is written exactly
+  as it was before schema 3: whatever the tail writes for it from the session
+  (STATION_CALLSIGN, POTA's park) is the fallback NY4I ruled for (A), and
+  nothing is added -- which is why no corpus fixture's export changes.
+
+  For a captured row, in this order, each only when the row holds a value:
+  STATION_CALLSIGN (only when the record's OPERATOR is not that call -- the
+  rule the export has always applied, now asked of the record), MY_GRIDSQUARE,
+  MY_STATE, MY_CNTY, MY_ARRL_SECT, MY_IOTA, MY_CQ_ZONE, MY_ITU_ZONE, MY_DXCC
+  (from my_country, when the table knows its code), and the park as MY_SIG
+  POTA, MY_SIG_INFO and MY_POTA_REF. POTA writes those three itself, from the
+  record's park, so for a POTA QSO they are skipped by the rule below.
+
+  A TAG ALREADY IN aAlreadyWritten IS SKIPPED. The contest's own fields come
+  first and win -- POTA writes MY_STATE and MY_DXCC from its park list -- and
+  one record must not carry a tag twice. *)
+function EmitADIFMyStationFields(const rec: ContestExchange;
+                                 const aFacts: TQsoMyFacts;
+                                 const aAlreadyWritten: string): string;
 
 // Format an integer with at least minLen digits (zero-padded) -- the
 // width of ADIF's SRX, STX, TEN_TEN, AGE and CHECK as TR4W writes them.
@@ -956,13 +1040,25 @@ begin
    temps.DOK        := '';
    temps.IOTA       := '';
    temps.N1MM_Exchange1 := '';
+   temps.MyCall       := '';
+   temps.MyGridSquare := '';
+   temps.MyState      := '';
+   temps.MyCounty     := '';
+   temps.MyARRLSect   := '';
+   temps.MySig        := '';
+   temps.MySigInfo    := '';
+   temps.MyPOTARef    := '';
+   temps.MyIOTA       := '';
+   temps.MyDXCC       := '';
+   temps.MyCQZone     := '';
+   temps.MyITUZone    := '';
    temps.FromWSJTX  := False;
 end;
 
 const
    // Order MUST match the TADIF_Fields enum declaration.  Adding a field
    // requires updating BOTH this array AND the enum.
-   ADIF_FIELD_NAMES : array[0..48] of string = (
+   ADIF_FIELD_NAMES : array[0..59] of string = (
       // ADIF spec field name is `CQZ` (no underscore).  The original
       // import lookup had `CQ_Z` which never matched real-world ADIF
       // exports -- the tAdifCQ_Z handler was effectively dead until
@@ -981,7 +1077,11 @@ const
       'APP_TR4W_ROVERCALL',
       // X-QSO marker fields (Issue #750) -- order must match the enum
       'APP_TR4W_CLAIMEDQSO', 'APP_N1MM_CLAIMEDQSO', 'APP_DXLOG_XQSO',
-      'DOK');
+      'DOK',
+      // Our station (schema 3) -- order must match the enum
+      'MY_GRIDSQUARE', 'MY_STATE', 'MY_CNTY', 'MY_ARRL_SECT',
+      'MY_SIG', 'MY_SIG_INFO', 'MY_POTA_REF', 'MY_IOTA',
+      'MY_DXCC', 'MY_CQ_ZONE', 'MY_ITU_ZONE');
 
 // Index of aName in ADIF_FIELD_NAMES, or -1.  Case-insensitive, ASCII-only.
 //
@@ -1125,6 +1225,30 @@ begin
             tAdifDOK:
                temps.DOK := fieldValue;
 
+            (* OUR STATION, AS THE RECORD STATES IT -- MyFactsFromADIF. *)
+            tAdifMY_GRIDSQUARE:
+               temps.MyGridSquare := fieldValue;
+            tAdifMY_STATE:
+               temps.MyState := fieldValue;
+            tAdifMY_CNTY:
+               temps.MyCounty := fieldValue;
+            tAdifMY_ARRL_SECT:
+               temps.MyARRLSect := fieldValue;
+            tAdifMY_SIG:
+               temps.MySig := fieldValue;
+            tAdifMY_SIG_INFO:
+               temps.MySigInfo := fieldValue;
+            tAdifMY_POTA_REF:
+               temps.MyPOTARef := fieldValue;
+            tAdifMY_IOTA:
+               temps.MyIOTA := fieldValue;
+            tAdifMY_DXCC:
+               temps.MyDXCC := fieldValue;
+            tAdifMY_CQ_ZONE:
+               temps.MyCQZone := fieldValue;
+            tAdifMY_ITU_ZONE:
+               temps.MyITUZone := fieldValue;
+
             tAdifFREQ:
                begin
                saveDecimalSeparator := FormatSettings.DecimalSeparator;
@@ -1225,8 +1349,10 @@ begin
             tAdifAPP_TR4W_HQ, tAdifAPP_N1MM_HQ:
                temps.APP_HQ := fieldValue;
 
+            (* OUR CALL AS SIGNED -- the row's my_call (schema 3). It was
+              ignored on import until stage 2. *)
             tAdifSTATION_CALLSIGN:
-               ; // ignored on import
+               temps.MyCall := fieldValue;
 
             tAdifQTH:
                exch.QTHString := fieldValue;
@@ -1963,22 +2089,212 @@ begin
       end;
 end;
 
+// ---------------------------------------------------------------------------
+// Our station, in and out -- log schema 3, stage 2
+// ---------------------------------------------------------------------------
+
+function CTYEntityOfADIFDXCC(aDXCC: integer): AnsiString;
+var
+   i: integer;
+   prefix: string;
+   found: integer;
+begin
+   Result := '';
+   if aDXCC <= 0 then
+      begin
+      Exit;
+      end;
+
+   found := 0;
+   for i := 0 to DXCCEntityCount - 1 do
+      begin
+      prefix := DXCCEntityPrefixAt(i);
+      if (prefix <> '') and (prefix[1] <> '*') and
+         (ADIFDXCCOfCTYEntity(prefix) = aDXCC) then
+         begin
+         Inc(found);
+         (* The prefix is cty.dat's ASCII; the encode states the conversion. *)
+         Result := UTF8Encode(prefix);
+         end;
+      end;
+
+   (* NONE, OR AMBIGUOUS: unknown, never a guess between two entities. *)
+   if found <> 1 then
+      begin
+      Result := '';
+      end;
+end;
+
+(* A TAG'S TEXT AS THE FACTS HOLD IT: encoded once, exactly, and trimmed.
+  The facts are AnsiString and the record's text is UTF-16 here; the RTL's
+  Trim, UpperCase and StrToIntDef bind to their AnsiString forms, so every
+  step after the encode is conversion-free. *)
+function TagText(const aValue: string): AnsiString;
+begin
+   Result := Trim(UTF8Encode(aValue));
+end;
+
+(* The same, upper-cased -- BEFORE the encode, where UpperCase binds to its
+  UnicodeString form; after it, it would widen and narrow again. *)
+function TagUpper(const aValue: string): AnsiString;
+begin
+   Result := Trim(UTF8Encode(UpperCase(aValue)));
+end;
+
+(* A zone tag: a positive number, else unknown -- 0. *)
+function TagZone(const aValue: string): integer;
+begin
+   Result := StrToIntDef(TagText(aValue), 0);
+   if Result < 0 then
+      begin
+      Result := 0;
+      end;
+end;
+
+function MyFactsFromADIF(const temps: TADIFRecordTemps): TQsoMyFacts;
+begin
+   Result := NotCapturedMyFacts;
+   Result.Source := mfsImported;
+
+   Result.Call := TagUpper(temps.MyCall);
+   Result.Grid := TagText(temps.MyGridSquare);
+   Result.State := TagUpper(temps.MyState);
+   Result.County := TagUpper(temps.MyCounty);
+   Result.Section := TagUpper(temps.MyARRLSect);
+   Result.Iota := TagUpper(temps.MyIOTA);
+
+   (* MY_POTA_REF IS THE PARK; MY_SIG_INFO is one only under MY_SIG POTA --
+     under another programme (SOTA, WWFF) it names something else, and is
+     not ours to store as a park. *)
+   Result.Park := TagUpper(temps.MyPOTARef);
+   if (Length(Result.Park) = 0) and SameText(TagText(temps.MySig), 'POTA') then
+      begin
+      Result.Park := TagUpper(temps.MySigInfo);
+      end;
+
+   Result.Country := CTYEntityOfADIFDXCC(TagZone(temps.MyDXCC));
+   Result.CQZone := TagZone(temps.MyCQZone);
+   Result.ITUZone := TagZone(temps.MyITUZone);
+end;
+
+function SentExchangeFromADIF(const temps: TADIFRecordTemps): AnsiString;
+begin
+   Result := TagText(temps.STX_String);
+end;
+
+(* Does aText already carry the tag aName? Case-insensitive, matched on the
+  '<NAME:' that opens it, so MY_STATE is not found inside STATE. *)
+function ADIFTextHasTag(const aText, aName: string): boolean;
+begin
+   Result := Pos('<' + UpperCase(aName) + ':', UpperCase(aText)) > 0;
+end;
+
+function EmitADIFMyStationFields(const rec: ContestExchange;
+                                 const aFacts: TQsoMyFacts;
+                                 const aAlreadyWritten: string): string;
+
+   procedure Add(const aName, aValue: string);
+   begin
+      if (aValue <> '') and (not ADIFTextHasTag(aAlreadyWritten, aName)) and
+         (not ADIFTextHasTag(Result, aName)) then
+         begin
+         Result := Result + EmitADIFField(aName, aValue);
+         end;
+   end;
+
+   function ZoneValue(aZone: integer): string;
+   begin
+      Result := '';
+      if aZone > 0 then
+         begin
+         Result := string(IntToStr(aZone));
+         end;
+   end;
+
+var
+   dxcc: integer;
+   operatorCall: AnsiString;
+begin
+   Result := '';
+   if aFacts.Source = mfsNotCaptured then
+      begin
+      Exit;
+      end;
+
+   (* THE RULE THE EXPORT HAS ALWAYS APPLIED, asked of the record: the station
+     call is written only when somebody other than the station operated it.
+     The operator field's own bytes (CharBufferBytes), so the comparison is
+     AnsiString against AnsiString. *)
+   operatorCall := Trim(CharBufferBytes(rec.ceOperator));
+   if (Length(operatorCall) > 0) and (Length(aFacts.Call) > 0) and
+      (not SameText(operatorCall, aFacts.Call)) then
+      begin
+      Add('STATION_CALLSIGN', string(aFacts.Call));
+      end;
+
+   Add('MY_GRIDSQUARE', string(aFacts.Grid));
+   Add('MY_STATE', string(aFacts.State));
+   Add('MY_CNTY', string(aFacts.County));
+   Add('MY_ARRL_SECT', string(aFacts.Section));
+   Add('MY_IOTA', string(aFacts.Iota));
+   Add('MY_CQ_ZONE', ZoneValue(aFacts.CQZone));
+   Add('MY_ITU_ZONE', ZoneValue(aFacts.ITUZone));
+
+   dxcc := 0;
+   if Length(aFacts.Country) > 0 then
+      begin
+      dxcc := ADIFDXCCOfCTYEntity(string(aFacts.Country));
+      end;
+   Add('MY_DXCC', ZoneValue(dxcc));
+
+   (* OUR PARK, LAST. POTA writes these three itself from the record's park,
+     before this, so for a POTA QSO all three are skipped; any other contest's
+     QSO that recorded a park carries it here, as the import read it. *)
+   if Length(aFacts.Park) > 0 then
+      begin
+      Add('MY_SIG', 'POTA');
+      Add('MY_SIG_INFO', string(aFacts.Park));
+      Add('MY_POTA_REF', string(aFacts.Park));
+      end;
+end;
+
 function ExportADIFToString(const records: TContestExchangeArray;
+                            const programVersion: string;
+                            tailEmitter: TContestTailEmitter;
+                            aContest: TContestBase): string;
+begin
+   Result := ExportADIFToString(records, nil, programVersion, tailEmitter,
+                                aContest);
+end;
+
+function ExportADIFToString(const records: TContestExchangeArray;
+                            const aMyFacts: TQsoMyFactsArray;
                             const programVersion: string;
                             tailEmitter: TContestTailEmitter;
                             aContest: TContestBase): string;
 var
    i : Integer;
+   facts: TQsoMyFacts;
+   body: string;
 begin
    Result := EmitADIFHeader(programVersion);
    for i := 0 to High(records) do
       begin
-      Result := Result + EmitADIFRecord(records[i], aContest);
+      facts := NotCapturedMyFacts;
+      if i <= High(aMyFacts) then
+         begin
+         facts := aMyFacts[i];
+         end;
+
+      body := EmitADIFRecord(records[i], aContest);
       if Assigned(tailEmitter) then
          begin
-         Result := Result + tailEmitter(records[i]);
+         body := body + tailEmitter(records[i], facts);
          end;
-      Result := Result + '<EOR>'#13#10;
+      (* AFTER THE TAIL, so the contest's own fields win any tag both would
+        write, and a never-captured row's line is byte for byte what it was. *)
+      body := body + EmitADIFMyStationFields(records[i], facts, body);
+      Result := Result + body + '<EOR>'#13#10;
       end;
 end;
 

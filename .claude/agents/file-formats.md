@@ -288,6 +288,16 @@ multipliers, CTY.DAT, band lookup and CRC32.
   table** -- PostUnit's and Tree's layered copies were merged into it at M4.
 - **CTY.DAT reloads.** A reload wrote past the end of the country table
   (`b56e1ef9`); the table is sized, and a reload is not a fresh start.
+- **OUR STATION'S ADIF TAGS ARE THE RECORD'S, not the session's (log schema 3,
+  stage 2, 2026-10-18).** Import reads STATION_CALLSIGN and the MY_* tags into
+  the row's my_* columns (`uADIF.MyFactsFromADIF`); an absent tag is unknown,
+  never today's value. STX_STRING is the row's `exchange_sent`
+  (`SentExchangeFromADIF`), never rebuilt from the live station. Export writes
+  them AFTER the contest's tail (`EmitADIFMyStationFields`), and **a tag the
+  contest already wrote wins** (POTA's park, MY_STATE, MY_DXCC). A row written
+  before schema 3 writes exactly what it always did. `TContestTailEmitter` now
+  takes the row's `TQsoMyFacts`. Detail: `docs/SQLITE_LOG_SCHEMA_PLAN.md`
+  §12h. `test-adif-roundtrip.sh` has a MY_ case.
 
 ## Coordinate with
 

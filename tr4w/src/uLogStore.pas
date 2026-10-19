@@ -128,9 +128,11 @@ type
 
   The ADIF import's write. NY4I, 2026-10-14: the import is all or nothing --
   one record that will not go in, and nothing goes in. Each QSO is written as
-  LogStoreAppendQSO writes one (its sent exchange captured from the live
-  station, the contest stamped from the record, county-line grouping), all in
-  TLogRepository.AppendBatch's one transaction.
+  LogStoreAppendQSO writes one (the contest stamped from the record,
+  county-line grouping), all in TLogRepository.AppendBatch's one transaction
+  -- EXCEPT what it sent and where our station was, which are the row's own
+  as the batch was given them, never captured from the live station (log
+  schema 3, stage 2: the D3 fix).
 
   True when every QSO was written and the transaction committed (also for an
   empty list). On failure the batch is ROLLED BACK and the log holds exactly
@@ -1705,13 +1707,10 @@ begin
    end;
 end;
 
-(* LogStoreAppendQSO's own capture of what was sent, in the shape
-  TLogRepository.AppendBatch takes. *)
-function SentExchangeOfQSO(const aQso: ContestExchange): AnsiString;
-begin
-   Result := AnsiString(BuildSentExchangeText(aQso));
-end;
-
+(* ~~SentExchangeOfQSO~~ stood here: LogStoreAppendQSO's LIVE capture of what
+  was sent, handed to AppendBatch -- so every QSO an ADIF import wrote claimed
+  the exchange this station sends TODAY (D3). Deleted in stage 2 (2026-10-18):
+  each row carries what its file says it sent (TLogQsoAppends.Add). *)
 function LogStoreAppendQSOs(aQsos: TLogQsoAppends; out aFailedIndex: integer;
                             out aFailure: string): boolean;
 var
@@ -1743,7 +1742,7 @@ begin
          Exit;
          end;
 
-      GRepository.AppendBatch(aQsos, SentExchangeOfQSO, aFailedIndex);
+      GRepository.AppendBatch(aQsos, aFailedIndex);
       Result := True;
    except
       on E: Exception do

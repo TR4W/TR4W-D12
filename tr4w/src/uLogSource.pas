@@ -62,7 +62,8 @@ unit uLogSource;
 interface
 
 uses
-   VC;
+   VC,
+   uQsoMyFacts;   (* TQsoMyFacts -- a row's own station, LogSourceNext below *)
 
 (* WHETHER A READ CAN BE MADE RIGHT NOW.
 
@@ -90,7 +91,12 @@ procedure LogSourceRewind;
 (* Reads the next QSO.  False at the end.  Fills aQso with zeroes when it
   returns False, so a caller that ignores the result reads a blank rather than
   the previous record again. *)
-function LogSourceNext(out aQso: ContestExchange): boolean;
+function LogSourceNext(out aQso: ContestExchange): boolean; overload;
+
+(* LogSourceNext, and the row's OWN STATION -- its my_* columns (log schema 3);
+  NotCapturedMyFacts for a row written before. *)
+function LogSourceNext(out aQso: ContestExchange;
+                       out aFacts: TQsoMyFacts): boolean; overload;
 
 (* LogSourceNext, and the ROW ID of what it read -- the handle
   uLogStore.LogStoreUpdateQSOsByRowId writes by. For a pass that reads the
@@ -279,6 +285,13 @@ end;
 function LogSourceNext(out aQso: ContestExchange): boolean;
 begin
    Result := (Repo <> nil) and Repo.ReadNext(aQso);
+end;
+
+function LogSourceNext(out aQso: ContestExchange;
+                       out aFacts: TQsoMyFacts): boolean;
+begin
+   aFacts := NotCapturedMyFacts;
+   Result := (Repo <> nil) and Repo.ReadNext(aQso, aFacts);
 end;
 
 function LogSourceNextWithRowId(out aRowId: Int64;

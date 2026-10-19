@@ -29,6 +29,11 @@ type
    TLogMyFactsTests = class(TTestCase)
    private
       FDir: string;
+      (* StartStore's scratch log, and what it put aside. *)
+      FTrw: string;
+      FDb: string;
+      FSavedLogName: string;
+      FSavedSilent: boolean;
       function TempLogName(const aLeaf: string): string;
       procedure Scrub(const aFileName: string);
       procedure MakeQSO(out aQso: ContestExchange; aSeed: integer);
@@ -39,6 +44,12 @@ type
         aFirstDropped on, and stamps user_version 2. *)
       procedure DowngradeToSchema2(const aFileName: string; aFirstDropped: integer);
       procedure CheckFactsEqual(const aExpected, aActual: TQsoMyFacts; const aWhat: string);
+      (* One ADIF record through the import's own readers. *)
+      procedure ParseOneRecord(const aADIF: string; out aQso: ContestExchange;
+                               out aFacts: TQsoMyFacts; out aSent: AnsiString);
+      (* The store pointed at a scratch copy of a D7 fixture, and back. *)
+      procedure StartStore(const aLeaf: string);
+      procedure StopStore;
    protected
       (* the leaf *)
       procedure TestEverySourceTokenRoundTrips;
@@ -57,9 +68,21 @@ type
       procedure TestTheEditorWriteChangesThem;
       procedure TestARescoreAndANetworkUpdateKeepThem;
       procedure TestAnAppendBatchCarriesEachRowsOwn;
+      (* the ADIF import and export -- stage 2 *)
+      procedure TestTheImportReadsEveryMYTag;
+      procedure TestAnAbsentTagIsUnknownNotTodaysValue;
+      procedure TestSigInfoIsAParkOnlyUnderPOTA;
+      procedure TestADXCCCodeMapsToOnePlainEntity;
+      procedure TestTheSentExchangeIsTheRecordsSTXString;
+      procedure TestANeverCapturedRowWritesNoMYTags;
+      procedure TestACapturedRowWritesItsTagsInOrder;
+      procedure TestATagTheContestWroteIsNotWrittenTwice;
+      procedure TestTheStationCallFollowsTheOperatorRule;
+      procedure TestTheMYTagsSurviveARoundTrip;
       (* the store *)
       procedure TestTheStoreCapturesOurStationAtTheMomentOfTheQSO;
       procedure TestTheEditorReadsAndWritesThroughTheStore;
+      procedure TestAnImportBatchNeverTakesTheLiveStation;
    public
       procedure RunAllTests; override;
    end;
@@ -67,6 +90,9 @@ type
 implementation
 
 uses
+   (* The ADIF readers and writer -- FIRST, so the units below still win
+     any name it shares with them. *)
+   uADIF,
    SysUtils, sqldb, utils_text, uSettingsModel,
    uLogDatabase, uLogSchema, uLogRepository, uLogStore;
 
@@ -733,7 +759,7 @@ begin
             appends.Add(qso, facts);
             MakeQSO(qso, 2);
             appends.Add(qso);
-            repo.AppendBatch(appends, nil, failedAt);
+            repo.AppendBatch(appends, failedAt);
          finally
             appends.Free;
          end;
@@ -754,35 +780,243 @@ begin
    Scrub(fn);
 end;
 
-(* ------------------------------------------------------------- the store *)
+(* --------------------------------------------------------------- the ADIF *)
 
-(* THE STORE, AS A QSO IS LOGGED -- driven exactly as uTestLogStore drives it:
-  a D7 fixture copied to a scratch .trw is the log, so the first append
-  migrates it. That gives all three kinds of row in one file: 101 migrated
-  rows (never captured -- a binary log records none of this), one QSO this
-  station logged, and one that arrived from a multi-op peer. *)
-procedure TLogMyFactsTests.TestTheStoreCapturesOurStationAtTheMomentOfTheQSO;
+(* One ADIF record through the import's own steps: the lexer, the generic
+  field mapping, and the two stage-2 readers. *)
+procedure TLogMyFactsTests.ParseOneRecord(const aADIF: string;
+                                          out aQso: ContestExchange;
+                                          out aFacts: TQsoMyFacts;
+                                          out aSent: AnsiString);
 var
-   trw, db, savedLogName, savedGrid, savedOverride: string;
-   savedSilent, savedStated: boolean;
-   source, target: TFileStream;
+   fields: TADIFFieldList;
+   temps: TADIFRecordTemps;
+begin
+   InitContestExchangeForParse(aQso);
+   ParseADIFFieldsList(aADIF, fields);
+   ApplyADIFFieldsToExchange(fields, aQso, temps);
+   aFacts := MyFactsFromADIF(temps);
+   aSent := SentExchangeFromADIF(temps);
+end;
+
+const
+   (* EVERY MY_* TAG THE IMPORT READS, each a different value. *)
+   ADIF_WITH_MY_TAGS =
+      '<CALL:4>W1AW <BAND:3>20m <MODE:2>CW <QSO_DATE:8>20261001 ' +
+      '<TIME_ON:4>1200 <OPERATOR:5>K9OPS <STATION_CALLSIGN:6>NY4I/R ' +
+      '<MY_GRIDSQUARE:6>EN01ab <MY_STATE:2>ne <MY_CNTY:3>LAN ' +
+      '<MY_ARRL_SECT:2>NE <MY_IOTA:6>NA-001 <MY_CQ_ZONE:1>4 ' +
+      '<MY_ITU_ZONE:1>7 <MY_DXCC:3>291 <MY_POTA_REF:7>US-1234 ' +
+      '<STX_STRING:6>599 NE <EOR>';
+
+   (* NOTHING OF OURS -- the shape of every D7 reference in the corpus. *)
+   ADIF_WITHOUT_MY_TAGS =
+      '<CALL:4>W1AW <BAND:3>20m <MODE:2>CW <QSO_DATE:8>20261001 ' +
+      '<TIME_ON:4>1200 <EOR>';
+
+procedure TLogMyFactsTests.TestTheImportReadsEveryMYTag;
+var
    qso: ContestExchange;
    facts: TQsoMyFacts;
-   logDb: TLogDatabase;
-   repo: TLogRepository;
-   ourGrid: AnsiString;
+   sent: AnsiString;
 begin
-   BeginTest('the store records our station as it was when each QSO was logged');
+   BeginTest('an ADIF import reads every MY_ tag into the row''s station, as imported');
+   ParseOneRecord(ADIF_WITH_MY_TAGS, qso, facts, sent);
+   CheckEquals(Ord(mfsImported), Ord(facts.Source), 'the source is the file');
+   CheckEquals('NY4I/R', string(facts.Call), 'STATION_CALLSIGN is our call as signed');
+   CheckEquals('EN01ab', string(facts.Grid), 'MY_GRIDSQUARE, as written');
+   CheckEquals('NE', string(facts.State), 'MY_STATE');
+   CheckEquals('LAN', string(facts.County), 'MY_CNTY');
+   CheckEquals('NE', string(facts.Section), 'MY_ARRL_SECT');
+   CheckEquals('NA-001', string(facts.Iota), 'MY_IOTA');
+   CheckEquals(4, facts.CQZone, 'MY_CQ_ZONE');
+   CheckEquals(7, facts.ITUZone, 'MY_ITU_ZONE');
+   CheckEquals('K', string(facts.Country), 'MY_DXCC 291 is the CTY entity K');
+   CheckEquals('US-1234', string(facts.Park), 'MY_POTA_REF is the park');
+   CheckEquals('', string(facts.Continent), 'ADIF carries no continent of ours');
+   CheckEquals('K9OPS', string(qso.ceOperator), 'and OPERATOR is still the operator');
+end;
 
+(* RULING A: AN ABSENT TAG IS UNKNOWN, AND TODAY'S SETTINGS ARE NOT CONSULTED.
+  The station's grid is set while the record is read, to prove it. *)
+procedure TLogMyFactsTests.TestAnAbsentTagIsUnknownNotTodaysValue;
+var
+   qso: ContestExchange;
+   facts: TQsoMyFacts;
+   sent: AnsiString;
+   savedGrid: string;
+begin
+   BeginTest('a record with no MY_ tags imports an unknown station, never today''s');
+   savedGrid := Settings.My.Grid;
+   Settings.My.Grid := 'FN31PR';
+   try
+      ParseOneRecord(ADIF_WITHOUT_MY_TAGS, qso, facts, sent);
+   finally
+      Settings.My.Grid := savedGrid;
+   end;
+   CheckEquals(Ord(mfsImported), Ord(facts.Source),
+               'captured -- from the file -- so a reader does NOT fall back');
+   CheckFalse(MyFactsValuesDiffer(facts, NotCapturedMyFacts),
+              'and every value is unknown: nothing was borrowed from settings');
+   CheckEquals('', string(sent), 'and it sent nothing the file says');
+end;
+
+procedure TLogMyFactsTests.TestSigInfoIsAParkOnlyUnderPOTA;
+var
+   qso: ContestExchange;
+   facts: TQsoMyFacts;
+   sent: AnsiString;
+begin
+   BeginTest('MY_SIG_INFO is our park only under MY_SIG POTA');
+   ParseOneRecord('<CALL:4>W1AW <MY_SIG:4>POTA <MY_SIG_INFO:7>US-0002 <EOR>',
+                  qso, facts, sent);
+   CheckEquals('US-0002', string(facts.Park), 'under POTA it is the park');
+   ParseOneRecord('<CALL:4>W1AW <MY_SIG:4>SOTA <MY_SIG_INFO:9>W4G/NG-001 <EOR>',
+                  qso, facts, sent);
+   CheckEquals('', string(facts.Park), 'a SOTA summit is not a park');
+   ParseOneRecord('<CALL:4>W1AW <MY_SIG:4>POTA <MY_SIG_INFO:7>US-0002 ' +
+                  '<MY_POTA_REF:7>US-1234 <EOR>', qso, facts, sent);
+   CheckEquals('US-1234', string(facts.Park), 'and MY_POTA_REF wins when both are there');
+end;
+
+procedure TLogMyFactsTests.TestADXCCCodeMapsToOnePlainEntity;
+begin
+   BeginTest('a MY_DXCC code maps to the one plain CTY entity that carries it');
+   CheckEquals('K', string(CTYEntityOfADIFDXCC(291)), '291 is K');
+   CheckEquals('VE', string(CTYEntityOfADIFDXCC(1)), '1 is VE');
+   (* '*GM/s' (Shetland) is credited to 279 with 'GM'; a starred prefix is a
+     CTY-only region, not an entity of its own. *)
+   CheckEquals('GM', string(CTYEntityOfADIFDXCC(279)), '279 is GM, not *GM/s');
+   CheckEquals('', string(CTYEntityOfADIFDXCC(0)), '0 is no entity');
+   CheckEquals('', string(CTYEntityOfADIFDXCC(9999)), 'an unknown code is unknown');
+end;
+
+(* THE D3 FIX AT THE READER: the sent exchange is the record's STX_STRING. *)
+procedure TLogMyFactsTests.TestTheSentExchangeIsTheRecordsSTXString;
+var
+   qso: ContestExchange;
+   facts: TQsoMyFacts;
+   sent: AnsiString;
+begin
+   BeginTest('an imported QSO sent what its STX_STRING says, and nothing else');
+   ParseOneRecord(ADIF_WITH_MY_TAGS, qso, facts, sent);
+   CheckEquals('599 NE', string(sent), 'STX_STRING, verbatim');
+end;
+
+procedure TLogMyFactsTests.TestANeverCapturedRowWritesNoMYTags;
+var
+   qso: ContestExchange;
+begin
+   BeginTest('a row that never recorded its station writes no MY_ tag of its own');
+   MakeQSO(qso, 1);
+   qso.ceOperator := 'K9OPS';
+   CheckEquals('', EmitADIFMyStationFields(qso, NotCapturedMyFacts, ''),
+               'nothing -- so a pre-schema-3 log exports exactly as it did');
+end;
+
+procedure TLogMyFactsTests.TestACapturedRowWritesItsTagsInOrder;
+var
+   qso: ContestExchange;
+begin
+   BeginTest('a captured row writes its own MY_ tags, in a fixed order');
+   MakeQSO(qso, 1);
+   qso.ceOperator := 'K9OPS';
+   CheckEquals('<STATION_CALLSIGN:6>NY4I/R <MY_GRIDSQUARE:6>EN01AB ' +
+               '<MY_STATE:2>NE <MY_CNTY:3>LAN <MY_ARRL_SECT:2>NE ' +
+               '<MY_IOTA:6>NA-001 <MY_CQ_ZONE:1>4 <MY_ITU_ZONE:1>7 ' +
+               '<MY_DXCC:3>291 <MY_SIG:4>POTA <MY_SIG_INFO:7>US-1234 ' +
+               '<MY_POTA_REF:7>US-1234 ',
+               EmitADIFMyStationFields(qso, SampleFacts, ''),
+               'every value the row holds, the park last');
+end;
+
+procedure TLogMyFactsTests.TestATagTheContestWroteIsNotWrittenTwice;
+var
+   qso: ContestExchange;
+   tags: string;
+begin
+   BeginTest('a MY_ tag the contest already wrote is not written again');
+   MakeQSO(qso, 1);
+   (* POTA writes its park, and MY_STATE and MY_DXCC from its park list. *)
+   tags := EmitADIFMyStationFields(qso, SampleFacts,
+                                   '<MY_SIG:4>POTA <MY_SIG_INFO:7>US-1234 ' +
+                                   '<MY_POTA_REF:7>US-1234 <MY_STATE:2>ME <MY_DXCC:3>291 ');
+   CheckEquals(0, Pos('<MY_STATE:', tags), 'MY_STATE is the contest''s');
+   CheckEquals(0, Pos('<MY_DXCC:', tags), 'MY_DXCC is the contest''s');
+   CheckEquals(0, Pos('<MY_SIG', tags), 'and so is the park');
+   CheckEquals(0, Pos('<MY_POTA_REF:', tags), 'all of it');
+   CheckTrue(Pos('<MY_GRIDSQUARE:', tags) > 0, 'the rest are still written');
+   (* STATE is the worked station's and must not hide MY_STATE. *)
+   tags := EmitADIFMyStationFields(qso, SampleFacts, '<STATE:2>CT ');
+   CheckTrue(Pos('<MY_STATE:', tags) > 0, 'STATE is not MY_STATE');
+end;
+
+procedure TLogMyFactsTests.TestTheStationCallFollowsTheOperatorRule;
+var
+   qso: ContestExchange;
+   facts: TQsoMyFacts;
+begin
+   BeginTest('STATION_CALLSIGN is written when someone else operated, as it always was');
+   MakeQSO(qso, 1);
+   facts := SampleFacts;
+   qso.ceOperator := 'NY4I/R';
+   CheckEquals(0, Pos('STATION_CALLSIGN', EmitADIFMyStationFields(qso, facts, '')),
+               'not when the operator is the station');
+   qso.ceOperator := '';
+   CheckEquals(0, Pos('STATION_CALLSIGN', EmitADIFMyStationFields(qso, facts, '')),
+               'not when no operator is recorded');
+   qso.ceOperator := 'K9OPS';
+   CheckTrue(Pos('<STATION_CALLSIGN:6>NY4I/R', EmitADIFMyStationFields(qso, facts, '')) > 0,
+             'and from the record''s call when someone else did');
+end;
+
+(* IMPORT, THEN EXPORT, THEN IMPORT AGAIN: our station survives the trip. *)
+procedure TLogMyFactsTests.TestTheMYTagsSurviveARoundTrip;
+var
+   qso, again: ContestExchange;
+   facts, back: TQsoMyFacts;
+   sent: AnsiString;
+   records: TContestExchangeArray;
+   recordFacts: TQsoMyFactsArray;
+   adif, body: string;
+   at: integer;
+begin
+   BeginTest('MY_ tags imported, exported and imported again come back unchanged');
+   ParseOneRecord(ADIF_WITH_MY_TAGS, qso, facts, sent);
+
+   SetLength(records, 1);
+   records[0] := qso;
+   SetLength(recordFacts, 1);
+   recordFacts[0] := facts;
+   adif := ExportADIFToString(records, recordFacts, 'roundtrip', nil);
+
+   (* The record after the header. *)
+   at := Pos('<EOH>', UpperCase(adif));
+   CheckTrue(at > 0, 'the export has a header');
+   body := Copy(adif, at + 5, MaxInt);
+   ParseOneRecord(body, again, back, sent);
+   CheckFactsEqual(facts, back, 'the station after the round trip');
+   CheckEquals('W1AW', string(again.Callsign), 'and the QSO is the same QSO');
+end;
+
+(* -------------------------------------------------------------- the store *)
+
+(* A D7 fixture copied to a scratch .trw and made the store's log -- driven
+  exactly as uTestLogStore drives it, so the first write migrates it and the
+  log holds 101 rows that never recorded a station. *)
+procedure TLogMyFactsTests.StartStore(const aLeaf: string);
+var
+   source, target: TFileStream;
+begin
    LogStoreClose;
-   trw := TempLogName(FIXTURE_SET + '.trw');
-   db := LogDatabaseFileName(trw);
-   Scrub(db);
+   FTrw := TempLogName(aLeaf);
+   FDb := LogDatabaseFileName(FTrw);
+   Scrub(FDb);
    source := TFileStream.Create(ExtractFilePath(ParamStr(0)) + 'fixtures' +
                                 PathDelim + 'binarylog' + PathDelim + FIXTURE_SET +
                                 '.trw', fmOpenRead or fmShareDenyWrite);
    try
-      target := TFileStream.Create(trw, fmCreate);
+      target := TFileStream.Create(FTrw, fmCreate);
       try
          target.CopyFrom(source, 0);
       finally
@@ -792,13 +1026,43 @@ begin
       source.Free;
    end;
 
-   savedLogName := CharBufferText(TR4W_LOG_FILENAME);
-   savedSilent := tSilentExport;
+   FSavedLogName := CharBufferText(TR4W_LOG_FILENAME);
+   FSavedSilent := tSilentExport;
+   SetCharBuffer(TR4W_LOG_FILENAME, FTrw);
+   (* A failure is a log line and a False, not a modal. *)
+   tSilentExport := True;
+end;
+
+procedure TLogMyFactsTests.StopStore;
+begin
+   LogStoreClose;
+   SetCharBuffer(TR4W_LOG_FILENAME, FSavedLogName);
+   tSilentExport := FSavedSilent;
+   Scrub(FDb);
+   if FileExists(FTrw) then
+      begin
+      DeleteFile(FTrw);
+      end;
+end;
+
+(* THE STORE, AS A QSO IS LOGGED: one QSO this station logged, and one that
+  arrived from a multi-op peer, beside 101 migrated rows. *)
+procedure TLogMyFactsTests.TestTheStoreCapturesOurStationAtTheMomentOfTheQSO;
+var
+   savedGrid, savedOverride: string;
+   savedStated: boolean;
+   qso: ContestExchange;
+   facts: TQsoMyFacts;
+   logDb: TLogDatabase;
+   repo: TLogRepository;
+   ourGrid: AnsiString;
+begin
+   BeginTest('the store records our station as it was when each QSO was logged');
+
+   StartStore(FIXTURE_SET + '.trw');
    savedGrid := Settings.My.Grid;
    savedStated := Settings.My.HasContestOverride(sfGrid);
    savedOverride := Settings.My.ContestOverride(sfGrid);
-   SetCharBuffer(TR4W_LOG_FILENAME, trw);
-   tSilentExport := True;
    try
       (* THE STATION'S GRID, with no contest override in the way. *)
       Settings.My.ClearContestOverride(sfGrid);
@@ -828,7 +1092,7 @@ begin
 
       logDb := TLogDatabase.Create;
       try
-         logDb.OpenReadOnly(db);
+         logDb.OpenReadOnly(FDb);
          repo := TLogRepository.Create(logDb);
          try
             CheckEquals(103, repo.QSOCount, '101 migrated QSOs and the two logged');
@@ -855,19 +1119,12 @@ begin
          logDb.Free;
       end;
    finally
-      LogStoreClose;
       Settings.My.Grid := savedGrid;
       if savedStated then
          begin
          Settings.My.SetContestOverride(sfGrid, savedOverride);
          end;
-      SetCharBuffer(TR4W_LOG_FILENAME, savedLogName);
-      tSilentExport := savedSilent;
-      Scrub(db);
-      if FileExists(trw) then
-         begin
-         DeleteFile(trw);
-         end;
+      StopStore;
    end;
 end;
 
@@ -875,9 +1132,6 @@ end;
   record position, and write the QSO and its station back as one transaction. *)
 procedure TLogMyFactsTests.TestTheEditorReadsAndWritesThroughTheStore;
 var
-   trw, db, savedLogName: string;
-   savedSilent: boolean;
-   source, target: TFileStream;
    qso: ContestExchange;
    facts, edited: TQsoMyFacts;
    logDb: TLogDatabase;
@@ -886,28 +1140,7 @@ var
 begin
    BeginTest('Edit QSO reads and writes our station through the store');
 
-   LogStoreClose;
-   trw := TempLogName(FIXTURE_SET + '-edit.trw');
-   db := LogDatabaseFileName(trw);
-   Scrub(db);
-   source := TFileStream.Create(ExtractFilePath(ParamStr(0)) + 'fixtures' +
-                                PathDelim + 'binarylog' + PathDelim + FIXTURE_SET +
-                                '.trw', fmOpenRead or fmShareDenyWrite);
-   try
-      target := TFileStream.Create(trw, fmCreate);
-      try
-         target.CopyFrom(source, 0);
-      finally
-         target.Free;
-      end;
-   finally
-      source.Free;
-   end;
-
-   savedLogName := CharBufferText(TR4W_LOG_FILENAME);
-   savedSilent := tSilentExport;
-   SetCharBuffer(TR4W_LOG_FILENAME, trw);
-   tSilentExport := True;
+   StartStore(FIXTURE_SET + '-edit.trw');
    try
       MakeQSO(qso, 1);
       qso.ceComputerID := Settings.Computer.Id;
@@ -933,7 +1166,7 @@ begin
 
       logDb := TLogDatabase.Create;
       try
-         logDb.OpenReadOnly(db);
+         logDb.OpenReadOnly(FDb);
          repo := TLogRepository.Create(logDb);
          try
             CheckTrue(repo.LoadQSOMyFacts(repo.RowIdAtIndex(101), facts), 'after a close');
@@ -947,14 +1180,85 @@ begin
          logDb.Free;
       end;
    finally
+      StopStore;
+   end;
+end;
+
+(* THE D3 FIX, THROUGH THE STORE: an ADIF import's batch writes each row's
+  OWN sent exchange and station -- and a row whose file said nothing sends
+  nothing, though this station has a CQ exchange and a grid of its own. *)
+procedure TLogMyFactsTests.TestAnImportBatchNeverTakesTheLiveStation;
+var
+   appends: TLogQsoAppends;
+   qso: ContestExchange;
+   facts: TQsoMyFacts;
+   failedAt: integer;
+   failure: string;
+   logDb: TLogDatabase;
+   repo: TLogRepository;
+   q: TSQLQuery;
+   savedGrid: string;
+begin
+   BeginTest('an import batch writes each row''s own sent exchange and station, never the live ones');
+
+   StartStore(FIXTURE_SET + '-import.trw');
+   savedGrid := Settings.My.Grid;
+   try
+      Settings.My.Grid := 'FN31PR';
+      appends := TLogQsoAppends.Create;
+      try
+         MakeQSO(qso, 1);
+         facts := SampleFacts;
+         facts.Source := mfsImported;
+         appends.Add(qso, facts, '599 NE');
+         MakeQSO(qso, 2);
+         facts := NotCapturedMyFacts;
+         facts.Source := mfsImported;
+         appends.Add(qso, facts, '');
+         CheckTrue(LogStoreAppendQSOs(appends, failedAt, failure),
+                   'the batch is written: ' + failure);
+      finally
+         appends.Free;
+      end;
       LogStoreClose;
-      SetCharBuffer(TR4W_LOG_FILENAME, savedLogName);
-      tSilentExport := savedSilent;
-      Scrub(db);
-      if FileExists(trw) then
-         begin
-         DeleteFile(trw);
+
+      logDb := TLogDatabase.Create;
+      try
+         logDb.OpenReadOnly(FDb);
+         repo := TLogRepository.Create(logDb);
+         try
+            CheckEquals(103, repo.QSOCount, '101 migrated QSOs and the two imported');
+            CheckTrue(repo.LoadQSOMyFacts(repo.RowIdAtIndex(101), facts), 'row 1');
+            CheckEquals(Ord(mfsImported), Ord(facts.Source), 'row 1 is imported');
+            CheckEquals('EN01AB', string(facts.Grid), 'with its file''s grid');
+            CheckTrue(repo.LoadQSOMyFacts(repo.RowIdAtIndex(102), facts), 'row 2');
+            CheckEquals('', string(facts.Grid),
+                        'row 2''s file named no grid, and it does not get today''s');
+         finally
+            repo.Free;
          end;
+
+         q := TSQLQuery.Create(nil);
+         try
+            q.DataBase := logDb.Connection;
+            q.UsePrimaryKeyAsKey := False;
+            q.SQL.Text := 'SELECT IFNULL(exchange_sent, ''<null>'') FROM qso ' +
+                          'ORDER BY id LIMIT 2 OFFSET 101';
+            q.Open;
+            CheckEquals('599 NE', q.Fields[0].AsString, 'row 1 sent its STX_STRING');
+            q.Next;
+            CheckEquals('<null>', q.Fields[0].AsString,
+                        'row 2 sent nothing -- not this station''s exchange (D3)');
+            q.Close;
+         finally
+            q.Free;
+         end;
+      finally
+         logDb.Free;
+      end;
+   finally
+      Settings.My.Grid := savedGrid;
+      StopStore;
    end;
 end;
 
@@ -977,11 +1281,23 @@ begin
    TestARescoreAndANetworkUpdateKeepThem;
    TestAnAppendBatchCarriesEachRowsOwn;
 
+   TestTheImportReadsEveryMYTag;
+   TestAnAbsentTagIsUnknownNotTodaysValue;
+   TestSigInfoIsAParkOnlyUnderPOTA;
+   TestADXCCCodeMapsToOnePlainEntity;
+   TestTheSentExchangeIsTheRecordsSTXString;
+   TestANeverCapturedRowWritesNoMYTags;
+   TestACapturedRowWritesItsTagsInOrder;
+   TestATagTheContestWroteIsNotWrittenTwice;
+   TestTheStationCallFollowsTheOperatorRule;
+   TestTheMYTagsSurviveARoundTrip;
+
 {$IFDEF WINDOWS}
    (* As the LogStore suite: these migrate a D7 binary log, which is a
      Windows migration path. *)
    TestTheStoreCapturesOurStationAtTheMomentOfTheQSO;
    TestTheEditorReadsAndWritesThroughTheStore;
+   TestAnImportBatchNeverTakesTheLiveStation;
 {$ELSE}
    WriteLn('  SKIPPED (store half): migrates a D7 binary log, a Windows migration path.');
 {$ENDIF}

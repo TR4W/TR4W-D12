@@ -190,22 +190,26 @@ type
       (* OUR STATION FOR EACH ROW, kept in step with the records the way
          TLogRowUpdates keeps its ids. *)
       FMyFacts: array of TQsoMyFacts;
+      (* WHAT EACH ROW SENT, from its file -- its exchange_sent. *)
+      FSentExchanges: array of AnsiString;
    public
       (* A row with no captured station: my_source NULL, as a row written
-         before schema 3 -- what an importer writes when its file carries
-         nothing to read them from. *)
+         before schema 3 -- and no sent exchange. *)
       procedure Add(const aQso: ContestExchange); overload;
-      (* A row with OUR STATION AS IT WAS for that QSO -- from the file it is
-         imported from, never from today's settings. *)
+      (* A row with OUR STATION AS IT WAS for that QSO and WHAT IT SENT -- both
+         from the file it is imported from, never from today's settings (log
+         schema 3, stage 2: the D3 fix). '' sends nothing. *)
       procedure Add(const aQso: ContestExchange;
-                    const aMyFacts: TQsoMyFacts); overload;
+                    const aMyFacts: TQsoMyFacts;
+                    const aSentExchange: AnsiString = ''); overload;
       function MyFacts(aIndex: integer): TQsoMyFacts;
+      function SentExchange(aIndex: integer): AnsiString;
    end;
 
-   (* What a QSO SENT, for the row AppendBatch writes -- the live append's
-      SetNextSentExchange, supplied by a caller that knows the station. nil
-      writes none. *)
-   TSentExchangeText = function(const aQso: ContestExchange): AnsiString;
+   (* ~~TSentExchangeText~~ -- the callback AppendBatch asked for a row's sent
+      exchange -- IS GONE (stage 2, 2026-10-18). Its one caller supplied the
+      LIVE builder, so every imported QSO claimed to have sent today's
+      exchange (D3). A row carries its own now; see TLogQsoAppends.Add. *)
 
    (* QSOs THAT CARRY NO EXCHANGE ID -- TLogRepository.QSOsWithoutExchangeId.
       Count is every one; Sample is the first few, in log order, as
@@ -608,7 +612,15 @@ type
          times come from the operator's clock and go backwards across a UTC
          correction. *)
       procedure OpenSequentialRead;
-      function ReadNext(out aQso: ContestExchange): boolean;
+      function ReadNext(out aQso: ContestExchange): boolean; overload;
+      (* ReadNext, and the row's OWN STATION -- its my_* columns (schema 3),
+         NotCapturedMyFacts for a row written before. What the ADIF export
+         writes its MY_* tags from. *)
+      function ReadNext(out aQso: ContestExchange;
+                        out aFacts: TQsoMyFacts): boolean; overload;
+      function ReadNextWithMyFacts(out aRowId: Int64;
+                                   out aQso: ContestExchange;
+                                   out aFacts: TQsoMyFacts): boolean;
 
       (* ReadNext, and the ROW ID of the record it read -- the handle
          UpdateQSOByRowId takes. The cursor SELECTs it after QSO_COLUMNS, so
@@ -673,16 +685,19 @@ type
 
          EACH ROW IS WRITTEN AS THE LIVE APPEND WRITES ONE
          (uLogStore.LogStoreAppendQSO): the contest stamped from the record
-         when the log carries another, the sent exchange from
-         aSentExchangeOf when one is given, and SaveQSOGroupingByExchangeId.
-         The grouping lookup sees this transaction's own rows, so a county
-         line inside one file still groups.
+         when the log carries another, and SaveQSOGroupingByExchangeId. The
+         grouping lookup sees this transaction's own rows, so a county line
+         inside one file still groups.
+
+         THE ROW'S SENT EXCHANGE AND STATION ARE ITS OWN -- what the batch was
+         given for it (TLogQsoAppends.Add), never what this station sends now.
+         That is where it differs from the live append, on purpose: the live
+         append records a QSO logged HERE, NOW.
 
          aFailedIndex is the 0-based index of the row that failed, or -1
          when the failure was not a row's -- the begin or the commit. Set
          before the exception leaves, so a caller can name the record. *)
       procedure AppendBatch(aQsos: TLogQsoAppends;
-                            aSentExchangeOf: TSentExchangeText;
                             out aFailedIndex: integer);
       property InBatch: boolean read FInBatch;
 
@@ -2883,12 +2898,34 @@ end;
 
 function TLogRepository.ReadNextWithRowId(out aRowId: Int64;
                                           out aQso: ContestExchange): boolean;
+var
+   ignored: TQsoMyFacts;
+begin
+   Result := ReadNextWithMyFacts(aRowId, aQso, ignored);
+end;
+
+function TLogRepository.ReadNext(out aQso: ContestExchange;
+                                 out aFacts: TQsoMyFacts): boolean;
+var
+   ignored: Int64;
+begin
+   Result := ReadNextWithMyFacts(ignored, aQso, aFacts);
+end;
+
+(* THE ONE CURSOR STEP every sequential read takes. The my_* columns are in
+  QSO_COLUMNS, so reading them is a dozen positional fields more per row,
+  whether the caller keeps them or not. *)
+function TLogRepository.ReadNextWithMyFacts(out aRowId: Int64;
+                                            out aQso: ContestExchange;
+                                            out aFacts: TQsoMyFacts): boolean;
 begin
    aRowId := 0;
+   aFacts := NotCapturedMyFacts;
    Result := (FCursor <> nil) and (not FCursor.EOF);
    if Result then
       begin
       ReadRecord(FCursor, aQso);
+      ReadMyFacts(FCursor, aFacts);
       aRowId := FCursor.Fields[QSO_COLUMN_COUNT].AsLargeInt;
       FCursor.Next;
       end
@@ -2994,7 +3031,6 @@ begin
 end;
 
 procedure TLogRepository.AppendBatch(aQsos: TLogQsoAppends;
-                                     aSentExchangeOf: TSentExchangeText;
                                      out aFailedIndex: integer);
 var
    i: integer;
@@ -3009,12 +3045,9 @@ begin
             begin
             SetContest(aQsos.FRows[i].ceContest);
             end;
-         if Assigned(aSentExchangeOf) then
-            begin
-            SetNextSentExchange(aSentExchangeOf(aQsos.FRows[i]));
-            end;
-         (* The row's own -- from its file, or not captured. Never the
-           session's: an import is not a QSO logged here. *)
+         (* The row's own -- from its file, or nothing. Never the session's:
+           an import is not a QSO logged here. *)
+         SetNextSentExchange(aQsos.SentExchange(i));
          SetNextMyFacts(aQsos.MyFacts(i));
          SaveQSOGroupingByExchangeId(aQsos.FRows[i]);
          end;
@@ -3127,11 +3160,12 @@ end;
 
 procedure TLogQsoAppends.Add(const aQso: ContestExchange);
 begin
-   Add(aQso, NotCapturedMyFacts);
+   Add(aQso, NotCapturedMyFacts, '');
 end;
 
 procedure TLogQsoAppends.Add(const aQso: ContestExchange;
-                             const aMyFacts: TQsoMyFacts);
+                             const aMyFacts: TQsoMyFacts;
+                             const aSentExchange: AnsiString);
 var
    i: integer;
 begin
@@ -3140,14 +3174,22 @@ begin
    if Length(FMyFacts) < Length(FRows) then
       begin
       SetLength(FMyFacts, Length(FRows));
+      SetLength(FSentExchanges, Length(FRows));
       end;
    FMyFacts[i] := aMyFacts;
+   FSentExchanges[i] := aSentExchange;
 end;
 
 function TLogQsoAppends.MyFacts(aIndex: integer): TQsoMyFacts;
 begin
    CheckIndex(aIndex);
    Result := FMyFacts[aIndex];
+end;
+
+function TLogQsoAppends.SentExchange(aIndex: integer): AnsiString;
+begin
+   CheckIndex(aIndex);
+   Result := FSentExchanges[aIndex];
 end;
 
 procedure TLogRepository.CloseSequentialRead;

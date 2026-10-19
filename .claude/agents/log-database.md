@@ -310,6 +310,18 @@ Detail, rulings A to E, and measurements: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12h
   passes no `--settings`).** In a fresh worktree that file is the program's
   defaults, and the check reports 0 identical and 13 differing for that reason
   alone. Measured 2026-10-18: with the station's file copied in, 13 identical.
+- **Stage 2 (ADIF): an import is `imported`, and an absent tag is UNKNOWN.**
+  `uADIF.MyFactsFromADIF` reads the MY_* tags and STATION_CALLSIGN;
+  `SentExchangeFromADIF` makes `exchange_sent` from STX_STRING, else NULL. The
+  live sent-exchange callback is deleted (D3), and **a `TLogQsoAppends` row
+  carries its own sent exchange and station**. Never give a batch the live
+  station.
+- **Export: `EmitADIFMyStationFields` writes the record's tags AFTER the
+  contest's tail and skips any tag the tail already wrote** (POTA's park,
+  MY_STATE, MY_DXCC). A never-captured row writes nothing new, so the corpus
+  does not move. **The contest matrix DOES**: its rows are captured live, so
+  every export gained the matrix station's MY_ tags. That is a re-freeze for
+  NY4I, not a regression; strip the added tags and all 187 are identical.
 - **The lints scan nothing in a `.claude\worktrees\` checkout** (by design,
   `Get-ScanExclusions.ps1`), and twenty of them then FAIL as "no files
   scanned". Lint a copy of the change from a checkout outside that path.

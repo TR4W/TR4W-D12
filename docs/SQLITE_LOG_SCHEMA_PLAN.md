@@ -2326,15 +2326,56 @@ with `my_source` NULL on every row, and the tracked fixtures stay at 2,
 byte-unchanged. **No D7 reference changes.** Corpus 21/0/5, factory 13
 identical, matrix 187 identical, ADIF 11/0/2, rescore unchanged.
 
-**Not yet (stages 2 to 5):** ADIF MY_* import and export, rulings C and the
-D3 fix (stage 2); the per-QSO overlay in scoring (stage 3, where Nebraska's
-bonus reads the record); exports reading the record (stage 4); explicit
-network provenance (stage 5, only if the computer-id rule proves too weak).
+**Not yet (stages 3 to 5):** the per-QSO overlay in scoring (stage 3, where
+Nebraska's bonus reads the record); exports reading the record for the SENT
+exchange (stage 4 -- STX_STRING and the Cabrillo sent column are still built
+from the session); explicit network provenance (stage 5, only if the
+computer-id rule proves too weak).
 
 Pinned in `uTestLogMyFacts` (16 tests) and mutation-tested five ways, each
 caught: the per-save clear removed, a peer never marked assumed, the editor
 write outside `ExecuteKeptWrite`, `my_grid` added to the updatable list, and
 a migration that adds nothing.
+
+#### Stage 2 (2026-10-18): ADIF in and out, and the D3 fix
+
+- **Import.** `STATION_CALLSIGN` and every MY_* tag ADIF defines for these
+  columns are read into `TADIFRecordTemps`, and `uADIF.MyFactsFromADIF` makes
+  the row's station from them: `my_source = 'imported'`, and **a tag the record
+  does not carry is unknown, never today's value** (ruling A). Park:
+  `MY_POTA_REF`, else `MY_SIG_INFO` under `MY_SIG` POTA (under SOTA or WWFF it
+  is not a park). `MY_DXCC` becomes `my_country` through
+  `CTYEntityOfADIFDXCC`, which answers only a code that ONE plain (unstarred)
+  CTY entity carries: 279 is `GM`, not `*GM/s`. No plain prefix in the
+  shipped table shares a code, so the "ambiguous" answer is a guard, not a
+  case that happens. `MY_COUNTRY` (a name) is NOT read, because nothing maps a
+  name to an entity. ADIF carries no continent of ours.
+- **D3 is fixed.** An import's `exchange_sent` is the record's STX_STRING
+  verbatim, else NULL -- `SentExchangeFromADIF`. The batch callback that
+  rebuilt it from the LIVE station (`TSentExchangeText`, `SentExchangeOfQSO`)
+  is deleted; each `TLogQsoAppends` row carries its own sent exchange and
+  station.
+- **Export.** `uADIF.EmitADIFMyStationFields` writes the RECORD's tags after
+  the contest's tail, in a fixed order: STATION_CALLSIGN (only when the
+  record's OPERATOR is not that call, the rule the export always had),
+  MY_GRIDSQUARE, MY_STATE, MY_CNTY, MY_ARRL_SECT, MY_IOTA, MY_CQ_ZONE,
+  MY_ITU_ZONE, MY_DXCC, then the park (MY_SIG POTA, MY_SIG_INFO, MY_POTA_REF).
+  **A tag the contest already wrote is skipped**: POTA writes its park, MY_STATE
+  and MY_DXCC, and since stage 2 it is handed the RECORD's park. **A
+  never-captured row writes nothing new**, and the tail's session fallback
+  (STATION_CALLSIGN, POTA's park) runs only for such a row, logged once per
+  export.
+- **Measured.** Corpus 21/0/5, ADIF round trip 12/0/2 (it gained a MY_ case:
+  na_sprint's reference with every MY_ tag injected, imported and exported
+  unchanged), rescore unchanged, factory 13 identical. **The contest matrix:
+  0 identical, 187 differing**, and that is the intended change. Its QSOs are
+  logged live, so since stage 1 they record the matrix station, and their
+  exports now end with that station's MY_ tags. With those added tags
+  removed, all 187 are identical. **Re-freezing it is NY4I's decision; it was
+  not done.**
+- **Still open, deliberately (NY4I declined the question for now):** editing
+  our call does not re-derive country or zones; editing a never-captured row
+  makes every untouched field unknown. Stage 1's behaviour, unchanged.
 
 ---
 
