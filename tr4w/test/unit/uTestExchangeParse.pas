@@ -358,7 +358,7 @@ end;
 
 const
    (* Every code, in the order a row is matched against them. *)
-   ALL_CODES = '.-qdnouazc2rie';
+   ALL_CODES = '.-qdnouazc2rieg';
 
 (* What code aCode says the program did with row aRow, given the parser a
    plain exchange reaches (aHelper) and the contest's host state.
@@ -376,7 +376,10 @@ const
      2  the plain parse twice: the composite's, then its party's (IN7QPNE)
      r  the composite's parse, then refused: no party (IN7QPNE)
      i  both parses, then Indiana's out-of-state refusal (IN7QPNE)
-     e  both parses, then Delaware's out-of-state refusal (IN7QPNE) *)
+     e  both parses, then Delaware's out-of-state refusal (IN7QPNE)
+     g  the plain parse, then refused when it left no grid in the domestic
+        QTH -- the class requires one (Q115: the ARRL VHF runnings, CQ VHF,
+        the Stew Perry) *)
 function ExpectedOutcome(aCode: char; const aHelper: string;
                          const aHostState: string; aRow: integer): string;
 var
@@ -476,6 +479,15 @@ begin
          else
             begin
             msg := Format(SExchangeOutOfStateWorksHostOnly, ['DE']);
+            end;
+         end;
+      'g':
+         begin
+         ok := PinBehaviour(aHelper, RowText(aRow), exch);
+         if ok and (exch.DomesticQTH = '') then
+            begin
+            ok := False;
+            msg := SExchangeGridRequired;
             end;
          end;
    else
@@ -1307,6 +1319,14 @@ begin
       UA4WCHAMPIONSHIP:
          begin
          Result := CODES_UA4W;
+         end;
+
+      (* THE GRID IS REQUIRED -- Q115 (NY4I, 2026-10-18): each sponsor
+         requires the grid and makes the signal report optional, so every row
+         is the plain parse refused where it found no grid. *)
+      ARRLVHFJAN, ARRLVHFJUN, ARRLVHFSEP, CQVHF, STEWPERRY:
+         begin
+         Result := StringOfChar('g', ROWS);
          end;
 
       ARKTIKA_SPRING:

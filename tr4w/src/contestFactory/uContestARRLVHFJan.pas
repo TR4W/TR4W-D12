@@ -130,6 +130,15 @@ type
       (* MAY AN EXCHANGE WORD BE A GRID? -- see
          TContestBase.ExchangeTextMayHoldGridSquare (M11 S9e part 1). *)
       function ExchangeTextMayHoldGridSquare: boolean; override;
+   public
+      (* WHAT THE RECEIVED EXCHANGE REQUIRES -- see
+         TContestBase.ParseReceivedExchange and RequireReceivedGrid (Q115). *)
+      function ParseReceivedExchange(const aText: string;
+                                     const aSession: TReceivedExchangeSession;
+                                     var aExch: ContestExchange;
+                                     out aErrorMessage: string): boolean; override;
+      (* A GRID WORD IS NEVER A CALL -- see TContestBase.MayBeACallsign. *)
+      function MayBeACallsign(const aWord: string): boolean; override;
    end;
 
 implementation
@@ -141,6 +150,8 @@ uses
    (* RDADistrictKey, DOKKey, GridSquareKey, GridFieldKey -- the shared
       domestic-QTH shapes (M11 S6). *)
    uDomesticKey,
+   (* IsGoodLookingGrid -- a grid word is not a call (Q115). *)
+   uGridShape,
    uContestRegistry,
    uTR4WStrings;
 
@@ -269,6 +280,32 @@ end;
 function TContestARRLVHFJan.ExchangeTextMayHoldGridSquare: boolean;
 begin
    Result := True;
+end;
+
+(* THE GRID IS REQUIRED, THE SIGNAL REPORT OPTIONAL -- Q115 (NY4I,
+   2026-10-18: "The contest class should be stating what is required.").
+   The sponsor's rule, ARRL Jan-Jun-Sep VHF Contest Rules v1.2, rule 4: "the
+   required exchange consists of: 4.1 4-character Maidenhead grid-square
+   locator ... 4.2 A signal report is optional." So a signal report alone is
+   refused; a grid alone is taken, the RST defaulting as it always has. A
+   word that is neither is the format's refusal (LOGSTUFF's RST-and/or-grid
+   parse). *)
+function TContestARRLVHFJan.ParseReceivedExchange(const aText: string;
+                                                  const aSession: TReceivedExchangeSession;
+                                                  var aExch: ContestExchange;
+                                                  out aErrorMessage: string): boolean;
+begin
+   Result := inherited ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
+   Result := RequireReceivedGrid(Result, aExch, aErrorMessage);
+end;
+
+(* A WORD THAT IS A GRID SQUARE IS THE GRID -- Q115. Without this a
+   six-character grid ('FN31PR') has a call's shape, the call window took it
+   as the worked station's call, and '599 FN31PR' logged a QSO with the call
+   FN31PR and no grid. *)
+function TContestARRLVHFJan.MayBeACallsign(const aWord: string): boolean;
+begin
+   Result := not IsGoodLookingGrid(aWord);
 end;
 
 function TContestARRLVHFJan.ExchangeCarriesGridSquare: boolean;

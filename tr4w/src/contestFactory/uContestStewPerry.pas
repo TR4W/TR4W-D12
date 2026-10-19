@@ -119,6 +119,15 @@ type
       (* MAY AN EXCHANGE WORD BE A GRID? -- see
          TContestBase.ExchangeTextMayHoldGridSquare (M11 S9e part 1). *)
       function ExchangeTextMayHoldGridSquare: boolean; override;
+   public
+      (* WHAT THE RECEIVED EXCHANGE REQUIRES -- see
+         TContestBase.ParseReceivedExchange and RequireReceivedGrid (Q115). *)
+      function ParseReceivedExchange(const aText: string;
+                                     const aSession: TReceivedExchangeSession;
+                                     var aExch: ContestExchange;
+                                     out aErrorMessage: string): boolean; override;
+      (* A GRID WORD IS NEVER A CALL -- see TContestBase.MayBeACallsign. *)
+      function MayBeACallsign(const aWord: string): boolean; override;
    end;
 
 implementation
@@ -130,6 +139,8 @@ uses
    uSettingsModel,
    uContestRegistry,
    LOGGRID,
+   (* IsGoodLookingGrid -- a grid word is not a call (Q115). *)
+   uGridShape,
    uTR4WStrings;
 
 (* StewPerryQSOPointMethod -- the legacy LOGSTUFF arm for this
@@ -225,6 +236,33 @@ end;
 function TContestStewPerry.ExchangeTextMayHoldGridSquare: boolean;
 begin
    Result := True;
+end;
+
+(* THE GRID IS REQUIRED, THE SIGNAL REPORT OPTIONAL -- Q115 (NY4I,
+   2026-10-18: "The contest class should be stating what is required.").
+   The sponsor's rule, kkn.net/stew/stew_rules.html: "Exchange: Four
+   character grid square (i.e. CN85). RST is optional." So a signal report
+   alone is refused; a grid alone is taken, the RST defaulting as it always
+   has. A word that is neither is the format's refusal (LOGSTUFF's
+   RST-and/or-grid parse). CalculateQSOPoints' one point for a QSO with no
+   grid is therefore unreachable from typed entry; an import can still carry
+   one (Q116). *)
+function TContestStewPerry.ParseReceivedExchange(const aText: string;
+                                                 const aSession: TReceivedExchangeSession;
+                                                 var aExch: ContestExchange;
+                                                 out aErrorMessage: string): boolean;
+begin
+   Result := inherited ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
+   Result := RequireReceivedGrid(Result, aExch, aErrorMessage);
+end;
+
+(* A WORD THAT IS A GRID SQUARE IS THE GRID -- Q115. Without this a
+   six-character grid ('FN31PR') has a call's shape, the call window took it
+   as the worked station's call, and '599 FN31PR' logged a QSO with the call
+   FN31PR and no grid. *)
+function TContestStewPerry.MayBeACallsign(const aWord: string): boolean;
+begin
+   Result := not IsGoodLookingGrid(aWord);
 end;
 
 function TContestStewPerry.ExchangeCarriesGridSquare: boolean;

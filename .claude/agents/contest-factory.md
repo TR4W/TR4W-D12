@@ -552,6 +552,23 @@ the target shape, the M-step migration order and the open questions.
   matrix's `parse` section (66 typed exchanges per contest and variant, no
   points) gates it. UA4W's parse rule, held in LOGSTUFF at M5b, is its
   class's `ParseReceivedExchange` since 2026-10-14 (design 8.2p).
+- **A CONTEST STATES WHAT ITS EXCHANGE REQUIRES; A FORMAT NEVER DROPS A
+  WORD** (Q115, NY4I 2026-10-18: *"The contest class should be stating what
+  is required. Some contests could allow just rst but most require more
+  data."*). The format parser refuses a word it cannot read, names it in
+  `ExchangeErrorMessage` and makes it `ExchangeErrorToken`; what must be
+  present is the class's rule in its own `ParseReceivedExchange` after
+  `inherited` -- no "required fields" virtual (`ReceivedExchangeFields` says
+  what is CARRIED, and is the ADIF export). Built for the RST-and/or-grid
+  format: the ARRL VHF runnings, CQ VHF and the Stew Perry call
+  `RequireReceivedGrid` (grid required, RST optional, all five sponsors), and
+  each says a grid word is not a call (`MayBeACallsign` -- `FN31PR` was being
+  logged as the CALL). `uTestGridExchange` drives the REAL engine per
+  contest. The sibling grid formats (`ParseRSTAndGrid` WWL,
+  `ParseRSTAndGridSquareOrRDA` UA4W, `ParseNameAndPossibleGridSquare` GridLoc)
+  still drop an unreadable word, and the positional ones refuse without a
+  message -- reported, not changed. Import has no refusal seam yet (Q112
+  wants one for both).
 - **A contest owns its final score and its bonuses** (M6, 2026-10-02).
   `LOGEDIT.TotalScore` -- what every score reader reads -- gathers a
   `TScoreTotals` (a record: the interface-parameter exemption) and asks

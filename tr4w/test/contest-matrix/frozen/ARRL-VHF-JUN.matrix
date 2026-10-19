@@ -163,71 +163,71 @@ imp rover | parsed=TRUE call=KG1S/MON band=Band20 mode=CW/eCW time=260115 121800
 == parse
 parse.keys = CT MA
 parse empty W1AW Band20/CW "" | ok=FALSE err="" token="" pending="" call=W1AW
-parse rst W1AW Band20/CW "599" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 cty=K/8/NorthAmerica/W1
-parse serial W1AW Band20/CW "123" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=123 cty=K/8/NorthAmerica/W1
-parse rst.serial W1AW Band20/CW "599 123" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=599 123 cty=K/8/NorthAmerica/W1
-parse cut.serial W1AW Band20/CW "5NN TT7" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse serial.letters W1AW Band20/CW "599 12A" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 12A cty=K/8/NorthAmerica/W1
-parse state W1AW Band20/CW "CT" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse rst.state W1AW Band20/CW "599 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 CT cty=K/8/NorthAmerica/W1
-parse serial.state W1AW Band20/CW "123 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=123 CT cty=K/8/NorthAmerica/W1
-parse rst.serial.state W1AW Band20/CW "599 123 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=599 123 CT cty=K/8/NorthAmerica/W1
-parse state.serial W1AW Band20/CW "CT 123" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=CT 123 cty=K/8/NorthAmerica/W1
-parse phone.rs.state W1AW Band20/Phone "59 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=Phone/eNoMode freq=14250000 rst.sent=59 rst.rcvd=59 nr.sent=1 exch=59 CT cty=K/8/NorthAmerica/W1
-parse extra.fields W1AW Band20/CW "599 123 CT XYZ 45" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=45 nr.sent=1 exch=599 123 CT XYZ 45 cty=K/8/NorthAmerica/W1
-parse call.in.exchange W1AW Band20/CW "599 CT K1ABC" | ok=TRUE err="" token="" pending="" call=K1ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 CT cty=K/8/NorthAmerica/K1
-parse zone W1AW Band20/CW "5" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=559 nr.sent=1 exch=5 cty=K/8/NorthAmerica/W1
-parse rst.zone W1AW Band20/CW "599 5" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=559 nr.sent=1 exch=599 5 cty=K/8/NorthAmerica/W1
-parse zone.state W1AW Band20/CW "599 5 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=559 nr.sent=1 exch=599 5 CT cty=K/8/NorthAmerica/W1
-parse society W1AW Band20/CW "ARRL" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse rst.society W1AW Band20/CW "599 ARRL" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 ARRL cty=K/8/NorthAmerica/W1
-parse name.state W1AW Band20/CW "JOE CT" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse serial.name.state W1AW Band20/CW "123 JOE CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=123 JOE CT cty=K/8/NorthAmerica/W1
-parse name.serial W1AW Band20/CW "JOE 123" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=JOE 123 cty=K/8/NorthAmerica/W1
-parse name.state.tenten W1AW Band20/CW "JOE CT 1234" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=1234 nr.sent=1 exch=JOE CT 1234 cty=K/8/NorthAmerica/W1
-parse name.age.state W1AW Band20/CW "JOE 10 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=10 nr.sent=1 exch=JOE 10 CT cty=K/8/NorthAmerica/W1
-parse power.letters W1AW Band20/CW "599 KW" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 KW cty=K/8/NorthAmerica/W1
-parse power.number W1AW Band20/CW "599 100" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=100 nr.sent=1 exch=599 100 cty=K/8/NorthAmerica/W1
-parse age W1AW Band20/CW "599 45" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=45 nr.sent=1 exch=599 45 cty=K/8/NorthAmerica/W1
+parse rst W1AW Band20/CW "599" | ok=FALSE err="Grid square required" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse serial W1AW Band20/CW "123" | ok=FALSE err="Grid square required" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse rst.serial W1AW Band20/CW "599 123" | ok=FALSE err="Grid square required" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse cut.serial W1AW Band20/CW "5NN TT7" | ok=FALSE err="5NN is not a grid square or a signal report" token="5NN" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse serial.letters W1AW Band20/CW "599 12A" | ok=FALSE err="12A is not a grid square or a signal report" token="12A" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse state W1AW Band20/CW "CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse rst.state W1AW Band20/CW "599 CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse serial.state W1AW Band20/CW "123 CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse rst.serial.state W1AW Band20/CW "599 123 CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse state.serial W1AW Band20/CW "CT 123" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse phone.rs.state W1AW Band20/Phone "59 CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=Phone/eNoMode freq=14250000 rst.sent=59 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse extra.fields W1AW Band20/CW "599 123 CT XYZ 45" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse call.in.exchange W1AW Band20/CW "599 CT K1ABC" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=K1ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/K1
+parse zone W1AW Band20/CW "5" | ok=FALSE err="Grid square required" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=559 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse rst.zone W1AW Band20/CW "599 5" | ok=FALSE err="Grid square required" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=559 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse zone.state W1AW Band20/CW "599 5 CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse society W1AW Band20/CW "ARRL" | ok=FALSE err="ARRL is not a grid square or a signal report" token="ARRL" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse rst.society W1AW Band20/CW "599 ARRL" | ok=FALSE err="ARRL is not a grid square or a signal report" token="ARRL" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse name.state W1AW Band20/CW "JOE CT" | ok=FALSE err="JOE is not a grid square or a signal report" token="JOE" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse serial.name.state W1AW Band20/CW "123 JOE CT" | ok=FALSE err="JOE is not a grid square or a signal report" token="JOE" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse name.serial W1AW Band20/CW "JOE 123" | ok=FALSE err="JOE is not a grid square or a signal report" token="JOE" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse name.state.tenten W1AW Band20/CW "JOE CT 1234" | ok=FALSE err="JOE is not a grid square or a signal report" token="JOE" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse name.age.state W1AW Band20/CW "JOE 10 CT" | ok=FALSE err="JOE is not a grid square or a signal report" token="JOE" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse power.letters W1AW Band20/CW "599 KW" | ok=FALSE err="KW is not a grid square or a signal report" token="KW" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse power.number W1AW Band20/CW "599 100" | ok=FALSE err="Grid square required" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=100 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse age W1AW Band20/CW "599 45" | ok=FALSE err="Grid square required" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=45 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse grid W1AW Band20/CW "FN31" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=FN31 domqth=FN31 exch=FN31 cty=K/8/NorthAmerica/W1
 parse rst.grid W1AW Band20/CW "599 FN31" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=FN31 domqth=FN31 exch=599 FN31 cty=K/8/NorthAmerica/W1
 parse serial.grid W1AW Band20/CW "599 123 FN31" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=FN31 domqth=FN31 exch=599 123 FN31 cty=K/8/NorthAmerica/W1
-parse continent W1AW Band20/CW "599 NA" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 NA cty=K/8/NorthAmerica/W1
-parse fd.class.section W1AW Band20/CW "2A CT" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse fd.section.class W1AW Band20/CW "CT 2A" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse fd.bad.class W1AW Band20/CW "2Z CT" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse fd.bad.section W1AW Band20/CW "2A XYZ" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse fd.class.only W1AW Band20/CW "2A" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse fd.dx DL1ABC Band40/CW "1D DX" | ok=FALSE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
-parse fd.dx.class.only DL1ABC Band40/CW "1D" | ok=FALSE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
-parse fd.dx.mx DL1ABC Band40/CW "1D MX" | ok=FALSE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
-parse ss.full W1AW Band20/CW "123 A 99 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=99 nr.sent=1 exch=123 A 99 CT cty=K/8/NorthAmerica/W1
-parse ss.packed W1AW Band20/CW "123A 99CT" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse ss.no.precedence W1AW Band20/CW "123 99 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=99 nr.sent=1 exch=123 99 CT cty=K/8/NorthAmerica/W1
-parse ss.wrong.order W1AW Band20/CW "CT 99 A 123" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=CT 99 A 123 cty=K/8/NorthAmerica/W1
-parse ss.no.check W1AW Band20/CW "123 A CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=123 A CT cty=K/8/NorthAmerica/W1
-parse ss.bad.section W1AW Band20/CW "123 A 99 XYZ" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=99 nr.sent=1 exch=123 A 99 XYZ cty=K/8/NorthAmerica/W1
-parse county W1AW Band20/CW "CT" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse rst.county W1AW Band20/CW "599 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 CT cty=K/8/NorthAmerica/W1
-parse serial.county W1AW Band20/CW "123 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=123 CT cty=K/8/NorthAmerica/W1
-parse county.line W1AW Band20/CW "599 CT/MA" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 CT/MA cty=K/8/NorthAmerica/W1
-parse county.bad W1AW Band20/CW "599 ZZZ" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 ZZZ cty=K/8/NorthAmerica/W1
-parse oos.state K4ABC Band40/CW "599 GA" | ok=TRUE err="" token="" pending="" call=K4ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 GA cty=K/8/NorthAmerica/K4
-parse oos.serial.state K4ABC Band40/CW "123 GA" | ok=TRUE err="" token="" pending="" call=K4ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=123 GA cty=K/8/NorthAmerica/K4
-parse ve.province VE3ABC Band15/Phone "59 ON" | ok=TRUE err="" token="" pending="" call=VE3ABC band=Band15 mode=Phone/eNoMode freq=21300000 rst.sent=59 rst.rcvd=59 nr.sent=1 exch=59 ON cty=VE/9/NorthAmerica/VE3
-parse ve0.serial VE0ABC Band20/CW "599 123" | ok=TRUE err="" token="" pending="" call=VE0ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=599 123 cty=VE/9/NorthAmerica/VE0
-parse dx.dx DL1ABC Band40/CW "599 DX" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 DX cty=DL/28/Europe/DL1
-parse dx.serial DL1ABC Band40/CW "599 001" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=1 nr.sent=1 exch=599 001 cty=DL/28/Europe/DL1
-parse dx.zone DL1ABC Band40/CW "599 14" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=14 nr.sent=1 exch=599 14 cty=DL/28/Europe/DL1
-parse dx.name.country DL1ABC Band40/CW "HANS DL" | ok=FALSE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
-parse uk.serial.only G3ABC Band20/CW "123" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=123 cty=G/27/Europe/G3
-parse uk.serial.district G3ABC Band20/CW "599 123 LN" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=599 123 LN cty=G/27/Europe/G3
-parse ja.prefecture JA1ABC Band15/CW "599 13" | ok=TRUE err="" token="" pending="" call=JA1ABC band=Band15 mode=CW/eNoMode freq=21025000 rst.sent=599 rst.rcvd=13 nr.sent=1 exch=599 13 cty=JA/45/Asia/JA1
-parse ru.oblast UA3ABC Band20/CW "599 MO" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 MO cty=UA/29/Europe/UA3
-parse ru.serial UA3ABC Band20/CW "599 123" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=599 123 cty=UA/29/Europe/UA3
+parse continent W1AW Band20/CW "599 NA" | ok=FALSE err="NA is not a grid square or a signal report" token="NA" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse fd.class.section W1AW Band20/CW "2A CT" | ok=FALSE err="2A is not a grid square or a signal report" token="2A" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse fd.section.class W1AW Band20/CW "CT 2A" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse fd.bad.class W1AW Band20/CW "2Z CT" | ok=FALSE err="2Z is not a grid square or a signal report" token="2Z" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse fd.bad.section W1AW Band20/CW "2A XYZ" | ok=FALSE err="2A is not a grid square or a signal report" token="2A" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse fd.class.only W1AW Band20/CW "2A" | ok=FALSE err="2A is not a grid square or a signal report" token="2A" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse fd.dx DL1ABC Band40/CW "1D DX" | ok=FALSE err="1D is not a grid square or a signal report" token="1D" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
+parse fd.dx.class.only DL1ABC Band40/CW "1D" | ok=FALSE err="1D is not a grid square or a signal report" token="1D" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
+parse fd.dx.mx DL1ABC Band40/CW "1D MX" | ok=FALSE err="1D is not a grid square or a signal report" token="1D" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
+parse ss.full W1AW Band20/CW "123 A 99 CT" | ok=FALSE err="A is not a grid square or a signal report" token="A" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse ss.packed W1AW Band20/CW "123A 99CT" | ok=FALSE err="123A is not a grid square or a signal report" token="123A" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse ss.no.precedence W1AW Band20/CW "123 99 CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse ss.wrong.order W1AW Band20/CW "CT 99 A 123" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse ss.no.check W1AW Band20/CW "123 A CT" | ok=FALSE err="A is not a grid square or a signal report" token="A" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse ss.bad.section W1AW Band20/CW "123 A 99 XYZ" | ok=FALSE err="A is not a grid square or a signal report" token="A" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse county W1AW Band20/CW "CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse rst.county W1AW Band20/CW "599 CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse serial.county W1AW Band20/CW "123 CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse county.line W1AW Band20/CW "599 CT/MA" | ok=FALSE err="CT/MA is not a grid square or a signal report" token="CT/MA" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse county.bad W1AW Band20/CW "599 ZZZ" | ok=FALSE err="ZZZ is not a grid square or a signal report" token="ZZZ" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse oos.state K4ABC Band40/CW "599 GA" | ok=FALSE err="GA is not a grid square or a signal report" token="GA" pending="" call=K4ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/K4
+parse oos.serial.state K4ABC Band40/CW "123 GA" | ok=FALSE err="GA is not a grid square or a signal report" token="GA" pending="" call=K4ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/K4
+parse ve.province VE3ABC Band15/Phone "59 ON" | ok=FALSE err="ON is not a grid square or a signal report" token="ON" pending="" call=VE3ABC band=Band15 mode=Phone/eNoMode freq=21300000 rst.sent=59 nr.sent=1 cty=VE/9/NorthAmerica/VE3
+parse ve0.serial VE0ABC Band20/CW "599 123" | ok=FALSE err="Grid square required" token="" pending="" call=VE0ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 cty=VE/9/NorthAmerica/VE0
+parse dx.dx DL1ABC Band40/CW "599 DX" | ok=FALSE err="DX is not a grid square or a signal report" token="DX" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
+parse dx.serial DL1ABC Band40/CW "599 001" | ok=FALSE err="Grid square required" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=1 nr.sent=1 cty=DL/28/Europe/DL1
+parse dx.zone DL1ABC Band40/CW "599 14" | ok=FALSE err="Grid square required" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=14 nr.sent=1 cty=DL/28/Europe/DL1
+parse dx.name.country DL1ABC Band40/CW "HANS DL" | ok=FALSE err="HANS is not a grid square or a signal report" token="HANS" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
+parse uk.serial.only G3ABC Band20/CW "123" | ok=FALSE err="Grid square required" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 cty=G/27/Europe/G3
+parse uk.serial.district G3ABC Band20/CW "599 123 LN" | ok=FALSE err="LN is not a grid square or a signal report" token="LN" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/27/Europe/G3
+parse ja.prefecture JA1ABC Band15/CW "599 13" | ok=FALSE err="Grid square required" token="" pending="" call=JA1ABC band=Band15 mode=CW/eNoMode freq=21025000 rst.sent=599 rst.rcvd=13 nr.sent=1 cty=JA/45/Asia/JA1
+parse ru.oblast UA3ABC Band20/CW "599 MO" | ok=FALSE err="MO is not a grid square or a signal report" token="MO" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/29/Europe/UA3
+parse ru.serial UA3ABC Band20/CW "599 123" | ok=FALSE err="Grid square required" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 cty=UA/29/Europe/UA3
 parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=MO12 domqth=MO12 exch=599 MO12 cty=UA/29/Europe/UA3
-parse py.state PY2ABC Band20/CW "599 SP" | ok=TRUE err="" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 SP cty=PY/15/SouthAmerica/PY2
-parse f.department F5ABC Band20/CW "599 75" | ok=TRUE err="" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=75 nr.sent=1 exch=599 75 cty=F/27/Europe/F5
+parse py.state PY2ABC Band20/CW "599 SP" | ok=FALSE err="SP is not a grid square or a signal report" token="SP" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=PY/15/SouthAmerica/PY2
+parse f.department F5ABC Band20/CW "599 75" | ok=FALSE err="Grid square required" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=75 nr.sent=1 cty=F/27/Europe/F5
 == keys
 exchange.fields = QTH RST
 zones.max = 0
@@ -250,14 +250,14 @@ qso 33 9A2ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALS
 qso 34 KL7ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=KL qthzone=1 cont=NorthAmerica qthpfx=KL7 pfx= dxqth= dommultqth= domqth= zone=1
 qso 35 HB9ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=HB qthzone=28 cont=Europe qthpfx=HB9 pfx= dxqth= dommultqth= domqth= zone=14
 qso 36 OK1ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=OK qthzone=28 cont=Europe qthpfx=OK1 pfx= dxqth= dommultqth= domqth= zone=15
-parse iota G3ABC Band20/CW "599 123 EU005" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=599 123 EU005 cty=G/27/Europe/G3
-parse iota.dash G3ABC Band20/CW "599 123 EU-005" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=599 123 EU-005 cty=G/27/Europe/G3
-parse iota.short G3ABC Band20/CW "599 EU5" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 EU5 cty=G/27/Europe/G3
-parse dok DL1ABC Band40/CW "599 A01" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 A01 cty=DL/28/Europe/DL1
-parse serial.dok DL1ABC Band40/CW "599 123 A01" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=599 123 A01 cty=DL/28/Europe/DL1
-parse grid6 W1AW Band20/CW "599 FN31PR" | ok=TRUE err="" token="" pending="" call=FN31PR band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 cty=F/27/Europe/FN31
-parse grid.field W1AW Band20/CW "599 FN" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 FN cty=K/8/NorthAmerica/W1
-parse rda.short UA3ABC Band20/CW "599 MO1" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 MO1 cty=UA/29/Europe/UA3
+parse iota G3ABC Band20/CW "599 123 EU005" | ok=FALSE err="EU005 is not a grid square or a signal report" token="EU005" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/27/Europe/G3
+parse iota.dash G3ABC Band20/CW "599 123 EU-005" | ok=FALSE err="EU-005 is not a grid square or a signal report" token="EU-005" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/27/Europe/G3
+parse iota.short G3ABC Band20/CW "599 EU5" | ok=FALSE err="EU5 is not a grid square or a signal report" token="EU5" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/27/Europe/G3
+parse dok DL1ABC Band40/CW "599 A01" | ok=FALSE err="A01 is not a grid square or a signal report" token="A01" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
+parse serial.dok DL1ABC Band40/CW "599 123 A01" | ok=FALSE err="A01 is not a grid square or a signal report" token="A01" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
+parse grid6 W1AW Band20/CW "599 FN31PR" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=FN31PR domqth=FN31PR exch=599 FN31PR cty=K/8/NorthAmerica/W1
+parse grid.field W1AW Band20/CW "599 FN" | ok=FALSE err="FN is not a grid square or a signal report" token="FN" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse rda.short UA3ABC Band20/CW "599 MO1" | ok=FALSE err="MO1 is not a grid square or a signal report" token="MO1" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/29/Europe/UA3
 == totals
 totals.qsopoints = 2
 totals.qtcs = 0
@@ -509,71 +509,71 @@ imp rover | parsed=TRUE call=KG1S/MON band=Band20 mode=CW/eCW time=260115 121800
 == parse
 parse.keys = CT MA
 parse empty W1AW Band20/CW "" | ok=FALSE err="" token="" pending="" call=W1AW
-parse rst W1AW Band20/CW "599" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 cty=K/8/NorthAmerica/W1
-parse serial W1AW Band20/CW "123" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=123 cty=K/8/NorthAmerica/W1
-parse rst.serial W1AW Band20/CW "599 123" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=599 123 cty=K/8/NorthAmerica/W1
-parse cut.serial W1AW Band20/CW "5NN TT7" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse serial.letters W1AW Band20/CW "599 12A" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 12A cty=K/8/NorthAmerica/W1
-parse state W1AW Band20/CW "CT" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse rst.state W1AW Band20/CW "599 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 CT cty=K/8/NorthAmerica/W1
-parse serial.state W1AW Band20/CW "123 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=123 CT cty=K/8/NorthAmerica/W1
-parse rst.serial.state W1AW Band20/CW "599 123 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=599 123 CT cty=K/8/NorthAmerica/W1
-parse state.serial W1AW Band20/CW "CT 123" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=CT 123 cty=K/8/NorthAmerica/W1
-parse phone.rs.state W1AW Band20/Phone "59 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=Phone/eNoMode freq=14250000 rst.sent=59 rst.rcvd=59 nr.sent=1 exch=59 CT cty=K/8/NorthAmerica/W1
-parse extra.fields W1AW Band20/CW "599 123 CT XYZ 45" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=45 nr.sent=1 exch=599 123 CT XYZ 45 cty=K/8/NorthAmerica/W1
-parse call.in.exchange W1AW Band20/CW "599 CT K1ABC" | ok=TRUE err="" token="" pending="" call=K1ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 CT cty=K/8/NorthAmerica/K1
-parse zone W1AW Band20/CW "5" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=559 nr.sent=1 exch=5 cty=K/8/NorthAmerica/W1
-parse rst.zone W1AW Band20/CW "599 5" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=559 nr.sent=1 exch=599 5 cty=K/8/NorthAmerica/W1
-parse zone.state W1AW Band20/CW "599 5 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=559 nr.sent=1 exch=599 5 CT cty=K/8/NorthAmerica/W1
-parse society W1AW Band20/CW "ARRL" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse rst.society W1AW Band20/CW "599 ARRL" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 ARRL cty=K/8/NorthAmerica/W1
-parse name.state W1AW Band20/CW "JOE CT" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse serial.name.state W1AW Band20/CW "123 JOE CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=123 JOE CT cty=K/8/NorthAmerica/W1
-parse name.serial W1AW Band20/CW "JOE 123" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=JOE 123 cty=K/8/NorthAmerica/W1
-parse name.state.tenten W1AW Band20/CW "JOE CT 1234" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=1234 nr.sent=1 exch=JOE CT 1234 cty=K/8/NorthAmerica/W1
-parse name.age.state W1AW Band20/CW "JOE 10 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=10 nr.sent=1 exch=JOE 10 CT cty=K/8/NorthAmerica/W1
-parse power.letters W1AW Band20/CW "599 KW" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 KW cty=K/8/NorthAmerica/W1
-parse power.number W1AW Band20/CW "599 100" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=100 nr.sent=1 exch=599 100 cty=K/8/NorthAmerica/W1
-parse age W1AW Band20/CW "599 45" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=45 nr.sent=1 exch=599 45 cty=K/8/NorthAmerica/W1
+parse rst W1AW Band20/CW "599" | ok=FALSE err="Grid square required" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse serial W1AW Band20/CW "123" | ok=FALSE err="Grid square required" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse rst.serial W1AW Band20/CW "599 123" | ok=FALSE err="Grid square required" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse cut.serial W1AW Band20/CW "5NN TT7" | ok=FALSE err="5NN is not a grid square or a signal report" token="5NN" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse serial.letters W1AW Band20/CW "599 12A" | ok=FALSE err="12A is not a grid square or a signal report" token="12A" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse state W1AW Band20/CW "CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse rst.state W1AW Band20/CW "599 CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse serial.state W1AW Band20/CW "123 CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse rst.serial.state W1AW Band20/CW "599 123 CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse state.serial W1AW Band20/CW "CT 123" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse phone.rs.state W1AW Band20/Phone "59 CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=Phone/eNoMode freq=14250000 rst.sent=59 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse extra.fields W1AW Band20/CW "599 123 CT XYZ 45" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse call.in.exchange W1AW Band20/CW "599 CT K1ABC" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=K1ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/K1
+parse zone W1AW Band20/CW "5" | ok=FALSE err="Grid square required" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=559 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse rst.zone W1AW Band20/CW "599 5" | ok=FALSE err="Grid square required" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=559 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse zone.state W1AW Band20/CW "599 5 CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse society W1AW Band20/CW "ARRL" | ok=FALSE err="ARRL is not a grid square or a signal report" token="ARRL" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse rst.society W1AW Band20/CW "599 ARRL" | ok=FALSE err="ARRL is not a grid square or a signal report" token="ARRL" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse name.state W1AW Band20/CW "JOE CT" | ok=FALSE err="JOE is not a grid square or a signal report" token="JOE" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse serial.name.state W1AW Band20/CW "123 JOE CT" | ok=FALSE err="JOE is not a grid square or a signal report" token="JOE" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse name.serial W1AW Band20/CW "JOE 123" | ok=FALSE err="JOE is not a grid square or a signal report" token="JOE" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse name.state.tenten W1AW Band20/CW "JOE CT 1234" | ok=FALSE err="JOE is not a grid square or a signal report" token="JOE" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse name.age.state W1AW Band20/CW "JOE 10 CT" | ok=FALSE err="JOE is not a grid square or a signal report" token="JOE" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse power.letters W1AW Band20/CW "599 KW" | ok=FALSE err="KW is not a grid square or a signal report" token="KW" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse power.number W1AW Band20/CW "599 100" | ok=FALSE err="Grid square required" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=100 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse age W1AW Band20/CW "599 45" | ok=FALSE err="Grid square required" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=45 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse grid W1AW Band20/CW "FN31" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=FN31 domqth=FN31 exch=FN31 cty=K/8/NorthAmerica/W1
 parse rst.grid W1AW Band20/CW "599 FN31" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=FN31 domqth=FN31 exch=599 FN31 cty=K/8/NorthAmerica/W1
 parse serial.grid W1AW Band20/CW "599 123 FN31" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=FN31 domqth=FN31 exch=599 123 FN31 cty=K/8/NorthAmerica/W1
-parse continent W1AW Band20/CW "599 NA" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 NA cty=K/8/NorthAmerica/W1
-parse fd.class.section W1AW Band20/CW "2A CT" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse fd.section.class W1AW Band20/CW "CT 2A" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse fd.bad.class W1AW Band20/CW "2Z CT" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse fd.bad.section W1AW Band20/CW "2A XYZ" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse fd.class.only W1AW Band20/CW "2A" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse fd.dx DL1ABC Band40/CW "1D DX" | ok=FALSE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
-parse fd.dx.class.only DL1ABC Band40/CW "1D" | ok=FALSE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
-parse fd.dx.mx DL1ABC Band40/CW "1D MX" | ok=FALSE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
-parse ss.full W1AW Band20/CW "123 A 99 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=99 nr.sent=1 exch=123 A 99 CT cty=K/8/NorthAmerica/W1
-parse ss.packed W1AW Band20/CW "123A 99CT" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse ss.no.precedence W1AW Band20/CW "123 99 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=99 nr.sent=1 exch=123 99 CT cty=K/8/NorthAmerica/W1
-parse ss.wrong.order W1AW Band20/CW "CT 99 A 123" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=CT 99 A 123 cty=K/8/NorthAmerica/W1
-parse ss.no.check W1AW Band20/CW "123 A CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=123 A CT cty=K/8/NorthAmerica/W1
-parse ss.bad.section W1AW Band20/CW "123 A 99 XYZ" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=99 nr.sent=1 exch=123 A 99 XYZ cty=K/8/NorthAmerica/W1
-parse county W1AW Band20/CW "CT" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse rst.county W1AW Band20/CW "599 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 CT cty=K/8/NorthAmerica/W1
-parse serial.county W1AW Band20/CW "123 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=123 CT cty=K/8/NorthAmerica/W1
-parse county.line W1AW Band20/CW "599 CT/MA" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 CT/MA cty=K/8/NorthAmerica/W1
-parse county.bad W1AW Band20/CW "599 ZZZ" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 ZZZ cty=K/8/NorthAmerica/W1
-parse oos.state K4ABC Band40/CW "599 GA" | ok=TRUE err="" token="" pending="" call=K4ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 GA cty=K/8/NorthAmerica/K4
-parse oos.serial.state K4ABC Band40/CW "123 GA" | ok=TRUE err="" token="" pending="" call=K4ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=123 GA cty=K/8/NorthAmerica/K4
-parse ve.province VE3ABC Band15/Phone "59 ON" | ok=TRUE err="" token="" pending="" call=VE3ABC band=Band15 mode=Phone/eNoMode freq=21300000 rst.sent=59 rst.rcvd=59 nr.sent=1 exch=59 ON cty=VE/9/NorthAmerica/VE3
-parse ve0.serial VE0ABC Band20/CW "599 123" | ok=TRUE err="" token="" pending="" call=VE0ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=599 123 cty=VE/9/NorthAmerica/VE0
-parse dx.dx DL1ABC Band40/CW "599 DX" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 DX cty=DL/28/Europe/DL1
-parse dx.serial DL1ABC Band40/CW "599 001" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=1 nr.sent=1 exch=599 001 cty=DL/28/Europe/DL1
-parse dx.zone DL1ABC Band40/CW "599 14" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=14 nr.sent=1 exch=599 14 cty=DL/28/Europe/DL1
-parse dx.name.country DL1ABC Band40/CW "HANS DL" | ok=FALSE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
-parse uk.serial.only G3ABC Band20/CW "123" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=123 cty=G/27/Europe/G3
-parse uk.serial.district G3ABC Band20/CW "599 123 LN" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=599 123 LN cty=G/27/Europe/G3
-parse ja.prefecture JA1ABC Band15/CW "599 13" | ok=TRUE err="" token="" pending="" call=JA1ABC band=Band15 mode=CW/eNoMode freq=21025000 rst.sent=599 rst.rcvd=13 nr.sent=1 exch=599 13 cty=JA/45/Asia/JA1
-parse ru.oblast UA3ABC Band20/CW "599 MO" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 MO cty=UA/29/Europe/UA3
-parse ru.serial UA3ABC Band20/CW "599 123" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=599 123 cty=UA/29/Europe/UA3
+parse continent W1AW Band20/CW "599 NA" | ok=FALSE err="NA is not a grid square or a signal report" token="NA" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse fd.class.section W1AW Band20/CW "2A CT" | ok=FALSE err="2A is not a grid square or a signal report" token="2A" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse fd.section.class W1AW Band20/CW "CT 2A" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse fd.bad.class W1AW Band20/CW "2Z CT" | ok=FALSE err="2Z is not a grid square or a signal report" token="2Z" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse fd.bad.section W1AW Band20/CW "2A XYZ" | ok=FALSE err="2A is not a grid square or a signal report" token="2A" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse fd.class.only W1AW Band20/CW "2A" | ok=FALSE err="2A is not a grid square or a signal report" token="2A" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse fd.dx DL1ABC Band40/CW "1D DX" | ok=FALSE err="1D is not a grid square or a signal report" token="1D" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
+parse fd.dx.class.only DL1ABC Band40/CW "1D" | ok=FALSE err="1D is not a grid square or a signal report" token="1D" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
+parse fd.dx.mx DL1ABC Band40/CW "1D MX" | ok=FALSE err="1D is not a grid square or a signal report" token="1D" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
+parse ss.full W1AW Band20/CW "123 A 99 CT" | ok=FALSE err="A is not a grid square or a signal report" token="A" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse ss.packed W1AW Band20/CW "123A 99CT" | ok=FALSE err="123A is not a grid square or a signal report" token="123A" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse ss.no.precedence W1AW Band20/CW "123 99 CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse ss.wrong.order W1AW Band20/CW "CT 99 A 123" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse ss.no.check W1AW Band20/CW "123 A CT" | ok=FALSE err="A is not a grid square or a signal report" token="A" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse ss.bad.section W1AW Band20/CW "123 A 99 XYZ" | ok=FALSE err="A is not a grid square or a signal report" token="A" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse county W1AW Band20/CW "CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse rst.county W1AW Band20/CW "599 CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse serial.county W1AW Band20/CW "123 CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse county.line W1AW Band20/CW "599 CT/MA" | ok=FALSE err="CT/MA is not a grid square or a signal report" token="CT/MA" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse county.bad W1AW Band20/CW "599 ZZZ" | ok=FALSE err="ZZZ is not a grid square or a signal report" token="ZZZ" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse oos.state K4ABC Band40/CW "599 GA" | ok=FALSE err="GA is not a grid square or a signal report" token="GA" pending="" call=K4ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/K4
+parse oos.serial.state K4ABC Band40/CW "123 GA" | ok=FALSE err="GA is not a grid square or a signal report" token="GA" pending="" call=K4ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/K4
+parse ve.province VE3ABC Band15/Phone "59 ON" | ok=FALSE err="ON is not a grid square or a signal report" token="ON" pending="" call=VE3ABC band=Band15 mode=Phone/eNoMode freq=21300000 rst.sent=59 nr.sent=1 cty=VE/9/NorthAmerica/VE3
+parse ve0.serial VE0ABC Band20/CW "599 123" | ok=FALSE err="Grid square required" token="" pending="" call=VE0ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 cty=VE/9/NorthAmerica/VE0
+parse dx.dx DL1ABC Band40/CW "599 DX" | ok=FALSE err="DX is not a grid square or a signal report" token="DX" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
+parse dx.serial DL1ABC Band40/CW "599 001" | ok=FALSE err="Grid square required" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=1 nr.sent=1 cty=DL/28/Europe/DL1
+parse dx.zone DL1ABC Band40/CW "599 14" | ok=FALSE err="Grid square required" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=14 nr.sent=1 cty=DL/28/Europe/DL1
+parse dx.name.country DL1ABC Band40/CW "HANS DL" | ok=FALSE err="HANS is not a grid square or a signal report" token="HANS" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
+parse uk.serial.only G3ABC Band20/CW "123" | ok=FALSE err="Grid square required" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 cty=G/27/Europe/G3
+parse uk.serial.district G3ABC Band20/CW "599 123 LN" | ok=FALSE err="LN is not a grid square or a signal report" token="LN" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/27/Europe/G3
+parse ja.prefecture JA1ABC Band15/CW "599 13" | ok=FALSE err="Grid square required" token="" pending="" call=JA1ABC band=Band15 mode=CW/eNoMode freq=21025000 rst.sent=599 rst.rcvd=13 nr.sent=1 cty=JA/45/Asia/JA1
+parse ru.oblast UA3ABC Band20/CW "599 MO" | ok=FALSE err="MO is not a grid square or a signal report" token="MO" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/29/Europe/UA3
+parse ru.serial UA3ABC Band20/CW "599 123" | ok=FALSE err="Grid square required" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 cty=UA/29/Europe/UA3
 parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=MO12 domqth=MO12 exch=599 MO12 cty=UA/29/Europe/UA3
-parse py.state PY2ABC Band20/CW "599 SP" | ok=TRUE err="" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 SP cty=PY/15/SouthAmerica/PY2
-parse f.department F5ABC Band20/CW "599 75" | ok=TRUE err="" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=75 nr.sent=1 exch=599 75 cty=F/27/Europe/F5
+parse py.state PY2ABC Band20/CW "599 SP" | ok=FALSE err="SP is not a grid square or a signal report" token="SP" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=PY/15/SouthAmerica/PY2
+parse f.department F5ABC Band20/CW "599 75" | ok=FALSE err="Grid square required" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=75 nr.sent=1 cty=F/27/Europe/F5
 == keys
 exchange.fields = QTH RST
 zones.max = 0
@@ -596,14 +596,14 @@ qso 33 9A2ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALS
 qso 34 KL7ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=KL qthzone=1 cont=NorthAmerica qthpfx=KL7 pfx= dxqth= dommultqth= domqth= zone=1
 qso 35 HB9ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=HB qthzone=28 cont=Europe qthpfx=HB9 pfx= dxqth= dommultqth= domqth= zone=14
 qso 36 OK1ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=OK qthzone=28 cont=Europe qthpfx=OK1 pfx= dxqth= dommultqth= domqth= zone=15
-parse iota G3ABC Band20/CW "599 123 EU005" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=599 123 EU005 cty=G/27/Europe/G3
-parse iota.dash G3ABC Band20/CW "599 123 EU-005" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=599 123 EU-005 cty=G/27/Europe/G3
-parse iota.short G3ABC Band20/CW "599 EU5" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 EU5 cty=G/27/Europe/G3
-parse dok DL1ABC Band40/CW "599 A01" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 A01 cty=DL/28/Europe/DL1
-parse serial.dok DL1ABC Band40/CW "599 123 A01" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=599 123 A01 cty=DL/28/Europe/DL1
-parse grid6 W1AW Band20/CW "599 FN31PR" | ok=TRUE err="" token="" pending="" call=FN31PR band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 cty=F/27/Europe/FN31
-parse grid.field W1AW Band20/CW "599 FN" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 FN cty=K/8/NorthAmerica/W1
-parse rda.short UA3ABC Band20/CW "599 MO1" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 MO1 cty=UA/29/Europe/UA3
+parse iota G3ABC Band20/CW "599 123 EU005" | ok=FALSE err="EU005 is not a grid square or a signal report" token="EU005" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/27/Europe/G3
+parse iota.dash G3ABC Band20/CW "599 123 EU-005" | ok=FALSE err="EU-005 is not a grid square or a signal report" token="EU-005" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/27/Europe/G3
+parse iota.short G3ABC Band20/CW "599 EU5" | ok=FALSE err="EU5 is not a grid square or a signal report" token="EU5" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/27/Europe/G3
+parse dok DL1ABC Band40/CW "599 A01" | ok=FALSE err="A01 is not a grid square or a signal report" token="A01" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
+parse serial.dok DL1ABC Band40/CW "599 123 A01" | ok=FALSE err="A01 is not a grid square or a signal report" token="A01" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
+parse grid6 W1AW Band20/CW "599 FN31PR" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=FN31PR domqth=FN31PR exch=599 FN31PR cty=K/8/NorthAmerica/W1
+parse grid.field W1AW Band20/CW "599 FN" | ok=FALSE err="FN is not a grid square or a signal report" token="FN" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse rda.short UA3ABC Band20/CW "599 MO1" | ok=FALSE err="MO1 is not a grid square or a signal report" token="MO1" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/29/Europe/UA3
 == totals
 totals.qsopoints = 2
 totals.qtcs = 0
@@ -853,71 +853,71 @@ imp rover | parsed=TRUE call=KG1S/MON band=Band20 mode=CW/eCW time=260115 121800
 == parse
 parse.keys = CT MA
 parse empty W1AW Band20/CW "" | ok=FALSE err="" token="" pending="" call=W1AW
-parse rst W1AW Band20/CW "599" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 cty=K/8/NorthAmerica/W1
-parse serial W1AW Band20/CW "123" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=123 cty=K/8/NorthAmerica/W1
-parse rst.serial W1AW Band20/CW "599 123" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=599 123 cty=K/8/NorthAmerica/W1
-parse cut.serial W1AW Band20/CW "5NN TT7" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse serial.letters W1AW Band20/CW "599 12A" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 12A cty=K/8/NorthAmerica/W1
-parse state W1AW Band20/CW "CT" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse rst.state W1AW Band20/CW "599 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 CT cty=K/8/NorthAmerica/W1
-parse serial.state W1AW Band20/CW "123 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=123 CT cty=K/8/NorthAmerica/W1
-parse rst.serial.state W1AW Band20/CW "599 123 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=599 123 CT cty=K/8/NorthAmerica/W1
-parse state.serial W1AW Band20/CW "CT 123" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=CT 123 cty=K/8/NorthAmerica/W1
-parse phone.rs.state W1AW Band20/Phone "59 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=Phone/eNoMode freq=14250000 rst.sent=59 rst.rcvd=59 nr.sent=1 exch=59 CT cty=K/8/NorthAmerica/W1
-parse extra.fields W1AW Band20/CW "599 123 CT XYZ 45" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=45 nr.sent=1 exch=599 123 CT XYZ 45 cty=K/8/NorthAmerica/W1
-parse call.in.exchange W1AW Band20/CW "599 CT K1ABC" | ok=TRUE err="" token="" pending="" call=K1ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 CT cty=K/8/NorthAmerica/K1
-parse zone W1AW Band20/CW "5" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=559 nr.sent=1 exch=5 cty=K/8/NorthAmerica/W1
-parse rst.zone W1AW Band20/CW "599 5" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=559 nr.sent=1 exch=599 5 cty=K/8/NorthAmerica/W1
-parse zone.state W1AW Band20/CW "599 5 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=559 nr.sent=1 exch=599 5 CT cty=K/8/NorthAmerica/W1
-parse society W1AW Band20/CW "ARRL" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse rst.society W1AW Band20/CW "599 ARRL" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 ARRL cty=K/8/NorthAmerica/W1
-parse name.state W1AW Band20/CW "JOE CT" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse serial.name.state W1AW Band20/CW "123 JOE CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=123 JOE CT cty=K/8/NorthAmerica/W1
-parse name.serial W1AW Band20/CW "JOE 123" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=JOE 123 cty=K/8/NorthAmerica/W1
-parse name.state.tenten W1AW Band20/CW "JOE CT 1234" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=1234 nr.sent=1 exch=JOE CT 1234 cty=K/8/NorthAmerica/W1
-parse name.age.state W1AW Band20/CW "JOE 10 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=10 nr.sent=1 exch=JOE 10 CT cty=K/8/NorthAmerica/W1
-parse power.letters W1AW Band20/CW "599 KW" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 KW cty=K/8/NorthAmerica/W1
-parse power.number W1AW Band20/CW "599 100" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=100 nr.sent=1 exch=599 100 cty=K/8/NorthAmerica/W1
-parse age W1AW Band20/CW "599 45" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=45 nr.sent=1 exch=599 45 cty=K/8/NorthAmerica/W1
+parse rst W1AW Band20/CW "599" | ok=FALSE err="Grid square required" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse serial W1AW Band20/CW "123" | ok=FALSE err="Grid square required" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse rst.serial W1AW Band20/CW "599 123" | ok=FALSE err="Grid square required" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse cut.serial W1AW Band20/CW "5NN TT7" | ok=FALSE err="5NN is not a grid square or a signal report" token="5NN" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse serial.letters W1AW Band20/CW "599 12A" | ok=FALSE err="12A is not a grid square or a signal report" token="12A" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse state W1AW Band20/CW "CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse rst.state W1AW Band20/CW "599 CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse serial.state W1AW Band20/CW "123 CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse rst.serial.state W1AW Band20/CW "599 123 CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse state.serial W1AW Band20/CW "CT 123" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse phone.rs.state W1AW Band20/Phone "59 CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=Phone/eNoMode freq=14250000 rst.sent=59 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse extra.fields W1AW Band20/CW "599 123 CT XYZ 45" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse call.in.exchange W1AW Band20/CW "599 CT K1ABC" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=K1ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/K1
+parse zone W1AW Band20/CW "5" | ok=FALSE err="Grid square required" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=559 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse rst.zone W1AW Band20/CW "599 5" | ok=FALSE err="Grid square required" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=559 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse zone.state W1AW Band20/CW "599 5 CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse society W1AW Band20/CW "ARRL" | ok=FALSE err="ARRL is not a grid square or a signal report" token="ARRL" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse rst.society W1AW Band20/CW "599 ARRL" | ok=FALSE err="ARRL is not a grid square or a signal report" token="ARRL" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse name.state W1AW Band20/CW "JOE CT" | ok=FALSE err="JOE is not a grid square or a signal report" token="JOE" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse serial.name.state W1AW Band20/CW "123 JOE CT" | ok=FALSE err="JOE is not a grid square or a signal report" token="JOE" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse name.serial W1AW Band20/CW "JOE 123" | ok=FALSE err="JOE is not a grid square or a signal report" token="JOE" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse name.state.tenten W1AW Band20/CW "JOE CT 1234" | ok=FALSE err="JOE is not a grid square or a signal report" token="JOE" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse name.age.state W1AW Band20/CW "JOE 10 CT" | ok=FALSE err="JOE is not a grid square or a signal report" token="JOE" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse power.letters W1AW Band20/CW "599 KW" | ok=FALSE err="KW is not a grid square or a signal report" token="KW" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse power.number W1AW Band20/CW "599 100" | ok=FALSE err="Grid square required" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=100 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse age W1AW Band20/CW "599 45" | ok=FALSE err="Grid square required" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=45 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse grid W1AW Band20/CW "FN31" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=FN31 domqth=FN31 exch=FN31 cty=K/8/NorthAmerica/W1
 parse rst.grid W1AW Band20/CW "599 FN31" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=FN31 domqth=FN31 exch=599 FN31 cty=K/8/NorthAmerica/W1
 parse serial.grid W1AW Band20/CW "599 123 FN31" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=FN31 domqth=FN31 exch=599 123 FN31 cty=K/8/NorthAmerica/W1
-parse continent W1AW Band20/CW "599 NA" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 NA cty=K/8/NorthAmerica/W1
-parse fd.class.section W1AW Band20/CW "2A CT" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse fd.section.class W1AW Band20/CW "CT 2A" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse fd.bad.class W1AW Band20/CW "2Z CT" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse fd.bad.section W1AW Band20/CW "2A XYZ" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse fd.class.only W1AW Band20/CW "2A" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse fd.dx DL1ABC Band40/CW "1D DX" | ok=FALSE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
-parse fd.dx.class.only DL1ABC Band40/CW "1D" | ok=FALSE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
-parse fd.dx.mx DL1ABC Band40/CW "1D MX" | ok=FALSE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
-parse ss.full W1AW Band20/CW "123 A 99 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=99 nr.sent=1 exch=123 A 99 CT cty=K/8/NorthAmerica/W1
-parse ss.packed W1AW Band20/CW "123A 99CT" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse ss.no.precedence W1AW Band20/CW "123 99 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=99 nr.sent=1 exch=123 99 CT cty=K/8/NorthAmerica/W1
-parse ss.wrong.order W1AW Band20/CW "CT 99 A 123" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=CT 99 A 123 cty=K/8/NorthAmerica/W1
-parse ss.no.check W1AW Band20/CW "123 A CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=123 A CT cty=K/8/NorthAmerica/W1
-parse ss.bad.section W1AW Band20/CW "123 A 99 XYZ" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=99 nr.sent=1 exch=123 A 99 XYZ cty=K/8/NorthAmerica/W1
-parse county W1AW Band20/CW "CT" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse rst.county W1AW Band20/CW "599 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 CT cty=K/8/NorthAmerica/W1
-parse serial.county W1AW Band20/CW "123 CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=123 CT cty=K/8/NorthAmerica/W1
-parse county.line W1AW Band20/CW "599 CT/MA" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 CT/MA cty=K/8/NorthAmerica/W1
-parse county.bad W1AW Band20/CW "599 ZZZ" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 ZZZ cty=K/8/NorthAmerica/W1
-parse oos.state K4ABC Band40/CW "599 GA" | ok=TRUE err="" token="" pending="" call=K4ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 GA cty=K/8/NorthAmerica/K4
-parse oos.serial.state K4ABC Band40/CW "123 GA" | ok=TRUE err="" token="" pending="" call=K4ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=123 GA cty=K/8/NorthAmerica/K4
-parse ve.province VE3ABC Band15/Phone "59 ON" | ok=TRUE err="" token="" pending="" call=VE3ABC band=Band15 mode=Phone/eNoMode freq=21300000 rst.sent=59 rst.rcvd=59 nr.sent=1 exch=59 ON cty=VE/9/NorthAmerica/VE3
-parse ve0.serial VE0ABC Band20/CW "599 123" | ok=TRUE err="" token="" pending="" call=VE0ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=599 123 cty=VE/9/NorthAmerica/VE0
-parse dx.dx DL1ABC Band40/CW "599 DX" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 DX cty=DL/28/Europe/DL1
-parse dx.serial DL1ABC Band40/CW "599 001" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=1 nr.sent=1 exch=599 001 cty=DL/28/Europe/DL1
-parse dx.zone DL1ABC Band40/CW "599 14" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=14 nr.sent=1 exch=599 14 cty=DL/28/Europe/DL1
-parse dx.name.country DL1ABC Band40/CW "HANS DL" | ok=FALSE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
-parse uk.serial.only G3ABC Band20/CW "123" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=123 cty=G/27/Europe/G3
-parse uk.serial.district G3ABC Band20/CW "599 123 LN" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=599 123 LN cty=G/27/Europe/G3
-parse ja.prefecture JA1ABC Band15/CW "599 13" | ok=TRUE err="" token="" pending="" call=JA1ABC band=Band15 mode=CW/eNoMode freq=21025000 rst.sent=599 rst.rcvd=13 nr.sent=1 exch=599 13 cty=JA/45/Asia/JA1
-parse ru.oblast UA3ABC Band20/CW "599 MO" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 MO cty=UA/29/Europe/UA3
-parse ru.serial UA3ABC Band20/CW "599 123" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=599 123 cty=UA/29/Europe/UA3
+parse continent W1AW Band20/CW "599 NA" | ok=FALSE err="NA is not a grid square or a signal report" token="NA" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse fd.class.section W1AW Band20/CW "2A CT" | ok=FALSE err="2A is not a grid square or a signal report" token="2A" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse fd.section.class W1AW Band20/CW "CT 2A" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse fd.bad.class W1AW Band20/CW "2Z CT" | ok=FALSE err="2Z is not a grid square or a signal report" token="2Z" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse fd.bad.section W1AW Band20/CW "2A XYZ" | ok=FALSE err="2A is not a grid square or a signal report" token="2A" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse fd.class.only W1AW Band20/CW "2A" | ok=FALSE err="2A is not a grid square or a signal report" token="2A" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse fd.dx DL1ABC Band40/CW "1D DX" | ok=FALSE err="1D is not a grid square or a signal report" token="1D" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
+parse fd.dx.class.only DL1ABC Band40/CW "1D" | ok=FALSE err="1D is not a grid square or a signal report" token="1D" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
+parse fd.dx.mx DL1ABC Band40/CW "1D MX" | ok=FALSE err="1D is not a grid square or a signal report" token="1D" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
+parse ss.full W1AW Band20/CW "123 A 99 CT" | ok=FALSE err="A is not a grid square or a signal report" token="A" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse ss.packed W1AW Band20/CW "123A 99CT" | ok=FALSE err="123A is not a grid square or a signal report" token="123A" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse ss.no.precedence W1AW Band20/CW "123 99 CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse ss.wrong.order W1AW Band20/CW "CT 99 A 123" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse ss.no.check W1AW Band20/CW "123 A CT" | ok=FALSE err="A is not a grid square or a signal report" token="A" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse ss.bad.section W1AW Band20/CW "123 A 99 XYZ" | ok=FALSE err="A is not a grid square or a signal report" token="A" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse county W1AW Band20/CW "CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse rst.county W1AW Band20/CW "599 CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse serial.county W1AW Band20/CW "123 CT" | ok=FALSE err="CT is not a grid square or a signal report" token="CT" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse county.line W1AW Band20/CW "599 CT/MA" | ok=FALSE err="CT/MA is not a grid square or a signal report" token="CT/MA" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse county.bad W1AW Band20/CW "599 ZZZ" | ok=FALSE err="ZZZ is not a grid square or a signal report" token="ZZZ" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse oos.state K4ABC Band40/CW "599 GA" | ok=FALSE err="GA is not a grid square or a signal report" token="GA" pending="" call=K4ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/K4
+parse oos.serial.state K4ABC Band40/CW "123 GA" | ok=FALSE err="GA is not a grid square or a signal report" token="GA" pending="" call=K4ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/K4
+parse ve.province VE3ABC Band15/Phone "59 ON" | ok=FALSE err="ON is not a grid square or a signal report" token="ON" pending="" call=VE3ABC band=Band15 mode=Phone/eNoMode freq=21300000 rst.sent=59 nr.sent=1 cty=VE/9/NorthAmerica/VE3
+parse ve0.serial VE0ABC Band20/CW "599 123" | ok=FALSE err="Grid square required" token="" pending="" call=VE0ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 cty=VE/9/NorthAmerica/VE0
+parse dx.dx DL1ABC Band40/CW "599 DX" | ok=FALSE err="DX is not a grid square or a signal report" token="DX" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
+parse dx.serial DL1ABC Band40/CW "599 001" | ok=FALSE err="Grid square required" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=1 nr.sent=1 cty=DL/28/Europe/DL1
+parse dx.zone DL1ABC Band40/CW "599 14" | ok=FALSE err="Grid square required" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=14 nr.sent=1 cty=DL/28/Europe/DL1
+parse dx.name.country DL1ABC Band40/CW "HANS DL" | ok=FALSE err="HANS is not a grid square or a signal report" token="HANS" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
+parse uk.serial.only G3ABC Band20/CW "123" | ok=FALSE err="Grid square required" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 cty=G/27/Europe/G3
+parse uk.serial.district G3ABC Band20/CW "599 123 LN" | ok=FALSE err="LN is not a grid square or a signal report" token="LN" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/27/Europe/G3
+parse ja.prefecture JA1ABC Band15/CW "599 13" | ok=FALSE err="Grid square required" token="" pending="" call=JA1ABC band=Band15 mode=CW/eNoMode freq=21025000 rst.sent=599 rst.rcvd=13 nr.sent=1 cty=JA/45/Asia/JA1
+parse ru.oblast UA3ABC Band20/CW "599 MO" | ok=FALSE err="MO is not a grid square or a signal report" token="MO" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/29/Europe/UA3
+parse ru.serial UA3ABC Band20/CW "599 123" | ok=FALSE err="Grid square required" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 cty=UA/29/Europe/UA3
 parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=MO12 domqth=MO12 exch=599 MO12 cty=UA/29/Europe/UA3
-parse py.state PY2ABC Band20/CW "599 SP" | ok=TRUE err="" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 SP cty=PY/15/SouthAmerica/PY2
-parse f.department F5ABC Band20/CW "599 75" | ok=TRUE err="" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=75 nr.sent=1 exch=599 75 cty=F/27/Europe/F5
+parse py.state PY2ABC Band20/CW "599 SP" | ok=FALSE err="SP is not a grid square or a signal report" token="SP" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=PY/15/SouthAmerica/PY2
+parse f.department F5ABC Band20/CW "599 75" | ok=FALSE err="Grid square required" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=75 nr.sent=1 cty=F/27/Europe/F5
 == keys
 exchange.fields = QTH RST
 zones.max = 0
@@ -940,14 +940,14 @@ qso 33 9A2ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALS
 qso 34 KL7ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=KL qthzone=1 cont=NorthAmerica qthpfx=KL7 pfx= dxqth= dommultqth= domqth= zone=1
 qso 35 HB9ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=HB qthzone=28 cont=Europe qthpfx=HB9 pfx= dxqth= dommultqth= domqth= zone=14
 qso 36 OK1ABC Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=OK qthzone=28 cont=Europe qthpfx=OK1 pfx= dxqth= dommultqth= domqth= zone=15
-parse iota G3ABC Band20/CW "599 123 EU005" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=599 123 EU005 cty=G/27/Europe/G3
-parse iota.dash G3ABC Band20/CW "599 123 EU-005" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=599 123 EU-005 cty=G/27/Europe/G3
-parse iota.short G3ABC Band20/CW "599 EU5" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 EU5 cty=G/27/Europe/G3
-parse dok DL1ABC Band40/CW "599 A01" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 A01 cty=DL/28/Europe/DL1
-parse serial.dok DL1ABC Band40/CW "599 123 A01" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=599 123 A01 cty=DL/28/Europe/DL1
-parse grid6 W1AW Band20/CW "599 FN31PR" | ok=TRUE err="" token="" pending="" call=FN31PR band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 cty=F/27/Europe/FN31
-parse grid.field W1AW Band20/CW "599 FN" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 FN cty=K/8/NorthAmerica/W1
-parse rda.short UA3ABC Band20/CW "599 MO1" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 MO1 cty=UA/29/Europe/UA3
+parse iota G3ABC Band20/CW "599 123 EU005" | ok=FALSE err="EU005 is not a grid square or a signal report" token="EU005" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/27/Europe/G3
+parse iota.dash G3ABC Band20/CW "599 123 EU-005" | ok=FALSE err="EU-005 is not a grid square or a signal report" token="EU-005" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/27/Europe/G3
+parse iota.short G3ABC Band20/CW "599 EU5" | ok=FALSE err="EU5 is not a grid square or a signal report" token="EU5" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/27/Europe/G3
+parse dok DL1ABC Band40/CW "599 A01" | ok=FALSE err="A01 is not a grid square or a signal report" token="A01" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
+parse serial.dok DL1ABC Band40/CW "599 123 A01" | ok=FALSE err="A01 is not a grid square or a signal report" token="A01" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
+parse grid6 W1AW Band20/CW "599 FN31PR" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=FN31PR domqth=FN31PR exch=599 FN31PR cty=K/8/NorthAmerica/W1
+parse grid.field W1AW Band20/CW "599 FN" | ok=FALSE err="FN is not a grid square or a signal report" token="FN" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
+parse rda.short UA3ABC Band20/CW "599 MO1" | ok=FALSE err="MO1 is not a grid square or a signal report" token="MO1" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/29/Europe/UA3
 == totals
 totals.qsopoints = 2
 totals.qtcs = 0

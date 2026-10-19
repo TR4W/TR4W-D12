@@ -357,6 +357,16 @@ resourcestring
      error like we would with an invalid county".  %s is the host state. *)
    SExchangeOutOfStateWorksHostOnly = 'Out of state: work %s stations only';
 
+   (* A WORD OF AN RST-AND-GRID EXCHANGE THAT IS NEITHER -- Q115, NY4I
+     2026-10-18. The parser used to drop such a word silently, so '599 FN3'
+     logged a QSO with no grid. %s is the word as typed. *)
+   SExchangeNotAGridOrReport = '%s is not a grid square or a signal report';
+
+   (* A GRID CONTEST'S EXCHANGE WITH NO GRID IN IT -- Q115, NY4I 2026-10-18:
+     "The contest class should be stating what is required." Shown when the
+     class requires the grid and only a signal report was typed. *)
+   SExchangeGridRequired = 'Grid square required';
+
    (* THE COMBINED IN7QPNE PARTY'S NEW CONTEST PROMPT -- Q87, NY4I
      2026-10-14. The shared prompt names the party's area twice, and this
      party's area is four areas, so it printed the token 'IN7QPNE' twice. *)

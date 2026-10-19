@@ -748,6 +748,9 @@ uses uNet,
   (* ExchangeModeAttribution -- which SETTING put this contest in
     domestic-QTH mode. See the rejections below. *)
   uContestReadiness,
+  (* SExchangeNotAGridOrReport -- the RST-and/or-grid parser's refusal of a
+    word that is neither (Q115). *)
+  uAppStrings,
   Classes; // TStringList — used by ProcessRSTAndDomesticQTHExchange
 
 (* THE CONTEST THAT PARSES AND VALIDATES AN EXCHANGE -- M5b, 2026-10-02.
@@ -2371,11 +2374,28 @@ begin
 end;
 }
 
+(* RST AND/OR GRID: every word is a grid square or a signal report.
+
+  A WORD THAT IS NEITHER REFUSES THE EXCHANGE -- Q115 (NY4I, 2026-10-18).
+  This loop used to skip such a word, so '599 FN3' (a grid one character
+  short) logged a QSO with no grid at all and said nothing. Every word is now
+  read FIRST, before any field is written, and the leftmost word that is
+  neither a grid (uGridShape.IsGoodLookingGrid, through Tree.GoodLookingGrid
+  -- the Q37 rule: what may be logged is what may be measured) nor all digits
+  is named in the message and is the caret's token (Issue #1010), as an
+  improper section is.
+
+  WHAT THE EXCHANGE MUST CARRY IS THE CONTEST'S, NOT THIS PARSER'S. It still
+  accepts a signal report alone; a class that requires the grid says so in
+  its own ParseReceivedExchange (TContestBase.RequireReceivedGrid) -- all five
+  of today's callers do, because all five sponsors require it. *)
 function ProcessRSTAndOrGridSquareExchange(Exchange: ShortString {Str80}; var
   RXData: ContestExchange): boolean;
 
 var
   TestString: Str20;
+  Words: ShortString;
+  BadWord: Str20;
 
 begin
   ProcessRSTAndOrGridSquareExchange := False;
@@ -2384,6 +2404,26 @@ begin
 
   if length(Exchange) = 0 then
      begin
+     Exit;
+     end;
+
+  (* Last word first, as the parse below cuts them, so the word kept is the
+    LEFTMOST bad one -- the first an operator typed. *)
+  BadWord := '';
+  Words := Exchange;
+  while Words <> '' do
+     begin
+     TestString := RemoveLastString(Words);
+     if (not GoodLookingGrid(TestString)) and (not StringIsAllNumbers(TestString)) then
+        begin
+        BadWord := TestString;
+        end;
+     end;
+
+  if BadWord <> '' then
+     begin
+     ExchangeErrorMessage := SysUtils.Format(SExchangeNotAGridOrReport, [string(BadWord)]);
+     ExchangeErrorToken := BadWord;
      Exit;
      end;
 

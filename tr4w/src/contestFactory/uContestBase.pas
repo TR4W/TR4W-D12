@@ -3209,6 +3209,24 @@ type
                                      const aAlsoAllowed: string;
                                      out aResolved: string;
                                      out aErrorMessage: string): boolean;
+
+      (* THE GRID SQUARE IS REQUIRED -- Q115 (NY4I, 2026-10-18: "The contest
+         class should be stating what is required. Some contests could allow
+         just rst but most require more data.").
+
+         MECHANISM, called by a class's own ParseReceivedExchange after
+         `inherited`, with what the format's parse answered. A parse that
+         accepted with no grid is refused with SExchangeGridRequired; a
+         refusal already made passes through untouched, its message with it.
+
+         "No grid" is an empty DomesticQTH: the RST-and/or-grid parse clears
+         it first and writes the grid there, so a grid in it is this parse's
+         and never a stale one -- which QTHString, cleared only by live entry,
+         cannot promise. A contest whose format keeps its grid elsewhere does
+         not call this. The base states no requirement. *)
+      function RequireReceivedGrid(aAccepted: boolean;
+                                   const aExch: ContestExchange;
+                                   var aErrorMessage: string): boolean;
    end;
 
    TContestClass = class of TContestBase;
@@ -3515,6 +3533,8 @@ uses
    (* TC_IMPROPERTRANSMITTERCOUNT -- the one message that is NOT contest
       specific: every class-carrying contest counts transmitters the same way. *)
    uTR4WStrings,
+   (* SExchangeGridRequired -- RequireReceivedGrid's refusal (Q115). *)
+   uAppStrings,
    (* THE SHARED EXCHANGE ARMS the base's export defaults call -- M4. Both
       units name this one in their interface for the record types, so the
       reference back is from the implementation, which Pascal allows. They
@@ -5140,6 +5160,19 @@ begin
    aResolved := aQTH;
    aErrorMessage := TC_ARRLFIELDDAYIMPROPERDXEXCHANGE;
    Result := False;
+end;
+
+function TContestBase.RequireReceivedGrid(aAccepted: boolean;
+                                          const aExch: ContestExchange;
+                                          var aErrorMessage: string): boolean;
+begin
+   (* See the declaration. *)
+   Result := aAccepted;
+   if aAccepted and (aExch.DomesticQTH = '') then
+      begin
+      aErrorMessage := SExchangeGridRequired;
+      Result := False;
+      end;
 end;
 
 function TContestBase.ValidateCountAndLetterClass(const aClass: string;

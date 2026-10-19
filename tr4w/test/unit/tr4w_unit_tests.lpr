@@ -706,6 +706,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestContestRulings2026Oct in 'uTestContestRulings2026Oct.pas',
    (* A QSO party's host-area rule, typed AND scored (Q107, 2026-10-16). *)
    uTestHostAreaRule    in 'uTestHostAreaRule.pas',
+   (* A grid contest's exchange requires the grid, and a bad grid word is
+      refused, never dropped (Q115, NY4I 2026-10-18). *)
+   uTestGridExchange    in 'uTestGridExchange.pas',
    (* A .dom loaded into a table that already holds one (LOGDOM's emptying
       loop read through nil at the end of every list, D7 included). *)
    uTestDomQTHTableReload in 'uTestDomQTHTableReload.pas',
@@ -816,6 +819,7 @@ begin
    RegisterSuite(TContestIN7QPNETests.Create('ContestIN7QPNE'));
    RegisterSuite(TContestRulings2026OctTests.Create('ContestRulings2026Oct'));
    RegisterSuite(THostAreaRuleTests.Create('HostAreaRule'));
+   RegisterSuite(TGridExchangeTests.Create('GridExchange'));
    RegisterSuite(TDomQTHTableReloadTests.Create('DomQTHTableReload'));
    RegisterSuite(TDomesticCountryListTests.Create('DomesticCountryList'));
    RegisterSuite(TCRC32Tests.Create('CRC32'));

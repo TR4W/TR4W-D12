@@ -35,7 +35,6 @@ in section 4. One line each -- the full text is further down.
 - **Q112** Field Day's DX refusal holds only when typed -- apply it to imports/peers/Rescore (as Q107)?
 - **Q113** Edited memories are lost on restart (the message table is written, never read).
 - **Q114** ALRS-UA1DZ: is its exchange a grid (RDA entrants send a district)?
-- **Q115** VHF "RST and/or grid" parser drops a bad grid token silently -- is RST alone OK?
 - **Q116** A malformed grid has no distance -- should it score 0 (not the closest bucket)?
 - **Q119** Is a host-area-refused QSO (Q107) also an automatic X-QSO? (needed before Q98's mechanism)
 - **Q120** Bands and modes per contest: fill `docs/Q98_CONTEST_BANDS_MODES.csv` + five yes/no rulings.
@@ -281,12 +280,6 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   parsed as a domestic QTH, taken as typed, and then used as a GRID for
   distance -- but an RDA entrant's QTH is a district code. A sponsor
   question: what does an ALRS entrant send?
-  **Answer:**
-
-- **Q115** (Q37) **The "RST and/or grid" parser (ARRL VHF x3, CQ VHF, Stew
-  Perry) logs `599 FN3` as a QSO with NO grid**, silently dropping the bad
-  token. Should RST alone be accepted in those contests (then only the bad
-  token should be refused), or is a grid required?
   **Answer:**
 
 - **Q116** (Q37) **What should "no distance" score?** After Q37 a malformed
@@ -550,6 +543,7 @@ closes it; anything else reopens it.
 | Q108 | Contests register by string id like radios (no `VC.pas` line for a new contest); multi-op refused for a contest with no legacy number until the new protocol; `<contestnr>` open | design after the cleanup |
 | Q109 | UDP `dynamicresults`: send the ALL row, per-mode totals, WRTC mults; never suppressed (WRTC's local aggregators read it -- also settles Q55) | built 2026-10-16 |
 | Q110 | Peers must be on the same contest; a QSO from a peer on another contest is refused (not logged, scored or applied) and reported | built 2026-10-18 (bench: BENCH_QUEUE) |
+| Q115 | The class states what its exchange requires; the five RST-and/or-grid contests require the grid, RST optional (all five sponsors); a word that is neither grid nor RST is refused and named, never dropped | built 2026-10-18 (typed entry); import: no seam, not built (finding) |
 | Q52 note | Settled by Q52 | removed |
 
 ### Answered since the table was last updated (full text)
@@ -578,6 +572,48 @@ closes it; anything else reopens it.
   `ceContest` (that byte is read only for the log-compare header,
   `ServerLogFileInformation.liContest`). It is not a contest log, so nothing
   was changed there; the check is the client's.
+- **Q115** (Q37) **The "RST and/or grid" parser (ARRL VHF x3, CQ VHF, Stew
+  Perry) logs `599 FN3` as a QSO with NO grid**, silently dropping the bad
+  token. Should RST alone be accepted in those contests (then only the bad
+  token should be refused), or is a grid required?
+  **Answer:** (NY4I, 2026-10-18) *"The contest class should be stating what
+  is required. Some contests could allow just rst but most require more
+  data."*
+  **The sponsors, read 2026-10-18 -- all five require the grid, none the
+  RST:** ARRL Jan-Jun-Sep VHF Contest Rules v1.2 (one PDF for the three
+  runnings), rule 4: *"the required exchange consists of: 4.1 4-character
+  Maidenhead grid-square locator ... 4.2 A signal report is optional."*
+  CQ VHF (`cqww-vhf.com/rules.htm` IV): *"Callsign and Maidenhead grid
+  locator (4 characters, e.g., EM15). Signal reports are not required."*
+  Stew Perry (`kkn.net/stew/stew_rules.html`): *"Four character grid square
+  (i.e. CN85). RST is optional."* DXLog's five definitions agree
+  (`FIELD_RCVD_MANDATORY=YES`, a grid type).
+  **Built 2026-10-18, typed entry:**
+  * THE FORMAT (LOGSTUFF `ProcessRSTAndOrGridSquareExchange`) reads every
+    word first; the leftmost word that is neither a grid
+    (`uGridShape.IsGoodLookingGrid`, Q37) nor all digits refuses the
+    exchange with `SExchangeNotAGridOrReport` ("FN3 is not a grid square or
+    a signal report") and is the caret token. It still accepts RST alone --
+    a contest that allows that simply states no requirement.
+  * THE REQUIREMENT is each class's, in its own `ParseReceivedExchange`
+    (`inherited`, then the base mechanism `RequireReceivedGrid`):
+    `SExchangeGridRequired` for a signal report alone. No new virtual: the
+    existing parse seam is where a class states a rule. RST stays optional
+    (defaulted 599/59 as before).
+  * FOUND ON THE WAY, in the same five: `599 FN31PR` logged a QSO with the
+    CALL `FN31PR` and no grid -- the call window took the six-character grid
+    for a call. Each class's `MayBeACallsign` now says a grid word is not a
+    call.
+  * Pinned by `uTestGridExchange` (the real engine, per contest) and
+    `uTestExchangeParse` (code `g`); the matrix's parse lines for these five
+    move (see the commit).
+  **Import is NOT built and has no seam:** `ApplyADIFImport` is a procedure
+  that cannot refuse, and the base copies `GRIDSQUARE` into the record
+  without the parser -- so a record with no grid or `FN3` imports as it is.
+  NY4I's Q112 rule (a record typing would refuse is an import error that
+  rolls back the whole import) applies here too, and wants ONE mechanism for
+  both: a refusal out of `ApplyADIFImport` (or a validation virtual beside
+  it) and the importer's rollback.
 
 - **Q118** (Q73; NY4I's NYQP field report, 2026-10-17, the contest running
   that day) **A mobile signing its BARE call** and sending a new county was a
