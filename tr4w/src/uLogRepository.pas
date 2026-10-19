@@ -1111,6 +1111,23 @@ end;
 (* identity                                                                     *)
 (* --------------------------------------------------------------------------- *)
 
+(* NOW, AS UNIX SECONDS -- WHICH ARE UTC BY DEFINITION, and every *_at column
+  of the log says so (uLogSchema: "unix UTC").
+
+  DateTimeToUnix does NOT convert: it counts days from 1970 in whatever clock
+  it is handed, and its AInputIsUTC parameter defaults to True, so handing it
+  Now stored LOCAL time as if it were UTC -- off by the station's UTC offset.
+  Every write of "now" here did that until 2026-10-19 (contest.created_at,
+  config.set_at, session_state.saved_at, and the timestamp inside a contest
+  row's guid). LocalTimeToUniversal(Now) is how the rest of the tree reads
+  UTC (uSpotAge.UTCNow, uSynTime, TF), so it is used here too rather than a
+  third way. Rows already written keep what they hold: nothing migrates them,
+  and nothing reads set_at or saved_at. *)
+function UnixNowUTC: Int64;
+begin
+   Result := DateTimeToUnix(LocalTimeToUniversal(Now));
+end;
+
 function NewUUIDv7(aUnixMillis: Int64): AnsiString;
 var
    b: array[0..15] of byte;
@@ -1120,7 +1137,7 @@ begin
    ms := aUnixMillis;
    if ms <= 0 then
       begin
-      ms := DateTimeToUnix(Now) * Int64(1000);
+      ms := UnixNowUTC * Int64(1000);
       end;
 
    (* 48-bit big-endian timestamp. *)
@@ -2318,7 +2335,7 @@ begin
       q.ParamByName('command').AsString := aCommand;
       q.ParamByName('value').AsString := aValue;
       q.ParamByName('source').AsString := aSource;
-      q.ParamByName('set_at').AsLargeInt := DateTimeToUnix(Now);
+      q.ParamByName('set_at').AsLargeInt := UnixNowUTC;
       q.ExecSQL;
    finally
       q.Free;
@@ -2357,7 +2374,7 @@ begin
          '  saved_at = excluded.saved_at';
       q.ParamByName('key').AsString := aKey;
       q.ParamByName('value').AsString := aValue;
-      q.ParamByName('saved_at').AsLargeInt := DateTimeToUnix(Now);
+      q.ParamByName('saved_at').AsLargeInt := UnixNowUTC;
       q.ExecSQL;
    finally
       q.Free;
@@ -2528,7 +2545,7 @@ begin
       q.ParamByName('guid').AsString := NewUUIDv7(0);
       q.ParamByName('ct').AsString := token;
       q.ParamByName('cn').AsString := friendly;
-      q.ParamByName('created').AsLargeInt := DateTimeToUnix(Now);
+      q.ParamByName('created').AsLargeInt := UnixNowUTC;
       (* MY CALL IS NOT IN THE BINARY LOG. The record carries ceOperator, which
         is the OPERATOR and is not the same thing at a multi-op station, so
         guessing would be worse than leaving it empty. Phase E fills it from

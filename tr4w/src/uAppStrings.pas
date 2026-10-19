@@ -410,6 +410,25 @@ resourcestring
      SContestInactive, and still cannot be chosen for a new contest. *)
    SNewContestShowInactive = 'Show inactive contests';
 
+   (* THE "LAST CONTEST" BUTTON'S SECOND LINE -- NY4I 2026-10-19: "make the
+     contest and year more obvious". %0:s is the contest's display name (a
+     sponsor's proper name, not translated), %1:d the year it was run. Reorder
+     freely; both must stay. *)
+   SLatestContestLine = '%0:s %1:d';
+
+   (* ITS THIRD LINE: %0:s is the entry's callsign, %1:s the log's file name
+     without its directory. Shown only when the log declares a callsign. *)
+   SLatestContestDetail = '%0:s - %1:s';
+
+   (* THE NEW CONTEST DIALOG'S EXISTING-LOG GRID, its four column headers --
+     NY4I 2026-10-19. One row per log in the contest directory: the contest's
+     display name, the year it was run, the entry's callsign, and the file
+     name without its directory. *)
+   SNewContestFilesContest = 'Contest';
+   SNewContestFilesYear = 'Year';
+   SNewContestFilesCall = 'Call';
+   SNewContestFilesFile = 'File';
+
    (* CATEGORY-POWER CHANGED WITH QSOs IN THE LOG. NY4I, 2026-10-01: "Maybe
      we remind them of that mid-contest but let it be changed." A notice, not
      a question -- the change has already been made and the log rescored.

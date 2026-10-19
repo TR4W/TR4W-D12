@@ -414,7 +414,10 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # width ONCE and explicitly, where every comparison's parameter did it
 # implicitly (uSortedStringList 2 -> 0, uCallsigns 7 -> 1). Measured by a
 # full compile of every unit, file for file against the 1243 build's log.
-$NARROW_CEILING = 1235
+# 1235 -> 1233, 2026-10-19: the New Contest dialog's Last Contest button and
+# log grid (uLatestContest, uLogFileFacts) build their captions from native
+# strings; measured by the full builds of that work.
+$NARROW_CEILING = 1233
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

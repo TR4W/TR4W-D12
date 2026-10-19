@@ -74,6 +74,22 @@ uses
   what keeps the domain layer a domain layer. *)
 function LogDatabaseFileName(const aBinaryLogPath: string): string;
 
+(* THE file: URI THAT OPENS aFileName IMMUTABLE -- see OpenToPeek. Public so
+  the escaping is pinned by a test, the UNC form included. *)
+function ImmutableURI(const aFileName: string): AnsiString;
+
+const
+   (* WHAT SQLITE MAY LEAVE BESIDE A DATABASE. The write-ahead log and its
+     index, because every log runs in WAL mode (TLogDatabase.ApplyPragmas);
+     and the rollback journal, which is what SQLite uses when it refuses WAL
+     -- a network share, for one. Declared HERE, beside the database that
+     makes them, since 2026-10-19: uLogImport had the only copy, and the peek
+     (OpenToPeek) became its second reader. *)
+   LOG_SIDECAR_SUFFIXES: array[0..2] of string = ('-wal', '-shm', '-journal');
+
+(* The first sidecar of aDatabase that exists (its full name), or ''. *)
+function LogSidecarPresent(const aDatabase: string): string;
+
 type
    ELogDatabaseError = class(Exception);
 
@@ -134,6 +150,9 @@ type
       FJournalMode: string;
       FForeignKeysEnforced: boolean;
       FReadOnly: boolean;
+      (* Opened by OpenToPeek's immutable branch: the connection names a
+        file: URI. *)
+      FImmutable: boolean;
 
       (* Both open paths refuse a missing file with the same sentence. One
         copy, because two would drift. *)
@@ -214,6 +233,43 @@ type
 
         Refuses a missing file for the same reason Open does. *)
       procedure OpenReadOnly(const aFileName: string);
+
+      (* GLANCE AT A LOG: READ-ONLY, NO LOCK KEPT, NOTHING LEFT BESIDE IT.
+
+        For a look at a log somebody may or may not have open -- the New
+        Contest dialog's Last Contest button is the caller (uLogFileFacts).
+        Refuses a missing file; verifies identity; never migrates, so a
+        schema-2 log stays schema 2.
+
+        WHY NOT SIMPLY OpenReadOnly. On a WAL-mode log -- which every log
+        this program writes is -- a read-only connection still makes SQLite
+        create <file>-wal and <file>-shm, and it cannot checkpoint, so it
+        leaves both behind. Measured 2026-10-19 (uTestLatestContest): the .db
+        byte-identical, two new sidecars.
+
+        SO A LOG WITH NO SIDECAR IS OPENED immutable=1 (sqlite.org/uri.html):
+        no lock, no WAL, no sidecar. A log WITH any sidecar (-wal, -shm or
+        -journal; LogSidecarPresent) is open elsewhere, or was not closed
+        cleanly, and immutable would read past what the sidecar holds -- the
+        WAL's committed frames, or a hot journal's undo of a torn write --
+        so it is read through OpenReadOnly instead. The decision is HERE and
+        not at the caller, because which sidecar makes immutable unsafe is a
+        fact about SQLite, and a caller that checked only -wal (the first
+        version did) would read a rollback-journal log mid-write.
+
+        THE WINDOW THAT REMAINS, and why it is accepted. A writer can open the
+        file between the sidecar check and the end of the read. In WAL mode
+        its writes go to the -wal and the main file changes only at a
+        checkpoint; in DELETE mode it changes the main file under a lock that
+        an immutable reader does not take. Either way the peek can read a
+        page mid-change: SQLite then reports corruption (an exception the
+        caller already turns into "not described") or, rarely, returns a value
+        a moment out of date. It cannot harm the writer -- the peek writes
+        nothing and locks nothing -- and the read is two statements long. A
+        caption that is wrong for one showing of a dialog is the whole cost;
+        locking the file to rule it out would be a peek that can block a
+        live log, which is worse. *)
+      procedure OpenToPeek(const aFileName: string);
 
       procedure Close;
       function IsOpen: boolean;
@@ -312,7 +368,7 @@ type
         anything about locking or speed. *)
       property JournalMode: string read FJournalMode;
 
-      (* True when this connection was opened by OpenReadOnly. Read by
+      (* True when this connection was opened by OpenReadOnly or OpenToPeek. Read by
         CheckIntegrity, which cannot checkpoint a file it may not write. *)
       property IsReadOnly: boolean read FReadOnly;
 
@@ -1202,9 +1258,16 @@ begin
    (* THE CONNECTOR'S OWN READ-ONLY PATH, not a URI and not a flag we invent:
      TSQLite3Connection.OpenFlags goes straight into sqlite3_open_v2
      (sqlite3conn.pp:883), so sofReadOnly is SQLITE_OPEN_READONLY and SQLite
-     enforces it. Set on BOTH branches, never left over from a previous open
+     enforces it. Set on EVERY branch, never left over from a previous open
      of the same object. *)
-   if FReadOnly then
+   if FImmutable then
+      begin
+      (* sofURI is SQLITE_OPEN_URI: the name is parsed as a file: URI, and
+        immutable=1 is SQLite's documented parameter (sqlite.org/uri.html). *)
+      FConnection.DatabaseName := ImmutableURI(aFileName);
+      FConnection.OpenFlags := [sofReadOnly, sofURI];
+      end
+   else if FReadOnly then
       begin
       FConnection.OpenFlags := [sofReadOnly];
       end
@@ -1290,6 +1353,7 @@ begin
    RefuseAMissingFile(aFileName);
 
    FReadOnly := False;
+   FImmutable := False;
    OpenConnection(aFileName);
    VerifyIdentity;
 
@@ -1304,6 +1368,7 @@ begin
    RefuseAMissingFile(aFileName);
 
    FReadOnly := True;
+   FImmutable := False;
    OpenConnection(aFileName);
 
    (* KEPT: VerifyIdentity only reads pragmas, and it is the check that says
@@ -1313,6 +1378,91 @@ begin
      NOT MigrateSchema: it creates tables and stamps user_version, which is a
      write, and a file being inspected is not a file being adopted. *)
    VerifyIdentity;
+end;
+
+procedure TLogDatabase.OpenToPeek(const aFileName: string);
+begin
+   if LogSidecarPresent(aFileName) <> '' then
+      begin
+      OpenReadOnly(aFileName);
+      Exit;
+      end;
+
+   RefuseAMissingFile(aFileName);
+
+   FReadOnly := True;
+   FImmutable := True;
+   OpenConnection(aFileName);
+   VerifyIdentity;
+end;
+
+function LogSidecarPresent(const aDatabase: string): string;
+var
+   i: integer;
+begin
+   Result := '';
+   for i := Low(LOG_SIDECAR_SUFFIXES) to High(LOG_SIDECAR_SUFFIXES) do
+      begin
+      if FileExists(aDatabase + LOG_SIDECAR_SUFFIXES[i]) then
+         begin
+         Result := aDatabase + LOG_SIDECAR_SUFFIXES[i];
+         Exit;
+         end;
+      end;
+end;
+
+function ImmutableURI(const aFileName: string): AnsiString;
+const
+   (* TYPED, so the concatenation stays AnsiString: a bare literal is
+     UnicodeString in this mode and the result would narrow on the way back. *)
+   IMMUTABLE_QUERY: AnsiString = '?immutable=1';
+var
+   path: UTF8String;
+   i: integer;
+   c: AnsiChar;
+begin
+   (* sqlite.org/uri.html, and SQLite's own parser (sqlite3ParseUri):
+
+       - a drive path gets a third slash, file:///C:/x.db -- SQLite's
+         Windows VFS drops the "/" before "C:" itself;
+       - a UNC path \\server\share\x.db becomes file:////server/share/x.db:
+         an EMPTY authority (the only kind SQLite accepts by default) and a
+         path that still begins "//server" -- the four-slash form that page
+         gives for a UNC name;
+       - a Unix path already starts with "/", so file:///home/x.db;
+       - %, ?, # and a space are escaped -- the first three would otherwise
+         end or decode the path -- and the rest of the UTF-8 passes as it
+         is, which SQLite takes byte for byte.
+
+     THE BACKSLASH IS A SEPARATOR ONLY ON WINDOWS. On Linux and macOS it is
+     an ordinary character a file name may contain, so there it is escaped
+     (%5C) rather than turned into a "/" that would name another path. The
+     RTL's DirectorySeparator says which, so no platform test is written
+     here: it is '\' on Windows and '/' elsewhere. *)
+   path := UTF8Encode(ExpandFileName(aFileName));
+   Result := 'file://';
+   if (Length(path) = 0) or
+      ((path[1] <> '/') and (path[1] <> DirectorySeparator)) then
+      begin
+      Result := Result + '/';
+      end;
+   for i := 1 to Length(path) do
+      begin
+      c := path[i];
+      if (c = DirectorySeparator) or (c = '/') then
+         begin
+         Result := Result + '/';
+         end
+      else if (c = '%') or (c = '?') or (c = '#') or (c = ' ') or (c = '\') then
+         begin
+         Result := Result + '%' + AnsiString(IntToHex(Ord(c), 2));
+         end
+      else
+         begin
+         Result := Result + c;
+         end;
+      end;
+   Result := Result + IMMUTABLE_QUERY;
 end;
 
 (* BRING AN OLDER LOG UP TO THE CURRENT SCHEMA.
@@ -1423,6 +1573,7 @@ begin
    FJournalMode := '';
    FForeignKeysEnforced := False;
    FReadOnly := False;
+   FImmutable := False;
 end;
 
 procedure TLogDatabase.Rollback;

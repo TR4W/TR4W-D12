@@ -135,32 +135,14 @@ implementation
 uses
    uContestRegistry;   (* ContestLegacyNumber -- the first record's contest *)
 
-const
-   (* WHAT SQLITE MAY LEAVE BESIDE A DATABASE. The write-ahead log and its
-     index, because every log runs in WAL mode (TLogDatabase.ApplyPragmas);
-     and the rollback journal, which is what SQLite uses when it refuses WAL --
-     a network share, for one. *)
-   SQLITE_SIDECARS: array[0..2] of string = ('-wal', '-shm', '-journal');
+(* WHAT SQLITE MAY LEAVE BESIDE A DATABASE, and the first of them present:
+  uLogDatabase.LOG_SIDECAR_SUFFIXES and LogSidecarPresent. Both lived here
+  until 2026-10-19, when the log peek (TLogDatabase.OpenToPeek) became their
+  second reader. *)
 
 function StagedImportFileName(const aTargetFile: string): string;
 begin
    Result := aTargetFile + '.importing';
-end;
-
-(* The first sidecar of aDatabase that exists, or empty. *)
-function FirstSidecarPresent(const aDatabase: string): string;
-var
-   i: integer;
-begin
-   Result := '';
-   for i := Low(SQLITE_SIDECARS) to High(SQLITE_SIDECARS) do
-      begin
-      if FileExists(aDatabase + SQLITE_SIDECARS[i]) then
-         begin
-         Result := aDatabase + SQLITE_SIDECARS[i];
-         Exit;
-         end;
-      end;
 end;
 
 (* Deletes aStaged and every sidecar of it. True only when none is left.
@@ -174,18 +156,18 @@ function DeleteStagedFiles(const aStaged: string): boolean;
 var
    i: integer;
 begin
-   for i := Low(SQLITE_SIDECARS) to High(SQLITE_SIDECARS) do
+   for i := Low(LOG_SIDECAR_SUFFIXES) to High(LOG_SIDECAR_SUFFIXES) do
       begin
-      if FileExists(aStaged + SQLITE_SIDECARS[i]) then
+      if FileExists(aStaged + LOG_SIDECAR_SUFFIXES[i]) then
          begin
-         DeleteFile(aStaged + SQLITE_SIDECARS[i]);
+         DeleteFile(aStaged + LOG_SIDECAR_SUFFIXES[i]);
          end;
       end;
-   if (FirstSidecarPresent(aStaged) = '') and FileExists(aStaged) then
+   if (LogSidecarPresent(aStaged) = '') and FileExists(aStaged) then
       begin
       DeleteFile(aStaged);
       end;
-   Result := (FirstSidecarPresent(aStaged) = '') and (not FileExists(aStaged));
+   Result := (LogSidecarPresent(aStaged) = '') and (not FileExists(aStaged));
 end;
 
 (* EVERY RECORD OF aReader INTO A NEW DATABASE AT aStaged, IN ONE TRANSACTION.
@@ -406,7 +388,7 @@ begin
         that is the whole point of staging -- so it is worth nothing, and the
         source it came from is still here to import again. *)
       staged := StagedImportFileName(aTargetFile);
-      leftover := FirstSidecarPresent(staged);
+      leftover := LogSidecarPresent(staged);
       if FileExists(staged) then
          begin
          leftover := staged;
@@ -456,7 +438,7 @@ begin
         checkpoints, and a PRAGMA wal_checkpoint here would only repeat it; it
         is the check after the close that turns "SQLite normally does this"
         into a guarantee. *)
-      leftover := FirstSidecarPresent(staged);
+      leftover := LogSidecarPresent(staged);
       if leftover <> '' then
          begin
          DeleteStagedFiles(staged);

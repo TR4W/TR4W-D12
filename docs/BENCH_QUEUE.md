@@ -23,6 +23,28 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-19 -- THE NEW CONTEST DIALOG: LAST CONTEST BUTTON AND THE LOG GRID
+
+No window is shown by any test; all of this is compiled and unit-tested only.
+
+- **Last Contest button** shows the contest's display name and year on its
+  second line and the call / file name on the third; hovering shows the full
+  path. Check it at 100% and 150% scaling, with a long name (e.g. the
+  IN7QPNE composite) -- the year must survive any shortening.
+- **The existing-log list is a grid** (Contest, Year, Call, File), newest
+  year first, undescribable files (old `.cfg`, damaged `.db`) last by file
+  name. Check: layout at 100%/150%; header and row height and the sideways
+  scroll bar on Windows, GTK and Cocoa; the full-path hint; a double-click on
+  a HEADER opens nothing, on a row opens that log.
+- **Enter on a log row opens it and does NOT also create a new contest**
+  (the OK default button). With no logs listed, Enter still presses OK. Key
+  routing differs by widget set -- check Windows, GTK and Cocoa.
+- **Fill time on a real contest directory, cold disk** -- 100 warm logs take
+  ~160 ms; antivirus scanning each `.db` may be slower.
+- **The peek never touches a log:** opening the dialog while the same log is
+  open in another TR4W leaves that log working, and no `-wal`/`-shm` files
+  appear beside a closed log.
+
 ## Added 2026-10-19 -- SMALL PUNS AND TERMINATORS (pointer audit P10: 3.3, 3.4, 3.6, 6.14)
 
 Unit-pinned: the CQ / NEW marker test (`uTestDXSpotParse`, `Test_Marker_*`),

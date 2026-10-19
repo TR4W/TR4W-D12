@@ -57,6 +57,7 @@ type
       procedure TestAnEditKeepsTheSentExchange;
       procedure TestQSOsWithoutAnExchangeIdAreReported;
       procedure TestTheContestStartTimeIsReadAtOpen;
+      procedure TestEveryNowTheLogStoresIsUTC;
       procedure TestOneQSORoundTrips;
       procedure Test_LegacySkippedIsReadAsDeleted;
       procedure TestSentinelsBecomeNullAndComeBack;
@@ -2919,6 +2920,99 @@ begin
    Scrub(fn);
 end;
 
+(* EVERY "NOW" THE LOG STORES IS UNIX UTC -- 2026-10-19.
+
+  contest.created_at, config.set_at, session_state.saved_at and the
+  millisecond timestamp at the head of the contest row's guid were all
+  DateTimeToUnix(Now): LOCAL time stored as if it were UTC. Each is checked
+  against a UTC window taken around the writes.
+
+  THIS CAN ONLY CATCH THE DEFECT ON A MACHINE WHOSE CLOCK IS NOT UTC, because
+  there local and UTC are the same number. The test says so when it runs on
+  one, rather than passing quietly as though it had checked something.
+  Mutation-checked 2026-10-19 at UTC-4: putting Now back fails all four. *)
+procedure TLogRepositoryTests.TestEveryNowTheLogStoresIsUTC;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   q: TSQLQuery;
+   fn: string;
+   before, after: Int64;
+   offsetSeconds: Int64;
+   guid: AnsiString;
+   guidSeconds: Int64;
+
+   procedure CheckInWindow(aValue: Int64; const aWhat: string);
+   begin
+      CheckTrue((aValue >= before) and (aValue <= after),
+                aWhat + ' is UTC: ' + IntToStr(aValue) + ' not in [' +
+                IntToStr(before) + ', ' + IntToStr(after) + '] (local offset ' +
+                IntToStr(offsetSeconds) + ' s)');
+   end;
+
+begin
+   BeginTest('TestEveryNowTheLogStoresIsUTC');
+   fn := TempLogName('utcnow.db');
+   Scrub(fn);
+
+   offsetSeconds := DateTimeToUnix(Now) - DateTimeToUnix(LocalTimeToUniversal(Now));
+   if Abs(offsetSeconds) < 60 then
+      begin
+      WriteLn('  NOTE: this machine''s clock is UTC, so TestEveryNowTheLogStoresIsUTC ' +
+              'cannot tell local from UTC here.');
+      end;
+
+   (* A second either side: the column holds whole seconds. *)
+   before := DateTimeToUnix(LocalTimeToUniversal(Now)) - 1;
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         repo.SetContest(ContestHandleOf(IDAHOQSOPARTY));
+         repo.SaveConfigValue('MY CALL', 'NY4I', 'station');
+         repo.SaveSessionValue('utc-probe', '1');
+         repo.Commit;
+      finally
+         repo.Free;
+      end;
+      after := DateTimeToUnix(LocalTimeToUniversal(Now)) + 1;
+
+      q := TSQLQuery.Create(nil);
+      try
+         q.DataBase := db.Connection;
+         q.Transaction := db.Transaction;
+
+         q.SQL.Text := 'SELECT created_at, guid FROM contest WHERE id = 1';
+         q.Open;
+         CheckInWindow(q.Fields[0].AsLargeInt, 'contest.created_at');
+         guid := AnsiString(q.Fields[1].AsString);
+         q.Close;
+         (* The first twelve hex digits are the UUIDv7's unix milliseconds. *)
+         guidSeconds := StrToInt64('$' + string(Copy(guid, 1, 12))) div 1000;
+         CheckInWindow(guidSeconds, 'the contest guid''s timestamp');
+
+         q.SQL.Text := 'SELECT set_at FROM config WHERE command = ''MY CALL''';
+         q.Open;
+         CheckInWindow(q.Fields[0].AsLargeInt, 'config.set_at');
+         q.Close;
+
+         q.SQL.Text := 'SELECT saved_at FROM session_state WHERE key = ''utc-probe''';
+         q.Open;
+         CheckInWindow(q.Fields[0].AsLargeInt, 'session_state.saved_at');
+         q.Close;
+      finally
+         q.Free;
+      end;
+      db.Transaction.Commit;
+   finally
+      db.Free;
+   end;
+
+   Scrub(fn);
+end;
+
 procedure TLogRepositoryTests.RunAllTests;
 begin
    (* FIRST, AND ON EVERY PLATFORM: these need no D7 fixture, and they pin
@@ -2941,6 +3035,7 @@ begin
    TestAnEditKeepsTheSentExchange;
    TestQSOsWithoutAnExchangeIdAreReported;
    TestTheContestStartTimeIsReadAtOpen;
+   TestEveryNowTheLogStoresIsUTC;
 
 {$IFNDEF WINDOWS}
    (* SAID, NOT SILENT: a suite that quietly contributes nothing is

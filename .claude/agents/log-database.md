@@ -79,6 +79,33 @@ read-only connection to a rollback-journal file creates no WAL at all.
 that asserts "nothing beside the file" must check BEFORE it opens the file to
 inspect it.
 
+**TO GLANCE AT A LOG, `TLogDatabase.OpenToPeek` (2026-10-19)** -- the New
+Contest dialog's Last Contest button, through `uLogFileFacts.ReadLogFileFacts`.
+With NO sidecar beside the file it opens `file:...?immutable=1` (`sofURI` +
+`sofReadOnly`): no lock, no WAL, nothing left behind. With ANY sidecar --
+`-wal`, `-shm` or `-journal` (`LogSidecarPresent`, lifted out of `uLogImport`)
+-- it falls back to `OpenReadOnly`. **The `-journal` matters**: the first
+version checked only `-wal`, so a rollback-journal log (a network share) in the
+middle of a write was read immutable, uncommitted spilled pages and all
+(`Test_ARollbackLogMidWriteIsNotReadImmutable`). The decision lives in
+`OpenToPeek`, not the caller. A writer arriving between the check and the
+read is an accepted window: the peek can misread, never harm the writer.
+- **`ImmutableURI`**: a drive gets `file:///C:/`, a UNC name `file:////server/`
+  (empty authority, the only kind SQLite accepts by default); `%`, `?`, `#`,
+  space are escaped; a backslash is a separator only where it is
+  `DirectorySeparator` -- on Unix it is `%5C`. URIs work in the shipped
+  `sqlite3.dll` because `sofURI` asks per open; proven end to end by an awkward
+  path (`%41`, `#`, an accent) and by `\\localhost\C$` in `uTestLatestContest`.
+
+**EVERY "NOW" STORED IN THE LOG IS UNIX UTC (2026-10-19).**
+`DateTimeToUnix` does NOT convert -- its `AInputIsUTC` defaults to True -- so
+`DateTimeToUnix(Now)` stores LOCAL time. `contest.created_at`, `config.set_at`,
+`session_state.saved_at` and the contest guid's UUIDv7 timestamp all did. They
+go through `uLogRepository.UnixNowUTC` (`LocalTimeToUniversal(Now)`, the tree's
+one way). Rows already written keep their value; nothing migrates them.
+Pinned by `TestEveryNowTheLogStoresIsUTC`, which can only discriminate on a
+machine whose clock is not UTC, and says so on one that is.
+
 **NEVER `FieldByName` IN A PER-ROW READ.** In FPC 3.2.2 `TFields.FindField` is
 a linear scan that upper-cases both names on every comparison. `ReadRecord` paid
 about 190 µs a row for it, on every read path (measured 2026-10-14), and that

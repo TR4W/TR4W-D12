@@ -23,15 +23,21 @@ object frmNewContest: TfrmNewContest
     ClientHeight = 448
     ClientWidth = 296
     TabOrder = 0
-    object lstFiles: TListBox
+    object grdFiles: TStringGrid
       Left = 10
       Height = 328
       Top = 8
       Width = 276
       Anchors = [akTop, akLeft, akRight, akBottom]
-      ItemHeight = 0
+      ColCount = 4
+      FixedCols = 0
+      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRowSelect, goThumbTracking, goSmoothScroll, goCellHints]
+      RowCount = 1
+      ShowHint = True
       TabOrder = 0
-      OnDblClick = lstFilesDblClick
+      OnDblClick = grdFilesDblClick
+      OnGetCellHint = grdFilesGetCellHint
+      OnKeyDown = grdFilesKeyDown
     end
     object btnBrowse: TButton
       Left = 10
@@ -55,11 +61,14 @@ object frmNewContest: TfrmNewContest
     end
   end
   object gbNew: TGroupBox
+    AnchorSideLeft.Control = gbExisting
+    AnchorSideLeft.Side = asrBottom
     Left = 316
     Height = 468
     Top = 8
     Width = 628
     Anchors = [akTop, akLeft, akRight, akBottom]
+    BorderSpacing.Left = 8
     Caption = 'Start a new contest'
     ClientHeight = 448
     ClientWidth = 624

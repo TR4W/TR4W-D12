@@ -40,10 +40,12 @@ interface
 
 uses
   Classes, Controls, Forms, StdCtrls, ExtCtrls, Dialogs, Graphics,
+  Grids,          (* TStringGrid -- the existing-log grid *)
   uTR4WStrings,
   LCLStrConsts,   // RC_/TC_ captions -- see the note on SetRowLabels
   VC,             (* TContestHandle -- the identity each contest line holds (M9b; a handle since Q108 S2) *)
-  uContestChoices; (* TContestChoices -- the list, its order and its search (Q103) *)
+  uContestChoices, (* TContestChoices -- the list, its order and its search (Q103) *)
+  uLatestContest;  (* TLatestContest -- what the Last Contest button says, and its fitting *)
 
 type
   { The nine dynamic rows: three free-text fields then six CATEGORY-* choices.
@@ -75,7 +77,7 @@ type
   TfrmNewContest = class(TForm)
     gbExisting: TGroupBox;
     gbNew: TGroupBox;
-    lstFiles: TListBox;
+    grdFiles: TStringGrid;
     btnBrowse: TButton;
     dlgOpen: TOpenDialog;
     btnLatest: TButton;
@@ -94,7 +96,13 @@ type
     btnCancel: TButton;
     procedure HandleCreate(Sender: TObject);
     procedure HandleShow(Sender: TObject);
-    procedure lstFilesDblClick(Sender: TObject);
+    procedure grdFilesDblClick(Sender: TObject);
+    procedure grdFilesKeyDown(Sender: TObject; var Key: Word;
+                              Shift: TShiftState);
+    (* AnsiString, not string: the grid's event is declared in an ObjFPC unit,
+       where String is AnsiString, and this unit's string is UnicodeString. *)
+    procedure grdFilesGetCellHint(Sender: TObject; ACol, ARow: Integer;
+                                  var HintText: AnsiString);
     procedure btnLatestClick(Sender: TObject);
     procedure btnBrowseClick(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
@@ -127,15 +135,37 @@ type
        raised in the middle describes a half-built list. *)
     FFilling: boolean;
     FChoice: TNewContestChoice;
-    FDir: string;            { the directory lstFiles was filled from }
-    FBrowsedFile: string;    { set only when Browse... was used }
+    (* THE FULL PATH OF EACH LOG IN grdFiles -- data row i (grid row
+       FixedRows + i, under the header) is FFiles[i]. Filled in the same pass
+       as the cells, so the two cannot disagree; a typed field the view owns,
+       never Objects[] and never the File cell joined back to a directory. *)
+    FFiles: array of string;
+    (* How much SizeFileGrid has widened gbExisting and the form beyond their
+       designed widths, so a second fill adjusts by the difference rather
+       than growing again. *)
+    FFileGridGrow: integer;
+    (* The grid's designed width, read once at creation -- what the growth
+       is measured from, since the anchors do not re-lay the grid out until
+       the form shows. *)
+    FFileGridDesigned: integer;
+    FBrowsedFile: string;    (* set only when Browse... was used *)
     { The designed geometry of the bottom of gbExisting, captured once so
       LayoutLatestButton is idempotent and survives a resize. See it. }
     FLatestMargin: integer;      { gbExisting client bottom -> button bottom }
     FLatestHeight: integer;      { the designed height, used as a floor }
     FGapBrowse:    integer;      { Browse bottom -> Latest top }
-    FGapList:      integer;      { list bottom -> Browse top }
+    FGapList:      integer;      (* grid bottom -> Browse top *)
     FGeometry:     boolean;      { the four above have been captured }
+    (* THE LAST CONTEST, as its log describes it -- owned here, nil when there
+       is none. The button's caption is COMPOSED from it on every layout, never
+       read back from the button, so a second layout starts from the whole
+       text rather than from the first one's shortened copy. *)
+    FLatest:       TLatestContest;
+    FLatestLabel:  string;
+    (* The room LatestCaptionFits measures against, set by LayoutLatestButton. *)
+    FFitAvail:     integer;
+    FFitInner:     integer;
+    function  LatestCaptionFits(const aCaption: string): boolean;
     procedure BuildRows;
     procedure CaptureGeometry;
 
@@ -149,16 +179,25 @@ type
     procedure ShowMatchingContests;
     procedure NotifyContestIfChanged;
     procedure SizeContestList;
+    procedure SetFileGridHeaders;
+    procedure FillFileGrid(const aBase: string; aNames: TStrings);
+    procedure SizeFileGrid;
+    function  OpenSelectedRow: boolean;
   public
     destructor Destroy; override;
     { Population -- what WM_INITDIALOG used to do with CreateWindow calls. }
     procedure PopulateFiles(const aDir: string);
     procedure FillContests;
     procedure FillCategories;
-    procedure ShowLatest(const aCaption: string);
+    (* aLabel over what aLatest describes; nil hides the button. The form
+       takes ownership of aLatest. *)
+    procedure ShowLatest(const aLabel: string; aLatest: TLatestContest);
 
     { What the caller reads back -- GetDlgItemTextA, named. }
     function  SelectedFile: string;
+    (* The full path of grid row aRow; '' for the header or a row out of
+       range. *)
+    function  FileOnRow(aRow: integer): string;
     function  MyCall: string;
     function  ContestName: string;
     function  SelectedContest: TContestHandle;
@@ -204,6 +243,7 @@ implementation
 
 uses
   SysUtils,
+  Types,            (* TPoint -- the grid cell under the mouse *)
   LCLType,          (* VK_DOWN, SM_CXVSCROLL *)
   LCLIntf,          (* GetSystemMetrics -- the LCL's, on every widget set *)
   uSettingsModel,   // the Cabrillo category settings and their spellings
@@ -242,6 +282,13 @@ const
   ROW_FIELD_LEFT  = 176;
   ROW_FIELD_WIDTH = 180;
   FIRST_CHOICE_ROW = 4;   // rows 1..3 are free text, 4..9 are CATEGORY-* lists
+
+  (* grdFiles' columns, in the order the .lfm's ColCount and the headers
+     (SetFileGridHeaders) give them. *)
+  COL_CONTEST = 0;
+  COL_YEAR    = 1;
+  COL_CALL    = 2;
+  COL_FILE    = 3;
 
 function TfrmNewContest.GetRowCount: integer;
 begin
@@ -306,6 +353,8 @@ end;
 procedure TfrmNewContest.HandleCreate(Sender: TObject);
 begin
    BuildRows;
+   FFileGridDesigned := grdFiles.Width;
+   SetFileGridHeaders;
    edtMyCall.OnChange := FieldChanged;
    FNotified := NoContest;
    FillContests;
@@ -316,6 +365,7 @@ end;
 destructor TfrmNewContest.Destroy;
 begin
    FreeAndNil(FChoices);
+   FreeAndNil(FLatest);
    inherited Destroy;
 end;
 
@@ -371,7 +421,11 @@ begin
       end;
 end;
 
-{ THE .CFG FILES WHERE TR4W KEEPS THEM -- the one-click common case.
+(* THE LOGS WHERE TR4W KEEPS THEM -- the one-click common case.
+
+  A GRID SINCE 2026-10-19 (NY4I): Contest, Year, Call and File, the first
+  three read from inside each log by uLatestContest -- the very description
+  the Last Contest button shows, so the two cannot disagree. FillFileGrid.
 
   This list is deliberately NOT a file browser. Two were tried first and both
   were wrong for different reasons.
@@ -386,11 +440,11 @@ end;
   TOpenDialog?"  There was not.  TOpenDialog is the platform's own picker and
   arrives with traversal, type-ahead, sorting, recent places, network paths and
   keyboard conventions that would each be code here.  The one thing it cannot
-  do -- show columns read from INSIDE each .cfg, which is the brief's Tier 1 --
+  do -- show columns read from INSIDE each log, which is the brief's Tier 1 --
   no filesystem browser can do either, because that needs the contest database.
-  So the browser bought nothing now and was scheduled for deletion later.
+  So the browser bought nothing, and that one thing is this grid.
 
-  What is left is the cheap half: the files in one known directory, listed. }
+  What is left: the files in one known directory, described. *)
 procedure TfrmNewContest.PopulateFiles(const aDir: string);
 var
    found: TSearchRec;
@@ -447,12 +501,189 @@ begin
          until FindNext(found) <> 0;
          FindClose(found);
          end;
-      { ONE assignment, not one Add per row: Items proxies the widget. }
-      lstFiles.Items.Assign(names);
-      FDir := IncludeTrailingPathDelimiter(aDir);
+      FillFileGrid(base, names);
    finally
       names.Free;
    end;
+end;
+
+(* THE GRID'S FOUR HEADERS, from the resourcestrings -- a header typed into
+  the .lfm would ship as English in every language. Set at creation, not on
+  show, because SizeFileGrid measures them and PopulateFiles runs before the
+  form is shown. *)
+procedure TfrmNewContest.SetFileGridHeaders;
+begin
+   grdFiles.Cells[COL_CONTEST, 0] := UTF8Encode(SNewContestFilesContest);
+   grdFiles.Cells[COL_YEAR, 0]    := UTF8Encode(SNewContestFilesYear);
+   grdFiles.Cells[COL_CALL, 0]    := UTF8Encode(SNewContestFilesCall);
+   grdFiles.Cells[COL_FILE, 0]    := UTF8Encode(SNewContestFilesFile);
+end;
+
+(* ONE ROW PER FILE, DESCRIBED BY THE LOG ITSELF.
+
+  Each file is described ONCE, here, by uLatestContest -- the same reader and
+  the same name and year rule as the Last Contest button. That read opens the
+  log immutable and read-only and closes it before returning, so filling the
+  grid upgrades no schema, leaves no sidecar and holds no lock.
+
+  A FILE THAT CANNOT DESCRIBE ITSELF IS STILL LISTED -- an old .cfg waiting
+  to be migrated, a damaged or foreign database. Its File cell is filled and
+  the other three are blank; why goes to the debug log, because nothing is
+  wrong that the operator must act on, and opening it is what tells them.
+
+  THE ORDER IS uLatestContest.SortContestFiles' (NY4I, 2026-10-19): newest
+  year first, then contest, then file name, with the files that cannot
+  describe themselves last -- unit tested there, without a form.
+
+  aNames holds file names; aBase is their directory, with its trailing
+  delimiter. *)
+procedure TfrmNewContest.FillFileGrid(const aBase: string; aNames: TStrings);
+var
+   i, row: integer;
+   files: TContestFileList;
+   described: TLatestContest;
+begin
+   files := TContestFileList.Create(True);
+   try
+      for i := 0 to aNames.Count - 1 do
+         begin
+         (* string(): a file name from FindFirst, widened -- stated, as
+           SelectedFile's join always did implicitly. *)
+         files.Add(TLatestContest.Create(aBase + string(aNames[i])));
+         end;
+      SortContestFiles(files);
+
+      SetLength(FFiles, files.Count);
+      grdFiles.BeginUpdate;
+      try
+         grdFiles.RowCount := grdFiles.FixedRows + files.Count;
+         for i := 0 to files.Count - 1 do
+            begin
+            described := files[i];
+            FFiles[i] := described.FileName;
+            row := grdFiles.FixedRows + i;
+
+            if described.Described then
+               begin
+               grdFiles.Cells[COL_CONTEST, row] := UTF8Encode(described.ContestName);
+               if described.Year > 0 then
+                  begin
+                  grdFiles.Cells[COL_YEAR, row] := IntToStr(described.Year);
+                  end
+               else
+                  begin
+                  grdFiles.Cells[COL_YEAR, row] := '';
+                  end;
+               grdFiles.Cells[COL_CALL, row] := UTF8Encode(described.Call);
+               end
+            else
+               begin
+               grdFiles.Cells[COL_CONTEST, row] := '';
+               grdFiles.Cells[COL_YEAR, row]    := '';
+               grdFiles.Cells[COL_CALL, row]    := '';
+               if logger.IsDebugEnabled then
+                  begin
+                  logger.Debug('[NewContest] %s does not describe itself (%s); ' +
+                               'listed by its file name only',
+                               [FFiles[i], described.Why]);
+                  end;
+               end;
+            grdFiles.Cells[COL_FILE, row] := UTF8Encode(ExtractFileName(described.FileName));
+            end;
+      finally
+         grdFiles.EndUpdate;
+      end;
+   finally
+      files.Free;
+   end;
+
+   SizeFileGrid;
+end;
+
+(* EVERY COLUMN AS WIDE AS ITS WIDEST CELL, AND THE GROUP AS WIDE AS THE GRID.
+
+  MEASURED, NOT TYPED -- the cells in the grid's font, the header in its
+  title font, plus the grid's own cell padding on both sides. Measured with
+  WidestText's bitmap canvas, which needs no window handle, because this runs
+  before the form is shown.
+
+  THE GROUP BOX ONLY GROWS, from its designed width, and the form with it.
+  gbNew's left side is anchored to gbExisting's right (.lfm), so the right
+  half moves over intact rather than being squeezed. Never past the screen's
+  work area: there the grid keeps its width and scrolls sideways.
+
+  IDEMPOTENT: the growth is held in FFileGridGrow and applied as a
+  difference, so a second fill neither grows the form again nor needs the
+  anchored grid to have been laid out (it is not, until the form shows). *)
+procedure TfrmNewContest.SizeFileGrid;
+const
+   (* The grid's frame, both sides together; generous, as LIST_CHROME is. *)
+   GRID_CHROME = 8;
+var
+   texts: TStringList;
+   col, row, w, header, need, grow, room: integer;
+begin
+   need := 0;
+   texts := TStringList.Create;
+   try
+      for col := 0 to grdFiles.ColCount - 1 do
+         begin
+         texts.Clear;
+         for row := grdFiles.FixedRows to grdFiles.RowCount - 1 do
+            begin
+            texts.Add(grdFiles.Cells[col, row]);
+            end;
+         w := WidestText(grdFiles.Font, texts);
+
+         texts.Clear;
+         texts.Add(grdFiles.Cells[col, 0]);
+         header := WidestText(grdFiles.TitleFont, texts);
+         if header > w then
+            begin
+            w := header;
+            end;
+
+         w := w + 2 * grdFiles.Scale96ToFont(constCellPadding) + GRID_CHROME;
+         grdFiles.ColWidths[col] := w;
+         need := need + w;
+         end;
+   finally
+      texts.Free;
+   end;
+   need := need + GRID_CHROME + GetSystemMetrics(SM_CXVSCROLL);
+
+   grow := need - FFileGridDesigned;
+   if grow < 0 then
+      begin
+      grow := 0;
+      end;
+   room := Screen.WorkAreaWidth - (Width - FFileGridGrow);
+   if grow > room then
+      begin
+      grow := room;
+      end;
+   if grow < 0 then
+      begin
+      grow := 0;
+      end;
+
+   if grow <> FFileGridGrow then
+      begin
+      (* THE MINIMUM FIRST: giving room back lowers Width, and a Width below
+        the old minimum would be clamped back up to it. *)
+      Constraints.MinWidth := Constraints.MinWidth + (grow - FFileGridGrow);
+      gbExisting.Width     := gbExisting.Width + (grow - FFileGridGrow);
+      Width                := Width + (grow - FFileGridGrow);
+      FFileGridGrow        := grow;
+      end;
+
+   if logger.IsDebugEnabled then
+      begin
+      logger.Debug('[NewContest] file grid: %d rows, columns need %d px, ' +
+                   'grew %d -> group %d, form %d',
+                   [grdFiles.RowCount - grdFiles.FixedRows, need, grow,
+                    gbExisting.Width, Width]);
+      end;
 end;
 
 { ANYWHERE ELSE. The picker answers with a full path, which is why
@@ -864,16 +1095,35 @@ begin
    FLatestMargin := gbExisting.ClientHeight - (btnLatest.Top + btnLatest.Height);
    FLatestHeight := btnLatest.Height;
    FGapBrowse    := btnLatest.Top - (btnBrowse.Top + btnBrowse.Height);
-   FGapList      := btnBrowse.Top - (lstFiles.Top + lstFiles.Height);
+   FGapList      := btnBrowse.Top - (grdFiles.Top + grdFiles.Height);
    FGeometry     := True;
 end;
 
-{ SIZE THE BUTTON TO ITS TEXT, and take the difference out of the file list.
+(* A button insets its text from its own edges; measure against the inside. *)
+const
+   LATEST_TEXT_INSET = 16;
 
-  The caption is two logical lines -- the label and then the full path -- and
-  the path is as long as the operator's directory names make it. It was a fixed
-  44px in the .lfm, which fits exactly two rendered lines, so a path that wrapped
-  to a third was silently clipped (NY4I, 2026-08-31: a path ending in
+(* DOES THIS CAPTION FIT THE ROOM LayoutLatestButton MEASURED? Too TALL or too
+  WIDE are both a no: a Win32 button wraps, so a long line grows the height,
+  but nothing wraps on GTK and the line runs out of the button instead. *)
+function TfrmNewContest.LatestCaptionFits(const aCaption: string): boolean;
+var
+   (* UTF8Encode, the exact conversion: a caption is UTF-8, and assigning the
+     UnicodeString straight in is a narrowing the build counts. *)
+   caption: TCaption;
+begin
+   caption := UTF8Encode(aCaption);
+   Result := (WrappedTextHeight(caption, FFitInner) + LATEST_TEXT_INSET <= FFitAvail) and
+             (WidestLine(caption) <= FFitInner);
+end;
+
+(* SIZE THE BUTTON TO ITS TEXT, and take the difference out of the file list.
+
+  The caption is up to three lines -- the label, the contest and its year, and
+  the call and file name (uLatestContest) -- or, when the log cannot describe
+  itself, the label and the full path as it always was. It was a fixed 44px in
+  the .lfm, which fits exactly two rendered lines, so a path that wrapped to a
+  third was silently clipped (NY4I, 2026-08-31: a path ending in
   \2026 wwdigi ny4i\wwdigi.cfg lost its last line).
 
   GROWS UPWARD, because the button is anchored to the bottom of the group box
@@ -881,30 +1131,24 @@ end;
   the list absorbs it.
 
   THE LIST HAS A FLOOR. Growth is capped so the file list keeps MIN_LIST pixels
-  -- an unbounded path would otherwise consume the very list this dialog exists
-  to show. When the cap bites, the PATH is elided in its middle rather than
-  clipped at its end: the drive and the file name are the two parts that
-  identify it, and they are the two parts a right-clip destroys.
+  -- an unbounded caption would otherwise consume the very list this dialog
+  exists to show. When the cap bites, uLatestContest.FitLatestCaption decides
+  what to give up: the file line first (from its middle), then the file line
+  altogether, and only then the end of the contest name -- never its year, and
+  never the label.
 
   IDEMPOTENT: every value is derived from the captured design geometry and the
-  current caption, never from the controls' present Top and Height. }
+  caption composed afresh from FLatest, never from the controls' present Top
+  and Height or the button's present caption. *)
 procedure TfrmNewContest.LayoutLatestButton;
 const
-   { A button insets its text from its own edges; measure against the inside. }
-   TEXT_INSET = 16;
    MIN_LIST   = 120;
-   ELIDE      = '...';
 var
-   { TCaption, NOT string. In this unit `string` is UnicodeString while an LCL
+   (* TCaption, NOT string. In this unit `string` is UnicodeString while an LCL
      caption is TCaption, so a plain string local converts on every read and
-     every write -- four narrowing warnings for text that never leaves the
-     widget set. Hold the caption in the type the control uses. }
-   text, label_, path: TCaption;
-   { The ellipsis as a TCaption too. As a bare string constant it is
-     UnicodeString here, which promotes the whole concatenation and then
-     narrows it back on the way into text -- three warnings for three dots. }
-   dots: TCaption;
-   avail, needed, capHeight, bottom, keep, brk: integer;
+     every write. Hold the caption in the type the control uses. *)
+   text: TCaption;
+   avail, needed, capHeight, bottom: integer;
    inner, widest: integer;
 begin
    (* INITIALISED, because the debug line at the bottom reads both whatever
@@ -920,63 +1164,35 @@ begin
 
    bottom := gbExisting.ClientHeight - FLatestMargin;
 
-   if not btnLatest.Visible then
+   if (not btnLatest.Visible) or
+      (FLatest = nil) then
       begin
-      { No latest file: hand the space back rather than leaving a hole. }
+      (* No latest file: hand the space back rather than leaving a hole. *)
       capHeight := 0;
       end
    else
       begin
       avail := bottom - FGapBrowse - btnBrowse.Height - FGapList
-                      - lstFiles.Top - MIN_LIST;
+                      - grdFiles.Top - MIN_LIST;
+      inner := btnLatest.Width - LATEST_TEXT_INSET;
 
-      text   := btnLatest.Caption;
-      inner  := btnLatest.Width - TEXT_INSET;
-      needed := WrappedTextHeight(text, inner) + TEXT_INSET;
-      widest := WidestLine(text);
+      (* COMPOSED AND CUT DOWN TO FIT in one place -- see uLatestContest for
+        the order things are given up in. *)
+      FFitAvail := avail;
+      FFitInner := inner;
+      text      := UTF8Encode(FitLatestCaption(FLatestLabel, FLatest, LatestCaptionFits));
+      needed    := WrappedTextHeight(text, inner) + LATEST_TEXT_INSET;
+      widest    := WidestLine(text);
       if logger.IsDebugEnabled then
          begin
          logger.Debug('[NewContest] measured "%s" at width %d: %d px',
                       [StringReplace(text, #13#10, ' | ', [rfReplaceAll]),
-                       btnLatest.Width - TEXT_INSET, needed]);
+                       inner, needed]);
          end;
 
-      { STILL TOO LONG FOR THE WHOLE ALLOWANCE: shorten the PATH, and only the
-        path.  The caption is 'Last Contest, Alt+&A:' + a line break + the
-        file name, and eliding into the label would damage the one part that
-        says what the button does. Everything after the last line break is the
-        path; if there is no line break there is nothing to protect and the
-        whole caption is the path.
-
-        Shortened from the MIDDLE: the drive and the file name identify a path,
-        and they are exactly the two parts a right-hand clip destroys. Halved
-        each pass, so this converges in a handful of passes on any real path,
-        and it runs once per show. }
-      dots   := ELIDE;
-      brk    := LastDelimiter(#10, text);
-      label_ := Copy(text, 1, brk);
-      path   := Copy(text, brk + 1, MaxInt);
-      keep   := Length(path);
-
-      (* TOO TALL *OR* TOO WIDE. The height test alone was a Windows test: a
-        button there wraps, so an over-long path became a second line and grew
-        the height. Nothing wraps on GTK, so the line ran off the end of the
-        button and the height never noticed. *)
-      while ((needed > avail) or (widest > inner)) and
-            (keep > Length(ELIDE) + 8) do
-         begin
-         keep := keep div 2;
-         text := label_ + Copy(path, 1, keep div 2) + dots +
-                 Copy(path, Length(path) - (keep - keep div 2) + 1, MaxInt);
-         needed := WrappedTextHeight(text, inner) + TEXT_INSET;
-         widest := WidestLine(text);
-         end;
       if text <> btnLatest.Caption then
          begin
-         { The full path stays reachable even when it cannot be shown. }
-         btnLatest.Hint     := btnLatest.Caption;
-         btnLatest.ShowHint := True;
-         btnLatest.Caption  := text;
+         btnLatest.Caption := text;
          end;
 
       capHeight := needed;
@@ -995,7 +1211,7 @@ begin
       end;
 
    btnBrowse.Top   := bottom - capHeight - btnBrowse.Height;
-   lstFiles.Height := btnBrowse.Top - FGapList - lstFiles.Top;
+   grdFiles.Height := btnBrowse.Top - FGapList - grdFiles.Top;
 
    if logger.IsDebugEnabled then
       begin
@@ -1005,7 +1221,7 @@ begin
                    [gbExisting.ClientHeight, bottom, needed, avail,
                     widest, inner,
                     btnLatest.Top, btnLatest.Height, btnBrowse.Top,
-                    lstFiles.Height]);
+                    grdFiles.Height]);
       end;
 end;
 
@@ -1043,19 +1259,39 @@ begin
    btnLatest.Caption := want;
 end;
 
-procedure TfrmNewContest.ShowLatest(const aCaption: string);
+procedure TfrmNewContest.ShowLatest(const aLabel: string; aLatest: TLatestContest);
 begin
-   btnLatest.ShowHint := False;
-   btnLatest.Hint     := '';
-   btnLatest.Caption  := aCaption;
-   btnLatest.Visible  := aCaption <> '';
+   if aLatest <> FLatest then
+      begin
+      FreeAndNil(FLatest);
+      FLatest := aLatest;
+      end;
+   FLatestLabel := aLabel;
+
+   (* THE FULL PATH IS ALWAYS THE HINT -- whatever the caption had to give up,
+     and whether or not it gave anything up. *)
+   if FLatest <> nil then
+      begin
+      btnLatest.Hint     := UTF8Encode(FLatest.FileName);
+      btnLatest.ShowHint := True;
+      (* The caption is LayoutLatestButton's to write: it alone has measured
+        the room. *)
+      btnLatest.Visible  := True;
+      end
+   else
+      begin
+      btnLatest.Hint     := '';
+      btnLatest.ShowHint := False;
+      btnLatest.Caption  := '';
+      btnLatest.Visible  := False;
+      end;
    LayoutLatestButton;
 end;
 
-{ THE FULL PATH, whichever way it was chosen: Browse answers with one already,
-  and a list selection is joined to the directory it was listed from. The caller
+(* THE FULL PATH, whichever way it was chosen: Browse answers with one already,
+  and a grid row's path is the one FillFileGrid recorded for it. The caller
   has nothing to prepend, which is what StartContestFromListbox got wrong when it
-  expanded a name with GetFullPathNameA against the process's current directory. }
+  expanded a name with GetFullPathNameA against the process's current directory. *)
 function TfrmNewContest.SelectedFile: string;
 begin
    Result := FBrowsedFile;
@@ -1063,9 +1299,19 @@ begin
       begin
       Exit;
       end;
-   if (lstFiles.ItemIndex >= 0) and (lstFiles.ItemIndex < lstFiles.Items.Count) then
+   Result := FileOnRow(grdFiles.Row);
+end;
+
+function TfrmNewContest.FileOnRow(aRow: integer): string;
+var
+   i: integer;
+begin
+   Result := '';
+   i := aRow - grdFiles.FixedRows;
+   if (i >= 0) and
+      (i <= High(FFiles)) then
       begin
-      Result := FDir + lstFiles.Items[lstFiles.ItemIndex];
+      Result := FFiles[i];
       end;
 end;
 
@@ -1247,16 +1493,74 @@ begin
    chkIAmIn.Visible := aText <> '';
 end;
 
-procedure TfrmNewContest.lstFilesDblClick(Sender: TObject);
+(* A DOUBLE-CLICK ON A LOG'S ROW OPENS IT.
+
+  ONLY ON THE SELECTED ROW. The grid raises OnDblClick wherever the mouse is
+  -- on the header, or below the last row -- and its selection does not move
+  there, so a double-click on a column header would otherwise open whichever
+  log happened to be selected. The first click of a double-click on a row has
+  already selected it, so "the row under the mouse is the selected row" is
+  exactly "the operator double-clicked a log". *)
+procedure TfrmNewContest.grdFilesDblClick(Sender: TObject);
+var
+   cell: TPoint;
 begin
-   { LBN_DBLCLK used to mean ChangeDir -- descend, or open if it was a file.
-     With a flat list there is nothing to descend into, so it only ever meant
-     the second thing. }
-   if SelectedFile <> '' then
+   cell := grdFiles.MouseToCell(grdFiles.ScreenToClient(Mouse.CursorPos));
+   if cell.Y <> grdFiles.Row then
       begin
-      FChoice     := nccOpenSelected;
-      ModalResult := mrOk;
+      Exit;
       end;
+   OpenSelectedRow;
+end;
+
+(* ENTER IN THE GRID OPENS THE SELECTED LOG -- NY4I, 2026-10-19. Before this,
+  Enter in the file list pressed OK, the form's Default button, which CREATES
+  a new contest: the opposite of what the operator was pointing at.
+
+  CONSUMING THE KEY IS WHAT KEEPS OK FROM FIRING TOO. The LCL presses the
+  Default button from the key UP (TApplication.ControlKeyUp -> DoReturnKey),
+  and only for a key whose DOWN reached TApplication.ControlKeyDown unhandled
+  -- that is what records it. OnKeyDown runs before that; Key := 0 stops it
+  there (TWinControl.DoKeyDownBeforeInterface), so nothing is recorded and the
+  key up does nothing.
+
+  Only a plain Enter on a real row. With no log listed -- the grid holds only
+  its header -- the key is left alone and Enter presses OK as it does
+  everywhere else in the dialog. *)
+procedure TfrmNewContest.grdFilesKeyDown(Sender: TObject; var Key: Word;
+                                         Shift: TShiftState);
+begin
+   if (Key <> VK_RETURN) or
+      (Shift <> []) then
+      begin
+      Exit;
+      end;
+   if OpenSelectedRow then
+      begin
+      Key := 0;
+      end;
+end;
+
+(* THE ONE WAY A GRID ROW IS OPENED, by double-click or by Enter. False, and
+  nothing chosen, when the selected row is no file -- the header, or a grid
+  with no logs in it. *)
+function TfrmNewContest.OpenSelectedRow: boolean;
+begin
+   Result := FileOnRow(grdFiles.Row) <> '';
+   if Result then
+      begin
+      FBrowsedFile := '';
+      FChoice      := nccOpenSelected;
+      ModalResult  := mrOk;
+      end;
+end;
+
+(* THE FULL PATH IS THE HINT of every row's cells -- the File column shows the
+  name only. The header has none. *)
+procedure TfrmNewContest.grdFilesGetCellHint(Sender: TObject; ACol, ARow: Integer;
+                                             var HintText: AnsiString);
+begin
+   HintText := UTF8Encode(FileOnRow(ARow));
 end;
 
 { Every edit that can invalidate the OK button routes here; uNewContest owns

@@ -80,6 +80,7 @@ uses
   SysUtils,            // Format, Trim, FreeAndNil -- the RTL, not TF shims
   Controls,            // mrOk -- the modal results
   uNewContestForm,     // the designed form this unit now drives
+  uLatestContest,      (* TLatestContest -- the last contest, as its log describes it *)
   MainUnit,
   uRadioConfigApply,   // GetLatestConfigFile -- the last contest, from tr4w.json
   uCFG,
@@ -506,6 +507,8 @@ end;
 procedure PrepareForm;
 var
    latest: string;
+   (* Handed to the form, which owns it from then on. *)
+   describedLatest: TLatestContest;
    myCall: string;
    i     : integer;
 begin
@@ -589,12 +592,24 @@ begin
         label that contains an UNCLOSED '(' before the '&' would still trip it;
         nothing in the catalogues does, and the guard belongs in a caption lint
         rather than here. *)
-      frmNewContest.ShowLatest(Format(TC_LATEST_CONFIG_FILE + ', Alt+&A:'#13#10'%s',
-                                      [LowerCase(latest)]));
+      (* WHAT CONTEST, AND WHICH YEAR -- asked of the log itself (NY4I,
+        2026-10-19: "make the contest and year more obvious"). A file that
+        cannot say -- an old .cfg, a damaged or foreign database -- keeps the
+        old caption, the path; the reason goes to the debug log only, because
+        nothing is wrong that the operator needs to act on. *)
+      describedLatest := TLatestContest.Create(latest);
+      if (not describedLatest.Described) and
+         logger.IsDebugEnabled then
+         begin
+         logger.Debug('[NewContest] the last contest file does not describe ' +
+                      'itself (%s), so the button shows its path: %s',
+                      [describedLatest.Why, latest]);
+         end;
+      frmNewContest.ShowLatest(TC_LATEST_CONFIG_FILE + ', Alt+&A:', describedLatest);
       end
    else
       begin
-      frmNewContest.ShowLatest('');
+      frmNewContest.ShowLatest('', nil);
       end;
 
    { The six CATEGORY-* rows are labelled once and stay labelled. Rows 1..3 are

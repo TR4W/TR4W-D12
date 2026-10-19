@@ -853,7 +853,8 @@ closes it; anything else reopens it.
   and "Order by next date" (Q99) beneath; no groups unless search proves
   short. Built with Q52, Q59 and Q99 as one New Contest dialog change
   (lcl-ui). **Built 2026-10-19 with Q52 and Q59** (Q99 not yet): a search
-  box over a `TListBox`; it matches the caption only, never the internal id;
+  box over a `TListBox`; it matches the caption only, never the internal id
+  (confirmed, NY4I 2026-10-19: "search caption only is fine");
   a search that hides the chosen contest un-chooses it; a single match is
   not chosen automatically; Down arrow moves into the list.
 
