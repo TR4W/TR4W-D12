@@ -331,3 +331,6 @@ tr4w/tr4w.ico
 # Lazarus writes the previous version here when it saves a unit it had open.
 # Not source: it is a stale editor buffer by definition.
 tr4w/src/backup/
+
+# N1MM UDC downloads: third-party files, this repository is public
+tools/udc/cache/
