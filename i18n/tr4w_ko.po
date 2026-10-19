@@ -91,6 +91,7 @@ msgctxt "TC_FREQ_ZERO"
 msgid "ERROR: Invalid Frequency logged"
 msgstr "ERROR: 잘못된 주파수 로그"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "로그인에 있는 SHOW FREQUENCY는 꺼집니다"
 #. Section: General
 #: utr4wstrings:tc_freq_off
 #: tr4w/src/lang/tr4w_consts_eng.pas:16
@@ -98,7 +99,7 @@ msgstr "ERROR: 잘못된 주파수 로그"
 #, fuzzy
 msgctxt "TC_FREQ_OFF"
 msgid "SHOW FREQUENCY IN LOG is turned off"
-msgstr "로그인에 있는 SHOW FREQUENCY는 꺼집니다"
+msgstr "SHOW FREQUENCY IN LOG가 꺼져 있습니다"
 
 #. Section: General
 #: utr4wstrings:tc_checkcallsign
@@ -959,6 +960,7 @@ msgctxt "TC_ENTERYOURAGEINMYSTATEFIELD"
 msgid "Enter your age in MY STATE field:"
 msgstr "MY STATE 필드에 당신의 나이를 입력하십시오:"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "당신이 북아메리카에 있는 경우에 또는 나의 STATE로 당신의 힘을 보낼 QTH를 입력하십시오:"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryourqthorpower
 #: tr4w/src/lang/tr4w_consts_eng.pas:135
@@ -966,7 +968,7 @@ msgstr "MY STATE 필드에 당신의 나이를 입력하십시오:"
 #, fuzzy
 msgctxt "TC_ENTERYOURQTHORPOWER"
 msgid "Enter your QTH that you want to send if you are in North America or your power as MY STATE if outside:"
-msgstr "당신이 북아메리카에 있는 경우에 또는 나의 STATE로 당신의 힘을 보낼 QTH를 입력하십시오:"
+msgstr "북미에 있으면 보낼 QTH를, 그 밖이면 출력을 MY STATE로 입력하십시오:"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enterfirsttwolettersofyourgrid
@@ -2879,6 +2881,7 @@ msgctxt "TC_INVALIDREMINDERDATE"
 msgid "Invalid reminder date!!"
 msgstr "잘못된 알림 날짜!!"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "너무 많은 TOTAL SCORE의 장점!!"
 #. Section: CFGCMD
 #: utr4wstrings:tc_toomanytotalscoremessages
 #: tr4w/src/lang/tr4w_consts_eng.pas:453
@@ -2886,7 +2889,7 @@ msgstr "잘못된 알림 날짜!!"
 #, fuzzy
 msgctxt "TC_TOOMANYTOTALSCOREMESSAGES"
 msgid "Too many TOTAL SCORE MESSAGEs!!"
-msgstr "너무 많은 TOTAL SCORE의 장점!!"
+msgstr "TOTAL SCORE MESSAGE가 너무 많습니다!!"
 
 #. Section: CFGCMD
 #: utr4wstrings:tc_thefirstcommandinconfigfilemustbe
@@ -3222,6 +3225,7 @@ msgctxt "TC_RST_PROMPT"
 msgid "RST prompt"
 msgstr "RST 프롬프트"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "내 CALL 명령어로 호출하기"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:tc_send_callassetbymycallcommand
 #: tr4w/src/lang/tr4w_consts_eng.pas:511
@@ -3229,7 +3233,7 @@ msgstr "RST 프롬프트"
 #, fuzzy
 msgctxt "TC_SEND_CALLASSETBYMYCALLCOMMAND"
 msgid "Send call as set by MY CALL command"
-msgstr "내 CALL 명령어로 호출하기"
+msgstr "MY CALL 명령으로 설정된 콜사인 보내기"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:tc_repeatrstsent
@@ -5027,10 +5031,11 @@ msgstr "메인 창"
 msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
 msgstr "글꼴은 메인 대회 창에 적용됩니다. 다음 TR4W가 시작됩니다."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "이 설정 메뉴의 외관 항목에 있었다. 그 창은 ROW COUNT와 WINDOW 크기가 여기에 가입하면됩니다."
 #: tprefsform.lblappearmenunote.caption
 #, fuzzy
 msgid "These were on the Appearance item of the Settings menu. That window goes away once ROW COUNT and WINDOW SIZE join them here."
-msgstr "이 설정 메뉴의 외관 항목에 있었다. 그 창은 ROW COUNT와 WINDOW 크기가 여기에 가입하면됩니다."
+msgstr "이 항목들은 설정 메뉴의 모양 항목에 있었습니다. ROW COUNT와 WINDOW SIZE도 이곳으로 옮겨지면 그 창은 없어집니다."
 
 #: tprefsform.lblaudioheading.caption
 #, fuzzy
@@ -7716,6 +7721,7 @@ msgctxt "TC_AUTOSPOTENABLEDTESTMODEONLY"
 msgid "AUTOSPOT is enabled - Test Mode Only"
 msgstr "AUTOSPOT가 활성화됩니다 - 테스트 모드 만"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "HAND 로그 모드 = TRUE"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_handlogmodetrue
 #: tr4w/src/lang/tr4w_consts_eng.pas:848
@@ -7723,7 +7729,7 @@ msgstr "AUTOSPOT가 활성화됩니다 - 테스트 모드 만"
 #, fuzzy
 msgctxt "TC_HANDLOGMODETRUE"
 msgid "HAND LOG MODE = TRUE"
-msgstr "HAND 로그 모드 = TRUE"
+msgstr "HAND LOG MODE = TRUE"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_trmasterdtas
@@ -7995,6 +8001,7 @@ msgctxt "TC_ENTEREXCHANGEPRESSENTERLOGESCAPEAB"
 msgid "Enter exchange.  Press ENTER to log, ESCAPE to abort QSO."
 msgstr "자주 묻는 질문 로그인하려면 ENTER를 누르십시오."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "RELAY CONTROL 포트 = PADDLE 포트"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_relaycontrolportpaddleport
 #: tr4w/src/lang/tr4w_consts_eng.pas:879
@@ -8002,7 +8009,7 @@ msgstr "자주 묻는 질문 로그인하려면 ENTER를 누르십시오."
 #, fuzzy
 msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
 msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr "RELAY CONTROL 포트 = PADDLE 포트"
+msgstr "RELAY CONTROL PORT = PADDLE PORT"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_locationfieldempty
@@ -8013,6 +8020,7 @@ msgctxt "TC_LOCATIONFIELDEMPTY"
 msgid "LOCATION field is empty."
 msgstr "LOCATION 필드는 비어 있습니다."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "PTT 차단=TRUE"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_pttlockouttrue
 #: tr4w/src/lang/tr4w_consts_eng.pas:881
@@ -8020,7 +8028,7 @@ msgstr "LOCATION 필드는 비어 있습니다."
 #, fuzzy
 msgctxt "TC_PTTLOCKOUTTRUE"
 msgid "PTT LOCKOUT=TRUE"
-msgstr "PTT 차단=TRUE"
+msgstr "PTT LOCKOUT=TRUE"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_preferencescouldopeneds
@@ -9516,25 +9524,28 @@ msgstr ""
 "\n"
 "요청은 REFUSED가 아닌 전송되지 않았습니다. 설정 해제 > Network > 검사없이 진행할 경우 서버 인증서를 확인합니다."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(남성 국가 = %s·"
 #: uappstrings.sexchangemodebriefcountry
 #, fuzzy
 msgid "(MY COUNTRY = %s)"
-msgstr "(남성 국가 = %s·"
+msgstr "(MY COUNTRY = %s)"
 
 #: uappstrings.sexchangemodebriefemptycountry
 #, fuzzy
 msgid "(MY COUNTRY is empty)"
 msgstr "(MY COUNTRY는 비어 있습니다)"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "이 대회는 국가, 지방 또는 섹션을 요청합니다. %s·"
 #: uappstrings.sexchangemodefromcountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is %s."
-msgstr "이 대회는 국가, 지방 또는 섹션을 요청합니다. %s·"
+msgstr "MY COUNTRY가 %s이므로 이 대회는 주, 도 또는 섹션을 요구합니다."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "이 대회는 나의 COUNTRY가 비어 있기 때문에 국가, 지방 또는 단면도를 위해 요구됩니다."
 #: uappstrings.sexchangemodefromemptycountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is empty."
-msgstr "이 대회는 나의 COUNTRY가 비어 있기 때문에 국가, 지방 또는 단면도를 위해 요구됩니다."
+msgstr "MY COUNTRY가 비어 있으므로 이 대회는 주, 도 또는 섹션을 요구합니다."
 
 #: uappstrings.sfilenamecamefromsetting
 #, fuzzy
@@ -9623,6 +9634,7 @@ msgstr ""
 "\n"
 "%sTR4W는 실행을 유지하고 그것을 열려고 노력합니다. 이 세션에서 아무것도 할 수 때까지 로그에 기록됩니다."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "컴퓨터 ID %s 이 네트워크의 다른 역에 의해 이미 사용됩니다.\n\nCOMPUTER 변경 다른 역에 ID는 사용되지 않습니다, 그 후에 재연결."
 #: uappstrings.snetcomputeridinuse
 #, fuzzy
 msgid ""
@@ -9630,9 +9642,9 @@ msgid ""
 "\n"
 "Change COMPUTER ID to a letter no other station is using, then reconnect."
 msgstr ""
-"컴퓨터 ID %s 이 네트워크의 다른 역에 의해 이미 사용됩니다.\n"
+"컴퓨터 ID %s은(는) 이 네트워크의 다른 국에서 이미 사용 중입니다.\n"
 "\n"
-"COMPUTER 변경 다른 역에 ID는 사용되지 않습니다, 그 후에 재연결."
+"COMPUTER ID를 다른 국이 사용하지 않는 문자로 변경한 후 다시 연결하십시오."
 
 #: uappstrings.snewcontestin7qpnecountyorstate
 #, fuzzy
@@ -9669,20 +9681,22 @@ msgstr "MY CALL은 비어있습니다. TR4W는 국가, 대륙 또는 지역을 �
 msgid "MY COUNTRY is empty. It is normally worked out from MY CALL through CTY.DAT. Until it has a value TR4W treats this station as DX -- in ARRL DX that means it will ask every station for a state or province and refuse a power such as K or 100."
 msgstr "MY COUNTRY는 비어 있습니다. 그것은 일반적으로 CTY.DAT를 통해 MY CALL에서 작동. TR4W가 DX--ARRL으로 이 역을 치료할 때까지 DX는 국가 또는 지방에 대한 모든 역을 요청하고 K 또는 100과 같은 힘을 거부합니다."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "나의 GRID는 비어있고 이 대회는 당신의 격자 사각을 보냅니다."
 #: uappstrings.sreadinessmygridmissing
 #, fuzzy
 msgid "MY GRID is empty and this contest sends your grid square."
-msgstr "나의 GRID는 비어있고 이 대회는 당신의 격자 사각을 보냅니다."
+msgstr "MY GRID가 비어 있으며 이 대회는 그리드 스퀘어를 보냅니다."
 
 #: uappstrings.sreadinessmystatemissing
 #, fuzzy
 msgid "MY STATE is empty and this contest sends your state, province or section. TR4W will send a serial number instead."
 msgstr "MY STATE는 비어 있으며이 대회는 국가, 지방 또는 섹션을 보냅니다. TR4W는 일련 번호를 대신 보낼 것입니다."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "나의 ZONE은 비어있고 이 대회는 당신의 지역을 보냅니다."
 #: uappstrings.sreadinessmyzonemissing
 #, fuzzy
 msgid "MY ZONE is empty and this contest sends your zone."
-msgstr "나의 ZONE은 비어있고 이 대회는 당신의 지역을 보냅니다."
+msgstr "MY ZONE이 비어 있으며 이 대회는 존을 보냅니다."
 
 #: uappstrings.sverifyallpassed
 #, fuzzy
@@ -9830,4 +9844,34 @@ msgstr "%d QSO(s)는 우리들의 역을 지명하고 이 대회를 주었다."
 #, fuzzy
 msgid "Show inactive contests"
 msgstr "비활성 콘테스트 표시"
+
+#: uappstrings.slatestcontestdetail
+#, fuzzy
+msgid "%0:s - %1:s"
+msgstr "%0:s - %1:s"
+
+#: uappstrings.slatestcontestline
+#, fuzzy
+msgid "%0:s %1:d"
+msgstr "%0:s %1:d"
+
+#: uappstrings.snewcontestfilescall
+#, fuzzy
+msgid "Call"
+msgstr "콜사인"
+
+#: uappstrings.snewcontestfilescontest
+#, fuzzy
+msgid "Contest"
+msgstr "대회"
+
+#: uappstrings.snewcontestfilesfile
+#, fuzzy
+msgid "File"
+msgstr "파일"
+
+#: uappstrings.snewcontestfilesyear
+#, fuzzy
+msgid "Year"
+msgstr "연도"
 

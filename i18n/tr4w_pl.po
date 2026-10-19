@@ -66,11 +66,12 @@ msgctxt "TC_FREQ_ZERO"
 msgid "ERROR: Invalid Frequency logged"
 msgstr "BŁĄD: Nieprawidłowa częstotliwość zalogowana"
 
+# 2026-10-19 command name restored to English (NY4I ruling: command names are never translated, even in reviewed text); was: "POKAŻ CZĘSTOTLIWOŚĆ W DZIENNIKU jest wyłączony"
 #. Section: General
 #: utr4wstrings:tc_freq_off tr4w/src/lang/tr4w_consts_eng.pas:16
 msgctxt "TC_FREQ_OFF"
 msgid "SHOW FREQUENCY IN LOG is turned off"
-msgstr "POKAŻ CZĘSTOTLIWOŚĆ W DZIENNIKU jest wyłączony"
+msgstr "SHOW FREQUENCY IN LOG jest wyłączony"
 
 #. Section: General
 #: utr4wstrings:tc_checkcallsign tr4w/src/lang/tr4w_consts_eng.pas:17
@@ -128,11 +129,12 @@ msgctxt "TC_HAMLIB_ID_LABEL"
 msgid "HAMLIB ID"
 msgstr "HAMLIB ID"
 
+# 2026-10-19 command name restored to English (NY4I ruling: command names are never translated, even in reviewed text); was: "Oba RADIO 1 i RADIO 2 są skonfigurowane aby używać %s. RADIO 1 utrzymuje port;  Sterowanie RADIO 2 CAT jest wyłączone do czasu zmiany CONTROL PORT któregoś radia. "
 #. Section: General
 #: utr4wstrings:tc_port_conflict_startup tr4w/src/lang/tr4w_consts_eng.pas:32
 msgctxt "TC_PORT_CONFLICT_STARTUP"
 msgid "RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio's CONTROL PORT is changed."
-msgstr "Oba RADIO 1 i RADIO 2 są skonfigurowane aby używać %s. RADIO 1 utrzymuje port;  Sterowanie RADIO 2 CAT jest wyłączone do czasu zmiany CONTROL PORT któregoś radia. "
+msgstr "Oba RADIO ONE i RADIO TWO są skonfigurowane aby używać %s. RADIO ONE utrzymuje port;  Sterowanie RADIO TWO CAT jest wyłączone do czasu zmiany CONTROL PORT któregoś radia. "
 
 #. Section: General
 #: utr4wstrings:tc_port_conflict_dialog tr4w/src/lang/tr4w_consts_eng.pas:33
@@ -1058,12 +1060,13 @@ msgctxt "TC_CONNECTINGTO"
 msgid "Connecting to "
 msgstr "Łączę z "
 
+# 2026-10-19 command name restored to English (NY4I ruling: command names are never translated, even in reviewed text); was: "Półaczenie z TR4WSERVER nie zostało nawiązane. Sprawdź hasło dostępowe do serwera!"
 #. Section: UNET
 #: utr4wstrings:tc_connecttotr4wserverfailed
 #: tr4w/src/lang/tr4w_consts_eng.pas:209
 msgctxt "TC_CONNECTTOTR4WSERVERFAILED"
 msgid "Connect to TR4WSERVER failed. Check SERVER PASSWORD value!!"
-msgstr "Półaczenie z TR4WSERVER nie zostało nawiązane. Sprawdź hasło dostępowe do serwera!"
+msgstr "Półaczenie z TR4WSERVER nie zostało nawiązane. Sprawdź SERVER PASSWORD!"
 
 #. Section: UNET
 #: utr4wstrings:tc_connectedto tr4w/src/lang/tr4w_consts_eng.pas:210
@@ -2564,12 +2567,13 @@ msgctxt "RC_BAND"
 msgid "Band"
 msgstr "Pasmo"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Znak wywo¦awczy"
 #. Section: UEDITMESSAGE
 #: tfrmeditqso.lblcallsign.caption tfrmsendspot.lblcallsign.caption
 #: utr4wstrings:rc_callsign tr4w/src/lang/tr4w_consts_eng.pas:586
 msgctxt "RC_CALLSIGN"
 msgid "Callsign"
-msgstr "Znak wywo¦awczy"
+msgstr "Znak wywoławczy"
 
 #: tfrmeditqso.lblchapter.caption
 msgid "Chapter"
@@ -2921,6 +2925,7 @@ msgctxt "RC_PRESS_C"
 msgid "Press &C to program a CQ function key."
 msgstr "Naciśnij &C aby zaprogramować CQ klawisz funkcyjny"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "U¬yj  &E\\n  do zaprogramowania klawisza grupy kontrolnej dla trybu S&P."
 #. ACCELERATOR: this translation marks a keyboard shortcut (&) that the English does not have. Remove it unless this control really should have one -- two controls claiming the same letter makes one of them unreachable. Then clear "Needs work".
 #. Section: UEDITMESSAGE
 #: tfrmprogrammessage.btnexchange.caption utr4wstrings:rc_press_e
@@ -2928,14 +2933,15 @@ msgstr "Naciśnij &C aby zaprogramować CQ klawisz funkcyjny"
 #, fuzzy
 msgctxt "RC_PRESS_E"
 msgid "Press &E to program an exchange/search and pounce function key."
-msgstr "U¬yj  &E\\n  do zaprogramowania klawisza grupy kontrolnej dla trybu S&P."
+msgstr "Użyj  &E\\n  do zaprogramowania klawisza grupy kontrolnej dla trybu S&P."
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "U¬yj  &O\\n  do zaprogramowania pozosta¦ych makr klawiszy funkcyjnych."
 #. Section: UEDITMESSAGE
 #: tfrmprogrammessage.btnother.caption utr4wstrings:rc_press_o
 #: tr4w/src/lang/tr4w_consts_eng.pas:540
 msgctxt "RC_PRESS_O"
 msgid "Press &O to program the other non function key messages."
-msgstr "U¬yj  &O\\n  do zaprogramowania pozosta¦ych makr klawiszy funkcyjnych."
+msgstr "Użyj  &O\\n  do zaprogramowania pozostałych makr klawiszy funkcyjnych."
 
 #. Section: UEDITMESSAGE
 #: tfrmprogrammessage.caption utr4wstrings:rc_memprogfunc
@@ -2988,12 +2994,13 @@ msgstr "Zamknij"
 msgid "Sending CW"
 msgstr "Wysyłanie CW"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyÜlij spot"
 #. Section: UEDITMESSAGE
 #: tfrmsendspot.caption utr4wstrings:rc_sendspot
 #: tr4w/src/lang/tr4w_consts_eng.pas:691
 msgctxt "RC_SENDSPOT"
 msgid "Send spot"
-msgstr "WyÜlij spot"
+msgstr "Wyślij spot"
 
 #: tfrmsendspot.chkcontestname.caption
 msgid "Contest name in comment"
@@ -3006,12 +3013,13 @@ msgctxt "RC_COMMENT"
 msgid "Comment"
 msgstr "Komentarz"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "CzústotliwoÜö"
 #. Section: UEDITMESSAGE
 #: tfrmsendspot.lblfrequency.caption utr4wstrings:rc_frequency
 #: tr4w/src/lang/tr4w_consts_eng.pas:802
 msgctxt "RC_FREQUENCY"
 msgid "Frequency"
-msgstr "CzústotliwoÜö"
+msgstr "Częstotliwość"
 
 #. Section: UEDITMESSAGE
 #: tfrmstations.caption utr4wstrings:rc_stations
@@ -3223,10 +3231,11 @@ msgstr "Wszystkie tryby"
 msgid "Show the call window entry"
 msgstr "Pokaż wpis w oknie wywołania"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Pokaż miejsca CQ' -> 'Pokaż spoty CQ', s.2.d 'spotowanie'; the reviewed 'spoty' (miejsca = places). Previous text: "Pokaż miejsca CQ"
 #: tprefsform.chkbandmapcq.caption
 #, fuzzy
 msgid "Show CQ spots"
-msgstr "Pokaż miejsca CQ"
+msgstr "Pokaż spoty CQ"
 
 #: tprefsform.chkbandmapdupes.caption
 msgid "Show duplicates"
@@ -3248,10 +3257,11 @@ msgstr "Wyświetlacz SO2R"
 msgid "Bold"
 msgstr "pogrubiony"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Pokaż każde miejsce' -> 'Pokaż każdy spot', s.2.d 'spotowanie'; the reviewed 'spoty' (miejsce = place). Previous text: "Pokaż każde miejsce w oknie wywołania"
 #: tprefsform.chkcallwindowshowallspots.caption
 #, fuzzy
 msgid "Show every spot in the call window"
-msgstr "Pokaż każde miejsce w oknie wywołania"
+msgstr "Pokaż każdy spot w oknie wywołania"
 
 #: tprefsform.chkchecklogfilesize.caption
 msgid "Warn when the log file grows unexpectedly"
@@ -3431,10 +3441,11 @@ msgstr "Zablokuj PTT"
 msgid "Key the transmitter with a CAT command instead of a hardware line"
 msgstr "Dodaj nadajnik poleceniem CAT zamiast linii sprzętowej"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'kiedy zmieniam zespół' -> 'kiedy zmieniam pasmo', s.2.g 'Pasma' (zespol = ensemble). Previous text: "QSY nieaktywne radio kiedy zmieniam zespół"
 #: tprefsform.chkqsyinactive.caption
 #, fuzzy
 msgid "QSY the inactive radio when I change band"
-msgstr "QSY nieaktywne radio kiedy zmieniam zespół"
+msgstr "QSY nieaktywne radio kiedy zmieniam pasmo"
 
 #: tprefsform.chksayhienable.caption
 #, fuzzy
@@ -3451,10 +3462,11 @@ msgstr "Zawsze wyślij wszystkie cztery litery czteroliterowego połączenia"
 msgid "Draw gridlines in the log"
 msgstr "Rysuj linie w dzienniku"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Pomiń zespół inne radio jest włączone' -> 'Pomiń pasmo, na którym pracuje drugie radio', s.2.g 'Pasma' (zespol = ensemble). Previous text: "Pomiń zespół inne radio jest włączone"
 #: tprefsform.chkskipactiveband.caption
 #, fuzzy
 msgid "Skip the band the other radio is on"
-msgstr "Pomiń zespół inne radio jest włączone"
+msgstr "Pomiń pasmo, na którym pracuje drugie radio"
 
 #: tprefsform.chkso2r.caption
 #, fuzzy
@@ -3473,15 +3485,17 @@ msgctxt "tprefsform.chkspeedsync1.caption"
 msgid "Speed sync"
 msgstr "Synchronizacja prędkości"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Zbieraj miejsca z klastra' -> 'Zbieraj spoty z klastra', s.2.d 'zaspotowanie', 'spotowanie'; the reviewed 'Pokaż spoty packet' (miejsca = places). Previous text: "Zbieraj miejsca z klastra"
 #: tprefsform.chkspotcollector.caption
 #, fuzzy
 msgid "Collect spots from the cluster"
-msgstr "Zbieraj miejsca z klastra"
+msgstr "Zbieraj spoty z klastra"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Wyślij miejsca do innego radia' -> 'Wyślij spoty do drugiego radia', s.2.d 'spotowanie'; the reviewed 'spoty' (miejsca = places). Previous text: "Wyślij miejsca do innego radia"
 #: tprefsform.chkswappacketspotradios.caption
 #, fuzzy
 msgid "Send spots to the other radio"
-msgstr "Wyślij miejsca do innego radia"
+msgstr "Wyślij spoty do drugiego radia"
 
 #: tprefsform.chkswappaddles.caption
 #, fuzzy
@@ -3578,10 +3592,11 @@ msgstr "Pozwól na karty w części"
 msgid "Exchange data with WSJT-X"
 msgstr "Wymiana danych z WSJT- X"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Wyślij sygnał wywoławczy podświetlający do' -> 'Wyślij podświetlenie znaków wywoławczych do', s.10 'europejskiego znaku'; the reviewed 'znaków wywoławczych' (sygnal wywolawczy is a calque). Previous text: "Wyślij sygnał wywoławczy podświetlający do WSJT- X"
 #: tprefsform.chkwsjtxhighlights.caption
 #, fuzzy
 msgid "Send callsign highlighting to WSJT-X"
-msgstr "Wyślij sygnał wywoławczy podświetlający do WSJT- X"
+msgstr "Wyślij podświetlenie znaków wywoławczych do WSJT- X"
 
 #: tprefsform.chkwsjtxradiocontrol.caption
 #, fuzzy
@@ -3637,10 +3652,11 @@ msgstr "Główne okno"
 msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
 msgstr "Czcionka dotyczy głównego okna zawodów. Wszystkie cztery stają się skuteczne, gdy TR4W rozpocznie się następny."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Były w pozycji Wygląd menu Ustawienia. To okno zniknie, gdy tylko RWA COUNT i WINDOW SIZE dołączą do nich."
 #: tprefsform.lblappearmenunote.caption
 #, fuzzy
 msgid "These were on the Appearance item of the Settings menu. That window goes away once ROW COUNT and WINDOW SIZE join them here."
-msgstr "Były w pozycji Wygląd menu Ustawienia. To okno zniknie, gdy tylko RWA COUNT i WINDOW SIZE dołączą do nich."
+msgstr "Były w pozycji Wygląd menu Ustawienia. To okno zniknie, gdy tylko ROW COUNT i WINDOW SIZE również trafią tutaj."
 
 #: tprefsform.lblaudioheading.caption
 #, fuzzy
@@ -3682,20 +3698,22 @@ msgstr "Kopia zapasowa dziennika"
 msgid "A second copy of the log, written as you go.  Put it somewhere that is not the same disk as the log itself, or it protects against nothing worth protecting against."
 msgstr "Drugą kopię dziennika. Umieść go gdzieś, gdzie nie jest to ten sam dysk co sam dziennik, lub chroni przed niczym wartym ochrony przed."
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Okres ważności:' -> 'Ważność spotu:', s.2.d 'spotowanie' (the spot was dropped). Previous text: "Okres ważności:"
 #: tprefsform.lblbandmapdecay.caption
 #, fuzzy
 msgid "Spot expiry:"
-msgstr "Okres ważności:"
+msgstr "Ważność spotu:"
 
 #: tprefsform.lblbandmapdecayunits.caption
 #, fuzzy
 msgid "minutes"
 msgstr "minuty"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Zespół straży:' -> 'Pasmo ochronne:', s.2.g 'Pasma' (zespol strazy = guards' squad). Previous text: "Zespół straży:"
 #: tprefsform.lblbandmapguard.caption
 #, fuzzy
 msgid "Guard band:"
-msgstr "Zespół straży:"
+msgstr "Pasmo ochronne:"
 
 #: tprefsform.lblbandmapguardunits.caption
 #: tprefsform.lblpaddletoneunits.caption
@@ -3709,15 +3727,17 @@ msgstr "Hz"
 msgid "Display limit:"
 msgstr "Granica wyświetlania:"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'plamy' -> 'spoty', s.2.d 'spotowanie' (plamy = stains). Previous text: "plamy"
 #: tprefsform.lblbandmaplimitunits.caption
 #, fuzzy
 msgid "spots"
-msgstr "plamy"
+msgstr "spoty"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'posiada również miejsca, które' -> 'zawiera również spoty, które', s.2.d 'spotowanie' (miejsca = places). Previous text: "Mapa pasma nie potrzebuje klastra DX: posiada również miejsca, które sami tworzycie i wszystko, co słyszy radio SO2R. Ustawienia klastra znajdują się na stronie DX Cluster."
 #: tprefsform.lblbandmapnote.caption
 #, fuzzy
 msgid "A band map does not need a DX cluster: it also holds spots you make yourself and anything the SO2R radio hears.  Cluster settings are on the DX Cluster page."
-msgstr "Mapa pasma nie potrzebuje klastra DX: posiada również miejsca, które sami tworzycie i wszystko, co słyszy radio SO2R. Ustawienia klastra znajdują się na stronie DX Cluster."
+msgstr "Mapa pasma nie potrzebuje klastra DX: zawiera również spoty, które sami tworzycie i wszystko, co słyszy radio SO2R. Ustawienia klastra znajdują się na stronie DX Cluster."
 
 #: tprefsform.lblbandoutput1.caption
 #, fuzzy
@@ -3766,10 +3786,11 @@ msgstr "Moje klastry DX"
 msgid "Log in as:"
 msgstr "Zaloguj się jako:"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'mój sygnał wywoławczy stacji' -> 'znak wywoławczy mojej stacji', s.10 'znaku'; the reviewed 'znaków wywoławczych'. Previous text: "puste = mój sygnał wywoławczy stacji"
 #: tprefsform.lblclusterloginhint.caption
 #, fuzzy
 msgid "blank = my station callsign"
-msgstr "puste = mój sygnał wywoławczy stacji"
+msgstr "puste = znak wywoławczy mojej stacji"
 
 #: tprefsform.lblclustername.caption tprefsform.lblrotatorname.caption
 #, fuzzy
@@ -3777,10 +3798,11 @@ msgctxt "tprefsform.lblclustername.caption"
 msgid "Name:"
 msgstr "Nazwa:"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Rejestrowanie teleskopów' -> 'Rejestrowanie Telnetu', the English says Telnet (teleskopy = telescopes); 'na mapie bandy' -> 'na mapie pasm', s.2.g 'Pasma'; the reviewed 'Mapa pasm' (banda = gang). Previous text: "Klaster po kropli ponownie się łączy. Rejestrowanie teleskopów jest na stronie Logging; wyświetlanie spot i starzenie są na mapie bandy."
 #: tprefsform.lblclusternote.caption
 #, fuzzy
 msgid "The cluster reconnects on its own after a drop.  Telnet logging is on the Logging page; spot display and ageing are on Band Map."
-msgstr "Klaster po kropli ponownie się łączy. Rejestrowanie teleskopów jest na stronie Logging; wyświetlanie spot i starzenie są na mapie bandy."
+msgstr "Klaster po kropli ponownie się łączy. Rejestrowanie Telnetu jest na stronie Logging; wyświetlanie spot i starzenie są na mapie pasm."
 
 #: tprefsform.lblclusterpassword.caption tprefsform.lblhamscorepass.caption
 #: tprefsform.lblnetpassword.caption
@@ -4149,10 +4171,11 @@ msgid "Operating"
 msgstr "Działanie"
 
 # 2026-10-16: machine error: Polish contest terminology is 'zawody' (plural-only) -- G0DVJ's reviewed entries use it, and the PZK's SP DX Contest 2023 rules use zawody 11 times, konkurs never. Was: "Jak dziennik zachowuje się podczas prowadzenia konkursu. Na poniższych stronach znajduje się mapa band, bandy, CW, punktacja i two-radio."
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'mapa band, bandy,' -> 'mapa pasm, pasma,', s.2.g 'Pasma'; the reviewed 'Mapa pasm' (banda = gang). Previous text: "Jak dziennik zachowuje się podczas prowadzenia zawodów. Na poniższych stronach znajduje się mapa band, bandy, CW, punktacja i two-radio."
 #: tprefsform.lbloperatinginfo.caption
 #, fuzzy
 msgid "How the log behaves while you are running the contest. Band map, bands, CW, scoring and two-radio settings are on the pages below."
-msgstr "Jak dziennik zachowuje się podczas prowadzenia zawodów. Na poniższych stronach znajduje się mapa band, bandy, CW, punktacja i two-radio."
+msgstr "Jak dziennik zachowuje się podczas prowadzenia zawodów. Na poniższych stronach znajduje się mapa pasm, pasma, CW, punktacja i two-radio."
 
 #: tprefsform.lblpaddlehold.caption
 #, fuzzy
@@ -4957,12 +4980,13 @@ msgctxt "RC_3830_ARRL"
 msgid "Submit ARRL Log"
 msgstr "Wyślij dziennik ARRL"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Przegl¦daj / Edytujlog"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_vieweditlog2 tr4w/src/lang/tr4w_consts_eng.pas:523
 #: utr4wstrings:rc_vieweditlog tr4w/src/lang/tr4w_consts_eng.pas:666
 msgctxt "RC_VIEWEDITLOG2"
 msgid "View / Edit log"
-msgstr "Przegl¦daj / Edytujlog"
+msgstr "Przeglądaj / Edytujlog"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_ct1bohis2 tr4w/src/lang/tr4w_consts_eng.pas:524
@@ -4977,6 +5001,7 @@ msgctxt "HELP_WORD"
 msgid "Help"
 msgstr "Pomoc"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyjÜcie"
 #. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Section: UEDITMESSAGE
 #: utr4wstrings:exit_word tr4w/src/lang/tr4w_consts_eng.pas:531
@@ -4984,7 +5009,7 @@ msgstr "Pomoc"
 #, fuzzy
 msgctxt "EXIT_WORD"
 msgid "E&xit"
-msgstr "WyjÜcie"
+msgstr "Wyjście"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_listofmess tr4w/src/lang/tr4w_consts_eng.pas:532
@@ -4992,11 +5017,12 @@ msgctxt "RC_LISTOFMESS"
 msgid "List of messages"
 msgstr "Lista wiadomości"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Nadawanie CW z klawiatury. U¬yj ENTER/Escape/F10 ¬eby wyjÜö."
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_sendingcw tr4w/src/lang/tr4w_consts_eng.pas:542
 msgctxt "RC_SENDINGCW"
 msgid "Sending CW from the keyboard. Use ENTER/Escape/F10 to exit."
-msgstr "Nadawanie CW z klawiatury. U¬yj ENTER/Escape/F10 ¬eby wyjÜö."
+msgstr "Nadawanie CW z klawiatury. Użyj ENTER/Escape/F10 żeby wyjść."
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_wincontrol2 tr4w/src/lang/tr4w_consts_eng.pas:547
@@ -5005,23 +5031,26 @@ msgctxt "RC_WINCONTROL2"
 msgid "Windows control"
 msgstr "Sterowanie oknami"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Narzúdzia"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_tools tr4w/src/lang/tr4w_consts_eng.pas:549
 msgctxt "RC_TOOLS"
 msgid "Tools"
-msgstr "Narzúdzia"
+msgstr "Narzędzia"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Monitor bikonşw"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_beaconsm tr4w/src/lang/tr4w_consts_eng.pas:551
 msgctxt "RC_BEACONSM"
 msgid "Beacons monitor"
-msgstr "Monitor bikonşw"
+msgstr "Monitor bikonów"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Ustaw strefú czasow¦"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_settimezone tr4w/src/lang/tr4w_consts_eng.pas:553
 msgctxt "RC_SETTIMEZONE"
 msgid "Set time zone"
-msgstr "Ustaw strefú czasow¦"
+msgstr "Ustaw strefę czasową"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_ping tr4w/src/lang/tr4w_consts_eng.pas:554
@@ -5074,11 +5103,12 @@ msgctxt "RC_MP3_RECENABLE"
 msgid "Enable"
 msgstr "Włącz"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Ustaw czústotliwoÜö na nieaktywnym radiu"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_sendinrig tr4w/src/lang/tr4w_consts_eng.pas:579
 msgctxt "RC_SENDINRIG"
 msgid "QSY Inactive Radio"
-msgstr "Ustaw czústotliwoÜö na nieaktywnym radiu"
+msgstr "Ustaw częstotliwość na nieaktywnym radiu"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_file tr4w/src/lang/tr4w_consts_eng.pas:580
@@ -5086,11 +5116,12 @@ msgctxt "RC_FILE"
 msgid "File"
 msgstr "Plik"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyczyÜö log"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_clearlog tr4w/src/lang/tr4w_consts_eng.pas:581
 msgctxt "RC_CLEARLOG"
 msgid "Clear log"
-msgstr "WyczyÜö log"
+msgstr "Wyczyść log"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_import tr4w/src/lang/tr4w_consts_eng.pas:582
@@ -5099,17 +5130,19 @@ msgctxt "RC_IMPORT"
 msgid "Import"
 msgstr "Import"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Otwşrz katalog logu"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_openlogdir tr4w/src/lang/tr4w_consts_eng.pas:583
 msgctxt "RC_OPENLOGDIR"
 msgid "Open log directory"
-msgstr "Otwşrz katalog logu"
+msgstr "Otwórz katalog logu"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyÜlij punktacjú"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_postscoretogs tr4w/src/lang/tr4w_consts_eng.pas:596
 msgctxt "RC_POSTSCORETOGS"
 msgid "Post score"
-msgstr "WyÜlij punktacjú"
+msgstr "Wyślij punktację"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_export tr4w/src/lang/tr4w_consts_eng.pas:600
@@ -5117,11 +5150,12 @@ msgctxt "RC_EXPORT"
 msgid "Export"
 msgstr "Eksport"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Lista raportşw wstúpnych"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_iniexlist tr4w/src/lang/tr4w_consts_eng.pas:601
 msgctxt "RC_INIEXLIST"
 msgid "Initial exchanges list"
-msgstr "Lista raportşw wstúpnych"
+msgstr "Lista raportów wstępnych"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_trlogform tr4w/src/lang/tr4w_consts_eng.pas:602
@@ -5135,11 +5169,12 @@ msgctxt "RC_REPORTS"
 msgid "Reports"
 msgstr "Raporty"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Wszystkie znaki wywo¦awcze"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_allcalls tr4w/src/lang/tr4w_consts_eng.pas:604
 msgctxt "RC_ALLCALLS"
 msgid "All callsigns"
-msgstr "Wszystkie znaki wywo¦awcze"
+msgstr "Wszystkie znaki wywoławcze"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_bandchanges tr4w/src/lang/tr4w_consts_eng.pas:605
@@ -5147,29 +5182,33 @@ msgctxt "RC_BANDCHANGES"
 msgid "Band changes"
 msgstr "Zmiany pasm"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Lista kontynentşw"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_contlist tr4w/src/lang/tr4w_consts_eng.pas:606
 msgctxt "RC_CONTLIST"
 msgid "Continent List"
-msgstr "Lista kontynentşw"
+msgstr "Lista kontynentów"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Pierwsza zrobiona stacja z ka¬dego kraju"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_fcc tr4w/src/lang/tr4w_consts_eng.pas:607
 msgctxt "RC_FCC"
 msgid "First callsign worked in each country"
-msgstr "Pierwsza zrobiona stacja z ka¬dego kraju"
+msgstr "Pierwsza zrobiona stacja z każdego kraju"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Pierwsza zrobiona stacja z ka¬dej strefy"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_fcz tr4w/src/lang/tr4w_consts_eng.pas:608
 msgctxt "RC_FCZ"
 msgid "First callsign worked in each zone"
-msgstr "Pierwsza zrobiona stacja z ka¬dej strefy"
+msgstr "Pierwsza zrobiona stacja z każdej strefy"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "QSO wg krajşw i pasm"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_qsobycountry tr4w/src/lang/tr4w_consts_eng.pas:610
 msgctxt "RC_QSOBYCOUNTRY"
 msgid "QSOs by country by band"
-msgstr "QSO wg krajşw i pasm"
+msgstr "QSO wg krajów i pasm"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_scorebyhour tr4w/src/lang/tr4w_consts_eng.pas:611
@@ -5232,18 +5271,20 @@ msgctxt "RC_TRMASTER"
 msgid "SCP"
 msgstr "SCP"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Pozostaj¦ce mno¬niki"
 #. Section: UEDITMESSAGE
 #. 4.72.3
 #: utr4wstrings:rc_remmults tr4w/src/lang/tr4w_consts_eng.pas:624
 msgctxt "RC_REMMULTS"
 msgid "Mults"
-msgstr "Pozostaj¦ce mno¬niki"
+msgstr "Pozostające mnożniki"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Ustawienia domyÜlne"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_rm_default tr4w/src/lang/tr4w_consts_eng.pas:625
 msgctxt "RC_RM_DEFAULT"
 msgid "Default"
-msgstr "Ustawienia domyÜlne"
+msgstr "Ustawienia domyślne"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_telnet tr4w/src/lang/tr4w_consts_eng.pas:626
@@ -5272,11 +5313,12 @@ msgctxt "RC_AUTOCQRESUME"
 msgid "Auto-CQ resume"
 msgstr "Wznowienie Auto-CQ"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Sprawdß czy duplikat"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_dupecheck tr4w/src/lang/tr4w_consts_eng.pas:639
 msgctxt "RC_DUPECHECK"
 msgid "Dupe check"
-msgstr "Sprawdß czy duplikat"
+msgstr "Sprawdź czy duplikat"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_edit tr4w/src/lang/tr4w_consts_eng.pas:640
@@ -5291,23 +5333,26 @@ msgctxt "RC_BACKUPLOG"
 msgid "Backup Log"
 msgstr "Dziennik kopii zapasowej"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Zamie¸ widok mno¬nikşw"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_swapmultview tr4w/src/lang/tr4w_consts_eng.pas:643
 msgctxt "RC_SWAPMULTVIEW"
 msgid "Swap mult view"
-msgstr "Zamie¸ widok mno¬nikşw"
+msgstr "Zamień widok mnożników"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Zwiúksz numer"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_incnumber tr4w/src/lang/tr4w_consts_eng.pas:644
 msgctxt "RC_INCNUMBER"
 msgid "Increment number"
-msgstr "Zwiúksz numer"
+msgstr "Zwiększ numer"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Prze¦¦cz dzwonek mno¬nikşw"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_tooglemb tr4w/src/lang/tr4w_consts_eng.pas:645
 msgctxt "RC_TOOGLEMB"
 msgid "Toogle multiplier bell"
-msgstr "Prze¦¦cz dzwonek mno¬nikşw"
+msgstr "Przełącz dzwonek mnożników"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_killcw tr4w/src/lang/tr4w_consts_eng.pas:646
@@ -5321,29 +5366,33 @@ msgctxt "RC_SEARCHLOG"
 msgid "Search log"
 msgstr "Szukaj w logu"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "CzústotliwoÜö nadawcza"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_transfreq tr4w/src/lang/tr4w_consts_eng.pas:648
 msgctxt "RC_TRANSFREQ"
 msgid "Transmit frequency"
-msgstr "CzústotliwoÜö nadawcza"
+msgstr "Częstotliwość nadawcza"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Prze¦¦cz radia"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_tooglerigs tr4w/src/lang/tr4w_consts_eng.pas:651
 msgctxt "RC_TOOGLERIGS"
 msgid "Toggle rigs"
-msgstr "Prze¦¦cz radia"
+msgstr "Przełącz radia"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "PrúdkoÜö CW"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_cwspeed tr4w/src/lang/tr4w_consts_eng.pas:652
 msgctxt "RC_CWSPEED"
 msgid "CW speed"
-msgstr "PrúdkoÜö CW"
+msgstr "Prędkość CW"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Ustaw datú systemow¦/time"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_setsysdt tr4w/src/lang/tr4w_consts_eng.pas:653
 msgctxt "RC_SETSYSDT"
 msgid "Set system date/time"
-msgstr "Ustaw datú systemow¦/time"
+msgstr "Ustaw datę systemową/time"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_initialize tr4w/src/lang/tr4w_consts_eng.pas:654
@@ -5351,41 +5400,47 @@ msgctxt "RC_INITIALIZE"
 msgid "Initialize QSO"
 msgstr "Rozpocznij QSO"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Usu¸ ostatnie QSO"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_deletelastqso tr4w/src/lang/tr4w_consts_eng.pas:656
 msgctxt "RC_DELETELASTQSO"
 msgid "Delete the last QSO"
-msgstr "Usu¸ ostatnie QSO"
+msgstr "Usuń ostatnie QSO"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Raport pocz¦tkowy"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_initialex tr4w/src/lang/tr4w_consts_eng.pas:657
 msgctxt "RC_INITIALEX"
 msgid "Initial exchange"
-msgstr "Raport pocz¦tkowy"
+msgstr "Raport początkowy"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Prze¦¦cz monitor CW"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_tooglest tr4w/src/lang/tr4w_consts_eng.pas:658
 msgctxt "RC_TOOGLEST"
 msgid "Toggle sidetone"
-msgstr "Prze¦¦cz monitor CW"
+msgstr "Przełącz monitor CW"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Prze¦¦cz autosend"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_toogleas tr4w/src/lang/tr4w_consts_eng.pas:659
 msgctxt "RC_TOOGLEAS"
 msgid "Toggle autosend"
-msgstr "Prze¦¦cz autosend"
+msgstr "Przełącz autosend"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Jedno pasmo w gşrú"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_bandup tr4w/src/lang/tr4w_consts_eng.pas:660
 msgctxt "RC_BANDUP"
 msgid "Band Up"
-msgstr "Jedno pasmo w gşrú"
+msgstr "Jedno pasmo w górę"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Jedno pasmo w dş¦"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_banddown tr4w/src/lang/tr4w_consts_eng.pas:661
 msgctxt "RC_BANDDOWN"
 msgid "Band Down"
-msgstr "Jedno pasmo w dş¦"
+msgstr "Jedno pasmo w dół"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_ssbcwmode tr4w/src/lang/tr4w_consts_eng.pas:662
@@ -5399,11 +5454,12 @@ msgctxt "RC_SENDKEYBOARD"
 msgid "Send Keyboard Input"
 msgstr "Nadawanie z klawiatury"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyczyÜö listú zrobionych stacji"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_cleardupes tr4w/src/lang/tr4w_consts_eng.pas:665
 msgctxt "RC_CLEARDUPES"
 msgid "Clear dupesheet"
-msgstr "WyczyÜö listú zrobionych stacji"
+msgstr "Wyczyść listę zrobionych stacji"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_note tr4w/src/lang/tr4w_consts_eng.pas:667
@@ -5411,11 +5467,12 @@ msgctxt "RC_NOTE"
 msgid "Note"
 msgstr "Notes"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Raport niezrobionych mno¬nikşw"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_missmultsrep tr4w/src/lang/tr4w_consts_eng.pas:668
 msgctxt "RC_MISSMULTSREP"
 msgid "Missing mults report"
-msgstr "Raport niezrobionych mno¬nikşw"
+msgstr "Raport niezrobionych mnożników"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_qtcfunctions tr4w/src/lang/tr4w_consts_eng.pas:670
@@ -5423,11 +5480,12 @@ msgctxt "RC_QTCFUNCTIONS"
 msgid "QTC functions"
 msgstr "Funkcje QTC"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Przywo¦aj ostatni wpis"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_recalllastent tr4w/src/lang/tr4w_consts_eng.pas:671
 msgctxt "RC_RECALLLASTENT"
 msgid "Recall last entry"
-msgstr "Przywo¦aj ostatni wpis"
+msgstr "Przywołaj ostatni wpis"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_viewpakspots tr4w/src/lang/tr4w_consts_eng.pas:672
@@ -5441,11 +5499,12 @@ msgctxt "RC_EXECONFIGFILE"
 msgid "Execute configuration file"
 msgstr "Wykonaj plik konfiguracyjny"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "OdÜwie¬ bandmapú"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_refreshbm tr4w/src/lang/tr4w_consts_eng.pas:674
 msgctxt "RC_REFRESHBM"
 msgid "Refresh bandmap"
-msgstr "OdÜwie¬ bandmapú"
+msgstr "Odśwież bandmapę"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_cursorinbm tr4w/src/lang/tr4w_consts_eng.pas:676
@@ -5472,17 +5531,19 @@ msgctxt "RC_ADDBANDMAPPH"
 msgid "Add bandmap place holder"
 msgstr "Zaznacz miejsce w bandmapie"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Uaktywnienie g¦şwnego okna"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_focusinmw tr4w/src/lang/tr4w_consts_eng.pas:682
 msgctxt "RC_FOCUSINMW"
 msgid "Focus in main window"
-msgstr "Uaktywnienie g¦şwnego okna"
+msgstr "Uaktywnienie głównego okna"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Prze¦¦czenie funkcji wstaw"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_toggleinsert tr4w/src/lang/tr4w_consts_eng.pas:683
 msgctxt "RC_TOGGLEINSERT"
 msgid "Toggle insert mode"
-msgstr "Prze¦¦czenie funkcji wstaw"
+msgstr "Przełączenie funkcji wstaw"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_escape tr4w/src/lang/tr4w_consts_eng.pas:684
@@ -5491,11 +5552,12 @@ msgctxt "RC_ESCAPE"
 msgid "Escape"
 msgstr "Escape"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "CW - zwiúksz tempo"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_cwspeedup tr4w/src/lang/tr4w_consts_eng.pas:685
 msgctxt "RC_CWSPEEDUP"
 msgid "CW Speed Up"
-msgstr "CW - zwiúksz tempo"
+msgstr "CW - zwiększ tempo"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_cwspeeddown tr4w/src/lang/tr4w_consts_eng.pas:686
@@ -5503,11 +5565,12 @@ msgctxt "RC_CWSPEEDDOWN"
 msgid "CW Speed Down"
 msgstr "CW - zmniejsz tempo"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "CW - zwiúksz tempo dla nieaktywnego radia"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_cwspupir tr4w/src/lang/tr4w_consts_eng.pas:687
 msgctxt "RC_CWSPUPIR"
 msgid "CW Speed Up for the inactive radio"
-msgstr "CW - zwiúksz tempo dla nieaktywnego radia"
+msgstr "CW - zwiększ tempo dla nieaktywnego radia"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_cwspdnir tr4w/src/lang/tr4w_consts_eng.pas:688
@@ -5529,47 +5592,54 @@ msgctxt "RC_SEARCHPOUNCE"
 msgid "Search && pounce mode"
 msgstr "Tryb S&P"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Przelicz punktacjú"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_rescore tr4w/src/lang/tr4w_consts_eng.pas:692
 msgctxt "RC_RESCORE"
 msgid "Rescore"
-msgstr "Przelicz punktacjú"
+msgstr "Przelicz punktację"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Sieö"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_net tr4w/src/lang/tr4w_consts_eng.pas:694
 msgctxt "RC_NET"
 msgid "Net"
-msgstr "Sieö"
+msgstr "Sieć"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyÜlij wiadomoÜö"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_sendmessage tr4w/src/lang/tr4w_consts_eng.pas:696
 msgctxt "RC_SENDMESSAGE"
 msgid "Send message"
-msgstr "WyÜlij wiadomoÜö"
+msgstr "Wyślij wiadomość"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Porşwnaj i synchronizuj log"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_synlog tr4w/src/lang/tr4w_consts_eng.pas:697
 msgctxt "RC_SYNLOG"
 msgid "Compare and synchronize logs"
-msgstr "Porşwnaj i synchronizuj log"
+msgstr "Porównaj i synchronizuj log"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyczyÜö wszystkie logi w sieci"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_clearalllogs tr4w/src/lang/tr4w_consts_eng.pas:698
 msgctxt "RC_CLEARALLLOGS"
 msgid "Clear all logs in network"
-msgstr "WyczyÜö wszystkie logi w sieci"
+msgstr "Wyczyść wszystkie logi w sieci"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Sprawdß ostatni¦ wersjú"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_download tr4w/src/lang/tr4w_consts_eng.pas:699
 msgctxt "RC_DOWNLOAD"
 msgid "Download the latest CTY.DAT"
-msgstr "Sprawdß ostatni¦ wersjú"
+msgstr "Sprawdź ostatnią wersję"
 
+# 2026-10-19 codepage damage reversed by byte reversal -- the text is not in D7 tr4w_pol.RES, and no ambiguous byte was involved (NY4I approved); was: "Spis treÜci"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_contents tr4w/src/lang/tr4w_consts_eng.pas:700
 msgctxt "RC_CONTENTS"
 msgid "Contents"
-msgstr "Spis treÜci"
+msgstr "Spis treści"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_about tr4w/src/lang/tr4w_consts_eng.pas:701
@@ -5577,13 +5647,14 @@ msgctxt "RC_ABOUT"
 msgid "About"
 msgstr "Na temat"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "&Usuniúte"
 #. ACCELERATOR: this translation marks a keyboard shortcut (&) that the English does not have. Remove it unless this control really should have one -- two controls claiming the same letter makes one of them unreachable. Then clear "Needs work".
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_deleted tr4w/src/lang/tr4w_consts_eng.pas:705
 #, fuzzy
 msgctxt "RC_DELETED"
 msgid "Deleted"
-msgstr "&Usuniúte"
+msgstr "&Usunięte"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_search tr4w/src/lang/tr4w_consts_eng.pas:708
@@ -5591,13 +5662,14 @@ msgctxt "RC_SEARCH"
 msgid "&Search"
 msgstr "&Wyszukuj"
 
+# 2026-10-19 codepage damage reversed by byte reversal -- the text is not in D7 tr4w_pol.RES, and no ambiguous byte was involved (NY4I approved); was: "Nazwa zawodşw w polu ' Komentarz '"
 #. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_contestnameic tr4w/src/lang/tr4w_consts_eng.pas:712
 #, fuzzy
 msgctxt "RC_CONTESTNAMEIC"
 msgid "C&ontest name in comment"
-msgstr "Nazwa zawodşw w polu ' Komentarz '"
+msgstr "Nazwa zawodów w polu ' Komentarz '"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_recvqtc tr4w/src/lang/tr4w_consts_eng.pas:735
@@ -5605,23 +5677,26 @@ msgctxt "RC_RECVQTC"
 msgid "Receiving QTCs"
 msgstr "Odbieranie QTC"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Rş¬nice w logach"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_diffinlog tr4w/src/lang/tr4w_consts_eng.pas:749
 msgctxt "RC_DIFFINLOG"
 msgid "Difference in logs"
-msgstr "Rş¬nice w logach"
+msgstr "Różnice w logach"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Odstúp Auto QSL (Zwiúksz)"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_iaqslint tr4w/src/lang/tr4w_consts_eng.pas:775
 msgctxt "RC_IAQSLINT"
 msgid "Auto QSL Interval (Increase)"
-msgstr "Odstúp Auto QSL (Zwiúksz)"
+msgstr "Odstęp Auto QSL (Zwiększ)"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Odstúp Auto QSL (Zmniejsz)"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_daqslint tr4w/src/lang/tr4w_consts_eng.pas:776
 msgctxt "RC_DAQSLINT"
 msgid "Auto QSL Interval (Decrease)"
-msgstr "Odstúp Auto QSL (Zmniejsz)"
+msgstr "Odstęp Auto QSL (Zmniejsz)"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_addinfo tr4w/src/lang/tr4w_consts_eng.pas:777
@@ -5641,35 +5716,40 @@ msgctxt "RC_AI_CWSPEED"
 msgid "CW Speed"
 msgstr "Tempo CW"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyczyÜö zestawienie mno¬nikşw"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_clearmsheet tr4w/src/lang/tr4w_consts_eng.pas:780
 msgctxt "RC_CLEARMSHEET"
 msgid "Clear multsheet"
-msgstr "WyczyÜö zestawienie mno¬nikşw"
+msgstr "Wyczyść zestawienie mnożników"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Dokumentacja On-line (w júzyku rosyjskim)"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_wiki tr4w/src/lang/tr4w_consts_eng.pas:781
 msgctxt "RC_WIKI"
 msgid "On-line documentation (in Russian)"
-msgstr "Dokumentacja On-line (w júzyku rosyjskim)"
+msgstr "Dokumentacja On-line (w języku rosyjskim)"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyczyÜö zestawienie zrobionych stacji we wszystkich logach"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_net_cldupe tr4w/src/lang/tr4w_consts_eng.pas:782
 msgctxt "RC_NET_CLDUPE"
 msgid "Clear dupesheet in all logs"
-msgstr "WyczyÜö zestawienie zrobionych stacji we wszystkich logach"
+msgstr "Wyczyść zestawienie zrobionych stacji we wszystkich logach"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyczyÜö zestawienie mno¬nikşw we wszystkich logach"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_net_clmult tr4w/src/lang/tr4w_consts_eng.pas:783
 msgctxt "RC_NET_CLMULT"
 msgid "Clear multsheet in all logs"
-msgstr "WyczyÜö zestawienie mno¬nikşw we wszystkich logach"
+msgstr "Wyczyść zestawienie mnożników we wszystkich logach"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Postúp czasu"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_inc_time tr4w/src/lang/tr4w_consts_eng.pas:784
 msgctxt "RC_INC_TIME"
 msgid "Increment time"
-msgstr "Postúp czasu"
+msgstr "Postęp czasu"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_notes tr4w/src/lang/tr4w_consts_eng.pas:785
@@ -5677,11 +5757,12 @@ msgctxt "RC_NOTES"
 msgid "Notes"
 msgstr "Uwagi"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Menad¬er sprzútowy"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_devicemanager tr4w/src/lang/tr4w_consts_eng.pas:788
 msgctxt "RC_DEVICEMANAGER"
 msgid "Device Manager"
-msgstr "Menad¬er sprzútowy"
+msgstr "Menadżer sprzętowy"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_shdx_callsign tr4w/src/lang/tr4w_consts_eng.pas:789
@@ -5759,13 +5840,14 @@ msgctxt "TC_HAMSCOREQUEUEINGFULLLOGRESYNC"
 msgid "HamScore: queueing full log resync..."
 msgstr "HamScore: kolejka w pełnym dzienniku..."
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'sygnał wywoławczy' -> 'znak wywoławczy', s.10 'znaku'; the reviewed 'znaków wywoławczych'. Previous text: "Zaloguj się nie wygląda jak sygnał wywoławczy"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_logincalldoeslooklikecallsign
 #: tr4w/src/lang/tr4w_consts_eng.pas:831
 #, fuzzy
 msgctxt "TC_LOGINCALLDOESLOOKLIKECALLSIGN"
 msgid "Login call does not look like a callsign"
-msgstr "Zaloguj się nie wygląda jak sygnał wywoławczy"
+msgstr "Zaloguj się nie wygląda jak znak wywoławczy"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_nopotaparksloggedyetsession
@@ -6089,21 +6171,23 @@ msgctxt "TC_POSSIBLEDATALOSSMULTINETWORK"
 msgid "Possible data loss on multi network."
 msgstr "Możliwe straty danych w wielu sieciach."
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Wybierz miejsce.' -> 'Wybierz spot.', s.2.d 'spotowanie' (miejsce = place). Previous text: "Wybierz miejsce. Return, lewa lub prawa strzałka do wyboru. Escape do wyjścia."
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_selectspotreturnleftorrightarrowse
 #: tr4w/src/lang/tr4w_consts_eng.pas:874
 #, fuzzy
 msgctxt "TC_SELECTSPOTRETURNLEFTORRIGHTARROWSE"
 msgid "Select spot.  RETURN, left or right arrow to select.  ESCAPE to exit."
-msgstr "Wybierz miejsce. Return, lewa lub prawa strzałka do wyboru. Escape do wyjścia."
+msgstr "Wybierz spot. Return, lewa lub prawa strzałka do wyboru. Escape do wyjścia."
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Zawołaj mnie. Miejsce dla dupeczków. Alt- H prosi o pomoc.' -> 'Wpisz znak. SPACJA – sprawdzenie duplikatów. Alt-H – pomoc.', s.10 'znaku', s.8 'Duplikatem jest'; the reviewed 'duplikat' (= 'Call me. A place for little bottoms.'). Previous text: "Zawołaj mnie. Miejsce dla dupeczków. Alt- H prosi o pomoc."
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_entercallsignspacedupecheckalthhel
 #: tr4w/src/lang/tr4w_consts_eng.pas:875
 #, fuzzy
 msgctxt "TC_ENTERCALLSIGNSPACEDUPECHECKALTHHEL"
 msgid "ENTER a callsign.  SPACE for dupecheck.  Alt-H for help."
-msgstr "Zawołaj mnie. Miejsce dla dupeczków. Alt- H prosi o pomoc."
+msgstr "Wpisz znak. SPACJA – sprawdzenie duplikatów. Alt-H – pomoc."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_continueenteringcharactersautoterm
@@ -6129,13 +6213,14 @@ msgctxt "TC_ENTEREXCHANGEPRESSENTERLOGESCAPEAB"
 msgid "Enter exchange.  Press ENTER to log, ESCAPE to abort QSO."
 msgstr "Wprowadź wymianę. Naciśnij ENTER do logowania, ESCAPE do przerwania QSO."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "PORT KONTROLI RELAYY = PORT PADDLE"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_relaycontrolportpaddleport
 #: tr4w/src/lang/tr4w_consts_eng.pas:879
 #, fuzzy
 msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
 msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr "PORT KONTROLI RELAYY = PORT PADDLE"
+msgstr "RELAY CONTROL PORT = PADDLE PORT"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_locationfieldempty tr4w/src/lang/tr4w_consts_eng.pas:880
@@ -6303,10 +6388,11 @@ msgctxt "tfrmaltd.btnok.caption"
 msgid "OK"
 msgstr "OK"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Sprawdzenie powtşrek QSO na nieaktywnym radiu' -> 'Sprawdzanie duplikatów na nieaktywnym radiu', s.8 'Duplikatem jest QSO'; the reviewed twin (the old text is also codepage-damaged). Previous text: "Sprawdzenie powtşrek QSO na nieaktywnym radiu"
 #: tfrmaltd.caption
 #, fuzzy
 msgid "Dupe Check On Inactive Radio"
-msgstr "Sprawdzenie powtşrek QSO na nieaktywnym radiu"
+msgstr "Sprawdzanie duplikatów na nieaktywnym radiu"
 
 #: tfrmautocq.btncancel.caption
 #, fuzzy
@@ -6330,20 +6416,23 @@ msgstr "Auto- CQ"
 msgid "Number of milliseconds of listening time:"
 msgstr "Czas przerwy w milisekundach:"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "NaciÜnij klawisz F, ktşry ma byö powtarzany:"
 #: tfrmautocq.lblmemorykey.caption
 #, fuzzy
 msgid "Press the memory key you want to repeat:"
-msgstr "NaciÜnij klawisz F, ktşry ma byö powtarzany:"
+msgstr "Naciśnij klawisz F, który ma być powtarzany:"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Usu¸ zaznaczonego spota"
 #: tfrmbandmap.mideletespot.caption
 #, fuzzy
 msgid "Delete selected spot"
-msgstr "Usu¸ zaznaczonego spota"
+msgstr "Usuń zaznaczonego spota"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Usu¸ wszystkie spoty"
 #: tfrmbandmap.miremoveall.caption
 #, fuzzy
 msgid "Remove all spots"
-msgstr "Usu¸ wszystkie spoty"
+msgstr "Usuń wszystkie spoty"
 
 #: tfrmbandplan.btncancel.caption
 #, fuzzy
@@ -6395,11 +6484,12 @@ msgstr "Makro"
 msgid "Caption"
 msgstr "Napis"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WiadomoÜö"
 #: tfrmeditmessage.lblmessage.caption
 #, fuzzy
 msgctxt "tfrmeditmessage.lblmessage.caption"
 msgid "Message"
-msgstr "WiadomoÜö"
+msgstr "Wiadomość"
 
 #: tfrmeditqso.btncancel.caption
 #, fuzzy
@@ -6412,11 +6502,12 @@ msgstr "Anuluj"
 msgid "Band"
 msgstr "Pasmo"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Znak wywo¦awczy"
 #: tfrmeditqso.lblcallsign.caption
 #, fuzzy
 msgctxt "tfrmeditqso.lblcallsign.caption"
 msgid "Callsign"
-msgstr "Znak wywo¦awczy"
+msgstr "Znak wywoławczy"
 
 #: tfrmeditqso.lbldate.caption
 #, fuzzy
@@ -6433,11 +6524,12 @@ msgstr "DX"
 msgid "Mode"
 msgstr "Emisja"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Imiú i nazwisko"
 #: tfrmeditqso.lblname.caption
 #, fuzzy
 msgctxt "tfrmeditqso.lblname.caption"
 msgid "Name"
-msgstr "Imiú i nazwisko"
+msgstr "Imię i nazwisko"
 
 #: tfrmeditqso.lbloperator.caption
 #, fuzzy
@@ -6518,10 +6610,11 @@ msgctxt "tfrminputquery.btnok.caption"
 msgid "OK"
 msgstr "OK"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Sieö wewnútrzna"
 #: tfrmintercom.caption
 #, fuzzy
 msgid "Intercom"
-msgstr "Sieö wewnútrzna"
+msgstr "Sieć wewnętrzna"
 
 #: tfrmkeyeredit.btncancel.caption
 #, fuzzy
@@ -6529,11 +6622,12 @@ msgctxt "tfrmkeyeredit.btncancel.caption"
 msgid "Cancel"
 msgstr "Anuluj"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Imiú i nazwisko"
 #: tfrmkeyeredit.lblname.caption
 #, fuzzy
 msgctxt "tfrmkeyeredit.lblname.caption"
 msgid "Name"
-msgstr "Imiú i nazwisko"
+msgstr "Imię i nazwisko"
 
 #: tfrmkeyeredit.lblwkfirstext.caption
 #, fuzzy
@@ -6589,11 +6683,12 @@ msgstr ""
 msgid "MP3 Recorder"
 msgstr "Zapis MP3"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Sieö"
 #: tfrmnetwork.caption
 #, fuzzy
 msgctxt "tfrmnetwork.caption"
 msgid "Network"
-msgstr "Sieö"
+msgstr "Sieć"
 
 #: tfrmpanadapter.btnspannarrow.caption
 msgid "-"
@@ -6608,30 +6703,35 @@ msgstr ""
 msgid "Disconnected"
 msgstr "Rozłączony"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyÜlij teraz"
 #: tfrmpostscores.btnpostnow.caption
 #, fuzzy
 msgid "Post now"
-msgstr "WyÜlij teraz"
+msgstr "Wyślij teraz"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Poka¬"
 #: tfrmpostscores.btnshowscores.caption
 #, fuzzy
 msgid "Show scores"
-msgstr "Poka¬"
+msgstr "Pokaż"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "U¬yj  &C\\n  do zaprogramowania klawisza CQ."
 #: tfrmprogrammessage.btncq.caption
 #, fuzzy
 msgid "Press &C to program a CQ function key."
-msgstr "U¬yj  &C\\n  do zaprogramowania klawisza CQ."
+msgstr "Użyj  &C\\n  do zaprogramowania klawisza CQ."
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "U¬yj  &E\\n  do zaprogramowania klawisza grupy kontrolnej dla trybu S&P."
 #: tfrmprogrammessage.btnexchange.caption
 #, fuzzy
 msgid "Press &E to program an exchange/search and pounce function key."
-msgstr "U¬yj  &E\\n  do zaprogramowania klawisza grupy kontrolnej dla trybu S&P."
+msgstr "Użyj  &E\\n  do zaprogramowania klawisza grupy kontrolnej dla trybu S&P."
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "U¬yj  &O\\n  do zaprogramowania pozosta¦ych makr klawiszy funkcyjnych."
 #: tfrmprogrammessage.btnother.caption
 #, fuzzy
 msgid "Press &O to program the other non function key messages."
-msgstr "U¬yj  &O\\n  do zaprogramowania pozosta¦ych makr klawiszy funkcyjnych."
+msgstr "Użyj  &O\\n  do zaprogramowania pozostałych makr klawiszy funkcyjnych."
 
 #: tfrmprogrammessage.caption
 #, fuzzy
@@ -6655,26 +6755,29 @@ msgctxt "tfrmsendspot.btnok.caption"
 msgid "OK"
 msgstr "OK"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyÜlij spot"
 #: tfrmsendspot.caption
 #, fuzzy
 msgid "Send spot"
-msgstr "WyÜlij spot"
+msgstr "Wyślij spot"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Znak wywo¦awczy"
 #: tfrmsendspot.lblcallsign.caption
 #, fuzzy
 msgctxt "tfrmsendspot.lblcallsign.caption"
 msgid "Callsign"
-msgstr "Znak wywo¦awczy"
+msgstr "Znak wywoławczy"
 
 #: tfrmsendspot.lblcomment.caption
 #, fuzzy
 msgid "Comment"
 msgstr "Komentarz"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "CzústotliwoÜö"
 #: tfrmsendspot.lblfrequency.caption
 #, fuzzy
 msgid "Frequency"
-msgstr "CzústotliwoÜö"
+msgstr "Częstotliwość"
 
 #: tfrmstations.caption
 #, fuzzy
@@ -6954,11 +7057,12 @@ msgctxt "tradioeditform.caption"
 msgid "Radio"
 msgstr "Radio"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Imiú i nazwisko"
 #: tradioeditform.lblname.caption
 #, fuzzy
 msgctxt "tradioeditform.lblname.caption"
 msgid "Name"
-msgstr "Imiú i nazwisko"
+msgstr "Imię i nazwisko"
 
 #: tradioeditform.lblport.caption
 #, fuzzy
@@ -6988,11 +7092,12 @@ msgstr ""
 msgid "2"
 msgstr ""
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Sieö"
 #: tradioeditform.tabnetwork.caption
 #, fuzzy
 msgctxt "tradioeditform.tabnetwork.caption"
 msgid "Network"
-msgstr "Sieö"
+msgstr "Sieć"
 
 #: ttr4wmainform.caption
 #, fuzzy
@@ -7319,17 +7424,19 @@ msgctxt "ulclformhelpers.tc_radioedit_keyerstopbits"
 msgid "Stop bits"
 msgstr "Zatrzymaj bity"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Imiú i nazwisko"
 #: ulclformhelpers.tc_radioedit_name
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_name"
 msgid "Name"
-msgstr "Imiú i nazwisko"
+msgstr "Imię i nazwisko"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Sieö"
 #: ulclformhelpers.tc_radioedit_network
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_network"
 msgid "Network"
-msgstr "Sieö"
+msgstr "Sieć"
 
 #: ulclformhelpers.tc_radioedit_parity
 #, fuzzy
@@ -7437,11 +7544,12 @@ msgctxt "ulclformhelpers.tc_radioedit_widecw"
 msgid "Wide CW filter"
 msgstr "Szeroki filtr CW"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Sprawdzenie powtşrek QSO na nieaktywnym radiu' -> 'Sprawdzanie duplikatów na nieaktywnym radiu', s.8 'Duplikatem jest QSO'; the reviewed twin (the old text is also codepage-damaged). Previous text: "Sprawdzenie powtşrek QSO na nieaktywnym radiu"
 #: tfrmaltd.caption
 #, fuzzy
 msgctxt "tfrmaltd.caption"
 msgid "Dupe Check On Inactive Radio"
-msgstr "Sprawdzenie powtşrek QSO na nieaktywnym radiu"
+msgstr "Sprawdzanie duplikatów na nieaktywnym radiu"
 
 #: tfrmautocq.caption
 #, fuzzy
@@ -7455,23 +7563,26 @@ msgctxt "tfrmautocq.lbldelay.caption"
 msgid "Number of milliseconds of listening time:"
 msgstr "Czas przerwy w milisekundach:"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "NaciÜnij klawisz F, ktşry ma byö powtarzany:"
 #: tfrmautocq.lblmemorykey.caption
 #, fuzzy
 msgctxt "tfrmautocq.lblmemorykey.caption"
 msgid "Press the memory key you want to repeat:"
-msgstr "NaciÜnij klawisz F, ktşry ma byö powtarzany:"
+msgstr "Naciśnij klawisz F, który ma być powtarzany:"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Usu¸ zaznaczonego spota"
 #: tfrmbandmap.mideletespot.caption
 #, fuzzy
 msgctxt "tfrmbandmap.mideletespot.caption"
 msgid "Delete selected spot"
-msgstr "Usu¸ zaznaczonego spota"
+msgstr "Usuń zaznaczonego spota"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Usu¸ wszystkie spoty"
 #: tfrmbandmap.miremoveall.caption
 #, fuzzy
 msgctxt "tfrmbandmap.miremoveall.caption"
 msgid "Remove all spots"
-msgstr "Usu¸ wszystkie spoty"
+msgstr "Usuń wszystkie spoty"
 
 #: tfrmbandplan.caption
 #, fuzzy
@@ -7527,11 +7638,12 @@ msgctxt "tfrmfunctionkeys.caption"
 msgid "Function keys"
 msgstr "Klawisze funkcyjne"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Sieö wewnútrzna"
 #: tfrmintercom.caption
 #, fuzzy
 msgctxt "tfrmintercom.caption"
 msgid "Intercom"
-msgstr "Sieö wewnútrzna"
+msgstr "Sieć wewnętrzna"
 
 #: tfrmkeyeredit.lblwkfirstext.caption
 #, fuzzy
@@ -7623,35 +7735,40 @@ msgctxt "tfrmpanadapter.lblstatus.caption"
 msgid "Disconnected"
 msgstr "Rozłączony"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyÜlij teraz"
 #: tfrmpostscores.btnpostnow.caption
 #, fuzzy
 msgctxt "tfrmpostscores.btnpostnow.caption"
 msgid "Post now"
-msgstr "WyÜlij teraz"
+msgstr "Wyślij teraz"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Poka¬"
 #: tfrmpostscores.btnshowscores.caption
 #, fuzzy
 msgctxt "tfrmpostscores.btnshowscores.caption"
 msgid "Show scores"
-msgstr "Poka¬"
+msgstr "Pokaż"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "U¬yj  &C\\n  do zaprogramowania klawisza CQ."
 #: tfrmprogrammessage.btncq.caption
 #, fuzzy
 msgctxt "tfrmprogrammessage.btncq.caption"
 msgid "Press &C to program a CQ function key."
-msgstr "U¬yj  &C\\n  do zaprogramowania klawisza CQ."
+msgstr "Użyj  &C\\n  do zaprogramowania klawisza CQ."
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "U¬yj  &E\\n  do zaprogramowania klawisza grupy kontrolnej dla trybu S&P."
 #: tfrmprogrammessage.btnexchange.caption
 #, fuzzy
 msgctxt "tfrmprogrammessage.btnexchange.caption"
 msgid "Press &E to program an exchange/search and pounce function key."
-msgstr "U¬yj  &E\\n  do zaprogramowania klawisza grupy kontrolnej dla trybu S&P."
+msgstr "Użyj  &E\\n  do zaprogramowania klawisza grupy kontrolnej dla trybu S&P."
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "U¬yj  &O\\n  do zaprogramowania pozosta¦ych makr klawiszy funkcyjnych."
 #: tfrmprogrammessage.btnother.caption
 #, fuzzy
 msgctxt "tfrmprogrammessage.btnother.caption"
 msgid "Press &O to program the other non function key messages."
-msgstr "U¬yj  &O\\n  do zaprogramowania pozosta¦ych makr klawiszy funkcyjnych."
+msgstr "Użyj  &O\\n  do zaprogramowania pozostałych makr klawiszy funkcyjnych."
 
 #: tfrmprogrammessage.caption
 #, fuzzy
@@ -7665,11 +7782,12 @@ msgctxt "tfrmsendkeyboard.btnclose.caption"
 msgid "Close"
 msgstr "Zamknij"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyÜlij spot"
 #: tfrmsendspot.caption
 #, fuzzy
 msgctxt "tfrmsendspot.caption"
 msgid "Send spot"
-msgstr "WyÜlij spot"
+msgstr "Wyślij spot"
 
 #: tfrmsendspot.lblcomment.caption
 #, fuzzy
@@ -7677,11 +7795,12 @@ msgctxt "tfrmsendspot.lblcomment.caption"
 msgid "Comment"
 msgstr "Komentarz"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "CzústotliwoÜö"
 #: tfrmsendspot.lblfrequency.caption
 #, fuzzy
 msgctxt "tfrmsendspot.lblfrequency.caption"
 msgid "Frequency"
-msgstr "CzústotliwoÜö"
+msgstr "Częstotliwość"
 
 #: tfrmstations.caption
 #, fuzzy
@@ -7713,11 +7832,12 @@ msgctxt "utr4wstrings.close_word"
 msgid "Close"
 msgstr "Zamknij"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyjÜcie"
 #: utr4wstrings.exit_word
 #, fuzzy
 msgctxt "utr4wstrings.exit_word"
 msgid "E&xit"
-msgstr "WyjÜcie"
+msgstr "Wyjście"
 
 #: utr4wstrings.help_word
 #, fuzzy
@@ -7759,10 +7879,11 @@ msgstr "Tempo CW"
 msgid "QSO number"
 msgstr "Numer QSO"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Wszystkie znaki wywo¦awcze"
 #: utr4wstrings.rc_allcalls
 #, fuzzy
 msgid "All callsigns"
-msgstr "Wszystkie znaki wywo¦awcze"
+msgstr "Wszystkie znaki wywoławcze"
 
 #: utr4wstrings.rc_altp
 #, fuzzy
@@ -7807,10 +7928,11 @@ msgstr "Pasmo"
 msgid "Band changes"
 msgstr "Zmiany pasm"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Jedno pasmo w dş¦"
 #: utr4wstrings.rc_banddown
 #, fuzzy
 msgid "Band Down"
-msgstr "Jedno pasmo w dş¦"
+msgstr "Jedno pasmo w dół"
 
 #: utr4wstrings.rc_bandmap
 #, fuzzy
@@ -7823,26 +7945,29 @@ msgctxt "utr4wstrings.rc_bandplan"
 msgid "Band plan"
 msgstr "Plan pasm"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Jedno pasmo w gşrú"
 #: utr4wstrings.rc_bandup
 #, fuzzy
 msgid "Band Up"
-msgstr "Jedno pasmo w gşrú"
+msgstr "Jedno pasmo w górę"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Monitor bikonşw"
 #: utr4wstrings.rc_beaconsm
 #, fuzzy
 msgid "Beacons monitor"
-msgstr "Monitor bikonşw"
+msgstr "Monitor bikonów"
 
 #: utr4wstrings.rc_calculator
 #, fuzzy
 msgid "Calculator"
 msgstr "Kalkulator"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Znak wywo¦awczy"
 #: utr4wstrings.rc_callsign
 #, fuzzy
 msgctxt "utr4wstrings.rc_callsign"
 msgid "Callsign"
-msgstr "Znak wywo¦awczy"
+msgstr "Znak wywoławczy"
 
 #: utr4wstrings.rc_caption
 #, fuzzy
@@ -7855,25 +7980,29 @@ msgstr "Napis"
 msgid "CAT and CW Keying"
 msgstr "CAT i kluczowanie CW"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyczyÜö wszystkie logi w sieci"
 #: utr4wstrings.rc_clearalllogs
 #, fuzzy
 msgid "Clear all logs in network"
-msgstr "WyczyÜö wszystkie logi w sieci"
+msgstr "Wyczyść wszystkie logi w sieci"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyczyÜö listú zrobionych stacji"
 #: utr4wstrings.rc_cleardupes
 #, fuzzy
 msgid "Clear dupesheet"
-msgstr "WyczyÜö listú zrobionych stacji"
+msgstr "Wyczyść listę zrobionych stacji"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyczyÜö log"
 #: utr4wstrings.rc_clearlog
 #, fuzzy
 msgid "Clear log"
-msgstr "WyczyÜö log"
+msgstr "Wyczyść log"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyczyÜö zestawienie mno¬nikşw"
 #: utr4wstrings.rc_clearmsheet
 #, fuzzy
 msgid "Clear multsheet"
-msgstr "WyczyÜö zestawienie mno¬nikşw"
+msgstr "Wyczyść zestawienie mnożników"
 
 #: utr4wstrings.rc_colors
 #, fuzzy
@@ -7892,20 +8021,23 @@ msgctxt "utr4wstrings.rc_comment"
 msgid "Comment"
 msgstr "Komentarz"
 
+# 2026-10-19 codepage damage reversed by byte reversal -- the text is not in D7 tr4w_pol.RES, and no ambiguous byte was involved (NY4I approved); was: "Spis treÜci"
 #: utr4wstrings.rc_contents
 #, fuzzy
 msgid "Contents"
-msgstr "Spis treÜci"
+msgstr "Spis treści"
 
+# 2026-10-19 codepage damage reversed by byte reversal -- the text is not in D7 tr4w_pol.RES, and no ambiguous byte was involved (NY4I approved); was: "Nazwa zawodşw w polu ' Komentarz '"
 #: utr4wstrings.rc_contestnameic
 #, fuzzy
 msgid "C&ontest name in comment"
-msgstr "Nazwa zawodşw w polu ' Komentarz '"
+msgstr "Nazwa zawodów w polu ' Komentarz '"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Lista kontynentşw"
 #: utr4wstrings.rc_contlist
 #, fuzzy
 msgid "Continent List"
-msgstr "Lista kontynentşw"
+msgstr "Lista kontynentów"
 
 #: utr4wstrings.rc_cqmode
 #, fuzzy
@@ -7939,30 +8071,34 @@ msgstr "Kursor w oknie klastra DX"
 msgid "CW Speed Down for the inactive radio"
 msgstr "CW - zmniejsz tempo dla niekatywnego radia"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "PrúdkoÜö CW"
 #: utr4wstrings.rc_cwspeed
 #, fuzzy
 msgid "CW speed"
-msgstr "PrúdkoÜö CW"
+msgstr "Prędkość CW"
 
 #: utr4wstrings.rc_cwspeeddown
 #, fuzzy
 msgid "CW Speed Down"
 msgstr "CW - zmniejsz tempo"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "CW - zwiúksz tempo"
 #: utr4wstrings.rc_cwspeedup
 #, fuzzy
 msgid "CW Speed Up"
-msgstr "CW - zwiúksz tempo"
+msgstr "CW - zwiększ tempo"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "CW - zwiúksz tempo dla nieaktywnego radia"
 #: utr4wstrings.rc_cwspupir
 #, fuzzy
 msgid "CW Speed Up for the inactive radio"
-msgstr "CW - zwiúksz tempo dla nieaktywnego radia"
+msgstr "CW - zwiększ tempo dla nieaktywnego radia"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Odstúp Auto QSL (Zmniejsz)"
 #: utr4wstrings.rc_daqslint
 #, fuzzy
 msgid "Auto QSL Interval (Decrease)"
-msgstr "Odstúp Auto QSL (Zmniejsz)"
+msgstr "Odstęp Auto QSL (Zmniejsz)"
 
 #: utr4wstrings.rc_date
 #, fuzzy
@@ -7970,47 +8106,55 @@ msgctxt "utr4wstrings.rc_date"
 msgid "Date"
 msgstr "Data"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "&Usuniúte"
 #: utr4wstrings.rc_deleted
 #, fuzzy
 msgid "Deleted"
-msgstr "&Usuniúte"
+msgstr "&Usunięte"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Usu¸ ostatnie QSO"
 #: utr4wstrings.rc_deletelastqso
 #, fuzzy
 msgid "Delete the last QSO"
-msgstr "Usu¸ ostatnie QSO"
+msgstr "Usuń ostatnie QSO"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Usu¸ zaznaczonego spota"
 #: utr4wstrings.rc_deleteselspot
 #, fuzzy
 msgctxt "utr4wstrings.rc_deleteselspot"
 msgid "Delete selected spot"
-msgstr "Usu¸ zaznaczonego spota"
+msgstr "Usuń zaznaczonego spota"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Menad¬er sprzútowy"
 #: utr4wstrings.rc_devicemanager
 #, fuzzy
 msgid "Device Manager"
-msgstr "Menad¬er sprzútowy"
+msgstr "Menadżer sprzętowy"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Rş¬nice w logach"
 #: utr4wstrings.rc_diffinlog
 #, fuzzy
 msgid "Difference in logs"
-msgstr "Rş¬nice w logach"
+msgstr "Różnice w logach"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Sprawdß ostatni¦ wersjú"
 #: utr4wstrings.rc_download
 #, fuzzy
 msgid "Download the latest CTY.DAT"
-msgstr "Sprawdß ostatni¦ wersjú"
+msgstr "Sprawdź ostatnią wersję"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Sprawdß czy duplikat"
 #: utr4wstrings.rc_dupecheck
 #, fuzzy
 msgid "Dupe check"
-msgstr "Sprawdß czy duplikat"
+msgstr "Sprawdź czy duplikat"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Sprawdzenie powtşrek QSO na nieaktywnym radiu' -> 'Sprawdzanie duplikatów na nieaktywnym radiu', s.8 'Duplikatem jest QSO'; the reviewed twin (the old text is also codepage-damaged). Previous text: "Sprawdzenie powtşrek QSO na nieaktywnym radiu"
 #: utr4wstrings.rc_dupecheckoar
 #, fuzzy
 msgctxt "utr4wstrings.rc_dupecheckoar"
 msgid "Dupe Check On Inactive Radio"
-msgstr "Sprawdzenie powtşrek QSO na nieaktywnym radiu"
+msgstr "Sprawdzanie duplikatów na nieaktywnym radiu"
 
 #: utr4wstrings.rc_dupesheet
 #, fuzzy
@@ -8043,26 +8187,29 @@ msgstr "Ucieczka"
 msgid "Execute configuration file"
 msgstr "Wykonaj plik konfiguracyjny"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyjÜcie"
 #: utr4wstrings.rc_exit
 #, fuzzy
 msgctxt "utr4wstrings.rc_exit"
 msgid "E&xit"
-msgstr "WyjÜcie"
+msgstr "Wyjście"
 
 #: utr4wstrings.rc_export
 #, fuzzy
 msgid "Export"
 msgstr "Eksport"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Pierwsza zrobiona stacja z ka¬dego kraju"
 #: utr4wstrings.rc_fcc
 #, fuzzy
 msgid "First callsign worked in each country"
-msgstr "Pierwsza zrobiona stacja z ka¬dego kraju"
+msgstr "Pierwsza zrobiona stacja z każdego kraju"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Pierwsza zrobiona stacja z ka¬dej strefy"
 #: utr4wstrings.rc_fcz
 #, fuzzy
 msgid "First callsign worked in each zone"
-msgstr "Pierwsza zrobiona stacja z ka¬dej strefy"
+msgstr "Pierwsza zrobiona stacja z każdej strefy"
 
 #: utr4wstrings.rc_file
 #, fuzzy
@@ -8075,68 +8222,77 @@ msgctxt "utr4wstrings.rc_fkeys"
 msgid "Function keys"
 msgstr "Klawisze funkcyjne"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Uaktywnienie g¦şwnego okna"
 #: utr4wstrings.rc_focusinmw
 #, fuzzy
 msgid "Focus in main window"
-msgstr "Uaktywnienie g¦şwnego okna"
+msgstr "Uaktywnienie głównego okna"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "CzústotliwoÜö"
 #: utr4wstrings.rc_frequency
 #, fuzzy
 msgctxt "utr4wstrings.rc_frequency"
 msgid "Frequency"
-msgstr "CzústotliwoÜö"
+msgstr "Częstotliwość"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Poka¬"
 #: utr4wstrings.rc_gotogs
 #, fuzzy
 msgctxt "utr4wstrings.rc_gotogs"
 msgid "Show scores"
-msgstr "Poka¬"
+msgstr "Pokaż"
 
 #: utr4wstrings.rc_homepage
 #, fuzzy
 msgid "TR4W Home Page"
 msgstr "Strona domowa TR4W"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Odstúp Auto QSL (Zwiúksz)"
 #: utr4wstrings.rc_iaqslint
 #, fuzzy
 msgid "Auto QSL Interval (Increase)"
-msgstr "Odstúp Auto QSL (Zwiúksz)"
+msgstr "Odstęp Auto QSL (Zwiększ)"
 
 #: utr4wstrings.rc_import
 #, fuzzy
 msgid "Import"
 msgstr "Import"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Zwiúksz numer"
 #: utr4wstrings.rc_incnumber
 #, fuzzy
 msgid "Increment number"
-msgstr "Zwiúksz numer"
+msgstr "Zwiększ numer"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Postúp czasu"
 #: utr4wstrings.rc_inc_time
 #, fuzzy
 msgid "Increment time"
-msgstr "Postúp czasu"
+msgstr "Postęp czasu"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Lista raportşw wstúpnych"
 #: utr4wstrings.rc_iniexlist
 #, fuzzy
 msgid "Initial exchanges list"
-msgstr "Lista raportşw wstúpnych"
+msgstr "Lista raportów wstępnych"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Raport pocz¦tkowy"
 #: utr4wstrings.rc_initialex
 #, fuzzy
 msgid "Initial exchange"
-msgstr "Raport pocz¦tkowy"
+msgstr "Raport początkowy"
 
 #: utr4wstrings.rc_initialize
 #, fuzzy
 msgid "Initialize QSO"
 msgstr "Rozpocznij QSO"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Sieö wewnútrzna"
 #: utr4wstrings.rc_intercom
 #, fuzzy
 msgctxt "utr4wstrings.rc_intercom"
 msgid "Intercom"
-msgstr "Sieö wewnútrzna"
+msgstr "Sieć wewnętrzna"
 
 #: utr4wstrings.rc_killcw
 #, fuzzy
@@ -8159,16 +8315,18 @@ msgctxt "utr4wstrings.rc_memprogfunc"
 msgid "Memory program function"
 msgstr "Makra"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WiadomoÜö"
 #: utr4wstrings.rc_message
 #, fuzzy
 msgctxt "utr4wstrings.rc_message"
 msgid "Message"
-msgstr "WiadomoÜö"
+msgstr "Wiadomość"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Raport niezrobionych mno¬nikşw"
 #: utr4wstrings.rc_missmultsrep
 #, fuzzy
 msgid "Missing mults report"
-msgstr "Raport niezrobionych mno¬nikşw"
+msgstr "Raport niezrobionych mnożników"
 
 #: utr4wstrings.rc_mode
 #, fuzzy
@@ -8187,32 +8345,37 @@ msgstr "Zapis MP3"
 msgid "Enable"
 msgstr "Włącz"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Imiú i nazwisko"
 #: utr4wstrings.rc_name
 #, fuzzy
 msgctxt "utr4wstrings.rc_name"
 msgid "Name"
-msgstr "Imiú i nazwisko"
+msgstr "Imię i nazwisko"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Sieö"
 #: utr4wstrings.rc_net
 #, fuzzy
 msgid "Net"
-msgstr "Sieö"
+msgstr "Sieć"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Sieö"
 #: utr4wstrings.rc_network
 #, fuzzy
 msgctxt "utr4wstrings.rc_network"
 msgid "Network"
-msgstr "Sieö"
+msgstr "Sieć"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyczyÜö zestawienie zrobionych stacji we wszystkich logach"
 #: utr4wstrings.rc_net_cldupe
 #, fuzzy
 msgid "Clear dupesheet in all logs"
-msgstr "WyczyÜö zestawienie zrobionych stacji we wszystkich logach"
+msgstr "Wyczyść zestawienie zrobionych stacji we wszystkich logach"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyczyÜö zestawienie mno¬nikşw we wszystkich logach"
 #: utr4wstrings.rc_net_clmult
 #, fuzzy
 msgid "Clear multsheet in all logs"
-msgstr "WyczyÜö zestawienie mno¬nikşw we wszystkich logach"
+msgstr "Wyczyść zestawienie mnożników we wszystkich logach"
 
 #: utr4wstrings.rc_note
 #, fuzzy
@@ -8230,10 +8393,11 @@ msgctxt "utr4wstrings.rc_numberosolt"
 msgid "Number of milliseconds of listening time:"
 msgstr "Czas przerwy w milisekundach:"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Otwşrz katalog logu"
 #: utr4wstrings.rc_openlogdir
 #, fuzzy
 msgid "Open log directory"
-msgstr "Otwşrz katalog logu"
+msgstr "Otwórz katalog logu"
 
 #: utr4wstrings.rc_operator
 #, fuzzy
@@ -8251,40 +8415,46 @@ msgstr "Polecenia konfiguracyjne"
 msgid "Ping [SERVER ADDRESS]"
 msgstr "Ping [ADRES SERWERA]"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyÜlij teraz"
 #: utr4wstrings.rc_postnow
 #, fuzzy
 msgctxt "utr4wstrings.rc_postnow"
 msgid "Post now"
-msgstr "WyÜlij teraz"
+msgstr "Wyślij teraz"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyÜlij punktacjú"
 #: utr4wstrings.rc_postscoretogs
 #, fuzzy
 msgid "Post score"
-msgstr "WyÜlij punktacjú"
+msgstr "Wyślij punktację"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "NaciÜnij klawisz F, ktşry ma byö powtarzany:"
 #: utr4wstrings.rc_pressmkywtr
 #, fuzzy
 msgctxt "utr4wstrings.rc_pressmkywtr"
 msgid "Press the memory key you want to repeat:"
-msgstr "NaciÜnij klawisz F, ktşry ma byö powtarzany:"
+msgstr "Naciśnij klawisz F, który ma być powtarzany:"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "U¬yj  &C\\n  do zaprogramowania klawisza CQ."
 #: utr4wstrings.rc_press_c
 #, fuzzy
 msgctxt "utr4wstrings.rc_press_c"
 msgid "Press &C to program a CQ function key."
-msgstr "U¬yj  &C\\n  do zaprogramowania klawisza CQ."
+msgstr "Użyj  &C\\n  do zaprogramowania klawisza CQ."
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "U¬yj  &E\\n  do zaprogramowania klawisza grupy kontrolnej dla trybu S&P."
 #: utr4wstrings.rc_press_e
 #, fuzzy
 msgctxt "utr4wstrings.rc_press_e"
 msgid "Press &E to program an exchange/search and pounce function key."
-msgstr "U¬yj  &E\\n  do zaprogramowania klawisza grupy kontrolnej dla trybu S&P."
+msgstr "Użyj  &E\\n  do zaprogramowania klawisza grupy kontrolnej dla trybu S&P."
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "U¬yj  &O\\n  do zaprogramowania pozosta¦ych makr klawiszy funkcyjnych."
 #: utr4wstrings.rc_press_o
 #, fuzzy
 msgctxt "utr4wstrings.rc_press_o"
 msgid "Press &O to program the other non function key messages."
-msgstr "U¬yj  &O\\n  do zaprogramowania pozosta¦ych makr klawiszy funkcyjnych."
+msgstr "Użyj  &O\\n  do zaprogramowania pozostałych makr klawiszy funkcyjnych."
 
 #: utr4wstrings.rc_programmes
 #, fuzzy
@@ -8297,10 +8467,11 @@ msgctxt "utr4wstrings.rc_progrmess"
 msgid "Program message"
 msgstr "Makro"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "QSO wg krajşw i pasm"
 #: utr4wstrings.rc_qsobycountry
 #, fuzzy
 msgid "QSOs by country by band"
-msgstr "QSO wg krajşw i pasm"
+msgstr "QSO wg krajów i pasm"
 
 #: utr4wstrings.rc_qsowithnocw
 #, fuzzy
@@ -8312,10 +8483,11 @@ msgstr "Logowanie bez CW"
 msgid "QTC functions"
 msgstr "Funkcje QTC"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Przywo¦aj ostatni wpis"
 #: utr4wstrings.rc_recalllastent
 #, fuzzy
 msgid "Recall last entry"
-msgstr "Przywo¦aj ostatni wpis"
+msgstr "Przywołaj ostatni wpis"
 
 #: utr4wstrings.rc_reccontrol
 #, fuzzy
@@ -8327,41 +8499,46 @@ msgstr "Regulacja zapisu"
 msgid "Receiving QTCs"
 msgstr "Odbieranie QTC"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "OdÜwie¬ bandmapú"
 #: utr4wstrings.rc_refreshbm
 #, fuzzy
 msgid "Refresh bandmap"
-msgstr "OdÜwie¬ bandmapú"
+msgstr "Odśwież bandmapę"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Pozostaj¦ce mno¬niki"
 #: utr4wstrings.rc_remmults
 #, fuzzy
 msgid "Mults"
-msgstr "Pozostaj¦ce mno¬niki"
+msgstr "Pozostające mnożniki"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Usu¸ wszystkie spoty"
 #: utr4wstrings.rc_removeallsp
 #, fuzzy
 msgctxt "utr4wstrings.rc_removeallsp"
 msgid "Remove all spots"
-msgstr "Usu¸ wszystkie spoty"
+msgstr "Usuń wszystkie spoty"
 
 #: utr4wstrings.rc_reports
 #, fuzzy
 msgid "Reports"
 msgstr "Raporty"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Przelicz punktacjú"
 #: utr4wstrings.rc_rescore
 #, fuzzy
 msgid "Rescore"
-msgstr "Przelicz punktacjú"
+msgstr "Przelicz punktację"
 
 #: utr4wstrings.rc_reset_radio_ports
 #, fuzzy
 msgid "Reset Radio Ports"
 msgstr "Resetuj porty radia"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Ustawienia domyÜlne"
 #: utr4wstrings.rc_rm_default
 #, fuzzy
 msgid "Default"
-msgstr "Ustawienia domyÜlne"
+msgstr "Ustawienia domyślne"
 
 #: utr4wstrings.rc_runserver
 #, fuzzy
@@ -8388,56 +8565,63 @@ msgstr "Szukaj w logu"
 msgid "Search && pounce mode"
 msgstr "Tryb S&P"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Nadawanie CW z klawiatury. U¬yj ENTER/Escape/F10 ¬eby wyjÜö."
 #: utr4wstrings.rc_sendingcw
 #, fuzzy
 msgid "Sending CW from the keyboard. Use ENTER/Escape/F10 to exit."
-msgstr "Nadawanie CW z klawiatury. U¬yj ENTER/Escape/F10 ¬eby wyjÜö."
+msgstr "Nadawanie CW z klawiatury. Użyj ENTER/Escape/F10 żeby wyjść."
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Ustaw czústotliwoÜö na nieaktywnym radiu"
 #: utr4wstrings.rc_sendinrig
 #, fuzzy
 msgid "QSY Inactive Radio"
-msgstr "Ustaw czústotliwoÜö na nieaktywnym radiu"
+msgstr "Ustaw częstotliwość na nieaktywnym radiu"
 
 #: utr4wstrings.rc_sendkeyboard
 #, fuzzy
 msgid "Send Keyboard Input"
 msgstr "Nadawanie z klawiatury"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyÜlij wiadomoÜö"
 #: utr4wstrings.rc_sendmessage
 #, fuzzy
 msgid "Send message"
-msgstr "WyÜlij wiadomoÜö"
+msgstr "Wyślij wiadomość"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyÜlij spot"
 #: utr4wstrings.rc_sendspot
 #, fuzzy
 msgctxt "utr4wstrings.rc_sendspot"
 msgid "Send spot"
-msgstr "WyÜlij spot"
+msgstr "Wyślij spot"
 
 #: utr4wstrings.rc_send_bug
 #, fuzzy
 msgid "Send bug report"
 msgstr "Wyślij raport o błędzie"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Ustaw datú systemow¦/time"
 #: utr4wstrings.rc_setsysdt
 #, fuzzy
 msgid "Set system date/time"
-msgstr "Ustaw datú systemow¦/time"
+msgstr "Ustaw datę systemową/time"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Ustaw strefú czasow¦"
 #: utr4wstrings.rc_settimezone
 #, fuzzy
 msgid "Set time zone"
-msgstr "Ustaw strefú czasow¦"
+msgstr "Ustaw strefę czasową"
 
 #: utr4wstrings.rc_settings
 #, fuzzy
 msgid "Settings"
 msgstr "Ustawienia"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): '[sygnał wywoławczy]' -> '[znak]', s.10 'znaku'. Previous text: "SH / DX [sygnał wywoławczy]"
 #: utr4wstrings.rc_shdx_callsign
 #, fuzzy
 msgid "SH/DX [callsign]"
-msgstr "SH / DX [sygnał wywoławczy]"
+msgstr "SH / DX [znak]"
 
 #: utr4wstrings.rc_splitoff
 #, fuzzy
@@ -8466,10 +8650,11 @@ msgstr "Stacje"
 msgid "Summary"
 msgstr "Podsumowanie"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Zamie¸ widok mno¬nikşw"
 #: utr4wstrings.rc_swapmultview
 #, fuzzy
 msgid "Swap mult view"
-msgstr "Zamie¸ widok mno¬nikşw"
+msgstr "Zamień widok mnożników"
 
 #: utr4wstrings.rc_synchronize
 #, fuzzy
@@ -8477,10 +8662,11 @@ msgctxt "utr4wstrings.rc_synchronize"
 msgid "Synchronize"
 msgstr "&Synchronizuj"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Porşwnaj i synchronizuj log"
 #: utr4wstrings.rc_synlog
 #, fuzzy
 msgid "Compare and synchronize logs"
-msgstr "Porşwnaj i synchronizuj log"
+msgstr "Porównaj i synchronizuj log"
 
 #: utr4wstrings.rc_telnet
 #, fuzzy
@@ -8493,40 +8679,47 @@ msgstr "Klaster DX"
 msgid "Synchronize time on &all computers"
 msgstr "Synchronizowanie czasu"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Prze¦¦czenie funkcji wstaw"
 #: utr4wstrings.rc_toggleinsert
 #, fuzzy
 msgid "Toggle insert mode"
-msgstr "Prze¦¦czenie funkcji wstaw"
+msgstr "Przełączenie funkcji wstaw"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Prze¦¦cz autosend"
 #: utr4wstrings.rc_toogleas
 #, fuzzy
 msgid "Toggle autosend"
-msgstr "Prze¦¦cz autosend"
+msgstr "Przełącz autosend"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Prze¦¦cz dzwonek mno¬nikşw"
 #: utr4wstrings.rc_tooglemb
 #, fuzzy
 msgid "Toogle multiplier bell"
-msgstr "Prze¦¦cz dzwonek mno¬nikşw"
+msgstr "Przełącz dzwonek mnożników"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Prze¦¦cz radia"
 #: utr4wstrings.rc_tooglerigs
 #, fuzzy
 msgid "Toggle rigs"
-msgstr "Prze¦¦cz radia"
+msgstr "Przełącz radia"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Prze¦¦cz monitor CW"
 #: utr4wstrings.rc_tooglest
 #, fuzzy
 msgid "Toggle sidetone"
-msgstr "Prze¦¦cz monitor CW"
+msgstr "Przełącz monitor CW"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Narzúdzia"
 #: utr4wstrings.rc_tools
 #, fuzzy
 msgid "Tools"
-msgstr "Narzúdzia"
+msgstr "Narzędzia"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "CzústotliwoÜö nadawcza"
 #: utr4wstrings.rc_transfreq
 #, fuzzy
 msgid "Transmit frequency"
-msgstr "CzústotliwoÜö nadawcza"
+msgstr "Częstotliwość nadawcza"
 
 #: utr4wstrings.rc_trlogform
 #, fuzzy
@@ -8538,27 +8731,30 @@ msgstr "Format logu wg TR"
 msgid "SCP"
 msgstr "SCP"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Przegl¦daj / Edytujlog"
 #: utr4wstrings.rc_vieweditlog
 #, fuzzy
 msgctxt "utr4wstrings.rc_vieweditlog"
 msgid "View / Edit log"
-msgstr "Przegl¦daj / Edytujlog"
+msgstr "Przeglądaj / Edytujlog"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Przegl¦daj / Edytujlog"
 #: utr4wstrings.rc_vieweditlog2
 #, fuzzy
 msgctxt "utr4wstrings.rc_vieweditlog2"
 msgid "View / Edit log"
-msgstr "Przegl¦daj / Edytujlog"
+msgstr "Przeglądaj / Edytujlog"
 
 #: utr4wstrings.rc_viewpakspots
 #, fuzzy
 msgid "View packet spots"
 msgstr "Pokaż spoty packet"
 
+# 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Dokumentacja On-line (w júzyku rosyjskim)"
 #: utr4wstrings.rc_wiki
 #, fuzzy
 msgid "On-line documentation (in Russian)"
-msgstr "Dokumentacja On-line (w júzyku rosyjskim)"
+msgstr "Dokumentacja On-line (w języku rosyjskim)"
 
 #: utr4wstrings.rc_wincontrol
 #, fuzzy
@@ -8866,10 +9062,11 @@ msgstr "Łączę z "
 msgid "Connection to TR4WSERVER %s:%d lost."
 msgstr "Połączenie z TR4WSERVER %s:%d zostało utracone."
 
+# 2026-10-19 command name restored to English (NY4I ruling: command names are never translated, even in reviewed text) -- fuzzy copy kept in step with its reviewed twin; was: "Półaczenie z TR4WSERVER nie zostało nawiązane. Sprawdź hasło dostępowe do serwera!"
 #: utr4wstrings.tc_connecttotr4wserverfailed
 #, fuzzy
 msgid "Connect to TR4WSERVER failed. Check SERVER PASSWORD value!!"
-msgstr "Półaczenie z TR4WSERVER nie zostało nawiązane. Sprawdź hasło dostępowe do serwera!"
+msgstr "Półaczenie z TR4WSERVER nie zostało nawiązane. Sprawdź SERVER PASSWORD!"
 
 #: utr4wstrings.tc_continueenteringcharactersautoterm
 #, fuzzy
@@ -9152,20 +9349,22 @@ msgstr "Czy chcesz sprawdzić dostępność nowszej wersji TR4W ?"
 msgid "Dupesheet - %sm-%s"
 msgstr "Zestawienie stacji - %sm-%s"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Zestawienie stacji wyczyszczone!' -> 'Lista duplikatów wyczyszczona!', s.8 'Duplikatem jest QSO'; the reviewed 'lista duplikatów' (zestawienie stacji = station list). Previous text: "Zestawienie stacji wyczyszczone!"
 #: utr4wstrings.tc_dupesheetcleared
 #, fuzzy
 msgid "Dupe sheet cleared!"
-msgstr "Zestawienie stacji wyczyszczone!"
+msgstr "Lista duplikatów wyczyszczona!"
 
 #: utr4wstrings.tc_dxmults
 #, fuzzy
 msgid "DX Mults"
 msgstr "Mnożniki"
 
+# 2026-10-19 codepage damage reversed by byte reversal -- the text is not in D7 tr4w_pol.RES, and no ambiguous byte was involved (NY4I approved); was: "Edytuj %s WiadomoÜö"
 #: utr4wstrings.tc_editfunctionkey
 #, fuzzy
 msgid "Edit %s message"
-msgstr "Edytuj %s WiadomoÜö"
+msgstr "Edytuj %s Wiadomość"
 
 #: utr4wstrings.tc_editor_copy
 #, fuzzy
@@ -9213,10 +9412,11 @@ msgstr "Za mało pamięci do wstępnej wymiany!!"
 msgid "Enter %s :"
 msgstr "Wpisz %s :"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Zawołaj mnie. Miejsce dla dupeczków. Alt- H prosi o pomoc.' -> 'Wpisz znak. SPACJA – sprawdzenie duplikatów. Alt-H – pomoc.', s.10 'znaku', s.8 'Duplikatem jest'; the reviewed 'duplikat' (= 'Call me. A place for little bottoms.'). Previous text: "Zawołaj mnie. Miejsce dla dupeczków. Alt- H prosi o pomoc."
 #: utr4wstrings.tc_entercallsignspacedupecheckalthhel
 #, fuzzy
 msgid "ENTER a callsign.  SPACE for dupecheck.  Alt-H for help."
-msgstr "Zawołaj mnie. Miejsce dla dupeczków. Alt- H prosi o pomoc."
+msgstr "Wpisz znak. SPACJA – sprawdzenie duplikatów. Alt-H – pomoc."
 
 #: utr4wstrings.tc_entercalltobecheckedon
 #, fuzzy
@@ -9775,15 +9975,17 @@ msgstr "Irlandia"
 msgid "EI/GI, enter your County"
 msgstr "EI / GI, wprowadź swoje hrabstwo"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): '%s to powtórka!!' -> '%s to duplikat!!', s.8 'Duplikatem jest QSO'; the reviewed twin '%s to duplikat!!' (powtorka = rerun). Previous text: "%s to powtórka!!"
 #: utr4wstrings.tc_isadupe
 #, fuzzy
 msgid "%s is a dupe!!"
-msgstr "%s to powtórka!!"
+msgstr "%s to duplikat!!"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): '%s jest powtórką i będzie zalogowany punktacją zerową.' -> '%s jest duplikatem i będzie zalogowany z zerową punktacją.', s.8 'Duplikatem jest QSO'; the reviewed twin (powtorka = rerun). Previous text: "%s jest powtórką i będzie zalogowany punktacją zerową."
 #: utr4wstrings.tc_isadupeandwillbeloggedwithzero
 #, fuzzy
 msgid "%s is a dupe and will be logged with zero QSO points."
-msgstr "%s jest powtórką i będzie zalogowany punktacją zerową."
+msgstr "%s jest duplikatem i będzie zalogowany z zerową punktacją."
 
 #: utr4wstrings.tc_islandstation
 #, fuzzy
@@ -9886,10 +10088,11 @@ msgstr "Nieprawidłowy rozmiar pliku logu!!!!"
 msgid "Logging is not running, so there is no file to open."
 msgstr "Logowanie nie działa, więc nie ma pliku do otwarcia."
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'sygnał wywoławczy' -> 'znak wywoławczy', s.10 'znaku'; the reviewed 'znaków wywoławczych'. Previous text: "Zaloguj się nie wygląda jak sygnał wywoławczy"
 #: utr4wstrings.tc_logincalldoeslooklikecallsign
 #, fuzzy
 msgid "Login call does not look like a callsign"
-msgstr "Zaloguj się nie wygląda jak sygnał wywoławczy"
+msgstr "Zaloguj się nie wygląda jak znak wywoławczy"
 
 #: utr4wstrings.tc_m
 msgid "m"
@@ -10101,10 +10304,11 @@ msgstr "Ohio"
 msgid "Op"
 msgstr "Op"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'albo utwórz nowy contest' -> 'albo zacznij nowe zawody', s.1-2 'zawody'; the reviewed twin. Previous text: " - otwórz plik konfiguracyjny albo utwórz nowy contest"
 #: utr4wstrings.tc_openconfigurationfile
 #, fuzzy
 msgid " - Open configuration file or start a new contest"
-msgstr " - otwórz plik konfiguracyjny albo utwórz nowy contest"
+msgstr " - otwórz plik konfiguracyjny albo zacznij nowe zawody"
 
 #: utr4wstrings.tc_othercwmessagememorystatus
 #, fuzzy
@@ -10177,10 +10381,11 @@ msgstr "%s jest już skonfigurowany jako %s. Dwa urządzenia nie mogą dzielić 
 msgid "Apply anyway?"
 msgstr "I tak złożysz wniosek?"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "RADIO One i RADIO Two są skonfigurowane do użycia %s. RADIO ONE utrzymuje port; RADIO DWA CAT jest wyłączone do czasu zmiany jednego radia CONTROL PORT."
 #: utr4wstrings.tc_port_conflict_startup
 #, fuzzy
 msgid "RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio's CONTROL PORT is changed."
-msgstr "RADIO One i RADIO Two są skonfigurowane do użycia %s. RADIO ONE utrzymuje port; RADIO DWA CAT jest wyłączone do czasu zmiany jednego radia CONTROL PORT."
+msgstr "RADIO ONE i RADIO TWO są skonfigurowane do użycia %s. RADIO ONE zachowuje port; sterowanie CAT dla RADIO TWO jest wyłączone do czasu zmiany CONTROL PORT któregoś radia."
 
 #: utr4wstrings.tc_port_not_connected
 #, fuzzy
@@ -10339,10 +10544,11 @@ msgstr "Zapisywanie wiadomości głosowych. Naciśnij ESCAPE lub RETURN aby zatr
 msgid "Records"
 msgstr "Nagrania"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "PORT KONTROLI RELAYY = PORT PADDLE"
 #: utr4wstrings.tc_relaycontrolportpaddleport
 #, fuzzy
 msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr "PORT KONTROLI RELAYY = PORT PADDLE"
+msgstr "RELAY CONTROL PORT = PADDLE PORT"
 
 #: utr4wstrings.tc_removeclusters
 #, fuzzy
@@ -10364,10 +10570,11 @@ msgstr "Powtarzanie %s  czas odłuchu = %u msec - zmiana PgUp/Dn lub ESCAPE"
 msgid "Repeat RST sent"
 msgstr "Powtórz nadany RST"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'z innego kontestu' -> 'z innych zawodów', s.1-2 'zawody'; the reviewed twin. Previous text: "RESTART.BIN jest z innego kontestu."
 #: utr4wstrings.tc_restartbinisforadifferentcontest
 #, fuzzy
 msgid "RESTART.BIN is for a different contest."
-msgstr "RESTART.BIN jest z innego kontestu."
+msgstr "RESTART.BIN jest z innych zawodów."
 
 #: utr4wstrings.tc_rfas
 #, fuzzy
@@ -10384,15 +10591,17 @@ msgstr "Rumunia"
 msgid "RST prompt"
 msgstr "Kursor RST"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Regulamin dla %s contest na QRZ.RU' -> 'Regulamin %s zawodów jest na QRZ.RU', s.16 'regulaminem zawodów'; the reviewed twin. Previous text: "Regulamin dla %s contest na QRZ.RU"
 #: utr4wstrings.tc_rulesonqrzru
 #, fuzzy
 msgid "Rules for %s contest at QRZ.RU"
-msgstr "Regulamin dla %s contest na QRZ.RU"
+msgstr "Regulamin %s zawodów jest na QRZ.RU"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Rules for %s contest on WA7BNM Contest Calendar' -> 'Regulamin %s zawodów jest w WA7BNM Contest kalendarzu', s.16 'regulaminem zawodów'; the reviewed twin (the old text was untranslated). Previous text: "Rules for %s contest on WA7BNM Contest Calendar"
 #: utr4wstrings.tc_rulesonsm3cer
 #, fuzzy
 msgid "Rules for %s contest at WA7BNM Contest Calendar"
-msgstr "Rules for %s contest on WA7BNM Contest Calendar"
+msgstr "Regulamin %s zawodów jest w WA7BNM Contest kalendarzu"
 
 #: utr4wstrings.tc_runwarn
 #, fuzzy
@@ -10438,10 +10647,11 @@ msgstr "Zapisywanie %s do %s"
 msgid "%s cannot be edited here."
 msgstr "%s nie można tutaj edytować."
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Wybierz miejsce.' -> 'Wybierz spot.', s.2.d 'spotowanie' (miejsce = place). Previous text: "Wybierz miejsce. Return, lewa lub prawa strzałka do wyboru. Escape do wyjścia."
 #: utr4wstrings.tc_selectspotreturnleftorrightarrowse
 #, fuzzy
 msgid "Select spot.  RETURN, left or right arrow to select.  ESCAPE to exit."
-msgstr "Wybierz miejsce. Return, lewa lub prawa strzałka do wyboru. Escape do wyjścia."
+msgstr "Wybierz spot. Return, lewa lub prawa strzałka do wyboru. Escape do wyjścia."
 
 #: utr4wstrings.tc_sendingssbwavfilename
 #, fuzzy
@@ -10523,10 +10733,11 @@ msgstr "Częstotliwość monitora."
 msgid "Size, bytes"
 msgstr "Wielkość, bytes"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Sorry!! Brak LOG = TRUE co uniemożliwia logowanie łączności na tym komputerze"
 #: utr4wstrings.tc_sorrynolog
 #, fuzzy
 msgid "Sorry!! NO LOG = TRUE which prohibits logging QSOs on this computer"
-msgstr "Sorry!! Brak LOG = TRUE co uniemożliwia logowanie łączności na tym komputerze"
+msgstr "Sorry!! NO LOG = TRUE co uniemożliwia logowanie łączności na tym komputerze"
 
 #: utr4wstrings.tc_sorryusedupallreminders
 #, fuzzy
@@ -10687,10 +10898,11 @@ msgstr "Czas pracy"
 msgid "Discover radios on the network"
 msgstr "Odkryj radia w sieci"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'dat kontestów' -> 'dat zawodów', s.1-2 'zawody'; the reviewed twin. Previous text: "Zbyt dużo dat kontestów!!"
 #: utr4wstrings.tc_toomanycontestdates
 #, fuzzy
 msgid "Too many contest dates!!"
-msgstr "Zbyt dużo dat kontestów!!"
+msgstr "Zbyt dużo dat zawodów!!"
 
 #: utr4wstrings.tc_toomanytotalscoremessages
 #, fuzzy
@@ -11048,30 +11260,37 @@ msgstr ""
 "\n"
 "Wniosek został raczej rozpatrzony, a nie wysłany niezweryfikowany. Wyłącz preferencje > Sieć > weryfikować certyfikaty serwerów, jeśli chcesz kontynuować bez sprawdzania."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(Mój kraj = %s)"
 #: uappstrings.sexchangemodebriefcountry
 #, fuzzy
 msgid "(MY COUNTRY = %s)"
-msgstr "(Mój kraj = %s)"
+msgstr "(MY COUNTRY = %s)"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(Mój kraj jest pusty)"
 #: uappstrings.sexchangemodebriefemptycountry
 #, fuzzy
 msgid "(MY COUNTRY is empty)"
-msgstr "(Mój kraj jest pusty)"
+msgstr "(MY COUNTRY jest puste)"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Ten konkurs prosi' -> 'Te zawody proszą', s.1-2 'zawody' throughout (konkurs once, in the title line). Previous text: "Ten konkurs prosi o państwo, prowincję lub sekcję, ponieważ mój kraj %s."
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Te zawody proszą o państwo, prowincję lub sekcję, ponieważ mój kraj %s."
 #: uappstrings.sexchangemodefromcountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is %s."
-msgstr "Ten konkurs prosi o państwo, prowincję lub sekcję, ponieważ mój kraj %s."
+msgstr "Te zawody proszą o stan, prowincję lub sekcję, ponieważ MY COUNTRY to %s."
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Ten konkurs prosi' -> 'Te zawody proszą', s.1-2 'zawody'. Previous text: "Ten konkurs prosi o państwo, prowincję lub sekcję, ponieważ mój kraj jest pusty."
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Te zawody proszą o państwo, prowincję lub sekcję, ponieważ mój kraj jest pusty."
 #: uappstrings.sexchangemodefromemptycountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is empty."
-msgstr "Ten konkurs prosi o państwo, prowincję lub sekcję, ponieważ mój kraj jest pusty."
+msgstr "Te zawody proszą o stan, prowincję lub sekcję, ponieważ MY COUNTRY jest puste."
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'do tego konkursu' -> 'dla tych zawodów', s.1-2 'zawody'. Previous text: "Nazwa pochodzi od %s Ustawienie do tego konkursu."
 #: uappstrings.sfilenamecamefromsetting
 #, fuzzy
 msgid "The name came from the %s setting for this contest."
-msgstr "Nazwa pochodzi od %s Ustawienie do tego konkursu."
+msgstr "Nazwa pochodzi od %s Ustawienie dla tych zawodów."
 
 #: uappstrings.sfilenotfoundthere
 #, fuzzy
@@ -11171,50 +11390,62 @@ msgstr ""
 msgid "Enter your county if you are in Indiana, the 7th call area, New England or Delaware. Enter your state, Canadian Province or \"DX\" if outside all four:"
 msgstr "Wprowadź swoje hrabstwo, jeśli jesteś w Indianie, 7 call area, Nowa Anglia lub Delaware. Wprowadź swój stan, prowincję kanadyjską lub \"DX\", jeśli poza wszystkimi czterema:"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'NIE ZAGROŻONE - dziennik konkursowy nie zaakceptowałby' -> 'NIE ZALOGOWANO - dziennik zawodów nie przyjął', s.11 'logowanie QSO', s.1-2 'zawody' (nie zagrozone = not threatened). Previous text: "NIE ZAGROŻONE - dziennik konkursowy nie zaakceptowałby tego QSO. Zob. tr4w.log.: Nie czyść wpisu."
 #: uappstrings.sqsonotlogged
 #, fuzzy
 msgid "NOT LOGGED -- the contest log would not accept this QSO. See tr4w.log. Do not clear the entry."
-msgstr "NIE ZAGROŻONE - dziennik konkursowy nie zaakceptowałby tego QSO. Zob. tr4w.log.: Nie czyść wpisu."
+msgstr "NIE ZALOGOWANO - dziennik zawodów nie przyjął tego QSO. Zob. tr4w.log.: Nie czyść wpisu."
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Ten konkurs zdobywa' -> 'Te zawody liczą', s.1-2 'zawody' (zdobywa = wins). Previous text: "Ten konkurs zdobywa krajowe mnożniki z pliku .DOM i żaden nie jest nazwany, więc żaden mnożnik krajowy nie będzie liczony."
 #: uappstrings.sreadinessdomesticfilemissing
 #, fuzzy
 msgid "This contest scores domestic multipliers from a .DOM file and none is named, so no domestic multiplier will be counted."
-msgstr "Ten konkurs zdobywa krajowe mnożniki z pliku .DOM i żaden nie jest nazwany, więc żaden mnożnik krajowy nie będzie liczony."
+msgstr "Te zawody liczą krajowe mnożniki z pliku .DOM i żaden nie jest nazwany, więc żaden mnożnik krajowy nie będzie liczony."
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'gdy konkurs jest ustawiony, więc zmiana ich teraz nie zmieni tego konkursu.' -> 'gdy zawody są ustawiane, więc zmiana ich teraz nie zmieni tych zawodów.', s.1-2 'zawody'. Previous text: "Ustaw je w Preferencjach > Station, a następnie ponownie uruchom TR4W: są one odczytywane raz, gdy konkurs jest ustawiony, więc zmiana ich teraz nie zmieni tego konkursu."
 #: uappstrings.sreadinessfooter
 #, fuzzy
 msgid "Set these in Preferences > Station, then restart TR4W: they are read once when the contest is set up, so changing them now will not change this contest."
-msgstr "Ustaw je w Preferencjach > Station, a następnie ponownie uruchom TR4W: są one odczytywane raz, gdy konkurs jest ustawiony, więc zmiana ich teraz nie zmieni tego konkursu."
+msgstr "Ustaw je w Preferencjach > Station, a następnie ponownie uruchom TR4W: są one odczytywane raz, gdy zawody są ustawiane, więc zmiana ich teraz nie zmieni tych zawodów."
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Konkurs jest ustawiony' -> 'Zawody są ustawione', s.1-2 'zawody'. Previous text: "Konkurs jest ustawiony, ale TR4W brakuje informacji, których potrzebuje:"
 #: uappstrings.sreadinessheading
 #, fuzzy
 msgid "This contest is set up, but TR4W is missing information it needs:"
-msgstr "Konkurs jest ustawiony, ale TR4W brakuje informacji, których potrzebuje:"
+msgstr "Zawody są ustawione, ale TR4W brakuje informacji, których potrzebuje:"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Mój telefon jest pusty. TR4W nie może bez niego wypracować swojego kraju, kontynentu czy strefy, a nic, co od nich zależy, nie będzie słuszne."
 #: uappstrings.sreadinessmycallmissing
 #, fuzzy
 msgid "MY CALL is empty. TR4W cannot work out your country, continent or zone without it, and nothing that depends on them will be right."
-msgstr "Mój telefon jest pusty. TR4W nie może bez niego wypracować swojego kraju, kontynentu czy strefy, a nic, co od nich zależy, nie będzie słuszne."
+msgstr "MY CALL jest puste. Bez niego TR4W nie może ustalić twojego kraju, kontynentu ani strefy i nic, co od nich zależy, nie będzie poprawne."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Mój kraj jest pusty. Zwykle jest on opracowywany z MOJEGO telefonu przez CTY.DAT. Dopóki nie ma wartości TR4W traktuje tę stację jako DX -- w ARRL DX oznacza, że będzie prosić każdą stację o państwo lub prowincję i odmówić takiej mocy jak K lub 100."
 #: uappstrings.sreadinessmycountrymissing
 #, fuzzy
 msgid "MY COUNTRY is empty. It is normally worked out from MY CALL through CTY.DAT. Until it has a value TR4W treats this station as DX -- in ARRL DX that means it will ask every station for a state or province and refuse a power such as K or 100."
-msgstr "Mój kraj jest pusty. Zwykle jest on opracowywany z MOJEGO telefonu przez CTY.DAT. Dopóki nie ma wartości TR4W traktuje tę stację jako DX -- w ARRL DX oznacza, że będzie prosić każdą stację o państwo lub prowincję i odmówić takiej mocy jak K lub 100."
+msgstr "MY COUNTRY jest puste. Zwykle jest ustalane z MY CALL na podstawie CTY.DAT. Dopóki nie ma wartości, TR4W traktuje tę stację jako DX -- w ARRL DX oznacza to, że będzie żądać od każdej stacji stanu lub prowincji i odrzucać moc taką jak K lub 100."
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'a ten konkurs wysyła' -> 'a te zawody wysyłają', s.1-2 'zawody'. Previous text: "Mój GRID jest pusty, a ten konkurs wysyła twoją siatkę."
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Mój GRID jest pusty, a te zawody wysyłają twoją siatkę."
 #: uappstrings.sreadinessmygridmissing
 #, fuzzy
 msgid "MY GRID is empty and this contest sends your grid square."
-msgstr "Mój GRID jest pusty, a ten konkurs wysyła twoją siatkę."
+msgstr "MY GRID jest puste, a te zawody wysyłają twój lokator."
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'i ten konkurs wysyła swój stan' -> 'i te zawody wysyłają twój stan', s.1-2 'zawody'. Previous text: "Mój stan jest pusty i ten konkurs wysyła swój stan, prowincję lub sekcję. TR4W wyśle zamiast tego numer seryjny."
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Mój stan jest pusty i te zawody wysyłają twój stan, prowincję lub sekcję. TR4W wyśle zamiast tego numer seryjny."
 #: uappstrings.sreadinessmystatemissing
 #, fuzzy
 msgid "MY STATE is empty and this contest sends your state, province or section. TR4W will send a serial number instead."
-msgstr "Mój stan jest pusty i ten konkurs wysyła swój stan, prowincję lub sekcję. TR4W wyśle zamiast tego numer seryjny."
+msgstr "MY STATE jest puste, a te zawody wysyłają twój stan, prowincję lub sekcję. TR4W wyśle zamiast tego numer seryjny."
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'a ten konkurs wysyła' -> 'a te zawody wysyłają', s.1-2 'zawody'. Previous text: "Moja strefa jest pusta, a ten konkurs wysyła twoją strefę."
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Moja strefa jest pusta, a te zawody wysyłają twoją strefę."
 #: uappstrings.sreadinessmyzonemissing
 #, fuzzy
 msgid "MY ZONE is empty and this contest sends your zone."
-msgstr "Moja strefa jest pusta, a ten konkurs wysyła twoją strefę."
+msgstr "MY ZONE jest puste, a te zawody wysyłają twoją strefę."
 
 #: uappstrings.sverifyallpassed
 #, fuzzy
@@ -11359,11 +11590,13 @@ msgstr "Konfiguracja..."
 msgid "lblNoClusters"
 msgstr ""
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'kliknąć miejsce w DXLab' -> 'kliknąć spot w DXLab', s.2.d 'spotowanie'; the reviewed 'spoty' (miejsce = place); 'na miejsca z klastra DX' -> 'na spoty z klastra DX', s.2.d 'spotowanie'; the reviewed 'spoty' (miejsca = places). Previous text: "Pozwala dwukrotnie kliknąć miejsce w DXLab SpotCollector i mieć znak wywoławczy pojawia się w polu TR4W rozmowy. Nie wpływa to na miejsca z klastra DX - te, które przychodzą bez względu na to, czy jest to zaznaczone czy nie."
 #: tprefsform.lblspotcollectorhint.caption
 #, fuzzy
 msgid "Lets you double-click a spot in DXLab SpotCollector and have the callsign appear in TR4W's call field.  This does NOT affect spots from your DX cluster - those arrive whether this is ticked or not."
-msgstr "Pozwala dwukrotnie kliknąć miejsce w DXLab SpotCollector i mieć znak wywoławczy pojawia się w polu TR4W rozmowy. Nie wpływa to na miejsca z klastra DX - te, które przychodzą bez względu na to, czy jest to zaznaczone czy nie."
+msgstr "Pozwala dwukrotnie kliknąć spot w DXLab SpotCollector i mieć znak wywoławczy pojawia się w polu TR4W rozmowy. Nie wpływa to na spoty z klastra DX - te, które przychodzą bez względu na to, czy jest to zaznaczone czy nie."
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'plik konfiguracyjny konkursu' -> 'plik konfiguracyjny zawodów', s.1-2 'zawody'. Previous text: "Ten plik jest bazą danych, ale nie został utworzony przez TR4W:\n\n%sTR4W nie może otworzyć dziennika innego programu. Wybierz dziennik TR4W (.db) lub plik konfiguracyjny konkursu (.cfg)."
 #: uprogrammain.scontestfileforeigndatabase
 #, fuzzy
 msgid ""
@@ -11375,8 +11608,9 @@ msgid ""
 msgstr ""
 "Ten plik jest bazą danych, ale nie został utworzony przez TR4W:\n"
 "\n"
-"%sTR4W nie może otworzyć dziennika innego programu. Wybierz dziennik TR4W (.db) lub plik konfiguracyjny konkursu (.cfg)."
+"%sTR4W nie może otworzyć dziennika innego programu. Wybierz dziennik TR4W (.db) lub plik konfiguracyjny zawodów (.cfg)."
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'plikiem konfiguracyjnym konkursu' -> 'plikiem konfiguracyjnym zawodów', s.1-2 'zawody'; 'plik konfiguracyjny konkursu' -> 'plik konfiguracyjny zawodów', s.1-2 'zawody'. Previous text: "Ten plik nie jest dziennikiem TR4W i nie jest plikiem konfiguracyjnym konkursu:\n\n%sWybierz dziennik TR4W (.db) lub plik konfiguracyjny konkursu (.cfg)."
 #: uprogrammain.scontestfilenotrecognised
 #, fuzzy
 msgid ""
@@ -11386,9 +11620,9 @@ msgid ""
 "\n"
 "Choose a TR4W log (.db) or a contest configuration file (.cfg)."
 msgstr ""
-"Ten plik nie jest dziennikiem TR4W i nie jest plikiem konfiguracyjnym konkursu:\n"
+"Ten plik nie jest dziennikiem TR4W i nie jest plikiem konfiguracyjnym zawodów:\n"
 "\n"
-"%sWybierz dziennik TR4W (.db) lub plik konfiguracyjny konkursu (.cfg)."
+"%sWybierz dziennik TR4W (.db) lub plik konfiguracyjny zawodów (.cfg)."
 
 #: usettingscaptions.rs_advanced_handlogmode
 #, fuzzy
@@ -11410,10 +11644,11 @@ msgstr "Włącz beep"
 msgid "Column Autosize"
 msgstr "Automat kolumny"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Pełna maska Callsign' -> 'Pełna maska znaku', s.10 'znaku'. Previous text: "Pełna maska Callsign"
 #: usettingscaptions.rs_appearance_ctrlj_completecallsignmask
 #, fuzzy
 msgid "Complete Callsign Mask"
-msgstr "Pełna maska Callsign"
+msgstr "Pełna maska znaku"
 
 #: usettingscaptions.rs_appearance_ctrlj_contactsperpage
 #, fuzzy
@@ -11535,42 +11770,47 @@ msgctxt "usettingscaptions.rs_audio_userecordedsigns"
 msgid "Send recorded audio for callsign characters"
 msgstr "Wyślij nagrany dźwięk dla znaków wywołania"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Pokaż każde miejsce' -> 'Pokaż każdy spot', s.2.d 'spotowanie'; the reviewed 'spoty' (miejsce = place). Previous text: "Pokaż każde miejsce w oknie wywołania"
 #: usettingscaptions.rs_bandmap_callwindowshowallspots
 #, fuzzy
 msgctxt "usettingscaptions.rs_bandmap_callwindowshowallspots"
 msgid "Show every spot in the call window"
-msgstr "Pokaż każde miejsce w oknie wywołania"
+msgstr "Pokaż każdy spot w oknie wywołania"
 
 #: usettingscaptions.rs_bandmap_ctrlj_bandmapcutofffrequency
 #, fuzzy
 msgid "Band Map Cutoff Frequency"
 msgstr "Częstotliwość odcinania pasma"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'mapy bandy' -> 'mapy pasm', s.2.g 'Pasma'; the reviewed 'Mapa pasm' (banda = gang). Previous text: "Wysokość elementu mapy bandy"
 #: usettingscaptions.rs_bandmap_ctrlj_bandmapitemheight
 #, fuzzy
 msgid "Band Map Item Height"
-msgstr "Wysokość elementu mapy bandy"
+msgstr "Wysokość elementu mapy pasm"
 
 #: usettingscaptions.rs_bandmap_ctrlj_bandmapitemwidth
 #, fuzzy
 msgid "Band Map Item Width"
 msgstr "Szerokość elementu mapy"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'mapy bandy' -> 'mapy pasm', s.2.g 'Pasma'; the reviewed 'Mapa pasm' (banda = gang). Previous text: "Rozmiar mapy bandy"
 #: usettingscaptions.rs_bandmap_ctrlj_bandmapsize
 #, fuzzy
 msgid "Band Map Size"
-msgstr "Rozmiar mapy bandy"
+msgstr "Rozmiar mapy pasm"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'mapy bandy' -> 'mapy pasm', s.2.g 'Pasma'; the reviewed 'Mapa pasm' (banda = gang). Previous text: "Tryb podziału mapy bandy"
 #: usettingscaptions.rs_bandmap_ctrlj_bandmapsplitmode
 #, fuzzy
 msgid "Band Map Split Mode"
-msgstr "Tryb podziału mapy bandy"
+msgstr "Tryb podziału mapy pasm"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Wyślij miejsca do innego radia' -> 'Wyślij spoty do drugiego radia', s.2.d 'spotowanie'; the reviewed 'spoty' (miejsca = places). Previous text: "Wyślij miejsca do innego radia"
 #: usettingscaptions.rs_bandmap_swappacketspotradios
 #, fuzzy
 msgctxt "usettingscaptions.rs_bandmap_swappacketspotradios"
 msgid "Send spots to the other radio"
-msgstr "Wyślij miejsca do innego radia"
+msgstr "Wyślij spoty do drugiego radia"
 
 #: usettingscaptions.rs_cluster_connectatstartup
 #, fuzzy
@@ -11608,10 +11848,11 @@ msgstr "Asystowane kategoriami"
 msgid "Category-Band"
 msgstr "Category- Band"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Tryb kategorii' -> 'Kategoria – rodzaj emisji', s.8 'tym samym rodzajem emisji' (tryb kategorii = the category's mode of operation). Previous text: "Tryb kategorii"
 #: usettingscaptions.rs_contest_categorymode
 #, fuzzy
 msgid "Category-Mode"
-msgstr "Tryb kategorii"
+msgstr "Kategoria – rodzaj emisji"
 
 #: usettingscaptions.rs_contest_categoryoperator
 #, fuzzy
@@ -11633,20 +11874,23 @@ msgstr "Kategoria - Moc"
 msgid "Category-Transmitter"
 msgstr "Nadajnik kategorii"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Konkurs' -> 'Zawody', s.1-2 'zawody'. Previous text: "Konkurs"
 #: usettingscaptions.rs_contest_contest
 #, fuzzy
 msgid "Contest"
-msgstr "Konkurs"
+msgstr "Zawody"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Nazwa konkursu' -> 'Nazwa zawodów', s.1-2 'zawody'. Previous text: "Nazwa konkursu"
 #: usettingscaptions.rs_contest_contestname
 #, fuzzy
 msgid "Contest Name"
-msgstr "Nazwa konkursu"
+msgstr "Nazwa zawodów"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Tytuł konkursu' -> 'Tytuł zawodów', s.1-2 'zawody'. Previous text: "Tytuł konkursu"
 #: usettingscaptions.rs_contest_contesttitle
 #, fuzzy
 msgid "Contest Title"
-msgstr "Tytuł konkursu"
+msgstr "Tytuł zawodów"
 
 #: usettingscaptions.rs_contest_countdomesticcountries
 #, fuzzy
@@ -11673,10 +11917,11 @@ msgstr "Mnożnik DX"
 msgid "Exchange Memory Enable"
 msgstr "Wymiana pamięci Włącz"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Giełda odebrana' -> 'Wymiana odebrana', the reviewed 'Wymiana od DX stacji' (the sponsor says 'Grupa kontrolna', s.4) (gielda = stock exchange). Previous text: "Giełda odebrana"
 #: usettingscaptions.rs_contest_exchangereceived
 #, fuzzy
 msgid "Exchange Received"
-msgstr "Giełda odebrana"
+msgstr "Wymiana odebrana"
 
 #: usettingscaptions.rs_contest_gridmapcenter
 #, fuzzy
@@ -11693,10 +11938,11 @@ msgstr "Wstępna wymiana"
 msgid "Initial Exchange Cursor Pos"
 msgstr "Wstępna wymiana kursora Pos"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Początkowe zastępowanie giełdy' -> 'Zastępowanie początkowej wymiany', the reviewed 'Wymiana' (the sponsor says 'Grupa kontrolna', s.4) (gielda = stock exchange). Previous text: "Początkowe zastępowanie giełdy"
 #: usettingscaptions.rs_contest_initialexchangeoverwrite
 #, fuzzy
 msgid "Initial Exchange Overwrite"
-msgstr "Początkowe zastępowanie giełdy"
+msgstr "Zastępowanie początkowej wymiany"
 
 #: usettingscaptions.rs_contest_literaldomesticqth
 #, fuzzy
@@ -11733,30 +11979,35 @@ msgstr "Minimalny czas trwania"
 msgid "Mult By Band"
 msgstr "Mult by Band"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Wymuszanie według trybu' -> 'Mnożniki według rodzaju emisji', s.5 'Mnożniki', s.8 'rodzajem emisji' (wymuszanie = forcing). Previous text: "Wymuszanie według trybu"
 #: usettingscaptions.rs_contest_multbymode
 #, fuzzy
 msgid "Mult By Mode"
-msgstr "Wymuszanie według trybu"
+msgstr "Mnożniki według rodzaju emisji"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Wiele zespołów' -> 'Wiele pasm', s.2.g 'Pasma' (zespol = ensemble). Previous text: "Wiele zespołów"
 #: usettingscaptions.rs_contest_multiplebands
 #, fuzzy
 msgid "Multiple Bands"
-msgstr "Wiele zespołów"
+msgstr "Wiele pasm"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Wielokrotne tryby' -> 'Wiele rodzajów emisji', s.8 'rodzajem emisji', s.10 'pasma i rodzaj emisji'. Previous text: "Wielokrotne tryby"
 #: usettingscaptions.rs_contest_multiplemodes
 #, fuzzy
 msgid "Multiple Modes"
-msgstr "Wielokrotne tryby"
+msgstr "Wiele rodzajów emisji"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Minimalne zestawy do składania sprawozdań' -> 'Minimalna liczba pasm dla raportu mnożników', s.2.g 'Pasma', s.5 'Mnożniki' (= 'minimum kits for filing reports'). Previous text: "Minimalne zestawy do składania sprawozdań"
 #: usettingscaptions.rs_contest_multreportminimumbands
 #, fuzzy
 msgid "Mult Report Minimum Bands"
-msgstr "Minimalne zestawy do składania sprawozdań"
+msgstr "Minimalna liczba pasm dla raportu mnożników"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Reset autoarkusza mutacji' -> 'Automatyczny reset arkusza mnożników', s.5 'Mnożniki' (mutacje = mutations). Previous text: "Reset autoarkusza mutacji"
 #: usettingscaptions.rs_contest_multsheetautoreset
 #, fuzzy
 msgid "Mult Sheet Auto Reset"
-msgstr "Reset autoarkusza mutacji"
+msgstr "Automatyczny reset arkusza mnożników"
 
 #: usettingscaptions.rs_contest_prefixmultiplier
 #, fuzzy
@@ -11768,15 +12019,17 @@ msgstr "Prefix Multiplier"
 msgid "QSL Mode"
 msgstr "Tryb QSL"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'QSO według zespołu' -> 'QSO według pasma', s.2.g 'Pasma' (zespol = ensemble). Previous text: "QSO według zespołu"
 #: usettingscaptions.rs_contest_qsobyband
 #, fuzzy
 msgid "QSO By Band"
-msgstr "QSO według zespołu"
+msgstr "QSO według pasma"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Tryb QSO' -> 'QSO według rodzaju emisji', s.8 'rodzajem emisji' (= 'QSO mode'). Previous text: "Tryb QSO"
 #: usettingscaptions.rs_contest_qsobymode
 #, fuzzy
 msgid "QSO By Mode"
-msgstr "Tryb QSO"
+msgstr "QSO według rodzaju emisji"
 
 #: usettingscaptions.rs_contest_qsonumberbyband
 #, fuzzy
@@ -11873,10 +12126,11 @@ msgstr "Tryb R150S"
 msgid "Random CQ Mode"
 msgstr "Losowy tryb CQ"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Pozostały tryb wyświetlania mutacji' -> 'Tryb wyświetlania pozostałych mnożników', s.5 'Mnożniki' (mutacje = mutations). Previous text: "Pozostały tryb wyświetlania mutacji"
 #: usettingscaptions.rs_contest_remainingmultdisplaymode
 #, fuzzy
 msgid "Remaining Mult Display Mode"
-msgstr "Pozostały tryb wyświetlania mutacji"
+msgstr "Tryb wyświetlania pozostałych mnożników"
 
 #: usettingscaptions.rs_contest_reverseinitialex
 #, fuzzy
@@ -12047,10 +12301,11 @@ msgstr "Tune z dits raczej niż stałe nośniki"
 msgid "Allow Auto Update"
 msgstr "Pozwól na automatyczną aktualizację"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Update Callsign Włącz' -> 'Włącz aktualizację znaków', s.10 'znaku'. Previous text: "Update Callsign Włącz"
 #: usettingscaptions.rs_files_ctrlj_callsignupdateenable
 #, fuzzy
 msgid "Callsign Update Enable"
-msgstr "Update Callsign Włącz"
+msgstr "Włącz aktualizację znaków"
 
 #: usettingscaptions.rs_files_ctrlj_countryinformationfile
 #, fuzzy
@@ -12292,10 +12547,11 @@ msgstr "Częstotliwość dziennika Włącz"
 msgid "Log Sub Title"
 msgstr "Podtytuł dziennika"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Główny sygnał wywoławczy' -> 'Główny znak wywoławczy', s.10 'znaku'; the reviewed 'znaków wywoławczych'. Previous text: "Główny sygnał wywoławczy"
 #: usettingscaptions.rs_operating_ctrlj_maincallsign
 #, fuzzy
 msgid "Main Callsign"
-msgstr "Główny sygnał wywoławczy"
+msgstr "Główny znak wywoławczy"
 
 #: usettingscaptions.rs_operating_ctrlj_mode
 #, fuzzy
@@ -12462,11 +12718,12 @@ msgstr "Stop oba radia lądują na jednym paśmie"
 msgid "QSY the inactive radio"
 msgstr "QSY nieaktywne radio"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Pomiń zespół inne radio jest włączone' -> 'Pomiń pasmo, na którym pracuje drugie radio', s.2.g 'Pasma' (zespol = ensemble). Previous text: "Pomiń zespół inne radio jest włączone"
 #: usettingscaptions.rs_operating_tworadio_skipactiveband
 #, fuzzy
 msgctxt "usettingscaptions.rs_operating_tworadio_skipactiveband"
 msgid "Skip the band the other radio is on"
-msgstr "Pomiń zespół inne radio jest włączone"
+msgstr "Pomiń pasmo, na którym pracuje drugie radio"
 
 #: usettingscaptions.rs_operating_tworadio_swaprelaysense
 #, fuzzy
@@ -12524,11 +12781,12 @@ msgctxt "usettingscaptions.rs_scoring_hamscore_contactinfo"
 msgid "Include contact information"
 msgstr "Dołącz dane kontaktowe"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'podczas trwania konkursu' -> 'podczas trwania zawodów', s.1-2 'zawody'; 'w okresie udziału w zawodach' (s.12). Previous text: "Zapisz mój wynik podczas trwania konkursu"
 #: usettingscaptions.rs_scoring_hamscore_enable
 #, fuzzy
 msgctxt "usettingscaptions.rs_scoring_hamscore_enable"
 msgid "Post my score while the contest runs"
-msgstr "Zapisz mój wynik podczas trwania konkursu"
+msgstr "Zapisz mój wynik podczas trwania zawodów"
 
 #: usettingscaptions.rs_scoring_hamscore_password
 #, fuzzy
@@ -12632,10 +12890,11 @@ msgstr "ZAWODY"
 msgid "Search: type part of a name, e.g. QSO"
 msgstr "Wyszukiwanie: część typu nazwy, np. QSO"
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): '(ten konkurs: %s)' -> '(te zawody: %s)', s.1-2 'zawody'. Previous text: "%s: %d QSO, np. %s (ten konkurs: %s)"
 #: uappstrings.simportmyfactsdifference
 #, fuzzy
 msgid "%s: %d QSO(s), e.g. %s (this contest: %s)"
-msgstr "%s: %d QSO, np. %s (ten konkurs: %s)"
+msgstr "%s: %d QSO, np. %s (te zawody: %s)"
 
 #: uappstrings.simportmyfactskept
 #, fuzzy
@@ -12651,24 +12910,57 @@ msgid ""
 "Yes keeps the file's. No gives them this contest's, as a new QSO would get."
 msgstr ""
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'stanowisko tego konkursu' -> 'stanowisko tych zawodów', s.1-2 'zawody'. Previous text: "%d QSO (y) otrzymał (y) stanowisko tego konkursu w miejsce pliku."
 #: uappstrings.simportmyfactsreplaced
 #, fuzzy
 msgid "%d QSO(s) were given this contest's station in place of the file's."
-msgstr "%d QSO (y) otrzymał (y) stanowisko tego konkursu w miejsce pliku."
+msgstr "%d QSO (y) otrzymał (y) stanowisko tych zawodów w miejsce pliku."
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'taki sam jak ten konkurs' -> 'taki sam jak w tych zawodach', s.1-2 'zawody'. Previous text: "%d QSO (s) nazwane naszą stacją (%s), taki sam jak ten konkurs."
 #: uappstrings.simportmyfactssame
 #, fuzzy
 msgid "%d QSO(s) named our station (%s), the same as this contest's."
-msgstr "%d QSO (s) nazwane naszą stacją (%s), taki sam jak ten konkurs."
+msgstr "%d QSO (s) nazwane naszą stacją (%s), taki sam jak w tych zawodach."
 
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'otrzymało tytuł konkursu' -> 'otrzymało stację tych zawodów', s.1-2 'zawody' (tytul konkursu = the contest's title). Previous text: "%d QSO (y) nie nazwało żadnej z naszych stacji i otrzymało tytuł konkursu."
 #: uappstrings.simportmyfactsstamped
 #, fuzzy
 msgid "%d QSO(s) named no station of ours and were given this contest's."
-msgstr "%d QSO (y) nie nazwało żadnej z naszych stacji i otrzymało tytuł konkursu."
+msgstr "%d QSO (y) nie nazwało żadnej z naszych stacji i otrzymało stację tych zawodów."
 
 # 2026-10-19: Polish contest terminology is 'zawody' (see the tc_prefs_contest note). Machine output was: "Pokaż nieaktywne konkursy"
 #: uappstrings.snewcontestshowinactive
 #, fuzzy
 msgid "Show inactive contests"
 msgstr "Pokaż nieaktywne zawody"
+
+#: uappstrings.slatestcontestdetail
+#, fuzzy
+msgid "%0:s - %1:s"
+msgstr "%0:s - %1:s"
+
+#: uappstrings.slatestcontestline
+#, fuzzy
+msgid "%0:s %1:d"
+msgstr "%0:s %1:d"
+
+#: uappstrings.snewcontestfilescall
+#, fuzzy
+msgid "Call"
+msgstr "Znak wywoławczy"
+
+#: uappstrings.snewcontestfilescontest
+#, fuzzy
+msgid "Contest"
+msgstr "Zawody"
+
+#: uappstrings.snewcontestfilesfile
+#, fuzzy
+msgid "File"
+msgstr "Plik"
+
+#: uappstrings.snewcontestfilesyear
+#, fuzzy
+msgid "Year"
+msgstr "Rok"
 

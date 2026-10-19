@@ -759,12 +759,13 @@ msgstr "Indtast din QTH som du vil sende\rog det navn, du vil bruge:"
 msgid "Enter first two digits of your QTH:"
 msgstr "Indtast de første to cifre i din QTH:"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Indtast din alder i mit statsfelt:"
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:134
 #: utr4wstrings.tc_enteryourageinmystatefield
 #, fuzzy
 msgid "Enter your age in MY STATE field:"
-msgstr "Indtast din alder i mit statsfelt:"
+msgstr "Indtast din alder i feltet MY STATE:"
 
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:135
@@ -1216,12 +1217,13 @@ msgstr "Computeruret er synkroniseret."
 msgid "Connecting to "
 msgstr "Forbindelse til "
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Forbindelse til TR4WSERVER mislykkedes. Tjek SERVER PASSORD værdi!!"
 #. Section: UNET
 #: tr4w/src/lang/tr4w_consts_eng.pas:205
 #: utr4wstrings.tc_connecttotr4wserverfailed
 #, fuzzy
 msgid "Connect to TR4WSERVER failed. Check SERVER PASSWORD value!!"
-msgstr "Forbindelse til TR4WSERVER mislykkedes. Tjek SERVER PASSORD værdi!!"
+msgstr "Forbindelse til TR4WSERVER mislykkedes. Tjek værdien af SERVER PASSWORD!!"
 
 #. Section: UNET
 #: tr4w/src/lang/tr4w_consts_eng.pas:206
@@ -2293,12 +2295,13 @@ msgstr "Ugyldig påmindelse tid!!"
 msgid "Invalid reminder date!!"
 msgstr "Ugyldig påmindelsesdato!!"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "For mange TOTAL MESSAGES!!!"
 #. Section: CFGCMD
 #: tr4w/src/lang/tr4w_consts_eng.pas:450
 #: utr4wstrings.tc_toomanytotalscoremessages
 #, fuzzy
 msgid "Too many TOTAL SCORE MESSAGEs!!"
-msgstr "For mange TOTAL MESSAGES!!!"
+msgstr "For mange TOTAL SCORE MESSAGE!!"
 
 #. Section: CFGCMD
 #: tr4w/src/lang/tr4w_consts_eng.pas:451
@@ -8808,25 +8811,29 @@ msgstr ""
 "\n"
 "Anmodningen blev afvist i stedet for sendt ubekræftet. Afbryd indstillinger > Netværk > verificer servercertifikater hvis du ønsker at fortsætte uden at tjekke."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(Mit land = %s)"
 #: uappstrings.sexchangemodebriefcountry
 #, fuzzy
 msgid "(MY COUNTRY = %s)"
-msgstr "(Mit land = %s)"
+msgstr "(MY COUNTRY = %s)"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(Mit land er tomt)"
 #: uappstrings.sexchangemodebriefemptycountry
 #, fuzzy
 msgid "(MY COUNTRY is empty)"
-msgstr "(Mit land er tomt)"
+msgstr "(MY COUNTRY er tom)"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Denne konkurrence beder om en stat, provins eller sektion, fordi mit land er %s."
 #: uappstrings.sexchangemodefromcountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is %s."
-msgstr "Denne konkurrence beder om en stat, provins eller sektion, fordi mit land er %s."
+msgstr "Denne konkurrence beder om en stat, provins eller sektion, fordi MY COUNTRY er %s."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Denne konkurrence beder om en stat, provins eller sektion fordi mit land er tomt."
 #: uappstrings.sexchangemodefromemptycountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is empty."
-msgstr "Denne konkurrence beder om en stat, provins eller sektion fordi mit land er tomt."
+msgstr "Denne konkurrence beder om en stat, provins eller sektion, fordi MY COUNTRY er tom."
 
 #: uappstrings.sfilenamecamefromsetting
 #, fuzzy
@@ -8951,30 +8958,35 @@ msgstr "Sæt disse i Indstillinger > Station, derefter genstart TR4W: de læses 
 msgid "This contest is set up, but TR4W is missing information it needs:"
 msgstr "Denne konkurrence er oprettet, men TR4W mangler oplysninger, den har brug for:"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Min telefon er tom. TR4W kan ikke løse dit land, kontinent eller område uden det, og intet, der afhænger af dem, vil være rigtigt."
 #: uappstrings.sreadinessmycallmissing
 #, fuzzy
 msgid "MY CALL is empty. TR4W cannot work out your country, continent or zone without it, and nothing that depends on them will be right."
-msgstr "Min telefon er tom. TR4W kan ikke løse dit land, kontinent eller område uden det, og intet, der afhænger af dem, vil være rigtigt."
+msgstr "MY CALL er tom. Uden den kan TR4W ikke finde dit land, kontinent eller zone, og intet, der afhænger af dem, bliver rigtigt."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Mit land er tomt. Det er normalt udarbejdet fra min call gennem CTY.DATA. Indtil det har en værdi TR4W behandler denne station som DX -- i ARRL DX betyder, at det vil bede alle stationer om en stat eller provins og nægte en magt som K eller 100."
 #: uappstrings.sreadinessmycountrymissing
 #, fuzzy
 msgid "MY COUNTRY is empty. It is normally worked out from MY CALL through CTY.DAT. Until it has a value TR4W treats this station as DX -- in ARRL DX that means it will ask every station for a state or province and refuse a power such as K or 100."
-msgstr "Mit land er tomt. Det er normalt udarbejdet fra min call gennem CTY.DATA. Indtil det har en værdi TR4W behandler denne station som DX -- i ARRL DX betyder, at det vil bede alle stationer om en stat eller provins og nægte en magt som K eller 100."
+msgstr "MY COUNTRY er tom. Den udledes normalt af MY CALL via CTY.DAT. Indtil den har en værdi, behandler TR4W denne station som DX -- i ARRL DX betyder det, at den vil bede hver station om en stat eller provins og afvise en effekt som K eller 100."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Min GRID er tom, og konkurrencen sender dit kvadratnet."
 #: uappstrings.sreadinessmygridmissing
 #, fuzzy
 msgid "MY GRID is empty and this contest sends your grid square."
-msgstr "Min GRID er tom, og konkurrencen sender dit kvadratnet."
+msgstr "MY GRID er tom, og denne konkurrence sender din locator."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Min stat er tom og denne konkurrence sender din stat, provins eller sektion. TR4W sender et serienummer i stedet."
 #: uappstrings.sreadinessmystatemissing
 #, fuzzy
 msgid "MY STATE is empty and this contest sends your state, province or section. TR4W will send a serial number instead."
-msgstr "Min stat er tom og denne konkurrence sender din stat, provins eller sektion. TR4W sender et serienummer i stedet."
+msgstr "MY STATE er tom, og denne konkurrence sender din stat, provins eller sektion. TR4W sender i stedet et serienummer."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Min ZONE er tom og denne konkurrence sender din zone."
 #: uappstrings.sreadinessmyzonemissing
 #, fuzzy
 msgid "MY ZONE is empty and this contest sends your zone."
-msgstr "Min ZONE er tom og denne konkurrence sender din zone."
+msgstr "MY ZONE er tom, og denne konkurrence sender din zone."
 
 #: uappstrings.sverifyallpassed
 #, fuzzy
@@ -9121,4 +9133,34 @@ msgstr "%d QSO (s) navngivet ingen station af vores og fik denne konkurrence."
 #, fuzzy
 msgid "Show inactive contests"
 msgstr "Vis inaktive konkurrencer"
+
+#: uappstrings.slatestcontestdetail
+#, fuzzy
+msgid "%0:s - %1:s"
+msgstr "%0:s - %1:s"
+
+#: uappstrings.slatestcontestline
+#, fuzzy
+msgid "%0:s %1:d"
+msgstr "%0:s %1:d"
+
+#: uappstrings.snewcontestfilescall
+#, fuzzy
+msgid "Call"
+msgstr "Kaldesignal"
+
+#: uappstrings.snewcontestfilescontest
+#, fuzzy
+msgid "Contest"
+msgstr "Konkurrence"
+
+#: uappstrings.snewcontestfilesfile
+#, fuzzy
+msgid "File"
+msgstr "Fil"
+
+#: uappstrings.snewcontestfilesyear
+#, fuzzy
+msgid "Year"
+msgstr "År"
 

@@ -83,13 +83,14 @@ msgctxt "TC_FREQ_ZERO"
 msgid "ERROR: Invalid Frequency logged"
 msgstr "EROARE: Frecventa invalida inregistrata"
 
+# 2026-10-19 command name restored to English (NY4I ruling: command names are never translated, even in reviewed text); was: "AFISARE FRECVENTA IN LOG este dezactivata"
 #. Section: General
 #: utr4wstrings:tc_freq_off
 #: tr4w/src/lang/tr4w_consts_eng.pas:16
 #: utr4wstrings.tc_freq_off
 msgctxt "TC_FREQ_OFF"
 msgid "SHOW FREQUENCY IN LOG is turned off"
-msgstr "AFISARE FRECVENTA IN LOG este dezactivata"
+msgstr "SHOW FREQUENCY IN LOG este dezactivata"
 
 #. Section: General
 #: utr4wstrings:tc_checkcallsign
@@ -2628,13 +2629,14 @@ msgctxt "TC_INVALIDREMINDERDATE"
 msgid "Invalid reminder date!!"
 msgstr "Data de atentionare invalida!!"
 
+# 2026-10-19 command name restored to English (NY4I ruling: command names are never translated, even in reviewed text); was: "Prea multe mesaje TOTAL SCORE!!"
 #. Section: CFGCMD
 #: utr4wstrings:tc_toomanytotalscoremessages
 #: tr4w/src/lang/tr4w_consts_eng.pas:453
 #: utr4wstrings.tc_toomanytotalscoremessages
 msgctxt "TC_TOOMANYTOTALSCOREMESSAGES"
 msgid "Too many TOTAL SCORE MESSAGEs!!"
-msgstr "Prea multe mesaje TOTAL SCORE!!"
+msgstr "Prea multe TOTAL SCORE MESSAGE!!"
 
 #. Section: CFGCMD
 #: utr4wstrings:tc_thefirstcommandinconfigfilemustbe
@@ -4695,10 +4697,11 @@ msgstr "Fereastra principală"
 msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
 msgstr "Fontul se aplică ferestrei concursului principal. Toţi patru îşi vor face efectul când va începe următorul TR4W."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Acestea au fost pe aspectul meniului Setări. Fereastra aia dispare odată ce se numără şi se alătură lor aici."
 #: tprefsform.lblappearmenunote.caption
 #, fuzzy
 msgid "These were on the Appearance item of the Settings menu. That window goes away once ROW COUNT and WINDOW SIZE join them here."
-msgstr "Acestea au fost pe aspectul meniului Setări. Fereastra aia dispare odată ce se numără şi se alătură lor aici."
+msgstr "Acestea erau în elementul Aspect al meniului Setări. Fereastra aceea dispare după ce ROW COUNT și WINDOW SIZE vor fi mutate și ele aici."
 
 #: tprefsform.lblaudioheading.caption
 #, fuzzy
@@ -6042,6 +6045,7 @@ msgctxt "TC_TELNET"
 msgid "Connect\000Disconnect\000Commands\000Freeze\000Clear\000SH/50\000\000"
 msgstr "Conectat\000Deconectat\000Comenzi\000Opreste\000Sterge\000100\000\000"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Schimbarea benzii necesită baghete multiple = TRUE o dată ce jurnalul are QSOs"
 #. Section: LOGSUBS2
 #: utr4wstrings:tc_bandchangedisabled
 #: tr4w/src/lang/tr4w_consts_eng.pas:365
@@ -6049,7 +6053,7 @@ msgstr "Conectat\000Deconectat\000Comenzi\000Opreste\000Sterge\000100\000\000"
 #, fuzzy
 msgctxt "TC_BANDCHANGEDISABLED"
 msgid "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
-msgstr "Schimbarea benzii necesită baghete multiple = TRUE o dată ce jurnalul are QSOs"
+msgstr "Schimbarea benzii necesită MULTIPLE BANDS = TRUE după ce jurnalul conține QSO-uri"
 
 #. Section: UEDITMESSAGE
 #. 4.51.8
@@ -7282,6 +7286,7 @@ msgctxt "TC_AUTOSPOTENABLEDTESTMODEONLY"
 msgid "AUTOSPOT is enabled - Test Mode Only"
 msgstr "AUTOSPOT este activat - Numai mod de testare"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "MOD DE LOG HAND = ADEVARAT"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_handlogmodetrue
 #: tr4w/src/lang/tr4w_consts_eng.pas:848
@@ -7289,7 +7294,7 @@ msgstr "AUTOSPOT este activat - Numai mod de testare"
 #, fuzzy
 msgctxt "TC_HANDLOGMODETRUE"
 msgid "HAND LOG MODE = TRUE"
-msgstr "MOD DE LOG HAND = ADEVARAT"
+msgstr "HAND LOG MODE = TRUE"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_trmasterdtas
@@ -7318,6 +7323,7 @@ msgctxt "TC_ERROROFFERINGCOMMANDERPROXYTCPPORT"
 msgid "Error offering Commander proxy TCP Port"
 msgstr "Eroare la oferirea comandantului proxy TCP Port"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Opțiunea PTT VIA COMMANDDS (CTRL-J) trebuie să fie adevărată pentru utilizarea WSJT-X - Setarea la adevărat"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_pttviacommandsctrljoptionmusttruew
 #: tr4w/src/lang/tr4w_consts_eng.pas:852
@@ -7325,7 +7331,7 @@ msgstr "Eroare la oferirea comandantului proxy TCP Port"
 #, fuzzy
 msgctxt "TC_PTTVIACOMMANDSCTRLJOPTIONMUSTTRUEW"
 msgid "PTT VIA COMMANDS (CTRL-J) option must be true for WSJT-X use - Setting to true"
-msgstr "Opțiunea PTT VIA COMMANDDS (CTRL-J) trebuie să fie adevărată pentru utilizarea WSJT-X - Setarea la adevărat"
+msgstr "Opțiunea PTT VIA COMMANDS (CTRL-J) trebuie să fie adevărată pentru utilizarea WSJT-X - Setarea la adevărat"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_cannotdisablesplittransmitslicecre
@@ -9084,25 +9090,29 @@ msgstr ""
 "\n"
 "Cererea a fost REFUZAT mai degrabă decât trimis neverificat. Oprește preferințele > Rețea > verificați certificatele serverului dacă doriți să continuați fără verificare."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(ȚARA MY = %s)"
 #: uappstrings.sexchangemodebriefcountry
 #, fuzzy
 msgid "(MY COUNTRY = %s)"
-msgstr "(ȚARA MY = %s)"
+msgstr "(MY COUNTRY = %s)"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(ȚARA MY este goală)"
 #: uappstrings.sexchangemodebriefemptycountry
 #, fuzzy
 msgid "(MY COUNTRY is empty)"
-msgstr "(ȚARA MY este goală)"
+msgstr "(MY COUNTRY este gol)"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Acest concurs cere un stat, o provincie sau o secţiune deoarece ţara MEA este %s."
 #: uappstrings.sexchangemodefromcountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is %s."
-msgstr "Acest concurs cere un stat, o provincie sau o secţiune deoarece ţara MEA este %s."
+msgstr "Acest concurs cere un stat, o provincie sau o secțiune deoarece MY COUNTRY este %s."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Acest concurs cere un stat, o provincie sau o secţiune deoarece ţara MEA este goală."
 #: uappstrings.sexchangemodefromemptycountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is empty."
-msgstr "Acest concurs cere un stat, o provincie sau o secţiune deoarece ţara MEA este goală."
+msgstr "Acest concurs cere un stat, o provincie sau o secțiune deoarece MY COUNTRY este gol."
 
 #: uappstrings.sfilenamecamefromsetting
 #, fuzzy
@@ -9191,6 +9201,7 @@ msgstr ""
 "\n"
 "%sTR4W va continua să ruleze și să continue să încerce să-l deschidă. Până nu poate, nimic din această sesiune nu este scris în jurnal."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "ID-ul computerului %s este deja în uz de o altă stație de pe această rețea.\n\nSchimbă computerul ID-ul unei scrisori pe care nicio altă staţie nu o foloseşte, apoi reconectează-te."
 #: uappstrings.snetcomputeridinuse
 #, fuzzy
 msgid ""
@@ -9198,9 +9209,9 @@ msgid ""
 "\n"
 "Change COMPUTER ID to a letter no other station is using, then reconnect."
 msgstr ""
-"ID-ul computerului %s este deja în uz de o altă stație de pe această rețea.\n"
+"ID-ul de computer %s este deja folosit de o altă stație din această rețea.\n"
 "\n"
-"Schimbă computerul ID-ul unei scrisori pe care nicio altă staţie nu o foloseşte, apoi reconectează-te."
+"Schimbați COMPUTER ID într-o literă pe care nu o folosește nicio altă stație, apoi reconectați-vă."
 
 #: uappstrings.snewcontestin7qpnecountyorstate
 #, fuzzy
@@ -9227,30 +9238,35 @@ msgstr "Setați acestea în Preferințe > Station, apoi reporniți TR4W: acestea
 msgid "This contest is set up, but TR4W is missing information it needs:"
 msgstr "Acest concurs este înființat, dar TR4W lipsește informații de care are nevoie:"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Apelul meu e gol. TR4W nu-ţi poate rezolva ţara, continentul sau zona fără ea şi nimic care să depindă de ei nu va fi corect."
 #: uappstrings.sreadinessmycallmissing
 #, fuzzy
 msgid "MY CALL is empty. TR4W cannot work out your country, continent or zone without it, and nothing that depends on them will be right."
-msgstr "Apelul meu e gol. TR4W nu-ţi poate rezolva ţara, continentul sau zona fără ea şi nimic care să depindă de ei nu va fi corect."
+msgstr "MY CALL este gol. Fără el, TR4W nu poate determina țara, continentul sau zona dumneavoastră, iar nimic din ce depinde de acestea nu va fi corect."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Ţara mea e goală. În mod normal, este lucrat din apelul meu prin CTY.DAT. Până când are o valoare TR4W tratează această stație ca DX - în ARRM DX înseamnă că va cere fiecărei staţii un stat sau provincie şi va refuza o putere precum K sau 100."
 #: uappstrings.sreadinessmycountrymissing
 #, fuzzy
 msgid "MY COUNTRY is empty. It is normally worked out from MY CALL through CTY.DAT. Until it has a value TR4W treats this station as DX -- in ARRL DX that means it will ask every station for a state or province and refuse a power such as K or 100."
-msgstr "Ţara mea e goală. În mod normal, este lucrat din apelul meu prin CTY.DAT. Până când are o valoare TR4W tratează această stație ca DX - în ARRM DX înseamnă că va cere fiecărei staţii un stat sau provincie şi va refuza o putere precum K sau 100."
+msgstr "MY COUNTRY este gol. În mod normal se deduce din MY CALL prin CTY.DAT. Până când are o valoare, TR4W tratează această stație ca DX -- în ARRL DX asta înseamnă că va cere fiecărei stații un stat sau o provincie și va refuza o putere precum K sau 100."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "GRID-ul meu e gol şi concursul ăsta îţi trimite pătratul."
 #: uappstrings.sreadinessmygridmissing
 #, fuzzy
 msgid "MY GRID is empty and this contest sends your grid square."
-msgstr "GRID-ul meu e gol şi concursul ăsta îţi trimite pătratul."
+msgstr "MY GRID este gol, iar acest concurs trimite locatorul dumneavoastră."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "STATUL MEU este gol și acest concurs trimite statul, provincia sau secțiunea dumneavoastră. TR4W va trimite un număr de serie în schimb."
 #: uappstrings.sreadinessmystatemissing
 #, fuzzy
 msgid "MY STATE is empty and this contest sends your state, province or section. TR4W will send a serial number instead."
-msgstr "STATUL MEU este gol și acest concurs trimite statul, provincia sau secțiunea dumneavoastră. TR4W va trimite un număr de serie în schimb."
+msgstr "MY STATE este gol, iar acest concurs trimite statul, provincia sau secțiunea dumneavoastră. TR4W va trimite în schimb un număr de serie."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "ZONA MEA e goală şi acest concurs îţi trimite zona."
 #: uappstrings.sreadinessmyzonemissing
 #, fuzzy
 msgid "MY ZONE is empty and this contest sends your zone."
-msgstr "ZONA MEA e goală şi acest concurs îţi trimite zona."
+msgstr "MY ZONE este gol, iar acest concurs trimite zona dumneavoastră."
 
 #: uappstrings.sverifyallpassed
 #, fuzzy
@@ -9397,4 +9413,34 @@ msgstr "%d QSO [s] nu a numit nicio stație a noastră și li s-a dat acest conc
 #, fuzzy
 msgid "Show inactive contests"
 msgstr "Arată concursuri inactive"
+
+#: uappstrings.slatestcontestdetail
+#, fuzzy
+msgid "%0:s - %1:s"
+msgstr "%0:s - %1:s"
+
+#: uappstrings.slatestcontestline
+#, fuzzy
+msgid "%0:s %1:d"
+msgstr "%0:s %1:d"
+
+#: uappstrings.snewcontestfilescall
+#, fuzzy
+msgid "Call"
+msgstr "Indicativ"
+
+#: uappstrings.snewcontestfilescontest
+#, fuzzy
+msgid "Contest"
+msgstr "Concurs"
+
+#: uappstrings.snewcontestfilesfile
+#, fuzzy
+msgid "File"
+msgstr "Fisier"
+
+#: uappstrings.snewcontestfilesyear
+#, fuzzy
+msgid "Year"
+msgstr "An"
 

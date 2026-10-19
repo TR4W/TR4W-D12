@@ -43,6 +43,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   owns:
       rg -i -w MARCONIMEMORIAL tr4w/src
 
+  THE CABRILLO CONTEST: NAME IS WA7BNM'S MMC-HF-CW SINCE 2026-10-19 (see
+  GetCabrilloName), not the enum's spelling the paragraph below
+  describes.
+
   BLANK CABName, FriendlyName AND ADIFName ALL MEAN "THE ENUM'S SPELLING";
   the getters below state the value each resolves to, never the empty
   string. ADIFName joined the other two at M1 (2026-10-01): a blank one
@@ -127,9 +131,14 @@ end;
 
 function TContestMarconiMemorial.GetCabrilloName: string;
 begin
-   (* The row's CABName is blank; this is the enum's spelling it
-      resolves to. *)
-   Result := 'MARCONI MEMORIAL';
+   (* WA7BNM's Cabrillo name (WA7BNM 56), NY4I 2026-10-19: "do the
+      cabrillo renames". TR4W wrote 'MARCONI MEMORIAL', which the sponsor's log robot
+      accepted neither as the name nor as an alias
+      (docs/UDC_CROSSWALK_FINDINGS.md). Only the Cabrillo CONTEST: line
+      (and the UDP <contestname>) moves: the id, the ADIF id and the
+      display names are their own literals. TR4W reads no Cabrillo
+      CONTEST: value back, so the old name needs no read alias. *)
+   Result := 'MMC-HF-CW';
 end;
 
 function TContestMarconiMemorial.GetADIFContestId: string;

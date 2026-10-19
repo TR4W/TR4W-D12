@@ -164,7 +164,7 @@ imp xqso+id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 r
 imp wsjtx | parsed=TRUE call=DL1ABC band=Band20 mode=Digital/eFT8 time=260115 121800 rst.sent=5 rst.rcvd=-5 operator=K0AAA cty=DL/28/Europe/DL1
 imp rover | parsed=TRUE call=KG1S/MON band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=MON domqth=MON exch=59 MON operator=K0AAA cty=G/27/Europe/MON0
 == parse
-parse.keys = ACRE ALAGOAS
+parse.keys = AC AL
 parse empty W1AW Band20/CW "" | ok=FALSE err="" token="" pending="" call=W1AW
 parse rst W1AW Band20/CW "599" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 cty=K/8/NorthAmerica/W1 dxqth=K
 parse serial W1AW Band20/CW "123" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=123 cty=K/8/NorthAmerica/W1 dxqth=K
@@ -210,10 +210,10 @@ parse ss.no.precedence W1AW Band20/CW "123 99 CT" | ok=TRUE err="" token="" pend
 parse ss.wrong.order W1AW Band20/CW "CT 99 A 123" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=CT 99 A exch=CT 99 A 123 cty=K/8/NorthAmerica/W1 dxqth=K
 parse ss.no.check W1AW Band20/CW "123 A CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=A CT exch=123 A CT cty=K/8/NorthAmerica/W1 dxqth=K
 parse ss.bad.section W1AW Band20/CW "123 A 99 XYZ" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=A 99 XYZ exch=123 A 99 XYZ cty=K/8/NorthAmerica/W1 dxqth=K
-parse county W1AW Band20/CW "ACRE" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=ACRE exch=ACRE cty=K/8/NorthAmerica/W1 dxqth=K
-parse rst.county W1AW Band20/CW "599 ACRE" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=ACRE exch=599 ACRE cty=K/8/NorthAmerica/W1 dxqth=K
-parse serial.county W1AW Band20/CW "123 ACRE" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=ACRE exch=123 ACRE cty=K/8/NorthAmerica/W1 dxqth=K
-parse county.line W1AW Band20/CW "599 ACRE/ALAGOAS" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=ACRE/ALAGO exch=599 ACRE/ALAGOAS cty=K/8/NorthAmerica/W1 dxqth=K
+parse county W1AW Band20/CW "AC" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=AC exch=AC cty=K/8/NorthAmerica/W1 dxqth=K
+parse rst.county W1AW Band20/CW "599 AC" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=AC exch=599 AC cty=K/8/NorthAmerica/W1 dxqth=K
+parse serial.county W1AW Band20/CW "123 AC" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=AC exch=123 AC cty=K/8/NorthAmerica/W1 dxqth=K
+parse county.line W1AW Band20/CW "599 AC/AL" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=AC/AL exch=599 AC/AL cty=K/8/NorthAmerica/W1 dxqth=K
 parse county.bad W1AW Band20/CW "599 ZZZ" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=ZZZ exch=599 ZZZ cty=K/8/NorthAmerica/W1 dxqth=K
 parse oos.state K4ABC Band40/CW "599 GA" | ok=TRUE err="" token="" pending="" call=K4ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=GA exch=599 GA cty=K/8/NorthAmerica/K4 dxqth=K
 parse oos.serial.state K4ABC Band40/CW "123 GA" | ok=TRUE err="" token="" pending="" call=K4ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=GA exch=123 GA cty=K/8/NorthAmerica/K4 dxqth=K
@@ -229,7 +229,7 @@ parse ja.prefecture JA1ABC Band15/CW "599 13" | ok=TRUE err="" token="" pending=
 parse ru.oblast UA3ABC Band20/CW "599 MO" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=MO exch=599 MO cty=UA/29/Europe/UA3 dxqth=UA
 parse ru.serial UA3ABC Band20/CW "599 123" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=123 exch=599 123 cty=UA/29/Europe/UA3 dxqth=UA
 parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=MO12 exch=599 MO12 cty=UA/29/Europe/UA3 dxqth=UA
-parse py.state PY2ABC Band20/CW "599 SP" | ok=TRUE err="" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=SP domqth=S�o Paul dommultqth=S�o Paul exch=599 SP cty=PY/15/SouthAmerica/PY2 dxqth=PY
+parse py.state PY2ABC Band20/CW "599 SP" | ok=TRUE err="" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=SP domqth=SP dommultqth=SP exch=599 SP cty=PY/15/SouthAmerica/PY2 dxqth=PY
 parse f.department F5ABC Band20/CW "599 75" | ok=TRUE err="" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=75 exch=599 75 cty=F/27/Europe/F5 dxqth=F
 == keys
 exchange.fields = QTH RST
@@ -524,7 +524,7 @@ imp xqso+id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 r
 imp wsjtx | parsed=TRUE call=DL1ABC band=Band20 mode=Digital/eFT8 time=260115 121800 rst.sent=5 rst.rcvd=-5 operator=VE3AAA cty=DL/28/Europe/DL1
 imp rover | parsed=TRUE call=KG1S/MON band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=MON domqth=MON exch=59 MON operator=VE3AAA cty=G/27/Europe/MON0
 == parse
-parse.keys = ACRE ALAGOAS
+parse.keys = AC AL
 parse empty W1AW Band20/CW "" | ok=FALSE err="" token="" pending="" call=W1AW
 parse rst W1AW Band20/CW "599" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 cty=K/8/NorthAmerica/W1 dxqth=K
 parse serial W1AW Band20/CW "123" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=123 cty=K/8/NorthAmerica/W1 dxqth=K
@@ -570,10 +570,10 @@ parse ss.no.precedence W1AW Band20/CW "123 99 CT" | ok=TRUE err="" token="" pend
 parse ss.wrong.order W1AW Band20/CW "CT 99 A 123" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=CT 99 A exch=CT 99 A 123 cty=K/8/NorthAmerica/W1 dxqth=K
 parse ss.no.check W1AW Band20/CW "123 A CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=A CT exch=123 A CT cty=K/8/NorthAmerica/W1 dxqth=K
 parse ss.bad.section W1AW Band20/CW "123 A 99 XYZ" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=A 99 XYZ exch=123 A 99 XYZ cty=K/8/NorthAmerica/W1 dxqth=K
-parse county W1AW Band20/CW "ACRE" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=ACRE exch=ACRE cty=K/8/NorthAmerica/W1 dxqth=K
-parse rst.county W1AW Band20/CW "599 ACRE" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=ACRE exch=599 ACRE cty=K/8/NorthAmerica/W1 dxqth=K
-parse serial.county W1AW Band20/CW "123 ACRE" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=ACRE exch=123 ACRE cty=K/8/NorthAmerica/W1 dxqth=K
-parse county.line W1AW Band20/CW "599 ACRE/ALAGOAS" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=ACRE/ALAGO exch=599 ACRE/ALAGOAS cty=K/8/NorthAmerica/W1 dxqth=K
+parse county W1AW Band20/CW "AC" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=AC exch=AC cty=K/8/NorthAmerica/W1 dxqth=K
+parse rst.county W1AW Band20/CW "599 AC" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=AC exch=599 AC cty=K/8/NorthAmerica/W1 dxqth=K
+parse serial.county W1AW Band20/CW "123 AC" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=AC exch=123 AC cty=K/8/NorthAmerica/W1 dxqth=K
+parse county.line W1AW Band20/CW "599 AC/AL" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=AC/AL exch=599 AC/AL cty=K/8/NorthAmerica/W1 dxqth=K
 parse county.bad W1AW Band20/CW "599 ZZZ" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=ZZZ exch=599 ZZZ cty=K/8/NorthAmerica/W1 dxqth=K
 parse oos.state K4ABC Band40/CW "599 GA" | ok=TRUE err="" token="" pending="" call=K4ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=GA exch=599 GA cty=K/8/NorthAmerica/K4 dxqth=K
 parse oos.serial.state K4ABC Band40/CW "123 GA" | ok=TRUE err="" token="" pending="" call=K4ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=GA exch=123 GA cty=K/8/NorthAmerica/K4 dxqth=K
@@ -589,7 +589,7 @@ parse ja.prefecture JA1ABC Band15/CW "599 13" | ok=TRUE err="" token="" pending=
 parse ru.oblast UA3ABC Band20/CW "599 MO" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=MO exch=599 MO cty=UA/29/Europe/UA3 dxqth=UA
 parse ru.serial UA3ABC Band20/CW "599 123" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=123 exch=599 123 cty=UA/29/Europe/UA3 dxqth=UA
 parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=MO12 exch=599 MO12 cty=UA/29/Europe/UA3 dxqth=UA
-parse py.state PY2ABC Band20/CW "599 SP" | ok=TRUE err="" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=SP domqth=S�o Paul dommultqth=S�o Paul exch=599 SP cty=PY/15/SouthAmerica/PY2 dxqth=PY
+parse py.state PY2ABC Band20/CW "599 SP" | ok=TRUE err="" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=SP domqth=SP dommultqth=SP exch=599 SP cty=PY/15/SouthAmerica/PY2 dxqth=PY
 parse f.department F5ABC Band20/CW "599 75" | ok=TRUE err="" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=75 exch=599 75 cty=F/27/Europe/F5 dxqth=F
 == keys
 exchange.fields = QTH RST
@@ -882,7 +882,7 @@ imp xqso+id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 r
 imp wsjtx | parsed=TRUE call=DL1ABC band=Band20 mode=Digital/eFT8 time=260115 121800 rst.sent=5 rst.rcvd=-5 operator=DL1AAA cty=DL/28/Europe/DL1
 imp rover | parsed=TRUE call=KG1S/MON band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=MON domqth=MON exch=59 MON operator=DL1AAA cty=G/27/Europe/MON0
 == parse
-parse.keys = ACRE ALAGOAS
+parse.keys = AC AL
 parse empty W1AW Band20/CW "" | ok=FALSE err="" token="" pending="" call=W1AW
 parse rst W1AW Band20/CW "599" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 cty=K/8/NorthAmerica/W1 dxqth=K
 parse serial W1AW Band20/CW "123" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=123 cty=K/8/NorthAmerica/W1 dxqth=K
@@ -928,10 +928,10 @@ parse ss.no.precedence W1AW Band20/CW "123 99 CT" | ok=TRUE err="" token="" pend
 parse ss.wrong.order W1AW Band20/CW "CT 99 A 123" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=CT 99 A exch=CT 99 A 123 cty=K/8/NorthAmerica/W1 dxqth=K
 parse ss.no.check W1AW Band20/CW "123 A CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=A CT exch=123 A CT cty=K/8/NorthAmerica/W1 dxqth=K
 parse ss.bad.section W1AW Band20/CW "123 A 99 XYZ" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=A 99 XYZ exch=123 A 99 XYZ cty=K/8/NorthAmerica/W1 dxqth=K
-parse county W1AW Band20/CW "ACRE" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=ACRE exch=ACRE cty=K/8/NorthAmerica/W1 dxqth=K
-parse rst.county W1AW Band20/CW "599 ACRE" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=ACRE exch=599 ACRE cty=K/8/NorthAmerica/W1 dxqth=K
-parse serial.county W1AW Band20/CW "123 ACRE" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=ACRE exch=123 ACRE cty=K/8/NorthAmerica/W1 dxqth=K
-parse county.line W1AW Band20/CW "599 ACRE/ALAGOAS" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=ACRE/ALAGO exch=599 ACRE/ALAGOAS cty=K/8/NorthAmerica/W1 dxqth=K
+parse county W1AW Band20/CW "AC" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=AC exch=AC cty=K/8/NorthAmerica/W1 dxqth=K
+parse rst.county W1AW Band20/CW "599 AC" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=AC exch=599 AC cty=K/8/NorthAmerica/W1 dxqth=K
+parse serial.county W1AW Band20/CW "123 AC" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=AC exch=123 AC cty=K/8/NorthAmerica/W1 dxqth=K
+parse county.line W1AW Band20/CW "599 AC/AL" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=AC/AL exch=599 AC/AL cty=K/8/NorthAmerica/W1 dxqth=K
 parse county.bad W1AW Band20/CW "599 ZZZ" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=ZZZ exch=599 ZZZ cty=K/8/NorthAmerica/W1 dxqth=K
 parse oos.state K4ABC Band40/CW "599 GA" | ok=TRUE err="" token="" pending="" call=K4ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=GA exch=599 GA cty=K/8/NorthAmerica/K4 dxqth=K
 parse oos.serial.state K4ABC Band40/CW "123 GA" | ok=TRUE err="" token="" pending="" call=K4ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=GA exch=123 GA cty=K/8/NorthAmerica/K4 dxqth=K
@@ -947,7 +947,7 @@ parse ja.prefecture JA1ABC Band15/CW "599 13" | ok=TRUE err="" token="" pending=
 parse ru.oblast UA3ABC Band20/CW "599 MO" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=MO exch=599 MO cty=UA/29/Europe/UA3 dxqth=UA
 parse ru.serial UA3ABC Band20/CW "599 123" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=123 exch=599 123 cty=UA/29/Europe/UA3 dxqth=UA
 parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=MO12 exch=599 MO12 cty=UA/29/Europe/UA3 dxqth=UA
-parse py.state PY2ABC Band20/CW "599 SP" | ok=TRUE err="" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=SP domqth=S�o Paul dommultqth=S�o Paul exch=599 SP cty=PY/15/SouthAmerica/PY2 dxqth=PY
+parse py.state PY2ABC Band20/CW "599 SP" | ok=TRUE err="" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=SP domqth=SP dommultqth=SP exch=599 SP cty=PY/15/SouthAmerica/PY2 dxqth=PY
 parse f.department F5ABC Band20/CW "599 75" | ok=TRUE err="" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=75 exch=599 75 cty=F/27/Europe/F5 dxqth=F
 == keys
 exchange.fields = QTH RST

@@ -118,9 +118,20 @@ end;
 
 function TContestXmas.GetCabrilloName: string;
 begin
-   (* The row's CABName is blank; this is the enum's spelling it
-      resolves to. *)
-   Result := 'XMAS';
+   (* THE SPONSOR'S NAME, 2026-10-19 (NY4I confirmed this contest is NOT
+      the DARC Christmas contest, which writes WA7BNM 210's XMAS). This is
+      the SSA Jultest (Sveriges Saendareamatoerer, 25 December 0800-1100
+      UTC, 80/40 m CW/SSB): RST + serial from 001 + a five-letter group,
+      2 points per QSO, no multipliers -- exactly this class's exchange
+      and scoring. The sponsor's Cabrillo page states "Taevlingsnamnet
+      maste vara: SSA-JULTEST"
+      (https://hfcontest.ssa.se/ssa-jt/ssa-jt-cabrillo.html, updated
+      2022-11-12; rules at https://hfcontest.ssa.se/ssa-jt/regler.html);
+      DXLog's SSA_JT.txt and N1MM's SSA_JT.udc agree. WA7BNM does not list
+      it. It was 'XMAS', the enum's spelling, which is DARC's registered
+      name. Only the CONTEST: line moves: the stored id and the ADIF id
+      stay XMAS. *)
+   Result := 'SSA-JULTEST';
 end;
 
 function TContestXmas.GetADIFContestId: string;
@@ -141,6 +152,11 @@ end;
 
 function TContestXmas.GetQRZRUId: integer;
 begin
+   (* A KNOWN DATA DEFECT, kept until there is evidence of the right id
+      (2026-10-19): QRZ.RU 100 is the DARC XMAS Contest page
+      (https://web.archive.org/web/20250126012214id_/http://www.qrz.ru/contest/detail/100.html),
+      the DARC-XMAS row's id, copied into this row in D7 -- not the SSA
+      Jultest this contest is (see GetCabrilloName). *)
    Result := 100;
 end;
 

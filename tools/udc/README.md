@@ -179,6 +179,60 @@ Mode only when that picks exactly one; otherwise every candidate is an
 | `ambiguous-match`, `match-candidate` | for a human to confirm |
 | `not-in-tr4w` | UDC contests TR4W lacks -- a reference list, not a to-do list |
 
+## N1MM's BUILT-IN contests (`n1mm_builtin.py`)
+
+```
+python -I tools/udc/n1mm_builtin.py "<N1MM Logger>\Source"
+       [--names CSV --names-out CSV] [--fetch-wa7bnm] [--cache DIR]
+```
+
+**Provenance: "N1MM Logger source, c. 2014."** NY4I's copy is from a review
+he did for the N1MM team about twelve years ago. It is NOT ours and NOT in
+this repository, which is public: pass its `Source` directory as the
+argument (there is no default), never copy its text here. Its Cabrillo names
+may be stale against today's sponsors, so **where TR4W and N1MM differ, the
+sponsor's current Cabrillo name is the verdict.** Authority order:
+D7 > sponsor's Cabrillo template > WA7BNM > DXLog > N1MM built-in > UDC.
+
+N1MM's modules register with `api.AddChgContest name, DisplayName,
+CabrilloName, Mode, DupeType, Multiplier1Name, Multiplier2Name,
+Multiplier3Name, Period, PointsPerContact[, CabrilloVersion]`. The script
+reads only the Visual Basic files (`.cls .bas .frm .ctl`) directly in the
+directory you name. It joins ` _` continuations, strips `'` comments and
+`:`-separated statements, and records the enclosing `If` / `ElseIf` / `Else`
+/ `Select Case` branch. A call with a non-literal argument or the wrong
+argument count is listed as unparsed, never dropped. Editor backups and other
+files that mention the call are listed as excluded.
+
+It writes, to the gitignored cache:
+
+| file | what |
+|---|---|
+| `n1mm_builtin.csv` | one row per call: file, line, procedure, branch, status, the eleven arguments (DupeType spelled out; CabrilloVersion `2.0 (default)` when not passed), the raw arguments |
+| `n1mm_crosswalk.csv` | one row per TR4W contest: outcome (matched / ambiguous / unmatched), method, the N1MM entries, `cabrillo_agrees`, note |
+| `wa7bnm_cabnames.html`, `wa7bnm/<id>.html` | with `--fetch-wa7bnm`: WA7BNM's master list of Cabrillo names, and the detail page of each WA7BNM id in `--names` (the master list omits inactive contests; a detail page also lists the Cabrillo-name ALIASES). Fetched once each, 1.5 s apart |
+
+The TR4W side is `crosswalk.py`'s reader, imported rather than copied. The
+match methods are crosswalk's (Cabrillo exact / normalised / to-id, name-to-id,
+display), then `N1MM_CURATED`: each entry has its evidence, and an entry that
+lists several TR4W contests is ambiguous unless its Mode picks one.
+`N1MM_REJECTED` vetoes a wrong automatic match. A TR4W contest that N1MM
+registers once per mode (a different Cabrillo name per mode) is a match;
+different names the mode does not separate make it ambiguous. Ambiguous
+contests are listed, never counted as matched.
+
+`--names IN --names-out OUT` adds eight columns to NY4I's contest-names table:
+N1MM name, N1MM display name, N1MM Cabrillo name, N1MM mode, UDC Cabrillo name
+(from `crosswalk.csv`'s matches), WA7BNM Cabrillo name, `Cabrillo agrees?` (TR4W
+against N1MM: Y / N / no N1MM entry) and Note. Where TR4W differs from N1MM or
+from WA7BNM, the Note says what WA7BNM and its aliases make of each side, and
+adds the hand-checked `SPONSOR_VERDICTS`. **OUT may be IN**: the step drops
+the columns it added last time and copies every other column through
+untouched, so it is safe to re-run, and the table generator
+(`build_and_run.ps1 -N1MMSource ...`) runs it after each regeneration. The
+dated reading is in `docs/UDC_CROSSWALK_FINDINGS.md`, section "N1MM built-in
+contests".
+
 ## Limits
 
 - Only the English UDC help is used for definitions.

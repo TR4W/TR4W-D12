@@ -132,12 +132,13 @@ msgctxt "TC_RADIO2"
 msgid "Radio 2"
 msgstr "Radio 2"
 
+# 2026-10-19 NY4I approved; was: "Disable \"CI-V Transceive\" mode in your ICOM rig."; evidence CQWS bulletin
 #. Section: General
 #: utr4wstrings:tc_disbale_civ tr4w/src/lang/tr4w_consts_eng.pas:29
 #: utr4wstrings.tc_disbale_civ
 msgctxt "TC_DISBALE_CIV"
 msgid "Disable \"CI-V Transceive\" mode in your ICOM rig. Refer to instruction manual of your radio."
-msgstr "Disable \"CI-V Transceive\" mode in your ICOM rig."
+msgstr "Desactive el modo \"CI-V Transceive\" en su equipo ICOM. Consulte el manual de instrucciones de su radio."
 
 #. Section: General
 #: utr4wstrings:tc_serial_format_label tr4w/src/lang/tr4w_consts_eng.pas:30
@@ -222,12 +223,13 @@ msgctxt "TC_QSO_IMPORTED"
 msgid "Qs imported."
 msgstr "QSOs importados."
 
+# 2026-10-19 NY4I approved; was: "%s es un dupli!!"; evidence CQWS bulletin
 #. Section: MAIN
 #: utr4wstrings:tc_isadupe tr4w/src/lang/tr4w_consts_eng.pas:43
 #: utr4wstrings.tc_isadupe
 msgctxt "TC_ISADUPE"
 msgid "%s is a dupe!!"
-msgstr "%s es un dupli!!"
+msgstr "¡¡%s es un duplicado!!"
 
 #. Section: MAIN
 #: utr4wstrings:tc_errorinlogfile tr4w/src/lang/tr4w_consts_eng.pas:44
@@ -756,12 +758,13 @@ msgctxt "TC_ENTERYOURNAMEANDQTH"
 msgid "Enter your name and QTH (US state, Canadian Province or DX country) or member number:"
 msgstr "Entre su nombre y QTH (estado US, provincia canadiense o pais DX):"
 
+# 2026-10-19 NY4I approved; was: "Entre su precedence, su check\r(last dos numeros de ano licensed) y ARRL section:"; evidence CQWS bulletin
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryourprecedencechecksection
 #: tr4w/src/lang/tr4w_consts_eng.pas:131
 msgctxt "TC_ENTERYOURPRECEDENCECHECKSECTION"
 msgid "Enter your precedence, your check\r(last two digits of year licensed) and ARRL section:"
-msgstr "Entre su precedence, su check\r(last dos numeros de ano licensed) y ARRL section:"
+msgstr "Introduzca su precedence, su check\r(últimos dos dígitos del año de licencia) y su sección ARRL:"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryourqthandthename tr4w/src/lang/tr4w_consts_eng.pas:132
@@ -846,19 +849,21 @@ msgctxt "TC_PREFECTURE"
 msgid "Enter your prefecture:"
 msgstr "Entre su prefecture:"
 
+# 2026-10-19 NY4I approved; was: "Entre su station class:"; evidence CQWS bulletin
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_stationclass tr4w/src/lang/tr4w_consts_eng.pas:143
 #: utr4wstrings.tc_stationclass
 msgctxt "TC_STATIONCLASS"
 msgid "Enter your station class:"
-msgstr "Entre su station class:"
+msgstr "Introduzca la clase de su estación:"
 
+# 2026-10-19 NY4I approved; was: "Entre su edad (and Silent Key callsign y edad):"; evidence CQWS bulletin
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_agecallsignage tr4w/src/lang/tr4w_consts_eng.pas:144
 #: utr4wstrings.tc_agecallsignage
 msgctxt "TC_AGECALLSIGNAGE"
 msgid "Enter your age (and Silent Key callsign and age):"
-msgstr "Entre su edad (and Silent Key callsign y edad):"
+msgstr "Introduzca su edad (y el indicativo y la edad del Silent Key):"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_department tr4w/src/lang/tr4w_consts_eng.pas:145
@@ -867,12 +872,13 @@ msgctxt "TC_DEPARTMENT"
 msgid "Enter your department:"
 msgstr "Entre su department:"
 
+# 2026-10-19 NY4I approved; was: "Entre su RDA ID (for UA1A stations) or cuatro digit locator:"; evidence CQWS bulletin
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryourrdaidorgrid tr4w/src/lang/tr4w_consts_eng.pas:146
 #: utr4wstrings.tc_enteryourrdaidorgrid
 msgctxt "TC_ENTERYOURRDAIDORGRID"
 msgid "Enter your RDA ID (for UA1A stations) or four digit grid square:"
-msgstr "Entre su RDA ID (for UA1A stations) or cuatro digit locator:"
+msgstr "Introduzca su RDA (estaciones UA1A) o su locator de cuatro caracteres:"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryourbranchnumber tr4w/src/lang/tr4w_consts_eng.pas:147
@@ -1107,13 +1113,14 @@ msgctxt "TC_SWITZERLAND"
 msgid "Switzerland"
 msgstr "Suiza"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Spanish edition Boletim_CQWS_2026_espanhol.pdf: '(HQ station)' -> '(estación HQ)', p.7 'Estaciones QRP', 'Estaciones YL'. Previous text: "HQ (HQ station)"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_hq tr4w/src/lang/tr4w_consts_eng.pas:179
 #: utr4wstrings.tc_hq
 #, fuzzy
 msgctxt "TC_HQ"
 msgid "HQ (HQ station)"
-msgstr "HQ (HQ station)"
+msgstr "HQ (estación HQ)"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_spain tr4w/src/lang/tr4w_consts_eng.pas:181
@@ -1863,13 +1870,14 @@ msgctxt "TC_NOCALLSIGNSPECIFIED"
 msgid "No callsign specified!!"
 msgstr "Indicativo no especificado!!"
 
+# 2026-10-19 NY4I approved; was: "Nombre para salvar no especificado."; evidence CQWS bulletin
 #. Section: LOGCFG
 #: utr4wstrings:tc_nofloppyfilesavenamespecified
 #: tr4w/src/lang/tr4w_consts_eng.pas:347
 #: utr4wstrings.tc_nofloppyfilesavenamespecified
 msgctxt "TC_NOFLOPPYFILESAVENAMESPECIFIED"
 msgid "No floppy file save name specified."
-msgstr "Nombre para salvar no especificado."
+msgstr "No se ha especificado un nombre de archivo para guardar."
 
 #. Section: LOGCFG
 #: utr4wstrings:tc_unabletofind tr4w/src/lang/tr4w_consts_eng.pas:348
@@ -1891,12 +1899,13 @@ msgctxt "TC_UNABLETOFINDCTYDAT"
 msgid "Unable to find CTY.DAT country file!!\rMake sure this file is in the same directory as the program."
 msgstr "No encuentro fichero paises CTY.DAT!!\rAsegurese de que esta en el mismo directorio del programa."
 
+# 2026-10-19 NY4I approved; was: "%s:\rINVALID STATEMENT IN CONFIG FILE!!\r\rLine %u\r%s"; evidence CQWS bulletin
 #. Section: LOGCFG
 #: utr4wstrings:tc_invalidstatementinconfigfile
 #: tr4w/src/lang/tr4w_consts_eng.pas:351
 msgctxt "TC_INVALIDSTATEMENTINCONFIGFILE"
 msgid "%s:\rInvalid statement in config file.\r\rLine %u\r%s"
-msgstr "%s:\rINVALID STATEMENT IN CONFIG FILE!!\r\rLine %u\r%s"
+msgstr "%s:\rInstrucción no válida en el archivo de configuración.\r\rLínea %u\r%s"
 
 #. Section: LOGCFG
 #: utr4wstrings:tc_parameterhasnovalue tr4w/src/lang/tr4w_consts_eng.pas:352
@@ -1975,20 +1984,22 @@ msgctxt "TC_YOUARENOWTALKINGTOYOURPACKETPORT"
 msgid "You are now talking to your packet port.  Use Control-B to exit."
 msgstr "Esta usando el puerto packet.  Use Control-B para salir."
 
+# 2026-10-19 NY4I approved; was: "Ya ha trabado %s en %s!!"; evidence CQWS bulletin
 #. Section: LOGSUBS2
 #: utr4wstrings:tc_youalreadyworkedin tr4w/src/lang/tr4w_consts_eng.pas:369
 #: utr4wstrings.tc_youalreadyworkedin
 msgctxt "TC_YOUALREADYWORKEDIN"
 msgid "You already worked %s in %s!!"
-msgstr "Ya ha trabado %s en %s!!"
+msgstr "¡¡Ya ha trabajado %s en %s!!"
 
+# 2026-10-19 NY4I approved; was: "%s es un duplicado y se grabara como QSO de 0 puntos."; evidence CQWS bulletin
 #. Section: LOGSUBS2
 #: utr4wstrings:tc_isadupeandwillbeloggedwithzero
 #: tr4w/src/lang/tr4w_consts_eng.pas:370
 #: utr4wstrings.tc_isadupeandwillbeloggedwithzero
 msgctxt "TC_ISADUPEANDWILLBELOGGEDWITHZERO"
 msgid "%s is a dupe and will be logged with zero QSO points."
-msgstr "%s es un duplicado y se grabara como QSO de 0 puntos."
+msgstr "%s es un duplicado y se registrará como QSO de 0 puntos."
 
 #. Section: LOGSUBS2
 #: utr4wstrings:tc_logfilesizecheckfailed tr4w/src/lang/tr4w_consts_eng.pas:371
@@ -2370,13 +2381,14 @@ msgctxt "TC_INVALIDREMINDERDATE"
 msgid "Invalid reminder date!!"
 msgstr "¡¡Fecha de recordatorio inválida!!"
 
+# 2026-10-19 command name restored to English (NY4I ruling: command names are never translated, even in reviewed text); was: "¡Demasiados mensajes de PUNTUACIÓN TOTAL!"
 #. Section: CFGCMD
 #: utr4wstrings:tc_toomanytotalscoremessages
 #: tr4w/src/lang/tr4w_consts_eng.pas:453
 #: utr4wstrings.tc_toomanytotalscoremessages
 msgctxt "TC_TOOMANYTOTALSCOREMESSAGES"
 msgid "Too many TOTAL SCORE MESSAGEs!!"
-msgstr "¡Demasiados mensajes de PUNTUACIÓN TOTAL!"
+msgstr "¡Demasiados TOTAL SCORE MESSAGE!"
 
 #. Section: CFGCMD
 #: utr4wstrings:tc_thefirstcommandinconfigfilemustbe
@@ -2676,12 +2688,13 @@ msgctxt "TC_THISVERSION2"
 msgid "This version"
 msgstr "Esta versión"
 
+# 2026-10-19 NY4I approved; was: "Download last version?"; evidence CQWS bulletin
 #. Section: UCHECKLATESTVERSION
 #: utr4wstrings:tc_downloadit tr4w/src/lang/tr4w_consts_eng.pas:548
 #: utr4wstrings.tc_downloadit
 msgctxt "TC_DOWNLOADIT"
 msgid "Would you like to download the latest version?"
-msgstr "Download last version?"
+msgstr "¿Desea descargar la última versión?"
 
 #. Section: UCHECKLATESTVERSION
 #: utr4wstrings:tc_list_of_command tr4w/src/lang/tr4w_consts_eng.pas:551
@@ -2921,10 +2934,11 @@ msgstr "Beacons Monitor"
 msgid "CT1BOH information"
 msgstr "Informacion de CT1BOH"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Spanish edition Boletim_CQWS_2026_espanhol.pdf: 'Hoja de trabajo' -> 'Hoja de duplicados', p.10 'QSO duplicado' (hoja de trabajo = worksheet). Previous text: "Hoja de trabajo"
 #: tfrmdupesheet.caption
 #, fuzzy
 msgid "Dupe sheet"
-msgstr "Hoja de trabajo"
+msgstr "Hoja de duplicados"
 
 #. Section: UEDITMESSAGE
 #. Section: FD Additions NY4I
@@ -3140,10 +3154,11 @@ msgstr "Operador"
 msgid "Postal Code"
 msgstr "Código postal"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Spanish edition Boletim_CQWS_2026_espanhol.pdf: 'Poder' -> 'Potencia', p.3 'La potencia de salida total'. Previous text: "Poder"
 #: tfrmeditqso.lblpower.caption
 #, fuzzy
 msgid "Power"
-msgstr "Poder"
+msgstr "Potencia"
 
 #: tfrmeditqso.lblprecedence.caption
 #, fuzzy
@@ -3486,6 +3501,7 @@ msgctxt "RC_POSTNOW"
 msgid "Post now"
 msgstr "Publicar ahora"
 
+# 2026-10-19 NY4I approved; was: "Ver"; evidence CQWS bulletin
 #. Section: UEDITMESSAGE
 #: tfrmpostscores.btnshowscores.caption utr4wstrings:rc_gotogs
 #: tr4w/src/lang/tr4w_consts_eng.pas:574
@@ -3493,7 +3509,7 @@ msgstr "Publicar ahora"
 #: utr4wstrings.rc_gotogs
 msgctxt "RC_GOTOGS"
 msgid "Show scores"
-msgstr "Ver"
+msgstr "Ver puntuaciones"
 
 #: tfrmpostscores.caption
 #, fuzzy
@@ -3575,10 +3591,11 @@ msgstr "VFO B"
 msgid "XIT"
 msgstr "XIT"
 
+# 2026-10-19: term from the EU DX Contest rules, Spanish edition (EUDXCC, https://www.eudx-contest.com/reglas/): 'Permaneces' -> 'Multiplicadores restantes', s.5 'Multiplicadores' (permaneces = you remain). Previous text: "Permaneces"
 #: tfrmremmults.caption
 #, fuzzy
 msgid "Remaining mults"
-msgstr "Permaneces"
+msgstr "Multiplicadores restantes"
 
 #. Section: UEDITMESSAGE
 #: tfrmsendkeyboard.btnclose.caption utr4wstrings:close_word
@@ -3618,6 +3635,7 @@ msgctxt "RC_COMMENT"
 msgid "Comment"
 msgstr "Comentario"
 
+# 2026-10-19 NY4I approved; was: "Frequencia"; evidence CQWS bulletin
 #. Section: UEDITMESSAGE
 #: tfrmsendspot.lblfrequency.caption utr4wstrings:rc_frequency
 #: tr4w/src/lang/tr4w_consts_eng.pas:802
@@ -3625,7 +3643,7 @@ msgstr "Comentario"
 #: utr4wstrings.rc_frequency
 msgctxt "RC_FREQUENCY"
 msgid "Frequency"
-msgstr "Frequencia"
+msgstr "Frecuencia"
 
 #. Section: UEDITMESSAGE
 #: tfrmstations.caption utr4wstrings:rc_stations
@@ -3705,12 +3723,13 @@ msgctxt "tfrmudpdestinationedit.chkstreamcontact.caption"
 msgid "Contact info"
 msgstr "Información de contacto"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Spanish edition Boletim_CQWS_2026_espanhol.pdf: 'firmas' -> 'indicativos', p.4 'indicativo' (firmas = signatures). Previous text: "Consulta de firmas"
 #: tfrmudpdestinationedit.chkstreamlookup.caption
 #: ulclformhelpers.tc_prefs_udpstream_lookup
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamlookup.caption"
 msgid "Callsign lookup"
-msgstr "Consulta de firmas"
+msgstr "Consulta de indicativos"
 
 #: tfrmudpdestinationedit.chkstreamradio.caption
 #: ulclformhelpers.tc_prefs_udpstream_radio
@@ -3913,10 +3932,11 @@ msgstr "Todos los modos"
 msgid "Show the call window entry"
 msgstr "Mostrar la entrada de la ventana de llamada"
 
+# 2026-10-19: term from the EU DX Contest rules, Spanish edition (EUDXCC, https://www.eudx-contest.com/reglas/): 'Mostrar puntos CQ' -> 'Mostrar anuncios CQ', s.2.d 'auto anuncio'; the reviewed 'anuncios' (puntos = points). Previous text: "Mostrar puntos CQ"
 #: tprefsform.chkbandmapcq.caption
 #, fuzzy
 msgid "Show CQ spots"
-msgstr "Mostrar puntos CQ"
+msgstr "Mostrar anuncios CQ"
 
 #: tprefsform.chkbandmapdupes.caption
 #, fuzzy
@@ -3943,11 +3963,12 @@ msgstr "Pantalla SO2R"
 msgid "Bold"
 msgstr "Bold"
 
+# 2026-10-19: term from the EU DX Contest rules, Spanish edition (EUDXCC, https://www.eudx-contest.com/reglas/): 'cada lugar' -> 'cada anuncio', s.2.d 'auto anuncio'; the reviewed 'anuncios' (lugar = place). Previous text: "Mostrar cada lugar en la ventana de llamada"
 #: tprefsform.chkcallwindowshowallspots.caption
 #: usettingscaptions.rs_bandmap_callwindowshowallspots
 #, fuzzy
 msgid "Show every spot in the call window"
-msgstr "Mostrar cada lugar en la ventana de llamada"
+msgstr "Mostrar cada anuncio en la ventana de llamada"
 
 #: tprefsform.chkchecklogfilesize.caption
 #: usettingscaptions.rs_logging_checklogfilesize
@@ -4075,16 +4096,18 @@ msgstr "Número de teclado envía recuerdos CW"
 msgid "Leave the cursor in the call window"
 msgstr "Deja el cursor en la ventana de llamada"
 
+# 2026-10-19: term from the EU DX Contest rules, Spanish edition (EUDXCC, https://www.eudx-contest.com/reglas/): 'ya que están conectados' -> 'a medida que se registran', s.11 'registro de QSO', and the CQWS bulletin's own 'conectado a' machine error (conectados = connected). Previous text: "Enviar QSOs a ella ya que están conectados"
 #: tprefsform.chkloggerenabled.caption
 #, fuzzy
 msgid "Send QSOs to it as they are logged"
-msgstr "Enviar QSOs a ella ya que están conectados"
+msgstr "Enviar QSOs a ella a medida que se registran"
 
+# 2026-10-19: term from the EU DX Contest rules, Spanish edition (EUDXCC, https://www.eudx-contest.com/reglas/): 'Inicia sesión con un solo Entrar' -> 'Registrar con un solo Enter', s.11 'registro de QSO' (iniciar sesion = log in). Previous text: "Inicia sesión con un solo Entrar"
 #: tprefsform.chklogwithsingleenter.caption
 #: usettingscaptions.rs_operating_logwithsingleenter
 #, fuzzy
 msgid "Log with a single Enter"
-msgstr "Inicia sesión con un solo Entrar"
+msgstr "Registrar con un solo Enter"
 
 #: tprefsform.chkmp3recorderenable.caption
 #: usettingscaptions.rs_audio_mp3_recorderenable
@@ -4132,11 +4155,12 @@ msgstr "Ocultar los títulos de la columna de registro"
 msgid "Stop polling the radio while transmitting"
 msgstr "Deja de encuestar la radio mientras se transmite"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Spanish edition Boletim_CQWS_2026_espanhol.pdf: 'una llamada parcial' -> 'un indicativo parcial', p.4 'indicativo'. Previous text: "Coincidencia en una llamada parcial"
 #: tprefsform.chkpartialcall.caption
 #: usettingscaptions.rs_scp_partialcall
 #, fuzzy
 msgid "Match on a partial callsign"
-msgstr "Coincidencia en una llamada parcial"
+msgstr "Coincidencia en un indicativo parcial"
 
 #: tprefsform.chkpossiblecalls.caption
 #: usettingscaptions.rs_scp_possiblecalls
@@ -4211,16 +4235,18 @@ msgctxt "tprefsform.chkspeedsync1.caption"
 msgid "Speed sync"
 msgstr "Sincronización de velocidad"
 
+# 2026-10-19: term from the EU DX Contest rules, Spanish edition (EUDXCC, https://www.eudx-contest.com/reglas/): 'Recoger puntos del grupo' -> 'Recoger anuncios del clúster', s.2.d 'auto anuncio', s.10 'Clusters'; the reviewed 'anuncios', 'clúster'. Previous text: "Recoger puntos del grupo"
 #: tprefsform.chkspotcollector.caption
 #, fuzzy
 msgid "Collect spots from the cluster"
-msgstr "Recoger puntos del grupo"
+msgstr "Recoger anuncios del clúster"
 
+# 2026-10-19: term from the EU DX Contest rules, Spanish edition (EUDXCC, https://www.eudx-contest.com/reglas/): 'Enviar puntos' -> 'Enviar anuncios', s.2.d 'auto anuncio'; the reviewed 'anuncios' (puntos = points). Previous text: "Enviar puntos a la otra radio"
 #: tprefsform.chkswappacketspotradios.caption
 #: usettingscaptions.rs_bandmap_swappacketspotradios
 #, fuzzy
 msgid "Send spots to the other radio"
-msgstr "Enviar puntos a la otra radio"
+msgstr "Enviar anuncios a la otra radio"
 
 #: tprefsform.chkswappaddles.caption
 #: usettingscaptions.rs_cw_paddle_swap
@@ -4239,10 +4265,11 @@ msgstr "Invierte el sentido de la radio relé"
 msgid "Also listen on the network (other computers can connect)"
 msgstr "También escucha en la red (otros ordenadores pueden conectarse)"
 
+# 2026-10-19: term from the EU DX Contest rules, Spanish edition (EUDXCC, https://www.eudx-contest.com/reglas/): 'inicie cada comando' -> 'registrar cada comando', s.11 'registro' (iniciar = start). Previous text: "Servidor TCI - inicie cada comando, ambas direcciones"
 #: tprefsform.chktcidebug.caption
 #, fuzzy
 msgid "TCI server - log every command, both directions"
-msgstr "Servidor TCI - inicie cada comando, ambas direcciones"
+msgstr "Servidor TCI - registrar cada comando, ambas direcciones"
 
 #: tprefsform.chktciserver.caption
 #, fuzzy
@@ -4266,21 +4293,23 @@ msgstr "Tune con puntos en lugar de un portador sólido"
 msgid "Two radio mode"
 msgstr "Dos modos de radio"
 
+# 2026-10-19: term from the EU DX Contest rules, Spanish edition (EUDXCC, https://www.eudx-contest.com/reglas/): 'previamente conectados' -> 'previamente registrados', s.11 'registro de QSO' (conectados = connected). Previous text: "También emitieron QSOs editados y previamente conectados"
 #: tprefsform.chkudpallqsos.caption
 #, fuzzy
 msgid "Also broadcast edited and previously logged QSOs"
-msgstr "También emitieron QSOs editados y previamente conectados"
+msgstr "También emitieron QSOs editados y previamente registrados"
 
 #: tprefsform.chkudpenabled.caption
 #, fuzzy
 msgid "Broadcast UDP data"
 msgstr "Broadcast UDP data"
 
+# 2026-10-19: term from the EU DX Contest rules, Spanish edition (EUDXCC, https://www.eudx-contest.com/reglas/): 'Llamadas de grabación sin partido de país' -> 'Registrar indicativos sin país coincidente', s.10 'su indicativo de Europa', s.11 'registro' (llamadas de grabacion = recording calls; partido = match game). Previous text: "Llamadas de grabación sin partido de país"
 #: tprefsform.chkunknowncountryfile.caption
 #: usettingscaptions.rs_logging_unknowncountryfile
 #, fuzzy
 msgid "Record callsigns with no country match"
-msgstr "Llamadas de grabación sin partido de país"
+msgstr "Registrar indicativos sin país coincidente"
 
 #: tprefsform.chkupdaterestartfile.caption
 #: usettingscaptions.rs_logging_updaterestartfile
@@ -4293,11 +4322,12 @@ msgstr "Mantenga el archivo de reinicio actualizado"
 msgid "Use the radio control port for paddle and foot switch"
 msgstr "Utilice el puerto de control de radio para palanca y interruptor de pie"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Spanish edition Boletim_CQWS_2026_espanhol.pdf: 'caracteres de llamada' -> 'caracteres del indicativo', p.4 'indicativo'. Previous text: "Enviar audio grabado para caracteres de llamada"
 #: tprefsform.chkuserecordedsigns.caption
 #: usettingscaptions.rs_audio_userecordedsigns
 #, fuzzy
 msgid "Send recorded audio for callsign characters"
-msgstr "Enviar audio grabado para caracteres de llamada"
+msgstr "Enviar audio grabado para caracteres del indicativo"
 
 #: tprefsform.chkvhfbands.caption
 #, fuzzy
@@ -4326,10 +4356,11 @@ msgstr "Permitir comodines en un parcial"
 msgid "Exchange data with WSJT-X"
 msgstr "Datos de intercambio con WSJT-X"
 
+# 2026-10-19: term from the EU DX Contest rules, Spanish edition (EUDXCC, https://www.eudx-contest.com/reglas/): 'Enviar llamada destacando a WSJT-X' -> 'Enviar el resaltado de indicativos a WSJT-X', s.10 'indicativo' (llamada = phone call). Previous text: "Enviar llamada destacando a WSJT-X"
 #: tprefsform.chkwsjtxhighlights.caption
 #, fuzzy
 msgid "Send callsign highlighting to WSJT-X"
-msgstr "Enviar llamada destacando a WSJT-X"
+msgstr "Enviar el resaltado de indicativos a WSJT-X"
 
 #: tprefsform.chkwsjtxradiocontrol.caption
 #, fuzzy
@@ -4432,10 +4463,11 @@ msgstr "Respaldo de registro"
 msgid "A second copy of the log, written as you go.  Put it somewhere that is not the same disk as the log itself, or it protects against nothing worth protecting against."
 msgstr "Una segunda copia del registro, escrita como vas. Ponlo en algún lugar que no sea el mismo disco que el propio tronco, o protege contra nada que vale la pena proteger contra."
 
+# 2026-10-19: term from the EU DX Contest rules, Spanish edition (EUDXCC, https://www.eudx-contest.com/reglas/): 'Caducidad del punto:' -> 'Caducidad del anuncio:', s.2.d 'auto anuncio'; the reviewed 'anuncios' (punto = point). Previous text: "Caducidad del punto:"
 #: tprefsform.lblbandmapdecay.caption
 #, fuzzy
 msgid "Spot expiry:"
-msgstr "Caducidad del punto:"
+msgstr "Caducidad del anuncio:"
 
 #: tprefsform.lblbandmapdecayunits.caption
 #, fuzzy
@@ -4459,15 +4491,17 @@ msgstr "Hz"
 msgid "Display limit:"
 msgstr "Plazo de visualización:"
 
+# 2026-10-19: term from the EU DX Contest rules, Spanish edition (EUDXCC, https://www.eudx-contest.com/reglas/): 'manchas' -> 'anuncios', s.2.d 'auto anuncio'; the reviewed 'anuncios' (manchas = stains). Previous text: "manchas"
 #: tprefsform.lblbandmaplimitunits.caption
 #, fuzzy
 msgid "spots"
-msgstr "manchas"
+msgstr "anuncios"
 
+# 2026-10-19: term from the EU DX Contest rules, Spanish edition (EUDXCC, https://www.eudx-contest.com/reglas/): 'también tiene puntos que' -> 'también tiene anuncios que', s.2.d 'el auto anuncio'; the reviewed 'anuncios' (puntos = points); 'La configuración de la lista está en la página de la lista DX.' -> 'La configuración del clúster está en la página del clúster DX.', s.10 'Clusters'; the reviewed 'Quitar el clúster' (lista = list). Previous text: "Un mapa de banda no necesita un clúster DX: también tiene puntos que usted hace y cualquier cosa que la radio SO2R oye. La configuración de la lista está en la página de la lista DX."
 #: tprefsform.lblbandmapnote.caption
 #, fuzzy
 msgid "A band map does not need a DX cluster: it also holds spots you make yourself and anything the SO2R radio hears.  Cluster settings are on the DX Cluster page."
-msgstr "Un mapa de banda no necesita un clúster DX: también tiene puntos que usted hace y cualquier cosa que la radio SO2R oye. La configuración de la lista está en la página de la lista DX."
+msgstr "Un mapa de banda no necesita un clúster DX: también tiene anuncios que usted hace y cualquier cosa que la radio SO2R oye. La configuración del clúster está en la página del clúster DX."
 
 #: tprefsform.lblbandoutput1.caption
 msgid "Radio 1 band output port"
@@ -4497,25 +4531,28 @@ msgstr "Después de conectarse:"
 msgid "Sent once the login is accepted - filters, set/name, sh/dx.  Separate several with a semicolon."
 msgstr "Enviado una vez que se acepta el iniciar sesión - filtros, set/name, sh/dx.  Separar varios con un punto y coma."
 
+# 2026-10-19: term from the EU DX Contest rules, Spanish edition (EUDXCC, https://www.eudx-contest.com/reglas/): 'Por cada grupo' -> 'Por cada clúster', s.10 'Clusters'; the reviewed 'Quitar el clúster' (grupo = group). Previous text: "Por cada grupo"
 #: tprefsform.lblclusterglobalheading.caption
 #, fuzzy
 msgid "For every cluster"
-msgstr "Por cada grupo"
+msgstr "Por cada clúster"
 
+# 2026-10-19: term from the EU DX Contest rules, Spanish edition (EUDXCC, https://www.eudx-contest.com/reglas/): 'Mis racimos DX' -> 'Mis clústeres DX', s.10 'Clusters'; the reviewed 'clúster' (racimos = bunches of grapes). Previous text: "Mis racimos DX"
 #: tprefsform.lblclusterheading.caption
 #, fuzzy
 msgid "My DX clusters"
-msgstr "Mis racimos DX"
+msgstr "Mis clústeres DX"
 
 #: tprefsform.lblclusterlogin.caption
 #, fuzzy
 msgid "Log in as:"
 msgstr "Inicia sesión como:"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Spanish edition Boletim_CQWS_2026_espanhol.pdf: 'mi llamada de la estación' -> 'mi indicativo de la estación', p.4 'indicativo'. Previous text: "blanco = mi llamada de la estación"
 #: tprefsform.lblclusterloginhint.caption
 #, fuzzy
 msgid "blank = my station callsign"
-msgstr "blanco = mi llamada de la estación"
+msgstr "blanco = mi indicativo de la estación"
 
 #: tprefsform.lblclustername.caption tprefsform.lblrotatorname.caption
 #: tprefsform.lblrotatorname.caption
@@ -4524,10 +4561,11 @@ msgctxt "tprefsform.lblclustername.caption"
 msgid "Name:"
 msgstr "Nombre:"
 
+# 2026-10-19: term from the EU DX Contest rules, Spanish edition (EUDXCC, https://www.eudx-contest.com/reglas/): 'La tala de Telnet' -> 'El registro de Telnet', s.11 'registro de QSO', as the CQWS 'registro' (tala = tree felling); 'visualización de manchas' -> 'visualización de anuncios', s.2.d 'el auto anuncio'; the reviewed 'Borrar todos los anuncios' (manchas = stains). Previous text: "El clúster se conecta por sí solo después de una gota. La tala de Telnet está en la página Logging; la visualización de manchas y el envejecimiento están en Band Map."
 #: tprefsform.lblclusternote.caption
 #, fuzzy
 msgid "The cluster reconnects on its own after a drop.  Telnet logging is on the Logging page; spot display and ageing are on Band Map."
-msgstr "El clúster se conecta por sí solo después de una gota. La tala de Telnet está en la página Logging; la visualización de manchas y el envejecimiento están en Band Map."
+msgstr "El clúster se conecta por sí solo después de una gota. El registro de Telnet está en la página Logging; la visualización de anuncios y el envejecimiento están en Band Map."
 
 #: tprefsform.lblclusterpassword.caption tprefsform.lblhamscorepass.caption
 #: tprefsform.lblnetpassword.caption
@@ -4780,10 +4818,11 @@ msgstr "Carpeta MP3"
 msgid "MP3 player program"
 msgstr "Programa de reproductor MP3"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Spanish edition Boletim_CQWS_2026_espanhol.pdf: 'Callsign:' -> 'Indicativo:', p.4 'El indicativo de llamada', p.10 'Indicativo incorrecto'. Previous text: "Callsign:"
 #: tprefsform.lblmycall.caption
 #, fuzzy
 msgid "Callsign:"
-msgstr "Callsign:"
+msgstr "Indicativo:"
 
 #: tprefsform.lblmycheck.caption
 #, fuzzy
@@ -6590,13 +6629,14 @@ msgctxt "RC_DEVICEMANAGER"
 msgid "Device Manager"
 msgstr "Administrador de dispositivos"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Spanish edition Boletim_CQWS_2026_espanhol.pdf: '[callsign]' -> '[indicativo]', p.4 'indicativo'. Previous text: "SH/DX [callsign]"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_shdx_callsign tr4w/src/lang/tr4w_consts_eng.pas:789
 #: utr4wstrings.rc_shdx_callsign
 #, fuzzy
 msgctxt "RC_SHDX_CALLSIGN"
 msgid "SH/DX [callsign]"
-msgstr "SH/DX [callsign]"
+msgstr "SH/DX [indicativo]"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_login tr4w/src/lang/tr4w_consts_eng.pas:793
@@ -6671,13 +6711,14 @@ msgctxt "TC_HAMSCOREQUEUEINGFULLLOGRESYNC"
 msgid "HamScore: queueing full log resync..."
 msgstr "HamScore: colar el resync del registro completo..."
 
+# 2026-10-19 NY4I approved; was: "La llamada de inicio no parece una llamada"; evidence CQWS bulletin
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_logincalldoeslooklikecallsign
 #: tr4w/src/lang/tr4w_consts_eng.pas:831
 #: utr4wstrings.tc_logincalldoeslooklikecallsign
 msgctxt "TC_LOGINCALLDOESLOOKLIKECALLSIGN"
 msgid "Login call does not look like a callsign"
-msgstr "La llamada de inicio no parece una llamada"
+msgstr "El indicativo de inicio de sesión no parece un indicativo"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_nopotaparksloggedyetsession
@@ -7014,13 +7055,14 @@ msgctxt "TC_SELECTSPOTRETURNLEFTORRIGHTARROWSE"
 msgid "Select spot.  RETURN, left or right arrow to select.  ESCAPE to exit."
 msgstr "Seleccione el lugar. RETURN, flecha izquierda o derecha para seleccionar. CESPAP para salir."
 
+# 2026-10-19 NY4I approved; was: "ENTRA UNA CALENDA. ESPACIO para el control. Alt-H por ayuda."; evidence CQWS bulletin
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_entercallsignspacedupecheckalthhel
 #: tr4w/src/lang/tr4w_consts_eng.pas:875
 #: utr4wstrings.tc_entercallsignspacedupecheckalthhel
 msgctxt "TC_ENTERCALLSIGNSPACEDUPECHECKALTHHEL"
 msgid "ENTER a callsign.  SPACE for dupecheck.  Alt-H for help."
-msgstr "ENTRA UNA CALENDA. ESPACIO para el control. Alt-H por ayuda."
+msgstr "INTRODUZCA un indicativo. ESPACIO para comprobar duplicados. Alt-H para ayuda."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_continueenteringcharactersautoterm
@@ -7038,13 +7080,14 @@ msgctxt "TC_CONTINUEENTERINGCHARACTERSPRESSRET"
 msgid "Continue entering characters and press RETURN when done."
 msgstr "Continuar entrando personajes y presionar RETURN cuando esté hecho."
 
+# 2026-10-19 NY4I approved; was: "Entra en intercambio. Presione ENTER para iniciar sesión, ESCAPE para abortar QSO."; evidence CQWS bulletin
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_enterexchangepressenterlogescapeab
 #: tr4w/src/lang/tr4w_consts_eng.pas:878
 #: utr4wstrings.tc_enterexchangepressenterlogescapeab
 msgctxt "TC_ENTEREXCHANGEPRESSENTERLOGESCAPEAB"
 msgid "Enter exchange.  Press ENTER to log, ESCAPE to abort QSO."
-msgstr "Entra en intercambio. Presione ENTER para iniciar sesión, ESCAPE para abortar QSO."
+msgstr "Introduzca el intercambio. Pulse ENTER para registrar, ESCAPE para cancelar el QSO."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_relaycontrolportpaddleport
@@ -7408,10 +7451,11 @@ msgstr "Abrir una configuración existente"
 msgid "Start a new contest"
 msgstr "Iniciar un nuevo concurso"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Spanish edition Boletim_CQWS_2026_espanhol.pdf: 'CONTEST' -> 'CONCURSO', p.2 'un concurso de radioaficionados'. Previous text: "CONTEST"
 #: tfrmnewcontest.lblcontest.caption
 #, fuzzy
 msgid "CONTEST"
-msgstr "CONTEST"
+msgstr "CONCURSO"
 
 #: tfrmnewcontest.lblmycall.caption
 #, fuzzy
@@ -7631,10 +7675,12 @@ msgstr "Configure..."
 msgid "lblNoClusters"
 msgstr ""
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Spanish edition Boletim_CQWS_2026_espanhol.pdf: 'el callsign aparezca' -> 'el indicativo aparezca', p.4 'indicativo'. Previous text: "Le permite hacer doble clic en un lugar en DXLab SpotCollector y hacer que el callsign aparezca en el campo de llamadas de TR4W. Esto NO afecta los puntos de su grupo DX - los que llegan si esto está marcado o no."
+# 2026-10-19: term from the EU DX Contest rules, Spanish edition (EUDXCC, https://www.eudx-contest.com/reglas/): 'en un lugar en DXLab' -> 'en un anuncio en DXLab', s.2.d 'el auto anuncio'; the reviewed 'anuncios' (lugar = place); 'los puntos de su grupo DX' -> 'los anuncios de su clúster DX', s.2.d 'auto anuncio', s.10 'Clusters'; the reviewed 'Quitar el clúster' (puntos = points, grupo = group). Previous text: "Le permite hacer doble clic en un lugar en DXLab SpotCollector y hacer que el indicativo aparezca en el campo de llamadas de TR4W. Esto NO afecta los puntos de su grupo DX - los que llegan si esto está marcado o no."
 #: tprefsform.lblspotcollectorhint.caption
 #, fuzzy
 msgid "Lets you double-click a spot in DXLab SpotCollector and have the callsign appear in TR4W's call field.  This does NOT affect spots from your DX cluster - those arrive whether this is ticked or not."
-msgstr "Le permite hacer doble clic en un lugar en DXLab SpotCollector y hacer que el callsign aparezca en el campo de llamadas de TR4W. Esto NO afecta los puntos de su grupo DX - los que llegan si esto está marcado o no."
+msgstr "Le permite hacer doble clic en un anuncio en DXLab SpotCollector y hacer que el indicativo aparezca en el campo de llamadas de TR4W. Esto NO afecta los anuncios de su clúster DX - los que llegan si esto está marcado o no."
 
 #: usettingscaptions.rs_advanced_handlogmode
 #, fuzzy
@@ -7656,10 +7702,11 @@ msgstr "Beep Enable"
 msgid "Column Autosize"
 msgstr "Columna Autosize"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Spanish edition Boletim_CQWS_2026_espanhol.pdf: 'de llamada' -> 'de indicativo', p.4 'indicativo'. Previous text: "Máscara de llamada completa"
 #: usettingscaptions.rs_appearance_ctrlj_completecallsignmask
 #, fuzzy
 msgid "Complete Callsign Mask"
-msgstr "Máscara de llamada completa"
+msgstr "Máscara de indicativo completa"
 
 #: usettingscaptions.rs_appearance_ctrlj_contactsperpage
 #, fuzzy
@@ -7776,10 +7823,11 @@ msgstr "Categoría"
 msgid "Category-Band"
 msgstr "Category-Band"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Spanish edition Boletim_CQWS_2026_espanhol.pdf: 'Categoría-Mode' -> 'Categoría-Modo', p.3 'MODOS Y BANDAS'. Previous text: "Categoría-Mode"
 #: usettingscaptions.rs_contest_categorymode
 #, fuzzy
 msgid "Category-Mode"
-msgstr "Categoría-Mode"
+msgstr "Categoría-Modo"
 
 #: usettingscaptions.rs_contest_categoryoperator
 #, fuzzy
@@ -7791,10 +7839,11 @@ msgstr "Categoría-Operador"
 msgid "Category-Overlay"
 msgstr "Categoría-Overlay"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Spanish edition Boletim_CQWS_2026_espanhol.pdf: 'Categoría-Power' -> 'Categoría-Potencia', p.3 'potencia de salida'. Previous text: "Categoría-Power"
 #: usettingscaptions.rs_contest_categorypower
 #, fuzzy
 msgid "Category-Power"
-msgstr "Categoría-Power"
+msgstr "Categoría-Potencia"
 
 #: usettingscaptions.rs_contest_categorytransmitter
 #, fuzzy
@@ -7836,10 +7885,11 @@ msgstr "Multiplicador DX"
 msgid "Exchange Memory Enable"
 msgstr "Intercambio de memoria"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Spanish edition Boletim_CQWS_2026_espanhol.pdf: 'Cambio recibido' -> 'Intercambio recibido', p.5 'INTERCAMBIO enviados y recibidos', p.3 'el intercambio enviado'. Previous text: "Cambio recibido"
 #: usettingscaptions.rs_contest_exchangereceived
 #, fuzzy
 msgid "Exchange Received"
-msgstr "Cambio recibido"
+msgstr "Intercambio recibido"
 
 #: usettingscaptions.rs_contest_gridmapcenter
 #, fuzzy
@@ -8156,10 +8206,11 @@ msgstr "Paso de velocidad"
 msgid "Allow Auto Update"
 msgstr "Permitir la actualización automática"
 
+# 2026-10-19: term from the EU DX Contest rules, Spanish edition (EUDXCC, https://www.eudx-contest.com/reglas/): 'Actualización de llamadas Permite' -> 'Habilitar actualización de indicativos', s.10 'indicativo' (llamadas = phone calls). Previous text: "Actualización de llamadas Permite"
 #: usettingscaptions.rs_files_ctrlj_callsignupdateenable
 #, fuzzy
 msgid "Callsign Update Enable"
-msgstr "Actualización de llamadas Permite"
+msgstr "Habilitar actualización de indicativos"
 
 #: usettingscaptions.rs_files_ctrlj_countryinformationfile
 #, fuzzy
@@ -8296,10 +8347,11 @@ msgstr "Modo digital"
 msgid "Distance Mode"
 msgstr "Modo de distancia"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Spanish edition Boletim_CQWS_2026_espanhol.pdf: 'tuberías' -> 'duplicados', p.10 'QSO duplicado' (tuberias = pipes). Previous text: "Sonido de control de tuberías"
 #: usettingscaptions.rs_operating_ctrlj_dupechecksound
 #, fuzzy
 msgid "Dupe Check Sound"
-msgstr "Sonido de control de tuberías"
+msgstr "Sonido de control de duplicados"
 
 #: usettingscaptions.rs_operating_ctrlj_dupesheetautoreset
 #, fuzzy
@@ -8341,10 +8393,11 @@ msgstr "Log Frequency Enable"
 msgid "Log Sub Title"
 msgstr "Subtítulo"
 
+# 2026-10-19: term from the EU DX Contest rules, Spanish edition (EUDXCC, https://www.eudx-contest.com/reglas/): 'Central Callsign' -> 'Indicativo principal', s.10 'indicativo'. Previous text: "Central Callsign"
 #: usettingscaptions.rs_operating_ctrlj_maincallsign
 #, fuzzy
 msgid "Main Callsign"
-msgstr "Central Callsign"
+msgstr "Indicativo principal"
 
 #: usettingscaptions.rs_operating_ctrlj_possiblecallacceptkey
 #, fuzzy
@@ -8471,10 +8524,11 @@ msgstr "Mp3 Recorder Duración"
 msgid "TRCLUSTER.DAT was not found beside the program, so the list is empty. Type the server as host:port, for example dxc.nc7j.com:7373."
 msgstr "TRCLUSTER.DAT no fue encontrado junto al programa, por lo que la lista está vacía. Escriba el servidor como host:port, por ejemplo dxc.nc7j.com:7373."
 
+# 2026-10-19: term from the EU DX Contest rules, Spanish edition (EUDXCC, https://www.eudx-contest.com/reglas/): 'grupos DX' -> 'clústeres DX', s.10 'Clusters'; the reviewed 'clúster' (grupos = groups). Previous text: "Aún no se definen grupos DX -- haga clic en Configurar para añadir uno."
 #: utr4wstrings.tc_nodxclustersdefined
 #, fuzzy
 msgid "No DX clusters are defined yet -- click Configure to add one."
-msgstr "Aún no se definen grupos DX -- haga clic en Configurar para añadir uno."
+msgstr "Aún no se definen clústeres DX -- haga clic en Configurar para añadir uno."
 
 #: uappstrings.sexchangenoprecedence
 #, fuzzy
@@ -8555,15 +8609,17 @@ msgstr "(MY COUNTRY = %s)"
 msgid "(MY COUNTRY is empty)"
 msgstr "(MY COUNTRY está vacío)"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Este concurso está pidiendo un estado, provincia o sección porque MI PAIS %s."
 #: uappstrings.sexchangemodefromcountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is %s."
-msgstr "Este concurso está pidiendo un estado, provincia o sección porque MI PAIS %s."
+msgstr "Este concurso pide un estado, provincia o sección porque MY COUNTRY es %s."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Este concurso está pidiendo un estado, provincia o sección porque MI PAIS está vacío."
 #: uappstrings.sexchangemodefromemptycountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is empty."
-msgstr "Este concurso está pidiendo un estado, provincia o sección porque MI PAIS está vacío."
+msgstr "Este concurso pide un estado, provincia o sección porque MY COUNTRY está vacío."
 
 #: uappstrings.sfilenamecamefromsetting
 #, fuzzy
@@ -8652,6 +8708,7 @@ msgstr ""
 "\n"
 "%sTR4W seguirá corriendo y seguirá tratando de abrirlo. Hasta que pueda, nada de esta sesión está escrito al registro."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "ID de computadora %s ya está en uso por otra estación en esta red.\n\nCambio ID a una carta que ninguna otra estación está usando, luego reconecte."
 #: uappstrings.snetcomputeridinuse
 #, fuzzy
 msgid ""
@@ -8659,9 +8716,9 @@ msgid ""
 "\n"
 "Change COMPUTER ID to a letter no other station is using, then reconnect."
 msgstr ""
-"ID de computadora %s ya está en uso por otra estación en esta red.\n"
+"El ID de computadora %s ya lo está usando otra estación de esta red.\n"
 "\n"
-"Cambio ID a una carta que ninguna otra estación está usando, luego reconecte."
+"Cambie COMPUTER ID a una letra que ninguna otra estación esté usando y vuelva a conectarse."
 
 #: uappstrings.snewcontestin7qpnecountyorstate
 #, fuzzy
@@ -8688,30 +8745,35 @@ msgstr "Establezca estos en Preferencias > Station, luego reiniciar TR4W: son le
 msgid "This contest is set up, but TR4W is missing information it needs:"
 msgstr "Este concurso está establecido, pero TR4W falta información que necesita:"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Mi llamada está vacía. TR4W no puede funcionar fuera de su país, continente o zona sin ella, y nada que dependa de ellos será correcto."
 #: uappstrings.sreadinessmycallmissing
 #, fuzzy
 msgid "MY CALL is empty. TR4W cannot work out your country, continent or zone without it, and nothing that depends on them will be right."
-msgstr "Mi llamada está vacía. TR4W no puede funcionar fuera de su país, continente o zona sin ella, y nada que dependa de ellos será correcto."
+msgstr "MY CALL está vacío. Sin él, TR4W no puede determinar su país, continente ni zona, y nada que dependa de ellos será correcto."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Mi país está vacío. Normalmente se resuelve de MI LL a través de CTY.DAT. Hasta que tenga un valor TR4W trata esta estación como DX - en ARRL DX que significa que pedirá a cada estación para un estado o provincia y rechazará un poder como K o 100."
 #: uappstrings.sreadinessmycountrymissing
 #, fuzzy
 msgid "MY COUNTRY is empty. It is normally worked out from MY CALL through CTY.DAT. Until it has a value TR4W treats this station as DX -- in ARRL DX that means it will ask every station for a state or province and refuse a power such as K or 100."
-msgstr "Mi país está vacío. Normalmente se resuelve de MI LL a través de CTY.DAT. Hasta que tenga un valor TR4W trata esta estación como DX - en ARRL DX que significa que pedirá a cada estación para un estado o provincia y rechazará un poder como K o 100."
+msgstr "MY COUNTRY está vacío. Normalmente se deduce de MY CALL mediante CTY.DAT. Mientras no tenga un valor, TR4W trata esta estación como DX -- en el ARRL DX eso significa que pedirá a cada estación un estado o provincia y rechazará una potencia como K o 100."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "MI GRID está vacío y este concurso envía su cuadrado de red."
 #: uappstrings.sreadinessmygridmissing
 #, fuzzy
 msgid "MY GRID is empty and this contest sends your grid square."
-msgstr "MI GRID está vacío y este concurso envía su cuadrado de red."
+msgstr "MY GRID está vacío y este concurso envía su cuadrícula."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "MI ESTADO está vacío y este concurso envía su estado, provincia o sección. TR4W enviará un número de serie en su lugar."
 #: uappstrings.sreadinessmystatemissing
 #, fuzzy
 msgid "MY STATE is empty and this contest sends your state, province or section. TR4W will send a serial number instead."
-msgstr "MI ESTADO está vacío y este concurso envía su estado, provincia o sección. TR4W enviará un número de serie en su lugar."
+msgstr "MY STATE está vacío y este concurso envía su estado, provincia o sección. TR4W enviará en su lugar un número de serie."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "MI ZONA está vacía y este concurso envía su zona."
 #: uappstrings.sreadinessmyzonemissing
 #, fuzzy
 msgid "MY ZONE is empty and this contest sends your zone."
-msgstr "MI ZONA está vacía y este concurso envía su zona."
+msgstr "MY ZONE está vacío y este concurso envía su zona."
 
 #: uappstrings.sverifyallpassed
 #, fuzzy
@@ -8858,4 +8920,34 @@ msgstr "%d QSO(s) no nombró ninguna estación nuestra y se les dio este concurs
 #, fuzzy
 msgid "Show inactive contests"
 msgstr "Mostrar concursos inactivos"
+
+#: uappstrings.slatestcontestdetail
+#, fuzzy
+msgid "%0:s - %1:s"
+msgstr "%0:s - %1:s"
+
+#: uappstrings.slatestcontestline
+#, fuzzy
+msgid "%0:s %1:d"
+msgstr "%0:s %1:d"
+
+#: uappstrings.snewcontestfilescall
+#, fuzzy
+msgid "Call"
+msgstr "Indicativo"
+
+#: uappstrings.snewcontestfilescontest
+#, fuzzy
+msgid "Contest"
+msgstr "Concurso"
+
+#: uappstrings.snewcontestfilesfile
+#, fuzzy
+msgid "File"
+msgstr "Archivo"
+
+#: uappstrings.snewcontestfilesyear
+#, fuzzy
+msgid "Year"
+msgstr "Año"
 

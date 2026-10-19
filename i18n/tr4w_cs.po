@@ -85,13 +85,14 @@ msgctxt "TC_FREQ_ZERO"
 msgid "ERROR: Invalid Frequency logged"
 msgstr "CHYBA: Zalogována neplatná frekvence"
 
+# 2026-10-19 command name restored to English (NY4I ruling: command names are never translated, even in reviewed text); was: "ZOBRAZIT FREKVENCI V LOGU je vypnuto"
 #. Section: General
 #: utr4wstrings:tc_freq_off
 #: tr4w/src/lang/tr4w_consts_eng.pas:16
 #: utr4wstrings.tc_freq_off
 msgctxt "TC_FREQ_OFF"
 msgid "SHOW FREQUENCY IN LOG is turned off"
-msgstr "ZOBRAZIT FREKVENCI V LOGU je vypnuto"
+msgstr "SHOW FREQUENCY IN LOG je vypnuto"
 
 #. Section: General
 #: utr4wstrings:tc_checkcallsign
@@ -1378,13 +1379,14 @@ msgctxt "TC_CONNECTINGTO"
 msgid "Connecting to "
 msgstr "Připojuje se k "
 
+# 2026-10-19 command name restored to English (NY4I ruling: command names are never translated, even in reviewed text); was: "Připojení k serveru TR4W neúspěšné. Ověř heslo!"
 #. Section: UNET
 #: utr4wstrings:tc_connecttotr4wserverfailed
 #: tr4w/src/lang/tr4w_consts_eng.pas:209
 #: utr4wstrings.tc_connecttotr4wserverfailed
 msgctxt "TC_CONNECTTOTR4WSERVERFAILED"
 msgid "Connect to TR4WSERVER failed. Check SERVER PASSWORD value!!"
-msgstr "Připojení k serveru TR4W neúspěšné. Ověř heslo!"
+msgstr "Připojení k serveru TR4W neúspěšné. Ověř SERVER PASSWORD!"
 
 #. Section: UNET
 #: utr4wstrings:tc_connectedto
@@ -2593,13 +2595,14 @@ msgctxt "TC_INVALIDREMINDERDATE"
 msgid "Invalid reminder date!!"
 msgstr "Neplatné datum připomínky!"
 
+# 2026-10-19 command name restored to English (NY4I ruling: command names are never translated, even in reviewed text); was: "Příliš mnoho TOTAL SCORE MSG!"
 #. Section: CFGCMD
 #: utr4wstrings:tc_toomanytotalscoremessages
 #: tr4w/src/lang/tr4w_consts_eng.pas:453
 #: utr4wstrings.tc_toomanytotalscoremessages
 msgctxt "TC_TOOMANYTOTALSCOREMESSAGES"
 msgid "Too many TOTAL SCORE MESSAGEs!!"
-msgstr "Příliš mnoho TOTAL SCORE MSG!"
+msgstr "Příliš mnoho TOTAL SCORE MESSAGE!"
 
 #. Section: CFGCMD
 #: utr4wstrings:tc_thefirstcommandinconfigfilemustbe
@@ -7280,6 +7283,7 @@ msgctxt "TC_ERROROFFERINGCOMMANDERPROXYTCPPORT"
 msgid "Error offering Commander proxy TCP Port"
 msgstr "Chyba při nabízení Commander proxy TCP Port"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Volba PTT VIA COMRANDS (CTRL-J) musí platit pro použití WSJT-X - Nastavení na true"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_pttviacommandsctrljoptionmusttruew
 #: tr4w/src/lang/tr4w_consts_eng.pas:852
@@ -7287,7 +7291,7 @@ msgstr "Chyba při nabízení Commander proxy TCP Port"
 #, fuzzy
 msgctxt "TC_PTTVIACOMMANDSCTRLJOPTIONMUSTTRUEW"
 msgid "PTT VIA COMMANDS (CTRL-J) option must be true for WSJT-X use - Setting to true"
-msgstr "Volba PTT VIA COMRANDS (CTRL-J) musí platit pro použití WSJT-X - Nastavení na true"
+msgstr "Volba PTT VIA COMMANDS (CTRL-J) musí platit pro použití WSJT-X - Nastavení na true"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_cannotdisablesplittransmitslicecre
@@ -9046,25 +9050,29 @@ msgstr ""
 "\n"
 "Žádost byla zamítnuta spíše než zaslána neověřená. Vypnout preference > Síť > ověřte certifikáty serveru, pokud chcete pokračovat bez kontroly."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(MY country = %s)"
 #: uappstrings.sexchangemodebriefcountry
 #, fuzzy
 msgid "(MY COUNTRY = %s)"
-msgstr "(MY country = %s)"
+msgstr "(MY COUNTRY = %s)"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(Moje země je prázdná)"
 #: uappstrings.sexchangemodebriefemptycountry
 #, fuzzy
 msgid "(MY COUNTRY is empty)"
-msgstr "(Moje země je prázdná)"
+msgstr "(MY COUNTRY není vyplněno)"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Tato soutěž žádá stát, provincii nebo sekci, protože MÁ ZEMĚ je %s."
 #: uappstrings.sexchangemodefromcountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is %s."
-msgstr "Tato soutěž žádá stát, provincii nebo sekci, protože MÁ ZEMĚ je %s."
+msgstr "Tato soutěž požaduje stát, provincii nebo sekci, protože MY COUNTRY je %s."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Tato soutěž žádá stát, provincii nebo sekci, protože MÁ ZEMĚ je prázdná."
 #: uappstrings.sexchangemodefromemptycountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is empty."
-msgstr "Tato soutěž žádá stát, provincii nebo sekci, protože MÁ ZEMĚ je prázdná."
+msgstr "Tato soutěž požaduje stát, provincii nebo sekci, protože MY COUNTRY je prázdné."
 
 #: uappstrings.sfilenamecamefromsetting
 #, fuzzy
@@ -9153,6 +9161,7 @@ msgstr ""
 "\n"
 "%sTR4W bude dál utíkat a snažit se ho otevřít. Dokud to nebude možné, nic z tohoto sezení není zapsáno do deníku."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Identifikace počítače %s je již v provozu jinou stanicí v této síti.\n\nZměnit počítač Identifikace k dopisu, který žádná jiná stanice nepoužívá, pak se znovu spojí."
 #: uappstrings.snetcomputeridinuse
 #, fuzzy
 msgid ""
@@ -9160,9 +9169,9 @@ msgid ""
 "\n"
 "Change COMPUTER ID to a letter no other station is using, then reconnect."
 msgstr ""
-"Identifikace počítače %s je již v provozu jinou stanicí v této síti.\n"
+"ID počítače %s již v této síti používá jiná stanice.\n"
 "\n"
-"Změnit počítač Identifikace k dopisu, který žádná jiná stanice nepoužívá, pak se znovu spojí."
+"Změňte COMPUTER ID na písmeno, které žádná jiná stanice nepoužívá, a znovu se připojte."
 
 #: uappstrings.snewcontestin7qpnecountyorstate
 #, fuzzy
@@ -9189,30 +9198,35 @@ msgstr "Nastavte je v Preferences > Station, pak restartujte TR4W: budou přečt
 msgid "This contest is set up, but TR4W is missing information it needs:"
 msgstr "Tato soutěž je nastavena, ale TR4W chybí informace, které potřebuje:"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Můj hovor je prázdný. TR4W nemůže vyřešit vaši zemi, kontinent nebo zónu bez ní, a nic, co na nich závisí, nebude správné."
 #: uappstrings.sreadinessmycallmissing
 #, fuzzy
 msgid "MY CALL is empty. TR4W cannot work out your country, continent or zone without it, and nothing that depends on them will be right."
-msgstr "Můj hovor je prázdný. TR4W nemůže vyřešit vaši zemi, kontinent nebo zónu bez ní, a nic, co na nich závisí, nebude správné."
+msgstr "MY CALL je prázdné. Bez něj TR4W nedokáže určit vaši zemi, kontinent ani zónu a nic, co na nich závisí, nebude správně."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Moje země je prázdná. Obvykle se to pracuje z MÉHO CALL přes CTY.DAT. Dokud nebude mít hodnotu TR4W zachází s touto stanicí jako s DX -- v ARRL DX znamená, že požádá každou stanici o stát nebo provincii a odmítne moc jako K nebo100."
 #: uappstrings.sreadinessmycountrymissing
 #, fuzzy
 msgid "MY COUNTRY is empty. It is normally worked out from MY CALL through CTY.DAT. Until it has a value TR4W treats this station as DX -- in ARRL DX that means it will ask every station for a state or province and refuse a power such as K or 100."
-msgstr "Moje země je prázdná. Obvykle se to pracuje z MÉHO CALL přes CTY.DAT. Dokud nebude mít hodnotu TR4W zachází s touto stanicí jako s DX -- v ARRL DX znamená, že požádá každou stanici o stát nebo provincii a odmítne moc jako K nebo100."
+msgstr "MY COUNTRY je prázdné. Obvykle se určuje z MY CALL pomocí CTY.DAT. Dokud nemá hodnotu, TR4W považuje tuto stanici za DX -- v ARRL DX to znamená, že bude od každé stanice požadovat stát nebo provincii a odmítne výkon jako K nebo 100."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "MŮJ GRID je prázdný a tahle soutěž ti pošle čtverec."
 #: uappstrings.sreadinessmygridmissing
 #, fuzzy
 msgid "MY GRID is empty and this contest sends your grid square."
-msgstr "MŮJ GRID je prázdný a tahle soutěž ti pošle čtverec."
+msgstr "MY GRID je prázdné a tato soutěž odesílá váš lokátor."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Můj stát je prázdný a tato soutěž posílá váš stát, provincii nebo sekci. TR4W místo toho pošle sériové číslo."
 #: uappstrings.sreadinessmystatemissing
 #, fuzzy
 msgid "MY STATE is empty and this contest sends your state, province or section. TR4W will send a serial number instead."
-msgstr "Můj stát je prázdný a tato soutěž posílá váš stát, provincii nebo sekci. TR4W místo toho pošle sériové číslo."
+msgstr "MY STATE je prázdné a tato soutěž odesílá váš stát, provincii nebo sekci. TR4W místo toho odešle pořadové číslo."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Moje zóna je prázdná a tahle soutěž posílá tvou zónu."
 #: uappstrings.sreadinessmyzonemissing
 #, fuzzy
 msgid "MY ZONE is empty and this contest sends your zone."
-msgstr "Moje zóna je prázdná a tahle soutěž posílá tvou zónu."
+msgstr "MY ZONE je prázdné a tato soutěž odesílá vaši zónu."
 
 #: uappstrings.sverifyallpassed
 #, fuzzy
@@ -9359,4 +9373,34 @@ msgstr "%d QSO (s) pojmenoval žádnou naši stanici a dostal tuto soutěž."
 #, fuzzy
 msgid "Show inactive contests"
 msgstr "Zobrazit neaktivní soutěže"
+
+#: uappstrings.slatestcontestdetail
+#, fuzzy
+msgid "%0:s - %1:s"
+msgstr "%0:s - %1:s"
+
+#: uappstrings.slatestcontestline
+#, fuzzy
+msgid "%0:s %1:d"
+msgstr "%0:s %1:d"
+
+#: uappstrings.snewcontestfilescall
+#, fuzzy
+msgid "Call"
+msgstr "Značka"
+
+#: uappstrings.snewcontestfilescontest
+#, fuzzy
+msgid "Contest"
+msgstr "Soutěž"
+
+#: uappstrings.snewcontestfilesfile
+#, fuzzy
+msgid "File"
+msgstr "Soubor"
+
+#: uappstrings.snewcontestfilesyear
+#, fuzzy
+msgid "Year"
+msgstr "Rok"
 

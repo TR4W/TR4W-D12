@@ -84,13 +84,14 @@ msgctxt "TC_FREQ_ZERO"
 msgid "ERROR: Invalid Frequency logged"
 msgstr "ОШИБКА: недопустимое значение частоты для регистрации"
 
+# 2026-10-19 command name restored to English (NY4I ruling: command names are never translated, even in reviewed text); was: "Запись значения частоты САТ в лог отключена"
 #. Section: General
 #: utr4wstrings:tc_freq_off
 #: tr4w/src/lang/tr4w_consts_eng.pas:16
 #: utr4wstrings.tc_freq_off
 msgctxt "TC_FREQ_OFF"
 msgid "SHOW FREQUENCY IN LOG is turned off"
-msgstr "Запись значения частоты САТ в лог отключена"
+msgstr "SHOW FREQUENCY IN LOG отключена"
 
 #. Section: General
 #: utr4wstrings:tc_checkcallsign
@@ -593,6 +594,7 @@ msgstr "EI/GI, введите ваше графство"
 # 2026-10-16: the English changed from "Latest config file" to "Last Contest" -- the button reopens the contest's database, not a config file.
 # Composed from this catalogue's own words, please review: last = 'Last status:' -> 'Последний статус:'; contest = 'Start a new contest' -> 'Начать новый конкурс'.
 # Previous translation (of the old English): "Последний файл конфигурации"
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "Последний конкурс"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_latest_config_file
 #: tr4w/src/lang/tr4w_consts_eng.pas:100
@@ -601,7 +603,7 @@ msgstr "EI/GI, введите ваше графство"
 #, fuzzy
 msgctxt "TC_LATEST_CONFIG_FILE"
 msgid "Last Contest"
-msgstr "Последний конкурс"
+msgstr "Последний контест"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_openconfigurationfile
@@ -3136,22 +3138,25 @@ msgctxt "RC_PRESSMKYWTR"
 msgid "Press the memory key you want to repeat:"
 msgstr "Функц. клавиша, которую нужно повторять"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Карта группы' -> 'Карта диапазона', s.2.g 'Диапазоны'; the reviewed 'Карта диапазона' (группа = group). Previous text: "Карта группы"
 #: tfrmbandmap.caption
 #: tprefsform.lblbandmapheading.caption
 #, fuzzy
 msgctxt "tfrmbandmap.caption"
 msgid "Band map"
-msgstr "Карта группы"
+msgstr "Карта диапазона"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'ВСЕ ЗАПАДЫ' -> 'ВСЕ ДИАПАЗОНЫ', s.2.g 'Диапазоны' (запады = wests). Previous text: "BAND MAP ВСЕ ЗАПАДЫ"
 #: tfrmbandmap.miallbands.caption
 #, fuzzy
 msgid "BAND MAP ALL BANDS"
-msgstr "BAND MAP ВСЕ ЗАПАДЫ"
+msgstr "BAND MAP ВСЕ ДИАПАЗОНЫ"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'ВСЕ МОДЕЛИ' -> 'ВСЕ РЕЖИМЫ', s.10 'диапазоны и режимы работы' (модели = models). Previous text: "BAND MAP ВСЕ МОДЕЛИ"
 #: tfrmbandmap.miallmodes.caption
 #, fuzzy
 msgid "BAND MAP ALL MODES"
-msgstr "BAND MAP ВСЕ МОДЕЛИ"
+msgstr "BAND MAP ВСЕ РЕЖИМЫ"
 
 #. Section: UEDITMESSAGE
 #: tfrmbandmap.mideletespot.caption
@@ -3167,20 +3172,23 @@ msgstr "Удалить выделенный спот"
 msgid "BAND MAP DISPLAY CQ"
 msgstr "BAND MAP ОТМЕНЯЕТ CQ"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'БАНДА-КАРТА-ПАПА-ДЕСПЛАЙ' -> 'BAND MAP ПОКАЗ ПОВТОРОВ', s.8 'Повторы'; the reviewed 'Лист повторов' (= 'gang-map-daddy-desplay'). Previous text: "БАНДА-КАРТА-ПАПА-ДЕСПЛАЙ"
 #: tfrmbandmap.midupedisplay.caption
 #, fuzzy
 msgid "BAND MAP DUPE DISPLAY"
-msgstr "БАНДА-КАРТА-ПАПА-ДЕСПЛАЙ"
+msgstr "BAND MAP ПОКАЗ ПОВТОРОВ"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'РАСПРОСТРАНЯЕТСЯ ТОЛЬКО' -> 'ТОЛЬКО МНОЖИТЕЛИ', s.5 'Множители' (= 'spreads only'). Previous text: "BAND MAP РАСПРОСТРАНЯЕТСЯ ТОЛЬКО"
 #: tfrmbandmap.mimultsonly.caption
 #, fuzzy
 msgid "BAND MAP MULTS ONLY"
-msgstr "BAND MAP РАСПРОСТРАНЯЕТСЯ ТОЛЬКО"
+msgstr "BAND MAP ТОЛЬКО МНОЖИТЕЛИ"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Отправить сообщение на' -> 'Отправить спот на', s.2.d '«проспотить»'; the reviewed 'Отправить спот' (the spot was dropped). Previous text: "Отправить сообщение на неактивное радио"
 #: tfrmbandmap.miqsyinactive.caption
 #, fuzzy
 msgid "Send spot to inactive radio"
-msgstr "Отправить сообщение на неактивное радио"
+msgstr "Отправить спот на неактивное радио"
 
 #. Section: UEDITMESSAGE
 #: tfrmbandmap.miremoveall.caption
@@ -3215,10 +3223,11 @@ msgstr "Монитор маяков"
 msgid "CT1BOH information"
 msgstr "CT1BOH Информация"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Листовка' -> 'Лист повторов', s.8 'Повторы'; the reviewed 'Лист повторов' (листовка = leaflet). Previous text: "Листовка"
 #: tfrmdupesheet.caption
 #, fuzzy
 msgid "Dupe sheet"
-msgstr "Листовка"
+msgstr "Лист повторов"
 
 #. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Section: UEDITMESSAGE
@@ -3287,20 +3296,22 @@ msgstr "&Deleted"
 msgid "Domestic Mult"
 msgstr "Домашний мульт"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Дурак' -> 'Повтор', s.8 'Повторы' (дурак = fool). Previous text: "Дурак"
 #: tfrmeditqso.chkdupe.caption
 #, fuzzy
 msgid "Dupe"
-msgstr "Дурак"
+msgstr "Повтор"
 
 #: tfrmeditqso.chkdxmult.caption
 #, fuzzy
 msgid "DX Mult"
 msgstr "DX Mult"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Запретить культ' -> 'Запретить множители', s.5 'Множители' (культ = cult). Previous text: "Запретить культ"
 #: tfrmeditqso.chkinhibitmults.caption
 #, fuzzy
 msgid "Inhibit Mults"
-msgstr "Запретить культ"
+msgstr "Запретить множители"
 
 #: tfrmeditqso.chknamesent.caption
 #, fuzzy
@@ -3436,10 +3447,11 @@ msgstr "Оператор"
 msgid "Postal Code"
 msgstr "Почтовый кодекс"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Власть' -> 'Мощность', s.2.c 'мощность до 100 Вт' (власть = political power). Previous text: "Власть"
 #: tfrmeditqso.lblpower.caption
 #, fuzzy
 msgid "Power"
-msgstr "Власть"
+msgstr "Мощность"
 
 #: tfrmeditqso.lblprecedence.caption
 #, fuzzy
@@ -3670,10 +3682,11 @@ msgstr "Хвост"
 msgid "Weight"
 msgstr "Вес"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Очистить все бревна' -> 'Очистить все логи', s.12 'Логи принимаются'; the reviewed 'Очистить лог' (бревна = wooden logs). Previous text: "Очистить все бревна"
 #: tfrmlogcompare.btnclearalllogs.caption
 #, fuzzy
 msgid "Clear all logs"
-msgstr "Очистить все бревна"
+msgstr "Очистить все логи"
 
 #: tfrmlogcompare.btnexit.caption
 #, fuzzy
@@ -3789,10 +3802,11 @@ msgctxt "RC_GOTOGS"
 msgid "Show scores"
 msgstr "Показать результаты"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Почтовые баллы' -> 'Отправить результаты', s.6 'окончательный результат'; the reviewed 'Отправить результат' (= 'postal points'). Previous text: "Почтовые баллы"
 #: tfrmpostscores.caption
 #, fuzzy
 msgid "Post scores"
-msgstr "Почтовые баллы"
+msgstr "Отправить результаты"
 
 #. Section: UEDITMESSAGE
 #: tfrmprogrammessage.btncq.caption
@@ -3870,10 +3884,11 @@ msgstr "VFO B"
 msgid "XIT"
 msgstr "XIT"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Оставшиеся грибы' -> 'Оставшиеся множители', s.5 'Множители' (грибы = mushrooms). Previous text: "Оставшиеся грибы"
 #: tfrmremmults.caption
 #, fuzzy
 msgid "Remaining mults"
-msgstr "Оставшиеся грибы"
+msgstr "Оставшиеся множители"
 
 #. Section: UEDITMESSAGE
 #: tfrmsendkeyboard.btnclose.caption
@@ -3899,10 +3914,11 @@ msgctxt "RC_SENDSPOT"
 msgid "Send spot"
 msgstr "Отправить спот"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "Название конкурса в комментарии"
 #: tfrmsendspot.chkcontestname.caption
 #, fuzzy
 msgid "Contest name in comment"
-msgstr "Название конкурса в комментарии"
+msgstr "Название контеста в комментарии"
 
 #. Section: UEDITMESSAGE
 #: tfrmsendspot.lblcomment.caption
@@ -4001,12 +4017,13 @@ msgctxt "tfrmudpdestinationedit.chkstreamcontact.caption"
 msgid "Contact info"
 msgstr "Контактная информация"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Поиск по телефону' -> 'Поиск позывного', the reviewed 'позывных' (телефон = telephone). Previous text: "Поиск по телефону"
 #: tfrmudpdestinationedit.chkstreamlookup.caption
 #: ulclformhelpers.tc_prefs_udpstream_lookup
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamlookup.caption"
 msgid "Callsign lookup"
-msgstr "Поиск по телефону"
+msgstr "Поиск позывного"
 
 #: tfrmudpdestinationedit.chkstreamradio.caption
 #: ulclformhelpers.tc_prefs_udpstream_radio
@@ -4110,10 +4127,11 @@ msgctxt "tprefsform.btnnewprofile.caption"
 msgid "New..."
 msgstr "Новый..."
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Open log файл' -> 'Открыть файл лога', s.12 'Логи'; the reviewed 'Файл лога не найден'. Previous text: "Open log файл"
 #: tprefsform.btnopenlogfile.caption
 #, fuzzy
 msgid "Open log file"
-msgstr "Open log файл"
+msgstr "Открыть файл лога"
 
 #: tprefsform.btnremove.caption
 #: tprefsform.btnremovecluster.caption
@@ -4190,10 +4208,11 @@ msgstr "Верните серийный номер, когда QSO будет з
 msgid "Return to CQ mode after logging a QSO"
 msgstr "Вернуться в режим CQ после регистрации QSO"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Все группы' -> 'Все диапазоны', s.2.g 'Диапазоны' (группы = groups). Previous text: "Все группы"
 #: tprefsform.chkbandmapallbands.caption
 #, fuzzy
 msgid "All bands"
-msgstr "Все группы"
+msgstr "Все диапазоны"
 
 #: tprefsform.chkbandmapallmodes.caption
 #, fuzzy
@@ -4205,10 +4224,11 @@ msgstr "Все режимы"
 msgid "Show the call window entry"
 msgstr "Показать вход в окно вызова"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Показать CQ пятна' -> 'Показать CQ споты', s.2.d; the reviewed 'споты' (пятна = stains). Previous text: "Показать CQ пятна"
 #: tprefsform.chkbandmapcq.caption
 #, fuzzy
 msgid "Show CQ spots"
-msgstr "Показать CQ пятна"
+msgstr "Показать CQ споты"
 
 #: tprefsform.chkbandmapdupes.caption
 #, fuzzy
@@ -4235,11 +4255,12 @@ msgstr "SO2R дисплей"
 msgid "Bold"
 msgstr "Смелый"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Показать каждое место' -> 'Показать каждый спот', s.2.d; the reviewed 'споты' (место = place). Previous text: "Показать каждое место в окне вызова"
 #: tprefsform.chkcallwindowshowallspots.caption
 #: usettingscaptions.rs_bandmap_callwindowshowallspots
 #, fuzzy
 msgid "Show every spot in the call window"
-msgstr "Показать каждое место в окне вызова"
+msgstr "Показать каждый спот в окне вызова"
 
 #: tprefsform.chkchecklogfilesize.caption
 #: usettingscaptions.rs_logging_checklogfilesize
@@ -4276,10 +4297,11 @@ msgstr "Любое сообщение CW может привязаться к с
 msgid "Match the speed a station was worked at before"
 msgstr "Сопоставьте скорость, с которой раньше работала станция"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Окрасить колонны листа' -> 'Окрасить столбцы листа повторов', s.8 'Повторы'; the reviewed 'Лист повторов' (колонны = architectural columns). Previous text: "Окрасить колонны листа"
 #: tprefsform.chkdupesheetcolor.caption
 #, fuzzy
 msgid "Color the dupe sheet columns"
-msgstr "Окрасить колонны листа"
+msgstr "Окрасить столбцы листа повторов"
 
 #: tprefsform.chkdvkenable.caption
 #: usettingscaptions.rs_audio_dvk_enable
@@ -4326,11 +4348,12 @@ msgstr "HamLib - внутренний след к hamlib trace.log"
 msgid "Include contact information"
 msgstr "Включите контактную информацию"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Опубликуйте мой счет, пока конкурс проходит' -> 'Публиковать мой результат во время контеста', s.6 'результат', s.2 'контест'; the reviewed 'Отправить результат' (счет = bill). Previous text: "Опубликуйте мой счет, пока конкурс проходит"
 #: tprefsform.chkhamscoreenable.caption
 #: usettingscaptions.rs_scoring_hamscore_enable
 #, fuzzy
 msgid "Post my score while the contest runs"
-msgstr "Опубликуйте мой счет, пока конкурс проходит"
+msgstr "Публиковать мой результат во время контеста"
 
 #: tprefsform.chkhfbands.caption
 #: usettingscaptions.rs_operating_bands_hf
@@ -4338,11 +4361,12 @@ msgstr "Опубликуйте мой счет, пока конкурс прох
 msgid "HF (160 - 10 m)"
 msgstr "HF (160 - 10 м)"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'на одну полосу' -> 'на один диапазон', s.2.g 'Диапазоны' (полоса = strip). Previous text: "Прекратить посадку обоих радиостанций на одну полосу"
 #: tprefsform.chkinbandlockout.caption
 #: usettingscaptions.rs_operating_tworadio_inbandlockout
 #, fuzzy
 msgid "Stop both radios landing on one band"
-msgstr "Прекратить посадку обоих радиостанций на одну полосу"
+msgstr "Прекратить посадку обоих радиостанций на один диапазон"
 
 #: tprefsform.chkincludefkeynumber.caption
 #: usettingscaptions.rs_cw_includefkeynumber
@@ -4454,10 +4478,11 @@ msgstr "Скачать PTT"
 msgid "Key the transmitter with a CAT command instead of a hardware line"
 msgstr "Ключ передатчик с командой CAT вместо аппаратной линии"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'меняю группу' -> 'меняю диапазон', s.2.g 'Диапазоны' (группа = group). Previous text: "QSY неактивное радио, когда я меняю группу"
 #: tprefsform.chkqsyinactive.caption
 #, fuzzy
 msgid "QSY the inactive radio when I change band"
-msgstr "QSY неактивное радио, когда я меняю группу"
+msgstr "QSY неактивное радио, когда я меняю диапазон"
 
 #: tprefsform.chksayhienable.caption
 #: usettingscaptions.rs_operating_cw_sayhi
@@ -4477,11 +4502,12 @@ msgstr "Всегда отправляйте все четыре письма и�
 msgid "Draw gridlines in the log"
 msgstr "Нарисуйте линии сетки в журнале"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Пропустите группу, другая радиостанция включена' -> 'Пропускать диапазон, на котором работает другая радиостанция', s.2.g 'Диапазоны' (группа = group). Previous text: "Пропустите группу, другая радиостанция включена"
 #: tprefsform.chkskipactiveband.caption
 #: usettingscaptions.rs_operating_tworadio_skipactiveband
 #, fuzzy
 msgid "Skip the band the other radio is on"
-msgstr "Пропустите группу, другая радиостанция включена"
+msgstr "Пропускать диапазон, на котором работает другая радиостанция"
 
 #: tprefsform.chkso2r.caption
 #: ulclformhelpers.tc_prefs_so2r
@@ -4490,11 +4516,12 @@ msgctxt "tprefsform.chkso2r.caption"
 msgid "SO2R enabled"
 msgstr "SO2R включен"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Космический бар выполняет проверку на обман' -> 'Пробел выполняет проверку на повтор', s.8 'Повторы'; the reviewed 'Проверка на повтор' (= 'the space bar [pub] checks for fraud'). Previous text: "Космический бар выполняет проверку на обман"
 #: tprefsform.chkspacebardupecheck.caption
 #: usettingscaptions.rs_operating_spacebardupecheck
 #, fuzzy
 msgid "Space bar performs a dupe check"
-msgstr "Космический бар выполняет проверку на обман"
+msgstr "Пробел выполняет проверку на повтор"
 
 #: tprefsform.chkspeedsync1.caption
 #: tprefsform.chkspeedsync2.caption
@@ -4504,16 +4531,18 @@ msgctxt "tprefsform.chkspeedsync1.caption"
 msgid "Speed sync"
 msgstr "Синхронизация скорости"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Сбор пятен из кластера' -> 'Сбор спотов из кластера', s.2.d; the reviewed 'споты' (пятна = stains). Previous text: "Сбор пятен из кластера"
 #: tprefsform.chkspotcollector.caption
 #, fuzzy
 msgid "Collect spots from the cluster"
-msgstr "Сбор пятен из кластера"
+msgstr "Сбор спотов из кластера"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Отправьте пятна на' -> 'Отправлять споты на', s.2.d; the reviewed 'споты' (пятна = stains). Previous text: "Отправьте пятна на другое радио"
 #: tprefsform.chkswappacketspotradios.caption
 #: usettingscaptions.rs_bandmap_swappacketspotradios
 #, fuzzy
 msgid "Send spots to the other radio"
-msgstr "Отправьте пятна на другое радио"
+msgstr "Отправлять споты на другое радио"
 
 #: tprefsform.chkswappaddles.caption
 #: usettingscaptions.rs_cw_paddle_swap
@@ -4586,11 +4615,12 @@ msgstr "Держите файл перезагрузки в актуальном
 msgid "Use the radio control port for paddle and foot switch"
 msgstr "Используйте порт радиоуправления для весла и переключателя стопы"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'для вызывающих символов' -> 'для символов позывного', the reviewed 'позывных'. Previous text: "Отправить записанное аудио для вызывающих символов"
 #: tprefsform.chkuserecordedsigns.caption
 #: usettingscaptions.rs_audio_userecordedsigns
 #, fuzzy
 msgid "Send recorded audio for callsign characters"
-msgstr "Отправить записанное аудио для вызывающих символов"
+msgstr "Отправить записанное аудио для символов позывного"
 
 #: tprefsform.chkvhfbands.caption
 #, fuzzy
@@ -4619,10 +4649,11 @@ msgstr "Разрешить использование диких карт в ч�
 msgid "Exchange data with WSJT-X"
 msgstr "Обмен данными с WSJT-X"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Отправьте сигнальный сигнал на WSJT-X' -> 'Отправлять выделение позывных в WSJT-X', the reviewed 'позывных' (= 'send the signal signal'). Previous text: "Отправьте сигнальный сигнал на WSJT-X"
 #: tprefsform.chkwsjtxhighlights.caption
 #, fuzzy
 msgid "Send callsign highlighting to WSJT-X"
-msgstr "Отправьте сигнальный сигнал на WSJT-X"
+msgstr "Отправлять выделение позывных в WSJT-X"
 
 #: tprefsform.chkwsjtxradiocontrol.caption
 #, fuzzy
@@ -4675,10 +4706,11 @@ msgctxt "tprefsform.lblappearheading.caption"
 msgid "Main window"
 msgstr "Главное окно"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "Шрифт распространяется на главное окно конкурса. Все они вступают в силу при следующем запуске TR4W."
 #: tprefsform.lblappearhint.caption
 #, fuzzy
 msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
-msgstr "Шрифт распространяется на главное окно конкурса. Все они вступают в силу при следующем запуске TR4W."
+msgstr "Шрифт распространяется на главное окно контеста. Все они вступают в силу при следующем запуске TR4W."
 
 #: tprefsform.lblappearmenunote.caption
 #, fuzzy
@@ -4715,20 +4747,22 @@ msgstr "QSO (0 = никогда)"
 msgid "Copy to:"
 msgstr "Копировать:"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Резервное копирование' -> 'Резервное копирование лога', s.12 'Логи'; the reviewed 'Резервное копирование лога' (the log was dropped). Previous text: "Резервное копирование"
 #: tprefsform.lblbackupheading.caption
 #, fuzzy
 msgid "Log backup"
-msgstr "Резервное копирование"
+msgstr "Резервное копирование лога"
 
 #: tprefsform.lblbackuphint.caption
 #, fuzzy
 msgid "A second copy of the log, written as you go.  Put it somewhere that is not the same disk as the log itself, or it protects against nothing worth protecting against."
 msgstr "Вторая копия журнала, написанная по ходу дела. Поместите его куда-нибудь, где не тот же диск, что и сам журнал, или он защищает от всего, от чего стоит защищаться."
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Срок годности:' -> 'Срок жизни спота:', s.2.d; the reviewed 'споты' (срок годности = best-before date). Previous text: "Срок годности:"
 #: tprefsform.lblbandmapdecay.caption
 #, fuzzy
 msgid "Spot expiry:"
-msgstr "Срок годности:"
+msgstr "Срок жизни спота:"
 
 #: tprefsform.lblbandmapdecayunits.caption
 #, fuzzy
@@ -4752,15 +4786,17 @@ msgstr "Гц"
 msgid "Display limit:"
 msgstr "Ограничение показа:"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'пятна' -> 'споты', s.2.d; the reviewed 'споты' (пятна = stains). Previous text: "пятна"
 #: tprefsform.lblbandmaplimitunits.caption
 #, fuzzy
 msgid "spots"
-msgstr "пятна"
+msgstr "споты"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Карта группы' -> 'Карта диапазона', s.2.g; the reviewed 'Карта диапазона'; 'содержит пятна,' -> 'содержит споты,', s.2.d '«проспотить»'; the reviewed 'Удалить все споты' (пятна = stains). Previous text: "Карта группы не нуждается в кластере DX: она также содержит пятна, которые вы делаете сами, и все, что слышит радио SO2R. Настройки кластера находятся на странице кластера DX."
 #: tprefsform.lblbandmapnote.caption
 #, fuzzy
 msgid "A band map does not need a DX cluster: it also holds spots you make yourself and anything the SO2R radio hears.  Cluster settings are on the DX Cluster page."
-msgstr "Карта группы не нуждается в кластере DX: она также содержит пятна, которые вы делаете сами, и все, что слышит радио SO2R. Настройки кластера находятся на странице кластера DX."
+msgstr "Карта диапазона не нуждается в кластере DX: она также содержит споты, которые вы делаете сами, и все, что слышит радио SO2R. Настройки кластера находятся на странице кластера DX."
 
 #: tprefsform.lblbandoutput1.caption
 #, fuzzy
@@ -4772,15 +4808,17 @@ msgstr "Радио 1 выходной порт"
 msgid "Radio 2 band output port"
 msgstr "Радио 2 выходной порт"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Полосы в использовании' -> 'Используемые диапазоны', s.2.g 'Диапазоны' (полосы = strips). Previous text: "Полосы в использовании"
 #: tprefsform.lblbandsheading.caption
 #, fuzzy
 msgid "Bands in use"
-msgstr "Полосы в использовании"
+msgstr "Используемые диапазоны"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Какие полосы TR4W предлагает при смене полосы, а какие появляются в дисплеях мультипликатора и карты полосы. Группы WARC' -> 'Какие диапазоны TR4W предлагает при смене диапазона, а какие появляются в дисплеях множителей и карты диапазона. Диапазоны WARC', s.2.g 'диапазонов WARC', s.5 'Множители' (полосы = strips, мультипликатор = animator); 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "Какие полосы TR4W предлагает при смене полосы, а какие появляются в дисплеях мультипликатора и карты полосы. Группы WARC по умолчанию выключены, потому что большинство конкурсов не допускают их."
 #: tprefsform.lblbandshint.caption
 #, fuzzy
 msgid "Which bands TR4W offers when you change band, and which appear in the multiplier and band-map displays.  WARC bands are off by default because most contests do not allow them."
-msgstr "Какие полосы TR4W предлагает при смене полосы, а какие появляются в дисплеях мультипликатора и карты полосы. Группы WARC по умолчанию выключены, потому что большинство конкурсов не допускают их."
+msgstr "Какие диапазоны TR4W предлагает при смене диапазона, а какие появляются в дисплеях множителей и карты диапазона. Диапазоны WARC по умолчанию выключены, потому что большинство контестов не допускают их."
 
 #: tprefsform.lblclustercommand.caption
 #, fuzzy
@@ -4792,10 +4830,11 @@ msgstr "После подключения:"
 msgid "Sent once the login is accepted - filters, set/name, sh/dx.  Separate several with a semicolon."
 msgstr "Отправлено после принятия логина - фильтры, set/name, sh/dx. Отдельно несколько с полуколоном."
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Для каждой группы' -> 'Для каждого кластера', s.2.d 'Использование кластеров' (группа = group). Previous text: "Для каждой группы"
 #: tprefsform.lblclusterglobalheading.caption
 #, fuzzy
 msgid "For every cluster"
-msgstr "Для каждой группы"
+msgstr "Для каждого кластера"
 
 #: tprefsform.lblclusterheading.caption
 #, fuzzy
@@ -4807,10 +4846,11 @@ msgstr "Мои DX кластеры"
 msgid "Log in as:"
 msgstr "Войдите как:"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'звонок моей станции' -> 'пусто = позывной моей станции', the reviewed 'позывных' (звонок = phone call; 'blank =' was dropped). Previous text: "звонок моей станции"
 #: tprefsform.lblclusterloginhint.caption
 #, fuzzy
 msgid "blank = my station callsign"
-msgstr "звонок моей станции"
+msgstr "пусто = позывной моей станции"
 
 #: tprefsform.lblclustername.caption
 #: tprefsform.lblrotatorname.caption
@@ -4819,10 +4859,11 @@ msgctxt "tprefsform.lblclustername.caption"
 msgid "Name:"
 msgstr "Имя:"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'отображение пятна и старение находятся на карте группы' -> 'отображение спотов и старение находятся на карте диапазона', s.2.d '«проспотить»', s.2.g; the reviewed 'споты', 'Карта диапазона' (пятна = stains). Previous text: "Кластер воссоединяется сам по себе после падения. Телнет-регистрация находится на странице журнала; отображение пятна и старение находятся на карте группы."
 #: tprefsform.lblclusternote.caption
 #, fuzzy
 msgid "The cluster reconnects on its own after a drop.  Telnet logging is on the Logging page; spot display and ageing are on Band Map."
-msgstr "Кластер воссоединяется сам по себе после падения. Телнет-регистрация находится на странице журнала; отображение пятна и старение находятся на карте группы."
+msgstr "Кластер воссоединяется сам по себе после падения. Телнет-регистрация находится на странице журнала; отображение спотов и старение находятся на карте диапазона."
 
 #: tprefsform.lblclusterpassword.caption
 #: tprefsform.lblhamscorepass.caption
@@ -4845,10 +4886,11 @@ msgstr "Сервер:"
 msgid "host:port, for example dxc.nc7j.com:7373.  The drop-down lists the servers in TRCLUSTER.DAT; you can also type one that is not on it."
 msgstr "host:port, например, dxc.nc7j.com:7373. В раскрывающемся списке перечислены серверы в TRCLUSTER.DAT; вы также можете набрать тот, который не на нем."
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Обмен конкурсами' -> 'Обмен в контесте', s.2 'Контест проводится'; the reviewed 'новый контест' (= 'exchanging contests with each other'). Previous text: "Обмен конкурсами"
 #: tprefsform.lblcontestheading.caption
 #, fuzzy
 msgid "Contest exchange"
-msgstr "Обмен конкурсами"
+msgstr "Обмен в контесте"
 
 #: tprefsform.lblcwoutput1.caption
 #: ulclformhelpers.tc_prefs_cwoutput1
@@ -5074,10 +5116,11 @@ msgstr "MP3 папка"
 msgid "MP3 player program"
 msgstr "MP3 плеер программа"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Звонок:' -> 'Позывной:', the reviewed 'позывных' (звонок = phone call). Previous text: "Звонок:"
 #: tprefsform.lblmycall.caption
 #, fuzzy
 msgid "Callsign:"
-msgstr "Звонок:"
+msgstr "Позывной:"
 
 #: tprefsform.lblmycheck.caption
 #, fuzzy
@@ -5201,10 +5244,11 @@ msgstr "CW во время работы"
 msgid "Operating"
 msgstr "Оперировать"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Карта полос, полосы,' -> 'Карта диапазона, диапазоны,', s.2.g; the reviewed 'Карта диапазона'; 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "Как ведет себя журнал, пока вы проводите конкурс. Карта полос, полосы, CW, счет и настройки двух радио находятся на страницах ниже."
 #: tprefsform.lbloperatinginfo.caption
 #, fuzzy
 msgid "How the log behaves while you are running the contest. Band map, bands, CW, scoring and two-radio settings are on the pages below."
-msgstr "Как ведет себя журнал, пока вы проводите конкурс. Карта полос, полосы, CW, счет и настройки двух радио находятся на страницах ниже."
+msgstr "Как ведет себя журнал, пока вы проводите контест. Карта диапазона, диапазоны, CW, счет и настройки двух радио находятся на страницах ниже."
 
 #: tprefsform.lblpaddlehold.caption
 #, fuzzy
@@ -5300,15 +5344,17 @@ msgstr "Порт управления реле"
 msgid "Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for."
 msgstr "Параллельная (LPT) проводка порта для этой станции: переключение реле, передача данных в декодер в рабочем положении и управление стереозвуком. Они следуют за DESK, а не за радио, поэтому они остаются на месте, когда вы активируете другое радио. Не оставляйте их, если у вас нет такого интерфейса - поддерживает ли TR4W LPT вообще, все еще остается открытым вопросом, для которого серая коробка ниже является заполнителем."
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Группы:' -> 'Диапазоны:', s.2.g 'Диапазоны' (группы = groups). Previous text: "Группы:"
 #: tprefsform.lblrotatorbands.caption
 #, fuzzy
 msgid "Bands:"
-msgstr "Группы:"
+msgstr "Диапазоны:"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'для каждой полосы' -> 'для каждого диапазона', s.2.g 'Диапазоны'; 'Список полос' -> 'Список диапазонов', s.2.g 'Диапазоны'; 'по полосе.' -> 'по диапазону.', s.2.g 'Диапазоны'. Previous text: "Оставьте пустой, и этот вращатель поворачивается для каждой полосы, чего хочет станция с одной антенной. Список полос - 20 15 10 - чтобы иметь TR4W выбор между несколькими ротаторами по полосе."
 #: tprefsform.lblrotatorbandshint.caption
 #, fuzzy
 msgid "Leave blank and this rotator turns for every band, which is what a station with one antenna wants.  List bands - 20 15 10 - to have TR4W choose between several rotators by band."
-msgstr "Оставьте пустой, и этот вращатель поворачивается для каждой полосы, чего хочет станция с одной антенной. Список полос - 20 15 10 - чтобы иметь TR4W выбор между несколькими ротаторами по полосе."
+msgstr "Оставьте пустой, и этот вращатель поворачивается для каждого диапазона, чего хочет станция с одной антенной. Список диапазонов - 20 15 10 - чтобы иметь TR4W выбор между несколькими ротаторами по диапазону."
 
 #: tprefsform.lblrotatorbaud.caption
 #, fuzzy
@@ -5350,10 +5396,11 @@ msgstr "Остановитесь выше скорости:"
 msgid "QSOs per hour"
 msgstr "QSO в час"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Доска объявлений' -> 'Табло результатов', s.6 'результат' (доска объявлений = notice board). Previous text: "Доска объявлений"
 #: tprefsform.lblscoreboardheading.caption
 #, fuzzy
 msgid "Score board"
-msgstr "Доска объявлений"
+msgstr "Табло результатов"
 
 #: tprefsform.lblscoreboardhint.caption
 #, fuzzy
@@ -5390,10 +5437,11 @@ msgstr "Матчи приходят из TRMASTER.DTA в папке програ
 msgid "Super Check Partial"
 msgstr "Super Check Partial"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "Бланк показывает матчи со всех сторон. Список префиксов страны сужает его, что полезно во внутреннем конкурсе, где не работает весь мир."
 #: tprefsform.lblscphint.caption
 #, fuzzy
 msgid "Blank shows matches from everywhere.  A list of country prefixes narrows it, which is useful in a domestic contest where the whole world is not workable."
-msgstr "Бланк показывает матчи со всех сторон. Список префиксов страны сужает его, что полезно во внутреннем конкурсе, где не работает весь мир."
+msgstr "Бланк показывает матчи со всех сторон. Список префиксов страны сужает его, что полезно во внутреннем контесте, где не работает весь мир."
 
 #: tprefsform.lblscpmatchheading.caption
 #, fuzzy
@@ -5479,10 +5527,11 @@ msgstr "- этот компьютер только (127.0.0.1), пока вы н
 msgid "Two radio operating"
 msgstr "Два радиоприемника"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Пропуск полосы другого радио - это то, что останавливает изменение полосы' -> 'Пропуск диапазона другого радио - это то, что останавливает смену диапазона', s.2.g 'Диапазоны'. Previous text: "Пропуск полосы другого радио - это то, что останавливает изменение полосы на одном радио, посадив вас на другую."
 #: tprefsform.lbltworadiohint.caption
 #, fuzzy
 msgid "Skipping the other radio's band is what stops a band change on one radio landing you on top of the other."
-msgstr "Пропуск полосы другого радио - это то, что останавливает изменение полосы на одном радио, посадив вас на другую."
+msgstr "Пропуск диапазона другого радио - это то, что останавливает смену диапазона на одном радио, посадив вас на другую."
 
 #: tprefsform.lbltworadiointro.caption
 #, fuzzy
@@ -6017,6 +6066,7 @@ msgctxt "TC_TELNET"
 msgid "Connect\000Disconnect\000Commands\000Freeze\000Clear\000SH/50\000\000"
 msgstr "Соединение\000Отключение\000Команды\000Заморозить\000Очистить\000100\000"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Изменение полосы требует' -> 'Смена диапазона требует', s.2.g 'Диапазоны'. Previous text: "Изменение полосы требует MULTIPLE BANDS = TRUE, как только журнал имеет QSO"
 #. Section: LOGSUBS2
 #: utr4wstrings:tc_bandchangedisabled
 #: tr4w/src/lang/tr4w_consts_eng.pas:365
@@ -6024,7 +6074,7 @@ msgstr "Соединение\000Отключение\000Команды\000Зам
 #, fuzzy
 msgctxt "TC_BANDCHANGEDISABLED"
 msgid "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
-msgstr "Изменение полосы требует MULTIPLE BANDS = TRUE, как только журнал имеет QSO"
+msgstr "Смена диапазона требует MULTIPLE BANDS = TRUE, как только журнал имеет QSO"
 
 #. Section: UEDITMESSAGE
 #. 4.51.8
@@ -7090,6 +7140,7 @@ msgctxt "TC_DOWNLOADINGPOTAPARKS"
 msgid "Downloading POTA parks..."
 msgstr "Скачать POTA Parks."
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'полная синхронизация бревен.' -> 'полная синхронизация лога...', s.12 'Логи'; the reviewed 'лог' (бревна = wooden logs). Previous text: "HamScore: полная синхронизация бревен."
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_hamscorequeueingfulllogresync
 #: tr4w/src/lang/tr4w_consts_eng.pas:830
@@ -7097,7 +7148,7 @@ msgstr "Скачать POTA Parks."
 #, fuzzy
 msgctxt "TC_HAMSCOREQUEUEINGFULLLOGRESYNC"
 msgid "HamScore: queueing full log resync..."
-msgstr "HamScore: полная синхронизация бревен."
+msgstr "HamScore: полная синхронизация лога..."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_logincalldoeslooklikecallsign
@@ -7126,6 +7177,7 @@ msgctxt "TC_CWOFF"
 msgid "CW Off"
 msgstr "CW Off"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'файл log' -> 'файл лога', s.12 'Логи'; the reviewed 'Файл лога не найден'. Previous text: "Невозможно открыть файл log"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_cannotopenlogfile
 #: tr4w/src/lang/tr4w_consts_eng.pas:834
@@ -7133,7 +7185,7 @@ msgstr "CW Off"
 #, fuzzy
 msgctxt "TC_CANNOTOPENLOGFILE"
 msgid "Cannot open log file"
-msgstr "Невозможно открыть файл log"
+msgstr "Невозможно открыть файл лога"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_scannoteditedhere
@@ -7252,6 +7304,7 @@ msgctxt "TC_AUTOSPOTENABLEDTESTMODEONLY"
 msgid "AUTOSPOT is enabled - Test Mode Only"
 msgstr "AUTOSPOT включен - только режим тестирования"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "РУЧНОЙ ПУТЬ = ПРАВДА"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_handlogmodetrue
 #: tr4w/src/lang/tr4w_consts_eng.pas:848
@@ -7259,7 +7312,7 @@ msgstr "AUTOSPOT включен - только режим тестировани
 #, fuzzy
 msgctxt "TC_HANDLOGMODETRUE"
 msgid "HAND LOG MODE = TRUE"
-msgstr "РУЧНОЙ ПУТЬ = ПРАВДА"
+msgstr "HAND LOG MODE = TRUE"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_trmasterdtas
@@ -7378,6 +7431,7 @@ msgctxt "TC_QTCPROCESSTERMINATEDINVALIDNUMBERM"
 msgid "QTC process terminated.  Invalid number of messages."
 msgstr "Процесс QTC завершен. Недействительное количество сообщений."
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "Я нашел название конкурса, которого не понимаю в вашем файле LOGCFG.DAT."
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ifoundcontestnameidonounderstandlo
 #: tr4w/src/lang/tr4w_consts_eng.pas:862
@@ -7385,8 +7439,9 @@ msgstr "Процесс QTC завершен. Недействительное к
 #, fuzzy
 msgctxt "TC_IFOUNDCONTESTNAMEIDONOUNDERSTANDLO"
 msgid "I found a contest name I do no understand in your LOGCFG.DAT file."
-msgstr "Я нашел название конкурса, которого не понимаю в вашем файле LOGCFG.DAT."
+msgstr "Я нашел название контеста, которого не понимаю в вашем файле LOGCFG.DAT."
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "Я не оштрафовал название конкурса в вашем файле LOGCFG.DAT."
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ididfinecontestnamelogcfgdatfile
 #: tr4w/src/lang/tr4w_consts_eng.pas:863
@@ -7394,7 +7449,7 @@ msgstr "Я нашел название конкурса, которого не �
 #, fuzzy
 msgctxt "TC_IDIDFINECONTESTNAMELOGCFGDATFILE"
 msgid "I did not fine a contest name in your LOGCFG.DAT file."
-msgstr "Я не оштрафовал название конкурса в вашем файле LOGCFG.DAT."
+msgstr "Я не оштрафовал название контеста в вашем файле LOGCFG.DAT."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_arenewengland
@@ -7486,6 +7541,7 @@ msgctxt "TC_POSSIBLEDATALOSSMULTINETWORK"
 msgid "Possible data loss on multi network."
 msgstr "Возможная потеря данных в сети."
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Выберите место.' -> 'Выберите спот.', s.2.d; the reviewed 'споты' (место = place). Previous text: "Выберите место. Вернуться, левую или правую стрелку выбрать. Бегство на выход."
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_selectspotreturnleftorrightarrowse
 #: tr4w/src/lang/tr4w_consts_eng.pas:874
@@ -7493,7 +7549,7 @@ msgstr "Возможная потеря данных в сети."
 #, fuzzy
 msgctxt "TC_SELECTSPOTRETURNLEFTORRIGHTARROWSE"
 msgid "Select spot.  RETURN, left or right arrow to select.  ESCAPE to exit."
-msgstr "Выберите место. Вернуться, левую или правую стрелку выбрать. Бегство на выход."
+msgstr "Выберите спот. Вернуться, левую или правую стрелку выбрать. Бегство на выход."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_entercallsignspacedupecheckalthhel
@@ -7531,6 +7587,7 @@ msgctxt "TC_ENTEREXCHANGEPRESSENTERLOGESCAPEAB"
 msgid "Enter exchange.  Press ENTER to log, ESCAPE to abort QSO."
 msgstr "Введите обмен. Нажмите Enter to log, ESCAPE to abort QSO."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "ПРАВИЛЬНЫЙ КОНТРОЛЬ НАД ПОРТОМ = СЛАДКИЙ ПОРТ"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_relaycontrolportpaddleport
 #: tr4w/src/lang/tr4w_consts_eng.pas:879
@@ -7538,7 +7595,7 @@ msgstr "Введите обмен. Нажмите Enter to log, ESCAPE to abort 
 #, fuzzy
 msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
 msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr "ПРАВИЛЬНЫЙ КОНТРОЛЬ НАД ПОРТОМ = СЛАДКИЙ ПОРТ"
+msgstr "RELAY CONTROL PORT = PADDLE PORT"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_locationfieldempty
@@ -7549,6 +7606,7 @@ msgctxt "TC_LOCATIONFIELDEMPTY"
 msgid "LOCATION field is empty."
 msgstr "Местоположение пустое."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "PTT LOCKOUT = ПРАВДА"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_pttlockouttrue
 #: tr4w/src/lang/tr4w_consts_eng.pas:881
@@ -7556,7 +7614,7 @@ msgstr "Местоположение пустое."
 #, fuzzy
 msgctxt "TC_PTTLOCKOUTTRUE"
 msgid "PTT LOCKOUT=TRUE"
-msgstr "PTT LOCKOUT = ПРАВДА"
+msgstr "PTT LOCKOUT=TRUE"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_preferencescouldopeneds
@@ -7675,6 +7733,7 @@ msgctxt "TC_EDITOR_SELECTALL"
 msgid "Select &all"
 msgstr "Выберите и все"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Отправить log to %s' -> 'Отправить лог на %s', s.12 'Логи'; the reviewed 'Отправить лог ARRL'. Previous text: "Отправить log to %s"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_sendlogto
 #: tr4w/src/lang/tr4w_consts_eng.pas:900
@@ -7682,7 +7741,7 @@ msgstr "Выберите и все"
 #, fuzzy
 msgctxt "TC_EDITOR_SENDLOGTO"
 msgid "Send log to %s"
-msgstr "Отправить log to %s"
+msgstr "Отправить лог на %s"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_uploadcabrillotoscp
@@ -7874,11 +7933,12 @@ msgstr ""
 msgid "Save and activate this profile"
 msgstr "Сохраните и активируйте этот профиль"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Конкурс' -> 'Контест', s.2 'Контест проводится' and the reviewed 'новый контест'. Previous text: "Конкурс"
 #: ulclformhelpers.tc_prefs_contest
 #: usettingscaptions.rs_contest_contest
 #, fuzzy
 msgid "Contest"
-msgstr "Конкурс"
+msgstr "Контест"
 
 #: ulclformhelpers.tc_prefs_cw
 #, fuzzy
@@ -7895,10 +7955,11 @@ msgstr "Подключение"
 msgid "Save your changes to this radio?"
 msgstr "Сохраните свои изменения на радио?"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "Открыть файл конфигурации или начать новый конкурс"
 #: tfrmnewcontest.caption
 #, fuzzy
 msgid "Open configuration file or start a new contest"
-msgstr "Открыть файл конфигурации или начать новый конкурс"
+msgstr "Открыть файл конфигурации или начать новый контест"
 
 #: tfrmnewcontest.dlgopen.title
 #, fuzzy
@@ -7910,10 +7971,11 @@ msgstr "Открытый конфигурационный файл"
 msgid "Open an existing configuration"
 msgstr "Откройте существующую конфигурацию"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "Начать новый конкурс"
 #: tfrmnewcontest.gbnew.caption
 #, fuzzy
 msgid "Start a new contest"
-msgstr "Начать новый конкурс"
+msgstr "Начать новый контест"
 
 #: tfrmnewcontest.lblcontest.caption
 #, fuzzy
@@ -8030,14 +8092,15 @@ msgstr ""
 msgid "Connect#0Disconnect#0Commands#0Freeze#0Clear#0SH/50#0#0"
 msgstr "Connect#0Disconnect#0Commands#0Freeze#0Clear#0SH/50#0#0"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Там были %u Звонки, найденные в исходном файле обмена.\n+%u дурачок' -> 'Найдено %u позывных в файле начальных обменных номеров.\n+%u повторов', s.8 'Повторы'; the reviewed twin (дурачок = little fool). Previous text: "Там были %u Звонки, найденные в исходном файле обмена.\n+%u дурачок"
 #: utr4wstrings.tc_therewerecalls
 #, fuzzy
 msgid ""
 "There were %u calls found in initial exchange file.\n"
 "+%u dupe(s)"
 msgstr ""
-"Там были %u Звонки, найденные в исходном файле обмена.\n"
-"+%u дурачок"
+"Найдено %u позывных в файле начальных обменных номеров.\n"
+"+%u повторов"
 
 #: utr4wstrings.tc_uk
 #, fuzzy
@@ -8060,11 +8123,12 @@ msgctxt "utr4wstrings.rc_synlog2"
 msgid "Synchronize log"
 msgstr "Синхронизация журнала"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Зарегистрируйте сервер' -> '&Получить лог сервера', s.12 'Логи'; the reviewed 'серверный лог' (= 'register the server'); restores the '&'. Previous text: "Зарегистрируйте сервер"
 #: utr4wstrings.rc_getservlog
 #, fuzzy
 msgctxt "utr4wstrings.rc_getservlog"
 msgid "&Get server log"
-msgstr "Зарегистрируйте сервер"
+msgstr "&Получить лог сервера"
 
 #: utr4wstrings.rc_recvrecords
 #: tfrmserverlog.lblrecordscaption.caption
@@ -8112,10 +8176,11 @@ msgstr "&Создание и использование нового журна�
 msgid "Create and use new log"
 msgstr "Создавайте и используйте новый журнал"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Запись сервера' -> 'Получить лог сервера', s.12 'Логи'; the reviewed 'Не удалось получить серверный лог' (= 'the server's record'). Previous text: "Запись сервера"
 #: tfrmserverlog.btngetlog.caption
 #, fuzzy
 msgid "Get server log"
-msgstr "Запись сервера"
+msgstr "Получить лог сервера"
 
 #: tfrmserverlog.lblbytes.caption
 #: tfrmserverlog.lblqsos.caption
@@ -8138,10 +8203,11 @@ msgstr "Настройка..."
 msgid "lblNoClusters"
 msgstr ""
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'щелкнуть пятно в DXLab' -> 'щелкнуть спот в DXLab', s.2.d '«проспотить»'; the reviewed 'споты' (пятно = stain); 'на пятна из вашего кластера DX' -> 'на споты из вашего кластера DX', s.2.d '«проспотить»', 'кластеров'; the reviewed 'споты' (пятна = stains). Previous text: "Позволяет дважды щелкнуть пятно в DXLab SpotCollector и включить позывной в поле вызова TR4W. Это не влияет на пятна из вашего кластера DX - они приходят независимо от того, тикают они или нет."
 #: tprefsform.lblspotcollectorhint.caption
 #, fuzzy
 msgid "Lets you double-click a spot in DXLab SpotCollector and have the callsign appear in TR4W's call field.  This does NOT affect spots from your DX cluster - those arrive whether this is ticked or not."
-msgstr "Позволяет дважды щелкнуть пятно в DXLab SpotCollector и включить позывной в поле вызова TR4W. Это не влияет на пятна из вашего кластера DX - они приходят независимо от того, тикают они или нет."
+msgstr "Позволяет дважды щелкнуть спот в DXLab SpotCollector и включить позывной в поле вызова TR4W. Это не влияет на споты из вашего кластера DX - они приходят независимо от того, тикают они или нет."
 
 #: usettingscaptions.rs_advanced_handlogmode
 #, fuzzy
@@ -8163,10 +8229,11 @@ msgstr "Бип включен"
 msgid "Column Autosize"
 msgstr "Колонка Autosize"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Полная маска Callsign' -> 'Полная маска позывного', the reviewed 'позывных'. Previous text: "Полная маска Callsign"
 #: usettingscaptions.rs_appearance_ctrlj_completecallsignmask
 #, fuzzy
 msgid "Complete Callsign Mask"
-msgstr "Полная маска Callsign"
+msgstr "Полная маска позывного"
 
 #: usettingscaptions.rs_appearance_ctrlj_contactsperpage
 #, fuzzy
@@ -8198,10 +8265,11 @@ msgstr "Напоминание"
 msgid "Show Frequency In Log"
 msgstr "Показать частоту в журнале"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Показать тип Callsign' -> 'Показать набранный позывной', the reviewed 'позывных' (тип = type, as in kind). Previous text: "Показать тип Callsign"
 #: usettingscaptions.rs_appearance_ctrlj_showtypedcallsign
 #, fuzzy
 msgid "Show Typed Callsign"
-msgstr "Показать тип Callsign"
+msgstr "Показать набранный позывной"
 
 #: usettingscaptions.rs_appearance_ctrlj_userinfoshown
 #, fuzzy
@@ -8243,10 +8311,11 @@ msgstr "Альбом: Map Item Height"
 msgid "Band Map Item Width"
 msgstr "Обсуждение Band Map Width"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Размер карты группы' -> 'Размер карты диапазона', s.2.g; the reviewed 'Карта диапазона'. Previous text: "Размер карты группы"
 #: usettingscaptions.rs_bandmap_ctrlj_bandmapsize
 #, fuzzy
 msgid "Band Map Size"
-msgstr "Размер карты группы"
+msgstr "Размер карты диапазона"
 
 #: usettingscaptions.rs_bandmap_ctrlj_bandmapsplitmode
 #, fuzzy
@@ -8278,15 +8347,17 @@ msgstr "Beep каждые 10 QSO"
 msgid "Category-Assisted"
 msgstr "Категория Помощь"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Группа категорий' -> 'Категория-Диапазон', s.2.c 'Категории', s.2.g 'Диапазоны' (= 'group of categories'). Previous text: "Группа категорий"
 #: usettingscaptions.rs_contest_categoryband
 #, fuzzy
 msgid "Category-Band"
-msgstr "Группа категорий"
+msgstr "Категория-Диапазон"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Типовой режим' -> 'Категория-Вид излучения', s.2.c 'Категории', s.8 'в том же виде излучения' (типовой режим = standard regime). Previous text: "Типовой режим"
 #: usettingscaptions.rs_contest_categorymode
 #, fuzzy
 msgid "Category-Mode"
-msgstr "Типовой режим"
+msgstr "Категория-Вид излучения"
 
 #: usettingscaptions.rs_contest_categoryoperator
 #, fuzzy
@@ -8298,25 +8369,29 @@ msgstr "Оператор категории"
 msgid "Category-Overlay"
 msgstr "Категория:Оверлей"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Категория:Власть' -> 'Категория-Мощность', s.2.c 'мощность до 100 Вт' (власть = political power). Previous text: "Категория:Власть"
 #: usettingscaptions.rs_contest_categorypower
 #, fuzzy
 msgid "Category-Power"
-msgstr "Категория:Власть"
+msgstr "Категория-Мощность"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Передача по категориям' -> 'Категория-Передатчик', s.2.c 'Один передатчик' (= 'transmission by categories'). Previous text: "Передача по категориям"
 #: usettingscaptions.rs_contest_categorytransmitter
 #, fuzzy
 msgid "Category-Transmitter"
-msgstr "Передача по категориям"
+msgstr "Категория-Передатчик"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "Название конкурса"
 #: usettingscaptions.rs_contest_contestname
 #, fuzzy
 msgid "Contest Name"
-msgstr "Название конкурса"
+msgstr "Название контеста"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "Название конкурса"
 #: usettingscaptions.rs_contest_contesttitle
 #, fuzzy
 msgid "Contest Title"
-msgstr "Название конкурса"
+msgstr "Название контеста"
 
 #: usettingscaptions.rs_contest_countdomesticcountries
 #, fuzzy
@@ -8398,30 +8473,33 @@ msgstr "Сообщение Enable"
 msgid "Minitour Duration"
 msgstr "Минимальная продолжительность"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Исполнитель: Band' -> 'Множители по диапазонам', s.5 'Множители' (исполнитель = performer). Previous text: "Исполнитель: Band"
 #: usettingscaptions.rs_contest_multbyband
 #, fuzzy
 msgid "Mult By Band"
-msgstr "Исполнитель: Band"
+msgstr "Множители по диапазонам"
 
 #: usettingscaptions.rs_contest_multbymode
 #, fuzzy
 msgid "Mult By Mode"
 msgstr "Мульт в режиме"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Несколько полос' -> 'Несколько диапазонов', s.2.g 'Диапазоны'. Previous text: "Несколько полос"
 #: usettingscaptions.rs_contest_multiplebands
 #, fuzzy
 msgid "Multiple Bands"
-msgstr "Несколько полос"
+msgstr "Несколько диапазонов"
 
 #: usettingscaptions.rs_contest_multiplemodes
 #, fuzzy
 msgid "Multiple Modes"
 msgstr "Несколько режимов"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Минимальные группы' -> 'Минимум диапазонов', s.2.g 'Диапазоны' (группы = groups). Previous text: "Mult Report Минимальные группы"
 #: usettingscaptions.rs_contest_multreportminimumbands
 #, fuzzy
 msgid "Mult Report Minimum Bands"
-msgstr "Mult Report Минимальные группы"
+msgstr "Mult Report Минимум диапазонов"
 
 #: usettingscaptions.rs_contest_multsheetautoreset
 #, fuzzy
@@ -8438,45 +8516,51 @@ msgstr "Умножитель префикса"
 msgid "QSL Mode"
 msgstr "Режим QSL"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'QSO в группе' -> 'QSO по диапазонам', s.2.g 'Диапазоны' (группа = group). Previous text: "QSO в группе"
 #: usettingscaptions.rs_contest_qsobyband
 #, fuzzy
 msgid "QSO By Band"
-msgstr "QSO в группе"
+msgstr "QSO по диапазонам"
 
 #: usettingscaptions.rs_contest_qsobymode
 #, fuzzy
 msgid "QSO By Mode"
 msgstr "QSO в режиме"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'QSO номер в полосе' -> 'Номер QSO по диапазонам', s.2.g 'Диапазоны'. Previous text: "QSO номер в полосе"
 #: usettingscaptions.rs_contest_qsonumberbyband
 #, fuzzy
 msgid "QSO Number By Band"
-msgstr "QSO номер в полосе"
+msgstr "Номер QSO по диапазонам"
 
 #: usettingscaptions.rs_contest_qsopointmethod
 #, fuzzy
 msgid "QSO Point Method"
 msgstr "Метод QSO Point"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'QSO указывает на внутренний CW' -> 'Очки за QSO: внутренние, CW', s.3 'Очки за QSO' (указывает на = points at). Previous text: "QSO указывает на внутренний CW"
 #: usettingscaptions.rs_contest_qsopointsdomesticcw
 #, fuzzy
 msgid "QSO Points Domestic CW"
-msgstr "QSO указывает на внутренний CW"
+msgstr "Очки за QSO: внутренние, CW"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'QSO указывает на домашний телефон' -> 'Очки за QSO: внутренние, телефон', s.3 'Очки за QSO' (= 'the QSO points at your home phone'). Previous text: "QSO указывает на домашний телефон"
 #: usettingscaptions.rs_contest_qsopointsdomesticphone
 #, fuzzy
 msgid "QSO Points Domestic Phone"
-msgstr "QSO указывает на домашний телефон"
+msgstr "Очки за QSO: внутренние, телефон"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Обсуждение QSO Points DX CW' -> 'Очки за QSO: DX, CW', s.3 'Очки за QSO' (обсуждение = discussion). Previous text: "Обсуждение QSO Points DX CW"
 #: usettingscaptions.rs_contest_qsopointsdxcw
 #, fuzzy
 msgid "QSO Points DX CW"
-msgstr "Обсуждение QSO Points DX CW"
+msgstr "Очки за QSO: DX, CW"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Телефон QSO Points DX' -> 'Очки за QSO: DX, телефон', s.3 'Очки за QSO'. Previous text: "Телефон QSO Points DX"
 #: usettingscaptions.rs_contest_qsopointsdxphone
 #, fuzzy
 msgid "QSO Points DX Phone"
-msgstr "Телефон QSO Points DX"
+msgstr "Очки за QSO: DX, телефон"
 
 #: usettingscaptions.rs_contest_qtcenable
 #, fuzzy
@@ -8663,10 +8747,11 @@ msgstr "Скорость шага"
 msgid "Allow Auto Update"
 msgstr "Разрешить автоматическое обновление"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Callsign Update включен' -> 'Обновление позывных включено', the reviewed 'позывных'. Previous text: "Callsign Update включен"
 #: usettingscaptions.rs_files_ctrlj_callsignupdateenable
 #, fuzzy
 msgid "Callsign Update Enable"
-msgstr "Callsign Update включен"
+msgstr "Обновление позывных включено"
 
 #: usettingscaptions.rs_files_ctrlj_countryinformationfile
 #, fuzzy
@@ -8803,10 +8888,11 @@ msgstr "Цифровой режим включен"
 msgid "Distance Mode"
 msgstr "Дистанционный режим"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Проверить звук' -> 'Звук проверки повторов', s.8 'Повторы' (the dupe was dropped). Previous text: "Проверить звук"
 #: usettingscaptions.rs_operating_ctrlj_dupechecksound
 #, fuzzy
 msgid "Dupe Check Sound"
-msgstr "Проверить звук"
+msgstr "Звук проверки повторов"
 
 #: usettingscaptions.rs_operating_ctrlj_dupesheetautoreset
 #, fuzzy
@@ -8848,10 +8934,11 @@ msgstr "Включить Log Frequency Enable"
 msgid "Log Sub Title"
 msgstr "Log Sub Title"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Главная Callsign' -> 'Основной позывной', the reviewed 'позывных'. Previous text: "Главная Callsign"
 #: usettingscaptions.rs_operating_ctrlj_maincallsign
 #, fuzzy
 msgid "Main Callsign"
-msgstr "Главная Callsign"
+msgstr "Основной позывной"
 
 #: usettingscaptions.rs_operating_ctrlj_possiblecallacceptkey
 #, fuzzy
@@ -8893,10 +8980,11 @@ msgstr "Радиус Земли"
 msgid "Shift Key Enable"
 msgstr "Скачать Shift Key Enable"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Станции Callsigns Маска' -> 'Маска позывных станций', the reviewed 'позывных'. Previous text: "Станции Callsigns Маска"
 #: usettingscaptions.rs_operating_ctrlj_stationscallsignsmask
 #, fuzzy
 msgid "Stations Callsigns Mask"
-msgstr "Станции Callsigns Маска"
+msgstr "Маска позывных станций"
 
 #: usettingscaptions.rs_operating_ctrlj_wakeuptimeout
 #, fuzzy
@@ -9052,30 +9140,37 @@ msgstr ""
 "\n"
 "Запрос был отклонен, а не отправлен непроверенным. Отключите предпочтения Сеть > проверьте сертификаты сервера, если вы хотите продолжить работу без проверки."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(Моя страна = %s)"
 #: uappstrings.sexchangemodebriefcountry
 #, fuzzy
 msgid "(MY COUNTRY = %s)"
-msgstr "(Моя страна = %s)"
+msgstr "(MY COUNTRY = %s)"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(Моя страна пуста)"
 #: uappstrings.sexchangemodebriefemptycountry
 #, fuzzy
 msgid "(MY COUNTRY is empty)"
-msgstr "(Моя страна пуста)"
+msgstr "(MY COUNTRY не задан)"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "Этот конкурс требует штата, провинции или секции, потому что моя страна является %s."
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Этот контест требует штата, провинции или секции, потому что моя страна является %s."
 #: uappstrings.sexchangemodefromcountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is %s."
-msgstr "Этот конкурс требует штата, провинции или секции, потому что моя страна является %s."
+msgstr "Этот контест требует штат, провинцию или секцию, потому что MY COUNTRY — %s."
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "Этот конкурс требует штата, провинции или участка, потому что моя страна пуста."
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Этот контест требует штата, провинции или участка, потому что моя страна пуста."
 #: uappstrings.sexchangemodefromemptycountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is empty."
-msgstr "Этот конкурс требует штата, провинции или участка, потому что моя страна пуста."
+msgstr "Этот контест требует штат, провинцию или секцию, потому что MY COUNTRY не задан."
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "Название произошло от %s Настройка для этого конкурса."
 #: uappstrings.sfilenamecamefromsetting
 #, fuzzy
 msgid "The name came from the %s setting for this contest."
-msgstr "Название произошло от %s Настройка для этого конкурса."
+msgstr "Название произошло от %s Настройка для этого контеста."
 
 #: uappstrings.sfilenotfoundthere
 #, fuzzy
@@ -9159,6 +9254,7 @@ msgstr ""
 "\n"
 "%sTR4W будет продолжать работать и пытаться открыть его. Пока это не возможно, ничего из этого сеанса не записывается в журнал."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Компьютерный идентификатор %s Он уже используется другой станцией в этой сети.\n\nИзменить компьютер Идентификатор на букву, которую не использует никакая другая станция, затем переподключитесь."
 #: uappstrings.snetcomputeridinuse
 #, fuzzy
 msgid ""
@@ -9166,59 +9262,70 @@ msgid ""
 "\n"
 "Change COMPUTER ID to a letter no other station is using, then reconnect."
 msgstr ""
-"Компьютерный идентификатор %s Он уже используется другой станцией в этой сети.\n"
+"Идентификатор компьютера %s уже используется другой станцией в этой сети.\n"
 "\n"
-"Изменить компьютер Идентификатор на букву, которую не использует никакая другая станция, затем переподключитесь."
+"Измените COMPUTER ID на букву, которую не использует ни одна другая станция, затем переподключитесь."
 
 #: uappstrings.snewcontestin7qpnecountyorstate
 #, fuzzy
 msgid "Enter your county if you are in Indiana, the 7th call area, New England or Delaware. Enter your state, Canadian Province or \"DX\" if outside all four:"
 msgstr "Въезжайте в свой округ, если вы находитесь в Индиане, в районе 7-го звонка, в Новой Англии или штате Делавэр. Введите свой штат, канадскую провинцию или «DX», если за пределами всех четырех:"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "Не LOGGED - журнал конкурса не примет этот QSO. См. tr4w.log. Не очищайте вход."
 #: uappstrings.sqsonotlogged
 #, fuzzy
 msgid "NOT LOGGED -- the contest log would not accept this QSO. See tr4w.log. Do not clear the entry."
-msgstr "Не LOGGED - журнал конкурса не примет этот QSO. См. tr4w.log. Не очищайте вход."
+msgstr "Не LOGGED - журнал контеста не примет этот QSO. См. tr4w.log. Не очищайте вход."
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "Этот конкурс набирает отечественные множители из файла .DOM, и ни один из них не называется, поэтому ни один отечественный множитель не будет засчитан."
 #: uappstrings.sreadinessdomesticfilemissing
 #, fuzzy
 msgid "This contest scores domestic multipliers from a .DOM file and none is named, so no domestic multiplier will be counted."
-msgstr "Этот конкурс набирает отечественные множители из файла .DOM, и ни один из них не называется, поэтому ни один отечественный множитель не будет засчитан."
+msgstr "Этот контест набирает отечественные множители из файла .DOM, и ни один из них не называется, поэтому ни один отечественный множитель не будет засчитан."
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "Установите их в настройках > Станция, затем перезапустите TR4W: они читаются один раз, когда конкурс настроен, поэтому изменение их теперь не изменит этот конкурс."
 #: uappstrings.sreadinessfooter
 #, fuzzy
 msgid "Set these in Preferences > Station, then restart TR4W: they are read once when the contest is set up, so changing them now will not change this contest."
-msgstr "Установите их в настройках > Станция, затем перезапустите TR4W: они читаются один раз, когда конкурс настроен, поэтому изменение их теперь не изменит этот конкурс."
+msgstr "Установите их в настройках > Станция, затем перезапустите TR4W: они читаются один раз, когда контест настроен, поэтому изменение их теперь не изменит этот контест."
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Конкурс' -> 'Контест', s.2 'Контест проводится' and the reviewed 'новый контест'. Previous text: "Конкурс организован, но в TR4W отсутствует необходимая информация:"
 #: uappstrings.sreadinessheading
 #, fuzzy
 msgid "This contest is set up, but TR4W is missing information it needs:"
-msgstr "Конкурс организован, но в TR4W отсутствует необходимая информация:"
+msgstr "Контест организован, но в TR4W отсутствует необходимая информация:"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Мой звонок пуст. TR4W не может без него отработать вашу страну, континент или зону, и ничего, что от них зависит, не будет правильным."
 #: uappstrings.sreadinessmycallmissing
 #, fuzzy
 msgid "MY CALL is empty. TR4W cannot work out your country, continent or zone without it, and nothing that depends on them will be right."
-msgstr "Мой звонок пуст. TR4W не может без него отработать вашу страну, континент или зону, и ничего, что от них зависит, не будет правильным."
+msgstr "MY CALL не задан. Без него TR4W не может определить вашу страну, континент или зону, и всё, что от них зависит, будет неверным."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Моя страна пуста. Как правило, он выполняется через CTY.DAT. Пока у него нет значения TR4W трактует эту станцию как DX - в ARRL Это означает, что DX будет запрашивать каждую станцию для штата или провинции и отказываться от такой мощности, как K или 100."
 #: uappstrings.sreadinessmycountrymissing
 #, fuzzy
 msgid "MY COUNTRY is empty. It is normally worked out from MY CALL through CTY.DAT. Until it has a value TR4W treats this station as DX -- in ARRL DX that means it will ask every station for a state or province and refuse a power such as K or 100."
-msgstr "Моя страна пуста. Как правило, он выполняется через CTY.DAT. Пока у него нет значения TR4W трактует эту станцию как DX - в ARRL Это означает, что DX будет запрашивать каждую станцию для штата или провинции и отказываться от такой мощности, как K или 100."
+msgstr "MY COUNTRY не задан. Обычно он определяется по MY CALL с помощью CTY.DAT. Пока у него нет значения, TR4W считает эту станцию DX -- в ARRL DX это значит, что у каждой станции будет запрашиваться штат или провинция, а мощность вроде K или 100 будет отклоняться."
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "MY GRID пуст, и этот конкурс отправляет вам квадрат сетки."
 #: uappstrings.sreadinessmygridmissing
 #, fuzzy
 msgid "MY GRID is empty and this contest sends your grid square."
-msgstr "MY GRID пуст, и этот конкурс отправляет вам квадрат сетки."
+msgstr "MY GRID пуст, и этот контест отправляет вам квадрат сетки."
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "Мое государство пусто, и этот конкурс отправляет ваш штат, провинцию или раздел. Вместо этого TR4W отправит серийный номер."
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Мое государство пусто, и этот контест отправляет ваш штат, провинцию или раздел. Вместо этого TR4W отправит серийный номер."
 #: uappstrings.sreadinessmystatemissing
 #, fuzzy
 msgid "MY STATE is empty and this contest sends your state, province or section. TR4W will send a serial number instead."
-msgstr "Мое государство пусто, и этот конкурс отправляет ваш штат, провинцию или раздел. Вместо этого TR4W отправит серийный номер."
+msgstr "MY STATE не задан, а этот контест передаёт ваш штат, провинцию или секцию. Вместо этого TR4W будет передавать порядковый номер."
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "Моя зона пуста, и этот конкурс отправляет вашу зону."
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Моя зона пуста, и этот контест отправляет вашу зону."
 #: uappstrings.sreadinessmyzonemissing
 #, fuzzy
 msgid "MY ZONE is empty and this contest sends your zone."
-msgstr "Моя зона пуста, и этот конкурс отправляет вашу зону."
+msgstr "MY ZONE не задан, а этот контест передаёт вашу зону."
 
 #: uappstrings.sverifyallpassed
 #, fuzzy
@@ -9270,6 +9377,7 @@ msgstr "%d из %d Проверка (проверки) не выполнена. 
 msgid "Verification checks"
 msgstr "Проверка"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "Этот файл является базой данных, но он не был создан TR4W:\n\n%sTR4W не может открыть журнал другой программы. Выберите журнал TR4W (.db) или файл конфигурации конкурса (.cfg)."
 #: uprogrammain.scontestfileforeigndatabase
 #, fuzzy
 msgid ""
@@ -9281,8 +9389,9 @@ msgid ""
 msgstr ""
 "Этот файл является базой данных, но он не был создан TR4W:\n"
 "\n"
-"%sTR4W не может открыть журнал другой программы. Выберите журнал TR4W (.db) или файл конфигурации конкурса (.cfg)."
+"%sTR4W не может открыть журнал другой программы. Выберите журнал TR4W (.db) или файл конфигурации контеста (.cfg)."
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "Этот файл не является журналом TR4W и не является файлом конфигурации конкурса:\n\n%sВыберите журнал TR4W (.db) или файл конфигурации конкурса (.cfg)."
 #: uprogrammain.scontestfilenotrecognised
 #, fuzzy
 msgid ""
@@ -9292,9 +9401,9 @@ msgid ""
 "\n"
 "Choose a TR4W log (.db) or a contest configuration file (.cfg)."
 msgstr ""
-"Этот файл не является журналом TR4W и не является файлом конфигурации конкурса:\n"
+"Этот файл не является журналом TR4W и не является файлом конфигурации контеста:\n"
 "\n"
-"%sВыберите журнал TR4W (.db) или файл конфигурации конкурса (.cfg)."
+"%sВыберите журнал TR4W (.db) или файл конфигурации контеста (.cfg)."
 
 #: utr4wstrings.tc_bankalt
 #, fuzzy
@@ -9327,10 +9436,11 @@ msgstr "КОНТЕСТ"
 msgid "Search: type part of a name, e.g. QSO"
 msgstr "Поиск: тип части имени, например QSO"
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "%s: %d QSO(s), например. %s (этот конкурс: %s)"
 #: uappstrings.simportmyfactsdifference
 #, fuzzy
 msgid "%s: %d QSO(s), e.g. %s (this contest: %s)"
-msgstr "%s: %d QSO(s), например. %s (этот конкурс: %s)"
+msgstr "%s: %d QSO(s), например. %s (этот контест: %s)"
 
 #: uappstrings.simportmyfactskept
 #, fuzzy
@@ -9346,23 +9456,57 @@ msgid ""
 "Yes keeps the file's. No gives them this contest's, as a new QSO would get."
 msgstr ""
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "%d QSO(ы) были предоставлены станции этого конкурса вместо файла."
 #: uappstrings.simportmyfactsreplaced
 #, fuzzy
 msgid "%d QSO(s) were given this contest's station in place of the file's."
-msgstr "%d QSO(ы) были предоставлены станции этого конкурса вместо файла."
+msgstr "%d QSO(ы) были предоставлены станции этого контеста вместо файла."
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "%d QSO(s) назвала нашу станцию%sТо же, что и в этом конкурсе."
 #: uappstrings.simportmyfactssame
 #, fuzzy
 msgid "%d QSO(s) named our station (%s), the same as this contest's."
-msgstr "%d QSO(s) назвала нашу станцию%sТо же, что и в этом конкурсе."
+msgstr "%d QSO(s) назвала нашу станцию%sТо же, что и в этом контесте."
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "%d QSO (s) не назвала ни одной станции нашей и получила этот конкурс."
 #: uappstrings.simportmyfactsstamped
 #, fuzzy
 msgid "%d QSO(s) named no station of ours and were given this contest's."
-msgstr "%d QSO (s) не назвала ни одной станции нашей и получила этот конкурс."
+msgstr "%d QSO (s) не назвала ни одной станции нашей и получила этот контест."
 
+# 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "Показать неактивные конкурсы"
 #: uappstrings.snewcontestshowinactive
 #, fuzzy
 msgid "Show inactive contests"
-msgstr "Показать неактивные конкурсы"
+msgstr "Показать неактивные контесты"
+
+#: uappstrings.slatestcontestdetail
+#, fuzzy
+msgid "%0:s - %1:s"
+msgstr "%0:s - %1:s"
+
+#: uappstrings.slatestcontestline
+#, fuzzy
+msgid "%0:s %1:d"
+msgstr "%0:s %1:d"
+
+#: uappstrings.snewcontestfilescall
+#, fuzzy
+msgid "Call"
+msgstr "Позывной"
+
+#: uappstrings.snewcontestfilescontest
+#, fuzzy
+msgid "Contest"
+msgstr "Контест"
+
+#: uappstrings.snewcontestfilesfile
+#, fuzzy
+msgid "File"
+msgstr "Файл"
+
+#: uappstrings.snewcontestfilesyear
+#, fuzzy
+msgid "Year"
+msgstr "Год"
 

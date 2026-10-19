@@ -633,6 +633,11 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestStationFactOverrides in 'uTestStationFactOverrides.pas',
    (* M9b: the New Contest drop-down's list, and a CATEGORY-POWER change. *)
    uContestChoices      in '..\..\src\uContestChoices.pas',
+   (* The New Contest dialog's Last Contest button: the log read without
+      adopting it, and the caption fitted to the button. *)
+   uLogFileFacts        in '..\..\src\domain\uLogFileFacts.pas',
+   uLatestContest       in '..\..\src\uLatestContest.pas',
+   uTestLatestContest   in 'uTestLatestContest.pas',
    uCategoryPowerChange in '..\..\src\uCategoryPowerChange.pas',
    uTestContestUI       in 'uTestContestUI.pas',
    (* M10 S8: every contest's identity values, frozen as literals when the
@@ -718,6 +723,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* A .dom loaded into a table that already holds one (LOGDOM's emptying
       loop read through nil at the end of every list, D7 included). *)
    uTestDomQTHTableReload in 'uTestDomQTHTableReload.pas',
+   (* Shipped .dom files against their sponsor's list: LABRE's 28 codes and
+      HQ, EUDX's regions only (UDC cross-walk leads, 2026-10-19). *)
+   uTestShippedDomLists in 'uTestShippedDomLists.pas',
    (* ZONECONT's domestic COUNTRY list, once a hand-built linked list:
       order, duplicates, case, width, and the reset (pointer audit P5). *)
    uTestDomesticCountryList in 'uTestDomesticCountryList.pas',
@@ -827,6 +835,7 @@ begin
    RegisterSuite(THostAreaRuleTests.Create('HostAreaRule'));
    RegisterSuite(TGridExchangeTests.Create('GridExchange'));
    RegisterSuite(TDomQTHTableReloadTests.Create('DomQTHTableReload'));
+   RegisterSuite(TShippedDomListsTests.Create('ShippedDomLists'));
    RegisterSuite(TDomesticCountryListTests.Create('DomesticCountryList'));
    RegisterSuite(TCRC32Tests.Create('CRC32'));
    RegisterSuite(TCRC16Tests.Create('CRC16'));
@@ -885,6 +894,7 @@ begin
    RegisterSuite(TRadioLinkRetryTests.Create('RadioLinkRetry'));
    RegisterSuite(TStatusAndNoticeTests.Create('StatusAndNotice'));
    RegisterSuite(TNewContestFormTests.Create('NewContestForm'));
+   RegisterSuite(TLatestContestTests.Create('LatestContest'));
    RegisterSuite(TWSJTXThreadingTests.Create('WSJTXThreading'));
    RegisterSuite(TAcceleratorTests.Create('Accelerators'));
    RegisterSuite(TMenuShortcutTests.Create('MenuShortcuts'));

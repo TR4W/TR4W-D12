@@ -15,8 +15,10 @@ gitignored: it quotes third-party files. See `tools/udc/README.md`.
 
 **Source ranking (NY4I): D7 > sponsor rules > WA7BNM > DXLog > UDC.** A UDC is
 community-written for another program. Every item below is a LEAD to check
-against a higher source, never a verdict, and nothing here changed any code,
-`.dom` or class.
+against a higher source, never a verdict. The reading itself changed no code,
+`.dom` or class; items 1 and 2 below were then checked against the sponsors'
+rules and FIXED (2026-10-19, NY4I: *"yes add GO to brazil.dom and clean up
+EUDX"*).
 
 ## Counts
 
@@ -44,16 +46,39 @@ UDC at all.
 
 ### Section and multiplier lists (`.dom` against the UDC's `.sec`)
 
-1. **LABRE DX: `brazil.dom` has no Goias (`GO`).** It holds 26 multipliers;
-   Brazil is 26 states plus the Federal District, and DF is present, so GO is
-   the one missing. The UDC's state list carries GO (and `HQ`, presumably the
-   LABRE headquarters station). Strongest data lead in this reading.
-2. **EUDX: `EUDX.dom` has `BE011` where the UDC has `BE11`** -- probably a typo
-   for Belgian region 11. The same file also carries entries that are not
-   regions: `eudx = eudx`, `Page = Page`, and 26 blank ` = ` lines, all read by
-   the loader as entries (`logdom.EnumDOMFILE` takes every line holding `=`).
-   Whether `EUDX`, `PAGE` or an empty multiplier then reaches the remaining-
-   multipliers list was not checked here. The UDC lacks `DK06`, which TR4W has.
+1. **FIXED 2026-10-19. LABRE DX: `brazil.dom` had no Goias (`GO`).** The
+   sponsor's list is longer than the UDC's: the 2026 rules
+   (<https://www.labre.org.br/contest/wp-content/uploads/2026/07/Regulamento-Contest-LABRE-DX-2026-Ingles-v3.pdf>,
+   section V, Table 1) give 28 codes -- the 26 states, `DF` and Fernando de
+   Noronha (`FN`) -- and section VI.C counts the official LABRE stations,
+   whose exchange is `HQ`, as a multiplier. The file had 26; `GO`, `FN` and
+   `HQ` were added, so a station sending one is no longer refused as an
+   improper domestic QTH. Pinned by `uTestShippedDomLists`.
+   **ALSO FIXED, found while measuring:** the multiplier was the line's LEFT
+   side (the state's NAME), and the domestic table and the sheet both keep
+   ten characters, so `Rio Grande do Norte`/`Rio Grande do Sul` were one
+   multiplier (`Rio Grande`) and `Mato Grosso`/`Mato Grosso do Sul` another
+   (`Mato Gross`): 26 lines loaded as 24 multipliers. NY4I: *"The codes are
+   the multipliers. Rio Grande is RN (Norte) and RS (Sul)."* Every line is
+   `CODE = CODE, ^Name` now -- 29 distinct multipliers, the code still the
+   accepted exchange, the name the remaining-multipliers window's display
+   name (`^`, `EnumDOMFILE` -> `AltName`, upper-cased by the loader). LABRE's
+   frozen matrix record moves with it (the stored multiplier is the code).
+2. **FIXED 2026-10-19. EUDX: `eudx.dom` had `BE011` where the sponsor has
+   `BE11`** (East Flanders; <https://www.eudx-contest.com/rules/>, point 7),
+   and 28 lines that were not regions: 26 ` = `, `eudx = eudx` and
+   `Page = Page`. MEASURED before removal: `EnumDOMFILE` added the left side
+   of each to the sheet's domestic list -- an EMPTY multiplier, `eudx` and
+   `Page` (279 entries for 276 regions), all listed by the remaining-
+   multipliers window (`uRemMults`) -- and `EUDX` and `PAGE` were accepted
+   exchanges; because `TContestEUDX` scores a station as in the EU when its
+   exchange matched the file, either scored as an EU region (10 points from
+   outside the EU). All removed; pinned by `uTestShippedDomLists`.
+   **`DK06` ALSO REMOVED** ("Overseas Countries and Territories"): it is in
+   the sponsor's 2022-2025 lists (Wayback, 2025-01-27) and gone from the 2026
+   rules, which list `DK01`-`DK05`; the UDC agrees, and NY4I confirmed it.
+   The file and the sponsor's 2026 list now agree code for code (275
+   regions), pinned by the same test.
 3. **Winter Field Day: the UDC's section list is the stale one, not TR4W's.**
    It carries `GTA`, `MAR` and `NT`; TR4W's `arrlsect.dom` has `GH`, `NB`, `NS`
    and `TER` -- the current RAC sections. Nothing to change on that account. The
@@ -136,3 +161,147 @@ plainly different events (AMSAT Field Day, SARA Spring Sprint, SP PGA...).
   multiplier and its right side the accepted spellings. "Not accepted" means
   the UDC spelling is not a TR4W alias, not that the multiplier is missing.
 - `not-in-tr4w` is a reference list. NY4I is not adding those contests.
+
+## N1MM built-in contests
+
+**Reading of 2026-10-19, from the N1MM Logger source, c. 2014** -- NY4I's copy,
+from a review he did for the N1MM team about twelve years ago. It is not in
+this repository and its text must never be. Its Cabrillo names may be stale
+against today's sponsors, so where TR4W and N1MM differ, **the sponsor's
+current name is the verdict**, and WA7BNM's detail page (which also lists the
+names the sponsor's log robot accepts as ALIASES) stands in for the sponsor
+where the sponsor publishes none. Authority order: D7 > sponsor's Cabrillo
+template > WA7BNM > DXLog > N1MM built-in > UDC. **Nothing here renamed
+anything**: a stored name keeps its meaning forever, and a rename (with its
+read alias) is NY4I's call.
+
+```
+python -I tools/udc/n1mm_builtin.py "C:\projects\N1MMSource\N1MM Logger\Source" ^
+       --names <contest-names CSV> --names-out <same CSV> [--fetch-wa7bnm]
+```
+
+It wrote `tools/udc/cache/n1mm_builtin.csv` and `n1mm_crosswalk.csv`
+(gitignored), and added eight columns to NY4I's contest-names table: N1MM
+name / display name / Cabrillo name / mode, UDC Cabrillo name, WA7BNM
+Cabrillo name, `Cabrillo agrees?` (TR4W against N1MM) and a Note. See
+`tools/udc/README.md`.
+
+### Counts
+
+| | |
+|---|---|
+| `AddChgContest` calls in the VB source files | 229: **227 parsed, 2 unparsed** |
+| unparsed | `ContestInterface.cls` (the plug-in interface template, 9 arguments); `CUserChoice.cls` (the UDC loader -- every argument is a variable) |
+| excluded, not VB source | `CDx.cls.bak`, `CQCWAQSO.cls.bak`, `CQSOpartyNR.cls.bak`, `CUserChoice.cls.bak` (13 calls between them), `New contest.wri` |
+| branch-dependent calls | `CAA.cls` (continent: WPX prefix or country multiplier) and `CArrlDx.cls` (US/VE or not) -- the same contest under each branch, so one entry each |
+| distinct N1MM entries | 223: matched 101, ambiguous 5, unmatched 117 |
+| **TR4W contests (187)** | **matched 93, ambiguous 13, unmatched 81** |
+
+Matches by method: `cabrillo-exact` 64, `cabrillo-normalized` 3,
+`name-to-id` 4, `display-exact` 3, `curated` 19 (each with its evidence in
+`N1MM_CURATED`). The 13 ambiguous TR4W contests are listed, not counted: N1MM
+has one module where TR4W has several -- RAC (Canada Day / Winter), the EU
+Sprint CW and SSB (spring / autumn), IARU Region 1 Field Day (TR4W's plain
+and two RCC runnings), `Mini Test CW` (MINITEST / MINI40 / MINI80) -- and
+three RSGB 1.8 MHz entries (CW, 1st, 2nd) for TR4W's one RSGB-160.
+
+Most of the 117 unmatched N1MM entries are events TR4W does not carry (BARTG,
+the ARRL Rookie Roundup, DARC 10 m Digi, JARTS, the UK DX, LoTW, the TARA
+events...). Of the 81 unmatched TR4W contests, about twenty are state QSO
+parties (N1MM has one generic `QSOPARTY` module); the rest are events N1MM
+did not carry in 2014 or carries under a name nothing here could tie.
+
+### TR4W and N1MM disagree on 29 Cabrillo names -- the verdicts
+
+TR4W agrees with N1MM on the other 64 matched contests.
+
+| verdict | contests (TR4W writes / N1MM writes / the answer) |
+|---|---|
+| **TR4W is right** (6) | ALL-ASIAN-DX-CW and -SSB (`AADX-CW` / `AA-CW`: WA7BNM `AADX-CW`, N1MM's is an alias); **AP-SPRINT** (`AP-SPRINT` / `AP-Sprint-CW`, `-SSB`: the sponsor's own rules, revised January 2024, give `CONTEST: AP-SPRINT` for both modes); CWOPEN (`CW-OPEN` / `CWOPS-Open`: WA7BNM `CW-OPEN`); RSGB-ROPOCO-CW (`RSGB-ROLO` / `RSGB-ROPOCO`: WA7BNM `RSGB-ROLO`, the old name an alias); YUDX (`YUDX` / `YU-DX`: WA7BNM `YUDX`) |
+| **N1MM writes the primary name; TR4W's is an accepted alias** (6) | BALTIC (`BALTIC-CONTEST`), EUROPEAN HFC (`EUHFC`), HA DX (`HA-DX`), LZ DX (`LZ-DX`), OK-OM DX CW (`OK-OM-DX`), GAGARIN-CUP (`GC`) |
+| **neither writes the primary; both are aliases** (4) | CROATIAN (WA7BNM `9A-DX`; `CROATIAN` and N1MM's `9A-CW` both aliases), SP DX (`SPDX`), UN DX (`UN-DX`), WW PMC (`WW-PMC`) |
+| **TR4W's name is NOT accepted; N1MM writes the primary** (4) | CQMM (`CQMM` / `CQMMDX`), CWOPS (`CWOPS` / `CW-Ops`; WA7BNM `CW-OPS`, alias `CW-OPS-CWT`), UKRAINIAN (`UKRAINIAN` / `UKRAINIAN-DX`; alias `URDXC`), WRTC (`WRTC` / `IARU-HF`: WRTC is scored inside the IARU HF Championship -- whether TR4W's WRTC should write `IARU-HF` is NY4I's call) |
+| **TR4W's name is NOT accepted; N1MM writes an alias** (1) | GACW-WWSA-CW (`GACW-WWSA-CW` / `GACW`; WA7BNM `WWSA`) |
+| **unsettled -- no WA7BNM name and no sponsor answer** (6) | BWQP (`FOC-BWQP`: the FOC page names none); QCWA (`QCWAQSO`: the 2021 rules ask only for "Cabrillo format"); RF-CUP-CW / -SSB / -DIG (`RFC-CW` / `-SSB` / `-DIGI`: the rules are on qrz.ru, unreachable from here by design); UKRAINE CHAMPIONSHIP (`UKR-CHAMP-CW` / `-SSB` / `-RTTY`; see Q98 below) |
+| **moot -- inactive** (2) | CIS (`CISDX-CW`; inactive since 2004, the sponsor page names none), WWIH (`WW-IH`; inactive, rules PDF gone) |
+
+### TR4W against WA7BNM, where N1MM has nothing to say
+
+WA7BNM gives a Cabrillo name for 126 of TR4W's contests. **TR4W writes
+neither that name nor one of its aliases for 18**: the five in the last two
+"NOT accepted" rows above, and BCQP (`BC-QSO-PARTY`), CALIFORNIA QSO PARTY
+(`CA-QSO-PARTY`), CQ-VHF (`CQ-VHF-SSBCW` -- N1MM's c. 2014 `CQ-VHF` agrees with
+TR4W; a guess, unchecked: the name changed when CQ added the separate
+`CQ-VHF-DIGI` running), DARC-XMAS (`XMAS`), EUDX (`EUDXC`, as
+the UDC said), MST (`ICWC-MST`), IRTS (`IRTS-80-CONTEST`), MARCONI MEMORIAL
+(`MMC-HF-CW`), CANADA DAY and CANADA WINTER (`CANADA-DAY`, `CANADA-WINTER`),
+RU3AX MEMORIAL (`RADIO-160`, as three UDCs said), TEXAS QSO PARTY (`TXQP`) and
+YBDX (`ORARI-DX`). These are the strongest candidates for NY4I's rename list,
+each a stored-name decision with a read alias.
+
+**DONE 2026-10-19 -- all 18 renamed** (NY4I: *"do the cabrillo renames"*).
+Each class's `GetCabrilloName` now states WA7BNM's name; the left-hand names
+above were re-measured from the classes first and all 18 matched the
+crosswalk. Only the Cabrillo `CONTEST:` line moves (and LOGSUBS2's UDP
+`<contestname>`, which writes the same `CabrilloName`): the stored id
+(`ContestTypeSA`), the ADIF `CONTEST_ID` and the display names are separate
+literals and did not change. **No read alias was needed**: TR4W has no Cabrillo
+import, and every reader of `CabrilloName` writes it.
+
+**TR4W's XMAS contest is NOT the DARC Christmas contest** (NY4I, 2026-10-19),
+so it no longer writes `XMAS` beside it. It is the **SSA Jultest** (Sveriges
+Sändareamatörer, 25 December 0800-1100 UTC, 80/40 m CW/SSB): RST + serial from
+001 + a five-letter group, 2 points per QSO, no multipliers -- this class's
+exchange and scoring exactly (`regler.html`, updated 2022-11-01). The sponsor's
+Cabrillo page says the name *must* be `SSA-JULTEST`
+(https://hfcontest.ssa.se/ssa-jt/ssa-jt-cabrillo.html, updated 2022-11-12);
+DXLog's `SSA_JT.txt` and N1MM's `SSA_JT.udc` agree, and WA7BNM does not list
+it. `uContestXmas.GetCabrilloName` now writes `SSA-JULTEST`; its stored id and
+ADIF id stay `XMAS`. **A data defect stays in that class, reported and not
+changed**: its QRZ.RU id 100 is the DARC XMAS Contest page (checked through the
+Wayback Machine), the DARC-XMAS row's id copied into this row in D7; the
+Jultest's own id is not known.
+
+So **two Cabrillo names are SHARED on purpose**, and no others: WRTC writes
+`IARU-HF` as the IARU HF Championship does, and the RSGB RoLo's CW and SSB
+runnings both write `RSGB-ROLO`, the one name WA7BNM gives each (refs 77 and
+361; this predates the renames). `uTestContestIdentityPin.Test_WA7BNMCabrilloRenamesMoveOnlyTheCabrilloName`
+pins all 18 renames and XMAS's, and walks the registry: any other two contests
+writing one Cabrillo name fail it. The "NOT accepted" rows in the table above
+and this paragraph record the 2026-10-19 reading, before the renames.
+
+### Gaps N1MM fills
+
+**None of the kind asked for: no TR4W contest has a blank Cabrillo name.**
+N1MM's value is the 29 disagreements above, and the leads below.
+
+### Q98 open contests
+
+- **UKRAINE CHAMPIONSHIP -- identified, with a scoring question.** N1MM's
+  `CUKRChamp.cls` is the "Championship of Ukraine": oblast (two letters) +
+  serial, 2 points a QSO, 160 and 80 m, RTTY, CW and SSB, four one-hour
+  sessions. D7's row agrees on the exchange (QSONumberDomesticQTHExchange,
+  `ukraine.dom`'s two-letter oblasts) and the 2 points. N1MM also adds 10
+  points for each oblast per session, where D7 counts domestic multipliers.
+  WA7BNM 334, the *Open* Ukraine RTTY Championship (`UKR-CHAMP-RTTY`), scores
+  the same 2 + 10 with no multipliers but runs 160-10 m. A lead for Q98's
+  bands (160/80) and modes (CW, SSB, RTTY); confirm against the sponsor.
+- **SOUTH AMERICAN WW -- WA7BNM accepts TR4W's own Cabrillo name for the WWSA.**
+  WA7BNM 45 (GACW WWSA CW, Cabrillo `WWSA`) lists `SOUTH AMERICAN WW` as an
+  alias, so the WWSA log robot takes a TR4W log as WWSA. That ties D7's
+  contest to the GACW WWSA, which TR4W also carries as GACW-WWSA-CW. But
+  today's WWSA scores RST + CQ zone, 0/1/3 and 5 for South America, not D7's
+  RST + continent and 2/10. Either the rules changed after D7, or they are two
+  events sharing a name. N1MM's `CCQSA.cls` (CQ SA SSB: 10 points to South
+  America for non-SA stations) is a weaker lead.
+- **QCWA GOLDEN -- no identification.** N1MM carries only the QCWA QSO Party
+  (`CQCWAQSO.cls`, matched to TR4W's QCWA). TR4W's QCWA and QCWA GOLDEN score
+  identically (2 CW, 1 phone), so N1MM's one module does not separate them.
+- **JA LONG PREFECT -- no identification.** N1MM's `CJAdomestic.cls` is a
+  generic JA-domestic module (JA works JA; prefecture number + power letter,
+  1 point, with an ALL JA example). TR4W's contest exchanges a "long" JA
+  prefecture (`jacg3`), so the module does not settle it.
+- **OZHCR-VHF, WWL, RADIO-YOC -- nothing in N1MM.** N1MM's `cRRTC.cls` writes
+  `OZCHR` for both the RRTC and RRTCT entries (TR4W's OZCHR, matched);
+  nothing names the VHF running. WA7BNM's Popov Memorial (`RADIO-POPOV`) is a
+  YL event and does not support the Popov Youth Cup lead above.

@@ -42,8 +42,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   SCORING, transcribed from LABREQSOPointMethod: another continent 6 on 160,
   80 and 40 m and 3 elsewhere; the same continent but another country 4 and
   2; the same country 2 and 1.
-  ITS PARSE: a Brazilian station sends its state, so a PY station is parsed
-  as a domestic QTH and never as DX; everybody else is the shape's own rule. *)
+  ITS PARSE: a Brazilian station sends its state, so a PY station -- or a
+  PY0F one, Fernando de Noronha being a Table 1 code (2026-10-19) -- is
+  parsed as a domestic QTH and never as DX; everybody else is the shape's
+  own rule. *)
 unit uContestLABRE;
 
 {$I tr4w.inc}
@@ -88,9 +90,12 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   private
+      (* DOES THE WORKED STATION SEND A TABLE 1 CODE? -- see the body. *)
+      function SendsBrazilianState(const aExch: ContestExchange): boolean;
    public
-      (* A PY STATION SENDS A STATE -- see the header. Under the shape the
-         rule stood in. *)
+      (* A STATION IN BRAZIL SENDS A STATE -- see the header and
+         SendsBrazilianState. Under the shape the rule stood in. *)
       function ParseReceivedExchange(const aText: string;
                                      const aSession: TReceivedExchangeSession;
                                      var aExch: ContestExchange;
@@ -206,6 +211,26 @@ begin
       end;
 end;
 
+(* A STATION THAT SENDS ONE OF TABLE 1'S CODES -- 2026-10-19.
+
+   The 2026 rules (section V): a station in Brazil sends its Table 1 code,
+   anybody else a continent. Table 1 lists the 26 states, DF and Fernando de
+   Noronha (FN) -- and Fernando de Noronha is its own DXCC entity, PY0F, so
+   the test that stood here (`CountryID = 'PY'`) sent a PY0F station's FN
+   to the DX shape: accepted as text, its DXCC entity credited, FN never
+   looked up in brazil.dom and so never a state multiplier (measured with
+   the contest matrix's parse section). Both multipliers count under the
+   rules (VI.C: DXCC entities AND Brazilian states).
+
+   PY0S (St Peter & St Paul) and PY0T (Trindade & Martim Vaz) are NOT here:
+   Table 1 has no code for either and the rules say nothing of them, so they
+   stay on the contest's format (a continent or a text). Open for NY4I. *)
+function TContestLABRE.SendsBrazilianState(const aExch: ContestExchange): boolean;
+begin
+   Result := (aExch.QTH.CountryID = 'PY')   or
+             (aExch.QTH.CountryID = 'PY0F');
+end;
+
 function TContestLABRE.ParseReceivedExchange(const aText: string;
                                             const aSession: TReceivedExchangeSession;
                                             var aExch: ContestExchange;
@@ -215,7 +240,7 @@ begin
       RSTDomesticOrDXQTHExchange, its trait, and no DescribeSession
       states another, so the test that stood here was always true.
       Deleted at M11 S2 (plan F11). *)
-   if aExch.QTH.CountryID = 'PY' then
+   if SendsBrazilianState(aExch) then
       begin
       aErrorMessage := '';
       Result := aSession.Parsers.ParseRSTDomesticQTH(aText, aExch);

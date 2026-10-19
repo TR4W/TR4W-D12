@@ -306,6 +306,21 @@ begin
    exch := NewExch('DL1ABC', 'DL');
    Parse(LABRE, True, '599 DL', exch, msg);
    CheckEquals('ParseRSTDomesticOrDXQTH', GShapeAsked, 'anybody else: the contest''s format');
+
+   (* FERNANDO DE NORONHA IS A TABLE 1 CODE (FN) AND ITS OWN DXCC ENTITY,
+      PY0F: a station there sends a state too (2026-10-19). It went to the
+      contest's format, so FN was never a state multiplier. *)
+   ResetStub;
+   exch := NewExch('PY0FF', 'PY0F');
+   Parse(LABRE, True, '599 FN', exch, msg);
+   CheckEquals('ParseRSTDomesticQTH', GShapeAsked, 'a PY0F station: a domestic QTH');
+
+   (* TRINDADE (PY0T) HAS NO TABLE 1 CODE and the rules say nothing of it:
+      the contest's format, as before -- open for NY4I. *)
+   ResetStub;
+   exch := NewExch('PY0TA', 'PY0T');
+   Parse(LABRE, True, '599 SA', exch, msg);
+   CheckEquals('ParseRSTDomesticOrDXQTH', GShapeAsked, 'a PY0T station: the contest''s format');
 end;
 
 (* THE UA4W CHAMPIONSHIP'S QTH IS ITS DOMESTIC QTH -- LOGSTUFF's rule inside

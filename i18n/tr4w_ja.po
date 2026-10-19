@@ -55,6 +55,7 @@ msgctxt "TC_FREQ"
 msgid "Freq"
 msgstr "フリーク"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'ピッツ' -> '点', s.3 '10 点' (ピッツ = pits). Previous text: "ピッツ"
 #. Section: General
 #: utr4wstrings:tc_points
 #: tr4w/src/lang/tr4w_consts_eng.pas:12
@@ -62,7 +63,7 @@ msgstr "フリーク"
 #, fuzzy
 msgctxt "TC_POINTS"
 msgid "Pts"
-msgstr "ピッツ"
+msgstr "点"
 
 #. Section: General
 #: utr4wstrings:tc_op
@@ -82,6 +83,7 @@ msgctxt "TC_INVALID"
 msgid "Invalid Entry"
 msgstr "無効な記入項目"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '記録される無効な頻度' -> '無効な周波数が記録されました', s.12 '周波数' (頻度 = how often). Previous text: "ERROR: 記録される無効な頻度"
 #. Section: General
 #: utr4wstrings:tc_freq_zero
 #: tr4w/src/lang/tr4w_consts_eng.pas:15
@@ -89,8 +91,9 @@ msgstr "無効な記入項目"
 #, fuzzy
 msgctxt "TC_FREQ_ZERO"
 msgid "ERROR: Invalid Frequency logged"
-msgstr "ERROR: 記録される無効な頻度"
+msgstr "ERROR: 無効な周波数が記録されました"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "ログの周波数がオフに表示"
 #. Section: General
 #: utr4wstrings:tc_freq_off
 #: tr4w/src/lang/tr4w_consts_eng.pas:16
@@ -98,7 +101,7 @@ msgstr "ERROR: 記録される無効な頻度"
 #, fuzzy
 msgctxt "TC_FREQ_OFF"
 msgid "SHOW FREQUENCY IN LOG is turned off"
-msgstr "ログの周波数がオフに表示"
+msgstr "SHOW FREQUENCY IN LOG がオフになっています"
 
 #. Section: General
 #: utr4wstrings:tc_checkcallsign
@@ -238,6 +241,7 @@ msgctxt "TC_CONFIGURATION_FILE"
 msgid "Configuration file"
 msgstr "設定ファイル"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '現在の演算子コールサイン' -> '現在のオペレーターのコールサイン', s.11 'シングルオペレーター' (演算子 = mathematical operator). Previous text: "現在の演算子コールサイン"
 #. Section: MAIN
 #: utr4wstrings:tc_current_operator_callsign
 #: tr4w/src/lang/tr4w_consts_eng.pas:40
@@ -245,7 +249,7 @@ msgstr "設定ファイル"
 #, fuzzy
 msgctxt "TC_CURRENT_OPERATOR_CALLSIGN"
 msgid "current operator callsign"
-msgstr "現在の演算子コールサイン"
+msgstr "現在のオペレーターのコールサイン"
 
 #. Section: MAIN
 #: utr4wstrings:tc_appendimportedqsostocurrentlog
@@ -266,6 +270,7 @@ msgctxt "TC_QSO_IMPORTED"
 msgid "Qs imported."
 msgstr "輸入されるQs."
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'デュペです' -> '重複です', s.8 '「重複」'. Previous text: "%sはデュペです!"
 #. Section: MAIN
 #: utr4wstrings:tc_isadupe
 #: tr4w/src/lang/tr4w_consts_eng.pas:43
@@ -273,7 +278,7 @@ msgstr "輸入されるQs."
 #, fuzzy
 msgctxt "TC_ISADUPE"
 msgid "%s is a dupe!!"
-msgstr "%sはデュペです!"
+msgstr "%sは重複です!"
 
 #. Section: MAIN
 #: utr4wstrings:tc_errorinlogfile
@@ -302,6 +307,7 @@ msgctxt "TC_PREF_OR_CQZONE"
 msgid "Enter your CQ ZONE or JA PREFECTURE"
 msgstr "あなたのCQ ZONEまたはJA PREFECTUREを入力してください"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "お問い合わせ いいえ LOG = このコンピュータ上でQSOをログに禁止するTRUE"
 #. Section: MAIN
 #: utr4wstrings:tc_sorrynolog
 #: tr4w/src/lang/tr4w_consts_eng.pas:47
@@ -309,7 +315,7 @@ msgstr "あなたのCQ ZONEまたはJA PREFECTUREを入力してください"
 #, fuzzy
 msgctxt "TC_SORRYNOLOG"
 msgid "Sorry!! NO LOG = TRUE which prohibits logging QSOs on this computer"
-msgstr "お問い合わせ いいえ LOG = このコンピュータ上でQSOをログに禁止するTRUE"
+msgstr "申し訳ありません!! NO LOG = TRUE のため、このコンピューターでは QSO を記録できません"
 
 #. Section: MAIN
 #: utr4wstrings:tc_setcomputeridvalue
@@ -455,6 +461,7 @@ msgctxt "TC_NOTE"
 msgid "note"
 msgstr "お問い合わせ"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'パイプシート' -> '重複シート', s.8 '「重複」' (パイプ = pipe). Previous text: "パイプシートクリア!"
 #. Section: MAIN
 #: utr4wstrings:tc_dupesheetcleared
 #: tr4w/src/lang/tr4w_consts_eng.pas:67
@@ -462,7 +469,7 @@ msgstr "お問い合わせ"
 #, fuzzy
 msgctxt "TC_DUPESHEETCLEARED"
 msgid "Dupe sheet cleared!"
-msgstr "パイプシートクリア!"
+msgstr "重複シートクリア!"
 
 #. Section: MAIN
 #: utr4wstrings:tc_multsheetcleared
@@ -491,6 +498,7 @@ msgctxt "TC_CLEARMULTTOCLEARMULTSHEET"
 msgid "\"CLEARMULT\" to clear the multsheet"
 msgstr "「CLEARMULT」をクリアしてmultsheetをクリア"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '送信頻度' -> '送信周波数', s.12 '周波数' (頻度 = how often). Previous text: "送信頻度(kiloHertz): "
 #. Section: MAIN
 #: utr4wstrings:tc_transmitfrequencykilohertz
 #: tr4w/src/lang/tr4w_consts_eng.pas:72
@@ -498,7 +506,7 @@ msgstr "「CLEARMULT」をクリアしてmultsheetをクリア"
 #, fuzzy
 msgctxt "TC_TRANSMITFREQUENCYKILOHERTZ"
 msgid "transmit frequency (kiloHertz): "
-msgstr "送信頻度(kiloHertz): "
+msgstr "送信周波数(kiloHertz): "
 
 #. Section: MAIN
 #: utr4wstrings:tc_sprintqsyrule
@@ -950,6 +958,7 @@ msgctxt "TC_ENTERFIRSTTWODIGITSOFYOURQTH"
 msgid "Enter first two digits of your QTH:"
 msgstr "QTHの最初の2桁を入力してください"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "年齢を入力してください"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryourageinmystatefield
 #: tr4w/src/lang/tr4w_consts_eng.pas:134
@@ -957,8 +966,9 @@ msgstr "QTHの最初の2桁を入力してください"
 #, fuzzy
 msgctxt "TC_ENTERYOURAGEINMYSTATEFIELD"
 msgid "Enter your age in MY STATE field:"
-msgstr "年齢を入力してください"
+msgstr "年齢を MY STATE 欄に入力してください:"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "北アメリカにいるか、または外にいると送信したいQTHを入力してください"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryourqthorpower
 #: tr4w/src/lang/tr4w_consts_eng.pas:135
@@ -966,7 +976,7 @@ msgstr "年齢を入力してください"
 #, fuzzy
 msgctxt "TC_ENTERYOURQTHORPOWER"
 msgid "Enter your QTH that you want to send if you are in North America or your power as MY STATE if outside:"
-msgstr "北アメリカにいるか、または外にいると送信したいQTHを入力してください"
+msgstr "北米にいる場合は送信するQTHを、それ以外の場合は送信出力を MY STATE として入力してください:"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enterfirsttwolettersofyourgrid
@@ -1351,6 +1361,7 @@ msgctxt "TC_SWITZERLAND"
 msgid "Switzerland"
 msgstr "スイス"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '本社(本社駅)' -> 'HQ (HQ局)', s.3 '局' (本社駅 = head-office railway station). Previous text: "本社(本社駅)"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_hq
 #: tr4w/src/lang/tr4w_consts_eng.pas:179
@@ -1358,7 +1369,7 @@ msgstr "スイス"
 #, fuzzy
 msgctxt "TC_HQ"
 msgid "HQ (HQ station)"
-msgstr "本社(本社駅)"
+msgstr "HQ (HQ局)"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_spain
@@ -1486,6 +1497,7 @@ msgctxt "TC_CONNECTED"
 msgid "CONNECTED"
 msgstr "接続される"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '別の駅で見られます.' -> '他局にスポットされました.', s.2.d 'セルフ・スポッティング', s.3 '局' (= 'you are seen at another railway station'). Previous text: "別の駅で見られます."
 #. Section: UTELNET
 #: utr4wstrings:tc_youarespottedbyanotherstation
 #: tr4w/src/lang/tr4w_consts_eng.pas:202
@@ -1493,7 +1505,7 @@ msgstr "接続される"
 #, fuzzy
 msgctxt "TC_YOUARESPOTTEDBYANOTHERSTATION"
 msgid "You are spotted by another station."
-msgstr "別の駅で見られます."
+msgstr "他局にスポットされました."
 
 #. Section: UNET
 #: utr4wstrings:tc_connectiontotr4wserverlost
@@ -1693,6 +1705,7 @@ msgctxt "TC_ENTER"
 msgid "Enter %s :"
 msgstr "エントリー %s : : :"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'ピッツ' -> '点', s.3 '10 点' (ピッツ = pits). Previous text: "%d ピッツ"
 #. Section: LOGWIND
 #: utr4wstrings:tc_pts
 #: tr4w/src/lang/tr4w_consts_eng.pas:237
@@ -1700,7 +1713,7 @@ msgstr "エントリー %s : : :"
 #, fuzzy
 msgctxt "TC_PTS"
 msgid "%d Pts"
-msgstr "%d ピッツ"
+msgstr "%d 点"
 
 #. Section: LOGWIND
 #: utr4wstrings:tc_rate
@@ -1810,13 +1823,14 @@ msgctxt "TC_MISSINGMULTSREPORT"
 msgid "Missing mults report: %u countries on at least %u but not all bands."
 msgstr "Mults レポートを見逃す: %u 少なくとも %u ではなく、すべてのバンドの国."
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'デュペ(s)' -> '重複', s.8 '「重複」'. Previous text: "初期交換ファイルには %u の呼び出しがありました.\r+%u デュペ(s)"
 #. Section: LOGDUPE
 #: utr4wstrings:tc_therewerecalls
 #: tr4w/src/lang/tr4w_consts_eng.pas:260
 #, fuzzy
 msgctxt "TC_THEREWERECALLS"
 msgid "There were %u calls found in initial exchange file.\r+%u dupe(s)"
-msgstr "初期交換ファイルには %u の呼び出しがありました.\r+%u デュペ(s)"
+msgstr "初期交換ファイルには %u の呼び出しがありました.\r+%u 重複"
 
 #. Section: LOGDUPE
 #: utr4wstrings:tc_restartbinisforadifferentcontest
@@ -1989,6 +2003,7 @@ msgctxt "TC_C9_UNKNOWN"
 msgid "Unknown"
 msgstr "未知の"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '%sモードの駅' -> '%sモードの局', s.3 '局' (駅 = railway station). Previous text: "%sモードの駅"
 #. Section: USTATIONS
 #: utr4wstrings:tc_stationsinmode
 #: tr4w/src/lang/tr4w_consts_eng.pas:294
@@ -1996,7 +2011,7 @@ msgstr "未知の"
 #, fuzzy
 msgctxt "TC_STATIONSINMODE"
 msgid "Stations in %s mode"
-msgstr "%sモードの駅"
+msgstr "%sモードの局"
 
 #. Section: USPOTS
 #: utr4wstrings:tc_spots
@@ -2418,6 +2433,7 @@ msgctxt "TC_YOUALREADYWORKEDIN"
 msgid "You already worked %s in %s!!"
 msgstr "既に働いた %s お問い合わせ %sお問い合わせ"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'は dupe で' -> 'は重複で', s.8 '「重複」'. Previous text: "%s は dupe で、QSO はゼロの点で記録されます."
 #. Section: LOGSUBS2
 #: utr4wstrings:tc_isadupeandwillbeloggedwithzero
 #: tr4w/src/lang/tr4w_consts_eng.pas:370
@@ -2425,7 +2441,7 @@ msgstr "既に働いた %s お問い合わせ %sお問い合わせ"
 #, fuzzy
 msgctxt "TC_ISADUPEANDWILLBELOGGEDWITHZERO"
 msgid "%s is a dupe and will be logged with zero QSO points."
-msgstr "%s は dupe で、QSO はゼロの点で記録されます."
+msgstr "%s は重複で、QSO はゼロの点で記録されます."
 
 #. Section: LOGSUBS2
 #: utr4wstrings:tc_logfilesizecheckfailed
@@ -2680,6 +2696,7 @@ msgctxt "TC_PREFIX"
 msgid "Prefixes"
 msgstr "プレフィックス"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'DX Multsの特長' -> 'DXマルチ', s.5 'マルチ' (特長 = feature). Previous text: "DX Multsの特長"
 #. Section: UTOTAL
 #: utr4wstrings:tc_dxmults
 #: tr4w/src/lang/tr4w_consts_eng.pas:413
@@ -2687,7 +2704,7 @@ msgstr "プレフィックス"
 #, fuzzy
 msgctxt "TC_DXMULTS"
 msgid "DX Mults"
-msgstr "DX Multsの特長"
+msgstr "DXマルチ"
 
 #. Section: UTOTAL
 #: utr4wstrings:tc_oblasts
@@ -2707,6 +2724,7 @@ msgctxt "TC_HQMULTS"
 msgid "HQ Mults"
 msgstr "HQのMults"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'ドム・マルト' -> '国内マルチ', s.5 'マルチ'. Previous text: "ドム・マルト"
 #. Section: UTOTAL
 #: utr4wstrings:tc_dommults
 #: tr4w/src/lang/tr4w_consts_eng.pas:416
@@ -2714,7 +2732,7 @@ msgstr "HQのMults"
 #, fuzzy
 msgctxt "TC_DOMMULTS"
 msgid "Dom Mults"
-msgstr "ドム・マルト"
+msgstr "国内マルチ"
 
 #. Section: UTOTAL
 #: utr4wstrings:tc_qsos
@@ -2879,6 +2897,7 @@ msgctxt "TC_INVALIDREMINDERDATE"
 msgid "Invalid reminder date!!"
 msgstr "無効なリマインダーの日付!!"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "TOTAL SCOREのメッセージが多すぎる!!"
 #. Section: CFGCMD
 #: utr4wstrings:tc_toomanytotalscoremessages
 #: tr4w/src/lang/tr4w_consts_eng.pas:453
@@ -2886,7 +2905,7 @@ msgstr "無効なリマインダーの日付!!"
 #, fuzzy
 msgctxt "TC_TOOMANYTOTALSCOREMESSAGES"
 msgid "Too many TOTAL SCORE MESSAGEs!!"
-msgstr "TOTAL SCOREのメッセージが多すぎる!!"
+msgstr "TOTAL SCORE MESSAGE が多すぎます!!"
 
 #. Section: CFGCMD
 #: utr4wstrings:tc_thefirstcommandinconfigfilemustbe
@@ -2952,6 +2971,7 @@ msgctxt "TC_TIMEDIFF"
 msgid "Time diff."
 msgstr "時間差分."
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'サーボ' -> 'サーバーログ', s.12 'ログ' (サーボ = servo). Previous text: "サーボ"
 #. Section: ULOGCOMPARE
 #: utr4wstrings:tc_serverlog
 #: tr4w/src/lang/tr4w_consts_eng.pas:482
@@ -2959,8 +2979,9 @@ msgstr "時間差分."
 #, fuzzy
 msgctxt "TC_SERVERLOG"
 msgid "SERVER LOG"
-msgstr "サーボ"
+msgstr "サーバーログ"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'サイトマップ' -> 'ローカルログ', s.12 'ログ' (サイトマップ = site map). Previous text: "サイトマップ"
 #. Section: ULOGCOMPARE
 #: utr4wstrings:tc_locallog
 #: tr4w/src/lang/tr4w_consts_eng.pas:483
@@ -2968,7 +2989,7 @@ msgstr "サーボ"
 #, fuzzy
 msgctxt "TC_LOCALLOG"
 msgid "LOCAL LOG"
-msgstr "サイトマップ"
+msgstr "ローカルログ"
 
 #. Section: POSTUNIT
 #: utr4wstrings:tc_morethan50differenthoursinthislog
@@ -3494,10 +3515,11 @@ msgstr "バンドマップディスプレイCQ"
 msgid "BAND MAP DUPE DISPLAY"
 msgstr "バンドマップDUPEディスプレイ"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'バンドマップのみ' -> 'バンドマップ マルチのみ', s.5 'マルチ' (the multiplier was dropped). Previous text: "バンドマップのみ"
 #: tfrmbandmap.mimultsonly.caption
 #, fuzzy
 msgid "BAND MAP MULTS ONLY"
-msgstr "バンドマップのみ"
+msgstr "バンドマップ マルチのみ"
 
 #: tfrmbandmap.miqsyinactive.caption
 #, fuzzy
@@ -3539,10 +3561,11 @@ msgstr "Beaconsモニター"
 msgid "CT1BOH information"
 msgstr "CT1BOH情報"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'パイプシート' -> '重複シート', s.8 '「重複」' (パイプ = pipe). Previous text: "パイプシート"
 #: tfrmdupesheet.caption
 #, fuzzy
 msgid "Dupe sheet"
-msgstr "パイプシート"
+msgstr "重複シート"
 
 #. Section: UEDITMESSAGE
 #. Section: FD Additions NY4I
@@ -3613,15 +3636,17 @@ msgstr "&削除"
 msgid "Domestic Mult"
 msgstr "国内Mult"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'デュペ' -> '重複', s.8 '「重複」' (デュペ is not a Japanese word). Previous text: "デュペ"
 #: tfrmeditqso.chkdupe.caption
 #, fuzzy
 msgid "Dupe"
-msgstr "デュペ"
+msgstr "重複"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'DX Multの特長' -> 'DXマルチ', s.5 'マルチ' (特長 = feature). Previous text: "DX Multの特長"
 #: tfrmeditqso.chkdxmult.caption
 #, fuzzy
 msgid "DX Mult"
-msgstr "DX Multの特長"
+msgstr "DXマルチ"
 
 #: tfrmeditqso.chkinhibitmults.caption
 #, fuzzy
@@ -3714,10 +3739,11 @@ msgstr "開催期間"
 msgid "Domestic"
 msgstr "国内拠点"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '頻度、Hz' -> '周波数、Hz', s.12 '各 QSO の正確な周波数' (頻度 = how often). Previous text: "頻度、Hz"
 #: tfrmeditqso.lblfrequency.caption
 #, fuzzy
 msgid "Frequency, Hz"
-msgstr "頻度、Hz"
+msgstr "周波数、Hz"
 
 #. Section: UEDITMESSAGE
 #: tfrmeditqso.lblmode.caption
@@ -4211,10 +4237,11 @@ msgstr "VFO Bの特長"
 msgid "XIT"
 msgstr "ログイン"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'Multsの維持' -> '残りのマルチ', s.5 'マルチ' (維持 = maintenance). Previous text: "Multsの維持"
 #: tfrmremmults.caption
 #, fuzzy
 msgid "Remaining mults"
-msgstr "Multsの維持"
+msgstr "残りのマルチ"
 
 #. Section: UEDITMESSAGE
 #: tfrmsendkeyboard.btnclose.caption
@@ -4257,6 +4284,7 @@ msgctxt "RC_COMMENT"
 msgid "Comment"
 msgstr "コメント"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '頻度:' -> '周波数:', s.12 '周波数' (頻度 = how often). Previous text: "頻度:"
 #. Section: UEDITMESSAGE
 #: tfrmsendspot.lblfrequency.caption
 #: utr4wstrings:rc_frequency
@@ -4265,7 +4293,7 @@ msgstr "コメント"
 #, fuzzy
 msgctxt "RC_FREQUENCY"
 msgid "Frequency"
-msgstr "頻度:"
+msgstr "周波数:"
 
 #. Section: UEDITMESSAGE
 #: tfrmstations.caption
@@ -4617,16 +4645,18 @@ msgstr "CWの送信"
 msgid "Any CW message may chain into the next"
 msgstr "CWメッセージは、次のメッセージにチェーンすることができます"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '駅前に駅が働いた速度にマッチ' -> '以前に交信した局の速度に合わせる', s.3 '局との交信' (駅 = railway station; 働いた = laboured). Previous text: "駅前に駅が働いた速度にマッチ"
 #: tprefsform.chkcwspeedfromdatabase.caption
 #: usettingscaptions.rs_cw_speedfromdatabase
 #, fuzzy
 msgid "Match the speed a station was worked at before"
-msgstr "駅前に駅が働いた速度にマッチ"
+msgstr "以前に交信した局の速度に合わせる"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'デュペシート' -> '重複シート', s.8 '「重複」'. Previous text: "デュペシート列の色"
 #: tprefsform.chkdupesheetcolor.caption
 #, fuzzy
 msgid "Color the dupe sheet columns"
-msgstr "デュペシート列の色"
+msgstr "重複シート列の色"
 
 #: tprefsform.chkdvkenable.caption
 #: usettingscaptions.rs_audio_dvk_enable
@@ -4738,10 +4768,11 @@ msgstr "各QSOをMP3に記録する"
 msgid "Pass only new multipliers around the network"
 msgstr "ネットワークの周りの新しいマルチプライヤーだけを渡す"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '知られている場所を' -> '知られている局を', s.3 '局' (場所 = place). Previous text: "名前が既に知られている場所をフラグする"
 #: tprefsform.chknameflag.caption
 #, fuzzy
 msgid "Flag a station whose name is already known"
-msgstr "名前が既に知られている場所をフラグする"
+msgstr "名前が既に知られている局をフラグする"
 
 #: tprefsform.chknetautosync.caption
 #, fuzzy
@@ -4806,11 +4837,12 @@ msgstr "ハードウェアラインの代わりにCATコマンドで送信機を
 msgid "QSY the inactive radio when I change band"
 msgstr "QSY バンド変更時の非アクティブラジオ"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '以前に働いていた場所への' -> '以前に交信した局への', s.3 '局との交信' (働いていた場所 = former workplace). Previous text: "以前に働いていた場所への挨拶を送る"
 #: tprefsform.chksayhienable.caption
 #: usettingscaptions.rs_operating_cw_sayhi
 #, fuzzy
 msgid "Send a greeting to stations worked before"
-msgstr "以前に働いていた場所への挨拶を送る"
+msgstr "以前に交信した局への挨拶を送る"
 
 #: tprefsform.chksendfourlettercall.caption
 #: usettingscaptions.rs_cw_sendfourlettercall
@@ -4837,11 +4869,12 @@ msgctxt "tprefsform.chkso2r.caption"
 msgid "SO2R enabled"
 msgstr "SO2R対応"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'デュペチェック' -> '重複チェック', s.8 '「重複」'. Previous text: "スペースバーがデュペチェックを実行"
 #: tprefsform.chkspacebardupecheck.caption
 #: usettingscaptions.rs_operating_spacebardupecheck
 #, fuzzy
 msgid "Space bar performs a dupe check"
-msgstr "スペースバーがデュペチェックを実行"
+msgstr "スペースバーが重複チェックを実行"
 
 #: tprefsform.chkspeedsync1.caption
 #: tprefsform.chkspeedsync2.caption
@@ -5154,10 +5187,11 @@ msgstr "私のDXクラスター"
 msgid "Log in as:"
 msgstr "次のようにします"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '私の駅のコールサイン' -> '自局のコールサイン', s.3 '自国内の局', s.10 'コールサイン' (駅 = railway station). Previous text: "blank = 私の駅のコールサイン"
 #: tprefsform.lblclusterloginhint.caption
 #, fuzzy
 msgid "blank = my station callsign"
-msgstr "blank = 私の駅のコールサイン"
+msgstr "blank = 自局のコールサイン"
 
 #: tprefsform.lblclustername.caption
 #: tprefsform.lblrotatorname.caption
@@ -5314,10 +5348,11 @@ msgctxt "tprefsform.lblhardwareheading.caption"
 msgid "Hardware"
 msgstr "ハードウェア"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '駅全体のハードウェア' -> '局全体のハードウェア', s.3 '局' (駅 = railway station). Previous text: "駅全体のハードウェア。 1つのラジオに属する設定は、ラジオ下にあります。 回転子は回転子下にあります."
 #: tprefsform.lblhardwareinfo.caption
 #, fuzzy
 msgid "Station-wide hardware. Settings that belong to one radio are under Radios; rotators are under Rotators."
-msgstr "駅全体のハードウェア。 1つのラジオに属する設定は、ラジオ下にあります。 回転子は回転子下にあります."
+msgstr "局全体のハードウェア。 1つのラジオに属する設定は、ラジオ下にあります。 回転子は回転子下にあります."
 
 #: tprefsform.lblkeyerhint.caption
 #, fuzzy
@@ -5431,10 +5466,11 @@ msgstr "コールサイン:"
 msgid "Check:"
 msgstr "チェック:"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'コンチネンタル:' -> '大陸:', s.3 '別の大陸の局' (コンチネンタル = 'continental'). Previous text: "コンチネンタル:"
 #: tprefsform.lblmycontinent.caption
 #, fuzzy
 msgid "Continent:"
-msgstr "コンチネンタル:"
+msgstr "大陸:"
 
 #: tprefsform.lblmycountry.caption
 #, fuzzy
@@ -5461,10 +5497,11 @@ msgstr "格子正方形:"
 msgid "IOTA:"
 msgstr "伊藤:"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'ITUの地帯:' -> 'ITUゾーン:', s.4 '自局の ITU ゾーン' (地帯 = geographic belt). Previous text: "ITUの地帯:"
 #: tprefsform.lblmyituzone.caption
 #, fuzzy
 msgid "ITU zone:"
-msgstr "ITUの地帯:"
+msgstr "ITUゾーン:"
 
 #: tprefsform.lblmykeyers.caption
 #, fuzzy
@@ -5513,25 +5550,28 @@ msgstr "ARRLセクション:"
 msgid "State/Province:"
 msgstr "状態/証拠:"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'CQの地帯:' -> 'CQゾーン:', s.4 'ITU ゾーン' (地帯 = geographic belt). Previous text: "CQの地帯:"
 #: tprefsform.lblmyzone.caption
 #, fuzzy
 msgid "CQ zone:"
-msgstr "CQの地帯:"
+msgstr "CQゾーン:"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'この場所:' -> 'この局:', s.3 '局' (場所 = place). Previous text: "この場所:"
 #: tprefsform.lblnetcomputerid.caption
 #, fuzzy
 msgid "This station:"
-msgstr "この場所:"
+msgstr "この局:"
 
 #: tprefsform.lblnetcomputeridhint.caption
 #, fuzzy
 msgid "a single letter, unique in the network"
 msgstr "単一の手紙、ネットワークでユニーク"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'マルチオペレーションネットワーク' -> 'マルチオペレーターネットワーク', s.2.c 'マルチオペレーター'. Previous text: "マルチオペレーションネットワーク"
 #: tprefsform.lblnetheading.caption
 #, fuzzy
 msgid "Multi-operator network"
-msgstr "マルチオペレーションネットワーク"
+msgstr "マルチオペレーターネットワーク"
 
 #: tprefsform.lblnethint.caption
 #, fuzzy
@@ -5627,10 +5667,11 @@ msgstr "PTTの特長"
 msgid "Radio sharing"
 msgstr "ラジオ共有"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'この駅のラジオ' -> 'この局のラジオ', s.3 '局' (駅 = railway station). Previous text: "この駅のラジオを別の位置で読みましょう。 TR4Wが始まると効果を発揮します."
 #: tprefsform.lblradiotcphint.caption
 #, fuzzy
 msgid "Lets another position read this station's radio.  Takes effect when TR4W next starts."
-msgstr "この駅のラジオを別の位置で読みましょう。 TR4Wが始まると効果を発揮します."
+msgstr "この局のラジオを別の位置で読みましょう。 TR4Wが始まると効果を発揮します."
 
 #: tprefsform.lblradiotcpport.caption
 #, fuzzy
@@ -5767,6 +5808,7 @@ msgstr "無線シリアルキー(DTR/RTSキーのみ)"
 msgid "These shape the CW that TR4W generates itself by toggling a serial line.  They do nothing for a WinKeyer, a YCCC box, or CW sent by CAT - those devices keep their own timing."
 msgstr "これらは、TR4Wがシリアルラインをトグルすることにより、それ自体を生成するCWを形作ります。 それらはWinKeyer、YCCC箱、CATによって送信されるCWのために何もしません - これらの装置は独自のタイミングを保ちます."
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '駅情報' -> '局情報', s.3 '局' (駅 = railway station). Previous text: "駅情報"
 #. Section: UEDITMESSAGE
 #: tprefsform.lblstationheading.caption
 #: utr4wstrings:rc_stationinfo
@@ -5775,12 +5817,13 @@ msgstr "これらは、TR4Wがシリアルラインをトグルすることに�
 #, fuzzy
 msgctxt "RC_STATIONINFO"
 msgid "Station information"
-msgstr "駅情報"
+msgstr "局情報"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '複数の演算子ネットワーク' -> 'マルチオペレーターネットワーク', s.2.c 'マルチオペレーター' (演算子 = mathematical operator). Previous text: "これらは、変更時に複数の演算子ネットワーク内の他のステーションに送信されるため、すべてのポジションは交換に合意します."
 #: tprefsform.lblstationhint.caption
 #, fuzzy
 msgid "These are sent to the other stations in a multi-operator network when you change them, so all positions agree on the exchange."
-msgstr "これらは、変更時に複数の演算子ネットワーク内の他のステーションに送信されるため、すべてのポジションは交換に合意します."
+msgstr "これらは、変更時にマルチオペレーターネットワーク内の他のステーションに送信されるため、すべてのポジションは交換に合意します."
 
 #: tprefsform.lblstereoport.caption
 #, fuzzy
@@ -6633,6 +6676,7 @@ msgctxt "RC_EXPORT"
 msgid "Export"
 msgstr "エクスポート"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '初期の取引所リスト' -> '初期コンテストナンバーリスト', s.4 'コンテストナンバー' (取引所 = stock exchange). Previous text: "初期の取引所リスト"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_iniexlist
 #: tr4w/src/lang/tr4w_consts_eng.pas:601
@@ -6640,7 +6684,7 @@ msgstr "エクスポート"
 #, fuzzy
 msgctxt "RC_INIEXLIST"
 msgid "Initial exchanges list"
-msgstr "初期の取引所リスト"
+msgstr "初期コンテストナンバーリスト"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_trlogform
@@ -6678,6 +6722,7 @@ msgctxt "RC_BANDCHANGES"
 msgid "Band changes"
 msgstr "バンド変更"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'コンチネンタルリスト' -> '大陸リスト', s.3 '大陸'. Previous text: "コンチネンタルリスト"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_contlist
 #: tr4w/src/lang/tr4w_consts_eng.pas:606
@@ -6685,7 +6730,7 @@ msgstr "バンド変更"
 #, fuzzy
 msgctxt "RC_CONTLIST"
 msgid "Continent List"
-msgstr "コンチネンタルリスト"
+msgstr "大陸リスト"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_fcc
@@ -6804,6 +6849,7 @@ msgctxt "RC_TRMASTER"
 msgid "SCP"
 msgstr "SCPの特長"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'カルト' -> 'マルチ', s.5 'マルチ' (カルト = cult). Previous text: "カルト"
 #. Section: UEDITMESSAGE
 #. 4.72.3
 #: utr4wstrings:rc_remmults
@@ -6812,7 +6858,7 @@ msgstr "SCPの特長"
 #, fuzzy
 msgctxt "RC_REMMULTS"
 msgid "Mults"
-msgstr "カルト"
+msgstr "マルチ"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_rm_default
@@ -6860,6 +6906,7 @@ msgctxt "RC_AUTOCQRESUME"
 msgid "Auto-CQ resume"
 msgstr "自動CQ再開"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'デュペチェック' -> '重複チェック', s.8 '「重複」'. Previous text: "デュペチェック"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_dupecheck
 #: tr4w/src/lang/tr4w_consts_eng.pas:639
@@ -6867,7 +6914,7 @@ msgstr "自動CQ再開"
 #, fuzzy
 msgctxt "RC_DUPECHECK"
 msgid "Dupe check"
-msgstr "デュペチェック"
+msgstr "重複チェック"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_edit
@@ -6932,6 +6979,7 @@ msgctxt "RC_SEARCHLOG"
 msgid "Search log"
 msgstr "ログを検索"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '送信頻度' -> '送信周波数', s.12 '周波数' (頻度 = how often). Previous text: "送信頻度"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_transfreq
 #: tr4w/src/lang/tr4w_consts_eng.pas:648
@@ -6939,7 +6987,7 @@ msgstr "ログを検索"
 #, fuzzy
 msgctxt "RC_TRANSFREQ"
 msgid "Transmit frequency"
-msgstr "送信頻度"
+msgstr "送信周波数"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_tooglerigs
@@ -6986,6 +7034,7 @@ msgctxt "RC_DELETELASTQSO"
 msgid "Delete the last QSO"
 msgstr "最後のQSOを削除"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '初期取引' -> '初期コンテストナンバー', s.4 'コンテストナンバー' (取引 = trade deal). Previous text: "初期取引"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_initialex
 #: tr4w/src/lang/tr4w_consts_eng.pas:657
@@ -6993,7 +7042,7 @@ msgstr "最後のQSOを削除"
 #, fuzzy
 msgctxt "RC_INITIALEX"
 msgid "Initial exchange"
-msgstr "初期取引"
+msgstr "初期コンテストナンバー"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_tooglest
@@ -7716,6 +7765,7 @@ msgctxt "TC_AUTOSPOTENABLEDTESTMODEONLY"
 msgid "AUTOSPOT is enabled - Test Mode Only"
 msgstr "AUTOSPOTが有効化 - テストモードのみ"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "ハンドログモード = TRUE"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_handlogmodetrue
 #: tr4w/src/lang/tr4w_consts_eng.pas:848
@@ -7723,7 +7773,7 @@ msgstr "AUTOSPOTが有効化 - テストモードのみ"
 #, fuzzy
 msgctxt "TC_HANDLOGMODETRUE"
 msgid "HAND LOG MODE = TRUE"
-msgstr "ハンドログモード = TRUE"
+msgstr "HAND LOG MODE = TRUE"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_trmasterdtas
@@ -7995,6 +8045,7 @@ msgctxt "TC_ENTEREXCHANGEPRESSENTERLOGESCAPEAB"
 msgid "Enter exchange.  Press ENTER to log, ESCAPE to abort QSO."
 msgstr "交換する ENTER を押して、ESCAPE を QSO を中止します."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "リレーコントロールポート=パドルポート"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_relaycontrolportpaddleport
 #: tr4w/src/lang/tr4w_consts_eng.pas:879
@@ -8002,7 +8053,7 @@ msgstr "交換する ENTER を押して、ESCAPE を QSO を中止します."
 #, fuzzy
 msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
 msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr "リレーコントロールポート=パドルポート"
+msgstr "RELAY CONTROL PORT = PADDLE PORT"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_locationfieldempty
@@ -8013,6 +8064,7 @@ msgctxt "TC_LOCATIONFIELDEMPTY"
 msgid "LOCATION field is empty."
 msgstr "LOCATION フィールドは空です."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "PTT LOCKOUT=ドライブ"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_pttlockouttrue
 #: tr4w/src/lang/tr4w_consts_eng.pas:881
@@ -8020,7 +8072,7 @@ msgstr "LOCATION フィールドは空です."
 #, fuzzy
 msgctxt "TC_PTTLOCKOUTTRUE"
 msgid "PTT LOCKOUT=TRUE"
-msgstr "PTT LOCKOUT=ドライブ"
+msgstr "PTT LOCKOUT=TRUE"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_preferencescouldopeneds
@@ -8494,6 +8546,7 @@ msgstr ""
 msgid "Connect#0Disconnect#0Commands#0Freeze#0Clear#0SH/50#0#0"
 msgstr "Connect#0Disconnect#0Commands#0Freeze#0Clear#0SH/50#0#0"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'デュペ(s)' -> '重複', s.8 '「重複」'. Previous text: "初期交換ファイルには %u の呼び出しがありました。\n+%u デュペ(s)"
 #: utr4wstrings.tc_therewerecalls
 #, fuzzy
 msgid ""
@@ -8501,7 +8554,7 @@ msgid ""
 "+%u dupe(s)"
 msgstr ""
 "初期交換ファイルには %u の呼び出しがありました。\n"
-"+%u デュペ(s)"
+"+%u 重複"
 
 #: utr4wstrings.tc_uk
 #, fuzzy
@@ -8657,10 +8710,11 @@ msgstr "レート表示"
 msgid "Reminder"
 msgstr "リマインダー"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'ログの表示頻度' -> 'ログに周波数を表示', s.12 '周波数' (= 'how often the log is shown'). Previous text: "ログの表示頻度"
 #: usettingscaptions.rs_appearance_ctrlj_showfrequencyinlog
 #, fuzzy
 msgid "Show Frequency In Log"
-msgstr "ログの表示頻度"
+msgstr "ログに周波数を表示"
 
 #: usettingscaptions.rs_appearance_ctrlj_showtypedcallsign
 #, fuzzy
@@ -8692,10 +8746,11 @@ msgstr "DVK録画用のフォルダ"
 msgid "Folder for MP3 recordings"
 msgstr "MP3録画用のフォルダ"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '締切りの頻度' -> 'カットオフ周波数', s.12 '周波数' (締切りの頻度 = deadline frequency). Previous text: "バンド・マップの締切りの頻度"
 #: usettingscaptions.rs_bandmap_ctrlj_bandmapcutofffrequency
 #, fuzzy
 msgid "Band Map Cutoff Frequency"
-msgstr "バンド・マップの締切りの頻度"
+msgstr "バンド・マップのカットオフ周波数"
 
 #: usettingscaptions.rs_bandmap_ctrlj_bandmapitemheight
 #, fuzzy
@@ -8807,20 +8862,22 @@ msgstr "DXマルチプライヤー"
 msgid "Exchange Memory Enable"
 msgstr "交換メモリ 有効"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '株式の受入' -> '受信コンテストナンバー', s.4 'コンテストナンバー' (株式 = company shares). Previous text: "株式の受入"
 #: usettingscaptions.rs_contest_exchangereceived
 #, fuzzy
 msgid "Exchange Received"
-msgstr "株式の受入"
+msgstr "受信コンテストナンバー"
 
 #: usettingscaptions.rs_contest_gridmapcenter
 #, fuzzy
 msgid "Grid Map Center"
 msgstr "グリッドマップセンター"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '初期取引' -> '初期コンテストナンバー', s.4 'コンテストナンバー' (取引 = trade deal). Previous text: "初期取引"
 #: usettingscaptions.rs_contest_initialexchange
 #, fuzzy
 msgid "Initial Exchange"
-msgstr "初期取引"
+msgstr "初期コンテストナンバー"
 
 #: usettingscaptions.rs_contest_initialexchangecursorpos
 #, fuzzy
@@ -9007,10 +9064,11 @@ msgstr "R150Sモード"
 msgid "Random CQ Mode"
 msgstr "ランダムCQモード"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'Mult表示モードの維持' -> '残りマルチ表示モード', s.5 'マルチ' (維持 = maintenance). Previous text: "Mult表示モードの維持"
 #: usettingscaptions.rs_contest_remainingmultdisplaymode
 #, fuzzy
 msgid "Remaining Mult Display Mode"
-msgstr "Mult表示モードの維持"
+msgstr "残りマルチ表示モード"
 
 #: usettingscaptions.rs_contest_reverseinitialex
 #, fuzzy
@@ -9212,25 +9270,29 @@ msgstr "ログイン後CQモードに戻ります"
 msgid "VHF and up"
 msgstr "VHFとアップ"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'よくある質問' -> '周波数を尋ねる', s.12 '周波数' (よくある質問 = FAQ). Previous text: "よくある質問"
 #: usettingscaptions.rs_operating_ctrlj_askforfrequencies
 #, fuzzy
 msgid "Ask For Frequencies"
-msgstr "よくある質問"
+msgstr "周波数を尋ねる"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '自動表示はQSOをおおいます' -> '重複QSOの自動表示', s.8 '「重複」' (おおいます = covers). Previous text: "自動表示はQSOをおおいます"
 #: usettingscaptions.rs_operating_ctrlj_autodisplaydupeqso
 #, fuzzy
 msgid "Auto Display Dupe QSO"
-msgstr "自動表示はQSOをおおいます"
+msgstr "重複QSOの自動表示"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'CQを有効にするオートパイプ' -> 'CQ時の自動重複チェック有効', s.8 '「重複」' (オートパイプ = auto pipe). Previous text: "CQを有効にするオートパイプ"
 #: usettingscaptions.rs_operating_ctrlj_autodupeenablecq
 #, fuzzy
 msgid "Auto Dupe Enable CQ"
-msgstr "CQを有効にするオートパイプ"
+msgstr "CQ時の自動重複チェック有効"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '自動パイプはSとPを有効にします' -> 'SとP時の自動重複チェック有効', s.8 '「重複」' (パイプ = pipe). Previous text: "自動パイプはSとPを有効にします"
 #: usettingscaptions.rs_operating_ctrlj_autodupeenablesandp
 #, fuzzy
 msgid "Auto Dupe Enable S And P"
-msgstr "自動パイプはSとPを有効にします"
+msgstr "SとP時の自動重複チェック有効"
 
 #: usettingscaptions.rs_operating_ctrlj_autospenable
 #, fuzzy
@@ -9267,30 +9329,35 @@ msgstr "デジタルモードを有効にする"
 msgid "Distance Mode"
 msgstr "距離モード"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'デュペチェック' -> '重複チェック', s.8 '「重複」'. Previous text: "デュペチェックサウンド"
 #: usettingscaptions.rs_operating_ctrlj_dupechecksound
 #, fuzzy
 msgid "Dupe Check Sound"
-msgstr "デュペチェックサウンド"
+msgstr "重複チェックサウンド"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'パイプシート' -> '重複シート', s.8 '「重複」' (パイプ = pipe). Previous text: "パイプシート自動リセット"
 #: usettingscaptions.rs_operating_ctrlj_dupesheetautoreset
 #, fuzzy
 msgid "Dupe Sheet Auto Reset"
-msgstr "パイプシート自動リセット"
+msgstr "重複シート自動リセット"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '頻度記憶' -> '周波数メモリー', s.12 '周波数' (頻度 = how often). Previous text: "頻度記憶"
 #: usettingscaptions.rs_operating_ctrlj_frequencymemory
 #, fuzzy
 msgid "Frequency Memory"
-msgstr "頻度記憶"
+msgstr "周波数メモリー"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '頻度記憶' -> '周波数メモリー', s.12 '周波数' (頻度 = how often). Previous text: "頻度記憶 有効"
 #: usettingscaptions.rs_operating_ctrlj_frequencymemoryenable
 #, fuzzy
 msgid "Frequency Memory Enable"
-msgstr "頻度記憶 有効"
+msgstr "周波数メモリー 有効"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '頻度 気孔率' -> '周波数ポーリング間隔', s.12 '周波数' (気孔率 = porosity). Previous text: "頻度 気孔率"
 #: usettingscaptions.rs_operating_ctrlj_frequencypollrate
 #, fuzzy
 msgid "Frequency Poll Rate"
-msgstr "頻度 気孔率"
+msgstr "周波数ポーリング間隔"
 
 #: usettingscaptions.rs_operating_ctrlj_ieswitch
 #, fuzzy
@@ -9302,10 +9369,11 @@ msgstr "アイスイッチ"
 msgid "Increment Time Enable"
 msgstr "増加時間 有効"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'ログの頻度' -> 'ログ周波数', s.12 '周波数' (頻度 = how often). Previous text: "ログの頻度 有効"
 #: usettingscaptions.rs_operating_ctrlj_logfrequencyenable
 #, fuzzy
 msgid "Log Frequency Enable"
-msgstr "ログの頻度 有効"
+msgstr "ログ周波数 有効"
 
 #: usettingscaptions.rs_operating_ctrlj_logsubtitle
 #, fuzzy
@@ -9422,10 +9490,11 @@ msgstr "サービスURL"
 msgid "Username"
 msgstr "ユーザ名"
 
+# 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): '知られている場所を' -> '知られている局を', s.3 '局' (場所 = place). Previous text: "名前が知られている場所をフラグする"
 #: usettingscaptions.rs_scp_nameflag
 #, fuzzy
 msgid "Flag a station whose name is known"
-msgstr "名前が知られている場所をフラグする"
+msgstr "名前が知られている局をフラグする"
 
 #: usettingscaptions.rs_voice_ctrlj_mp3recorderbitrate
 #, fuzzy
@@ -9516,10 +9585,11 @@ msgstr ""
 "\n"
 "未確認の送信ではなく、再承認されました。 設定をオフにする > ネットワーク > チェックせずに続行したい場合は、サーバー証明書を確認します。"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(マイカントリー= %s)"
 #: uappstrings.sexchangemodebriefcountry
 #, fuzzy
 msgid "(MY COUNTRY = %s)"
-msgstr "(マイカントリー= %s)"
+msgstr "(MY COUNTRY = %s)"
 
 #: uappstrings.sexchangemodebriefemptycountry
 #, fuzzy
@@ -9623,6 +9693,7 @@ msgstr ""
 "\n"
 "%sTR4W は実行し続けます。 できるまで、このセッションから何もログに書かれていません。"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "コンピュータID %s このネットワーク上の別のステーションで既に使用しています。\n\nコンピューターの変更 他のステーションが使用されていないレターへのIDが再接続されます。"
 #: uappstrings.snetcomputeridinuse
 #, fuzzy
 msgid ""
@@ -9630,9 +9701,9 @@ msgid ""
 "\n"
 "Change COMPUTER ID to a letter no other station is using, then reconnect."
 msgstr ""
-"コンピュータID %s このネットワーク上の別のステーションで既に使用しています。\n"
+"コンピューターID %s は、このネットワーク上の別の局がすでに使用しています。\n"
 "\n"
-"コンピューターの変更 他のステーションが使用されていないレターへのIDが再接続されます。"
+"COMPUTER ID を他の局が使用していない文字に変更してから、再接続してください。"
 
 #: uappstrings.snewcontestin7qpnecountyorstate
 #, fuzzy
@@ -9659,15 +9730,17 @@ msgstr "これらを Preferences > Station で設定し、 TR4W を再起動し�
 msgid "This contest is set up, but TR4W is missing information it needs:"
 msgstr "このコンテストはセットアップされますが、TR4W は必要な情報が不足しています。"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "私のCALLは空です。 TR4Wは、あなたの国、大陸、またはそれなしでゾーンを動作させることはできません。それらに依存するものは何もありません。"
 #: uappstrings.sreadinessmycallmissing
 #, fuzzy
 msgid "MY CALL is empty. TR4W cannot work out your country, continent or zone without it, and nothing that depends on them will be right."
-msgstr "私のCALLは空です。 TR4Wは、あなたの国、大陸、またはそれなしでゾーンを動作させることはできません。それらに依存するものは何もありません。"
+msgstr "MY CALL が空です。これがないと TR4W はあなたの国、大陸、ゾーンを判断できず、それらに依存するものはすべて正しくなりません。"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "マイアカウントは空です。 通常、MY CALL から CTY.DAT 経由で動作します。 TR4W がこのステーションを DX として扱うまで、ARRL では DXは、州や州の各駅に尋ね、Kや100などの電力を拒絶することを意味します。"
 #: uappstrings.sreadinessmycountrymissing
 #, fuzzy
 msgid "MY COUNTRY is empty. It is normally worked out from MY CALL through CTY.DAT. Until it has a value TR4W treats this station as DX -- in ARRL DX that means it will ask every station for a state or province and refuse a power such as K or 100."
-msgstr "マイアカウントは空です。 通常、MY CALL から CTY.DAT 経由で動作します。 TR4W がこのステーションを DX として扱うまで、ARRL では DXは、州や州の各駅に尋ね、Kや100などの電力を拒絶することを意味します。"
+msgstr "MY COUNTRY が空です。通常は CTY.DAT を使って MY CALL から求められます。値が入るまで TR4W はこの局を DX として扱います -- ARRL DX では、すべての局に州またはプロビンスを要求し、K や 100 のような出力を受け付けません。"
 
 #: uappstrings.sreadinessmygridmissing
 #, fuzzy
@@ -9830,4 +9903,34 @@ msgstr "%d QSO(s)は、私たちの場所を名付けず、このコンテスト
 #, fuzzy
 msgid "Show inactive contests"
 msgstr "非アクティブなコンテストを表示"
+
+#: uappstrings.slatestcontestdetail
+#, fuzzy
+msgid "%0:s - %1:s"
+msgstr "%0:s - %1:s"
+
+#: uappstrings.slatestcontestline
+#, fuzzy
+msgid "%0:s %1:d"
+msgstr "%0:s %1:d"
+
+#: uappstrings.snewcontestfilescall
+#, fuzzy
+msgid "Call"
+msgstr "コールサイン"
+
+#: uappstrings.snewcontestfilescontest
+#, fuzzy
+msgid "Contest"
+msgstr "コンテスト"
+
+#: uappstrings.snewcontestfilesfile
+#, fuzzy
+msgid "File"
+msgstr "ファイル"
+
+#: uappstrings.snewcontestfilesyear
+#, fuzzy
+msgid "Year"
+msgstr "年"
 

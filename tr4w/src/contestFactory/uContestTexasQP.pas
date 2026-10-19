@@ -32,9 +32,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   ITS CABName IS BLANK IN THE ROW AND BLANK IS NOT THE ANSWER. PostUnit's rule,
   reproduced by TContestBase.GetCabrilloName, is that an empty CABName means
-  ContestTypeSA[ct] -- so the CONTEST: line of a submitted log reads
+  ContestTypeSA[ct] -- so the CONTEST: line of a submitted log read
   TEXAS QSO PARTY, and returning '' here would put a blank header line in an
   entrant's Cabrillo. ADIFName is the opposite and is stated as it stands.
+  Since 2026-10-19 the CONTEST: line is WA7BNM's TXQP (see GetCabrilloName).
 
   NO COUNTY-LINE MAXIMUM IS ESTABLISHED FOR THIS PARTY, so it inherits
   TContestStateQSOPartyBase's CountyLineCountiesUnlimited -- which is exactly
@@ -162,7 +163,14 @@ end;
 
 function TContestTexasQP.GetCabrilloName: string;
 begin
-   Result := 'TEXAS QSO PARTY';
+   (* WA7BNM's Cabrillo name (WA7BNM 133), NY4I 2026-10-19: "do the
+      cabrillo renames". TR4W wrote 'TEXAS QSO PARTY', which the sponsor's
+      log robot accepted neither as the name nor as an alias
+      (docs/UDC_CROSSWALK_FINDINGS.md). Only the Cabrillo CONTEST: line
+      (and the UDP <contestname>) moves: the id, the ADIF id and the
+      display names are their own literals. TR4W reads no Cabrillo
+      CONTEST: value back, so the old name needs no read alias. *)
+   Result := 'TXQP';
 end;
 
 function TContestTexasQP.GetADIFContestId: string;

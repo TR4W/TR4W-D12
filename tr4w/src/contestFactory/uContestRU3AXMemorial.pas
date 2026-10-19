@@ -28,6 +28,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
    AE: RSTDomesticQTHOrQSONumberExchange;  XM: ARRLDXCC;  QP: RussianDXQSOPointMethod;
    ADIFName: '';  CABName: '';  FriendlyName: 'Russian 160-Meter DX Contest'
 
+  THE CABRILLO CONTEST: NAME IS WA7BNM'S RADIO-160 SINCE 2026-10-19 (see
+  GetCabrilloName), not the enum's spelling the paragraph below
+  describes.
+
   Blank CABName and ADIFName resolve to the enum's spelling, 'RU3AX MEMORIAL'.
 
   WHY IT HAS A CLASS NOW. M5b (2026-10-02): this contest's initial-exchange
@@ -211,8 +215,14 @@ end;
 
 function TContestRU3AXMemorial.GetCabrilloName: string;
 begin
-   (* The row's CABName is blank; this is the enum's spelling it resolves to. *)
-   Result := 'RU3AX MEMORIAL';
+   (* WA7BNM's Cabrillo name (WA7BNM 202), NY4I 2026-10-19: "do the
+      cabrillo renames". TR4W wrote 'RU3AX MEMORIAL', which the sponsor's log robot
+      accepted neither as the name nor as an alias
+      (docs/UDC_CROSSWALK_FINDINGS.md). Only the Cabrillo CONTEST: line
+      (and the UDP <contestname>) moves: the id, the ADIF id and the
+      display names are their own literals. TR4W reads no Cabrillo
+      CONTEST: value back, so the old name needs no read alias. *)
+   Result := 'RADIO-160';
 end;
 
 function TContestRU3AXMemorial.GetADIFContestId: string;

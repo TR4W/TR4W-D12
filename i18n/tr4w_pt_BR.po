@@ -74,19 +74,21 @@ msgstr "Entrada Inválida"
 msgid "ERROR: Invalid Frequency logged"
 msgstr "ERRO: Frequência inválida registrada"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "A FREQUÊNCIA EM LOG está desligada"
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:16
 #: utr4wstrings.tc_freq_off
 #, fuzzy
 msgid "SHOW FREQUENCY IN LOG is turned off"
-msgstr "A FREQUÊNCIA EM LOG está desligada"
+msgstr "SHOW FREQUENCY IN LOG está desligado"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'o sinal de chamada' -> 'o indicativo', p.4, p.10 'indicativo'. Previous text: "Verifique o sinal de chamada"
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:17
 #: utr4wstrings.tc_checkcallsign
 #, fuzzy
 msgid "Check callsign"
-msgstr "Verifique o sinal de chamada"
+msgstr "Verifique o indicativo"
 
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:18
@@ -154,12 +156,13 @@ msgstr "DADOS/PARTE/STOP"
 msgid "HAMLIB ID"
 msgstr "ID HAMLIB"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Rádio Um e Rádio Dois estão configurados para usar %s. O rádio 1 mantém o porto, o controle de dois gatos está desativado até que um rádio mude o porto do CONTROLE."
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:32
 #: utr4wstrings.tc_port_conflict_startup
 #, fuzzy
 msgid "RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio's CONTROL PORT is changed."
-msgstr "Rádio Um e Rádio Dois estão configurados para usar %s. O rádio 1 mantém o porto, o controle de dois gatos está desativado até que um rádio mude o porto do CONTROLE."
+msgstr "RADIO ONE e RADIO TWO estão ambos configurados para usar %s. RADIO ONE mantém a porta; o controle CAT do RADIO TWO fica desativado até que a CONTROL PORT de um dos rádios seja alterada."
 
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:33
@@ -196,12 +199,13 @@ msgstr "Defina o valor de %s. Pronto agora?"
 msgid "Configuration file"
 msgstr "Arquivo de configuração"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'chamada de operador' -> 'indicativo do operador', p.12 'o indicativo do operador'. Previous text: "chamada de operador atual"
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:40
 #: utr4wstrings.tc_current_operator_callsign
 #, fuzzy
 msgid "current operator callsign"
-msgstr "chamada de operador atual"
+msgstr "indicativo do operador atual"
 
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:41
@@ -218,12 +222,13 @@ msgstr "Adicionar QSOs importados para o registro atual?"
 msgid "Qs imported."
 msgstr "Qs importados."
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'um idiota' -> 'um duplicado', p.10 'Duplicação de QSO' (idiota = idiot). Previous text: "%s É um idiota!"
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:43
 #: utr4wstrings.tc_isadupe
 #, fuzzy
 msgid "%s is a dupe!!"
-msgstr "%s É um idiota!"
+msgstr "%s É um duplicado!"
 
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:44
@@ -246,19 +251,21 @@ msgstr "%s tem sintaxe imprópria!"
 msgid "Enter your CQ ZONE or JA PREFECTURE"
 msgstr "Digite sua ZONA CQ ou PREFECTURA JA"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Desculpe! NO LOG = VERDADEIRO que proíbe o registro de QSOs neste computador"
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:47
 #: utr4wstrings.tc_sorrynolog
 #, fuzzy
 msgid "Sorry!! NO LOG = TRUE which prohibits logging QSOs on this computer"
-msgstr "Desculpe! NO LOG = VERDADEIRO que proíbe o registro de QSOs neste computador"
+msgstr "Desculpe!! NO LOG = TRUE, que proíbe o registro de QSOs neste computador"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Defina o valor de identificação do computador."
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:48
 #: utr4wstrings.tc_setcomputeridvalue
 #, fuzzy
 msgid "Set COMPUTER ID value."
-msgstr "Defina o valor de identificação do computador."
+msgstr "Defina o valor de COMPUTER ID."
 
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:50
@@ -365,19 +372,21 @@ msgstr "Regras para o concurso %s no QRZ. RU"
 msgid "note"
 msgstr "nota"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'Folha limpa' -> 'Folha de duplicados limpa', p.10 'Duplicação de QSO' (the term was dropped). Previous text: "Folha limpa!"
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:67
 #: utr4wstrings.tc_dupesheetcleared
 #, fuzzy
 msgid "Dupe sheet cleared!"
-msgstr "Folha limpa!"
+msgstr "Folha de duplicados limpa!"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'O lençol está limpo' -> 'Folha de multiplicadores limpa', p.9 'multiplicadores' (lencol = bed sheet). Previous text: "O lençol está limpo!"
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:68
 #: utr4wstrings.tc_multsheetcleared
 #, fuzzy
 msgid "Mult sheet cleared!"
-msgstr "O lençol está limpo!"
+msgstr "Folha de multiplicadores limpa!"
 
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:69
@@ -400,12 +409,13 @@ msgstr "\"CLEARMULT\" para limpar o lençol"
 msgid "transmit frequency (kiloHertz): "
 msgstr "transmitir frequência (kiloHertz): "
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'REGLE' -> 'REGRA', p.11 'regras do concurso'. Previous text: "SPRINT QSY REGLE!!"
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:73
 #: utr4wstrings.tc_sprintqsyrule
 #, fuzzy
 msgid "SPRINT QSY RULE!!!"
-msgstr "SPRINT QSY REGLE!!"
+msgstr "SPRINT QSY REGRA!!"
 
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:74
@@ -759,19 +769,22 @@ msgstr "Digite seu QTH que você quer enviar\re o nome que você quer usar:"
 msgid "Enter first two digits of your QTH:"
 msgstr "Digite os dois primeiros dígitos do seu QTH:"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Entre na sua idade no meu campo de estado:"
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:134
 #: utr4wstrings.tc_enteryourageinmystatefield
 #, fuzzy
 msgid "Enter your age in MY STATE field:"
-msgstr "Entre na sua idade no meu campo de estado:"
+msgstr "Digite sua idade no campo MY STATE:"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'seu poder' -> 'sua potência', p.3 'A potência total de saída'. Previous text: "Digite seu QTH que você quer enviar se você está na América do Norte ou seu poder como MEU ESTADO se fora:"
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Digite seu QTH que você quer enviar se você está na América do Norte ou sua potência como MEU ESTADO se fora:"
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:135
 #: utr4wstrings.tc_enteryourqthorpower
 #, fuzzy
 msgid "Enter your QTH that you want to send if you are in North America or your power as MY STATE if outside:"
-msgstr "Digite seu QTH que você quer enviar se você está na América do Norte ou seu poder como MEU ESTADO se fora:"
+msgstr "Digite seu QTH que você quer enviar se você está na América do Norte ou sua potência como MY STATE se fora:"
 
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:136
@@ -1216,12 +1229,13 @@ msgstr "Relógio do computador sincronizado."
 msgid "Connecting to "
 msgstr "Ligando-se a "
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "A conexão com TR4WSERVER falhou. Verifique o valor da senha do servidor!"
 #. Section: UNET
 #: tr4w/src/lang/tr4w_consts_eng.pas:205
 #: utr4wstrings.tc_connecttotr4wserverfailed
 #, fuzzy
 msgid "Connect to TR4WSERVER failed. Check SERVER PASSWORD value!!"
-msgstr "A conexão com TR4WSERVER falhou. Verifique o valor da senha do servidor!"
+msgstr "A conexão com TR4WSERVER falhou. Verifique o valor de SERVER PASSWORD!!"
 
 #. Section: UNET
 #: tr4w/src/lang/tr4w_consts_eng.pas:206
@@ -1440,12 +1454,13 @@ msgstr " Necessidades mult para %s:"
 msgid "Missing mults report: %u countries on at least %u but not all bands."
 msgstr "Relatório de mults desaparecidos: %u países em pelo menos %u mas não todas as bandas."
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'de troca inicial' -> 'de exchange inicial', p.3, p.5 'exchange'. Previous text: "Houve chamadas %u encontradas no arquivo de troca inicial.\r+%u dupe(s)"
 #. Section: LOGDUPE
 #: tr4w/src/lang/tr4w_consts_eng.pas:256
 #, fuzzy
 msgctxt "TC_THEREWERECALLS"
 msgid "There were %u calls found in initial exchange file.\r+%u dupe(s)"
-msgstr "Houve chamadas %u encontradas no arquivo de troca inicial.\r+%u dupe(s)"
+msgstr "Houve chamadas %u encontradas no arquivo de exchange inicial.\r+%u dupe(s)"
 
 #. Section: LOGDUPE
 #: tr4w/src/lang/tr4w_consts_eng.pas:257
@@ -1454,12 +1469,13 @@ msgstr "Houve chamadas %u encontradas no arquivo de troca inicial.\r+%u dupe(s)"
 msgid "RESTART.BIN is for a different contest."
 msgstr "RESTART.BIN é para uma competição diferente."
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'em troca!' -> 'no exchange!', p.3 'o exchange enviado' ('em troca' = 'in return'). Previous text: "Não há informações suficientes em troca!"
 #. Section: LOGSTUFF
 #: tr4w/src/lang/tr4w_consts_eng.pas:261
 #: utr4wstrings.tc_notenoughinfoinexchange
 #, fuzzy
 msgid "Not enough info in exchange!!"
-msgstr "Não há informações suficientes em troca!"
+msgstr "Não há informações suficientes no exchange!"
 
 #. Section: LOGSTUFF
 #: tr4w/src/lang/tr4w_consts_eng.pas:262
@@ -1644,12 +1660,13 @@ msgstr "Próximo"
 msgid "%s for %s"
 msgstr "%s para %s"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'Chamada:' -> 'Indicativo:', p.4, p.10 'indicativo'. Previous text: "Chamada:"
 #. Section: QTC
 #: tr4w/src/lang/tr4w_consts_eng.pas:308
 #: utr4wstrings.tc_qtc_callsign
 #, fuzzy
 msgid "Callsign :"
-msgstr "Chamada:"
+msgstr "Indicativo:"
 
 #. Section: QTC
 #: tr4w/src/lang/tr4w_consts_eng.pas:309
@@ -1798,12 +1815,13 @@ msgstr "CW desativado com Alt-K! Use Alt-K novamente para ativar."
 msgid "Voice keyer disabled with Alt-K!!  Use Alt-K again to enable."
 msgstr "Teclador de voz desativado com Alt-K! Use Alt-K novamente para ativar."
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'Nenhum sinal' -> 'Nenhum indicativo', p.4, p.10 'indicativo'. Previous text: "Nenhum sinal especificado!"
 #. Section: LOGCFG
 #: tr4w/src/lang/tr4w_consts_eng.pas:342
 #: utr4wstrings.tc_nocallsignspecified
 #, fuzzy
 msgid "No callsign specified!!"
-msgstr "Nenhum sinal especificado!"
+msgstr "Nenhum indicativo especificado!"
 
 #. Section: LOGCFG
 #: tr4w/src/lang/tr4w_consts_eng.pas:343
@@ -1854,12 +1872,13 @@ msgstr "Parâmetro \"%s\" não tem valor no arquivo de configuração - esquerda
 msgid "Recording DVP. Press ESCAPE or RETURN to stop."
 msgstr "Gravando DVP. Pressione Escape ou volte para parar."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "O comando Alt-R requer DOIS RÁDIO MODO = VERDADEIRO"
 #. Section: LOGSUBS1
 #: tr4w/src/lang/tr4w_consts_eng.pas:353
 #: utr4wstrings.tc_altrcommanddisabled
 #, fuzzy
 msgid "Alt-R command requires TWO RADIO MODE = TRUE"
-msgstr "O comando Alt-R requer DOIS RÁDIO MODO = VERDADEIRO"
+msgstr "O comando Alt-R requer TWO RADIO MODE = TRUE"
 
 #. Section: LOGSUBS1
 #: tr4w/src/lang/tr4w_consts_eng.pas:354
@@ -1875,19 +1894,21 @@ msgstr "Nenhuma mensagem CQ programada na memória CQ AltF1."
 msgid "This file does not exist. Create an empty file for editing?"
 msgstr "Este arquivo não existe. Criar um arquivo vazio para edição?"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "O comando Alt-D requer dois modos de rádio = VERDADEIRO"
 #. Section: LOGSUBS2
 #: tr4w/src/lang/tr4w_consts_eng.pas:360
 #: utr4wstrings.tc_altdcommanddisabled
 #, fuzzy
 msgid "Alt-D command requires TWO RADIO MODE = TRUE"
-msgstr "O comando Alt-D requer dois modos de rádio = VERDADEIRO"
+msgstr "O comando Alt-D requer TWO RADIO MODE = TRUE"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Mudança de banda requer MULTIPLE BANDS = VERDADEIRO uma vez que o log tem QSOs"
 #. Section: LOGSUBS2
 #: tr4w/src/lang/tr4w_consts_eng.pas:361
 #: utr4wstrings.tc_bandchangedisabled
 #, fuzzy
 msgid "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
-msgstr "Mudança de banda requer MULTIPLE BANDS = VERDADEIRO uma vez que o log tem QSOs"
+msgstr "Mudança de banda requer MULTIPLE BANDS = TRUE uma vez que o log tem QSOs"
 
 #. Section: LOGSUBS2
 #: tr4w/src/lang/tr4w_consts_eng.pas:362
@@ -2230,12 +2251,13 @@ msgctxt "TC_MIXW_DISCONNECTED"
 msgid "Disconnected"
 msgstr "Desligado"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'Sinal de chamada inválido' -> 'Indicativo inválido', p.4, p.10 'indicativo'. Previous text: "Sinal de chamada inválido na janela de chamada!"
 #. Section: LOGWAE
 #: tr4w/src/lang/tr4w_consts_eng.pas:435
 #: utr4wstrings.tc_invalidcallsignincallwindow
 #, fuzzy
 msgid "Invalid callsign in call window!!"
-msgstr "Sinal de chamada inválido na janela de chamada!"
+msgstr "Indicativo inválido na janela de chamada!"
 
 #. Section: LOGWAE
 #: tr4w/src/lang/tr4w_consts_eng.pas:436
@@ -2293,12 +2315,13 @@ msgstr "Hora do lembrete inválido!"
 msgid "Invalid reminder date!!"
 msgstr "Data de lembrete inválida!"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Muitas mensagens de pontuação!"
 #. Section: CFGCMD
 #: tr4w/src/lang/tr4w_consts_eng.pas:450
 #: utr4wstrings.tc_toomanytotalscoremessages
 #, fuzzy
 msgid "Too many TOTAL SCORE MESSAGEs!!"
-msgstr "Muitas mensagens de pontuação!"
+msgstr "Muitas TOTAL SCORE MESSAGE!!"
 
 #. Section: CFGCMD
 #: tr4w/src/lang/tr4w_consts_eng.pas:451
@@ -2350,12 +2373,13 @@ msgstr "Modificado"
 msgid "Time diff."
 msgstr "Difere o tempo."
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'neste tronco' -> 'neste log', p.4, p.12 'log' (tronco = tree trunk). Previous text: "Mais de 50 horas diferentes neste tronco!"
 #. Section: POSTUNIT
 #: tr4w/src/lang/tr4w_consts_eng.pas:466
 #: utr4wstrings.tc_morethan50differenthoursinthislog
 #, fuzzy
 msgid "More than 50 different hours in this log!!"
-msgstr "Mais de 50 horas diferentes neste tronco!"
+msgstr "Mais de 50 horas diferentes neste log!"
 
 #. Section: POSTUNIT
 #: tr4w/src/lang/tr4w_consts_eng.pas:467
@@ -2614,12 +2638,13 @@ msgstr "Lista de comandos"
 msgid "Edit %s message"
 msgstr "Editar mensagem %s"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'modelo SPLIT' -> 'modo SPLIT', p.3 'MODOS E BANDAS' (modelo = model). Previous text: "Aviso: você está no modelo SPLIT!!"
 #. Section: UEDITMESSAGE
 #: tr4w/src/lang/tr4w_consts_eng.pas:799
 #: utr4wstrings.tc_split_warn
 #, fuzzy
 msgid "Warning: You are in SPLIT MODE !!!"
-msgstr "Aviso: você está no modelo SPLIT!!"
+msgstr "Aviso: você está no modo SPLIT!!"
 
 #. Section: FD Additions NY4I
 #: tr4w/src/lang/tr4w_consts_eng.pas:802
@@ -2642,12 +2667,13 @@ msgstr "A aula do dia de campo deve ser A, B, C, D, E ou F."
 msgid "Winter Field Day class must be H, I, O or M."
 msgstr "A aula do Dia do Campo de Inverno deve ser H, I, O ou M."
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'A troca da' -> 'O exchange da', p.3 'o exchange enviado'. Previous text: "A troca da Estação DX deve ser \"DX\"."
 #. Section: FD Additions NY4I
 #: tr4w/src/lang/tr4w_consts_eng.pas:805
 #: utr4wstrings.tc_arrlfielddayimproperdxexchange
 #, fuzzy
 msgid "DX Station exchange must be \"DX\"."
-msgstr "A troca da Estação DX deve ser \"DX\"."
+msgstr "O exchange da Estação DX deve ser \"DX\"."
 
 #. Section: FD Additions NY4I
 #: tr4w/src/lang/tr4w_consts_eng.pas:808
@@ -2765,15 +2791,17 @@ msgctxt "tfrmbandmap.caption"
 msgid "Band map"
 msgstr "Mapa da banda"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'MAPA DE BAND TODOS OS BANDS' -> 'MAPA DE BANDA TODAS AS BANDAS', p.3 'MODOS E BANDAS'. Previous text: "MAPA DE BAND TODOS OS BANDS"
 #: tfrmbandmap.miallbands.caption
 #, fuzzy
 msgid "BAND MAP ALL BANDS"
-msgstr "MAPA DE BAND TODOS OS BANDS"
+msgstr "MAPA DE BANDA TODAS AS BANDAS"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'MAPA DE BAND' -> 'MAPA DE BANDA', p.3 'MODOS E BANDAS'. Previous text: "MAPA DE BAND TODOS OS MODOS"
 #: tfrmbandmap.miallmodes.caption
 #, fuzzy
 msgid "BAND MAP ALL MODES"
-msgstr "MAPA DE BAND TODOS OS MODOS"
+msgstr "MAPA DE BANDA TODOS OS MODOS"
 
 #. Section: UEDITMESSAGE
 #: tfrmbandmap.mideletespot.caption
@@ -2969,6 +2997,7 @@ msgctxt "RC_BAND"
 msgid "Band"
 msgstr "Banda"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'Chamada' -> 'Indicativo', p.4 'O indicativo de chamada', p.10 'Anotação incorreta do Indicativo'. Previous text: "Chamada"
 #. Section: UEDITMESSAGE
 #: tfrmeditqso.lblcallsign.caption
 #: tfrmsendspot.lblcallsign.caption
@@ -2978,7 +3007,7 @@ msgstr "Banda"
 #, fuzzy
 msgctxt "RC_CALLSIGN"
 msgid "Callsign"
-msgstr "Chamada"
+msgstr "Indicativo"
 
 #: tfrmeditqso.lblchapter.caption
 #, fuzzy
@@ -3054,6 +3083,7 @@ msgstr "Número Rcvd"
 msgid "Number Sent"
 msgstr "Número Enviado"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'Telefonista' -> 'Operador', p.4 '(o operador)' (telefonista = telephone operator). Previous text: "Telefonista"
 #. Section: UEDITMESSAGE
 #: tfrmeditqso.lbloperator.caption
 #: utr4wstrings:rc_operator
@@ -3062,17 +3092,18 @@ msgstr "Número Enviado"
 #, fuzzy
 msgctxt "RC_OPERATOR"
 msgid "Operator"
-msgstr "Telefonista"
+msgstr "Operador"
 
 #: tfrmeditqso.lblpostalcode.caption
 #, fuzzy
 msgid "Postal Code"
 msgstr "Código postal"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'Poder' -> 'Potência', p.3 'A potência total de saída'. Previous text: "Poder"
 #: tfrmeditqso.lblpower.caption
 #, fuzzy
 msgid "Power"
-msgstr "Poder"
+msgstr "Potência"
 
 #: tfrmeditqso.lblprecedence.caption
 #, fuzzy
@@ -3512,10 +3543,11 @@ msgstr "VFO B"
 msgid "XIT"
 msgstr "XIT"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'Mutantes' -> 'Multiplicadores', p.9 'Dois tipos de multiplicadores' (mutantes = mutants). Previous text: "Mutantes restantes"
 #: tfrmremmults.caption
 #, fuzzy
 msgid "Remaining mults"
-msgstr "Mutantes restantes"
+msgstr "Multiplicadores restantes"
 
 #. Section: UEDITMESSAGE
 #: tfrmsendkeyboard.btnclose.caption
@@ -3670,12 +3702,13 @@ msgctxt "tfrmudpdestinationedit.chkstreamrotor.caption"
 msgid "Rotor"
 msgstr "Rotor"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'Ponto' -> 'Pontuação', p.5 'a pontuação final', p.10 'PONTUAÇÃO FINAL'. Previous text: "Ponto"
 #: tfrmudpdestinationedit.chkstreamscore.caption
 #: ulclformhelpers.tc_prefs_udpstream_score
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamscore.caption"
 msgid "Score"
-msgstr "Ponto"
+msgstr "Pontuação"
 
 #: tfrmudpdestinationedit.grpstreams.caption
 #, fuzzy
@@ -4073,11 +4106,12 @@ msgstr "Esconda os cabeçalhos da coluna de registro"
 msgid "Stop polling the radio while transmitting"
 msgstr "Pare de sondar o rádio enquanto transmite"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'um sinal parcial' -> 'um indicativo parcial', p.4, p.10 'indicativo'. Previous text: "Combina com um sinal parcial"
 #: tprefsform.chkpartialcall.caption
 #: usettingscaptions.rs_scp_partialcall
 #, fuzzy
 msgid "Match on a partial callsign"
-msgstr "Combina com um sinal parcial"
+msgstr "Combina com um indicativo parcial"
 
 #: tprefsform.chkpossiblecalls.caption
 #: usettingscaptions.rs_scp_possiblecalls
@@ -4138,11 +4172,12 @@ msgctxt "tprefsform.chkso2r.caption"
 msgid "SO2R enabled"
 msgstr "SO2R ativado"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'um cheque falso' -> 'uma verificação de duplicados', p.10 'Duplicação de QSO' (cheque falso = forged cheque). Previous text: "A barra espacial faz um cheque falso"
 #: tprefsform.chkspacebardupecheck.caption
 #: usettingscaptions.rs_operating_spacebardupecheck
 #, fuzzy
 msgid "Space bar performs a dupe check"
-msgstr "A barra espacial faz um cheque falso"
+msgstr "A barra espacial faz uma verificação de duplicados"
 
 #: tprefsform.chkspeedsync1.caption
 #: tprefsform.chkspeedsync2.caption
@@ -4217,11 +4252,12 @@ msgstr "Também transmitiram QSOs editados e previamente registrados"
 msgid "Broadcast UDP data"
 msgstr "Transmitir dados UDP"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'os sinais de chamadas' -> 'os indicativos', p.4, p.10 'indicativo'. Previous text: "Gravar os sinais de chamadas sem correspondência"
 #: tprefsform.chkunknowncountryfile.caption
 #: usettingscaptions.rs_logging_unknowncountryfile
 #, fuzzy
 msgid "Record callsigns with no country match"
-msgstr "Gravar os sinais de chamadas sem correspondência"
+msgstr "Gravar os indicativos sem correspondência"
 
 #: tprefsform.chkupdaterestartfile.caption
 #: usettingscaptions.rs_logging_updaterestartfile
@@ -4328,10 +4364,11 @@ msgstr "Janela principal"
 msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
 msgstr "A fonte se aplica à janela principal do concurso. Todos os quatro fazem efeito quando TR4W começar."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Estes estavam no item Aparência do menu Configurações. Essa janela desaparece uma vez que o tamanho da corda e da janela se juntam a eles aqui."
 #: tprefsform.lblappearmenunote.caption
 #, fuzzy
 msgid "These were on the Appearance item of the Settings menu. That window goes away once ROW COUNT and WINDOW SIZE join them here."
-msgstr "Estes estavam no item Aparência do menu Configurações. Essa janela desaparece uma vez que o tamanho da corda e da janela se juntam a eles aqui."
+msgstr "Estes estavam no item Aparência do menu Configurações. Essa janela deixará de existir quando ROW COUNT e WINDOW SIZE também vierem para cá."
 
 #: tprefsform.lblaudioheading.caption
 #, fuzzy
@@ -4368,10 +4405,11 @@ msgstr "Entendido"
 msgid "Log backup"
 msgstr "Reforço do registro"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'do diário' -> 'do log', p.4 'o log completo', p.12 'Seu log'; 'próprio tronco' -> 'próprio log', p.4, p.12 'log' (tronco = tree trunk). Previous text: "Uma segunda cópia do diário, escrita enquanto você vai. Coloque em algum lugar que não seja o mesmo disco que o próprio tronco, ou ele protege contra nada que valha a pena proteger."
 #: tprefsform.lblbackuphint.caption
 #, fuzzy
 msgid "A second copy of the log, written as you go.  Put it somewhere that is not the same disk as the log itself, or it protects against nothing worth protecting against."
-msgstr "Uma segunda cópia do diário, escrita enquanto você vai. Coloque em algum lugar que não seja o mesmo disco que o próprio tronco, ou ele protege contra nada que valha a pena proteger."
+msgstr "Uma segunda cópia do log, escrita enquanto você vai. Coloque em algum lugar que não seja o mesmo disco que o próprio log, ou ele protege contra nada que valha a pena proteger."
 
 #: tprefsform.lblbandmapdecay.caption
 #, fuzzy
@@ -4455,10 +4493,11 @@ msgstr "Meus grupos DX"
 msgid "Log in as:"
 msgstr "Entrar como:"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'meu sinal de estação' -> 'meu indicativo de estação', p.4, p.10 'indicativo'. Previous text: "em branco = meu sinal de estação"
 #: tprefsform.lblclusterloginhint.caption
 #, fuzzy
 msgid "blank = my station callsign"
-msgstr "em branco = meu sinal de estação"
+msgstr "em branco = meu indicativo de estação"
 
 #: tprefsform.lblclustername.caption
 #: tprefsform.lblrotatorname.caption
@@ -4493,10 +4532,11 @@ msgstr "Servidor:"
 msgid "host:port, for example dxc.nc7j.com:7373.  The drop-down lists the servers in TRCLUSTER.DAT; you can also type one that is not on it."
 msgstr "por exemplo, DXC.NC7j.com:7373. A lista dos servidores em TRCLUSTER.DAT, você também pode digitar um que não esteja nele."
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'Troca do concurso' -> 'Exchange do concurso', p.3 'o exchange enviado', p.7 'MENSAGEM/EXCHANGE' (never 'troca'). Previous text: "Troca do concurso"
 #: tprefsform.lblcontestheading.caption
 #, fuzzy
 msgid "Contest exchange"
-msgstr "Troca do concurso"
+msgstr "Exchange do concurso"
 
 #: tprefsform.lblcwoutput1.caption
 #: ulclformhelpers.tc_prefs_cwoutput1
@@ -4686,10 +4726,11 @@ msgstr "Programa:"
 msgid "Log level:"
 msgstr "Nível de registro:"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'o tronco' -> 'o log', p.4, p.12 'log' (tronco = tree trunk; this is the diagnostic log). Previous text: "Faz efeito imediatamente, sem reiniciar. INFO é a configuração normal, DEBUG e TRACE tornam o tronco muito maior e são para diagnosticar um problema."
 #: tprefsform.lblloglevelhint.caption
 #, fuzzy
 msgid "Takes effect immediately - no restart.  INFO is the normal setting; DEBUG and TRACE make the log much larger and are for diagnosing a problem."
-msgstr "Faz efeito imediatamente, sem reiniciar. INFO é a configuração normal, DEBUG e TRACE tornam o tronco muito maior e são para diagnosticar um problema."
+msgstr "Faz efeito imediatamente, sem reiniciar. INFO é a configuração normal, DEBUG e TRACE tornam o log muito maior e são para diagnosticar um problema."
 
 #: tprefsform.lblmainfont.caption
 #, fuzzy
@@ -4722,10 +4763,11 @@ msgstr "Pasta MP3"
 msgid "MP3 player program"
 msgstr "Programa MP3 player"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'Chamada:' -> 'Indicativo:', p.4, p.10 'indicativo'. Previous text: "Chamada:"
 #: tprefsform.lblmycall.caption
 #, fuzzy
 msgid "Callsign:"
-msgstr "Chamada:"
+msgstr "Indicativo:"
 
 #: tprefsform.lblmycheck.caption
 #, fuzzy
@@ -4849,10 +4891,11 @@ msgstr "CW enquanto opera"
 msgid "Operating"
 msgstr "Operando"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'o tronco' -> 'o log', p.4, p.12 'log' (tronco = tree trunk). Previous text: "Como o tronco se comporta enquanto você dirige o concurso. Mapa de banda, bandas, CW, marcando e duas configurações de rádio estão nas páginas abaixo."
 #: tprefsform.lbloperatinginfo.caption
 #, fuzzy
 msgid "How the log behaves while you are running the contest. Band map, bands, CW, scoring and two-radio settings are on the pages below."
-msgstr "Como o tronco se comporta enquanto você dirige o concurso. Mapa de banda, bandas, CW, marcando e duas configurações de rádio estão nas páginas abaixo."
+msgstr "Como o log se comporta enquanto você dirige o concurso. Mapa de banda, bandas, CW, marcando e duas configurações de rádio estão nas páginas abaixo."
 
 #: tprefsform.lblpaddlehold.caption
 #, fuzzy
@@ -5078,10 +5121,11 @@ msgctxt "RC_STATIONINFO"
 msgid "Station information"
 msgstr "Informação da estação"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'com a troca' -> 'com o exchange', p.3 'o exchange enviado'. Previous text: "Estes são enviados para as outras estações em uma rede multi-operador quando você mudá-los, então todas as posições concordam com a troca."
 #: tprefsform.lblstationhint.caption
 #, fuzzy
 msgid "These are sent to the other stations in a multi-operator network when you change them, so all positions agree on the exchange."
-msgstr "Estes são enviados para as outras estações em uma rede multi-operador quando você mudá-los, então todas as posições concordam com a troca."
+msgstr "Estes são enviados para as outras estações em uma rede multi-operador quando você mudá-los, então todas as posições concordam com o exchange."
 
 #: tprefsform.lblstereoport.caption
 #, fuzzy
@@ -5675,6 +5719,7 @@ msgctxt "RC_3830"
 msgid "3830 Score posting"
 msgstr "3830 Score posting"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'Submeter' -> 'Enviar', p.12 'Ao enviar seu log'. Previous text: "Submeter o registro de ARRL"
 #. Section: UEDITMESSAGE
 #. 4.53.3
 #: utr4wstrings:rc_3830_arrl
@@ -5683,7 +5728,7 @@ msgstr "3830 Score posting"
 #, fuzzy
 msgctxt "RC_3830_ARRL"
 msgid "Submit ARRL Log"
-msgstr "Submeter o registro de ARRL"
+msgstr "Enviar o registro de ARRL"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_vieweditlog2
@@ -5788,6 +5833,7 @@ msgctxt "RC_SETTIMEZONE"
 msgid "Set time zone"
 msgstr "Definir fuso horário"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Ping"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_ping
 #: tr4w/src/lang/tr4w_consts_eng.pas:554
@@ -5795,7 +5841,7 @@ msgstr "Definir fuso horário"
 #, fuzzy
 msgctxt "RC_PING"
 msgid "Ping [SERVER ADDRESS]"
-msgstr "Ping"
+msgstr "Ping [SERVER ADDRESS]"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_runserver
@@ -5923,6 +5969,7 @@ msgctxt "RC_EXPORT"
 msgid "Export"
 msgstr "Exportar"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'de trocas iniciais' -> 'de exchanges iniciais', p.5 'Os Exchanges para a categoria'. Previous text: "Lista de trocas iniciais"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_iniexlist
 #: tr4w/src/lang/tr4w_consts_eng.pas:601
@@ -5930,7 +5977,7 @@ msgstr "Exportar"
 #, fuzzy
 msgctxt "RC_INIEXLIST"
 msgid "Initial exchanges list"
-msgstr "Lista de trocas iniciais"
+msgstr "Lista de exchanges iniciais"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_trlogform
@@ -5950,6 +5997,7 @@ msgctxt "RC_REPORTS"
 msgid "Reports"
 msgstr "Relatórios"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'os sinais de chamada' -> 'os indicativos', p.4, p.10 'indicativo'. Previous text: "Todos os sinais de chamada"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_allcalls
 #: tr4w/src/lang/tr4w_consts_eng.pas:604
@@ -5957,7 +6005,7 @@ msgstr "Relatórios"
 #, fuzzy
 msgctxt "RC_ALLCALLS"
 msgid "All callsigns"
-msgstr "Todos os sinais de chamada"
+msgstr "Todos os indicativos"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_bandchanges
@@ -5977,6 +6025,7 @@ msgctxt "RC_CONTLIST"
 msgid "Continent List"
 msgstr "Lista Continente"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'sinal trabalhava' -> 'indicativo trabalhado', p.4 'indicativo'; p.8 'estação trabalhada'. Previous text: "O primeiro sinal trabalhava em cada país"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_fcc
 #: tr4w/src/lang/tr4w_consts_eng.pas:607
@@ -5984,8 +6033,9 @@ msgstr "Lista Continente"
 #, fuzzy
 msgctxt "RC_FCC"
 msgid "First callsign worked in each country"
-msgstr "O primeiro sinal trabalhava em cada país"
+msgstr "O primeiro indicativo trabalhado em cada país"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'sinal trabalhava' -> 'indicativo trabalhado', p.4 'indicativo'; p.8 'estação trabalhada'. Previous text: "O primeiro sinal trabalhava em cada zona"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_fcz
 #: tr4w/src/lang/tr4w_consts_eng.pas:608
@@ -5993,7 +6043,7 @@ msgstr "O primeiro sinal trabalhava em cada país"
 #, fuzzy
 msgctxt "RC_FCZ"
 msgid "First callsign worked in each zone"
-msgstr "O primeiro sinal trabalhava em cada zona"
+msgstr "O primeiro indicativo trabalhado em cada zona"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_qsobycountry
@@ -6276,6 +6326,7 @@ msgctxt "RC_DELETELASTQSO"
 msgid "Delete the last QSO"
 msgstr "Apague o último QSO"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'Troca inicial' -> 'Exchange inicial', p.3, p.5 'exchange'. Previous text: "Troca inicial"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_initialex
 #: tr4w/src/lang/tr4w_consts_eng.pas:657
@@ -6283,7 +6334,7 @@ msgstr "Apague o último QSO"
 #, fuzzy
 msgctxt "RC_INITIALEX"
 msgid "Initial exchange"
-msgstr "Troca inicial"
+msgstr "Exchange inicial"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_tooglest
@@ -6636,6 +6687,7 @@ msgctxt "RC_RECVQTC"
 msgid "Receiving QTCs"
 msgstr "Recebendo QTCs"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'em troncos' -> 'em logs', p.12 'Os logs originais' (tronco = tree trunk). Previous text: "Diferença em troncos"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_diffinlog
 #: tr4w/src/lang/tr4w_consts_eng.pas:749
@@ -6643,7 +6695,7 @@ msgstr "Recebendo QTCs"
 #, fuzzy
 msgctxt "RC_DIFFINLOG"
 msgid "Difference in logs"
-msgstr "Diferença em troncos"
+msgstr "Diferença em logs"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_iaqslint
@@ -6717,6 +6769,7 @@ msgctxt "RC_NET_CLDUPE"
 msgid "Clear dupesheet in all logs"
 msgstr "Limpar dupesheet em todos os registros"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'os troncos' -> 'os logs', p.12 'Os logs originais' (tronco = tree trunk). Previous text: "Limpar folha de mult em todos os troncos"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_net_clmult
 #: tr4w/src/lang/tr4w_consts_eng.pas:783
@@ -6724,7 +6777,7 @@ msgstr "Limpar dupesheet em todos os registros"
 #, fuzzy
 msgctxt "RC_NET_CLMULT"
 msgid "Clear multsheet in all logs"
-msgstr "Limpar folha de mult em todos os troncos"
+msgstr "Limpar folha de mult em todos os logs"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_inc_time
@@ -6753,6 +6806,7 @@ msgctxt "RC_DEVICEMANAGER"
 msgid "Device Manager"
 msgstr "Gerenciador de dispositivos"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'SH/DX' -> 'SH/DX [indicativo]', p.4, p.10 'indicativo' (the term was dropped). Previous text: "SH/DX"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_shdx_callsign
 #: tr4w/src/lang/tr4w_consts_eng.pas:789
@@ -6760,7 +6814,7 @@ msgstr "Gerenciador de dispositivos"
 #, fuzzy
 msgctxt "RC_SHDX_CALLSIGN"
 msgid "SH/DX [callsign]"
-msgstr "SH/DX"
+msgstr "SH/DX [indicativo]"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_login
@@ -6853,6 +6907,7 @@ msgctxt "TC_HAMSCOREQUEUEINGFULLLOGRESYNC"
 msgid "HamScore: queueing full log resync..."
 msgstr "Resincronização de log completo em fila..."
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'um sinal de chamada' -> 'um indicativo', p.4, p.10 'indicativo'. Previous text: "Chamada de login não parece um sinal de chamada"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_logincalldoeslooklikecallsign
 #: tr4w/src/lang/tr4w_consts_eng.pas:831
@@ -6860,7 +6915,7 @@ msgstr "Resincronização de log completo em fila..."
 #, fuzzy
 msgctxt "TC_LOGINCALLDOESLOOKLIKECALLSIGN"
 msgid "Login call does not look like a callsign"
-msgstr "Chamada de login não parece um sinal de chamada"
+msgstr "Chamada de login não parece um indicativo"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_nopotaparksloggedyetsession
@@ -7006,6 +7061,7 @@ msgctxt "TC_AUTOSPOTENABLEDTESTMODEONLY"
 msgid "AUTOSPOT is enabled - Test Mode Only"
 msgstr "AUTOSPOT está ativado"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "MÃO LOG MODE = VERDADEIRA"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_handlogmodetrue
 #: tr4w/src/lang/tr4w_consts_eng.pas:848
@@ -7013,7 +7069,7 @@ msgstr "AUTOSPOT está ativado"
 #, fuzzy
 msgctxt "TC_HANDLOGMODETRUE"
 msgid "HAND LOG MODE = TRUE"
-msgstr "MÃO LOG MODE = VERDADEIRA"
+msgstr "HAND LOG MODE = TRUE"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_trmasterdtas
@@ -7078,6 +7134,7 @@ msgctxt "TC_INVALIDDATE"
 msgid "Invalid date!!"
 msgstr "Encontro inválido!"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'para troca inicial' -> 'para exchange inicial', p.3, p.5 'exchange'. Previous text: "Não há memória suficiente para troca inicial!"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_enoughmemoryinitialexchangearray
 #: tr4w/src/lang/tr4w_consts_eng.pas:856
@@ -7085,7 +7142,7 @@ msgstr "Encontro inválido!"
 #, fuzzy
 msgctxt "TC_ENOUGHMEMORYINITIALEXCHANGEARRAY"
 msgid "Not enough memory for initial exchange array!!"
-msgstr "Não há memória suficiente para troca inicial!"
+msgstr "Não há memória suficiente para exchange inicial!"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_findingzeroendvisibledupesheetlist
@@ -7285,6 +7342,7 @@ msgctxt "TC_ENTEREXCHANGEPRESSENTERLOGESCAPEAB"
 msgid "Enter exchange.  Press ENTER to log, ESCAPE to abort QSO."
 msgstr "Entre em troca. Pressione ENTER para registrar, Escape para abortar QSO."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "RELAY CONTROLE PORTO = PADDLE PORTO"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_relaycontrolportpaddleport
 #: tr4w/src/lang/tr4w_consts_eng.pas:879
@@ -7292,7 +7350,7 @@ msgstr "Entre em troca. Pressione ENTER para registrar, Escape para abortar QSO.
 #, fuzzy
 msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
 msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr "RELAY CONTROLE PORTO = PADDLE PORTO"
+msgstr "RELAY CONTROL PORT = PADDLE PORT"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_locationfieldempty
@@ -7303,6 +7361,7 @@ msgctxt "TC_LOCATIONFIELDEMPTY"
 msgid "LOCATION field is empty."
 msgstr "O campo de localização está vazio."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "LOCALIZAÇÃO DE PTT=TRUE"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_pttlockouttrue
 #: tr4w/src/lang/tr4w_consts_eng.pas:881
@@ -7310,7 +7369,7 @@ msgstr "O campo de localização está vazio."
 #, fuzzy
 msgctxt "TC_PTTLOCKOUTTRUE"
 msgid "PTT LOCKOUT=TRUE"
-msgstr "LOCALIZAÇÃO DE PTT=TRUE"
+msgstr "PTT LOCKOUT=TRUE"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_preferencescouldopeneds
@@ -7667,10 +7726,11 @@ msgstr "Abra uma configuração existente"
 msgid "Start a new contest"
 msgstr "Comece um novo concurso"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'CONTESTE' -> 'CONCURSO', p.2 'um concurso de radioamadorismo' (the bulletin also says 'conteste' twice, p.2 and p.13). Previous text: "CONTESTE"
 #: tfrmnewcontest.lblcontest.caption
 #, fuzzy
 msgid "CONTEST"
-msgstr "CONTESTE"
+msgstr "CONCURSO"
 
 #: tfrmnewcontest.lblmycall.caption
 #, fuzzy
@@ -7782,13 +7842,14 @@ msgstr ""
 msgid "Connect#0Disconnect#0Commands#0Freeze#0Clear#0SH/50#0#0"
 msgstr "Conectar #0Desconectar #0Comandos#0Paralisar#0Limpar#0SH/50#0"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'de troca inicial' -> 'de exchange inicial', p.3, p.5 'exchange'. Previous text: "Houve chamadas %u encontradas no arquivo de troca inicial.\n+%u dupe(s)"
 #: utr4wstrings.tc_therewerecalls
 #, fuzzy
 msgid ""
 "There were %u calls found in initial exchange file.\n"
 "+%u dupe(s)"
 msgstr ""
-"Houve chamadas %u encontradas no arquivo de troca inicial.\n"
+"Houve chamadas %u encontradas no arquivo de exchange inicial.\n"
 "+%u dupe(s)"
 
 #: utr4wstrings.tc_uk
@@ -7890,10 +7951,11 @@ msgstr "Configurar..."
 msgid "lblNoClusters"
 msgstr ""
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'o sinal aparecer' -> 'o indicativo aparecer', p.4, p.10 'indicativo'. Previous text: "Deixa você clicar duas vezes em um lugar no DXLab SpotCollector e fazer o sinal aparecer no campo de chamada do TR4W. Isso não afeta as manchas do seu grupo DX - as que chegam se isso está marcado ou não."
 #: tprefsform.lblspotcollectorhint.caption
 #, fuzzy
 msgid "Lets you double-click a spot in DXLab SpotCollector and have the callsign appear in TR4W's call field.  This does NOT affect spots from your DX cluster - those arrive whether this is ticked or not."
-msgstr "Deixa você clicar duas vezes em um lugar no DXLab SpotCollector e fazer o sinal aparecer no campo de chamada do TR4W. Isso não afeta as manchas do seu grupo DX - as que chegam se isso está marcado ou não."
+msgstr "Deixa você clicar duas vezes em um lugar no DXLab SpotCollector e fazer o indicativo aparecer no campo de chamada do TR4W. Isso não afeta as manchas do seu grupo DX - as que chegam se isso está marcado ou não."
 
 #: usettingscaptions.rs_advanced_handlogmode
 #, fuzzy
@@ -7950,10 +8012,11 @@ msgstr "Lembrete"
 msgid "Show Frequency In Log"
 msgstr "Mostrar frequência no registro"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'sinal de chamada' -> 'indicativo', p.4, p.10 'indicativo'. Previous text: "Mostrar sinal de chamada digitado"
 #: usettingscaptions.rs_appearance_ctrlj_showtypedcallsign
 #, fuzzy
 msgid "Show Typed Callsign"
-msgstr "Mostrar sinal de chamada digitado"
+msgstr "Mostrar indicativo digitado"
 
 #: usettingscaptions.rs_appearance_ctrlj_userinfoshown
 #, fuzzy
@@ -8045,15 +8108,17 @@ msgstr "Modo de Categoria"
 msgid "Category-Operator"
 msgstr "Operador de Categoria"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'Sobreposição' -> 'Overlay', p.6 'CATEGORY-OVERLAY', 'As classificações das categorias OVERLAY'. Previous text: "Sobreposição de categoria"
 #: usettingscaptions.rs_contest_categoryoverlay
 #, fuzzy
 msgid "Category-Overlay"
-msgstr "Sobreposição de categoria"
+msgstr "Overlay de categoria"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'Poder de Categoria' -> 'Potência de Categoria', p.3 'POTÊNCIAS'. Previous text: "Poder de Categoria"
 #: usettingscaptions.rs_contest_categorypower
 #, fuzzy
 msgid "Category-Power"
-msgstr "Poder de Categoria"
+msgstr "Potência de Categoria"
 
 #: usettingscaptions.rs_contest_categorytransmitter
 #, fuzzy
@@ -8075,10 +8140,11 @@ msgstr "Título do Concurso"
 msgid "Count Domestic Countries"
 msgstr "Contagem de países domésticos"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'de troca inicial' -> 'de exchange inicial', p.3, p.5 'exchange'. Previous text: "Corrente de troca inicial personalizada"
 #: usettingscaptions.rs_contest_custominitialexchangestring
 #, fuzzy
 msgid "Custom Initial Exchange String"
-msgstr "Corrente de troca inicial personalizada"
+msgstr "Corrente de exchange inicial personalizada"
 
 #: usettingscaptions.rs_contest_domesticmultiplier
 #, fuzzy
@@ -8095,30 +8161,33 @@ msgstr "Multiplicador DX"
 msgid "Exchange Memory Enable"
 msgstr "Trocar Memória Activar"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'Câmbio recebido.' -> 'Exchange recebido.', p.5 'EXCHANGE enviado e recebido' (cambio = currency exchange). Previous text: "Câmbio recebido."
 #: usettingscaptions.rs_contest_exchangereceived
 #, fuzzy
 msgid "Exchange Received"
-msgstr "Câmbio recebido."
+msgstr "Exchange recebido."
 
 #: usettingscaptions.rs_contest_gridmapcenter
 #, fuzzy
 msgid "Grid Map Center"
 msgstr "Centro de mapas da grade"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'Troca Inicial' -> 'Exchange Inicial', p.3, p.5 'exchange'. Previous text: "Troca Inicial"
 #: usettingscaptions.rs_contest_initialexchange
 #, fuzzy
 msgid "Initial Exchange"
-msgstr "Troca Inicial"
+msgstr "Exchange Inicial"
 
 #: usettingscaptions.rs_contest_initialexchangecursorpos
 #, fuzzy
 msgid "Initial Exchange Cursor Pos"
 msgstr "Poso de Cursor de Intercâmbio Inicial"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'Troca Inicial' -> 'Exchange Inicial', p.3, p.5 'exchange'. Previous text: "Troca Inicial Sobrescrever"
 #: usettingscaptions.rs_contest_initialexchangeoverwrite
 #, fuzzy
 msgid "Initial Exchange Overwrite"
-msgstr "Troca Inicial Sobrescrever"
+msgstr "Exchange Inicial Sobrescrever"
 
 #: usettingscaptions.rs_contest_literaldomesticqth
 #, fuzzy
@@ -8215,10 +8284,11 @@ msgstr "Método de Ponto QSO"
 msgid "QSO Points Domestic CW"
 msgstr "QSO Pontos CW doméstico"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'telefone doméstico' -> 'fonia doméstica', p.8 'FONIA: CQ WORLD SCOUT'. Previous text: "QSO Points telefone doméstico"
 #: usettingscaptions.rs_contest_qsopointsdomesticphone
 #, fuzzy
 msgid "QSO Points Domestic Phone"
-msgstr "QSO Points telefone doméstico"
+msgstr "QSO Points fonia doméstica"
 
 #: usettingscaptions.rs_contest_qsopointsdxcw
 #, fuzzy
@@ -8435,10 +8505,11 @@ msgstr "Cty Update Check on Startup"
 msgid "Domestic Filename"
 msgstr "Nome de arquivo doméstico"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'de troca inicial' -> 'de exchange inicial', p.3, p.5 'exchange'. Previous text: "Nome do arquivo de troca inicial"
 #: usettingscaptions.rs_files_ctrlj_initialexchangefilename
 #, fuzzy
 msgid "Initial Exchange Filename"
-msgstr "Nome do arquivo de troca inicial"
+msgstr "Nome do arquivo de exchange inicial"
 
 #: usettingscaptions.rs_files_ctrlj_missingcallsignsfileenable
 #, fuzzy
@@ -8600,10 +8671,11 @@ msgstr "Frequência do log Activar"
 msgid "Log Sub Title"
 msgstr "Subtítulo do registro"
 
+# 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'Sinal principal' -> 'Indicativo principal', p.4, p.10 'indicativo'. Previous text: "Sinal principal"
 #: usettingscaptions.rs_operating_ctrlj_maincallsign
 #, fuzzy
 msgid "Main Callsign"
-msgstr "Sinal principal"
+msgstr "Indicativo principal"
 
 #: usettingscaptions.rs_operating_ctrlj_possiblecallacceptkey
 #, fuzzy
@@ -8804,25 +8876,29 @@ msgstr ""
 "\n"
 "O pedido foi rejeitado em vez de enviado sem verificação. Desligar Preferências > Rede > verifique os certificados do servidor se quiser prosseguir sem verificar."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(Meu país =) %s)"
 #: uappstrings.sexchangemodebriefcountry
 #, fuzzy
 msgid "(MY COUNTRY = %s)"
-msgstr "(Meu país =) %s)"
+msgstr "(MY COUNTRY = %s)"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(Meu país está vazio)"
 #: uappstrings.sexchangemodebriefemptycountry
 #, fuzzy
 msgid "(MY COUNTRY is empty)"
-msgstr "(Meu país está vazio)"
+msgstr "(MY COUNTRY está vazio)"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Este concurso está pedindo um estado, província ou seção porque meu país é %s."
 #: uappstrings.sexchangemodefromcountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is %s."
-msgstr "Este concurso está pedindo um estado, província ou seção porque meu país é %s."
+msgstr "Este concurso está pedindo um estado, província ou seção porque MY COUNTRY é %s."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Este concurso está pedindo um estado, província ou seção porque meu país está vazio."
 #: uappstrings.sexchangemodefromemptycountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is empty."
-msgstr "Este concurso está pedindo um estado, província ou seção porque meu país está vazio."
+msgstr "Este concurso está pedindo um estado, província ou seção porque MY COUNTRY está vazio."
 
 #: uappstrings.sfilenamecamefromsetting
 #, fuzzy
@@ -8911,6 +8987,7 @@ msgstr ""
 "\n"
 "%sTR4W vai continuar correndo e continuar tentando abri-lo. Até que possa, nada desta sessão está escrito no diário."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "ID do computador %s já está em uso por outra estação nesta rede.\n\nMUDAR COMPUTADOR Identidade para uma letra que nenhuma outra estação está usando, então reconecte."
 #: uappstrings.snetcomputeridinuse
 #, fuzzy
 msgid ""
@@ -8918,9 +8995,9 @@ msgid ""
 "\n"
 "Change COMPUTER ID to a letter no other station is using, then reconnect."
 msgstr ""
-"ID do computador %s já está em uso por outra estação nesta rede.\n"
+"O ID do computador %s já está em uso por outra estação nesta rede.\n"
 "\n"
-"MUDAR COMPUTADOR Identidade para uma letra que nenhuma outra estação está usando, então reconecte."
+"Altere COMPUTER ID para uma letra que nenhuma outra estação esteja usando e reconecte."
 
 #: uappstrings.snewcontestin7qpnecountyorstate
 #, fuzzy
@@ -8947,30 +9024,35 @@ msgstr "Configure isso em Preferências > Station, em seguida, reinicie TR4W: el
 msgid "This contest is set up, but TR4W is missing information it needs:"
 msgstr "Este concurso está montado, mas TR4W está faltando informações que precisa:"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Minha chamada está vazia. TR4W não pode trabalhar seu país, continente ou zona sem ele, e nada que depende deles estará certo."
 #: uappstrings.sreadinessmycallmissing
 #, fuzzy
 msgid "MY CALL is empty. TR4W cannot work out your country, continent or zone without it, and nothing that depends on them will be right."
-msgstr "Minha chamada está vazia. TR4W não pode trabalhar seu país, continente ou zona sem ele, e nada que depende deles estará certo."
+msgstr "MY CALL está vazio. Sem ele, o TR4W não consegue determinar seu país, continente ou zona, e nada que dependa deles estará correto."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Meu país está vazio. Normalmente é feito a partir de minha chamada através do CTY.DAT. Até que tenha um valor TR4W trata esta estação como DX -- em ARRL DX significa que pedirá a cada estação um estado ou província e recusará um poder como K ou 100."
 #: uappstrings.sreadinessmycountrymissing
 #, fuzzy
 msgid "MY COUNTRY is empty. It is normally worked out from MY CALL through CTY.DAT. Until it has a value TR4W treats this station as DX -- in ARRL DX that means it will ask every station for a state or province and refuse a power such as K or 100."
-msgstr "Meu país está vazio. Normalmente é feito a partir de minha chamada através do CTY.DAT. Até que tenha um valor TR4W trata esta estação como DX -- em ARRL DX significa que pedirá a cada estação um estado ou província e recusará um poder como K ou 100."
+msgstr "MY COUNTRY está vazio. Normalmente é obtido a partir de MY CALL por meio do CTY.DAT. Enquanto não tiver um valor, o TR4W trata esta estação como DX -- no ARRL DX isso significa que pedirá a cada estação um estado ou província e recusará uma potência como K ou 100."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Meu grid está vazio e este concurso envia sua grade quadrada."
 #: uappstrings.sreadinessmygridmissing
 #, fuzzy
 msgid "MY GRID is empty and this contest sends your grid square."
-msgstr "Meu grid está vazio e este concurso envia sua grade quadrada."
+msgstr "MY GRID está vazio e este concurso envia seu locator."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Meu estado está vazio e este concurso envia seu estado, província ou seção. TR4W enviará um número de série."
 #: uappstrings.sreadinessmystatemissing
 #, fuzzy
 msgid "MY STATE is empty and this contest sends your state, province or section. TR4W will send a serial number instead."
-msgstr "Meu estado está vazio e este concurso envia seu estado, província ou seção. TR4W enviará um número de série."
+msgstr "MY STATE está vazio e este concurso envia seu estado, província ou seção. O TR4W enviará um número de série no lugar."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Minha zona está vazia e este concurso envia sua zona."
 #: uappstrings.sreadinessmyzonemissing
 #, fuzzy
 msgid "MY ZONE is empty and this contest sends your zone."
-msgstr "Minha zona está vazia e este concurso envia sua zona."
+msgstr "MY ZONE está vazio e este concurso envia sua zona."
 
 #: uappstrings.sverifyallpassed
 #, fuzzy
@@ -9118,4 +9200,34 @@ msgstr "%d QSO(s) não nomeou nenhuma estação nossa e receberam este concurso.
 #, fuzzy
 msgid "Show inactive contests"
 msgstr "Mostrar concursos inativos"
+
+#: uappstrings.slatestcontestdetail
+#, fuzzy
+msgid "%0:s - %1:s"
+msgstr "%0:s - %1:s"
+
+#: uappstrings.slatestcontestline
+#, fuzzy
+msgid "%0:s %1:d"
+msgstr "%0:s %1:d"
+
+#: uappstrings.snewcontestfilescall
+#, fuzzy
+msgid "Call"
+msgstr "Indicativo"
+
+#: uappstrings.snewcontestfilescontest
+#, fuzzy
+msgid "Contest"
+msgstr "Concurso"
+
+#: uappstrings.snewcontestfilesfile
+#, fuzzy
+msgid "File"
+msgstr "Arquivo"
+
+#: uappstrings.snewcontestfilesyear
+#, fuzzy
+msgid "Year"
+msgstr "Ano"
 

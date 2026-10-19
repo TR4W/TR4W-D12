@@ -74,12 +74,13 @@ msgctxt "TC_FREQ_ZERO"
 msgid "ERROR: Invalid Frequency logged"
 msgstr "ПОМИЛКА: недопустиме значення частоти для регістрациї"
 
+# 2026-10-19 command name restored to English (NY4I ruling: command names are never translated, even in reviewed text); was: "Запис значення частоти САТ в лог відключена"
 #. Section: General
 #: utr4wstrings:tc_freq_off tr4w/src/lang/tr4w_consts_eng.pas:16
 #: utr4wstrings.tc_freq_off
 msgctxt "TC_FREQ_OFF"
 msgid "SHOW FREQUENCY IN LOG is turned off"
-msgstr "Запис значення частоти САТ в лог відключена"
+msgstr "SHOW FREQUENCY IN LOG відключена"
 
 #. Section: General
 #: utr4wstrings:tc_checkcallsign tr4w/src/lang/tr4w_consts_eng.pas:17
@@ -7091,6 +7092,7 @@ msgctxt "TC_ENTEREXCHANGEPRESSENTERLOGESCAPEAB"
 msgid "Enter exchange.  Press ENTER to log, ESCAPE to abort QSO."
 msgstr "Вхідний обмін Натисніть ENTER для входу, ESCAPE до аборту QSO."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "ЗВІТ З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_relaycontrolportpaddleport
 #: tr4w/src/lang/tr4w_consts_eng.pas:879
@@ -7098,7 +7100,7 @@ msgstr "Вхідний обмін Натисніть ENTER для входу, ES
 #, fuzzy
 msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
 msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr "ЗВІТ З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ"
+msgstr "RELAY CONTROL PORT = PADDLE PORT"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_locationfieldempty tr4w/src/lang/tr4w_consts_eng.pas:880
@@ -8587,10 +8589,11 @@ msgstr "(MY COUNTRY порожній)"
 msgid "This contest is asking for a state, province or section because MY COUNTRY is %s."
 msgstr "Цей конкурс просить державі, губернії або секцію, оскільки MY COUNTRY %sй"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Цей конкурс просить державі, губернії або секцію, оскільки МИ МОЄМО РАУНТРІ є порожнім."
 #: uappstrings.sexchangemodefromemptycountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is empty."
-msgstr "Цей конкурс просить державі, губернії або секцію, оскільки МИ МОЄМО РАУНТРІ є порожнім."
+msgstr "Цей конкурс запитує штат, провінцію або секцію, оскільки MY COUNTRY не задано."
 
 #: uappstrings.sfilenamecamefromsetting
 #, fuzzy
@@ -8679,6 +8682,7 @@ msgstr ""
 "\n"
 "%sTR4W буде підтримувати роботу і підтримувати його намагатися відкривати. До цього не можна, нічого з цього сеансу написано до журналу."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Комп'ютерний ідентифікатор %s вже у використанні іншої станції в мережі.\n\nЗміна складу Введіть номер мобільного, який Ви вказали при укладаннi договору з банком - для ідентифікації."
 #: uappstrings.snetcomputeridinuse
 #, fuzzy
 msgid ""
@@ -8686,9 +8690,9 @@ msgid ""
 "\n"
 "Change COMPUTER ID to a letter no other station is using, then reconnect."
 msgstr ""
-"Комп'ютерний ідентифікатор %s вже у використанні іншої станції в мережі.\n"
+"Ідентифікатор комп'ютера %s уже використовує інша станція в цій мережі.\n"
 "\n"
-"Зміна складу Введіть номер мобільного, який Ви вказали при укладаннi договору з банком - для ідентифікації."
+"Змініть COMPUTER ID на літеру, яку не використовує жодна інша станція, а потім підключіться знову."
 
 #: uappstrings.snewcontestin7qpnecountyorstate
 #, fuzzy
@@ -8715,30 +8719,34 @@ msgstr "Налаштуйте ці налаштування > Станція, п�
 msgid "This contest is set up, but TR4W is missing information it needs:"
 msgstr "Цей конкурс встановлюється, але TR4W не містить інформації, яку він потребує:"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Мої КАЛ порожній. TR4W не може працювати з країною, континентом або зоною без неї, і нічого, що залежить від них, буде правильним."
 #: uappstrings.sreadinessmycallmissing
 #, fuzzy
 msgid "MY CALL is empty. TR4W cannot work out your country, continent or zone without it, and nothing that depends on them will be right."
-msgstr "Мої КАЛ порожній. TR4W не може працювати з країною, континентом або зоною без неї, і нічого, що залежить від них, буде правильним."
+msgstr "MY CALL не задано. Без нього TR4W не може визначити вашу країну, континент або зону, і все, що від них залежить, буде неправильним."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Мої РАУНТРИ порожній. Це нормально працює від MY CALL через CTY.DAT. До цього значення TR4W лікує цю станцію як DX -- в ARRL DX, що означає, що це буде запитати кожну станцію для держави або провінції і відмовитися від влади, таких як K або 100."
 #: uappstrings.sreadinessmycountrymissing
 #, fuzzy
 msgid "MY COUNTRY is empty. It is normally worked out from MY CALL through CTY.DAT. Until it has a value TR4W treats this station as DX -- in ARRL DX that means it will ask every station for a state or province and refuse a power such as K or 100."
-msgstr "Мої РАУНТРИ порожній. Це нормально працює від MY CALL через CTY.DAT. До цього значення TR4W лікує цю станцію як DX -- в ARRL DX, що означає, що це буде запитати кожну станцію для держави або провінції і відмовитися від влади, таких як K або 100."
+msgstr "MY COUNTRY не задано. Зазвичай воно визначається з MY CALL за допомогою CTY.DAT. Поки воно не має значення, TR4W вважає цю станцію DX -- в ARRL DX це означає, що в кожної станції запитуватиметься штат або провінція, а потужність на зразок K або 100 відхилятиметься."
 
 #: uappstrings.sreadinessmygridmissing
 #, fuzzy
 msgid "MY GRID is empty and this contest sends your grid square."
 msgstr "MY GRID - це порожній і цей конкурс надсилає вашу сітку площі."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Мої ДЕРЖАВИ є порожнім і цей конкурс надсилає вашу державу, провінції або розділ. TR4W відправить серійний номер."
 #: uappstrings.sreadinessmystatemissing
 #, fuzzy
 msgid "MY STATE is empty and this contest sends your state, province or section. TR4W will send a serial number instead."
-msgstr "Мої ДЕРЖАВИ є порожнім і цей конкурс надсилає вашу державу, провінції або розділ. TR4W відправить серійний номер."
+msgstr "MY STATE не задано, а цей конкурс передає ваш штат, провінцію або секцію. Натомість TR4W передаватиме порядковий номер."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "МИ ЗОН - це порожній і цей конкурс надсилає вашу зону."
 #: uappstrings.sreadinessmyzonemissing
 #, fuzzy
 msgid "MY ZONE is empty and this contest sends your zone."
-msgstr "МИ ЗОН - це порожній і цей конкурс надсилає вашу зону."
+msgstr "MY ZONE не задано, а цей конкурс передає вашу зону."
 
 #: uappstrings.sverifyallpassed
 #, fuzzy
@@ -8885,4 +8893,34 @@ msgstr "%d Згідно з даним конкурсом."
 #, fuzzy
 msgid "Show inactive contests"
 msgstr "Показати неактивні конкурси"
+
+#: uappstrings.slatestcontestdetail
+#, fuzzy
+msgid "%0:s - %1:s"
+msgstr "%0:s - %1:s"
+
+#: uappstrings.slatestcontestline
+#, fuzzy
+msgid "%0:s %1:d"
+msgstr "%0:s %1:d"
+
+#: uappstrings.snewcontestfilescall
+#, fuzzy
+msgid "Call"
+msgstr "Позивний"
+
+#: uappstrings.snewcontestfilescontest
+#, fuzzy
+msgid "Contest"
+msgstr "Конкурс"
+
+#: uappstrings.snewcontestfilesfile
+#, fuzzy
+msgid "File"
+msgstr "Файл"
+
+#: uappstrings.snewcontestfilesyear
+#, fuzzy
+msgid "Year"
+msgstr "Рік"
 

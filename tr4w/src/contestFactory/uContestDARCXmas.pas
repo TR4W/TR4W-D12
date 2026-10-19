@@ -55,6 +55,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   sits on TContestBase directly and states its own points, calling
   FixedModePoints as a helper (TContestFixedPoints retired at M3).
 
+  THE CABRILLO CONTEST: NAME IS WA7BNM'S XMAS SINCE 2026-10-19 (see
+  GetCabrilloName), not the enum's spelling the paragraph below
+  describes.
+
   BLANK CABName, FriendlyName AND ADIFName ALL MEAN "THE ENUM'S SPELLING";
   the getters below state the value each resolves to, never the empty
   string. ADIFName joined the other two at M1 (2026-10-01): a blank one
@@ -162,9 +166,18 @@ end;
 
 function TContestDARCXmas.GetCabrilloName: string;
 begin
-   (* The row's CABName is blank; this is the enum's spelling it
-      resolves to. *)
-   Result := 'DARC-XMAS';
+   (* WA7BNM's Cabrillo name (WA7BNM 210), NY4I 2026-10-19: "do the
+      cabrillo renames". TR4W wrote 'DARC-XMAS', which the sponsor's log robot
+      accepted neither as the name nor as an alias
+      (docs/UDC_CROSSWALK_FINDINGS.md). Only the Cabrillo CONTEST: line
+      (and the UDP <contestname>) moves: the id, the ADIF id and the
+      display names are their own literals. TR4W reads no Cabrillo
+      CONTEST: value back, so the old name needs no read alias.
+
+      TR4W's XMAS contest (uContestXmas) is a DIFFERENT event, the SSA
+      Jultest (NY4I, 2026-10-19), and writes its sponsor's SSA-JULTEST, so
+      no other contest writes XMAS. *)
+   Result := 'XMAS';
 end;
 
 function TContestDARCXmas.GetADIFContestId: string;

@@ -677,6 +677,21 @@ the target shape, the M-step migration order and the open questions.
   **Q53 was applied 2026-10-17**: 24 contests got NY4I's names (and 14 their
   WA7BNM refs); the 17 with no name keep their internal one. A name change
   is the class's two getters plus its `uTestContestIdentityPin` row, by hand.
+  **THE CABRILLO NAME IS WRITE-ONLY, SO RENAMING IT NEEDS NO READ ALIAS**
+  (2026-10-19, NY4I's 18 WA7BNM renames, e.g. CQMM -> CQMMDX): TR4W has no
+  Cabrillo import, and every `CabrilloName` reader WRITES it (PostUnit's
+  `CONTEST:` line and EDI fallback, LOGSUBS2's UDP `<contestname>`). Only the
+  ID (`ContestTypeSA`, stored) and the ADIF id (import matches it) need the
+  never-reuse rule. **Two DIFFERENT events never share a Cabrillo name**:
+  only the pairs the sponsor states share one (WRTC and IARU write
+  `IARU-HF`; the RoLo CW and SSB write `RSGB-ROLO`, WA7BNM 77/361), and
+  `Test_WA7BNMCabrilloRenamesMoveOnlyTheCabrilloName` walks the registry and
+  fails any other pair -- a new shared pair joins its `IsSharedOnPurpose`
+  table only on a source. TR4W's XMAS is the SSA Jultest, NOT the DARC
+  Christmas (NY4I, 2026-10-19): it writes the sponsor's `SSA-JULTEST`, the
+  DARC contest WA7BNM's `XMAS`; XMAS's QRZ.RU id 100 is DARC's page, a
+  known defect left until the Jultest's id is found.
+  The matrix's `export.cabrillo` lines hold every other Cabrillo name.
 - **A NON-ASCII literal in a class is written as `#$xxxx` code points**
   (Q42, 2026-10-17: the OZCHR session names in Cyrillic). The factory's units
   carry no BOM, and a non-ASCII literal in a BOM-less unit is read in the

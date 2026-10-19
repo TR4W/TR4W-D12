@@ -86,13 +86,14 @@ msgctxt "TC_FREQ_ZERO"
 msgid "ERROR: Invalid Frequency logged"
 msgstr "GREŠKA: Logovana nevažeća frekvencija"
 
+# 2026-10-19 command name restored to English (NY4I ruling: command names are never translated, even in reviewed text); was: "PRIKAZ FREKVENCIJE U LOGU je isključen"
 #. Section: General
 #: utr4wstrings:tc_freq_off
 #: tr4w/src/lang/tr4w_consts_eng.pas:16
 #: utr4wstrings.tc_freq_off
 msgctxt "TC_FREQ_OFF"
 msgid "SHOW FREQUENCY IN LOG is turned off"
-msgstr "PRIKAZ FREKVENCIJE U LOGU je isključen"
+msgstr "SHOW FREQUENCY IN LOG je isključen"
 
 #. Section: General
 #: utr4wstrings:tc_checkcallsign
@@ -1370,13 +1371,14 @@ msgctxt "TC_CONNECTINGTO"
 msgid "Connecting to "
 msgstr "Konektujem se na "
 
+# 2026-10-19 command name restored to English (NY4I ruling: command names are never translated, even in reviewed text); was: "Konekcija na TR4WSERVER nije uspela. Proveri ispravnost LOZINKE SERVERA!!"
 #. Section: UNET
 #: utr4wstrings:tc_connecttotr4wserverfailed
 #: tr4w/src/lang/tr4w_consts_eng.pas:209
 #: utr4wstrings.tc_connecttotr4wserverfailed
 msgctxt "TC_CONNECTTOTR4WSERVERFAILED"
 msgid "Connect to TR4WSERVER failed. Check SERVER PASSWORD value!!"
-msgstr "Konekcija na TR4WSERVER nije uspela. Proveri ispravnost LOZINKE SERVERA!!"
+msgstr "Konekcija na TR4WSERVER nije uspela. Proveri ispravnost SERVER PASSWORD!!"
 
 #. Section: UNET
 #: utr4wstrings:tc_connectedto
@@ -9238,5 +9240,35 @@ msgstr ""
 #: uappstrings.snewcontestshowinactive
 #, fuzzy
 msgid "Show inactive contests"
+msgstr ""
+
+#: uappstrings.slatestcontestdetail
+#, fuzzy
+msgid "%0:s - %1:s"
+msgstr ""
+
+#: uappstrings.slatestcontestline
+#, fuzzy
+msgid "%0:s %1:d"
+msgstr ""
+
+#: uappstrings.snewcontestfilescall
+#, fuzzy
+msgid "Call"
+msgstr ""
+
+#: uappstrings.snewcontestfilescontest
+#, fuzzy
+msgid "Contest"
+msgstr ""
+
+#: uappstrings.snewcontestfilesfile
+#, fuzzy
+msgid "File"
+msgstr "Datoteka"
+
+#: uappstrings.snewcontestfilesyear
+#, fuzzy
+msgid "Year"
 msgstr ""
 

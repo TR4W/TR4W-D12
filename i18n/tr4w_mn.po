@@ -289,13 +289,14 @@ msgctxt "TC_SORRYNOLOG"
 msgid "Sorry!! NO LOG = TRUE which prohibits logging QSOs on this computer"
 msgstr "Уучлаарай!! NO LOG = TRUE холбоог компьютер луу оруулах боломжгvй"
 
+# 2026-10-19 command name restored to English (NY4I ruling: command names are never translated, even in reviewed text); was: "Компьютерийн ID -г тохируулна уу"
 #. Section: MAIN
 #: utr4wstrings:tc_setcomputeridvalue
 #: tr4w/src/lang/tr4w_consts_eng.pas:48
 #: utr4wstrings.tc_setcomputeridvalue
 msgctxt "TC_SETCOMPUTERIDVALUE"
 msgid "Set COMPUTER ID value."
-msgstr "Компьютерийн ID -г тохируулна уу"
+msgstr "COMPUTER ID -г тохируулна уу"
 
 #. Section: MAIN
 #: utr4wstrings:tc_wanttoconvertlog
@@ -9266,5 +9267,35 @@ msgstr ""
 #: uappstrings.snewcontestshowinactive
 #, fuzzy
 msgid "Show inactive contests"
+msgstr ""
+
+#: uappstrings.slatestcontestdetail
+#, fuzzy
+msgid "%0:s - %1:s"
+msgstr ""
+
+#: uappstrings.slatestcontestline
+#, fuzzy
+msgid "%0:s %1:d"
+msgstr ""
+
+#: uappstrings.snewcontestfilescall
+#, fuzzy
+msgid "Call"
+msgstr ""
+
+#: uappstrings.snewcontestfilescontest
+#, fuzzy
+msgid "Contest"
+msgstr ""
+
+#: uappstrings.snewcontestfilesfile
+#, fuzzy
+msgid "File"
+msgstr "Файл"
+
+#: uappstrings.snewcontestfilesyear
+#, fuzzy
+msgid "Year"
 msgstr ""
 

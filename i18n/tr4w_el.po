@@ -154,12 +154,13 @@ msgstr "ΔΕΔΟΜΕΝΑ/ΠΑARΟΤΗΤΑ/ΚΑΤΑΣΤΑΣΗ"
 msgid "HAMLIB ID"
 msgstr "ΤΑΥΤΌΤΗΤΑ HAMLIB"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Το ΡΑΔΙΟ 1 και το ΡΑΔΙΟ 2 είναι ρυθμισμένα για χρήση. %s. ΡΑΔΙΟΦΩΝΟ Ένα κρατά την θύρα ; ΡΑΔΙΟ Δύο CAT έλεγχο είναι απενεργοποιημένο μέχρι ένα radio του ελέγχου port έχει αλλάξει."
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:32
 #: utr4wstrings.tc_port_conflict_startup
 #, fuzzy
 msgid "RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio's CONTROL PORT is changed."
-msgstr "Το ΡΑΔΙΟ 1 και το ΡΑΔΙΟ 2 είναι ρυθμισμένα για χρήση. %s. ΡΑΔΙΟΦΩΝΟ Ένα κρατά την θύρα ; ΡΑΔΙΟ Δύο CAT έλεγχο είναι απενεργοποιημένο μέχρι ένα radio του ελέγχου port έχει αλλάξει."
+msgstr "Τα RADIO ONE και RADIO TWO έχουν ρυθμιστεί και τα δύο να χρησιμοποιούν το %s. Το RADIO ONE κρατά τη θύρα· ο έλεγχος CAT του RADIO TWO απενεργοποιείται μέχρι να αλλάξει το CONTROL PORT ενός από τους δύο πομποδέκτες."
 
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:33
@@ -246,19 +247,21 @@ msgstr "%s Έχει ακατάλληλη σύνταξη!"
 msgid "Enter your CQ ZONE or JA PREFECTURE"
 msgstr "Εισάγετε το CQ ZONE ή JA ΠΡΟΔΙΑΓΡΑΦΗ σας"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Συγγνώμη! ΟΧΙ LOG = ΑΛΗΘΕΙΑ που απαγορεύει την καταγραφή QSO σε αυτόν τον υπολογιστή"
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:47
 #: utr4wstrings.tc_sorrynolog
 #, fuzzy
 msgid "Sorry!! NO LOG = TRUE which prohibits logging QSOs on this computer"
-msgstr "Συγγνώμη! ΟΧΙ LOG = ΑΛΗΘΕΙΑ που απαγορεύει την καταγραφή QSO σε αυτόν τον υπολογιστή"
+msgstr "Λυπούμαστε!! NO LOG = TRUE, που απαγορεύει την καταγραφή QSO σε αυτόν τον υπολογιστή"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Ορισμός τιμής ταυτότητας υπολογιστή."
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:48
 #: utr4wstrings.tc_setcomputeridvalue
 #, fuzzy
 msgid "Set COMPUTER ID value."
-msgstr "Ορισμός τιμής ταυτότητας υπολογιστή."
+msgstr "Ορίστε την τιμή του COMPUTER ID."
 
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:50
@@ -759,19 +762,21 @@ msgstr "Εισάγετε το QTH που θέλετε να στείλετε\rκ�
 msgid "Enter first two digits of your QTH:"
 msgstr "Εισάγετε τα δύο πρώτα ψηφία του QTH σας:"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Εισάγετε την ηλικία σας στο πεδίο STATE ΜΟΥ:"
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:134
 #: utr4wstrings.tc_enteryourageinmystatefield
 #, fuzzy
 msgid "Enter your age in MY STATE field:"
-msgstr "Εισάγετε την ηλικία σας στο πεδίο STATE ΜΟΥ:"
+msgstr "Εισαγάγετε την ηλικία σας στο πεδίο MY STATE:"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Εισάγετε το QTH σας που θέλετε να στείλετε αν είστε στη Βόρεια Αμερική ή τη δύναμή σας ως κράτος μου αν έξω:"
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:135
 #: utr4wstrings.tc_enteryourqthorpower
 #, fuzzy
 msgid "Enter your QTH that you want to send if you are in North America or your power as MY STATE if outside:"
-msgstr "Εισάγετε το QTH σας που θέλετε να στείλετε αν είστε στη Βόρεια Αμερική ή τη δύναμή σας ως κράτος μου αν έξω:"
+msgstr "Εισαγάγετε το QTH που θέλετε να στέλνετε αν βρίσκεστε στη Βόρεια Αμερική, ή την ισχύ σας ως MY STATE αν βρίσκεστε εκτός:"
 
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:136
@@ -1854,12 +1859,13 @@ msgstr "Παράμετρος \" %s\" δεν έχει αξία στο αρχεί�
 msgid "Recording DVP. Press ESCAPE or RETURN to stop."
 msgstr "Καταγραφή DVP. Πατήστε ESCAPE ή ΕΠΙΣΤΡΟΦΗ για να σταματήσει."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Η εντολή Alt-R απαιτεί ΔΥΟ ΡΑΔΙΟΜΟΡΦΟ = ΑΛΗΘΙΝΟ"
 #. Section: LOGSUBS1
 #: tr4w/src/lang/tr4w_consts_eng.pas:353
 #: utr4wstrings.tc_altrcommanddisabled
 #, fuzzy
 msgid "Alt-R command requires TWO RADIO MODE = TRUE"
-msgstr "Η εντολή Alt-R απαιτεί ΔΥΟ ΡΑΔΙΟΜΟΡΦΟ = ΑΛΗΘΙΝΟ"
+msgstr "Η εντολή Alt-R απαιτεί TWO RADIO MODE = TRUE"
 
 #. Section: LOGSUBS1
 #: tr4w/src/lang/tr4w_consts_eng.pas:354
@@ -1875,19 +1881,21 @@ msgstr "Κανένα μήνυμα CQ προγραμματισμένο στο CQ 
 msgid "This file does not exist. Create an empty file for editing?"
 msgstr "Αυτό το αρχείο δεν υπάρχει. Δημιουργία ενός κενού αρχείου για επεξεργασία?"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Η εντολή Alt-D απαιτεί ΔΥΟ ΡΑΔΙΟΜΟΡΦΟ = ΑΛΗΘΙΝΟ"
 #. Section: LOGSUBS2
 #: tr4w/src/lang/tr4w_consts_eng.pas:360
 #: utr4wstrings.tc_altdcommanddisabled
 #, fuzzy
 msgid "Alt-D command requires TWO RADIO MODE = TRUE"
-msgstr "Η εντολή Alt-D απαιτεί ΔΥΟ ΡΑΔΙΟΜΟΡΦΟ = ΑΛΗΘΙΝΟ"
+msgstr "Η εντολή Alt-D απαιτεί TWO RADIO MODE = TRUE"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Η αλλαγή ζώνης απαιτεί ΠΟΛΥΤΙΜΕΣ ΒΑΣΕΙΣ = ΑΛΗΘΕΙΑ μόλις το αρχείο καταγραφής έχει QSOs"
 #. Section: LOGSUBS2
 #: tr4w/src/lang/tr4w_consts_eng.pas:361
 #: utr4wstrings.tc_bandchangedisabled
 #, fuzzy
 msgid "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
-msgstr "Η αλλαγή ζώνης απαιτεί ΠΟΛΥΤΙΜΕΣ ΒΑΣΕΙΣ = ΑΛΗΘΕΙΑ μόλις το αρχείο καταγραφής έχει QSOs"
+msgstr "Η αλλαγή μπάντας απαιτεί MULTIPLE BANDS = TRUE όταν το ημερολόγιο έχει ήδη QSO"
 
 #. Section: LOGSUBS2
 #: tr4w/src/lang/tr4w_consts_eng.pas:362
@@ -2293,19 +2301,21 @@ msgstr "Μη έγκυρη ώρα υπενθύμισης!"
 msgid "Invalid reminder date!!"
 msgstr "Μη έγκυρη ημερομηνία υπενθύμισης!"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Πάρα πολλά ΣΥΝΟΛΙΚΑ ΜΗΝΥΜΑΤΑ!"
 #. Section: CFGCMD
 #: tr4w/src/lang/tr4w_consts_eng.pas:450
 #: utr4wstrings.tc_toomanytotalscoremessages
 #, fuzzy
 msgid "Too many TOTAL SCORE MESSAGEs!!"
-msgstr "Πάρα πολλά ΣΥΝΟΛΙΚΑ ΜΗΝΥΜΑΤΑ!"
+msgstr "Πάρα πολλά TOTAL SCORE MESSAGE!!"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Η πρώτη εντολή στο αρχείο ρυθμίσεων πρέπει να είναι η δήλωση ΜΟΥ!!"
 #. Section: CFGCMD
 #: tr4w/src/lang/tr4w_consts_eng.pas:451
 #: utr4wstrings.tc_thefirstcommandinconfigfilemustbe
 #, fuzzy
 msgid "The first command in config file must be the MY CALL statement!!"
-msgstr "Η πρώτη εντολή στο αρχείο ρυθμίσεων πρέπει να είναι η δήλωση ΜΟΥ!!"
+msgstr "Η πρώτη εντολή στο αρχείο ρυθμίσεων πρέπει να είναι η δήλωση MY CALL!!"
 
 #. Section: USYNTIME
 #. milliseconds
@@ -2560,12 +2570,13 @@ msgstr "Παράθυρο κλήσης"
 msgid "RST prompt"
 msgstr "Άμεση RST"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Αποστολή κλήσης όπως ορίζεται από την εντολή κλήσης μου"
 #. Section: UEDITMESSAGE
 #: tr4w/src/lang/tr4w_consts_eng.pas:508
 #: utr4wstrings.tc_send_callassetbymycallcommand
 #, fuzzy
 msgid "Send call as set by MY CALL command"
-msgstr "Αποστολή κλήσης όπως ορίζεται από την εντολή κλήσης μου"
+msgstr "Αποστολή του διακριτικού όπως ορίζεται από την εντολή MY CALL"
 
 #. Section: UEDITMESSAGE
 #: tr4w/src/lang/tr4w_consts_eng.pas:509
@@ -4328,10 +4339,11 @@ msgstr "Κύριο παράθυρο"
 msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
 msgstr "Η γραμματοσειρά εφαρμόζεται στο κύριο παράθυρο του διαγωνισμού. Και οι τέσσερις ενεργοποιούνται όταν αρχίσει το TR4W."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Αυτά ήταν στο αντικείμενο εμφάνισης του μενού Settings. Αυτό το παράθυρο θα φύγει μόλις έρθει ο ROW COUNT και η WINDOW ΜΕΓΕΘΟΣ."
 #: tprefsform.lblappearmenunote.caption
 #, fuzzy
 msgid "These were on the Appearance item of the Settings menu. That window goes away once ROW COUNT and WINDOW SIZE join them here."
-msgstr "Αυτά ήταν στο αντικείμενο εμφάνισης του μενού Settings. Αυτό το παράθυρο θα φύγει μόλις έρθει ο ROW COUNT και η WINDOW ΜΕΓΕΘΟΣ."
+msgstr "Αυτά βρίσκονταν στο στοιχείο Εμφάνιση του μενού Ρυθμίσεις. Εκείνο το παράθυρο θα καταργηθεί μόλις έρθουν εδώ και τα ROW COUNT και WINDOW SIZE."
 
 #: tprefsform.lblaudioheading.caption
 #, fuzzy
@@ -5792,6 +5804,7 @@ msgctxt "RC_SETTIMEZONE"
 msgid "Set time zone"
 msgstr "Ορισμός ζώνης ώρας"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Ping [Διευθυντή"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_ping
 #: tr4w/src/lang/tr4w_consts_eng.pas:554
@@ -5799,7 +5812,7 @@ msgstr "Ορισμός ζώνης ώρας"
 #, fuzzy
 msgctxt "RC_PING"
 msgid "Ping [SERVER ADDRESS]"
-msgstr "Ping [Διευθυντή"
+msgstr "Ping [SERVER ADDRESS]"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_runserver
@@ -7010,6 +7023,7 @@ msgctxt "TC_AUTOSPOTENABLEDTESTMODEONLY"
 msgid "AUTOSPOT is enabled - Test Mode Only"
 msgstr "Το ΑΥΤΟΜΑΤΟ SPOT είναι ενεργοποιημένο - Λειτουργία δοκιμής μόνο"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "ΟΜΑΔΑ ΧΕΡΙΟΥ = ΑΛΗΘΕΙΑ"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_handlogmodetrue
 #: tr4w/src/lang/tr4w_consts_eng.pas:848
@@ -7017,7 +7031,7 @@ msgstr "Το ΑΥΤΟΜΑΤΟ SPOT είναι ενεργοποιημένο - Λ�
 #, fuzzy
 msgctxt "TC_HANDLOGMODETRUE"
 msgid "HAND LOG MODE = TRUE"
-msgstr "ΟΜΑΔΑ ΧΕΡΙΟΥ = ΑΛΗΘΕΙΑ"
+msgstr "HAND LOG MODE = TRUE"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_trmasterdtas
@@ -7289,6 +7303,7 @@ msgctxt "TC_ENTEREXCHANGEPRESSENTERLOGESCAPEAB"
 msgid "Enter exchange.  Press ENTER to log, ESCAPE to abort QSO."
 msgstr "Μπες στην ανταλλαγή. Πατήστε ENTER για καταγραφή, ESCAPE για να ματαιώσετε QSO."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "ΛΙΜΕΝΑ ΕΛΕΓΧΟΥ ΑΝΑΛΥΣΗΣ = ΠΑΝΤΑ ΛΙΜΕΝΑ"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_relaycontrolportpaddleport
 #: tr4w/src/lang/tr4w_consts_eng.pas:879
@@ -7296,7 +7311,7 @@ msgstr "Μπες στην ανταλλαγή. Πατήστε ENTER για κατ
 #, fuzzy
 msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
 msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr "ΛΙΜΕΝΑ ΕΛΕΓΧΟΥ ΑΝΑΛΥΣΗΣ = ΠΑΝΤΑ ΛΙΜΕΝΑ"
+msgstr "RELAY CONTROL PORT = PADDLE PORT"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_locationfieldempty
@@ -7307,6 +7322,7 @@ msgctxt "TC_LOCATIONFIELDEMPTY"
 msgid "LOCATION field is empty."
 msgstr "Το πεδίο εντοπισμού είναι άδειο."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "PTT LOCKOUT= ΑΛΗΘΙΝΟ"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_pttlockouttrue
 #: tr4w/src/lang/tr4w_consts_eng.pas:881
@@ -7314,7 +7330,7 @@ msgstr "Το πεδίο εντοπισμού είναι άδειο."
 #, fuzzy
 msgctxt "TC_PTTLOCKOUTTRUE"
 msgid "PTT LOCKOUT=TRUE"
-msgstr "PTT LOCKOUT= ΑΛΗΘΙΝΟ"
+msgstr "PTT LOCKOUT=TRUE"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_preferencescouldopeneds
@@ -8808,25 +8824,29 @@ msgstr ""
 "\n"
 "Το αίτημα απορρίφθηκε αντί να σταλεί μη επιβεβαιωμένο. Κλείσιμο Προτιμήσεων > Δίκτυο > επαλήθευση πιστοποιητικών διακομιστή αν θέλετε να προχωρήσετε χωρίς έλεγχο."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(ΧΩΡΑ ΜΥ = %s)"
 #: uappstrings.sexchangemodebriefcountry
 #, fuzzy
 msgid "(MY COUNTRY = %s)"
-msgstr "(ΧΩΡΑ ΜΥ = %s)"
+msgstr "(MY COUNTRY = %s)"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(Η ΧΩΡΑ ΜΥ είναι άδεια)"
 #: uappstrings.sexchangemodebriefemptycountry
 #, fuzzy
 msgid "(MY COUNTRY is empty)"
-msgstr "(Η ΧΩΡΑ ΜΥ είναι άδεια)"
+msgstr "(Το MY COUNTRY είναι κενό)"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Αυτός ο διαγωνισμός ζητά ένα κράτος, επαρχία ή τμήμα επειδή ΧΩΡΑ μου είναι %s."
 #: uappstrings.sexchangemodefromcountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is %s."
-msgstr "Αυτός ο διαγωνισμός ζητά ένα κράτος, επαρχία ή τμήμα επειδή ΧΩΡΑ μου είναι %s."
+msgstr "Αυτός ο διαγωνισμός ζητά πολιτεία, επαρχία ή τμήμα επειδή το MY COUNTRY είναι %s."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Ο διαγωνισμός αυτός ζητά κράτος, επαρχία ή τμήμα επειδή η ΧΩΡΑ ΜΟΥ είναι άδεια."
 #: uappstrings.sexchangemodefromemptycountry
 #, fuzzy
 msgid "This contest is asking for a state, province or section because MY COUNTRY is empty."
-msgstr "Ο διαγωνισμός αυτός ζητά κράτος, επαρχία ή τμήμα επειδή η ΧΩΡΑ ΜΟΥ είναι άδεια."
+msgstr "Αυτός ο διαγωνισμός ζητά πολιτεία, επαρχία ή τμήμα επειδή το MY COUNTRY είναι κενό."
 
 #: uappstrings.sfilenamecamefromsetting
 #, fuzzy
@@ -8915,6 +8935,7 @@ msgstr ""
 "\n"
 "%sΤο TR4W θα συνεχίσει να τρέχει και να προσπαθεί να το ανοίξει. Μέχρι να μπορέσει, τίποτα από αυτή τη συνεδρία δεν είναι γραμμένο στο ημερολόγιο."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Ταυτότητα υπολογιστή %s χρησιμοποιείται ήδη από άλλο σταθμό σε αυτό το δίκτυο.\n\nΤροποποίηση υπολογιστή Ταυτότητα σε ένα γράμμα που κανένας άλλος σταθμός δεν χρησιμοποιεί και μετά επανασυνδέεται."
 #: uappstrings.snetcomputeridinuse
 #, fuzzy
 msgid ""
@@ -8922,9 +8943,9 @@ msgid ""
 "\n"
 "Change COMPUTER ID to a letter no other station is using, then reconnect."
 msgstr ""
-"Ταυτότητα υπολογιστή %s χρησιμοποιείται ήδη από άλλο σταθμό σε αυτό το δίκτυο.\n"
+"Το αναγνωριστικό υπολογιστή %s χρησιμοποιείται ήδη από άλλο σταθμό σε αυτό το δίκτυο.\n"
 "\n"
-"Τροποποίηση υπολογιστή Ταυτότητα σε ένα γράμμα που κανένας άλλος σταθμός δεν χρησιμοποιεί και μετά επανασυνδέεται."
+"Αλλάξτε το COMPUTER ID σε ένα γράμμα που δεν χρησιμοποιεί κανένας άλλος σταθμός και, στη συνέχεια, συνδεθείτε ξανά."
 
 #: uappstrings.snewcontestin7qpnecountyorstate
 #, fuzzy
@@ -8951,30 +8972,35 @@ msgstr "Ορίστε αυτά σε Προτιμήσεις > Σταθμός, στ
 msgid "This contest is set up, but TR4W is missing information it needs:"
 msgstr "Αυτός ο διαγωνισμός έχει συσταθεί, αλλά TR4W λείπει πληροφορίες που χρειάζεται:"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Η κλήση μου είναι άδεια. TR4W δεν μπορεί να λειτουργήσει έξω χώρα, ήπειρο ή ζώνη σας χωρίς αυτήν, και τίποτα που εξαρτάται από αυτούς θα είναι σωστό."
 #: uappstrings.sreadinessmycallmissing
 #, fuzzy
 msgid "MY CALL is empty. TR4W cannot work out your country, continent or zone without it, and nothing that depends on them will be right."
-msgstr "Η κλήση μου είναι άδεια. TR4W δεν μπορεί να λειτουργήσει έξω χώρα, ήπειρο ή ζώνη σας χωρίς αυτήν, και τίποτα που εξαρτάται από αυτούς θα είναι σωστό."
+msgstr "Το MY CALL είναι κενό. Χωρίς αυτό το TR4W δεν μπορεί να προσδιορίσει τη χώρα, την ήπειρο ή τη ζώνη σας, και τίποτα που εξαρτάται από αυτά δεν θα είναι σωστό."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Η ΧΩΡΑ μου είναι άδεια. Συνήθως γίνεται από την κλήση μου μέσω CTY.DAT. Μέχρι να έχει τιμή TR4W αντιμετωπίζει αυτό το σταθμό ως DX -- σε ARRL DX που σημαίνει ότι θα ζητήσει από κάθε σταθμό ένα κράτος ή επαρχία και να αρνηθεί μια δύναμη όπως K ή 100."
 #: uappstrings.sreadinessmycountrymissing
 #, fuzzy
 msgid "MY COUNTRY is empty. It is normally worked out from MY CALL through CTY.DAT. Until it has a value TR4W treats this station as DX -- in ARRL DX that means it will ask every station for a state or province and refuse a power such as K or 100."
-msgstr "Η ΧΩΡΑ μου είναι άδεια. Συνήθως γίνεται από την κλήση μου μέσω CTY.DAT. Μέχρι να έχει τιμή TR4W αντιμετωπίζει αυτό το σταθμό ως DX -- σε ARRL DX που σημαίνει ότι θα ζητήσει από κάθε σταθμό ένα κράτος ή επαρχία και να αρνηθεί μια δύναμη όπως K ή 100."
+msgstr "Το MY COUNTRY είναι κενό. Κανονικά προκύπτει από το MY CALL μέσω του CTY.DAT. Μέχρι να αποκτήσει τιμή, το TR4W αντιμετωπίζει αυτόν τον σταθμό ως DX -- στο ARRL DX αυτό σημαίνει ότι θα ζητά από κάθε σταθμό πολιτεία ή επαρχία και θα απορρίπτει ισχύ όπως K ή 100."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Το GRID μου είναι άδειο και αυτός ο διαγωνισμός στέλνει το πλέγμα σας τετράγωνο."
 #: uappstrings.sreadinessmygridmissing
 #, fuzzy
 msgid "MY GRID is empty and this contest sends your grid square."
-msgstr "Το GRID μου είναι άδειο και αυτός ο διαγωνισμός στέλνει το πλέγμα σας τετράγωνο."
+msgstr "Το MY GRID είναι κενό και αυτός ο διαγωνισμός στέλνει το τετράγωνο πλέγματός σας."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "ΤΟ ΚΡΑΤΟΣ μου είναι άδειο και αυτός ο διαγωνισμός στέλνει το κράτος, την επαρχία ή το τμήμα σας. Το TR4W θα στείλει έναν σειριακό αριθμό."
 #: uappstrings.sreadinessmystatemissing
 #, fuzzy
 msgid "MY STATE is empty and this contest sends your state, province or section. TR4W will send a serial number instead."
-msgstr "ΤΟ ΚΡΑΤΟΣ μου είναι άδειο και αυτός ο διαγωνισμός στέλνει το κράτος, την επαρχία ή το τμήμα σας. Το TR4W θα στείλει έναν σειριακό αριθμό."
+msgstr "Το MY STATE είναι κενό και αυτός ο διαγωνισμός στέλνει την πολιτεία, την επαρχία ή το τμήμα σας. Το TR4W θα στείλει αντί γι' αυτό αύξοντα αριθμό."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Η ΖΩΝΗ μου είναι άδεια και αυτός ο διαγωνισμός στέλνει τη ζώνη σου."
 #: uappstrings.sreadinessmyzonemissing
 #, fuzzy
 msgid "MY ZONE is empty and this contest sends your zone."
-msgstr "Η ΖΩΝΗ μου είναι άδεια και αυτός ο διαγωνισμός στέλνει τη ζώνη σου."
+msgstr "Το MY ZONE είναι κενό και αυτός ο διαγωνισμός στέλνει τη ζώνη σας."
 
 #: uappstrings.sverifyallpassed
 #, fuzzy
@@ -9121,4 +9147,34 @@ msgstr "%d Το QSO(s) δεν ονόμασε σταθμό μας και τους
 #, fuzzy
 msgid "Show inactive contests"
 msgstr "Εμφάνιση ανενεργών διαγωνισμών"
+
+#: uappstrings.slatestcontestdetail
+#, fuzzy
+msgid "%0:s - %1:s"
+msgstr "%0:s - %1:s"
+
+#: uappstrings.slatestcontestline
+#, fuzzy
+msgid "%0:s %1:d"
+msgstr "%0:s %1:d"
+
+#: uappstrings.snewcontestfilescall
+#, fuzzy
+msgid "Call"
+msgstr "Διακριτικό"
+
+#: uappstrings.snewcontestfilescontest
+#, fuzzy
+msgid "Contest"
+msgstr "Διαγωνισμός"
+
+#: uappstrings.snewcontestfilesfile
+#, fuzzy
+msgid "File"
+msgstr "Αρχείο"
+
+#: uappstrings.snewcontestfilesyear
+#, fuzzy
+msgid "Year"
+msgstr "Έτος"
 

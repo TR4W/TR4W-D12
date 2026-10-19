@@ -87,6 +87,7 @@ type
    private
       procedure Test_EveryContestStatesItsIdentityLiterally;
       procedure Test_MatrixBlindContestsStateTheirIds;
+      procedure Test_WA7BNMCabrilloRenamesMoveOnlyTheCabrilloName;
    end;
 
 implementation
@@ -95,7 +96,9 @@ uses
    SysUtils,
    VC,
    uContestBase,
-   uContestRegistry;
+   uContestNames,
+   uContestRegistry,
+   uTestRegisteredContests;
 
 type
    (* A literal row of test data -- the one shape Pascal gives a typed
@@ -875,6 +878,7 @@ procedure TContestIdentityPinTests.RunAllTests;
 begin
    Test_EveryContestStatesItsIdentityLiterally;
    Test_MatrixBlindContestsStateTheirIds;
+   Test_WA7BNMCabrilloRenamesMoveOnlyTheCabrilloName;
 end;
 
 procedure TContestIdentityPinTests.Test_EveryContestStatesItsIdentityLiterally;
@@ -923,6 +927,155 @@ begin
    CheckEquals('GENERAL QSO', ContestIdentity(GENERALQSO).CabrilloName, 'General QSO Cabrillo name');
    CheckEquals('POTA', ContestIdentity(POTA).ADIFContestId, 'POTA ADIF id');
    CheckEquals('POTA', ContestIdentity(POTA).CabrilloName, 'POTA Cabrillo name');
+end;
+
+(* THE CABRILLO RENAMES OF 2026-10-19 -- NY4I: "do the cabrillo renames".
+
+  Eighteen contests wrote a Cabrillo CONTEST: name the sponsor's log robot
+  accepted neither as its name nor as an alias, per WA7BNM's detail page
+  (docs/UDC_CROSSWALK_FINDINGS.md, "TR4W against WA7BNM"). Each now writes
+  WA7BNM's name. Every old name was the contest's ContestTypeSA spelling,
+  which is STORED data -- every SQLite log's contest row and every .cfg --
+  so the rename must move the Cabrillo name and NOTHING ELSE. This holds
+  each of the eighteen to that:
+    * CabrilloName is the new name, and so is the CONTEST: line the export
+      writes (CabrilloContestName, asked as PostUnit asks it);
+    * the stored id is still the old spelling, and the old spelling still
+      resolves to this contest through the ONE name resolver;
+    * the ADIF CONTEST_ID did not move (export writes it, import matches it).
+
+  NO READ ALIAS IS PINNED because nothing reads one: TR4W has no Cabrillo
+  import, and the CabrilloName readers (PostUnit's CONTEST: line and EDI
+  fallback, LOGSUBS2's UDP <contestname>) all WRITE it.
+
+  TWO NAMES ARE SHARED ON PURPOSE (SHARED_ON_PURPOSE below): WRTC writes
+  IARU-HF as the IARU HF Championship does (WRTC is contested inside it),
+  and the RSGB RoLo's CW and SSB runnings both write RSGB-ROLO, the one name
+  WA7BNM states for each (refs 77 and 361). Every other registered contest's
+  Cabrillo name is its own, walked over the registry below.
+  TR4W's XMAS contest is NOT the DARC Christmas contest (NY4I, 2026-10-19):
+  it is the SSA Jultest and writes its sponsor's SSA-JULTEST, so the DARC
+  contest alone writes WA7BNM's XMAS. *)
+procedure TContestIdentityPinTests.Test_WA7BNMCabrilloRenamesMoveOnlyTheCabrilloName;
+type
+   TCabrilloRename = record
+      Contest: ContestType;
+      OldName: string;
+      NewName: string;
+      ADIFId: string;
+   end;
+const
+   RENAMES: array[0..18] of TCabrilloRename = (
+      (Contest: CQMM;            OldName: 'CQMM';                 NewName: 'CQMMDX';          ADIFId: 'CQMM'),
+      (Contest: CWOPS;           OldName: 'CWOPS';                NewName: 'CW-OPS';          ADIFId: 'CWOPS-CWT'),
+      (Contest: UKRAINIAN;       OldName: 'UKRAINIAN';            NewName: 'UKRAINIAN-DX';    ADIFId: 'UKRAINIAN'),
+      (Contest: WRTC;            OldName: 'WRTC';                 NewName: 'IARU-HF';         ADIFId: 'WRTC'),
+      (Contest: GACWWWSACW;      OldName: 'GACW-WWSA-CW';         NewName: 'WWSA';            ADIFId: 'GACW-WWSA-CW'),
+      (Contest: BCQP;            OldName: 'BCQP';                 NewName: 'BC-QSO-PARTY';    ADIFId: 'BC-QSO-PARTY'),
+      (Contest: CALQSOPARTY;     OldName: 'CALIFORNIA QSO PARTY'; NewName: 'CA-QSO-PARTY';    ADIFId: 'CA-QSO-PARTY'),
+      (Contest: CQVHF;           OldName: 'CQ-VHF';               NewName: 'CQ-VHF-SSBCW';    ADIFId: 'CQ-VHF'),
+      (Contest: DARCXMAS;        OldName: 'DARC-XMAS';            NewName: 'XMAS';            ADIFId: 'DARC-XMAS'),
+      (Contest: EUDX;            OldName: 'EUDX';                 NewName: 'EUDXC';           ADIFId: 'EUDX'),
+      (Contest: MST;             OldName: 'MST';                  NewName: 'ICWC-MST';        ADIFId: 'ICWC-MST'),
+      (Contest: IRTS;            OldName: 'IRTS';                 NewName: 'IRTS-80-CONTEST'; ADIFId: 'IRTS'),
+      (Contest: MARCONIMEMORIAL; OldName: 'MARCONI MEMORIAL';     NewName: 'MMC-HF-CW';       ADIFId: 'MARCONI MEMORIAL'),
+      (Contest: CANADA_DAY;      OldName: 'CANADA DAY';           NewName: 'CANADA-DAY';      ADIFId: 'CANADA DAY'),
+      (Contest: CANADA_WINTER;   OldName: 'CANADA WINTER';        NewName: 'CANADA-WINTER';   ADIFId: 'CANADA WINTER'),
+      (Contest: RU3AXMEMORIAL;   OldName: 'RU3AX MEMORIAL';       NewName: 'RADIO-160';       ADIFId: 'RU3AX MEMORIAL'),
+      (Contest: TEXASQSOPARTY;   OldName: 'TEXAS QSO PARTY';      NewName: 'TXQP';            ADIFId: 'TX-QSO-PARTY'),
+      (Contest: YBDX;            OldName: 'YBDX';                 NewName: 'ORARI-DX';        ADIFId: 'YBDX'),
+      (* NOT a WA7BNM rename: the SSA Jultest's own name, from its sponsor --
+         see TContestXmas.GetCabrilloName. *)
+      (Contest: XMAS;            OldName: 'XMAS';                 NewName: 'SSA-JULTEST';     ADIFId: 'XMAS')
+   );
+var
+   i: integer;
+   j: integer;
+   obj: TContestBase;
+   who: string;
+   resolved: TContestHandle;
+   contests: TContestIdentityList;
+   shared: string;
+
+   (* Is the pair (a, b), in either order, one of SHARED_ON_PURPOSE? *)
+   function IsSharedOnPurpose(a, b: ContestType): boolean;
+   type
+      TContestPair = record
+         First: ContestType;
+         Second: ContestType;
+      end;
+   const
+      SHARED_ON_PURPOSE: array[0..1] of TContestPair = (
+         (* WRTC is contested inside the IARU HF Championship. *)
+         (First: WRTC;           Second: IARU),
+         (* WA7BNM 77 (CW) and 361 (SSB): "Cabrillo name: RSGB-ROLO" for both. *)
+         (First: RSGB_ROPOCO_CW; Second: RSGB_ROPOCO_SSB)
+      );
+   var
+      k: integer;
+   begin
+      Result := False;
+      for k := Low(SHARED_ON_PURPOSE) to High(SHARED_ON_PURPOSE) do
+         begin
+         if ((a = SHARED_ON_PURPOSE[k].First) and (b = SHARED_ON_PURPOSE[k].Second)) or
+            ((a = SHARED_ON_PURPOSE[k].Second) and (b = SHARED_ON_PURPOSE[k].First)) then
+            begin
+            Result := True;
+            end;
+         end;
+   end;
+
+begin
+   BeginTest('Test_WA7BNMCabrilloRenamesMoveOnlyTheCabrilloName');
+   for i := Low(RENAMES) to High(RENAMES) do
+      begin
+      who := RENAMES[i].OldName;
+      obj := ContestIdentity(RENAMES[i].Contest);
+      CheckEquals(RENAMES[i].NewName, obj.CabrilloName, who + ': the Cabrillo name');
+      CheckEquals(RENAMES[i].NewName, obj.CabrilloContestName('', ''),
+                  who + ': the CONTEST: line the export writes');
+      CheckEquals(RENAMES[i].NewName, obj.CabrilloContestName('A TITLE', 'A NAME'),
+                  who + ': the CONTEST: line ignores the title and session name');
+
+      CheckEquals(RENAMES[i].OldName, ContestId(ContestHandleOf(RENAMES[i].Contest)),
+                  who + ': the stored id is unchanged');
+      CheckTrue(TryContestFromName(RENAMES[i].OldName, resolved),
+                who + ': the old spelling still resolves');
+      CheckTrue(resolved = ContestHandleOf(RENAMES[i].Contest),
+                who + ': and resolves to the same contest');
+      CheckEquals(RENAMES[i].ADIFId, obj.ADIFContestId, who + ': the ADIF CONTEST_ID is unchanged');
+      end;
+
+   (* THE TWO SHARED NAMES, stated from both sides, so an exception below
+     that stops being true fails here rather than going stale. *)
+   CheckEquals('IARU-HF', ContestIdentity(IARU).CabrilloName, 'IARU HF writes IARU-HF as WRTC now does');
+   CheckEquals('RSGB-ROLO', ContestIdentity(RSGB_ROPOCO_CW).CabrilloName, 'the RoLo CW writes RSGB-ROLO');
+   CheckEquals('RSGB-ROLO', ContestIdentity(RSGB_ROPOCO_SSB).CabrilloName, 'the RoLo SSB writes RSGB-ROLO');
+
+   (* NO TWO REGISTERED CONTESTS WRITE ONE CABRILLO NAME, but the pairs in
+     IsSharedOnPurpose. Two different events must not write the same
+     CONTEST: line: the sponsor's robot would take one event's log as the
+     other's. Walks the registry, so a contest added later is held too.
+     Compared as Cabrillo compares, case-blind. Every pair is listed in one
+     failure. *)
+   contests := ContestsToWalk;
+   shared := '';
+   for i := 0 to High(contests) - 1 do
+      begin
+      for j := i + 1 to High(contests) do
+         begin
+         if SameText(contests[i].CabrilloName, contests[j].CabrilloName) then
+            begin
+            if not IsSharedOnPurpose(ContestOf(contests[i]), ContestOf(contests[j])) then
+               begin
+               shared := shared + ' ' + ContestWho(contests[i]) + ' and ' +
+                         ContestWho(contests[j]) + ' both write "' +
+                         contests[i].CabrilloName + '";';
+               end;
+            end;
+         end;
+      end;
+   CheckEquals('', shared, 'two contests write one Cabrillo name');
 end;
 
 end.

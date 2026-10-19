@@ -30,6 +30,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
    ADIFName: '';  CABName: '';
    FriendlyName: 'CQMM DX Contest'
 
+  THE CABRILLO CONTEST: NAME IS WA7BNM'S CQMMDX SINCE 2026-10-19 (see
+  GetCabrilloName), not the enum's spelling the paragraph below
+  describes.
+
   Blank CABName and ADIFName resolve to the enum's spelling, 'CQMM'.
 
   WHY IT HAS A CLASS. Milestone M7b (2026-10-02) gives every classless
@@ -175,9 +179,14 @@ end;
 
 function TContestCQMM.GetCabrilloName: string;
 begin
-   (* The row's CABName is blank; this is the enum's spelling it resolves
-      to. *)
-   Result := 'CQMM';
+   (* WA7BNM's Cabrillo name (WA7BNM 21), NY4I 2026-10-19: "do the
+      cabrillo renames". TR4W wrote 'CQMM', which the sponsor's log robot
+      accepted neither as the name nor as an alias
+      (docs/UDC_CROSSWALK_FINDINGS.md). Only the Cabrillo CONTEST: line
+      (and the UDP <contestname>) moves: the id, the ADIF id and the
+      display names are their own literals. TR4W reads no Cabrillo
+      CONTEST: value back, so the old name needs no read alias. *)
+   Result := 'CQMMDX';
 end;
 
 function TContestCQMM.GetADIFContestId: string;
