@@ -83,6 +83,7 @@ type
       procedure Test_CharBufferText_StopsAtNul;
       procedure Test_CharBufferText_IgnoresBytesPastTheNul;
       procedure Test_CharBufferSlice_ByPosition;
+      procedure Test_CharBufferSlice_RecognisesAWireTag;
       procedure Test_CharBufferSlice_StopsAtNul;
       procedure Test_CharBufferSlice_OutOfRangeIsEmpty;
 
@@ -503,6 +504,25 @@ begin
    CheckEquals('W3LPL', CharBufferSlice(buf, 6, 5), 'the spotter');
    CheckEquals('NY4I',  CharBufferSlice(buf, 23, 4), 'the spotted call');
    CheckEquals('D',     CharBufferSlice(buf, 0, 1), 'a single character');
+end;
+
+procedure TUtilsTextTests.Test_CharBufferSlice_RecognisesAWireTag;
+var
+   buf: array[0..63] of AnsiChar;
+begin
+   (* Pointer audit 3.4: tr4wserver's CorrectPassword recognised a 'GET ...PASS'
+     handshake by reading buf[0..3] and buf[6..9] as integers. It asks the
+     slices now, and this pins that the slices answer the same questions --
+     including when the bytes are NOT the tag. *)
+   BeginTest('CharBufferSlice reads a four-byte tag at an offset');
+   SetCharBuffer(buf, 'GET abPASS secret');
+   CheckEquals('GET ', CharBufferSlice(buf, 0, 4), 'the verb');
+   CheckEquals('PASS', CharBufferSlice(buf, 6, 4), 'the keyword at byte 6');
+   SetCharBuffer(buf, 'GET abPASX secret');
+   CheckEquals('PASX', CharBufferSlice(buf, 6, 4), 'one byte off is a different slice');
+   SetCharBuffer(buf, 'GE');
+   CheckEquals('GE', CharBufferSlice(buf, 0, 4), 'a short buffer yields a short slice');
+   CheckTrue(CharBufferSlice(buf, 0, 4) <> 'GET ', 'which is not the tag');
 end;
 
 procedure TUtilsTextTests.Test_CharBufferSlice_StopsAtNul;
@@ -977,6 +997,7 @@ begin
    Test_CharBufferText_StopsAtNul;
    Test_CharBufferText_IgnoresBytesPastTheNul;
    Test_CharBufferSlice_ByPosition;
+   Test_CharBufferSlice_RecognisesAWireTag;
    Test_CharBufferSlice_StopsAtNul;
    Test_CharBufferSlice_OutOfRangeIsEmpty;
 

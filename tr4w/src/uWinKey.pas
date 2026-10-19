@@ -368,7 +368,11 @@ begin
   wkSendAdminCommand(wkHOSTOPEN);
 //  Sleep(150);
 
-  PCardinal(@wkREADBuffer[0])^ := 0;   // Issue #997: was asm (zero first dword)
+  (* Zero the byte the next read fills. Only [0] is ever looked at afterwards
+    (the version byte), so the old four-byte store through PCardinal -- itself
+    from an asm "zero first dword" -- cleared three bytes nothing reads.
+    Pointer audit 3.4. *)
+  wkREADBuffer[0] := 0;
   if wkRead(1) then
      begin
      // The keyer's HOST OPEN response is its firmware-revision byte.

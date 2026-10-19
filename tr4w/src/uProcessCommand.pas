@@ -266,8 +266,12 @@ begin
         CommandString := PrecedingString(CommandString, '=');
         end;
 
-     scFileName[length(scFileName) + 1] := #0;
-   
+     (* NO C TERMINATOR. This used to write #0 at scFileName[Length + 1] so that
+       @scFileName[1] could be handed to a C-string consumer. The last such
+       consumer (FileExists(@scFileName[1]) in scEXECUTE) is inside a comment,
+       and every live use passes the ShortString itself. The write also went
+       one byte past the string when it was 255 long. Pointer audit 3.6. *)
+
      for i := 0 to sCommands - 1 do
         begin
         if sCommandsArray[i].caCommand = string(CommandString) then

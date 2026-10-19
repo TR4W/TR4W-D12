@@ -23,6 +23,47 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-19 -- SMALL PUNS AND TERMINATORS (pointer audit P10: 3.3, 3.4, 3.6, 6.14)
+
+Unit-pinned: the CQ / NEW marker test (`uTestDXSpotParse`, `Test_Marker_*`),
+the country prefix table's add, replace and growth (`uTestCTYDAT`), and the
+two server handshake slices (`uTestUtilsText`). What no gate reaches is the
+screen, the keyer and the multi-op handshake.
+
+- [ ] **CQ and NEW markers in the band map** (3.3). With the band map open and
+      a radio on a band: tune to a frequency and press the key that drops a CQ
+      marker (or call CQ so `CQ/ <number>` is created). EXPECT: a `CQ/ n` row
+      appears at that frequency, is NOT sent to the multi-op network
+      (`uSpots.AddSpot`), and clicking it tunes the radio but does NOT fill the
+      call window (`uBandmap`). A `NEW ` flag row behaves the same on click. A
+      normal spot beside it still fills the call window and still sends. The
+      Alt-D / VFO-spin call window ignores a CQ marker inside the guard band
+      (`DisplayCallsignOnThisFreq`, `TuneDupeCheck`, on the polling thread) and
+      shows the real spot next to it.
+- [ ] **Multiplier refresh skips markers** (3.3). Change the multiplier mode
+      (or log a QSO that makes a spotted station a dupe) with a CQ marker on
+      the map: the marker row is untouched, ordinary spots change colour.
+- [ ] **WinKeyer opens** (3.4, `cw-keying`). Plug in a WinKeyer, start TR4W
+      with it enabled. EXPECT: the main window shows `WK2` / `WK3` and the
+      keyer's firmware version exactly as before (the version byte is read
+      into `wkREADBuffer[0]` after the buffer's first byte is cleared). A
+      WinKeyer that does not answer the host-open must still end with the
+      keyer reported closed, not a stale version.
+- [ ] **Server password handshake** (3.4, `multi-op-network`; automated only
+      for the slicing). With `tr4wserver` running with a password, connect a
+      client with the right password: it joins. Connect with a wrong one: it
+      is refused ("password" reply) and the server stays up. If a browser or
+      a `GET xxPASS...` style client is in use, the 11-byte offset form still
+      authenticates.
+- [ ] **A command with an argument** (3.6, `uProcessCommand`). Put a command
+      with an `=` argument in a CW memory (a ctrl-C ... ctrl-D command such as
+      the `EXECUTE` one naming a config file, or one that sends text to the
+      cluster) and play it. EXPECT: the argument reaches the command intact.
+      The removed line wrote a NUL one byte past the argument; no live consumer
+      read it (the one that did is commented out), so nothing should differ.
+
+---
+
 ## Added 2026-10-18 -- AN ADIF IMPORT GIVES QSOs THIS CONTEST'S STATION, AND ASKS WHEN THE FILE NAMES ITS OWN (log schema 3)
 
 NY4I's ruling: *"I start a contest, then import. Therefore you apply the set my

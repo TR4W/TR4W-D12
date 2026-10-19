@@ -1167,12 +1167,15 @@ begin
   Offset := 0;
   if BytesReceived > 10 then
      begin
-     if PInteger(@ServerBuffer[0])^ = 542393671 {'GET '} then
-       if PInteger(@ServerBuffer[6])^ = 1397965136 {'PASS'} then
-           //          MessageBox(ApplicationHandle, @ServerBuffer, _TR4WSERVER, MB_OK or MB_ICONWARNING or MB_TOPMOST);
-          begin
-          Offset := 11;
-          end;
+     (* The two tags were read as integers (542393671 and 1397965136); they
+       are the slices 'GET ' at byte 0 and 'PASS' at byte 6, which is what the
+       integers spelled. Pointer audit 3.4; the slices are pinned in
+       uTestUtilsText. *)
+     if (CharBufferSlice(ServerBuffer, 0, 4) = 'GET ') and
+        (CharBufferSlice(ServerBuffer, 6, 4) = 'PASS') then
+        begin
+        Offset := 11;
+        end;
      end;
   Result := False;
   for i := 0 to 9 do

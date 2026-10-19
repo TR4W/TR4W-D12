@@ -97,12 +97,20 @@ type
       procedure Test_RemainingMultsSection;
       procedure Test_BangLineMergesEntities;
       procedure Test_ReloadReplacesRatherThanAppends;
+
+      (* ctyAddNewPrefixRecord DIRECTLY -- pointer audit 6.14. It took a pointer
+        to a record and wrote through it; it takes the record now. The load
+        tests above reach it only through a file, so its two filters, its
+        replace-on-duplicate and its growth were pinned only in aggregate. *)
+      procedure Test_AddNewPrefixRecord_FiltersAndAppends;
+      procedure Test_AddNewPrefixRecord_DuplicateReplaces;
+      procedure Test_AddNewPrefixRecord_GrowsTheTable;
    end;
 
 implementation
 
 uses
-   SysUtils, VC, uCTYDAT;
+   SysUtils, VC, uCTYDAT, utils_text;
 
 // ---------------------------------------------------------------------------
 // Load helper -- loads the shipped cty.dat once, relative to the test EXE.
@@ -915,6 +923,144 @@ begin
       end;
 end;
 
+(* ===========================================================================
+  ctyAddNewPrefixRecord, called directly.
+
+  Each test appends to the live table and then reloads the shipped file with
+  ReplaceTable, so the suite is left as it was found. *)
+
+function MakePrefixRec(const aPrefix: AnsiString; aFull: boolean;
+                       aCQ: Byte): PrefixRec;
+var
+   i: integer;
+begin
+   Result := Default(PrefixRec);
+   for i := 1 to Length(aPrefix) do
+      begin
+      Result.Prefix[i - 1] := aPrefix[i];
+      end;
+   Result.PrefLength := Length(aPrefix);
+   Result.FullCallsigns := aFull;
+   Result.CQZone := aCQ;
+end;
+
+procedure TCTYDATTests.Test_AddNewPrefixRecord_FiltersAndAppends;
+var
+   pr: PrefixRec;
+   before: longword;
+begin
+   BeginTest('ctyAddNewPrefixRecord: the R and U filters, and a plain append');
+   EnsureCtyLoaded;
+   before := CTY.ctyPrefixesTableRecords;
+   try
+      pr := MakePrefixRec('RB5', False, 11);
+      ctyAddNewPrefixRecord(pr, False);
+      CheckEquals(Integer(before), Integer(CTY.ctyPrefixesTableRecords),
+                  'RB5 is refused: R, then B..H or J..Z, and not "2" third');
+      pr := MakePrefixRec('UB5', False, 11);
+      ctyAddNewPrefixRecord(pr, False);
+      CheckEquals(Integer(before), Integer(CTY.ctyPrefixesTableRecords),
+                  'UB5 is refused: U, then B..E or G..I');
+
+      pr := MakePrefixRec('RB2', False, 11);
+      ctyAddNewPrefixRecord(pr, False);
+      CheckEquals(Integer(before) + 1, Integer(CTY.ctyPrefixesTableRecords),
+                  'RB2 is kept: the third character is "2"');
+      pr := MakePrefixRec('RA1', False, 11);
+      ctyAddNewPrefixRecord(pr, False);
+      CheckEquals(Integer(before) + 2, Integer(CTY.ctyPrefixesTableRecords),
+                  'RA1 is kept: A is outside B..H, J..Z');
+      pr := MakePrefixRec('UA1', False, 11);
+      ctyAddNewPrefixRecord(pr, False);
+      CheckEquals(Integer(before) + 3, Integer(CTY.ctyPrefixesTableRecords),
+                  'UA1 is kept: A is outside B..E, G..I');
+      pr := MakePrefixRec('RB5ABC', True, 11);
+      ctyAddNewPrefixRecord(pr, False);
+      CheckEquals(Integer(before) + 4, Integer(CTY.ctyPrefixesTableRecords),
+                  'a FULL callsign is exempt from both filters');
+
+      (* The record that was added is the record that was passed. *)
+      CheckEquals(11, Integer(CTY.ctyPrefixesTable[before + 3].CQZone),
+                  'the stored record carries the caller''s zone');
+      CheckEquals('RB5ABC',
+                  CharBufferText(CTY.ctyPrefixesTable[before + 3].Prefix),
+                  'and its prefix');
+      CheckEquals(6, Integer(CTY.ctyPrefixesTable[before + 3].PrefLength),
+                  'and its length');
+   finally
+      FLoaded := False;
+      EnsureCtyLoaded;
+   end;
+   CheckEquals(Integer(before), Integer(CTY.ctyPrefixesTableRecords),
+               'the suite is left as it was');
+end;
+
+procedure TCTYDATTests.Test_AddNewPrefixRecord_DuplicateReplaces;
+var
+   pr: PrefixRec;
+   before: longword;
+begin
+   BeginTest('ctyAddNewPrefixRecord: CheckDupe replaces, no CheckDupe appends');
+   EnsureCtyLoaded;
+   before := CTY.ctyPrefixesTableRecords;
+   try
+      pr := MakePrefixRec('QX9', False, 11);
+      ctyAddNewPrefixRecord(pr, True);
+      CheckEquals(Integer(before) + 1, Integer(CTY.ctyPrefixesTableRecords),
+                  'a new prefix with CheckDupe is appended');
+
+      pr := MakePrefixRec('QX9', False, 22);
+      ctyAddNewPrefixRecord(pr, True);
+      CheckEquals(Integer(before) + 1, Integer(CTY.ctyPrefixesTableRecords),
+                  'the same prefix with CheckDupe replaces, so no growth');
+      CheckEquals(22, Integer(CTY.ctyPrefixesTable[before].CQZone),
+                  'and the stored record is the NEW one');
+
+      pr := MakePrefixRec('QX9', False, 33);
+      ctyAddNewPrefixRecord(pr, False);
+      CheckEquals(Integer(before) + 2, Integer(CTY.ctyPrefixesTableRecords),
+                  'without CheckDupe the same prefix is appended again');
+   finally
+      FLoaded := False;
+      EnsureCtyLoaded;
+   end;
+   CheckEquals(Integer(before), Integer(CTY.ctyPrefixesTableRecords),
+               'the suite is left as it was');
+end;
+
+procedure TCTYDATTests.Test_AddNewPrefixRecord_GrowsTheTable;
+var
+   pr: PrefixRec;
+   before: longword;
+   i: integer;
+begin
+   BeginTest('ctyAddNewPrefixRecord: the table grows to hold what is added');
+   EnsureCtyLoaded;
+   before := CTY.ctyPrefixesTableRecords;
+   try
+      for i := 1 to 350 do
+         begin
+         pr := MakePrefixRec('Q' + AnsiString(IntToStr(i)), False, Byte(i mod 40));
+         ctyAddNewPrefixRecord(pr, False);
+         end;
+      CheckEquals(Integer(before) + 350, Integer(CTY.ctyPrefixesTableRecords),
+                  'all 350 were stored');
+      Check(Length(CTY.ctyPrefixesTable) >= Integer(CTY.ctyPrefixesTableRecords),
+            'and the array is at least as long as the count');
+      CheckEquals(Integer(350 mod 40),
+                  Integer(CTY.ctyPrefixesTable[before + 349].CQZone),
+                  'the last record survived the growth');
+      CheckEquals(Integer(1 mod 40),
+                  Integer(CTY.ctyPrefixesTable[before].CQZone),
+                  'and so did the first');
+   finally
+      FLoaded := False;
+      EnsureCtyLoaded;
+   end;
+   CheckEquals(Integer(before), Integer(CTY.ctyPrefixesTableRecords),
+               'the suite is left as it was');
+end;
+
 procedure TCTYDATTests.RunAllTests;
 begin
    Test_LoadCtyDat;
@@ -951,6 +1097,10 @@ begin
    Test_RemainingMultsSection;
    Test_BangLineMergesEntities;
    Test_ReloadReplacesRatherThanAppends;
+
+   Test_AddNewPrefixRecord_FiltersAndAppends;
+   Test_AddNewPrefixRecord_DuplicateReplaces;
+   Test_AddNewPrefixRecord_GrowsTheTable;
 end;
 
 end.

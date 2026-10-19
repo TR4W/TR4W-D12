@@ -1978,14 +1978,14 @@ begin
 
   FillChar(TempSpot, SizeOf(TempSpot), 0);
 
-  if PInteger(@Call[1])^ = tCQAsInteger then
+  if SpotCallIsCQMarker(Call) then
      begin
      Mult := False;
      TempSpot.FCQ := True; //GAV changed from true to false
      goto 1;
      end;
 
-  if PInteger(@Call[1])^ = tNEWAsInteger then
+  if SpotCallIsNewMarker(Call) then
      begin
      Mult := False;
      goto 1;

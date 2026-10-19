@@ -167,6 +167,7 @@ uses
    uSettingsModel,     // Settings.BandMap -- the eight display filters
   uMainForm,   { the call field, named -- wh[] round 3 }
   uSpotAge,   // UTCNow, AgeSeconds -- the leaf the tests can link
+  uDXSpotParse, // SpotCallIsCQMarker / SpotCallIsNewMarker
   SysUtils,   // Issue #997: Format/StrPCopy
   utils_text, // D12: ANSI StrPCopy for wsprintfBuffer
   LOGSUBS2,
@@ -317,13 +318,13 @@ begin
   //   Windows.SetFocus(wh[mweCall]);
   // end;
 
-  if SendToNetwork then
-    if PInteger(@Spot.FCall[1])^ <> tCQAsInteger then
-      if NetIsConnected then
-         begin
-         NetDXSpot.dsSpot := Spot;
-         SendToNet(NetDXSpot, SizeOf(NetDXSpot));
-         end;
+  if (SendToNetwork)                       and
+     (not SpotCallIsCQMarker(Spot.FCall))  and
+     (NetIsConnected)                      then
+     begin
+     NetDXSpot.dsSpot := Spot;
+     SendToNet(NetDXSpot, SizeOf(NetDXSpot));
+     end;
 
 end;
 
@@ -657,8 +658,8 @@ begin
   for i := 0 to FList.Count - 1 do
      begin
      Spot := FList[i];
-     if (PInteger(@Spot.FCall[1])^ <> tCQAsInteger) and
-        (PInteger(@Spot.FCall[1])^ <> tNEWAsInteger) then
+     if (not SpotCallIsCQMarker(Spot.FCall)) and
+        (not SpotCallIsNewMarker(Spot.FCall)) then
         begin
         // The multiplier question is asked OUTSIDE the lock (it walks the
         // log); only the write-back is locked, so the poller never sees a
@@ -865,7 +866,7 @@ begin
            Exit;
            end;
         if (a < Settings.BandMap.GuardBand) and
-           (PInteger(@Spot.FCall[1])^ <> tCQAsInteger) then
+           (not SpotCallIsCQMarker(Spot.FCall)) then
            begin
            if (a < d) then
               begin
@@ -935,7 +936,7 @@ begin
         Spot := FList[Index];
         a := Abs(Spot.FFrequency - Freq);
         if (a < Settings.BandMap.GuardBand) and
-           (PInteger(@Spot.FCall[1])^ <> tCQAsInteger) then
+           (not SpotCallIsCQMarker(Spot.FCall)) then
            begin
            if a < d then
               begin

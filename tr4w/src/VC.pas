@@ -2511,8 +2511,9 @@ const
   StatusEquality                        = 1;
   tr4w_MAX_RATE                         = 200;
 
-  tCQAsInteger                          = $202F5143;
-  tNEWAsInteger                         = $2057454E;
+  (* tCQAsInteger / tNEWAsInteger ('CQ/ ' and 'NEW ' read as integers) are
+    GONE (pointer audit 3.3): the band-map marker test is
+    uDXSpotParse.SpotCallIsCQMarker / SpotCallIsNewMarker. *)
 
 const
   (* CallsignExchangeWinStyle IS GONE (2026-09-06): the Win32 edit style for

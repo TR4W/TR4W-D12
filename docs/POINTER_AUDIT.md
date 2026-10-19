@@ -215,9 +215,10 @@ ever compiled; CLAUDE.md section 7 and the `integrations` agent are corrected.
 The real band map is `uBandmap` / `uSpots` / `uBandMapForm`. Deleting these
 is packet P4, and the compiler is its oracle.
 
-### D7. `PInteger(@Call[1])^` reads past a short call's length -- semantic, not a crash
+### D7. `PInteger(@Call[1])^` reads past a short call's length -- semantic, not a crash -- FIXED (P10)
 
-`uTelnet.pas:1981, 1988`, `uBandmap.pas:212, 216`, `uSpots.pas:297` compare the
+**Measured and fixed 2026-10-19; see the P10 section.** What follows is the
+original finding. `uTelnet.pas:1981, 1988`, `uBandmap.pas:212, 216`, `uSpots.pas:297` compare the
 first four bytes of a ShortString callsign with `tCQAsInteger = $202F5143` /
 `tNEWAsInteger` (`VC.pas:2471-2472`). For a call shorter than four characters
 the comparison includes **stale bytes beyond the length** -- inside the
@@ -375,10 +376,10 @@ The `Move`/`FillChar` half of this category is triaged in full in
 |---|---|---|---|---|---|---|
 | 3.1 | `uMMTTY.pas:253, 384`, `ui/lcl/uMMTTYForm.pas:237`, `uNet.pas:1491, 1504` | pointer narrowed to `integer` | see D3 | **DONE (P2)**: `LPARAM(@x)`; `ShowLogCompare` takes `PLogFileInformation` | **high on Win64** | `Lint-PointerTruncation` (P2); MMTTY is BENCH |
 | 3.2 | `uNet.pas:421-699` (12 overlays: `StationStPtr := @NetBuffer[Bufindex]` and the rest), `tr4wserverUnit.pas:642-716` (4 overlays) and `:691, 697, 703, 1287` (`XPtr(@ServerBuffer[...])^`) | a wire message read by laying a packed record over the receive buffer | live, multi-op | a decoder that reads each record from a `TBytes` slice with its length checked -- **the bytes stay identical, the overlay goes** (CLAUDE.md: *the contract is the encoding, not the type*) | high for multi-op; **ask NY4I first** -- the new multi-station protocol may replace these messages, and refactoring a protocol about to be retired is waste | UT `uTestNetFraming` covers FRAMING only; per-message decode pins must be written FIRST; then BENCH (two stations + `tr4wserver`) |
-| 3.3 | `uTelnet.pas:1981, 1988`, `uBandmap.pas:212, 216`, `uSpots.pas:297` | `PInteger(@Call[1])^` 4-byte pun | live | string comparison (D7) | low | UT `uTestDXSpotParse`, `uTestSpotAge` -- add short-call pins first |
-| 3.4 | `uWinKey.pas:370` `PCardinal(@wkREADBuffer[0])^ := 0`; `tr4wserverUnit.pas:1173` `PInteger(@ServerBuffer[0])^ = 542393671 {'GET '}` | integer puns on byte buffers | live | index the bytes / compare a 4-byte `Copy` | low | WinKeyer: BENCH. Server: **none** |
+| 3.3 | `uTelnet.pas:1981, 1988`, `uBandmap.pas:212, 216`, `uSpots.pas:321, 660, 661, 868, 938` (seven sites; the audit counted five) | `PInteger(@Call[1])^` 4-byte pun | **DONE (P10)**: `uDXSpotParse.SpotCallIsCQMarker` / `SpotCallIsNewMarker`; `tCQAsInteger` / `tNEWAsInteger` deleted from `VC.pas` | string comparison (D7) | low | UT `uTestDXSpotParse` `Test_Marker_*` (written first), BENCH |
+| 3.4 | `uWinKey.pas:370` `PCardinal(@wkREADBuffer[0])^ := 0`; `tr4wserverUnit.pas:1173` `PInteger(@ServerBuffer[0])^ = 542393671 {'GET '}` | integer puns on byte buffers | **DONE (P10)**: `wkREADBuffer[0] := 0` (only byte 0 is read); the server compares `CharBufferSlice(ServerBuffer, 0, 4) = 'GET '` and `(.., 6, 4) = 'PASS'` | index the bytes / compare a 4-byte `Copy` | low | WinKeyer: BENCH. Server: UT `uTestUtilsText` for the slices, BENCH for the handshake |
 | 3.5 | untyped buffer parameters: `uCRC16.GetCRC16X25`, `uCRC32.GetCRC32`, `uSHA256.SHA256Update`, `uNetFraming.NextNetMessage`, `uNet.SendToNet`, `uNetClient.Send`, `uServerNet.SendToClient`/`HexOf`, `tr4wserverUnit.sSend`, `uWinKey.wkSend`/`wkSendAdminCommand`/`wkWriteRaw`, `uIcomNetworkTransport.SendRawPacket`/`BytesToHexStr`, `utils_text.BinToHexStr`, `utils_file.sWriteFile`/`tWriteFile`/`sReadFile` (35 in `src`) | `const data; Count` | live | `const data: array of Byte` / `TBytes` -- an open array carries its bounds (CLAUDE.md strings table). Byte I/O stays byte I/O | medium (wire and serial bytes) | UT `uTestCRC32`, `uTestSHA256`, `uTestNetFraming`, `uTestWebSocketFraming`, `uTestIcomCIV`; WinKeyer and `tr4wserver`: BENCH |
-| 3.6 | `uProcessCommand.pas:261` `scFileName[length(scFileName) + 1] := #0` | hand-written C terminator on a ShortString | live | delete -- its last C-string consumer, `FileExists(@scFileName[1])` at `:416`, is inside a `{ }` comment (the comment-aware reader does not see it; a plain `rg` does), and every live use passes the ShortString itself | low | **none** |
+| 3.6 | `uProcessCommand.pas:261` `scFileName[length(scFileName) + 1] := #0` | hand-written C terminator on a ShortString | **DONE (P10): deleted** | delete -- its last C-string consumer, `FileExists(@scFileName[1])` at `:416`, is inside a `{ }` comment (the comment-aware reader does not see it; a plain `rg` does), and every live use passes the ShortString itself | low | **none** |
 | 3.7 | `ui/lcl/uLogGrid.pas:1045, 1054, 1093` `@FCache[i mod CACHE_ROWS]` | a pointer into an array of records, returned to callers | live | return the index, or make the cache entry a class | low -- dangles only if `FCache` is resized while a caller holds one; check before converting | UT `uTestLogRepository` (data), screen is BENCH |
 | 3.8 | `MainUnit.pas:8986` `CompareMem(@RescoredBefore, @RescoredRXData, SizeOf(ContestExchange))` | byte compare of two records | live | **keep for now**: it is a deliberate "did anything change" that includes padding; the same rule as `RadioStatusRecord`'s `BYTES` flag | -- | CORPUS / rescore baseline |
 | 3.9 | `ui/lcl/uAltPForm.pas:189` `row.Data := Pointer(PtrInt(aKey + 1))` | integer in a `TListItem.Data` | live | see 5.4 | -- | -- |
@@ -446,7 +447,7 @@ audit's list finds them.
 | 6.11 | `NameDictionary` | `trdos/logname.pas:167` | no | **DELETED (P4)** with the file (D5) | COMPILER |
 | 6.12 | `^record` type declarations with **one** mention in `src`/`tr4wserver`/`test` -- the declaration itself (`rg -c -i -w`, raw): `RememberHeap`, `OldInt08Vector`, `OldInt0BVector`, `FourBytesPtr`, `BufferTypePtr`, `PDayTable`, `PPortType`, `TMessageStatePtr`, `DataBaseEntryRecordPtr`, `PMenuRecord`, `SocketPtr`. Two mentions (declaration plus one use, possibly a dead variable): `EntryPointerListPtr`, `SCPIndexArrayPtr`, `MultiMessageListPointer`, `ReminderArrayPointer`, `SharedMemoryPointer`, `RealTimeMessagePointer`, `StringPointer`, `MultiMessage`, `FourBytePtr` | `VC.pas`, `tree.pas`, `logscp.pas`, `logstuff.pas`, `logwind.pas`, `logdvp.pas`, `logk1ea.pas`, `logedit.pas`, `uMenu.pas`, `tr4wserverUnit.pas` | -- | **DONE (P4)**: all deleted except `SCPIndexArrayPtr`, `ReminderArrayPointer` and `StringPointer`, which have a live use (`SCPIndexArray`, `Reminders`, `ExchangeTemplateList`). See the P4 section | COMPILER |
 | 6.13 | `ContestExchangePtr` (4), `ContestExchangeArrayPtr` (5), the network `...Ptr` types | `VC.pas:2026-2440` | -- | follow 3.2 and the log-store work; `ContestExchangeArrayPtr` at `tr4wserverUnit.pas:1287` is pinned by `TestRecordArrayStrideIsOneRecord` | UT `uTestLogBinaryFile` |
-| 6.14 | `uCTYDAT.PrefixRecPtr` (`ctyAddNewPrefixRecord(pr: PrefixRecPtr; ...)`) | `uCTYDAT.pas:194, 287, 363` | -- | `const pr: PrefixRec` | UT `uTestCTYDAT` |
+| 6.14 | `uCTYDAT.PrefixRecPtr` (`ctyAddNewPrefixRecord(pr: PrefixRecPtr; ...)`) | `uCTYDAT.pas:194, 287, 363` (plus three readers: `ctyBuildPrefixIndex`, the `FillRecord` arm of `ctyLocateCall`, `ctyGetZone`) | -- | **DONE (P10)**: `const pr: PrefixRec`; the type is deleted | UT `uTestCTYDAT` (`Test_AddNewPrefixRecord_*` written first, and the 1,684-call characterisation) |
 
 ### Category 7 -- procedure variables and untyped code pointers
 
@@ -488,7 +489,7 @@ Owners follow CLAUDE.md's routing table.
 | **P7** | SCP cell buffer -- **DONE 2026-10-17**: `TSCPCellBuffer` (a class over one dynamic array, kept between loads), `GetNextEntryAddress` deleted; `uTestLogSCP` written FIRST and green against the pointer buffer, unchanged after (both memory modes: the running program's 160,000 and the unit's 3 x 260,000). Lookup loop (50,000 `GeneratePossibleCallList`): 438-485 ms before, 469-515 ms after -- no difference above noise; the cost is the index and parse work, not the allocation. `logscp` pointer-rule hits **127 -> 97**, measured with `Count-LivePointers.ps1 -Detail` on both trees (the agent's ad-hoc estimate, 103 -> 79, under-counted) | 2.2, 6.4, 7.5 | two allocators for one pointer; live on every partial-call lookup | MATRIX covers the TRMASTER initial-exchange path only. **TEST FIRST**: a UT over the shipped-format fixture (`contest-matrix/MATRIX-TRMASTER.DTA`) asserting partial-call results for a handful of keys | write the UT | file-formats |
 | **P8** | Old-style lists with a VMT -- **part A DONE 2026-10-17** (2.3, 6.7, 6.8, 6.9; see below); part B (`TDXSpotsList`, 6.10) **DONE 2026-10-17** | 2.3, 6.7, 6.8, 6.9, 6.10 | objects with a VMT are where `SizeOf` and `FillChar` go wrong (CLAUDE.md, the `0xC0000005` story) | `uSortedStringList`/`MultsObject`: UT `uTestMults` + MATRIX + CORPUS. `TCallsignsList`, `TDXSpotsList`: **TEST FIRST** (partials list; spot store add/age/remove). **Part B (`TDXSpotsList`) DONE 2026-10-17**: `uTestSpotStore` (20 tests, 75 checks) written and green against the old object, then the object became a `class` over `TList<TSpotRecord>` with the same test unchanged; it did not explain the `ERangeError` (that routine, `Display`, no longer exists), and it found that the radio polling thread reads the store, so its two scans now take the lock | write the two UTs | contest-scoring, dx-cluster |
 | **P9** | Identity in `Objects[]` / `Data` / `lParam` | 5.1, 5.2, 5.3, 5.4, 5.6 | the `WIN32_ARTIFACT_SWEEP` pattern; display-only, so low crash risk but invisible breakage | **no automated oracle** -- each conversion writes its typed-payload test with the change (the sweep doc's own rule) AND a BENCH entry per window | none | lcl-ui |
-| **P10** | Small puns and terminators | 3.3, 3.4, 3.6, 6.14 | low risk, easy to pin | **TEST FIRST** for 3.3 (short-call pins in `uTestDXSpotParse`); `uTestCTYDAT` for 6.14; 3.4 and 3.6 BENCH | write the 3.3 pins | dx-cluster, cw-keying, multi-op-network, file-formats |
+| **P10** | Small puns and terminators -- **DONE 2026-10-19**, see below | 3.3, 3.4, 3.6, 6.14 | low risk, easy to pin | **TEST FIRST** for 3.3 (short-call pins in `uTestDXSpotParse`); `uTestCTYDAT` for 6.14; 3.4 and 3.6 BENCH | write the 3.3 pins | dx-cluster, cw-keying, multi-op-network, file-formats |
 | **P11** | `RadioObject` -> class | 6.1, 7.6 | the largest item (363 pointer mentions) and the widest blast radius; every radio | UT `uTestRadioStatus` / `uTestCWKeyer` / `uTestStatusAndNotice` / `uTestTCIServer`, then BENCH one rig per verified family (`RADIO_BENCH_STATUS.md`) | P1 done (`BeginPolling` takes `RadioPtr`) | radio-factory, cw-keying |
 | **P12** | Untyped byte buffers -> open arrays | 3.5 | correct today; this is the "byte I/O stays byte I/O, the pointer goes" rule | UT `uTestCRC32`, `uTestSHA256`, `uTestNetFraming`, `uTestWebSocketFraming`, `uTestIcomCIV`; WinKeyer + server BENCH | none | serial-port-io, multi-op-network, tci-interface, cw-keying |
 | **P13** | Heap temporaries and queues | 2.4, 2.5, 2.7, 2.8 | leaks on exception, `^record` in `TList` | CORPUS (Cabrillo summary); UT `uTestFlexDiscovery`, `uTestIcomTeardown`; the two post-contest reports and K4/Icom discovery are BENCH; QTC per `QTC_BENCH_HANDOFF.md` | none | file-formats, radio-factory, contest-scoring |
@@ -889,6 +890,74 @@ behind the live ring, sets End = 0 with Start just before it, and asserts no
 retraction and End unchanged; then a real retraction across the wrap
 (E E space ending at 0) cuts at `CWBufferSize - 1`, the answer the old code
 gave too. The keying itself is in `BENCH_QUEUE.md`.
+
+### P10 -- small puns and terminators, 2026-10-19
+
+**Test first.** The `Test_Marker_*` group (5 tests) in `uTestDXSpotParse` and
+`Test_AddNewPrefixRecord_*` (3 tests) in `uTestCTYDAT` were written and run
+against the UNCHANGED code (the marker tests through a helper that was the
+pun itself). Result on the old code: the short-call, real-marker,
+beyond-the-fourth-byte and near-miss pins all passed -- **a short call never
+mismatched, because every record the program builds starts zeroed, so the bytes
+past a call's length are NUL and cannot equal `/` or a space.** The one place
+the pun was wrong is a record that is REUSED: a ShortString assignment writes
+the length byte and the characters and nothing else, so a record that held
+`CQ/ 5` and is then given `CQ/` still has the old fourth byte, and the pun
+answered "CQ marker" for `CQ/`, `CQ` and (for `NEW`) `NEW` -- three failures,
+exactly the three stale-byte assertions. Nothing in the program builds a spot
+that way in the paths read for this packet (`tCreateAndAddNewSpot` zeroes its
+record with `FillChar`; the cluster-line path was not audited for it), so D7 was a **latent**
+difference, not a live bug; the typed code answers NO in all three, and that
+is the only assertion that changed meaning between the two runs.
+
+**3.3.** Seven sites, not five: `uSpots` has 321 (the multi-op send), 660/661
+(multiplier refresh), 868 and 938 (the two polling-thread scans), plus
+`uBandmap` 212/216 and `uTelnet` 1981/1988. All now ask
+`uDXSpotParse.SpotCallIsCQMarker` / `SpotCallIsNewMarker`, four characters
+written out. `tCQAsInteger` / `tNEWAsInteger` are deleted from `VC.pas`. A
+general "begins with" helper was written first and **measured 2x slower**
+than the pun (3.4 ns versus 6.9 ns per spot, 60 million compares, FPC 3.2.2
+-O2 i386, a 1,000,000-record array of `string[13]` calls, 40% of them markers; scratch program, not committed);
+the written-out comparison measured 3.7 ns against 3.4 ns for the pun, so it
+costs nothing a user can see (a band map holds hundreds of spots).
+
+**3.4.** `wkREADBuffer[0] := 0` (byte 0 is the only one read afterwards; the
+other three bytes the `PCardinal` store cleared are never looked at).
+`CorrectPassword` in `tr4wserverUnit` compares `CharBufferSlice(ServerBuffer,
+0, 4) = 'GET '` and `(.., 6, 4) = 'PASS'`; the two integers (542393671 and
+1397965136) were those bytes. `CharBufferSlice` was already tested; one test
+(`Test_CharBufferSlice_RecognisesAWireTag`) pins the tag shape and the
+mismatch cases. Owner areas: `cw-keying` (WinKeyer) and `multi-op-network`
+(server); both changes are mechanical, neither touches the wire bytes, and
+both have `BENCH_QUEUE.md` entries.
+
+**3.6.** The `#0` write at `scFileName[Length + 1]` is deleted. Every live
+consumer of `scFileName` takes the ShortString (`ExecuteConfigurationFile`
+takes `const AnsiString`, `SendViaTelnetSocket` takes `const AnsiString`,
+`SendToRadio` takes `string`); the only `@scFileName[1]` is inside a brace
+comment. As a side effect it no longer writes one byte past a 255-character
+argument.
+
+**6.14.** `PrefixRecPtr` is deleted. `ctyAddNewPrefixRecord` takes
+`const pr: PrefixRec`; `ctyBuildPrefixIndex` reads each entry into a local
+`PrefixRec`; `ctyLocateCall`'s `FillRecord` arm indexes the table directly
+(the hot path -- no copy); `ctyGetZone` holds a local `PrefixRec` copy.
+
+**Oracles.** Unit 385,595 / 0 failed, plain and `-Checked`; heaptrc unfreed
+13,463 = the ceiling, no corruption report. App (full, i386-win32): 0 errors,
+narrowing **1235** = the ceiling (no new), range warnings 3 = the ceiling.
+`tr4wserver` compiles (0 errors). The corpus, matrix and x86_64 build were
+NOT run (compile-and-unit-test packet).
+
+**Pointer delta.** `Count-LivePointers.ps1` run on a copy of `src`, `test`,
+`build`, `tr4wserver` and `tools` OUTSIDE `.claude/worktrees` (the counter
+skips worktree paths), HEAD `d1fbac01` against the working tree: **2,472 ->
+2,401 hits (-71)**. By rule: `C1-ptrtype-decl` 61 -> 60, `C3-typed-ptr-type`
+216 -> 204, `C3-addr-of` 404 -> 388, `C3-deref` 671 -> 646, `C3-s1` 31 -> 20,
+`C6-ptr-named` 554 -> 548; every other rule unchanged. By unit (hit rows):
+`uSpots` 22 -> 2, `uctydat` 24 -> 0, `uBandmap` 15 -> 7, `uTelnet` 26 -> 18,
+`uWinKey` 22 -> 18, `tr4wserverUnit` 76 -> 69, `uProcessCommand` 14 -> 14
+(its removed line was a ShortString index, which no rule counts).
 
 ---
 
