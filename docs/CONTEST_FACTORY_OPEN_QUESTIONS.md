@@ -41,6 +41,18 @@ in section 4. One line each -- the full text is further down.
 - **Q119** Is a host-area-refused QSO (Q107) also an automatic X-QSO? (needed before Q98's mechanism)
 - **Q120** Bands and modes per contest: fill `docs/Q98_CONTEST_BANDS_MODES.csv` + five yes/no rulings.
 
+**Raised 2026-10-19 (sections 1 and 2, under "Raised 2026-10-19")**
+
+- **Q122** LABRE: do PY0S / PY0T send a state, or stay DX?
+- **Q123** RF Cup Digital: add BPSK63 to its modes (UA9QCQ lists RTTY75 + BPSK63)?
+- **Q124** OZCHR (RRTC) scoring: 1/2/3 by ITU zone (UA9QCQ 2022) vs TR4W's 1/1/3/5 -- check it?
+- **Q125** UKRAINE CHAMPIONSHIP: is it the Open Ukraine RTTY Championship?
+- **Q126** Q98's five still-unidentified contests: OZHCR-VHF, WWL, JA LONG PREFECT, QCWA GOLDEN, SOUTH AMERICAN WW.
+- **Q127** Four more Cabrillo renames from UA9QCQ: OZCHR->RRTC, the RCC field days -> FD-RCC-CW/SSB, RF-CUP-DIG -> SRR-CUP-DIGI, GAGARIN-CUP -> GC?
+- **Q128** Polish Kill CW: "Przełącz CW" or D7's shipped "Zakończ CW"?
+- **Q129** Seven machine catalogues show "Ping [SERVER ADDRESS]" in English -- leave, or translate?
+- **Q130** Two Spanish typos in reviewed entries -- fix them?
+
 **Awaiting only your yes (section 3)**
 
 - **Q10** Retire unused ContestTypes through `TContestRetired` (MINITEST needs it).
@@ -50,8 +62,8 @@ in section 4. One line each -- the full text is further down.
 - **Q23** CUP RF: the QSO line, and the difference never reached a file -- close.
 - **Q40** County-line limits: 7QP 4, NEQP none (stated); a rover logs its own party.
 
-**Not a question but open:** Q59 asks you to confirm GREY (unselectable) for an
-inactive contest in the New Contest list.
+**Q59 is settled:** inactive contests are HIDDEN behind "Show inactive
+contests" (NY4I, 2026-10-19), built in e560f51f.
 
 ---
 
@@ -202,6 +214,44 @@ the classes. These decide how far it goes. M11's early stages (pins,
 dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
 
 *All answered (Q50, Q90-Q96): see section 4.*
+
+### Raised 2026-10-19
+
+- **Q122** LABRE DX: the 2026 rules (Table 1) list the 26 states, DF and FN;
+  a PY0F station sending FN is now credited FN (it was DX only -- fixed
+  2026-10-19). **St Peter & St Paul (PY0S) and Trindade & Martim Vaz (PY0T)
+  are not mentioned anywhere in the rules.** Today they parse as DX: their
+  DXCC entity counts, never a state. They are Brazilian territory (part of
+  Pernambuco and Espirito Santo), but Table 1 has no code for either.
+  *Recommended: leave them DX -- the rules give them no code to send.*
+  **Answer:**
+
+- **Q123** RF Cup Digital (SRR): UA9QCQ's copy of the 2021 regulation lists
+  RTTY75 and BPSK63; the Q98 table has RTTY only (from WA7BNM). Add BPSK?
+  **Answer:**
+
+- **Q124** OZCHR (the Russian Radio Team Championship, RRTC): UA9QCQ's copy
+  of the 2022 regulation scores 1 point for a special or LZ0 station, 2 for
+  the same ITU zone, 3 for a different zone. TR4W's class scores 1/1/3/5
+  (the IARU method). *Recommended: the contest-scoring specialist checks D7
+  and the sponsor's current text, and reports before changing anything.*
+  **Answer:**
+
+- **Q125** UKRAINE CHAMPIONSHIP: the Open Ukraine RTTY Championship
+  (UKR-CHAMP-RTTY, WA7BNM 334; 160-10 m RTTY) has a two-letter region +
+  serial exchange whose 27 codes match `ukraine.dom` exactly, and 2 points a
+  QSO, as D7. But D7 scores only UR stations and that event is open to all;
+  N1MM's "Championship of Ukraine" (c. 2014) is 160/80 m, RTTY/CW/SSB, four
+  one-hour sessions, +10 per oblast per session. Which event is TR4W's?
+  **Answer:**
+
+- **Q126** Q98: five contests no source identifies (D7, sponsor, WA7BNM,
+  DXLog, N1MM's UDCs and built-ins, QRZ.RU, UA9QCQ were all searched):
+  OZHCR-VHF (D7 gives the bands, 144 MHz and up; a UDC says all modes),
+  WWL (D7's scoring implies HF incl. 160 m), JA LONG PREFECT, QCWA GOLDEN
+  (scores as TR4W's QCWA), SOUTH AMERICAN WW (D7: RST + continent, 2/10 --
+  not today's WWSA). What are they, and their bands and modes -- or retire?
+  **Answer:**
 
 ---
 
@@ -364,6 +414,31 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   (c) is CQMM CW only? (both sources say so; TR4W scores phone today);
   (d) does ARRL Digi exclude RTTY?;
   (e) General QSO and POTA state EVERY band and mode explicitly? *proposed yes*.
+  **Answer:**
+
+### Raised 2026-10-19
+
+- **Q127** Cabrillo names that differ from the sponsor's tag on UA9QCQ
+  (the log robot these sponsors use), not done with the 18 WA7BNM renames:
+  OZCHR and OZCHR-TEAMS -> `RRTC`; REGION 1 FIELD DAY-RCC-CW / -SSB ->
+  `FD-RCC-CW` / `FD-RCC-SSB`; RF-CUP-DIG -> `SRR-CUP-DIGI`; GAGARIN-CUP ->
+  `GC` (WA7BNM agrees). Only the CONTEST: line changes (TR4W never reads a
+  Cabrillo name back). *Recommended: yes.* **Answer:**
+
+- **Q128** Polish "Kill CW" (`rc_killcw`): its text was codepage-damaged in
+  D7. The bytes recover as "Przełącz CW" (switch CW); D7's shipped Polish
+  menu (Alt+K) reads "Zakończ CW" (end CW). Which? **Answer:**
+
+- **Q129** "Ping [SERVER ADDRESS]" (`RC_PING`) is a Tools menu caption; TR4W
+  fills in the configured server address itself, so it is not a command and
+  stays translatable. The reviewed translations kept theirs. An earlier
+  machine pass put the English text into seven fuzzy catalogues (el fi fr nl
+  pt pt_BR zh_CN), most of whose previous text was broken anyway.
+  *Recommended: leave them; a translator fixes them on review.* **Answer:**
+
+- **Q130** Two typos in REVIEWED Spanish entries: `tc_repeating`
+  "AvPàg/RePàg" -> "AvPág/RePág"; `tc_improperdomesitcqth` "Impropìo QTH
+  domertico!!" -> "Impropio QTH doméstico!!". *Recommended: fix.*
   **Answer:**
 
 ---
