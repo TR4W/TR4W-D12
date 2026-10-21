@@ -237,6 +237,14 @@ var
    to tell which build he was running. HandleShow is the only writer. *)
 function NewContestFormCaption: string;
 
+(* HOW MUCH A COLUMN OF THIS DIALOG MAY GROW: what it wants, but never past
+   the room the screen's work area leaves, and never negative -- the dialog
+   only grows. Both SizeContestList and SizeFileGrid ask it, so the cap is
+   one rule. With no room at all (a desktop no wider than the form, which is
+   what a CI runner's service session gives) the answer is 0 and the control
+   scrolls sideways instead. Interfaced so the cap is testable on any screen. *)
+function GrowWithinRoom(aWanted, aRoom: integer): integer;
+
 implementation
 
 {$R *.lfm}
@@ -253,6 +261,19 @@ uses
   uAppStrings,      (* SNewContestContestLabel, SNewContestSearchHint,
                        SNewContestShowInactive *)
   uContestRegistry; (* ContestId -- the chosen contest's token, Q108 S2 *)
+
+function GrowWithinRoom(aWanted, aRoom: integer): integer;
+begin
+   Result := aWanted;
+   if Result > aRoom then
+      begin
+      Result := aRoom;
+      end;
+   if Result < 0 then
+      begin
+      Result := 0;
+      end;
+end;
 
 function NewContestFormCaption: string;
 begin
@@ -652,20 +673,10 @@ begin
    end;
    need := need + GRID_CHROME + GetSystemMetrics(SM_CXVSCROLL);
 
-   grow := need - FFileGridDesigned;
-   if grow < 0 then
-      begin
-      grow := 0;
-      end;
+   (* The room is measured from the form WITHOUT this grid's growth, so a
+      second fill asks the same question as the first. *)
    room := Screen.WorkAreaWidth - (Width - FFileGridGrow);
-   if grow > room then
-      begin
-      grow := room;
-      end;
-   if grow < 0 then
-      begin
-      grow := 0;
-      end;
+   grow := GrowWithinRoom(need - FFileGridDesigned, room);
 
    if grow <> FFileGridGrow then
       begin
@@ -859,13 +870,8 @@ begin
       plus whatever the panel keeps around the list (its BorderSpacing). *)
    need := widest + LIST_CHROME + GetSystemMetrics(SM_CXVSCROLL) +
            (pnlContestPick.Width - lstContests.Width);
-   grow := need - pnlContestPick.Width;
-
    room := Screen.WorkAreaWidth - Width;
-   if grow > room then
-      begin
-      grow := room;
-      end;
+   grow := GrowWithinRoom(need - pnlContestPick.Width, room);
 
    if grow > 0 then
       begin

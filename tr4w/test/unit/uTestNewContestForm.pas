@@ -21,6 +21,7 @@ interface
 
 uses
    SysUtils, Classes, Forms, Controls, Graphics,
+   StdCtrls,          (* TScrollStyle -- the file grid scrolls when it cannot grow *)
    Grids,             (* goRowSelect, goCellHints -- the file grid's options *)
    LCLType,           (* VK_DOWN *)
    uContestNames,     (* ContestFromName -- the test logs' contests *)
@@ -74,6 +75,7 @@ type
       procedure Test_TheFileGridDescribesEachLog;
       procedure Test_TheSelectedRowIsTheFileOpened;
       procedure Test_TheFileGridIsWideEnoughAndSizesOnce;
+      procedure Test_GrowthStopsAtTheWorkArea;
       procedure Test_AHundredLogsFillQuickly;
 
       (* NY4I 2026-10-19: Enter opens the selected log; the order is newest
@@ -1024,13 +1026,21 @@ end;
 (* EVERY COLUMN HOLDS ITS WIDEST CELL, THE GROUP GROWS TO HOLD THE COLUMNS, AND
   IT GROWS ONCE: a second fill of the same directory changes nothing, and an
   empty one gives the room back. gbNew's left side is anchored to gbExisting,
-  so it moves over rather than being squeezed. *)
+  so it moves over rather than being squeezed.
+
+  TRUE ON ANY SCREEN. The group grows by what the columns need or by the room
+  the work area leaves beside the form, whichever is smaller -- and with no
+  room it keeps its width and the grid scrolls sideways. The CI runner is a
+  service session whose desktop is no wider than this form once the contest
+  list has widened it, so there the room is 0; on a normal screen the room is
+  ample and the widening is checked in full. The cap itself is pinned on every
+  screen by Test_GrowthStopsAtTheWorkArea. *)
 procedure TNewContestFormTests.Test_TheFileGridIsWideEnoughAndSizesOnce;
 var
    frm: TfrmNewContest;
-   dir: string;
+   dir, where: string;
    probe: TBitmap;
-   c, r, w, columns, w0, g0, min0, w1, g1: integer;
+   c, r, w, columns, w0, g0, min0, w1, g1, room, designedGrid: integer;
 begin
    BeginTest('Test_TheFileGridIsWideEnoughAndSizesOnce');
 
@@ -1049,9 +1059,12 @@ begin
       w0   := frm.Width;
       g0   := frm.gbExisting.Width;
       min0 := frm.Constraints.MinWidth;
+      designedGrid := frm.grdFiles.Width;
+      room := Screen.WorkAreaWidth - w0;
+      where := ' (work area ' + IntToStr(Screen.WorkAreaWidth) + ' px, form ' +
+               IntToStr(w0) + ' px, room ' + IntToStr(room) + ' px)';
 
       frm.PopulateFiles(dir);
-
       probe.SetSize(1, 1);
       columns := 0;
       for c := 0 to frm.grdFiles.ColCount - 1 do
@@ -1074,10 +1087,26 @@ begin
          columns := columns + frm.grdFiles.ColWidths[c];
          end;
 
+      (* THE FIXTURE MUST NEED THE ROOM, or nothing below is tested. *)
+      CheckTrue(columns > designedGrid,
+                'the columns (' + IntToStr(columns) + ' px) need more than the designed grid (' +
+                IntToStr(designedGrid) + ' px)');
+
       g1 := frm.gbExisting.Width;
       w1 := frm.Width;
-      CheckTrue(g1 > g0, 'a long file name widens the group (' + IntToStr(g0) + ' -> ' +
-                         IntToStr(g1) + ')');
+      if room > 0 then
+         begin
+         CheckTrue(g1 > g0, 'a long file name widens the group (' + IntToStr(g0) + ' -> ' +
+                            IntToStr(g1) + ')' + where);
+         CheckTrue(g1 - g0 <= room, 'but never past the work area (grew ' +
+                                    IntToStr(g1 - g0) + ')' + where);
+         end
+      else
+         begin
+         CheckEquals(g0, g1, 'with no room the group keeps its width' + where);
+         CheckTrue(frm.grdFiles.ScrollBars in [ssHorizontal, ssBoth, ssAutoHorizontal, ssAutoBoth],
+                   'and the grid scrolls sideways rather than clipping a column' + where);
+         end;
       CheckEquals(g1 - g0, w1 - w0, 'the form widens by exactly what the group did');
       CheckEquals(g1 - g0, frm.Constraints.MinWidth - min0, 'and so does its minimum');
       if w1 < Screen.WorkAreaWidth then
@@ -1103,6 +1132,24 @@ begin
       frm.Free;
       RemoveFilesDir(dir);
    end;
+end;
+
+(* THE CAP, ON ANY SCREEN: a column grows by what it wants or by the room the
+  work area leaves, whichever is smaller, and never shrinks the dialog. The
+  rooms here are forced small -- a real desktop cannot be made narrow from a
+  test -- including none at all and less than none, which is a form already
+  wider than its screen. *)
+procedure TNewContestFormTests.Test_GrowthStopsAtTheWorkArea;
+begin
+   BeginTest('Test_GrowthStopsAtTheWorkArea');
+
+   CheckEquals(100, GrowWithinRoom(100, 500), 'ample room: the whole of what is wanted');
+   CheckEquals(100, GrowWithinRoom(100, 100), 'exactly enough room: all of it');
+   CheckEquals(40,  GrowWithinRoom(100, 40),  'too little room: only the room');
+   CheckEquals(0,   GrowWithinRoom(100, 0),   'no room: no growth');
+   CheckEquals(0,   GrowWithinRoom(100, -50), 'a form wider than its screen is not shrunk');
+   CheckEquals(0,   GrowWithinRoom(-20, 500), 'a column that needs less than designed does not shrink');
+   CheckEquals(0,   GrowWithinRoom(0, 500),   'nothing wanted, nothing grown');
 end;
 
 (* ONE DESCRIBE PER FILE AT SHOW, AND IT MUST NOT BLOCK: a hundred copies of a
@@ -1362,6 +1409,7 @@ begin
    Test_TheFileGridDescribesEachLog;
    Test_TheSelectedRowIsTheFileOpened;
    Test_TheFileGridIsWideEnoughAndSizesOnce;
+   Test_GrowthStopsAtTheWorkArea;
    Test_AHundredLogsFillQuickly;
    Test_LogsSortNewestYearFirst;
    Test_TheGridListsInTheSortedOrder;
