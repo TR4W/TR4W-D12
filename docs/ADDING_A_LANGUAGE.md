@@ -21,6 +21,16 @@ resourcestring  ->  <unit>.rsj  ->  rstconv  ->  .po  ->  SetDefaultLang  ->  tr
 
 ## 1. Get the English catalogue
 
+**There is no `i18n/tr4w_en.po`, and nothing should make one** (deleted 2026-10-21). English
+is the `msgid` every catalogue already carries, and the program loads no catalogue for its
+compiled-in language. "The English catalogue" here means the TEMPLATE -- the strings below,
+and `tr4w/languages/tr4w_laz.pot` for the `.lfm` captions. English's name in Preferences
+("English (en)") is `uEmbeddedTranslations.COMPILED_IN_LANGUAGE_NAME`.
+
+**And not every caption is a string.** `F1`, `8`, `...` are not language and never become a
+catalogue entry -- `pofile.is_translatable` is the rule, and `po_merge` and `pas2po` both ask
+it. The form keeps its `.lfm` text, which is what an untranslated property shows anyway.
+
 The strings live in two mechanisms, and both end up in the same `.po`.
 
 ```bash
@@ -38,8 +48,13 @@ table.
 ## 2. Add the language
 
 ```bash
-python tools/i18n/pas2po.py            # writes i18n/tr4w_<code>.po for each known language
+python tools/i18n/pas2po.py --new-lang <LANG> --code <xx>   # writes i18n/tr4w_<xx>.po, all fuzzy
 ```
+
+~~`python tools/i18n/pas2po.py`~~ with no `--new-lang` rebuilds EVERY catalogue from the
+`TC_`/`RC_` tables alone, which deletes the `.lfm` and resourcestring entries (2,203
+translations, 2026-08-29); it now refuses rather than doing so. It never writes English.
+Existing catalogues take new strings from `po_merge.py --pot`.
 
 A language with no `tr4w_consts_<lang>.pas` takes the *generate* path rather than the
 surgical-rewrite path; see the tooling README for the worked Italian example.

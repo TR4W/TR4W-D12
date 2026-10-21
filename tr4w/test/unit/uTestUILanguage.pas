@@ -433,7 +433,7 @@ var
 begin
    BeginTest('the Language list is the catalogues this binary carries');
    codes := ' ' + AvailableLanguages + ' ';
-   CheckTrue(Pos(' en ', codes) > 0, 'English is embedded: ' + codes);
+   CheckTrue(Pos(' en ', codes) > 0, 'English is offered: ' + codes);
    CheckTrue(Pos(' de ', codes) > 0, 'and at least one other language');
 
    CheckTrue(IsUILanguageAvailable('de'), 'de is loadable');
@@ -453,7 +453,7 @@ begin
       CheckTrue(IsUILanguageAvailable(offered[i]),
                 offered[i] + ' is offered and loadable');
       CheckTrue(Pos(' ' + offered[i] + ' ', codes) > 0,
-                offered[i] + ' is an embedded catalogue');
+                offered[i] + ' is an available language');
       Inc(n);
       end;
    CheckEquals(Length(Trim(codes)) - Length(StringReplace(Trim(codes), ' ', '',
@@ -467,6 +467,7 @@ var
    offered: TArray<string>;
    i: integer;
    elapsed: int64;
+   english, own: string;
 begin
    BeginTest('each language is offered in its own name, with its code');
    DeclareAllSettings;
@@ -481,6 +482,11 @@ begin
    CheckEquals('Deutsch (de)', s.CaptionForValue('de'),
                'German, as its catalogue names itself');
    CheckEquals('English (en)', s.CaptionForValue('en'), 'English');
+   (* ...AND NOT FROM A CATALOGUE. English is the compiled-in language and
+     has none since 2026-10-21; its name is COMPILED_IN_LANGUAGE_NAME. *)
+   CheckFalse(EmbeddedCatalogueEntry('en', 'utr4wstrings.tc_translation_language',
+                                     english, own),
+              'no English catalogue is embedded');
    CheckEquals('System default', s.CaptionForValue(''),
                'the empty value, in words');
    CheckEquals('xx', UILanguageCaption('xx'),
@@ -509,7 +515,7 @@ end;
   An author that IS the English author is never a translator's credit: a
   real one names the translator, and a machine one names nobody (the About
   box then says LibreTranslate). English itself is exempt -- it is the
-  source, and loads no catalogue, so it is never credited.
+  source, and has no catalogue, so it is never credited.
 
   Reads the EMBEDDED copies, so it checks what ships rather than what is on
   disk.

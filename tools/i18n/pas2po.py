@@ -94,23 +94,29 @@ def same_as_english(translated, english):
 
 def emit(eng_decls, translations, lang, out_path, reflag_identical=False):
    """Write one .po, preserving any review decision already in the file."""
+   # THERE IS NO ENGLISH CATALOGUE (2026-10-21). English is the msgid, and
+   # the program loads no catalogue for its compiled-in language; the one
+   # entry tr4w_en.po held that was not a copy of its msgid -- the language's
+   # own name -- lives in uEmbeddedTranslations now.
+   if lang == pc.SOURCE_LANG:
+      raise SystemExit("pas2po: %s is the source language and has no catalogue"
+                       % lang)
    prior = pofile.by_key(pofile.read_po(out_path))
-   is_source = lang == pc.SOURCE_LANG
    seen = set()
    entries = []
 
    for d in eng_decls:
       seen.add(d.name)
+      # Not language -- 'F1', '8', '...' -- is not offered for translation.
+      # The one rule, shared with po_merge: pofile.is_translatable.
+      if not pofile.is_translatable(d.value):
+         continue
       t = translations.get(d.name)
       notes = ["Section: %s" % d.context]
       if d.comment:
          notes.append(d.comment)
       refs = ["tr4w/src/lang/tr4w_consts_eng.pas:%d" % d.lineno]
 
-      if is_source:
-         entries.append(pofile.Entry(d.name, d.value, d.value, False,
-                                     notes, refs))
-         continue
       if t is None:
          entries.append(pofile.Entry(d.name, d.value, "", True, notes, refs))
          continue
@@ -306,6 +312,8 @@ def main(argv=None):
       if code is None:
          print("skipping unknown LANG %s" % lang, file=sys.stderr)
          continue
+      if lang == pc.SOURCE_LANG:
+         continue                      # English is the msgid -- see emit()
       if lang in lossy:
          print("%-5s SKIPPED -- decodes under no declared codepage; seed its "
                "catalogue from ENG with --new-lang %s, then salvage what "

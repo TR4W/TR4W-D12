@@ -111,8 +111,10 @@ class RealCatalogues(unittest.TestCase):
    """THE GATE: every shipped catalogue survives a read/write unchanged."""
 
    def test_there_are_catalogues(self):
-      # A floor, so the gate cannot pass by finding nothing to check.
-      self.assertGreaterEqual(len(CATALOGUES), 22, "found %d catalogues" % len(CATALOGUES))
+      # A floor, so the gate cannot pass by finding nothing to check. 21:
+      # every language but English, which is the msgid and has had no
+      # catalogue since 2026-10-21.
+      self.assertGreaterEqual(len(CATALOGUES), 21, "found %d catalogues" % len(CATALOGUES))
 
    def test_every_catalogue_roundtrips_byte_identical(self):
       self.assertEqual(roundtrip_failures(CATALOGUES), [])

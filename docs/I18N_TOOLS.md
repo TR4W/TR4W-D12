@@ -78,6 +78,13 @@ for a machine translation**. The About box then says LibreTranslate and adds
 `uTestUILanguage.Test_NoCatalogueCreditsTheEnglishAuthor` pins the same rule against the
 embedded catalogues, which is the copy that gates a build (2026-10-16).
 
+It also fails an entry whose English is **not language** -- `F1`, `8`, `...` -- because
+nothing should have offered it to a translator. `pofile.is_translatable` is the rule;
+`po_merge --apply` removes such an entry while its msgstr is empty (2026-10-21).
+
+**There is no English catalogue to lint** (2026-10-21): English is the msgid, and
+`tr4w_en.po` was deleted. No catalogue is exempt from any check any more.
+
 ---
 
 ## Refresh the catalogues after the program changes
@@ -231,8 +238,8 @@ is in `i18n\languages.json` and `--lang FIN` is enough.
 |---|---|
 | `mt_seed.py` | machine drafts for empty entries, always marked "Needs work" |
 | `po_lint.py` | checks placeholders, line breaks and entry state |
-| `po_merge.py` | adds new strings to every catalogue; never edits an existing translation |
-| `pas2po.py` | language tables → `.po` (also creates a new language) |
+| `po_merge.py` | adds new strings to every catalogue; never edits an existing translation; never adds -- and drops when empty -- an entry that is not language (`F1`, `8`, `...`) |
+| `pas2po.py` | creates a new language (`--new-lang`). Never writes English, which has no catalogue |
 | `po2pas.py` | `.po` → language tables; refuses anything still "Needs work" |
 | `pas2res.py` | English tables → `uTR4WStrings.pas` resourcestrings |
 | `po_rekey.py` | adds the run-time identifier beside the `msgctxt` key |
@@ -242,6 +249,7 @@ is in `i18n\languages.json` and `--lang FIN` is enough.
 | `salvage_lossy.py` | recovers what it can from a lang file that decodes under no codepage (CHN) |
 | `pofile.py`, `pasconsts.py` | shared readers — not run directly. `pofile` rewrites losslessly |
 | `test_pofile.py` | the gate on that: every catalogue must read and write back byte-identical |
+| `test_is_translatable.py` | pins `pofile.is_translatable`, and that no catalogue holds an entry that is not language |
 
 ---
 

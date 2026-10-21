@@ -175,11 +175,15 @@ Poedit's bundled gettext tools work on these files directly:
 
 ```bash
 msgfmt --check-format --check-domain -o NUL i18n/tr4w_es.po   # validate
-msgmerge --update i18n/tr4w_es.po i18n/tr4w_en.po             # re-match after English changes
 ```
 
-`msgmerge` is the one worth remembering: when a source string is reworded it re-matches the old
-translation and marks it fuzzy, which the extractor's exact-key matching cannot do.
+~~`msgmerge --update i18n/tr4w_es.po i18n/tr4w_en.po`~~ -- **there is no `tr4w_en.po` since
+2026-10-21.** English is the msgid and the program loads no catalogue for it, so an English
+"translation" was 1,274 copies of its own msgid and one real entry (the language's own name, now
+in `uEmbeddedTranslations`). New English reaches the catalogues through
+`po_merge.py --pot`, which also applies the one rule `msgmerge` does not know:
+`pofile.is_translatable` -- a function-key name (`F1`), a bare number (`8`) or bare punctuation
+(`...`) is not language and never becomes an entry.
 
 ## Two traps, both verified against Qt 6.10.1
 

@@ -7315,86 +7315,6 @@ msgstr "ДКС"
 msgid "QTH"
 msgstr "ЗАМОВИТИ"
 
-#: tfrmfunctionkeys.pnlf1.caption
-msgid "F1"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf10.caption
-msgid "F10"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf11.caption
-msgid "F11"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf12.caption
-msgid "F12"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf2.caption
-msgid "F2"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf3.caption
-msgid "F3"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf4.caption
-msgid "F4"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf5.caption
-msgid "F5"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf6.caption
-msgid "F6"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf7.caption
-msgid "F7"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf8.caption
-msgid "F8"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf9.caption
-msgid "F9"
-msgstr ""
-
-#: tfrmhamscore.lblqueuevalue.caption
-msgid "--"
-msgstr ""
-
-#: tfrmmp3recorder.btncontrol.caption
-msgid "..."
-msgstr ""
-
-#: tfrmpanadapter.btnspannarrow.caption
-msgid "-"
-msgstr ""
-
-#: tfrmpanadapter.btnspanwide.caption
-msgid "+"
-msgstr ""
-
-#: tradioeditform.optdata7.caption
-msgid "7"
-msgstr ""
-
-#: tradioeditform.optdata8.caption
-msgid "8"
-msgstr ""
-
-#: tradioeditform.optstop1.caption
-msgid "1"
-msgstr ""
-
-#: tradioeditform.optstop2.caption
-msgid "2"
-msgstr ""
-
 #: ulclformhelpers.tc_prefs_activate
 #, fuzzy
 msgid "Save and activate this profile"
@@ -7638,15 +7558,6 @@ msgstr "Створення та використання нового журна
 #, fuzzy
 msgid "Get server log"
 msgstr "Отримати логін сервера"
-
-#: tfrmserverlog.lblbytes.caption
-#: tfrmserverlog.lblqsos.caption
-#: tfrmserverlog.lblrecords.caption
-#: tfrmserverlog.lblsent.caption
-#, fuzzy
-msgctxt "tfrmserverlog.lblbytes.caption"
-msgid "0"
-msgstr ""
 
 #: tfrmtelnet.btnconfigure.caption
 #: utr4wstrings.tc_configure_ellipsis

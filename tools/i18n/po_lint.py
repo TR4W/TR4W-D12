@@ -236,12 +236,21 @@ def check(path, fix):
    entities = []
    accel_bad, by_form, english = [], {}, []
    author_copied = []
+   not_language = []
    lang = code_of(name)
-   is_source = lang == 'en'
    lcl = lcl_accelerators(lang)
 
    for e in entries:
       if e.obsolete or not e.source.strip():
+         continue
+
+      # NOT LANGUAGE, AND IN THE CATALOGUE ANYWAY -- 'F1', '8', '...'.
+      # pofile.is_translatable is the rule; po_merge neither adds such an
+      # entry nor keeps an empty one. Checked here because a catalogue also
+      # arrives from a translator or a translation server, and those do not
+      # ask. Fuzzy or not, empty or not: it should not be there at all.
+      if not pofile.is_translatable(e.source):
+         not_language.append(e)
          continue
 
       # THE TRANSLATOR CREDIT MAY NEVER BE THE ENGLISH AUTHOR -- fuzzy or not.
@@ -253,8 +262,7 @@ def check(path, fix):
       # translator; a machine translation leaves it empty or says
       # LibreTranslate. The unit test uTestUILanguage pins the same rule
       # against the embedded catalogues, which is the copy that gates a build.
-      if ((not is_source) and is_author_credit(e) and
-            e.target.strip() == e.source.strip()):
+      if is_author_credit(e) and e.target.strip() == e.source.strip():
          author_copied.append(e)
 
       if not e.target.strip():
@@ -278,9 +286,10 @@ def check(path, fix):
       # would embed as the Polish. Measured across the catalogues: 106 of these
       # outside the English one -- 81 Spanish, 17 German.
       #
-      # The English catalogue is EXEMPT and must stay so: msgstr == msgid is
-      # what tr4w_en.po is for, and flagging its 378 entries would be nonsense.
-      if (not is_source) and (not e.fuzzy) and same_text(e.source, e.target):
+      # No catalogue is exempt. An English one used to be -- msgstr == msgid
+      # was all tr4w_en.po held -- and it was deleted on 2026-10-21: English
+      # is the msgid, and the program loads no catalogue for it.
+      if (not e.fuzzy) and same_text(e.source, e.target):
          english.append(e)
 
       if controls(e.source) != controls(e.target):
@@ -359,6 +368,12 @@ def check(path, fix):
           "translator, or leave it empty for a machine translation"
           % (name, e.target))
 
+   for e in not_language:
+      say("  %s: NOT LANGUAGE -- %r is a key name, a number or punctuation, "
+          "and is not offered for translation (pofile.is_translatable); "
+          "po_merge --apply removes it while its msgstr is empty"
+          % (name, e.source))
+
    for e in english:
       say("  %s: ENGLISH IN THE TRANSLATION, not flagged -- would ship as %s"
           % (name, lang))
@@ -403,13 +418,14 @@ def check(path, fix):
       pofile.write_po(path, entries, lang)
 
    ok = (not ctrl_bad and not fmt_bad and not accel_bad and not clashes
-         and not english and not spaced and not entities and not author_copied)
+         and not english and not spaced and not entities and not author_copied
+         and not not_language)
    if ok and not stranded:
       live = [e for e in entries if not e.obsolete and e.source.strip()]
       print("  %-16s %4d entries, no control-character or format defects"
             % (name, len(live)))
    return (len(ctrl_bad) + len(fmt_bad) + len(accel_bad) + clashes + len(english)
-           + len(author_copied))
+           + len(author_copied) + len(not_language))
 
 
 def main():

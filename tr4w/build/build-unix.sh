@@ -1355,6 +1355,13 @@ stage_package() {
          return 1
       fi
 
+      # ENGLISH IS ADDED, NOT READ: it is the compiled-in language and has
+      # no catalogue, so the .res holds no TR4W_EN (tr4w_en.po was deleted
+      # 2026-10-21). Added AFTER the check above, so an unreadable .res
+      # still fails rather than declaring English alone.
+      localizations="    <string>en</string>
+$localizations"
+
       cat > "$bundle/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"

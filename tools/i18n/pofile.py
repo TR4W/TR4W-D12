@@ -36,8 +36,11 @@ text and the fields it was parsed into; write_po emits that text VERBATIM
 unless a caller changed a field, and only then re-renders the entry, keeping
 its translator comments, flags and previous-msgid lines. The header, the
 blank lines and comment-only blocks between entries, a BOM and the line
-endings come back exactly as read. test_pofile.py pins it: all 22 catalogues
-round-trip byte-identical.
+endings come back exactly as read. test_pofile.py pins it: every catalogue
+round-trips byte-identical.
+
+WHAT IS NOT A CATALOGUE ENTRY AT ALL is decided here too -- is_translatable,
+below: a function-key name, a bare number, or bare punctuation.
 """
 
 import os
@@ -368,6 +371,50 @@ def read_po(path):
 
 def by_key(entries):
    return {e.key: e for e in entries if e.key and not e.obsolete}
+
+# ---------------------------------------------------------------- is it language?
+
+# F1..F24, with at most one '&' anywhere in it ('&F12', 'F&1').
+_FUNCTION_KEY = re.compile(r"F(?:[1-9]|1[0-9]|2[0-4])")
+_DIGITS = re.compile(r"[0-9]+")
+
+
+def is_translatable(msgid):
+   """Is this English text LANGUAGE -- something a translator can translate?
+
+   THE ONE RULE, and every tool that creates a catalogue entry asks it here
+   rather than keeping its own copy (po_merge for the harvest, pas2po for a
+   new language, po_lint for anything that got in another way).
+
+   NOT language, so never offered for translation:
+     * a function-key name, F1 to F24, optionally carrying one '&';
+     * only ASCII digits ('8', '10');
+     * only punctuation and whitespace ('-', '+', '--', '...', ' ').
+
+   WHY. The .lfm harvest takes every Caption, and a designed form has captions
+   that are labels for keys and numbers, not words: the function-key panel's
+   'F1'..'F12', the radio editor's data-bits '7'/'8' and stop-bits '1'/'2',
+   the panadapter's '-'/'+' span buttons, a '--' placeholder, a '...' button,
+   the server-log counters' '0'. 21 of them sat in every catalogue, and
+   Weblate asked translators to translate '8' (NY4I, 2026-10-21).
+
+   NOTHING IS LOST BY LEAVING THEM OUT. A form property with no catalogue
+   entry keeps the value the .lfm streamed, which IS this text: the LCL's
+   TPOTranslator only replaces a property it finds an entry for.
+
+   Anything with a letter in it is language, even with digits beside it --
+   'F1 help', 'Band 8' and '8 hours' are sentences a translator may reorder.
+   A letter is str.isalpha, so Cyrillic, Greek and CJK count."""
+   s = msgid.strip()
+   if not s:
+      return False
+   if _FUNCTION_KEY.fullmatch(s.replace("&", "", 1)):
+      return False
+   if _DIGITS.fullmatch(s):
+      return False
+   if not any(ch.isalnum() for ch in s):
+      return False
+   return True
 
 def lcl_catalogue(lang):
    """The LCL's OWN translations for this language, by English text.

@@ -20,7 +20,8 @@ unit uEmbeddedTranslations;
 
   So build\Make-LanguageRes.ps1 compiles i18n\tr4w_<lang>.po into
   res\tr4w_languages.res as RCDATA named TR4W_<LANG>, and this reads it back.
-  5.0 MB for twenty-two languages, reviewed entries and unreviewed alike.
+  Every language but English, reviewed entries and unreviewed alike; English
+  is compiled in and has no catalogue (see COMPILED_IN_LANGUAGE).
 
   A FILE STILL WINS IF ONE IS PRESENT, deliberately. languages\<lang>\tr4w.po
   beside the exe overrides the embedded copy, so a corrected translation can be
@@ -119,8 +120,22 @@ function EmbeddedCatalogueEntry(const aCode, aIdentifier: string;
   'cs da de el en es fi fr ...'.
 
   Read from the RCDATA names rather than from a list, so it cannot disagree
-  with what Make-LanguageRes embedded. Used by the --lang usage text. }
+  with what Make-LanguageRes embedded -- plus English, which is the
+  compiled-in language and has no catalogue. Used by the --lang usage text. }
 function AvailableLanguages: string;
+
+const
+   (* THE COMPILED-IN LANGUAGE: the English every resourcestring and .lfm
+     already holds. It has NO catalogue -- tr4w_en.po was deleted on
+     2026-10-21, because loading English over English was work to no effect
+     and its 1,366 entries were copies of their own msgid but one.
+
+     That one is the name below: what Preferences shows for this language,
+     the way each catalogue names itself through TC_TRANSLATION_LANGUAGE.
+     A constant, not a resourcestring -- a language's own name is the same
+     in every language the UI is shown in. *)
+   COMPILED_IN_LANGUAGE      = 'en';
+   COMPILED_IN_LANGUAGE_NAME = 'English';
 
 implementation
 
@@ -290,9 +305,10 @@ begin
       end;
 end;
 
-(* The embedded codes, sorted -- the one enumeration both the usage text and
-  the Language setting's vocabulary are built from. *)
-function EmbeddedLanguageCodes: TArray<string>;
+(* Every code this binary can show, sorted -- the embedded catalogues and the
+  compiled-in English, which has none. The one enumeration both the usage text
+  and the Language setting's vocabulary are built from. *)
+function UILanguageCodes: TArray<string>;
 var
    list: TStringList;
    i: integer;
@@ -302,6 +318,7 @@ begin
    try
       list.Sorted := True;
       list.Duplicates := dupIgnore;
+      list.Add(COMPILED_IN_LANGUAGE);
       EnumResourceNames(HInstance, RT_RCDATA, @EnumLangProc, PtrInt(list));
       SetLength(Result, list.Count);
       for i := 0 to list.Count - 1 do
@@ -318,7 +335,7 @@ var
    code: string;
 begin
    Result := '';
-   for code in EmbeddedLanguageCodes do
+   for code in UILanguageCodes do
       begin
       if Result <> '' then
          begin
@@ -348,7 +365,7 @@ begin
       Result := False;
       Exit;
       end;
-   if code = 'en' then
+   if code = COMPILED_IN_LANGUAGE then
       begin
       Result := True;
       Exit;
@@ -418,11 +435,17 @@ begin
 end;
 
 (* TC_TRANSLATION_LANGUAGE as one catalogue spells it, or ''. A caption is
-  never worth a failure: the code alone still identifies the language. *)
+  never worth a failure: the code alone still identifies the language.
+  English has no catalogue, so its own name is the constant. *)
 function CatalogueLanguageName(const aCode: string): string;
 var
    english: string;
 begin
+   if aCode = COMPILED_IN_LANGUAGE then
+      begin
+      Result := COMPILED_IN_LANGUAGE_NAME;
+      Exit;
+      end;
    if not EmbeddedCatalogueEntry(aCode, 'utr4wstrings.tc_translation_language',
                                  english, Result) then
       begin
@@ -478,7 +501,7 @@ procedure LoadLCLCatalogue(const aLang: string);
   then, where TPOTranslator keeps the pointer. That asymmetry is exactly what
   the --lang crash was, so it is worth stating rather than inferring.
 
-  Absent is normal: Lazarus ships 15 of our 21 languages. }
+  Absent is normal: Lazarus ships 16 of our 21 catalogues. }
 var
    rs: TResourceStream;
    po: TPOFile;
@@ -593,7 +616,7 @@ begin
    GActiveLang := '';
    GActiveAuthor := '';
    lang := ResolveLang(aSetting, source);
-   if (lang = '') or SameText(lang, 'en') then
+   if (lang = '') or SameText(lang, COMPILED_IN_LANGUAGE) then
       begin
       // English is what the binary already holds; loading a catalogue to
       // replace English with English would be work to no effect.
@@ -693,7 +716,8 @@ end;
   same reason uCFG registers the vocabularies it owns. From the RCDATA names,
   never from a typed list, so Preferences cannot offer a language the binary
   lacks, and a config line naming one is refused. English is in the list
-  because Make-LanguageRes embeds tr4w_en.po like any other. *)
+  because UILanguageCodes adds the compiled-in language -- it has no
+  catalogue to enumerate (2026-10-21). *)
 (* GENERATED, NOT TYPED -- and Lint-SpellingTables knows this name as one,
   the way it knows uRadioRegistry.RadioTypeTokensA. Its '' is deliberate
   and is not the blank-spelling defect that lint hunts: this is a STRING
@@ -704,7 +728,7 @@ var
    codes: TArray<string>;
    i: integer;
 begin
-   codes := EmbeddedLanguageCodes;
+   codes := UILanguageCodes;
    SetLength(Result, Length(codes) + 1);
    Result[0] := '';
    for i := 0 to High(codes) do

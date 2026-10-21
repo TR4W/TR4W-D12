@@ -6546,58 +6546,6 @@ msgstr "QTH"
 msgid "Function keys"
 msgstr "Klawisze funkcyjne"
 
-#: tfrmfunctionkeys.pnlf1.caption
-msgid "F1"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf10.caption
-msgid "F10"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf11.caption
-msgid "F11"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf12.caption
-msgid "F12"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf2.caption
-msgid "F2"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf3.caption
-msgid "F3"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf4.caption
-msgid "F4"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf5.caption
-msgid "F5"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf6.caption
-msgid "F6"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf7.caption
-msgid "F7"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf8.caption
-msgid "F8"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf9.caption
-msgid "F9"
-msgstr ""
-
-#: tfrmhamscore.lblqueuevalue.caption
-msgid "--"
-msgstr ""
-
 #: tfrminputquery.btncancel.caption
 #, fuzzy
 msgctxt "tfrminputquery.btncancel.caption"
@@ -6674,10 +6622,6 @@ msgctxt "tfrmmessageslist.caption"
 msgid "List of commands"
 msgstr "&List of commands"
 
-#: tfrmmp3recorder.btncontrol.caption
-msgid "..."
-msgstr ""
-
 #: tfrmmp3recorder.caption
 #, fuzzy
 msgid "MP3 Recorder"
@@ -6689,14 +6633,6 @@ msgstr "Zapis MP3"
 msgctxt "tfrmnetwork.caption"
 msgid "Network"
 msgstr "Sieć"
-
-#: tfrmpanadapter.btnspannarrow.caption
-msgid "-"
-msgstr ""
-
-#: tfrmpanadapter.btnspanwide.caption
-msgid "+"
-msgstr ""
 
 #: tfrmpanadapter.lblstatus.caption
 #, fuzzy
@@ -7075,22 +7011,6 @@ msgstr "Port"
 msgctxt "tradioeditform.lblstopbits.caption"
 msgid "Stop bits"
 msgstr "Zatrzymaj bity"
-
-#: tradioeditform.optdata7.caption
-msgid "7"
-msgstr ""
-
-#: tradioeditform.optdata8.caption
-msgid "8"
-msgstr ""
-
-#: tradioeditform.optstop1.caption
-msgid "1"
-msgstr ""
-
-#: tradioeditform.optstop2.caption
-msgid "2"
-msgstr ""
 
 # 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Sieö"
 #: tradioeditform.tabnetwork.caption
@@ -11531,23 +11451,11 @@ msgctxt "tfrmserverlog.chkshowcontent.caption"
 msgid "Show server log content"
 msgstr "Pokaż zawartość dziennika serwera"
 
-#: tfrmserverlog.lblbytes.caption
-#, fuzzy
-msgctxt "tfrmserverlog.lblbytes.caption"
-msgid "0"
-msgstr ""
-
 #: tfrmserverlog.lblbytescaption.caption
 #, fuzzy
 msgctxt "tfrmserverlog.lblbytescaption.caption"
 msgid "Received bytes:"
 msgstr "Otrzymane bajty:"
-
-#: tfrmserverlog.lblqsos.caption
-#, fuzzy
-msgctxt "tfrmserverlog.lblqsos.caption"
-msgid "0"
-msgstr ""
 
 #: tfrmserverlog.lblqsoscaption.caption
 #, fuzzy
@@ -11555,23 +11463,11 @@ msgctxt "tfrmserverlog.lblqsoscaption.caption"
 msgid "Received QSOs:"
 msgstr "Otrzymane QSOs:"
 
-#: tfrmserverlog.lblrecords.caption
-#, fuzzy
-msgctxt "tfrmserverlog.lblrecords.caption"
-msgid "0"
-msgstr ""
-
 #: tfrmserverlog.lblrecordscaption.caption
 #, fuzzy
 msgctxt "tfrmserverlog.lblrecordscaption.caption"
 msgid "Received records:"
 msgstr "Otrzymane zapisy:"
-
-#: tfrmserverlog.lblsent.caption
-#, fuzzy
-msgctxt "tfrmserverlog.lblsent.caption"
-msgid "0"
-msgstr ""
 
 #: tfrmserverlog.lblsentcaption.caption
 #, fuzzy

@@ -1,7 +1,7 @@
 """Merge a .pot into the language catalogues, adding what is new and touching nothing else.
 
 The harvest (tr4w_laz.pot -- 561 form properties plus the resourcestrings) is a
-TEMPLATE. The 16 language files do not know those strings exist. This adds them
+TEMPLATE. The language files do not know those strings exist. This adds them
 as untranslated entries so a translator gets ONE complete file instead of the
 417 they have now and a second batch of ~690 covering the same dialogs.
 
@@ -11,8 +11,13 @@ THE ONE RULE: AN EXISTING TRANSLATION IS NEVER TOUCHED.
 want to re-translate already completed items"). So it ADDS. It does not reword,
 does not clear a msgstr, and does not clear a fuzzy flag. Entries already in the
 catalogue are left exactly as they are, including their existing refs --
-po_rekey.py owns those. The only deletions are the two kinds merge() explains: a
-dependency's string (a unit the .lpi does not list) and an obsolete (#~) entry.
+po_rekey.py owns those. The only deletions are the three kinds merge() explains: a
+dependency's string (a unit the .lpi does not list), an obsolete (#~) entry, and
+an UNTRANSLATED entry whose English is not language -- 'F1', '8', '...' (see
+pofile.is_translatable; such a template entry is never added either).
+
+THERE IS NO ENGLISH CATALOGUE (2026-10-21). English is the msgid; the program
+loads no catalogue for it. A tr4w_en.po is not something this tool creates.
 
 AND "EXACTLY AS THEY ARE" MEANS BYTE FOR BYTE -- TRUE ONLY SINCE 2026-10-18.
 Before then the rewrite went through a pofile.write_po that rebuilt every entry
@@ -214,10 +219,29 @@ def merge(path, template, ours, apply_changes):
    dropped = before - len(existing)
    retired += dropped
 
+   # AND WHAT IS NOT LANGUAGE -- pofile.is_translatable, the one rule. An
+   # earlier harvest let in every .lfm caption, 'F1' and '8' and '...'
+   # included, and Weblate offered them to translators (2026-10-21). Removed
+   # only while EMPTY: a msgstr someone wrote is kept and reported, because
+   # deciding it is noise is a person's call, not this tool's.
+   kept = []
+   for e in existing:
+      if pofile.is_translatable(e.source):
+         kept.append(e)
+      elif e.target.strip():
+         kept.append(e)
+         print('  %s: KEPT %r -- not language, but it carries %r'
+               % (os.path.basename(path), e.source, e.target))
+      else:
+         retired += 1
+   existing = kept
+
    added = carried = skipped = 0
    for t in template:
       if not t.source.strip():
          continue                      # the header
+      if not pofile.is_translatable(t.source):
+         continue                      # 'F1', '8', '...': see pofile.is_translatable
       if is_known(t, seen_ids, seen_sources):
          continue                      # already known -- leave it alone
       if is_third_party(t, ours):

@@ -4823,66 +4823,6 @@ msgstr "十号"
 msgid "Zone"
 msgstr "区"
 
-#: tfrmfunctionkeys.pnlf1.caption
-#, fuzzy
-msgid "F1"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf10.caption
-#, fuzzy
-msgid "F10"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf11.caption
-#, fuzzy
-msgid "F11"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf12.caption
-#, fuzzy
-msgid "F12"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf2.caption
-#, fuzzy
-msgid "F2"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf3.caption
-#, fuzzy
-msgid "F3"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf4.caption
-#, fuzzy
-msgid "F4"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf5.caption
-#, fuzzy
-msgid "F5"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf6.caption
-#, fuzzy
-msgid "F6"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf7.caption
-#, fuzzy
-msgid "F7"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf8.caption
-#, fuzzy
-msgid "F8"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf9.caption
-#, fuzzy
-msgid "F9"
-msgstr ""
-
 #: tfrmhamscore.btnpushnow.caption
 #, fuzzy
 msgid "Push Now"
@@ -4902,11 +4842,6 @@ msgstr "中分数"
 #, fuzzy
 msgid "Queued contacts:"
 msgstr "队列联系人 :"
-
-#: tfrmhamscore.lblqueuevalue.caption
-#, fuzzy
-msgid "--"
-msgstr ""
 
 #: tfrmhamscore.lblstatustitle.caption
 #, fuzzy
@@ -5084,11 +5019,6 @@ msgctxt "tfrmmmtty.caption"
 msgid "MMTTY"
 msgstr "门蒂"
 
-#: tfrmmp3recorder.btncontrol.caption
-#, fuzzy
-msgid "..."
-msgstr ""
-
 #: tfrmmp3recorder.chkrecord.caption
 #, fuzzy
 msgid "Record"
@@ -5141,20 +5071,10 @@ msgstr "我的电话"
 msgid "Pause"
 msgstr "暂停"
 
-#: tfrmpanadapter.btnspannarrow.caption
-#, fuzzy
-msgid "-"
-msgstr ""
-
 #: tfrmpanadapter.btnspannarrow.hint
 #, fuzzy
 msgid "Narrower span (zoom in)"
 msgstr "缩小间距( 区间)"
-
-#: tfrmpanadapter.btnspanwide.caption
-#, fuzzy
-msgid "+"
-msgstr ""
 
 #: tfrmpanadapter.btnspanwide.hint
 #, fuzzy
@@ -6966,16 +6886,6 @@ msgctxt "tradioeditform.lbluser.caption"
 msgid "User name"
 msgstr "用户名"
 
-#: tradioeditform.optdata7.caption
-#, fuzzy
-msgid "7"
-msgstr ""
-
-#: tradioeditform.optdata8.caption
-#, fuzzy
-msgid "8"
-msgstr ""
-
 #: tradioeditform.optparityeven.caption
 #, fuzzy
 msgctxt "tradioeditform.optparityeven.caption"
@@ -6993,16 +6903,6 @@ msgstr "无"
 msgctxt "tradioeditform.optparityodd.caption"
 msgid "Odd"
 msgstr "单数"
-
-#: tradioeditform.optstop1.caption
-#, fuzzy
-msgid "1"
-msgstr ""
-
-#: tradioeditform.optstop2.caption
-#, fuzzy
-msgid "2"
-msgstr ""
 
 #: tradioeditform.tabadvanced.caption
 #, fuzzy
@@ -7425,15 +7325,6 @@ msgstr "创建和使用新日志"
 #, fuzzy
 msgid "Get server log"
 msgstr "获取服务器日志"
-
-#: tfrmserverlog.lblbytes.caption
-#: tfrmserverlog.lblqsos.caption
-#: tfrmserverlog.lblrecords.caption
-#: tfrmserverlog.lblsent.caption
-#, fuzzy
-msgctxt "tfrmserverlog.lblbytes.caption"
-msgid "0"
-msgstr ""
 
 #: tfrmtelnet.btnconfigure.caption
 #: utr4wstrings.tc_configure_ellipsis
