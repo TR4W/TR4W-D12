@@ -1,14 +1,17 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: TR4W\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"PO-Revision-Date: 2026-10-21 13:38+0000\n"
+"Last-Translator: Weblate Admin <weblate.admin@bettersoftwaresolutions.com>\n"
+"Language-Team: Spanish <http://weblate.bettersoftwaresolutions.com/projects/"
+"tr4w/help-text/es/>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: es\n"
 "X-Source-Language: en\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 2026.10.1\n"
 
 #. Config command: ALL CW MESSAGES CHAINABLE   (default: FALSE)
 msgctxt "TC_HELP_ALL_CW_MESSAGES_CHAINABLE"
@@ -653,10 +656,9 @@ msgid "The base address of parallel port LPT3 (PARALLEL 3)."
 msgstr "La dirección base del puerto paralelo LPT3 (PARALLEL 3)."
 
 #. Config command: MAIN CALLSIGN   (default: NONE)
-#, fuzzy
 msgctxt "TC_HELP_MAIN_CALLSIGN"
 msgid ""
-msgstr ""
+msgstr "`"
 
 #. Config command: MAIN FONT   (default: Arial)
 msgctxt "TC_HELP_MAIN_FONT"
@@ -2252,108 +2254,86 @@ msgctxt "TC_HELP_YCCC_SO2R_ENABLE"
 msgid "If TRUE, the YCCC SO2R box is supported for switching radio audio streams and other steps involving two-radio mode."
 msgstr "Si TRUE, la caja YCCC SO2R es compatible para cambiar las secuencias de audio de radio y otros pasos que implican el modo de dos radios."
 
-#. Section ADD DOMESTIC COUNTRY is not in the English file; retained so nothing is lost.
 #~ msgctxt "TC_HELP_ADD_DOMESTIC_COUNTRY"
 #~ msgid "Valores: identificador de país válido. Cuando TR4W está tratando algunos países como multiplicadores nacionales y al resto de países de forma distinta, puede añadir países a la lista de los que se procesan como multiplicadores nacionales. Normalmente esta lista se configura mediante la sentencia CONTEST, pero puede utilizar este comando varias veces para añadir tantos países a la lista nacional como desee. Puede vaciar la lista por defecto utilizando primero el comando ADD DOMESTIC COUNTRY = CLEAR y, a continuación, añadiendo los que desee. Asegúrese de que los identificadores de país que añada coincidan con los de su fichero CTY.DAT."
 #~ msgstr "Valores: identificador de país válido. Cuando TR4W está tratando algunos países como multiplicadores nacionales y al resto de países de forma distinta, puede añadir países a la lista de los que se procesan como multiplicadores nacionales. Normalmente esta lista se configura mediante la sentencia CONTEST, pero puede utilizar este comando varias veces para añadir tantos países a la lista nacional como desee. Puede vaciar la lista por defecto utilizando primero el comando ADD DOMESTIC COUNTRY = CLEAR y, a continuación, añadiendo los que desee. Asegúrese de que los identificadores de país que añada coincidan con los de su fichero CTY.DAT."
 
-#. Section BAND MAP CUTOFF FREQUENCY is not in the English file; retained so nothing is lost.
 #~ msgctxt "TC_HELP_BAND_MAP_CUTOFF_FREQUENCY"
 #~ msgid "Permite cambiar, banda por banda, la frecuencia por debajo de la cual se asume que el modo es CW y por encima de la cual se asume que es SSB. Cuando introduce una frecuencia (en Hz), TR4W deducirá automáticamente la banda para la que está definiendo una nueva frecuencia de corte. Para definir nuevas frecuencias de corte para varias bandas, simplemente incluya el comando tantas veces como sea necesario en su fichero *.CFG, una vez por frecuencia de corte."
 #~ msgstr "Permite cambiar, banda por banda, la frecuencia por debajo de la cual se asume que el modo es CW y por encima de la cual se asume que es SSB. Cuando introduce una frecuencia (en Hz), TR4W deducirá automáticamente la banda para la que está definiendo una nueva frecuencia de corte. Para definir nuevas frecuencias de corte para varias bandas, simplemente incluya el comando tantas veces como sea necesario en su fichero *.CFG, una vez por frecuencia de corte."
 
-#. Section BANDMAP ITEM HEIGHT is not in the English file; retained so nothing is lost.
 #~ msgctxt "TC_HELP_BANDMAP_ITEM_HEIGHT"
 #~ msgid "Altura del elemento en la ventana del bandmap."
 #~ msgstr "Altura del elemento en la ventana del bandmap."
 
-#. Section BANDMAP ITEM WIDTH is not in the English file; retained so nothing is lost.
 #~ msgctxt "TC_HELP_BANDMAP_ITEM_WIDTH"
 #~ msgid "Anchura del elemento en la ventana del bandmap. Puede ir de cero a cinco."
 #~ msgstr "Anchura del elemento en la ventana del bandmap. Puede ir de cero a cinco."
 
-#. Section CALL WINDOW SHOW ALL SPOTS is not in the English file; retained so nothing is lost.
 #~ msgctxt "TC_HELP_CALL_WINDOW_SHOW_ALL_SPOTS"
 #~ msgid "Cuando es TRUE, al sintonizar en modo S&P, todos los indicativos que TR4W conozca aparecerán en la ventana de llamada aunque no aparezcan en el bandmap. Por ejemplo, si tiene BAND MAP DUPE DISPLAY establecido a FALSE, los duplicados no aparecerán en el bandmap, pero seguirán apareciendo en la ventana de llamada si CALL WINDOW SHOW ALL SPOTS es TRUE."
 #~ msgstr "Cuando es TRUE, al sintonizar en modo S&P, todos los indicativos que TR4W conozca aparecerán en la ventana de llamada aunque no aparezcan en el bandmap. Por ejemplo, si tiene BAND MAP DUPE DISPLAY establecido a FALSE, los duplicados no aparecerán en el bandmap, pero seguirán apareciendo en la ventana de llamada si CALL WINDOW SHOW ALL SPOTS es TRUE."
 
-#. Section COUNTRY INFORMATION FILE is not in the English file; retained so nothing is lost.
 #~ msgctxt "TC_HELP_COUNTRY_INFORMATION_FILE"
 #~ msgid "Este comando le permite especificar un fichero que tenga hasta cinco líneas de texto asociadas a un país (los países se definen en el fichero CTY.DAT). El texto se mostrará en la ventana del log editable cuando trabaje la estación. El formato del fichero consiste en el carácter identificador del país (como se usa en el fichero CTY.DAT) en la primera línea, seguido de hasta cinco líneas de texto. Una línea en blanco indica el final de los datos y puede ir seguida del siguiente identificador de país. No hay límite en el tamaño del fichero ni en el número de países."
 #~ msgstr "Este comando le permite especificar un fichero que tenga hasta cinco líneas de texto asociadas a un país (los países se definen en el fichero CTY.DAT). El texto se mostrará en la ventana del log editable cuando trabaje la estación. El formato del fichero consiste en el carácter identificador del país (como se usa en el fichero CTY.DAT) en la primera línea, seguido de hasta cinco líneas de texto. Una línea en blanco indica el final de los datos y puede ir seguida del siguiente identificador de país. No hay límite en el tamaño del fichero ni en el número de países."
 
-#. Section DISPLAY REFRESH is not in the English file; retained so nothing is lost.
 #~ msgctxt "TC_HELP_DISPLAY_REFRESH"
 #~ msgid "Número de spots almacenados en búfer en el rango (1-10) antes de que se produzca un refresco de pantalla. Esto reduce el parpadeo de la pantalla pero también reduce la precisión de los spots ya que el búfer y la pantalla pueden desincronizarse. Al almacenar spots en búfer es importante seleccionar spots lo más próximos posible al momento del refresco."
 #~ msgstr "Número de spots almacenados en búfer en el rango (1-10) antes de que se produzca un refresco de pantalla. Esto reduce el parpadeo de la pantalla pero también reduce la precisión de los spots ya que el búfer y la pantalla pueden desincronizarse. Al almacenar spots en búfer es importante seleccionar spots lo más próximos posible al momento del refresco."
 
-#. Section FLOPPY FILE SAVE FREQUENCY is not in the English file; retained so nothing is lost.
 #~ msgctxt "TC_HELP_FLOPPY_FILE_SAVE_FREQUENCY"
 #~ msgid "Valores: entero (nº de contactos). Este comando le permite controlar la frecuencia con la que TR4W guarda el log actual en otro fichero. Un valor de 0 (el valor por defecto) desactiva esta función."
 #~ msgstr "Valores: entero (nº de contactos). Este comando le permite controlar la frecuencia con la que TR4W guarda el log actual en otro fichero. Un valor de 0 (el valor por defecto) desactiva esta función."
 
-#. Section FLOPPY FILE SAVE NAME is not in the English file; retained so nothing is lost.
 #~ msgctxt "TC_HELP_FLOPPY_FILE_SAVE_NAME"
 #~ msgid "Este comando le permite hacer copias de seguridad del fichero *.TRW periódicamente durante el concurso a otra unidad de disco. Para habilitar esta función, establezca FLOPPY FILE SAVE FREQUENCY igual al número de contactos que desea hacer entre copias. El nombre del fichero al que se hará la copia se controla con el comando FLOPPY FILE SAVE NAME. Los nombres de estos comandos pueden inducir a error: puede hacer copias a cualquier unidad; incluso puede hacer copias al directorio de trabajo actual siempre que el nombre del fichero de copia sea distinto de *.TRW."
 #~ msgstr "Este comando le permite hacer copias de seguridad del fichero *.TRW periódicamente durante el concurso a otra unidad de disco. Para habilitar esta función, establezca FLOPPY FILE SAVE FREQUENCY igual al número de contactos que desea hacer entre copias. El nombre del fichero al que se hará la copia se controla con el comando FLOPPY FILE SAVE NAME. Los nombres de estos comandos pueden inducir a error: puede hacer copias a cualquier unidad; incluso puede hacer copias al directorio de trabajo actual siempre que el nombre del fichero de copia sea distinto de *.TRW."
 
-#. Section FREQUENCY MEMORY is not in the English file; retained so nothing is lost.
 #~ msgctxt "TC_HELP_FREQUENCY_MEMORY"
 #~ msgid "Valores: frecuencia (kHz). Cuando TR4W cambia por primera vez a una banda/modo, tiene una frecuencia a la que irá por defecto. Use este comando si desea cambiar el valor por defecto. Use este comando una vez por cada banda que desee cambiar. Si está especificando una frecuencia que podría procesarse como frecuencia de CW pero que desea que se use como frecuencia de SSB, anteponga SSB (p. ej.: FREQUENCY MEMORY = SSB 7050). Tenga en cuenta que estos valores por defecto se actualizarán con las frecuencias reales utilizadas en los cambios posteriores de banda/modo si establece FREQUENCY MEMORY ENABLE a TRUE."
 #~ msgstr "Valores: frecuencia (kHz). Cuando TR4W cambia por primera vez a una banda/modo, tiene una frecuencia a la que irá por defecto. Use este comando si desea cambiar el valor por defecto. Use este comando una vez por cada banda que desee cambiar. Si está especificando una frecuencia que podría procesarse como frecuencia de CW pero que desea que se use como frecuencia de SSB, anteponga SSB (p. ej.: FREQUENCY MEMORY = SSB 7050). Tenga en cuenta que estos valores por defecto se actualizarán con las frecuencias reales utilizadas en los cambios posteriores de banda/modo si establece FREQUENCY MEMORY ENABLE a TRUE."
 
-#. Section HAMLIB PATH is not in the English file; retained so nothing is lost.
 #~ msgctxt "TC_HELP_HAMLIB_PATH"
 #~ msgid "Esta es la ubicación del ejecutable rigctld de HamLib y su DLL asociada (libhamlib-4.dll)."
 #~ msgstr "Esta es la ubicación del ejecutable rigctld de HamLib y su DLL asociada (libhamlib-4.dll)."
 
-#. Section HAMLIB RIGCTLD IP ADDRESS is not in the English file; retained so nothing is lost.
 #~ msgctxt "TC_HELP_HAMLIB_RIGCTLD_IP_ADDRESS"
 #~ msgid "TR4W se conecta a rigctld a través de un socket TCP/IP. Esta es la dirección IP del ordenador donde se ejecuta rigctld. Normalmente será siempre 127.0.0.1 pero la opción está disponible para casos especiales en los que hamlib se ejecuta en otro ordenador."
 #~ msgstr "TR4W se conecta a rigctld a través de un socket TCP/IP. Esta es la dirección IP del ordenador donde se ejecuta rigctld. Normalmente será siempre 127.0.0.1 pero la opción está disponible para casos especiales en los que hamlib se ejecuta en otro ordenador."
 
-#. Section HAMLIB RIGCTLD PORT is not in the English file; retained so nothing is lost.
 #~ msgctxt "TC_HELP_HAMLIB_RIGCTLD_PORT"
 #~ msgid "TR4W se conecta a rigctld a través de un socket TCP/IP. Este es el socket en el que rigctld escucha conexiones. El valor por defecto en rigctld es 4532."
 #~ msgstr "TR4W se conecta a rigctld a través de un socket TCP/IP. Este es el socket en el que rigctld escucha conexiones. El valor por defecto en rigctld es 4532."
 
-#. Section HAMLIB RIGCTLD RUN AT STARTUP is not in the English file; retained so nothing is lost.
 #~ msgctxt "TC_HELP_HAMLIB_RIGCTLD_RUN_AT_STARTUP"
 #~ msgid "Indica a TR4W que lance el proceso rigctld cuando TR4W se inicia y que lo cierre cuando TR4W se cierra. En algunos casos, puede que se desee utilizar un rigctld iniciado previamente. Esto debería ser siempre TRUE salvo que tenga un caso muy específico y sepa bien lo que está haciendo."
 #~ msgstr "Indica a TR4W que lance el proceso rigctld cuando TR4W se inicia y que lo cierre cuando TR4W se cierra. En algunos casos, puede que se desee utilizar un rigctld iniciado previamente. Esto debería ser siempre TRUE salvo que tenga un caso muy específico y sepa bien lo que está haciendo."
 
-#. Section MULTI MULTS ONLY is not in the English file; retained so nothing is lost.
 #~ msgctxt "TC_HELP_MULTI_MULTS_ONLY"
 #~ msgid "Si está utilizando una red de ordenadores para una operación multi, este comando determinará si todos los QSOs se distribuyen por la red, o solo aquellos que son nuevos multiplicadores."
 #~ msgstr "Si está utilizando una red de ordenadores para una operación multi, este comando determinará si todos los QSOs se distribuyen por la red, o solo aquellos que son nuevos multiplicadores."
 
-#. Section RADIO ONE SCORE is not in the English file; retained so nothing is lost.
 #~ msgctxt "TC_HELP_RADIO_ONE_SCORE"
 #~ msgid "Tras conectar la radio, este comando se envía para inicializar la radio con los ajustes que el operador desee. Puede usarse para configurar el IF Shift, velocidad de CW por defecto u otros comandos. Por el momento, esto solo funciona con radios Kenwood, Elecraft y Yaesu."
 #~ msgstr "Tras conectar la radio, este comando se envía para inicializar la radio con los ajustes que el operador desee. Puede usarse para configurar el IF Shift, velocidad de CW por defecto u otros comandos. Por el momento, esto solo funciona con radios Kenwood, Elecraft y Yaesu."
 
-#. Section RADIO TCP SERVER PORT is not in the English file; retained so nothing is lost.
 #~ msgctxt "TC_HELP_RADIO_TCP_SERVER_PORT"
 #~ msgid "Este es el puerto en el que TR4W escucha entradas para interactuar con la radio que está controlando. Implementa el protocolo DXLab Commander de modo que OTROS programas pueden controlar la radio que TR4W está utilizando. Tenga en cuenta que esto NO es una conexión para permitir que TR4W controle una radio mediante DXLab Commander. Es una conexión entrante pensada principalmente para que WSJT-X controle la radio actual de TR4W."
 #~ msgstr "Este es el puerto en el que TR4W escucha entradas para interactuar con la radio que está controlando. Implementa el protocolo DXLab Commander de modo que OTROS programas pueden controlar la radio que TR4W está utilizando. Tenga en cuenta que esto NO es una conexión para permitir que TR4W controle una radio mediante DXLab Commander. Es una conexión entrante pensada principalmente para que WSJT-X controle la radio actual de TR4W."
 
-#. Section RADIO TWO STARTUP COMAND is not in the English file; retained so nothing is lost.
 #~ msgctxt "TC_HELP_RADIO_TWO_STARTUP_COMAND"
 #~ msgid "Tras conectar la radio, este comando se envía para inicializar la radio con los ajustes que el operador desee. Puede usarse para configurar el IF Shift, velocidad de CW por defecto u otros comandos. Por el momento, esto solo funciona con radios Kenwood, Elecraft y Yaesu."
 #~ msgstr "Tras conectar la radio, este comando se envía para inicializar la radio con los ajustes que el operador desee. Puede usarse para configurar el IF Shift, velocidad de CW por defecto u otros comandos. Por el momento, esto solo funciona con radios Kenwood, Elecraft y Yaesu."
 
-#. Section TAIL END KEY is not in the English file; retained so nothing is lost.
 #~ msgctxt "TC_HELP_TAIL_END_KEY"
 #~ msgid "Valores: cualquier tecla. La TAIL END KEY le permite responder a los tail-enders al finalizar un QSO en modo CQ."
 #~ msgstr "Valores: cualquier tecla. La TAIL END KEY le permite responder a los tail-enders al finalizar un QSO en modo CQ."
 
-#. Section TUNE WITH DITS is not in the English file; retained so nothing is lost.
 #~ msgctxt "TC_HELP_TUNE_WITH_DITS"
 #~ msgid "Si este parámetro es TRUE, TR4W envía una cadena de dits a 75 WPM al pulsar ctrl-Left-Shift."
 #~ msgstr "Si este parámetro es TRUE, TR4W envía una cadena de dits a 75 WPM al pulsar ctrl-Left-Shift."
 
-#. Section UDP BROADCAST PORT is not in the English file; retained so nothing is lost.
 #~ msgctxt "TC_HELP_UDP_BROADCAST_PORT"
 #~ msgid "*** OBSOLETO *** El puerto de broadcast UDP al que se envían todos los datos (excepto la información del rotor). No utilice este. Use los puertos individuales que se indican a continuación."
 #~ msgstr "*** OBSOLETO *** El puerto de broadcast UDP al que se envían todos los datos (excepto la información del rotor). No utilice este. Use los puertos individuales que se indican a continuación."
-
