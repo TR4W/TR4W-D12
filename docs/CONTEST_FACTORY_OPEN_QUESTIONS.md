@@ -51,7 +51,6 @@ in section 4. One line each -- the full text is further down.
 - **Q127** Four more Cabrillo renames from UA9QCQ: OZCHR->RRTC, the RCC field days -> FD-RCC-CW/SSB, RF-CUP-DIG -> SRR-CUP-DIGI, GAGARIN-CUP -> GC?
 - **Q128** Polish Kill CW: "Przełącz CW" or D7's shipped "Zakończ CW"?
 - **Q129** Seven machine catalogues show "Ping [SERVER ADDRESS]" in English -- leave, or translate?
-- **Q130** Two Spanish typos in reviewed entries -- fix them?
 
 **Raised 2026-10-22, from the Russian rule pages NY4I saved (section 1, "Raised 2026-10-19")**
 
@@ -555,7 +554,8 @@ different event), so Q123 still needs the SRR digital cup's own rules.
 - **Q130** Two typos in REVIEWED Spanish entries: `tc_repeating`
   "AvPàg/RePàg" -> "AvPág/RePág"; `tc_improperdomesitcqth` "Impropìo QTH
   domertico!!" -> "Impropio QTH doméstico!!". *Recommended: fix.*
-  **Answer:**
+  **Answer:** (NY4I, 2026-10-22) *"proposed changes accepted"* -- both fixed in
+  `i18n/tr4w_es.po`, the old text kept in a dated `#` note on each entry.
 
 ---
 

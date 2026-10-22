@@ -1371,12 +1371,13 @@ msgctxt "TC_CQTOTAL"
 msgid "CQ total: %u"
 msgstr "CQ total: %u"
 
+# 2026-10-22 NY4I approved (Q130); was: "Repitiendo %s  Tiempo escucha = %u msec - AvPàg/RePàg para ajustar o ESCAPE"; typo: the key labels take an acute accent
 #. Section: LOGWIND
 #: utr4wstrings:tc_repeating tr4w/src/lang/tr4w_consts_eng.pas:234
 #: utr4wstrings.tc_repeating
 msgctxt "TC_REPEATING"
 msgid "Repeating %s  Listen time = %u msec - PgUp/Dn to adjust or ESCAPE"
-msgstr "Repitiendo %s  Tiempo escucha = %u msec - AvPàg/RePàg para ajustar o ESCAPE"
+msgstr "Repitiendo %s  Tiempo escucha = %u msec - AvPág/RePág para ajustar o ESCAPE"
 
 #. Section: LOGWIND
 #: utr4wstrings:tc_newtour tr4w/src/lang/tr4w_consts_eng.pas:235
@@ -1507,12 +1508,13 @@ msgctxt "TC_NOTENOUGHINFOINEXCHANGE"
 msgid "Not enough info in exchange!!"
 msgstr "Insuficiente info en intercambio!!"
 
+# 2026-10-22 NY4I approved (Q130); was: "Impropìo QTH domertico!!"; typo: impropio, doméstico
 #. Section: LOGSTUFF
 #: utr4wstrings:tc_improperdomesitcqth tr4w/src/lang/tr4w_consts_eng.pas:266
 #: utr4wstrings.tc_improperdomesitcqth
 msgctxt "TC_IMPROPERDOMESITCQTH"
 msgid "Improper domestic QTH!!"
-msgstr "Impropìo QTH domertico!!"
+msgstr "Impropio QTH doméstico!!"
 
 #. Section: LOGSTUFF
 #: utr4wstrings:tc_improperdomesitcqthormissingname
