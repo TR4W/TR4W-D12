@@ -186,3 +186,4 @@
 "YO-DX-HF","both-agree","both sources agree -- proposed is used unless you change it","80;40;20;15;10","CW;SSB","98","80, 40, 20, 15, 10m","CW, SSB","80;40;20;15;10","","",""
 "YOTA","both-agree","both sources agree -- proposed is used unless you change it","80;40;20;15;10","CW;SSB","696","80, 40, 20, 15, 10m","CW, SSB","80;40;20;15;10","","",""
 "YUDX","both-agree","both sources agree -- proposed is used unless you change it","80;40;20;15;10","CW;SSB","322","80, 40, 20, 15, 10m","CW, SSB","80;40;20;15;10","","",""
+"URC-DX-RTTY","sponsor-rules","none -- the sponsor's rules state both (docs/ContestRules/URC/rules.md)","","","","","","160;80;40;20;15;10","160;80;40;20;15;10","RTTY","new contest 2026-10-22 (Q138), registered by id; stated in uContestURCDXRTTY.UsesBand and RunsInMode"

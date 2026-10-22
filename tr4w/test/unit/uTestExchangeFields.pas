@@ -527,7 +527,8 @@ begin
          end;
       RADIOYOC:
          begin
-         Result := 'QSONumber';
+         (* Q136 (2026-10-22): age + serial. *)
+         Result := 'Age QSONumber';
          end;
       NZFIELDDAY:
          begin
@@ -548,8 +549,10 @@ procedure TExchangeFieldsTests.Test_EveryContestStatesItsPinnedFields;
 const
    (* HOW MANY DISTINCT FIELD SETS THE PROGRAM MARKS, over every contest at
       every roster station: the machine's 28 for the shapes registered
-      contests run, the empty set among them. *)
-   DISTINCT_SETS = 28;
+      contests run, the empty set among them -- 27 since Q136 (2026-10-22):
+      RADIO-YOC was the one contest whose set was the serial alone
+      (ExchangeFieldsQSONumber), and it receives age + serial now. *)
+   DISTINCT_SETS = 27;
 var
    s: TPinStation;
    c: ContestType;

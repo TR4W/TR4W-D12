@@ -8089,10 +8089,9 @@ begin
   QuickDisplay(IntToStr(GetTickCount64 - T1));
   // showint(m);
 {$IFEND}
-  if LegacyContestOf(Contest) = RADIOYOC then // 4.53.2 // 4.72.9
-     begin
-     PrevNr := copy(IntToStr(TempRXData.NumberReceived), 1, 3); // 4.53.2
-     end;
+  (* THE RADIO-YOC PREVIOUS-NUMBER RECOVERY IS GONE (Q136, 2026-10-22): the
+    Popov Youth Cup's exchange is age + serial under the SRR 2026 regulation,
+    not the previous QSO's received number, and no other contest sent one. *)
 end;
 
 (* WHERE A COLUMN'S TEXT GOES.

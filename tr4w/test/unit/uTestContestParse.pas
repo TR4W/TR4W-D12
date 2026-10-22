@@ -623,8 +623,18 @@ begin
          transcription refused it; the country's RussianID does not. *)
       CheckTrue(ContestIdentity(c).InitialExchangeFromCall('R1FJL', 'R1FJ', answer),
                 string(ContestTypeSA[c]) + ': Franz Josef Land is Russian (Q50)');
-      CheckEquals(GetRussiaOblastID('R1FJL'), answer,
-                  string(ContestTypeSA[c]) + ': and gets the call''s oblast');
+      if c = RUSSIANDX then
+         begin
+         (* Q97 (2026-10-22): RDXC rule 7.3 (2027) makes FJL its own oblast,
+            FJ -- not the call's "1F" read as St Petersburg. Pinned in full
+            by uTestContestRussianRules2026Oct. *)
+         CheckEquals('FJ', answer, 'RDXC: Franz Josef Land is FJ (Q97)');
+         end
+      else
+         begin
+         CheckEquals(GetRussiaOblastID('R1FJL'), answer,
+                     string(ContestTypeSA[c]) + ': and gets the call''s oblast');
+         end;
       CheckTrue(ContestIdentity(c).InitialExchangeFromCall('UA3ABC/P', 'UA', answer),
                 string(ContestTypeSA[c]) + ': a portable Russian station is Russian');
       CheckEquals('', answer,

@@ -216,7 +216,10 @@ $CEILINGS = @{
    # (uCallSignRoutines.RussianStationOblast): logedit 4 -> 3 (the initial
    # exchange's `Contest in [RUSSIANDX, RDA, RU3AXMEMORIAL]` fallback is each
    # contest's InitialExchangeFromCall).
-   'mainunit.pas'          = 1
+   #
+   # Q136, 2026-10-22 -- RADIO-YOC's exchange is age + serial (SRR 2026
+   # regulation): mainunit 1 -> 0 (the log loader's RADIOYOC previous-number
+   # recovery is deleted; no contest sends a previous number). Unlisted now.
    'trdos\logedit.pas'     = 3
    'trdos\postunit.pas'    = 1
 }
@@ -255,7 +258,10 @@ $CEILINGS = @{
 # M10 S3, 2026-10-14: unchanged at 5. The total fell 7 -> 6 (the legacy
 # scoring case's RU3AX test, deleted with the case); 5 is still below it, and
 # still far above what a parser that read nothing would find.
-$TOTAL_FLOOR  = 5
+#
+# Q136, 2026-10-22: 5 -> 3. The total fell 5 -> 4 (MainUnit's RADIOYOC test,
+# deleted with the previous-number exchange); 3 is about 80% of it.
+$TOTAL_FLOOR  = 3
 $MEMBER_FLOOR = 130
 
 # --------------------------------------------------------------------------

@@ -151,7 +151,8 @@ var
   (* Created in this unit's initialization, freed in its finalization. *)
   CallsignsList                         : TCallsignsList;
   (* THE DUPE SHEET FOR A CONTEST WHOSE DUPE KEY IS MORE THAN THE CALL --
-    Q118 (TContestBase.DupeKeyQualifier: a state party's received QTH).
+    Q118 (TContestBase.DupeKeyQualifier: a state party's received QTH, or
+    the tour of a contest that has tours, Q136).
     Used ONLY for the dupe question of a logged QSO (LOGEDIT.QSOIsADupe),
     never for partials, the dupe-sheet window, the worked-station count or
     a check made before the exchange exists (the call window, AUTO DUPE,

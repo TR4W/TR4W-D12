@@ -506,10 +506,12 @@ begin
          end;
       RADIOYOC:
          begin
-         Result := Pick(aVariant, '000007    ',
-                     '000123    ',
-                     '0004567   ',
-                     '000007    ');
+         (* Q136 (2026-10-22): the age (MY STATE) and the serial -- the
+            Youth Championship RF's helper and rows. *)
+         Result := Pick(aVariant, 'FL 007 ',
+                     '   123 ',
+                     'ABCDEFGHIJKLMNOPQRST 4567 ',
+                     'TRC 007 ');
          end;
    else
       begin

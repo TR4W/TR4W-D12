@@ -1280,23 +1280,25 @@ begin
          end;
       RADIOYOC:
          begin
+         (* Q136 (2026-10-22): the age (MY STATE) + serial exchange, the
+            Youth Championship RF's helpers -- its rows. *)
          Take(aVariant,
-              ['3210007   ',
-               '0000123   ',
-               '45674567   ',
-               '3210007   ',
-               '3210007   ',
-               '4294967293-0005  ',
-               '3210007   ',
-               '3210007   '],
-              ['00000012',
-               '00000000',
-               '00040567',
-               '00000012',
-               '00000012',
-               '0000-0001',
-               '00000012',
-               '00000012'],
+              ['FL 007 ',
+               '   123 ',
+               'ABCDEFGHIJKLMNOPQRSTUVWXYZ 4567 ',
+               'TRC 007 ',
+               'FL 007 ',
+               '99 -05 ',
+               '   007 ',
+               'FL 007 '],
+              [' 33  0012',
+               ' 0   0000',
+               ' 99  4567',
+               ' 33  0012',
+               ' 33  0012',
+               ' 33  -001',
+               ' 33  0012',
+               ' 33  0012'],
               aSent, aRec);
          end;
       PAQSOPARTY, VAQP:
@@ -1429,7 +1431,10 @@ begin
    CheckHelper('CabrilloSentRSTQSONumber', CabrilloSentRSTQSONumber, APSPRINT, psUS, True);
    CheckHelper('CabrilloSentStateZoneQSONumber', CabrilloSentStateZoneQSONumber, RFCHAMPIONSHIPCW, psUS, True);
    CheckHelper('CabrilloSentRSTZone', CabrilloSentRSTZone, EUROPEANHFC, psUS, True);
-   CheckHelper('CabrilloSentQSONumberPreviousQSONumber', CabrilloSentQSONumberPreviousQSONumber, RADIOYOC, psUS, True);
+   (* CabrilloSentQSONumberPreviousQSONumber and its received twin have no
+      contest since Q136 (2026-10-22): RADIO-YOC, their one user, sends age
+      + serial. Not pinned here; the helpers are left for a separate
+      deletion. *)
    CheckHelper('CabrilloSentRSTStateOrQSONumber', CabrilloSentRSTStateOrQSONumber, ARI_DX, psUS, True);
    CheckHelper('CabrilloSentNotHandled', CabrilloSentNotHandled, ALLJA, psUS, True);
 
@@ -1459,7 +1464,6 @@ begin
    CheckHelper('CabrilloReceivedRSTQTHOrDXQTH', CabrilloReceivedRSTQTHOrDXQTH, LABRE, psUS, False);
    CheckHelper('CabrilloReceivedZoneQSONumber', CabrilloReceivedZoneQSONumber, RFCHAMPIONSHIPCW, psUS, False);
    CheckHelper('CabrilloReceivedRSTZone', CabrilloReceivedRSTZone, EUROPEANHFC, psUS, False);
-   CheckHelper('CabrilloReceivedQSONumberPreviousQSONumber', CabrilloReceivedQSONumberPreviousQSONumber, RADIOYOC, psUS, False);
    CheckHelper('CabrilloReceivedRSTQTHOrQSONumber', CabrilloReceivedRSTQTHOrQSONumber, ARI_DX, psUS, False);
    CheckHelper('CabrilloReceivedNotHandled', CabrilloReceivedNotHandled, ALLJA, psUS, False);
 end;

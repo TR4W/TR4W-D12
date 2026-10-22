@@ -4341,6 +4341,31 @@ begin
       end;
 end;
 
+(* FREE ONE OF THE LAZY DEFERRAL TARGETS (GNoticeArmer, GDeferrer) AT UNIT
+   FINALIZATION -- found 2026-10-22 as two unfreed 4-byte blocks in the checked
+   unit run, the first time a test (the URC DX one) reached an off-main-thread
+   element write.
+
+   ITS QUEUED CALLS GO FIRST. TApplication.Destroy drains the async queue, and it
+   runs AFTER this unit's finalization (Forms finalizes later), so a call still
+   queued against a freed target would run on freed memory. RemoveAsyncCalls
+   unqueues them; a write dropped at shutdown is what the shutting-down branches
+   above already do. Once the LCL has stopped the queue (AppDoNotCallAsyncQueue)
+   RemoveAsyncCalls raises, and nothing can run any more, so it is skipped. *)
+procedure FreeDeferralTarget(var aTarget: TObject);
+begin
+   if aTarget = nil then
+      begin
+      Exit;
+      end;
+   if (Application <> nil) and
+      not (AppDoNotCallAsyncQueue in Application.Flags) then
+      begin
+      Application.RemoveAsyncCalls(aTarget);
+      end;
+   FreeAndNil(aTarget);
+end;
+
 initialization
    (* THE SAME REGISTRATION uElementPanel MAKES, AND FOR THE SAME REASON.
 
@@ -4361,5 +4386,8 @@ finalization
    DoneCriticalSection(GPendingLock);
    // The overflow de-duplication list -- created on first use, so usually nil.
    FreeAndNil(GOverflowReported);
+   // The two deferral targets -- created on the first off-main-thread write.
+   FreeDeferralTarget(TObject(GNoticeArmer));
+   FreeDeferralTarget(TObject(GDeferrer));
 
 end.

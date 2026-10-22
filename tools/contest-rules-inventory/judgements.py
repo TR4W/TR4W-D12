@@ -186,12 +186,10 @@ ROUTINES = {
 # routine, regex over the code-only line); each must match at least one site.
 # The logsubs2 dupe-marking site (ActiveQSOPointMethod = AlwaysOnePointPerQSO)
 # left this list at M3 (2026-10-01): it asks TContestBase.MarksDupes now.
+# The LoadinLog RADIOYOC site (the previous QSO number) left this list with
+# Q136 (2026-10-22): the Popov Youth Cup's exchange is age + serial, and the
+# site is deleted.
 SITE_OVERRIDES = [
-   # Spelled `LegacyContestOf(Contest) = RADIOYOC` since Q108 S2 (2026-10-16):
-   # the global holds a registry handle and the rule site asks for its legacy
-   # member. Same site, same rule.
-   ("MainUnit.pas", "LoadinLog", r"\bLegacyContestOf\(\s*contest\s*\)\s*=\s*RADIOYOC\b",
-    ("exchange", new("SessionExchangeState (previous QSO number)"))),
 ]
 
 # THE EXCHANGE-SHAPE MACHINES (M11 S0a, plan F1 and 0.1). Each is keyed on the

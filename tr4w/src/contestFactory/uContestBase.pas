@@ -2398,19 +2398,37 @@ type
          parties" -- TContestStateQSOPartyBase answers True (DXLog's
          DOUBLE_QSO=PER_BAND_MODE_RCVD / _RECINFO for every one of them).
 
-         THE ONE VIRTUAL; DupeKeyQualifier, below, is derived from it and is
-         deliberately not virtual, so a class cannot say "qualified" while
-         answering no qualifier, or the reverse -- the shape CountyLineAllowed
-         uses. Asked of ContestIdentity (the answer must not depend on the
-         station; a class that ever makes it so must move LOGEDIT's callers to
+         ONE OF TWO VIRTUALS (DupeKeyTour, below, is the other);
+         DupeKeyQualifier, below, is derived from them and is deliberately not
+         virtual, so a class cannot say "qualified" while answering no
+         qualifier, or the reverse -- the shape CountyLineAllowed uses. Asked
+         of ContestIdentity (the answer must not depend on the station; a
+         class that ever makes it so must move LOGEDIT's callers to
          ActiveContest). Pinned by uTestNYQPRover. *)
       function DupeKeyIncludesReceivedQTH: boolean; virtual;
+
+      (* WHICH TOUR OF THE CONTEST aQso FALLS IN, FOR A CONTEST THAT ALLOWS A
+         REPEAT IN ANOTHER TOUR -- '' (the base): no tours, the dupe key is
+         what it always was. A non-empty text names the tour, from the QSO's
+         OWN logged time (a logged QSO reads its record), and joins the dupe
+         key through DupeKeyQualifier: the same call on the same band in
+         another tour is a NEW QSO, and on another band in the same tour it
+         already was (the dupe bits are per band). First stated by the Popov
+         Youth Cup (RADIO-YOC, SRR 2026 regulation, Q136, 2026-10-22).
+
+         A CHECK MADE BEFORE THE EXCHANGE EXISTS STILL ASKS THE CALL ALONE --
+         a station worked in tour 1 shows DUPE in the call window in tour 2
+         until the QSO is logged: information, not a gate (NY4I, 2026-10-18,
+         Q118). The answer must not depend on the station, as above. *)
+      function DupeKeyTour(const aQso: ContestExchange): string; virtual;
 
       (* THE TEXT, BESIDES THE CALL, THAT MAKES aQso A NEW QSO FOR DUPES --
          '' when DupeKeyIncludesReceivedQTH is False, else the QSO's own
          received QTH: the domestic QTH the contest's file resolved it to,
          else the text as typed (a DX station's DX), upper case; '' when
-         nothing was received, which is the call alone.
+         nothing was received, which is the call alone. Then the tour
+         (DupeKeyTour), when the contest has tours: '' plus a tour is the
+         tour alone.
 
          READ FROM THE RECORD, never from live state ("a logged QSO reads its
          record"), so the live check at LogContact, the log loader and the
@@ -4888,17 +4906,32 @@ begin
    Result := False;
 end;
 
+function TContestBase.DupeKeyTour(const aQso: ContestExchange): string;
+begin
+   (* No tours: the dupe key is what it always was -- see the declaration. *)
+   Result := '';
+end;
+
 function TContestBase.DupeKeyQualifier(const aQso: ContestExchange): string;
+var
+   tour: string;
 begin
    Result := '';
-   if not DupeKeyIncludesReceivedQTH then
+   if DupeKeyIncludesReceivedQTH then
       begin
-      Exit;
+      Result := UpperCase(Trim(string(aQso.DomesticQTH)));
+      if Result = '' then
+         begin
+         Result := UpperCase(Trim(string(aQso.QTHString)));
+         end;
       end;
-   Result := UpperCase(Trim(string(aQso.DomesticQTH)));
-   if Result = '' then
+
+   (* THE TOUR, AFTER A SEPARATOR NEITHER A QTH NOR A TOUR TEXT CAN HOLD, so
+      a QTH and a tour can never spell another QTH's key. *)
+   tour := DupeKeyTour(aQso);
+   if tour <> '' then
       begin
-      Result := UpperCase(Trim(string(aQso.QTHString)));
+      Result := Result + #1 + tour;
       end;
 end;
 

@@ -1668,10 +1668,12 @@ begin
          the IN7QPNE composite (2026-10-16, uTestQSOPartyBands); Nebraska
          (2026-10-16, uTestContestNebraskaQP); and the four 160 m contests,
          RSGB 1.8 MHz, ARRL 160 and the CQ 160 CW and SSB runnings
-         (2026-10-17, Q71, uTestContestRulings2026Oct). *)
+         (2026-10-17, Q71, uTestContestRulings2026Oct); and the Popov Youth
+         Cup, 40 and 20 m (2026-10-22, Q136,
+         uTestContestRussianRules2026Oct). *)
       if c in [IDAHOQSOPARTY, DELAWAREQSOPARTY, NEWENGLANDQSO, SEVENQP,
                INQSOPARTY, IN7QPNE, NEBRASKAQSO,
-               RSGB18, ARRL160, CQ160CW, CQ160SSB] then
+               RSGB18, ARRL160, CQ160CW, CQ160SSB, RADIOYOC] then
          begin
          Continue;
          end;

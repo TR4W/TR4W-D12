@@ -88,6 +88,13 @@ not actually commented out, and lists every marked line so the pile gets swept.
 - **Position a form through `lclForm.BoundsRect`, never `SetWindowPos`** — the LCL
   holds its own bounds and pushes the designed ones back down when it shows, which
   silently undid a restored position.
+- **A lazily created async-call target must be freed AND unqueued** (2026-10-22).
+  `uMainForm`'s `GNoticeArmer` and `GDeferrer` were created on the first
+  off-main-thread write and never freed -- two unfreed blocks the checked unit run
+  caught. Its finalization now frees them through `FreeDeferralTarget`, which first
+  calls `Application.RemoveAsyncCalls`: `TApplication.Destroy` drains the async
+  queue AFTER unit finalization, so a call still queued against a freed object
+  would run on freed memory at shutdown.
 
 ## A window that shows something per contest asks the contest
 

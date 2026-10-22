@@ -23,6 +23,29 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-22 -- RUSSIAN DX 2027 RULES AND THE POPOV YOUTH CUP (Q97, Q131-Q136)
+
+Unit-tested and matrix-classified only; the corpus has no log of either
+contest, and the matrix's call roster has no WAE-only, UA2, FJL, RI1AN or
+/MM station, so nothing has scored one of these end to end.
+
+- **RDXC, as a DL station:** log IT9xxx (a new multiplier, 3 points),
+  4U1VIC (multiplier, 3), RI1ANx (10 points, Antarctica multiplier, exchange
+  AN accepted), RI1FJx (10, FJL multiplier, FJ), UA2Fxx (10) and DL1xxx/MM
+  (5 points, no multiplier). The CTY country list is now CQ's -- check the
+  country display for IT9/TA1/JW/4U1V calls and that MY COUNTRY is right.
+- **RDXC, as a UA3 station:** UA2Fxx and RI1ANx score 2; a call-window
+  pre-fill of RI1ANx is AN and of RI1FJx is FJ; DO/HE/LU/ZP are accepted as
+  oblasts (also now in the five other contests that share russian.dom).
+- **RADIO-YOC:** MY STATE = the age; the CQ/S&P exchange sends it with the
+  serial (check the function-key messages -- the class states none); typing
+  `15001` logs age 15 serial 1; a station worked at 07:10 is a new QSO at
+  07:40 on the same band (the call window still shows DUPE -- information,
+  not a gate) and a dupe at 07:20; 80 m scores 0; a Russian call's
+  multiplier is its subject (RFOBL MODE needs a restart after choosing the
+  contest, as for SRR-JR). Check the Ermak/Cabrillo QSO line against
+  ua9qcq's Ermak example: TR4W prints the SRR-JR layout.
+
 ## Added 2026-10-19 -- THE NEW CONTEST DIALOG: LAST CONTEST BUTTON AND THE LOG GRID
 
 No window is shown by any test; all of this is compiled and unit-tested only.

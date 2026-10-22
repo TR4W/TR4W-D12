@@ -489,8 +489,10 @@ and what S4 did about the wire is worth knowing before you ship one:**
 6. **One regeneration** after the commit:
    `python tools/contest-rules-inventory/generate.py`. **Its `model.py`
    refuses a by-id contest in the factory today** (it is keyed by the enum and
-   would otherwise drop it silently); the first real by-id contest (S5)
-   extends it.
+   would otherwise drop it silently). The first real by-id contest,
+   `URC-DX-RTTY`, arrived 2026-10-22, so the S5 extension is owed: until it
+   lands the generator stops on URC and `CONTEST_RULES_OUTSIDE_FACTORY.md`
+   is not regenerated.
 
 Nothing in `VC.pas`, no pin row, no count, no `case` arm, no exception list,
 no `full.nsi` line.

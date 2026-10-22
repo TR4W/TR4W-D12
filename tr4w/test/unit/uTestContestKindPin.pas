@@ -1026,11 +1026,11 @@ const
        AtUS: (Exchange: ClassDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange);
        AtVE: (Exchange: ClassDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange);
        AtDX: (Exchange: ClassDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange)),
-      (* RADIOYOC *)
+      (* RADIOYOC -- age + serial since Q136 (2026-10-22). *)
       (Token: 'RADIO-YOC';
-       AtUS: (Exchange: QSONumberAndPreviousQSONumber; InitialExchange: NoInitialExchange);
-       AtVE: (Exchange: QSONumberAndPreviousQSONumber; InitialExchange: NoInitialExchange);
-       AtDX: (Exchange: QSONumberAndPreviousQSONumber; InitialExchange: NoInitialExchange)),
+       AtUS: (Exchange: AgeAndQSONumberExchange; InitialExchange: NoInitialExchange);
+       AtVE: (Exchange: AgeAndQSONumberExchange; InitialExchange: NoInitialExchange);
+       AtDX: (Exchange: AgeAndQSONumberExchange; InitialExchange: NoInitialExchange)),
       (* PAQSOPARTY *)
       (Token: 'PA QSO PARTY';
        AtUS: (Exchange: QSONumberDomesticQTHExchange; InitialExchange: NoInitialExchange);

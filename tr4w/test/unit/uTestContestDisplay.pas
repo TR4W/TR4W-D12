@@ -600,6 +600,11 @@ begin
          begin
          Result := StepComment(TC_ENTERYOURSIXDIGITGRIDSQUARE, ncfMyGrid);
          end;
+      RADIOYOC:
+         begin
+         (* Q136 (2026-10-22): the age it sends, in MY STATE. *)
+         Result := StepComment(TC_ENTERYOURAGEINMYSTATEFIELD, ncfMyState);
+         end;
       RAEM:
          begin
          Result := StepComment(TC_ENTERYOURGEOGRAPHICALCOORDINATES, ncfMyQTH);

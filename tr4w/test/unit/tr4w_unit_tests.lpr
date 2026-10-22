@@ -414,6 +414,7 @@ uses
    uContestGagarinCup in '..\..\src\contestFactory\uContestGagarinCup.pas',
    uContestHADX in '..\..\src\contestFactory\uContestHADX.pas',
    uContestYUDX in '..\..\src\contestFactory\uContestYUDX.pas',
+   uContestURCDXRTTY in '..\..\src\contestFactory\uContestURCDXRTTY.pas',
    uContestHelvetia in '..\..\src\contestFactory\uContestHelvetia.pas',
    uContestJIDXCW in '..\..\src\contestFactory\uContestJIDXCW.pas',
    uContestJIDXSSB in '..\..\src\contestFactory\uContestJIDXSSB.pas',
@@ -708,6 +709,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* The Nebraska QSO Party, a new contest, and the New England rename
       with its legacy name (design Q105, 2026-10-16). *)
    uTestContestNebraskaQP in 'uTestContestNebraskaQP.pas',
+   (* The URC DX RTTY Contest, the first real contest registered by its id
+      (Q138, 2026-10-22). *)
+   uTestContestURCDXRTTY in 'uTestContestURCDXRTTY.pas',
    uTestContestNames    in 'uTestContestNames.pas',
    (* Every QSO party's stated bands (NY4I, 2026-10-16). *)
    uTestQSOPartyBands   in 'uTestQSOPartyBands.pas',
@@ -715,6 +719,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestContestIN7QPNE in 'uTestContestIN7QPNE.pas',
    (* NY4I's rulings Q45, Q49, Q84, Q71, Q85 and Q104, built 2026-10-17. *)
    uTestContestRulings2026Oct in 'uTestContestRulings2026Oct.pas',
+   (* The Russian DX Contest's 2027 rules and the Popov Youth Cup's SRR 2026
+      regulation (Q97, Q131-Q136, built 2026-10-22). *)
+   uTestContestRussianRules2026Oct in 'uTestContestRussianRules2026Oct.pas',
    (* A QSO party's host-area rule, typed AND scored (Q107, 2026-10-16). *)
    uTestHostAreaRule    in 'uTestHostAreaRule.pas',
    (* A grid contest's exchange requires the grid, and a bad grid word is
@@ -828,10 +835,12 @@ begin
    RegisterSuite(TDXCCEntitiesTests.Create('DXCCEntities'));
    RegisterSuite(TContestDelawareQPTests.Create('ContestDelawareQP'));
    RegisterSuite(TContestNebraskaQPTests.Create('ContestNebraskaQP'));
+   RegisterSuite(TContestURCDXRTTYTests.Create('ContestURCDXRTTY'));
    RegisterSuite(TContestNamesTests.Create('ContestNames'));
    RegisterSuite(TQSOPartyBandsTests.Create('QSOPartyBands'));
    RegisterSuite(TContestIN7QPNETests.Create('ContestIN7QPNE'));
    RegisterSuite(TContestRulings2026OctTests.Create('ContestRulings2026Oct'));
+   RegisterSuite(TContestRussianRules2026OctTests.Create('ContestRussianRules2026Oct'));
    RegisterSuite(THostAreaRuleTests.Create('HostAreaRule'));
    RegisterSuite(TGridExchangeTests.Create('GridExchange'));
    RegisterSuite(TDomQTHTableReloadTests.Create('DomQTHTableReload'));

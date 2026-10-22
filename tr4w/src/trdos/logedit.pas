@@ -550,8 +550,10 @@ begin
      Result := CallIsADupe(call, aRX.Band, aRX.Mode);
      Exit;
      end;
-  (* THE CALL AND WHAT IT SENT. No grid-rover exit: a contest whose key is
-    qualified is a state QSO party, never a grid-square contest (Q118). *)
+  (* THE CALL AND WHAT IT SENT, OR THE TOUR IT WAS WORKED IN. No grid-rover
+    exit: a contest whose key is qualified is a state QSO party (Q118) or a
+    contest with tours (the Popov Youth Cup, Q136), never a grid-square
+    contest. *)
   Result := (call <> '') and
             QualifiedDupes.QSOIsDupe(string(call), qualifier, aRX.Band, aRX.Mode);
 end;

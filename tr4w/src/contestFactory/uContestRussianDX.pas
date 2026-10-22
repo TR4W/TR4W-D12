@@ -52,7 +52,34 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   oblast, from its call -- uCallSignRoutines.RussianStationOblast, the one
   rule NY4I ruled on Q50 (2026-10-15): RussianID of the CTY.DAT country
   decides, and GetRussiaOblastID of the call answers. LOGEDIT's
-  InitialExchangeEntry asks it once nothing else has filled the exchange. *)
+  InitialExchangeEntry asks it once nothing else has filled the exchange.
+
+  THE 2027 RULES (SRR, the Russian-language "RUSSIAN DX CONTEST 2027" rules, rdxc.org,
+  read 2026-10-22; built under NY4I's standing ruling of that day, "if the
+  rules say to do something, then we can abide by it"). Each is stated
+  below, where it acts:
+
+    7.3  Kaliningrad (UA2F), Franz Josef Land (RI1FJ...) and the Russian
+         stations in Antarctica (RI1AN...) are each a separate DXCC territory
+         AND a separate oblast -- a double multiplier -- and score "as
+         European Russia". (Q97, Q132)
+    7.4  A /MM station scores 5 for everybody and is not a multiplier. (Q133)
+    7.6  Countries and continents for POINTS are by the DXCC list.
+    9    The multiplier is the territories (the DXCC list PLUS the WAE
+         multiplier list) plus the Russian oblasts, FJ and AN among them.
+         (Q131)
+    11.5 Logs only through https://ua9qcq.ru/submit_log.php; questions to
+         rdxc@srr.ru or mail@rdxc.org (14.2). (Q135)
+
+  The 89 subjects of the appendix (Q134) are target/dom/russian.dom; the
+  four it lacked -- DO, HE, LU, ZP -- were added with their codes from
+  rdxc.org/info (Wayback snapshot 2025-11-16).
+
+  NOT BUILT, REPORTED: rule 11.4 makes LOCATION: <oblast> mandatory in a
+  Russian station's Cabrillo header. TR4W writes LOCATION only from the
+  Cabrillo summary window, and RequiresCabrilloLocation is a station-blind
+  answer asked of ContestIdentity, so it cannot say "for a Russian station
+  only". *)
 unit uContestRussianDX;
 
 {$I tr4w.inc}
@@ -133,6 +160,10 @@ type
                                out aKey: DXMultiplierString): boolean; override;
       (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
       function CountryMode: CountryModeType; override;
+      (* RULE 7.4: A /MM STATION IS NOT A MULTIPLIER -- see
+         TContestBase.CountsAsMultiplier (M8). *)
+      function CountsAsMultiplier(const aQso: ContestExchange;
+                                  aKind: RemainingMultiplierType): boolean; override;
    public
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
@@ -152,21 +183,160 @@ uses
    (* RussianID, RussianStationOblast -- the scoring arm's leaf, and the one
       oblast rule (Q50). *)
    uCallSignRoutines,
-   uTR4WStrings;
+   uTR4WStrings,
+   SysUtils;
 
+type
+   (* RULE 7.3'S THREE TERRITORIES -- each its own DXCC territory and its own
+      oblast, each scored as European Russia. *)
+   TRDXCTerritory = (rdxcNone, rdxcKaliningrad, rdxcFranzJosefLand, rdxcRussianAntarctica);
+
+   (* RULE 7.6 AGAINST RULE 9: the CTY country list is DXCC + WAE (rule 9's
+      multiplier), so a WAE-only entity arrives as its own '*' CTY entity --
+      but POINTS are by the DXCC list. Each row names a WAE-only entity and
+      the DXCC country and continent CTY.DAT gives the same call under the
+      DXCC list (ARRLCountryMode), which is what this contest scored it as
+      before Q131. *)
+   TWAEParent = record
+      WAEEntity: string;
+      DXCCCountry: string;
+      DXCCContinent: ContinentType;
+   end;
+
+const
+   (* CTY.DAT's ids for rule 7.3's two non-CTY-entity territories: Franz Josef
+      Land's entity, and Antarctica's -- RI1AN... is "a separate DXCC territory",
+      and Antarctica is the DXCC entity it stands in. Both are already this
+      contest's domestic countries (DescribeSession). *)
+   FRANZ_JOSEF_LAND_ENTITY = 'R1FJ';
+   ANTARCTICA_ENTITY       = 'CE9';
+   KALININGRAD_ENTITY      = 'UA2';
+
+   (* The DARC WAE list's entities that are not DXCC entities, as CTY.DAT
+      marks them ('*'), with their DXCC parents. *)
+   WAE_PARENTS: array[0..5] of TWAEParent = (
+      (WAEEntity: '*IT9';  DXCCCountry: 'I';  DXCCContinent: Europe),
+      (WAEEntity: '*IG9';  DXCCCountry: 'I';  DXCCContinent: Europe),
+      (WAEEntity: '*GM/s'; DXCCCountry: 'GM'; DXCCContinent: Europe),
+      (WAEEntity: '*JW/b'; DXCCCountry: 'JW'; DXCCContinent: Europe),
+      (WAEEntity: '*4U1V'; DXCCCountry: 'OE'; DXCCContinent: Europe),
+      (WAEEntity: '*TA1';  DXCCCountry: 'TA'; DXCCContinent: Asia));
+
+(* WHICH OF RULE 7.3'S TERRITORIES, IF ANY. The rule names RI1FJ... and RI1AN...
+   by CALL, so the call decides for those two -- whatever CTY.DAT resolves it
+   to. MEASURED 2026-10-22 with the shipped CTY.DAT, in both country modes:
+   RI1FJA, RI1FJL, R1FJL and RI1ANA all resolve to UA (ctyLocateCall rewrites
+   R[B-Z] to RA before its prefix walk, so CTY's RI1F and RI1AN prefixes are
+   never reached); only the exact =RI1ANC/=RI1ANI/=RI1ANY reach CE9.
+   Kaliningrad is a CTY.DAT entity of its own, so the country decides; so
+   does Franz Josef Land's entity for a call CTY.DAT files there. *)
+function RDXCTerritoryOf(const aCall: string; const aCountryID: string): TRDXCTerritory;
+var
+   call: string;
+begin
+   call := UpperCase(Trim(aCall));
+   if Copy(call, 1, 5) = 'RI1AN' then
+      begin
+      Result := rdxcRussianAntarctica;
+      end
+   else if (Copy(call, 1, 5) = 'RI1FJ') or (aCountryID = FRANZ_JOSEF_LAND_ENTITY) then
+      begin
+      Result := rdxcFranzJosefLand;
+      end
+   else if aCountryID = KALININGRAD_ENTITY then
+      begin
+      Result := rdxcKaliningrad;
+      end
+   else
+      begin
+      Result := rdxcNone;
+      end;
+end;
+
+(* THE COUNTRY AND CONTINENT A STATION SCORES AS -- rules 7.3 and 7.6. A
+   rule 7.3 territory is European Russia; a WAE-only entity is its DXCC
+   parent; anything else is what CTY.DAT said. Asked of both ends of the
+   QSO, so a Kaliningrad entrant working UA is "own country" (2), as the
+   rule says. An unknown '*' entity (a WAE row CTY.DAT adds later) is left
+   as CTY.DAT gave it. *)
+procedure RDXCPointsCountry(const aCall: string;
+                            const aCountryID: string;
+                            aContinent: ContinentType;
+                            out aCountry: string;
+                            out aPointsContinent: ContinentType);
+var
+   i: integer;
+begin
+   aCountry := aCountryID;
+   aPointsContinent := aContinent;
+   if RDXCTerritoryOf(aCall, aCountryID) <> rdxcNone then
+      begin
+      aCountry := 'UA';
+      aPointsContinent := Europe;
+      Exit;
+      end;
+   for i := Low(WAE_PARENTS) to High(WAE_PARENTS) do
+      begin
+      if aCountryID = WAE_PARENTS[i].WAEEntity then
+         begin
+         aCountry := WAE_PARENTS[i].DXCCCountry;
+         aPointsContinent := WAE_PARENTS[i].DXCCContinent;
+         Exit;
+         end;
+      end;
+end;
+
+(* A STATION'S OBLAST FROM ITS CALL, FOR THIS CONTEST: rule 7.3's FJ and AN,
+   then the one rule (Q50), uCallSignRoutines.RussianStationOblast -- which
+   reads R1FJ's '1F' as St Petersburg and knows nothing of RI1AN. *)
+function RDXCOblastFromCall(const aCall: string; const aCountryID: string): string;
+begin
+   case RDXCTerritoryOf(aCall, aCountryID) of
+      rdxcRussianAntarctica:
+         begin
+         Result := 'AN';
+         end;
+      rdxcFranzJosefLand:
+         begin
+         Result := 'FJ';
+         end;
+   else
+      begin
+      Result := RussianStationOblast(aCall, aCountryID);
+      end;
+   end;
+end;
+
+(* RULES 7.1-7.4 (2027). A Russian station: another continent 5 (Russia of
+   another continent included), another country of its own continent 3, its
+   own country 2. Anybody else: a Russian station 10, another continent 5,
+   another country 3, its own 2. Both ends are scored as RDXCPointsCountry
+   says (7.3, 7.6), and a /MM station is 5 for everybody (7.4). *)
 procedure TContestRussianDX.CalculateQSOPoints(var aQso: ContestExchange);
 var
-   rxCty: CallString;
+   myCountry: string;
+   myContinent: ContinentType;
+   rxCountry: string;
+   rxContinent: ContinentType;
 begin
-   rxCty := aQso.QTH.CountryID;
-
-   if RussianID(Station.MyCountry) then
+   if MaritimeMobileStation(string(aQso.Callsign)) then
       begin
-      if aQso.QTH.Continent <> Station.MyContinent then
+      aQso.QSOPoints := 5;
+      Exit;
+      end;
+
+   RDXCPointsCountry(Station.MyCall, string(Station.MyCountry), Station.MyContinent,
+                     myCountry, myContinent);
+   RDXCPointsCountry(string(aQso.Callsign), string(aQso.QTH.CountryID), aQso.QTH.Continent,
+                     rxCountry, rxContinent);
+
+   if RussianID(myCountry) then
+      begin
+      if rxContinent <> myContinent then
          begin
          aQso.QSOPoints := 5;
          end
-      else if rxCty <> Station.MyCountry then
+      else if rxCountry <> myCountry then
          begin
          aQso.QSOPoints := 3;
          end
@@ -175,15 +345,15 @@ begin
          aQso.QSOPoints := 2;
          end;
       end
-   else if RussianID(rxCty) then
+   else if RussianID(rxCountry) then
       begin
       aQso.QSOPoints := 10;
       end
-   else if aQso.QTH.Continent <> Station.MyContinent then
+   else if rxContinent <> myContinent then
       begin
       aQso.QSOPoints := 5;
       end
-   else if rxCty <> Station.MyCountry then
+   else if rxCountry <> myCountry then
       begin
       aQso.QSOPoints := 3;
       end
@@ -195,13 +365,16 @@ end;
 
 (* Q50 (NY4I, 2026-10-15): the one rule, RussianStationOblast. True for any
    Russian station, as LOGEDIT's fallback was -- the CTY.DAT country, not
-   'UA' alone as the M5b transcription of ZoneCont's dead arm said. *)
+   'UA' alone as the M5b transcription of ZoneCont's dead arm said. Rule 7.3
+   (Q97, 2026-10-22): a Franz Josef Land call answers FJ and an RI1AN... call
+   AN -- RI1AN is a Russian station whatever CTY.DAT files it under. *)
 function TContestRussianDX.InitialExchangeFromCall(const aCall: string;
                                                    const aCountryID: string;
                                                    out aExchange: string): boolean;
 begin
-   Result := RussianID(aCountryID);
-   aExchange := RussianStationOblast(aCall, aCountryID);
+   Result := RussianID(aCountryID) or
+             (RDXCTerritoryOf(aCall, aCountryID) <> rdxcNone);
+   aExchange := RDXCOblastFromCall(aCall, aCountryID);
 end;
 
 function TContestRussianDX.DomesticMultiplierFromCall(const aCall: string;
@@ -210,8 +383,16 @@ begin
    Result := '';
    if Assigned(aLookups.CountryOfCall) then
       begin
-      Result := RussianStationOblast(aCall, aLookups.CountryOfCall(aCall));
+      Result := RDXCOblastFromCall(aCall, aLookups.CountryOfCall(aCall));
       end;
+end;
+
+(* RULE 7.4 (2027): contacts with any "/MM" station "are not a multiplier" --
+   a /MM station earns no multiplier of any kind. *)
+function TContestRussianDX.CountsAsMultiplier(const aQso: ContestExchange;
+                                              aKind: RemainingMultiplierType): boolean;
+begin
+   Result := not MaritimeMobileStation(string(aQso.Callsign));
 end;
 
 function TContestRussianDX.GetDisplayName: string;
@@ -243,7 +424,12 @@ end;
 
 function TContestRussianDX.GetSubmissionEmail: string;
 begin
-   Result := 'logs@rdxc.org';
+   (* NO E-MAIL SUBMISSION -- rule 11.5 (2027): logs "are accepted in
+      electronic form only through the web interface:
+      https://ua9qcq.ru/submit_log.php". Questions go to rdxc@srr.ru or
+      mail@rdxc.org (rule 14.2), which is not where a log goes. The row said
+      'logs@rdxc.org' (Q135, 2026-10-22). *)
+   Result := '';
 end;
 
 function TContestRussianDX.GetDomesticFileName: string;
@@ -372,20 +558,38 @@ begin
 end;
 
 (* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
-   Every country counts: the key is the CTY country -- GetDXQTH's `else`
-   arm, for the session's ARRLDXCC. *)
+   Every territory counts: the key is the CTY country, from the DXCC + WAE
+   list (CountryMode, rule 9) -- except rule 7.3's Franz Josef Land and
+   RI1AN..., which are each "a separate DXCC territory" whatever CTY.DAT files
+   the call under (Q97, 2026-10-22). Kaliningrad is CTY.DAT's own UA2. *)
 function TContestRussianDX.DXMultiplierKey(const aQso: ContestExchange;
                                            out aKey: DXMultiplierString): boolean;
 begin
-   aKey := aQso.QTH.CountryID;
+   case RDXCTerritoryOf(string(aQso.Callsign), string(aQso.QTH.CountryID)) of
+      rdxcFranzJosefLand:
+         begin
+         aKey := FRANZ_JOSEF_LAND_ENTITY;
+         end;
+      rdxcRussianAntarctica:
+         begin
+         aKey := ANTARCTICA_ENTITY;
+         end;
+   else
+      begin
+      aKey := aQso.QTH.CountryID;
+      end;
+   end;
    Result := True;
 end;
 
-(* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
-   DXCC only, at every station -- the ARRLDXCC kind was in the ARRL set. *)
+(* THE CTY COUNTRY LIST -- rule 9 (2027): "the number of territories (the
+   DXCC list + the WAE multiplier list)". CQCountryMode is CTY.DAT's DXCC + WAE list, the
+   one CQ WW counts (Q131, 2026-10-22). It was ARRLCountryMode, DXCC only,
+   since D7. Points stay on the DXCC list (rule 7.6): RDXCPointsCountry maps
+   a WAE-only entity back to its DXCC parent. *)
 function TContestRussianDX.CountryMode: CountryModeType;
 begin
-   Result := ARRLCountryMode;
+   Result := CQCountryMode;
 end;
 
 

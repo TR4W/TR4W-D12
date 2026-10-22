@@ -66,6 +66,10 @@ function GetPrefix(Call: string): string;
 function GetOblast(Call: string): string;
 function MobileCall(Call: string): boolean;  //n4af 4.41.8
 function MarineOrAirMobileStation(Call: string): boolean;
+(* A MARITIME MOBILE CALL ONLY -- '/MM', never '/AM'. The Russian DX Contest's
+   rule 7.4 (2027) names "/MM" alone. MarineOrAirMobileStation's shape and
+   case-sensitivity, narrowed to its second letter. *)
+function MaritimeMobileStation(Call: string): boolean;
 //function IsUA1AStation(Call: string): boolean;
 function StandardCallFormat(Call: string; Complete: boolean): string;
 function GetRussiaOblastID(Call: string): string; //
@@ -648,6 +652,10 @@ begin
       begin
       Result := True;
       end;
+end;
+function MaritimeMobileStation(Call: string): boolean;
+begin
+   Result := MarineOrAirMobileStation(Call) and (Call[Length(Call) - 1] = 'M');
 end;
 function SimilarCall(Call1: string; Call2: string): boolean;
 { This function will return true if the two calls only differ in one

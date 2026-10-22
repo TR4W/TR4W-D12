@@ -93,10 +93,12 @@ the contest's file; it is the "discrete value" NY4I asked for (Q45), where
 IT SENT (Q118, 2026-10-17).** `CALL/county` is its own key already (Q73,
 `uTestRoverDupeKey`). NY4I: *"New QSO per county"*, then *"All state parties"* --
 in every state QSO party the same call on the same band and mode with a
-different received QTH is a new QSO. The one virtual is
+different received QTH is a new QSO. There are two virtuals:
 `TContestBase.DupeKeyIncludesReceivedQTH` (base False,
-`TContestStateQSOPartyBase` True); the non-virtual `DupeKeyQualifier` derives the
-key text from the record (`DomesticQTH`, else `QTHString`). 7QP, NEQP and IN7QPNE
+`TContestStateQSOPartyBase` True) and `DupeKeyTour` (base ''; RADIO-YOC names
+its 30-minute tour from the QSO's logged time, Q136 2026-10-22, so a repeat in
+another tour is a new QSO); the non-virtual `DupeKeyQualifier` derives the
+key text from the record (`DomesticQTH`, else `QTHString`, then #1 + the tour). 7QP, NEQP and IN7QPNE
 are not on that base and are not covered (open). **A logged QSO's dupe question
 is `EditableLog.QSOIsADupe(rx)` and its write is `LOGEDIT.AddQSOToDupeSheets`**
 -- LogContact, the loader and the rescore all go through them; never call

@@ -556,8 +556,9 @@ const
       (Token: 'RSGB-160'; WA7BNM: 252; QRZRUID: 44; Email: '';
        Friendly: 'RSGB 1.8 MHz Contest';
        Display: 'RSGB 1.8 MHz Contest'; DomesticFile: 'rsgb'),
-      (* RUSSIANDX *)
-      (Token: 'RDXC'; WA7BNM: 310; QRZRUID: 7; Email: 'logs@rdxc.org';
+      (* RUSSIANDX -- no e-mail since Q135 (2026-10-22): rule 11.5 of the
+         2027 rules takes logs only through ua9qcq.ru's web form. *)
+      (Token: 'RDXC'; WA7BNM: 310; QRZRUID: 7; Email: '';
        Friendly: 'Russian DX Contest';
        Display: 'Russian DX Contest'; DomesticFile: 'russian'),
       (* SACCW *)
