@@ -72,9 +72,9 @@ type
    public
       (* THE RUNNING'S MODE -- Q98 S4a (design 8.2v). Phone: SSB, USB, LSB or
          a phone record with no submode. NOT FM, which TR4W keeps as its own
-         ModeType: the sponsor and WA7BNM 172 say "SSB", and Q120(a)'s
-         proposal is "where the sponsor says SSB, Phone only" -- NY4I has not
-         answered (Q120(a) open), so FM is refused until he does. Every other
+         ModeType: the sponsor and WA7BNM 172 say "SSB", and NY4I ruled
+         2026-10-22 (Q120(a)): "FM is not valid in CQ WW SSB. just ssb."
+         So an FM QSO is an automatic X-QSO. Every other
          mode -- CW, RTTY, FT8 -- is an automatic X-QSO. The bands are the
          family's (TContestCQWWBase.UsesBand). *)
       function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
