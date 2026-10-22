@@ -73,8 +73,9 @@ type
 // the log-comparison dialog.  Two call sites in uNet pass the same shape.
 //
 // THE SEAM established in Phase 1: the caller does not know what this is, only
-// that the window opens.
-procedure ShowLogCompare(const aInitParam: lParam);
+// that the window opens. A typed pointer since pointer audit P2 (2026-10-16);
+// it was an lParam that uNet filled with integer(s).
+procedure ShowLogCompare(const aInfo: PLogFileInformation);
 
 implementation
 
@@ -88,6 +89,7 @@ uses
     and LCLType -- already in this clause -- declares them. *)
   TF,
   PostUnit,         // Contest, ContestExchange
+  uContestRegistry, // ContestId -- the two contests' names
   LogDupe,
   uNet,             // DifferentContests, tUSQ, tUSQE
   uServerLogForm,   // ShowServerLogSync -- a designed form since 2026-08-29
@@ -173,15 +175,15 @@ begin
       AddRow('USQE', '', IntToStr(tUSQE));
 
       AddRow('Contest',
-             string(ContestTypeSA[FInfo^.liContest]),
-             string(ContestTypeSA[Contest]));
+             ContestId(FInfo^.liContest),
+             ContestId(Contest));
 
       // SYNCHRONIZING ACROSS DIFFERENT CONTESTS IS THE ONE THING THIS DIALOG
       // MUST NOT ALLOW -- it would merge one contest's QSOs into another's log.
       // DUMMYCONTEST is the server not having told us yet, which is not a
       // mismatch.
       DifferentContests := FInfo^.liContest <> Contest;
-      if FInfo^.liContest = DUMMYCONTEST then
+      if FInfo^.liContest = NoContest then
          begin
          DifferentContests := False;
          end;
@@ -222,7 +224,7 @@ begin
    Close;
 end;
 
-procedure ShowLogCompare(const aInitParam: lParam);
+procedure ShowLogCompare(const aInfo: PLogFileInformation);
 begin
    // The try/except is permanent and deliberate: under FPC an exception that
    // escapes into the main loop is a bare RTE with no class, and it takes the
@@ -233,9 +235,8 @@ begin
          frmLogCompare := TfrmLogCompare.Create(Application);
          end;
 
-      // The init param IS the server's log information -- uNet passes the
-      // record's address through the dialog's lParam.
-      frmLogCompare.FInfo := PLogFileInformation(aInitParam);
+      // The server's log information, as uNet received it.
+      frmLogCompare.FInfo := aInfo;
       // THROUGH THE ONE DOOR, parent 0.  There is no raw Win32 parent to
       // disable here, but ShowModalOverWin32Parent is also where the main
       // window is made the owner and the form is centred over it -- see

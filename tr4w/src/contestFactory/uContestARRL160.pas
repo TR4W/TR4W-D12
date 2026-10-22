@@ -1,0 +1,489 @@
+(*
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+
+ This file is part of TR4W  (SRC)
+
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+ *)
+
+(* THE ARRL 160-METER CONTEST.
+
+  The ContestsArray row this class states, verbatim:
+
+   Email: '160meter@arrl.org';  DF: 'arrlsect';  WA7BNM: 194;  QRZRUID: 22;
+   Pxm: NoPrefixMults;  ZnM: NoZoneMults;  AIE: NoInitialExchange;
+   DM: DomesticFile;  P: 0;  AE: RSTDomesticOrDXQTHExchange;
+   XM: NoDXMults;  QP: ARRL160QSOPointMethod;
+   ADIFName: '';  CABName: '';
+   FriendlyName: 'ARRL 160-Meter Contest'
+
+  Blank CABName and ADIFName resolve to the enum's spelling, 'ARRL-160'.
+
+  WHY IT HAS A CLASS. Milestone M7b (2026-10-02) gives every classless
+  contest one, and a registered class is the contest's scorer, set-up,
+  export, import, parse and final score from the moment it exists -- so the
+  whole contest is transcribed here, exactly: the row above as literals
+  (Test_MovedRowValuesStillMatchTheArray), and every legacy arm that named it.
+  The contest matrix is the proof: every line of its record but
+  `contest.class` is unchanged.
+
+  WHY IT WAITED UNTIL M7b. Its scoring asks whether a call is in the
+  session's DOMESTIC COUNTRIES -- a CTY.DAT lookup against the list set-up
+  built (ZoneCont.DomesticCountryCall) -- and a class may not reach TRDOS.
+  DECIDED at M7b: the station context carries that lookup as a SERVICE,
+  TStationContext.IsDomesticCountryCall, filled by
+  uContestFactory.CurrentStation -- the shape M5b's parse session hands its
+  engine services in. The class still reads no global, and a test hands it
+  a stub. With no service (nil) a call is not domestic, which is what the
+  engine answers for an empty list.
+
+  SCORING: ARRL160QSOPointMethod -- a domestic station 2; else, if WE are
+  domestic, 5; else 0.
+
+  SET-UP: an ARRL-section country (W/VE and the US possessions) sends RST
+  and its section or DX and counts DXCC without the sections; everyone else
+  sends RST and a section. The twenty ARRL-section countries are domestic.
+  LogCfg's CQ exchange: 5NN and MY STATE.
+
+  EXPORT: a W/VE QSO's QTH is its ARRL_SECT -- PostUnit's tail named this
+  contest until M7b. IMPORT: SRX_STRING is the domestic QTH -- the arm
+  MainUnit.ApplyClasslessADIFImport kept for it until M7b; the arm it came
+  from named CQ 160 and the UBA contests too, and each owns its copy. *)
+unit uContestARRL160;
+
+{$I tr4w.inc}
+
+interface
+
+uses
+   VC, uContestBase;
+
+type
+   TContestARRL160 = class(TContestBase)
+   protected
+      (* PROTECTED, MATCHING THE BASE -- callers use the properties,
+         descendants override the getters. Every getter below states
+         the ContestsArray row quoted above. *)
+      function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetFriendlyName: string; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
+
+      (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
+      function GetFlags: TContestFlags; override;
+      function GetIsUSQSOParty: boolean; override;
+      (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
+         TContestBase: ScoreQSO is the one public scoring entry. *)
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   private
+      (* The station context's domestic-country service, or "not domestic"
+         when there is none -- see the header. *)
+      function IsDomesticCall(const aCall: string): boolean;
+   public
+      (* EXPORT -- see TContestBase.EmitADIFContestFields. *)
+      function EmitADIFContestFields(const aQso: ContestExchange): string; override;
+      (* IMPORT -- see TContestBase.ApplyADIFImport. *)
+      procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                const aSession: TADIFImportSession;
+                                var aExch: ContestExchange); override;
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+      (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
+      (* 160 m and nothing else -- Q71; see the body. *)
+      function UsesBand(aBand: BandType): boolean; override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   private
+      (* DOES THIS ENTRANT COUNT A DX MULTIPLIER? -- the station test
+         DescribeSession stated the DX kind under (deleted at M11 S4 part 2);
+         HasDXMultiplier, the key and the country list ask it, so the answers
+         cannot disagree (M11 S4). *)
+      function CountsDXMultiplier: boolean;
+   public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
+      function CountryMode: CountryModeType; override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
+      (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
+      function LogsSeveralQTHsFromOneEntry: boolean; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesDomesticQTH: boolean; override;
+   end;
+
+implementation
+
+uses
+   uExchangeFields,
+   uCabrilloExchange,
+   uADIFExchange,
+   uDXMultiplierKey,
+   uContestRegistry,
+   (* ARRLSectionCountry -- the leaf the set-up arm asked. *)
+   uCallSignRoutines,
+   (* EmitADIFField -- the tag spellings are ADIF's. *)
+   uADIF,
+   uTR4WStrings;
+
+procedure TContestARRL160.CalculateQSOPoints(var aQso: ContestExchange);
+begin
+   if IsDomesticCall(string(aQso.Callsign)) then
+      begin
+      aQso.QSOPoints := 2;
+      end
+   else if IsDomesticCall(Station.MyCall) then
+      begin
+      aQso.QSOPoints := 5;
+      end
+   else
+      begin
+      aQso.QSOPoints := 0;
+      end;
+end;
+
+function TContestARRL160.IsDomesticCall(const aCall: string): boolean;
+begin
+   if Assigned(Station.IsDomesticCountryCall) then
+      begin
+      Result := Station.IsDomesticCountryCall(aCall);
+      end
+   else
+      begin
+      Result := False;
+      end;
+end;
+
+function TContestARRL160.GetDisplayName: string;
+begin
+   Result := 'ARRL 160-Meter Contest';
+end;
+
+function TContestARRL160.GetCabrilloName: string;
+begin
+   (* The row's CABName is blank; this is the enum's spelling it resolves
+      to. *)
+   Result := 'ARRL-160';
+end;
+
+function TContestARRL160.GetADIFContestId: string;
+begin
+   (* The row's ADIFName is blank; export writes the enum's spelling, and
+      import matches it (M1). *)
+   Result := 'ARRL-160';
+end;
+
+function TContestARRL160.GetWA7BNMId: integer;
+begin
+   Result := 194;
+end;
+
+function TContestARRL160.GetQRZRUId: integer;
+begin
+   Result := 22;
+end;
+
+function TContestARRL160.GetSubmissionEmail: string;
+begin
+   Result := '160meter@arrl.org';
+end;
+
+function TContestARRL160.GetDomesticFileName: string;
+begin
+   Result := 'arrlsect';
+end;
+
+function TContestARRL160.GetFriendlyName: string;
+begin
+   Result := 'ARRL 160-Meter Contest';
+end;
+
+function TContestARRL160.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := NoInitialExchange;
+end;
+
+function TContestARRL160.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTDomesticOrDXQTHExchange;
+end;
+
+(* AN ENTRANT IN AN ARRL SECTION COUNTRY RECEIVES THE RST AND A SECTION OR
+   COUNTRY (RSTDomesticOrDXQTH); ANYONE ELSE THE RST, A NUMBER AND A SECTION
+   (RSTDomesticQTH) -- the two shapes
+   DescribeSession chooses between, by the station test CountsDXMultiplier
+   asks. M11 S9a. *)
+function TContestARRL160.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   if CountsDXMultiplier then
+      begin
+      Result := ExchangeFieldsRSTQTH;
+      end
+   else
+      begin
+      Result := ExchangeFieldsRSTQSONumberQTH;
+      end;
+end;
+
+function TContestARRL160.ParseReceivedExchangeFormat(const aText: string;
+                                                     aParsers: TExchangeParsers;
+                                                     var aExch: ContestExchange): boolean;
+begin
+   if CountsDXMultiplier then
+      begin
+      Result := aParsers.ParseRSTDomesticOrDXQTH(aText, aExch);
+      end
+   else
+      begin
+      Result := aParsers.ParseRSTDomesticQTH(aText, aExch);
+      end;
+end;
+
+procedure TContestARRL160.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   (* The station test the parse format chooses by: an entrant who
+      receives the domestic-or-DX exchange gets no default messages
+      (the old `case` had no arm for its shape). *)
+   if not CountsDXMultiplier then
+      begin
+      aMessages.WriteRSTStateOrQSONumber;
+      end;
+end;
+
+function TContestARRL160.ExchangeCarriesDomesticQTH: boolean;
+begin
+   Result := True;
+end;
+
+function TContestARRL160.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                             const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentRSTState(aMy, aQso);
+end;
+
+function TContestARRL160.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                 const aQso: ContestExchange;
+                                                 const aCtx: TCabrilloQSOContext): string;
+begin
+   if CountsDXMultiplier then
+      begin
+      Result := CabrilloSentRSTState(aMy, aQso, aCtx);
+      end
+   else
+      begin
+      Result := CabrilloSentRSTStateOrDX(aMy, aQso, aCtx);
+      end;
+end;
+
+function TContestARRL160.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                     const aQso: ContestExchange;
+                                                     const aCtx: TCabrilloQSOContext): string;
+begin
+   if CountsDXMultiplier then
+      begin
+      Result := CabrilloReceivedRSTQTHOrDXQTH(aMy, aQso, aCtx);
+      end
+   else
+      begin
+      Result := CabrilloReceivedRSTQTHDX(aMy, aQso, aCtx);
+      end;
+end;
+
+function TContestARRL160.GetFlags: TContestFlags;
+begin
+   Result := [];
+end;
+
+function TContestARRL160.GetIsUSQSOParty: boolean;
+begin
+   (* P: 0 -- not a US state QSO party. *)
+   Result := False;
+end;
+
+(* 160 M AND NOTHING ELSE -- Q71, NY4I 2026-10-15: "a 1.8 MHz contest like
+   this (and ARRL-160 or CQ-160) would only allow points for 160." The class
+   credited every band, as its row always had. A QSO on any other band is
+   logged, scores 0 and earns no multiplier (design 7.4). *)
+function TContestARRL160.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand = Band160;
+end;
+
+(* PostUnit's ARRL160 arm, moved at M7b: a W/VE station's QTH is its ARRL
+   section. Asked only for a QSO whose QTH is not empty and not a grid. *)
+function TContestARRL160.EmitADIFContestFields(const aQso: ContestExchange): string;
+begin
+   Result := '';
+   if (aQso.QTH.CountryID = 'K') or
+      (aQso.QTH.CountryID = 'VE') then
+      begin
+      Result := EmitADIFField('ARRL_SECT', string(aQso.QTHString));
+      end;
+end;
+
+(* MainUnit.ApplyClasslessADIFImport's ARRL160 arm, moved at M7b:
+   SRX_STRING is the domestic QTH. *)
+procedure TContestARRL160.ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                          const aSession: TADIFImportSession;
+                                          var aExch: ContestExchange);
+begin
+   aExch.DomesticQTH := ShortString(aTemps.SRX_String);
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7b, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestARRL160.DescribeSession(const aStation: TStationContext;
+                                          aSession: TSessionDefaults);
+begin
+   if ARRLSectionCountry(string(aStation.MyCountry)) then
+      begin
+      aSession.Exchange := RSTDomesticOrDXQTHExchange;
+      end
+   else
+      begin
+      aSession.Exchange := RSTDomesticQTHExchange;
+      end;
+   aSession.AddDomesticCountries(DomesticCountriesARRLSections);
+end;
+
+(* LogCfg.tSetupExchangeNumbers' arm for this contest, moved at M7b -- see
+   TContestBase.CQExchangeDefault. *)
+function TContestARRL160.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   Result := ' 5NN ' + aStation.MyState;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for ARRL10, ARRL_RTTY_ROUNDUP,
+   CQ160CW, CQ160SSB, CQWWRTTY.
+   The same steps on ticking the box stood for ARRL10, ARRLDXCW,
+   ARRL_RTTY_ROUNDUP.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestARRL160.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.OfferIAmIn(TC_NORTHAMERICA);
+   aPrompts.AskFieldWithCommentWhenInside(TC_ENTERTHEQTHTHATYOUWANTTOSEND, ncfMyState);
+end;
+
+(* THE STATION TEST -- DescribeSession's (an ARRL section country), asked of
+   Station through the same list. See the declaration. *)
+function TContestARRL160.CountsDXMultiplier: boolean;
+begin
+   Result := IsARRLSectionCountry(Station.MyCountry);
+end;
+
+(* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- M11 S4 part 2,
+   2026-10-14. Yes for an entrant in an ARRL section country; none for anyone
+   else. This is the station test the session's DX kind was chosen by (the
+   trait, then DescribeSession) until that kind was deleted; DXMultiplierKey
+   and the country list ask the same predicate, so the answers cannot
+   disagree. *)
+function TContestARRL160.HasDXMultiplier: boolean;
+begin
+   Result := CountsDXMultiplier;
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country but the ARRL section countries, for an entrant IN one
+   (ARRLDXCCWithNoARRLSections, which DescribeSession stated there); none
+   for anyone else. *)
+function TContestARRL160.DXMultiplierKey(const aQso: ContestExchange;
+                                         out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if CountsDXMultiplier and
+      not IsARRLSectionCountry(aQso.QTH.CountryID) then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
+end;
+
+(* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
+   DXCC only for an entrant in an ARRL section country; the CQ list for
+   anyone else, who counts no DX multiplier. *)
+function TContestARRL160.CountryMode: CountryModeType;
+begin
+   if CountsDXMultiplier then
+      begin
+      Result := ARRLCountryMode;
+      end
+   else
+      begin
+      Result := CQCountryMode;
+      end;
+end;
+
+
+(* THE DOMESTIC QTH IS LOOKED UP IN THIS CONTEST'S DOMESTIC FILE, at every
+   station -- M11 S6 part 1b, 2026-10-14. It was the session's
+   `= DomesticFile` (the trait); see TContestBase.UsesDomesticFile. *)
+function TContestARRL160.UsesDomesticFile: boolean;
+begin
+   Result := True;
+end;
+
+(* OUTSIDE AN ARRL SECTION COUNTRY ONE ENTRY MAY CARRY SEVERAL QTHs
+   (RSTDomesticQTH); inside one, not (RSTDomesticOrDXQTH) -- M11 S7,
+   2026-10-14. It was the session's shape, and this is the station test
+   DescribeSession chooses the shape by; see
+   TContestBase.LogsSeveralQTHsFromOneEntry. *)
+function TContestARRL160.LogsSeveralQTHsFromOneEntry: boolean;
+begin
+   Result := not CountsDXMultiplier;
+end;
+
+initialization
+   RegisterContest(ARRL160, TContestARRL160);
+
+end.

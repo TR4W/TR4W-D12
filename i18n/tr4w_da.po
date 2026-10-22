@@ -17,12 +17,13 @@ msgctxt "TC_TRANSLATION_LANGUAGE"
 msgid "ENGLISH"
 msgstr "Dansk"
 
+# 2026-10-16: machine translation (LibreTranslate), no human translator to credit (NY4I, 2026-10-16). Was "N4AF" -- the English msgid copied, which credited N4AF for it.
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:8
 #: utr4wstrings.tc_translation_author
 #, fuzzy
 msgid "N4AF"
-msgstr "N4AF"
+msgstr "LibreTranslate"
 
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:9
@@ -522,14 +523,17 @@ msgstr "EU-land, indtast din landekode med fire tegn"
 msgid "EI/GI, enter your County"
 msgstr "EI / GI, indtast din County"
 
+# 2026-10-16: the English changed from "Latest config file" to "Last Contest" -- the button reopens the contest's database, not a config file.
+# Composed from this catalogue's own words, please review: last = 'Last status:' -> 'Sidste status:'; contest = 'Contest Name' -> 'Contest navn'.
+# Previous translation (of the old English): "Seneste indstillingsfil"
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:100
 #: tfrmnewcontest.btnlatest.caption
 #: utr4wstrings.tc_latest_config_file
 #, fuzzy
 msgctxt "tfrmnewcontest.btnlatest.caption"
-msgid "Latest config file"
-msgstr "Seneste indstillingsfil"
+msgid "Last Contest"
+msgstr "Sidste contest"
 
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:101
@@ -755,12 +759,13 @@ msgstr "Indtast din QTH som du vil sende\rog det navn, du vil bruge:"
 msgid "Enter first two digits of your QTH:"
 msgstr "Indtast de første to cifre i din QTH:"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Indtast din alder i mit statsfelt:"
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:134
 #: utr4wstrings.tc_enteryourageinmystatefield
 #, fuzzy
 msgid "Enter your age in MY STATE field:"
-msgstr "Indtast din alder i mit statsfelt:"
+msgstr "Indtast din alder i feltet MY STATE:"
 
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:135
@@ -1212,12 +1217,13 @@ msgstr "Computeruret er synkroniseret."
 msgid "Connecting to "
 msgstr "Forbindelse til "
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Forbindelse til TR4WSERVER mislykkedes. Tjek SERVER PASSORD værdi!!"
 #. Section: UNET
 #: tr4w/src/lang/tr4w_consts_eng.pas:205
 #: utr4wstrings.tc_connecttotr4wserverfailed
 #, fuzzy
 msgid "Connect to TR4WSERVER failed. Check SERVER PASSWORD value!!"
-msgstr "Forbindelse til TR4WSERVER mislykkedes. Tjek SERVER PASSORD værdi!!"
+msgstr "Forbindelse til TR4WSERVER mislykkedes. Tjek værdien af SERVER PASSWORD!!"
 
 #. Section: UNET
 #: tr4w/src/lang/tr4w_consts_eng.pas:206
@@ -2289,12 +2295,13 @@ msgstr "Ugyldig påmindelse tid!!"
 msgid "Invalid reminder date!!"
 msgstr "Ugyldig påmindelsesdato!!"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "For mange TOTAL MESSAGES!!!"
 #. Section: CFGCMD
 #: tr4w/src/lang/tr4w_consts_eng.pas:450
 #: utr4wstrings.tc_toomanytotalscoremessages
 #, fuzzy
 msgid "Too many TOTAL SCORE MESSAGEs!!"
-msgstr "For mange TOTAL MESSAGES!!!"
+msgstr "For mange TOTAL SCORE MESSAGE!!"
 
 #. Section: CFGCMD
 #: tr4w/src/lang/tr4w_consts_eng.pas:451
@@ -5655,6 +5662,16 @@ msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
 msgstr "%s oversættelse af %s"
 
+# 2026-10-16: new string -- the About box shows it under a machine translation's credit. Machine draft, please review.
+#. Section: General
+#: utr4wstrings:tc_translation_corrections
+#: tr4w/src/lang/tr4w_consts_eng.pas:14
+#: utr4wstrings.tc_translation_corrections
+#, fuzzy
+msgctxt "TC_TRANSLATION_CORRECTIONS"
+msgid "Corrections are appreciated."
+msgstr "Rettelser modtages gerne."
+
 #. Section: UEDITMESSAGE
 #. 4.51.8
 #: utr4wstrings:rc_3830
@@ -7511,106 +7528,6 @@ msgstr "DX"
 msgid "QTH"
 msgstr "QTH"
 
-#: tfrmfunctionkeys.pnlf1.caption
-#, fuzzy
-msgid "F1"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf10.caption
-#, fuzzy
-msgid "F10"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf11.caption
-#, fuzzy
-msgid "F11"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf12.caption
-#, fuzzy
-msgid "F12"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf2.caption
-#, fuzzy
-msgid "F2"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf3.caption
-#, fuzzy
-msgid "F3"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf4.caption
-#, fuzzy
-msgid "F4"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf5.caption
-#, fuzzy
-msgid "F5"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf6.caption
-#, fuzzy
-msgid "F6"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf7.caption
-#, fuzzy
-msgid "F7"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf8.caption
-#, fuzzy
-msgid "F8"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf9.caption
-#, fuzzy
-msgid "F9"
-msgstr ""
-
-#: tfrmhamscore.lblqueuevalue.caption
-#, fuzzy
-msgid "--"
-msgstr ""
-
-#: tfrmmp3recorder.btncontrol.caption
-#, fuzzy
-msgid "..."
-msgstr ""
-
-#: tfrmpanadapter.btnspannarrow.caption
-#, fuzzy
-msgid "-"
-msgstr ""
-
-#: tfrmpanadapter.btnspanwide.caption
-#, fuzzy
-msgid "+"
-msgstr ""
-
-#: tradioeditform.optdata7.caption
-#, fuzzy
-msgid "7"
-msgstr ""
-
-#: tradioeditform.optdata8.caption
-#, fuzzy
-msgid "8"
-msgstr ""
-
-#: tradioeditform.optstop1.caption
-#, fuzzy
-msgid "1"
-msgstr ""
-
-#: tradioeditform.optstop2.caption
-#, fuzzy
-msgid "2"
-msgstr ""
-
 #: ulclformhelpers.tc_prefs_activate
 #, fuzzy
 msgid "Save and activate this profile"
@@ -7858,15 +7775,6 @@ msgstr "Opret og brug ny log"
 #, fuzzy
 msgid "Get server log"
 msgstr "Hent serverlog"
-
-#: tfrmserverlog.lblbytes.caption
-#: tfrmserverlog.lblqsos.caption
-#: tfrmserverlog.lblrecords.caption
-#: tfrmserverlog.lblsent.caption
-#, fuzzy
-msgctxt "tfrmserverlog.lblbytes.caption"
-msgid "0"
-msgstr ""
 
 #: tfrmtelnet.btnconfigure.caption
 #: utr4wstrings.tc_configure_ellipsis
@@ -8724,4 +8632,426 @@ msgstr "TRCLUSTER.DAT blev ikke fundet ved siden af programmet, så listen er to
 #, fuzzy
 msgid "No DX clusters are defined yet -- click Configure to add one."
 msgstr "Ingen DX klynger er defineret endnu -- klik på Indstil for at tilføje en."
+
+#: uappstrings.sexchangenoprecedence
+#, fuzzy
+msgid "Missing precedence (Q A B U M S)"
+msgstr "Manglende rangfølge (Q A B U M S)"
+
+#: uappstrings.sexchangeoutofstateworkshostonly
+#, fuzzy
+msgid "Out of state: work %s stations only"
+msgstr "Ude af staten: arbejde %s Kun stationer"
+
+#: uappstrings.scontestinactive
+#, fuzzy
+msgid "%s (inactive)"
+msgstr "%s (inaktiv)"
+
+#: uappstrings.scategorypowerchangedrescored
+#, fuzzy
+msgid "CATEGORY-POWER is now %s -- the scoring category changed and the log was rescored."
+msgstr "KATEGORI-POWER er nu %s -- scoringkategorien ændrede sig, og loggen blev rekoreret."
+
+#: uappstrings.scontestnotonmultiop
+#, fuzzy
+msgid "%s cannot be used on the multi-op network yet -- the network protocol cannot carry it. Use it only while this station is not connected to a multi-op server."
+msgstr "%s kan endnu ikke bruges på multi-op-netværket -- netværksprotokollen kan ikke bære den. Brug den kun, mens denne station ikke er forbundet til en multi-op-server."
+
+#: uappstrings.snewcontestin7qpneinsideaparty
+#, fuzzy
+msgid "IN7QPNE is for stations outside Indiana, the 7th call area, New England and Delaware. From %s, choose the %s instead."
+msgstr "IN7QPNE er for stationer uden for Indiana, 7. kaldeområde, New England og Delaware. Fra %s skal du i stedet vælge %s."
+
+#: uappstrings.speeronanothercontest
+#, fuzzy
+msgid "Station %s is on %s, this station is on %s -- its QSOs are NOT being logged here. All stations must run the same contest."
+msgstr "Station %s kører %s, denne station kører %s -- dens QSO'er logges IKKE her. Alle stationer skal køre den samme contest."
+
+#: uappstrings.sexchangenotagridorreport
+#, fuzzy
+msgid "%s is not a grid square or a signal report"
+msgstr "%s er hverken en locator eller en signalrapport"
+
+#: uappstrings.sexchangegridrequired
+#, fuzzy
+msgid "Grid square required"
+msgstr "Locator påkrævet"
+
+#: uappstrings.scouldnotshowinfilemanager
+#, fuzzy
+msgid ""
+"TR4W could not open this location in your file manager:\n"
+"\n"
+"%s\n"
+"\n"
+"Check that it still exists.  tr4w.log records what was tried."
+msgstr ""
+"TR4W kunne ikke åbne denne placering i din filhåndtering:\n"
+"\n"
+"%sTjek, at det stadig eksisterer. Tr4w.log registrerer, hvad der blev prøvet."
+
+#: uappstrings.sdownloadcannotverify
+#, fuzzy
+msgid ""
+"the server's certificate could not be verified (%s).\n"
+"\n"
+"The request was REFUSED rather than sent unverified. Turn off Preferences > Network > verify server certificates if you want to proceed without checking."
+msgstr ""
+"serverens certifikat kunne ikke verificeres (%s).\n"
+"\n"
+"Anmodningen blev afvist i stedet for sendt ubekræftet. Afbryd indstillinger > Netværk > verificer servercertifikater hvis du ønsker at fortsætte uden at tjekke."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(Mit land = %s)"
+#: uappstrings.sexchangemodebriefcountry
+#, fuzzy
+msgid "(MY COUNTRY = %s)"
+msgstr "(MY COUNTRY = %s)"
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(Mit land er tomt)"
+#: uappstrings.sexchangemodebriefemptycountry
+#, fuzzy
+msgid "(MY COUNTRY is empty)"
+msgstr "(MY COUNTRY er tom)"
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Denne konkurrence beder om en stat, provins eller sektion, fordi mit land er %s."
+#: uappstrings.sexchangemodefromcountry
+#, fuzzy
+msgid "This contest is asking for a state, province or section because MY COUNTRY is %s."
+msgstr "Denne konkurrence beder om en stat, provins eller sektion, fordi MY COUNTRY er %s."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Denne konkurrence beder om en stat, provins eller sektion fordi mit land er tomt."
+#: uappstrings.sexchangemodefromemptycountry
+#, fuzzy
+msgid "This contest is asking for a state, province or section because MY COUNTRY is empty."
+msgstr "Denne konkurrence beder om en stat, provins eller sektion, fordi MY COUNTRY er tom."
+
+#: uappstrings.sfilenamecamefromsetting
+#, fuzzy
+msgid "The name came from the %s setting for this contest."
+msgstr "Navnet kom fra %s indstilling til denne konkurrence."
+
+#: uappstrings.sfilenotfoundthere
+#, fuzzy
+msgid "TR4W could not find this file:"
+msgstr "TR4W kunne ikke finde denne fil:"
+
+#: uappstrings.sfirstrunconvertmissing
+#, fuzzy
+msgid ""
+"TR4W could not find the conversion program:\n"
+"    %s\n"
+"\n"
+"It is installed beside TR4W itself. TR4W will start with its defaults, and your old settings file is left untouched."
+msgstr ""
+"TR4W kunne ikke finde konverteringsprogrammet:\n"
+" %sDet er installeret ved siden af TR4W selv. TR4W vil starte med sine standardindstillinger, og din gamle indstillinger fil er efterladt uberørt."
+
+#: uappstrings.sfirstrunconvertnothingdone
+#, fuzzy
+msgid ""
+"Nothing was converted.\n"
+"\n"
+"TR4W will start with its defaults and your old settings file is untouched. You can convert at any time by running\n"
+"    %s\n"
+"\n"
+"from a command prompt in that folder. Converting then replaces whatever you have configured in the meantime with the old values."
+msgstr ""
+"Intet blev konverteret.\n"
+"\n"
+"TR4W vil starte med sine standardindstillinger og din gamle indstillinger fil er uberørt. Du kan konvertere til enhver tid ved at køre\n"
+" %sfra en kommandoprompt i mappen. Konvertering derefter erstatter hvad du har konfigureret i mellemtiden med de gamle værdier."
+
+#: uappstrings.sfirstrunconvertnow
+#, fuzzy
+msgid "Convert now"
+msgstr "Konvertér nu"
+
+#: uappstrings.sfirstrunconvertprompt
+#, fuzzy
+msgid ""
+"TR4W has found settings from an earlier version:\n"
+"    %s\n"
+"\n"
+"and it has not written its own settings file yet:\n"
+"    %s\n"
+"\n"
+"TR4W can carry that old configuration across now. The conversion lists what it would change and asks before writing anything, so you can look first and still say no.\n"
+"\n"
+"You do not have to do it now. Nothing is lost by continuing: TR4W starts with its defaults, your old file is left untouched, and converting later simply replaces those defaults with your old values.\n"
+"\n"
+"What is worth knowing is the ORDER. If you continue now and then set TR4W up by hand, converting afterwards overwrites that work with the values from the old file. Converting first avoids the question."
+msgstr ""
+"TR4W har fundet indstillinger fra en tidligere version:\n"
+" %sog den har endnu ikke skrevet sin egen indstillingsfil:\n"
+" %sTR4W kan bære den gamle konfiguration over nu. Konverteringen lister, hvad det ville ændre og spørger, før du skriver noget, så du kan se først og stadig sige nej.\n"
+"\n"
+"Du behøver ikke gøre det nu. Intet går tabt ved at fortsætte: TR4W starter med sine standardværdier, din gamle fil forbliver uberørt, og konvertere senere blot erstatter disse standardværdier med dine gamle værdier.\n"
+"\n"
+"Det, der er værd at vide, er ORDER. Hvis du fortsætter nu og derefter indstille TR4W op i hånden, konvertering bagefter overskriver, at arbejde med værdierne fra den gamle fil. Konvertering først undgår spørgsmålet."
+
+#: uappstrings.sfirstrunconvertskip
+#, fuzzy
+msgid "Continue without converting"
+msgstr "Fortsæt uden at konvertere"
+
+#: uappstrings.sfirstrunconverttitle
+#, fuzzy
+msgid "TR4W -- settings from an earlier version"
+msgstr "TR4W -- indstillinger fra en tidligere version"
+
+#: uappstrings.slogfileunavailable
+#, fuzzy
+msgid ""
+"TR4W could not open its log file.\n"
+"\n"
+"%s\n"
+"\n"
+"TR4W will keep running and keep trying to open it. Until it can, nothing from this session is written to the log."
+msgstr ""
+"TR4W kunne ikke åbne sin logfil.\n"
+"\n"
+"%sTR4W fortsætter og prøver at åbne den. Indtil det kan, er intet fra denne session skrevet til loggen."
+
+#: uappstrings.snetcomputeridinuse
+#, fuzzy
+msgid ""
+"Computer ID %s is already in use by another station on this network.\n"
+"\n"
+"Change COMPUTER ID to a letter no other station is using, then reconnect."
+msgstr ""
+"Computer- id %s er allerede i brug af en anden station på dette netværk.\n"
+"\n"
+"Ændr COMPUTER ID til et brev ingen anden station bruger, derefter gentilslutte."
+
+#: uappstrings.snewcontestin7qpnecountyorstate
+#, fuzzy
+msgid "Enter your county if you are in Indiana, the 7th call area, New England or Delaware. Enter your state, Canadian Province or \"DX\" if outside all four:"
+msgstr "Indtast dit amt, hvis du er i Indiana, det 7. call area, New England eller Delaware. Indtast din stat, canadiske provins eller \"DX\" hvis udenfor alle fire:"
+
+#: uappstrings.sqsonotlogged
+#, fuzzy
+msgid "NOT LOGGED -- the contest log would not accept this QSO. See tr4w.log. Do not clear the entry."
+msgstr "NOT LOGGGED -- konkurrencen log ville ikke acceptere denne QSO. Se Tr4w.log. Ryd ikke indgangen."
+
+#: uappstrings.sreadinessdomesticfilemissing
+#, fuzzy
+msgid "This contest scores domestic multipliers from a .DOM file and none is named, so no domestic multiplier will be counted."
+msgstr "Denne konkurrence scorer indenlandske multiplikatorer fra en .DOM-fil, og ingen er navngivet, så ingen indenlandsk multiplikator vil blive talt."
+
+#: uappstrings.sreadinessfooter
+#, fuzzy
+msgid "Set these in Preferences > Station, then restart TR4W: they are read once when the contest is set up, so changing them now will not change this contest."
+msgstr "Sæt disse i Indstillinger > Station, derefter genstart TR4W: de læses en gang, når konkurrencen er sat op, så ændre dem nu vil ikke ændre denne konkurrence."
+
+#: uappstrings.sreadinessheading
+#, fuzzy
+msgid "This contest is set up, but TR4W is missing information it needs:"
+msgstr "Denne konkurrence er oprettet, men TR4W mangler oplysninger, den har brug for:"
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Min telefon er tom. TR4W kan ikke løse dit land, kontinent eller område uden det, og intet, der afhænger af dem, vil være rigtigt."
+#: uappstrings.sreadinessmycallmissing
+#, fuzzy
+msgid "MY CALL is empty. TR4W cannot work out your country, continent or zone without it, and nothing that depends on them will be right."
+msgstr "MY CALL er tom. Uden den kan TR4W ikke finde dit land, kontinent eller zone, og intet, der afhænger af dem, bliver rigtigt."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Mit land er tomt. Det er normalt udarbejdet fra min call gennem CTY.DATA. Indtil det har en værdi TR4W behandler denne station som DX -- i ARRL DX betyder, at det vil bede alle stationer om en stat eller provins og nægte en magt som K eller 100."
+#: uappstrings.sreadinessmycountrymissing
+#, fuzzy
+msgid "MY COUNTRY is empty. It is normally worked out from MY CALL through CTY.DAT. Until it has a value TR4W treats this station as DX -- in ARRL DX that means it will ask every station for a state or province and refuse a power such as K or 100."
+msgstr "MY COUNTRY er tom. Den udledes normalt af MY CALL via CTY.DAT. Indtil den har en værdi, behandler TR4W denne station som DX -- i ARRL DX betyder det, at den vil bede hver station om en stat eller provins og afvise en effekt som K eller 100."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Min GRID er tom, og konkurrencen sender dit kvadratnet."
+#: uappstrings.sreadinessmygridmissing
+#, fuzzy
+msgid "MY GRID is empty and this contest sends your grid square."
+msgstr "MY GRID er tom, og denne konkurrence sender din locator."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Min stat er tom og denne konkurrence sender din stat, provins eller sektion. TR4W sender et serienummer i stedet."
+#: uappstrings.sreadinessmystatemissing
+#, fuzzy
+msgid "MY STATE is empty and this contest sends your state, province or section. TR4W will send a serial number instead."
+msgstr "MY STATE er tom, og denne konkurrence sender din stat, provins eller sektion. TR4W sender i stedet et serienummer."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Min ZONE er tom og denne konkurrence sender din zone."
+#: uappstrings.sreadinessmyzonemissing
+#, fuzzy
+msgid "MY ZONE is empty and this contest sends your zone."
+msgstr "MY ZONE er tom, og denne konkurrence sender din zone."
+
+#: uappstrings.sverifyallpassed
+#, fuzzy
+msgid "All %d check(s) passed."
+msgstr "Alle %d kontrol (er) bestået."
+
+#: uappstrings.sverifyclose
+#, fuzzy
+msgid "&Close"
+msgstr "& Luk"
+
+#: uappstrings.sverifycolumncheck
+#, fuzzy
+msgid "Check"
+msgstr "Tjek"
+
+#: uappstrings.sverifycolumnresult
+#, fuzzy
+msgid "Result"
+msgstr "Resultat"
+
+#: uappstrings.sverifyfailed
+#, fuzzy
+msgid "FAILED"
+msgstr "FAILED"
+
+#: uappstrings.sverifypassed
+#, fuzzy
+msgid "Passed"
+msgstr "Bestået"
+
+#: uappstrings.sverifyrun
+#, fuzzy
+msgid "&Run checks"
+msgstr "& Kør kontroller"
+
+#: uappstrings.sverifyrunning
+#, fuzzy
+msgid "Running %d check(s)..."
+msgstr "Kører %d kontrol (er)..."
+
+#: uappstrings.sverifysomefailed
+#, fuzzy
+msgid "%d of %d check(s) FAILED. Select a row for details."
+msgstr "%d af %d kontrol (er) FAILED. Vælg en række for detaljer."
+
+#: uappstrings.sverifytitle
+#, fuzzy
+msgid "Verification checks"
+msgstr "Kontrol"
+
+#: uprogrammain.scontestfileforeigndatabase
+#, fuzzy
+msgid ""
+"This file is a database, but it was not created by TR4W:\n"
+"\n"
+"%s\n"
+"\n"
+"TR4W cannot open another program's log. Choose a TR4W log (.db) or a contest configuration file (.cfg)."
+msgstr ""
+"Denne fil er en database, men den blev ikke oprettet af TR4W:\n"
+"\n"
+"%sTR4W kan ikke åbne et andet programs log. Vælg en TR4W log (.db) eller en konkurrence konfiguration fil (.cfg)."
+
+#: uprogrammain.scontestfilenotrecognised
+#, fuzzy
+msgid ""
+"This file is not a TR4W log and is not a contest configuration file:\n"
+"\n"
+"%s\n"
+"\n"
+"Choose a TR4W log (.db) or a contest configuration file (.cfg)."
+msgstr ""
+"Denne fil er ikke en TR4W log og er ikke en konkurrence konfiguration fil:\n"
+"\n"
+"%sVælg en TR4W log (.db) eller en konkurrence konfiguration fil (.cfg)."
+
+#: utr4wstrings.tc_bankalt
+#, fuzzy
+msgid "Alt"
+msgstr "Alt"
+
+#: utr4wstrings.tc_bankcontrol
+#, fuzzy
+msgid "Control"
+msgstr "Kontrol"
+
+#: utr4wstrings.tc_bankstandard
+#, fuzzy
+msgid "Standard"
+msgstr "Standard"
+
+#: utr4wstrings.tc_ignoredunknownqth
+#, fuzzy
+msgid "Ignored, not a known QTH:"
+msgstr "Ignoreret, ikke kendt QTH:"
+
+# 2026-10-19: carried from tfrmnewcontest.lblcontest.caption.
+#: uappstrings.snewcontestcontestlabel
+#, fuzzy
+msgid "CONTEST"
+msgstr "KONTEST"
+
+#: uappstrings.snewcontestsearchhint
+#, fuzzy
+msgid "Search: type part of a name, e.g. QSO"
+msgstr "Søg: Type del af et navn, fx QSO"
+
+#: uappstrings.simportmyfactsdifference
+#, fuzzy
+msgid "%s: %d QSO(s), e.g. %s (this contest: %s)"
+msgstr "%s: %d QSO (er), f.eks. %s (denne konkurrence: %s)"
+
+#: uappstrings.simportmyfactskept
+#, fuzzy
+msgid "The file's station was kept for %d QSO(s)."
+msgstr "Filens station blev holdt for %d QSO (er)."
+
+#: uappstrings.simportmyfactsquestion
+#, fuzzy
+msgid ""
+"This file names our station for %d of its %d QSO(s) (%s), and it is not what this contest has:%s\n"
+"\n"
+"Keep the file's values for those QSOs?\n"
+"Yes keeps the file's. No gives them this contest's, as a new QSO would get."
+msgstr ""
+
+#: uappstrings.simportmyfactsreplaced
+#, fuzzy
+msgid "%d QSO(s) were given this contest's station in place of the file's."
+msgstr "%d QSO (s) fik denne konkurrence station i stedet for filen."
+
+#: uappstrings.simportmyfactssame
+#, fuzzy
+msgid "%d QSO(s) named our station (%s), the same as this contest's."
+msgstr "%d QSO (s) navngivet vores station (%s), det samme som denne konkurrence."
+
+#: uappstrings.simportmyfactsstamped
+#, fuzzy
+msgid "%d QSO(s) named no station of ours and were given this contest's."
+msgstr "%d QSO (s) navngivet ingen station af vores og fik denne konkurrence."
+
+#: uappstrings.snewcontestshowinactive
+#, fuzzy
+msgid "Show inactive contests"
+msgstr "Vis inaktive konkurrencer"
+
+#: uappstrings.slatestcontestdetail
+#, fuzzy
+msgid "%0:s - %1:s"
+msgstr "%0:s - %1:s"
+
+#: uappstrings.slatestcontestline
+#, fuzzy
+msgid "%0:s %1:d"
+msgstr "%0:s %1:d"
+
+#: uappstrings.snewcontestfilescall
+#, fuzzy
+msgid "Call"
+msgstr "Kaldesignal"
+
+#: uappstrings.snewcontestfilescontest
+#, fuzzy
+msgid "Contest"
+msgstr "Konkurrence"
+
+#: uappstrings.snewcontestfilesfile
+#, fuzzy
+msgid "File"
+msgstr "Fil"
+
+#: uappstrings.snewcontestfilesyear
+#, fuzzy
+msgid "Year"
+msgstr "År"
 

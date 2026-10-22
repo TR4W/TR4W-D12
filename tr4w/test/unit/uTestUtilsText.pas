@@ -83,6 +83,7 @@ type
       procedure Test_CharBufferText_StopsAtNul;
       procedure Test_CharBufferText_IgnoresBytesPastTheNul;
       procedure Test_CharBufferSlice_ByPosition;
+      procedure Test_CharBufferSlice_RecognisesAWireTag;
       procedure Test_CharBufferSlice_StopsAtNul;
       procedure Test_CharBufferSlice_OutOfRangeIsEmpty;
 
@@ -112,6 +113,17 @@ type
       procedure Test_AnsiStringFromBytes_Slices;
       procedure Test_AnsiStringFromBytes_OutOfRangeIsEmpty;
       procedure Test_AnsiStringFromBytes_KeepsHighBytes;
+
+      (* P12 (2026-10-18), written BEFORE BinToHexStr lost its untyped
+        buffer and green against it: it had no test, and no caller, and it is
+        about to become the one hex dumper for the Icom and server traces. *)
+      procedure Test_BinToHexStr_UppercaseUnseparated;
+      procedure Test_BinToHexStr_EmptyAndZeros;
+
+      (* NEW with the separator, so written after it: the format the Icom CI-V
+        trace (uIcomNetworkTransport.BytesToHexStr, deleted) always printed,
+        and what uServerNet.HexOf builds on. *)
+      procedure Test_BinToHexStr_SeparatorGoesBetweenBytesOnly;
    end;
 
 implementation
@@ -503,6 +515,25 @@ begin
    CheckEquals('W3LPL', CharBufferSlice(buf, 6, 5), 'the spotter');
    CheckEquals('NY4I',  CharBufferSlice(buf, 23, 4), 'the spotted call');
    CheckEquals('D',     CharBufferSlice(buf, 0, 1), 'a single character');
+end;
+
+procedure TUtilsTextTests.Test_CharBufferSlice_RecognisesAWireTag;
+var
+   buf: array[0..63] of AnsiChar;
+begin
+   (* Pointer audit 3.4: tr4wserver's CorrectPassword recognised a 'GET ...PASS'
+     handshake by reading buf[0..3] and buf[6..9] as integers. It asks the
+     slices now, and this pins that the slices answer the same questions --
+     including when the bytes are NOT the tag. *)
+   BeginTest('CharBufferSlice reads a four-byte tag at an offset');
+   SetCharBuffer(buf, 'GET abPASS secret');
+   CheckEquals('GET ', CharBufferSlice(buf, 0, 4), 'the verb');
+   CheckEquals('PASS', CharBufferSlice(buf, 6, 4), 'the keyword at byte 6');
+   SetCharBuffer(buf, 'GET abPASX secret');
+   CheckEquals('PASX', CharBufferSlice(buf, 6, 4), 'one byte off is a different slice');
+   SetCharBuffer(buf, 'GE');
+   CheckEquals('GE', CharBufferSlice(buf, 0, 4), 'a short buffer yields a short slice');
+   CheckTrue(CharBufferSlice(buf, 0, 4) <> 'GET ', 'which is not the tag');
 end;
 
 procedure TUtilsTextTests.Test_CharBufferSlice_StopsAtNul;
@@ -953,8 +984,73 @@ begin
    CheckEquals($FF, Ord(s[3]), 'the last high byte');
 end;
 
+// ---------------------------------------------------------------------------
+// BinToHexStr
+// ---------------------------------------------------------------------------
+
+(* THE ONE PLACE THESE PINS CALL BinToHexStr, so its signature change touches
+  one line and no assertion. *)
+function HexOfBytes(const aBytes: TBytes): string;
+begin
+   Result := BinToHexStr(aBytes);
+end;
+
+procedure TUtilsTextTests.Test_BinToHexStr_UppercaseUnseparated;
+var
+   b: TBytes;
+begin
+   BeginTest('Test_BinToHexStr_UppercaseUnseparated');
+   SetLength(b, 4);
+   b[0] := $FE;
+   b[1] := $0A;
+   b[2] := $94;
+   b[3] := $FD;
+   CheckEquals('FE0A94FD', HexOfBytes(b), 'two digits a byte, upper case, nothing between');
+   SetLength(b, 1);
+   b[0] := $7;
+   CheckEquals('07', HexOfBytes(b), 'a single byte keeps its leading zero');
+end;
+
+procedure TUtilsTextTests.Test_BinToHexStr_EmptyAndZeros;
+var
+   b: TBytes;
+begin
+   BeginTest('Test_BinToHexStr_EmptyAndZeros');
+   SetLength(b, 0);
+   CheckEquals('', HexOfBytes(b), 'no bytes, no text');
+   SetLength(b, 3);
+   b[0] := $41;
+   b[1] := 0;
+   b[2] := $42;
+   CheckEquals('410042', HexOfBytes(b), 'a zero byte mid-buffer is printed, not a terminator');
+end;
+
+procedure TUtilsTextTests.Test_BinToHexStr_SeparatorGoesBetweenBytesOnly;
+var
+   b: TBytes;
+begin
+   BeginTest('Test_BinToHexStr_SeparatorGoesBetweenBytesOnly');
+   SetLength(b, 6);
+   b[0] := $FE;
+   b[1] := $FE;
+   b[2] := $E0;
+   b[3] := $94;
+   b[4] := $03;
+   b[5] := $FD;
+   CheckEquals('FE FE E0 94 03 FD', BinToHexStr(b, ' '),
+               'a CI-V frame as the Icom trace prints it: no leading or trailing space');
+   CheckEquals('E0 94', BinToHexStr(b[2..3], ' '), 'a slice dumps just its bytes');
+   CheckEquals('FE', BinToHexStr(b[0..0], ' '), 'one byte has no separator at all');
+   CheckEquals('FE::FE', BinToHexStr(b[0..1], '::'), 'a separator of any length');
+   SetLength(b, 0);
+   CheckEquals('', BinToHexStr(b, ' '), 'and nothing is nothing');
+end;
+
 procedure TUtilsTextTests.RunAllTests;
 begin
+   Test_BinToHexStr_UppercaseUnseparated;
+   Test_BinToHexStr_EmptyAndZeros;
+   Test_BinToHexStr_SeparatorGoesBetweenBytesOnly;
    Test_StringIsAllNumbers;
    Test_StringIsAllNumbersOrSpaces;
    Test_StringIsAllNumbersOrDecimal;
@@ -977,6 +1073,7 @@ begin
    Test_CharBufferText_StopsAtNul;
    Test_CharBufferText_IgnoresBytesPastTheNul;
    Test_CharBufferSlice_ByPosition;
+   Test_CharBufferSlice_RecognisesAWireTag;
    Test_CharBufferSlice_StopsAtNul;
    Test_CharBufferSlice_OutOfRangeIsEmpty;
 

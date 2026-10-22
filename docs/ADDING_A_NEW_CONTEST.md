@@ -6,7 +6,7 @@
 
 ## 1. Mental model
 
-A "contest" in TR4W is a row of metadata + a small amount of behavior wired in by case-statements keyed on a `ContestType` enum value. The metadata lives in **eight parallel arrays in `VC.pas`** — every array is indexed by `ContestType`, and they must stay perfectly in lockstep. Behavior is wired in three places: `fcontest.pas` (init defaults), `logstuff.pas` (scoring), and `uNewContest.pas` (UI prompt).
+A "contest" in TR4W is a `ContestType` enum value and **a class that owns its rules** -- its names and ids, its exchange and multiplier kinds, its flags, its scoring, its set-up and its prompts (`docs/ADDING_A_CONTEST.md`, `docs/CONTEST_OWNERSHIP_DESIGN.md`). **There is no metadata row any more**: `ContestsArray`, `ContestsBooleanArray` and `QSOParties` were deleted at M10 S8 (2026-10-14), after every class had stated their values (S5). `VC.pas` keeps the enum and one parallel array, `ContestTypeSA` (the spelling a `.cfg`'s `CONTEST =` line matches).
 
 The vast majority of plumbing — exchange parsing, Cabrillo formatting, dupe handling, ADIF export, multiplier tracking — already exists for the common exchange shapes. **Reuse before writing new parsers.**
 
@@ -14,62 +14,58 @@ The vast majority of plumbing — exchange parsing, Cabrillo formatting, dupe ha
 
 ## 2. Anatomy of a contest definition
 
-Eight `VC.pas` arrays (indexed by `ContestType`) must each get a new entry, in the same order:
+> **SINCE Q108 S3 (2026-10-17) THE `ContestType` ENUM IS FROZEN, AND A NEW
+> CONTEST HAS NO ENTRY IN `VC.pas`.** `Lint-FrozenContestNumbers` fails the
+> build if a member is added -- appended included -- removed, reordered or
+> renamed. A new contest registers by its string id
+> (`RegisterContestById`), and **a real contest MAY do so since Q108 S4
+> (2026-10-17)** -- multi-op is refused for it (no legacy number for the V1
+> packet) and its `<contestnr>` is derived from its id; see
+> `ADDING_A_CONTEST.md`, "A NEW CONTEST REGISTERS BY ITS ID".
+> The table below describes the 188 LEGACY contests, which is how every
+> existing contest was added; S5 rewrites this document.
 
-| Array | Approx line | What it holds |
-|---|---|---|
-| `ContestType` enum | ~960 | The new enum value (e.g. `RTC`) |
-| `ContestsArray` | ~3370+ | The big metadata row (exchange, mults, scoring method, Cabrillo name, etc.) |
-| `ContestTypeSA` | ~3560+ | Short display name (`PChar`), shown in UI |
-| `ContestsBooleanArray` | ~3790+ | Bitfield of `ciCDC0`/`ciCQZoneMode0`/`ciVHFEnabled0`/`ciErmak0`/`ciQB?`/`ciQM?`/`ciMB?`/`ciMM?` |
+`VC.pas` holds **two** entries per LEGACY contest, in the same position:
 
-If your contest introduces a brand-new QSO-points formula, you also touch:
-
-| Array / type | Approx line | Notes |
-|---|---|---|
-| `QSOPointMethodType` enum | ~2820+ | New enum entry (e.g. `RTCQSOPointMethod`) |
-| `QSOPointMethodSA` | ~3030+ | `PChar` name array for the QP enum |
-
-**Adding to the end of each enum is the safe move** — appending keeps existing on-disk binary log files and config files compatible. Reordering the enum will break those files.
-
-### `ContestsArray` row reference
-
-Field-by-field, using a real RTC row:
-
-```pascal
-({Name: 'RTC';                        }
- Email: nil;                       // contest committee email; nil if none
- DF: nil;                          // domestic-file basename (e.g. 'va_cty'); nil if no .DOM file used
- WA7BNM: 0782;                     // contestcalendar.com numeric ID
- QRZRUID: 0;                       // qrz.ru contest ID
- Pxm: NoPrefixMults;               // prefix-multiplier type
- ZnM: NoZoneMults;                 // zone-multiplier type
- AIE: GridInitialExchange;         // what to auto-prefill in the exchange box
- DM: GridSquares;                  // domestic-multiplier type (per-band by default)
- P: 0;                             // points-table index (legacy)
- AE: RSTQSONumberAndGridSquareExchange;  // exchange type
- XM: NoDXMults;                    // DX-multiplier type
- QP: RTCQSOPointMethod;            // scoring method
- ADIFName: 'RTC';                  // ADIF CONTEST_ID
- CABName: 'RTC')                   // Cabrillo CONTEST: header value
-```
-
-### `ContestsBooleanArray` bit recipe
-
-Each flag is `ciXXX0` (off) or `ciXXX1` (on). The eight bits are:
-
-| Bit | Meaning when on |
+| Where | What it holds |
 |---|---|
-| `ciCDC1` | (legacy) |
-| `ciCQZoneMode1` | CQ-zone-style scoring |
-| `ciVHFEnabled1` | VHF bands enabled by default |
-| `ciErmak1` | (Russian regional config) |
-| `ciQB1` | Dupes are per-band (call+band, otherwise call-only) |
-| `ciQM1` | Dupes are per-mode (call+band+mode) |
-| `ciMB1` | Multipliers counted per band |
-| `ciMM1` | Multipliers counted per mode |
+| `ContestType` enum | The new enum value (e.g. `RTC`) -- **appended**, because the ordinal is persisted |
+| `ContestTypeSA` | The enum's spelling: what a `.cfg`'s `CONTEST =` line is matched against, what the SQLite log stores, and every name getter's neutral fallback. **Never reuse a spelling for another contest**; a renamed one keeps its old spelling in `uContestNames.LEGACY_CONTEST_NAMES` (`ADDING_A_CONTEST.md` Step 3c) |
 
-A mixed-mode contest with per-band dupes (RTC, WWDIGI): `ciQB1 + ciQM0 + ciMB1 + ciMM0`.
+Everything else is the contest's class, in `src/contestFactory/` -- read
+[`ADDING_A_CONTEST.md`](ADDING_A_CONTEST.md). A state QSO party also ships
+both `.dom` files (`<base>.dom` and `<base>_cty.dom`) in `full.nsi`, which
+`Lint-DomCoverage` checks against each party class's
+`InStateDomesticFileName`.
+
+**A new QSO-points formula touches no shared table.** `QSOPointMethodType`, its
+spelling table and the row's `QP:` column are gone (M10 S2-S4, 2026-10-14): a
+contest's scoring is its class's `CalculateQSOPoints` -- see
+[`ADDING_A_CONTEST.md`](ADDING_A_CONTEST.md). There is no point method to set.
+
+~~**Adding to the end of the enum is the safe move**~~ — **not any more (Q108 S3): the enum is frozen.** Appending kept existing binary log files, config files and the multi-op packet compatible, but an appended member would now collide with the handles the registry gives contests registered by id, which start one above the last member. Reordering the enum would break those files, and still would.
+
+### Where the old row's fields went (M10 S8)
+
+For reading a pre-S8 commit, or a contest transcribed from one. Each field of
+the deleted `ContestsArray` row is a `TContestBase` getter the class states:
+
+| old row field | the class states |
+|---|---|
+| `Name` / `FriendlyName` | `GetDisplayName`, `GetFriendlyName` |
+| `ADIFName` / `CABName` | `GetADIFContestId`, `GetCabrilloName` |
+| `Email` / `DF` | `GetSubmissionEmail`, `GetDomesticFileName` |
+| `WA7BNM` / `QRZRUID` | `GetWA7BNMId`, `GetQRZRUId` |
+| `PxM` `ZnM` `XM` `DM` | `HasPrefixMultiplier` and `PrefixMultiplierKey` (the prefix KIND and `GetPrefixMultiplierType` were deleted at M11 S3), `HasZoneMultiplier` and `ZoneMultiplierCount` (plus `ZoneMultiplierZones` for CQ or ITU zones and `NumbersZonesFromZero`; the zone KIND and `GetZoneMultiplierType` were deleted at M11 S5), `HasDXMultiplier` and `DXMultiplierKey` (plus `CountryMode` for DXCC only; the DX KIND and `GetDXMultiplierType` were deleted at M11 S4), `UsesDomesticFile` for a `.DOM` lookup, or the shape answers (`DomesticMultiplierFromQTH`, `DomesticMultiplierHint`, `HasGridSquareMultiplier`, `HasGridFieldMultiplier`, `DomesticQTHReplacesDXMultiplier`, `DomesticQTHIsNeverAGrid`); `HasDomesticMultiplier` is composed from them in the base (the domestic KIND and `GetDomesticMultiplierType` were deleted at M11 S6) |
+| `AIE` / `AE` | `GetInitialExchangeKind`, `GetExchangeKind`, and `GetReceivedExchangeFields` (the fields that exchange carries, calling a `uExchangeFields` helper -- M11 S9a; the base marks none) |
+| `P` (the `QSOParties` index) | `GetIsUSQSOParty`, `GetHostState`, `GetInStateDomesticFileName`, `GetQSOPartyArea` |
+| `CountyLineAllowed` | the import's county line is `TContestStateQSOPartyBase.CountyLineAllowed` (S7); the rover split on ADIF export is `TContestBase.SplitsRoverCallOnExport` (S8), True for every QSO party since Q90/Q94 (2026-10-14) -- a state party inherits it from its base |
+| the `ContestsBooleanArray` word (`ciQB`, `ciQM`, `ciMB`, `ciMM`, `ciErmak`, `ciVHFEnabled`, `ciCQZoneMode`, `ciCDC`, `ciRTC`) | `GetFlags: TContestFlags` -- `cfQSOByBand`, `cfQSOByMode`, `cfMultByBand`, `cfMultByMode`, `cfErmakSpecification`, `cfVHFBandsEnabled`, `cfCQZoneMode`, `cfCountsDomesticCountries`, `cfRTCCapable` |
+
+A getter a class does not state answers DUMMYCONTEST's neutral row (M10 S6):
+`[]`, the `No*` kinds, `''`, 0, and the enum's spelling for the names. A
+mixed-mode contest with per-band dupes (RTC, WWDIGI) states
+`[cfQSOByBand, cfMultByBand]`.
 
 ---
 
@@ -99,22 +95,35 @@ Each exchange type already has:
 
 **If you find an existing exchange type that matches, you write zero new parsing/serialization code.**
 
-### QSO-point methods (`VC.pas:2940+`)
+### QSO points -- the contest's class, not an enum
 
-There are ~80 scoring methods. Distance-based, country-based, zone-based, multiplier-conditional — most patterns exist. Check `logstuff.pas:CalculateQSOPoints` (case statement starting around line 5796) before writing a new one. Add yours by:
+Until 2026-10-14 a contest named one of ~130 `QSOPointMethodType` values and
+`logstuff.pas:CalculateQSOPoints` had a `case` arm per value. The arm moved into
+each contest's class (M3 onward), the `case` was deleted at M10 S3 and the
+enum at M10 S4. Score your contest in its class's `CalculateQSOPoints`
+(`ADDING_A_CONTEST.md`); a computation genuinely shared by several contests is
+a helper the class calls (`FixedModePoints`, `LOGGRID.GetDistanceBetweenGrids`).
 
-1. Adding the enum value
-2. Adding the `PChar` name
-3. Adding a `case` branch in `CalculateQSOPoints`
+### Domestic multipliers -- the class states them (M11 S6, 2026-10-14)
 
-### Domestic multiplier types (`DomesticMultStringArray`, ~`VC.pas:2989`)
+There is no domestic-multiplier enum any more (`DomesticMultType` was deleted
+at M11 S6 part 2). The class says what a received domestic QTH means:
 
-- `GridSquares` — 4-char Maidenhead (e.g. FN20)
-- `GridFields` — 2-char Maidenhead (e.g. FN)
-- `DomesticFile` — a `.DOM` file lookup (US states, JA prefectures, etc.)
-- `WYSIWYG` — whatever the operator typed
-- `IOTA` / `DOK` / `RDA` — specialty databases
-- `NoDomesticMults` — none
+- **a `.DOM` file lookup** (US states, JA prefectures, a party's counties ...)
+  -- override `UsesDomesticFile` (or inherit it: every state QSO party does
+  from `TContestStateQSOPartyBase`);
+- **a grid square / grid field** -- override `DomesticMultiplierFromQTH` and
+  `DomesticMultiplierHint` with `uDomesticKey.GridSquareKey` /
+  `GridFieldKey`, and `HasGridSquareMultiplier` / `HasGridFieldMultiplier`;
+- **the text as typed (WYSIWYG)** -- `DomesticMultiplierFromQTH` and
+  `DomesticQTHReplacesDXMultiplier`;
+- **an RDA district / a DOK / an IOTA reference** -- copy RDA's, WAG's or the
+  RSGB IOTA's overrides;
+- **none** -- state nothing.
+
+`HasDomesticMultiplier` is composed from those answers in the base; a shape
+with no flag of its own (DOK, IOTA) overrides it. Pin the answers in
+`uTestDomesticMultiplier`.
 
 ### Initial exchange auto-prefill (`InitialExchangeType`, `VC.pas:561`)
 
@@ -128,7 +137,13 @@ There are ~80 scoring methods. Distance-based, country-based, zone-based, multip
 
 ## 4. Behavior knobs in `fcontest.pas`
 
-`fcontest.pas:OpenContest` has a giant case statement (`case Contest of`) where contest-specific defaults live. Most contests don't need an entry — the metadata row drives behavior. Add a case branch only if you need to:
+> **STALE SINCE M7a (2026-10-02).** FoundContest's `case Contest of` is
+> deleted: a contest states its session -- bands, modes, memories, exchange
+> strings -- in its class's `DescribeSession` (`ADDING_A_CONTEST.md`, "How a
+> contest describes its session"). The knobs below are still what the
+> session applies; where they are set is the class.
+
+`fcontest.pas:OpenContest` had a giant case statement (`case Contest of`) where contest-specific defaults lived. Most contests don't need an entry — the metadata row drives behavior. Add a case branch only if you need to:
 
 ### Band/mode group toggles (coarse-grained)
 
@@ -173,7 +188,7 @@ If the operator changes `MyGrid` mid-contest, function-key memories don't update
 
 ### Reuse the helper procedures
 
-`fcontest.pas` has helpers like `SetUpRSTQSONumberExchange`, `SetUpRSTMyStateExchange`, `SetUpRSTMyZoneExchange`, `SetUpNameAndStateExchange`. They're called from the exchange dispatch (`case ActiveExchange of` around line 1618). If your exchange type matches an existing helper, inheritance is automatic — you may not need to set memories at all.
+`fcontest.pas` has helpers like `SetUpRSTQSONumberExchange`, `SetUpRSTMyStateExchange`, `SetUpRSTMyZoneExchange`, `SetUpNameAndStateExchange`. They're called from the exchange dispatch in `FoundContest` (`case ContestSession.Exchange of` -- the session's resolved exchange kind, `ActiveExchange` until M10 S9f; grep for it rather than trust a line number). If your exchange type matches an existing helper, inheritance is automatic — you may not need to set memories at all.
 
 ---
 
@@ -193,9 +208,9 @@ If your contest doesn't need a special prompt, it falls through to the generic f
 
 ## 6. Common pitfalls
 
-### a) Parallel arrays must stay aligned
+### a) The one parallel array must stay aligned
 
-`ContestType`, `ContestsArray`, `ContestTypeSA`, `ContestsBooleanArray` are indexed by the same enum. **Always append in the same position** — if you put the new contest at the end of the enum, it must be at the end of every parallel array. Off-by-one will silently corrupt every contest after your insertion point at runtime.
+`ContestType` and `ContestTypeSA` are indexed by the same enum. **Always append in the same position** — if you put the new contest at the end of the enum, its spelling goes at the end of `ContestTypeSA`. The other two parallel tables (`ContestsArray`, `ContestsBooleanArray`) are gone (M10 S8), and `Lint-NoContestTables` fails the build if a new hand-typed `array[ContestType]` table appears.
 
 ### b) The `cMyGrid` ShortString → PChar trap
 
@@ -251,18 +266,14 @@ Never invoke `DCC32.EXE` directly. If the link step fails with `Could not create
 Working through a new contest, in dependency order:
 
 - [ ] Identify the contest's exchange shape — find a matching existing `ExchangeType` (`VC.pas:3144+`)
-- [ ] Identify the multiplier type — find a matching `DomesticMultType` / `XMType` / etc.
-- [ ] Identify or write the QSO-points method
-  - [ ] If new: add `XxxQSOPointMethod` to `QSOPointMethodType` enum
-  - [ ] Add `'Xxx'` to `QSOPointMethodSA`
-  - [ ] Add `XxxQSOPointMethod:` case branch in `logstuff.pas:CalculateQSOPoints`
+- [ ] Identify the multipliers -- each is a class answer now (`Has*Multiplier` and its key; see the table above), not an enum
+- [ ] Write the QSO-points rule in the contest's class (`CalculateQSOPoints`, `ADDING_A_CONTEST.md`) -- there is no point-method enum since M10 S4
   - [ ] If distance-based, sanity-check against rules' published fixture
 - [ ] Add the contest itself to `VC.pas`:
   - [ ] `ContestType` enum (append at end)
-  - [ ] `ContestsArray` row
-  - [ ] `ContestTypeSA` `PChar`
-  - [ ] `ContestsBooleanArray` row with correct `ciQB/ciQM/ciMB/ciMM`
-- [ ] If the contest needs init defaults, add a `Contest:` case in `fcontest.pas`
+  - [ ] `ContestTypeSA` spelling (append at end)
+- [ ] Write its class (`ADDING_A_CONTEST.md`): names and ids, kinds, `GetFlags` (`cfQSOByBand/cfQSOByMode/cfMultByBand/cfMultByMode`, ...) -- no `VC.pas` row exists to fill in
+- [ ] If the contest needs init defaults, state them in its class's `DescribeSession` (FoundContest's `case Contest of` is gone since M7a)
   - [ ] Band/mode group toggles (`HFBandEnable`, `WARCBandsEnabled`, `VHFBandsEnabled`, `DigitalModeEnable`)
   - [ ] `ActiveBand`, `ActiveMode` defaults
   - [ ] CW function-key memories and SAP exchange strings if non-trivial
@@ -284,7 +295,7 @@ For reference, the full RTC change set covered:
 |---|---|
 | `VC.pas` | 6 array entries (enum + 5 arrays) |
 | `loggrid.pas` | new `RTCGridDistance` Haversine helper (40 lines) |
-| `logstuff.pas` | new `RTCQSOPointMethod:` case branch + 1 new local var |
+| `logstuff.pas` | new `RTCQSOPointMethod:` case branch + 1 new local var (historical: the case and the enum are gone since M10 S3/S4; it is `uContestRTC` now) |
 | `fcontest.pas` | `RTC:` case with `WARCBandsEnabled` and CW function-key defaults |
 | `uNewContest.pas` | 1-word edit: add `RTC` to the 4-char-grid prompt |
 | `postunit.pas` | (bug fix surfaced by RTC, not strictly RTC) `cMyGrid` null-terminator |

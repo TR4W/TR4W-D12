@@ -52,6 +52,8 @@ type
       procedure Test_AssigningTheSameValueRaisesNothing;
       procedure Test_AWithdrawnCommandIsStillAccepted;
       procedure Test_NoRetiredNameIsAlsoLiveOrOwned;
+      procedure Test_TheSevenContestRuleSettingsAreRetired;
+      procedure Test_AWithdrawnNameIsReportedOncePerSession;
       procedure Test_AStoreOwnedCommandIsAcceptedAndIsNotRetired;
       procedure Test_ARangeIsPartOfTheType;
       procedure Test_TheTelnetConsoleCapIsBoundedAndDefaulted;
@@ -355,7 +357,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(298, names.Count,
+         CheckEquals(291, names.Count,
                      'one name per migrated setting, plus the ten that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -368,7 +370,11 @@ begin
                      + ' CFGCA row), 2026-09-19; 298 with TELNET'
                      + ' CONSOLE LINES, the DX cluster scrollback cap'
                      + ' (new, no CFGCA row -- nothing bounded that'
-                     + ' console before), 2026-09-24');
+                     + ' console before), 2026-09-24; 291 since the'
+                     + ' seven contest-rule settings retired -- QSO POINT'
+                     + ' METHOD, EXCHANGE RECEIVED, INITIAL EXCHANGE and'
+                     + ' the four multipliers (M10 S2, NY4I Q4),'
+                     + ' 2026-10-14');
       finally
          names.Free;
       end;
@@ -703,7 +709,103 @@ begin
      the ORIGINAL CFGCA array, which still exists in the D7 tree at C:\TR4W.
      `crAddress: nil` means it was already obsolete there. Of the 93, 49 were
      nil, 41 had a real target, and 3 had no row at all. *)
-   CheckTrue(RetiredCommandCount >= 88, 'the retired list has not shrunk');
+   (* 95 SINCE M10 S2 (2026-10-14): the seven contest-rule settings joined
+     the list. *)
+   CheckTrue(RetiredCommandCount >= 95, 'the retired list has not shrunk');
+end;
+
+(* ---------------------------------------------------------------------
+  THE SEVEN CONTEST-RULE SETTINGS, RETIRED AT M10 S2 (2026-10-14).
+
+  NY4I's Q4 ruling: QSO POINT METHOD, EXCHANGE RECEIVED, INITIAL EXCHANGE and
+  the four multiplier commands each chose from a SHARED set, and the
+  contest's class decides all of them now. User-defined contests are a
+  future feature, designed another way.
+
+  WHAT THIS PINS, in both directions: each name is withdrawn (so an old .cfg,
+  an old tr4w.ini, a stored log row and an older peer all load with no modal),
+  the settings object no longer owns it (so nothing can set it), it is not
+  sent to the other positions, and CheckCommand accepts it from an untrusted
+  AND a trusted caller -- the .cfg reader and the log's reapply respectively.
+  --------------------------------------------------------------------- *)
+procedure TSettingsModelTests.Test_TheSevenContestRuleSettingsAreRetired;
+const
+   SEVEN: array[0..6] of string = (
+      'QSO POINT METHOD',
+      'EXCHANGE RECEIVED',
+      'INITIAL EXCHANGE',
+      'DOMESTIC MULTIPLIER',
+      'DX MULTIPLIER',
+      'PREFIX MULTIPLIER',
+      'ZONE MULTIPLIER');
+var
+   s: TR4WSettings;
+   i: integer;
+   cmd: ShortString;
+begin
+   BeginTest('the seven contest-rule settings are withdrawn, not live');
+
+   s := TR4WSettings.Create;
+   try
+      for i := Low(SEVEN) to High(SEVEN) do
+         begin
+         CheckTrue(CommandIsRetired(SEVEN[i]), SEVEN[i] + ' is withdrawn');
+         CheckFalse(s.OwnsCommand(SEVEN[i]),
+                    SEVEN[i] + ' is no longer a setting');
+         CheckFalse(s.CommandIsContestScoped(SEVEN[i]),
+                    SEVEN[i] + ' is no longer contest-scoped');
+         CheckFalse(CommandIsSharedWithPeers(SEVEN[i]),
+                    SEVEN[i] + ' is not sent to the other positions');
+
+         cmd := ShortString(AnsiString(SEVEN[i]));
+         CheckTrue(CheckCommand(cmd, 'NONE'),
+                   SEVEN[i] + ' from a .cfg is accepted -- no modal');
+         CheckTrue(CheckCommand(cmd, 'NONE', True),
+                   SEVEN[i] + ' from the log or a peer is accepted');
+         end;
+
+      (* THE FOUR QSO POINTS OVERRIDES ARE NOT RETIRED (NY4I, Q4). *)
+      CheckTrue(s.OwnsCommand('QSO POINTS DOMESTIC CW'),
+                'QSO POINTS DOMESTIC CW is still a setting');
+      CheckFalse(CommandIsRetired('QSO POINTS DOMESTIC CW'),
+                 'and it is not withdrawn');
+
+      (* AND THE TOKEN SETTINGS THAT SHARED THEIR GROUP ARE STILL LIVE. *)
+      CheckTrue(s.OwnsCommand('INITIAL EXCHANGE CURSOR POS'),
+                'INITIAL EXCHANGE CURSOR POS is not INITIAL EXCHANGE');
+      CheckFalse(CommandIsRetired('INITIAL EXCHANGE CURSOR POS'),
+                 'and it is not withdrawn');
+   finally
+      s.Free;
+   end;
+end;
+
+(* A WITHDRAWN NAME IS REPORTED ONCE PER NAME PER SESSION -- the claim
+  uCFG's summary and CLAUDE.md always made, and the code did not keep until
+  M10 S2: every occurrence was logged, and an old contest log reapplies seven
+  such rows on every open. *)
+procedure TSettingsModelTests.Test_AWithdrawnNameIsReportedOncePerSession;
+begin
+   BeginTest('a withdrawn name is reported once per name per session');
+
+   ForgetRetiredCommandSightings;
+   try
+      CheckTrue(RetiredCommandFirstSighting('QSO POINT METHOD'),
+                'the first sighting is reported');
+      CheckFalse(RetiredCommandFirstSighting('QSO POINT METHOD'),
+                 'the second is not');
+      CheckFalse(RetiredCommandFirstSighting('qso point method'),
+                 'nor the same name in another case');
+      CheckTrue(RetiredCommandFirstSighting('DX MULTIPLIER'),
+                'another withdrawn name has its own first sighting');
+      CheckFalse(RetiredCommandFirstSighting('QSO POINTS DOMESTIC CW'),
+                 'a live setting is never a sighting');
+      CheckFalse(RetiredCommandFirstSighting(''),
+                 'nor is an empty command');
+   finally
+      (* Leave nothing behind for a later suite that logs one. *)
+      ForgetRetiredCommandSightings;
+   end;
 end;
 
 procedure TSettingsModelTests.Test_NoRetiredNameIsAlsoLiveOrOwned;
@@ -1401,17 +1503,14 @@ const
       + '"DISTANCE MODE",'
       + '"DIT DAH RATIO",'
       + '"DOMESTIC FILENAME",'
-      + '"DOMESTIC MULTIPLIER",'
       + '"DUPE CHECK SOUND",'
       + '"DUPE SHEET AUTO RESET",'
       + '"DVK ENABLE",'
       + '"DVK LOCALIZED MESSAGES ENABLE",'
       + '"DVK PATH",'
       + '"DVK RECORDER",'
-      + '"DX MULTIPLIER",'
       + '"ESCAPE EXITS SEARCH AND POUNCE",'
       + '"EXCHANGE MEMORY ENABLE",'
-      + '"EXCHANGE RECEIVED",'
       + '"EXTERNAL LOGGER",'
       + '"EXTERNAL LOGGER ADDRESS",'
       + '"EXTERNAL LOGGER ENABLED",'
@@ -1434,7 +1533,6 @@ const
       + '"IN BAND LOCKOUT",'
       + '"INCLUDE F-KEY NUMBER",'
       + '"INCREMENT TIME ENABLE",'
-      + '"INITIAL EXCHANGE",'
       + '"INITIAL EXCHANGE CURSOR POS",'
       + '"INITIAL EXCHANGE FILENAME",'
       + '"INITIAL EXCHANGE OVERWRITE",'
@@ -1499,7 +1597,6 @@ const
       + '"POSSIBLE CALL MODE",'
       + '"POSSIBLE CALL RIGHT KEY",'
       + '"POSSIBLE CALLS",'
-      + '"PREFIX MULTIPLIER",'
       + '"PSTROTATOR IP ADDRESS",'
       + '"PSTROTATOR UDP PORT",'
       + '"PTT ENABLE",'
@@ -1516,7 +1613,6 @@ const
       + '"QSO BY BAND",'
       + '"QSO BY MODE",'
       + '"QSO NUMBER BY BAND",'
-      + '"QSO POINT METHOD",'
       + '"QSO POINTS DOMESTIC CW",'
       + '"QSO POINTS DOMESTIC PHONE",'
       + '"QSO POINTS DX CW",'
@@ -1610,8 +1706,7 @@ const
       + '"WSJT-X MULTICAST GROUP",'
       + '"WSJT-X RADIO CONTROL ENABLED",'
       + '"WSJT-X SEND HIGHLIGHTS",'
-      + '"YCCC SO2R ENABLE",'
-      + '"ZONE MULTIPLIER"';
+      + '"YCCC SO2R ENABLE"';
 
 var
    s: TR4WSettings;
@@ -2090,6 +2185,8 @@ begin
    Test_ASetterRaisesTheChange;
    Test_AssigningTheSameValueRaisesNothing;
    Test_AWithdrawnCommandIsStillAccepted;
+   Test_TheSevenContestRuleSettingsAreRetired;
+   Test_AWithdrawnNameIsReportedOncePerSession;
    Test_NoRetiredNameIsAlsoLiveOrOwned;
    Test_AStoreOwnedCommandIsAcceptedAndIsNotRetired;
    Test_ARangeIsPartOfTheType;

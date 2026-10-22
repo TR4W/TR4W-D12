@@ -191,7 +191,10 @@ type
     {01}ITUZone: Byte;
   end;
 
-  PrefixRecPtr = ^PrefixRec;
+  (* PrefixRecPtr IS GONE (pointer audit 6.14). It existed so
+    ctyAddNewPrefixRecord could be handed @pr and three readers could hold
+    @CTY.ctyPrefixesTable[i]; the first takes the record now and the others
+    index the table. *)
 
   (* THE COUNTRY PREFIX TABLE.
 
@@ -284,7 +287,7 @@ function ctyGetCountryName(Index: Word): string;
 function ctyGetCountryID(const Call: string): string;
 
 procedure ctyShellSort;
-procedure ctyAddNewPrefixRecord(pr: PrefixRecPtr; CheckDupe: boolean);
+procedure ctyAddNewPrefixRecord(const pr: PrefixRec; CheckDupe: boolean);
 procedure ctyLoadInRFOblList;   // n4af 4.42.6
 procedure ctyLoadInRemainingMults(const aSection: AnsiString);
 procedure ctyLoadInR150SList;
@@ -360,7 +363,7 @@ begin
   ConvertLatLonToGrid := m1 + m2 + m3 + m4 + m5 + m6;
 end;
 
-procedure ctyAddNewPrefixRecord(pr: PrefixRecPtr; CheckDupe: boolean);
+procedure ctyAddNewPrefixRecord(const pr: PrefixRec; CheckDupe: boolean);
 var
   TempIndex                             : integer;
 begin
@@ -385,7 +388,7 @@ begin
       for TempIndex := 0 to CTY.CTYPrefixesTableRecords - 1 do
         if CompareCharBuffer(CTY.ctyPrefixesTable[TempIndex].Prefix, pr.Prefix) = 0 then
            begin
-           CTY.ctyPrefixesTable[TempIndex] := pr^;
+           CTY.ctyPrefixesTable[TempIndex] := pr;
            Exit;
            end;
       end;
@@ -396,7 +399,7 @@ begin
                Length(CTY.ctyPrefixesTable) + PREFIX_TABLE_GROW);
      end;
 
-  CTY.ctyPrefixesTable[CTY.CTYPrefixesTableRecords] := pr^;
+  CTY.ctyPrefixesTable[CTY.CTYPrefixesTableRecords] := pr;
   inc(CTY.CTYPrefixesTableRecords);
 end;
 
@@ -826,7 +829,7 @@ begin
           if oITU <> 0 then begin pr.ITUZone := oITU;
             oITU := 0;
           end {else pr.ITUZone := r.DefaultITUZone};
-          ctyAddNewPrefixRecord(@pr, CheckDupe);
+          ctyAddNewPrefixRecord(pr, CheckDupe);
           if pr.Prefix[0] = 'V' then
             if pr.Prefix[1] = 'E' then
               if pr.Prefix[2] = 'R' then
@@ -964,7 +967,7 @@ procedure ctyBuildPrefixIndex;
 var
   i        : integer;
   TempChar : Char;
-  rec      : PrefixRecPtr;
+  Entry    : PrefixRec;
 begin
   FillChar(CTY.ctyIndexArray, SizeOf(CTY.ctyIndexArray), -1);
   FillChar(CTY.ctyMaxLengthIndexArray, SizeOf(CTY.ctyMaxLengthIndexArray), 0);
@@ -977,17 +980,19 @@ begin
     rewritten the wrong way round. *)
   for i := Integer(CTY.ctyPrefixesTableRecords) - 1 downto 0 do
      begin
-     rec := @CTY.ctyPrefixesTable[i];
-     CTY.ctyIndexArray[rec^.Prefix[0]] := i;
+     Entry := CTY.ctyPrefixesTable[i];
+     CTY.ctyIndexArray[Entry.Prefix[0]] := i;
 
      (* A FULL CALLSIGN IS NOT A PREFIX and must not stretch the length the
        search is willing to try -- otherwise every lookup under that letter
        would test prefixes no prefix is that long. *)
-     if not rec^.FullCallsigns then
-        if rec^.PrefLength > CTY.ctyMaxLengthIndexArray[rec^.Prefix[0]] then
+     if not Entry.FullCallsigns then
+        begin
+        if Entry.PrefLength > CTY.ctyMaxLengthIndexArray[Entry.Prefix[0]] then
            begin
-           CTY.ctyMaxLengthIndexArray[rec^.Prefix[0]] := rec^.PrefLength;
+           CTY.ctyMaxLengthIndexArray[Entry.Prefix[0]] := Entry.PrefLength;
            end;
+        end;
      end;
 
   (* The sentinel past 'Z' is the end of the table, so 'Z' has an upper bound
@@ -1205,7 +1210,6 @@ label
   FillRecord;
 var
   TempIndex                             : integer;
-  TempPrefixRec                         : PrefixRecPtr;
   TempLength                            : integer;
   TempPrefix                            : PrefixName;
   TempPointer                           : integer;
@@ -1326,15 +1330,14 @@ begin
 
   CTY.ctyLastIndex := TempIndex;
 
-  TempPrefixRec := @CTY.ctyPrefixesTable[TempIndex];
-  QTH.Continent := CTY.ctyTable[TempPrefixRec^.Country].DefaultContinent;
+  QTH.Continent := CTY.ctyTable[CTY.ctyPrefixesTable[TempIndex].Country].DefaultContinent;
 
-  QTH.CountryID := CTY.ctyTable[TempPrefixRec.Country].ID;
-  QTH.Country := TempPrefixRec.Country;
+  QTH.CountryID := CTY.ctyTable[CTY.ctyPrefixesTable[TempIndex].Country].ID;
+  QTH.Country := CTY.ctyPrefixesTable[TempIndex].Country;
 
   case CTY.ctyZoneMode of
-    ITUZoneMode: QTH.Zone := TempPrefixRec.ITUZone;
-    CQZoneMode: QTH.Zone := TempPrefixRec.CQZone;
+    ITUZoneMode: QTH.Zone := CTY.ctyPrefixesTable[TempIndex].ITUZone;
+    CQZoneMode: QTH.Zone := CTY.ctyPrefixesTable[TempIndex].CQZone;
   end;
 
   if QTH.Zone = 0 then
@@ -1432,8 +1435,17 @@ end;
 
 function ctyGetCountryIdByIndex(Country: Word): string;
 begin
-  // Result is '' by default (native string); no ZeroMemory buffer-clear needed.
-  if Country = UNKNOWN_COUNTRY then Exit;
+  (* RESULT IS ASSIGNED ON EVERY PATH. The note that stood here -- "Result is ''
+    by default (native string)" -- is not true in FPC: a managed function
+    result is the CALLER's variable, passed in, and can arrive holding that
+    variable's previous value. Built with -gt (trash locals) the unknown-
+    country path returned FPC's "uninitialized function result" marker, and
+    uTestCTYDAT.Test_UnknownCountryIndex failed (found 2026-10-14). *)
+  Result := '';
+  if Country = UNKNOWN_COUNTRY then
+     begin
+     Exit;
+     end;
   Result := CTY.ctyTable[Country].ID;
 end;
 
@@ -1660,7 +1672,7 @@ end;
 
 function ctyGetZone(const Call: string): Byte;
 var
-  TempPrefixRec : PrefixRecPtr;
+  TempPrefixRec : PrefixRec;
   id            : string;
   district      : Char;
   letter        : Char;
@@ -1672,22 +1684,22 @@ begin
      Exit;
      end;
 
-  TempPrefixRec := @CTY.ctyPrefixesTable[CTY.ctyLastIndex];
+  TempPrefixRec := CTY.ctyPrefixesTable[CTY.ctyLastIndex];
 
   (* THE FILE ANSWERS FIRST, and that has not changed: when cty.dat carries a
     zone for this prefix it wins outright, and the rules below never run. It is
     why several of them are unreachable against the shipped file. *)
   case CTY.ctyZoneMode of
      ITUZoneMode:
-        if TempPrefixRec^.ITUZone <> 0 then
+        if TempPrefixRec.ITUZone <> 0 then
            begin
-           Result := TempPrefixRec^.ITUZone;
+           Result := TempPrefixRec.ITUZone;
            Exit;
            end;
      CQZoneMode:
-        if TempPrefixRec^.CQZone <> 0 then
+        if TempPrefixRec.CQZone <> 0 then
            begin
-           Result := TempPrefixRec^.CQZone;
+           Result := TempPrefixRec.CQZone;
            Exit;
            end;
   end;

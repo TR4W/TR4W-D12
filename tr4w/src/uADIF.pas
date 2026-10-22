@@ -23,10 +23,11 @@ unit uADIF;
     - ParseADIFFieldsList (the lexer)
     - TADIFField / TADIFFieldList types
 
-  Still in MainUnit, will move in follow-up commits:
-    - The field-name -> ContestExchange mapping case statement
-    - The contest-specific post-processing tail
-    - ImportADIFFromString multi-record entry point
+  Moved since (M5a, 2026-10-01): the contest-specific post-processing tail is
+  the contest's own -- TContestBase.ApplyADIFImport, asked by
+  ApplyADIFContestImport after the whole record is read. This unit names no
+  contest on the way in; TADIFRecordTemps (what it captures for the contest)
+  lives in uContestBase and is aliased below.
 
   See docs/tr4w-migration-strategy.md.  ADIF string handling is the
   highest-risk surface for Phase 2 (Unicode correctness); each function
@@ -47,7 +48,14 @@ uses
    StrUtils,
    Log4D,
    VC,
-   utils_text;
+   (* TADIFRecordTemps and TADIFImportSession, the two records the generic
+      importer hands to a contest -- see below. *)
+   uContestBase,
+   utils_text,
+   (* TQsoMyFacts -- our station for one QSO, the row's my_* columns (log
+      schema 3): what an import reads from the MY_* tags and an export
+      writes back. A leaf; it declares nothing the units above do. *)
+   uQsoMyFacts;
 
 type
    TADIFField = record
@@ -57,34 +65,19 @@ type
 
    TADIFFieldList = array of TADIFField;
 
-   // Transient fields populated by ApplyADIFFieldsToExchange that the
-   // contest-specific post-processing (in MainUnit) needs.  Some ADIF
-   // tags map directly to ContestExchange fields; others need contest-
-   // aware re-interpretation (e.g. STATE in ARRL_RTTY_ROUNDUP becomes
-   // part of QTHString in a contest-defined format).  This record
-   // carries the raw field values forward so the contest tail can do
-   // its job without re-parsing.
-   TADIFRecordTemps = record
-      SRX_String : string;
-      STX_String : string;
-      State      : string;
-      ARRL_Sect  : string;
-      VE_Prov    : string;
-      POTARef    : string;
-      SIG        : string;
-      SIG_Info   : string;
-      GridSquare : string;
-      FOC_Num    : string;
-      APP_HQ     : string;
-      FromWSJTX  : Boolean;
-   end;
+   (* The raw values of every ADIF tag whose MEANING depends on the contest,
+     captured by ApplyADIFFieldsToExchange for the contest to interpret once
+     the whole record is read. The record is the contest model's -- it is the
+     argument of TContestBase.ApplyADIFImport -- and lives in uContestBase;
+     these aliases keep its old home's name working. *)
+   TADIFRecordTemps = uContestBase.TADIFRecordTemps;
+   TADIFImportSession = uContestBase.TADIFImportSession;
 
    TContestExchangeArray = array of ContestExchange;
 
-   // ADIF field-name dispatch enum.  Order MUST match the AnsiIndexText
-   // string array in MainUnit.ParseADIFRecord (and in the future, in
-   // ApplyADIFFieldsToExchange when that moves here).  Adding entries
-   // requires updating both the enum and the lookup array.
+   // ADIF field-name dispatch enum.  Order MUST match ADIF_FIELD_NAMES (the
+   // lookup array in the implementation).  Adding entries requires updating
+   // both.
    TADIF_Fields = (tAdifARRL_SECT = 0, tAdifBAND, tAdifCALL, tAdifCHECK,
       tAdifCLASS, tAdifCQ_Z,
       tAdifCONTEST_ID, tAdifCNTY, tadifFOC_NUM, tAdifGRIDSQUARE, tAdifFREQ,
@@ -104,7 +97,14 @@ type
       //   APP_DXLOG_XQSO       value 'Y' = X-QSO                (DXLog.net)
       // Export emits only APP_TR4W_CLAIMEDQSO; the others are import-only.
       tAdifAPP_TR4W_CLAIMEDQSO, tAdifAPP_N1MM_CLAIMEDQSO,
-      tAdifAPP_DXLOG_XQSO);
+      tAdifAPP_DXLOG_XQSO,
+      // The WAG DOK, written by that contest's exporter (M5a).
+      tAdifDOK,
+      // OUR STATION, AS THE RECORD STATES IT -- log schema 3, stage 2. Into
+      // the row's my_* columns (MyFactsFromADIF), never today's settings.
+      tAdifMY_GRIDSQUARE, tAdifMY_STATE, tAdifMY_CNTY, tAdifMY_ARRL_SECT,
+      tAdifMY_SIG, tAdifMY_SIG_INFO, tAdifMY_POTA_REF, tAdifMY_IOTA,
+      tAdifMY_DXCC, tAdifMY_CQ_ZONE, tAdifMY_ITU_ZONE);
 
 // =========================================================================
 // Lexer
@@ -155,13 +155,19 @@ function ADIFDateStringToQSOTime(sDate: string;
 function ADIFTimeStringToQSOTime(sTime: string;
                                  var qsoTime: TQSOTime): Boolean;
 
-// Look up a contest by its ADIF CONTEST_ID value.  Returns the first
-// ContestType whose ContestsArray[].ADIFName matches sADIFName; otherwise
-// returns the contest at Low(ContestsArray) (DummyContest).  Caller must
-// then verify ContestsArray[Result].ADIFName = sADIFName to distinguish
-// "not found" from "first contest".  Cached single-entry for the common
-// case of all QSOs in a file sharing the same contest.
-function GetContestByADIFName(sADIFName: string): ContestType;
+(* LOOK UP A CONTEST BY ITS ADIF CONTEST_ID. True, with aContest set, when a
+  contest answers to it -- by its current id or by one it was exported under
+  before a rename; False otherwise, INCLUDING for an empty or all-blank value.
+  The rule itself is uContestRegistry.FindContestByADIFContestId; this adds a
+  single-entry cache for the common case of every QSO in a file sharing one
+  contest.
+
+  IT RETURNS WHETHER IT FOUND ONE. It used to return a contest always and
+  leave the caller to compare that row's ADIFName with the input, which
+  cannot recognise a former id -- and which accepted an EMPTY input as
+  "found", landing on the first contest whose ADIFName was blank. *)
+function GetContestByADIFName(const sADIFName: string;
+                              out aContest: TContestHandle): Boolean;
 
 // Validate an ADIF GUID/UUID string.  Accepts 32 hex characters with
 // optional 8-4-4-4-12 hyphens and optional `{...}` braces.  Used to gate
@@ -197,15 +203,99 @@ function ApplyADIFFieldsToExchange(const fields: TADIFFieldList;
                                    var exch: ContestExchange;
                                    var temps: TADIFRecordTemps): Boolean;
 
+(* THE TWO STEPS AFTER THE GENERIC READ -- M5a, 2026-10-01.
+
+  ApplyADIFFieldsToExchange is contest-blind: it knows ADIF, not contests.
+  What a record MEANS to its contest is decided only after the whole record is
+  read, in this order, so the order its tags arrived in cannot matter:
+
+    1. ApplyADIFCommonImport -- what every contest wants: a record with no
+       OPERATOR gets the session's, and the received RST comes off the front
+       of SRX_STRING to make ExchString (the exact inverse of what export
+       prepends, ResolveSRXString);
+    2. ApplyADIFContestImport -- the contest named by the record's CONTEST_ID
+       is asked to interpret what the importer captured
+       (TContestBase.ApplyADIFImport). The contest is
+       uContestRegistry.ContestIdentity(exch.ceContest): its class, or the
+       classless default.
+
+  InterpretADIFRecord is both. They are separate so that a caller can put its
+  own step between them for a contest that has no class yet. *)
+procedure ApplyADIFCommonImport(const temps: TADIFRecordTemps;
+                                const session: TADIFImportSession;
+                                var exch: ContestExchange);
+procedure ApplyADIFContestImport(const temps: TADIFRecordTemps;
+                                 const session: TADIFImportSession;
+                                 var exch: ContestExchange);
+procedure InterpretADIFRecord(const temps: TADIFRecordTemps;
+                              const session: TADIFImportSession;
+                              var exch: ContestExchange);
+
+(* A SESSION THAT STATES NOTHING: no operator, no exchange kind, no domestic
+  multiplier. For an import that has no session to describe -- the unit tests'
+  ImportADIFFromString -- so the classless default sees exactly what a contest
+  with no domestic multipliers and no grid exchange sees. *)
+function NeutralADIFImportSession: TADIFImportSession;
+
+(* OUR STATION AS THE RECORD STATES IT -- log schema 3, stage 2.
+
+  What the record says about our station: Source is mfsImported, and each
+  value is the record's own tag; a tag it does not carry is empty here.
+
+  A RECORD THAT NAMES NO MY_ TAG AT ALL ANSWERS NotCapturedMyFacts -- it says
+  nothing about our station, and the importer stamps the contest's values as
+  a new QSO would get (NY4I, 2026-10-18, replacing stage 2's "an absent tag
+  is unknown"). Whether a record that DOES name some keeps them is the
+  operator's choice at import (uQsoMyFacts.MyFactsForImport).
+
+    STATION_CALLSIGN            my_call
+    MY_GRIDSQUARE               my_grid
+    MY_STATE / MY_CNTY          my_state / my_county
+    MY_ARRL_SECT                my_section
+    MY_POTA_REF, else MY_SIG_INFO when MY_SIG is POTA      my_park
+    MY_IOTA                     my_iota
+    MY_DXCC                     my_country -- CTYEntityOfADIFDXCC, so only
+                                a code ONE plain CTY entity carries
+    MY_CQ_ZONE / MY_ITU_ZONE    my_cq_zone / my_itu_zone
+
+  MY_COUNTRY (an entity NAME) is not read: nothing here maps a name to a CTY
+  entity, and a guessed country is worse than an unknown one. my_continent is
+  never in ADIF and stays unknown. *)
+function MyFactsFromADIF(const temps: TADIFRecordTemps): TQsoMyFacts;
+
+(* WHAT THE RECORD SAYS WE SENT -- its STX_STRING, verbatim, for the row's
+  exchange_sent; '' when it has none. NEVER rebuilt from today's settings
+  (stage 2, the D3 fix): that is what an import used to do, which stamped
+  every imported QSO with the exchange the operator happens to send now. *)
+function SentExchangeFromADIF(const temps: TADIFRecordTemps): AnsiString;
+
+(* THE CTY ENTITY (its primary prefix, as cty.dat spells it) that ADIF DXCC
+  code aDXCC names -- or '' when no entity, or more than one, carries it.
+  The table maps prefix to code and several prefixes share a code ('*GM/s',
+  Shetland, is credited to 279 with 'GM'); a starred prefix is a CTY-only
+  region, so it is not counted, and a code still shared by two plain prefixes
+  answers '' rather than guessing between them. *)
+function CTYEntityOfADIFDXCC(aDXCC: integer): AnsiString;
+
+(* TRUE WHEN aText IS ONE OR MORE ASCII LETTERS AND NOTHING ELSE -- false for
+  empty text, a digit, a space or a hyphen. It is what a contest asks of an
+  SRX_STRING to tell a domestic QTH from a serial number ('CT' against '123'),
+  and it is Indy's IdGlobal.IsAlpha, which the main unit used for the same
+  question, restated here because a contest class may not reach for the
+  network library. *)
+function ADIFTextIsAlphabetic(const aText: string): Boolean;
+
 // =========================================================================
 // Multi-record entry point
 // =========================================================================
 
 // Parse a multi-record ADIF string into `records`.  Splits on <EOR>
-// (case-insensitive), lexes each record, and applies the field mapping
-// for each.  The contest-specific post-processing tail is NOT applied
-// here -- the caller is responsible for that (e.g. MainUnit.ImportFromADIF
-// applies it via ApplyContestSpecificADIFTail).
+// (case-insensitive), lexes each record, applies the generic field mapping
+// and then InterpretADIFRecord -- the contest named by the record's
+// CONTEST_ID interprets what the mapping captured -- under
+// NeutralADIFImportSession: there is no running contest here to describe.
+// (MainUnit.ParseADIFRecord, which the operator's import runs, passes the
+// session it really has.)
 //
 // Skips an optional ADIF header section (everything up to the first
 // <EOH>, also case-insensitive).
@@ -226,7 +316,21 @@ type
    // (GRIDSQUARE / IOTA / ARRL_SECT / POTA MY_SIG / CLASS / STATION_CALLSIGN /
    // STX_STRING built from MainUnit globals / CQZ/ITUZ / CNTY from mo.DomList).
    // Tests pass nil to skip the tail entirely.
-   TContestTailEmitter = function(const rec: ContestExchange): string;
+   //
+   // aMyFacts is the record's OWN station (log schema 3): a tail that writes
+   // something about our station writes it from there when the row captured
+   // one, and from the session only for a row that never did (ruling A).
+   //
+   // aSentExchange is the row's exchange_sent (stage 4) -- for an imported
+   // row, its file's STX_STRING verbatim; '' when the row has none.
+   TContestTailEmitter = function(const rec: ContestExchange;
+                                  const aMyFacts: TQsoMyFacts;
+                                  const aSentExchange: AnsiString): string;
+
+   (* One TQsoMyFacts per record, in the records' order. *)
+   TQsoMyFactsArray = array of TQsoMyFacts;
+   (* One exchange_sent per record, in the records' order. *)
+   TSentExchangeArray = array of AnsiString;
 
 // Build one ADIF field as `<NAME:LEN>VALUE ` (trailing space for tag
 // separation).  Empty value returns ''.
@@ -244,27 +348,116 @@ function EmitADIFHeader(const programVersion: string): string;
 //
 // Excludes fields that need MainUnit/trdos globals (STATION_CALLSIGN,
 // STX_STRING via GetMyExchangeForExport, CNTY via mo.DomList,
-// CQZ/ITUZ via ActiveZoneMult, POTA MY_* fields via myPark, ARRL-FD
+// CQZ/ITUZ via the contest's ZoneMultiplierZones, POTA MY_* fields via MY PARK, ARRL-FD
 // CLASS via MyFDClass etc.).  PostUnit.ExportToADIF provides those
 // via the TContestTailEmitter callback.
-function EmitADIFRecord(const rec: ContestExchange): string;
+//
+// WHICH EXCHANGE FIELDS THE RECORD CARRIES IS THE CONTEST'S (2026-10-17,
+// NY4I: "We should not just be exporting all possible fields"): QTH,
+// PRECEDENCE, CHECK, NAME, the power tag, SRX, STX, TEN_TEN and AGE are
+// TContestBase.EmitADIFReceivedFields -- each only where the contest's
+// own ReceivedExchangeFields declares it.  The RST pair is
+// TContestBase.EmitADIFReportFields and is every QSO's (NY4I: "Every QSO").
+// This unit writes the fields
+// that belong to the QSO, whatever the contest.
+//
+// aContest is the contest object to ask when the caller holds one that
+// CARRIES THE STATION (uContestFactory.ActiveContest): a contest's field
+// list can depend on the entrant (ARRL DX asks whether the entrant counts
+// the DX multiplier), which ContestIdentity cannot know.  It is used only
+// when it IS the record's own contest -- a logged QSO reads its record,
+// never the live contest -- and nil, or another contest, asks
+// ContestIdentity(rec.ceContest).
+function EmitADIFRecord(const rec: ContestExchange;
+                        aContest: TContestBase = nil): string;
 
 // Build the entire ADIF document for the given records: header +
 // (EmitADIFRecord(r) + tailEmitter(r) + <EOR>) for each record.
 // `programVersion` is the value for the PROGRAMVERSION ADIF tag in
 // the header.  `tailEmitter` may be nil -- in which case no contest-
 // specific extras are added per record (suitable for tests).
+// aContest is EmitADIFRecord's.
 function ExportADIFToString(const records: TContestExchangeArray;
                             const programVersion: string;
-                            tailEmitter: TContestTailEmitter): string;
+                            tailEmitter: TContestTailEmitter;
+                            aContest: TContestBase = nil): string; overload;
 
-// Return the host state's 2-letter postal code for the 13 known
-// single-state QSO parties (CA/FL/MI/MN/MO/NC/OH/TX/WI/TN/CO/PA/IN).
-// Returns '' for any other contest.  Used by EmitADIFRecord to emit
-// STATE when QTHString carries a county code instead of a 2-letter
-// state code.  Originally lived in PostUnit; moved here so it is
-// reachable from both uADIF (export) and the test runner.
-function GetStateForContest(c: ContestType): string;
+// THE SAME, WITH EACH RECORD'S OWN STATION -- aMyFacts[i] is records[i]'s,
+// and is what EmitADIFMyStationFields writes after the tail. Shorter than
+// records, or nil, means the records past its end were never captured.
+function ExportADIFToString(const records: TContestExchangeArray;
+                            const aMyFacts: TQsoMyFactsArray;
+                            const aSentExchanges: TSentExchangeArray;
+                            const programVersion: string;
+                            tailEmitter: TContestTailEmitter;
+                            aContest: TContestBase = nil): string; overload;
+
+(* OUR STATION'S TAGS FOR ONE RECORD, FROM THE RECORD -- log schema 3, stage 2.
+
+  '' FOR A ROW NEVER CAPTURED (my_source NULL). Such a row is written exactly
+  as it was before schema 3: whatever the tail writes for it from the session
+  (STATION_CALLSIGN, POTA's park) is the fallback NY4I ruled for (A), and
+  nothing is added -- which is why no corpus fixture's export changes.
+
+  For a captured row, in this order, each only when the row holds a value:
+  STATION_CALLSIGN (only when the record's OPERATOR is not that call -- the
+  rule the export has always applied, now asked of the record), MY_GRIDSQUARE,
+  MY_STATE, MY_CNTY, MY_ARRL_SECT, MY_IOTA, MY_CQ_ZONE, MY_ITU_ZONE, MY_DXCC
+  (from my_country, when the table knows its code), and the park as MY_SIG
+  POTA, MY_SIG_INFO and MY_POTA_REF. POTA writes those three itself, from the
+  record's park, so for a POTA QSO they are skipped by the rule below.
+
+  A TAG ALREADY IN aAlreadyWritten IS SKIPPED. The contest's own fields come
+  first and win -- POTA writes MY_STATE and MY_DXCC from its park list -- and
+  one record must not carry a tag twice. *)
+function EmitADIFMyStationFields(const rec: ContestExchange;
+                                 const aFacts: TQsoMyFacts;
+                                 const aAlreadyWritten: string): string;
+
+// Format an integer with at least minLen digits (zero-padded) -- the
+// width of ADIF's SRX, STX, TEN_TEN, AGE and CHECK as TR4W writes them.
+// Public for TContestBase.EmitADIFReceivedFields.
+function PadInt(n: Integer; minLen: Integer): string;
+
+// Return the ADIF STATE of the WORKED station of rec -- the class of
+// rec's contest decides (TContestBase.ADIFWorkedStationState; '' for
+// every contest but the QSO parties).  Used by EmitADIFRecord.  Was
+// GetStateForContest(c), which wrote the PARTY's state on every QSO --
+// D7's rule, fixed at Q76/Q89 (NY4I, 2026-10-16).
+function GetADIFStateForQSO(const rec: ContestExchange): string;
+
+// ADIF's Primary Administrative Subdivision enumeration, for the four
+// entities a North American QSO party hears from: is aCode (upper case)
+// a STATE value ADIF allows for the CTY country aCountryID?
+//   'K'   USA (DXCC 291)      the 48 contiguous states and DC
+//   'KL'  Alaska (DXCC 6)     AK
+//   'KH6' Hawaii (DXCC 110)   HI
+//   'VE'  Canada (DXCC 1)     the 13 provinces and territories
+// Any other country, or an unknown one, answers False: no value is
+// invented for it.
+function IsADIFPrimarySubdivision(const aCountryID, aCode: string): boolean;
+
+// The same question by ADIF DXCC entity code (291, 6, 110, 1), for a caller
+// that holds the code and not the CTY entity -- POTA's MY_STATE, whose DXCC
+// comes from the park list.
+function IsADIFPrimarySubdivisionOfDXCC(aDXCC: integer; const aCode: string): boolean;
+
+// THE QTH A QSO PARTY JUDGES A QSO BY: the domestic table's resolved key
+// (DomesticQTH -- 'Pin', 'AddVT', 'Md') when the record has one, else the
+// QTH as logged (QTHString), trimmed.  The key, not the typed text, because
+// an alias can be any length -- 'CON' is Connecticut, 'AD' an Addison
+// County, VT -- while every county key in target/dom is longer than two
+// letters and every state or province key is exactly two.
+function ADIFPartyQTHKey(const aQso: ContestExchange): string;
+
+// THE ADIF STATE OF A QSO PARTY'S WORKED STATION (Q76/Q89): aCountyState
+// when the class found the QTH to be one of its counties (it says whose);
+// else the QTH itself when it is a primary subdivision ADIF allows for the
+// worked station's country (an out-of-state station's state, a VE's
+// province); else '' -- DX, or anything else.  The rule every party class
+// calls from its ADIFWorkedStationState.
+function ADIFStateOfPartyQSO(const aCountyState: string;
+                             const aQso: ContestExchange): string;
 
 // Build the RST-normalized SRX_STRING value: if ExchString already
 // starts with the literal RSTReceived (e.g. operator typed `599 HIL`),
@@ -298,15 +491,36 @@ implementation
   wanted for SetCharBuffer, which writes a fixed AnsiChar field through
   its own bounds instead of StrPLCopy plus a hand-passed High(). *)
 uses
-   TF;
+   TF,
+   (* FindContestByADIFContestId -- which contest answers to a CONTEST_ID,
+      including the ids it was exported under before a rename -- and
+      ContestIdentity, the contest's own id for export. The contest owns both
+      answers; this unit only caches the first. *)
+   uContestRegistry,
+   (* ADIFDXCCOfCTYEntity -- a CTY entity's ADIF DXCC code. *)
+   uDXCCEntities;
 
 var
    logger : TLogLogger;
 
    // Single-entry cache for GetContestByADIFName.  All QSOs in a typical
    // import file share the same CONTEST_ID, so this is a hot path.
+   (* THE CACHE HOLDS THE ANSWER AND WHETHER THERE WAS ONE. It used to hold
+      only the contest, and callers told "found" from "not found" by comparing
+      the row's ADIFName with the input -- which cannot work once a contest
+      also answers to a FORMER id. saveLastValid keeps an untouched cache from
+      answering for an empty input. *)
+   saveLastValid    : boolean;
    saveLastADIFName : string;
-   saveLastContest  : ContestType;
+   saveLastContest  : TContestHandle;
+   saveLastFound    : boolean;
+
+   (* Single-entry cache for ContestOfRecordMode, for the same reason: a file
+      is one contest and, nearly always, one or two modes. *)
+   modeLastValid    : boolean;
+   modeLastContest  : TContestHandle;
+   modeLastMode     : ModeType;
+   modeLastAnswer   : TContestHandle;
 
 // ---------------------------------------------------------------------------
 // Lexer helpers
@@ -716,27 +930,42 @@ begin
       end;
 end;
 
-function GetContestByADIFName(sADIFName: string): ContestType;
-var
-   i : ContestType;
+function GetContestByADIFName(const sADIFName: string;
+                              out aContest: TContestHandle): Boolean;
 begin
-   if sADIFName = saveLastADIFName then
+   if saveLastValid and (sADIFName = saveLastADIFName) then
       begin
-      Result := saveLastContest;
+      aContest := saveLastContest;
+      Result := saveLastFound;
       Exit;
       end;
 
-   Result := Low(ContestsArray); // first contest = DummyContest
-   for i := Low(ContestsArray) to High(ContestsArray) do
+   Result := FindContestByADIFContestId(sADIFName, aContest);
+
+   saveLastADIFName := sADIFName;
+   saveLastContest  := aContest;
+   saveLastFound    := Result;
+   saveLastValid    := True;
+end;
+
+(* THE RECORD'S CONTEST, NOW THAT ITS MODE IS KNOWN -- M7b batch 2. See
+  uContestRegistry.ContestOfADIFRecordMode; this only caches it. *)
+function ContestOfRecordMode(aContest: TContestHandle; aMode: ModeType): TContestHandle;
+begin
+   if modeLastValid               and
+      (aContest = modeLastContest) and
+      (aMode = modeLastMode)       then
       begin
-      if ContestsArray[i].ADIFName = sADIFName then
-         begin
-         Result := i;
-         saveLastADIFName := sADIFName;
-         saveLastContest  := i;
-         Break;
-         end;
+      Result := modeLastAnswer;
+      Exit;
       end;
+
+   Result := ContestOfADIFRecordMode(aContest, aMode);
+
+   modeLastContest := aContest;
+   modeLastMode    := aMode;
+   modeLastAnswer  := Result;
+   modeLastValid   := True;
 end;
 
 // ---------------------------------------------------------------------------
@@ -819,13 +1048,28 @@ begin
    temps.GridSquare := '';
    temps.FOC_Num    := '';
    temps.APP_HQ     := '';
+   temps.DOK        := '';
+   temps.IOTA       := '';
+   temps.N1MM_Exchange1 := '';
+   temps.MyCall       := '';
+   temps.MyGridSquare := '';
+   temps.MyState      := '';
+   temps.MyCounty     := '';
+   temps.MyARRLSect   := '';
+   temps.MySig        := '';
+   temps.MySigInfo    := '';
+   temps.MyPOTARef    := '';
+   temps.MyIOTA       := '';
+   temps.MyDXCC       := '';
+   temps.MyCQZone     := '';
+   temps.MyITUZone    := '';
    temps.FromWSJTX  := False;
 end;
 
 const
    // Order MUST match the TADIF_Fields enum declaration.  Adding a field
    // requires updating BOTH this array AND the enum.
-   ADIF_FIELD_NAMES : array[0..47] of string = (
+   ADIF_FIELD_NAMES : array[0..59] of string = (
       // ADIF spec field name is `CQZ` (no underscore).  The original
       // import lookup had `CQ_Z` which never matched real-world ADIF
       // exports -- the tAdifCQ_Z handler was effectively dead until
@@ -843,7 +1087,12 @@ const
       'APP_TR4W_ID', 'SIG', 'SIG_INFO', 'POTA_REF',
       'APP_TR4W_ROVERCALL',
       // X-QSO marker fields (Issue #750) -- order must match the enum
-      'APP_TR4W_CLAIMEDQSO', 'APP_N1MM_CLAIMEDQSO', 'APP_DXLOG_XQSO');
+      'APP_TR4W_CLAIMEDQSO', 'APP_N1MM_CLAIMEDQSO', 'APP_DXLOG_XQSO',
+      'DOK',
+      // Our station (schema 3) -- order must match the enum
+      'MY_GRIDSQUARE', 'MY_STATE', 'MY_CNTY', 'MY_ARRL_SECT',
+      'MY_SIG', 'MY_SIG_INFO', 'MY_POTA_REF', 'MY_IOTA',
+      'MY_DXCC', 'MY_CQ_ZONE', 'MY_ITU_ZONE');
 
 // Index of aName in ADIF_FIELD_NAMES, or -1.  Case-insensitive, ASCII-only.
 //
@@ -914,13 +1163,15 @@ var
    tempRST              : string;
    neFreq               : Extended;
    msm                  : ModeAndExtendedModeType;
-   contest              : ContestType;
+   contest              : TContestHandle;
    saveDecimalSeparator : Char;
    haveRoverCall        : Boolean;
+   contestFromId        : Boolean;
 begin
    Result := True;
    InitADIFRecordTemps(temps);
    haveRoverCall := False;
+   contestFromId := False;
 
    for i := 0 to High(fields) do
       begin
@@ -962,10 +1213,10 @@ begin
 
             tAdifCONTEST_ID:
                begin
-               contest := GetContestByADIFName(fieldValue);
-               if ContestsArray[contest].ADIFName = fieldValue then
+               if GetContestByADIFName(fieldValue, contest) then
                   begin
                   exch.ceContest := contest;
+                  contestFromId := True;
                   end;
                end;
 
@@ -978,6 +1229,36 @@ begin
 
             tAdifGRIDSQUARE:
                temps.GridSquare := fieldValue;
+
+            tAdifIOTA:
+               temps.IOTA := fieldValue;
+
+            tAdifDOK:
+               temps.DOK := fieldValue;
+
+            (* OUR STATION, AS THE RECORD STATES IT -- MyFactsFromADIF. *)
+            tAdifMY_GRIDSQUARE:
+               temps.MyGridSquare := fieldValue;
+            tAdifMY_STATE:
+               temps.MyState := fieldValue;
+            tAdifMY_CNTY:
+               temps.MyCounty := fieldValue;
+            tAdifMY_ARRL_SECT:
+               temps.MyARRLSect := fieldValue;
+            tAdifMY_SIG:
+               temps.MySig := fieldValue;
+            tAdifMY_SIG_INFO:
+               temps.MySigInfo := fieldValue;
+            tAdifMY_POTA_REF:
+               temps.MyPOTARef := fieldValue;
+            tAdifMY_IOTA:
+               temps.MyIOTA := fieldValue;
+            tAdifMY_DXCC:
+               temps.MyDXCC := fieldValue;
+            tAdifMY_CQ_ZONE:
+               temps.MyCQZone := fieldValue;
+            tAdifMY_ITU_ZONE:
+               temps.MyITUZone := fieldValue;
 
             tAdifFREQ:
                begin
@@ -1079,8 +1360,10 @@ begin
             tAdifAPP_TR4W_HQ, tAdifAPP_N1MM_HQ:
                temps.APP_HQ := fieldValue;
 
+            (* OUR CALL AS SIGNED -- the row's my_call (schema 3). It was
+              ignored on import until stage 2. *)
             tAdifSTATION_CALLSIGN:
-               ; // ignored on import
+               temps.MyCall := fieldValue;
 
             tAdifQTH:
                exch.QTHString := fieldValue;
@@ -1092,17 +1375,17 @@ begin
                   end;
 
             tAdifAPP_N1MM_EXCHANGE1:
-               // N1MM stores CLASS in APP_N1MM_EXCHANGE1 instead of
-               // the standard CLASS field.  Map back depending on
-               // the active contest.
-               if exch.ceContest in [ARRLFIELDDAY, WINTERFIELDDAY] then
-                  begin
-                  exch.ceClass := AnsiUpperCase(fieldValue)
-                  end
-               else if exch.ceContest in [FOCMARATHON] then
-                  begin
-                  exch.Power := fieldValue;
-                  end;
+               (* CAPTURED, NOT READ AS IT GOES BY. N1MM stores the contest's
+                  own exchange item here -- a class for the Field Days instead
+                  of the standard CLASS tag, a membership number for the FOC
+                  Marathon -- so what it MEANS is the contest's. The contest
+                  is known only when CONTEST_ID has been read, and ADIF fixes
+                  no field order: the arm that used to stand here read
+                  exch.ceContest as it went by, so a record with this tag
+                  AHEAD of CONTEST_ID was interpreted for the SESSION's
+                  contest and not the record's. The contest interprets it
+                  after the whole record is in (ApplyADIFImport). *)
+               temps.N1MM_Exchange1 := fieldValue;
 
             tAdifAPP_N1MM_ID, tAdifAPP_TR4W_ID:
                if IsValidGUID(fieldValue) then
@@ -1159,6 +1442,17 @@ begin
             end;
       end;
       end;
+
+   (* ONE ID, TWO CONTESTS: TOLD APART BY THE MODE, ONCE THE WHOLE RECORD IS
+      READ -- M7b batch 2 (design 8.2k). RSGB-ROLO names both RSGB RoPoCo
+      runnings; the contest that runs in this record's mode is its contest.
+      After the loop, so MODE may arrive before or after CONTEST_ID. Only a
+      contest that came FROM the id is refined: one the caller set has no id
+      to share. *)
+   if contestFromId then
+      begin
+      exch.ceContest := ContestOfRecordMode(exch.ceContest, exch.Mode);
+      end;
 end;
 
 // ---------------------------------------------------------------------------
@@ -1187,6 +1481,72 @@ begin
    exch.TenTenNum      := SENTINEL_WORD;
    exch.Zone           := DUMMYZONE;
    exch.QTH.Zone       := DUMMYZONE;
+end;
+
+procedure ApplyADIFCommonImport(const temps: TADIFRecordTemps;
+                                const session: TADIFImportSession;
+                                var exch: ContestExchange);
+begin
+   // fix up operator
+   if exch.ceOperator = '' then
+      begin
+      exch.ceOperator := session.Operator;
+      end;
+
+   (* THE RECEIVED RST COMES OFF HERE, ONCE, FOR EVERY CONTEST. The export
+     side prepends it unconditionally (ResolveSRXString) to make the field
+     symmetric with STX_STRING, so this is the exact inverse and belongs at
+     the same level -- not in a contest's interpretation, which is where the
+     first two instances of this fault were fixed one at a time. *)
+   if Length(temps.SRX_String) > 0 then
+      begin
+      exch.ExchString := ExchangeFromSRXString(temps.SRX_String,
+                                               exch.RSTReceived);
+      end;
+end;
+
+procedure ApplyADIFContestImport(const temps: TADIFRecordTemps;
+                                 const session: TADIFImportSession;
+                                 var exch: ContestExchange);
+begin
+   ContestIdentity(exch.ceContest).ApplyADIFImport(temps, session, exch);
+end;
+
+procedure InterpretADIFRecord(const temps: TADIFRecordTemps;
+                              const session: TADIFImportSession;
+                              var exch: ContestExchange);
+begin
+   ApplyADIFCommonImport(temps, session, exch);
+   ApplyADIFContestImport(temps, session, exch);
+end;
+
+function NeutralADIFImportSession: TADIFImportSession;
+begin
+   FillChar(Result, SizeOf(Result), 0);
+   Result.ReceivesGridSquare := False;
+   Result.CountsGridSquares := False;
+   Result.DoingDomesticMults := False;
+end;
+
+function ADIFTextIsAlphabetic(const aText: string): Boolean;
+var
+   i: Integer;
+begin
+   Result := False;
+   if Length(aText) = 0 then
+      begin
+      Exit;
+      end;
+
+   for i := 1 to Length(aText) do
+      begin
+      if not (((aText[i] >= 'a') and (aText[i] <= 'z')) or
+              ((aText[i] >= 'A') and (aText[i] <= 'Z'))) then
+         begin
+         Exit;
+         end;
+      end;
+   Result := True;
 end;
 
 function ImportADIFFromString(const s: string;
@@ -1241,6 +1601,7 @@ begin
       InitContestExchangeForParse(exch);
       InitADIFRecordTemps(temps);
       ApplyADIFFieldsToExchange(fields, exch, temps);
+      InterpretADIFRecord(temps, NeutralADIFImportSession, exch);
 
       SetLength(records, Result + 1);
       records[Result] := exch;
@@ -1254,25 +1615,130 @@ end;
 // Export side
 // ---------------------------------------------------------------------------
 
-function GetStateForContest(c: ContestType): string;
+(* ONE DEFINITION, IN VC, WHERE THE TABLE IS.
+
+   THIS WAS A 13-ARM `case c of FLORIDAQSOPARTY: Result := 'FL'`, AND SO WAS
+   PostUnit's -- two hand-typed copies of a fact ContestsArray already carries
+   as its P index. Both were incomplete in the same way: New York, Washington,
+   Arizona and Virginia are state QSO parties with a two-letter StateName in
+   QSOParties and appeared in neither copy, so their ADIF export emitted no
+   STATE field at all. That is the drift CLAUDE.md describes -- the newest bug
+   living in the oldest copy, with nothing in the build pointing at it.
+
+   THE FUNCTION IS KEPT RATHER THAN THE CALL SITES REPOINTED, because the name
+   is what documents the intent at the two places that use it and it is named
+   in the ADIF verifier's README.
+
+   IT ASKS THE CONTEST SINCE M10 S6, and asks its QSOPartyArea, NOT its
+   HostState. VC.USQSOPartyStateName -- the table read this replaced, now
+   deleted -- answered the QSOParties entry's StateName when that was two
+   letters, else ''. QSOPartyArea IS that StateName for every contest
+   (Test_MovedRowValuesStillMatchTheArray), so the same two-letter test on
+   it gives byte-identical export. HostState would NOT: British Columbia
+   states 'BC' while its area is 'VE7', so asking HostState would start
+   writing STATE and CNTY on every BCQP QSO. That may well be right -- ADIF's
+   STATE holds a Canadian province -- but it is a behaviour change, and it
+   is an open question for NY4I, not a side effect of removing a table.
+
+   NY4I ANSWERED IT (Q89, 2026-10-16): STATE yes, CNTY no. The same day
+   (Q76) he fixed the rule itself: "if you write STATE in ADIF,
+   that is the state of the worked station" (the entrant's is MY_STATE).
+   The function above wrote the HOST's state on EVERY QSO carrying a QTH --
+   D7's `if (stateForQP <> '') and (rec.QTHString <> '')` -- so a Michigan
+   log said STATE:MI for a station in DC. It is replaced by the class's
+   per-QSO answer, TContestBase.ADIFWorkedStationState: a host county gives
+   the host's state, an out-of-state station's own state or province is
+   written as itself when ADIF allows it for that country, and DX gets
+   none. GetStateForContest is deleted with the contest-level answer.
+   uTestContestExport.Test_ADIFStateIsTheWorkedStations pins it. *)
+function GetADIFStateForQSO(const rec: ContestExchange): string;
 begin
-   case c of
-      CALQSOPARTY        : Result := 'CA';
-      FLORIDAQSOPARTY    : Result := 'FL';
-      MICHQSOPARTY       : Result := 'MI';
-      MINNQSOPARTY       : Result := 'MN';
-      MOQSOPARTY         : Result := 'MO';
-      NCQSOPARTY         : Result := 'NC';
-      OHIOQSOPARTY       : Result := 'OH';
-      TEXASQSOPARTY      : Result := 'TX';
-      WISCONSINQSOPARTY  : Result := 'WI';
-      TENNESSEEQSOPARTY  : Result := 'TN';
-      COLORADOQSOPARTY   : Result := 'CO';
-      PAQSOPARTY         : Result := 'PA';
-      INQSOPARTY         : Result := 'IN';
+   Result := ContestIdentity(rec.ceContest).ADIFWorkedStationState(rec);
+end;
+
+const
+   (* ADIF 3.1 Primary_Administrative_Subdivision, DXCC 291: the 48
+      contiguous states and the District of Columbia. Alaska and Hawaii are
+      entities of their own (6 and 110) and are NOT in this list. *)
+   ADIF_US_STATES =
+      ' AL AR AZ CA CO CT DC DE FL GA IA ID IL IN KS KY LA MA MD ME MI MN' +
+      ' MO MS MT NC ND NE NH NJ NM NV NY OH OK OR PA RI SC SD TN TX UT VA' +
+      ' VT WA WI WV WY ';
+
+   (* DXCC 1: the ten provinces and three territories. *)
+   ADIF_CANADIAN_PROVINCES =
+      ' AB BC MB NB NL NS NT NU ON PE QC SK YT ';
+
+(* True when aCode is one blank-separated word of aList (which is padded
+   with blanks at both ends). *)
+function IsCodeInList(const aCode: string; const aList: string): boolean;
+begin
+   Result := (Length(aCode) = 2) and (Pos(' ' + aCode + ' ', aList) > 0);
+end;
+
+function IsADIFPrimarySubdivisionOfDXCC(aDXCC: integer; const aCode: string): boolean;
+begin
+   case aDXCC of
+      291:
+         begin
+         Result := IsCodeInList(aCode, ADIF_US_STATES);
+         end;
+      6:
+         begin
+         Result := aCode = 'AK';
+         end;
+      110:
+         begin
+         Result := aCode = 'HI';
+         end;
+      1:
+         begin
+         Result := IsCodeInList(aCode, ADIF_CANADIAN_PROVINCES);
+         end;
    else
-      Result := '';
+      begin
+      Result := False;
+      end;
    end;
+end;
+
+(* The CTY country is turned into its DXCC code and the DXCC answer is asked --
+   'K' is 291, 'KL' 6, 'KH6' 110, 'VE' 1; every other CTY entity, and an
+   unknown one (code 0), answers False as before. *)
+function IsADIFPrimarySubdivision(const aCountryID, aCode: string): boolean;
+begin
+   Result := IsADIFPrimarySubdivisionOfDXCC(ADIFDXCCOfCTYEntity(aCountryID), aCode);
+end;
+
+function ADIFPartyQTHKey(const aQso: ContestExchange): string;
+begin
+   Result := Trim(string(aQso.DomesticQTH));
+   if Result = '' then
+      begin
+      Result := Trim(string(aQso.QTHString));
+      end;
+end;
+
+function ADIFStateOfPartyQSO(const aCountyState: string;
+                             const aQso: ContestExchange): string;
+var
+   code: string;
+begin
+   if aCountyState <> '' then
+      begin
+      Result := aCountyState;
+      Exit;
+      end;
+
+   code := UpperCase(ADIFPartyQTHKey(aQso));
+   if IsADIFPrimarySubdivision(string(aQso.QTH.CountryID), code) then
+      begin
+      Result := code;
+      end
+   else
+      begin
+      Result := '';
+      end;
 end;
 
 function EmitADIFField(const name, value: string): string;
@@ -1390,8 +1856,9 @@ var
 begin
    bareCall := string(rec.Callsign);
    roverFullCall := '';
-   // Only relevant for state-QP exchanges.
-   if not ContestsArray[rec.ceContest].CountyLineAllowed then
+   (* Only the parties that say so -- the class's statement since M10 S8,
+      the deleted row's CountyLineAllowed before it (open question Q90). *)
+   if not ContestSplitsRoverCallOnExport(rec.ceContest) then
       begin
       Exit;
       end;
@@ -1460,16 +1927,36 @@ end;
 
 // ----- EmitADIFRecord -------------------------------------------------
 
-function EmitADIFRecord(const rec: ContestExchange): string;
+(* THE CONTEST THAT SPEAKS FOR rec: aContest when it is rec's own contest
+  (it carries the station), else the identity object. Never the live
+  contest -- a QSO of another contest is judged by its own. *)
+function ContestForRecord(const rec: ContestExchange;
+                          aContest: TContestBase): TContestBase;
+begin
+   if (aContest <> nil) and
+      aContest.IsContestOfQso(rec) then
+      begin
+      Result := aContest;
+      end
+   else
+      begin
+      Result := ContestIdentity(rec.ceContest);
+      end;
+end;
+
+function EmitADIFRecord(const rec: ContestExchange;
+                        aContest: TContestBase): string;
 var
-   bareCall       : string;
+   bareCall      : string;
    roverFullCall  : string;
    bandStr        : string;
    modeStr        : string;
    subModeStr     : string;
    freqStr        : string;
    stateForQP     : string;
+   rules          : TContestBase;
 begin
+   rules := ContestForRecord(rec, aContest);
    ResolveRoverCall(rec, bareCall, roverFullCall);
 
    // BAND string -- mirror the legacy 70cm/23cm rewrites.
@@ -1507,9 +1994,9 @@ begin
           rec.tSysTime.qtMinute,
           rec.tSysTime.qtSecond]));
 
-   // RST and exchange
-   Result := Result + EmitADIFField('RST_SENT', IntToStr(rec.RSTSent));
-   Result := Result + EmitADIFField('RST_RCVD', IntToStr(rec.RSTReceived));
+   (* The signal report, for every QSO (NY4I, 2026-10-17) -- asked of the
+      contest all the same (EmitADIFReportFields), so a class can own a rule. *)
+   Result := Result + rules.EmitADIFReportFields(rec);
 
    // APP_TR4W_ROVERCALL (full rover form, e.g. KG1S/MON)
    if roverFullCall <> '' then
@@ -1517,25 +2004,20 @@ begin
       Result := Result + EmitADIFField('APP_TR4W_ROVERCALL', roverFullCall);
       end;
 
-   // CONTEST_ID, unless POTA/GENERALQSO (legacy behaviour).
-   // Mirror the fallback used by logsubs2.pas:2782, uGetScores.pas:435 and 564:
-   // if ContestsArray[].ADIFName is empty (true for 156 of TR4W's contests),
-   // fall back to the parallel ContestTypeSA[] string, which IS the standard
-   // ADIF Contest_ID for the major contests (e.g. 'CQ-WPX-SSB', 'CQ-WW-CW',
-   // 'ARRL-DX-CW').  This was the behaviour before Issue #887's extraction;
-   // it did not survive the move into uADIF.pas.
-   if not (rec.ceContest in [POTA, GENERALQSO]) then
+   (* CONTEST_ID, unless the contest says it writes none -- General QSO, an
+      operating mode, since M4, and POTA, an activation, since it gained its
+      class (2026-10-13, design Q6; it was a `ceContest <> POTA` test here).
+
+      THE CONTEST'S OWN ID, ASKED OF THE CONTEST (M1, 2026-10-01). This used to
+      spell out "ADIFName, else the enum's spelling" here, one of four copies
+      of that rule. The rule is TContestBase.GetADIFContestId now, and import
+      (uContestRegistry.FindContestByADIFContestId) matches the same getter,
+      so what is written here always reads back to the contest that wrote
+      it -- inventory D9, which this closes. *)
+   if ContestIdentity(rec.ceContest).WritesADIFContestId then
       begin
-      if Length(ContestsArray[rec.ceContest].ADIFName) = 0 then
-         begin
-         Result := Result + EmitADIFField('CONTEST_ID',
-            string(ContestTypeSA[rec.ceContest]))
-         end
-      else
-         begin
-         Result := Result + EmitADIFField('CONTEST_ID',
-            ContestsArray[rec.ceContest].ADIFName);
-         end;
+      Result := Result + EmitADIFField('CONTEST_ID',
+         ContestIdentity(rec.ceContest).ADIFContestId);
       end;
 
    // MODE / SUBMODE
@@ -1558,88 +2040,40 @@ begin
    // ResolveSRXString below is exported as a helper for the tail
    // emitter's RST-normalizing branch.
 
-   // STATE - only for single-state QSO parties, where the host state is
-   // known from the contest type and QTHString is a county code.
+   // STATE - the WORKED station's, and only where the QSO's contest is a
+   // QSO party that can say what it is (Q76/Q89, NY4I 2026-10-16): the
+   // host's state for a host county, the station's own state or province
+   // for an out-of-state QSO when ADIF allows that code for its country,
+   // none for DX.  Until then this wrote the HOST's state on every QSO.
    //
-   // We deliberately do NOT infer STATE from a bare 2-char QTHString.
-   // QTHString means different things per contest (an ARRL section, a
-   // zone, a serial, a name, ...), so a "2 letters => it's a state"
-   // heuristic mislabels section-based contests -- e.g. ARRL section
-   // 'EB' (East Bay) is not the state 'EB'.  Contest-specific STATE that
-   // must be derived (e.g. Field Day: section -> state) is emitted by the
-   // PostUnit tail emitter, which has the contest knowledge to do it
-   // correctly.  See Issue #1050.
-   stateForQP := GetStateForContest(rec.ceContest);
+   // We deliberately do NOT infer STATE from a bare 2-char QTHString in
+   // any other contest.  QTHString means different things per contest (an
+   // ARRL section, a zone, a serial, a name, ...), so a "2 letters => it's
+   // a state" heuristic mislabels section-based contests -- e.g. ARRL
+   // section 'EB' (East Bay) is not the state 'EB'.  A party's QTH IS a
+   // county, state or province, which is why only the party classes
+   // answer.  Contest-specific STATE that must be derived (e.g. Field Day:
+   // section -> state) is emitted by the PostUnit tail emitter.  See
+   // Issue #1050.
+   stateForQP := GetADIFStateForQSO(rec);
    if (stateForQP <> '') and (rec.QTHString <> '') then
       begin
       Result := Result + EmitADIFField('STATE', stateForQP);
       end;
 
-   // QTH - the "default" location field.  Always emit when QTHString
-   // is non-empty.  Contests that prefer GRIDSQUARE/IOTA/ARRL_SECT
-   // can override via the tail emitter.
-   if rec.QTHString <> '' then
-      begin
-      Result := Result + EmitADIFField('QTH', string(rec.QTHString));
-      end;
-
-   // PRECEDENCE / CHECK
-   if rec.Precedence <> #0 then
-      begin
-      Result := Result + EmitADIFField('PRECEDENCE', string(rec.Precedence));
-      end;
-   if rec.Check <> 0 then
-      begin
-      Result := Result + EmitADIFField('CHECK', PadInt(rec.Check, 2));
-      end;
-
-   // NAME / FOC_NUM / RX_PWR
-   if rec.Name <> '' then
-      begin
-      Result := Result + EmitADIFField('NAME', string(rec.Name));
-      end;
-   if rec.Power <> '' then
-      begin
-      if rec.ceContest = FOCMARATHON then
-         begin
-         Result := Result + EmitADIFField('FOC_NUM', string(rec.Power))
-         end
-      else
-         begin
-         Result := Result + EmitADIFField('RX_PWR', string(rec.Power));
-         end;
-      end;
-
-   // SRX / STX (numeric serials).  Two "unset" sentinels are in use:
-   //   $FFFF (65535) -- set by uADIF.InitContestExchangeForParse for
-   //                    records built from imported ADIF
-   //   -1            -- left in place by live-entry / binary-log
-   //                    paths for contests that don't use a serial
-   //                    (e.g. Field Day on the SRX side -- ExchString
-   //                    carries class+section, NumberReceived stays
-   //                    at its initialized value)
-   // Without the >0 guard, FD records emit garbage like <SRX:5>000-1
-   // because PadInt(-1, 5) produces the literal string "000-1".
-   if (rec.NumberReceived > 0)      and
-      (rec.NumberReceived <> $FFFF) then
-      begin
-      Result := Result + EmitADIFField('SRX', PadInt(rec.NumberReceived, 5));
-      end;
-   if (rec.NumberSent > 0)      and
-      (rec.NumberSent <> $FFFF) then
-      begin
-      Result := Result + EmitADIFField('STX', PadInt(rec.NumberSent, 5));
-      end;
-
-   if rec.TenTenNum <> $FFFF then
-      begin
-      Result := Result + EmitADIFField('TEN_TEN', PadInt(rec.TenTenNum, 5));
-      end;
-
-   if rec.Age <> 0 then
-      begin
-      Result := Result + EmitADIFField('AGE', PadInt(rec.Age, 3));
-      end;
+   (* THE WORKED STATION'S EXCHANGE -- QTH, PRECEDENCE, CHECK, NAME, the
+      power tag (RX_PWR, FOC_NUM for the FOC Marathon), SRX, STX, TEN_TEN and
+      AGE -- IS THE CONTEST'S TO WRITE (2026-10-17, NY4I: "Shouldn't the uADIF
+      exporter be calling the contest class to ask for the specific fields it
+      wants to include?"). Each is written only where the contest's own
+      ReceivedExchangeFields declares it. This block used to write whichever
+      of them was non-empty, so a POTA record carried a PRECEDENCE, a CHECK,
+      a TEN_TEN and an AGE that POTA has no such thing as. The unset
+      sentinels ($FFFF; -1 on a contest with no serial) are the class's to
+      read now: see TContestBase.EmitADIFReceivedFields.
+      Contests that prefer GRIDSQUARE/IOTA/ARRL_SECT add them through the
+      tail emitter (EmitADIFContestFields). *)
+   Result := Result + rules.EmitADIFReceivedFields(rec);
 
    // OPERATOR + APP_TR4W_ID
    if rec.ceOperator <> '' then
@@ -1666,26 +2100,247 @@ begin
       end;
 end;
 
+// ---------------------------------------------------------------------------
+// Our station, in and out -- log schema 3, stage 2
+// ---------------------------------------------------------------------------
+
+function CTYEntityOfADIFDXCC(aDXCC: integer): AnsiString;
+var
+   i: integer;
+   prefix: string;
+   found: integer;
+begin
+   Result := '';
+   if aDXCC <= 0 then
+      begin
+      Exit;
+      end;
+
+   found := 0;
+   for i := 0 to DXCCEntityCount - 1 do
+      begin
+      prefix := DXCCEntityPrefixAt(i);
+      if (prefix <> '') and (prefix[1] <> '*') and
+         (ADIFDXCCOfCTYEntity(prefix) = aDXCC) then
+         begin
+         Inc(found);
+         (* The prefix is cty.dat's ASCII; the encode states the conversion. *)
+         Result := UTF8Encode(prefix);
+         end;
+      end;
+
+   (* NONE, OR AMBIGUOUS: unknown, never a guess between two entities. *)
+   if found <> 1 then
+      begin
+      Result := '';
+      end;
+end;
+
+(* A TAG'S TEXT AS THE FACTS HOLD IT: encoded once, exactly, and trimmed.
+  The facts are AnsiString and the record's text is UTF-16 here; the RTL's
+  Trim, UpperCase and StrToIntDef bind to their AnsiString forms, so every
+  step after the encode is conversion-free. *)
+function TagText(const aValue: string): AnsiString;
+begin
+   Result := Trim(UTF8Encode(aValue));
+end;
+
+(* The same, upper-cased -- BEFORE the encode, where UpperCase binds to its
+  UnicodeString form; after it, it would widen and narrow again. *)
+function TagUpper(const aValue: string): AnsiString;
+begin
+   Result := Trim(UTF8Encode(UpperCase(aValue)));
+end;
+
+(* A zone tag: a positive number, else unknown -- 0. *)
+function TagZone(const aValue: string): integer;
+begin
+   Result := StrToIntDef(TagText(aValue), 0);
+   if Result < 0 then
+      begin
+      Result := 0;
+      end;
+end;
+
+function MyFactsFromADIF(const temps: TADIFRecordTemps): TQsoMyFacts;
+begin
+   Result := NotCapturedMyFacts;
+
+   (* A RECORD THAT NAMES NO MY_ FIELD SAYS NOTHING ABOUT OUR STATION, and
+     answers NotCapturedMyFacts -- so the importer stamps the contest's
+     values, as a new QSO would get (NY4I, 2026-10-18). STATION_CALLSIGN
+     alone is not a MY_ field: it is written whenever someone else
+     operated, and says nothing about where the station was. *)
+   if (Length(TagText(temps.MyGridSquare)) = 0) and
+      (Length(TagText(temps.MyState)) = 0) and
+      (Length(TagText(temps.MyCounty)) = 0) and
+      (Length(TagText(temps.MyARRLSect)) = 0) and
+      (Length(TagText(temps.MySig)) = 0) and
+      (Length(TagText(temps.MySigInfo)) = 0) and
+      (Length(TagText(temps.MyPOTARef)) = 0) and
+      (Length(TagText(temps.MyIOTA)) = 0) and
+      (Length(TagText(temps.MyDXCC)) = 0) and
+      (Length(TagText(temps.MyCQZone)) = 0) and
+      (Length(TagText(temps.MyITUZone)) = 0) then
+      begin
+      Exit;
+      end;
+
+   Result.Source := mfsImported;
+
+   Result.Call := TagUpper(temps.MyCall);
+   Result.Grid := TagText(temps.MyGridSquare);
+   Result.State := TagUpper(temps.MyState);
+   Result.County := TagUpper(temps.MyCounty);
+   Result.Section := TagUpper(temps.MyARRLSect);
+   Result.Iota := TagUpper(temps.MyIOTA);
+
+   (* MY_POTA_REF IS THE PARK; MY_SIG_INFO is one only under MY_SIG POTA --
+     under another programme (SOTA, WWFF) it names something else, and is
+     not ours to store as a park. *)
+   Result.Park := TagUpper(temps.MyPOTARef);
+   if (Length(Result.Park) = 0) and SameText(TagText(temps.MySig), 'POTA') then
+      begin
+      Result.Park := TagUpper(temps.MySigInfo);
+      end;
+
+   Result.Country := CTYEntityOfADIFDXCC(TagZone(temps.MyDXCC));
+   Result.CQZone := TagZone(temps.MyCQZone);
+   Result.ITUZone := TagZone(temps.MyITUZone);
+end;
+
+function SentExchangeFromADIF(const temps: TADIFRecordTemps): AnsiString;
+begin
+   Result := TagText(temps.STX_String);
+end;
+
+(* Does aText already carry the tag aName? Case-insensitive, matched on the
+  '<NAME:' that opens it, so MY_STATE is not found inside STATE. *)
+function ADIFTextHasTag(const aText, aName: string): boolean;
+begin
+   Result := Pos('<' + UpperCase(aName) + ':', UpperCase(aText)) > 0;
+end;
+
+function EmitADIFMyStationFields(const rec: ContestExchange;
+                                 const aFacts: TQsoMyFacts;
+                                 const aAlreadyWritten: string): string;
+
+   procedure Add(const aName, aValue: string);
+   begin
+      if (aValue <> '') and (not ADIFTextHasTag(aAlreadyWritten, aName)) and
+         (not ADIFTextHasTag(Result, aName)) then
+         begin
+         Result := Result + EmitADIFField(aName, aValue);
+         end;
+   end;
+
+   function ZoneValue(aZone: integer): string;
+   begin
+      Result := '';
+      if aZone > 0 then
+         begin
+         Result := string(IntToStr(aZone));
+         end;
+   end;
+
+var
+   dxcc: integer;
+   operatorCall: AnsiString;
+begin
+   Result := '';
+   if aFacts.Source = mfsNotCaptured then
+      begin
+      Exit;
+      end;
+
+   (* THE RULE THE EXPORT HAS ALWAYS APPLIED, asked of the record: the station
+     call is written only when somebody other than the station operated it.
+     The operator field's own bytes (CharBufferBytes), so the comparison is
+     AnsiString against AnsiString. *)
+   operatorCall := Trim(CharBufferBytes(rec.ceOperator));
+   if (Length(operatorCall) > 0) and (Length(aFacts.Call) > 0) and
+      (not SameText(operatorCall, aFacts.Call)) then
+      begin
+      Add('STATION_CALLSIGN', string(aFacts.Call));
+      end;
+
+   Add('MY_GRIDSQUARE', string(aFacts.Grid));
+   Add('MY_STATE', string(aFacts.State));
+   Add('MY_CNTY', string(aFacts.County));
+   Add('MY_ARRL_SECT', string(aFacts.Section));
+   Add('MY_IOTA', string(aFacts.Iota));
+   Add('MY_CQ_ZONE', ZoneValue(aFacts.CQZone));
+   Add('MY_ITU_ZONE', ZoneValue(aFacts.ITUZone));
+
+   dxcc := 0;
+   if Length(aFacts.Country) > 0 then
+      begin
+      dxcc := ADIFDXCCOfCTYEntity(string(aFacts.Country));
+      end;
+   Add('MY_DXCC', ZoneValue(dxcc));
+
+   (* OUR PARK, LAST. POTA writes these three itself from the record's park,
+     before this, so for a POTA QSO all three are skipped; any other contest's
+     QSO that recorded a park carries it here, as the import read it. *)
+   if Length(aFacts.Park) > 0 then
+      begin
+      Add('MY_SIG', 'POTA');
+      Add('MY_SIG_INFO', string(aFacts.Park));
+      Add('MY_POTA_REF', string(aFacts.Park));
+      end;
+end;
+
 function ExportADIFToString(const records: TContestExchangeArray;
                             const programVersion: string;
-                            tailEmitter: TContestTailEmitter): string;
+                            tailEmitter: TContestTailEmitter;
+                            aContest: TContestBase): string;
+begin
+   Result := ExportADIFToString(records, nil, nil, programVersion, tailEmitter,
+                                aContest);
+end;
+
+function ExportADIFToString(const records: TContestExchangeArray;
+                            const aMyFacts: TQsoMyFactsArray;
+                            const aSentExchanges: TSentExchangeArray;
+                            const programVersion: string;
+                            tailEmitter: TContestTailEmitter;
+                            aContest: TContestBase): string;
 var
    i : Integer;
+   facts: TQsoMyFacts;
+   sent: AnsiString;
+   body: string;
 begin
    Result := EmitADIFHeader(programVersion);
    for i := 0 to High(records) do
       begin
-      Result := Result + EmitADIFRecord(records[i]);
+      facts := NotCapturedMyFacts;
+      if i <= High(aMyFacts) then
+         begin
+         facts := aMyFacts[i];
+         end;
+      sent := '';
+      if i <= High(aSentExchanges) then
+         begin
+         sent := aSentExchanges[i];
+         end;
+
+      body := EmitADIFRecord(records[i], aContest);
       if Assigned(tailEmitter) then
          begin
-         Result := Result + tailEmitter(records[i]);
+         body := body + tailEmitter(records[i], facts, sent);
          end;
-      Result := Result + '<EOR>'#13#10;
+      (* AFTER THE TAIL, so the contest's own fields win any tag both would
+        write, and a never-captured row's line is byte for byte what it was. *)
+      body := body + EmitADIFMyStationFields(records[i], facts, body);
+      Result := Result + body + '<EOR>'#13#10;
       end;
 end;
 
 initialization
    logger := TLogLogger.GetLogger('uADIF');
+   saveLastValid    := False;
    saveLastADIFName := '';
+   saveLastFound    := False;
 
 end.

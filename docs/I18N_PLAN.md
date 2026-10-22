@@ -103,7 +103,9 @@ executable as RCDATA, which Cocoa cannot see — so nothing told macOS what we s
 `CFBundleDevelopmentRegion` (`en`). **The list is derived, never typed**: the Darwin arm of
 `tr4w/build/build-unix.sh` reads the resource names out of `tr4w/res/tr4w_languages.res` —
 the `.res` that is `{$R}`-linked into the binary — so it cannot claim a language the
-executable does not carry. Apple's spelling differs from our catalogue keys in two places
+executable does not carry. **English is the exception, added rather than read** (2026-10-21):
+it is the compiled-in language and has no catalogue since `tr4w_en.po` was deleted, so the
+`.res` holds 21 names and the plist still declares 22 tags. Apple's spelling differs from our catalogue keys in two places
 and both are inverses of `uUILanguage.SystemLanguageCode`: `pt_BR` is declared `pt-BR`, and
 `zh_CN` is declared **`zh-Hans`**, because macOS identifies Chinese by script rather than by
 country.
@@ -201,7 +203,7 @@ In `c:/tr4w-i18n/tools/i18n`, on branch `i18n-ts-poc`. Nothing in the build depe
 | tool | does |
 |---|---|
 | `pasconsts.py` | the shared line-oriented parser for the language fragments |
-| `pofile.py` | minimal `.po` reader/writer — `msgctxt`, `#,fuzzy`, `#.`, `#:`, `#~` |
+| `pofile.py` | minimal `.po` reader/writer — `msgctxt`, `#,fuzzy`, `#.`, `#:`, `#~`; keeps `# ` and `#|` lines and the header. A rewrite is byte-identical except where a caller changed an entry (`test_pofile.py`) |
 | `pas2po.py` | language tables → `.po` |
 | `po2pas.py` | `.po` → language tables, *surgical*; `--verify` proves byte-identical round-trip |
 | `po_rekey.py` | adds the `#:` run-time identifier beside the `msgctxt` key |

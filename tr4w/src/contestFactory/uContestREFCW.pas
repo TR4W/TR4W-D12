@@ -1,0 +1,270 @@
+(*
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+
+ This file is part of TR4W  (SRC)
+
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+ *)
+
+(* THE REF CONTEST, CW.
+
+  The ContestsArray row this class states, verbatim:
+
+   Email: '';  DF: 'ref';  WA7BNM: 233;  QRZRUID: 67;
+   Pxm: NoPrefixMults;  ZnM: NoZoneMults;  AIE: NoInitialExchange;
+   DM: DomesticFile;  P: 0;  AE: RSTAndQSONumberOrFrenchDepartmentExchange;
+   XM: NoDXMults;  QP: REFQSOPointMethod;
+   ADIFName: '';  CABName: '';
+   FriendlyName: 'REF Contest, CW'
+
+  Blank CABName and ADIFName resolve to the enum's spelling, 'REF-CW'.
+
+  WHY IT HAS A CLASS. Milestone M7b (2026-10-02) gives every classless
+  contest one -- this is batch 2 -- and a registered class is the contest's
+  scorer, set-up, export, import, parse and final score from the moment it
+  exists, so the whole contest is transcribed here, exactly: the row above
+  as literals (Test_MovedRowValuesStillMatchTheArray), and every legacy arm
+  that named it, each arm deleted from the shared code it stood in. The
+  contest matrix is the proof: every line of its record but `contest.class`
+  is unchanged.
+
+  SCORING: REFQSOPointMethod -- only a French station scores: 3 off our
+  continent, 1 on it; anyone else 0. uCallSignRoutines.FrenchID, which has
+  answered False for an empty country since M5a -- kept.
+
+  SET-UP: nothing -- the FoundContest arm that named REFCW was commented
+  out (and is deleted with this move).
+
+  A SIBLING, NOT A FAMILY MEMBER (M7b batch 2, DECIDED on evidence). It and
+  REFSSB (uContestREFSSB) share their rules today -- one contest in two
+  modes, the NRAU-Baltic shape -- and that is exactly NY4I's open Q7 (and
+  Q43). While Q7 is open the brief is siblings, so this class is a COPY and
+  owns it (design 1.4). Never merge the two, and never extract a base for
+  them. *)
+unit uContestREFCW;
+
+{$I tr4w.inc}
+
+interface
+
+uses
+   VC, uContestBase;
+
+type
+   TContestREFCW = class(TContestBase)
+   protected
+      (* PROTECTED, MATCHING THE BASE -- callers use the properties,
+         descendants override the getters. Every getter below states
+         the ContestsArray row quoted above. *)
+      function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetFriendlyName: string; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
+
+      (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
+      function GetFlags: TContestFlags; override;
+      function GetIsUSQSOParty: boolean; override;
+      (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
+         TContestBase: ScoreQSO is the one public scoring entry. *)
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
+   end;
+
+implementation
+
+uses
+   uExchangeFields,
+   uCabrilloExchange,
+   uADIFExchange,
+   uContestRegistry,
+   uCallSignRoutines,
+   uTR4WStrings;
+
+(* REFQSOPointMethod -- the legacy LOGSTUFF arm for this
+   contest's point method, moved here as it stood (M7b batch 2). The arm
+   was deleted at M10 S3; see git history or the D7 tree. *)
+procedure TContestREFCW.CalculateQSOPoints(var aQso: ContestExchange);
+begin
+   if not FrenchID(aQso.QTH.CountryID) then
+      begin
+      Exit;
+      end;
+
+   if aQso.QTH.Continent <> Station.MyContinent then
+      begin
+      aQso.QSOPoints := 3;
+      end
+   else
+      begin
+      aQso.QSOPoints := 1;
+      end;
+end;
+
+function TContestREFCW.GetDisplayName: string;
+begin
+   Result := 'REF Contest, CW';
+end;
+
+function TContestREFCW.GetCabrilloName: string;
+begin
+   (* The row's CABName is blank; this is the enum's spelling it resolves
+      to. *)
+   Result := 'REF-CW';
+end;
+
+function TContestREFCW.GetADIFContestId: string;
+begin
+   (* The row's ADIFName is blank; export writes the enum's spelling, and
+      import matches it (M1). *)
+   Result := 'REF-CW';
+end;
+
+function TContestREFCW.GetWA7BNMId: integer;
+begin
+   Result := 233;
+end;
+
+function TContestREFCW.GetQRZRUId: integer;
+begin
+   Result := 67;
+end;
+
+function TContestREFCW.GetSubmissionEmail: string;
+begin
+   Result := '';
+end;
+
+function TContestREFCW.GetDomesticFileName: string;
+begin
+   Result := 'ref';
+end;
+
+function TContestREFCW.GetFriendlyName: string;
+begin
+   Result := 'REF Contest, CW';
+end;
+
+function TContestREFCW.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := NoInitialExchange;
+end;
+
+function TContestREFCW.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTAndQSONumberOrFrenchDepartmentExchange;
+end;
+
+function TContestREFCW.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQSONumberQTH;
+end;
+
+function TContestREFCW.ParseReceivedExchangeFormat(const aText: string;
+                                                   aParsers: TExchangeParsers;
+                                                   var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTAndQSONumberOrFrenchDepartment(aText, aExch);
+end;
+
+procedure TContestREFCW.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   aMessages.WriteRSTStateOrQSONumber;
+end;
+
+function TContestREFCW.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentRSTStateOrQSONumber(aMy, aQso);
+end;
+
+function TContestREFCW.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                               const aQso: ContestExchange;
+                                               const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentRSTStateOrQSONumber(aMy, aQso, aCtx);
+end;
+
+function TContestREFCW.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                   const aQso: ContestExchange;
+                                                   const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedRSTQTHOrQSONumber(aMy, aQso, aCtx);
+end;
+
+function TContestREFCW.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfMultByBand];
+end;
+
+function TContestREFCW.GetIsUSQSOParty: boolean;
+begin
+   (* P: 0 -- not a US state QSO party. *)
+   Result := False;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for REFSSB.
+   The same steps on ticking the box stood for REFSSB.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestREFCW.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.OfferIAmIn(TC_FRANCE);
+   aPrompts.AskFieldWithCommentWhenInside(TC_DEPARTMENT, ncfMyState);
+end;
+
+
+(* THE DOMESTIC QTH IS LOOKED UP IN THIS CONTEST'S DOMESTIC FILE, at every
+   station -- M11 S6 part 1b, 2026-10-14. It was the session's
+   `= DomesticFile` (the trait); see TContestBase.UsesDomesticFile. *)
+function TContestREFCW.UsesDomesticFile: boolean;
+begin
+   Result := True;
+end;
+
+initialization
+   RegisterContest(REFCW, TContestREFCW);
+
+end.

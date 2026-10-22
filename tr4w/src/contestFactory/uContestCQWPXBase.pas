@@ -54,25 +54,42 @@ uses
 type
    TContestCQWPXBase = class(TContestBase)
    protected
-      function GetFormatsExchange: boolean; override;
-   public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
 
-      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                          const aQso: ContestExchange;
-                                          const aRSTSent: string): string; override;
-      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                              const aQso: ContestExchange;
-                                              const aRSTReceived: string;
-                                              const aHisQTH: string): string; override;
-      function FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                      const aQso: ContestExchange): string; override;
+      (* THE FLAG SET IS THE FAMILY'S RULE -- both modes run under one set
+         of rules, so it is stated once, here (M10 S5). See
+         TContestBase.GetFlags. *)
+      function GetFlags: TContestFlags; override;
+   public
+
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+   public
+      (* THE CANONICAL RECEIVED EXCHANGE -- see
+         TContestBase.CanonicalReceivedExchange (M9a). *)
+      function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
+   public
+      (* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasPrefixMultiplier (M11 S3 part 2). *)
+      function HasPrefixMultiplier: boolean; override;
+      (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
+         (M11 S3). *)
+      function PrefixMultiplierKey(const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean; override;
    end;
 
 implementation
 
 uses
-   SysUtils;
+   uCabrilloExchange,
+   SysUtils,
+   uCanonicalExchange;
 
 (* THE EXCHANGE IS RST AND A SERIAL NUMBER.
 
@@ -84,28 +101,22 @@ uses
 
    The ADIF side uses a plain '%03d' because ADIF is not column-aligned and the
    legacy arm never applied the sign rule there. *)
-function TContestCQWPXBase.GetFormatsExchange: boolean;
+function TContestCQWPXBase.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                   const aQso: ContestExchange;
+                                                   const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := True;
+   Result := CabrilloSentRSTQSONumber(aMy, aQso, aCtx);
 end;
 
-function TContestCQWPXBase.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                       const aQso: ContestExchange;
-                                       const aRSTSent: string): string;
+function TContestCQWPXBase.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                       const aQso: ContestExchange;
+                                                       const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := Format('%-3s %.*d ', [aRSTSent, 3 - Ord(aQso.NumberSent < 0), aQso.NumberSent]);
+   Result := CabrilloReceivedRSTQSONumber(aMy, aQso, aCtx);
 end;
 
-function TContestCQWPXBase.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                           const aQso: ContestExchange;
-                                           const aRSTReceived: string;
-                                           const aHisQTH: string): string;
-begin
-   Result := Format('%-3s %-3.3u', [aRSTReceived, aQso.NumberReceived]);
-end;
-
-function TContestCQWPXBase.FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                   const aQso: ContestExchange): string;
+function TContestCQWPXBase.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                               const aQso: ContestExchange): string;
 begin
    Result := Format('%-3d %03d ', [aQso.RSTSent, aQso.NumberSent]);
 end;
@@ -152,6 +163,39 @@ begin
             end;
          end;
       end;
+end;
+
+function TContestCQWPXBase.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfCQZoneMode];
+end;
+
+(* THE CANONICAL RECEIVED EXCHANGE -- uExchangeBuilder's arm for this
+   contest, moved here at M9a (2026-10-02): the RST and the serial. It
+   named CQWPXCW and CQWPXSSB, the family, so it is the family's. See
+   TContestBase.CanonicalReceivedExchange; the caller collapses the
+   whitespace. *)
+function TContestCQWPXBase.CanonicalReceivedExchange(const aQso: ContestExchange): string;
+begin
+   Result := RSTReceivedText(aQso) + ' ' + IntToStr(aQso.NumberReceived);
+end;
+
+(* A PREFIX MULTIPLIER AT EVERY STATION -- M11 S3 part 2, 2026-10-14: the
+   trait CQ WPX CW and SSB each stated (`Prefix`) until the kind was
+   deleted. Once, here, as the key is. *)
+function TContestCQWPXBase.HasPrefixMultiplier: boolean;
+begin
+   Result := True;
+end;
+
+(* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
+   LOGEDIT.SetPrefix.
+   The CTY prefix of every QSO -- SetPrefix's `Prefix` arm. *)
+function TContestCQWPXBase.PrefixMultiplierKey(const aQso: ContestExchange;
+                                               out aKey: PrefixMultiplierString): boolean;
+begin
+   aKey := aQso.QTH.Prefix;
+   Result := True;
 end;
 
 end.

@@ -2,6 +2,7 @@
 name: cw-keying
 description: CW keying — the keyer factory (CAT, WinKeyer, YCCC, CPU/DTR-RTS), LogCW message memories and function keys, CW framing and prosigns, element timing. Use for anything that keys CW, selects a keyer, changes CW speed, or touches CW message macros. Involve on any issue mentioning CW, keyer, WinKeyer, paddle, sidetone, weight, or WPM.
 tools: Read, Grep, Glob, Bash, Edit, Write
+model: opus
 ---
 
 You own how TR4W turns text into keyed CW.
@@ -63,6 +64,57 @@ still stands. Three things to know before extending it:
   clock** (a `GetTickCount64` fallback off Windows). Repoint it to `uHPTimer`
   and its gated `uses Windows` goes with it.
 
+## Thread bodies have ONE shape, and it is compiler-checked (2026-10-16)
+
+`CWThreadProc`, `tDoABeep`, `tPaddleFootSwitchThreadProc`,
+`tDVPPlayThreadproc`, `wkReadThreadProc` and `wkOpenThreadProc` (the thread
+entry for `wkOpen`, which `MainUnit` also calls directly) are all
+`function(aParameter: Pointer): DWORD; stdcall` -- `TF.TTR4WThreadStart`.
+Until pointer audit P1 they were parameterless procedures started through an
+untyped `Pointer`, and on i386 each one's EXIT wrote nil into the thread's
+SEH chain head (`docs/POINTER_AUDIT.md`, D2). **Pass the routine BARE --
+`tCreateThread(CWThreadProc, id)`.** In Delphi mode `@CWThreadProc` is an
+untyped pointer the compiler does not check; `Lint-TypedCodePointers` fails
+the build on it. The bench check for each is in `docs/BENCH_QUEUE.md`.
+
+## The CPU keyer's element ring is a FIELD, and it is pinned (2026-10-17)
+
+`K1EAKeyer.CWBuffer` (private, `logk1ea.pas`) is a fixed
+`array[0..CWBufferSize] of CWElementRecord` inside the keyer. Until pointer
+audit P6 it was a unit-global `^array` that `Dit`/`Dah`/`Dat`/
+`AddStringToCWBuffer` `New()`'d lazily and nothing disposed -- and the
+space, `^`, control-character and unmapped-character arms wrote through it
+unchecked, so a first autosend `' '` (`TCWKeyerCPU.SendChar`) was an
+`EAccessViolation` (D4, reproduced by the test before the fix). **Do not
+reintroduce a lazily-allocated ring.** Read it through
+`CPUKeyer.BufferedElement(i)`; only `SendCWBufferStart` touches the field
+directly. `test/unit/uTestCPUKeyerRing.pas` pins every element the text
+produces (A-Z, 0-9, punctuation, the prosigns, the accented letters, the
+control characters, the Esc command escape, the wrap, retraction) against
+international Morse written out independently.
+
+**Step the ring with `NextRingSlot` / `PreviousRingSlot` (`logk1ea`
+interface), never by hand.** They are the ring's modulus written once, and
+`IncrementBufferEnd`, `CWThreadProc`, `DeleteLastCharacter`'s retraction and
+`FlushCWBuffer` use them. The reason: `FlushCWBuffer`, with the CW thread
+running, puts Start one slot behind End, and it used to wrap -1 to
+`CWBufferSize` by hand -- but the ring runs modulo `CWBufferSize`, so from
+End = 0 the thread stepped to slot 1, not 0, and keyed the STALE ring from
+slot 1 round to 0 (about 2,046 old elements) instead of stopping on Esc.
+**FIXED in P6 (NY4I, 2026-10-17)**; identical for every End <> 0.
+`Test_RingSlotArithmetic` and `Test_FlushedStartStopsInOneStep` pin it
+without the thread. **`DeleteLastCharacter` had the same shape, also FIXED
+in P6 (NY4I, 2026-10-17):** it started its walk from `CWBufferEnd - 1`
+written by hand, -1 when End is 0, which never equals Start -- so with Start
+just before End the walk went round the whole STALE ring and could make an
+old gap the new End (Backspace un-retracting into old CW). It now starts at
+`PreviousRingSlot(CWBufferEnd)` and steps with `PreviousRingSlot`; identical
+for every End <> 0. Pinned by `Test_DeleteLastCharacterAtEndZero`.
+
+`CWBufferStart`/`CWBufferEnd` are still interface globals
+(`uNet` reads them), and `K1EAKeyer` is still an old-style `object` -- audit
+item 6.5, its conversion to a class, was not part of P6.
+
 ## Open, and decided
 
 **Open (NY4I — design, not refactor):** `ActiveCWKeyer`'s precedence chain
@@ -81,8 +133,19 @@ output lapses until OTRSP AUX is wired.
 
 ## Oracle
 
-`.\tr4w\build\Build-Tests.ps1 -Run` covers CW framing and keyer logic. Actual
+`.\tr4w\build\Build-Tests.ps1 -Run` covers CW framing and keyer logic, and
+the CPU keyer's text-to-element translation (`uTestCPUKeyerRing`). Actual
 keying is bench-only — no oracle in this repo proves a rig keys.
+
+**The WinKeyer's wire bytes are pinned without a keyer** (`uTestWinKeyWire`,
+P12, 2026-10-18). `wkWriteRaw` takes `const aBytes: array of Byte`; an admin
+command is a `TwkAdminCommand` (exactly two bytes, so the D12-era
+"every command went out as CALIBRATE" width bug cannot recur); and the
+LOAD DEFAULTS value list goes out through `wkValueListBytes`, one wire byte
+per field — **not** as the packed record's memory, which had made the
+record's field order the wire format by accident. Adding or reordering a
+`TwkValueList` field no longer changes what the keyer receives; changing
+`wkValueListBytes` does, and the test says so.
 
 ## Coordinate with
 

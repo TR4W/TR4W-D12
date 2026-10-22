@@ -1,0 +1,260 @@
+(*
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+
+ This file is part of TR4W  (SRC)
+
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+ *)
+
+(* THE RUSSIAN ASIAN CHAMPIONSHIP, CW (AS-CHAMP).
+
+  The ContestsArray row this class states, verbatim:
+
+   Email: '';  DF: '';  WA7BNM: 0000;  QRZRUID: 64;
+   Pxm: NoPrefixMults;  ZnM: NoZoneMults;  AIE: NoInitialExchange;
+   DM: NoDomesticMults;  P: 0;  AE: QSONumberAndCoordinatesSum;
+   XM: NoDXMults;  QP: ChampionshipRFASMethod;
+   ADIFName: '';  CABName: '';
+   FriendlyName: ''
+
+  Blank CABName, ADIFName and FriendlyName resolve to the enum's spelling, 'AS-CHAMP'.
+
+  WHY IT HAS A CLASS. Milestone M7b (2026-10-02) gives every classless
+  contest one -- this is batch 2 -- and a registered class is the contest's
+  scorer, set-up, export, import, parse and final score from the moment it
+  exists, so the whole contest is transcribed here, exactly: the row above
+  as literals (Test_MovedRowValuesStillMatchTheArray), and every legacy arm
+  that named it, each arm deleted from the shared code it stood in. The
+  contest matrix is the proof: every line of its record but `contest.class`
+  is unchanged.
+
+  SCORING: ChampionshipRFASMethod -- when MY STATE is all digits and both
+  it and the received QTH are given: the QTH's first digit and next two are
+  a coordinate pair, and the points are 5 plus the two differences from
+  ours, 5 more on CW. Otherwise 0.
+
+  SET-UP: nothing; FoundContest's arm for it was empty. LogCfg's CQ
+  exchange: MY STATE and the serial. *)
+unit uContestRFASChampionshipCW;
+
+{$I tr4w.inc}
+
+interface
+
+uses
+   VC, uContestBase;
+
+type
+   TContestRFASChampionshipCW = class(TContestBase)
+   protected
+      (* PROTECTED, MATCHING THE BASE -- callers use the properties,
+         descendants override the getters. Every getter below states
+         the ContestsArray row quoted above. *)
+      function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetFriendlyName: string; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
+
+      (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
+      function GetFlags: TContestFlags; override;
+      function GetIsUSQSOParty: boolean; override;
+      (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
+         TContestBase: ScoreQSO is the one public scoring entry. *)
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   end;
+
+implementation
+
+uses
+   uExchangeFields,
+   uCabrilloExchange,
+   uADIFExchange,
+   uContestRegistry,
+   SysUtils,
+   utils_text,
+   uTR4WStrings;
+
+(* ChampionshipRFASMethod -- the legacy LOGSTUFF arm for this
+   contest's point method, moved here as it stood (M7b batch 2). The arm
+   was deleted at M10 S3; see git history or the D7 tree. *)
+procedure TContestRFASChampionshipCW.CalculateQSOPoints(var aQso: ContestExchange);
+var
+   la1, la2, lo1, lo2: integer;
+begin
+   if (Station.MyState <> '') and (aQso.QTHString <> '') then
+      begin
+      if StringIsAllNumbers(Station.MyState) then
+         begin
+         la1 := StrToIntDef(aQso.QTHString[1], 0);
+         lo1 := StrToIntDef(Copy(aQso.QTHString, 2, 2), 0);
+
+         la2 := StrToIntDef(UTF8Encode(Station.MyState[1]), 0);
+         lo2 := StrToIntDef(UTF8Encode(Copy(Station.MyState, 2, 2)), 0);
+         aQso.QSOPoints := Abs(la1 - la2) + Abs(lo1 - lo2) + 5;
+         if aQso.Mode = CW then
+            begin
+            aQso.QSOPoints := aQso.QSOPoints + 5;
+            end;
+         end;
+      end;
+end;
+
+function TContestRFASChampionshipCW.GetDisplayName: string;
+begin
+   (* The contest's human name: the DXLog name (design Q53,
+      docs/Q53_CONTEST_NAMES.csv). *)
+   Result := 'Asiatic Russia Championship';
+end;
+
+function TContestRFASChampionshipCW.GetCabrilloName: string;
+begin
+   (* The row's CABName is blank; this is the enum's spelling it resolves
+      to. *)
+   Result := 'AS-CHAMP';
+end;
+
+function TContestRFASChampionshipCW.GetADIFContestId: string;
+begin
+   (* The row's ADIFName is blank; export writes the enum's spelling, and
+      import matches it (M1). *)
+   Result := 'AS-CHAMP';
+end;
+
+function TContestRFASChampionshipCW.GetWA7BNMId: integer;
+begin
+   Result := 0;
+end;
+
+function TContestRFASChampionshipCW.GetQRZRUId: integer;
+begin
+   Result := 64;
+end;
+
+function TContestRFASChampionshipCW.GetSubmissionEmail: string;
+begin
+   Result := '';
+end;
+
+function TContestRFASChampionshipCW.GetDomesticFileName: string;
+begin
+   Result := '';
+end;
+
+function TContestRFASChampionshipCW.GetFriendlyName: string;
+begin
+   (* The display name above -- design Q53. *)
+   Result := 'Asiatic Russia Championship';
+end;
+
+function TContestRFASChampionshipCW.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := NoInitialExchange;
+end;
+
+function TContestRFASChampionshipCW.GetExchangeKind: ExchangeType;
+begin
+   Result := QSONumberAndCoordinatesSum;
+end;
+
+function TContestRFASChampionshipCW.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsQSONumberQTH;
+end;
+
+function TContestRFASChampionshipCW.ParseReceivedExchangeFormat(const aText: string;
+                                                                aParsers: TExchangeParsers;
+                                                                var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseQSONumberAndCoordinatesSum(aText, aExch);
+end;
+
+function TContestRFASChampionshipCW.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                                        const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentStateAndQSONumberSum(aMy, aQso);
+end;
+
+function TContestRFASChampionshipCW.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                            const aQso: ContestExchange;
+                                                            const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentStateQSONumberSum(aMy, aQso, aCtx);
+end;
+
+function TContestRFASChampionshipCW.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                                const aQso: ContestExchange;
+                                                                const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedQTHQSONumberSum(aMy, aQso, aCtx);
+end;
+
+function TContestRFASChampionshipCW.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode, cfErmakSpecification];
+end;
+
+function TContestRFASChampionshipCW.GetIsUSQSOParty: boolean;
+begin
+   (* P: 0 -- not a US state QSO party. *)
+   Result := False;
+end;
+
+(* LogCfg.tSetupExchangeNumbers' arm for this contest, moved here as it
+   stood (M7b batch 2). See TContestBase.CQExchangeDefault. *)
+function TContestRFASChampionshipCW.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   Result := ' ' + aStation.MyState + '#';
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts. *)
+procedure TContestRFASChampionshipCW.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskFieldWithComment(TC_RFAS, ncfMyQTH);
+end;
+
+initialization
+   RegisterContest(RFASCHAMPIONSHIPCW, TContestRFASChampionshipCW);
+
+end.

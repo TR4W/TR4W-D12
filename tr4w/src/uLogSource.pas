@@ -62,7 +62,8 @@ unit uLogSource;
 interface
 
 uses
-   VC;
+   VC,
+   uQsoMyFacts;   (* TQsoMyFacts -- a row's own station, LogSourceNext below *)
 
 (* WHETHER A READ CAN BE MADE RIGHT NOW.
 
@@ -90,9 +91,36 @@ procedure LogSourceRewind;
 (* Reads the next QSO.  False at the end.  Fills aQso with zeroes when it
   returns False, so a caller that ignores the result reads a blank rather than
   the previous record again. *)
-function LogSourceNext(out aQso: ContestExchange): boolean;
+function LogSourceNext(out aQso: ContestExchange): boolean; overload;
+
+(* LogSourceNext, and the row's OWN STATION -- its my_* columns (log schema 3);
+  NotCapturedMyFacts for a row written before. *)
+function LogSourceNext(out aQso: ContestExchange;
+                       out aFacts: TQsoMyFacts): boolean; overload;
+(* AND WHAT IT SENT -- exchange_sent, '' for none (the export's read). *)
+function LogSourceNext(out aQso: ContestExchange;
+                       out aFacts: TQsoMyFacts;
+                       out aSentExchange: AnsiString): boolean; overload;
+
+(* LogSourceNext, and the ROW ID of what it read -- the handle
+  uLogStore.LogStoreUpdateQSOsByRowId writes by. For a pass that reads the
+  whole log and rewrites some of it: the rescore reached each row by index
+  (an O(n) OFFSET walk and a 68-column Open, per row) until 2026-10-14.
+  aRowId is 0 when this returns False. *)
+function LogSourceNextWithRowId(out aRowId: Int64;
+                                out aQso: ContestExchange): boolean; overload;
+(* LogSourceNextWithRowId, and the row's OWN STATION -- what a rescore scores
+  the row by (log schema 3, stage 3). *)
+function LogSourceNextWithRowId(out aRowId: Int64;
+                                out aQso: ContestExchange;
+                                out aFacts: TQsoMyFacts): boolean; overload;
 
 procedure LogSourceClose;
+
+(* THE CALL THE LOG'S ENTRY DECLARED -- contest.my_call; '' when the source is
+  shut or the log declared none. What an export writes for a QSO that recorded
+  no call of its own (log schema 3, stage 4). *)
+function LogSourceDeclaredCall: AnsiString;
 
 (* HOW MANY QSO RECORDS THE LOG HOLDS.  -1 if it cannot be read.
 
@@ -273,6 +301,38 @@ begin
    Result := (Repo <> nil) and Repo.ReadNext(aQso);
 end;
 
+function LogSourceNext(out aQso: ContestExchange;
+                       out aFacts: TQsoMyFacts): boolean;
+begin
+   aFacts := NotCapturedMyFacts;
+   Result := (Repo <> nil) and Repo.ReadNext(aQso, aFacts);
+end;
+
+function LogSourceNext(out aQso: ContestExchange;
+                       out aFacts: TQsoMyFacts;
+                       out aSentExchange: AnsiString): boolean;
+begin
+   aFacts := NotCapturedMyFacts;
+   aSentExchange := '';
+   Result := (Repo <> nil) and Repo.ReadNextForExport(aQso, aFacts, aSentExchange);
+end;
+
+function LogSourceNextWithRowId(out aRowId: Int64;
+                                out aQso: ContestExchange): boolean;
+begin
+   aRowId := 0;
+   Result := (Repo <> nil) and Repo.ReadNextWithRowId(aRowId, aQso);
+end;
+
+function LogSourceNextWithRowId(out aRowId: Int64;
+                                out aQso: ContestExchange;
+                                out aFacts: TQsoMyFacts): boolean;
+begin
+   aRowId := 0;
+   aFacts := NotCapturedMyFacts;
+   Result := (Repo <> nil) and Repo.ReadNextWithMyFacts(aRowId, aQso, aFacts);
+end;
+
 procedure LogSourceClose;
 begin
    GOpen := False;
@@ -283,6 +343,15 @@ begin
    if Repo <> nil then
       begin
       Repo.CloseSequentialRead;
+      end;
+end;
+
+function LogSourceDeclaredCall: AnsiString;
+begin
+   Result := '';
+   if Repo <> nil then
+      begin
+      Result := Repo.DeclaredCall;
       end;
 end;
 

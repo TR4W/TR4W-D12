@@ -6,15 +6,13 @@
 # ---------------------------------------------------------------------------
 # WHY THIS EXISTS
 # ---------------------------------------------------------------------------
-# fcontest.pas picks the .dom file at contest setup like this:
+# fcontest.pas picks the .dom file at contest setup: in state, the party's
+# InStateDomesticFileName (`<base>.dom`); out of state, its DomesticFileName,
+# the county file (`<base>_cty.dom` -- Test_EveryQSOPartyNamesBothDomesticFiles
+# holds the two names together).
 #
-#     if FoundMyStateInDomFile then                       // operator IS in-state
-#        TempDomesticQTHDataFileName := QSOParties[...].InsideStateDOMFile
-#     else                                                // operator is NOT
-#        TF.Format(TmpBuf, '%s_cty', QSOParties[...].InsideStateDOMFile)
-#
-# So one table entry yields TWO filenames -- `<base>.dom` and `<base>_cty.dom`
-# -- and only the second is spelled out anywhere.  full.nsi lists dom files by
+# So one statement yields TWO filenames -- `<base>.dom` and `<base>_cty.dom`
+# -- and only the base is spelled out by the class.  full.nsi lists dom files by
 # name, so packaging one and forgetting the other is invisible: the installer
 # builds, the file list looks plausible, and the gap only appears when someone
 # in that state runs that contest.
@@ -30,12 +28,24 @@
 # went into full.nsi and `missouri.dom` did not.
 #
 # ---------------------------------------------------------------------------
-# WHY IT READS VC.pas RATHER THAN A LIST OF ITS OWN
+# WHY IT READS THE CONTEST CLASSES RATHER THAN A LIST OF ITS OWN
 # ---------------------------------------------------------------------------
-# The QSOParties table is what the PROGRAM reads.  A second list here would be
-# one more thing to keep in lockstep, which is the defect this is meant to
-# catch.  Adding a QSO party to VC.pas is what makes this check demand its
-# files -- there is nothing else to remember.
+# What the PROGRAM reads is each party class's InStateDomesticFileName -- a
+# `function T<Class>.GetInStateDomesticFileName: string;` whose body is one
+# `Result := '<base>';`.  A second list here would be one more thing to keep
+# in lockstep, which is the defect this is meant to catch.  Writing a party
+# class is what makes this check demand its files -- there is nothing else to
+# remember.
+#
+# It read VC.pas's QSOParties table until M10 S8 (2026-10-14) deleted it; the
+# classes had stated the same 22 names since S5, and the base reads no table
+# since S6.
+#
+# IT FAILS CLOSED.  No factory directory, no statement found, fewer than
+# $MinimumParties statements, or a statement this cannot read as one literal
+# (a computed name would be a file this lint cannot check) -- each FAILS,
+# never passes quietly.  TContestBase's own `Result := ''` is the one body
+# skipped: it is the neutral answer of every contest that is not a party.
 #
 # Deliberately NOT a check that every file in target\dom is packaged: that
 # directory holds superseded files (ubaold.dom), case-duplicates, non-.dom
@@ -44,20 +54,27 @@
 # program will actually go looking for.
 #
 #   powershell -File tr4w\build\Lint-DomCoverage.ps1
-#   powershell -File tr4w\build\Lint-DomCoverage.ps1 -Nsi <path> -VcPas <path>
+#   powershell -File tr4w\build\Lint-DomCoverage.ps1 -Nsi <path> -FactoryDir <path>
 
 param(
-   [string] $Repo   = (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent),
-   [string] $Nsi    = '',
-   [string] $VcPas  = '',
-   [string] $DomDir = ''
+   [string] $Repo       = (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent),
+   [string] $Nsi        = '',
+   [string] $FactoryDir = '',
+   [string] $DomDir     = ''
 )
 
-if (-not $Nsi)    { $Nsi    = Join-Path $Repo 'tr4w\build\full.nsi' }
-if (-not $VcPas)  { $VcPas  = Join-Path $Repo 'tr4w\src\VC.pas' }
-if (-not $DomDir) { $DomDir = Join-Path $Repo 'tr4w\target\dom' }
+if (-not $Nsi)        { $Nsi        = Join-Path $Repo 'tr4w\build\full.nsi' }
+if (-not $FactoryDir) { $FactoryDir = Join-Path $Repo 'tr4w\src\contestFactory' }
+if (-not $DomDir)     { $DomDir     = Join-Path $Repo 'tr4w\target\dom' }
 
-foreach ($p in @($Nsi, $VcPas, $DomDir))
+# THE FLOOR -- the party classes stating an in-state file at M10 S8
+# (2026-10-14): 22.  Lower it only in the commit that deletes a party, naming
+# the party; a parse that finds fewer has broken, not shrunk.
+$MinimumParties = 22
+
+Import-Module (Join-Path $PSScriptRoot 'PascalSource.psm1') -Force
+
+foreach ($p in @($Nsi, $FactoryDir, $DomDir))
    {
    if (-not (Test-Path $p))
       {
@@ -67,14 +84,54 @@ foreach ($p in @($Nsi, $VcPas, $DomDir))
    }
 
 # --- what the program will ask for -----------------------------------------
-$vc = Get-Content $VcPas -Raw
-$entries = [regex]::Matches($vc, "\(InsideStateDOMFile:'([^']+)';.*?StateName:'([^']+)'\)")
+# Comments are stripped (PascalSource.psm1) and string literals kept, so a
+# commented-out override is not counted and the literal is still readable.
+$getterRx = [regex]::new(
+   'function\s+(?<cls>T\w+)\s*\.\s*GetInStateDomesticFileName\s*:\s*string\s*;(?<body>.*?)\bend\s*;',
+   'IgnoreCase, Singleline')
+$literalRx = [regex]::new("^\s*begin\s*Result\s*:=\s*'(?<base>[^']*)'\s*;\s*$", 'IgnoreCase')
 
-if ($entries.Count -eq 0)
+$entries = New-Object System.Collections.ArrayList
+$unreadable = New-Object System.Collections.ArrayList
+foreach ($f in Get-ChildItem -Path $FactoryDir -Filter '*.pas' -File)
+   {
+   $code = Get-PascalCodeOnlyText -Path $f.FullName
+   foreach ($m in $getterRx.Matches($code))
+      {
+      $cls = $m.Groups['cls'].Value
+      $lit = $literalRx.Match($m.Groups['body'].Value)
+      if ($cls -ieq 'TContestBase')
+         {
+         # The neutral answer -- see the header.  It must still be the
+         # empty literal; anything else is a base that names a file.
+         if ((-not $lit.Success) -or ($lit.Groups['base'].Value -ne ''))
+            {
+            [void]$unreadable.Add("  $($f.Name): TContestBase.GetInStateDomesticFileName is not Result := ''")
+            }
+         continue
+         }
+      if ((-not $lit.Success) -or ($lit.Groups['base'].Value -eq ''))
+         {
+         [void]$unreadable.Add("  $($f.Name): $cls.GetInStateDomesticFileName is not one non-empty literal")
+         continue
+         }
+      [void]$entries.Add([pscustomobject]@{ Base = $lit.Groups['base'].Value; Class = $cls })
+      }
+   }
+
+if ($unreadable.Count -gt 0)
+   {
+   Write-Host "Lint-DomCoverage: cannot read every party's in-state file name:" -ForegroundColor Red
+   $unreadable | ForEach-Object { Write-Host $_ -ForegroundColor Red }
+   Write-Host "  A name this lint cannot read is a file it cannot check -- state it as one literal." -ForegroundColor Yellow
+   exit 1
+   }
+
+if ($entries.Count -lt $MinimumParties)
    {
    # Fail loud rather than pass vacuously.  A lint that silently checks nothing
    # is worse than no lint -- it reads as a guarantee.
-   Write-Host "Lint-DomCoverage: parsed 0 QSOParties entries from VC.pas -- the table moved or its shape changed." -ForegroundColor Red
+   Write-Host "Lint-DomCoverage: found $($entries.Count) in-state file statement(s) under $FactoryDir, floor $MinimumParties -- the getter moved or its shape changed." -ForegroundColor Red
    exit 1
    }
 
@@ -102,8 +159,8 @@ foreach ($f in Get-ChildItem -Path $DomDir -File)
 $problems = New-Object System.Collections.ArrayList
 foreach ($e in $entries)
    {
-   $base  = $e.Groups[1].Value
-   $state = $e.Groups[2].Value
+   $base  = $e.Base
+   $state = $e.Class
 
    foreach ($pair in @(@{n = "$base.dom"; k = 'in-state'}, @{n = "$base`_cty.dom"; k = 'out-of-state'}))
       {
@@ -127,7 +184,7 @@ if ($problems.Count -gt 0)
    Write-Host "Lint-DomCoverage: $($problems.Count) domestic multiplier file(s) a defined QSO party needs are not shipping:" -ForegroundColor Red
    $problems | ForEach-Object { Write-Host $_ -ForegroundColor Red }
    Write-Host ""
-   Write-Host "  fcontest.pas uses <base>.dom in-state and <base>_cty.dom out-of-state," -ForegroundColor Yellow
+   Write-Host "  set-up uses <base>.dom in-state and <base>_cty.dom out-of-state," -ForegroundColor Yellow
    Write-Host "  so BOTH must be in target\dom and named in full.nsi." -ForegroundColor Yellow
    exit 1
    }

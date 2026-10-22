@@ -56,7 +56,10 @@ uses
     the compiler, not by grepping: wsprintfBuffer LOOKS Win32 and is TR4W s
     own buffer. *)
   LCLType,
-  uTR4WStrings;
+  uTR4WStrings,
+  (* TContestBase -- SetPrefix's contest parameter (M11 S4). An interface
+    leaf over VC and uSettingsModel; it was in the implementation uses. *)
+  uContestBase;
 
 const
   MULT_DX = 1;
@@ -69,6 +72,20 @@ type
 
     function CallIsADupe(var Call: CallString; Band: BandType; Mode: ModeType):
       boolean;
+    (* IS THIS LOGGED QSO A DUPE? -- the question LogContact (live and a
+      peer's QSO) and the rescore ask of a QSO whose exchange is known, Q118.
+      The contest's DupeKeyQualifier, read from the record, decides the key:
+      '' is CallIsADupe on the call as logged, exactly as before; a text is
+      the call PLUS that text, on QualifiedDupes (the New York QSO Party's
+      received county). Asked of ContestIdentity(Contest) -- see
+      TContestBase.DupeKeyQualifier.
+
+      A CHECK MADE BEFORE THE EXCHANGE EXISTS (the call window, AUTO DUPE,
+      the inactive radio) asks CallIsADupe, the call alone, as it always
+      has: a call worked from one county shows DUPE until the QSO with the
+      new county is logged (NY4I, 2026-10-18, narrowing Q118 -- "a
+      reasonable compromise"). *)
+    function QSOIsADupe(const aRX: ContestExchange): boolean;
     //    procedure CancelOutMultsThatAreInEditableWindow(var Exchange: ContestExchange);
     //    function CallIsInEditableLog(Call: CallString; Band: BandType; Mode: ModeType): boolean;
 
@@ -150,7 +167,6 @@ var
   //  MTotals                               : MultTotalArrayType;
 
   OriginalTextMode: integer;
-  RememberHeap: Pointer;
   {
     RemainingMults                        : RemainingMultList;
     RemainingMultsDX                      : RemainingMultListPointer;
@@ -181,15 +197,43 @@ procedure UpdateMaxSerialSent(Band: BandType; SerialNum: integer);  { Issue #954
 function TotalCWContacts: integer;
 function TotalPhoneContacts: integer;
 function TotalScore: LONGINT;
-procedure SetPrefix(var RData: ContestExchange {Ptr});
-{KK1L: 6.64 Added to keep BM up to date with changes made while logging}
-procedure UpdateBandMapDupeStatus(RXCall: CallString; RXBand: BandType; RXMode:
-  ModeType; MakeDupe: boolean);
+procedure SetPrefix(var RData: ContestExchange); overload;
+(* The same, asking aContest -- ActiveContest(Contest), already fetched by a
+  caller that asks it something else for the same QSO (M11 S4). *)
+procedure SetPrefix(aContest: TContestBase; var RData: ContestExchange); overload;
+(* THE QSO'S DX QTH AND PREFIX, FROM ONE CONTEST LOOKUP -- M11 S4. What the
+  QSO entry paths did as two steps (GetDXQTH when the contest counts DX
+  multipliers, SetPrefix when it counts prefixes), each step fetching the
+  contest for itself. *)
+procedure SetDXQTHAndPrefix(var RData: ContestExchange);
+(* A LOGGED QSO, ADDED TO THE DUPE SHEETS -- Q118. The ONE writer for the
+  three places a QSO reaches the sheets: LogContact, the log loader and the
+  rescore. Always CallsignsList.AddCallsign (the station's QSO count, the
+  partials, the call-only dupe the call window shows), with aJustAddToList as each caller
+  passed it; and, where the contest's DupeKeyQualifier answers a text and
+  the QSO marks dupes (not aJustAddToList), QualifiedDupes too -- the sheet
+  EditableLog.QSOIsADupe reads. THE MODE IS THE RECORD'S, IN ITS DUPE SLOT
+  (uSortedStringList.DupeSlot, FM in Phone's), taken HERE so the three
+  callers cannot record different slots -- LogContact and the loader
+  remapped FM themselves and the rescore did not. *)
+procedure AddQSOToDupeSheets(const aRX: ContestExchange; aJustAddToList: boolean);
+(* Does the active contest have a prefix multiplier at this station? M11 S3. *)
+function DoingPrefixMults: boolean;
+(* Does the active contest have a DX multiplier at this station? M11 S4. *)
+function DoingDXMults: boolean;
+(* Does the active contest have a zone multiplier at this station? M11 S5. *)
+function DoingZoneMults: boolean;
+(* Does the active contest have a domestic multiplier at this station? M11
+  S6. *)
+function DoingDomesticMults: boolean;
+(* Does aContest count any multiplier at all at this station? M11 S4. *)
+function DoingAnyMults(aContest: TContestHandle): boolean;
 //procedure UpdateTotals_old;
 
 implementation
 
 uses
+   uSortedStringList,   (* DupeSlot -- AddQSOToDupeSheets (Q118 with P8) *)
    uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF }
   uMainForm,   { the exchange field, named -- wh[] round 3 }
   uMainGrids,  { the QSO-need and mult-need band strips }
@@ -207,6 +251,18 @@ uses
   uRemMults,
   uRemMultsForm,   { the five multiplier windows are forms -- wh[] conversion }
   uBandmap,
+  (* THE FINAL SCORE -- M6: the totals and the contest that combines them
+     (uContestBase, in the interface uses since M11 S4), and OnMainThread for
+     the worker threads that read the score. *)
+  (* ActiveContest -- SetPrefix asks the contest its prefix key (M11 S3). *)
+  uContestFactory,
+  (* ContestIdentity -- the multiplier hint asks the session's contest which
+     domestic multiplier a call implies, and which bands it uses (M8). *)
+  uContestRegistry,
+  uScoreTotals,
+  (* ContestSession -- the initial exchange set-up resolved (M10 S9a). *)
+  uContestSession,
+  uCrashLog,
   MainUnit; {KK1L: 6.71 attempt to get POST to compile. Moved here from INTERFACE section. Was not there in original}
 
 var
@@ -456,8 +512,6 @@ function EditableLog.CallIsADupe(var Call: CallString; Band: BandType; Mode:
   ModeType): boolean;
 
 var
-  TempMode: ModeType;
-  TempBand: BandType;
   Index: integer;
 begin
   CallIsADupe := False;
@@ -466,29 +520,58 @@ begin
      Exit;
      end;
 
-  if (ActiveDomesticMult = GridSquares) and RoverCall(Call) then
+  (* A ROVER IS NEVER A DUPE where the multiplier is the grid square --
+    the contest says so (TContestBase.HasGridSquareMultiplier, M11 S6 part
+    1); it asked `ContestSession.DomesticMult = GridSquares`. THE ROVER
+    TEST GOES FIRST: both are pure, and the rescore asks this for every QSO,
+    so the contest is fetched only for a rover's call. *)
+  if RoverCall(Call) and ContestHasGridSquareMultiplier(ActiveContest(Contest)) then
      begin
      Exit;
      end;
 
-  if Settings.Qso.ByMode then
+  (* THE BAND AND MODE GO THROUGH AS THEY ARE -- M8. This routine used to turn
+     them into the dupe sheet's keys (Both, AllBands) first, a copy of what
+     CallsignIsDupe does again on entry, so the second copy changed nothing --
+     and the first hid the REAL band from the off-band question CallsignIsDupe
+     now asks (design 7.4). One copy remains, there. *)
+  Result := CallsignsList.CallsignIsDupe(Call, Band, Mode, Index);
+end;
+
+function EditableLog.QSOIsADupe(const aRX: ContestExchange): boolean;
+var
+  call: CallString;
+  qualifier: string;
+begin
+  call := aRX.Callsign;
+  qualifier := ContestDupeKeyQualifier(ContestIdentity(Contest), aRX);
+  if qualifier = '' then
      begin
-     TempMode := Mode
-     end
-  else
-     begin
-     TempMode := Both;
+     Result := CallIsADupe(call, aRX.Band, aRX.Mode);
+     Exit;
      end;
-  if Settings.Qso.ByBand then
+  (* THE CALL AND WHAT IT SENT. No grid-rover exit: a contest whose key is
+    qualified is a state QSO party, never a grid-square contest (Q118). *)
+  Result := (call <> '') and
+            QualifiedDupes.QSOIsDupe(string(call), qualifier, aRX.Band, aRX.Mode);
+end;
+
+procedure AddQSOToDupeSheets(const aRX: ContestExchange; aJustAddToList: boolean);
+var
+  qualifier: string;
+  slot: ModeType;
+begin
+  slot := DupeSlot(aRX.Mode);
+  CallsignsList.AddCallsign(aRX.Callsign, slot, aRX.Band, aJustAddToList);
+  if aJustAddToList then
      begin
-     TempBand := Band
-     end
-  else
-     begin
-     TempBand := AllBands;
+     Exit;
      end;
-  //  call[length(call)+1] := #0;
-  Result := CallsignsList.CallsignIsDupe(Call, TempBand, TempMode, Index);
+  qualifier := ContestDupeKeyQualifier(ContestIdentity(Contest), aRX);
+  if qualifier <> '' then
+     begin
+     QualifiedDupes.AddQSO(string(aRX.Callsign), qualifier, slot, aRX.Band);
+     end;
 end;
 
 {
@@ -679,6 +762,19 @@ begin
   MultString := 0;
   FillChar(TempRXData, SizeOf(ContestExchange), 0);
   TempRXData.Band := Band;
+  (* ALLBANDS IS A KEY, NOT A BAND -- M8. CreateModeSpecificDomesticMultiplier-
+     Info asks with it when multipliers are not counted per band, meaning
+     "needed anywhere". SetMultFlags asks the contest whether the QSO's band
+     earns credit, and a contest that states its bands credits no AllBands --
+     so for Idaho this hint said "not needed" for every county, always. The
+     band such a hint is FOR is the one the operator is on, which is also the
+     band NY4I's ruling turns on (design 7.4: off-band shows no need). Only
+     the credit question sees it: with multipliers not counted per band,
+     SetMultFlags keys the sheet on AllBands whatever the QSO's band. *)
+  if (Band = AllBands) and (not Settings.Mult.ByBand) then
+     begin
+     TempRXData.Band := ActiveBand;
+     end;
   TempRXData.Mode := Mode;
   SetExtendedModeFromMode(TempRXData);
   TempRXData.QTHString := DomesticMult;
@@ -723,10 +819,19 @@ begin
      begin
      TempBand := Band;
      end;
+  (* NO MULTIPLIER IS NEEDED ON A BAND THE CONTEST DOES NOT USE -- design 7.4,
+     NY4I: "off-band should not impact need multiplier. It is really a
+     one-off with no impact on the contest at all." Band is the real band the
+     hint is for (the radio's, or a spot's), asked before it becomes the
+     AllBands key of a contest whose multipliers are not counted per band. *)
+  if not ContestCreditsBand(ContestIdentity(Contest), Band) then
+     begin
+     Result := False;
+     Exit;
+     end;
+
   OutputValue := GetMultArray(Call, TempMode, '');
   Result := (OutputValue and (1 shl Cardinal(TempBand))) <> 0;
- 
-
 end;
 
 procedure EditableLog.CreateModeSpecificDomesticMultiplierInfo(DomQTH: Str20;
@@ -918,6 +1023,28 @@ begin
   SetMultStatus(Call, '');
 end;
 
+(* THE ENGINE'S TWO ANSWERS A CONTEST'S DomesticMultiplierFromCall MAY ASK
+  FOR -- see uContestBase.TMultiplierHintLookups. Each is exactly the call the
+  `case Contest of` arm made before M8. *)
+function EngineInitialExchangeOf(const aCall: string): string;
+begin
+  Result := CallsignsList.GetIniitialExchange(aCall);
+end;
+
+function EngineGridOfCall(const aCall: string): string;
+var
+  id: DXMultiplierString;
+begin
+  Result := ctyGetGrid(aCall, id);
+end;
+
+(* CTY.DAT's country ID for a call, '' when CTY.DAT does not know it -- Q50
+  (2026-10-15): "is this a Russian station" is asked of the country. *)
+function EngineCountryOfCall(const aCall: string): string;
+begin
+  Result := ctyGetCountryID(aCall);
+end;
+
 function EditableLog.GetMultArray(Call: CallString; Mode: ModeType; TempMult:
   Str10): Cardinal;
 var
@@ -925,13 +1052,27 @@ var
   TempRXData: ContestExchange;
   Index: integer;
   TempDomMult: Str10;
-  TempID: DXMultiplierString;
+  hintLookups: TMultiplierHintLookups;
   Zone: Byte;
+  (* ONE ActiveContest FOR THE WHOLE HINT -- M11 S4. It rebuilds the station
+    on every call; this routine asked it twice through DoingPrefixMults and
+    again through SetPrefix, and GetDXQTH now needs it too. *)
+  contestRules: TContestBase;
+  (* Asked once: a station test can allocate (ALRS's oblast). M11 S4 part 2. *)
+  countsDX: boolean;
+  (* Asked once of the contest in hand, as countsDX is -- M11 S5 part 2. *)
+  countsZones: boolean;
+  (* The zone list the contest's zone multiplier counts -- M11 S5. *)
+  zoneList: TZoneMultiplierZones;
 begin
   Result := 0;
   if Mode = FM then Mode := Phone;   // FM shares the Phone slot (DX/Zone arrays are CW..NoMode)
+  contestRules := ActiveContest(Contest);
+  countsDX := ContestHasDXMultiplier(contestRules);
+  countsZones := ContestHasZoneMultiplier(contestRules);
 
-  if DoingDXMults or DoingZoneMults or DoingPrefixMults then
+  if countsDX or countsZones or
+     ContestHasPrefixMultiplier(contestRules) then
      begin
      FillChar(TempRXData, SizeOf(TempRXData), 0);
      ctyLocateCall(Call, TempRXData.QTH);
@@ -941,11 +1082,11 @@ begin
         end;
      end;
 
-  if DoingDXMults then
+  if countsDX then
      begin
      TempRXData.DXQTH := '';
      TempRXData.Callsign := Call;
-     GetDXQTH(TempRXData);
+     GetDXQTH(contestRules, TempRXData);
      if TempRXData.DXQTH <> '' then
         begin
 
@@ -962,12 +1103,16 @@ begin
         end;
      end;
 
-  if DoingZoneMults then
+  if countsZones then
      begin
-     if ActiveZoneMult in [CQZones, ITUZones] then
+     (* WHICH ZONE LIST, ASKED OF THE CONTEST ALREADY IN HAND -- M11 S5. It
+       was `ContestSession.ZoneMult in [CQZones, ITUZones]`; a contest that
+       numbers its own zones gives no hint here, as before. *)
+     zoneList := ContestZoneMultiplierZones(contestRules);
+     if zoneList in [zmzCQZones, zmzITUZones] then
         begin
 
-        if ActiveZoneMult = CQZones then
+        if zoneList = zmzCQZones then
            begin
            Zone := ctyGetCQZone(Call)
            end
@@ -982,15 +1127,15 @@ begin
         end;
      end;
 
-  if DoingPrefixMults then
+  if ContestHasPrefixMultiplier(contestRules) then
      begin
      TempRXData.Callsign := Call;
-     SetPrefix(TempRXData);
+     SetPrefix(contestRules, TempRXData);
      if TempRXData.Prefix <> '' then
         begin
         if mo.PrfList.FindMult(TempRXData.Prefix, Index) then
            begin
-           TempCardinal := $FFFFFFFF xor mo.PrfList.FList[Index].FArray[Mode];
+           TempCardinal := $FFFFFFFF xor mo.PrfList.Dupes[Index][Mode];
              //1000000000000000000000
            Result := TempCardinal or Result;
            end
@@ -1001,7 +1146,8 @@ begin
         end;
      end;
 
-  if DoingDomesticMults then
+  (* The contest this hint already holds (M11 S6 part 2). *)
+  if ContestHasDomesticMultiplier(contestRules) then
      begin
 
      TempDomMult := '';
@@ -1011,29 +1157,16 @@ begin
         end
      else
         begin
-        case Contest of
-          RUSSIANDX, RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB:
-            if RussianID(Call) then
-               begin
-               TempDomMult := GetRussiaOblastID(Call);
-               end;
-
-          CUPURAL:
-            TempDomMult := ctyGetGrid(Call, TempID);
-
-          RDA:
-            if RussianID(Call) then
-               begin
-               TempDomMult := CallsignsList.GetIniitialExchange(Call);
-               end;
-
-          YODX:
-            if Call[1] = 'Y' then
-               begin
-               TempDomMult := CallsignsList.GetIniitialExchange(Call);
-               end;
-        
-        end;
+        (* WHICH DOMESTIC MULTIPLIER THE CALL IMPLIES IS THE CONTEST'S RULE --
+           M8. The `case Contest of` that stood here (the Russian DX contest
+           and the RF Championships, the Ural Cup, RDA, YO DX) is each
+           contest's DomesticMultiplierFromCall now. Assigned to a Str10, as
+           the arms did, so a longer answer is cut where it always was. *)
+        hintLookups.InitialExchangeOf := @EngineInitialExchangeOf;
+        hintLookups.GridOfCall := @EngineGridOfCall;
+        hintLookups.CountryOfCall := @EngineCountryOfCall;
+        TempDomMult := ShortString(ContestIdentity(Contest).DomesticMultiplierFromCall(string(Call),
+                                                                                       hintLookups));
         end;
 
      if TempDomMult <> '' then
@@ -1041,12 +1174,12 @@ begin
         if mo.DomList.FindMult(TempDomMult, Index) then
            begin
            if DomesticMultByBand = dmbbAllBand then
-             if mo.DomList.FList[Index].FArray[Mode] > 0 then
+             if mo.DomList.Dupes[Index][Mode] > 0 then
                 begin
                 Exit;
                 end;
 
-           TempCardinal := $FFFFFFFF xor mo.DomList.FList[Index].FArray[Mode];
+           TempCardinal := $FFFFFFFF xor mo.DomList.Dupes[Index][Mode];
            Result := TempCardinal or Result;
 
            end
@@ -1066,7 +1199,9 @@ var
 
 begin
 
-  OutputString := GetMultArray(Call, Mode, TempMult);
+  (* NO BAND THE CONTEST DOES NOT USE IS SHOWN NEEDING A MULTIPLIER -- design
+     7.4, M8. The per-band strip reads these bits. *)
+  OutputString := CreditedBands(ContestIdentity(Contest), GetMultArray(Call, Mode, TempMult));
 
   if Settings.Mult.ByMode and (Mode <> ActiveMode) then
      begin
@@ -1074,6 +1209,14 @@ begin
      end;
 
   nCmndShow := SW_HIDE;
+
+  (* AND NO "NEW MULTIPLIER" WHILE THE OPERATOR IS ON SUCH A BAND -- the
+     AllBands bit below is kept by CreditedBands, so it is asked here. *)
+  if not ContestCreditsBand(ContestIdentity(Contest), ActiveBand) then
+     begin
+     DispalayNewMult(nCmndShow);
+     Exit;
+     end;
 
   if Settings.Mult.ByBand then
      begin
@@ -1122,7 +1265,8 @@ begin
      if not Settings.Mult.ByBand then
        if (OutputValue and (1 shl integer(AllBands))) <> 0 then
           begin
-          OutputValue := $FFFFFFFF
+          (* Needed on every band -- every band the contest USES (M8). *)
+          OutputValue := CreditedBands(ContestIdentity(Contest), $FFFFFFFF);
           end
        else
           begin
@@ -1376,6 +1520,7 @@ var
   frm: TfrmRemMults;
   TempMultBand: BandType;
   HiLighting: boolean;
+  zonesFromZero: boolean;
 
   procedure Add(const aIndex: integer);
   begin
@@ -1462,13 +1607,17 @@ begin
       begin
         if MaxNumberOfZones <> 0 then
            begin
+           (* Asked once, before the walk: the contest says whether it
+             numbers its zones from zero (the European HF Championship and
+             KVP, whose zone is the year licensed). It was
+             `ContestSession.ZoneMult = EUHFCYear`, inside the loop -- M11 S5. *)
+           zonesFromZero := ContestNumbersZonesFromZero(ActiveContest(Contest));
            for i := 1 to MaxNumberOfZones do
               begin
               if HiLighting                            or
                  mo.IsZnMult(i, MultBand, MultMode)    then
                  begin
-                 // EUHFC numbers its zones from zero; everything else from one.
-                 if ActiveZoneMult = EUHFCYear then
+                 if zonesFromZero then
                     begin
                     Add(i - 1);
                     end
@@ -1705,7 +1854,9 @@ begin
      begin
      Exit;
      end;
-  if Contest = WRTC then           
+  (* A CONTEST THAT FORBIDS SUPER CHECK PARTIAL GETS NONE -- M9a. This was
+    `Contest = WRTC`. *)
+  if not (oaSuperCheckPartial in ContestIdentity(Contest).PermittedOperatingAids) then
      begin
      Exit;
      end;
@@ -1962,8 +2113,10 @@ begin
      DisplayQTCNumber(NumberQTCsThisStation(StandardCallFormat(Call, False)));
      end;
 
-  if Contest <> GENERALQSO then
-    // Gav 4.44.8   Uses intiial exchange & previous qso DOM to display Domestic mults, if it exists
+  (* Gav 4.44.8: uses the initial exchange and the previous QSO's domestic
+    QTH to show the domestic multiplier status -- not for General QSO, a log
+    (TContestBase.ShowsContestStatus, M9b). *)
+  if ContestIdentity(Contest).ShowsContestStatus then
      begin
      if DoingDomesticMults then
         begin
@@ -2185,7 +2338,9 @@ function InitialExchangeEntry(Call: CallString): string;
 
 var
   CharPosition, Zone {, Result1}: integer;
-  TempQTH: QTHRecord;
+  (* The contest's InitialExchangeFromCall answer (Q50). TempQTH, which the
+    Russian fallback located the call into, went with it. *)
+  contestAnswer: string;
   TestString: ShortString;
   StandardCall, Command: Str20;
   Exchange: Str80;
@@ -2194,6 +2349,8 @@ var
   data: DataBaseEntryRecord;
   TempZone: Byte;
   heading : Integer;
+  (* The zone a call-history entry offers -- InitialZoneFromCallHistory. *)
+  historyZone: ShortString;
 begin
   {TR6.74 - Removed any manipulation of IntialExchangePutUp from this
    routine.  It is up to whomever calls it to decide if they want to
@@ -2234,7 +2391,7 @@ begin
      begin
      StandardCall := StandardCallFormat(Call, True);
 
-     case ActiveInitialExchange of
+     case ContestSession.InitialExchange of
 
        CustomInitialExchange:
          begin
@@ -2332,10 +2489,10 @@ begin
                    begin
                    Exchange := Exchange + data.Grid + ' ';
 
-                   if (Settings.My.Grid <> '') and LooksLikeAGrid(data.Grid) then
+                   if (Settings.My.ResolvedGrid <> '') and LooksLikeAGrid(data.Grid) then
                       begin
                       //                  SaveSetAndClearActiveWindow(BeamHeadingWindow);
-                      Heading := round(GetBeamHeading(Settings.My.Grid, data.Grid));
+                      Heading := round(GetBeamHeading(Settings.My.ResolvedGrid, data.Grid));
                       //                  Write(data.Grid, ' at ', Heading, '?');
                                                 //                  RestorePreviousWindow;
                       end;
@@ -2383,7 +2540,7 @@ begin
 
        ZoneInitialExchange:
          begin
-           if Contest in [OZCR_O, OZCR_Z] then
+           if LegacyContestOf(Contest) in [OZCR_O, OZCR_Z] then
               begin
               //        if length(Call) = 3 then if Call[1] = 'R' then {if Call[2] in ['0'..'1'] then} Exit;
               if Call[1] = 'R' then
@@ -2394,14 +2551,14 @@ begin
                      end;
               end;
 
-           if ActiveExchange = RSTZoneOrDomesticQTH then
+           if ContestSession.Exchange = RSTZoneOrDomesticQTH then
              if DomesticCountryCall(Call) then
                 begin
                 Result := '';
                 Exit;
                 end;
 
-           if Contest in [RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB] then
+           if LegacyContestOf(Contest) in [RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB] then
               begin
               Result := '';
               Command := GetOblast(Call);
@@ -2435,24 +2592,27 @@ begin
 
            if CD.GetEntry(Call, data) then
               begin
-              if ActiveZoneMult = ITUZones then
+              (* WHICH ZONE THE ENTRY OFFERS -- M11 S5: the contest's zone
+                list, through InitialZoneFromCallHistory (the old rule, exactly
+                -- it read `ContestSession.ZoneMult = ITUZones`). The ' ' in
+                front is KK1L's (6.73, "K9PG forgets to add it").
+
+                The ACTIVE contest, like every other zone reader (M11 S5 part
+                2). Part 1 asked ContestIdentity here because an
+                ActiveContest call between two call-history lookups moved
+                the stack residue LOGSCP.BestTwoLetters read for a call
+                containing 'JA' (plan F22); BestTwoLetters zeroes its array
+                since a8186905, so nothing here depends on what ran between
+                lookups. The answer is the same either way -- "ITU or not"
+                depends on no entrant for any contest, pinned in
+                uTestZoneMultiplier.Test_TheITUQuestionDependsOnNoStation.
+                Once per initial exchange that TRMASTER answers, not per
+                row. *)
+              if InitialZoneFromCallHistory(
+                    ContestZoneMultiplierZones(ActiveContest(Contest)),
+                    data.CQZone, data.ITUZone, historyZone) then
                  begin
-                 if data.ITUZone <> '' then
-                    begin
-                    InitialExchangeEntry := ' ' + data.ITUZone;
-                      {KK1L: 6.73 Added ' '. K9PG forgets to add it.}
-
-                    { InitialExchangePutUp := True; }
-
-                    Exit;
-                    end;
-                 end
-              else if data.CQZone <> '' then
-                 begin
-                 InitialExchangeEntry := ' ' + data.CQZone;
-                   {KK1L: 6.73 Added ' '. K9PG forgets to add it.}
-
-                 { InitialExchangePutUp := True; }
+                 InitialExchangeEntry := ' ' + historyZone;
                  Exit;
                  end;
               end;
@@ -2565,10 +2725,10 @@ begin
             begin
             TempString := data.Grid;
 
-            if (Settings.My.Grid <> '') and LooksLikeAGrid(data.Grid) then
+            if (Settings.My.ResolvedGrid <> '') and LooksLikeAGrid(data.Grid) then
                begin
                //            SaveSetAndClearActiveWindow(BeamHeadingWindow);
-               Heading := round(GetBeamHeading(Settings.My.Grid, data.Grid));
+               Heading := round(GetBeamHeading(Settings.My.ResolvedGrid, data.Grid));
                //            Write(data.Grid, ' at ', Heading, '?');
                                  //            RestorePreviousWindow;
                end;
@@ -2612,15 +2772,23 @@ begin
 
      end; { if case }
 
+     (* THE CONTEST'S OWN ANSWER FROM THE CALL, WHEN NOTHING ELSE GAVE ONE --
+       Q50, ruled 2026-10-15. This was `Contest in [RUSSIANDX, RDA,
+       RU3AXMEMORIAL]` with RussianID of the CTY.DAT country and the call's
+       oblast (D7's rule, the one that ran); each of those three contests
+       states it now as InitialExchangeFromCall, through
+       uCallSignRoutines.RussianStationOblast, and every other contest answers
+       False. The call goes as typed, as before. ContestIdentity: the rule
+       needs no station. *)
      if TempString = '' then
-       if Contest in [RUSSIANDX, RDA, RU3AXMEMORIAL] then
-          begin
-          ctyLocateCall(Call, TempQTH);
-          if RussianID(TempQTH.CountryID) then
-             begin
-             TempString := GetRussiaOblastID(Call);
-             end;
-          end;
+        begin
+        if ContestIdentity(Contest).InitialExchangeFromCall(string(Call),
+                                                            ctyGetCountryID(string(Call)),
+                                                            contestAnswer) then
+           begin
+           TempString := ShortString(contestAnswer);
+           end;
+        end;
      if Settings.InitialExchange.Reverse then
         begin
         TempString := CallsignsList.GetIniitialExchange(Call)
@@ -2641,17 +2809,17 @@ begin
      GetRidOfPrecedingSpaces(TempString); //n4af 4.31.7
      GetRidOfPostcedingSpaces(TempString);
 
-     if (ActiveExchange = QSONumberDomesticOrDXQTHExchange) or
-       (ActiveExchange = RSTAndFOCNumberExchange) or
-       (ActiveExchange = QSONumberDomesticQTHExchange) or
-       (ActiveExchange = QSONumberAndGridSquare) or
-       (ActiveExchange = RSTAndQSONumberOrDomesticQTHExchange) or
-       (ActiveExchange = RSTDomesticOrDXQTHExchange) or
-       (ActiveExchange = RSTDomesticQTHExchange) or
-       (ActiveExchange = RSTDomesticQTHOrQSONumberExchange) or
-       (ActiveExchange = RSTQSONumberAndDomesticQTHExchange) or
-       (ActiveExchange = QSONumberAndPossibleDomesticQTHExchange) or {KK1L: 6.73}
-     (ActiveExchange = RSTQSONumberAndPossibleDomesticQTHExchange) then
+     if (ContestSession.Exchange = QSONumberDomesticOrDXQTHExchange) or
+       (ContestSession.Exchange = RSTAndFOCNumberExchange) or
+       (ContestSession.Exchange = QSONumberDomesticQTHExchange) or
+       (ContestSession.Exchange = QSONumberAndGridSquare) or
+       (ContestSession.Exchange = RSTAndQSONumberOrDomesticQTHExchange) or
+       (ContestSession.Exchange = RSTDomesticOrDXQTHExchange) or
+       (ContestSession.Exchange = RSTDomesticQTHExchange) or
+       (ContestSession.Exchange = RSTDomesticQTHOrQSONumberExchange) or
+       (ContestSession.Exchange = RSTQSONumberAndDomesticQTHExchange) or
+       (ContestSession.Exchange = QSONumberAndPossibleDomesticQTHExchange) or {KK1L: 6.73}
+     (ContestSession.Exchange = RSTQSONumberAndPossibleDomesticQTHExchange) then
         begin
         for CharPosition := 1 to length(TempString) do
           if Copy(TempString, CharPosition, 1) = ' ' then
@@ -2661,12 +2829,12 @@ begin
         end;
 
      {ua4wli 3.01}
-     if ActiveExchange = RSTZoneOrDomesticQTH then
+     if ContestSession.Exchange = RSTZoneOrDomesticQTH then
        if DomesticCountryCall(Call) then
           begin
           TempString := RemoveLastString(TempString);
           end;
-     if ActiveExchange = QSONumberPrecedenceCheckDomesticQTHEXchange then
+     if ContestSession.Exchange = QSONumberPrecedenceCheckDomesticQTHEXchange then
        // n4af 4.43.2
        if length(GetFirstString(TempString)) = 1 then // 4.43.2
          if StringIsAllNumbers(GetFirstString(TempString)) then // 4.43.2
@@ -2678,7 +2846,7 @@ begin
      {           Both the zone and country are log entries, but only the zone is in the}
      {           exchange. This confused the parser. Only the first string (zone) is needed.}
 
-     if (ActiveInitialExchange = ZoneInitialExchange) or (Contest = IARU) then
+     if (ContestSession.InitialExchange = ZoneInitialExchange) or (LegacyContestOf(Contest) = IARU) then
        {KK1L: 6.71 The init exchange bug came back when I changed the Initital exchange default}
        {           for IARU and WRTC!! Added the second line above.}
         begin
@@ -2723,15 +2891,15 @@ begin
 
     TestString := RemoveLastString(TempString);
 
-    if (Settings.My.Grid <> '') and LooksLikeAGrid(TestString) then
+    if (Settings.My.ResolvedGrid <> '') and LooksLikeAGrid(TestString) then
        begin
        //      SaveSetAndClearActiveWindow(BeamHeadingWindow);
-       Heading := round(GetBeamHeading(Settings.My.Grid, TestString));
+       Heading := round(GetBeamHeading(Settings.My.ResolvedGrid, TestString));
        //               Write(TestString, ' ', Heading, '?');
        TestString := TestString + ' ' + IntToStr(Heading) + '*';
        {               if Settings.Log.DistanceMode <> NoDistanceDisplay then
                         begin
-                           Distance := GetDistanceBetweenGrids(Settings.My.Grid, TestString);
+                           Distance := GetDistanceBetweenGrids(Settings.My.ResolvedGrid, TestString);
 
                            if Settings.Log.DistanceMode = DistanceMiles then
                               begin
@@ -2760,7 +2928,7 @@ begin
             Exit;
             end;
          end
-      else if ActiveExchange = RSTPrefectureExchange then
+      else if ContestSession.Exchange = RSTPrefectureExchange then
          begin
          TempExchange.QTHString := 'p' + RemoveFirstString(TempString);
          logger.debug('Calling FoundDomesticQTH from InitialExchangeEntry');
@@ -2777,297 +2945,192 @@ begin
 
 end;
 
-procedure UpdateBandMapDupeStatus(RXCall: CallString; RXBand: BandType; RXMode:
-  ModeType; MakeDupe: boolean);
+(* THE ONE SCORE -- M6, 2026-10-02 (docs/CONTEST_OWNERSHIP_DESIGN.md 5, 7.7).
 
+  EVERY READER OF THE SCORE READS THIS: the score display (LOGWIND), the
+  summary sheet and the Cabrillo CLAIMED-SCORE (POSTUNIT), the XML score
+  report (LOGSUBS2), and the two score-posting clients (uGetScores, uHamScore).
+
+  THE FORMULA AND THE BONUSES ARE THE CONTEST'S. This gathers the totals the
+  program holds (uScoreTotals.GatherScoreTotals) and asks the session's
+  contest for its final score -- TContestBase.FinalScore, the sponsor's
+  formula plus the bonuses, over a read-only view of the log. Until M6 the
+  formulas stood here: the Field Days, WAE's weighted multipliers, the
+  Russian cups' points-plus-N-per-multiplier (read through
+  ActiveQSOPointMethod, so an operator's QSO POINT METHOD line reached them in
+  any contest), the Ukraine Championship, the Ural Cup and Missouri's
+  bonuses. Each is its contest's class now.
+
+  NO CONTEST IS NAMED HERE. The last was RSGB 1.8 MHz's "points times one",
+  which is its class's formula since 2026-10-14 (design 7.13, Q33).
+
+  OFF THE MAIN THREAD, THE LAST SCORE THE MAIN THREAD COMPUTED. The
+  score-posting clients build their reports on worker threads. The final
+  score reads the log through the store's one SQLite connection and the
+  contest object ActiveContest owns, neither of which is safe to share; the
+  main thread recomputes the score after every logged QSO (the score
+  display), so the value they get is the one on the screen. A longint is read
+  and written whole on every platform this builds for. *)
 var
-  BandMapEntryRecord: BandMapEntryPointer;
-  ChangeMade: boolean;
-
-begin
-  ChangeMade := False;
-
-  BandMapEntryRecord := BandMapFirstEntryList[RXBand, RXMode];
-  while BandMapEntryRecord <> nil do
-     begin
-     with BandMapEntryRecord^ do
-        begin
-
-        {IF (RXCall = BandMapExpandedString(Call)) AND           } {KK1L: 6.73 Removed}
-        {   (RXBand = ActiveBand) AND (RXMode = ActiveMode) THEN }
-        {KK1L: 6.73 Don't limit compare to active band/mode. This keeps a contact made on the}
-        {           second radio from getting reset correctly. The BandMapFirstEntryList limits}
-        {           the check appropriately to the band/mode of the deleted contact.}
-        if (RXCall = BandMapExpandedString(Call)) then
-          if MakeDupe then
-             begin
-             StatusByte := StatusByte or $40; {KK1L: 6.64 Turn on dupe bit}
-             StatusByte := StatusByte and $7F;
-               {KK1L: 6.69 if it is a dupe it CAN'T be a mult}
-             ChangeMade := True;
-             end
-          else
-             begin
-             StatusByte := StatusByte and $BF; {KK1L: 6.64 Turn off dupe bit}
-             ChangeMade := True;
-             end;
-        end;
-     BandMapEntryRecord := BandMapEntryRecord^.NextEntry;
-     end;
-
-  if ChangeMade then
-     begin
-     DisplayBandMap;
-     end;
-end;
+  LastMainThreadTotalScore: LONGINT = 0;
 
 function TotalScore: LONGINT;
-
-{ This routine will return the current contest score }
-
 var
-  QPoints, TotalMults: LONGINT;
-  m: RemainingMultiplierType;
-  b: BandType;
+  totals: TScoreTotals;
 begin
-   TotalMults := 0;    // 4.69.5
-  QPoints := TotalQSOPoints;
-
-  //  VisibleLog.IncrementQSOPointsWithContentsOfEditableWindow(QPoints);
-
-  if Settings.Qtc.Enable then
+  if not OnMainThread then
      begin
-     QPoints := QPoints + TotalNumberQTCsProcessed;
-     end;
-
-   if (ActiveDomesticMult = NoDomesticMults)  and        // 4.57.2    //4.69.5  // 4.70.2
-    (ActiveDXMult = NoDXMults) and
-    (ActivePrefixMult = NoPrefixMults) and
-    (ActiveZoneMult = NoZoneMults) then
-      begin
-      TotalScore := QPoints;
-      Exit;
-      end;
-
-  {KK1L: 6.70 Ugly fix for FISTS because mults don't work...too long an exchange}
-  if ActiveExchange = RSTQTHNameAndFistsNumberOrPowerExchange then
-     begin
-     TotalScore := QPoints;
+     Result := LastMainThreadTotalScore;
      Exit;
      end;
 
-  if Contest = ARRLFIELDDAY then    // 4.72.4
-     begin
-     totalscore := QPoints;
-     exit;
-     end;
-{ if contest = DL-DX RTTY then
- exit
- }
+  GatherScoreTotals(Contest, totals);
+  Result := ContestFinalScore(Contest, totals);
 
-  if Contest = WINTERFIELDDAY then // Issue 301 NY4I
-     begin
-     TotalMults := 0;
-     for b := Low(BandType) to Band1296 do
-        begin
-        if QTotals[b, Digital] > 0 then
-           begin
-           inc(TotalMults);
-           end;
-        if QTotals[b, CW] > 0 then
-           begin
-           inc(TotalMults);
-           end;
-        if QTotals[b, Phone] > 0 then
-           begin
-           inc(TotalMults);
-           end;
-        end;
-     TotalScore := TotalMults * QPoints;
-     if tCategoryPowerSA[Settings.Contest.CategoryPower] = 'LOW' then
-        begin
-        Result := Result * 2;
-        end
-     else if tCategoryPowerSA[Settings.Contest.CategoryPower] = 'QRP' then
-        begin
-        Result := Result * 5;
-        end;
-
-
-     Exit;
-     end;
-
-  //  Sheet.MultSheetTotals(MTotals);
-    //  VisibleLog.IncrementMultTotalsWithContentsOfEditableWindow(MTotals);
-//   TotalMults := 0;
-
-  if SingleBand <> AllBands then
-     begin
-      
-     for m := Low(RemainingMultiplierType) to High(RemainingMultiplierType) do
-        begin
-        TotalMults := TotalMults + mo.MTotals[SingleBand, Both, m];
-        end;
-
-     //    TotalMults := MTotals[SingleBand, Both].NumberDomesticMults;
-     //    TotalMults := TotalMults + MTotals[SingleBand, Both].NumberDXMults;
-     //    TotalMults := TotalMults + MTotals[SingleBand, Both].NumberPrefixMults;
-     //    TotalMults := TotalMults + MTotals[SingleBand, Both].NumberZoneMults;
-     end
-  else if (ActiveQSOPointMethod = WAEQSOPointMethod)  then               // 4.116.1
-     begin
-
-     if ActiveDXMult = CQEuropeanCountries then
-        begin
-        m := rmDX
-        end
-     else
-        begin
-        m := rmPrefix;
-        end;
-
-     TotalMults := mo.MTotals[Band80, Both, m] * 4;
-     TotalMults := TotalMults + mo.MTotals[Band40, Both, m] * 3;
-     TotalMults := TotalMults + mo.MTotals[Band20, Both, m] * 2;
-     TotalMults := TotalMults + mo.MTotals[Band15, Both, m] * 2;
-     TotalMults := TotalMults + mo.MTotals[Band10, Both, m] * 2;
-     end
-  else
-     begin
-     for m := Low(RemainingMultiplierType) to High(RemainingMultiplierType) do
-        begin
-        TotalMults := TotalMults + mo.MTotals[AllBands, Both, m];
-        end;
-
-     //      TotalMults := mo.MTotals[All, Both, rmDomestic];
-
-     //      TotalMults := TotalMults + moMTotals[All, Both].NumberDXMults;
-
-     //      if (Contest = RDA) and (not RussianID(Settings.My.Country)) then        TotalMults := TotalMults - MTotals[All, Both].NumberDXMults;
-
-     //      if Contest <> CUPURAL then        TotalMults := TotalMults + MTotals[All, Both].NumberPrefixMults;
-
-     //      TotalMults := TotalMults + MTotals[All, Both].NumberZoneMults;
-     if Contest = CUPURAL then
-        begin
-        TotalMults := TotalMults - mo.MTotals[AllBands, Both, rmPrefix];
-        end;
-     end;
-
-  if Contest = RSGB18 then
-     begin
-     TotalMults := 1;
-     end;
-
-  if ActiveQSOPointMethod = CupRFMethod then
-     begin
-     TotalScore := QPoints + (100 * TotalMults);
-     Exit;
-     end;
-
-  if ActiveQSOPointMethod = ALRSUA1DZCupQSOPointMethod then
-     begin
-     TotalScore := QPoints + (300 * TotalMults);
-     Exit;
-     end;
-
-  if ActiveQSOPointMethod = ChampionshipRFMethod then
-     begin
-     TotalScore := QPoints + (50 * TotalMults);
-     Exit;
-     end;
-
-  //  if ActiveQSOPointMethod = ChampionshipUkrMethod then
-  if Contest in [UKRAINECHAMPIONSHIP {, RADIOYOC}] then
-     begin
-     TotalScore := QPoints + (10 * TotalMults);
-     Exit;
-     end;
-
-  if ActiveQSOPointMethod = OZHCRVHFQSOPointMethod then
-     begin
-     TotalScore := QPoints + (1000 * TotalMults);
-     Exit;
-     end;
-  
-  TotalScore := QPoints * TotalMults;
-
-  if Contest = MOQSOPARTY then
-     begin
-     if MOQSOPartyW0MAWorked then
-        begin
-        TotalScore := Result + 100;
-        end;
-     if MOQSOPartyK0GQWorked then
-        begin
-        TotalScore := Result + 100;
-        end;
-     TotalScore := Result + MOQSOPartyPeakHourCount;
-     end;
-
-  if Contest = CUPURAL then
-     begin
-     Result := Result + 10 * mo.MTotals[AllBands, Both, rmPrefix];
-     end;
-
+  LastMainThreadTotalScore := Result;
 end;
 
-procedure SetPrefix(var RData: ContestExchange {Ptr});
+(* THE PREFIX MULTIPLIER KEY IS THE CONTEST'S -- M11 S3, 2026-10-14.
+  This was `case ContestSession.PrefixMult of`, an enum choosing the
+  computation for the contest. Each prefix contest states its own rule in
+  TContestBase.PrefixMultiplierKey now (the shared computations are
+  uPrefixMultiplierKey), and the arms are gone; the GAGARINCUP callsign
+  list went to its class with them.
+
+  ONE ActiveContest PER QSO: it rebuilds the station on every call, so it
+  is fetched here once and never per helper. A False answer leaves the
+  QSO's prefix as it was, exactly as an arm that did not match did. *)
+procedure SetPrefix(var RData: ContestExchange);
 begin
-  case ActivePrefixMult of
-    CQNonEuropeanCountriesAndWAECallRegions: RData.Prefix :=
-      EuropeanCountriesAndWAECallRegions(RData.QTH);
-    BelgiumPrefixes: if RData.QTH.CountryID = 'ON' then
-                        begin
-                        RData.Prefix := RData.QTH.Prefix;
-                        end;
-    SACDistricts: RData.Prefix := SACDistrict(RData.QTH);
-    IndonesianDistricts: RData.Prefix := IndonesianDistrict(RData.QTH); // 4.64.1
-    Prefix: RData.Prefix := RData.QTH.Prefix;
-    SouthAmericanPrefixes: if RData.QTH.Continent = SouthAmerica then
-                              begin
-                              RData.Prefix := RData.QTH.Prefix;
-                              end;
-    NorthAmericanPrefixes: if RData.QTH.Continent = NorthAmerica then
-                              begin
-                              RData.Prefix := RData.QTH.Prefix;
-                              end;
-    AsianPrefixes: if RData.QTH.Continent = Asia then
-                      begin
-                      RData.Prefix := RData.QTH.Prefix;
-                      end;
-    SouthAndNorthAmericanPrefixes: if RData.QTH.Continent in [NorthAmerica,
-      SouthAmerica] then
-                                      begin
-                                      RData.Prefix := RData.QTH.Prefix;
-                                      end;
-    NonSouthAmericanPrefixes: if RData.QTH.Continent <> SouthAmerica then
-                                 begin
-                                 RData.Prefix := RData.QTH.Prefix;
-                                 end;
-    CallSignPrefix: RData.Prefix := RData.Callsign;
-    MongolianCallSignPrefix: if RData.QTH.CountryID = 'JT' then
-                                begin
-                                RData.Prefix := RData.Callsign;
-                                end;
-    RussianPrefixes: if Rdata.QTH.CountryID = 'UA' then
-                        begin
-                        RData.Prefix := RData.Callsign;
-                        end;
-    // CzechRepublicCallsignPrefix: if RData.QTH.CountryID = 'OK' then
-    //      RDATA.Prefix := RDATA.Callsign;
-    GCStation:
-      begin
-        if (RData.Callsign = 'RK1G') or (RData.Callsign = 'R3K') or
-          (RData.Callsign = 'RS3A')
-          or (RData.Callsign = 'RT3F') or (RData.Callsign = 'UP7Z') or
-            (RData.Callsign = 'UN/RA3VM') then
-           begin
-           RData.Prefix := RData.Callsign;
-           end;
-      end;
-  end;
-  //  RData^.Prefix := RData^.Prefix;
+  SetPrefix(ActiveContest(Contest), RData);
+end;
+
+procedure SetPrefix(aContest: TContestBase; var RData: ContestExchange);
+var
+  key: PrefixMultiplierString;
+begin
+  if ContestPrefixMultiplierKey(aContest, RData, key) then
+     begin
+     RData.Prefix := key;
+     end;
+end;
+
+(* THE QSO'S DX QTH AND PREFIX -- M11 S4, 2026-10-14. The two steps every
+  QSO entry path took (ParametersOkay's two exits, the WSJT-X logged-ADIF
+  path), unchanged in order and in their tests, with the contest fetched
+  ONCE: GetDXQTH now asks the contest for the DX key, and asking
+  ActiveContest a second time for the prefix would rebuild the station
+  twice per QSO. Whether to take the DX step is the contest's answer
+  (HasDXMultiplier) since M11 S4 part 2, asked of the same object. *)
+procedure SetDXQTHAndPrefix(var RData: ContestExchange);
+var
+  contestRules: TContestBase;
+begin
+  contestRules := ActiveContest(Contest);
+
+  if ContestHasDXMultiplier(contestRules) then
+     begin
+     GetDXQTH(contestRules, RData);
+     end;
+
+  if ContestHasPrefixMultiplier(contestRules) then
+     begin
+     SetPrefix(contestRules, RData);
+     end;
+end;
+
+(* DOES THE ACTIVE CONTEST HAVE A PREFIX MULTIPLIER AT THIS STATION? -- M11 S3
+  part 2, 2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S3, F20).
+
+  This was ContestSession.DoingPrefixMults, `PrefixMult <> NoPrefixMults`
+  over the kind FoundContest resolved once at set-up. The kind is deleted;
+  the contest answers (TContestBase.HasPrefixMultiplier), against the
+  station ActiveContest hands it on every call -- the station SetPrefix's
+  key reads, so whether a prefix is set and what it is set to follow the
+  same MY CALL (F20, closed).
+
+  Every reader that asks with no contest object in hand asks here, so the
+  question has one spelling outside the factory. A reader that already
+  holds ActiveContest's object (LOGDUPE.SetMultFlags) asks
+  ContestHasPrefixMultiplier on it instead of fetching it twice. *)
+function DoingPrefixMults: boolean;
+begin
+   Result := ContestHasPrefixMultiplier(ActiveContest(Contest));
+end;
+
+(* DOES THE ACTIVE CONTEST HAVE A DX MULTIPLIER AT THIS STATION? -- M11 S4
+  part 2, 2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S4, F21).
+
+  This was ContestSession.DoingDXMults, `DXMult <> NoDXMults` over the kind
+  FoundContest resolved once at set-up. The kind is deleted; the contest
+  answers (TContestBase.HasDXMultiplier), against the station ActiveContest
+  hands it on every call -- the station GetDXQTH's key reads, so whether a
+  DX QTH is set and what it is set to follow the same MY CALL (F21, closed).
+
+  For a reader with no contest object in hand, as DoingPrefixMults is. A
+  reader that already holds ActiveContest's object (SetMultFlags, the
+  rescore, SetDXQTHAndPrefix, GetMultArray, FillVisibleBytes) asks
+  ContestHasDXMultiplier on it instead of fetching it again. *)
+function DoingDXMults: boolean;
+begin
+   Result := ContestHasDXMultiplier(ActiveContest(Contest));
+end;
+
+(* DOES THE ACTIVE CONTEST HAVE A ZONE MULTIPLIER AT THIS STATION? -- M11 S5
+  part 2, 2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S5).
+
+  This was ContestSession.DoingZoneMults, `ZoneMult <> NoZoneMults` over the
+  kind FoundContest resolved once at set-up. The kind is deleted; the
+  contest answers (TContestBase.HasZoneMultiplier), against the station
+  ActiveContest hands it on every call -- the station its zone count and
+  zone list read, so all three follow the same MY CALL.
+
+  For a reader with no contest object in hand, as DoingDXMults is. A reader
+  that already holds ActiveContest's object (SetMultFlags, the rescore,
+  GetMultArray, SetUpRemainingMultiplierArrays) asks
+  ContestHasZoneMultiplier on it instead of fetching it again. *)
+function DoingZoneMults: boolean;
+begin
+   Result := ContestHasZoneMultiplier(ActiveContest(Contest));
+end;
+
+(* DOES THE ACTIVE CONTEST HAVE A DOMESTIC MULTIPLIER AT THIS STATION? -- M11
+  S6 part 2, 2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S6, F23).
+
+  This was ContestSession.DoingDomesticMults, `DomesticMult <>
+  NoDomesticMults` over the kind FoundContest resolved once at set-up. The
+  kind is deleted; the contest answers (TContestBase.HasDomesticMultiplier),
+  against the station ActiveContest hands it on every call -- the station its
+  domestic rules read, so all of them follow the same MY CALL.
+
+  For a reader with no contest object in hand, as DoingZoneMults is. A reader
+  that already holds ActiveContest's object (SetMultFlags, LogContact,
+  GetDomQTH, the Cabrillo writer, the ADIF import) asks
+  ContestHasDomesticMultiplier on it instead of fetching it again. *)
+function DoingDomesticMults: boolean;
+begin
+   Result := ContestHasDomesticMultiplier(ActiveContest(Contest));
+end;
+
+(* DOES aContest COUNT ANY MULTIPLIER AT ALL AT THIS STATION? -- M11 S4 part
+  2, 2026-10-14. The four Doing* answers OR-ed, all four the contest's own
+  since M11 S6 part 2 (the domestic one was the session's kind until then).
+
+  ONE STATEMENT FOR TWO READERS that had each spelled it: the final score's
+  "counts multipliers" (uScoreTotals.GatherScoreTotals) and the WSJT-X decode
+  gate (uWSJTX). The contest is fetched ONCE for its four answers --
+  ActiveContest rebuilds the station on every call. A domestic contest now
+  pays that fetch here, where the session's field answered before; every DX,
+  prefix and zone contest already did. *)
+function DoingAnyMults(aContest: TContestHandle): boolean;
+var
+   contestRules: TContestBase;
+begin
+   contestRules := ActiveContest(aContest);
+   Result := ContestHasDomesticMultiplier(contestRules) or
+             ContestHasDXMultiplier(contestRules)       or
+             ContestHasPrefixMultiplier(contestRules)   or
+             ContestHasZoneMultiplier(contestRules);
 end;
 
 end.

@@ -19,45 +19,30 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  *)
 
-(* THE SQLITE LOG, WRITTEN ALONGSIDE THE BINARY ONE -- STEP B2.
+(* THE CONTEST LOG -- THE ONE SQLITE DATABASE, AND EVERY WRITE TO IT.
 
-  The binary .TRW REMAINS AUTHORITATIVE. Nothing reads this database yet: it is
-  written so that a bench session produces a real SQLite log next to a real
-  binary one, which is the only way to find out whether the mapper survives
-  contact with live logging rather than with corpus fixtures.
+  THIS HEADER DESCRIBED STEP B2 UNTIL 2026-10-17: a shadow written alongside
+  an authoritative .TRW, opened lazily on the first append, each call made
+  AFTER the binary record was on disk. Every clause of that stopped being true
+  at B5 (2026-09-24), and the premise outlived it in two branches -- an append
+  that updated the newest imported row instead of inserting, and a rewrite
+  that returned without writing, both on the reasoning that the .TRW already
+  held the QSO. They are deleted; uTestLogStore pins what replaced them.
 
-  That is the strangler pattern this tree already used for the radio and CW
-  keyer factories, in CLAUDE.md's own words: "thin adapters over the existing
-  globals first, prove the seam on hardware, then delete the legacy path".
+  WHAT IS TRUE NOW:
 
-  THE RULE THAT OVERRIDES EVERYTHING ELSE HERE: A FAILURE IN THIS UNIT MUST
-  NEVER COST A QSO. Every entry point swallows its exceptions, reports once, and
-  switches the shadow OFF for the rest of the session. An operator in a contest
-  must not lose a contact because a database he does not yet use would not
-  write. That is also why nothing here is on the critical path of the log write
-  itself -- each call happens AFTER the binary record is safely on disk.
+    The database IS the log. tAddQSOToLog writes here and nowhere else; the
+    .TRW is IMPORT-ONLY, read once by EnsureOpen to migrate a contest this
+    build has never opened, and never written.
 
-  OPENED LAZILY, on the first append, so there is no startup wiring to get in
-  the wrong order and nothing happens at all in a session that logs nothing.
+    It is opened at STARTUP, by LogStoreApplyContestConfig, before anything
+    is logged. Every entry point still goes through EnsureOpen, so a caller
+    that comes first gets the same log.
 
-  WHAT IS SHADOWED, AND WHAT IS NOT -- because a partial shadow that pretends to
-  be complete would be worse than none:
-
-    shadowed      appending a QSO             (LOGSUBS2.tAddQSOToLog)
-                  rewriting the newest row    (DeleteLastContact,
-                                               uNet.UpdateRec,
-                                               uQTCS.SetSendedQSOs)
-
-                  editing an arbitrary QSO    (uEditQSO, by record position)
-                  the network's own update    (uNet.FindAndUpdateQSOInLog,
-                                               by (ceQSOID1, ceQSOID2))
-                  ADIF import                 (MainUnit.ImportFromADIF)
-
-  ALL EIGHT WRITE SITES ARE NOW SHADOWED. The drift rebuild in EnsureOpen stays
-  anyway, and not as a formality: a session that ran with the shadow switched
-  off after a failure, or a log edited by an older build, still leaves the two
-  out of step. Rebuilding is cheap (1,316 QSOs in 63 ms) and the .TRW is
-  authoritative, so disagreement is settled rather than hoped about. *)
+    A write failure DISABLES the store and is put in front of the operator
+    (see Disable): there is no fallback behind it, so a QSO that did not
+    commit is not acknowledged. docs/SQLITE_MIGRATION_TASKS.md has the
+    history. *)
 unit uLogStore;
 
 {$I tr4w.inc}
@@ -66,7 +51,8 @@ interface
 
 uses
    VC,
-   uLogRepository;   (* TLogRepository -- see LogStoreRepository *)
+   uLogRepository,   (* TLogRepository -- see LogStoreRepository *)
+   uQsoMyFacts;      (* TQsoMyFacts -- the editor's read and write below *)
 
 (* PUT A QSO IN THE LOG, AND SAY WHETHER IT IS ACTUALLY THERE.
 
@@ -90,13 +76,104 @@ uses
   entry fields until this says True. Never raises. *)
 function LogStoreAppendQSO(const aQso: ContestExchange): boolean;
 
-(* Rewrites the shadow's newest row -- what the three "seek back one record"
-  sites do to the binary log.  Never raises. *)
+(* OUR STATION AS THE LAST SUCCESSFUL LogStoreAppendQSO RECORDED IT -- what
+  live entry hands the final score's view beside that QSO (log schema 3,
+  stage 3), so a whole-log rule reads the station the row holds. Ask it only
+  right after an append answered True; NotCapturedMyFacts before any. *)
+function LogStoreLastAppendedMyFacts: TQsoMyFacts;
+
+(* THIS STATION'S MY_ VALUES AS THEY ARE NOW -- exactly what a QSO logged at
+  this moment records (Source mfsLogged). What an ADIF import stamps on a
+  record that names none (NY4I, 2026-10-18). *)
+function LogStoreCurrentMyFacts: TQsoMyFacts;
+
+(* Rewrites the log's newest row -- the three sites that used to seek back one
+  record in the binary log (DeleteLastContact, uNet.UpdateRec,
+  uQTCS.SetSendedQSOs).  Writes even when this call migrated the log: the .TRW
+  never holds the rewrite.  Never raises. *)
 procedure LogStoreUpdateNewestQSO(const aQso: ContestExchange);
 
 (* Rewrites the row matching a record's POSITION in the binary log -- what the
   QSO editor does with a byte offset.  Never raises. *)
-procedure LogStoreUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange);
+procedure LogStoreUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange); overload;
+
+(* THE SAME, AND OUR STATION FOR THAT QSO WITH IT -- Edit QSO when the operator
+  changed one of the my_* values (NY4I, ruling B). Both writes are ONE
+  transaction: one commit, or neither. aFacts.Source is written as given;
+  the editor passes mfsEdited. Never raises. *)
+procedure LogStoreUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange;
+                                   const aFacts: TQsoMyFacts); overload;
+
+(* OUR STATION AS RECORDED for the QSO at a record position -- what Edit QSO
+  shows. NotCapturedMyFacts for a row written before schema 3. False, with
+  NotCapturedMyFacts, when the log is not usable or holds no such row.
+  Never raises. *)
+function LogStoreReadMyFactsAtIndex(aRecordIndex: Int64;
+                                    out aFacts: TQsoMyFacts): boolean;
+
+type
+   (* Re-exported so a caller can collect rows for LogStoreUpdateQSOsByRowId
+     without using uLogRepository itself -- and taking on every name it
+     declares into a uses clause where order decides which one wins. *)
+   TLogRowUpdates = uLogRepository.TLogRowUpdates;
+
+(* REWRITES MANY ROWS, BY ROW ID, IN ONE TRANSACTION -- ALL OR NONE.
+
+  What a whole-log pass wants: the rescore and the dupe- and mult-sheet
+  clears read every row through uLogSource.LogSourceNextWithRowId, collect
+  the ones they changed, and hand them here. Section 9c, F4: one commit
+  instead of one per row, and no OFFSET walk to find each row again.
+
+  True when every row was written and the transaction committed (also for an
+  empty list). On failure the batch is ROLLED BACK -- the log holds exactly
+  what it held before -- and the failure is reported and the store disabled,
+  the same rule as every other write here: LogStoreIsUsable then says so,
+  which is what /RESCORE's exit code reads. Never raises. *)
+function LogStoreUpdateQSOsByRowId(aUpdates: TLogRowUpdates): boolean;
+
+type
+   (* Re-exported for the same reason as TLogRowUpdates. *)
+   TLogQsoAppends = uLogRepository.TLogQsoAppends;
+
+(* APPENDS MANY QSOS IN ONE TRANSACTION -- ALL OR NONE.
+
+  The ADIF import's write. NY4I, 2026-10-14: the import is all or nothing --
+  one record that will not go in, and nothing goes in. Each QSO is written as
+  LogStoreAppendQSO writes one (the contest stamped from the record,
+  county-line grouping), all in TLogRepository.AppendBatch's one transaction
+  -- EXCEPT what it sent and where our station was, which are the row's own
+  as the batch was given them, never captured from the live station (log
+  schema 3, stage 2: the D3 fix).
+
+  True when every QSO was written and the transaction committed (also for an
+  empty list). On failure the batch is ROLLED BACK and the log holds exactly
+  what it held before; aFailedIndex is the 0-based index of the QSO that
+  failed, or -1 when the failure was not one QSO's (the log would not open,
+  the commit failed), and aFailure is the reason, fit to show.
+
+  THE STORE STAYS ENABLED WHEN THE ROLLBACK SUCCEEDED, which is a deliberate
+  difference from LogStoreUpdateQSOsByRowId. A record that will not insert --
+  an ADIF record with no CALL is the realistic one, since callsign is NOT
+  NULL -- says something about the FILE, not about the log, and the log is
+  provably as it was. Disabling would stop the operator logging for the rest
+  of the session over a bad line in a file. If the failure was the disk, the
+  next QSO's own append meets it and fails closed there, which is the moment
+  that matters. When the ROLLBACK itself fails the log's state is not known,
+  and then the store is disabled exactly as every other write failure
+  disables it. Never raises. *)
+function LogStoreAppendQSOs(aQsos: TLogQsoAppends; out aFailedIndex: integer;
+                            out aFailure: string): boolean;
+
+(* THE VALIDITY CHECK FOR EXCHANGE IDS: are there QSOs in the log with none?
+
+  NY4I, 2026-10-14: a rescore no longer mints an exchange id, and a missing
+  one is REPORTED on validity check rather than invented. False when there
+  are any, with aReport giving the count and the first few (call and time);
+  True with a sentence saying so when there are none. A log that cannot be
+  opened is a False with the reason -- a check that cannot run has not
+  passed. Reads only. Registered with uVerificationChecks, which is the Tools
+  menu's verification window. *)
+function LogStoreCheckExchangeIds(out aReport: string): boolean;
 
 (* Rewrites the row the multi-op network identifies by (ceQSOID1, ceQSOID2).
   Does nothing when that pair is unset.  Never raises. *)
@@ -150,19 +227,32 @@ function LogStoreIsUsable: boolean;
   ONLY source = 'contest'. See TLogRepository.LoadContestConfig for why. *)
 function LogStoreApplyContestConfig: integer;
 
-(* MAKES THE SQLITE LOG EXIST AND MATCH THE BINARY ONE, and returns whether it
-  can be relied on.  Its file name is uLogDatabase.LogDatabaseFileName.
+(* RECORD ONE CONTEST-SCOPED STATEMENT IN THE LOG NOW, AND COMMIT IT -- Q61.
 
-  THIS IS WHAT A READER NEEDS AND A WRITER DID NOT. While only writes were
-  shadowed, the database was built lazily by the first append and no one else
-  cared. A READ can now come first -- a headless export of a log this build has
-  never appended to, or an operator opening the log window before working
-  anybody -- and it must not find an absent or stale file.
+  The contest database is the one home of a contest-scoped setting, and a
+  change is written when it is MADE: the Cabrillo summary window calls this
+  after it applies CATEGORY-ASSISTED, -BAND, -MODE, -OPERATOR or -POWER.
+  Before, such a change reached the log only through the capture at a clean
+  close, so a crash lost it. uLogContestStatements.CaptureContestStatement
+  is the rule (written while stated, deleted otherwise).
 
-  Rebuild-when-absent and the drift check already existed for the write path;
-  this exposes them. Never raises: on failure the shadow disables itself and
-  this returns False, which is the caller's cue to say so rather than to
-  silently read the wrong store. *)
+  True when the row is committed. A batch /EXPORT writes nothing, like the
+  close capture. A write failure disables the store, as every write here
+  does. Never raises. *)
+function LogStoreRecordContestStatement(const aCommand: string): boolean;
+
+(* MAKES THE LOG EXIST, and returns whether it can be relied on.  Its file
+  name is uLogDatabase.LogDatabaseFileName.
+
+  Opens the database when it exists; otherwise migrates the contest's .TRW
+  once, when there is one with records; otherwise creates a new log. It
+  checks integrity and writability after. A READ may be the first thing to come
+  here -- a headless export, or the log window before anybody is worked --
+  and gets the same log a write would. (The drift check this used to expose
+  went at B5, with the second store.)
+
+  Never raises: on failure the store disables itself and this returns False,
+  which is the caller's cue to say so rather than to silently read nothing. *)
 function LogStoreEnsureOpen: boolean;
 
 (* A VERIFIED BACKUP OF THE CONTEST LOG, at aDestination.
@@ -217,9 +307,19 @@ function LogStoreCheckIntegrity(out aReport: string): boolean;
 implementation
 
 uses
+   (* FIRST, AFTER THE RTL, ON PURPOSE: this tree resolves a name to the LAST
+      unit that declares it, so these three go where every unit below still
+      wins any name they share. Qualified at their call sites anyway.
+
+      CurrentStation -- the station context scoring is handed, so the my_*
+      values a QSO records are the ones scoring saw at that moment (country,
+      continent, MY CQ ZONE); TStationContext is uContestBase's.
+      ctyGetITUZone -- MY ITU ZONE when the operator stated none. *)
+   SysUtils, Classes, uContestBase, uContestFactory, uCTYDAT,
    (* uLogRepository is in the INTERFACE uses now -- LogStoreRepository's
       return type. *)
-   SysUtils, Classes, MainUnit, uLogDatabase, uLogImport,
+   MainUnit, uLogDatabase, uLogImport,
+   uContestRegistry,   (* ContestId -- a contest's stored name *)
    uLogBinaryFile,
    (* TLogBackup -- the ORDER of a backup's file operations, which is a leaf so
       the unit tests can hold it. LogStoreBackup supplies the live database. *)
@@ -246,6 +346,9 @@ uses
    (* Settings.CommandIsContestScoped -- which commands belong to the contest
       rather than to the station. See the capture classifier below. *)
    uSettingsModel,
+   (* Which contest-scoped rows the log writes, and which stored ones are
+     operator statements -- section 7.8. A leaf, so the rules are tested. *)
+   uLogContestStatements,
    (* RecalculateMyCountryContinentAndZoneNew -- run once the log has supplied
       the callsign; see the end of LogStoreApplyContestConfig. *)
    FContest,
@@ -260,6 +363,11 @@ var
    GDisabled: boolean = False;
 
    GTriedToOpen: boolean = False;
+
+   (* OUR STATION AS THE LAST COMMITTED APPEND RECORDED IT -- see
+     LogStoreLastAppendedMyFacts -- and the one being written. *)
+   GLastAppendedMyFacts: TQsoMyFacts;
+   GPendingMyFacts: TQsoMyFacts;
 
    (* THERE IS NO "written already" FLAG, ON PURPOSE -- see EnsureOpen. *)
 
@@ -361,7 +469,14 @@ end;
    what made the interactive and headless paths agree in the first place.
 
    ONCE. Reading it again later would reintroduce the bug at the header level:
-   what an entry DECLARED is a fact about the entry, not about today. *)
+   what an entry DECLARED is a fact about the entry, not about today.
+
+   AND NOW IT IS ONCE (Q61, 2026-10-17). EnsureOpen wrote it on EVERY open
+   until then; RecordEntryDeclaration writes it only for a new or just-migrated
+   log. The five category tags here (ASSISTED, BAND, MODE, OPERATOR, POWER)
+   are the contest-scoped settings, which CabrilloTagText answers when the
+   window is closed -- so a new log records what the New Contest dialog
+   stated, not the tr4w.json header store's copy. *)
 function ReadEntryDeclaration: TLogEntryDeclaration;
 begin
    FillChar(Result, SizeOf(Result), 0);
@@ -372,7 +487,7 @@ begin
      POTA reference are both ASCII, so nothing changes in the bytes -- what
      changes is that the build can still count what it is counting. *)
    Result.MyCall := UTF8Encode(Settings.My.Call);
-   Result.MyPark := UTF8Encode(Settings.My.Park);
+   Result.MyPark := UTF8Encode(Settings.My.ResolvedPark);
 
    Result.CategoryOperator    := AnsiString(CabrilloTagText(ctCategoryOperator));
    Result.CategoryAssisted    := AnsiString(CabrilloTagText(ctCategoryAssisted));
@@ -407,11 +522,13 @@ end;
   real log rather than by trusting a reading of the code. E2 makes them
   authoritative, and that is the step that can break a contest.
 
-  EVERY LIVE ROW, NOT THE ONES THAT LOOK CONTEST-SHAPED. Choosing a subset would
-  mean this unit deciding which settings matter, which is exactly the judgement
-  that leaves an operator's log missing the one thing they changed. Only csRem
-  is skipped, because csRem means the command was WITHDRAWN -- recognised so an
-  old config does not error, applied by nothing.
+  EVERY STATION ROW, AND EVERY CONTEST-SCOPED ROW THE OPERATOR STATED. The
+  station rows are a record of the station config and are applied by nothing.
+  A contest-scoped row is written only while TR4WSettings.CommandIsStated says
+  the operator stated it, and deleted otherwise -- absence means the contest
+  decides (2026-10-01, section 7.8; see uLogContestStatements). That is not
+  this unit choosing which settings matter: the operator's statement is the
+  test, and it is recorded where the statement is made.
 
   THE SOURCE COLUMN IS NOT DESCRIPTIVE. With no .cfg left, 'contest' versus
   'station' is the only thing that will say an explicit contest setting outranks
@@ -501,14 +618,31 @@ begin
             Continue;
             end;
 
-         (* A CONTEST-SCOPED SETTING IS ALWAYS THE CONTEST'S, whatever file it
-           arrived in. The band enables are the case: FCONTEST assigns them
-           when a contest loads, so CommandCameFromContestCFG can say no --
-           the value was not typed in a .cfg, it was computed -- and they
-           would be recorded as the STATION'S. Measured in a real log before
-           changing anything: HF, VHF and WARC BAND ENABLE all carried source
-           'station' in target/2026 ARRL-10 NY4I, with WARC TRUE in a
-           ten-metre contest.
+         (* A CONTEST-SCOPED SETTING IS CAPTURED BELOW, AND ONLY IF THE
+           OPERATOR STATED IT -- 2026-10-01, docs/CONTEST_OWNERSHIP_DESIGN.md
+           section 7.8. This walk wrote its current value unconditionally,
+           which for the contest-rule settings is the constructor's 'NONE' /
+           'UNKNOWN' (FoundContest sets the globals, not these properties) --
+           so every log recorded defaults, not rules, and reread them as
+           though they had been chosen. See uLogContestStatements. *)
+         if Settings.CommandIsContestScoped(cmd) then
+            begin
+            Continue;
+            end;
+
+         (* A STATION FACT A CONTEST MAY OVERRIDE (MY STATE, MY ZONE, MY GRID
+           ...) IS CAPTURED BELOW TOO -- design 7.12. Its row is the contest's
+           override, as 'contest', while one is stated, and otherwise the
+           station's value as 'station'. See CaptureStationFactRows. *)
+         if Settings.CommandIsContestOverridable(cmd) then
+            begin
+            Continue;
+            end;
+
+         (* A CONTEST-SCOPED SETTING NEVER REACHES HERE -- it is skipped above
+           and captured by CaptureContestStatements, always as 'contest' and
+           only while stated. The 'or contest-scoped' arm that stood in this
+           test is gone with it.
 
            MY CALL IS A CONTEST SETTING AND HAS TO BE NAMED AS ONE.
            CommandCameFromContestCFG says no for it, and not because it came
@@ -520,8 +654,7 @@ begin
            empty .cfg halts on "No callsign specified" while its own callsign
            sits in the config table unread. *)
          if CommandCameFromContestCFG(cmd)
-            or (cmd = 'MY CALL')
-            or Settings.CommandIsContestScoped(cmd) then
+            or (cmd = 'MY CALL') then
             begin
             src := AnsiString('contest');
             end
@@ -554,6 +687,15 @@ begin
    finally
       names.Free;
    end;
+
+   (* THE CONTEST-SCOPED SETTINGS: written while stated, deleted otherwise,
+     and the log marked as holding statements only. *)
+   saved := saved + CaptureContestStatements(Settings, GRepository,
+                                             CommandIsRetired);
+
+   (* THE STATION FACTS: the contest's override while stated, else the
+     station's value as a record. *)
+   saved := saved + CaptureStationFactRows(Settings, GRepository);
 
    (* THE EDITABLE-LOG COLUMN WIDTHS.
 
@@ -695,28 +837,20 @@ begin
    end;
 end;
 
-(* True when the shadow is open and usable.
+(* True when the log is open and usable.
 
-  aRebuilt tells the caller the shadow was just built FROM THE BINARY LOG, which
-  matters more than it looks -- see LogStoreAppendQSO. *)
-(* aAppendPending -- THE CALLER IS PART WAY THROUGH ADDING A QSO.
+  aRebuilt is True on the one call that MIGRATED the log from a binary .TRW.
+  It says what happened to the log, not what the caller should do about the
+  write it is making: the .TRW is import-only, so it never holds a QSO this
+  build logged, and every write proceeds as written. Read here (the migrated
+  log is captured and declared as a new one) and logged by
+  LogStoreUpdateQSOAtIndex.
 
-   The binary record is written and the file CLOSED before LogStoreAppendQSO is
-   called (LOGSUBS2.tAddQSOToLog, and that order is deliberate: the contact must
-   be durable before anything else is attempted). So during an append the log
-   holds exactly ONE record more than the shadow, and that is AGREEMENT, not
-   drift.
-
-   Reading it as drift is what the first version did, and the cost was not
-   theoretical: EVERY RESUMED SESSION RE-IMPORTED THE WHOLE LOG on its first
-   QSO, and the plain-reopen path below was never once taken -- dead code that
-   looked live. Measured on the county-line harness with -KeepLog: "shadow holds
-   2 record(s), the log holds 3", on a shadow that was perfectly in step.
-
-   AN EXACT EXPECTATION, NOT A TOLERANCE. Accepting a difference of one in
-   either direction would have been fewer lines and would have made a genuinely
-   lost record invisible -- which is the one thing this check exists to catch. *)
-function EnsureOpen(out aRebuilt: boolean; aAppendPending: boolean): boolean;
+  ~~aAppendPending~~ went 2026-10-17. It told the old drift check that the
+  .TRW was one record ahead during an append -- because tAddQSOToLog wrote
+  the .TRW first -- and both that write and the drift check were gone; the
+  parameter was read by nothing. *)
+function EnsureOpen(out aRebuilt: boolean): boolean;
 var
    dbName: string;
    trwCount: Int64;
@@ -745,6 +879,23 @@ var
          DeleteFile(dbName);
          end;
       res := ImportBinaryLog(CharBufferText(TR4W_LOG_FILENAME), dbName);
+
+      (* AN EARLIER MIGRATION DIED PART WAY, AND THIS ONE STARTED AGAIN.
+        ImportBinaryLog builds under a staged name and publishes by rename, so
+        a crash mid-import leaves that staged file and no log -- which is why
+        we are here at all -- and it has just been discarded. Nothing is lost:
+        the .TRW it came from is what is being imported again.
+
+        AT ERROR LEVEL, ON PURPOSE. It is a recovery rather than a failure,
+        but it is the one trace an operator has that a previous session ended
+        badly, and DEBUG LOG LEVEL = ERROR must not hide it. *)
+      if (res.DiscardedStaged <> '') and (logger <> nil) then
+         begin
+         logger.Error('[LogStore] RECOVERED FROM AN INTERRUPTED MIGRATION: ' +
+                      'discarded the unfinished import %s and migrated %s ' +
+                      'again from the start', [res.DiscardedStaged, dbName]);
+         end;
+
       Result := res.Ok;
       if (not Result) and (logger <> nil) then
          begin
@@ -912,8 +1063,9 @@ begin
 
       GRepository := TLogRepository.Create(GDatabase);
 
-
-      GRepository.SetEntryDeclaration(ReadEntryDeclaration);
+      (* ~~GRepository.SetEntryDeclaration(ReadEntryDeclaration)~~ stood here
+        and ran on EVERY open -- see the entry declaration below the contest
+        stamp, which is where it runs now, and only for a new log. *)
 
       (* THE CONFIGURATION IS CAPTURED WHEN THE LOG IS MADE, AND ONLY THEN.
 
@@ -984,8 +1136,8 @@ begin
           were the answer. Better an empty row than a wrong one: an empty row
           is still fixable by the dialog. *)
       if isNewLog and
-         (GRepository.LogContest = DUMMYCONTEST) and
-         (Contest <> DUMMYCONTEST) then
+         (GRepository.LogContest = NoContest) and
+         (Contest <> NoContest) then
          begin
          GRepository.SetContest(Contest);
          (* COMMITTED, AND THE FIRST VERSION WAS NOT.
@@ -1004,8 +1156,39 @@ begin
          if logger <> nil then
             begin
             logger.Info('[LogStore] stamped the new log as contest %s',
-                        [ContestTypeSA[Contest]]);
+                        [ContestId(Contest)]);
             end;
+         end;
+
+      (* THE ENTRY DECLARATION, ONCE: ON THE OPEN THAT MADE THE LOG -- Q61.
+
+        It was written on every open, just after the repository was made, so
+        a reopened log
+        carried today's values instead of what the entry declared; and for a
+        new log it ran BEFORE the contest stamp above, when there was no row
+        for its UPDATE to land on. So it runs here, after the stamp, and the
+        guard is the leaf's (RecordEntryDeclaration), where it is tested.
+
+        A MIGRATED LOG COUNTS AS NEW, for the reason the configuration capture
+        gives: a binary log carries no declaration, so this is the only one it
+        will ever have. Its contest row was written by the import. *)
+      if RecordEntryDeclaration(GRepository, isNewLog or aRebuilt,
+                                ReadEntryDeclaration) then
+         begin
+         GRepository.Commit;
+         if logger <> nil then
+            begin
+            logger.Info('[LogStore] recorded the entry declaration of the new log');
+            end;
+         end
+      else if (isNewLog or aRebuilt) and (logger <> nil) then
+         begin
+         (* A NEW LOG OPENED WITH NO CONTEST has no contest row -- the stamp
+           above refuses to write "no contest" -- so there is nowhere to put
+           the declaration. Said, because the declaration is then simply
+           absent from this log. *)
+         logger.Info('[LogStore] the new log has no contest row yet, so its ' +
+                     'entry declaration is not recorded');
          end;
 
       Result := True;
@@ -1029,9 +1212,7 @@ begin
       end;
 
    try
-      (* False: no append is in flight, so the store is expected to be exactly
-        in step rather than one record behind. *)
-      if not EnsureOpen(rebuilt, False) then
+      if not EnsureOpen(rebuilt) then
          begin
          Exit;
          end;
@@ -1098,6 +1279,57 @@ begin
       end;
 end;
 
+function LogStoreCheckExchangeIds(out aReport: string): boolean;
+const
+   (* Enough to find them in the log window, not a listing. *)
+   SAMPLE_SIZE = 5;
+var
+   missing: TMissingExchangeIds;
+begin
+   Result := False;
+   aReport := '';
+
+   if not LogStoreEnsureOpen then
+      begin
+      aReport := 'The contest log is not open, so it could not be checked. '
+                 + 'Details are in tr4w.log.';
+      Exit;
+      end;
+
+   try
+      missing := GRepository.QSOsWithoutExchangeId(SAMPLE_SIZE);
+   except
+      (* As the integrity check: a check that raises has answered, and the
+        answer is no. *)
+      on E: Exception do
+         begin
+         aReport := 'The check could not be completed: ' + E.Message;
+         Exit;
+         end;
+   end;
+
+   if missing.Count = 0 then
+      begin
+      aReport := 'Every QSO in ' + LogStoreFileName + ' carries an exchange id.';
+      Result := True;
+      Exit;
+      end;
+
+   (* REPORTED, NOT REPAIRED. Minting ids here would be the rescore's old
+     behaviour moved to a menu item, and it is the minting that was ruled
+     out: an id is an identity, and one invented now is not the one any
+     other program knew this contact by. *)
+   aReport := string(IntToStr(missing.Count)) + ' QSO(s) in ' + LogStoreFileName
+              + ' carry no exchange id. They export with no APP_TR4W_ID, so '
+              + 'other software cannot match them across an export and a '
+              + 're-import. Nothing has been changed. The first: '
+              + missing.Sample + '.';
+   if logger <> nil then
+      begin
+      logger.Warn('[LogStore] validity check: %s', [aReport]);
+      end;
+end;
+
 (* THE LIVE LOG, AS A BACKUP SOURCE. Everything else about a backup -- the
   staging, the verification, the .bak displacement, the publish-by-rename and
   every report sentence -- is TLogBackup's, in uLogBackup, where the unit tests
@@ -1131,10 +1363,79 @@ begin
    end;
 end;
 
+(* OUR STATION, AS IT IS AT THIS MOMENT -- what a QSO being logged now
+  records in its my_* columns (schema 3; NY4I 2026-10-18: "The QSO record
+  should have all the MY_ values").
+
+  THE VALUES SCORING SEES, read where scoring reads them: the contest's
+  override if it stated one, else the station's (Settings.My.Resolved*, design
+  7.12), and country, continent and MY CQ ZONE from the same station context
+  a contest class is handed (uContestFactory.CurrentStation). So a rescore
+  that later reads the record sees what the live entry saw.
+
+  my_state IS MY STATE, the place -- ADIF MY_STATE, the primary subdivision we
+  are in -- NOT the session's SentMyState, which is what the exchange sends in
+  that slot and for some contests is not a state at all (the Cup of the RF
+  sends the grid there). What was sent is exchange_sent.
+
+  my_county IS EMPTY, which here means UNKNOWN: there is no MY COUNTY setting
+  yet (docs/F26_EXCHANGE_LAYOUTS.md, decision 2). It arrives with that setting.
+
+  A PEER'S QSO IS MARKED ASSUMED (NY4I, ruling D). The V1 network packet
+  carries none of this, so a QSO another station logged is stamped with THIS
+  station's values -- usually the same site -- and my_source says so, so
+  nothing reads them as that station's own. The computer id on the record is
+  what tells the two apart; see uQsoMyFacts.QsoWasLoggedHere. *)
+function LogStoreCurrentMyFacts: TQsoMyFacts;
+var
+   station: uContestBase.TStationContext;
+begin
+   station := uContestFactory.CurrentStation;
+
+   Result := NotCapturedMyFacts;
+   Result.Source := mfsLogged;
+
+   (* UTF8Encode, as ReadEntryDeclaration: the settings are UTF-16 and the
+     fields AnsiString; callsigns, grids and references are ASCII. *)
+   Result.Call := UTF8Encode(Settings.My.Call);
+   Result.Grid := UTF8Encode(Settings.My.ResolvedGrid);
+   Result.State := UTF8Encode(Settings.My.ResolvedState);
+   Result.County := '';
+   Result.Section := UTF8Encode(Settings.My.ResolvedSection);
+   Result.Park := UTF8Encode(Settings.My.ResolvedPark);
+   Result.Iota := UTF8Encode(Settings.My.ResolvedIota);
+   Result.Country := AnsiString(station.MyCountry);
+   (* The stable two-letter token cty_continent stores, and only for a real
+     continent -- see the guard on cty_continent in uLogRepository. *)
+   if (station.MyContinent <> UnknownContinent) and
+      (Ord(station.MyContinent) <= Ord(High(ContinentType))) then
+      begin
+      Result.Continent := AnsiString(ContinentTypeSA[station.MyContinent]);
+      end;
+   Result.CQZone := station.MyCQZone();
+   (* 0 is "use CTY.DAT" in the setting, so CTY.DAT's answer for our call is
+     the zone in effect. 0 from there too is unknown, and is stored as NULL. *)
+   Result.ITUZone := Settings.My.ResolvedItuZone;
+   if Result.ITUZone = 0 then
+      begin
+      Result.ITUZone := uCTYDAT.ctyGetITUZone(Settings.My.Call);
+      end;
+end;
+
+(* The capture for a QSO being logged now: this station's values, and whether
+  it was logged HERE or arrived from a multi-op peer (ruling D). *)
+function CaptureMyFactsNow(const aQso: ContestExchange): TQsoMyFacts;
+begin
+   Result := LogStoreCurrentMyFacts;
+   if not QsoWasLoggedHere(aQso.ceComputerID, Settings.Computer.Id) then
+      begin
+      Result.Source := mfsAssumed;
+      end;
+end;
+
 function LogStoreAppendQSO(const aQso: ContestExchange): boolean;
 var
    rebuilt: boolean;
-   rowId: Int64;
 begin
    (* FALSE UNTIL A COMMIT SAYS OTHERWISE. Every exit below that is not a
      completed commit leaves it here, which is the only default that cannot
@@ -1147,59 +1448,28 @@ begin
       end;
 
    try
-      (* True: tAddQSOToLog has already written this QSO to the binary log,
-         so the log being one ahead of the shadow is expected. *)
-      if not EnsureOpen(rebuilt, True) then
+      if not EnsureOpen(rebuilt) then
          begin
          Exit;
          end;
 
-      (* THE SHADOW IS OPENED LAZILY, ON THE FIRST APPEND -- AND THE BINARY
-        RECORD IS ALREADY ON DISK BY THEN.
+      (* AN APPEND ALWAYS INSERTS, WHETHER OR NOT THIS CALL MIGRATED THE LOG.
 
-        This call happens after tAddQSOToLog has written and closed the file,
-        which is deliberate: the contact must be safe before anything else is
-        attempted. But it means a rebuild-from-binary triggered HERE has already
-        imported the very QSO being appended, and appending it again duplicates
-        it.
+        ~~"if rebuilt then update the newest row and return True"~~ stood
+        here until 2026-10-17, and its premise was B2's: tAddQSOToLog wrote
+        the .TRW FIRST, so a migration triggered by this call had already
+        imported the QSO being appended, and inserting it again would have
+        duplicated it. Since B5 the .TRW is import-only -- tAddQSOToLog writes
+        here and nowhere else -- so a migration imports only what was logged
+        BEFORE this build, never the QSO in hand. The branch therefore
+        OVERWROTE the newest imported QSO with this one and acknowledged a
+        contact it had not stored. uTestLogStore drives that case (the append
+        as the first thing to open the log) and pins the insert.
 
-        Measured, not reasoned: the county-line UI harness logged two QSOs and
-        the shadow held THREE, with the first one twice.
-
-        The drift check in EnsureOpen would have repaired it at the next open,
-        which is some comfort -- but a shadow that is briefly wrong is a shadow
-        nobody can trust mid-contest, and "it fixes itself later" is not a
-        property to rely on. *)
-      if rebuilt then
-         begin
-         (* THE REBUILD ALREADY IMPORTED THIS QSO, so appending would duplicate
-            it -- but the import cannot know what was SENT, and this call can.
-            Skipping outright therefore lost the sent exchange of the first QSO
-            of every session, which is exactly the field this work exists to
-            capture. Measured: row 1 came back with exchange_sent NULL while
-            row 2 carried it.
-
-            The record just written to the binary log is its LAST one, so the
-            row the rebuild just imported is the newest -- update that one with
-            what only the live path knows. *)
-         GRepository.SetNextSentExchange(
-            AnsiString(BuildSentExchangeText(aQso)));
-         rowId := GRepository.NewestRowId;
-         if rowId > 0 then
-            begin
-            GRepository.UpdateQSO(rowId, aQso);
-            GRepository.Commit;
-            end;
-
-         (* TRUE EITHER WAY, and deliberately. The rebuild imported this QSO
-           from the binary log, so the contact IS in the database -- that is
-           what makes appending it again a duplicate. A failure to attach the
-           sent exchange on top of it loses a field, not a contact, and
-           reporting the QSO as unlogged here would have the operator work it
-           again. *)
-         Result := True;
-         Exit;
-         end;
+        The program never took the branch -- startup opens the log through
+        LogStoreApplyContestConfig before anything is logged, so a migration
+        happens there -- but the store's promise cannot rest on its caller
+        having opened it first. *)
 
       (* The contest comes from the records; a binary log has no header naming
         it, and the shadow must answer the same question the same way the
@@ -1223,8 +1493,35 @@ begin
         stale grid if the operator changed one mid-contest, because that is
         what was sent. An event source records the event, not today's opinion
         of it. *)
-      GRepository.SetNextSentExchange(
-         AnsiString(BuildSentExchangeText(aQso)));
+      (* AND OUR STATION, CAPTURED NOW, for the same reason: the QSO records
+        where we were, not where settings say we are when it is next read.
+
+        ONLY A QSO HAS EITHER (log schema 3, stage 5). A note or a QTC record
+        is not a contact: it has no station of ours and no exchange we sent,
+        and stamping them (the CQ template rebuilt over a note's fields) put
+        invented text into the log. *)
+      GPendingMyFacts := NotCapturedMyFacts;
+      GRepository.SetNextSentExchange('');
+      if aQso.ceRecordKind = rkQSO then
+         begin
+         GPendingMyFacts := CaptureMyFactsNow(aQso);
+
+         (* A PEER'S QSO SENT WHAT THE PEER SENT, AND THE V1 PACKET DOES NOT
+           SAY WHAT THAT WAS (D4, stage 5). The serial is in the record, and
+           is stored as serial_sent; the rest of the sent exchange is the
+           peer's CQ template, which never crosses the wire. Building it from
+           THIS station's template would invent the peer's text, so a peer's
+           QSO stores none: unknown, not ours. Its station is still stamped
+           with ours, MARKED assumed (ruling D) -- the export rebuilds its
+           sent columns from that and from the record, and never reads an
+           assumed row's exchange_sent. *)
+         if GPendingMyFacts.Source = mfsLogged then
+            begin
+            GRepository.SetNextSentExchange(
+               AnsiString(BuildSentExchangeText(aQso)));
+            end;
+         end;
+      GRepository.SetNextMyFacts(GPendingMyFacts);
 
       (* The same grouping rule the importer uses -- a county line logged
         live must relate its rows exactly as an imported one does. *)
@@ -1240,6 +1537,7 @@ begin
       GRepository.Commit;
 
       (* AND ONLY NOW. *)
+      GLastAppendedMyFacts := GPendingMyFacts;
       Result := True;
    except
       on E: Exception do
@@ -1247,6 +1545,11 @@ begin
          Disable('appending a QSO', E);
          end;
    end;
+end;
+
+function LogStoreLastAppendedMyFacts: TQsoMyFacts;
+begin
+   Result := GLastAppendedMyFacts;
 end;
 
 procedure LogStoreUpdateNewestQSO(const aQso: ContestExchange);
@@ -1260,19 +1563,18 @@ begin
       end;
 
    try
-      if not EnsureOpen(rebuilt, False) then
+      if not EnsureOpen(rebuilt) then
          begin
          Exit;
          end;
 
-      (* A rebuild has just re-read the binary log, which already contains this
-        rewrite -- the caller writes the record before calling here, exactly as
-        the append does. *)
-      if rebuilt then
-         begin
-         Exit;
-         end;
-
+      (* ~~"if rebuilt then Exit"~~ stood here until 2026-10-17, on the
+        reasoning that the caller had already written this rewrite to the
+        binary log and the migration had just re-read it. No caller writes the
+        .TRW any more, so the exit DROPPED the rewrite -- an Alt-Y delete, a
+        QTC mark, a network update. The rewrite proceeds onto the row the
+        migration produced; see the same note in LogStoreAppendQSO, and
+        uTestLogStore for the pin. *)
       rowId := GRepository.NewestRowId;
       if rowId <= 0 then
          begin
@@ -1291,7 +1593,10 @@ begin
    end;
 end;
 
-procedure LogStoreUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange);
+(* THE ONE BODY OF BOTH LogStoreUpdateQSOAtIndex OVERLOADS. aWriteFacts says
+  whether aFacts is written too, in the same transaction. *)
+procedure UpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange;
+                           aWriteFacts: boolean; const aFacts: TQsoMyFacts);
 var
    rowId: Int64;
    rebuilt: boolean;
@@ -1302,7 +1607,7 @@ begin
       end;
 
    try
-      if not EnsureOpen(rebuilt, False) then
+      if not EnsureOpen(rebuilt) then
          begin
          Exit;
          end;
@@ -1331,23 +1636,182 @@ begin
       rowId := GRepository.RowIdAtIndex(aRecordIndex);
       if rowId <= 0 then
          begin
-         (* The shadow is short of that record. EnsureOpen's drift check will
-           rebuild at the next open; saying so here is what makes that visible
-           rather than mysterious. *)
+         (* The log holds no record at that position, so there is nothing to
+           rewrite. Said, because the edit is not saved -- and nothing will
+           rebuild it: the drift check that once would is gone with the
+           second store. *)
          if logger <> nil then
             begin
-            logger.Warn('[LogStore] no row at record index %d -- the shadow ' +
-                        'will be rebuilt from the binary log', [aRecordIndex]);
+            logger.Warn('[LogStore] no row at record index %d -- the edit to ' +
+                        'it was NOT saved', [aRecordIndex]);
             end;
          Exit;
          end;
 
       GRepository.UpdateQSO(rowId, aQso);
+      if aWriteFacts then
+         begin
+         GRepository.UpdateQSOMyFacts(rowId, aFacts);
+         end;
       GRepository.Commit;
    except
       on E: Exception do
          begin
          Disable('rewriting a QSO by position', E);
+         end;
+   end;
+end;
+
+procedure LogStoreUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange);
+begin
+   UpdateQSOAtIndex(aRecordIndex, aQso, False, NotCapturedMyFacts);
+end;
+
+procedure LogStoreUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange;
+                                   const aFacts: TQsoMyFacts);
+begin
+   UpdateQSOAtIndex(aRecordIndex, aQso, True, aFacts);
+end;
+
+function LogStoreReadMyFactsAtIndex(aRecordIndex: Int64;
+                                    out aFacts: TQsoMyFacts): boolean;
+var
+   rowId: Int64;
+   rebuilt: boolean;
+begin
+   Result := False;
+   aFacts := NotCapturedMyFacts;
+   if GDisabled then
+      begin
+      Exit;
+      end;
+
+   try
+      if not EnsureOpen(rebuilt) then
+         begin
+         Exit;
+         end;
+      rowId := GRepository.RowIdAtIndex(aRecordIndex);
+      if rowId <= 0 then
+         begin
+         Exit;
+         end;
+      Result := GRepository.LoadQSOMyFacts(rowId, aFacts);
+   except
+      on E: Exception do
+         begin
+         (* A READ, so the store stays enabled: nothing was written, and the
+           editor shows the fields as not recorded. *)
+         aFacts := NotCapturedMyFacts;
+         Result := False;
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] could not read our station for record ' +
+                         '%d: %s', [aRecordIndex, E.Message]);
+            end;
+         end;
+   end;
+end;
+
+function LogStoreUpdateQSOsByRowId(aUpdates: TLogRowUpdates): boolean;
+begin
+   Result := False;
+   if GDisabled then
+      begin
+      Exit;
+      end;
+
+   (* NOT EnsureOpen. The row ids came from a read of THIS open log; a log
+     opened or rebuilt now would be a different set of rows, and writing
+     these ids into it would be wrong rather than late. *)
+   if GRepository = nil then
+      begin
+      if logger <> nil then
+         begin
+         logger.Error('[LogStore] %d rewritten QSOs were not saved: the log ' +
+                      'is not open.', [aUpdates.Count]);
+         end;
+      Exit;
+      end;
+
+   if aUpdates.Count = 0 then
+      begin
+      Result := True;
+      Exit;
+      end;
+
+   try
+      (* WriteBatch has rolled back before anything reaches the handler. *)
+      GRepository.WriteBatch(aUpdates);
+      Result := True;
+   except
+      on E: Exception do
+         begin
+         (* string(): the RTL's IntToStr returns AnsiString, and Disable takes
+           a string. Stated, so the widening is not a build warning. *)
+         Disable('rewriting ' + string(IntToStr(aUpdates.Count)) + ' QSOs in one ' +
+                 'transaction -- ROLLED BACK, so the log is as it was ' +
+                 'before this pass', E);
+         end;
+   end;
+end;
+
+(* ~~SentExchangeOfQSO~~ stood here: LogStoreAppendQSO's LIVE capture of what
+  was sent, handed to AppendBatch -- so every QSO an ADIF import wrote claimed
+  the exchange this station sends TODAY (D3). Deleted in stage 2 (2026-10-18):
+  each row carries what its file says it sent (TLogQsoAppends.Add). *)
+function LogStoreAppendQSOs(aQsos: TLogQsoAppends; out aFailedIndex: integer;
+                            out aFailure: string): boolean;
+var
+   rebuilt: boolean;
+begin
+   Result := False;
+   aFailedIndex := -1;
+   aFailure := '';
+
+   if GDisabled then
+      begin
+      aFailure := 'the contest log is not being written -- an earlier ' +
+                  'failure stopped it. See tr4w.log.';
+      Exit;
+      end;
+
+   try
+      (* A log migrated from the .TRW here is simply the log these QSOs join:
+        the .TRW holds none of them. *)
+      if not EnsureOpen(rebuilt) then
+         begin
+         aFailure := 'the contest log could not be opened. See tr4w.log.';
+         Exit;
+         end;
+
+      if aQsos.Count = 0 then
+         begin
+         Result := True;
+         Exit;
+         end;
+
+      GRepository.AppendBatch(aQsos, aFailedIndex);
+      Result := True;
+   except
+      on E: Exception do
+         begin
+         aFailure := E.Message;
+         (* InBatch stays True only when the ROLLBACK ITSELF failed (see
+           TLogRepository.RollbackBatch). Then nobody knows what the log
+           holds, and that is a write failure like any other. *)
+         if (GRepository <> nil) and GRepository.InBatch then
+            begin
+            Disable('appending ' + string(IntToStr(aQsos.Count)) + ' QSOs ' +
+                    'in one transaction -- and its ROLLBACK FAILED, so what ' +
+                    'the log holds is not known', E);
+            end
+         else if logger <> nil then
+            begin
+            logger.Error('[LogStore] %d QSOs were ROLLED BACK and none ' +
+                         'written; the log is as it was. %s: %s',
+                         [aQsos.Count, AnsiString(E.ClassName), E.Message]);
+            end;
          end;
    end;
 end;
@@ -1363,7 +1827,7 @@ begin
       end;
 
    try
-      if not EnsureOpen(rebuilt, False) then
+      if not EnsureOpen(rebuilt) then
          begin
          Exit;
          end;
@@ -1383,10 +1847,52 @@ begin
    end;
 end;
 
+function LogStoreRecordContestStatement(const aCommand: string): boolean;
+var
+   rebuilt: boolean;
+begin
+   Result := False;
+
+   (* /EXPORT is read-only for the log -- see CaptureConfigurationOnClose. *)
+   if tSilentExport or GDisabled then
+      begin
+      Exit;
+      end;
+
+   try
+      if not EnsureOpen(rebuilt) then
+         begin
+         Exit;
+         end;
+
+      (* COMMITTED EITHER WAY: an unstated setting's row is DELETED by the
+        same rule, and that is a write too. *)
+      Result := CaptureContestStatement(Settings, GRepository, aCommand);
+      GRepository.Commit;
+      if Result then
+         begin
+         if logger <> nil then
+            begin
+            logger.Info('[LogStore] %s recorded in the log as the contest''s ' +
+                        'statement', [aCommand]);
+            end;
+         end;
+   except
+      on E: Exception do
+         begin
+         Disable('recording a contest setting', E);
+         end;
+   end;
+end;
+
 function LogStoreApplyContestConfig: integer;
 var
    rebuilt: boolean;
    rows: TStringList;
+   (* Stored contest rows that are not statements -- reported, not applied. *)
+   dropped: TStringList;
+   (* Stored rows naming a RETIRED command (M10 S2) -- reported, not applied. *)
+   retired: TStringList;
    i: integer;
    cmd, val: string;
    renderable: boolean;
@@ -1405,14 +1911,53 @@ begin
       end;
 
    try
-      if not EnsureOpen(rebuilt, False) then
+      if not EnsureOpen(rebuilt) then
          begin
          Exit;
          end;
 
       rows := TStringList.Create;
+      dropped := TStringList.Create;
+      retired := TStringList.Create;
       try
          GRepository.LoadContestConfig(rows);
+
+         (* ONLY THE OPERATOR'S STATEMENTS ARE APPLIED -- 2026-10-01, section
+           7.8 of docs/CONTEST_OWNERSHIP_DESIGN.md.
+
+           A LOG WRITTEN BEFORE THAT RULE stored every contest-scoped
+           setting, so its 'NONE' / 'UNKNOWN' rows are constructor defaults,
+           not choices. Applied, one of them CLOBBERED a contest .cfg line
+           that had just stated the setting (D2) -- the equality skip below
+           protected only the case where the value in force happened to equal
+           the sentinel. Such a row is dropped here and deleted at the next
+           capture; a non-default row in that era was a real value from a
+           .cfg or the New Contest dialog, so it is kept and applied as a
+           statement. A log captured under the rule holds statements only. *)
+         (* AND A RETIRED SETTING'S ROW IS SET ASIDE IN EITHER ERA -- M10 S2,
+           2026-10-14. The seven contest-rule settings (QSO POINT METHOD,
+           EXCHANGE RECEIVED, INITIAL EXCHANGE, the four multipliers) are in
+           uCFG.RETIRED_COMMANDS: the class decides. Set aside here, so they
+           never reach CheckCommand, said ONCE per open with their values,
+           and deleted by the next capture -- so a log reports them at most
+           until its first clean close. *)
+         KeepOnlyStatements(rows, LogHoldsStatementsOnly(GRepository), dropped,
+                            CommandIsRetired, retired);
+         if (dropped.Count > 0) and (logger <> nil) then
+            begin
+            logger.Info('[LogStore] %d stored contest setting(s) hold the ' +
+                        'built-in default and were written before the log ' +
+                        'stored only what the operator stated -- not applied, ' +
+                        'the contest decides: %s',
+                        [dropped.Count, dropped.CommaText]);
+            end;
+         if (retired.Count > 0) and (logger <> nil) then
+            begin
+            logger.Info('[LogStore] %d stored contest setting(s) are retired ' +
+                        'commands -- not applied, the contest''s class ' +
+                        'decides; deleted from the log at its next capture: %s',
+                        [retired.Count, retired.CommaText]);
+            end;
 
          (* THE CALLSIGN BEFORE THE CONTEST -- 2026-09-20.
 
@@ -1485,14 +2030,14 @@ begin
            So the table answers the case it exists for -- a log with no .cfg at
            all, which is every contest created by the New Contest dialog -- and
            stays out of the way otherwise. *)
-         if (GRepository.LogContest <> DUMMYCONTEST) and
+         if (GRepository.LogContest <> NoContest) and
             ((CFGCommandValueAsString('CONTEST') = '') or
              (CFGCommandValueAsString('CONTEST') =
-              string(ContestTypeSA[DUMMYCONTEST]))) then
+              ContestId(NoContest))) then
             begin
             cmdName := ShortString(AnsiString('CONTEST'));
             valName := ShortString(AnsiString(
-               ContestTypeSA[GRepository.LogContest]));
+               ContestId(GRepository.LogContest)));
             (* ONLY IF IT IS NOT ALREADY RIGHT. FoundContest is NOT
                idempotent -- re-running it appends to the domestic file name
                (dom\iaruhq.domiaruhq.dom), and applying it unconditionally on
@@ -1539,8 +2084,8 @@ begin
 
            NOTHING IS OVERWRITTEN. The arm above owns the case where the table
            already answered; this one runs only when it did not. *)
-         else if (GRepository.LogContest = DUMMYCONTEST) and
-                 (Contest <> DUMMYCONTEST) then
+         else if (GRepository.LogContest = NoContest) and
+                 (Contest <> NoContest) then
             begin
             GRepository.SetContest(Contest);
             (* See the note beside the stamp in EnsureOpen: SetContest does not
@@ -1553,7 +2098,7 @@ begin
                            'It was made before the log stored its own ' +
                            'contest, and would have scored every domestic ' +
                            'callsign as DX on its next open.',
-                           [ContestTypeSA[Contest]]);
+                           [ContestId(Contest)]);
                end;
             end
 
@@ -1581,7 +2126,7 @@ begin
 
            NOTHING IS GUESSED. The value written is the contest the program is
            already scoring with. *)
-         else if (Contest <> DUMMYCONTEST) and
+         else if (Contest <> NoContest) and
                  (GRepository.LogContest <> Contest) and
                  CommandCameFromContestCFG('CONTEST') then
             begin
@@ -1591,8 +2136,8 @@ begin
                            'says %s -- correcting the log. The stamp came ' +
                            'from a binary import, whose contest ordinal was ' +
                            'written under an older layout.',
-                           [ContestTypeSA[GRepository.LogContest],
-                            ContestTypeSA[Contest]]);
+                           [ContestId(GRepository.LogContest),
+                            ContestId(Contest)]);
                end;
             GRepository.SetContest(Contest);
             (* See the note beside the stamp in EnsureOpen: SetContest does not
@@ -1742,9 +2287,38 @@ begin
                a property setter is idempotent by construction. Naming it
                says what the test is for, where a hook index only said where
                the answer was stored. *)
+            (* A STATION FACT IS THIS CONTEST'S OVERRIDE -- design 7.12 -- and
+              is routed BEFORE the no-op skip below. That skip compares with
+              the STATION'S value; a stored MY STATE equal to it would be
+              skipped, never become the override, and the next capture would
+              rewrite the row as 'station' -- after which a Preferences edit
+              of the station would silently change this contest. Recording an
+              override assigns nothing and runs no setter, so it is safe
+              unconditionally.
+
+              A log written before 7.12 holds the same rows (source 'contest',
+              from a .cfg or the New Contest dialog), so it reads exactly as
+              it did: the contest's value in force. A log with no such row
+              resolves to the station's value, as it always did. *)
+            if Settings.CommandIsContestOverridable(cmd) then
+               begin
+               if ApplyContestStatement(cmd, val) then
+                  begin
+                  inc(Result);
+                  end;
+               Continue;
+               end;
+
             if (CFGCommandValueAsString(cmd) = val) and
                (not UnicodeSameText(cmd, 'CONTEST')) then
                begin
+               (* NOTHING TO ASSIGN, BUT THE STATEMENT STILL STANDS. Every row
+                 that reaches here is one (see KeepOnlyStatements above), and
+                 a CheckCommand would have recorded it as such -- skipping the
+                 assignment must not skip that, or the next capture would
+                 delete a statement because it happened to match. A no-op for
+                 a setting that is not contest-scoped. *)
+               Settings.SetCommandStated(cmd, True);
                inc(Result);
                Continue;
                end;
@@ -1791,6 +2365,8 @@ begin
                end;
             end;
       finally
+         retired.Free;
+         dropped.Free;
          rows.Free;
       end;
 
@@ -1834,9 +2410,7 @@ function LogStoreEnsureOpen: boolean;
 var
    rebuilt: boolean;
 begin
-   (* aAppendPending FALSE: nobody is part way through adding a QSO here, so the
-      log and the shadow should agree exactly. *)
-   Result := EnsureOpen(rebuilt, False);
+   Result := EnsureOpen(rebuilt);
 end;
 
 (* WHAT THE CONTEST'S CONFIGURATION IS WHEN THE OPERATOR STOPS.

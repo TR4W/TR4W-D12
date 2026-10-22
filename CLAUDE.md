@@ -24,7 +24,12 @@ matters in a multi-repo workspace — but it is a preference now, not a rule, an
 ## MANDATORY: Project guardrails live in the repo
 
 `.claude/settings.json` and `.claude/hooks/` are **tracked**. They carry the hooks every clone needs:
-the begin/end lint and the CRLF check. (The `git -C` rule is **gone as of
+the begin/end lint, the CRLF check, and **`block-stdin-readers.py`** (2026-10-15), which BLOCKS a
+Bash command that would wait on standard input — a heredoc, or a `cat` with no file. A
+background shell running `cat > /dev/null; python - <<'EOF'` waited for **1 day 0 h 21 m** and
+held up the agent that owned it; a background shell has no timeout, so the only control is to
+refuse the shape. NY4I: *"That should never be allowed to happen."* Write files with the Write
+tool and pass scripts as files. (The `git -C` rule is **gone as of
 2026-09-07** — see the section above. The Pascal glob rule
 is **gone as of 2026-09-07** -- it blocked `--include=*.pas` because 25 units had
 UPPERCASE extensions, and those are renamed. Its successor
@@ -262,7 +267,8 @@ factory.~~ **SQLITE IS NO LONGER OUT OF SCOPE — IT IS THE LOG** (started 2026-
 **THE CONTEST FACTORY IS ALSO NO LONGER OUT OF SCOPE** — `tr4w/src/contestFactory/` exists and is
 compiled into `tr4w.lpr`. Read [`docs/ADDING_A_CONTEST.md`](docs/ADDING_A_CONTEST.md), and its
 section 4 before believing a green run: the golden corpus is blind to scoring, and
-`tr4w/test/corpus/test-contest-factory.sh` is the only thing that is not. **Count the units with
+`tr4w/test/corpus/test-contest-factory.sh` (13 logs) and the contest matrix
+(`tr4w/test/contest-matrix/run-contest-matrix.sh`, every contest the registry knows) are what is not. **Count the units with
 `ls tr4w/src/contestFactory` rather than writing a number here.**
 ~~Still out of scope: 64-bit.~~ **64-BIT IS NO LONGER OUT OF SCOPE, AND THE
 APP COMPILES AND LINKS FOR x86_64-win64** (2026-09-14):
@@ -362,6 +368,13 @@ fuzzy entries with the `#,` line stripped, which clears both gates (its own, and
 `translations.pas:1223`), so 22,493 unreviewed strings ship -- the Chinese salvage among them.
 `-ReviewedOnly` puts both gates back when review finishes. **The `.po` files keep their markers**;
 what changed is the BUILD, not the catalogues.
+
+**THE BUILD REGENERATES `tr4w/res/tr4w_languages.res` (2026-10-16).** Until then nothing ran
+`Make-LanguageRes.ps1` and two catalogue commits never reached a binary. `Build-App.ps1` and
+`Build-Tests.ps1` compare sha256 hashes of the `.po` files and the generator with
+`res/tr4w_languages.res.inputs` (content, not mtime) and rebuild on a mismatch; commit the `.res`
+and `.inputs` together. Linux and macOS run `build/check-language-res.sh` and FAIL a stale pair.
+`-ReviewedOnly` is an experiment: the next build restores the default.
 
 ## Build System
 
@@ -659,8 +672,28 @@ their data from `ParamStr(0)`, not the working directory.
 Covers ADIF, Cabrillo, callsign routines, multipliers, CTY.DAT, band lookup, CRC32, grid/distance,
 text/file/math utils, DX-spot parsing, CW framing/keyer, and the radio factory (Icom CI-V, Kenwood,
 Yaesu ASCII/binary, Elecraft IF, Flex, HamLib IDs, registry taxonomy, capability pinning).
-It links only leaf `src` units, so **the TRDOS contest engine is not unit-covered** —
-`ProcessExchange`, scoring and dupe need the app's globals booted.
+~~It links only leaf `src` units, so the TRDOS contest engine is not unit-covered~~ — **stale
+by 2026-10-15 (M11 F35):** the test `.lpr` uses `MainUnit`, and the contest pins link
+`FCONTEST`, `LOGSTUFF`, `PostUnit` and `LogEdit` (count the test units naming them with
+`rg -l -i -w`, not from here). Every contest's parse dispatch, export columns, field list and
+exchange rules are pinned per contest and station. What is still NOT unit-covered is the
+engine run end to end — `ProcessExchange`, scoring and dupe over a booted session — which is
+the contest matrix's and the corpus's job.
+
+**1b. Checked unit tests: `-gt` + heaptrc** (2026-10-14). The same suite, compiled so undefined
+behaviour is wrong *every* run instead of right by luck:
+
+```powershell
+.\tr4w\build\Build-Tests.ps1 -Checked -Run    # ~2 min; -Lines adds source lines, to DIAGNOSE only
+```
+
+`-gt` fills every local with garbage on entry (an unassigned managed function result is NOT `''`
+in FPC); `-gh` reports overwritten, double-freed and wrong-size blocks at exit. It fails on a
+non-zero exit, on **any** heaptrc corruption line, on a missing heaptrc summary, and on unfreed
+blocks above `$LEAK_CEILING` in the script, which **ratchets down only**. `FullBuild.ps1` runs it
+after the normal suite. It exists because an intermittent `0xC0000005` in the unit tests was a
+`FillChar(x, SizeOf(x))` on an old-style object with virtuals — `SizeOf` of an instance goes
+through the VMT, so **always write `SizeOf(TYPE)`** — and a plain run only crashed sometimes.
 
 **2. Golden-master corpus** — the regression oracle for the contest engine.
 `bash tr4w/test/corpus/export-d12-corpus.sh` runs the app's headless export mode
@@ -693,8 +726,11 @@ comparisons).
 - The migration was gated set by set: each `.db` had to reproduce that set's existing `ref.adi` /
   `ref.cbr` before its `.trw` was deleted. All thirteen did, with the result below unchanged.
 
-- **Baseline: `24 passed, 0 failed, 2 known-divergence, 0 awaiting-candidate` = GREEN**, and
-  **every export run must also exit 0.**
+- **GREEN = `0 failed` and every known-divergence is a recorded pin** (`known-divergences.txt`,
+  or a per-artifact `<set>/known.<kind>.diff` that excuses EXACTLY its lines -- a stale pin
+  fails), **and every export run exits 0.** ~~`24 passed, 0 failed, 2 known-divergence`~~ stood
+  here and went stale when the Q54 and Q76/Q89 rulings were pinned (22/0/4 on 2026-10-16); the
+  numbers move with each ruling, so take the current line from the newest commit message.
 - **THE EXIT CODE IS PART OF THE RESULT, since 2026-09-06.** The corpus used to discard it, and
   for at least two days all THIRTEEN `/EXPORT` runs were dying with an `EAccessViolation` while it
   reported `24 passed, 0 failed` — the artifacts are written before the exit, so the byte
@@ -1041,8 +1077,13 @@ invites a re-measurement and a reason invites agreement.*
 
 **`csRem` IS GONE ENTIRELY** (2026-09-11). Every one of its rows was deleted.
 A withdrawn command is a NAME in `uCFG.RETIRED_COMMANDS` now -- accepted,
-logged once, and ignored -- rather than a twenty-field `CFGRecord` whose every
-field `CheckCommand` skipped. The name list exists for one reason worth
+logged once per name per session, and ignored -- rather than a twenty-field
+`CFGRecord` whose every field `CheckCommand` skipped. (**"Once" was not true
+until M10 S2, 2026-10-14**: the code logged every occurrence. It is a latch in
+`uCFG` now, `RetiredCommandFirstSighting`. That stage also retired the seven
+contest-rule settings -- `QSO POINT METHOD`, `EXCHANGE RECEIVED`, `INITIAL
+EXCHANGE` and the four multipliers -- onto this list; the contest's class
+decides them.) The name list exists for one reason worth
 knowing: `src/trdos/LogCfg.pas` shows a **modal** *"invalid statement in config
 file"* (`TC_INVALIDSTATEMENTINCONFIGFILE`) for a line `CheckCommand` refuses,
 so an old `tr4w.ini` naming a
@@ -1161,7 +1202,8 @@ Both are archived — the array is gone.
 2. Super Check Partial → `logscp.pas` (TRMASTER.DTA)
 3. Dupe check → `logdupe.pas`
 4. Country/multiplier → `uctydat.pas` (CTY.DAT), `uMults.pas`
-5. Exchange parsing → `logstuff.pas` `ProcessExchange()`
+5. Exchange parsing → `logstuff.pas` `ProcessExchange()` → the contest's
+   `ParseReceivedExchange` (M5b; design doc §8.2g)
 6. Validation → `ContestExchange` record
 7. Network broadcast → `uNet.pas`
 8. Display update → `logwind.pas`
@@ -1421,8 +1463,10 @@ loudly.
 ### 7. External logger integration
 
 `src/uExternalLoggerFactory.pas` creates loggers; `uExternalLoggerBase.pas` (`TExternalLoggerBase`) is
-the abstract base; `uExternalLogger.pas` and `uExternalLoggerManager.pas` carry the implementation.
-Each logger runs its own reading/sender thread pair.
+the abstract base; `uExternalLogger.pas` carries the implementation. ~~`uExternalLoggerManager.pas`~~
+**was never linked and is DELETED (2026-10-16)** -- its only mention was a commented-out `uses`
+line, so it described a multi-logger manager the program has never had. `uRadioManager.pas` went
+with it for the same reason. Each logger runs its own reading/sender thread pair.
 
 | Type | Status |
 |---|---|
@@ -1569,8 +1613,13 @@ Read the specific doc before acting in its area — these are current and this f
 | **Band plan: frequency memories and band-map cutoffs (DESIGN, nothing built)** | **[`docs/BAND_PLAN_SETTINGS_DESIGN.md`](docs/BAND_PLAN_SETTINGS_DESIGN.md)** -- the two rows that are unsafe to render as ordinary settings, and why |
 | Legacy removal plan | **archived** — `docs/migration_interim_artifacts/LEGACY_DEPENDENCY_AUDIT.md`, `.../PHASE_INVENTORIES.md`. The legacy radio path was deleted 2026-08-02 and live `asm` is zero |
 | CW keyer factory | `docs/CW_Keyer_Factory_Plan.md` |
-| Adding a contest -- the DATA (a new `ContestType`, `FCONTEST` init, a `.cfg`) | `docs/ADDING_A_NEW_CONTEST.md` |
-| **Adding a contest to the FACTORY -- the class, and which oracle sees what** | **`docs/ADDING_A_CONTEST.md`** -- read section 4 before believing a green run: the golden corpus is BLIND to scoring, and `test-contest-factory.sh` is the only thing that is not |
+| Adding a contest -- the DATA (the LEGACY contests' `ContestType` and `ContestTypeSA` -- FROZEN since Q108 S3, a new contest has no `VC.pas` entry; its `.dom` files) | `docs/ADDING_A_NEW_CONTEST.md` |
+| **Adding a contest to the FACTORY -- the class, and which oracle sees what** | **`docs/ADDING_A_CONTEST.md`** -- read section 4 before believing a green run: the golden corpus is BLIND to scoring; `test-contest-factory.sh` and the contest matrix (`tr4w/test/contest-matrix`) are not |
+| **What a contest OWNS -- the factory's target shape (DESIGN; NY4I's ruling 2026-10-01)** | **`docs/CONTEST_OWNERSHIP_DESIGN.md`** -- a contest class owns its rules outright through `TContestBase` virtuals (scoring, parsing, ADIF import interpretation, ADIF/Cabrillo export, setup, total score); NO shared strategies and NO registries; family bases only for one family under one rule; a look-alike contest starts as a COPY it owns. Holds the migration order M0-M10, the checkable definition of "a contest has moved", the rotated `QSOPointMethodArray` finding (moot: that table went at M10 S2, and the point method itself as a concept at M10 S4) and open questions Q1-Q13 |
+| **M10, the contest-factory endpoint -- the STAGED plan (S0-S9)** | **`docs/CONTEST_FACTORY_M10_PLAN.md`** -- measured at `de62e724` with `tools/contest-factory-m10/`; re-measure before acting on a number. Deleting the legacy scoring case changes no registered contest (checked two ways, design §8.2s); the six multiplier/exchange KIND enums outlive M10 and go at M11 |
+| ~~Point methods as factory strategies~~ **SUPERSEDED 2026-10-01** | `docs/QSO_POINT_METHOD_DESIGN.md` -- the strategy/registry design NY4I's ownership ruling replaced. Kept for its measurements only; its two live findings are restated in `CONTEST_OWNERSHIP_DESIGN.md` section 7. Do not build from it |
+| **Every contest rule still OUTSIDE the factory -- GENERATED** | **`docs/CONTEST_RULES_OUTSIDE_FACTORY.md`** -- `python tools/contest-rules-inventory/generate.py` regenerates it; only the marked hand-maintained blocks are prose. `Lint-ContestNameTests` gates the same ground |
+| **A contest's `.dom` multipliers against DXLog.net -- and a starter `.dom` for a NEW QSO party** | **`python tools/dom-crosscheck/crosscheck_dom_dxlog.py`** (`--new-party <DXLog file>`); one dated reading is `docs/DOM_CROSSCHECK_FINDINGS.md`. A difference is a lead to check with the sponsor, not a verdict. Reads TR4W's side from the frozen contest matrix, so re-freeze before trusting a difference |
 | **THE ROADMAP — the single phased task list for the modernization** | **[`docs/MODERNIZATION_ROADMAP.md`](docs/MODERNIZATION_ROADMAP.md)** — replaces eleven tracking documents. Carries the measured baseline WITH the command for each number, the four-week phases, the bench block, and the decisions owed from NY4I |
 | Finished and superseded migration notes | [`docs/migration_interim_artifacts/`](docs/migration_interim_artifacts/) — read for *why*, never for *status* |
 | **The order the three big pieces go in** | **`docs/DOMAIN_LAYER_SEQUENCE.md`** |
@@ -1666,9 +1715,32 @@ capability flags set in the constructor, added to `tr4w.lpr` and the unit-test `
 a model check to a base class. **Never** add it to `logradio.pas`.
 
 ### Add a contest
-Read [`docs/ADDING_A_NEW_CONTEST.md`](docs/ADDING_A_NEW_CONTEST.md). New `ContestType` in `VC.pas`,
-initialisation in `fcontest.pas`, `.cfg` in `target/dom/`. Then verify exchange parsing, multiplier
-tracking, scoring, and Cabrillo export — and run the corpus.
+Read [`docs/ADDING_A_NEW_CONTEST.md`](docs/ADDING_A_NEW_CONTEST.md) and
+[`docs/ADDING_A_CONTEST.md`](docs/ADDING_A_CONTEST.md). ~~A new `ContestType` member and its
+`ContestTypeSA` spelling in `VC.pas` (appended)~~ -- **THE ENUM IS FROZEN SINCE Q108 S3
+(2026-10-17)**: `Lint-FrozenContestNumbers` fails the build on any member added (appended
+included), removed, reordered or renamed, because a member's position is a persisted contest
+number. A new contest registers by its string id (`RegisterContestById`), with **no `VC.pas`
+entry** -- and **a real contest MAY do so since Q108 S4 (2026-10-17)**: such a contest is
+REFUSED on the multi-op network (`ContestCanUseMultiOp`; the V1 packet has no number for it, and
+the packet is not being changed) and its UDP `<contestnr>` is derived from its id, so a class
+writes neither. Then: a class in `src/contestFactory/` that
+states its rules -- set-up in its `DescribeSession`, not in `fcontest.pas` -- one line in each
+of `tr4w.lpr` and the test `.lpr` (`Lint-ContestUnitsLinked` holds the two together), and its
+`.dom` files in `target/dom/` if it has domestic multipliers. **No `.cfg` goes there** -- `target/dom` holds
+`.dom` files only, and the two templates that sat there (Idaho, Delaware) never shipped and
+were deleted 2026-10-15 (NY4I).
+
+**A NEW CONTEST IS ITS SQLITE FILE AND NOTHING ELSE. NO `.cfg`.** NY4I, 2026-10-15: *"the
+standard going forward is we absolutely open a contest database file without a CFG file. CFG
+file is purely a historical artifact if I want to import an external contest. If you have cfg
+files still for a brand new contest (as opposed to simply the contest sqlite file), something
+is wrong in our design."* The New Contest dialog writes none (since `66ac1ebe`): it queues its
+values (`uNewContestCommands`) and they are applied into the new log's database. A `.cfg` is
+only ever READ, as an import of an old or external contest.
+**There is no metadata row**: `ContestsArray`, `ContestsBooleanArray` and `QSOParties` were deleted
+at M10 S8 (2026-10-14). Then verify exchange parsing, multiplier tracking, scoring, and Cabrillo
+export — and run the corpus, the factory check and the contest matrix.
 
 ### Modify UI
 `TMainWindowElement` in `VC.pas` → `CreateMainWindow()` in `MainUnit.pas` → display routines in
@@ -1873,6 +1945,29 @@ the reasoning rather than the mechanics.
 - **Pascal identifier search is case-insensitive.** Always `grep -i` for Delphi symbols — TR4W spells
   the same identifier differently at declaration, assignment and use, and a case-sensitive grep has
   already produced a false "dead code" conclusion.
+- **A LINE REGEX CANNOT PARSE PASCAL, AND `rg` DOES NOT CHANGE THAT.** `grep -i` answers WHERE AN
+  IDENTIFIER APPEARS. It does not answer a STRUCTURAL question -- how many `case` arms exist, which
+  ones are live, how many call sites a routine has -- and the failure is quiet rather than empty:
+  you get a plausible number that is wrong. Measured in one session, 2026-09-29, three causes:
+
+  | the wrong answer | why |
+  |---|---|
+  | a contest scoring arm reported MISSING | the arm spells it `VAQSOPOINTMETHOD`, the search did not |
+  | 188 `case` arms counted where 91 exist | the regex matched the arms of NESTED cases too |
+  | a second arm reported MISSING | its label is `RadioVHFFDQSOPointMethod {, Championship...}:` -- a BRACE COMMENT SITS BETWEEN THE NAME AND THE COLON |
+
+  The first was nearly reported to NY4I as a port regression, with the D7 arm quoted as proof of
+  what had been lost. Nothing had been lost.
+
+  **`tr4w/build/PascalSource.psm1` reads Pascal the way the COMPILER sees it** -- comments and
+  string literals stripped, block-comment state carried across lines, `{$IFDEF}` treated as live
+  code. Every lint that counts something is built on it, and `Count-LivePChar.ps1` /
+  `Count-LiveAsm.ps1` exist because a raw grep over-reports those by 10x and 2x. Use it, or an
+  `rg -i` for ONE named identifier, and do not invent a regex for the shape of the language.
+
+  `rg` IS the right search tool here, and is what NY4I asks for: `rg -oNI -r '$1' 'QP:(\w+)'`
+  replaces a `grep -o | sed` pair exactly, verified identical. It is faster and shorter. It is
+  not more correct, and reaching for it does not make a text search into a parse.
 
 ### File encodings and line endings
 Two silent-corruption traps live here, and neither produces a compiler diagnostic.

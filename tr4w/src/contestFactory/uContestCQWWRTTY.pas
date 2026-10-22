@@ -1,0 +1,367 @@
+(*
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+
+ This file is part of TR4W  (SRC)
+
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+ *)
+
+(* THE CQ WORLDWIDE DX CONTEST, RTTY.
+
+  The ContestsArray row this class states, verbatim:
+
+   Email: 'rtty@cqww.com';  DF: 's48p14dc';  WA7BNM: 130;  QRZRUID: 191;
+   Pxm: NoPrefixMults;  ZnM: CQZones;  AIE: ZoneInitialExchange;
+   DM: DomesticFile;  P: 0;  AE: RSTZoneAndPossibleDomesticQTHExchange;
+   XM: CQDXCC;  QP: CQWWRTTYQSOPointMethod;
+   ADIFName: '';  CABName: '';
+   FriendlyName: 'CQ Worldwide DX Contest, RTTY'
+
+  Blank CABName and ADIFName resolve to the enum's spelling, 'CQ-WW-RTTY'.
+
+  WHY IT HAS A CLASS. Milestone M7b (2026-10-02) gives every classless
+  contest one, and a registered class is the contest's scorer, set-up,
+  export, import, parse and final score from the moment it exists -- so the
+  whole contest is transcribed here, exactly: the row above as literals
+  (Test_MovedRowValuesStillMatchTheArray), and every legacy arm that named it.
+  The contest matrix is the proof: every line of its record but
+  `contest.class` is unchanged.
+
+  NOT A MEMBER OF THE CQ WW FAMILY (M7b, DECIDED on evidence).
+  TContestCQWWBase holds the CW and SSB runnings under ONE rule:
+  CQWWQSOPointMethod (our own country 0, North America's 2) and its own
+  ADIF import. This contest scores by another arm (our own country 1, no
+  North American rule), sends a zone AND a state, counts domestic
+  multipliers from s48p14dc, and has always imported through the base's
+  default. Same sponsor, different rule, so it is its own class on
+  TContestBase.
+
+  SCORING: CQWWRTTYQSOPointMethod -- another continent 3, another country 2,
+  our own country 1.
+
+  SET-UP: none -- FoundContest's arm for it was commented out in D7, and
+  that dead block was deleted at M7b. *)
+unit uContestCQWWRTTY;
+
+{$I tr4w.inc}
+
+interface
+
+uses
+   VC, uContestBase;
+
+type
+   TContestCQWWRTTY = class(TContestBase)
+   protected
+      (* PROTECTED, MATCHING THE BASE -- callers use the properties,
+         descendants override the getters. Every getter below states
+         the ContestsArray row quoted above. *)
+      function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetFriendlyName: string; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
+
+      (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
+      function GetFlags: TContestFlags; override;
+      function GetIsUSQSOParty: boolean; override;
+      (* A BREAK IS 60 MINUTES -- see TContestBase.MinimumOffTimeMinutes
+         (Q60). *)
+      function GetMinimumOffTimeMinutes: integer; override;
+      (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
+         TContestBase: ScoreQSO is the one public scoring entry. *)
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+   public
+      (* DOES IT HAVE A ZONE MULTIPLIER? -- see
+         TContestBase.HasZoneMultiplier (M11 S5 part 2). *)
+      function HasZoneMultiplier: boolean; override;
+      (* THE ZONE MULTIPLIER -- see TContestBase.ZoneMultiplierCount and
+         ZoneMultiplierZones (M11 S5). *)
+      function ZoneMultiplierCount: integer; override;
+      function ZoneMultiplierZones: TZoneMultiplierZones; override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
+      (* THE STATE AFTER THE ZONE -- see TContestBase.SendsStateAfterZone (M11 S7). *)
+      function SendsStateAfterZone: boolean; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesDomesticQTH: boolean; override;
+      function ExchangeCarriesZone: boolean; override;
+   end;
+
+implementation
+
+uses
+   uExchangeFields,
+   uCabrilloExchange,
+   uADIFExchange,
+   uContestRegistry,
+   uTR4WStrings;
+
+procedure TContestCQWWRTTY.CalculateQSOPoints(var aQso: ContestExchange);
+var
+   rxCty: CallString;
+begin
+   rxCty := aQso.QTH.CountryID;
+
+   if aQso.QTH.Continent <> Station.MyContinent then
+      begin
+      aQso.QSOPoints := 3;
+      end
+   else if rxCty <> Station.MyCountry then
+      begin
+      aQso.QSOPoints := 2;
+      end
+   else
+      begin
+      aQso.QSOPoints := 1;
+      end;
+end;
+
+function TContestCQWWRTTY.GetDisplayName: string;
+begin
+   Result := 'CQ Worldwide DX Contest, RTTY';
+end;
+
+function TContestCQWWRTTY.GetCabrilloName: string;
+begin
+   (* The row's CABName is blank; this is the enum's spelling it resolves
+      to. *)
+   Result := 'CQ-WW-RTTY';
+end;
+
+function TContestCQWWRTTY.GetADIFContestId: string;
+begin
+   (* The row's ADIFName is blank; export writes the enum's spelling, and
+      import matches it (M1). *)
+   Result := 'CQ-WW-RTTY';
+end;
+
+function TContestCQWWRTTY.GetWA7BNMId: integer;
+begin
+   Result := 130;
+end;
+
+function TContestCQWWRTTY.GetQRZRUId: integer;
+begin
+   Result := 191;
+end;
+
+function TContestCQWWRTTY.GetSubmissionEmail: string;
+begin
+   Result := 'rtty@cqww.com';
+end;
+
+function TContestCQWWRTTY.GetDomesticFileName: string;
+begin
+   Result := 's48p14dc';
+end;
+
+function TContestCQWWRTTY.GetFriendlyName: string;
+begin
+   Result := 'CQ Worldwide DX Contest, RTTY';
+end;
+
+function TContestCQWWRTTY.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := ZoneInitialExchange;
+end;
+
+function TContestCQWWRTTY.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTZoneAndPossibleDomesticQTHExchange;
+end;
+
+function TContestCQWWRTTY.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTZoneQTH;
+end;
+
+function TContestCQWWRTTY.ParseReceivedExchangeFormat(const aText: string;
+                                                      aParsers: TExchangeParsers;
+                                                      var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTZoneAndPossibleDomesticQTH(aText, aExch);
+end;
+
+procedure TContestCQWWRTTY.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   aMessages.WriteRSTZone(SendsStateAfterZone);
+end;
+
+function TContestCQWWRTTY.ExchangeCarriesDomesticQTH: boolean;
+begin
+   Result := True;
+end;
+
+function TContestCQWWRTTY.ExchangeCarriesZone: boolean;
+begin
+   Result := True;
+end;
+
+function TContestCQWWRTTY.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                              const aQso: ContestExchange): string;
+begin
+   (* RST, ZONE, STATE OR 'DX' -- the same text the Cabrillo sent column
+      prints. Plan F25, fixed 2026-10-14 (NY4I): the machine's format for this
+      exchange ('%02u' of a ShortString zone) raised, and STX_STRING carried a
+      placeholder. *)
+   Result := ADIFSentRSTZoneStateDX(aMy, aQso);
+end;
+
+function TContestCQWWRTTY.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                  const aQso: ContestExchange;
+                                                  const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentRSTZoneStateDX(aMy, aQso, aCtx);
+end;
+
+function TContestCQWWRTTY.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                      const aQso: ContestExchange;
+                                                      const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedRSTZoneQTHDX(aMy, aQso, aCtx);
+end;
+
+function TContestCQWWRTTY.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfMultByBand, cfCQZoneMode];
+end;
+
+(* 60 MINUTES, AS THE SUMMARY SHEET ALWAYS GAVE IT -- its token 'CQ-WW-RTTY'
+   matched `Pos('CQ-WW', ...)`, so the RTTY running took CQ WW's break with
+   the CW and SSB ones (Q60). Stated here, not inherited: this class is a
+   sibling of the CW/SSB family, not under it. Whether the RTTY rules set an
+   off time of their own is not settled by Q60's answer, which quotes
+   DXLog's CQWW.txt only. *)
+function TContestCQWWRTTY.GetMinimumOffTimeMinutes: integer;
+begin
+   Result := 60;
+end;
+
+function TContestCQWWRTTY.GetIsUSQSOParty: boolean;
+begin
+   (* P: 0 -- not a US state QSO party. *)
+   Result := False;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for ARRL10, ARRL160,
+   ARRL_RTTY_ROUNDUP, CQ160CW, CQ160SSB.
+   The same steps on ticking the box stood for CQ160CW, CQ160SSB.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestCQWWRTTY.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.OfferIAmIn(TC_NORTHAMERICA);
+   aPrompts.AskFieldWithCommentWhenInside(TC_ENTERSTATEFORUSPROVINCEFORCANADA, ncfMyState);
+end;
+
+(* A DX MULTIPLIER AT EVERY STATION -- M11 S4 part 2, 2026-10-14: the trait
+   this class stated (`CQDXCC`) until the kind was deleted. *)
+function TContestCQWWRTTY.HasDXMultiplier: boolean;
+begin
+   Result := True;
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country counts: the key is the CTY country -- GetDXQTH's `else`
+   arm, for the session's CQDXCC. *)
+function TContestCQWWRTTY.DXMultiplierKey(const aQso: ContestExchange;
+                                          out aKey: DXMultiplierString): boolean;
+begin
+   aKey := aQso.QTH.CountryID;
+   Result := True;
+end;
+
+(* THE ZONE MULTIPLIER -- M11 S5, 2026-10-14: the CQ zones, at every
+   station. What the trait's CQZones gave LOGDUPE's zone count and the
+   zone-list readers (LOGEDIT, POSTUNIT) through the session kind until
+   S5. *)
+function TContestCQWWRTTY.ZoneMultiplierCount: integer;
+begin
+   Result := CQ_ZONE_MULTIPLIERS;
+end;
+
+(* IT HAS A ZONE MULTIPLIER, AT EVERY STATION -- M11 S5 part 2,
+   2026-10-14: the answer the session kind gave (`kind <> NoZoneMults`)
+   before the kind was deleted. *)
+function TContestCQWWRTTY.HasZoneMultiplier: boolean;
+begin
+   Result := True;
+end;
+
+function TContestCQWWRTTY.ZoneMultiplierZones: TZoneMultiplierZones;
+begin
+   Result := zmzCQZones;
+end;
+
+
+(* THE DOMESTIC QTH IS LOOKED UP IN THIS CONTEST'S DOMESTIC FILE, at every
+   station -- M11 S6 part 1b, 2026-10-14. It was the session's
+   `= DomesticFile` (the trait); see TContestBase.UsesDomesticFile. *)
+function TContestCQWWRTTY.UsesDomesticFile: boolean;
+begin
+   Result := True;
+end;
+
+(* THE ZONE EXCHANGE CARRIES THE STATE SENT, at every station -- M11 S7,
+   2026-10-14. It was the session's RSTZoneAndPossibleDomesticQTH shape; see
+   TContestBase.SendsStateAfterZone. *)
+function TContestCQWWRTTY.SendsStateAfterZone: boolean;
+begin
+   Result := True;
+end;
+
+initialization
+   RegisterContest(CQWWRTTY, TContestCQWWRTTY);
+
+end.

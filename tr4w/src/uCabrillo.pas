@@ -21,7 +21,8 @@ unit uCabrillo;
   Pre-migration test target -- see docs/tr4w-migration-strategy.md
   ("Tier 1 Extraction Pattern").  The single-QSO builder here uses:
 
-    uCabrilloFormat    -- FormatCabrilloFreq / FormatCabrilloMode
+    uCabrilloFormat    -- FormatCabrilloFreq
+    uContestRegistry   -- the QSO's contest's CabrilloModeString (Q54)
     uExchangeBuilder   -- BuildSentExchangeText / BuildRxExchangeText
 
   ...which are the same pure helpers postunit.pas now imports, so the
@@ -59,8 +60,9 @@ implementation
 uses
    uSettingsModel,   // Settings.My.Call
    SysUtils,
-   uCabrilloFormat,        // FormatCabrilloFreq / FormatCabrilloMode
-   uExchangeBuilder,       // BuildSentExchangeText / BuildRxExchangeText
+   uCabrilloFormat,        // FormatCabrilloFreq
+   uContestRegistry,       // ContestIdentity -- the QSO's contest's mode column
+   uExchangeBuilder,      // BuildSentExchangeText / BuildRxExchangeText
    LogWind;                // the contest globals this renders from
 
 function BuildSingleQsoCabrilloLine(const RXData: ContestExchange): AnsiString;
@@ -72,7 +74,14 @@ var
    rcvExch:   string;
    begin
    sFreq := FormatCabrilloFreq(RXData.Band, RXData.Frequency, True);
-   sMode := FormatCabrilloMode(RXData.Mode, RXData.ExtMode, False);
+   (* THE MODE COLUMN IS THE QSO'S CONTEST'S (Q54, NY4I 2026-10-16) -- the
+      same CabrilloModeString PostUnit's Cabrillo file asks, so HamScore's
+      line and the submitted file cannot spell a mode differently. It was
+      FormatCabrilloMode with no override, which agreed with the file only
+      while no contest overrode the mode column. The QSO's own contest,
+      as uExchangeBuilder asks for the exchanges below. *)
+   sMode := AnsiString(ContestIdentity(RXData.ceContest).CabrilloModeString(
+               RXData.Mode, RXData.ExtMode));
 
    sentExch := BuildSentExchangeText(RXData);
    rcvExch  := BuildRxExchangeText(RXData);

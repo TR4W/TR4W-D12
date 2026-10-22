@@ -48,9 +48,8 @@ uses
   uTR4WStrings;
 
 function wkOpen: boolean;
+function wkOpenThreadProc(aParameter: Pointer): DWORD; stdcall;   (* wkOpen, as a tCreateThread body *)
 function wkOpenPort: boolean;
-function wkSend(const Buffer; nNumberOfBytesToWrite: DWORD): Cardinal;
-procedure wkSendAdminCommand(const Buffer);
 function wkSendByte(b: Byte): Cardinal;
 function wkSendTwoBytes(B1, B2: Byte): Cardinal;
 procedure wkSetSpeed(Speed: integer);
@@ -65,9 +64,9 @@ procedure wkSetupSpeedPot;
 //procedure wkLoadSettings;
 function wkTurnPTT(Turn: boolean): boolean;
 procedure wkDispayState;
-procedure wkReadThreadProc;
+function wkReadThreadProc(aParameter: Pointer): DWORD; stdcall;
 // DEAD CODE.  Nothing starts this thread -- wkInit creates wkReadThreadProc
-// (tCreateThread(@wkReadThreadProc, ...)) and wkReadThreadProc1 is referenced
+// (tCreateThread(wkReadThreadProc, ...)) and wkReadThreadProc1 is referenced
 // nowhere else.  Kept only as the older parsing variant.  Beware: its status
 // handling DIFFERS from the live one -- it sets wkBUSY True for ANY byte below
 // $C0 and detects end-of-buffer with byte = 192, where the live parser uses the
@@ -172,9 +171,15 @@ type
     {*)}
   end;
 
+  (* AN ADMIN COMMAND IS EXACTLY TWO BYTES, and naming the type makes the
+    compiler hold it to that: wkSendAdminCommand used to take an untyped
+    `const Buffer` and read two bytes through an `absolute` view of whatever
+    it was given (P12, 2026-10-18). *)
+  TwkAdminCommand = array[0..1] of Byte;
+
 const
   // ADMIN COMMANDS -- two RAW BYTES on the wire ($00 + sub-command), passed to
-  // wkSendAdminCommand's untyped `const Buffer` and written verbatim.
+  // wkSendAdminCommand and written verbatim.
   //
   // These MUST be typed as bytes, not written as character literals.  They used
   // to read `wkECHOTEST = #$00#$04;`, which under Delphi 7 was an AnsiString --
@@ -189,15 +194,15 @@ const
   //
   // A byte array cannot silently change width, so this class of bug cannot
   // recur here.
-  wkCALIBRATE   : array[0..1] of Byte = ($00, $00);
-  wkRESET       : array[0..1] of Byte = ($00, $01);
-  wkHOSTOPEN    : array[0..1] of Byte = ($00, $02);
-  wkHOSTCLOSE   : array[0..1] of Byte = ($00, $03);
-  wkECHOTEST    : array[0..1] of Byte = ($00, $04);
-  wkGETVALUES   : array[0..1] of Byte = ($00, $07);
+  wkCALIBRATE   : TwkAdminCommand = ($00, $00);
+  wkRESET       : TwkAdminCommand = ($00, $01);
+  wkHOSTOPEN    : TwkAdminCommand = ($00, $02);
+  wkHOSTCLOSE   : TwkAdminCommand = ($00, $03);
+  wkECHOTEST    : TwkAdminCommand = ($00, $04);
+  wkGETVALUES   : TwkAdminCommand = ($00, $07);
 
-  wkSETWK1MODE  : array[0..1] of Byte = ($00, $0A);
-  wkSETWK2MODE  : array[0..1] of Byte = ($00, $0B);
+  wkSETWK1MODE  : TwkAdminCommand = ($00, $0A);
+  wkSETWK2MODE  : TwkAdminCommand = ($00, $0B);
 
   wkECHOTESTBYTE                        = $55;
 
@@ -249,8 +254,7 @@ var
     INVALID_HANDLE_VALUE asks wkPortOpen instead. *)
   WinKeyPort                            : TSerialPort = nil;
 
-  wkBuffer                              : array[0..7] of Byte;
-  wkREADBuffer                          : array[0..32] of Byte;
+  wkREADBuffer                         : array[0..32] of Byte;
   wkThreadReadBuffer                    : array[0..15] of Byte;
   wkInternalCWBuffer                    : array[0..SizeOfHostBuffer - 1] of AnsiChar;
 
@@ -310,6 +314,17 @@ const
   wkMINWPM                              = 10;
   wkWPMRANGE                            = 40;
 
+procedure wkSendAdminCommand(const aCommand: TwkAdminCommand);
+
+type
+  (* LOAD DEFAULTS is a sixteen-byte message; the type says so. *)
+  TwkValueListWire = array[0..15] of Byte;
+
+(* THE LOAD DEFAULTS VALUE LIST AS IT GOES ON THE WIRE: sixteen bytes in the
+  WinKeyer's own order, one per field. It used to be written as the packed
+  record's memory image, which made the record's field order the wire format
+  by accident; this states it (P12, 2026-10-18). Pinned by uTestWinKeyWire. *)
+function wkValueListBytes(const aList: TwkValueList): TwkValueListWire;
 
 implementation
 
@@ -335,7 +350,7 @@ uses
   bottom of the unit -- with the routine whose port they belong to -- and
   almost everything above calls them. *)
 function wkPortOpen: boolean; forward;
-function wkWriteRaw(const Buffer; Count: DWORD): Cardinal; forward;
+function wkWriteRaw(const aBytes: array of Byte): Cardinal; forward;
 
 function wkOpen: boolean;
 var
@@ -367,7 +382,11 @@ begin
   wkSendAdminCommand(wkHOSTOPEN);
 //  Sleep(150);
 
-  PCardinal(@wkREADBuffer[0])^ := 0;   // Issue #997: was asm (zero first dword)
+  (* Zero the byte the next read fills. Only [0] is ever looked at afterwards
+    (the version byte), so the old four-byte store through PCardinal -- itself
+    from an asm "zero first dword" -- cleared three bytes nothing reads.
+    Pointer audit 3.4. *)
+  wkREADBuffer[0] := 0;
   if wkRead(1) then
      begin
      // The keyer's HOST OPEN response is its firmware-revision byte.
@@ -421,7 +440,7 @@ begin
 //          if WinKeySettings.wksKeyerMode = kmBugMode then TempInteger := TempInteger + 48;
 
   WinKeySettings.wksValueList.vlSpeedinWPM := ActiveRadioPtr.SpeedMemory;
-  wkWriteRaw(WinKeySettings.wksValueList, SizeOf(TwkValueList));
+  wkWriteRaw(wkValueListBytes(WinKeySettings.wksValueList));
 //  wkSetupSpeedPot;
   wkSendByte(wkCMD_GETPOT);
 //  wkSendTwoBytes(wkCMD_SETWEIGHTING, WinKeySettings.wkWeighting);
@@ -450,24 +469,51 @@ begin
   // and HOST OPEN) both run earlier, and the GETPOT response simply waits in the
   // driver's receive buffer until the thread starts.
   logger.Info('Calling tCreateThread from WkOpen');
-  tCreateThread(@wkReadThreadProc, wkThreadID);
+  tCreateThread(wkReadThreadProc, wkThreadID);
   logger.Info('Created WK thread with id %u',[PtrUInt(wkThreadId)]);
 end;
 
-function wkSend(const Buffer; nNumberOfBytesToWrite: DWORD): Cardinal;
+(* wkOpen ON A WORKER THREAD (pointer audit P1, 2026-10-16). uProgramMain
+  started wkOpen itself as the thread body, through the untyped thread start,
+  although it is a parameterless register-convention function -- the shape
+  that, on i386, made the trampoline write nil into the thread's SEH chain
+  head on exit. MainUnit also calls wkOpen directly, so it keeps its own
+  signature and this is the thread's entry. wkOpen's boolean was never read
+  by anything on this path. *)
+function wkOpenThreadProc(aParameter: Pointer): DWORD; stdcall;
 begin
-  logger.Debug('[wkSend] writing %d byte(s) to WinKeyer', [nNumberOfBytesToWrite]);
-  if not wkPortOpen then Exit;
-  Result := wkWriteRaw(Buffer, nNumberOfBytesToWrite);
+  Result := 0;
+  wkOpen;
 end;
 
-procedure wkSendAdminCommand(const Buffer);
-var
-  Bytes: array[0..1] of Byte absolute Buffer;
+procedure wkSendAdminCommand(const aCommand: TwkAdminCommand);
 begin
-  logger.Trace('[wkSendAdminCommand] B1=$%s B2=$%s', [IntToHex(Bytes[0], 2), IntToHex(Bytes[1], 2)]);
-  if not wkPortOpen then Exit;
-  wkWriteRaw(Buffer, 2);
+  logger.Trace('[wkSendAdminCommand] B1=$%s B2=$%s', [IntToHex(aCommand[0], 2), IntToHex(aCommand[1], 2)]);
+  if not wkPortOpen then
+     begin
+     Exit;
+     end;
+  wkWriteRaw(aCommand);
+end;
+
+function wkValueListBytes(const aList: TwkValueList): TwkValueListWire;
+begin
+  Result[0]  := aList.vlCommandCode;
+  Result[1]  := aList.vlModeRegister;
+  Result[2]  := aList.vlSpeedinWPM;
+  Result[3]  := Ord(aList.vlSidetoneFrequency);
+  Result[4]  := aList.vlWeight;
+  Result[5]  := aList.vlLeadInTime;
+  Result[6]  := aList.vlTailTime;
+  Result[7]  := aList.vlMinWPM;
+  Result[8]  := aList.vlWPMRange;
+  Result[9]  := aList.vl1stExtension;
+  Result[10] := aList.vlKeyCompensation;
+  Result[11] := aList.vlFarnsworthWPM;
+  Result[12] := aList.vlPaddleSWPoint;
+  Result[13] := aList.vlDitDahRatio;
+  Result[14] := aList.vlPinConfiguration;
+  Result[15] := aList.vlDontcare;
 end;
 
 var
@@ -543,7 +589,7 @@ begin
   logger.Trace('[wkSendByte] b=%s ($%s)', [string(Char(b)), IntToHex(b, 2)]);
   if not wkPortOpen then Exit;
   t0 := wkPerfNow;
-  wkWriteRaw(b, 1);
+  wkWriteRaw([b]);
   wkWriteMsAccum := wkWriteMsAccum + wkPerfMs(t0);
 
 //  wkBuffer[0] := b;
@@ -553,16 +599,13 @@ end;
 
 function wkSendTwoBytes(B1, B2: Byte): Cardinal;
 var
-  TwoBytesBuffer                        : array[0..1] of Byte;
   t0                                    : Int64;
 begin
   logger.Trace('[wkSendTwoBytes] B1=%s ($%s) B2=%s ($%s)',
                [string(Char(B1)), IntToHex(B1, 2), string(Char(B2)), IntToHex(B2, 2)]);
   if not wkPortOpen then Exit;
-  TwoBytesBuffer[0] := B1;
-  TwoBytesBuffer[1] := B2;
   t0 := wkPerfNow;
-  Result := wkWriteRaw(TwoBytesBuffer, 2);
+  Result := wkWriteRaw([B1, B2]);
   wkWriteMsAccum := wkWriteMsAccum + wkPerfMs(t0);
 
 //  wkSendByte(B1);
@@ -696,20 +739,14 @@ end;
 procedure wkSetupSpeedPot;
 begin
   if not wkPortOpen then Exit;
-  wkBuffer[0] := wkCMD_SETUPSPEEDPOT;
-  wkBuffer[1] := wkMINWPM;
-  wkBuffer[2] := wkWPMRANGE;
-  wkBuffer[3] := 0;
-  wkWriteRaw(wkBuffer, 4);
+  wkWriteRaw([wkCMD_SETUPSPEEDPOT, wkMINWPM, wkWPMRANGE, 0]);
 end;
 
 function wkTurnPTT(Turn: boolean): boolean;
 begin
   Result := False;
   if not wkPortOpen then Exit;
-  wkBuffer[0] := wkCMD_PTTONOFF;
-  wkBuffer[1] := Byte(Turn);
-  Result := wkWriteRaw(wkBuffer, 2) = 2;
+  Result := wkWriteRaw([wkCMD_PTTONOFF, Byte(Turn)]) = 2;
 {$IF WINKEYDEBUG}
 //  AddStringToTelnetConsole('PTT');
 {$IFEND}
@@ -739,13 +776,14 @@ begin
   Result := Length(got);
 end;
 
-procedure wkReadThreadProc;
+function wkReadThreadProc(aParameter: Pointer): DWORD; stdcall;
 label
   1, 2;
 var
   lpNumberOfBytesRead                   : DWORD;
   i                                     : integer;
 begin
+  Result := 0;   (* the thread exit code -- see TF.TTR4WThreadStart *)
   wkActive := True;
   wkDispayState;
   while wkActive = True do
@@ -1098,30 +1136,40 @@ begin
   Result := (WinKeyPort <> nil) and WinKeyPort.IsOpen;
 end;
 
-(* Write raw bytes, for the callers that hold an untyped buffer and a length.
+(* Write raw bytes.
 
   The WinKeyer protocol is binary -- command bytes, a value list, echoed
   characters -- so this is the byte-exact path and never WriteString. It
   answers the number of bytes written, as tWriteFile did, so the two callers
-  that report it need no change. *)
-function wkWriteRaw(const Buffer; Count: DWORD): Cardinal;
+  that report it need no change.
+
+  AN OPEN ARRAY (P12, 2026-10-18): it used to take an untyped buffer and a
+  count and Move one into the other. Callers pass `[b]`, `[B1, B2]`, an admin
+  command or the value list's wire bytes, and the count comes with them. *)
+function wkWriteRaw(const aBytes: array of Byte): Cardinal;
 var
   bytes: TBytes;
+  i: integer;
 begin
   Result := 0;
-  if (Count = 0) or (not wkPortOpen) then
+  if (Length(aBytes) = 0) or (not wkPortOpen) then
      begin
      Exit;
      end;
-  SetLength(bytes, Count);
-  Move(Buffer, bytes[0], Count);
+  (* TSerialPort.WriteBytes takes a TBytes; an open array is not one, so the
+    bytes are copied -- at most sixteen. *)
+  SetLength(bytes, Length(aBytes));
+  for i := 0 to High(aBytes) do
+     begin
+     bytes[i] := aBytes[i];
+     end;
   try
      WinKeyPort.WriteBytes(bytes);
-     Result := Count;
+     Result := Length(aBytes);
   except
      on E: Exception do
         begin
-        logger.Warn('[uWinKey] write of %d byte(s) failed: %s', [Count, E.Message]);
+        logger.Warn('[uWinKey] write of %d byte(s) failed: %s', [Length(aBytes), E.Message]);
         end;
   end;
 end;

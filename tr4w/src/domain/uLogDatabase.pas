@@ -74,6 +74,22 @@ uses
   what keeps the domain layer a domain layer. *)
 function LogDatabaseFileName(const aBinaryLogPath: string): string;
 
+(* THE file: URI THAT OPENS aFileName IMMUTABLE -- see OpenToPeek. Public so
+  the escaping is pinned by a test, the UNC form included. *)
+function ImmutableURI(const aFileName: string): AnsiString;
+
+const
+   (* WHAT SQLITE MAY LEAVE BESIDE A DATABASE. The write-ahead log and its
+     index, because every log runs in WAL mode (TLogDatabase.ApplyPragmas);
+     and the rollback journal, which is what SQLite uses when it refuses WAL
+     -- a network share, for one. Declared HERE, beside the database that
+     makes them, since 2026-10-19: uLogImport had the only copy, and the peek
+     (OpenToPeek) became its second reader. *)
+   LOG_SIDECAR_SUFFIXES: array[0..2] of string = ('-wal', '-shm', '-journal');
+
+(* The first sidecar of aDatabase that exists (its full name), or ''. *)
+function LogSidecarPresent(const aDatabase: string): string;
+
 type
    ELogDatabaseError = class(Exception);
 
@@ -134,6 +150,9 @@ type
       FJournalMode: string;
       FForeignKeysEnforced: boolean;
       FReadOnly: boolean;
+      (* Opened by OpenToPeek's immutable branch: the connection names a
+        file: URI. *)
+      FImmutable: boolean;
 
       (* Both open paths refuse a missing file with the same sentence. One
         copy, because two would drift. *)
@@ -215,8 +234,65 @@ type
         Refuses a missing file for the same reason Open does. *)
       procedure OpenReadOnly(const aFileName: string);
 
+      (* GLANCE AT A LOG: READ-ONLY, NO LOCK KEPT, NOTHING LEFT BESIDE IT.
+
+        For a look at a log somebody may or may not have open -- the New
+        Contest dialog's Last Contest button is the caller (uLogFileFacts).
+        Refuses a missing file; verifies identity; never migrates, so a
+        schema-2 log stays schema 2.
+
+        WHY NOT SIMPLY OpenReadOnly. On a WAL-mode log -- which every log
+        this program writes is -- a read-only connection still makes SQLite
+        create <file>-wal and <file>-shm, and it cannot checkpoint, so it
+        leaves both behind. Measured 2026-10-19 (uTestLatestContest): the .db
+        byte-identical, two new sidecars.
+
+        SO A LOG WITH NO SIDECAR IS OPENED immutable=1 (sqlite.org/uri.html):
+        no lock, no WAL, no sidecar. A log WITH any sidecar (-wal, -shm or
+        -journal; LogSidecarPresent) is open elsewhere, or was not closed
+        cleanly, and immutable would read past what the sidecar holds -- the
+        WAL's committed frames, or a hot journal's undo of a torn write --
+        so it is read through OpenReadOnly instead. The decision is HERE and
+        not at the caller, because which sidecar makes immutable unsafe is a
+        fact about SQLite, and a caller that checked only -wal (the first
+        version did) would read a rollback-journal log mid-write.
+
+        THE WINDOW THAT REMAINS, and why it is accepted. A writer can open the
+        file between the sidecar check and the end of the read. In WAL mode
+        its writes go to the -wal and the main file changes only at a
+        checkpoint; in DELETE mode it changes the main file under a lock that
+        an immutable reader does not take. Either way the peek can read a
+        page mid-change: SQLite then reports corruption (an exception the
+        caller already turns into "not described") or, rarely, returns a value
+        a moment out of date. It cannot harm the writer -- the peek writes
+        nothing and locks nothing -- and the read is two statements long. A
+        caption that is wrong for one showing of a dialog is the whole cost;
+        locking the file to rule it out would be a peek that can block a
+        live log, which is worse. *)
+      procedure OpenToPeek(const aFileName: string);
+
       procedure Close;
       function IsOpen: boolean;
+
+      (* ROLL BACK THE OPEN TRANSACTION -- INCLUDING ONE SQLITE HAS ALREADY
+        ENDED. A no-op when sqldb holds none.
+
+        SQLite may roll a transaction back BY ITSELF on SQLITE_FULL, IOERR,
+        NOMEM or BUSY ("may or may not", sqlite.org/lang_transaction.html).
+        sqldb is not told: it still holds its transaction Active, so its
+        ROLLBACK then fails with "cannot rollback - no transaction is active"
+        and it STAYS Active. Measured 2026-10-14 with a RAISE(ROLLBACK)
+        trigger: the error a batch reported was that one instead of the real
+        failure, the repository stayed "in a batch" for good, and the close
+        raised as well -- which, inside uLogStore.Disable, escapes the very
+        handler that reports the failure.
+
+        So when sqldb's ROLLBACK fails, ask SQLite whether it still has a
+        transaction: a raw BEGIN succeeds only if it does NOT. If it
+        succeeds, sqldb's ROLLBACK is repeated and now ends both, and the
+        state agrees again. If BEGIN fails, the transaction was real and the
+        original failure is raised. No message text is matched. *)
+      procedure Rollback;
 
       (* PRAGMA user_version.  0 means "no schema", which is what an empty file
         reports -- so it is also how a caller detects a database that is not
@@ -292,7 +368,7 @@ type
         anything about locking or speed. *)
       property JournalMode: string read FJournalMode;
 
-      (* True when this connection was opened by OpenReadOnly. Read by
+      (* True when this connection was opened by OpenReadOnly or OpenToPeek. Read by
         CheckIntegrity, which cannot checkpoint a file it may not write. *)
       property IsReadOnly: boolean read FReadOnly;
 
@@ -1182,9 +1258,16 @@ begin
    (* THE CONNECTOR'S OWN READ-ONLY PATH, not a URI and not a flag we invent:
      TSQLite3Connection.OpenFlags goes straight into sqlite3_open_v2
      (sqlite3conn.pp:883), so sofReadOnly is SQLITE_OPEN_READONLY and SQLite
-     enforces it. Set on BOTH branches, never left over from a previous open
+     enforces it. Set on EVERY branch, never left over from a previous open
      of the same object. *)
-   if FReadOnly then
+   if FImmutable then
+      begin
+      (* sofURI is SQLITE_OPEN_URI: the name is parsed as a file: URI, and
+        immutable=1 is SQLite's documented parameter (sqlite.org/uri.html). *)
+      FConnection.DatabaseName := ImmutableURI(aFileName);
+      FConnection.OpenFlags := [sofReadOnly, sofURI];
+      end
+   else if FReadOnly then
       begin
       FConnection.OpenFlags := [sofReadOnly];
       end
@@ -1270,6 +1353,7 @@ begin
    RefuseAMissingFile(aFileName);
 
    FReadOnly := False;
+   FImmutable := False;
    OpenConnection(aFileName);
    VerifyIdentity;
 
@@ -1284,6 +1368,7 @@ begin
    RefuseAMissingFile(aFileName);
 
    FReadOnly := True;
+   FImmutable := False;
    OpenConnection(aFileName);
 
    (* KEPT: VerifyIdentity only reads pragmas, and it is the check that says
@@ -1293,6 +1378,91 @@ begin
      NOT MigrateSchema: it creates tables and stamps user_version, which is a
      write, and a file being inspected is not a file being adopted. *)
    VerifyIdentity;
+end;
+
+procedure TLogDatabase.OpenToPeek(const aFileName: string);
+begin
+   if LogSidecarPresent(aFileName) <> '' then
+      begin
+      OpenReadOnly(aFileName);
+      Exit;
+      end;
+
+   RefuseAMissingFile(aFileName);
+
+   FReadOnly := True;
+   FImmutable := True;
+   OpenConnection(aFileName);
+   VerifyIdentity;
+end;
+
+function LogSidecarPresent(const aDatabase: string): string;
+var
+   i: integer;
+begin
+   Result := '';
+   for i := Low(LOG_SIDECAR_SUFFIXES) to High(LOG_SIDECAR_SUFFIXES) do
+      begin
+      if FileExists(aDatabase + LOG_SIDECAR_SUFFIXES[i]) then
+         begin
+         Result := aDatabase + LOG_SIDECAR_SUFFIXES[i];
+         Exit;
+         end;
+      end;
+end;
+
+function ImmutableURI(const aFileName: string): AnsiString;
+const
+   (* TYPED, so the concatenation stays AnsiString: a bare literal is
+     UnicodeString in this mode and the result would narrow on the way back. *)
+   IMMUTABLE_QUERY: AnsiString = '?immutable=1';
+var
+   path: UTF8String;
+   i: integer;
+   c: AnsiChar;
+begin
+   (* sqlite.org/uri.html, and SQLite's own parser (sqlite3ParseUri):
+
+       - a drive path gets a third slash, file:///C:/x.db -- SQLite's
+         Windows VFS drops the "/" before "C:" itself;
+       - a UNC path \\server\share\x.db becomes file:////server/share/x.db:
+         an EMPTY authority (the only kind SQLite accepts by default) and a
+         path that still begins "//server" -- the four-slash form that page
+         gives for a UNC name;
+       - a Unix path already starts with "/", so file:///home/x.db;
+       - %, ?, # and a space are escaped -- the first three would otherwise
+         end or decode the path -- and the rest of the UTF-8 passes as it
+         is, which SQLite takes byte for byte.
+
+     THE BACKSLASH IS A SEPARATOR ONLY ON WINDOWS. On Linux and macOS it is
+     an ordinary character a file name may contain, so there it is escaped
+     (%5C) rather than turned into a "/" that would name another path. The
+     RTL's DirectorySeparator says which, so no platform test is written
+     here: it is '\' on Windows and '/' elsewhere. *)
+   path := UTF8Encode(ExpandFileName(aFileName));
+   Result := 'file://';
+   if (Length(path) = 0) or
+      ((path[1] <> '/') and (path[1] <> DirectorySeparator)) then
+      begin
+      Result := Result + '/';
+      end;
+   for i := 1 to Length(path) do
+      begin
+      c := path[i];
+      if (c = DirectorySeparator) or (c = '/') then
+         begin
+         Result := Result + '/';
+         end
+      else if (c = '%') or (c = '?') or (c = '#') or (c = ' ') or (c = '\') then
+         begin
+         Result := Result + '%' + AnsiString(IntToHex(Ord(c), 2));
+         end
+      else
+         begin
+         Result := Result + c;
+         end;
+      end;
+   Result := Result + IMMUTABLE_QUERY;
 end;
 
 (* BRING AN OLDER LOG UP TO THE CURRENT SCHEMA.
@@ -1315,11 +1485,39 @@ end;
 procedure TLogDatabase.MigrateSchema;
 var
    version: integer;
+   i: integer;
+   missing: array of integer;
 begin
    version := PragmaAsInteger('PRAGMA user_version');
    if version >= LOG_SCHEMA_VERSION then
       begin
       Exit;
+      end;
+
+   (* v2 -> v3: WHICH my_* COLUMNS ARE MISSING, asked BEFORE anything is
+     changed. PragmaAsString ends the transaction around itself, so asking
+     between two ALTERs would commit the first on its own; asking first keeps
+     the whole migration one transaction. GUARDED BY table_info, as the note
+     on LOG_SCHEMA_VERSION requires, so a column already present -- a
+     half-finished hand repair, a log created by this build and stamped back
+     -- is left alone rather than failing the open. *)
+   SetLength(missing, 0);
+   if version < 3 then
+      begin
+      for i := Low(LOG_V3_QSO_COLUMNS) to High(LOG_V3_QSO_COLUMNS) do
+         begin
+         (* UTF8Encode LAST, as for the version stamp below: the names are
+           our own ASCII, and an encode of the whole is exact where an
+           AnsiString cast of a UnicodeString expression is a narrowing the
+           build counts. *)
+         if PragmaAsString(UTF8Encode('SELECT name FROM pragma_table_info(''qso'') ' +
+                           'WHERE name = ''' + string(LOG_V3_QSO_COLUMNS[i].Name) +
+                           '''')) = '' then
+            begin
+            SetLength(missing, Length(missing) + 1);
+            missing[High(missing)] := i;
+            end;
+         end;
       end;
 
    (* NO LOG LINE HERE. This unit has no logger by design -- it is a leaf
@@ -1336,7 +1534,23 @@ begin
          + ' saved_at INTEGER)');
       end;
 
-   FTransaction.Commit;
+   (* v2 -> v3: the my_* columns, NULL in every existing row -- which is what
+     "never captured" is (my_source NULL), so no row needs touching. ADD
+     COLUMN appends, and the CREATE TABLE ends with these columns in the same
+     order, so a migrated table and a new one match column for column. *)
+   for i := 0 to High(missing) do
+      begin
+      FConnection.ExecuteDirect(UTF8Encode(
+         'ALTER TABLE qso ADD COLUMN ' + string(LOG_V3_QSO_COLUMNS[missing[i]].Name) +
+         ' ' + string(LOG_V3_QSO_COLUMNS[missing[i]].Declaration)));
+      end;
+
+   (* ExecuteDirect is what begins a transaction; with nothing to do there is
+     none to commit. *)
+   if FTransaction.Active then
+      begin
+      FTransaction.Commit;
+      end;
    (* The version is a small integer, so its digits are ASCII and UTF8Encode
      is exact where an AnsiString cast would be a narrowing the build
      counts. Encoded LAST: concatenating onto the result would promote it
@@ -1349,18 +1563,58 @@ procedure TLogDatabase.Close;
 begin
    if FConnection.Connected then
       begin
-      if FTransaction.Active then
-         begin
-         (* Anything uncommitted at close is by definition not wanted -- a
-           committed QSO is committed at the moment it is logged (plan 9b). *)
-         FTransaction.Rollback;
-         end;
+      (* Anything uncommitted at close is by definition not wanted -- a
+        committed QSO is committed at the moment it is logged (plan 9b).
+        Rollback, not FTransaction.Rollback: see Rollback. *)
+      Rollback;
       FConnection.Close;
       end;
    FFileName := '';
    FJournalMode := '';
    FForeignKeysEnforced := False;
    FReadOnly := False;
+   FImmutable := False;
+end;
+
+procedure TLogDatabase.Rollback;
+var
+   sqliteHadOne: boolean;
+begin
+   if not FTransaction.Active then
+      begin
+      Exit;
+      end;
+
+   try
+      FTransaction.Rollback;
+   except
+      on EDatabaseError do
+         begin
+         (* WHICH SIDE IS WRONG? A raw BEGIN -- execsql, the path sqldb's own
+           BEGIN takes, beneath its bookkeeping -- succeeds only when SQLite
+           holds NO transaction. *)
+         sqliteHadOne := False;
+         try
+            FConnection.ExecutePragma('BEGIN');
+         except
+            on EDatabaseError do
+               begin
+               sqliteHadOne := True;
+               end;
+         end;
+
+         if sqliteHadOne then
+            begin
+            (* The transaction is real and its ROLLBACK failed: that failure
+              is the one to report. *)
+            raise;
+            end;
+
+         (* SQLite had ended it, and now holds the empty one just begun, so
+           sqldb's ROLLBACK has something to end and the two agree again. *)
+         FTransaction.Rollback;
+         end;
+   end;
 end;
 
 function TLogDatabase.SchemaVersion: integer;

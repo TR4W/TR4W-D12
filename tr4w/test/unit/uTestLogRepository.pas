@@ -37,7 +37,27 @@ type
       (* A METHOD, not a free function: CheckEquals is protected on TTestCase,
         which is the framework saying assertions belong to a test. *)
       procedure CompareQSO(const a, b: ContestExchange; const where: string);
+      procedure MakeDistinctQSO(out aQso: ContestExchange; aSeed: integer);
    protected
+      procedure TestTheColumnTableAgreesWithQSO_COLUMNS;
+      procedure TestAReaderWhoseColumnsDriftedFailsLoudly;
+      procedure TestEveryReaderReturnsTheSameRecord;
+      procedure TestTheCursorYieldsEachRowsId;
+      procedure TestARowIdReaderNeedsTheIdLast;
+      procedure TestABatchCommitsByRowId;
+      procedure TestAFailedBatchRollsBackWhole;
+      procedure TestABatchRefusesWhatWouldBreakIt;
+      procedure TestEveryWriteWaitsForItsCommit;
+      procedure TestAFreshRepositoryHoldsItsWritesUntilCommit;
+      procedure TestABatchSQLiteRollsBackItselfLeavesTheRepositoryUsable;
+      procedure TestALogSQLiteRolledBackClosesCleanly;
+      procedure TestAnAppendBatchLandsInOneCommit;
+      procedure TestAFailedAppendBatchLeavesTheLogAsItWas;
+      procedure TestAnAppendBatchWritesRowsAsTheLiveAppendDoes;
+      procedure TestAnEditKeepsTheSentExchange;
+      procedure TestQSOsWithoutAnExchangeIdAreReported;
+      procedure TestTheContestStartTimeIsReadAtOpen;
+      procedure TestEveryNowTheLogStoresIsUTC;
       procedure TestOneQSORoundTrips;
       procedure Test_LegacySkippedIsReadAsDeleted;
       procedure TestSentinelsBecomeNullAndComeBack;
@@ -61,14 +81,19 @@ type
 implementation
 
 uses
+   uContestRegistry,   (* ContestHandleOf -- a legacy contest's handle, Q108 S2 *)
    (* LCLType for MAXBYTE / MAXWORD -- the not-set markers
      ClearContestExchange writes, and the values this suite exists to prove
      never reach the log.  It was Windows; LCLType declares both and is what
      the rest of the tree now uses for them. *)
    LCLType, SysUtils, Classes, uLogDatabase, uLogSchema, uLogBinaryFile,
+   DateUtils,   (* DateTimeToUnix -- the contest row's start_time (Q35) *)
+   sqldb,   (* TSQLQuery -- a reader built by hand to drift on purpose *)
    uLogRepository,
    utils_text,   (* CharBufferBytes -- the mapper's own read of ceOperator *)
-   uLogNote;   (* NoteText / SetNoteText -- a note's text *)
+   uLogNote,   (* NoteText / SetNoteText -- a note's text *)
+   uQsoMyFacts,   (* TQsoMyFacts -- the 16th write path, UpdateQSOMyFacts *)
+   md5;   (* MD5File -- "the log is byte for byte as it was" *)
 
 function TLogRepositoryTests.TempLogName(const aLeaf: string): string;
 begin
@@ -143,7 +168,7 @@ begin
      row. That is exactly why it needs checking: nothing else would notice a
      QSO coming back as DUMMYCONTEST, and PostUnit branches on
      `rec.ceContest = POTA` while exporting. *)
-   SameInt('ceContest', Ord(a.ceContest), Ord(b.ceContest));
+   SameInt('ceContest', a.ceContest.ToByte, b.ceContest.ToByte);
 
    (* when and what *)
    SameInt('tSysTime', integer(QSOTimeToUnixUTC(a.tSysTime)),
@@ -1171,12 +1196,1855 @@ begin
    Scrub(fn);
 end;
 
+(* ===========================================================================
+  THE READERS READ BY POSITION NOW -- 2026-10-14. These three pin what makes
+  that safe.
+
+  ReadRecord takes column c from Fields[Ord(c)] instead of looking it up by
+  name, because the name lookup was most of the cost of every read. A position
+  is only right while the SELECT matches QSO_COLUMNS, so the repository checks
+  that BY NAME each time a reader opens, and refuses on a mismatch. *)
+
+(* The ordinal table and QSO_COLUMNS are the same list. If this fails, the
+  enum in uLogRepository and the column string have drifted -- and no
+  repository can be created until they agree. *)
+procedure TLogRepositoryTests.TestTheColumnTableAgreesWithQSO_COLUMNS;
+begin
+   BeginTest('the column table ReadRecord reads by agrees with QSO_COLUMNS');
+   CheckEquals('', string(QsoColumnTableProblem),
+               'TQsoColumn and QSO_COLUMNS name the same columns in order');
+end;
+
+(* THE GUARD FIRES. A reader whose SELECT is QSO_COLUMNS passes; one with two
+  columns swapped, one column short or one column extra RAISES -- and says
+  which position, so the message points at the drift rather than at a wrong
+  value three screens later. *)
+procedure TLogRepositoryTests.TestAReaderWhoseColumnsDriftedFailsLoudly;
+var
+   db: TLogDatabase;
+   fn: string;
+   list: AnsiString;
+   swapped: AnsiString;
+   short: AnsiString;
+
+   (* '' when VerifyQsoColumns accepts the SELECT, else what it raised. *)
+   function Verdict(const aColumns: AnsiString): string;
+   var
+      q: TSQLQuery;
+   begin
+      Result := '';
+      q := TSQLQuery.Create(nil);
+      try
+         q.DataBase := db.Connection;
+         q.SQL.Text := 'SELECT ' + aColumns + ' FROM qso';
+         q.Open;
+         try
+            try
+               VerifyQsoColumns(q);
+            except
+               on e: ELogRepositoryError do
+                  begin
+                  Result := e.Message;
+                  if Result = '' then
+                     begin
+                     Result := '(raised with no message)';
+                     end;
+                  end;
+            end;
+         finally
+            q.Close;
+         end;
+      finally
+         q.Free;
+      end;
+   end;
+
+begin
+   BeginTest('a qso reader whose columns drifted from QSO_COLUMNS fails loudly');
+   fn := TempLogName('columns.db');
+   Scrub(fn);
+
+   list := QsoColumnList;
+   CheckTrue(Pos(AnsiString('guid, exchange_id, '), list) = 1,
+             'the swap below assumes QSO_COLUMNS starts guid, exchange_id');
+   swapped := StringReplace(list, 'guid, exchange_id, ', 'exchange_id, guid, ', []);
+   short := Copy(list, 1, LastDelimiter(',', list) - 1);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+
+      CheckEquals('', Verdict(list), 'QSO_COLUMNS itself is accepted');
+
+      CheckTrue(Pos('column 0', Verdict(swapped)) > 0,
+                'two columns swapped is refused, naming position 0: ' +
+                Verdict(swapped));
+      CheckTrue(Verdict(short) <> '',
+                'one column short is refused');
+      CheckTrue(Verdict(list + ', id') <> '',
+                'one column extra is refused');
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* A QSO WITH A DIFFERENT VALUE IN AS MANY COLUMNS AS THE RECORD ALLOWS -- so a
+  column read from the wrong position shows up as a wrong field, not as two
+  zeros that happen to agree. The flags alternate with the seed for the same
+  reason: corpus data is almost all False, and two False flags swapped look
+  correct. *)
+procedure TLogRepositoryTests.MakeDistinctQSO(out aQso: ContestExchange;
+                                              aSeed: integer);
+begin
+   (* ContestExchange holds ShortStrings and scalars only, so clearing it
+     whole is safe; the reader does the same. *)
+   FillChar(aQso, SizeOf(aQso), 0);
+   aQso.ceRecordKind := rkQSO;
+   aQso.ceContest := NoContest;
+   aQso.id := 'exchange' + IntToStr(aSeed);
+   aQso.ceQSOID1 := 1000 + aSeed;
+   aQso.ceQSOID2 := 2000 + aSeed;
+   aQso.ceComputerID := 'B';
+   aQso.ceOperatorID := 7 + aSeed;
+
+   aQso.tSysTime.qtYear := 26;
+   aQso.tSysTime.qtMonth := 6;
+   aQso.tSysTime.qtDay := 1 + aSeed;
+   aQso.tSysTime.qtHour := 12;
+   aQso.tSysTime.qtMinute := 30 + aSeed;
+   aQso.tSysTime.qtSecond := 15 + aSeed;
+   aQso.Callsign := 'K' + IntToStr(aSeed) + 'ABC';
+   aQso.QTH.StandardCall := 'K' + IntToStr(aSeed) + 'ABC';
+   aQso.Frequency := 14025000 + aSeed;
+   aQso.Band := Band20;
+   aQso.Mode := CW;
+   aQso.ExtMode := eCW;
+   aQso.ExchString := '599 0' + IntToStr(aSeed);
+
+   aQso.RSTSent := 599;
+   aQso.RSTReceived := 579;
+   aQso.NumberSent := 11 + aSeed;
+   aQso.NumberReceived := 22 + aSeed;
+   aQso.Zone := 5;
+   aQso.Name := 'TOM';
+   aQso.Age := 42;
+   aQso.Check := 72;
+   aQso.Precedence := 'A';
+   aQso.ceClass := '2A';
+   aQso.Power := '100';
+   aQso.Chapter := '12';
+   aQso.Prefecture := 13;
+   aQso.TenTenNum := 1234;
+   aQso.QTHString := 'FN42';
+   aQso.RandomCharsReceived := 'XYZ';
+   aQso.RandomCharsSent := 'ABC';
+   aQso.Kids := 'KID';
+   aQso.DomesticQTH := 'FL';
+
+   aQso.QTH.Prefix := 'K';
+   aQso.QTH.CountryID := 'K';
+   aQso.QTH.Country := 291;
+   aQso.QTH.Zone := 4;
+   aQso.QTH.Continent := NorthAmerica;
+
+   aQso.Prefix := 'K4';
+   aQso.DXQTH := 'W';
+   aQso.DomMultQTH := 'GA';
+   aQso.DomesticMult := Odd(aSeed);
+   aQso.DXMult := not Odd(aSeed);
+   aQso.PrefixMult := Odd(aSeed);
+   aQso.ZoneMult := not Odd(aSeed);
+   aQso.InhibitMults := Odd(aSeed);
+
+   aQso.QSOPoints := 3 + aSeed;
+   aQso.ceDupe := not Odd(aSeed);
+   aQso.ceSearchAndPounce := Odd(aSeed);
+   aQso.ceXQSO := not Odd(aSeed);
+   aQso.ceWasSendInQTC := Odd(aSeed);
+   aQso.NameSent := not Odd(aSeed);
+   aQso.MP3Record := Odd(aSeed);
+   aQso.ceClearDupeSheet := not Odd(aSeed);
+   aQso.ceClearMultSheet := Odd(aSeed);
+   aQso.ceRadio := RadioTwo;
+   AnsiToCharArray(aQso.ceOperator, 'NY4I');
+   aQso.ceQSO_Deleted := not Odd(aSeed);
+   aQso.ceSendToServer := Odd(aSeed);
+   aQso.ceNeedSendToServerAE := not Odd(aSeed);
+end;
+
+(* EVERY READER, THE SAME RECORD. There are four ways to read a qso row --
+  by id, by guid, a range, and the sequential cursor -- and each one opens
+  through the column check. So each must come back field-for-field equal to
+  what was written; a reader that drifted would raise first. *)
+procedure TLogRepositoryTests.TestEveryReaderReturnsTheSameRecord;
+const
+   ROWS = 2;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   written: array[0..ROWS - 1] of ContestExchange;
+   back: ContestExchange;
+   ranged: array[0..ROWS - 1] of ContestExchange;
+   rowIds: array[0..ROWS - 1] of Int64;
+   guids: array[0..ROWS - 1] of AnsiString;
+   fn: string;
+   i: integer;
+begin
+   BeginTest('every qso reader returns the record that was written');
+   fn := TempLogName('readers.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         for i := 0 to ROWS - 1 do
+            begin
+            MakeDistinctQSO(written[i], i);
+            rowIds[i] := repo.SaveQSO(written[i]);
+            guids[i] := repo.LastGuid;
+            end;
+         repo.Commit;
+
+         for i := 0 to ROWS - 1 do
+            begin
+            CheckTrue(repo.LoadQSO(rowIds[i], back), 'LoadQSO reads row ' + IntToStr(i));
+            CompareQSO(written[i], back, 'LoadQSO #' + IntToStr(i));
+
+            CheckTrue(repo.LoadQSOByGuid(guids[i], back),
+                      'LoadQSOByGuid reads row ' + IntToStr(i));
+            CompareQSO(written[i], back, 'LoadQSOByGuid #' + IntToStr(i));
+            end;
+
+         CheckEquals(ROWS, repo.ReadRange(0, ranged), 'ReadRange reads every row');
+         for i := 0 to ROWS - 1 do
+            begin
+            CompareQSO(written[i], ranged[i], 'ReadRange #' + IntToStr(i));
+            end;
+
+         repo.OpenSequentialRead;
+         try
+            for i := 0 to ROWS - 1 do
+               begin
+               CheckTrue(repo.ReadNext(back), 'ReadNext reads row ' + IntToStr(i));
+               CompareQSO(written[i], back, 'ReadNext #' + IntToStr(i));
+               end;
+            CheckFalse(repo.ReadNext(back), 'and then the cursor is at the end');
+         finally
+            repo.CloseSequentialRead;
+         end;
+
+         (* RowIdAtIndex holds ONE prepared statement now, re-opened per call.
+           Asked twice and out of order, it still answers each index. *)
+         CheckEquals(integer(rowIds[1]), integer(repo.RowIdAtIndex(1)), 'index 1');
+         CheckEquals(integer(rowIds[0]), integer(repo.RowIdAtIndex(0)), 'index 0');
+         CheckEquals(integer(rowIds[1]), integer(repo.RowIdAtIndex(1)), 'index 1 again');
+         CheckEquals(0, integer(repo.RowIdAtIndex(ROWS)), 'past the end');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* THE CURSOR'S ROW ID IS THE ROW IT READ. The rescore writes back by that id,
+  so a cursor that paired a record with the wrong id -- or with 0 -- would
+  rewrite the wrong QSO, or none. Three rows, so a constant answer cannot
+  pass; and ReadNext, which now reads through the same routine, still returns
+  the same records without the id. *)
+procedure TLogRepositoryTests.TestTheCursorYieldsEachRowsId;
+const
+   ROWS = 3;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   written: array[0..ROWS - 1] of ContestExchange;
+   rowIds: array[0..ROWS - 1] of Int64;
+   back: ContestExchange;
+   rowId: Int64;
+   fn: string;
+   i: integer;
+begin
+   BeginTest('the sequential cursor yields each record with its own row id');
+   fn := TempLogName('cursorids.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         for i := 0 to ROWS - 1 do
+            begin
+            MakeDistinctQSO(written[i], i);
+            rowIds[i] := repo.SaveQSO(written[i]);
+            end;
+         repo.Commit;
+         CheckTrue((rowIds[0] <> rowIds[1]) and (rowIds[1] <> rowIds[2]),
+                   'three distinct row ids to tell apart');
+
+         repo.OpenSequentialRead;
+         try
+            for i := 0 to ROWS - 1 do
+               begin
+               CheckTrue(repo.ReadNextWithRowId(rowId, back),
+                         'ReadNextWithRowId reads row ' + IntToStr(i));
+               CheckEquals(integer(rowIds[i]), integer(rowId),
+                           'and names the row it read, #' + IntToStr(i));
+               CompareQSO(written[i], back, 'ReadNextWithRowId #' + IntToStr(i));
+               end;
+            CheckFalse(repo.ReadNextWithRowId(rowId, back), 'then the end');
+            CheckEquals(0, integer(rowId), 'with no row id at the end');
+         finally
+            repo.CloseSequentialRead;
+         end;
+
+         repo.OpenSequentialRead;
+         try
+            for i := 0 to ROWS - 1 do
+               begin
+               CheckTrue(repo.ReadNext(back), 'ReadNext reads row ' + IntToStr(i));
+               CompareQSO(written[i], back, 'ReadNext beside the id #' + IntToStr(i));
+               end;
+         finally
+            repo.CloseSequentialRead;
+         end;
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* A READER THAT ALSO SELECTS THE ROW ID takes it AFTER QSO_COLUMNS, and the
+  guard checks that position by name too. Without the trailing id, with
+  another column there, or with the id moved to the front, it refuses. *)
+procedure TLogRepositoryTests.TestARowIdReaderNeedsTheIdLast;
+var
+   db: TLogDatabase;
+   fn: string;
+   list: AnsiString;
+
+   function Verdict(const aColumns: AnsiString): string;
+   var
+      q: TSQLQuery;
+   begin
+      Result := '';
+      q := TSQLQuery.Create(nil);
+      try
+         q.DataBase := db.Connection;
+         q.SQL.Text := 'SELECT ' + aColumns + ' FROM qso';
+         q.Open;
+         try
+            try
+               VerifyQsoColumns(q, True);
+            except
+               on e: ELogRepositoryError do
+                  begin
+                  Result := e.Message;
+                  if Result = '' then
+                     begin
+                     Result := '(raised with no message)';
+                     end;
+                  end;
+            end;
+         finally
+            q.Close;
+         end;
+      finally
+         q.Free;
+      end;
+   end;
+
+begin
+   BeginTest('a reader that selects the row id must have it after QSO_COLUMNS');
+   fn := TempLogName('rowidcolumns.db');
+   Scrub(fn);
+   list := QsoColumnList;
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      CheckEquals('', Verdict(list + ', id'), 'QSO_COLUMNS then id is accepted');
+      CheckTrue(Verdict(list) <> '', 'without the id it is refused');
+      CheckTrue(Pos('row id', Verdict(list + ', guid')) > 0,
+                'another column in its place is refused, naming the row id: ' +
+                Verdict(list + ', guid'));
+      CheckTrue(Verdict('id, ' + list) <> '',
+                'the id in front, which shifts every column, is refused');
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* A BATCH WRITES BY ROW ID AND COMMITS -- durably. Two of three rows are
+  rewritten through WriteBatch, then the database is CLOSED AND REOPENED, so
+  what is checked is what reached the file and not what one connection can
+  see of its own transaction. The third row, not in the batch, is unchanged. *)
+procedure TLogRepositoryTests.TestABatchCommitsByRowId;
+const
+   ROWS = 3;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   updates: TLogRowUpdates;
+   written: array[0..ROWS - 1] of ContestExchange;
+   edited: array[0..ROWS - 1] of ContestExchange;
+   rowIds: array[0..ROWS - 1] of Int64;
+   back: ContestExchange;
+   fn: string;
+   i: integer;
+begin
+   BeginTest('a batch rewrites rows by row id and commits them');
+   fn := TempLogName('batchcommit.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         for i := 0 to ROWS - 1 do
+            begin
+            MakeDistinctQSO(written[i], i);
+            rowIds[i] := repo.SaveQSO(written[i]);
+            edited[i] := written[i];
+            end;
+         repo.Commit;
+
+         (* Rows 0 and 2, LAST FIRST, so a write that went by position in the
+           list rather than by row id would land on the wrong row. *)
+         edited[0].QSOPoints := 77;
+         edited[0].id := 'minted0';
+         edited[2].QSOPoints := 99;
+         edited[2].ceDupe := not written[2].ceDupe;
+
+         updates := TLogRowUpdates.Create;
+         try
+            updates.Add(rowIds[2], edited[2]);
+            updates.Add(rowIds[0], edited[0]);
+            CheckEquals(2, updates.Count, 'two rows collected');
+            CheckEquals(integer(rowIds[2]), integer(updates.RowId(0)),
+                        'held in the order added');
+            repo.WriteBatch(updates);
+         finally
+            updates.Free;
+         end;
+         CheckFalse(repo.InBatch, 'the batch is closed after it commits');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      repo := TLogRepository.Create(db);
+      try
+         CheckTrue(repo.LoadQSO(rowIds[0], back), 'row 0 reads back after reopening');
+         CompareQSO(edited[0], back, 'batched row 0');
+         CheckTrue(repo.LoadQSO(rowIds[1], back), 'row 1 reads back');
+         CompareQSO(written[1], back, 'row 1, not in the batch, unchanged');
+         CheckTrue(repo.LoadQSO(rowIds[2], back), 'row 2 reads back');
+         CompareQSO(edited[2], back, 'batched row 2');
+         CheckEquals(ROWS, integer(repo.RecordCount), 'and no row was added');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* A BATCH THAT FAILS PART-WAY LEAVES NOTHING OF ITSELF.
+
+  The fault is injected the way it would arrive: the second row of the batch
+  does not exist. The first row's UPDATE has already run by then, inside the
+  transaction, so this is the case the rollback exists for. Checked after a
+  reopen, so it is the FILE that is unchanged.
+
+  It also pins the boundary: a write left UNCOMMITTED before the batch began
+  is committed BY BeginBatchUpdate, so it survives the rollback -- the
+  rollback undoes the batch and nothing before it.
+
+  THAT WRITE IS A SESSION VALUE, NOT A QSO, and when this was written it had
+  to be. sqldb starts a transaction only when a statement PREPARES
+  (sqldb.pp:1296), and SaveQSO's FInsert stays prepared, so after a commit it
+  executed in SQLite's autocommit and was durable at once -- measured: a QSO
+  "saved and not committed" here survived a ROLLBACK of the adopted
+  transaction. Section 9c's audit fixed that for every kept write
+  (ExecuteKeptWrite, pinned by TestEveryWriteWaitsForItsCommit); the session
+  value stays, since it was always a fair test of the boundary. *)
+procedure TLogRepositoryTests.TestAFailedBatchRollsBackWhole;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   updates: TLogRowUpdates;
+   first, edited, back: ContestExchange;
+   firstId: Int64;
+   raised: boolean;
+   fn: string;
+begin
+   BeginTest('a batch that fails part-way is rolled back whole');
+   fn := TempLogName('batchrollback.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         MakeDistinctQSO(first, 1);
+         firstId := repo.SaveQSO(first);
+         repo.Commit;
+
+         (* Written and deliberately NOT committed. *)
+         repo.SaveSessionValue('pinBeforeBatch', 'kept');
+         CheckTrue(db.Transaction.Active,
+                   'the session write is waiting in an open transaction');
+
+         edited := first;
+         edited.QSOPoints := 55;
+         edited.Callsign := 'CHANGED';
+
+         updates := TLogRowUpdates.Create;
+         try
+            updates.Add(firstId, edited);
+            updates.Add(firstId + 1000, edited);
+            raised := False;
+            try
+               repo.WriteBatch(updates);
+            except
+               on e: ELogRepositoryError do
+                  begin
+                  raised := True;
+                  CheckTrue(Pos('no qso row', e.Message) > 0,
+                            'it names the missing row: ' + e.Message);
+                  end;
+            end;
+            CheckTrue(raised, 'a batch naming a missing row raises');
+         finally
+            updates.Free;
+         end;
+         CheckFalse(repo.InBatch, 'and the batch is closed by the rollback');
+
+         CheckTrue(repo.LoadQSO(firstId, back), 'the first row still reads');
+         CompareQSO(first, back, 'the first row, as seen by the same connection');
+
+         (* AND THE NEXT BATCH WORKS: a failed one does not wedge the
+           repository. *)
+         updates := TLogRowUpdates.Create;
+         try
+            edited.Callsign := 'LATER';
+            updates.Add(firstId, edited);
+            repo.WriteBatch(updates);
+         finally
+            updates.Free;
+         end;
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      repo := TLogRepository.Create(db);
+      try
+         CheckEquals('kept', string(repo.SessionValue('pinBeforeBatch', 'lost')),
+                     'the write made before the batch survived its rollback');
+         CheckTrue(repo.LoadQSO(firstId, back), 'the first row reads after reopening');
+         CheckEquals('LATER', string(back.Callsign),
+                     'carrying the later batch and not the failed one');
+         CheckEquals(55, integer(back.QSOPoints),
+                     'whose points the later batch also wrote');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* THE THREE MISUSES THAT WOULD BREAK A BATCH ARE REFUSED, LOUDLY:
+  beginning while the sequential cursor is open (the commit would close it
+  under its reader), beginning a second batch inside the first, and writing
+  a batch row with no batch open. *)
+procedure TLogRepositoryTests.TestABatchRefusesWhatWouldBreakIt;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   qso: ContestExchange;
+   rowId: Int64;
+   fn: string;
+
+   function Raises(aStep: integer): boolean;
+   begin
+      Result := False;
+      try
+         case aStep of
+            0:
+               begin
+               repo.BeginBatchUpdate;
+               end;
+            1:
+               begin
+               repo.UpdateQSOByRowId(rowId, qso);
+               end;
+         end;
+      except
+         on ELogRepositoryError do
+            begin
+            Result := True;
+            end;
+      end;
+   end;
+
+begin
+   BeginTest('a batch refuses to begin over a cursor, to nest, or to run unopened');
+   fn := TempLogName('batchmisuse.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         MakeDistinctQSO(qso, 0);
+         rowId := repo.SaveQSO(qso);
+         repo.Commit;
+
+         CheckTrue(Raises(1), 'a batch row with no batch open is refused');
+
+         repo.OpenSequentialRead;
+         try
+            CheckTrue(Raises(0), 'beginning while the cursor is open is refused');
+            CheckFalse(repo.InBatch, 'and no batch was begun');
+            CheckTrue(repo.ReadNext(qso), 'and the cursor still reads');
+         finally
+            repo.CloseSequentialRead;
+         end;
+
+         repo.BeginBatchUpdate;
+         try
+            CheckTrue(Raises(0), 'a second batch inside the first is refused');
+            CheckTrue(repo.InBatch, 'and the first is still open');
+         finally
+            repo.RollbackBatch;
+         end;
+         CheckFalse(repo.InBatch, 'until it is rolled back');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* WHAT THE FILE HOLDS, AS ONE STRING -- every table a write path touches:
+  the QSOs (callsign and points, in id order), the contest row, the config
+  rows, the session rows and the messages.
+
+  Read through the connection handed in, which sees its own uncommitted
+  writes. That is how a test proves a write HAPPENED before it proves the
+  write did not survive -- a pin that cannot tell "rolled back" from "never
+  written" proves nothing. *)
+function DatabaseFingerprint(aDatabase: TLogDatabase): string;
+var
+   q: TSQLQuery;
+   i: integer;
+begin
+   Result := '';
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := aDatabase.Connection;
+      q.UsePrimaryKeyAsKey := False;
+      q.SQL.Text :=
+         'SELECT (SELECT COUNT(*) FROM qso), ' +
+         '(SELECT group_concat(c, '','') FROM (SELECT callsign || '':'' || ' +
+         'IFNULL(qso_points, '''') || '':'' || IFNULL(exchange_sent, '''') ' +
+         '|| '':'' || IFNULL(my_grid, '''') || '':'' || IFNULL(my_source, '''') ' +
+         'AS c FROM qso ORDER BY id)), ' +
+         '(SELECT contest_type || '':'' || my_call FROM contest WHERE id = 1), ' +
+         '(SELECT group_concat(c, '','') FROM (SELECT command || ''='' || ' +
+         'value AS c FROM config ORDER BY command)), ' +
+         '(SELECT group_concat(c, '','') FROM (SELECT key || ''='' || value ' +
+         'AS c FROM session_state ORDER BY key)), ' +
+         '(SELECT group_concat(text, '','') FROM (SELECT text FROM message ' +
+         'ORDER BY kind, mode, key_id))';
+      q.Open;
+      for i := 0 to q.FieldCount - 1 do
+         begin
+         Result := Result + '|' + q.Fields[i].AsString;
+         end;
+      q.Close;
+   finally
+      q.Free;
+   end;
+end;
+
+(* EVERY WRITE THE REPOSITORY OFFERS WAITS FOR ITS CALLER'S COMMIT.
+
+  The contract is stated on SaveQSO -- "Does NOT commit; the caller decides
+  the batch" -- and every caller is written to it: a write, then Commit, and
+  on failure no Commit, so the close rolls the write back. For that to be
+  true the write has to be INSIDE a transaction when it runs.
+
+  sqldb begins one only when a statement PREPARES (sqldb.pp:1296). The
+  statements made per call (config, session, messages, the contest row)
+  prepare every time, so they always begin one. FInsert and FUpdate are
+  prepared ONCE and kept, so after any Commit they ran in SQLite's
+  AUTOCOMMIT: each one durable the moment it executed, whatever the caller
+  then did. Measured 2026-10-14 by this test before the fix: SaveQSO,
+  UpdateQSO, ImportQSOByGuid with no guid, and both sequences below survived
+  a close with no commit.
+
+  EACH STEP: a seeded log is committed, so no transaction is open; one write
+  path runs; the fingerprint proves it changed something; the repository
+  and database are freed WITHOUT a commit -- Close rolls back what is open,
+  which is what SQLite does at the next open with a transaction a crash left
+  in the -wal -- and the reopened file must match the seed exactly. *)
+procedure TLogRepositoryTests.TestEveryWriteWaitsForItsCommit;
+const
+   STEPS = 16;
+   NAMES: array[0..STEPS - 1] of string = (
+      'SaveQSO',
+      'UpdateQSO',
+      'ImportQSOByGuid with no guid',
+      'ImportQSOByGuid with a new guid',
+      'ImportQSOByGuid with an existing guid',
+      'UpdateQSOBySessionIds',
+      'SetContest',
+      'SetEntryDeclaration',
+      'SaveConfigValue',
+      'DeleteConfigValue',
+      'SaveSessionValue',
+      'SaveMessage',
+      'DeleteAllQSOs',
+      'two SaveQSOs in a row',
+      'UpdateQSO and then SaveConfigValue',
+      'UpdateQSOMyFacts');
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   seed, other, changed: ContestExchange;
+   seedId: Int64;
+   seedGuid: AnsiString;
+   seedPrint, written: string;
+   decl: TLogEntryDeclaration;
+   facts: TQsoMyFacts;
+   wasNew: boolean;
+   fn: string;
+   step: integer;
+begin
+   BeginTest('every repository write waits for its caller''s commit');
+   for step := 0 to STEPS - 1 do
+      begin
+      fn := TempLogName('waits' + IntToStr(step) + '.db');
+      Scrub(fn);
+
+      db := TLogDatabase.Create;
+      try
+         db.CreateNew(fn);
+         repo := TLogRepository.Create(db);
+         try
+            MakeDistinctQSO(seed, 0);
+            seedId := repo.SaveQSO(seed);
+            seedGuid := repo.LastGuid;
+            repo.SetContest(ContestHandleOf(CQWWCW));
+            repo.SaveConfigValue('SEED COMMAND', 'seed', 'contest');
+            repo.SaveSessionValue('seed', 'seed');
+            repo.SaveMessage('CQ', 'CW', 'F1', 'seed', '');
+            repo.Commit;
+            seedPrint := DatabaseFingerprint(db);
+
+            (* The fingerprint's own read began a transaction. Ended, so the
+              write below starts exactly where a caller's Commit leaves it. *)
+            repo.Commit;
+            CheckFalse(db.Transaction.Active,
+                       NAMES[step] + ': no transaction is open before the write');
+
+            MakeDistinctQSO(other, 1);
+            changed := seed;
+            changed.Callsign := 'CHANGED';
+            changed.QSOPoints := 42;
+
+            case step of
+               0:
+                  begin
+                  repo.SaveQSO(other);
+                  end;
+               1:
+                  begin
+                  repo.UpdateQSO(seedId, changed);
+                  end;
+               2:
+                  begin
+                  repo.ImportQSOByGuid('', other, wasNew);
+                  end;
+               3:
+                  begin
+                  repo.ImportQSOByGuid('018f3a2b7c1d7abc8def0000000000aa', other,
+                                       wasNew);
+                  end;
+               4:
+                  begin
+                  repo.ImportQSOByGuid(seedGuid, changed, wasNew);
+                  end;
+               5:
+                  begin
+                  repo.UpdateQSOBySessionIds(seed.ceQSOID1, seed.ceQSOID2,
+                                             changed);
+                  end;
+               6:
+                  begin
+                  repo.SetContest(ContestHandleOf(CQWWSSB));
+                  end;
+               7:
+                  begin
+                  decl.MyCall := 'CHANGED';
+                  repo.SetEntryDeclaration(decl);
+                  end;
+               8:
+                  begin
+                  repo.SaveConfigValue('SEED COMMAND', 'changed', 'contest');
+                  end;
+               9:
+                  begin
+                  repo.DeleteConfigValue('SEED COMMAND');
+                  end;
+               10:
+                  begin
+                  repo.SaveSessionValue('seed', 'changed');
+                  end;
+               11:
+                  begin
+                  repo.SaveMessage('CQ', 'CW', 'F1', 'changed', '');
+                  end;
+               12:
+                  begin
+                  repo.DeleteAllQSOs;
+                  end;
+               13:
+                  begin
+                  repo.SaveQSO(other);
+                  MakeDistinctQSO(other, 2);
+                  repo.SaveQSO(other);
+                  end;
+               14:
+                  begin
+                  repo.UpdateQSO(seedId, changed);
+                  repo.SaveConfigValue('SEED COMMAND', 'changed', 'contest');
+                  end;
+               15:
+                  begin
+                  facts := NotCapturedMyFacts;
+                  facts.Source := mfsEdited;
+                  facts.Grid := 'FN31PR';
+                  repo.UpdateQSOMyFacts(seedId, facts);
+                  end;
+            end;
+
+            written := DatabaseFingerprint(db);
+            CheckTrue(written <> seedPrint,
+                      NAMES[step] + ': the write happened, as this connection sees it');
+            (* NO COMMIT. *)
+         finally
+            repo.Free;
+         end;
+      finally
+         db.Free;
+      end;
+
+      db := TLogDatabase.Create;
+      try
+         db.Open(fn);
+         CheckEquals(seedPrint, DatabaseFingerprint(db),
+                     NAMES[step] + ': nothing of it survives a close with no commit');
+      finally
+         db.Free;
+      end;
+      Scrub(fn);
+      end;
+end;
+
+(* A NEW LOG'S FIRST TRANSACTION IS OPEN FROM THE MOMENT ITS REPOSITORY
+  EXISTS -- the shape ImportBinaryLog relies on for "one transaction for the
+  whole import": CreateNew, a repository, SetContest from the first record,
+  every record saved grouped, and ONE Commit at the end.
+
+  So a migration that dies before that Commit leaves no QSO and no contest
+  row. It does still leave the FILE, which CreateNew made and committed --
+  and since 2026-10-14 that file is the import's STAGED name, renamed to the
+  log only after the Commit and the close (docs/SQLITE_LOG_SCHEMA_PLAN.md
+  section 9c; pinned in uTestLogImport). *)
+procedure TLogRepositoryTests.TestAFreshRepositoryHoldsItsWritesUntilCommit;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   qso: ContestExchange;
+   fn: string;
+   i: integer;
+begin
+   BeginTest('a new log holds an import''s writes until the one commit');
+   fn := TempLogName('importshape.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         repo.SetContest(ContestHandleOf(CQWWCW));
+         for i := 0 to 2 do
+            begin
+            MakeDistinctQSO(qso, i);
+            repo.SaveQSOGroupingByExchangeId(qso);
+            end;
+         CheckEquals(3, integer(repo.RecordCount),
+                     'three rows, as the importing connection sees them');
+         (* NO COMMIT: the import died here. *)
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      repo := TLogRepository.Create(db);
+      try
+         CheckEquals(0, integer(repo.RecordCount), 'no QSO survives');
+         CheckTrue(repo.LogContest = NoContest, 'and no contest row');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* SQLITE CAN END A TRANSACTION BY ITSELF, AND A BATCH MUST SURVIVE IT.
+
+  On SQLITE_FULL, SQLITE_IOERR, SQLITE_NOMEM or SQLITE_BUSY "the transaction
+  may or may not be rolled back automatically" (sqlite.org/lang_transaction).
+  When it is, sqldb does not know: it still holds its transaction Active, and
+  the ROLLBACK RollbackBatch then issues fails with "no transaction is
+  active".
+
+  The fault is injected with a trigger whose RAISE(ROLLBACK) does exactly
+  that to the second row of a batch, after the first row's UPDATE ran. The
+  log must be unchanged after a reopen, the repository must not be left
+  believing a batch is open, and the next batch must commit durably. *)
+procedure TLogRepositoryTests.TestABatchSQLiteRollsBackItselfLeavesTheRepositoryUsable;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   updates: TLogRowUpdates;
+   a, b, edited, back: ContestExchange;
+   idA, idB: Int64;
+   raised: boolean;
+   fn: string;
+begin
+   BeginTest('a batch SQLite rolls back by itself leaves the log and repository whole');
+   fn := TempLogName('autorollback.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         MakeDistinctQSO(a, 1);
+         MakeDistinctQSO(b, 2);
+         idA := repo.SaveQSO(a);
+         idB := repo.SaveQSO(b);
+         db.Connection.ExecuteDirect(
+            'CREATE TRIGGER inject_rollback AFTER UPDATE ON qso ' +
+            'WHEN NEW.callsign = ''BOOM'' ' +
+            'BEGIN SELECT RAISE(ROLLBACK, ''injected failure''); END');
+         repo.Commit;
+
+         (* A NEW REPOSITORY, so its statements are prepared against the
+           schema WITH the trigger. The one prepared before it answers
+           "database schema has changed", which is a different failure. *)
+         repo.Free;
+         repo := TLogRepository.Create(db);
+
+         updates := TLogRowUpdates.Create;
+         try
+            edited := a;
+            edited.Callsign := 'CHANGED';
+            updates.Add(idA, edited);
+            edited := b;
+            edited.Callsign := 'BOOM';
+            updates.Add(idB, edited);
+            raised := False;
+            try
+               repo.WriteBatch(updates);
+            except
+               on e: Exception do
+                  begin
+                  raised := True;
+                  CheckTrue(Pos('injected failure', e.Message) > 0,
+                            'the failure reported is the one that happened: ' +
+                            e.Message);
+                  end;
+            end;
+            CheckTrue(raised, 'the batch raises');
+         finally
+            updates.Free;
+         end;
+         CheckFalse(repo.InBatch, 'and the repository is not left inside a batch');
+         CheckFalse(db.Transaction.Active,
+                    'nor is sqldb left holding a transaction SQLite has ended');
+
+         updates := TLogRowUpdates.Create;
+         try
+            edited := a;
+            edited.Callsign := 'LATER';
+            updates.Add(idA, edited);
+            raised := False;
+            try
+               repo.WriteBatch(updates);
+            except
+               on e: Exception do
+                  begin
+                  raised := True;
+                  CheckTrue(False, 'the next batch raised: ' + e.Message);
+                  end;
+            end;
+            CheckFalse(raised, 'the next batch commits');
+         finally
+            updates.Free;
+         end;
+      finally
+         repo.Free;
+      end;
+   finally
+      (* Close rolls back what is open; with sqldb out of step that ROLLBACK
+        raises too, and must not take the suite down with it. *)
+      try
+         db.Free;
+      except
+         on e: Exception do
+            begin
+            CheckTrue(False, 'closing the log raised: ' + e.Message);
+            end;
+      end;
+   end;
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      repo := TLogRepository.Create(db);
+      try
+         CheckTrue(repo.LoadQSO(idA, back), 'row A reads after reopening');
+         CheckEquals('LATER', string(back.Callsign),
+                     'carrying the later batch, durably');
+         CheckTrue(repo.LoadQSO(idB, back), 'row B reads after reopening');
+         CheckEquals(string(b.Callsign), string(back.Callsign),
+                     'and row B is as it was');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* AND OUTSIDE A BATCH, THE CLOSE MUST STILL WORK. This is the QSO append's
+  shape: one SaveQSO that SQLite answers by rolling the transaction back
+  itself, then the store disabling -- which frees the database. That close
+  rolled back through sqldb, whose ROLLBACK failed with "no transaction is
+  active" and raised out of the handler meant to report the first failure. *)
+procedure TLogRepositoryTests.TestALogSQLiteRolledBackClosesCleanly;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   a, b: ContestExchange;
+   raised: boolean;
+   fn: string;
+begin
+   BeginTest('a log whose transaction SQLite rolled back still closes cleanly');
+   fn := TempLogName('autorollbackclose.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         MakeDistinctQSO(a, 1);
+         repo.SaveQSO(a);
+         db.Connection.ExecuteDirect(
+            'CREATE TRIGGER inject_rollback AFTER INSERT ON qso ' +
+            'WHEN NEW.callsign = ''BOOM'' ' +
+            'BEGIN SELECT RAISE(ROLLBACK, ''injected failure''); END');
+         repo.Commit;
+         (* Prepared again, against the schema with the trigger. *)
+         repo.Free;
+         repo := TLogRepository.Create(db);
+
+         MakeDistinctQSO(b, 2);
+         b.Callsign := 'BOOM';
+         raised := False;
+         try
+            repo.SaveQSO(b);
+         except
+            on e: Exception do
+               begin
+               raised := True;
+               CheckTrue(Pos('injected failure', e.Message) > 0,
+                         'the append reports what happened: ' + e.Message);
+               end;
+         end;
+         CheckTrue(raised, 'the append raises');
+      finally
+         repo.Free;
+      end;
+   finally
+      raised := False;
+      try
+         db.Free;
+      except
+         on e: Exception do
+            begin
+            raised := True;
+            CheckTrue(False, 'closing the log raised: ' + e.Message);
+            end;
+      end;
+      CheckFalse(raised, 'the log closes without raising');
+   end;
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      repo := TLogRepository.Create(db);
+      try
+         CheckEquals(1, integer(repo.RecordCount),
+                     'the committed QSO is there and the failed one is not');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* The live append's sent exchange, as a test can state it: AppendBatch takes
+  a plain function, and uLogStore passes BuildSentExchangeText's. *)
+function SentExchangeForTest(const aQso: ContestExchange): AnsiString;
+begin
+   Result := AnsiString('599 ') + AnsiString(aQso.Callsign);
+end;
+
+(* AN APPEND BATCH IS ONE COMMIT, AND THAT COMMIT IS DURABLE.
+
+  The ADIF import's write (NY4I, 2026-10-14: all or nothing). Every row is
+  in when AppendBatch returns, no transaction is left open behind it, and the
+  rows survive a close with no further commit -- which is what a crash right
+  after the import leaves. TestAFailedAppendBatchLeavesTheLogAsItWas is the
+  other half: a failure at the third row leaves NONE of the first two, which
+  is only true if nothing committed before the end. *)
+procedure TLogRepositoryTests.TestAnAppendBatchLandsInOneCommit;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   appends: TLogQsoAppends;
+   seed, qso: ContestExchange;
+   failedAt: integer;
+   fn: string;
+   i: integer;
+begin
+   BeginTest('an append batch lands every row in one durable commit');
+   fn := TempLogName('appendbatch.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         MakeDistinctQSO(seed, 0);
+         repo.SaveQSO(seed);
+         repo.Commit;
+
+         appends := TLogQsoAppends.Create;
+         try
+            for i := 1 to 5 do
+               begin
+               MakeDistinctQSO(qso, i);
+               appends.Add(qso);
+               end;
+            repo.AppendBatch(appends, failedAt);
+         finally
+            appends.Free;
+         end;
+         CheckEquals(-1, failedAt, 'no row failed');
+         CheckFalse(repo.InBatch, 'the batch is closed');
+         CheckFalse(db.Transaction.Active,
+                    'and committed: no transaction is left open behind it');
+         CheckEquals(6, integer(repo.RecordCount), 'the seed and five appended rows');
+         (* NO COMMIT: a crash right after the import. *)
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      repo := TLogRepository.Create(db);
+      try
+         CheckEquals(6, integer(repo.RecordCount),
+                     'all five survive the close: the batch''s commit was its own');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* A FAILURE PART WAY THROUGH AN APPEND BATCH LEAVES THE LOG EXACTLY AS IT WAS.
+
+  Three ways to fail at the third of four rows, each a different path through
+  the rollback:
+
+    a QSO with no callsign   the realistic one -- an ADIF record with no CALL.
+                             callsign is NOT NULL, so SQLite refuses the row
+                             and sqldb's own ROLLBACK ends the batch.
+    RAISE(FAIL)              the statement fails; the transaction is ours to
+                             end.
+    RAISE(ROLLBACK)          SQLite ends the transaction BY ITSELF, as it may on
+                             FULL, IOERR, NOMEM or BUSY, and sqldb is not told
+                             -- TLogDatabase.Rollback has to resync the two.
+
+  Each is held to the audit's recipe (section 9c): a committed seed; the
+  batch fails; the same connection proves the two rows before the failure
+  were WRITTEN and then rolled back (its fingerprint, which sees its own
+  uncommitted rows, is the seed's again); close with no commit; and the FILE
+  is byte for byte what it was before the batch began. *)
+procedure TLogRepositoryTests.TestAFailedAppendBatchLeavesTheLogAsItWas;
+const
+   VARIANTS = 3;
+   NAMES: array[0..VARIANTS - 1] of string = (
+      'a QSO with no callsign',
+      'a RAISE(FAIL) trigger',
+      'a RAISE(ROLLBACK) trigger');
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   appends: TLogQsoAppends;
+   seed, qso: ContestExchange;
+   failedAt: integer;
+   seedPrint, beforeHash, reason: string;
+   raised: boolean;
+   fn: string;
+   v, i: integer;
+begin
+   BeginTest('a failed append batch leaves the log exactly as it was');
+   for v := 0 to VARIANTS - 1 do
+      begin
+      fn := TempLogName('appendfail' + IntToStr(v) + '.db');
+      Scrub(fn);
+
+      db := TLogDatabase.Create;
+      try
+         db.CreateNew(fn);
+         repo := TLogRepository.Create(db);
+         try
+            MakeDistinctQSO(seed, 0);
+            repo.SaveQSO(seed);
+            repo.SaveConfigValue('SEED COMMAND', 'seed', 'contest');
+            if v = 1 then
+               begin
+               db.Connection.ExecuteDirect(
+                  'CREATE TRIGGER inject_fail AFTER INSERT ON qso ' +
+                  'WHEN NEW.callsign = ''BOOM'' ' +
+                  'BEGIN SELECT RAISE(FAIL, ''injected failure''); END');
+               end;
+            if v = 2 then
+               begin
+               db.Connection.ExecuteDirect(
+                  'CREATE TRIGGER inject_rollback AFTER INSERT ON qso ' +
+                  'WHEN NEW.callsign = ''BOOM'' ' +
+                  'BEGIN SELECT RAISE(ROLLBACK, ''injected failure''); END');
+               end;
+            repo.Commit;
+         finally
+            repo.Free;
+         end;
+      finally
+         db.Free;
+      end;
+      (* After a clean close: the -wal is checkpointed into the file and gone,
+        so the file is the whole log. *)
+      beforeHash := MD5Print(MD5File(fn));
+
+      db := TLogDatabase.Create;
+      try
+         db.Open(fn);
+         (* A NEW REPOSITORY, prepared against the schema with the trigger. *)
+         repo := TLogRepository.Create(db);
+         try
+            seedPrint := DatabaseFingerprint(db);
+            repo.Commit;
+
+            appends := TLogQsoAppends.Create;
+            try
+               for i := 1 to 4 do
+                  begin
+                  MakeDistinctQSO(qso, i);
+                  if i = 3 then
+                     begin
+                     if v = 0 then
+                        begin
+                        qso.Callsign := '';
+                        end
+                     else
+                        begin
+                        qso.Callsign := 'BOOM';
+                        end;
+                     end;
+                  appends.Add(qso);
+                  end;
+
+               raised := False;
+               reason := '';
+               try
+                  repo.AppendBatch(appends, failedAt);
+               except
+                  on e: Exception do
+                     begin
+                     raised := True;
+                     reason := e.Message;
+                     end;
+               end;
+            finally
+               appends.Free;
+            end;
+
+            CheckTrue(raised, NAMES[v] + ': the batch raises');
+            CheckEquals(2, failedAt, NAMES[v] + ': and names the third row (index 2)');
+            if v = 0 then
+               begin
+               CheckTrue(Pos('NOT NULL', UpperCase(reason)) > 0,
+                         NAMES[v] + ': the reason is SQLite''s own: ' + reason);
+               end
+            else
+               begin
+               CheckTrue(Pos('injected failure', reason) > 0,
+                         NAMES[v] + ': the reason is the one that happened: ' + reason);
+               end;
+            CheckFalse(repo.InBatch, NAMES[v] + ': the repository is not left in a batch');
+            CheckFalse(db.Transaction.Active,
+                       NAMES[v] + ': nor holding a transaction');
+            CheckEquals(seedPrint, DatabaseFingerprint(db),
+                        NAMES[v] + ': the two rows before the failure are gone, ' +
+                        'as this connection sees it');
+            repo.Commit;
+            (* NO COMMIT OF ANYTHING ELSE: the fingerprint's read is all that
+              just ended. *)
+         finally
+            repo.Free;
+         end;
+      finally
+         db.Free;
+      end;
+
+      CheckEquals(beforeHash, MD5Print(MD5File(fn)),
+                  NAMES[v] + ': the FILE is byte for byte what it was before the batch');
+
+      db := TLogDatabase.Create;
+      try
+         db.Open(fn);
+         CheckEquals(seedPrint, DatabaseFingerprint(db),
+                     NAMES[v] + ': and reopened, it holds the seed and nothing else');
+      finally
+         db.Free;
+      end;
+      Scrub(fn);
+      end;
+end;
+
+(* EACH ROW IS WRITTEN AS THE LIVE APPEND WRITES ONE -- the contest stamped
+  from the record, the sent exchange from the caller, and county-line
+  grouping that sees the batch's own uncommitted rows. *)
+procedure TLogRepositoryTests.TestAnAppendBatchWritesRowsAsTheLiveAppendDoes;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   appends: TLogQsoAppends;
+   a, b, c: ContestExchange;
+   failedAt: integer;
+   related: TInt64Array;
+   q: TSQLQuery;
+   sent: string;
+   fn: string;
+begin
+   BeginTest('an append batch writes each row as the live append does');
+   fn := TempLogName('appendshape.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         MakeDistinctQSO(a, 1);
+         MakeDistinctQSO(b, 2);
+         MakeDistinctQSO(c, 3);
+         a.ceContest := ContestHandleOf(CQWWCW);
+         b.ceContest := ContestHandleOf(CQWWCW);
+         c.ceContest := ContestHandleOf(CQWWCW);
+         (* A county line: one exchange, two QSOs. *)
+         a.id := 'countyline';
+         b.id := 'countyline';
+
+         appends := TLogQsoAppends.Create;
+         try
+            (* THE SENT EXCHANGE IS THE ROW'S OWN, handed in with it (stage 2:
+              the callback that rebuilt it from the live station is gone). *)
+            appends.Add(a, NotCapturedMyFacts, SentExchangeForTest(a));
+            appends.Add(b, NotCapturedMyFacts, SentExchangeForTest(b));
+            appends.Add(c, NotCapturedMyFacts, SentExchangeForTest(c));
+            repo.AppendBatch(appends, failedAt);
+         finally
+            appends.Free;
+         end;
+
+         CheckTrue(repo.LogContest = ContestHandleOf(CQWWCW), 'the log is stamped with the records'' contest');
+
+         related := repo.RelatedRowIds(1);
+         CheckEquals(1, integer(Length(related)), 'the first row has one relative');
+         if Length(related) = 1 then
+            begin
+            CheckEquals(2, integer(related[0]),
+                        'the second -- grouped inside the batch, before any commit');
+            end;
+         CheckEquals(0, integer(Length(repo.RelatedRowIds(3))),
+                     'and the third stands alone');
+
+         sent := '';
+         q := TSQLQuery.Create(nil);
+         try
+            q.DataBase := db.Connection;
+            q.UsePrimaryKeyAsKey := False;
+            q.SQL.Text := 'SELECT group_concat(exchange_sent, ''|'') FROM ' +
+                          '(SELECT exchange_sent FROM qso ORDER BY id)';
+            q.Open;
+            sent := q.Fields[0].AsString;
+            q.Close;
+         finally
+            q.Free;
+         end;
+         CheckEquals('599 ' + string(a.Callsign) + '|599 ' + string(b.Callsign) +
+                     '|599 ' + string(c.Callsign), sent,
+                     'each row carries the sent exchange the caller supplied');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* exchange_sent of one row, '' for NULL, through the connection handed in. *)
+function SentExchangeOfRow(aDatabase: TLogDatabase; aRowId: Int64): string;
+var
+   q: TSQLQuery;
+begin
+   Result := '';
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := aDatabase.Connection;
+      q.UsePrimaryKeyAsKey := False;
+      q.SQL.Text := 'SELECT IFNULL(exchange_sent, '''') FROM qso WHERE id = :id';
+      q.ParamByName('id').AsLargeInt := aRowId;
+      q.Open;
+      if not q.EOF then
+         begin
+         Result := q.Fields[0].AsString;
+         end;
+      q.Close;
+   finally
+      q.Free;
+   end;
+end;
+
+(* AN EDIT CHANGES ONLY WHAT WAS EDITED -- Q61's latent defect (2), and Q13.
+
+  exchange_sent is what was SENT when the QSO was logged. The record has no
+  field for it, so every update bound the repository's next-save value, which
+  SaveQSO clears after each insert: Edit QSO, the rescore's batch, a network
+  update and a re-import each wrote NULL over it. Every one of those paths is
+  run here, and then the row is read back after a REOPEN, so it is the file
+  that keeps it.
+
+  ~~And the one path that means to write it on an existing row
+  (SetSentExchange) does~~ -- there is no such path since 2026-10-17:
+  exchange_sent is insert-only. *)
+procedure TLogRepositoryTests.TestAnEditKeepsTheSentExchange;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   first, second, edited: ContestExchange;
+   firstId, secondId: Int64;
+   firstGuid: AnsiString;
+   updates: TLogRowUpdates;
+   wasNew: boolean;
+   fn: string;
+begin
+   BeginTest('an edit, a rescore, a network update and a re-import keep exchange_sent');
+   fn := TempLogName('keepsent.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         MakeDistinctQSO(first, 1);
+         MakeDistinctQSO(second, 2);
+         repo.SetNextSentExchange('599 05');
+         firstId := repo.SaveQSO(first);
+         firstGuid := repo.LastGuid;
+         repo.SetNextSentExchange('599 06');
+         secondId := repo.SaveQSO(second);
+         repo.Commit;
+         CheckEquals('599 05', SentExchangeOfRow(db, firstId),
+                     'the live append recorded what was sent');
+
+         edited := first;
+         edited.Callsign := 'EDITED';
+         edited.QSOPoints := 9;
+
+         (* Edit QSO and the newest-row rewrite. *)
+         CheckTrue(repo.UpdateQSO(firstId, edited), 'the edit found its row');
+         repo.Commit;
+         CheckEquals('599 05', SentExchangeOfRow(db, firstId),
+                     'Edit QSO keeps the sent exchange');
+
+         (* The network's update, keyed on the session pair. *)
+         CheckTrue(repo.UpdateQSOBySessionIds(first.ceQSOID1, first.ceQSOID2,
+                                              edited),
+                   'the network update found its row');
+         repo.Commit;
+         CheckEquals('599 05', SentExchangeOfRow(db, firstId),
+                     'a network update keeps it');
+
+         (* The rescore's batch. *)
+         updates := TLogRowUpdates.Create;
+         try
+            updates.Add(firstId, edited);
+            updates.Add(secondId, second);
+            repo.WriteBatch(updates);
+         finally
+            updates.Free;
+         end;
+         CheckEquals('599 05', SentExchangeOfRow(db, firstId),
+                     'a rescore keeps it');
+         CheckEquals('599 06', SentExchangeOfRow(db, secondId),
+                     'on every row of the batch');
+
+         (* A re-import of our own export: the same guid, an update. *)
+         repo.ImportQSOByGuid(firstGuid, edited, wasNew);
+         repo.Commit;
+         CheckFalse(wasNew, 'the re-import matched the row');
+         CheckEquals('599 05', SentExchangeOfRow(db, firstId),
+                     'a re-import keeps it');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      CheckEquals('599 05', SentExchangeOfRow(db, firstId),
+                  'after a reopen, the edited QSO still carries what it sent');
+      CheckEquals('599 06', SentExchangeOfRow(db, secondId),
+                  'and the other QSO what it sent');
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* THE VALIDITY CHECK'S QUERY: QSOs with no exchange id, counted in full and
+  sampled in log order. Notes are not QSOs and are not counted; a deleted QSO
+  is still a contact and is. (F6, NY4I 2026-10-14: a rescore no longer mints
+  ids, so a missing one is REPORTED.) *)
+procedure TLogRepositoryTests.TestQSOsWithoutAnExchangeIdAreReported;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   qso: ContestExchange;
+   missing: TMissingExchangeIds;
+   fn: string;
+begin
+   BeginTest('QSOs with no exchange id are counted and sampled');
+   fn := TempLogName('missingids.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         missing := repo.QSOsWithoutExchangeId(5);
+         CheckEquals(0, missing.Count, 'an empty log has none');
+         CheckEquals('', missing.Sample, 'and nothing to sample');
+
+         MakeDistinctQSO(qso, 1);                    (* has an id *)
+         repo.SaveQSO(qso);
+         MakeDistinctQSO(qso, 2);                    (* none *)
+         qso.id := '';
+         qso.ceQSO_Deleted := False;
+         repo.SaveQSO(qso);
+         MakeDistinctQSO(qso, 3);                    (* none, and deleted *)
+         qso.id := '';
+         qso.ceQSO_Deleted := True;
+         repo.SaveQSO(qso);
+         MakeDistinctQSO(qso, 4);                    (* a note: not a QSO *)
+         qso.id := '';
+         qso.ceRecordKind := rkNote;
+         repo.SaveQSO(qso);
+         MakeDistinctQSO(qso, 5);                    (* none *)
+         qso.id := '';
+         repo.SaveQSO(qso);
+         repo.Commit;
+
+         missing := repo.QSOsWithoutExchangeId(2);
+         CheckEquals(3, missing.Count, 'three QSOs carry none: the note is not counted');
+         CheckTrue(Pos('K2ABC 2026-06-03 12:32', missing.Sample) > 0,
+                   'the first is named with its time: ' + missing.Sample);
+         CheckTrue(Pos('K3ABC', missing.Sample) > 0,
+                   'the deleted one is still a QSO: ' + missing.Sample);
+         CheckEquals(0, Pos('K5ABC', missing.Sample),
+                     'and the sample stops at its size; the count does not: ' +
+                     missing.Sample);
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* THE CONTEST ROW'S start_time IS READ WHEN THE LOG OPENS (Q35) -- the
+   contest year a bonus table is chosen by. A new log has none (nothing
+   writes it until Q99) and answers 0, never 1 January 1970; a row that
+   carries one answers it, as a UTC TDateTime, from a repository opened
+   after it was written -- the reopened-old-log case. *)
+procedure TLogRepositoryTests.TestTheContestStartTimeIsReadAtOpen;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   fn: string;
+   start: TDateTime;
+begin
+   BeginTest('TestTheContestStartTimeIsReadAtOpen');
+   fn := TempLogName('starttime.db');
+   Scrub(fn);
+   start := EncodeDate(2026, 3, 14) + EncodeTime(19, 0, 0, 0);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         repo.SetContest(ContestHandleOf(IDAHOQSOPARTY));
+         repo.Commit;
+         CheckTrue(repo.LogStartTime = 0, 'a new log records no start');
+      finally
+         repo.Free;
+      end;
+
+      (* What Q99 will write at New Contest. *)
+      db.Connection.ExecuteDirect(
+         'UPDATE contest SET start_time = ' + IntToStr(DateTimeToUnix(start)) +
+         ' WHERE id = 1');
+      db.Transaction.Commit;
+
+      repo := TLogRepository.Create(db);
+      try
+         (* Within a second: the column holds whole unix seconds. *)
+         CheckTrue(Abs(repo.LogStartTime - start) < 1.0 / 86400,
+                   'a reopened log answers its recorded start: ' +
+                   DateTimeToStr(repo.LogStartTime));
+      finally
+         repo.Free;
+      end;
+
+      db.Connection.ExecuteDirect('UPDATE contest SET start_time = 0 WHERE id = 1');
+      db.Transaction.Commit;
+      repo := TLogRepository.Create(db);
+      try
+         CheckTrue(repo.LogStartTime = 0, 'a zero start is "not recorded", not 1970');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   Scrub(fn);
+end;
+
+(* EVERY "NOW" THE LOG STORES IS UNIX UTC -- 2026-10-19.
+
+  contest.created_at, config.set_at, session_state.saved_at and the
+  millisecond timestamp at the head of the contest row's guid were all
+  DateTimeToUnix(Now): LOCAL time stored as if it were UTC. Each is checked
+  against a UTC window taken around the writes.
+
+  THIS CAN ONLY CATCH THE DEFECT ON A MACHINE WHOSE CLOCK IS NOT UTC, because
+  there local and UTC are the same number. The test says so when it runs on
+  one, rather than passing quietly as though it had checked something.
+  Mutation-checked 2026-10-19 at UTC-4: putting Now back fails all four. *)
+procedure TLogRepositoryTests.TestEveryNowTheLogStoresIsUTC;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   q: TSQLQuery;
+   fn: string;
+   before, after: Int64;
+   offsetSeconds: Int64;
+   guid: AnsiString;
+   guidSeconds: Int64;
+
+   procedure CheckInWindow(aValue: Int64; const aWhat: string);
+   begin
+      CheckTrue((aValue >= before) and (aValue <= after),
+                aWhat + ' is UTC: ' + IntToStr(aValue) + ' not in [' +
+                IntToStr(before) + ', ' + IntToStr(after) + '] (local offset ' +
+                IntToStr(offsetSeconds) + ' s)');
+   end;
+
+begin
+   BeginTest('TestEveryNowTheLogStoresIsUTC');
+   fn := TempLogName('utcnow.db');
+   Scrub(fn);
+
+   offsetSeconds := DateTimeToUnix(Now) - DateTimeToUnix(LocalTimeToUniversal(Now));
+   if Abs(offsetSeconds) < 60 then
+      begin
+      WriteLn('  NOTE: this machine''s clock is UTC, so TestEveryNowTheLogStoresIsUTC ' +
+              'cannot tell local from UTC here.');
+      end;
+
+   (* A second either side: the column holds whole seconds. *)
+   before := DateTimeToUnix(LocalTimeToUniversal(Now)) - 1;
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         repo.SetContest(ContestHandleOf(IDAHOQSOPARTY));
+         repo.SaveConfigValue('MY CALL', 'NY4I', 'station');
+         repo.SaveSessionValue('utc-probe', '1');
+         repo.Commit;
+      finally
+         repo.Free;
+      end;
+      after := DateTimeToUnix(LocalTimeToUniversal(Now)) + 1;
+
+      q := TSQLQuery.Create(nil);
+      try
+         q.DataBase := db.Connection;
+         q.Transaction := db.Transaction;
+
+         q.SQL.Text := 'SELECT created_at, guid FROM contest WHERE id = 1';
+         q.Open;
+         CheckInWindow(q.Fields[0].AsLargeInt, 'contest.created_at');
+         guid := AnsiString(q.Fields[1].AsString);
+         q.Close;
+         (* The first twelve hex digits are the UUIDv7's unix milliseconds. *)
+         guidSeconds := StrToInt64('$' + string(Copy(guid, 1, 12))) div 1000;
+         CheckInWindow(guidSeconds, 'the contest guid''s timestamp');
+
+         q.SQL.Text := 'SELECT set_at FROM config WHERE command = ''MY CALL''';
+         q.Open;
+         CheckInWindow(q.Fields[0].AsLargeInt, 'config.set_at');
+         q.Close;
+
+         q.SQL.Text := 'SELECT saved_at FROM session_state WHERE key = ''utc-probe''';
+         q.Open;
+         CheckInWindow(q.Fields[0].AsLargeInt, 'session_state.saved_at');
+         q.Close;
+      finally
+         q.Free;
+      end;
+      db.Transaction.Commit;
+   finally
+      db.Free;
+   end;
+
+   Scrub(fn);
+end;
+
 procedure TLogRepositoryTests.RunAllTests;
 begin
+   (* FIRST, AND ON EVERY PLATFORM: these need no D7 fixture, and they pin
+     the column order every reader depends on. *)
+   TestTheColumnTableAgreesWithQSO_COLUMNS;
+   TestAReaderWhoseColumnsDriftedFailsLoudly;
+   TestEveryReaderReturnsTheSameRecord;
+   TestTheCursorYieldsEachRowsId;
+   TestARowIdReaderNeedsTheIdLast;
+   TestABatchCommitsByRowId;
+   TestAFailedBatchRollsBackWhole;
+   TestABatchRefusesWhatWouldBreakIt;
+   TestEveryWriteWaitsForItsCommit;
+   TestAFreshRepositoryHoldsItsWritesUntilCommit;
+   TestABatchSQLiteRollsBackItselfLeavesTheRepositoryUsable;
+   TestALogSQLiteRolledBackClosesCleanly;
+   TestAnAppendBatchLandsInOneCommit;
+   TestAFailedAppendBatchLeavesTheLogAsItWas;
+   TestAnAppendBatchWritesRowsAsTheLiveAppendDoes;
+   TestAnEditKeepsTheSentExchange;
+   TestQSOsWithoutAnExchangeIdAreReported;
+   TestTheContestStartTimeIsReadAtOpen;
+   TestEveryNowTheLogStoresIsUTC;
+
 {$IFNDEF WINDOWS}
    (* SAID, NOT SILENT: a suite that quietly contributes nothing is
      indistinguishable from one that passed. *)
-   WriteLn('  SKIPPED: reads a D7 binary log, which is a Windows migration path.');
+   WriteLn('  SKIPPED (the rest): reads a D7 binary log, which is a Windows migration path.');
+   if (FDir <> '') and DirectoryExists(FDir) then
+      begin
+      RemoveDir(FDir);
+      end;
    Exit;
 {$ENDIF}
    TestOneQSORoundTrips;

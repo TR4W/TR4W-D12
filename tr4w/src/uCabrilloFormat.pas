@@ -116,7 +116,9 @@ function FormatCabrilloFreq(band: BandType; freqHz: LongInt;
 //
 // Returns the Cabrillo "mode" column string per spec.  Caller passes
 // modeOverridesToPhone = True for FM contacts in contests where the
-// log must show 'PH' rather than 'FM' (e.g. WINTERFIELDDAY).  This
+// log must show 'PH' rather than 'FM' -- a contest class's own
+// CabrilloModeString decides (the Delaware QSO Party does; Winter
+// Field Day did until Q54, 2026-10-16, and writes 'FM' now).  This
 // keeps the function ignorant of ContestType.
 //
 //   - Digital + (eNoMode or eRTTY)  -> 'RY'

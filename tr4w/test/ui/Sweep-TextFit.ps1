@@ -77,7 +77,6 @@ if (-not $Lang -or $Lang.Count -eq 0)
    {
    $Lang = Get-ChildItem (Join-Path $i18n 'tr4w_*.po') |
               ForEach-Object { $_.BaseName -replace '^tr4w_', '' } |
-              Where-Object { $_ -ne 'en' } |
               Sort-Object
    }
 

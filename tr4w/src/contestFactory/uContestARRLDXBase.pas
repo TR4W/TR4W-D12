@@ -47,7 +47,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   of virtuals TContestBase grows into -- so there is somewhere for it to go
   when the decision is made.
 
-  The rules below are LOGSTUFF's ARRLDXQSOPointMethod arm, moved verbatim.
+  The rules below are LOGSTUFF's ARRLDXQSOPointMethod arm, moved verbatim
+  (the arm was deleted at M10 S3; see git history or the D7 tree).
 
   CHOSEN AS THE FIRST FAMILY BECAUSE IT IS PROVABLE, not because it is easy.
   arrl_dx_cw_2025_ny4i is a 66-QSO golden-corpus set with a D7-written
@@ -77,25 +78,74 @@ uses
 type
    TContestARRLDXBase = class(TContestBase)
    protected
-      function GetFormatsExchange: boolean; override;
-   public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
 
-      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                          const aQso: ContestExchange;
-                                          const aRSTSent: string): string; override;
-      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                              const aQso: ContestExchange;
-                                              const aRSTReceived: string;
-                                              const aHisQTH: string): string; override;
-      function FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                      const aQso: ContestExchange): string; override;
+      (* THE FLAG SET IS THE FAMILY'S RULE -- both modes run under one set
+         of rules, so it is stated once, here (M10 S5). See
+         TContestBase.GetFlags. *)
+      function GetFlags: TContestFlags; override;
+
+      (* THE RECEIVED-EXCHANGE FIELDS ARE THE FAMILY'S, AND THE STATION'S --
+         see TContestBase.GetReceivedExchangeFields (M11 S9a). Stated once,
+         here, as DescribeSession is; each mode's GetExchangeKind still
+         states the trait. *)
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
+   public
+
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+   public
+      (* THE CANONICAL RECEIVED EXCHANGE -- see
+         TContestBase.CanonicalReceivedExchange (M9a). *)
+      function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
+   private
+      (* DOES THIS ENTRANT COUNT A DX MULTIPLIER? -- the station test
+         DescribeSession stated the DX kind under (deleted at M11 S4 part 2);
+         HasDXMultiplier, the key and the country list ask it, so the answers
+         cannot disagree (M11 S4). *)
+      function CountsDXMultiplier: boolean;
+   public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
+      function CountryMode: CountryModeType; override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
+      (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
+      function LogsSeveralQTHsFromOneEntry: boolean; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesDomesticQTH: boolean; override;
    end;
 
 implementation
 
 uses
-   SysUtils;
+   uCabrilloExchange,
+   uDXMultiplierKey,
+   uExchangeFields,
+   SysUtils,
+   uCanonicalExchange;
 
 (* THE EXCHANGE IS RST AND EITHER A STATE OR A POWER.
 
@@ -105,36 +155,27 @@ uses
    received side is simply the QSO's Power field, which is where the parser puts
    a state as readily as a number.
 
-   THE FOCMARATHON HALF OF THE LEGACY ARM IS NOT HERE. RSTPowerExchange is
-   shared, and inside it sits `if Contest = FOCMARATHON` swapping in the FOC
-   membership number. That is FOC Marathon's rule, not ARRL DX's, and it stays in
-   the legacy case until FOC Marathon gets a class of its own -- copying it here
-   would put one contest's rule in another contest's file, which is the shape
-   this factory exists to remove. *)
-function TContestARRLDXBase.GetFormatsExchange: boolean;
+   THE FOC MARATHON HALF OF THE LEGACY ARM IS NOT HERE. RSTPowerExchange is
+   shared, and inside it sat `if Contest = FOCMARATHON` swapping in the FOC
+   membership number. That is FOC Marathon's rule, not ARRL DX's, and since M4
+   it is TContestFOCMarathon's own -- copying it here would have put one
+   contest's rule in another contest's file. *)
+function TContestARRLDXBase.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                    const aQso: ContestExchange;
+                                                    const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := True;
+   Result := CabrilloSentRSTState(aMy, aQso, aCtx);
 end;
 
-function TContestARRLDXBase.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                                       const aQso: ContestExchange;
-                                                       const aRSTSent: string): string;
+function TContestARRLDXBase.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                        const aQso: ContestExchange;
+                                                        const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := Format('%-3s %-7s', [aRSTSent, aMy.MyState]);
+   Result := CabrilloReceivedRSTPower(aMy, aQso, aCtx);
 end;
 
-function TContestARRLDXBase.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                                           const aQso: ContestExchange;
-                                                           const aRSTReceived: string;
-                                                           const aHisQTH: string): string;
-begin
-   (* The QSO's OWN Power, not the his-QTH the exporter selected -- the legacy
-      arm reads rx.Power here and ignores csQTHString. *)
-   Result := Format('%-3s %-7s', [aRSTReceived, string(aQso.Power)]);
-end;
-
-function TContestARRLDXBase.FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                                   const aQso: ContestExchange): string;
+function TContestARRLDXBase.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                                const aQso: ContestExchange): string;
 begin
    Result := Format('%-3d %-7s', [aQso.RSTSent, aMy.MyState]);
 end;
@@ -170,9 +211,175 @@ begin
       end;
 end;
 
+function TContestARRLDXBase.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfMultByBand];
+end;
+
+(* A W OR VE ENTRANT RECEIVES THE RST AND A POWER (RSTPower); ANYONE ELSE THE
+   RST, A NUMBER AND A STATE OR PROVINCE (RSTDomesticQTH) -- the two shapes
+   DescribeSession chooses between, by the station test CountsDXMultiplier
+   asks. M11 S9a. *)
+function TContestARRLDXBase.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   if CountsDXMultiplier then
+      begin
+      Result := ExchangeFieldsRSTPower;
+      end
+   else
+      begin
+      Result := ExchangeFieldsRSTQSONumberQTH;
+      end;
+end;
+
+function TContestARRLDXBase.ParseReceivedExchangeFormat(const aText: string;
+                                                        aParsers: TExchangeParsers;
+                                                        var aExch: ContestExchange): boolean;
+begin
+   if CountsDXMultiplier then
+      begin
+      Result := aParsers.ParseRSTPower(aText, aExch);
+      end
+   else
+      begin
+      Result := aParsers.ParseRSTDomesticQTH(aText, aExch);
+      end;
+end;
+
+procedure TContestARRLDXBase.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   (* The station test the parse format chooses by: a W or VE entrant
+      receives the power exchange and gets no default messages (the old
+      `case` had no arm for its shape); anyone else, KH6 included, the
+      state-or-serial set. *)
+   if not CountsDXMultiplier then
+      begin
+      aMessages.WriteRSTStateOrQSONumber;
+      end;
+end;
+
+function TContestARRLDXBase.ExchangeCarriesDomesticQTH: boolean;
+begin
+   Result := not CountsDXMultiplier;
+end;
+
 (* NOTHING IS REGISTERED HERE. A family base is not a contest an operator can
   select, and registering it for both modes -- which is what this unit did
   before the split -- makes "which class serves ARRL-DX-CW" answerable only by
   reading the base. Each mode registers itself, in its own unit. *)
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation.
+   The arm named ARRLDXCW, ARRLDXSSB, one contest in two
+   modes, so the family base holds it once. *)
+procedure TContestARRLDXBase.DescribeSession(const aStation: TStationContext;
+                                             aSession: TSessionDefaults);
+begin
+   (* A W/VE STATION SENDS POWER AND COUNTS DXCC; EVERYONE ELSE SENDS A STATE
+      OR PROVINCE OUT OF S48P14DC. *)
+   if (aStation.MyCountry = 'K') or (aStation.MyCountry = 'VE') then
+      begin
+      aSession.Exchange := RSTPowerExchange;
+      end
+   else
+      begin
+      aSession.DomesticFile := 'S48P14DC';
+      aSession.Exchange := RSTDomesticQTHExchange;
+      end;
+
+   aSession.ContestName := 'ARRL DX Test';
+   aSession.AddDomesticCountries(DomesticCountriesKVE);
+end;
+
+(* THE CANONICAL RECEIVED EXCHANGE -- uExchangeBuilder's arm for this
+   contest, moved here at M9a (2026-10-02): the RST and the state or the
+   power. It named ARRLDXCW and ARRLDXSSB, the family, so it is the
+   family's. See TContestBase.CanonicalReceivedExchange; the caller
+   collapses the whitespace. *)
+function TContestARRLDXBase.CanonicalReceivedExchange(const aQso: ContestExchange): string;
+begin
+   (* The US side sends RST and state, the DX side RST and power; the
+      parser puts the state in QTHString and the power in Power, so the one
+      the worked station sent is the one that is there. *)
+   if Trim(string(aQso.QTHString)) <> '' then
+      begin
+      Result := RSTReceivedText(aQso) + ' ' + Trim(string(aQso.QTHString));
+      end
+   else
+      begin
+      Result := RSTReceivedText(aQso) + ' ' + Trim(string(aQso.Power));
+      end;
+end;
+
+(* THE STATION TEST -- DescribeSession's, asked of Station. See the declaration. *)
+function TContestARRLDXBase.CountsDXMultiplier: boolean;
+begin
+   Result := IsUSAOrCanadaCountry(Station.MyCountry);
+end;
+
+(* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- M11 S4 part 2,
+   2026-10-14. Yes for a W or VE entrant; none for anyone else, whose
+   multiplier is the state or province. Once, on the family base, as the key
+   is. This is the station test the session's DX kind was chosen by (the
+   trait, then DescribeSession) until that kind was deleted; DXMultiplierKey
+   and the country list ask the same predicate, so the answers cannot
+   disagree. *)
+function TContestARRLDXBase.HasDXMultiplier: boolean;
+begin
+   Result := CountsDXMultiplier;
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country but the USA and Canada, for a W or VE entrant (ARRLDXCCWithNoUSAOrCanada, which DescribeSession
+   states for K and VE); none for anyone else, whose multiplier is the state
+   or province. Stated once, on the family base, as DescribeSession is. *)
+function TContestARRLDXBase.DXMultiplierKey(const aQso: ContestExchange;
+                                            out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if CountsDXMultiplier and
+      not IsUSAOrCanadaCountry(aQso.QTH.CountryID) then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
+end;
+
+(* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
+   DXCC only where the entrant counts the DX multiplier; the CQ list
+   for anyone else, who counts none. *)
+function TContestARRLDXBase.CountryMode: CountryModeType;
+begin
+   if CountsDXMultiplier then
+      begin
+      Result := ARRLCountryMode;
+      end
+   else
+      begin
+      Result := CQCountryMode;
+      end;
+end;
+
+
+(* AN ENTRANT OUTSIDE THE USA AND CANADA LOOKS THE STATE OR PROVINCE UP IN
+   S48P14DC -- M11 S6 part 1b, 2026-10-14. The station test
+   DescribeSession states DomesticFile under: the negation of the one
+   CountsDXMultiplier asks. See TContestBase.UsesDomesticFile. *)
+function TContestARRLDXBase.UsesDomesticFile: boolean;
+begin
+   Result := not CountsDXMultiplier;
+end;
+
+(* ONE ENTRY MAY CARRY SEVERAL QTHs FOR AN ENTRANT OUTSIDE THE USA AND
+   CANADA (RSTDomesticQTH); a W or VE entrant sends power -- M11 S7,
+   2026-10-14. It was the session's shape, and this is the station test
+   DescribeSession chooses the shape by; see
+   TContestBase.LogsSeveralQTHsFromOneEntry. *)
+function TContestARRLDXBase.LogsSeveralQTHsFromOneEntry: boolean;
+begin
+   Result := not CountsDXMultiplier;
+end;
 
 end.

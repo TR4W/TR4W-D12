@@ -447,7 +447,7 @@ backwards scan of the whole log into one indexed statement.
 | # | task |
 |---|---|
 | **C1** | Store `exchange_sent` per QSO **at log time**, not rebuilt from station globals at export |
-| **C2** | Capture the tier-2 entry declaration **at log creation**. This also closes section 12c: a headless export currently ships a Cabrillo file with three `CATEGORY` lines missing and a `CATEGORY-MODE` contradicting the log's own configuration, and `golden_diff.py` cannot see it because it drops header lines |
+| **C2** | Capture the tier-2 entry declaration **at log creation**. This also closes section 12c: a headless export currently ships a Cabrillo file with three `CATEGORY` lines missing and a `CATEGORY-MODE` contradicting the log's own configuration, and `golden_diff.py` cannot see it because it drops header lines. **DONE 2026-10-17 (Q61), schema plan §12f:** the declaration is written once, on the open that made the log (it had been rewritten on every open); the 12c header defect is closed by the categories reading their one value, the log's `config` statement -- all 52 corpus category lines now match D7. No schema change. |
 | **C3** | `MyZone` does double duty for the CQ and ITU zones, and `MY ITU ZONE` is read by no export path. Store the zone that was **sent** |
 
 **Exit:** the four known divergences go green. **Issue #2 closed with no

@@ -55,17 +55,13 @@ $ErrorActionPreference = 'Stop'
 # ACCEPTED, WITH A REASON EACH. A baseline, not an exemption list: a NEW
 # duplicate fails even in a table named here.
 # ---------------------------------------------------------------------------
+#
+# EMPTY SINCE M10 S2 (2026-10-14). Its one entry was QSOPointMethodArray's two
+# 'ONY' spellings (ordinals 29 and 85). QSO POINT METHOD is a retired command
+# now and the table is DELETED, so there is nothing left for the baseline to
+# describe. Keep the mechanism: a future accepted duplicate goes here, with
+# its reason.
 $known = @{
-   # Two entries spell 'ONY', at ordinals 29 and 85. The second is commented
-   # OldNewYearQSOPointMethod and is the one unreachable by name; the first
-   # carries no provenance comment at all, which is the only reason to suspect
-   # it is the mistake. ALREADY DOCUMENTED at TF.pas, in the note explaining
-   # that folding case created no NEW ambiguity.
-   #
-   # NOT FIXED HERE ON PURPOSE. Which ordinal 'ONY' should select decides which
-   # scoring rule a contest runs under, the golden corpus is blind to scoring,
-   # and this is NY4I's call.
-   'QSOPointMethodArray' = @('ONY')
 }
 
 # A table that no longer has a literal list is not a gap. RadioTypeTokensA is a
@@ -104,7 +100,25 @@ $generated = @('RadioTypeTokensA', 'LanguageVocabulary')
 # All five were reached ONLY through ListParamArray, which went with the last
 # CFGCA row. The 31 that remain are registered vocabularies, and that is the
 # shape this lint was always aiming at.
-$minimumTables = 31
+#
+# LOWERED 31 -> 24 on 2026-10-14 (M10 S2), BY EXACTLY THE SEVEN TABLES WHOSE
+# SETTINGS RETIRED -- NY4I's Q4: the contest's class decides all seven, so
+# each command is a name in uCFG.RETIRED_COMMANDS and registers no vocabulary:
+#
+#   QSOPointMethodArray             deleted (VC)      -- QSO POINT METHOD
+#   ActiveExchangeArray             KEPT (VC), unregistered -- EXCHANGE
+#                                   RECEIVED. Its one reader names an exchange
+#                                   kind in a uADIFExchange log line; it goes
+#                                   with the kind enums at M11.
+#   InitialExchangeTypeStringArray  deleted (logwind) -- INITIAL EXCHANGE
+#   DomesticMultStringArray         deleted (VC)      -- DOMESTIC MULTIPLIER
+#   DXMultTypenameArray             deleted (logdupe) -- DX MULTIPLIER
+#   PrefixMultStringArray           deleted (VC)      -- PREFIX MULTIPLIER
+#   ZoneMultTypeSA                  deleted (logwind) -- ZONE MULTIPLIER
+#
+# MEASURED: 32 tables resolved at 4af8742d and 25 after, so the one table of
+# slack between the count and the floor predates this change and is kept.
+$minimumTables = 24
 
 # ---------------------------------------------------------------------------
 # The literals of a Pascal initialiser, AND NOTHING FROM A COMMENT.
@@ -256,6 +270,15 @@ foreach ($p in $text.Keys)
       [void] $wanted.Add($m.Groups[1].Value)
       }
    }
+
+# THE CONTEST VOCABULARY IS A PROVIDER NOW (Q108 S2, 2026-10-16), so no
+# RegisterSettingAllowedValues call names its table any more -- uCFG registers
+# ContestIdVocabulary, which reads the contest registry's ids, and a legacy
+# contest's id IS its ContestTypeSA spelling. The table still decides which
+# contest a CONTEST line selects, so it keeps this guard by name; without this
+# line it would have lost it in silence, which is exactly what the floor below
+# exists to catch and could not here (one table of slack).
+[void] $wanted.Add('ContestTypeSA')
 
 foreach ($name in @($wanted | Sort-Object))
    {

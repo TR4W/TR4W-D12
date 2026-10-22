@@ -28,6 +28,9 @@ unit MainUnit;
 interface
 
 uses
+  (* TQsoMyFacts -- an imported record's own station, ParseADIFRecord (log
+    schema 3). FIRST, so every unit below still wins any name it shares. *)
+  uQsoMyFacts,
   uMainWindowProc, // TTR4WEntryField -- CreateCallOrExchangeWin names the field
   Graphics,        // TFont -- ApplyMainFontTo, for controls the LCL draws
   uConfigValues,   // Settings.Cw.SpeedIncrement
@@ -106,7 +109,6 @@ uses
   uWinManager,
   uBandmap,
   TF,
-  Version,
   VC,
   uGradient,
   uNet,
@@ -310,8 +312,17 @@ procedure SetCommand(const c: string);
   script and an import that runs from the menu must be the SAME import, or
   the one nobody watches is the one that drifts. Only the two questions --
   which file, and append to a log that already has QSOs -- differ, and both
-  are asked here rather than duplicated. *)
-procedure ImportFromADIF(const aFileName: string = '');
+  are asked here rather than duplicated.
+
+  ALL OR NOTHING (NY4I, 2026-10-14). Every record is read first and the lot
+  is written in ONE transaction (uLogStore.LogStoreAppendQSOs); one record
+  that will not go in, and none does. The operator is told either way --
+  how many were imported, or that NOTHING was, which record failed and why,
+  and that the log is unchanged. False only when the import FAILED;
+  cancelling is not a failure. aReport is that sentence, for /IMPORT, which
+  has no dialog to show it in. *)
+function ImportFromADIF(const aFileName: string = ''): boolean; overload;
+function ImportFromADIF(const aFileName: string; out aReport: string): boolean; overload;
 procedure CheckQuestionMark;
 (* TelnetWantsClipboardKey IS GONE (2026-09-07) -- it had no caller.
 
@@ -343,9 +354,16 @@ procedure RunOptionsDialog(f: CFGFunc);
 // fixed rather than cast at the call site.  See CLAUDE.md on type honesty:
 // the program passes strings, and conversions belong at the real boundary.
 procedure OpenUrl(const url: string);
-function ParseADIFRecord(sADIF: string; var exch: ContestExchange): boolean;
-procedure ProcessImportedSRX_String(fieldValue: string; var exch:
-  ContestExchange);
+(* aMyFacts and aSentExchange are the RECORD'S OWN station and sent exchange
+  (log schema 3, stage 2) -- its MY_* tags and STX_STRING, and never today's
+  settings: uADIF.MyFactsFromADIF / SentExchangeFromADIF. *)
+function ParseADIFRecord(sADIF: string; var exch: ContestExchange;
+                         out aMyFacts: TQsoMyFacts;
+                         out aSentExchange: AnsiString): boolean; overload;
+(* WITHOUT THEM -- WSJT-X's logged QSO, which is a QSO logged HERE, NOW, and so
+  has its station captured live by the store (uLogStore.CaptureMyFactsNow),
+  not read from the message. *)
+function ParseADIFRecord(sADIF: string; var exch: ContestExchange): boolean; overload;
 // GetContestByADIFName moved to uADIF.pas (Issue #887).
 procedure SetExtendedModeFromMode(RData: ContestExchange);
 function GetTR4WBandFromNetworkBand(band: TRadioBand): BandType;
@@ -356,6 +374,12 @@ procedure GetTRModeAndExtendedModeFromNetworkMode(netMode: TRadioMode; var mode:
   ModeType; var extMode: extendedModeType);
 
 procedure LoadinLog;
+
+(* RESCORE THE WHOLE LOG AND RELOAD IT -- the Rescore command. Was the pair
+  `tUpdateLog(actRescore); LoadinLog;` written out at four sites (the menu,
+  the QSO editor, ADIF import, a multi-op update); named at M9b, when a fifth
+  needed it -- a CATEGORY-POWER change in the Cabrillo summary window. *)
+procedure RescoreLog;
 (* THE TEXT OF ONE LOG ROW, COLUMN BY COLUMN.
 
   BuildLogRow is the only thing that knows how a QSO is displayed -- 360 lines
@@ -625,6 +649,16 @@ function AskConvertLog(sVersion: string): boolean; // ny4i
 
 procedure UpdateWindows;
 procedure tUpdateLog(UpdAction: UpadateAction);
+(* The per-QSO body of the rescore -- see the implementation. *)
+procedure RecomputeQSOScoring(var aRX: ContestExchange); overload;
+(* A STORED QSO, SCORED BY ITS OWN RECORDED STATION (log schema 3, stage 3) --
+  the rescore's. The one-argument form scores by the session's station: a QSO
+  being built now, as the contest matrix builds them. *)
+procedure RecomputeQSOScoring(var aRX: ContestExchange;
+                              const aMyFacts: TQsoMyFacts); overload;
+(* The country lookup live entry and ADIF import both run on a new QSO --
+  exported for the contest matrix, which builds a stored QSO the same way. *)
+function ctyLocateCallStripRover(const Call: CallString; var QTH: QTHRecord): Boolean;
 //procedure SelectFileOfFolder(Parent: HWND; FileName: PChar; Mask: PChar; SelectType: CFGType);
 
 //procedure main(LogFileName: pchar; var CreatedReport: pchar; var ReLoadLog: boolean); stdcall external 'Plugins/tr4wSortLog.dll' name 'main';
@@ -633,7 +667,6 @@ procedure PTTOn;
 procedure PTTOff;
 
 procedure ResetRadioPorts;
-procedure WagCheck;
 
 (* Tmain AND Ttr4wGetPlugin WERE HERE -- the ABI of the binary plug-in
   interface, deleted 2026-09-16 with the subsystem. They were the last
@@ -645,22 +678,10 @@ var
   debugstr: string;
 const
   CWByCATBufferTerminator = Chr(242);
-  tAboutText =
-    TR4W_CURRENTVERSION +
-    ' - ' +
-    TR4W_CURRENTVERSIONDATE +
-    #13 +
-    '2006 - 2012 Dmitriy Gulyaev UA4WLI' + #13 +
-    'TR4WSERVER version - ' + TR4WSERVER_CURRENTVERSION + #13#13 +
-    'https://tr4w.net'#13#10
-
-  // 'Log format version - v.1.' + LOGVERSION4 + #13 +
-  // 'Compiler directives: ['{$IFOPT I+} + 'I'{$ENDIF}{$IFOPT R+} + 'R'{$ENDIF}{$IFOPT Q+} + 'Q'{$ENDIF} + ']'
-{$IFNDEF LANG_ENG} + #13'Language: ' + TC_TRANSLATION_LANGUAGE + ' (by ' +
-  TC_TRANSLATION_AUTHOR + ')'{$ENDIF} + #13#10 +
-  'On basis of the source code of the TRLog v.6.80 UA4WLI + Larry Tyree N6TR' + #13
-    + //n4af 4.30.0
-  'Current development team = N4AF, NY4I, UR7QM '; //n4af 4.30.0
+  (* tAboutText WAS HERE -- the old MessageBox About text, with a
+    compile-time translator credit behind an IFNDEF on LANG_ENG. Unreferenced since
+    uAboutForm, which credits the translator at run time; deleted
+    2026-10-16. *)
   // Radio1AsPchar : PChar = TC_RADIO1;
   // Radio2AsPchar : PChar = TC_RADIO2;
 
@@ -682,6 +703,11 @@ uses
      uses this unit back, which is legal: both edges are
      implementation-section. *)
   uLogSource,
+  (* ~~uContestSession~~ stood here for SetColumnsWidth's reads of the
+     session's exchange shape, its last in this unit; the Sweepstakes
+     columns ask the field list now (M11 S9e part 1). *)
+  (* ExchangeFieldsShowPrecedenceColumn / ...ShowCheckColumn. *)
+  uExchangeFields,
 {$IF tDebugMode}
   // uDocumentation,
 {$IFEND}
@@ -739,7 +765,11 @@ uses
   uTR4WConfigFile,   // TR4WConfigFileName / Save- LoadWindowLayout
   uWSJTXState,       // the state the WSJT-X indicator paints from
   uLogNote,          // NoteText / SetNoteText -- a note's text, spelled once
-  uPanadapterForm;   // it is not a tw_ window, so it saves its own row
+  uPanadapterForm,   // it is not a tw_ window, so it saves its own row
+  uContestRegistry,  // ContestIdentity -- the contest's calendar ids, M1; ContestId, the handle (Q108 S2)
+  uContestBase,      // QSOCountsTowardTotals -- which records the loader counts, M6
+  uContestFactory,   // ActiveContest -- the rescore's one lookup per QSO, M11 S4
+  uScoreTotals;      // AddLoggedQSO -- the bonus view, kept with the totals, M6
 
 
 
@@ -816,42 +846,46 @@ end;
 // the RST exchanges carry an RS(T).  Emitting the RST for a serial-number
 // contest would put the defaulted 599 into the log in place of the number
 // the station actually sent.
-function PerQSOExchString(const RXData: ContestExchange): string;
+//
+// Which leads is the contest's answer since M11 S9d
+// (TContestBase.PerQSOExchangeLeadsWithSerial); this was a `case` over the
+// session's exchange kind. The caller asks the contest once and hands it in.
+function PerQSOExchString(aLeadsWithSerial: boolean;
+                          const RXData: ContestExchange): string;
 begin
-  case ActiveExchange of
-    QSONumberDomesticQTHExchange,
-    QSONumberDomesticOrDXQTHExchange:
-       begin
-       Result := IntToStr(RXData.NumberReceived) + ' ' + string(RXData.QTHString);
-       end;
+  if aLeadsWithSerial then
+     begin
+     Result := IntToStr(RXData.NumberReceived) + ' ' + string(RXData.QTHString);
+     end
   else
      begin
      Result := IntToStr(RXData.RSTReceived) + ' ' + string(RXData.QTHString);
      end;
-  end;
 end;
 
 procedure DrainPendingMultiQSORefs;
 var
   TempRX : ContestExchange;
+  leadsWithSerial: boolean;
 begin
-  if (not HasPendingParks)     and 
+  if (not HasPendingParks)     and
      (not HasPendingCounties) then
      begin
      Exit;
      end;
+  leadsWithSerial := ContestPerQSOExchangeLeadsWithSerial(ActiveContest(Contest));
   TempRX := ReceivedData;
   while HasPendingParks do
      begin
      TempRX.QTHString := DequeuePendingPark;
-     TempRX.ExchString := PerQSOExchString(TempRX);   // Issue #889
+     TempRX.ExchString := PerQSOExchString(leadsWithSerial, TempRX);   // Issue #889
      LogContact(TempRX, True);
      end;
   while HasPendingCounties do
      begin
      TempRX.QTHString := DequeuePendingCounty;
      FoundDomesticQTH(TempRX);  // refresh DomMultQTH/DomesticQTH
-     TempRX.ExchString := PerQSOExchString(TempRX);   // Issue #889
+     TempRX.ExchString := PerQSOExchString(leadsWithSerial, TempRX);   // Issue #889
      // QSO-party rule: a station that changes county is a new station and
      // is NOT a dupe of an earlier QSO with the same call.  The follow-up
      // county records share callsign+band+mode with the first one, so the
@@ -907,7 +941,19 @@ end;
 //
 // Used by ParametersOkay (live entry) and ParseADIFRecord at EOR (import).
 
-function ctyLocateCallStripRover(const Call: CallString; var QTH: QTHRecord): Boolean;
+(* THE ROVER STRIP, ON A CONTEST THE CALLER ALREADY HOLDS -- M11 S7,
+  2026-10-14. Whether a /suffix may be a rover's county is the contest's
+  answer (TContestBase.StripsRoverCountyFromCall); it was a test of the
+  session's exchange shape (RSTDomesticQTH, RSTQTH, RSTDomesticOrDXQTH).
+
+  THE SLASH IS TESTED FIRST, and aContest is asked only for a call that has
+  one, so a caller with no contest in hand fetches one only for such a call
+  (ctyLocateCallStripRover). nil is the classless DUMMYCONTEST, which
+  strips nothing. The rescore and the ADIF record parse pass the contest
+  they fetched for the same QSO. *)
+function LocateCallStrippingRoverCounty(aContest: TContestBase;
+                                        const Call: CallString;
+                                        var QTH: QTHRecord): Boolean;
 var
   LookupCall  : CallString;
   SlashPos    : Integer;
@@ -916,38 +962,47 @@ var
   ProbeSuffix : string;
 begin
   LookupCall := Call;
-  logger.Info('[ctyLocateCallStripRover] ENTER Call=[%s] ActiveExchange=%d',
-              [string(Call), Ord(ActiveExchange)]);
-  if ((ActiveExchange = RSTDomesticQTHExchange) or
-      (ActiveExchange = RSTQTHExchange) or
-      (ActiveExchange = RSTDomesticOrDXQTHExchange)) then
+  SlashPos := Pos('/', string(LookupCall));
+  logger.Info('[ctyLocateCallStripRover] ENTER Call=[%s] SlashPos=%d',
+              [string(Call), SlashPos]);
+  if (SlashPos > 0) and ContestStripsRoverCountyFromCall(aContest) then
      begin
-     SlashPos := Pos('/', string(LookupCall));
-     logger.Info('[ctyLocateCallStripRover] QP exchange, SlashPos=%d', [SlashPos]);
-     if SlashPos > 0 then
+     FillChar(ProbeRX, SizeOf(ProbeRX), 0);
+     ProbeSuffix := UpperCase(
+        Copy(string(LookupCall), SlashPos + 1,
+             Length(string(LookupCall)) - SlashPos));
+     ProbeRX.QTHString := ProbeSuffix;
+     FoundQTH := FoundDomesticQTH(ProbeRX);
+     logger.Info('[ctyLocateCallStripRover] suffix=[%s] FoundDomesticQTH=%s',
+                 [ProbeSuffix, BoolToStr(FoundQTH, True)]);
+     if FoundQTH then
         begin
-        FillChar(ProbeRX, SizeOf(ProbeRX), 0);
-        ProbeSuffix := UpperCase(
-           Copy(string(LookupCall), SlashPos + 1,
-                Length(string(LookupCall)) - SlashPos));
-        ProbeRX.QTHString := ProbeSuffix;
-        FoundQTH := FoundDomesticQTH(ProbeRX);
-        logger.Info('[ctyLocateCallStripRover] suffix=[%s] FoundDomesticQTH=%s',
-                    [ProbeSuffix, BoolToStr(FoundQTH, True)]);
-        if FoundQTH then
-           begin
-           LookupCall := Copy(string(LookupCall), 1, SlashPos - 1);
-           end;
+        LookupCall := Copy(string(LookupCall), 1, SlashPos - 1);
         end;
      end
   else
      begin
-     logger.Info('[ctyLocateCallStripRover] NOT a QP exchange, skipping strip', []);
+     logger.Info('[ctyLocateCallStripRover] no slash, or no rover county in this contest: skipping strip', []);
      end;
   Result := ctyLocateCall(LookupCall, QTH);
   logger.Info('[ctyLocateCallStripRover] EXIT LookupCall=[%s] Result=%s CountryID=[%s] Prefix=[%s]',
               [string(LookupCall), BoolToStr(Result, True),
                string(QTH.CountryID), string(QTH.Prefix)]);
+end;
+
+(* THE ROVER STRIP FOR A CALLER WITH NO CONTEST IN HAND -- live entry, the
+  ADIF import loop and the contest matrix. The open contest is fetched only
+  for a call with a '/'; without one nothing asks it. *)
+function ctyLocateCallStripRover(const Call: CallString; var QTH: QTHRecord): Boolean;
+var
+  contestRules: TContestBase;
+begin
+  contestRules := nil;
+  if Pos('/', string(Call)) > 0 then
+     begin
+     contestRules := ActiveContest(Contest);
+     end;
+  Result := LocateCallStrippingRoverCounty(contestRules, Call, QTH);
 end;
 
 function DetectRoverSlashInCall(out RoverCounty: string): Boolean;
@@ -959,16 +1014,17 @@ begin
   Result := False;
   RoverCounty := '';
 
-  if not ((ActiveExchange = RSTDomesticQTHExchange) or
-          (ActiveExchange = RSTQTHExchange) or
-          (ActiveExchange = RSTDomesticOrDXQTHExchange)) then
+  CallStr := string(CallWindowString);
+  SlashPos := Pos('/', CallStr);
+  if SlashPos = 0 then
      begin
      Exit;
      end;
 
-  CallStr := string(CallWindowString);
-  SlashPos := Pos('/', CallStr);
-  if SlashPos = 0 then
+  (* THE CONTEST SAYS WHETHER A /SUFFIX MAY BE A ROVER'S COUNTY -- M11 S7
+    (TContestBase.StripsRoverCountyFromCall); it was a test of the session's
+    exchange shape, ahead of the slash. Asked only for a call with a '/'. *)
+  if not ContestStripsRoverCountyFromCall(ActiveContest(Contest)) then
      begin
      Exit;
      end;
@@ -1072,7 +1128,9 @@ begin
     // each ADIF SRX_STRING reflects only its own ref.
       if HasPendingParks or HasPendingCounties then
          begin
-         ReceivedData.ExchString := PerQSOExchString(ReceivedData);
+         ReceivedData.ExchString :=
+            PerQSOExchString(ContestPerQSOExchangeLeadsWithSerial(ActiveContest(Contest)),
+                             ReceivedData);
          end;
 
       LogContact(ReceivedData, True);
@@ -1744,7 +1802,9 @@ begin
      end;
   DisplayGridSquareStatus(CallWindowString);
 
-  if Contest <> GENERALQSO then
+  (* ASKED OF THE CONTEST -- M9b: General QSO, a log, shows no contest
+    status (TContestBase.ShowsContestStatus). *)
+  if ContestIdentity(Contest).ShowsContestStatus then
      begin
      ShowStationInformation(CallWindowString); //gav 4.44.8
      VisibleLog.DoPossibleCalls(CallWindowString);
@@ -2043,8 +2103,10 @@ begin
            end;
         end;
      end;
-  if (ActiveExchange = RSTDomesticQTHExchange) or (ActiveExchange =
-    RSTQTHEXCHANGE) then
+  (* SEVERAL QTHs FROM ONE ENTRY IS THE CONTEST'S ANSWER -- M11 S7
+    (TContestBase.LogsSeveralQTHsFromOneEntry); it was a test of the
+    session's exchange shape (RSTDomesticQTH, RSTQTH). *)
+  if ContestLogsSeveralQTHsFromOneEntry(ActiveContest(Contest)) then
      begin
      if (IsAlpha(S2)) and (S2 <> '') then
         begin
@@ -3772,7 +3834,7 @@ begin
 
   tUpdateLog(actSetClearDupesheetBit);
   UpdateTotals2;
-  CallsignsList.ClearDupes;
+  ClearAllDupeSheets;
 
   QuickDisplay(TC_DUPESHEETCLEARED
     { To restore, delete RESTART.BIN and start program over.'});
@@ -4036,13 +4098,17 @@ begin
        end;
 
   // POTA: look up park name from exchange as typed and show via QuickDisplay.
-  if (ActiveExchange = RSTAndPOTAPark) and POTAParksLoaded then
+  (* THE CONTEST SAYS WHETHER IT HAS PARKS -- OffersParkTools, the answer the
+    Tools menu asks (True for POTA alone); this was a test of the session's
+    exchange shape, RSTAndPOTAPark, which POTA alone runs (M11 S7). Its
+    identity: the answer depends on no station. *)
+  if ContestIdentity(Contest).OffersParkTools and POTAParksLoaded then
      begin
      TempString := ExchangeWindowString;
      while TempString <> '' do
         begin
         TestString := RemoveFirstString(TempString);
-        TestString := NormalizePOTAPark(TestString, Settings.My.Park);
+        TestString := NormalizePOTAPark(TestString, Settings.My.ResolvedPark);
         if TestString <> '' then
            begin
            if GetPOTAParkName(TestString) <> '' then
@@ -4056,53 +4122,22 @@ begin
 
 end;
 
-procedure WagCheck; //added by n4af at behest of wag contest mgr
+(* THE CONTEST'S WARNING FOR THE RADIO'S FREQUENCY, AS A NOTICE -- M9b.
+
+  Was WagCheck: `if Contest = WAG` at the call site and WAG's seven kHz
+  windows here (n4af, 4.31.4 / 4.90.3). Where a sponsor wants no QSO is the
+  contest's, so the windows and the words are
+  TContestBase.CallEntryFrequencyWarning; what stays here is the UI's half --
+  which radio, and how a warning is shown. *)
+procedure ShowCallEntryFrequencyWarning;
 var
-  ARF: integer;
-
+  warning: string;
 begin
-  ARF := ActiveRadioPtr.CurrentStatus.Freq div 1000;
-
-  if (ARF > 3650) and (ARF < 3700) then
+  warning := ContestIdentity(Contest).CallEntryFrequencyWarning(
+                ActiveRadioPtr.CurrentStatus.Freq div 1000);
+  if warning <> '' then
      begin
-     QuickDisplay(TC_WagWarn); // 4.90.3
-     exit;
-     end;
-
-  if (ARF > 7043) and (ARF < 7080) then
-     begin
-     QuickDisplay(TC_WagWarn);
-     exit;
-     end;
-
-  if (ARF > 7080) and (ARF < 7143) then
-     begin
-     QuickDisplay(TC_WagWarn);
-     exit;
-     end;
-
-  if (ARF > 14060) and (ARF < 14125) then
-     begin
-     QuickDisplay(TC_WagWarn);
-     exit;
-     end;
-
-  if (ARF > 14280) and (ARF < 14350) then
-     begin
-     QuickDisplay(TC_WagWarn);
-     exit;
-     end;
-
-  if (ARF > 21347) and (ARF < 21450) then
-     begin
-     QuickDisplay(TC_WagWarn);
-     exit;
-     end;
-
-  if (ARF > 28225) and (ARF < 28400) then
-     begin
-     QuickDisplay(TC_WagWarn);
-     exit;
+     QuickDisplay(warning);
      end;
 end;
 
@@ -4117,10 +4152,7 @@ begin
   TR4WMainForm.pnlName.Caption := '';
   TR4WMainForm.pnlUserInfo.Caption := '';
 
-  if Contest = WAG then //n4af 4.31.4
-     begin
-     WagCheck; //n4af
-     end;
+  ShowCallEntryFrequencyWarning;
 
   CallWindowString := ShortString(AnsiString(Copy(EntryText(TR4WCallEdit), 1,
                                                   CallstringLength)));
@@ -4235,6 +4267,8 @@ procedure CreateMainWindow;
 var
   e: TMainWindowElement;
   temprect: TRect;
+  (* The operating aids the contest allows -- M9a. *)
+  aids: TOperatingAids;
   // OffsetY : integer;
 begin
   // PHASE 3a: the main window is an LCL TForm, and tr4whandle is its Handle.
@@ -4453,30 +4487,38 @@ begin
   (* THE CONTEST'S NAME IN TWO MENU CAPTIONS. Was ModifyMenuA, which rewrites
     the row through the menu handle; Caption is the property that row has. *)
   SetMenuCaption(menu_qrzru_calendar,
-                 SysUtils.Format(TC_RULESONQRZRU, [string(ContestTypeSA[Contest])]));
+                 SysUtils.Format(TC_RULESONQRZRU, [ContestId(Contest)]));
   SetMenuCaption(menu_WA7BNM_calendar,
-                 SysUtils.Format(TC_RULESONSM3CER, [string(ContestTypeSA[Contest])]));
-  if (pos('CQ-WW', ContestTypeSA[Contest]) <> 0) or (pos('IARU-HF',
-    ContestTypeSA[Contest]) <> 0) then //n4af 4.35.5 // 4.115.4
-     begin
-     T1 := 3600000 // 60 min break criteria
-     end
-  else
-     begin
-     T1 := 1800000; // normal 30min break
-     end;
-  if ContestsArray[Contest].QRZRUID = 0 then
+                 SysUtils.Format(TC_RULESONSM3CER, [ContestId(Contest)]));
+  (* THE 60/30-MINUTE BREAK THAT STOOD HERE IS DELETED (Q60, 2026-10-15). It
+    wrote T1 -- 60 minutes for CQ WW and IARU HF (n4af 4.35.5, 4.115.4) -- and
+    NOTHING READ IT: LOGWIND's on-air-time reader sat inside a comment in D7
+    too, and the only live T1 is the debug stopwatch in the log load. The
+    break is the contest's, TContestBase.MinimumOffTimeMinutes, which
+    PostUnit.CalculateTotals reads. *)
+  (* The calendar ids, asked of the contest -- M1. 0 means "not listed". *)
+  if ContestIdentity(Contest).QRZRUId = 0 then
      begin
      SetMenuEnabled(menu_qrzru_calendar, False);
      end;
-  if ContestsArray[Contest].WA7BNM = 0 then
+  if ContestIdentity(Contest).WA7BNMId = 0 then
      begin
      SetMenuEnabled(menu_WA7BNM_calendar, False);
      end;
-  if Contest = WRTC then
+  (* THE OPERATING AIDS THE CONTEST FORBIDS ARE GREYED -- M9a. This was
+    `Contest = WRTC`; the contest says which aids it allows (TOperatingAid),
+    and each menu row is the aid it opens. *)
+  aids := ContestIdentity(Contest).PermittedOperatingAids;
+  if not (oaSuperCheckPartial in aids) then
      begin
      SetMenuEnabled(menu_windows_trmasterdta, False);
+     end;
+  if not (oaDXCluster in aids) then
+     begin
      SetMenuEnabled(menu_windows_telnet, False);
+     end;
+  if not (oaScorePosting in aids) then
+     begin
      SetMenuEnabled(menu_windows_getscores, False);
      end;
 
@@ -4489,20 +4531,23 @@ begin
   // DeleteMenu(tr4w_main_menu, menu_windows_mf, MF_BYCOMMAND or MF_GRAYED);
 {$IFEND}
 
-  if not (Contest in [DARCWAEDCCW..DARCWAEDCSSB]) then
+  (* THE QTC MENU IS THE CONTEST'S -- M9a; this was the WAE range
+    DARCWAEDCCW..DARCWAEDCSSB. *)
+  if not ContestIdentity(Contest).OffersQTCs then
      begin
      SetMenuEnabled(menu_ctrl_qtcfunctions, False);
      end;
 
-  (* HIDE the POTA-specific rows outside a POTA contest -- invisible rather
+  (* HIDE the park rows unless the contest offers them -- invisible rather
     than greyed, because they are irrelevant there and would only clutter the
-    menu.
+    menu. THE CONTEST SAYS WHETHER (OffersParkTools); this was a
+    `Contest <> POTA` test until POTA gained its class (2026-10-13).
 
     Visible := False, NOT a Free. DeleteMenu removed the row from the menu
     handle; freeing the TMenuItem would leave the id index holding a dangling
     pointer, and nothing needs the row back -- as the original note says, they
     were never re-added if the operator switched contests mid-session. *)
-  if Contest <> POTA then
+  if not ContestIdentity(Contest).OffersParkTools then
      begin
      if MenuItemById(menu_download_pota_parks) <> nil then
         begin
@@ -4513,9 +4558,10 @@ begin
         MenuItemById(menu_repeat_pota_parks).Visible := False;
         end;
      end;
-  // if ContestsArray[Contest].e <> 0 then
-  ErmakSpecification := ((ContestsBooleanArray[Contest] and (1 shl ERMAK_BIT))
-    <> 0) and (RussianID(Settings.My.Call));
+  (* THE CONTEST SAYS WHETHER IT OFFERS THE ERMAK SPECIFICATION (M10 S6); this
+     read ContestsBooleanArray's ERMAK_BIT, which the class's flag set states. *)
+  ErmakSpecification := ContestIdentity(Contest).ErmakSpecification and
+                        RussianID(Settings.My.Call);
 
   if ErmakSpecification then
      begin
@@ -4939,7 +4985,7 @@ begin
         begin
         if QSOTotals[All, Both] > 0 then
         if YesOrNo(TC_APPENDIMPORTEDQSOSTOCURRENTLOG) = IDno then Exit;
-       // if ImportFromADIFThreadID = 0 then tCreateThread(@ImportFromADIF, ImportFromADIFThreadID);
+       // if ImportFromADIFThreadID = 0 then tCreateThread(ImportFromADIF, ImportFromADIFThreadID);
         ImportFromADIF;
         end;
         *)
@@ -5677,8 +5723,7 @@ begin
 
     menu_rescore:
       begin
-        tUpdateLog(actRescore);
-        LoadinLog;
+        RescoreLog;
       end;
 
     //tLoadinLog({True, }True);
@@ -5795,13 +5840,13 @@ begin
     menu_qrzru_calendar:
       begin
         OpenUrl(SysUtils.Format('http://www.qrz.ru/contest/detail/%d.html',
-                                [ContestsArray[Contest].QRZRUID]));
+                                [ContestIdentity(Contest).QRZRUId]));
       end;
 
     menu_WA7BNM_calendar:
       begin
         OpenUrl(SysUtils.Format('https://contestcalendar.com/contestdetails.php?ref=%u',
-                                [ContestsArray[Contest].WA7BNM]));   // 4.127.1
+                                [ContestIdentity(Contest).WA7BNMId]));   // 4.127.1
 
       end;
 
@@ -5988,16 +6033,11 @@ begin
      begin
      tPTTVIACAT(false);
      end;
-  if (ActiveExchange = RSTDomesticQTHExchange) then
-    if (CallWindowString <> '') and (ExchangeWindowString <> '') then
-       begin
-       ParseFourFields(ExchangeWindowString, s1, s2, s3, s4);
-       end;
-  {    if S3 <> '' then
-       begin
-        ExchangeWindowString := S3
-
-      }
+  (* A SPLIT OF THE EXCHANGE INTO s1..s4 STOOD HERE, for the
+    RSTDomesticQTH shape, and was DELETED at M11 S7 (2026-10-14) as having
+    no effect: those four globals are read in one place,
+    ReturnInSAPOpMode, which splits the exchange into them itself before
+    any read. *)
   if OpMode = CQOpMode then
      begin
      ctyGetCountryID(callwindowstring);
@@ -6421,6 +6461,37 @@ begin
       end;
 end;
 
+(* WHICH OPERATING AID A WINDOW IS -- M9a, 2026-10-02.
+
+  UI WIRING, NOT A RULE. The contest says which aids it allows
+  (TContestBase.PermittedOperatingAids); this says which window IS which aid,
+  which only the UI knows: the master-file window is Super Check Partial, the
+  Telnet window the DX cluster, the post-scores window live score posting.
+  False for every other window. *)
+function OperatingAidOfWindow(aID: WindowsType; out aAid: TOperatingAid): boolean;
+begin
+   Result := True;
+   aAid := oaSuperCheckPartial;
+   case aID of
+      tw_MASTERWINDOW_INDEX:
+         begin
+         aAid := oaSuperCheckPartial;
+         end;
+      tw_TELNETWINDOW_INDEX:
+         begin
+         aAid := oaDXCluster;
+         end;
+      tw_POSTSCORESWINDOW_INDEX:
+         begin
+         aAid := oaScorePosting;
+         end;
+   else
+      begin
+      Result := False;
+      end;
+   end;
+end;
+
 procedure OpenTR4WWindow(ID: WindowsType);
 const
   NORESIZEEDWINDOW = SWP_SHOWWINDOW or SWP_NOSIZE;
@@ -6456,13 +6527,17 @@ var
   lclForm: TCustomForm;
   { The window's title, taken from its menu row -- see below. }
   menuTitle: string;
+  (* The operating aid this window is, if it is one -- M9a. *)
+  aid: TOperatingAid;
 begin
-  if Contest = WRTC then
-    if ID in [tw_MASTERWINDOW_INDEX, tw_TELNETWINDOW_INDEX,
-      tw_POSTSCORESWINDOW_INDEX] then
-       begin
-       Exit;
-       end;
+  (* A WINDOW FOR AN AID THE CONTEST FORBIDS DOES NOT OPEN -- M9a. This was
+    `Contest = WRTC` and the same three windows: the master file (Super Check
+    Partial), the DX cluster and score posting. *)
+  if OperatingAidOfWindow(ID, aid) and
+     (not (aid in ContestIdentity(Contest).PermittedOperatingAids)) then
+     begin
+     Exit;
+     end;
 
 
   if ID = tw_NETWINDOW_INDEX then
@@ -7076,9 +7151,21 @@ begin
   { Need this in case we exit soon }
   FillChar(RData.Callsign, SizeOf(RData.Callsign), 0);
   RData.ID := GetGUID;
+  (* THE QSO'S TIME, STAMPED BEFORE IT IS SCORED. A time-of-day rule
+     (Croatian, UK/EI) reads the hour the QSO was recorded in, never the
+     clock (NY4I 2026-10-01, design Q21), and this function scores the QSO
+     below -- so it must carry its time here, or a cleared record would
+     score at hour 00. LogContact stamps it again when the QSO is written,
+     as it always has; the two are the same moment to within the seconds
+     between Enter and the write, which is what the old clock read gave
+     live scoring too. *)
+  tGetQSOSystemTime(RData.tSysTime);
   RData.Callsign := Call;
-  if (ExchangeString = '') and not (ActiveExchange in [RSTNameAndQTHExchange,
-    RSTAndPOTAPark]) then // These two exchanges allow blank exchanges
+  (* A BLANK EXCHANGE IS THE CONTEST'S ANSWER -- M11 S7
+    (TContestBase.AcceptsBlankExchange: BWQP, the General QSO, POTA); it was
+    a test of the session's exchange shape (RSTNameAndQTH, RSTAndPOTAPark),
+    and it is asked only of a blank exchange. *)
+  if (ExchangeString = '') and not ContestAcceptsBlankExchange(ActiveContest(Contest)) then
      begin
      logger.debug('Exiting ParametersOkay early: ExchangeString=<%s>',
        [ExchangeString]);
@@ -7147,15 +7234,8 @@ begin
 
      // LocateCall(RData.Callsign, RData.QTH, True);
 
-     if DoingDXMults then
-        begin
-        GetDXQTH(RData);
-        end;
-
-     if DoingPrefixMults then
-        begin
-        SetPrefix(RData);
-        end;
+     (* The DX QTH, then the prefix, from one contest lookup -- M11 S4. *)
+     SetDXQTHAndPrefix(RData);
 
      GetRidOfPrecedingSpaces(ExchangeString);
      GetRidOfPostcedingSpaces(ExchangeString);
@@ -7222,39 +7302,40 @@ begin
   // indicator).  RData.Callsign itself is preserved.
   ctyLocateCallStripRover(RData.Callsign, RData.QTH);
 
-  if DoingDXMults then
-     begin
-     GetDXQTH(RData);
-     end;
+  (* THE DX QTH, THEN THE PREFIX, FROM ONE CONTEST LOOKUP -- M11 S4. The two
+     steps that stood here (GetDXQTH when the session counts DX multipliers,
+     SetPrefix when the contest counts prefixes) are LOGEDIT.SetDXQTHAndPrefix,
+     in the same order: GetDXQTH asks the contest for the DX key now, and two
+     ActiveContest calls per QSO would rebuild the station twice.
 
-  if DoingPrefixMults then
-     begin
-     SetPrefix(RData);
-     end;
-  case ActivePrefixMult of
-    BelgiumPrefixes: if RData.QTH.CountryID = 'ON' then
-                        begin
-                        RData.Prefix := RData.QTH.Prefix;
-                        end;
-    SACDistricts: RData.Prefix := SACDistrict(RData.QTH);
-    IndonesianDistricts:
-      begin
-        RData.Prefix := IndonesianDistrict(Rdata.QTH); // 4.64.1
-        if (Contest = YBDX) and (IndonesianCountry(Settings.My.Country)) then
-           begin
-           SetPrefix(RData);
-           end;
-      end;
-    Prefix: RData.Prefix := RData.QTH.Prefix;
-    SouthAmericanPrefixes: if RData.QTH.Continent = SouthAmerica then
-                              begin
-                              RData.Prefix := RData.QTH.Prefix;
-                              end;
-    NonSouthAmericanPrefixes: if RData.QTH.Continent <> SouthAmerica then
-                                 begin
-                                 RData.Prefix := RData.QTH.Prefix;
-                                 end;
-  end;
+     THE PREFIX MULTIPLIER, SET BY LOGEDIT.SetPrefix AND BY NOTHING ELSE -- M8.
+
+     A `case ActivePrefixMult of` stood after this call and was a COPY of six
+     of SetPrefix's arms (Belgium, SAC, Indonesian districts, Prefix, South
+     American, non-South American), line for line -- so it set the same
+     prefix again when DoingPrefixMults was on, and was the only thing that
+     set one when an operator's PREFIX MULTIPLIER line had chosen one of
+     those six without DoingPrefixMults following. Both are kept: SetPrefix
+     runs in exactly the cases where either copy ran, and every SetPrefix arm
+     sets the prefix from the QTH or the call alone, so running it once is
+     running it twice.
+
+     ITS INDONESIAN ARM NAMED THE YB DX CONTEST AND DID NOTHING: for an
+     Indonesian entrant it called SetPrefix, whose IndonesianDistricts arm
+     sets the very value the line before had just set. It was the same in D7
+     (MainUnit.pas:5225). It is deleted rather than moved -- a rule that
+     changes nothing is not a rule its class could state -- and what it was
+     meant to do is design Q48.
+
+     ITS SECOND HALF IS GONE -- M11 S3, 2026-10-14. The test also read
+     `PrefixMult in [the six kinds above]`, kept for the operator's PREFIX
+     MULTIPLIER line. That command retired at M10 S2, and since M11 S2
+     DoingPrefixMults IS `PrefixMult <> NoPrefixMults`, so the six-kind set
+     was a subset of the first half and could never add a call. The key
+     itself is the contest's (TContestBase.PrefixMultiplierKey), and since
+     M11 S3 part 2 so is DoingPrefixMults (LOGEDIT, asking
+     TContestBase.HasPrefixMultiplier): the prefix kind is deleted. *)
+  SetDXQTHAndPrefix(RData);
 
   GetRidOfPrecedingSpaces(ExchangeString);
   GetRidOfPostcedingSpaces(ExchangeString);
@@ -7674,7 +7755,7 @@ begin
      end;
   tExitFromPaddleFootSwitchThread := False;
   logger.Info('Calling tCreateThread from tRuntPaddleAndFootSwitchThread');
-  tPaddleFootSwitchThread := tCreateThread(@tPaddleFootSwitchThreadProc,
+  tPaddleFootSwitchThread := tCreateThread(tPaddleFootSwitchThreadProc,
     tPaddleThreadID);
   logger.Info('Created PaddleAndFootSwitch thread with threadid of %d',
     [tPaddleThreadID]);
@@ -7779,6 +7860,12 @@ begin
     'rundll32.exe shell32.dll,Control_RunDLL timedate.cpl,,%u', [i]));
 end;
 
+procedure RescoreLog;
+begin
+  tUpdateLog(actRescore);
+  LoadinLog;
+end;
+
 procedure LoadinLog;
 label
   1, 2, start;
@@ -7790,6 +7877,8 @@ var
   Size: Int64;
   CurrentRecord, FirstRecord: integer;
   TempMode: ModeType;
+  (* The row's own station, read with it (log schema 3). *)
+  LoadedMyFacts: TQsoMyFacts;
 
 begin
 
@@ -7855,7 +7944,9 @@ begin
   Sheet.DisposeOfMemoryAndZeroTotals;
   // LoadingInLogFile := True;
   1:
-  if LogSourceNext(TempRXData) then
+  (* AND EACH ROW'S OWN STATION, for the view a whole-log rule reads (log
+    schema 3, stage 3). *)
+  if LogSourceNext(TempRXData, LoadedMyFacts) then
      begin
 
      if TempRXData.ceSendToServer = False then
@@ -7900,8 +7991,11 @@ begin
           // sheet.  tUpdateLog(actRescore) has the same guard for the
           // same reason; this load-time path (LoadinLog) also needs
           // it so totals are correct after a fresh log open / load.
-          if (TempRXData.ceQSO_Deleted = False) and
-             (TempRXData.ceXQSO        = False) then
+          (* THE ONE STATEMENT OF WHICH RECORDS COUNT (M6) -- the view a bonus
+             rule reads at the final score holds exactly these. Inside the
+             outer test it adds only the X-QSO exclusion, as the line it
+             replaced did. *)
+          if QSOCountsTowardTotals(TempRXData) then
              begin
              TempMode := TempRXData.Mode;
              if TempMode = FM then
@@ -7917,14 +8011,15 @@ begin
                 TotalQSOPoints := TotalQSOPoints + TempRXData.QSOPoints;
                 end;
 
-             if Contest = MOQSOPARTY then
-                begin
-                CheckMOQSOPartyBonusStation(TempRXData.Callsign);
-                end;
-
+             (* MISSOURI'S BONUS-STATION CHECK STOOD HERE. Its stations are the
+                Missouri class's declared data now, counted over the whole log
+                at the final score (M6), so the loader decides nothing about
+                them. *)
              Sheet.AddQSOToSheets(@TempRXData, True);
-             CallsignsList.AddCallsign(TempRXData.Callsign, TempMode,
-               TempRXData.Band, TempRXData.ceClearDupeSheet);
+             (* AND TO THE VIEW THE FINAL SCORE'S BONUSES READ (M6) -- kept
+                beside the totals; see uScoreTotals. *)
+             AddLoggedQSO(TempRXData, LoadedMyFacts);
+             AddQSOToDupeSheets(TempRXData, TempRXData.ceClearDupeSheet);
              if not IntitialExLoaded then
                 begin
                 CallsignsList.AddIniitialExchange(TempRXData.Callsign,
@@ -7994,7 +8089,7 @@ begin
   QuickDisplay(IntToStr(GetTickCount64 - T1));
   // showint(m);
 {$IFEND}
-  if contest = RADIOYOC then // 4.53.2 // 4.72.9
+  if LegacyContestOf(Contest) = RADIOYOC then // 4.53.2 // 4.72.9
      begin
      PrevNr := copy(IntToStr(TempRXData.NumberReceived), 1, 3); // 4.53.2
      end;
@@ -8240,8 +8335,10 @@ begin
         end;
      end;
 
-  if ((ColumnsArray[logColPower].Enable) and (Contest <> FOCMARATHON)) then
-    //n4af 4.32.5
+  (* The FOC Marathon's power field is its member number, shown under FOC#
+    (n4af 4.32.5) -- the contest's to say since M9b. *)
+  if ((ColumnsArray[logColPower].Enable) and
+      (not ContestIdentity(Contest).PowerFieldIsFOCNumber)) then
      begin
      if RXData.Power <> '' then
         begin
@@ -8627,6 +8724,61 @@ begin
   FKButtonWidth := ws * 4 - 3;
 end;
 
+(* ONE QSO'S SCORING, RECOMPUTED FROM WHAT IS STORED ON IT.
+
+  The body of the rescore loop below, lifted out unchanged (2026-10-01) so the
+  contest matrix (uContestMatrix) runs EXACTLY the path /RESCORE runs rather
+  than a copy of it -- a copy would drift, and the matrix exists to say "the
+  program does what it did before". Country and prefix are looked up again,
+  the mult flags are set against the current sheet, then the points.
+
+  What it deliberately does NOT do: mint an id (and since 2026-10-14 the
+  rescore loop does not either -- an id is an identity, not scoring), or mark
+  dupes (that needs the log walked in order, which is the rescore loop's
+  business). *)
+procedure RecomputeQSOScoring(var aRX: ContestExchange);
+begin
+  RecomputeQSOScoring(aRX, NotCapturedMyFacts);
+end;
+
+procedure RecomputeQSOScoring(var aRX: ContestExchange;
+                              const aMyFacts: TQsoMyFacts);
+var
+  (* ONE ActiveContest FOR THE PREFIX AND THE DX QTH -- M11 S4. It rebuilds
+    the station on every call; this asked it through DoingPrefixMults and
+    again through SetPrefix, and GetDXQTH now needs it too -- as does
+    whether to run it (HasDXMultiplier, M11 S4 part 2), and the rover strip
+    asks it whether a /suffix may be a county (M11 S7). SetMultFlags and
+    CalculateQSOPoints fetch their own, as before. *)
+  contestRules: TContestBase;
+begin
+  contestRules := ActiveContest(Contest);
+
+  if ContestHasPrefixMultiplier(contestRules) then
+     begin
+     FillChar(aRX.QTH, SizeOf(aRX.QTH), 0);
+     FillChar(aRX.DXQTH, SizeOf(aRX.DXQTH), 0);
+     // State-QP rover (KG1S/MON): strip suffix for country lookup so
+     // /M doesn't get misread as a GB prefix.  Without this the
+     // rescore wipes the correct USA lookup done at log-time and
+     // restamps the record as DX=G.
+     LocateCallStrippingRoverCounty(contestRules, aRX.Callsign, aRX.QTH);
+     SetPrefix(contestRules, aRX);
+     end;
+
+  if ContestHasZoneMultiplier(contestRules) or ContestHasDXMultiplier(contestRules) then
+     begin
+     FillChar(aRX.QTH, SizeOf(aRX.QTH), 0);
+     FillChar(aRX.DXQTH, SizeOf(aRX.DXQTH), 0);
+     // The same rover strip as above, for the same reason.
+     LocateCallStrippingRoverCounty(contestRules, aRX.Callsign, aRX.QTH);
+     GetDXQTH(contestRules, aRX);
+     end;
+
+  Sheet.SetMultFlags(aRX);
+  CalculateQSOPoints(aRX, aMyFacts);
+end;
+
 procedure tUpdateLog(UpdAction: UpadateAction);
 label
   1, 2, 3, 4;
@@ -8652,6 +8804,25 @@ var
   beforeZoneMult  : Boolean;
   beforeQSOPoints : Word;
   beforeDupe      : Boolean;
+  (* The country lookup's other outputs -- dxcc_prefix, dxcc_code and
+    cty_cq_zone in the row. A rescore rewrites them too, and the line used to
+    itemise none of them, so a row could be written with no line saying why. *)
+  beforeQTHPrefix : PrefixMultiplierString;
+  beforeQTHCountry: Word;
+  beforeQTHZone   : Byte;
+  (* The row being read, by its handle -- what the write goes back to. *)
+  RowId: Int64;
+  (* THE CHANGED ROWS, written in ONE transaction after the read pass.
+    Section 9c, F1 and F4; see uLogRepository.TLogRowUpdates for why they are
+    collected rather than written as the pass goes. *)
+  Pending: TLogRowUpdates;
+  (* What the write covers, for the closing summary line. *)
+  Itemised: Boolean;
+  ItemisedCount: integer;
+  UnitemisedCount: integer;
+  (* The row's own station, and how many rows recorded none (stage 3). *)
+  RescoredMyFacts: TQsoMyFacts;
+  NotRecordedCount: integer;
 begin
 
   (* ROWS, NOT A MEMORY MAP -- step B5.
@@ -8670,199 +8841,244 @@ begin
     rescore did not touch was simply left alone in the file. CompareMem against
     a snapshot restores that property, and it matters -- a rescore of a
     thousand-QSO log would otherwise issue a thousand UPDATEs to write back
-    values that never changed. *)
+    values that never changed.
+
+    ONE READ, ONE WRITE -- section 9c, F1 and F4 (2026-10-14). The records
+    came from LogSourceReadAtIndex, which is an OFFSET walk to find the row
+    (O(n)) and a 68-column Open to read it, per record; each changed record
+    then went back through LogStoreUpdateQSOAtIndex, which walked the OFFSET
+    again and COMMITTED, per record. Now one cursor reads the log in order
+    and yields each row's id, the changed records are collected with it, and
+    LogStoreUpdateQSOsByRowId writes them in one transaction once the cursor
+    is closed. A failure rolls the whole pass back instead of leaving the log
+    half rewritten.
+
+    THE LOOP BODY IS STILL UNCHANGED: what is fetched, how it is fetched and
+    where it is stored changed, and nothing that decides WHAT is written.
+    Every UpdAction goes through this one loop, so all three that have
+    callers -- actRescore, actSetClearDupesheetBit, actClearMults -- read
+    and write this way; actResetClearDupesheetBit and actGetCRC32 have none. *)
   if not LogSourceOpen then
      begin
      Exit;
      end;
-  LogSize := LogSourceRecordCount;
-  if LogSize <= 0 then
-     begin
-     goto 2;
-     end;
-  QSOCounter := 0;
-
-  if UpdAction = actRescore then
-     begin
-     // LoadingInLogFile := True;
-     Sheet.DisposeOfMemoryAndZeroTotals;
-     end;
-  1:
-  if not LogSourceReadAtIndex(QSOCounter, RescoredRXData) then
-     begin
-     goto 4;
-     end;
-  RescoredBefore := RescoredRXData;
-
-  if RescoredRXData.ceRecordKind = rkQSO then
-     begin
-     if UpdAction = actSetClearDupesheetBit then
+  Pending := TLogRowUpdates.Create;
+  try
+     ItemisedCount := 0;
+     UnitemisedCount := 0;
+     NotRecordedCount := 0;
+     (* Read by the summary line, which an empty log also reaches. *)
+     QSOCounter := 0;
+     LogSize := LogSourceRecordCount;
+     if LogSize <= 0 then
         begin
-        RescoredRXData.ceClearDupeSheet := True;
-        end;
-
-     if UpdAction = actResetClearDupesheetBit then
-        begin
-        RescoredRXData.ceClearDupeSheet := False;
+        goto 2;
         end;
 
      if UpdAction = actRescore then
-       // Issue #750: X-QSO records stay in the log (for NIL protection
-       // of the worked station) but are deliberately excluded from
-       // every scoring artifact -- the rescore rebuilds the dupe
-       // sheet, mult sheet, and totals from this loop, so skipping
-       // X-QSO from the main scoring path makes them invisible to
-       // dupe checking, mults, and totals.  We ALSO zero out the
-       // record's own QSOPoints and ceDupe fields so the editable log
-       // displays a consistent "0" in the Pts column for every
-       // X-QSO record (matches DXLog.net's convention -- N1MM keeps
-       // the historical points, but a consistent visual signal is
-       // more useful at a glance).  The contact still exports to
-       // ADIF and Cabrillo (with the `X-QSO:` prefix instead of `QSO:`).
-       if RescoredRXData.ceQSO_Deleted = False then
-         if RescoredRXData.ceQSO_Deleted = False then
-         if RescoredRXData.ceXQSO then
-            begin
-            RescoredRXData.QSOPoints := 0;
-            RescoredRXData.ceDupe    := False;
-            end
-         else
-            begin
-            // Snapshot before rescore so we can report what (if anything) changed.
-            beforeCountryID  := RescoredRXData.QTH.CountryID;
-            beforePrefix     := RescoredRXData.Prefix;
-            beforeDXQTH      := RescoredRXData.DXQTH;
-            beforeDomMult    := RescoredRXData.DomesticMult;
-            beforeDXMult     := RescoredRXData.DXMult;
-            beforePrefixMult := RescoredRXData.PrefixMult;
-            beforeZoneMult   := RescoredRXData.ZoneMult;
-            beforeQSOPoints  := RescoredRXData.QSOPoints;
-            beforeDupe       := RescoredRXData.ceDupe;
-
-            if DoingPrefixMults then
-               begin
-               FillChar(RescoredRXData.QTH, SizeOf(RescoredRXData.QTH), 0);
-               FillChar(RescoredRXData.DXQTH, SizeOf(RescoredRXData.DXQTH), 0);
-               // State-QP rover (KG1S/MON): strip suffix for country lookup so
-               // /M doesn't get misread as a GB prefix.  Without this the
-               // rescore wipes the correct USA lookup done at log-time and
-               // restamps the record as DX=G.
-               ctyLocateCallStripRover(RescoredRXData.Callsign, RescoredRXData.QTH);
-               SetPrefix(RescoredRXData);
-               end;
-            // if (RXData.Prefix <> '') and DoingPrefixMults then
-            {
-          if RescoredRXData.Callsign = 'RP7X' then
-          asm
-          nop
-          end;
-          }
-
-            if DoingZoneMults or DoingDXMults then
-               begin
-               FillChar(RescoredRXData.QTH, SizeOf(RescoredRXData.QTH), 0);
-               FillChar(RescoredRXData.DXQTH, SizeOf(RescoredRXData.DXQTH), 0);
-               // State-QP rover (KG1S/MON): strip suffix for country lookup so
-               // /M doesn't get misread as a GB prefix.  Without this the
-               // rescore wipes the correct USA lookup done at log-time and
-               // restamps the record as DX=G.
-               ctyLocateCallStripRover(RescoredRXData.Callsign, RescoredRXData.QTH);
-               GetDXQTH(RescoredRXData);
-               //.DXQTH := RescoredRXData.QTH.CountryID;
-               end;
-
-            {rk4wwq}
-            // RescoredRXData.ceContest := Contest;
-            {
-          if RescoredRXData.Zone = 255 then
-          begin
-          if (RescoredRXData.NumberReceived > 999) and (RescoredRXData.NumberReceived < 9999) then
-          begin
-          asm nop end;
-          RescoredRXData.Zone := RescoredRXData.NumberReceived div 1000;
-          RescoredRXData.NumberReceived := RescoredRXData.NumberReceived mod 1000;
-          end;
-          end;
-          }
-            {rk4wwq}
-
-            if RescoredRXData.id = '' then
-               begin
-               RescoredRXData.id := GetGUID;
-               end;
-
-            Sheet.SetMultFlags(RescoredRXData);
-            CalculateQSOPoints(RescoredRXData);
-            if (not tAllowDupeQSOs) and (RescoredRXData.ceClearDupeSheet = False)
-              and (VisibleLog.CallIsADupe(RescoredRXData.Callsign,
-              RescoredRXData.Band, RescoredRXData.Mode)) then
-               begin
-               RescoredRXData.QSOPoints := 0;
-               RescoredRXData.ceDupe := True;
-               end
-            else
-               begin
-               RescoredRXData.ceDupe := False;
-               end;
-
-            // Report whenever actRescore actually mutated a record.  One line
-            // per changed record makes silent rescore-induced corruption
-            // (rover-call DX=G, mult-flag flip, points change, etc.) visible.
-            if (beforeCountryID  <> RescoredRXData.QTH.CountryID) or
-               (beforePrefix     <> RescoredRXData.Prefix)        or
-               (beforeDXQTH      <> RescoredRXData.DXQTH)         or
-               (beforeDomMult    <> RescoredRXData.DomesticMult)  or
-               (beforeDXMult     <> RescoredRXData.DXMult)        or
-               (beforePrefixMult <> RescoredRXData.PrefixMult)    or
-               (beforeZoneMult   <> RescoredRXData.ZoneMult)      or
-               (beforeQSOPoints  <> RescoredRXData.QSOPoints)     or
-               (beforeDupe       <> RescoredRXData.ceDupe) then
-               begin
-               logger.Info('[actRescore] %s [%d] changed: ' +
-                  'CountryID [%s]->[%s] Prefix [%s]->[%s] DXQTH [%s]->[%s] ' +
-                  'DomMult %s->%s DXMult %s->%s PrefixMult %s->%s ZoneMult %s->%s ' +
-                  'QSOPoints %d->%d Dupe %s->%s',
-                  [string(RescoredRXData.Callsign), QSOCounter,
-                   string(beforeCountryID),  string(RescoredRXData.QTH.CountryID),
-                   string(beforePrefix),     string(RescoredRXData.Prefix),
-                   string(beforeDXQTH),      string(RescoredRXData.DXQTH),
-                   BoolToStr(beforeDomMult,    True), BoolToStr(RescoredRXData.DomesticMult, True),
-                   BoolToStr(beforeDXMult,     True), BoolToStr(RescoredRXData.DXMult,       True),
-                   BoolToStr(beforePrefixMult, True), BoolToStr(RescoredRXData.PrefixMult,   True),
-                   BoolToStr(beforeZoneMult,   True), BoolToStr(RescoredRXData.ZoneMult,     True),
-                   beforeQSOPoints, RescoredRXData.QSOPoints,
-                   BoolToStr(beforeDupe, True), BoolToStr(RescoredRXData.ceDupe, True)]);
-               end;
-
-            Sheet.AddQSOToSheets(@RescoredRXData, False);
-            CallsignsList.AddCallsign(RescoredRXData.Callsign,
-              RescoredRXData.Mode, RescoredRXData.Band,
-              RescoredRXData.ceClearDupeSheet);
-            end;
-
-     if UpdAction = actClearMults then
         begin
-        RescoredRXData.ceClearMultSheet := True;
-        RescoredRXData.DomesticMult := False;
-        RescoredRXData.DXMult := False;
-        RescoredRXData.PrefixMult := False;
-        RescoredRXData.ZoneMult := False;
+        // LoadingInLogFile := True;
+        Sheet.DisposeOfMemoryAndZeroTotals;
         end;
-     end;
-  (* The mapping wrote back implicitly; this says so. *)
-  if not CompareMem(@RescoredBefore, @RescoredRXData, SizeOf(ContestExchange)) then
-     begin
-     LogStoreUpdateQSOAtIndex(QSOCounter, RescoredRXData);
-     end;
+     LogSourceRewind;
+     1:
+     (* AND THE ROW'S OWN STATION, which it is scored by (stage 3). *)
+     if not LogSourceNextWithRowId(RowId, RescoredRXData, RescoredMyFacts) then
+        begin
+        goto 4;
+        end;
+     RescoredBefore := RescoredRXData;
+     Itemised := False;
 
-  inc(QSOCounter);
-  if QSOCounter <> LogSize then
-     begin
-     goto 1;
-     end;
-  4:
-  2:
-  LogSourceClose;
+     if RescoredRXData.ceRecordKind = rkQSO then
+        begin
+        if UpdAction = actSetClearDupesheetBit then
+           begin
+           RescoredRXData.ceClearDupeSheet := True;
+           end;
+
+        if UpdAction = actResetClearDupesheetBit then
+           begin
+           RescoredRXData.ceClearDupeSheet := False;
+           end;
+
+        if (UpdAction = actRescore)                and
+           (RescoredRXData.ceQSO_Deleted = False) then
+           begin
+           // Issue #750: X-QSO records stay in the log (for NIL protection
+           // of the worked station) but are deliberately excluded from
+           // every scoring artifact -- the rescore rebuilds the dupe
+           // sheet, mult sheet, and totals from this loop, so skipping
+           // X-QSO from the main scoring path makes them invisible to
+           // dupe checking, mults, and totals.  We ALSO zero out the
+           // record's own QSOPoints and ceDupe fields so the editable log
+           // displays a consistent "0" in the Pts column for every
+           // X-QSO record (matches DXLog.net's convention -- N1MM keeps
+           // the historical points, but a consistent visual signal is
+           // more useful at a glance).  The contact still exports to
+           // ADIF and Cabrillo (with the `X-QSO:` prefix instead of `QSO:`).
+           // Q51 (NY4I): "x-qso never counts as worked" -- no multiplier
+           // either, so ClearXQSOScoring clears the stored flags too
+           // (CONTEST_OWNERSHIP_DESIGN.md 8.2v). The deleted test was
+           // written twice here; once now.
+           if RescoredRXData.ceXQSO then
+              begin
+              ClearXQSOScoring(RescoredRXData);
+              end
+           else
+              begin
+              // Snapshot before rescore so we can report what (if anything) changed.
+              beforeCountryID  := RescoredRXData.QTH.CountryID;
+              beforePrefix     := RescoredRXData.Prefix;
+              beforeDXQTH      := RescoredRXData.DXQTH;
+              beforeDomMult    := RescoredRXData.DomesticMult;
+              beforeDXMult     := RescoredRXData.DXMult;
+              beforePrefixMult := RescoredRXData.PrefixMult;
+              beforeZoneMult   := RescoredRXData.ZoneMult;
+              beforeQSOPoints  := RescoredRXData.QSOPoints;
+              beforeDupe       := RescoredRXData.ceDupe;
+              beforeQTHPrefix  := RescoredRXData.QTH.Prefix;
+              beforeQTHCountry := RescoredRXData.QTH.Country;
+              beforeQTHZone    := RescoredRXData.QTH.Zone;
+
+              (* NO EXCHANGE ID IS MINTED HERE (NY4I, 2026-10-14; open
+                question F6 in docs/SQLITE_LOG_SCHEMA_PLAN.md section 9c).
+                This pass gave a fresh GUID to every QSO whose id was empty,
+                so the first rescore of any imported or migrated log
+                rewrote every row -- 1,772 rows across the corpus -- and
+                invented an identity no other program knew the contact by.
+                A rescore recomputes SCORING; an id is not scoring. A QSO
+                without one is reported by the validity check
+                (uLogStore.LogStoreCheckExchangeIds) and left alone. *)
+              (* BY ITS OWN RECORDED GRID -- log schema 3, stage 3 (D1). A row
+                that recorded none is scored by the session's, as it always
+                was, and counted for the line at the end of the pass. *)
+              if RescoredMyFacts.Source = mfsNotCaptured then
+                 begin
+                 Inc(NotRecordedCount);
+                 end;
+              RecomputeQSOScoring(RescoredRXData, RescoredMyFacts);
+              if (not tAllowDupeQSOs) and (RescoredRXData.ceClearDupeSheet = False)
+                and VisibleLog.QSOIsADupe(RescoredRXData) then
+                 begin
+                 RescoredRXData.QSOPoints := 0;
+                 RescoredRXData.ceDupe := True;
+                 end
+              else
+                 begin
+                 RescoredRXData.ceDupe := False;
+                 end;
+
+              // Report whenever actRescore actually mutated a record.  One line
+              // per changed record makes silent rescore-induced corruption
+              // (rover-call DX=G, mult-flag flip, points change, etc.) visible.
+              if (beforeCountryID  <> RescoredRXData.QTH.CountryID) or
+                 (beforePrefix     <> RescoredRXData.Prefix)        or
+                 (beforeDXQTH      <> RescoredRXData.DXQTH)         or
+                 (beforeDomMult    <> RescoredRXData.DomesticMult)  or
+                 (beforeDXMult     <> RescoredRXData.DXMult)        or
+                 (beforePrefixMult <> RescoredRXData.PrefixMult)    or
+                 (beforeZoneMult   <> RescoredRXData.ZoneMult)      or
+                 (beforeQSOPoints  <> RescoredRXData.QSOPoints)     or
+                 (beforeDupe       <> RescoredRXData.ceDupe)        or
+                 (beforeQTHPrefix  <> RescoredRXData.QTH.Prefix)    or
+                 (beforeQTHCountry <> RescoredRXData.QTH.Country)   or
+                 (beforeQTHZone    <> RescoredRXData.QTH.Zone) then
+                 begin
+                 Itemised := True;
+                 logger.Info('[actRescore] %s [%d] changed: ' +
+                    'CountryID [%s]->[%s] Prefix [%s]->[%s] DXQTH [%s]->[%s] ' +
+                    'DomMult %s->%s DXMult %s->%s PrefixMult %s->%s ZoneMult %s->%s ' +
+                    'QSOPoints %d->%d Dupe %s->%s ' +
+                    'DXCCPrefix [%s]->[%s] DXCC %d->%d CQZone %d->%d',
+                    [string(RescoredRXData.Callsign), QSOCounter,
+                     string(beforeCountryID),  string(RescoredRXData.QTH.CountryID),
+                     string(beforePrefix),     string(RescoredRXData.Prefix),
+                     string(beforeDXQTH),      string(RescoredRXData.DXQTH),
+                     BoolToStr(beforeDomMult,    True), BoolToStr(RescoredRXData.DomesticMult, True),
+                     BoolToStr(beforeDXMult,     True), BoolToStr(RescoredRXData.DXMult,       True),
+                     BoolToStr(beforePrefixMult, True), BoolToStr(RescoredRXData.PrefixMult,   True),
+                     BoolToStr(beforeZoneMult,   True), BoolToStr(RescoredRXData.ZoneMult,     True),
+                     beforeQSOPoints, RescoredRXData.QSOPoints,
+                     BoolToStr(beforeDupe, True), BoolToStr(RescoredRXData.ceDupe, True),
+                     string(beforeQTHPrefix),  string(RescoredRXData.QTH.Prefix),
+                     beforeQTHCountry, RescoredRXData.QTH.Country,
+                     beforeQTHZone,    RescoredRXData.QTH.Zone]);
+                 end;
+
+              Sheet.AddQSOToSheets(@RescoredRXData, False);
+              AddQSOToDupeSheets(RescoredRXData, RescoredRXData.ceClearDupeSheet);
+              end;
+           end;
+
+        if UpdAction = actClearMults then
+           begin
+           RescoredRXData.ceClearMultSheet := True;
+           ClearMultiplierFlags(RescoredRXData);
+           end;
+        end;
+     (* The mapping wrote back implicitly; this says so. Collected here and
+       written below, once the cursor is closed. *)
+     if not CompareMem(@RescoredBefore, @RescoredRXData, SizeOf(ContestExchange)) then
+        begin
+        Pending.Add(RowId, RescoredRXData);
+        if Itemised then
+           begin
+           Inc(ItemisedCount);
+           end
+        else
+           begin
+           Inc(UnitemisedCount);
+           end;
+        end;
+
+     inc(QSOCounter);
+     if QSOCounter <> LogSize then
+        begin
+        goto 1;
+        end;
+     4:
+     2:
+     (* CLOSED BEFORE THE WRITE: the batch's opening commit would close the
+       cursor anyway, and uLogRepository refuses to begin while it is open. *)
+     LogSourceClose;
+
+     if LogStoreUpdateQSOsByRowId(Pending) then
+        begin
+        (* WHAT WAS WRITTEN, IN ONE LINE. The per-record line above itemises
+          what scoring and the country lookup changed; a row can also be
+          rewritten for a difference outside those fields, and without this
+          nothing said so. Logged when nothing was rewritten too: "0 of N" is
+          how an idempotent second rescore shows that it was one. "Given an
+          exchange id" left this line with the minting (F6, 2026-10-14). *)
+        if UpdAction = actRescore then
+           begin
+           logger.Info('[actRescore] %d of %d records rewritten in one ' +
+              'transaction: %d itemised above, ' +
+              '%d changed only in fields the per-record line does not itemise',
+              [Pending.Count, QSOCounter, ItemisedCount, UnitemisedCount]);
+           (* RULING A'S LINE, ONCE PER PASS: these rows recorded no station of
+             their own (logged before log schema 3), so their distance and any
+             other rule that reads our grid used this session's. *)
+           if NotRecordedCount > 0 then
+              begin
+              logger.Info('[actRescore] %d of %d QSOs recorded no station of ' +
+                 'their own (logged before log schema 3) and were scored by this ' +
+                 'session''s grid', [NotRecordedCount, QSOCounter]);
+              end;
+           end
+        else
+           begin
+           logger.Info('[tUpdateLog] action %d: %d of %d records rewritten in ' +
+              'one transaction', [Ord(UpdAction), Pending.Count, QSOCounter]);
+           end;
+        end;
+  finally
+     (* Again on the way out of an exception, which skipped the close above.
+       Closing twice is harmless: the second finds no cursor. *)
+     LogSourceClose;
+     Pending.Free;
+  end;
 
   if UpdAction = actRescore then
      begin
@@ -9466,10 +9682,12 @@ var
   i: integer;
   TempColumn: LogColumnsType;
 begin
-  ColumnsArray[logColPrecedence].Enable := ActiveExchange =
-    QSONumberPrecedenceCheckDomesticQTHExchange;
-  ColumnsArray[logColCheck].Enable := ActiveExchange =
-    QSONumberPrecedenceCheckDomesticQTHExchange;
+  (* THE SWEEPSTAKES COLUMNS ASK THE CONTEST'S FIELD LIST, like every column
+    below -- M11 S9e part 1 (plan F15/F15a). They were a test of the
+    session's exchange shape; see uExchangeFields for why the precedence
+    column is not the precedence field alone (ALL JA). *)
+  ColumnsArray[logColPrecedence].Enable := ExchangeFieldsShowPrecedenceColumn(ExchangeInformation);
+  ColumnsArray[logColCheck].Enable := ExchangeFieldsShowCheckColumn(ExchangeInformation);
   ColumnsArray[logColQTC].Enable := Settings.Qtc.Enable;
   ColumnsArray[logColAge].Enable := ExchangeInformation.Age;
 
@@ -9481,19 +9699,22 @@ begin
 
   ColumnsArray[logColName].Enable := ExchangeInformation.Name;
   ColumnsArray[logColZoneMult].Enable := ExchangeInformation.Zone;
-  if Contest <> FOCMARATHON then //n4af 4.32.5
+  (* PWR or FOC#: the FOC Marathon's power field is its member number (n4af
+    4.32.5), and the contest says so since M9b. PWR is left as it was when
+    the field is the number, exactly as the two tests here left it. *)
+  if ContestIdentity(Contest).PowerFieldIsFOCNumber then
+     begin
+     ColumnsArray[logColFOC].Enable := ExchangeInformation.Power;
+     end
+  else
      begin
      ColumnsArray[logColPower].Enable := ExchangeInformation.Power;
-     end;
-  if Contest = FOCMARATHON then //n4af 4.32.5
-     begin
-     ColumnsArray[logColFOC].Enable := ExchangeInformation.Power; //n4af 4.32.5
      end;
   ColumnsArray[logColChapter].Enable := ExchangeInformation.Chapter;
 
   ColumnsArray[logColNumberReceive].Enable := ExchangeInformation.QSONumber;
-  ColumnsArray[logColPrefixMult].Enable := ActivePrefixMult <> NoPrefixMults;
-  ColumnsArray[logColDXMult].Enable := ActiveDXMult <> NoDXMults;
+  ColumnsArray[logColPrefixMult].Enable := DoingPrefixMults;
+  ColumnsArray[logColDXMult].Enable := DoingDXMults;
   // ColumnsArray[logColPostCode].Enable := ExchangeInformation.PostalCode;
   ColumnsArray[logColKids].Enable := ExchangeInformation.Kids;
   i := -1;
@@ -9920,233 +10141,15 @@ end;
 
 // GetADIFMode, GetADIFSubMode, GetADIFBand moved to uADIF.pas (Issue #887).
 
-// ---------------------------------------------------------------------------
-// Contest-specific post-processing for an imported ADIF record.
-//
-// Most ADIF tag-to-ContestExchange mapping is done by uADIF.ApplyADIFFields-
-// ToExchange (a pure function, no MainUnit globals).  But for several
-// contests, the tag-level value needs contest-aware reinterpretation:
-// e.g. for ARRL_RTTY_ROUNDUP, the QTHString is built from RST + STATE in
-// a contest-defined format; for POTA, the QTHString comes from POTA_REF
-// or SIG_INFO depending on which was supplied.
-//
-// This routine takes the temps captured during field mapping and applies
-// the contest-specific logic.  It uses MainUnit-scope globals
-// (currentOperator, ActiveDomesticMult, ActiveExchange, DoingDomesticMults)
-// which is why it stays in MainUnit rather than moving to uADIF.
-// ---------------------------------------------------------------------------
-procedure ApplyContestSpecificADIFTail(const temps: TADIFRecordTemps;
-                                       var exch: ContestExchange);
+function ParseADIFRecord(sADIF: string; var exch: ContestExchange;
+                         out aMyFacts: TQsoMyFacts;
+                         out aSentExchange: AnsiString): boolean;
 var
-  j : Integer;
-  (* SRX_STRING with the received RST taken off -- see
-    uADIF.ExchangeFromSRXString. *)
-  srxExchange : string;
-begin
-  // fix up operator
-  if exch.ceOperator = '' then
-     begin
-     exch.ceOperator := currentOperator;
-     end;
-
-  (* THE RECEIVED RST COMES OFF HERE, ONCE, FOR EVERY CONTEST. The export
-    side prepends it unconditionally (uADIF.ResolveSRXString) to make the
-    field symmetric with STX_STRING, so this is the exact inverse and
-    belongs at the same level -- not in the contest arms, which is where
-    the first two instances of this fault were fixed one at a time. *)
-  if Length(temps.SRX_String) > 0 then
-     begin
-     exch.ExchString := ExchangeFromSRXString(temps.SRX_String,
-                                              exch.RSTReceived);
-     end;
-
-  case exch.ceContest of
-    GENERALQSO:
-      // Use grid square as exchange for any ADIF source, not just WSJT-X.
-      // WSJT-X does not always include PROGRAMID, so gating on FromWSJTX
-      // caused ExchString to stay empty when PROGRAMID was absent.
-      if temps.GridSquare <> '' then
-         begin
-         exch.ExchString  := temps.GridSquare;
-         exch.QTHString   := temps.GridSquare;
-         exch.DomesticQTH := temps.GridSquare;
-         end;
-
-    WAG:
-      exch.QTHString := temps.SRX_String;
-
-    ARRL160, CQ160CW, CQ160SSB, UBACW, UBASSB:
-      exch.DomesticQTH := temps.SRX_String;
-
-    ARRL_RTTY_ROUNDUP:
-      begin
-        logger.Debug('[ParseADIF] exch.QTH.CountryID = %s',
-                     [exch.QTH.CountryID]);
-        if (exch.QTH.CountryID = 'K') or (exch.QTH.CountryID = 'VE') then
-           begin
-           exch.QTHString := IntToStr(exch.RSTReceived) + ' ' + temps.State
-           end
-        else
-           begin
-           exch.QTHString := IntToStr(exch.RSTReceived) + ' ' +
-                             IntToStr(exch.NumberReceived);
-           end;
-        exch.ExchString := exch.QTHString;
-      end;
-
-    ARRLSSCW, ARRLSSSSB, WINTERFIELDDAY, ARRLFIELDDAY:
-      begin
-        (* ARRL_SECT IS NOT ALWAYS THERE, AND AN ABSENT TAG IS NOT AN
-          EMPTY SECTION. D7 writes ARRL_SECT for Sweepstakes and does not
-          write it for Winter Field Day -- that log carries the section in
-          <QTH> alone. Assigning it unconditionally therefore ERASED a
-          section the parser had already read correctly, on 1310 of the
-          1316 QSOs in the corpus's winter_fd set.
-
-          So ARRL_SECT wins when it is present, because it is the
-          unambiguous field; otherwise whatever <QTH> supplied stands, and
-          the domestic multiplier is taken from it. *)
-        if temps.ARRL_Sect <> '' then
-           begin
-           exch.DomesticQTH := temps.ARRL_Sect;
-           exch.QTHString   := temps.ARRL_Sect;
-           end
-        else if exch.QTHString <> '' then
-           begin
-           exch.DomesticQTH := exch.QTHString;
-           end;
-      end;
-
-    CWOPS:
-      exch.Age := StrToIntDef(exch.QTHString, 0);
-
-    CQWWCW, CQWWSSB:
-      begin
-        (* THE RST COMES OFF FIRST. SRX_STRING is '59 8' -- the received RST
-          and the zone -- because the exporter prepends the RST to make the
-          field symmetric with STX_STRING. The old code stored the whole thing
-          as the QTH and then asked StrToIntDef for a zone, which answered 0
-          because '59 8' is not a number.
-
-          AND A ZONE IS NOT A LOCATION. D7 emits no QTH for these QSOs at all;
-          filling QTHString put a <QTH>59 8 into every re-exported record. The
-          zone has its own field and CQZ already populates it. *)
-        exch.zone := StrToIntDef(ExchangeFromSRXString(temps.SRX_String,
-                                                       exch.RSTReceived), 0);
-      end;
-
-    FOCMARATHON:
-      exch.Power := temps.FOC_Num;
-
-    IARU:
-      begin
-        (* IARU SENDS RST PLUS EITHER A ZONE OR A SOCIETY, and only the society
-          is a QTH. The zone already arrived through ITUZ, and QTHString is what
-          the export tail turns into APP_TR4W_HQ -- so storing a zone here put
-          both a <QTH> and an <APP_TR4W_HQ> of '59 8' into every re-exported
-          record, neither of which D7 wrote.
-
-          The alphabetic test is the one this file already uses to tell a
-          domestic QTH from a number -- see UKRAINIAN, OKDX and LZDX below. *)
-        srxExchange := ExchangeFromSRXString(temps.SRX_String, exch.RSTReceived);
-        if IsAlpha(srxExchange) then
-           begin
-           exch.QTHString := ShortString(srxExchange);
-           end;
-      end;
-
-    NAQSOCW, NAQSOSSB, NAQSORTTY, NCCCSPRINT:
-      begin
-        exch.QTHString   := temps.State;
-        exch.DomesticQTH := temps.State;
-        exch.ExchString  := temps.State;
-      end;
-
-    UKRAINIAN, OKDX, LZDX:
-      if IsAlpha(temps.SRX_String) then
-         begin
-         exch.DomesticQTH := temps.SRX_String
-         end
-      else
-         begin
-         exch.QTHString := temps.SRX_String;
-         end;
-
-    POTA:
-      if IsValidPOTAPark(temps.POTARef) then
-         begin
-         if Length(temps.POTARef) = 0 then
-            begin
-            if AnsiUpperCase(temps.SIG) = 'POTA' then
-              if IsValidPOTAPark(temps.SIG_Info) then
-                 begin
-                 exch.QTHString := temps.SIG_Info;
-                 end;
-            end
-         else
-            begin
-            exch.QTHString := temps.POTARef;
-            end;
-         end
-      else
-        if LooksLikeAState(temps.State) then
-           begin
-           exch.QTHString   := temps.State;
-           exch.DomesticQTH := temps.State;
-           end;
-
-    WWDIGI, ARRLDIGI:
-      begin
-        exch.ExchString  := temps.GridSquare;
-        exch.DomesticQTH := temps.GridSquare;
-      end;
-
-  else
-    if (ActiveDomesticMult = GridSquares) or
-       (ActiveExchange = RSTAndOrGridExchange) or
-       (ActiveExchange = Grid2Exchange) or
-       (ActiveExchange = RSTAndGrid3Exchange) or
-       (ActiveExchange = GridExchange) then
-       begin
-       exch.QTHString   := temps.GridSquare;
-       exch.DomesticQTH := temps.GridSquare;
-       exch.ExchString  := IntToStr(exch.RSTReceived) + ' ' + temps.GridSquare;
-       end
-    else if DoingDomesticMults then
-       begin
-       if exch.QTHString <> '' then
-         // ADIF QTH tag carries the county/state code unambiguously
-         // for state QSO parties.  Prefer it when present -- the
-         // alpha-prefix-of-SRX_STRING heuristic below was already
-         // unreliable, and now fails outright because SRX_STRING is
-         // normalized to include a leading RST ("59 MON") on export.
-          begin
-          exch.DomesticQTH := exch.QTHString
-          end
-       else
-          begin
-          // Legacy fallback for ADIF imports that lack a QTH tag.
-          // Loads DomesticQTH with the ALPHA prefix of SRX_STRING.
-          j := 1;
-          while (j <= Length(temps.SRX_String)) and
-                not (temps.SRX_String[j] in ['0'..'9']) do
-             begin
-             Inc(j);
-             end;
-          exch.DomesticQTH := Copy(temps.SRX_String, 1, j - 1);
-          end;
-       end
-    else
-       begin
-       exch.ExchString := temps.SRX_String;
-       end;
-  end;
-end;
-
-function ParseADIFRecord(sADIF: string; var exch: ContestExchange): boolean;
-var
-  fields : TADIFFieldList;
-  temps  : TADIFRecordTemps;
+  fields  : TADIFFieldList;
+  temps   : TADIFRecordTemps;
+  session : TADIFImportSession;
+  (* The open contest, asked once per record -- see below. *)
+  importContest : TContestBase;
 begin
   logger.debug('[ParseADIFRecord] Parsing %s', [sADIF]);
   Result := ParseADIFFieldsList(sADIF, fields);
@@ -10154,37 +10157,104 @@ begin
   // managed to parse -- same forgiving behaviour as the legacy
   // implementation, which logged at error but kept the partial exch.
   ApplyADIFFieldsToExchange(fields, exch, temps);
-  ApplyContestSpecificADIFTail(temps, exch);
+
+  (* THE RECORD'S OWN STATION AND SENT EXCHANGE, read from the tags it
+    carries -- never this station's, and never rebuilt (stage 2, D3). *)
+  aMyFacts := MyFactsFromADIF(temps);
+  aSentExchange := SentExchangeFromADIF(temps);
+
+  (* WHAT THE OPEN CONTEST KNOWS, handed in as data: the contest that reads the
+    record is the one it NAMES, and never reads a global itself. *)
+  session.Operator           := CurrentOperator;
+  (* The open contest's grid-square and domestic-multiplier answers (M11 S6
+    part 1b and part 2) -- the base ApplyADIFImport's domestic tests; this
+    handed it the session's domestic kind and its "not none". ONE
+    ActiveContest per record, for both: the import holds no contest
+    object. *)
+  importContest := ActiveContest(Contest);
+  session.CountsGridSquares  := ContestHasGridSquareMultiplier(importContest);
+  session.ReceivesGridSquare := ContestReceivesGridSquareExchange(importContest);
+  session.DoingDomesticMults := ContestHasDomesticMultiplier(importContest);
+
+  (* EVERY CONTEST INTERPRETS ITS OWN RECORD -- the one named by CONTEST_ID,
+    through its class. ApplyClasslessADIFImport stood between these two for
+    the contests that had no class to do it (M5a), and was deleted when the
+    last of them, POTA, gained one (2026-10-13). *)
+  ApplyADIFCommonImport(temps, session, exch);
+  ApplyADIFContestImport(temps, session, exch);
   // State-QP rover (KG1S/MON): strip suffix for country lookup so /M
   // doesn't get misread as a GB prefix indicator.  Done here (rather
   // than inside uADIF) because the strip uses MainUnit-scope state
-  // (DomQTHTable, ActiveExchange).
-  ctyLocateCallStripRover(exch.Callsign, exch.QTH);
+  // (DomQTHTable). Whether the contest has rover counties is its own
+  // answer, asked of the contest this record already fetched (M11 S7).
+  LocateCallStrippingRoverCounty(importContest, exch.Callsign, exch.QTH);
 end; // of ParseADIFRecord
 (*----------------------------------------------------------------------------*)
 
-procedure ImportFromADIF(const aFileName: string = '');
+function ParseADIFRecord(sADIF: string; var exch: ContestExchange): boolean;
+var
+  ignoredFacts: TQsoMyFacts;
+  ignoredSent: AnsiString;
+begin
+  Result := ParseADIFRecord(sADIF, exch, ignoredFacts, ignoredSent);
+end;
+
+function ImportFromADIF(const aFileName: string = ''): boolean;
+var
+  report: string;
+begin
+  (* The menu's door. The report has already been shown to the operator. *)
+  Result := ImportFromADIF(aFileName, report);
+end;
+
+function ImportFromADIF(const aFileName: string; out aReport: string): boolean;
 var
   adif: TextFile;
   adifFileName: string;
   sBuffer: string;
   FoundEOH: boolean;
+  (* RECORDS READ FROM THE FILE -- collected, and in the log only once the one
+    transaction below commits. *)
   QSOCounter: integer;
-  (* RECORDS THAT DID NOT COMMIT. An import is exactly where a disk fills up,
-    and until 2026-09-11 the append was fire-and-forget -- so a run that failed
-    halfway still reported every record as imported. *)
-  QSOFailed: integer;
-  lpNumberOfBytesWritten: Cardinal;
+  (* LINES AFTER <EOH> THAT HELD NO COMPLETE RECORD. ParseADIFRecord answers
+    False for a line with no <EOR> or with a malformed tag, and those lines
+    have always been passed over -- this import reads one record per line.
+    That is unchanged; what is new is that they are COUNTED and said, because
+    a silent skip makes the imported count quietly wrong. Blank lines are not
+    counted: they are not records. *)
+  LinesSkipped: integer;
+  (* THE RECORDS, collected rather than written as they are read -- section 9c,
+    the ADIF ruling. Written in one transaction once the file is read. *)
+  Pending: TLogQsoAppends;
+  (* THE RECORD'S OWN station and sent exchange, collected with it. *)
+  recordMyFacts: TQsoMyFacts;
+  recordSentExchange: AnsiString;
+  (* OUR STATION AND THE IMPORT (NY4I, 2026-10-18): this contest's values at
+    import time, what the records that name ours say, and the answer. *)
+  contestMyFacts: TQsoMyFacts;
+  namedCount, stampedCount: integer;
+  fieldsNamed: TMyFactFields;
+  differCount: array[TMyFactField] of integer;
+  differExample: array[TMyFactField] of AnsiString;
+  myField: TMyFactField;
+  myIndex: integer;
+  useFileMyFacts: boolean;
+  myFactsNote: string;
+  FailedIndex: integer;
+  Failure: string;
+  failedRec: ContestExchange;
+  failedCall: string;
+  failedWhen: string;
+  failedBandMode: string;
   // County-line detection during import.  Within a single ImportFromADIF
   // pass we remember the first QTHString seen for each (call|band|mode)
   // tuple.  When a later record reuses the same (call|band|mode) with a
-  // different QTHString AND the contest's CountyLineAllowed flag is True,
+  // different QTHString AND the contest allows a county line on import,
   // we set ceClearDupeSheet on the later record so the post-import
   // rescore (tUpdateLog(actRescore)) does NOT flag it as a dupe.
-  // ContestsArray[ceContest].CountyLineAllowed is set to True only for
-  // the 13 single-state QSO parties (VC.pas).  Multi-state QPs (7QP /
-  // NEQP / etc.) are deliberately not flagged -- they need their own
-  // per-state county-line handling, tracked separately.
+  // The contest is asked through uContestRegistry.ContestAllowsCountyLineOnImport
+  // (M10 S1), which answers the contest's class since S7 (the row is no
+  // longer read here).
   seenCallBandMode    : TStringList;
   cbmKey              : string;
   cbmKeyIdx           : Integer;
@@ -10198,31 +10268,100 @@ var
     SetTextInQuickCommandWindow(SysUtils.Format(AnsiString(LclText('%u ' + TC_QSO_IMPORTED)), [QSOCounter]));
   end;
 
-  (* SAID AT THE END, AND SAID LOUDLY. A count that silently excludes what
-    failed is not better than a count that includes it -- the operator has to
-    know the file and the log now disagree, and by how much. *)
-  procedure ReportAnyThatFailed;
+  (* THE MY_ TAGS THE FILE NAMED, for the report: 'MY_GRIDSQUARE, MY_STATE'. *)
+  function ImportMyFactsTagList(const aFields: TMyFactFields): string;
+  var
+    f: TMyFactField;
   begin
-    if QSOFailed > 0 then
+    Result := '';
+    for f in aFields do
       begin
-      logger.Error('[Import] %d of %d records did NOT commit to the contest log',
-                   [QSOFailed, QSOCounter + QSOFailed]);
-      (* THE LOG LINE ABOVE IS THE HEADLESS REPORT. The dialog below is for
-        an operator, and a headless run has none -- see the note on the
-        append question. *)
-      if tSilentExport then
-         begin
-         Exit;
-         end;
-      ShowWarning(AnsiString(SysUtils.Format(
-         AnsiString('%d record(s) in this file did NOT reach the contest log. '
-                    + '%d were imported. See tr4w.log.'),
-         [QSOFailed, QSOCounter])));
+      if Result <> '' then
+        begin
+        Result := Result + ', ';
+        end;
+      Result := Result + MyFactFieldTag(f);
       end;
+  end;
+
+  (* Does any record that names our station disagree with this contest? *)
+  function ImportMyFactsDiffer: boolean;
+  var
+    f: TMyFactField;
+  begin
+    Result := False;
+    for f := Low(TMyFactField) to High(TMyFactField) do
+      begin
+      if differCount[f] > 0 then
+        begin
+        Result := True;
+        end;
+      end;
+  end;
+
+  (* One line per tag that differs: the tag, how many QSOs, one of the file's
+    values and this contest's. *)
+  function ImportMyFactsDifferences: string;
+  var
+    f: TMyFactField;
+  begin
+    Result := '';
+    for f := Low(TMyFactField) to High(TMyFactField) do
+      begin
+      if differCount[f] > 0 then
+        begin
+        Result := Result + sLineBreak + '   ' + SysUtils.Format(SImportMyFactsDifference,
+           [MyFactFieldTag(f), differCount[f], string(differExample[f]),
+            string(MyFactFieldValue(contestMyFacts, f))]);
+        end;
+      end;
+  end;
+
+  (* THE SKIPPED LINES, as a clause both reports end with. Empty when none. *)
+  function SkippedClause: string;
+  begin
+    Result := '';
+    if LinesSkipped > 0 then
+      begin
+      Result := ' ' + string(IntToStr(LinesSkipped)) + ' line(s) after the ADIF ' +
+                'header held no complete record (no <EOR>, or a malformed tag) ' +
+                'and were skipped, as they always have been.';
+      end;
+  end;
+
+  (* NOTHING WAS IMPORTED, SAID LOUDLY AND IN FULL -- NY4I, 2026-10-14: "all
+    or nothing, with ample notification". The sentence names the file, the
+    record that failed (its number in the file, its call and its time) and
+    why, and says what the log is now. It goes to the log at Error, and to the
+    operator in the same dialog the import's failure report has always used
+    (showwarning -- which never opens a dialog in a headless run), with a
+    notice in the quick-command line beside it that does not need dismissing. *)
+  procedure ReportNothingImported(const aWhy: string);
+  var
+    logNow: string;
+  begin
+    (* SAID ONLY WHEN IT IS TRUE. A rolled-back batch leaves the log as it
+      was and the store running; a rollback that itself failed disables the
+      store, and then "unchanged" is a claim nobody checked. *)
+    if LogStoreIsUsable then
+      begin
+      logNow := ' The contest log is unchanged.';
+      end
+    else
+      begin
+      logNow := ' The contest log is not being written -- see tr4w.log.';
+      end;
+    aReport := 'NOTHING was imported from ' + adifFileName + ': ' + aWhy + '.' +
+               logNow + SkippedClause;
+    logger.Error('[Import] %s', [aReport]);
+    SetTextInQuickCommandWindow('ADIF import FAILED -- nothing was imported');
+    showwarning(aReport);
   end;
 begin
   { This is a total rewrite of the ADIF import processing. - NY4I 2020 Jul 2
   }
+  Result := True;
+  aReport := '';
   FoundEOH := false;
   // TR4W's own GetOpenFileNameA wrapper, not VCL's TOpenDialog.  This restores
   // the house pattern that was here before -- it survived in comments at the
@@ -10262,18 +10401,22 @@ begin
         end;
      end;
 
+  (* A FAILURE, REPORTED LIKE THE OTHERS. This was a ShowMessage, which is
+    modal even in a headless run -- so /IMPORT naming a missing file hung
+    rather than failing. showwarning skips the dialog there. *)
   if not FileExists(adifFileName) then
      begin
-     ShowMessage({TC_IMPORTFILENOTFOUND} 'The import file is not available' + ' '
-       + adifFileName);
-     exit;
+     LinesSkipped := 0;
+     ReportNothingImported('the file is not available');
+     Result := False;
+     Exit;
      end;
 
   (* THE BINARY LOG IS OPTIONAL HERE, AND THAT IS THE WHOLE POINT OF THIS
     ROUTINE NOW.
 
     Nothing between here and CloseLogFile writes a byte to it -- the records go
-    to the contest database through LogStoreAppendQSO below, which is the only
+    to the contest database through LogStoreAppendQSOs below, which is the only
     append path left. The open and the seek are what remain of the days when an
     import appended to the .TRW.
 
@@ -10285,6 +10428,20 @@ begin
     So it is opened if it is there, because an operator who still has one
     should keep whatever that buys, and its absence is a log line rather than
     a refusal. *)
+  (* THIS CONTEST'S STATION, AS A QSO LOGGED NOW WOULD RECORD IT -- what an
+    imported record that names none is given (NY4I, 2026-10-18). Taken once:
+    nothing in the import changes it. *)
+  contestMyFacts := LogStoreCurrentMyFacts;
+  namedCount := 0;
+  stampedCount := 0;
+  fieldsNamed := [];
+  for myField := Low(TMyFactField) to High(TMyFactField) do
+     begin
+     differCount[myField] := 0;
+     differExample[myField] := '';
+     end;
+  myFactsNote := '';
+
   binaryLogOpen := OpenLogFile;
   if binaryLogOpen then
      begin
@@ -10295,19 +10452,12 @@ begin
      logger.Info('[Import] no binary log to open -- importing into the '
                  + 'contest database only, which is where the QSOs go anyway');
      end;
-  // Now open te file and process
-
-  if not FileExists(adifFileName) then
-     begin
-     DebugMsg('In ImportADIF, ADIF file ' + adifFilename + ' does not exists');
-     Exit;
-     end;
 
   AssignFile(adif, adifFileName);
-  //ReWrite(adif);
   QSOCounter := 0;
-  QSOFailed  := 0;
+  LinesSkipped := 0;
   Reset(adif);
+  Pending := TLogQsoAppends.Create;
   seenCallBandMode := TStringList.Create;
   try
     seenCallBandMode.CaseSensitive := False;
@@ -10324,7 +10474,8 @@ begin
        else
           begin
           ClearContestExchange(TempRXData);
-          if ParseADIFRecord(sBuffer, TempRXData) then // processed a record if true
+          if ParseADIFRecord(sBuffer, TempRXData, recordMyFacts,
+                             recordSentExchange) then // processed a record if true
              begin
              // State-QP rover (KG1S/MON): strip suffix for country lookup so
              // the /M tail isn't misread as a GB prefix indicator.  Without
@@ -10334,7 +10485,7 @@ begin
 
              // County-line follow-up detection.  If the imported record
              // reuses (call|band|mode) with a different QTHString AND the
-             // contest's CountyLineAllowed flag is True (see VC.pas), set
+             // contest allows it (uContestRegistry.ContestAllowsCountyLineOnImport), set
              // ceClearDupeSheet so the post-import rescore does not
              // dupe-flag this record.  Otherwise leave the flag alone --
              // the standard dupe check stays in effect.
@@ -10346,7 +10497,7 @@ begin
                 begin
                 priorQTHForKey := seenCallBandMode.ValueFromIndex[cbmKeyIdx];
                 if (priorQTHForKey <> string(TempRXData.QTHString)) and
-                   ContestsArray[TempRXData.ceContest].CountyLineAllowed then
+                   ContestAllowsCountyLineOnImport(TempRXData.ceContest) then
                    begin
                    TempRXData.ceClearDupeSheet := True;
                    end;
@@ -10356,45 +10507,190 @@ begin
                 seenCallBandMode.Add(cbmKey + '=' + string(TempRXData.QTHString));
                 end;
 
-             CalculateQSOPoints(TempRXData);
-             (* Into the log -- which is the database. The binary write that
-                followed this is gone with the .TRW.
-
-                COUNTED ONLY IF IT COMMITTED. The append used to be
-                fire-and-forget, so an import that failed partway still
-                reported every record as loaded -- and an import is precisely
-                where a disk fills up. The count now describes what is in the
-                log, which is what the operator is about to trust. *)
-             if LogStoreAppendQSO(TempRXData) then
+             (* OUR STATION FOR THIS RECORD (NY4I, 2026-10-18). One that names
+               none is given this contest's now, as a new QSO would be. One that
+               names some keeps them until the operator answers below, and is
+               counted for the report: which tags, and where they differ. *)
+             if recordMyFacts.Source = mfsNotCaptured then
                 begin
-                inc(QSOCounter);
+                recordMyFacts := MyFactsForImport(recordMyFacts, contestMyFacts, False);
+                Inc(stampedCount);
                 end
              else
                 begin
-                inc(QSOFailed);
+                Inc(namedCount);
+                fieldsNamed := fieldsNamed + MyFactsFieldsPresent(recordMyFacts);
+                for myField in MyFactsFieldsDiffering(recordMyFacts, contestMyFacts) do
+                   begin
+                   if differCount[myField] = 0 then
+                      begin
+                      differExample[myField] := MyFactFieldValue(recordMyFacts, myField);
+                      end;
+                   Inc(differCount[myField]);
+                   end;
                 end;
-             if QSOCounter mod 100 = 0 then
-                begin
-                DisplayLoadedQSOs;
-                end;
+
+             (* BY THAT STATION (stage 3). RescoreLog, after the commit, scores
+               again by what was stored, so a row the answer below changes is
+               scored by its final station. *)
+             CalculateQSOPoints(TempRXData, recordMyFacts);
+             (* COLLECTED, NOT WRITTEN. The write is one transaction, below,
+               once the whole file has been read. Nothing in this loop reads
+               the log, so holding the records back changes no record. *)
+             Pending.Add(TempRXData, recordMyFacts, recordSentExchange);
+             inc(QSOCounter);
+             end
+          else if Trim(sBuffer) <> '' then
+             begin
+             inc(LinesSkipped);
              end;
           end;
        end;
+    CloseFile(adif);
+
+    if binaryLogOpen then
+       begin
+       CloseLogFile;
+       end;
+
+    (* THE FILE NAMES OUR STATION: REPORT IT, AND ASK WHEN IT IS NOT THIS
+      CONTEST'S -- before anything is written (NY4I, 2026-10-18: "If the
+      import has its own my fields, we should report that and ask the user if
+      they should override the contest").
+
+        Yes  -> each such record keeps the file's values; a field it does not
+                name is unknown (MyFactsForImport)
+        No   -> each is given this contest's, every field, as a new QSO
+
+      ASKED ONLY WHEN SOMETHING DIFFERS: a file that agrees with the contest
+      gets the same answer either way, and is only reported. A HEADLESS
+      /IMPORT keeps the file's values -- nobody is there to ask, a script
+      that imports a file means its contents, and the round trip's MY_ case
+      depends on it -- and says so once in the log. *)
+    useFileMyFacts := True;
+    if namedCount > 0 then
+       begin
+       myFactsNote := ImportMyFactsTagList(fieldsNamed);
+       if ImportMyFactsDiffer then
+          begin
+          if tSilentExport then
+             begin
+             logger.Info('[Import] %d of %d record(s) name our station (%s) and ' +
+                'differ from this contest''s; a headless import keeps the ' +
+                'file''s values', [namedCount, QSOCounter, myFactsNote]);
+             end
+          else
+             begin
+             useFileMyFacts := YesOrNo(SysUtils.Format(SImportMyFactsQuestion,
+                [namedCount, QSOCounter, myFactsNote, ImportMyFactsDifferences])) = IDYES;
+             end;
+
+          if useFileMyFacts then
+             begin
+             myFactsNote := SysUtils.Format(SImportMyFactsKept, [namedCount]);
+             end
+          else
+             begin
+             for myIndex := 0 to Pending.Count - 1 do
+                begin
+                if Pending.MyFacts(myIndex).Source = mfsImported then
+                   begin
+                   Pending.SetMyFacts(myIndex,
+                      MyFactsForImport(Pending.MyFacts(myIndex), contestMyFacts, False));
+                   end;
+                end;
+             myFactsNote := SysUtils.Format(SImportMyFactsReplaced, [namedCount]);
+             end;
+          end
+       else
+          begin
+          myFactsNote := SysUtils.Format(SImportMyFactsSame, [namedCount, myFactsNote]);
+          end;
+       logger.Info('[Import] %s', [myFactsNote]);
+       end;
+    if stampedCount > 0 then
+       begin
+       if myFactsNote <> '' then
+          begin
+          myFactsNote := myFactsNote + ' ';
+          end;
+       myFactsNote := myFactsNote + SysUtils.Format(SImportMyFactsStamped, [stampedCount]);
+       end;
+
+    (* ONE TRANSACTION FOR THE WHOLE FILE -- ALL OR NOTHING (NY4I,
+      2026-10-14). This committed one record at a time ("counted only if it
+      committed"), which made a failure part way a log holding part of a
+      file. Now a failure rolls every record back, and the log is exactly
+      as it was before the import began. *)
+    if not LogStoreAppendQSOs(Pending, FailedIndex, Failure) then
+       begin
+       if (FailedIndex >= 0) and (FailedIndex < Pending.Count) then
+          begin
+          failedRec := Pending.Row(FailedIndex);
+          (* NAMED AS THE FILE HAS IT. The realistic failure is a record with
+            no CALL -- callsign is NOT NULL -- and such a record often has no
+            date either, so "( , 00-00-00 0000z)" would describe nothing. *)
+          failedCall := string(failedRec.Callsign);
+          if failedCall = '' then
+             begin
+             failedCall := 'no CALL';
+             end;
+          if (failedRec.tSysTime.qtYear = 0) and
+             (failedRec.tSysTime.qtMonth = 0) and
+             (failedRec.tSysTime.qtDay = 0) then
+             begin
+             failedWhen := 'no QSO_DATE';
+             end
+          else
+             begin
+             failedWhen := tGetDateFormat(failedRec.tSysTime) +
+                           SysUtils.Format(' %.2d%.2dz',
+                              [failedRec.tSysTime.qtHour,
+                               failedRec.tSysTime.qtMinute]);
+             end;
+          (* THE BAND AND MODE TOO -- NY4I, 2026-10-14: "notify the user with
+            the callsign, band, mode and timestamp". The spellings the log
+            window and the edit dialog use. *)
+          failedBandMode := Trim(BandStringsArrayWithOutSpaces[failedRec.Band]) + ' ' +
+                            ModeStringArray[failedRec.Mode];
+          ReportNothingImported(SysUtils.Format(
+             'record %d of %d (%s, %s, %s) could not be written to the log: %s',
+             [FailedIndex + 1, Pending.Count, failedCall, failedBandMode,
+              failedWhen, Failure]));
+          end
+       else
+          begin
+          ReportNothingImported('its ' + string(IntToStr(Pending.Count)) +
+                                ' record(s) could not be written to the log: ' +
+                                Failure);
+          end;
+       Result := False;
+       ClearThread(ImportFromADIFThreadID);
+       Exit;
+       end;
   finally
     seenCallBandMode.Free;
+    Pending.Free;
   end;
 
-  CloseFile(adif);
-
-  if binaryLogOpen then
-     begin
-     CloseLogFile;
-     end;
-
-  tUpdateLog(actRescore);
-  LoadinLog;
+  RescoreLog;
   DisplayLoadedQSOs;
-  ReportAnyThatFailed;
+  aReport := string(IntToStr(QSOCounter)) + ' QSO(s) imported from ' +
+             adifFileName + ' in one transaction.' + SkippedClause;
+  (* AND WHAT IT DID WITH OUR STATION -- reported every time a record named
+    it or was given the contest's (NY4I, 2026-10-18). *)
+  if myFactsNote <> '' then
+     begin
+     aReport := aReport + ' ' + myFactsNote;
+     end;
+  logger.Info('[Import] %s', [aReport]);
+  (* SKIPPED LINES ARE SAID TO THE OPERATOR TOO. They are not a failure --
+    they never were -- but each one is something in the file that is not in
+    the log, and the count above does not show it. *)
+  if LinesSkipped > 0 then
+     begin
+     showwarning(aReport);
+     end;
   ClearThread(ImportFromADIFThreadID);
 
 end; // of ImportFromADIF
@@ -11274,7 +11570,7 @@ begin
         newRXData.Zone := oldRXData_v1_5.Zone;
         newRXData.NameSent := oldRXData_v1_5.NameSent;
         newRXData.Kids := oldRXData_v1_5.Kids;
-        newRXData.ceContest := oldRXData_v1_5.ceContest;
+        newRXData.ceContest := ContestHandleOf(oldRXData_v1_5.ceContest);  (* the same byte: a legacy contest's handle is its number *)
         newRXData.QSOPoints := oldRXData_v1_5.QSOPoints;
         newRXData.RandomCharsReceived := oldRXData_v1_5.RandomCharsReceived;
         newRXData.ceClearMultSheet := oldRXData_v1_5.ceClearMultSheet;
@@ -11370,7 +11666,7 @@ begin
         newRXData.Zone := oldRXData_v1_6.Zone;
         newRXData.NameSent := oldRXData_v1_6.NameSent;
         newRXData.Kids := oldRXData_v1_6.Kids;
-        newRXData.ceContest := oldRXData_v1_6.ceContest;
+        newRXData.ceContest := ContestHandleOf(oldRXData_v1_6.ceContest);  (* the same byte, as above *)
         newRXData.QSOPoints := oldRXData_v1_6.QSOPoints;
         newRXData.RandomCharsReceived := oldRXData_v1_6.RandomCharsReceived;
         newRXData.ceClearMultSheet := oldRXData_v1_6.ceClearMultSheet;
@@ -11418,23 +11714,11 @@ begin
 
 end;
 
-procedure ProcessImportedSRX_String(fieldValue: string; var exch:
-  ContestExchange);
-begin
-  case exch.ceContest of
-    ARRLFIELDDAY, WINTERFIELDDAY:
-      begin
-        // parse SRX_STRING of 1A EPA into class 1A and QTHString of EPA
-        logger.debug('Calling ProcessClassAndDomesticOrDXQTHExchange from ProcessImportedSRX_String');
-        ProcessClassAndDomesticOrDXQTHExchange(fieldValue, exch);
-        exch.exchString := fieldValue;
-        if length(exch.DomesticQTH) = 0 then
-           begin
-           exch.DomesticQTH := exch.QTHString;
-           end;
-      end;
-  end; // case
-end;
+(* ProcessImportedSRX_String IS DELETED (M5a, 2026-10-01). It parsed a Field
+  Day SRX_STRING ('1A EPA') into a class and a section, and NOTHING CALLED IT:
+  no caller anywhere in the tree, so a Field Day import never did what it said.
+  Reading a received exchange is the contest's, and arrives as
+  ParseReceivedExchange on the two Field Day classes (M5b, design 3.2). *)
 
 (* IsWin64 IS DELETED (2026-09-08), and it was here TWICE.
 

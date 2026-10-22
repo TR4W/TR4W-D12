@@ -17,12 +17,13 @@ msgctxt "TC_TRANSLATION_LANGUAGE"
 msgid "ENGLISH"
 msgstr "Suomi"
 
+# 2026-10-16: machine translation (LibreTranslate), no human translator to credit (NY4I, 2026-10-16). Was "N4AF" -- the English msgid copied, which credited N4AF for it.
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:8
 #: utr4wstrings.tc_translation_author
 #, fuzzy
 msgid "N4AF"
-msgstr "N4AF"
+msgstr "LibreTranslate"
 
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:9
@@ -73,12 +74,13 @@ msgstr "Virheellinen tietue"
 msgid "ERROR: Invalid Frequency logged"
 msgstr "VIRHE: Virheellinen taajuus kirjattuna"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "SHOW FREQUENCY in LOG on pois päältä"
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:16
 #: utr4wstrings.tc_freq_off
 #, fuzzy
 msgid "SHOW FREQUENCY IN LOG is turned off"
-msgstr "SHOW FREQUENCY in LOG on pois päältä"
+msgstr "SHOW FREQUENCY IN LOG on pois päältä"
 
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:17
@@ -153,12 +155,13 @@ msgstr "TIEDOT/VASTUU/PAIKALLISUUS"
 msgid "HAMLIB ID"
 msgstr "HAMLIB-TUNNISTE"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "RADIO ONE ja RADIo KAKSI on määritetty käytettäväksi %s. RADIO ONE pitää portin; RADIO KAKSI CAT ohjaus on pois päältä, kunnes yksi radion CONTROL Port on muuttunut."
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:32
 #: utr4wstrings.tc_port_conflict_startup
 #, fuzzy
 msgid "RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio's CONTROL PORT is changed."
-msgstr "RADIO ONE ja RADIo KAKSI on määritetty käytettäväksi %s. RADIO ONE pitää portin; RADIO KAKSI CAT ohjaus on pois päältä, kunnes yksi radion CONTROL Port on muuttunut."
+msgstr "RADIO ONE ja RADIO TWO on molemmat määritetty käyttämään porttia %s. RADIO ONE pitää portin; RADIO TWO:n CAT-ohjaus on pois käytöstä, kunnes jommankumman radion CONTROL PORT vaihdetaan."
 
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:33
@@ -252,12 +255,13 @@ msgstr "Anna CQ ZONE tai JA PREFECTURE"
 msgid "Sorry!! NO LOG = TRUE which prohibits logging QSOs on this computer"
 msgstr "Anteeksi! NO LOG = TRUE, joka kieltää QSO:iden kirjaamisen tällä tietokoneella"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Aseta koodin tunnistearvo."
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:48
 #: utr4wstrings.tc_setcomputeridvalue
 #, fuzzy
 msgid "Set COMPUTER ID value."
-msgstr "Aseta koodin tunnistearvo."
+msgstr "Aseta COMPUTER ID -arvo."
 
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:50
@@ -522,14 +526,17 @@ msgstr "EU-maa, kirjoita nelimerkkinen maakoodi"
 msgid "EI/GI, enter your County"
 msgstr "EI/GI, mene piirikuntaasi"
 
+# 2026-10-16: the English changed from "Latest config file" to "Last Contest" -- the button reopens the contest's database, not a config file.
+# Composed from this catalogue's own words, please review: last = 'Last status:' -> 'Viimeinen tila:'; contest = 'Contest' -> 'Kilpailu'.
+# Previous translation (of the old English): "Viimeisin config-tiedosto"
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:100
 #: tfrmnewcontest.btnlatest.caption
 #: utr4wstrings.tc_latest_config_file
 #, fuzzy
 msgctxt "tfrmnewcontest.btnlatest.caption"
-msgid "Latest config file"
-msgstr "Viimeisin config-tiedosto"
+msgid "Last Contest"
+msgstr "Viimeinen kilpailu"
 
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:101
@@ -755,19 +762,21 @@ msgstr "Anna QTH, jonka haluat lähettää\rja nimi, jota haluat käyttää:"
 msgid "Enter first two digits of your QTH:"
 msgstr "Anna QTH:n kaksi ensimmäistä numeroa:"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Kirjoita ikäsi MINUN VALTIONi kenttään:"
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:134
 #: utr4wstrings.tc_enteryourageinmystatefield
 #, fuzzy
 msgid "Enter your age in MY STATE field:"
-msgstr "Kirjoita ikäsi MINUN VALTIONi kenttään:"
+msgstr "Kirjoita ikäsi MY STATE -kenttään:"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Anna QTH:si, jonka haluat lähettää, jos olet Pohjois-Amerikassa tai voimasi MINUN valtionani, jos ulkona:"
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:135
 #: utr4wstrings.tc_enteryourqthorpower
 #, fuzzy
 msgid "Enter your QTH that you want to send if you are in North America or your power as MY STATE if outside:"
-msgstr "Anna QTH:si, jonka haluat lähettää, jos olet Pohjois-Amerikassa tai voimasi MINUN valtionani, jos ulkona:"
+msgstr "Anna QTH, jonka haluat lähettää, jos olet Pohjois-Amerikassa, tai muuten lähetysteho MY STATE -arvoksi:"
 
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:136
@@ -1212,12 +1221,13 @@ msgstr "Tietokonekello on synkronoitu."
 msgid "Connecting to "
 msgstr "Yhdistetään "
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Yhteys TR4WSERVERiin epäonnistui. Tarkista Server PASSWORD-arvo!"
 #. Section: UNET
 #: tr4w/src/lang/tr4w_consts_eng.pas:205
 #: utr4wstrings.tc_connecttotr4wserverfailed
 #, fuzzy
 msgid "Connect to TR4WSERVER failed. Check SERVER PASSWORD value!!"
-msgstr "Yhteys TR4WSERVERiin epäonnistui. Tarkista Server PASSWORD-arvo!"
+msgstr "Yhteys TR4WSERVERiin epäonnistui. Tarkista SERVER PASSWORD -arvo!!"
 
 #. Section: UNET
 #: tr4w/src/lang/tr4w_consts_eng.pas:206
@@ -1850,12 +1860,13 @@ msgstr "Parametrilla \"%s\" ei ole arvoa konfig-tiedostossa -- jätetään oletu
 msgid "Recording DVP. Press ESCAPE or RETURN to stop."
 msgstr "Nauhoitan DVP:tä. Paina ESCAPE tai takaisin pysähtyä."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Alt-R-komento vaatii KAKSI RADIO MODE = TRUE"
 #. Section: LOGSUBS1
 #: tr4w/src/lang/tr4w_consts_eng.pas:353
 #: utr4wstrings.tc_altrcommanddisabled
 #, fuzzy
 msgid "Alt-R command requires TWO RADIO MODE = TRUE"
-msgstr "Alt-R-komento vaatii KAKSI RADIO MODE = TRUE"
+msgstr "Alt-R-komento vaatii TWO RADIO MODE = TRUE"
 
 #. Section: LOGSUBS1
 #: tr4w/src/lang/tr4w_consts_eng.pas:354
@@ -1871,12 +1882,13 @@ msgstr "CQ-viestiä ei ole ohjelmoitu AltF1:een."
 msgid "This file does not exist. Create an empty file for editing?"
 msgstr "Tiedostoa ei ole olemassa. Luo tyhjä tiedosto muokattavaksi?"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Alt-D-komento vaatii KAKSI RADIO MODE = TRUE"
 #. Section: LOGSUBS2
 #: tr4w/src/lang/tr4w_consts_eng.pas:360
 #: utr4wstrings.tc_altdcommanddisabled
 #, fuzzy
 msgid "Alt-D command requires TWO RADIO MODE = TRUE"
-msgstr "Alt-D-komento vaatii KAKSI RADIO MODE = TRUE"
+msgstr "Alt-D-komento vaatii TWO RADIO MODE = TRUE"
 
 #. Section: LOGSUBS2
 #: tr4w/src/lang/tr4w_consts_eng.pas:361
@@ -2289,19 +2301,21 @@ msgstr "Väärä muistutusaika!"
 msgid "Invalid reminder date!!"
 msgstr "Virheellinen muistutuspäivä!"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Liian monta SCORE viestit!!"
 #. Section: CFGCMD
 #: tr4w/src/lang/tr4w_consts_eng.pas:450
 #: utr4wstrings.tc_toomanytotalscoremessages
 #, fuzzy
 msgid "Too many TOTAL SCORE MESSAGEs!!"
-msgstr "Liian monta SCORE viestit!!"
+msgstr "Liian monta TOTAL SCORE MESSAGE -riviä!!"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Ensimmäinen komento config-tiedostossa täytyy olla MINUN Call-lausuntoni!!"
 #. Section: CFGCMD
 #: tr4w/src/lang/tr4w_consts_eng.pas:451
 #: utr4wstrings.tc_thefirstcommandinconfigfilemustbe
 #, fuzzy
 msgid "The first command in config file must be the MY CALL statement!!"
-msgstr "Ensimmäinen komento config-tiedostossa täytyy olla MINUN Call-lausuntoni!!"
+msgstr "Asetustiedoston ensimmäisen komennon on oltava MY CALL -lause!!"
 
 #. Section: USYNTIME
 #. milliseconds
@@ -2556,12 +2570,13 @@ msgstr "Soita Call Windowiin"
 msgid "RST prompt"
 msgstr "RST-kehotus"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Lähetä puhelu MINUN Call-komennollani"
 #. Section: UEDITMESSAGE
 #: tr4w/src/lang/tr4w_consts_eng.pas:508
 #: utr4wstrings.tc_send_callassetbymycallcommand
 #, fuzzy
 msgid "Send call as set by MY CALL command"
-msgstr "Lähetä puhelu MINUN Call-komennollani"
+msgstr "Lähetä tunnus MY CALL -komennon mukaisena"
 
 #. Section: UEDITMESSAGE
 #: tr4w/src/lang/tr4w_consts_eng.pas:509
@@ -4324,10 +4339,11 @@ msgstr "Pääikkuna"
 msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
 msgstr "Kirjasin koskee pääkilpailun ikkunaa. Kaikki neljä tulevat voimaan, kun TR4W alkaa."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Nämä olivat asetusvalikossa. Tuo ikkuna katoaa, kun ROW COUNT ja WINDOW KOKO liittyvät heihin täällä."
 #: tprefsform.lblappearmenunote.caption
 #, fuzzy
 msgid "These were on the Appearance item of the Settings menu. That window goes away once ROW COUNT and WINDOW SIZE join them here."
-msgstr "Nämä olivat asetusvalikossa. Tuo ikkuna katoaa, kun ROW COUNT ja WINDOW KOKO liittyvät heihin täällä."
+msgstr "Nämä olivat Asetukset-valikon Ulkoasu-kohdassa. Se ikkuna poistuu, kun myös ROW COUNT ja WINDOW SIZE siirtyvät tänne."
 
 #: tprefsform.lblaudioheading.caption
 #, fuzzy
@@ -5655,6 +5671,16 @@ msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
 msgstr "%s käännös %s"
 
+# 2026-10-16: new string -- the About box shows it under a machine translation's credit. Machine draft, please review.
+#. Section: General
+#: utr4wstrings:tc_translation_corrections
+#: tr4w/src/lang/tr4w_consts_eng.pas:14
+#: utr4wstrings.tc_translation_corrections
+#, fuzzy
+msgctxt "TC_TRANSLATION_CORRECTIONS"
+msgid "Corrections are appreciated."
+msgstr "Korjaukset otetaan mielellään vastaan."
+
 #. Section: UEDITMESSAGE
 #. 4.51.8
 #: utr4wstrings:rc_3830
@@ -5778,6 +5804,7 @@ msgctxt "RC_SETTIMEZONE"
 msgid "Set time zone"
 msgstr "Aseta aikavyöhyke"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Ping [SERVER OSOITE]"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_ping
 #: tr4w/src/lang/tr4w_consts_eng.pas:554
@@ -5785,7 +5812,7 @@ msgstr "Aseta aikavyöhyke"
 #, fuzzy
 msgctxt "RC_PING"
 msgid "Ping [SERVER ADDRESS]"
-msgstr "Ping [SERVER OSOITE]"
+msgstr "Ping [SERVER ADDRESS]"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_runserver
@@ -7275,6 +7302,7 @@ msgctxt "TC_ENTEREXCHANGEPRESSENTERLOGESCAPEAB"
 msgid "Enter exchange.  Press ENTER to log, ESCAPE to abort QSO."
 msgstr "Syötä vaihto. Paina Enter kirjautua, ESCAPE keskeyttää QSO."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "RELAY CONTROL SATAMA = PADDLE SATAMA"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_relaycontrolportpaddleport
 #: tr4w/src/lang/tr4w_consts_eng.pas:879
@@ -7282,7 +7310,7 @@ msgstr "Syötä vaihto. Paina Enter kirjautua, ESCAPE keskeyttää QSO."
 #, fuzzy
 msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
 msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr "RELAY CONTROL SATAMA = PADDLE SATAMA"
+msgstr "RELAY CONTROL PORT = PADDLE PORT"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_locationfieldempty
@@ -7510,106 +7538,6 @@ msgstr "DX"
 #, fuzzy
 msgid "QTH"
 msgstr "QTH"
-
-#: tfrmfunctionkeys.pnlf1.caption
-#, fuzzy
-msgid "F1"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf10.caption
-#, fuzzy
-msgid "F10"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf11.caption
-#, fuzzy
-msgid "F11"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf12.caption
-#, fuzzy
-msgid "F12"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf2.caption
-#, fuzzy
-msgid "F2"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf3.caption
-#, fuzzy
-msgid "F3"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf4.caption
-#, fuzzy
-msgid "F4"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf5.caption
-#, fuzzy
-msgid "F5"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf6.caption
-#, fuzzy
-msgid "F6"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf7.caption
-#, fuzzy
-msgid "F7"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf8.caption
-#, fuzzy
-msgid "F8"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf9.caption
-#, fuzzy
-msgid "F9"
-msgstr ""
-
-#: tfrmhamscore.lblqueuevalue.caption
-#, fuzzy
-msgid "--"
-msgstr ""
-
-#: tfrmmp3recorder.btncontrol.caption
-#, fuzzy
-msgid "..."
-msgstr ""
-
-#: tfrmpanadapter.btnspannarrow.caption
-#, fuzzy
-msgid "-"
-msgstr ""
-
-#: tfrmpanadapter.btnspanwide.caption
-#, fuzzy
-msgid "+"
-msgstr ""
-
-#: tradioeditform.optdata7.caption
-#, fuzzy
-msgid "7"
-msgstr ""
-
-#: tradioeditform.optdata8.caption
-#, fuzzy
-msgid "8"
-msgstr ""
-
-#: tradioeditform.optstop1.caption
-#, fuzzy
-msgid "1"
-msgstr ""
-
-#: tradioeditform.optstop2.caption
-#, fuzzy
-msgid "2"
-msgstr ""
 
 #: ulclformhelpers.tc_prefs_activate
 #, fuzzy
@@ -7858,15 +7786,6 @@ msgstr "Luo ja käytä uutta lokia"
 #, fuzzy
 msgid "Get server log"
 msgstr "Hae palvelinloki"
-
-#: tfrmserverlog.lblbytes.caption
-#: tfrmserverlog.lblqsos.caption
-#: tfrmserverlog.lblrecords.caption
-#: tfrmserverlog.lblsent.caption
-#, fuzzy
-msgctxt "tfrmserverlog.lblbytes.caption"
-msgid "0"
-msgstr ""
 
 #: tfrmtelnet.btnconfigure.caption
 #: utr4wstrings.tc_configure_ellipsis
@@ -8724,4 +8643,428 @@ msgstr "TRCLUSTER.DAT ei löytynyt ohjelman vierestä, joten lista on tyhjä. Ki
 #, fuzzy
 msgid "No DX clusters are defined yet -- click Configure to add one."
 msgstr "DX-klustereita ei ole vielä määritelty -- napsauta Asetukset lisätäksesi yhden."
+
+#: uappstrings.sexchangenoprecedence
+#, fuzzy
+msgid "Missing precedence (Q A B U M S)"
+msgstr "Puuttuva etuoikeus (Q A B U M S)"
+
+#: uappstrings.sexchangeoutofstateworkshostonly
+#, fuzzy
+msgid "Out of state: work %s stations only"
+msgstr "Valtion ulkopuolella: työtä %s ainoastaan asemat"
+
+#: uappstrings.scontestinactive
+#, fuzzy
+msgid "%s (inactive)"
+msgstr "%s (ei aktiivinen)"
+
+#: uappstrings.scategorypowerchangedrescored
+#, fuzzy
+msgid "CATEGORY-POWER is now %s -- the scoring category changed and the log was rescored."
+msgstr "LUOKKA-POWER on nyt %s - pisteytysluokka muuttui ja loki uusittiin."
+
+#: uappstrings.scontestnotonmultiop
+#, fuzzy
+msgid "%s cannot be used on the multi-op network yet -- the network protocol cannot carry it. Use it only while this station is not connected to a multi-op server."
+msgstr "%s ei ole vielä käytettävissä multi-op-verkossa -- verkkoprotokolla ei pysty kuljettamaan sitä. Käytä sitä vain, kun tämä asema ei ole yhteydessä multi-op-palvelimeen."
+
+#: uappstrings.snewcontestin7qpneinsideaparty
+#, fuzzy
+msgid "IN7QPNE is for stations outside Indiana, the 7th call area, New England and Delaware. From %s, choose the %s instead."
+msgstr "IN7QPNE on Indianan, 7. kutsualueen, New Englandin ja Delawaren ulkopuolisille asemille. Valitse %s:sta sen sijaan %s."
+
+#: uappstrings.speeronanothercontest
+#, fuzzy
+msgid "Station %s is on %s, this station is on %s -- its QSOs are NOT being logged here. All stations must run the same contest."
+msgstr "Asema %s on kilpailussa %s, tämä asema on kilpailussa %s -- sen QSO:ita EI kirjata tänne. Kaikkien asemien on ajettava samaa kilpailua."
+
+#: uappstrings.sexchangenotagridorreport
+#, fuzzy
+msgid "%s is not a grid square or a signal report"
+msgstr "%s ei ole lokaattori eikä signaaliraportti"
+
+#: uappstrings.sexchangegridrequired
+#, fuzzy
+msgid "Grid square required"
+msgstr "Lokaattori vaaditaan"
+
+#: uappstrings.scouldnotshowinfilemanager
+#, fuzzy
+msgid ""
+"TR4W could not open this location in your file manager:\n"
+"\n"
+"%s\n"
+"\n"
+"Check that it still exists.  tr4w.log records what was tried."
+msgstr ""
+"TR4W ei voinut avata tätä sijaintia tiedostonhallinnassa:\n"
+"\n"
+"%sTarkista, että se on yhä olemassa. tr4w.log kirjaa mitä yritettiin."
+
+#: uappstrings.sdownloadcannotverify
+#, fuzzy
+msgid ""
+"the server's certificate could not be verified (%s).\n"
+"\n"
+"The request was REFUSED rather than sent unverified. Turn off Preferences > Network > verify server certificates if you want to proceed without checking."
+msgstr ""
+"palvelimen todistusta ei voitu todentaa (%s)\n"
+"\n"
+"Pyyntö ei ollut todennettu eikä lähetetty. Sammuta asetukset > Verkko > tarkistaa palvelinvarmenteet, jos haluat jatkaa ilman tarkistuksia."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(MAANI = %s)"
+#: uappstrings.sexchangemodebriefcountry
+#, fuzzy
+msgid "(MY COUNTRY = %s)"
+msgstr "(MY COUNTRY = %s)"
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(MAANI on tyhjä)"
+#: uappstrings.sexchangemodebriefemptycountry
+#, fuzzy
+msgid "(MY COUNTRY is empty)"
+msgstr "(MY COUNTRY on tyhjä)"
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Tämä kilpailu pyytää valtiota, provinssia tai osastoa, koska MINUN MAAni on %s."
+#: uappstrings.sexchangemodefromcountry
+#, fuzzy
+msgid "This contest is asking for a state, province or section because MY COUNTRY is %s."
+msgstr "Tämä kilpailu kysyy osavaltiota, provinssia tai sektiota, koska MY COUNTRY on %s."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Tämä kilpailu pyytää valtiota, maakuntaa tai osastoa, koska MINUN maani on tyhjä."
+#: uappstrings.sexchangemodefromemptycountry
+#, fuzzy
+msgid "This contest is asking for a state, province or section because MY COUNTRY is empty."
+msgstr "Tämä kilpailu kysyy osavaltiota, provinssia tai sektiota, koska MY COUNTRY on tyhjä."
+
+#: uappstrings.sfilenamecamefromsetting
+#, fuzzy
+msgid "The name came from the %s setting for this contest."
+msgstr "Nimi tuli %s Kilpailua varten."
+
+#: uappstrings.sfilenotfoundthere
+#, fuzzy
+msgid "TR4W could not find this file:"
+msgstr "TR4W ei löytänyt tätä tiedostoa:"
+
+#: uappstrings.sfirstrunconvertmissing
+#, fuzzy
+msgid ""
+"TR4W could not find the conversion program:\n"
+"    %s\n"
+"\n"
+"It is installed beside TR4W itself. TR4W will start with its defaults, and your old settings file is left untouched."
+msgstr ""
+"TR4W ei löytänyt muunto-ohjelmaa:\n"
+" %sSe asennetaan TR4W:n viereen. TR4W aloittaa oletuksistaan, ja vanha asetustiedosto jätetään koskematta."
+
+#: uappstrings.sfirstrunconvertnothingdone
+#, fuzzy
+msgid ""
+"Nothing was converted.\n"
+"\n"
+"TR4W will start with its defaults and your old settings file is untouched. You can convert at any time by running\n"
+"    %s\n"
+"\n"
+"from a command prompt in that folder. Converting then replaces whatever you have configured in the meantime with the old values."
+msgstr ""
+"Mitään ei muutettu.\n"
+"\n"
+"TR4W aloittaa oletuksistaan ja vanha asetustiedostosi on koskematon. Voit muuntaa milloin tahansa juoksemalla\n"
+" %sKansiossa olevasta komentokehotuksesta. Muuntaminen korvaa sitten mitä olet konfiguroinut sillä välin vanhoilla arvoilla."
+
+#: uappstrings.sfirstrunconvertnow
+#, fuzzy
+msgid "Convert now"
+msgstr "Muunna nyt"
+
+#: uappstrings.sfirstrunconvertprompt
+#, fuzzy
+msgid ""
+"TR4W has found settings from an earlier version:\n"
+"    %s\n"
+"\n"
+"and it has not written its own settings file yet:\n"
+"    %s\n"
+"\n"
+"TR4W can carry that old configuration across now. The conversion lists what it would change and asks before writing anything, so you can look first and still say no.\n"
+"\n"
+"You do not have to do it now. Nothing is lost by continuing: TR4W starts with its defaults, your old file is left untouched, and converting later simply replaces those defaults with your old values.\n"
+"\n"
+"What is worth knowing is the ORDER. If you continue now and then set TR4W up by hand, converting afterwards overwrites that work with the values from the old file. Converting first avoids the question."
+msgstr ""
+"TR4W on löytänyt asetukset aikaisemmasta versiosta:\n"
+" %sja se ei ole vielä kirjoittanut omaa asetustiedostoaan:\n"
+" %sTR4W voi kantaa vanhan konfiguraation nyt. Muunnos listaa mitä se muuttaisi ja kysyy ennen kirjoittamista mitään, joten voit katsoa ensin ja silti sanoa ei.\n"
+"\n"
+"Sinun ei tarvitse tehdä sitä nyt. Mikään ei mene hukkaan jatkamalla: TR4W alkaa sen oletusarvot, vanha tiedosto jätetään koskematta, ja muuntaminen myöhemmin yksinkertaisesti korvaa nämä oletusarvot vanhoilla arvoilla.\n"
+"\n"
+"Se, mikä kannattaa tietää, on käsky. Jos jatkat nyt ja sitten asettaa TR4W käsin, muuntaa jälkeenpäin ylikirjoittaa, että toimivat arvot vanhan tiedoston. Ensin käännyttäminen välttää kysymyksen."
+
+#: uappstrings.sfirstrunconvertskip
+#, fuzzy
+msgid "Continue without converting"
+msgstr "Jatka ilman muuntamista"
+
+#: uappstrings.sfirstrunconverttitle
+#, fuzzy
+msgid "TR4W -- settings from an earlier version"
+msgstr "TR4W -- aikaisemman version asetukset"
+
+#: uappstrings.slogfileunavailable
+#, fuzzy
+msgid ""
+"TR4W could not open its log file.\n"
+"\n"
+"%s\n"
+"\n"
+"TR4W will keep running and keep trying to open it. Until it can, nothing from this session is written to the log."
+msgstr ""
+"TR4W ei voinut avata lokitiedostoaan.\n"
+"\n"
+"%sTR4W jatkaa juoksemista ja yrittää avata sen. Ennen kuin se voi, mitään tästä istunnosta ei ole kirjoitettu lokiin."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Tietokonetunniste %s on jo käytössä toinen asema tässä verkossa.\n\nMuutos Tunnistus kirjaimeen, jota muut asemat eivät käytä."
+#: uappstrings.snetcomputeridinuse
+#, fuzzy
+msgid ""
+"Computer ID %s is already in use by another station on this network.\n"
+"\n"
+"Change COMPUTER ID to a letter no other station is using, then reconnect."
+msgstr ""
+"Tietokoneen tunnus %s on jo toisen aseman käytössä tässä verkossa.\n"
+"\n"
+"Vaihda COMPUTER ID kirjaimeksi, jota mikään muu asema ei käytä, ja yhdistä sitten uudelleen."
+
+#: uappstrings.snewcontestin7qpnecountyorstate
+#, fuzzy
+msgid "Enter your county if you are in Indiana, the 7th call area, New England or Delaware. Enter your state, Canadian Province or \"DX\" if outside all four:"
+msgstr "Jos olet Indianassa, 7. puhelualueella, Uudessa Englannissa tai Delawaressa. Syötä valtion, Kanadan maakunta tai \"DX,\" jos ulkopuolella kaikki neljä:"
+
+#: uappstrings.sqsonotlogged
+#, fuzzy
+msgid "NOT LOGGED -- the contest log would not accept this QSO. See tr4w.log. Do not clear the entry."
+msgstr "EI LOGGED -- kilpailun loki ei hyväksyisi tätä QSO. Ks. pr4w.log. Älä tyhjennä sisäänkäyntiä."
+
+#: uappstrings.sreadinessdomesticfilemissing
+#, fuzzy
+msgid "This contest scores domestic multipliers from a .DOM file and none is named, so no domestic multiplier will be counted."
+msgstr "Tämä kilpailu tuottaa kotimaisia kertoimia .DOM-tiedostosta eikä kukaan ole nimetty, joten mitään kotimaista kerrointa ei lasketa."
+
+#: uappstrings.sreadinessfooter
+#, fuzzy
+msgid "Set these in Preferences > Station, then restart TR4W: they are read once when the contest is set up, so changing them now will not change this contest."
+msgstr "Aseta nämä asemiin > Asema, käynnistä sitten TR4W uudelleen: ne luetaan kerran, kun kilpailu on perustettu, joten niiden muuttaminen nyt ei muuta tätä kilpailua."
+
+#: uappstrings.sreadinessheading
+#, fuzzy
+msgid "This contest is set up, but TR4W is missing information it needs:"
+msgstr "Tämä kilpailu on perustettu, mutta TR4W puuttuu tietoja se tarvitsee:"
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Puheluni on tyhjä. TR4W ei pysty hoitamaan maatasi, maanosaasi tai aluettasi ilman sitä, eikä mikään niistä riippuvainen ole oikein."
+#: uappstrings.sreadinessmycallmissing
+#, fuzzy
+msgid "MY CALL is empty. TR4W cannot work out your country, continent or zone without it, and nothing that depends on them will be right."
+msgstr "MY CALL on tyhjä. Ilman sitä TR4W ei pysty päättelemään maatasi, mannerta tai vyöhykettä, eikä mikään niistä riippuva ole oikein."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Maani on tyhjä. Se on yleensä tehty MINUN Call kautta CTY.DAT. Kunnes sillä on arvo TR4W kohtelee tätä asemaa DX -- ARRL DX tarkoittaa, että se pyytää jokaiselta asemalta valtiota tai maakuntaa - ja kieltäytyy K:n tai 100:n kaltaisesta vallasta."
+#: uappstrings.sreadinessmycountrymissing
+#, fuzzy
+msgid "MY COUNTRY is empty. It is normally worked out from MY CALL through CTY.DAT. Until it has a value TR4W treats this station as DX -- in ARRL DX that means it will ask every station for a state or province and refuse a power such as K or 100."
+msgstr "MY COUNTRY on tyhjä. Se päätellään yleensä MY CALL -tunnuksesta CTY.DAT-tiedoston avulla. Kunnes sillä on arvo, TR4W käsittelee tätä asemaa DX-asemana -- ARRL DX:ssä se tarkoittaa, että jokaiselta asemalta kysytään osavaltiota tai provinssia ja teho kuten K tai 100 hylätään."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "MINUN GRIDINi on tyhjä ja tämä kilpailu lähettää verkkoruutusi."
+#: uappstrings.sreadinessmygridmissing
+#, fuzzy
+msgid "MY GRID is empty and this contest sends your grid square."
+msgstr "MY GRID on tyhjä, ja tämä kilpailu lähettää lokaattorisi."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "MINUN VALTIONi on tyhjä ja tämä kilpailu lähettää valtion, maakunnan tai osaston. TR4W lähettää sarjanumeron."
+#: uappstrings.sreadinessmystatemissing
+#, fuzzy
+msgid "MY STATE is empty and this contest sends your state, province or section. TR4W will send a serial number instead."
+msgstr "MY STATE on tyhjä, ja tämä kilpailu lähettää osavaltiosi, provinssisi tai sektiosi. TR4W lähettää sen sijaan sarjanumeron."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "MINUN Zone on tyhjä ja tämä kilpailu lähettää teidän alue."
+#: uappstrings.sreadinessmyzonemissing
+#, fuzzy
+msgid "MY ZONE is empty and this contest sends your zone."
+msgstr "MY ZONE on tyhjä, ja tämä kilpailu lähettää vyöhykkeesi."
+
+#: uappstrings.sverifyallpassed
+#, fuzzy
+msgid "All %d check(s) passed."
+msgstr "Kaikki %d Tarkistus [s] hyväksytty."
+
+#: uappstrings.sverifyclose
+#, fuzzy
+msgid "&Close"
+msgstr "&Sulje"
+
+#: uappstrings.sverifycolumncheck
+#, fuzzy
+msgid "Check"
+msgstr "Tarkista"
+
+#: uappstrings.sverifycolumnresult
+#, fuzzy
+msgid "Result"
+msgstr "Tulos"
+
+#: uappstrings.sverifyfailed
+#, fuzzy
+msgid "FAILED"
+msgstr "FAIDOT"
+
+#: uappstrings.sverifypassed
+#, fuzzy
+msgid "Passed"
+msgstr "Ohitettu"
+
+#: uappstrings.sverifyrun
+#, fuzzy
+msgid "&Run checks"
+msgstr "& Suorita tarkastukset"
+
+#: uappstrings.sverifyrunning
+#, fuzzy
+msgid "Running %d check(s)..."
+msgstr "Suoritetaan %d shekit"
+
+#: uappstrings.sverifysomefailed
+#, fuzzy
+msgid "%d of %d check(s) FAILED. Select a row for details."
+msgstr "%d / %d Tarkistetaan. Valitse rivi yksityiskohtia varten."
+
+#: uappstrings.sverifytitle
+#, fuzzy
+msgid "Verification checks"
+msgstr "Tarkastustarkastukset"
+
+#: uprogrammain.scontestfileforeigndatabase
+#, fuzzy
+msgid ""
+"This file is a database, but it was not created by TR4W:\n"
+"\n"
+"%s\n"
+"\n"
+"TR4W cannot open another program's log. Choose a TR4W log (.db) or a contest configuration file (.cfg)."
+msgstr ""
+"Tämä tiedosto on tietokanta, mutta TR4W ei luonut sitä:\n"
+"\n"
+"%sTR4W ei voi avata toisen ohjelman lokia. Valitse TR4W-loki (.db) tai kilpailuasetustiedosto (.cfg)."
+
+#: uprogrammain.scontestfilenotrecognised
+#, fuzzy
+msgid ""
+"This file is not a TR4W log and is not a contest configuration file:\n"
+"\n"
+"%s\n"
+"\n"
+"Choose a TR4W log (.db) or a contest configuration file (.cfg)."
+msgstr ""
+"Tämä tiedosto ei ole TR4W-loki eikä kilpailuasetustiedosto:\n"
+"\n"
+"%sValitse TR4W-loki (.db) tai kilpailuasetustiedosto (.cfg)."
+
+#: utr4wstrings.tc_bankalt
+#, fuzzy
+msgid "Alt"
+msgstr "Alt"
+
+#: utr4wstrings.tc_bankcontrol
+#, fuzzy
+msgid "Control"
+msgstr "Valvonta"
+
+#: utr4wstrings.tc_bankstandard
+#, fuzzy
+msgid "Standard"
+msgstr "Standardi"
+
+#: utr4wstrings.tc_ignoredunknownqth
+#, fuzzy
+msgid "Ignored, not a known QTH:"
+msgstr "Tuntematon QTH:"
+
+# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output say TAUSTA (background), a mistranslation; this catalogue's 'Contest' is 'Kilpailu'. Machine output was: "TAUSTA"
+#: uappstrings.snewcontestcontestlabel
+#, fuzzy
+msgid "CONTEST"
+msgstr "KILPAILU"
+
+#: uappstrings.snewcontestsearchhint
+#, fuzzy
+msgid "Search: type part of a name, e.g. QSO"
+msgstr "Haku: kirjoita nimen osa, esim. QSO"
+
+#: uappstrings.simportmyfactsdifference
+#, fuzzy
+msgid "%s: %d QSO(s), e.g. %s (this contest: %s)"
+msgstr "%s: %d QSO(s), esim. %s (tämä kilpailu: %s)"
+
+#: uappstrings.simportmyfactskept
+#, fuzzy
+msgid "The file's station was kept for %d QSO(s)."
+msgstr "Tiedoston asema säilytettiin %d QSO(s)."
+
+#: uappstrings.simportmyfactsquestion
+#, fuzzy
+msgid ""
+"This file names our station for %d of its %d QSO(s) (%s), and it is not what this contest has:%s\n"
+"\n"
+"Keep the file's values for those QSOs?\n"
+"Yes keeps the file's. No gives them this contest's, as a new QSO would get."
+msgstr ""
+
+#: uappstrings.simportmyfactsreplaced
+#, fuzzy
+msgid "%d QSO(s) were given this contest's station in place of the file's."
+msgstr "%d QSO:ille annettiin tämän kilpailun asema tiedoston sijasta."
+
+#: uappstrings.simportmyfactssame
+#, fuzzy
+msgid "%d QSO(s) named our station (%s), the same as this contest's."
+msgstr "%d QSO(s) nimetty asema (%s), sama kuin tämän kilpailun."
+
+#: uappstrings.simportmyfactsstamped
+#, fuzzy
+msgid "%d QSO(s) named no station of ours and were given this contest's."
+msgstr "%d QSO [s] nimesi mitään asemamme ja sai tämän kilpailun."
+
+# 2026-10-19: machine output said 'aktiiviset' (active), the opposite of the English. Machine output was: "Näytä aktiiviset kilpailut"
+#: uappstrings.snewcontestshowinactive
+#, fuzzy
+msgid "Show inactive contests"
+msgstr "Näytä passiiviset kilpailut"
+
+#: uappstrings.slatestcontestdetail
+#, fuzzy
+msgid "%0:s - %1:s"
+msgstr "%0:s - %1:s"
+
+#: uappstrings.slatestcontestline
+#, fuzzy
+msgid "%0:s %1:d"
+msgstr "%0:s %1:d"
+
+#: uappstrings.snewcontestfilescall
+#, fuzzy
+msgid "Call"
+msgstr "Kutsumerkki"
+
+#: uappstrings.snewcontestfilescontest
+#, fuzzy
+msgid "Contest"
+msgstr "Kilpailu"
+
+#: uappstrings.snewcontestfilesfile
+#, fuzzy
+msgid "File"
+msgstr "Tiedosto"
+
+#: uappstrings.snewcontestfilesyear
+#, fuzzy
+msgid "Year"
+msgstr "Vuosi"
 

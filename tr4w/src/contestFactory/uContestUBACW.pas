@@ -1,0 +1,426 @@
+(*
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+
+ This file is part of TR4W  (SRC)
+
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+ *)
+
+(* THE UBA DX CONTEST, CW.
+
+  The ContestsArray row this class states, verbatim:
+
+   Email: '';  DF: 'uba';  WA7BNM: 261;  QRZRUID: 59;
+   Pxm: BelgiumPrefixes;  ZnM: NoZoneMults;  AIE: NoInitialExchange;  DM: DomesticFile;  P: 0;
+   AE: RSTQSONumberAndPossibleDomesticQTHExchange;  XM: CQUBAEuropeanCountries;  QP: UBAQSOPointMethod;
+   ADIFName: '';  CABName: '';  FriendlyName: 'UBA DX Contest, CW'
+
+  Blank CABName and ADIFName resolve to the enum's spelling, 'UBA-DX-CW'.
+
+  WHY IT HAS A CLASS NOW. M5a (2026-10-01) moved ADIF import interpretation
+  onto the contest, and this contest's rule was an arm of a `case ceContest`
+  in the main unit -- which a base may never contain. A class to hold that
+  rule needed the whole row and the scoring arm with it, because registering a
+  class makes the class this contest's scorer too. Both are transcribed
+  exactly; Test_MovedRowValuesStillMatchTheArray holds the row, and the
+  contest matrix the scoring and the export -- every line of its record but
+  `contest.class` is unchanged, which is the proof. EXCHANGE PARSING (M5b) and
+  set-up (M7a) have moved since.
+
+  SCORING, transcribed from UBAQSOPointMethod (4.106.5). A Belgian station
+  (ON) scores 1 for ON, 2 for another UBA European country and 3 for the rest
+  of the world; everyone else scores 10 for ON, 3 for a UBA country and 1
+  otherwise. A Belgian station working ON with the QTH 'XXX' earns no
+  domestic multiplier. The two country lists are uCallSignRoutines.UBACountry.
+  ITS IMPORT: SRX_STRING is the domestic QTH. (The arm it came from named five
+  contests, CQ 160 CW and SSB, UBA CW and SSB and ARRL 160; each owns its own
+  copy of the body -- design 1.4.) *)
+unit uContestUBACW;
+
+{$I tr4w.inc}
+
+interface
+
+uses
+   VC, uContestBase;
+
+type
+   TContestUBACW = class(TContestBase)
+   protected
+      (* PROTECTED, MATCHING THE BASE -- callers use the properties,
+         descendants override the getters. Every getter below states
+         the ContestsArray row quoted above. *)
+      function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetFriendlyName: string; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
+
+      (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
+      function GetFlags: TContestFlags; override;
+      function GetIsUSQSOParty: boolean; override;
+      (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
+         TContestBase: ScoreQSO is the one public scoring entry. *)
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                const aSession: TADIFImportSession;
+                                var aExch: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+      (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasPrefixMultiplier (M11 S3 part 2). *)
+      function HasPrefixMultiplier: boolean; override;
+      (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
+         (M11 S3). *)
+      function PrefixMultiplierKey(const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean; override;
+   private
+      (* DOES THIS ENTRANT COUNT UBA'S EUROPEAN COUNTRIES? -- an entrant
+         outside Belgium does (CQUBAEuropeanCountries, the trait); a Belgian
+         counts every country (DescribeSession's CQDXCC). The key and the
+         remaining-mults filter ask it (M11 S4). *)
+      function CountsUBACountries: boolean;
+   public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      (* THE REMAINING-MULTS FILTER -- see
+         TContestBase.ListsRemainingDXCountry (M11 S4). *)
+      function ListsRemainingDXCountry(const aCountryID: DXMultiplierString;
+                                       aContinent: ContinentType): boolean; override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesDomesticQTH: boolean; override;
+   end;
+
+implementation
+
+uses
+   uExchangeFields,
+   uCabrilloExchange,
+   uADIFExchange,
+   SysUtils, uContestRegistry, uCallSignRoutines,
+   uTR4WStrings;
+
+procedure TContestUBACW.CalculateQSOPoints(var aQso: ContestExchange);
+var
+   rxCty: CallString;
+begin
+   rxCty := aQso.QTH.CountryID;
+
+   if Station.MyCountry = 'ON' then
+      begin
+      if rxCty = 'ON' then
+         begin
+         aQso.QSOPoints := 1;
+         if aQso.QTHString = 'XXX' then
+            begin
+            aQso.DomesticMult := False;
+            end;
+         end
+      else if UBACountry(aQso.DXQTH) then
+         begin
+         aQso.QSOPoints := 2;
+         end
+      else
+         begin
+         aQso.QSOPoints := 3;
+         end;
+      Exit;
+      end;
+
+   if rxCty = 'ON' then
+      begin
+      aQso.QSOPoints := 10;
+      end
+   else if UBACountry(rxCty) then
+      begin
+      aQso.QSOPoints := 3;
+      end
+   else
+      begin
+      aQso.QSOPoints := 1;
+      end;
+end;
+
+procedure TContestUBACW.ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                        const aSession: TADIFImportSession;
+                                        var aExch: ContestExchange);
+begin
+   aExch.DomesticQTH := ShortString(aTemps.SRX_String);
+end;
+
+function TContestUBACW.GetDisplayName: string;
+begin
+   Result := 'UBA DX Contest, CW';
+end;
+
+function TContestUBACW.GetCabrilloName: string;
+begin
+   (* The row's CABName is blank; this is the enum's spelling it resolves to. *)
+   Result := 'UBA-DX-CW';
+end;
+
+function TContestUBACW.GetADIFContestId: string;
+begin
+   (* The row's ADIFName is blank; export writes the enum's spelling, and import matches it (M1). *)
+   Result := 'UBA-DX-CW';
+end;
+
+function TContestUBACW.GetWA7BNMId: integer;
+begin
+   Result := 261;
+end;
+
+function TContestUBACW.GetQRZRUId: integer;
+begin
+   Result := 59;
+end;
+
+function TContestUBACW.GetSubmissionEmail: string;
+begin
+   Result := '';
+end;
+
+function TContestUBACW.GetDomesticFileName: string;
+begin
+   Result := 'uba';
+end;
+
+function TContestUBACW.GetFriendlyName: string;
+begin
+   Result := 'UBA DX Contest, CW';
+end;
+
+function TContestUBACW.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := NoInitialExchange;
+end;
+
+function TContestUBACW.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTQSONumberAndPossibleDomesticQTHExchange;
+end;
+
+function TContestUBACW.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQSONumberQTH;
+end;
+
+function TContestUBACW.ParseReceivedExchangeFormat(const aText: string;
+                                                   aParsers: TExchangeParsers;
+                                                   var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTQSONumberAndPossibleDomesticQTH(aText, aExch);
+end;
+
+function TContestUBACW.ExchangeCarriesDomesticQTH: boolean;
+begin
+   Result := True;
+end;
+
+function TContestUBACW.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentRSTQSONumberState(aMy, aQso);
+end;
+
+function TContestUBACW.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                               const aQso: ContestExchange;
+                                               const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentRSTQSONumberState(aMy, aQso, aCtx);
+end;
+
+function TContestUBACW.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                   const aQso: ContestExchange;
+                                                   const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedRSTQSONumberQTH(aMy, aQso, aCtx);
+end;
+
+function TContestUBACW.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfMultByBand, cfCountsDomesticCountries];
+end;
+
+function TContestUBACW.GetIsUSQSOParty: boolean;
+begin
+   (* P: 0 -- not a US state QSO party. *)
+   Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation.
+   The arm named UBACW, UBASSB; each of them holds its own
+   copy (design 1.4), so a sponsor changing one changes one. *)
+procedure TContestUBACW.DescribeSession(const aStation: TStationContext;
+                                        aSession: TSessionDefaults);
+begin
+   aSession.LiteralDomesticQTH := True;
+   (* THE DOMESTIC FILE IS THE CLASS'S OWN ANSWER (UsesDomesticFile -- no
+      domestic multiplier for an ON entrant); the statement here went with
+      the domestic kind, M11 S6 part 2. *)
+   if aStation.MyCountry = 'ON' then
+      begin
+      aSession.Band := Band80;
+      end;
+end;
+
+(* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE --
+   LogCfg.tSetupExchangeNumbers' arm for it, moved here at M7a. See
+   TContestBase.CQExchangeDefault. *)
+function TContestUBACW.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   Result := ' 5NN # ' + aStation.MyState;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for UBASSB.
+   The same steps on ticking the box stood for ARI_DX, CANADA_DAY,
+   CANADA_WINTER, HELVETIA, KINGOFSPAINCW, KINGOFSPAINSSB, PACC, UBASSB.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestUBACW.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.OfferIAmIn(TC_BELGIUM);
+   aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURPROVINCEID, ncfMyState);
+end;
+
+(* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- M11 S3 part 2,
+   2026-10-14. Yes for an entrant outside Belgium; none for a Belgian one.
+   This is the station test DescribeSession chose the session's prefix kind
+   by, until that kind was deleted; PrefixMultiplierKey asks it, so the two
+   cannot disagree. *)
+function TContestUBACW.HasPrefixMultiplier: boolean;
+begin
+   Result := Station.MyCountry <> 'ON';
+end;
+
+(* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
+   LOGEDIT.SetPrefix.
+   Belgian prefixes for an entrant outside Belgium -- SetPrefix's
+   `BelgiumPrefixes` arm; none for a Belgian entrant, whose session
+   DescribeSession gave NoPrefixMults. The station test is HasPrefixMultiplier's. *)
+function TContestUBACW.PrefixMultiplierKey(const aQso: ContestExchange;
+                                           out aKey: PrefixMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if not HasPrefixMultiplier then
+      begin
+      Exit;
+      end;
+   if aQso.QTH.CountryID = 'ON' then
+      begin
+      aKey := aQso.QTH.Prefix;
+      Result := True;
+      end;
+end;
+
+(* THE STATION TEST -- DescribeSession's, asked of Station. See the declaration. *)
+function TContestUBACW.CountsUBACountries: boolean;
+begin
+   Result := Station.MyCountry <> 'ON';
+end;
+
+(* THE REMAINING-MULTS FILTER -- M11 S4, 2026-10-14, moved from
+   uMults.FillVisibleBytes. UBA's list for an entrant outside Belgium, as the
+   window's CQUBAEuropeanCountries filter did; no filter for a Belgian. *)
+function TContestUBACW.ListsRemainingDXCountry(const aCountryID: DXMultiplierString;
+                                               aContinent: ContinentType): boolean;
+begin
+   Result := not CountsUBACountries or UBACountry(aCountryID);
+end;
+
+(* A DX MULTIPLIER AT EVERY STATION -- M11 S4 part 2, 2026-10-14: the trait
+   this class stated (`CQUBAEuropeanCountries`) and, for a Belgian entrant,
+   the kind its DescribeSession stated (`CQDXCC`) -- a DX multiplier either
+   way -- until the kind was deleted. *)
+function TContestUBACW.HasDXMultiplier: boolean;
+begin
+   Result := True;
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   UBA's European countries (uCallSignRoutines.UBACountry) for an entrant
+   outside Belgium -- the trait's CQUBAEuropeanCountries; every country for a
+   Belgian, whose DescribeSession stated CQDXCC. *)
+function TContestUBACW.DXMultiplierKey(const aQso: ContestExchange;
+                                       out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if not CountsUBACountries or
+      UBACountry(aQso.QTH.CountryID) then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
+end;
+
+
+(* AN ENTRANT OUTSIDE BELGIUM LOOKS THE PROVINCE UP IN THE DOMESTIC FILE -- M11
+   S6 part 1b, 2026-10-14. The trait said DomesticFile and DescribeSession
+   states none for an ON entrant. See TContestBase.UsesDomesticFile. *)
+function TContestUBACW.UsesDomesticFile: boolean;
+begin
+   Result := Station.MyCountry <> 'ON';
+end;
+
+initialization
+   RegisterContest(UBACW, TContestUBACW);
+
+end.

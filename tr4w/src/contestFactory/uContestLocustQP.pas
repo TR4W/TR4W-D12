@@ -1,0 +1,321 @@
+(*
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+
+ This file is part of TR4W  (SRC)
+
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+ *)
+
+(* THE LOCUST QSO PARTY -- K6VVA's EVENT, AND NOT A STATE QSO PARTY.
+
+  A QSO party by NAME only: P is 0 in its row, it has no host state and no
+  counties, so it sits on TContestBase and NOT on TContestStateQSOPartyBase
+  (whose header listed it as a single-state party until M3; corrected the
+  same day). Inactive since about 2015 (contest calendar entry 446). NY4I,
+  2026-10-01: inactive contests stay in the factory, for old logs.
+
+  The ContestsArray row this class states, verbatim:
+
+   Email: '';  DF: 'naqp';  WA7BNM: 446;  QRZRUID: 0;
+   Pxm: NoPrefixMults;  ZnM: NoZoneMults;  AIE: NameQTHInitialExchange;
+   DM: DomesticFile;  P: 0;
+   AE: NameAndDomesticOrDXQTHExchange
+       (a commented-out QSONumberNameDomesticOrDXQTHExchange beside it);
+   XM: NoDXMults;  QP: LQPQSOPointMethod;  ADIFName: '';  CABName: '';
+   FriendlyName: 'Locust QSO Party'
+
+  Blank ADIFName and CABName are the enum's spelling, 'LOCUST QSO PARTY'.
+
+  SCORING IS LQPQSOPointMethod, an arm of the legacy LOGSTUFF scoring
+  case (deleted at M10 S3; see git history or the D7 tree),
+  transcribed exactly:
+
+      RXData.QSOPoints := 1000;
+      if (RXData.Name = 'LOCUST') or (RXData.Callsign = 'K6VVA') then
+         begin
+         RXData.QSOPoints := 5000;
+         end;
+
+  Every mode and every band, as the arm does. WHAT THE CALENDAR SAYS AND THE
+  CODE DOES NOT -- recorded as questions for NY4I, not acted on, because a
+  class that changes behaviour as it arrives is not a transcription:
+    - CW only, 80 and 40 m: the arm scores every mode and band. Stating it
+      would be a UsesBand override (an off-band QSO then scores 0).
+    - No multipliers: the row has DM: DomesticFile on 'naqp', so TR4W
+      counts states/provinces as domestic multipliers.
+
+  EXCHANGE PARSING IS NOT MOVED (M5); EXPORT IS THE CLASS'S, THROUGH HELPERS
+  (M11 S9b, S9c), the two columns of its exchange. FCONTEST's and LOGCFG's set-up are this
+  class's DescribeSession and CQExchangeDefault since M7a; uNewContest
+  still names it (M9). *)
+unit uContestLocustQP;
+
+{$I tr4w.inc}
+
+interface
+
+uses
+   VC, uContestBase;
+
+type
+   TContestLocustQP = class(TContestBase)
+   protected
+      (* PROTECTED, MATCHING THE BASE -- callers use the properties,
+         descendants override the getters. Every getter below states
+         the ContestsArray row quoted above. *)
+      function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetFriendlyName: string; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
+
+      (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
+      function GetFlags: TContestFlags; override;
+      function GetIsUSQSOParty: boolean; override;
+      (* NO LONGER RUN -- M9b. See the body. *)
+      function GetIsActive: boolean; override;
+      (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
+         TContestBase: ScoreQSO is the one public scoring entry. *)
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+      (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesDomesticQTH: boolean; override;
+   end;
+
+implementation
+
+uses
+   uExchangeFields,
+   uCabrilloExchange,
+   uADIFExchange,
+   uContestRegistry,
+   uTR4WStrings;
+
+const
+   (* THE SPONSOR'S STATION AND THE SPONSOR'S NAME -- a contact with either
+      is worth five times an ordinary one. *)
+   LocustBonusCallsign = 'K6VVA';
+   LocustBonusName = 'LOCUST';
+   LocustQSOPoints = 1000;
+   LocustBonusQSOPoints = 5000;
+
+procedure TContestLocustQP.CalculateQSOPoints(var aQso: ContestExchange);
+begin
+   aQso.QSOPoints := LocustQSOPoints;
+   if (aQso.Name = LocustBonusName) or (aQso.Callsign = LocustBonusCallsign) then
+      begin
+      aQso.QSOPoints := LocustBonusQSOPoints;
+      end;
+end;
+
+function TContestLocustQP.GetDisplayName: string;
+begin
+   Result := 'Locust QSO Party';
+end;
+
+function TContestLocustQP.GetCabrilloName: string;
+begin
+   (* The row's CABName is blank; this is the enum's spelling it resolves
+      to. *)
+   Result := 'LOCUST QSO PARTY';
+end;
+
+function TContestLocustQP.GetADIFContestId: string;
+begin
+   (* The row's ADIFName is blank; export writes the enum's spelling, and
+      import matches it (M1). *)
+   Result := 'LOCUST QSO PARTY';
+end;
+
+function TContestLocustQP.GetWA7BNMId: integer;
+begin
+   Result := 446;
+end;
+
+function TContestLocustQP.GetQRZRUId: integer;
+begin
+   Result := 0;
+end;
+
+function TContestLocustQP.GetSubmissionEmail: string;
+begin
+   Result := '';
+end;
+
+function TContestLocustQP.GetDomesticFileName: string;
+begin
+   Result := 'naqp';
+end;
+
+function TContestLocustQP.GetFriendlyName: string;
+begin
+   Result := 'Locust QSO Party';
+end;
+
+function TContestLocustQP.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := NameQTHInitialExchange;
+end;
+
+function TContestLocustQP.GetExchangeKind: ExchangeType;
+begin
+   Result := NameAndDomesticOrDXQTHExchange;
+end;
+
+function TContestLocustQP.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsNameQTH;
+end;
+
+function TContestLocustQP.ParseReceivedExchangeFormat(const aText: string;
+                                                      aParsers: TExchangeParsers;
+                                                      var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseNameAndDomesticOrDXQTH(aText, aExch);
+end;
+
+procedure TContestLocustQP.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   aMessages.WriteNameAndState;
+end;
+
+function TContestLocustQP.ExchangeCarriesDomesticQTH: boolean;
+begin
+   Result := True;
+end;
+
+function TContestLocustQP.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                              const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentNameState(aMy, aQso);
+end;
+
+function TContestLocustQP.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                  const aQso: ContestExchange;
+                                                  const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentNameState(aMy, aQso, aCtx);
+end;
+
+function TContestLocustQP.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                      const aQso: ContestExchange;
+                                                      const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedNameQTH(aMy, aQso, aCtx);
+end;
+
+function TContestLocustQP.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand];
+end;
+
+function TContestLocustQP.GetIsUSQSOParty: boolean;
+begin
+   (* P: 0 -- a QSO party by name only; see the header. *)
+   Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation.
+   The arm named LQP, NCCCSPRINT; each of them holds its own
+   copy (design 1.4), so a sponsor changing one changes one. *)
+procedure TContestLocustQP.DescribeSession(const aStation: TStationContext;
+                                           aSession: TSessionDefaults);
+begin
+   aSession.AutoDupeEnableCQ := True;
+   aSession.AutoDupeEnableSAndP := True;
+   aSession.AddDomesticCountry('KH6');
+   aSession.AddDomesticCountries(DomesticCountriesKVE);
+   aSession.ExchangeMemoryEnable := True;
+   aSession.SprintQSYRule := True;
+   aSession.AllowDupeQSOs := False;
+end;
+
+(* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE --
+   LogCfg.tSetupExchangeNumbers' arm for it, moved here at M7a. See
+   TContestBase.CQExchangeDefault. *)
+function TContestLocustQP.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   Result := ' # ' + aStation.MyName + ' ' + aStation.MyState;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for CWOPS, NCCCSPRINT.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestLocustQP.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskField(ncfMyName);
+   aPrompts.AskFieldWithComment(TC_ENTERYOURNAMEANDQTH, ncfMyState);
+end;
+
+(* INACTIVE, ON NY4I'S WORD -- see the header. Stated at M9b (2026-10-02):
+   the New Contest drop-down lists it after every active contest, marked. *)
+function TContestLocustQP.GetIsActive: boolean;
+begin
+   Result := False;
+end;
+
+
+(* THE DOMESTIC QTH IS LOOKED UP IN THIS CONTEST'S DOMESTIC FILE, at every
+   station -- M11 S6 part 1b, 2026-10-14. It was the session's
+   `= DomesticFile` (the trait); see TContestBase.UsesDomesticFile. *)
+function TContestLocustQP.UsesDomesticFile: boolean;
+begin
+   Result := True;
+end;
+
+initialization
+   RegisterContest(LQP, TContestLocustQP);
+
+end.

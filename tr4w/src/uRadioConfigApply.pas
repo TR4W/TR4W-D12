@@ -229,8 +229,9 @@ function ActiveRadioSettingsChanged(const aStore: TRadioConfigStore;
   reverted the next time the operator pressed Save. }
 function ApplyPeerCommand(const aCommand, aValue: string): boolean;
 
-// The contest .cfg last opened, read from and written to the `general` section
-// of settings\tr4w.json.
+// The contest last opened -- its SQLite .db, which New Contest's "Last
+// Contest" button reopens (a .cfg until a contest became its database) --
+// read from and written to the `general` section of settings\tr4w.json.
 //
 // NOT a setting: it is bookkeeping, it is not registered, and it does not
 // appear in Preferences or in the search index (NY4I, 2026-08-16). It lives
@@ -380,24 +381,22 @@ end;
   The ini keys are left in place: inert, harmless, and a fallback for anyone who
   rolls back to a previous build. }
 const
-   MIGRATED_COMMANDS: array[0..248] of string =
+   (* SEVEN LEFT AT M10 S2 (2026-10-14) -- QSO POINT METHOD, EXCHANGE
+     RECEIVED, INITIAL EXCHANGE and the four multipliers, now in
+     uCFG.RETIRED_COMMANDS. Seeding a retired name would put a value into the
+     bucket that nothing applies. *)
+   MIGRATED_COMMANDS: array[0..241] of string =
    (
       'BAND MAP CUTOFF FREQUENCY',
       'FREQUENCY MEMORY',
       'CONTEST NAME',
       'CONTEST',
-      'DOMESTIC MULTIPLIER',
-      'DX MULTIPLIER',
-      'EXCHANGE RECEIVED',
       'PADDLE PORT',
-      'PREFIX MULTIPLIER',
-      'QSO POINT METHOD',
       'QUICK QSL CW MESSAGE',
       'QUICK QSL CW MESSAGE1',
       'QUICK QSL MESSAGE 1',
       'QUICK QSL MESSAGE 2',
       'QUICK QSL SSB MESSAGE',
-      'ZONE MULTIPLIER',
       'BAND MAP SPLIT MODE',
       'CATEGORY-ASSISTED',
       'CATEGORY-BAND',
@@ -409,7 +408,6 @@ const
       'DISTANCE MODE',
       'DUPE CHECK SOUND',
       'HOUR DISPLAY',
-      'INITIAL EXCHANGE',
       'INITIAL EXCHANGE CURSOR POS',
       'MODE',
       'MP3 RECORDER DURATION',
@@ -868,6 +866,53 @@ begin
          logger.Info('[ApplyStoredCommands] %s is a settings-object command -- ' +
                      'the settings section is its home and has already been applied',
                      [name]);
+         Continue;
+         end;
+
+      (* A CONTEST-SCOPED VALUE HERE IS A STATION DEFAULT, NOT A STATEMENT
+        ABOUT THE CONTEST THAT IS OPEN -- 2026-10-01, section 7.8 of
+        docs/CONTEST_OWNERSHIP_DESIGN.md.
+
+        WHO WRITES THESE, measured 2026-10-01: the one-time seed from a
+        legacy tr4w.ini (SeedMigratedCommandsFromIni), a multi-op peer's
+        change (ApplyPeerCommand), and ONE Preferences control -- MY
+        CONTINENT on the Station page, which goes through
+        ApplyAndStoreCommand. Every other contest-scoped setting in
+        Preferences is a TModelSetting, applied by name and captured by the
+        log, and writes no bucket entry. None of the three was speaking about
+        the contest now open, and this loop applies them to every contest
+        the station opens.
+
+        MY CONTINENT IS THE ODD ONE: a STATION fact filed in a contest-scoped
+        group. In force every session from here as before, it is no longer
+        captured into a NEW log, so a headless /EXPORT of that log derives
+        the continent from the callsign instead. Its fix is to move the
+        property to the station's group, which is NY4I's call -- see section
+        7.8 of the design document.
+
+        SO TWO RULES. A setting the operator HAS stated for this contest --
+        the .cfg, the New Contest dialog, the log's own stored statement --
+        is not overridden: that is the contest-over-station rule the
+        CommandCameFromContestCFG test above already states, extended to
+        every way a statement arrives. Applying it last used to undo the
+        log's own value on every interactive start.
+
+        And a value applied from here is applied UNSTATED: in force for the
+        session, as before, but not captured into the log as though the
+        operator had chosen it for this contest. *)
+      if Settings.CommandIsContestScoped(name) then
+         begin
+         if Settings.CommandIsStated(name) then
+            begin
+            logger.Info('[ApplyStoredCommands] %s is stated for this contest -- ' +
+                        'the station''s stored value is not applied', [name]);
+            Continue;
+            end;
+         if not Settings.TrySetUnstated(name, value) then
+            begin
+            logger.Warn('[ApplyStoredCommands] the settings object refused "%s" = "%s"',
+                        [name, value]);
+            end;
          Continue;
          end;
 
@@ -1415,6 +1460,24 @@ begin
                      + 'one.', [aCommand]);
          end;
       Result := True;
+      Exit;
+      end;
+
+   (* A WITHDRAWN COMMAND FROM AN OLDER PEER -- accepted and ignored, M10 S2
+     (2026-10-14).
+
+     The seven contest-rule settings retired then (QSO POINT METHOD,
+     EXCHANGE RECEIVED, INITIAL EXCHANGE, the four multipliers) were all in
+     SHARED_WITH_PEERS, so a position running an older build goes on sending
+     them. Without this arm such a name fell to the un-migrated branch below:
+     CheckCommand accepted it as withdrawn, and the branch then warned
+     "applied but not persisted" on every sync -- a warning about a value
+     that was never applied. CheckCommand is still the one place that
+     reports a withdrawn name, once per name per session; nothing is stored. *)
+   if CommandIsRetired(aCommand) then
+      begin
+      Result := CheckCommand(ShortString(AnsiString(aCommand)),
+                             ShortString(AnsiString(aValue)), True);
       Exit;
       end;
 

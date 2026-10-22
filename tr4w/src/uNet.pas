@@ -137,7 +137,7 @@ function FindAndUpdateQSOInLog(var RXData: ContestExchange): boolean;
 //procedure SendEditedQSOToNetwork(var CE: ContestExchange);
 procedure ShowConnectionStatus(Operation: string);
 procedure AddNewClient(ClientID: integer);
-procedure ConnectThread;
+function ConnectThread(aParameter: Pointer): DWORD; stdcall;
 procedure DisplayClientStatus(Index: integer);
 procedure DisplayMessageStatus(Index: integer; Msg: TMessageState);
 procedure EnableNetworkMenuItem(const aEnabled: boolean);
@@ -180,6 +180,76 @@ procedure SendParameterToNetwork(const aCommand, aValue: string);
 { IS THE MULTI-OP LINK UP?  Replaces `NetSocket <> 0`, which three other units
   were reading directly. }
 function NetIsConnected: boolean;
+
+(* A CONTEST WITH NO LEGACY NUMBER CANNOT TRAVEL THIS LINK -- Q108 S4,
+  2026-10-17 (design 8.2u; NY4I: "refuse multi-op for new contests until the
+  new protocol").
+
+  The V1 packet carries a contest as ONE BYTE that only a legacy contest has,
+  and a D7 peer, the server's log and the log-compare packet read it as that
+  number. The packet is NOT being converted, so the doors are guarded. THE
+  QUESTION IS ONE FUNCTION, uContestRegistry.ContestCanUseMultiOp; every door
+  below asks it and none restates it:
+
+      connect         TryConnectToNetwork, ConnectToTR4WServer
+      switch          NetContestChanged   (from the CONTEST setting's effect)
+      a peer's CONTEST  PeerContestRefusal (the NET_PARAMETER arm)
+      send            SendRecordToServer
+      receive         the NET_QSOINFO and NET_EDITEDQSO arms
+
+  NetCarriesContest asks and, when it refuses, logs which door (aDoor) turned
+  which contest (by id) away. The operator-facing doors show
+  MultiOpRefusalText on top of it. *)
+function NetCarriesContest(aContest: TContestHandle; const aDoor: string): boolean;
+
+(* THE CONTEST HAS CHANGED: DROP A LINK THAT CANNOT CARRY THE NEW ONE, and say
+  why. Nothing happens when there is no link or the contest travels. *)
+procedure NetContestChanged(aContest: TContestHandle);
+
+(* ANOTHER STATION'S PARAMETER, JUDGED BEFORE IT IS APPLIED. '' to apply it;
+  otherwise the operator message, and the parameter is NOT applied. Only the
+  CONTEST command naming a contest that cannot travel is refused. *)
+function PeerContestRefusal(const aCommand, aValue: string): string;
+
+(* PEERS HAVE TO BE ON THE SAME CONTEST -- Q110, NY4I 2026-10-18: "Peers have to
+  be on the same contest and that is a flagged error to be reported."
+
+  A record from another station whose contest is not THIS station's is never
+  logged, scored or applied: the NET_QSOINFO arm (QSO, note, QTC) and the
+  NET_EDITEDQSO arm both ask here first, after NetCarriesContest has judged the
+  byte. There is no other receive path -- the server's log sync reads no QSO
+  packet in this client. The wire is untouched.
+
+  False means REFUSED, and the refusal is REPORTED, not silent:
+    the log     one Error line per record (peer, its contest, ours, the call);
+                the lines ARE the audit trail of what was dropped, so they are
+                not rate-limited
+    the screen  one QuickDisplay notice per (peer, peer's contest) per link
+                session, so a busy peer cannot flood the operator; the latch is
+                forgotten when the link comes up (ForgetPeerContestNotices)
+
+  aDoor names the arm for the log. *)
+function PeerRecordInOurContest(const aRec: ContestExchange;
+                                const aDoor: string): boolean;
+
+(* How many operator notices PeerRecordInOurContest has raised since the last
+  ForgetPeerContestNotices -- the test's way to read "raised once". *)
+function PeerContestNoticeCount: integer;
+procedure ForgetPeerContestNotices;
+
+type
+  TPeerNoticeProc = procedure(const aText: string);
+
+(* Where the operator notice goes; nil means QuickDisplay. A unit test points it
+  at a recorder, because QuickDisplay needs a main window and a notice armer
+  that live for the whole process. *)
+var
+  PeerContestNoticeSink: TPeerNoticeProc = nil;
+
+(* The walk over NetBuffer, one arm per message id. In the interface so the
+  unit tests can put a packet in NetBuffer and hand it to the real arms. *)
+function ConsumeNetBuffer(const i: integer; out aDesync: boolean): integer;
+
 procedure CommitChangesInLocalLog;
 function SendRecordToServer(RecordType: Word; var rec: ContestExchange): boolean;
 procedure SendFullStationStatus;
@@ -277,6 +347,8 @@ uses
   LOGSUBS2,
   uRadioPolling,
   uRadioConfigApply,   // ApplyPeerCommand -- a peer's config change
+  uContestRegistry,    // ContestCanUseMultiOp, MultiOpRefusalText -- Q108 S4
+  uContestNames,       // TryContestFromName -- a peer's CONTEST value
   uTelnet,
   uGetServerLog,
   MainUnit,
@@ -361,6 +433,9 @@ var
   NetTimeSyncPtr                        : TNetTimeSyncPtr;
   ParameterToNetworkPtr                 : TParameterToNetworkPtr;
   IntercomMessagePtr                    : TIntercomMessagePtr;
+  (* A peer's CONTEST command this build refuses to follow -- see
+     PeerContestRefusal. '' when the parameter is to be applied. *)
+  Refusal                               : string;
 
    { The label lives HERE: a goto may not cross a procedure boundary. }
    procedure Walk;
@@ -459,18 +534,30 @@ var
           NET_PARAMETER_ID:
             begin
               ParameterToNetworkPtr := @NetBuffer[Bufindex];
-              // ApplyPeerCommand, not CheckCommand + an ini write.  A row that
-              // has moved to settings\tr4w.json is INERT to CheckCommand, so
-              // this returned False for seventeen rows -- the UDP broadcast
-              // block among them -- and the operator was told nothing while the
-              // station that made the change saw it take effect.  The routine
-              // routes on the row's own state and persists to whichever file is
-              // that row's system of record.
-              if ApplyPeerCommand(string(ParameterToNetworkPtr^.pnCommand),
-                                  string(ParameterToNetworkPtr^.pnValue)) then
+              (* A PEER'S CONTEST THIS LINK CANNOT CARRY IS NOT FOLLOWED (Q108
+                S4). The refusal is said once, to the operator, and the
+                parameter is dropped -- this station keeps the contest it has. *)
+              Refusal := PeerContestRefusal(string(ParameterToNetworkPtr^.pnCommand),
+                                            string(ParameterToNetworkPtr^.pnValue));
+              if Refusal <> '' then
                  begin
- //                ShowTrayTips();
-                 QuickDisplay(string(ParameterToNetworkPtr^.pnCommand) + ' was changed by other station in network');
+                 showwarning(Refusal);
+                 end
+              else
+                 begin
+                 // ApplyPeerCommand, not CheckCommand + an ini write.  A row that
+                 // has moved to settings\tr4w.json is INERT to CheckCommand, so
+                 // this returned False for seventeen rows -- the UDP broadcast
+                 // block among them -- and the operator was told nothing while the
+                 // station that made the change saw it take effect.  The routine
+                 // routes on the row's own state and persists to whichever file is
+                 // that row's system of record.
+                 if ApplyPeerCommand(string(ParameterToNetworkPtr^.pnCommand),
+                                     string(ParameterToNetworkPtr^.pnValue)) then
+                    begin
+ //                   ShowTrayTips();
+                    QuickDisplay(string(ParameterToNetworkPtr^.pnCommand) + ' was changed by other station in network');
+                    end;
                  end;
             end;
 
@@ -528,43 +615,54 @@ var
           NET_QSOINFO_ID:
             begin
               NetQSOInfoPtr := @NetBuffer[Bufindex];
-              if NetQSOInfoPtr^.qiInformation.ceRecordKind = rkQSO then
+              (* A RECORD WHOSE CONTEST BYTE IS NO LEGACY NUMBER IS NEVER READ
+                (Q108 S4): no legacy contest has that byte, so it names
+                something this protocol cannot mean -- a peer on a newer build
+                with a contest this one lacks, or a damaged packet. It is
+                dropped and the log says so; nothing is logged from it. *)
+              if NetCarriesContest(NetQSOInfoPtr^.qiInformation.ceContest,
+                                   'receive of a NET_QSOINFO packet') and
+                 PeerRecordInOurContest(NetQSOInfoPtr^.qiInformation,
+                                        'NET_QSOINFO') then
                  begin
-                 if NetQSOInfoPtr^.qiComputerID <> NetQSOInfoToSend.qiComputerID then
+                 if NetQSOInfoPtr^.qiInformation.ceRecordKind = rkQSO then
                     begin
-                    LogContact(NetQSOInfoPtr^.qiInformation, False);
-                    UpdateWindows;
+                    if NetQSOInfoPtr^.qiComputerID <> NetQSOInfoToSend.qiComputerID then
+                       begin
+                       LogContact(NetQSOInfoPtr^.qiInformation, False);
+                       UpdateWindows;
+                       end;
                     end;
-                 end;
 
-              if NetQSOInfoPtr^.qiInformation.ceRecordKind = rkNote then
-                 begin
-                 (* A PEER'S RECORD THAT THIS STATION COULD NOT KEEP. It is
-                   already logged at the station that made it, so this is not
-                   a lost contact -- but this station's copy of the multi-op
-                   log is now incomplete and only the log says so. *)
-                 if not tAddQSOToLog(NetQSOInfoPtr^.qiInformation) then
+                 if NetQSOInfoPtr^.qiInformation.ceRecordKind = rkNote then
                     begin
-                    logger.Error('[Net] a note from the network did NOT commit '
-                                 + 'to the contest log');
+                    (* A PEER'S RECORD THAT THIS STATION COULD NOT KEEP. It is
+                      already logged at the station that made it, so this is not
+                      a lost contact -- but this station's copy of the multi-op
+                      log is now incomplete and only the log says so. *)
+                    if not tAddQSOToLog(NetQSOInfoPtr^.qiInformation) then
+                       begin
+                       logger.Error('[Net] a note from the network did NOT commit '
+                                    + 'to the contest log');
+                       end;
                     end;
-                 end;
 
-              if NetQSOInfoPtr^.qiInformation.ceRecordKind in [rkQTCR, rkQTCS] then
-                 begin
-                 if NetQSOInfoPtr^.qiInformation.ceRecordKind = rkQTCS then
+                 if NetQSOInfoPtr^.qiInformation.ceRecordKind in [rkQTCR, rkQTCS] then
                     begin
-                    NumberQTCBooksSent := NetQSOInfoPtr^.qiInformation.QSOPoints;
+                    if NetQSOInfoPtr^.qiInformation.ceRecordKind = rkQTCS then
+                       begin
+                       NumberQTCBooksSent := NetQSOInfoPtr^.qiInformation.QSOPoints;
+                       end;
+                    IncrementQTCCount(NetQSOInfoPtr^.qiInformation.Callsign);
+                    if not tAddQSOToLog(NetQSOInfoPtr^.qiInformation) then
+                       begin
+                       logger.Error('[Net] a QTC record from %s did NOT commit to '
+                                    + 'the contest log',
+                                    [NetQSOInfoPtr^.qiInformation.Callsign]);
+                       end;
+                    DisplayTotalScore;
+                    UpdateTotals2;
                     end;
-                 IncrementQTCCount(NetQSOInfoPtr^.qiInformation.Callsign);
-                 if not tAddQSOToLog(NetQSOInfoPtr^.qiInformation) then
-                    begin
-                    logger.Error('[Net] a QTC record from %s did NOT commit to '
-                                 + 'the contest log',
-                                 [NetQSOInfoPtr^.qiInformation.Callsign]);
-                    end;
-                 DisplayTotalScore;
-                 UpdateTotals2;
                  end;
 
             end;
@@ -573,14 +671,19 @@ var
             begin
               NetQSOInfoPtr := @NetBuffer[Bufindex];
 
-              if NetQSOInfoPtr^.qiComputerID <> NetQSOInfoToSend.qiComputerID then
+              if (NetQSOInfoPtr^.qiComputerID <> NetQSOInfoToSend.qiComputerID) and
+                 NetCarriesContest(NetQSOInfoPtr^.qiInformation.ceContest,
+                                   'receive of a NET_EDITEDQSO packet') and
+                 PeerRecordInOurContest(NetQSOInfoPtr^.qiInformation,
+                                        'NET_EDITEDQSO') then
                  begin
                  if FindAndUpdateQSOInLog(NetQSOInfoPtr^.qiInformation) then
-                   if Settings.Network.AllowAutoUpdate then
-                      begin
-                      tUpdateLog(actRescore);
-                      LoadinLog;
-                      end;
+                    begin
+                    if Settings.Network.AllowAutoUpdate then
+                       begin
+                       RescoreLog;
+                       end;
+                    end;
                  end;
             end;
 
@@ -1073,6 +1176,12 @@ var
   // the thread is created stays put for that thread's whole life.
   FConnectThreadAnnounced : boolean = False;
 
+  (* THE CONTEST THE OPERATOR WAS LAST TOLD THIS LINK CANNOT CARRY (Q108 S4),
+    so the connect timer's retries do not say it again. NoContest -- handle 0,
+    which every unit-level variable starts as -- means "nothing outstanding";
+    TryConnectToNetwork clears it as soon as the contest travels. *)
+  FMultiOpRefusalSaidFor : TContestHandle;
+
 { THIS STATION'S ID AS THE WIRE CARRIES IT.
 
   AN ORDINAL, 1..26 -- NOT THE LETTER, whatever TClientEntry.clID's AnsiChar and
@@ -1115,6 +1224,23 @@ begin
      end;
   FRefusedComputerID := #0;
 
+  (* A CONTEST THIS LINK CANNOT CARRY (Q108 S4): NO CONNECTION IS ATTEMPTED.
+    The same refusal-without-nagging shape as the computer id above -- said
+    ONCE per contest, silent on the timer's retries, and re-armed by choosing
+    a contest that travels (the latch clears below). Asked on the main thread,
+    before any thread exists. *)
+  if not ContestCanUseMultiOp(Contest) then
+     begin
+     if FMultiOpRefusalSaidFor <> Contest then
+        begin
+        FMultiOpRefusalSaidFor := Contest;
+        NetCarriesContest(Contest, 'TryConnectToNetwork');
+        showwarning(MultiOpRefusalText(Contest));
+        end;
+     Exit;
+     end;
+  FMultiOpRefusalSaidFor := NoContest;
+
   // Issue #1041: log the "trying" line only on a GENUINE new attempt -- the
   // first one (nclsInitial) or after we'd been connected and dropped
   // (nclsConnected).  The old condition (<> nclsTrying) re-fired here every
@@ -1132,7 +1258,7 @@ begin
   if not ThreadStarted(NetThreadID) then
      begin
      FConnectThreadAnnounced := announce;
-     tCreateThread(@ConnectThread, NetThreadID, not announce {Quiet on silent retries});
+     tCreateThread(ConnectThread, NetThreadID, not announce {Quiet on silent retries});
      end;
 end;
 
@@ -1145,6 +1271,16 @@ var
    err: string;
    wrongPassword: boolean;
 begin
+   (* THE SECOND DOOR TO CONNECTING (Q108 S4). TryConnectToNetwork refuses
+     before it starts this thread; the contest can still change between that
+     and here, and this is the routine that actually opens the link. It only
+     logs: the operator was, or will be, told at the first door. *)
+   if not NetCarriesContest(Contest, 'ConnectToTR4WServer') then
+      begin
+      Result := False;
+      Exit;
+      end;
+
    if NetClient = nil then
       begin
       NetClient := TNetClient.Create;
@@ -1171,12 +1307,13 @@ begin
       end;
 end;
 
-procedure ConnectThread;
+function ConnectThread(aParameter: Pointer): DWORD; stdcall;
 label
   1, 2;
 var
   i                                     : integer;
 begin
+  Result := 0;   (* the thread exit code -- see TF.TTR4WThreadStart *)
   DifferentContests := False;
   ShowConnectionStatus(TC_CONNECTINGTO);
 
@@ -1198,6 +1335,7 @@ begin
      // now, and the handshake happens inside Connect because a link the server
      // has not acknowledged is not a link.
      FillChar(StatusArray, SizeOf(StatusArray), 0);
+     ForgetPeerContestNotices;   (* a new link is a new session (Q110) *)
      (* Cardinal(GetTickCount64) -- TRUNCATED DELIBERATELY. qiComputerID is a
     field of TNetQSOInformation, which is a PACKED RECORD SENT BETWEEN
     STATIONS, so its width is on the wire and is not ours to widen. The
@@ -1475,7 +1613,7 @@ begin
        // yet); otherwise fall through to the existing dialog so the operator
        // sees the wrong-server warning.
        if Settings.Server.AutoSynchronizeLogOnConnect and
-          ((s^.liContest = Contest) or (s^.liContest = DUMMYCONTEST)) then
+          ((s^.liContest = Contest) or (s^.liContest = NoContest)) then
           begin
           logger.Info('Auto-synchronizing local log from server (CRC mismatch: local %x, server %x)',
                       [s^.liLocalCRC32, s^.liSeverCRC32]);
@@ -1487,20 +1625,20 @@ begin
              begin
              logger.Error('Auto-sync: could not create %s', [TR4W_SYN_FILENAME]);
              // Fall through to the existing dialog so the operator can react.
-             ShowLogCompare(integer(s));
+             ShowLogCompare(s);
              end
           else
              begin
              HeadlessSyncMode := True;
              if not ThreadStarted(LogSyncThreadID) then
                 begin
-                tCreateThread(@RunSyncThread, LogSyncThreadID);
+                tCreateThread(RunSyncThread, LogSyncThreadID);
                 end;
              end;
           end
        else
           begin
-          ShowLogCompare(integer(s));
+          ShowLogCompare(s);
           end;
        end
     else
@@ -1654,6 +1792,135 @@ begin
   Result := (NetClient <> nil) and NetClient.IsConnected;
 end;
 
+function NetCarriesContest(aContest: TContestHandle; const aDoor: string): boolean;
+begin
+   Result := ContestCanUseMultiOp(aContest);
+   if (not Result) and (logger <> nil) then
+      begin
+      (* ContestId, not the display name: it is what a log line is searched
+         by, and it names a handle this build cannot name ('') too. *)
+      logger.Warn('[Net] %s refused contest "%s" (handle %d): it has no legacy ' +
+                  'contest number, and the V1 multi-op packet carries only that ' +
+                  'byte (design 8.2u, Q108 S4).',
+                  [aDoor, ContestId(aContest), aContest.ToByte]);
+      end;
+end;
+
+procedure NetContestChanged(aContest: TContestHandle);
+begin
+   if not NetIsConnected then
+      begin
+      Exit;
+      end;
+   if NetCarriesContest(aContest, 'a switch of contest while connected') then
+      begin
+      Exit;
+      end;
+
+   (* THE LINK GOES: the contest the operator chose cannot be carried, and a
+     link that stays up would be offered every QSO of it. The other half of
+     the refusal at connect -- and like it, the operator is told once. *)
+   NetDisconnect;
+   ShowConnectionStatus(TC_DISCONNECTEDFROM);
+   showwarning(MultiOpRefusalText(aContest));
+end;
+
+function PeerContestRefusal(const aCommand, aValue: string): string;
+var
+   chosen: TContestHandle;
+begin
+   Result := '';
+   (* 'CONTEST' IS THE COMMAND THAT SELECTS THE CONTEST (settings path
+     Contest.ContestToken); 'CONTEST NAME' is a different setting. The value
+     is resolved by the ONE resolver of a contest name. A value this build
+     cannot resolve is not ours to judge: ApplyPeerCommand refuses it as it
+     always has. *)
+   if (not UnicodeSameText(Trim(aCommand), 'CONTEST')) or
+      (not TryContestFromName(aValue, chosen))         then
+      begin
+      Exit;
+      end;
+   if NetCarriesContest(chosen, 'a peer''s CONTEST command') then
+      begin
+      Exit;
+      end;
+   Result := MultiOpRefusalText(chosen);
+end;
+
+type
+   TPeerNoticeLatch = array[0..26, 0..255] of boolean;
+
+var
+   (* [peer slot 0..26, the peer's contest byte]. Slot 0 is a peer whose
+     ceComputerID is not a letter. Zero-initialised, like every unit variable. *)
+   FPeerContestNoticed: TPeerNoticeLatch;
+   FPeerContestNotices: integer;
+
+function PeerRecordInOurContest(const aRec: ContestExchange;
+                                const aDoor: string): boolean;
+var
+   slot: integer;
+   peer, notice: string;
+begin
+   Result := (aRec.ceContest = Contest);
+   if Result then
+      begin
+      Exit;
+      end;
+
+   if aRec.ceComputerID in ['A'..'Z'] then
+      begin
+      slot := Ord(aRec.ceComputerID) - Ord('A') + 1;
+      peer := string(aRec.ceComputerID);
+      end
+   else
+      begin
+      slot := 0;
+      peer := '?';
+      end;
+
+   (* EVERY RECORD IS LOGGED, ONCE PER LINK IS SHOWN. The log line is the only
+     record of which QSOs were dropped, so it is not rate-limited; the screen
+     is, because a peer logging a QSO a minute would otherwise bury every other
+     notice for the length of the contest. *)
+   if logger <> nil then
+      begin
+      logger.Error('[Net] %s from station %s REFUSED: it is on contest "%s" and ' +
+                   'this station is on "%s" (call %s). Peers must run the same ' +
+                   'contest (Q110).',
+                   [aDoor, peer, ContestId(aRec.ceContest), ContestId(Contest),
+                    string(aRec.Callsign)]);
+      end;
+
+   if not FPeerContestNoticed[slot, aRec.ceContest.ToByte] then
+      begin
+      FPeerContestNoticed[slot, aRec.ceContest.ToByte] := True;
+      inc(FPeerContestNotices);
+      notice := SysUtils.Format(SPeerOnAnotherContest,
+                          [peer, ContestIdentity(aRec.ceContest).DisplayName,
+                           ContestIdentity(Contest).DisplayName]);
+      if Assigned(PeerContestNoticeSink) then
+         begin
+         PeerContestNoticeSink(notice);
+         end
+      else
+         begin
+         QuickDisplay(notice);
+         end;
+      end;
+end;
+
+function PeerContestNoticeCount: integer;
+begin
+   Result := FPeerContestNotices;
+end;
+
+procedure ForgetPeerContestNotices;
+begin
+   FPeerContestNotices := 0;
+   FPeerContestNoticed := Default(TPeerNoticeLatch);
+end;
+
 procedure CommitChangesInLocalLog;
 label
   1;
@@ -1741,6 +2008,16 @@ var
 begin
   Result := False;
   if not NetIsConnected then Exit;
+
+  (* A RECORD WITH NO LEGACY CONTEST NUMBER IS NEVER WRITTEN TO THE WIRE (Q108
+    S4). Every QSO, edit and offline resend goes through here, so this is the
+    one place that keeps the by-id handle out of the packet, the server's log
+    and, through it, a D7 peer. The flags are untouched: the record is left
+    exactly as unsent, which is what it is. *)
+  if not NetCarriesContest(rec.ceContest, 'send of a QSO packet') then
+     begin
+     Exit;
+     end;
 
   SendToServer := rec.ceSendToServer;
   SendToServerAE := rec.ceNeedSendToServerAE;

@@ -29,12 +29,35 @@ unit uContestFloridaQP;
 interface
 
 uses
-   VC, uContestBase, uContestFixedPoints;
+   VC, uContestBase, uContestStateQSOPartyBase;
 
 type
-   TContestFloridaQP = class(TContestFixedPoints)
+   TContestFloridaQP = class(TContestStateQSOPartyBase)
    protected
-      function GetFormatsExchange: boolean; override;
+
+      (* THE STATE WHOSE COUNTIES THIS CONTEST'S EXCHANGE NAMES.
+
+         Stated, not derived. The inherited getter would reach ContestsArray's
+         P index and arrive at the same 'FL' -- but the base makes it abstract
+         for state parties precisely so that answer is never an accident, and
+         three separate places in this tree used to hand-type it. *)
+      function GetHostState: string; override;
+
+      (* TWO, FROM THE PUBLISHED RULES: "Florida stations on a county line
+         (maximum of two counties) may be claimed as a separate QSO and
+         multiplier from each county."
+
+         THIS IS NEW BEHAVIOUR AND WAS CHOSEN, NOT MOVED. TR4W has never
+         enforced any limit -- LOGSTUFF.ApplyFirstQTHAndQueueRest queues every
+         valid county the operator typed -- and NY4I, 2026-09-28: "It has not
+         enforced a limit. It relied upon participants not being given more
+         than the ones allowed. But knowing and setting a limit makes our edit
+         checking of the exchange more robust."
+
+         So Florida is the first contest whose exchange is actually bounded,
+         and it is bounded because its number is KNOWN. Michigan's is not, and
+         is deliberately left unlimited rather than inferred from this one. *)
+      function GetCountyLineCountiesMax: integer; override;
       (* THE GETTERS BEHIND TContestBase's PROPERTIES.
 
          PROTECTED, MATCHING THE BASE. Left public -- which is what the first
@@ -44,34 +67,159 @@ type
          ambiguity a property removes, so the getter is not part of the
          surface: callers use the property, descendants override the getter. *)
       function GetDisplayName: string; override;
-   public
-      constructor Create(aContest: ContestType); override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetFriendlyName: string; override;
 
-      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                          const aQso: ContestExchange;
-                                          const aRSTSent: string): string; override;
-      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                              const aQso: ContestExchange;
-                                              const aRSTReceived: string;
-                                              const aHisQTH: string): string; override;
-      function FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                      const aQso: ContestExchange): string; override;
+      (* STATED AT M10 S5, transcribed from the rows the base read until
+         then (ContestsArray, QSOParties, ContestsBooleanArray). The
+         flags: see TContestBase.GetFlags. *)
+      function GetWA7BNMId: integer; override;
+      function GetDomesticFileName: string; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+      function GetInStateDomesticFileName: string; override;
+      function GetFlags: TContestFlags; override;
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      constructor Create(aContest: TContestHandle); override;
+
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+   public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
+      function CountryMode: CountryModeType; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesDomesticQTH: boolean; override;
    end;
 
 implementation
 
 uses
-   SysUtils, uContestRegistry;
+   uCabrilloExchange,
+   uExchangeFields,
+   uDXMultiplierKey,
+   SysUtils, uContestFixedPoints, uContestRegistry;
 
-constructor TContestFloridaQP.Create(aContest: ContestType);
+constructor TContestFloridaQP.Create(aContest: TContestHandle);
 begin
    inherited Create(aContest);
-   SetPoints(2, 1);
+end;
+
+(* OnePhoneTwoCW, AND THE RULE IS CALLED RATHER THAN INHERITED.
+
+   THIS CLASS USED TO DESCEND FROM TContestFixedPoints, which is a mechanism
+   base for "a number per mode" -- and mechanism is all it ever gave: three
+   integers and a case. Being a state QSO party is the stronger classification
+   and there is only one base class to spend, so the scoring arrives as a call
+   to the FixedModePoints helper. No behaviour moved and nothing is
+   duplicated. (Florida was the first to leave that base; the base itself
+   retired at M3, 2026-10-01, and every contest that used it now calls the
+   helper the same way.)
+
+   THE THIRD NUMBER MATTERS AND IS NOT A GUESS: the legacy arm is
+   `if Mode = CW then 2 else 1`, so DIGITAL scores the PHONE value. Passing 1
+   for it is reproducing the arm, not rounding it off -- the corpus log for this
+   contest contains a 6 m digital QSO, and a CW-versus-not model would have
+   scored it the same by luck while being wrong in principle. *)
+procedure TContestFloridaQP.CalculateQSOPoints(var aQso: ContestExchange);
+begin
+   aQso.QSOPoints := FixedModePoints(aQso.Mode, 2, 1, 1);
 end;
 
 function TContestFloridaQP.GetDisplayName: string;
 begin
    Result := 'Florida QSO Party';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestFloridaQP.GetCabrilloName: string;
+begin
+   Result := 'FCG-FQP';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestFloridaQP.GetADIFContestId: string;
+begin
+   Result := 'FL-QSO-PARTY';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestFloridaQP.GetFriendlyName: string;
+begin
+   Result := 'Florida QSO Party';
+end;
+
+function TContestFloridaQP.GetWA7BNMId: integer;
+begin
+   Result := 325;
+end;
+
+function TContestFloridaQP.GetDomesticFileName: string;
+begin
+   Result := 'florida_cty';
+end;
+
+function TContestFloridaQP.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTDomesticOrDXQTHExchange;
+end;
+
+function TContestFloridaQP.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQTH;
+end;
+
+function TContestFloridaQP.ParseReceivedExchangeFormat(const aText: string;
+                                                       aParsers: TExchangeParsers;
+                                                       var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTDomesticOrDXQTH(aText, aExch);
+end;
+
+function TContestFloridaQP.ExchangeCarriesDomesticQTH: boolean;
+begin
+   Result := True;
+end;
+
+function TContestFloridaQP.GetInStateDomesticFileName: string;
+begin
+   Result := 'florida';
+end;
+
+function TContestFloridaQP.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode, cfMultByMode];
+end;
+
+function TContestFloridaQP.GetHostState: string;
+begin
+   Result := 'FL';
+end;
+
+function TContestFloridaQP.GetCountyLineCountiesMax: integer;
+begin
+   Result := 2;
 end;
 
 (* THE EXCHANGE IS RST AND A COUNTY, OR RST AND A COUNTRY PREFIX.
@@ -87,55 +235,78 @@ end;
    written where the contest's name has to be asked for. It is expressed here as
    behaviour instead.
 
-   THE LEGACY TESTS STAY IN PLACE, deliberately. RSTDomesticOrDXQTHExchange is
-   still reached by Florida under /NOFACTORY, which is how test-contest-factory
-   compares the two paths -- deleting them would make the A/B meaningless. They
-   become removable when the legacy exporter does. *)
-function TContestFloridaQP.GetFormatsExchange: boolean;
+   THE LEGACY FLORIDA-NAMED TESTS WERE DELETED ON 2026-09-29: this class's
+   override is the only route, so a branch testing for Florida BY NAME could
+   only ever be reached by Florida. The SENT column is the plain RST-and-state
+   helper (M11 S9c); the received one is Florida's own. *)
+function TContestFloridaQP.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                   const aQso: ContestExchange;
+                                                   const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := True;
+   Result := CabrilloSentRSTState(aMy, aQso, aCtx);
 end;
 
-function TContestFloridaQP.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                            const aQso: ContestExchange;
-                                            const aRSTSent: string): string;
+function TContestFloridaQP.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                       const aQso: ContestExchange;
+                                                       const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := Format('%-3s %-7s', [aRSTSent, aMy.MyState]);
-end;
-
-function TContestFloridaQP.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                                const aQso: ContestExchange;
-                                                const aRSTReceived: string;
-                                                const aHisQTH: string): string;
-begin
-   (* Reproduces the legacy decision tree exactly.  aHisQTH is what the
+   (* Reproduces the legacy decision tree exactly.  aCtx.HisQTH is what the
       exporter resolved from rx.QTHString, so the '' and 'DX' cases below are
       the same two the legacy arm tests. *)
    if aQso.QTHString = '' then
       begin
       if aQso.DXQTH = '' then
          begin
-         Result := Format('%-3s %-7s', [aRSTReceived, 'DX']);
+         Result := Format('%-3s %-7s', [aCtx.RSTReceived, 'DX']);
          end
       else
          begin
-         Result := Format('%-3s %-7s', [aRSTReceived, string(aQso.QTH.Prefix)]);
+         Result := Format('%-3s %-7s', [aCtx.RSTReceived, string(aQso.QTH.Prefix)]);
          end;
       end
    else if aQso.QTHString = 'DX' then
       begin
-      Result := Format('%-3s %-7s', [aRSTReceived, string(aQso.QTH.Prefix)]);
+      Result := Format('%-3s %-7s', [aCtx.RSTReceived, string(aQso.QTH.Prefix)]);
       end
    else
       begin
-      Result := Format('%-3s %-7s', [aRSTReceived, aHisQTH]);
+      Result := Format('%-3s %-7s', [aCtx.RSTReceived, aCtx.HisQTH]);
       end;
 end;
 
-function TContestFloridaQP.FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                        const aQso: ContestExchange): string;
+function TContestFloridaQP.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                               const aQso: ContestExchange): string;
 begin
    Result := Format('%-3d %-7s', [aQso.RSTSent, aMy.MyState]);
+end;
+
+(* A DX MULTIPLIER AT EVERY STATION -- M11 S4 part 2, 2026-10-14: the trait
+   this class stated (`ARRLDXCCWithNoUSAOrCanada`) until the kind was
+   deleted. *)
+function TContestFloridaQP.HasDXMultiplier: boolean;
+begin
+   Result := True;
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country but the USA and Canada -- the ARRLDXCCWithNoUSAOrCanada arm. *)
+function TContestFloridaQP.DXMultiplierKey(const aQso: ContestExchange;
+                                           out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if not IsUSAOrCanadaCountry(aQso.QTH.CountryID) then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
+end;
+
+(* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
+   DXCC only, at every station. *)
+function TContestFloridaQP.CountryMode: CountryModeType;
+begin
+   Result := ARRLCountryMode;
 end;
 
 initialization

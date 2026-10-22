@@ -54,6 +54,30 @@ $lints = @(
    # Bans a hand-typed table indexed by a radio enum. Two of them drifted from
    # VC.pas and four Kenwoods selected the wrong driver -- see the script.
    @{ Name = 'Lint-NoRadioTables'; Arg = $src;     NeedsFpc = $false }
+   # The same ban for ContestType. Its allow-list is ContestTypeSA alone since
+   # M10 S8 deleted the other two tables (a stale entry fails).
+   # docs/CONTEST_FACTORY_M10_PLAN.md, S0 and S8.
+   @{ Name = 'Lint-NoContestTables'; Arg = $src;   NeedsFpc = $false }
+   # THE ContestType ENUM IS FROZEN (Q108 S3, 2026-10-17). A member's position
+   # is a persisted contest number (.TRW, multi-op packet, server log), so no
+   # member is ever added, removed, reordered or renamed: a new contest
+   # registers by its id (RegisterContestById). Compares a hash of the ordered
+   # member list.
+   @{ Name = 'Lint-FrozenContestNumbers'; Arg = $src; NeedsFpc = $false }
+   # A CONTEST UNIT NOT LINKED IS A CONTEST THAT DOES NOT EXIST, silently
+   # (Q108 S3). Every factory unit that registers a contest is in tr4w.lpr AND
+   # the unit-test program; a test fixture contest is in the test program only
+   # and never reaches the application or the server.
+   @{ Name = 'Lint-ContestUnitsLinked'; Arg = $Tr4wDir; NeedsFpc = $false }
+   # EVERY STATE QSO PARTY SHIPS BOTH ITS .dom FILES. Each party class's
+   # InStateDomesticFileName names <base>.dom and <base>_cty.dom; both must be
+   # in target\dom and named in full.nsi (PA, AZ and MO once shipped without
+   # theirs). It gated FullBuild's installer path from 2026-08-13 and was LOST,
+   # not dropped, when FullBuild was rewritten for FPC that night (724d53d0
+   # kept it only in the D12 script, deleted with the Delphi files); nothing
+   # ran it again until M10 S8 put it here (2026-10-14). No -SourceDir: it
+   # takes the repository, and reads the classes, full.nsi and target\dom.
+   @{ Name = 'Lint-DomCoverage';     Arg = $null;  NeedsFpc = $false; Extra = @('-Repo', $repoRoot) }
    # The SAME defect one layer down. A config spelling table is bounded by its
    # enum, so its LENGTH is enforced and its CONTENTS are not -- and a repeated
    # word means GetValueFromArray hands back the FIRST ordinal and the second
@@ -211,6 +235,32 @@ $lints = @(
    # the opposite, which is why it lasted: a missing call breaks no build, no
    # test and no corpus run. This is the only thing that disagrees.
    @{ Name = 'Lint-CrashLogInstalled'; Arg = $Tr4wDir; NeedsFpc = $false }
+
+   # SHARED CODE MAY NOT ASK "WHICH CONTEST IS THIS". A per-file ratchet on
+   # `Contest = X`, `Contest in [...]` and `case Contest of` outside
+   # src\contestFactory\: what differs about a contest belongs in its class.
+   @{ Name = 'Lint-ContestNameTests'; Arg = $src; NeedsFpc = $false }
+
+   # A POINTER NARROWED TO A 32-BIT INTEGER (pointer audit D3 / P2,
+   # 2026-10-16). integer(@x) and integer(<a pointer>) are exact on i386 and
+   # cut an address in half on x86_64, and neither compiler says a word. Five
+   # were live when this was written; 64_BIT_TASKLIST had recorded zero,
+   # because its scan looked only for the widening direction. The whole tr4w
+   # tree, so the server and the tests are held to it too.
+   @{ Name = 'Lint-PointerTruncation'; Arg = $Tr4wDir; NeedsFpc = $false }
+
+   # `@Routine` IN A PROCEDURAL-TYPED SLOT (pointer audit D2 / P1). Delphi mode
+   # makes @Routine an UNTYPED pointer, which FPC accepts for a procedural
+   # parameter without checking the signature -- so typing tCreateThread's
+   # parameter only works while the call sites name the routine bare. Ten
+   # thread bodies had the wrong signature, unchecked, until 2026-10-16.
+   @{ Name = 'Lint-TypedCodePointers'; Arg = $Tr4wDir; NeedsFpc = $false }
+
+   # THE LIVE Move / FillChar COUNT, RATCHETED DOWN (pointer audit P15,
+   # 2026-10-17). It went 387 -> 464 in four weeks, all new FillChar, while the
+   # counter had no ceiling. Count-LiveMove.ps1 is both the measurement and, with
+   # -Gate, this lint: it runs its fixture first and fails below its floors.
+   @{ Name = 'Count-LiveMove'; Arg = $Tr4wDir; NeedsFpc = $false; Extra = @('-Gate') }
 )
 
 $failed  = 0

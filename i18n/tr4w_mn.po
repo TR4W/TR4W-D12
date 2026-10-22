@@ -289,13 +289,14 @@ msgctxt "TC_SORRYNOLOG"
 msgid "Sorry!! NO LOG = TRUE which prohibits logging QSOs on this computer"
 msgstr "Уучлаарай!! NO LOG = TRUE холбоог компьютер луу оруулах боломжгvй"
 
+# 2026-10-19 command name restored to English (NY4I ruling: command names are never translated, even in reviewed text); was: "Компьютерийн ID -г тохируулна уу"
 #. Section: MAIN
 #: utr4wstrings:tc_setcomputeridvalue
 #: tr4w/src/lang/tr4w_consts_eng.pas:48
 #: utr4wstrings.tc_setcomputeridvalue
 msgctxt "TC_SETCOMPUTERIDVALUE"
 msgid "Set COMPUTER ID value."
-msgstr "Компьютерийн ID -г тохируулна уу"
+msgstr "COMPUTER ID -г тохируулна уу"
 
 #. Section: MAIN
 #: utr4wstrings:tc_wanttoconvertlog
@@ -604,14 +605,18 @@ msgctxt "TC_IRTS"
 msgid "EI/GI, enter your County"
 msgstr "EI/GI, enter your County"
 
+# 2026-10-16: the English changed from "Latest config file" to "Last Contest" -- the button reopens the contest's database, not a config file.
+# Composed from this catalogue's own words, please review: last = 'Last 60 = %d' -> 'Сvvлийн 60 = %d'; contest = NONE -- this catalogue has no word for contest; left for a translator.
+# Previous translation (of the old English): "Сvvлчийн Config File"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_latest_config_file
 #: tr4w/src/lang/tr4w_consts_eng.pas:100
 #: tfrmnewcontest.btnlatest.caption
 #: utr4wstrings.tc_latest_config_file
+#, fuzzy
 msgctxt "TC_LATEST_CONFIG_FILE"
-msgid "Latest config file"
-msgstr "Сvvлчийн Config File"
+msgid "Last Contest"
+msgstr ""
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_openconfigurationfile
@@ -5952,6 +5957,16 @@ msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
 msgstr ""
 
+# 2026-10-16: new string -- the About box shows it only under a machine translation's credit, so this language does not show it today.
+#. Section: General
+#: utr4wstrings:tc_translation_corrections
+#: tr4w/src/lang/tr4w_consts_eng.pas:14
+#: utr4wstrings.tc_translation_corrections
+#, fuzzy
+msgctxt "TC_TRANSLATION_CORRECTIONS"
+msgid "Corrections are appreciated."
+msgstr ""
+
 #. Section: UTELNET
 #: utr4wstrings:tc_telnet
 #: tr4w/src/lang/tr4w_consts_eng.pas:195
@@ -7718,106 +7733,6 @@ msgstr ""
 msgid "QTH"
 msgstr ""
 
-#: tfrmfunctionkeys.pnlf1.caption
-#, fuzzy
-msgid "F1"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf10.caption
-#, fuzzy
-msgid "F10"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf11.caption
-#, fuzzy
-msgid "F11"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf12.caption
-#, fuzzy
-msgid "F12"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf2.caption
-#, fuzzy
-msgid "F2"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf3.caption
-#, fuzzy
-msgid "F3"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf4.caption
-#, fuzzy
-msgid "F4"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf5.caption
-#, fuzzy
-msgid "F5"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf6.caption
-#, fuzzy
-msgid "F6"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf7.caption
-#, fuzzy
-msgid "F7"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf8.caption
-#, fuzzy
-msgid "F8"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf9.caption
-#, fuzzy
-msgid "F9"
-msgstr ""
-
-#: tfrmhamscore.lblqueuevalue.caption
-#, fuzzy
-msgid "--"
-msgstr ""
-
-#: tfrmmp3recorder.btncontrol.caption
-#, fuzzy
-msgid "..."
-msgstr ""
-
-#: tfrmpanadapter.btnspannarrow.caption
-#, fuzzy
-msgid "-"
-msgstr ""
-
-#: tfrmpanadapter.btnspanwide.caption
-#, fuzzy
-msgid "+"
-msgstr ""
-
-#: tradioeditform.optdata7.caption
-#, fuzzy
-msgid "7"
-msgstr ""
-
-#: tradioeditform.optdata8.caption
-#, fuzzy
-msgid "8"
-msgstr ""
-
-#: tradioeditform.optstop1.caption
-#, fuzzy
-msgid "1"
-msgstr ""
-
-#: tradioeditform.optstop2.caption
-#, fuzzy
-msgid "2"
-msgstr ""
-
 #: ulclformhelpers.tc_prefs_activate
 #, fuzzy
 msgid "Save and activate this profile"
@@ -8035,15 +7950,6 @@ msgstr ""
 #: tfrmserverlog.btngetlog.caption
 #, fuzzy
 msgid "Get server log"
-msgstr ""
-
-#: tfrmserverlog.lblbytes.caption
-#: tfrmserverlog.lblqsos.caption
-#: tfrmserverlog.lblrecords.caption
-#: tfrmserverlog.lblsent.caption
-#, fuzzy
-msgctxt "tfrmserverlog.lblbytes.caption"
-msgid "0"
 msgstr ""
 
 #: tfrmtelnet.btnconfigure.caption
@@ -8901,5 +8807,386 @@ msgstr ""
 #: utr4wstrings.tc_nodxclustersdefined
 #, fuzzy
 msgid "No DX clusters are defined yet -- click Configure to add one."
+msgstr ""
+
+#: uappstrings.sexchangenoprecedence
+#, fuzzy
+msgid "Missing precedence (Q A B U M S)"
+msgstr ""
+
+#: uappstrings.sexchangeoutofstateworkshostonly
+#, fuzzy
+msgid "Out of state: work %s stations only"
+msgstr ""
+
+#: uappstrings.scontestinactive
+#, fuzzy
+msgid "%s (inactive)"
+msgstr ""
+
+#: uappstrings.scategorypowerchangedrescored
+#, fuzzy
+msgid "CATEGORY-POWER is now %s -- the scoring category changed and the log was rescored."
+msgstr ""
+
+#: uappstrings.scontestnotonmultiop
+#, fuzzy
+msgid "%s cannot be used on the multi-op network yet -- the network protocol cannot carry it. Use it only while this station is not connected to a multi-op server."
+msgstr "%s-г multi-op сүлжээнд одоогоор ашиглах боломжгүй -- сүлжээний протокол үүнийг дамжуулж чадахгүй. Энэ станц multi-op серверт холбогдоогүй үед л ашиглана уу."
+
+#: uappstrings.snewcontestin7qpneinsideaparty
+#, fuzzy
+msgid "IN7QPNE is for stations outside Indiana, the 7th call area, New England and Delaware. From %s, choose the %s instead."
+msgstr "IN7QPNE нь Indiana, 7-р дуудлагын бүс, New England, Delaware-с гаднах станцуудад зориулагдсан. %s-аас оронд нь %s-г сонгоно уу."
+
+#: uappstrings.speeronanothercontest
+#, fuzzy
+msgid "Station %s is on %s, this station is on %s -- its QSOs are NOT being logged here. All stations must run the same contest."
+msgstr "Станц %s нь %s тэмцээнд, энэ станц %s тэмцээнд оролцож байна -- түүний QSO-г энд БҮРТГЭХГҮЙ. Бүх станц нэг тэмцээнд оролцох ёстой."
+
+#: uappstrings.sexchangenotagridorreport
+#, fuzzy
+msgid "%s is not a grid square or a signal report"
+msgstr "%s нь грид локатор ч биш, RST ч биш"
+
+#: uappstrings.sexchangegridrequired
+#, fuzzy
+msgid "Grid square required"
+msgstr "Грид локатор шаардлагатай"
+
+#: uappstrings.scouldnotshowinfilemanager
+#, fuzzy
+msgid ""
+"TR4W could not open this location in your file manager:\n"
+"\n"
+"%s\n"
+"\n"
+"Check that it still exists.  tr4w.log records what was tried."
+msgstr ""
+
+#: uappstrings.sdownloadcannotverify
+#, fuzzy
+msgid ""
+"the server's certificate could not be verified (%s).\n"
+"\n"
+"The request was REFUSED rather than sent unverified. Turn off Preferences > Network > verify server certificates if you want to proceed without checking."
+msgstr ""
+
+#: uappstrings.sexchangemodebriefcountry
+#, fuzzy
+msgid "(MY COUNTRY = %s)"
+msgstr ""
+
+#: uappstrings.sexchangemodebriefemptycountry
+#, fuzzy
+msgid "(MY COUNTRY is empty)"
+msgstr ""
+
+#: uappstrings.sexchangemodefromcountry
+#, fuzzy
+msgid "This contest is asking for a state, province or section because MY COUNTRY is %s."
+msgstr ""
+
+#: uappstrings.sexchangemodefromemptycountry
+#, fuzzy
+msgid "This contest is asking for a state, province or section because MY COUNTRY is empty."
+msgstr ""
+
+#: uappstrings.sfilenamecamefromsetting
+#, fuzzy
+msgid "The name came from the %s setting for this contest."
+msgstr ""
+
+#: uappstrings.sfilenotfoundthere
+#, fuzzy
+msgid "TR4W could not find this file:"
+msgstr ""
+
+#: uappstrings.sfirstrunconvertmissing
+#, fuzzy
+msgid ""
+"TR4W could not find the conversion program:\n"
+"    %s\n"
+"\n"
+"It is installed beside TR4W itself. TR4W will start with its defaults, and your old settings file is left untouched."
+msgstr ""
+
+#: uappstrings.sfirstrunconvertnothingdone
+#, fuzzy
+msgid ""
+"Nothing was converted.\n"
+"\n"
+"TR4W will start with its defaults and your old settings file is untouched. You can convert at any time by running\n"
+"    %s\n"
+"\n"
+"from a command prompt in that folder. Converting then replaces whatever you have configured in the meantime with the old values."
+msgstr ""
+
+#: uappstrings.sfirstrunconvertnow
+#, fuzzy
+msgid "Convert now"
+msgstr ""
+
+#: uappstrings.sfirstrunconvertprompt
+#, fuzzy
+msgid ""
+"TR4W has found settings from an earlier version:\n"
+"    %s\n"
+"\n"
+"and it has not written its own settings file yet:\n"
+"    %s\n"
+"\n"
+"TR4W can carry that old configuration across now. The conversion lists what it would change and asks before writing anything, so you can look first and still say no.\n"
+"\n"
+"You do not have to do it now. Nothing is lost by continuing: TR4W starts with its defaults, your old file is left untouched, and converting later simply replaces those defaults with your old values.\n"
+"\n"
+"What is worth knowing is the ORDER. If you continue now and then set TR4W up by hand, converting afterwards overwrites that work with the values from the old file. Converting first avoids the question."
+msgstr ""
+
+#: uappstrings.sfirstrunconvertskip
+#, fuzzy
+msgid "Continue without converting"
+msgstr ""
+
+#: uappstrings.sfirstrunconverttitle
+#, fuzzy
+msgid "TR4W -- settings from an earlier version"
+msgstr ""
+
+#: uappstrings.slogfileunavailable
+#, fuzzy
+msgid ""
+"TR4W could not open its log file.\n"
+"\n"
+"%s\n"
+"\n"
+"TR4W will keep running and keep trying to open it. Until it can, nothing from this session is written to the log."
+msgstr ""
+
+#: uappstrings.snetcomputeridinuse
+#, fuzzy
+msgid ""
+"Computer ID %s is already in use by another station on this network.\n"
+"\n"
+"Change COMPUTER ID to a letter no other station is using, then reconnect."
+msgstr ""
+
+#: uappstrings.snewcontestin7qpnecountyorstate
+#, fuzzy
+msgid "Enter your county if you are in Indiana, the 7th call area, New England or Delaware. Enter your state, Canadian Province or \"DX\" if outside all four:"
+msgstr ""
+
+#: uappstrings.sqsonotlogged
+#, fuzzy
+msgid "NOT LOGGED -- the contest log would not accept this QSO. See tr4w.log. Do not clear the entry."
+msgstr ""
+
+#: uappstrings.sreadinessdomesticfilemissing
+#, fuzzy
+msgid "This contest scores domestic multipliers from a .DOM file and none is named, so no domestic multiplier will be counted."
+msgstr ""
+
+#: uappstrings.sreadinessfooter
+#, fuzzy
+msgid "Set these in Preferences > Station, then restart TR4W: they are read once when the contest is set up, so changing them now will not change this contest."
+msgstr ""
+
+#: uappstrings.sreadinessheading
+#, fuzzy
+msgid "This contest is set up, but TR4W is missing information it needs:"
+msgstr ""
+
+#: uappstrings.sreadinessmycallmissing
+#, fuzzy
+msgid "MY CALL is empty. TR4W cannot work out your country, continent or zone without it, and nothing that depends on them will be right."
+msgstr ""
+
+#: uappstrings.sreadinessmycountrymissing
+#, fuzzy
+msgid "MY COUNTRY is empty. It is normally worked out from MY CALL through CTY.DAT. Until it has a value TR4W treats this station as DX -- in ARRL DX that means it will ask every station for a state or province and refuse a power such as K or 100."
+msgstr ""
+
+#: uappstrings.sreadinessmygridmissing
+#, fuzzy
+msgid "MY GRID is empty and this contest sends your grid square."
+msgstr ""
+
+#: uappstrings.sreadinessmystatemissing
+#, fuzzy
+msgid "MY STATE is empty and this contest sends your state, province or section. TR4W will send a serial number instead."
+msgstr ""
+
+#: uappstrings.sreadinessmyzonemissing
+#, fuzzy
+msgid "MY ZONE is empty and this contest sends your zone."
+msgstr ""
+
+#: uappstrings.sverifyallpassed
+#, fuzzy
+msgid "All %d check(s) passed."
+msgstr ""
+
+#: uappstrings.sverifyclose
+#, fuzzy
+msgid "&Close"
+msgstr ""
+
+#: uappstrings.sverifycolumncheck
+#, fuzzy
+msgid "Check"
+msgstr ""
+
+#: uappstrings.sverifycolumnresult
+#, fuzzy
+msgid "Result"
+msgstr ""
+
+#: uappstrings.sverifyfailed
+#, fuzzy
+msgid "FAILED"
+msgstr ""
+
+#: uappstrings.sverifypassed
+#, fuzzy
+msgid "Passed"
+msgstr ""
+
+#: uappstrings.sverifyrun
+#, fuzzy
+msgid "&Run checks"
+msgstr ""
+
+#: uappstrings.sverifyrunning
+#, fuzzy
+msgid "Running %d check(s)..."
+msgstr ""
+
+#: uappstrings.sverifysomefailed
+#, fuzzy
+msgid "%d of %d check(s) FAILED. Select a row for details."
+msgstr ""
+
+#: uappstrings.sverifytitle
+#, fuzzy
+msgid "Verification checks"
+msgstr ""
+
+#: uprogrammain.scontestfileforeigndatabase
+#, fuzzy
+msgid ""
+"This file is a database, but it was not created by TR4W:\n"
+"\n"
+"%s\n"
+"\n"
+"TR4W cannot open another program's log. Choose a TR4W log (.db) or a contest configuration file (.cfg)."
+msgstr ""
+
+#: uprogrammain.scontestfilenotrecognised
+#, fuzzy
+msgid ""
+"This file is not a TR4W log and is not a contest configuration file:\n"
+"\n"
+"%s\n"
+"\n"
+"Choose a TR4W log (.db) or a contest configuration file (.cfg)."
+msgstr ""
+
+#: utr4wstrings.tc_bankalt
+#, fuzzy
+msgid "Alt"
+msgstr ""
+
+#: utr4wstrings.tc_bankcontrol
+#, fuzzy
+msgid "Control"
+msgstr ""
+
+#: utr4wstrings.tc_bankstandard
+#, fuzzy
+msgid "Standard"
+msgstr ""
+
+#: utr4wstrings.tc_ignoredunknownqth
+#, fuzzy
+msgid "Ignored, not a known QTH:"
+msgstr ""
+
+#: uappstrings.snewcontestcontestlabel
+#, fuzzy
+msgid "CONTEST"
+msgstr ""
+
+#: uappstrings.snewcontestsearchhint
+#, fuzzy
+msgid "Search: type part of a name, e.g. QSO"
+msgstr ""
+
+#: uappstrings.simportmyfactsdifference
+#, fuzzy
+msgid "%s: %d QSO(s), e.g. %s (this contest: %s)"
+msgstr ""
+
+#: uappstrings.simportmyfactskept
+#, fuzzy
+msgid "The file's station was kept for %d QSO(s)."
+msgstr ""
+
+#: uappstrings.simportmyfactsquestion
+#, fuzzy
+msgid ""
+"This file names our station for %d of its %d QSO(s) (%s), and it is not what this contest has:%s\n"
+"\n"
+"Keep the file's values for those QSOs?\n"
+"Yes keeps the file's. No gives them this contest's, as a new QSO would get."
+msgstr ""
+
+#: uappstrings.simportmyfactsreplaced
+#, fuzzy
+msgid "%d QSO(s) were given this contest's station in place of the file's."
+msgstr ""
+
+#: uappstrings.simportmyfactssame
+#, fuzzy
+msgid "%d QSO(s) named our station (%s), the same as this contest's."
+msgstr ""
+
+#: uappstrings.simportmyfactsstamped
+#, fuzzy
+msgid "%d QSO(s) named no station of ours and were given this contest's."
+msgstr ""
+
+#: uappstrings.snewcontestshowinactive
+#, fuzzy
+msgid "Show inactive contests"
+msgstr ""
+
+#: uappstrings.slatestcontestdetail
+#, fuzzy
+msgid "%0:s - %1:s"
+msgstr ""
+
+#: uappstrings.slatestcontestline
+#, fuzzy
+msgid "%0:s %1:d"
+msgstr ""
+
+#: uappstrings.snewcontestfilescall
+#, fuzzy
+msgid "Call"
+msgstr ""
+
+#: uappstrings.snewcontestfilescontest
+#, fuzzy
+msgid "Contest"
+msgstr ""
+
+#: uappstrings.snewcontestfilesfile
+#, fuzzy
+msgid "File"
+msgstr "Файл"
+
+#: uappstrings.snewcontestfilesyear
+#, fuzzy
+msgid "Year"
 msgstr ""
 

@@ -122,6 +122,13 @@ type
       procedure Test_Time_MissingZRejected;
       procedure Test_Time_TrailingGridStillParses;
 
+      // The CQ / NEW band-map markers (pointer audit 3.3)
+      procedure Test_Marker_ShortCallsAreNeitherCQNorNew;
+      procedure Test_Marker_RealMarkersAreRecognised;
+      procedure Test_Marker_OnlyTheFirstFourCharactersMatter;
+      procedure Test_Marker_NearMissesAreNot;
+      procedure Test_Marker_StaleBytesBeyondTheLength;
+
    public
       procedure RunAllTests; override;
    end;
@@ -973,8 +980,159 @@ begin
               'prose is deliberately NOT matched -- the timeout covers it');
 end;
 
+(* ===========================================================================
+  THE CQ / NEW MARKERS -- pointer audit 3.3, pinned BEFORE the pun is removed.
+
+  A band-map marker is a spot whose call BEGINS 'CQ/ ' (the CQ frequency, with
+  the QSO number after it) or 'NEW '. The code asked that by reading the first
+  four bytes of the ShortString as an integer and comparing with a constant.
+  These tests were written FIRST against the pun itself (PInteger(@Call[1])^ =
+  tCQAsInteger) and passed unchanged against the typed functions that replaced
+  it -- except Test_Marker_StaleBytesBeyondTheLength, which is the one place the
+  pun was wrong: it answered YES in all three of its cases, and the typed
+  functions answer NO. MarkerIsCQ / MarkerIsNew below are the one place the
+  question is asked.
+
+  Every record here starts from Default(TSpotRecord), so the bytes past a short
+  call's length are ZERO -- which is what every spot the program builds starts
+  from (the cluster path FillChars its record). *)
+
+function MarkerIsCQ(const aCall: CallString): boolean;
+begin
+   Result := SpotCallIsCQMarker(aCall);
+end;
+
+function MarkerIsNew(const aCall: CallString): boolean;
+begin
+   Result := SpotCallIsNewMarker(aCall);
+end;
+
+function SpotWith(const aCall: string): TSpotRecord;
+begin
+   Result := Default(TSpotRecord);
+   Result.FCall := ShortString(aCall);
+end;
+
+procedure TDXSpotParseTests.Test_Marker_ShortCallsAreNeitherCQNorNew;
+var
+   s: TSpotRecord;
+begin
+   BeginTest('a call shorter than four characters is neither marker');
+   s := SpotWith('');
+   CheckFalse(MarkerIsCQ(s.FCall), 'empty: CQ');
+   CheckFalse(MarkerIsNew(s.FCall), 'empty: NEW');
+   s := SpotWith('K');
+   CheckFalse(MarkerIsCQ(s.FCall), '1 char: CQ');
+   CheckFalse(MarkerIsNew(s.FCall), '1 char: NEW');
+   s := SpotWith('K1');
+   CheckFalse(MarkerIsCQ(s.FCall), 'K1: CQ');
+   CheckFalse(MarkerIsNew(s.FCall), 'K1: NEW');
+   s := SpotWith('W1A');
+   CheckFalse(MarkerIsCQ(s.FCall), 'W1A: CQ');
+   CheckFalse(MarkerIsNew(s.FCall), 'W1A: NEW');
+   s := SpotWith('N1MM');
+   CheckFalse(MarkerIsCQ(s.FCall), 'N1MM, exactly four: CQ');
+   CheckFalse(MarkerIsNew(s.FCall), 'N1MM, exactly four: NEW');
+   (* a marker with its tail cut off is a short call, not a marker *)
+   s := SpotWith('CQ');
+   CheckFalse(MarkerIsCQ(s.FCall), 'CQ: CQ');
+   s := SpotWith('CQ/');
+   CheckFalse(MarkerIsCQ(s.FCall), 'CQ/: CQ');
+   s := SpotWith('NEW');
+   CheckFalse(MarkerIsNew(s.FCall), 'NEW: NEW');
+end;
+
+procedure TDXSpotParseTests.Test_Marker_RealMarkersAreRecognised;
+var
+   s: TSpotRecord;
+begin
+   BeginTest('the markers the program itself creates are recognised');
+   s := SpotWith('CQ/ 1');
+   CheckTrue(MarkerIsCQ(s.FCall), 'CQ/ with a QSO number');
+   CheckFalse(MarkerIsNew(s.FCall), 'and it is not NEW');
+   s := SpotWith('CQ/ 123456789');
+   CheckTrue(MarkerIsCQ(s.FCall), 'CQ/ with the longest number the call holds');
+   s := SpotWith('CQ/ ');
+   CheckTrue(MarkerIsCQ(s.FCall), 'CQ/ and its space, exactly four');
+   s := SpotWith('NEW 5');
+   CheckTrue(MarkerIsNew(s.FCall), 'NEW with a tail');
+   CheckFalse(MarkerIsCQ(s.FCall), 'and it is not CQ');
+   s := SpotWith('NEW ');
+   CheckTrue(MarkerIsNew(s.FCall), 'NEW and its space, exactly four');
+end;
+
+procedure TDXSpotParseTests.Test_Marker_OnlyTheFirstFourCharactersMatter;
+var
+   a, b: TSpotRecord;
+begin
+   BeginTest('calls that differ only after the fourth character');
+   a := SpotWith('CQ/ 17');
+   b := SpotWith('CQ/ 18');
+   CheckTrue(MarkerIsCQ(a.FCall) = MarkerIsCQ(b.FCall),
+             'two CQ markers differing past byte 4 answer alike');
+   CheckTrue(MarkerIsCQ(b.FCall), 'and both are CQ');
+   a := SpotWith('N1MMA');
+   b := SpotWith('N1MMB');
+   CheckFalse(MarkerIsCQ(a.FCall) or MarkerIsNew(a.FCall), 'N1MMA');
+   CheckFalse(MarkerIsCQ(b.FCall) or MarkerIsNew(b.FCall), 'N1MMB');
+   a := SpotWith('CQ/ X');
+   b := SpotWith('CQ/ ');
+   CheckTrue(MarkerIsCQ(a.FCall) = MarkerIsCQ(b.FCall), 'a tail changes nothing');
+end;
+
+procedure TDXSpotParseTests.Test_Marker_NearMissesAreNot;
+var
+   s: TSpotRecord;
+begin
+   BeginTest('near misses are not markers');
+   s := SpotWith('CQ/X1');
+   CheckFalse(MarkerIsCQ(s.FCall), 'CQ/ with no space');
+   s := SpotWith('CQ 12');
+   CheckFalse(MarkerIsCQ(s.FCall), 'CQ and a space, no slash');
+   s := SpotWith('cq/ 1');
+   CheckFalse(MarkerIsCQ(s.FCall), 'the match is case-sensitive');
+   s := SpotWith('new 1');
+   CheckFalse(MarkerIsNew(s.FCall), 'NEW is case-sensitive too');
+   s := SpotWith('NEW1');
+   CheckFalse(MarkerIsNew(s.FCall), 'NEW with no space');
+   s := SpotWith(' CQ/ 1');
+   CheckFalse(MarkerIsCQ(s.FCall), 'a leading space moves it off the front');
+   s := SpotWith('K1ABC');
+   CheckFalse(MarkerIsCQ(s.FCall) or MarkerIsNew(s.FCall), 'an ordinary call');
+end;
+
+procedure TDXSpotParseTests.Test_Marker_StaleBytesBeyondTheLength;
+var
+   s: TSpotRecord;
+begin
+   BeginTest('bytes beyond a call''s length are not part of the call');
+   (* THE FINDING. A ShortString assignment copies the length byte and the
+     characters, and nothing else, so a record that held 'CQ/ 5' and is then
+     given 'CQ/' still has the old fourth byte in place. The integer pun read
+     those four bytes whole and answered YES; the call is 'CQ/', which is not
+     the marker. The typed test answers NO. Nothing in the program builds a spot
+     this way today (every path starts from a zeroed record), so this was a
+     latent difference, not a live bug. *)
+   s := SpotWith('CQ/ 5');
+   s.FCall := 'CQ/';
+   CheckEquals('CQ/', string(s.FCall), 'the call is three characters');
+   CheckFalse(MarkerIsCQ(s.FCall), 'CQ/ left over from CQ/ 5 is not the marker');
+   s := SpotWith('NEW 5');
+   s.FCall := 'NEW';
+   CheckFalse(MarkerIsNew(s.FCall), 'NEW left over from NEW 5 is not the marker');
+   s := SpotWith('CQ/ 5');
+   s.FCall := 'CQ';
+   CheckFalse(MarkerIsCQ(s.FCall), 'CQ left over from CQ/ 5 is not the marker');
+end;
+
 procedure TDXSpotParseTests.RunAllTests;
 begin
+   Test_Marker_ShortCallsAreNeitherCQNorNew;
+   Test_Marker_RealMarkersAreRecognised;
+   Test_Marker_OnlyTheFirstFourCharactersMatter;
+   Test_Marker_NearMissesAreNot;
+   Test_Marker_StaleBytesBeyondTheLength;
+
    Test_PlainSpot_Frequency;
    Test_PlainSpot_Call;
    Test_PlainSpot_SourceCall;

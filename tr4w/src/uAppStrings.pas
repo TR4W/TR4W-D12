@@ -276,6 +276,30 @@ resourcestring
       'Change COMPUTER ID to a letter no other station is using, then ' +
       'reconnect.';
 
+   (* A CONTEST THE V1 MULTI-OP PACKET CANNOT CARRY -- Q108 S4, 2026-10-17
+     (NY4I: "refuse multi-op for new contests until the new protocol").
+
+     THE ONE MESSAGE for every door that refuses it: connecting while that
+     contest is selected, switching to it while connected (the link is
+     dropped), another station's CONTEST command naming it (not applied). So
+     it states the fact and the way out, and promises nothing about which door
+     it came through. A contest has no number in the packet unless it is one of
+     the legacy contests, and the packet is not being changed.
+
+     %s is the contest's display name. *)
+   SContestNotOnMultiOp =
+      '%s cannot be used on the multi-op network yet -- the network protocol ' +
+      'cannot carry it. Use it only while this station is not connected to a ' +
+      'multi-op server.';
+
+   (* PEERS MUST BE ON THE SAME CONTEST -- Q110, NY4I 2026-10-18. A QSO from
+     another station on a different contest is refused and this is the
+     notice, raised once per station and contest per link. %s: the station
+     letter, its contest, this station's contest. *)
+   SPeerOnAnotherContest =
+      'Station %s is on %s, this station is on %s -- its QSOs are NOT being ' +
+      'logged here. All stations must run the same contest.';
+
    { --------------------------------------------------- verification checks - }
 
    (* Tools -> Run Verification Checks.  The window title names the thing an
@@ -318,6 +342,127 @@ resourcestring
       'TR4W could not open this location in your file manager:' + sLineBreak +
       sLineBreak + '%s' + sLineBreak + sLineBreak +
       'Check that it still exists.  tr4w.log records what was tried.';
+
+   (* ------------------------------------ refused exchanges (M5b, 7.10) - *)
+
+   (* SWEEPSTAKES WITHOUT A PRECEDENCE. NY4I, 2026-10-02: "A sweepstakes
+     entry should not have been logged without a precedence." Shown where an
+     improper section is shown -- the main window's one-line notice -- so it
+     is a few words, and it names the letters that are legal. *)
+   SExchangeNoPrecedence = 'Missing precedence (Q A B U M S)';
+
+   (* A QSO PARTY'S OUT-OF-STATE STATION WORKING ANOTHER OUT-OF-STATE ONE.
+     NY4I, 2026-10-02: "It's not valid for a fl station to work an Idaho or
+     VE station in the NC QSO party", "we should refuse to log it and show an
+     error like we would with an invalid county".  %s is the host state. *)
+   SExchangeOutOfStateWorksHostOnly = 'Out of state: work %s stations only';
+
+   (* A WORD OF AN RST-AND-GRID EXCHANGE THAT IS NEITHER -- Q115, NY4I
+     2026-10-18. The parser used to drop such a word silently, so '599 FN3'
+     logged a QSO with no grid. %s is the word as typed. *)
+   SExchangeNotAGridOrReport = '%s is not a grid square or a signal report';
+
+   (* A GRID CONTEST'S EXCHANGE WITH NO GRID IN IT -- Q115, NY4I 2026-10-18:
+     "The contest class should be stating what is required." Shown when the
+     class requires the grid and only a signal report was typed. *)
+   SExchangeGridRequired = 'Grid square required';
+
+   (* THE COMBINED IN7QPNE PARTY'S NEW CONTEST PROMPT -- Q87, NY4I
+     2026-10-14. The shared prompt names the party's area twice, and this
+     party's area is four areas, so it printed the token 'IN7QPNE' twice. *)
+   SNewContestIN7QPNECountyOrState =
+      'Enter your county if you are in Indiana, the 7th call area, New ' +
+      'England or Delaware. Enter your state, Canadian Province or "DX" ' +
+      'if outside all four:';
+
+   (* IN7QPNE REFUSED FOR A STATION INSIDE ONE OF ITS FOUR PARTIES -- Q104,
+     NY4I 2026-10-16: an in-state station uses its own party, and a 7th-area
+     station the 7QP, never its single state's party. Shown in the New
+     Contest dialog's comment while OK stays disabled. The first %s is the
+     MY STATE as typed, the second the party's contest name (e.g. "7th Call
+     Area QSO Party"). *)
+   SNewContestIN7QPNEInsideAParty =
+      'IN7QPNE is for stations outside Indiana, the 7th call area, New ' +
+      'England and Delaware. From %s, choose the %s instead.';
+
+   (* --------------------------------------------- the contest UI (M9b) - *)
+
+   (* AN INACTIVE CONTEST'S LINE IN THE NEW CONTEST DROP-DOWN. NY4I,
+     2026-10-02: "inactive contests go at the bottom of the drop down". Since
+     Q59 (2026-10-19) they are listed only when "Show inactive contests" is
+     ticked, and cannot be chosen for a new contest; the mark says why. %s is
+     the contest's display name. *)
+   SContestInactive = '%s (inactive)';
+
+   (* THE NEW CONTEST DIALOG'S CONTEST LIST -- Q103 / Q52, 2026-10-19. The
+     label over the search box and the list, in the same capitals as the
+     MY CALL and CATEGORY-* labels beside it. *)
+   SNewContestContestLabel = 'CONTEST';
+
+   (* THE GREYED HINT INSIDE THE EMPTY SEARCH BOX. Typing filters the list
+     to the contests whose name contains the text, anywhere, ignoring case;
+     "QSO" is the example because it lists every QSO party. *)
+   SNewContestSearchHint = 'Search: type part of a name, e.g. QSO';
+
+   (* THE BOX UNDER THE NEW CONTEST LIST -- Q59, NY4I 2026-10-19: "hide
+     inactive contests". Unticked (the default) the list holds only contests
+     that can be started; ticked, the inactive ones are listed too, marked
+     SContestInactive, and still cannot be chosen for a new contest. *)
+   SNewContestShowInactive = 'Show inactive contests';
+
+   (* THE "LAST CONTEST" BUTTON'S SECOND LINE -- NY4I 2026-10-19: "make the
+     contest and year more obvious". %0:s is the contest's display name (a
+     sponsor's proper name, not translated), %1:d the year it was run. Reorder
+     freely; both must stay. *)
+   SLatestContestLine = '%0:s %1:d';
+
+   (* ITS THIRD LINE: %0:s is the entry's callsign, %1:s the log's file name
+     without its directory. Shown only when the log declares a callsign. *)
+   SLatestContestDetail = '%0:s - %1:s';
+
+   (* THE NEW CONTEST DIALOG'S EXISTING-LOG GRID, its four column headers --
+     NY4I 2026-10-19. One row per log in the contest directory: the contest's
+     display name, the year it was run, the entry's callsign, and the file
+     name without its directory. *)
+   SNewContestFilesContest = 'Contest';
+   SNewContestFilesYear = 'Year';
+   SNewContestFilesCall = 'Call';
+   SNewContestFilesFile = 'File';
+
+   (* CATEGORY-POWER CHANGED WITH QSOs IN THE LOG. NY4I, 2026-10-01: "Maybe
+     we remind them of that mid-contest but let it be changed." A notice, not
+     a question -- the change has already been made and the log rescored.
+     %s is the new power category (HIGH, LOW, QRP). *)
+   SCategoryPowerChangedRescored =
+      'CATEGORY-POWER is now %s -- the scoring category changed and the log was rescored.';
+
+   (* ---------------------- an ADIF import names our station (schema 3) - *)
+
+   (* ASKED BEFORE THE IMPORT COMMITS, when the file names our station for
+     some QSOs and any of it is not this contest's. NY4I, 2026-10-18: "If the
+     import has its own my fields, we should report that and ask the user if
+     they should override the contest." %d of %d: the QSOs that name our
+     station, of all the file's; %s: the MY_ tags they carry; the last %s:
+     one line per tag that differs, from SImportMyFactsDifference. *)
+   SImportMyFactsQuestion =
+      'This file names our station for %d of its %d QSO(s) (%s), and it is ' +
+      'not what this contest has:%s' + sLineBreak + sLineBreak +
+      'Keep the file''s values for those QSOs?' + sLineBreak +
+      'Yes keeps the file''s. No gives them this contest''s, as a new QSO ' +
+      'would get.';
+
+   (* One line of SImportMyFactsQuestion: the tag, how many QSOs differ, one
+     of the file's values and this contest's. *)
+   SImportMyFactsDifference = '%s: %d QSO(s), e.g. %s (this contest: %s)';
+
+   (* WHAT THE IMPORT DID WITH OUR STATION -- the end of its report. *)
+   SImportMyFactsSame =
+      '%d QSO(s) named our station (%s), the same as this contest''s.';
+   SImportMyFactsKept = 'The file''s station was kept for %d QSO(s).';
+   SImportMyFactsReplaced =
+      '%d QSO(s) were given this contest''s station in place of the file''s.';
+   SImportMyFactsStamped =
+      '%d QSO(s) named no station of ours and were given this contest''s.';
 
 implementation
 

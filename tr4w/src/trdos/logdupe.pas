@@ -48,7 +48,10 @@ utils_text,
   LogRadio,
   LogSCP
   ,
-  uTR4WStrings;
+  uTR4WStrings,
+  (* TContestBase -- GetDXQTH's parameter (M11 S4). An interface leaf over
+    VC and uSettingsModel; it was in the implementation uses until then. *)
+  uContestBase;
 
 const
   MaxGridSquaresInList                  = 40;
@@ -150,13 +153,6 @@ type
     //    BigCallList: array[1..MaxBigCallBlocks] of BigCallBlockPtr;
   end;
 
-  VDEntry = record
-    Callsign: string[6];
-    NextEntry: Pointer;
-  end;
-
-  VDEntryPointer = ^VDEntry;
-
   //  CallDistrictTotalArray = array[1..11] of integer;
 
   DupeAndMultSheet = object
@@ -165,7 +161,6 @@ type
 //    MultSheet: MultList;
 
     function AddBigCallAddress(BigCall: EightBytes): integer;
-    procedure AddCallToVisibleDupeSheet(Callsign: CallString);
     procedure AddCompressedCallToDupeSheet(Call: FourBytes; Band: BandType; Mode: ModeType);
     procedure AddQSOToSheets(RXData: ContestExchangePtr; AddToPartials: boolean);
 
@@ -207,55 +202,35 @@ type
     procedure SheetInitAndLoad;
   end;
 
-const
-
-(* PLAIN STRINGS, NOT PAnsiChar, since 2026-09-13.  Its ckList row left
-    CFGCA and nothing reads this through a pointer any more. *)
-    DXMultTypenameArray                   : array[DXMultType] of string =
-    (
-//    'NO COUNT', //    NoCountDXMults,
-    'NONE', //    NoDXMults,
-    'ARRL DXCC WITH NO USA OR CANADA', //    ARRLDXCCWithNoUSAOrCanada,
-    'ARRL DXCC WITH NO ARRL SECTIONS', //    ARRLDXCCWithNoARRLSections,
-    'ARRL DXCC WITH NO USA CANADA KH6 OR KL7', //    ARRLDXCCWithNoUSACanadaKH6OrKL7,
-    'ARRL DXCC WITH NO I OR IS0', //    ARRLDXCCWithNoIOrIS0,
-    'ARRL DXCC WITH NO JT',
-    'ARRL DXCC', //    ARRLDXCC,
-    'CQ DXCC', //    CQDXCC,
-    'CQ DXCC WITH NO USA OR CANADA', //    CQDXCCWithNoUSAOrCanada,
-    'CQ DXCC WITH NO HB9', //    CQDXCCWithNoHB9,
-
-    'CQ DXCC WITH NO OK',
-    'CQ EUROPEAN COUNTRIES', //    CQEuropeanCountries,
-    'CQ UBA EUROPEAN COUNTRIES', //    CQUBAEuropeanCountries,
-    'CQ NON EUROPEAN COUNTRIES', //    CQNonEuropeanCountries,
-    'NORTH AMERICAN ARRL DXCC WITH NO USA CANADA OR KL7', //    NorthAmericanARRLDXCCWithNoUSACanadaOrkL7,
-    'NON SOUTH AMERICAN COUNTRIES', //    NonSouthAmericanCountries,
-    'PACC COUNTRIES AND PREFIXES', //    PACCCountriesAndPrefixes,
- //   'CQ NON EUROPEAN COUNTRIES AND WAE', //    CQNonEuropeanCountriesAndWAECallRegions
-    'BLACK SEA COUNTRIES'
-    );
+(* DXMultTypenameArray IS GONE -- M10 S2, 2026-10-14, with DX MULTIPLIER
+  (uCFG.RETIRED_COMMANDS, NY4I's Q4). Nothing else read it. *)
 var
 
   InitialExCallsigns                    : integer;
   InitialExDupes                        : integer;
 
   tAllowDupeQSOs                        : boolean = False;
-  // Issue #1034: ActiveDXMult moved to VC.pas (light home) so uMults can read it
-  // without depending on LogDupe. All users resolve it via VC (universally used).
-  ActivePrefixMult                      : PrefixMultType {= NoPrefixMults};
+  (* ActiveDXMult MOVED -- Issue #1034 took it from here to VC so uMults
+    could read it without LogDupe's cone; M10 S9d (2026-10-14) took it to
+    uContestSession.ContestSession.DXMult, as light (a leaf over VC),
+    written only by FCONTEST's set-up path. *)
+  (* ActivePrefixMult MOVED -- M10 S9b, 2026-10-14, to
+    uContestSession.ContestSession.PrefixMult -- and is GONE since M11 S3
+    part 2: the contest states its prefix key and whether it has one
+    (TContestBase.PrefixMultiplierKey, HasPrefixMultiplier). *)
 
 
 //  CQP                                   : boolean;
 
-  DoingDomesticMults                    : boolean;
-  DoingDXMults                          : boolean;
-  DoingPrefixMults                      : boolean;
-  DoingZoneMults                        : boolean;
+  (* DoingDomesticMults, DoingDXMults, DoingPrefixMults and DoingZoneMults
+    MOVED -- M11 S2, 2026-10-14 (plan F9). They are ContestSession's,
+    computed from the session's kinds on every read: LogCfg derived these
+    once at start-up, so a contest changed without a restart left them
+    describing the previous one. DoingPrefixMults left the session at M11
+    S3 with the prefix kind: the contest answers it (LOGEDIT.DoingPrefixMults,
+    TContestBase.HasPrefixMultiplier). *)
 
   ExchangeInformation                   : ExchangeInformationRecord;
-
-  FirstVDEntry                          : VDEntryPointer;
 
   GridSquareList                        : array[0..MaxGridSquaresInList - 1] of string[4];
 
@@ -273,7 +248,6 @@ var
   NumberInitialExchanges                : integer;
   NumberLongPartialCalls                : integer;
   NumberPartialCalls                    : integer;
-  NumberVDCalls                         : integer;
 
   OffTimeStart                          : TimeRecord;
 
@@ -316,9 +290,11 @@ var
 
   TotalNamesSent                        : integer;
   TotalQSOPoints                        : LONGINT {= 0};
-  MOQSOPartyW0MAWorked                  : Boolean;   // W0MA worked at least once (+100 flat bonus)
-  MOQSOPartyK0GQWorked                  : Boolean;   // K0GQ worked at least once (+100 flat bonus)
-  MOQSOPartyPeakHourCount               : Integer;   // 40/80m QSOs in 1400-2000 UTC window (max 250)
+  (* ~~LiveSessionTally~~ stood here (it was MOQSOPartyPeakHourCount):
+     Missouri's peak-hour count, kept while the program ran and never by the
+     log's loader. Deleted at Q32 (2026-10-17) -- the Missouri class counts
+     the bonus over the whole log now, as it already counted its bonus
+     stations (W0MA, K0GQ). *)
 
   //  tTotalRecordsInLog               : integer;
   tRestartInfo                          : RestartInfo;
@@ -327,7 +303,6 @@ var
 
 //procedure AddCallToPartialList(Call: CallString; InitialExchange: CallString);
 
-procedure CheckMOQSOPartyBonusStation(const Callsign: CallString);
 function BigEntryAddress(Entry: FourBytes): integer;
 
 function CallNotInPossibleCallList(Call: CallString; PossCallList: PossibleCallRecord): boolean;
@@ -335,11 +310,22 @@ function CallNotInPossibleCallList(Call: CallString; PossCallList: PossibleCallR
 procedure ClearContestExchange(var Exchange: ContestExchange);
 procedure CreateGridSquareList(Call: CallString; Band: BandType);
 
-procedure DupeInit;
 //function FindProperPartialCallAddress(Call: CallString): integer;
 function FoundDomesticQTH(var RXData: ContestExchange): boolean;
 
-procedure GetDXQTH(var RXData: ContestExchange);
+(* DOES THE LOADED DOMESTIC QTH TABLE KNOW THIS QTH? -- uContestBase's
+  TDomesticQTHTest, the engine's one answer. Handed to a contest in the typed
+  exchange's session (LOGSTUFF, M5b) and in its station (uContestFactory.
+  CurrentStation, Q107), so the host-area refusal and the host-area score ask
+  the same thing. Moved here from LOGSTUFF (ParseSessionIsDomesticQTH) on
+  2026-10-16 when it gained its second caller. *)
+function DomesticTableKnowsQTH(const aQTH: string): boolean;
+
+(* THE QSO'S DX QTH -- the engine's head, then the contest's own rule
+  (TContestBase.DXMultiplierKey, M11 S4). aContest is ActiveContest(Contest),
+  fetched ONCE by the caller and shared with whatever else it asks of the
+  contest for the same QSO; nil is the classless DUMMYCONTEST. *)
+procedure GetDXQTH(aContest: TContestBase; var RXData: ContestExchange);
 //function GetInitialExchange(Call: CallString): CallString;
 function GetInitialExchangeStringFromContestExchange(RData: ContestExchange): string;
 procedure GetMultsFromLogEntry(LogEntry: Str80; var RXData: ContestExchange);
@@ -348,15 +334,13 @@ procedure GetMultsFromLogEntry(LogEntry: Str80; var RXData: ContestExchange);
 procedure LoadInitialExchangeFile;
 procedure EnumInitialEx(FileString: PShortString);
 
-function ParseExchangeIntoContestExchange(LogEntry: string;
-  var RXData: ContestExchange): boolean;
-
 function PointsToBigCall(Entry: FourBytes): boolean;
 
 
-procedure SetUpExchangeInformation(ActiveExchange: ExchangeType;
-  var ExchangeInformation: ExchangeInformationRecord
-  );
+(* ~~SetUpExchangeInformation~~ IS DELETED (M11 S9a, 2026-10-14): each
+  contest states the fields its received exchange carries,
+  TContestBase.ReceivedExchangeFields, and start-up (uProgramMain) assigns
+  ExchangeInformation from it. *)
 
 {procedure TransferLogEntryInfoToContestExchange(LogEntry: Str80; var RXData: ContestExchange); }
 {
@@ -394,6 +378,15 @@ uses
   TypInfo,          // enum names, so an inserted band cannot shift a value
   uNet,
   uGetScores,
+  (* ActiveContest -- SetMultFlags asks the contest whether an off-band QSO
+    earns a multiplier (ContestCreditsBand, uContestBase -- now in the
+    interface uses, for GetDXQTH's parameter). *)
+  uContestFactory,
+  (* ContestSession -- the zone kind set-up resolved (M10 S9c). *)
+  uContestSession,
+  (* ResetLoggedQSOs -- the final score's view of the log is emptied with
+    the totals it is kept beside (M6). *)
+  uScoreTotals,
   PostUnit,
 //  uStack,
   MainUnit;
@@ -447,6 +440,25 @@ begin
 
 
  end;
+
+(* FoundDomesticQTH itself, on a scratch exchange, so the answer is the
+  table's own and no QSO is touched. See the declaration. *)
+function DomesticTableKnowsQTH(const aQTH: string): boolean;
+var
+  scratch: ContestExchange;
+begin
+  (* No QTH is no domestic QTH -- answered here so FoundDomesticQTH does not
+    log its blank-QTH error for a question nobody typed. *)
+  if aQTH = '' then
+     begin
+     Result := False;
+     Exit;
+     end;
+  FillChar(scratch, SizeOf(ContestExchange), 0);
+  (* The cast is a received QTH returning to the width it was typed in. *)
+  scratch.QTHString := ShortString(aQTH);
+  Result := FoundDomesticQTH(scratch);
+end;
 
 function GetInitialExchangeIndex(InitialExchange: CallString): integer;
 
@@ -626,157 +638,56 @@ begin
   Exchange.ceContest := Contest;
 end;
 
-function GetNumber(Call: CallString): AnsiChar;
+(* GetNumber IS GONE -- M11 S4, 2026-10-14. Its only caller was GetDXQTH's
+  PACC arm, and it moved with that arm, verbatim, into TContestPACC as
+  PACCCallAreaDigit. *)
 
+(* THE QSO'S DX QTH -- M11 S4, 2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S4).
+
+  THE HEAD IS THE ENGINE'S AND STAYS: COUNT DOMESTIC COUNTRIES is the
+  operator's setting, and a domestic-country call earns no DX QTH. Under the
+  same setting, whether a QSO's domestic QTH takes the DX multiplier's place
+  is the contest's answer since M11 S6 part 1
+  (TContestBase.DomesticQTHReplacesDXMultiplier -- the WYSIWYG contests); it
+  was the session kind.
+
+  THE REST IS THE CONTEST'S. This was `case ContestSession.DXMult of`, an
+  enum choosing which countries count FOR the contest (fifteen arms and an
+  `else`). Each DX contest states its own rule in
+  TContestBase.DXMultiplierKey now (shared country lists in
+  uDXMultiplierKey), and the arms are gone -- with them the four dead since
+  M11 S2 (no HB9, no OK, non-European, non-South American). A False answer
+  leaves the DX QTH as it was, exactly as an arm that did not match did.
+
+  THE CONTEST IS HANDED IN, NOT FETCHED: ActiveContest rebuilds the station
+  on every call, and every caller already asks the contest something else
+  for the same QSO, so it fetches once and passes it here. *)
+procedure GetDXQTH(aContest: TContestBase; var RXData: ContestExchange);
 var
-  TempString, NumberString              : CallString;
-
-begin
-  GetNumber := '0';
-
-  if (Call = '') or not StringHasNumber(Call) then Exit;
-
-  TempString := GetPrefix(Call);
-
-  NumberString := '';
-
-  while (TempString <> '') and
-    (Copy(TempString, length(TempString), 1) >= '0') and
-    (Copy(TempString, length(TempString), 1) <= '9') do
-     begin
-     NumberString := Copy(TempString, length(TempString), 1) + NumberString;
-     Delete(TempString, length(TempString), 1);
-     end;
-
-  GetNumber := NumberString[1];
-end;
-
-procedure GetDXQTH(var RXData: ContestExchange);
-
-//var
-  //ID                                    : string[6];
-  //NumberChar                            : Char; {KK1L: 6.70}
-
+  key                                   : DXMultiplierString;
 begin
   if not Settings.Contest.CountDomesticCountries then
      begin
-     if ActiveDomesticMult = WYSIWYGDomestic then
-       if RXData.DomesticQTH <> '' then Exit;
+     (* A DOMESTIC QTH TAKES THE PLACE OF THE DX MULTIPLIER where the contest
+       says so (TContestBase.DomesticQTHReplacesDXMultiplier, M11 S6 part 1),
+       asked of the contest handed in; it was `ContestSession.DomesticMult =
+       WYSIWYGDomestic`. *)
+     if ContestDomesticQTHReplacesDXMultiplier(aContest) and
+        (RXData.DomesticQTH <> '') then
+        begin
+        Exit;
+        end;
 
-     if DomesticCountryCall(RXData.Callsign) then Exit;
+     if DomesticCountryCall(RXData.Callsign) then
+        begin
+        Exit;
+        end;
      end;
 
-//R3DSS/E9
-  case ActiveDXMult of
-
-//    NoCountDXMults:      RXData.DXQTH := RXData.QTH.CountryID; { 6.60 }
-
-    NoDXMults:
-      {RXData.DXQTH := RXData.QTH.CountryID}; { 6.30 }
-
-    ARRLDXCCWithNoUSAOrCanada, CQDXCCWithNoUSAOrCanada:
-      if (RXData.QTH.CountryID <> 'K') and (RXData.QTH.CountryID <> 'VE') then
-         begin
-         RXData.DXQTH := RXData.QTH.CountryID;
-         end;
-
-    ARRLDXCCWithNoARRLSections:
-      if pos(' ' + RXData.QTH.CountryID + ' ', ARRLSectionCountryString) = 0 then
-         begin
-         RXData.DXQTH := RXData.QTH.CountryID;
-         end;
-
-    ARRLDXCCWithNoUSACanadaKH6OrKL7:
-      if (RXData.QTH.CountryID <> 'K') and (RXData.QTH.CountryID <> 'VE') and
-        (RXData.QTH.CountryID <> 'KH6') and (RXData.QTH.CountryID <> 'KL') then
-         begin
-         RXData.DXQTH := RXData.QTH.CountryID;
-         end;
-
-    ARRLDXCCWithNoIOrIS0:
-//      if (RXData.QTH.CountryID <> 'I') and (RXData.QTH.CountryID <> 'IS') and (RXData.QTH.CountryID <> 'IT9') then
-      if RXData.QTH.CountryID[1] <> 'I' then
-         begin
-         RXData.DXQTH := RXData.QTH.CountryID;
-         end;
-
-    CQDXCCWithNoHB9: if RXData.QTH.CountryID <> 'HB' then RXData.DXQTH := RXData.QTH.CountryID;
-    CQDXCCWithNoOK: if RXData.QTH.CountryID <> 'OK' then RXData.DXQTH := RXData.QTH.CountryID;
-    ARRLDXCCWithNoJT: if RXData.QTH.CountryID <> 'JT' then RXData.DXQTH := RXData.QTH.CountryID;
-
-    NorthAmericanARRLDXCCWithNoUSACanadaOrkL7:
-      if (RXData.QTH.Continent = NorthAmerica) then
-        if (RXData.QTH.CountryID <> 'K') and
-          (RXData.QTH.CountryID <> 'VE') and
-          (RXData.QTH.CountryID <> 'KL') then
-           begin
-           RXData.DXQTH := RXData.QTH.CountryID;
-           end;
-
-    CQEuropeanCountries:
-      if (RXData.QTH.Continent = Europe) then
-         begin
-         RXData.DXQTH := RXData.QTH.CountryID;
-         end;
-
-    CQUBAEuropeanCountries:
-      if UBACountry(RXData.QTH.CountryID) then
-         begin
-         RXData.DXQTH := RXData.QTH.CountryID;
-         end;
-
-    CQNonEuropeanCountries:
-      if (RXData.QTH.Continent <> Europe) then
-         begin
-         RXData.DXQTH := RXData.QTH.CountryID;
-         end;
-
-    NonSouthAmericanCountries:
-      if RXData.QTH.Continent <> SouthAmerica then
-         begin
-         RXData.DXQTH := RXData.QTH.CountryID;
-         end;
-
-    BlackSeaCountries:
-      begin
-        if BlackSeaRegionCountry(RXData.QTH.CountryID) then
-           begin
-           RXData.DXQTH := RXData.QTH.CountryID;
-           end;
-      end;
-
-    PACCCountriesAndPrefixes:
-      begin
-        if RXData.QTH.CountryID = 'UA9' then
-           begin
-           if StringHas(RXData.Callsign, '9') then
-              begin
-              RXData.DXQTH := 'UA9'
-              end
-           else
-              begin
-              RXData.DXQTH := 'UA0';
-              end;
-
-           Exit;
-           end;
-
-        if (RXData.QTH.CountryID = 'CE') or
-          (RXData.QTH.CountryID = 'JA') or (RXData.QTH.CountryID = 'LU') or
-          (RXData.QTH.CountryID = 'PY') or (RXData.QTH.CountryID = 'VE') or
-          (RXData.QTH.CountryID = 'K') or (RXData.QTH.CountryID = 'VK') or
-          (RXData.QTH.CountryID = 'ZS') or (RXData.QTH.CountryID = 'ZL') then
-           begin
-           RXData.DXQTH := RXData.QTH.CountryID + AnsiChar(GetNumber(RXData.Callsign));
-           Exit;
-           end;
-
-        RXData.DXQTH := RXData.QTH.CountryID;
-      end;
-
-  else
-    RXData.DXQTH := RXData.QTH.CountryID;
-  end;
+  if ContestDXMultiplierKey(aContest, RXData, key) then
+     begin
+     RXData.DXQTH := key;
+     end;
 end;
 
 procedure GetMultsFromLogEntry(LogEntry: Str80; var RXData: ContestExchange);
@@ -886,154 +797,6 @@ begin
      end;
 end;
 
-procedure DupeAndMultSheet.AddCallToVisibleDupeSheet(Callsign: CallString);
-
-var
-  SuffixString, NumberString            : CallString;
-  NumberChar                            : AnsiChar;
-  Character                             : Char;
-  NextRecord, {Remember,} ActiveVDEntry : VDEntryPointer;
-  Count                                 : integer;
-
-begin
-  //{WLI}    IF MaxAvail <= SizeOf (VDEntry) THEN Exit;
-
-  {    StandardCall := StandardCallFormat (Callsign, True);
-
-      IF StringHas (StandardCall, '/') THEN
-          StandardCall := PostcedingString (StandardCall, '/');
-  }
-  Callsign := RootCall(Callsign);
-
-  NumberString := NumberPartOfString(Callsign);
-  NumberChar := NumberString[1];
-
-  if FirstVDEntry = nil then { Set up entries with 1 to 10 }
-     begin
-     FirstVDEntry := New(VDEntryPointer);
-     ActiveVDEntry := FirstVDEntry;
-
-     ActiveVDEntry^.Callsign := '1';
-     ActiveVDEntry^.NextEntry := New(VDEntryPointer);
-
-     for Count := 2 to 10 do
-        begin
-        if Count < 10 then
-           begin
-           Character := CHR(Ord('0') + Count)
-           end
-        else
-           begin
-           Character := '0';
-           end;
-
-        ActiveVDEntry := ActiveVDEntry^.NextEntry;
-
-        ActiveVDEntry^.Callsign := Character;
-
-        if Character <> '0' then
-           begin
-           ActiveVDEntry^.NextEntry := New(VDEntryPointer)
-           end
-        else
-           begin
-           ActiveVDEntry^.NextEntry := nil;
-           end;
-        end;
-
-     NumberVDCalls := 10;
-     end;
-
-  ActiveVDEntry := FirstVDEntry;
-
-  while ActiveVDEntry^.Callsign <> NumberChar do
-    if ActiveVDEntry^.NextEntry = nil then
-       begin
-       ActiveVDEntry^.NextEntry := New(VDEntryPointer);
-       ActiveVDEntry := ActiveVDEntry^.NextEntry;
-
-       ActiveVDEntry^.Callsign := Callsign;
-       ActiveVDEntry^.NextEntry := nil;
-       inc(NumberVDCalls);
-       Exit;
-       end
-    else
-       begin
-       ActiveVDEntry := ActiveVDEntry^.NextEntry;
-       end;
-
-  { We have found the Number Entry that matches the call we are adding. }
-
-  if ActiveVDEntry^.NextEntry = nil then { Adding the 1st 0 call? }
-     begin
-     if ActiveVDEntry^.Callsign <> '0' then
-        begin
-        //      SetWindow(WholeScreenWindow);
-             //{WLI}            ClrScr;
-    ShowMessage(TC_FINDINGZEROENDVISIBLEDUPESHEETLIST);
-    logger.Fatal('Not finding zero at end visible dupesheet list!!');
-    halt;
-        end;
-
-     ActiveVDEntry^.NextEntry := New(VDEntryPointer);
-     ActiveVDEntry := ActiveVDEntry^.NextEntry;
-
-     ActiveVDEntry^.Callsign := Callsign;
-     ActiveVDEntry^.NextEntry := nil;
-     inc(NumberVDCalls);
-     Exit; { All done - 1st 0 call added }
-     end;
-
-  { See if it is the first for this number }
-
-  NextRecord := ActiveVDEntry^.NextEntry;
-
-  if (length(NextRecord^.Callsign) = 1) and StringIsAllNumbers(ActiveVDEntry^.Callsign) then
-     begin
-     ActiveVDEntry^.NextEntry := New(VDEntryPointer);
-
-     ActiveVDEntry := ActiveVDEntry^.NextEntry;
-     ActiveVDEntry^.Callsign := Callsign;
-     ActiveVDEntry^.NextEntry := NextRecord;
-     inc(NumberVDCalls);
-     Exit;
-     end;
-
-  { We have to find the right place to squeeze it }
-
-  SuffixString := GetSuffix(Callsign);
-
-  while (SuffixString > GetSuffix(NextRecord^.Callsign)) and
-    (length(NextRecord^.Callsign) > 1) and
-    (ActiveVDEntry^.NextEntry <> nil) do
-     begin
-     ActiveVDEntry := NextRecord;
-     NextRecord := ActiveVDEntry^.NextEntry;
-     if NextRecord = nil then Break; {added by wli}
-     end;
-
-  if NextRecord <> nil then {added by wli}
-     begin {added by wli}
-     if (ActiveVDEntry^.NextEntry = nil) and (SuffixString > GetSuffix(NextRecord^.Callsign)) then
-        begin
-        ActiveVDEntry := NextRecord;
-
-        ActiveVDEntry^.NextEntry := New(VDEntryPointer);
-        ActiveVDEntry := ActiveVDEntry^.NextEntry;
-        ActiveVDEntry^.Callsign := Callsign;
-        ActiveVDEntry^.NextEntry := nil;
-        Exit;
-        end;
-     end; {added by wli}
-
-  ActiveVDEntry^.NextEntry := New(VDEntryPointer);
-
-  ActiveVDEntry := ActiveVDEntry^.NextEntry;
-  ActiveVDEntry^.Callsign := Callsign;
-  ActiveVDEntry^.NextEntry := NextRecord;
-  inc(NumberVDCalls);
-end;
-
 procedure DupeAndMultSheet.DisposeOfMemoryAndZeroTotals;
 
 //var
@@ -1043,7 +806,7 @@ procedure DupeAndMultSheet.DisposeOfMemoryAndZeroTotals;
   //TempRemainingMultiplierType           : RemainingMultiplierType;
 begin
 
-  CallsignsList.ClearDupes;
+  ClearAllDupeSheets;
 
   mo.ClearAllMults;
 {
@@ -1088,27 +851,14 @@ begin
      end;
 
   TotalQSOPoints := 0;
-  MOQSOPartyW0MAWorked := False;
-  MOQSOPartyK0GQWorked := False;
-  MOQSOPartyPeakHourCount := 0;
+  (* THE VIEW A BONUS RULE READS GOES WITH THE TOTALS -- see uScoreTotals. *)
+  ResetLoggedQSOs;
   TotalNamesSent := 0;
   tRestartInfo.riTotalRecordsInLog := 0;
   tUSQ := 0;
   tUSQE := 0;
   FillChar(tRestartInfo.riQSOByOpMode, SizeOf(tRestartInfo.riQSOByOpMode), 0);
   tThisHourPreviousBand := NoBand;
-end;
-
-procedure CheckMOQSOPartyBonusStation(const Callsign: CallString);
-begin
-   if Callsign = 'W0MA' then
-      begin
-      MOQSOPartyW0MAWorked := True;
-      end;
-   if Callsign = 'K0GQ' then
-      begin
-      MOQSOPartyK0GQWorked := True;
-      end;
 end;
 
 procedure DupeAndMultSheet.DupeSheetTotals(var Totals: QSOTotalArray);
@@ -1229,8 +979,6 @@ begin
 end;
 
 procedure DupeAndMultSheet.SetMultFlags(var RXData: ContestExchange);
-label
-  SkipDomesticMult;
 { This procedure will look at the contest exchange passed to it and see
   if any multiplier flags should be set.  No updating of multiplier arrays
   of totals is done.        }
@@ -1240,6 +988,7 @@ var
  // TempBand                              : BandType;
   MultBand                              : BandType;
   MultMode                              : ModeType;
+  contestRules                          : TContestBase;
   //CompressedMult                        : FourBytes;
   //DomQTH                                : Str20;
  // c                                     : integer;
@@ -1248,17 +997,14 @@ begin
    logger.Trace('>>> Entering DupeAndMultSheet.SetMultFlags');
    if logger.IsDebugEnabled then
       begin
-      logger.debug('DoingDomesticMults = ' + BooleanToStr(DoingDomesticMults));
-      logger.debug('DoingDXMults       = ' + BooleanToStr(DoingDXMults));
-      logger.debug('DoingPrefixMults   = ' + BooleanToStr(DoingPrefixMults));
-      logger.debug('DoingZoneMults     = ' + BooleanToStr(DoingZoneMults));
+      logger.debug('DoingDomesticMults = ' + BooleanToStr(ContestHasDomesticMultiplier(ActiveContest(Contest))));
+      logger.debug('DoingDXMults       = ' + BooleanToStr(ContestHasDXMultiplier(ActiveContest(Contest))));
+      logger.debug('DoingPrefixMults   = ' + BooleanToStr(ContestHasPrefixMultiplier(ActiveContest(Contest))));
+      logger.debug('DoingZoneMults     = ' + BooleanToStr(ContestHasZoneMultiplier(ActiveContest(Contest))));
       end;
 
   if RXData.ceClearMultSheet then Exit;
-  RXData.DomesticMult := False;
-  RXData.DXMult := False;
-  RXData.PrefixMult := False;
-  RXData.ZoneMult := False;
+  ClearMultiplierFlags(RXData);
 
   if Settings.Mult.ByBand then MultBand := RXData.Band else MultBand := AllBands;
   if Settings.Mult.ByMode then MultMode := RXData.Mode else MultMode := Both;
@@ -1268,47 +1014,62 @@ begin
      RXData.DomMultQTH := RXData.DomesticQTH;
      end;
 
-  SkipDomesticMult:
-  if (Contest = BCQP) and (RXData.DomMultQTH = 'dx') then         // 4.98.2
+  (* NO MULTIPLIER CREDIT FOR A QSO ON A BAND THE CONTEST DOES NOT USE -- NY4I,
+     2026-10-01: "correct, no multiplier credit for off-band QSOs". The points
+     half is TContestBase.ScoreQSO (since M3), which asks the same question
+     before the class ever sees the QSO.
+
+     HERE, AFTER THE FOUR FLAGS ARE CLEARED, because every flag the program
+     keeps is set in this routine: live entry, the rescore, the editable log
+     and the multiplier alarm all come through it, and AddQSOToSheets only
+     marks the multiplier sheet for a flag set here. So one exit leaves the
+     QSO with no multiplier anywhere. AFTER the DomMultQTH fill, too, so the
+     QSO still records the QTH it was worked with -- only its credit goes. *)
+  contestRules := ActiveContest(Contest);
+  if not ContestCreditsBand(contestRules, RXData.Band) then
      begin
-     exit;   // no mults for dx
-     end;
-  if (Contest = NYQP) and (RXData.DomMultQTH = 'DX') then         // 4.116.5
-     begin
-     exit;
-     end;
-   if (Contest = INQSOPARTY) and (RXData.DomMultQTH = 'DX') then         // 4.116.5
-      begin
-      exit;
-      end;
-  if (RXData.DomMultQTH <> '') and DoingDomesticMults then
-     begin
-     RXData.DomesticMult := mo.IsDmMult(RXData.DomMultQTH, GetAddMultBand(DomesticMultByBand, MultBand), MultMode, ActiveDomesticMult);
+     Exit;
      end;
 
-  if (RXData.DXQTH <> '') and DoingDXMults {and (ActiveDXMult <> NoCountDXMults)} then
- // if (activeqsopointmethod = DLRTTY then
+  (* NOR FOR A WORKED STATION THE ENTRANT MAY NOT CREDIT -- a QSO party's
+     host-area rule, Q107 (NY4I, 2026-10-16). The points half is ScoreQSO,
+     which asks the same contest the same question; see
+     TContestBase.CreditsWorkedStation. *)
+  if not ContestCreditsWorkedStation(contestRules, RXData) then
+     begin
+     Exit;
+     end;
+
+  (* WHETHER THE QSO EARNS A MULTIPLIER OF A KIND AT ALL IS THE CONTEST'S
+     DECLARATION; WHETHER IT IS NEW IS THIS SHEET'S -- M8, design 7.7 stage 2.
+     Five rules that named their contest here went to their classes'
+     CountsAsMultiplier: a 'DX' QTH earns none in the BC (spelt 'dx'), New
+     York and Indiana QSO parties, the PCC's own-country prefix earns none,
+     and the Jock White Field Day's own branch and branch 00 earn no zone.
+     A false answer leaves the flag false, as each `exit` here did. *)
+  if (RXData.DomMultQTH <> '') and ContestHasDomesticMultiplier(contestRules) and
+     ContestCountsMultiplier(contestRules, RXData, rmDomestic) then
+     begin
+     (* The sheet's grid-field key -- the contest's answer (M11 S6 part 1),
+       on the object this routine already holds; it was the session kind. *)
+     RXData.DomesticMult := mo.IsDmMult(RXData.DomMultQTH, GetAddMultBand(DomesticMultByBand, MultBand), MultMode,
+                                        ContestHasGridFieldMultiplier(contestRules));
+     end;
+
+  if (RXData.DXQTH <> '') and ContestHasDXMultiplier(contestRules) and
+     ContestCountsMultiplier(contestRules, RXData, rmDX) then
      begin
      RXData.DXMult := mo.IsDXMult(RXData.QTH.Country, GetAddMultBand(DXCCMultByBand, MultBand), MultMode);
      end;
 
-   if (RXData.Prefix <> '') and DoingPrefixMults then
-      begin        // 4.83.6
-      if (contest = PCC) and
-         (RXData.QTH.CountryID = Settings.My.Country) then
-         begin
-         RXData.PrefixMult := False
-         end
-      else
-         begin
-         RXData.PrefixMult := mo.IsPxMult(RXData.Prefix, MultBand, MultMode);
-         end;
-      end;
-    if (Contest = NZFIELDDAY) then
-    if (RXData.Zone = StrToIntDef(UTF8Encode(Settings.My.Zone), 0)) or (RXData.Zone = 00) then   exit;  //n4af 4.41.6
+  if (RXData.Prefix <> '') and ContestHasPrefixMultiplier(contestRules) and
+     ContestCountsMultiplier(contestRules, RXData, rmPrefix) then
+     begin
+     RXData.PrefixMult := mo.IsPxMult(RXData.Prefix, MultBand, MultMode);
+     end;
 
-
-  if (RXData.Zone <> DUMMYZONE) and DoingZoneMults then              // n4af 4.42.1
+  if (RXData.Zone <> DUMMYZONE) and ContestHasZoneMultiplier(contestRules) and
+     ContestCountsMultiplier(contestRules, RXData, rmZone) then
      begin
      RXData.ZoneMult := mo.IsZnMult(RXData.Zone, MultBand, MultMode);
      end;
@@ -1597,467 +1358,6 @@ begin
   LoadinLog;
 end;
 
-procedure SetUpExchangeInformation(ActiveExchange: ExchangeType; var ExchangeInformation: ExchangeInformationRecord);
-
-begin
-  //FillChar(ExchangeInformation, sizeof(ExchangeInformation), 0);
-
-  with ExchangeInformation do
-     begin
-     Age := False;
-     Chapter := False;
-     Check := False;
-     ClassEI := False;
- //    FOCNumber := False;
-     Name := False;
- //    PostalCode := False;
-     Power := False;
-     Precedence := False;
-     QSONumber := False;
-     QTH := False;
-     RandomChars := False;
-     RST := False;
-     Zone := False;
-     ZoneOrSociety := False;
-     end;
-
-  case ActiveExchange of
-    CheckAndChapterOrQTHExchange:
-      begin
-        ExchangeInformation.Chapter := True;
-        ExchangeInformation.Check := True;
-        ExchangeInformation.QTH := True;
-      end;
-
-    ClassDomesticOrDXQTHExchange:
-      begin
-        ExchangeInformation.ClassEI := True;
-        ExchangeInformation.QTH := True;
-      end;
-
-    KidsDayExchange:
-      begin
-        ExchangeInformation.Kids := True;
-      end;
-
-    RSTAndContinentExchange:
-      begin
-        ExchangeInformation.RST := True;
-        ExchangeInformation.QTH := True;
-      end;
-
-    NameQTHAndPossibleTenTenNumber:
-      begin
-        ExchangeInformation.Name := True;
-        ExchangeInformation.QTH := True;
-        ExchangeInformation.TenTenNum := True;
-      end;
-
-    NameAndDomesticOrDXQTHExchange:
-      begin
-        ExchangeInformation.Name := True;
-        ExchangeInformation.QTH := True;
-      end;
-
-    NameAndPossibleGridSquareExchange:
-      begin
-        ExchangeInformation.Name := True;
-        ExchangeInformation.QTH := True;
-      end;
-
-    NZFieldDayExchange:
-      begin
-        ExchangeInformation.RST := True;
-        ExchangeInformation.QSONumber := True;
-        ExchangeInformation.Zone := True;
-      end;
-  
-    QSONumberAndCoordinatesSum, QSONumberAndGeoCoordinates:
-      begin
-        ExchangeInformation.QTH := True;
-        ExchangeInformation.QSONumber := True;
-      end;
-
-    QSONumberAndPreviousQSONumber:
-      begin
-//        ExchangeInformation.RandomChars := True;
-        ExchangeInformation.QSONumber := True;
-      end;
-
-    QSONumberAndZone:
-      begin
-        ExchangeInformation.Zone := True;
-        ExchangeInformation.QSONumber := True;
-      end;
-
-    QSONumberAndNameExchange:
-      begin
-        ExchangeInformation.Name := True;
-        ExchangeInformation.QSONumber := True;
-      end;
-    QSONumberAndGridSquare,
-      QSONumberDomesticQTHExchange,
-      QSONumberDomesticOrDXQTHExchange:
-      begin
-        ExchangeInformation.QSONumber := True;
-        ExchangeInformation.QTH := True;
-      end;
-
-    QSONumberNameChapterAndQTHExchange:
-      begin
-        ExchangeInformation.QSONumber := True;
-        ExchangeInformation.Name := True;
-        ExchangeInformation.Chapter := True;
-        ExchangeInformation.QTH := True;
-      end;
-
-    QSONumberNameDomesticOrDXQTHExchange:
-      begin
-        ExchangeInformation.QSONumber := True;
-        ExchangeInformation.Name := True;
-        ExchangeInformation.QTH := True;
-      end;
-
-    QSONumberPrecedenceCheckDomesticQTHExchange:
-      begin
-        ExchangeInformation.QSONumber := True;
-        ExchangeInformation.Precedence := True;
-        ExchangeInformation.Check := True;
-        ExchangeInformation.QTH := True;
-      end;
-
-    AgeAndQSONumberExchange:
-      begin
-        ExchangeInformation.QSONumber := True;
-        ExchangeInformation.Age := True;
-      end;
-
-    QSONumberAndAgeExchange:             // 4.119.1
-      begin
-        ExchangeInformation.QSONumber := True;
-        ExchangeInformation.Age := True;
-      end;
-    RSTAndPOTAPark:
-       begin
-       ExchangeInformation.RST := true;
-       ExchangeInformation.QTH := true;
-       end;
-       
-    RSTAgeAndPossibleSK:
-      begin
-        ExchangeInformation.RST := True;
-        ExchangeInformation.Age := True;
-        ExchangeInformation.QTH := True;
-      end;
-
-    RSTAgeExchange:
-      begin
-        ExchangeInformation.RST := True;
-        ExchangeInformation.Age := True;
-      end;
-
-    RSTALLJAPrefectureAndPrecedenceExchange:
-      begin
-        ExchangeInformation.RST := True;
-        ExchangeInformation.Precedence := True;
-        ExchangeInformation.QTH := True;
-      end;
-
-    RSTPossibleDomesticQTHAndPower:
-      begin
-        ExchangeInformation.RST := True;
-        ExchangeInformation.QTH := True;
-        ExchangeInformation.Power := True;
-      end;
-
-    Grid2Exchange:
-      begin
-        ExchangeInformation.QTH := True;
-      end;
-
-      RSTAndGrid3Exchange:      // 4.96.3
-      begin
-        ExchangeInformation.QTH := True;
-      end;
-
-       GridExchange:
-      begin
-        ExchangeInformation.QTH := True;
-      end;
-
-    RSTAndOrGridExchange, RSTAndGridExchange:
-      begin
-        ExchangeInformation.RST := True;
-        ExchangeInformation.QTH := True;
-      end;
-
-    RSTAndPostalCodeExchange:
-      begin
-        ExchangeInformation.RST := True;
-//        ExchangeInformation.PostalCode := True;
-        ExchangeInformation.QTH := True;
-      end;
-
-    RSTQTHExchange,
-      RSTDomesticOrDXQTHExchange:
-      begin
-        ExchangeInformation.RST := True;
-        ExchangeInformation.QTH := True;
-      end;
-
-    RSTDomesticQTHExchange,
-      RSTPrefectureExchange:
-      begin
-        ExchangeInformation.RST := True;
-        ExchangeInformation.QTH := True;
-        ExchangeInformation.QSONumber := True;  // 4.97.5
-      end;
-
-    QSONumberAndPossibleDomesticQTHExchange, RSTDomesticQTHOrQSONumberExchange:
-      begin
-        ExchangeInformation.RST := True;
-        ExchangeInformation.QSONumber := True;
-        ExchangeInformation.QTH := True;
-      end;
-
-    RSTNameAndQTHExchange:
-      begin
-        ExchangeInformation.RST := True;
-        ExchangeInformation.Name := True;
-        ExchangeInformation.QTH := True;
-      end;
-  RSTAndFOCNumberExchange:
-  begin
-  ExchangeInformation.RST := True;
-  ExchangeInformation.Power := True;
-  end;
-
-    RSTPowerExchange:
-      begin
-        ExchangeInformation.RST := True;
-        ExchangeInformation.Power := True;
-      end;
-    {WLI-DUBLICATE}
-    {        NZFieldDayExchange:
-                BEGIN
-                ExchangeInformation.RST := True;
-                ExchangeInformation.QSONumber := True;
-                ExchangeInformation.Zone := True;
-                END;
-    }
-    RSTQSONumberExchange:
-      begin
-        ExchangeInformation.RST := True;
-        ExchangeInformation.QSONumber := True;
-      end;
-
-    RSTAndQSONumberOrFrenchDepartmentExchange,
-    RSTQSONumberOrDomesticQTHExchange, //n4af 04.40.5
-      RSTQSONumberAndPossibleDomesticQTHExchange,
-      RSTQSONumberAndDomesticQTHExchange,
-      RSTQSONumberAndGridSquareExchange,
-      RSTAndQSONumberOrDomesticQTHExchange:
-      begin
-        ExchangeInformation.RST := True;
-        ExchangeInformation.QSONumber := True;
-        ExchangeInformation.QTH := True;
-      end;
-
-    RSTQTHNameAndFistsNumberOrPowerExchange:
-      begin
-        ExchangeInformation.RST := True;
-        ExchangeInformation.QTH := True;
-        ExchangeInformation.Name := True;
-        ExchangeInformation.Power := True;
-        ExchangeInformation.QSONumber := True;
-      end;
-
-    RSTQSONumberAndRandomCharactersExchange:
-      begin
-        ExchangeInformation.RST := True;
-        ExchangeInformation.RandomChars := True;
-        ExchangeInformation.QSONumber := True;
-      end;
-
-    RSTZoneAndPossibleDomesticQTHExchange:
-      begin
-        ExchangeInformation.RST := True;
-        ExchangeInformation.Zone := True;
-        ExchangeInformation.QTH := True;
-      end;
-
-    RSTZoneExchange:
-      begin
-        ExchangeInformation.RST := True;
-        ExchangeInformation.Zone := True;
-      end;
-
-    RSTZoneOrSocietyExchange:
-      begin
-        ExchangeInformation.RST := True;
-        ExchangeInformation.QTH := True;
-        ExchangeInformation.Zone := True;
-      end;
-
-    RSTLongJAPrefectureExchange: {KK1L: 6.72}
-      begin
-        ExchangeInformation.RST := True;
-        ExchangeInformation.QTH := True;
-      end;
-      RSTZoneOrDomesticQTH:
-      begin
-        ExchangeInformation.RST := True;
-        ExchangeInformation.Zone := True;
-        ExchangeInformation.QTH := True;
-      end;
-  end;
-
-end;
-
-function ParseExchangeIntoContestExchange(LogEntry: string;
-  var RXData: ContestExchange): boolean;
-
-{ Returns TRUE if it looks like a good QSO }
-
-var
-  ExchangeString                        : ShortString {Str80}; {WLI}
-
-begin
-  ParseExchangeIntoContestExchange := False;
-  logger.debug('Entering ParseEchangeIntoCOntestExchange with LogEntry = (%s)',[LogEntry]);
-
-  ClearContestExchange(RXData);
-
-  { See if it is a note }
-
-  if Copy(LogEntry, 1, 1) = ';' then Exit;
-
-  RXData.Callsign := GetLogEntryCall(LogEntry);
-  RXData.Band := GetLogEntryBand(LogEntry);
-  RXData.Mode := GetLogEntryMode(LogEntry);
-  SetExtendedModeFromMode(RXData);
-  RXData.QSOPoints := GetLogEntryQSOPoints(LogEntry);
-  //  RXData.Date := GetLogEntryDateString(LogEntry);
-  //  RXData.Time := GetLogEntryIntegerTime(LogEntry);
-
-  if (RXData.Band = NoBand) or (RXData.Mode = NoMode) then Exit;
-
-  ExchangeString := GetLogEntryExchangeString(LogEntry);
-
-  if ExchangeInformation.RST then
-     begin
-     RXData.RSTSent := StrToIntDef(RemoveFirstString(ExchangeString), 0);
-
-       { Sometimes the received RST is optional, so I only pull it
-        off if it appears to be all there (numbers only). }
-
-     if StringIsAllNumbers(GetFirstString(ExchangeString)) then
-        begin
-        RXData.RSTReceived := StrToIntDef(RemoveFirstString(ExchangeString), 0);
-        end;
-     end;
-
-
-  if (ActiveExchange = RSTQTHNameAndFistsNumberOrPowerExchange) then {KK1L: 6.70 for FISTS funny exchange}
-     begin
-
-     RXData.QTHString := RemoveFirstString(ExchangeString);
-     RXData.Name := RemoveFirstString(ExchangeString);
-       {KK1L: 6.70 The power/number is right where the mults usually go}
-     RXData.Power := GetLogEntryMultString(LogEntry); {KK1L: 6.70 I use power string for either number or power}
-     end
-
-  else {KK1L: 6.70 What follows is what was always here!}
-     begin
-     if ExchangeInformation.ClassEI then
-        begin
-        RXData.ceClass := RemoveFirstString(ExchangeString);
-        end;
-
-       { Sometimes the QSO number is optional - so only pull it off the
-        exchange if it looks like it is there. }
-
-     if ExchangeInformation.QSONumber and StringIsAllNumbers(GetFirstString(ExchangeString)) then
-        begin
-        RXData.NumberReceived := RemoveFirstLongInteger(ExchangeString);
-        end;
-
-     if ExchangeInformation.RandomChars then
-        begin
-        RXData.RandomCharsSent := RemoveFirstString(ExchangeString); { added in 6.27 }
-        RXData.RandomCharsReceived := RemoveFirstString(ExchangeString);
-        end;
- {
-    if ExchangeInformation.PostalCode then
-    begin
-      RXData.PostalCode := RemoveFirstString(ExchangeString) + ' ' + RemoveFirstString(ExchangeString);
-    end;
-}
-     if ExchangeInformation.Power then
-        begin
-        RXData.Power := RemoveFirstString(ExchangeString);
-        end;
-
-     if ExchangeInformation.Age then
-        begin
-        RXData.Age := StrToIntDef(RemoveFirstString(ExchangeString), 0);
-        end;
-
-     if ExchangeInformation.Name then
-        begin
-        RXData.Name := RemoveFirstString(ExchangeString);
-        end;
-
-     if ExchangeInformation.Chapter then
-        begin
-        RXData.Chapter := RemoveFirstString(ExchangeString);
-        end;
-
-     if ExchangeInformation.Precedence then
-        begin
-        RXData.Precedence := RemoveFirstString(ExchangeString)[1];
-        end;
-
-     if ExchangeInformation.Check then
-        begin
-        RXData.Check := StrToIntDef(RemoveFirstString(ExchangeString), 0);
-        end;
-
-     if ExchangeInformation.Zone and StringIsAllNumbersOrSpaces(ExchangeString) then
-        begin
-        RXData.Zone := StrToIntDef(RemoveFirstString(ExchangeString), 0);
-        end;
-
-     if ExchangeInformation.QTH then
-        begin
-        GetRidOfPrecedingSpaces(ExchangeString);
-        GetRidOfPostcedingSpaces(ExchangeString);
-        RXData.QTHString := ExchangeString;
-        end;
-     end;
-
-  ParseExchangeIntoContestExchange := True;
-end;
-
-procedure DupeInit;
-
-var
-  //Block                                 : integer;
-  NextEntry, ActiveVDEntry              : VDEntryPointer;
-  //Band                                  : BandType;
-  //Mode                                  : ModeType;
-
-begin
-  //  for Block := 1 to MaxPartialCallBlocks do PartialCallList[Block] := nil;
-  ActiveVDEntry := FirstVDEntry;
-  while ActiveVDEntry <> nil do
-     begin
-     NextEntry := ActiveVDEntry^.NextEntry;
-     Dispose(ActiveVDEntry);
-     ActiveVDEntry := NextEntry;
-     end;
-end;
-
 function GetInitialExchangeStringFromContestExchange(RData: ContestExchange): string;
 
 var
@@ -2071,13 +1371,13 @@ begin
   with RData do
      begin
 
-     if ActiveExchange = RSTALLJAPrefectureAndPrecedenceExchange then
+     if ContestSession.Exchange = RSTALLJAPrefectureAndPrecedenceExchange then
         begin
         GetInitialExchangeStringFromContestExchange := Precedence + ' ' + QTHString;
         Exit;
         end;
 
-     if ActiveExchange = RSTDomesticQTHOrQSONumberExchange then
+     if ContestSession.Exchange = RSTDomesticQTHOrQSONumberExchange then
         begin
         QString := QTHString;
 
@@ -2094,13 +1394,13 @@ begin
         Exit;
         end;
 
-     if ActiveExchange = RSTQTHNameAndFistsNumberOrPowerExchange then
+     if ContestSession.Exchange = RSTQTHNameAndFistsNumberOrPowerExchange then
         begin
         GetInitialExchangeStringFromContestExchange := QTHString + ' ' + Name + ' ' + Power;
         Exit;
         end;
 
-     if ActiveExchange = RSTZoneOrSocietyExchange then
+     if ContestSession.Exchange = RSTZoneOrSocietyExchange then
         begin
         if QTHString <> '' then
            begin
@@ -2109,7 +1409,7 @@ begin
            end;
         end;
 
-      if ActiveExchange = RSTZoneOrDomesticQTH then           // 4.95.6
+      if ContestSession.Exchange = RSTZoneOrDomesticQTH then           // 4.95.6
          begin
          if QTHString <> '' then
             begin
@@ -2206,6 +1506,9 @@ var
   StartMode, FinishMode{, Mode}           : ModeType;
   //TempString                            : Str20;
  // Address                               : integer;
+  (* The active contest, fetched once for the zone questions -- M11 S5
+    part 2. *)
+  zoneRules                               : TContestBase;
 
 begin
   if Settings.Mult.ByBand then
@@ -2249,26 +1552,21 @@ begin
         end;
   end;
 }
-  if DoingZoneMults then
+  zoneRules := ActiveContest(Contest);
+  if ContestHasZoneMultiplier(zoneRules) then
      begin
-     case ActiveZoneMult of
-       CQZones: MaxNumberOfZones := 40;
-       EUHFCYear: MaxNumberOfZones := 100;
-       ITUZones: MaxNumberOfZones := 75;
-       JAPrefectures: MaxNumberOfZones := 50;
-       BranchZones: MaxNumberOfZones := 99;
-       RFChampionchipZones: MaxNumberOfZones := 7;
-     else MaxNumberOfZones := 0;
-     end;
-
+     (* THE CONTEST SAYS HOW MANY ZONES -- M11 S5, 2026-10-14. This was
+       `case ContestSession.ZoneMult of` (CQ 40, the year licensed 100, ITU
+       75, the NZART branch 99, the RF Championship 7, and a JA-prefecture
+       arm, 50, that ran for no contest). Once per set-up of the remaining
+       mults, so one ActiveContest, which also answers whether there is a
+       zone multiplier at all (M11 S5 part 2). *)
+     MaxNumberOfZones := ContestZoneMultiplierCount(zoneRules);
      end;
 
 
 end;
 
-begin
-  //{WLI}    HeapError := @HeapFunc;
-  DupeInit;
 end.
 
 

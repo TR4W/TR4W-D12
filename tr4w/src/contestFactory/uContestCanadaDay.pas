@@ -1,0 +1,333 @@
+(*
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+
+ This file is part of TR4W  (SRC)
+
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+ *)
+
+(* THE RAC CANADA DAY CONTEST.
+
+  The ContestsArray row this class states, verbatim:
+
+   Email: '';  DF: 'p13';  WA7BNM: 60;  QRZRUID: 101;
+   Pxm: NoPrefixMults;  ZnM: NoZoneMults;  AIE: NoInitialExchange;  DM: DomesticFile;  P: 0;
+   AE: RSTAndQSONumberOrDomesticQTHExchange;  XM: NoDXMults;  QP: RACQSOPointMethod;
+   ADIFName: '';  CABName: '';  FriendlyName: 'RAC Canada Day Contest'
+
+  THE CABRILLO CONTEST: NAME IS WA7BNM'S CANADA-DAY SINCE 2026-10-19 (see
+  GetCabrilloName), not the enum's spelling the paragraph below
+  describes.
+
+  Blank CABName and ADIFName resolve to the enum's spelling, 'CANADA DAY'.
+
+  WHY IT HAS A CLASS NOW. M5b (2026-10-02) moved exchange parsing onto the
+  contest, and this contest's parse rule was a test of ActiveQSOPointMethod
+  inside a shared shape parser -- which an operator's QSO POINT METHOD line
+  reached in any contest. A class to hold that rule needed the whole row and
+  the scoring arm with it, because registering a class makes the class this
+  contest's scorer too. Both are transcribed exactly;
+  Test_MovedRowValuesStillMatchTheArray holds the row, and the contest matrix
+  the scoring, export, import and parse -- every line of its record but
+  `contest.class` is unchanged, which is the proof.
+
+  A COPY OF THE RAC WINTER CONTEST'S CLASS, AND DELIBERATELY SO (design 1.4).
+  The two are RAC's two contests, on different dates and under rules RAC
+  revises separately; today they score and parse alike. Do not merge them.
+
+  SCORING, transcribed from RACQSOPointMethod: a Canadian station scores 10,
+  20 if its call contains RAC (an RAC official station); anybody else 2.
+  ITS PARSE: a VE0 station (maritime mobile) sends a serial, whatever its
+  country makes it look like; everybody else is the shape's own rule. *)
+unit uContestCanadaDay;
+
+{$I tr4w.inc}
+
+interface
+
+uses
+   VC, uContestBase;
+
+type
+   TContestCanadaDay = class(TContestBase)
+   protected
+      (* PROTECTED, MATCHING THE BASE -- callers use the properties,
+         descendants override the getters. Every getter below states
+         the ContestsArray row quoted above. *)
+      function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetFriendlyName: string; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
+
+      (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
+      function GetFlags: TContestFlags; override;
+      function GetIsUSQSOParty: boolean; override;
+      (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
+         TContestBase: ScoreQSO is the one public scoring entry. *)
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* A VE0 STATION SENDS A SERIAL -- see the header. It stood in
+         LOGSTUFF.ProcessRSTAndQSONumberOrDomesticQTHExchange as a test of
+         ActiveQSOPointMethod = RACQSOPointMethod; stated here under that
+         shape. *)
+      function ParseReceivedExchange(const aText: string;
+                                     const aSession: TReceivedExchangeSession;
+                                     var aExch: ContestExchange;
+                                     out aErrorMessage: string): boolean; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesDomesticQTH: boolean; override;
+   end;
+
+implementation
+
+uses
+   uExchangeFields,
+   uCabrilloExchange,
+   uADIFExchange,
+   uContestRegistry,
+   uTR4WStrings;
+
+procedure TContestCanadaDay.CalculateQSOPoints(var aQso: ContestExchange);
+begin
+   if aQso.QTH.CountryID = 'VE' then
+      begin
+      if Pos('RAC', aQso.Callsign) > 0 then
+         begin
+         aQso.QSOPoints := 20;
+         end
+      else
+         begin
+         aQso.QSOPoints := 10;
+         end;
+      end
+   else
+      begin
+      aQso.QSOPoints := 2;
+      end;
+end;
+
+function TContestCanadaDay.ParseReceivedExchange(const aText: string;
+                                                const aSession: TReceivedExchangeSession;
+                                                var aExch: ContestExchange;
+                                                out aErrorMessage: string): boolean;
+begin
+   (* NO SHAPE TEST -- THIS CONTEST'S SESSION ALWAYS PARSES
+      RSTAndQSONumberOrDomesticQTHExchange, its trait, and no DescribeSession
+      states another, so the test that stood here was always true.
+      Deleted at M11 S2 (plan F11). *)
+   if Copy(aExch.Callsign, 1, 3) = 'VE0' then
+      begin
+      aErrorMessage := '';
+      Result := aSession.Parsers.ParseRSTQSONumber(aText, aExch);
+      Exit;
+      end;
+
+   Result := inherited ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
+end;
+
+function TContestCanadaDay.GetDisplayName: string;
+begin
+   Result := 'RAC Canada Day Contest';
+end;
+
+function TContestCanadaDay.GetCabrilloName: string;
+begin
+   (* WA7BNM's Cabrillo name (WA7BNM 60), NY4I 2026-10-19: "do the
+      cabrillo renames". TR4W wrote 'CANADA DAY', which the sponsor's log robot
+      accepted neither as the name nor as an alias
+      (docs/UDC_CROSSWALK_FINDINGS.md). Only the Cabrillo CONTEST: line
+      (and the UDP <contestname>) moves: the id, the ADIF id and the
+      display names are their own literals. TR4W reads no Cabrillo
+      CONTEST: value back, so the old name needs no read alias. *)
+   Result := 'CANADA-DAY';
+end;
+
+function TContestCanadaDay.GetADIFContestId: string;
+begin
+   (* The row's ADIFName is blank; export writes the enum's spelling, and import matches it (M1). *)
+   Result := 'CANADA DAY';
+end;
+
+function TContestCanadaDay.GetWA7BNMId: integer;
+begin
+   Result := 60;
+end;
+
+function TContestCanadaDay.GetQRZRUId: integer;
+begin
+   Result := 101;
+end;
+
+function TContestCanadaDay.GetSubmissionEmail: string;
+begin
+   Result := '';
+end;
+
+function TContestCanadaDay.GetDomesticFileName: string;
+begin
+   Result := 'p13';
+end;
+
+function TContestCanadaDay.GetFriendlyName: string;
+begin
+   Result := 'RAC Canada Day Contest';
+end;
+
+function TContestCanadaDay.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := NoInitialExchange;
+end;
+
+function TContestCanadaDay.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTAndQSONumberOrDomesticQTHExchange;
+end;
+
+function TContestCanadaDay.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQSONumberQTH;
+end;
+
+function TContestCanadaDay.ParseReceivedExchangeFormat(const aText: string;
+                                                       aParsers: TExchangeParsers;
+                                                       var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTAndQSONumberOrDomesticQTH(aText, aExch);
+end;
+
+procedure TContestCanadaDay.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   aMessages.WriteRSTStateOrQSONumber;
+end;
+
+function TContestCanadaDay.ExchangeCarriesDomesticQTH: boolean;
+begin
+   Result := True;
+end;
+
+function TContestCanadaDay.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                               const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentRSTStateOrQSONumber(aMy, aQso);
+end;
+
+function TContestCanadaDay.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                   const aQso: ContestExchange;
+                                                   const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentRSTStateOrQSONumber(aMy, aQso, aCtx);
+end;
+
+function TContestCanadaDay.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                       const aQso: ContestExchange;
+                                                       const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedRSTQTHOrQSONumber(aMy, aQso, aCtx);
+end;
+
+function TContestCanadaDay.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand,
+              cfQSOByMode,
+              cfMultByBand,
+              cfMultByMode,
+              cfVHFBandsEnabled];
+end;
+
+function TContestCanadaDay.GetIsUSQSOParty: boolean;
+begin
+   (* P: 0 -- not a US state QSO party. *)
+   Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation.
+   The arm named CANADA_DAY, CANADA_WINTER; each of them holds its own
+   copy (design 1.4), so a sponsor changing one changes one. *)
+procedure TContestCanadaDay.DescribeSession(const aStation: TStationContext;
+                                            aSession: TSessionDefaults);
+begin
+   if aStation.MyCountry <> 'VE' then
+      begin
+      aSession.SentState := '';
+      end;
+   aSession.AddDomesticCountry('VE');
+   aSession.AddDomesticCountry('CY0');
+   aSession.AddDomesticCountry('CY9');
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for CANADA_WINTER.
+   The same steps on ticking the box stood for ARI_DX, CANADA_WINTER,
+   HELVETIA, KINGOFSPAINCW, KINGOFSPAINSSB, PACC, UBACW, UBASSB.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestCanadaDay.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.OfferIAmIn(TC_CANADA);
+   aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURPROVINCEID, ncfMyState);
+end;
+
+
+(* THE DOMESTIC QTH IS LOOKED UP IN THIS CONTEST'S DOMESTIC FILE, at every
+   station -- M11 S6 part 1b, 2026-10-14. It was the session's
+   `= DomesticFile` (the trait); see TContestBase.UsesDomesticFile. *)
+function TContestCanadaDay.UsesDomesticFile: boolean;
+begin
+   Result := True;
+end;
+
+initialization
+   RegisterContest(CANADA_DAY, TContestCanadaDay);
+
+end.

@@ -180,6 +180,19 @@ function TryApplyMessageCommand(const aCommand, aValue: ShortString): boolean;
 procedure SetCQMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString {Str80});
 procedure SetEXMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString {Str80});
 
+(* AN OPERATOR-STATED CQ MEMORY SURVIVES RE-SELECTING THE CONTEST -- Q9
+  (2026-10-17); see the implementation. NoteCQMemoryStatedByOperator latches
+  a memory the operator edited (TryApplyMessageCommand, the line-input
+  edit); FCONTEST's set-up forgets another contest's statements first
+  (ForgetCQMemoryStatementsOfOtherContests) and then writes each default CQ
+  memory through SetContestDefaultCQMemoryString, which leaves a latched one
+  alone. *)
+procedure NoteCQMemoryStatedByOperator(Mode: ModeType; Key: AnsiChar);
+function CQMemoryIsOperatorStated(Mode: ModeType; Key: AnsiChar): boolean;
+procedure ForgetCQMemoryStatementsOfOtherContests(aContest: TContestHandle);
+procedure SetContestDefaultCQMemoryString(Mode: ModeType; Key: AnsiChar;
+                                          MemoryString: ShortString);
+
 procedure SetCQCaptionMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString);
 procedure SetEXCaptionMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString);
 
@@ -1182,6 +1195,8 @@ begin
            (GetCQMemoryString(ActiveMode, FunctionKey) <> TempString) then
               begin
               SetCQMemoryString(ActiveMode, FunctionKey, TempString);
+              (* THE OPERATOR STATED IT -- Q9: set-up leaves it alone now. *)
+              NoteCQMemoryStatedByOperator(ActiveMode, FunctionKey);
 
               if ActiveMode = Phone then
                  begin
@@ -2015,137 +2030,169 @@ begin
   EXCaptionMemory[Mode, Key] := MemoryString;
 end;
 
+(* WHERE A FUNCTION-KEY MEMORY LIVES, OR False -- the two guards
+  SetCQMemoryString and SetEXMemoryString each held a copy of, LIFTED
+  2026-10-17 when the operator-statement latch (Q9) became their third
+  user. aWho names the caller in the log, so each line reads as it did.
+
+  REFUSE A KEY THIS ARRAY CANNOT HOLD -- and this one matters more than the
+  caption pair, because of what sits next to it. CQMemory, EXMemory,
+  CQCaptionMemory and EXCaptionMemory are four adjacent globals of the same
+  type (LogCW.pas:86-90). Range checking is off, so an index past AltF12
+  does not raise -- it writes a freshly New()ed pointer into the NEXT array
+  along. That is a non-nil, valid-looking pointer in a slot nothing ever
+  allocated, and whoever reads it later takes the access violation, in
+  another unit, with nothing to connect the two.
+
+  ORDINALS, NOT A SET. `Key in [F1..AltF12]` rejected key #139 at run time
+  even though F1 = CHR(112) and AltF12 = CHR(147) -- it is inside the range
+  by inspection, and a standalone probe with the same mode switches agrees.
+  Char is WideChar here -- tr4w.inc turns on the UnicodeStrings mode switch
+  -- and a set of WideChar is not something to rely on; the first version of
+  this guard silently discarded every Alt-F memory during config load.
+  Comparing ordinals says exactly what is meant and cannot be affected by
+  the set representation. The bounds are logged with any rejection so a
+  future surprise names its own numbers instead of needing a probe.
+
+  THE FIRST INDEX NEEDS THE SAME CARE AS THE SECOND, and it was the half
+  that was missing. ModeType is (CW, Digital, Phone, Both, NoMode, FM) --
+  six values -- while FunctionKeyMemoryArray is array[CW..Phone, ...], which
+  is the first THREE. Mapping Digital to CW covered one of the three strays
+  and left Both, NoMode and FM writing a whole ROW or more past the array:
+  36 pointers, 144 bytes, landing squarely in the next one along. Range
+  checking is off, so it does not raise -- it plants a New()ed pointer in a
+  slot nothing allocated, and the fault surfaces later in whoever reads it.
+  ShowFMessages folds FM into Phone for exactly this reason
+  (uFunctionKeys.pas:263); the setters never got the same treatment.
+  ActiveMode reaches here directly (LogCW.pas:1386, :1490), so this is not a
+  theoretical argument about what a caller might pass. *)
+function FunctionKeyMemorySlot(const aWho: string; var aMode: ModeType;
+                               aKey: AnsiChar): boolean;
+begin
+  Result := False;
+  if (Ord(aKey) < Ord(F1)) or (Ord(aKey) > Ord(AltF12)) then
+     begin
+     logger.Error('[%s] key #%d is outside F1..AltF12 (%d..%d) -- ignored, it '
+                  + 'would have written into the next array',
+                  [aWho, Ord(aKey), Ord(F1), Ord(AltF12)]);
+     Exit;
+     end;
+
+  if aMode = Digital then
+     begin
+     aMode := CW;
+     end;
+  if aMode = FM then
+     begin
+     aMode := Phone;
+     end;
+  if (aMode < CW) or (aMode > Phone) then
+     begin
+     logger.Error('[%s] mode %d has no memory row (CW..Phone only) -- ignored',
+                  [aWho, Ord(aMode)]);
+     Exit;
+     end;
+
+  Result := True;
+end;
+
 procedure SetCQMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString {Str80});
 
 begin
-  { REFUSE A KEY THIS ARRAY CANNOT HOLD -- and this one matters more than
-    the caption pair, because of what sits next to it.
-
-    CQMemory, EXMemory, CQCaptionMemory and EXCaptionMemory are four
-    adjacent globals of the same type (LogCW.pas:86-90). Range checking
-    is off, so an index past AltF12 here does not raise -- it writes a
-    freshly New()ed pointer into the NEXT array along. That is a
-    non-nil, valid-looking pointer in a slot nothing ever allocated,
-    and whoever reads it later takes the access violation, in another
-    unit, with nothing to connect the two. }
-  { ORDINALS, NOT A SET. `Key in [F1..AltF12]` rejected key #139 at run time
-    even though F1 = CHR(112) and AltF12 = CHR(147) -- it is inside the
-    range by inspection, and a standalone probe with the same mode switches
-    agrees. Char is WideChar here -- tr4w.inc turns on the UnicodeStrings
-    mode switch -- and a set
-    of WideChar is not something to rely on; the first version of this guard
-    silently discarded every Alt-F memory during config load.
-
-    Comparing ordinals says exactly what is meant and cannot be affected by
-    the set representation. The bounds are logged with any rejection so a
-    future surprise names its own numbers instead of needing a probe. }
-  if (Ord(Key) < Ord(F1)) or (Ord(Key) > Ord(AltF12)) then
+  if not FunctionKeyMemorySlot('SetCQMemoryString', Mode, Key) then
      begin
-     logger.Error('[SetCQMemoryString] key #%d is outside F1..AltF12 (%d..%d) -- ignored, it '
-                  + 'would have written into the next array',
-                  [Ord(Key), Ord(F1), Ord(AltF12)]);
      Exit;
      end;
 
-  { THE FIRST INDEX NEEDS THE SAME CARE AS THE SECOND, and it was the half
-    that was missing.
-
-    ModeType is (CW, Digital, Phone, Both, NoMode, FM) -- six values --
-    while FunctionKeyMemoryArray is array[CW..Phone, ...], which is the
-    first THREE. Mapping Digital to CW covered one of the three strays and
-    left Both, NoMode and FM writing a whole ROW or more past the array: 36
-    pointers, 144 bytes, landing squarely in the next one along. Range
-    checking is off, so it does not raise -- it plants a New()ed pointer in
-    a slot nothing allocated, and the fault surfaces later in whoever reads
-    it. ShowFMessages folds FM into Phone for exactly this reason
-    (uFunctionKeys.pas:263); the setters never got the same treatment.
-
-    ActiveMode reaches here directly (LogCW.pas:1386, :1490), so this is not
-    a theoretical argument about what a caller might pass. }
-  if Mode = Digital then
-     begin
-     Mode                               := CW;
-     end;
-  if Mode = FM then
-     begin
-     Mode                               := Phone;
-     end;
-  if (Mode < CW) or (Mode > Phone) then
-     begin
-     logger.Error('[SetCQMemoryString] mode %d has no memory row (CW..Phone only) -- ignored',
-                  [Ord(Mode)]);
-     Exit;
-     end;
-
-  {KK1L: 6.72 NOTE This is where I should interpret the string just as if it were being read from LOGCFG.DAT}
-  SniffOutControlCharacters(MemoryString); {KK1L: 6.72}
+  (* KK1L: 6.72 NOTE This is where I should interpret the string just as if
+    it were being read from LOGCFG.DAT *)
+  SniffOutControlCharacters(MemoryString); (* KK1L: 6.72 *)
   CQMemory[Mode, Key] := MemoryString;
+end;
+
+(* THE CQ MEMORIES THE OPERATOR HAS STATED THIS CONTEST -- Q9 (NY4I,
+  2026-10-15: "Accept" -- "an edited memory is an operator statement").
+
+  A CONTEST'S SET-UP WRITES DEFAULT CQ MEMORIES (FCONTEST: its contest's
+  TSessionDefaults memories and the engine's default exchange messages),
+  and until Q9 it overwrote an operator's edit every time the contest was
+  selected again. A memory the operator STATED -- the Alt-P edit dialog
+  (TryApplyMessageCommand, whose only caller it is) or the line-input edit
+  -- is latched here, and set-up writes its default only where nothing is
+  latched.
+
+  THE LATCH BELONGS TO ONE CONTEST: the one set up last. FCONTEST's set-up
+  hands each contest it sets up to ForgetCQMemoryStatementsOfOtherContests
+  before writing a default, so another contest's edit is never carried into
+  this one -- that contest writes its own defaults, as before -- and
+  re-selecting the SAME contest keeps them. A statement is made under the
+  contest set up last; one made before any is set up is forgotten by the
+  first. Main thread only, as every memory write is. Nothing here is
+  persisted: the log's `message` table holds every memory at close and is
+  not read back (reported 2026-10-17). *)
+var
+  CQMemoryStated: array[CW..Phone, F1..AltF12] of boolean;
+  CQMemoryStatementsContest: TContestHandle;
+
+procedure NoteCQMemoryStatedByOperator(Mode: ModeType; Key: AnsiChar);
+begin
+  if not FunctionKeyMemorySlot('NoteCQMemoryStatedByOperator', Mode, Key) then
+     begin
+     Exit;
+     end;
+  CQMemoryStated[Mode, Key] := True;
+end;
+
+function CQMemoryIsOperatorStated(Mode: ModeType; Key: AnsiChar): boolean;
+begin
+  Result := False;
+  if not FunctionKeyMemorySlot('CQMemoryIsOperatorStated', Mode, Key) then
+     begin
+     Exit;
+     end;
+  Result := CQMemoryStated[Mode, Key];
+end;
+
+procedure ForgetCQMemoryStatementsOfOtherContests(aContest: TContestHandle);
+var
+  m: ModeType;
+  k: AnsiChar;
+begin
+  if CQMemoryStatementsContest = aContest then
+     begin
+     Exit;
+     end;
+  for m := CW to Phone do
+     begin
+     for k := F1 to AltF12 do
+        begin
+        CQMemoryStated[m, k] := False;
+        end;
+     end;
+  CQMemoryStatementsContest := aContest;
+end;
+
+procedure SetContestDefaultCQMemoryString(Mode: ModeType; Key: AnsiChar;
+                                          MemoryString: ShortString);
+begin
+  if CQMemoryIsOperatorStated(Mode, Key) then
+     begin
+     Exit;
+     end;
+  SetCQMemoryString(Mode, Key, MemoryString);
 end;
 
 procedure SetEXMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString {Str80});
 
 begin
-  { REFUSE A KEY THIS ARRAY CANNOT HOLD -- and this one matters more than
-    the caption pair, because of what sits next to it.
-
-    CQMemory, EXMemory, CQCaptionMemory and EXCaptionMemory are four
-    adjacent globals of the same type (LogCW.pas:86-90). Range checking
-    is off, so an index past AltF12 here does not raise -- it writes a
-    freshly New()ed pointer into the NEXT array along. That is a
-    non-nil, valid-looking pointer in a slot nothing ever allocated,
-    and whoever reads it later takes the access violation, in another
-    unit, with nothing to connect the two. }
-  { ORDINALS, NOT A SET. `Key in [F1..AltF12]` rejected key #139 at run time
-    even though F1 = CHR(112) and AltF12 = CHR(147) -- it is inside the
-    range by inspection, and a standalone probe with the same mode switches
-    agrees. Char is WideChar here -- tr4w.inc turns on the UnicodeStrings
-    mode switch -- and a set
-    of WideChar is not something to rely on; the first version of this guard
-    silently discarded every Alt-F memory during config load.
-
-    Comparing ordinals says exactly what is meant and cannot be affected by
-    the set representation. The bounds are logged with any rejection so a
-    future surprise names its own numbers instead of needing a probe. }
-  if (Ord(Key) < Ord(F1)) or (Ord(Key) > Ord(AltF12)) then
+  if not FunctionKeyMemorySlot('SetEXMemoryString', Mode, Key) then
      begin
-     logger.Error('[SetEXMemoryString] key #%d is outside F1..AltF12 (%d..%d) -- ignored, it '
-                  + 'would have written into the next array',
-                  [Ord(Key), Ord(F1), Ord(AltF12)]);
      Exit;
      end;
 
-  { THE FIRST INDEX NEEDS THE SAME CARE AS THE SECOND, and it was the half
-    that was missing.
-
-    ModeType is (CW, Digital, Phone, Both, NoMode, FM) -- six values --
-    while FunctionKeyMemoryArray is array[CW..Phone, ...], which is the
-    first THREE. Mapping Digital to CW covered one of the three strays and
-    left Both, NoMode and FM writing a whole ROW or more past the array: 36
-    pointers, 144 bytes, landing squarely in the next one along. Range
-    checking is off, so it does not raise -- it plants a New()ed pointer in
-    a slot nothing allocated, and the fault surfaces later in whoever reads
-    it. ShowFMessages folds FM into Phone for exactly this reason
-    (uFunctionKeys.pas:263); the setters never got the same treatment.
-
-    ActiveMode reaches here directly (LogCW.pas:1386, :1490), so this is not
-    a theoretical argument about what a caller might pass. }
-  if Mode = Digital then
-     begin
-     Mode                               := CW;
-     end;
-  if Mode = FM then
-     begin
-     Mode                               := Phone;
-     end;
-  if (Mode < CW) or (Mode > Phone) then
-     begin
-     logger.Error('[SetEXMemoryString] mode %d has no memory row (CW..Phone only) -- ignored',
-                  [Ord(Mode)]);
-     Exit;
-     end;
-
-  {KK1L: 6.72 NOTE This is where I should interpret the string just as if it were being read from LOGCFG.DAT}
-  SniffOutControlCharacters(MemoryString); {KK1L: 6.72}
+  (* KK1L: 6.72 NOTE This is where I should interpret the string just as if
+    it were being read from LOGCFG.DAT *)
+  SniffOutControlCharacters(MemoryString); (* KK1L: 6.72 *)
   EXMemory[Mode, Key] := MemoryString;
 end;
 
@@ -2476,7 +2523,9 @@ begin
       begin
       if CQMessage then
          begin
-         SetCQMemoryString(TempMode, CHR(TempValue + FuncKey), CMD)
+         SetCQMemoryString(TempMode, CHR(TempValue + FuncKey), CMD);
+         (* THE OPERATOR STATED IT -- Q9: set-up leaves it alone now. *)
+         NoteCQMemoryStatedByOperator(TempMode, CHR(TempValue + FuncKey));
          end
       else
          begin

@@ -132,6 +132,18 @@ def lcl_accelerators(lang):
    return out
 
 
+AUTHOR_KEY = "tc_translation_author"
+
+
+def is_author_credit(entry):
+   """Is this the TC_TRANSLATION_AUTHOR entry -- by msgctxt, or by reference
+   for the catalogues whose copy carries no msgctxt (da, el, fi, pt_BR, sv,
+   zh_CN, and Polish's second copy)."""
+   if entry.key and entry.key.lower() == AUTHOR_KEY:
+      return True
+   return any(r.strip().lower().endswith(AUTHOR_KEY) for r in entry.refs)
+
+
 def same_text(a, b):
    """Is this the English wearing a hat?
 
@@ -223,13 +235,35 @@ def check(path, fix):
    spaced = []
    entities = []
    accel_bad, by_form, english = [], {}, []
+   author_copied = []
+   not_language = []
    lang = code_of(name)
-   is_source = lang == 'en'
    lcl = lcl_accelerators(lang)
 
    for e in entries:
       if e.obsolete or not e.source.strip():
          continue
+
+      # NOT LANGUAGE, AND IN THE CATALOGUE ANYWAY -- 'F1', '8', '...'.
+      # pofile.is_translatable is the rule; po_merge neither adds such an
+      # entry nor keeps an empty one. Checked here because a catalogue also
+      # arrives from a translator or a translation server, and those do not
+      # ask. Fuzzy or not, empty or not: it should not be there at all.
+      if not pofile.is_translatable(e.source):
+         not_language.append(e)
+         continue
+
+      # THE TRANSLATOR CREDIT MAY NEVER BE THE ENGLISH AUTHOR -- fuzzy or not.
+      #
+      # The About box shows TC_TRANSLATION_AUTHOR as "<language> translation by
+      # <author>". A seeded catalogue that copied the msgid credited N4AF for a
+      # machine translation; five did until 2026-10-16 (NY4I). Fuzzy is no
+      # excuse here, because fuzzy entries SHIP. A real credit names the
+      # translator; a machine translation leaves it empty or says
+      # LibreTranslate. The unit test uTestUILanguage pins the same rule
+      # against the embedded catalogues, which is the copy that gates a build.
+      if is_author_credit(e) and e.target.strip() == e.source.strip():
+         author_copied.append(e)
 
       if not e.target.strip():
          # An empty msgstr is UNTRANSLATED, a different state from fuzzy, and
@@ -252,9 +286,10 @@ def check(path, fix):
       # would embed as the Polish. Measured across the catalogues: 106 of these
       # outside the English one -- 81 Spanish, 17 German.
       #
-      # The English catalogue is EXEMPT and must stay so: msgstr == msgid is
-      # what tr4w_en.po is for, and flagging its 378 entries would be nonsense.
-      if (not is_source) and (not e.fuzzy) and same_text(e.source, e.target):
+      # No catalogue is exempt. An English one used to be -- msgstr == msgid
+      # was all tr4w_en.po held -- and it was deleted on 2026-10-21: English
+      # is the msgid, and the program loads no catalogue for it.
+      if (not e.fuzzy) and same_text(e.source, e.target):
          english.append(e)
 
       if controls(e.source) != controls(e.target):
@@ -328,6 +363,17 @@ def check(path, fix):
             if lletter == letter and cap not in [x.replace("&", "").lower() for x in texts]:
                pass   # only reported when the form is known to use that button
 
+   for e in author_copied:
+      say("  %s: TRANSLATOR CREDIT is the English author %r -- name the "
+          "translator, or leave it empty for a machine translation"
+          % (name, e.target))
+
+   for e in not_language:
+      say("  %s: NOT LANGUAGE -- %r is a key name, a number or punctuation, "
+          "and is not offered for translation (pofile.is_translatable); "
+          "po_merge --apply removes it while its msgstr is empty"
+          % (name, e.source))
+
    for e in english:
       say("  %s: ENGLISH IN THE TRANSLATION, not flagged -- would ship as %s"
           % (name, lang))
@@ -372,12 +418,14 @@ def check(path, fix):
       pofile.write_po(path, entries, lang)
 
    ok = (not ctrl_bad and not fmt_bad and not accel_bad and not clashes
-         and not english and not spaced and not entities)
+         and not english and not spaced and not entities and not author_copied
+         and not not_language)
    if ok and not stranded:
       live = [e for e in entries if not e.obsolete and e.source.strip()]
       print("  %-16s %4d entries, no control-character or format defects"
             % (name, len(live)))
-   return len(ctrl_bad) + len(fmt_bad) + len(accel_bad) + clashes + len(english)
+   return (len(ctrl_bad) + len(fmt_bad) + len(accel_bad) + clashes + len(english)
+           + len(author_copied) + len(not_language))
 
 
 def main():

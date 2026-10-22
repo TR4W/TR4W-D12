@@ -37,9 +37,13 @@
 >   `postunit.pas`, and referenced by the contest-factory units.
 > - **§12b** asks for three corrections to `known-divergences.txt`. They were
 >   made (the file carries a "CORRECTED 2026-09-01" block).
-> - **§12c** — the CAPTURE half shipped (`uLogStore.ReadEntryDeclaration` →
->   `uLogRepository.SetEntryDeclaration`); no export path reads it back, so the
->   Cabrillo header defect stands. Half the work is already committed.
+> - **§12c** — ~~the CAPTURE half shipped; no export path reads it back, so the
+>   Cabrillo header defect stands~~ **FIXED 2026-10-17 (Q61) by a different
+>   route than this plan drew — see [§12f](#12f-q61-built-2026-10-17--the-categories-are-one-value-each-and-two-latent-defects).**
+>   The four categories are contest-scoped settings whose one home is the
+>   log's `config` table; the header reads them. The `contest` row's
+>   declaration is now written once, for a new log, and is still read by
+>   nothing.
 > - **§11a** recommends a `TDBGrid` for View/Edit Log. That is **not** what
 >   shipped: `uLogEditForm` uses `TLogGrid`, a `TDrawGrid`. `uLogEdit.pas` is
 >   gone, and `tAddContestExchangeToLog` is deleted.
@@ -216,7 +220,7 @@ log?**
 | tier | what | where it lives |
 |---|---|---|
 | 1. durable station identity | name, address, city, state, postcode, country, email, club | `settings/tr4w.json` — cross-contest; **seeds** the export form and stays overridable at export |
-| 2. per-contest entry declaration | category, transmitters, assisted, overlay, power, station, mode, band, time, soapbox, my park | the **`contest` row**, captured when the log is created — never read live at export |
+| 2. per-contest entry declaration | category, transmitters, assisted, overlay, power, station, mode, band, time, soapbox, my park | the **`contest` row**, captured when the log is created — never read live at export. **Since Q61 (§12f) the CURRENT value of ASSISTED, BAND, MODE, OPERATOR and POWER is one contest-scoped setting each, in this log's `config` table**; the row records the entry as made |
 | 3. per-QSO event | what was **sent**; what was **copied**; my county; my grid | the **`qso` row** |
 
 There is a fourth thing that is not a tier but obeys the same law: values
@@ -333,10 +337,8 @@ CREATE TABLE contest (
     created_at        INTEGER NOT NULL,   -- unix UTC
     start_time        INTEGER,
     end_time          INTEGER,
-    -- Written every time the log is OPENED, and it is the chooser's default
-    -- sort key: recent activity floats up, not start date (§11b). A contest
-    -- resumed on Sunday belongs above one created on Saturday and abandoned.
-    last_opened_at    INTEGER,
+    -- (last_opened_at stood here until 2026-10-16 and was never written or
+    --  read. REMOVED, Q100 -- see §11b.)
 
     -- tier 2: the entry declaration, as sent in the Cabrillo header
     my_call           TEXT NOT NULL,
@@ -1213,6 +1215,522 @@ Three consequences worth writing down:
 - **The chooser (§11b) is the exception** and opens many databases briefly. Those
   are separate, short-lived, read-only connections and are not this connection.
 
+---
+
+## 9c. Reading a row — by position, and without key metadata (2026-10-14)
+
+A profile of a 1,316-QSO `/RESCORE` (3.3 s) and `/EXPORT` (1.4 s) found scoring
+under 1% of the time. The rest was sqldb row handling, and two of its causes are
+fixed in `uLogRepository`:
+
+- **`FieldByName` per field per row.** In FPC 3.2.2 `TFields.FindField` is a
+  linear scan that upper-cases both names on every comparison. `ReadRecord`
+  resolved about a hundred fields per row that way, about 190 µs a row, on
+  every read path: startup, the four full reads of an export, the rescore and
+  the grid. It now reads `Fields[Ord(c)]`, where `TQsoColumn` is an enum in
+  `QSO_COLUMNS` order.
+  - **Position is only safe while the SELECT matches**, so `OpenQsoReader`
+    checks every reader's fields against `QSO_COLUMNS` by name, once per Open.
+    A mismatch raises `ELogRepositoryError`; there is no fallback to name
+    lookup.
+  - `TQsoColumn` itself is checked against `QSO_COLUMNS` once, at unit
+    initialization. Each identifier is `qc_` + the column name, compared through
+    RTTI. A disagreement makes `TLogRepository.Create` raise.
+- **`UsePrimaryKeyAsKey` left at its default.** With it True, every Open of a
+  single-table SELECT runs `UpdateServerIndexDefs` (`sqldb.pp:3121`): three
+  PRAGMA queries for key metadata that nothing here uses. `NewReadQuery` turns
+  it off for every SELECT. `ParseSQL := False` skips the same work, as a side
+  effect, and measured the same. It was not chosen for that reason.
+  `RowIdAtIndex` also keeps one prepared statement instead of building one per
+  call.
+
+**Measured on `winter_fd_2025_w4ta`, median of 5 runs, warmed up, logging at
+Warn:**
+
+| | before | after |
+|---|---:|---:|
+| `/EXPORT` | 1,306–1,399 ms | 472–474 ms |
+| `/RESCORE` | 2,973–3,275 ms | 2,140–2,237 ms |
+
+All 26 corpus artifacts are byte-identical before and after. An A/B rescore of
+all 13 sets is also identical: ADIF, Cabrillo and every stored `qso` row match,
+apart from the exchange ids the rescore mints for rows that had none.
+
+**What was left was per-Open, not per-field.** Each Open of a `QSO_COLUMNS`
+SELECT creates 68 `TField` objects, and the rescore opened one per QSO. That
+cost grows with the column count: a micro-benchmark measured about 390 µs an
+Open at 45 columns and 715 µs at 91. F1 and F4 below remove it from the
+rescore.
+
+### F1 and F4 — the rescore reads once and writes once (2026-10-14)
+
+`MainUnit.tUpdateLog` (the rescore, and the dupe- and mult-sheet clears, which
+share its loop) fetched record N with `LogSourceReadAtIndex`: an `OFFSET` walk
+to find the row id (O(n)), then a 68-column Open to read it. Each changed
+record went back through `LogStoreUpdateQSOAtIndex`, which walked the `OFFSET`
+again and committed. Per QSO.
+
+- **F1, one read.** The sequential cursor now SELECTs `QSO_COLUMNS, id`, and
+  `ReadNextWithRowId` / `LogSourceNextWithRowId` yield each record with its
+  row id. The id is AFTER the QSO columns, so every QSO column keeps its
+  position; `OpenQsoReader(q, True)` checks the extra column by name as well.
+  `RowIdAtIndex` and its `OFFSET` are gone from the rescore. The export cursor
+  carries the extra column too, and an alternated 21-run measurement shows no
+  cost (median 499 ms before, 481 after).
+- **F4, one write.** Changed records are collected in a `TLogRowUpdates`
+  (row id + record) during the pass and written by
+  `LogStoreUpdateQSOsByRowId` once the cursor is closed:
+  `TLogRepository.WriteBatch` is `BeginBatchUpdate`, `UpdateQSOByRowId` per
+  row, `CommitBatch`, and `RollbackBatch` plus re-raise on any exception. The
+  store then disables itself and reports, as for every write failure, so
+  `/RESCORE` exits 2. **The log is never left half rescored.**
+
+**Why collect rather than write as the pass goes.** There is one connection and
+so one transaction. `TSQLTransaction.Commit` calls `CloseDataSets` first
+(`sqldb.pp:2412`), so committing with the cursor open closes it under the
+reader. UPDATEs issued while the SELECT is still stepping, with one commit at
+the end, would avoid that. But SQLite documents what a running statement sees
+of its own connection's changes as undefined. A second write transaction would
+need a second connection, and that is the two-connection shape `uLogStore`
+removed. Collected records cost 376 bytes each.
+
+**A sqldb fact this depends on, measured.** sqldb starts a transaction only
+when a statement *prepares* (`sqldb.pp:1296`). `FInsert` and `FUpdate` stay
+prepared, so once a commit has ended the implicit transaction they execute in
+SQLite **autocommit**, and each one is durable on its own. So
+`BeginBatchUpdate` commits whatever is pending and then calls
+`StartTransaction` explicitly. Mutation-tested: without the explicit start, a
+"rolled back" UPDATE stayed in the file. The importer is not affected, because
+nothing commits between its inserts.
+
+**The change report.** `[actRescore] … changed:` used to compare nine fields
+while the rescore also rewrites `dxcc_prefix`, `dxcc_code` and `cty_cq_zone`,
+so a row could be written with no line saying why. On winter_fd, 8 rows
+changed only their CQ zone or DXCC code. The line now names those three and
+whether an exchange id was minted. One summary line follows:
+`N of M records rewritten in one transaction: X itemised above, Y given an
+exchange id, Z changed only in fields the per-record line does not itemise`.
+A second rescore prints `0 of 1316`. What is written is unchanged, and the
+exchange-id minting (open question F6) is untouched.
+
+**F6 was ruled on the same day: the rescore no longer mints.** The `IdMinted`
+field and the "given an exchange id" clause left the two lines with it; see
+[the rulings below](#ny4is-three-rulings-of-2026-10-14-and-how-they-were-met).
+
+**Measured on `winter_fd_2025_w4ta`, base `f0c54f4c` against this change,
+alternated run by run, 9 runs each, warmed up, logging at Warn:**
+
+| | before | after |
+|---|---:|---:|
+| `/RESCORE` of the tracked log (no exchange ids, so every row is rewritten) | 2,168 ms (2,081–2,593) | 475 ms (428–878) |
+| `/RESCORE` of a log already rescored once (nothing to write) | 1,418 ms (1,359–1,743) | 397 ms (381–448) |
+| `/EXPORT` | 468 ms (442–524) | 507 ms (452–896)* |
+
+\* Within noise. An `/EXPORT`-only alternated run of 21 gave a median of
+499 ms before and 481 ms after.
+
+**Equivalence.** All 13 corpus sets went through `/RESCORE` then `/EXPORT` with
+both builds. ADIF, Cabrillo and a dump of every `qso` row are identical once
+the 1,772 exchange ids minted on both sides are masked (`exchange_id`, and
+`APP_TR4W_ID` in the ADIF). Rescoring twice leaves every set's rows unchanged.
+The golden corpus gives 24/0/2 with exit 0, and its 26 artifacts are
+byte-identical between the two builds.
+
+### The "one transaction" audit — every multi-write path, tested (2026-10-14)
+
+F4's finding meant any code that believed several writes were one transaction
+might be wrong. Every write path in the log layer and its callers was listed,
+and each claim was checked by injecting a failure part-way and reopening the
+file. Reading the code was not accepted as the answer.
+
+**THE RULE: a sequence of writes is atomic only inside an explicit or implicit
+transaction that the caller ends with `Commit`.** Before this audit, the
+repository did not honour that rule for its own two kept statements.
+
+**Finding 1: a kept write ran in autocommit. FIXED.** sqldb begins a
+transaction only when a statement prepares. A statement made per call
+(`SaveConfigValue`, `DeleteConfigValue`, `SaveSessionValue`, `SaveMessage`,
+`SetContest`, `SetEntryDeclaration`, and every `NewReadQuery`) prepares every
+time, so it always began one. `FInsert` and `FUpdate` are prepared once and
+kept. After any `Commit`, `SaveQSO`, `UpdateQSO` and `ImportQSOByGuid` with no
+guid were therefore durable the moment they ran, which contradicts SaveQSO's
+own contract: "Does NOT commit; the caller decides".
+
+`TestEveryWriteWaitsForItsCommit` runs 15 write paths after a commit, closes
+without committing and reopens. Before the fix, 5 failed:
+
+- `SaveQSO`, `UpdateQSO` and `ImportQSOByGuid('')` each survived on their own.
+- *Two SaveQSOs*: the first survived and the second did not.
+- *UpdateQSO then SaveConfigValue*: the update survived and the config row did
+  not.
+
+The last two are half-applied writes by a caller that believed it held one
+transaction.
+
+The fix is `TLogRepository.ExecuteKeptWrite`, which every execution of `FInsert`
+or `FUpdate` now goes through. It begins the transaction a prepare would have
+begun. The caller's `Commit` ends it, or, on a failure, the rollback at close.
+The fsync cost does not change: autocommit paid one per statement, and a
+caller's `Commit` pays one per transaction.
+
+**Finding 2: SQLite can end a transaction without telling sqldb. FIXED for
+rollback and close.** On SQLITE_FULL, IOERR, NOMEM or BUSY, SQLite may roll the
+transaction back by itself. sqldb then still holds its transaction `Active`, and
+its `ROLLBACK` fails with "cannot rollback - no transaction is active".
+
+This was measured with a `RAISE(ROLLBACK)` trigger on the second row of a
+batch. The log itself stayed atomic, because SQLite had undone row 1. Every
+layer above it went wrong:
+
+- `WriteBatch` reported the rollback error instead of the real one.
+- `InBatch` stayed True for good, so every later batch was refused.
+- `Close` raised as well. In `uLogStore.Disable` that close runs inside the
+  handler that reports the original failure, so the second exception escapes
+  it.
+
+`TLogDatabase.Rollback` fixes this. When sqldb's ROLLBACK fails, it issues a
+raw `BEGIN`, which succeeds only if SQLite holds no transaction. If the BEGIN
+succeeds, sqldb's ROLLBACK is repeated and the two agree again. If it fails, the
+original error is raised. No message text is matched. `RollbackBatch` and
+`Close` both use it.
+
+| path | atomic before (by test) | should be | outcome |
+|---|---|---|---|
+| `WriteBatch` (rescore, clear dupes and mults) | yes, F4 | yes | unchanged. Its rollback now survives a SQLite-side rollback (finding 2) |
+| `SaveQSO` / `UpdateQSO` / `ImportQSOByGuid('')` after a commit | **no**, durable alone | yes, per the contract | **fixed** (finding 1) |
+| `uLogStore.LogStoreAppendQSO`: optional `SetContest`, insert, `Commit` | yes when `SetContest` ran first (it BEGINs). Otherwise the insert was durable before the acknowledging `Commit` | yes | **fixed** (finding 1): a failure before the `Commit` no longer leaves an unacknowledged QSO in the log |
+| `CaptureContestStatements` / `CaptureStationFactRows`, inside `CaptureConfiguration` (one `Commit`) | yes. Pinned by injecting a failure through `aIsRetired` | yes | pinned: `Test_ACaptureThatFailsPartWayLeavesNothingOfItself` |
+| `logdupe.SaveRestartFile` (N session rows, one `Commit`) | yes: fresh statements, matrix row `SaveSessionValue` | yes | covered by the matrix. `logdupe` is not linkable |
+| `ImportBinaryLog` (one transaction for the whole import) | yes for rows. The transaction opens when the repository is constructed | yes | pinned: `TestAFreshRepositoryHoldsItsWritesUntilCommit` (the import's shape). The two file-level gaps below were **fixed the same day** -- staged name, rename on success; see the rulings |
+| `LogStoreUpdateNewestQSO` / `UpdateQSOAtIndex` / `UpdateQSOBySessionIds`, `LogStoreClearAllQSOs` | single statement | — | nothing to make atomic |
+| `EnsureOpen` on a new log: declaration and capture, `Commit`, then `SetContest`, `Commit` | two transactions | acceptable | left. A crash between them leaves a log with no contest row, which the "carried no contest" arm in `LogStoreApplyContestConfig` repairs on the next open |
+| `ApplySchema` (`CreateNew`) | tables in one transaction. The identity stamp follows it | — | left. A failure deletes the file; a crash between the commit and the stamp is a window of microseconds |
+| `MigrateSchema` | `CREATE ... IF NOT EXISTS`, then the version stamp | — | left on purpose: idempotent, and the version is stamped last |
+| ADIF import (`MainUnit.ImportFromADIF`, one `LogStoreAppendQSO` per record) | **no**, one commit per record | a decision | ~~left: deliberately per record~~ **ruled all-or-nothing by NY4I the same day, and done**: `LogStoreAppendQSOs` / `TLogRepository.AppendBatch`, one transaction. See the rulings |
+| a county-line contact (one `LogStoreAppendQSO` per county) | **no**, one commit per QSO | a decision | **left: deliberately per QSO** (section 9b: "the commit is the contact") |
+
+**Pins and mutations.** Five pins:
+
+- `TestEveryWriteWaitsForItsCommit`
+- `TestAFreshRepositoryHoldsItsWritesUntilCommit`
+- `TestABatchSQLiteRollsBackItselfLeavesTheRepositoryUsable`
+- `TestALogSQLiteRolledBackClosesCleanly`
+- `Test_ACaptureThatFailsPartWayLeavesNothingOfItself`
+
+Nine mutations were tried, and eight were caught. These were caught:
+
+- no `BEGIN` in `ExecuteKeptWrite`
+- `SaveQSO` bypasses it
+- `UpdateQSO` bypasses it
+- `Rollback` without the resync
+- `RollbackBatch` back on sqldb's rollback
+- `Close` back on sqldb's rollback
+- a `Commit` part-way through the capture
+- `BeginBatchUpdate` adopting the pending transaction
+
+**`ImportQSOByGuid`'s new-guid insert bypassing `ExecuteKeptWrite` SURVIVES**,
+and that is expected. Its guid lookup is a fresh prepare, which has already
+begun the transaction. The call is kept so the rule has no exception.
+
+**Timings** (unit-test harness, synchronous = FULL, median of 3):
+
+| shape | before | after |
+|---|---:|---:|
+| 500 × (`SaveQSO`, `Commit`): the live append | 329 ms | 329 ms |
+| 500 × (`UpdateQSO`, `Commit`): an edit | 266 ms | 250 ms |
+
+Both are unchanged, as expected: one fsync per QSO either way. For the ADIF
+import's shape, 1,316 grouped inserts take **about 920 ms with a commit per
+record and about 109 ms in one transaction (8×)**. That is the cost of the
+per-record design above, and it is the number to weigh if the import is made
+all-or-none.
+
+**~~Open, not fixed~~ FIXED THE SAME DAY: the migration import's file is not
+atomic.** Both items are closed by staging (ruling 1, below). Kept as written,
+because it is the reasoning the fix answers.
+
+1. `CreateNew` commits the empty file before the import's transaction begins,
+   and `EnsureOpen` adopts any existing file as the log. So a crash mid-import
+   leaves an EMPTY log, and the next start opens it rather than migrating the
+   `.TRW` again. The likely fix is to import into a staged name and rename on
+   success, which is the backup's stage-then-publish shape. It needs a decision
+   on staging and `-wal` handling.
+2. `ImportBinaryLog` catches each record's exception and carries on. If SQLite
+   rolled the transaction back itself (finding 2), the records after it run in
+   autocommit and the final `Commit` raises out of a routine documented never
+   to raise. This is reasoned from the batch measurement. The routine has no
+   seam for injecting a fault, so it was not injected there.
+
+### NY4I's three rulings of 2026-10-14, and how they were met
+
+The audit above left two decisions open, and F1/F4 left a third (F6). NY4I
+ruled on all three the same day.
+
+#### Ruling 1 -- a crash mid-migration must not leave an empty log
+
+**Done: the import is built under a STAGED name and published by rename.**
+`uLogImport.ImportBinaryLog` writes `<log>.db.importing`
+(`StagedImportFileName`), and only when every record is written, the one
+transaction has committed and the database is CLOSED does it rename that file
+to `<log>.db`. So the log's name either does not exist or names a complete
+import; there is no moment at which it names a partial one, and
+`uLogStore.EnsureOpen`'s rule -- migrate when the `.db` does not exist -- is
+exactly the recovery. The test seam is an optional per-record callback
+(`TLogImportRecordHook`), the same device as `aIsRetired`.
+
+- **Sidecars: CLOSE, THEN CHECK -- no explicit checkpoint.** On a clean close of
+  the last connection SQLite checkpoints the `-wal` into the file and deletes
+  `-wal` and `-shm`. A `PRAGMA wal_checkpoint` first would only repeat that.
+  What makes it a guarantee is the check AFTER the close: if any of `-wal`,
+  `-shm` or `-journal` is still beside the staged file, nothing is published,
+  because renaming the database away from a `-wal` that holds committed pages
+  publishes a log without them.
+  - **The check is load-bearing on Unix, not on Windows.** Pinned by holding a
+    second connection open on the staged file, so the import's close is not the
+    last (`TestASidecarLeftBesideTheImportStopsThePublish`). With the check
+    removed, Windows still refused, because `MoveFileW` will not rename an open
+    file; `rename(2)` on Unix would have succeeded.
+- **A leftover from an earlier crash is discarded, then the import starts
+  again.** Its path comes back in `TLogImportResult.DiscardedStaged`.
+  - `EnsureOpen` logs it at **Error**: `[LogStore] RECOVERED FROM AN
+    INTERRUPTED MIGRATION: discarded the unfinished import ... and migrated
+    ... again from the start`. Error rather than Warn, so `DEBUG LOG LEVEL =
+    ERROR` cannot hide the one trace that a session ended badly.
+  - `/IMPORTLOG` traces the same.
+  - **The sidecars are deleted first, and one that will not go is a refusal.**
+    A `-wal` carries no record of which database it belongs to, so a new file
+    created beside an old `-wal` could have its frames recovered into it.
+- **A rename that fails is said in full and never adopted.** The finished
+  import is left at the staged name, which the message gives, and the next
+  import discards it.
+- **A failed RECORD now publishes nothing either.** This was the second gap
+  above, and it was worse than recorded. `EnsureOpen` already treated `not
+  res.Ok` as a failure and disabled the store, but the partial file stayed on
+  disk, and the NEXT start adopted it. Now `ImportBinaryLog` is all-or-nothing
+  at the file level for every caller. That is the same rule as ruling 2, and
+  it is a behaviour change for `/IMPORTLOG`: a `.TRW` with one record that
+  will not insert produces no `.db`, where it used to produce one without that
+  record (and exit 2 either way). The loop still finishes, so the report says
+  how many records failed. `ImportBinaryLog`'s result record is now made with
+  `Default()`, no longer `FillChar`: it holds managed strings.
+
+Pins (`uTestLogImport`):
+
+- `TestAFailedImportLeavesNoLogAndImportsAgain`: a fault after record 50 of
+  101 leaves no `.db` and nothing staged; the next import gives all 101.
+- `TestALeftoverStagedImportIsDiscardedAndImportedAgain`: an uncommitted
+  staged log plus a junk `-wal` and `-shm` is discarded, said, and replaced by
+  the whole log.
+- `TestASuccessfulImportLeavesNothingStaged`
+- `TestARenameThatFailsLeavesNoLog`
+- `TestASidecarLeftBesideTheImportStopsThePublish`
+
+Mutations, all caught:
+
+- never discarding a leftover
+- skipping the rename
+- skipping the sidecar check
+
+End to end through the real startup path, which no unit test can link: a
+contest with a `.TRW`, no `.db`, a junk `migt.db.importing` and `-wal`, run
+`/EXPORT`. The result: the Error line above, `migt.db` with 6 rows, nothing
+staged left.
+
+**Measured on the way, and not obvious: a READ-ONLY connection to a WAL-mode
+log leaves its own `-wal` behind when it closes.** `TLogDatabase.OpenReadOnly`
+and Python's `?mode=ro` both did it. A test that inspects a published log must
+check for sidecars BEFORE it opens one. This is not the stray-`-wal` worry of
+2026-09-19, which was about a rollback-journal snapshot; that one still does
+not reproduce.
+
+**Residual, not fixed:** a crash under a build from BEFORE this change can
+already have left an empty, committed `.db`, and that is still adopted. An
+empty log beside a `.TRW` with records is the signature, if anyone wants a
+warning for it.
+
+#### Ruling 2 -- the ADIF import is all or nothing, "with ample notification"
+
+**Done, on the F4 batch, with no second mechanism.**
+
+- `TLogRepository.AppendBatch` is `BeginBatchUpdate`, every row, `CommitBatch`,
+  and on ANY exception `RollbackBatch` and re-raise. It is the same
+  begin/commit/rollback `WriteBatch` uses, with an insert where `WriteBatch`
+  has an update. Each row is written as the live append writes one: the contest
+  stamped from the record, the sent exchange from a caller-supplied function
+  (`BuildSentExchangeText`'s, via the store), and
+  `SaveQSOGroupingByExchangeId`, whose lookup sees the batch's own uncommitted
+  rows, so a county line inside one file still groups. `aFailedIndex` names the
+  row that failed (-1 when it was the begin or the commit).
+- The rows are collected in a `TLogQsoAppends`. `TLogRowUpdates` and it now
+  share `TLogQsoList`, the record list, so there is one copy of the
+  grow-by-doubling code.
+- `uLogStore.LogStoreAppendQSOs` is the store's door.
+- `MainUnit.ImportFromADIF` reads the whole file, collecting, then writes once.
+  The change is confined to that routine plus an overload; the two menu call
+  sites are untouched.
+
+**The store stays ENABLED after a rolled-back import -- a deliberate difference
+from `LogStoreUpdateQSOsByRowId`.** **CONFIRMED by NY4I, 2026-10-14:** *"If an
+ADIF record fails to import, notify the user with the callsign, band, mode and
+timestamp. Then abort the import but let the user keep logging new contacts."*
+The failure report names all four (band and mode added that day).
+
+- The realistic failure is a record with no `CALL`: `callsign` is NOT NULL, and
+  a line holding only `<EOR>` is such a record. That is a fact about the FILE.
+  The log is provably as it was.
+  - The OLD import disabled the store on it, so one bad line stopped logging
+    for the session, half way through the file.
+- If the failure was the disk, the next QSO's own append meets it and fails
+  closed there.
+- The store IS disabled when the ROLLBACK itself fails (`InBatch` still True).
+  Then nobody knows what the log holds.
+
+**Notification -- what the program already used for an import result.**
+
+- **The count** goes to the quick-command line: the 30-second non-modal notice
+  that `N Qs imported.` always used.
+- **A failure** goes to the same `showwarning` dialog the import's failure report
+  always used. It is modal on the desktop, logs at Warn, and opens no dialog in
+  a headless run. Beside it go a quick-command notice (`ADIF import FAILED --
+  nothing was imported`) and a `logger.Error` line carrying the full sentence.
+- **The sentence:** `NOTHING was imported from <file>: record N of M (<call>,
+  <date> <hhmm>z) could not be written to the log: <SQLite's reason>. The
+  contest log is unchanged.`
+  - A record with no CALL or date says `(no CALL, no QSO_DATE)`.
+  - "Unchanged" is said only while the store is usable. After a failed rollback
+    it says the log is not being written.
+- **`/IMPORT`** exits **2** on failure, where it used to `Halt(0)` whatever
+  happened. It traces the same sentence to `tr4w-early.log`
+  (`[Import] FAILED: ...` / `[Import] done: ...`).
+  - A file that does not exist was a `ShowMessage` -- modal even headless, so
+    `/IMPORT` of a missing file HUNG. It is the same failure report now.
+
+**What counts as a skip -- the classification as found, NOT changed:**
+
+| a line ... | treated as | change |
+|---|---|---|
+| before `<EOH>` | the header; not a record | none |
+| after `<EOH>`, where `ParseADIFRecord` is False (no `<EOR>`, or a malformed tag) | **skipped**, as it always was | now COUNTED (non-blank lines only) and reported, in the success sentence and in a warning. One record per line has always been this importer's reading, so a multi-line record would be split -- unchanged, and worth knowing |
+| a parsed record that will not insert | a **failure** | was: counted, store disabled, the rest failed too. Now: nothing imported, record named |
+| a duplicate | **not skipped -- there is no dupe skip.** Dupes are written and flagged by the rescore after the import | none |
+
+Also as found and not changed: a file with no `<EOH>` imports nothing, since
+the loop waits for the header that ends it.
+
+Pins (`uTestLogRepository`):
+
+- `TestAnAppendBatchLandsInOneCommit`: every row in, no transaction left open,
+  durable across a close with no further commit.
+- `TestAFailedAppendBatchLeavesTheLogAsItWas`: three failures at the third of
+  four rows -- a QSO with no callsign (NOT NULL), `RAISE(FAIL)` and
+  `RAISE(ROLLBACK)`, the last being SQLite ending the transaction itself. Each
+  must raise with SQLite's reason, report index 2, leave no batch or
+  transaction open, show the seed's fingerprint through the SAME connection,
+  and leave the FILE's MD5 equal to before.
+- `TestAnAppendBatchWritesRowsAsTheLiveAppendDoes`: the contest stamp, the
+  sent exchange, county-line grouping inside the batch.
+
+Mutations, both caught:
+
+- a commit per row (9 failures)
+- no rollback (all three variants)
+
+**Byte equality is pinned at the batch, and is NOT attainable across a program
+run.** Measured: a plain `/EXPORT` of the same log changed the file's MD5 too
+(the open's writes). So the end-to-end check compares the `qso` rows, and they
+are unchanged:
+
+| run | exit | rows | digest |
+|---|---:|---:|---|
+| winter_fd's `ref.adi` | 0 | 1316 | -- |
+| then the same file with a bare `<EOR>` as record 700 | **2** | 1316 | unchanged |
+
+The report for the second run names record 700 of 1,317.
+
+**Measured, `winter_fd_2025_w4ta`'s `ref.adi` (1,316 records), headless
+`/IMPORT` into a fresh contest, base `17902292` against this change, alternated,
+9 runs each, corpus settings (DEBUG logging):**
+
+| | before | after |
+|---|---:|---:|
+| parse + write (from `[Import] no binary log` to the first `[actRescore]` line) | 1,268 ms (1,193-1,349) | 429 ms (401-457) |
+| the whole `/IMPORT` run, wall clock | 1,927 ms (1,842-2,035) | 1,029 ms (979-1,138) |
+
+The parse is the same code in both, so the 839 ms is the write: one fsync
+instead of 1,316. That agrees with the audit's 920 -> 109 ms unit-harness
+figure.
+
+#### Ruling 3 (F6) -- a rescore must not mint an exchange id
+
+**Done.** `tUpdateLog` gave a fresh GUID to every QSO whose `exchange_id` was
+empty, so the first rescore of any imported or migrated log rewrote every row,
+and invented an identity no other program knew the contact by.
+
+- Only `actRescore` minted. `actSetClearDupesheetBit` and `actClearMults`
+  never did (read, not assumed: the `GetGUID` sat inside the `actRescore` arm,
+  and the only other caller in the tree is a QSO being logged).
+- The per-record change line lost `IdMinted`. The summary is now `N of M
+  records rewritten in one transaction: X itemised above, Y changed only in
+  fields the per-record line does not itemise`.
+- **Not every row-write of an imported log was the minting.** After a
+  `winter_fd` ADIF import the rescore still rewrites all 1,316 rows: 99
+  itemised, 1,217 in un-itemised fields. That is the import storing values
+  the rescore then recomputes. It is unchanged here and not investigated.
+
+**The validity check.** The Tools menu's verification window
+(`uVerificationChecks`, built 2026-09-11 with one check) gains a second:
+`Every QSO has an exchange id`.
+
+- `uLogStore.LogStoreCheckExchangeIds` runs
+  `TLogRepository.QSOsWithoutExchangeId`.
+- **It fails when any QSO lacks one**, giving the count and the first five as
+  `CALL yyyy-mm-dd hh:nn`, and saying the QSOs export with no `APP_TR4W_ID` and
+  that nothing has been changed.
+- **It REPORTS and never repairs.** Minting from a menu item would be the
+  ruled-out behaviour moved somewhere else.
+- **What counts:** notes and QTC records are not QSOs and are not counted;
+  deleted QSOs are.
+- Pinned by `TestQSOsWithoutAnExchangeIdAreReported`; a mutation counting notes
+  was caught.
+
+`test-rescore.sh` now also fails a log whose exchange-id count changes across
+the FIRST rescore, which is the pass that minted; the second rescore could
+never see it. Run against the base binary, it reports MINT for exactly the six
+id-less sets:
+
+| set | ids minted by the old rescore |
+|---|---:|
+| `arrl_dx_cw_2025_ny4i` | 66 |
+| `arrl_ss_ssb_2024_w4ta` | 206 |
+| `cqww_ssb_2025_ny4i` | 101 |
+| `general_qso_2026_w1aw4` | 79 |
+| `michigan_qp_2026_ny4i` | 4 (of 5 rows) |
+| `winter_fd_2025_w4ta` | 1,316 |
+| **total** | **1,772** |
+
+**Corpus and matrix impact, exactly:**
+
+- **`test-contest-factory.sh`, unmodified, failed those same six sets, in
+  `rescored.adi` only.** All 13 Cabrillo files were identical.
+  - Their frozen baselines carry an `<APP_TR4W_ID:32>ID` placeholder on every
+    record, 1,772 in all, because the legacy rescore minted them. No fixture
+    `log.db` holds one.
+  - Measured set by set: deleting that one field, with its separating space,
+    makes the fresh export byte-identical to the frozen baseline.
+  - The seven sets whose fixtures carry ids are byte-identical as they stand,
+    ids and all.
+- **The frozen files were NOT regenerated.** The gate now sets `APP_TR4W_ID`
+  aside on both sides ONLY for a set whose fixture holds no exchange id
+  (`corpus_fixture_exchange_ids`, `corpus_drop_app_id` in `corpus-lib.sh`). That
+  is the rule `test-adif-roundtrip.sh` already applied: a minted identity is
+  ignored only where the reference has none to compare. Where a log carries
+  ids, their survival is still compared exactly. The gate prints which sets
+  had the field set aside.
+- **Golden corpus:** unaffected -- `/EXPORT` never rescored -- 24/0/2, exit 0.
+- **`test-adif-roundtrip.sh`:** 13 passed. It already ignored `APP_TR4W_ID`
+  when `ref.adi` has none.
+- **Contest matrix:** 186 identical. It uses a fixed id and
+  `RecomputeQSOScoring`, which never minted.
 
 ---
 
@@ -1449,7 +1967,7 @@ work.** `docs/NEW_CONTEST_DIALOG_DESIGN_BRIEF.md` lists as **Tier 1**:
 | Database-backed list (no filesystem browser) | kill `[..]` and absolute paths |
 | Columned existing-contest grid (Name/Type/Date/Ver) | *"From TR4QT"* |
 | Clickable sortable columns | *"Enables recent"* |
-| "Last Opened" column / sort key | *"Recent activity floats up, not start date"* |
+| ~~"Last Opened" column / sort key~~ | *"Recent activity floats up, not start date"* -- **dropped 2026-10-16 (Q100): the last-contest button serves it; see "What the schema owes it" below** |
 | Delete / manage existing contests | *"From TR4QT"* |
 
 And the current LCL dialog says so itself, in the comment above `PopulateFiles`
@@ -1471,7 +1989,7 @@ rather than lucky:
   the data.
 - Everything the chooser wants except the QSO count is **one row**, because
   `contest` is a single-row table (question 1): `SELECT contest_name,
-  contest_type, my_call, start_time, created_at, last_opened_at FROM contest`.
+  contest_type, my_call, start_time, created_at FROM contest`.
 - The count is `SELECT COUNT(*) FROM qso WHERE deleted = 0`, which the partial
   index in §4 already serves.
 
@@ -1483,16 +2001,31 @@ that can drift from the log it describes (§9a).
 
 ### What the schema owes it
 
-One addition to the `contest` row, which the brief asks for and the draft did
-not have:
+~~One addition to the `contest` row: `last_opened_at`, written when the log is
+OPENED, as the chooser's default sort key.~~ **REMOVED 2026-10-16 (NY4I, Q100 in
+`docs/CONTEST_FACTORY_OPEN_QUESTIONS.md`).** The column was added, but nothing
+ever wrote or read it. All 13 corpus fixtures hold NULL there. The schema
+comment that called it "written every time the log is OPENED" and "the
+chooser's default sort key" was false on both counts. Quick access to the
+contest you were just working is the New Contest dialog's last-contest button,
+which reads the one path `settings/tr4w.json` records
+(`uRadioConfigApply.GetLatestConfigFile`). So no per-database open time is
+needed.
 
-```sql
-    last_opened_at    INTEGER,   -- unix UTC; written when the log is OPENED
-```
+**It was removed from the DDL WITHOUT a schema-version bump, and that is
+deliberate.** The reasoning is beside `LOG_SCHEMA_VERSION` in
+`src/domain/uLogSchema.pas`, in short:
 
-"Last opened" rather than "created" is deliberate and the brief is explicit
-about why: *recent activity floats up, not start date*. A contest resumed on
-Sunday morning should sort above one created on Saturday and abandoned.
+- Nothing reads the column, so either shape opens in every build. A bump would
+  make every log this build touches unopenable by every earlier build
+  ("written by a newer version"), for a NULL.
+- `ALTER TABLE ... DROP COLUMN` would not remove the false claim. Measured on
+  SQLite 3.42, it cuts the stored CREATE text from the column's name to the
+  next column's name. That keeps the comment ABOVE the column and deletes the
+  true `tier 2` comment after it. Only a table rebuild removes it.
+
+So a log created before 2026-10-16 still has the column, NULL, and the stale
+comment in its `sqlite_master` text. Leave both.
 
 The schema version for the "Ver" column is free — `PRAGMA user_version` (§8).
 
@@ -1632,6 +2165,357 @@ log" is a **policy we would be introducing**, not a fact the code enforces.
 - `ctrCFG` is declared at line **76** and the array has **21** rows, not 22 —
   and it is **not** uniformly set: 11 `True`, 10 `False`. It is still never
   read, so it is still dead.
+
+### 12f. Q61, built 2026-10-17 — the categories are one value each, and two latent defects
+
+NY4I, 2026-10-16, Q61: *"Yes."* — CATEGORY-ASSISTED, -BAND, -MODE and
+-OPERATOR are ONE value each, stored in the contest database, which the
+summary window edits and a headless export reads. That is what design 7.6 did
+for CATEGORY-POWER.
+
+**Where each value lived before, measured:**
+
+| | the New Contest dialog | the summary window wrote | a closed window / headless `/EXPORT` read |
+|---|---|---|---|
+| ASSISTED, BAND, OPERATOR | `Settings.Contest.Category*` (queued, stated) | **nothing** (`ctrSave` False) — the edit was lost on close | the header store in `tr4w.json`, which nothing wrote: the line was **absent** |
+| MODE | the same | a copy, `_CATEGORY-MODE`, in `tr4w.json` | that copy — `SSB` in every corpus set, whatever the log said |
+| POWER (7.6) | the same | the setting | the setting |
+
+The setting is contest-scoped (`TContestSettings.IsContestScoped`, kept out of
+`tr4w.json`), so its persistent home was already the log: a stated value is a
+`config` row (`CaptureContestStatements`, design 7.8), applied on reopen. The
+defect was only that the window and the header read around it.
+
+**The home now, for all five: the `config` row, i.e. the contest database.**
+`uCbrSum.CabrilloTagText` answers the setting for all five when the window is
+closed; `_CATEGORY-MODE` no longer saves (a stored one is inert); the window
+commits each row through `SetCFGCommandValue` (apply, state, tell a peer) and
+then **`LogStoreRecordContestStatement`**, which writes that one row and commits
+— a change is in the file when it is made, not at the next clean close. The
+3830 report's Class line read `_CATEGORY-OPERATOR` straight from the header
+store and is repointed too. No rescore: no QSO's points depend on these (MODE
+feeds Washington Salmon Run's W7DX bonus, which is computed at total time).
+
+**Measured on the golden corpus:** every set's headless Cabrillo now carries
+the four lines, and **all 52 (13 × 4) match the D7 `ref.cbr`** — the 12c
+divergence is closed. The corpus is unchanged at 22/0/4 because
+`golden_diff.py` does not compare the header. `test-contest-factory.sh` DOES
+compare it, against frozen output that recorded the defect, so it reports 13
+DIFF on exactly those header lines (no QSO, ADIF or CLAIMED-SCORE difference).
+Not re-frozen; that is NY4I's call.
+
+**Why not the `contest` row's `category_*` columns**, which §3 names as tier 2's
+home: they were never read, every corpus fixture holds `('', '', 'HIGH', '',
+'SSB')` there (written by an `/EXPORT` open, from constructor defaults), and the
+config row was already where the program reads a contest-scoped value. Making
+the column the home would have meant a second copy in the same file plus a
+migration preferring the config row. The column stays the record of the entry
+**as made**.
+
+**NO SCHEMA CHANGE, so NO `user_version` BUMP.** Every column and table used
+existed; a log written by this build opens in any earlier 5.x, and every
+fixture is byte-identical after the corpus.
+
+**Latent defect (1), fixed — the declaration was written on EVERY open.**
+`EnsureOpen` called `SetEntryDeclaration` unconditionally, and for a new log it
+ran **before** the contest row existed, so its UPDATE landed nowhere until the
+first reopen. It now runs after the contest stamp, through
+`uLogContestStatements.RecordEntryDeclaration(repo, isNewLog or aRebuilt, …)`,
+and writes only on the open that made (or migrated) the log. The declaration
+holds MY CALL, MY PARK, the nine CATEGORY tags, CLUB, SOAPBOX and the station
+identity (name, address, city, state, postcode, country, email). Pinned by
+`uTestLogContestStatements.Test_Q61_AReopenedLogKeepsItsEntryDeclaration`.
+
+**Latent defect (2), fixed — every update NULLed `qso.exchange_sent`.**
+`exchange_sent` is out of `QSO_COLUMNS_UPDATABLE` (as `qso_set_id` already was)
+and bound on insert only, so Edit QSO, the rescore's batch, a network update and
+a re-import keep what was sent. ~~The one path that meant to write it on an
+existing row — the append that found the log just rebuilt from a `.TRW` — now
+calls `TLogRepository.SetSentExchange`~~ — **that path and `SetSentExchange`
+were deleted on 2026-10-17**: the branch assumed the `.TRW` already held the QSO
+being appended, which stopped being true at B5, so it OVERWROTE the newest
+imported QSO instead of inserting (see §12g). `exchange_sent` is now
+insert-only with no exception. Pinned by
+`uTestLogRepository.TestAnEditKeepsTheSentExchange`;
+`TestEveryWriteWaitsForItsCommit` covers 15 write paths (16 since §12h added
+`UpdateQSOMyFacts`).
+
+**Both pins were run against the old code and failed** (10 failures), then the
+fix was restored.
+
+### 12g. An append always inserts — the migrating-append branch is gone (2026-10-17)
+
+`uLogStore.LogStoreAppendQSO` had a branch for "`EnsureOpen` migrated the log
+from the `.TRW` on this very call". Its premise was B2's: `tAddQSOToLog` wrote
+the `.TRW` first, so the migration had already imported the QSO in hand, and
+the branch UPDATED the newest imported row with it (plus its sent exchange)
+and returned True. `LogStoreUpdateNewestQSO` had the twin: it returned without
+writing. Since B5 the `.TRW` is import-only, so **the append overwrote the last
+imported QSO and acknowledged a contact it never stored**, and the rewrite was
+dropped.
+
+**Reachability, traced:** `aRebuilt` is True only on the one `EnsureOpen` call
+that migrates (no `.db`, a `.TRW` with records, store not yet open). Startup
+calls `LogStoreApplyContestConfig` (`uProgramMain`, after `SetUpFileNames`) and
+it opens the log before anything can append, so a migration always happens
+there, and that caller discards the flag. `/IMPORTLOG` halts before it and
+never appends; `/MATRIX`, `/IMPORT` and the GUI come after it; `LogStoreClose`
+runs only at shutdown and does not delete the `.db`. **So the shipped program
+never took either branch and no QSO was lost.** The store's own contract was
+still wrong, and any caller that wrote first would have hit it.
+
+**Fixed by deletion:** both branches, `TLogRepository.SetSentExchange` (their
+only caller) and `EnsureOpen`'s unread `aAppendPending` parameter. Pinned by
+`uTestLogStore`, the first suite that drives `uLogStore` itself (the test
+program links `MainUnit` now): an append and a rewrite that each migrate a
+scratch copy of `cqww_ssb_2025_ny4i.trw`, and an append after an earlier open.
+**Run against the old code first:** 3 failures — 101 rows instead of 102,
+imported QSO 101 `KP4PR` overwritten with `N0NEW`, and the rewrite missing.
+
+### 12h. Schema 3 — every QSO records OUR station as it was (2026-10-18, stage 1)
+
+NY4I, 2026-10-18: *"our grid is an event source along with all the MY_ values
+for the contest where needed. The QSO record should have all the MY_ values
+(such as MY_GRID)."* The Nebraska rare-grid bonus (Q106(1)) is the first
+consumer: a rover moves, and a logged QSO reads its record, never live
+settings (Q13).
+
+**Measured before building:** `my_county`, `my_grid` and `my_state` were in
+the v1 DDL and nothing wrote or read them; all thirteen corpus fixtures hold
+NULL there and an empty `exchange_sent`.
+
+**NY4I's rulings, 2026-10-18:**
+
+| | ruling | as built |
+|---|---|---|
+| A | NULL = never captured, and falls back to the session (logged once); `''` = captured but unknown, and never borrows today's value | **`my_source` carries it**, because `BindText` stores `''` as NULL in every optional column, so the per-value NULL cannot. `my_source` NULL = never captured (every pre-v3 row, every `.TRW` migration); otherwise `logged` / `assumed` / `imported` / `edited`, and an empty value is unknown |
+| B | editable now | Edit QSO has a group "Our station for this QSO" (call, grid, state, county, section, park, CQ zone, ITU zone), written only when changed, marked `edited`, in the QSO's own transaction |
+| C | an ADIF import writes `exchange_sent` from STX_STRING, else `''`, never live | **stage 2**; the batch already carries each row's own MY values (`TLogQsoAppends.Add(qso, facts)`) |
+| D | a peer's QSO records THIS station's values, marked assumed | `my_source = 'assumed'`; the store tells a peer QSO by its computer id (`QsoWasLoggedHere`), so no `uNet` or `logsubs2` change was needed |
+| E | all the columns now, schema 3 | `LOG_SCHEMA_VERSION = 3`; `MigrateSchema` adds each column in `LOG_V3_QSO_COLUMNS` that `pragma_table_info` does not show, in one transaction |
+
+**The columns** (at the END of `CREATE TABLE qso`, so a migrated table and a
+new one match column for column): `my_call` (as signed), `my_section`,
+`my_park`, `my_iota`, `my_country`, `my_continent`, `my_cq_zone`,
+`my_itu_zone`, `my_source`, beside v1's `my_county`, `my_grid`, `my_state`.
+**Insert-only, like `exchange_sent`**: they are in `QSO_COLUMNS` (every reader
+carries them) and NOT in `QSO_COLUMNS_UPDATABLE`, so `UpdateQSO`, the
+rescore's batch and the network update cannot reach them. The editor writes
+them through `UpdateQSOMyFacts`, a kept write (the 16th path pinned by
+`TestEveryWriteWaitsForItsCommit`).
+
+**Captured where scoring reads them** (`uLogStore.CaptureMyFactsNow`):
+`Settings.My.Resolved*` for grid, state, section, park and IOTA, and
+`uContestFactory.CurrentStation` for country, continent and MY CQ ZONE.
+`my_state` is MY STATE, the place we are (ADIF MY_STATE), **not**
+`SentMyState`: the Cup of the RF sends the grid in that slot. `my_county` is
+empty (unknown) until a MY COUNTY setting exists (F26 decision 2).
+
+> **THE CONSEQUENCE, ACCEPTED BY NY4I (ruling E):** `VerifyIdentity` refuses
+> a log whose `user_version` is above the build's own. **Once a schema-3 build
+> has OPENED a log, no earlier 5.0.x build can open it.** Opening is enough:
+> `TLogDatabase.Open` migrates, and an `/EXPORT` opens. Only `OpenReadOnly`
+> leaves the file at 2. Keep a copy of a log before trying a new build on it
+> if an older build must read it again.
+
+**The corpus fixtures are not rewritten.** Every script copies the tracked
+`log.db` into `build-out` first (`corpus-lib.sh`, `test-rescore.sh`,
+`test-contest-factory.sh`, `test-cfg-not-needed.sh`, the freeze script), so
+the COPY migrates. Measured: the thirteen work copies read `user_version` 3
+with `my_source` NULL on every row, and the tracked fixtures stay at 2,
+byte-unchanged. **No D7 reference changes.** Corpus 21/0/5, factory 13
+identical, matrix 187 identical, ADIF 11/0/2, rescore unchanged.
+
+**All five stages are built** (2026-10-18/19). What remains open is listed
+under stage 5.
+
+Pinned in `uTestLogMyFacts` (16 tests) and mutation-tested five ways, each
+caught: the per-save clear removed, a peer never marked assumed, the editor
+write outside `ExecuteKeptWrite`, `my_grid` added to the updatable list, and
+a migration that adds nothing.
+
+#### Stage 2 (2026-10-18): ADIF in and out, and the D3 fix
+
+- **Import.** `STATION_CALLSIGN` and every MY_* tag ADIF defines for these
+  columns are read into `TADIFRecordTemps`, and `uADIF.MyFactsFromADIF` makes
+  the row's station from them: `my_source = 'imported'`, and **a tag the record
+  does not carry is unknown, never today's value** (ruling A). Park:
+  `MY_POTA_REF`, else `MY_SIG_INFO` under `MY_SIG` POTA (under SOTA or WWFF it
+  is not a park). `MY_DXCC` becomes `my_country` through
+  `CTYEntityOfADIFDXCC`, which answers only a code that ONE plain (unstarred)
+  CTY entity carries: 279 is `GM`, not `*GM/s`. No plain prefix in the
+  shipped table shares a code, so the "ambiguous" answer is a guard, not a
+  case that happens. `MY_COUNTRY` (a name) is NOT read, because nothing maps a
+  name to an entity. ADIF carries no continent of ours.
+- **D3 is fixed.** An import's `exchange_sent` is the record's STX_STRING
+  verbatim, else NULL -- `SentExchangeFromADIF`. The batch callback that
+  rebuilt it from the LIVE station (`TSentExchangeText`, `SentExchangeOfQSO`)
+  is deleted; each `TLogQsoAppends` row carries its own sent exchange and
+  station.
+- **Export.** `uADIF.EmitADIFMyStationFields` writes the RECORD's tags after
+  the contest's tail, in a fixed order: STATION_CALLSIGN (only when the
+  record's OPERATOR is not that call, the rule the export always had),
+  MY_GRIDSQUARE, MY_STATE, MY_CNTY, MY_ARRL_SECT, MY_IOTA, MY_CQ_ZONE,
+  MY_ITU_ZONE, MY_DXCC, then the park (MY_SIG POTA, MY_SIG_INFO, MY_POTA_REF).
+  **A tag the contest already wrote is skipped**: POTA writes its park, MY_STATE
+  and MY_DXCC, and since stage 2 it is handed the RECORD's park. **A
+  never-captured row writes nothing new**, and the tail's session fallback
+  (STATION_CALLSIGN, POTA's park) runs only for such a row, logged once per
+  export.
+- **Measured.** Corpus 21/0/5, ADIF round trip 12/0/2 (it gained a MY_ case:
+  na_sprint's reference with every MY_ tag injected, imported and exported
+  unchanged), rescore unchanged, factory 13 identical. **The contest matrix:
+  0 identical, 187 differing**, and that is the intended change. Its QSOs are
+  logged live, so since stage 1 they record the matrix station, and their
+  exports now end with that station's MY_ tags. With those added tags
+  removed, all 187 are identical. **Re-freezing it is NY4I's decision; it was
+  not done.**
+- **Still open, deliberately (NY4I declined the question for now):** editing
+  our call does not re-derive country or zones; editing a never-captured row
+  makes every untouched field unknown. Stage 1's behaviour, unchanged.
+
+#### Stage 3 (2026-10-18): a stored QSO is scored by its own recorded grid (D1)
+
+- **`TContestBase.ScoreQSO(aQso, aMyFacts)`** lays the row's `my_grid` over
+  `Station.MyGrid` for the one call, restored in a `finally`. All thirteen
+  distance rules read `Station.MyGrid` only inside their own
+  `CalculateQSOPoints` (measured), so none of them changed: ARRL Digi, Cup of
+  the RF CW/SSB/DIG, European VHF, Makrothen, OZHCR VHF, Radio VHF FD, RTC,
+  Stew Perry, Tesla, WW Digi, WWL.
+- **Who passes facts:** the rescore (`tUpdateLog`, through
+  `LogSourceNextWithRowId(..., facts)` and
+  `RecomputeQSOScoring(..., facts)`), the ADIF import (the record's own), Edit
+  QSO (the station as the save will leave it, `MyFactsAsSaved`), and IN/7QP/NE's
+  delegation (`ScoringMyFacts`). **Live entry and the contest matrix use the
+  one-argument form: the session's station, unchanged.**
+- **Ruling A:** a row with `my_source` NULL is scored by the session's grid,
+  as before, and the rescore says so once per pass. A captured row's `''` is
+  laid over the session's: no grid.
+- **Only the grid is overlaid.** `Station.MyState` is the state the session
+  SENDS, not `my_state`; overlaying country or call would make every imported
+  QSO that names no MY_DXCC or STATION_CALLSIGN score as an unknown country.
+  Each is its own decision.
+- **`TLoggedQSOView.MyFacts(i)`** gives a whole-log rule (Idaho's bonus, the
+  Nebraska rare-grid bonus) each QSO's own station. It is filled at log load
+  (`LoadinLog`) and at live entry (`LogStoreLastAppendedMyFacts`). A view with
+  none answers `NotCapturedMyFacts`.
+- **Q116 is not what every rule does yet:** with no grid of ours, Stew Perry and
+  WWL score 1 and Tesla 10 (distance 0 lands in its 0..600 km band). The rest
+  score 0. Left for Q116's build.
+- **THE IMPORT RULE -- NY4I, 2026-10-18, replacing stage 2's "an absent tag
+  is unknown" for an import:** *"So the use case is I start a contest, then
+  import. Therefore you apply the set my fields as if it were a new QSO. If the
+  import has its own my fields, we should report that and ask the user if they
+  should override the contest."*
+  1. **A record naming no MY_ tag** is given this contest's values at import
+     time -- `uLogStore.LogStoreCurrentMyFacts`, exactly what a QSO logged now
+     records -- with **`my_source = 'stamped'`**, a value of its own so a
+     stamped row is always told from one whose file named it (`imported`).
+     `STATION_CALLSIGN` alone is not a MY_ tag (it is written whenever someone
+     else operated).
+  2. **A file whose records name some** is REPORTED before the import commits:
+     the tags, how many records, and one line per tag that differs from the
+     contest's. The operator is ASKED only when one differs (`YesOrNo`, the
+     import's own prompt): **Yes** keeps the file's values, **No** stamps the
+     contest's. The answer and the stamp count end the import's report.
+  3. **Headless `/IMPORT` keeps the file's values** and logs that once -- nobody
+     to ask, and the round trip's MY_ case expects it.
+  4. **Some MY_ tags but no grid:** under Yes the grid is UNKNOWN (the file's
+     values as named, `MyFactsForImport`); under No every field is stamped.
+- **MEASURED THROUGH THE PROGRAM** (ARRL Digi's D7 reference, headless
+  `/IMPORT`, `/RESCORE`, `/EXPORT`; the contest's `.cfg` states MY GRID EL88):
+
+  | input | stage 2 | stage 3, first cut | stage 3 + the rule |
+  |---|---:|---:|---:|
+  | records naming no MY_ tag | 231 (session grid) | 0 (unknown) | **231** (stamped EL88) |
+  | records naming `MY_GRIDSQUARE` JO65 | 231 (session grid) | 522 | **522** (file kept) |
+
+- **A D7 `.TRW` is not affected either way:** `uLogImport.ImportBinaryLog`
+  sets no station, so its rows are never captured and fall back (ruling A),
+  which is why the corpus scored unchanged.
+- **Stamping exposes a data defect it does not fix:** Florida QP's stamped
+  `MY_STATE` is `PIN` -- the county, because that contest's MY STATE holds a
+  county, the field reuse NY4I ruled against (STATE is the primary
+  subdivision, COUNTY the secondary).
+- **Oracles:** corpus 21/0/5, rescore unchanged, factory 13 identical, matrix
+  187 identical -- none imports. **The ADIF round trip went 1/13 failed** (every
+  D7 reference's records now come back carrying the contest's MY_ tags), and
+  that is the rule working. So `test-adif-roundtrip.sh` sets the MY_ tags aside
+  only where the reference has none, by the rule it already applies to
+  APP_TR4W_ID -- **and fails a record that comes back WITHOUT the contest's
+  station** (MY_DXCC on every record). With that, 12/0/2; the MY_ case is
+  compared tag for tag. Mutation-tested: an import that stamps nothing fails
+  13 sets, and a headless import that takes the contest's values fails the
+  MY_ case.
+- **The question itself is GUI-only:** `docs/BENCH_QUEUE.md`.
+
+#### Stage 4 (2026-10-18): an export writes what each QSO's record says it sent
+
+- **The sent exchange is built from the QSO's own station.**
+  `uContestBase.MyStationExchangeOfQSO` lays the row's recorded station over
+  the session's `TMyStationExchange`, and the ADIF STX_STRING, every
+  contest's own ADIF exchange fields (POTA's park included) and the Cabrillo
+  sent columns are built from it (`postunit.CurrentMyStationExchange(aContest,
+  aFacts)`, at the three call sites).
+  - **Overlaid:** grid, section, park, and the zone of the kind the contest
+    sends (ITU for an ITU-zone contest or an ITU CTY zone mode, else CQ).
+  - **The state slot only when the session sends MY STATE itself:** a contest
+    whose set-up sends something else there keeps it (the Cup of the RF sends
+    the grid). `my_state` is the place, not the slot.
+  - **A zone that is the same number keeps the session's text** (`05`, not
+    `5`), so a QSO whose station did not move writes what it always did.
+  - **Name, FD class, check, precedence, FOC number and postal code stay the
+    session's:** no per-QSO column, and they do not change within a log.
+- **`exchange_sent` IS the source for one case, and only one.** An imported or
+  stamped row's `exchange_sent` is its file's STX_STRING verbatim (stage 2's
+  D3 fix), and the ADIF export writes it back unchanged
+  (`uQsoMyFacts.RecordedSentExchange`). Rebuilding it would rewrite what the
+  file states: the round trip's MY_ case names `MY_STATE NE` beside an
+  STX_STRING that sent `FL`. A QSO logged HERE is not this case, because its
+  `exchange_sent` is the contest's CANONICAL spelling (the RTC and UDP form),
+  not the ADIF one, so it is rebuilt from its record. **The Cabrillo sent
+  column is always rebuilt**: a file's STX_STRING is not in Cabrillo's
+  column layout.
+- **D5: our call is the record's.** STATION_CALLSIGN, the Cabrillo `QSO:`
+  line's call and both QTC calls are the QSO's `my_call`, else the call the
+  log's entry DECLARED (`contest.my_call`, now read with the contest row:
+  `TLogRepository.DeclaredCall`), and only then today's MY CALL
+  (`uQsoMyFacts.ExportCallOf`). Measured: in all 13 corpus fixtures the
+  declared call, the `.cfg`'s MY CALL and the reference's QSO-line call are the
+  same, so no reference moves.
+- **A never-captured row is the session's, exactly as before (ruling A).**
+- **The external logger's live send** (`GetMyExchangeForExport`) is a QSO
+  logged now: the session's.
+
+#### Stage 5 (2026-10-19): network and import provenance
+
+**Measured first; most of it was already done.**
+- **A peer's edit keeps the row `assumed`.** `NET_EDITEDQSO` reaches
+  `FindAndUpdateQSOInLog`, then `LogStoreUpdateQSOBySessionIds`, then the
+  ordinary update, which cannot write the `my_*` columns or `exchange_sent`
+  (stage 1). Nothing is re-stamped. Now pinned for an `assumed` row
+  (`TestAPeersEditKeepsItsProvenance`).
+- **D3** (stage 2) and **ruling D** (stage 1) stand.
+- **A `.TRW` import** stays never-captured, by design.
+- **A re-import of our own export** comes back `imported` (the file names our
+  station) or `stamped`. That is correct for a row read from a file.
+
+**What was left, and is now built (in the store only; no `uNet` or
+`logsubs2` change):**
+- **D4: a peer's QSO stored THIS station's sent exchange.** `LogStoreAppendQSO`
+  built it from this station's CQ EXCHANGE template and grid. The serial was
+  already the peer's: `#` is the record's `NumberSent`, which the packet
+  carries, and it is stored as `serial_sent`. **The rest of a peer's sent
+  exchange -- its CQ template -- never crosses the V1 wire**, so building it
+  here invented the peer's text. A peer's QSO now stores NO `exchange_sent`
+  (unknown). Nothing reads one for an `assumed` row: the export rebuilds its
+  sent columns from the record (stage 4).
+  - **What is lost:** the peer's literal template text (a name or state it
+    typed into its own CQ exchange). It is recoverable only if the protocol
+    carries it, and the V1 wire is not being changed.
+- **A note or QTC record was stamped like a QSO:** our station, and a "sent
+  exchange" built from the CQ template over the note's fields. Only an
+  `rkQSO` captures either now.
 
 ---
 

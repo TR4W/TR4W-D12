@@ -47,7 +47,7 @@ uses
   Tree
   ,
   uTR4WStrings;
-procedure CreateConnectionAndSendReportToGetScores;
+function CreateConnectionAndSendReportToGetScores(aParameter: Pointer): DWORD; stdcall;
 procedure RunPOSTGetScoresThread;
 //function MakePOSTRequest: integer;
 //function MakePOSTRequestForRDXC2010: integer;
@@ -90,20 +90,22 @@ uses
   MainUnit,
   uPostScoresForm,   // PostScoresShowStatus -- the window is an LCL form
   uCabrilloHeader,   // the Cabrillo header, from settings\tr4w.json
-  uSettingsModel;    // Settings.My.ItuZone
+  uSettingsModel,    // Settings.My.ResolvedItuZone
+  uContestRegistry,  // ContestIdentity -- the contest's ADIF id
+  FCONTEST;          // SentMyState -- the state sent, design 7.11 (M9a)
 
 procedure RunPOSTGetScoresThread;
 begin
   if not ThreadStarted(GetScoresThreadID) then
      begin
      logger.Debug('Calling tCreateThread from RunPOSTGetScoresThread');
-     GetScoresThreadHandle := tCreateThread(@CreateConnectionAndSendReportToGetScores, GetScoresThreadID);
+     GetScoresThreadHandle := tCreateThread(CreateConnectionAndSendReportToGetScores, GetScoresThreadID);
      logger.Debug('Created GetScores thread with threadid of %u',[PtrUInt(GetScoresThreadID)] );
      end;
 //  CreateConnectionAndSendReportToGetScores;
 end;
 
-procedure CreateConnectionAndSendReportToGetScores;
+function CreateConnectionAndSendReportToGetScores(aParameter: Pointer): DWORD; stdcall;
 var
    post      : THttpPost;
    sURL      : string;
@@ -111,6 +113,7 @@ var
      window, and never was. *)
    h         : THandle;
 begin
+   Result := 0;   (* the thread exit code -- see TF.TTR4WThreadStart *)
    ShowGetScoresStatus(TC_CONNECT);
    MakePOSTRequestNew; // fills GetScoresBuffer with the URL-encoded POST body
 
@@ -298,14 +301,8 @@ begin
   nTotal := 0;
   nQSOs  := 0;
 
-  if Length(ContestsArray[Contest].ADIFName) = 0 then
-     begin
-     sContest := ContestTypeSA[Contest]
-     end
-  else
-     begin
-     sContest := ContestsArray[Contest].ADIFName;
-     end;
+  (* The contest's ADIF id, asked of the contest -- M1. *)
+  sContest := ContestIdentity(Contest).ADIFContestId;
 
   // <ops> = Settings.My.Call (single-op) -- issue #930.  Multi-op operator-list comes
   // from the Cabrillo summary _OPERATORS in production use; defer until users
@@ -370,13 +367,14 @@ begin
      sDXCC := ctyGetCountryID(UTF8Encode(Settings.My.Call));
      end;
 
-  sSection := Trim(Settings.My.Section);
+  sSection := Trim(Settings.My.ResolvedSection);
   if sSection = '' then
      begin
      sSection := ReadCabrilloSummaryField('_LOCATION');
      end;
 
-  sState := Trim(Settings.My.State);
+  (* The state SENT in this contest -- design 7.11 (M9a). *)
+  sState := Trim(SentMyState);
   if sState = '' then
      begin
      sState := ReadCabrilloSummaryField('_ADDRESS-STATE-PROVINCE');
@@ -394,7 +392,7 @@ begin
   // (uNewContest.pas:419), so 4 chars is the common case; a 6-char value
   // appears when the user manually set MY GRID in tr4w.ini or used a
   // contest dialog that prompts for the full grid.
-  sGrid4 := Trim(Settings.My.Grid);
+  sGrid4 := Trim(Settings.My.ResolvedGrid);
 
   qth := '';
   if sDXCC <> '' then
@@ -405,9 +403,9 @@ begin
      begin
      qth := qth + '<cqzone>' + XmlEscape(sZone) + '</cqzone>';
      end;
-  if Settings.My.ItuZone > 0 then
+  if Settings.My.ResolvedItuZone > 0 then
      begin
-     qth := qth + '<iaruzone>' + IntToStr(Settings.My.ItuZone) + '</iaruzone>'
+     qth := qth + '<iaruzone>' + IntToStr(Settings.My.ResolvedItuZone) + '</iaruzone>'
      end
   else if Settings.My.Call <> '' then
      begin

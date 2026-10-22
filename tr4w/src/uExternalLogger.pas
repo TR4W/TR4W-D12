@@ -56,7 +56,8 @@ implementation
 
 Uses
    uSettingsModel,   // Settings.My.Call
-   MainUnit;
+   MainUnit,
+   uContestRegistry; // ContestIdentity -- the contest's ADIF id
 
 Constructor TExternalLogger.Create();
 begin
@@ -341,7 +342,13 @@ This is all we need to send as we DO NOT want to send every contact to any of th
      sCoreADIF :=   sCoreADIF
                   + AddADIFField('BAND',ADIFBANDSTRINGSARRAY[ce.Band])
                   + ADDADIFField('MODE',sMode)
-                  + AddADIFField('CONTEST_ID',ContestTypeSA[ce.ceContest])
+                  (* THE CONTEST'S ADIF id, the one TR4W's own export writes
+                     -- M1. This sent the ENUM'S SPELLING, a fifth answer
+                     to "what is this contest's CONTEST_ID" that disagreed
+                     with export for every contest whose ADIF id is not its
+                     spelling -- 34 of them, e.g. ARRL Field Day sent
+                     'ARRL-FD' where export writes 'ARRL-FIELD-DAY'. *)
+                  + AddADIFField('CONTEST_ID',ContestIdentity(ce.ceContest).ADIFContestId)
                   + AddADIFField('QSO_DATE',SysUtils.format('20%0.2d%0.2d%0.2d',
                                                             [ce.tSysTime.qtYear,
                                                              ce.tSysTime.qtMonth,

@@ -1,18 +1,17 @@
-{ PINS THE ADIF MY-EXCHANGE, ARM BY ARM.
+(* PINS THE ADIF MY-EXCHANGE HELPERS, ONE LAYOUT AT A TIME.
 
-  The twin of uTestCabrilloExchange, which pins 39 Cabrillo arms.  Its ADIF
-  sibling had no unit coverage at all until uADIFExchange was extracted: the
-  code sat inside a 4,000-line unit no test links, reachable only through the
-  golden corpus, and the corpus covers 12 contests out of 184.
+  The twin of uTestCabrilloExchange. These were the arms of
+  uADIFExchange.FormatADIFExchangeOfKind until M11 S9b, which turned the arms
+  into named helpers (ADIFSentRSTNameQTH ...) that each contest class calls.
+  uTestADIFSentExchange pins which contest sends which; this pins what each
+  helper PRINTS, with the widths that make the expectations look fussy:
+  '%-3d %-5s %-7s' is padded output that lands in an ADIF field, so a change
+  of one space is a change to every exported log.
 
-  THESE ARE CHARACTERIZATION TESTS.  They record what the code DOES, validated
-  against a corpus run that byte-diffs ref.adi for all thirteen fixture sets and
-  still passes.  Two of them record a DEFECT and say so -- a pin that quietly
-  blesses a bug is worse than no pin.
-
-  Field widths matter and are why the expectations look fussy: '%-3d %-5s %-7s'
-  is padded output that lands in an ADIF field, so a change of one space is a
-  change to every exported log. }
+  THESE ARE CHARACTERIZATION TESTS. They record what the code DOES, validated
+  against a corpus run that byte-diffs ref.adi for all thirteen fixture sets
+  and still passes. Two of them record a DEFECT and say so -- a pin that
+  quietly blesses a bug is worse than no pin. *)
 unit uTestADIFExchange;
 
 {$I ..\..\src\tr4w.inc}
@@ -43,7 +42,7 @@ type
 implementation
 
 uses
-   VC, uCabrilloExchange, uADIFExchange;
+   VC, uContestBase, uADIFExchange;
 
 function MakeMy: TMyStationExchange;
 begin
@@ -71,114 +70,127 @@ begin
    Result.ceRecordKind := rkQSO;
 end;
 
-function Ex(const aExchange: ExchangeType): string;
-begin
-   Result := FormatADIFMyExchange(aExchange, CQWWCW, MakeRx, MakeMy, True);
-end;
-
 procedure TTestADIFExchange.Test_GridIsJustTheGrid;
 begin
-   CheckEquals('EL88AA', Ex(GridExchange), 'GridExchange');
-   CheckEquals('EL88AA', Ex(Grid2Exchange), 'Grid2Exchange');
+   CheckEquals('EL88AA', ADIFSentGrid(MakeMy, MakeRx), 'the Grid and Grid2 exchanges');
 end;
 
-{ Issue #902's fix, pinned.  The old code wrote #0 at byte 5 unconditionally,
+(* Issue #902's fix, pinned. The old code wrote #0 at byte 5 unconditionally,
   which silently truncated six-character grids -- EL88AA became EL88 in every
-  exported exchange.  If this ever reads 'EL88' again, that regressed. }
+  exported exchange. If this ever reads 'EL88' again, that regressed. *)
 procedure TTestADIFExchange.Test_SixCharacterGridIsNotTruncated;
 begin
-   Check(Ex(GridExchange) <> 'EL88',
+   Check(ADIFSentGrid(MakeMy, MakeRx) <> 'EL88',
          'a six-character grid must not be cut to four (issue #902)');
-   CheckEquals(6, Length(Ex(GridExchange)), 'all six characters survive');
+   CheckEquals(6, Length(ADIFSentGrid(MakeMy, MakeRx)), 'all six characters survive');
 end;
 
 procedure TTestADIFExchange.Test_RSTNameAndQTH;
 begin
    // '%-3d %-5s %-7s' of 599, TOM, FL
-   CheckEquals('599 TOM   FL     ', Ex(RSTNameAndQTHExchange),
+   CheckEquals('599 TOM   FL     ', ADIFSentRSTNameQTH(MakeMy, MakeRx),
                'RST, name and QTH, padded');
 end;
 
 procedure TTestADIFExchange.Test_QSONumberAndName;
 begin
    // '%-3d %-7s' of NumberSent and the name
-   CheckEquals('7   TOM    ', Ex(QSONumberAndNameExchange),
+   CheckEquals('7   TOM    ', ADIFSentQSONumberName(MakeMy, MakeRx),
                'serial then name');
 end;
 
 procedure TTestADIFExchange.Test_RSTQSONumberAndGridSquare;
 begin
    // '%-3d %-4d %-7s'
-   CheckEquals('599 7    EL88AA ', Ex(RSTQSONumberAndGridSquareExchange),
+   CheckEquals('599 7    EL88AA ', ADIFSentRSTQSONumberGrid(MakeMy, MakeRx),
                'RST, serial, grid');
 end;
 
+(* THE FIELD DAYS HAVE NO HELPER (M4, inventory D4) -- both format their own
+   STX_STRING, pinned on their classes in uTestContestExport. A contest that
+   states nothing, the base, keeps the marker. *)
 procedure TTestADIFExchange.Test_ClassAndSection;
+var
+   obj: TContestBase;
 begin
-   // '%-3s %-7s ' -- note the trailing space, which is in the format string
-   CheckEquals('1D  WCF     ', Ex(ClassDomesticOrDXQTHExchange),
-               'Field Day class and section');
+   obj := TContestBase.Create(NoContest);
+   try
+      (* F25/F26, 2026-10-14 (NY4I): it was the placeholder 'Error generating
+         my exchange'. The base states no layout, so the field is '' and the
+         failure is reported (uTestADIFSentExchange pins the reporting). *)
+      CheckEquals('', obj.FormatADIFSentExchange(MakeMy, MakeRx),
+                  'a contest with no statement of its own');
+   finally
+      obj.Free;
+      end;
 end;
 
-{ '%-3d %03d ' -- AND THE SERIAL IS NOT ZERO-PADDED, WHICH IS ALMOST CERTAINLY
+(* '%-3d %03d ' -- AND THE SERIAL IS NOT ZERO-PADDED, WHICH IS ALMOST CERTAINLY
   NOT WHAT WAS INTENDED.
 
-  In C, "%03d" of 7 is "007".  In Object Pascal it is not: Format's grammar is
+  In C, "%03d" of 7 is "007". In Object Pascal it is not: Format's grammar is
   %[index:][-][width][.precision]type, so the leading zero is simply part of the
-  width -- 03 is 3 -- and the result is right-justified with SPACES.  Serial 7
+  width -- 03 is 3 -- and the result is right-justified with SPACES. Serial 7
   exports as "  7", not "007".
 
   The arm carries the comment "issue 177", which suggests somebody went looking
-  for a zero-padded serial and wrote the C spelling.  Whether the field should
+  for a zero-padded serial and wrote the C spelling. Whether the field should
   be "007" is a contest question; pinning what it actually produces is not, and
   a wrong expectation here is how the next reader would have discovered this the
-  hard way.  I wrote '599 007 ' first and the test caught me. }
+  hard way. I wrote '599 007 ' first and the test caught me. *)
 procedure TTestADIFExchange.Test_RSTQSONumber;
 begin
-   CheckEquals('599   7 ', Ex(RSTQSONumberExchange),
+   CheckEquals('599   7 ', ADIFSentRSTQSONumber(MakeMy, MakeRx),
                'Pascal Format does not zero-pad -- 03 is a WIDTH, not a flag');
 end;
 
 procedure TTestADIFExchange.Test_POTAParkIsJustThePark;
 begin
-   CheckEquals('K-1234', Ex(RSTAndPOTAPark), 'the park reference alone');
+   CheckEquals('K-1234', ADIFSentPark(MakeMy, MakeRx), 'the park reference alone');
 end;
 
-{ A QSO the caller rejected never reaches the case at all, and the initial value
-  of Result is what comes back.  That string is what PostUnit writes into the
-  ADIF field, so it is worth knowing it is this and not empty. }
+(* A QSO PostUnit rejects never reaches a contest at all (since M4 the decision
+  is PostUnit's, which owns the log), and 2026-10-14 (NY4I: "report an error as
+  the silent error is not good") what it writes into STX_STRING is NOTHING:
+  the placeholder 'Error generating my exchange' this test pinned is deleted,
+  because a robot reads a placeholder as an exchange. A contest with no
+  layout raises instead, and the caller reports it. *)
 procedure TTestADIFExchange.Test_BadQSOYieldsTheErrorMarker;
+var
+   raised: boolean;
 begin
-   CheckEquals('Error generating my exchange',
-               FormatADIFMyExchange(GridExchange, CQWWCW, MakeRx, MakeMy, False),
-               'a rejected QSO yields the marker, not a blank field');
+   raised := False;
+   try
+      ADIFSentNotImplemented(MakeMy, MakeRx);
+   except
+      on E: EADIFExchangeNotImplemented do
+         begin
+         raised := True;
+         end;
+   end;
+   CheckTrue(raised, 'no layout raises, it does not answer a placeholder');
 end;
 
-{ THIS PINS A DEFECT, DELIBERATELY.
+(* THIS PINNED A DEFECT UNTIL 2026-10-14, AND THE DEFECT IS FIXED (plan F25,
+  NY4I).
 
-  The arm reads:
+  The AgeAndQSONumber arm read:
 
       Result := Format('%-3d %-2s %03d      ', [cMyState, nrSent]);
 
   THREE format specifiers, TWO arguments -- and the first specifier is %d while
-  the first argument is a PAnsiChar.  Format raises, the routine's own
-  try/except swallows it, and the caller gets the initialisation string.  So
-  every AgeAndQSONumberExchange contest exports 'Error generating my exchange'
-  in that field.
+  the first argument is a string. Format raised, the machine's own try/except
+  swallowed it, and the caller got the initialisation string, so the Youth
+  Championship RF exported 'Error generating my exchange' in that field -- as
+  did the Cup RF's three runnings (QSONumberAndGridSquare: '%-3s' of a number)
+  and CQ WW RTTY (RSTZoneAndPossibleDomesticQTH: '%02u' of a ShortString).
 
-  It is pinned rather than fixed because this commit is an extraction and its
-  claim is that nothing changed.  Fixing it needs somebody who knows what the
-  field should say -- '%-3s %-2s' with a third argument, or two specifiers and
-  the age dropped -- and that is a contest question, not a refactoring one.
-  Recorded in the bench queue.
-
-  If this test starts FAILING, someone has fixed it; update the expectation and
-  delete this comment. }
+  Each of the five now exports what its own Cabrillo sent column prints; this
+  is the Youth Championship RF's: the state and the serial. *)
 procedure TTestADIFExchange.Test_DEFECT_AgeAndQSONumberHasThreeSpecsAndTwoArgs;
 begin
-   CheckEquals('Error generating my exchange', Ex(AgeAndQSONumberExchange),
-               'DEFECT: three format specs, two arguments -- Format raises and '
-               + 'the except swallows it');
+   CheckEquals('FL 007 ', ADIFSentStateQSONumber2(MakeMy, MakeRx),
+               'F25 fixed: the Youth Championship RF sends the state and the serial');
 end;
 
 procedure TTestADIFExchange.RunAllTests;

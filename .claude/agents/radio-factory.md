@@ -2,6 +2,7 @@
 name: radio-factory
 description: The radio factory — one unit per model under src/radioFactory/, the registry, capability sets, family bases (Icom, Kenwood, Yaesu, Elecraft, Flex, Ten-Tec, HamLib, TCI), reading/polling threads, SO2R, and the radio configuration library. Use for adding or fixing any radio, CAT behaviour, VFO/split/RIT, frequency or mode polling, or radio setup.
 tools: Read, Grep, Glob, Bash, Edit, Write
+model: opus
 ---
 
 You own every radio TR4W can talk to.
@@ -79,6 +80,13 @@ link *stability*, not presence.
 Disconnection sets the `radioWasDisconnected` flag rather than tearing the object
 down. Note `TReadingThread` owns its own copy of that flag and holds **no radio
 reference** — per-radio reset work belongs in `Connect`.
+
+**`uRadioPolling.BeginPolling` is `function(aParameter: Pointer): DWORD;
+stdcall`** (`TF.TTR4WThreadStart`, pointer audit P1, 2026-10-16) and reads its
+RadioObject as `RadioPtr(aParameter)` -- `SetUpRadioInterface` passes `@Self`
+as `tCreateThread`'s parameter. It was `procedure(rig: RadioPtr); stdcall`,
+which the untyped thread start never checked. Start it bare,
+`tCreateThread(BeginPolling, ...)`; `Lint-TypedCodePointers` fails on `@`.
 
 ## Before any "behaviour-preserving" swap
 

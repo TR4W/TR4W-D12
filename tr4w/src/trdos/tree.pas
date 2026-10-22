@@ -85,10 +85,6 @@ const
   dcb_Reserveds                         = $FFFF8000;
 
 type
-  PDayTable = ^TDayTable;
-  TDayTable = array[1..12] of Word;
-
-type
   PBoolean = ^boolean;
 
 type
@@ -99,8 +95,6 @@ type
 
   // TwoBytes/FourBytes/EightBytes moved to VC.pas (pre-migration extraction of
   // callsign compression); tree.pas now gets them from VC (used in interface).
-  FourBytesPtr = ^FourBytes;
-
 const
   PortTypeSA                            : array[PortType] of string =
 
@@ -173,8 +167,6 @@ const
     'TCP/IP'
     );
 type
-  PPortType = ^PortType;
-
   (* ParallelInterface WENT WITH THE PARALLEL PORT, 2026-09-13.  What is left
     is the question tGetPortType actually answers now: serial, or nothing. *)
   PortInterface =
@@ -690,9 +682,6 @@ type
     List: array[0..MaximumFileNames - 1] of string[12];
   end;
 
-  BufferType = array[0..$FF] of Char;
-  BufferTypePtr = ^BufferType;
-
 const
   InitialCodeSpeed                      = 35;
 var
@@ -795,7 +784,8 @@ procedure GetRidOfPostcedingSpaces(var s: OpenString);
 procedure GetRidOfPrecedingSpaces(var s: OpenString);
 function GetSCPCharFromInteger(Index: integer): Char;
 function GetSCPIntegerFromChar(InputChar: AnsiChar): integer;
-function GetStateFromSection(Section: Str20): string;
+(* GetStateFromSection moved to uARRLSections.StateFromARRLSection at M4
+   (2026-10-01), together with PostUnit's layer over it -- one function now. *)
 function GetSuffix(Call: CallString): CallString;
 function GetTimeString: string;
 function GetTomorrowString: Str80;
@@ -844,8 +834,9 @@ function LineInput(Prompt: Str160;
 function LowerCase(const s: string): string;
 function LooksLikeAGrid(var GridString: OpenString): boolean;
 function LooksLikeAGridIgnoreAE(var GridString: OpenString): boolean;
-function LooksLikeAPOTAPark(park: string): boolean;
-function LooksLikeAState(state: string): boolean; // NY4I
+(* LooksLikeAPOTAPark and LooksLikeAState went to the leaf uPOTAReference on
+  2026-10-13, when POTA gained its class -- the alias as IsValidPOTAPark, which
+  it only called. Every caller of either was a POTA site. *)
 function LooksLikeASection(section: string): boolean;
 function Lpt1BaseAddress: Word;
 function Lpt2BaseAddress: Word;
@@ -872,7 +863,9 @@ function OperatorEscape: boolean;
 
 function PacketCharReady(SerialPort: PortType; var CIn: Char): boolean;
 function PartialCall(Pattern: CallString; Call: CallString): boolean;
-function PortableStation(Call: CallString): boolean;
+(* ~~PortableStation~~ IS uCallSignRoutines.PortableStation since M7b batch 2
+   -- lifted so the Region 1 Field Day class and the legacy scoring arm ask
+   one function. *)
 
 function ReadChar(SerialPort: PortType): Char;
 
@@ -984,6 +977,12 @@ var
 implementation
 
 uses
+   (* LooksLikeAGrid's first question -- the open contest (PostUnit.Contest)
+     and its identity (uContestRegistry), M11 S9e part 1. FIRST, so that
+     neither can shadow a name this unit takes from the units below:
+     Pascal resolves an identifier to the LAST unit that declares it. *)
+   PostUnit,
+   uContestRegistry,
    uSettingsModel,     // Settings -- the settings that have left CFGCA
   Dialogs,         (* QuestionDlg -- OkayToDeleteExistingFile, was MessageBoxA *)
   Controls,        (* mrYes / mrNo -- the modal results QuestionDlg answers *)
@@ -998,7 +997,15 @@ uses
   LogK1EA
   ,
   uFreqTimeFormat   // Issue #997: golden-tested time formatter
-  , uConfigValues;
+  , uConfigValues
+  (* LooksLikeGridSquare -- the shape half of LooksLikeAGrid, lifted to a
+    leaf when POTA gained its class; and IsGoodLookingGrid, GoodLookingGrid's
+    rule, lifted at Q37. *)
+  , uGridShape
+  (* ~~uContestSession~~ stood here for LooksLikeAGrid's first question,
+    the session's exchange kind (M10 S9f). The contest answers it since
+    M11 S9e part 1 -- PostUnit and uContestRegistry, FIRST in this list. *)
+  ;
 
 //{WLI}FUNCTION  BYTADDR  (Call: Pointer; NumberCalls: INTEGER; A: Pointer): INTEGER; EXTERNAL;
 //{WLI}FUNCTION  BYTDUPE  (Call: Pointer; NumberCalls: INTEGER; A: Pointer): BOOLEAN; EXTERNAL;
@@ -2459,20 +2466,30 @@ begin
 end;
 
 
-function LooksLikeAPOTAPark(park: string): boolean;
+(* THE GRID'S FIRST TWO LETTERS IN UPPER CASE, written back through the var
+  parameter -- what both grid tests below did on a match. Their comment says
+  "lower case so it looks like a domestic QTH", and the code has always done
+  the opposite; the code is what is kept. *)
+procedure UpperCaseGridLetters(var GridString: OpenString);
+var
+  i: integer;
 begin
-   Result := IsValidPOTAPark(park);
+  for i := 1 to 2 do
+     begin
+     if GridString[i] > 'Z' then
+        begin
+        GridString[i] := AnsiChar(Ord(GridString[i]) - Ord('a') + Ord('A'));
+        end;
+     end;
 end;
 
+(* DOES THIS LOOK LIKE A GRID, IN A SESSION WHOSE EXCHANGE CAN CARRY ONE?
+
+  THE SHAPE IS uGridShape's SINCE 2026-10-13, and so is the set of exchanges
+  that carry a grid -- lifted when POTA gained its class, so that its ADIF
+  export could ask the same two questions without a global. This keeps the
+  order that matters here, below. *)
 function LooksLikeAGrid(var GridString: OpenString): boolean;
-
-{ If it does look like a grid, it will make the first two letters lower
-  case so it looks like a domestic QTH. }
-
-var
-  TestString                            : Str20;
-  i                                     : integer;
- // p                                  : pchar;
 begin
 
   LooksLikeAGrid := False;
@@ -2481,25 +2498,25 @@ begin
 
     UpperCase(GridString) used to run above this test, so every call allocated
     and upper-cased a string even when the contest can never carry a grid and
-    the answer was already known to be False. This is called once per log row
-    per repaint (logwind.pas:3042), which is why NY4I saw it eighty times in a
-    millisecond on 2026-09-11.
+    the answer was already known to be False. NY4I saw this routine eighty
+    times in a millisecond on 2026-09-11.
 
-    Comparing an enum is free; allocating a string is not. Asking the cheap
-    question first is the whole fix.
+    ~~once per log row per repaint, logwind.pas:3042~~ -- NEVER TRUE
+    (measured 2026-10-15, plan F33): logwind.pas:3042 was then, and is now,
+    DisplayUserInfo -- once per call shown -- and no caller runs per row.
+    The callers are the call-history displays (LOGWIND, LOGEDIT), the VHF
+    beam heading (MainUnit), the ADIF export tail (PostUnit, once per
+    record) and the external logger (three per QSO).
 
-    A SET, NOT NINE ORs -- and the rewrite found a duplicate: GridExchange was
-    tested TWICE in the old chain. A set cannot express that mistake. *)
-  if not (ActiveExchange in [RSTAndOrGridExchange,        // 4.118.1
-                             Grid2Exchange,
-                             RSTAndGrid3Exchange,
-                             GridExchange,
-                             RSTQSONumberAndGridSquareExchange,
-                             // ny4i -- GeneralQSO, to find a grid in the exchange
-                             RSTNameAndQTHExchange,
-                             // ny4i -- so the free-form POTA exchange can find a grid
-                             RSTAndPOTAPark,
-                             RSTAndGridExchange]) then
+    THE QUESTION IS THE CONTEST'S -- M11 S9e part 1 (S9f), 2026-10-15. It
+    was `ContestSession.Exchange in uGridShape.GRID_CARRYING_EXCHANGES`;
+    it is TContestBase.ExchangeTextMayHoldGridSquare, asked of the
+    contest's IDENTITY. No station decides it (pinned by
+    uTestExchangeKindReaders), and the identity is a locked table lookup
+    with no station to rebuild, where ActiveContest would rebuild one on
+    every call and is main-thread only. Still one call ahead of any string
+    work. *)
+  if not ContestIdentity(Contest).ExchangeTextMayHoldGridSquare then
      begin
      (* NO LOG LINE HERE. "This contest has no grid" is the ordinary answer
        for most contests, not an anomaly, and it was being written once per
@@ -2508,87 +2525,27 @@ begin
      Exit;
      end;
 
-  TestString := UpperCase(GridString);
-  if (length(TestString) <> 4) and (length(TestString) <> 6) then
+  if not LooksLikeGridSquare(string(GridString)) then
      begin
      Exit;
      end;
-  //   if (TestString[1] < 'A') or (TestString[1] > 'R') then Exit;
-  //   if (TestString[2] < 'A') or (TestString[2] > 'R') then Exit;
-  for i := 1 to 2 do
-     begin
-     if (TestString[i] < 'A') or (TestString[i] > 'R') then
-        begin
-        Exit;
-        end;
-     end;
-  //if (TestString[3] < '0') or (TestString[3] > '9') then Exit;
-  //if (TestString[4] < '0') or (TestString[4] > '9') then Exit;
-  for i := 3 to 4 do
-     begin
-     if (TestString[i] < '0') or (TestString[i] > '9') then
-        begin
-        Exit;
-        end;
-     end;
-  //   if GridString[1] > 'Z' then GridString[1] := CHR(Ord(GridString[1]) - Ord('a') + Ord('A'));
-  //   if GridString[2] > 'Z' then GridString[2] := CHR(Ord(GridString[2]) - Ord('a') + Ord('A'));
-  for i := 1 to 2 do
-     begin
-     if GridString[i] > 'Z' then
-        begin
-        GridString[i] := AnsiChar(Ord(GridString[i]) - Ord('a') + Ord('A'));
-        end;
-     end;
+
+  UpperCaseGridLetters(GridString);
   LooksLikeAGrid := True;
 end;
 
-
+(* The same shape test, whatever the session's exchange -- WSJT-X's decodes. *)
 function LooksLikeAGridIgnoreAE(var GridString: OpenString): boolean;
-
-{ If it does look like a grid, it will make the first two letters lower
-  case so it looks like a domestic QTH. }
-
-var
-  TestString                            : Str20;
-  i                                     : integer;
-  //p                                  : pchar;
 begin
-
   LooksLikeAGridIgnoreAE := False;
 
-  TestString := UpperCase(GridString);
-  if (length(TestString) <> 4) and (length(TestString) <> 6) then
+  if not LooksLikeGridSquare(string(GridString)) then
      begin
      Exit;
      end;
 
-  for i := 1 to 2 do
-     begin
-     if (TestString[i] < 'A') or (TestString[i] > 'R') then
-        begin
-        Exit;
-        end;
-     end;
-
-  for i := 3 to 4 do
-     begin
-     if (TestString[i] < '0') or (TestString[i] > '9') then
-        begin
-        Exit;
-        end;
-     end;
-
-  for i := 1 to 2 do
-     begin
-     if GridString[i] > 'Z' then
-        begin
-        GridString[i] := AnsiChar(Ord(GridString[i]) - Ord('a') + Ord('A'));
-        end;
-     end;
-
+  UpperCaseGridLetters(GridString);
   LooksLikeAGridIgnoreAE := True;
-
 end;
 
 
@@ -2832,34 +2789,6 @@ begin
                   Key := ReadKey;
           END;
  }
-end;
-
-function PortableStation(Call: CallString): boolean;
-
-{ This function will return TRUE if the callsign passed to it is a portable
-  station. }
-
-var
-  TempString                            : Str20;
-  TempChar                              : Char;
-
-begin
-  PortableStation := False;
-  TempString := PostcedingString(Call, '/');
-
-  if StringHas(TempString, '/') then
-     begin
-     TempString := PostcedingString(TempString, '/');
-     end;
-
-  if length(TempString) = 1 then
-     begin
-     TempChar := Char(TempString[1]);
-     if ((TempChar >= '0') and (TempChar <= '9')) or (TempChar = 'P') or (TempChar = 'M') then
-        begin
-        PortableStation := True;
-        end;
-     end;
 end;
 
 function ReadChar(SerialPort: PortType): Char;
@@ -3457,45 +3386,14 @@ function NewReadKey: Char;
 begin
 end;
 
+(* VERIFIES THAT THE GRID SQUARE IS LEGITIMATE -- the rule is
+  uGridShape.IsGoodLookingGrid's since Q37 (2026-10-17), lifted there
+  unchanged when LOGGRID's distance became its second user: four or six
+  characters, A..R twice, two digits, and A..Z twice in a six-character grid,
+  either case. *)
 function GoodLookingGrid(Grid: Str20): boolean;
-
-{ Verifies that the grid square is legitimate }
-
-var
-  CharPosition                          : integer;
-
 begin
-  GoodLookingGrid := False;
-
-  if not ((length(Grid) = 4) or (length(Grid) = 6)) then Exit;
-
-  strU(Grid);
-
-  for CharPosition := 1 to length(Grid) do
-     begin
-     case CharPosition of
-       1, 2:
-         if (Grid[CharPosition] < 'A') or (Grid[CharPosition] > 'R') then
-            begin
-            Exit;
-            end;
-
-       3, 4:
-         if (Grid[CharPosition] < '0') or (Grid[CharPosition] > '9') then
-            begin
-            Exit;
-            end;
-
-       5, 6:
-         if (Grid[CharPosition] < 'A') or (Grid[CharPosition] > 'Z') then
-            begin
-            Exit;
-            end;
-
-     end;
-     end;
-
-  GoodLookingGrid := True;
+  GoodLookingGrid := IsGoodLookingGrid(string(Grid));
 end;
 
 function GoodLookingGrid2(Grid: Str20): boolean;
@@ -3729,116 +3627,6 @@ begin
   CallSortValue := round(Total - 2147483648.0);
 end;
 
-function GetStateFromSection(Section: Str20): string;
-
-begin
-  Section := UpperCase(Section);
-
-  if (Section = 'AK') or (Section = 'AL') or (Section = 'AR') or
-    (Section = 'AZ') or (Section = 'CO') or (Section = 'CT') or
-    (Section = 'DE') or (Section = 'GA') or (Section = 'IA') or
-    (Section = 'ID') or (Section = 'IN') or (Section = 'IL') or
-    (Section = 'KS') or (Section = 'KY') or (Section = 'LA') or
-    (Section = 'ME') or (Section = 'MI') or (Section = 'MN') or
-    (Section = 'MO') or (Section = 'MS') or (Section = 'MT') or
-    (Section = 'NC') or (Section = 'ND') or (Section = 'NE') or
-    (Section = 'NH') or (Section = 'NM') or (Section = 'NV') or
-    (Section = 'OH') or (Section = 'OK') or (Section = 'OR') or
-
-  (Section = 'RI') or (Section = 'SD') or (Section = 'TN') or
-    (Section = 'UT') or (Section = 'VA') or (Section = 'VT') or
-    (Section = 'WI') or (Section = 'WV') or (Section = 'WY') or
-    (Section = 'SC') then
-     begin
-     GetStateFromSection := Section;
-     Exit;
-     end;
-
-  if (Section = 'EB') or (Section = 'LAX') or (Section = 'ORG') or
-    (Section = 'SB') or (Section = 'SCV') or (Section = 'SDG') or
-    (Section = 'SF') or (Section = 'SJV') or (Section = 'SV') then
-     begin
-     GetStateFromSection := 'CA';
-     Exit;
-     end;
-
-  if (Section = 'EM') or (Section = 'WM') then
-     begin
-     GetStateFromSection := 'MA';
-     Exit;
-     end;
-
-  if (Section = 'EN') or (Section = 'WNY') or (Section = 'NNY') or
-    (Section = 'ENY') or (Section = 'NLI') then
-     begin
-     GetStateFromSection := 'NY';
-     Exit;
-     end;
-
-  if (Section = 'EP') or (Section = 'WP') then
-     begin
-     GetStateFromSection := 'PA';
-     Exit;
-     end;
-
-  if (Section = 'EW') or (Section = 'WWA') or (Section = 'EWA') then
-     begin
-     GetStateFromSection := 'WA';
-     Exit;
-     end;
-
-  if (Section = 'NF') or (Section = 'SF') or (Section = 'WCF') then // ny4i 4.44.9...unrelated but I happened to notice this
-     begin
-     GetStateFromSection := 'FL';
-     Exit;
-     end;
-
-  if (Section = 'NNJ') or (Section = 'SNJ') then
-     begin
-     GetStateFromSection := 'NJ';
-     Exit;
-     end;
-
-  if (Section = 'NTX') or (Section = 'STX') or (Section = 'WTX') then
-     begin
-     GetStateFromSection := 'TX';
-     Exit;
-     end;
-
-  GetStateFromSection := '';
-end;
-
-function LooksLikeAState(state: string): boolean;
-
-begin
-  Result := false;
-  if (state = 'CA') or (state = 'TX') or (state = 'NY') or (state = 'FL') or
-     (state = 'TX') or (state = 'PA') or (state = 'MA') or (state = 'NJ') or
-     (state = 'WA') or (state = 'MD') or (state = 'DC') or
-     (state = 'AK') or (state = 'AL') or (state = 'AR') or
-     (state = 'AZ') or (state = 'CO') or (state = 'CT') or
-     (state = 'DE') or (state = 'GA') or (state = 'IA') or
-     (state = 'ID') or (state = 'IN') or (state = 'IL') or
-     (state = 'KS') or (state = 'KY') or (state = 'LA') or
-     (state = 'ME') or (state = 'MI') or (state = 'MN') or
-     (state = 'MO') or (state = 'MS') or (state = 'MT') or
-     (state = 'NC') or (state = 'ND') or (state = 'NE') or
-     (state = 'NH') or (state = 'NM') or (state = 'NV') or
-     (state = 'OH') or (state = 'OK') or (state = 'OR') or
-     (state = 'RI') or (state = 'SD') or (state = 'TN') or
-     (state = 'UT') or (state = 'VA') or (state = 'VT') or
-     (state = 'WI') or (state = 'WV') or (state = 'WY') or
-     (state = 'SC') or (state = 'HI') or
-     (state = 'NS') or (state = 'QC') or (state = 'ON') or (state = 'MB') or
-     (state = 'SK') or (state = 'AB') or (state = 'BC') or (state = 'NT') or
-     (state = 'NB') or (state = 'NL') or (state = 'YT') or (state = 'PE') or (state = 'NU') then
-     begin
-     Result := true;
-     end;
-
-
-end;
-
 function LooksLikeASection(section: string): boolean;
 
 begin
@@ -3956,7 +3744,8 @@ end;
 
   Callers went with them: help.CheckForName (which had no caller of its own)
   and the else-arm of logname.NameDictionary.Init, which now says '' outright,
-  because that is what it has always computed. *)
+  because that is what it has always computed. (logname.pas itself was never
+  compiled and is deleted -- 2026-10-16, docs/POINTER_AUDIT.md D5.) *)
 
 procedure RenameFile(OldName: string; NewName: string);
 

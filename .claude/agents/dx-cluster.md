@@ -2,6 +2,7 @@
 name: dx-cluster
 description: DX cluster and the DX terminal — the Telnet client, cluster login and auto-reconnect, DX spot parsing, the spot store, spot ageing, and the band map. Use for anything about cluster connections, telnet, spots, spot colours or filters, the band map, or click-to-tune.
 tools: Read, Grep, Glob, Bash, Edit, Write
+model: sonnet
 ---
 
 You own how spots reach TR4W and how they are shown.
@@ -62,10 +63,29 @@ You own how spots reach TR4W and how they are shown.
   managed fields; a raw byte shift does not. The same trap exists wherever a
   record carries an `AnsiString`, not only here.
 
+- **`SpotsList` is a `class` over `TList<TSpotRecord>` (2026-10-17), pinned by
+  `uTestSpotStore`.** Only the MAIN thread changes it (the cluster reader queues
+  events; `ProcessDX` and so `AddSpot` run from the drain). The RADIO POLLING
+  thread READS it -- `DisplayCallsignOnThisFreq`, `TuneDupeCheck` -- so those
+  two scans hold `FCriticalSection`; a list that shrinks under an unlocked
+  reader now raises (the list range-checks) instead of reading stale bytes.
+  `Items[i]` of a record list is a COPY: edit by read, change, write back.
+
+- **A CQ or NEW band-map marker is asked ONE way:
+  `uDXSpotParse.SpotCallIsCQMarker` / `SpotCallIsNewMarker`** (2026-10-19,
+  pointer audit P10). The old test read the call's first four bytes as an
+  integer, which also compared the bytes BEYOND a short call's length -- a
+  reused record holding `CQ/ ` + stale tail answered "marker" for `CQ/`. The
+  four characters are written out rather than looped over: a generic
+  "begins with" helper measured 2x slower per spot. Do not bring the integer
+  constants back. Pins: `Test_Marker_*` in `uTestDXSpotParse`.
+
 ## Open
 
 **`uSpots` `ERangeError` is STILL OPEN** — see the `winter-fd-corpus-crash`
-memory. Do not close it from inspection.
+memory. Do not close it from inspection. The routine it named,
+`TDXSpotsList.Display`, no longer exists, and the 2026-10-17 conversion to a
+list class did not reproduce or explain it.
 
 ## Test assets
 

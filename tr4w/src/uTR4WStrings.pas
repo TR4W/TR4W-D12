@@ -37,6 +37,7 @@ resourcestring
    TC_TRANSLATION_AUTHOR                 = 'N4AF';
    TC_TRANSLATOR_EMAIL                   = 'ny4i@ny4i.com';
    TC_TRANSLATION_CREDIT                 = '%s translation by %s';
+   TC_TRANSLATION_CORRECTIONS            = 'Corrections are appreciated.';
    TC_WAGWarn                            = 'Warning: Out of WAG allowed frequency range';
    TC_FREQ                               = 'Freq';
    TC_POINTS                             = 'Pts';
@@ -113,7 +114,7 @@ resourcestring
    TC_LABRE                              = 'Enter 2 char QTH ID';
    TC_EUDX                               = 'EU country, enter your four character country code';
    TC_IRTS                               = 'EI/GI, enter your County';
-   TC_LATEST_CONFIG_FILE                 = 'Latest config file';
+   TC_LATEST_CONFIG_FILE                 = 'Last Contest';
    TC_OPENCONFIGURATIONFILE              = ' - Open configuration file or start a new contest';
    TC_FOLDERALREADYEXISTSOVERWRITE       = 'Folder "%s" already exists.'#13'Overwrite ?';
    TC_IAMIN                              = '&I am in %s';
@@ -267,6 +268,7 @@ resourcestring
    TC_NOTENOUGHINFOINEXCHANGE            = 'Not enough info in exchange!!';
    TC_IMPROPERDOMESITCQTH                = 'Improper domestic QTH!!';
    TC_IGNOREDUNKNOWNQTH                  = 'Ignored, not a known QTH:';
+   TC_TOOMANYCOUNTIES                    = 'Too many counties for this contest (maximum %d)!!';
    TC_BANKSTANDARD                       = 'Standard';
    TC_BANKCONTROL                        = 'Control';
    TC_BANKALT                            = 'Alt';
@@ -770,6 +772,19 @@ resourcestring
    CLOSE_WORD = 'Close';
    HELP_WORD  = 'Help';
    EXIT_WORD  = 'E&xit';
+
+   // EDIT QSO -- OUR STATION AS RECORDED FOR THE QSO (log schema 3)
+   SEditQSOMyStation            = 'Our station for this QSO';
+   SEditQSOMyStationNotRecorded = 'Our station for this QSO (not recorded)';
+   SEditQSOMyStationAssumed     = 'Our station for this QSO (assumed: a network QSO)';
+   SEditQSOMyCall               = 'Call';
+   SEditQSOMyGrid               = 'Grid';
+   SEditQSOMyState              = 'State';
+   SEditQSOMyCounty             = 'County';
+   SEditQSOMySection            = 'Section';
+   SEditQSOMyPark               = 'Park';
+   SEditQSOMyCQZone             = 'CQ zone';
+   SEditQSOMyITUZone            = 'ITU zone';
 
 implementation
 

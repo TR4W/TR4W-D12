@@ -59,6 +59,10 @@ unit uContestWinterFieldDay;
 interface
 
 uses
+   (* cpLOW and cpQRP -- the entrant's CATEGORY-POWER, which multiplies the
+      final score (M6). FIRST, so VC's names win where the two overlap, as
+      in uContestBase. *)
+   uSettingsModel,
    VC, uContestBase;
 
 type
@@ -72,32 +76,115 @@ type
          this object. Two ways to ask the same question is exactly the
          ambiguity a property removes, so the getter is not part of the
          surface: callers use the property, descendants override the getter. *)
-      function GetFormatsExchange: boolean; override;
       function GetDisplayName: string; override;
-   public
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetFriendlyName: string; override;
+
+      (* STATED AT M10 S5, transcribed from the rows the base read until
+         then (ContestsArray, QSOParties, ContestsBooleanArray). The
+         flags: see TContestBase.GetFlags. *)
+      function GetWA7BNMId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+      function GetFlags: TContestFlags; override;
+      (* THE POINTS -- see the implementation. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+
+      (* THE FINAL SCORE -- Issue 301 (NY4I): the points times the band-mode
+         multiplier, times two for a LOW entry and five for a QRP one. It was
+         LogEdit.TotalScore's Winter Field Day arm; moved at M6. *)
+      function CombineWithMultipliers(const aTotals: TScoreTotals): longint; override;
+   public
       function ValidateClass(const aClass: string;
                              out aErrorMessage: string): boolean; override;
       function ValidateDXQTH(const aQTH: string;
                              out aResolved: string;
                              out aErrorMessage: string): boolean; override;
 
-      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                          const aQso: ContestExchange;
-                                          const aRSTSent: string): string; override;
-      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                              const aQso: ContestExchange;
-                                              const aRSTReceived: string;
-                                              const aHisQTH: string): string; override;
-      function FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                      const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+
+      (* THE WORKED STATION'S ADIF FIELDS -- see the implementation. *)
+      function EmitADIFContestFields(const aQso: ContestExchange): string; override;
+      procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                const aSession: TADIFImportSession;
+                                var aExch: ContestExchange); override;
+
+      (* A DX STATION'S SRX_STRING IS ITS CLASS AND 'DX' -- M5b, NY4I
+         2026-10-02 (design 7.10, Q20), as for ARRL Field Day; this class owns
+         its own copy (design 1.4). *)
+      function FormatADIFReceivedExchange(const aQso: ContestExchange;
+                                          aExchangeCarriesRST: boolean): string; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   protected
+      (* THE SUMMARY SHEET AND THE CABRILLO HEADER -- M9a. *)
+      function GetSummarySheet: TSummarySheetLayout; override;
+      function GetRequiresCabrilloLocation: boolean; override;
+   public
+      (* THE CANONICAL RECEIVED EXCHANGE -- see
+         TContestBase.CanonicalReceivedExchange (M9a). *)
+      function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
+      (* THE CABRILLO HEADER -- M9a.
+
+         THE MODE COLUMN IS THE BASE'S (Q54, NY4I 2026-10-16): FM is a valid
+         Cabrillo mode and the WFD rules list it, so an FM contact is written
+         `FM`, not `PH`. The override that wrote PH (D7's PostUnit test,
+         moved here at M9a) is deleted. Scoring is unchanged -- an FM contact
+         still scores as phone in CalculateQSOPoints; that is the points
+         rule, not the mode column. *)
+      function CabrilloHeaderLinesBeforeTag(const aTagName: string;
+                                            const aTagValue: string;
+                                            const aStation: TStationContext): string; override;
+   public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
+      (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
+      function CountryMode: CountryModeType; override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesDomesticQTH: boolean; override;
    end;
 
 implementation
 
 uses
-   SysUtils, uTR4WStrings, uContestRegistry;
+   uCabrilloExchange,
+   uExchangeFields,
+   SysUtils, uTR4WStrings, uContestRegistry,
+   (* EmitADIFField -- the tag spellings are ADIF's. *)
+   uADIF,
+   (* STATE from the worked station's section -- a leaf, lifted at M4. *)
+   uARRLSections,
+   uCanonicalExchange;
 
+(* ONE POINT FOR PHONE (FM INCLUDED), TWO OTHERWISE.
+
+   (The DX multiplier this comment described -- DXCC without the ARRL
+   sections, M7a -- is gone: Q38, see HasDXMultiplier.) *)
 procedure TContestWinterFieldDay.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    if aQso.Mode in [Phone, FM] then
@@ -107,6 +194,46 @@ begin
    else
       begin
       aQso.QSOPoints := 2;
+      end;
+end;
+
+(* THE BAND-MODE MULTIPLIER: one for each band from 160 m to 1296 MHz and
+   each of digital, CW and phone that has a QSO -- read from the QSO counts,
+   which FM already joins to phone. Transcribed from LogEdit.TotalScore, which
+   read the same counts from the totals window's copy of them (QTotals); the
+   score now reads the counts themselves (TScoreTotals.QSOs), which that copy
+   is taken from. The power factor is the entrant's CATEGORY-POWER, the value
+   TotalScore read through Settings.Contest.CategoryPower. *)
+function TContestWinterFieldDay.CombineWithMultipliers(const aTotals: TScoreTotals): longint;
+var
+   b: BandType;
+   bandModes: longint;
+begin
+   bandModes := 0;
+   for b := Low(BandType) to Band1296 do
+      begin
+      if aTotals.QSOs[b, Digital] > 0 then
+         begin
+         inc(bandModes);
+         end;
+      if aTotals.QSOs[b, CW] > 0 then
+         begin
+         inc(bandModes);
+         end;
+      if aTotals.QSOs[b, Phone] > 0 then
+         begin
+         inc(bandModes);
+         end;
+      end;
+
+   Result := bandModes * ContestPoints(aTotals);
+   if Station.MyPower = cpLOW then
+      begin
+      Result := Result * 2;
+      end
+   else if Station.MyPower = cpQRP then
+      begin
+      Result := Result * 5;
       end;
 end;
 
@@ -138,31 +265,71 @@ end;
    log a robot scorer reads wrongly.
 
    THE RECEIVED QTH IS THE QSO'S OWN, not the his-QTH the exporter selected.
-   The legacy arm says so with an `if Contest in [ARRLFIELDDAY, WINTERFIELDDAY]`
+   The legacy arm said so with an `if Contest in [ARRLFIELDDAY, WINTERFIELDDAY]`
    that overwrote csQTHString just before use (issue 407) -- one more contest
-   test, now expressed by simply not using the parameter. *)
-function TContestWinterFieldDay.GetFormatsExchange: boolean;
-begin
-   Result := True;
-end;
-
-function TContestWinterFieldDay.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                       const aQso: ContestExchange;
-                                       const aRSTSent: string): string;
+   test, now expressed by simply not using the parameter. That branch was
+   DELETED 2026-09-29, and at M4 (2026-10-01) the shared
+   ClassDomesticOrDXQTHExchange arm went too: only the two Field Days run this
+   exchange, and both format their own (inventory D4). *)
+function TContestWinterFieldDay.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                        const aQso: ContestExchange;
+                                                        const aCtx: TCabrilloQSOContext): string;
 begin
    Result := Format('%-3s %-7s ', [aMy.MyFDClass, aMy.MySection]);
 end;
 
-function TContestWinterFieldDay.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                           const aQso: ContestExchange;
-                                           const aRSTReceived: string;
-                                           const aHisQTH: string): string;
+function TContestWinterFieldDay.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                            const aQso: ContestExchange;
+                                                            const aCtx: TCabrilloQSOContext): string;
 begin
    Result := Format('%-3s %-7s', [string(aQso.ceClass), string(aQso.QTHString)]);
 end;
 
-function TContestWinterFieldDay.FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                   const aQso: ContestExchange): string;
+(* THE WORKED STATION'S ADIF FIELDS -- M4, 2026-10-01: the arm postunit's
+   EmitContestSpecificTailForExport kept for ARRLFIELDDAY and WINTERFIELDDAY,
+   moved here, and copied into uContestARRLFieldDay (design 1.4: the two Field Days diverge,
+   so each owns its copy).
+
+   DX IS NEVER AN ARRL SECTION. NY4I, 2026-10-01: a DX station sends its
+   class and 'DX'; that goes in the section POSITION of the Cabrillo line
+   (FormatCabrilloReceivedExchange writes QTHString there) but never into
+   ADIF ARRL_SECT -- "be explicit about the source and never call DX an ARRL
+   section". So a QSO whose QTH is 'DX' writes no ARRL_SECT, no STATE and no
+   DXCC.
+
+   IT WRITES ITS CLASS, SINCE M5b. NY4I, 2026-10-02 (design 7.10, Q20):
+   "CLASS is whatever was logged (usually 1D); ARRL_SECT is never written for
+   DX". The arm wrote no CLASS for a DX station, although one sends a class.
+
+   DXCC 291 and 1 are hard-coded as the arm had them (ny4i): a K section is
+   in the US and a VE section in Canada. *)
+function TContestWinterFieldDay.EmitADIFContestFields(const aQso: ContestExchange): string;
+begin
+   Result := '';
+   if aQso.QTHString = 'DX' then
+      begin
+      Result := EmitADIFField('CLASS', string(aQso.ceClass));
+      Exit;
+      end;
+
+   if aQso.QTH.CountryID = 'K' then
+      begin
+      Result := Result + EmitADIFField('DXCC', '291');
+      Result := Result + EmitADIFField('STATE',
+         StateFromARRLSection(string(aQso.QTHString)));
+      end
+   else if aQso.QTH.CountryID = 'VE' then
+      begin
+      Result := Result + EmitADIFField('DXCC', '1');
+      Result := Result + EmitADIFField('STATE',
+         StateFromARRLSection(string(aQso.QTHString)));
+      end;
+   Result := Result + EmitADIFField('ARRL_SECT', string(aQso.QTHString));
+   Result := Result + EmitADIFField('CLASS', string(aQso.ceClass));
+end;
+
+function TContestWinterFieldDay.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                                    const aQso: ContestExchange): string;
 begin
    Result := Format('%-3s %-7s ', [aMy.MyFDClass, aMy.MySection]);
 end;
@@ -170,6 +337,239 @@ end;
 function TContestWinterFieldDay.GetDisplayName: string;
 begin
    Result := 'Winter Field Day';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestWinterFieldDay.GetCabrilloName: string;
+begin
+   Result := 'WFD';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestWinterFieldDay.GetADIFContestId: string;
+begin
+   Result := 'WFD';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestWinterFieldDay.GetFriendlyName: string;
+begin
+   Result := 'Winter Field Day';
+end;
+
+function TContestWinterFieldDay.GetWA7BNMId: integer;
+begin
+   Result := 421;
+end;
+
+function TContestWinterFieldDay.GetSubmissionEmail: string;
+begin
+   Result := 'wfda@winterfieldday.com';
+end;
+
+function TContestWinterFieldDay.GetDomesticFileName: string;
+begin
+   Result := 'arrlsect';
+end;
+
+function TContestWinterFieldDay.GetExchangeKind: ExchangeType;
+begin
+   Result := ClassDomesticOrDXQTHExchange;
+end;
+
+function TContestWinterFieldDay.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsClassQTH;
+end;
+
+function TContestWinterFieldDay.ParseReceivedExchangeFormat(const aText: string;
+                                                            aParsers: TExchangeParsers;
+                                                            var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseClassDomesticOrDXQTH(aText, aExch);
+end;
+
+function TContestWinterFieldDay.ExchangeCarriesDomesticQTH: boolean;
+begin
+   Result := True;
+end;
+
+function TContestWinterFieldDay.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode, cfVHFBandsEnabled];
+end;
+
+(* THE SECTION, FROM ARRL_SECT -- BUT AN ABSENT TAG IS NOT AN EMPTY SECTION.
+   D7 writes ARRL_SECT for Sweepstakes and does not write it for Winter Field
+   Day -- that log carries the section in <QTH> alone. Assigning it
+   unconditionally ERASED a section the generic import had already read
+   correctly, on 1310 of the 1316 QSOs in the corpus's winter_fd set. So
+   ARRL_SECT wins when it is present, because it is the unambiguous field;
+   otherwise whatever <QTH> supplied stands, and the domestic multiplier is
+   taken from it.
+
+   N1MM WRITES THE CLASS IN APP_N1MM_EXCHANGE1 instead of the standard CLASS
+   tag. It is read HERE, after the whole record, so the order the two tags
+   arrive in no longer decides anything: the standard CLASS wins when the
+   record has it, and N1MM's tag fills in a record that has none. (Until M5a
+   whichever tag came LAST won, and the N1MM tag was read only when it came
+   after CONTEST_ID.)
+
+   DX IS NOT A SECTION, ON THE WAY IN EITHER -- M5b, design Q25, as for ARRL
+   Field Day: a QTH of 'DX', in <QTH> or in another logger's ARRL_SECT, stays
+   the QSO's QTH and is never made its domestic QTH -- what the live parse
+   does. Until M5b the import alone made it a section. *)
+procedure TContestWinterFieldDay.ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                             const aSession: TADIFImportSession;
+                                             var aExch: ContestExchange);
+begin
+   if UpperCase(Trim(aTemps.ARRL_Sect)) = 'DX' then
+      begin
+      aExch.QTHString := 'DX';
+      end
+   else if aTemps.ARRL_Sect <> '' then
+      begin
+      aExch.DomesticQTH := ShortString(aTemps.ARRL_Sect);
+      aExch.QTHString   := ShortString(aTemps.ARRL_Sect);
+      end
+   else if UpperCase(Trim(string(aExch.QTHString))) = 'DX' then
+      begin
+      aExch.QTHString := 'DX';
+      end
+   else if aExch.QTHString <> '' then
+      begin
+      aExch.DomesticQTH := aExch.QTHString;
+      end;
+
+   if (aExch.ceClass = '') and (aTemps.N1MM_Exchange1 <> '') then
+      begin
+      aExch.ceClass := ShortString(UpperCase(aTemps.N1MM_Exchange1));
+      end;
+end;
+
+function TContestWinterFieldDay.FormatADIFReceivedExchange(const aQso: ContestExchange;
+                                                           aExchangeCarriesRST: boolean): string;
+begin
+   if aQso.QTHString = 'DX' then
+      begin
+      Result := Trim(string(aQso.ceClass) + ' DX');
+      end
+   else
+      begin
+      Result := inherited FormatADIFReceivedExchange(aQso, aExchangeCarriesRST);
+      end;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestWinterFieldDay.DescribeSession(const aStation: TStationContext;
+                                                 aSession: TSessionDefaults);
+begin
+   aSession.WARCEnabled := False;
+   aSession.SetCQMemory(CW, smkF1, 'CQ^WFD \ \ TEST');
+   aSession.SetCQMemory(CW, smkF2, 'CQ^WFD CQ^WFD \ \ TEST');
+   aSession.CQExchangeCW := ' ' + aStation.MyFDClass + ' ' + aStation.MySection;
+   aSession.SPExchangeCW := aStation.MyFDClass + ' ' + aStation.MySection;
+   aSession.QSLCW := '73 \ WFD';
+
+   (* THE DX MULTIPLIER IS THE CLASS'S -- see HasDXMultiplier and
+      DXMultiplierKey (the DX kind is deleted, M11 S4 part 2). It was
+      restated here, to overwrite a DX MULTIPLIER line written before the
+      CONTEST line; that setting retired at M10 S2, so the restatement went
+      at M11 S2 (plan 1.3). *)
+   aSession.AddDomesticCountries(DomesticCountriesARRLSections);
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for ARRLFIELDDAY.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestWinterFieldDay.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskField(ncfMyFDClass);
+   aPrompts.AskField(ncfMySection);
+end;
+
+(* THE SUMMARY SHEET COUNTS ONE MULTIPLIER FOR EACH BAND AND MODE WORKED --
+   PostUnit's two WINTERFIELDDAY tests in WriteScoreInformationToSummarySheet,
+   moved here at M9a (2026-10-02): each multiplier column of a band/mode row
+   shows 1, and the total row shows how many rows there were. *)
+function TContestWinterFieldDay.GetSummarySheet: TSummarySheetLayout;
+begin
+   Result := inherited GetSummarySheet;
+   Result.MultiplierPerBandModeRow := True;
+end;
+
+(* THE CABRILLO FILE IS NOT STARTED WITHOUT A LOCATION -- PostUnit's guard,
+   which named ARRL 10 and this contest (M9a). The section comes from it. *)
+function TContestWinterFieldDay.GetRequiresCabrilloLocation: boolean;
+begin
+   Result := True;
+end;
+
+(* THE SECTION AND THE CLASS, BEFORE THE LOCATION LINE -- PostUnit's
+   WINTERFIELDDAY test in the header writer, moved here at M9a: the sponsor's
+   robot reads ARRL-SECTION (the location) and X-EXCHANGE (MY FD CLASS). *)
+function TContestWinterFieldDay.CabrilloHeaderLinesBeforeTag(const aTagName: string;
+                                                             const aTagValue: string;
+                                                             const aStation: TStationContext): string;
+begin
+   Result := '';
+   if aTagName = 'LOCATION' then
+      begin
+      Result := 'ARRL-SECTION: ' + aTagValue + #13#10 +
+                'X-EXCHANGE: ' + aStation.MyFDClass + #13#10;
+      end;
+end;
+
+(* THE CANONICAL RECEIVED EXCHANGE -- uExchangeBuilder's arm for this
+   contest, moved here at M9a (2026-10-02): the class and the section (or
+   DX). The arm named ARRLFIELDDAY and WINTERFIELDDAY; each holds its own
+   copy (design 1.4). See TContestBase.CanonicalReceivedExchange; the
+   caller collapses the whitespace. *)
+function TContestWinterFieldDay.CanonicalReceivedExchange(const aQso: ContestExchange): string;
+begin
+   Result := Trim(string(aQso.ceClass)) + ' ' + Trim(string(aQso.QTHString));
+end;
+
+(* NO DX MULTIPLIER, AT ANY STATION -- Q38, NY4I 2026-10-15: "Winter FD does
+   not count DXCC multipliers or at least it did not in D7." D7 TRACKED them
+   -- FCONTEST.PAS:414 set ActiveDXMult := ARRLDXCCWithNoARRLSections, so the
+   multiplier sheet and the remaining-multiplier window counted DXCC
+   countries -- but never SCORED them: the score is points x band-modes x
+   the power factor (CombineWithMultipliers). The ruling removes the tracking
+   too, as Field Day has none (Q1). This said True, the trait the class
+   stated (`ARRLDXCCWithNoARRLSections`) until the kind was deleted at M11 S4
+   part 2; its DXMultiplierKey (every country but the ARRL section ones) went
+   with it, so the base answers "no key". No score moves; the multiplier
+   displays do. *)
+function TContestWinterFieldDay.HasDXMultiplier: boolean;
+begin
+   Result := False;
+end;
+
+(* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
+   DXCC only, at every station. *)
+function TContestWinterFieldDay.CountryMode: CountryModeType;
+begin
+   Result := ARRLCountryMode;
+end;
+
+
+(* THE DOMESTIC QTH IS LOOKED UP IN THIS CONTEST'S DOMESTIC FILE, at every
+   station -- M11 S6 part 1b, 2026-10-14. It was the session's
+   `= DomesticFile` (the trait); see TContestBase.UsesDomesticFile. *)
+function TContestWinterFieldDay.UsesDomesticFile: boolean;
+begin
+   Result := True;
 end;
 
 initialization

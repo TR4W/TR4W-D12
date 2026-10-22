@@ -1,0 +1,403 @@
+(*
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+
+ This file is part of TR4W  (SRC)
+
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+ *)
+
+(* THE EXCHANGE RULES EVERY CONTEST STATES, AT STATIONS THE CONTEST MATRIX
+  DOES NOT RUN -- M11 S7, 2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S7).
+
+  WHY IT EXISTS. S7 moves the RULES that the engine decided by comparing the
+  session's exchange SHAPE (ContestSession.Exchange = X) into the classes:
+  - is a call's /suffix a rover's county? (MainUnit's two rover routines --
+    the RSTDomesticQTH, RSTQTH and RSTDomesticOrDXQTH shapes, 25 contests);
+  - does an S&P entry carry several QTHs? (MainUnit.ReturnInSAPOpMode -- the
+    RSTDomesticQTH and RSTQTH shapes, 21 contests);
+  - may the exchange be blank? (ParametersOkay and LOGSTUFF.ProcessExchange
+    -- RSTNameAndQTH and RSTAndPOTAPark: BWQP, General QSO, POTA);
+  - does the zone exchange carry the sent state? (FCONTEST's zone messages --
+    RSTZoneAndPossibleDomesticQTH: CQ WW RTTY);
+  - is a typed park looked up? (MainUnit.ExchangeWindowChange --
+    RSTAndPOTAPark: POTA, whose OffersParkTools already said so);
+  - does the final score ignore the multipliers? (TContestBase.CombineScore
+    -- the FISTS exchange: FISTS).
+  Most of those sites are UI paths no oracle runs, and the matrix's stations
+  do not reach the station branches (an entrant inside a party's host state,
+  a Dutch station in the PACC, a KH6 station in ARRL 160 and the ARRL DX).
+
+  HOW THE LITERALS WERE MADE. Laid out by hand from each class's trait and
+  DescribeSession, and RUN GREEN AGAINST THE OLD CODE before anything moved:
+  the program's answer was then the old compare, frozen here (LegacyAnswer),
+  on the session shape uTestContestKindPin.Kinds resolves -- the trait, and
+  DescribeSession over it -- exactly what the engine compared. Then the move,
+  and the same tables green against the classes.
+
+  THE CROSS-CHECK STAYS UNTIL S9 DELETES THE SHAPE: every ContestType at
+  every roster station, the class's answer against the frozen compare --
+  for every rule BUT THE ROVER, which no longer follows the shape (below).
+
+  NEVER REGENERATE IT TO CLEAR A FAILURE -- the uTestContestKindPin rule. A
+  failure means a contest's exchange rule changed.
+
+  THE ROVER SET CHANGED ON PURPOSE -- NY4I's ruling on Q94 with Q90,
+  2026-10-14: "yes QSO parties allow it but in any contest NY4I/7 or
+  VP9/NY4I is a valid call." A /suffix is a county rover only in a QSO
+  party. So every state party strips (California, Colorado, Minnesota, Ohio,
+  Pennsylvania and Virginia STARTED), 7QP, NEQP and IN7QPNE keep it, County
+  Hunter keeps it (a recorded decision, not his ruling), and the ARRL DX x2,
+  ARRL 160, PACC, LABRE, TOEC and ALRS UA1DZ Cup STOPPED. The literals
+  below were S7's transcription (25, with station branches for the ARRL DX
+  and PACC) until then; they are the ruling's set now (24, at every
+  station). *)
+unit uTestExchangeRules;
+
+{$I ..\..\src\tr4w.inc}
+
+interface
+
+uses
+   uTR4WTestFramework;
+
+type
+   TExchangeRuleTests = class(TTestCase)
+   public
+      procedure RunAllTests; override;
+   private
+      procedure Test_EveryContestStatesItsPinnedExchangeRules;
+      procedure Test_ExchangeRulesAgreeWithTheSessionShape;
+      procedure Test_FISTSScoresItsPointsAlone;
+   end;
+
+implementation
+
+uses
+   SysUtils,
+   VC,
+   uContestBase,
+   uContestRegistry,
+   uTestContestObjects,
+   uTestContestKindPin;
+
+type
+   (* The entrants. us, ve and dx are the matrix's (dx is German); host is a
+      Massachusetts station inside its party's host state (and in New
+      England); PA a Dutch station, the PACC's own; KH6 a station in an ARRL
+      section country that is neither the USA nor Canada -- where ARRL 160
+      and the ARRL DX part company. *)
+   TPinStation = (psUS, psVE, psDX, psHost, psPA, psKH6);
+
+   (* The five yes/no rules S7 moved. The FISTS score has its own test. *)
+   TExchangeRule = (erRoverCounty, erSeveralQTHs, erBlankExchange,
+                    erStateAfterZone, erParkLookup);
+
+   TStationRow = record
+      Call: string;
+      Country: string;
+      Continent: ContinentType;
+      State: string;
+      InHostState: boolean;
+   end;
+
+const
+   STATIONS: array[TPinStation] of TStationRow = (
+      (Call: 'K0AAA';  Country: 'K';   Continent: NorthAmerica; State: 'KS'; InHostState: False),
+      (Call: 'VE3AAA'; Country: 'VE';  Continent: NorthAmerica; State: 'ON'; InHostState: False),
+      (Call: 'DL1AAA'; Country: 'DL';  Continent: Europe;       State: '';   InHostState: False),
+      (Call: 'K1AAA';  Country: 'K';   Continent: NorthAmerica; State: 'MA'; InHostState: True),
+      (Call: 'PA3AAA'; Country: 'PA';  Continent: Europe;       State: '';   InHostState: False),
+      (Call: 'KH6AAA'; Country: 'KH6'; Continent: Oceania;      State: '';   InHostState: False)
+   );
+
+   RULE_NAMES: array[TExchangeRule] of string = (
+      'strips a rover county', 'logs several QTHs from one entry',
+      'accepts a blank exchange', 'sends the state after the zone',
+      'looks a typed park up'
+   );
+
+   (* THE CONTESTS THAT ANSWER EACH RULE AT EVERY STATION. The station
+      branches are PinnedAnswer's. *)
+   (* THE ROVER: every QSO party, and County Hunter -- Q94 with Q90,
+      2026-10-14 (see the header). The twenty state parties on
+      TContestStateQSOPartyBase, the three multi-state parties, County
+      Hunter. *)
+   ROVER_EVERYWHERE = [
+      ArizonaQsoParty, BCQP, CALQSOPARTY, COLORADOQSOPARTY, DELAWAREQSOPARTY, NEBRASKAQSO,
+      FLORIDAQSOPARTY, IDAHOQSOPARTY, INQSOPARTY, MICHQSOPARTY, MINNQSOPARTY,
+      MOQSOPARTY, NCQSOPARTY, NYQP, OHIOQSOPARTY, PAQSOPARTY,
+      TENNESSEEQSOPARTY, TEXASQSOPARTY, VAQP, WISCONSINQSOPARTY, SALMONRUN,
+      SEVENQP, NEWENGLANDQSO, IN7QPNE,
+      COUNTYHUNTER];
+
+   SEVERAL_QTHS_EVERYWHERE = [
+      COUNTYHUNTER, MICHQSOPARTY, MOQSOPARTY, NCQSOPARTY, TOEC,
+      WISCONSINQSOPARTY, NYQP, TENNESSEEQSOPARTY, ALRS_UA1DZ_CUP, INQSOPARTY,
+      BCQP, IN7QPNE];
+
+   BLANK_EXCHANGE_EVERYWHERE = [BWQP, GENERALQSO, POTA];
+
+(* THE OLD COMPARE, FROZEN -- each site's test of the session shape, as it
+   stood before S7. *)
+function LegacyAnswer(aRule: TExchangeRule; aShape: ExchangeType): boolean;
+begin
+   case aRule of
+      erRoverCounty:
+         begin
+         Result := (aShape = RSTDomesticQTHExchange) or
+                   (aShape = RSTQTHExchange)         or
+                   (aShape = RSTDomesticOrDXQTHExchange);
+         end;
+      erSeveralQTHs:
+         begin
+         Result := (aShape = RSTDomesticQTHExchange) or
+                   (aShape = RSTQTHExchange);
+         end;
+      erBlankExchange:
+         begin
+         Result := aShape in [RSTNameAndQTHExchange, RSTAndPOTAPark];
+         end;
+      erStateAfterZone:
+         begin
+         Result := aShape = RSTZoneAndPossibleDomesticQTHExchange;
+         end;
+   else
+      begin
+      Result := aShape = RSTAndPOTAPark;
+      end;
+   end;
+end;
+
+function PinStation(aStation: TPinStation; aContest: ContestType): TStationContext;
+begin
+   Result := MatrixStation(STATIONS[aStation].Call, STATIONS[aStation].Country,
+                           STATIONS[aStation].Continent, STATIONS[aStation].State,
+                           'DX', '', STATIONS[aStation].InHostState,
+                           SessionContestName(aContest, STATIONS[aStation].InHostState));
+end;
+
+function Who(aContest: ContestType; aStation: TPinStation): string;
+begin
+   Result := string(ContestTypeSA[aContest]) + ' at ' + STATIONS[aStation].Call;
+end;
+
+(* WHAT THE PROGRAM ANSWERS -- what each engine site asks of the contest:
+   MainUnit's rover routines, ReturnInSAPOpMode, ParametersOkay and
+   LOGSTUFF.ProcessExchange through the nil-safe Contest... functions;
+   FCONTEST and ExchangeWindowChange of the contest's identity, which a
+   classless contest's is a plain TContestBase answering False. BEFORE THE
+   MOVE it returned the frozen old compare on the session shape Kinds
+   resolves -- the run that made the literals. *)
+function ProgramAnswer(aRule: TExchangeRule;
+                       aContest: ContestType;
+                       const aStation: TStationContext): boolean;
+var
+   obj: TContestBase;
+begin
+   obj := MakeContestOrNil(aContest, aStation);
+   try
+      case aRule of
+         erRoverCounty:
+            begin
+            Result := ContestStripsRoverCountyFromCall(obj);
+            end;
+         erSeveralQTHs:
+            begin
+            Result := ContestLogsSeveralQTHsFromOneEntry(obj);
+            end;
+         erBlankExchange:
+            begin
+            Result := ContestAcceptsBlankExchange(obj);
+            end;
+         erStateAfterZone:
+            begin
+            Result := (obj <> nil) and obj.SendsStateAfterZone;
+            end;
+      else
+         begin
+         Result := (obj <> nil) and obj.OffersParkTools;
+         end;
+      end;
+   finally
+      obj.Free;
+      end;
+end;
+
+(* THE PINNED ANSWER: the sets above, and the station branches -- each the
+   test the contest's DescribeSession chooses its shape by. *)
+function PinnedAnswer(aRule: TExchangeRule;
+                      aContest: ContestType;
+                      aStation: TPinStation): boolean;
+var
+   notWOrVE: boolean;
+   notSectionCountry: boolean;
+begin
+   (* The ARRL DX: a W or VE entrant sends power. *)
+   notWOrVE := not (aStation in [psUS, psVE, psHost]);
+   (* ARRL 160: an entrant in an ARRL section country sends a section or
+      takes DX. *)
+   notSectionCountry := aStation in [psDX, psPA];
+   case aRule of
+      erRoverCounty:
+         begin
+         (* No station branch since Q94: the ARRL DX and PACC branches went
+            with their strips. *)
+         Result := aContest in ROVER_EVERYWHERE;
+         end;
+      erSeveralQTHs:
+         begin
+         Result := (aContest in SEVERAL_QTHS_EVERYWHERE)                    or
+                   ((aContest in [SEVENQP, ArizonaQsoParty, SALMONRUN,
+                                  TEXASQSOPARTY]) and (aStation <> psHost))  or
+                   ((aContest = ARRL160) and notSectionCountry)             or
+                   ((aContest in [ARRLDXCW, ARRLDXSSB]) and notWOrVE)       or
+                   ((aContest = NEWENGLANDQSO) and (aStation <> psHost))    or
+                   ((aContest = PACC) and (aStation <> psPA));
+         end;
+      erBlankExchange:
+         begin
+         Result := aContest in BLANK_EXCHANGE_EVERYWHERE;
+         end;
+      erStateAfterZone:
+         begin
+         Result := aContest = CQWWRTTY;
+         end;
+   else
+      begin
+      Result := aContest = POTA;
+      end;
+   end;
+end;
+
+procedure TExchangeRuleTests.Test_EveryContestStatesItsPinnedExchangeRules;
+var
+   r: TExchangeRule;
+   s: TPinStation;
+   c: ContestType;
+begin
+   BeginTest('Test_EveryContestStatesItsPinnedExchangeRules');
+   (* THE LEGACY CONTESTS, FROZEN: PinnedAnswer for every rule, contest by
+      contest, at every roster station. The tables of how many contests
+      answered each rule at each station (COUNTS) and at some station
+      (COUNT_ANYWHERE) are deleted (Q108 S1): they were counted from the sets
+      and branches PinnedAnswer reads, so they restated them, and every QSO
+      party added moved a whole row by hand. A contest that gains or loses a
+      rule fails here by name. That the rover strip belongs to a QSO party
+      and to nothing else is an invariant over every registered contest,
+      uTestContestFactory.Test_EveryQSOPartySplitsARoverCallOnExport. *)
+   for r := Low(TExchangeRule) to High(TExchangeRule) do
+      begin
+      for s := Low(TPinStation) to High(TPinStation) do
+         begin
+         for c := Low(ContestType) to High(ContestType) do
+            begin
+            CheckEquals(BoolToStr(PinnedAnswer(r, c, s), True),
+                        BoolToStr(ProgramAnswer(r, c, PinStation(s, c)), True),
+                        Who(c, s) + ' ' + RULE_NAMES[r]);
+            end;
+         end;
+      end;
+end;
+
+(* THE CROSS-CHECK: the program's answer against the frozen old compare, for
+   every ContestType at every roster station. Until S9 deletes the shape.
+
+   NOT THE ROVER (erRoverCounty, the first rule), since Q94 with Q90
+   (2026-10-14): NY4I ruled it by what the contest IS -- a QSO party -- not
+   by how its exchange is spelled, so it disagrees with the shape on
+   purpose for thirteen contests (six parties gained it, seven non-parties
+   lost it). Test_EveryContestStatesItsPinnedExchangeRules
+   holds it instead. *)
+procedure TExchangeRuleTests.Test_ExchangeRulesAgreeWithTheSessionShape;
+var
+   r: TExchangeRule;
+   s: TPinStation;
+   c: ContestType;
+   station: TStationContext;
+   checked: integer;
+begin
+   BeginTest('Test_ExchangeRulesAgreeWithTheSessionShape');
+   checked := 0;
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      for s := Low(TPinStation) to High(TPinStation) do
+         begin
+         station := PinStation(s, c);
+         for r := Succ(erRoverCounty) to High(TExchangeRule) do
+            begin
+            CheckEquals(BoolToStr(LegacyAnswer(r, Kinds(c, station).Exchange), True),
+                        BoolToStr(ProgramAnswer(r, c, station), True),
+                        Who(c, s) + ' ' + RULE_NAMES[r] + ' as its session shape did');
+            Inc(checked);
+            end;
+         end;
+      end;
+   CheckEquals((Ord(High(ContestType)) + 1) * (Ord(High(TPinStation)) + 1) *
+               Ord(High(TExchangeRule)), checked,
+               'contest x station x rule answers compared');
+end;
+
+(* THE FISTS FINAL SCORE IS ITS POINTS ALONE, multipliers or not -- a D7
+   note: "Ugly fix for FISTS because mults don't work". Ten QSO points and one
+   QTC point against nine multipliers; CQ WW CW, which multiplies, beside it.
+   BEFORE THE MOVE the session shape each resolved (Kinds) was handed in as
+   TScoreTotals.SessionExchange, which went with the move: FISTS states its
+   own CombineWithMultipliers now. *)
+procedure TExchangeRuleTests.Test_FISTSScoresItsPointsAlone;
+var
+   s: TPinStation;
+   t: TScoreTotals;
+   obj: TContestBase;
+   station: TStationContext;
+begin
+   BeginTest('Test_FISTSScoresItsPointsAlone');
+   for s := Low(TPinStation) to High(TPinStation) do
+      begin
+      FillChar(t, SizeOf(t), 0);
+      t.QSOPoints := 10;
+      t.QTCPoints := 1;
+      t.ScoredBand := AllBands;
+      t.SessionCountsMultipliers := True;
+      t.Mults[AllBands, Both, rmDX] := 9;
+
+      station := PinStation(s, FISTS);
+      obj := ContestClassFor(FISTS).Create(ContestHandleOf(FISTS));
+      try
+         obj.SetStation(station);
+         CheckEquals(11, obj.CombineScore(t), Who(FISTS, s) + ' scores its points alone');
+      finally
+         obj.Free;
+         end;
+
+      station := PinStation(s, CQWWCW);
+      obj := ContestClassFor(CQWWCW).Create(ContestHandleOf(CQWWCW));
+      try
+         obj.SetStation(station);
+         CheckEquals(99, obj.CombineScore(t), Who(CQWWCW, s) + ' multiplies');
+      finally
+         obj.Free;
+         end;
+      end;
+end;
+
+procedure TExchangeRuleTests.RunAllTests;
+begin
+   Test_EveryContestStatesItsPinnedExchangeRules;
+   Test_ExchangeRulesAgreeWithTheSessionShape;
+   Test_FISTSScoresItsPointsAlone;
+end;
+
+end.

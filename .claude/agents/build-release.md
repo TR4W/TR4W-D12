@@ -2,6 +2,7 @@
 name: build-release
 description: Build, lint, test infrastructure and releases — FullBuild.ps1, the build and lint scripts, the three-platform builds, the self-hosted CI runners, the NSIS installer, versioning and GitHub releases. Use for build failures, toolchain problems, adding or changing a lint, CI workflow work, or cutting a release.
 tools: Read, Grep, Glob, Bash, Edit, Write
+model: sonnet
 ---
 
 You own the machinery that turns this tree into something an operator can run.
@@ -26,6 +27,7 @@ only, cannot build a Win32 target).
 .\build\Build-App.ps1            # full rebuild (-B), the safe default
 .\build\Build-App.ps1 -Incremental
 .\build\Build-Tests.ps1 -Run
+.\build\Build-Tests.ps1 -Checked -Run   # -gt -gh; FullBuild.ps1 runs it too
 .\build\Build-Server.ps1
 .\build\Run-Lints.ps1
 ```
@@ -47,6 +49,63 @@ sh tr4w/build/build-unix.sh      # Linux and macOS; build-linux.sh / build-mac.s
 - **The lints and the Edit-QSO round-trip are PowerShell and do not run on Unix.**
   Report them as **not-run**, never as passed.
 
+## The CHECKED unit-test build
+
+`Build-Tests.ps1 -Checked` compiles the same suite with `-gt` (trash locals) and
+`-gh` (heaptrc) into `build-out/tests-checked-<cpu>-<os>/` and
+`test/unit/tr4w_unit_tests_checked.exe` -- never the normal build's paths. It
+fails on a test failure or crash, on heaptrc **corruption** lines ("Wrong
+signature", "Marked memory at ... invalid", "Wrong size", "freed again at"...),
+and on a **missing heaptrc summary** (fail closed). Unfreed blocks are a
+ratchet: `$LEAK_CEILING` in the script, printed every run, lower it when it drops.
+
+- **Do not add `-gl` to the default run.** heaptrc symbolises every unfreed block
+  at exit; with ~13,500 of them that is 9+ minutes under DWARF and effectively
+  forever under stabs. `-Lines` exists to diagnose a corruption report.
+- **Do not add `HEAPTRC=keepreleased=1`.** The suite allocates ~1 GB cumulatively;
+  a 32-bit process never reuses it and dies, and the heap-growth test fails.
+- **`-CR` stays out:** it does not compile vendored `Log4D.pas`.
+- It exists because commit 0ec5d43d's crash (an instance-sized `FillChar` over an
+  old-style object with virtuals; an unassigned managed result) was invisible in
+  a normal build and deterministic here.
+- **heaptrc has a FALSE "freed again" (2026-10-14, found at M10 S2).** Under its
+  default `usecrc` a live block's `sig` is a CRC-32 of size + 16 return
+  addresses + tail, and "released" is the constant `$AAAAAAAA` in the SAME
+  field, tested FIRST. A live block whose CRC is `$AAAAAAAA` is reported
+  "Marked memory at ... released / freed again at" on its first free. The CRC
+  has no heap address in it, so the collision is **fixed per binary** and moves
+  with ANY code change (S2's two new tests triggered it in SettingsFreshInstall
+  before either ran; `-Lines` hid it). **Without `keepreleased` the "was
+  released at" lines are calls[9..16] of the ALLOCATION trace, not a release
+  trace** -- do not chase them.
+  - `HeaptrcReport.ps1` recomputes the signature from the printed size and
+    addresses and excuses a report ONLY if it is `$AAAAAAAA`; it self-checks
+    against the S2 block every run and fails closed.
+  - The checked run sets `HEAPTRC=nohalt`, because heaptrc's `haltonerror`
+    otherwise ENDS the run on the false positive (exit 1, later suites never
+    run, unfreed count drops). heaptrc then exits 203; the gate accepts 203
+    only with 0 failed tests and every report excused.
+  - **Never "fix" it with `usecrc := false`:** the tail-overrun check exists
+    only inside the CRC.
+  - Ruled out on the way, with instruments in a scratch memory-manager spy:
+    no overrun of any live block, no long-lived thread, no stale or double
+    free within a 400k-free quarantine.
+
+## The language resource is a build input (2026-10-16)
+
+`tr4w/res/tr4w_languages.res` is tracked and linked by the app and the tests.
+`Build-App.ps1` (incremental too) and `Build-Tests.ps1` call
+`Sync-Tr4wLanguageRes` (`build/LanguageResStamp.ps1`): sha256 of every
+`i18n/tr4w_*.po` plus `Make-LanguageRes.ps1` and the helper itself, compared with
+`res/tr4w_languages.res.inputs`; mismatch regenerates (~3 s, byte-identical for
+identical inputs), failure fails the build. **Content, not mtime** -- git sets
+mtimes at checkout. A dirty `.res` + `.inputs` after a build means commit both.
+Linux/macOS cannot run the generator, so `build-unix.sh` stage `languages` runs
+`build/check-language-res.sh` and records FAIL on a stale pair; the release job
+still publishes (it ignores that exit), so READ the summary. Keep the two hash
+definitions (PowerShell and sh) identical. The Lazarus `lclstrconsts` catalogues
+embedded in the `.res` are deliberately not hashed.
+
 ## The ceilings, and the rule about them
 
 `Build-App.ps1` enforces them. **Split a string in ShortString rather than raising
@@ -59,13 +118,54 @@ Add a lint by editing the array in `Run-Lints.ps1` — **one place**. The list
 previously lived only in `tr4w.dproj`'s PreBuildEvent, so it gated msbuild and
 nothing else.
 
+**`Lint-ContestNameTests` is a per-file ratchet** (`$CEILINGS` table in the
+script; `-List` prints the lines, `-Emit` the table, `-SelfTest` the fixture).
+It counts any `ContestType` member (read from `VC.pas`, `DUMMYCONTEST` excepted;
+fails closed under 150 names) used inside a body as a `=`/`<>` operand **whatever the
+other operand is** (`exch.ceContest`, `rec.liContest`, `Contest`...), in an `in [...]`
+set (one per test), or as a label of a **`case` arm (one per arm)** — all outside
+`src\contestFactory\`. It is a token walk with a block stack, not a line regex. When a
+file's count drops, lower its
+ceiling — the script names the files that are below theirs.
+
+**`Lint-NoContestTables` allows ONE table since M10 S8 (2026-10-14):
+`ContestTypeSA`.** `ContestsArray` and `ContestsBooleanArray` left its
+allow-list with their deletion; an allow-listed table not found fails it, so
+the list cannot outlive what it names. **`Lint-DomCoverage` reads the party
+classes now** (each `GetInStateDomesticFileName` literal, floor 22, fails on a
+statement it cannot read) instead of `VC.pas`'s deleted `QSOParties`, and **it
+is in `Run-Lints.ps1` since M10 S8**. It gated FullBuild's installer path from
+2026-08-13 and was LOST, not dropped, when FullBuild was rewritten for FPC the
+same night (`724d53d0` kept it only in the D12 script, deleted later with the
+Delphi files) -- so for two months nothing ran it. That is the general
+lesson: **a rewrite of a build script must carry every gate across, and the
+place to put one is the `Run-Lints.ps1` array**, never a step inline in a
+build script, where it can be lost with the script.
+
+**Two pointer gates (pointer audit P1/P2, 2026-10-16), both over all of
+`tr4w`, both with a fixture and floors:** `Lint-PointerTruncation` fails on a
+cast to a 32-bit-or-narrower integer of `@x`, `Pointer(...)`, `Self`, or a
+name the same file declares with a pointer type -- the narrowing direction
+`64_BIT_TASKLIST`'s old scan could not see, and the x86_64 compiler accepts.
+`Lint-TypedCodePointers` fails on `tCreateThread(@X` and `caAddress: @X`:
+**in Delphi mode `@Routine` is an untyped pointer and FPC 3.2.2 does not
+check it against a procedural parameter** (measured, with or without `{$T+}`),
+so a typed slot is only checked while callers name the routine bare. Add a
+slot to its `$Slots` table when another procedural type is introduced for
+the same reason.
+
 **`Lint-PascalBeginEnd` and `Lint-ChangedPascal` do NOT gate the build.** The
 first runs as a warn-only `PostToolUse` hook; the second is run by hand.
 
 **The `Count-Live*.ps1` scripts are measurements, not gates** — `Count-LiveAsm`,
-`Count-LivePChar`, `Count-LiveMove`. They are not in `Run-Lints` and have no
-ceiling. **Never quote a raw grep in their place**: this tree documents its
-conversions in comments, so a raw count is wrong, and by a lot. All three read
+`Count-LivePChar`, and `Count-LivePointers` (2026-10-16, the
+22-category table that measures every `docs/POINTER_AUDIT.md` packet). They
+are not in `Run-Lints` and have no ceiling. **The exception is
+`Count-LiveMove`** (P15, 2026-10-17): `-Gate` makes it a ratchet
+(`$MOVE_CEILING` in the script, lower it when the count drops, never raise it)
+and `Run-Lints.ps1` runs it that way. **Never quote a raw grep in their
+place**: this tree documents its conversions in comments, so a raw count is
+wrong, and by a lot. All four read
 through `PascalSource.psm1`, never a local regex. A new one takes
 `Get-PascalCodeOnlyText -BlankStrings` when it counts CALLS, since a string
 literal is not a call. It also runs a built-in fixture before it reports a
@@ -157,6 +257,17 @@ something has gone wrong.
 `windows11-ci-d12` (`win-ci`), `linux-ci-build-tr4w` (`linux-ci`), `mac-ci-tr4w`
 (`mac-ci`). **One Windows runner, so queue time looks like slow runs** — a job
 reported at 19m57s ran in ~18s. Check queue time before diagnosing a hang.
+
+**But a job QUEUED while a matching runner shows online and IDLE is not queue
+time** (2026-10-14). The job's `runner_name` stays empty and the runner's
+`_diag/Runner_*.log` shows it listening with no job message. Look for
+`SelfUpdater` failures there: GitHub stops dispatching to a runner that cannot
+update itself, without marking it offline. On win-ci the D12 service ran as
+NETWORK SERVICE and could not write its update marker into system32; it runs
+as LocalSystem now. Recipe in `docs/CI_RUNNER_SETUP.md`, third trap.
+**Keeping the runners working is part of the job** (NY4I, 2026-10-14:
+*"Maintaining the runners is an integral task"*) -- diagnose and fix, then
+document here and in that file, not on the runner.
 
 Apple secrets are **per-repository**. Do not copy credentials from another repo's
 runner.

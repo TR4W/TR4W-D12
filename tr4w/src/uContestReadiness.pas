@@ -33,10 +33,11 @@ unit uContestReadiness;
   that caused it.
 
   DERIVED FROM THE CONTEST'S OWN CONFIGURATION, NEVER FROM A TABLE INDEXED BY
-  CONTEST. FoundContest has just chosen ActiveExchange, ActiveDomesticMult and
-  the rest; those ARE the statement of what this contest asks the operator to
-  send. A hand-typed list of "ARRL DX needs MY COUNTRY" would be a second
-  definition of every contest, free to drift from FCONTEST -- which is the
+  CONTEST. FoundContest has just chosen ActiveExchange, the session's
+  DomesticMult (uContestSession) and the rest; those ARE the statement of
+  what this contest asks the operator to send. A hand-typed list of "ARRL
+  DX needs MY COUNTRY" would be a second definition of every contest, free
+  to drift from FCONTEST -- which is the
   shape this tree has spent a year deleting (CLAUDE.md: the radio tables, the
   config array). Every rule below reads the live configuration.
 
@@ -55,56 +56,19 @@ unit uContestReadiness;
 interface
 
 uses
-   Classes,
-   VC;   // ExchangeType, DomesticMultType
+   Classes;
 
-(* EVERY EXCHANGE THAT SENDS THE OPERATOR'S OWN DOMESTIC QTH.
+(* WHAT THE EXCHANGE CARRIES IS THE CONTEST'S ANSWER -- M11 S9d, 2026-10-15.
 
-  Taken from the arms of FCONTEST's `case ActiveExchange of` that call
-  SetUpRSTMyStateExchange, plus the handlers in LOGSTUFF that compare a
-  received QTH against the domestic table. Exported so a reader can see the
-  rule rather than infer it from the function below. *)
-const
-   DOMESTIC_QTH_EXCHANGES: set of ExchangeType =
-      [ClassDomesticOrDXQTHExchange,
-       NameAndDomesticOrDXQTHExchange,
-       QSONumberAndPossibleDomesticQTHExchange,
-       QSONumberDomesticOrDXQTHExchange,
-       QSONumberDomesticQTHExchange,
-       QSONumberNameDomesticOrDXQTHExchange,
-       QSONumberPrecedenceCheckDomesticQTHExchange,
-       RSTAndDOMESTICQTH,
-       RSTAndQSONumberOrDomesticQTHExchange,
-       RSTDomesticOrDXQTHExchange,
-       RSTDomesticQTHExchange,
-       RSTDomesticQTHOrQSONumberExchange,
-       RSTQSONumberAndDomesticQTHExchange,
-       RSTQSONumberAndPossibleDomesticQTHExchange,
-       RSTQSONumberOrDomesticQTHExchange,
-       RSTZoneAndPossibleDomesticQTHExchange,
-       RSTZoneOrDomesticQTH];
-
-   (* The exchanges whose SENT half is the operator's CQ or ITU zone --
-     SetUpRSTMyZoneExchange's arms in FCONTEST. *)
-   ZONE_EXCHANGES: set of ExchangeType =
-      [QSONumberAndZone,
-       RSTZoneAndPossibleDomesticQTHExchange,
-       RSTZoneExchange,
-       RSTZoneOrSocietyExchange,
-       RSTZoneOrDomesticQTH];
-
-   (* The exchanges whose sent half is the operator's Maidenhead locator. *)
-   GRID_EXCHANGES: set of ExchangeType =
-      [GridExchange,
-       Grid2Exchange,
-       RSTAndGrid3Exchange,
-       RSTAndGridExchange,
-       RSTAndOrGridExchange,
-       QSONumberAndGridSquare,
-       RSTQSONumberAndGridSquareExchange,
-       NameAndPossibleGridSquareExchange,
-       RSTAndSerialNumberAndGridandPossibleMemberNumber,
-       RSTAndGridSquareOrRDAExchange];
+  Three sets of exchange KINDS stood here -- DOMESTIC_QTH_EXCHANGES,
+  ZONE_EXCHANGES and GRID_EXCHANGES -- and the caller handed in the
+  session's kind. Each is the open contest's answer now
+  (TContestBase.ExchangeCarriesDomesticQTH, ExchangeCarriesZone,
+  ExchangeCarriesGridSquare), stated per class for exactly the contests
+  whose session ran a kind in the set, and the caller hands in the three
+  answers. TRANSCRIBED, NOT JUDGED (plan F28): they are RECEIVED kinds
+  standing for what the operator SENDS, and the grid set is not the same
+  as the tree's other two. *)
 
 (* THE RULES, AS A PURE FUNCTION.
 
@@ -115,8 +79,10 @@ const
   aContestActive is False for DUMMYCONTEST -- no contest is set up, so there
   is nothing to be ready for and nothing is reported. *)
 procedure CollectContestSettingsGaps(const aContestActive: boolean;
-                                     const aExchange: ExchangeType;
-                                     const aDomesticMult: DomesticMultType;
+                                     const aCarriesDomesticQTH: boolean;
+                                     const aCarriesZone: boolean;
+                                     const aCarriesGridSquare: boolean;
+                                     const aUsesDomesticFile: boolean;
                                      const aCall: string;
                                      const aCountry: string;
                                      const aState: string;
@@ -135,7 +101,7 @@ procedure CollectContestSettingsGaps(const aContestActive: boolean;
   and a dialog take the sentence; the on-screen error is a main-window
   element a few words wide, so it gets ' (MY COUNTRY is empty)' -- WITH its
   leading space, so an empty attribution appends nothing at all. *)
-function ExchangeModeAttribution(const aExchange: ExchangeType;
+function ExchangeModeAttribution(const aCarriesDomesticQTH: boolean;
                                  const aCountry: string;
                                  const aBrief: boolean): string;
 
@@ -155,8 +121,10 @@ uses
    uAppStrings;
 
 procedure CollectContestSettingsGaps(const aContestActive: boolean;
-                                     const aExchange: ExchangeType;
-                                     const aDomesticMult: DomesticMultType;
+                                     const aCarriesDomesticQTH: boolean;
+                                     const aCarriesZone: boolean;
+                                     const aCarriesGridSquare: boolean;
+                                     const aUsesDomesticFile: boolean;
                                      const aCall: string;
                                      const aCountry: string;
                                      const aState: string;
@@ -200,36 +168,38 @@ begin
      empty MY STATE it silently falls back to SetUpRSTQSONumberExchange -- so
      this reports a substitution that already happens rather than predicting
      one. *)
-   if (aExchange in DOMESTIC_QTH_EXCHANGES) and (Trim(aState) = '') then
+   if aCarriesDomesticQTH and (Trim(aState) = '') then
       begin
       aGaps.Add(SReadinessMyStateMissing);
       end;
 
-   if (aExchange in ZONE_EXCHANGES) and (Trim(aZone) = '') then
+   if aCarriesZone and (Trim(aZone) = '') then
       begin
       aGaps.Add(SReadinessMyZoneMissing);
       end;
 
-   if (aExchange in GRID_EXCHANGES) and (Trim(aGrid) = '') then
+   if aCarriesGridSquare and (Trim(aGrid) = '') then
       begin
       aGaps.Add(SReadinessMyGridMissing);
       end;
 
-   (* A DOMESTIC-FILE CONTEST WITH NO FILE NAMED. DomesticFile is the one
-     DomesticMultType that reads a .DOM, so this is the whole of the rule. *)
-   if (aDomesticMult = DomesticFile) and (Trim(aDomesticFile) = '') then
+   (* A DOMESTIC-FILE CONTEST WITH NO FILE NAMED. aUsesDomesticFile is the
+     contest's own answer (TContestBase.UsesDomesticFile, M11 S6 part 1b) --
+     the caller asks the contest; it was the session's DomesticMultType
+     compared with DomesticFile, the one kind that reads a .DOM. *)
+   if aUsesDomesticFile and (Trim(aDomesticFile) = '') then
       begin
       aGaps.Add(SReadinessDomesticFileMissing);
       end;
 end;
 
-function ExchangeModeAttribution(const aExchange: ExchangeType;
+function ExchangeModeAttribution(const aCarriesDomesticQTH: boolean;
                                  const aCountry: string;
                                  const aBrief: boolean): string;
 begin
    Result := '';
 
-   if aExchange in DOMESTIC_QTH_EXCHANGES then
+   if aCarriesDomesticQTH then
       begin
       if aBrief then
          begin

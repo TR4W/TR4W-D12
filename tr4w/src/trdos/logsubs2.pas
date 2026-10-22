@@ -144,6 +144,8 @@ uses
     'LIGHT'
     );
 procedure SendScoreToUDP;
+function BuildScoreUDPXml(aTotalScore: longint): AnsiString;
+procedure PostScoreToUDP(aTotalScore: longint);
 procedure LogContactToUDP(RXData: ContestExchange); // ny4i
 procedure SendFullLogToHamScore;  // Issue #783 -- enqueue every QSO for RTC resync
 procedure LogEditedContactToUDP(RXData: ContestExchange); // ny4i
@@ -156,7 +158,6 @@ procedure ToggleStereoPin; {KK1L: 6.71}
 procedure OTRSPCommand;
 procedure LogContact(var RXData: ContestExchange; MyComputer: boolean);
 procedure SwapMultDisplay;
-procedure PushLogStringIntoEditableLogAndLogPopedQSO(LogString: ShortString {Str80}; MyQSO: boolean);
 procedure DeleteLastContact;
 //procedure MoveEditableLogIntoLogFile;
 procedure DoAltZ({var WindowString: string { VAR KeyChar: CHAR});
@@ -168,9 +169,6 @@ procedure DupeCheckOnInactiveRadio(Tune: boolean);
 function GotExchange: boolean;
 procedure ProcessExchangeFunctionKey(ExtendedKey: Char);
 procedure ExitProgram(Ask: boolean);
-procedure GoToNextMultBandMapFrequency;
-procedure GoToNextDisplayedBandMapFrequency;
-procedure GoToNextMultDisplayedBandMapFrequency;
 function tAddQSOToLog(RXData: ContestExchange): boolean;
 function ConvertBandTypeToUDPContactBand(band: BandType): string;
 implementation
@@ -202,31 +200,20 @@ uses
     LogStoreAppendQSO. }
   uLogStore,
   { SQsoNotLogged. }
-  uAppStrings;
-procedure PutContactIntoLogFile(LogString: string {Str80});
-
-begin
-
-end;
-procedure PushLogStringIntoEditableLogAndLogPopedQSO(LogString: ShortString {Str80};
-  MyQSO: boolean);
-var
-  RData                                 : ContestExchange;
-
-begin
-
-  //  LogString := VisibleLog.PushLogEntry(LogString);
-     { LogString is now what popped off the top of the editable window }
-  GetRidOfPostcedingSpaces(LogString);
-  if LogString <> '' then
-     begin
-     PutContactIntoLogFile(LogString);
-     if ParseExchangeIntoContestExchange(LogString, RData) then
-        begin
-        ProcessPartialCallAndInitialExchange(RData);
-        end;
-     end;
-end;
+  uAppStrings,
+  (* AddLoggedQSO -- the final score's view of the log, kept with the totals
+     (M6). *)
+  uScoreTotals,
+  (* uContestSession STOOD HERE for the session's domestic kind and its
+     DoingDomesticMults; both are the contest's answers since M11 S6. *)
+  (* ContestIdentity -- the contest's own ADIF id and Cabrillo name for the
+     two UDP broadcasts. *)
+  uContestRegistry,
+  (* ActiveContest, ContestHasGridSquareMultiplier and
+     ContestUsesDomesticFile -- the grid-square rover and QSO-party mobile
+     rules ask the contest (M11 S6). *)
+  uContestBase,
+  uContestFactory;
 procedure ProcessCallWindowCommand(Command: Str80);
 { This procedure gets called if a command in the call window was typed in
   starting with a \ character. }
@@ -639,16 +626,6 @@ begin
   LoadinLog;
   ShowMessage(p);
   //  QuickDisplay(p);
-end;
-procedure LogBackCopy(Seconds: integer);
-var
-  SecString, TempString                 : Str80;
-begin
-  Str(Seconds, SecString);
-  Str(NextSerialToSend, TempString);  // Issue #954
-  TempString := '; Backcopy made for QSO #' + TempString + ' at ' +
-    GetTimeString + ' for ' + SecString + ' seconds.';
-  PushLogStringIntoEditableLogAndLogPopedQSO(TempString, True);
 end;
 // Wait for a thread handle to signal, pumping Windows messages so that
 // cross-thread SendMessage calls (e.g. SetDlgItemText from the polling
@@ -1295,7 +1272,16 @@ var
 
 begin
 //  if not PartialCallMultsEnable then Exit;
-  if ActiveMainWindow <> awCallWindow then if ActiveDomesticMult <> GridSquares then Exit;          
+  (* OUTSIDE THE CALL WINDOW, ONLY WHERE THE MULTIPLIER IS THE GRID SQUARE --
+    the contest says so (TContestBase.HasGridSquareMultiplier, M11 S6 part
+    1); it asked `ContestSession.DomesticMult <> GridSquares`. *)
+  if ActiveMainWindow <> awCallWindow then
+     begin
+     if not ContestHasGridSquareMultiplier(ActiveContest(Contest)) then
+        begin
+        Exit;
+        end;
+     end;
   if length(WindowString) < 2 then Exit;
   if length(WindowString) < 3 then
      begin
@@ -1322,70 +1308,6 @@ begin
     end;
 end;
 
-{KK1L: 6.68}
-procedure GoToNextMultBandMapFrequency;
-
-begin
-  if (CommandUseInactiveRadio) and {KK1L: 6.73}
-    (NextMultiplierEntryInBandMap(InActiveRadioPtr.BandMemory {BandMemory[InactiveRadio]}, InActiveRadioPtr.ModeMemory {ModeMemory[InactiveRadio]})) then
-     begin
-     SetUpBandMapEntry(BandMapCursorData, InactiveRadio)
-     end
-  else
-    if NextMultiplierEntryInBandMap(ActiveBand, ActiveMode) then
-       begin
-       SetUpBandMapEntry(BandMapCursorData, ActiveRadio); {KK1L: Added ActiveRadio}
-       if ActiveWindow = ExchangeWindow then
-          begin
-          //{WLI}                 ClrScr;
-      ExchangeWindowString := '';
-          //        RestorePreviousWindow;
-          end;
-       end;
-end;
-procedure GoToNextDisplayedBandMapFrequency;
-
-begin
-  if (CommandUseInactiveRadio) and {KK1L: 6.73}
-    (NextNonDupeEntryInDisplayedBandMap(InActiveRadioPtr.BandMemory {BandMemory[InactiveRadio]},
-    InActiveRadioPtr.ModeMemory { ModeMemory[InactiveRadio]})) then
-     begin
-     SetUpBandMapEntry(BandMapCursorData, InactiveRadio)
-     end
-  else
-    if NextNonDupeEntryInDisplayedBandMap(ActiveBand, ActiveMode) then
-       begin
-       SetUpBandMapEntry(BandMapCursorData, ActiveRadio); {KK1L: Added ActiveRadio}
-       if ActiveWindow = ExchangeWindow then
-          begin
-          //{WLI}                 ClrScr;
-      ExchangeWindowString := '';
-          //        RestorePreviousWindow;
-          end;
-       end;
-end;
-{KK1L: 6.68}
-procedure GoToNextMultDisplayedBandMapFrequency;
-
-begin
-  if (CommandUseInactiveRadio) and {KK1L: 6.73}
-    (NextMultiplierEntryInDisplayedBandMap(InActiveRadioPtr.BandMemory {BandMemory[InactiveRadio]},
-    InActiveRadioPtr.ModeMemory {ModeMemory[InactiveRadio]})) then
-     begin
-     SetUpBandMapEntry(BandMapCursorData, InactiveRadio)
-     end
-  else
-    if NextMultiplierEntryInDisplayedBandMap(ActiveBand, ActiveMode) then
-       begin
-       SetUpBandMapEntry(BandMapCursorData, ActiveRadio); {KK1L: Added ActiveRadio}
-       if ActiveWindow = ExchangeWindow then
-          begin
-          //{WLI}                 ClrScr;
-      ExchangeWindowString := '';
-          //        RestorePreviousWindow;
-          end;
-       end;
-end;
 function FoundCommand(var SendString: Str160): boolean;
 
 begin
@@ -1556,6 +1478,10 @@ var
 
   TempMode                              : ModeType;
   perfTimeStart, perfTimeStop: TDateTime;
+  (* The active contest, and whether it counts grid squares -- each asked
+    once, below. *)
+  contestRules                          : TContestBase;
+  countsGridSquares                     : boolean;
 begin
   logger.trace('>>>Entering LogContact');
 
@@ -1599,7 +1525,12 @@ begin
   //  if not DDX(VerifyContact) then RXData.QSOPoints := 0;
      //  if not TailEnding then RemoveWindow(PossibleCallWindow);
   //  if Trace then Write('@');
-  if MobileCall(RXData.Callsign) and (ActiveDomesticMult = DomesticFile) and (RXData.DomesticQTH <> '')then    // n4af 4.41.8 Add Q.P. Rover  // 4.98.6
+  (* THE CONTEST, FETCHED ONCE PER QSO for the mobile rewrite and the two
+    grid-square rover tests below -- M11 S6. The rewrite asked
+    `ContestSession.DomesticMult = DomesticFile`; the contest states it now
+    (TContestBase.UsesDomesticFile, part 1b). *)
+  contestRules := ActiveContest(Contest);
+  if MobileCall(RXData.Callsign) and ContestUsesDomesticFile(contestRules) and (RXData.DomesticQTH <> '')then    // n4af 4.41.8 Add Q.P. Rover  // 4.98.6
      begin
      RXData.Callsign := PrecedingString(RXData.Callsign,'/')  + '/' + RXData.DomesticQTH;  // n4af 4.41.7
      end;
@@ -1608,15 +1539,29 @@ begin
   // this flag so the dupe check below (and the matching one in
   // tUpdateLog(actRescore)) does NOT flag them as dupes.  See
   // MainUnit.DrainPendingMultiQSORefs for where the flag is set.
+  (* THE GRID-SQUARE ROVER -- the contest says whether its multiplier is the
+    grid square (TContestBase.HasGridSquareMultiplier, M11 S6 part 1); both
+    tests below asked `ContestSession.DomesticMult = GridSquares`. Asked
+    once per QSO, of the contest fetched above: no call between that and
+    either test changes the contest or the station. *)
+  countsGridSquares := ContestHasGridSquareMultiplier(contestRules);
+
   if (not RXData.ceClearDupeSheet) and
-    (VisibleLog.CallIsADupe(RXData.Callsign, RXData.Band, RXData.Mode) or
-    ((ActiveDomesticMult = GridSquares) and RoverCall(RXData.Callsign) and (NumberGridSquaresInList > 0))) then
-    if not (ActiveQSOPointMethod = AlwaysOnePointPerQSO) then
+    (VisibleLog.QSOIsADupe(RXData) or
+    (countsGridSquares and RoverCall(RXData.Callsign) and (NumberGridSquaresInList > 0))) then
+    (* THE CONTEST'S DUPE POLICY -- M3, 2026-10-01. This tested the global
+       ActiveQSOPointMethod for AlwaysOnePointPerQSO ("ignores dupes"), so an
+       operator's QSO POINT METHOD line switched dupe marking. The contest
+       states it now (TContestBase.MarksDupes): True, unless the contest
+       says otherwise -- Internet Sprint and the Youth Championship of
+       Russia, the two whose rows held AlwaysOnePointPerQSO. The point
+       method itself was deleted as a concept at M10 S4 (2026-10-14). *)
+    if ContestIdentity(Contest).MarksDupes then
        begin
        //      if Trace then Write('#');
      RXData.ceDupe := True;
        //            RXData.tDupe := True;
-     if (ActiveDomesticMult = GridSquares) and RoverCall(RXData.Callsign) then
+     if countsGridSquares and RoverCall(RXData.Callsign) then
         begin
         if NumberGridSquaresInList > 0 then
            begin
@@ -1716,7 +1661,12 @@ begin
      inc(QSOTotals[AllBands, Both]);
      Sheet.SetMultFlags(RXData);
      Sheet.AddQSOToSheets(@RXData, True);
-     CallsignsList.AddCallsign(RXData.Callsign, TempMode, RXData.Band, False);
+     (* AND TO THE VIEW THE FINAL SCORE'S BONUSES READ (M6), as the log's
+        loader does -- see uScoreTotals. It keeps only what
+        QSOCountsTowardTotals accepts, which is the loader's test. *)
+     (* WITH THE STATION THE STORE JUST RECORDED FOR IT (log schema 3). *)
+     AddLoggedQSO(RXData, LogStoreLastAppendedMyFacts);
+     AddQSOToDupeSheets(RXData, False);
      CallsignsList.AddIniitialExchange(RXData.Callsign, GetInitialExchangeStringFromContestExchange(RXData));
      SendStationStatus(sstQSOs);
      end;
@@ -1732,19 +1682,11 @@ begin
      TotalQSOPoints := TotalQSOPoints + RXData.QSOPoints;
      end;
 
-  if Contest = MOQSOPARTY then
-     begin
-     CheckMOQSOPartyBonusStation(RXData.Callsign);
-     if (RXData.Band in [Band80, Band40]) and
-        (RXData.tSysTime.qtHour >= 14) and
-        (RXData.tSysTime.qtHour < 20) and
-        (MOQSOPartyPeakHourCount < 250) then
-        begin
-        inc(MOQSOPartyPeakHourCount);
-        end;
-     end;
-  //  ProcessPartialCallAndInitialExchange(RXData);
-    //  PushLogStringIntoEditableLogAndLogPopedQSO(LogString, True);
+  (* ~~THE CONTEST'S LIVE TALLY~~ stood here -- Missouri's peak-hour count,
+     kept only in live entry and so lost on every reopen (M6's preserved
+     defect, TalliesLiveQSO). Q32 (NY4I, 2026-10-15) ruled it a rule over the
+     whole log, from each QSO's logged time: Missouri's BonusPoints counts it
+     over the view, and nothing is decided here about any bonus. *)
     //  if Trace then Write('&');
   if MyComputer then
     if not TailEnding then
@@ -1752,7 +1694,7 @@ begin
        //      ShowStationInformation(RXData.Callsign);
              UpdateStationStatus(RXData.Callsign, -1);
        end;
-  if DoingDomesticMults and                                         // Gav 4.44.8   uncommented section
+  if ContestHasDomesticMultiplier(contestRules) and                               // Gav 4.44.8   uncommented section
     (Settings.Mult.ByBand or Settings.Mult.ByMode) and
     (RXData.DomesticQTH <> '') then
      begin
@@ -1815,7 +1757,6 @@ begin
       //UpdateBandMapMultiplierStatus;
     SpotsList.UpdateSpotsMultiplierStatus;
       //        KK1L: 6.64 Need to change dupe status for this contact as well
-//      UpdateBandMapDupeStatus(RXData.Callsign, RXData.Band, RXData.Mode, True);
     SpotsList.UpdateSpotsDupeStatus(RXData.Callsign, RXData.Band, TempMode {RXData.Mode});
   end;
   if UDPBroadcaster.Enabled(usScore) then
@@ -2479,7 +2420,8 @@ var
      LogContact(PreviousQSOReceivedData, True);
      TailEnding := False;
          end;
-      if Contest <> GENERALQSO then
+      (* Not for General QSO, a log -- ShowsContestStatus, M9b. *)
+      if ContestIdentity(Contest).ShowsContestStatus then
          begin
          VisibleLog.ShowMultiplierStatus(CallsignICameBackTo);
          VisibleLog.ShowQSOStatus(CallsignICameBackTo);
@@ -2503,7 +2445,8 @@ var
           begin
           DisplayQTCNumber(NumberQTCsThisStation(CallWindowString));
           end;
-       if Contest <> GENERALQSO then
+       (* Not for General QSO, a log -- ShowsContestStatus, M9b. *)
+       if ContestIdentity(Contest).ShowsContestStatus then
           begin
           VisibleLog.ShowMultiplierStatus(CallWindowString);
           VisibleLog.ShowQSOStatus(CallWindowString);
@@ -2665,7 +2608,13 @@ begin
   Result := True;
 //  SendStationStatus;
 end;
-procedure SendScoreToUDP;
+(* THE dynamicresults XML, AS A STRING.  Split out of SendScoreToUDP so a test
+  can read exactly what an N1MM-format score listener is sent without a log
+  to read: the totals come from the globals CalculateTotals fills, and the
+  final score is a PARAMETER (TotalScore reads the contest, which is the
+  caller's business).  The output is byte-identical to what SendScoreToUDP
+  built inline before. *)
+function BuildScoreUDPXml(aTotalScore: longint): AnsiString;
 var
     sBuf: AnsiString;
 
@@ -2676,11 +2625,17 @@ var
       string array now, and it is only ever concatenated into XML below. *)
     BandPchar                             : string;
     nQSOs                                 : integer;
-    nTotal                                : integer;
-    sContestName                          : string;
+    (* Q109: THE PER-MODE SUM OF THE BANDS, one slot per mode (the ALL slot sums
+      the ALL rows).  There used to be ONE running sum, reused for every mode,
+      so the total row of the second mode worked read the first mode's bands too. *)
+    nModeTotal                            : array[ModeType] of integer;
+    sContestName                         : string;
+    (* The contest's type= label for one multiplier kind -- M9a. *)
+    multType                              : string;
 const
-  GetScoresMults                        : array[RemainingMultiplierType] of string = ('', 'state', 'country', 'zone', 'prefix');
-  GetScoresMultsWRTC                   : array[RemainingMultiplierType] of string = ('', 'HQ', 'country', 'zone', 'prefix');
+  (* ~~GetScoresMults~~ AND ~~GetScoresMultsWRTC~~ ARE GONE -- M9a, 2026-10-02.
+    The type= labels are the contest's: TContestBase.ScorePostingMultiplierType
+    (the base's are GetScoresMults' four; WRTC's class holds its own two). *)
   GetScoresModesArray                   : array[ModeType] of string = ('CW', 'DIG', 'PH', 'ALL', '', '');
 begin
 // Score formatted for WRTC Score Computer
@@ -2711,90 +2666,98 @@ begin
 You cannot use QSOTotals[TempBand, TempMode] for an accurate score for the total QSOs. QSOTotals[TempBand, TempMode] is not decremented for ALL as that is the log's total QSO count including deleted contacts.
 QSOTotals[TempBand, TempMode] is accurate for the individual bands so just sum those values to calculate the total
 }
-   nTotal := 0;
-   // Enabled() here is an OPTIMISATION, not the rule -- Send tests it again.
-   // It guards CalculateTotals, which reads the whole log.
-   if UDPBroadcaster.Enabled(usScore) then    // Issue 304 NY4I
+   for TempMode := Low(ModeType) to High(ModeType) do
       begin
-      CalculateTotals;    // This reads the log so be careful how often it is done.
-      if length(ContestsArray[Contest].ADIFName) = 0 then
-         begin
-         sContestName := ContestTypeSA[Contest]
-         end
-      else
-         begin
-         sContestName := ContestsArray[Contest].ADIFName;
-         end;
-      sBuf := '<?xml version="1.0"?>' + sLineBreak +
-             '<dynamicresults>' +  sLineBreak +
-             #9 + '<soft>TR4W</soft>' + sLineBreak +
-             #9 + '<version>' + TR4W_CURRENTVERSION_NUMBER + '</version>' + sLineBreak +
-             #9 + '<contest>' + sContestName + '</contest>' +   sLineBreak +
-             #9 + '<call>' + Settings.My.Call + '</call>' + sLineBreak +
-             #9 + '<club>' + ' ' + '</club>' + sLineBreak +
-             #9 + '<class ops="' + tCategoryOperatorSA[Settings.Contest.CategoryOperator] + '" mode="' + tCategoryModeSA[Settings.Contest.CategoryMode] +
-                  '" power="' + tCategoryPowerSA[Settings.Contest.CategoryPower] + '" bands="' + tCategoryBandSA[Settings.Contest.CategoryBand] +
-                  '" transmitter="' + tCategoryTransmitterSA[Settings.Contest.CategoryTransmitter] +
-                  '" assisted="' + tCategoryAssistedSA[Settings.Contest.CategoryAssisted] + '"></class>' + sLineBreak +
-             #9 + '<breakdown>' + sLineBreak;
+      nModeTotal[TempMode] := 0;
+      end;
+   (* The contest's ADIF id, asked of the contest -- M1. *)
+   sContestName := ContestIdentity(Contest).ADIFContestId;
+   sBuf := '<?xml version="1.0"?>' + sLineBreak +
+          '<dynamicresults>' +  sLineBreak +
+          #9 + '<soft>TR4W</soft>' + sLineBreak +
+          #9 + '<version>' + TR4W_CURRENTVERSION_NUMBER + '</version>' + sLineBreak +
+          #9 + '<contest>' + sContestName + '</contest>' +   sLineBreak +
+          #9 + '<call>' + Settings.My.Call + '</call>' + sLineBreak +
+          #9 + '<club>' + ' ' + '</club>' + sLineBreak +
+          #9 + '<class ops="' + tCategoryOperatorSA[Settings.Contest.CategoryOperator] + '" mode="' + tCategoryModeSA[Settings.Contest.CategoryMode] +
+               '" power="' + tCategoryPowerSA[Settings.Contest.CategoryPower] + '" bands="' + tCategoryBandSA[Settings.Contest.CategoryBand] +
+               '" transmitter="' + tCategoryTransmitterSA[Settings.Contest.CategoryTransmitter] +
+               '" assisted="' + tCategoryAssistedSA[Settings.Contest.CategoryAssisted] + '"></class>' + sLineBreak +
+          #9 + '<breakdown>' + sLineBreak;
    for TempBand := Band160 to AllBands do
       begin
-      for TempMode := CW to Phone do {Both do} // Was Phone for a test do
+      (* Q109: CW THROUGH Both, so the ALL row is sent.  The loop stopped at
+        Phone ("{Both do} // Was Phone for a test do") in D7 as well, and the
+        ALL rows in the sample above were never written. *)
+      for TempMode := CW to Both do
          begin
-         if QSOTotals[TempBand, TempMode] = 0 then Continue;
          BandPchar := BandStringsArrayWithOutSpaces[TempBand];
          if TempBand = AllBands then
             begin
             BandPchar := 'total';
-            nQSOs := nTotal;
+            (* The total is THIS MODE's bands summed -- QSOTotals[AllBands, m]
+              is not used, see the NOTE above. *)
+            nQSOs := nModeTotal[TempMode];
             end
          else
             begin
             nQSOs := QSOTotals[TempBand, TempMode];
+            nModeTotal[TempMode] := nModeTotal[TempMode] + nQSOs;
             end;
-         nTotal := nTotal + QSOTotals[TempBand, TempMode];
-         if GetScoresModesArray[TempMode] <> 'ALL' then
+         if nQSOs = 0 then Continue;
+         sBuf := sBuf + #9#9 + '<qso band="' + BandPChar +
+                            '" mode="' + GetScoresModesArray[TempMode] +
+                            '">' + IntToStr(nQSOs) + '</qso>' + sLineBreak;
+         (* ONE <mult> PER KIND THE CONTEST LABELS, IN KIND ORDER -- M9a. This
+           was `if Contest <> WRTC` with two loops; the contest says which kinds
+           it posts on this row, and under what label ('' posts none). *)
+         for m := Succ(Low(RemainingMultiplierType)) to High(RemainingMultiplierType) do
             begin
-            sBuf := sBuf + #9#9 + '<qso band="' + BandPChar +
-                               '" mode="' + GetScoresModesArray[TempMode] +
-                               '">' + IntToStr(nQSOs) + '</qso>' + sLineBreak;
-            end;
-         if Contest <> WRTC then
-            begin
-            for m := Succ(Low(RemainingMultiplierType)) to High(RemainingMultiplierType) do
+            multType := ContestIdentity(Contest).ScorePostingMultiplierType(
+                           m, GetScoresModesArray[TempMode] = 'ALL');
+            if multType = '' then
                begin
-               sBuf := sBuf + #9#9 + '<mult band="' + BandPChar + '" mode="' + GetScoresModesArray[TempMode] +
-                                         '" type="' +  GetScoresMults[m] + '">' + IntToStr(mo.MTotals[TempBand, TempMode, m]) +
-                                         '</mult>' + sLineBreak;
+               Continue;
                end;
-            end
-         else
-            begin // WRTC
-            if GetScoresModesArray[TempMode] = 'ALL' then
-               begin
-               for m := Succ(Low(RemainingMultiplierType)) to Succ(Succ(Low(RemainingMultiplierType))) do  // odd bit of code to select rmDomestic and rmDX
-                  begin
-                  sBuf := sBuf + #9#9 + '<mult band="' + BandPChar + '" mode="' + GetScoresModesArray[TempMode] +
-                                            '" type="' + GetScoresMultsWRTC[m] + '">' +
-                                             IntToStr(mo.MTotals[TempBand, TempMode, m]) + '</mult>' + sLineBreak;
-                  end;
-               end;
+            sBuf := sBuf + #9#9 + '<mult band="' + BandPChar + '" mode="' + GetScoresModesArray[TempMode] +
+                                      '" type="' + multType + '">' + IntToStr(mo.MTotals[TempBand, TempMode, m]) +
+                                      '</mult>' + sLineBreak;
             end;
          if GetScoresModesArray[TempMode] = 'ALL' then
             begin
             sBuf := sBuf + #9#9 + '<point band="' + BandPChar + '" mode="' + GetScoresModesArray[TempMode] + '">' +
                          IntToStr(QSOPointTotals[TempBand, TempMode]) + '</point>' + sLineBreak;
-            sBuf := sBuf + sLineBreak;
             end;
          end;
          // After mode loop...
       end;
    sBuf := sBuf + #9 + '</breakdown>' + sLineBreak +
-                  #9 + '<score>' + IntToStr(TotalScore) + '</score>' + sLineBreak +
+                  #9 + '<score>' + IntToStr(aTotalScore) + '</score>' + sLineBreak +
                   #9 + '<timestamp>' + SystemTimeToString(UTC) + '</timestamp>' + sLineBreak +
                   '</dynamicresults>' + sLineBreak;
+   Result := sBuf;
+end;
+
+(* Builds the score message and sends it on the score stream.  Split from
+  SendScoreToUDP for the same reason as BuildScoreUDPXml: a test can drive
+  the send without a log to read. *)
+procedure PostScoreToUDP(aTotalScore: longint);
+var
+    sBuf: AnsiString;
+begin
+   sBuf := BuildScoreUDPXml(aTotalScore);
    logger.debug('[SendScoreToUDP] \n %s',[sBuf]);
    UDPBroadcaster.Send(usScore, sBuf);
+end;
+
+procedure SendScoreToUDP;
+begin
+   // Enabled() here is an OPTIMISATION, not the rule -- Send tests it again.
+   // It guards CalculateTotals, which reads the whole log.
+   if UDPBroadcaster.Enabled(usScore) then    // Issue 304 NY4I
+      begin
+      CalculateTotals;    // This reads the log so be careful how often it is done.
+      PostScoreToUDP(TotalScore);
       end;
 end;
 procedure SendDeletedContactToUDP(RXData: ContestExchange);
@@ -2817,7 +2780,7 @@ begin
                        RxData.tSysTime.qtSecond]) +
              '</timestamp>' + sLineBreak +
              #9 + '<call>' + RXData.Callsign + '</call>' + sLineBreak +
-             #9 + '<contestnr>' + IntToStr(Ord(RxData.ceContest)) + '</contestnr>' + sLineBreak +
+             #9 + '<contestnr>' + IntToStr(ContestBroadcastNumber(RxData.ceContest)) + '</contestnr>' + sLineBreak +
              #9 + '<StationName>' +  Settings.Computer.Name + '</StationName>' + sLineBreak + // Issue 263 NY4I
              #9 + '<ID>' + RxData.id + '</ID>' + sLineBreak +
        '</contactdelete>'+ sLineBreak ;
@@ -2985,14 +2948,11 @@ begin
          end;
       end; // case nMultCount
 
-   if length(ContestsArray[Contest].CABName) = 0 then
-      begin
-      sContestName := ContestTypeSA[RxData.ceContest]
-      end
-   else
-      begin
-      sContestName := AnsiString(ContestsArray[Contest].CABName);
-      end;
+   (* THE QSO'S CONTEST, ASKED FOR ITS CABRILLO NAME -- M1. The copy this
+      replaced tested the ACTIVE contest's CABName and then spelled the QSO's
+      contest, so the two halves of one rule read two different contests.
+      <contestnr> below has always been the QSO's, and so is this now. *)
+   sContestName := AnsiString(ContestIdentity(RxData.ceContest).CabrilloName);
 
    nNumberReceived := IfThen(RxData.NumberReceived > 0,RxData.NumberReceived,0);
    sTimestamp := SysUtils.format('20%0.2d-%0.2d-%0.2d %0.2d:%0.2d:%0.2d',[
@@ -3007,9 +2967,9 @@ begin
              #9 + '<app>TR4W</app>' + sLineBreak +
              #9 + '<contestname>' + sContestName + '</contestname>' + sLineBreak +
              {#9 + '<contestname>' + ContestTypeSA[RxData.ceContest] + '</contestname>' + sLineBreak + }
-             #9 + '<contestnr>' + IntToStr(Ord(RxData.ceContest)) + '</contestnr>' + sLineBreak +
+             #9 + '<contestnr>' + IntToStr(ContestBroadcastNumber(RxData.ceContest)) + '</contestnr>' + sLineBreak +
              #9 + '<timestamp>' + sTimestamp + '</timestamp>' + sLineBreak +
-             #9 + '<Settings.My.Call>' + Settings.My.Call + '</Settings.My.Call>' + sLineBreak +
+             #9 + '<mycall>' + Settings.My.Call + '</mycall>' + sLineBreak +
              #9 + '<band>' + ConvertBandTypeToUDPContactBand(RXData.Band) + '</band>' + sLineBreak +
             #9 + '<rxfreq>' + Format('%d',[freq div 10]) + '</rxfreq>' + sLineBreak + // 1420100
             #9 + '<txfreq>' + Format('%d',[txFreq div 10]) + '</txfreq>' + sLineBreak +

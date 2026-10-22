@@ -2,6 +2,7 @@
 name: settings-config
 description: Settings and configuration — the uSettingsModel published-property model, JSON storage, the config command vocabulary, the read-once ini and contest .cfg import paths, and the settings UI binding. Use for adding or changing a setting, config file parsing, defaults, or anything about tr4w.json / tr4w.ini / a contest .cfg.
 tools: Read, Grep, Glob, Bash, Edit, Write
+model: opus
 ---
 
 You own where a setting lives and how it gets there.
@@ -97,6 +98,14 @@ that in both directions.
   present or absent; that is one information line in a log, not a prompt.
 - **The contest `.cfg` is deliberately exempt** from JSON: its parameters go to
   the **contest SQLite database**.
+- **The five Cabrillo categories (ASSISTED, BAND, MODE, OPERATOR, POWER) are
+  `Settings.Contest.Category*` and nothing else** (Q61, 2026-10-17; 7.6 for
+  POWER). Their home is the log's `config` statement row; the summary window
+  writes them through `SetCFGCommandValue` plus
+  `uLogStore.LogStoreRecordContestStatement`, and the Cabrillo header reads
+  them through `uCbrSum.CabrilloTagText`. A `_CATEGORY-*` key for these five
+  in `tr4w.json`'s Cabrillo header store is inert. `SetCFGCommandValue` still
+  drops a copy in the `commands/contest` bucket (a station default; Q-M2a).
 - **Credentials live in the OS vault**, not in settings.
 - **ONE HOME FOR THE LOG LEVEL: `Settings.Log.DebugLevel`** (default DEBUG,
   NY4I 2026-09-14). The radio store's `logging.level` is written only when an
@@ -215,6 +224,102 @@ is the only member** (NY4I, 2026-09-19): `StartupUILanguage` has chosen the
 catalogue already, so a `.cfg` line could not take effect — it could only be
 written into the station's file by the next Preferences save.
 
+## A contest-scoped setting has a WAS-SET flag, and the log stores only that (2026-10-01)
+
+`TR4WSettings.CommandIsStated(cmd)` answers "did the operator state this for
+the open contest". Section 7.8 of `docs/CONTEST_OWNERSHIP_DESIGN.md` has the
+decision. The flag is one set of property paths, so every alias of a setting
+shares it, and it covers every `IsContestScoped` group. It answers False for a
+station setting.
+
+- **`TrySetByCommand` SETS IT, and that is the whole design.** Every operator
+  channel reaches a setting by name: the `.cfg`, the New Contest queue,
+  Preferences (`TModelSetting`), Alt-P, a peer, and the log's own statements.
+  `FoundContest` and the constructor assign properties directly, so "arrived
+  by name" and "stated" are the same set. Since M7a (2026-10-02) a contest
+  with a class states its set-up in `DescribeSession` and
+  `FCONTEST.ApplySessionDefaults` assigns it -- still directly, by property.
+  **Never route contest set-up through `TrySetByCommand`**, or the contest's
+  computed value becomes the operator's statement in the log.
+- **`TrySetUnstated`** is for a by-name value that is not a statement. Its
+  one caller is `ApplyStoredCommands` for the bucket's contest-scoped
+  entries. It also skips any setting that is already stated.
+- **`SetCommandStated(cmd, False)`** withdraws a statement. No control offers
+  it yet.
+- **`PathIsStated(path)`** asks the same by property path
+  (`'Contest.QslMode'`). `CommandIsStated` resolves the name and calls
+  it. Since M2 (2026-10-01) **contest set-up reads the flag**:
+  `FCONTEST.ApplyContestTraits` leaves a stated flag setting alone.
+  `Test_ContestSetUpAsksRealContestScopedNames` pins every name set-up
+  asks; a misspelled one would read "not stated" and silently lose.
+- **THE SEVEN CONTEST-RULE SETTINGS ARE RETIRED (M10 S2, 2026-10-14, NY4I's
+  Q4).** `QSO POINT METHOD`, `EXCHANGE RECEIVED`, `INITIAL EXCHANGE`,
+  `DOMESTIC MULTIPLIER`, `DX MULTIPLIER`, `PREFIX MULTIPLIER`, `ZONE
+  MULTIPLIER` are names in `RETIRED_COMMANDS`; the property, registration,
+  caption, vocabulary, `SHARED_WITH_PEERS` and `MIGRATED_COMMANDS` entries,
+  the token arms and `ReplayContestStatements` are all gone, and six of the
+  seven spelling tables with them (`ActiveExchangeArray` stays for one log
+  line until M11). The contest's class decides. **The four `QSO POINTS ...`
+  overrides are NOT retired.** User-defined contests are a future feature, to
+  be designed another way -- do not revive these for it.
+  - **The CONTEST arm's country-mode derivation survives** in
+    `uSettingsEffects.ApplyTokenSetting` (plan F5); the DX arm's copy went.
+  - **Stored log rows** of the seven: `KeepOnlyStatements` sets them aside in
+    either era (passed `uCFG.CommandIsRetired` -- the leaf cannot link
+    uCFG), `uLogStore` logs them once per open with values, and
+    `CaptureContestStatements` deletes them. `uTestLogContestStatements`
+    pins all three, including that a second capture is a no-op.
+  - **A peer still sending one** is routed by `ApplyPeerCommand`'s withdrawn
+    arm to `CheckCommand`, not to the "applied but not persisted" Warn.
+- **`RETIRED_COMMANDS` IS LOGGED ONCE PER NAME PER SESSION -- really, since
+  M10 S2.** Before that `CheckCommand` logged every occurrence, though this
+  file and CLAUDE.md said "once". `RetiredCommandFirstSighting` is the latch;
+  `ForgetRetiredCommandSightings` is for tests.
+- Before this, the log captured every contest-scoped value, which put the
+  constructor's `NONE`/`UNKNOWN` into every log. A stored sentinel then
+  overwrote a `.cfg` line on reopen (D2). The flag generalises
+  `MyContinentIsSet` / `ZoneWasSet` / `CountryWasSet`; those three predate it
+  and are NOT folded in.
+
+## A station fact is a DEFAULT a contest may override (2026-10-13)
+
+NY4I, design 7.12: *"we use station config as a default but allow the
+override at contest selection time."* His case: a laptop taken to CQ zone 3
+in Utah for one contest.
+
+- **The facts are `uSettingsModel.TStationFact`.** They are the `TMySettings`
+  properties the New Contest dialog can ask for, plus MY ITU ZONE: state
+  (with its alias MY QTH), section, CQ zone, ITU zone, grid, name, FD class,
+  check, prec, park, IOTA, postal code and FOC number. MY CALL, MY COUNTRY
+  and MAIN CALLSIGN are deliberately NOT facts; MY CALL is Q65.
+- **The published property is the STATION's value.** Preferences, the
+  startup load, a peer and the converter write it, and `tr4w.json` stores
+  it. A contest never writes it.
+- **The contest's value is an override beside the property** in
+  `TMySettings`, and it is not published. `uCFG.ApplyContestStatement` is
+  the one route for the `.cfg`, the New Contest queue and the log's rows.
+  It sends a fact to `TR4WSettings.TryOverrideForContest`, which applies the
+  property's own value check and MY ITU ZONE's 0..90. Everything else goes
+  to `CheckCommand(.., True)`. `ClearContestCFGCommands` clears the
+  overrides along with the provenance tracker.
+- **Readers that serve the contest read `Settings.My.Resolved<X>`** --
+  the override if stated, else the station's value. Only the station's own
+  editors read the plain property. **When you add a reader of a fact,
+  choose the right one.** The station context's `MyZone` is MY CQ ZONE,
+  resolved.
+- **In the log:** `uLogContestStatements.CaptureStationFactRows` writes the
+  override as `contest`, else the station's value as `station`. On reopen,
+  a fact row is routed before the no-op skip, so **a fact is never
+  demoted** (see Open).
+- **It is not 7.11's SentState.** `FCONTEST.SentMyState` is the contest's
+  SentState when set-up states one, else `ResolvedState`. The override is
+  where the station IS; SentState is what the contest's rule SENDS. Never
+  route set-up through `TryOverrideForContest`.
+- **Before this,** every dialog field was written into `TMySettings`. A
+  Preferences save or the insert-mode toggle then put the contest's value
+  into `tr4w.json`. European HFC's year licensed, which uses the MY ZONE
+  row, became the station's CQ zone that way.
+
 ## `NeedsRestart` is a flag with no consumer
 
 `TSettingBase.NeedsRestart` exists and **nothing reads it** (measured
@@ -223,8 +328,9 @@ Language drop-down — does it with a **hand-typed hint label in the `.lfm`**, a
 the Station page now carries a second such label for `MY CALL`/`MY COUNTRY`.
 That is two hand-written hints where a registry flag already exists.
 
-**Every `Settings.My.*` and `Settings.Contest.*` value `FoundContest` reads has
-this property** — `MY STATE`, `MY ZONE`, `MY GRID`, `MY SECTION`, `MY CHECK`,
+**Every `Settings.My.*` and `Settings.Contest.*` value `FoundContest` reads
+(since M7a, through `uContestFactory.CurrentStation`, the station a contest's
+`DescribeSession` is handed) has this property** — `MY STATE`, `MY ZONE`, `MY GRID`, `MY SECTION`, `MY CHECK`,
 `MY PREC`, `MY FD CLASS` — because the contest is set up once at startup.
 Wiring `NeedsRestart` to emit that hint per bound control is the real fix and is
 `settings-config` + `lcl-ui` work. NY4I lost twenty minutes to this: he set
@@ -237,11 +343,30 @@ contest kept its original exchange.
 station-settings half is done — one home, one writer, and the bucket collapses
 on first start. What remains:
 
-- **The contest-scoped settings still live only in the legacy bucket.**
-  `ToJSON` excludes them from the `settings` section, so the bucket is their
-  ONLY copy and `ApplyStoredCommands` still applies them. Their destination is
-  the contest database (`uLogStore.CaptureConfiguration`), and that is a
-  separate migration — the collapse deliberately leaves them alone.
+- **The bucket's `commands/contest` section still exists**, but since
+  2026-10-01 it is a station default and not a statement.
+  - **Its writers:** the one-time `tr4w.ini` seed, `ApplyPeerCommand`, and
+    one Preferences control: `MY CONTINENT` on the Station page, through
+    `ApplyAndStoreCommand`. That setting is a station fact filed in the
+    contest-scoped `TContestSettings`. Moving it to `TMySettings` is Q-M2b in
+    the design doc.
+  - **How it applies:** unstated, never over a stated setting, and the log
+    does not capture it.
+  - **The contest's own values** live in the contest database
+    (`uLogStore.CaptureConfiguration`), as stated rows only.
+  - **Open (Q-M2a in the design doc):** whether to retire this section or
+    convert it is NY4I's call.
+- **A STATION-scoped row a `.cfg` stated can be DEMOTED** -- *except a
+  station fact, which since 2026-10-13 records its override where the
+  statement is made and is routed before the no-op skip on reopen (design
+  7.12). What is left is the station-scoped commands that are not facts.*
+  `CaptureConfiguration` gives it source `contest` only while
+  `CommandCameFromContestCFG` says so. A reopen that applies it from the log
+  does not note it, so with the `.cfg` gone the next clean close rewrites it
+  as `station`, and from then on it is never applied. This is reasoned, not
+  measured, and was outside M2a. It has the same root as the contest-scoped
+  defect: provenance is re-derived from session state instead of recorded
+  where the statement is made.
 - ~~**`tr4w.ini` is still read at startup**~~ **DONE 2026-09-19.** The call,
   the `cfgINI` enum member and every ini-only routine in `LogCfg` are gone
   (`RestoreCFGPasswordCase`, `FileHasCommands`, the duplicate-key report,

@@ -11,6 +11,7 @@
     build credits nobody. First %s is TC_TRANSLATION_LANGUAGE, second is
     TC_TRANSLATION_AUTHOR; a translation may reorder them with %1:s / %0:s. }
   TC_TRANSLATION_CREDIT                 = '%s translation by %s';
+  TC_TRANSLATION_CORRECTIONS            = 'Corrections are appreciated.'; // About box, under a machine translation's credit
   TC_WAGWarn                            = 'Warning: Out of WAG allowed frequency range';
   TC_FREQ                               = 'Freq';
   TC_POINTS                             = 'Pts';
@@ -101,7 +102,7 @@
   TC_LABRE                              = 'Enter 2 char QTH ID';
   TC_EUDX                               = 'EU country, enter your four character country code';
   TC_IRTS                               = 'EI/GI, enter your County';
-  TC_LATEST_CONFIG_FILE                 = 'Latest config file';
+  TC_LATEST_CONFIG_FILE                 = 'Last Contest';
   TC_OPENCONFIGURATIONFILE              = ' - Open configuration file or start a new contest';
   TC_FOLDERALREADYEXISTSOVERWRITE       = 'Folder "%s" already exists.'#13'Overwrite ?';
   TC_IAMIN                              = '&I am in %s';
@@ -265,6 +266,7 @@
   TC_NOTENOUGHINFOINEXCHANGE            = 'Not enough info in exchange!!';
   TC_IMPROPERDOMESITCQTH                = 'Improper domestic QTH!!';
   TC_IGNOREDUNKNOWNQTH                  = 'Ignored, not a known QTH:';
+  TC_TOOMANYCOUNTIES                    = 'Too many counties for this contest (maximum %d)!!';
   { Alt-P bank filter.  F1-F12, Ctrl+F1-F12 and Alt+F1-F12 are three banks of
     twelve; the window shows one at a time. }
   TC_BANKSTANDARD                       = 'Standard';

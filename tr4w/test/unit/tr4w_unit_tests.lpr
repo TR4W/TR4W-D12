@@ -107,6 +107,10 @@ uses
    uTestCabrilloFormat  in 'uTestCabrilloFormat.pas',
    uCabrilloExchange    in '..\..\src\uCabrilloExchange.pas',
    uADIFExchange        in '..\..\src\uADIFExchange.pas',
+   uARRLSections        in '..\..\src\uARRLSections.pas',
+   uPOTAReference       in '..\..\src\uPOTAReference.pas',
+   uGridShape           in '..\..\src\uGridShape.pas',
+   uDXCCEntities        in '..\..\src\uDXCCEntities.pas',
    uTestADIFExchange    in 'uTestADIFExchange.pas',
    uTestCabrilloExchange in 'uTestCabrilloExchange.pas',
    uCRC32               in '..\..\src\uCRC32.pas',
@@ -114,6 +118,9 @@ uses
    uCRC16               in '..\..\src\uCRC16.pas',
    uSpectrumTypes       in '..\..\src\uSpectrumTypes.pas',
    uK4Spectrum          in '..\..\src\radioFactory\uK4Spectrum.pas',
+   uTestBytePattern     in 'uTestBytePattern.pas',
+   uTestCRC16           in 'uTestCRC16.pas',
+   uTestWinKeyWire      in 'uTestWinKeyWire.pas',
    uK4SpectrumThread    in '..\..\src\radioFactory\uK4SpectrumThread.pas',
    uTestK4Spectrum      in 'uTestK4Spectrum.pas',
    uIcomScope           in '..\..\src\radioFactory\uIcomScope.pas',
@@ -159,6 +166,8 @@ uses
    uTestWindowLayoutStore in 'uTestWindowLayoutStore.pas',
    uTestComputerID in 'uTestComputerID.pas',
    uTestUDPBroadcaster  in 'uTestUDPBroadcaster.pas',
+   uTestUDPContactXml   in 'uTestUDPContactXml.pas',
+   uTestUDPDatagrams    in 'uTestUDPDatagrams.pas',
    uTestUtilsFile       in 'uTestUtilsFile.pas',
    uTestADIFRegression  in 'uTestADIFRegression.pas',
    uFreqTimeFormat      in '..\..\src\uFreqTimeFormat.pas',
@@ -174,6 +183,13 @@ uses
    uTestContestReadiness in 'uTestContestReadiness.pas',
    uMults               in '..\..\src\uMults.pas',
    uTestMults           in 'uTestMults.pas',
+   uTestSortedStringList in 'uTestSortedStringList.pas',
+   uTestCallsignsList   in 'uTestCallsignsList.pas',
+   uTestOffBandCredit   in 'uTestOffBandCredit.pas',
+   uTestMalformedGrid   in 'uTestMalformedGrid.pas',
+   uTestRoverDupeKey    in 'uTestRoverDupeKey.pas',
+   uTestNYQPRover       in 'uTestNYQPRover.pas',
+   uTestOperatorCQMemory in 'uTestOperatorCQMemory.pas',
    uCallSignRoutines    in '..\..\src\uCallSignRoutines.pas',
    uTestCallSignRoutines in 'uTestCallSignRoutines.pas',
    uFactoryRadioBase    in '..\..\src\radioFactory\uFactoryRadioBase.pas',
@@ -246,11 +262,244 @@ uses
    uTestSHA256 in 'uTestSHA256.pas',
    uTestAllSettings in 'uTestAllSettings.pas',
    uTestCWFraming in 'uTestCWFraming.pas',
+   (* THE CONTEST FACTORY. uContestFactory is deliberately NOT here: it reads
+      LOGWIND and the settings model, and the point of uTestContestFactory is
+      that a contest class needs neither. The classes are listed so their
+      initialization sections register them. *)
+   uCanonicalExchange in '..\..\src\uCanonicalExchange.pas',
+   uContestBase in '..\..\src\contestFactory\uContestBase.pas',
+   uContestRegistry in '..\..\src\contestFactory\uContestRegistry.pas',
+   uContestSession in '..\..\src\uContestSession.pas',
+   uContestStateQSOPartyBase in '..\..\src\contestFactory\uContestStateQSOPartyBase.pas',
+   uContestFixedPoints in '..\..\src\contestFactory\uContestFixedPoints.pas',
+   uPrefixMultiplierKey in '..\..\src\contestFactory\uPrefixMultiplierKey.pas',
+   uDXMultiplierKey     in '..\..\src\contestFactory\uDXMultiplierKey.pas',
+   uDomesticKey         in '..\..\src\contestFactory\uDomesticKey.pas',
+   uExchangeFields      in '..\..\src\contestFactory\uExchangeFields.pas',
+   uContestARRLDXBase in '..\..\src\contestFactory\uContestARRLDXBase.pas',
+   uContestARRLDXCW in '..\..\src\contestFactory\uContestARRLDXCW.pas',
+   uContestARRLDXPhone in '..\..\src\contestFactory\uContestARRLDXPhone.pas',
+   uContestARRLSSBase in '..\..\src\contestFactory\uContestARRLSSBase.pas',
+   uContestARRLSSCW in '..\..\src\contestFactory\uContestARRLSSCW.pas',
+   uContestARRLSSSSB in '..\..\src\contestFactory\uContestARRLSSSSB.pas',
+   uContestCQWPXBase in '..\..\src\contestFactory\uContestCQWPXBase.pas',
+   uContestCQWPXCW in '..\..\src\contestFactory\uContestCQWPXCW.pas',
+   uContestCQWPXSSB in '..\..\src\contestFactory\uContestCQWPXSSB.pas',
+   uContestCQWWBase in '..\..\src\contestFactory\uContestCQWWBase.pas',
+   uContestCQWWCW in '..\..\src\contestFactory\uContestCQWWCW.pas',
+   uContestCQWWSSB in '..\..\src\contestFactory\uContestCQWWSSB.pas',
+   uContestARRLFieldDay in '..\..\src\contestFactory\uContestARRLFieldDay.pas',
+   uContestWinterFieldDay in '..\..\src\contestFactory\uContestWinterFieldDay.pas',
+   uContestIARU in '..\..\src\contestFactory\uContestIARU.pas',
+   uContestGeneralQSO in '..\..\src\contestFactory\uContestGeneralQSO.pas',
+   uContestNASprintCW in '..\..\src\contestFactory\uContestNASprintCW.pas',
+   uContestNASprintRTTY in '..\..\src\contestFactory\uContestNASprintRTTY.pas',
+   uContestFloridaQP in '..\..\src\contestFactory\uContestFloridaQP.pas',
+   uContestMichiganQP in '..\..\src\contestFactory\uContestMichiganQP.pas',
+   uContestCaliforniaQP in '..\..\src\contestFactory\uContestCaliforniaQP.pas',
+   uContestIndianaQP in '..\..\src\contestFactory\uContestIndianaQP.pas',
+   uContestColoradoQP in '..\..\src\contestFactory\uContestColoradoQP.pas',
+   uContestMinnesotaQP in '..\..\src\contestFactory\uContestMinnesotaQP.pas',
+   uContestMissouriQP in '..\..\src\contestFactory\uContestMissouriQP.pas',
+   uContestOhioQP in '..\..\src\contestFactory\uContestOhioQP.pas',
+   uContestWisconsinQP in '..\..\src\contestFactory\uContestWisconsinQP.pas',
+   uContestTennesseeQP in '..\..\src\contestFactory\uContestTennesseeQP.pas',
+   uContestTexasQP in '..\..\src\contestFactory\uContestTexasQP.pas',
+   uContestArizonaQP in '..\..\src\contestFactory\uContestArizonaQP.pas',
+   uContestBritishColumbiaQP in '..\..\src\contestFactory\uContestBritishColumbiaQP.pas',
+   uContestNorthCarolinaQP in '..\..\src\contestFactory\uContestNorthCarolinaQP.pas',
+   uContestPennsylvaniaQP in '..\..\src\contestFactory\uContestPennsylvaniaQP.pas',
+   uContestVirginiaQP in '..\..\src\contestFactory\uContestVirginiaQP.pas',
+   uContestNewYorkQP in '..\..\src\contestFactory\uContestNewYorkQP.pas',
+   uContestWashingtonSalmonRun in '..\..\src\contestFactory\uContestWashingtonSalmonRun.pas',
+   uContestIdahoQP in '..\..\src\contestFactory\uContestIdahoQP.pas',
+   uContestDelawareQP in '..\..\src\contestFactory\uContestDelawareQP.pas',
+   uContestNebraskaQP in '..\..\src\contestFactory\uContestNebraskaQP.pas',
+   uContestIN7QPNE in '..\..\src\contestFactory\uContestIN7QPNE.pas',
+   uContestQCWA in '..\..\src\contestFactory\uContestQCWA.pas',
+   uContestQCWAGolden in '..\..\src\contestFactory\uContestQCWAGolden.pas',
+   uContestCountyHunter in '..\..\src\contestFactory\uContestCountyHunter.pas',
+   uContestGridLoc in '..\..\src\contestFactory\uContestGridLoc.pas',
+   uContestMarconiMemorial in '..\..\src\contestFactory\uContestMarconiMemorial.pas',
+   uContestSASprint in '..\..\src\contestFactory\uContestSASprint.pas',
+   uContestXmas in '..\..\src\contestFactory\uContestXmas.pas',
+   uContestInternetSprint in '..\..\src\contestFactory\uContestInternetSprint.pas',
+   uContestAllJA in '..\..\src\contestFactory\uContestAllJA.pas',
+   uContestAPSprint in '..\..\src\contestFactory\uContestAPSprint.pas',
+   uContestJALongPrefect in '..\..\src\contestFactory\uContestJALongPrefect.pas',
+   uContestKidsDay in '..\..\src\contestFactory\uContestKidsDay.pas',
+   uContestMini40 in '..\..\src\contestFactory\uContestMini40.pas',
+   uContestMini80 in '..\..\src\contestFactory\uContestMini80.pas',
+   uContestMinitest in '..\..\src\contestFactory\uContestMinitest.pas',
+   uContestKVP in '..\..\src\contestFactory\uContestKVP.pas',
+   uContestMST in '..\..\src\contestFactory\uContestMST.pas',
+   uContestYouthChampionshipRF in '..\..\src\contestFactory\uContestYouthChampionshipRF.pas',
+   uContestEuropeanHFC in '..\..\src\contestFactory\uContestEuropeanHFC.pas',
+   uContestCQIR in '..\..\src\contestFactory\uContestCQIR.pas',
+   uContestDARCXmas in '..\..\src\contestFactory\uContestDARCXmas.pas',
+   uContestArktikaSpring in '..\..\src\contestFactory\uContestArktikaSpring.pas',
+   uContestARRLDigi in '..\..\src\contestFactory\uContestARRLDigi.pas',
+   uContestNRAUBalticBase in '..\..\src\contestFactory\uContestNRAUBalticBase.pas',
+   uContestNRAUBalticCW in '..\..\src\contestFactory\uContestNRAUBalticCW.pas',
+   uContestNRAUBalticSSB in '..\..\src\contestFactory\uContestNRAUBalticSSB.pas',
+   uContestSprintSSB in '..\..\src\contestFactory\uContestSprintSSB.pas',
+   uContestLocustQP in '..\..\src\contestFactory\uContestLocustQP.pas',
+   uContestJockWhiteFieldDay in '..\..\src\contestFactory\uContestJockWhiteFieldDay.pas',
+   uContestFOCMarathon in '..\..\src\contestFactory\uContestFOCMarathon.pas',
+   uContestUkraineChampionship in '..\..\src\contestFactory\uContestUkraineChampionship.pas',
+   uContestUralCup in '..\..\src\contestFactory\uContestUralCup.pas',
+   uContestUKEI in '..\..\src\contestFactory\uContestUKEI.pas',
+   uContestRSGBIOTA in '..\..\src\contestFactory\uContestRSGBIOTA.pas',
+   uContestDARC10M in '..\..\src\contestFactory\uContestDARC10M.pas',
+   uContestPACC in '..\..\src\contestFactory\uContestPACC.pas',
+   uContestPCC in '..\..\src\contestFactory\uContestPCC.pas',
+   uContestWAG in '..\..\src\contestFactory\uContestWAG.pas',
+   uContestWWDigi in '..\..\src\contestFactory\uContestWWDigi.pas',
+   uContestCQ160CW in '..\..\src\contestFactory\uContestCQ160CW.pas',
+   uContestCQ160SSB in '..\..\src\contestFactory\uContestCQ160SSB.pas',
+   uContestUBACW in '..\..\src\contestFactory\uContestUBACW.pas',
+   uContestUBASSB in '..\..\src\contestFactory\uContestUBASSB.pas',
+   uContestARRLRTTYRoundup in '..\..\src\contestFactory\uContestARRLRTTYRoundup.pas',
+   uContestCWOps in '..\..\src\contestFactory\uContestCWOps.pas',
+   uContestNAQPCW in '..\..\src\contestFactory\uContestNAQPCW.pas',
+   uContestNAQPSSB in '..\..\src\contestFactory\uContestNAQPSSB.pas',
+   uContestNAQPRTTY in '..\..\src\contestFactory\uContestNAQPRTTY.pas',
+   uContestNCCCSprint in '..\..\src\contestFactory\uContestNCCCSprint.pas',
+   uContestUkrainianDX in '..\..\src\contestFactory\uContestUkrainianDX.pas',
+   uContestOKDX in '..\..\src\contestFactory\uContestOKDX.pas',
+   uContestLZDX in '..\..\src\contestFactory\uContestLZDX.pas',
+   uContestBataviaFT8 in '..\..\src\contestFactory\uContestBataviaFT8.pas',
+   uContestCroatian in '..\..\src\contestFactory\uContestCroatian.pas',
+   uContestCanadaDay in '..\..\src\contestFactory\uContestCanadaDay.pas',
+   uContestCanadaWinter in '..\..\src\contestFactory\uContestCanadaWinter.pas',
+   uContestSACCW in '..\..\src\contestFactory\uContestSACCW.pas',
+   uContestSACSSB in '..\..\src\contestFactory\uContestSACSSB.pas',
+   uContestLABRE in '..\..\src\contestFactory\uContestLABRE.pas',
+   uContestRussianDX in '..\..\src\contestFactory\uContestRussianDX.pas',
+   uContestRU3AXMemorial in '..\..\src\contestFactory\uContestRU3AXMemorial.pas',
+   uContestCupRFCW in '..\..\src\contestFactory\uContestCupRFCW.pas',
+   uContestCupRFSSB in '..\..\src\contestFactory\uContestCupRFSSB.pas',
+   uContestCupRFDIG in '..\..\src\contestFactory\uContestCupRFDIG.pas',
+   uContestRFChampionshipCW in '..\..\src\contestFactory\uContestRFChampionshipCW.pas',
+   uContestRFChampionshipSSB in '..\..\src\contestFactory\uContestRFChampionshipSSB.pas',
+   uContestDARCWAEDCCW in '..\..\src\contestFactory\uContestDARCWAEDCCW.pas',
+   uContestDARCWAEDCSSB in '..\..\src\contestFactory\uContestDARCWAEDCSSB.pas',
+   uContestOZHCRVHF in '..\..\src\contestFactory\uContestOZHCRVHF.pas',
+   uContestALRSUA1DZCup in '..\..\src\contestFactory\uContestALRSUA1DZCup.pas',
+   uContestSevenQP in '..\..\src\contestFactory\uContestSevenQP.pas',
+   uContestAllAsianCW in '..\..\src\contestFactory\uContestAllAsianCW.pas',
+   uContestAllAsianSSB in '..\..\src\contestFactory\uContestAllAsianSSB.pas',
+   uContestARCI in '..\..\src\contestFactory\uContestARCI.pas',
+   uContestARIDX in '..\..\src\contestFactory\uContestARIDX.pas',
+   uContestARRL10 in '..\..\src\contestFactory\uContestARRL10.pas',
+   uContestARRL160 in '..\..\src\contestFactory\uContestARRL160.pas',
+   uContestARRLVHFJan in '..\..\src\contestFactory\uContestARRLVHFJan.pas',
+   uContestARRLVHFJun in '..\..\src\contestFactory\uContestARRLVHFJun.pas',
+   uContestARRLVHFSep in '..\..\src\contestFactory\uContestARRLVHFSep.pas',
+   uContestBaltic in '..\..\src\contestFactory\uContestBaltic.pas',
+   uContestBWQP in '..\..\src\contestFactory\uContestBWQP.pas',
+   uContestCIS in '..\..\src\contestFactory\uContestCIS.pas',
+   uContestCQM in '..\..\src\contestFactory\uContestCQM.pas',
+   uContestCQVHF in '..\..\src\contestFactory\uContestCQVHF.pas',
+   uContestCQWPXRTTY in '..\..\src\contestFactory\uContestCQWPXRTTY.pas',
+   uContestCQWWRTTY in '..\..\src\contestFactory\uContestCQWWRTTY.pas',
+   uContestEUSprintSpringCW in '..\..\src\contestFactory\uContestEUSprintSpringCW.pas',
+   uContestEUSprintSpringSSB in '..\..\src\contestFactory\uContestEUSprintSpringSSB.pas',
+   uContestEUSprintAutumnCW in '..\..\src\contestFactory\uContestEUSprintAutumnCW.pas',
+   uContestEUSprintAutumnSSB in '..\..\src\contestFactory\uContestEUSprintAutumnSSB.pas',
+   uContestEuropeanVHF in '..\..\src\contestFactory\uContestEuropeanVHF.pas',
+   uContestTesla in '..\..\src\contestFactory\uContestTesla.pas',
+   uContestFISTS in '..\..\src\contestFactory\uContestFISTS.pas',
+   uContestGACWWWSACW in '..\..\src\contestFactory\uContestGACWWWSACW.pas',
+   uContestGagarinCup in '..\..\src\contestFactory\uContestGagarinCup.pas',
+   uContestHADX in '..\..\src\contestFactory\uContestHADX.pas',
+   uContestYUDX in '..\..\src\contestFactory\uContestYUDX.pas',
+   uContestHelvetia in '..\..\src\contestFactory\uContestHelvetia.pas',
+   uContestJIDXCW in '..\..\src\contestFactory\uContestJIDXCW.pas',
+   uContestJIDXSSB in '..\..\src\contestFactory\uContestJIDXSSB.pas',
+   uContestJTDX in '..\..\src\contestFactory\uContestJTDX.pas',
+   uContestKCJ in '..\..\src\contestFactory\uContestKCJ.pas',
+   uContestNewEnglandQP in '..\..\src\contestFactory\uContestNewEnglandQP.pas',
+   uContestOceaniaDXCW in '..\..\src\contestFactory\uContestOceaniaDXCW.pas',
+   uContestOceaniaDXSSB in '..\..\src\contestFactory\uContestOceaniaDXSSB.pas',
+   uContestOldNewYear in '..\..\src\contestFactory\uContestOldNewYear.pas',
+   uContestOZCRO in '..\..\src\contestFactory\uContestOZCRO.pas',
+   uContestOZCRZ in '..\..\src\contestFactory\uContestOZCRZ.pas',
+   uContestRadioVHFFD in '..\..\src\contestFactory\uContestRadioVHFFD.pas',
+   uContestRAEM in '..\..\src\contestFactory\uContestRAEM.pas',
+   uContestRDA in '..\..\src\contestFactory\uContestRDA.pas',
+   uContestRegion1FieldDay in '..\..\src\contestFactory\uContestRegion1FieldDay.pas',
+   uContestRegion1FieldDayRCCCW in '..\..\src\contestFactory\uContestRegion1FieldDayRCCCW.pas',
+   uContestRegion1FieldDayRCCSSB in '..\..\src\contestFactory\uContestRegion1FieldDayRCCSSB.pas',
+   uContestRFASChampionshipCW in '..\..\src\contestFactory\uContestRFASChampionshipCW.pas',
+   uContestRSGBRoPoCoCW in '..\..\src\contestFactory\uContestRSGBRoPoCoCW.pas',
+   uContestRSGBRoPoCoSSB in '..\..\src\contestFactory\uContestRSGBRoPoCoSSB.pas',
+   uContestYBDX in '..\..\src\contestFactory\uContestYBDX.pas',
+   uContestSouthAmericanWW in '..\..\src\contestFactory\uContestSouthAmericanWW.pas',
+   uContestSPDX in '..\..\src\contestFactory\uContestSPDX.pas',
+   uContestStewPerry in '..\..\src\contestFactory\uContestStewPerry.pas',
+   uContestTenTen in '..\..\src\contestFactory\uContestTenTen.pas',
+   uContestTOEC in '..\..\src\contestFactory\uContestTOEC.pas',
+   uContestUCG in '..\..\src\contestFactory\uContestUCG.pas',
+   uContestWWL in '..\..\src\contestFactory\uContestWWL.pas',
+   uContestWWPMC in '..\..\src\contestFactory\uContestWWPMC.pas',
+   uContestYODX in '..\..\src\contestFactory\uContestYODX.pas',
+   uContestUNDX in '..\..\src\contestFactory\uContestUNDX.pas',
+   uContestKingOfSpainCW in '..\..\src\contestFactory\uContestKingOfSpainCW.pas',
+   uContestKingOfSpainSSB in '..\..\src\contestFactory\uContestKingOfSpainSSB.pas',
+   uContestWRTC in '..\..\src\contestFactory\uContestWRTC.pas',
+   uContestR9WUW9WKMemorial in '..\..\src\contestFactory\uContestR9WUW9WKMemorial.pas',
+   uContestRadioMemory in '..\..\src\contestFactory\uContestRadioMemory.pas',
+   uContestREFCW in '..\..\src\contestFactory\uContestREFCW.pas',
+   uContestREFSSB in '..\..\src\contestFactory\uContestREFSSB.pas',
+   uContestBSCI in '..\..\src\contestFactory\uContestBSCI.pas',
+   uContestCQMM in '..\..\src\contestFactory\uContestCQMM.pas',
+   uContestCWOpen in '..\..\src\contestFactory\uContestCWOpen.pas',
+   uContestMakrothen in '..\..\src\contestFactory\uContestMakrothen.pas',
+   uContestWWIH in '..\..\src\contestFactory\uContestWWIH.pas',
+   uContestRadioYOC in '..\..\src\contestFactory\uContestRadioYOC.pas',
+   uContestOKOMSSB in '..\..\src\contestFactory\uContestOKOMSSB.pas',
+   uContestMWC in '..\..\src\contestFactory\uContestMWC.pas',
+   uContestIRTS in '..\..\src\contestFactory\uContestIRTS.pas',
+   uContestEUDX in '..\..\src\contestFactory\uContestEUDX.pas',
+   uContestYOTA in '..\..\src\contestFactory\uContestYOTA.pas',
+   uContestSST in '..\..\src\contestFactory\uContestSST.pas',
+   uContestRTC in '..\..\src\contestFactory\uContestRTC.pas',
+   uContestPOTA in '..\..\src\contestFactory\uContestPOTA.pas',
+   uContestUA4WChampionship in '..\..\src\contestFactory\uContestUA4WChampionship.pas',
+   uContestRSGB18 in '..\..\src\contestFactory\uContestRSGB18.pas',
+   uRFChampionshipPoints in '..\..\src\uRFChampionshipPoints.pas',
+   uExchangeTokens in '..\..\src\uExchangeTokens.pas',
+   uTestContestFactory in 'uTestContestFactory.pas',
+   uTestContestExport in 'uTestContestExport.pas',
+   uTestContestImport in 'uTestContestImport.pas',
+   uTestContestParse in 'uTestContestParse.pas',
+   uTestContestTotals in 'uTestContestTotals.pas',
+   uTestContestObjects in 'uTestContestObjects.pas',
+   uTestLogCapture in 'uTestLogCapture.pas',
+   uTestRegisteredContests in 'uTestRegisteredContests.pas',
+   uTestContestStatesItsRules in 'uTestContestStatesItsRules.pas',
+   (* A CONTEST REGISTERED BY ITS STRING ID, AND ONLY HERE (Q108 S3). The
+      fixture has no ContestType member; it must never be in tr4w.lpr --
+      Lint-ContestUnitsLinked fails the build if it is. *)
+   uContestTestFixture in 'uContestTestFixture.pas',
+   uTestContestById in 'uTestContestById.pas',
+   uTestContestMultipliers in 'uTestContestMultipliers.pas',
+   uTestContestSession in 'uTestContestSession.pas',
+   uTestContestDisplay in 'uTestContestDisplay.pas',
    uTestRadioLinkRetry in 'uTestRadioLinkRetry.pas',
    (* THE STATUS/NOTICE SPLIT.  It streams uMainForm.lfm -- a designed form
      verified by rebuilding it in code is not verified at all -- so it reaches
      the LCL, which this binary already links. *)
    uTestStatusAndNotice in 'uTestStatusAndNotice.pas',
+   (* THE NEW CONTEST DIALOG'S TITLE NAMES THE BUILD.  Streams
+     uNewContestForm.lfm and fires its OnShow; the form arrives here for the
+     first time, the LCL it needs is already linked. *)
+   uNewContestForm      in '..\..\src\ui\lcl\uNewContestForm.pas',
+   uTestNewContestForm  in 'uTestNewContestForm.pas',
+   (* THE WSJT-X CQ DECODE'S THREAD HAND-OFF.  Links MainUnit, which already
+     brings uWSJTX in; no new dependency. *)
+   uTestWSJTXThreading in 'uTestWSJTXThreading.pas',
    // Pins the radio-status change detector.  LOGRADIO itself is not listed
    // here -- it arrives through the search path, the same way uTestIcomRegistry
    // reaches RadioParametersArray.
@@ -267,6 +516,7 @@ uses
    uCWKeyerYCCC in '..\..\src\uCWKeyerYCCC.pas',
    uCWKeyerCPU in '..\..\src\uCWKeyerCPU.pas',
    uTestCWKeyer in 'uTestCWKeyer.pas',
+   uTestCPUKeyerRing in 'uTestCPUKeyerRing.pas',
    uRadioIcom78 in '..\..\src\radioFactory\uRadioIcom78.pas',
    uRadioIcom707 in '..\..\src\radioFactory\uRadioIcom707.pas',
    uRadioIcom725 in '..\..\src\radioFactory\uRadioIcom725.pas',
@@ -343,11 +593,14 @@ uses
    uClusterTokens       in '..\..\src\uClusterTokens.pas',
    uTestDXSpotParse     in 'uTestDXSpotParse.pas',
    uTestSpotAge         in 'uTestSpotAge.pas',
+   uTestSpotStore       in 'uTestSpotStore.pas',
    uTestTelnetTrace     in 'uTestTelnetTrace.pas',
    uTestCrashContext    in 'uTestCrashContext.pas',
    uTestKeychain     in 'uTestKeychain.pas',
    uTestWindowSnap      in 'uTestWindowSnap.pas',
    uAppPaths            in '..\..\src\uAppPaths.pas',
+   uDomFileKeys         in '..\..\src\uDomFileKeys.pas',
+   uContestNames        in '..\..\src\uContestNames.pas',
    uTLSTrust            in '..\..\src\utils\uTLSTrust.pas',
    uHTTPDownload        in '..\..\src\utils\uHTTPDownload.pas',
    uLogBinaryFile       in '..\..\src\uLogBinaryFile.pas',
@@ -356,18 +609,126 @@ uses
 uContestFileKind           in '..\..\src\domain\uContestFileKind.pas',
    uLogRepository       in '..\..\src\uLogRepository.pas',
    uTestLogRepository   in 'uTestLogRepository.pas',
+   uLogContestStatements in '..\..\src\uLogContestStatements.pas',
+   uTestLogContestStatements in 'uTestLogContestStatements.pas',
    uLogNote             in '..\..\src\domain\uLogNote.pas',
    uTestLogNote         in 'uTestLogNote.pas',
    uTestLogNaming       in 'uTestLogNaming.pas',
 uTestContestFileKind       in 'uTestContestFileKind.pas',
    uLogImport           in '..\..\src\uLogImport.pas',
    uTestLogImport       in 'uTestLogImport.pas',
+   (* uLogStore itself, through its entry points -- a write never assumes the
+      .TRW already holds it. *)
+   uTestLogStore        in 'uTestLogStore.pas',
    uLogDatabase         in '..\..\src\domain\uLogDatabase.pas',
    uTestLogDatabase     in 'uTestLogDatabase.pas',
    uLogBackup           in '..\..\src\domain\uLogBackup.pas',
    uTestLogBackup       in 'uTestLogBackup.pas',
+   uQsoMyFacts          in '..\..\src\domain\uQsoMyFacts.pas',
+   uTestLogMyFacts      in 'uTestLogMyFacts.pas',
+   uTestScoringMyFacts  in 'uTestScoringMyFacts.pas',
    uNewContestCommands  in '..\..\src\uNewContestCommands.pas',
    uTestNewContestCommands in 'uTestNewContestCommands.pas',
+   (* Design 7.12: a station fact is a default a contest may override. *)
+   uTestStationFactOverrides in 'uTestStationFactOverrides.pas',
+   (* M9b: the New Contest drop-down's list, and a CATEGORY-POWER change. *)
+   uContestChoices      in '..\..\src\uContestChoices.pas',
+   (* The New Contest dialog's Last Contest button: the log read without
+      adopting it, and the caption fitted to the button. *)
+   uLogFileFacts        in '..\..\src\domain\uLogFileFacts.pas',
+   uLatestContest       in '..\..\src\uLatestContest.pas',
+   uTestLatestContest   in 'uTestLatestContest.pas',
+   uCategoryPowerChange in '..\..\src\uCategoryPowerChange.pas',
+   uTestContestUI       in 'uTestContestUI.pas',
+   (* M10 S8: every contest's identity values, frozen as literals when the
+      tables were deleted. *)
+   uTestContestIdentityPin in 'uTestContestIdentityPin.pas',
+   (* M11 S0b: every contest's six session kinds at every matrix station,
+      frozen as literals before the kinds move into the classes. *)
+   uTestContestKindPin  in 'uTestContestKindPin.pas',
+   (* M11 S3: every prefix contest's key, at stations the matrix does not
+      run, frozen against the old SetPrefix before the rule moved. *)
+   uTestPrefixMultiplierKey in 'uTestPrefixMultiplierKey.pas',
+   (* M11 S4: every DX contest's key, country mode and remaining-countries
+      filter, at stations the matrix does not run, frozen against the old
+      GetDXQTH / country-mode set / FillVisibleBytes before the rule moved. *)
+   uTestDXMultiplierKey in 'uTestDXMultiplierKey.pas',
+   (* M11 S5: every zone contest's zone count, zone list and zero-based
+      numbering, at stations the matrix does not run (a JA entrant), frozen
+      against the old session-kind readers before the rule moved. *)
+   uTestZoneMultiplier  in 'uTestZoneMultiplier.pas',
+   (* P7: the Super Check Partial cell buffer, over the matrix's TRMASTER fixture. *)
+   uTestLogSCP          in 'uTestLogSCP.pas',
+   (* M11 S6 part 1: every contest's domestic QTH rule that is not the
+      domestic file, its hint and its four yes/no answers, at stations the
+      matrix does not run, frozen against the old GetDomQTH, DomStringParse
+      and session-kind tests before the rules moved. *)
+   uTestDomesticMultiplier in 'uTestDomesticMultiplier.pas',
+   (* M11 S7: the exchange RULES the engine decided by the session shape
+      -- the rover county, several QTHs, a blank exchange, CQ WW RTTY's
+      state, the park lookup, the FISTS score -- frozen against the old
+      compares before they moved. *)
+   uTestExchangeRules   in 'uTestExchangeRules.pas',
+   (* M11 S9a: every contest's received-exchange field list, at stations
+      the matrix does not run, frozen against the old
+      SetUpExchangeInformation before it moved into the classes. *)
+   uTestExchangeFields  in 'uTestExchangeFields.pas',
+   (* M11 S9b: every contest's ADIF STX_STRING at every roster station,
+      frozen against the old FormatADIFExchangeOfKind before it moved into
+      the classes. *)
+   uTestADIFSentExchange in 'uTestADIFSentExchange.pas',
+   (* 2026-10-17: every contest's ADIF exchange tags are exactly the ones its
+      own ReceivedExchangeFields declares (TContestBase.EmitADIFReceivedFields). *)
+   uTestADIFReceivedFields in 'uTestADIFReceivedFields.pas',
+   (* M11 S9c: every contest's two Cabrillo exchange columns at every roster
+      station, frozen against the old FormatCabrilloExchangeOfKind before it
+      moved into the classes. *)
+   uTestCabrilloColumns in 'uTestCabrilloColumns.pas',
+   (* M11 S9d: how every contest parses a typed exchange at every roster
+      station -- which engine parser it asks for and every rule around it --
+      frozen against the old ParseExchangeShape before it moved into the
+      classes. *)
+   uTestExchangeParse in 'uTestExchangeParse.pas',
+   (* M11 S9d: the engine's parsers as a stub the parse tests share -- each
+      installs what its parsers "do" and sees which one a contest asked for,
+      by name. *)
+   uTestExchangeParserStub in 'uTestExchangeParserStub.pas',
+   (* M11 S9e part 1: the last three readers of the session's exchange kind
+      outside the initial exchange -- the Sweepstakes log columns, the default
+      CW exchange messages set-up writes, and whether an exchange word may be
+      a grid square -- frozen against the old kind tests before they moved
+      into the classes. *)
+   uTestExchangeKindReaders in 'uTestExchangeKindReaders.pas',
+   (* POTA as a contest class (design Q6, 2026-10-13). *)
+   uTestContestPOTA     in 'uTestContestPOTA.pas',
+   (* Q62: the CTY entity -> ADIF DXCC table, held to the shipped cty.dat. *)
+   uTestDXCCEntities    in 'uTestDXCCEntities.pas',
+   (* The Delaware QSO Party, a new contest (design 7.14, 8.2q). *)
+   uTestContestDelawareQP in 'uTestContestDelawareQP.pas',
+   (* The Nebraska QSO Party, a new contest, and the New England rename
+      with its legacy name (design Q105, 2026-10-16). *)
+   uTestContestNebraskaQP in 'uTestContestNebraskaQP.pas',
+   uTestContestNames    in 'uTestContestNames.pas',
+   (* Every QSO party's stated bands (NY4I, 2026-10-16). *)
+   uTestQSOPartyBands   in 'uTestQSOPartyBands.pas',
+   (* IN7QPNE, the composite of four parties (design 7.14, 8.2r). *)
+   uTestContestIN7QPNE in 'uTestContestIN7QPNE.pas',
+   (* NY4I's rulings Q45, Q49, Q84, Q71, Q85 and Q104, built 2026-10-17. *)
+   uTestContestRulings2026Oct in 'uTestContestRulings2026Oct.pas',
+   (* A QSO party's host-area rule, typed AND scored (Q107, 2026-10-16). *)
+   uTestHostAreaRule    in 'uTestHostAreaRule.pas',
+   (* A grid contest's exchange requires the grid, and a bad grid word is
+      refused, never dropped (Q115, NY4I 2026-10-18). *)
+   uTestGridExchange    in 'uTestGridExchange.pas',
+   (* A .dom loaded into a table that already holds one (LOGDOM's emptying
+      loop read through nil at the end of every list, D7 included). *)
+   uTestDomQTHTableReload in 'uTestDomQTHTableReload.pas',
+   (* Shipped .dom files against their sponsor's list: LABRE's 28 codes and
+      HQ, EUDX's regions only (UDC cross-walk leads, 2026-10-19). *)
+   uTestShippedDomLists in 'uTestShippedDomLists.pas',
+   (* ZONECONT's domestic COUNTRY list, once a hand-built linked list:
+      order, duplicates, case, width, and the reset (pointer audit P5). *)
+   uTestDomesticCountryList in 'uTestDomesticCountryList.pas',
    uTestSettingsFreshInstall in 'uTestSettingsFreshInstall.pas',
    uTestLegacyConversionCheck in 'uTestLegacyConversionCheck.pas',
    uLegacyConversionCheck in '..\..\src\uLegacyConversionCheck.pas',
@@ -421,6 +782,8 @@ begin
    WriteLn('');
 
    RegisterSuite(TUDPBroadcasterTests.Create('UDPBroadcaster'));
+   RegisterSuite(TUDPContactXmlTests.Create('UDPContactXml'));
+   RegisterSuite(TUDPDatagramTests.Create('UDPDatagrams'));
    RegisterSuite(TIcomCIVTests.Create('IcomCIV'));
    RegisterSuite(TRadioBandTests.Create('RadioBand'));
    RegisterSuite(TComboTagTests.Create('ComboTags'));
@@ -438,7 +801,46 @@ begin
    RegisterSuite(TBandLookupTests.Create('BandLookup'));
    RegisterSuite(TCabrilloFormatTests.Create('CabrilloFormat'));
    RegisterSuite(TCabrilloExchangeTests.Create('CabrilloExchange'));
+   RegisterSuite(TContestExportTests.Create('ContestExport'));
+   RegisterSuite(TContestImportTests.Create('ContestImport'));
+   RegisterSuite(TContestParseTests.Create('ContestParse'));
+   RegisterSuite(TContestTotalsTests.Create('ContestTotals'));
+   RegisterSuite(TContestMultipliersTests.Create('ContestMultipliers'));
+   RegisterSuite(TContestSessionTests.Create('ContestSession'));
+   RegisterSuite(TContestDisplayTests.Create('ContestDisplay'));
+   RegisterSuite(TContestStatesItsRulesTests.Create('ContestStatesItsRules'));
+   RegisterSuite(TContestByIdTests.Create('ContestById'));
+   RegisterSuite(TContestUITests.Create('ContestUI'));
+   RegisterSuite(TContestIdentityPinTests.Create('ContestIdentityPin'));
+   RegisterSuite(TContestKindPinTests.Create('ContestKindPin'));
+   RegisterSuite(TPrefixMultiplierKeyTests.Create('PrefixMultiplierKey'));
+   RegisterSuite(TDXMultiplierKeyTests.Create('DXMultiplierKey'));
+   RegisterSuite(TZoneMultiplierTests.Create('ZoneMultiplier'));
+   RegisterSuite(TDomesticMultiplierTests.Create('DomesticMultiplier'));
+   RegisterSuite(TExchangeRuleTests.Create('ExchangeRules'));
+   RegisterSuite(TExchangeFieldsTests.Create('ExchangeFields'));
+   RegisterSuite(TADIFSentExchangeTests.Create('ADIFSentExchange'));
+   RegisterSuite(TADIFReceivedFieldsTests.Create('ADIFReceivedFields'));
+   RegisterSuite(TCabrilloColumnsTests.Create('CabrilloColumns'));
+   RegisterSuite(TExchangeParseTests.Create('ExchangeParse'));
+   RegisterSuite(TExchangeKindReadersTests.Create('ExchangeKindReaders'));
+   RegisterSuite(TContestPOTATests.Create('ContestPOTA'));
+   RegisterSuite(TDXCCEntitiesTests.Create('DXCCEntities'));
+   RegisterSuite(TContestDelawareQPTests.Create('ContestDelawareQP'));
+   RegisterSuite(TContestNebraskaQPTests.Create('ContestNebraskaQP'));
+   RegisterSuite(TContestNamesTests.Create('ContestNames'));
+   RegisterSuite(TQSOPartyBandsTests.Create('QSOPartyBands'));
+   RegisterSuite(TContestIN7QPNETests.Create('ContestIN7QPNE'));
+   RegisterSuite(TContestRulings2026OctTests.Create('ContestRulings2026Oct'));
+   RegisterSuite(THostAreaRuleTests.Create('HostAreaRule'));
+   RegisterSuite(TGridExchangeTests.Create('GridExchange'));
+   RegisterSuite(TDomQTHTableReloadTests.Create('DomQTHTableReload'));
+   RegisterSuite(TShippedDomListsTests.Create('ShippedDomLists'));
+   RegisterSuite(TDomesticCountryListTests.Create('DomesticCountryList'));
    RegisterSuite(TCRC32Tests.Create('CRC32'));
+   RegisterSuite(TCRC16Tests.Create('CRC16'));
+   RegisterSuite(TWinKeyWireTests.Create('WinKeyWire'));
+   RegisterSuite(TLogSCPTests.Create('LogSCP'));
    RegisterSuite(TK4SpectrumTests.Create('K4Spectrum'));
    RegisterSuite(TIcomScopeTests.Create('IcomScope'));
    RegisterSuite(TIcomScopeSeamTests.Create('IcomScopeSeam'));
@@ -453,6 +855,8 @@ begin
    RegisterSuite(TCTYDATTests.Create('CTYDAT'));
    RegisterSuite(TContestReadinessTests.Create('ContestReadiness'));
    RegisterSuite(TMultsTests.Create('Mults'));
+   RegisterSuite(TSortedStringListTests.Create('SortedStringList'));
+   RegisterSuite(TCallsignsListTests.Create('CallsignsList'));
    RegisterSuite(TTestNetFraming.Create('NetFraming'));
    RegisterSuite(TTestADIFExchange.Create('ADIFExchange'));
    RegisterSuite(TCallSignRoutinesTests.Create('CallSignRoutines'));
@@ -478,10 +882,20 @@ begin
    RegisterSuite(TConfigDefaultsTests.Create('ConfigDefaults'));
    RegisterSuite(THamLibIDTests.Create('HamLibIDs'));
    RegisterSuite(TCWKeyerTests.Create('CWKeyer'));
+   RegisterSuite(TCPUKeyerRingTests.Create('CPUKeyerRing'));
    RegisterSuite(TSHA256Tests.Create('SHA256'));
    RegisterSuite(TCWFramingTests.Create('CWFraming'));
+   RegisterSuite(TContestFactoryTests.Create('ContestFactory'));
+   RegisterSuite(TOffBandCreditTests.Create('OffBandCredit'));
+   RegisterSuite(TMalformedGridTests.Create('MalformedGrid'));
+   RegisterSuite(TRoverDupeKeyTests.Create('RoverDupeKey'));
+   RegisterSuite(TNYQPRoverTests.Create('NYQPRover'));
+   RegisterSuite(TOperatorCQMemoryTests.Create('OperatorCQMemory'));
    RegisterSuite(TRadioLinkRetryTests.Create('RadioLinkRetry'));
    RegisterSuite(TStatusAndNoticeTests.Create('StatusAndNotice'));
+   RegisterSuite(TNewContestFormTests.Create('NewContestForm'));
+   RegisterSuite(TLatestContestTests.Create('LatestContest'));
+   RegisterSuite(TWSJTXThreadingTests.Create('WSJTXThreading'));
    RegisterSuite(TAcceleratorTests.Create('Accelerators'));
    RegisterSuite(TMenuShortcutTests.Create('MenuShortcuts'));
    RegisterSuite(TEditingKeysTests.Create('EditingKeys'));
@@ -495,6 +909,7 @@ begin
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TSpotAgeTests.Create('SpotAge'));
+   RegisterSuite(TSpotStoreTests.Create('SpotStore'));
    RegisterSuite(TTelnetTraceTests.Create('TelnetTrace'));
    RegisterSuite(TCrashContextTests.Create('CrashContext'));
    RegisterSuite(THPTimerTests.Create('HPTimer'));
@@ -505,13 +920,18 @@ begin
    RegisterSuite(TLogDatabaseTests.Create('LogDatabase'));
    RegisterSuite(TLogBackupTests.Create('LogBackup'));
    RegisterSuite(TNewContestCommandsTests.Create('NewContestCommands'));
+   RegisterSuite(TStationFactOverrideTests.Create('StationFactOverrides'));
    RegisterSuite(TSettingsFreshInstallTests.Create('SettingsFreshInstall'));
    RegisterSuite(TLegacyConversionCheckTests.Create('LegacyConversionCheck'));
    RegisterSuite(TUILanguageTests.Create('UILanguage'));
    RegisterSuite(TLogRepositoryTests.Create('LogRepository'));
+   RegisterSuite(TLogContestStatementsTests.Create('LogContestStatements'));
    RegisterSuite(TLogNamingTests.Create('LogNaming'));
    RegisterSuite(TContestFileKindTests.Create('ContestFileKind'));
    RegisterSuite(TLogImportTests.Create('LogImport'));
+   RegisterSuite(TLogStoreTests.Create('LogStore'));
+   RegisterSuite(TLogMyFactsTests.Create('LogMyFacts'));
+   RegisterSuite(TScoringMyFactsTests.Create('ScoringMyFacts'));
    RegisterSuite(TClusterTokensTests.Create('ClusterTokens'));
    RegisterSuite(TSplitReassertTests.Create('SplitReassert'));
    RegisterSuite(TCWByCATTimerTests.Create('CWByCATTimer'));

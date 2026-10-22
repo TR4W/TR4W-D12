@@ -29,6 +29,11 @@ unit uContestCQWPXSSB;
 interface
 
 uses
+   (* VC: the kind enums the transcribed row getters return (M10 S5). *)
+   VC,
+   (* uContestBase: TExchangeParsers, which the format's signature
+      names (M11 S9d). *)
+   uContestBase,
    uContestCQWPXBase;
 
 type
@@ -43,17 +48,91 @@ type
          ambiguity a property removes, so the getter is not part of the
          surface: callers use the property, descendants override the getter. *)
       function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetFriendlyName: string; override;
+
+      (* STATED AT M10 S5, transcribed from the ContestsArray row the base
+         read until then. The flag set is the family's -- see the base. *)
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
    public
    end;
 
 implementation
 
 uses
-   VC, uContestRegistry;
+   uExchangeFields,
+   uContestRegistry;
 
 function TContestCQWPXSSB.GetDisplayName: string;
 begin
-   Result := 'CQ WPX - SSB';
+   Result := 'CQ WW WPX Contest, SSB';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestCQWPXSSB.GetCabrilloName: string;
+begin
+   Result := 'CQ-WPX-SSB';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestCQWPXSSB.GetADIFContestId: string;
+begin
+   Result := 'CQ-WPX-SSB';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestCQWPXSSB.GetFriendlyName: string;
+begin
+   Result := 'CQ WW WPX Contest, SSB';
+end;
+
+function TContestCQWPXSSB.GetWA7BNMId: integer;
+begin
+   Result := 291;
+end;
+
+function TContestCQWPXSSB.GetQRZRUId: integer;
+begin
+   Result := 6;
+end;
+
+function TContestCQWPXSSB.GetSubmissionEmail: string;
+begin
+   Result := 'ssb@cqwpx.com';
+end;
+
+function TContestCQWPXSSB.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTQSONumberExchange;
+end;
+
+function TContestCQWPXSSB.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQSONumber;
+end;
+
+function TContestCQWPXSSB.ParseReceivedExchangeFormat(const aText: string;
+                                                      aParsers: TExchangeParsers;
+                                                      var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTQSONumber(aText, aExch);
+end;
+
+procedure TContestCQWPXSSB.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   aMessages.WriteRSTQSONumber;
 end;
 
 initialization

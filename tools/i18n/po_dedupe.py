@@ -120,9 +120,25 @@ def dedupe(entries):
                nseen.add(n)
                notes.append(n)
 
+      # TRANSLATOR COMMENTS ('# ' lines) FROM EVERY COPY, first-seen order: they
+      # are the record of why a translation reads as it does (the dated audit
+      # notes, an author credit's provenance), and a merge that kept only the
+      # winner's would lose the loser's reason with no trace. The flags (e.g.
+      # object-pascal-format) and '#|' previous-msgid lines describe the
+      # WINNER's text, so they come from the winner alone. Until 2026-10-18 the
+      # merged entry carried none of the three.
+      comments, cseen = [], set()
+      for e in group:
+         for c in e.comments:
+            if c not in cseen:
+               cseen.add(c)
+               comments.append(c)
+
       merged = pofile.Entry(key=winner.key, source=winner.source,
                             target=winner.target, fuzzy=winner.fuzzy,
-                            notes=notes, refs=refs, obsolete=False)
+                            notes=notes, refs=refs, obsolete=False,
+                            comments=comments, flags=list(winner.flags),
+                            previous=list(winner.previous))
       out.append(merged)
       collapsed += 1
       removed += len(group) - 1

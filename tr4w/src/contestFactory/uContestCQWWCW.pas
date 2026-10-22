@@ -29,6 +29,11 @@ unit uContestCQWWCW;
 interface
 
 uses
+   (* VC: the kind enums the transcribed row getters return (M10 S5). *)
+   VC,
+   (* uContestBase: TExchangeParsers, which the format's signature
+      names (M11 S9d). *)
+   uContestBase,
    uContestCQWWBase;
 
 type
@@ -43,17 +48,109 @@ type
          ambiguity a property removes, so the getter is not part of the
          surface: callers use the property, descendants override the getter. *)
       function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetFriendlyName: string; override;
+
+      (* STATED AT M10 S5, transcribed from the ContestsArray row the base
+         read until then. The flag set is the family's -- see the base. *)
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
    public
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesZone: boolean; override;
    end;
 
 implementation
 
 uses
-   VC, uContestRegistry;
+   uExchangeFields,
+   uContestRegistry;
 
 function TContestCQWWCW.GetDisplayName: string;
 begin
-   Result := 'CQ World Wide DX - CW';
+   Result := 'CQ Worldwide DX Contest, CW';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestCQWWCW.GetCabrilloName: string;
+begin
+   Result := 'CQ-WW-CW';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestCQWWCW.GetADIFContestId: string;
+begin
+   Result := 'CQ-WW-CW';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestCQWWCW.GetFriendlyName: string;
+begin
+   Result := 'CQ Worldwide DX Contest, CW';
+end;
+
+function TContestCQWWCW.GetWA7BNMId: integer;
+begin
+   Result := 192;
+end;
+
+function TContestCQWWCW.GetQRZRUId: integer;
+begin
+   Result := 5;
+end;
+
+function TContestCQWWCW.GetSubmissionEmail: string;
+begin
+   Result := 'cw@cqww.com';
+end;
+
+(* THE ZONE, AS CQ WW SSB AND RTTY FILL IT -- Q96, NY4I 2026-10-14: "both
+  should fill zone". This was CustomInitialExchange, carried from D7, which
+  with the default empty CUSTOM INITIAL EXCHANGE STRING filled nothing. *)
+function TContestCQWWCW.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := ZoneInitialExchange;
+end;
+
+function TContestCQWWCW.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTZoneExchange;
+end;
+
+function TContestCQWWCW.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTZone;
+end;
+
+function TContestCQWWCW.ParseReceivedExchangeFormat(const aText: string;
+                                                    aParsers: TExchangeParsers;
+                                                    var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTZone(aText, aExch);
+end;
+
+procedure TContestCQWWCW.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   aMessages.WriteRSTZone(SendsStateAfterZone);
+end;
+
+function TContestCQWWCW.ExchangeCarriesZone: boolean;
+begin
+   Result := True;
 end;
 
 initialization

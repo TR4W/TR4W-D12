@@ -25,7 +25,7 @@ unit uTestCabrilloFormat;
       - mode = Phone: returns 'PH'
       - mode = Digital + extMode = eRTTY/eNoMode: returns 'RY'
       - mode = Digital + any other extMode: returns 'DG'
-      - mode = FM, modeOverridesToPhone = True: returns 'PH' (Winter Field Day)
+      - mode = FM, modeOverridesToPhone = True: returns 'PH' (the Delaware QSO Party)
       - mode = FM, modeOverridesToPhone = False: returns 'FM'
 
   Pre-migration regression net: these tests must pass identically on
@@ -196,7 +196,7 @@ end;
 procedure TCabrilloFormatTests.Test_Mode_FM_OverrideToPhone;
 begin
    BeginTest('Test_Mode_FM_OverrideToPhone');
-   // Winter Field Day flag overrides FM to PH per its scoring rules.
+   // The Delaware QSO Party writes FM as PH (Winter Field Day did until Q54).
    CheckEquals('PH', string(FormatCabrilloMode(FM, eNoMode, True)), '');
 end;
 

@@ -69,6 +69,22 @@ python tools\i18n\po_lint.py i18n\tr4w_pl.po --fix    # only repairs the harmles
 Catches a changed `%s`, a dropped line break, and entries left empty but no longer
 flagged. Non-zero exit means a real defect.
 
+It also fails a catalogue whose `TC_TRANSLATION_AUTHOR` is the English msgid (`N4AF`),
+**fuzzy or not**, because fuzzy entries ship. That entry is the About box's
+"<language> translation by <author>" credit: name and callsign of the translator
+(never an email), `(SK)` after a silent key's callsign, and **empty or `LibreTranslate`
+for a machine translation**. The About box then says LibreTranslate and adds
+`TC_TRANSLATION_CORRECTIONS` ("Corrections are appreciated."). The unit test
+`uTestUILanguage.Test_NoCatalogueCreditsTheEnglishAuthor` pins the same rule against the
+embedded catalogues, which is the copy that gates a build (2026-10-16).
+
+It also fails an entry whose English is **not language** -- `F1`, `8`, `...` -- because
+nothing should have offered it to a translator. `pofile.is_translatable` is the rule;
+`po_merge --apply` removes such an entry while its msgstr is empty (2026-10-21).
+
+**There is no English catalogue to lint** (2026-10-21): English is the msgid, and
+`tr4w_en.po` was deleted. No catalogue is exempt from any check any more.
+
 ---
 
 ## Refresh the catalogues after the program changes
@@ -84,18 +100,61 @@ Only needed when forms or strings have changed.
 python tools\i18n\po_merge.py --pot tr4w\languages\tr4w_laz.pot --apply
 ```
 
+**Only new RESOURCESTRINGS? No IDE needed.** FPC writes a `.rsj` for every unit
+with resourcestrings on every build (`build-out\app-i386-win32\uAppStrings.rsj`),
+and Lazarus' own `updatepofiles` turns one into a template. Write it to a
+**scratch** file, never to `tr4w_laz.pot`:
+
+```powershell
+New-Item -ItemType File <scratch>\uappstrings.pot -Force     # it refuses a missing .pot
+C:\Lazarus\tools\updatepofiles.exe build-out\app-i386-win32\uAppStrings.rsj <scratch>\uappstrings.pot
+python tools\i18n\po_merge.py --pot <scratch>\uappstrings.pot          # dry run first
+python tools\i18n\po_merge.py --pot <scratch>\uappstrings.pot --apply
+```
+
+**Never point `updatepofiles` at `tr4w\languages\tr4w_laz.pot`.** It deletes
+every template entry that is not in the files it was given
+(`translations.pas` `UpdatePOFile` -> `RemoveTaggedItems(0)`), and the form
+half of that template comes from `.lrj` files that only the IDE writes when it
+resaves forms -- so it would strip every `.lfm` caption out of the template.
+The `.lfm` half still needs step 1.
+
+**An `--apply` is lossless since 2026-10-18.** Before that, every catalogue
+rewrite -- `po_merge`, `po_lint --fix`, `po_rekey`, `po_prune`, `po_dedupe`,
+`mt_seed` -- went through a `pofile.write_po` that rebuilt the file from parsed
+fields, dropping every `# ` translator comment and replacing the header (4-5
+lines per catalogue, 36 in Polish, G0DVJ's Poedit header among them). It now
+writes unchanged entries from their own text, and
+`python tools\i18n\test_pofile.py` fails if any catalogue does not read and
+write back byte-identical. Check `git diff --numstat i18n` after an `--apply`:
+an add-only merge is additions and no deletions.
+
 ---
 
 ## Put translations into the program
 
 ```powershell
-powershell -File tr4w\build\Make-LanguageRes.ps1     # catalogues -> res\tr4w_languages.res
-powershell -File tr4w\build\Build-App.ps1
+powershell -File tr4w\build\Build-App.ps1     # regenerates res\tr4w_languages.res itself
 ```
 
-Only entries a person has **approved** are embedded — anything still marked "Needs
-work" is dropped. So a language full of machine drafts adds nothing to the exe until
-someone reviews it.
+**`Build-App.ps1` and `Build-Tests.ps1` regenerate `res\tr4w_languages.res`
+automatically** (2026-10-16; before that nothing ran `Make-LanguageRes.ps1` and
+two catalogue commits never reached a binary). The trigger is CONTENT, not file
+times: `res\tr4w_languages.res.inputs` records a sha256 per `i18n\tr4w_*.po` plus
+the generator, and the build recompares them (~0.1 s when current, ~3 s to
+regenerate; the output is byte-identical for identical inputs). A failure to
+regenerate FAILS the build. **After changing a catalogue, build once and commit
+the `.res` AND the `.inputs` together** — the Linux and macOS builds cannot run
+the generator, so `build/check-language-res.sh` (stage `languages` in
+`build-unix.sh`) FAILS them if the committed pair does not match the
+catalogues. You can still run `Make-LanguageRes.ps1` by hand; do so after a
+Lazarus upgrade, whose `lclstrconsts` catalogues are embedded but deliberately
+not hashed.
+
+Unreviewed ("Needs work") entries ARE embedded since 2026-09-21, with their
+`#,` flag stripped in the shipped copy only; the `.po` keeps its marker.
+`Make-LanguageRes.ps1 -ReviewedOnly` is an experiment, not a setting: the next
+build puts the default back (the stamp's `mode` line no longer matches).
 
 Check it worked:
 
@@ -179,8 +238,8 @@ is in `i18n\languages.json` and `--lang FIN` is enough.
 |---|---|
 | `mt_seed.py` | machine drafts for empty entries, always marked "Needs work" |
 | `po_lint.py` | checks placeholders, line breaks and entry state |
-| `po_merge.py` | adds new strings to every catalogue; never edits an existing translation |
-| `pas2po.py` | language tables → `.po` (also creates a new language) |
+| `po_merge.py` | adds new strings to every catalogue; never edits an existing translation; never adds -- and drops when empty -- an entry that is not language (`F1`, `8`, `...`) |
+| `pas2po.py` | creates a new language (`--new-lang`). Never writes English, which has no catalogue |
 | `po2pas.py` | `.po` → language tables; refuses anything still "Needs work" |
 | `pas2res.py` | English tables → `uTR4WStrings.pas` resourcestrings |
 | `po_rekey.py` | adds the run-time identifier beside the `msgctxt` key |
@@ -188,7 +247,9 @@ is in `i18n\languages.json` and `--lang FIN` is enough.
 | `ini2po.py` | help INIs ⟷ `.po` |
 | `po_defuzz.py` | a copy with the "Needs work" flags removed, for testing only |
 | `salvage_lossy.py` | recovers what it can from a lang file that decodes under no codepage (CHN) |
-| `pofile.py`, `pasconsts.py` | shared readers — not run directly |
+| `pofile.py`, `pasconsts.py` | shared readers — not run directly. `pofile` rewrites losslessly |
+| `test_pofile.py` | the gate on that: every catalogue must read and write back byte-identical |
+| `test_is_translatable.py` | pins `pofile.is_translatable`, and that no catalogue holds an entry that is not language |
 
 ---
 

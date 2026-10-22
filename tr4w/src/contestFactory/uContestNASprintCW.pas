@@ -21,7 +21,18 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
 (* North American Sprint - CW.
 
-  OnePointPerQSO. A sprint's character is its QSY rule and its exchange, not its scoring. *)
+  OnePointPerQSO. A sprint's character is its QSY rule and its exchange, not its scoring.
+
+  ON TContestBase SINCE M3 (2026-10-01), with the RTTY running a SIBLING class,
+  not a family member -- no NA Sprint base is introduced. The evidence: the two
+  rows already differ (domestic file 'naqp' here, 's49p8' for RTTY), this class
+  owns its export and RTTY's does not, and NY4I's family ruling names NRAU-Baltic
+  only; whether every two-mode pair follows it is Q7 in
+  CONTEST_OWNERSHIP_DESIGN.md, still his. TContestFixedPoints retired at M3; the
+  one point is stated here through the FixedModePoints helper.
+
+  THE SSB SPRINT IS NOT THIS CONTEST'S SIBLING EITHER. NY4I: a different contest
+  with a different sponsor -- uContestSprintSSB, on TContestBase. *)
 unit uContestNASprintCW;
 
 {$I tr4w.inc}
@@ -29,12 +40,12 @@ unit uContestNASprintCW;
 interface
 
 uses
-   VC, uContestBase, uContestFixedPoints;
+   VC, uContestBase;
 
 type
-   TContestNASprintCW = class(TContestFixedPoints)
+   TContestNASprintCW = class(TContestBase)
    protected
-      function GetFormatsExchange: boolean; override;
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
       (* THE GETTERS BEHIND TContestBase's PROPERTIES.
 
          PROTECTED, MATCHING THE BASE. Left public -- which is what the first
@@ -44,34 +55,141 @@ type
          ambiguity a property removes, so the getter is not part of the
          surface: callers use the property, descendants override the getter. *)
       function GetDisplayName: string; override;
-   public
-      constructor Create(aContest: ContestType); override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetFriendlyName: string; override;
 
-      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                          const aQso: ContestExchange;
-                                          const aRSTSent: string): string; override;
-      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                              const aQso: ContestExchange;
-                                              const aRSTReceived: string;
-                                              const aHisQTH: string): string; override;
-      function FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                      const aQso: ContestExchange): string; override;
+      (* STATED AT M10 S5, transcribed from the rows the base read until
+         then (ContestsArray, QSOParties, ContestsBooleanArray). The
+         flags: see TContestBase.GetFlags. *)
+      function GetWA7BNMId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+      function GetFlags: TContestFlags; override;
+   public
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesDomesticQTH: boolean; override;
    end;
 
 implementation
 
 uses
-   SysUtils, uContestRegistry;
+   uCabrilloExchange,
+   uExchangeFields,
+   uDXMultiplierKey,
+   SysUtils, uContestRegistry, uContestFixedPoints,
+   uTR4WStrings;
 
-constructor TContestNASprintCW.Create(aContest: ContestType);
+procedure TContestNASprintCW.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   inherited Create(aContest);
-   SetPoints(1, 1);
+   aQso.QSOPoints := FixedModePoints(aQso.Mode, 1, 1, 1);
 end;
 
 function TContestNASprintCW.GetDisplayName: string;
 begin
-   Result := 'North American Sprint - CW';
+   Result := 'North American Sprint, CW';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestNASprintCW.GetCabrilloName: string;
+begin
+   Result := 'NA-SPRINT-CW';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestNASprintCW.GetADIFContestId: string;
+begin
+   Result := 'NA-SPRINT-CW';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestNASprintCW.GetFriendlyName: string;
+begin
+   Result := 'North American Sprint, CW';
+end;
+
+function TContestNASprintCW.GetWA7BNMId: integer;
+begin
+   Result := 253;
+end;
+
+function TContestNASprintCW.GetSubmissionEmail: string;
+begin
+   Result := 'cwsprint@ncjweb.com';
+end;
+
+function TContestNASprintCW.GetDomesticFileName: string;
+begin
+   Result := 'naqp';
+end;
+
+function TContestNASprintCW.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := NameQTHInitialExchange;
+end;
+
+function TContestNASprintCW.GetExchangeKind: ExchangeType;
+begin
+   Result := QSONumberNameDomesticOrDXQTHExchange;
+end;
+
+function TContestNASprintCW.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsQSONumberNameQTH;
+end;
+
+function TContestNASprintCW.ParseReceivedExchangeFormat(const aText: string;
+                                                        aParsers: TExchangeParsers;
+                                                        var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseQSONumberNameDomesticOrDXQTH(aText, aExch);
+end;
+
+function TContestNASprintCW.ExchangeCarriesDomesticQTH: boolean;
+begin
+   Result := True;
+end;
+
+function TContestNASprintCW.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfRTCCapable];
 end;
 
 (* THE EXCHANGE IS SERIAL, NAME AND STATE-OR-DX.
@@ -85,55 +203,123 @@ end;
    marker in the legacy source, so they were set to those numbers together and
    on purpose.
 
-   THE SHARED ARM STAYS: SSB-SPRINT uses the same body and has no class yet, so
-   QSONumberNameDomesticOrDXQTHExchange is still live. *)
-function TContestNASprintCW.GetFormatsExchange: boolean;
+   BOTH COLUMNS ARE HELPERS (M11 S9c): the SSB Sprint and the NA Sprint RTTY
+   run the same exchange with no rule of their own, and call the same two
+   helpers in uCabrilloExchange. *)
+function TContestNASprintCW.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                    const aQso: ContestExchange;
+                                                    const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentQSONumberNameStateDX(aMy, aQso, aCtx);
+end;
+
+function TContestNASprintCW.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                        const aQso: ContestExchange;
+                                                        const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedQSONumberNameQTHDX(aMy, aQso, aCtx);
+end;
+
+function TContestNASprintCW.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                                const aQso: ContestExchange): string;
+begin
+   if aMy.MyState = '' then
+      begin
+      Result := Format('%-4d %-7s %-8s', [aQso.NumberSent, aMy.MyName, 'DX']);
+      end
+   else
+      begin
+      Result := Format('%-4d %-7s %-8s', [aQso.NumberSent, aMy.MyName, aMy.MyState]);
+      end;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation.
+   The arm named NASPRINTCW, NASPRINTRTTY; each of them holds its own
+   copy (design 1.4), so a sponsor changing one changes one. *)
+procedure TContestNASprintCW.DescribeSession(const aStation: TStationContext;
+                                             aSession: TSessionDefaults);
+begin
+   aSession.Band := Band20;
+
+   aSession.CQExchangeCW := '^  \   # ' + aStation.MyName + ' ' + aStation.MyState;
+   aSession.QSLCW := 'TU';
+   aSession.QuickQSLCW1 := 'EE';
+   aSession.QSOBeforeCW := 'B4 \ NA';
+   aSession.SPExchangeCW := '@ # ' + aStation.MyName + ' ' + aStation.MyState + '  \ ';
+   aSession.RepeatSPExchangeCW := '# ' + aStation.MyName + ' ' + aStation.MyState;
+   aSession.CallOkNowCW := '} R';
+
+   aSession.SetCQMemory(CW, smkF1, 'NA \');
+   aSession.SetCQMemory(CW, smkF2, 'CQ^NA CQ^NA \ \ NA');
+   aSession.SetCQMemory(CW, smkF5, '   ? ');
+   aSession.SetCQMemory(CW, smkF6, '   NA \ NA ');
+   aSession.SetCQMemory(CW, smkF7, '   CQ^NA \ \ NA ');
+   aSession.SetCQMemory(CW, smkF8, '   CQ^NA CQ^NA \ \ NA ');
+   (* The arm set Alt-F1 to 'NA \ NA' first and overwrote it with this. *)
+   aSession.SetCQMemory(CW, smkAltF1, 'NA \ \ NA');
+
+   aSession.SetExchangeMemory(CW, smkF3, 'NR #');
+   aSession.SetExchangeMemory(CW, smkF4, aStation.MyName);
+   aSession.SetExchangeMemory(CW, smkF5, aStation.MyState);
+   aSession.SetExchangeMemory(CW, smkF6, '@ \ NR^# ' + aStation.MyName + ' ' + aStation.MyState);
+   aSession.SetExchangeMemory(CW, smkF7, '   CQ^NA \ \ NA ');
+   aSession.SetExchangeMemory(CW, smkF8, '   CQ^NA CQ^NA \ \ NA ');
+   aSession.SetExchangeMemory(CW, smkAltF3, 'NR?');
+   aSession.SetExchangeMemory(CW, smkAltF4, 'NAME?');
+   aSession.SetExchangeMemory(CW, smkAltF5, 'QTH?');
+
+   aSession.SprintQSYRule := True;
+   aSession.AddDomesticCountries(DomesticCountriesKVE);
+   aSession.AddDomesticCountry('KL');
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for NASPRINTRTTY, SPRINTSSB.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestNASprintCW.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskFieldWithComment(TC_ENTERYOURQTHANDTHENAME, ncfMyState);
+   aPrompts.AskField(ncfMyName);
+end;
+
+(* A DX MULTIPLIER AT EVERY STATION -- M11 S4 part 2, 2026-10-14: the trait
+   this class stated (`NorthAmericanARRLDXCCWithNoUSACanadaOrkL7`) until the
+   kind was deleted. *)
+function TContestNASprintCW.HasDXMultiplier: boolean;
 begin
    Result := True;
 end;
 
-function TContestNASprintCW.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                            const aQso: ContestExchange;
-                                            const aRSTSent: string): string;
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   North American countries other than the USA, Canada and Alaska -- the
+   NorthAmericanARRLDXCCWithNoUSACanadaOrkL7 arm. The CQ list, whatever the
+   kind's name: the country-mode set never held it. *)
+function TContestNASprintCW.DXMultiplierKey(const aQso: ContestExchange;
+                                            out aKey: DXMultiplierString): boolean;
 begin
-   if aMy.MyState = '' then
+   aKey := '';
+   Result := False;
+   if IsNorthAmericanDXCountry(aQso.QTH.CountryID, aQso.QTH.Continent) then
       begin
-      Result := Format('%-4d %-7s %-8s', [aQso.NumberSent, aMy.MyName, 'DX']);
-      end
-   else
-      begin
-      Result := Format('%-4d %-7s %-8s', [aQso.NumberSent, aMy.MyName, aMy.MyState]);
+      aKey := aQso.QTH.CountryID;
+      Result := True;
       end;
 end;
 
-function TContestNASprintCW.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                                const aQso: ContestExchange;
-                                                const aRSTReceived: string;
-                                                const aHisQTH: string): string;
-begin
-   (* Tested on aQso.QTHString and formatted from aHisQTH, matching the
-      legacy arm exactly. *)
-   if aQso.QTHString = '' then
-      begin
-      Result := Format('%-4u %-5s %-4s', [aQso.NumberReceived, string(aQso.Name), 'DX']);
-      end
-   else
-      begin
-      Result := Format('%-4u %-5s %-4s', [aQso.NumberReceived, string(aQso.Name), aHisQTH]);
-      end;
-end;
 
-function TContestNASprintCW.FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                        const aQso: ContestExchange): string;
+(* THE DOMESTIC QTH IS LOOKED UP IN THIS CONTEST'S DOMESTIC FILE, at every
+   station -- M11 S6 part 1b, 2026-10-14. It was the session's
+   `= DomesticFile` (the trait); see TContestBase.UsesDomesticFile. *)
+function TContestNASprintCW.UsesDomesticFile: boolean;
 begin
-   if aMy.MyState = '' then
-      begin
-      Result := Format('%-4d %-7s %-8s', [aQso.NumberSent, aMy.MyName, 'DX']);
-      end
-   else
-      begin
-      Result := Format('%-4d %-7s %-8s', [aQso.NumberSent, aMy.MyName, aMy.MyState]);
-      end;
+   Result := True;
 end;
 
 initialization

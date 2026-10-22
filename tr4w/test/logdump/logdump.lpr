@@ -108,14 +108,35 @@ begin
    Result := ExtendedModeStringArray[m];
 end;
 
-function ContestToString(c: ContestType): string;
+(* THE CONTEST AS THE LOG RECORDS IT -- its ContestTypeSA spelling, which
+   VC still holds, and its ordinal.
+
+   NOT ITS ADIF ID, AND NOT ITS ROVER RULE (M10 S8, 2026-10-14). Both came
+   from ContestsArray, which is deleted: a contest states them in its class
+   (ADIFContestId, SplitsRoverCallOnExport), and asking the class here would
+   link the whole contest factory -- and with it the LCL -- into a program
+   that deliberately links only VC and uLogBinaryFile. This dumps the RECORD;
+   the contest's rules are pinned by the unit tests and the contest matrix.
+   The old ADIF-name field was already wrong for every contest whose row had
+   a blank ADIFName: it wrote CONTEST_<n> where export, since M1, writes the
+   enum's spelling.
+
+   THE RECORD HOLDS A CONTEST HANDLE SINCE Q108 S2, whose byte is the
+   legacy ContestType number for every legacy contest -- and a binary log
+   holds nothing else. The registry (uContestRegistry.ContestId) states
+   that rule for the program; this tool links no factory unit, so it reads
+   the byte as the legacy number itself, and names a byte above the last
+   of them rather than indexing ContestTypeSA out of range. *)
+function ContestToString(c: TContestHandle): string;
 begin
-   // Use the ADIF contest name when set; otherwise fall back to the
-   // enum ordinal.
-   if ContestsArray[c].ADIFName <> '' then
-      Result := string(ContestsArray[c].ADIFName)
+   if c.ToByte <= Ord(High(ContestType)) then
+      begin
+      Result := string(ContestTypeSA[ContestType(c.ToByte)]);
+      end
    else
-      Result := 'CONTEST_' + IntToStr(Ord(c));
+      begin
+      Result := Format('<no contest %d>', [c.ToByte]);
+      end;
 end;
 
 function RecordKindToString(k: LogRecordKind): string;
@@ -171,7 +192,8 @@ begin
    EmitField(first,    'Mode',         ModeToString(rec.Mode));
    EmitField(first,    'ExtMode',      ExtModeToString(rec.ExtMode));
    EmitIntField(first, 'FrequencyHz',  rec.Frequency);
-   EmitField(first,    'Contest',      ContestToString(rec.ceContest));
+   EmitField(first,    'ContestToken', ContestToString(rec.ceContest));
+   EmitIntField(first, 'ContestOrdinal', rec.ceContest.ToByte);
 
    // Time -- format as yyyymmdd / hhmmss to match ADIF directly
    EmitField(first,    'QSODate',
@@ -216,13 +238,11 @@ begin
    EmitField(first,    'Operator',     string(rec.ceOperator));
    EmitField(first,    'ID',           string(rec.id));
 
-   // Contest-attribute flag the verifier needs.  CountyLineAllowed is
-   // True for the 13 single-state QSO parties where a CALL/<county>
-   // form decomposes into bare CALL + APP_TR4W_ROVERCALL.  Living in
-   // ContestsArray (Pascal), we surface it so Python doesn't have to
-   // duplicate the list.
-   EmitBoolField(first, 'CountyLineAllowed',
-                 ContestsArray[rec.ceContest].CountyLineAllowed);
+   (* NO CountyLineAllowed FIELD SINCE M10 S8. It surfaced the deleted
+      row's flag, which decided whether export splits a rover's call; that
+      is the class's SplitsRoverCallOnExport now, and the verifier checks
+      the split it finds in the ADIF for consistency instead -- see
+      verify_adif_export.py. *)
 
    // Filter-relevant flags (Python can re-apply the GoodLookingQSO
    // filter if needed)

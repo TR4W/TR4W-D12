@@ -230,7 +230,15 @@ uses
   (* The log carries its own contest configuration -- phase E2. *)
   uLogStore,
   uLogDatabase,   // LogDatabaseFileName -- the contest database path
-  (* ContestFactoryEnabled -- phase F. *)
+  uContestMatrix, // /MATRIX and /MATRIXLIST -- the legacy-fixture harness
+  (* ~~uContestFactory -- phase F~~ was here for ContestFactoryEnabled alone,
+     and went with it on 2026-09-29. It is back for ActiveContest (M11 S4,
+     2026-10-14): the remaining-countries filter asks the active contest. *)
+  (* ContestUsesDomesticFile -- the settings-gap check asks the active
+     contest whether it reads a domestic file (M11 S6 part 1b). Placed just
+     ahead of uContestFactory so it shadows nothing a later unit supplies;
+     of its interface, this unit names only that function. *)
+  uContestBase,
   uContestFactory,
   uCFG,
   uCRC32,
@@ -376,8 +384,6 @@ uses
   uExternalLoggerBase,
   uExternalLogger,
   uExternalLoggerFactory,
-  // uExternalLoggerManager uses Generics.Collections (Delphi 2009+) - not Delphi 7 IDE compatible
-  //uExternalLoggerManager in 'src\uExternalLoggerManager.pas',
   uDXLabPathfinder,
   uYCCCSO2R,
   uCWKeyerBase,
@@ -444,8 +450,6 @@ uses
   uRadioKenwoodTS2000,
   uIcomCIV,
   uIcomScope,
-  // uRadioManager uses Generics.Collections (Delphi 2009+) - not Delphi 7 IDE compatible
-  //uRadioManager in 'src\radioFactory\uRadioManager.pas',
   // DELETED 2026-08-28: uRemMults_DOM/DX/Zone, uDXSSpotsFilter,
   // uSpotsFilter and uMultsFrequencies. Commented out of this uses clause
   // since the initial commit, so never compiled, and with no live reference
@@ -473,6 +477,9 @@ uses
   NetworkMessageUtils,
   uTR4WStrings,
    uContestFileKind;   (* what kind of file did the operator pick as a contest *)
+  (* ~~uContestSession~~ was here for ContestSession.Exchange, which the
+     settings-gap check handed in; it asks the contest what its exchange
+     carries since M11 S9d, so nothing here reads the session. *)
 
 (* A resourcestring, NOT a TC_ constant in the language tables.
 
@@ -697,7 +704,9 @@ begin
      thought about and one that just happened. *)
    Result := SameText(AnsiString(aArg), AnsiString('/EXPORT')) or
              SameText(AnsiString(aArg), AnsiString('/RESCORE')) or
-             SameText(AnsiString(aArg), AnsiString('/IMPORT'));
+             SameText(AnsiString(aArg), AnsiString('/IMPORT')) or
+             SameText(AnsiString(aArg), AnsiString('/MATRIX')) or
+             SameText(AnsiString(aArg), AnsiString('/MATRIXLIST'));
 end;
 
 function HasHeadlessSwitch: boolean;
@@ -802,6 +811,15 @@ begin
 
    res := ImportBinaryLog(source, target);
 
+   (* An earlier /IMPORTLOG to this target died part way; its staged file was
+     discarded and the import ran again from the start. *)
+   if res.DiscardedStaged <> '' then
+      begin
+      EarlyTrace(SysUtils.Format('[ImportLog] discarded the unfinished ' +
+                                 'import %s left by an earlier run',
+                                 [res.DiscardedStaged]));
+      end;
+
    if not res.Ok then
       begin
       EarlyTrace(SysUtils.Format('[ImportLog] FAILED: %s', [res.Message]));
@@ -872,6 +890,8 @@ begin
       '  /EXPORT            headless ADIF and Cabrillo export, then exit' + sLineBreak +
       '  /IMPORT <file.adi> headless ADIF import into this contest, then exit' + sLineBreak +
       '  /RESCORE           recompute every QSO''s scoring, then exit' + sLineBreak +
+      '  /MATRIX <out> <id> write this contest''s legacy-fixture record, then exit' + sLineBreak +
+      '  /MATRIXLIST <out>  list every contest for the matrix, then exit' + sLineBreak +
       '  /IMPORTLOG <log.trw> [<log.db>]' + sLineBreak +
       '                     convert a binary log to a SQLite log, then exit' + sLineBreak +
       '                     (reports to tr4w-early.log; exit 0 ok, 2 failed)' + sLineBreak +
@@ -991,18 +1011,17 @@ begin
    (* Built natively and encoded ONCE at the assignment. Casting each piece
      and concatenating does not work: the '_' literal promotes the whole
      expression back to UTF-16 and the assignment narrows it again. *)
-   (* dir[1], NOT PWideChar(dir)^ -- THE SAME ADDRESS AND THE SAME BYTES, so
-     the mutex name does not change and an install keeps the identity it had.
-     GetCRC32 takes an untyped `const data`, which is a variable reference:
-     the pointer was never needed to hand it one.
-
-     THE EMPTY CASE IS UNCHANGED TOO. Count is Length(dir) * 2, so an empty
-     path hashes zero bytes either way, and range checks are off (tr4w.inc
-     sets only MODE/MODESWITCH; the build passes no -Cr), so dir[1] reads the
-     terminator exactly as the dereference did. *)
+   (* THE PATH'S UTF-16 BYTES, NAMED AS SUCH. This hashed dir[1] for
+     Length(dir) * 2 bytes -- the string's own UTF-16 code units as they lie
+     in memory. TEncoding.Unicode.GetBytes is exactly that: FPC 3.2.2's
+     TUnicodeEncoding.GetBytes copies the code units unvalidated, in memory
+     order, no BOM (sysencoding.inc:681) -- so the bytes are the same, a lone
+     surrogate included, the mutex name does not change and an install keeps
+     the identity it had. Pinned by uTestCRC32.Test_UnicodeBytesAreTheCodeUnits.
+     Stated as an encoding rather than borrowed from the string's layout (P12,
+     2026-10-18); an empty path is zero bytes and CRC 0, as before. *)
    Result := UTF8Encode(tr4w_ClassName + '_'
-                        + IntToHex(GetCRC32(dir[1],
-                                            Length(dir) * SizeOf(WideChar)), 8));
+                        + IntToHex(GetCRC32(TEncoding.Unicode.GetBytes(dir)), 8));
 end;
 
 
@@ -1079,6 +1098,9 @@ var
     below. `i` in this routine is a tLogLevels, so the walk needs its own. *)
   readinessGaps                         : TStringList;
   gapIndex                              : integer;
+  readinessContest                      : TContestBase;
+  // What /IMPORT tells the operator, for the headless run's own trace.
+  importReport                          : string;
    //  P                                   : Pchar; //n4af
    //   P1                                   : boolean; //n4af
    // S1                                   : String; //n4af
@@ -1422,6 +1444,13 @@ begin
    if UpperCase(ParamStr(1)) = '/IMPORTLOG' then
       begin
       Halt(RunLogImport);
+      end;
+
+   (* /MATRIXLIST -- the contest matrix's list of every known contest. It reads
+     only compiled tables, so it needs nothing below; see uContestMatrix. *)
+   if UpperCase(ParamStr(1)) = '/MATRIXLIST' then
+      begin
+      Halt(RunContestMatrixList(ParamStr(2)));
       end;
 
    { THE SETTINGS REGISTRY, AND THIS IS THE 'once at startup' ITS OWN COMMENT
@@ -2226,7 +2255,8 @@ begin
   scpLoadInDateBase('trmaster.dta');
 {$IFEND}
 
-  mo.FillVisibleBytes;
+  (* The contest's remaining-countries filter -- M11 S4. *)
+  mo.FillVisibleBytes(ActiveContest(Contest));
   ws := ws + 12;
 
   tSetupExchangeNumbers;
@@ -2289,7 +2319,11 @@ begin
     a row. *)
   InstallSettingsEffects;
 
-  SetUpExchangeInformation(ActiveExchange, ExchangeInformation);
+  (* THE CONTEST STATES WHICH FIELDS ITS RECEIVED EXCHANGE CARRIES (M11 S9a)
+    -- it was LOGDUPE.SetUpExchangeInformation, a `case` over the session's
+    exchange shape. Once, here, as before: a peer's run-time CONTEST line
+    does not re-ask it (plan F19). *)
+  ExchangeInformation := ContestReceivedExchangeFields(ActiveContest(Contest));
   SetColumnsWidth;
   CreateMainWindow;
 
@@ -2325,15 +2359,11 @@ begin
      changed. tr4w/test/corpus/test-rescore.sh asserts it. *)
   if SameText(AnsiString(ParamStr(2)), AnsiString('/RESCORE')) then
      begin
-     (* /NOFACTORY -- rescore through the LEGACY case instead of the contest
-        factory, so the two can be diffed against each other. See
-        uContestFactory.ContestFactoryEnabled for why that is the only exact
-        measurement available. *)
-     if SameText(AnsiString(ParamStr(3)), AnsiString('/NOFACTORY')) then
-        begin
-        ContestFactoryEnabled := False;
-        EarlyTrace('[Rescore] the contest factory is OFF for this run');
-        end;
+     (* ~~/NOFACTORY~~ IS GONE (2026-09-29). It rescored through the legacy
+        `case` so the two paths could be diffed, and it could only work while
+        both existed. The legacy side is frozen per corpus set now --
+        tr4w/test/corpus/freeze-rescore-baseline.sh, compared by
+        test-contest-factory.sh -- so the gate outlives the path it measured. *)
      EarlyTrace('[Rescore] recomputing scoring for every QSO');
      tUpdateLog(actRescore);
 
@@ -2379,9 +2409,30 @@ begin
   if ImportFileFromCommandLine <> '' then
      begin
      EarlyTrace('[Import] importing ' + ImportFileFromCommandLine);
-     ImportFromADIF(ImportFileFromCommandLine);
-     EarlyTrace('[Import] done');
+     (* ALL OR NOTHING, AND THE EXIT CODE SAYS WHICH (NY4I, 2026-10-14).
+       This used to Halt(0) whatever happened, so a script was told the file
+       was imported when part of it, or none of it, was. The report is the
+       sentence the operator's dialog carries; it is in tr4w.log as well.
+       2 for failure, /IMPORTLOG's and /RESCORE's convention. *)
+     if not ImportFromADIF(ImportFileFromCommandLine, importReport) then
+        begin
+        EarlyTrace('[Import] FAILED: ' + importReport);
+        Halt(2);
+        end;
+     EarlyTrace('[Import] done: ' + importReport);
      Halt(0);
+     end;
+
+  (* /MATRIX <out-file> <contest id> -- THE CONTEST MATRIX (milestone M0; the
+     contest is named by its id since Q108 S3).
+
+     HERE, BESIDE /EXPORT, for /EXPORT's reason: the .cfg has been read, the
+     contest set up and the log opened, by the same path an operator's start
+     takes. It captures that contest's set-up, scoring and export and halts.
+     See uContestMatrix and tr4w/test/contest-matrix. *)
+  if SameText(AnsiString(ParamStr(2)), AnsiString('/MATRIX')) then
+     begin
+     Halt(RunContestMatrix(ParamStr(3), ParamStr(4)));
      end;
 
   if SameText(ParamStr(2), '/EXPORT') then
@@ -2504,7 +2555,7 @@ begin
   // SetCommand routes it to Preferences with the Station page open and the grid
   // field focused, because Ctrl-J never listed MY GRID -- see SetCommand for
   // the full story.  The row itself has since left CFGCA for
-  // Settings.My.Grid, which is what this now reads.
+  // Settings.My.ResolvedGrid, which is what this now reads.
   //
   // Placed here deliberately: config is loaded (so the grid is the operator's
   // real value, not the default) and the main window exists, but the
@@ -2520,7 +2571,7 @@ begin
   // they open TR4W, and one who does can set it in Preferences > Station --
   // where it is now also findable by search.  The flag is recorded whatever the
   // answer, because being asked and saying no IS an answer.
-  if (not tSilentExport) and (Trim(Settings.My.Grid) = '') then
+  if (not tSilentExport) and (Trim(Settings.My.ResolvedGrid) = '') then
      begin
      if GridPromptAlreadyShown then
         begin
@@ -2561,14 +2612,23 @@ begin
     modal in a batch run is a hang, and this tree has already paid for one. *)
   readinessGaps := TStringList.Create;
   try
-     CollectContestSettingsGaps(Contest <> DUMMYCONTEST,
-                                ActiveExchange,
-                                ActiveDomesticMult,
+     (* Whether the contest reads a domestic file is its own answer (M11 S6
+       part 1b); this read the session's domestic kind. What its exchange
+       carries -- a domestic QTH, a zone, a grid square -- is its own answer
+       too (M11 S9d); this handed in the session's exchange kind. One fetch
+       for all four. *)
+     readinessContest := ActiveContest(Contest);
+     CollectContestSettingsGaps(Contest <> NoContest,
+                                ContestExchangeCarriesDomesticQTH(readinessContest),
+                                ContestExchangeCarriesZone(readinessContest),
+                                ContestExchangeCarriesGridSquare(readinessContest),
+                                ContestUsesDomesticFile(readinessContest),
                                 Settings.My.Call,
                                 Settings.My.Country,
-                                Settings.My.State,
-                                Settings.My.Zone,
-                                Settings.My.Grid,
+                                (* The state SENT -- design 7.11 (M9a). *)
+                                SentMyState,
+                                Settings.My.ResolvedZone,
+                                Settings.My.ResolvedGrid,
                                 Settings.Contest.DomesticFilename,
                                 readinessGaps);
 
@@ -2665,7 +2725,7 @@ begin
    if WinKeySettings.wksWinKey2Enable then
       begin
       logger.Info('Calling tCreateThread from WinKeyer');
-      tCreateThread(@wkOpen, wkThreadID);
+      tCreateThread(wkOpenThreadProc, wkThreadID);
       logger.Info('Created WinKeyer thread with threadid of %u',[PtrUInt(wkThreadID)] );
       end;
 
@@ -2699,7 +2759,8 @@ begin
   // made "the ini is gone" untestable and untrue. Measured before changing it —
   // the recreated file was exactly `[COMMANDS]` and this one key.
   //
-  // It stays valid data (it names the contest .cfg to reopen) but it is NOT a
+  // It stays valid data (it names the contest's .db -- the SQLite log that IS
+  // the contest -- for New Contest's "Last Contest" button to reopen) but it is NOT a
   // setting, so it lives in the store's `general` section beside activeProfile
   // rather than in `commands`, and it is deliberately not registered — nothing
   // in Preferences edits it and it is absent from the search index.

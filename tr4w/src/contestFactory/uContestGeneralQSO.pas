@@ -21,7 +21,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
 (* General QSO.
 
-  OnePointPerQSO -- the plainest rule there is, and the default for 31 contests. GENERAL QSO is TR4W's everyday non-contest logging mode, so this is the one that runs when nothing else does. *)
+  OnePointPerQSO -- the plainest rule there is, and the default for 31 contests. GENERAL QSO is TR4W's everyday non-contest logging mode, so this is the one that runs when nothing else does.
+
+  ON TContestBase SINCE M3 (2026-10-01): TContestFixedPoints, the mechanism
+  base it descended from, retired (CONTEST_OWNERSHIP_DESIGN.md 1.5). The one
+  point is stated here, through the FixedModePoints helper. *)
 unit uContestGeneralQSO;
 
 {$I tr4w.inc}
@@ -29,12 +33,13 @@ unit uContestGeneralQSO;
 interface
 
 uses
-   VC, uContestBase, uContestFixedPoints;
+   VC, uContestBase;
 
 type
-   TContestGeneralQSO = class(TContestFixedPoints)
+   TContestGeneralQSO = class(TContestBase)
    protected
-      function GetFormatsExchange: boolean; override;
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+      function GetWritesADIFContestId: boolean; override;
       (* THE GETTERS BEHIND TContestBase's PROPERTIES.
 
          PROTECTED, MATCHING THE BASE. Left public -- which is what the first
@@ -44,34 +49,123 @@ type
          ambiguity a property removes, so the getter is not part of the
          surface: callers use the property, descendants override the getter. *)
       function GetDisplayName: string; override;
-   public
-      constructor Create(aContest: ContestType); override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetFriendlyName: string; override;
 
-      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                          const aQso: ContestExchange;
-                                          const aRSTSent: string): string; override;
-      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                              const aQso: ContestExchange;
-                                              const aRSTReceived: string;
-                                              const aHisQTH: string): string; override;
-      function FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                      const aQso: ContestExchange): string; override;
+      (* STATED AT M10 S5, transcribed from the rows the base read until
+         then (ContestsArray, QSOParties, ContestsBooleanArray). The
+         flags: see TContestBase.GetFlags. *)
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+      function GetFlags: TContestFlags; override;
+   public
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+      procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                const aSession: TADIFImportSession;
+                                var aExch: ContestExchange); override;
+      (* WHAT THE UI ASKS -- M9b. General QSO is a log, not a contest: call
+         entry shows no contest status, the summary never warns of too many
+         dates, and band stepping reaches the WARC bands. Each was an
+         `if Contest <> GENERALQSO` in the code that showed it. *)
+      function GetShowsContestStatus: boolean; override;
+      function GetMaximumContestDates: integer; override;
+      function GetBandStepIncludesWARC: boolean; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+   public
+      (* THE CABRILLO CONTEST: NAME -- M9a. *)
+      function CabrilloContestName(const aContestTitle: string;
+                                   const aSessionName: string): string; override;
+      (* A BLANK EXCHANGE -- see TContestBase.AcceptsBlankExchange (M11 S7). *)
+      function AcceptsBlankExchange: boolean; override;
+   public
+      (* MAY AN EXCHANGE WORD BE A GRID? -- see
+         TContestBase.ExchangeTextMayHoldGridSquare (M11 S9e part 1). *)
+      function ExchangeTextMayHoldGridSquare: boolean; override;
    end;
 
 implementation
 
 uses
-   SysUtils, uContestRegistry;
+   uCabrilloExchange,
+   uExchangeFields,
+   SysUtils, uContestRegistry, uContestFixedPoints;
 
-constructor TContestGeneralQSO.Create(aContest: ContestType);
+procedure TContestGeneralQSO.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   inherited Create(aContest);
-   SetPoints(1, 1);
+   aQso.QSOPoints := FixedModePoints(aQso.Mode, 1, 1, 1);
 end;
 
 function TContestGeneralQSO.GetDisplayName: string;
 begin
-   Result := 'General QSO';
+   Result := 'General QSO/DX Logging';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestGeneralQSO.GetCabrilloName: string;
+begin
+   Result := 'GENERAL QSO';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestGeneralQSO.GetADIFContestId: string;
+begin
+   Result := 'GENERAL QSO';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestGeneralQSO.GetFriendlyName: string;
+begin
+   Result := 'General QSO/DX Logging';
+end;
+
+function TContestGeneralQSO.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := NameQTHInitialExchange;
+end;
+
+function TContestGeneralQSO.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTNameAndQTHExchange;
+end;
+
+function TContestGeneralQSO.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTNameQTH;
+end;
+
+function TContestGeneralQSO.ParseReceivedExchangeFormat(const aText: string;
+                                                        aParsers: TExchangeParsers;
+                                                        var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTNameAndQTH(aText, aExch);
+end;
+
+function TContestGeneralQSO.ExchangeTextMayHoldGridSquare: boolean;
+begin
+   Result := True;
+end;
+
+function TContestGeneralQSO.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode];
 end;
 
 (* THE EXCHANGE IS RST, A NAME AND A QTH -- the plain ragchew-style log.
@@ -80,32 +174,117 @@ end;
    same three widths, because General QSO has no rule about who sends what. It
    is the fallback contest, so there is nothing contest-specific to encode.
 
-   THE SHARED ARM STAYS: RSTNameAndQTHExchange serves other contests that have
-   no class. *)
-function TContestGeneralQSO.GetFormatsExchange: boolean;
+   BOTH COLUMNS ARE HELPERS (M11 S9c): the RST-name-and-QTH layout is
+   uCabrilloExchange's, which the BWQP calls too.
+
+   NO CONTEST_ID IN ADIF (WritesADIFContestId False): General QSO is an
+   operating mode, not a contest, and uADIF.EmitADIFRecord has never written
+   one for it. It tested `ceContest in [POTA, GENERALQSO]` until M4. *)
+function TContestGeneralQSO.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                    const aQso: ContestExchange;
+                                                    const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentRSTNameState(aMy, aQso, aCtx);
+end;
+
+function TContestGeneralQSO.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                        const aQso: ContestExchange;
+                                                        const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedRSTNameQTH(aMy, aQso, aCtx);
+end;
+
+function TContestGeneralQSO.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                                const aQso: ContestExchange): string;
+begin
+   Result := Format('%-3d %-5s %-7s', [aQso.RSTSent, aMy.MyName, aMy.MyState]);
+end;
+
+function TContestGeneralQSO.GetWritesADIFContestId: boolean;
+begin
+   (* An operating mode, not a contest -- see the note above
+      FormatCabrilloSentExchange. *)
+   Result := False;
+end;
+
+(* THE GRID IS THE EXCHANGE, for any ADIF source -- not just WSJT-X, which does
+   not always include PROGRAMID. Gating on that flag left ExchString empty
+   when PROGRAMID was absent. A record with no grid keeps what the generic
+   import gave it: this contest has no other rule. *)
+procedure TContestGeneralQSO.ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                             const aSession: TADIFImportSession;
+                                             var aExch: ContestExchange);
+begin
+   if aTemps.GridSquare <> '' then
+      begin
+      aExch.ExchString  := ShortString(aTemps.GridSquare);
+      aExch.QTHString   := ShortString(aTemps.GridSquare);
+      aExch.DomesticQTH := ShortString(aTemps.GridSquare);
+      end;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestGeneralQSO.DescribeSession(const aStation: TStationContext;
+                                             aSession: TSessionDefaults);
+begin
+   aSession.AutoDupeEnableCQ := False;
+   aSession.AutoDupeEnableSAndP := False;
+   aSession.ContestName := 'General QSOs';
+   aSession.WARCEnabled := True;
+end;
+
+(* THE CABRILLO CONTEST: LINE NAMES WHAT THE OPERATOR CALLED THIS LOG --
+   PostUnit's GENERALQSO test (4.78.3, "ALLOW CUSTOM CONFIG Contest Title or
+   Contest Name"), moved here at M9a (2026-10-02). General QSO is a log, not
+   a contest, so the title the operator gave it, else the session's contest
+   name, else the Cabrillo name. *)
+function TContestGeneralQSO.CabrilloContestName(const aContestTitle: string;
+                                                const aSessionName: string): string;
+begin
+   if Length(aContestTitle) <> 0 then
+      begin
+      Result := aContestTitle;
+      end
+   else if Length(aSessionName) <> 0 then
+      begin
+      Result := aSessionName;
+      end
+   else
+      begin
+      Result := inherited CabrilloContestName(aContestTitle, aSessionName);
+      end;
+end;
+
+(* MainUnit (station information and possible calls), LOGEDIT (the
+   domestic-multiplier status), LOGSUBS2 x2 and LOGWIND (multiplier and QSO
+   status) each skipped these for General QSO -- M9b. *)
+function TContestGeneralQSO.GetShowsContestStatus: boolean;
+begin
+   Result := False;
+end;
+
+(* PostUnit.CheckForNewContestDate tested `( NumberDates > 10 ) and
+   ( Contest <> GENERALQSO )` (4.72.1): a log never warns -- M9b. *)
+function TContestGeneralQSO.GetMaximumContestDates: integer;
+begin
+   Result := 0;
+end;
+
+(* LOGSTUFF's band stepping skipped a WARC band when `CONTEST <> GeneralQSO`
+   (n4af 4.37.11), so General QSO alone steps onto WARC -- M9b. *)
+function TContestGeneralQSO.GetBandStepIncludesWARC: boolean;
 begin
    Result := True;
 end;
 
-function TContestGeneralQSO.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                            const aQso: ContestExchange;
-                                            const aRSTSent: string): string;
+(* THE RECEIVED EXCHANGE MAY BE BLANK, at every station -- M11 S7,
+   2026-10-14. It was the session's RSTNameAndQTH shape; see
+   TContestBase.AcceptsBlankExchange. *)
+function TContestGeneralQSO.AcceptsBlankExchange: boolean;
 begin
-   Result := Format('%-3s %-5s %-7s', [aRSTSent, aMy.MyName, aMy.MyState]);
-end;
-
-function TContestGeneralQSO.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                                const aQso: ContestExchange;
-                                                const aRSTReceived: string;
-                                                const aHisQTH: string): string;
-begin
-   Result := Format('%-3s %-5s %-7s', [aRSTReceived, string(aQso.Name), aHisQTH]);
-end;
-
-function TContestGeneralQSO.FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                        const aQso: ContestExchange): string;
-begin
-   Result := Format('%-3d %-5s %-7s', [aQso.RSTSent, aMy.MyName, aMy.MyState]);
+   Result := True;
 end;
 
 initialization

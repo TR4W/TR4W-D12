@@ -295,6 +295,20 @@ var
      file. What it no longer has is a table to scan. *)
 function CheckCommand(const Command: ShortString; CustomCMD: ShortString;
                       const aApplyJSONOwned: boolean = False): boolean;
+
+(* ONE COMMAND THAT THE CONTEST STATED -- a contest .cfg line, a New Contest
+  choice, or a row of the contest's own log on reopen.
+
+  A STATION FACT (MY STATE, MY ZONE, MY GRID...; see uSettingsModel.
+  TStationFact) BECOMES THIS CONTEST'S OVERRIDE and the station's value is not
+  touched -- design 7.12. It used to be written INTO the station's settings,
+  and the next SaveSettings of the session carried the contest's value into
+  settings\tr4w.json. Every other command is CheckCommand with
+  aApplyJSONOwned = True, exactly what these three channels already did.
+
+  THE ONE ROUTE FOR ALL THREE CHANNELS, so the rule cannot be applied by one
+  and forgotten by another. A refused value is reported here. *)
+function ApplyContestStatement(const aCommand, aValue: string): boolean;
 (* ~~CommandIsSingleValued~~ -- DELETED 2026-09-19 WITH THE INI READ.
 
   Its one caller was LogCfg's duplicate-key report, which fired for
@@ -322,6 +336,23 @@ function CommandIsRetired(const aCommand: string): boolean;
   is no other reason to ask. *)
 function RetiredCommandCount: integer;
 
+(* TRUE THE FIRST TIME A WITHDRAWN NAME IS SEEN THIS SESSION, AND NEVER AGAIN.
+
+  CheckCommand asks it before reporting a withdrawn command, so the log says
+  so ONCE PER NAME PER SESSION -- which is what this unit's own summary and
+  CLAUDE.md always claimed, and what the code did not do until M10 S2: it
+  logged every occurrence. That mattered once seven contest settings were
+  retired, because every contest log written before 2026-10-01 stores a row
+  for each of them and they are reapplied on every open.
+
+  False for a name that is not withdrawn. Case-insensitive, as the list is.
+  Main thread only, like CheckCommand itself. *)
+function RetiredCommandFirstSighting(const aCommand: string): boolean;
+
+(* Forget every sighting, so the next one of each name reports again.  For
+  the tests; nothing in the program resets a session's sightings. *)
+procedure ForgetRetiredCommandSightings;
+
 (* IS THIS A COMMAND A STORE OWNS -- accepted here, applied by whatever
   reads that store.  NOT the same question as CommandIsRetired: these
   settings still work.  See OWNED_BY_A_STORE. *)
@@ -338,6 +369,8 @@ procedure InitializeStrings;
 implementation
 uses MainUnit, SysUtils,   // Issue #997 -- SysUtils for Format/StrPCopy (asm-to-Pascal conversion)
      uSettingsModel,       // Settings -- the commands that have left this array
+     uContestNames,        // CurrentContestSpelling -- CONTEST's legacy names
+     uContestRegistry,     // KnownContests, ContestId -- CONTEST's vocabulary
      uStateBridge;         // RefreshWSJTXIndicator -- the box tracks WSJT-X ENABLED
 
 var
@@ -349,6 +382,12 @@ var
 procedure ClearContestCFGCommands;
 begin
    SetLength(gContestCFGCommands, 0);
+   (* AND THE CONTEST'S STATION-FACT OVERRIDES WITH IT -- design 7.12. Both
+     record what THIS contest stated, and both are reset at the same two
+     moments: before a contest .cfg is read and before the New Contest
+     dialog's choices are applied. Two resets kept in step by hand would
+     drift; one call cannot. *)
+   Settings.My.ClearContestOverrides;
 end;
 
 procedure NoteCommandFromContestCFG(const aCommand: string);
@@ -696,9 +735,15 @@ var
   agree about this", which is a statement about a contest being logged at
   several desks. That question is being answered properly by the new
   multi-station work; until then this is the same answer the rows gave,
-  written once where it can be read. *)
+  written once where it can be read.
+
+  SEVEN LEFT AT M10 S2 (2026-10-14): QSO POINT METHOD, EXCHANGE RECEIVED,
+  INITIAL EXCHANGE and the four multiplier commands are retired
+  (RETIRED_COMMANDS). This build neither sends them nor applies them; an
+  older peer that still sends one lands in CheckCommand's withdrawn arm and
+  is ignored. *)
 const
-   SHARED_WITH_PEERS: array[0..44] of string = (
+   SHARED_WITH_PEERS: array[0..37] of string = (
       'BACKUP LOG FILE NAME',
       'BAND',
       'CATEGORY-ASSISTED',
@@ -717,15 +762,11 @@ const
       'CQ MENU',
       'CW TONE',
       'DISPLAY REFRESH',
-      'DOMESTIC MULTIPLIER',
       'DVK PORT',
-      'DX MULTIPLIER',
-      'EXCHANGE RECEIVED',
       'FARNSWORTH ENABLE',
       'FARNSWORTH SPEED',
       'HOUR OFFSET',
       'ICOM COMMAND PAUSE',
-      'INITIAL EXCHANGE',
       'INITIAL EXCHANGE CURSOR POS',
       'INITIAL EXCHANGE FILENAME',
       'INPUT CONFIG FILE',
@@ -734,16 +775,13 @@ const
       'MULTIPLIER ITEM WIDTH',
       'MY CONTINENT',
       'PADDLE PORT',
-      'PREFIX MULTIPLIER',
       'QSL MODE',
-      'QSO POINT METHOD',
       'SINGLE BAND SCORE',
       'TAIL END CW MESSAGE',
       'TAIL END KEY',
       'TAIL END MESSAGE',
       'TAIL END SSB MESSAGE',
-      'WEIGHT',
-      'ZONE MULTIPLIER');
+      'WEIGHT');
 
 function CommandIsSharedWithPeers(const aCommand: string): boolean;
 var
@@ -786,7 +824,7 @@ end;
   silence a command that still does something.
 *)
 const
-   RETIRED_COMMANDS: array[0..87] of string = (
+   RETIRED_COMMANDS: array[0..94] of string = (
       'AUTO ALT-D ENABLE',
       'BACKCOPY ENABLE',
       'BAND MAP ENABLE',
@@ -883,12 +921,83 @@ const
       'VGA DISPLAY ENABLE',
       'VISIBLE DUPESHEET',
       'WIDE FREQUENCY DISPLAY',
-      'YAESU RESPONSE TIMEOUT'
+      'YAESU RESPONSE TIMEOUT',
+      (* RETIRED AT M10 S2, 2026-10-14 (NY4I, design Q4): "Since we will be
+        able to enter contests faster, we can retire the user entering their
+        own contests." Each one chose from a SHARED set of scoring rules,
+        exchanges or multiplier kinds; the contest's class decides all of
+        them now. User-defined contests are a future feature, to be designed
+        another way -- not by bending an existing contest through these.
+
+        THE FEATURE THAT WENT is the operator's choice, not the kinds: the
+        engine still runs on the kinds, which the class states and which
+        move into the classes at M11. Every contest log written before
+        2026-10-01 carries a row for each of these (the NONE/UNKNOWN
+        placeholders design 7.8 describes); uLogContestStatements deletes
+        them at the next capture. *)
+      'DOMESTIC MULTIPLIER',
+      'DX MULTIPLIER',
+      'EXCHANGE RECEIVED',
+      'INITIAL EXCHANGE',
+      'PREFIX MULTIPLIER',
+      'QSO POINT METHOD',
+      'ZONE MULTIPLIER'
       );
 
 function RetiredCommandCount: integer;
 begin
    Result := Length(RETIRED_COMMANDS);
+end;
+
+var
+   (* ONE FLAG PER WITHDRAWN NAME, by its position in RETIRED_COMMANDS: has
+     this session reported it yet. Sized FROM the list, so the two cannot
+     disagree about how many names there are. Zeroed at load, as a unit
+     global is. *)
+   GRetiredCommandSeen: array[Low(RETIRED_COMMANDS)..High(RETIRED_COMMANDS)] of boolean;
+
+(* The position of aCommand in RETIRED_COMMANDS, or -1. The one search both
+  CommandIsRetired and the sighting latch make. *)
+function RetiredCommandIndex(const aCommand: string): integer;
+var
+   i: integer;
+begin
+   Result := -1;
+   for i := Low(RETIRED_COMMANDS) to High(RETIRED_COMMANDS) do
+      begin
+      if UnicodeSameText(RETIRED_COMMANDS[i], aCommand) then
+         begin
+         Result := i;
+         Exit;
+         end;
+      end;
+end;
+
+function RetiredCommandFirstSighting(const aCommand: string): boolean;
+var
+   position: integer;
+begin
+   Result := False;
+   position := RetiredCommandIndex(aCommand);
+   if position < 0 then
+      begin
+      Exit;
+      end;
+   if not GRetiredCommandSeen[position] then
+      begin
+      GRetiredCommandSeen[position] := True;
+      Result := True;
+      end;
+end;
+
+procedure ForgetRetiredCommandSightings;
+var
+   i: integer;
+begin
+   for i := Low(GRetiredCommandSeen) to High(GRetiredCommandSeen) do
+      begin
+      GRetiredCommandSeen[i] := False;
+      end;
 end;
 
 (*
@@ -1069,18 +1178,8 @@ begin
 end;
 
 function CommandIsRetired(const aCommand: string): boolean;
-var
-   i: integer;
 begin
-   Result := False;
-   for i := Low(RETIRED_COMMANDS) to High(RETIRED_COMMANDS) do
-      begin
-      if UnicodeSameText(RETIRED_COMMANDS[i], aCommand) then
-         begin
-         Result := True;
-         Exit;
-         end;
-      end;
+   Result := RetiredCommandIndex(aCommand) >= 0;
 end;
 
 (* THE COMMANDS THAT DO SOMETHING RATHER THAN SET SOMETHING.
@@ -1176,13 +1275,6 @@ end;
 
 function CheckCommand(const Command: ShortString; CustomCMD: ShortString;
                       const aApplyJSONOwned: boolean = False): boolean;
-label
-   AdditionalProc;
-type
-   // Issue #997: every AdditionalProcsArray entry is a param-less boolean
-   // function (default register convention); this type lets us call Proc
-   // through a typed cast instead of inline asm.
-   TAdditionalProc = function: Boolean;
 var
    { The command as a STRING, so the tests below are Pos() on a value with a
      length rather than StrPos() on a pointer that runs to the first NUL.  See
@@ -1193,7 +1285,6 @@ var
    TempInteger2: integer;
    TempReal: REAL;
    code: integer;
-   Proc: Pointer;
    TempByte: Byte;
    //  TempString                            : Str10;
    TempElement: TMainWindowElement;
@@ -1287,8 +1378,6 @@ begin
          end;
       Exit;
       end;
-   { if Command = 'QSO POINT METHOD' then
-     result := false;  }
    (* THE FUNCTION-KEY MEMORY ARM IS GONE -- 2026-09-14, the last pattern
      family to leave CheckCommand.
 
@@ -1398,10 +1487,16 @@ begin
      being applied. *)
    if (not Result) and CommandIsRetired(string(Command)) then
       begin
-      if logger <> nil then
+      (* ONCE PER NAME PER SESSION, WITH THE VALUE. An old contest log stores
+        a row for each of the seven contest settings retired at M10 S2 and
+        reapplies them on every open; the first sighting is the useful one,
+        and naming the value is what lets an operator see a real statement
+        (not a NONE placeholder) being set aside. *)
+      if RetiredCommandFirstSighting(string(Command)) and (logger <> nil) then
          begin
-         logger.Info('[Config] %s is a withdrawn command -- accepted and ignored',
-                     [Command]);
+         logger.Info('[Config] %s = %s is a withdrawn command -- accepted and '
+                     + 'ignored (reported once per session)',
+                     [Command, CustomCMD]);
          end;
       Result := True;
       end;
@@ -1422,6 +1517,37 @@ begin
          end;
       Result := True;
       end;
+end;
+
+function ApplyContestStatement(const aCommand, aValue: string): boolean;
+var
+   key, val: ShortString;
+begin
+   if Settings.CommandIsContestOverridable(aCommand) then
+      begin
+      Result := Settings.TryOverrideForContest(aCommand, aValue);
+      if logger <> nil then
+         begin
+         if Result then
+            begin
+            logger.Info('[Config] %s = %s for this contest -- the station''s ' +
+                        'value is the default and is not changed',
+                        [aCommand, aValue]);
+            end
+         else
+            begin
+            logger.Warn('[Config] %s = %s for this contest was refused -- the ' +
+                        'station''s value stays in force', [aCommand, aValue]);
+            end;
+         end;
+      Exit;
+      end;
+
+   (* Plain assignment: the same conversion as a ShortString() cast, see
+     test/unit/uTestShortStringConversion.pas. *)
+   key := AnsiString(aCommand);
+   val := AnsiString(aValue);
+   Result := CheckCommand(key, val, True);
 end;
 
 
@@ -1585,6 +1711,24 @@ begin
       end;
 end;
 
+(* THE CONTEST setting's vocabulary: every known contest's id, in handle
+  order -- NoContest's 'DUMMY CONTEST' first, as ContestTypeSA listed it
+  (Q108 S2). A PROVIDER, asked when the vocabulary is read, never at this
+  unit's initialization: see the registration below. *)
+function ContestIdVocabulary: TArray<string>;
+var
+   known: TContestHandleList;
+   i: integer;
+begin
+   Result := nil;
+   known := KnownContests;
+   SetLength(Result, Length(known));
+   for i := 0 to High(known) do
+      begin
+      Result[i] := ContestId(known[i]);
+      end;
+end;
+
 (* THE VALIDATOR THAT USED TO BE A HOOK INDEX.
 
   Registered HERE because this is the unit that knows about CTY.DAT, and
@@ -1615,14 +1759,15 @@ initialization
    RegisterSettingAllowedValues('Contest.MultReportMinimumBands',
                                 IntegerVocabulary(MULT_REPORT_MINIMUM_BANDS_ARRAY));
 
-   (* THE FOUR MULTIPLIER VOCABULARIES, from the very tables CheckCommand
-     matched their ckList rows against -- so the drop-down, the refusal and
-     the engine cannot disagree about what 'ARRL DXCC' means.
+   (* THE FOUR MULTIPLIER VOCABULARIES STOOD HERE until M10 S2 (2026-10-14),
+     with QSO POINT METHOD's, EXCHANGE RECEIVED's and INITIAL EXCHANGE's
+     below. All seven settings are retired (RETIRED_COMMANDS), so none
+     registers a vocabulary -- Lint-SpellingTables' floor fell by exactly
+     those seven. Six of the tables are deleted; ActiveExchangeArray stays in
+     VC for one log line until M11.
 
      HERE rather than in uSettingsModel for the reason MY COUNTRY's check is:
-     the unit that can SEE the vocabulary is the one that registers it. These
-     four tables live in VC, logdupe and logwind, none of which the settings
-     model imports. *)
+     the unit that can SEE the vocabulary is the one that registers it. *)
    (* THE TEN ckList TOKENS' VOCABULARIES, from the very tables their rows
      matched against. Without these each setting would have NO allow-list --
      which is not a quiet gap: Preferences renders a setting with no allowed
@@ -1633,32 +1778,29 @@ initialization
                                 BandStringsArrayWithOutSpaces);
    RegisterSettingAllowedValues('Contest.SingleBandScore',
                                 BandStringsArrayWithOutSpaces);
-   RegisterSettingAllowedValues('Contest.ContestToken', ContestTypeSA);
-   RegisterSettingAllowedValues('Contest.ExchangeReceived',
-                                ActiveExchangeArray);
-   RegisterSettingAllowedValues('Contest.InitialExchange',
-                                InitialExchangeTypeStringArray);
+   (* THE CONTEST VOCABULARY IS THE REGISTRY'S IDS, READ WHEN ASKED (Q108
+     S2, design 8.2u). It was ContestTypeSA, copied here; a list built
+     from the registry at this point would miss every contest, because
+     the contest units initialise after this one. ContestIdVocabulary is
+     asked each time instead. Same values, same order, today. *)
+   RegisterSettingAllowedValuesProvider('Contest.ContestToken',
+                                        @ContestIdVocabulary);
+   (* AND ITS LEGACY NAMES, read and stored as the current spelling --
+     CONTEST = NEQP is the New England QSO Party, NEWEQP since 2026-10-16.
+     The vocabulary above offers current spellings only. See
+     uContestNames. *)
+   RegisterSettingValueSpelling('Contest.ContestToken', @CurrentContestSpelling);
    RegisterSettingAllowedValues('Contest.InitialExchangeCursorPos',
                                 IECursorPosTypeStringArray);
    RegisterSettingAllowedValues('Contest.Mode', ModeStringArray);
    RegisterSettingAllowedValues('Contest.MyContinent', ContinentTypeSA);
    RegisterSettingAllowedValues('Contest.QslMode',
                                 ParameterOkayModeTypeStringArray);
-   RegisterSettingAllowedValues('Contest.QsoPointMethod', QSOPointMethodArray);
 
    (* THE COLOUR NAMES, so ALERT COLOR refuses a spelling that is not one and
      a drop-down can offer the list. tr4wColorsSA is the same table the arm
      that used to live in CheckCommand matched against, so the vocabulary, the
      refusal and the effect cannot disagree about what 'LIGHT CYAN' means. *)
    RegisterSettingAllowedValues('MainWindow.AlertColor', tr4wColorsSA);
-
-   RegisterSettingAllowedValues('Contest.DomesticMultiplier',
-                                DomesticMultStringArray);
-   RegisterSettingAllowedValues('Contest.DxMultiplier',
-                                DXMultTypenameArray);
-   RegisterSettingAllowedValues('Contest.PrefixMultiplier',
-                                PrefixMultStringArray);
-   RegisterSettingAllowedValues('Contest.ZoneMultiplier',
-                                ZoneMultTypeSA);
 
 end.

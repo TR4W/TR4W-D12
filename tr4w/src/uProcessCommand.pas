@@ -56,6 +56,14 @@ utils_text,
   uTR4WStrings;
 
 type
+  (* WHAT A COMMAND-TABLE ROW RUNS (pointer audit P1, 2026-10-16). caAddress
+    was an untyped Pointer, cast to a parameterless procedure at the one
+    dispatch site, so the compiler checked no row. Typed, it checks every
+    one -- and the rows name their handler WITHOUT `@`, because in Delphi
+    mode `@Handler` is an untyped Pointer that a procedural type accepts
+    unchecked (measured with a probe against FPC 3.2.2). *)
+  TCommandHandler = procedure;
+
   TsCommandsArrayType = packed record
     (* A NAME, NOT A POINTER. It was a PAnsiChar, which forced the ONE
       comparison against it to go through @CommandString[1] -- a pointer into
@@ -63,7 +71,7 @@ type
       above that comparison to make the ShortString look like a C string.
       A string field needs neither. *)
     caCommand: string;
-    caAddress: Pointer;
+    caAddress: TCommandHandler;
   end;
 
   
@@ -120,97 +128,97 @@ const
     (
 
 // (a commented-out MMTTYMODE guard stood here; the switch is gone -- 2026-08-18)
-      (caCommand: 'MM_CLEAR_THE_TX_BUFFER'; caAddress: @csMMTTY_CLEAR_THE_TX_BUFFER),
-      (caCommand: 'MM_SWITCH_TO_TX'; caAddress: @csMMTTY_SWITCH_TO_TX),
-      (caCommand: 'MM_SWITCH_TO_RX_IMMEDIATELY'; caAddress: @csMMTTY_SWITCH_TO_RX_IMMEDIATELY),
-      (caCommand: 'MM_SWITCH_TO_RX_AFTER_THE_TRANSMISSION_IS_COMPLETED'; caAddress: @csMMTTY_SWITCH_TO_RX_AFTER_THE_TRANSMISSION_IS_COMPLETED),
-      (caCommand: 'MM_GRABLASTCALL'; caAddress: @csMMTTY_GRABLASTCALL),
+      (caCommand: 'MM_CLEAR_THE_TX_BUFFER'; caAddress: csMMTTY_CLEAR_THE_TX_BUFFER),
+      (caCommand: 'MM_SWITCH_TO_TX'; caAddress: csMMTTY_SWITCH_TO_TX),
+      (caCommand: 'MM_SWITCH_TO_RX_IMMEDIATELY'; caAddress: csMMTTY_SWITCH_TO_RX_IMMEDIATELY),
+      (caCommand: 'MM_SWITCH_TO_RX_AFTER_THE_TRANSMISSION_IS_COMPLETED'; caAddress: csMMTTY_SWITCH_TO_RX_AFTER_THE_TRANSMISSION_IS_COMPLETED),
+      (caCommand: 'MM_GRABLASTCALL'; caAddress: csMMTTY_GRABLASTCALL),
 //{$IFEND}
 
    //24
-(caCommand: ' <01>   =  Send on other radio- focus d/n change';caaddress:@scexchangeradios),      // n4af 4.42.11
-(caCommand: ' <02>   =  Send on other radio,switch radio if called';caaddress:@scexchangeradios), // n4af 4.42.11
-(caCommand: ' <05>   =  Same as <02> but subsequent enter triggers cq on other radio';caaddress:@scexchangeradios), // n4af 4.42.11
-(caCommand: '  # = QSO Number '; caAddress: @scEXCHANGERADIOS),     //n4af 04.33.2    DUMMY @ entries
-(caCommand: '  @ = HisCall '; caAddress: @scEXCHANGERADIOS),          // really done by LOGSEND.PAS
-(caCommand: '  $ = Salutation/Name '; caAddress: @scEXCHANGERADIOS),
-(caCommand: '  % = Name from Names DB'; caAddress: @scEXCHANGERADIOS),
-(caCommand: ' : = Send from K.B.'; caAddress: @scEXCHANGERADIOS),
-(caCommand: ' ~ = Salutation - no name'; caAddress: @scEXCHANGERADIOS),
-(caCommand: '  \ = My Call'; caAddress: @scEXCHANGERADIOS),
-(caCommand: ' | = Name from Exch Window'; caAddress: @scEXCHANGERADIOS),
-(caCommand: ' [ = Wait for # (RST)'; caAddress: @scEXCHANGERADIOS),
-(caCommand: ' ] = Repeat last RST from ['; caAddress: @scEXCHANGERADIOS),
-(caCommand: '  ^ = Half space'; caAddress: @scEXCHANGERADIOS),
-(caCommand: '  CTRL-P CTRL-F = Faster'; caAddress: @scEXCHANGERADIOS),
-(caCommand: '  CTRL-P CTRL-S = Slower'; caAddress: @scWK_SWAPTUNE),
-(caCommand: ' + = Previous #'; caAddress: @scWK_RESET),       //4.53.2  // 4.71.5
-(caCommand: '  > = Reset RIT'; caAddress: @scSENDMESSAGE),
-(caCommand: ' < = SK'; caAddress: @scEXCHANGERADIOS),   // DISPLAY ONLY -- see the note on sCommandsArray
+(caCommand: ' <01>   =  Send on other radio- focus d/n change';caAddress:scexchangeradios),      // n4af 4.42.11
+(caCommand: ' <02>   =  Send on other radio,switch radio if called';caAddress:scexchangeradios), // n4af 4.42.11
+(caCommand: ' <05>   =  Same as <02> but subsequent enter triggers cq on other radio';caAddress:scexchangeradios), // n4af 4.42.11
+(caCommand: '  # = QSO Number '; caAddress: scEXCHANGERADIOS),     //n4af 04.33.2    DUMMY @ entries
+(caCommand: '  @ = HisCall '; caAddress: scEXCHANGERADIOS),          // really done by LOGSEND.PAS
+(caCommand: '  $ = Salutation/Name '; caAddress: scEXCHANGERADIOS),
+(caCommand: '  % = Name from Names DB'; caAddress: scEXCHANGERADIOS),
+(caCommand: ' : = Send from K.B.'; caAddress: scEXCHANGERADIOS),
+(caCommand: ' ~ = Salutation - no name'; caAddress: scEXCHANGERADIOS),
+(caCommand: '  \ = My Call'; caAddress: scEXCHANGERADIOS),
+(caCommand: ' | = Name from Exch Window'; caAddress: scEXCHANGERADIOS),
+(caCommand: ' [ = Wait for # (RST)'; caAddress: scEXCHANGERADIOS),
+(caCommand: ' ] = Repeat last RST from ['; caAddress: scEXCHANGERADIOS),
+(caCommand: '  ^ = Half space'; caAddress: scEXCHANGERADIOS),
+(caCommand: '  CTRL-P CTRL-F = Faster'; caAddress: scEXCHANGERADIOS),
+(caCommand: '  CTRL-P CTRL-S = Slower'; caAddress: scWK_SWAPTUNE),
+(caCommand: ' + = Previous #'; caAddress: scWK_RESET),       //4.53.2  // 4.71.5
+(caCommand: '  > = Reset RIT'; caAddress: scSENDMESSAGE),
+(caCommand: ' < = SK'; caAddress: scEXCHANGERADIOS),   // DISPLAY ONLY -- see the note on sCommandsArray
 // The reachable BOOLSWAP row.  scBOOLSWAP had only the display row above,
 // whose caption contains '=' -- and FoundCommand splits the typed command on
 // '=' before matching, so that row can never be the compared string.  The
 // feature was documented in 2010 and unreachable ever since.
-(caCommand: 'BOOLSWAP'; caAddress: @scBOOLSWAP),
-(caCommand: ' = = BT'; caAddress: @tClearDupesheet),
-(caCommand: ' ! = SN'; caAddress: @tClearMultSheet),
-(caCommand: ' & = AS'; caAddress: @scDUPECHECK),
-// (caCommand: ' ) = Last QSOs Call'; caAddress: @scDUPECHECK),
-(caCommand: ' , = Send GMT time'; caAddress: @scDUPECHECK),       // 4.56.5
-(caCommand: ' .  = Repeat previous GMT time'; caAddress: @scDUPECHECK),       // 4.56.6
-(caCommand: ' ALT-D = Dupe Check R2'; caAddress:  @CheckNumber),
-(caCommand: ' CN = Check Entered Number'; caAddress:  @CheckNumber),    // n4af 4.42.2
-  // (caCommand: 'CN' ; caAddress:  @CheckNumber),                      // n4af 4.42.2
-    (caCommand: 'ALT-D'; caAddress: @scDupeCheck),
-    (caCommand: 'WK_SWAPTUNE'; caAddress: @scWK_SWAPTUNE),
-    (caCommand: 'WK_RESET'; caAddress: @scWK_RESET),
-    (caCommand: 'NEXTBANDMAP'; caAddress: @NEXTBANDMAPENTRY),
- //   (caCommand: 'BMFIRST'; caAddress: @BMFIRST),
-    (caCommand: 'SENDTOCLUSTER'; caAddress: @scSENDTOCLUSTER),
-    (caCommand: 'LASTCQFREQ'; caAddress: @scLASTCQFREQ),
-    (caCommand: 'LASTSPFREQ'; caAddress: @scLASTSPFREQ),
-    (caCommand: 'LOGIN'; caAddress: @scLOGIN),     //ny4i 04.39.4
-    (caCommand: 'ENTER'; caAddress: @ProcessReturn),
-    (caCommand: 'ESCAPE'; caAddress: @Escape_proc),
-    (caCommand: 'COMPLETECALL'; caAddress: @CompleteCallsign),
-    (caCommand: 'SWAPRADIOS'; caAddress: @SwapRadios),
-    (caCommand: 'TOGGLEMODES'; caAddress: @ToggleModes),
-    (caCommand: 'TOGGLESTEREOPIN'; caAddress: @ToggleStereoPin),
-    (caCommand: 'OTRSP'; caAddress: @OTRSPCommand),  // Issue 61 - OTRSP RX focus
-    (caCommand: ' OTRSP=RX1    = Listen to Radio 1'; caAddress: @OTRSPCommand),
-    (caCommand: ' OTRSP=RX2    = Listen to Radio 2'; caAddress: @OTRSPCommand),
-    (caCommand: ' OTRSP=RXA    = Listen to active (TX) radio'; caAddress: @OTRSPCommand),
-    (caCommand: ' OTRSP=RXI    = Listen to inactive radio'; caAddress: @OTRSPCommand),
-    (caCommand: ' OTRSP=STEREO = Stereo (hear both radios)'; caAddress: @OTRSPCommand),
-    (caCommand: 'TOGGLECW'; caAddress: @scTOGGLECW),
-    (caCommand: 'BANDUP'; caAddress: @scBANDUP),
-    (caCommand: 'BANDDOWN'; caAddress: @scBANDDOWN),
-    (caCommand: 'CWMONITORON'; caAddress: @scCWMONITORON),
-    (caCommand: 'CWMONITOROFF'; caAddress: @scCWMONITOROFF),
-    (caCommand: 'WINEXEC'; caAddress: @scWINEXEC),
-    (caCommand: 'DISABLECW'; caAddress: @scDISABLECW),
-    (caCommand: 'ENABLECW'; caAddress: @scENABLECW),
-    (caCommand: 'EXCHANGERADIOS'; caAddress: @scEXCHANGERADIOS),
-    (caCommand: 'SAPMODE'; caAddress: @scSAPMODE),
-    (caCommand: 'CQMODE'; caAddress: @scCQMODE),
-    (caCommand: 'CONTROLENTER'; caAddress: @tr4w_log_qso_without_cw),
-    (caCommand: 'CWENABLETOGGLE'; caAddress: @scCWENABLETOGGLE),
-    (caCommand: 'EXECUTE'; caAddress: @scEXECUTE),
-    (caCommand: 'CABRILLO'; caAddress: @scCABRILLO),
-    (caCommand: 'INITIALIZEQSO'; caAddress: @InitializeQSO),
-    (caCommand: 'AUTOCQ'; caAddress: @RunAutoCQ),
-    (caCommand: 'SPACEBAR'; caAddress: @SpaceBarProc2),
-    (caCommand: 'PLAYMESSAGE_ACTIVE'; caAddress: @scPlayMessageActive),
-    (caCommand: 'PLAYMESSAGE_INACTIVE'; caAddress: @scPlayMessageInActive),
-    (caCommand: 'SRS'; caAddress: @scSRS),
-    (caCommand: 'SRSI'; caAddress: @scSRSI),
-    (caCommand: 'SRS1'; caAddress: @scSRS1),
-    (caCommand: 'SRS2'; caAddress: @scSRS2),
-    (caCommand: 'RADIOONELPTMASK'; caAddress: @scRADIOONELPTMASK),
-    (caCommand: 'FLUSHINITIALEX'; caAddress: @scFLUSHINITIALEX),
-    (caCommand: 'SNLOCKOUT'; caAddress: @scSNLOCKOUT),
-    (caCommand: 'CLEARDUPESHEET'; caAddress: @tClearDupeSheet)  ,
-    (caCommand: 'CLEARMULTSHEET'; caAddress: @tClearMultSheet)
+(caCommand: 'BOOLSWAP'; caAddress: scBOOLSWAP),
+(caCommand: ' = = BT'; caAddress: tClearDupesheet),
+(caCommand: ' ! = SN'; caAddress: tClearMultSheet),
+(caCommand: ' & = AS'; caAddress: scDUPECHECK),
+// (caCommand: ' ) = Last QSOs Call'; caAddress: scDUPECHECK),
+(caCommand: ' , = Send GMT time'; caAddress: scDUPECHECK),       // 4.56.5
+(caCommand: ' .  = Repeat previous GMT time'; caAddress: scDUPECHECK),       // 4.56.6
+(caCommand: ' ALT-D = Dupe Check R2'; caAddress:  CheckNumber),
+(caCommand: ' CN = Check Entered Number'; caAddress:  CheckNumber),    // n4af 4.42.2
+  // (caCommand: 'CN' ; caAddress:  CheckNumber),                      // n4af 4.42.2
+    (caCommand: 'ALT-D'; caAddress: scDupeCheck),
+    (caCommand: 'WK_SWAPTUNE'; caAddress: scWK_SWAPTUNE),
+    (caCommand: 'WK_RESET'; caAddress: scWK_RESET),
+    (caCommand: 'NEXTBANDMAP'; caAddress: NEXTBANDMAPENTRY),
+ //   (caCommand: 'BMFIRST'; caAddress: BMFIRST),
+    (caCommand: 'SENDTOCLUSTER'; caAddress: scSENDTOCLUSTER),
+    (caCommand: 'LASTCQFREQ'; caAddress: scLASTCQFREQ),
+    (caCommand: 'LASTSPFREQ'; caAddress: scLASTSPFREQ),
+    (caCommand: 'LOGIN'; caAddress: scLOGIN),     //ny4i 04.39.4
+    (caCommand: 'ENTER'; caAddress: ProcessReturn),
+    (caCommand: 'ESCAPE'; caAddress: Escape_proc),
+    (caCommand: 'COMPLETECALL'; caAddress: CompleteCallsign),
+    (caCommand: 'SWAPRADIOS'; caAddress: SwapRadios),
+    (caCommand: 'TOGGLEMODES'; caAddress: ToggleModes),
+    (caCommand: 'TOGGLESTEREOPIN'; caAddress: ToggleStereoPin),
+    (caCommand: 'OTRSP'; caAddress: OTRSPCommand),  // Issue 61 - OTRSP RX focus
+    (caCommand: ' OTRSP=RX1    = Listen to Radio 1'; caAddress: OTRSPCommand),
+    (caCommand: ' OTRSP=RX2    = Listen to Radio 2'; caAddress: OTRSPCommand),
+    (caCommand: ' OTRSP=RXA    = Listen to active (TX) radio'; caAddress: OTRSPCommand),
+    (caCommand: ' OTRSP=RXI    = Listen to inactive radio'; caAddress: OTRSPCommand),
+    (caCommand: ' OTRSP=STEREO = Stereo (hear both radios)'; caAddress: OTRSPCommand),
+    (caCommand: 'TOGGLECW'; caAddress: scTOGGLECW),
+    (caCommand: 'BANDUP'; caAddress: scBANDUP),
+    (caCommand: 'BANDDOWN'; caAddress: scBANDDOWN),
+    (caCommand: 'CWMONITORON'; caAddress: scCWMONITORON),
+    (caCommand: 'CWMONITOROFF'; caAddress: scCWMONITOROFF),
+    (caCommand: 'WINEXEC'; caAddress: scWINEXEC),
+    (caCommand: 'DISABLECW'; caAddress: scDISABLECW),
+    (caCommand: 'ENABLECW'; caAddress: scENABLECW),
+    (caCommand: 'EXCHANGERADIOS'; caAddress: scEXCHANGERADIOS),
+    (caCommand: 'SAPMODE'; caAddress: scSAPMODE),
+    (caCommand: 'CQMODE'; caAddress: scCQMODE),
+    (caCommand: 'CONTROLENTER'; caAddress: tr4w_log_qso_without_cw),
+    (caCommand: 'CWENABLETOGGLE'; caAddress: scCWENABLETOGGLE),
+    (caCommand: 'EXECUTE'; caAddress: scEXECUTE),
+    (caCommand: 'CABRILLO'; caAddress: scCABRILLO),
+    (caCommand: 'INITIALIZEQSO'; caAddress: InitializeQSO),
+    (caCommand: 'AUTOCQ'; caAddress: RunAutoCQ),
+    (caCommand: 'SPACEBAR'; caAddress: SpaceBarProc2),
+    (caCommand: 'PLAYMESSAGE_ACTIVE'; caAddress: scPlayMessageActive),
+    (caCommand: 'PLAYMESSAGE_INACTIVE'; caAddress: scPlayMessageInActive),
+    (caCommand: 'SRS'; caAddress: scSRS),
+    (caCommand: 'SRSI'; caAddress: scSRSI),
+    (caCommand: 'SRS1'; caAddress: scSRS1),
+    (caCommand: 'SRS2'; caAddress: scSRS2),
+    (caCommand: 'RADIOONELPTMASK'; caAddress: scRADIOONELPTMASK),
+    (caCommand: 'FLUSHINITIALEX'; caAddress: scFLUSHINITIALEX),
+    (caCommand: 'SNLOCKOUT'; caAddress: scSNLOCKOUT),
+    (caCommand: 'CLEARDUPESHEET'; caAddress: tClearDupeSheet)  ,
+    (caCommand: 'CLEARMULTSHEET'; caAddress: tClearMultSheet)
     )
     ;
 
@@ -231,7 +239,7 @@ var
   TempInt, Result1                      : integer;
   i                                     : integer;
   //p                                     : Pointer;
-  cmdProc                               : procedure;   // Issue #997: typed call of a Pointer command handler
+  cmdProc                               : TCommandHandler;
 begin
   FoundCommand := False;
 
@@ -258,16 +266,19 @@ begin
         CommandString := PrecedingString(CommandString, '=');
         end;
 
-     scFileName[length(scFileName) + 1] := #0;
-   
+     (* NO C TERMINATOR. This used to write #0 at scFileName[Length + 1] so that
+       @scFileName[1] could be handed to a C-string consumer. The last such
+       consumer (FileExists(@scFileName[1]) in scEXECUTE) is inside a comment,
+       and every live use passes the ShortString itself. The write also went
+       one byte past the string when it was 255 long. Pointer audit 3.6. *)
+
      for i := 0 to sCommands - 1 do
         begin
         if sCommandsArray[i].caCommand = string(CommandString) then
            begin
-           // Issue #997: asm `call p` (untyped Pointer command handler,
-           // parameterless) -> typed call, guarded against a nil entry in the
-           // command-table (sCommandsArray) definition.
-           @cmdProc := sCommandsArray[i].caAddress;
+           // Issue #997: asm `call p` -> a typed call, guarded against a nil
+           // entry. The row's type is TCommandHandler now (P1), so no cast.
+           cmdProc := sCommandsArray[i].caAddress;
            if Assigned(cmdProc) then
               begin
               cmdProc;

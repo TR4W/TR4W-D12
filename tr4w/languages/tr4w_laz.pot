@@ -892,7 +892,7 @@ msgstr ""
 
 #: tfrmnewcontest.btnlatest.caption
 msgctxt "tfrmnewcontest.btnlatest.caption"
-msgid "Latest config file"
+msgid "Last Contest"
 msgstr ""
 
 #: tfrmnewcontest.btnok.caption
@@ -5880,7 +5880,7 @@ msgstr ""
 
 #: utr4wstrings.tc_latest_config_file
 msgctxt "utr4wstrings.tc_latest_config_file"
-msgid "Latest config file"
+msgid "Last Contest"
 msgstr ""
 
 #: utr4wstrings.tc_leadin
@@ -6603,6 +6603,10 @@ msgstr ""
 
 #: utr4wstrings.tc_translation_author
 msgid "N4AF"
+msgstr ""
+
+#: utr4wstrings.tc_translation_corrections
+msgid "Corrections are appreciated."
 msgstr ""
 
 #: utr4wstrings.tc_translation_credit

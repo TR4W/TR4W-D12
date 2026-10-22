@@ -132,11 +132,16 @@ const
   CabrilloTagsArray                     : array[CabrilloTags] of TCabrilloTagRecord =
     (
 {(*}
+    // NONE OF THE FIVE CATEGORIES BELOW IS SAVED HERE (Q61, as M9b did for
+    // POWER): each is ONE contest-scoped setting, Settings.Contest.Category*,
+    // whose home is the contest database -- see CabrilloTagText. MODE was
+    // the one still copied into settings\tr4w.json; a '_CATEGORY-MODE' left
+    // there is inert.
     (ctrTag: '_CATEGORY-ASSISTED';      ctrCFG:True;  ctrSave: False; ctrList: True; ctrOpen: False),
     (ctrTag: '_CATEGORY-BAND';          ctrCFG:True;  ctrSave: False; ctrList: True; ctrOpen: False),
-    (ctrTag: '_CATEGORY-MODE';          ctrCFG:True;  ctrSave: True; ctrList: True; ctrOpen: False),
-    (ctrTag: '_CATEGORY-OPERATOR';      ctrCFG:True;  ctrSave: False; ctrList: True; ctrOpen: False),    // ny4i changed this since we dete3rmine from the log
-    (ctrTag: '_CATEGORY-POWER';         ctrCFG:True;  ctrSave: True; ctrList: True; ctrOpen: False),
+    (ctrTag: '_CATEGORY-MODE';          ctrCFG:True;  ctrSave: False; ctrList: True; ctrOpen: False),
+    (ctrTag: '_CATEGORY-OPERATOR';      ctrCFG:True;  ctrSave: False; ctrList: True; ctrOpen: False),
+    (ctrTag: '_CATEGORY-POWER';         ctrCFG:True;  ctrSave: False; ctrList: True; ctrOpen: False),
     (ctrTag: '_CATEGORY-STATION';       ctrCFG:False; ctrSave: True; ctrList: True; ctrOpen: False), // Issue #976: now a drop-down
     (ctrTag: '_CATEGORY-TIME';          ctrCFG:True;  ctrSave: True; ctrList: True; ctrOpen: False),  // Issue #976: persist + restore selection
     // Cabrillo v3 publishes ONE/TWO/LIMITED/UNLIMITED/SWL here, and sponsors
@@ -267,6 +272,50 @@ begin
       Result := CabrilloSummary.TagText(aTag);
       Exit;
       end;
+
+   (* CATEGORY-POWER IS THE SETTING, NOT A HEADER-STORE COPY -- M9b, design
+     7.6 (NY4I: the last touch point wins). It had two stores: this one's
+     '_CATEGORY-POWER', written by the summary window, and
+     Settings.Contest.CategoryPower, written by the New Contest dialog and read
+     by scoring. They disagreed in the golden corpus -- arrl_digi's log says
+     LOW, its Cabrillo header said HIGH -- so a Winter Field Day header could
+     declare one power while the score used another. The window now writes
+     the setting, and everything that reads the header reads the setting. A
+     '_CATEGORY-POWER' left in settings\tr4w.json is inert. *)
+   (* AND ASSISTED, BAND, MODE AND OPERATOR THE SAME WAY -- Q61 (NY4I,
+     2026-10-16: "Yes."). Each had the two-store shape POWER had: the window
+     started from the setting, then wrote MODE to the header store and the
+     other three nowhere, so a headless /EXPORT -- which never opens the
+     window -- read a stale MODE and NO assisted, band or operator line at
+     all (SQLITE_LOG_SCHEMA_PLAN.md 12c). One value each now, a contest-scoped
+     setting whose home is the contest database. *)
+   case aTag of
+      ctCategoryAssisted:
+         begin
+         Result := tCategoryAssistedSA[Settings.Contest.CategoryAssisted];
+         Exit;
+         end;
+      ctCategoryBand:
+         begin
+         Result := tCategoryBandSA[Settings.Contest.CategoryBand];
+         Exit;
+         end;
+      ctCategoryMode:
+         begin
+         Result := tCategoryModeSA[Settings.Contest.CategoryMode];
+         Exit;
+         end;
+      ctCategoryOperator:
+         begin
+         Result := tCategoryOperatorSA[Settings.Contest.CategoryOperator];
+         Exit;
+         end;
+      ctCategoryPower:
+         begin
+         Result := tCategoryPowerSA[Settings.Contest.CategoryPower];
+         Exit;
+         end;
+   end;
 
    if ErmakSpecification then
       begin

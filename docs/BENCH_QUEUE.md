@@ -6,20 +6,1057 @@ pass are deleted from here; if the result is interesting it goes into the
 document that owns the area (`RADIO_BENCH_STATUS.md`, `D12_HARDWARE_TEST_PLAN.md`,
 `CW_Keyer_Factory_Plan.md`) rather than accumulating here.
 
-**"Does it open" is already covered.** `Invoke-MenuSmoke.ps1` now drives all six
-converted dialogs (10111, 10302, 10101, 10104, 10557, 10416) and fails if any of
-them does not produce a window -- which proves the `.lfm` streams, the form
-constructs and `OnShow` runs without raising. So nothing below is asking whether
+**"Does it open" is meant to be covered by a gate.** `Invoke-MenuSmoke.ps1`
+drives the converted dialogs and is meant to fail when one does not produce a
+window -- but see the DISTRUST item below: on 2026-08-29 it reported success
+for runs in which Preferences never opened. So nothing below is asking whether
 a dialog appears; every item is about whether what appears is CORRECT, which is
 the part no gate reaches.
 
 **Why this exists.** Every defect NY4I found during the Phase 3/4 conversions was
-invisible to the eleven lints, the 9244 unit tests and the golden corpus: a
+invisible to the lints, the unit tests and the golden corpus: a
 swallowed menu, invisible entry fields, a double caret, a window collapsed to
 400×200, the "most recent configuration" button vanishing, `K3Sio 2` for a radio
 named `K3S`, Escape not closing a dialog, a settings field accepting letters, and
 a message key written with four bytes of garbage on the end. The gates are good
 at what they cover; this is the list of what they cannot see.
+
+---
+
+## Added 2026-10-19 -- THE NEW CONTEST DIALOG: LAST CONTEST BUTTON AND THE LOG GRID
+
+No window is shown by any test; all of this is compiled and unit-tested only.
+
+- **Last Contest button** shows the contest's display name and year on its
+  second line and the call / file name on the third; hovering shows the full
+  path. Check it at 100% and 150% scaling, with a long name (e.g. the
+  IN7QPNE composite) -- the year must survive any shortening.
+- **The existing-log list is a grid** (Contest, Year, Call, File), newest
+  year first, undescribable files (old `.cfg`, damaged `.db`) last by file
+  name. Check: layout at 100%/150%; header and row height and the sideways
+  scroll bar on Windows, GTK and Cocoa; the full-path hint; a double-click on
+  a HEADER opens nothing, on a row opens that log.
+- **Enter on a log row opens it and does NOT also create a new contest**
+  (the OK default button). With no logs listed, Enter still presses OK. Key
+  routing differs by widget set -- check Windows, GTK and Cocoa.
+- **Fill time on a real contest directory, cold disk** -- 100 warm logs take
+  ~160 ms; antivirus scanning each `.db` may be slower.
+- **The peek never touches a log:** opening the dialog while the same log is
+  open in another TR4W leaves that log working, and no `-wal`/`-shm` files
+  appear beside a closed log.
+
+## Added 2026-10-19 -- SMALL PUNS AND TERMINATORS (pointer audit P10: 3.3, 3.4, 3.6, 6.14)
+
+Unit-pinned: the CQ / NEW marker test (`uTestDXSpotParse`, `Test_Marker_*`),
+the country prefix table's add, replace and growth (`uTestCTYDAT`), and the
+two server handshake slices (`uTestUtilsText`). What no gate reaches is the
+screen, the keyer and the multi-op handshake.
+
+- [ ] **CQ and NEW markers in the band map** (3.3). With the band map open and
+      a radio on a band: tune to a frequency and press the key that drops a CQ
+      marker (or call CQ so `CQ/ <number>` is created). EXPECT: a `CQ/ n` row
+      appears at that frequency, is NOT sent to the multi-op network
+      (`uSpots.AddSpot`), and clicking it tunes the radio but does NOT fill the
+      call window (`uBandmap`). A `NEW ` flag row behaves the same on click. A
+      normal spot beside it still fills the call window and still sends. The
+      Alt-D / VFO-spin call window ignores a CQ marker inside the guard band
+      (`DisplayCallsignOnThisFreq`, `TuneDupeCheck`, on the polling thread) and
+      shows the real spot next to it.
+- [ ] **Multiplier refresh skips markers** (3.3). Change the multiplier mode
+      (or log a QSO that makes a spotted station a dupe) with a CQ marker on
+      the map: the marker row is untouched, ordinary spots change colour.
+- [ ] **WinKeyer opens** (3.4, `cw-keying`). Plug in a WinKeyer, start TR4W
+      with it enabled. EXPECT: the main window shows `WK2` / `WK3` and the
+      keyer's firmware version exactly as before (the version byte is read
+      into `wkREADBuffer[0]` after the buffer's first byte is cleared). A
+      WinKeyer that does not answer the host-open must still end with the
+      keyer reported closed, not a stale version.
+- [ ] **Server password handshake** (3.4, `multi-op-network`; automated only
+      for the slicing). With `tr4wserver` running with a password, connect a
+      client with the right password: it joins. Connect with a wrong one: it
+      is refused ("password" reply) and the server stays up. If a browser or
+      a `GET xxPASS...` style client is in use, the 11-byte offset form still
+      authenticates.
+- [ ] **A command with an argument** (3.6, `uProcessCommand`). Put a command
+      with an `=` argument in a CW memory (a ctrl-C ... ctrl-D command such as
+      the `EXECUTE` one naming a config file, or one that sends text to the
+      cluster) and play it. EXPECT: the argument reaches the command intact.
+      The removed line wrote a NUL one byte past the argument; no live consumer
+      read it (the one that did is commented out), so nothing should differ.
+## Added 2026-10-18 -- UNTYPED BYTE BUFFERS ARE OPEN ARRAYS (pointer audit P12)
+
+`GetCRC32`, `GetCRC16X25`, `SHA256Update`, `NextNetMessage`, the hex dumpers
+and the WinKeyer writer take `const aData: array of Byte` now, not an untyped
+buffer and a count (`docs/POINTER_AUDIT.md`, P12). Every hash and framing pin
+was written first and passed unchanged after; what no test reaches is a real
+keyer and a real two-station link. **The wire bytes are meant to be identical
+-- anything that behaves differently is a defect, not a new behaviour.**
+
+**WinKeyer** (cw-keying). `wkWriteRaw` takes an open array, the admin
+commands are a two-byte type, and the 16-byte LOAD DEFAULTS value list is
+built field by field by `wkValueListBytes` instead of being sent as the
+record's memory (pinned by `uTestWinKeyWire`). Set `DEBUG LOG LEVEL = TRACE`.
+
+- [ ] **Enable the WinKeyer and let it open.** EXPECT: `tr4w.log` shows
+      `[wkSendAdminCommand] B1=$00 B2=$04` (ECHO TEST) and then
+      `B1=$00 B2=$02` (HOST OPEN), and the main window names WK2/WK3 and its
+      version. No answer to the echo test means an admin command's bytes
+      changed.
+- [ ] **The settings sent at open take effect before any change is made.**
+      Send a message straight away. EXPECT: the TR4W speed, the configured
+      sidetone pitch, and the configured paddle mode and swap. A wrong speed
+      or pitch at open (and right after a manual change) is a value-list
+      field out of order.
+- [ ] **Send a message; change speed during it; PTT; Escape to clear.**
+      EXPECT: all as before (`wkSendByte`, `wkSendTwoBytes`, `wkTurnPTT` and
+      `wkClearBuffer` now pass `[b]` / `[B1, B2]`).
+- [ ] **Disable and re-enable the keyer.** EXPECT: `B1=$00 B2=$03` (HOST
+      CLOSE), then a clean re-open.
+
+**Multi-op link** (multi-op-network). Two stations and `tr4wserver`. The
+server's `SendToClient` turns the record into bytes once and both writes and
+traces those; the wire format is unchanged (V1 is not being touched).
+
+- [ ] **Connect two clients and log a QSO on one.** EXPECT: it reaches the
+      other; neither `tr4w.log` nor `tr4wserver.log` reports an unrecognised
+      id or a desync.
+- [ ] **Server at TRACE.** EXPECT `[Net] rx <ip>:` and `[Net] tx <ip>:` lines
+      in the same shape as before: two upper-case hex digits and a space per
+      byte, at most 64 bytes, then `... (N more)`.
+
+**Single-instance lock** (serial-port-io; no hardware). The mutex name is a
+CRC of the install path's UTF-16 bytes, now taken with
+`TEncoding.Unicode.GetBytes` instead of read out of the string (pinned by
+`uTestCRC32.Test_UnicodeBytesAreTheCodeUnits`).
+
+- [ ] **Start the PREVIOUS release's exe, then this build's, from the SAME
+      directory.** EXPECT: the second is refused as a second instance. That
+      proves the name did not change between builds, which a test cannot.
+
+---
+
+## Added 2026-10-18 -- AN ADIF IMPORT GIVES QSOs THIS CONTEST'S STATION, AND ASKS WHEN THE FILE NAMES ITS OWN (log schema 3)
+
+NY4I's ruling: *"I start a contest, then import. Therefore you apply the set my
+fields as if it were a new QSO. If the import has its own my fields, we should
+report that and ask the user if they should override the contest."* A headless
+`/IMPORT` keeps the file's values (the round trip pins that); the QUESTION only
+appears in the GUI, so nothing automated has seen it.
+
+Set up: an ARRL Digi log with MY GRID `EL88`. Two ADIF files: one with no MY_
+tags, and one whose records carry `<MY_GRIDSQUARE:4>JO65`.
+
+- [ ] **Import the file with no MY_ tags.** EXPECT: no question; the final
+      report ends "N QSO(s) named no station of ours and were given this
+      contest's." Edit QSO on one shows grid `EL88`; the claimed score is the
+      one EL88 gives.
+- [ ] **Import the JO65 file.** EXPECT: before anything is written, a Yes/No
+      naming "MY_GRIDSQUARE", the record count, and a line
+      `MY_GRIDSQUARE: N QSO(s), e.g. JO65 (this contest: EL88)`. The wording
+      and line breaks must read right; it is new text.
+- [ ] **Answer Yes.** EXPECT: Edit QSO shows `JO65`, and the score is the one
+      JO65 gives (measured headless: 522 against 231 for ARRL Digi's
+      reference).
+- [ ] **Answer No (on a fresh log).** EXPECT: Edit QSO shows `EL88`.
+- [ ] **A file whose MY_ values match the contest's.** EXPECT: no question,
+      only "...the same as this contest's." in the report.
+
+---
+
+## Added 2026-10-18 -- A STATE QSO PARTY: A NEW COUNTY FROM THE SAME PLAIN CALL IS A NEW QSO (Q118, `91d6bc34`)
+
+NY4I's ruling: in a state QSO party a logged QSO whose received county differs
+is NOT a dupe, live and on rescore (`QSOIsADupe`, `AddQSOToDupeSheets`). The
+call window, deliberately, still checks the CALL alone -- *"If we consider it a
+dupe until that second contact with a new county comes in, that is a
+reasonable compromise."* `uTestNYQPRover` pins the rule; nothing automated
+types into the entry window or watches the call window say DUPE.
+
+Set up: a New York QSO Party log, MY STATE out of state (e.g. `FL`), CW on
+20 m. A station that does NOT sign `/county`.
+
+- [ ] **Log plain `W2TZ` sending `KIN`.** It logs and scores.
+- [ ] **Type `W2TZ` again, same band and mode.** EXPECT: the call window shows
+      DUPE -- that is the ruling, not a defect.
+- [ ] **Enter `STE` as the exchange and log it.** EXPECT: it is accepted, is
+      not marked a dupe, and scores (2 points on CW).
+- [ ] **`W2TZ` with `KIN` again.** EXPECT: a dupe, scoring 0.
+- [ ] **Rescore** (Tools > Rescore). EXPECT: the same marks -- KIN and STE
+      counted once each, the second KIN a dupe -- and the same score.
+- [ ] On 40 m, `W2TZ` is not a dupe in the call window at all.
+
+## Added 2026-10-18 -- AN FM QSO NO LONGER CORRUPTS ITS CALL ON RESCORE (pointer audit P8 part A, `433c047f`)
+
+The sorted list, the multiplier object and the callsign list are classes now.
+The defect found on the way: the RESCORE passed a QSO's stored mode, which can
+be FM, and the dupe bits were indexed past their array into the entry's
+callsign (K1AR on 20 m FM became garbage). One rule now, `DupeSlot`: FM counts
+as Phone. The unit tests pin it; the commit itself asks for a real-contest
+check.
+
+Set up: a log that holds FM QSOs -- a VHF contest (e.g. ARRL VHF) with a few
+FM contacts among SSB and CW ones. Note the score and the multiplier counts
+before you start.
+
+- [ ] **Rescore** (Tools > Rescore).
+- [ ] **Open the dupe sheet (Alt-D)** on the band and mode the FM QSOs were
+      made on, and on phone. EXPECT: every call reads exactly as logged -- no
+      garbled or truncated callsigns -- and the FM QSOs are listed as PHONE.
+- [ ] **Open the remaining-multiplier windows.** EXPECT: the multipliers
+      worked and needed are what they were before the rescore.
+- [ ] EXPECT: the score and multiplier counts are unchanged, and working an
+      FM-logged station again on phone, same band, is a dupe.
+- [ ] Exit TR4W: nothing in `tr4w.log` at Error level from the rescore.
+
+## Added 2026-10-17 -- THE CPU KEYER'S ELEMENT RING IS A FIELD (pointer audit P6, defect D4)
+
+`uTestCPUKeyerRing` pins every element the DTR/RTS keyer's text-to-element
+translation writes, and it passed unchanged across the change -- so what
+reaches the ring is the same. What the tests cannot see is the CW THREAD
+keying it: `SendCWBufferStart` now reads `CPUKeyer.CWBuffer[...]` instead of
+`CWBuffer^[...]`, including the Farnsworth arm that rewrites an element's
+length in place, and the thread and Esc (`FlushCWBuffer`) step the ring
+through `NextRingSlot` / `PreviousRingSlot` -- with one deliberate change,
+the Esc wrap fix in the long-run item below. Set up: CW through the **CPU keyer** -- keyer port on a
+serial adapter with DTR (or RTS) = CW, no WinKeyer, CW-by-CAT off, a radio
+or a sidetone monitor you can hear. **A YCCC box's autosend characters go
+this way too**, so the same checks cover it.
+
+- [ ] **A message keys exactly as before.** F1 (CQ) and the exchange memory:
+      every character correct by ear, letter spacing and word spacing
+      unchanged, PTT drops at the end. Include a memory with `^` (half space)
+      and one with a speed change (Ctrl-F / Ctrl-S inside the memory) if you
+      use them.
+- [ ] **Autosend, starting from a FRESH start of TR4W.** Before keying
+      anything else, put the call window in autosend and type a call: it
+      keys as you type. (The D4 crash needed the very first character into
+      the keyer to be a space, `^`, a control character or an unmapped one,
+      which the UI does not readily produce -- the unit test reached it and
+      reproduced the access violation; this checks the ordinary path.)
+- [ ] **Farnsworth** (if you use it: FARNSWORTH ENABLE with a code speed
+      below FARNSWORTH SPEED): the character and word gaps stretch as before.
+- [ ] **Backspace while autosending** retracts the last unsent character, as
+      before -- and only that: it never brings back CW that was already sent
+      or flushed. **FIXED in this packet (NY4I, 2026-10-17):** when the ring
+      stood at slot 0, the retraction walk used to go round the whole OLD
+      ring and could resume keying stale CW. Rare for the same reason as
+      the Esc item below, so a clean run does not prove it -- the unit test
+      does -- but stale CW after a Backspace is now a defect: note the time
+      and send `tr4w.log`. **Esc** stops sending mid-message.
+- [ ] **A long run, with Esc.** Send forty or more CQs/exchanges in one
+      session -- the ring holds 2,047 elements and wraps, so this crosses the
+      wrap several times -- and press **Esc mid-message on a good number of
+      them**. Every message keys clean, and **every Esc stops sending
+      cleanly**: at most the element in progress finishes, then silence and
+      PTT off. **FIXED in this packet (NY4I, 2026-10-17):** `FlushCWBuffer`
+      used to wrap to `CWBufferSize`, not `CWBufferSize - 1`, so an Esc at
+      the moment the ring stood at slot 0 replayed up to 2,046 OLD elements
+      instead of stopping. That moment is rare (once per 2,047 elements), so
+      a clean run does not prove the fix -- the unit tests do -- but **a
+      burst of old CW after an Esc is now a defect**: note the time and send
+      `tr4w.log`.
+- [ ] Exit TR4W: no `worker thread` exception line in `tr4w.log`.
+
+## Added 2026-10-17 -- THE SPOT STORE IS A CLASS OVER A GENERIC LIST (pointer audit P8, part B)
+
+`uTestSpotStore` pins the store itself (add, same-frequency replace, order,
+find, delete, clear, 600-spot growth, ageing and the minutes-versus-seconds
+decay, dupe and repaint bookkeeping). It cannot reach the band map window, the
+cluster, or the radio polling thread, which now takes the store's lock.
+
+- [ ] **Spots arrive, age and leave.** Connect to a cluster (Telnet window)
+      with the band map open. EXPECT: spots appear, in frequency order, within
+      a repaint tick of arriving; with `BAND MAP DECAY TIME` set to 2 they fall
+      off one at a time about two minutes after THEY arrived, not all in one
+      tick. The band map's delete removes the right row; its clear empties
+      the map and new spots still arrive afterwards.
+- [ ] **Click-to-tune.** Click a spot: the radio tunes to that spot's
+      frequency and the call window fills (search-and-pounce). Spin the VFO
+      across a spot's frequency with the band map open: the call window shows
+      that spot's call inside the guard band and clears outside it. With
+      the Tune Alt-D option on and a second radio, tuning the INACTIVE radio onto a
+      spot fills the Alt-D call. These last two run on the radio polling
+      thread and are the paths that gained the lock -- watch for a stall or an
+      exception in `tr4w.log` while spots are arriving and being deleted.
+- [ ] **Persistence.** Close and reopen TR4W with spots on the map: they come
+      back (SaveBandMap / LoadBandMap), still ordered, with their ages kept.
+
+---
+
+## Added 2026-10-17 -- BATCH C RULINGS (Q9, Q32, Q37, Q73, Q81)
+
+The unit tests reach each rule (`uTestOperatorCQMemory`, `uTestContestTotals.
+Test_MissouriPeakHourBonus`, `uTestMalformedGrid`, `uTestRoverDupeKey`,
+`uTestContestIN7QPNE` / `uTestContestExport` for the New England files) and the
+contest matrix reaches the scoring; nothing reaches a live entry window or the
+running program's contest re-selection, and the corpus is blind to points.
+
+- [ ] **An edited CQ memory survives re-selecting the contest (Q9).** Open a
+      CQ WPX (or any serial-number) log; Alt-P, edit CQ F3 to something of
+      your own; then re-select the SAME contest the way an operator does
+      (a peer's CONTEST line, or the CONTEST setting applied again). EXPECT:
+      CQ F3 keeps your text, while the other memories set-up writes are
+      written as before. Then open a log of a DIFFERENT contest: its own CQ F3
+      default appears (your edit is not carried over). **Known, separate:** an
+      edited memory is still lost when TR4W restarts -- the log's `message`
+      table is written at close and never read back (reported with Q9).
+- [ ] **Missouri's peak-hour bonus survives reopening (Q32).** In a Missouri
+      log, log a few 40 or 80 m QSOs with a logged time between 1400 and 1959
+      UTC (edit the time if it is not contest day), note the score, close and
+      reopen the log: the score is the SAME (it used to drop by the tally).
+      `/EXPORT`'s `CLAIMED-SCORE` matches the window.
+- [ ] **A malformed grid has no distance (Q37).** In WWL or the Stew Perry, a
+      logged QSO whose grid is not a grid (import one, or edit one to `FN3`)
+      scores the no-distance points (1 in both) every time it is rescored, and
+      the beam-heading display shows nothing for it. A real grid still shows
+      its heading and distance.
+- [ ] **A county rover is its own station (Q73).** In the Florida QSO Party,
+      work `NY4I/PIN`, then type `NY4I/HIL`: the call window does NOT say
+      dupe, and it logs. Type `NY4I/PIN` again on the same band and mode: it
+      IS a dupe. The same with `K1AR/NHHIL` then `K1AR/NHMER` in New England.
+- [ ] **New England's county spellings (Q81).** Out of New England, the
+      New England QSO Party accepts `MEAND`, `CTCAP` and the old `ANDME`; of
+      the eight old Connecticut counties only the three in7qpne_cty.dom maps
+      onto a planning region are still typed (`HARCT` and `TOLCT` give
+      Capital, `NHVCT` Naugatuck) and `FAICT`, `LITCT`, `MIDCT`, `NLNCT`,
+      `WINCT` are refused; the remaining-multiplier window lists 68 counties
+      under the state-first names. Inside New England (MY STATE `ME`),
+      `MEAND` counts Maine.
+
+---
+
+## Added 2026-10-17 -- BATCH B SCORING RULINGS (Q38, Q45, Q49, Q71, Q84, Q85, Q104)
+
+The unit tests reach every rule (`uTestContestRulings2026Oct`) and the contest
+matrix reaches the scoring; NOTHING reaches the New Contest dialog's window or a
+live entry window, and the corpus is blind to points.
+
+- [ ] **IN7QPNE is refused at New Contest for an in-area station (Q104).** Pick
+      IN7QPNE and type each of `IN`, `UT`, `ME`, `DE` (and one county, e.g.
+      `INADA`) into MY STATE. EXPECT: OK stays DISABLED and the comment under the
+      rows reads *"IN7QPNE is for stations outside Indiana, the 7th call area,
+      New England and Delaware. From UT, choose the 7th Call Area QSO Party
+      instead."* -- the 7QP for every 7th-area state, Indiana / New England /
+      Delaware QSO Party for the others. Then type `KS`: the prompt text comes
+      BACK in the comment and OK enables. Check the message fits the comment
+      area without clipping (it is longer than the prompt).
+- [ ] **The UA4W Championship's prompt (Q71).** Pick it: the comment is the
+      translated `TC_ENTERYOURRDAIDORGRID` ("Enter your RDA ID (for UA1A
+      stations) or four digit grid square:" in English); in Russian it should be
+      the existing Russian text.
+- [ ] **A 160 m contest scores nothing off 160 m (Q71).** In RSGB 1.8 MHz, ARRL
+      160 or CQ 160, log one QSO on 80 m: it is logged, scores 0, earns no
+      multiplier and is not a dupe on 160 m; the need-multiplier hint on 80 m
+      says nothing is needed.
+- [ ] **Winter Field Day shows no DXCC multipliers (Q38).** The remaining-DX
+      window and the multiplier totals show none; the score is unchanged.
+- [ ] **EUDX from outside the EU (Q45).** A W station working a European who
+      sends a ZONE scores 5 (3 on our continent, 2 for our own country), not
+      10; one who sends a region scores 10.
+
+---
+
+## Added 2026-10-17 -- Q108 S4: A CONTEST WITH NO LEGACY NUMBER IS REFUSED ON MULTI-OP
+
+Nothing automated drives a socket, so no gate has seen any of this end to end
+(the unit tests reach the predicate, the message, `PeerContestRefusal`,
+`TryConnectToNetwork`'s refusal and a source read of every door). **WHAT YOU
+NEED:** a contest registered by id. The application links none until the first
+real one (design 8.2u S5); until then use a LOCAL build with
+`uContestTestFixture in '..\test\unit\uContestTestFixture.pas'` added to
+`tr4w.lpr` (`TR4W-TEST-FIXTURE`; it appears in the New Contest list) -- do not
+commit that, `Lint-ContestUnitsLinked` will fail it. **Two machines**, one
+running `tr4wserver`.
+
+- [ ] **Connect with such a contest selected is refused, once, and cleanly.**
+      Select `TR4W-TEST-FIXTURE`, open the Network window (or restart with it
+      active) with the server running. EXPECT: NO connection attempt (the
+      status never says "Connecting"), ONE warning dialog reading "TR4W-TEST-FIXTURE
+      cannot be used on the multi-op network yet -- the network protocol cannot
+      carry it. Use it only while this station is not connected to a multi-op
+      server.", and NOTHING more on the 5-second timer's retries (it is silent
+      after the first). `tr4w.log` has one `[Net] TryConnectToNetwork refused
+      contest "TR4W-TEST-FIXTURE" (handle 188)` line. Then switch to a legacy
+      contest: the next retry connects normally; switch back and the message
+      appears again once.
+- [ ] **A legacy contest still works exactly as before** on the same two
+      machines: connect, log QSOs at one station and see them arrive at the
+      other, edit one, change a shared setting. (This is the regression check
+      for the guards on the send and receive paths.)
+- [ ] **Switching to such a contest while connected drops the link, with the
+      message.** Connect on a legacy contest, then choose `TR4W-TEST-FIXTURE`
+      (New Contest, or CONTEST in Preferences). EXPECT: the link closes (the
+      Network window shows disconnected), one dialog with the same message, and
+      no QSO of the new contest ever reaches the server (`tr4wserver.log`).
+- [ ] **A peer's CONTEST change is not followed.** Station B, on a build that
+      CAN select it, changes the contest to `TR4W-TEST-FIXTURE` while station A
+      is connected on a legacy contest. EXPECT at A: the message, A keeps its
+      contest, and `tr4w.log` has `[Net] a peer's CONTEST command refused ...`.
+      (B itself is dropped from the network by the switch door above, so this
+      needs B to switch before it notices -- or a hand-sent packet.)
+- [ ] **`<contestnr>` on the wire.** With a UDP listener (N1MM-format) on the
+      contact stream and the fixture selected, log a QSO: the datagram carries
+      `<contestnr>1862707066</contestnr>`; a legacy contest still carries its
+      legacy number (the `ContestType` ordinal -- compare with a capture from
+      before this change). Wireshark on the contact stream's port will do.
+
+---
+
+## Added 2026-10-18 -- Q110: PEERS ON DIFFERENT CONTESTS
+
+Two machines, one `tr4wserver`, two LEGACY contests (e.g. ARRL DX CW and CQ WW CW).
+Unit tests feed the real receive arms but cannot log a QSO or show a panel.
+
+- [ ] **A QSO from a peer on another contest is refused and reported.** Station
+      A on contest X, station B on contest Y, both connected; log a QSO at B.
+      EXPECT at A: the QSO is NOT in A's log or totals; the quick-command panel
+      shows "Station B is on Y, this station is on X -- its QSOs are NOT being
+      logged here. ..." ; `tr4w.log` has one `[Net] NET_QSOINFO from station B
+      REFUSED` Error line naming both contests and the call. Log three more at
+      B: three more log lines, NO second panel notice. Edit one at B: a
+      `NET_EDITEDQSO ... REFUSED` line, still no second notice.
+- [ ] **Same contest on both is unchanged**, and a reconnect re-arms the notice.
+
+## Added 2026-10-16 -- 5.0.28 AND AFTER: WHAT THE GATES CANNOT SEE
+
+Every item below passed every automated oracle; each is "same as before",
+not "right". Check on a real run:
+
+- **DX vs domestic in a domestic contest** (pointer audit P5): the domestic
+  country list is a class now (`TDomesticCountryList`). Log a few in-country
+  and DX contacts in a contest that uses it (e.g. a state QSO party from out
+  of state, ARRL DX from W) and confirm each is DX or domestic as before.
+- **County files** (`TDomQTHTable`, the logdom rewrite): a QSO party's county
+  abbreviations still resolve, including an INCLUDE FILE (New York in-state:
+  a Canadian province counts).
+- **Nebraska QSO Party** (new): out of state, only NE counties score; in
+  state, counties + states + provinces + countries, NE itself not a state;
+  KA0BOJ bonus 100.
+- **Out-of-area QSOs score 0** (Q107): as an out-of-state entrant, import an
+  ADIF holding a contact with another out-of-state station; it should log
+  but score 0 -- and Rescore from the menu keeps it 0.
+- **Polish UI** shows "Polski", the About box credits SP2EWQ, M0GIM and
+  G0DVJ; a machine-translated language credits LibreTranslate.
+- **N1MM listener** receives `<mycall>` again (UDP contact broadcast).
+- **The installer** (`dom\*.dom` wildcard): an installed copy has all 124
+  files in `dom\`, including `prov12.dom`.
+- **Every worker thread has a new signature** (pointer audit P1, defect D2).
+  `tCreateThread` is typed now, and eleven thread bodies changed from
+  parameterless procedures to `function(aParameter: Pointer): DWORD;
+  stdcall`. Before, each of them, ON EXIT, wrote nil into its own SEH chain
+  head and restored three registers from the wrong stack slots -- so a
+  crash or hang AT THE END of one of these is what to watch for, not at the
+  start. For each: use the feature, let the thread finish (or exit TR4W),
+  and check `tr4w.log` holds no `worker thread ... ` exception line:
+  - **The dupe / new-multiplier beep** (`tDoABeep`).
+  - **The paddle/foot-switch thread** (`tPaddleFootSwitchThreadProc`).
+    Its LPT reads are gone (2026-09-13), so all it has to do is start and
+    exit cleanly.
+  - **DVP voice playback** -- play a `.wav` memory to its end, and stop one
+    mid-message (`tDVPPlayThreadproc`).
+  - **WinKeyer** -- open at startup with WINKEYER ENABLE on, key a message,
+    exit (`wkOpenThreadProc`, the new entry for `wkOpen`, and
+    `wkReadThreadProc`).
+  - **Any CAT radio** -- polling starts, frequency and mode follow, and
+    Reset Radio Ports rebuilds it (`BeginPolling`, which now receives its
+    RadioObject as the thread parameter).
+  - **Multi-op** -- connect to `tr4wserver`, including a retry while the
+    server is down (`ConnectThread`), and **Synchronize** the server log,
+    both from the Network window and with SERVER AUTO SYNCHRONIZE LOG ON
+    CONNECT (`RunSyncThread`).
+  - **Post / Get Scores** upload (`CreateConnectionAndSendReportToGetScores`).
+  - **The NTP check at startup** (`NTPStartupCheck`).
+- **The CW-memory command table** (pointer audit P1): its handler column is a
+  typed procedure now and every row names its routine bare. No row changed
+  its target, and the compiler checked all 81; still, run two or three
+  memory commands (e.g. `SWAPRADIOS`, `BANDUP`, `CQMODE` in a function-key
+  message) and confirm each does what it did.
+- **MMTTY RTTY text** (pointer audit P2, defect D3): with MMTTY running,
+  received characters appear in the RTTY window in Lucida Console, in
+  colour, and the callsign grab still works. Three `SendMessage` addresses
+  are `LPARAM` instead of `integer` -- identical on i386; on x86_64 the
+  `integer` form handed RichEdit half an address (the 64-bit image is based
+  at `$100000000`).
+
+---
+
+## Added 2026-10-15 -- THE MINIMUM OFF TIME IS THE CONTEST'S (Q60)
+
+NY4I's answer: a break is 60 minutes in CQ WW and 30 in every other contest,
+IARU HF included. `TContestBase.MinimumOffTimeMinutes` states it and
+`PostUnit.CalculateTotals` reads it; the summary sheet no longer reads it from
+the contest NAME. The values and the gap rule are unit-pinned
+(`uTestContestUI`); the summary sheet is in no oracle.
+
+**The main window's on-screen times are NOT affected.** Its 60-for-IARU copy
+wrote a variable nothing read (the reader was inside a comment in D7 too), and
+is deleted. The on-air counter is wall time since the first entry, with no
+break rule at all -- so there is nothing to see change there.
+
+- [ ] **IARU HF**: log two QSOs 45 minutes apart (edit the second QSO's time)
+  and write the summary sheet. `OPERATING TIME` does NOT include the 45
+  minutes. Before this change it did not either, unless a stated `CONTEST
+  NAME` held `CQ-WW`.
+- [ ] **CQ WW CW**: the same two QSOs -- `OPERATING TIME` DOES include the
+  45 minutes. The CT1BOH window's per-band times agree with it.
+- [ ] **CQ WW CW with `CONTEST NAME = MY TEST`** in the `.cfg`: still 60
+  minutes (before this change, 30).
+
+## Added 2026-10-14 -- THE EXCHANGE RULES ASK THE CONTEST (M11 S7)
+
+Five rules the engine decided by testing the session's exchange shape are now
+each contest's own answer. The answers are unit-pinned for every contest at
+six stations, but the sites that USE them are entry-window paths no gate runs.
+Nothing should look different:
+
+- [ ] **Rover call, Michigan QSO Party** (out of state): type `KG1S/MON` and
+  Enter with the exchange empty. The county `MON` is copied into the exchange
+  and the QSO logs as a USA contact (not country G).
+- [ ] **Rover call, ARRL DX CW from a non-W/VE call** (e.g. `MY CALL` DL1xx):
+  the same `/county` strip happens; from a W or VE call it does NOT (the
+  exchange there is power).
+- [ ] **Two QTHs in one S&P entry** (Michigan, out of state): `MON WAY` logs
+  exactly as it did before this change (`ReturnInSAPOpMode`'s re-entry).
+- [ ] **A blank exchange** logs in BWQP, General QSO and POTA, and is refused
+  (nothing logged) in, say, CQ WW CW.
+- [ ] **POTA**: typing a park reference in the exchange shows its name.
+- [ ] **CQ WW RTTY** with `MY STATE` set: the F3 exchange memory is
+  `599 <zone> <state>`; CQ WW CW's has no state.
+
+## Added 2026-10-14 -- THE ADIF IMPORT IS ALL OR NOTHING, AND SAYS SO
+
+NY4I's ruling: an ADIF import is one transaction -- one record that will not
+go in, and none does -- "with ample notification". `File > Import ADIF`
+(`MainUnit.ImportFromADIF`) now reads the whole file, then writes it in one
+transaction (`uLogStore.LogStoreAppendQSOs`). Headless `/IMPORT` is proven
+(exit 2 on failure, the `qso` rows unchanged, the report in
+`tr4w-early.log`); what the OPERATOR sees is not. Make a bad file by adding a
+line holding only `<EOR>` after a few records of any ADIF -- a record with no
+CALL, which the log refuses (`callsign` is NOT NULL).
+
+- [ ] **Import the bad file into a log that already has QSOs.** A warning
+  dialog says NOTHING was imported, names the record (`record N of M (no CALL,
+  no QSO_DATE)`), the reason (`NOT NULL constraint failed: qso.callsign`) and
+  that the contest log is unchanged; the quick-command line reads `ADIF import
+  FAILED -- nothing was imported` behind it. The log window, totals and score
+  are exactly what they were. Is it unmissable, and is it clear?
+- [ ] **Then log a QSO by hand.** It logs: a rolled-back import no longer stops
+  the log (only a rollback that itself fails does -- see
+  `docs/SQLITE_LOG_SCHEMA_PLAN.md` 9c). There is no second dialog saying THE
+  CONTEST LOG IS NOT BEING SAVED.
+- [ ] **Import a good file.** The quick-command line shows `N Qs imported.` as
+  before, the log window fills once, and on a large file (a few thousand
+  records) the wait is noticeably shorter than before -- the progress count
+  every 100 records is GONE, because nothing is in the log until the end.
+- [ ] **Import a file with a stray non-record line after the header** (any text
+  with no `<EOR>`). It imports, and a warning names how many lines were
+  skipped. Those lines were always dropped; now the operator is told.
+
+---
+
+## Added 2026-10-14 -- WSJT-X MESSAGES ARE EVALUATED ON THE MAIN THREAD
+
+`uWSJTX` ran the dupe and new-multiplier test for a CQ decode on Indy's UDP
+listener thread, racing the main thread's sheet and `ActiveContest`. The
+evaluation and the `HighlightCall` reply now run on the main thread, queued by
+the listener. The unit tests pin the hand-off; only a live WSJT-X proves the
+colours still land. The server's destructor also runs now (it had been hidden
+from `Free` for as long as the unit existed), so the shutdown path is new.
+
+- [ ] **Run WSJT-X FT8 against TR4W in a digital contest with a few logged QSOs.**
+  A CQ decode from a station already worked on that band is coloured as a dupe
+  in the WSJT-X decode list; a new multiplier (call or grid) is coloured as a
+  mult; an ordinary station is not coloured.
+- [ ] **Log a QSO from WSJT-X while decodes are arriving** and confirm the next
+  decode of that station turns dupe-red. (The sheet is read after the QSO is
+  logged because both are now on the main thread's queue order.)
+- [ ] **Turn WSJT-X off and on in Preferences, then exit TR4W** with WSJT-X
+  still sending. No crash, nothing in `tr4w.log` from `[uWSJTX]` at Error level.
+- [ ] **Look for `called off the main thread` from `[uWSJTX]` in `tr4w.log`.**
+  It should never appear.
+
+The STATUS, CLEAR and LOGGED-ADIF messages followed (same day), so a QSO WSJT-X
+logs is now parsed, checked and LOGGED on the main thread, in arrival order with
+everything else WSJT-X sent. The unit tests pin the marshalling for all four
+kinds and cannot log a QSO (no booted contest):
+
+- [ ] **Log a QSO in WSJT-X (FT8, a contest that accepts it).** TR4W logs it
+  EXACTLY ONCE, with the right call, band, mode, and exchange (grid or state as
+  the contest wants), and the log window, score and rate update.
+- [ ] **Work two stations back to back while decodes are scrolling.** Each QSO
+  is logged once and in order; the call window does not show the previous
+  station's call or lose the next one (the clear after QSO 1 must land BEFORE
+  QSO 2's call is placed).
+- [ ] **While WSJT-X is calling a station,** that call appears in the call
+  window and its grid in the station display; stepping the dial with no radio
+  defined still follows the band.
+- [ ] **Log a QSO from WSJT-X and, at the same moment, type one yourself.** Both
+  are logged, neither is lost or doubled.
+- [ ] **Disable WSJT-X in Preferences right after WSJT-X logs a QSO, and the QSO
+  must be in the log.** Stop logs any QSO still queued, in order, before it lets
+  go. Do the same by quitting TR4W immediately after a WSJT-X QSO (the exit path
+  stops the server before the log store closes). A line in `tr4w.log` reading
+  `LOST QSO` is a failure of this fix: report it with the ADIF text it carries.
+
+NOT CHANGED, AND RECORDED: the WSJT-X TCP command handler
+(`IdTCPServer1Execute`) still runs on Indy's TCP thread. It reads the radio
+status record unsynchronised and writes `Settings.Ptt.ViaCommands`. It is
+request/response against a roughly one-second WSJT-X deadline, and CmdTX / CmdRX
+are PTT, so queuing it to the main thread is the wrong fix; the assessment is in
+a comment above the procedure. It belongs with the radio-status snapshot work.
+
+## Added 2026-10-14 -- COUNTY-LINE IMPORT ASKS THE CLASS (M10 S7)
+
+`MainUnit`'s ADIF import clears the dupe flag on a repeat of (call, band, mode)
+with a different QTH when the contest's CLASS allows a county line. That
+changed for six parties, and `ceClearDupeSheet` is set inside the import
+routine, which no unit test reaches:
+
+- [ ] **Import a real Michigan QSO Party ADIF holding a repeat** (same call,
+  band and mode, a DIFFERENT county). Since Q118 (`4c5c0a6b`, kept in
+  `91d6bc34`) a state-party QSO whose received county differs is NOT a dupe --
+  live and on the post-import rescore -- so the repeat is NOT flagged. A
+  repeat from the SAME county IS flagged.
+- [ ] **Import a county-line ADIF for one of Arizona, BC, Virginia, the Salmon
+  Run or New York** (same call/band/mode, two counties). The second contact is
+  now NOT flagged as a dupe; it used to be.
+
+## Added 2026-10-14 -- SEVEN CONTEST SETTINGS RETIRED (M10 S2, NY4I's Q4)
+
+`QSO POINT METHOD`, `EXCHANGE RECEIVED`, `INITIAL EXCHANGE`, `DOMESTIC
+MULTIPLIER`, `DX MULTIPLIER`, `PREFIX MULTIPLIER` and `ZONE MULTIPLIER` are
+names in `uCFG.RETIRED_COMMANDS` now: accepted, reported once per name per
+session, no effect. They are gone from Preferences. Unit tests pin the read,
+the capture and the no-modal path; the corpus never captures, so **an
+interactive open and close of an old log is what no gate runs**:
+
+- [ ] **Open a contest log written before 2026-10-01** (any corpus `log.db`
+  copied somewhere writable will do). `tr4w.log` carries ONE line
+  `[LogStore] 7 stored contest setting(s) are retired commands -- ...`
+  naming each with its value, and **no** "invalid statement" dialog. Close
+  it cleanly, reopen it: that line is gone, because the close deleted the
+  seven rows.
+- [ ] **A contest `.cfg` that still says `QSO POINT METHOD = ...`** (or any of
+  the seven) loads with no dialog and one
+  `[Config] QSO POINT METHOD = ... is a withdrawn command` line, once, however
+  many times the file is read in the session. The contest scores by its class.
+- [ ] **Preferences, Contest page:** the seven rows are gone, and nothing else
+  on the page moved or lost its caption.
+
+## Added 2026-10-14 -- IN7QPNE JUDGES EACH QSO BY ITS PARTY (design 7.14, 8.2r)
+
+IN7QPNE is no longer one merged rule: `uContestIN7QPNE` hands each QSO to the
+Indiana, 7QP, NEQP or Delaware class, by the worked station's county. Unit
+tests pin the routing and each party's points; **no real IN7QPNE session has
+been logged with it**, and the contest matrix record changes by design. To
+exercise, log a short session from an IN7QPNE `.cfg`:
+
+- **Outside all four areas** (`MY STATE` e.g. KS): an Indiana county scores
+  2 on any mode; a 7QP county 3 CW / 2 phone; a New England county 2 CW /
+  1 phone; a Delaware county 20 CW / 10 phone, and **0 on 30, 17 or 12 m**.
+  A station sending a state or DX is refused with "Out of state: work IN,
+  7th area, NE or DE stations only" (only if the exchange lets you type one).
+- **Inside one** (`MY STATE` a county, e.g. `INADA` or `KDE`): a station in
+  another party scores by THAT party's rules (a DE entrant working an
+  Arizona county: 7QP's 3 on CW); a state, province or DX station scores by
+  your own party's (a DE entrant: 2 CW, 1 phone).
+- **Multipliers**: a Delaware county worked on 30 m earns none; an Indiana
+  entrant's DX contact -- see Q84.
+- **The score shown** is points x multipliers over the whole log: no
+  sponsor's score (Q77). Check it is not mistaken for one party's.
+- **Cabrillo**: `CONTEST: IN7QPNE-QSO-PARTY`, one file for all four sponsors.
+- **No score posting**: Post Scores is greyed; with `HAMSCORE ENABLE` on, the
+  HamScore window's status reads "Score posting is not permitted for this
+  contest" and nothing is sent. (WRTC now behaves the same -- Q83.)
+
+---
+
+## Added 2026-10-14 -- THE DELAWARE QSO PARTY IS A NEW CONTEST
+
+`DELAWAREQSOPARTY` is a new contest type with its own class
+(`uContestDelawareQP`, design 8.2q). Unit tests pin the class; **nothing
+automated types a Delaware exchange or loads its `.dom` files**, and the
+contest matrix shows it unfrozen. To exercise, create it from the New Contest
+dialog (the template `.cfg` was deleted 2026-10-15):
+
+- **In-state** (`MY STATE` a county: NDE, KDE or SDE): states, provinces and
+  DX countries are multipliers **per band**; working another DE county counts
+  the ONE multiplier "Delaware". Points CW 2, digital 2, phone 1.
+- **Out-of-state** (`MY STATE` e.g. PA): NDE, KDE and SDE are the only
+  multipliers, per band; a non-DE station is refused with "Out of state: work
+  DE stations only". Points CW 20, digital 20, phone 10.
+- **Bands**: a QSO on 30, 17 or 12 m is logged and scores 0; 6 m and 2 m score.
+- **Score**: CATEGORY-POWER LOW doubles, QRP triples, and 50 is added.
+- **Cabrillo**: `CONTEST: DE-QSO-PARTY`, an FT8 QSO's mode is `RY`, and the
+  file is refused until the summary window has a LOCATION.
+
+---
+
+## Added 2026-10-13 -- A STATION FACT CHOSEN AT NEW CONTEST IS THAT CONTEST'S ONLY (design 7.12)
+
+What the New Contest dialog asks for, such as MY ZONE, MY STATE, MY SECTION
+and MY FD CLASS, is now **this contest's override**. It is stored in the
+log. It is **never** written into the station's settings. Before this
+change, the next settings save carried it into `settings\tr4w.json`. A save
+happens on any Preferences edit or on the insert-mode toggle. Unit tests pin
+the rule; only a run shows the dialog and the windows agree.
+
+Before you start, note the station's **MY ZONE** and **MY STATE** in
+Preferences > Station (zone 5 and FL here).
+
+- [ ] **New Contest > European HFC.** Its row is labelled `MY ZONE`, because
+      that contest sends the year licensed in the zone's place. Enter `3`.
+      OK. The CQ message (F1/F3) sends `599 3`.
+- [ ] **During that contest, Preferences > Station > MY ZONE still shows the
+      station's zone (5).** Change something harmless on another page and
+      save, or toggle INSERT. Close TR4W. Open `settings\tr4w.json`:
+      `"Zone"` is still `"5"`.
+- [ ] **Log one QSO, close, and reopen the European HFC log.** Export
+      Cabrillo. The sent column carries `3`, because the log carries the
+      override. Also look at what F1/F3 send after the reopen. The contest
+      is set up before the log's rows are applied (Q68), so a message built
+      at set-up may show the station's 5. Note which one you see.
+- [ ] **New Contest > CQ WW (any mode).** Its exchange sends the
+      **station's** zone (5), not 3. That is NY4I's case: zone 3 was
+      for that one contest.
+- [ ] **New Contest > CQ WW RTTY.** Its row is MY STATE; enter `UT`. The CQ
+      exchange is `599 5 UT`, the same text it always built. In Preferences,
+      MY STATE is still `FL`.
+- [ ] **During the European HFC contest, change MY ZONE in Preferences to
+      4.** The contest still sends `599 3`, because its override wins for
+      that contest. Preferences does not say so; that is Q66. A later new CQ
+      WW contest sends 4.
+
+---
+
+## Added 2026-10-13 -- POTA IS A CONTEST CLASS. LOG AN ACTIVATION.
+
+NY4I ruled design Q6; `TContestPOTA` now owns everything POTA did through
+shared code (`CONTEST_OWNERSHIP_DESIGN.md` §8.2o). **Nothing below should look
+different** except the one line marked. The contest matrix proved set-up,
+scoring and export unchanged -- but its QSOs carry **no park**, so the park,
+n-fer and state/grid branches are proven only by `uTestContestPOTA`, which
+cannot press a key. One live activation covers all of it.
+
+- [ ] **New Contest**: the drop-down line now reads *"Parks on the Air(r)
+      Logging"* -- **a deliberate change** (it said *"POTA"*; design Q64). Choose
+      it: the box reads *"Activator"*; tick it -- the MY PARK row with the
+      comment *"Enter your POTA Park Reference Designator (WITH DASH e.g.
+      K-1234)"*; enter `US-0663`, OK. The log opens as POTA.
+- [ ] **Set-up**: CW F1 is `CQ^POTA \ \ `, F2 `CQ^POTA CQ^POTA \ \ FD`, the
+      QSL message `73 \ EE`; WARC bands step; working the same call twice is
+      allowed (no dupe warning). The **Download POTA Parks** and **Repeat POTA
+      Parks (2nd Op)** menu rows are **visible**; open any other contest and
+      both are **hidden**.
+- [ ] **Park entry**: type a call and `57 US-1234`; the park's NAME shows as
+      you type (with the park list loaded) and the QSO logs with QTH
+      `US-1234`. Abbreviations still normalise -- `1274` becomes `US-1274`
+      from MY PARK.
+- [ ] **The n-fer**: `57 US-1234 US-5678 US-9012` logs **three** rows, one per
+      park, as one contact (one QSO set, like a county line). Then **Repeat
+      POTA Parks (2nd Op)** pre-fills the three parks for a new call.
+- [ ] **A hunter not in a park**: `57 PA` logs with the state; `57 FN31` with
+      the grid; a bare call with an empty exchange still logs.
+- [ ] **ADIF export** (File > Export ADIF), **with the POTA park list
+      loaded** (Download POTA Parks): every record has `<MY_SIG:4>POTA`,
+      `MY_SIG_INFO` and `MY_POTA_REF` = MY PARK, `MY_DXCC` (and `MY_STATE`
+      for a single-subdivision park) from MY PARK's row in the list -- a park
+      not in the list writes neither and warns once -- and **no
+      `CONTEST_ID`**. A park QSO: `SRX_STRING`, `SIG`, `SIG_INFO` and
+      `POTA_REF` = the park, one record per park of an n-fer. **`DXCC` is the
+      WORKED CALL's country** (Q62, `d6dd0208`), never the shape of what it
+      sent: a W hunter sending `PA` writes `<DXCC:3>291` and `<STATE:2>PA`; a
+      VE3 hunter writes `<DXCC:1>1`; `NY4I/VE7` is Canada. A grid QSO:
+      `<GRIDSQUARE:4>FN31`. No exchange field the POTA class does not declare
+      (`df4f028a`) -- no PRECEDENCE, CHECK, TEN_TEN, AGE or NAME.
+- [ ] **ADIF import**: re-import that file into a new POTA log; the parks come
+      back as each QSO's QTH, and a record carrying only `SIG=POTA` and
+      `SIG_INFO` (as another logger writes it) reads its park from there.
+
+---
+
+## Added 2026-10-02 -- THE NEW CONTEST DROP-DOWN SHOWS DISPLAY NAMES, AND CATEGORY-POWER IS ONE VALUE (M9b)
+
+The UI itself (`CONTEST_OWNERSHIP_DESIGN.md` §8.2n). `uTestContestUI` pins the
+list the drop-down is built from and the power decision; **nothing sees the
+windows**. The first two groups are DELIBERATE changes; the rest should look
+exactly as before.
+
+- **The New Contest drop-down** (`uNewContestForm.FillContests`,
+  `uContestChoices`):
+  - it lists **display names**, sorted by them -- *"ARRL Inter. DX Contest,
+    CW"*, *"CQ Worldwide DX Contest, SSB"*, *"General QSO/DX Logging"* -- and
+    a contest with no human name yet still shows its token (design Q53;
+    Batch A, `fba681fa`, named more of them);
+  - **WRTC** reads *"World Radiosport Team Championship"* and **IARU-HF**
+    reads *"IARU HF World Championship"*, both bare -- no brackets on either,
+    since WRTC took its own name (NY4I, 2026-10-16, design Q58);
+  - the **last two lines** are *"Locust QSO Party (inactive)"* and
+    *"SA-SPRINT (inactive)"*, after every active contest;
+  - choose a contest and press OK: **the log's file name and the contest that
+    opens are what they were** (the file is still named by the token, e.g.
+    `CQ-WW-CW`, not the display name). Check one QSO party, Field Day and
+    General QSO;
+  - **type-ahead**: the list is a drop-down list -- typing a letter should jump
+    to display names starting with it;
+  - **long names**: a 30-plus-character name (*"RAEM Ernst Krenkel Memorial
+    Contest"*) -- is it readable in the closed combo and the open list, or
+    clipped? Widen the dialog: the combo is right-anchored and should grow;
+  - the prompts per contest (M9a's list below) are unchanged.
+- **CATEGORY-POWER is one value** (`uCabrilloSummaryForm.CommitCategoryPower`,
+  design 7.6):
+  - open a contest with a few QSOs, power HIGH. Start the **Cabrillo** export
+    (its station-information window opens), choose **QRP**, OK: a Cabrillo
+    file is written whose
+    header says **CATEGORY-POWER: QRP** and whose **CLAIMED-SCORE** is the QRP
+    score -- Winter Field Day (power factor), Idaho (QRP points) or Stew Perry
+    show the difference; a plain contest's score does not move;
+  - the main window's notice strip shows *"CATEGORY-POWER is now QRP -- the
+    scoring category changed and the log was rescored."* and the score display
+    updates **without** using Tools > Rescore;
+  - reopen it (Tools > Edit Cabrillo Summary...): the row shows QRP. Choose
+    LOW and OK -- no file is written (no export), but the notice shows and the
+    score moves. Close it **without** changing it --
+    no notice, no rescore (re-saving the same power does nothing);
+  - **Cancel** and the window's close button save it too (every exit has always
+    saved the summary);
+  - a **brand-new contest** (no QSOs): choosing a power in the New Contest
+    dialog, or later in the summary, shows **no** notice;
+  - restart TR4W and reopen the log: the power is the one chosen last.
+  - **headless /EXPORT**: a log whose `.cfg` says LOW now writes
+    `CATEGORY-POWER: LOW` in the Cabrillo header (the golden corpus's
+    `arrl_digi` and `winter_fd` sets did write HIGH, from the header store's
+    copy; the corpus compares only QSO lines and CLAIMED-SCORE, so it cannot
+    see this).
+- **Call entry, General QSO** (`ShowsContestStatus`): in a General QSO log,
+  typing a call shows **no** multiplier/QSO status, station information or
+  possible calls, as before; in any contest they show as before.
+- **Band up/down, General QSO** (`BandStepIncludesWARC`): steps onto 30, 17 and
+  12 m (with WARC enabled); a contest skips them, as before.
+- **The summary sheet's ten-date warning** (`MaximumContestDates`): a contest
+  log spanning more than ten dates warns; General QSO never does -- as before.
+- **The FOC Marathon log** (`PowerFieldIsFOCNumber`): the member number shows
+  under **FOC#**, and there is no PWR column; any contest with a power exchange
+  shows PWR as before.
+- **WAG** (`CallEntryFrequencyWarning`): with the radio at 3.675 MHz, typing a
+  call shows *"Warning: Out of WAG allowed frequency range"*; at 7.080 MHz
+  exactly it does **not** (between two windows, as before); in any other
+  contest no warning.
+
+## Added 2026-10-02 -- THE DIALOG, THE TOTALS, THE REPORTS AND HAMSCORE ASK THE CONTEST (M9a)
+
+What each contest shows and reports moved onto its class as data the UI renders
+(`CONTEST_OWNERSHIP_DESIGN.md` §8.2m). **Every item below should look exactly
+as it did before** -- the change is where the answer comes from, not the answer.
+`uTestContestDisplay` pins the data; **nothing sees the windows or the files
+below but the golden corpus's Cabrillo header** (Winter Field Day, General QSO).
+One deliberate change is listed last.
+
+- **The New Contest dialog** (`uNewContest` renders
+  `TContestBase.DescribeNewContestPrompts`; its two 240-line `case`s are gone).
+  Choose, and check the rows, their labels, the comment and the "I am in" box:
+  - a state QSO party (Florida): one MY STATE row, comment *"Enter your county
+    if you are in FL state ..."*; **7QP** says *"7th area"*; **Colorado** adds a
+    MY NAME row after it; **British Columbia** shows only its VE7 district
+    comment;
+  - **NAQP CW**: MY STATE (comment *name and state*) then MY NAME; **CWops**:
+    MY NAME first, then MY STATE -- the order is the point;
+  - **Sweepstakes**: MY PREC (comment), MY CHECK, MY SECTION; **ARRL Field
+    Day**: MY FD CLASS, MY SECTION;
+  - **Russian DX**: the box reads *"I am in Russia"*; tick it -- MY STATE row,
+    comment *"Enter your oblast ID:"*; untick -- the rows clear;
+  - **IOTA**: the box reads *"Island station"* (its own caption, not "I am in");
+    **WW PMC**: *"I am in PMC"*;
+  - the three still named in the dialog: **POTA** (box *"Activator"*, tick for
+    MY PARK -- its class's since 2026-10-13, checked in the POTA item above),
+    **RSGB 1.8 MHz** (*"I am in UK"*, tick for the district), the
+    **UA4W Championship** (MY QTH, the RDA/grid comment);
+  - **IN7QPNE** (its composite class since 2026-10-14; the base's prompt): the county-or-state comment naming *IN7QPNE*.
+  OK must still enable only when every offered row is filled.
+- **The totals window** (`uTotal` reads `TotalsDisplay`): **IARU** labels the
+  domestic row *HQ Mults* (by mode: *CW HQ* / *Ph HQ*); **Russian DX** and
+  **RU3AX** *Oblasts*; **OZCHR teams** (QSO by mode, CW and phone both worked)
+  shows *CW: nn%* / *PH: nn%* in place of the per-mode QSO rows. Every other
+  contest *Dom Mults*, *CW Dom*, *Ph Dom* as before.
+- **The summary sheet** (PostUnit reads `SummarySheet`): **Winter Field Day**'s
+  multiplier columns show 1 per band/mode row and the row count on the total
+  line; **ARRL Field Day**'s claimed score is the QSO point total, one column
+  further in; every other contest states `Claimed Score = <score>`.
+- **The hour-by-hour report** (`ReportsRunningScore`): no SCORE column for the
+  Cup RF CW/SSB, Ural Cup, Ukraine Championship, RF Championship CW/SSB and
+  RU3AX; every other contest keeps it.
+- **The Cabrillo header**: ARRL 10 and Winter Field Day still refuse to start
+  without a LOCATION (`TC_LOCATIONFIELDEMPTY`); Winter Field Day's
+  `ARRL-SECTION:` and `X-EXCHANGE:` lines still precede `LOCATION:`; General
+  QSO's `CONTEST:` is the title, else the contest name.
+- **HamScore / the UDP contact broadcast / the log's `exchange_sent`**
+  (`uExchangeBuilder` asks `CanonicalReceived/SentExchange`): with HamScore on,
+  log one QSO each in **CQ WW** (`599 5`), **ARRL DX** from a W and from a DX
+  station (`599 CT` / `599 100`), **NAQP** (`JOE CT`), **CW Open** (`123 JOE`),
+  **RTC** (`123 EM17` received, `7 EM17` sent -- no RST either way) and **Field
+  Day** (`2A CT`); every other contest sends the exchange as typed.
+- **WRTC**: the master-file, Telnet and post-scores menu rows are greyed, the
+  three windows do not open, and Super Check Partial shows nothing -- now from
+  `PermittedOperatingAids`. The **WAE** runnings still offer the QTC menu; every
+  other contest greys it.
+- **Score posting XML** (UDP score broadcast, Q109, `a5afe844`): every
+  contest posts `state`, `country`, `zone`, `prefix` `<mult>` rows per band
+  and mode, **plus the ALL rows**, and the total row is per mode -- CW 5 on
+  20 m and PH 3 on 15 m reads CW 5 / PH 3 / ALL 8. **WRTC now posts its HQ and
+  country multipliers** (it posted none before -- Q55).
+- **THE ONE DELIBERATE CHANGE -- design 7.11, MY STATE IS NEVER WRITTEN BY A
+  CONTEST.** As a **K or DL station**, open **Canada Day** (or Canada Winter,
+  Russian DX, RU3AX) or the **Cup RF**: the CW messages, the `&` macro, the
+  Cabrillo and ADIF sent columns and HamScore send what they always did (no
+  state; the grid for the Cup RF) -- **but Preferences' MY STATE still shows
+  YOUR state**, and after exiting and opening another contest MY STATE is what
+  you set, not blank or a grid. Before M9a the contest wrote its value into MY
+  STATE and a save carried it out. A MY STATE edit made mid-session no longer
+  reaches those contests' sent exchange (the contest's rule stands for the
+  session; design Q56).
+
+---
+
+## Added 2026-10-02 -- OFF-BAND QSOs LEAVE THE DUPE SHEET AND THE NEED-MULT HINTS (M8)
+
+Multipliers and dupes became contest-declared rules over the shared sheet
+(`CONTEST_OWNERSHIP_DESIGN.md` §8.2l), and NY4I's off-band ruling (§7.4,
+*"off-band should not impact need multiplier. It is really a one-off with no
+impact on the contest at all"*) now reaches the dupe sheet and the hints.
+**Only the Idaho QSO Party states its bands today**, so only Idaho can move;
+every other contest credits every band and is unchanged by construction. The
+unit tests pin the logic; **nothing sees the windows**. Open an Idaho log
+(160/80/40/20/15/10 m only) and work one station on 20 m CW, then the same
+station on 30 m CW:
+
+- **Dupes**: the 30 m QSO is **not** shown or logged as a dupe, and a second
+  30 m QSO with it is not either. A 20 m repeat still is.
+- **Displays that read the dupe sheet** -- a deliberate consequence, Q51:
+  the 30 m dupe sheet does not list the station, and the Stations window
+  shows no `+` for an off-band band it shows (6 m and up, in its VHF view).
+  The possible-calls strip does not mark it a dupe on 30 m.
+- **Need-multiplier hints** on 30 m: typing a DX call that is a needed
+  country on 20 m shows **no** "new multiplier" indicator, the mult-needs
+  strip shows no off-band band as needed, and the band map does not flag a
+  30 m spot as a multiplier.
+- **A defect that went with it**: in Idaho (multipliers not counted per
+  band) typing a county the log does not have now shows it **needed** while
+  on an Idaho band -- before M8 the county strip said "not needed" for every
+  county, always.
+- **Everything else is as before** -- the score, the multiplier counts and
+  the Cabrillo `CLAIMED-SCORE` (the golden corpus and the contest matrix
+  hold those).
+
+---
+
+## Added 2026-10-02 -- EACH CONTEST OWNS ITS FINAL SCORE (M6), AND THREE BONUSES ARE NEW
+
+The final score moved onto the contest classes (`TContestBase.FinalScore` =
+`CombineScore` + `BonusPoints`), and `LogEdit.TotalScore` -- what the score
+display, the summary sheet, Cabrillo `CLAIMED-SCORE`, the XML report and the
+posting clients read -- asks it. The golden corpus and the matrix's `totals`
+section prove the formulas did not move; **no gate sees the score ON SCREEN,
+and none sees a bonus pay**: the matrix's synthetic QSOs trigger none of them,
+so `uTestContestTotals` is their only proof. To exercise, watching the main
+window's score after each QSO and the `CLAIMED-SCORE` of an exported Cabrillo:
+
+- **North Carolina, the Rarest-of-NC sweep (NEW)**: log stations in four of
+  CAB, GRM, VAN, MAC, DAV, CUR, PAM, ALL, PER, CAS -- no bonus; the fifth adds
+  **500 once**, after the multiplication (the score is points x mults + 500).
+  A sixth county adds nothing more.
+- **Salmon Run, W7DX (NEW)**: CATEGORY-MODE MIXED -- a W7DX CW contact adds
+  500, a W7DX phone contact another 500, a second CW band nothing. Set
+  CATEGORY-MODE CW and the phone contact stops paying (the score drops 500).
+  **An operator who never chose a CATEGORY-MODE is a CW entry** -- that is the
+  setting's default and what the Cabrillo header says.
+- **Idaho, the dormant county (NEW; one table per contest YEAR since Q35,
+  `b6e7d19b`)**: the year comes from the LOG -- today its QSO dates -- and
+  only 2026 has a table. In a log dated 2026, an in-state station with MY
+  STATE `BUT` (Butte) -- nine valid QSOs, no bonus; the tenth adds **1000**.
+  `ADM` pays 500; `ADA` and `WAS` are not in the 2026 table and pay nothing.
+  A dupe or a 30 m QSO is not a valid QSO. A log dated another year pays no
+  county bonus, and `tr4w.log` carries one error naming the year.
+- **The moved formulas -- spot-check one each against a hand calculation**:
+  WAE (weighted multipliers, QTCs as points), Winter Field Day (band-modes x
+  points x 2 for LOW / 5 for QRP), RF Cup / ALRS / RF Championship / Ukraine
+  Championship / OZHCR (points PLUS 100 / 300 / 50 / 10 / 1000 per
+  multiplier), Ural Cup (prefixes are 10 points each, after the
+  multiplication).
+- **A score-posting client** (HamScore / getscores.org) posts the score the
+  main window shows -- off the main thread it now reads the last score the
+  window computed.
+
+---
+
+## Added 2026-10-02 -- EACH CONTEST PARSES ITS OWN EXCHANGE (M5b), AND TWO NEW REFUSALS
+
+Exchange parsing moved onto the contest classes
+(`TContestBase.ParseReceivedExchange`). The contest matrix types 66 exchanges
+through `ParametersOkay` for every contest and proved nothing else moved; **no
+gate types into the real window**, so nothing has seen a refusal's message on
+screen or a valid exchange log from the entry fields. To exercise:
+
+- **Sweepstakes, no precedence** (NY4I, design 7.10): type `123 99 CT` and
+  Enter -- NOT logged, and the notice line says `Missing precedence (Q A B U M S)`.
+  It used to refuse silently. `123 A 99 CT` logs as before.
+- **A QSO party, out-of-state station** (NY4I, design 7.10) -- Florida, MY
+  STATE `KS`: a DX station `DL1ABC` with `599 DL` is NOT logged and the notice
+  says `Out of state: work FL stations only`; a Florida county logs. With MY
+  STATE a Florida county (in state), the DX station logs.
+- **NC QSO Party**: out of state, `599 GA` from `K4ABC` is now refused (an
+  improper domestic QTH -- `nc_cty.dom` is the hundred counties); a county logs.
+  A VE station with MY STATE `ON` is now OUT of state for NC. In state, states,
+  provinces, DC and DX are still accepted.
+- **Field Day DX**: log `DL1ABC` with `1D` (or `1D DX`), export ADIF -- the
+  record carries `CLASS 1D`, `SRX_STRING 1D DX`, and no `ARRL_SECT`. Import that
+  file back: the QSO's QTH is DX and it is NOT a section.
+- **Unchanged, but moved -- spot-check one each**: RAC Canada Day `VE0ABC 599 123`
+  logs a serial; PCC `599 GR` a QTH and `599 123` a serial; IARU `ARRL` alone
+  logs with the station's zone filled; UK/EI `G3ABC` with only `123` is refused
+  `Invalid Entry`; SAC with `UA3ABC` in the call window clears the entry; LABRE
+  `PY2ABC 599 SP` logs SP as the state.
+- **CQ WW RTTY `599 14` from a DX station** now answers the same every time --
+  REFUSED, by the shape's own later test of a first word over two characters.
+  The fields it left behind used to differ run to run (an uninitialised word
+  handed to `ValidRST`, also in D7). Whether `RST zone` should log at all for
+  CQ WW RTTY is a question, not a regression: it never did reliably.
+
+---
+
+## Added 2026-10-01 -- NIGHT-TIME RULES READ THE QSO'S TIME, NOT THE CLOCK
+
+Croatian (23:00-04:59 UTC doubles) and UK/EI (01:00-04:59 UTC for a UK/EI
+station) used to read the PC's clock at SCORING time, so a rescore at night
+doubled daytime QSOs. Both now read `ContestExchange.tSysTime`, and live entry
+(`MainUnit.ParametersOkay`) stamps the QSO's time BEFORE scoring it -- without
+that, a fresh record scored as hour 00, inside both windows. Unit tests pin
+the rules; nothing automated drives live entry. To exercise:
+
+- Log a Croatian QSO by day and one at night (or with the clock set): day
+  points by day, doubled at night.
+- Rescore the log at the other time of day: points do NOT change.
+- Same for UK/EI from a G station.
+
+---
+
+## Added 2026-10-01 -- THE IDAHO QSO PARTY HAS ITS OWN CONTEST
+
+`IDAHOQSOPARTY` is a new contest type with its own class (`uContestIdahoQP`); the
+template `Idaho QSO Party.cfg` no longer borrowed `CONTEST = NEQP` (and was deleted
+2026-10-15; create the contest from the New Contest dialog). Unit tests pin
+the class; **nothing automated types an Idaho exchange**, and the multiplier
+lists come from `.dom` files no gate loads. To exercise:
+
+- **In-state** (`MY STATE` an Idaho county, e.g. ADA): states, Canadian
+  provinces and DX countries are multipliers, and every Idaho county counts as
+  the ONE multiplier "Idaho". Before this change in-state got the 44 counties
+  and no states or provinces at all -- `IDAHO.DOM` wrote `INCLUDE S50.DOM`
+  without the word `FILE`, which `logdom` silently skips.
+- **Out-of-state**: each of the 44 counties is its own multiplier; nothing else.
+- **Points**: CW 2, phone 1, digital 2, FM 1 -- the old `.cfg` scored CW 4 and
+  phone 2 through the rotated spelling table.
+- **County line**: a third county in one exchange is refused; two are accepted.
+- **Export**: Cabrillo `CONTEST: ID-QSO-PARTY`, ADIF `CONTEST_ID` `ID-QSO-PARTY`.
 
 ---
 
@@ -53,25 +1090,6 @@ on the bench anyway**: open Preferences, confirm the external logger and spot
 collector checkboxes show the state the program is actually in, press OK, and
 confirm they are unchanged afterwards.
 
-### OPEN, AND A QUESTION -- `EXCHANGE WINDOW S&P BACKGROUND` sets the wrong field
-
-`EXCHANGE` is a real `TMainWindowElement`, so this command matches the
-generated `<element> WINDOW COLOR/BACKGROUND` arm (`uCFG.pas:1976`) BEFORE the
-row scan -- which is why its `csRem` row had never executed.
-
-The arm tests only `Pos(' WINDOW ', cmd) > 0` and the element name at position
-1, then checks for `' COLOR'`. It has no notion of S&P. So
-**`EXCHANGE WINDOW S&P BACKGROUND` and `EXCHANGE WINDOW BACKGROUND` both write
-`TWindows[EXCHANGE].mweBackG`** -- setting the search-and-pounce colour changes
-the ordinary one.
-
-And there is nowhere else for it to go: `VC.pas:767` gives the element record
-exactly two colour fields, `mweColor` and `mweBackG`. There is no S&P colour.
-
-**The question for NY4I:** was a separate S&P colour ever a feature, or is
-that command a leftover that should join the retired list? Nothing was changed
--- it behaves today exactly as it did before the deletions.
-
 ### ALSO OBSERVED -- the external logger port is read once at startup
 
 `uProgramMain:1682` copies `Settings.ExternalLogger.Port` into the logger
@@ -82,7 +1100,7 @@ anyone reports "changing the port does nothing".
 
 ---
 
-## Added 2026-09-11 (overnight) -- 122 CONFIG ROWS GONE, AND THREE RULINGS OWED
+## Added 2026-09-11 (overnight) -- 122 CONFIG ROWS GONE, AND THE RULINGS THAT WERE OWED
 
 Six commits moved 122 rows out of `CFGCA` (508 -> 386). Everything below is
 green on this machine -- FullBuild, 24,787 unit tests, the corpus at
@@ -114,9 +1132,11 @@ is what this queue is for.
    defaults to 15 ms and is what stops CW starting before an amplifier is
    keyed.
 
-4. **The paddle**, same reason: SWAP PADDLES, PADDLE SPEED (0 = follow the
-   keyboard speed), PADDLE PTT HOLD COUNT (13 dit counts -- a 0 here is hot
-   switching on an amplifier).
+4. **The paddle**, through a WinKeyer or a YCCC box -- the LPT paddle input
+   is gone (2026-09-13): SWAP PADDLES, PADDLE SPEED (0 = follow the keyboard
+   speed), PADDLE PTT HOLD COUNT (13 dit counts -- a 0 here is hot switching
+   on an amplifier), and PADDLE MONITOR TONE, the paddle sidetone -- KEPT by
+   NY4I's ruling below.
 
 5. **An OLD config file.** 98 `csRem` rows were deleted and 91 withdrawn
    command NAMES replace them. Open a `tr4w.ini` or contest `.cfg` from 4.x
@@ -128,24 +1148,11 @@ is what this queue is for.
    rather than accepting it. They still say "restart required", which is real:
    the grid geometry is computed once.
 
-### Three rulings owed, and they are questions not tasks
+### The ruling recorded
 
-- **`BAND MAP GUARD BAND`'s default contradicts its own minimum.** Declared
-  `: integer; // = 200;` with no initialiser, so it starts at **0** while
-  `crMin` is **100** -- a config file cannot set what the program boots with.
-  A subrange type cannot express both, which is how it surfaced. Which is
-  right?
-
-- **`PADDLE MONITOR TONE` has no live reader.** A config row, a commented-out
-  default, three translated captions, and no code that reads it. Stored,
-  editable, broadcast to peers, used by nothing. Did the sidetone move, or did
-  the feature go? Left untouched -- deleting a setting an operator may have
-  set is not a cleanup.
-
-- **`HAMSCORE PASSWORD` blocks an otherwise clean batch.** The HamScore group
-  is five settings whose names all derive with no alias. It is held back only
-  because the agent memory says password storage in JSON is a decision owed
-  before the config work ends.
+- **`PADDLE MONITOR TONE` -- RULED 2026-10-18 (NY4I): *"Keep it."*** The
+  setting stays. Its check is bench item 4 above: the WinKeyer / YCCC paddle
+  sidetone, now that the LPT paddle is gone.
 
 ### One thing NOT done on purpose
 
@@ -213,8 +1220,8 @@ log out and in), or the port will list and refuse to open.
 `969d8a2d`. The AppImage mounted itself read-only and the contest log was being
 created beside the binary, so QSOs were NOT BEING SAVED.
 
-- Create a contest on the Debian box. The `.cfg` and the `.db` should be in
-  `~/tr4w`, not under `/tmp/.mount_...`.
+- Create a contest on the Debian box. Its `.db` should be in `~/tr4w`, not
+  under `/tmp/.mount_...` (a new contest writes no `.cfg`).
 - Log a QSO, restart, and confirm it is still there.
 - "Download latest cty.dat" should succeed rather than failing with
   *"Read-only file system"*.
@@ -288,7 +1295,7 @@ the second group were on screen.
    shipped a v6 manifest. Confirm you are happy with that before it is called
    done -- restoring the colours means owner-drawing the bar.
 
-6. **Tour duration (needs `TOUR DURATION` non-zero).** The readout and its bar
+6. **Tour duration (needs `MINITOUR DURATION` non-zero).** The readout and its bar
    appear on the quick-command row, the bar tracks the minutes, and at the top
    of the tour it switches to MARQUEE and back. The marquee used to be driven by
    `SetWindowLong(GWL_STYLE)` rewriting the window style wholesale -- the same
@@ -309,16 +1316,6 @@ the second group were on screen.
 9. **Both radio panel titles.** Open Radio 1 and Radio 2. Each should read
    `Radio 1`/`Radio 2` plus the rig name when one is configured, and just
    `Radio 1`/`Radio 2` when none is. Same conversion as the item above.
-
-### One thing to READ, not to do
-
-10. **Grep the log for `positioned by the Win32 fallback`.** Every `WindowsType`
-    now maps to an LCL form, so the raw `SetWindowPos` path in `OpenTR4WWindow`
-    looks dead -- but it is guarded by a nil test on the FORM OBJECT rather than
-    by the enum, so it could still fire before a form is built. It is
-    instrumented rather than deleted, because silently doing nothing there is
-    what lost the band map's saved position. **If that line never appears after
-    a few sessions, the branch can be deleted on evidence.**
 
 ---
 
@@ -356,20 +1353,6 @@ the second group were on screen.
    the contest cleanly, reopen it, and confirm the width came back -- and that
    a column you did NOT drag still sizes itself. Only a width the operator set
    is captured, which is what the `.cfg` used to hold.
-
-### Found and worth knowing
-
-4. **NOTHING IN THIS TREE RENDERS A ROW, so a display regression passes every
-   gate.** That is how a blank editable log shipped: the capture wrote a
-   character count where a pixel width was expected, and the corpus -- which
-   runs `/EXPORT` and never creates the main window -- passed 24/24 throughout.
-   A cheap harness that builds one row and pins the strings would have caught
-   it. This is the single biggest hole in the current gates.
-
-5. **Lazarus holding a unit open silently reverts edits.** It saved a stale
-   buffer over `uLogEditForm.pas`, dropping 132 lines, and left the original in
-   `srcackup\`. The directory is ignored now. If the IDE is open, assume any
-   file it has loaded may be rewritten.
 
 ### Added later the same night -- Win32 removal, inside out
 
@@ -446,14 +1429,6 @@ the second group were on screen.
     still lists and greys ports correctly, that a network radio discovers, and
     that the settings survive a restart.
 
-16. **`TF.pas` lost 243 lines of unused Win32 wrappers**, including all six
-    `TF.Create*` control factories (static, edit, combo, list box, list view,
-    owner-draw list box) -- every one with zero callers, because the dialogs
-    that used them were deleted during the LCL conversion rather than wrapped.
-    No behaviour should change. **TEST:** nothing specific; if a window that
-    still uses TF's messaging helpers misbehaves (WinKeyer settings, server
-    log), this is where to look.
-
 ## Added 2026-09-01 -- BOTH WAE QTC WINDOWS, AND NOBODY HAS RUN THEM
 
 ### [ ] Hand `docs/QTC_BENCH_HANDOFF.md` to N4AF
@@ -527,20 +1502,7 @@ offered to anyone as finished.
 
 ---
 
-## Added 2026-08-28 (night) -- I18N: TWO THINGS TO SEND, ONE THING TO DISTRUST
-
-### [ ] Send the Polish catalogue
-
-`build-out\TR4W-polish-translation.zip` -- `tr4w_pl.po` + `TRANSLATOR_GUIDE.md`,
-which is exactly what `TRANSLATION_HANDOFF.md` says to send and nothing else.
-A draft covering note is beside it in `build-out\handoff\POLISH-COVERING-NOTE.txt`;
-edit it freely.
-
-1939 entries, 444 already reviewed, 1493 marked "Needs work". 27 accelerator
-questions are listed in the note for him -- which letter should carry each `&`
-is a judgement only a Polish speaker can make, so they were deliberately NOT
-repaired here. The 79 that WERE mechanical (`& Zapisz` for `&Zapisz`, which
-stops the shortcut working) are already fixed across all 16 catalogues.
+## Added 2026-08-28 (night) -- I18N: ONE THING TO SEND, ONE THING TO DISTRUST
 
 ### [ ] Send the Chinese catalogue to BA4WI, and ask for his original file
 
@@ -653,10 +1615,6 @@ settings/tr4w.json.
 
 ### Still open from his notes
 
-- [ ] **Ctrl/Alt bank labels do not restore on release** (`88d5d5ef`
-  instrumented, not fixed). Set DEBUG, press and release Ctrl then Alt, send the
-  `[Modifiers]` lines. Two lines = the restore ran and the fault is inside
-  `ShowFMessages(0)`; one line = the release never arrives.
 - [ ] **The beacon monitor tunes the radio just by opening.** "I should have to
   take an overt act to start changing the radio frequency."
 - [ ] **The colours table could show a sample** of the text and background.
@@ -741,33 +1699,7 @@ replaced 494 lines of `NewContestDlgProc`.
   default to Yes. Confirmed once on the exit prompt; the other fifteen are
   unverified.
 
-### C. Twelve units deleted  (`96d2f2c2`, `7d65787b`, `49b30e07`, `3722f669`)
-
-uRemMults_DOM/DX/Zone, uDXSSpotsFilter, uSpotsFilter, uMultsFrequencies,
-ColorCfg, LOGHP, LOGPROM, uSCP, uReminder, uQuickEdit -- 3070 lines, twelve
-Win32 dialog procedures, and eight HWND globals nothing read. All were proved
-unreachable: absent from every program's uses clause, or a dialog procedure
-nothing ever passes to `DialogBox`.
-
-- [ ] **Nothing should have changed.** If a menu item now does nothing that used
-  to work, it is one of these -- `git revert` the commit above and say which.
-
 ### D. Decisions waiting on NY4I, not bench items
-
-- [ ] **`uExternalLoggerManager` and `uRadioManager` are excluded for an expired
-  reason.** `tr4w.lpr` says "uses Generics.Collections (Delphi 2009+) - not
-  Delphi 7 IDE compatible". Delphi 7 is gone and FPC has
-  `Generics.Collections`. CLAUDE.md still describes `uExternalLoggerManager` as
-  carrying the external-logger implementation, so this is either work to finish
-  or code to delete -- it should not stay in limbo. **The one worth your time.** [AGENT: Yes the external loggers should be a factory. I believe it is so I am not sure why the Generics aftect this. I could see there being an external logger status indicator but a better UX might be an external status panel. That way we could show the time of the last WSJT-X message, the last status sent form ExternalLOggers, the last exchange with Hamscore. Sort of a status window on these items. But new windows can wait and the external logger works now.]
-
-- [x] ~~**`MixW2DlgProc` and `WinKeyer2SettingsDlgProc` have zero references.**~~
-  **ANSWERED 2026-09-05: Preferences replaced it.** `menu_winkeyer2` is live and
-  runs `RunOptionsDialog(cfWK)`; the `tDialogBox(67, @WinKeyer2SettingsDlgProc)`
-  that used to open the old dialog is commented out beside it. So the WinKeyer
-  settings dialog is superseded, not lost, and converting it to LCL would have
-  resurrected a window somebody deliberately replaced.
-  MixW is deleted outright (NY4I: he had confused it with another program).
 
 - [ ] **The main window's start-up paint is still unexplained** -- grid lines,
   then data. The `WM_SETREDRAW` bracket was tried, made no visible difference,
@@ -796,9 +1728,9 @@ are diagnostics that cost nothing to leave on.
   (`RequestCloseTR4WWindow`). Also **Escape in the Stations window**, which had
   the same bug and appeared to do nothing.
 
-- [ ] **Three menu items no longer show their shortcut twice** -- File > Export >
-  Cabrillo, Settings > Winkeyer, Settings > LPT. They read `Ctrl+Alt+B
-  Ctrl+Alt+B` and so on. Check the keys still WORK as well as reading right.
+- [ ] **Menu items no longer show their shortcut twice** -- File > Export >
+  Cabrillo and Settings > Winkeyer. They read `Ctrl+Alt+B Ctrl+Alt+B` and so
+  on. Check the keys still WORK as well as reading right.
 
 - [x] **The WSJT-X indicator's font is smaller** so its text fits its cell --
   see the item in section 40. The layout is unchanged. [AGENT: But after that change, the font size of the call window is now smaller. That should be the same size as other items on the form like band, date, time, etc.]
@@ -851,6 +1783,8 @@ Ctrl+P / Ctrl+A / Ctrl+C / Ctrl+D all insert their control characters, the saved
 
 - [ ] **&Edit** is enabled only in Phone mode, and only acts on a message naming
   a `.WAV`. [AGENT: Given the comment below, is this still a viable task to test. Also, you headline has test steps rather than a tasklist under the heading. This needs some more explanation.]
+  **NEEDS REWRITE -- NY4I:** *"Given the comment below, is this still a
+  viable task to test ... This needs some more explanation."*
 
 ~~An empty Caption REMOVES the key.~~ **Struck 2026-08-20 (NY4I):** "I see no
 evidence of this nor would I want it to work that way." It was written from
@@ -879,6 +1813,9 @@ open:
 
 - [ ] Moving the selection with the ARROW KEYS, without accepting, flashes the
   window and does nothing else. This is the half of F2 that is still a question. [AGENT: There is no way to move with arrow keys as when I press OK, the window control daughter menu appears and the arrow keys navigate in that menu (up and down).]
+  **NEEDS REWRITE -- NY4I:** *"There is no way to move with arrow keys as
+  when I press OK, the window control daughter menu appears and the arrow keys
+  navigate in that menu (up and down)."*
 
 ### 4. Band plan editor — Preferences, More settings, the Edit... button  (`uBandPlanForm`)
 
@@ -924,51 +1861,6 @@ FREQUENCY does. Both loaders call `CalculateBandMode` on the value, so typing a
 20m frequency into the 80m row updates 20m. That is pre-existing behaviour, not
 new, and it surprised me enough while reading that it is worth surprising you
 deliberately rather than accidentally.
-
-### 5. LPT port dialog — Ctrl+Alt+L, or the LPT menu item  (`uLPTForm`)
-
-**Bench this one on hardware if you can**, because it is the dialog that decides
-which parallel port keys the paddle and reads the foot switch.
-
-- [ ] It **opens** and shows the three base addresses and the six port
-  assignments as they currently are.
-- [ ] **OK saves and takes effect** — the paddle and foot switch still work
-  afterwards, and the status display updates.
-- [ ] With the **radio control port in use**, the FOOT SWITCH and PADDLE combos
-  are **greyed** (they come off the radio, not off an LPT).
-- [ ] Setting every port to NONE stops the paddle/foot-switch thread; setting one
-  back starts it.
-- [ ] **Cancel changes nothing.**
-
-The base-address fields are numbers-only now, which they were before via
-`ES_NUMBER`.
-
-### 7. Log comparison dialog  (`uLogCompareForm`)
-
-**Multi-op only** -- it appears by itself when a client's log does not match the
-server's. To provoke it, connect a client whose `.dat` differs from the server's
-(a few QSOs logged while disconnected will do).
-
-- [ ] It **opens** and the table shows six rows -- size, records, CRC32, USQ,
-  USQE, contest -- with a **server** and a **local** column. USQ and USQE are
-  local-only counters, so their server cells are **blank on purpose**.
-- [ ] The **records** row is bytes/record minus one; the log's first record is a
-  header, so a 10-QSO log reads 10, not 11.
-- [ ] **Synchronize is greyed when the contests differ.** That is the one thing
-  this dialog must not allow -- it would merge one contest's QSOs into
-  another's log. A server that has not said which contest yet reads
-  DUMMYCONTEST, and that is NOT a mismatch, so Synchronize stays available.
-- [ ] **Synchronize** closes this window and then opens the server-log dialog.
-- [ ] **THE FIX WORTH TESTING:** closing with **Exit**, **Escape** or the window
-  **X** must **NOT** open the server-log dialog. It could before, at random.
-  The flag meaning "the operator pressed Synchronize" was a LOCAL of the
-  window procedure, so a close that did not come from that button read it
-  uninitialised -- whatever happened to be on the stack. Someone had already
-  seen the symptom: there is a commented-out attempt at a fix in the old code
-  that could not have worked either. It is a field now.
-- [ ] **Clear all logs** does what the menu item does, and closes.
-- [ ] If the local log **cannot be opened**, the window closes immediately rather
-  than drawing a comparison against a log that is not there. Unchanged.
 
 ### 8. Beacon monitor  (`uBeaconsForm`)
 
@@ -1023,11 +1915,11 @@ it) and F5 (a bad callsign is accepted). Still open:**
 - [ ] **A LONG CALLSIGN SURVIVES.** **Cannot be tested by TYPING** (NY4I,
   2026-08-20: "It is not possible to enter a callsign greater than 12
   characters") -- and that is the design: `MaxLength` limits typing exactly as
-  `EM_SETLIMITTEXT` did. The regression was on the LOAD path, so the test has
-  to load a long callsign the dialog did not type. Two ways in: log
-  `VP2E/W1ABCDE` from the main window if that field allows it, or edit one into
-  a scratch `.dat` and open it. Open the QSO, press Save, reopen, and confirm
-  it is not shortened. Worth the trouble because it was silent log corruption.
+  `EM_SETLIMITTEXT` did. The regression was on the LOAD path, so load one the
+  dialog did not type: **import an ADIF holding a callsign longer than twelve
+  characters** (e.g. `VP2E/W1ABCDE`), open the QSO, press Save, reopen, and
+  confirm it is not shortened. Worth the trouble because it was silent log
+  corruption.
 - [x] **Deleted still sends a contactdelete** to UDP / the external logger.
 - [x] **Cancel and Escape discard everything.** See F6 -- NY4I found Escape
   after a change does not prompt, and whether it SHOULD depends on the
@@ -1044,7 +1936,6 @@ it) and F5 (a bad callsign is accepted). Still open:**
   TR4W's own recorder, describing nothing an external recorder produces. See
   the commit that removed it for the future path (QSOCapture returning a
   filename for the contactinfo GUID).
-- [ ] [AGENT: The Tab order on the edit QSO dialog is a bit off. The check boxes for Deleted and X-QSO should be entered after tabbing out of Operator. And after RST received, the next in the tab order should be Operator.]
 
 **Not a defect, do not report:** the RST fields still refuse a minus sign. That
 is deliberate and now has a written reason -- a negative "RST" is a WSJT-X dB
@@ -1070,8 +1961,6 @@ Everything below should look exactly as it did. The point of the list is that
 - [x] **The active VFO highlight follows the radio** when you switch VFO A/B.
 - [x] **Disconnect the radio** (pull the cable or stop the network rig): both VFO
   fields should clear.
-- [ ] **A network radio with wrong credentials still shows `AUTH FAILED`** in the
-  status line.
 - [x] **Close the panel and reopen it.** Everything should repopulate. This is
   the one genuinely new failure mode: the coalescing cache remembers what it
   last sent, and a panel that reopens BLANK and stays blank would mean the
@@ -1087,7 +1976,7 @@ Everything below should look exactly as it did. The point of the list is that
 - [ ] **Known limitation, not a defect:** the title is set when the panel OPENS.
   Changing the radio in the CAT dialog while the panel is up leaves the old
   caption until it is closed and reopened. Say so if that is worth fixing --
-  `RestartPollingThread` is where a refresh would go. [AGENT: While testing, I ran into an issue here... I changed the name of the K4Z to K40 in My radios. When I did that, the radio was removed from the active profile. I then selected the new name K4) from the drop-down for Radio 2, but received this error message - ![image-20260828141727836](C:\Users\toms\AppData\Roaming\Typora\typora-user-images\image-20260828141727836.png) So there are at least two issues. First, when I change the name of a radio in MY radios, that name should also be updated in the saved (and active profile). It would appear you are using the radio name as an id when it would make more sense to say use a GUID and reference it by index so these changes will just flow through once you just do an update on the profile drop-downs.  The second issue of course is the error dialog but the prior statement about a guid or some index besides the name could address that. On the subject of what this item discussed specifically, stale data is never good and should be updated as we change it so yes the name in the radio window and the main window should change.]
+  There is no polling-thread restart -- a configuration change rebuilds the radio (`SetUpRadioInterface`), and that rebuild is where a refresh would go. [AGENT: While testing, I ran into an issue here... I changed the name of the K4Z to K40 in My radios. When I did that, the radio was removed from the active profile. I then selected the new name K4) from the drop-down for Radio 2, but received this error message - ![image-20260828141727836](C:\Users\toms\AppData\Roaming\Typora\typora-user-images\image-20260828141727836.png) So there are at least two issues. First, when I change the name of a radio in MY radios, that name should also be updated in the saved (and active profile). It would appear you are using the radio name as an id when it would make more sense to say use a GUID and reference it by index so these changes will just flow through once you just do an update on the profile drop-downs.  The second issue of course is the error dialog but the prior statement about a guid or some index besides the name could address that. On the subject of what this item discussed specifically, stale data is never good and should be updated as we change it so yes the name in the radio window and the main window should change.]
 - [x] **The MODE labels beside each VFO still show the mode** (CW / USB / …).
   They moved house in the same sitting: they used to be created by the
   generic window opener in `MainUnit` with runtime geometry arithmetic, and
@@ -1144,109 +2033,6 @@ means a rect read as (0,0,0,0) -- which is a LEGAL saved value, so nothing will
 report it. A window back at its default position means its name did not match:
 `WindowNames` in `VC.pas` is now the on-disk key, and a rename orphans a saved
 entry silently.
-
-### 12. Six links, after `OpenUrl` became the only launcher  (`f3fece6d`)
-
-**One click each, and the point is that they still open.** `ShellExecute` was
-replaced by `LCLIntf.OpenURL`/`OpenDocument`, and four menu items that had grown
-their own `ShellExecute` now go through `OpenUrl` like the other six callers did
-all along.
-
-- [x] **3830 scores** and **ARRL log submission** (both under the log-submission
-  menu) each open a browser.
-
-- [x] **QRZ.RU calendar** and **WA7BNM calendar** open the page **for the CURRENT
-  CONTEST** -- these two build their URL from `ContestsArray[Contest]`, and the
-  URL is now composed with `SysUtils.Format` into a string instead of
-  `TF.Format` into a buffer, so a wrong contest id or a truncated URL is the
-  thing to watch for.
-
-- [ ] **Help -> Check for Updates** -- NEW, 2026-08-22, and it has NEVER RUN
-  BEFORE. `uCheckLatestVersion` had existed complete since the D7 days with no
-  caller; NY4I asked for it on the Help menu after this queue sent him looking
-  for an option that did not exist.
-
-  - [ ] It should reach `www.tr4w.net`, compare versions, and either say you have
-    the latest or offer the download link. **It dialed `tr4w.com` while sending
-    `Host: www.tr4w.net`** -- corrected to `www.tr4w.net`, and since the routine
-    had never run, nothing had ever exercised that mismatch. If the check fails,
-    the host is the first thing to suspect. ~~[AGENT: ;I tested this but we still have the issue of implementing a good pattern where our website can give you the latest version info so the program can decide if it needs to offer a download. I also need to get a static link that redirects to the latest. SO for now, let's disable that menu item. This is the error I received: ![image-20260828142557318](C:\Users\toms\AppData\Roaming\Typora\typora-user-images\image-20260828142557318.png)]~~
-    **DONE 2026-08-28 (`2366f099`) -- the item is off the Help menu.** The unit,
-    handler and id all stay; restoring it is one line once the site serves a
-    version STRING rather than a web page. Removing the row also required
-    removing its caption line: captions are assigned POSITIONALLY, so the first
-    attempt left About reading "Check for Updates". Verified by dumping the
-    live menu.
-    **Still open, and yours:** a documented endpoint, and a static link that
-    redirects to the latest.
-
-  - [ ] **EXPECT THE UI TO FREEZE for about two seconds.** It does its socket
-    work on the main thread and sleeps 2s waiting for the reply. That breaks
-    NY4I's own no-I/O-on-the-UI-thread rule and is a KNOWN follow-up: wiring it
-    up was the request, and rewriting it in the same change would have meant a
-    bench failure could not be attributed to either. [ AGENT: You know how I feel about I/O on the main thread]
-  - [x] Confirm the menu item sits in **Help**, after "Download POTA Parks".
-
-  **DEFERRED, and the client side is only half the question (NY4I, 2026-08-22).**
-  This routine expects `GET /include_pages/version.txt` from `www.tr4w.net` to
-  return a version string it can compare against `TR4W_CURRENTVERSION`. Whether
-  that endpoint still exists, still contains a current number, and still matches
-  the format the compare expects is a question about the RELEASES SITE, not
-  about this code -- NY4I is checking that infrastructure separately and this
-  item stays UNTESTED until he has.
-
-  Worth asking at the same time whether this mechanism is still the right one:
-  releases now go out with `Invoke-Release.ps1` and a GitHub tag, so a hand-kept
-  `version.txt` is a second place the version has to be right. If the answer is
-  a GitHub releases API call, the socket code and the 2-second freeze both go
-  away with it rather than needing the threading rewrite.
-
-- [x] **Preferences -> Logging -> the "Open log file" BUTTON** (bottom of the
-  Logging page, below the trace check boxes) opens `tr4w.log` in whatever
-  editor the operator has associated with `.txt`. It is a button, not a menu
-  item -- the original wording read like a menu path, which is why it could
-  not be found. 
-
-### 13. Nothing should have changed -- 7,187 lines of commented-out code are gone
-
-  (`dd53c1ab`, `67af7f28`, `3c1c4703`)
-
-**No behaviour change is intended anywhere in this, which is exactly why it wants
-a normal session rather than a checklist.** The app, `tr4wserver`, 16 lints and
-9558 unit tests are green, and the golden corpus has NOT been run (it needs a
-deploy into `target\`, which is yours).
-
-- [x] **Run a short contest normally** -- log a few QSOs, work a dupe, change
-  band and mode, send CW from the function keys, and exit cleanly.
-- [x] **Then run the golden corpus** once you have deployed, since the sweep
-  touched `LOGSTUFF`, `LOGSUBS2`, `LOGDUPE`, `PostUnit` and `tree` -- the units
-  the corpus is built to protect. That is the real regression gate here.
-
-**Two decisions this sweep surfaced, both yours and neither urgent:**
-
-- [x] **EMPTY PROCEDURES.** `DeleteOrMoveLog` (`LOGMENU`), and routines in
-  `LOGWAE` and `LOGHP`, had their ENTIRE bodies commented out -- so removing the
-  comment leaves `begin end;`. They have been silent no-ops for years while
-  still being called. That is a dead FEATURE, not dead text: delete the
-  routines and their call sites, or reinstate the behaviour.
-- [x] **`StartNewContest` is dead and carries a hardcoded path.** No callers
-  anywhere (checked case-insensitively, including `tr4w.lpr` and `test\`), and
-  its body is `WinExec('D:\TR4W_WinAPI\out\tr4w.exe', 0)` -- the original
-  author's own machine. It could never have worked on a user's PC. Delete, or
-  say what it was meant to do.
-
-### 14. The judgement calls -- F5 is DECIDED
-
-**Blocks under 30 lines were left alone deliberately**, along with anything
-that looked like a DISABLED RULE rather than replaced code.
-
-**F5 is now answered by NY4I, 2026-08-21: the rule stays disabled.** The
-`//n4af 4.38.3` block in `GoodCallSyntax` -- "no digit in positions 2-4",
-plus the clause refusing a call that ends in a digit unless it is a
-five-character `B...` prefix -- has been DELETED rather than reinstated. So
-`GoodCallSyntax` deliberately accepts a letters-only string like `FRED`, and
-that is now a decision on the record instead of an accident of a comment.
-Nothing to bench; `uTestCallSignRoutines` still passes.
 
 ### 15. Launching other programs now goes through one unit  (`07c55fa4`)
 
@@ -1305,162 +2091,51 @@ refused, none the other way). 254 of those callsigns are now a test fixture.
 - [ ] **WSJT-X CQ decoding** (`uWSJTX.pas:557`) -- swapped from
   `IsValidCallsign` to `IsAGoodCall`. Marginal calls in the decode list are
   where a difference would show.
-- [ ] **DX spots and packet spots** -- the heaviest users of `IsAGoodCall`. The
-  tell would be a spot that used to be filtered out and now is not, or the
-  reverse. ~~[AGENT - We do not have the concept of a filter in spots.]~~
-  **CONFIRMED 2026-08-28 -- correct, and the code agrees.** `uSpotsFilter` and
-  `uDXSSpotsFilter` were commented out of `tr4w.lpr` since the initial commit,
-  never compiled, and are now deleted (`96d2f2c2`). There is no spot filter to
-  test; the item is struck rather than pending.
-
 
 **If something looks wrong, the benchmark diagnoses it faster than a symptom
 will:** `build\Build-Bench.ps1`, then run `test\bench\bench_callsign.exe` over
 any list of callsigns -- it reports exactly which ones are accepted and refused,
 rather than leaving us to infer it from behaviour.
 
-### 17. LPT CW keying and the YCCC box -- test before any decision
+### 17. The YCCC box -- the LPT half of this item is gone
 
-**NY4I, 2026-08-21: "I have Windows users using the LPT port for CW and YCCC box
-control so I cannot delete it yet."** Nothing here is a removal candidate. It is
-listed so the testing happens before the questions below are reopened.
+The parallel port left TR4W on 2026-09-13 (`f2839f8c`). The YCCC SO2R+ box
+(`uYCCCSO2R.pas`, a USB **HID** device) is a different transport and stays.
 
-**Two different dependencies, often spoken of together but not the same thing:**
-
-- **LPT** -- `uIO.pas` loads `inpout32.dll` and drives the parallel port: CW
-  keying, PTT, and the paddle / foot-switch INPUTS. `LPT.pas` is the settings
-  dialog for the port assignments.
-- **YCCC SO2R+** -- `uYCCCSO2R.pas`, a USB **HID** device. Different transport,
-  different future.
-
-#### To test
-
-- [ ] **CW keys from the LPT port** at the configured base address, with clean
-  timing at contest speed.
-- [ ] **PTT asserts and releases** on the LPT line.
-- [ ] **The paddle and the foot switch read back.** These are INPUTS on the same
-  port, and an input that never asserts looks exactly like an unplugged switch --
-  worth testing deliberately rather than assuming.
 - [ ] **The YCCC SO2R+ box opens and switches.** HID, so a separate check.
-- [ ] **A machine with no `inpout32.dll`** still starts and reports the absence
-  ONCE rather than on every attempt (`NoInpOut32Message`; the load is attempted
-  at most once by design).
 
-#### The HWND in OpenLPT is a mislabel, not a design problem
+### 18. Upgrading a 4.x station -- its settings arrive from `tr4w.ini`, once
 
-An earlier reading of this called the platform seam an API DESIGN decision. That
-was wrong, and the body says so:
+Every setting lives in `settings\tr4w.json`. A 4.x `tr4w.ini` is read ONCE,
+through the first-run conversion offer (`uLegacyIniPrompt`, which runs
+`SeedMigratedCommandsFromIni` and `SeedBandPlanFromIni` in
+`uRadioConfigApply`), and never consulted again. Run this on a machine with a
+POPULATED 4.x `tr4w.ini` you can restore -- an empty ini proves nothing.
 
-```pascal
-function OpenLPT(var PortHandle: HWND; LPT: PortType): boolean;
-begin
-  ...
-  PortHandle := LPTBaseAA[LPT];    // an I/O BASE ADDRESS -- 0x378, not a window
-  Result := True;
-end;
-```
-
-`PortHandle` never holds a window handle. Every caller passes something that is
-plainly an address: `tPaddlePortBaseAddress`, `tBandOutputPortBaseAddress`,
-`Radio1.tKeyerPortHandle`. `HWND` is simply the integer type that happened to be
-in scope. So the fix is a TYPE CORRECTION -- `HWND` to `Word`, or a named
-`TLPTBaseAddress` -- with no behaviour change whatsoever, which is the
-type-honesty rule in CLAUDE.md: fix the declaration, do not cast at the call
-site.
-
-Worth noting: `src\DLPortIO.pas`, the DEAD predecessor, has the more portable
-signature already -- `GetPortByte(Address: Word)`, `OpenDriver: boolean`.
-
-- [ ] **Sequencing is NY4I's call:** correct the type BEFORE the lab test (so the
-  binary tested is the corrected one, and it is only tested once), or AFTER (so
-  the binary tested is exactly what ships today). It is mechanical either way.
-
-#### DECIDED: what we have today is fine (NY4I, 2026-08-21)
-
-*"I am ok to use what we have today."* So **no LPT work is scheduled** -- not
-the seam, not the type correction, not the Linux path. `inpout32` on Windows
-stays exactly as it is, and the only open item above is the BENCH TEST.
-
-What follows is recorded because it was investigated, not because it is
-planned. It exists so that whoever picks LPT up later starts from the answers
-rather than the questions.
-
-#### Linux is possible -- with two real conditions
-
-NY4I, 2026-08-21, pointing at <https://wiki.freepascal.org/Hardware_Access>: the
-parallel-port methods there cover Windows AND Linux, and they share TR4W's model
-of "read or write a byte at an I/O base address".
-
-|         | how                                                                    | condition                              |
-| ------- | ---------------------------------------------------------------------- | -------------------------------------- |
-| Windows | `inpout32.dll`, `Inp32`/`Out32`                                        | what `uIO` already does                |
-| Linux   | `ports` unit + `ioperm()` from libc, or FPC's `fpioperm` in unit `x86` | **requires root**, and is **x86-only** |
-
-**Both conditions matter and neither should be designed away.** Asking a contest
-operator to run the logger as root is a genuine deployment problem, and
-`fpioperm` does not exist on ARM because ARM has no x86 I/O ports -- so a
-Raspberry Pi station gets no LPT by this route regardless. `ppdev`
-(`/dev/parport`) is the other Linux path and does not require root, but the wiki
-does not cover it and it has not been looked at here.
-
-**So LPT moves from GUARD to a candidate for ABSTRACT in Phase 8** -- a seam with
-a per-OS implementation behind it, rather than a permanent `{$IFDEF WINDOWS}`.
-Not scheduled, and not before the bench test.
-
-#### `src\DLPortIO.pas` stays
-
-668 lines, in no project file, referenced by no unit -- the older parallel-port
-driver `uIO` replaced (GM0GAV, 2015: *"Rewrite of uIO to use InpOut32.dll"*).
-Dead, but it is the reference for how the previous driver did this, and deleting
-it in the week the LPT path gets bench-tested would throw away the comparison
-exactly when it might be wanted. Revisit after the test.
-
-### 18. 112 settings now persist to JSON instead of tr4w.ini  (`de15d7c4`, `cfcba0f8`)
-
-**This is the one to test first, and your read-only `tr4w.ini` is the perfect
-rig for it.** Before tonight, 153 settings appeared in Preferences, applied
-immediately when changed, and wrote `tr4w.ini` -- which on your station is empty
-and read-only, so they silently reverted on restart. `DE ENABLE` was the one you
-noticed. 112 of them now write `settings\tr4w.json`.
-
-- [x] **`DE ENABLE`, the worked example.** Change it in Preferences, close TR4W,
-  reopen. It should still be what you set. Before tonight it would not have been.
-- [ ] **Two or three others from different panels** -- say `ROW COUNT` (a
-  drop-down, `ckArray`), `AUTO-CQ DELAY TIME` (an integer), and any check box.
-  Same test: set, restart, still set.
-- [ ] **Hand-edit one in `settings\tr4w.json`**, as you did to verify the radio
-  settings, and confirm TR4W honours it on the next start.
-- [ ] **The log should be quiet.** `[ApplyStoredCommands] CFGCA refused "X" =
-  "Y"` in `tr4w.log` means a stored value the row will not accept -- that is the
-  failure mode of this change and it names itself. Worth one grep after a
+- [ ] **Accept the conversion, then restart.** Settings you had are in force
+  and survive the restart -- try a drop-down (`ROW COUNT`), an integer
+  (`AUTO-CQ DELAY TIME`), a check box and `DE ENABLE`.
+- [ ] **`HOUR DISPLAY`, `RATE DISPLAY`, `DUPE CHECK SOUND`**: set each in
+  Preferences, confirm it takes effect and survives a restart. [AGENT (NY4I,
+  earlier): I am changing these but do not see any evidence of a change on the
+  main window]
+- [ ] **The band plan.** `tr4w.log` reads `[BandPlan] seeded N band(s) from
+  tr4w.ini`, and the seeded values land on the RIGHT bands -- the seed
+  re-derives each band from its frequency, the one thing that could put a
+  memory on the wrong band. Then change one cutoff in the band plan editor, OK,
+  restart: it sticks and shows under `bandPlan` in `tr4w.json`; a band with no
+  values is ABSENT rather than three zeros. The band map still splits CW from
+  phone on each band.
+- [ ] **A contest wins over the station.** A contest `.cfg` carrying
+  `FREQUENCY MEMORY` lines, or naming a Cabrillo category such as
+  `CATEGORY-POWER`, is in force over the station's value.
+- [ ] **Load a few real old contest `.cfg` files**: no "Invalid statement in
+  config file" dialog, and no new `[Config] ... was REFUSED` lines.
+- [ ] **Hand-edit one setting in `settings\tr4w.json`** and confirm TR4W
+  honours it on the next start.
+- [ ] **`tr4w.log` should be quiet.** `[ApplyStoredCommands] CFGCA refused "X"
+  = "Y"` names a stored value TR4W would not accept. Worth one grep after a
   session.
-- [ ] **A setting you have NOT touched keeps its old value.** The seeding path
-  (`MIGRATED_COMMANDS`, 214 entries now) carries an existing `tr4w.ini` value
-  into the store once, so an operator upgrading does not silently revert to
-  compiled defaults. Your station has an EMPTY ini, so this one is better tested
-  on a machine with a populated one.
-
-**A failure now says so.** `SetCFGCommandValue` checks the ini write result --
-it never did -- so a setting that cannot be saved reports "applied but could NOT
-be saved" instead of vanishing quietly.
-
-**Still on the ini, deliberately: 41.** Thirty are `ckList` rows that Preferences
-renders READ-ONLY, so they cannot be edited at all yet; the rest are read-only
-rows, an action trigger (`CLEAR DUPE SHEET`), the band plan, and the LPT port.
-Each reason is written down in `docs/migration_interim_artifacts/CFG_MIGRATION_PLAN.md`, along with what
-unlocking the `ckList` thirty would take and the padding trap that makes it
-delicate.
-
-### 19. The `ckList` rows are editable for the first time  (21 more settings to JSON)
-
-**These rows have NEVER been editable in Preferences.** They rendered as
-disabled boxes because `CFGCommandAllowedValues` returned nothing for a `ckList`
-row, and a row with no allowed values is forced read-only. They are drop-downs
-now, and 21 of them store to `settings\tr4w.json` instead of `tr4w.ini`.
-
-- [ ] **Three station settings, set and restart:** `HOUR DISPLAY`,
-  `RATE DISPLAY`, `DUPE CHECK SOUND`. Each should be a drop-down, take effect,
-  and still be what you set after a restart. Before today none of that was true. [AGENT - I am changing these but do not see any evidence of a change on the main window]
 - [ ] **ACCENTED TEXT, IN A NON-ENGLISH CATALOGUE, AFTER TF.Format BECAME
   PASCAL (2026-09-07). UNVERIFIED, AND I INTRODUCED THE DOUBT.**
 
@@ -1485,158 +2160,10 @@ now, and 21 of them store to `settings\tr4w.json` instead of `tr4w.ini`.
   pass the string straight through; that is a 73-site change and wants
   deciding, not guessing.
 
-- [ ] **SERIAL NUMBER PADDING IS DECIDED, AND NOT YET BUILT (NY4I, 2026-09-07).**
-
-  The exchange formatters pad serials with a fixed width -- `%03d` in
-  uADIFExchange and uContestCQWPXBase -- and under the RTL that pads with
-  SPACES, so serial 7 exports as `  7`. uTestADIFExchange pins that current
-  output on purpose, with a note saying whether it should be `007` is a
-  contest question rather than a code one.
-
-  **NY4I has answered it, and the answer is neither `  7` nor a fixed `007`:**
-
-  > "check all the QSOs serial numbers. Get the max DIGITSIN(serial) and use
-  > that. So if a station sent 1245 serial numbers, we pad out to 4 digits so
-  > the first serial number would be 0001 and last 1234. Same for someone
-  > making 142 QSOs. 001 for first and 142 for last. This way they align in
-  > the columns."
-
-  So the width is a property of the LOG, not a constant in a format string:
-  one pass over the QSOs for the highest serial, and every serial
-  zero-padded to that many digits. That cannot be expressed as `%03d` at
-  all -- it needs the width passed in, which the RTL supports as `%.*d`.
-
-  NOT DONE. It changes exported Cabrillo and ADIF, so it wants doing with
-  the corpus in front of you: the 13 reference sets were produced by D7 and
-  will differ, and each difference has to be judged rather than accepted.
-
-- [ ] **`MP3 RECORDER DURATION` and `BAND MAP SPLIT MODE`** -- same test, and
-  the second one has a redraw handler (`crP: 1`), so the band map should change
-  WITHOUT a restart.
-
-  **`MP3 RECORDER DURATION` NOW CONFIGURES NOTHING (2026-09-07).** The recorder
-  it belonged to is gone. The row is KEPT because CommandsArray addresses its
-  list-valued settings by INDEX -- `crAddress: pointer(N)` into ListParamArray
-  -- so deleting it silently repoints other settings, and ListParamArray's
-  lpVar is dereferenced with no nil check. So test that it still round-trips
-  like any other drop-down; do NOT expect it to affect anything. Removing the
-  Preferences card for it is owed work, listed in the removal commit.
-- [ ] **A Cabrillo category, e.g. `CATEGORY-POWER`.** These are contest-scoped.
-  Set one, then load a contest `.cfg` that names the same key: **the contest
-  must win.** That precedence already existed (`CommandCameFromContestCFG`);
-  this is confirming the migration did not disturb it.
-- [ ] **`tr4w.log` should be quiet.** `[ApplyStoredCommands] CFGCA refused` names
-  a stored value a row will not accept -- the failure mode of this change.
-
-**The mixed-case fix is the one to watch for surprises.** Six spellings across
-the whole program are not all-caps -- `All`, `Yes`, `No`,
-`Indonesian Districts`, `NC QSO Party`. The config loader uppercases every line
-before parsing, and the matcher compared case-SENSITIVELY, so those six could be
-written and never read back. That was the whole of the
-`SINGLE BAND SCORE=All` -> "Invalid statement in config file" failure of
-2026-08-16. The matcher now folds case.
-
-- [ ] **Load a few real contest `.cfg` files** and confirm no
-  "Invalid statement in config file" and no new `[Config] ... was REFUSED`
-  lines. The golden corpus (22/0/4) covers 13 of them already; this is about
-  configs the corpus does not carry.
-
-**Two defects found while doing this, NEITHER fixed -- they need a decision:**
-
-1. **`QSOPointMethodArray` has two identical `'ONY'` entries** (`VC.pas:3264`
-   and `:3319`). Only the first is reachable by name, so one QSO-point method
-   cannot be selected by spelling and shows the wrong label. Aligning the array
-   to the enum did not reconcile (133 members vs 136 entries), so which value is
-   mislabelled needs a read rather than a guess.
-2. **`SetCFGCommandValue` ignores `crC`.** Ctrl-J wrote a contest-scoped row to
-   the contest `.cfg` (`uOption.pas:851`); Preferences writes every row to
-   `tr4w.ini`. So a contest-scoped setting edited in Preferences was written to
-   the wrong file and lost on the next start, silently. The 11 migrated today
-   are out of that path; the rest go when the remaining 20 do.
-
-### 20. 15 more settings to JSON -- ini count now 5, and the risky ones are here
-
-The rule used was the table's own: **`crC` says which FILE owns the value.**
-`crC=0` means the station file, which today is `tr4w.ini`, so those must move.
-Only `BAND` and `SINGLE BAND SCORE` are `crC=1` (contest-owned) and stay for the
-contest file.
-
-**These 15 are read-only in Preferences, so nothing can be tested by changing
-them.** That is exactly why they need watching: their values arrive only through
-the config parser reading a file, and the file just changed.
-
-- [ ] **The multiplier and scoring rows are the ones to watch:**
-  `DOMESTIC MULTIPLIER`, `DX MULTIPLIER`, `PREFIX MULTIPLIER`, `ZONE
-  MULTIPLIER`, `QSO POINT METHOD`, `EXCHANGE RECEIVED`, `CONTEST`,
-  `CONTEST NAME`. Start a contest of each kind you care about and confirm the
-  multipliers and scoring are what they should be. **If a stale value were being
-  applied over the contest's, wrong SCORING is how it would show** -- not an
-  error message.
-- [ ] **The golden corpus covers 13 contests and is green (22/0/4)**, so this is
-  about contests the corpus does not carry.
-- [ ] **QUICK QSL messages x5 and `REMINDER`** -- confirm the quick-QSL message
-  still sends what it used to.
-- [ ] **`PADDLE PORT`** is the one genuinely editable row in this batch. Set it,
-  restart, confirm it stuck.
-
-**Why this should be safe, and what would disprove it:** nothing in the program
-writes these keys -- there is no writer for any of them outside CFGCA -- so a
-value only ever came from a file line. `MIGRATED_COMMANDS` carries an existing
-`tr4w.ini` value into the store once, and the contest `.cfg` still overrides via
-`CommandCameFromContestCFG`. Equivalent to today, minus the ini. A contest whose
-multipliers come out wrong disproves it.
-
-**Still on the ini, 5:** `CLEAR DUPE SHEET` (an ACTION trigger --
-`@ClearDupeSheetCommandGiven` -- persisting TRUE would clear the dupe sheet on
-every start), `BAND` and `SINGLE BAND SCORE` (contest-owned, going to the SQLite
-contest file), and `BAND MAP CUTOFF FREQUENCY` + `FREQUENCY MEMORY` (multi-valued
-`ctFreqList`, needing a JSON home for the whole `[BAND PLAN]` section).
-
-**Sections still ahead before `tr4w.ini` can be deleted:** `[BAND PLAN]`,
-`[COLORS]` (~112 elements x 2, and the reason Ctrl-J cannot be deleted yet),
-`[WINKEYER]`, and `uNewContest`'s `MAIN CALLSIGN` read.
-
-### 21. The band plan moved to JSON -- and its file finally says what it means
-
-`[BAND PLAN]` in `tr4w.ini` is gone. `settings\tr4w.json` now holds:
-
-```json
-"bandPlan": { "160": { "cutoff": 1800, "cw": 1815, "ssb": 1845 } }
-```
-
-**Why this was the awkward one.** The ini held REPEATED keys -- twelve
-`BAND MAP CUTOFF FREQUENCY=` lines and up to twenty-four `FREQUENCY MEMORY=`
-ones -- with the band DERIVED from each frequency, and the phone memory told
-apart from the CW one by an `SSB ` prefix inside the VALUE. Nothing in that file
-said which band a line was for, so a frequency in the wrong band was invisible.
-It is also why these two rows could never be ordinary settings.
-
-- [ ] **Open the band plan editor, change one cutoff, OK, restart.** It should
-  stick, and `settings\tr4w.json` should show it under `bandPlan`.
-- [ ] **Look at the file.** Every band you have set should be there and read
-  sensibly. A band with no values should be ABSENT rather than three zeros --
-  absent means "leave that band alone", which is what an empty cell means.
-- [ ] **The seed, which is the part with a real risk.** If you still have a
-  `tr4w.ini` with a `[BAND PLAN]` section, TR4W reads it ONCE into the store
-  (`[BandPlan] seeded N band(s) from tr4w.ini` in the log) and never again.
-  **Check the seeded values land on the right bands** -- the seed re-derives the
-  band from each frequency exactly as the old loader did, and that arithmetic is
-  the one thing that could put a memory on the wrong band.
-- [ ] **A contest `.cfg` carrying `FREQUENCY MEMORY` lines must still win.** The
-  store is skipped for whichever of the two keys the contest names, the same
-  rule `ApplyStoredCommands` uses. Load such a contest and confirm its memories
-  are in force, not your station ones.
-- [ ] **The band map mode cutoff still splits CW from phone** on each band.
-
-**Note for a station with no `tr4w.ini`:** the seed reads nothing, so the band
-plan starts from the compiled defaults. Set it once in the editor.
-
-**Settings still on the ini: 3.** `CLEAR DUPE SHEET` (an action trigger, must
-never persist), and `BAND` + `SINGLE BAND SCORE` (contest-owned, going to the
-SQLite contest file). No station setting writes `tr4w.ini` any more.
-
-**What still does:** `[COLORS]` (~112 elements x 2, and the reason Ctrl-J cannot
-be deleted), `[WINKEYER]`, and `uNewContest`'s `MAIN CALLSIGN` read.
+**Not a bench check, recorded so it is not lost:** serial-number padding is
+DECIDED and NOT BUILT (NY4I, 2026-09-07) -- the width is the digit count of the
+log's highest serial, so 142 QSOs export `001` to `142`. It changes exported
+Cabrillo and ADIF and needs the corpus in front of it -- now issue #91.
 
 ### 22. Colors moved to JSON, and Ctrl-J is GONE
 
@@ -1694,8 +2221,12 @@ told "your settings have already been copied, this file is no longer read" can
 answer the question actually being asked.
 
 - [ ] **On a station WITH a `tr4w.ini`:** start TR4W. The prompt should appear
-  once, after the window is up. Say **No** -- it must not ask again on the next
-  start, and `settings\tr4w.json` should carry `"keepLegacyIni": true`.
+  once, after the window is up -- **and only when the first-run conversion
+  offer was not declined in that run** (`FirstRunConversionDeclined`,
+  `uProgramMain`): declining it leaves a `tr4w.json` of defaults, and offering
+  to remove the ini then would offer to delete the only copy of the 4.x
+  configuration. Say **No** -- it must not ask again on the next start, and
+  `settings\tr4w.json` should carry `"keepLegacyIni": true`.
 - [ ] **Then flip that back to `false` by hand, restart, and say Yes.** The file
   should be gone and a confirmation shown. **No `.bak` is made** -- that is
   deliberate ("There should not be any backups of the ini or anything else").
@@ -1707,9 +2238,9 @@ answer the question actually being asked.
   remove it and carry on -- the file is ignored either way.
 - [ ] **A station with no `tr4w.ini` must never see the prompt.**
 
-**The corpus is the automated half of this and is green (22/0/4).** The prompt
-sits AFTER the `/EXPORT` Halt in `tr4w.lpr` for exactly that reason: a modal
-dialog in headless mode would HANG all thirteen runs rather than fail them.
+**The corpus is the automated half of this.** The prompt sits AFTER the
+`/EXPORT` Halt in `uProgramMain` for exactly that reason: a modal dialog in
+headless mode would HANG every corpus run rather than fail it.
 
 **First `resourcestring` in the program** (`src\uAppStrings.pas`). New dialogs
 and message boxes declare their text there from now on, not as a `TC_` constant
@@ -1763,44 +2294,6 @@ did not.
 the WinKeyer is in use is a property of the PROFILE (`SetWinKeyerEnabled`). The
 seed describes the device on the desk and nothing more.
 
-### 25. Overnight 2026-08-22: the main window is a designed form, and two controls moved
-
-Everything below is built, green (9803 unit tests, 21 lints, corpus 22/0/4) and
-committed but **not pushed**.
-
-- [x] **The main window still looks and behaves as it did.** It is a designed
-  `TForm` now (`uMainForm.lfm`) rather than one built in code. Border, minimise
-  box, taskbar button, background colour all moved from Pascal into the designer,
-  so this is the check that nothing was dropped in the move.
-- [x] **The possible-call list.** Type a partial callsign and watch the row of
-  suggestions below the entry fields: same font, same column width, dupes still
-  red, the selected one still outlined. It is an LCL `TListBox` now, drawn
-  through `OnDrawItem` instead of `WM_DRAWITEM`.
-- [x] **A specific thing to watch on that list, recorded honestly:** TR4W fills
-  it with raw `LB_ADDSTRING`, so the LCL's own `Items` are empty. Nothing
-  recreates the control's handle today, but if it ever DOES the list would go
-  blank and refill on the next keystroke. If you see that once, that is what it
-  was.
-- [x] **Help > About** opens a designed form instead of a system message box, with
-  the same content and the website as a clickable link. Check the version and
-  date read correctly -- they are composed from the same constants, not typed
-  into the form.
-
-**Not done, and each for a stated reason** (docs/ROADMAP.md section 2):
-
-* **The editable log stays a Win32 ListView.** `TListView` caches its rows and
-  TR4W does not use that cache -- it inserts with raw `LVM_INSERTITEM` across
-  ~150 call sites. The control would show hundreds of rows while the LCL believed
-  it had none, and anything that recreated the handle would rebuild it from the
-  empty cache: **a blank log, mid-contest, with no error.** Converting it means
-  moving those call sites to the `Items` API, with the log-dump harness proving
-  rows survive.
-* **The three remaining Win32 dialogs are all entangled** -- CAT is 2570 lines and
-  actively maintained, Missing Mults builds a runtime grid of child windows, and
-  Get Server Log embeds the editable log and so is blocked on the same work.
-* **`Application.Run` is still gated on the band map and the function-keys
-  window**, not on the main form.
-
 ### 26. The function-keys window is an LCL form -- TEST THIS ONE PROPERLY
 
 **This window sends CW.** It is the first `tw_` tool window converted, two of the
@@ -1813,27 +2306,6 @@ is provable by build. Please give it a real session.
 - [x] **The CQ and S&P banks both show the right text.** Toggle mode and watch
   the captions change. `ShowFMessages` drives them now by setting `Caption`
   instead of invalidating an owner-draw.
-- [ ] **Ctrl and Alt banks.** Hold Ctrl, then Alt, and confirm the captions
-  switch to those banks and back on release. [AGENT - When I press CTRL in the main window, the function key labels do change but when I unkey CTRL, they do not restore to their original non-CTRL setting. Same for ALT.]
-
-  **INSTRUMENTED 2026-08-28 (`pending`), not yet fixed -- and deliberately so.**
-  The press and the release are handled in two DIFFERENT places: the press by
-  the entry field's `OnKeyDown` (`uMainWindowProc`, `ShowFMessages(12)` for
-  Ctrl and `(24)` for Alt), the release application-wide in
-  `uAppInputHooks.UserInput`, which watches a `GetKeyState` TRANSITION and
-  calls `ShowFMessages(0)`. Both are wired and installed, so which half is
-  missing decides the fix and the two look identical from the outside.
-
-  It cannot be reproduced from the harness: `Test-Typing` drives keys with
-  `PostMessage`, which does not move the real keyboard state `GetKeyState`
-  reads, so a modifier HOLD cannot be simulated. Driving it with `SendInput`
-  would type into whatever has focus on NY4I's desktop.
-
-  So `DEBUG LOG LEVEL = DEBUG`, press and release Ctrl, then Alt, and send the
-  `[Modifiers]` lines. Two lines per press means the transition is seen and the
-  restore ran -- the fault is then in `ShowFMessages(0)` itself. No second line
-  means the release never reaches the handler, which is a different fix.
-
 - [ ] **AN AMPERSAND IN A CW MESSAGE.** Put `&` in an F-key message and check it
   shows as one `&`, not none and not two. `ShowFMessages` deliberately doubles
   it; a `TPanel` caption treats `&` the same way the owner-draw did, so the
@@ -1856,11 +2328,6 @@ is provable by build. Please give it a real session.
 
 **What is left before `Application.Run` can replace the message loop:** the band
 map's `WM_KEYUP` arm, and nothing else. That is the next piece of item 1.
-
-**Follow-up noted, not done:** `FunctionKeysWindowDlgProc` is no longer reached
-for this window, but it is still registered in `tr4w_WindowsArray[..].WndProcAdr`
-and this tree's rule is that unreachable-looking is not proof. Retiring it is a
-separate, deliberate step.
 
 ### 27. Band map step 1: the model, before any form exists
 
@@ -1941,11 +2408,6 @@ showed nothing at all.** Three separate things, and the log settled all of them.
   only its repaint waits. Restore and check the age colours are right, not
   a minute behind.
 
-- [ ] **NOT tested and deliberately not implemented: occlusion.** If another
-  window is simply sitting on top of the band map, TR4W still repaints it.
-  Windows will not answer "am I covered" reliably and guessing would trade
-  a real repaint for a maybe-saved one.
-
 - [x] **DX cluster logging was never broken** -- 56 `[Telnet RX]` lines were in
   that log, buried under the flood above. Nothing to fix; noted so it is
   not re-reported.
@@ -1956,65 +2418,6 @@ needs the full list of places the LOG changes, and `UpdateWindows` demonstrably
 covers QSO-logged, log-load, network QSO and WSJT-X but **not** an in-place log
 edit. A stale multiplier flag shows up as WRONG SCORING, not as an error, so it
 is carved out into its own change rather than guessed at here.
-
-### 28. The band map form, and three defects the bench run found
-
-The band map is an LCL form (section 27 covers the model work underneath it).
-Everything here was found by NY4I running it on 2026-08-22/23, and none of it
-was visible to a lint or a unit test.
-
-- [x] **Status bar panel count.** The .lfm declared four panels; the code
-  indexed six. `List index (5) out of bounds` came out of the form's
-  OnCreate, so the CONSTRUCTOR never completed and TR4WBandMapForm stayed
-  nil -- which presented as an empty band map with no context menu rather
-  than as a wrong status bar. There is a `SB_PANELS` check at create now
-  that names the mismatch instead.
-- [x] **A form shown by SetWindowPos is not Visible to the LCL.** Every tw_
-  window is shown with a raw `SWP_SHOWWINDOW` on an HWND, which the LCL
-  cannot see, so `TForm.Visible` stayed False while the window was on
-  screen: the refresh timer skipped every tick and the LCL never showed the
-  child controls. `OpenTR4WWindow` now tells the LCL, once, for whichever
-  form the seam built -- so the next tool window to convert inherits it.
-  **The same note already existed on ShowTR4WMainForm**; it is the second
-  time this has been discovered.
-- [x] **Re-test the band map end to end** now those are fixed: resize wide and
-  narrow (the columns reflow -- it is a newspaper layout, widening shows
-  MORE spots), a spot arriving while a row is selected, a split spot that
-  is also a dupe, double-click and Enter both tuning, Ctrl-End landing
-  focus in the grid, and Delete.
-
-### 29. Preferences: two defects, one of them the reason settings did not stick
-
-- [x] **THE LOAD GUARD DID NOT NEST.** `FLoading` was a plain boolean and
-  nested loaders each set it True and then set it **False** on the way out.
-  `ShowSelectedCluster` and `ShowSelectedRotator` both do that, and
-  construction calls both before `FBindings.LoadAll` -- so the guard was OFF
-  for the rest of construction, the bindings' change events fired, and
-  `CaptureProfileFields` wrote every panel's UNLOADED controls back over the
-  store. A check box the operator had turned on came back off because
-  construction saved False over it from an unticked box and then read that
-  False back. It is now a DEPTH COUNTER, which an inner scope cannot clear.
-  **Test: set the logging check boxes, restart, and confirm they hold** --
-  and the same for anything on a panel loaded after the cluster and rotator
-  lists.
-- [x] **An empty handler is not the same as no handler.** `cbxLogLevel` and
-  `cbxRelayPort` had do-nothing OnChange stubs, and `HookDirtyMarker`
-  attaches its MarkDirty only to a control with NO handler -- so merely
-  existing stopped them marking the form dirty: Apply stayed greyed, the
-  close prompt never appeared, and the edit went in silence. Both now mark
-  dirty without applying, so Cancel still discards.
-  **Test: change the log level alone, close, and it should offer to save.**
-- [x] **Preferences vanished behind TR4W after switching to another program.**
-  It had no PopupParent, and pmAuto resolves to `Application.MainForm`,
-  which is nil here because TR4W never calls `Application.CreateForm`. So
-  it was a top-level window owned by nothing. `OwnFormByMainWindow` now
-  owns it, like every other form.
-
-**Audited while there, and clean:** every other control on Preferences either
-reaches `Dirty` through its handler or is picked up by `HookDirtyMarker`, whose
-arms cover every control type the form actually uses. The remainder of the
-report is buttons, which do their own work, and navigation, which is excluded
-on purpose.
 
 ### 30. Application.Run -- THE PIVOT.  Test this harder than anything before it
 
@@ -2034,23 +2437,6 @@ rather than a crash.
   Ctrl+Alt+B, Ctrl+W, the Ctrl+Shift+digit window shortcuts. A shortcut that
   does nothing is the signature failure of this change.
 
-  - [ ] **Ctrl+Shift+0 (MP3 recorder) does nothing** -- NY4I, 2026-08-26,
-    while Ctrl+Shift+9 (Stations) works. **Investigated 2026-08-26 and NOT
-    resolved by reading.** The two `ACCELERATORS` rows are identical in
-    shape (`acKey $30`/`$39`, same modifiers, both `acInstall: true`), the
-    matcher compares them the same way, and posting `WM_COMMAND 10216`
-    directly DOES open the window -- so the open path is sound and this is
-    a keystroke question. There are two candidate causes and they are
-    indistinguishable from outside: the key reached the hook and matched
-    nothing, or **Windows took it first** -- `Ctrl+Shift+<digit>` is a
-    standard keyboard-layout switch hotkey when more than one layout is
-    installed.
-
-    `uAppInputHooks` now logs every MODIFIED keystroke it sees at TRACE
-    (`[InputHooks] key $30 ctrl=1 alt=0 shift=1 -> no accelerator`), which
-    separates them **in one run**: set `DEBUG LOG LEVEL = TRACE`, press
-    Ctrl+Shift+0, and look. **No line at all means the program never saw
-    the key** and the fix is in Windows' settings, not here.
 - [ ] **The same shortcuts with a TOOL WINDOW focused.** The handler is
   application-wide by design, so Ctrl+Shift+1 should open the dupe sheet
   whether the callsign field or the band map has focus.
@@ -2060,12 +2446,6 @@ rather than a crash.
 - [ ] **The numeric keypad as CW memories**, if you use them
   (`KEYPAD CW MEMORIES`). They fire whatever has focus.
 - [ ] **F10 does nothing**, as before -- it must not open the menu bar.
-- [ ] **The F-key labels follow Ctrl and Alt.** Hold Ctrl: the alternate bank
-  shows. Release: the plain one comes back. This is the arm with the largest
-  change in mechanism -- the loop watched for a key-up whose key WAS Ctrl or
-  Alt; there is no application-wide key-up hook, so it now watches the
-  modifier state TRANSITION through `OnUserInput`. Watch for labels that
-  stick on the wrong bank.
 - [ ] **QUICK QSL -- and a deliberate narrowing.** `\` and `=` still QSL while
   you are typing a callsign. They no longer fire while a TOOL WINDOW has
   focus: type a call, click into the band map, press `\` -- nothing happens,
@@ -2117,58 +2497,20 @@ of it has been seen.**
   radio's band, and check each sheet shows ITS radio's calls with ITS radio
   in the title.
 - [ ] **Retirement of `COLUMN DUPESHEET ENABLE`.** Setting it in a `.cfg` or
-  `tr4w.ini` must still LOAD WITHOUT AN ERROR (it is `csRem`, not deleted)
+  `tr4w.ini` must still LOAD WITHOUT AN ERROR (it is a retired command, `uCFG.RETIRED_COMMANDS`)
   and must have no effect. It must not appear in Preferences. `tr4w.json`
   may still hold the key from before the retirement; that is inert.
 
 **Not asking whether it opens** -- see the note at the head of this file.
 
-### 32. The stations window scales; the dupe sheet reflows  (`uStationsForm`, `uDupeSheetForm`)
-
-Two DIFFERENT resize behaviours, deliberately, and the pair is worth one look
-side by side because getting them backwards would be easy to miss:
-
-- [x] **Stations SCALES.** Fixed columns; the font grows with the window and the
-  columns are sized from the font that was applied, floor 7pt, ceiling 28pt.
-  Widen it and the text gets bigger; there must be no grey strip to the
-  right of the last band column at any width.
-- [x] **The dupe sheet REFLOWS.** Widening it gives MORE COLUMNS of the same
-  size, not bigger cells -- which is what `LB_SETCOLUMNWIDTH` did, and what
-  scanning for a callsign wants.
-- [x] **The 28pt ceiling is mine, not NY4I's** (he asked only for a minimum).
-  Maximise the stations window and say whether 28pt is the right stopping
-  point.
-
-### 33. Band change now says why it refused  (`TC_BANDCHANGEDISABLED`)
-
-- [x] With `MULTIPLE BANDS = FALSE` and at least one QSO logged, Alt-B / Alt-V
-  and the Band Up / Band Down menu items must show
-  "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
-  instead of doing nothing in silence. Same for anything that reaches
-  `GoToBand` -- a band map click, for instance.
-- [x] With `MULTIPLE BANDS = TRUE`, no message and band change works as before.
-
-The CAUSE of NY4I hitting this is not fixed here and is not meant to be: a
-`csJSON` stored setting outlives contest selection, so `fcontest.pas`'s
-per-contest initialisation never took effect on a newly selected CQ WW. NY4I
-owns that -- the contest factory harvests those states.
-
-### 34. The entry fields colour themselves  (`RefreshEntryFieldColors`)
-
-Confirmed by NY4I on 2026-08-24 for search-and-pounce green, overtype with
-Insert off, and a palette change. Left here for ONE case that sitting did not
-cover: [AGENT - Is it possible to arrange this dialog to show in the table a sample of the text and background?]
-
-- [x] **A colour change made while the program is running, from Preferences,
-  with the operator IN search-and-pounce.** The exchange field must stay
-  green rather than snapping to the new normal background, and must take the
-  new background when S&P is left.
-
 ### 35. Super Check Partial is a form, and the dupe sheet moved under it  (`uMasterForm`, `uCallGrid`)
 
 **Neither has been seen since this change.** The dupe sheet WAS confirmed on
-2026-08-24 (section 31) and was then refactored onto the shared `TCallGrid` --
-so its confirmation no longer covers the code that runs. Re-check both.
+2026-08-24 (section 31) and was then refactored onto the shared grid -- now
+`TFlowGrid` (`uFlowGrid.pas`) -- so its confirmation no longer covers the code
+that runs. Re-check both. The SCP cell buffer underneath was rebuilt on
+2026-10-17 (pointer audit P7, `24f336c2`), which "SCP fills as you type" now
+covers too.
 
 - [x] **SCP fills as you type.** Type three or more characters of a callsign
   with the SCP window open; partial matches appear. Fewer than
@@ -2178,7 +2520,7 @@ so its confirmation no longer covers the code that runs. Re-check both.
   worked on this band and mode must show in `SCP DUPE COLOR` with white
   text; everything else plain on the window background.
 - [ ] **IT STOPS AT WHAT FITS AND DOES NOT SCROLL.** That is the old behaviour
-  (`MaxItemsInMasterListBox`), now `TCallGrid.LimitToVisible`. Make the
+  (`MaxItemsInMasterListBox`), now `TFlowGrid.LimitToVisible`. Make the
   window small with a common partial like `K1` and confirm it fills and
   stops rather than growing a scrollbar. Then make it BIG and confirm more
   matches appear -- the capacity is asked for, not cached, so a resize must
@@ -2277,10 +2619,10 @@ the wrong size, this is the change that did it.**
 - [ ] **WAE QTC puts the callsign into the call field** (`LOGWAE:177`), if you
   run WAE.
 - [x] **Greying still works:** the inactive radio's row in two-radio mode, the
-  foot switch and WinKey indicators, and the quick-display FLASH (which is
+  WinKey indicator, and the quick-display FLASH (which is
   still an enable/disable toggle -- see LOGWIND).
 
-### 38. Three injected keystrokes are deferred calls now
+### 38. Injected keystrokes are deferred calls now
 
 Each was a PostMessage into an entry field, and the POST was doing real work --
 deferring the action until the current message finished. That deferral is kept
@@ -2288,8 +2630,6 @@ through Application.QueueAsyncCall; what went away is the synthetic keystroke.
 
 - [ ] **The trailing space in the exchange field** (space bar at the end of an
   exchange that does not already end in one).
-- [ ] **The foot switch's start-sending key** in CW. Was a WM_CHAR into the call
-  field; now calls the field's own key handler.
 - [ ] **MMTTY double-click pastes a callsign into the call field AND FOCUSES
   IT.** The focus half never worked: the old code posted WM_SETFOCUS, which
   tells a window it has gained focus rather than giving it focus. If the
@@ -2404,16 +2744,6 @@ is no `uNet` test at all).
   appears, the framing is holding. **If it does, capture the log** -- it
   names the id and the offset, and it is the first evidence this program has
   ever produced for a class of loss that was previously invisible.
-- [ ] **A busy multi-op run.** HALF the structural defect is now fixed: a
-  message whose bytes have not all arrived is REFUSED AND LOGGED rather than
-  assembled from stale buffer contents and logged as a real QSO. What is
-  still missing is the carry-over buffer -- `Bufindex := 1` on every recv --
-  so a split message is **dropped**, not recovered. Dropped-and-logged beats
-  silently-wrong, but the recovery is the transport rewrite.
-  **Watch for `[Net] Message id ... needs N bytes but only M arrived`.** If
-  that line appears in a real multi-op session, splits are happening in the
-  field and the transport rewrite moves up the list.
-
 **Not a defect, do not re-report:** `NET_MESSAGESTATE_ID` is sent and received
 only under `{$IF OZCR2008}`, and that is `False` -- so no shipping TR4W emits it
 and the missing receive arm cannot fire. It was briefly reported as live during
@@ -2421,65 +2751,6 @@ this session and that was wrong: the `SetTimer` that would arm it is inside the
 same conditional (`uCWKeyerCPU.pas:87`). The residual hazard is cross-build
 only -- `tr4wserver` relays the id ungated, so a client compiled WITH the switch
 would feed standard clients something they cannot advance past.
-
-### 41. Two ADIF export defects, found by pinning and NOT fixed
-
-Both surfaced while extracting `GetMyExchangeForExport` into `uADIFExchange` and
-pinning its arms. Both are pinned as-is, because that commit's whole claim is
-that it changed nothing, and both need a CONTEST answer rather than a
-refactoring one.
-
-- [x] **`AgeAndQSONumberExchange` exports `Error generating my exchange`.** The
-  arm is `Format('%-3d %-2s %03d      ', [cMyState, nrSent])` -- **three
-  format specifiers, two arguments**, and the first specifier is `%d` while
-  the first argument is a PAnsiChar. `Format` raises, the routine's own
-  `try/except` swallows it, and the caller gets the initialisation string.
-  Every contest using that exchange has been exporting the error text in
-  that ADIF field.
-
-  **ANSWERED 2026-08-26 -- NY4I asked which contests use this exchange.**
-  **Exactly one: `SRR-JR`.** All 186 contest rows in `VC.pas` were parsed on
-  their `AE:` field; `SRR-JR` is the only one whose `AE` is
-  `AgeAndQSONumberExchange` (a Russian contest, `DF: 'russian'`,
-  `QRZRUID: 331`). So the blast radius is one contest, not a family.
-
-  **And the evidence says it is NOT RST**, which was the suspicion. The
-  CABRILLO arm for the same exchange is intact and states the field
-  meanings outright (`uCabrilloExchange.pas`):
-
-      SetMyEx('%-2s %.*d ', [cMyState, 3 - Ord(nrSent < 0), nrSent]);
-      SetHisEx(' %-3d %.*d', [hisAge, 4 - Ord(nrReceived < 0), nrReceived]);
-
-  Sent is **age then serial**, received is **age then serial**; no RST
-  anywhere. `cMyState` carries the AGE here (a `PAnsiChar`), which is also
-  why the ADIF arm raises: its first specifier is `%-3d` and its first
-  argument is that pointer.
-
-  So the likely correct ADIF arm is `Format('%-2s %03d', [cMyState, nrSent])`
-  -- the same two fields Cabrillo writes, in the same order. **Still not
-  fixed**, because that is a contest-rules answer and NY4I asked to check
-  the rules: confirm SRR-JR sends age + serial and the ADIF field should
-  carry both.
-- [x] **Serial numbers are not zero-padded, though the format looks like they
-  would be.** `RSTQSONumberExchange` is `'%-3d %03d '`. In C `%03d` of 7 is
-  `007`; in Object Pascal the leading zero is part of the WIDTH, so it is
-  right-justified with spaces -- serial 7 exports as `  7`. The arm carries
-  the comment "issue 177", which suggests somebody wanted `007` and wrote
-  the C spelling. **Should it be `007`?** If so it is `Format('%.3d', ...)`
-  or explicit padding, and it changes every affected log.
-
-  **DECIDED 2026-08-26 (NY4I): padding is NOT required.** *"The spec states
-  that the spacing between the fields is what the log checking tools use."*
-  Three digits, four digits or none are all acceptable; zero-padding only
-  aids readability. A dynamic width -- `DigitsIn(max(qsoNumber))` -- would
-  be legitimate but is not wanted for its own sake.
-
-  So this is **not a defect to fix**, and the reason to touch it would be
-  readability alone. What must NOT change is the FIELD SPACING, which is
-  what the checking tools parse.
-
-Neither is a regression -- both predate today and are unchanged by the
-extraction, which the corpus confirms byte-for-byte across all 13 ADIF fixtures.
 
 ### 42. Accelerators no longer reach past a modal dialog
 
@@ -2645,39 +2916,9 @@ else? If it does, F2 is a misreading of intended behaviour and can be deleted.
 If a system menu appears on selection alone, the diagnosis above is wrong and
 that is worth knowing.
 
-### F3 — the band plan editor has no way in — **FIXED 2026-08-21, confirmed on the bench**
-
-**Seen:** *"I do not see this option in Settings."*
-
-The form exists and `Invoke-MenuSmoke` proves it constructs and shows, so this is
-about the ROUTE, not the dialog -- and note that the smoke test passing is
-exactly why nothing caught this: it opens dialogs by resource id, not by clicking
-through the UI a person actually uses.
-
-**ANSWERED 2026-08-21: the editor has no live caller at all, and the route was
-removed on 2026-08-16.** Its only entry point is `uOption.pas:746`, reached by
-activating a settings row whose type is `ctFreqList`. There are exactly two such
-rows, `BAND MAP CUTOFF FREQUENCY` and `FREQUENCY MEMORY` (`uCFG.pas:478`,
-`:585`). Commit `79d4b6f0`, "empty Ctrl-J -- 173 settings move into Preferences",
-flipped both from `csOld` to `csOwned`, and the Ctrl-J list builder skips
-`csOwned` rows (`uOption.pas:389`). So the rows are not listed, and the call that
-opens the band plan editor can no longer be reached.
-
-Preferences does show both, and renders them DISABLED on purpose: they are
-multi-valued `[BAND PLAN]` rows and a bound edit box would write one frequency
-into `[COMMANDS]` and could replace a whole band plan (`uCFG.pas:1247` states
-this at length, and it is right). So the fix is not to bind them.
-
-**Decided (NY4I, 2026-08-21): put the way back in Preferences**, as an "Edit..."
-button on those two rows calling `ShowBandPlan`. That keeps them unbound -- a row
-that cannot be edited in place still cannot be saved -- while giving the dialog
-that owns the setting the job of offering the editor for it.
-
-**DONE, and confirmed opening on the bench the same day.** `CFGCommandIsFreqList`
-(`uCFG.pas`) is the predicate -- a refinement of `CFGCommandIsList`, because both
-kinds stay unbound but only this one has an editor behind it. The button carries
-no binding, so the `[BAND PLAN]` hazard is untouched. Section 4's checklist is
-live again; the items that WRITE the ini are still unrun.
+**NEEDS REWRITE -- NY4I** (section 3): *"There is no way to move with arrow
+keys as when I press OK, the window control daughter menu appears and the arrow
+keys navigate in that menu (up and down)."*
 
 ### F4 — Edit QSO is dirty before you touch it — **FIXED, needs a bench pass**
 
@@ -2707,57 +2948,6 @@ change-tracking the dialog has, which is exactly why F6 could not work.
 The second symptom had a second cause: the "Save changes?" prompt lived inside
 `SaveQSOToEditableLog` and was never guarded by whether anything had changed. It
 has moved to the UI layer -- see F6.
-
-### F5 — a bad callsign is accepted on Save — **CLOSED 2026-08-21: it is a feature**
-
-**Seen:** *"I entered callsign FRED and it accepted it."* NY4I's follow-up:
-*"I have no issue if this is a feature, but your test request of me in this file
-was to check that a known bad call could not be entered."* -- which is fair, and
-the item was a legitimate test. Settled in code rather than left hedged:
-
-**The dialog does validate, in BOTH trees, identically.** `uEditQSO.pas:455`
-(this tree) and `:501` (D7, `C:\TR4W`) are the same three lines:
-
-```pascal
-  if not GoodCallSyntax(EditableQSORXData.Callsign) then
-     begin
-     showwarning(TC_CHECKCALLSIGN);
-     Result := False;
-     Exit;
-     end;
-```
-
-So this is neither a port regression nor a missing check. `FRED` is accepted
-because `GoodCallSyntax` says it is valid. Tracing it in
-`uCallSignRoutines.pas:543`: length >= 3 passes, it has letters, there is no
-slash, `Call[1] <= '9'` is false so the digits-first test does not fire, and the
-length-3 rule does not apply to a four-character call. The rule that WOULD have
-rejected it -- no digit anywhere in positions 2 to 4 -- is **commented out**:
-
-```pascal
-  { //n4af 4.38.3
-  else
-    if ((Call[2] < '0') or (Call[2] > '9')) and
-       ((Call[3] < '0') or (Call[3] > '9')) and
-       ((Call[4] < '0') or (Call[4] > '9')) then
-      Exit;
-```
-
-**So the defect, if it is one, is a disabled validation rule -- not the dialog.**
-Whether a letters-only string should be refused is a decision about
-`GoodCallSyntax` and belongs with the callsign routines and their unit tests
-(`uTestCallSignRoutines.Test_GoodCallSyntax_Rejects`), not with Edit QSO.
-
-Worth noting for the commented-code sweep: this block is not inert scaffolding,
-it is a **behaviour change hiding in a comment** since 4.38.3. Deleting it
-without deciding the question would quietly make the decision permanent.
-
-**DECIDED AND DONE (NY4I, 2026-08-21).** The commented `//n4af 4.38.3` block
-was DELETED, not reinstated -- so accepting `FRED` is the intended behaviour
-of `GoodCallSyntax`, on the record, rather than a rule that happened to be
-switched off in a comment since 4.38.3. The point this finding was making
-stands either way: the block had to be DECIDED, because deleting it blind
-would have settled the question without anyone noticing it was asked.
 
 ### F6 — Escape after a change does not prompt — **IMPLEMENTED as NEW behaviour**
 
@@ -2917,29 +3107,6 @@ was reaching the panel to be suppressed in the first place.
   at all, and the coalescing cache no longer suppresses the first update
   after a reopen.
 
-- [ ] With a radio connected, **bench item 10 becomes testable for the first
-  time** -- VFO A/B text, the mode labels, RIT/XIT/SPLIT following the rig.
-  None of it can ever have worked, so treat that whole item as unrun rather
-  than as a regression check.
-
-- [ ] **Multi-op:** a client log replace from the server should now actually
-  happen (`WM_USER_HEADLESS_SYNC_REPLACE`).
-
-- ~~**Tray icon:** clicking the notification-area icon should reach TR4W
-  again.~~ **STRUCK -- NOT OBSERVABLE, and it should never have been listed.**
-  `WM_TRAYBALLON`'s handler in `uMainWindowProc.pas:385` is an EMPTY
-  `begin end`. Clicking the tray icon has always done nothing and still does;
-  the routing fix means the message now arrives somewhere that ignores it,
-  which looks identical from the outside. Written into the checklist without
-  reading the handler first.
-
-  Worth knowing rather than deleting: the icon is registered with
-  `Balloon_AddTrayIcon(tr4whandle, 11, ..., WM_TRAYBALLON, 'TR4W')`
-  (`uTrayBalloon.pas:214`), so the plumbing is real and the click callback now
-  genuinely lands. If a tray click is ever meant to DO something -- restore the
-  window, show a menu -- the handler is where it goes, and it will work now
-  whereas before the message never got there.
-
 - [x] **Taskbar button:** the main window has one again, and clicking it
   restores/minimises normally. **CONFIRMED 2026-08-20 (NY4I).** This is the
   `ShowInTaskBar := stAlways` fix, not a message-routing one: the window had
@@ -2970,10 +3137,6 @@ edits one, deletes one, or opens a log window.
   resync on every connect against a log this build cannot read.
   **The question for you: does the server move to SQLite, or does the new
   protocol have to speak to a binary-log server?**
-
-- [ ] **RESTART.BIN.** You said "I guess this is obsolete now" -- agreed, and it
-  is untouched. It is derived state in a side file, exactly like the `.TRW` was.
-  Confirm it goes into the database and it comes off this list.
 
 - [ ] **THE LOG NOW OVERRIDES `settings\tr4w.json` FOR CONTEST SETTINGS.**
   `csJSON` means the JSON store owns a row, which is right for a STATION
@@ -3048,11 +3211,13 @@ edits one, deletes one, or opens a log window.
 
 - [ ] **The server-log SYNCHRONIZE window -- NEEDS A SECOND STATION.** Its
   QSO list was the last hand-built Win32 window in the program and is a
-  `TLogGrid` now (2026-09-06). Connect to a multi-op server, open Log Compare
-  -> Synchronize, tick "show server log content", and press Get Log. Check
-  that rows appear AS THE DOWNLOAD RUNS rather than all at the end, that the
-  columns match the main window's log, that X-QSO and deleted rows are
-  visually distinct, and that "Create a new log" still replaces the local log.
+  `TLogGrid` now (2026-09-06). Connect to a multi-op server, open it from the
+  menu (**Ctrl+Alt+S**, get server log), tick "show server log content", and
+  press Get Log. Check that rows appear AS THE DOWNLOAD RUNS rather than all at
+  the end, that the columns match the main window's log, and that X-QSO and
+  deleted rows are visually distinct. **"Create a new log" is UNPROVEN against
+  the SQLite log** -- the server still sends its binary log -- so check whether
+  it replaces the local log at all, and what the log holds afterwards.
 
   **What changed and why it needs an operator.** The rows used to be inserted
   one at a time by the download WORKER THREAD with `ListView_InsertItem` --
@@ -3138,25 +3303,6 @@ edits one, deletes one, or opens a log window.
   care about and confirm every QSO arrives. It happens ONCE, silently, on first
   open. The corpus does this thirteen times, but with logs I chose.
 
-- [x] **Make the log unwritable and log a QSO. CONFIRMED 2026-09-02 (NY4I).**
-  He set `GENERAL QSO.db` read-only and got exactly the intended stop:
-
-      THE CONTEST LOG IS NOT BEING SAVED.
-      Writing to the log database failed in opening the shadow:
-      ESQLDatabaseError -- TLogConnection : attempt to write a readonly database
-      QSOs made from now on are NOT being recorded. Stop and fix this before
-      working anyone else. The log written so far is intact in
-      C:\tr4w-d12\tr4w\target\2026 GENERAL QSO NY4I\GENERAL QSO.db.
-
-  The inverted posture works: the operator is stopped rather than logging into
-  nothing. Note it fires at OPEN, not at the first QSO -- SQLite needs to write
-  the `-wal` and `-shm` beside the database to open it in WAL mode -- which is
-  the better moment for it to happen.
-
-  **It also caught a stale string: "in opening the shadow".** There is no shadow
-  any more; the message says "opening the log", and the remaining `[LogShadow]`
-  tags in the log are `[LogStore]`. Fixed.
-
 - [ ] **CREATE A NEW CONTEST.** The highest-risk item in this batch, because
   contest creation has NO automated coverage of any kind -- the corpus is handed
   ready-made logs and never makes one, and no harness drives the new-contest
@@ -3192,27 +3338,6 @@ edits one, deletes one, or opens a log window.
   an upgrading operator still sees the contests they already have. Opening one
   builds the database from the `.TRW`, after which it is listed as a `.db` and
   the `.cfg` stops appearing, because the same contest must not show twice.
-
-### KNOWN-FAILING MEASUREMENTS -- recorded, not hidden
-
-- [x] ~~**`test-cfg-not-needed.sh` is 11 of 13.**~~ **IT IS 13 OF 13 SINCE
-  2026-09-24, AND THE MEASUREMENT WENT AWAY RATHER THAN THE DEFECT BEING FIXED.**
-  It was ORDERING -- `MY CALL` arrived from the log later than the `.cfg` used to
-  supply it, so country and continent derived from the callsign during config
-  load were computed while it was empty; in ARRL-DX that decides whether a
-  received exchange renders as a power or a section, and all 66 QSOs came out
-  `DX`. That only happened on the pass that MIGRATED a `.TRW`. The corpus fixture
-  is a `log.db` now, so that test opens a finished database twice and the
-  migration ordering is no longer in play. **Do not read the green row as proof
-  the ordering is right** -- if anyone re-opens it, a migration is what has to be
-  measured, and that lives in the unit tests over
-  `tr4w/test/unit/fixtures/binarylog/`.
-
-- [ ] **`Test-CountyLineEntry` failed once under load, then passed four times.**
-  Ran immediately after three heavy corpus passes; the control-wait deadline is
-  10s and startup does radio band interrogation. A harness flake, not a product
-  fault -- but it will waste somebody's time. I have not tuned the threshold on
-  one data point.
 
 ### AND ONE THING THE GATES DID CATCH, WORTH KNOWING
 
@@ -3409,94 +3534,6 @@ Nothing here is a bench test. They need an answer, not a radio.
   from the frequency across the keyer API, so it is a refactor with real reach,
   not a deletion. Not started.
 
-- [x] **LPT: WINDOWS-GATED TODAY ON inpout32. LINUX IS A FUTURE RELEASE,
-  inpout64 GOES WITH THE 64-BIT CHANGE. SCHEDULED 2026-09-08.**
-
-  NY4I: *"windows gate LPT support today. Use inpout32. We will address as an
-  incremental release for linux/lpt in the future. inpout64 will be with the
-  64 bit change."*
-
-  **THAT CLOSES THE QUESTION AND SPLITS THE WORK INTO TWO RELEASES**, which is
-  the useful part -- neither half is now a decision, and neither blocks
-  anything.
-
-  **TODAY, AND IT IS ALREADY TRUE:** `uIO` and `uLPTPortEnumerator` are both
-  `{$IFDEF WINDOWS}`-gated, and `uLPTPortEnumerator` compiles for x86_64-linux
-  as it stands. `uIO` is blocked only behind `MainUnit`'s `TLVItem`, not by
-  anything of its own. `'inpout32.dll'` stays hardcoded and is CORRECT for a
-  32-bit build -- see below.
-
-  **WITH THE 64-BIT CHANGE: the driver name, and nothing else.** The x64 build
-  is `InpOutx64.dll`, and **the choice is by BUILD BITNESS, not by OS** -- a
-  32-bit application must use `InpOut32.dll` even on 64-bit Windows, because
-  that DLL carries both drivers and picks at runtime. So the guards nest:
-
-  ```pascal
-  {$IFDEF WINDOWS}
-     {$IFDEF CPU64}  INPOUT_LIB = 'InpOutx64.dll';
-     {$ELSE}         INPOUT_LIB = 'inpout32.dll';
-     {$ENDIF}
-  {$ENDIF}
-  ```
-
-  The exports are unchanged between the two -- the driver author's notes say
-  *"everything else is the same as the 32bit (InpOut32) DLL"* -- so this is a
-  name, not a rewrite. Details: [`inpOut32-64_Info.md`](inpOut32-64_Info.md).
-  **Read the name and exports off a real x64 build rather than inferring
-  them.**
-
-  **AS A LATER INCREMENTAL RELEASE: the Linux back end**, behind `uIO`'s
-  existing surface so no caller changes. What is NOT established, and should
-  be checked before it is budgeted:
-
-  - **ppdev** (ioctls on `/dev/parport0`) needs no root but has **no FPC
-    bindings I have found** -- it means hand-written `PPCLAIM` / `PPWDATA`
-    ioctls. The FreePascal wiki's alternative (`ports` + `fpioperm`) DOES
-    exist in the RTL and **wants root**, which is the real objection to it.
-  - **THE TIMING IS THE ACTUAL BLOCKER.** LPT keying bit-bangs PTT and CW
-    element edges, and TR4W's CW element clock off Windows is ALREADY a
-    placeholder -- `logk1ea.tCWSleep`'s non-Windows arm is a plain `Sleep`,
-    which CLAUDE.md says outright *"will not key a contest"*. **So Linux LPT
-    is downstream of the HPTimer work**, and the cheap first step is not code:
-    confirm on a real Linux box with a real parallel port that a pin can be
-    toggled at CW element rates at all.
-  - **macOS: not applicable.** No parallel port, so the existing no-op is the
-    finished answer rather than a gap.
-
-- [x] **The legacy CAT port -- DELETED 2026-09-08.**
-  NY4I: *"delete any unused legacy code including the CAT port."* Done:
-  `tCATPortHandle`, `WriteToCATPort`, `WriteBufferToCATPort`,
-  `SetK3ExtendedCommandMode` (no caller of its own), the two
-  `INVALID_HANDLE_VALUE` assignments, the polling-thread guard that tested it,
-  the four `uProcessCommand` fall-through arms (which now REPORT that a radio
-  has no factory driver), and the paddle/foot-switch-over-control-port path in
-  `LogCfg`, `uLPTForm` and `logk1ea`.
-
-  **The last of those was worse than dead:** it read the modem status lines
-  with `GetCommModemStatus` on the never-open handle, so the call failed and
-  left `TempCardinal` **uninitialised** -- the foot-switch and paddle tests ran
-  against whatever was on the stack. `USE CONTROL PORT` now logs one line
-  saying the control port cannot supply them, once per run rather than once per
-  poll.
-
-- [ ] **`CompareStringA` now BLOCKS the Linux compile of MainUnit -- and the
-      tests are owed before it can move.**
-  Peeling MainUnit's dependency chain for `Compile-Linux.ps1` (2026-09-08) got
-  through every unit above it and stopped here: `uCallsigns` calls
-  `CompareStringA(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE, ...)`, which is
-  Win32-only.
-
-  **It was left alone on purpose.** That call is one of THREE copies of the
-  same comparison in this tree, they have already drifted, and the standing
-  instruction (NY4I) is that the tests come BEFORE the repoint -- otherwise the
-  differences between the copies, which are usually fixes that never
-  propagated, get normalised away by whoever unifies them. A portability sweep
-  is the wrong context to decide what the right comparison is.
-
-  **So the order is: golden tests over all three copies, diff their behaviour,
-  agree one implementation, then repoint.** Until then MainUnit cannot be
-  compiled for a non-Windows target, and neither can anything above it.
-
 - [ ] **BENCH: the Icom LAN transport is back on Indy -- find the deadlock.**
   NY4I, 2026-09-08: *"we have to switch back to indy and we will bench test to
   determine the issue. Using WinSock is no longer an option."* Done, and
@@ -3541,18 +3578,6 @@ Nothing here is a bench test. They need an answer, not a radio.
   radio family `RADIO_BENCH_STATUS.md` lists as UNPROVEN. Build, tests and
   lints are green and prove only that it compiles.
 
-- [x] **`FoundDirectory` / `FindDirectory` -- DELETED 2026-09-08.**
-  NY4I: *"Yes to deleting the founddirectry and finddirectry and calling
-  branches."* Both routines are gone from `tree.pas`, with
-  `help.CheckForName` (which had no caller of its own) and the else-arm of
-  `logname.NameDictionary.Init`, which now assigns `''` outright because that
-  is what those calls always produced.
-
-  Two independent reasons it could never return anything else, either
-  sufficient: `FoundDirectory` tested a local string nothing assigns, and
-  `FindDirectory`'s third branch had its condition commented out but not its
-  body, so it returned unconditionally before reaching the four below it.
-
 - [ ] **CW speed sync over TCI: the detector's POSITIVE branch has never fired
   against a real server.** Restored 2026-09-18 with a behaviour detector in
   `TFactoryRadioBase` — TR4W remembers the speed it pushed, compares it with
@@ -3594,6 +3619,75 @@ Nothing here is a bench test. They need an answer, not a radio.
   **does the attached radio report a radio-side CW keyer?** Key a long message,
   press Escape. If it does not cut, that test is why, and it is a capability
   question rather than a protocol one.
+
+---
+
+## Contest factory -- state QSO parties (added 2026-09-29)
+
+**None of this is covered by any automated gate.** ADDING_A_CONTEST.md section 4
+is explicit: the golden corpus is blind to scoring, `test-contest-factory.sh`
+sees only the factory-versus-legacy A/B, and **nothing in this tree types an
+exchange**. The unit tests added alongside this work pin the contest classes'
+ANSWERS; they cannot press a key.
+
+- [ ] **Florida QSO Party now refuses a three-county exchange.** Type
+      `599 PIN/HIL/CIT` into the exchange window in FQP. Expected: the exchange
+      is refused with "Too many counties for this contest (maximum 2)!!" and
+      nothing is logged. Two counties (`599 PIN/HIL`) must still log TWO QSOs
+      sharing one serial number. **This is NEW behaviour** -- TR4W has never
+      enforced a county limit; NY4I chose it ("knowing and setting a limit makes
+      our edit checking of the exchange more robust").
+
+- [ ] **Michigan QSO Party now refuses ANY county-line exchange.** `599 WAYN/OAK`
+      must be refused; `599 WAYN` must log normally. Michigan's rules: "No
+      station may claim simultaneous operation in more than one county, state,
+      or province." Also new behaviour.
+
+- [ ] **California QSO Party now refuses a FIVE-county exchange.** NY4I set the
+      maximum at four -- "4 since that is the intersection of 4 counties with
+      common 90 degree angle borders". `599 SLUI/MONT/ALAM/STAN` must log FOUR
+      QSOs sharing one serial; a fifth county must be refused. Also new
+      behaviour.
+
+- [ ] **Indiana QSO Party now refuses a THREE-county exchange.** Maximum two,
+      per NY4I. Two must still log two QSOs sharing one serial.
+
+      **California was this list's "unchanged" canary until 2026-09-29 and is
+      no longer usable as one** -- it now has a limit of its own. Use a party
+      that states NO maximum instead: Colorado, Minnesota, Missouri, Ohio,
+      Wisconsin, Tennessee, Texas or Arizona. All eight inherit
+      `CountyLineCountiesUnlimited`.
+
+- [ ] **Every QSO party WITHOUT an established maximum must be UNCHANGED.**
+      Spot-check one of the eight above with four counties; it must log four,
+      exactly as before. If it is refused, the unlimited default has been lost
+      -- which is the defect fixed on 2026-09-29, where a class of any kind
+      made the base answer 0 from ContestsArray's boolean and refuse a second
+      QTH.
+
+- [ ] **A contest that is NOT a QSO party must not be asked at all.** Arktika
+      Spring, ARRL Digital and ARRL Field Day each have a class now and none is
+      a QSO party; a multi-QTH exchange in any of them must behave exactly as
+      it did before they were moved. The unit tests assert they accept two;
+      only the bench can say what the operator sees.
+
+- [ ] **ADIF STATE is the WORKED station's, decided per QSO by the contest
+      class** (Q76/Q89, `35986731`): a party county gives its state, a
+      state or province code gives itself where ADIF allows it, DX gives
+      none. Export from NYQP: an in-state county QSO carries `<STATE:2>NY`
+      and its `<CNTY>`; an out-of-state W station that sent `PA` carries
+      `<STATE:2>PA`; a DX QSO carries no STATE. **No corpus log covers
+      NYQP.**
+
+---
+
+## Decisions owed from NY4I -- contest factory
+
+- **Eleven flagged parties have no established county limit** and are left
+  unlimited (today's behaviour). 7QP is known to be 4 on NY4I's geometric
+  argument -- four counties is the most that can meet at a point with
+  right-angle borders. 7QP has a class now (`uContestSevenQP`), and it states
+  no county-line limit of its own.
 
 ---
 

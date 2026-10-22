@@ -56,7 +56,6 @@ uses
 type
    TContestIARU = class(TContestBase)
    protected
-      function GetFormatsExchange: boolean; override;
       (* THE GETTERS BEHIND TContestBase's PROPERTIES.
 
          PROTECTED, MATCHING THE BASE. Left public -- which is what the first
@@ -66,24 +65,128 @@ type
          ambiguity a property removes, so the getter is not part of the
          surface: callers use the property, descendants override the getter. *)
       function GetDisplayName: string; override;
-   public
-      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetFriendlyName: string; override;
 
-      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                          const aQso: ContestExchange;
-                                          const aRSTSent: string): string; override;
-      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                              const aQso: ContestExchange;
-                                              const aRSTReceived: string;
-                                              const aHisQTH: string): string; override;
-      function FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                      const aQso: ContestExchange): string; override;
+      (* STATED AT M10 S5, transcribed from the rows the base read until
+         then (ContestsArray, QSOParties, ContestsBooleanArray). The
+         flags: see TContestBase.GetFlags. *)
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
+      function GetFlags: TContestFlags; override;
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+      function EmitADIFContestFields(const aQso: ContestExchange): string; override;
+      procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                const aSession: TADIFImportSession;
+                                var aExch: ContestExchange); override;
+
+      (* A MEMBER SOCIETY'S EXCHANGE STILL CARRIES THE STATION'S ZONE -- M5b.
+
+         NY4I, 2026JUL07: when the exchange is a society (ARRL, DARC) rather
+         than a zone, RXData.Zone was never set, and the zone matters to the
+         external processors that read it (UDP). So the zone comes from the
+         call. It stood in LOGSTUFF.ProcessRSTAndDomesticQTHExchange as
+         `if Contest = IARU`, inside the single-word QTH branch, reached only
+         for RSTZoneOrSocietyExchange; it is IARU's rule, stated here under
+         exactly those conditions: that shape, a word that is not all digits
+         (the shape's own split between a zone and a society), one word once
+         '/' is read as a blank (uExchangeTokens, the test that branch makes),
+         and a zone not set yet. Applied after the parse whatever it
+         answered, as it was. *)
+      function ParseReceivedExchange(const aText: string;
+                                     const aSession: TReceivedExchangeSession;
+                                     var aExch: ContestExchange;
+                                     out aErrorMessage: string): boolean; override;
+   public
+      (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   protected
+      (* THE TOTALS WINDOW -- see TContestBase.TotalsDisplay (M9a). *)
+      function GetTotalsDisplay: TTotalsDisplay; override;
+   public
+      (* THE CANONICAL RECEIVED EXCHANGE -- see
+         TContestBase.CanonicalReceivedExchange (M9a). *)
+      function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
+   public
+      (* DOES IT HAVE A ZONE MULTIPLIER? -- see
+         TContestBase.HasZoneMultiplier (M11 S5 part 2). *)
+      function HasZoneMultiplier: boolean; override;
+      (* THE ZONE MULTIPLIER -- see TContestBase.ZoneMultiplierCount and
+         ZoneMultiplierZones (M11 S5). *)
+      function ZoneMultiplierCount: integer; override;
+      function ZoneMultiplierZones: TZoneMultiplierZones; override;
+   public
+      (* THE DOMESTIC QTH -- see TContestBase.DomesticMultiplierFromQTH
+         (M11 S6). *)
+      function DomesticMultiplierFromQTH(const aText: Str20;
+                                         var aMultiplier: Str10;
+                                         var aQTH: Str10;
+                                         var aFound: boolean): TDomesticQTHAnswer; override;
+      (* see TContestBase.DomesticQTHReplacesDXMultiplier (M11 S6). *)
+      function DomesticQTHReplacesDXMultiplier: boolean; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesZone: boolean; override;
    end;
 
 implementation
 
 uses
-   SysUtils, uContestRegistry;
+   uCabrilloExchange,
+   uExchangeFields,
+   SysUtils, uContestRegistry,
+   (* EmitADIFField -- the tag spellings are ADIF's. *)
+   uADIF,
+   (* StringIsAllNumbersOrSpaces -- the shape's zone-or-society split. *)
+   utils_text,
+   (* IsSingleNonNumericToken -- the single-word test. *)
+   uExchangeTokens,
+   uTR4WStrings,
+   uCanonicalExchange;
+
+function TContestIARU.ParseReceivedExchange(const aText: string;
+                                           const aSession: TReceivedExchangeSession;
+                                           var aExch: ContestExchange;
+                                           out aErrorMessage: string): boolean;
+begin
+   Result := inherited ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
+
+   (* NO SHAPE TEST -- THIS CONTEST'S SESSION ALWAYS PARSES
+      RSTZoneOrSocietyExchange, its trait, and no DescribeSession
+      states another, so the test that stood here was always true.
+      Deleted at M11 S2 (plan F11). *)
+   if (not StringIsAllNumbersOrSpaces(aText)) and
+      IsSingleNonNumericToken(aText)          and
+      (aExch.Zone = DUMMYZONE)                then
+      begin
+      aExch.Zone := aSession.ZoneOfCall(string(aExch.Callsign));
+      end;
+end;
 
 procedure TContestIARU.CalculateQSOPoints(var aQso: ContestExchange);
 begin
@@ -113,6 +216,84 @@ begin
    Result := 'IARU HF World Championship';
 end;
 
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestIARU.GetCabrilloName: string;
+begin
+   Result := 'IARU-HF';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestIARU.GetADIFContestId: string;
+begin
+   Result := 'IARU-HF';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestIARU.GetFriendlyName: string;
+begin
+   Result := 'IARU HF World Championship';
+end;
+
+function TContestIARU.GetWA7BNMId: integer;
+begin
+   Result := 67;
+end;
+
+function TContestIARU.GetQRZRUId: integer;
+begin
+   Result := 33;
+end;
+
+function TContestIARU.GetSubmissionEmail: string;
+begin
+   Result := 'iaruhf@iaru.org';
+end;
+
+function TContestIARU.GetDomesticFileName: string;
+begin
+   Result := 'iaruhq';
+end;
+
+function TContestIARU.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := ZoneInitialExchange;
+end;
+
+function TContestIARU.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTZoneOrSocietyExchange;
+end;
+
+function TContestIARU.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTZoneQTH;
+end;
+
+function TContestIARU.ParseReceivedExchangeFormat(const aText: string;
+                                                  aParsers: TExchangeParsers;
+                                                  var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTZoneOrSociety(aText, aExch);
+end;
+
+procedure TContestIARU.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   aMessages.WriteRSTStateOrZone(SendsStateAfterZone);
+end;
+
+function TContestIARU.ExchangeCarriesZone: boolean;
+begin
+   Result := True;
+end;
+
+function TContestIARU.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode, cfMultByBand];
+end;
+
 (* THE EXCHANGE IS RST AND EITHER A SOCIETY ABBREVIATION OR AN ITU ZONE.
 
    WHICH ONE FOLLOWS FROM WHO IS SENDING, on both sides independently: a society
@@ -132,47 +313,24 @@ end;
    spellings are kept so a future reader diffing against the legacy sees no
    difference at all.
 
-   THE SHARED ARM STAYS: RSTZoneOrDomesticQTH sits on the same body and belongs
-   to contests that have no class yet. *)
-function TContestIARU.GetFormatsExchange: boolean;
+   BOTH COLUMNS ARE HELPERS (M11 S9c): the state-or-zone layout is
+   uCabrilloExchange's, which the other RST-and-zone contests call too. *)
+function TContestIARU.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                              const aQso: ContestExchange;
+                                              const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := True;
+   Result := CabrilloSentRSTStateOrZone(aMy, aQso, aCtx);
 end;
 
-function TContestIARU.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                            const aQso: ContestExchange;
-                                            const aRSTSent: string): string;
+function TContestIARU.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                  const aQso: ContestExchange;
+                                                  const aCtx: TCabrilloQSOContext): string;
 begin
-   if aMy.MyState <> '' then
-      begin
-      Result := Format('%-3s %-7s', [aRSTSent, aMy.MyState]);
-      end
-   else
-      begin
-      Result := Format('%-3s %-7d', [aRSTSent, StrToIntDef(AnsiString(aMy.MyZone), 0)]);
-      end;
+   Result := CabrilloReceivedRSTQTHOrZone(aMy, aQso, aCtx);
 end;
 
-function TContestIARU.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                                const aQso: ContestExchange;
-                                                const aRSTReceived: string;
-                                                const aHisQTH: string): string;
-begin
-   (* aQso.QTHString, not aHisQTH: the legacy arm TESTS rx.QTHString and then
-      formats csQTHString, which the exporter set from it. The test and the
-      value are the same source. *)
-   if aQso.QTHString <> '' then
-      begin
-      Result := Format('%-3s %-7s', [aRSTReceived, aHisQTH]);
-      end
-   else
-      begin
-      Result := Format('%-3s %-7u', [aRSTReceived, aQso.Zone]);
-      end;
-end;
-
-function TContestIARU.FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                        const aQso: ContestExchange): string;
+function TContestIARU.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                          const aQso: ContestExchange): string;
 begin
    if aMy.MyState <> '' then
       begin
@@ -182,6 +340,131 @@ begin
       begin
       Result := Format('%-3d %-7d', [aQso.RSTSent, StrToIntDef(AnsiString(aMy.MyZone), 0)]);
       end;
+end;
+
+(* A HEADQUARTERS STATION'S SOCIETY GOES TO APP_TR4W_HQ -- M4, 2026-10-01,
+   the IARU arm of postunit's EmitContestSpecificTailForExport, moved here.
+   ADIF has no standard tag for an IARU society; this is TR4W's own, and
+   import reads it back (with N1MM's APP_N1MM_HQ). PostUnit asks only for a
+   non-empty QTH, and writes it, as the arm did. *)
+function TContestIARU.EmitADIFContestFields(const aQso: ContestExchange): string;
+begin
+   Result := EmitADIFField('APP_TR4W_HQ', string(aQso.QTHString));
+end;
+
+(* IARU SENDS RST PLUS EITHER A ZONE OR A SOCIETY, and only the society is a
+   QTH. The zone already arrived through ITUZ, and QTHString is what the export
+   tail turns into APP_TR4W_HQ -- so storing a zone here put both a <QTH> and
+   an <APP_TR4W_HQ> of '59 8' into every re-exported record, neither of which
+   D7 wrote.
+
+   The alphabetic test tells a society from a number. *)
+procedure TContestIARU.ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                       const aSession: TADIFImportSession;
+                                       var aExch: ContestExchange);
+var
+   srxExchange: string;
+begin
+   srxExchange := ExchangeFromSRXString(aTemps.SRX_String, aExch.RSTReceived);
+   if ADIFTextIsAlphabetic(srxExchange) then
+      begin
+      aExch.QTHString := ShortString(srxExchange);
+      end;
+end;
+
+(* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE --
+   LogCfg.tSetupExchangeNumbers' arm for it, moved here at M7a. See
+   TContestBase.CQExchangeDefault. *)
+function TContestIARU.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   if aStation.MyState <> '' then
+      begin
+      Result := ' 5NN ' + aStation.MyState;
+      end
+   else
+      begin
+      Result := ' 5NN ' + aStation.MyZoneText;
+      end;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for BSCI.
+   The same steps on ticking the box stood for BSCI.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestIARU.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.OfferIAmIn(TC_HQ_OR_MEMBER);
+   aPrompts.AskFieldWithCommentWhenInside('', ncfMyState);
+end;
+
+(* THE TOTALS WINDOW LABELS THE DOMESTIC MULTIPLIERS AS HQ STATIONS --
+   uTotal's two IARU arms, moved here at M9a (2026-10-02): the HQ and member
+   society stations are this contest's domestic multipliers. *)
+function TContestIARU.GetTotalsDisplay: TTotalsDisplay;
+begin
+   Result := inherited GetTotalsDisplay;
+   Result.DomesticMultsCaption := TC_HQMULTS;
+   Result.DomesticMultsCaptionCW := 'CW HQ';
+   Result.DomesticMultsCaptionPhone := 'Ph HQ';
+end;
+
+(* THE CANONICAL RECEIVED EXCHANGE -- uExchangeBuilder's arm for this
+   contest, moved here at M9a (2026-10-02): the RST and the zone, the arm
+   it shared with CQ WW. See TContestBase.CanonicalReceivedExchange; the
+   caller collapses the whitespace. *)
+function TContestIARU.CanonicalReceivedExchange(const aQso: ContestExchange): string;
+begin
+   Result := RSTReceivedText(aQso) + ' ' + IntToStr(aQso.Zone);
+end;
+
+(* THE ZONE MULTIPLIER -- M11 S5, 2026-10-14: the ITU zones, at every
+   station. What the trait's ITUZones gave LOGDUPE's zone count and the
+   zone-list readers (LOGEDIT, POSTUNIT) through the session kind until
+   S5. *)
+function TContestIARU.ZoneMultiplierCount: integer;
+begin
+   Result := ITU_ZONE_MULTIPLIERS;
+end;
+
+(* IT HAS A ZONE MULTIPLIER, AT EVERY STATION -- M11 S5 part 2,
+   2026-10-14: the answer the session kind gave (`kind <> NoZoneMults`)
+   before the kind was deleted. *)
+function TContestIARU.HasZoneMultiplier: boolean;
+begin
+   Result := True;
+end;
+
+function TContestIARU.ZoneMultiplierZones: TZoneMultiplierZones;
+begin
+   Result := zmzITUZones;
+end;
+
+
+(* THE DOMESTIC QTH -- M11 S6 part 1, 2026-10-14, moved from LOGDOM.GetDomQTH's
+   WYSIWYGDomestic arm (the trait): the text as received is both the multiplier and
+   the QTH, cut to the field's ten characters, and it is always found. *)
+function TContestIARU.DomesticMultiplierFromQTH(const aText: Str20;
+                                                var aMultiplier: Str10;
+                                                var aQTH: Str10;
+                                                var aFound: boolean): TDomesticQTHAnswer;
+begin
+   aMultiplier := aText;
+   aQTH := aText;
+   aFound := True;
+   Result := dqaDecided;
+end;
+
+(* A DOMESTIC QTH TAKES THE PLACE OF THE DX MULTIPLIER -- M11 S6 part 1,
+   moved from LOGDUPE.GetDXQTH's `= WYSIWYGDomestic` guard (the trait). See
+   TContestBase.DomesticQTHReplacesDXMultiplier. *)
+function TContestIARU.DomesticQTHReplacesDXMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 initialization

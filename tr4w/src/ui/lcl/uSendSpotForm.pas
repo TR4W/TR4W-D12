@@ -74,8 +74,9 @@ implementation
 
 uses
   uLCLFormHelpers,   // ShowModalOverWin32Parent -- ownership and centring
-  VC,           // RC_* captions, ContestTypeSA, tContestNameInComment
-  PostUnit,     // Contest -- the active contest type
+  VC,           // RC_* captions, tContestNameInComment
+  PostUnit,     // Contest -- the active contest
+  uContestRegistry, // ContestId -- the contest's name, for the comment
   TF,           // FreqToPChar
   LogStuff,     // CallWindowString
   LogEdit,      // VisibleLog.LastEntry
@@ -145,7 +146,7 @@ begin
 
    if tContestNameInComment then
       begin
-      edtComment.Text := string(ContestTypeSA[Contest]);
+      edtComment.Text := ContestId(Contest);
       end
    else
       begin

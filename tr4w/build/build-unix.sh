@@ -698,6 +698,30 @@ compile() {
 }
 
 # ---------------------------------------------------------------------------
+# STAGE 3b -- the language catalogues.
+#
+# tr4w_languages.res is a TRACKED binary the app and the tests link, generated
+# from i18n/tr4w_*.po by Make-LanguageRes.ps1.  Windows regenerates it on every
+# build; THIS platform cannot (PowerShell, and a Windows-hosted fpcres), so it
+# checks that the committed one matches the catalogues and FAILS the run when it
+# does not.  Without this, a .po committed without its .res shipped in no binary
+# and nothing said so -- two catalogue commits sat unlinked for two weeks.
+# The build still goes on to the app stage so the summary stays a worklist.
+# ---------------------------------------------------------------------------
+stage_languages() {
+   phase 'Language catalogues'
+   _lr=$(sh "$BUILD_DIR/check-language-res.sh" 2>&1)
+   _rc=$?
+   say "$_lr" | sed 's/^/  /'
+   case "$_rc" in
+      0) record PASS 'languages' 'tr4w_languages.res matches the catalogues' ;;
+      1) record FAIL 'languages' 'tr4w_languages.res is STALE: run Build-App.ps1 on Windows and commit the .res and .inputs' ;;
+      *) record FAIL 'languages' 'could not compare tr4w_languages.res with the catalogues' ;;
+   esac
+   return 0
+}
+
+# ---------------------------------------------------------------------------
 # STAGE 4 -- the application.
 # ---------------------------------------------------------------------------
 stage_app() {
@@ -1280,12 +1304,25 @@ stage_package() {
       bundle="$stage/TR4W.app"
       mkdir -p "$bundle/Contents/MacOS" "$bundle/Contents/Resources"
       # Move the data payload inside the bundle, where a Mac app finds it.
+      #
+      # A FAILED MOVE FAILS THE STAGE, naming the item. This was
+      # `mv ... 2>/dev/null || true`, which shipped a bundle missing whatever
+      # would not move, with no error anywhere (GitHub issue #90). Every item
+      # is still attempted, so one run names ALL of them, not just the first.
+      _mvfailed=''
       for item in "$stage"/*; do
          case "$item" in
             "$bundle") continue ;;
          esac
-            mv "$item" "$bundle/Contents/Resources/" 2>/dev/null || true
+         if ! mv "$item" "$bundle/Contents/Resources/"; then
+            _mvfailed="$_mvfailed $(basename "$item")"
+         fi
       done
+      if [ -n "$_mvfailed" ]; then
+         say "  FAILED: could not move into TR4W.app/Contents/Resources:$_mvfailed"
+         record FAIL 'package' "could not move into the bundle:$_mvfailed"
+         return 1
+      fi
       cp "$APP_EXE" "$bundle/Contents/MacOS/tr4w"
       chmod +x "$bundle/Contents/MacOS/tr4w"
 
@@ -1317,6 +1354,13 @@ stage_package() {
          record FAIL 'package' 'no CFBundleLocalizations could be derived'
          return 1
       fi
+
+      # ENGLISH IS ADDED, NOT READ: it is the compiled-in language and has
+      # no catalogue, so the .res holds no TR4W_EN (tr4w_en.po was deleted
+      # 2026-10-21). Added AFTER the check above, so an unreadable .res
+      # still fails rather than declaring English alone.
+      localizations="    <string>en</string>
+$localizations"
 
       cat > "$bundle/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -2110,6 +2154,10 @@ fi
 APP_EXE="$OUTROOT/app-$ARCH/tr4w"
 SERVER_EXE="$OUTROOT/server-$ARCH/tr4wserver"
 TEST_EXE="$TEST_DIR/tr4w_unit_tests_$OS"
+
+case "$WANT" in
+   all|app|tests) stage_languages ;;
+esac
 
 case "$WANT" in
    all)

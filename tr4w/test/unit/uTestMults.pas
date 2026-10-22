@@ -5,7 +5,7 @@ unit uTestMults;
   Tests for uMults multiplier add / check / count (Issue #1034,
   pre-migration roadmap item 3).
 
-  Scope: the zone-multiplier path of MultsObject, which is fully
+  Scope: the zone-multiplier path of TMultsObject, which is fully
   self-contained (fixed-size arrays inside the object, no cty.dat and no
   file backing). DX mults are deliberately NOT covered here because
   SetDXMult gates on CTY.ctyNumberCountries, i.e. it needs a loaded
@@ -56,20 +56,18 @@ implementation
 uses
    VC, uMults;
 
-// Module-level instance: MultsObject embeds large fixed arrays, so keep it
-// off the test stack. Its TSortedStringList sub-lists are Init'd once; ClearAllMults gives
-// each test a clean slate (and is itself under test).
+// Module-level instance, the suite's own (it shadows uMults.mo): created once,
+// freed at finalization; ClearAllMults gives each test a clean slate (and is
+// itself under test). A class since pointer audit P8 (2026-10-17) -- it was an
+// old-style object held by value, its sorted lists Init'd here.
 var
-   mo: MultsObject;
-   moInited: boolean;
+   mo: TMultsObject;
 
 procedure TMultsTests.FreshMults;
 begin
-   if not moInited then
+   if mo = nil then
       begin
-      mo.PrfList.Init;
-      mo.DomList.Init;
-      moInited := True;
+      mo := TMultsObject.Create;
       end;
    mo.ClearAllMults;
 end;
@@ -169,5 +167,9 @@ begin
    Test_OutOfRangeZone;
    Test_ZoneCount;
 end;
+
+finalization
+   mo.Free;
+   mo := nil;
 
 end.

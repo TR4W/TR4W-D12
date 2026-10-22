@@ -65,9 +65,51 @@ function UKEIStation(ID: string): boolean;
 function GetPrefix(Call: string): string;
 function GetOblast(Call: string): string;
 function MobileCall(Call: string): boolean;  //n4af 4.41.8
+function MarineOrAirMobileStation(Call: string): boolean;
 //function IsUA1AStation(Call: string): boolean;
 function StandardCallFormat(Call: string; Complete: boolean): string;
 function GetRussiaOblastID(Call: string): string; //
+
+(* A RUSSIAN STATION'S OBLAST -- THE ONE RULE (Q50, NY4I, 2026-10-15).
+
+   GetRussiaOblastID of the call when RussianID of its CTY.DAT COUNTRY says
+   the station is Russian, else ''. So any 'R...' entity counts (Franz Josef
+   Land's R1FJ, for instance), and a Russian call in the UB..UI blocks does
+   too -- the country decides, never the call's first letters.
+
+   It was written three ways that disagreed: the dead initial exchange from a
+   call (country beginning 'UA'), LOGEDIT's initial-exchange fallback (this
+   rule -- the one that ran, in D7 and here) and the need-multiplier hint
+   (RussianID of the raw CALL, which missed UB..UI). Each contest that wants a
+   Russian oblast calls this from its own code; nothing selects it.
+
+   aCall may be raw: GetRussiaOblastID answers '' for a call holding '/'. *)
+function RussianStationOblast(const aCall: string; const aCountryID: string): string;
+
+(* ARE THE TWO CALLS IN THE SAME RUSSIAN FEDERAL OKRUG? -- the CQ-M contest's
+   one-point rule for a Russian station working another.
+
+   LIFTED FROM LOGSTUFF LINE FOR LINE AT M7b (2026-10-02), so the CQ-M class
+   and the engine's legacy arm ask one function: a contest class may not call
+   TRDOS (docs/CONTEST_OWNERSHIP_DESIGN.md 1.3). The station's own call was the
+   MY CALL global there; it is a parameter here, which is the whole change.
+
+   TRUE WHEN IT CANNOT TELL -- a portable call, a call with no oblast, or an
+   oblast with no okrug -- exactly as the engine's version answered. *)
+function InSameFederalOkrug(const aMyCall: string; const aHisCall: string): boolean;
+
+(* IS THIS A PORTABLE STATION? -- a call whose last '/' part is a single
+   digit, P or M (G4ABC/P, DL1XYZ/3, F5AA/M). The Region 1 Field Day's
+   points read it.
+
+   LIFTED FROM TREE LINE FOR LINE AT M7b BATCH 2 (2026-10-02), so the Region 1
+   Field Day class and the engine's legacy EuropeanFieldDay arm ask one
+   function: a contest class may not call TRDOS
+   (docs/CONTEST_OWNERSHIP_DESIGN.md 1.3). Tree's copy took a CallString and
+   kept the tail in a Str20; a callsign is shorter than either, so the string
+   here changes nothing. Only the second '/' part is looked through, as
+   before: K/G4ABC/P answers P. *)
+function PortableStation(const aCall: string): boolean;
 function CaliforniaCall(Call: string): boolean;
 function RootCall(Call: string): string;
 function RoverCall(Call: string): boolean;
@@ -242,7 +284,12 @@ begin
 end;
 function FrenchID(ID: string): boolean;
 begin
-  Result := (ID[1] = 'F') or (ID = 'TM') or (ID = 'TK');
+  (* AN EMPTY ID IS NOT FRENCH, AND ASKING MUST NOT RAISE (design defect #6,
+    fixed M5a). ID[1] on an empty string is a range error, and both callers
+    hand this a QTH.CountryID that is empty whenever the country lookup found
+    nothing -- a call the cty file does not know, or a record that never had
+    one looked up. The REF scoring arm and the REF exchange parser both ask. *)
+  Result := ((Length(ID) > 0) and (ID[1] = 'F')) or (ID = 'TM') or (ID = 'TK');
 end;
 function RussianID(ID: string): boolean;
 begin
@@ -504,6 +551,15 @@ begin
   if reg = rtUnknownRegion then Exit;
   Result := Char(RussianRegionsTypeIdArray[reg][0]) + Char(RussianRegionsTypeIdArray[reg][1]);   // was Result[0]:=#2; Result[1]:=AnsiChar(r[0]); Result[2]:=AnsiChar(r[1]);
 end;
+
+function RussianStationOblast(const aCall: string; const aCountryID: string): string;
+begin
+   Result := '';
+   if RussianID(aCountryID) then
+      begin
+      Result := GetRussiaOblastID(aCall);
+      end;
+end;
 function CaliforniaCall(Call: string): boolean;
 begin
   CaliforniaCall := False;
@@ -546,6 +602,52 @@ end;
 function MobileCall(Call: string): boolean;      //n4af 4.41.8
 begin
   MobileCall := UpperCase(Copy(Call, length(Call) - 1, 2)) = '/M';
+end;
+
+(* '/AM' OR '/MM' -- AIR MOBILE OR MARITIME MOBILE.
+
+   LIFTED OUT OF LOGSTUFF ON 2026-09-29, NOT COPIED. The Virginia QSO Party
+   scores such a station at three points, so a contest class needs to ask the
+   question -- and the answer lived in LOGSTUFF, whose dependency cone is the
+   whole TRDOS engine. Duplicating it into the contest factory would have made
+   two copies of one predicate, which is the drift CLAUDE.md forbids; so the
+   single copy moved HERE, beside MobileCall and RoverCall, which are the same
+   kind of suffix test on the same kind of leaf unit. LOGSTUFF's two callers
+   resolve to this one -- it already has uCallSignRoutines in its interface
+   uses.
+
+   FAITHFUL, INCLUDING THE PARTS THAT LOOK LIKE OVERSIGHTS. It is
+   case-SENSITIVE (the original did no UpperCase, unlike MobileCall directly
+   above), and it requires at least four characters, so a bare '/AM' is not a
+   marine station. Both are reproduced rather than corrected: this move must
+   change no score.
+
+   THE ONE CHANGE IS THE PARAMETER TYPE -- CallString became string, matching
+   every other routine in this unit. Callers pass ContestExchange.Callsign, a
+   ShortString, which converts at the call site; callsigns are ASCII, so the
+   char comparisons below are identical either way.
+
+   The original also used `Call[l - 1] in ['A', 'M']`, which does not compile
+   against a WideChar. It is written out as two comparisons, which is what the
+   set meant. *)
+function MarineOrAirMobileStation(Call: string): boolean;
+var
+   l: integer;
+begin
+   Result := False;
+   l := Length(Call);
+   if l < 4 then
+      begin
+      Exit;
+      end;
+   if Call[l - 2] <> '/' then
+      begin
+      Exit;
+      end;
+   if (Call[l] = 'M') and ((Call[l - 1] = 'A') or (Call[l - 1] = 'M')) then
+      begin
+      Result := True;
+      end;
 end;
 function SimilarCall(Call1: string; Call2: string): boolean;
 { This function will return true if the two calls only differ in one
@@ -715,5 +817,69 @@ end;
 function ValidCallCharacter(CallChar: Char): boolean;
 begin
   Result := CallChar in ['/', '0'..'9', 'A'..'Z'];
+end;
+
+function InSameFederalOkrug(const aMyCall: string; const aHisCall: string): boolean;
+var
+   myOblast, hisOblast: string;
+   o1, o2: OkrugType;
+begin
+   Result := True;
+   if StringHas(aMyCall, '/') then
+      begin
+      Exit;
+      end;
+   myOblast := GetOblast(aMyCall);
+   if myOblast = '' then
+      begin
+      Exit;
+      end;
+
+   if StringHas(aHisCall, '/') then
+      begin
+      Exit;
+      end;
+   hisOblast := GetOblast(aHisCall);
+   if hisOblast = '' then
+      begin
+      Exit;
+      end;
+
+   o1 := GetOkrugByOblast(GetRussiaOblastByTwoChars(myOblast[1], myOblast[2]));
+   if o1 = foUnKnownOkrug then
+      begin
+      Exit;
+      end;
+
+   o2 := GetOkrugByOblast(GetRussiaOblastByTwoChars(hisOblast[1], hisOblast[2]));
+   if o2 = foUnKnownOkrug then
+      begin
+      Exit;
+      end;
+
+   Result := o1 = o2;
+end;
+
+function PortableStation(const aCall: string): boolean;
+var
+   tail: string;
+   c: Char;
+begin
+   Result := False;
+   tail := PostcedingString(aCall, '/');
+
+   if StringHas(tail, '/') then
+      begin
+      tail := PostcedingString(tail, '/');
+      end;
+
+   if Length(tail) = 1 then
+      begin
+      c := tail[1];
+      if ((c >= '0') and (c <= '9')) or (c = 'P') or (c = 'M') then
+         begin
+         Result := True;
+         end;
+      end;
 end;
 end.

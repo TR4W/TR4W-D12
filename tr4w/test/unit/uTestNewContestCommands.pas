@@ -64,7 +64,8 @@ implementation
 
 uses
    SysUtils, fpjson,
-   uCFG, uSettingsModel, uTR4WConfigFile, uNewContestCommands;
+   uCFG, uSettingsModel, uTR4WConfigFile, uNewContestCommands,
+   uLogContestStatements;   (* StationFactRow -- what the capture writes for a fact *)
 
 const
    GRID_SENTINEL = 'EL98';
@@ -121,9 +122,24 @@ end;
 
 procedure TNewContestCommandsTests.CheckCaptured(const aCommand,
    aExpected: string);
+var
+   value, source: string;
 begin
-   CheckEquals(aExpected, CFGCommandValueAsString(aCommand),
-               aCommand + ' holds the value chosen in New Contest');
+   (* A STATION FACT (MY FD CLASS, MY SECTION...) IS THIS CONTEST'S OVERRIDE
+     since design 7.12, and the capture writes the override -- so ask what
+     the capture writes. MY CALL is not a fact and reads as it always did. *)
+   if StationFactRow(Settings, aCommand, value, source) then
+      begin
+      CheckEquals(aExpected, value,
+                  aCommand + ' is captured with the value chosen in New Contest');
+      CheckEquals('contest', source,
+                  aCommand + ' is captured as the contest''s override');
+      end
+   else
+      begin
+      CheckEquals(aExpected, CFGCommandValueAsString(aCommand),
+                  aCommand + ' holds the value chosen in New Contest');
+      end;
    CheckTrue(CommandCameFromContestCFG(aCommand),
              aCommand + ' is marked as the CONTEST''S, so the log captures ' +
              'it with source = contest');
@@ -182,8 +198,14 @@ begin
    CheckEquals('W4TA', Settings.My.Call, 'MY CALL is My.Call');
    CheckEquals('NY4I', Settings.My.MainCallsign,
                'and NOT My.MainCallsign, which still holds the station''s call');
-   CheckEquals('3A', Settings.My.FdClass, 'MY FD CLASS is My.FdClass');
-   CheckEquals('WCF', Settings.My.Section, 'MY SECTION is My.Section');
+   (* THE CONTEST'S VALUES ARE OVERRIDES, the station's are untouched --
+     design 7.12. Before it, the dialog wrote 3A and WCF INTO the station's
+     My.FdClass and My.Section, and any later save in the session carried
+     them into the station file (asserted at the end of this test). *)
+   CheckEquals('3A', Settings.My.ResolvedFdClass, 'this contest is class 3A');
+   CheckEquals('WCF', Settings.My.ResolvedSection, 'in section WCF');
+   CheckEquals('1D', Settings.My.FdClass, 'the station is still class 1D');
+   CheckEquals('NFL', Settings.My.Section, 'in section NFL');
 
    onDisk := TR4WSettings.Create;
    try
@@ -195,6 +217,23 @@ begin
       CheckEquals('1D', onDisk.My.FdClass, 'and so is its class');
       CheckEquals(GRID_SENTINEL, onDisk.My.Grid,
                   'and every other station setting');
+   finally
+      onDisk.Free;
+   end;
+
+   (* A SAVE DURING THE CONTEST -- a Preferences edit, the insert-mode
+     toggle -- writes the whole settings section from the object. Before
+     7.12 that carried the contest's class and section into the station's
+     file. MY CALL is not asserted: the club call is not a station fact yet
+     (Q65). *)
+   SaveSettings(FFile, Settings);
+   onDisk := TR4WSettings.Create;
+   try
+      LoadSettingsForStartup(FFile, onDisk);
+      CheckEquals('1D', onDisk.My.FdClass,
+                  'a save mid-contest keeps the station''s class');
+      CheckEquals('NFL', onDisk.My.Section,
+                  'and its section');
    finally
       onDisk.Free;
    end;

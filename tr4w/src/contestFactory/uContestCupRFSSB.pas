@@ -1,0 +1,402 @@
+(*
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+
+ This file is part of TR4W  (SRC)
+
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+ *)
+
+(* THE RUSSIAN CUP (RF CUP), SSB.
+
+  The ContestsArray row this class states, verbatim:
+
+   Email: '';  DF: (commented out -- blank);  WA7BNM: 0;  QRZRUID: 24;
+   Pxm: NoPrefixMults;  ZnM: NoZoneMults;  AIE: NoInitialExchange;  DM: GridFields;  P: 0;
+   AE: QSONumberAndGridSquare;  XM: NoDXMults;  QP: CupRFMethod;
+   ADIFName: '';  CABName: '';  FriendlyName: ''
+
+  Blank ADIFName, CABName and FriendlyName resolve to the enum's spelling,
+  'RF-CUP-SSB'.
+
+  WHY IT HAS A CLASS NOW. M6 (2026-10-02) moved the final score onto the
+  contest, and this contest's formula was LogEdit.TotalScore's
+  `ActiveQSOPointMethod = CupRFMethod` test -- the session's POINT METHOD, so an
+  operator's QSO POINT METHOD line reached it in any contest. A class to hold
+  that formula needed the whole row and the scoring arm with it, because
+  registering a class makes the class this contest's scorer too. Both are
+  transcribed exactly; Test_MovedRowValuesStillMatchTheArray holds the row,
+  and the contest matrix the rest -- every line of its record but
+  `contest.class` is unchanged, its totals included, which is the proof.
+
+  A SIBLING OF THE CW AND DIGITAL RUNNINGS, NOT A FAMILY (design 1.5, Q7). NY4I's ruling that a
+  two-mode contest gets a base names NRAU-Baltic only, and extending it to
+  every pair is his open Q7 -- so, as with the SAC pair, the runnings are
+  siblings and each owns its copy (design 1.4).
+
+  ITS FINAL SCORE: the points PLUS 100 for each multiplier, not times --
+  LogEdit.TotalScore's CupRFMethod arm, moved at M6.
+
+  SCORING, transcribed from CupRFMethod: by the distance between the two
+  grids (LOGGRID.GetDistanceBetweenGrids, the geodesic ARRL-DIGI also calls),
+  35 to 62 points, or 1 without both grids. *)
+unit uContestCupRFSSB;
+
+{$I tr4w.inc}
+
+interface
+
+uses
+   VC, uContestBase;
+
+type
+   TContestCupRFSSB = class(TContestBase)
+   protected
+      (* PROTECTED, MATCHING THE BASE -- callers use the properties,
+         descendants override the getters. Every getter below states
+         the ContestsArray row quoted above. *)
+      function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetFriendlyName: string; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
+
+      (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
+      function GetFlags: TContestFlags; override;
+      function GetIsUSQSOParty: boolean; override;
+      (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
+         TContestBase: ScoreQSO is the one public scoring entry. *)
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+      (* THE SPONSOR'S FORMULA -- see the header. *)
+      function CombineWithMultipliers(const aTotals: TScoreTotals): longint; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+      (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   protected
+      (* THE HOUR-BY-HOUR REPORT -- see TContestBase.ReportsRunningScore (M9a). *)
+      function GetReportsRunningScore: boolean; override;
+   public
+      (* THE DOMESTIC QTH -- see TContestBase.DomesticMultiplierFromQTH
+         (M11 S6). *)
+      function DomesticMultiplierFromQTH(const aText: Str20;
+                                         var aMultiplier: Str10;
+                                         var aQTH: Str10;
+                                         var aFound: boolean): TDomesticQTHAnswer; override;
+      (* THE NEED-MULTIPLIER HINT -- see
+         TContestBase.DomesticMultiplierHint (M11 S6). *)
+      function DomesticMultiplierHint(const aText: Str14): string; override;
+      (* THE GRID FIELD -- see TContestBase.HasGridFieldMultiplier
+         (M11 S6). *)
+      function HasGridFieldMultiplier: boolean; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesGridSquare: boolean; override;
+   end;
+
+implementation
+
+uses
+   uExchangeFields,
+   uCabrilloExchange,
+   uADIFExchange,
+   (* RDADistrictKey, DOKKey, GridSquareKey, GridFieldKey -- the shared
+      domestic-QTH shapes (M11 S6). *)
+   uDomesticKey,
+   uContestRegistry,
+   (* GetDistanceBetweenGrids -- the arm's own geodesic; see
+      uContestARRLDigi for why it is the TRDOS unit. *)
+   LOGGRID,
+   uTR4WStrings;
+
+(* CupRFMethod, transcribed. With both grids known, the points rise with the
+   distance between them -- 35 up to 2000 km, then 38, 42, 47, 52 and 57 by
+   each further 1000 km, and 62 beyond 7000; without them, 1. The received
+   grid is the QTH as typed (QTHString), as the arm read it. *)
+procedure TContestCupRFSSB.CalculateQSOPoints(var aQso: ContestExchange);
+var
+   distance: longint;
+begin
+   if (Station.MyGrid <> '') and (aQso.QTHString <> '') then
+      begin
+      distance := GetDistanceBetweenGrids(Station.MyGrid, string(aQso.QTHString));
+
+      if distance > 7000 then
+         begin
+         aQso.QSOPoints := 62;
+         end;
+      if distance <= 7000 then
+         begin
+         aQso.QSOPoints := 57;
+         end;
+      if distance <= 6000 then
+         begin
+         aQso.QSOPoints := 52;
+         end;
+      if distance <= 5000 then
+         begin
+         aQso.QSOPoints := 47;
+         end;
+      if distance <= 4000 then
+         begin
+         aQso.QSOPoints := 42;
+         end;
+      if distance <= 3000 then
+         begin
+         aQso.QSOPoints := 38;
+         end;
+      if distance <= 2000 then
+         begin
+         aQso.QSOPoints := 35;
+         end;
+      end
+   else
+      begin
+      aQso.QSOPoints := 1;
+      end;
+end;
+
+function TContestCupRFSSB.CombineWithMultipliers(const aTotals: TScoreTotals): longint;
+begin
+   Result := ContestPoints(aTotals) + 100 * SummedMultipliers(aTotals);
+end;
+
+function TContestCupRFSSB.GetDisplayName: string;
+begin
+   (* The contest's human name: the DXLog name, in English (design Q53,
+      docs/Q53_CONTEST_NAMES.csv). *)
+   Result := 'Russian Cup Contest, SSB';
+end;
+
+function TContestCupRFSSB.GetCabrilloName: string;
+begin
+   (* The row's CABName is blank; the Cabrillo header writes the enum's spelling. *)
+   Result := 'RF-CUP-SSB';
+end;
+
+function TContestCupRFSSB.GetADIFContestId: string;
+begin
+   (* The row's ADIFName is blank; export writes the enum's spelling, and import matches it (M1). *)
+   Result := 'RF-CUP-SSB';
+end;
+
+function TContestCupRFSSB.GetWA7BNMId: integer;
+begin
+   Result := 0;
+end;
+
+function TContestCupRFSSB.GetQRZRUId: integer;
+begin
+   Result := 24;
+end;
+
+function TContestCupRFSSB.GetSubmissionEmail: string;
+begin
+   Result := '';
+end;
+
+function TContestCupRFSSB.GetDomesticFileName: string;
+begin
+   (* The row's DF is commented out in VC.pas (it reads DF: 'grids' inside a comment), so it is blank. *)
+   Result := '';
+end;
+
+function TContestCupRFSSB.GetFriendlyName: string;
+begin
+   (* The display name above -- design Q53. *)
+   Result := 'Russian Cup Contest, SSB';
+end;
+
+function TContestCupRFSSB.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := NoInitialExchange;
+end;
+
+function TContestCupRFSSB.GetExchangeKind: ExchangeType;
+begin
+   Result := QSONumberAndGridSquare;
+end;
+
+function TContestCupRFSSB.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsQSONumberQTH;
+end;
+
+function TContestCupRFSSB.ParseReceivedExchangeFormat(const aText: string;
+                                                      aParsers: TExchangeParsers;
+                                                      var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseQSONumberAndGridSquare(aText, aExch);
+end;
+
+function TContestCupRFSSB.ExchangeCarriesGridSquare: boolean;
+begin
+   Result := True;
+end;
+
+function TContestCupRFSSB.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                              const aQso: ContestExchange): string;
+begin
+   (* THE SERIAL AND THE GRID SENT (MY STATE IS THE GRID THIS CONTEST SENDS,
+      design 7.11) -- the same text the Cabrillo sent column prints. Plan F25,
+      fixed 2026-10-14 (NY4I): the machine's format for this exchange
+      ('%-3s' of a number) raised, and STX_STRING carried a placeholder. *)
+   Result := ADIFSentQSONumberStateShort(aMy, aQso);
+end;
+
+function TContestCupRFSSB.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                  const aQso: ContestExchange;
+                                                  const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentQSONumberStateShort(aMy, aQso, aCtx);
+end;
+
+function TContestCupRFSSB.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                      const aQso: ContestExchange;
+                                                      const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedQSONumberQTHShort(aMy, aQso, aCtx);
+end;
+
+function TContestCupRFSSB.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfMultByBand, cfErmakSpecification];
+end;
+
+function TContestCupRFSSB.GetIsUSQSOParty: boolean;
+begin
+   (* P: 0 -- not a US state QSO party. *)
+   Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation.
+   The arm named CUPRFCW, CUPRFSSB, CUPRFDIG; each of them holds its own
+   copy (design 1.4), so a sponsor changing one changes one. *)
+procedure TContestCupRFSSB.DescribeSession(const aStation: TStationContext;
+                                           aSession: TSessionDefaults);
+begin
+   aSession.Mode := Phone;
+   aSession.SentState := aStation.MyGrid;
+   aSession.LiteralDomesticQTH := True;
+end;
+
+(* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE --
+   LogCfg.tSetupExchangeNumbers' arm for it, moved here at M7a. See
+   TContestBase.CQExchangeDefault. *)
+function TContestCupRFSSB.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   (* THE STATE SENT -- the grid DescribeSession stated for the session.
+      aStation.MyState is FCONTEST.SentMyState since M9a (design 7.11); the
+      grid used to be written into MY STATE itself, and read back here. *)
+   Result := ' # ' + aStation.MyState;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for ARRLDIGI, ARRLVHFJAN, ARRLVHFJUN,
+   ARRLVHFSEP, BATAVIA_FT8, CQVHF, CUPRFCW, CUPRFDIG, MAKROTHEN, RTC,
+   STEWPERRY, TESLA, WWDIGI.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestCupRFSSB.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskFieldWithComment(TC_ENTERYOURFOURDIGITGRIDSQUARE, ncfMyGrid);
+end;
+
+(* THE HOUR-BY-HOUR REPORT CARRIES NO RUNNING SCORE -- PostUnit.PrintHourTotals
+   named this contest among the seven whose score is not points times
+   multipliers hour by hour (M9a, 2026-10-02). Each of the seven holds its own copy (design 1.4). *)
+function TContestCupRFSSB.GetReportsRunningScore: boolean;
+begin
+   Result := False;
+end;
+
+
+(* THE DOMESTIC QTH -- M11 S6 part 1, 2026-10-14, moved from LOGDOM.GetDomQTH's
+   GridFields arm (the trait): a four-character grid square gives its key; the QTH is the text. Anything
+   else is not found, and the domestic file is never consulted. *)
+function TContestCupRFSSB.DomesticMultiplierFromQTH(const aText: Str20;
+                                                    var aMultiplier: Str10;
+                                                    var aQTH: Str10;
+                                                    var aFound: boolean): TDomesticQTHAnswer;
+var
+   key: ShortString;
+begin
+   if GridFieldKey(aText, key) then
+      begin
+      aMultiplier := key;
+      aQTH := aText;
+      aFound := True;
+      end;
+   Result := dqaDecided;
+end;
+
+(* THE NEED-MULTIPLIER HINT -- M11 S6 part 1, moved from LOGSTUFF.
+   DomStringParse's GridFields arm: the key, or '' for a text that is not one. *)
+function TContestCupRFSSB.DomesticMultiplierHint(const aText: Str14): string;
+var
+   key: ShortString;
+begin
+   if GridFieldKey(aText, key) then
+      begin
+      Result := string(key);
+      end
+   else
+      begin
+      Result := '';
+      end;
+end;
+
+(* THE DOMESTIC MULTIPLIER IS THE GRID FIELD -- M11 S6 part 1, moved from
+   uMults.IsDmMult's and uWSJTX's `= GridFields`. See
+   TContestBase.HasGridFieldMultiplier. *)
+function TContestCupRFSSB.HasGridFieldMultiplier: boolean;
+begin
+   Result := True;
+end;
+
+initialization
+   RegisterContest(CUPRFSSB, TContestCupRFSSB);
+
+end.

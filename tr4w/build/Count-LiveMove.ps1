@@ -47,16 +47,39 @@
 # the file set does not contain src\MainUnit.pas, which is what a wrong -Root
 # looks like: zero files, zero hits, and a green-looking answer.
 #
-# THIS IS A MEASUREMENT, NOT A GATE. It is not in Run-Lints and has no ceiling.
-# The count is not supposed to reach zero on its own schedule: each site is
-# converted by the specialist who owns it, and a (c) byte-framing site becomes
-# TBytes, not nothing.
+#   .\Count-LiveMove.ps1 -Gate       # what Run-Lints runs: fails over $MOVE_CEILING
+#
+# WITHOUT -Gate THIS IS A MEASUREMENT. WITH IT, IT IS A RATCHET (P15), listed in
+# Run-Lints.ps1 as 'Count-LiveMove'. The count is not supposed to reach zero on
+# its own schedule: each site is converted by the specialist who owns it, and a
+# (c) byte-framing site becomes TBytes, not nothing -- the ceiling only stops it
+# growing.
 
 param(
+   # -SourceDir is the name Run-Lints.ps1 passes to every lint.
+   [Alias('SourceDir')]
    [string] $Root   = (Split-Path -Parent $PSScriptRoot),
    [switch] $Detail,
-   [switch] $SelfTest
+   [switch] $SelfTest,
+   # The build gate: quiet, fails over $MOVE_CEILING. See below.
+   [switch] $Gate
 )
+
+# THE CEILING (pointer audit P15, 2026-10-17). Ratchets DOWN only: when the
+# count falls, lower this to the new number in the same commit; never raise it.
+# Split a clear into field initialisation rather than raising it. The count
+# went 387 -> 464 in four weeks, all new FillChar, before anything held it.
+# 466 -> 453, 2026-10-17: P8 -- TSortedStringList, TMultsObject and
+# TCallsignsList are classes over TObjectList; their hand shifts and clears
+# went, and so did the tests' FillChar of an object by its type's size.
+# 453 -> 444, 2026-10-18: P12 -- untyped byte buffers became open arrays:
+# uSHA256 (one Move, two FillChar), uWinKey.wkWriteRaw (one Move), and the
+# five FillChar in uTestNetFraming became a zeroing loop.
+$MOVE_CEILING = 444
+# Floors for -Gate: the tree has ~800 Pascal files and several hundred live
+# calls, so fewer than these means the reader failed, not that the tree is clean.
+$FILE_FLOOR  = 300
+$COUNT_FLOOR = 100
 
 # The shared reader, with -BlankStrings: a string literal that reads
 # 'Move failed' is not a call. See PascalSource.psm1 for why the reader is
@@ -188,6 +211,7 @@ if (-not ($files | Where-Object { $_.Name -ieq 'MainUnit.pas' })) {
    exit 1
 }
 
+$Root      = $Root.TrimEnd('\')
 $total     = 0
 $rawTotal  = 0
 $rawFiles  = 0
@@ -195,9 +219,11 @@ $units     = 0
 $byRoutine = @{}
 
 foreach ($f in $files) {
-   $raw     = [IO.File]::ReadAllText($f.FullName)
-   $rawHits = $script:RawRx.Matches($raw).Count
-   if ($rawHits -gt 0) { $rawTotal += $rawHits; $rawFiles++ }
+   if (-not $Gate) {
+      $raw     = [IO.File]::ReadAllText($f.FullName)
+      $rawHits = $script:RawRx.Matches($raw).Count
+      if ($rawHits -gt 0) { $rawTotal += $rawHits; $rawFiles++ }
+   }
 
    $hits = @(Get-LiveMoveHits -Path $f.FullName)
    if ($hits.Count -eq 0) { continue }
@@ -209,6 +235,8 @@ foreach ($f in $files) {
       if ($byRoutine.ContainsKey($key)) { $byRoutine[$key]++ } else { $byRoutine[$key] = 1 }
    }
 
+   if ($Gate) { continue }
+
    $rel = $f.FullName.Substring($Root.Length).TrimStart('\')
    "{0,3}  {1}" -f $hits.Count, $rel
 
@@ -218,6 +246,26 @@ foreach ($f in $files) {
          "       {0,6}: {1}" -f $h.Line, $srcLines[$h.Line - 1].Trim()
       }
    }
+}
+
+if ($Gate) {
+   # FAIL CLOSED. Below the floor the reader found almost nothing, which is what
+   # a broken PascalSource.psm1 or a wrong -SourceDir looks like -- and a count
+   # of "few" would pass the ceiling below. Do not report that as clean.
+   if ($files.Count -lt $FILE_FLOOR -or $total -lt $COUNT_FLOOR) {
+      Write-Output ("Count-LiveMove: only {0} file(s) / {1} live call(s) found -- floors are {2} / {3}. The reader or the root is broken; failing." -f $files.Count, $total, $FILE_FLOOR, $COUNT_FLOOR)
+      exit 1
+   }
+   Write-Output ("Count-LiveMove: {0} live Move/FillChar-family call(s) across {1} unit(s) (ceiling {2})" -f $total, $units, $MOVE_CEILING)
+   if ($total -gt $MOVE_CEILING) {
+      Write-Output ("Count-LiveMove FAILED: {0} is over the ceiling of {1}. Express the clear as field initialisation, the copy as assignment, or the framing as TBytes (docs/POINTER_AUDIT.md, P15). Do not raise the ceiling." -f $total, $MOVE_CEILING)
+      Write-Output '   .\tr4w\build\Count-LiveMove.ps1 -Detail   lists every site.'
+      exit 1
+   }
+   if ($total -lt $MOVE_CEILING) {
+      Write-Output ("   down from {0} -- lower `$MOVE_CEILING in tr4w\build\Count-LiveMove.ps1 to {1} and commit it with the fix." -f $MOVE_CEILING, $total)
+   }
+   exit 0
 }
 
 ""

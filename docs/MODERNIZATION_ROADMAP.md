@@ -502,6 +502,10 @@ Order, each phase gated by proof before the next:
 3. **Exports end-to-end** — replace the all-or-nothing `FormatsExchange`
    boolean with typed operations for Cabrillo headers and columns and for ADIF
    sent/received. **Golden byte-level fixtures first** — widths and spacing.
+   **Columns, line layout and ADIF contest fields DONE at M4 (2026-10-01)**:
+   `FormatsExchange` is deleted and every contest is asked
+   (CONTEST_OWNERSHIP_DESIGN.md §8.2e). Cabrillo headers and mode string are
+   M9's.
 4. **Setup and metadata last** — `FCONTEST`'s `case Contest` setup and
    `ActiveExchange` mutation move into the class layer; those two globals become
    compatibility-only projections.
@@ -539,14 +543,18 @@ only once every selectable contest has the capability.
 
 Coverage is ~19 contest classes against 189 `ContestType` members. **That ratio
 is not the work** — most enum members share a handful of rules, which is what
-`TContestFixedPoints` already demonstrates — but the 92 branches are, and they
+the `FixedModePoints` helper demonstrates (the `TContestFixedPoints` base it
+grew out of retired at M3, 2026-10-01) — but the 92 branches are, and they
 are the honest progress metric.
 
 ### 5.4 The blind spot that matters
 
 **The golden corpus is blind to scoring.** It reads QSO points already stored in
-the log and never recomputes them. `test-contest-factory.sh` (factory vs legacy
-`/NOFACTORY` rescore) is the only thing that catches a scoring regression, and
+the log and never recomputes them. `test-contest-factory.sh` is the only thing that catches a scoring regression -- it
+rescores through the factory and diffs against each set's FROZEN legacy output
+(`rescored.adi` / `rescored.cbr`, captured by `freeze-rescore-baseline.sh`).
+~~factory vs legacy `/NOFACTORY` rescore~~ -- **that switch was deleted 2026-09-29**,
+because an A/B against the legacy arm dies with the legacy arm. And
 **exchange validation and Cabrillo headers are caught by nothing.** Extend the
 golden comparison to headers as part of step 3 — do not treat a green corpus as
 completion.

@@ -1,0 +1,351 @@
+(*
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+
+ This file is part of TR4W  (SRC)
+
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+ *)
+
+(* THE UKRAINIAN DX CONTEST.
+
+  The ContestsArray row this class states, verbatim:
+
+   Email: '';  DF: 'ukraine';  WA7BNM: 176;  QRZRUID: 8;
+   Pxm: NoPrefixMults;  ZnM: NoZoneMults;  AIE: NoInitialExchange;  DM: DomesticFile;  P: 0;
+   AE: RSTAndQSONumberOrDomesticQTHExchange;  XM: CQDXCC;  QP: UkrainianQSOPointMethod;
+   ADIFName: '';  CABName: '';  FriendlyName: 'Ukrainian DX Contest'
+
+  THE CABRILLO CONTEST: NAME IS WA7BNM'S UKRAINIAN-DX SINCE 2026-10-19 (see
+  GetCabrilloName), not the enum's spelling the paragraph below
+  describes.
+
+  Blank CABName and ADIFName resolve to the enum's spelling, 'UKRAINIAN'.
+
+  WHY IT HAS A CLASS NOW. M5a (2026-10-01) moved ADIF import interpretation
+  onto the contest, and this contest's rule was an arm of a `case ceContest`
+  in the main unit -- which a base may never contain. A class to hold that
+  rule needed the whole row and the scoring arm with it, because registering a
+  class makes the class this contest's scorer too. Both are transcribed
+  exactly; Test_MovedRowValuesStillMatchTheArray holds the row, and the
+  contest matrix the scoring and the export -- every line of its record but
+  `contest.class` is unchanged, which is the proof. EXCHANGE PARSING (M5b) and
+  set-up (M7a) have moved since.
+
+  SCORING, transcribed from UkrainianQSOPointMethod: 10 for Ukraine (UR), 1 for
+  the station's own country, 2 for its own continent, 3 otherwise. A Ukrainian
+  station scores 1 for another Ukrainian and earns no domestic multiplier.
+  ITS IMPORT: an alphabetic SRX_STRING is a domestic QTH and anything else is
+  stored as the QTH string. (The arm it came from named three contests,
+  Ukrainian DX, OK/OM DX and LZ DX; each owns its own copy -- design 1.4.) *)
+unit uContestUkrainianDX;
+
+{$I tr4w.inc}
+
+interface
+
+uses
+   VC, uContestBase;
+
+type
+   TContestUkrainianDX = class(TContestBase)
+   protected
+      (* PROTECTED, MATCHING THE BASE -- callers use the properties,
+         descendants override the getters. Every getter below states
+         the ContestsArray row quoted above. *)
+      function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetFriendlyName: string; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
+
+      (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
+      function GetFlags: TContestFlags; override;
+      function GetIsUSQSOParty: boolean; override;
+      (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
+         TContestBase: ScoreQSO is the one public scoring entry. *)
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                const aSession: TADIFImportSession;
+                                var aExch: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesDomesticQTH: boolean; override;
+   end;
+
+implementation
+
+uses
+   uExchangeFields,
+   uCabrilloExchange,
+   uADIFExchange,
+   SysUtils, uContestRegistry, uADIF,
+   uTR4WStrings;
+
+procedure TContestUkrainianDX.CalculateQSOPoints(var aQso: ContestExchange);
+var
+   rxCty: CallString;
+begin
+   rxCty := aQso.QTH.CountryID;
+
+   if rxCty = 'UR' then
+      begin
+      aQso.QSOPoints := 10;
+      end
+   else if rxCty = Station.MyCountry then
+      begin
+      aQso.QSOPoints := 1;
+      end
+   else if aQso.QTH.Continent = Station.MyContinent then
+      begin
+      aQso.QSOPoints := 2;
+      end
+   else
+      begin
+      aQso.QSOPoints := 3;
+      end;
+
+   if Station.MyCountry = 'UR' then
+      begin
+      if rxCty = 'UR' then
+         begin
+         aQso.QSOPoints := 1;
+         end;
+      aQso.DomesticMult := False;
+      end;
+end;
+
+procedure TContestUkrainianDX.ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                              const aSession: TADIFImportSession;
+                                              var aExch: ContestExchange);
+begin
+   if ADIFTextIsAlphabetic(aTemps.SRX_String) then
+      begin
+      aExch.DomesticQTH := ShortString(aTemps.SRX_String);
+      end
+   else
+      begin
+      aExch.QTHString := ShortString(aTemps.SRX_String);
+      end;
+end;
+
+function TContestUkrainianDX.GetDisplayName: string;
+begin
+   Result := 'Ukrainian DX Contest';
+end;
+
+function TContestUkrainianDX.GetCabrilloName: string;
+begin
+   (* WA7BNM's Cabrillo name (WA7BNM 176), NY4I 2026-10-19: "do the
+      cabrillo renames". TR4W wrote 'UKRAINIAN', which the sponsor's log robot
+      accepted neither as the name nor as an alias
+      (docs/UDC_CROSSWALK_FINDINGS.md). Only the Cabrillo CONTEST: line
+      (and the UDP <contestname>) moves: the id, the ADIF id and the
+      display names are their own literals. TR4W reads no Cabrillo
+      CONTEST: value back, so the old name needs no read alias. *)
+   Result := 'UKRAINIAN-DX';
+end;
+
+function TContestUkrainianDX.GetADIFContestId: string;
+begin
+   (* The row's ADIFName is blank; export writes the enum's spelling, and import matches it (M1). *)
+   Result := 'UKRAINIAN';
+end;
+
+function TContestUkrainianDX.GetWA7BNMId: integer;
+begin
+   Result := 176;
+end;
+
+function TContestUkrainianDX.GetQRZRUId: integer;
+begin
+   Result := 8;
+end;
+
+function TContestUkrainianDX.GetSubmissionEmail: string;
+begin
+   Result := '';
+end;
+
+function TContestUkrainianDX.GetDomesticFileName: string;
+begin
+   Result := 'ukraine';
+end;
+
+function TContestUkrainianDX.GetFriendlyName: string;
+begin
+   Result := 'Ukrainian DX Contest';
+end;
+
+function TContestUkrainianDX.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := NoInitialExchange;
+end;
+
+function TContestUkrainianDX.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTAndQSONumberOrDomesticQTHExchange;
+end;
+
+function TContestUkrainianDX.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQSONumberQTH;
+end;
+
+function TContestUkrainianDX.ParseReceivedExchangeFormat(const aText: string;
+                                                         aParsers: TExchangeParsers;
+                                                         var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTAndQSONumberOrDomesticQTH(aText, aExch);
+end;
+
+procedure TContestUkrainianDX.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   aMessages.WriteRSTStateOrQSONumber;
+end;
+
+function TContestUkrainianDX.ExchangeCarriesDomesticQTH: boolean;
+begin
+   Result := True;
+end;
+
+function TContestUkrainianDX.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                                 const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentRSTStateOrQSONumber(aMy, aQso);
+end;
+
+function TContestUkrainianDX.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                     const aQso: ContestExchange;
+                                                     const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentRSTStateOrQSONumber(aMy, aQso, aCtx);
+end;
+
+function TContestUkrainianDX.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                         const aQso: ContestExchange;
+                                                         const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedRSTQTHOrQSONumber(aMy, aQso, aCtx);
+end;
+
+function TContestUkrainianDX.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand,
+              cfQSOByMode,
+              cfMultByBand,
+              cfCountsDomesticCountries];
+end;
+
+function TContestUkrainianDX.GetIsUSQSOParty: boolean;
+begin
+   (* P: 0 -- not a US state QSO party. *)
+   Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestUkrainianDX.DescribeSession(const aStation: TStationContext;
+                                              aSession: TSessionDefaults);
+begin
+   aSession.AddDomesticCountry('UR');
+   (* A UR entrant counts no domestic multiplier -- the class's own answer
+      (UsesDomesticFile), since the domestic kind went (M11 S6 part 2). *)
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on ticking the box stood for CIS, RU3AXMEMORIAL,
+   RUSSIANDX, UNDX.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestUkrainianDX.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.OfferIAmIn(TC_UKRAINE);
+   aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOUROBLASTID, ncfMyState);
+end;
+
+(* A DX MULTIPLIER AT EVERY STATION -- M11 S4 part 2, 2026-10-14: the trait
+   this class stated (`CQDXCC`) until the kind was deleted. *)
+function TContestUkrainianDX.HasDXMultiplier: boolean;
+begin
+   Result := True;
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country counts: the key is the CTY country -- GetDXQTH's `else`
+   arm, for the session's CQDXCC. *)
+function TContestUkrainianDX.DXMultiplierKey(const aQso: ContestExchange;
+                                             out aKey: DXMultiplierString): boolean;
+begin
+   aKey := aQso.QTH.CountryID;
+   Result := True;
+end;
+
+
+(* AN ENTRANT OUTSIDE UKRAINE LOOKS THE OBLAST UP IN THE DOMESTIC FILE -- M11
+   S6 part 1b, 2026-10-14. The trait said DomesticFile and DescribeSession
+   states none for a UR entrant. See TContestBase.UsesDomesticFile. *)
+function TContestUkrainianDX.UsesDomesticFile: boolean;
+begin
+   Result := Station.MyCountry <> 'UR';
+end;
+
+initialization
+   RegisterContest(UKRAINIAN, TContestUkrainianDX);
+
+end.

@@ -28,7 +28,7 @@ unit uBandMapForm;
 
   THE ROWS ARE VALUE COPIES.  FRows holds TSpotRecords, not indexes.  The old
   code stored an FList index as list-box item data and read it back through
-  SpotsList.Get -- but InsertSpot Moves the array, so a spot arriving between a
+  SpotsList.Get -- but an insert shifts the list, so a spot arriving between a
   rebuild and the next paint renumbered every index above it and a cell painted
   a DIFFERENT spot.  Nothing here holds an index across a call; actions resolve
   by identity (IndexOfSpot), so Delete cannot remove the wrong spot either.
@@ -325,7 +325,7 @@ begin
    for i := 0 to n - 1 do
       begin
       // THE COPY.  Taken here and nowhere else, so nothing downstream holds an
-      // index that InsertSpot could renumber under it.
+      // index that an insert could renumber under it.
       FRows[i] := SpotsList.Get(idx[i]);
       end;
    FRowCount := n;

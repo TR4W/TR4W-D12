@@ -18,13 +18,14 @@ msgctxt "TC_TRANSLATION_LANGUAGE"
 msgid "ENGLISH"
 msgstr "中文"
 
+# 2026-10-16: the D7 Chinese translation by Li Jia Wei BA4WI (recovered by tools/i18n/salvage_lossy.py) with machine-translated gaps -- NY4I, 2026-10-16. Was "国家4AF", a machine rendering of N4AF. Left fuzzy with the rest of this catalogue.
 #. Section: General
 #. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
 #: tr4w/src/lang/tr4w_consts_eng.pas:8
 #: utr4wstrings.tc_translation_author
 #, fuzzy
 msgid "N4AF"
-msgstr "国家4AF"
+msgstr "Li Jia Wei BA4WI, LibreTranslate"
 
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:9
@@ -39,6 +40,14 @@ msgstr "ny4i@ny4i.com (中文(简体) )"
 #, fuzzy
 msgid "%s translation by %s"
 msgstr "%s翻译 %s"
+
+# 2026-10-16: new string -- the About box shows it under a machine translation's credit. Machine draft, please review.
+#. Section: General
+#: tr4w/src/lang/tr4w_consts_eng.pas:14
+#: utr4wstrings.tc_translation_corrections
+#, fuzzy
+msgid "Corrections are appreciated."
+msgstr "欢迎指正。"
 
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:14
@@ -82,12 +91,13 @@ msgstr "无效的条目"
 msgid "ERROR: Invalid Frequency logged"
 msgstr "错误: 已登录的频率无效"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "在LOG里穿的FREQUENCY是关闭的"
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:20
 #: utr4wstrings.tc_freq_off
 #, fuzzy
 msgid "SHOW FREQUENCY IN LOG is turned off"
-msgstr "在LOG里穿的FREQUENCY是关闭的"
+msgstr "SHOW FREQUENCY IN LOG 已关闭"
 
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:21
@@ -174,12 +184,13 @@ msgstr "数据/数量/结构"
 msgid "HAMLIB ID"
 msgstr "海地身份证"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "RADIO one和RADIO 2都配置为使用%s. RADIO one保留端口;RADIO Two CAT控制被禁用,直到一个无线电控制端口被改变."
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:36
 #: utr4wstrings.tc_port_conflict_startup
 #, fuzzy
 msgid "RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio's CONTROL PORT is changed."
-msgstr "RADIO one和RADIO 2都配置为使用%s. RADIO one保留端口;RADIO Two CAT控制被禁用,直到一个无线电控制端口被改变."
+msgstr "RADIO ONE 和 RADIO TWO 都配置为使用 %s。RADIO ONE 保留该端口；RADIO TWO 的 CAT 控制将被禁用，直到更改其中一台电台的 CONTROL PORT。"
 
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:37
@@ -273,12 +284,13 @@ msgstr "输入您的 CQ ZONE 或 JA 预录"
 msgid "Sorry!! NO LOG = TRUE which prohibits logging QSOs on this computer"
 msgstr "对不起! NO LOG = TRUE 禁止在这个计算机上记录QSO"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "设置计算机标识值 ."
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:52
 #: utr4wstrings.tc_setcomputeridvalue
 #, fuzzy
 msgid "Set COMPUTER ID value."
-msgstr "设置计算机标识值 ."
+msgstr "请设置 COMPUTER ID 的值。"
 
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:54
@@ -541,14 +553,17 @@ msgstr "欧盟国家,请输入您的四个字符国家代码"
 msgid "EI/GI, enter your County"
 msgstr "EI/GI, 进入您的县"
 
+# 2026-10-16: the English changed from "Latest config file" to "Last Contest" -- the button reopens the contest's database, not a config file.
+# Composed from this catalogue's own words, please review: last = 'Recall last entry' -> '回顾上次条目'; contest = 'Start a new contest' -> '开始新比赛'.
+# Previous translation (of the old English): "最新配置文件"
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:104
 #: tfrmnewcontest.btnlatest.caption
 #: utr4wstrings.tc_latest_config_file
 #, fuzzy
 msgctxt "tfrmnewcontest.btnlatest.caption"
-msgid "Latest config file"
-msgstr "最新配置文件"
+msgid "Last Contest"
+msgstr "上次比赛"
 
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:105
@@ -774,19 +789,21 @@ msgstr "输入要发送的QTH\r和要使用的名称 :"
 msgid "Enter first two digits of your QTH:"
 msgstr "输入您的 QTH 的前两位数 :"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "输入您的年龄在我的州域 :"
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:138
 #: utr4wstrings.tc_enteryourageinmystatefield
 #, fuzzy
 msgid "Enter your age in MY STATE field:"
-msgstr "输入您的年龄在我的州域 :"
+msgstr "请在 MY STATE 字段中输入您的年龄:"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "输入您想要发送的QTH, 如果您在北美, 或者您作为我的州的力量, 如果在外 :"
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:139
 #: utr4wstrings.tc_enteryourqthorpower
 #, fuzzy
 msgid "Enter your QTH that you want to send if you are in North America or your power as MY STATE if outside:"
-msgstr "输入您想要发送的QTH, 如果您在北美, 或者您作为我的州的力量, 如果在外 :"
+msgstr "如果您在北美，请输入要发送的 QTH；如果在北美以外，请将您的功率作为 MY STATE 输入:"
 
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:140
@@ -1241,12 +1258,13 @@ msgstr "计算机时钟同步."
 msgid "Connecting to "
 msgstr "正在连接到 "
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "连接到 TR4WSERVER 失败 。 检查SERVER PASWORD值!"
 #. Section: UNET
 #: tr4w/src/lang/tr4w_consts_eng.pas:209
 #: utr4wstrings.tc_connecttotr4wserverfailed
 #, fuzzy
 msgid "Connect to TR4WSERVER failed. Check SERVER PASSWORD value!!"
-msgstr "连接到 TR4WSERVER 失败 。 检查SERVER PASWORD值!"
+msgstr "连接 TR4WSERVER 失败。请检查 SERVER PASSWORD 的值!!"
 
 #. Section: UNET
 #: tr4w/src/lang/tr4w_consts_eng.pas:210
@@ -1879,12 +1897,13 @@ msgstr "参数 \"%s\" 在配置文件中没有值 - 默认时留下 ."
 msgid "Recording DVP. Press ESCAPE or RETURN to stop."
 msgstr "录制DVP. 按ESCAPE或回电停止."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Alt-R命令需要两个RADIO MODE = TRUE"
 #. Section: LOGSUBS1
 #: tr4w/src/lang/tr4w_consts_eng.pas:357
 #: utr4wstrings.tc_altrcommanddisabled
 #, fuzzy
 msgid "Alt-R command requires TWO RADIO MODE = TRUE"
-msgstr "Alt-R命令需要两个RADIO MODE = TRUE"
+msgstr "Alt-R 命令需要 TWO RADIO MODE = TRUE"
 
 #. Section: LOGSUBS1
 #: tr4w/src/lang/tr4w_consts_eng.pas:358
@@ -1900,12 +1919,13 @@ msgstr "没有 CQ 消息编程到 CQ MEMORY AltF1."
 msgid "This file does not exist. Create an empty file for editing?"
 msgstr "此文件不存在 。 创建用于编辑的空文件 ?"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Alt-D 命令需要两个 RADIO MODE = TRUE"
 #. Section: LOGSUBS2
 #: tr4w/src/lang/tr4w_consts_eng.pas:364
 #: utr4wstrings.tc_altdcommanddisabled
 #, fuzzy
 msgid "Alt-D command requires TWO RADIO MODE = TRUE"
-msgstr "Alt-D 命令需要两个 RADIO MODE = TRUE"
+msgstr "Alt-D 命令需要 TWO RADIO MODE = TRUE"
 
 #. Section: LOGSUBS2
 #: tr4w/src/lang/tr4w_consts_eng.pas:365
@@ -2312,19 +2332,21 @@ msgstr "无效的提醒时间 !"
 msgid "Invalid reminder date!!"
 msgstr "无效的提醒日期 !"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "太多总的悲伤!"
 #. Section: CFGCMD
 #: tr4w/src/lang/tr4w_consts_eng.pas:454
 #: utr4wstrings.tc_toomanytotalscoremessages
 #, fuzzy
 msgid "Too many TOTAL SCORE MESSAGEs!!"
-msgstr "太多总的悲伤!"
+msgstr "TOTAL SCORE MESSAGE 过多!!"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "配置文件中的第一个命令必须是 My Call 语句 !"
 #. Section: CFGCMD
 #: tr4w/src/lang/tr4w_consts_eng.pas:455
 #: utr4wstrings.tc_thefirstcommandinconfigfilemustbe
 #, fuzzy
 msgid "The first command in config file must be the MY CALL statement!!"
-msgstr "配置文件中的第一个命令必须是 My Call 语句 !"
+msgstr "配置文件中的第一条命令必须是 MY CALL 语句!!"
 
 #. Section: USYNTIME
 #. milliseconds
@@ -2579,12 +2601,13 @@ msgstr "调用窗口"
 msgid "RST prompt"
 msgstr "RST 提示"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "按我的呼叫命令发送呼叫"
 #. Section: UEDITMESSAGE
 #: tr4w/src/lang/tr4w_consts_eng.pas:512
 #: utr4wstrings.tc_send_callassetbymycallcommand
 #, fuzzy
 msgid "Send call as set by MY CALL command"
-msgstr "按我的呼叫命令发送呼叫"
+msgstr "发送 MY CALL 命令所设置的呼号"
 
 #. Section: UEDITMESSAGE
 #: tr4w/src/lang/tr4w_consts_eng.pas:513
@@ -2837,12 +2860,13 @@ msgstr "灯塔监视器"
 msgid "Set time zone"
 msgstr "设定时区"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "平 [服务解答]"
 #. Section: UEDITMESSAGE
 #: tr4w/src/lang/tr4w_consts_eng.pas:552
 #: utr4wstrings.rc_ping
 #, fuzzy
 msgid "Ping [SERVER ADDRESS]"
-msgstr "平 [服务解答]"
+msgstr "Ping [SERVER ADDRESS]"
 
 #. Section: UEDITMESSAGE
 #. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
@@ -4163,12 +4187,13 @@ msgstr "FLUSHINITIALEX 命令执行."
 msgid "AUTOSPOT is enabled - Test Mode Only"
 msgstr "AUTOSPOT 启用 - 仅测试模式"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "HANDLOG 模式=真实"
 #. Section: FD Additions NY4I
 #: tr4w/src/lang/tr4w_consts_eng.pas:846
 #: utr4wstrings.tc_handlogmodetrue
 #, fuzzy
 msgid "HAND LOG MODE = TRUE"
-msgstr "HANDLOG 模式=真实"
+msgstr "HAND LOG MODE = TRUE"
 
 #. Section: FD Additions NY4I
 #: tr4w/src/lang/tr4w_consts_eng.pas:847
@@ -4191,12 +4216,13 @@ msgstr "TR4W 战车 时间警告"
 msgid "Error offering Commander proxy TCP Port"
 msgstr "提供命令代理 TCP 端口出错"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "PTT VIA CommanDS(CTRL-J) 选项对 WSJT- X 使用必须是真的 - 设置为真"
 #. Section: FD Additions NY4I
 #: tr4w/src/lang/tr4w_consts_eng.pas:850
 #: utr4wstrings.tc_pttviacommandsctrljoptionmusttruew
 #, fuzzy
 msgid "PTT VIA COMMANDS (CTRL-J) option must be true for WSJT-X use - Setting to true"
-msgstr "PTT VIA CommanDS(CTRL-J) 选项对 WSJT- X 使用必须是真的 - 设置为真"
+msgstr "PTT VIA COMMANDS (CTRL-J) 选项对 WSJT-X 使用必须是真的 - 设置为真"
 
 #. Section: FD Additions NY4I
 #: tr4w/src/lang/tr4w_consts_eng.pas:851
@@ -4380,12 +4406,13 @@ msgstr "继续输入字符, 完成后按返回键 ."
 msgid "Enter exchange.  Press ENTER to log, ESCAPE to abort QSO."
 msgstr "输入交换。 按 ENDER 进行登录, ESCAPE 中止 QSO ."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "RELAY控制端口 = 管道端口"
 #. Section: FD Additions NY4I
 #: tr4w/src/lang/tr4w_consts_eng.pas:877
 #: utr4wstrings.tc_relaycontrolportpaddleport
 #, fuzzy
 msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr "RELAY控制端口 = 管道端口"
+msgstr "RELAY CONTROL PORT = PADDLE PORT"
 
 #. Section: FD Additions NY4I
 #: tr4w/src/lang/tr4w_consts_eng.pas:878
@@ -4394,12 +4421,13 @@ msgstr "RELAY控制端口 = 管道端口"
 msgid "LOCATION field is empty."
 msgstr "定位域为空 ."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "PTT LOCKUT=图"
 #. Section: FD Additions NY4I
 #: tr4w/src/lang/tr4w_consts_eng.pas:879
 #: utr4wstrings.tc_pttlockouttrue
 #, fuzzy
 msgid "PTT LOCKOUT=TRUE"
-msgstr "PTT LOCKUT=图"
+msgstr "PTT LOCKOUT=TRUE"
 
 #. Section: FD Additions NY4I
 #: tr4w/src/lang/tr4w_consts_eng.pas:880
@@ -4795,66 +4823,6 @@ msgstr "十号"
 msgid "Zone"
 msgstr "区"
 
-#: tfrmfunctionkeys.pnlf1.caption
-#, fuzzy
-msgid "F1"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf10.caption
-#, fuzzy
-msgid "F10"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf11.caption
-#, fuzzy
-msgid "F11"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf12.caption
-#, fuzzy
-msgid "F12"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf2.caption
-#, fuzzy
-msgid "F2"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf3.caption
-#, fuzzy
-msgid "F3"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf4.caption
-#, fuzzy
-msgid "F4"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf5.caption
-#, fuzzy
-msgid "F5"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf6.caption
-#, fuzzy
-msgid "F6"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf7.caption
-#, fuzzy
-msgid "F7"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf8.caption
-#, fuzzy
-msgid "F8"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf9.caption
-#, fuzzy
-msgid "F9"
-msgstr ""
-
 #: tfrmhamscore.btnpushnow.caption
 #, fuzzy
 msgid "Push Now"
@@ -4874,11 +4842,6 @@ msgstr "中分数"
 #, fuzzy
 msgid "Queued contacts:"
 msgstr "队列联系人 :"
-
-#: tfrmhamscore.lblqueuevalue.caption
-#, fuzzy
-msgid "--"
-msgstr ""
 
 #: tfrmhamscore.lblstatustitle.caption
 #, fuzzy
@@ -5056,11 +5019,6 @@ msgctxt "tfrmmmtty.caption"
 msgid "MMTTY"
 msgstr "门蒂"
 
-#: tfrmmp3recorder.btncontrol.caption
-#, fuzzy
-msgid "..."
-msgstr ""
-
 #: tfrmmp3recorder.chkrecord.caption
 #, fuzzy
 msgid "Record"
@@ -5113,20 +5071,10 @@ msgstr "我的电话"
 msgid "Pause"
 msgstr "暂停"
 
-#: tfrmpanadapter.btnspannarrow.caption
-#, fuzzy
-msgid "-"
-msgstr ""
-
 #: tfrmpanadapter.btnspannarrow.hint
 #, fuzzy
 msgid "Narrower span (zoom in)"
 msgstr "缩小间距( 区间)"
-
-#: tfrmpanadapter.btnspanwide.caption
-#, fuzzy
-msgid "+"
-msgstr ""
 
 #: tfrmpanadapter.btnspanwide.hint
 #, fuzzy
@@ -5928,10 +5876,11 @@ msgstr "主窗口"
 msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
 msgstr "字体适用于主竞赛窗口. 四者在TR4W下一个开始时生效."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "这些是设置菜单的外观项目 。 一旦WINDOW SIZE和他们一起进来 窗户就会消失."
 #: tprefsform.lblappearmenunote.caption
 #, fuzzy
 msgid "These were on the Appearance item of the Settings menu. That window goes away once ROW COUNT and WINDOW SIZE join them here."
-msgstr "这些是设置菜单的外观项目 。 一旦WINDOW SIZE和他们一起进来 窗户就会消失."
+msgstr "这些原先位于设置菜单的外观项中。一旦 ROW COUNT 和 WINDOW SIZE 也移到这里，那个窗口就会取消。"
 
 #: tprefsform.lblaudioheading.caption
 #, fuzzy
@@ -6937,16 +6886,6 @@ msgctxt "tradioeditform.lbluser.caption"
 msgid "User name"
 msgstr "用户名"
 
-#: tradioeditform.optdata7.caption
-#, fuzzy
-msgid "7"
-msgstr ""
-
-#: tradioeditform.optdata8.caption
-#, fuzzy
-msgid "8"
-msgstr ""
-
 #: tradioeditform.optparityeven.caption
 #, fuzzy
 msgctxt "tradioeditform.optparityeven.caption"
@@ -6964,16 +6903,6 @@ msgstr "无"
 msgctxt "tradioeditform.optparityodd.caption"
 msgid "Odd"
 msgstr "单数"
-
-#: tradioeditform.optstop1.caption
-#, fuzzy
-msgid "1"
-msgstr ""
-
-#: tradioeditform.optstop2.caption
-#, fuzzy
-msgid "2"
-msgstr ""
 
 #: tradioeditform.tabadvanced.caption
 #, fuzzy
@@ -7396,15 +7325,6 @@ msgstr "创建和使用新日志"
 #, fuzzy
 msgid "Get server log"
 msgstr "获取服务器日志"
-
-#: tfrmserverlog.lblbytes.caption
-#: tfrmserverlog.lblqsos.caption
-#: tfrmserverlog.lblrecords.caption
-#: tfrmserverlog.lblsent.caption
-#, fuzzy
-msgctxt "tfrmserverlog.lblbytes.caption"
-msgid "0"
-msgstr ""
 
 #: tfrmtelnet.btnconfigure.caption
 #: utr4wstrings.tc_configure_ellipsis
@@ -8267,4 +8187,427 @@ msgstr "TRCLUSTER. DAT 在程序旁没有找到,所以列表是空的. 输入服
 #, fuzzy
 msgid "No DX clusters are defined yet -- click Configure to add one."
 msgstr "尚未定义 DX 集群 -- 单击配置以添加一个 。"
+
+#: uappstrings.sexchangenoprecedence
+#, fuzzy
+msgid "Missing precedence (Q A B U M S)"
+msgstr "缺少优先级(问题A B U M S)"
+
+#: uappstrings.sexchangeoutofstateworkshostonly
+#, fuzzy
+msgid "Out of state: work %s stations only"
+msgstr "州外:工作 %s 仅限台站"
+
+#: uappstrings.scontestinactive
+#, fuzzy
+msgid "%s (inactive)"
+msgstr "%s (不活动)"
+
+#: uappstrings.scategorypowerchangedrescored
+#, fuzzy
+msgid "CATEGORY-POWER is now %s -- the scoring category changed and the log was rescored."
+msgstr "现在轮到POWER了 %s - 得分类别改变,日志被重新记分。"
+
+#: uappstrings.scontestnotonmultiop
+#, fuzzy
+msgid "%s cannot be used on the multi-op network yet -- the network protocol cannot carry it. Use it only while this station is not connected to a multi-op server."
+msgstr "%s 目前还不能在多操作员网络上使用 -- 网络协议无法承载它。请仅在本电台未连接到多操作员服务器时使用。"
+
+#: uappstrings.snewcontestin7qpneinsideaparty
+#, fuzzy
+msgid "IN7QPNE is for stations outside Indiana, the 7th call area, New England and Delaware. From %s, choose the %s instead."
+msgstr "IN7QPNE 适用于印第安纳、第 7 呼号区、新英格兰和特拉华以外的电台。在 %s，请改选 %s。"
+
+#: uappstrings.speeronanothercontest
+#, fuzzy
+msgid "Station %s is on %s, this station is on %s -- its QSOs are NOT being logged here. All stations must run the same contest."
+msgstr "电台 %s 正在参加 %s，本电台正在参加 %s -- 它的 QSO 不会在这里记录。所有电台必须运行同一个比赛。"
+
+#: uappstrings.sexchangenotagridorreport
+#, fuzzy
+msgid "%s is not a grid square or a signal report"
+msgstr "%s 不是网格坐标，也不是信号报告"
+
+#: uappstrings.sexchangegridrequired
+#, fuzzy
+msgid "Grid square required"
+msgstr "需要网格坐标"
+
+#: uappstrings.scouldnotshowinfilemanager
+#, fuzzy
+msgid ""
+"TR4W could not open this location in your file manager:\n"
+"\n"
+"%s\n"
+"\n"
+"Check that it still exists.  tr4w.log records what was tried."
+msgstr ""
+"TR4W 无法打开您文件管理器中的此位置 :\n"
+"\n"
+"%s请检查它是否存在。 tr4w.log记录了所尝试的."
+
+#: uappstrings.sdownloadcannotverify
+#, fuzzy
+msgid ""
+"the server's certificate could not be verified (%s).\n"
+"\n"
+"The request was REFUSED rather than sent unverified. Turn off Preferences > Network > verify server certificates if you want to proceed without checking."
+msgstr ""
+"无法校验服务器的证书( I)%s) (中文(简体) ).\n"
+"\n"
+"请求得到答复,而不是未经核实。 关闭首选项 > 网络 > 验证服务器证书, 如果您想要不检查就进行 。"
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(我国 = %s页:1"
+#: uappstrings.sexchangemodebriefcountry
+#, fuzzy
+msgid "(MY COUNTRY = %s)"
+msgstr "(MY COUNTRY = %s)"
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(MY国家是空的)"
+#: uappstrings.sexchangemodebriefemptycountry
+#, fuzzy
+msgid "(MY COUNTRY is empty)"
+msgstr "(MY COUNTRY 为空)"
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "比赛要求州、省或区 因为我的国家是 %s。 。 。 。"
+#: uappstrings.sexchangemodefromcountry
+#, fuzzy
+msgid "This contest is asking for a state, province or section because MY COUNTRY is %s."
+msgstr "由于 MY COUNTRY 为 %s，本比赛要求提供州、省或分区。"
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "这场比赛需要州、省或区,"
+#: uappstrings.sexchangemodefromemptycountry
+#, fuzzy
+msgid "This contest is asking for a state, province or section because MY COUNTRY is empty."
+msgstr "由于 MY COUNTRY 为空，本比赛要求提供州、省或分区。"
+
+#: uappstrings.sfilenamecamefromsetting
+#, fuzzy
+msgid "The name came from the %s setting for this contest."
+msgstr "名字来自 %s 设置此比赛。"
+
+#: uappstrings.sfilenotfoundthere
+#, fuzzy
+msgid "TR4W could not find this file:"
+msgstr "TR4W 无法找到此文件 :"
+
+#: uappstrings.sfirstrunconvertmissing
+#, fuzzy
+msgid ""
+"TR4W could not find the conversion program:\n"
+"    %s\n"
+"\n"
+"It is installed beside TR4W itself. TR4W will start with its defaults, and your old settings file is left untouched."
+msgstr ""
+"TR4W 找不到转换程序 :\n"
+" %s它安装在TR4W本身旁边. TR4W会从它的默认开始,而您的旧设置文件则未受影响 。"
+
+#: uappstrings.sfirstrunconvertnothingdone
+#, fuzzy
+msgid ""
+"Nothing was converted.\n"
+"\n"
+"TR4W will start with its defaults and your old settings file is untouched. You can convert at any time by running\n"
+"    %s\n"
+"\n"
+"from a command prompt in that folder. Converting then replaces whatever you have configured in the meantime with the old values."
+msgstr ""
+"没有改变。\n"
+"\n"
+"TR4W会从默认开始, 您的旧设置文件没有被更改 。 您可以随时通过运行转换\n"
+" %s从文件夹中的命令提示。 转换后以旧值替换您同时配置的任意内容 。"
+
+#: uappstrings.sfirstrunconvertnow
+#, fuzzy
+msgid "Convert now"
+msgstr "现在转换"
+
+#: uappstrings.sfirstrunconvertprompt
+#, fuzzy
+msgid ""
+"TR4W has found settings from an earlier version:\n"
+"    %s\n"
+"\n"
+"and it has not written its own settings file yet:\n"
+"    %s\n"
+"\n"
+"TR4W can carry that old configuration across now. The conversion lists what it would change and asks before writing anything, so you can look first and still say no.\n"
+"\n"
+"You do not have to do it now. Nothing is lost by continuing: TR4W starts with its defaults, your old file is left untouched, and converting later simply replaces those defaults with your old values.\n"
+"\n"
+"What is worth knowing is the ORDER. If you continue now and then set TR4W up by hand, converting afterwards overwrites that work with the values from the old file. Converting first avoids the question."
+msgstr ""
+"TR4W从较早的版本中找到了设置:\n"
+" %s而且它尚未写入自己的设置文件 :\n"
+" %sTR4W现在可以把旧配置带过 转换中列出它会改变什么,在写东西之前询问什么,这样你就可以先看,还是说不.\n"
+"\n"
+"你不必现在做。 没有东西会因为继续而丢失:TR4W从它的默认开始,你的旧文件没有受到任何影响,后来的转换只是用你的旧值来替换这些默认.\n"
+"\n"
+"值得知道的是命令。 如果您现在继续, 然后用手设置 TR4W , 转换后将覆盖与旧文件中的值一起工作 。 先转换可以避免这个问题。"
+
+#: uappstrings.sfirstrunconvertskip
+#, fuzzy
+msgid "Continue without converting"
+msgstr "不转换而继续"
+
+#: uappstrings.sfirstrunconverttitle
+#, fuzzy
+msgid "TR4W -- settings from an earlier version"
+msgstr "TR4W - 早先版本的设置"
+
+#: uappstrings.slogfileunavailable
+#, fuzzy
+msgid ""
+"TR4W could not open its log file.\n"
+"\n"
+"%s\n"
+"\n"
+"TR4W will keep running and keep trying to open it. Until it can, nothing from this session is written to the log."
+msgstr ""
+"TR4W 无法打开日志文件 。\n"
+"\n"
+"%sTR4W会继续运行并不断尝试打开. 在它能够做到之前,本次会话中没有任何内容被写入日志."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "计算机标识 %s 已经被这个网络上的另一台站使用。\n\n更改计算机 ID到一个字母 没有其他的车站使用, 然后重新连接。"
+#: uappstrings.snetcomputeridinuse
+#, fuzzy
+msgid ""
+"Computer ID %s is already in use by another station on this network.\n"
+"\n"
+"Change COMPUTER ID to a letter no other station is using, then reconnect."
+msgstr ""
+"计算机 ID %s 已被此网络上的另一个电台使用。\n"
+"\n"
+"请将 COMPUTER ID 改为其他电台都未使用的字母，然后重新连接。"
+
+#: uappstrings.snewcontestin7qpnecountyorstate
+#, fuzzy
+msgid "Enter your county if you are in Indiana, the 7th call area, New England or Delaware. Enter your state, Canadian Province or \"DX\" if outside all four:"
+msgstr "如果你在印第安纳州 第七呼叫区 新英格兰或特拉华州 输入您的州、 加拿大省或“ DX ” , 如果所有四个省之外:"
+
+#: uappstrings.sqsonotlogged
+#, fuzzy
+msgid "NOT LOGGED -- the contest log would not accept this QSO. See tr4w.log. Do not clear the entry."
+msgstr "不是LOGGED——比赛日志不会接受这个QSO. 见tr4w.log. 不清除条目。"
+
+#: uappstrings.sreadinessdomesticfilemissing
+#, fuzzy
+msgid "This contest scores domestic multipliers from a .DOM file and none is named, so no domestic multiplier will be counted."
+msgstr "这场比赛从一个.DOM文件中对国内乘数进行评分,但没有一个被点名,因此不会计算国内乘数."
+
+#: uappstrings.sreadinessfooter
+#, fuzzy
+msgid "Set these in Preferences > Station, then restart TR4W: they are read once when the contest is set up, so changing them now will not change this contest."
+msgstr "在 Phition > station 中设置这些选项,然后重新启动 TR4W : 当比赛设置时它们会被读取一次,所以现在更改它们不会改变这场比赛."
+
+#: uappstrings.sreadinessheading
+#, fuzzy
+msgid "This contest is set up, but TR4W is missing information it needs:"
+msgstr "但TR4W缺少它需要的信息:"
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "我的电话是空的。 TR4W没有它就无法解决你的国家,大陆或地区,任何依赖它们的东西都不会是正确的."
+#: uappstrings.sreadinessmycallmissing
+#, fuzzy
+msgid "MY CALL is empty. TR4W cannot work out your country, continent or zone without it, and nothing that depends on them will be right."
+msgstr "MY CALL 为空。没有它，TR4W 无法确定您的国家、大洲或分区，所有依赖于它们的内容都将不正确。"
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "我的国家是空的。 通常通过CTY.DAT通过我的电话解决 在它有价值之前,TR4W将这个车站当作DX--在ARRL中 DX意味着它会向每个车站要求一个州或省,拒绝K或100这样的权力."
+#: uappstrings.sreadinessmycountrymissing
+#, fuzzy
+msgid "MY COUNTRY is empty. It is normally worked out from MY CALL through CTY.DAT. Until it has a value TR4W treats this station as DX -- in ARRL DX that means it will ask every station for a state or province and refuse a power such as K or 100."
+msgstr "MY COUNTRY 为空。它通常通过 CTY.DAT 从 MY CALL 推算得出。在它有值之前，TR4W 会把本台视为 DX -- 在 ARRL DX 中，这意味着它会向每个电台索要州或省，并拒绝 K 或 100 这样的功率。"
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "我的GRID是空的,本次比赛 发送您的网格广场。"
+#: uappstrings.sreadinessmygridmissing
+#, fuzzy
+msgid "MY GRID is empty and this contest sends your grid square."
+msgstr "MY GRID 为空，而本比赛需要发送您的网格坐标。"
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "我的状态是空的,这次比赛 发送你的州,省或部分。 TR4W会发送序列号代替."
+#: uappstrings.sreadinessmystatemissing
+#, fuzzy
+msgid "MY STATE is empty and this contest sends your state, province or section. TR4W will send a serial number instead."
+msgstr "MY STATE 为空，而本比赛需要发送您的州、省或分区。TR4W 将改为发送序号。"
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "我的ZONE是空的,这场比赛 发送你的区域。"
+#: uappstrings.sreadinessmyzonemissing
+#, fuzzy
+msgid "MY ZONE is empty and this contest sends your zone."
+msgstr "MY ZONE 为空，而本比赛需要发送您的分区。"
+
+#: uappstrings.sverifyallpassed
+#, fuzzy
+msgid "All %d check(s) passed."
+msgstr "全体 %d 检查通过。"
+
+#: uappstrings.sverifyclose
+#, fuzzy
+msgid "&Close"
+msgstr "关闭( C)"
+
+#: uappstrings.sverifycolumncheck
+#, fuzzy
+msgid "Check"
+msgstr "检查"
+
+#: uappstrings.sverifycolumnresult
+#, fuzzy
+msgid "Result"
+msgstr "结果"
+
+#: uappstrings.sverifyfailed
+#, fuzzy
+msgid "FAILED"
+msgstr "失败"
+
+#: uappstrings.sverifypassed
+#, fuzzy
+msgid "Passed"
+msgstr "已经通过"
+
+#: uappstrings.sverifyrun
+#, fuzzy
+msgid "&Run checks"
+msgstr "运行检查( R)"
+
+#: uappstrings.sverifyrunning
+#, fuzzy
+msgid "Running %d check(s)..."
+msgstr "运行 %d 检查..."
+
+#: uappstrings.sverifysomefailed
+#, fuzzy
+msgid "%d of %d check(s) FAILED. Select a row for details."
+msgstr "%d 页:1 %d 检查失败。 为细节选择一行。"
+
+#: uappstrings.sverifytitle
+#, fuzzy
+msgid "Verification checks"
+msgstr "核查检查"
+
+#: uprogrammain.scontestfileforeigndatabase
+#, fuzzy
+msgid ""
+"This file is a database, but it was not created by TR4W:\n"
+"\n"
+"%s\n"
+"\n"
+"TR4W cannot open another program's log. Choose a TR4W log (.db) or a contest configuration file (.cfg)."
+msgstr ""
+"这个文件是一个数据库,但它不是由TR4W创建的:\n"
+"\n"
+"%sTR4W无法打开另一个程序的日志. 选择TR4W日志(.db)或比赛配置文件(.cfg)."
+
+#: uprogrammain.scontestfilenotrecognised
+#, fuzzy
+msgid ""
+"This file is not a TR4W log and is not a contest configuration file:\n"
+"\n"
+"%s\n"
+"\n"
+"Choose a TR4W log (.db) or a contest configuration file (.cfg)."
+msgstr ""
+"此文件不是一个 TR4W 日志, 也不是一个比赛配置文件 :\n"
+"\n"
+"%s选择TR4W日志(.db)或比赛配置文件(.cfg)."
+
+#: utr4wstrings.tc_bankalt
+#, fuzzy
+msgid "Alt"
+msgstr "备选案文"
+
+#: utr4wstrings.tc_bankcontrol
+#, fuzzy
+msgid "Control"
+msgstr "控件"
+
+#: utr4wstrings.tc_bankstandard
+#, fuzzy
+msgid "Standard"
+msgstr "标准"
+
+#: utr4wstrings.tc_ignoredunknownqth
+#, fuzzy
+msgid "Ignored, not a known QTH:"
+msgstr "被忽略, 不是已知的 QTH :"
+
+# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output say 内容 (content), a mistranslation; this catalogue's 'Contest' is 竞技 (athletics) -- 竞赛 is contest. Machine output was: "内容"
+#: uappstrings.snewcontestcontestlabel
+#, fuzzy
+msgid "CONTEST"
+msgstr "竞赛"
+
+#: uappstrings.snewcontestsearchhint
+#, fuzzy
+msgid "Search: type part of a name, e.g. QSO"
+msgstr "搜索: 输入名称的一部分, 例如 QSO"
+
+#: uappstrings.simportmyfactsdifference
+#, fuzzy
+msgid "%s: %d QSO(s), e.g. %s (this contest: %s)"
+msgstr "%s编号 : %d QSO,例如: %s (本次比赛: %s页:1"
+
+#: uappstrings.simportmyfactskept
+#, fuzzy
+msgid "The file's station was kept for %d QSO(s)."
+msgstr "档案站被保存 %d QSO(s)."
+
+#: uappstrings.simportmyfactsquestion
+#, fuzzy
+msgid ""
+"This file names our station for %d of its %d QSO(s) (%s), and it is not what this contest has:%s\n"
+"\n"
+"Keep the file's values for those QSOs?\n"
+"Yes keeps the file's. No gives them this contest's, as a new QSO would get."
+msgstr ""
+
+#: uappstrings.simportmyfactsreplaced
+#, fuzzy
+msgid "%d QSO(s) were given this contest's station in place of the file's."
+msgstr "%d QSO被赋予本次比赛的站点代替了文件的站点."
+
+#: uappstrings.simportmyfactssame
+#, fuzzy
+msgid "%d QSO(s) named our station (%s), the same as this contest's."
+msgstr "%d QSO 命名我们的站(%s),与本次比赛相同."
+
+#: uappstrings.simportmyfactsstamped
+#, fuzzy
+msgid "%d QSO(s) named no station of ours and were given this contest's."
+msgstr "%d QSO没有命名我们的站 并得到了这次比赛。"
+
+#: uappstrings.snewcontestshowinactive
+#, fuzzy
+msgid "Show inactive contests"
+msgstr "显示不活动比赛"
+
+#: uappstrings.slatestcontestdetail
+#, fuzzy
+msgid "%0:s - %1:s"
+msgstr "%0:s - %1:s"
+
+#: uappstrings.slatestcontestline
+#, fuzzy
+msgid "%0:s %1:d"
+msgstr "%0:s %1:d"
+
+#: uappstrings.snewcontestfilescall
+#, fuzzy
+msgid "Call"
+msgstr "呼号"
+
+#: uappstrings.snewcontestfilescontest
+#, fuzzy
+msgid "Contest"
+msgstr "比赛"
+
+#: uappstrings.snewcontestfilesfile
+#, fuzzy
+msgid "File"
+msgstr "文件"
+
+#: uappstrings.snewcontestfilesyear
+#, fuzzy
+msgid "Year"
+msgstr "年份"
 

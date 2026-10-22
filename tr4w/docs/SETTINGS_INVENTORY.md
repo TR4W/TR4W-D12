@@ -33,7 +33,7 @@ where a property does not. It is a staging post: every row that reaches the
 settings model leaves the record, and it is down to a handful of fields.
 Read `Config.X` as "a station setting that has not finished moving yet".
 
-## Settings that have moved (288)
+## Settings that have moved (281)
 
 These are published properties. The command name is DERIVED from the
 property path unless an alias says otherwise, and an alias exists only
@@ -126,17 +126,14 @@ comes last, a word run together.
 | `DISTANCE MODE` |  | global | `Settings.Log.DistanceMode` | DistanceDisplayType |  |
 | `DIT DAH RATIO` |  | global | `Settings.Cw.DitDahRatio` | TCwDitDahRatio |  |
 | `DOMESTIC FILENAME` |  | **CONTEST** | `Settings.Contest.DomesticFilename` | string |  |
-| `DOMESTIC MULTIPLIER` |  | **CONTEST** | `Settings.Contest.DomesticMultiplier` | string |  |
 | `DUPE CHECK SOUND` |  | global | `Settings.Operating.DupeCheckSound` | DupeCheckSoundType |  |
 | `DUPE SHEET AUTO RESET` |  | global | `Settings.DupeSheet.AutoReset` | boolean |  |
 | `DVK ENABLE` |  | global | `Settings.Dvk.Enable` | boolean |  |
 | `DVK LOCALIZED MESSAGES ENABLE` |  | global | `Settings.Dvk.LocalizedMessagesEnable` | boolean |  |
 | `DVK PATH` |  | global | `Settings.Dvk.Path` | string |  |
 | `DVK RECORDER` |  | global | `Settings.Dvk.Recorder` | string |  |
-| `DX MULTIPLIER` |  | **CONTEST** | `Settings.Contest.DxMultiplier` | string |  |
 | `ESCAPE EXITS SEARCH AND POUNCE` |  | global | `Settings.Cq.EscapeExitsSearchAndPounce` | boolean |  |
 | `EXCHANGE MEMORY ENABLE` |  | **CONTEST** | `Settings.Contest.ExchangeMemoryEnable` | boolean |  |
-| `EXCHANGE RECEIVED` |  | **CONTEST** | `Settings.Contest.ExchangeReceived` | string |  |
 | `EXTERNAL LOGGER` |  | global | `Settings.ExternalLogger.LoggerType` | string |  |
 | `EXTERNAL LOGGER ADDRESS` |  | global | `Settings.ExternalLogger.Address` | string |  |
 | `EXTERNAL LOGGER ENABLED` |  | global | `Settings.ExternalLogger.Enabled` | boolean |  |
@@ -159,7 +156,6 @@ comes last, a word run together.
 | `IN BAND LOCKOUT` |  | global | `Settings.So2r.InBandLockout` | boolean |  |
 | `INCLUDE F-KEY NUMBER` |  | global | `Settings.Cw.IncludeFKeyNumber` | boolean |  |
 | `INCREMENT TIME ENABLE` |  | global | `Settings.Operating.IncrementTimeEnable` | boolean |  |
-| `INITIAL EXCHANGE` |  | **CONTEST** | `Settings.Contest.InitialExchange` | string |  |
 | `INITIAL EXCHANGE CURSOR POS` |  | **CONTEST** | `Settings.Contest.InitialExchangeCursorPos` | string |  |
 | `INITIAL EXCHANGE FILENAME` |  | **CONTEST** | `Settings.Contest.InitialExchangeFilename` | string |  |
 | `INITIAL EXCHANGE OVERWRITE` |  | **CONTEST** | `Settings.Contest.InitialExchangeOverwrite` | boolean |  |
@@ -223,7 +219,6 @@ comes last, a word run together.
 | `POSSIBLE CALL MODE` |  | global | `Settings.Scp.PossibleCallMode` | PossibleCallActionType |  |
 | `POSSIBLE CALL RIGHT KEY` |  | global | `Settings.PossibleCall.RightKey` | Char |  |
 | `POSSIBLE CALLS` |  | global | `Settings.PossibleCall.Enable` | boolean |  |
-| `PREFIX MULTIPLIER` |  | **CONTEST** | `Settings.Contest.PrefixMultiplier` | string |  |
 | `PSTROTATOR IP ADDRESS` |  | global | `Settings.Rotator.IpAddress` | string |  |
 | `PSTROTATOR UDP PORT` |  | global | `Settings.Rotator.UdpPort` | TRotatorUdpPort |  |
 | `PTT ENABLE` |  | global | `Settings.Ptt.Enable` | boolean |  |
@@ -238,7 +233,6 @@ comes last, a word run together.
 | `QSO BY BAND` |  | **CONTEST** | `Settings.Qso.ByBand` | boolean |  |
 | `QSO BY MODE` |  | **CONTEST** | `Settings.Qso.ByMode` | boolean |  |
 | `QSO NUMBER BY BAND` |  | **CONTEST** | `Settings.Contest.QsoNumberByBand` | boolean |  |
-| `QSO POINT METHOD` |  | **CONTEST** | `Settings.Contest.QsoPointMethod` | string |  |
 | `QSO POINTS DOMESTIC CW` |  | **CONTEST** | `Settings.Qso.PointsDomesticCw` | TQsoPoints |  |
 | `QSO POINTS DOMESTIC PHONE` |  | **CONTEST** | `Settings.Qso.PointsDomesticPhone` | TQsoPoints |  |
 | `QSO POINTS DX CW` |  | **CONTEST** | `Settings.Qso.PointsDxCw` | TQsoPoints |  |
@@ -329,7 +323,6 @@ comes last, a word run together.
 | `WSJT-X RADIO CONTROL ENABLED` |  | global | `Settings.Wsjtx.RadioControlEnabled` | boolean |  |
 | `WSJT-X SEND HIGHLIGHTS` |  | global | `Settings.Wsjtx.SendHighlights` | boolean |  |
 | `YCCC SO2R ENABLE` |  | global | `Settings.Yccc.So2rEnable` | boolean |  |
-| `ZONE MULTIPLIER` |  | **CONTEST** | `Settings.Contest.ZoneMultiplier` | string |  |
 
 ## Settings still in the config array: none
 
@@ -353,7 +346,7 @@ is read out of the live settings object, so if the generator and the program
 ever disagree, the generator is wrong. `tools/settings_inventory_doc.py`
 makes that comparison every time it runs and refuses to write this file
 when the two differ; when this file was written they agreed exactly on all
-298 command names.
+291 command names.
 
 Run `tools/settings_inventory.py`, then `tools/settings_inventory_doc.py`.
 

@@ -32,25 +32,44 @@ uses
   uCallSignRoutines,
   uCTYDAT,
   //Country9,
-  Log4D;   // Issue #1034: dropped uCallsigns (unused here)
+  Log4D,
+  (* TContestBase -- FillVisibleBytes' parameter (M11 S4). A leaf over VC
+    and uSettingsModel, already linked by the unit tests. *)
+  uContestBase;   // Issue #1034: dropped uCallsigns (unused here)
 
 
 const
   ZoneMultArraySize                     = 100;
 
 type
-  DXMultsArray = record
-    dxmaArray: TDupesArray;
-    dxmaVisible: boolean;
-  end;
+  (* THE THREE TABLES, NAMED so ClearAllMults can assign Default() to each
+    rather than FillChar it. A record TYPE called DXMultsArray (28 bytes,
+    used nowhere) stood here beside a FIELD of the same name -- and the
+    FillChar's SizeOf(DXMultsArray) resolved to the field only because a
+    method searches its own fields first. Deleted, with the ambiguity
+    (uTestSortedStringList pins that the last country is cleared). *)
+  TDXMultsTable = array[0..MaxCountries - 1] of TDupesArray;
+  TZoneMultsTable = array[0..ZoneMultArraySize] of TDupesArray;
+  TMultTotals = array[BandType, CW..Both, RemainingMultiplierType] of Word;
 
-  MultsObject = object
-    DXMultsArray: array[0..MaxCountries - 1] of TDupesArray;
-    ZoneMultsArray: array[0..ZoneMultArraySize] of TDupesArray;
+  (* THE MULTIPLIER SHEET -- a CLASS since 2026-10-17 (pointer audit P8,
+    docs/POINTER_AUDIT.md 6.7). It was an old-style `object` held by value in
+    the global `mo`, with its two sorted lists Init'd from this unit's
+    initialization block. Now `mo` is created there and freed at
+    finalization, and the instance owns its lists. Nothing ever copied `mo`
+    or took its address, so no caller depended on the value semantics; the
+    tests that kept a sheet of their own create one. *)
+  TMultsObject = class
+  public
+    DXMultsArray: TDXMultsTable;
+    ZoneMultsArray: TZoneMultsTable;
     PrfList: TSortedStringList;
     DomList: TSortedStringList;
 
-    MTotals: array[BandType, CW..Both, RemainingMultiplierType] of Word;
+    MTotals: TMultTotals;
+
+    constructor Create;
+    destructor Destroy; override;
 
     procedure IncrementTotals(Band: BandType; Mode: ModeType; m: RemainingMultiplierType);
     procedure ClearAllMults;
@@ -64,14 +83,28 @@ type
     function IsZnMult(Zone: Word; Band: BandType; Mode: ModeType): boolean;
     function IsDXMult(Country: Word; Band: BandType; Mode: ModeType): boolean;
     function IsPxMult(const Prfx: string; Band: BandType; Mode: ModeType): boolean;
-    function IsDmMult(const Dom: string; Band: BandType; Mode: ModeType; DomMultType: DomesticMultType): boolean;
-    procedure FillVisibleBytes;
+    (* aKeyedOnGridField: the contest's domestic multiplier is the grid FIELD
+      (TContestBase.HasGridFieldMultiplier) -- the caller asks the contest,
+      M11 S6 part 1. It was the session's DomesticMultType, of which this
+      tested one member. *)
+    function IsDmMult(const Dom: string; Band: BandType; Mode: ModeType; aKeyedOnGridField: boolean): boolean;
+    (* WHICH CTY COUNTRIES THE REMAINING-MULTS WINDOW LISTS. aContest is the
+      active contest (ActiveContest(Contest)), asked which countries its
+      filter keeps -- TContestBase.ListsRemainingDXCountry, M11 S4; nil, the
+      classless DUMMYCONTEST, keeps them all. *)
+    procedure FillVisibleBytes(aContest: TContestBase);
   end;
 
 var
-  mo                                    : MultsObject;
+  (* Created in this unit's initialization, freed in its finalization. *)
+  mo                                    : TMultsObject;
   
 implementation
+
+(* uContestSession WAS USED HERE for ContestSession.DoingDXMults (M10 S9d /
+  M11 S2). Since M11 S4 part 2 the contest answers whether it has a DX
+  multiplier (HasDXMultiplier) and its filter (ListsRemainingDXCountry), both
+  through uContestBase, so this unit reads no session kind at all. *)
 
 // Issue #1034: own Log4D logger (initialized below), replacing the former
 // MainUnit.logger borrow. MainUnit + LogDupe were otherwise unused here, so
@@ -80,14 +113,25 @@ implementation
 var
   logger: TLogLogger;
 
-procedure MultsObject.IncrementTotals(Band: BandType; Mode: ModeType; m: RemainingMultiplierType);
+constructor TMultsObject.Create;
+begin
+  inherited Create;
+  PrfList := TSortedStringList.Create;
+  DomList := TSortedStringList.Create;
+end;
+
+destructor TMultsObject.Destroy;
+begin
+  DomList.Free;
+  PrfList.Free;
+  inherited Destroy;
+end;
+
+procedure TMultsObject.IncrementTotals(Band: BandType; Mode: ModeType; m: RemainingMultiplierType);
 begin
   // MTotals mode dim is CW..Both; FM (ordinal 5) is outside it -> remap to
   // Phone (FM counts as Phone) so MTotals[Band, FM, m] is not out of bounds.
-  if Mode = FM then
-     begin
-     Mode := Phone;
-     end;
+  Mode := DupeSlot(Mode);
   inc(MTotals[Band, Mode, m]);
 
   if Mode <> Both then
@@ -106,19 +150,22 @@ begin
       end;
 end;
 
-procedure MultsObject.ClearAllMults;
+procedure TMultsObject.ClearAllMults;
 begin
-  FillChar(ZoneMultsArray, SizeOf(ZoneMultsArray), 0);
-  FillChar(DXMultsArray, SizeOf(DXMultsArray), 0);
-  FillChar(MTotals, SizeOf(MTotals), 0);
+  ZoneMultsArray := Default(TZoneMultsTable);
+  DXMultsArray := Default(TDXMultsTable);
+  MTotals := Default(TMultTotals);
   PrfList.ClearDupes;
   DomList.ClearDupes;
 end;
 
-procedure MultsObject.SetZnMult(Zone: Word; Band: BandType; Mode: ModeType);
+procedure TMultsObject.SetZnMult(Zone: Word; Band: BandType; Mode: ModeType);
 begin
-  if Mode = FM then Mode := Phone;   // FM shares the Phone slot (TDupesArray is CW..NoMode)
-  if not (Zone in [0..ZoneMultArraySize]) then Exit;
+  Mode := DupeSlot(Mode);   // FM shares the Phone slot (TDupesArray is CW..NoMode)
+  if not (Zone in [0..ZoneMultArraySize]) then
+     begin
+     Exit;
+     end;
   ZoneMultsArray[Zone][Mode] := ZoneMultsArray[Zone][Mode] or (1 shl Ord(Band));
   ZoneMultsArray[Zone][Both] := ZoneMultsArray[Zone][Both] or (1 shl Ord(Band));
   ZoneMultsArray[Zone][Mode] := ZoneMultsArray[Zone][Mode] or (1 shl Ord(AllBands));
@@ -126,10 +173,13 @@ begin
   IncrementTotals(Band, Mode, rmZone);
 end;
 
-procedure MultsObject.SetDXMult(Cntr: Word; Band: BandType; Mode: ModeType);
+procedure TMultsObject.SetDXMult(Cntr: Word; Band: BandType; Mode: ModeType);
 begin
-  if Mode = FM then Mode := Phone;   // FM shares the Phone slot (TDupesArray is CW..NoMode)
-  if Cntr >= CTY.ctyNumberCountries then Exit;
+  Mode := DupeSlot(Mode);   // FM shares the Phone slot (TDupesArray is CW..NoMode)
+  if Cntr >= CTY.ctyNumberCountries then
+     begin
+     Exit;
+     end;
 
   DXMultsArray[Cntr][Mode] := DXMultsArray[Cntr][Mode] or (1 shl Ord(Band));
   DXMultsArray[Cntr][Both] := DXMultsArray[Cntr][Both] or (1 shl Ord(Band));
@@ -138,7 +188,7 @@ begin
   IncrementTotals(Band, Mode, rmDX);
 end;
 
-procedure MultsObject.SetPxMult(const Prfx: string; Band: BandType; Mode: ModeType);
+procedure TMultsObject.SetPxMult(const Prfx: string; Band: BandType; Mode: ModeType);
 begin
   // (dropped the ShortString null-terminator Prfx[Ord(Prfx[0])+1]:=#0 -- a native
   //  string carries its own length, and uSortedStringList.AddString now takes a string.)
@@ -146,16 +196,16 @@ begin
   IncrementTotals(Band, Mode, rmPrefix);
 end;
 
-procedure MultsObject.SetDmMult(const Dom: string; Band: BandType; Mode: ModeType);
+procedure TMultsObject.SetDmMult(const Dom: string; Band: BandType; Mode: ModeType);
 begin
   // (dropped the ShortString null-terminator; native string + uSortedStringList.AddString(string).)
   DomList.AddString(Dom, Band, Mode, False);
   IncrementTotals(Band, Mode, rmDomestic);
 end;
 
-function MultsObject.IsZnMult(Zone: Word; Band: BandType; Mode: ModeType): boolean;
+function TMultsObject.IsZnMult(Zone: Word; Band: BandType; Mode: ModeType): boolean;
 begin
-  if Mode = FM then Mode := Phone;   // FM shares the Phone slot (TDupesArray is CW..NoMode)
+  Mode := DupeSlot(Mode);   // FM shares the Phone slot (TDupesArray is CW..NoMode)
   if Zone in [0..ZoneMultArraySize] then
      begin
      Result := (ZoneMultsArray[Zone][Mode] and (1 shl Ord(Band))) = 0
@@ -166,9 +216,9 @@ begin
      end;
 end;
 
-function MultsObject.IsDXMult(Country: Word; Band: BandType; Mode: ModeType): boolean;
+function TMultsObject.IsDXMult(Country: Word; Band: BandType; Mode: ModeType): boolean;
 begin
-  if Mode = FM then Mode := Phone;   // FM shares the Phone slot (TDupesArray is CW..NoMode)
+  Mode := DupeSlot(Mode);   // FM shares the Phone slot (TDupesArray is CW..NoMode)
   if Country < MaxCountries then
      begin
      Result := (DXMultsArray[Country][Mode] and (1 shl Ord(Band))) = 0
@@ -179,19 +229,19 @@ begin
        end;
 end;
 
-function MultsObject.IsPxMult(const Prfx: string; Band: BandType; Mode: ModeType): boolean;
+function TMultsObject.IsPxMult(const Prfx: string; Band: BandType; Mode: ModeType): boolean;
 var
   Index                                 : integer;
 begin
   Result := not PrfList.StringIsDupe(Prfx, Band, Mode, Index);
   if Index = -1 then
      begin
-     logger.debug('In MultsObject.IsPxMult, for Prfx of ' + Prfx + ', Result = true');
+     logger.debug('In TMultsObject.IsPxMult, for Prfx of ' + Prfx + ', Result = true');
      Result := True;
      end;
 end;
 
-function MultsObject.IsDmMult(const Dom: string; Band: BandType; Mode: ModeType; DomMultType: DomesticMultType): boolean;
+function TMultsObject.IsDmMult(const Dom: string; Band: BandType; Mode: ModeType; aKeyedOnGridField: boolean): boolean;
 var
   Index                                 : integer;
   InsertPos                             : integer;
@@ -204,7 +254,7 @@ begin
   // that any FN-prefixed grid in the store matches, regardless of whether the
   // stored key is the field ("FN", new format) or the full grid ("FN20", old
   // log records). GridSquares uses the full 4-char key and is unaffected.
-  if DomMultType = GridFields then
+  if aKeyedOnGridField then
      begin
      FieldKey := Copy(Dom, 1, 2);
      Result := not DomList.StringIsDupe(FieldKey, Band, Mode, Index);
@@ -236,17 +286,20 @@ begin
 
 end;
 
-procedure MultsObject.FillRemMultsBytes(rm: RemainingMultiplierType);
+procedure TMultsObject.FillRemMultsBytes(rm: RemainingMultiplierType);
 begin
 
 end;
 
-procedure MultsObject.FillVisibleBytes;
+procedure TMultsObject.FillVisibleBytes(aContest: TContestBase);
 label
   1;
 var
   i                                     : integer;
+  (* Asked once, not per country: a station test can allocate. *)
+  countsDX                              : boolean;
 begin
+  countsDX := ContestHasDXMultiplier(aContest);
   for i := 0 to MaxCountries - 1 do
      begin
      if CTY.ctyCountryMode = ARRLCountryMode then
@@ -257,19 +310,22 @@ begin
           Continue;
           end;
 
-     if ActiveDXMult = NoDXMults then
+     if not countsDX then
         begin
         goto 1;
         end;
 
-     if ActiveDXMult = CQNonEuropeanCountries then
-       if CTY.ctyTable[i].DefaultContinent = Europe then Continue;
-
-     if ActiveDXMult = CQEuropeanCountries then
-       if CTY.ctyTable[i].DefaultContinent <> Europe then Continue;
-
-     if ActiveDXMult = CQUBAEuropeanCountries then
-       if not UBACountry(CTY.ctyTable[i].ID) then Continue;
+     (* THE CONTEST'S FILTER -- M11 S4, 2026-10-14. Three tests on the
+       session's DX kind stood here: CQNonEuropeanCountries (no contest ran
+       it since M11 S2), CQEuropeanCountries (WAE, for an entrant outside
+       Europe) and CQUBAEuropeanCountries (UBA, outside Belgium). The contest
+       answers now, reproducing exactly those -- not its whole DX rule, which
+       this window never knew (plan F7). *)
+     if not ContestListsRemainingDXCountry(aContest, CTY.ctyTable[i].ID,
+                                           CTY.ctyTable[i].DefaultContinent) then
+        begin
+        Continue;
+        end;
 
      if CTY.ctyCustomRemainingCountryListFound then Continue;
 
@@ -281,11 +337,13 @@ begin
      end;
 end;
 
-begin
+initialization
   logger := TLogLogger.GetLogger('uMults');   // Issue #1034: own logger (was MainUnit.logger)
-  mo.PrfList.Init;
-  mo.DomList.Init;
-//  mo.PrfList := TSortedStringList.Create;
-//  mo.DomList := TSortedStringList.Create;
+  mo := TMultsObject.Create;
+
+finalization
+  mo.Free;
+  mo := nil;
+
 end.
 

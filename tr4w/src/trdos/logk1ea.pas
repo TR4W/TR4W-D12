@@ -156,6 +156,15 @@ type
     Key: boolean;
   end;
 
+  (* THE ELEMENT RING. Indexed 0..CWBufferSize, but appended to and walked
+    modulo CWBufferSize (IncrementBufferEnd, CWThreadProc; the wrap is pinned
+    by uTestCPUKeyerRing), so nothing reads or writes the last slot. Step
+    with NextRingSlot / PreviousRingSlot, never by hand: FlushCWBuffer once
+    wrapped -1 to CWBufferSize, and from End = 0 the CW thread then keyed the
+    stale ring from slot 1 round to 0 instead of stopping (FIXED in P6,
+    NY4I 2026-10-17). *)
+  CWBufferType = array[0..CWBufferSize] of CWElementRecord;
+
   K1EAKeyer = object
     NumberInterruptConstant: integer;
 
@@ -163,8 +172,6 @@ type
     CodeSpeed: integer;
 
     KeyerInitialized: boolean;
-
-    OldInt0BVector, OldInt0CVector: Pointer;
 
     //wli      SerialPortConfigured: array[Serial1..Serial9] of boolean;
     (* THE KEYER'S OWN SERIAL PORTS, as objects.
@@ -194,6 +201,9 @@ type
 
     procedure AddCharacterToCWBuffer(Character: Char);
     procedure AddStringToCWBuffer(Msg: Str160; Tone: integer);
+    (* One element of the ring, by index -- read-only, for the unit tests
+      (uTestCPUKeyerRing) and anything else that must look without keying. *)
+    function BufferedElement(Index: integer): CWElementRecord;
     function BufferEmpty: boolean;
 //    procedure CheckPTT;
     //    procedure CheckSerialPortReceiveData(SerialPort: PortType);
@@ -220,16 +230,21 @@ type
       last two callers of Tree.InitializeSerialPort keeping that routine
       alive. *)
     procedure UnInitializeKeyer;
+  private
+    (* THE RING IS THE KEYER'S OWN, AND IT IS NOT ON THE HEAP (pointer audit
+      P6, defect D4). It was a unit global CWBuffer: ^CWBufferType, New()'d
+      lazily by Dit, Dah, Dat and AddStringToCWBuffer and never disposed --
+      and the space, '^', control-character and unmapped-character arms of
+      AddCharacterToCWBuffer wrote through it WITHOUT that check, so a first
+      autosend character of ' ' wrote to address 0. A field cannot be nil
+      and has nothing to leak. Zeroed with the rest of the typed constant
+      CPUKeyer, which names only the fields it sets.
+
+      PRIVATE, so only this unit writes it -- SendCWBufferStart, the plain
+      procedure the CW thread calls, reads CPUKeyer.CWBuffer. Everything
+      else reads it through BufferedElement. *)
+    CWBuffer: CWBufferType;
   end;
-
-  RealTimeCWElementRecords = record
-    CWSendStatus: boolean;
-    ClockCount: Word;
-  end;
-
-  RealTimeMessageType = array[0..1024] of RealTimeCWElementRecords;
-
-  RealTimeMessagePointer = ^RealTimeMessageType;
 
   (* THE CONST SECTION HERE IS DELETED, not left empty: `const` with no
     members is a syntax error at the NEXT keyword.
@@ -391,7 +406,6 @@ var
   Radio2SerialInvert                    : boolean;
 //  RadioDebugWrite                       : file;
 
-  RealTimeCWMessageArrayType            : array[0..9] of RealTimeMessagePointer;
   RealTimeCWMessagePlaying              : boolean;
   RealTimeCWMessageRecording            : boolean;
   REalTimeCWMessageActive               : integer; { 0 through 9 }
@@ -423,12 +437,19 @@ function DVKMessagePlaying: boolean;
 procedure SetDVKDelay(Delay: integer);
 procedure StartDVK(MemorySwitch: integer);
 
+(* THE RING'S TWO STEPS, in one place so its modulus is written once. The
+  ring runs modulo CWBufferSize (see CWBufferType): NextRingSlot(CWBufferSize
+  - 1) is 0 and PreviousRingSlot(0) is CWBufferSize - 1. A hand-written wrap
+  to CWBufferSize was FlushCWBuffer's defect; uTestCPUKeyerRing pins both. *)
+function NextRingSlot(Index: integer): integer;
+function PreviousRingSlot(Index: integer): integer;
+
 procedure SendCWBufferStart;
-procedure CWThreadProc;
-procedure tDoABeep;
+function CWThreadProc(aParameter: Pointer): DWORD; stdcall;
+function tDoABeep(aParameter: Pointer): DWORD; stdcall;
 procedure AutoCQTick;
 procedure tCWSleep(millsec: Cardinal; myEvent: System.THandle);   (* myEvent is a HANDLE -- see the note on tCW_Event *)
-procedure tPaddleFootSwitchThreadProc;
+function tPaddleFootSwitchThreadProc(aParameter: Pointer): DWORD; stdcall;
 
 procedure tSetPaddleElementLength;
 function DisplayByte(b: Byte): string;
@@ -494,13 +515,10 @@ const
 type
   SendStatusType = (NothingBeingSent, DitBeingSent, DahBeingSent);
 
-  CWBufferType = array[0..CWBufferSize] of CWElementRecord;
-  CWBufferPtr = ^CWBufferType;
+  (* CWBufferType moved to the interface and CWBufferPtr is gone, with the
+    heap ring they described -- see K1EAKeyer.CWBuffer. *)
 
 var
-
-  CWBuffer                              : CWBufferPtr;
-  CWBufferAvailable                     : boolean;
 
   CWElementLength                       : integer;
 
@@ -534,8 +552,6 @@ var
 
 //  NumberInterruptsConstant              : integer;
 //  NumberInterrupts                      : integer;
-  OldInt08Vector                        : Pointer;
-
   PTTDelayCount                         : integer; { When non zero, indicates that
   PTT turn on delay is in progress }
 
@@ -792,10 +808,20 @@ begin
 end;
 }
 
+function NextRingSlot(Index: integer): integer;
+begin
+  Result := (Index + 1) mod CWBufferSize;
+end;
+
+function PreviousRingSlot(Index: integer): integer;
+begin
+  Result := (Index + CWBufferSize - 1) mod CWBufferSize;
+end;
+
 procedure K1EAKeyer.IncrementBufferEnd;
 
 begin
-  CWBufferEnd := (CWBufferEnd + 1) mod CWBufferSize;
+  CWBufferEnd := NextRingSlot(CWBufferEnd);
 //  tAllowIncrementCWBufferStart := True;
 end;
 {
@@ -817,20 +843,15 @@ begin
 
   //   SpeakerBeep(Config.CWTone, 90);
   //   Sleep(30);
-  if not CWBufferAvailable then
-     begin
-     New(CWBuffer);
-     CWBufferAvailable := True;
-     end;
 
 //  CheckPTT;
 
-  CWBuffer^[CWBufferEnd].length := 10;
-  CWBuffer^[CWBufferEnd].Key := True;
+  CWBuffer[CWBufferEnd].length := 10;
+  CWBuffer[CWBufferEnd].Key := True;
   IncrementBufferEnd;
 
-  CWBuffer^[CWBufferEnd].length := 10;
-  CWBuffer^[CWBufferEnd].Key := False;
+  CWBuffer[CWBufferEnd].length := 10;
+  CWBuffer[CWBufferEnd].Key := False;
   IncrementBufferEnd;
 
 //  CheckPTT;
@@ -840,11 +861,6 @@ end;
 procedure K1EAKeyer.Dat;
 
 begin
-  if not CWBufferAvailable then
-     begin
-     New(CWBuffer);
-     CWBufferAvailable := True;
-     end;
 {
   if not PTTAsserted then
   begin
@@ -853,13 +869,13 @@ begin
     TurnOffActivePort;
   end;
 }
-  CWBuffer^[CWBufferEnd].length := 45;
-  CWBuffer^[CWBufferEnd].Key := True;
+  CWBuffer[CWBufferEnd].length := 45;
+  CWBuffer[CWBufferEnd].Key := True;
 
   IncrementBufferEnd;
 
-  CWBuffer^[CWBufferEnd].length := 10;
-  CWBuffer^[CWBufferEnd].Key := False;
+  CWBuffer[CWBufferEnd].length := 10;
+  CWBuffer[CWBufferEnd].Key := False;
   IncrementBufferEnd;
 {
   if not PTTAsserted then
@@ -878,11 +894,6 @@ begin
   //   SpeakerBeep(Config.CWTone, 270);
   //   Sleep(30);
 
-  if not CWBufferAvailable then
-     begin
-     New(CWBuffer);
-     CWBufferAvailable := True;
-     end;
 {
   if not PTTAsserted then
   begin
@@ -892,13 +903,13 @@ begin
   end;
 }
 
-  CWBuffer^[CWBufferEnd].length := Settings.Cw.DitDahRatio * 10;
-  CWBuffer^[CWBufferEnd].Key := True;
+  CWBuffer[CWBufferEnd].length := Settings.Cw.DitDahRatio * 10;
+  CWBuffer[CWBufferEnd].Key := True;
 
   IncrementBufferEnd;
 
-  CWBuffer^[CWBufferEnd].length := 10;
-  CWBuffer^[CWBufferEnd].Key := False;
+  CWBuffer[CWBufferEnd].length := 10;
+  CWBuffer[CWBufferEnd].Key := False;
   IncrementBufferEnd;
 {
   if not PTTAsserted then
@@ -919,9 +930,15 @@ var
   BufferPointer                         : integer;
 
 begin
+  (* The walk starts at the last element written and steps BACK with
+    PreviousRingSlot. It used to start at CWBufferEnd - 1 written by hand,
+    which is -1 when End is 0: a value that can never equal Start, so with
+    Start just before End the walk went round the whole STALE ring and could
+    make an old gap the new End. FIXED in P6 (NY4I, 2026-10-17); identical
+    for every End <> 0. *)
   if CWBufferEnd <> CWBufferStart then
      begin
-     BufferPointer := CWBufferEnd - 1
+     BufferPointer := PreviousRingSlot(CWBufferEnd);
      end
   else
      begin
@@ -931,16 +948,11 @@ begin
 
   while BufferPointer <> CWBufferStart do
      begin
-     dec(BufferPointer);
+     BufferPointer := PreviousRingSlot(BufferPointer);
 
-     if BufferPointer < 0 then
+     if (CWBuffer[BufferPointer].length = 20) and (CWBuffer[BufferPointer].Key = False) then
         begin
-        BufferPointer := BufferPointer + CWBufferSize;
-        end;
-
-     if (CWBuffer^[BufferPointer].length = 20) and (CWBuffer^[BufferPointer].Key = False) then
-        begin
-        CWBufferEnd := (BufferPointer + 1) mod CWBufferSize;
+        CWBufferEnd := NextRingSlot(BufferPointer);
         DeleteLastCharacter := True;
         Exit;
         end;
@@ -1320,153 +1332,153 @@ begin
     ControlE:
       begin
 //        CheckPTT;
-        CWBuffer^[CWBufferEnd].length := 22;
-        CWBuffer^[CWBufferEnd].Key := True;
+        CWBuffer[CWBufferEnd].length := 22;
+        CWBuffer[CWBufferEnd].Key := True;
         IncrementBufferEnd;
-        CWBuffer^[CWBufferEnd].length := 10;
-        CWBuffer^[CWBufferEnd].Key := False;
+        CWBuffer[CWBufferEnd].length := 10;
+        CWBuffer[CWBufferEnd].Key := False;
         IncrementBufferEnd;
       end;
 
     ControlDash:
       begin
 //        CheckPTT;
-        CWBuffer^[CWBufferEnd].length := 26;
-        CWBuffer^[CWBufferEnd].Key := True;
+        CWBuffer[CWBufferEnd].length := 26;
+        CWBuffer[CWBufferEnd].Key := True;
         IncrementBufferEnd;
-        CWBuffer^[CWBufferEnd].length := 10;
-        CWBuffer^[CWBufferEnd].Key := False;
+        CWBuffer[CWBufferEnd].length := 10;
+        CWBuffer[CWBufferEnd].Key := False;
         IncrementBufferEnd;
       end;
 
     ControlK:
       begin
 //        CheckPTT;
-        CWBuffer^[CWBufferEnd].length := 30;
-        CWBuffer^[CWBufferEnd].Key := True;
+        CWBuffer[CWBufferEnd].length := 30;
+        CWBuffer[CWBufferEnd].Key := True;
         IncrementBufferEnd;
-        CWBuffer^[CWBufferEnd].length := 10;
-        CWBuffer^[CWBufferEnd].Key := False;
+        CWBuffer[CWBufferEnd].length := 10;
+        CWBuffer[CWBufferEnd].Key := False;
         IncrementBufferEnd;
       end;
 
     ControlN:
       begin
 //        CheckPTT;
-        CWBuffer^[CWBufferEnd].length := 34;
-        CWBuffer^[CWBufferEnd].Key := True;
+        CWBuffer[CWBufferEnd].length := 34;
+        CWBuffer[CWBufferEnd].Key := True;
         IncrementBufferEnd;
-        CWBuffer^[CWBufferEnd].length := 10;
-        CWBuffer^[CWBufferEnd].Key := False;
+        CWBuffer[CWBufferEnd].length := 10;
+        CWBuffer[CWBufferEnd].Key := False;
         IncrementBufferEnd;
       end;
 
     ControlO:
       begin
 //        CheckPTT;
-        CWBuffer^[CWBufferEnd].length := 38;
-        CWBuffer^[CWBufferEnd].Key := True;
+        CWBuffer[CWBufferEnd].length := 38;
+        CWBuffer[CWBufferEnd].Key := True;
         IncrementBufferEnd;
-        CWBuffer^[CWBufferEnd].length := 10;
-        CWBuffer^[CWBufferEnd].Key := False;
+        CWBuffer[CWBufferEnd].length := 10;
+        CWBuffer[CWBufferEnd].Key := False;
         IncrementBufferEnd;
       end;
 
     ControlP:
       begin
 //        CheckPTT;
-        CWBuffer^[CWBufferEnd].length := 6;
-        CWBuffer^[CWBufferEnd].Key := True;
+        CWBuffer[CWBufferEnd].length := 6;
+        CWBuffer[CWBufferEnd].Key := True;
         IncrementBufferEnd;
-        CWBuffer^[CWBufferEnd].length := 10;
-        CWBuffer^[CWBufferEnd].Key := False;
+        CWBuffer[CWBufferEnd].length := 10;
+        CWBuffer[CWBufferEnd].Key := False;
         IncrementBufferEnd;
       end;
 
     ControlQ:
       begin
 //        CheckPTT;
-        CWBuffer^[CWBufferEnd].length := 8;
-        CWBuffer^[CWBufferEnd].Key := True;
+        CWBuffer[CWBufferEnd].length := 8;
+        CWBuffer[CWBufferEnd].Key := True;
         IncrementBufferEnd;
-        CWBuffer^[CWBufferEnd].length := 10;
-        CWBuffer^[CWBufferEnd].Key := False;
+        CWBuffer[CWBufferEnd].length := 10;
+        CWBuffer[CWBufferEnd].Key := False;
         IncrementBufferEnd;
       end;
 
     ControlBackSlash:
       begin
 //        CheckPTT;
-        CWBuffer^[CWBufferEnd].length := 10;
-        CWBuffer^[CWBufferEnd].Key := True;
+        CWBuffer[CWBufferEnd].length := 10;
+        CWBuffer[CWBufferEnd].Key := True;
         IncrementBufferEnd;
-        CWBuffer^[CWBufferEnd].length := 10;
-        CWBuffer^[CWBufferEnd].Key := False;
+        CWBuffer[CWBufferEnd].length := 10;
+        CWBuffer[CWBufferEnd].Key := False;
         IncrementBufferEnd;
       end;
 
     ControlV:
       begin
-        CWBuffer^[CWBufferEnd].length := 12;
-        CWBuffer^[CWBufferEnd].Key := True;
+        CWBuffer[CWBufferEnd].length := 12;
+        CWBuffer[CWBufferEnd].Key := True;
         IncrementBufferEnd;
-        CWBuffer^[CWBufferEnd].length := 10;
-        CWBuffer^[CWBufferEnd].Key := False;
+        CWBuffer[CWBufferEnd].length := 10;
+        CWBuffer[CWBufferEnd].Key := False;
         IncrementBufferEnd;
       end;
 
     ControlL:
       begin
 //        CheckPTT;
-        CWBuffer^[CWBufferEnd].length := 14;
-        CWBuffer^[CWBufferEnd].Key := True;
+        CWBuffer[CWBufferEnd].length := 14;
+        CWBuffer[CWBufferEnd].Key := True;
         IncrementBufferEnd;
-        CWBuffer^[CWBufferEnd].length := 10;
-        CWBuffer^[CWBufferEnd].Key := False;
+        CWBuffer[CWBufferEnd].length := 10;
+        CWBuffer[CWBufferEnd].Key := False;
         IncrementBufferEnd;
       end;
 
     ControlF: { Speed up command }
       begin
-        CWBuffer^[CWBufferEnd].length := 0;
-        CWBuffer^[CWBufferEnd].Key := True;
+        CWBuffer[CWBufferEnd].length := 0;
+        CWBuffer[CWBufferEnd].Key := True;
         IncrementBufferEnd;
       end;
 
     ControlS: { Slow down command }
       begin
-        CWBuffer^[CWBufferEnd].length := 0;
-        CWBuffer^[CWBufferEnd].Key := False;
+        CWBuffer[CWBufferEnd].length := 0;
+        CWBuffer[CWBufferEnd].Key := False;
         IncrementBufferEnd;
       end;
 
     ControlX: { Decrease Config.weight command }
       begin
-        CWBuffer^[CWBufferEnd].length := -1;
-        CWBuffer^[CWBufferEnd].Key := False;
+        CWBuffer[CWBufferEnd].length := -1;
+        CWBuffer[CWBufferEnd].Key := False;
         IncrementBufferEnd;
       end;
 
     ControlY: { Increase Config.weight command }
       begin
-        CWBuffer^[CWBufferEnd].length := -1;
-        CWBuffer^[CWBufferEnd].Key := True;
+        CWBuffer[CWBufferEnd].length := -1;
+        CWBuffer[CWBufferEnd].Key := True;
         IncrementBufferEnd;
       end;
 
     ' ':
       begin
 //        CheckPTT;
-        CWBuffer^[CWBufferEnd].length := 30;
-        CWBuffer^[CWBufferEnd].Key := False;
+        CWBuffer[CWBufferEnd].length := 30;
+        CWBuffer[CWBufferEnd].Key := False;
         IncrementBufferEnd;
       end;
 
     '^':
       begin
 //        CheckPTT;
-        CWBuffer^[CWBufferEnd].length := 15;
-        CWBuffer^[CWBufferEnd].Key := False;
+        CWBuffer[CWBufferEnd].length := 15;
+        CWBuffer[CWBufferEnd].Key := False;
         IncrementBufferEnd;
       end;
 
@@ -1477,8 +1489,8 @@ begin
     (Character <> Settings.Cw.StartSendingNowKey) and
     (Character <> '^') then
      begin
-     CWBuffer^[CWBufferEnd].length := 20;
-     CWBuffer^[CWBufferEnd].Key := False;
+     CWBuffer[CWBufferEnd].length := 20;
+     CWBuffer[CWBufferEnd].Key := False;
      IncrementBufferEnd;
      end;
 end;
@@ -1499,11 +1511,6 @@ begin
 //  PaddlePTTOffTimer := 0;
 //  PaddleActive := False;
 
-  if not CWBufferAvailable then
-     begin
-     New(CWBuffer);
-     CWBufferAvailable := True;
-     end;
 
   MonitorTone := Tone;
 {
@@ -1521,7 +1528,7 @@ begin
         begin
         if CommandState then
            begin
-           CWBuffer^[CWBufferEnd].length := Ord('0') - Ord(Msg[Character]);
+           CWBuffer[CWBufferEnd].length := Ord('0') - Ord(Msg[Character]);
            IncrementBufferEnd;
            CommandState := False;
            Continue;
@@ -1537,6 +1544,11 @@ begin
         end;
      end;
 
+end;
+
+function K1EAKeyer.BufferedElement(Index: integer): CWElementRecord;
+begin
+  Result := CWBuffer[Index];
 end;
 
 function K1EAKeyer.BufferEmpty: boolean;
@@ -1564,14 +1576,17 @@ begin
   CWBufferStart := CWBufferEnd - I;
 }
 //  ExitFromCWThread := True;
+  (* With the CW thread running, Start goes ONE SLOT BEHIND End, so the
+    thread's next step (NextRingSlot) lands on End and it stops. That wrap
+    used to be written by hand -- dec, then -1 became CWBufferSize -- and it
+    was off by one: the ring's modulus is CWBufferSize, so from End = 0 the
+    thread stepped to 1, not 0, and keyed the STALE ring from slot 1 round to
+    0 instead of stopping. Fixed in P6 (NY4I, 2026-10-17); identical for
+    every End <> 0. *)
   CWBufferStart := CWBufferEnd;
   if ThreadStarted(CWThreadID) then
      begin
-     dec(CWBufferStart);
-     if CWBufferStart = -1 then
-        begin
-        CWBufferStart := CWBufferSize;
-        end;
+     CWBufferStart := PreviousRingSlot(CWBufferEnd);
      end;
   logger.debug('[CWThreadProc] CWBufferStart := CWBuferEnd');
   {$IF tDebugMode}
@@ -1615,7 +1630,7 @@ begin
   if not Settings.Operating.BeepEnable then Exit;
   ActiveBeep := TypeOfBeep;
   logger.Info('Calling tCreateThread from DoABeep');
-  TR4W_BeepThread := tCreateThread(@tDoABeep, TR4W_BeepThreadID);
+  TR4W_BeepThread := tCreateThread(tDoABeep, TR4W_BeepThreadID);
   logger.Info('Created Beep thread with threadid of %u',[PtrUInt(TR4W_BeepThreadID)] );
   (* Issue #997: asm SetThreadPriority -> Pascal call. The old `push eax` pushed
     a stale handle (clobbered by the preceding logger.Info), so this never
@@ -1812,9 +1827,9 @@ end;
 procedure SendCWBufferStart;
 begin
   CallWinKeyDown := False;  //4.52.4
-  if CWBuffer^[CWBufferStart].length = 0 then // Bump speed command
+  if CPUKeyer.CWBuffer[CWBufferStart].length = 0 then // Bump speed command
      begin
-     if CWBuffer^[CWBufferStart].Key then
+     if CPUKeyer.CWBuffer[CWBufferStart].Key then
         begin
         if CPUKeyer.CodeSpeed < 98 then
            begin
@@ -1856,11 +1871,11 @@ begin
      end
 
   else
-    if CWBuffer^[CWBufferStart].length < 0 then // Command mode
+    if CPUKeyer.CWBuffer[CWBufferStart].length < 0 then // Command mode
        begin
-       case CWBuffer^[CWBufferStart].length of
+       case CPUKeyer.CWBuffer[CWBufferStart].length of
          -1:
-           if CWBuffer^[CWBufferStart].Key then
+           if CPUKeyer.CWBuffer[CWBufferStart].Key then
               begin
               Config.Weight := Config.Weight + 0.03
               end
@@ -1880,10 +1895,10 @@ begin
        end
     else
        begin
-       if CWBuffer^[CWBufferStart].Key then
+       if CPUKeyer.CWBuffer[CWBufferStart].Key then
           begin
           TurnOnActivePort;
-          CWElementLength := round(Config.Weight * (CWBuffer^[CWBufferStart].length * ElementLength) / 10.0);
+          CWElementLength := round(Config.Weight * (CPUKeyer.CWBuffer[CWBufferStart].length * ElementLength) / 10.0);
 
           (* NO SIDETONE IS GENERATED HERE ANY MORE.  NY4I, 2026-09-08:
             "We do not need a sidetone generated by the program at all. It is
@@ -1910,18 +1925,18 @@ begin
           begin
           SendingADah := False;
           TurnOffActivePort;
-          if Config.FarnsworthEnable and (CWBuffer^[CWBufferStart].length >= 15) and (CodeSpeed < Config.FarnsworthSpeed) then
+          if Config.FarnsworthEnable and (CPUKeyer.CWBuffer[CWBufferStart].length >= 15) and (CodeSpeed < Config.FarnsworthSpeed) then
              begin
-             if CWBuffer^[CWBufferStart].length = 15 then
+             if CPUKeyer.CWBuffer[CWBufferStart].length = 15 then
                 begin
-                CWBuffer^[CWBufferStart].length := CWBuffer^[CWBufferStart].length + (Config.FarnsworthSpeed - CodeSpeed)
+                CPUKeyer.CWBuffer[CWBufferStart].length := CPUKeyer.CWBuffer[CWBufferStart].length + (Config.FarnsworthSpeed - CodeSpeed)
                 end
              else
                 begin
-                CWBuffer^[CWBufferStart].length := CWBuffer^[CWBufferStart].length + ((Config.FarnsworthSpeed - CodeSpeed) * 2);
+                CPUKeyer.CWBuffer[CWBufferStart].length := CPUKeyer.CWBuffer[CWBufferStart].length + ((Config.FarnsworthSpeed - CodeSpeed) * 2);
                 end;
              end;
-          CWElementLength := round(((CWBuffer^[CWBufferStart].length * ElementLength) / 10.0) - ((Config.Weight - 1.0) * 2 * ElementLength));
+          CWElementLength := round(((CPUKeyer.CWBuffer[CWBufferStart].length * ElementLength) / 10.0) - ((Config.Weight - 1.0) * 2 * ElementLength));
           tCWSleep(CWElementLength, tCW_Event);
           end;
        end;
@@ -1930,12 +1945,13 @@ begin
 {$IFEND}
 end;
 
-procedure CWThreadProc;
+function CWThreadProc(aParameter: Pointer): DWORD; stdcall;
 label
   SendNext, ExitAndPTTof;
 var
   b                                     : boolean;
 begin
+  Result := 0;   (* the thread exit code -- see TF.TTR4WThreadStart *)
 //tCWSleep(15, tCW_Event);
 
 {$IFDEF WINDOWS}
@@ -1959,7 +1975,7 @@ begin
      SendCWBufferStart;
      if CWBufferStart <> CWBufferEnd then
         begin
-        CWBufferStart := (CWBufferStart + 1) mod CWBufferSize;
+        CWBufferStart := NextRingSlot(CWBufferStart);
         goto SendNext;
         end;
 
@@ -2084,10 +2100,11 @@ begin
 
 end;
 
-procedure tDoABeep;
+function tDoABeep(aParameter: Pointer): DWORD; stdcall;
 var
   OldBeat                               : integer;
 begin
+  Result := 0;   (* the thread exit code -- see TF.TTR4WThreadStart *)
 
   case ActiveBeep of
     ThreeHarmonics:
@@ -2279,7 +2296,7 @@ begin
                 + 'Use an LPT port, or a keyer that provides them.');
 end;
 
-procedure tPaddleFootSwitchThreadProc;
+function tPaddleFootSwitchThreadProc(aParameter: Pointer): DWORD; stdcall;
 label
   Start;
 var
@@ -2289,6 +2306,7 @@ var
   DahContact                            : boolean;
   CWElementLength                       : Cardinal;
 begin
+  Result := 0;   (* the thread exit code -- see TF.TTR4WThreadStart *)
   tDispalyPaddleAndFootSwitchStatus;
 
   tPTTOnCounter := 0;

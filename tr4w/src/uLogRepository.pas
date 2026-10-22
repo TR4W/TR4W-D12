@@ -67,7 +67,10 @@ interface
 uses
    (* Windows for MAXBYTE / MAXWORD, which are the sentinels
      ClearContestExchange writes. DateUtils for the unix epoch. *)
-   LCLType, Classes, SysUtils, DateUtils, db, sqldb, VC, uLogDatabase;
+   LCLType, Classes, SysUtils, DateUtils, db, sqldb, VC, uLogDatabase,
+   (* TQsoMyFacts -- our station as it was for one QSO, the my_* columns.
+      Last, and it declares nothing any unit above also does. *)
+   uQsoMyFacts;
 
 type
    ELogRepositoryError = class(Exception);
@@ -83,6 +86,21 @@ type
       compares only QSO lines. Measured: a headless export ships a file with
       CATEGORY-ASSISTED, CATEGORY-BAND and CATEGORY-OPERATOR ABSENT and a
       CATEGORY-MODE of SSB where the log's own configuration says MIXED.
+
+      WHAT IT HOLDS: the entry's callsign and park; the nine Cabrillo
+      CATEGORY- tags; CLUB and SOAPBOX; and the station identity as declared
+      for this log (name, address, city, state, postcode, country, email).
+
+      WRITTEN ONCE, FOR A NEW (OR JUST-MIGRATED) LOG, AND NEVER ON A REOPEN
+      -- uLogContestStatements.RecordEntryDeclaration, Q61 (2026-10-17). It
+      had been written on EVERY open, which made it today's values rather
+      than the entry's.
+
+      IT IS A RECORD OF THE ENTRY AS MADE, NOT THE CURRENT VALUE, AND
+      NOTHING READS IT BACK. The CURRENT value of ASSISTED, BAND, MODE,
+      OPERATOR and POWER is ONE contest-scoped setting each, held in this
+      log's config table as the operator's statement (Q61, design 7.6) --
+      that is what the summary window edits and a headless export reads.
 
       A RECORD RATHER THAN NINETEEN PARAMETERS, and it is filled by the caller
       rather than read here: the values live in uCbrSum, which is the Cabrillo
@@ -116,6 +134,94 @@ type
       Email: AnsiString;
    end;
 
+   (* ROWS TO REWRITE, BY ROW ID -- collected during a whole-log pass and
+      written afterwards in ONE transaction by TLogRepository.WriteBatch.
+      Section 9c, F1 and F4.
+
+      WHY COLLECT RATHER THAN WRITE AS THE PASS GOES. The pass reads through
+      the sequential cursor, and the connection has ONE transaction: sqldb's
+      TSQLTransaction.Commit calls CloseDataSets first (sqldb.pp:2412), so a
+      commit made while the cursor is open closes it under the reader. Writing
+      inline and committing once at the end would avoid that, but it means
+      UPDATEs to the table a live SELECT is stepping through, which SQLite
+      documents as undefined for what the SELECT then sees. A second write
+      transaction is not available either: on SQLite a transaction belongs to
+      the CONNECTION, so it would need a second connection -- the two-connection
+      shape uLogStore removed because a reader pinned a stale WAL snapshot.
+
+      So the pass collects, the cursor closes, and the writes follow. A record
+      is 376 bytes; a 10,000-row log rewritten in full is under 4 MB, for the
+      length of one rescore.
+
+      Owns copies of the records, not references: the caller's local is
+      overwritten by the next row.
+
+      THE RECORDS ARE KEPT BY TLogQsoList, which TLogQsoAppends shares: the
+      two batches differ only in whether each row already has an id. *)
+   TLogQsoList = class(TObject)
+   private
+      FRows: array of ContestExchange;
+      FCount: integer;
+   protected
+      procedure CheckIndex(aIndex: integer);
+      (* A copy of aQso at the end; its index. Grows by doubling, so a
+         whole-log batch reallocates a handful of times rather than per row. *)
+      function AddRow(const aQso: ContestExchange): integer;
+   public
+      function Count: integer;
+      function Row(aIndex: integer): ContestExchange;
+   end;
+
+   TLogRowUpdates = class(TLogQsoList)
+   private
+      FRowIds: array of Int64;
+   public
+      procedure Add(aRowId: Int64; const aQso: ContestExchange);
+      function RowId(aIndex: integer): Int64;
+   end;
+
+   (* QSOS TO APPEND IN ONE TRANSACTION -- TLogRepository.AppendBatch.
+
+      The ADIF import's batch (NY4I, 2026-10-14: all or nothing). Its rows
+      are new, so there is no row id; everything else is TLogRowUpdates'
+      list, and the collect-then-write shape is the rescore's. *)
+   TLogQsoAppends = class(TLogQsoList)
+   private
+      (* OUR STATION FOR EACH ROW, kept in step with the records the way
+         TLogRowUpdates keeps its ids. *)
+      FMyFacts: array of TQsoMyFacts;
+      (* WHAT EACH ROW SENT, from its file -- its exchange_sent. *)
+      FSentExchanges: array of AnsiString;
+   public
+      (* A row with no captured station: my_source NULL, as a row written
+         before schema 3 -- and no sent exchange. *)
+      procedure Add(const aQso: ContestExchange); overload;
+      (* A row with OUR STATION AS IT WAS for that QSO and WHAT IT SENT -- both
+         from the file it is imported from, never from today's settings (log
+         schema 3, stage 2: the D3 fix). '' sends nothing. *)
+      procedure Add(const aQso: ContestExchange;
+                    const aMyFacts: TQsoMyFacts;
+                    const aSentExchange: AnsiString = ''); overload;
+      function MyFacts(aIndex: integer): TQsoMyFacts;
+      (* Replaces row aIndex's station -- the import's decision, made once the
+         whole file has been read (NY4I, 2026-10-18). *)
+      procedure SetMyFacts(aIndex: integer; const aMyFacts: TQsoMyFacts);
+      function SentExchange(aIndex: integer): AnsiString;
+   end;
+
+   (* ~~TSentExchangeText~~ -- the callback AppendBatch asked for a row's sent
+      exchange -- IS GONE (stage 2, 2026-10-18). Its one caller supplied the
+      LIVE builder, so every imported QSO claimed to have sent today's
+      exchange (D3). A row carries its own now; see TLogQsoAppends.Add. *)
+
+   (* QSOs THAT CARRY NO EXCHANGE ID -- TLogRepository.QSOsWithoutExchangeId.
+      Count is every one; Sample is the first few, in log order, as
+      "CALL yyyy-mm-dd hh:mm" -- enough to find them, not a listing. *)
+   TMissingExchangeIds = record
+      Count: integer;
+      Sample: string;
+   end;
+
    (* Reads and writes QSOs.  Owns its prepared statements and nothing else --
      the connection belongs to the TLogDatabase handed in. *)
    TLogRepository = class(TObject)
@@ -132,9 +238,22 @@ type
       FLastSetId: AnsiString;
       FSetIdForNextSave: AnsiString;
       FSentExchangeForNextSave: AnsiString;
-      FContest: ContestType;
+      (* OUR STATION FOR THE NEXT INSERT -- SetNextMyFacts. Cleared after every
+         save, like the sent exchange; mfsNotCaptured (the zero value) binds
+         every my_* column, my_source included, as NULL. *)
+      FMyFactsForNextSave: TQsoMyFacts;
+      FContest: TContestHandle;
+      (* The contest row's start_time, read with the contest -- see
+         LogStartTime. *)
+      FStartTime: TDateTime;
+      (* The contest row's my_call -- the call the entry DECLARED (see
+         DeclaredCall), read with the contest. *)
+      FDeclaredCall: AnsiString;
 
       FUpdate: TSQLQuery;
+      (* THE ONE WRITE OF A ROW'S my_* COLUMNS AFTER ITS INSERT -- Edit QSO
+         (NY4I, ruling B). Kept, so it executes through ExecuteKeptWrite. *)
+      FUpdateMyFacts: TSQLQuery;
       FSelectById: TSQLQuery;
 
       (* A CONTIGUOUS RUN OF ROWS, prepared once -- section 9b. A virtual grid
@@ -157,7 +276,21 @@ type
          a read transaction open with it. *)
       FCursor: TSQLQuery;
 
+      (* RowIdAtIndex's statement, prepared ONCE like the others. It was
+        created, prepared, opened and freed on every call, and a rescore calls
+        it once per QSO: the 2026-10-14 prototype measured 150 us a call
+        before and 47 after. *)
+      FRowIdAtIndex: TSQLQuery;
+
+      (* True between BeginBatchUpdate and a CommitBatch or RollbackBatch that
+         completed. Stays True if a rollback itself fails, so BeginBatchUpdate
+         refuses rather than committing what that rollback left behind. *)
+      FInBatch: boolean;
+
       procedure InvalidateRecordCount;
+      function NewReadQuery: TSQLQuery;
+      procedure ExecuteKeptWrite(aStatement: TSQLQuery);
+      procedure OpenQsoReader(aQuery: TSQLQuery; aTrailingRowId: boolean = False);
       procedure PrepareStatements;
       procedure LoadContest;
       function LastInsertedRowId: Int64;
@@ -166,6 +299,15 @@ type
       procedure BindRecord(const aQso: ContestExchange; const aGuid: AnsiString);
       procedure BindUpdate(const aQso: ContestExchange);
       procedure ReadRecord(aQuery: TSQLQuery; out aQso: ContestExchange);
+      (* The my_* columns: the insert's (aQuery = FInsert) and the editor's
+         update's (FUpdateMyFacts), one binder so they cannot disagree. *)
+      procedure BindMyFacts(aQuery: TSQLQuery; const aFacts: TQsoMyFacts);
+      (* PRECONDITION as ReadRecord's: opened by OpenQsoReader. *)
+      procedure ReadMyFacts(aQuery: TSQLQuery; out aFacts: TQsoMyFacts);
+      (* THE ONE CURSOR STEP -- every sequential read is this. *)
+      function ReadNextRow(out aRowId: Int64; out aQso: ContestExchange;
+                           out aFacts: TQsoMyFacts;
+                           out aSentExchange: AnsiString): boolean;
       function CountRows(const aSQL: AnsiString): integer;
    public
       constructor Create(aDatabase: TLogDatabase);
@@ -220,8 +362,40 @@ type
          bug this column exists to fix, committed by the tool meant to fix it.
 
          Cleared after every save, like the QSO set, so one contact cannot
-         inherit another's exchange. *)
+         inherit another's exchange.
+
+         FOR AN INSERT ONLY. UpdateQSO does not read it, and an update keeps
+         the exchange_sent the row already holds. exchange_sent is INSERT-ONLY:
+         nothing writes it on an existing row. *)
       procedure SetNextSentExchange(const aSentExchange: AnsiString);
+
+      (* OUR STATION, AS IT WAS FOR THE NEXT SAVED QSO -- the my_* columns.
+
+         The same shape as SetNextSentExchange and for the same reason: the
+         record has no field for them, so the caller that knows supplies them
+         for the insert. uLogStore captures them at the moment of the QSO;
+         an importer passes what its file says, or nothing.
+
+         NOT SET MEANS NOT CAPTURED: my_source is NULL and every reader falls
+         back to the session (NY4I, ruling A). That is right for a .TRW
+         migration, whose records hold none of this, and wrong for anything
+         that knows better -- so a caller that knows MUST set it.
+
+         Cleared after every save. INSERT-ONLY: UpdateQSO, the rescore's
+         batch and the network update never touch these columns -- an edit
+         changes only what was edited (Q13). The editor writes them, on
+         purpose, through UpdateQSOMyFacts. *)
+      procedure SetNextMyFacts(const aFacts: TQsoMyFacts);
+
+      (* THE OPERATOR'S CORRECTION -- Edit QSO (NY4I, ruling B). Writes every
+         my_* column of the row, my_source included; the caller states the
+         source (mfsEdited for an operator's change). Does NOT commit. True
+         when the row exists. *)
+      function UpdateQSOMyFacts(aRowId: Int64; const aFacts: TQsoMyFacts): boolean;
+
+      (* The row's my_* columns; NotCapturedMyFacts for a row written before
+         schema 3. False, and NotCapturedMyFacts, when there is no such row. *)
+      function LoadQSOMyFacts(aRowId: Int64; out aFacts: TQsoMyFacts): boolean;
 
       procedure SetNextQSOSet(const aSetId: AnsiString);
 
@@ -287,6 +461,8 @@ type
       (* REPLACES the row.  Every column BindRecord writes is rewritten, so a
         partially-populated record blanks what it does not carry -- which is
         what the file-based code does too, since it rewrites the whole record.
+        EXCEPT guid, qso_set_id and exchange_sent, which the record does not
+        carry and an edit cannot change (QSO_COLUMNS_UPDATABLE).
         False when there is no such row. *)
       function UpdateQSO(aRowId: Int64; const aQso: ContestExchange): boolean;
 
@@ -300,15 +476,21 @@ type
         logs carry exactly one distinct ContestType.
 
         IT MUST STILL BE RESTORED ON READ. It is not decoration: PostUnit
-        branches on `rec.ceContest = POTA` while EXPORTING, MainUnit reads
-        ContestsArray[..].CountyLineAllowed from it during ADIF import, and
+        asks the QSO's own contest (ContestIdentity(rec.ceContest)) for its
+        ADIF fields while EXPORTING -- POTA's park tags among them -- MainUnit asks
+        the contest's class about a county line from it during ADIF import, and
         HamScore emits it as <contestnr>. A QSO loaded with ceContest left at
         DUMMYCONTEST would export as the wrong contest, silently. *)
-      procedure SetContest(aContest: ContestType);
+      procedure SetContest(aContest: TContestHandle);
 
       (* Writes the entry declaration onto the contest row.  Call once, when
-         the log is created -- see TLogEntryDeclaration for why never again. *)
-      procedure SetEntryDeclaration(const aDeclaration: TLogEntryDeclaration);
+         the log is created -- see TLogEntryDeclaration for why never again.
+         uLogContestStatements.RecordEntryDeclaration is the guarded call.
+
+         False when there is no contest row to write it on: the UPDATE
+         invents no row, and a caller that meant to record the declaration
+         needs to know it did not. *)
+      function SetEntryDeclaration(const aDeclaration: TLogEntryDeclaration): boolean;
 
       (* CONFIGURATION AND PROGRAM MESSAGES INTO THE LOG -- phase E.
 
@@ -328,6 +510,15 @@ type
          station default. uCFG.CommandCameFromContestCFG already knows which is
          which -- this does not re-derive it. *)
       procedure SaveConfigValue(const aCommand, aValue, aSource: AnsiString);
+
+      (* REMOVE A COMMAND'S ROW, if it has one. An absent row is not an error.
+
+        A contest-scoped row exists only while the operator has STATED that
+        setting -- absence means the contest decides (section 7.8 of
+        docs/CONTEST_OWNERSHIP_DESIGN.md) -- so the capture deletes the row of
+        every contest-scoped setting that is not stated, which is also what
+        clears the sentinel rows a log written before that rule carries. *)
+      procedure DeleteConfigValue(const aCommand: AnsiString);
 
       (* WHERE THE OPERATOR LEFT OFF -- the session_state table.
 
@@ -369,7 +560,24 @@ type
 
       function ConfigCount: integer;
       function MessageCount: integer;
-      function LogContest: ContestType;
+      function LogContest: TContestHandle;
+
+      (* WHEN THE LOG SAYS ITS CONTEST STARTED: the contest row's start_time
+         (unix UTC) as a UTC TDateTime, or 0 when the row has none. Q35
+         (2026-10-17) is the first reader -- the contest year a bonus table
+         is chosen by (uContestBase.LogContestYear).
+
+         READ ONCE, WHEN THE REPOSITORY OPENS (LoadContest), because the
+         score asks for it after every QSO and a query per score is the cost
+         uScoreTotals measured and refused. NOTHING WRITES start_time YET --
+         Q99 seeds it at New Contest -- so today this is 0 for every log. *)
+      function LogStartTime: TDateTime;
+
+      (* THE CALL THIS LOG'S ENTRY DECLARED -- contest.my_call, written once
+         when the log was made (RecordEntryDeclaration). What an export writes
+         for a QSO that recorded no call of its own (log schema 3, stage 4: a
+         logged QSO reads the log, not today's MY CALL). '' when none. *)
+      function DeclaredCall: AnsiString;
 
       function NewestRowId: Int64;
 
@@ -420,8 +628,112 @@ type
          times come from the operator's clock and go backwards across a UTC
          correction. *)
       procedure OpenSequentialRead;
-      function ReadNext(out aQso: ContestExchange): boolean;
+      function ReadNext(out aQso: ContestExchange): boolean; overload;
+      (* ReadNext, and the row's OWN STATION -- its my_* columns (schema 3),
+         NotCapturedMyFacts for a row written before. What the ADIF export
+         writes its MY_* tags from. *)
+      function ReadNext(out aQso: ContestExchange;
+                        out aFacts: TQsoMyFacts): boolean; overload;
+      function ReadNextWithMyFacts(out aRowId: Int64;
+                                   out aQso: ContestExchange;
+                                   out aFacts: TQsoMyFacts): boolean;
+      (* ReadNext, the row's station, and WHAT IT SENT -- exchange_sent, '' for
+         none. For the export: an imported row's exchange_sent is its file's
+         STX_STRING, verbatim (log schema 3, stage 4). *)
+      function ReadNextForExport(out aQso: ContestExchange;
+                                 out aFacts: TQsoMyFacts;
+                                 out aSentExchange: AnsiString): boolean;
+
+      (* ReadNext, and the ROW ID of the record it read -- the handle
+         UpdateQSOByRowId takes. The cursor SELECTs it after QSO_COLUMNS, so
+         a whole-log pass can rewrite a row without asking where it is: the
+         rescore used RowIdAtIndex, an OFFSET walk, once per row and twice per
+         changed row. 0 at the end. *)
+      function ReadNextWithRowId(out aRowId: Int64;
+                                 out aQso: ContestExchange): boolean;
       procedure CloseSequentialRead;
+
+      (* ONE TRANSACTION FOR MANY ROWS -- section 9c, F4.
+
+         Every other write here commits per call, which is right for a QSO
+         being logged: the commit IS the contact. A whole-log rewrite is the
+         opposite case. Per row it cost a WAL commit apiece (754 ms of a
+         1,316-row rescore, measured 2026-10-14), and a failure part-way
+         left the log half rescored.
+
+         BeginBatchUpdate COMMITS whatever the connection's implicit
+         transaction holds and then begins a fresh one, so the batch's
+         boundary is exact and RollbackBatch undoes the batch and nothing
+         before it. Every caller of a write here commits its own work, so
+         what that first commit ends is normally a read. It REFUSES while
+         the sequential cursor is open, because that commit would close the
+         cursor (sqldb.pp:2412), and it refuses a second batch.
+
+         THE EXPLICIT START MARKS THE BOUNDARY. sqldb begins a transaction
+         only when a statement PREPARES (sqldb.pp:1296), and FUpdate and
+         FInsert stay prepared, so they used to execute in SQLite's
+         AUTOCOMMIT after any commit -- each UPDATE durable on its own. F4
+         found that here; section 9c's audit found it was true of EVERY
+         kept write, and ExecuteKeptWrite now begins the transaction for all
+         of them (pinned by TestEveryWriteWaitsForItsCommit). The batch still
+         starts its own, so its boundary is BeginBatchUpdate and not its
+         first row (pinned by TestAFailedBatchRollsBackWhole).
+
+         ROLLBACK GOES THROUGH TLogDatabase.Rollback, which survives SQLite
+         having ended the transaction by itself -- on SQLITE_FULL, IOERR,
+         NOMEM or BUSY it may. sqldb does not notice that; its own ROLLBACK
+         then fails with "no transaction is active", which hid the real
+         error, left InBatch True for good and made the close raise too
+         (pinned by TestABatchSQLiteRollsBackItselfLeavesTheRepositoryUsable).
+
+         UpdateQSOByRowId RAISES when the row does not exist. UpdateQSO
+         answers False there, which suits an edit; inside a batch a missing
+         row means the batch is not what its caller read, and it must not be
+         half applied.
+
+         WriteBatch is the usual way in: begin, every row, commit, and on ANY
+         exception roll back and re-raise. *)
+      procedure BeginBatchUpdate;
+      procedure UpdateQSOByRowId(aRowId: Int64; const aQso: ContestExchange);
+      procedure CommitBatch;
+      procedure RollbackBatch;
+      procedure WriteBatch(aUpdates: TLogRowUpdates);
+
+      (* APPENDS MANY QSOS IN ONE TRANSACTION -- ALL OR NONE. The ADIF
+         import's write (NY4I, 2026-10-14), on the batch above: BeginBatchUpdate,
+         every row, CommitBatch, and on ANY exception RollbackBatch and
+         re-raise. Not a second mechanism -- the same begin, commit and
+         rollback WriteBatch uses, with an insert where it has an update.
+
+         EACH ROW IS WRITTEN AS THE LIVE APPEND WRITES ONE
+         (uLogStore.LogStoreAppendQSO): the contest stamped from the record
+         when the log carries another, and SaveQSOGroupingByExchangeId. The
+         grouping lookup sees this transaction's own rows, so a county line
+         inside one file still groups.
+
+         THE ROW'S SENT EXCHANGE AND STATION ARE ITS OWN -- what the batch was
+         given for it (TLogQsoAppends.Add), never what this station sends now.
+         That is where it differs from the live append, on purpose: the live
+         append records a QSO logged HERE, NOW.
+
+         aFailedIndex is the 0-based index of the row that failed, or -1
+         when the failure was not a row's -- the begin or the commit. Set
+         before the exception leaves, so a caller can name the record. *)
+      procedure AppendBatch(aQsos: TLogQsoAppends;
+                            out aFailedIndex: integer);
+      property InBatch: boolean read FInBatch;
+
+      (* QSO ROWS WITH NO EXCHANGE ID. Reads only.
+
+         A rescore no longer mints one (NY4I, 2026-10-14, open question F6):
+         an id is an identity, and inventing it in a scoring pass rewrote
+         every row of an imported log on its first rescore. So a log can
+         legitimately hold QSOs without one -- a .TRW migration, an ADIF from
+         a program that writes none -- and the validity check REPORTS them
+         rather than anything repairing them. Notes and QTC records are not
+         QSOs and are not counted; deleted QSOs are, since they are still
+         contacts in the log. aSampleSize caps the sample, not the count. *)
+      function QSOsWithoutExchangeId(aSampleSize: integer): TMissingExchangeIds;
 
       function LoadQSO(aRowId: Int64; out aQso: ContestExchange): boolean;
 
@@ -482,12 +794,37 @@ function NewRowGuid(const aQso: ContestExchange): AnsiString;
   bytes and NUL-pads the tail. *)
 procedure AnsiToCharArray(var aBuffer: array of AnsiChar; const aValue: AnsiString);
 
+(* THE COLUMN LIST EVERY qso READER SELECTS, in the order ReadRecord reads it.
+  Exported for the pin tests and for nothing else. *)
+function QsoColumnList: AnsiString;
+
+(* '' when the ordinal table ReadRecord reads by agrees with QSO_COLUMNS, else
+  what disagrees. Computed once, when the unit initializes. *)
+function QsoColumnTableProblem: AnsiString;
+
+(* RAISES ELogRepositoryError unless aQuery's fields are QSO_COLUMNS, by name,
+  position for position. ReadRecord reads a column by its POSITION, so a reader
+  whose SELECT drifted would put one column's value in another field without a
+  single error -- this is what turns that into a loud failure at Open instead.
+
+  aTrailingRowId: the reader also SELECTs the row id, AFTER QSO_COLUMNS, so
+  exactly one more column, named id, is required at that position. *)
+procedure VerifyQsoColumns(aQuery: TSQLQuery; aTrailingRowId: boolean = False);
+
 implementation
 
 uses
+   (* TypInfo is here for GetEnumName only -- the proof that TQsoColumn
+     matches QSO_COLUMNS. FIRST in this list, so the units below still win
+     any name it shares with them. It does follow the interface units; no
+     identifier in this unit is one TypInfo also declares (checked
+     2026-10-14). *)
+   TypInfo,
    uADIF, uLogBinaryFile, ZONECONT, TF,
    utils_text,   (* CharBufferBytes -- a fixed char field read back *)
-   uLogNote;   (* NoteText / SetNoteText -- where a note's text lives *)
+   uLogNote,   (* NoteText / SetNoteText -- where a note's text lives *)
+   uContestRegistry,   (* ContestIdentity, ContestId -- the contest's names *)
+   uContestNames;      (* ContestFromName -- the contest row read back *)
 
 (* --------------------------------------------------------------------------- *)
 (* sentinels -- crosswalk finding 3                                            *)
@@ -774,6 +1111,23 @@ end;
 (* identity                                                                     *)
 (* --------------------------------------------------------------------------- *)
 
+(* NOW, AS UNIX SECONDS -- WHICH ARE UTC BY DEFINITION, and every *_at column
+  of the log says so (uLogSchema: "unix UTC").
+
+  DateTimeToUnix does NOT convert: it counts days from 1970 in whatever clock
+  it is handed, and its AInputIsUTC parameter defaults to True, so handing it
+  Now stored LOCAL time as if it were UTC -- off by the station's UTC offset.
+  Every write of "now" here did that until 2026-10-19 (contest.created_at,
+  config.set_at, session_state.saved_at, and the timestamp inside a contest
+  row's guid). LocalTimeToUniversal(Now) is how the rest of the tree reads
+  UTC (uSpotAge.UTCNow, uSynTime, TF), so it is used here too rather than a
+  third way. Rows already written keep what they hold: nothing migrates them,
+  and nothing reads set_at or saved_at. *)
+function UnixNowUTC: Int64;
+begin
+   Result := DateTimeToUnix(LocalTimeToUniversal(Now));
+end;
+
 function NewUUIDv7(aUnixMillis: Int64): AnsiString;
 var
    b: array[0..15] of byte;
@@ -783,7 +1137,7 @@ begin
    ms := aUnixMillis;
    if ms <= 0 then
       begin
-      ms := DateTimeToUnix(Now) * Int64(1000);
+      ms := UnixNowUTC * Int64(1000);
       end;
 
    (* 48-bit big-endian timestamp. *)
@@ -824,6 +1178,15 @@ end;
 (* --------------------------------------------------------------------------- *)
 
 const
+   (* OUR STATION AT THE MOMENT OF THE QSO -- schema 3. Named once and used
+     twice: at the end of QSO_COLUMNS, so every reader carries them and the
+     insert writes them, and as the whole SET clause of FUpdateMyFacts. NOT in
+     QSO_COLUMNS_UPDATABLE, like exchange_sent: no ordinary update can reach
+     them. *)
+   QSO_MY_COLUMNS =
+      'my_county, my_grid, my_state, my_call, my_section, my_park, my_iota, ' +
+      'my_country, my_continent, my_cq_zone, my_itu_zone, my_source';
+
    (* Named once. Adding a column means adding it here, in BindRecord and in
      ReadRecord, and the round-trip test fails if the three disagree. *)
    QSO_COLUMNS =
@@ -841,23 +1204,37 @@ const
       'mult_domestic, mult_dx, mult_prefix, mult_zone, inhibit_mults, ' +
       'qso_points, is_dupe, is_run, is_xqso, is_skipped, sent_in_qtc, ' +
       'name_sent, mp3_recorded, clear_dupe_sheet, clear_mult_sheet, ' +
-      'radio_nr, operator_call, deleted, sent_to_server, server_dirty, notes';
+      'radio_nr, operator_call, deleted, sent_to_server, server_dirty, notes, ' +
+      QSO_MY_COLUMNS;
 
-   (* THE UPDATABLE COLUMNS: the same list WITHOUT guid and WITHOUT
-     qso_set_id.
+   (* THE UPDATABLE COLUMNS: the same list WITHOUT guid, WITHOUT
+     qso_set_id, WITHOUT exchange_sent and WITHOUT QSO_MY_COLUMNS (schema 3,
+     for exchange_sent's reason: the record has no field for them, so an
+     update would bind nothing and erase what the insert captured).
 
-     Both are identity rather than content, and an edit changes what a QSO
-     SAYS, not which row it is or which contact it belonged to. Leaving
+     The first two are identity rather than content, and an edit changes what
+     a QSO SAYS, not which row it is or which contact it belonged to. Leaving
      qso_set_id in here was a real defect, caught by a live run: the update
      had no set id to bind, wrote an empty string, and the first QSO of the
      session lost its membership of the county-line pair it had just been
-     grouped into. Every subsequent edit would have done the same. *)
+     grouped into. Every subsequent edit would have done the same.
+
+     exchange_sent WENT FOR THE SAME REASON (Q61's column audit, 2026-10-16;
+     fixed 2026-10-17). It is what was SENT when the QSO was logged, and the
+     record has no field for it -- so an update had nothing to bind but
+     FSentExchangeForNextSave, which SaveQSO clears after every insert. Every
+     Edit QSO, every rescore and every network update therefore wrote NULL
+     over the sent exchange. An edit changes only what was edited (Q13), and
+     nothing an edit can reach is the sent exchange. NOTHING writes it on an
+     existing row: ~~SetSentExchange~~ did, for one caller -- uLogStore's
+     append-after-a-migration branch -- and went with that branch on
+     2026-10-17 (the .TRW never holds the QSO being appended). *)
    QSO_COLUMNS_UPDATABLE =
       'exchange_id, session_id, session_seq, ' +
       'computer_id, operator_id, record_kind, ' +
       'qso_at, callsign, standard_call, freq_tx_hz, freq_rx_hz, is_split, ' +
       'band, mode, submode, ' +
-      'exchange_sent, exchange_received, ' +
+      'exchange_received, ' +
       'rst_sent, rst_received, serial_sent, serial_received, ' +
       'rcvd_zone, rcvd_name, rcvd_age, rcvd_check, rcvd_precedence, rcvd_class, ' +
       'rcvd_power, rcvd_chapter, rcvd_prefecture, rcvd_member_no, rcvd_qth, ' +
@@ -884,7 +1261,9 @@ const
       ':mult_domestic, :mult_dx, :mult_prefix, :mult_zone, :inhibit_mults, ' +
       ':qso_points, :is_dupe, :is_run, :is_xqso, :is_skipped, :sent_in_qtc, ' +
       ':name_sent, :mp3_recorded, :clear_dupe_sheet, :clear_mult_sheet, ' +
-      ':radio_nr, :operator_call, :deleted, :sent_to_server, :server_dirty, :notes';
+      ':radio_nr, :operator_call, :deleted, :sent_to_server, :server_dirty, :notes, ' +
+      ':my_county, :my_grid, :my_state, :my_call, :my_section, :my_park, :my_iota, ' +
+      ':my_country, :my_continent, :my_cq_zone, :my_itu_zone, :my_source';
 
 (* 'a, b, c' -> 'a = :a, b = :b, c = :c'.
 
@@ -905,9 +1284,21 @@ const
    UPDATE_HEAD: AnsiString = 'UPDATE qso SET ';
    UPDATE_TAIL: AnsiString = ' WHERE id = :row_id';
 
-function AssignmentsFor(const aColumns: AnsiString): AnsiString;
+type
+   TAnsiStringArray = array of AnsiString;
+
+(* 'a, b, c' -> ['a', 'b', 'c']. ONE splitter for a column list: AssignmentsFor
+  and the ordinal table below both read QSO_COLUMNS through it, so they cannot
+  disagree about what a column name is.
+
+  Split by hand rather than with StrUtils' WordCount/ExtractWord: those take
+  UnicodeString here, so every column name would round-trip through a
+  narrowing conversion for no reason. The separator is one character and the
+  input is our own constant. *)
+function SplitColumnList(const aColumns: AnsiString): TAnsiStringArray;
 var
    i: integer;
+   n: integer;
    name: AnsiString;
 
    procedure Emit;
@@ -916,20 +1307,15 @@ var
          begin
          Exit;
          end;
-      if Result <> '' then
-         begin
-         Result := Result + COMMA_SEP;
-         end;
-      Result := Result + name + EQUALS_BIND + name;
+      SetLength(Result, n + 1);
+      Result[n] := name;
+      Inc(n);
       name := '';
    end;
 
 begin
-   (* Split by hand rather than with StrUtils' WordCount/ExtractWord: those take
-     UnicodeString here, so every column name would round-trip through a
-     narrowing conversion for no reason. The separator is one character and the
-     input is our own constant. *)
-   Result := '';
+   SetLength(Result, 0);
+   n := 0;
    name := '';
    for i := 1 to Length(aColumns) do
       begin
@@ -945,6 +1331,190 @@ begin
    Emit;
 end;
 
+function AssignmentsFor(const aColumns: AnsiString): AnsiString;
+var
+   names: TAnsiStringArray;
+   i: integer;
+begin
+   names := SplitColumnList(aColumns);
+   Result := '';
+   for i := 0 to High(names) do
+      begin
+      if i > 0 then
+         begin
+         Result := Result + COMMA_SEP;
+         end;
+      Result := Result + names[i] + EQUALS_BIND + names[i];
+      end;
+end;
+
+(* --------------------------------------------------------------------------- *)
+(* the ordinal table -- how ReadRecord finds a column                          *)
+(* --------------------------------------------------------------------------- *)
+
+(* EVERY COLUMN OF QSO_COLUMNS, BY POSITION. ReadRecord reads
+  aQuery.Fields[Ord(qc_x)] instead of aQuery.FieldByName('x').
+
+  WHY. In FPC 3.2.2 TFields.FindField is a LINEAR scan that upper-cases both
+  names on every comparison. ReadRecord resolved about a hundred fields per row
+  that way -- 190 us a row, measured 2026-10-14 -- on every read path the
+  program has: LoadinLog at startup, four full reads per /EXPORT, the rescore
+  and the grid. By position it is about 10 us a row.
+
+  THE RULE THAT MAKES POSITION SAFE: every reader SELECTs QSO_COLUMNS and
+  nothing else, and VerifyQsoColumns checks it BY NAME, position for position,
+  every time a reader opens -- a mismatch RAISES; there is no fallback to a
+  name lookup, because a fallback is how a shifted read would go unnoticed.
+
+  THE IDENTIFIER IS qc_ PLUS THE COLUMN NAME, EXACTLY. That is not a style
+  choice: BuildQsoColumnTable compares each identifier's RTTI name against
+  QSO_COLUMNS, so an element added, dropped or moved on one side and not the
+  other is reported, and the table refuses to be used. *)
+type
+   TQsoColumn = (
+      qc_guid, qc_exchange_id, qc_qso_set_id, qc_session_id, qc_session_seq,
+      qc_computer_id, qc_operator_id, qc_record_kind,
+      qc_qso_at, qc_callsign, qc_standard_call, qc_freq_tx_hz, qc_freq_rx_hz,
+      qc_is_split,
+      qc_band, qc_mode, qc_submode,
+      qc_exchange_sent, qc_exchange_received,
+      qc_rst_sent, qc_rst_received, qc_serial_sent, qc_serial_received,
+      qc_rcvd_zone, qc_rcvd_name, qc_rcvd_age, qc_rcvd_check,
+      qc_rcvd_precedence, qc_rcvd_class,
+      qc_rcvd_power, qc_rcvd_chapter, qc_rcvd_prefecture, qc_rcvd_member_no,
+      qc_rcvd_qth,
+      qc_rcvd_random, qc_random_sent, qc_rcvd_kids, qc_qtc_call,
+      qc_domestic_qth,
+      qc_dxcc_prefix, qc_dxcc_entity, qc_dxcc_code, qc_cty_cq_zone,
+      qc_cty_continent,
+      qc_prefix_mult, qc_dx_mult, qc_domestic_mult,
+      qc_mult_domestic, qc_mult_dx, qc_mult_prefix, qc_mult_zone,
+      qc_inhibit_mults,
+      qc_qso_points, qc_is_dupe, qc_is_run, qc_is_xqso, qc_is_skipped,
+      qc_sent_in_qtc,
+      qc_name_sent, qc_mp3_recorded, qc_clear_dupe_sheet, qc_clear_mult_sheet,
+      qc_radio_nr, qc_operator_call, qc_deleted, qc_sent_to_server,
+      qc_server_dirty, qc_notes,
+      (* QSO_MY_COLUMNS, in its order. *)
+      qc_my_county, qc_my_grid, qc_my_state, qc_my_call, qc_my_section,
+      qc_my_park, qc_my_iota, qc_my_country, qc_my_continent, qc_my_cq_zone,
+      qc_my_itu_zone, qc_my_source);
+
+const
+   QC_PREFIX: AnsiString = 'qc_';
+   QSO_COLUMN_COUNT = Ord(High(TQsoColumn)) + 1;
+
+   (* The row id, which is NOT in QSO_COLUMNS -- it is the table's own key,
+     never bound by a writer. The sequential cursor selects it AFTER them, at
+     position QSO_COLUMN_COUNT. A `string` constant because it is only ever
+     compared with a FieldName and put in a message, both `string`. *)
+   ROW_ID_COLUMN = 'id';
+
+var
+   (* FILLED ONCE, by BuildQsoColumnTable from the initialization section, and
+     read-only after that -- so readers on any thread see the same table. *)
+   GQsoColumnName: array[TQsoColumn] of AnsiString;
+   GQsoColumnTableProblem: AnsiString;
+
+procedure BuildQsoColumnTable;
+var
+   names: TAnsiStringArray;
+   column: TQsoColumn;
+   declared: AnsiString;
+begin
+   GQsoColumnTableProblem := '';
+   names := SplitColumnList(QSO_COLUMNS);
+   if Length(names) <> QSO_COLUMN_COUNT then
+      begin
+      GQsoColumnTableProblem := SysUtils.Format(
+         'uLogRepository: QSO_COLUMNS names %d columns and TQsoColumn ' +
+         'declares %d. They must be the same list in the same order.',
+         [Length(names), QSO_COLUMN_COUNT]);
+      Exit;
+      end;
+
+   for column := Low(TQsoColumn) to High(TQsoColumn) do
+      begin
+      GQsoColumnName[column] := names[Ord(column)];
+      declared := GetEnumName(TypeInfo(TQsoColumn), Ord(column));
+      if not SameText(declared, QC_PREFIX + names[Ord(column)]) then
+         begin
+         GQsoColumnTableProblem := SysUtils.Format(
+            'uLogRepository: column %d of QSO_COLUMNS is "%s" but TQsoColumn ' +
+            'declares %s there. They must be the same list in the same order.',
+            [Ord(column), names[Ord(column)], declared]);
+         Exit;
+         end;
+      end;
+end;
+
+function QsoColumnList: AnsiString;
+begin
+   Result := QSO_COLUMNS;
+end;
+
+function QsoColumnTableProblem: AnsiString;
+begin
+   Result := GQsoColumnTableProblem;
+end;
+
+(* ONCE PER OPEN, NOT PER ROW: sixty-eight name comparisons against a
+  table built at start-up, a few microseconds, so the guard costs nothing a
+  reader would notice and is never skipped. *)
+procedure VerifyQsoColumns(aQuery: TSQLQuery; aTrailingRowId: boolean);
+var
+   column: TQsoColumn;
+   actual: AnsiString;
+   expected: integer;
+begin
+   if Length(GQsoColumnTableProblem) > 0 then
+      begin
+      raise ELogRepositoryError.Create(GQsoColumnTableProblem);
+      end;
+
+   expected := QSO_COLUMN_COUNT;
+   if aTrailingRowId then
+      begin
+      Inc(expected);
+      end;
+
+   if aQuery.Fields.Count <> expected then
+      begin
+      raise ELogRepositoryError.Create(SysUtils.Format(
+         'A qso reader returned %d columns where QSO_COLUMNS names %d%s. ' +
+         'Its fields are read by POSITION, so it refuses rather than read ' +
+         'one column into another field.',
+         [aQuery.Fields.Count, QSO_COLUMN_COUNT,
+          BoolToStr(aTrailingRowId, ' and the row id follows them', '')]));
+      end;
+
+   (* The FieldName is compared as the string it is -- copying it into an
+     AnsiString first would be a narrowing conversion for no reason. *)
+   if aTrailingRowId and
+      (not SameText(aQuery.Fields[QSO_COLUMN_COUNT].FieldName, ROW_ID_COLUMN)) then
+      begin
+      raise ELogRepositoryError.Create(SysUtils.Format(
+         'A qso reader returned "%s" as column %d where the row id "%s" ' +
+         'belongs. It is read by POSITION, so it refuses rather than take ' +
+         'another column for the row id.',
+         [aQuery.Fields[QSO_COLUMN_COUNT].FieldName, QSO_COLUMN_COUNT,
+          ROW_ID_COLUMN]));
+      end;
+
+   for column := Low(TQsoColumn) to High(TQsoColumn) do
+      begin
+      actual := aQuery.Fields[Ord(column)].FieldName;
+      if not SameText(actual, GQsoColumnName[column]) then
+         begin
+         raise ELogRepositoryError.Create(SysUtils.Format(
+            'A qso reader returned "%s" as column %d where QSO_COLUMNS has ' +
+            '"%s". Its fields are read by POSITION, so it refuses rather ' +
+            'than read one column into another field.',
+            [actual, Ord(column), GQsoColumnName[column]]));
+         end;
+      end;
+end;
+
 constructor TLogRepository.Create(aDatabase: TLogDatabase);
 begin
    inherited Create;
@@ -953,8 +1523,15 @@ begin
       raise ELogRepositoryError.Create(
          'A log repository needs an open contest log.');
       end;
+   (* AT CONSTRUCTION, not at the first read: a column table that disagrees
+     with QSO_COLUMNS is a build defect, and the earliest point it can be
+     reported is the moment anything asks for a repository. *)
+   if Length(GQsoColumnTableProblem) > 0 then
+      begin
+      raise ELogRepositoryError.Create(GQsoColumnTableProblem);
+      end;
    FDatabase := aDatabase;
-   FContest := DUMMYCONTEST;
+   FContest := NoContest;
    FRecordCount := -1;
    PrepareStatements;
    LoadContest;
@@ -969,8 +1546,79 @@ begin
    FSelect.Free;
    FSelectById.Free;
    FSelectRange.Free;
+   FRowIdAtIndex.Free;
    FUpdate.Free;
+   FUpdateMyFacts.Free;
    inherited Destroy;
+end;
+
+(* A QUERY THAT ONLY READS. Every SELECT in this unit is made here.
+
+  UsePrimaryKeyAsKey := False is the point of it. sqldb's default is True, and
+  then EVERY Open of a single-table SELECT first runs UpdateServerIndexDefs
+  (sqldb.pp:3121) -- PRAGMA table_info, index_list and index_info -- to learn
+  which fields are the key, so that edits made through the dataset can be
+  written back. Nothing here edits through a dataset: writes are INSERT and
+  UPDATE statements of their own. Measured 2026-10-14 on winter_fd's log, a
+  prepared SELECT by id re-opened for each of its 1,316 rows: about 935 us an
+  Open with the default, about 715 with this off.
+
+  ParseSQL := False would skip the same metadata -- sqldb's own comment calls
+  that a "practical side effect" -- and measured the same (about 755 us). It is
+  not used because it is a side effect: UsePrimaryKeyAsKey names exactly the
+  work being declined. *)
+function TLogRepository.NewReadQuery: TSQLQuery;
+begin
+   Result := TSQLQuery.Create(nil);
+   try
+      Result.DataBase := FDatabase.Connection;
+      Result.UsePrimaryKeyAsKey := False;
+   except
+      Result.Free;
+      raise;
+   end;
+end;
+
+(* EVERY EXECUTION OF FInsert OR FUpdate GOES THROUGH HERE, AND IT IS WHAT
+  MAKES "Does NOT commit; the caller decides" TRUE OF THEM -- section 9c.
+
+  sqldb begins a transaction only when a statement PREPARES (sqldb.pp:1296).
+  A statement made per call -- config, session, messages, the contest row --
+  prepares every time and so always runs inside one. FInsert and FUpdate are
+  prepared ONCE, at construction, and kept; so after ANY Commit they ran in
+  SQLite's AUTOCOMMIT, each one durable the moment it executed. Measured
+  2026-10-14 (TestEveryWriteWaitsForItsCommit, before this existed): a SaveQSO
+  or an UpdateQSO survived a close with no commit, and of "two SaveQSOs" or
+  "UpdateQSO then SaveConfigValue" the FIRST write survived and the second
+  did not -- half applied, by a caller that believed it held one
+  transaction.
+
+  So a kept write begins the transaction a prepare would have begun, and
+  the caller's Commit -- or the rollback at close when it never comes -- ends
+  it. One fsync either way: the autocommit paid one per statement, and a
+  caller's Commit pays one per transaction.
+
+  A NEW KEPT WRITE STATEMENT MUST EXECUTE THROUGH HERE TOO. *)
+procedure TLogRepository.ExecuteKeptWrite(aStatement: TSQLQuery);
+begin
+   if not FDatabase.Transaction.Active then
+      begin
+      FDatabase.Transaction.StartTransaction;
+      end;
+   aStatement.ExecSQL;
+end;
+
+(* EVERY qso READER OPENS HERE, and is checked before a row is read. A reader
+  that opened some other way would bypass the guard ReadRecord depends on. *)
+procedure TLogRepository.OpenQsoReader(aQuery: TSQLQuery; aTrailingRowId: boolean);
+begin
+   aQuery.Open;
+   try
+      VerifyQsoColumns(aQuery, aTrailingRowId);
+   except
+      aQuery.Close;
+      raise;
+   end;
 end;
 
 (* PREPARED ONCE, RE-EXECUTED WITH PARAMETERS -- section 9b. Re-assigning
@@ -984,21 +1632,22 @@ begin
                        QSO_PARAMS + ')';
    FInsert.Prepare;
 
-   FSelect := TSQLQuery.Create(nil);
-   FSelect.DataBase := FDatabase.Connection;
+   FSelect := NewReadQuery;
    FSelect.SQL.Text := 'SELECT ' + QSO_COLUMNS + ' FROM qso WHERE guid = :guid';
    FSelect.Prepare;
 
-   FSelectById := TSQLQuery.Create(nil);
-   FSelectById.DataBase := FDatabase.Connection;
+   FSelectById := NewReadQuery;
    FSelectById.SQL.Text := 'SELECT ' + QSO_COLUMNS + ' FROM qso WHERE id = :row_id';
    FSelectById.Prepare;
 
-   FSelectRange := TSQLQuery.Create(nil);
-   FSelectRange.DataBase := FDatabase.Connection;
+   FSelectRange := NewReadQuery;
    FSelectRange.SQL.Text := 'SELECT ' + QSO_COLUMNS +
                             ' FROM qso ORDER BY id LIMIT :n OFFSET :m';
    FSelectRange.Prepare;
+
+   FRowIdAtIndex := NewReadQuery;
+   FRowIdAtIndex.SQL.Text := 'SELECT id FROM qso ORDER BY id LIMIT 1 OFFSET :n';
+   FRowIdAtIndex.Prepare;
 
    (* guid is NOT in the SET clause: a row's identity does not change when its
      contents do, and rewriting it would break anything holding the old one. *)
@@ -1008,6 +1657,13 @@ begin
                        AssignmentsFor(QSO_COLUMNS_UPDATABLE) +
                        UPDATE_TAIL;
    FUpdate.Prepare;
+
+   FUpdateMyFacts := TSQLQuery.Create(nil);
+   FUpdateMyFacts.DataBase := FDatabase.Connection;
+   FUpdateMyFacts.SQL.Text := UPDATE_HEAD +
+                              AssignmentsFor(QSO_MY_COLUMNS) +
+                              UPDATE_TAIL;
+   FUpdateMyFacts.Prepare;
 end;
 
 (* ONE BINDER FOR BOTH STATEMENTS.
@@ -1101,7 +1757,15 @@ begin
    (* The received exchange as rendered. There is no sent counterpart in the
      record -- crosswalk finding 1. *)
    BindText(P('exchange_received'), AnsiString(rec.ExchString));
-   BindText(P('exchange_sent'), FSentExchangeForNextSave);
+
+   (* INSERT ONLY, like qso_set_id: an update keeps what was sent -- see
+     QSO_COLUMNS_UPDATABLE. *)
+   if aInserting then
+      begin
+      BindText(P('exchange_sent'), FSentExchangeForNextSave);
+      (* INSERT ONLY, the same rule: our station as it was for this QSO. *)
+      BindMyFacts(aQuery, FMyFactsForNextSave);
+      end;
 
    P('rst_sent').AsInteger := rec.RSTSent;
    P('rst_received').AsInteger := rec.RSTReceived;
@@ -1260,25 +1924,130 @@ begin
    BindInto(FUpdate, aQso, '', False);
 end;
 
-procedure TLogRepository.ReadRecord(aQuery: TSQLQuery; out aQso: ContestExchange);
-var
-   continentToken: Str20;
-   token: AnsiString;
+procedure TLogRepository.BindMyFacts(aQuery: TSQLQuery;
+                                     const aFacts: TQsoMyFacts);
 
-   function F(const aName: AnsiString): TField;
+   function P(const aName: AnsiString): TParam;
    begin
-      Result := aQuery.FieldByName(aName);
+      Result := aQuery.ParamByName(aName);
    end;
 
-   function S(const aName: AnsiString): AnsiString;
+   (* 0 is "unknown" for a zone, and unknown is NULL -- never zone 0. *)
+   procedure BindZone(aParam: TParam; aZone: integer);
    begin
-      if F(aName).IsNull then
+      if aZone > 0 then
+         begin
+         aParam.AsInteger := aZone;
+         end
+      else
+         begin
+         aParam.Clear;
+         end;
+   end;
+
+begin
+   (* NOT CAPTURED IS NULL IN EVERY COLUMN, my_source included -- the shape a
+     row written before schema 3 has, so a reader cannot tell the two apart
+     and does not need to: both fall back to the session. Bound from the
+     zero record, which is exactly that. *)
+   BindText(P('my_county'), aFacts.County);
+   BindText(P('my_grid'), aFacts.Grid);
+   BindText(P('my_state'), aFacts.State);
+   BindText(P('my_call'), aFacts.Call);
+   BindText(P('my_section'), aFacts.Section);
+   BindText(P('my_park'), aFacts.Park);
+   BindText(P('my_iota'), aFacts.Iota);
+   BindText(P('my_country'), aFacts.Country);
+   BindText(P('my_continent'), aFacts.Continent);
+   BindZone(P('my_cq_zone'), aFacts.CQZone);
+   BindZone(P('my_itu_zone'), aFacts.ITUZone);
+   (* '' for mfsNotCaptured, which BindText stores as NULL. *)
+   BindText(P('my_source'), MyFactsSourceToken(aFacts.Source));
+end;
+
+procedure TLogRepository.ReadMyFacts(aQuery: TSQLQuery; out aFacts: TQsoMyFacts);
+
+   function F(aColumn: TQsoColumn): TField;
+   begin
+      Result := aQuery.Fields[Ord(aColumn)];
+   end;
+
+   function S(aColumn: TQsoColumn): AnsiString;
+   begin
+      if F(aColumn).IsNull then
          begin
          Result := '';
          end
       else
          begin
-         Result := AnsiString(F(aName).AsString);
+         Result := AnsiString(F(aColumn).AsString);
+         end;
+   end;
+
+   function Z(aColumn: TQsoColumn): integer;
+   begin
+      if F(aColumn).IsNull then
+         begin
+         Result := 0;
+         end
+      else
+         begin
+         Result := F(aColumn).AsInteger;
+         end;
+   end;
+
+begin
+   aFacts := NotCapturedMyFacts;
+   aFacts.Source := TokenToMyFactsSource(S(qc_my_source));
+   (* A ROW NEVER CAPTURED holds nothing to read -- and if a hand edit put a
+     value in one of its columns without a source, that value has no
+     provenance and is not reported as ours. *)
+   if aFacts.Source = mfsNotCaptured then
+      begin
+      Exit;
+      end;
+
+   aFacts.County := S(qc_my_county);
+   aFacts.Grid := S(qc_my_grid);
+   aFacts.State := S(qc_my_state);
+   aFacts.Call := S(qc_my_call);
+   aFacts.Section := S(qc_my_section);
+   aFacts.Park := S(qc_my_park);
+   aFacts.Iota := S(qc_my_iota);
+   aFacts.Country := S(qc_my_country);
+   aFacts.Continent := S(qc_my_continent);
+   aFacts.CQZone := Z(qc_my_cq_zone);
+   aFacts.ITUZone := Z(qc_my_itu_zone);
+end;
+
+(* PRECONDITION: aQuery was opened by OpenQsoReader, so its fields are
+  QSO_COLUMNS in order and Fields[Ord(c)] IS column c. That is checked once per
+  Open rather than here, once per row.
+
+  NEVER aQuery.FieldByName IN HERE. See TQsoColumn: a linear, case-folding
+  scan per field per row was nineteen-twentieths of this routine's cost. *)
+procedure TLogRepository.ReadRecord(aQuery: TSQLQuery; out aQso: ContestExchange);
+var
+   continentToken: Str20;
+   token: AnsiString;
+
+   function F(aColumn: TQsoColumn): TField;
+   begin
+      Result := aQuery.Fields[Ord(aColumn)];
+   end;
+
+   function S(aColumn: TQsoColumn): AnsiString;
+   var
+      field: TField;
+   begin
+      field := F(aColumn);
+      if field.IsNull then
+         begin
+         Result := '';
+         end
+      else
+         begin
+         Result := AnsiString(field.AsString);
          end;
    end;
 
@@ -1299,116 +2068,116 @@ begin
    aQso.QTH.Country := UNKNOWN_COUNTRY;
    aQso.TenTenNum := MAXWORD;
 
-   aQso.id := S('exchange_id');
-   aQso.ceQSOID1 := Cardinal(F('session_id').AsLargeInt);
-   aQso.ceQSOID2 := Cardinal(F('session_seq').AsLargeInt);
+   aQso.id := S(qc_exchange_id);
+   aQso.ceQSOID1 := Cardinal(F(qc_session_id).AsLargeInt);
+   aQso.ceQSOID2 := Cardinal(F(qc_session_seq).AsLargeInt);
    (* A single character out of a text column. Indexing a managed string is
      ordinary Pascal -- what this tree is removing is taking its ADDRESS. Read
      once into a local so the guard and the use cannot disagree. *)
-   token := S('computer_id');
+   token := S(qc_computer_id);
    if token <> '' then
       begin
       aQso.ceComputerID := token[1];
       end;
-   aQso.ceOperatorID := byte(F('operator_id').AsInteger);
-   aQso.ceRecordKind := TokenToRecordKind(S('record_kind'));
+   aQso.ceOperatorID := byte(F(qc_operator_id).AsInteger);
+   aQso.ceRecordKind := TokenToRecordKind(S(qc_record_kind));
 
    (* FROM THE CONTEST ROW, not from the QSO row -- see SetContest. Without this
      every loaded QSO reports DUMMYCONTEST and exports as the wrong contest. *)
    aQso.ceContest := FContest;
 
-   aQso.tSysTime := UnixUTCToQSOTime(F('qso_at').AsLargeInt);
-   aQso.Callsign := S('callsign');
-   aQso.QTH.StandardCall := S('standard_call');
-   aQso.Frequency := F('freq_tx_hz').AsLargeInt;
+   aQso.tSysTime := UnixUTCToQSOTime(F(qc_qso_at).AsLargeInt);
+   aQso.Callsign := S(qc_callsign);
+   aQso.QTH.StandardCall := S(qc_standard_call);
+   aQso.Frequency := F(qc_freq_tx_hz).AsLargeInt;
 
    (* GetADIFBand IS the inverse of ADIFBANDSTRINGSARRAY -- it scans that very
      array -- so it is the right routine and there is no second table. *)
-   aQso.Band := GetADIFBand(string(S('band')));
-   aQso.Mode := TokenToMode(S('mode'));
-   aQso.ExtMode := TokenToExtMode(S('submode'));
+   aQso.Band := GetADIFBand(string(S(qc_band)));
+   aQso.Mode := TokenToMode(S(qc_mode));
+   aQso.ExtMode := TokenToExtMode(S(qc_submode));
 
-   aQso.ExchString := S('exchange_received');
+   aQso.ExchString := S(qc_exchange_received);
 
-   aQso.RSTSent := F('rst_sent').AsInteger;
-   aQso.RSTReceived := F('rst_received').AsInteger;
-   aQso.NumberSent := FieldSerial(F('serial_sent'));
-   aQso.NumberReceived := FieldSerial(F('serial_received'));
+   aQso.RSTSent := F(qc_rst_sent).AsInteger;
+   aQso.RSTReceived := F(qc_rst_received).AsInteger;
+   aQso.NumberSent := FieldSerial(F(qc_serial_sent));
+   aQso.NumberReceived := FieldSerial(F(qc_serial_received));
 
-   aQso.Zone := FieldByte(F('rcvd_zone'), DUMMYZONE);
-   aQso.Name := S('rcvd_name');
-   aQso.Age := byte(F('rcvd_age').AsInteger);
-   aQso.Check := byte(F('rcvd_check').AsInteger);
-   token := S('rcvd_precedence');
+   aQso.Zone := FieldByte(F(qc_rcvd_zone), DUMMYZONE);
+   aQso.Name := S(qc_rcvd_name);
+   aQso.Age := byte(F(qc_rcvd_age).AsInteger);
+   aQso.Check := byte(F(qc_rcvd_check).AsInteger);
+   token := S(qc_rcvd_precedence);
    if token <> '' then
       begin
       aQso.Precedence := token[1];
       end;
-   aQso.ceClass := S('rcvd_class');
-   aQso.Power := S('rcvd_power');
-   aQso.Chapter := S('rcvd_chapter');
-   aQso.Prefecture := FieldByte(F('rcvd_prefecture'), MAXBYTE);
-   aQso.TenTenNum := FieldWord(F('rcvd_member_no'), MAXWORD);
-   aQso.QTHString := S('rcvd_qth');
-   aQso.RandomCharsReceived := S('rcvd_random');
-   aQso.RandomCharsSent := S('random_sent');
+   aQso.ceClass := S(qc_rcvd_class);
+   aQso.Power := S(qc_rcvd_power);
+   aQso.Chapter := S(qc_rcvd_chapter);
+   aQso.Prefecture := FieldByte(F(qc_rcvd_prefecture), MAXBYTE);
+   aQso.TenTenNum := FieldWord(F(qc_rcvd_member_no), MAXWORD);
+   aQso.QTHString := S(qc_rcvd_qth);
+   aQso.RandomCharsReceived := S(qc_rcvd_random);
+   aQso.RandomCharsSent := S(qc_random_sent);
 
    if aQso.ceRecordKind in [rkQTCR, rkQTCS] then
       begin
-      aQso.Kids := S('qtc_call');
+      aQso.Kids := S(qc_qtc_call);
       end
    else
       begin
-      aQso.Kids := S('rcvd_kids');
+      aQso.Kids := S(qc_rcvd_kids);
       end;
 
-   aQso.DomesticQTH := S('domestic_qth');
+   aQso.DomesticQTH := S(qc_domestic_qth);
 
-   aQso.QTH.Prefix := S('dxcc_prefix');
-   aQso.QTH.CountryID := S('dxcc_entity');
-   aQso.QTH.Country := FieldWord(F('dxcc_code'), UNKNOWN_COUNTRY);
-   aQso.QTH.Zone := FieldByte(F('cty_cq_zone'), DUMMYZONE);
-   if S('cty_continent') <> '' then
+   aQso.QTH.Prefix := S(qc_dxcc_prefix);
+   aQso.QTH.CountryID := S(qc_dxcc_entity);
+   aQso.QTH.Country := FieldWord(F(qc_dxcc_code), UNKNOWN_COUNTRY);
+   aQso.QTH.Zone := FieldByte(F(qc_cty_cq_zone), DUMMYZONE);
+   if S(qc_cty_continent) <> '' then
       begin
       begin
-      continentToken := S('cty_continent');
+      continentToken := S(qc_cty_continent);
       aQso.QTH.Continent := GetContinentFromString(continentToken);
       end;
       end;
 
-   aQso.Prefix := S('prefix_mult');
-   aQso.DXQTH := S('dx_mult');
-   aQso.DomMultQTH := S('domestic_mult');
-   aQso.DomesticMult := FieldBool(F('mult_domestic'));
-   aQso.DXMult := FieldBool(F('mult_dx'));
-   aQso.PrefixMult := FieldBool(F('mult_prefix'));
-   aQso.ZoneMult := FieldBool(F('mult_zone'));
-   aQso.InhibitMults := FieldBool(F('inhibit_mults'));
+   aQso.Prefix := S(qc_prefix_mult);
+   aQso.DXQTH := S(qc_dx_mult);
+   aQso.DomMultQTH := S(qc_domestic_mult);
+   aQso.DomesticMult := FieldBool(F(qc_mult_domestic));
+   aQso.DXMult := FieldBool(F(qc_mult_dx));
+   aQso.PrefixMult := FieldBool(F(qc_mult_prefix));
+   aQso.ZoneMult := FieldBool(F(qc_mult_zone));
+   aQso.InhibitMults := FieldBool(F(qc_inhibit_mults));
 
-   aQso.QSOPoints := word(F('qso_points').AsInteger);
-   aQso.ceDupe := FieldBool(F('is_dupe'));
-   aQso.ceSearchAndPounce := not FieldBool(F('is_run'));
-   aQso.ceXQSO := FieldBool(F('is_xqso'));
+   aQso.QSOPoints := word(F(qc_qso_points).AsInteger);
+   aQso.ceDupe := FieldBool(F(qc_is_dupe));
+   aQso.ceSearchAndPounce := not FieldBool(F(qc_is_run));
+   aQso.ceXQSO := FieldBool(F(qc_is_xqso));
    (* NEVER POPULATED FROM THE DATABASE. What this column meant is folded
      into ceQSO_Deleted below -- see ceQSO_Skiped in VC.pas. *)
    aQso.ceQSO_Skiped := False;
-   aQso.ceWasSendInQTC := FieldBool(F('sent_in_qtc'));
-   aQso.NameSent := FieldBool(F('name_sent'));
-   aQso.MP3Record := FieldBool(F('mp3_recorded'));
-   aQso.ceClearDupeSheet := FieldBool(F('clear_dupe_sheet'));
-   aQso.ceClearMultSheet := FieldBool(F('clear_mult_sheet'));
+   aQso.ceWasSendInQTC := FieldBool(F(qc_sent_in_qtc));
+   aQso.NameSent := FieldBool(F(qc_name_sent));
+   aQso.MP3Record := FieldBool(F(qc_mp3_recorded));
+   aQso.ceClearDupeSheet := FieldBool(F(qc_clear_dupe_sheet));
+   aQso.ceClearMultSheet := FieldBool(F(qc_clear_mult_sheet));
 
-   aQso.ceRadio := RadioType(F('radio_nr').AsInteger);
-   AnsiToCharArray(aQso.ceOperator, S('operator_call'));
+   aQso.ceRadio := RadioType(F(qc_radio_nr).AsInteger);
+   AnsiToCharArray(aQso.ceOperator, S(qc_operator_call));
    (* THE LEGACY FOLD, AND IT HAS TO BE HERE RATHER THAN WHERE is_skipped IS
      READ, thirteen lines above: `deleted` is not in aQso yet at that point, so
      an OR there would be against a stale value and this line would then
      overwrite it. A database written before the unification can carry
      is_skipped = 1 on a row whose deleted is 0 -- those QSOs would come back
      UNDELETED without this. *)
-   aQso.ceQSO_Deleted := FieldBool(F('deleted')) or FieldBool(F('is_skipped'));
-   aQso.ceSendToServer := FieldBool(F('sent_to_server'));
-   aQso.ceNeedSendToServerAE := FieldBool(F('server_dirty'));
+   aQso.ceQSO_Deleted := FieldBool(F(qc_deleted)) or FieldBool(F(qc_is_skipped));
+   aQso.ceSendToServer := FieldBool(F(qc_sent_to_server));
+   aQso.ceNeedSendToServerAE := FieldBool(F(qc_server_dirty));
 
    (* A NOTE'S TEXT GOES BACK INTO THE LAYOUT IT WAS WRITTEN IN. Every field
      above was read by its type, and for a note those fields were bound
@@ -1417,7 +2186,7 @@ begin
      saw. *)
    if aQso.ceRecordKind = rkNote then
       begin
-      SetNoteText(aQso, S('notes'));
+      SetNoteText(aQso, S(qc_notes));
       end;
 end;
 
@@ -1436,7 +2205,7 @@ begin
       end;
 
    BindRecord(aQso, FLastGuid);
-   FInsert.ExecSQL;
+   ExecuteKeptWrite(FInsert);
    InvalidateRecordCount;
 
    (* CLEARED IMMEDIATELY, BOTH OF THEM. A sticky set id would quietly pull the next
@@ -1446,6 +2215,8 @@ begin
      the next -- the same class of error against a different column. *)
    FSetIdForNextSave := '';
    FSentExchangeForNextSave := '';
+   (* And our station: one QSO's facts must not be the next one's. *)
+   FMyFactsForNextSave := NotCapturedMyFacts;
 
    Result := LastInsertedRowId;
 end;
@@ -1455,20 +2226,34 @@ var
    q: TSQLQuery;
    token: ShortString;
 begin
-   FContest := DUMMYCONTEST;
-   q := TSQLQuery.Create(nil);
+   FContest := NoContest;
+   FStartTime := 0;
+   FDeclaredCall := '';
+   q := NewReadQuery;
    try
-      q.DataBase := FDatabase.Connection;
-      q.SQL.Text := 'SELECT contest_type FROM contest WHERE id = 1';
+      q.SQL.Text := 'SELECT contest_type, start_time, my_call FROM contest WHERE id = 1';
       q.Open;
       if not q.EOF then
          begin
+         (* NULL, or a zero a writer left, is "not recorded" -- never
+            1 January 1970. *)
+         if (not q.Fields[1].IsNull) and
+            (q.Fields[1].AsLargeInt > 0) then
+            begin
+            FStartTime := UnixToDateTime(q.Fields[1].AsLargeInt);
+            end;
+         if not q.Fields[2].IsNull then
+            begin
+            FDeclaredCall := AnsiString(q.Fields[2].AsString);
+            end;
          token := q.Fields[0].AsString;
-         (* GetContestFromString scans ContestTypeSA, so the pair are true
-           inverses. It is reused rather than reimplemented -- though it does
-           contain an lstrcmpA and a string address, which the PChar sweep in
-           CLAUDE.md will want. Recorded there rather than forked here. *)
-         FContest := GetContestFromString(token);
+         (* ContestFromName reads the registry's ids (uContestNames), and
+           SetContest writes ContestId, so the pair are inverses for every
+           current spelling -- AND it reads a
+           LEGACY name too: a New England log written before 2026-10-16
+           stores 'NEQP', which still means NEWENGLANDQSO (never Nebraska).
+           The row is not rewritten here; it is read as it stands. *)
+         FContest := ContestFromName(token);
          end;
       q.Close;
    finally
@@ -1476,11 +2261,12 @@ begin
    end;
 end;
 
-procedure TLogRepository.SetEntryDeclaration(
-   const aDeclaration: TLogEntryDeclaration);
+function TLogRepository.SetEntryDeclaration(
+   const aDeclaration: TLogEntryDeclaration): boolean;
 var
    q: TSQLQuery;
 begin
+   Result := False;
    q := TSQLQuery.Create(nil);
    try
       q.DataBase := FDatabase.Connection;
@@ -1518,6 +2304,11 @@ begin
       q.ParamByName('country').AsString := aDeclaration.Country;
       q.ParamByName('email').AsString := aDeclaration.Email;
       q.ExecSQL;
+      Result := q.RowsAffected > 0;
+      if Result then
+         begin
+         FDeclaredCall := aDeclaration.MyCall;
+         end;
    finally
       q.Free;
    end;
@@ -1544,7 +2335,22 @@ begin
       q.ParamByName('command').AsString := aCommand;
       q.ParamByName('value').AsString := aValue;
       q.ParamByName('source').AsString := aSource;
-      q.ParamByName('set_at').AsLargeInt := DateTimeToUnix(Now);
+      q.ParamByName('set_at').AsLargeInt := UnixNowUTC;
+      q.ExecSQL;
+   finally
+      q.Free;
+   end;
+end;
+
+procedure TLogRepository.DeleteConfigValue(const aCommand: AnsiString);
+var
+   q: TSQLQuery;
+begin
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      q.SQL.Text := 'DELETE FROM config WHERE command = :command';
+      q.ParamByName('command').AsString := aCommand;
       q.ExecSQL;
    finally
       q.Free;
@@ -1568,7 +2374,7 @@ begin
          '  saved_at = excluded.saved_at';
       q.ParamByName('key').AsString := aKey;
       q.ParamByName('value').AsString := aValue;
-      q.ParamByName('saved_at').AsLargeInt := DateTimeToUnix(Now);
+      q.ParamByName('saved_at').AsLargeInt := UnixNowUTC;
       q.ExecSQL;
    finally
       q.Free;
@@ -1581,9 +2387,8 @@ var
    q: TSQLQuery;
 begin
    Result := aDefault;
-   q := TSQLQuery.Create(nil);
+   q := NewReadQuery;
    try
-      q.DataBase := FDatabase.Connection;
       q.SQL.Text := 'SELECT value FROM session_state WHERE key = :key';
       q.ParamByName('key').AsString := aKey;
       q.Open;
@@ -1634,9 +2439,8 @@ var
    q: TSQLQuery;
 begin
    Result := 0;
-   q := TSQLQuery.Create(nil);
+   q := NewReadQuery;
    try
-      q.DataBase := FDatabase.Connection;
       q.SQL.Text := aSQL;
       q.Open;
       if not q.EOF then
@@ -1659,9 +2463,8 @@ begin
       end;
    aInto.Clear;
 
-   q := TSQLQuery.Create(nil);
+   q := NewReadQuery;
    try
-      q.DataBase := FDatabase.Connection;
       q.SQL.Text := 'SELECT command, value FROM config ' +
                     (* OR command = 'CONTEST', because a log written before
                        2026-09-03 stored it as a STATION setting -- the capture
@@ -1700,25 +2503,33 @@ begin
    Result := CountRows('SELECT COUNT(*) FROM message');
 end;
 
-function TLogRepository.LogContest: ContestType;
+function TLogRepository.LogContest: TContestHandle;
 begin
    Result := FContest;
 end;
 
-procedure TLogRepository.SetContest(aContest: ContestType);
+function TLogRepository.DeclaredCall: AnsiString;
+begin
+   Result := FDeclaredCall;
+end;
+
+function TLogRepository.LogStartTime: TDateTime;
+begin
+   Result := FStartTime;
+end;
+
+procedure TLogRepository.SetContest(aContest: TContestHandle);
 var
    q: TSQLQuery;
    token: AnsiString;
    friendly: AnsiString;
 begin
    FContest := aContest;
-   token := AnsiString(ContestTypeSA[aContest]);
+   token := AnsiString(ContestId(aContest));
 
-   friendly := AnsiString(ContestsArray[aContest].FriendlyName);
-   if friendly = '' then
-      begin
-      friendly := token;
-      end;
+   (* Asked of the contest -- M1. Its FriendlyName already falls back to the
+      enum spelling, which is the rule this used to restate. *)
+   friendly := AnsiString(ContestIdentity(aContest).FriendlyName);
 
    q := TSQLQuery.Create(nil);
    try
@@ -1734,7 +2545,7 @@ begin
       q.ParamByName('guid').AsString := NewUUIDv7(0);
       q.ParamByName('ct').AsString := token;
       q.ParamByName('cn').AsString := friendly;
-      q.ParamByName('created').AsLargeInt := DateTimeToUnix(Now);
+      q.ParamByName('created').AsLargeInt := UnixNowUTC;
       (* MY CALL IS NOT IN THE BINARY LOG. The record carries ceOperator, which
         is the OPERATOR and is not the same thing at a multi-op station, so
         guessing would be worse than leaving it empty. Phase E fills it from
@@ -1764,9 +2575,8 @@ var
    q: TSQLQuery;
 begin
    Result := 0;
-   q := TSQLQuery.Create(nil);
+   q := NewReadQuery;
    try
-      q.DataBase := FDatabase.Connection;
       q.SQL.Text := 'SELECT MAX(id) FROM qso';
       q.Open;
       if (not q.EOF) and (not q.Fields[0].IsNull) then
@@ -1786,9 +2596,8 @@ var
    q: TSQLQuery;
 begin
    Result := 0;
-   q := TSQLQuery.Create(nil);
+   q := NewReadQuery;
    try
-      q.DataBase := FDatabase.Connection;
       q.SQL.Text := 'SELECT last_insert_rowid()';
       q.Open;
       if not q.EOF then
@@ -1816,7 +2625,7 @@ begin
    FSelectRange.Close;
    FSelectRange.ParamByName('n').AsInteger := want;
    FSelectRange.ParamByName('m').AsLargeInt := aFirstIndex;
-   FSelectRange.Open;
+   OpenQsoReader(FSelectRange);
    try
       while (not FSelectRange.EOF) and (Result < want) do
          begin
@@ -1830,8 +2639,6 @@ begin
 end;
 
 function TLogRepository.RowIdAtIndex(aIndex: Int64): Int64;
-var
-   q: TSQLQuery;
 begin
    Result := 0;
    if aIndex < 0 then
@@ -1839,19 +2646,18 @@ begin
       Exit;
       end;
 
-   q := TSQLQuery.Create(nil);
+   FRowIdAtIndex.Close;
+   FRowIdAtIndex.ParamByName('n').AsLargeInt := aIndex;
+   FRowIdAtIndex.Open;
    try
-      q.DataBase := FDatabase.Connection;
-      q.SQL.Text := 'SELECT id FROM qso ORDER BY id LIMIT 1 OFFSET :n';
-      q.ParamByName('n').AsLargeInt := aIndex;
-      q.Open;
-      if not q.EOF then
+      if not FRowIdAtIndex.EOF then
          begin
-         Result := q.Fields[0].AsLargeInt;
+         Result := FRowIdAtIndex.Fields[0].AsLargeInt;
          end;
-      q.Close;
    finally
-      q.Free;
+      (* Closed at once, as the per-call query was freed: an open result set
+        would hold a read transaction for as long as the repository lives. *)
+      FRowIdAtIndex.Close;
    end;
 end;
 
@@ -1872,9 +2678,8 @@ begin
       end;
 
    rowId := 0;
-   q := TSQLQuery.Create(nil);
+   q := NewReadQuery;
    try
-      q.DataBase := FDatabase.Connection;
       q.SQL.Text := 'SELECT id FROM qso WHERE session_id = :sid ' +
                     'AND session_seq = :sseq ORDER BY id DESC LIMIT 1';
       q.ParamByName('sid').AsLargeInt := aSessionId;
@@ -1915,9 +2720,8 @@ begin
       end;
 
    Result := 0;
-   q := TSQLQuery.Create(nil);
+   q := NewReadQuery;
    try
-      q.DataBase := FDatabase.Connection;
       q.SQL.Text := 'SELECT COUNT(*) FROM qso';
       q.Open;
       Result := q.Fields[0].AsLargeInt;
@@ -1934,7 +2738,7 @@ function TLogRepository.UpdateQSO(aRowId: Int64;
 begin
    BindUpdate(aQso);
    FUpdate.ParamByName('row_id').AsLargeInt := aRowId;
-   FUpdate.ExecSQL;
+   ExecuteKeptWrite(FUpdate);
 
    (* RowsAffected distinguishes "changed it" from "there was no such row", which
      is the difference between an edit and a silent no-op. The file-based code
@@ -1970,9 +2774,8 @@ begin
    if thisId <> '' then
       begin
       existing := '';
-      q := TSQLQuery.Create(nil);
+      q := NewReadQuery;
       try
-         q.DataBase := FDatabase.Connection;
          q.SQL.Text := 'SELECT qso_set_id FROM qso WHERE exchange_id = :x ' +
                        'ORDER BY id DESC LIMIT 1';
          q.ParamByName('x').AsString := thisId;
@@ -2005,6 +2808,38 @@ begin
    FSentExchangeForNextSave := aSentExchange;
 end;
 
+procedure TLogRepository.SetNextMyFacts(const aFacts: TQsoMyFacts);
+begin
+   FMyFactsForNextSave := aFacts;
+end;
+
+function TLogRepository.UpdateQSOMyFacts(aRowId: Int64;
+                                         const aFacts: TQsoMyFacts): boolean;
+begin
+   BindMyFacts(FUpdateMyFacts, aFacts);
+   FUpdateMyFacts.ParamByName('row_id').AsLargeInt := aRowId;
+   ExecuteKeptWrite(FUpdateMyFacts);
+   Result := FUpdateMyFacts.RowsAffected > 0;
+end;
+
+function TLogRepository.LoadQSOMyFacts(aRowId: Int64;
+                                       out aFacts: TQsoMyFacts): boolean;
+begin
+   FSelectById.Close;
+   FSelectById.ParamByName('row_id').AsLargeInt := aRowId;
+   OpenQsoReader(FSelectById);
+   Result := not FSelectById.EOF;
+   if Result then
+      begin
+      ReadMyFacts(FSelectById, aFacts);
+      end
+   else
+      begin
+      aFacts := NotCapturedMyFacts;
+      end;
+   FSelectById.Close;
+end;
+
 function TLogRepository.RelatedRowIds(aRowId: Int64): TInt64Array;
 var
    q: TSQLQuery;
@@ -2013,9 +2848,8 @@ begin
    SetLength(Result, 0);
    n := 0;
 
-   q := TSQLQuery.Create(nil);
+   q := NewReadQuery;
    try
-      q.DataBase := FDatabase.Connection;
       (* The set is read from the row itself rather than passed in, so a caller
         holding only a row id can ask. *)
       q.SQL.Text := 'SELECT id FROM qso WHERE qso_set_id = ' +
@@ -2056,9 +2890,8 @@ begin
       Exit;
       end;
 
-   q := TSQLQuery.Create(nil);
+   q := NewReadQuery;
    try
-      q.DataBase := FDatabase.Connection;
       q.SQL.Text := 'SELECT id FROM qso WHERE guid = :guid';
       q.ParamByName('guid').AsString := aGuid;
       q.Open;
@@ -2082,35 +2915,364 @@ begin
    aWasNew := True;
    FLastGuid := aGuid;
    BindRecord(aQso, aGuid);
-   FInsert.ExecSQL;
+   ExecuteKeptWrite(FInsert);
    InvalidateRecordCount;
+   (* Our station is per QSO, as in SaveQSO -- never carried to the next. *)
+   FMyFactsForNextSave := NotCapturedMyFacts;
    Result := LastInsertedRowId;
 end;
 
 procedure TLogRepository.OpenSequentialRead;
 begin
    CloseSequentialRead;
-   FCursor := TSQLQuery.Create(nil);
-   FCursor.DataBase := FDatabase.Connection;
+   FCursor := NewReadQuery;
    (* THE SAME QSO_COLUMNS the writer binds and ReadRecord reads. One column
       list, so a column added to the schema cannot reach the writer and miss
       the exporter. *)
-   FCursor.SQL.Text := 'SELECT ' + QSO_COLUMNS + ' FROM qso ORDER BY id';
-   FCursor.Open;
+   (* AND THE ROW ID AFTER THEM, for ReadNextWithRowId. After, not before,
+      so every QSO column keeps the position ReadRecord reads it at; one
+      extra field per Open costs an export nothing measurable. *)
+   FCursor.SQL.Text := 'SELECT ' + QSO_COLUMNS + ', ' + ROW_ID_COLUMN +
+                       ' FROM qso ORDER BY id';
+   try
+      OpenQsoReader(FCursor, True);
+   except
+      FreeAndNil(FCursor);
+      raise;
+   end;
 end;
 
 function TLogRepository.ReadNext(out aQso: ContestExchange): boolean;
+var
+   ignored: Int64;
 begin
+   Result := ReadNextWithRowId(ignored, aQso);
+end;
+
+function TLogRepository.ReadNextWithRowId(out aRowId: Int64;
+                                          out aQso: ContestExchange): boolean;
+var
+   ignored: TQsoMyFacts;
+begin
+   Result := ReadNextWithMyFacts(aRowId, aQso, ignored);
+end;
+
+function TLogRepository.ReadNext(out aQso: ContestExchange;
+                                 out aFacts: TQsoMyFacts): boolean;
+var
+   ignored: Int64;
+begin
+   Result := ReadNextWithMyFacts(ignored, aQso, aFacts);
+end;
+
+(* THE ONE CURSOR STEP every sequential read takes. The my_* columns are in
+  QSO_COLUMNS, so reading them is a dozen positional fields more per row,
+  whether the caller keeps them or not. *)
+function TLogRepository.ReadNextWithMyFacts(out aRowId: Int64;
+                                            out aQso: ContestExchange;
+                                            out aFacts: TQsoMyFacts): boolean;
+var
+   ignored: AnsiString;
+begin
+   Result := ReadNextRow(aRowId, aQso, aFacts, ignored);
+end;
+
+function TLogRepository.ReadNextForExport(out aQso: ContestExchange;
+                                          out aFacts: TQsoMyFacts;
+                                          out aSentExchange: AnsiString): boolean;
+var
+   ignored: Int64;
+begin
+   Result := ReadNextRow(ignored, aQso, aFacts, aSentExchange);
+end;
+
+function TLogRepository.ReadNextRow(out aRowId: Int64;
+                                    out aQso: ContestExchange;
+                                    out aFacts: TQsoMyFacts;
+                                    out aSentExchange: AnsiString): boolean;
+begin
+   aRowId := 0;
+   aFacts := NotCapturedMyFacts;
+   aSentExchange := '';
    Result := (FCursor <> nil) and (not FCursor.EOF);
    if Result then
       begin
       ReadRecord(FCursor, aQso);
+      ReadMyFacts(FCursor, aFacts);
+      if not FCursor.Fields[Ord(qc_exchange_sent)].IsNull then
+         begin
+         aSentExchange := AnsiString(FCursor.Fields[Ord(qc_exchange_sent)].AsString);
+         end;
+      aRowId := FCursor.Fields[QSO_COLUMN_COUNT].AsLargeInt;
       FCursor.Next;
       end
    else
       begin
+      (* ContestExchange holds ShortStrings and scalars only, so clearing it
+        whole is safe. *)
       FillChar(aQso, SizeOf(aQso), 0);
       end;
+end;
+
+(* --------------------------------------------------------------------------- *)
+(* one transaction for many rows -- section 9c, F4                             *)
+(* --------------------------------------------------------------------------- *)
+
+procedure TLogRepository.BeginBatchUpdate;
+begin
+   if FInBatch then
+      begin
+      raise ELogRepositoryError.Create(
+         'A batch update is already open on this log. One must be committed ' +
+         'or rolled back before the next begins.');
+      end;
+   if FCursor <> nil then
+      begin
+      raise ELogRepositoryError.Create(
+         'A batch update cannot begin while the sequential read is open: the ' +
+         'commit that starts it would close that cursor under its reader. ' +
+         'Close the read first.');
+      end;
+
+   (* THE IMPLICIT TRANSACTION ENDS HERE, AND OURS STARTS. sqldb starts one on the
+     first statement and leaves it open, so one is usually active here,
+     holding the reads that came before. Starting on top of it is refused
+     (StartTransaction raises when Active), and simply adopting it would make
+     RollbackBatch undo more than the batch. *)
+   if FDatabase.Transaction.Active then
+      begin
+      FDatabase.Transaction.Commit;
+      end;
+   FDatabase.Transaction.StartTransaction;
+   FInBatch := True;
+end;
+
+procedure TLogRepository.UpdateQSOByRowId(aRowId: Int64;
+                                          const aQso: ContestExchange);
+begin
+   if not FInBatch then
+      begin
+      raise ELogRepositoryError.Create(
+         'UpdateQSOByRowId is for a batch: call BeginBatchUpdate first, or ' +
+         'use UpdateQSO for a single edit.');
+      end;
+   if not UpdateQSO(aRowId, aQso) then
+      begin
+      raise ELogRepositoryError.Create(SysUtils.Format(
+         'There is no qso row %d to rewrite. A batch is written from rows its ' +
+         'caller has just read, so a missing one means the batch does not ' +
+         'match the log; it is refused rather than half applied.', [aRowId]));
+      end;
+end;
+
+procedure TLogRepository.CommitBatch;
+begin
+   if not FInBatch then
+      begin
+      raise ELogRepositoryError.Create('CommitBatch with no batch open.');
+      end;
+   (* If the COMMIT itself fails, FInBatch stays True and the transaction is
+     still the batch's, so the caller's RollbackBatch undoes it. *)
+   FDatabase.Transaction.Commit;
+   FInBatch := False;
+end;
+
+procedure TLogRepository.RollbackBatch;
+begin
+   (* TLogDatabase.Rollback, not the transaction's own: it also ends a
+     transaction SQLite has already rolled back by itself. *)
+   FDatabase.Rollback;
+   (* ONLY AFTER A ROLLBACK THAT RETURNED. Cleared first, a rollback that
+     raised would leave a half-written transaction open with nothing marking
+     it -- and the next BeginBatchUpdate would COMMIT it. *)
+   FInBatch := False;
+end;
+
+procedure TLogRepository.WriteBatch(aUpdates: TLogRowUpdates);
+var
+   i: integer;
+begin
+   BeginBatchUpdate;
+   try
+      for i := 0 to aUpdates.Count - 1 do
+         begin
+         UpdateQSOByRowId(aUpdates.FRowIds[i], aUpdates.FRows[i]);
+         end;
+      CommitBatch;
+   except
+      (* ANY exception -- a missing row, a constraint, a full disk, a failed
+        COMMIT. The log is left exactly as it was before the batch. *)
+      RollbackBatch;
+      raise;
+   end;
+end;
+
+procedure TLogRepository.AppendBatch(aQsos: TLogQsoAppends;
+                                     out aFailedIndex: integer);
+var
+   i: integer;
+begin
+   aFailedIndex := -1;
+   BeginBatchUpdate;
+   try
+      for i := 0 to aQsos.Count - 1 do
+         begin
+         aFailedIndex := i;
+         if LogContest <> aQsos.FRows[i].ceContest then
+            begin
+            SetContest(aQsos.FRows[i].ceContest);
+            end;
+         (* The row's own -- from its file, or nothing. Never the session's:
+           an import is not a QSO logged here. *)
+         SetNextSentExchange(aQsos.SentExchange(i));
+         SetNextMyFacts(aQsos.MyFacts(i));
+         SaveQSOGroupingByExchangeId(aQsos.FRows[i]);
+         end;
+      (* Every row is in; a failure from here on is the transaction's. *)
+      aFailedIndex := -1;
+      CommitBatch;
+   except
+      (* As WriteBatch: ANY exception, and the log is left exactly as it was
+        before the batch. A sent exchange set for a row that then failed is
+        cleared with it, so it cannot attach itself to a later save. *)
+      SetNextSentExchange('');
+      SetNextMyFacts(NotCapturedMyFacts);
+      RollbackBatch;
+      raise;
+   end;
+end;
+
+function TLogRepository.QSOsWithoutExchangeId(aSampleSize: integer): TMissingExchangeIds;
+var
+   q: TSQLQuery;
+   at: TDateTime;
+begin
+   Result := Default(TMissingExchangeIds);
+   q := NewReadQuery;
+   try
+      (* ONE READ, IN LOG ORDER. The sample is the first rows; the count is
+        all of them, read as the rows go by rather than by a second query.
+        '' is tested as well as NULL because a row written before BindText
+        stored the empty string would carry one. *)
+      q.SQL.Text := 'SELECT callsign, qso_at FROM qso ' +
+                    'WHERE record_kind = ''QSO'' ' +
+                    'AND (exchange_id IS NULL OR exchange_id = '''') ' +
+                    'ORDER BY id';
+      q.Open;
+      while not q.EOF do
+         begin
+         Inc(Result.Count);
+         if Result.Count <= aSampleSize then
+            begin
+            at := UnixToDateTime(q.Fields[1].AsLargeInt);
+            if Result.Sample <> '' then
+               begin
+               Result.Sample := Result.Sample + ', ';
+               end;
+            Result.Sample := Result.Sample + q.Fields[0].AsString + ' ' +
+                             FormatDateTime('yyyy-mm-dd hh:nn', at);
+            end;
+         q.Next;
+         end;
+      q.Close;
+   finally
+      q.Free;
+   end;
+end;
+
+(* --------------------------------------------------------------------------- *)
+(* TLogQsoList, TLogRowUpdates, TLogQsoAppends                                  *)
+(* --------------------------------------------------------------------------- *)
+
+procedure TLogQsoList.CheckIndex(aIndex: integer);
+begin
+   if (aIndex < 0) or (aIndex >= FCount) then
+      begin
+      raise ELogRepositoryError.Create(SysUtils.Format(
+         '%s: index %d is outside 0..%d.', [ClassName, aIndex, FCount - 1]));
+      end;
+end;
+
+function TLogQsoList.AddRow(const aQso: ContestExchange): integer;
+begin
+   if FCount = Length(FRows) then
+      begin
+      SetLength(FRows, (FCount * 2) + 64);
+      end;
+   FRows[FCount] := aQso;
+   Result := FCount;
+   Inc(FCount);
+end;
+
+function TLogQsoList.Count: integer;
+begin
+   Result := FCount;
+end;
+
+function TLogQsoList.Row(aIndex: integer): ContestExchange;
+begin
+   CheckIndex(aIndex);
+   Result := FRows[aIndex];
+end;
+
+procedure TLogRowUpdates.Add(aRowId: Int64; const aQso: ContestExchange);
+var
+   i: integer;
+begin
+   i := AddRow(aQso);
+   (* The ids keep step with the records' capacity, so one SetLength per
+     doubling serves both arrays. *)
+   if Length(FRowIds) < Length(FRows) then
+      begin
+      SetLength(FRowIds, Length(FRows));
+      end;
+   FRowIds[i] := aRowId;
+end;
+
+function TLogRowUpdates.RowId(aIndex: integer): Int64;
+begin
+   CheckIndex(aIndex);
+   Result := FRowIds[aIndex];
+end;
+
+procedure TLogQsoAppends.Add(const aQso: ContestExchange);
+begin
+   Add(aQso, NotCapturedMyFacts, '');
+end;
+
+procedure TLogQsoAppends.Add(const aQso: ContestExchange;
+                             const aMyFacts: TQsoMyFacts;
+                             const aSentExchange: AnsiString);
+var
+   i: integer;
+begin
+   i := AddRow(aQso);
+   (* In step with the records' capacity, as TLogRowUpdates' ids are. *)
+   if Length(FMyFacts) < Length(FRows) then
+      begin
+      SetLength(FMyFacts, Length(FRows));
+      SetLength(FSentExchanges, Length(FRows));
+      end;
+   FMyFacts[i] := aMyFacts;
+   FSentExchanges[i] := aSentExchange;
+end;
+
+function TLogQsoAppends.MyFacts(aIndex: integer): TQsoMyFacts;
+begin
+   CheckIndex(aIndex);
+   Result := FMyFacts[aIndex];
+end;
+
+procedure TLogQsoAppends.SetMyFacts(aIndex: integer; const aMyFacts: TQsoMyFacts);
+begin
+   CheckIndex(aIndex);
+   FMyFacts[aIndex] := aMyFacts;
+end;
+
+function TLogQsoAppends.SentExchange(aIndex: integer): AnsiString;
+begin
+   CheckIndex(aIndex);
+   Result := FSentExchanges[aIndex];
 end;
 
 procedure TLogRepository.CloseSequentialRead;
@@ -2127,7 +3289,7 @@ function TLogRepository.LoadQSO(aRowId: Int64;
 begin
    FSelectById.Close;
    FSelectById.ParamByName('row_id').AsLargeInt := aRowId;
-   FSelectById.Open;
+   OpenQsoReader(FSelectById);
    Result := not FSelectById.EOF;
    if Result then
       begin
@@ -2145,7 +3307,7 @@ function TLogRepository.LoadQSOByGuid(const aGuid: AnsiString;
 begin
    FSelect.Close;
    FSelect.ParamByName('guid').AsString := aGuid;
-   FSelect.Open;
+   OpenQsoReader(FSelect);
    Result := not FSelect.EOF;
    if Result then
       begin
@@ -2162,9 +3324,8 @@ function TLogRepository.QSOCount: integer;
 var
    q: TSQLQuery;
 begin
-   q := TSQLQuery.Create(nil);
+   q := NewReadQuery;
    try
-      q.DataBase := FDatabase.Connection;
       q.SQL.Text := 'SELECT COUNT(*) FROM qso WHERE deleted = 0';
       q.Open;
       Result := q.Fields[0].AsInteger;
@@ -2198,5 +3359,8 @@ end;
 
 initialization
    Randomize;
+   (* Before any repository can exist, and once. It never raises: a problem is
+     recorded, and TLogRepository.Create and VerifyQsoColumns report it. *)
+   BuildQsoColumnTable;
 
 end.

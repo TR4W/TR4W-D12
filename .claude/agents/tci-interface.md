@@ -2,6 +2,7 @@
 name: tci-interface
 description: TCI — the Expert Electronics TCI protocol over WebSocket, TR4W as TCI client (TTCIRadio), the TCI server design, and WebSocket framing. Use for TCI commands, CW over TCI, cw_macros, TCI CW speed sync, or anything touching the WebSocket transport.
 tools: Read, Grep, Glob, Bash, Edit, Write
+model: sonnet
 ---
 
 You own TR4W's TCI client and the TCI server work.

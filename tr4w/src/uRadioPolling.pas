@@ -68,7 +68,7 @@ procedure UpdateStatus(rig: RadioPtr);
 procedure ClearRadioPanel(rig: RadioPtr);
 procedure ClearRadioStatus(rig: RadioPtr);
 
-procedure BeginPolling(rig: RadioPtr); stdcall;
+function BeginPolling(aParameter: Pointer): DWORD; stdcall;   (* a RadioPtr; see the body *)
 procedure DisplayCurrentStatus(rig: RadioPtr);
 procedure ProcessFilteredStatus(rig: RadioPtr);
 procedure PTTStatusChanged;
@@ -1587,8 +1587,18 @@ const
       [TS140, TS440, TS450, TS480, TS570, TS590, TS690, TS850,
        TS870, TS890, TS940, TS950, TS990, TS2000, FLEX];
 
-procedure BeginPolling(rig: RadioPtr); stdcall;
+function BeginPolling(aParameter: Pointer): DWORD; stdcall;
+var
+   rig: RadioPtr;
 begin
+   (* A WORKER-THREAD BODY, SO IT HAS TF.TTR4WThreadStart's SHAPE (pointer
+     audit P1, 2026-10-16). The parameter is the RadioObject that
+     SetUpRadioInterface passed as tCreateThread's aParameter; it was typed
+     RadioPtr here, which the untyped thread start never checked. The stack
+     was right (stdcall, one argument) but the exit code was whatever EAX
+     held. *)
+   Result := 0;
+   rig := RadioPtr(aParameter);
    (* THE FLAG A SHUTDOWN WAIT CAN SEE.  Set True by SetUpRadioInterface before
      this thread existed; cleared HERE, in a finally, because this routine has
      three exits and a fourth is one edit away.  See RadioObject in LOGRADIO. *)

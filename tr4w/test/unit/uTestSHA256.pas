@@ -49,6 +49,8 @@ type
       procedure Test_BlockBoundaries;
       procedure Test_MillionCharacters;
       procedure Test_StreamMatchesBytes;
+      procedure Test_SingleBytesAndEmbeddedZeros;
+      procedure Test_LengthNotAMultipleOfTheBlock;
    public
       procedure RunAllTests; override;
    end;
@@ -56,7 +58,7 @@ type
 implementation
 
 uses
-   SysUtils, Classes, uSHA256;
+   SysUtils, Classes, uSHA256, uTestBytePattern;
 
 procedure TSHA256Tests.Test_FIPSVectors;
 begin
@@ -165,12 +167,50 @@ begin
    end;
 end;
 
+(* P12 (docs/POINTER_AUDIT.md, 2026-10-18): written BEFORE SHA256Update lost
+  its untyped buffer, and green against it. Digests from Python's hashlib,
+  the same independent provenance as the block-boundary ones above. *)
+procedure TSHA256Tests.Test_SingleBytesAndEmbeddedZeros;
+var
+   s: RawByteString;
+begin
+   BeginTest('one byte, a zero byte, and zeros inside a message');
+
+   CheckEquals('ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb',
+               SHA256OfBytes('a'), 'one byte');
+
+   (* A BYTE BUFFER IS NOT A C STRING: each of these would collapse to a
+     shorter message if anything on the way stopped at a NUL. *)
+   s := #0;
+   CheckEquals('6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d',
+               SHA256OfBytes(s), 'a single zero byte');
+
+   s := 'a'#0'b';
+   CheckEquals('59b271ae1bbcb1d31d41929817f4b16fb439eb4f31520b5ad1d5ce98920a7138',
+               SHA256OfBytes(s), '''a''#0''b''');
+
+   s := StringOfChar(AnsiChar(#0), 64);
+   CheckEquals('f5a5fd42d16a20302798ef6ed309979b43003d2320d9f0e8ea9831a92759fb4b',
+               SHA256OfBytes(s), 'a whole block of zeros');
+end;
+
+procedure TSHA256Tests.Test_LengthNotAMultipleOfTheBlock;
+begin
+   (* 4,097 = 64 blocks and one byte, over a pattern with zeros in it -- the
+     shared one in uTestBytePattern. *)
+   BeginTest('4,097 varied bytes -- one past a whole number of blocks');
+   CheckEquals('c6a7c1d5fc3cb2db20456263085111f5f9a1f9061add9e51467115ea7444ee81',
+               SHA256OfBytes(TestBytePatternRaw(4097)), 'pattern(4097)');
+end;
+
 procedure TSHA256Tests.RunAllTests;
 begin
    Test_FIPSVectors;
    Test_BlockBoundaries;
    Test_MillionCharacters;
    Test_StreamMatchesBytes;
+   Test_SingleBytesAndEmbeddedZeros;
+   Test_LengthNotAMultipleOfTheBlock;
 end;
 
 end.

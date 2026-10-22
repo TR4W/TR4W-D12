@@ -154,9 +154,6 @@ const
 
 type
 
-  EntryPointerListType = array[0..15000] of Pointer;
-  EntryPointerListPtr = ^EntryPointerListType;
-
   (* AN LPT BASE ADDRESS IS NOT A HANDLE (2026-09-08).
 
     These values -- $378, $278, $3BC -- are x86 I/O PORT ADDRESSES. They are
@@ -672,8 +669,6 @@ type
     {1}msComputerId: AnsiChar;
     {59}msCWMessage: array[0..CWMessageToNetworkLength] of AnsiChar;
   end;
-
-  TMessageStatePtr = ^TMessageState;
 
 type
   TSerialNumberType = (sntFree, sntReserved, sntUnknown);
@@ -1298,8 +1293,67 @@ type
     IN7QPNE,
     MST ,        // 4.110.5
     SST,
-    RTC          // Real-Time Contest (COS) -- exchange: RST + serial + 4-char grid; distance-based scoring
+    RTC,         // Real-Time Contest (COS) -- exchange: RST + serial + 4-char grid; distance-based scoring
+    // APPENDED, NEVER INSERTED: the ORDINAL is persisted outside this program --
+    // the binary .TRW record's ceContest byte (import), the multi-op packet's
+    // ContestExchange, and HamScore's <contestnr>. The SQLite log stores the
+    // ContestTypeSA spelling instead. See uContestIdahoQP.
+    IDAHOQSOPARTY,
+    (* APPENDED for the same reason, 2026-10-14. See uContestDelawareQP. *)
+    DELAWAREQSOPARTY,
+    (* APPENDED for the same reason, 2026-10-16. See uContestNebraskaQP. *)
+    NEBRASKAQSO
     );
+
+  (* A CONTEST, AS THE PROGRAM HOLDS ONE IN MEMORY -- Q108 S2, 2026-10-16
+    (docs/CONTEST_OWNERSHIP_DESIGN.md 8.2u).
+
+    WHAT IT IS. A one-byte handle the contest registry hands out. It is what
+    the global Contest, ContestExchange.ceContest and
+    TLogFileInformation.liContest hold, and what every contest-factory
+    question takes. ContestType above is the FROZEN list of LEGACY contest
+    numbers; it is no longer the in-memory key.
+
+    A LEGACY CONTEST'S HANDLE EQUALS ITS LEGACY NUMBER, Ord(member). That one
+    rule is why nothing that is persisted changes: the byte in a .TRW record,
+    a multi-op packet, the server's log and the log-compare packet means
+    exactly what it meant when the field was a ContestType. The registry
+    (uContestRegistry) states the rule -- ContestHandleOf / LegacyContestOf
+    -- and is the only unit that converts between the two.
+
+    A RECORD, NOT `type Byte`, so a band, a mode or a bare number cannot be
+    passed where a contest is expected -- the guarantee the enum gave. The
+    probe compile at the start of S2 measured it: FPC 3.2.2 in this tree's
+    mode keeps it ONE byte inside a packed record, at the same offset, and
+    refuses `h = aMode`, `h := 3` and `h := ARRLDXCW`.
+
+    THE BYTE IS REACHED THROUGH ONE PAIR OF NAMED ACCESSORS, FromByte and
+    ToByte, and only the registry and the legacy-number boundaries call
+    them. Nothing else should read a contest as a number.
+
+    NEVER PERSIST A HANDLE OF A CONTEST WITH NO LEGACY NUMBER (Q108 S3/S4):
+    such handles are assigned at the registry's seal and differ between
+    builds that link different contests. *)
+  TContestHandle = packed record
+  private
+    FNumber: Byte;
+  public
+    class operator Equal(const a, b: TContestHandle): boolean;
+    class operator NotEqual(const a, b: TContestHandle): boolean;
+
+    (* The handle whose byte is aNumber. For the registry and the
+      legacy-number boundaries (a .TRW record read back, the matrix's
+      requested number) only. *)
+    class function FromByte(aNumber: Byte): TContestHandle; static;
+
+    (* The handle's byte. Same rule. *)
+    function ToByte: Byte;
+  end;
+
+const
+  (* "No contest" -- handle 0, which is DUMMYCONTEST's legacy number, so a
+    zeroed record and an unset global already hold it. *)
+  NoContest: TContestHandle = (FNumber: 0);
 
     { NOTE: pls ensure VC INTERFACEDRADIOTYPE and LOGRADIO INTEFACEDRADIOTYPE ARE IN THE SAME ORDER }
 type
@@ -1788,8 +1842,6 @@ type
     User5: CallString; { Control-Y }
   end;
 
-  DataBaseEntryRecordPtr = ^DataBaseEntryRecord;
-
   TQSOTime = packed record
     {1}qtYear: Byte;
     {1}qtMonth: Byte;
@@ -1843,7 +1895,7 @@ type
     liLocalCRC32: Cardinal;
     liServerLogSize: Cardinal;
     liLocalLogSize: Cardinal;
-    liContest: ContestType;
+    liContest: TContestHandle;
   end;
 
 type
@@ -1971,7 +2023,7 @@ type
 {01}  NameSent:            boolean;
 
 {21}  Kids:                Str20; { Used for whole ex string }
-{01}  ceContest:           ContestType;
+{01}  ceContest:           TContestHandle;  (* Q108 S2: a legacy contest's handle IS its legacy number, so this byte is unchanged *)
 {02}  QSOPoints:           word{Smallint};
 
 {08}  RandomCharsReceived: string[7];
@@ -2459,8 +2511,9 @@ const
   StatusEquality                        = 1;
   tr4w_MAX_RATE                         = 200;
 
-  tCQAsInteger                          = $202F5143;
-  tNEWAsInteger                         = $2057454E;
+  (* tCQAsInteger / tNEWAsInteger ('CQ/ ' and 'NEW ' read as integers) are
+    GONE (pointer audit 3.3): the band-map marker test is
+    uDXSpotParse.SpotCallIsCQMarker / SpotCallIsNewMarker. *)
 
 const
   (* CallsignExchangeWinStyle IS GONE (2026-09-06): the Win32 edit style for
@@ -3227,398 +3280,53 @@ var
   TelnetPassword                        : string = '';
 //  RICHED32DLLHANDLE                     : Cardinal;
 
-type
+(* DXMultType IS GONE -- M11 S4 part 2, 2026-10-14. It named which DX
+  multiplier a session ran, and LOGDUPE.GetDXQTH cased on it. Each DX
+  contest states its own key (TContestBase.DXMultiplierKey), its CTY
+  country list (CountryMode -- CountryModeType, which is data, stays) and
+  whether it has a DX multiplier at all (HasDXMultiplier). *)
 
-  DXMultType =
-    (
-//    NoCountDXMults,
-    NoDXMults,
+(* PrefixMultType IS GONE -- M11 S3 part 2, 2026-10-14. It named which prefix
+  multiplier a session ran, and LOGEDIT.SetPrefix cased on it. Each prefix
+  contest states its own key (TContestBase.PrefixMultiplierKey) and whether
+  it has a prefix multiplier at all (TContestBase.HasPrefixMultiplier). *)
 
-    {DXCC ONLY}
-    ARRLDXCCWithNoUSAOrCanada,
-    ARRLDXCCWithNoARRLSections,
-    ARRLDXCCWithNoUSACanadaKH6OrKL7,
-    ARRLDXCCWithNoIOrIS0,
-    ARRLDXCCWithNoJT,
-    ARRLDXCC,
+(* ZoneMultType IS GONE -- M11 S5 part 2, 2026-10-14. It named which zone
+  multiplier a session ran. Each zone contest states its zone count
+  (TContestBase.ZoneMultiplierCount), the list it counts
+  (ZoneMultiplierZones), whether it numbers from zero
+  (NumbersZonesFromZero) and whether it has a zone multiplier at all
+  (HasZoneMultiplier). ZoneModeType, the CTY zone system, is data and
+  stays: it is not the multiplier's list (plan F5, Q95). *)
 
-    {DXCC+WAE}
-    CQDXCC,
-    CQDXCCWithNoUSAOrCanada,
-    CQDXCCWithNoHB9,
-    CQDXCCWithNoOK,
-    CQEuropeanCountries,
-    CQUBAEuropeanCountries,
-    CQNonEuropeanCountries,
+(* PrefixMultStringArray IS GONE -- M10 S2, 2026-10-14. It spelled PREFIX
+  MULTIPLIER's values for the config parser, and that command is retired
+  (uCFG.RETIRED_COMMANDS, NY4I's Q4): the contest's class decides the prefix
+  multiplier. Nothing else read it. *)
 
-    NorthAmericanARRLDXCCWithNoUSACanadaOrkL7,
-    NonSouthAmericanCountries,
-    PACCCountriesAndPrefixes,
-//    CQNonEuropeanCountriesAndWAECallRegions,
-    BlackSeaCountries
-    );
+(* DomesticMultType IS GONE -- M11 S6 part 2, 2026-10-14
+  (docs/CONTEST_FACTORY_M11_PLAN.md S6). Each contest states its own domestic
+  rule: what a received QTH means (TContestBase.DomesticMultiplierFromQTH and
+  its hint), whether it is looked up in the domestic file (UsesDomesticFile),
+  the grid-square, grid-field, WYSIWYG and RDA answers, and whether it has a
+  domestic multiplier at all (HasDomesticMultiplier). NumericID ran for no
+  contest. *)
 
-  PrefixMultType =          // NOTE: ORDER MUST MATCH PREFIXMULTSTRING ARRAY BELOW 4.67.9
-    (
-    NoPrefixMults,
-    AsianPrefixes,
-    BelgiumPrefixes,
-    CallSignPrefix,
-    IndonesianDistricts,       // 4.64.1
-    MongolianCallSignPrefix,
-    NonSouthAmericanPrefixes,
-    NorthAmericanPrefixes,
-    Prefix,
-    SACDistricts,
-    SouthAmericanPrefixes,
-    SouthAndNorthAmericanPrefixes,
-    GCStation,
-    CQNonEuropeanCountriesAndWAECallRegions,
-    RussianPrefixes
+(* DomesticMultStringArray AND QSOPointMethodArray ARE GONE -- M10 S2,
+  2026-10-14. They spelled DOMESTIC MULTIPLIER's and QSO POINT METHOD's values
+  for the config parser, and both commands are retired (uCFG.RETIRED_COMMANDS,
+  NY4I's Q4): the contest's class decides them. Nothing else read either.
+  QSOPointMethodArray was the ROTATED table (ownership design 7.2, the 'ONY' pair) --
+  with no reader left, that finding has nothing left to act on.
 
-    );
-
-  ZoneMultType =
-    (
-    NoZoneMults,
-    CQZones,
-    ITUZones,
-    JAPrefectures,
-    BranchZones,
-    EUHFCYear,
-    RFChampionchipZones
-    );
-   // 4.67.9 NOTE: ORDER MUST MATCH PREFIXMULTTYPE (ABOVE)
-const
-
-(* PLAIN STRINGS, NOT PAnsiChar, since 2026-09-13.  Its ckList row left
-    CFGCA and nothing reads this through a pointer any more. *)
-    PrefixMultStringArray                 : array[PrefixMultType] of string =
-    (
-    'NONE',
-    'ASIAN PREFIXES',
-    'BELGIUM PREFIXES',
-    'CALLSIGN',
-    'Indonesian Districts',     // 4.64.1
-    'MONGOLIAN CALLSIGN PREFIX',
-    'NON SOUTH AMERICAN PREFIXES',
-    'NORTH AMERICAN PREFIXES',
-    'PREFIX',
-    'SAC DISTRICTS',
-    'SOUTH AMERICAN PREFIXES',
-    'SOUTH AND NORTH AMERICAN PREFIXES',
-    'GC STATION',
-    'CQ NON EUROPEAN COUNTRIES AND WAE',
-    'RUSSIAN PREFIXES'
-       );
-type
-  DomesticMultType =
-    (
-    NoDomesticMults,
-    WYSIWYGDomestic,
-    IOTADomestic,
-    GridSquares,
-    GridFields,
-    DOKCodes,
-    DomesticFile,
-    RDADistrict,
-    NumericID
-    );
-
-  QSOPointMethodType =
-    (
-     NoQSOPointMethod, //{ Score = 0 }
-    AllAsianQSOPointMethod,
-    ARCIQSOPointMethod,
-    ARIQSOPointMethod,
-    ARRLFieldDayQSOPointMethod,
-    ARRLDIGIQSOPointMethod,
-    ARRL160QSOPointMethod,
-    ARRL10QSOPointMethod,
-    ARRLDXQSOPointMethod,
-    ARRLVHFJUNPointMethod,
-    ARRLVHFSSPointMethod,
-    BalticQSOPointMethod,
-    BWQPQSOPointMethod,
-    CISQSOPointMethod,
-    CQ160QSOPointMethod,
-    CQMQSOPointMethod,
-    CQVHFQSOPointMethod,
-    CQWWQSOPointMethod,
-    CQWWRTTYQSOPointMethod,
-    CQWPXQSOPointMethod,
-    CQWPXRTTYQSOPointMethod,
-    CroatianQSOPointMethod,
-    EuropeanFieldDayQSOPointMethod,
-    EuropeanSprintQSOPointMethod,
-    EuropeanVHFQSOPointMethod,
-    TeslaQSOPointMethod,
-    FistsQSOPointMethod,
-    FOCMarathonQSOPointMethod,
-    HADXQSOPointMethod,
-    ONY,
-    YUDXQSOPointMethod,     // 4.57.5
-    UKEIQSOPointMethod,    // 4.58.2
-    HelvetiaQSOPointMethod,
-    IARUQSOPointMethod,
-    InternetSixQSOPointMethod,
-    IOTAQSOPointMethod,
-    JapanInternationalDXQSOPointMethod,
-    KCJQSOPointMethod,
-    LABREQSOPointMethod,
-    LQPQSOPointMethod,
-    MMCQSOPOINTMETHOD,
-    NZFieldDayQSOPointMethod,
-    OKDXQSOPointMethod,
-    RAEMQSOPointMethod,
-    RACQSOPointMethod,
-    ThreePhoneFiveCWFourRTTY,   // 4.57.1 issue  242
-    RSGBQSOPointMethod,
-    RSGB160Method,
-    RussianDXQSOPointMethod,
-    RDAQSOPointMethod,
-    SalmonRunQSOPointMethod,
-    ScandinavianQSOPointMethod,
-    IndonesianQSOPointMethod,
-    SouthAmericanQSOPointMethod,
-    SouthAmericanWWQSOPointMethod,
-    SLFivePointQSOMethod,
-    StewPerryQSOPointMethod,
-    TenTenQSOPointMethod,
-    TOECQSOPointMethod,
-    UBAQSOPointMethod,
-    UkrainianQSOPointMethod,
-    VKZLQSOPointMethod,
-    WAEQSOPointMethod,
-    WAGQSOPointMethod,
-    WWLQSOPointMethod,
-    YL_ARCK_YL,
-    YODXQSOPointMethod,
-    AlwaysOnePointPerQSO, //{ Ignores dupes }
-    OnePointPerQSO,
-    TwoPointsPerQSO,
-    ThreePointsPerQSO,
-    TwoPhoneFourCW,
-    OnePhoneTwoCW,
-    ThreePhoneFiveCW,
-    TwoPhoneThreeCW,
-    TenPointsPerQSO,
-    OneEuropeTwoOther,
-    CupRFMethod,
-    UA4WMethod,
-    ChampionshipRFMethod,
-    ChampionshipUkrMethod,
-    RadioVHFFDQSOPointMethod,
-    LZDXQSOPointMethod,
-    OldNewYearQSOPointMethod,
-    ChampionshipRFASMethod,
-    YouthChampionshipRFMethod,
-    RegionOneFieldDayRCCQSOPointMethod,
-    GACWWWSACWQSOPointMethod,
-    WWPMCQSOPointMethod,
-    JTDXQSOPointMethod,
-    Radio160QSOPointMethod,
-    ArktikaSpringQSOPointMethod,
-    GagarinCupQSOPointMethod,
-    UNDXQSOPointMethod,
-    KingOfSpainQSOPointMethod,
-    WRTCQSOPointMethod,
-    R9WUW9WKMemorialQSOPointMethod,
-    PCCQSOPointMethod,
-    REFQSOPointMethod,
-    RadioMemoryQSOPointMethod,
-    BSCIQSOPointMethod,
-    CQMMQSOPointMethod,
-    OZHCRVHFQSOPointMethod,
-    MakrothenQSOPointMethod,
-    NCQSOPointMethod,
-    ALRSUA1DZCupQSOPointMethod,
-    HolyLand,               // 4.69.1
-    OQPQSOPointMethod,                     // 4.70.
-    PortugalDay,    // 4.70.4
-    RPX ,        // 4.72.2
-    DLRTTY ,      // 4.72.5
-    JAKARTARTTY,     // 4.74.2
-    TRCDIGITAL,       // 4.75.2
-    PAQSOPOINTMETHOD, // 4.74.3
-    INQsoPoinrMethod,  // 4.88.2
-    XERTTY,           // 4.77.5
-    OKOMSSBQSOPointMethod, // 4.80.1
-    uQRQCPM,      // 4.82.3
-    OKOMRTTY,     // 4.83.4
-    SRRQSOPOINTMETHOD, // 4.90.4
-    YBFT8QP,              // 4.90.7
-    WWDIGIQP,               // 4.90.8
-    IRTSQSOPointMethod,     // 4.93.1
-    EUDXQSOPointMethod,     // 4.95.6
-    BCQPQSOPointMethod,      // 4.97.6
-    MWCQP,
-    VAQSOPointMethod,
-    YOTAQSOPointMethod,
-    HAMSPIRIT ,
- //   RSGBDXMethod,
-    NYQPQP,
-    RCCVHFQP,
-    CFOQP,
-    RTCQSOPointMethod  // Haversine grid-center distance, tier 1/2/3/4 @ 2000/4000/8000 km
-    );
-
-const
-
-
-(* PLAIN STRINGS, NOT PAnsiChar, since 2026-09-13.  Its ckList row left
-    CFGCA and nothing reads this through a pointer any more. *)
-    DomesticMultStringArray               : array[DomesticMultType] of string =
-    (
-    'NONE',
-    'WYSIWYG',
-    'IOTA',
-    'GRID SQUARES',
-    'GRID FIELDS',
-    'DOK CODES',
-    'DOMESTIC FILE',
-    'RDA DISTRICT',
-    'NUMERIC ID'
-    );
-
-  QSOPointMethodArray                   : array[QSOPointMethodType] of string =
-    (
-    'NONE', //    NoQSOPointMethod, { Score = 0 }
-    'ALL ASIAN', //    AllAsianQSOPointMethod,
-    'ARCI', //    ARCIQSOPointMethod,
-    'ARI DX', //    ARIQSOPointMethod,
-    'ARRL FD', //    ARRLFieldDayQSOPointMethod,
-    'ARRL DIGI', // ARRLDIGIQSOPointMethod
-    'ARRL 160', //    ARRL160QSOPointMethod,
-    'ARRL 10', //    ARRL10QSOPointMethod,
-    'ARRL DX', //    ARRLDXQSOPointMethod,
-    'ARRL VHF JUN', //    ARRLVHFQSOPointMethod,
-    'ARRL VHF SS', //    ARRLVHFSSPointMethod,
-    'BALTIC', //    BalticQSOPointMethod,
-    'BWQP', // BWQPQSOPointMethod,
-    'CIS', //    CISQSOPointMethod,
-    'CQ 160', //    CQ160QSOPointMethod,
-    'CQ M', //    CQMQSOPointMethod,
-    'CQ VHF', //    CQVHFQSOPointMethod,
-    'CQ WW', //    CQWWQSOPointMethod,
-    'CQ WW RTTY', //    CQWWRTTYQSOPointMethod,
-    'CQ WPX', //    CQWPXQSOPointMethod,
-    'CQ WPX RTTY', //    CQWPXRTTYQSOPointMethod,
-    'CROATIAN', //    CroatianQSOPointMethod,
-    'EUROPEAN FIELD DAY', //    EuropeanFieldDayQSOPointMethod,
-    'EUROPEAN SPRINT', //    EuropeanSprintQSOPointMethod,
-    'EUROPEAN VHF', //    EuropeanVHFQSOPointMethod,
-    'HF-TESLA', //    TeslaQSOPointMethod,
-    'FISTS', //    FistsQSOPointMethod,
-    'FOC MARATHON' , // FOCMarathonPointMethod,
-    'HA DX', //    HADXQSOPointMethod,
-    'ONY',
-    'YUDX', //     YUDXQSOPointMethod,        // 4.57.5
-    'UKEI', //    UK-EIQSOPointMethod,       // 4.58.2
-    'HELVETIA', //    HelvetiaQSOPointMethod,
-    'IARU', //    IARUQSOPointMethod,
-//    'IN',
-    'INTERNET SIX', //    InternetSixQSOPointMethod,
-    'IOTA', //    IOTAQSOPointMethod,
-    'JA INTERNATIONAL DX', //    JapanInternationalDXQSOPointMethod,
-    'KCJ', //    KCJQSOPointMethod,
-    'LQP',//    'MQP', //    MQPQSOPointMethod,
-    'MARCONI MEMORIAL', // MMCQsoPointMethod,      //n4af
-    'NZ FIELD DAY', //    NZFieldDayQSOPointMethod,
-    'OK DX', //    OKDXQSOPointMethod,
-    'RAEM', //    RAEMQSOPointMethod,
-    'CANADA WINTER', //    RACQSOPointMethod,
-    'YOK', // Youth of Kazakstan
-    'RSGB', //    RSGBQSOPointMethod,
-    'RSGB 160', // rsgb160method,
-    'RUSSIAN DX', //    RussianDXQSOPointMethod,
-    'RDA', //    RDAQSOPointMethod,
-    'SALMON RUN', //    SalmonRunQSOPointMethod,
-    'SCANDINAVIAN', //    ScandinavianQSOPointMethod,
-    'INDONESIAN', // IndonesianQSOPointMethod,        // 4.64.1
-    'SOUTH AMERICAN', //    SouthAmericanQSOPointMethod,
-    'SOUTH AMERICAN WW', //    SouthAmericanWWQSOPointMethod,
-    'SL FIVE POINT', //    SLFivePointQSOMethod,
-    'STEW PERRY', //    StewPerryQSOPointMethod,
-    'TEN TEN', //    TenTenQSOPointMethod,
-    'TOEC', //    TOECQSOPointMethod,
-    'UBA', //    UBAQSOPointMethod,
-    'UKRAINIAN', //    UkrainianQSOPointMethod,
-    'VK ZL', //    VKZLQSOPointMethod,
-    'WAE', //    WAEQSOPointMethod,
-    'WAG', //    WAGQSOPointMethod,
-    'WWL', //    WWLQSOPointMethod,
-    'YL_ARCK_YL',
-    'YO DX', //    YODXQSOPointMethod,
-    'ALWAYS ONE', //    AlwaysOnePointPerQSO, { Ignores dupes }
-    'ONE POINT PER QSO', //    OnePointPerQSO,
-    'TWO POINTS PER QSO', //    TwoPointsPerQSO,
-    'THREE POINTS PER QSO', //    ThreePointsPerQSO,
-    'TWO PHONE FOUR CW', //    TwoPhoneFourCW,
-    'ONE PHONE TWO CW', //    OnePhoneTwoCW,
-    'THREE PHONE FIVE CW', //    ThreePhoneFiveCW,
-    'TWO PHONE THREE CW', //    TwoPhoneThreeCW,
-    'TEN POINTS PER QSO', //    TenPointsPerQSO,
-    'ONE EUROPE TWO OTHER', //    OneEuropeTwoOther,
-    'RF CUP', //    CupRFMethod,
-    'R4W', //    UA4WMethod,
-    'RF CHAMP', //    ChampionshipRFMethod,
-    'UKR CHAMP', //    ChampionshipUkrMethod,
-    'RADIO VHF FD', //    RadioVHFFDQSOPointMethod,
-    'LABRE', //labreqsopointmethod,
-    'LZ', //    LZDXQSOPointMethod,
-    'ONY', //    OldNewYearQSOPointMethod,
-    'RF AS CHAMP', //    ChampionshipRFASMethod,
-    'SRR JR', //    YouthChampionshipRFMethod,
-    'REG 1 RCC', //    RegionOneFieldDayRCCQSOPointMethod,
-    'GACWWWSA', //    GACWWWSACWQSOPointMethod,
-    'WW PMC', //    WWPMCQSOPointMethod,
-    'JT', //    JTDXQSOPointMethod
-    'RADIO 160',
-    'ARKTIKA-SPRING',
-    'GAGARIN-CUP',
-    'UN DX',
-    'KING OF SPAIN',
-    'WRTC',
-    'R9W-UW9WK-MEMORIAL',
-    'PCC',
-    'REF',
-    'RADIO-MEMORY',
-    'BSCI',
-    'CQMM',
-   // 'SASPRINT',
-    'OZHCR-VHF',
-    'MAKROTHEN',
-    'NC QSO Party',
-    'ALRS-UA1DZ-CUP',
-     'HOLYLAND',       // 4.69.1
-     'OQPQSOPOINTMETHOD',             // 4.70.4
-     'PORTUGALDAY',     // 4.71.4
-     'RPX' ,            // 4.72.2
-     'DL-RTTY',         // 4.72.5
-     'JAKARTA-RTTY',     // 4.74.2
-     'TRC-DIGITAL',      // 4.75.2
-     'PA QSO PARTY',      // 4.74.3
-     'IN QSO PARTY',      // 4.88.2
-     'XE RTTY',           // 4.77.5
-     'OKOM SSB',          // 4.80.1
-     'UQRQCPM',           // 4.82.3
-     'OKOMRTTY',           // 4.83.4
-     'SRRQSOPOINTMETHOD',  // 4.90.4
-     'YBFT8QP',               // 4.90.7
-     'WWDIGIQP',              // 4.90.8
-     'IRTS',   //  IRTSQSOPointMethod    // 4.93.1
-     'EUDX',    // 4.95.6
-     'MWCQP',
-     'BC QSO PARTY',      // 4.97.6
-     'VA QSO PARTY',
-     'YOTA',
-     'HAMSPIRIT', // 4.115.5
-      'NYQPQP',
-      'RCCVHFQP',
-      'CFOQP',
-      'RTC'                // Issue #902
-    );
+  QSOPointMethodType ITSELF IS GONE TOO -- M10 S4, 2026-10-14. With the
+  setting retired (S2) and LOGSTUFF's scoring case deleted (S3), nothing
+  scored by it: every contest's class scores itself, and the enum survived
+  only as a description each class restated. The QP column of
+  TContestInfo went with it, as did TContestBase.QSOPointMethod and
+  LOGWIND's ActiveQSOPointMethod. The one rule it ever carried beside
+  scoring -- AlwaysOnePointPerQSO's "ignores dupes" -- is
+  TContestBase.MarksDupes, stated by the two contests that ignore dupes. *)
 
 { When adding a new ExchangeType, please add a handler in the case statement in GetMyExchangeForExport
   in PostUnit for the ADIF export as well as in tGenerateLogPortionOfCabrilloFile in PostUnit for the Cabrillo file.
@@ -3690,6 +3398,12 @@ type
     ); //WLI
 
 const
+  (* NO LONGER A CONFIG VOCABULARY -- M10 S2, 2026-10-14. EXCHANGE RECEIVED is
+    retired (uCFG.RETIRED_COMMANDS, NY4I's Q4), so nothing registers this as
+    an allow-list any more. NOTHING READS IT since M11 S9b (2026-10-14): its
+    last two readers were uADIFExchange's log lines, which went with that
+    machine. It goes with the kind enums in the deletion stage, and
+    Lint-SpellingTables' floor of 24 falls with it. *)
   ActiveExchangeArray                   : array[ExchangeType] of string =
     (
      'UNKNOWN',
@@ -3755,291 +3469,18 @@ const
     'RST AND GRID SQUARE OR RDA'
     )
     ;
-type
-  TUSQSOPartyRecord = record
-{(*}
-    InsideStateDOMFile  : string;
-//    OutsideStateDOMFile : PChar;
-    StateName           : string;
-  end;
-
-const
-QSOPartiesCount = 20;
-
-  QSOParties                         : array[1..QSOPartiesCount] of TUSQSOPartyRecord =
-  (
-
-  (InsideStateDOMFile:'minnesota';  {OutsideStateDOMFile:'MINNESOTA';  }StateName:'MN'),
-  (InsideStateDOMFile:'michigan';   {OutsideStateDOMFile:'MICHIGAN';   }StateName:'MI'),
-  (InsideStateDOMFile:'newyork';    {OutsideStateDOMFile:'NEWYORK';    }StateName:'NY'),
-  (InsideStateDOMFile:'texas';      {OutsideStateDOMFile:'TEXAS';      }StateName:'TX'),
-  (InsideStateDOMFile:'ohio';       {OutsideStateDOMFile:'OHIO';       }StateName:'OH'),
-  (InsideStateDOMFile:'california'; {OutsideStateDOMFile:'CALIFORNIA'; }StateName:'CA'),
-  (InsideStateDOMFile:'wisconsin';  {OutsideStateDOMFile:'WISCONSIN';  }StateName:'WI'),
-  (InsideStateDOMFile:'tennessee';  {OutsideStateDOMFile:'TENNESSEE';  }StateName:'TN'),
-  (InsideStateDOMFile:'washington'; {OutsideStateDOMFile:'WASHINGTON'; }StateName:'WA'),  //n4af 4.41.1
-  (InsideStateDOMFile:'seven';      {OutsideStateDOMFile:'SEVEN';      }StateName:'7th area'),
-  (InsideStateDOMFile:'florida';    {OutsideStateDOMFile:'FLORIDA';    }StateName:'FL'),
-  (InsideStateDOMFile:'colorado';   {OutsideStateDOMFile:'COLORADO';   }StateName:'CO'),
-  (InsideStateDOMFile:'nc';         {OutsideStateDOMFile:'NC';         }StateName:'NC'),
-  (InsideStateDOMFile:'pa';         {OutsideStateDOMFile:'PA';         }StateName:'PA'),    // 4.74.3
-  (InsideStateDOMFile:'in';         {OutsideStateDOMFile:'IN';         }StateName:'IN'),
-  (InsideStateDOMFile:'ve7';        {OutsideStateDOMFile:'VE7';        }StateName: 'VE7'),
-  (InsideStateDOMFile:'va';         {OutsideStateDOMFile:'VA';         }StateName:'VA'),
-  (InsideStateDOMFile:'in7qpne';    {OutsideStateDOMFile:'IN7QPNE';    }StateName:'IN7QPNE'),
-  (InsideStateDOMFile:'arizona';    {OutsideStateDOMFile:'ARIZONA';    }StateName:'AZ'),
-  (InsideStateDOMFile:'missouri';   {OutsideStateDOMFile:'MISSOURI';   }StateName:'MO')
-  );
-{*)}
-
-  type
-    TContestInfo = record
-{(*}
-    {01}Name    : string;
-    {04}Email   : string;
-    {04}DF      : string;
-    {02}WA7BNM  : WORD;
-//    {04}SK3BG   : PChar;
-
-    {02}QRZRUID : Word;
-    {01}PxM     : PrefixMultType;
-    {01}ZnM     : ZoneMultType;
-    {01}AIE     : InitialExchangeType;{ActiveInitialExchange}
-    {01}DM      : DomesticMultType;
-
-    {01}P       : Byte;//US QSO Party
-    {01}AE      : ExchangeType;
-    {01}XM      : DXMultType;
-    {01}QP      : QSOPointMethodType;
-    {??}ADIFName: string;  // If blank, use the name.
-    {??}CABName : string;  // If blank, use the name.
-    // True when this contest permits the same station to legitimately
-    // submit multiple QSOs on the same band+mode with different QTH
-    // (mobile, rover, county-line).  Used by ImportFromADIF to suppress
-    // post-import dupe-flagging for follow-up records.  Default False;
-    // set True only for the single-state QSO parties (multi-state QPs
-    // such as 7QP/NEQP are out of scope until per-state handling lands).
-    {01}CountyLineAllowed : Boolean;
-
-    // Human-friendly contest name for reports (sourced from WA7BNM cabnames).
-    // If blank, use ContestTypeSA[ct].
-    {??}FriendlyName : string;
-{*)}
-    end;
-{
-    TContestMults = record
-      DomM: DomesticMultType;
-      DXM: DXMultType;
-      ZnM: ZoneMultType;
-      PxM: PrefixMultType;
-    end;
-}
-
-// NOTE This array below and ContestTypeSA have to be in the same order
-// This really should be setup so the name of the contest is the first parameter sothere is only one array rather
-// than a parallel array. NY4I Issue 222
-{ Note - # entries FOUR ARRAYS must match:
- Contest Type ~  Line #768
- QSO Point Method ` 3637
- ContestTypeSA  ` 3110
- Contests Boolean array ~ 3321
- }
+(* ContestsArray, ContestsBooleanArray AND QSOParties ARE GONE -- M10 S8,
+  2026-10-14 (docs/CONTEST_FACTORY_M10_PLAN.md S8, design 8.2s). They were
+  the row per contest (TContestInfo: names, calendar ids, the domestic file,
+  the kinds, the party index P), the word of flag bits per contest, and the
+  QSO-party table P indexed. Every registered class states each of those
+  values itself (S5), the base answers DUMMYCONTEST's neutral row (S6), and
+  the last reader -- the rover split on ADIF export, the row's
+  CountyLineAllowed -- asks the state-party class's SplitsRoverCallOnExport
+  (S8; open question Q90). A new contest adds an enum member, its
+  ContestTypeSA spelling below, and a class; no row. *)
   const
-    ContestsArray                       : array[ContestType] of TContestInfo =
-      (
-
- (Name: 'DUMMY CONTEST';               Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: UnknownExchange;                             XM:NoDXMults; QP:NoQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- (Name: '7QP';                         Email: '';                       DF: 'seven_cty';         WA7BNM:  404; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 10;AE: RSTDomesticOrDXQTHExchange;                  XM:NoDXMults; QP:TwoPhoneThreeCW; ADIFName:'7QP';   CABName:''; FriendlyName: '7th Call Area QSO Party'),
- (Name: 'ALL ASIAN CW';                Email: '';                       DF: '';                  WA7BNM:   47; {SK3BG: 'allasia';    } QRZRUID: 146 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTAgeExchange;                              XM:NoDXMults; QP:AllAsianQSOPointMethod; ADIFName:'ALL-ASIAN-DX-CW';   CABName:''; FriendlyName: 'All Asian DX Contest, CW'),
- (Name: 'ALL ASIAN SSB';               Email: '';                       DF: '';                  WA7BNM:  102; {SK3BG: 'allasia';    } QRZRUID: 146 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTAgeExchange;                              XM:NoDXMults; QP:AllAsianQSOPointMethod; ADIFName:'AL-ASIAN-DX-PHONE';   CABName:''; FriendlyName: 'All Asian DX Contest, Phone'),
- ({Name: 'ALL JA';                     }Email: '';                       DF: 'allja';             WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTALLJAPrefectureAndPrecedenceExchange;     XM:NoDXMults; QP:OnePointPerQSO; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'AP-SPRINT';                  }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: 'asiapacs';   } QRZRUID: 77  ; Pxm: Prefix; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQSONumberExchange;                               XM:NoDXMults; QP:OnePointPerQSO; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'ARCI';                       }Email: '';                       DF: 's50p12';            WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTPossibleDomesticQTHAndPower;              XM:ARRLDXCCWithNoUSACanadaKH6OrKL7; QP:ARCIQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'ARI-DX';                     }Email: '';                       DF: 'ari';               WA7BNM:    9; {SK3BG: nil;          } QRZRUID: 85  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTAndQSONumberOrDomesticQTHExchange;        XM:ARRLDXCCWithNoIOrIS0; QP:ARIQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'ARI International DX Contest'),
- ({Name: 'ARRL-10';                    }Email: '10meter@arrl.org';       DF: 'arrl10';            WA7BNM:  199; {SK3BG: 'arrl10';     } QRZRUID: 14  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTDomesticQTHOrQSONumberExchange;           XM:ARRLDXCCWithNoUSACanadaKH6OrKL7; QP:ARRL10QSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'ARRL 10-Meter Contest'),
- ({Name: 'ARRL DIGI';                  }Email: 'contests@arrl.org';      DF: '';                  WA7BNM:  716;                         QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: GridInitialExchange; DM: NoDomesticMults {GridFields};    P: 0; AE: Grid2Exchange;                               XM:NoDXMults; QP:ARRLDIGIQSOPointMethod; ADIFName:'';   CABName:'ARRL-DIGI'; FriendlyName: 'ARRL Inter. Digital Contest'),    // Issue 577
- ({Name: 'ARRL-160';                   }Email: '160meter@arrl.org';      DF: 'arrlsect';          WA7BNM:  194; {SK3BG: 'arrl160';    } QRZRUID: 22  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTDomesticOrDXQTHExchange;                  XM:NoDXMults; QP:ARRL160QSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'ARRL 160-Meter Contest'),
- ({Name: 'ARRL-DX-CW';                 }Email: 'DXCW@arrl.org';          DF: '';                  WA7BNM:  256; {SK3BG: 'arrlidx';    } QRZRUID: 335 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTPowerExchange;                            XM:NoDXMults; QP:ARRLDXQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'ARRL Inter. DX Contest, CW'),
- ({Name: 'ARRL-DX-SSB';                }Email: 'DXPhone@arrl.org';       DF: '';                  WA7BNM:  289; {SK3BG: 'arrlidx';    } QRZRUID: 334 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTPowerExchange;                            XM:NoDXMults; QP:ARRLDXQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'ARRL Inter. DX Contest, SSB'),
- ({Name: 'ARRL-SS-CW';                 }Email: 'SSCW@arrl.org';          DF: 'arrlsect';          WA7BNM:  177; {SK3BG: 'arrlnoss';   } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: CheckSectionInitialExchange; DM: DomesticFile;    P: 0; AE: QSONumberPrecedenceCheckDomesticQTHExchange; XM:NoDXMults; QP:TwoPointsPerQSO; ADIFName:'';   CABName:''; FriendlyName: 'ARRL Sweepstakes Contest, CW'),
- ({Name: 'ARRL-SS-SSB';                }Email: 'SSPhone@arrl.org';       DF: 'arrlsect';          WA7BNM:  178; {SK3BG: 'arrlnoss';   } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: CheckSectionInitialExchange; DM: DomesticFile;    P: 0; AE: QSONumberPrecedenceCheckDomesticQTHExchange; XM:NoDXMults; QP:TwoPointsPerQSO; ADIFName:'';   CABName:''; FriendlyName: 'ARRL Sweepstakes Contest, SSB'),
- ({Name: 'ARRL VHF JAN';              }Email: '';                       DF: '';                  WA7BNM:  231; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: GridSquares;     P: 0; AE:RSTandorGridExchange;                      XM:NoDXMults; QP:ARRLVHFJUNPointMethod; ADIFName:'ARRL-VHF-JAN';   CABName:''; FriendlyName: 'ARRL January VHF Contest'),
- ({Name: 'ARRL VHF JUN';               }Email: '';                       DF: '';                  WA7BNM:   43; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: GridSquares;     P: 0; AE:RSTandorGridExchange;                      XM:NoDXMults; QP:ARRLVHFJUNPointMethod; ADIFName:'ARRL-VHF-JUN';   CABName:''; FriendlyName: 'ARRL June VHF Contest'),
- ({Name: 'ARRL VHF SEP';                }Email: '';                       DF: '';                  WA7BNM:  113; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: GridSquares;     P: 0; AE: RSTandorGridExchange;                      XM:NoDXMults; QP:ARRLVHFJUNPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'ARRL September VHF Contest'),
- ({Name: 'ARIZONA QSO PARTY';          }Email: 'info@azqp.org';          DF: 'arizona_cty';            WA7BNM:  482; {SK3BG: nil;       } QRZRUID: 0    ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 19; AE: RSTDomesticOrDXQTHExchange;                  XM:ARRLDXCCWithNoUSAOrCanada;  QP:OnePhoneTwoCW; ADIFName:'AZ-QSO-PARTY';   CABName:'AZ-QSO-PARTY'; FriendlyName: 'Arizona QSO Party'),        
- ({Name: 'BALTIC';                     }Email: '';                       DF: '';                  WA7BNM:   28; {SK3BG: nil;          } QRZRUID: 161 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQSONumberExchange;                        XM:NoDXMults; QP:BalticQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'Baltic Contest'),
- ({Name: 'BWQP';                       }Email: '';                       DF: '';                  WA7BNM: 0000;      {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults;    P: 0; AE: RSTNameAndQTHExchange;              XM:NoDXMults; QP:BWQPQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'CIS';                        }Email: '';                       DF: 'cis';               WA7BNM:  197; {SK3BG: nil;          } QRZRUID: 500 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTDomesticQTHOrQSONumberExchange;           XM:ARRLDXCC; QP:CISQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'CIS DX Contest, CW'),
- ({Name: 'CQP';                        }Email: '';                       DF: 'california_cty';    WA7BNM:  140; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;   P: 6 ;AE: QSONumberDomesticOrDXQTHExchange;                    XM:NoDXMults; QP:ThreePointsPerQSO; ADIFName:'';   CABName:''; CountyLineAllowed: True; FriendlyName: 'California QSO Party'),           //n4af
- ({Name: 'COUNTY HUNTER';              }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQTHExchange;                              XM:NoDXMults; QP:OnePointPerQSO; ADIFName:'';   CABName:''; FriendlyName: 'General County Hunting Log'),
- ({Name: 'CQ-160-CW';                  }Email: '160CW@kkn.net';          DF: 's48p14dc';          WA7BNM:  232; {SK3BG: 'cqww160';    } QRZRUID: 311 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: ZoneInitialExchange; DM: DomesticFile;    P: 0; AE:RSTZoneOrDomesticQTH;                          XM:CQDXCCWithNoUSAOrCanada; QP:CQ160QSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'CQ 160-Meter Contest, CW'),     // 4.77.6
- ({Name: 'CQ-160-SSB';                 }Email: '160SSB@kkn.net';         DF: 's48p14dc';          WA7BNM:  259; {SK3BG: 'cqww160';    } QRZRUID: 312 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: ZoneInitialExchange; DM: DomesticFile;    P: 0; AE: RSTZoneOrDomesticQTH;                         XM:CQDXCCWithNoUSAOrCanada; QP:CQ160QSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'CQ 160-Meter Contest, SSB'),           // 4.77.6
-  ({Name: 'CQ-M';                       }Email: '';                       DF: '';                  WA7BNM:   14; {SK3BG: 'cqmidxc';    } QRZRUID: 126 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQSONumberExchange;                        XM:CQDXCC{ARRLDXCC};  QP:CQMQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'CQ-M International DX Contest'),
- ({Name: 'CQ-VHF';                     }Email: '';                       DF: '';                  WA7BNM:   73; {SK3BG: 'cqwwvhf';    } QRZRUID: 363 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM:  GridSquares;     P: 0; AE: RSTandorGridExchange;                      XM:NoDXMults; QP:CQVHFQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'CQ Worldwide VHF SSB/CW Contest'),
-// ({Name: 'WWDIGI';                     }Email: 'director@ww-digi.com';   DF: '';                  WA7BNM:  650;                         QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: GridInitialExchange; DM: GridSquares; P: 0; AE: Grid2Exchange;
- ({Name: 'CQ-WPX-CW';                  }Email: 'cw@cqwpx.com';           DF: '';                  WA7BNM:   29; {SK3BG: nil;          } QRZRUID: 18  ; Pxm: Prefix; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQSONumberExchange;                        XM:NoDXMults; QP:CQWPXQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'CQ WW WPX Contest, CW'),
- ({Name: 'CQ-WPX-SSB';                 }Email: 'ssb@cqwpx.com';          DF: '';                  WA7BNM:  291; {SK3BG: nil;          } QRZRUID: 6   ; Pxm: Prefix; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQSONumberExchange;                        XM:NoDXMults; QP:CQWPXQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'CQ WW WPX Contest, SSB'),
- ({Name: 'CQ-WPX-RTTY';                }Email: 'rtty@cqwpx.com';         DF: '';                  WA7BNM:  245; {SK3BG: nil;          } QRZRUID: 6   ; Pxm: Prefix; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQSONumberExchange;                        XM:NoDXMults; QP:CQWPXRTTYQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'CQ WW RTTY WPX Contest'),
- ({Name: 'CQ-WW-CW';                   }Email: 'cw@cqww.com';            DF: '';                  WA7BNM:  192; {SK3BG: 'cqwwdxc';    } QRZRUID: 5   ; Pxm: NoPrefixMults; ZnM: CQZones; AIE: CustomInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTZoneExchange;                             XM:CQDXCC; QP:CQWWQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'CQ Worldwide DX Contest, CW'), // 4.105.17
- ({Name: 'CQ-WW-SSB';                  }Email: 'ssb@cqww.com';           DF: '';                  WA7BNM:  172; {SK3BG: 'cqwwdxc';    } QRZRUID: 4   ; Pxm: NoPrefixMults; ZnM: CQZones; AIE: ZoneInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTZoneExchange;                             XM:CQDXCC; QP:CQWWQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'CQ Worldwide DX Contest, SSB'),
- ({Name: 'CROATIAN';                  }Email: '';                        DF: 'croat';            WA7BNM:  206; {SK3BG: '9acwc';      } QRZRUID: 91  ; Pxm: NoPrefixMults; ZnM:ITUZones; AIE: ZoneInitialExchange; DM: DomesticFile; P: 0; AE: RSTZONEORDOMESTICQTH;   XM:NODXMULTS; QP:CroatianQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'Croatian DX Contest'),
- ({Name: 'RF-CUP-CW';                  }Email: '';                       {DF: 'grids';}           WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 27  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: GridFields;    P: 0; AE: QSONumberAndGridSquare;                      XM:NoDXMults; QP:CupRFMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'RF-CUP-SSB';                 }Email: '';                       {DF: 'grids';}           WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 24  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: GridFields;    P: 0; AE: QSONumberAndGridSquare;                      XM:NoDXMults; QP:CupRFMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'RF-CUP-DIG';                 }Email: '';                       DF: 'grids';             WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 86  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: QSONumberAndGridSquare;                      XM:NoDXMults; QP:CupRFMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'URAL-CUP';                   }Email: '';                       DF: 'grids';             WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 112 ; Pxm: CallSignPrefix; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: QSONumberDomesticQTHExchange;                XM:NoDXMults; QP:OnePointPerQSO; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'EU-SPRINT-SPRING-CW';        }Email: '';                       DF: '';                  WA7BNM:  317;                         QRZRUID: 216 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NameInitialExchange; DM: NoDomesticMults; P: 0; AE: QSONumberAndNameExchange;                    XM:NoDXMults; QP:EuropeanSprintQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'EUROPEAN HFC';               }Email: '';                       DF: '';                  WA7BNM:   82; {SK3BG: 'euhfcs';     } QRZRUID: 31  ; Pxm: NoPrefixMults; ZnM: EUHFCYear; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTZoneExchange;                             XM:NoDXMults; QP:OnePointPerQSO; ADIFName:'';   CABName:''; FriendlyName: 'European HF Championship'),
- ({Name: 'EUROPEAN VHF';               }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQSONumberAndGridSquareExchange;           XM:NoDXMults; QP:EuropeanVHFQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'HF-TESLA    ';               }Email: '';                       DF: '';                  WA7BNM: 566; {SK3BG: nil;           } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQSONumberAndGridSquareExchange;           XM:NoDXMults; QP:TeslaQSOPointMethod; ADIFName:'';   CABName:'HF-TESLA'; FriendlyName: 'TESLA Memorial HF CW Contest'),
- ({Name: 'ARRL FIELD DAY';             }Email: 'fieldday@arrl.org';      DF: 'arrlsect';          WA7BNM:   57; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; {DM: NoDomesticMults;}    P: 0; AE: ClassDomesticOrDXQTHExchange;                XM:ARRLDXCC; QP:ARRLFieldDayQSOPointMethod; ADIFName:'ARRL-FIELD-DAY';   CABName:'ARRL-FD'; FriendlyName: 'ARRL Field Day'),   //ny4i Issue 222
- ({Name: 'FISTS';                      }Email: '';                       DF: 's49p8';             WA7BNM:  251; {SK3BG: 'fistsspr';   } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTQTHNameAndFistsNumberOrPowerExchange;     XM:NoDXMults; QP:FistsQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'FISTS Winter Unlimited Sprint'),
- ({Name: 'FOC MARATHON';               }Email: '';                       DF: '';                  WA7BNM:  0000; {SK3BG: nil;         } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTPowerExchange;                  XM:CQDXCC; QP:FOCMarathonQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),            //n4af
- ({Name: 'FLORIDA QSO PARTY';          }Email: '';                       DF: 'florida_cty';       WA7BNM:  325; {SK3BG: 'flqp';       } QRZRUID: 0    ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 11; AE: RSTDomesticOrDXQTHExchange;                  XM:ARRLDXCCWithNoUSAOrCanada;  QP:OnePhoneTwoCW; ADIFName:'FL-QSO-PARTY';   CABName:'FCG-FQP'; CountyLineAllowed: True; FriendlyName: 'Florida QSO Party'),        //N4AF 4.38.10
- ({Name: 'GACW-WWSA-CW';               }Email: '';                       DF: '';                  WA7BNM:   45; {SK3BG: 'gacwdxc';    } QRZRUID: 321 ; Pxm: NoPrefixMults; ZnM: CQZones; AIE: ZoneInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTZoneExchange;                             XM:CQDXCC; QP:GACWWWSACWQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'GACW WWSA CW DX Contest'),
- ({Name: 'GAGARIN-CUP';                }Email: '';                       DF: 'GC';                 WA7BNM:  367; {SK3BG: 'ygintc';     } QRZRUID: 82  ; Pxm: GCStation; ZnM: ITUZones; AIE: ZoneInitialExchange; DM: WYSIWYGDomestic; P: 0; AE: RSTZoneorDomesticQTH;                             XM:NoDXMults; QP:GagarinCupQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'Yuri Gagarin International DX Contest'),
- ({Name: 'GENERAL QSO';                }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NameQTHInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTNameAndQTHExchange;                       XM:NoDXMults; QP:OnePointPerQSO; ADIFName:'';   CABName:''; FriendlyName: 'General QSO/DX Logging'),
- ({Name: 'GRID LOC';                   }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NameInitialExchange; DM: WYSIWYGDomestic; P: 0; AE: NameAndPossibleGridSquareExchange;           XM:NoDXMults; QP:OnePointPerQSO; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'HA DX';                      }Email: '';                       DF: 'hungary';           WA7BNM:  228; {SK3BG: '`c';      } QRZRUID: 116 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTDomesticQTHOrQSONumberExchange;           XM:CQDXCC; QP:HADXQSOPointMethod; ADIFName:'HA-DX';   CABName:''; FriendlyName: 'Hungarian DX Contest'),     // 4.84.2
- ({Name: 'YUDX ';                      }Email: '';                       DF: 'yu';                WA7BNM:  000; {SK3BG:  nil;         } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTDomesticQTHOrQSONumberExchange;           XM:CQDXCC; QP:YUDXQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),     // 4.57.5
- ({Name: 'UKEI ';                      }Email: '';                       DF: 'uk-ei';             WA7BNM:  000; {SK3BG:  nil;         } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTQSONUMBERAndPossibleDomesticQTHExchange;           XM:CQDXCC; QP:UKEIQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),     // 4.58.2
- ({Name: 'HELVETIA';                   }Email: '';                       DF: 'swiss';             WA7BNM:  326; {SK3BG: 'helvc';      } QRZRUID: 157 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTDomesticQTHOrQSONumberExchange;  XM:NoDXMults; QP:HelvetiaQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'Helvetia Contest'),          // 4.54.6 issue 214
- ({Name: 'IARU-HF';                    }Email: 'iaruhf@iaru.org';        DF: 'iaruhq';            WA7BNM:   67; {SK3BG: 'iaruhfc';    } QRZRUID: 33  ; Pxm: NoPrefixMults; ZnM: ITUZones; AIE: ZoneInitialExchange; DM: WYSIWYGDomestic; P: 0; AE: RSTZoneOrSocietyExchange;                    XM:NoDXMults; QP:IARUQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'IARU HF World Championship'),
- ({Name: 'INTERNET SPRINT';            }Email: '';                       DF: 's49p13';            WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: QSONumberNameDomesticOrDXQTHExchange;        XM:NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; QP:AlwaysOnePointPerQSO; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'RSGB-IOTA';                  }Email: '';                       DF: '';                  WA7BNM:   75; {SK3BG: nil;          } QRZRUID: 29  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: IOTADomestic;    P: 0; AE: RSTQSONumberAndPossibleDomesticQTHExchange;  XM:NoDXMults; QP:IOTAQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'RSGB IOTA Contest'),
- ({Name: 'JIDX-CW';                    }Email: '';                       DF: 'jidx';              WA7BNM:  314; {SK3BG: 'jaintdx';    } QRZRUID: 57  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTZoneExchange;                             XM:NoDXMults; QP:JapanInternationalDXQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'JIDX CW Contest'),
- ({Name: 'JIDX-SSB';                   }Email: '';                       DF: 'jidx';              WA7BNM:  184; {SK3BG: 'jaintdx';    } QRZRUID: 57  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTZoneExchange;                             XM:NoDXMults; QP:JapanInternationalDXQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'JIDX Phone Contest'),
- ({Name: 'JA LONG PREFECT';            }Email: '';                       DF: 'jacg3';             WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTLongJAPrefectureExchange;                 XM:NoDXMults; QP:OnePointPerQSO; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'JT DX';                      }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: MongolianCallSignPrefix; ZnM: NoZoneMults; AIE: ZoneInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTZoneExchange;                             XM:ARRLDXCCWithNoJT;    QP:JTDXQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'KCJ';                        }Email: '';                       DF: 'japref';            WA7BNM:   89; {SK3BG: 'kcjc';       } QRZRUID: 169 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTZONEORDOMESTICQTH;                      XM:NoDXMults; QP:KCJQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'Keymans Club of Japan Contest'),
- ({Name: 'KIDS DAY';                   }Email: '';                       DF: '';                  WA7BNM:  224; {SK3BG: 'kidsday';    } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: KidsDayExchange;                             XM:NoDXMults; QP:OnePointPerQSO; ADIFName:'';   CABName:''; FriendlyName: 'ARRL Kids Day'),
- ({Name: 'KVP';                        }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: EUHFCYear;   AIE: noInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTZoneExchange;                             XM:NoDXMults; QP:OnePhoneTwoCW; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'LABRE';                      }Email: 'logs@labre.org.br' ;     DF: 'brazil';            WA7BNM:  761; {SK3BG: 'nil';      } QRZRUID: 0  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTDomesticOrDXQTHExchange;                        XM:ARRLDXCC; QP:LABREQSOPointMethod; ADIFName:'';   CABName:'LABRE-DX'; FriendlyName: 'LABRE DX Contest'),
- ({Name: 'LZ DX';                      }Email: '';                       DF: 'lz';                WA7BNM:  187; {SK3BG: 'lzdxc';      } QRZRUID: 53  ; Pxm: NoPrefixMults; ZnM: ITUZones; AIE: ZoneInitialExchange; DM: DomesticFile;    P: 0; AE: RSTZoneOrDomesticQTH;                        XM:NoDXMults; QP:LZDXQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'LZ DX Contest'),
- ({Name: 'Marconi Memorial';     }Email: 'contest.marconi@arifano.it';   DF: '';               WA7BNM:   56; {SK3BG: nil;        }   QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQSONumberExchange;                       XM:CQDXCC; QP:OnePointPerQSO; ADIFName:'';   CABName:''; FriendlyName: 'Marconi Memorial HF Contest'),        //n4af    4.68.1
- ({Name: 'MINITEST';                   }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: CallSignPrefix; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQSONumberExchange;                        XM:NoDXMults; QP:OnePointPerQSO; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'MINI80';                   }Email: '';                       DF: '';                  WA7BNM: 712; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: CallSignPrefix; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQSONumberExchange;                        XM:NoDXMults; QP:OnePointPerQSO; ADIFName:'MINITEST-80 ';   CABName:'MINITEST-80 '; FriendlyName: 'Mini-Test 80'),
- ({Name: 'MINI40';                   }Email: '';                       DF: '';                  WA7BNM: 711; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: CallSignPrefix; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQSONumberExchange;                        XM:NoDXMults; QP:OnePointPerQSO; ADIFName:'MINITEST-40 ';   CABName:'MINITEST-40 '; FriendlyName: 'Mini-Test 40'),
- ({Name: 'MICH QSO PARTY';             }Email: '';                       DF: 'michigan_cty';                 WA7BNM:  323; {SK3BG: 'miqp';       } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 2; AE: RSTDomesticQTHExchange;                XM:NoDXMults; QP:OnePhoneTwoCW; ADIFName:'MI-QSO-PARTY';   CABName:'MI-QSO-PARTY'; CountyLineAllowed: True; FriendlyName: 'Michigan QSO Party'),
- ({Name: 'MINN QSO PARTY';             }Email: '';                       DF: 'minnesota_cty';                 WA7BNM:  238; {SK3BG: 'mnqp';       } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 1; AE: NameAndDomesticOrDXQTHExchange;              XM:NoDXMults; QP:TwoPointsPerQSO{MQPQSOPointMethod}; ADIFName:'MN-QSO-PARTY';   CABName:'MN-QSO-PARTY'; CountyLineAllowed: True; FriendlyName: 'Minnesota QSO Party'),
- ({Name: 'MO QSO PARTY';              }Email: 'moqsoparty@w0ma.org' ;    DF: 'missouri_cty';      WA7BNM:  327; {SK3BG: 'moqp';       } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 20; AE: RSTDomesticQTHExchange;               XM:NoDXMults; QP:OnePhoneTwoCW; ADIFName:'MO-QSO-PARTY';   CABName:'MO-QSO-PARTY'; CountyLineAllowed: True; FriendlyName: 'Missouri QSO Party'),
- ({Name: 'NAQP-CW';                    }Email: 'cwnaqpmgr@ncjweb.com';   DF: 'naqp';              WA7BNM:  218; {SK3BG: 'naqp';       } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NameInitialExchange; DM: DomesticFile;    P: 0; AE: NameAndDomesticOrDXQTHExchange;              XM:NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; QP:OnePointPerQSO; ADIFName:'';   CABName:''; FriendlyName: 'North American QSO Party, CW'),
- ({Name: 'NAQP-SSB';                   }Email: 'ssbnaqpmgr@ncjweb.com';  DF: 'naqp';              WA7BNM:  229; {SK3BG: 'naqp';       } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NameInitialExchange; DM: DomesticFile;    P: 0; AE: NameAndDomesticOrDXQTHExchange;              XM:NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; QP:OnePointPerQSO; ADIFName:'';   CABName:''; FriendlyName: 'North American QSO Party, SSB'),
- ({Name: 'NAQP-RTTY';                  }Email: 'rttynaqpmgr@ncjweb.com'; DF: 'naqp';              WA7BNM:  263; {SK3BG: 'naqp';       } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NameInitialExchange; DM: DomesticFile;    P: 0; AE: NameAndDomesticOrDXQTHExchange;              XM:NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; QP:OnePointPerQSO; ADIFName:'';   CABName:''; FriendlyName: 'North American QSO Party, RTTY'),
- ({Name: 'NA-SPRINT-CW';               }Email: 'cwsprint@ncjweb.com';    DF: 'naqp';             WA7BNM:  253; {SK3BG: 'nasprint';   } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NameQTHInitialExchange; DM: DomesticFile;    P: 0; AE: QSONumberNameDomesticOrDXQTHExchange;        XM:NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; QP:OnePointPerQSO; ADIFName:'';   CABName:''; FriendlyName: 'North American Sprint, CW'),
- ({Name: 'SSB-SPRINT';                 }Email: '';                       DF: 'naqp';         WA7BNM:  242; {SK3BG: '';   } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NameQTHInitialExchange; DM: DomesticFile;    P: 0; AE: QSONumberNameDomesticOrDXQTHExchange;        XM:NoDXMults; QP:OnePointPerQSO; ADIFName:'NA-SPRINT-SSB';   CABName:'NA-SPRINT-SSB'; FriendlyName: 'North American Sprint, SSB'),         // 4.55.10
- ({Name: 'NA-SPRINT-RTTY';             }Email: 'rttysprint@ncjweb.com';  DF: 's49p8';             WA7BNM:  155; {SK3BG: 'nasprint';   } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NameQTHInitialExchange; DM: DomesticFile;    P: 0; AE: QSONumberNameDomesticOrDXQTHExchange;        XM:NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; QP:OnePointPerQSO; ADIFName:'';   CABName:''; FriendlyName: 'North American Sprint, RTTY'),
- ({Name: 'NCCC-SPRINT';                }Email: '';                       DF: 'naqp';              WA7BNM:   44; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NameQTHInitialExchange; DM: DomesticFile;    P: 0; AE: QSONumberNameDomesticOrDXQTHExchange;        XM:NoDXMults; QP:OnePointPerQSO; ADIFName:'';   CABName:''; FriendlyName: 'NCCC Sprint'),
- ({Name: 'NEQP';                       }Email: '';                       DF: '';                  WA7BNM:   10; {SK3BG: 'newengqp';   } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTDomesticOrDXQTHExchange;                  XM:NoDXMults; QP:OnePhoneTwoCW; ADIFName:'';   CABName:''; FriendlyName: 'New England QSO Party'),
- ({Name: 'NC QSO PARTY';               }Email: '';                       DF: 'nc_cty';            WA7BNM:  265; {SK3BG:  nil ;       } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 13; AE: RSTDomesticQTHExchange;                XM:NoDXMults; QP:NCQSOPointMethod; ADIFName:'North Carolina QSO Party';   CABName:'NC-QSO-PARTY'; CountyLineAllowed: True; FriendlyName: 'North Carolina QSO Party'),
- ({Name: 'NRAU-BALTIC-CW';             }Email: '';                       DF: 'nrau';              WA7BNM: 0000; {SK3BG: 'nrau';       } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTQSONumberAndDomesticQTHExchange;          XM:NoDXMults; QP:TwoPointsPerQSO; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'NRAU-BALTIC-SSB';            }Email: '';                       DF: 'nrau';              WA7BNM:  220; {SK3BG: 'nrau';       } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTQSONumberAndDomesticQTHExchange;          XM:NoDXMults; QP:TwoPointsPerQSO; ADIFName:'';   CABName:''; FriendlyName: 'NRAU-Baltic Contest, CW'),
- ({Name: 'NZ FIELD DAY';               }Email: '';                       DF: '';                  WA7BNM:  222; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: BranchZones; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: NZFieldDayExchange;                          XM:NoDXMults; QP:NZFieldDayQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'NRAU-Baltic Contest, SSB'),
- ({Name: 'OCEANIA-DX-CW';              }Email: '';                       DF: '';                  WA7BNM:  151; {SK3BG: 'ocdxc';      } QRZRUID: 72  ; Pxm: Prefix; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQSONumberExchange;                        XM:NoDXMults; QP:VKZLQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'Oceania DX Contest, CW'),
- ({Name: 'OCEANIA-DX-SSB';             }Email: '';                       DF: '';                  WA7BNM:  142; {SK3BG: 'ocdxc';      } QRZRUID: 73  ; Pxm: Prefix; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQSONumberExchange;                        XM:NoDXMults; QP:VKZLQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'Oceania DX Contest, Phone'),
- ({Name: 'OHIO QSO PARTY';             }Email: '';                       DF: 'ohio_cty';          WA7BNM:  100; {SK3BG: 'ohqp';       } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 5; AE: RSTQSONumberAndDomesticQTHExchange;          XM:NoDXMults; QP:OnePhoneTwoCW; ADIFName:'';   CABName:'MRRC-OHQP'; CountyLineAllowed: True; FriendlyName: 'Ohio QSO Party'),
- ({Name: 'OK-OM DX';                   }Email: '';                       DF: 'okom';              WA7BNM:  185; {SK3BG: 'okomdxc';    } QRZRUID: 12  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTAndQSONumberOrDomesticQTHExchange;        XM:CQDXCC; QP:OKDXQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'OK/OM DX Contest, CW'),
- ({Name: 'RADIO-ONY';                  }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 12  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTPowerExchange;                              XM:NoDXMults; QP:OldNewYearQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'OZCR-O';                     }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 182 ; Pxm: NoPrefixMults; ZnM: ITUZones; AIE: ZoneInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTZoneOrSocietyExchange;                    XM:CQDXCC{ARRLDXCC}; QP:OnePointPerQSO; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'OZCR-Z';                     }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 182 ; Pxm: NoPrefixMults; ZnM: ITUZones; AIE: ZoneInitialExchange; DM: WYSIWYGDomestic; P: 0; AE: RSTZoneOrSocietyExchange;                    XM:NoDXMults; QP:IARUQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'PACC';                       }Email: '';                       DF: 'pacc';              WA7BNM:  249; {SK3BG: 'pacc';       } QRZRUID: 66  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTAndQSONumberOrDomesticQTHExchange;        XM:NoDXMults; QP:OnePointPerQSO; ADIFName:'';   CABName:''; FriendlyName: 'Dutch PACC Contest'),
- ({Name: 'POTA';                       }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTAndPOTAPark;                         XM:NoDXMults; QP:OnePointPerQSO; ADIFName:'';   CABName:''; FriendlyName: 'Parks on the Air(r) Logging'),
- ({Name: 'QCWA';                       }Email: '';                       DF: '';                  WA7BNM:  332; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: QSONumberNameChapterAndQTHExchange;          XM:NoDXMults; QP:OnePhoneTwoCW; ADIFName:'';   CABName:''; FriendlyName: 'QCWA QSO Party'),
- ({Name: 'QCWA GOLDEN';                }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: QSONumberNameChapterAndQTHExchange;          XM:NoDXMults; QP:OnePhoneTwoCW; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'CANADA_WINTER';          }Email: '';                       DF: 'p13';               WA7BNM:  205; {SK3BG: 'canday';     } QRZRUID: 101 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTAndQSONumberOrDomesticQTHExchange;        XM:NoDXMults; QP:RACQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'RAC Winter Contest'),
- ({Name: 'RF-VHF-FD   ';               }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 180 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQSONumberAndGridSquareExchange;           XM:NoDXMults; QP:RadioVHFFDQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'RAEM';                       }Email: '';                       DF: '';                  WA7BNM:  209; {SK3BG: 'raem';       } QRZRUID: 88  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: QSONumberAndGeoCoordinates;                  XM:NoDXMults; QP:RAEMQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'RAEM Contest'),
- ({Name: 'RDAC';                       }Email: '';                       DF: '';                  WA7BNM:   94; {SK3BG: 'rdac';       } QRZRUID: 386 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: RDADistrict;     P: 0; AE: RSTDomesticQTHOrQSONumberExchange;           XM:ARRLDXCC; QP:RDAQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'Russian District Award Contest'),
- ({Name: 'REGION 1 FIELD DAY';         }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQSONumberExchange;                        XM:CQDXCC; QP:EuropeanFieldDayQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'REGION 1 FIELD DAY-RCC-CW';  }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 358 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQSONumberExchange;                        XM:CQDXCC; QP:RegionOneFieldDayRCCQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'REGION 1 FIELD DAY-RCC-SSB'; }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 358 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQSONumberExchange;                        XM:CQDXCC; QP:RegionOneFieldDayRCCQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'RF-CHAMP-CW';                }Email: 'champ@srr.ru';           DF: 'russian';           WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 30  ; Pxm: NoPrefixMults; ZnM: RFChampionchipZones; AIE: ZoneInitialExchange; DM: DomesticFile;    P: 0; AE: QSONumberAndZone;                            XM:NoDXMults; QP:ChampionshipRFMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'RF-CHAMP-SSB';               }Email: 'champ@srr.ru';           DF: 'russian';           WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 28  ; Pxm: NoPrefixMults; ZnM: RFChampionchipZones; AIE: ZoneInitialExchange; DM: DomesticFile;    P: 0; AE: QSONumberAndZone;                            XM:NoDXMults; QP:ChampionshipRFMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'AS-CHAMP-CW';                }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 64  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: QSONumberAndCoordinatesSum;                  XM:NoDXMults; QP:ChampionshipRFASMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'RSGB-ROPOCO-CW';             }Email: '';                       DF: '';                  WA7BNM:   77; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTAndPostalCodeExchange;                    XM:NoDXMults; QP:TenPointsPerQSO; ADIFName:'RSGB-ROLO';   CABName:'RSGB-ROLO'; FriendlyName: 'RSGB RoLo CW'),
- ({Name: 'RSGB-ROPOCO-SSB';            }Email: '';                       DF: '';                  WA7BNM:  361; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTAndPostalCodeExchange;                    XM:NoDXMults; QP:TenPointsPerQSO; ADIFName:'RSGB-ROLO';   CABName:'RSGB-ROLO'; FriendlyName: 'RSGB RoLo SSB'),
- ({Name: 'RSGB 1.8';                   }Email: '';                       DF: 'rsgb';              WA7BNM: 0000; {SK3BG: 'rsgb1-8';    } QRZRUID: 44  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTQSONumberAndPossibleDomesticQTHExchange;  XM:CQDXCC; QP:RSGB160Method; ADIFName:'';   CABName:''; FriendlyName: ''),               // issue 296
- ({Name: 'RDXC';                       }Email: 'logs@rdxc.org';          DF: 'russian';           WA7BNM:  310; {SK3BG: 'russdxc';    } QRZRUID: 7   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTDomesticQTHOrQSONumberExchange;           XM:ARRLDXCC; QP:RussianDXQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'Russian DX Contest'),
- ({Name: 'SAC-CW';                     }Email: '';                       DF: '';                  WA7BNM:  121; {SK3BG: 'sacnsc';     } QRZRUID: 175 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQSONumberExchange;                        XM:NoDXMults; QP:ScandinavianQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'Scandinavian Activity Contest, CW'),
- ({Name: 'YBDX';                       }Email: '';                       DF: '';                  WA7BNM:  772; {SK3BG: 'sacnsc';     } QRZRUID: 175 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQSONumberExchange;                        XM:NoDXMults; QP:IndonesianQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'YB ORARI DX Contest'),          // 4.64.1
- ({Name: 'SAC-SSB';                    }Email: '';                       DF: '';                  WA7BNM:  131; {SK3BG: 'sacnsc';     } QRZRUID: 175 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQSONumberExchange;                        XM:NoDXMults; QP:ScandinavianQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'Scandinavian Activity Contest, SSB'),
- ({Name: 'SALMON RUN';                 }Email: '';                       DF: 'washington_cty';                 WA7BNM:  126; {SK3BG: 'washsr';     } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 9; AE: RSTDomesticOrDXQTHExchange;                  XM:NoDXMults; QP:SalmonRunQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'Washington State Salmon Run'),    // n4af 4.41.1
- ({Name: 'SOUTH AMERICAN WW';          }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTAndContinentExchange;                     XM:NoDXMults; QP:SouthAmericanWWQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'SP DX';                      }Email: '';                       DF: 'spdx';              WA7BNM:  312; {SK3BG: nil;          } QRZRUID: 127 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTDomesticQTHOrQSONumberExchange;           XM:NoDXMults; QP:ThreePointsPerQSO; ADIFName:'';   CABName:''; FriendlyName: 'SP DX Contest'),
- ({Name: 'STEW-PERRY';                 }Email: '';                       DF: '';                  WA7BNM:  207; {SK3BG: 'stpetbdc';   } QRZRUID: 46  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTAndOrGridExchange;                        XM:NoDXMults; QP:StewPerryQSOPointMethod; ADIFName:'STEW-PERRY';   CABName:''; FriendlyName: 'Stew Perry Topband Challenge'),
- ({Name: 'TEN TEN';                    }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: NameQTHAndPossibleTenTenNumber;              XM:NoDXMults; QP:TenTenQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'Ten-Ten On Air Activities'),
- ({Name: 'TEXAS QSO PARTY';            }Email: '';                       DF: 'texas_cty';                 WA7BNM:  133; {SK3BG: 'txqp';       } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 4; AE: RSTDomesticOrDXQTHExchange;                  XM:NoDXMults; QP:TwoPhoneThreeCW; ADIFName:'TX-QSO-PARTY';   CABName:''; CountyLineAllowed: True; FriendlyName: 'Texas QSO Party'),       //n4af 4.33.6
- ({Name: 'TOEC';                       }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: 'toecwwgc';   } QRZRUID: 163 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: GridFields;      P: 0; AE: RSTDomesticQTHExchange;                      XM:NoDXMults; QP:TOECQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'UA4WCHAMPIONSHIP';           }Email: 'r4w@narod.ru';           DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 132 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: WYSIWYGDomestic; P: 0; AE: RSTAndGridSquareOrRDAExchange;                XM:NoDXMults; QP:UA4WMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'UBA-CW';                     }Email: '';                       DF: 'uba';               WA7BNM:  261; {SK3BG: 'ubac';       } QRZRUID: 59  ; Pxm: BelgiumPrefixes; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTQSONumberAndPossibleDomesticQTHExchange;  XM:CQUBAEuropeanCountries; QP:UBAQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'UBA DX Contest, CW'),
- ({Name: 'UBA-SSB';                    }Email: '';                       DF: 'uba';               WA7BNM:  235; {SK3BG: 'ubac';       } QRZRUID: 58  ; Pxm: BelgiumPrefixes; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTQSONumberAndPossibleDomesticQTHExchange;  XM:CQUBAEuropeanCountries; QP:UBAQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'UBA DX Contest, SSB'),
- ({Name: 'UCG';                        }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 160 ; Pxm: Prefix; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQSONumberExchange;                        XM:NoDXMults; QP:CQWPXQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'UKRAINE CHAMPIONSHIP';       }Email: '';                       DF: 'ukraine';           WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: QSONumberDomesticQTHExchange;                XM:NoDXMults; QP:ChampionshipUkrMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'UKRAINIAN';                  }Email: '';                       DF: 'ukraine';           WA7BNM:  176; {SK3BG: 'ukrdxc';     } QRZRUID: 8   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTAndQSONumberOrDomesticQTHExchange;        XM:CQDXCC; QP:UkrainianQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'Ukrainian DX Contest'),
- ({Name: 'DARC-WAEDC-CW';              }Email: '';                       DF: '';                  WA7BNM:   85; {SK3BG: 'waedxc';     } QRZRUID: 15  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQSONumberExchange;                        XM:NoDXMults; QP:WAEQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'WAE DX Contest, CW'),
- ({Name: 'DARC-WAEDC-SSB';             }Email: '';                       DF: '';                  WA7BNM:  111; {SK3BG: 'waedxc';     } QRZRUID: 16  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQSONumberExchange;                        XM:NoDXMults; QP:WAEQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'WAE DX Contest, SSB'),
- ({Name: 'DARC-XMAS';                  }Email: '';                       DF: '';                  WA7BNM:  210; {SK3BG: 'darcxmas';   } QRZRUID: 100 ; Pxm: Prefix; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: WYSIWYGDomestic; P: 0; AE: RSTAndQSONumberOrDomesticQTHExchange;        XM:NoDXMults; QP:OnePointPerQSO; ADIFName:'';   CABName:''; FriendlyName: 'DARC Christmas Contest'),
- ({Name: 'WAG';                        }Email: '';                       DF: '';                  WA7BNM:  163; {SK3BG: 'wadlc';      } QRZRUID: 74  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTAndQSONumberOrDomesticQTHExchange;        XM:NoDXMults; QP:WAGQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'Worked All Germany Contest'),
- ({Name: 'WISCONSIN QSO PARTY';        }Email: '';                       DF: 'wisconsin_cty';     WA7BNM:  330; {SK3BG: 'wisqp';      } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 7; AE: RSTDomesticQTHExchange;                      XM:NoDXMults; QP:OnePhoneTwoCW; ADIFName:'WI-QSO-PARTY';   CABName:'WIQP'; CountyLineAllowed: True; FriendlyName: 'Wisconsin QSO Party'),
- ({Name: 'WWL';                        }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: GridFields;      P: 0; AE: RSTAndGridExchange;                          XM:NoDXMults; QP:WWLQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'WW PMC';                     }Email: '';                       DF: 'pmc';               WA7BNM:  471; {SK3BG: nil;          } QRZRUID: 229 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTZoneOrSocietyExchange;                    XM:NoDXMults; QP:WWPMCQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'WW PMC Contest'),
- ({Name: 'XMAS';                       }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 100 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTQSONumberAndRandomCharactersExchange;     XM:NoDXMults; QP:TwoPointsPerQSO; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'YO-DX-HF';                      }Email: '';                       DF: 'romania';           WA7BNM:   98; {SK3BG: 'yodxc';      } QRZRUID: 328 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTAndQSONumberOrDomesticQTHExchange;        XM:ARRLDXCC;  QP:YODXQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'YO DX HF Contest'),
- ({Name: 'SRR-JR';                     }Email: '';                       DF: 'russian';           WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 331 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: AgeAndQSONumberExchange;                           XM:ARRLDXCC; QP:AlwaysOnePointPerQSO; ADIFName:'';   CABName:''; FriendlyName: ''),      // n4af 04.42.6
- ({Name: 'RU3AX MEMORIAL';                  }Email: '';                     DF: 'russian';           WA7BNM:  202; {SK3BG: 'russ160';    } QRZRUID: 90  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTDomesticQTHOrQSONumberExchange;           XM:ARRLDXCC;  QP:RussianDXQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'Russian 160-Meter DX Contest'),      // 4.65.4
- ({Name: 'LOCUST QP';                  }Email: '';                       DF: 'naqp';              WA7BNM:  446; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NameQTHInitialExchange; DM: DomesticFile;    P: 0; AE: NameAndDomesticOrDXQTHExchange{QSONumberNameDomesticOrDXQTHExchange};        XM:NoDXMults; QP:LQPQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'Locust QSO Party'),
- ({Name: 'ARKTIKA-SPRING';             }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 351 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: WYSIWYGDomestic; P: 0; AE: RSTAndQSONumberOrDomesticQTHExchange;        XM:NoDXMults; QP:ArktikaSpringQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'UN DX';                      }Email: '';                       DF: 'kda';               WA7BNM:  480; {SK3BG: nil;          } QRZRUID: 13  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTDomesticQTHOrQSONumberExchange;           XM:ARRLDXCC;    QP:UNDXQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'UN DX Contest'),
- ({Name: 'NYQP';                       }Email: '';                       DF: 'newyork_cty';                 WA7BNM:  473; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 3; AE: RSTDomesticQTHExchange;                      XM:NoDXMults; QP:OnePhoneTwoCW; ADIFName:'';   CABName:''; FriendlyName: 'New York QSO Party'),
- ({Name: 'KING-OF-SPAIN-CW';           }Email: '';                       DF: 'ea';                WA7BNM:   23; {SK3BG: 'kingofsp';   } QRZRUID: 308 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTDomesticQTHOrQSONumberExchange;           XM:CQDXCC;    QP:KingOfSpainQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'His Maj. King of Spain Contest, CW'),
- ({Name: 'KING-OF-SPAIN-SSB';          }Email: '';                       DF: 'ea';                WA7BNM:   59; {SK3BG: 'kingofsp';   } QRZRUID: 308 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTDomesticQTHOrQSONumberExchange;           XM:CQDXCC;    QP:KingOfSpainQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'His Maj. King of Spain Contest, SSB'),
- ({Name: 'WRTC';                       }Email: '';                       DF: 'iaruhq';            WA7BNM:   67; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: ZoneInitialExchange; DM: WYSIWYGDomestic; P: 0; AE: RSTZoneOrSocietyExchange;                  XM:ARRLDXCC;  QP:WRTCQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'IARU HF World Championship'),  //n4af 4.31.2
- ({Name: 'TENNESSEE QSO PARTY';        }Email: '';                       DF: 'tennessee_cty';                 WA7BNM:  115; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 8;AE: RSTDomesticQTHExchange;                      XM:NoDXMults; QP:TwoPhoneThreeCW; ADIFName:'TN-QSO-PARTY';   CABName:'TN-QSO-PARTY'; CountyLineAllowed: True; FriendlyName: 'Tennessee QSO Party'),         // n4af 4.51.4
- ({Name: 'COLORADO QSO PARTY';         }Email: 'colorado_cty';                      DF: '';                  WA7BNM:  431; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 12;AE: NameAndDomesticOrDXQTHExchange;              XM:NoDXMults; QP:TwoPointsPerQSO; ADIFName:'CO-QSO-PARTY';   CABName:'COQP'; CountyLineAllowed: True; FriendlyName: 'Colorado QSO Party'),
- ({Name: 'R9W-UW9WK-MEMORIAL';         }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 41  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P:  0;AE: QSONumberAndZone;                            XM:NoDXMults; QP:R9WUW9WKMemorialQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'PCC';                        }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 35  ; Pxm: Prefix; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTAndQSONumberOrDomesticQTHExchange;  XM:NoDXMults; QP:PCCQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'RADIO-MEMORY';               }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 83  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: RSTAgeAndPossibleSK;                         XM:NoDXMults; QP:RadioMemoryQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'DARC-10M';                   }Email: '';                       DF: '';                  WA7BNM:  223; {SK3BG: 'darcxmas';   } QRZRUID: 184 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: WYSIWYGDomestic; P: 0; AE: RSTQSONumberAndPossibleDomesticQTHExchange{RSTAndQSONumberOrDomesticQTHExchange};        XM:CQDXCC; QP:OnePointPerQSO; ADIFName:'';   CABName:''; FriendlyName: 'DARC 10-Meter Contest'),
- ({Name: 'REF-CW';                     }Email: '';                       DF: 'ref';               WA7BNM:  233; {SK3BG: 'refc';       } QRZRUID: 67  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTAndQSONumberOrFrenchDepartmentExchange;   XM:NoDXMults; QP:REFQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'REF Contest, CW'),
- ({Name: 'REF-SSB';                    }Email: '';                       DF: 'ref';               WA7BNM:  260; {SK3BG: 'refc';       } QRZRUID: 67  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTAndQSONumberOrFrenchDepartmentExchange;   XM:NoDXMults; QP:REFQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'REF Contest, SSB'),
- ({Name: 'BSCI';                       }Email: '';                       DF: '';                  WA7BNM:  470; {SK3BG: nil;          } QRZRUID: 232 ; Pxm: NoPrefixMults; ZnM: ITUZones; AIE: ZoneInitialExchange; DM: WYSIWYGDomestic; P: 0; AE: RSTZoneOrSocietyExchange;                    XM:BlackSeaCountries; QP:BSCIQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'Black Sea Cup International'),
- ({Name: 'CQMM';                       }Email: '';                       DF: '';                  WA7BNM:   21; {SK3BG: nil;          } QRZRUID: 34  ; Pxm: SouthAmericanPrefixes; ZnM: NoZoneMults; AIE: NoInitialExchange;      DM: NoDomesticMults; P: 0; AE: RSTAndContinentExchange;                    XM:CQDXCC; QP:CQMMQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'CQMM DX Contest'),
- ({Name: 'SA-SPRINT';                  }Email: 'sa-sprint.com/enviar-log/';  DF: '';              WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: SouthAmericanPrefixes; ZnM: NoZoneMults; AIE: NoInitialExchange;      DM: NoDomesticMults; P: 0; AE: RSTQSONumberExchange;                    XM:NoDXMults; QP:OnePointPerQSO; ADIFName:'';   CABName:''; FriendlyName: ''), // 4.50.5 issue 177
- ({Name: 'CWOPS';                      }Email: '';                       DF: '';                  WA7BNM:  498; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: CallSignPrefix;        ZnM: NoZoneMults; AIE: NameQTHInitialExchange; DM: NoDomesticMults; P: 0; AE: NameAndDomesticOrDXQTHExchange;             XM:NoDXMults; QP:OnePointPerQSO; ADIFName:'CWOPS-CWT';   CABName:''; FriendlyName: 'CWops Test (CWT)'),
- ({Name: 'OZHCR-VHF';                  }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 203 ; Pxm: NoPrefixMults;         ZnM: NoZoneMults; AIE: NoInitialExchange; DM: GridSquares; P: 0; AE: RSTQSONumberAndGridSquareExchange;             XM:NoDXMults; QP:OZHCRVHFQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'CANADA_DAY';             }Email: '';                       DF: 'p13';               WA7BNM:   60; {SK3BG: 'canday';     } QRZRUID: 101 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTAndQSONumberOrDomesticQTHExchange;        XM:NoDXMults; QP:RACQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'RAC Canada Day Contest'),
- ({Name: 'CQ-WW-RTTY';                 }Email: 'rtty@cqww.com';          DF: 's48p14dc';          WA7BNM:  130; {SK3BG: nil;          } QRZRUID: 191 ; Pxm: NoPrefixMults; ZnM: CQZones; AIE: ZoneInitialExchange; DM: DomesticFile; P: 0; AE: RSTZoneAndPossibleDomesticQTHExchange;  XM:CQDXCC; QP:CQWWRTTYQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'CQ Worldwide DX Contest, RTTY'),
- ({Name: 'CW-OPEN';                     }Email: 'cwo@cwops.org';          DF: '';                  WA7BNM:  532; {SK3BG: nil;          } QRZRUID:   0 ; Pxm: CallSignPrefix; ZnM: CQZones; AIE: NameInitialExchange; DM: NoDomesticMults; P: 0; AE: QSONumberAndNameExchange;  XM:NoDXMults; QP:OnePointPerQSO; ADIFName:'CWOPS-CW-OPEN';   CABName:'CW-OPEN'; FriendlyName: 'CWOps CW Open'),
- ({Name: 'Makrothen';                  }Email: '';                       DF: '';                  WA7BNM:  159; {SK3BG: nil;          } QRZRUID: 515 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: GridInitialExchange; DM: NoDomesticMults; P: 0; AE: GridExchange;  XM:NoDXMults; QP:MakrothenQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'Makrothen RTTY Contest'),
- ({Name: 'EU-SPRINT-SPRING-SSB';       }Email: '';                       DF: '';                  WA7BNM:  316;                         QRZRUID: 216 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NameInitialExchange; DM: NoDomesticMults; P: 0; AE: QSONumberAndNameExchange;                    XM:NoDXMults; QP:EuropeanSprintQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'RSGB International Sprint Contest, SSB'),
- ({Name: 'EU-SPRINT-AUTUMN-CW';        }Email: '';                       DF: '';                  WA7BNM:  152;                         QRZRUID: 216 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NameInitialExchange; DM: NoDomesticMults; P: 0; AE: QSONumberAndNameExchange;                    XM:NoDXMults; QP:EuropeanSprintQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'EU Autumn Sprint, CW'),
- ({Name: 'EU-SPRINT-AUTUMN-SSB';       }Email: '';                       DF: '';                  WA7BNM:  143;                         QRZRUID: 216 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NameInitialExchange; DM: NoDomesticMults; P: 0; AE: QSONumberAndNameExchange;                    XM:NoDXMults; QP:EuropeanSprintQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'Eu Autumn Sprint, SSB'),
- ({Name: 'ARRL RTTY ROUNDUP';       }   Email: 'rttyru@arrl.org';        DF: 's48p14dc';          WA7BNM:  217;                         QRZRUID:  56 ; Pxm: NoPrefixMults; ZnM: NoZoneMults;  DM: DomesticFile; P: 0; AE: RSTDomesticQTHOrQSONumberExchange;           XM:ARRLDXCC; QP:OnePointPerQSO; ADIFName:'ARRL-RTTY';   CABName:''; FriendlyName: 'ARRL RTTY Roundup'),
- ({Name: 'CQIR';                    }   Email: '';                       DF: 'ireland';           WA7BNM:  434;                         QRZRUID:   0 ; Pxm: NoPrefixMults; ZnM: NoZoneMults;  DM: DomesticFile; P: 0; AE: QSONumberAndPossibleDomesticQTHExchange;           XM:NoDXMults; QP:TwoPhoneThreeCW; ADIFName:'';   CABName:''; FriendlyName: 'CQIR - Ireland Calling'),
- ({Name: 'WWIH';                    }   Email: '';                       DF: '';                  WA7BNM:  552;                         QRZRUID:   0 ; Pxm: NoPrefixMults; ZnM: CQZones;  AIE:ZoneInitialExchange;DM: NoDomesticMults; P: 0; AE: RSTZoneExchange;           XM:CQDXCC; QP:CQWWRTTYQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'World Wide Iron Ham Contest'),
- ({Name: 'ALRS_UA1DZ_CUP';          }   Email: '';                       DF: 'russian';           WA7BNM: 0000;                         QRZRUID: 543 ; Pxm: NoPrefixMults; ZnM: NoZoneMults;  AIE:NoInitialExchange; DM: WYSIWYGDomestic; P: 0; AE: RSTDomesticQTHExchange;           XM:CQDXCC; QP:ALRSUA1DZCupQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'WINTER FIELD DAY';        }   Email: 'wfda@winterfieldday.com';DF: 'arrlsect';          WA7BNM:   421; {SK3BG: nil;         } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: ClassDomesticOrDXQTHExchange;                XM:ARRLDXCC; QP:ARRLFieldDayQSOPointMethod; ADIFName:'WFD';   CABName:'WFD'; FriendlyName: 'Winter Field Day'),
- ({Name: 'RADIO-YOC';                  }Email: '';                       DF: '';                  WA7BNM: 0000; {SK3BG: nil;          } QRZRUID: 119 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: NoDomesticMults; P: 0; AE: QSONumberAndPreviousQSONumber;               XM:ARRLDXCC;  QP:ThreePointsPerQSO; ADIFName:'';   CABName:''; FriendlyName: ''),
- ({Name: 'PA QSO PARTY';               }Email: '';                       DF: 'pa_cty';            WA7BNM: 153; {SK3BG:  nil ;        } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 14; AE: QSONumberDomesticQTHExchange;                XM:NoDXMults; QP:PAQSOPointMethod; ADIFName:'PA-QSO-PARTY';   CABName:'PA-QSO-PARTY'; CountyLineAllowed: True; FriendlyName: 'Pennsylvania QSO Party'),     // 4.74.3
- ({Name: 'IN QSO PARTY';               }Email: '';                       DF: 'in_cty';            WA7BNM:    8; {SK3BG:  nil ;        } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 15; AE: RSTDomesticQTHExchange;                XM:NoDXMults; QP:TWOPOINTSPERQSO; ADIFName:'IN-QSO-PARTY';   CABName:'IN-QSO-PARTY'; CountyLineAllowed: True; FriendlyName: 'Indiana QSO Party'),     // 4.144.3
- ({Name: 'OK-OM SSB';                  }Email: '';                       DF: 'okom';              WA7BNM:  567; {SK3BG: 'okomdxc';    } QRZRUID: 12  ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile; P: 0; AE: RSTAndQSONumberOrDomesticQTHExchange;        XM:CQDXCC; QP:OKOMSSBQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'OK/OM DX Contest, SSB'),     // 4.80.1
- ({Name: 'BATAVIA-FT8';                }Email: '';                       DF: '';                  WA7BNM:  677;                       QRZRUID: 0   ; Pxm: Prefix;        ZnM: NoZoneMults; AIE: GridInitialExchange; DM: NoDomesticMults; P: 0; AE: GridExchange;                           XM:CQDXCC; QP:YBFT8QP; ADIFName:'';   CABName:'BATAVIA'; FriendlyName: 'Batavia FT8 Contest'),    // 4.90.11
- ({Name: 'WWDIGI';                     }Email: 'director@ww-digi.com';   DF: '';                  WA7BNM:  650;                         QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: GridInitialExchange; DM: GridFields; P: 0; AE: Grid2Exchange;                           XM:NoDXMults; QP:WWDIGIQP; ADIFName:'';   CABName:'WW-DIGI'; FriendlyName: 'World Wide Digi DX Contest'),    // 4.90.11
- ({Name: 'MWC';                        }Email: 'memorial-ok1wc.cz/index.php?page=logs';                      DF: 'mwc';                 WA7BNM:  0;  QRZRUID: 0 ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile; P: 0; AE: RSTQSONumberExchange;          XM:NoDXMults; QP:MWCQP; ADIFName:'';   CABName:''; FriendlyName: ''),     // 4.98.1
- ({Name: 'IRTS ';                      }Email: 'IRTS.contests@gmail.com';             DF: 'ireland';             WA7BNM:  000; {SK3BG:  nil;         } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: ZoneInitialExchange; DM: DomesticFile;    P: 0; AE: RSTZoneOrDomesticQTH;           XM:NoDXMults; QP:EUDXQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: ''),     // 4.95.6
- ({Name: 'EUDX';                       }Email: 'log.eudxc@gmail.com';    DF: 'EUDX';           WA7BNM:  000; {SK3BG: nil;    } QRZRUID: 0   ;         Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 0; AE: RSTZoneOrDomesticQTH;           XM:CQDXCC; QP:EUDXQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: '') ,
- ({Name: 'BCQP';                       }Email: '';                       DF: 've7_cty';                 WA7BNM:  269; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 16; AE: RSTDomesticQTHExchange;                      XM:NoDXMults; QP:BCQPQSOPointMethod; ADIFName:'';   CABName:''; FriendlyName: 'British Columbia QSO Party'),      // 4.97.6
- ({Name: 'VA QSO Party';               }Email: '';                       DF: 'va_cty';            WA7BNM:  302; {SK3BG:  nil ;        } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 17; AE: QSONumberDomesticOrDXQTHExchange;                XM:NoDXMults; QP:VAQSOPointMethod; ADIFName:'VA-QSO-PARTY';   CABName:'VA-QSO-PARTY'; FriendlyName: 'Virginia QSO Party'),      // 4.88.2
- ({Name: 'YOTA';                       }Email: '';                       DF: 'YOTA';                 WA7BNM:   696; {SK3BG: nil;    } QRZRUID: 0; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile; P: 0; AE: RSTAgeExchange;                              XM:NoDXMults; QP:YOTAQSOPointMethod; ADIFName:'YOTA';   CABName:'YOTA-CONTEST'; FriendlyName: 'YOTA Contest') ,
- ({Name: 'IN7QPNE';                    }Email: '';                       DF: 'in7qpne_cty';            WA7BNM: 0000; {SK3BG:  nil ;        } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 18; AE: RSTDomesticQTHExchange;                XM:NoDXMults; QP:PAQSOPointMethod; ADIFName:'IN7QPNE-QSO-PARTY';   CABName:'IN7QPNE-QSO-PARTY'; FriendlyName: 'Combined Indiana, 7th Call Area, New England and Delaware QSO Party'),     // 4.88.2
- ({Name: 'MST';                        }Email: '';                       DF: '';                  WA7BNM:  720; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: CallSignPrefix;        ZnM: NoZoneMults; AIE:NoInitialExchange ; DM: NoDomesticMults; P: 0; AE: QSONumberandNameExchange;             XM:NoDXMults; QP:OnePointPerQSO; ADIFName:'MST';   CABName:''; FriendlyName: 'ICWC Medium Speed Test'),          // 4.110.5
- ({Name: 'SST';                        }Email: 'k1usn.radioclub.sst@gmail.com';   DF: 'naqp';              WA7BNM:  681; {SK3BG: 'naqp';       } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NameQTHInitialExchange; DM: DomesticFile;    P: 0; AE: NameAndDomesticOrDXQTHExchange;              XM:NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; QP:OnePointPerQSO; ADIFName:'K1USN-SST';   CABName:'K1USNSST'; FriendlyName: 'K1USN Slow Speed Test'),
- ({Name: 'RTC';                        }Email: '';                       DF: '';                  WA7BNM:  782; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: GridInitialExchange; DM: GridSquares;     P: 0; AE: RSTQSONumberAndGridSquareExchange;          XM:NoDXMults; QP:RTCQSOPointMethod; ADIFName:'RTC';   CABName:'RTC'; FriendlyName: 'Real Time Contest')   // Issue #902 Real-Time Contest (COS)
- );
-
-
-
-
-  // Warning - Do not change names here without careful consideration. If you do, it will break old config files. Better to use the ADIFName or CABName fields if needed. In a perfect world, these would all be the ADIFNAME.
+  // Warning - Do not change names here without careful consideration. Every one is STORED: in old .cfg files and in every SQLite contest log's contest table. If one must change, its old spelling goes into uContestNames.LEGACY_CONTEST_NAMES in the same commit and is never given to another contest. The Cabrillo and ADIF names are the class's (CabrilloName, ADIFContestId), not these.
     ContestTypeSA                       : array[ContestType] of string =
 
     (
@@ -4123,7 +3564,10 @@ QSOPartiesCount = 20;
       'SSB-SPRINT',
       'NA-SPRINT-RTTY',
       'NCCC-SPRINT',
-      'NEQP',
+      (* NEW ENGLAND -- 'NEQP' until 2026-10-16 (design Q105). The old
+        spelling is a permanent READ alias, uContestNames.LEGACY_CONTEST_NAMES,
+        and must never be given to another contest. *)
+      'NEWEQP',
       'NC QSO PARTY',
       'NRAU-BALTIC-CW',
       'NRAU-BALTIC-SSB',
@@ -4227,244 +3671,11 @@ QSOPartiesCount = 20;
       'IN7QPNE',
       'MST',           // 4.110.5
       'SST',
-      'RTC'            // Issue #902
+      'RTC',           // Issue #902
+      'IDAHO QSO PARTY',
+      'DELAWARE QSO PARTY',
+      'NE-QSO-PARTY'
      );
-
-  const
-    {QSO BY BAND BIT 0}
-    ciQB0                               = 0;
-    ciQB1                               = 1;
-    QSO_BY_BAND_BIT                     = 0;
-
-    {QSO BY MODE BIT 1}
-    ciQM0                               = 0;
-    ciQM1                               = 2;
-    QSO_BY_MODE_BIT                     = 1;
-
-    {MULT BY BAND BIT 2}
-    ciMB0                               = 0;
-    ciMB1                               = 4;
-    MULT_BY_BAND_BIT                    = 2;
-
-    {MULT BY MODE BIT 3}
-    ciMM0                               = 0;
-    ciMM1                               = 8;
-    MULT_BY_MODE_BIT                    = 3;
-
-    {ERMAK SPEC BIT 4}
-    ciErmak0                            = 0;
-    ciErmak1                            = 16;
-    ERMAK_BIT                           = 4;
-
-    {VHF BAND ENABLE BIT 5}
-    ciVHFEnabled0                       = 0;
-    ciVHFEnabled1                       = 32;
-    VHF_BAND_ENABLE_BIT                 = 5;
-
-    {CQ ZONE MODE BIT 6}
-    ciCQZoneMode0                       = 0; {ITU ZONE MODE}
-    ciCQZoneMode1                       = 64; {CQ ZONE MODE}
-    CQ_ZONE_MODE_BIT                    = 6;
-
-    {COUNT DOMESTIC COUNTRIES BIT 7}
-    ciCDC0                              = 0;
-    ciCDC1                              = 128;
-    CDC_BIT                             = 7;
-
-    {RTC (REAL-TIME CONTEST) CAPABLE BIT 8 -- HamScore real-time contact upload support, issue #931}
-    ciRTC0                              = 0;
-    ciRTC1                              = 256;
-    RTC_CAPABLE_BIT                     = 8;
-
-    ContestsBooleanArray                : array[ContestType] of Word =
-      (
-      ({Name: 'DUMMY CONTEST';              }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB0 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: '7QP';                        }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled1 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM0),
-      ({Name: 'ALL ASIAN CW';               }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'ALL ASIAN SSB';              }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'ALL JA';                     }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled1 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'AP-SPRINT';                  }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'ARCI';                       }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'ARI-DX';                     }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'ARRL-10';                    }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB0 + ciQM1 + ciMB0 + ciMM1),
-      ({Name: 'ARRL-DIGI';                  }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'ARRL-160';                   }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB0 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'ARRL-DX-CW';                 }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'ARRL-DX-SSB';                }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'ARRL-SS-CW';                 }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB0 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'ARRL-SS-SSB';                }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB0 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'ARRL VHF JAN';               }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled1 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'ARRL VHF JUN';               }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled1 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'ARRL VHF SEP';                }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled1 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'ARIZONA QSO PARTY';          }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM1),
-      ({Name: 'BALTIC';                     }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB0 + ciQM1 + ciMB0 + ciMM0),
-      ({Name: 'BWQP';                       }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),        //n4af
-      ({Name: 'CIS';                        }ciCDC1 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'CQP';                        }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM0),     //n4af 4.34.5
-      ({Name: 'COUNTY HUNTER';              }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB0 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'CQ-160-CW';                  }ciCDC0 + ciCQZoneMode1 + ciVHFEnabled0 + ciErmak0 + ciQB0 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'CQ-160-SSB';                 }ciCDC0 + ciCQZoneMode1 + ciVHFEnabled0 + ciErmak0 + ciQB0 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'CQ-M';                       }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak1 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'CQ-VHF';                     }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled1 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'CQ-WPX-CW';                  }ciCDC0 + ciCQZoneMode1 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'CQ-WPX-SSB';                 }ciCDC0 + ciCQZoneMode1 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'CQ-WPX-RTTY';                }ciCDC0 + ciCQZoneMode1 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'CQ-WW-CW';                   }ciCDC0 + ciCQZoneMode1 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'CQ-WW-SSB';                  }ciCDC0 + ciCQZoneMode1 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'CROATIAN';                   }ciCDC0 + ciCQZoneMode1 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM1),
-      ({Name: 'RF-CUP-CW';                  }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak1 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'RF-CUP-SSB';                 }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak1 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'RF-CUP-DIG';                 }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak1 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'URAL-CUP';                   }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak1 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'EU-SPRINT-SPRING-CW';        }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'EUROPEAN HFC';               }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'EUROPEAN VHF';               }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled1 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'HF-TESLA    ';               }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),      // 4.57.4
-      ({Name: 'ARRL-FIELD DAY';             }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled1 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM0),
-      ({Name: 'FISTS';                      }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'FOC MARATHON';               }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB0 + ciMM0),    //n4af
-      ({Name: 'FLORIDA QSO PARTY';          }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM1),
-      ({Name: 'GACW-WWSA-CW';               }ciCDC0 + ciCQZoneMode1 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'GAGARIN-CUP';                }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled1 + ciErmak1 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'GENERAL QSO';                }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM0),
-      ({Name: 'GRID LOC';                   }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'HA DX';                      }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'YUDX';                       }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),    // 4.57.5    // 4.58.1
-      ({Name: 'UKEI';                       }ciCDC0+ ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),    // 4.58.2
-      ({Name: 'HELVETIA';                   }ciCDC1 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0 + ciRTC1),    // 4.54.6 issue 214    // 4.56.8
-      ({Name: 'IARU-HF';                    }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'INTERNET SPRINT';            }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'RSGB-IOTA';                  }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM1),
-      ({Name: 'JIDX-CW';                    }ciCDC0 + ciCQZoneMode1 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'JIDX-SSB';                   }ciCDC0 + ciCQZoneMode1 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'JA LONG PREFECT';            }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB0 + ciQM1 + ciMB0 + ciMM0),
-      ({Name: 'JT DX';                      }ciCDC0 + ciCQZoneMode1 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'KCJ';                        }ciCDC1 + ciCQZoneMode1 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'KIDS DAY';                   }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB0 + ciQM0 + ciMB0 + ciMM1),
-      ({Name: 'KVP';                        }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB0 + ciQM1 + ciMB1 + ciMM1),
-      ({Name: 'LABRE';                      }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'LZ DX';                      }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name; 'Marconi Memorial';           }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),    //n4af
-      ({Name: 'MINITEST';                   }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'MINI80';                   }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'MINI40';                   }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'MICH QSO PARTY';             }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM1),
-      ({Name: 'MINN QSO PARTY';             }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled1 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM0 + ciRTC1),
-      ({Name: 'MO QSO PARTY';              }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled1 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM0),
-      ({Name: 'NAQP-CW';                    }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0 + ciRTC1),
-      ({Name: 'NAQP-SSB';                   }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0 + ciRTC1),
-      ({Name: 'NAQP-RTTY';                  }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0 + ciRTC1),
-      ({Name: 'NA-SPRINT-CW';               }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB0 + ciMM0 + ciRTC1),
-      ({Name: 'SSB SPRINT';                 }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'NA-SPRINT-RTTY';             }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB0 + ciMM0 + ciRTC1),
-      ({Name: 'NCCC-SPRINT';                }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'NEQP';                       }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM0),
-      ({Name: 'NC QSO PARTY';               }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM0),      // issue 292 4.66.1
-      ({Name: 'NRAU-BALTIC-CW';             }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'NRAU-BALTIC-SSB';            }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'NZ FIELD DAY';               }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM1),
-      ({Name: 'OCEANIA-DX-CW';              }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM1),
-      ({Name: 'OCEANIA-DX-SSB';             }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM1),
-      ({Name: 'OHIO QSO PARTY';             }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM1),
-      ({Name: 'OK-OM DX';                   }ciCDC0 + ciCQZoneMode1 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'RADIO-ONY';                  }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak1 + ciQB1 + ciQM1 + ciMB0 + ciMM0),
-      ({Name: 'OZCR-O';                     }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak1 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'OZCR-Z';                     }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak1 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'PACC';                       }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'POTA';                       }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM0),
-      ({Name: 'QCWA';                       }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled1 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM0),
-      ({Name: 'QCWA GOLDEN';                }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB0 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'CANADA WINTER';          }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled1 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM1),
-      ({Name: 'RF-VHF-FD';                  }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled1 + ciErmak1 + ciQB1 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'RAEM';                       }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak1 + ciQB1 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'RDAC';                       }ciCDC1 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak1 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'REGION 1 FIELD DAY';         }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'REGION 1 FIELD DAY-RCC-CW';  }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'REGION 1 FIELD DAY-RCC-SSB'; }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'RF-CHAMP-CW';                }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak1 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'RF-CHAMP-SSB';               }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak1 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'AS-CHAMP-CW';                }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak1 + ciQB1 + ciQM1 + ciMB0 + ciMM0),
-      ({Name: 'RSGB-ROPOCO-CW';             }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'RSGB-ROPOCO-SSB';            }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'RSGB 1.8';                   }ciCDC1 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB0 + ciQM0 + ciMB0 + ciMM0),        // issue 296
-      ({Name: 'RDXC';                       }ciCDC1 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'SAC-CW';                     }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'YBDX';                       }ciCDC1 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),       // 4.64.1   // add issue 291
-      ({Name: 'SAC-SSB';                    }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'SALMON RUN';                 }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM0),
-      ({Name: 'SOUTH AMERICAN WW';          }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'SP DX';                      }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'STEW-PERRY';                 }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB0 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'TEN TEN';                    }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM0),
-      ({Name: 'TEXAS QSO PARTY';            }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM0),
-      ({Name: 'TOEC';                       }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'R4W-CHAMP';                  }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak1 + ciQB1 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'UBA-CW';                     }ciCDC1 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'UBA-SSB';                    }ciCDC1 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'UCG';                        }ciCDC0 + ciCQZoneMode1 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'UKRAINE CHAMPIONSHIP';       }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'UKRAINIAN';                  }ciCDC1 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'DARC-WAEDC-CW';              }ciCDC0 + ciCQZoneMode1 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'DARC-WAEDC-SSB';             }ciCDC0 + ciCQZoneMode1 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'DARC-XMAS';                  }ciCDC0 + ciCQZoneMode1 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'WAG';                        }ciCDC0 + ciCQZoneMode1 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'WISCONSIN QSO PARTY';        }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM0),
-      ({Name: 'WWL';                        }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'WW PMC';                     }ciCDC0 + ciCQZoneMode1 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM1),
-      ({Name: 'XMAS';                       }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'YO DX';                      }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'SRR-JR';                     }ciCDC1 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak1 + ciQB1 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'RU3AX MEMORIAL';             }ciCDC1 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak1 + ciQB0 + ciQM1 + ciMB0 + ciMM1),      // 4.65.    // 4.76.5
-      ({Name: 'LQP';                        }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'ARKTIKA-SPRING';             }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak1 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'UN DX';                      }ciCDC1 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'NYQP';                       }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM1),
-      ({Name: 'KING-OF-SPAIN-CW';           }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'KING-OF-SPAIN-SSB';          }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'WRTC';                       }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'TENNESSEE QSO PARTY';        }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'COLORADO QSO PARTY';         }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM1),
-      ({Name: 'R9W-UW9WK-MEMORIAL';         }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak1 + ciQB1 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'PCC';                        }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'RADIO-MEMORY';               }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak1 + ciQB1 + ciQM1 + ciMB0 + ciMM0),
-      ({Name: 'DARC-10M';                   }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB0 + ciQM1 + ciMB0 + ciMM1),
-      ({Name: 'REF-CW';                     }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'REF-SSB';                    }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'BSCI';                       }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'CQMM';                       }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'SA-SPRINT';                  }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),   // 4.50.5 issue 177
-      ({Name: 'CWOPS';                      }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB0 + ciMM0 + ciRTC1),
-      ({Name: 'OZHCR-VHF';                  }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled1 + ciErmak1 + ciQB1 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'CANADA WINTER';          }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled1 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM1),
-      ({Name: 'CQ-WW-CW';                   }ciCDC0 + ciCQZoneMode1 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'CWOPEN';                     }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB0 + ciMM0 + ciRTC1),
-      ({Name: 'MAKROTHEN';                  }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'EU-SPRINT-SPRING-SSB';       }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'EU-SPRINT-AUTUMN-CW';        }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'EU-SPRINT-AUTUMN-SSB';       }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'ARRL RTTY ROUNDUP';          }ciCDC0 + ciCQZoneMode1 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'CQIR';                       }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM1),
-      ({Name: 'WWIH';                       }ciCDC0 + ciCQZoneMode1 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM1),
-      ({Name: 'ALRS-UA1DZ-CUP';             }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak1 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'WINTER-FIELD DAY';           }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled1 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM0),        // 4.56.9 ny4i
-      ({Name: 'RADIO-YOC';                  }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak1 + ciQB1 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'PA QSO PARTY';               }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM0),       // 4.74.3
-      ({Name: 'IN QSO PARTY';               }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM0),     // 4.88.2
-      ({Name: 'OK-OM SSB';                  }ciCDC0 + ciCQZoneMode1 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'BATAVIA-FT8';                }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB0 + ciMM0),
-      ({Name: 'WW-DIGI';                    }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0),
-      ({Name: 'MWC';                        }ciCDC0 + ciCQZoneMode1 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),       // 4.92.8
-      ({Name: 'IRTS';                       }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0) ,     // 4.93.1
-      ({Name: 'EUDX';                       }ciCDC1 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),     // 4.95.6
-      ({Name: 'BC QSO Party';               }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM1),      // 4.97.6
-      ({Name: 'VA QSO PARTY';               }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM0),
-      ({Name: 'YOTA';                       }ciCDC1 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0),
-      ({Name: 'IN7QPNE     ';               }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM0),     // 4.99.7
-      ({Name: 'MST';                        }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB0 + ciMM0 + ciRTC1),        // 4.110.5
-      ({Name: 'SST';                        }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0 + ciRTC1),
-      ({Name: 'RTC';                        }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0 + ciRTC1)        // Issue #902
-
-        );
 
   type
     tWindowColorRecord = record
@@ -4506,11 +3717,10 @@ QSOPartiesCount = 20;
 
   var
     tr4wBrushArray                      : array[tr4wColors] of HBRUSH;
-    // Issue #1034: relocated here from LogDupe so light units (uMults and the
-    // pre-migration test EXE) can read the active DX-multiplier mode without
-    // pulling LogDupe's monolith cone. DXMultType is defined above in this unit;
-    // zero-initialized to NoDXMults (its first value), matching the old default.
-    ActiveDXMult                        : DXMultType;
+    (* ActiveDXMult MOVED -- M10 S9d, 2026-10-14, to
+      uContestSession.ContestSession.DXMult -- and is GONE since M11 S4 part
+      2: the contest states its DX key and whether it has one
+      (TContestBase.DXMultiplierKey, HasDXMultiplier). *)
 
   { Fills the string tables that cannot be initialised where they are declared.
     uProgramMain calls this after the translation loads and before the main
@@ -4518,6 +3728,26 @@ QSOPartiesCount = 20;
   procedure InitializeStringTables;
 
 implementation
+
+class operator TContestHandle.Equal(const a, b: TContestHandle): boolean;
+begin
+   Result := a.FNumber = b.FNumber;
+end;
+
+class operator TContestHandle.NotEqual(const a, b: TContestHandle): boolean;
+begin
+   Result := a.FNumber <> b.FNumber;
+end;
+
+class function TContestHandle.FromByte(aNumber: Byte): TContestHandle;
+begin
+   Result.FNumber := aNumber;
+end;
+
+function TContestHandle.ToByte: Byte;
+begin
+   Result := FNumber;
+end;
 
 procedure InitializeStringTables;
    { WHY THESE THREE TABLES ARE FILLED HERE AND NOT AT THEIR DECLARATION.

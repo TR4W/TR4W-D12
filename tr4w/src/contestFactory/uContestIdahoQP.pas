@@ -1,0 +1,657 @@
+(*
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+
+ This file is part of TR4W  (SRC)
+
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+ *)
+
+(* IDAHO QSO PARTY -- "The Spud Run", sponsored by the Magic Valley Amateur
+  Radio Club, Twin Falls. Second full weekend of March.
+
+  A NEW ContestType, NOT A MOVED ONE (2026-10-01). Until today there was no
+  Idaho contest in TR4W at all: target\dom\Idaho QSO Party.cfg said
+  CONTEST = NEQP and overrode NEQP's settings line by line -- including
+  QSO POINT METHOD = ONE PHONE TWO CW, which the rotated QSOPointMethodArray
+  turns into TwoPhoneFourCW, doubling every claimed score
+  (CONTEST_OWNERSHIP_DESIGN.md section 7.2). NY4I: "The only contest that
+  should say CONTEST = NEQP is the NEQP." So Idaho is IDAHOQSOPARTY, this
+  class owns its rules, and the .cfg names it and overrides nothing.
+
+  WRITTEN FROM THE NEW YORK CLASS'S SHAPE, AND OWNED (ownership design 1.4).
+  Nothing here is shared with another party except the state-party base.
+
+  ---------------------------------------------------------------------------
+  SOURCES, read 2026-10-01
+
+    the sponsor's rules   https://www.idahoqsoparty.org/rules.htm
+    the county list       https://www.idahoqsoparty.org/MAPcountylist.htm
+    the Cabrillo page     https://www.idahoqsoparty.org/cabrillo.htm
+    WA7BNM, ref=305       https://www.contestcalendar.com/contestdetails.php?ref=305
+    ADIF 3.1.7 Contest_ID https://adif.org.uk/317/ADIF_317.htm#Contest_ID
+    NY4I, 2026-10-01      the points and the county-line maximum (below)
+
+  ---------------------------------------------------------------------------
+  WHAT EACH SOURCE SAYS, AND WHERE IT LANDED
+
+  QSO POINTS -- NY4I: "1 point phone, 2 points CW or digital." The sponsor
+    agrees: "Each phone QSO counts as one point. Each CW and Digital QSO counts
+    as two points." CalculateQSOPoints. FM is phone (see the routine).
+
+    QRP -- sponsor: "ALL QRP QSO's count 5 points. voice, CW, digital", QRP
+    being 5 W output or less. NY4I, 2026-10-01: "qrp means our power. You can
+    get that from the cabrillo fields in the new contest dialog." So it is the
+    ENTRANT'S CATEGORY-POWER, handed in as Station.MyPower; when it is QRP,
+    every QSO on an Idaho band scores 5 whatever its mode. LOW and HIGH score
+    as above.
+
+  COUNTY LINE -- NY4I: "ID QP allows up to 2 counties on a county line." The
+    sponsor agrees: "Idaho stations on a county line may be claimed as a QSO
+    and a multiplier from each county (2 QSO's and 2 multipliers)."
+    GetCountyLineCountiesMax = 2.
+
+  EXCHANGE -- sponsor: Idaho stations send their three-letter county; W/VE
+    (including KH6/KL7) send state or province; DX send "DXCC prefix/country".
+    "the RST is no longer part of the contest ... 59 is perfect, you are not
+    scored on RST reports", and the sponsor's own Cabrillo examples carry it.
+    So RSTDomesticOrDXQTHExchange -- RST plus a domestic QTH or a DX one --
+    which is what the .cfg selected and what NEQP's row already said.
+
+  MULTIPLIERS -- sponsor:
+    "For Idaho stations, count each US state (including Idaho), Canada
+     province, and DXCC country as 'a' (one) multiplier ... once per mode,
+     regardless of the number of bands."
+    "For non-Idaho stations: Idaho counties are multipliers ... counted once
+     per mode, regardless of the number of bands."
+    So DomesticFile, through this party's P index: idaho.dom in state (the 50
+    states, the provinces, and the 44 counties each mapped to ID) and
+    idaho_cty.dom out of state (the 44 counties, each its own multiplier --
+    FCONTEST sets MultipliersIsCounties). DX: ARRLDXCCWithNoUSAOrCanada, the
+    value Florida and Arizona state for the same rule; an out-of-state entrant
+    works only Idaho stations, so it never meets a DX multiplier.
+    Once per mode across bands is ContestsBooleanArray's MB0 MM1, as the .cfg
+    had it.
+
+    THE DX MULTIPLIER IS A CHANGE. Under CONTEST = NEQP the row said
+    NoDXMults and the .cfg did not override it, so an Idaho station's DX
+    countries counted nothing. The sponsor rule is unambiguous.
+
+  DUPES -- sponsor: "Stations may be worked once per mode, per band (for
+    mobiles in each new county)". ContestsBooleanArray's QB1 QM1.
+
+  BANDS -- sponsor: "160 - 80 - 40 - 20 - 15 - 10 meters" (VHF0). UsesBand
+    says exactly those six. NY4I, 2026-10-01: a QSO on any other band -- WARC,
+    6 m, VHF -- is LOGGED normally, scores 0 and earns no multiplier; it is not
+    refused and not an X-QSO. The engine asks UsesBand before scoring (and
+    before the four QSO POINTS ... overrides) and before setting multiplier
+    flags, so this class's CalculateQSOPoints is never asked about such a QSO.
+    Idaho is the first contest to state its bands (ownership design 7.4).
+
+    STILL NOT HERE: hiding WARC from band stepping (WarcEnabled), which is a
+    FoundContest arm -- a setup concern for DescribeSession (ownership design
+    section 4), not a scoring one.
+
+  NAMES -- ADIF 3.1.7 lists "ID-QSO-PARTY -- Idaho QSO Party"; WA7BNM's
+    Cabrillo name is ID-QSO-PARTY (aliases IDQP, IDAHO-QSO-PARTY), and the
+    sponsor's own Cabrillo example says CONTEST: ID-QSO-PARTY. Logs are
+    uploaded at https://idqp.contesting.com; there is no e-mail address.
+
+  THE DORMANT-COUNTY BONUS -- IMPLEMENTED AT M6 (2026-10-02; ownership design
+    7.5), from https://www.idahoqsoparty.org/idaho_rovers.htm, read
+    2026-10-02: "IDQP rules will award 500 or 1000 or 1500 bonus points to
+    any station that activates any Idaho County that was NOT activated in the
+    previous year", and "The bonus points will be given to stations in bonus
+    county that makes 10 valid QSO's." The page's table is headed "2027
+    Bonus" and lists twenty-five counties, 500 or 1000 each (none at 1500
+    this year); IdahoBonusCounties2026 below is that table, abbreviation for
+    abbreviation -- every one checked against idaho_cty.dom.
+
+    WHOSE COUNTY: AN IDAHO STATION'S OWN, which TR4W records ONCE, as MY
+    STATE (an in-state station's MY STATE is its county -- that is how set-up
+    found it in state). So BonusPoints pays the station's county when the
+    station is in state (Station.InHostState), the county is listed, and the
+    log holds at least ten valid QSOs: not dupes, on an Idaho band (UsesBand).
+    Once, after the multiplication.
+
+    A ROVER IS NOT COVERED, AND THAT IS A GAP, NOT A RULING. A rover earns a
+    bonus per county it activates, but no QSO in TR4W records the county it
+    was SENT FROM -- the sponsor says "Each QSO record needs to indicate the
+    county the QSO was completed in", and the log has no such field. A rover
+    is therefore scored as a fixed station in its MY STATE county (design
+    Q34).
+
+    THE SPONSOR'S TWO PAGES DIFFER ON THE THRESHOLD: the rovers page says
+    "makes 10 valid QSO's", the rules page "if they make MORE THAN 10
+    contacts". NY4I settled it (Q35, 2026-10-16): "it is at least 10 qsos."
+    So ten or more, as built.
+
+    ONE TABLE PER CONTEST YEAR (Q35, built 2026-10-17). NY4I: "This is an
+    annual update as the rare counties change each year", and "you have to
+    handle reviewing an old contest as you need to know which list of
+    counties to use." So the list is chosen by the LOG'S contest year --
+    uContestBase.LogContestYear: the contest row's start_time, else the
+    earliest QSO's date -- and never by today's clock, so a 2026 log rescored
+    in 2029 still pays the 2026 list. A year with no table PAYS NO COUNTY
+    BONUS, because there is no list to pay from, and SAYS SO: an Error in
+    tr4w.log naming the year, once per year per session (ReportNoTable). A
+    silent zero would be a wrong claimed score nobody could see.
+    TContestIdahoQP.HasDormantCountyTable is what the yearly pin test asks.
+
+  NOT HERE: WA7BNM's "5 bonus points each for working K7S, K7P, K7U or K7D",
+    which the sponsor's rules page does not mention; and the final score,
+    which the sponsor writes as "Multiply QSO x Mode multiplier x Mults"
+    against WA7BNM's "(total QSO points x total mults) + bonus points". TR4W
+    computes points times multipliers (CombineScore, the base's), as for
+    every state party.
+
+  ---------------------------------------------------------------------------
+  NO FORMER ADIF ID, AND THAT IS A DECISION. Every Idaho log TR4W ever wrote
+  was exported as NEQP -- its CONTEST_ID was NEQP's enum spelling, because
+  NEQP's ADIFName is blank. Those Idaho files cannot be told apart from
+  NEQP's, and they stay NEQP. Since M1 (2026-10-01) 'NEQP' IS NEQP's current
+  id -- the spelling export writes -- so a current-id match would beat a
+  former 'NEQP' here anyway; before M1 NEQP's id was blank, and such a former
+  id would have stolen every New England file. Listing it now would be dead
+  and misleading, so it stays unlisted.
+
+  EXPORT IS THE BASE'S DEFAULT (M4): the Cabrillo and ADIF columns come from
+  the shared RSTDomesticOrDXQTHExchange arms, as they did under NEQP. Idaho
+  has no export rule of its own to state.
+ *)
+unit uContestIdahoQP;
+
+{$I tr4w.inc}
+
+interface
+
+uses
+   (* cpQRP -- the entrant's CATEGORY-POWER, as TStationContext carries it.
+      First, so VC's names win wherever the two overlap. *)
+   uSettingsModel,
+   VC, uContestBase, uContestStateQSOPartyBase;
+
+type
+   TContestIdahoQP = class(TContestStateQSOPartyBase)
+   private
+      (* THE "NO TABLE" REPORT'S LATCH -- see ReportNoTable. The score is
+         asked after every QSO, so the Error is written once per year per
+         session, not once per QSO. Main thread only, as the score is. *)
+      FReportedNoTable: boolean;
+      FReportedNoTableYear: integer;
+      procedure ReportNoTable(aYear: integer; const aCounty: string);
+   protected
+      (* PROTECTED, MATCHING THE BASE -- callers use the property; descendants
+         override the getter. *)
+      function GetDisplayName: string; override;
+
+      (* THE STATE WHOSE COUNTIES THIS CONTEST'S EXCHANGE NAMES. Stated; the
+         base makes it abstract so it is never an accident. *)
+      function GetHostState: string; override;
+
+      (* THE WHOLE ContestsArray ROW, STATED HERE. The row exists only because
+         ContestsArray is array[ContestType] and the compiler demands one; it
+         carries the same values, and Test_MovedRowValuesStillMatchTheArray
+         holds the two together until the array goes (M10). *)
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetFriendlyName: string; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
+
+      (* STATED AT M10 S5, transcribed from the rows the base read until
+         then (ContestsArray, QSOParties, ContestsBooleanArray). The
+         flags: see TContestBase.GetFlags. *)
+      function GetInStateDomesticFileName: string; override;
+      function GetFlags: TContestFlags; override;
+
+      (* Two -- NY4I and the sponsor, quoted in the header. *)
+      function GetCountyLineCountiesMax: integer; override;
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+
+      (* 160, 80, 40, 20, 15 and 10 m -- the sponsor's list, quoted in the
+         header. *)
+      function UsesBand(aBand: BandType): boolean; override;
+
+      (* THE DORMANT-COUNTY BONUS -- see the header. *)
+      function BonusPoints(const aTotals: TScoreTotals;
+                           aView: TLoggedQSOView): longint; override;
+
+      (* DOES THE CLASS HOLD THE SPONSOR'S DORMANT-COUNTY TABLE FOR aYear?
+         Q35 -- the yearly pin test asks it of the current year, so the first
+         run of a new year fails until that year's table is added. *)
+      class function HasDormantCountyTable(aYear: integer): boolean;
+   public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
+      function CountryMode: CountryModeType; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesDomesticQTH: boolean; override;
+   end;
+
+implementation
+
+uses
+   uExchangeFields,
+   uCabrilloExchange,
+   uADIFExchange,
+   uDXMultiplierKey,
+   (* The "no table for this year" Error -- Q35. *)
+   Log4D,
+   SysUtils, uContestRegistry;
+
+type
+   TIdahoBonusCounty = record
+      County: string;
+      Points: longint;
+   end;
+
+const
+   (* THE 2026 CONTEST'S TABLE -- the sponsor's table headed "2027 Bonus",
+      https://www.idahoqsoparty.org/idaho_rovers.htm, read 2026-10-02: the
+      dormant counties and what each pays.
+
+      WHY 2026 AND NOT 2027 (Q35): the Wayback capture of 2026-05-11 -- four
+      months BEFORE the 2026 contest -- shows this identical table under the
+      same heading (the captures of 2026-03-15 and 2026-04-12 show the page
+      with no table), so it is the list in force for the 2026 contest,
+      whatever the label says. IT IS REGISTERED FOR 2026 ONLY. Whether it
+      ALSO covers the 2027 contest is the SPONSOR'S question and is still
+      open; until they answer, a 2027 log reports that it has no table
+      rather than being paid a list nobody has confirmed for it.
+
+      A NEW YEAR IS A NEW TABLE BESIDE THIS ONE and one arm in
+      IdahoBonusCountyPoints -- never an edit to this one, which a 2026 log
+      reopened later must still be paid from. *)
+   IdahoBonusCounties2026: array[0..24] of TIdahoBonusCounty =
+      (
+      (County: 'ADM'; Points:  500),
+      (County: 'BEA'; Points:  500),
+      (County: 'BEN'; Points:  500),
+      (County: 'BIN'; Points:  500),
+      (County: 'BOU'; Points:  500),
+      (County: 'BUT'; Points: 1000),
+      (County: 'CAR'; Points:  500),
+      (County: 'CAS'; Points:  500),
+      (County: 'CLA'; Points: 1000),
+      (County: 'CUS'; Points: 1000),
+      (County: 'FRE'; Points:  500),
+      (County: 'GEM'; Points:  500),
+      (County: 'GOO'; Points:  500),
+      (County: 'IDA'; Points:  500),
+      (County: 'JEF'; Points: 1000),
+      (County: 'JER'; Points:  500),
+      (County: 'LAT'; Points:  500),
+      (County: 'LEW'; Points:  500),
+      (County: 'MIN'; Points:  500),
+      (County: 'NEZ'; Points:  500),
+      (County: 'POW'; Points:  500),
+      (County: 'SHO'; Points:  500),
+      (County: 'TET'; Points:  500),
+      (County: 'VAL'; Points: 1000),
+      (County: 'WAS'; Points:  500)
+      );
+
+   (* "stations in bonus county that makes 10 valid QSO's" -- ten or more
+      (NY4I, Q35: "it is at least 10 qsos"). *)
+   IdahoBonusMinimumQSOs = 10;
+
+var
+   logger: TLogLogger;
+
+(* What aCounty pays in aTable; 0 when it is not listed. *)
+function PointsInTable(const aTable: array of TIdahoBonusCounty;
+                       const aCounty: string): longint;
+var
+   i: integer;
+begin
+   Result := 0;
+   for i := Low(aTable) to High(aTable) do
+      begin
+      if aTable[i].County = aCounty then
+         begin
+         Result := aTable[i].Points;
+         Exit;
+         end;
+      end;
+end;
+
+(* THE YEARS THAT HAVE A TABLE -- the one place a contest year is added.
+   False when aYear has none (aPoints 0); True with what aCounty pays in
+   that year's table, 0 when it is not a dormant county that year. *)
+function IdahoBonusCountyPoints(aYear: integer; const aCounty: string;
+                                out aPoints: longint): boolean;
+begin
+   aPoints := 0;
+   case aYear of
+      2026:
+         begin
+         aPoints := PointsInTable(IdahoBonusCounties2026, aCounty);
+         Result := True;
+         end;
+      else
+         begin
+         Result := False;
+         end;
+      end;
+end;
+
+function TContestIdahoQP.GetDisplayName: string;
+begin
+   Result := 'Idaho QSO Party';
+end;
+
+function TContestIdahoQP.GetHostState: string;
+begin
+   Result := 'ID';
+end;
+
+function TContestIdahoQP.GetCabrilloName: string;
+begin
+   (* WA7BNM's Cabrillo name and the sponsor's own example header. *)
+   Result := 'ID-QSO-PARTY';
+end;
+
+function TContestIdahoQP.GetADIFContestId: string;
+begin
+   (* ADIF 3.1.7's Contest_ID enumeration: "ID-QSO-PARTY -- Idaho QSO Party". *)
+   Result := 'ID-QSO-PARTY';
+end;
+
+function TContestIdahoQP.GetWA7BNMId: integer;
+begin
+   Result := 305;
+end;
+
+function TContestIdahoQP.GetQRZRUId: integer;
+begin
+   Result := 0;
+end;
+
+function TContestIdahoQP.GetSubmissionEmail: string;
+begin
+   (* None: logs are uploaded at https://idqp.contesting.com. *)
+   Result := '';
+end;
+
+function TContestIdahoQP.GetDomesticFileName: string;
+begin
+   (* The county file. FCONTEST.FoundMyStateInDomFile reads it to decide
+      whether MY STATE is an Idaho county, and then loads idaho.dom or
+      idaho_cty.dom through this party's QSOParties entry. *)
+   Result := 'idaho_cty';
+end;
+
+function TContestIdahoQP.GetFriendlyName: string;
+begin
+   Result := 'Idaho QSO Party';
+end;
+
+function TContestIdahoQP.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := NoInitialExchange;
+end;
+
+function TContestIdahoQP.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTDomesticOrDXQTHExchange;
+end;
+
+function TContestIdahoQP.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQTH;
+end;
+
+function TContestIdahoQP.ParseReceivedExchangeFormat(const aText: string;
+                                                     aParsers: TExchangeParsers;
+                                                     var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTDomesticOrDXQTH(aText, aExch);
+end;
+
+function TContestIdahoQP.ExchangeCarriesDomesticQTH: boolean;
+begin
+   Result := True;
+end;
+
+function TContestIdahoQP.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                             const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentRSTState(aMy, aQso);
+end;
+
+function TContestIdahoQP.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                 const aQso: ContestExchange;
+                                                 const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentRSTState(aMy, aQso, aCtx);
+end;
+
+function TContestIdahoQP.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                     const aQso: ContestExchange;
+                                                     const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedRSTQTHOrDXQTH(aMy, aQso, aCtx);
+end;
+
+function TContestIdahoQP.GetInStateDomesticFileName: string;
+begin
+   Result := 'idaho';
+end;
+
+function TContestIdahoQP.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode, cfMultByMode];
+end;
+
+function TContestIdahoQP.GetCountyLineCountiesMax: integer;
+begin
+   Result := 2;
+end;
+
+(* ONE POINT PHONE, TWO POINTS CW OR DIGITAL -- NY4I and the sponsor agree.
+
+   OWN BODY, NOT FixedModePoints. That helper files FM with "everything else",
+   which here is digital, so FM would score two; FM is a phone mode, and the
+   sponsor counts "Each phone QSO" as one. This is the Field Day shape
+   (ownership design 1.5: a rule that does not fit three numbers gets its own
+   body).
+
+   Both and NoMode are not modes a contact is made in, so they score nothing
+   rather than inheriting either number -- QRP included.
+
+   QRP IS THE ENTRANT'S CATEGORY-POWER (see the header): five for every mode
+   a contact is made in.
+
+   An off-band QSO never reaches here -- see UsesBand. *)
+procedure TContestIdahoQP.CalculateQSOPoints(var aQso: ContestExchange);
+begin
+   if Station.MyPower = cpQRP then
+      begin
+      case aQso.Mode of
+         CW, Digital, Phone, FM:
+            begin
+            aQso.QSOPoints := 5;
+            end;
+         else
+            begin
+            aQso.QSOPoints := 0;
+            end;
+         end;
+      Exit;
+      end;
+
+   case aQso.Mode of
+      CW, Digital:
+         begin
+         aQso.QSOPoints := 2;
+         end;
+      Phone, FM:
+         begin
+         aQso.QSOPoints := 1;
+         end;
+      else
+         begin
+         aQso.QSOPoints := 0;
+         end;
+      end;
+end;
+
+function TContestIdahoQP.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10];
+end;
+
+(* THE ORDER IS DELIBERATE. In state, then the ten valid QSOs, THEN the
+   year's table: below ten no list could pay anything, so a log still being
+   started (no QSOs, no year yet) is not reported as missing a table. *)
+function TContestIdahoQP.BonusPoints(const aTotals: TScoreTotals;
+                                     aView: TLoggedQSOView): longint;
+var
+   county: string;
+   countyBonus: longint;
+   validQSOs: integer;
+   year: integer;
+   i: integer;
+   qso: ContestExchange;
+begin
+   Result := inherited BonusPoints(aTotals, aView);
+
+   if not Station.InHostState then
+      begin
+      Exit;
+      end;
+
+   validQSOs := 0;
+   for i := 0 to aView.Count - 1 do
+      begin
+      qso := aView.QSO(i);
+      if (not qso.ceDupe) and UsesBand(qso.Band) then
+         begin
+         inc(validQSOs);
+         end;
+      end;
+   if validQSOs < IdahoBonusMinimumQSOs then
+      begin
+      Exit;
+      end;
+
+   county := UpperCase(Trim(Station.MyState));
+   year := LogContestYear(aTotals, aView);
+   if not IdahoBonusCountyPoints(year, county, countyBonus) then
+      begin
+      ReportNoTable(year, county);
+      Exit;
+      end;
+
+   Result := Result + countyBonus;
+end;
+
+class function TContestIdahoQP.HasDormantCountyTable(aYear: integer): boolean;
+var
+   points: longint;
+begin
+   Result := IdahoBonusCountyPoints(aYear, '', points);
+end;
+
+(* AN ERROR, NOT A WARNING: Log4D's root level defaults to Error, so a Warn
+   would not reach tr4w.log on a default station, and a claimed score that
+   leaves out a bonus is worth an operator's attention. Year 0 is a log that
+   says nothing about its year (no start_time and no dated QSO). *)
+procedure TContestIdahoQP.ReportNoTable(aYear: integer; const aCounty: string);
+begin
+   if FReportedNoTable and
+      (FReportedNoTableYear = aYear) then
+      begin
+      Exit;
+      end;
+   FReportedNoTable := True;
+   FReportedNoTableYear := aYear;
+
+   if aYear = 0 then
+      begin
+      logger.Error(Format(
+         'Idaho QSO Party: the log records no contest year (no start time and no dated QSO), ' +
+         'so the dormant-county bonus for %s cannot be decided and is NOT in the score.',
+         [aCounty]));
+      end
+   else
+      begin
+      logger.Error(Format(
+         'Idaho QSO Party: TR4W has no dormant-county bonus table for the %d contest, ' +
+         'so the bonus for %s is NOT in the score. Each year''s table is the sponsor''s ' +
+         '(idahoqsoparty.org/idaho_rovers.htm) and is added to uContestIdahoQP.',
+         [aYear, aCounty]));
+      end;
+end;
+
+(* A DX MULTIPLIER AT EVERY STATION -- M11 S4 part 2, 2026-10-14: the trait
+   this class stated (`ARRLDXCCWithNoUSAOrCanada`) until the kind was
+   deleted. *)
+function TContestIdahoQP.HasDXMultiplier: boolean;
+begin
+   Result := True;
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country but the USA and Canada -- the ARRLDXCCWithNoUSAOrCanada arm. *)
+function TContestIdahoQP.DXMultiplierKey(const aQso: ContestExchange;
+                                         out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if not IsUSAOrCanadaCountry(aQso.QTH.CountryID) then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
+end;
+
+(* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
+   DXCC only, at every station. *)
+function TContestIdahoQP.CountryMode: CountryModeType;
+begin
+   Result := ARRLCountryMode;
+end;
+
+initialization
+   logger := TLogLogger.GetLogger('uContestIdahoQP');
+   RegisterContest(IDAHOQSOPARTY, TContestIdahoQP);
+
+end.

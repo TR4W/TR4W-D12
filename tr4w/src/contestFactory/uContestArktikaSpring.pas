@@ -1,0 +1,369 @@
+(*
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+
+ This file is part of TR4W  (SRC)
+
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+ *)
+
+(* ARKTIKA SPRING.
+
+  THREE POINTS FOR A DOMESTIC MULTIPLIER QTH, ONE FOR EVERYTHING ELSE -- the
+  whole of ArktikaSpringQSOPointMethod, which was one arm of LOGSTUFF's 88-way
+  case and is now this class.
+
+  IT TESTS DomMultQTH AND NOT DomesticQTH, and the two are different fields on
+  ContestExchange: DomesticQTH is the corrected QTH, DomMultQTH is the string
+  the multiplier count is keyed on. Reproducing the arm means reproducing which
+  field it read; substituting the more familiar one would score every QSO the
+  same for a log where the two diverge, and nothing would say so. *)
+unit uContestArktikaSpring;
+
+{$I tr4w.inc}
+
+interface
+
+uses
+   VC, uContestBase;
+
+type
+   TContestArktikaSpring = class(TContestBase)
+   protected
+      (* THE GETTERS BEHIND TContestBase's PROPERTIES.
+
+         PROTECTED, MATCHING THE BASE. A class body with no visibility section
+         defaults to public, which would make both X.DisplayName and
+         X.GetDisplayName callable -- two ways to ask one question is exactly
+         the ambiguity a property removes. *)
+      function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetFriendlyName: string; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+
+      (* DIGITS AND BLANKS ARE A SERIAL, ANYTHING ELSE A QTH -- M5b.
+
+         It stood in LOGSTUFF.ProcessRSTAndQSONumberOrDomesticQTHExchange as a
+         test of ActiveQSOPointMethod = ArktikaSpringQSOPointMethod, ahead of
+         that shape's own rule. M5b stated it as this class's
+         ParseReceivedExchange; it is the FORMAT, so since M11 S9d it is
+         stated here, and Arktika Spring never asks the parser of the shape
+         it was carried in. *)
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
+
+      (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
+      function GetFlags: TContestFlags; override;
+      function GetIsUSQSOParty: boolean; override;
+
+      (* THE NARROWER CABRILLO QSO LINE -- taken over from PostUnit, where it
+         was written as an `if Contest = ARKTIKA_SPRING`.
+
+         It consumes only the first FOUR of the five arguments the general
+         layout takes; the multi-op flag is dropped, and Format ignores the
+         trailing argument it is still handed. That is how the legacy code
+         served both layouts from one argument list, and it is preserved here
+         rather than tidied -- changing the argument list would change the
+         bytes of every other contest's Cabrillo. *)
+      function GetCabrilloQSOLineFormat: string; override;
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+
+      (* THE WHOLE ContestsArray ROW, STATED HERE.
+
+         NY4I, 2026-09-29: "all the info in [the row] should go into the contest
+         class."
+
+         Every getter above returns what the array holds today, so this changes
+         no behaviour -- it moves the ANSWER, so that reading this one file tells
+         you what Arktika Spring is without cross-referencing a 200-row table by
+         enum position. When the array goes, these are already the definition.
+
+         The array row this replaces, verbatim:
+
+           Email: '';  DF: '';  WA7BNM: 0000;  QRZRUID: 351;
+           Pxm: NoPrefixMults;  ZnM: NoZoneMults;  AIE: NoInitialExchange;
+           DM: WYSIWYGDomestic;  P: 0;
+           AE: RSTAndQSONumberOrDomesticQTHExchange;  XM: NoDXMults;
+           QP: ArktikaSpringQSOPointMethod;  ADIFName: '';  CABName: '';
+           FriendlyName: ''
+
+         THE ROW IS NOT DELETED AND MUST NOT BE. It still answers for every
+         contest that has no class, and TContestBase still reads it for the ones
+         that do not override. *)
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE DOMESTIC QTH -- see TContestBase.DomesticMultiplierFromQTH
+         (M11 S6). *)
+      function DomesticMultiplierFromQTH(const aText: Str20;
+                                         var aMultiplier: Str10;
+                                         var aQTH: Str10;
+                                         var aFound: boolean): TDomesticQTHAnswer; override;
+      (* see TContestBase.DomesticQTHReplacesDXMultiplier (M11 S6). *)
+      function DomesticQTHReplacesDXMultiplier: boolean; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesDomesticQTH: boolean; override;
+   end;
+
+implementation
+
+uses
+   uExchangeFields,
+   uCabrilloExchange,
+   uADIFExchange,
+   uContestRegistry,
+   (* StringIsAllNumbersOrSpaces -- the test the arm made. *)
+   utils_text,
+   uTR4WStrings;
+
+procedure TContestArktikaSpring.CalculateQSOPoints(var aQso: ContestExchange);
+begin
+   if aQso.DomMultQTH <> '' then
+      begin
+      aQso.QSOPoints := 3;
+      end
+   else
+      begin
+      aQso.QSOPoints := 1;
+      end;
+end;
+
+function TContestArktikaSpring.GetCabrilloQSOLineFormat: string;
+begin
+   Result := '%s%-12s%-10s%-10s' + #13#10;
+end;
+
+function TContestArktikaSpring.GetDisplayName: string;
+begin
+   Result := 'Arktika Spring';
+end;
+
+function TContestArktikaSpring.GetCabrilloName: string;
+begin
+   (* THE ROW'S CABName IS EMPTY, AND THIS IS NOT THE EMPTY STRING. PostUnit's
+      rule -- reproduced by TContestBase.GetCabrilloName -- is that a blank
+      CABName means the enum's own spelling, so the CONTEST: line of a submitted
+      log reads ARKTIKA-SPRING. Returning '' here would put a blank CONTEST:
+      line in the header, which is a different answer from the one the array
+      produces. *)
+   Result := 'ARKTIKA-SPRING';
+end;
+
+function TContestArktikaSpring.GetADIFContestId: string;
+begin
+   (* WHAT TR4W'S ADIF EXPORT WRITES, AND SO WHAT ITS IMPORT MATCHES. The
+      row's ADIFName is blank, and export has always written the enum's own
+      spelling in its place; this states that id. It was '' until M1
+      (2026-10-01), which is why a file TR4W exported for this contest
+      never re-imported to it (inventory D9). See
+      TContestBase.GetADIFContestId. *)
+   Result := 'ARKTIKA-SPRING';
+end;
+
+function TContestArktikaSpring.GetWA7BNMId: integer;
+begin
+   (* 0000 in the row: this contest is not in the WA7BNM calendar. *)
+   Result := 0;
+end;
+
+function TContestArktikaSpring.GetQRZRUId: integer;
+begin
+   (* 351 -- the contest's id on the QRZ.RU calendar, which is where a Russian
+      contest is listed when WA7BNM does not carry it. *)
+   Result := 351;
+end;
+
+function TContestArktikaSpring.GetSubmissionEmail: string;
+begin
+   (* Blank in the row: no submission address is recorded for this contest. *)
+   Result := '';
+end;
+
+function TContestArktikaSpring.GetDomesticFileName: string;
+begin
+   (* Blank, and consistent with WYSIWYGDomestic below: there is no .DOM file
+      of legal QTHs, because whatever the operator types IS the QTH. *)
+   Result := '';
+end;
+
+function TContestArktikaSpring.GetFriendlyName: string;
+begin
+   (* THE ROW'S FriendlyName IS BLANK, AND BLANK IS NOT THE ANSWER -- the same
+      two-step as CabrilloName. The array's own note says "If blank, use
+      ContestTypeSA[ct]", so what an operator actually sees is the enum
+      spelling, ARKTIKA-SPRING.
+
+      This was written as '' first and the transcription test caught it, which
+      is the whole reason that test compares against a base object rather than
+      against the raw record field: two of this row's fields are blank and
+      NEITHER of them means the empty string. DisplayName above is the
+      factory's own readable name and is a separate question. *)
+   Result := 'ARKTIKA-SPRING';
+end;
+
+function TContestArktikaSpring.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := NoInitialExchange;
+end;
+
+function TContestArktikaSpring.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTAndQSONumberOrDomesticQTHExchange;
+end;
+
+function TContestArktikaSpring.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQSONumberQTH;
+end;
+
+function TContestArktikaSpring.ParseReceivedExchangeFormat(const aText: string;
+                                                           aParsers: TExchangeParsers;
+                                                           var aExch: ContestExchange): boolean;
+begin
+   (* DIGITS AND BLANKS ARE A SERIAL, ANYTHING ELSE A QTH -- the format
+      itself, so it is stated here; it stood in ParseReceivedExchange until
+      M11 S9d. *)
+   if StringIsAllNumbersOrSpaces(aText) then
+      begin
+      Result := aParsers.ParseRSTQSONumber(aText, aExch);
+      end
+   else
+      begin
+      Result := aParsers.ParseRSTDomesticQTH(aText, aExch);
+      end;
+end;
+
+procedure TContestArktikaSpring.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   aMessages.WriteRSTStateOrQSONumber;
+end;
+
+function TContestArktikaSpring.ExchangeCarriesDomesticQTH: boolean;
+begin
+   Result := True;
+end;
+
+function TContestArktikaSpring.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                                   const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentRSTStateOrQSONumber(aMy, aQso);
+end;
+
+function TContestArktikaSpring.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                       const aQso: ContestExchange;
+                                                       const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentRSTStateOrQSONumber(aMy, aQso, aCtx);
+end;
+
+function TContestArktikaSpring.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                           const aQso: ContestExchange;
+                                                           const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedRSTQTHOrQSONumber(aMy, aQso, aCtx);
+end;
+
+function TContestArktikaSpring.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode, cfMultByBand, cfErmakSpecification];
+end;
+
+function TContestArktikaSpring.GetIsUSQSOParty: boolean;
+begin
+   (* P: 0 -- this is not a US state QSO party. *)
+   Result := False;
+end;
+
+(* WHAT WAS DELIBERATELY NOT TAKEN OVER, AND WHY.
+
+   THE EXCHANGE PARSE STAYS IN LOGSTUFF.
+   ProcessRSTAndQSONumberOrDomesticQTHExchange asks
+   `if ActiveQSOPointMethod = ArktikaSpringQSOPointMethod` and then routes to an
+   RST-and-serial parse or an RST-and-domestic-QTH parse depending on whether
+   the typed exchange is all digits. That is a contest rule sitting in shared
+   code and it belongs here eventually -- but TContestBase has no parsing seam
+   at all today (docs/ADDING_A_CONTEST.md section 6 names parseReceivedExchange
+   as not built), and NO AUTOMATED GATE IN THIS TREE TYPES AN EXCHANGE, so
+   inventing the seam and the arm in one move would be unverifiable. It moves
+   when the parsing seam is designed.
+
+   THE EXCHANGE COLUMNS ARE THE BASE'S DEFAULT (M4): TContestBase formats
+   them through the shared RSTAndQSONumberOrDomesticQTHExchange arm, which
+   several other contests run as well. Only the LINE is this contest's. *)
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for PCC.
+   The same steps on ticking the box stood for PCC.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestArktikaSpring.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.OfferIAmIn(TC_ARKTIKACLUB);
+   aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURMEMBERSHIPNUMBER, ncfMyState);
+end;
+
+
+(* THE DOMESTIC QTH -- M11 S6 part 1, 2026-10-14, moved from LOGDOM.GetDomQTH's
+   WYSIWYGDomestic arm (the trait): the text as received is both the multiplier and
+   the QTH, cut to the field's ten characters, and it is always found. *)
+function TContestArktikaSpring.DomesticMultiplierFromQTH(const aText: Str20;
+                                                         var aMultiplier: Str10;
+                                                         var aQTH: Str10;
+                                                         var aFound: boolean): TDomesticQTHAnswer;
+begin
+   aMultiplier := aText;
+   aQTH := aText;
+   aFound := True;
+   Result := dqaDecided;
+end;
+
+(* A DOMESTIC QTH TAKES THE PLACE OF THE DX MULTIPLIER -- M11 S6 part 1,
+   moved from LOGDUPE.GetDXQTH's `= WYSIWYGDomestic` guard (the trait). See
+   TContestBase.DomesticQTHReplacesDXMultiplier. *)
+function TContestArktikaSpring.DomesticQTHReplacesDXMultiplier: boolean;
+begin
+   Result := True;
+end;
+
+initialization
+   RegisterContest(ARKTIKA_SPRING, TContestArktikaSpring);
+
+end.

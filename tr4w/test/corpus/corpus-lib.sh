@@ -92,3 +92,109 @@ corpus_stage_set(){
    rm -f "$dest/$stem.db-wal" "$dest/$stem.db-shm"
    return 0
 }
+
+# corpus_norm_artifact <file>
+# Print an exported .ADI or Cabrillo with the two fields that are REGENERATED
+# ON EVERY RUN BY DESIGN reduced to placeholders: the creation timestamp, and
+# APP_TR4W_ID -- the per-QSO UUIDv7, minted at import, so the same contact gets
+# a different id every time a log is rebuilt.
+#
+# NOTHING ELSE IS NORMALISED, and that is the whole point: every other byte has
+# to match exactly.
+#
+# ...EXCEPT THE PROGRAM VERSION, added 2026-10-16. It is in three header lines
+# (ADIF "Created by TR4W version ...", <PROGRAMVERSION:n>, Cabrillo CREATED-BY)
+# and changes on every release bump -- NY4I bumps it every ten answered
+# questions -- so without this every bump turned all 13 sets red and forced a
+# re-freeze of 26 files that changed nothing but that string. A re-freeze for
+# no reason is exactly the noise a real scoring change would hide in. Only
+# those three header fields are touched; no QSO line is.
+#
+# IT LIVES HERE BECAUSE TWO SCRIPTS NEED IT AND A SECOND COPY WOULD DRIFT.
+# freeze-rescore-baseline.sh writes the frozen bytes through it and
+# test-contest-factory.sh compares fresh output through it, so if the two ever
+# disagreed about what is volatile, every set would report a difference that is
+# not one -- on the only gate that watches scoring.
+corpus_norm_artifact(){
+   sed -E 's/(Created by TR4W version ).* on .*/\1VERSION on TIME/;
+           s/<PROGRAMVERSION:[0-9]+>TR4W v\.[^ <\r]*/<PROGRAMVERSION>TR4W v.VERSION/;
+           s/^(CREATED-BY: TR4W v\.)[^ \r]*/\1VERSION/;
+           s/(<CREATED_TIMESTAMP:15>).*/\1TIME/;
+           s/<APP_TR4W_ID:32>[0-9a-f]*/<APP_TR4W_ID:32>ID/g' "$1" 2>/dev/null
+}
+
+# corpus_fixture_exchange_ids <log.db>
+# How many QSO rows of a fixture log carry an exchange id (an ERROR: line when
+# the file cannot be read -- which is not "0", so nothing is relaxed by it).
+#
+# corpus_drop_app_id
+# stdin to stdout with every APP_TR4W_ID field deleted, value and separating
+# space with it -- the same shape test-adif-roundtrip.sh's strip_tags uses.
+#
+# WHY BOTH EXIST (2026-10-14, NY4I's ruling on open question F6): a rescore no
+# longer MINTS an exchange id for a QSO that has none.  Six fixtures carry no id
+# at all, and their frozen rescored.adi still holds an <APP_TR4W_ID:32>ID
+# placeholder on every record -- 1,772 of them -- because the legacy rescore
+# minted one.  That placeholder records the very behaviour the ruling removed,
+# not anything about scoring.  So test-contest-factory.sh sets the field aside
+# on BOTH sides, and ONLY for a fixture whose log holds no id: where a log does
+# carry ids, whether they survive the rescore is still compared exactly.  The
+# same rule test-adif-roundtrip.sh already applies to a minted identity: it is
+# ignored only where the reference has none to compare.  The frozen files are
+# NOT regenerated.
+corpus_fixture_exchange_ids(){
+   python - "$1" <<'PY'
+import sqlite3, sys
+try:
+   c = sqlite3.connect('file:' + sys.argv[1].replace('\\', '/') + '?mode=ro', uri=True)
+   print(c.execute("SELECT COUNT(*) FROM qso WHERE exchange_id IS NOT NULL "
+                   "AND exchange_id <> ''").fetchone()[0])
+except Exception as e:
+   print('ERROR:%s' % e)
+PY
+}
+
+corpus_drop_app_id(){
+   sed -E 's/<APP_TR4W_ID:[0-9]*>[^<]*//Ig'
+}
+
+# ---------------------------------------------------------------------------
+# THE CABRILLO .LOG FILES IN tr4w/target ARE NOT OURS (2026-10-17).
+# ---------------------------------------------------------------------------
+# The scripts that run the app in tr4w/target (test-contest-factory,
+# test-rescore, test-adif-roundtrip, freeze-rescore-baseline) used to clean
+# up with `rm -f ./*.LOG` -- deleting EVERY Cabrillo export an operator had in
+# that folder -- and to take "the" Cabrillo output as `ls ./*.LOG | head -1`,
+# which picks an unrelated file whenever one is there. Now:
+#
+#   corpus_logs_snapshot   once, after cd to the target folder and BEFORE the
+#                          first run: remembers which .LOG files exist, and
+#                          says so loudly if any do.
+#   corpus_new_logs        the .LOG files that appeared since the snapshot.
+#   corpus_remove_new_logs deletes those, and only those.
+#
+# A pre-existing file is never deleted. If a run's Cabrillo has the SAME name
+# as a pre-existing one the app overwrites it -- nothing here can prevent that,
+# which is why the snapshot names every file it found.
+corpus_list_logs(){
+   ls -1 ./*.LOG 2>/dev/null | sort
+}
+
+corpus_logs_snapshot(){
+   CORPUS_LOGS_BEFORE=$(corpus_list_logs)
+   if [ -n "$CORPUS_LOGS_BEFORE" ]; then
+      echo "NOTE: .LOG files already in $(pwd) are left alone (a run's Cabrillo of the same name would overwrite one):" >&2
+      printf '%s\n' "$CORPUS_LOGS_BEFORE" | sed 's/^/   /' >&2
+   fi
+}
+
+corpus_new_logs(){
+   comm -13 <(printf '%s\n' "${CORPUS_LOGS_BEFORE:-}" | sed '/^$/d') \
+            <(corpus_list_logs) | sed '/^$/d'
+}
+
+corpus_remove_new_logs(){
+   corpus_new_logs | while IFS= read -r f; do
+      rm -f -- "$f"
+   done
+}

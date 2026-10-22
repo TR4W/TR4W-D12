@@ -56,7 +56,8 @@ implementation
 
 uses uTelnet,
   uSettingsModel,   // Settings.Cw.SendCompleteFourLetterCall
-  MainUnit;
+  MainUnit,
+  FCONTEST;         // SentMyState -- the state sent, design 7.11 (M9a)
 
 procedure SendCrypticDVPString(SendString: ShortString);
 
@@ -99,7 +100,7 @@ begin
            tExitFromDVPThread := False;
            DisplayCodeSpeed;
            logger.Debug('Calling tCreateThread from LogSend');
-           tCreateThread(@tDVPPlayThreadproc, DVPThreadID);
+           tCreateThread(tDVPPlayThreadproc, DVPThreadID);
            logger.Debug('Created DVP thread with threadid of %u',[PtrUInt(DVPThreadID)] );
            end;
         end;
@@ -361,7 +362,8 @@ begin
   
         '~': SendSalutation(CallWindowString);
         '\': AddStringToBuffer(UTF8Encode(Settings.My.Call), Config.CWTone);
-        '&': AddStringToBuffer(UTF8Encode(Settings.My.State), Config.CWTone);
+        (* The state SENT in this contest, not MY STATE -- design 7.11 (M9a). *)
+        '&': AddStringToBuffer(UTF8Encode(SentMyState), Config.CWTone);
 
         '|':
           begin
@@ -451,9 +453,9 @@ begin
         '(':
           if TotalContacts = 0 then
              begin
-             if Settings.My.Name <> '' then
+             if Settings.My.ResolvedName <> '' then
                 begin
-                AddStringToBuffer(UTF8Encode(Settings.My.Name), Config.CWTone)
+                AddStringToBuffer(UTF8Encode(Settings.My.ResolvedName), Config.CWTone)
                 end
              else
                 begin
@@ -463,7 +465,7 @@ begin
                   build counts, while an AnsiString-family value assigned to
                   a ShortString is not one. A postal code is ASCII, so the
                   bytes are the same either way. *)
-                AddStringToBuffer(UTF8Encode(Settings.My.PostalCode),
+                AddStringToBuffer(UTF8Encode(Settings.My.ResolvedPostalCode),
                                   Config.CWTone);
                 end;
              end

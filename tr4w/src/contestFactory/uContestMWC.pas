@@ -1,0 +1,267 @@
+(*
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+
+ This file is part of TR4W  (SRC)
+
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+ *)
+
+(* THE MEMORIAL OK1WC (MWC).
+
+  The ContestsArray row this class states, verbatim:
+
+   Email: 'memorial-ok1wc.cz/index.php?page=logs';  DF: 'mwc';  WA7BNM: 0;  QRZRUID: 0;
+   Pxm: NoPrefixMults;  ZnM: NoZoneMults;  AIE: NoInitialExchange;
+   DM: DomesticFile;  P: 0;  AE: RSTQSONumberExchange;
+   XM: NoDXMults;  QP: MWCQP;
+   ADIFName: '';  CABName: '';
+   FriendlyName: ''
+
+  Blank CABName, ADIFName and FriendlyName resolve to the enum's spelling, 'MWC'.
+
+  WHY IT HAS A CLASS. Milestone M7b (2026-10-02) gives every classless
+  contest one -- this is batch 2 -- and a registered class is the contest's
+  scorer, set-up, export, import, parse and final score from the moment it
+  exists, so the whole contest is transcribed here, exactly: the row above
+  as literals (Test_MovedRowValuesStillMatchTheArray), and every legacy arm
+  that named it, each arm deleted from the shared code it stood in. The
+  contest matrix is the proof: every line of its record but `contest.class`
+  is unchanged.
+
+  SCORING: MWCQP -- 1, and the domestic multiplier is the call's last
+  character, or the character before a '/' followed by a letter.
+
+  SET-UP: 80 m, MWC as a domestic country.
+
+  THE CALL IS CUT TO TEN CHARACTERS AND WALKED TO ITS FULL LENGTH, as the
+  arm did (a string[10] copy, indexed to Length(Callsign)): a call longer
+  than ten reads past the copy, and one ending in '/' reads one byte past
+  its end. Transcribed, not judged -- no real call reaches either. *)
+unit uContestMWC;
+
+{$I tr4w.inc}
+
+interface
+
+uses
+   VC, uContestBase;
+
+type
+   TContestMWC = class(TContestBase)
+   protected
+      (* PROTECTED, MATCHING THE BASE -- callers use the properties,
+         descendants override the getters. Every getter below states
+         the ContestsArray row quoted above. *)
+      function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetFriendlyName: string; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
+
+      (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
+      function GetFlags: TContestFlags; override;
+      function GetIsUSQSOParty: boolean; override;
+      (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
+         TContestBase: ScoreQSO is the one public scoring entry. *)
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
+   end;
+
+implementation
+
+uses
+   uExchangeFields,
+   uCabrilloExchange,
+   uADIFExchange,
+   uContestRegistry;
+
+(* MWCQP -- the legacy LOGSTUFF arm for this
+   contest's point method, moved here as it stood (M7b batch 2). The arm
+   was deleted at M10 S3; see git history or the D7 tree. *)
+procedure TContestMWC.CalculateQSOPoints(var aQso: ContestExchange);
+var
+   callLength: integer;
+   i: integer;
+   k: string[10];
+begin
+   aQso.QSOPoints := 1;
+   callLength := Length(aQso.Callsign);
+   k := aQso.Callsign;
+   for i := 1 to callLength do
+      begin
+      (* The rules specify the multiplier number following a slash. *)
+      if (k[i] = '/') and (k[i + 1] in ['A'..'Z']) then
+         begin
+         aQso.DomMultQTH := k[i - 1];
+         Exit;
+         end;
+      end;
+   aQso.DomMultQTH := k[callLength];
+end;
+
+function TContestMWC.GetDisplayName: string;
+begin
+   (* The contest's human name: WA7BNM, accepted (design Q53,
+      docs/Q53_CONTEST_NAMES.csv). *)
+   Result := 'OK1WC Memorial (MWC)';
+end;
+
+function TContestMWC.GetCabrilloName: string;
+begin
+   (* The row's CABName is blank; this is the enum's spelling it resolves
+      to. *)
+   Result := 'MWC';
+end;
+
+function TContestMWC.GetADIFContestId: string;
+begin
+   (* The row's ADIFName is blank; export writes the enum's spelling, and
+      import matches it (M1). *)
+   Result := 'MWC';
+end;
+
+function TContestMWC.GetWA7BNMId: integer;
+begin
+   (* WA7BNM's ref, accepted by NY4I with its name (design Q53). *)
+   Result := 683;
+end;
+
+function TContestMWC.GetQRZRUId: integer;
+begin
+   Result := 0;
+end;
+
+function TContestMWC.GetSubmissionEmail: string;
+begin
+   Result := 'memorial-ok1wc.cz/index.php?page=logs';
+end;
+
+function TContestMWC.GetDomesticFileName: string;
+begin
+   Result := 'mwc';
+end;
+
+function TContestMWC.GetFriendlyName: string;
+begin
+   (* The display name above -- design Q53. *)
+   Result := 'OK1WC Memorial (MWC)';
+end;
+
+function TContestMWC.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := NoInitialExchange;
+end;
+
+function TContestMWC.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTQSONumberExchange;
+end;
+
+function TContestMWC.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQSONumber;
+end;
+
+function TContestMWC.ParseReceivedExchangeFormat(const aText: string;
+                                                 aParsers: TExchangeParsers;
+                                                 var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTQSONumber(aText, aExch);
+end;
+
+procedure TContestMWC.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   aMessages.WriteRSTQSONumber;
+end;
+
+function TContestMWC.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                         const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentRSTQSONumber(aMy, aQso);
+end;
+
+function TContestMWC.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                             const aQso: ContestExchange;
+                                             const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentRSTQSONumber(aMy, aQso, aCtx);
+end;
+
+function TContestMWC.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                 const aQso: ContestExchange;
+                                                 const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedRSTQSONumber(aMy, aQso, aCtx);
+end;
+
+function TContestMWC.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode, cfMultByBand, cfCQZoneMode];
+end;
+
+function TContestMWC.GetIsUSQSOParty: boolean;
+begin
+   (* P: 0 -- not a US state QSO party. *)
+   Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7b batch 2, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestMWC.DescribeSession(const aStation: TStationContext;
+                                      aSession: TSessionDefaults);
+begin
+   aSession.Band := Band80;
+   aSession.AddDomesticCountry('MWC');
+end;
+
+
+(* THE DOMESTIC QTH IS LOOKED UP IN THIS CONTEST'S DOMESTIC FILE, at every
+   station -- M11 S6 part 1b, 2026-10-14. It was the session's
+   `= DomesticFile` (the trait); see TContestBase.UsesDomesticFile. *)
+function TContestMWC.UsesDomesticFile: boolean;
+begin
+   Result := True;
+end;
+
+initialization
+   RegisterContest(MWC, TContestMWC);
+
+end.

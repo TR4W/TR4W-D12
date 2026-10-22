@@ -2,6 +2,7 @@
 name: lcl-ui
 description: The user interface — LCL designed forms under src/ui/lcl, the main window, window management, display coordination, colours and theming, and the removal of Win32 UI artifacts. Use for any window, control, layout, keyboard or mouse handling, painting, or colour question.
 tools: Read, Grep, Glob, Bash, Edit, Write
+model: opus
 ---
 
 You own what the operator sees.
@@ -87,6 +88,49 @@ not actually commented out, and lists every marked line so the pile gets swept.
 - **Position a form through `lclForm.BoundsRect`, never `SetWindowPos`** — the LCL
   holds its own bounds and pushes the designed ones back down when it shows, which
   silently undid a restored position.
+
+## A window that shows something per contest asks the contest
+
+Since M9a (2026-10-02) the New Contest dialog, the totals window, the summary
+sheet, the WRTC menus and windows and the QTC menu render DATA a contest class
+gives them (`docs/ADDING_A_CONTEST.md`, "How a contest tells the display and
+the reports"): `uNewContest` renders `DescribeNewContestPrompts`, `uTotal`
+reads `TotalsDisplay`, the menus and `OpenTR4WWindow` ask
+`PermittedOperatingAids` / `OffersQTCs`. **Do not put an `if Contest = ...`
+back into a window** -- `Lint-ContestNameTests` holds each file's ceiling. What
+only the UI knows stays here: which window IS which operating aid is
+`MainUnit.OperatingAidOfWindow`, and how a prompt's steps become rows, a comment
+and the "I am in" box is `uNewContest.RenderPrompt`.
+
+**Since M9b (2026-10-02) the UI asks the contest for the rest** (design 8.2n):
+
+- **The New Contest list is a `TListBox` under a search box** (Q103 and Q52,
+  2026-10-19) listing `DisplayName`s, built by `uContestChoices` (no LCL,
+  unit tested; `TContestChoices.Matching` is the search -- the caption,
+  case-insensitive, anywhere). The list is **not `Sorted`** and must not be:
+  `TfrmNewContest.FShown` holds the `TContestHandle` of each row, filled in
+  the same pass as `Items`, and a sorted list would reorder `Items` behind
+  it. A search that hides the chosen contest UN-chooses it. Inactive
+  contests are HIDDEN unless "Show inactive contests" is ticked (Q59), and
+  one listed that way cannot start a new contest: the rule is
+  `uContestChoices.ContestCanStartNew`, applied in `SelectedContest`, so a
+  highlighted inactive row reads as `NoContest` (a `TListBox` cannot
+  disable one row). The list's
+  width is measured from the widest name at run time. `SelectedContest` is the
+  identity; `ContestName` is still the TOKEN (`ContestTypeSA`) -- it names
+  the log file and the `CONTEST` command, so it must not become the caption.
+- **CATEGORY-POWER is one value**: the Cabrillo summary window writes
+  `Settings.Contest.CategoryPower` through `SetCFGCommandValue`, before the
+  export runs and on close; a change with QSOs logged calls
+  `MainUnit.RescoreLog` (the Rescore command, named once) and shows a
+  NOTICE (`QuickDisplay`), never a modal question. The decision is
+  `uCategoryPowerChange`, unit tested.
+- **Call entry, band stepping, the log columns** ask
+  `ShowsContestStatus`, `BandStepIncludesWARC`, `PowerFieldIsFOCNumber` and
+  `CallEntryFrequencyWarning` (`MainUnit.ShowCallEntryFrequencyWarning`
+  replaced `WagCheck`).
+
+`BENCH_QUEUE.md` carries what to look at.
 
 ## Before converting another window
 

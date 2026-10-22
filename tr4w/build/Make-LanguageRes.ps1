@@ -14,10 +14,14 @@
    languages means nine builds.
 
    WHAT IS TRIMMED, AND WHY IT IS SAFE. The shipped copy drops `#.` translator
-   notes and the `#:` SOURCE references that end in a line number -- comments no
-   run time reads. It KEEPS the `#:` identifier line, because that is what
-   LazUtils matches on, and it keeps `msgctxt`. Dropping either would silently
-   translate nothing.
+   notes and the `#:` SOURCE references (path:line tokens) -- comments no run
+   time reads. It KEEPS every identifier, because that is what LazUtils matches
+   on, and it keeps `msgctxt`. Dropping either would silently translate nothing.
+
+   Until 2026-10-16 it dropped a WHOLE `#:` line that ended in a line number,
+   identifier and all, and passed several identifiers through in one entry,
+   where LazUtils keeps only the last. See Write-TrimmedCatalogue for the shape
+   it emits now and why.
 
    FUZZY ENTRIES SHIP, AND THAT IS A DECISION, NOT AN OVERSIGHT (NY4I,
    2026-09-19 and again 2026-09-21): "languages are still being reviewed so we
@@ -50,8 +54,20 @@
    carries no text, and shipping it would only add bytes.
 
 .NOTES
-   Not called by FullBuild yet. Run it when a catalogue changes; the .res is
-   committed so a fresh clone builds without needing LibreTranslate or python.
+   RUN BY THE BUILD (2026-10-16). Build-App.ps1 and Build-Tests.ps1 call
+   Sync-Tr4wLanguageRes (LanguageResStamp.ps1), which regenerates the .res when
+   the input hashes in tr4w_languages.res.inputs no longer match the tree. Until
+   then NOTHING ran this script and two catalogue commits never reached a binary.
+   Running it by hand is still fine (and is how to pick up a Lazarus upgrade,
+   whose lclstrconsts catalogues are embedded but deliberately not hashed).
+
+   This script writes the stamp beside its output ("<out>.inputs"). The .res is
+   committed so a fresh clone builds without needing LibreTranslate or python,
+   and the stamp is committed with it: the Linux and macOS builds cannot run
+   this script, and check-language-res.sh fails them when the stamp is stale.
+   Commit BOTH files together.
+
+   The output is byte-identical for identical inputs (measured 2026-10-16).
 #>
 
 param(
@@ -65,7 +81,9 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$i18n = Join-Path $Repo 'i18n'
+. (Join-Path $PSScriptRoot 'LanguageResStamp.ps1')
+
+$i18n =Join-Path $Repo 'i18n'
 $res  = if ($OutRes -ne '') { $OutRes } else { Join-Path $Repo 'tr4w\res\tr4w_languages.res' }
 $work = Join-Path ([IO.Path]::GetTempPath()) ("tr4wlang_" + [Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $work | Out-Null
@@ -84,23 +102,60 @@ if (-not $tc) { exit 2 }
 $fpcres = $tc.FpcRes
 if (-not $fpcres -or -not (Test-Path $fpcres)) { throw "fpcres.exe not found: '$fpcres'" }
 
+function Get-CandidateRank
+   {
+   <# Which of two entries claiming one key ships: one WITH a translation
+      beats one without, then a REVIEWED one beats a fuzzy one. A tie keeps
+      the first seen -- the pas2po entry, in source order, ahead of the
+      copies po_merge appended later. #>
+   param($Candidate)
+   $rank = 0
+   if ($Candidate.HasText)     { $rank += 2 }
+   if (-not $Candidate.Fuzzy)  { $rank += 1 }
+   return $rank
+   }
+
 function Write-TrimmedCatalogue
    {
-   <# Keep msgctxt, msgid, msgstr and the IDENTIFIER #: line. Drop translator
-      notes, the pas2po source references (they end in a line number, which is
-      how they are told apart) and obsolete entries.
+   <# Keep msgctxt, msgid, msgstr and EVERY IDENTIFIER. Drop translator notes,
+      the pas2po source references (path:line tokens) and obsolete entries.
 
       The `#,` flag line is never emitted, which is what lets a fuzzy entry
       through the run-time gate -- see the FUZZY note in the file header.
 
-      Returns a two-element array: reviewed entries kept, fuzzy entries kept. #>
+      ONE IDENTIFIER PER EMITTED ENTRY, AND ONE ENTRY PER IDENTIFIER, because
+      that is the only shape LazUtils reads correctly (translations.pas,
+      ReadPOText/FillItem, measured 2026-10-16):
+
+        * every `#: ` line OVERWRITES the entry's identifier, so a block naming
+          a form property AND a resourcestring kept only the last one;
+        * a `#:` line is the identifier WHOLE, so a line that also carries a
+          source reference (`#: utr4wstrings:tc_x tr4w/src/...pas:8`) is no
+          usable key -- and this script used to drop such a line outright,
+          leaving the entry with no key at all;
+        * a later entry with the same identifier REPLACES the earlier one, so
+          a stale fuzzy copy appended by a merge silently shadowed a reviewed
+          translation: Polish showed "POLISH" for "Polski", and 202 Polish
+          entries shipped codepage-damaged text over reviewed text.
+
+      So each identifier token is collected separately, and the entry is
+      emitted once per identifier under `#: <identifier>`. Where two entries
+      claim one identifier, Get-CandidateRank picks the one that ships. The .po
+      files are not changed; their twins are catalogue debt for po_dedupe.
+
+      Returns: reviewed entries emitted, fuzzy entries emitted, and how many
+      identifiers had a competing entry (shadowed). #>
    param([string] $Source, [string] $Dest, [bool] $IncludeFuzzy)
 
-   $script:kept  = 0     # PER CALL. Module scope made it cumulative, so the
-   $script:fuzzyKept = 0 #  counts read 1431, 1452, 1453 ... across languages.
    $script:fuzzy = $false
-   $out  = New-Object System.Collections.Generic.List[string]
-   $block = New-Object System.Collections.Generic.List[string]
+   $script:shadowed = 0
+   $out   = New-Object System.Collections.Generic.List[string]
+   $block = New-Object System.Collections.Generic.List[string]   # the entry's msg lines
+   $keys  = New-Object System.Collections.Generic.List[string]   # its identifiers
+   # Output in order of first appearance: a keyed slot holds the winning entry
+   # for its identifier; an entry with no identifier (the header) keeps its place.
+   $slots  = New-Object System.Collections.Generic.List[object]
+   $slotOf = New-Object 'System.Collections.Generic.Dictionary[string,int]'
 
    function Test-HasTranslation {
       <# Is this block's msgstr non-empty? The value may continue over several
@@ -119,18 +174,43 @@ function Write-TrimmedCatalogue
    }
 
    function Flush {
-      if ($block.Count -eq 0) { $script:fuzzy = $false; return }
-      if (-not $script:fuzzy)
+      if ($block.Count -eq 0)
          {
-         $out.AddRange($block); $out.Add(''); $script:kept++
+         $keys.Clear(); $script:fuzzy = $false; return
          }
-      elseif ($IncludeFuzzy -and (Test-HasTranslation $block))
+      $hasText = Test-HasTranslation $block
+      # Unchanged rule: a reviewed entry ships; a fuzzy one ships when it has
+      # text and fuzzy is wanted -- emitted WITHOUT the flag line, which is the
+      # only way past translations.pas:1223. The source .po keeps its marker.
+      $eligible = (-not $script:fuzzy) -or ($IncludeFuzzy -and $hasText)
+      if ($eligible)
          {
-         # Emitted WITHOUT the flag line, which is the only way past
-         # translations.pas:1223. The source .po keeps its marker.
-         $out.AddRange($block); $out.Add(''); $script:fuzzyKept++
+         $body = $block.ToArray()
+         if ($keys.Count -eq 0)
+            {
+            $slots.Add([pscustomobject]@{ Key = $null; Body = $body; Fuzzy = $script:fuzzy; HasText = $hasText })
+            }
+         foreach ($k in $keys)
+            {
+            $cand = [pscustomobject]@{ Key = $k; Body = $body; Fuzzy = $script:fuzzy; HasText = $hasText }
+            if (-not $slotOf.ContainsKey($k))
+               {
+               $slotOf[$k] = $slots.Count
+               $slots.Add($cand)
+               }
+            else
+               {
+               $script:shadowed++
+               $at = $slotOf[$k]
+               if ((Get-CandidateRank $cand) -gt (Get-CandidateRank $slots[$at]))
+                  {
+                  $slots[$at] = $cand
+                  }
+               }
+            }
          }
       $block.Clear()
+      $keys.Clear()
       $script:fuzzy = $false
    }
 
@@ -142,17 +222,36 @@ function Write-TrimmedCatalogue
       if ($line.StartsWith('#,')) { if ($line -match 'fuzzy') { $script:fuzzy = $true }; continue }
       if ($line.StartsWith('#:'))
          {
-         # a pas2po source reference ends in a line number; the identifier does not
-         if ($line -match ':\d+\s*$') { continue }
-         $block.Add($line); continue
+         # EVERY TOKEN, not the whole line: a line may hold an identifier and a
+         # source reference together. A source reference is a path or ends in
+         # a line number; anything else is an identifier. LazUtils turns ':'
+         # into '.' and lower-cases, so the key is normalised the same way --
+         # 'utr4wstrings:tc_x' and 'utr4wstrings.tc_x' are ONE key.
+         foreach ($tok in ($line.Substring(2).Trim() -split '\s+'))
+            {
+            if (($tok -eq '') -or ($tok -match '[/\\]') -or ($tok -match ':\d+$')) { continue }
+            $k = $tok.Replace(':', '.').ToLowerInvariant()
+            if (-not $keys.Contains($k)) { $keys.Add($k) }
+            }
+         continue
          }
       if ($line.StartsWith('#')) { continue }
       $block.Add($line)
       }
    Flush
 
+   $kept = 0
+   $fuzzyKept = 0
+   foreach ($s in $slots)
+      {
+      if ($null -ne $s.Key) { $out.Add('#: ' + $s.Key) }
+      $out.AddRange([string[]] $s.Body)
+      $out.Add('')
+      if ($s.Fuzzy) { $fuzzyKept++ } else { $kept++ }
+      }
+
    [IO.File]::WriteAllLines($Dest, $out, (New-Object Text.UTF8Encoding($false)))
-   return @($script:kept, $script:fuzzyKept)
+   return @($kept, $fuzzyKept, $script:shadowed)
    }
 
 $rcLines = New-Object System.Collections.Generic.List[string]
@@ -167,6 +266,7 @@ foreach ($po in (Get-ChildItem -Path $i18n -Filter 'tr4w_*.po' | Sort-Object Nam
                                     -IncludeFuzzy (-not $ReviewedOnly)
    $kept  = $counts[0]
    $fuzzy = $counts[1]
+   $shadowed = $counts[2]
    $total += $kept
    $totalFuzzy += $fuzzy
 
@@ -196,7 +296,9 @@ foreach ($po in (Get-ChildItem -Path $i18n -Filter 'tr4w_*.po' | Sort-Object Nam
    if (-not $Quiet)
       {
       $kb = [math]::Round((Get-Item $trim).Length / 1KB)
-      Write-Host ("  {0,-6} {1,5} reviewed + {2,5} unreviewed  {3,4} KB" -f $lang, $kept, $fuzzy, $kb)
+      # 'twins' = identifiers more than one .po entry claims; one ships, by
+      # Get-CandidateRank. Reported so the catalogue debt stays visible.
+      Write-Host ("  {0,-6} {1,5} reviewed + {2,5} unreviewed  {3,4} KB  {4,4} twins" -f $lang, $kept, $fuzzy, $kb, $shadowed)
       }
    }
 
@@ -208,6 +310,12 @@ New-Item -ItemType Directory -Force -Path (Split-Path $res -Parent) | Out-Null
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path $res)) { throw "fpcres failed on $rc" }
 
 Remove-Item -Recurse -Force $work -ErrorAction SilentlyContinue
+
+# The stamp is written LAST, so an interrupted run leaves a .res that does not
+# match its stamp (or no stamp) and the next build regenerates it.
+Remove-Item -Force "$res.inputs" -ErrorAction SilentlyContinue
+$stampMode = if ($ReviewedOnly) { 'reviewed-only' } else { $script:LanguageResModeDefault }
+Write-Tr4wLanguageStamp -Repo $Repo -ResPath $res -Mode $stampMode
 
 $size = [math]::Round((Get-Item $res).Length / 1KB)
 $ours = ($rcLines | Where-Object { $_ -like "TR4W_*" }).Count

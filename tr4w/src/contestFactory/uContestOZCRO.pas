@@ -1,0 +1,363 @@
+(*
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+
+ This file is part of TR4W  (SRC)
+
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+ *)
+
+(* THE OZCHR CONTEST, TEAMS (OZCR-O).
+
+  The ContestsArray row this class states, verbatim:
+
+   Email: '';  DF: '';  WA7BNM: 0000;  QRZRUID: 182;
+   Pxm: NoPrefixMults;  ZnM: ITUZones;  AIE: ZoneInitialExchange;
+   DM: NoDomesticMults;  P: 0;  AE: RSTZoneOrSocietyExchange;
+   XM: CQDXCC;  QP: OnePointPerQSO;
+   ADIFName: '';  CABName: '';
+   FriendlyName: ''
+
+  Blank CABName, ADIFName and FriendlyName resolve to the enum's spelling, 'OZCHR-TEAMS'.
+
+  WHY IT HAS A CLASS. Milestone M7b (2026-10-02) gives every classless
+  contest one, and a registered class is the contest's scorer, set-up,
+  export, import, parse and final score from the moment it exists -- so the
+  whole contest is transcribed here, exactly: the row above as literals
+  (Test_MovedRowValuesStillMatchTheArray), and every legacy arm that named it.
+  The contest matrix is the proof: every line of its record but
+  `contest.class` is unchanged.
+
+  SCORING: OnePointPerQSO -- 1.
+
+  SET-UP: the contest name, and the R150S list on.
+
+  THE CONTEST NAME IS CYRILLIC AGAIN (design Q42, 2026-10-17). FoundContest's
+  arm held a Cyrillic name that reached this tree as literal '?' characters
+  (the bytes were 0x3F); NY4I ruled it restored, and D7's first commit still
+  held the cp1251 text -- see DescribeSession.
+
+  LogCfg's CQ exchange: 5NN and MY STATE, or 5NN and MY ZONE with no state.
+
+  NOT A FAMILY. The OZCHR team and individual contests share a name and a
+  sponsor, but not a rule: their point methods, domestic and DX multipliers
+  and set-up already differ. *)
+unit uContestOZCRO;
+
+{$I tr4w.inc}
+
+interface
+
+uses
+   VC, uContestBase;
+
+type
+   TContestOZCRO = class(TContestBase)
+   protected
+      (* PROTECTED, MATCHING THE BASE -- callers use the properties,
+         descendants override the getters. Every getter below states
+         the ContestsArray row quoted above. *)
+      function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetFriendlyName: string; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
+
+      (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
+      function GetFlags: TContestFlags; override;
+      function GetIsUSQSOParty: boolean; override;
+      (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
+         TContestBase: ScoreQSO is the one public scoring entry. *)
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+      (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   protected
+      (* THE TOTALS WINDOW -- see TContestBase.TotalsDisplay (M9a). *)
+      function GetTotalsDisplay: TTotalsDisplay; override;
+   public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+   public
+      (* DOES IT HAVE A ZONE MULTIPLIER? -- see
+         TContestBase.HasZoneMultiplier (M11 S5 part 2). *)
+      function HasZoneMultiplier: boolean; override;
+      (* THE ZONE MULTIPLIER -- see TContestBase.ZoneMultiplierCount and
+         ZoneMultiplierZones (M11 S5). *)
+      function ZoneMultiplierCount: integer; override;
+      function ZoneMultiplierZones: TZoneMultiplierZones; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesZone: boolean; override;
+   end;
+
+implementation
+
+uses
+   uExchangeFields,
+   uCabrilloExchange,
+   uADIFExchange,
+   uContestRegistry,
+   uTR4WStrings;
+
+procedure TContestOZCRO.CalculateQSOPoints(var aQso: ContestExchange);
+begin
+   aQso.QSOPoints := 1;
+end;
+
+function TContestOZCRO.GetDisplayName: string;
+begin
+   Result := 'OZCHR-TEAMS';
+end;
+
+function TContestOZCRO.GetCabrilloName: string;
+begin
+   (* The row's CABName is blank; this is the enum's spelling it resolves
+      to. *)
+   Result := 'OZCHR-TEAMS';
+end;
+
+function TContestOZCRO.GetADIFContestId: string;
+begin
+   (* The row's ADIFName is blank; export writes the enum's spelling, and
+      import matches it (M1). *)
+   Result := 'OZCHR-TEAMS';
+end;
+
+function TContestOZCRO.GetWA7BNMId: integer;
+begin
+   Result := 0;
+end;
+
+function TContestOZCRO.GetQRZRUId: integer;
+begin
+   Result := 182;
+end;
+
+function TContestOZCRO.GetSubmissionEmail: string;
+begin
+   Result := '';
+end;
+
+function TContestOZCRO.GetDomesticFileName: string;
+begin
+   Result := '';
+end;
+
+function TContestOZCRO.GetFriendlyName: string;
+begin
+   (* The row's FriendlyName is blank; this is the enum's spelling it
+      resolves to. *)
+   Result := 'OZCHR-TEAMS';
+end;
+
+function TContestOZCRO.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := ZoneInitialExchange;
+end;
+
+function TContestOZCRO.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTZoneOrSocietyExchange;
+end;
+
+function TContestOZCRO.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTZoneQTH;
+end;
+
+function TContestOZCRO.ParseReceivedExchangeFormat(const aText: string;
+                                                   aParsers: TExchangeParsers;
+                                                   var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTZoneOrSociety(aText, aExch);
+end;
+
+procedure TContestOZCRO.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   aMessages.WriteRSTStateOrZone(SendsStateAfterZone);
+end;
+
+function TContestOZCRO.ExchangeCarriesZone: boolean;
+begin
+   Result := True;
+end;
+
+function TContestOZCRO.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentRSTZoneOrState(aMy, aQso);
+end;
+
+function TContestOZCRO.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                               const aQso: ContestExchange;
+                                               const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentRSTStateOrZone(aMy, aQso, aCtx);
+end;
+
+function TContestOZCRO.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                   const aQso: ContestExchange;
+                                                   const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedRSTQTHOrZone(aMy, aQso, aCtx);
+end;
+
+function TContestOZCRO.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode, cfMultByBand, cfErmakSpecification];
+end;
+
+function TContestOZCRO.GetIsUSQSOParty: boolean;
+begin
+   (* P: 0 -- not a US state QSO party. *)
+   Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7b, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestOZCRO.DescribeSession(const aStation: TStationContext;
+                                        aSession: TSessionDefaults);
+begin
+   (* THE SESSION'S NAME, restored in Cyrillic (design Q42; NY4I,
+      2026-10-16: "Restore Cyrillic."). The text is D7's own, recovered
+      from its first commit (C:\TR4W b90ba930, FCONTEST.PAS, the OZCR_O
+      arm), where it was cp1251; it had been literal '?' characters here.
+      It reads: Очно-заочный чемпионат России - очные участники
+      WRITTEN AS CODE POINTS, so the source is ASCII and no codepage can
+      mis-decode it -- a non-ASCII literal in a unit with no BOM is read in
+      the build machine's ANSI codepage (build/Lint-BOM.ps1). The name is
+      for people to read (the title bar, the summary sheet, the hour report);
+      the Cabrillo CONTEST: line is CabrilloName, which this class does not
+      tie to the session's name, and the EDI export writes an ASCII name
+      in place of a non-ASCII one (PostUnit.EDIContestName). Pinned by
+      uTestContestSession.Test_OZCHRSessionNamesAreCyrillic. *)
+   aSession.ContestName := #$041E#$0447#$043D#$043E#$002D#$0437#$0430#$043E#$0447#$043D#$044B#$0439#$0020
+      + #$0447#$0435#$043C#$043F#$0438#$043E#$043D#$0430#$0442#$0020
+      + #$0420#$043E#$0441#$0441#$0438#$0438#$0020
+      + #$002D#$0020
+      + #$043E#$0447#$043D#$044B#$0435#$0020
+      + #$0443#$0447#$0430#$0441#$0442#$043D#$0438#$043A#$0438;
+   aSession.R150SMode := True;
+end;
+
+(* LogCfg.tSetupExchangeNumbers' arm for this contest, moved at M7b -- see
+   TContestBase.CQExchangeDefault. *)
+function TContestOZCRO.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   if aStation.MyState <> '' then
+      begin
+      Result := ' 5NN ' + aStation.MyState;
+      end
+   else
+      begin
+      Result := ' 5NN ' + aStation.MyZoneText;
+      end;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts. *)
+procedure TContestOZCRO.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskFieldWithComment(TC_OZCR, ncfMyState);
+end;
+
+(* THE TOTALS WINDOW SHOWS EACH MODE'S SHARE OF THE QSOs -- uTotal's OZCHR
+   teams arm (n4af, 4.34.8), moved here at M9a (2026-10-02): when QSOs count
+   per mode and both CW and phone have some, 'CW: 60%' and 'PH: 40%' stand
+   where the per-mode QSO rows would. *)
+function TContestOZCRO.GetTotalsDisplay: TTotalsDisplay;
+begin
+   Result := inherited GetTotalsDisplay;
+   Result.ShowsModeShares := True;
+end;
+
+(* A DX MULTIPLIER AT EVERY STATION -- M11 S4 part 2, 2026-10-14: the trait
+   this class stated (`CQDXCC`) until the kind was deleted. *)
+function TContestOZCRO.HasDXMultiplier: boolean;
+begin
+   Result := True;
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country counts: the key is the CTY country -- GetDXQTH's `else`
+   arm, for the session's CQDXCC. *)
+function TContestOZCRO.DXMultiplierKey(const aQso: ContestExchange;
+                                       out aKey: DXMultiplierString): boolean;
+begin
+   aKey := aQso.QTH.CountryID;
+   Result := True;
+end;
+
+(* THE ZONE MULTIPLIER -- M11 S5, 2026-10-14: the ITU zones, at every
+   station. What the trait's ITUZones gave LOGDUPE's zone count and the
+   zone-list readers (LOGEDIT, POSTUNIT) through the session kind until
+   S5. *)
+function TContestOZCRO.ZoneMultiplierCount: integer;
+begin
+   Result := ITU_ZONE_MULTIPLIERS;
+end;
+
+(* IT HAS A ZONE MULTIPLIER, AT EVERY STATION -- M11 S5 part 2,
+   2026-10-14: the answer the session kind gave (`kind <> NoZoneMults`)
+   before the kind was deleted. *)
+function TContestOZCRO.HasZoneMultiplier: boolean;
+begin
+   Result := True;
+end;
+
+function TContestOZCRO.ZoneMultiplierZones: TZoneMultiplierZones;
+begin
+   Result := zmzITUZones;
+end;
+
+initialization
+   RegisterContest(OZCR_O, TContestOZCRO);
+
+end.

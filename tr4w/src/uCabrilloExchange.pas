@@ -1,4 +1,4 @@
-{
+(*
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
  This file is part of TR4W  (SRC)
  TR4W is free software: you can redistribute it and/or
@@ -13,617 +13,942 @@
      Public License along with TR4W in  GPL_License.TXT.
 If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
-}
+*)
 unit uCabrilloExchange;
 {$I tr4w.inc}
 
-{
-  Issue #998 capstone -- testable extraction of the per-exchange Cabrillo
-  MY-EXCHANGE / HIS-EXCHANGE builder.
+(* THE CABRILLO EXCHANGE COLUMNS, ONE HELPER PER DISTINCT COLUMN -- and nothing
+  that names a contest, and nothing that selects by an exchange kind.
 
-  The logic here was lifted (behaviour-preserving) from
-  trdos/PostUnit.tGenerateLogPortionOfCabrilloFile's `case ActiveExchange of`.
-  It is deliberately DEPENDENCY-LIGHT (uses only VC + SysUtils, no MainUnit /
-  trdos globals / log I/O) so the per-contest exchange formatting can be
-  unit-tested with golden lines -- which it could NOT be while embedded in the
-  1,200-line PostUnit writer.
+  M11 S9c (2026-10-14). Until then this unit was ONE function,
+  FormatCabrilloExchangeOfKind: a `case` over the session's exchange shape
+  that built both columns of a QSO: line. It is gone. Each helper below
+  builds ONE column (the sent one or the received one) for one distinct
+  layout, named for what it prints, and every contest class states its own
+  columns by calling the two it wants from TContestBase's
+  GetCabrilloSentExchange / GetCabrilloReceivedExchange (NY4I's ruling Q92,
+  option 2: plain named helpers a class calls explicitly; no enum picks one).
 
-  PostUnit derives the per-QSO inputs (the display RST strings, the selected
-  HIS-QTH, the My-station fields) and calls FormatCabrilloExchange, then feeds
-  the returned MyEx/HisEx into the QSO: line assembly.  The QSO:/X-QSO: header,
-  the final assembly, the QTC block, StrUpper(HisEx) and file I/O stay in
-  PostUnit -- this unit only PRODUCES the two exchange column strings.
+  Sent and received are separate helpers because the machine's arms were
+  written as pairs only by habit: the same received layout is paired with
+  three different sent ones, and a pair per shape would have been the same
+  body up to ten times.
 
-  See plan_cabrillo_exchange_capstone for the phasing.
-}
+  WHAT THE HELPERS TAKE. The same three things the machine took: the station
+  (aMy), the worked QSO (aQso) and what the exporter decided about it before
+  asking (aCtx -- the formatted RSTs, the his-QTH it selected, the previous
+  record's values). None of it is the session's exchange: the field that
+  carried it is gone from TCabrilloQSOContext.
+
+  THE WIDTHS ARE THE CONTRACT. Cabrillo is a column format and these strings
+  are what a robot scorer reads, so every Format string below is the arm's,
+  trailing spaces included. uTestCabrilloColumns pins each helper's text
+  literally, and every contest's two columns at the seven roster stations.
+
+  EVERY RULE THAT BELONGED TO ONE CONTEST is that contest class's override
+  (since M4), not a branch here:
+
+    FOC Marathon's membership number      TContestFOCMarathon
+    Ukraine Championship / Ural Cup order TContestUkraineChampionship,
+                                          TContestUralCup
+    UK/EI '--', RSGB IOTA '------'        TContestUKEI, TContestRSGBIOTA
+    DARC 10 m's received column           TContestDARC10M
+    PACC's serial in the state column     TContestPACC
+    PCC's own sent branch                 TContestPCC
+
+  TWO TESTS STAY, AND THEY NAME NO CONTEST: `MyState = 'TRC'` and
+  `ContestTitle = 'PGA'` (CabrilloSentRSTQSONumberState and
+  CabrilloReceivedRSTQSONumberQTH). They are operator-driven hooks for two
+  events that have no ContestType (inventory D7, design Q8 -- NY4I's, open),
+  so there is no class they could move to.
+
+  THE ARMS THAT WENT WITH THE MACHINE, none reached by a registered contest
+  (measured against the frozen matrix's session exchanges): QSONumberAndAge
+  (Age QSONumber), RSTAndGrid3 (RST, grid) and RSTQSONumberOrDomesticQTH
+  (n4af 4.40.6). Their ExchangeType members stay for the deletion stage.
+
+  A CONTEST THAT HAS NO COLUMN LAYOUT prints CabrilloExchangeErrorMarker in
+  both columns, loudly, rather than blanks (Issue #1043): fifteen registered
+  contests run a shape the machine never had an arm for (ALL JA, ARCI,
+  County Hunter, FISTS, Grid Loc, JA Long Prefecture, Kids Day, NZ Field Day,
+  POTA, QCWA, QCWA Golden, TEN-TEN, the UA4W Championship, WWL and Xmas), and
+  so does the classless DUMMYCONTEST. Each registered one states the marker
+  BY NAME (CabrilloSentNotHandled); the base answers it for a contest that
+  states nothing. TContestBase.FormatCabrilloSentExchange logs the Error --
+  it knows the contest's name; a helper does not. *)
 
 interface
 
 uses
   VC,
   SysUtils,
-  (* TMyStationExchange, and TContestBase for the arms a contest formats
-     itself.  uContestBase depends on VC, SysUtils and the string constants and
-     nothing else, precisely so this unit and its tests stay light. *)
+  (* TMyStationExchange and TCabrilloQSOContext. uContestBase uses this unit
+     back from its implementation, for the default it delegates to. *)
   uContestBase;
 
 type
-  // The My-station fields the exchange arms read.  Strings so the unit needs no
-  // globals; PostUnit fills these from MyState / MyGrid / ... at the call site.
-  //
-  // DECLARED IN uContestBase NOW, and aliased here so every caller and both
-  // units' tests are untouched.  It had to move: this unit asks a contest how
-  // to format its own exchange, and the contest needs the record to answer,
-  // which is a cycle while the type lives here.  uADIFExchange already shared
-  // it -- "two records that differ by one field are two records that drift" --
-  // so there was never more than one, only a question of where it belongs.
+  (* DECLARED IN uContestBase, aliased so callers and tests that know this
+     unit keep compiling. Two records that differ by one field are two records
+     that drift; there is one of each. *)
   TMyStationExchange = uContestBase.TMyStationExchange;
+  TCabrilloQSOContext = uContestBase.TCabrilloQSOContext;
 
-// Builds the MY-EXCHANGE (MyEx) and HIS-EXCHANGE (HisEx) Cabrillo columns for
-// one QSO, dispatching on ActiveExchange.  RSTSentIn/RSTReceivedIn are the
-// already-formatted RST display strings; HisQTH is the his-QTH already selected
-// by PostUnit (DoingDomesticMults / LiteralDomesticQTH / ... ); PrevQTH is the
-// previous QSO's QTHString (RSTAndPostalCode); pnr is carried across QSOs
-// (QSONumberAndPreviousQSONumber).  Result is True for every handled
-// ActiveExchange; it is False only when ActiveExchange is unhandled (Issue
-// #1043), in which case both columns are set to an "ERROR EXCHANGE NOT
-// HANDLED" marker instead of being written silently.
-function FormatCabrilloExchange(
-    ActiveExchange : ExchangeType;
-    Contest        : ContestType;
-    const ContestTitle, ContestName : string;
-    const rx       : ContestExchange;
-    const my       : TMyStationExchange;
-    const RSTSentIn, RSTReceivedIn, HisQTH, PrevQTH : string;
-    contacts       : integer;
-    var   pnr      : integer;
-    out   MyEx, HisEx : string;
-    (* THE CONTEST OBJECT, OR nil.
+const
+  (* Both columns, for an exchange with no layout (Issue #1043). PostUnit
+     uppercases the received column, so the marker is all caps to keep the two
+     identical. *)
+  CabrilloExchangeErrorMarker = 'ERROR EXCHANGE NOT HANDLED';
 
-       PASSED IN RATHER THAN LOOKED UP, so this unit keeps no dependency on the
-       factory's lifetime or on the program's globals -- its tests construct a
-       contest, or pass nil, and get a deterministic answer either way.
+(* ---- THE SENT COLUMN ----------------------------------------------------- *)
 
-       nil means "no class for this contest yet", which is most of them, and the
-       case below runs exactly as before. *)
-    aContest       : TContestBase = nil) : boolean;
+(* '%-11s' of the grid. *)
+function CabrilloSentGrid(const aMy: TMyStationExchange;
+                          const aQso: ContestExchange;
+                          const aCtx: TCabrilloQSOContext): string;
+
+(* RST, name, state: '%-3s %-5s %-7s'. *)
+function CabrilloSentRSTNameState(const aMy: TMyStationExchange;
+                                  const aQso: ContestExchange;
+                                  const aCtx: TCabrilloQSOContext): string;
+
+(* Serial, name: '%-3d %-7s'. *)
+function CabrilloSentQSONumberName(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange;
+                                   const aCtx: TCabrilloQSOContext): string;
+
+(* RST and a postal code: our own on the first record, otherwise the one the
+   previous record carried (RSGB RoPoCo). '%-3s %-10s'. *)
+function CabrilloSentRSTPostalCode(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange;
+                                   const aCtx: TCabrilloQSOContext): string;
+
+(* RST, serial, grid: '%-3s %-4.4d %-7s'. *)
+function CabrilloSentRSTQSONumberGrid(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange;
+                                      const aCtx: TCabrilloQSOContext): string;
+
+(* RST and the zone as a plain number: '%-3s %-7d' (the JIDX prefecture
+   shape's sent side). *)
+function CabrilloSentRSTZoneNumber(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange;
+                                   const aCtx: TCabrilloQSOContext): string;
+
+(* Name and state, indented: '  %-10s %-4s'. *)
+function CabrilloSentNameState(const aMy: TMyStationExchange;
+                               const aQso: ContestExchange;
+                               const aCtx: TCabrilloQSOContext): string;
+
+(* Serial, name, state -- 'DX' when we have none: '%-4d %-7s %-8s'. *)
+function CabrilloSentQSONumberNameStateDX(const aMy: TMyStationExchange;
+                                          const aQso: ContestExchange;
+                                          const aCtx: TCabrilloQSOContext): string;
+
+(* RST and the state in a 16-wide column: '%-3s %-16s' (the SKCC-style
+   age-and-possible-SK shape). *)
+function CabrilloSentRSTStateWide(const aMy: TMyStationExchange;
+                                  const aQso: ContestExchange;
+                                  const aCtx: TCabrilloQSOContext): string;
+
+(* RST and the state: '%-3s %-7s'. Five shapes print this. *)
+function CabrilloSentRSTState(const aMy: TMyStationExchange;
+                              const aQso: ContestExchange;
+                              const aCtx: TCabrilloQSOContext): string;
+
+(* RST and the state -- 'DX' when we have none: '%-3s %-7s'. *)
+function CabrilloSentRSTStateOrDX(const aMy: TMyStationExchange;
+                                  const aQso: ContestExchange;
+                                  const aCtx: TCabrilloQSOContext): string;
+
+(* RST and the grid: '%-3s %-7s'. *)
+function CabrilloSentRSTGrid(const aMy: TMyStationExchange;
+                             const aQso: ContestExchange;
+                             const aCtx: TCabrilloQSOContext): string;
+
+(* State, serial (the age-and-serial shape): '%-2s %.*d '. *)
+function CabrilloSentStateQSONumber2(const aMy: TMyStationExchange;
+                                     const aQso: ContestExchange;
+                                     const aCtx: TCabrilloQSOContext): string;
+
+(* Serial, state cut to four: '%.*d %-6.4s '. *)
+function CabrilloSentQSONumberStateShort(const aMy: TMyStationExchange;
+                                         const aQso: ContestExchange;
+                                         const aCtx: TCabrilloQSOContext): string;
+
+(* Serial, state: '%-4d %-6s'. *)
+function CabrilloSentQSONumberState(const aMy: TMyStationExchange;
+                                    const aQso: ContestExchange;
+                                    const aCtx: TCabrilloQSOContext): string;
+
+(* State, serial (the Ukraine Championship and the Ural Cup put the QTH
+   first): '%-4s %-6.4d'. *)
+function CabrilloSentStateQSONumber(const aMy: TMyStationExchange;
+                                    const aQso: ContestExchange;
+                                    const aCtx: TCabrilloQSOContext): string;
+
+(* RST, serial, state, with the TRC and PGA events' own layouts. *)
+function CabrilloSentRSTQSONumberState(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string;
+
+(* RST, zone, state -- 'DX' when we have none: '%-3s %.2u %-4s'. *)
+function CabrilloSentRSTZoneStateDX(const aMy: TMyStationExchange;
+                                    const aQso: ContestExchange;
+                                    const aCtx: TCabrilloQSOContext): string;
+
+(* RST and the state, or the zone when we have no state. *)
+function CabrilloSentRSTStateOrZone(const aMy: TMyStationExchange;
+                                    const aQso: ContestExchange;
+                                    const aCtx: TCabrilloQSOContext): string;
+
+(* State, serial (the coordinates-sum shape): '%-3s %3.4d    '. *)
+function CabrilloSentStateQSONumberSum(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string;
+
+(* Serial, state (the geo-coordinates shape): '%-3.4d %-7s '. *)
+function CabrilloSentQSONumberGeoState(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string;
+
+(* RST, serial: '%-3s %.*d '. *)
+function CabrilloSentRSTQSONumber(const aMy: TMyStationExchange;
+                                  const aQso: ContestExchange;
+                                  const aCtx: TCabrilloQSOContext): string;
+
+(* Zone, serial (the zone-and-serial shape): '  %s    %3.4d '. *)
+function CabrilloSentStateZoneQSONumber(const aMy: TMyStationExchange;
+                                        const aQso: ContestExchange;
+                                        const aCtx: TCabrilloQSOContext): string;
+
+(* RST and the zone, two digits: '%-3s %-7.2d'. *)
+function CabrilloSentRSTZone(const aMy: TMyStationExchange;
+                             const aQso: ContestExchange;
+                             const aCtx: TCabrilloQSOContext): string;
+
+(* The previous record's serial received, then our serial: '%-.3u%-7.4d'
+   (Radio YOC). *)
+function CabrilloSentQSONumberPreviousQSONumber(const aMy: TMyStationExchange;
+                                                const aQso: ContestExchange;
+                                                const aCtx: TCabrilloQSOContext): string;
+
+(* RST and the state, or the serial when we have no state. *)
+function CabrilloSentRSTStateOrQSONumber(const aMy: TMyStationExchange;
+                                         const aQso: ContestExchange;
+                                         const aCtx: TCabrilloQSOContext): string;
+
+(* CabrilloExchangeErrorMarker. *)
+function CabrilloSentNotHandled(const aMy: TMyStationExchange;
+                                const aQso: ContestExchange;
+                                const aCtx: TCabrilloQSOContext): string;
+
+(* ---- THE RECEIVED COLUMN ------------------------------------------------- *)
+
+(* '%-11s' of the his-QTH the exporter selected. *)
+function CabrilloReceivedGrid(const aMy: TMyStationExchange;
+                              const aQso: ContestExchange;
+                              const aCtx: TCabrilloQSOContext): string;
+
+(* RST, name, his-QTH: '%-3s %-5s %-7s'. *)
+function CabrilloReceivedRSTNameQTH(const aMy: TMyStationExchange;
+                                    const aQso: ContestExchange;
+                                    const aCtx: TCabrilloQSOContext): string;
+
+(* Serial, name: '%-3u %-7s'. *)
+function CabrilloReceivedQSONumberName(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string;
+
+(* RST and the postal code as logged: '%-3s %-10s'. *)
+function CabrilloReceivedRSTPostalCode(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string;
+
+(* RST, serial, his-QTH: '%-3s %-4.4u %-7s'. *)
+function CabrilloReceivedRSTQSONumberGrid(const aMy: TMyStationExchange;
+                                          const aQso: ContestExchange;
+                                          const aCtx: TCabrilloQSOContext): string;
+
+(* RST and his-QTH: '%-3s %-7s'. *)
+function CabrilloReceivedRSTQTH(const aMy: TMyStationExchange;
+                                const aQso: ContestExchange;
+                                const aCtx: TCabrilloQSOContext): string;
+
+(* Name and his-QTH, indented: '  %-10s %-4s'. *)
+function CabrilloReceivedNameQTH(const aMy: TMyStationExchange;
+                                 const aQso: ContestExchange;
+                                 const aCtx: TCabrilloQSOContext): string;
+
+(* Serial, name, his-QTH -- 'DX' when the QSO has none: '%-4u %-5s %-4s'. *)
+function CabrilloReceivedQSONumberNameQTHDX(const aMy: TMyStationExchange;
+                                            const aQso: ContestExchange;
+                                            const aCtx: TCabrilloQSOContext): string;
+
+(* RST, age, his-QTH: '%-3s %u %s'. *)
+function CabrilloReceivedRSTAgeQTH(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange;
+                                   const aCtx: TCabrilloQSOContext): string;
+
+(* RST and age: '%-3s %-7u'. *)
+function CabrilloReceivedRSTAge(const aMy: TMyStationExchange;
+                                const aQso: ContestExchange;
+                                const aCtx: TCabrilloQSOContext): string;
+
+(* Age and serial: ' %-3d %.*d'. *)
+function CabrilloReceivedAgeQSONumber(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange;
+                                      const aCtx: TCabrilloQSOContext): string;
+
+(* RST and the QSO's OWN Power, not the his-QTH the exporter selected:
+   '%-3s %-7s'. FOC Marathon keeps its membership number there. *)
+function CabrilloReceivedRSTPower(const aMy: TMyStationExchange;
+                                  const aQso: ContestExchange;
+                                  const aCtx: TCabrilloQSOContext): string;
+
+(* Serial, his-QTH (the grid-square shape): '%3.4u %-6s'. *)
+function CabrilloReceivedQSONumberQTHShort(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string;
+
+(* Serial, his-QTH: '%-4.4u %-6s'. *)
+function CabrilloReceivedQSONumberQTH(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange;
+                                      const aCtx: TCabrilloQSOContext): string;
+
+(* His-QTH, serial (the Ukraine Championship and the Ural Cup put the QTH
+   first): '%-4s %-6.4u'. *)
+function CabrilloReceivedQTHQSONumber(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange;
+                                      const aCtx: TCabrilloQSOContext): string;
+
+(* RST, serial, his-QTH, with the PGA and TRC events' own layouts. *)
+function CabrilloReceivedRSTQSONumberQTH(const aMy: TMyStationExchange;
+                                         const aQso: ContestExchange;
+                                         const aCtx: TCabrilloQSOContext): string;
+
+(* RST, zone, his-QTH -- 'DX' when the QSO has none: '%-3s %.2u %-3s'. *)
+function CabrilloReceivedRSTZoneQTHDX(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange;
+                                      const aCtx: TCabrilloQSOContext): string;
+
+(* RST and his-QTH, or his zone when the QSO has no QTH. *)
+function CabrilloReceivedRSTQTHOrZone(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange;
+                                      const aCtx: TCabrilloQSOContext): string;
+
+(* His-QTH, serial (the coordinates-sum shape): '%-3s %3.4u'. *)
+function CabrilloReceivedQTHQSONumberSum(const aMy: TMyStationExchange;
+                                         const aQso: ContestExchange;
+                                         const aCtx: TCabrilloQSOContext): string;
+
+(* Serial, his-QTH (the geo-coordinates shape): '%-3.4u %-7s'. *)
+function CabrilloReceivedQSONumberGeoQTH(const aMy: TMyStationExchange;
+                                         const aQso: ContestExchange;
+                                         const aCtx: TCabrilloQSOContext): string;
+
+(* RST and serial: '%-3s %-3.3u'. *)
+function CabrilloReceivedRSTQSONumber(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange;
+                                      const aCtx: TCabrilloQSOContext): string;
+
+(* RST and the QSO's own QTH (the continent): '%-3s %-7s'. *)
+function CabrilloReceivedRSTContinent(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange;
+                                      const aCtx: TCabrilloQSOContext): string;
+
+(* RST and his-QTH -- 'DX' when the QSO has none: '%-3s %-7s'. *)
+function CabrilloReceivedRSTQTHDX(const aMy: TMyStationExchange;
+                                  const aQso: ContestExchange;
+                                  const aCtx: TCabrilloQSOContext): string;
+
+(* RST and his-QTH -- when the QSO has none, its DX QTH, or 'DX':
+   '%-3s %-7s'. *)
+function CabrilloReceivedRSTQTHOrDXQTH(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string;
+
+(* Zone, serial (the zone-and-serial shape): '  %-4u   %.3d'. *)
+function CabrilloReceivedZoneQSONumber(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string;
+
+(* RST and zone, two digits: '%-3s %-7.2d'. *)
+function CabrilloReceivedRSTZone(const aMy: TMyStationExchange;
+                                 const aQso: ContestExchange;
+                                 const aCtx: TCabrilloQSOContext): string;
+
+(* The received serial split in two: '%-.4d%-.4d' (Radio YOC). *)
+function CabrilloReceivedQSONumberPreviousQSONumber(const aMy: TMyStationExchange;
+                                                    const aQso: ContestExchange;
+                                                    const aCtx: TCabrilloQSOContext): string;
+
+(* RST and his-QTH, or the serial when the QSO has no QTH. *)
+function CabrilloReceivedRSTQTHOrQSONumber(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string;
+
+(* CabrilloExchangeErrorMarker. *)
+function CabrilloReceivedNotHandled(const aMy: TMyStationExchange;
+                                    const aQso: ContestExchange;
+                                    const aCtx: TCabrilloQSOContext): string;
+
+(* The serial sign rule several shapes share: a negative serial prints three
+   (or four) digits including the sign. Public since 2026-10-14 so the ADIF
+   STX_STRING of the five F25 contests (uADIFExchange) prints the same serial
+   their Cabrillo column does, from one function. *)
+function SerialWidth(aNumber, aWidth: integer): integer;
 
 implementation
 
-uses
-  Log4D;   // Issue #1043: lets this unit log an unhandled ActiveExchange. This
-           // is the one dependency beyond VC/SysUtils; Log4D is self-contained
-           // and already linked by the unit-test harness (see uADIF), so the
-           // dependency-light/testable nature is preserved.
-
-var
-  logger: TLogLogger;
-
-function StringIsAllNumbersLocal(const s: string): boolean;
-var
-  i: integer;
+(* See the declaration. *)
+function SerialWidth(aNumber, aWidth: integer): integer;
 begin
-  Result := (s <> '');
-  for i := 1 to Length(s) do
-    if not (s[i] in ['0'..'9']) then
-       begin
-       Result := False;
-       Exit;
-       end;
+  Result := aWidth - Ord(aNumber < 0);
 end;
 
-function FormatCabrilloExchange(
-    ActiveExchange : ExchangeType;
-    Contest        : ContestType;
-    const ContestTitle, ContestName : string;
-    const rx       : ContestExchange;
-    const my       : TMyStationExchange;
-    const RSTSentIn, RSTReceivedIn, HisQTH, PrevQTH : string;
-    contacts       : integer;
-    var   pnr      : integer;
-    out   MyEx, HisEx : string;
-    (* THE CONTEST OBJECT, OR nil.
-
-       PASSED IN RATHER THAN LOOKED UP, so this unit keeps no dependency on the
-       factory's lifetime or on the program's globals -- its tests construct a
-       contest, or pass nil, and get a deterministic answer either way.
-
-       nil means "no class for this contest yet", which is most of them, and the
-       case below runs exactly as before. *)
-    aContest       : TContestBase = nil) : boolean;
-var
-  // Mirror the PostUnit per-QSO locals (as strings/ints instead of PChar).
-  RSTSent, RSTReceived, csQTHString, csName,
-  cMyGrid, cMyName, cMyState,
-  csPower, crFOCNr, cMyFOCNumber, cMyCheck : string;
-  cMyZone, nrSent, nrReceived, HisZone, hisAge, csCheck, hisnr, rxnr : integer;
-
-  procedure SetMyEx(const fmt: string; const args: array of const);
-  begin
-    MyEx := SysUtils.Format(fmt, args);
-  end;
-
-  procedure SetHisEx(const fmt: string; const args: array of const);
-  begin
-    HisEx := SysUtils.Format(fmt, args);
-  end;
-
+(* A ZONE FIELD AS THE MACHINE READ IT: MY ZONE is text, and an unreadable one
+   is zero. *)
+function MyZoneNumber(const aMy: TMyStationExchange): integer;
 begin
-  Result := True;
-  MyEx := '';
-  HisEx := '';
+  Result := StrToIntDef(aMy.MyZone, 0);
+end;
 
-  // --- Preamble: initialise the per-QSO locals from rx / my / params,
-  //     mirroring the setup PostUnit did before the case. ---
-  RSTSent     := RSTSentIn;
-  RSTReceived := RSTReceivedIn;
-  csQTHString := HisQTH;
-  csName      := string(rx.Name);
-  cMyGrid     := my.MyGrid;
-  cMyName     := my.MyName;
-  cMyState    := my.MyState;
-  cMyZone     := StrToIntDef(my.MyZone, 0);
-  nrSent      := rx.NumberSent;
-  nrReceived  := rx.NumberReceived;
-  HisZone     := rx.Zone;
+function CabrilloSentGrid(const aMy: TMyStationExchange;
+                          const aQso: ContestExchange;
+                          const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-11s', [aMy.MyGrid]);
+end;
 
-  (* THE CONTEST FORMATS ITS OWN EXCHANGE IF IT HAS BEEN MOVED -- phase F.
+function CabrilloSentRSTNameState(const aMy: TMyStationExchange;
+                                  const aQso: ContestExchange;
+                                  const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-3s %-5s %-7s', [aCtx.RSTSent, aMy.MyName, aMy.MyState]);
+end;
 
-     A contest class answers FormatsExchange = True only once its Cabrillo
-     columns have actually been lifted into it, so a contest whose SCORING is in
-     the factory does not silently take over its export as well. Everything else
-     falls into the case below, unchanged.
+function CabrilloSentQSONumberName(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange;
+                                   const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-3d %-7s', [aQso.NumberSent, aMy.MyName]);
+end;
 
-     THE WIDTHS ARE THE CONTRACT. Cabrillo is a column format and these strings
-     are what a robot scorer reads, so a moved arm has to reproduce its widths
-     exactly -- including a trailing space where the legacy arm had one. *)
-  if (aContest <> nil) and aContest.FormatsExchange then
+function CabrilloSentRSTPostalCode(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange;
+                                   const aCtx: TCabrilloQSOContext): string;
+begin
+  if aCtx.RecordNumber = 1 then
      begin
-     MyEx := aContest.FormatCabrilloSentExchange(my, rx, RSTSent);
-     HisEx := aContest.FormatCabrilloReceivedExchange(my, rx, RSTReceived, HisQTH);
-     Result := True;
-     Exit;
+     Result := SysUtils.Format('%-3s %-10s', [aCtx.RSTSent, aMy.MyPostalCode]);
+     end
+  else
+     begin
+     Result := SysUtils.Format('%-3s %-10s', [aCtx.RSTSent, aCtx.PreviousQTH]);
      end;
-(*
-   [AGENT]
-   First look at how TR4QT did the contest exchanges and consider its approach.
-   This code should be moved to the contestfactory. As several contests can share an exchange type, this can be an overridden function in the contest class
-   that calls the inherited base class GetCabrilloExchange. The ActiveExchange type of the contest should be know and the MyEx and HisEx can be returned.
-   This is a suggestion as I am open to other ways to do this.
-*)
-
-  case ActiveExchange of
-
-    GridExchange, Grid2Exchange:
-      begin
-        SetMyEx('%-11s', [cMyGrid]);
-        SetHisEx('%-11s', [csQTHString]);
-      end;
-
-    RSTAndGrid3Exchange:                // 4.96.3
-      begin
-        SetMyEx('%-7s%-11s ', [RSTSent, cMyGrid]);
-        SetHisEx('%-3s %-11s ', [RSTReceived, csQTHString]);
-      end;
-
-    RSTNameAndQTHExchange:
-      begin
-        SetMyEx('%-3s %-5s %-7s', [RSTSent, cMyName, cMyState]);
-        SetHisEx('%-3s %-5s %-7s', [RSTReceived, csName, csQTHString]);
-      end;
-
-    QSONumberAndNameExchange:
-      begin
-        SetMyEx('%-3d %-7s', [nrSent, cMyName]);
-        SetHisEx('%-3u %-7s', [nrReceived, csName]);
-      end;
-
-    RSTAndPostalCodeExchange:
-      begin
-        if contacts = 1 then
-           begin
-           SetMyEx('%-3s %-10s', [RSTSent, my.MyPostalCode])
-           end
-        else
-           begin
-           SetMyEx('%-3s %-10s', [RSTSent, PrevQTH]);
-           end;
-        SetHisEx('%-3s %-10s', [RSTReceived, string(rx.QTHString)]);
-      end;
-
-    RSTQSONumberAndGridSquareExchange:
-      begin
-        SetMyEx('%-3s %-4.4d %-7s', [RSTSent, nrSent, cMyGrid]);
-        SetHisEx('%-3s %-4.4u %-7s', [RSTReceived, nrReceived, csQTHString]);
-      end;
-
-    RSTQSONumberOrDomesticQTHExchange:      //n4af 4.40.6
-      begin
-        if cMyState <> '' then
-           begin
-           SetMyEx('%-3s  %-8s', [RSTSent, cMyState]);        // 4.98.11
-           end;
-
-        if cMyState = '' then
-           begin
-           SetMyEx('%-3s  %-6d', [RSTSent, nrSent]);
-           end;
-
-        if nrReceived >= 1 then
-           begin
-           SetHisEx('%-3s %6d %-6s', [RSTReceived, nrReceived, csQTHString]);
-           end;
-        if nrReceived < 1 then
-           begin
-           SetHisEx('%-3s   %9s', [RSTReceived, csQTHString]);
-           end;
-      end;
-
-    RSTPrefectureExchange:
-      begin
-        SetMyEx('%-3s %-7d', [RSTSent, cMyZone]);
-        SetHisEx('%-3s %-7s', [RSTReceived, csQTHString]);
-      end;
-
-    NameAndDomesticOrDXQTHExchange:
-      begin
-        SetMyEx('  %-10s %-4s', [my.MyName, cMyState]);
-        SetHisEx('  %-10s %-4s', [csName, csQTHString]);
-      end;
-
-    QSONumberPrecedenceCheckDomesticQTHExchange:
-      begin
-        csName   := rx.Precedence;       // the precedence character
-        cMyName  := my.MyPrec;
-        csCheck  := rx.Check;
-        cMyCheck := my.MyCheck;
-        cMyState := my.MySection;
-
-        SetMyEx('%-4d %s %s %-3s ', [nrSent, cMyName, cMyCheck, cMyState]);
-        if nrReceived = -1 then
-           begin
-           nrReceived := 0;
-           end;
-        SetHisEx('%-4d %s %.2u %-3s', [nrReceived, csName, csCheck, csQTHString]);
-      end;
-
-    QSONumberNameDomesticOrDXQTHExchange:
-      begin
-        csName  := string(rx.Name);
-        cMyName := my.MyName;
-        if my.MyState = '' then
-           begin
-           cMyState := 'DX';
-           end;
-        if rx.QTHString = '' then
-           begin
-           csQTHString := 'DX';
-           end;
-
-        SetMyEx('%-4d %-7s %-8s', [nrSent, cMyName, cMyState]);    // 4.88.3
-        SetHisEx('%-4u %-5s %-4s', [nrReceived, csName, csQTHString]);  // 4.88.3
-      end;
-
-    RSTAgeAndPossibleSK:
-      begin
-        SetMyEx('%-3s %-16s', [RSTSent, cMyState]);
-        nrReceived := rx.Age;
-        SetHisEx('%-3s %u %s', [RSTReceived, nrReceived, csQTHString]);
-      end;
-
-    RSTAgeExchange:
-      begin
-        SetMyEx('%-3s %-7s', [RSTSent, cMyState]);
-        nrReceived := rx.Age;
-        SetHisEx('%-3s %-7u', [RSTReceived, nrReceived]);
-      end;
-
-    AgeAndQSONumberExchange:      // 4.55.4
-      begin
-        SetMyEx('%-2s %.*d ', [cMyState, 3 - Ord(nrSent < 0), nrSent]);
-        hisAge := rx.Age;
-        nrReceived := rx.NumberReceived;          // n4af 04.42.4
-        SetHisEx(' %-3d %.*d', [hisAge, 4 - Ord(nrReceived < 0), nrReceived]);   // n4af 4.42.4
-      end;
-
-    QSONumberAndAgeExchange:      // 4.119.1
-      begin
-        // Unreachable by any active contest; RSTSent here is the numeric RST.
-        SetMyEx('%-3d %.*d %-2s      ', [rx.RSTSent, 3 - Ord(nrSent < 0), nrSent, cMyState]);
-        hisAge := rx.Age;
-        nrReceived := rx.NumberReceived;          // n4af 04.42.4
-        SetHisEx(' %-3d %3d %.2d', [rx.RSTSent, nrReceived, hisAge]);       // n4af 4.42.4
-      end;
-
-    RSTPowerExchange:
-      begin
-        csPower := string(rx.Power);
-        if Contest = FOCMARATHON then
-           begin
-           cMyFOCNumber := my.MyFOCNumber;
-           crFOCNr := string(rx.Power);
-           SetMyEx('%-3s %-7s', [RSTSent, cMyFOCNumber]);
-           SetHisEx('%-3s %-7s', [RSTReceived, crFOCNr]);
-           end;
-        if Contest <> FOCMARATHON then
-           begin
-           SetHisEx('%-3s %-7s', [RSTReceived, csPower]);
-           SetMyEx('%-3s %-7s', [RSTSent, cMyState]);
-           end;
-      end;
-
-    RSTAndOrGridExchange:
-      begin
-        SetHisEx('%-3s %-7s', [RSTReceived, csQTHString]);
-        SetMyEx('%-3s %-7s', [RSTSent, cMyGrid]);
-      end;
-
-    QSONumberAndGridSquare:
-      begin
-        SetMyEx('%.*d %-6.4s ', [3 - Ord(nrSent < 0), nrSent, cMyState]);
-        SetHisEx('%3.4u %-6s', [nrReceived, csQTHString]);
-      end;
-
-    QSONumberDomesticOrDXQTHExchange, QSONumberDomesticQTHExchange:
-      if (Contest = UKRAINECHAMPIONSHIP) or (Contest = CUPURAL) then
-         begin
-         SetMyEx('%-4s %-6.4d', [cMyState, nrSent]);
-         SetHisEx('%-4s %-6.4u', [csQTHString, nrReceived]);
-         end
-      else
-         begin
-         SetMyEx('%-4d %-6s', [nrSent, cMyState]);
-         SetHisEx('%-4.4u %-6s', [nrReceived, csQTHString]);
-         end;
-
-    QSONumberAndPossibleDomesticQTHExchange, RSTQSONumberAndDomesticQTHExchange, RSTQSONumberAndPossibleDomesticQTHExchange:
-      begin
-        if cMyState = 'TRC' then      // 4.63.3
-           begin
-           SetMyEx('%-3s %d%-6s', [RSTSent, nrSent, cMyState])
-           end
-        else if ContestTitle = 'PGA' then       // 4.92.4
-           begin
-           SetMyEx('%-3s %3.3d%s     ', [RSTSent, nrSent, cMyState])
-           end
-        else
-           begin
-           SetMyEx('%-3s %-4.4d %6s      ', [RSTSent, nrSent, cMyState]);
-           end;
-
-        if Contest = UKEI then           // 4.58.2
-          if rx.QTHString = '' then
-             begin
-             csQTHString := '--';
-             end;
-
-        if Contest = IOTA then
-           begin
-           if csQTHString = '' then
-              begin
-              csQTHString := '------';
-              end;
-           end;
-
-        if Contest = DARC10M then     // n4af 4.43.7
-           begin
-           SetHisEx('%-3s %4.4d %3s', [RSTReceived, nrReceived, csQTHString])
-           end
-        else if ContestTitle = 'PGA' then           // 4.92.4
-           begin
-           SetHisEx('%-3s%5.3d%s', [RSTReceived, nrReceived, csQTHString])
-           end
-        else if csQTHString = 'TRC' then      // 4.63.3
-           begin
-           SetHisEx('%-3s%5d%-8s', [RSTReceived, nrReceived, csQTHString])
-           end
-        else
-           begin
-           SetHisEx('%-3s %4.4d %4s', [RSTReceived, nrReceived, csQTHString]);
-           end;
-      end;
-
-    RSTZoneAndPossibleDomesticQTHExchange:
-      begin
-        if my.MyState = '' then
-           begin
-           cMyState := 'DX';
-           end;
-
-        SetMyEx('%-3s %.2u %-4s', [RSTSent, cMyZone, cMyState]);
-
-        if rx.QTHString = '' then
-           begin
-           csQTHString := 'DX';
-           end;
-        SetHisEx('%-3s %.2u %-3s', [RSTReceived, HisZone, csQTHString]);
-      end;
-
-    RSTZoneOrDomesticQTH, RSTZoneOrSocietyExchange:
-      begin
-        if my.MyState <> '' then
-           begin
-           SetMyEx('%-3s %-7s', [RSTSent, cMyState]);
-           end
-        else
-           begin
-           SetMyEx('%-3s %-7d', [RSTSent, cMyZone]);
-           end;
-
-        if rx.QTHString <> '' then
-           begin
-           SetHisEx('%-3s %-7s', [RSTReceived, csQTHString]);
-           end
-        else
-           begin
-           SetHisEx('%-3s %-7u', [RSTReceived, HisZone]);
-           end;
-      end;
-
-    QSONumberAndCoordinatesSum: {RFASCHAMPIONSHIP}
-      begin
-        SetMyEx('%-3s %3.4d    ', [cMyState, nrSent]);
-        SetHisEx('%-3s %3.4u', [csQTHString, nrReceived]);
-      end;
-
-    ClassDomesticOrDXQTHExchange:
-      begin
-        (* Reached only when the contest has no class -- both contests that use
-           this exchange type now format it themselves, above. Kept because a
-           contest can be un-registered and this must still work. *)
-        SetMyEx('%-3s %-7s ', [my.MyFDClass, my.MySection]);
-        if Contest in [ARRLFIELDDAY, WINTERFIELDDAY] then
-           begin
-           csQTHString := string(rx.QTHString);   // Issue 407 ny4i
-           end;
-        SetHisEx('%-3s %-7s', [string(rx.ceClass), csQTHString]);
-      end;
-
-    QSONumberAndGeoCoordinates:
-      begin
-        SetMyEx('%-3.4d %-7s ', [nrSent, cMyState]);
-        SetHisEx('%-3.4u %-7s', [nrReceived, csQTHString]);
-      end;
-
-    RSTQSONumberExchange:
-      begin
-        SetMyEx('%-3s %.*d ', [RSTSent, 3 - Ord(nrSent < 0), nrSent]);   // issue 177
-        SetHisEx('%-3s %-3.3u', [RSTReceived, nrReceived]);              // issue 177
-      end;
-
-    RSTAndContinentExchange:
-      begin
-        csQTHString := string(rx.QTHString);
-        SetHisEx('%-3s %-7s', [RSTReceived, csQTHString]);
-        SetMyEx('%-3s %-7s', [RSTSent, cMyState]);
-      end;
-
-    RSTDomesticQTHExchange:
-      begin
-        if Contest in [ CQVHF {, MMAA}] then
-           begin
-           SetHisEx(' %-7s', [csQTHString]);
-           SetMyEx('%-7s', [cMyGrid]);
-           end
-        else
-           begin
-           if my.MyState = '' then
-              begin
-              cMyState := 'DX';
-              end;
-           if Contest in [SPDX, PACC] then
-              begin
-              cMyState := IntToStr(nrSent);
-              end;
-           if rx.QTHString = '' then
-              begin
-              csQTHString := 'DX';
-              end;
-           SetHisEx('%-3s %-7s', [RSTReceived, csQTHString]);
-           SetMyEx('%-3s %-7s', [RSTSent, cMyState]);
-           end;
-      end;
-
-    RSTDomesticOrDXQTHExchange:
-      begin
-        if rx.QTHString = '' then
-           begin
-           if rx.DXQTH = '' then
-              begin
-              csQTHString := 'DX';
-              end
-           else
-              begin
-              if Contest = FLORIDAQSOPARTY then
-                 begin
-                 csQTHString := string(rx.QTH.Prefix);
-                 end
-              else
-                 begin
-                 csQTHString := string(rx.DXQTH);
-                 end;
-              end;
-           end
-        else if rx.QTHString = 'DX' then
-           begin
-           if Contest = FLORIDAQSOPARTY then
-              begin
-              csQTHString := string(rx.QTH.Prefix);
-              end;
-           end;
-
-        SetHisEx('%-3s %-7s', [RSTReceived, csQTHString]);
-        SetMyEx('%-3s %-7s', [RSTSent, cMyState]);
-      end;
-
-    QSONumberAndZone:
-      begin
-        SetHisEx('  %-4u   %.3d', [HisZone, nrReceived]);   // 4.98.4
-        SetMyEx('  %s    %3.4d ', [cMyState, nrSent]);
-      end;
-
-    RSTZoneExchange:
-      begin
-        if Contest in [JIDXSSB, JIDXCW] then
-           begin
-           cMyZone := StrToIntDef(my.MyState, 0);
-           end;
-        SetHisEx('%-3s %-7.2d', [RSTReceived, HisZone]);   // 4.51.1 issue185
-        SetMyEx('%-3s %-7.2d', [RSTSent, cMyZone]);        // 4.51.1 issue#185
-      end;
-
-    QSONumberAndPreviousQSONumber:
-      begin
-        hisnr := (nrReceived div 1000);    // 4.53.2
-        rxnr  := (nrReceived mod 1000);    // 4.53.2
-        SetMyEx('%-.3u%-7.4d', [pnr, nrSent]);    // 4.72.9
-        pnr := rxnr;
-        SetHisEx('%-.4d%-.4d', [hisnr, rxnr]);    // 4.53.4
-      end;
-
-    RSTAndQSONumberOrFrenchDepartmentExchange, RSTAndQSONumberOrDomesticQTHExchange, RSTDomesticQTHOrQSONumberExchange:
-      begin
-        if (my.MyState <> '') and (Contest <> PCC) then      // 4.83.2
-           begin
-           SetMyEx('%-3s %-7s', [RSTSent, cMyState]);
-           end
-        else if StringIsAllNumbersLocal(my.MyState) then
-           begin
-           SetMyEx('%-4s %3.4u/M   ', [RSTSent, nrSent]);  // n4af 4.43.12
-           end
-        else
-           begin
-           SetMyEx('%-4s %3.4u   ', [RSTSent, nrSent]);  // n4af 4.43.12
-           end;
-
-        if rx.QTHString <> '' then
-           begin
-           SetHisEx('%-3s %-3s', [RSTReceived, csQTHString]); // 4.84.2
-           end
-        else
-           begin
-           SetHisEx('%-3s %.3u', [RSTReceived, nrReceived]);
-           end;
-      end;
-    else
-       begin
-       // Issue #1043: no contest should reach here. Rather than silently writing
-       // a blank/garbage exchange (the worst smell), log it and write a loud
-       // marker into BOTH columns so the offending QSO line is obvious in the
-       // Cabrillo output and gets reported. (PostUnit uppercases HisEx, so the
-       // marker is all-caps to keep both columns identical.)
-       logger.Error(SysUtils.Format(
-         'FormatCabrilloExchange: unhandled ActiveExchange %d (contest "%s") -- ' +
-         'wrote ERROR marker to the Cabrillo line. See Issue #1043.',
-         [Ord(ActiveExchange), ContestName]));
-       MyEx   := 'ERROR EXCHANGE NOT HANDLED';
-       HisEx  := 'ERROR EXCHANGE NOT HANDLED';
-       Result := False;
-       end;
-  end;
 end;
 
-initialization
-  logger := TLogLogger.GetLogger('uCabrilloExchange');
+function CabrilloSentRSTQSONumberGrid(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange;
+                                      const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-3s %-4.4d %-7s', [aCtx.RSTSent, aQso.NumberSent, aMy.MyGrid]);
+end;
+
+function CabrilloSentRSTZoneNumber(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange;
+                                   const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-3s %-7d', [aCtx.RSTSent, MyZoneNumber(aMy)]);
+end;
+
+function CabrilloSentNameState(const aMy: TMyStationExchange;
+                               const aQso: ContestExchange;
+                               const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('  %-10s %-4s', [aMy.MyName, aMy.MyState]);
+end;
+
+function CabrilloSentQSONumberNameStateDX(const aMy: TMyStationExchange;
+                                          const aQso: ContestExchange;
+                                          const aCtx: TCabrilloQSOContext): string;
+var
+  state: string;
+begin
+  state := aMy.MyState;
+  if aMy.MyState = '' then
+     begin
+     state := 'DX';
+     end;
+  Result := SysUtils.Format('%-4d %-7s %-8s', [aQso.NumberSent, aMy.MyName, state]);
+end;
+
+function CabrilloSentRSTStateWide(const aMy: TMyStationExchange;
+                                  const aQso: ContestExchange;
+                                  const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-3s %-16s', [aCtx.RSTSent, aMy.MyState]);
+end;
+
+function CabrilloSentRSTState(const aMy: TMyStationExchange;
+                              const aQso: ContestExchange;
+                              const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-3s %-7s', [aCtx.RSTSent, aMy.MyState]);
+end;
+
+function CabrilloSentRSTStateOrDX(const aMy: TMyStationExchange;
+                                  const aQso: ContestExchange;
+                                  const aCtx: TCabrilloQSOContext): string;
+var
+  state: string;
+begin
+  state := aMy.MyState;
+  if aMy.MyState = '' then
+     begin
+     state := 'DX';
+     end;
+  Result := SysUtils.Format('%-3s %-7s', [aCtx.RSTSent, state]);
+end;
+
+function CabrilloSentRSTGrid(const aMy: TMyStationExchange;
+                             const aQso: ContestExchange;
+                             const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-3s %-7s', [aCtx.RSTSent, aMy.MyGrid]);
+end;
+
+function CabrilloSentStateQSONumber2(const aMy: TMyStationExchange;
+                                     const aQso: ContestExchange;
+                                     const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-2s %.*d ', [aMy.MyState, SerialWidth(aQso.NumberSent, 3),
+                                           aQso.NumberSent]);
+end;
+
+function CabrilloSentQSONumberStateShort(const aMy: TMyStationExchange;
+                                         const aQso: ContestExchange;
+                                         const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%.*d %-6.4s ', [SerialWidth(aQso.NumberSent, 3), aQso.NumberSent,
+                                             aMy.MyState]);
+end;
+
+function CabrilloSentQSONumberState(const aMy: TMyStationExchange;
+                                    const aQso: ContestExchange;
+                                    const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-4d %-6s', [aQso.NumberSent, aMy.MyState]);
+end;
+
+function CabrilloSentStateQSONumber(const aMy: TMyStationExchange;
+                                    const aQso: ContestExchange;
+                                    const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-4s %-6.4d', [aMy.MyState, aQso.NumberSent]);
+end;
+
+function CabrilloSentRSTQSONumberState(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string;
+begin
+  if aMy.MyState = 'TRC' then      // 4.63.3
+     begin
+     Result := SysUtils.Format('%-3s %d%-6s', [aCtx.RSTSent, aQso.NumberSent, aMy.MyState]);
+     end
+  else if aCtx.ContestTitle = 'PGA' then       // 4.92.4
+     begin
+     Result := SysUtils.Format('%-3s %3.3d%s     ', [aCtx.RSTSent, aQso.NumberSent, aMy.MyState]);
+     end
+  else
+     begin
+     Result := SysUtils.Format('%-3s %-4.4d %6s      ', [aCtx.RSTSent, aQso.NumberSent, aMy.MyState]);
+     end;
+end;
+
+function CabrilloSentRSTZoneStateDX(const aMy: TMyStationExchange;
+                                    const aQso: ContestExchange;
+                                    const aCtx: TCabrilloQSOContext): string;
+var
+  state: string;
+begin
+  state := aMy.MyState;
+  if aMy.MyState = '' then
+     begin
+     state := 'DX';
+     end;
+  Result := SysUtils.Format('%-3s %.2u %-4s', [aCtx.RSTSent, MyZoneNumber(aMy), state]);
+end;
+
+function CabrilloSentRSTStateOrZone(const aMy: TMyStationExchange;
+                                    const aQso: ContestExchange;
+                                    const aCtx: TCabrilloQSOContext): string;
+begin
+  if aMy.MyState <> '' then
+     begin
+     Result := SysUtils.Format('%-3s %-7s', [aCtx.RSTSent, aMy.MyState]);
+     end
+  else
+     begin
+     Result := SysUtils.Format('%-3s %-7d', [aCtx.RSTSent, MyZoneNumber(aMy)]);
+     end;
+end;
+
+function CabrilloSentStateQSONumberSum(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-3s %3.4d    ', [aMy.MyState, aQso.NumberSent]);
+end;
+
+function CabrilloSentQSONumberGeoState(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-3.4d %-7s ', [aQso.NumberSent, aMy.MyState]);
+end;
+
+function CabrilloSentRSTQSONumber(const aMy: TMyStationExchange;
+                                  const aQso: ContestExchange;
+                                  const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-3s %.*d ', [aCtx.RSTSent, SerialWidth(aQso.NumberSent, 3),
+                                           aQso.NumberSent]);   // issue 177
+end;
+
+function CabrilloSentStateZoneQSONumber(const aMy: TMyStationExchange;
+                                        const aQso: ContestExchange;
+                                        const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('  %s    %3.4d ', [aMy.MyState, aQso.NumberSent]);
+end;
+
+function CabrilloSentRSTZone(const aMy: TMyStationExchange;
+                             const aQso: ContestExchange;
+                             const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-3s %-7.2d', [aCtx.RSTSent, MyZoneNumber(aMy)]);   // 4.51.1 issue#185
+end;
+
+function CabrilloSentQSONumberPreviousQSONumber(const aMy: TMyStationExchange;
+                                                const aQso: ContestExchange;
+                                                const aCtx: TCabrilloQSOContext): string;
+begin
+  (* THE PREVIOUS NUMBER IS CARRIED BY THE EXPORTER (aCtx), not by a var
+     parameter the arm used to write back -- formatting a line changes
+     nothing outside it. *)
+  Result := SysUtils.Format('%-.3u%-7.4d', [aCtx.PreviousNumberReceived, aQso.NumberSent]);   // 4.72.9
+end;
+
+function CabrilloSentRSTStateOrQSONumber(const aMy: TMyStationExchange;
+                                         const aQso: ContestExchange;
+                                         const aCtx: TCabrilloQSOContext): string;
+begin
+  (* THE PCC'S BRANCHES ARE TContestPCC'S, and taking them out left this one.
+     An all-digit MY STATE is never empty, so for every other contest the
+     first test already took it: the '/M' branch was the PCC's alone. *)
+  if aMy.MyState <> '' then      // 4.83.2
+     begin
+     Result := SysUtils.Format('%-3s %-7s', [aCtx.RSTSent, aMy.MyState]);
+     end
+  else
+     begin
+     Result := SysUtils.Format('%-4s %3.4u   ', [aCtx.RSTSent, aQso.NumberSent]);  // n4af 4.43.12
+     end;
+end;
+
+function CabrilloSentNotHandled(const aMy: TMyStationExchange;
+                                const aQso: ContestExchange;
+                                const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := CabrilloExchangeErrorMarker;
+end;
+
+function CabrilloReceivedGrid(const aMy: TMyStationExchange;
+                              const aQso: ContestExchange;
+                              const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-11s', [aCtx.HisQTH]);
+end;
+
+function CabrilloReceivedRSTNameQTH(const aMy: TMyStationExchange;
+                                    const aQso: ContestExchange;
+                                    const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-3s %-5s %-7s', [aCtx.RSTReceived, string(aQso.Name), aCtx.HisQTH]);
+end;
+
+function CabrilloReceivedQSONumberName(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-3u %-7s', [aQso.NumberReceived, string(aQso.Name)]);
+end;
+
+function CabrilloReceivedRSTPostalCode(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-3s %-10s', [aCtx.RSTReceived, string(aQso.QTHString)]);
+end;
+
+function CabrilloReceivedRSTQSONumberGrid(const aMy: TMyStationExchange;
+                                          const aQso: ContestExchange;
+                                          const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-3s %-4.4u %-7s', [aCtx.RSTReceived, aQso.NumberReceived, aCtx.HisQTH]);
+end;
+
+function CabrilloReceivedRSTQTH(const aMy: TMyStationExchange;
+                                const aQso: ContestExchange;
+                                const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-3s %-7s', [aCtx.RSTReceived, aCtx.HisQTH]);
+end;
+
+function CabrilloReceivedNameQTH(const aMy: TMyStationExchange;
+                                 const aQso: ContestExchange;
+                                 const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('  %-10s %-4s', [string(aQso.Name), aCtx.HisQTH]);
+end;
+
+function CabrilloReceivedQSONumberNameQTHDX(const aMy: TMyStationExchange;
+                                            const aQso: ContestExchange;
+                                            const aCtx: TCabrilloQSOContext): string;
+var
+  qth: string;
+begin
+  qth := aCtx.HisQTH;
+  if aQso.QTHString = '' then
+     begin
+     qth := 'DX';
+     end;
+  Result := SysUtils.Format('%-4u %-5s %-4s', [aQso.NumberReceived, string(aQso.Name), qth]);   // 4.88.3
+end;
+
+function CabrilloReceivedRSTAgeQTH(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange;
+                                   const aCtx: TCabrilloQSOContext): string;
+var
+  age: integer;
+begin
+  age := aQso.Age;
+  Result := SysUtils.Format('%-3s %u %s', [aCtx.RSTReceived, age, aCtx.HisQTH]);
+end;
+
+function CabrilloReceivedRSTAge(const aMy: TMyStationExchange;
+                                const aQso: ContestExchange;
+                                const aCtx: TCabrilloQSOContext): string;
+var
+  age: integer;
+begin
+  age := aQso.Age;
+  Result := SysUtils.Format('%-3s %-7u', [aCtx.RSTReceived, age]);
+end;
+
+function CabrilloReceivedAgeQSONumber(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange;
+                                      const aCtx: TCabrilloQSOContext): string;
+var
+  age: integer;
+begin
+  age := aQso.Age;
+  Result := SysUtils.Format(' %-3d %.*d', [age, SerialWidth(aQso.NumberReceived, 4),
+                                           aQso.NumberReceived]);   // n4af 4.42.4
+end;
+
+function CabrilloReceivedRSTPower(const aMy: TMyStationExchange;
+                                  const aQso: ContestExchange;
+                                  const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-3s %-7s', [aCtx.RSTReceived, string(aQso.Power)]);
+end;
+
+function CabrilloReceivedQSONumberQTHShort(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%3.4u %-6s', [aQso.NumberReceived, aCtx.HisQTH]);
+end;
+
+function CabrilloReceivedQSONumberQTH(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange;
+                                      const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-4.4u %-6s', [aQso.NumberReceived, aCtx.HisQTH]);
+end;
+
+function CabrilloReceivedQTHQSONumber(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange;
+                                      const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-4s %-6.4u', [aCtx.HisQTH, aQso.NumberReceived]);
+end;
+
+function CabrilloReceivedRSTQSONumberQTH(const aMy: TMyStationExchange;
+                                         const aQso: ContestExchange;
+                                         const aCtx: TCabrilloQSOContext): string;
+begin
+  if aCtx.ContestTitle = 'PGA' then           // 4.92.4
+     begin
+     Result := SysUtils.Format('%-3s%5.3d%s', [aCtx.RSTReceived, aQso.NumberReceived, aCtx.HisQTH]);
+     end
+  else if aCtx.HisQTH = 'TRC' then      // 4.63.3
+     begin
+     Result := SysUtils.Format('%-3s%5d%-8s', [aCtx.RSTReceived, aQso.NumberReceived, aCtx.HisQTH]);
+     end
+  else
+     begin
+     Result := SysUtils.Format('%-3s %4.4d %4s', [aCtx.RSTReceived, aQso.NumberReceived, aCtx.HisQTH]);
+     end;
+end;
+
+function CabrilloReceivedRSTZoneQTHDX(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange;
+                                      const aCtx: TCabrilloQSOContext): string;
+var
+  qth: string;
+  zone: integer;
+begin
+  qth := aCtx.HisQTH;
+  if aQso.QTHString = '' then
+     begin
+     qth := 'DX';
+     end;
+  zone := aQso.Zone;
+  Result := SysUtils.Format('%-3s %.2u %-3s', [aCtx.RSTReceived, zone, qth]);
+end;
+
+function CabrilloReceivedRSTQTHOrZone(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange;
+                                      const aCtx: TCabrilloQSOContext): string;
+var
+  zone: integer;
+begin
+  zone := aQso.Zone;
+  if aQso.QTHString <> '' then
+     begin
+     Result := SysUtils.Format('%-3s %-7s', [aCtx.RSTReceived, aCtx.HisQTH]);
+     end
+  else
+     begin
+     Result := SysUtils.Format('%-3s %-7u', [aCtx.RSTReceived, zone]);
+     end;
+end;
+
+function CabrilloReceivedQTHQSONumberSum(const aMy: TMyStationExchange;
+                                         const aQso: ContestExchange;
+                                         const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-3s %3.4u', [aCtx.HisQTH, aQso.NumberReceived]);
+end;
+
+function CabrilloReceivedQSONumberGeoQTH(const aMy: TMyStationExchange;
+                                         const aQso: ContestExchange;
+                                         const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-3.4u %-7s', [aQso.NumberReceived, aCtx.HisQTH]);
+end;
+
+function CabrilloReceivedRSTQSONumber(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange;
+                                      const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-3s %-3.3u', [aCtx.RSTReceived, aQso.NumberReceived]);   // issue 177
+end;
+
+function CabrilloReceivedRSTContinent(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange;
+                                      const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-3s %-7s', [aCtx.RSTReceived, string(aQso.QTHString)]);
+end;
+
+function CabrilloReceivedRSTQTHDX(const aMy: TMyStationExchange;
+                                  const aQso: ContestExchange;
+                                  const aCtx: TCabrilloQSOContext): string;
+var
+  qth: string;
+begin
+  qth := aCtx.HisQTH;
+  if aQso.QTHString = '' then
+     begin
+     qth := 'DX';
+     end;
+  Result := SysUtils.Format('%-3s %-7s', [aCtx.RSTReceived, qth]);
+end;
+
+function CabrilloReceivedRSTQTHOrDXQTH(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string;
+var
+  qth: string;
+begin
+  qth := aCtx.HisQTH;
+  if aQso.QTHString = '' then
+     begin
+     if aQso.DXQTH = '' then
+        begin
+        qth := 'DX';
+        end
+     else
+        begin
+        qth := string(aQso.DXQTH);
+        end;
+     end;
+  Result := SysUtils.Format('%-3s %-7s', [aCtx.RSTReceived, qth]);
+end;
+
+function CabrilloReceivedZoneQSONumber(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string;
+var
+  zone: integer;
+begin
+  zone := aQso.Zone;
+  Result := SysUtils.Format('  %-4u   %.3d', [zone, aQso.NumberReceived]);   // 4.98.4
+end;
+
+function CabrilloReceivedRSTZone(const aMy: TMyStationExchange;
+                                 const aQso: ContestExchange;
+                                 const aCtx: TCabrilloQSOContext): string;
+var
+  zone: integer;
+begin
+  zone := aQso.Zone;
+  Result := SysUtils.Format('%-3s %-7.2d', [aCtx.RSTReceived, zone]);   // 4.51.1 issue185
+end;
+
+function CabrilloReceivedQSONumberPreviousQSONumber(const aMy: TMyStationExchange;
+                                                    const aQso: ContestExchange;
+                                                    const aCtx: TCabrilloQSOContext): string;
+var
+  thousands, units: integer;
+begin
+  thousands := (aQso.NumberReceived div 1000);    // 4.53.2
+  units     := (aQso.NumberReceived mod 1000);    // 4.53.2
+  Result := SysUtils.Format('%-.4d%-.4d', [thousands, units]);    // 4.53.4
+end;
+
+function CabrilloReceivedRSTQTHOrQSONumber(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string;
+begin
+  if aQso.QTHString <> '' then
+     begin
+     Result := SysUtils.Format('%-3s %-3s', [aCtx.RSTReceived, aCtx.HisQTH]);   // 4.84.2
+     end
+  else
+     begin
+     Result := SysUtils.Format('%-3s %.3u', [aCtx.RSTReceived, aQso.NumberReceived]);
+     end;
+end;
+
+function CabrilloReceivedNotHandled(const aMy: TMyStationExchange;
+                                    const aQso: ContestExchange;
+                                    const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := CabrilloExchangeErrorMarker;
+end;
 
 end.

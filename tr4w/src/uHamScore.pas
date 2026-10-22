@@ -42,8 +42,8 @@
   All entry points are cheap no-ops when the uploader is not running.
 
   Default decisions made without spec guidance, flagged for review:
-  - Mode map: CW->CW, Phone->PH, Digital->RTTY (FT8/FT4/PSK if ExtMode set),
-    FM->FM
+  - Mode: the QSO's contest's Cabrillo mode column (CabrilloModeString,
+    via uCabrillo) -- the file's spelling, so the two cannot drift (Q54)
   - X-QSO records are SENT with <x-qso>1</x-qso>, not skipped
   - No per-contest filtering -- the server returns "Contest not supported"
     for unknown contests; we log and stop trying for the rest of the cycle
@@ -201,6 +201,9 @@ const
 implementation
 
 uses
+   (* oaScorePosting, the contest's permitted aids. FIRST, so every unit after
+      it keeps the meaning it had for any name the two share. *)
+   uContestBase,
    uSettingsModel,   // Settings.My.Call
   StrUtils, IdAuthentication,
   LogWind,           // the contest globals this reports
@@ -210,7 +213,8 @@ uses
   uGetScores,        // BuildDynamicResultsXml (added by this PR)
   uExchangeBuilder,  // Shared SentExchange / RxExchange canonical builders
   uCabrillo,         // BuildSingleQsoCabrilloLine (RTC 3.0 -- issue #920)
-  PostUnit;          // Contest global (RTC 3.0 deletelog needs contest name)
+  PostUnit,          // Contest global (RTC 3.0 deletelog needs contest name)
+  uContestRegistry;  // ContestIdentity -- the contest's ADIF id
 
 const
   DEFAULT_CYCLE_MS = 120000;   // 2 minutes per RTC spec section 1.2
@@ -226,6 +230,21 @@ begin
      ModuleLogger := TLogLogger.GetLogger('TR4WDebugLog.HamScore');
      end;
   Result := ModuleLogger;
+end;
+
+(* DOES THE OPEN CONTEST ALLOW ITS SCORE TO BE POSTED? -- 2026-10-14.
+
+  THE CONTEST SAYS, AS DATA: TContestBase.PermittedOperatingAids, the same
+  answer that greys the post-scores window and its menu row. Until this, the
+  RTC uploader asked nothing, so a contest that forbids live score posting
+  (WRTC's rule, and IN7QPNE's by NY4I's ruling, design 7.14) was still posted
+  here whenever HAMSCORE ENABLE was on. Asked per QSO event and per cycle,
+  not once at start-up, because the contest can change while the uploader
+  runs. The worker thread asks it too: ContestIdentity is safe from any
+  thread, and the cycle already reads the contest globals it reports. *)
+function ContestPermitsScorePosting: Boolean;
+begin
+  Result := oaScorePosting in ContestIdentity(Contest).PermittedOperatingAids;
 end;
 
 // ===========================================================================
@@ -256,42 +275,11 @@ begin
      end;
 end;
 
-// Map a QSO mode to the RTC <mode> string.  Spec examples list:
-//   CW, PH, RTTY, PSK, FT8, FT4
-// We prefer ExtMode when available for digital-mode specificity.
-function MapModeForRTC(const RXData: ContestExchange): AnsiString;
-begin
-  if RXData.ExtMode <> eNoMode then
-     begin
-     case RXData.ExtMode of
-       eCW, eCW_R:               Result := 'CW';
-       eRTTY, eRTTY_R:           Result := 'RTTY';
-       eFT8:                     Result := 'FT8';
-       eFT4:                     Result := 'FT4';
-       eJT65:                    Result := 'JT65';
-       ePSK31, ePSK63, ePSK_R:   Result := 'PSK';
-       eMFSK, eJS8:              Result := 'DATA';
-       eSSB, eUSB, eLSB:         Result := 'PH';
-       eFM, eFM_N, eData_FM:     Result := 'FM';
-       eAM, eAM_N:               Result := 'AM';
-       eC4FM:                    Result := 'C4FM';
-       eDStar:                   Result := 'DSTAR';
-     else
-       Result := 'CW';
-     end
-     end
-  else
-     begin
-     case RXData.Mode of
-       CW:      Result := 'CW';
-       Phone:   Result := 'PH';
-       Digital: Result := 'RTTY';   // generic digital fallback
-       FM:      Result := 'FM';
-     else
-       Result := 'CW';
-     end;
-     end;
-end;
+(* THE MODE IS THE CONTEST'S (Q54, NY4I 2026-10-16). MapModeForRTC, this
+   unit's own mode map from the RTC 2.4 structured body, had no caller once
+   RTC 3.0 sent the QSO as a Cabrillo line, and is deleted: the mode HamScore
+   sends is the one uCabrillo.BuildSingleQsoCabrilloLine asks of the QSO's
+   contest -- the same CabrilloModeString the Cabrillo file writes. *)
 
 // Map BandType to the MHz integer string the spec lists:
 // 1.8, 3.5, 7, 14, 21, 28, 50, 144 (also 10/18/24/...)
@@ -398,16 +386,10 @@ var sContest: string;
 begin
   // RTC 3.0 (issue #920): <deletelog> now carries a <contest> child so the
   // server can scope the wipe to a single contest if the operator has
-  // posted to multiple in the same session.  Prefer ADIFName when set,
-  // else the internal name.
-  if Length(ContestsArray[Contest].ADIFName) = 0 then
-     begin
-     sContest := ContestTypeSA[Contest]
-     end
-  else
-     begin
-     sContest := ContestsArray[Contest].ADIFName;
-     end;
+  // posted to multiple in the same session.
+  (* The contest's ADIF id, asked of the contest -- M1. It is the same id
+     BuildDynamicResultsXml sends, from the same getter. *)
+  sContest := ContestIdentity(Contest).ADIFContestId;
 
   Result :=
     '<deletelog>' + sLineBreak +
@@ -758,6 +740,15 @@ var
   description:  string;
   hadQSOs:      Boolean;
 begin
+  (* A CONTEST THAT FORBIDS SCORE POSTING POSTS NOTHING -- not even the
+     <dynamicresults> score every cycle carries. Whatever is pending stays
+     pending; nothing is queued while such a contest is open. *)
+  if not ContestPermitsScorePosting then
+     begin
+     SetCycleStatus('Score posting is not permitted for this contest');
+     Exit;
+     end;
+
   snapshot := TakePendingSnapshot;
   try
     payload := BuildPayload(snapshot, hadQSOs);
@@ -929,16 +920,25 @@ end;
 
 // Issue #931 -- gate per-QSO contact-info uploads on:
 //   1. The CFG override (HAMSCORE SEND CONTACT INFO, default TRUE)
-//   2. The contest being marked RTC-capable in ContestsBooleanArray
+//   2. The contest stating itself RTC-capable (its class's RTCCapable)
 // <dynamicresults> score posts remain unaffected (handled elsewhere).
 function ContactInfoUploadAllowed(const RXData: ContestExchange): Boolean;
    begin
+   (* NOTHING IS QUEUED FOR A CONTEST THAT FORBIDS SCORE POSTING. *)
+   if not ContestPermitsScorePosting then
+      begin
+      Result := False;
+      Exit;
+      end;
    if not Settings.Hamscore.SendContactInfo then
       begin
       Result := False;
       Exit;
       end;
-   Result := (ContestsBooleanArray[RXData.ceContest] and (1 shl RTC_CAPABLE_BIT)) <> 0;
+   (* THE QSO'S CONTEST SAYS WHETHER IT TAKES THE UPLOAD (M10 S6) -- it read
+      ContestsBooleanArray's RTC_CAPABLE_BIT, which the class's flag set
+      states. *)
+   Result := ContestIdentity(RXData.ceContest).RTCCapable;
    end;
 
 procedure HamScoreOnLog(const RXData: ContestExchange);
@@ -978,6 +978,10 @@ begin
   // re-uploads every QSO lives in LOGSUBS2.SendFullLogToHamScore, which is
   // called by the Tools-menu handler in MainUnit immediately after this.
   if Uploader = nil then Exit;
+  if not ContestPermitsScorePosting then
+     begin
+     Exit;
+     end;
   Uploader.Enqueue(TRTCContact.Create(rckDeleteLog, '', RenderDeleteLogBody));
 end;
 

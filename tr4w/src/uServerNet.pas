@@ -192,30 +192,32 @@ var
   the bytes that failed it.
 
   Capped, because a full 4 KB read is 12 KB of hex and the interesting part of
-  any TR4W message is its first few bytes -- the two-byte id and what follows. *)
-function HexOf(const aBuf; const aLen: integer): string;
+  any TR4W message is its first few bytes -- the two-byte id and what follows.
+
+  The digits come from utils_text.BinToHexStr, the one hex dumper (P12,
+  2026-10-18); the cap, and the trailing space the log has always shown after
+  each byte, are this trace's own. *)
+function HexOf(const aBytes: array of Byte): string;
 const
    MAX_BYTES = 64;
 var
-   p: PByte;
-   i, n: integer;
+   n: integer;
 begin
    Result := '';
-   n := aLen;
+   n := Length(aBytes);
    if n > MAX_BYTES then
       begin
       n := MAX_BYTES;
       end;
 
-   p := @aBuf;
-   for i := 0 to n - 1 do
+   if n > 0 then
       begin
-      Result := Result + IntToHex(p[i], 2) + ' ';
+      Result := BinToHexStr(aBytes[0..n - 1], ' ') + ' ';
       end;
 
-   if aLen > n then
+   if Length(aBytes) > n then
       begin
-      Result := Result + Format('... (%d more)', [aLen - n]);
+      Result := Result + Format('... (%d more)', [Length(aBytes) - n]);
       end;
 end;
 
@@ -370,7 +372,7 @@ begin
       logger.Debug('[Net] handshake: %d bytes from %s', [got, c.FPeerIP]);
       if logger.IsTraceEnabled then
          begin
-         logger.Trace('[Net] rx %s: %s', [c.FPeerIP, HexOf(c.FBuf[0], got)]);
+         logger.Trace('[Net] rx %s: %s', [c.FPeerIP, HexOf(raw)]);
          end;
 
       TThread.Synchronize(nil, c.SyncHandshake);
@@ -410,7 +412,7 @@ begin
    logger.Debug('[Net] %d bytes from %s', [got, c.FPeerIP]);
    if logger.IsTraceEnabled then
       begin
-      logger.Trace('[Net] rx %s: %s', [c.FPeerIP, HexOf(c.FBuf[0], got)]);
+      logger.Trace('[Net] rx %s: %s', [c.FPeerIP, HexOf(raw)]);
       end;
 
    TThread.Synchronize(nil, c.SyncParse);
@@ -714,6 +716,7 @@ function SendToClient(const aHandle: Cardinal; const aBuf;
                       const aLen: integer): integer;
 var
    c: TServerConn;
+   wire: TIdBytes;
 begin
    Result := -1;
    c := ContextOf(aHandle);
@@ -733,14 +736,22 @@ begin
       Exit;
       end;
 
+   (* THE RECORD BECOMES BYTES HERE, ONCE, and the write and the trace both
+     read them. aBuf stays untyped because every caller hands in a packed V1
+     wire record (sSend's callers) -- this is the boundary where the record's
+     layout IS the encoding, and the V1 protocol is being retired, not
+     re-encoded (P14, skipped by NY4I 2026-10-16). Indy's RawToBytes is the
+     one copy. *)
+   wire := RawToBytes(aBuf, aLen);
+
    c.WriteLock.Acquire;
    try
       try
-         c.Connection.IOHandler.Write(RawToBytes(aBuf, aLen));
+         c.Connection.IOHandler.Write(wire);
          Result := aLen;
          if logger.IsTraceEnabled then
             begin
-            logger.Trace('[Net] tx %s: %s', [c.FPeerIP, HexOf(aBuf, aLen)]);
+            logger.Trace('[Net] tx %s: %s', [c.FPeerIP, HexOf(wire)]);
             end;
       except
          on E: Exception do

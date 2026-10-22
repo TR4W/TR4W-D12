@@ -19,9 +19,28 @@ Only the subset TR4W needs is implemented, deliberately:
   #:       source reference.
   #~       obsolete -- a key that no longer exists in the source.
 
+  #        translator comment -- kept, never interpreted.
+  #|       previous msgid -- kept, never interpreted.
+
 Plural forms are NOT implemented. TR4W has no plural-sensitive strings today,
 and guessing at plural rules for ten languages would be worse than not having
 them. If one appears, add it here rather than working around it at a call site.
+
+A REWRITE IS LOSSLESS (2026-10-18). Every catalogue tool reads with read_po and
+writes with write_po, so this module decides what a rewrite can destroy. It
+used to rebuild every entry from its parsed fields and the header from
+gettext's template, which silently dropped every '# ' translator comment --
+the dated audit notes, the provenance of each author credit -- and G0DVJ's
+Poedit header in Polish. Now each entry read from a file remembers its exact
+text and the fields it was parsed into; write_po emits that text VERBATIM
+unless a caller changed a field, and only then re-renders the entry, keeping
+its translator comments, flags and previous-msgid lines. The header, the
+blank lines and comment-only blocks between entries, a BOM and the line
+endings come back exactly as read. test_pofile.py pins it: every catalogue
+round-trips byte-identical.
+
+WHAT IS NOT A CATALOGUE ENTRY AT ALL is decided here too -- is_translatable,
+below: a function-key name, a bare number, or bare punctuation.
 """
 
 import os
@@ -42,7 +61,8 @@ class Entry:
    """One catalogue entry."""
 
    def __init__(self, key, source, target="", fuzzy=False, notes=None,
-                refs=None, obsolete=False):
+                refs=None, obsolete=False, comments=None, flags=None,
+                previous=None):
       self.key = key                 # msgctxt
       self.source = source           # msgid
       self.target = target           # msgstr
@@ -50,11 +70,42 @@ class Entry:
       self.notes = notes or []       # #.
       self.refs = refs or []         # #:
       self.obsolete = obsolete       # #~
+      self.comments = comments or [] # '# ' lines, whole, as written
+      self.flags = flags or []       # #, flags OTHER than fuzzy, e.g. object-pascal-format
+      self.previous = previous or [] # '#|' lines, whole, as written
+
+      # Where this entry came from, when read_po made it: the catalogue it
+      # belongs to, the text before it (blank lines, comment-only blocks),
+      # its own exact text, and the fields that text parsed into. write_po
+      # uses the text verbatim while the fields still match. None for an
+      # entry a caller constructs.
+      self._source = None
+      self._lead = None
+      self._raw = None
+      self._snap = None
+
+   def _state(self):
+      """Every field write_po would render, so a change to any of them is seen."""
+      return (self.key, self.source, self.target, bool(self.fuzzy),
+              tuple(self.notes), tuple(self.refs), bool(self.obsolete),
+              tuple(self.comments), tuple(self.flags), tuple(self.previous))
 
    @property
    def translated(self):
       """Usable text: non-empty and not awaiting review."""
       return bool(self.target.strip()) and not self.fuzzy and not self.obsolete
+
+
+class _Catalogue:
+   """What a file holds besides its entries: the header block exactly as
+   written (with anything before it), the text after the last entry, the
+   line ending to give a NEW entry, and whether the file had a BOM."""
+
+   def __init__(self, header, tail, newline, bom):
+      self.header = header
+      self.tail = tail
+      self.newline = newline
+      self.bom = bom
 
 
 def escape(text):
@@ -110,14 +161,13 @@ def _emit_string(label, text):
    return "".join(lines)
 
 
-def write_po(path, entries, language, source_language="en", project=None):
-   """Write a .po file. `entries` is an ordered iterable of Entry."""
-   out = []
-   out.append('msgid ""\n')
-   out.append('msgstr ""\n')
+def _template_header(language, source_language, project):
+   """The header a catalogue built from nothing gets. Ends at the header's
+   last line; the blank line after it is the first entry's separator."""
    # The date/translator/team fields are gettext's own template placeholders.
    # msgfmt warns if they are absent; a real timestamp would make every
    # regeneration churn the whole file, so leave them for Poedit to fill in.
+   # An EXISTING catalogue keeps its own header -- see write_po.
    header = [
       "Project-Id-Version: %s\\n" % (project or "TR4W"),
       "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\\n",
@@ -129,77 +179,116 @@ def write_po(path, entries, language, source_language="en", project=None):
       "Language: %s\\n" % language,
       "X-Source-Language: %s\\n" % source_language,
    ]
-   for line in header:
-      out.append('"%s"\n' % line)
-   out.append("\n")
+   return 'msgid ""\nmsgstr ""\n' + "".join('"%s"\n' % line for line in header)
+
+
+def _render(e):
+   """An entry from its fields, LF line endings. Used for an entry a caller
+   built or changed; an unchanged entry is written from its own text."""
+   out = []
+   for line in e.comments:
+      out.append(line + "\n")
+   for note in e.notes:
+      out.append("#. %s\n" % note)
+   for ref in e.refs:
+      out.append("#: %s\n" % ref)
+   flags = (["fuzzy"] if e.fuzzy else []) + list(e.flags)
+   if flags:
+      out.append("#, %s\n" % ", ".join(flags))
+   for line in e.previous:
+      out.append(line + "\n")
+   prefix = "#~ " if e.obsolete else ""
+   if e.key:
+      out.append(prefix + _emit_string("msgctxt", e.key))
+   out.append(prefix + _emit_string("msgid", e.source))
+   out.append(prefix + _emit_string("msgstr", e.target))
+   return "".join(out)
+
+
+def write_po(path, entries, language, source_language="en", project=None):
+   """Write a .po file. `entries` is an ordered iterable of Entry.
+
+   LOSSLESS FOR WHAT read_po READ. When the entries came from read_po, the
+   file's own header, BOM, line endings, inter-entry text and trailing text
+   are written back as read, and each entry is written from its own text
+   unless one of its fields was changed. `language`, `source_language` and
+   `project` then name nothing: they only fill the template header of a
+   catalogue built from entries a caller constructed (pas2po --new-lang).
+
+   The catalogue is the one the FIRST read entry came from. Entries from any
+   other file keep their own text; new entries get that catalogue's line
+   ending, or CRLF -- .gitattributes is `* text=auto eol=crlf` for this tree.
+   """
+   entries = list(entries)
+   cat = next((e._source for e in entries if e._source is not None), None)
+   if cat is not None:
+      newline = cat.newline
+      out = [cat.header]
+      tail = cat.tail
+      bom = cat.bom
+   else:
+      newline = "\r\n"
+      out = [_template_header(language, source_language, project).replace("\n", newline)]
+      tail = newline
+      bom = False
 
    for e in entries:
-      for note in e.notes:
-         out.append("#. %s\n" % note)
-      for ref in e.refs:
-         out.append("#: %s\n" % ref)
-      if e.fuzzy:
-         out.append("#, fuzzy\n")
-      prefix = "#~ " if e.obsolete else ""
-      if e.key:
-         out.append(prefix + _emit_string("msgctxt", e.key))
-      out.append(prefix + _emit_string("msgid", e.source))
-      out.append(prefix + _emit_string("msgstr", e.target))
-      out.append("\n")
+      if e._raw is not None and e._state() == e._snap:
+         out.append(e._lead)
+         out.append(e._raw)
+         continue
+      nl = e._source.newline if e._source is not None else newline
+      if e._raw is not None:
+         lead = e._lead                  # a changed entry keeps its place's spacing
+      else:
+         lead = nl                       # a new entry: one blank line before it
+         # A file whose last line had no line ending would glue this entry to
+         # it; give that line its ending first.
+         if out and out[-1] and not out[-1].endswith("\n"):
+            out.append(nl)
+      out.append(lead)
+      out.append(_render(e).replace("\n", nl))
+   out.append(tail)
 
-   # CRLF: .gitattributes is `* text=auto eol=crlf` for this tree.
-   text = "".join(out).replace("\n", "\r\n")
+   data = "".join(out).encode("utf-8")
    with open(path, "wb") as fh:
-      fh.write(text.encode("utf-8"))
+      if bom:
+         fh.write(b"\xef\xbb\xbf")
+      fh.write(data)
 
 
-def read_po(path):
-   """Parse a .po file into a list of Entry. The header entry is skipped."""
-   if not os.path.exists(path):
-      return []
-   with open(path, "rb") as fh:
-      raw = fh.read()
-   if raw.startswith(b"\xef\xbb\xbf"):
-      raw = raw[3:]
-   text = raw.decode("utf-8").replace("\r\n", "\n")
-
-   entries = []
-   cur = {"notes": [], "refs": [], "fuzzy": False, "obsolete": False}
+def _parse_block(lines):
+   """The fields of one block of non-blank lines, as the reader has always
+   parsed them -- or None when the block holds no msgid or msgctxt line (a
+   comment-only block). Returns (entry_or_None, had_message): an entry is
+   None with had_message True for the header (empty msgid, no msgctxt)."""
+   notes, refs, comments, flags, previous = [], [], [], [], []
+   fuzzy = obsolete = False
    field = None
    parts = {"msgctxt": [], "msgid": [], "msgstr": []}
 
-   def flush():
-      if not parts["msgid"] and not parts["msgctxt"]:
-         return
-      key = unescape("".join(parts["msgctxt"]))
-      src = unescape("".join(parts["msgid"]))
-      dst = unescape("".join(parts["msgstr"]))
-      if src or key:                      # skip the header (empty msgid, no ctxt)
-         entries.append(Entry(key, src, dst, cur["fuzzy"], list(cur["notes"]),
-                              list(cur["refs"]), cur["obsolete"]))
-
-   for line in text.split("\n"):
-      stripped = line.strip()
-      if not stripped:
-         flush()
-         cur = {"notes": [], "refs": [], "fuzzy": False, "obsolete": False}
-         parts = {"msgctxt": [], "msgid": [], "msgstr": []}
-         field = None
-         continue
-      body = stripped
+   for line in lines:
+      whole = line.rstrip("\r\n")
+      body = whole.strip()
       if body.startswith("#~"):
-         cur["obsolete"] = True
+         obsolete = True
          body = body[2:].strip()
       if body.startswith("#."):
-         cur["notes"].append(body[2:].strip())
+         notes.append(body[2:].strip())
          continue
       if body.startswith("#:"):
-         cur["refs"].append(body[2:].strip())
+         refs.append(body[2:].strip())
          continue
       if body.startswith("#,"):
-         cur["fuzzy"] = "fuzzy" in body
+         fuzzy = "fuzzy" in body
+         flags.extend(f.strip() for f in body[2:].split(",")
+                      if f.strip() and f.strip() != "fuzzy")
+         continue
+      if body.startswith("#|"):
+         previous.append(whole)
          continue
       if body.startswith("#"):
+         comments.append(whole)
          continue
       m = re.match(r'^(msgctxt|msgid|msgstr)\s+"(.*)"$', body)
       if m:
@@ -209,12 +298,123 @@ def read_po(path):
       m = re.match(r'^"(.*)"$', body)
       if m and field:
          parts[field].append(m.group(1))
-   flush()
+
+   if not parts["msgid"] and not parts["msgctxt"]:
+      return None, False
+   key = unescape("".join(parts["msgctxt"]))
+   src = unescape("".join(parts["msgid"]))
+   dst = unescape("".join(parts["msgstr"]))
+   if not (src or key):                  # the header (empty msgid, no ctxt)
+      return None, True
+   return Entry(key, src, dst, fuzzy, notes, refs, obsolete,
+                comments, flags, previous), True
+
+
+def read_po(path):
+   """Parse a .po file into a list of Entry. The header entry is skipped.
+
+   Each entry also carries its exact text and its catalogue's header, BOM,
+   line endings and trailing text, so write_po can put the file back as it
+   was. The parsed fields are what they have always been."""
+   if not os.path.exists(path):
+      return []
+   with open(path, "rb") as fh:
+      raw = fh.read()
+   bom = raw.startswith(b"\xef\xbb\xbf")
+   if bom:
+      raw = raw[3:]
+   text = raw.decode("utf-8")
+
+   # The line ending a NEW entry gets: whichever this file mostly uses.
+   crlf = text.count("\r\n")
+   newline = "\r\n" if crlf >= text.count("\n") - crlf else "\n"
+
+   # Runs of blank and non-blank lines, every line keeping its own ending, so
+   # joining the runs gives back the file exactly. Split on LF ONLY:
+   # str.splitlines also breaks at U+0085, U+2028, form feed and others, which
+   # a translation may contain, and would cut an entry in two.
+   runs = []
+   for line in re.findall(r"[^\n]*\n|[^\n]+$", text):
+      blank = not line.strip()
+      if runs and runs[-1][0] == blank:
+         runs[-1][1].append(line)
+      else:
+         runs.append((blank, [line]))
+
+   entries = []
+   header = None
+   pending = ""
+   for blank, lines in runs:
+      chunk = "".join(lines)
+      if blank:
+         pending += chunk
+         continue
+      entry, had_message = _parse_block(lines)
+      if entry is None:
+         if had_message and header is None and not entries:
+            header = pending + chunk     # the header, and anything before it
+            pending = ""
+         else:
+            pending += chunk             # a comment-only block: travels with the next entry
+         continue
+      entry._lead = pending
+      entry._raw = chunk
+      entry._snap = entry._state()
+      entries.append(entry)
+      pending = ""
+
+   cat = _Catalogue(header if header is not None else "", pending, newline, bom)
+   for e in entries:
+      e._source = cat
    return entries
 
 
 def by_key(entries):
    return {e.key: e for e in entries if e.key and not e.obsolete}
+
+# ---------------------------------------------------------------- is it language?
+
+# F1..F24, with at most one '&' anywhere in it ('&F12', 'F&1').
+_FUNCTION_KEY = re.compile(r"F(?:[1-9]|1[0-9]|2[0-4])")
+_DIGITS = re.compile(r"[0-9]+")
+
+
+def is_translatable(msgid):
+   """Is this English text LANGUAGE -- something a translator can translate?
+
+   THE ONE RULE, and every tool that creates a catalogue entry asks it here
+   rather than keeping its own copy (po_merge for the harvest, pas2po for a
+   new language, po_lint for anything that got in another way).
+
+   NOT language, so never offered for translation:
+     * a function-key name, F1 to F24, optionally carrying one '&';
+     * only ASCII digits ('8', '10');
+     * only punctuation and whitespace ('-', '+', '--', '...', ' ').
+
+   WHY. The .lfm harvest takes every Caption, and a designed form has captions
+   that are labels for keys and numbers, not words: the function-key panel's
+   'F1'..'F12', the radio editor's data-bits '7'/'8' and stop-bits '1'/'2',
+   the panadapter's '-'/'+' span buttons, a '--' placeholder, a '...' button,
+   the server-log counters' '0'. 21 of them sat in every catalogue, and
+   Weblate asked translators to translate '8' (NY4I, 2026-10-21).
+
+   NOTHING IS LOST BY LEAVING THEM OUT. A form property with no catalogue
+   entry keeps the value the .lfm streamed, which IS this text: the LCL's
+   TPOTranslator only replaces a property it finds an entry for.
+
+   Anything with a letter in it is language, even with digits beside it --
+   'F1 help', 'Band 8' and '8 hours' are sentences a translator may reorder.
+   A letter is str.isalpha, so Cyrillic, Greek and CJK count."""
+   s = msgid.strip()
+   if not s:
+      return False
+   if _FUNCTION_KEY.fullmatch(s.replace("&", "", 1)):
+      return False
+   if _DIGITS.fullmatch(s):
+      return False
+   if not any(ch.isalnum() for ch in s):
+      return False
+   return True
 
 def lcl_catalogue(lang):
    """The LCL's OWN translations for this language, by English text.

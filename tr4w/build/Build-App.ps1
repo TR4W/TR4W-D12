@@ -83,6 +83,25 @@ catch
    exit 1
    }
 
+# THE LANGUAGE CATALOGUES ARE A BUILD INPUT TOO. tr4w.lpr links
+# res\tr4w_languages.res, a tracked binary generated from i18n\tr4w_<lang>.po,
+# and until 2026-10-16 nothing regenerated it: two catalogue commits never
+# reached any binary. Sync compares input hashes (not mtimes) with the stamp
+# beside the .res, regenerates on a mismatch, and THROWS rather than let a stale
+# .res be linked. This sits ABOVE the -Incremental split on purpose, so an
+# incremental build gets it too. See build\LanguageResStamp.ps1.
+. (Join-Path $PSScriptRoot 'LanguageResStamp.ps1')
+try
+   {
+   Sync-Tr4wLanguageRes -Repo $REPO
+   }
+catch
+   {
+   Write-Host ''
+   Write-Host "BUILD FAILED: $($_.Exception.Message)"
+   exit 1
+   }
+
 foreach ($d in $Defines) { $fpcArgs += "-d$d" }
 foreach ($p in (Get-Tr4wSearchPaths -Tr4wDir $TR4W_DIR -Toolchain $tc -For App)) { $fpcArgs += "-Fu$p" }
 foreach ($p in (Get-Tr4wIncludePaths -Tr4wDir $TR4W_DIR)) { $fpcArgs += "-Fi$p" }
@@ -177,7 +196,9 @@ $countsCaveat = if ($Incremental) { 'INCREMENTAL build -- only recompiled units 
                 elseif ($rc -ne 0) { 'build FAILED -- units after the error were never compiled' }
                 else { '' }
 
-$WARN_CEILING = 4
+# 4 -> 3, 2026-10-14: M10 S3 deleted LOGSTUFF's legacy scoring case, and
+# with it the Ten-Ten arm's `if RXData.TenTenNum <> -1` range warning.
+$WARN_CEILING = 3
 
 $warnLines = $output | Select-String -Pattern 'Comparison might be always (false|true)'
 Write-Host "range warnings: $($warnLines.Count) (ceiling $WARN_CEILING)"
@@ -281,7 +302,122 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # the ini-only machinery deleted with it (RestoreCFGPasswordCase,
 # FileHasCommands, the duplicate-key report, CommandIsSingleValued). Deletion,
 # not conversion.
-$NARROW_CEILING = 1339
+# 1339 -> 1338, 2026-10-01: the POTA ADIF-import arm's two QTHString
+# assignments became one, through ResolvePOTAParkFromADIF.
+# 1338 -> 1337, 2026-10-01: M1, contest identity read from the class. The UDP
+# contact broadcast's "CABName, else the enum's spelling" copy assigned the
+# spelling (a UnicodeString) straight into an AnsiString; it is one explicit
+# conversion of the class's CabrilloName now.
+# 1337 -> 1335, 2026-10-01: M2. The QSO-party in-state test and LogCfg's
+# domestic-file path stopped going through fixed AnsiChar buffers --
+# uAppPaths.ShippedDomFilePath returns the path as a string, and
+# uDomFileKeys replaced FCONTEST's ShortString EnumDOM2 callback.
+# 1335 -> 1331, 2026-10-01: M4, each contest formats its own export.
+# Measured against a HEAD build of the same tree, per file: PostUnit's
+# GetStateFromSection passed a UnicodeString to Tree's Str20 parameter and
+# called StrUtils.AnsiIndexText (AnsiString), Tree's own UpperCase'd into a
+# Str20, and uCabrilloExchange's dead JIDX branch handed MY STATE to
+# StrToIntDef. The section table is one string-typed function in
+# uARRLSections now, with a native lookup, and the JIDX branch is deleted.
+# 1331 -> 1306, 2026-10-01: M5a, each contest interprets its own ADIF import.
+# The arms of MainUnit's ApplyContestSpecificADIFTail (and the dead
+# ProcessImportedSRX_String) assigned UnicodeStrings straight into Str10 and
+# Str40 fields; the same assignments now live on the classes and the base's
+# default as explicit ShortString conversions, which is the deliberate form
+# this file asks for -- so thirteen new classes copying an arm each (design
+# 1.4) added no warning, and the sites that moved took theirs with them.
+# 1306 -> 1301, 2026-10-02: M5b, each contest parses its own exchange.
+# Measured as a total; the per-site accounting below is by READING, not a
+# per-file diff. The code that left LOGSTUFF took its implicit narrowings
+# with it -- ParseExchange's two PrecedingString results
+# into Str10 (lifted to uExchangeTokens as explicit ShortString conversions),
+# the dead ALRS branch's GetOblast/UTF8Encode into Str2, and ValidClass's
+# letter loop (D1) -- and the seven new classes and the new seams were written
+# with explicit conversions, adding none.
+# 1301 -> 1291, 2026-10-02: M7a, each contest describes its own session.
+# Measured as a total; the accounting is by READING. FoundContest's arms for
+# the contests with a class handed UnicodeString expressions straight to the
+# ShortString memory parameters (the Sweepstakes, Sprint and NAQP memories
+# built from MY CALL, MY STATE and MY NAME) and the ALRS arm narrowed
+# GetOblast into a Str2; the arms are DescribeSession now, which builds
+# native strings, and FCONTEST's one applier converts each memory once with
+# UTF8Encode -- not a narrowing. fcontest.pas is left with 2.
+# 1291 -> 1289, 2026-10-02: M7b batch 1, thirty-nine classless contests gained
+# a class. The two are LOGSTUFF's copy of InSameFederalOkrug, which put
+# GetOblast's native string into two string[2] locals; it was lifted to
+# uCallSignRoutines with native strings, and the classes were written with
+# explicit conversions, adding none.
+# 1289 -> 1287, 2026-10-02: M7b batch 2, forty more classless contests gained
+# a class. The two are Tree's PortableStation, which put PostcedingString's
+# native string into a Str20 twice; it was lifted to uCallSignRoutines with
+# native strings (the Region 1 Field Day class and the legacy arm share it),
+# and the classes were written with explicit conversions, adding none.
+# 1287 -> 1281, 2026-10-02: M8, multipliers declared by the contests. Four
+# are LOGEDIT.GetMultArray's `case Contest of` putting native strings
+# (GetRussiaOblastID, ctyGetGrid, GetIniitialExchange twice) into a Str10; the
+# classes return a string and the engine converts once, explicitly. Two are
+# MainUnit.ParametersOkay's copy of SetPrefix's arms (SACDistrict and
+# IndonesianDistrict into RData.Prefix), deleted for the one SetPrefix call.
+# 1281 -> 1279, 2026-10-02: M9a, the display and the reports ask the contest
+# (measured against a HEAD build of the same tree, file by file). One is
+# PostUnit's Winter Field Day header line, 'X-EXCHANGE: ' + MY FD CLASS handed
+# to the AnsiString writer -- the class's header lines go through UTF8Encode
+# now, as ARRL-SECTION always did. One is LOGSUBS2's score-posting XML, whose
+# two `<mult>` loops (`Contest <> WRTC` and WRTC's) are one loop asking the
+# contest for its labels. uExchangeBuilder's one moved, unchanged, to
+# uCanonicalExchange with the code it sits in.
+# 1279 -> 1277, 2026-10-02: M9b, the New Contest drop-down shows display
+# names. Both are uNewContest/uNewContestForm: the old FillContests handed
+# ContestTypeSA (a native string) to TStringList.Add, and ApplyContestChoice
+# read the caption back into GetContestFromString's ShortString. The combo
+# now holds UTF8Encode'd display names and a typed ContestType per line, and
+# no new unit adds one (uContestChoices and uCategoryPowerChange compare with
+# UnicodeSameText / UnicodeCompareText, not SysUtils' AnsiString names).
+# 1277 -> 1271, 2026-10-13: POTA gained its contest class (design Q6). Six
+# go: MainUnit.ApplyClasslessADIFImport's three ShortString writes (the
+# class casts them explicitly), Tree's two Str20 := UpperCase(...) in the
+# grid tests (the shape is uGridShape's, on a native string), and
+# ResolvePOTAParkFromADIF's AnsiUpperCase (UpperCase in its new leaf).
+# 1271 -> 1267, 2026-10-14: M10 S3 deleted LOGSTUFF's legacy scoring case
+# (about 3,270 lines reached only by DUMMYCONTEST); its four implicit
+# narrowings went with it. Measured by the full build, not estimated.
+# 1267 -> 1264, 2026-10-14: M11 S3 moved LOGEDIT.SetPrefix's case into the
+# prefix contests' classes. Its three implicit string -> PrefixMultiplierString
+# narrowings went; the classes cast the same truncation explicitly, and
+# ZoneCont's Str2 one moved with SACDistrict to uPrefixMultiplierKey.
+# Measured by a scratch -B compile with Build-App's arguments, per unit.
+# 1264 -> 1263, 2026-10-14: M11 S6 part 1a, measured by the full build
+# (the domestic-key move through the classes and uDomesticKey).
+# 1263 -> 1262, 2026-10-14: the ADIF import's "file not available" report.
+# It was a ShowMessage of 'literal' + the file name, which narrowed; it goes
+# through the import's one failure report now. Measured by a full build with
+# Build-App's arguments; the all-or-nothing import itself added none.
+# 1262 -> 1260, 2026-10-15: M11 S9c, the Cabrillo columns as named helpers.
+# Measured by the full build.
+# 1260 -> 1251, 2026-10-15: M11 S9e part 1 -- the dead FISTS log-line parse
+# (LOGDUPE.ParseExchangeIntoContestExchange) and its dead callers deleted.
+# Measured by the full build.
+# 1251 -> 1250, 2026-10-15: Q50 -- LOGEDIT.InitialExchangeEntry's Russian
+# fallback assigned GetRussiaOblastID's string to a ShortString; it is the
+# contest's InitialExchangeFromCall now, converted once and explicitly.
+# Measured by the full build.
+# 1250 -> 1249, 2026-10-16: Q54 -- uCabrillo's one-QSO mode column assigned
+# FormatCabrilloMode's string to an AnsiString; it asks the contest's
+# CabrilloModeString now, converted once and explicitly. Measured by the
+# full build.
+# 1249 -> 1245, 2026-10-16: POINTER_AUDIT P4 -- the dead DOS band map
+# (logwind SetUpBandMapEntry and its walkers, logedit UpdateBandMapDupeStatus)
+# and the visible dupe list were deleted, and their conversions with them.
+# Measured by the full build.
+# 1243 -> 1235, 2026-10-17: POINTER_AUDIT P8 -- TSortedStringList and
+# TCallsignsList are classes; each converts a lookup key to its ShortString
+# width ONCE and explicitly, where every comparison's parameter did it
+# implicitly (uSortedStringList 2 -> 0, uCallsigns 7 -> 1). Measured by a
+# full compile of every unit, file for file against the 1243 build's log.
+# 1235 -> 1233, 2026-10-19: the New Contest dialog's Last Contest button and
+# log grid (uLatestContest, uLogFileFacts) build their captions from native
+# strings; measured by the full builds of that work.
+$NARROW_CEILING = 1233
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

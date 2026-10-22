@@ -93,6 +93,7 @@ implementation
 uses
    MainUnit,
    uDupesheet,
+   uDXSpotParse,     // SpotCallIsCQMarker / SpotCallIsNewMarker
    uSettingsModel;   // Settings.BandMap -- the eight display filters
 
 procedure TuneRadioToSpot(Spot: TSpotRecord; Radio: RadioType);
@@ -209,11 +210,11 @@ begin
   ExchangeHasBeenSent := False;
   SetOpMode(SearchAndPounceOpMode);
 
-  if PInteger(@Spot.FCall[1])^ = tCQAsInteger then
+  if SpotCallIsCQMarker(Spot.FCall) then
      begin
      Exit;
      end;
-  if PInteger(@Spot.FCall[1])^ = tNEWAsInteger then
+  if SpotCallIsNewMarker(Spot.FCall) then
      begin
      Exit;
      end;

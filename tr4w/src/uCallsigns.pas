@@ -45,49 +45,57 @@ uses
   LogRadio,
   LogSCP,
   uTR4WStrings,
-  utils_text;
+  utils_text,
+  Generics.Collections;   (* TObjectList -- the entries, owned; TDictionary -- the qualified sheet *)
 
 const
   MAXCALLSIGNSINLIST                    = 100000;           // 4.115.6
 
 type
-  PCallsignItem = ^TCallsignItem;
-
-  TPossibleCalls = record
-    FCall: CallString;
-    FDupe: boolean;
-  end;
-
-  TCallsignItem = record
-    {16}FDupesArray: TDupesArray;
-
-    {14}FCall: CallString;
-    {01}FQSOs: Byte;
-    {01}res1: Byte;
-
-    {14}FInExchange: String[14];
-    {01}res2: Byte;
-//    {01}res3: Byte;
-  end;
-
-  TCallsignItemList = array[0..MAXCALLSIGNSINLIST - 1] of TCallsignItem;
-  PCallsignItemList = ^TCallsignItemList;
-
-  TCallsignsList = object {class}
-  private
-    FList: PCallsignItemList;
-    FCount: integer;
-    FCapacity: integer;
-    //    FPartialList: array[0..9] of TPossibleCalls;
-    procedure Grow;
-  protected
-    function GetCapacity: integer;
-    procedure SetCapacity(NewCapacity: integer);
-    function CompareStrings(const s1, s2: CallString): integer;
-    procedure InsertCallsign(Index: integer; const s: CallString); virtual;
+  (* ONE STATION IN THE LOG: its call as logged, its dupe bits per mode (a
+    bit per band), how many QSOs (stops at 255), and the initial exchange
+    TRMASTER or the log gave it. *)
+  TCallsignEntry = class
   public
-//  destructor Destroy; override;
-    constructor Init;
+    Dupes: TDupesArray;
+    Call: CallString;
+    QSOs: Byte;
+    InExchange: String[14];
+  end;
+
+  (* THE WORKED-CALLS LIST -- a CLASS over a TObjectList since 2026-10-17
+    (pointer audit P8, docs/POINTER_AUDIT.md 2.3, 6.9).
+
+    IT WAS AN OLD-STYLE `object` WITH A VMT (two virtual methods nothing
+    overrode) over a ReallocMem'd array of records reached through a
+    pointer, grown and shifted by hand with System.Move and zeroed with
+    FillChar. The tests that drove a list of their own had to FillChar the
+    object by its TYPE's size before Init, because SizeOf an INSTANCE of
+    such an object reads its VMT pointer -- the 0xC0000005 of 2026-10-13/14.
+    Now a list is made with Create and released with Free.
+
+    The entries are classes, not records, because FPC 3.2.2's TList<T> gives
+    out COPIES of an item and has no in-place access, and this list is
+    written in place on every QSO (the dupe bits, the count).
+
+    SEMANTICS KEPT EXACTLY and pinned by uTestCallsignsList against the old
+    code first, with three deliberate exceptions, all undefined behaviour:
+    AddCallsign indexed the dupe bits with FM, which is past TDupesArray, and
+    wrote into the entry's CALL (now DupeSlot, as CallsignIsDupe always read
+    it -- and DisplayDupeSheet read past it the same way); FindNumber read
+    one entry PAST the end of the list (its loop ran to Count, not Count - 1);
+    and AddIniitialExchange returned an unassigned boolean when the list was
+    full. An index out of range now raises, where the array read whatever
+    lay there. *)
+  TCallsignsList = class
+  private
+    FItems: TObjectList<TCallsignEntry>;
+    function CompareStrings(const s1, s2: CallString): integer;
+    procedure InsertCallsign(Index: integer; const s: CallString);
+    function GetCount: integer;
+  public
+    constructor Create;
+    destructor Destroy; override;
     function Get(Index: integer): string;
     function GetQSOs(Index: integer): Byte;
     function GetDupesArray(Index: integer; var da: TDupesArray): boolean;
@@ -103,17 +111,73 @@ type
     procedure ClearDupes;
     procedure DisplayDupeSheet(Radio: RadioPtr {dBand: BandType; dMode: ModeType});
     function CreatePartialsList(const Call: string): integer;
-    function FindCallsign(const s: string; var Index: integer): boolean; virtual;
-    function FindNumber(const s: string): boolean; virtual;  // n4af 4.42.2
+    function FindCallsign(const s: string; var Index: integer): boolean;
+    function FindNumber(const s: string): boolean;  // n4af 4.42.2
 
-    property Count: integer read FCount;
+    property Count: integer read GetCount;
+  end;
+
+  (* THE CALL + QUALIFIER DUPE SHEET -- Q118; see QualifiedDupes below.
+
+    A CLASS OVER ONE DICTIONARY, NOT A SECOND TCallsignsList: that list keys
+    on a CallString (13 characters), and a call plus a county overruns it --
+    'KC2ABC/STE SCH' would be cut to 'KC2ABC/STE SC' and collide with SCO
+    and SCU. Here the key is the whole call (upper-cased: TCallsignsList
+    compares case-blind), a #0 that neither a call nor a QTH can hold, and
+    the whole qualifier. The bits are the same TDupesArray, read and written
+    by the same MarkDupeBits / DupeBitsSay.
+
+    FLAT, NOT GROUPED BY CALL (2026-10-18): the per-call index served only
+    the pre-exchange "which QTHs was it worked from" hint, which NY4I
+    withdrew (Q118's narrowing). The one question left is "call AND
+    qualifier on this band and mode", a single lookup. *)
+  TQualifiedDupeSheet = class
+  private
+    FMarks: TDictionary<string, TDupesArray>;
+    class function KeyOf(const aCall: string; const aQualifier: string): string; static;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure AddQSO(const aCall: string; const aQualifier: string;
+                     Mode: ModeType; Band: BandType);
+    function QSOIsDupe(const aCall: string; const aQualifier: string;
+                       Band: BandType; Mode: ModeType): boolean;
+    procedure ClearDupes;
   end;
 
 const
   MaxCallsignsInPossibleCallsList       = 9;
 var
+  (* Created in this unit's initialization, freed in its finalization. *)
   CallsignsList                         : TCallsignsList;
-//  PossibleCallsList                     : array[0..MaxCallsignsInPossibleCallsList - 1] of TPossibleCalls;
+  (* THE DUPE SHEET FOR A CONTEST WHOSE DUPE KEY IS MORE THAN THE CALL --
+    Q118 (TContestBase.DupeKeyQualifier: a state party's received QTH).
+    Used ONLY for the dupe question of a logged QSO (LOGEDIT.QSOIsADupe),
+    never for partials, the dupe-sheet window, the worked-station count or
+    a check made before the exchange exists (the call window, AUTO DUPE,
+    the inactive radio -- NY4I 2026-10-18), which stay on CallsignsList. Written beside
+    CallsignsList by LOGEDIT.AddQSOToDupeSheets; cleared with it by
+    ClearAllDupeSheets. Empty for every other contest. Created in this
+    unit's initialization, freed in its finalization. *)
+  QualifiedDupes                        : TQualifiedDupeSheet;
+
+(* THE DUPE BITS OF ONE STATION, AND THE ONE RULE FOR READING AND WRITING
+  THEM -- shared by TCallsignsList and TQualifiedDupeSheet so the two sheets
+  cannot disagree about band, mode, FM or an off-band QSO. Lifted out of
+  TCallsignsList.AddCallsign / CallsignIsDupe unchanged (Q118); FM is
+  uSortedStringList.DupeSlot's, the one FM rule (P8).
+
+  MarkDupeBits: an off-band QSO (the contest does not use the band) marks
+  nothing; otherwise the band and AllBands bits of the mode's slot and of
+  Both. DupeBitsSay: an off-band question (Band <> AllBands) is never a
+  dupe; otherwise the QSO-by-band and QSO-by-mode settings choose the bit. *)
+procedure MarkDupeBits(var aDupes: TDupesArray; Mode: ModeType; Band: BandType);
+function DupeBandIsOffBand(Band: BandType): boolean;
+function DupeBitsSay(const aDupes: TDupesArray; Band: BandType; Mode: ModeType): boolean;
+
+(* CLEARS EVERY DUPE SHEET'S MARKS -- CallsignsList and QualifiedDupes,
+  which must never disagree about what has been worked. *)
+procedure ClearAllDupeSheets;
 
 implementation
 uses
@@ -124,27 +188,33 @@ uses
   uSettingsModel,   // Settings.PossibleCall.Enable
   LogStuff,
   LogDupe,
-  LogWind;
+  LogWind,
+  (* Contest, and the band question an off-band QSO is asked (M8). *)
+  PostUnit,
+  uContestBase,
+  uContestRegistry,
+  uSortedStringList;   (* DupeSlot -- FM shares Phone's dupe bits *)
 
-{ TStringList }
-
-constructor TCallsignsList.Init;
+constructor TCallsignsList.Create;
 begin
-  Grow;
+  inherited Create;
+  FItems := TObjectList<TCallsignEntry>.Create(True);
 end;
-{
+
 destructor TCallsignsList.Destroy;
 begin
+  FItems.Free;
   inherited Destroy;
-  if FCount <> 0 then Finalize(FList^[0], FCount);
-  FCount := 0;
-  SetCapacity(0);
 end;
-}
+
+function TCallsignsList.GetCount: integer;
+begin
+  Result := FItems.Count;
+end;
 
 function TCallsignsList.GetIniitialExchangeByIndex(Index: integer): string;
 begin
-  Result := FList^[Index].FInExchange
+  Result := string(FItems[Index].InExchange);
 end;
 
 function TCallsignsList.GetIniitialExchange(const Call: string): string;
@@ -153,30 +223,31 @@ var
 begin
   if FindCallsign(Call, Index) then
      begin
-     Result := FList^[Index].FInExchange
+     Result := string(FItems[Index].InExchange);
      end
-     else
-        begin
-        Result := '';
-        end;
+  else
+     begin
+     Result := '';
+     end;
 end;
 
+(* True when the station was new. A FULL list adds nothing and answers False
+  -- it returned an unassigned boolean there until P8. *)
 function TCallsignsList.AddIniitialExchange(const Call: string; const InitialExchangeString: string): boolean;
-label
-  Add;
 var
   Index                                 : integer;
 begin
-  if FindCallsign(Call, Index) then
+  Result := False;
+  if not FindCallsign(Call, Index) then
      begin
-     Result := False;
-     goto Add;
+     if FItems.Count = MAXCALLSIGNSINLIST then
+        begin
+        Exit;
+        end;
+     InsertCallsign(Index, ShortString(Call));
+     Result := True;
      end;
-  if Count = MAXCALLSIGNSINLIST then Exit;
-  InsertCallsign(Index, Call);
-  Result := True;
-  Add:
-  FList^[Index].FInExchange := InitialExchangeString;
+  FItems[Index].InExchange := ShortString(InitialExchangeString);
 end;
 
 function TCallsignsList.GetTotalWorkedStations: integer;
@@ -184,69 +255,147 @@ var
   i                                     : integer;
 begin
   Result := 0;
-  for i := 0 to Count - 1 do
-    if FList^[i].FQSOs > 0 then
-       begin
-       inc(Result);
-       end;
+  for i := 0 to FItems.Count - 1 do
+     begin
+     if FItems[i].QSOs > 0 then
+        begin
+        inc(Result);
+        end;
+     end;
 end;
 
+(* A FULL list refuses a new station and returns its insertion point, as it
+  always did; no caller reads the result then. *)
 function TCallsignsList.AddCallsign(const s: string; Mode: ModeType; Band: BandType; JustAddToList: boolean): integer;
-label
-  Add;
 var
-  Value                                 : integer;
-
+  entry                                 : TCallsignEntry;
 begin
-
-  if FindCallsign(s, Result) then
+  if not FindCallsign(s, Result) then
      begin
-     goto Add;
+     if FItems.Count = MAXCALLSIGNSINLIST then
+        begin
+        Exit;
+        end;
+     InsertCallsign(Result, ShortString(s));
      end;
-  if Count = MAXCALLSIGNSINLIST then Exit;
-  InsertCallsign(Result, s);
-  Add:
- if   FList^[Result].FQSOs < 255 then  //n4af 4.35.8
-    begin
-    inc(FList^[Result].FQSOs);
-    end;
 
-  if JustAddToList then Exit;
+  entry := FItems[Result];
+  if entry.QSOs < 255 then  //n4af 4.35.8
+     begin
+     inc(entry.QSOs);
+     end;
 
-  Value := FList^[Result].FDupesArray[Mode];
-  FList^[Result].FDupesArray[Mode] := Value or (1 shl Ord(Band));
+  if JustAddToList then
+     begin
+     Exit;
+     end;
 
-  Value := FList^[Result].FDupesArray[Both];
-  FList^[Result].FDupesArray[Both] := Value or (1 shl Ord(Band));
+  (* THE BITS, THE OFF-BAND RULE AND THE FM SLOT ARE MarkDupeBits'S --
+    shared with TQualifiedDupeSheet since Q118. The QSO still counts as a
+    QSO with the station (QSOs above) when it is off-band: it is in the log. *)
+  MarkDupeBits(entry.Dupes, Mode, Band);
+end;
 
-  Value := FList^[Result].FDupesArray[Mode];
-  FList^[Result].FDupesArray[Mode] := Value or (1 shl Ord(AllBands));
+procedure MarkDupeBits(var aDupes: TDupesArray; Mode: ModeType; Band: BandType);
+var
+  slot                                  : ModeType;
+begin
+  (* AN OFF-BAND QSO MARKS NO DUPE BIT -- M8, design 7.4. NY4I, 2026-10-01:
+    an off-band QSO "is not a dupe and makes no later on-band QSO a dupe".
 
-  Value := FList^[Result].FDupesArray[Both];
-  FList^[Result].FDupesArray[Both] := Value or (1 shl Ord(AllBands));
+    The AllBands bit below is what a contest whose QSOs are NOT counted per
+    band checks, so before M8 a 30 m QSO in such a contest made the same
+    station a dupe on 20 m. The same question scoring and SetMultFlags ask
+    (ContestCreditsBand), of the session's contest; ContestIdentity, which
+    carries no station and is safe off the main thread, because the band
+    list is what the contest IS. *)
+  if not ContestCreditsBand(ContestIdentity(Contest), Band) then
+     begin
+     Exit;
+     end;
 
+  (* FM SHARES PHONE'S SLOT, as DupeBitsSay reads it. Until P8 this
+    indexed the bits with Mode itself, and TDupesArray stops at NoMode, so
+    an FM QSO wrote four bytes PAST the array -- into the length and first
+    characters of the entry's call. The loader and LogContact remap FM
+    before calling; the rescore (MainUnit.RecomputeQSOScoring) passes the
+    record's mode as stored, and GetModeFromExtendedMode stores FM. *)
+  slot := DupeSlot(Mode);
+  aDupes[slot] := aDupes[slot] or (1 shl Ord(Band));
+  aDupes[Both] := aDupes[Both] or (1 shl Ord(Band));
+  aDupes[slot] := aDupes[slot] or (1 shl Ord(AllBands));
+  aDupes[Both] := aDupes[Both] or (1 shl Ord(AllBands));
+end;
+
+function DupeBandIsOffBand(Band: BandType): boolean;
+begin
+  (* AllBands from a caller is a key, not a band, and asks nothing -- see
+    TCallsignsList.CallsignIsDupe. *)
+  Result := (Band <> AllBands) and
+            (not ContestCreditsBand(ContestIdentity(Contest), Band));
+end;
+
+function DupeBitsSay(const aDupes: TDupesArray; Band: BandType; Mode: ModeType): boolean;
+var
+  TempMode                              : ModeType;
+  TempBand                              : BandType;
+begin
+  if DupeBandIsOffBand(Band) then
+     begin
+     Result := False;
+     Exit;
+     end;
+
+  if Settings.Qso.ByMode then
+     begin
+     TempMode := Mode;
+     end
+  else
+     begin
+     TempMode := Both;
+     end;
+  if Settings.Qso.ByBand then
+     begin
+     TempBand := Band;
+     end
+  else
+     begin
+     TempBand := AllBands;
+     end;
+
+  TempMode := DupeSlot(TempMode);
+
+  Result := (aDupes[TempMode] and (1 shl Ord(TempBand))) <> 0;
 end;
 
 function TCallsignsList.CallsignIsDupe(const s: string; Band: BandType; Mode: ModeType; var IndexInList: integer): boolean;
 var
   Index                                 : integer;
-  TempMode                              : ModeType;
-  TempBand                              : BandType;
 begin
   Result := False;
+
+  (* AN OFF-BAND QSO IS NOT A DUPE -- M8, design 7.4; the other half of the
+    rule in AddCallsign, asked the same way (DupeBandIsOffBand, shared with
+    TQualifiedDupeSheet since Q118). Band is the REAL band here:
+    EditableLog.CallIsADupe used to turn it into the AllBands key before
+    calling, which hid the band this asks about; it passes it through now and
+    the key is made in DupeBitsSay, once. AllBands from a caller (the
+    QSO-needs strip of a contest not counted per band) is a key, not a band,
+    and asks nothing. IndexInList is still reported, so a caller can still
+    show the station's history. *)
+  if DupeBandIsOffBand(Band) then
+     begin
+     if not FindCallsign(s, IndexInList) then
+        begin
+        IndexInList := -1;
+        end;
+     Exit;
+     end;
+
   if FindCallsign(s, Index) then
      begin
-     //    TempMode := Mode;
-         if Settings.Qso.ByMode then TempMode := Mode else TempMode := Both;
-         if Settings.Qso.ByBand then TempBand := Band else TempBand := AllBands;
-
-         if TempMode = FM then
-            begin
-            TempMode := Phone;
-            end;
-
-         Result := (FList^[Index].FDupesArray[TempMode {Mode}] and (1 shl Ord(TempBand))) <> 0;
-         IndexInList := Index;
+     Result := DupeBitsSay(FItems[Index].Dupes, Band, Mode);
+     IndexInList := Index;
      end
   else
      begin
@@ -254,129 +403,98 @@ begin
      end;
 end;
 
+(* THE CALL IS CUT TO CallString WIDTH ONCE, here, where the old code had each
+  comparison's CallString parameter cut it -- the same conversion, made once. *)
 function TCallsignsList.FindCallsign(const s: string; var Index: integer): boolean;
 var
   l, h, i, c                            : integer;
-
-  begin
+  key                                   : CallString;
+begin
   Result := False;
+  key := ShortString(s);
   l := 0;
-  h := FCount - 1;
+  h := FItems.Count - 1;
   while l <= h do
      begin
      i := (l + h) shr 1;
-     c := CompareStrings(FList^[i].FCall, s);
+     c := CompareStrings(FItems[i].Call, key);
      if c < 0 then
         begin
-        l := i + 1
+        l := i + 1;
         end
-      else
-         begin
-         h := i - 1;
-         if c = 0 then
-            begin
-            Result := True;
-            l := i;
-            end;
-         end;
+     else
+        begin
+        h := i - 1;
+        if c = 0 then
+           begin
+           Result := True;
+           l := i;
+           end;
+        end;
      end;
   Index := l;
 end;
 
+(* THE MEMBER-NUMBER REVERSE LOOKUP (n4af 4.42.2): the first station whose
+  initial exchange ENDS in s, in list order, goes to the call window.
 
+  ITS LOOP RAN ONE PAST THE END until P8 -- `i := -1; while i <= h do inc(i)`
+  reads entries 0..Count, and entry Count was whatever the ReallocMem'd
+  array held beyond the last station (uninitialised capacity, or past the
+  block when the list was exactly full). *)
 function TCallsignsList.FindNumber(const s: string): boolean;        // n4af 4.42.2 reverse lookup member #
 var
- i, {l,} h, c                             : integer;
- lstr                                    : string;
+  i                                     : integer;
+  key                                   : CallString;
 begin
   Result := False;
-  i := -1; //4.67.3
-  h := FCount - 1;
-  while i <= h do
+  key := ShortString(s);
+  for i := 0 to FItems.Count - 1 do
      begin
-     i := (i + 1);
-   lstr := laststring(Flist[i].Finexchange);
-    c := CompareStrings(lstr, s);
-     if c = 0 then
+     if CompareStrings(ShortString(LastString(FItems[i].InExchange)), key) = 0 then
         begin
         Result := True;
-        CallWindowString :=  flist^[i].FCall;
-    
-        exit; 
+        CallWindowString := FItems[i].Call;
+        Exit;
         end;
      end;
-  end;
-
+end;
 
 function TCallsignsList.Get(Index: integer): string;
 begin
-  //  if (Index < 0) or (Index >= FCount) then Exit; //ERROR(@SListIndexError, Index);
-  Result := FList^[Index].FCall;
+  Result := string(FItems[Index].Call);
 end;
 
 function TCallsignsList.GetQSOs(Index: integer): Byte;
 begin
   Result := 0;
-  if Index = -1 then Exit;
-
-  Result := FList^[Index].FQSOs;
+  if Index = -1 then
+     begin
+     Exit;
+     end;
+  Result := FItems[Index].QSOs;
 end;
 
 function TCallsignsList.GetDupesArray(Index: integer; var da: TDupesArray): boolean;
 begin
   Result := False;
-  if Index = -1 then Exit;
-  da := FList^[Index].FDupesArray;
+  if Index = -1 then
+     begin
+     Exit;
+     end;
+  da := FItems[Index].Dupes;
   Result := True;
 end;
 
-function TCallsignsList.GetCapacity: integer;
-begin
-  Result := FCapacity;
-end;
-
-procedure TCallsignsList.Grow;
-var
-  delta                                 : integer;
-begin
-  if FCapacity > 64 then delta := FCapacity div 4 else
-    if FCapacity > 8 then delta := 16 else
-                                         begin
-                                         delta := 4;
-                                         end;
-  SetCapacity(FCapacity + delta);
-end;
-
+(* A NEW ENTRY IS ZERO -- a class instance's fields are, which is what the
+  FillChar over the array slot did. *)
 procedure TCallsignsList.InsertCallsign(Index: integer; const s: CallString);
+var
+  entry                                 : TCallsignEntry;
 begin
-
-  if FCount = FCapacity then
-     begin
-     Grow;
-     end;
-  if Index < FCount then
-     begin
-     System.Move(FList^[Index], FList^[Index + 1],
-       (FCount - Index) * SizeOf(TCallsignItem));
-     end;
-
-  FillChar(FList^[Index], SizeOf(FList^[Index]), 0);
-  FList^[Index].FCall := s;
-//  with FList^[Index] do
-//  begin
-//    FillChar(FDupesArray, SizeOf(TDupesArray), 0);
-//    FQSOs := 0;
-//    FCall := s;
-//    FInExchange := '';
-//  end;
-  inc(FCount);
-
-end;
-
-procedure TCallsignsList.SetCapacity(NewCapacity: integer);
-begin
-  ReallocMem(FList, NewCapacity * SizeOf(TCallsignItem));
-  FCapacity := NewCapacity;
+  entry := TCallsignEntry.Create;
+  entry.Call := s;
+  FItems.Insert(Index, entry);
 end;
 
 function TCallsignsList.CompareStrings(const s1 {edx}, s2 {ecx}: CallString): integer {eax};
@@ -497,7 +615,7 @@ label
 var
   Index                                 : integer;
   TempIndex                             : integer;
-//  TempMode                              : ModeType;
+  entry                                 : TCallsignEntry;
 begin
   { FIRST, so the two guards below cannot return an uninitialised Result.
     A function that exits before assigning one hands back whatever was in
@@ -506,16 +624,14 @@ begin
   if not Settings.PossibleCall.Enable then Exit;
   ClearPossibleCalls;
   if length(Call) < 2 then Exit;
-  for Index := 0 to FCount - 1 do
+  for Index := 0 to FItems.Count - 1 do
      begin
-     if pos(Call, FList^[Index].FCall) > 0 then
+     entry := FItems[Index];
+     if pos(Call, entry.Call) > 0 then
         begin
-        //      if Settings.Qso.ByMode then TempMode := ActiveMode else TempMode := Both;
-        //      if TempMode = FM then TempMode := Phone;
-              PossibleCallList.List[Result].Call := FList^[Index].FCall;
+              PossibleCallList.List[Result].Call := entry.Call;
               PossibleCallList.List[Result].Dupe :=
-                CallsignIsDupe(FList^[Index].FCall, ActiveBand, ActiveMode, TempIndex);
-        //      (FList^[Index].FDupesArray[TempMode] and (1 shl Ord(ActiveBand))) <> 0;
+                CallsignIsDupe(entry.Call, ActiveBand, ActiveMode, TempIndex);
               (* THE CALLSIGN GOES INTO THE CONTROL, not just into the model.
                 See uMainForm.lstPossibleCallPrepareCanvas for why a strip that
                 held no data cost four separate defects. *)
@@ -557,6 +673,7 @@ procedure TCallsignsList.DisplayDupeSheet(Radio: RadioPtr {dBand: BandType; dMod
 var
   frm                                   : TfrmDupeSheet;
   i, Index                              : integer;
+  entry                                 : TCallsignEntry;
 
   Band                                  : BandType;
   Mode                                  : ModeType;
@@ -571,28 +688,37 @@ begin
   if frm = nil then Exit;
 
   Band := Radio.BandMemory;
-  Mode := Radio.ModeMemory;
+  (* FM reads Phone's slot -- see DupeSlot; it read past the array. *)
+  Mode := DupeSlot(Radio.ModeMemory);
 
   frm.Calls.BeginRebuild;
 
+  (* THE CALL AREA IS THE FIRST DIGIT THAT FOLLOWS A LETTER. The loop ran
+    from 0 with range checks off, reading Call[-1] -- the byte before the
+    string -- and Call[0], its length; neither can be a letter followed by a
+    digit (a CallString is at most 13 long), so starting at 2 is the same
+    answer without the out-of-range read. The {$RangeChecks ON} that closed
+    that block also switched range checking ON for the rest of this unit,
+    where it had been off; both went with the read. *)
   for TempChar := '0' to '9' do
      begin
-     for Index := 0 to FCount - 1 do
+     for Index := 0 to FItems.Count - 1 do
         begin
-        if (FList^[Index].FDupesArray[Mode] and (1 shl Ord(Band))) <> 0 then
+        entry := FItems[Index];
+        if (entry.Dupes[Mode] and (1 shl Ord(Band))) <> 0 then
            begin
-           {$RangeChecks OFF}
-           for i := 0 to length(FList^[Index].FCall) do        // 4.79.3
-             if FList^[Index].FCall[i - 1] in ['A'..'Z'] then
-               if FList^[Index].FCall[i] in ['0'..'9'] then
-                  begin
-                  if FList^[Index].FCall[i] = TempChar then
-                     begin
-                     frm.Calls.AddItem(string(FList^[Index].FCall), Ord(TempChar));
-                     end;
-                  Break;
-                  end;
-           {$RangeChecks ON}
+           for i := 2 to length(entry.Call) do        // 4.79.3
+              begin
+              if (entry.Call[i - 1] in ['A'..'Z']) and
+                 (entry.Call[i] in ['0'..'9']) then
+                 begin
+                 if entry.Call[i] = TempChar then
+                    begin
+                    frm.Calls.AddItem(string(entry.Call), Ord(TempChar));
+                    end;
+                 Break;
+                 end;
+              end;
            end;
         end;
      end;
@@ -677,23 +803,88 @@ end;
 procedure TCallsignsList.ClearDupes;
 var
   Index                                 : integer;
+  m                                     : ModeType;
+  entry                                 : TCallsignEntry;
 begin
-  for Index := 0 to FCount - 1 do
+  for Index := 0 to FItems.Count - 1 do
      begin
-     FillChar(FList^[Index].FDupesArray, SizeOf(TDupesArray), 0);
-     FList^[Index].FQSOs := 0;
-       {
-            for Band := Band160 to AllBands do
-              for Mode := CW to Both do
-                FList^[Index].FDupesArray[Mode, Band] := 0;
-      }
+     entry := FItems[Index];
+     for m := Low(TDupesArray) to High(TDupesArray) do
+        begin
+        entry.Dupes[m] := 0;
+        end;
+     entry.QSOs := 0;
      end;
 end;
 
+(* TQualifiedDupeSheet *)
+
+constructor TQualifiedDupeSheet.Create;
 begin
-//  CallsignsList := TCallsignsList.Create;
-  CallsignsList.Init;
+  inherited Create;
+  FMarks := TDictionary<string, TDupesArray>.Create;
+end;
+
+destructor TQualifiedDupeSheet.Destroy;
+begin
+  FMarks.Free;
+  inherited Destroy;
+end;
+
+class function TQualifiedDupeSheet.KeyOf(const aCall: string; const aQualifier: string): string;
+begin
+  (* The whole call, upper case, and the whole qualifier: #0 cannot occur
+    in either, so 'W2TZ' + 'STE' can never meet another pair's key. *)
+  Result := UpperCase(aCall) + #0 + aQualifier;
+end;
+
+procedure TQualifiedDupeSheet.AddQSO(const aCall: string; const aQualifier: string;
+                                     Mode: ModeType; Band: BandType);
+var
+  key                                   : string;
+  dupes                                 : TDupesArray;
+begin
+  key := KeyOf(aCall, aQualifier);
+  if not FMarks.TryGetValue(key, dupes) then
+     begin
+     dupes := Default(TDupesArray);
+     end;
+  MarkDupeBits(dupes, Mode, Band);
+  FMarks.AddOrSetValue(key, dupes);
+end;
+
+function TQualifiedDupeSheet.QSOIsDupe(const aCall: string; const aQualifier: string;
+                                       Band: BandType; Mode: ModeType): boolean;
+var
+  dupes                                 : TDupesArray;
+begin
+  Result := False;
+  if FMarks.TryGetValue(KeyOf(aCall, aQualifier), dupes) then
+     begin
+     Result := DupeBitsSay(dupes, Band, Mode);
+     end;
+end;
+
+procedure TQualifiedDupeSheet.ClearDupes;
+begin
+  FMarks.Clear;
+end;
+
+procedure ClearAllDupeSheets;
+begin
+  CallsignsList.ClearDupes;
+  QualifiedDupes.ClearDupes;
+end;
+
+initialization
+  CallsignsList := TCallsignsList.Create;
+  QualifiedDupes := TQualifiedDupeSheet.Create;
   RegisterDupeSheetSeams;
+
+finalization
+  FreeAndNil(QualifiedDupes);
+  FreeAndNil(CallsignsList);
+
 end.
 
 

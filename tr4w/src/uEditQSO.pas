@@ -132,6 +132,8 @@ uses
   { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
     cycle. It never raises and never blocks logging: see uLogStore. }
   uLogStore,
+  (* TQsoMyFacts -- our station as recorded for the QSO being edited. *)
+  uQsoMyFacts,
   (* Which store a log READ comes from -- step B4/B5. *)
   uLogSource,
    uPlatformProcess,   // RunProgram / RunWindowsUtility -- the only launchers
@@ -141,6 +143,28 @@ uses
   uHamScore,         // Issue #783 -- HamScoreOnEdit / HamScoreOnDelete hooks
   uLogNote,         // NoteText -- the note's text
   uConfigValues;
+
+var
+  (* OUR STATION AS RECORDED for EditableQSORXData, read with it -- what the
+    save compares the form against, so an untouched set is not rewritten. *)
+  EditableMyFacts: TQsoMyFacts;
+
+(* OUR STATION AS THE SAVE WILL LEAVE IT: the form's values over the recorded
+  ones -- marked edited when the operator changed any, and otherwise exactly
+  what was recorded, its source included. ONE answer for the two places that
+  need it: the points the save computes, and what the save writes. *)
+function MyFactsAsSaved: TQsoMyFacts;
+begin
+  Result := EditQSOReadMyFacts(EditableMyFacts);
+  if MyFactsValuesDiffer(Result, EditableMyFacts) then
+     begin
+     Result.Source := mfsEdited;
+     end
+  else
+     begin
+     Result := EditableMyFacts;
+     end;
+end;
 
 // Fills the form from the log record under the edit cursor.
 //
@@ -363,6 +387,14 @@ begin
 
    EditQSOSetText(FLD_OPERATOR, string(EditableQSORXData.ceOperator));  // Issue 601 NY4I
 
+   (* OUR STATION AS RECORDED FOR THIS QSO (schema 3; NY4I, ruling B) --
+     editable, because a rover's grid typed wrong is a correction the
+     operator must be able to make. Read from the row, never from settings:
+     a row written before schema 3 shows as not recorded, with empty
+     fields, not as today's values. *)
+   LogStoreReadMyFactsAtIndex(IndexOfItemInLogForEdit, EditableMyFacts);
+   EditQSOShowMyFacts(EditableMyFacts);
+
    Result := True;
 end;
 
@@ -389,7 +421,7 @@ begin
    EditQSOSetText(FLD_COUNTRYNAME,
      ctyGetCountryName(ctyGetCountry(TempString)));
 
-   if ActiveDXMult <> NoDXMults then
+   if DoingDXMults then
       begin
       EditQSOSetText(FLD_DXQTH, string(EditableQSORXData.QTH.CountryID));
       end;
@@ -426,6 +458,7 @@ var
   //  TempPointer                           : PWORD;
   TempByte: Byte;
   qsoY, qsoMo, qsoD, qsoH, qsoMi, qsoS, qsoMs: word;
+  editedMyFacts: TQsoMyFacts;
 begin
   Result := True;
 
@@ -481,14 +514,16 @@ begin
      end;
 
   //  LocateCall(EditableQSORXData.Callsign, EditableQSORXData.QTH, true);
-  if ActiveDXMult <> NoDXMults then
+  if DoingDXMults then
      begin
      FillChar(EditableQSORXData.DXQTH, SizeOf(EditableQSORXData.DXQTH), 0);
      EditableQSORXData.DXQTH := EditableQSORXData.QTH.CountryID;
      end;
 
   //   Sheet.SetMultFlags(EditableQSORXData);
-  CalculateQSOPoints(EditableQSORXData);
+  (* BY THE STATION THIS QSO WILL HAVE ONCE SAVED (log schema 3, stage 3) --
+    its recorded one, or the operator's correction of it in this dialog. *)
+  CalculateQSOPoints(EditableQSORXData, MyFactsAsSaved);
 
   {Band}
   if SO2R_Swap then
@@ -785,7 +820,19 @@ begin
 
      IndexInMap is the record index itself now, so there is nothing to
      convert. *)
-  LogStoreUpdateQSOAtIndex(IndexInMap, EditableQSORXData);
+  (* OUR STATION IS WRITTEN ONLY WHEN THE OPERATOR CHANGED IT, marked
+    edited, with the QSO, in one transaction. Left alone, the row keeps
+    exactly what it had, its source included: an edit changes only what was
+    edited (Q13). *)
+  editedMyFacts := MyFactsAsSaved;
+  if editedMyFacts.Source = mfsEdited then
+     begin
+     LogStoreUpdateQSOAtIndex(IndexInMap, EditableQSORXData, editedMyFacts);
+     end
+  else
+     begin
+     LogStoreUpdateQSOAtIndex(IndexInMap, EditableQSORXData);
+     end;
   (* THE LOG EDIT WINDOW REFRESHES ITSELF NOW.
 
     This deleted a row out of the old Win32 dialog's listview and re-inserted
@@ -797,8 +844,7 @@ begin
     The three globals this used -- FullLogEditHandle, LogEditListView,
     FullLogEditIndex -- went with the dialog. *)
 
-  tUpdateLog(actRescore);
-  LoadinLog;
+  RescoreLog;
   if FindStationInCallsignColumn(EditableQSORXData.Callsign) = -1 then
      begin
      AddCallsignToStationColumn(EditableQSORXData.Callsign);

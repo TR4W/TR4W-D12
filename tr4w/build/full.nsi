@@ -319,108 +319,12 @@ Section "Domestic multiplier files" Secdom
 
 
   SetOutPath "$INSTDIR\dom"
-   File ..\target\dom\alaska.dom
-   File ..\target\dom\allja.dom
-   File ..\target\dom\ari.dom
-   File ..\target\dom\arizona.dom
-   File ..\target\dom\arizona_cty.dom
-   File ..\target\dom\arrl10.dom
-   File ..\target\dom\arrlsect.dom
-   File ..\target\dom\brazil.dom
-   File ..\target\dom\california.dom
-   File ..\target\dom\california_cty.dom
-   File ..\target\dom\cis.dom
-   File ..\target\dom\colorado.dom
-   File ..\target\dom\colorado_cty.dom
-   File ..\target\dom\croat.dom
-    File ..\target\dom\dc.dom
-   File ..\target\dom\delaware_cty.dom
-   File ..\target\dom\ea.dom
-   File ..\target\dom\eudx.dom
-   File ..\target\dom\florida.dom
-   File ..\target\dom\florida_cty.dom
-   File ..\target\dom\gc.dom
-   File ..\target\dom\grids.dom
-   File ..\target\dom\hawaii.dom
-   File ..\target\dom\hungary.dom
-   File ..\target\dom\iaruhq.dom
-   File ..\target\dom\in7qpne.dom
-   File ..\target\dom\in7qpne_cty.dom
-   File ..\target\dom\illinois_cty.dom
-   File ..\target\dom\in.dom
-   File ..\target\dom\in_cty.dom
-   File ..\target\dom\ireland.dom
-   File ..\target\dom\jacg3.dom
-   File ..\target\dom\japref.dom
-   File ..\target\dom\japrefct.dom
-   File ..\target\dom\jidx.dom
-   File ..\target\dom\kda.dom
-   File ..\target\dom\lz.dom
-   File ..\target\dom\mexico.dom
-   File ..\target\dom\michigan.dom
-   File ..\target\dom\michigan_cty.dom
-   File ..\target\dom\minnesota.dom
-   File ..\target\dom\minnesota_cty.dom
-   File ..\target\dom\missouri.dom
-   File ..\target\dom\missouri_cty.dom
-   File ..\target\dom\naqp.dom
-   File ..\target\dom\nc.dom
-   File ..\target\dom\nc_cty.dom
-   File ..\target\dom\neqso.dom
-   File ..\target\dom\neqsow1.dom
-   File ..\target\dom\nevada_cty.dom
-   File ..\target\dom\newyork.dom
-   File ..\target\dom\newyork_cty.dom
-   File ..\target\dom\nrau.dom
-   File ..\target\dom\ohio.dom
-   File ..\target\dom\ohio_cty.dom
-   File ..\target\dom\okom.dom
-   File ..\target\dom\p12.dom
-   File ..\target\dom\p13.dom
-   File ..\target\dom\p14.dom
-   File ..\target\dom\p8.dom
-   File ..\target\dom\pa.dom
-   File ..\target\dom\pa_cty.dom
-   File ..\target\dom\pacc.dom
-   File ..\target\dom\paccpa.dom
-   File ..\target\dom\pmc.dom
-   File ..\target\dom\ref.dom
-   File ..\target\dom\romania.dom
-   File ..\target\dom\rsgb.dom
-   File ..\target\dom\russian.dom
-   File ..\target\dom\s48.dom
-   File ..\target\dom\s48p14dc.dom
-   File ..\target\dom\s49p13.dom
-   File ..\target\dom\s49p13dc.dom
-   File ..\target\dom\s49p8.dom
-   File ..\target\dom\s50.dom
-   File ..\target\dom\s50p12.dom
-   File ..\target\dom\s50p13.dom
-   File ..\target\dom\s50p13dc.dom
-   File ..\target\dom\s50p14dc.dom
-   File ..\target\dom\s51.dom
-   File ..\target\dom\seven.dom
-   File ..\target\dom\seven_cty.dom
-   File ..\target\dom\spdx.dom
-   File ..\target\dom\swiss.dom
-   File ..\target\dom\tennessee.dom
-   File ..\target\dom\tennessee_cty.dom
-   File ..\target\dom\texas.dom
-   File ..\target\dom\texas_cty.dom
-   File ..\target\dom\uba.dom
-   File ..\target\dom\uk-ei.dom
-   File ..\target\dom\ukraine.dom
-   File ..\target\dom\washington.dom
-   File ..\target\dom\washington_cty.dom
-   File ..\target\dom\wisconsin.dom
-   File ..\target\dom\wisconsin_cty.dom
-   File ..\target\dom\yu.dom
-   File ..\target\dom\ve7.dom
-   File ..\target\dom\ve7_cty.dom
-   File ..\target\dom\mwc.dom
-   File ..\target\dom\va.dom
-   File ..\target\dom\va_cty.dom
-   File ..\target\dom\yota.dom
+   ; EVERY FILE IN target\dom, by wildcard (NY4I, 2026-10-16): a new contest
+   ; adds its .dom files and touches nothing here. This list named 107 files
+   ; by hand and had already drifted -- prov12.dom, which newyork.dom INCLUDEs,
+   ; was never shipped. Linux and macOS ship the whole folder too. Debris
+   ; (eudx.dom.new, a copy whose name was a flattened Windows path) deleted.
+   File ..\target\dom\*.*
   
 SectionEnd
 

@@ -24,6 +24,7 @@ unit ZoneCont;
 interface
 
 uses
+  Generics.Collections,   // TList<AnsiString> -- the domestic country list
   TF,
   VC,
   { Windows stood here with nothing behind it -- not one reference in code
@@ -39,22 +40,63 @@ uses
 //  UpdateListDate                        = '3 Apr 93';
 
 type
-  DomesticCountryRecordPointer = ^DomesticCountryRecord;
+  (* THE SESSION'S DOMESTIC COUNTRY LIST -- the CTY country IDs that count as
+    "domestic" (not DX) for the contest. 2026-10-16, pointer audit P5.
 
-  DomesticCountryRecord = record
-    CountryID: string[6];
-    NextRecord: DomesticCountryRecordPointer;
+    IT WAS A HAND-BUILT LINKED LIST (a ^record with a NextRecord field, New
+    per entry, Dispose per entry on clear, and a walk to the tail on every
+    add). It owns a list now; the rules it kept, read from that code:
+
+      * ORDER: entries are kept in the order they were added -- the old add
+        walked to the tail. The contest matrix prints them in that order.
+      * DUPLICATES ARE KEPT: adding an ID that is already there appends it
+        again (UKEI adds GM twice). Only the order of the print shows it.
+      * CASE: an added ID is upper-cased in place, ASCII a..z only
+        (TF.strU), and the comparison is EXACT and case-sensitive -- a CTY ID
+        carrying a lowercase letter is never matched by an added one.
+      * WIDTH: an ID arrives as a CallString (13) and is stored as its first
+        SIX characters, as CountryID: string[6] stored it. A CTY ID is at
+        most five (DXMultiplierString), so a stored ID longer than five can
+        never match; it is kept anyway, and printed.
+      * AN EMPTY ID IS STORED, and it matches a call whose CTY ID is empty
+        (an unknown country). 'ADD DOMESTIC COUNTRY =' with no value adds one.
+      * AN EMPTY LIST is a missing input, not an answer: DomesticCountryCall
+        logs it ONCE (ClaimEmptyReport) and answers False -- "DX".
+      * RESET: only Clear empties it, and Clear also re-arms the once-only
+        empty report. FoundContest does NOT clear -- it appends -- so a
+        CONTEST applied twice without a .cfg read between accumulates, as it
+        always did. Clear is reached from LogCfg (just before a text .cfg is
+        parsed) and 'ADD DOMESTIC COUNTRY = CLEAR'.
+
+    THE ENTRIES ARE AnsiString, NOT string, ON PURPOSE: the IDs are bytes out
+    of a ShortString (CallString, the CTY table), and an AnsiString holds and
+    compares those bytes exactly, as the record's string[6] did. A
+    UnicodeString round trip would put a code-page conversion in the compare. *)
+  TDomesticCountryList = class
+  private
+    FIDs: TList<AnsiString>;
+    FEmptyReported: boolean;
+    function GetID(aIndex: integer): string;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure Add(ID: CallString);
+    procedure Clear;
+    function Count: integer;
+    (* True when aCountryID equals an entry exactly. *)
+    function HoldsCountry(const aCountryID: ShortString): boolean;
+    (* True ONCE after Create or Clear, then False: the caller reports an
+      empty list when this answers True. *)
+    function ClaimEmptyReport: boolean;
+    property IDs[aIndex: integer]: string read GetID;
   end;
 
 var
-  FirstDomesticCountryRecord            : DomesticCountryRecordPointer;
-
-  (* Reset by ClearDomesticCountryList, so a second contest in the same
-    session reports its own state rather than inheriting the first one's. *)
-  GEmptyDomesticListReported            : boolean = False;
+  (* Created in this unit's initialization, freed in its finalization. *)
+  DomesticCountries                     : TDomesticCountryList;
 //  LastLocateCall                        : CallString;
   LastLocateQTH                         : QTHRecord;
-  tAddDomesticCountryString             : CallString;
 
 procedure AddDomesticCountry(ID: CallString);
 procedure ClearDomesticCountryList;
@@ -67,14 +109,16 @@ function GetVEInitialExchange(Call: CallString): string;
 //procedure LocateCall(Call: VC.CallString; var QTH: VC.QTHRecord; UseStandardCallFormat: boolean);
 
 function GetContinentName(Cont: ContinentType): string;
-function GetContinentFromString(Cont: ShortString): ContinentType;
-function SACDistrict(QTH: QTHRecord): string;
-function IndonesianDistrict(QTH: QTHRecord): string;
-function EuropeanCountriesAndWAECallRegions(QTH: QTHRecord): string;
+(* GetContinentFromString MOVED to utils_text -- M11 S6, 2026-10-14: the
+  RSGB IOTA class parses a continent too, and a contest class cannot reach
+  this unit. Every caller already uses utils_text. *)
 
 implementation
-uses LogWind,
-     uSettingsModel,   // Settings.My.Country
+uses
+     (* PostUnit and uContestRegistry stood first here from M5b until Q50 was
+       ruled (2026-10-15): they served only the contest's initial-exchange
+       question below, which is gone. *)
+     LogWind,
      MainUnit;   // the logger global
 
 function GetVEInitialExchange(Call: CallString): string;
@@ -89,13 +133,13 @@ begin
   ctyLocateCall(Call, QTH);
   CountryID := QTH.CountryID;
 
-  if ActiveQSOPointMethod = RussianDXQSOPointMethod then
-    if (CountryID[1] = 'U') then
-      if (CountryID[2] = 'A') then
-         begin
-         Result := GetRussiaOblastID(Call);
-         Exit;
-         end;
+  (* NO RUSSIAN OBLAST HERE ANY MORE -- Q50, ruled 2026-10-15. D7 tested
+    CountryID 'UA' here under RussianDXQSOPointMethod, and M5b moved that to
+    the contest's InitialExchangeFromCall; neither ever ran for a shipped
+    contest, because the Russian DX and RU3AX rows state NoInitialExchange and
+    so never reach this routine. LOGEDIT.InitialExchangeEntry's fallback, the
+    rule that did run, now asks the contest's InitialExchangeFromCall once,
+    after every initial-exchange arm. *)
 
   if CountryID <> 'VE' then Exit;
   Call := Copy(Call, 1, 3);
@@ -151,49 +195,82 @@ begin
      end;
 end;
 
-procedure AddDomesticCountry(ID: CallString);
+constructor TDomesticCountryList.Create;
+begin
+  inherited Create;
+  FIDs := TList<AnsiString>.Create;
+  FEmptyReported := False;
+end;
 
+destructor TDomesticCountryList.Destroy;
+begin
+  FIDs.Free;
+  inherited Destroy;
+end;
+
+procedure TDomesticCountryList.Add(ID: CallString);
 var
-  ActiveRecord                          : DomesticCountryRecordPointer;
-
+  StoredID                              : string[6];
 begin
   strU(ID);
+  (* Truncated to six, as DomesticCountryRecord.CountryID was. *)
+  StoredID := ID;
+  FIDs.Add(AnsiString(StoredID));
+end;
 
-  if FirstDomesticCountryRecord = nil then
+procedure TDomesticCountryList.Clear;
+begin
+  FIDs.Clear;
+  FEmptyReported := False;
+end;
+
+function TDomesticCountryList.Count: integer;
+begin
+  Result := FIDs.Count;
+end;
+
+function TDomesticCountryList.GetID(aIndex: integer): string;
+begin
+  Result := string(FIDs[aIndex]);
+end;
+
+function TDomesticCountryList.HoldsCountry(const aCountryID: ShortString): boolean;
+var
+  wanted                                : AnsiString;
+  i                                     : integer;
+begin
+  wanted := AnsiString(aCountryID);
+  for i := 0 to FIDs.Count - 1 do
      begin
-     FirstDomesticCountryRecord := New(DomesticCountryRecordPointer);
-     FirstDomesticCountryRecord^.CountryID := ID;
-     FirstDomesticCountryRecord^.NextRecord := nil;
-     Exit;
+     if FIDs[i] = wanted then
+        begin
+        Result := True;
+        Exit;
+        end;
      end;
+  Result := False;
+end;
 
-  ActiveRecord := FirstDomesticCountryRecord;
+function TDomesticCountryList.ClaimEmptyReport: boolean;
+begin
+  Result := not FEmptyReported;
+  FEmptyReported := True;
+end;
 
-  while ActiveRecord^.NextRecord <> nil do
-     begin
-     ActiveRecord := ActiveRecord^.NextRecord;
-     end;
-
-  ActiveRecord^.NextRecord := New(DomesticCountryRecordPointer);
-
-  ActiveRecord := ActiveRecord^.NextRecord;
-
-  ActiveRecord^.CountryID := ID;
-  ActiveRecord^.NextRecord := nil;
+procedure AddDomesticCountry(ID: CallString);
+begin
+  DomesticCountries.Add(ID);
 end;
 
 function DomesticCountryCall(Call: CallString): boolean;
 
-{ Returns TRUE if the callsign is in one of the countries identified as
-  domestic countries. }
+(* Returns TRUE if the callsign is in one of the countries identified as
+  domestic countries. *)
 
 var
-  ActiveRecord                          : DomesticCountryRecordPointer;
   ID                                    : CallString;
   QTH                                   : QTHRecord;
 begin
-  ActiveRecord := FirstDomesticCountryRecord;
-
   (* AN EMPTY LIST IS NOT AN ANSWER, IT IS A MISSING INPUT -- SAY SO.
 
     This returned False silently, and False here means "this callsign is DX".
@@ -220,11 +297,10 @@ begin
     and a per-call message would be a flood rather than a diagnosis. The
     condition cannot come and go within a contest -- the list is loaded when
     the contest is set up -- so one line carries the whole story. *)
-  if ActiveRecord = nil then
+  if DomesticCountries.Count = 0 then
      begin
-     if not GEmptyDomesticListReported then
+     if DomesticCountries.ClaimEmptyReport then
         begin
-        GEmptyDomesticListReported := True;
         logger.Error('[Domestic] The domestic country list is EMPTY, so every '
                      + 'callsign will be treated as DX. The contest was not '
                      + 'set up -- check that a CONTEST value was applied and '
@@ -237,87 +313,12 @@ begin
   ctyLocateCall(Call, QTH);
   ID := QTH.CountryID;
 
-  repeat
-    if ActiveRecord^.CountryID = ID then
-       begin
-       DomesticCountryCall := True;
-       Exit;
-       end;
-
-    ActiveRecord := ActiveRecord^.NextRecord;
-
-  until ActiveRecord = nil;
-
-  DomesticCountryCall := False;
+  DomesticCountryCall := DomesticCountries.HoldsCountry(ID);
 end;
 
 procedure ClearDomesticCountryList;
-
-var
-  NextRecord, ActiveRecord              : DomesticCountryRecordPointer;
-
 begin
-  ActiveRecord := FirstDomesticCountryRecord;
-
-  while ActiveRecord <> nil do
-     begin
-     NextRecord := ActiveRecord^.NextRecord;
-     Dispose(ActiveRecord);
-     ActiveRecord := NextRecord;
-     end;
-  FirstDomesticCountryRecord := nil;
-  GEmptyDomesticListReported := False;
-end;
-
-function EuropeanCountriesAndWAECallRegions(QTH: QTHRecord): string;
-var
-  NumberChar                            : AnsiChar;
-begin
-  Result := '';
-  if QTH.Continent = Europe then Exit;
-  Result := QTH.CountryID;
-//W, VE, VK, ZL, ZS, JA, PY, ? ????? RA8/RA9 ? RA0
-  if (QTH.CountryID = 'K') or
-    (QTH.CountryID = 'VE') or
-    (QTH.CountryID = 'VK') or
-    (QTH.CountryID = 'ZL') or
-    (QTH.CountryID = 'ZS') or
-    (QTH.CountryID = 'JA') or
-    (QTH.CountryID = 'PY') or
-    (QTH.CountryID = 'UA9') then
-     begin
-     NumberChar := AnsiChar(GetNumber(QTH.StandardCall));
-     Result := QTH.CountryID + NumberChar;
-     end;
-
-end;
-
-function SACDistrict(QTH: QTHRecord): string;
-var
-  Oblast                                : Str2;
-begin
-  SACDistrict := '';
-  if ScandinavianCountry(QTH.CountryID) then
-     begin
-     Oblast := GetOblast(QTH.StandardCall);
-     if length(Oblast) = 0 then
-        begin
-        Oblast := '0';
-        end;
-     SACDistrict := QTH.CountryID + Oblast[1];
-     if (QTH.CountryID = 'OH0') or (QTH.CountryID = 'OJ0') then
-        begin
-        SACDistrict := QTH.CountryID;
-        end;
-     end;
-end;
-
-function IndonesianDistrict(QTH: QTHRecord): string;        // 4.64.1
-
-begin
-  IndonesianDistrict := '';
-  if (IndonesianCountry(QTH.CountryID) or (IndonesianCountry(Settings.My.Country))) then
-    IndonesianDistrict := GetPrefix(QTH.StandardCall); ;
+  DomesticCountries.Clear;
 end;
 
 function ClubCall(Call: CallString): boolean;
@@ -363,50 +364,17 @@ begin
   end;
 end;
 
-function GetContinentFromString(Cont: ShortString): ContinentType;
-begin
-  Result := UnknownContinent;
-  if Cont = 'NA' then
-     begin
-     Result := NorthAmerica;
-     end;
-  if Cont = 'NO' then
-     begin
-     Result := NorthAmerica;
-     end;
-
-  if Cont = 'SA' then
-     begin
-     Result := SouthAmerica;
-     end;
-  if Cont = 'SO' then
-     begin
-     Result := SouthAmerica;
-     end;
-
-  if Cont = 'EU' then
-     begin
-     Result := Europe;
-     end;
-  if Cont = 'AF' then
-     begin
-     Result := Africa;
-     end;
-  if Cont = 'AS' then
-     begin
-     Result := Asia;
-     end;
-  if Cont = 'OC' then
-     begin
-     Result := Oceania;
-     end;
-  if Cont = 'AN' then
-     begin
-     Result := Antartica;
-     end;
-end;
-
 //begin
   //  LastLocateCall := '';
+
+initialization
+  (* BEFORE ANY READER: every add is at run time (FoundContest, the config
+    reader), long after every unit's initialization. *)
+  DomesticCountries := TDomesticCountryList.Create;
+
+finalization
+  DomesticCountries.Free;
+  DomesticCountries := nil;
+
 end.
 

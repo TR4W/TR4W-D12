@@ -1,0 +1,339 @@
+(*
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+
+ This file is part of TR4W  (SRC)
+
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+ *)
+
+(* THE STEW PERRY TOPBAND DISTANCE CHALLENGE.
+
+  The ContestsArray row this class states, verbatim:
+
+   Email: '';  DF: '';  WA7BNM: 207;  QRZRUID: 46;
+   Pxm: NoPrefixMults;  ZnM: NoZoneMults;  AIE: NoInitialExchange;
+   DM: NoDomesticMults;  P: 0;  AE: RSTAndOrGridExchange;
+   XM: NoDXMults;  QP: StewPerryQSOPointMethod;
+   ADIFName: 'STEW-PERRY';  CABName: '';
+   FriendlyName: 'Stew Perry Topband Challenge'
+
+  Blank CABName resolves to the enum's spelling, 'STEW-PERRY'.
+
+  WHY IT HAS A CLASS. Milestone M7b (2026-10-02) gives every classless
+  contest one -- this is batch 2 -- and a registered class is the contest's
+  scorer, set-up, export, import, parse and final score from the moment it
+  exists, so the whole contest is transcribed here, exactly: the row above
+  as literals (Test_MovedRowValuesStillMatchTheArray), and every legacy arm
+  that named it, each arm deleted from the shared code it stood in. The
+  contest matrix is the proof: every line of its record but `contest.class`
+  is unchanged.
+
+  SCORING: StewPerryQSOPointMethod -- with MY GRID and the received grid:
+  one point per 500 km begun (distance div 500, plus 1), times 3 for a QRP
+  entrant and 1.5 (rounded) for a low-power one -- the entrant's
+  CATEGORY-POWER, Station.MyPower, the setting the arm read. Without both
+  grids, 1.
+
+  SET-UP: the contest name 'STEW-PERRY', the CQ and S&P exchanges as MY
+  GRID, 160 m.
+
+  DESIGN Q37 REACHES THIS CONTEST. LOGGRID.GetDistanceBetweenGrids pads a
+  grid that is not six characters with 'LL', and ConvertGridToLatLon reads
+  four characters of it: a grid shorter than four is read past its end, and
+  such a QSO's points followed the heap. Q37 (NY4I, 2026-10-15) is BUILT
+  (2026-10-17): the distance refuses a text that is not a grid and
+  answers 0, so this contest scores such a QSO by its own rule at no
+  distance -- and the grid exchange parsers refuse one when typed. Only a received grid
+  that is non-empty and shorter than four characters reaches it. *)
+unit uContestStewPerry;
+
+{$I tr4w.inc}
+
+interface
+
+uses
+   VC, uContestBase;
+
+type
+   TContestStewPerry = class(TContestBase)
+   protected
+      (* PROTECTED, MATCHING THE BASE -- callers use the properties,
+         descendants override the getters. Every getter below states
+         the ContestsArray row quoted above. *)
+      function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetFriendlyName: string; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
+      function GetReceivesGridSquareExchange: boolean; override;
+
+      (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
+      function GetFlags: TContestFlags; override;
+      function GetIsUSQSOParty: boolean; override;
+      (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
+         TContestBase: ScoreQSO is the one public scoring entry. *)
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesGridSquare: boolean; override;
+   public
+      (* MAY AN EXCHANGE WORD BE A GRID? -- see
+         TContestBase.ExchangeTextMayHoldGridSquare (M11 S9e part 1). *)
+      function ExchangeTextMayHoldGridSquare: boolean; override;
+   public
+      (* WHAT THE RECEIVED EXCHANGE REQUIRES -- see
+         TContestBase.ParseReceivedExchange and RequireReceivedGrid (Q115). *)
+      function ParseReceivedExchange(const aText: string;
+                                     const aSession: TReceivedExchangeSession;
+                                     var aExch: ContestExchange;
+                                     out aErrorMessage: string): boolean; override;
+      (* A GRID WORD IS NEVER A CALL -- see TContestBase.MayBeACallsign. *)
+      function MayBeACallsign(const aWord: string): boolean; override;
+   end;
+
+implementation
+
+uses
+   uExchangeFields,
+   uCabrilloExchange,
+   uADIFExchange,
+   uSettingsModel,
+   uContestRegistry,
+   LOGGRID,
+   (* IsGoodLookingGrid -- a grid word is not a call (Q115). *)
+   uGridShape,
+   uTR4WStrings;
+
+(* StewPerryQSOPointMethod -- the legacy LOGSTUFF arm for this
+   contest's point method, moved here as it stood (M7b batch 2). The arm
+   was deleted at M10 S3; see git history or the D7 tree. *)
+procedure TContestStewPerry.CalculateQSOPoints(var aQso: ContestExchange);
+var
+   distance: longint;
+begin
+   if (Station.MyGrid <> '') and (aQso.DomesticQTH <> '') then
+      begin
+      distance := GetDistanceBetweenGrids(Station.MyGrid, aQso.DomesticQTH);
+      aQso.QSOPoints := (distance div 500) + 1;
+      if Station.MyPower = cpQRP then
+         begin
+         aQso.QSOPoints := aQso.QSOPoints * 3;
+         end;
+      if Station.MyPower = cpLOW then
+         begin
+         aQso.QSOPoints := Round(aQso.QSOPoints * 1.5);
+         end;
+      end
+   else
+      begin
+      aQso.QSOPoints := 1;
+      end;
+end;
+
+function TContestStewPerry.GetDisplayName: string;
+begin
+   Result := 'Stew Perry Topband Challenge';
+end;
+
+function TContestStewPerry.GetCabrilloName: string;
+begin
+   (* The row's CABName is blank; this is the enum's spelling it resolves
+      to. *)
+   Result := 'STEW-PERRY';
+end;
+
+function TContestStewPerry.GetADIFContestId: string;
+begin
+   Result := 'STEW-PERRY';
+end;
+
+function TContestStewPerry.GetWA7BNMId: integer;
+begin
+   Result := 207;
+end;
+
+function TContestStewPerry.GetQRZRUId: integer;
+begin
+   Result := 46;
+end;
+
+function TContestStewPerry.GetSubmissionEmail: string;
+begin
+   Result := '';
+end;
+
+function TContestStewPerry.GetDomesticFileName: string;
+begin
+   Result := '';
+end;
+
+function TContestStewPerry.GetFriendlyName: string;
+begin
+   Result := 'Stew Perry Topband Challenge';
+end;
+
+function TContestStewPerry.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := NoInitialExchange;
+end;
+
+function TContestStewPerry.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTAndOrGridExchange;
+end;
+
+function TContestStewPerry.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQTH;
+end;
+
+function TContestStewPerry.ParseReceivedExchangeFormat(const aText: string;
+                                                       aParsers: TExchangeParsers;
+                                                       var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTAndOrGrid(aText, aExch);
+end;
+
+function TContestStewPerry.ExchangeTextMayHoldGridSquare: boolean;
+begin
+   Result := True;
+end;
+
+(* THE GRID IS REQUIRED, THE SIGNAL REPORT OPTIONAL -- Q115 (NY4I,
+   2026-10-18: "The contest class should be stating what is required.").
+   The sponsor's rule, kkn.net/stew/stew_rules.html: "Exchange: Four
+   character grid square (i.e. CN85). RST is optional." So a signal report
+   alone is refused; a grid alone is taken, the RST defaulting as it always
+   has. A word that is neither is the format's refusal (LOGSTUFF's
+   RST-and/or-grid parse). CalculateQSOPoints' one point for a QSO with no
+   grid is therefore unreachable from typed entry; an import can still carry
+   one (Q116). *)
+function TContestStewPerry.ParseReceivedExchange(const aText: string;
+                                                 const aSession: TReceivedExchangeSession;
+                                                 var aExch: ContestExchange;
+                                                 out aErrorMessage: string): boolean;
+begin
+   Result := inherited ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
+   Result := RequireReceivedGrid(Result, aExch, aErrorMessage);
+end;
+
+(* A WORD THAT IS A GRID SQUARE IS THE GRID -- Q115. Without this a
+   six-character grid ('FN31PR') has a call's shape, the call window took it
+   as the worked station's call, and '599 FN31PR' logged a QSO with the call
+   FN31PR and no grid. *)
+function TContestStewPerry.MayBeACallsign(const aWord: string): boolean;
+begin
+   Result := not IsGoodLookingGrid(aWord);
+end;
+
+function TContestStewPerry.ExchangeCarriesGridSquare: boolean;
+begin
+   Result := True;
+end;
+
+function TContestStewPerry.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                               const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentRSTGrid(aMy, aQso);
+end;
+
+function TContestStewPerry.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                   const aQso: ContestExchange;
+                                                   const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentRSTGrid(aMy, aQso, aCtx);
+end;
+
+function TContestStewPerry.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                       const aQso: ContestExchange;
+                                                       const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedRSTQTH(aMy, aQso, aCtx);
+end;
+
+function TContestStewPerry.GetReceivesGridSquareExchange: boolean;
+begin
+   Result := True;
+end;
+
+function TContestStewPerry.GetFlags: TContestFlags;
+begin
+   Result := [];
+end;
+
+function TContestStewPerry.GetIsUSQSOParty: boolean;
+begin
+   (* P: 0 -- not a US state QSO party. *)
+   Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7b batch 2, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestStewPerry.DescribeSession(const aStation: TStationContext;
+                                            aSession: TSessionDefaults);
+begin
+   aSession.ContestName := 'STEW-PERRY';
+   aSession.CQExchangeCW := ' ' + aStation.MyGrid;
+   aSession.SPExchangeCW := aStation.MyGrid;
+   aSession.Band := Band160;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for ARRLDIGI, ARRLVHFJAN, ARRLVHFJUN,
+   ARRLVHFSEP, BATAVIA_FT8, CQVHF, CUPRFCW, CUPRFDIG, CUPRFSSB, MAKROTHEN,
+   RTC, TESLA, WWDIGI.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestStewPerry.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskFieldWithComment(TC_ENTERYOURFOURDIGITGRIDSQUARE, ncfMyGrid);
+end;
+
+initialization
+   RegisterContest(STEWPERRY, TContestStewPerry);
+
+end.

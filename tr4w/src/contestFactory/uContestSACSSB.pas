@@ -1,0 +1,392 @@
+(*
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+
+ This file is part of TR4W  (SRC)
+
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+ *)
+
+(* THE SCANDINAVIAN ACTIVITY CONTEST, SSB.
+
+  The ContestsArray row this class states, verbatim:
+
+   Email: '';  DF: '';  WA7BNM: 131;  QRZRUID: 175;
+   Pxm: NoPrefixMults;  ZnM: NoZoneMults;  AIE: NoInitialExchange;  DM: NoDomesticMults;  P: 0;
+   AE: RSTQSONumberExchange;  XM: NoDXMults;  QP: ScandinavianQSOPointMethod;
+   ADIFName: '';  CABName: '';  FriendlyName: 'Scandinavian Activity Contest, SSB'
+
+  Blank CABName and ADIFName resolve to the enum's spelling, 'SAC-SSB'.
+
+  WHY IT HAS A CLASS NOW. M5b (2026-10-02) moved exchange parsing onto the
+  contest, and this contest's parse rule was `if (contest = SACCW) or
+  (contest = SACSSB)` inside a shared shape parser. A class to hold that rule
+  needed the whole row and the scoring arm with it, because registering a
+  class makes the class this contest's scorer too. Both are transcribed
+  exactly; Test_MovedRowValuesStillMatchTheArray holds the row, and the
+  contest matrix the rest -- every line of its record but `contest.class` is
+  unchanged, which is the proof.
+
+  A SIBLING OF THE CW RUNNING, NOT A FAMILY (design 1.5, Q7). NY4I's ruling
+  that a two-mode contest gets a base names NRAU-Baltic only, and extending it
+  to every pair is his open Q7 -- so, as with the NA Sprint CW and RTTY, the
+  two SAC runnings are siblings and each owns its copy (design 1.4).
+
+  SCORING, transcribed from ScandinavianQSOPointMethod. A Scandinavian
+  station scores 0 for another Scandinavian, 2 for the rest of Europe and 3
+  for the world. Anybody else scores 1 for a Scandinavian and 0 otherwise,
+  tripled on 80 and 40 m for a station outside Europe. 160 m scores 0.
+  ITS PARSE: a Russian station (UA, UA2, UA9, EU) entered live, against a call
+  in the call window, is not logged -- the entry is abandoned, silently, as
+  4.123.10 wrote it. Under this shape, before its parse. *)
+unit uContestSACSSB;
+
+{$I tr4w.inc}
+
+interface
+
+uses
+   VC, uContestBase;
+
+type
+   TContestSACSSB = class(TContestBase)
+   protected
+      (* PROTECTED, MATCHING THE BASE -- callers use the properties,
+         descendants override the getters. Every getter below states
+         the ContestsArray row quoted above. *)
+      function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetFriendlyName: string; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
+
+      (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
+      function GetFlags: TContestFlags; override;
+      function GetIsUSQSOParty: boolean; override;
+      (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
+         TContestBase: ScoreQSO is the one public scoring entry. *)
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* A RUSSIAN STATION ENTERED LIVE IS NOT LOGGED -- see the header. It
+         stood in LOGSTUFF.ProcessRSTAndQSONumberExchange; the entry is
+         abandoned through the session, which is what initializeqso did. *)
+      function ParseReceivedExchange(const aText: string;
+                                     const aSession: TReceivedExchangeSession;
+                                     var aExch: ContestExchange;
+                                     out aErrorMessage: string): boolean; override;
+   public
+      (* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasPrefixMultiplier (M11 S3 part 2). *)
+      function HasPrefixMultiplier: boolean; override;
+      (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
+         (M11 S3). *)
+      function PrefixMultiplierKey(const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean; override;
+   private
+      (* DOES THIS ENTRANT COUNT A DX MULTIPLIER? -- the station test
+         DescribeSession stated the DX kind under (deleted at M11 S4 part 2);
+         HasDXMultiplier, the key and the country list ask it, so the answers
+         cannot disagree (M11 S4). *)
+      function CountsDXMultiplier: boolean;
+   public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
+      function CountryMode: CountryModeType; override;
+   end;
+
+implementation
+
+uses
+   uExchangeFields,
+   uCabrilloExchange,
+   uADIFExchange,
+   uPrefixMultiplierKey,
+   uContestRegistry,
+   (* ScandinavianCountry -- the leaf the arm asks. *)
+   uCallSignRoutines;
+
+procedure TContestSACSSB.CalculateQSOPoints(var aQso: ContestExchange);
+var
+   rxCty: CallString;
+begin
+   rxCty := aQso.QTH.CountryID;
+
+   if ScandinavianCountry(Station.MyCountry) then
+      begin
+      if ScandinavianCountry(rxCty) then
+         begin
+         aQso.QSOPoints := 0;
+         end
+      else if aQso.QTH.Continent = Europe then
+         begin
+         aQso.QSOPoints := 2;
+         end
+      else
+         begin
+         aQso.QSOPoints := 3;
+         end;
+      end
+   else
+      begin
+      if ScandinavianCountry(rxCty) then
+         begin
+         aQso.QSOPoints := 1;
+         end
+      else
+         begin
+         aQso.QSOPoints := 0;
+         end;
+
+      if Station.MyContinent <> Europe then
+         begin
+         if aQso.Band in [Band80, Band40] then
+            begin
+            aQso.QSOPoints := aQso.QSOPoints * 3;
+            end;
+         end;
+      end;
+
+   if aQso.Band = Band160 then
+      begin
+      aQso.QSOPoints := 0;
+      end;
+end;
+
+function TContestSACSSB.ParseReceivedExchange(const aText: string;
+                                            const aSession: TReceivedExchangeSession;
+                                            var aExch: ContestExchange;
+                                            out aErrorMessage: string): boolean;
+begin
+   (* NO SHAPE TEST -- THIS CONTEST'S SESSION ALWAYS PARSES
+      RSTQSONumberExchange, its trait, and no DescribeSession
+      states another, so the test that stood here was always true.
+      Deleted at M11 S2 (plan F11). *)
+   if aSession.CallWindowHasCall                    and
+      ((aExch.QTH.CountryID = 'UA')  or
+       (aExch.QTH.CountryID = 'EU')  or
+       (aExch.QTH.CountryID = 'UA9') or
+       (aExch.QTH.CountryID = 'UA2'))               then
+      begin
+      aErrorMessage := '';
+      aSession.AbandonEntry;
+      Result := False;
+      Exit;
+      end;
+
+   Result := inherited ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
+end;
+
+function TContestSACSSB.GetDisplayName: string;
+begin
+   Result := 'Scandinavian Activity Contest, SSB';
+end;
+
+function TContestSACSSB.GetCabrilloName: string;
+begin
+   (* The row's CABName is blank; this is the enum's spelling it resolves to. *)
+   Result := 'SAC-SSB';
+end;
+
+function TContestSACSSB.GetADIFContestId: string;
+begin
+   (* The row's ADIFName is blank; export writes the enum's spelling, and import matches it (M1). *)
+   Result := 'SAC-SSB';
+end;
+
+function TContestSACSSB.GetWA7BNMId: integer;
+begin
+   Result := 131;
+end;
+
+function TContestSACSSB.GetQRZRUId: integer;
+begin
+   Result := 175;
+end;
+
+function TContestSACSSB.GetSubmissionEmail: string;
+begin
+   Result := '';
+end;
+
+function TContestSACSSB.GetDomesticFileName: string;
+begin
+   Result := '';
+end;
+
+function TContestSACSSB.GetFriendlyName: string;
+begin
+   Result := 'Scandinavian Activity Contest, SSB';
+end;
+
+function TContestSACSSB.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := NoInitialExchange;
+end;
+
+function TContestSACSSB.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTQSONumberExchange;
+end;
+
+function TContestSACSSB.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQSONumber;
+end;
+
+function TContestSACSSB.ParseReceivedExchangeFormat(const aText: string;
+                                                    aParsers: TExchangeParsers;
+                                                    var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTQSONumber(aText, aExch);
+end;
+
+procedure TContestSACSSB.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   aMessages.WriteRSTQSONumber;
+end;
+
+function TContestSACSSB.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                            const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentRSTQSONumber(aMy, aQso);
+end;
+
+function TContestSACSSB.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                const aQso: ContestExchange;
+                                                const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentRSTQSONumber(aMy, aQso, aCtx);
+end;
+
+function TContestSACSSB.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                    const aQso: ContestExchange;
+                                                    const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedRSTQSONumber(aMy, aQso, aCtx);
+end;
+
+function TContestSACSSB.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfMultByBand];
+end;
+
+function TContestSACSSB.GetIsUSQSOParty: boolean;
+begin
+   (* P: 0 -- not a US state QSO party. *)
+   Result := False;
+end;
+
+(* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- M11 S3 part 2,
+   2026-10-14. Yes for an entrant outside Scandinavia; none inside it. This
+   is the station test DescribeSession chose the session's prefix kind by,
+   until that kind was deleted; PrefixMultiplierKey asks it, so the two
+   cannot disagree. *)
+function TContestSACSSB.HasPrefixMultiplier: boolean;
+begin
+   Result := not ScandinavianCountry(string(Station.MyCountry));
+end;
+
+(* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
+   LOGEDIT.SetPrefix.
+   The Scandinavian call district for an entrant outside Scandinavia, an
+   EMPTY key (still assigned) for a non-Scandinavian QSO -- `SACDistricts`,
+   which DescribeSession chose there; none for a Scandinavian entrant, whose
+   session ran the trait's NoPrefixMults. *)
+function TContestSACSSB.PrefixMultiplierKey(const aQso: ContestExchange;
+                                            out aKey: PrefixMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if not HasPrefixMultiplier then
+      begin
+      Exit;
+      end;
+   aKey := PrefixMultiplierString(SACDistrict(aQso.QTH));
+   Result := True;
+end;
+
+(* THE STATION TEST -- DescribeSession's, asked of Station. See the declaration. *)
+function TContestSACSSB.CountsDXMultiplier: boolean;
+begin
+   Result := ScandinavianCountry(string(Station.MyCountry));
+end;
+
+(* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- M11 S4 part 2,
+   2026-10-14. Yes for a Scandinavian entrant; none for anyone else. This is
+   the station test the session's DX kind was chosen by (the trait, then
+   DescribeSession) until that kind was deleted; DXMultiplierKey and the
+   country list ask the same predicate, so the answers cannot disagree. *)
+function TContestSACSSB.HasDXMultiplier: boolean;
+begin
+   Result := CountsDXMultiplier;
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country, for a Scandinavian entrant (ARRLDXCC, which DescribeSession stated);
+   none for anyone else, whose multiplier is the Scandinavian district. *)
+function TContestSACSSB.DXMultiplierKey(const aQso: ContestExchange;
+                                        out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if CountsDXMultiplier then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
+end;
+
+(* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
+   DXCC only for a Scandinavian entrant; the CQ list for anyone else, who
+   counts no DX multiplier. *)
+function TContestSACSSB.CountryMode: CountryModeType;
+begin
+   if CountsDXMultiplier then
+      begin
+      Result := ARRLCountryMode;
+      end
+   else
+      begin
+      Result := CQCountryMode;
+      end;
+end;
+
+initialization
+   RegisterContest(SACSSB, TContestSACSSB);
+
+end.

@@ -141,12 +141,15 @@ resourcestring
    RS_CONTEST_CONTESTTITLE                    = 'Contest Title';
    RS_CONTEST_COUNTDOMESTICCOUNTRIES          = 'Count Domestic Countries';
    RS_CONTEST_CUSTOMINITIALEXCHANGESTRING     = 'Custom Initial Exchange String';
-   RS_CONTEST_DOMESTICMULTIPLIER              = 'Domestic Multiplier';
-   RS_CONTEST_DXMULTIPLIER                    = 'DX Multiplier';
+   (* SEVEN LABELS LEFT HERE AT M10 S2 (2026-10-14), with their settings:
+     RS_CONTEST_DOMESTICMULTIPLIER, _DXMULTIPLIER, _EXCHANGERECEIVED,
+     _INITIALEXCHANGE, _PREFIXMULTIPLIER, _QSOPOINTMETHOD, _ZONEMULTIPLIER.
+     The settings are in uCFG.RETIRED_COMMANDS (NY4I, Q4). THEIR CATALOGUE
+     ENTRIES ARE NOW ORPHANED in tr4w_laz.pot and every .po; they were left
+     alone deliberately, for the catalogue tooling to retire (see
+     docs/I18N_TOOLS.md). Never by hand, and never by pas2po. *)
    RS_CONTEST_EXCHANGEMEMORYENABLE            = 'Exchange Memory Enable';
-   RS_CONTEST_EXCHANGERECEIVED                = 'Exchange Received';
    RS_CONTEST_GRIDMAPCENTER                   = 'Grid Map Center';
-   RS_CONTEST_INITIALEXCHANGE                 = 'Initial Exchange';
    RS_CONTEST_INITIALEXCHANGECURSORPOS        = 'Initial Exchange Cursor Pos';
    RS_CONTEST_INITIALEXCHANGEOVERWRITE        = 'Initial Exchange Overwrite';
    RS_CONTEST_LITERALDOMESTICQTH              = 'Literal Domestic Qth';
@@ -161,12 +164,10 @@ resourcestring
    RS_CONTEST_MULTSHEETAUTORESET              = 'Mult Sheet Auto Reset';
    RS_CONTEST_MULTIPLEBANDS                   = 'Multiple Bands';
    RS_CONTEST_MULTIPLEMODES                   = 'Multiple Modes';
-   RS_CONTEST_PREFIXMULTIPLIER                = 'Prefix Multiplier';
    RS_CONTEST_QSLMODE                         = 'QSL Mode';
    RS_CONTEST_QSOBYBAND                       = 'QSO By Band';
    RS_CONTEST_QSOBYMODE                       = 'QSO By Mode';
    RS_CONTEST_QSONUMBERBYBAND                 = 'QSO Number By Band';
-   RS_CONTEST_QSOPOINTMETHOD                  = 'QSO Point Method';
    RS_CONTEST_QSOPOINTSDOMESTICCW             = 'QSO Points Domestic CW';
    RS_CONTEST_QSOPOINTSDOMESTICPHONE          = 'QSO Points Domestic Phone';
    RS_CONTEST_QSOPOINTSDXCW                   = 'QSO Points DX CW';
@@ -191,7 +192,6 @@ resourcestring
    RS_CONTEST_SHOWDOMESTICMULTIPLIERNAME      = 'Show Domestic Multiplier Name';
    RS_CONTEST_SPRINTQSYRULE                   = 'Sprint Qsy Rule';
    RS_CONTEST_TENMINUTERULE                   = 'Ten Minute Rule';
-   RS_CONTEST_ZONEMULTIPLIER                  = 'Zone Multiplier';
    RS_OPERATING_CTRLJ_ASKFORFREQUENCIES       = 'Ask For Frequencies';
    RS_OPERATING_CTRLJ_AUTODISPLAYDUPEQSO      = 'Auto Display Dupe QSO';
    RS_OPERATING_CTRLJ_AUTODUPEENABLECQ        = 'Auto Dupe Enable CQ';

@@ -1,0 +1,282 @@
+(*
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+
+ This file is part of TR4W  (SRC)
+
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+ *)
+
+(* ICWC MEDIUM SPEED TEST -- MST.
+
+  The ContestsArray row this class states, verbatim:
+
+   Email: '';  DF: '';  WA7BNM: 720;  QRZRUID: 0;
+   Pxm: CallSignPrefix;  ZnM: NoZoneMults;  AIE: NoInitialExchange;
+   DM: NoDomesticMults;  P: 0;  AE: QSONumberandNameExchange;
+   XM: NoDXMults;  QP: OnePointPerQSO;  ADIFName: 'ICWC-MST';  CABName: '';
+   FriendlyName: 'ICWC Medium Speed Test'
+
+  SCORING IS OnePointPerQSO, an arm of the legacy LOGSTUFF scoring
+  case (deleted at M10 S3; see git history or the D7 tree):
+
+      RXData.QSOPoints := 1;
+
+  so the whole rule is FixedModePoints(Mode, 1, 1, 1) -- CW, phone, everything
+  else. Digital scores the phone value, as the legacy arm does.
+
+  uNewContest shares an arm with CWOPEN for this contest -- operator
+  SETUP, not scoring, and it stays there. FCONTEST has no arm for it.
+
+  THE ADIF ID WAS 'MST' UNTIL 2026-09-29 AND IS NOW 'ICWC-MST', the ADIF
+  3.1.7 Contest_ID enumeration's spelling (ICWC Medium Speed Test). NY4I
+  ruled the change, and ruled that import keep accepting the old spelling:
+  "Yes support old spellings." So 'MST' is this contest's former id --
+  every MST log TR4W exported before the change carries it. The Cabrillo
+  name stays 'MST' (the enum's spelling); only the ADIF id moved.
+
+  NOT A STATE QSO PARTY: P is 0 and it has no other family, so it
+  sits on TContestBase directly and states its own points, calling
+  FixedModePoints as a helper (TContestFixedPoints retired at M3).
+
+  THE CABRILLO CONTEST: NAME IS WA7BNM'S ICWC-MST SINCE 2026-10-19 (see
+  GetCabrilloName), not the enum's spelling the paragraph below
+  describes.
+
+  BLANK CABName, FriendlyName AND ADIFName ALL MEAN "THE ENUM'S SPELLING";
+  the getters below state the value each resolves to, never the empty
+  string. ADIFName joined the other two at M1 (2026-10-01): a blank one
+  was always exported as the enum's spelling, and the id is now what
+  export writes, so import matches it.
+
+  EXCHANGE PARSING IS NOT MOVED (M5). EXPORT IS THE CLASS'S, THROUGH HELPERS
+  (M11 S9b, S9c): the contest has no export rule of its own, so it states its
+  ADIF STX_STRING and its two Cabrillo columns by calling the named helpers
+  its exchange uses (uADIFExchange, uCabrilloExchange). *)
+unit uContestMST;
+
+{$I tr4w.inc}
+
+interface
+
+uses
+   VC, uContestBase;
+
+type
+   TContestMST = class(TContestBase)
+   protected
+      (* PROTECTED, MATCHING THE BASE -- callers use the properties,
+         descendants override the getters. Every getter below states
+         the ContestsArray row quoted above. *)
+      function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetFormerADIFContestIds: TContestIdList; override;
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetFriendlyName: string; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
+
+      (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
+      function GetFlags: TContestFlags; override;
+      function GetIsUSQSOParty: boolean; override;
+      (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
+         TContestBase: ScoreQSO is the one public scoring entry. *)
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasPrefixMultiplier (M11 S3 part 2). *)
+      function HasPrefixMultiplier: boolean; override;
+      (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
+         (M11 S3). *)
+      function PrefixMultiplierKey(const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean; override;
+   end;
+
+implementation
+
+uses
+   uExchangeFields,
+   uCabrilloExchange,
+   uADIFExchange,
+   uContestRegistry, uContestFixedPoints,
+   uTR4WStrings;
+
+procedure TContestMST.CalculateQSOPoints(var aQso: ContestExchange);
+begin
+   aQso.QSOPoints := FixedModePoints(aQso.Mode, 1, 1, 1);
+end;
+
+function TContestMST.GetDisplayName: string;
+begin
+   Result := 'ICWC Medium Speed Test';
+end;
+
+function TContestMST.GetCabrilloName: string;
+begin
+   (* WA7BNM's Cabrillo name (WA7BNM 720), NY4I 2026-10-19: "do the
+      cabrillo renames". TR4W wrote 'MST', which the sponsor's log robot
+      accepted neither as the name nor as an alias
+      (docs/UDC_CROSSWALK_FINDINGS.md). Only the Cabrillo CONTEST: line
+      (and the UDP <contestname>) moves: the id, the ADIF id and the
+      display names are their own literals. TR4W reads no Cabrillo
+      CONTEST: value back, so the old name needs no read alias. *)
+   Result := 'ICWC-MST';
+end;
+
+function TContestMST.GetADIFContestId: string;
+begin
+   Result := 'ICWC-MST';
+end;
+
+function TContestMST.GetFormerADIFContestIds: TContestIdList;
+begin
+   (* The row's ADIFName until 2026-09-29 -- see the unit header. *)
+   Result := ContestIdList(['MST']);
+end;
+
+function TContestMST.GetWA7BNMId: integer;
+begin
+   Result := 720;
+end;
+
+function TContestMST.GetQRZRUId: integer;
+begin
+   Result := 0;
+end;
+
+function TContestMST.GetSubmissionEmail: string;
+begin
+   Result := '';
+end;
+
+function TContestMST.GetDomesticFileName: string;
+begin
+   Result := '';
+end;
+
+function TContestMST.GetFriendlyName: string;
+begin
+   Result := 'ICWC Medium Speed Test';
+end;
+
+function TContestMST.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := NoInitialExchange;
+end;
+
+function TContestMST.GetExchangeKind: ExchangeType;
+begin
+   Result := QSONumberAndNameExchange;
+end;
+
+function TContestMST.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsQSONumberName;
+end;
+
+function TContestMST.ParseReceivedExchangeFormat(const aText: string;
+                                                 aParsers: TExchangeParsers;
+                                                 var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseQSONumberAndName(aText, aExch);
+end;
+
+function TContestMST.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                         const aQso: ContestExchange): string;
+begin
+   Result := ADIFSentQSONumberName(aMy, aQso);
+end;
+
+function TContestMST.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                             const aQso: ContestExchange;
+                                             const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentQSONumberName(aMy, aQso, aCtx);
+end;
+
+function TContestMST.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                 const aQso: ContestExchange;
+                                                 const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedQSONumberName(aMy, aQso, aCtx);
+end;
+
+function TContestMST.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfRTCCapable];
+end;
+
+function TContestMST.GetIsUSQSOParty: boolean;
+begin
+   (* P: 0 -- this is not a US state QSO party. *)
+   Result := False;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for CWOPEN, EUSPRINT_AUTUMN_CW,
+   EUSPRINT_AUTUMN_SSB, EUSPRINT_SPRING_CW, EUSPRINT_SPRING_SSB.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestMST.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskFieldWithComment(TC_ENTERYOURNAME, ncfMyName);
+end;
+
+(* A PREFIX MULTIPLIER AT EVERY STATION -- M11 S3 part 2, 2026-10-14:
+   the trait this class stated (`CallSignPrefix`) until the kind was deleted. *)
+function TContestMST.HasPrefixMultiplier: boolean;
+begin
+   Result := True;
+end;
+
+(* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
+   LOGEDIT.SetPrefix.
+   The worked callsign itself, cut to the field's six characters --
+   SetPrefix's `CallSignPrefix` arm. *)
+function TContestMST.PrefixMultiplierKey(const aQso: ContestExchange;
+                                         out aKey: PrefixMultiplierString): boolean;
+begin
+   aKey := aQso.Callsign;
+   Result := True;
+end;
+
+initialization
+   RegisterContest(MST, TContestMST);
+
+end.

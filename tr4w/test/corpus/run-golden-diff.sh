@@ -22,6 +22,18 @@ is_known(){ grep -qiE "^$1[[:space:]]" "$KNOWN" 2>/dev/null; }
 # not open the file to check whether it means what it says.
 known_reason(){ grep -iE "^$1[[:space:]]" "$KNOWN" 2>/dev/null | head -1 |
                 sed -E "s/^[^[:space:]]+[[:space:]]+//"; }
+# A KNOWN DIFFERENCE IN ONE ARTIFACT, PINNED LINE FOR LINE (Q54, 2026-10-16).
+#
+# A row in known-divergences.txt excuses EVERY difference in BOTH artifacts of
+# its set, which is the right tool for a defect whose reach is open-ended
+# (general_qso's sent exchange) and the wrong one for a ruled change of a
+# known size: listing winter_fd there for its one FM line would have blinded
+# the corpus to any future regression in that set's ADIF and Cabrillo alike.
+#
+# So a set may instead carry <set>/known.<kind>.diff, matched by the ONE
+# implementation both corpus oracles source -- known-pin-lib.sh, which says
+# what a pin means. test-adif-roundtrip.sh reads the same file.
+. "$(dirname "${BASH_SOURCE[0]}")/known-pin-lib.sh"
 pass=0; fail=0; skip=0; known=0
 for d in tr4w/test/corpus/*/; do
    slug=$(basename "$d")
@@ -42,8 +54,27 @@ for d in tr4w/test/corpus/*/; do
          fi
          continue
       fi
-      if out=$(python "$GD" "$ref" "$cand" 2>&1); then
-         printf '  PASS  %-26s %s\n' "$slug" "$kind"; pass=$((pass+1))
+      pin="${d}known.$kind.diff"
+      out=$(python "$GD" "$ref" "$cand" 2>&1); rc=$?
+      if [ "$rc" -eq 0 ]; then
+         if [ -f "$pin" ]; then
+            # The pinned difference is GONE. Not a silent pass: the pin is now
+            # stale and must come out, or it would excuse the line coming back.
+            printf '  FAIL  %-26s %-3s (identical, but %s still pins a difference -- remove it)\n' \
+                   "$slug" "$kind" "known.$kind.diff"
+            fail=$((fail+1))
+         else
+            printf '  PASS  %-26s %s\n' "$slug" "$kind"; pass=$((pass+1))
+         fi
+      elif [ -f "$pin" ] && [ "$rc" -eq 1 ] &&
+           pin_matches "$pin" "$out"; then
+         # rc 1 is a FIDELITY difference only; a validity failure (rc 3, a
+         # corrupt candidate) or a usage error is never excused by a pin.
+         printf '  KNOWN %-26s %-3s (%s)\n' "$slug" "$kind" "$(pin_reason "$pin")"; known=$((known+1))
+      elif [ -f "$pin" ]; then
+         printf '  FAIL  %-26s %s (differs beyond %s)\n' "$slug" "$kind" "known.$kind.diff"
+         echo "$out" | grep -E '^[-+@]' | head -8 | sed 's/^/        /'
+         fail=$((fail+1))
       elif is_known "$slug"; then
          printf '  KNOWN %-26s %-3s (%s)\n' "$slug" "$kind" "$(known_reason "$slug")"; known=$((known+1))
       else

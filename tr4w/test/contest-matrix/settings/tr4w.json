@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "logging": {
+    "level": "WARN"
+  },
+  "settings": {
+    "ExternalLogger": {
+      "Address": "127.0.0.1",
+      "Enabled": false,
+      "Port": 52001
+    }
+  },
+  "cabrilloHeader": {
+    "_CATEGORY-ASSISTED": "NON-ASSISTED",
+    "_CATEGORY-BAND": "ALL",
+    "_CATEGORY-MODE": "MIXED",
+    "_CATEGORY-OPERATOR": "SINGLE-OP",
+    "_CATEGORY-POWER": "HIGH",
+    "_CATEGORY-STATION": "FIXED",
+    "_CATEGORY-TRANSMITTER": "ONE",
+    "_LOCATION": "MATRIX",
+    "_NAME": "Contest Matrix"
+  }
+}

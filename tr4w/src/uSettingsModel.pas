@@ -2082,6 +2082,33 @@ type
       property RateCutoff: TSayHiRateCutoff read FRateCutoff write FRateCutoff;
    end;
 
+   (* THE STATION FACTS A CONTEST MAY OVERRIDE -- design 7.12 (NY4I,
+     2026-10-13): "we use station config as a default but allow the override
+     at contest selection time."
+
+     ONE MEMBER PER TMySettings PROPERTY THAT THE NEW CONTEST DIALOG CAN ASK
+     FOR (uContestBase.TNewContestField: MY STATE / MY QTH, MY SECTION, MY
+     ZONE, MY GRID, MY NAME, MY FD CLASS, MY CHECK, MY PREC, MY PARK, MY IOTA,
+     MY POSTAL CODE, MY FOC NUMBER), PLUS MY ITU ZONE, which the dialog does
+     not ask for but which is the same kind of fact as the CQ zone: where the
+     station IS for this contest. Measured 2026-10-13: every one of the
+     dialog's fields was applied INTO this group, as the contest's, and the
+     next SaveSettings of the session -- a Preferences edit, the insert-mode
+     toggle -- wrote the contest's value into settings\tr4w.json as the
+     station's.
+
+     NOT HERE, ON PURPOSE: MY CALL (the club-call case predates this and has
+     its own capture rule, and everything derived from it -- country,
+     continent, zone -- would move with it), MY COUNTRY and MAIN CALLSIGN.
+     See docs/CONTEST_FACTORY_OPEN_QUESTIONS.md Q65.
+
+     STATION_FACT_PROPERTY names each member's property in TMySettings;
+     uTestStationFactOverrides checks every name is a published property, so
+     the two cannot drift apart unnoticed. *)
+   TStationFact = (sfState, sfSection, sfZone, sfItuZone, sfGrid, sfName,
+                   sfFdClass, sfCheck, sfPrec, sfPark, sfIota, sfPostalCode,
+                   sfFocNumber);
+
    (*
      THE STATION'S OWN FACTS -- the seventeen MY ... commands.
 
@@ -2132,11 +2159,69 @@ type
       FMainCallsign: string;
       FState: string;
       FItuZone: TMyItuZone;
+      (* THE OPEN CONTEST'S OVERRIDES -- design 7.12. NOT published, so they
+        are never streamed into settings\tr4w.json: they are stored with the
+        contest, in its log (uLogContestStatements). *)
+      FContestValue: array[TStationFact] of string;
+      FContestStated: array[TStationFact] of boolean;
       procedure SetCall(const aValue: string);
       procedure SetCountry(const aValue: string);
       procedure SetZone(const aValue: string);
+      function StationValue(aFact: TStationFact): string;
+      function GetResolvedText(aIndex: integer): string;
+      function GetResolvedItuZone: integer;
    public
       constructor Create;
+
+      (* ---------------------------------------------------------------
+        A STATION FACT IS A DEFAULT A CONTEST MAY OVERRIDE -- design 7.12.
+
+        THE PUBLISHED PROPERTIES BELOW ARE THE STATION'S CONFIGURATION:
+        what Preferences edits and settings\tr4w.json stores. A contest
+        never writes them. What a contest states for itself -- at New
+        Contest, in its .cfg, or from its own log on reopen -- is held here,
+        beside them, and Resolved answers "this contest's value if it stated
+        one, else the station's".
+
+        EVERY READER THAT SERVES THE CONTEST READS Resolved* -- the sent
+        exchange, the station context a contest class is handed, Cabrillo
+        and ADIF, the CW macros, the readiness check. Only the station's own
+        editors (Preferences, the converter, the startup load) read the
+        published property.
+
+        SO A PREFERENCES EDIT DURING A CONTEST CHANGES THE STATION, AND THE
+        CONTEST'S OVERRIDE STILL WINS FOR THAT CONTEST. A contest that
+        stated nothing follows the edit at once. *)
+      procedure SetContestOverride(aFact: TStationFact; const aValue: string);
+      (* Withdraw one override: the station's value is in force again for
+        this contest, and the next capture writes the station's row. *)
+      procedure ClearContestOverride(aFact: TStationFact);
+      (* Withdraw every override -- a contest's configuration is starting
+        afresh (uCFG.ClearContestCFGCommands). *)
+      procedure ClearContestOverrides;
+      function HasContestOverride(aFact: TStationFact): boolean;
+      function ContestOverride(aFact: TStationFact): string;
+      (* THE ONE RESOLVER. The contest's override if stated, else the
+        station's value, as text (MY ITU ZONE as its number). *)
+      function Resolved(aFact: TStationFact): string;
+
+      (* The resolver, by name, for the readers. ResolvedZone is MY CQ ZONE,
+        as text -- see Zone below for why it is text. *)
+      property ResolvedState: string index Ord(sfState) read GetResolvedText;
+      property ResolvedSection: string index Ord(sfSection) read GetResolvedText;
+      property ResolvedZone: string index Ord(sfZone) read GetResolvedText;
+      property ResolvedGrid: string index Ord(sfGrid) read GetResolvedText;
+      property ResolvedName: string index Ord(sfName) read GetResolvedText;
+      property ResolvedFdClass: string index Ord(sfFdClass) read GetResolvedText;
+      property ResolvedCheck: string index Ord(sfCheck) read GetResolvedText;
+      property ResolvedPrec: string index Ord(sfPrec) read GetResolvedText;
+      property ResolvedPark: string index Ord(sfPark) read GetResolvedText;
+      property ResolvedIota: string index Ord(sfIota) read GetResolvedText;
+      property ResolvedPostalCode: string index Ord(sfPostalCode) read GetResolvedText;
+      property ResolvedFocNumber: string index Ord(sfFocNumber) read GetResolvedText;
+      (* MY ITU ZONE resolved; 0 still means "use CTY.DAT". *)
+      property ResolvedItuZone: integer read GetResolvedItuZone;
+
       (* DID THE OPERATOR STATE A ZONE, or is it ours to derive?
 
         NOT published, so it is not streamed and has no command name: it is
@@ -2869,37 +2954,23 @@ type
       FCategoryOverlay: string;
       FBand: string;
       FContestToken: string;
-      FExchangeReceived: string;
-      FInitialExchange: string;
       FInitialExchangeCursorPos: string;
       FMode: string;
       FMyContinent: string;
       FQslMode: string;
-      FQsoPointMethod: string;
       FSingleBandScore: string;
       FMultReportMinimumBands: integer;
-      FDomesticMultiplier: string;
-      FDxMultiplier: string;
-      FPrefixMultiplier: string;
-      FZoneMultiplier: string;
       FHamscoreEnable: boolean;
       FR150SMode: boolean;
       FRfoblMode: boolean;
       procedure SetBand(const aValue: string);
       procedure SetDomesticFilename(const aValue: string);
       procedure SetContestToken(const aValue: string);
-      procedure SetExchangeReceived(const aValue: string);
-      procedure SetInitialExchange(const aValue: string);
       procedure SetInitialExchangeCursorPos(const aValue: string);
       procedure SetMode(const aValue: string);
       procedure SetMyContinent(const aValue: string);
       procedure SetQslMode(const aValue: string);
-      procedure SetQsoPointMethod(const aValue: string);
       procedure SetSingleBandScore(const aValue: string);
-      procedure SetDomesticMultiplier(const aValue: string);
-      procedure SetDxMultiplier(const aValue: string);
-      procedure SetPrefixMultiplier(const aValue: string);
-      procedure SetZoneMultiplier(const aValue: string);
       procedure SetName(const aValue: string);
    public
       constructor Create;
@@ -3052,7 +3123,7 @@ type
         is no enum to move. *)
       property CategoryOverlay: string
          read FCategoryOverlay write FCategoryOverlay;
-      (* TEN MORE TOKENS, on the same pattern as the four multipliers below.
+      (* MORE TOKENS, on the pattern the four (retired) multiplier modes set.
 
         EACH ENUM STAYS WITH THE SUBSYSTEM THAT OWNS IT -- ContestType with
         the contest table, BandType with the band plan, ContinentType with
@@ -3065,10 +3136,6 @@ type
       (* CONTEST, whose property cannot be called Contest: the group already
         is. The command name is aliased. *)
       property ContestToken: string read FContestToken write SetContestToken;
-      property ExchangeReceived: string
-         read FExchangeReceived write SetExchangeReceived;
-      property InitialExchange: string
-         read FInitialExchange write SetInitialExchange;
       property InitialExchangeCursorPos: string
          read FInitialExchangeCursorPos write SetInitialExchangeCursorPos;
       property Mode: string read FMode write SetMode;
@@ -3080,8 +3147,6 @@ type
         still arrives, from the same table, at the same point. *)
       property MyContinent: string read FMyContinent write SetMyContinent;
       property QslMode: string read FQslMode write SetQslMode;
-      property QsoPointMethod: string
-         read FQsoPointMethod write SetQsoPointMethod;
       property SingleBandScore: string
          read FSingleBandScore write SetSingleBandScore;
 
@@ -3096,32 +3161,12 @@ type
       property MultReportMinimumBands: integer
          read FMultReportMinimumBands write FMultReportMinimumBands;
 
-      (* THE FOUR MULTIPLIER MODES, AS TOKENS.
-
-        THE ENUM STAYS WITH THE SUBSYSTEM, which is NY4I's rule for the radio,
-        the external logger and the rotator, and it applies with more force
-        here: DXMultType and its three siblings are the CONTEST ENGINE's
-        vocabulary -- sixty-odd values whose order is load-bearing (
-        PrefixMultType's own comment says "ORDER MUST MATCH PREFIXMULTSTRING
-        ARRAY BELOW"), read at 149 sites in logdom, logdupe, logstuff and
-        uMults. Moving them here would buy nothing and cost all of that.
-
-        THE TOKEN IS WHAT A CONFIG FILE ALREADY WRITES -- 'DOMESTIC FILE',
-        'ARRL DXCC', 'CQ ZONES' -- and uCFG registers the vocabulary from the
-        very tables CheckCommand matched against, so there is still exactly
-        one statement of what each may say.
-
-        THE SETTERS ARE THE APPLY. Each raises Changed(), and uSettingsEffects
-        turns the token back into the live global the engine reads. That is
-        what the ckList row did, minus the row. *)
-      property DomesticMultiplier: string
-         read FDomesticMultiplier write SetDomesticMultiplier;
-      property DxMultiplier: string
-         read FDxMultiplier write SetDxMultiplier;
-      property PrefixMultiplier: string
-         read FPrefixMultiplier write SetPrefixMultiplier;
-      property ZoneMultiplier: string
-         read FZoneMultiplier write SetZoneMultiplier;
+      (* THE FOUR MULTIPLIER MODES, QSO POINT METHOD, EXCHANGE RECEIVED AND
+        INITIAL EXCHANGE STOOD HERE AS TOKENS until M10 S2 (2026-10-14). They
+        are retired -- uCFG.RETIRED_COMMANDS, NY4I's Q4 ruling: the contest's
+        class decides them, and user-defined contests are a future feature to
+        be designed another way. A stored row or a .cfg line naming one is
+        accepted, logged and ignored. *)
       (*
         POST LIVE SCORES FOR THIS CONTEST.
 
@@ -3509,6 +3554,9 @@ type
    private
       // command name -> property path, built once by walking the RTTI.
       FCommands: TStringList;
+      (* THE PROPERTY PATHS OF THE CONTEST-SCOPED SETTINGS THE OPERATOR HAS
+        STATED, for the contest that is open. See CommandIsStated. *)
+      FStated: TStringList;
       FOnChanged: TSettingChanged;
       FExternalLogger: TExternalLoggerSettings;
       FSpotCollector: TSpotCollectorSettings;
@@ -3584,6 +3632,14 @@ type
       procedure ReadEmptyCharAsUnset(aSender: TObject; aObject: TObject;
                                      aInfo: PPropInfo; aValue: TJSONData;
                                      var aHandled: boolean);
+      (* THE PARSE-AND-ASSIGN HALF OF TrySetByCommand, with no opinion on
+        whether the value is a statement. Both public setters below are this
+        plus one line saying which it is. *)
+      function AssignByCommand(const aCommand, aValue: string): boolean;
+      (* The property path of a CONTEST-SCOPED command, or '' for any other
+        name -- the one question CommandIsStated and SetCommandStated both
+        need answered first. *)
+      function ContestScopedPath(const aCommand: string): string;
    public
       constructor Create;
       destructor Destroy; override;
@@ -3653,7 +3709,101 @@ type
         set it? False for a name the model does not own at all, so a caller
         can ask about any command. See TSettingsGroup.IsStationOnly. *)
       function CommandIsStationOnly(const aCommand: string): boolean;
+
+      (* ---------------------------------------------------------------
+        A STATION FACT, STATED BY THE CONTEST -- design 7.12.
+
+        The command names are the station's own -- MY STATE, MY QTH, MY
+        ZONE, MY GRID... -- because that is what a .cfg, the New Contest
+        dialog and the log's config table have always said. What differs
+        is WHO IS SPEAKING, so it is the CHANNEL that chooses: the contest
+        channels (uCFG.ApplyContestStatement -- the .cfg, the New Contest
+        queue, the log's own rows on reopen) call TryOverrideForContest,
+        and every station channel (Preferences, a peer, the startup load)
+        goes on calling TrySetByCommand, which writes the station's value.
+
+        StationFactOfCommand answers which fact a name is, through the
+        same name map every other lookup uses, so MY QTH is MY STATE. *)
+      function StationFactOfCommand(const aCommand: string;
+                                    out aFact: TStationFact): boolean;
+      function CommandIsContestOverridable(const aCommand: string): boolean;
+      (* RECORD aValue AS THE OPEN CONTEST'S OWN VALUE OF THIS FACT. False for
+        a name that is not an overridable fact, and for a value the station's
+        property would refuse (its registered check, or MY ITU ZONE's
+        0..90) -- in which case nothing changes. Never touches the station's
+        value and never saves. *)
+      function TryOverrideForContest(const aCommand, aValue: string): boolean;
+      (* The override the open contest stated for this fact; False when it
+        stated none (or the name is not an overridable fact). *)
+      function TryGetContestOverride(const aCommand: string;
+                                     out aValue: string): boolean;
+
+      (* SET A SETTING BY ITS COMMAND NAME -- AND, FOR A CONTEST-SCOPED ONE,
+        RECORD THAT THE OPERATOR STATED IT.
+
+        Every channel that reaches a setting BY NAME is an operator speaking:
+        the contest .cfg, the New Contest dialog, Preferences, the Alt-P
+        message editor, a multi-op peer, and the log's own stored statements
+        on reopen. Contest set-up does NOT come through here -- FoundContest
+        and the constructor assign the properties directly -- so "arrived by
+        name" and "the operator said so" are the same set, and the flag is
+        set in the one place every one of those channels already passes.
+
+        The one by-name channel that is NOT a statement is the station's
+        legacy `commands` bucket; it uses TrySetUnstated. *)
       function TrySetByCommand(const aCommand, aValue: string): boolean;
+
+      (* THE SAME ASSIGNMENT, RECORDED AS NOT STATED for this contest.
+
+        For a value that reaches a contest-scoped setting from somewhere that
+        is not a statement about THIS contest: the station's legacy
+        `commands` bucket, which ApplyStoredCommands applies to whatever
+        contest is open. The value is in force for the session and the log
+        does not capture it, so the contest decides again on the next open.
+        Identical to TrySetByCommand for a setting that is not
+        contest-scoped. *)
+      function TrySetUnstated(const aCommand, aValue: string): boolean;
+
+      (* DID THE OPERATOR STATE THIS CONTEST-SCOPED SETTING FOR THE CONTEST
+        THAT IS OPEN? -- the was-set flag (docs/CONTEST_OWNERSHIP_DESIGN.md
+        section 7.8).
+
+        THE CONTEST LOG STORES ONLY WHAT THIS ANSWERS TRUE FOR, and deletes
+        the row of anything it answers False for: absence means the contest
+        decides. Before the flag, the log stored every contest-scoped value
+        including the constructor's 'NONE'/'UNKNOWN' sentinels, and nothing
+        could tell "the operator chose NONE" from "nobody chose" -- which is
+        how a stored sentinel could clobber a .cfg statement on reopen.
+
+        ONE MECHANISM FOR EVERY CONTEST-SCOPED SETTING, keyed by property
+        path, so every alias of a setting answers the same. It is the
+        generalisation of MyContinentIsSet / ZoneWasSet / CountryWasSet,
+        which predate it and are not folded in (they belong to station
+        groups and drive derivation rather than storage).
+
+        FALSE FOR EVERY NAME THAT IS NOT CONTEST-SCOPED: a station setting's
+        statement is settings\tr4w.json itself, and the question has no
+        other meaning there. *)
+      function CommandIsStated(const aCommand: string): boolean;
+
+      (* THE SAME QUESTION ASKED BY PROPERTY PATH -- 'Contest.QslMode'.
+
+        For the code that already holds the path rather than a command name.
+        (uSettingsEffects replayed the stated contest tokens by path until
+        those seven settings retired at M10 S2.) The statements are recorded BY
+        PATH, so this is the lookup CommandIsStated makes after resolving the
+        name. Only contest-scoped paths are ever recorded, so any other path
+        answers False. *)
+      function PathIsStated(const aPath: string): boolean;
+
+      (* RECORD OR WITHDRAW A STATEMENT WITHOUT ASSIGNING A VALUE.
+
+        True: the log's reapply uses it when a stored statement already
+        equals the value in force, so nothing is assigned but the statement
+        still stands. False: the operator withdraws it, and the contest
+        decides again -- the capture deletes the row. Ignored for a name
+        that is not contest-scoped. *)
+      procedure SetCommandStated(const aCommand: string; aStated: boolean);
       (* IS THIS SETTING A CREDENTIAL? Asked by the multi-op sync before it
         sends anything, by the importer before it upper-cases a line, and by
         Preferences before it shows a value. *)
@@ -3794,6 +3944,27 @@ type
 procedure RegisterSettingValueCheck(const aPath: string;
                                     const aCheck: TSettingValueCheck);
 
+(* A FORMER SPELLING OF A VALUE -- registered by the unit that knows it, as a
+  check is (2026-10-16).
+
+  The CONTEST setting is the first: 'NEQP' was the New England QSO Party's
+  spelling until it became NEWEQP, and every older .cfg and contest log
+  still says it. Its vocabulary (ContestTypeSA) lists only CURRENT spellings
+  -- it is also what a drop-down offers, and nobody should be offered a
+  retired name -- so the old one would be refused. A spelling function turns
+  it into the current spelling BEFORE the vocabulary and any check are
+  asked, and that is what is stored: the property only ever holds a current
+  spelling, so nothing downstream has to know an old one existed.
+
+  It TRANSLATES; it never refuses. Text it does not recognise comes back
+  unchanged and meets the vocabulary exactly as before. uCFG registers the
+  CONTEST one from uContestNames, which owns the legacy names. *)
+type
+   TSettingValueSpelling = function(const aValue: string): string;
+
+procedure RegisterSettingValueSpelling(const aPath: string;
+                                       const aSpelling: TSettingValueSpelling);
+
 (*
   THE VALUES A SETTING ACCEPTS, WHEN THEY ARE A LIST AND NOT A RANGE.
 
@@ -3813,6 +3984,25 @@ procedure RegisterSettingValueCheck(const aPath: string;
 *)
 procedure RegisterSettingAllowedValues(const aPath: string;
                                        const aValues: array of string);
+
+(* THE SAME, FROM A FUNCTION ASKED EACH TIME THE VOCABULARY IS READ -- Q108
+  S2, 2026-10-16 (design 8.2u, its first risk).
+
+  FOR A VOCABULARY THAT IS NOT COMPLETE WHEN ITS OWNER'S initialization
+  RUNS. The CONTEST setting is the one: its values are the contest
+  registry's ids, and the contest units register in their own
+  initialization sections, which run AFTER uCFG's (tr4w.lpr uses order).
+  A list copied at registration would silently miss every contest that
+  registered later; a provider is read when Preferences, the refusal or
+  the binding asks, after every unit has initialised.
+
+  A later RegisterSettingAllowedValues for the path replaces the provider,
+  and the other way round -- one vocabulary per path. *)
+type
+   TSettingValuesProvider = function: TArray<string>;
+
+procedure RegisterSettingAllowedValuesProvider(const aPath: string;
+                                               const aProvider: TSettingValuesProvider);
 
 (* THE SPELLING OF A LOG LEVEL -- 'DEBUG' for llDebug -- from the table the
   setting's vocabulary is registered from, so there is still one list. For
@@ -3881,6 +4071,16 @@ procedure FreeSettings;
 procedure FlattenLegacyCommands(const aCommands: TJSONObject;
                                 const aInto: TStrings);
 
+const
+   (* Each TStationFact's published property in TMySettings, so its path is
+     'My.' + this. Declared after the type section because a constant
+     between the forward declaration of TR4WSettings and its body would end
+     that type section early. *)
+   STATION_FACT_PROPERTY: array[TStationFact] of string = (
+      'State', 'Section', 'Zone', 'ItuZone', 'Grid', 'Name',
+      'FdClass', 'Check', 'Prec', 'Park', 'Iota', 'PostalCode',
+      'FocNumber');
+
 implementation
 
 uses
@@ -3904,9 +4104,21 @@ var
    GValueChecks: array of TRegisteredCheck;
 
 type
+   TRegisteredSpelling = record
+      Path: string;
+      Spelling: TSettingValueSpelling;
+   end;
+
+var
+   GValueSpellings: array of TRegisteredSpelling;
+
+type
    TRegisteredValues = record
       Path: string;
       Values: TArray<string>;
+      (* When assigned, the vocabulary IS this function's answer and Values
+         is unused -- RegisterSettingAllowedValuesProvider. *)
+      Provider: TSettingValuesProvider;
    end;
 
 var
@@ -3930,6 +4142,7 @@ begin
       if UnicodeSameText(GAllowedValues[i].Path, aPath) then
          begin
          GAllowedValues[i].Values := copied;
+         GAllowedValues[i].Provider := nil;
          Exit;
          end;
       end;
@@ -3938,6 +4151,29 @@ begin
    SetLength(GAllowedValues, n + 1);
    GAllowedValues[n].Path := aPath;
    GAllowedValues[n].Values := copied;
+   GAllowedValues[n].Provider := nil;
+end;
+
+procedure RegisterSettingAllowedValuesProvider(const aPath: string;
+                                               const aProvider: TSettingValuesProvider);
+var
+   i, n: integer;
+begin
+   for i := 0 to High(GAllowedValues) do
+      begin
+      if UnicodeSameText(GAllowedValues[i].Path, aPath) then
+         begin
+         GAllowedValues[i].Values := nil;
+         GAllowedValues[i].Provider := aProvider;
+         Exit;
+         end;
+      end;
+
+   n := Length(GAllowedValues);
+   SetLength(GAllowedValues, n + 1);
+   GAllowedValues[n].Path := aPath;
+   GAllowedValues[n].Values := nil;
+   GAllowedValues[n].Provider := aProvider;
 end;
 
 (* The vocabulary registered for this path, or nil. *)
@@ -3950,7 +4186,14 @@ begin
       begin
       if UnicodeSameText(GAllowedValues[i].Path, aPath) then
          begin
-         Result := GAllowedValues[i].Values;
+         if Assigned(GAllowedValues[i].Provider) then
+            begin
+            Result := GAllowedValues[i].Provider();
+            end
+         else
+            begin
+            Result := GAllowedValues[i].Values;
+            end;
          Exit;
          end;
       end;
@@ -4003,6 +4246,49 @@ begin
    SetLength(GValueChecks, i + 1);
    GValueChecks[i].Path := aPath;
    GValueChecks[i].Check := aCheck;
+end;
+
+procedure RegisterSettingValueSpelling(const aPath: string;
+                                       const aSpelling: TSettingValueSpelling);
+var
+   i: integer;
+begin
+   if not Assigned(aSpelling) then
+      begin
+      Exit;
+      end;
+
+   (* REGISTERING A PATH TWICE REPLACES, as for a check. *)
+   for i := 0 to High(GValueSpellings) do
+      begin
+      if UnicodeSameText(GValueSpellings[i].Path, aPath) then
+         begin
+         GValueSpellings[i].Spelling := aSpelling;
+         Exit;
+         end;
+      end;
+
+   i := Length(GValueSpellings);
+   SetLength(GValueSpellings, i + 1);
+   GValueSpellings[i].Path := aPath;
+   GValueSpellings[i].Spelling := aSpelling;
+end;
+
+(* The value as it is spelled now -- unchanged for a path with no spelling
+  registered, which is every path but CONTEST. *)
+function CurrentSpellingOf(const aPath, aValue: string): string;
+var
+   i: integer;
+begin
+   Result := aValue;
+   for i := 0 to High(GValueSpellings) do
+      begin
+      if UnicodeSameText(GValueSpellings[i].Path, aPath) then
+         begin
+         Result := GValueSpellings[i].Spelling(aValue);
+         Exit;
+         end;
+      end;
 end;
 
 (* True when nothing objects -- which is the answer for every path that has
@@ -4595,16 +4881,6 @@ begin
    SetStr(FContestToken, aValue, 'ContestToken');
 end;
 
-procedure TContestSettings.SetExchangeReceived(const aValue: string);
-begin
-   SetStr(FExchangeReceived, aValue, 'ExchangeReceived');
-end;
-
-procedure TContestSettings.SetInitialExchange(const aValue: string);
-begin
-   SetStr(FInitialExchange, aValue, 'InitialExchange');
-end;
-
 procedure TContestSettings.SetInitialExchangeCursorPos(const aValue: string);
 begin
    SetStr(FInitialExchangeCursorPos, aValue, 'InitialExchangeCursorPos');
@@ -4625,34 +4901,9 @@ begin
    SetStr(FQslMode, aValue, 'QslMode');
 end;
 
-procedure TContestSettings.SetQsoPointMethod(const aValue: string);
-begin
-   SetStr(FQsoPointMethod, aValue, 'QsoPointMethod');
-end;
-
 procedure TContestSettings.SetSingleBandScore(const aValue: string);
 begin
    SetStr(FSingleBandScore, aValue, 'SingleBandScore');
-end;
-
-procedure TContestSettings.SetDomesticMultiplier(const aValue: string);
-begin
-   SetStr(FDomesticMultiplier, aValue, 'DomesticMultiplier');
-end;
-
-procedure TContestSettings.SetDxMultiplier(const aValue: string);
-begin
-   SetStr(FDxMultiplier, aValue, 'DxMultiplier');
-end;
-
-procedure TContestSettings.SetPrefixMultiplier(const aValue: string);
-begin
-   SetStr(FPrefixMultiplier, aValue, 'PrefixMultiplier');
-end;
-
-procedure TContestSettings.SetZoneMultiplier(const aValue: string);
-begin
-   SetStr(FZoneMultiplier, aValue, 'ZoneMultiplier');
 end;
 
 procedure TContestSettings.SetName(const aValue: string);
@@ -4739,6 +4990,7 @@ begin
    FCountryWasSet := False;
    FState         := '';
    FItuZone    := 0;
+   ClearContestOverrides;
 end;
 
 procedure TMySettings.SetCall(const aValue: string);
@@ -4774,6 +5026,131 @@ end;
 procedure TMySettings.DeriveZone(const aValue: string);
 begin
    SetStr(FZone, aValue, 'Zone');
+end;
+
+(* THE STATION'S OWN VALUE OF ONE FACT, as text -- the published property.
+  A case rather than RTTI so the compiler sees every member named. *)
+function TMySettings.StationValue(aFact: TStationFact): string;
+begin
+   Result := '';
+   case aFact of
+      sfState:
+         begin
+         Result := FState;
+         end;
+      sfSection:
+         begin
+         Result := FSection;
+         end;
+      sfZone:
+         begin
+         Result := FZone;
+         end;
+      sfItuZone:
+         begin
+         Result := IntToStr(FItuZone);
+         end;
+      sfGrid:
+         begin
+         Result := FGrid;
+         end;
+      sfName:
+         begin
+         Result := FName;
+         end;
+      sfFdClass:
+         begin
+         Result := FFdClass;
+         end;
+      sfCheck:
+         begin
+         Result := FCheck;
+         end;
+      sfPrec:
+         begin
+         Result := FPrec;
+         end;
+      sfPark:
+         begin
+         Result := FPark;
+         end;
+      sfIota:
+         begin
+         Result := FIota;
+         end;
+      sfPostalCode:
+         begin
+         Result := FPostalCode;
+         end;
+      sfFocNumber:
+         begin
+         Result := FFocNumber;
+         end;
+   end;
+end;
+
+procedure TMySettings.SetContestOverride(aFact: TStationFact; const aValue: string);
+begin
+   FContestValue[aFact] := aValue;
+   FContestStated[aFact] := True;
+end;
+
+procedure TMySettings.ClearContestOverride(aFact: TStationFact);
+begin
+   FContestValue[aFact] := '';
+   FContestStated[aFact] := False;
+end;
+
+procedure TMySettings.ClearContestOverrides;
+var
+   fact: TStationFact;
+begin
+   for fact := Low(TStationFact) to High(TStationFact) do
+      begin
+      ClearContestOverride(fact);
+      end;
+end;
+
+function TMySettings.HasContestOverride(aFact: TStationFact): boolean;
+begin
+   Result := FContestStated[aFact];
+end;
+
+function TMySettings.ContestOverride(aFact: TStationFact): string;
+begin
+   Result := FContestValue[aFact];
+end;
+
+function TMySettings.Resolved(aFact: TStationFact): string;
+begin
+   if FContestStated[aFact] then
+      begin
+      Result := FContestValue[aFact];
+      end
+   else
+      begin
+      Result := StationValue(aFact);
+      end;
+end;
+
+function TMySettings.GetResolvedText(aIndex: integer): string;
+begin
+   Result := Resolved(TStationFact(aIndex));
+end;
+
+function TMySettings.GetResolvedItuZone: integer;
+var
+   code: integer;
+begin
+   (* An override was checked against TMyItuZone when it was stated (see
+     TR4WSettings.TryOverrideForContest), so this cannot leave the range.
+     Val, not StrToIntDef: the RTL's StrToIntDef takes an AnsiString here and
+     the conversion would be counted as a narrowing one. *)
+   Val(Resolved(sfItuZone), Result, code);
+   if code <> 0 then
+      begin
+      Result := 0;
+      end;
 end;
 
 constructor TSayHiSettings.Create;
@@ -5056,30 +5433,19 @@ begin
      buffer this replaces.  A bare name, resolved under the log and then the
      program directory by EnumerateLinesInFile. *)
    FInitialExchangeFilename := 'INITIAL.EX';
-   (* 'NONE' IS THE FIRST SPELLING IN ALL FOUR TABLES, and it is the value the
-     enums carry at zero -- NoDomesticMults, NoDXMults, NoPrefixMults,
-     NoZoneMults. Empty would not be in the allow-list, which a test says
-     plainly: a setting with a vocabulary has to hold one of its own values. *)
    (* EACH DEFAULT IS THE SPELLING OF THE VALUE ITS GLOBAL ALREADY CARRIED,
      so a station with no settings file behaves exactly as before -- and so
      that each holds one of its own allowed values, which a test requires and
      an empty string would fail. *)
    FBand                     := '160';          // BandType zero
    FContestToken             := 'DUMMY CONTEST';
-   FExchangeReceived         := 'UNKNOWN';
-   FInitialExchange          := 'NONE';
    FInitialExchangeCursorPos := 'AT END';
    FMode                     := 'CW';
    FMyContinent              := 'NONE';
    FQslMode                  := 'NONE';
-   FQsoPointMethod           := 'NONE';
    FSingleBandScore          := '160';
    (* 4, the value logstuff's declaration carried. *)
    FMultReportMinimumBands := 4;
-   FDomesticMultiplier := 'NONE';
-   FDxMultiplier       := 'NONE';
-   FPrefixMultiplier   := 'NONE';
-   FZoneMultiplier     := 'NONE';
    FDomesticFilename       := '';
    FExchangeMemoryEnable   := True;
    FMultipleBands          := True;
@@ -5196,10 +5562,18 @@ begin
    FCommands.Sorted := True;
    FCommands.Duplicates := dupError;   // two properties claiming one command name
    BuildCommandMap;
+
+   (* Nothing is stated by construction: a default is the contest's, not the
+     operator's. Paths are canonical, so the comparison is exact. *)
+   FStated := TStringList.Create;
+   FStated.CaseSensitive := True;
+   FStated.Sorted := True;
+   FStated.Duplicates := dupIgnore;
 end;
 
 destructor TR4WSettings.Destroy;
 begin
+   FStated.Free;
    FCommands.Free;
    (* EVERY GROUP THE CONSTRUCTOR CREATES IS FREED HERE, and eleven were not
      until 2026-09-19 -- Wsjtx through Hamscore, and Mp3 before it was
@@ -5671,13 +6045,10 @@ begin
    Alias('EXTERNAL LOGGER', 'ExternalLogger.LoggerType');
    Alias('BAND',                       'Contest.Band');
    Alias('CONTEST',                    'Contest.ContestToken');
-   Alias('EXCHANGE RECEIVED',          'Contest.ExchangeReceived');
-   Alias('INITIAL EXCHANGE',           'Contest.InitialExchange');
    Alias('INITIAL EXCHANGE CURSOR POS','Contest.InitialExchangeCursorPos');
    Alias('MODE',                       'Contest.Mode');
    Alias('MY CONTINENT',               'Contest.MyContinent');
    Alias('QSL MODE',                   'Contest.QslMode');
-   Alias('QSO POINT METHOD',           'Contest.QsoPointMethod');
    Alias('SINGLE BAND SCORE',          'Contest.SingleBandScore');
    Alias('CW ENABLE',            'Cw.Enable');
    Alias('CW TONE',              'Cw.Tone');
@@ -5688,10 +6059,6 @@ begin
    Alias('STEREO PIN HIGH',      'Cw.StereoPinHigh');
    Alias('ALERT COLOR',          'MainWindow.AlertColor');
    Alias('MULT REPORT MINIMUM BANDS', 'Contest.MultReportMinimumBands');
-   Alias('DOMESTIC MULTIPLIER',  'Contest.DomesticMultiplier');
-   Alias('DX MULTIPLIER',        'Contest.DxMultiplier');
-   Alias('PREFIX MULTIPLIER',    'Contest.PrefixMultiplier');
-   Alias('ZONE MULTIPLIER',      'Contest.ZoneMultiplier');
    Alias('CATEGORY-ASSISTED',    'Contest.CategoryAssisted');
    Alias('CATEGORY-BAND',        'Contest.CategoryBand');
    Alias('CATEGORY-MODE',        'Contest.CategoryMode');
@@ -5943,7 +6310,174 @@ begin
    Result := (owner is TSettingsGroup) and TSettingsGroup(owner).IsStationOnly;
 end;
 
+function TR4WSettings.StationFactOfCommand(const aCommand: string;
+                                          out aFact: TStationFact): boolean;
+var
+   path: string;
+   fact: TStationFact;
+begin
+   Result := False;
+   aFact := Low(TStationFact);
+   path := PathForCommand(aCommand);
+   if path = '' then
+      begin
+      Exit;
+      end;
+   for fact := Low(TStationFact) to High(TStationFact) do
+      begin
+      if UnicodeSameText(path, 'My.' + STATION_FACT_PROPERTY[fact]) then
+         begin
+         aFact := fact;
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
+function TR4WSettings.CommandIsContestOverridable(const aCommand: string): boolean;
+var
+   fact: TStationFact;
+begin
+   Result := StationFactOfCommand(aCommand, fact);
+end;
+
+function TR4WSettings.TryOverrideForContest(const aCommand, aValue: string): boolean;
+var
+   fact: TStationFact;
+   n: integer;
+   code: integer;
+   value: string;
+begin
+   Result := False;
+   if not StationFactOfCommand(aCommand, fact) then
+      begin
+      Exit;
+      end;
+
+   (* THE STATION'S PROPERTY'S OWN RULES, so a value the station could not
+     hold is not one the contest can hold either: its registered check, and
+     for the one integer fact its subrange. A string fact is taken as given,
+     untrimmed, exactly as AssignByCommand's string arm takes it. *)
+   if not ValueIsAcceptable('My.' + STATION_FACT_PROPERTY[fact], Trim(aValue)) then
+      begin
+      Exit;
+      end;
+
+   value := aValue;
+   if fact = sfItuZone then
+      begin
+      Val(Trim(aValue), n, code);
+      if (code <> 0) or
+         (n < Low(TMyItuZone)) or
+         (n > High(TMyItuZone)) then
+         begin
+         Exit;
+         end;
+      value := IntToStr(n);
+      end;
+
+   FMy.SetContestOverride(fact, value);
+   Result := True;
+end;
+
+function TR4WSettings.TryGetContestOverride(const aCommand: string;
+                                            out aValue: string): boolean;
+var
+   fact: TStationFact;
+begin
+   aValue := '';
+   Result := StationFactOfCommand(aCommand, fact) and
+             FMy.HasContestOverride(fact);
+   if Result then
+      begin
+      aValue := FMy.ContestOverride(fact);
+      end;
+end;
+
+function TR4WSettings.ContestScopedPath(const aCommand: string): string;
+var
+   path: string;
+   owner: TObject;
+   info: PPropInfo;
+begin
+   Result := '';
+   path := PathForCommand(aCommand);
+   if path = '' then
+      begin
+      Exit;
+      end;
+   if not ResolvePath(Self, path, owner, info) then
+      begin
+      Exit;
+      end;
+   if (owner is TSettingsGroup) and TSettingsGroup(owner).IsContestScoped then
+      begin
+      Result := path;
+      end;
+end;
+
+function TR4WSettings.CommandIsStated(const aCommand: string): boolean;
+var
+   path: string;
+begin
+   path := ContestScopedPath(aCommand);
+   Result := (path <> '') and PathIsStated(path);
+end;
+
+function TR4WSettings.PathIsStated(const aPath: string): boolean;
+begin
+   (* EXPLICIT AT THE CROSSING: a property path is a Pascal identifier
+     chain, ASCII by construction, and the list holds AnsiStrings. *)
+   Result := FStated.IndexOf(AnsiString(aPath)) >= 0;
+end;
+
+procedure TR4WSettings.SetCommandStated(const aCommand: string; aStated: boolean);
+var
+   path: string;
+   i: integer;
+begin
+   path := ContestScopedPath(aCommand);
+   if path = '' then
+      begin
+      Exit;
+      end;
+
+   if aStated then
+      begin
+      FStated.Add(AnsiString(path));
+      end
+   else
+      begin
+      i := FStated.IndexOf(AnsiString(path));
+      if i >= 0 then
+         begin
+         FStated.Delete(i);
+         end;
+      end;
+end;
+
 function TR4WSettings.TrySetByCommand(const aCommand, aValue: string): boolean;
+begin
+   Result := AssignByCommand(aCommand, aValue);
+   if Result then
+      begin
+      SetCommandStated(aCommand, True);
+      end;
+end;
+
+function TR4WSettings.TrySetUnstated(const aCommand, aValue: string): boolean;
+begin
+   Result := AssignByCommand(aCommand, aValue);
+   if Result then
+      begin
+      (* THE VALUE NOW IN FORCE IS NOT A STATEMENT, so any earlier one no
+        longer describes it. ApplyStoredCommands never reaches here for a
+        stated setting -- it skips those -- so this only ever confirms. *)
+      SetCommandStated(aCommand, False);
+      end;
+end;
+
+function TR4WSettings.AssignByCommand(const aCommand, aValue: string): boolean;
 var
    path: string;
    owner: TObject;
@@ -5964,7 +6498,10 @@ begin
       Exit;
       end;
 
-   text := Trim(aValue);
+   (* A FORMER SPELLING BECOMES THE CURRENT ONE FIRST, so the vocabulary,
+     the check and the property all see what is stored from now on. See
+     RegisterSettingValueSpelling. *)
+   text := CurrentSpellingOf(path, Trim(aValue));
 
    (* ASKED BEFORE ANY ARM ASSIGNS, so a refusal leaves the property exactly
      as it was. See RegisterSettingValueCheck. *)
@@ -6106,7 +6643,17 @@ begin
 
       tkString, tkLString, tkAString, tkUString, tkWString:
          begin
-         SetStrProp(owner, info, AnsiString(aValue));
+         (* THE TEXT AS GIVEN, untrimmed, as this arm always took it --
+           unless a registered spelling REPLACED it, when the current
+           spelling is what is stored. *)
+         if text <> Trim(aValue) then
+            begin
+            SetStrProp(owner, info, AnsiString(text));
+            end
+         else
+            begin
+            SetStrProp(owner, info, AnsiString(aValue));
+            end;
          Result := True;
          end;
    end;

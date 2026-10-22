@@ -1,0 +1,394 @@
+(*
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+
+ This file is part of TR4W  (SRC)
+
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+ *)
+
+(* THE PCC (4.83.8: every reference to TAC became PCC).
+
+  The ContestsArray row this class states, verbatim:
+
+   Email: '';  DF: '';  WA7BNM: 0;  QRZRUID: 35;
+   Pxm: Prefix;  ZnM: NoZoneMults;  AIE: NoInitialExchange;
+   DM: NoDomesticMults;  P: 0;  AE: RSTAndQSONumberOrDomesticQTHExchange;
+   XM: NoDXMults;  QP: PCCQSOPointMethod;  ADIFName: '';
+   CABName: '';  FriendlyName: ''
+
+  Blank ADIFName, CABName and FriendlyName are the enum's spelling, 'PCC'.
+
+  WHY IT HAS A CLASS NOW. M4 (2026-10-01) made every contest format its own
+  export, and this contest's rule was a `Contest = PCC` test inside a shared
+  exporter -- which the base may never contain. A class to hold that rule
+  needed the whole row and the scoring arm with it, because registering a
+  class makes the class this contest's scorer too. Both are transcribed
+  exactly; Test_MovedRowValuesStillMatchTheArray holds the row, and the
+  contest matrix the scoring and the export -- every line of its record
+  but `contest.class` is unchanged, which is the proof. EXCHANGE PARSING
+  (M5b) and set-up (M7a) have moved since.
+
+  SCORING IS PCCQSOPointMethod, transcribed exactly: 2 for a QSO with another
+  country, 1 within our own; and when the received exchange ENDS IN 'M' (a
+  mobile), 6 more if our MY STATE is all digits, 2 more otherwise. The arm
+  first sets 0 for 80 to 10 m and then overwrites it unconditionally -- that
+  line has no effect and is not carried.
+
+  THE SENT SIDE IS ITS OWN. Inside the shared
+  RSTAndQSONumberOrDomesticQTHExchange arm, `(MyState <> '') and (Contest <>
+  PCC)` sent the state for everyone else; the PCC always sends its serial,
+  with '/M' after it when MY STATE is all digits. That branch is this class's
+  now, in both exporters, and the shared helper keeps only the
+  state-or-serial answer. The received column is that helper's. *)
+unit uContestPCC;
+
+{$I tr4w.inc}
+
+interface
+
+uses
+   VC, uContestBase;
+
+type
+   TContestPCC = class(TContestBase)
+   protected
+      (* PROTECTED, MATCHING THE BASE -- callers use the properties,
+         descendants override the getters. Every getter below states
+         the ContestsArray row quoted above. *)
+      function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetFriendlyName: string; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+
+      (* LETTERS ARE A QTH, DIGITS A SERIAL -- M5b, 2026-10-02 (4.83.2).
+
+         It stood in LOGSTUFF.ProcessRSTAndQSONumberOrDomesticQTHExchange as a
+         test of ActiveQSOPointMethod = PCCQSOPointMethod, ahead of that
+         shape's own rule (a domestic station's QTH, anybody else's serial),
+         so an operator's QSO POINT METHOD line reached it in any contest.
+         M5b stated it as this class's ParseReceivedExchange; it is the
+         FORMAT, so since M11 S9d it is stated here, and the PCC never asks
+         the parser of the shape it was carried in. *)
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
+      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
+
+      (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
+      function GetFlags: TContestFlags; override;
+      function GetIsUSQSOParty: boolean; override;
+      (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
+         TContestBase: ScoreQSO is the one public scoring entry. *)
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
+
+      (* 'N/X' IS NOT A CALLSIGN IN THE PCC (4.83.7) -- a three-character
+         word with '/' in the middle. It stood in LOGSTUFF.LooksLikeACallSign
+         as `if contest = PCC`, which kept such a word from replacing the
+         call in the call window. *)
+      function MayBeACallsign(const aWord: string): boolean; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+      (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
+
+      (* OUR OWN COUNTRY'S PREFIXES ARE NO MULTIPLIER (4.83.6) --
+         logdupe's SetMultFlags rule for this contest, moved here at M8 and
+         transcribed exactly: a QSO whose CTY.DAT country is MY COUNTRY earns
+         no prefix multiplier. Every other kind is the sheet's. *)
+      function CountsAsMultiplier(const aQso: ContestExchange;
+                                  aKind: RemainingMultiplierType): boolean; override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasPrefixMultiplier (M11 S3 part 2). *)
+      function HasPrefixMultiplier: boolean; override;
+      (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
+         (M11 S3). *)
+      function PrefixMultiplierKey(const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean; override;
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesDomesticQTH: boolean; override;
+   end;
+
+implementation
+
+uses
+   uCabrilloExchange,
+   uExchangeFields,
+   SysUtils, uContestRegistry,
+   (* StringIsAllNumbers -- the test the arm asks of MY STATE. *)
+   utils_text,
+   uTR4WStrings;
+
+function TContestPCC.CountsAsMultiplier(const aQso: ContestExchange;
+                                        aKind: RemainingMultiplierType): boolean;
+begin
+   Result := not ((aKind = rmPrefix) and (aQso.QTH.CountryID = Station.MyCountry));
+end;
+
+function TContestPCC.MayBeACallsign(const aWord: string): boolean;
+begin
+   Result := not ((Length(aWord) = 3) and (aWord[2] = '/'));
+end;
+
+procedure TContestPCC.CalculateQSOPoints(var aQso: ContestExchange);
+var
+   lastIndex: integer;
+begin
+   if aQso.QTH.CountryID <> Station.MyCountry then
+      begin
+      aQso.QSOPoints := 2;
+      end
+   else
+      begin
+      aQso.QSOPoints := 1;
+      end;
+
+   (* "found 'M' in recvd nr?" -- the exchange's last character. The arm
+      indexed the length byte of an empty QTH, which is never 'M'; the guard
+      says the same thing aloud. *)
+   lastIndex := Length(aQso.QTHString);
+   if (lastIndex > 0) and (aQso.QTHString[lastIndex] = 'M') then
+      begin
+      if StringIsAllNumbers(Station.MyState) then
+         begin
+         inc(aQso.QSOPoints, 6);
+         end
+      else
+         begin
+         inc(aQso.QSOPoints, 2);
+         end;
+      end;
+end;
+
+function TContestPCC.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                             const aQso: ContestExchange;
+                                             const aCtx: TCabrilloQSOContext): string;
+begin
+   if StringIsAllNumbers(aMy.MyState) then
+      begin
+      Result := Format('%-4s %3.4u/M   ', [aCtx.RSTSent, aQso.NumberSent]);  (* n4af 4.43.12 *)
+      end
+   else
+      begin
+      Result := Format('%-4s %3.4u   ', [aCtx.RSTSent, aQso.NumberSent]);  (* n4af 4.43.12 *)
+      end;
+end;
+
+function TContestPCC.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                         const aQso: ContestExchange): string;
+begin
+   if StringIsAllNumbers(aMy.MyState) then
+      begin
+      Result := Format('%-4d %03u/M   ', [aQso.RSTSent, aQso.NumberSent]);
+      end
+   else
+      begin
+      Result := Format('%-4d %03u   ', [aQso.RSTSent, aQso.NumberSent]);
+      end;
+end;
+
+function TContestPCC.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                 const aQso: ContestExchange;
+                                                 const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedRSTQTHOrQSONumber(aMy, aQso, aCtx);
+end;
+
+function TContestPCC.GetDisplayName: string;
+begin
+   (* The contest's human name: WA7BNM, accepted (design Q53,
+      docs/Q53_CONTEST_NAMES.csv). *)
+   Result := 'PRO CW Contest';
+end;
+
+function TContestPCC.GetCabrilloName: string;
+begin
+   (* The row's CABName is blank; this is the enum's spelling it resolves
+      to. *)
+   Result := 'PCC';
+end;
+
+function TContestPCC.GetADIFContestId: string;
+begin
+   (* The row's ADIFName is blank; export writes the enum's spelling, and
+      import matches it (M1). *)
+   Result := 'PCC';
+end;
+
+function TContestPCC.GetWA7BNMId: integer;
+begin
+   (* WA7BNM's ref, accepted by NY4I with its name (design Q53). *)
+   Result := 266;
+end;
+
+function TContestPCC.GetQRZRUId: integer;
+begin
+   Result := 35;
+end;
+
+function TContestPCC.GetSubmissionEmail: string;
+begin
+   Result := '';
+end;
+
+function TContestPCC.GetDomesticFileName: string;
+begin
+   Result := '';
+end;
+
+function TContestPCC.GetFriendlyName: string;
+begin
+   (* The display name above -- design Q53. *)
+   Result := 'PRO CW Contest';
+end;
+
+function TContestPCC.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := NoInitialExchange;
+end;
+
+function TContestPCC.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTAndQSONumberOrDomesticQTHExchange;
+end;
+
+function TContestPCC.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsRSTQSONumberQTH;
+end;
+
+function TContestPCC.ParseReceivedExchangeFormat(const aText: string;
+                                                 aParsers: TExchangeParsers;
+                                                 var aExch: ContestExchange): boolean;
+begin
+   (* LETTERS ARE A QTH, DIGITS ALONE A SERIAL -- the format itself, so it
+      is stated here; it stood in ParseReceivedExchange until M11 S9d. *)
+   if not StringIsAllNumbers(aText) then
+      begin
+      Result := aParsers.ParseRSTDomesticQTH(aText, aExch);
+      end
+   else
+      begin
+      Result := aParsers.ParseRSTQSONumber(aText, aExch);
+      end;
+end;
+
+procedure TContestPCC.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   aMessages.WriteRSTStateOrQSONumber;
+end;
+
+function TContestPCC.ExchangeCarriesDomesticQTH: boolean;
+begin
+   Result := True;
+end;
+
+function TContestPCC.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfMultByBand];
+end;
+
+function TContestPCC.GetIsUSQSOParty: boolean;
+begin
+   (* P: 0 -- not a US state QSO party. *)
+   Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestPCC.DescribeSession(const aStation: TStationContext;
+                                      aSession: TSessionDefaults);
+begin
+   aSession.ExchangeMemoryEnable := False;
+   aSession.InitialExchangeOverwrite := True;
+end;
+
+(* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE --
+   LogCfg.tSetupExchangeNumbers' arm for it, moved here at M7a. See
+   TContestBase.CQExchangeDefault. *)
+function TContestPCC.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   if aStation.MyState <> '' then
+      begin
+      Result := ' 5NN # ' + aStation.MyState;
+      end
+   else
+      begin
+      Result := ' 5NN #';
+      end;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for ARKTIKA_SPRING.
+   The same steps on ticking the box stood for ARKTIKA_SPRING.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestPCC.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.OfferIAmIn(TC_ARKTIKACLUB);
+   aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURMEMBERSHIPNUMBER, ncfMyState);
+end;
+
+(* A PREFIX MULTIPLIER AT EVERY STATION -- M11 S3 part 2, 2026-10-14:
+   the trait this class stated (`Prefix`) until the kind was deleted. *)
+function TContestPCC.HasPrefixMultiplier: boolean;
+begin
+   Result := True;
+end;
+
+(* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
+   LOGEDIT.SetPrefix.
+   The CTY prefix of every QSO -- SetPrefix's `Prefix` arm. *)
+function TContestPCC.PrefixMultiplierKey(const aQso: ContestExchange;
+                                         out aKey: PrefixMultiplierString): boolean;
+begin
+   aKey := aQso.QTH.Prefix;
+   Result := True;
+end;
+
+initialization
+   RegisterContest(PCC, TContestPCC);
+
+end.

@@ -18,6 +18,7 @@ msgctxt "TC_TRANSLATION_LANGUAGE"
 msgid "ENGLISH"
 msgstr "Nederlands"
 
+# 2026-10-16: machine translation (LibreTranslate), no human translator to credit (NY4I, 2026-10-16). Was empty, which showed the English default "N4AF" in the About box.
 #. Section: General
 #: utr4wstrings:tc_translation_author
 #: tr4w/src/lang/tr4w_consts_eng.pas:8
@@ -25,7 +26,7 @@ msgstr "Nederlands"
 #, fuzzy
 msgctxt "TC_TRANSLATION_AUTHOR"
 msgid "N4AF"
-msgstr ""
+msgstr "LibreTranslate"
 
 #. Section: General
 #: utr4wstrings:tc_translator_email
@@ -90,6 +91,7 @@ msgctxt "TC_FREQ_ZERO"
 msgid "ERROR: Invalid Frequency logged"
 msgstr "FOUT: Ongeldige frequentie aangemeld"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "SHOW FREQUENTIE IN LOG is uitgeschakeld"
 #. Section: General
 #: utr4wstrings:tc_freq_off
 #: tr4w/src/lang/tr4w_consts_eng.pas:16
@@ -97,7 +99,7 @@ msgstr "FOUT: Ongeldige frequentie aangemeld"
 #, fuzzy
 msgctxt "TC_FREQ_OFF"
 msgid "SHOW FREQUENCY IN LOG is turned off"
-msgstr "SHOW FREQUENTIE IN LOG is uitgeschakeld"
+msgstr "SHOW FREQUENCY IN LOG is uitgeschakeld"
 
 #. Section: General
 #: utr4wstrings:tc_checkcallsign
@@ -183,6 +185,7 @@ msgctxt "TC_HAMLIB_ID_LABEL"
 msgid "HAMLIB ID"
 msgstr "HAMLIB ID"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "RADIO EEN en RADIO TWEE zijn beide geconfigureerd om %s. RADIO ONE houdt de poort; RADIO TWEE CAT control is uitgeschakeld totdat een radio's CONTROL PORT is veranderd."
 #. Section: General
 #: utr4wstrings:tc_port_conflict_startup
 #: tr4w/src/lang/tr4w_consts_eng.pas:32
@@ -190,7 +193,7 @@ msgstr "HAMLIB ID"
 #, fuzzy
 msgctxt "TC_PORT_CONFLICT_STARTUP"
 msgid "RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio's CONTROL PORT is changed."
-msgstr "RADIO EEN en RADIO TWEE zijn beide geconfigureerd om %s. RADIO ONE houdt de poort; RADIO TWEE CAT control is uitgeschakeld totdat een radio's CONTROL PORT is veranderd."
+msgstr "RADIO ONE en RADIO TWO zijn allebei ingesteld op %s. RADIO ONE houdt de poort; de CAT-besturing van RADIO TWO is uitgeschakeld totdat de CONTROL PORT van een van beide radio's is gewijzigd."
 
 #. Section: General
 #: utr4wstrings:tc_port_conflict_dialog
@@ -301,6 +304,7 @@ msgctxt "TC_PREF_OR_CQZONE"
 msgid "Enter your CQ ZONE or JA PREFECTURE"
 msgstr "Voer uw CQ ZONE of JA PREFECTURE in"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Sorry! GEEN LOG = WAAR die het loggen van QSO's op deze computer verbiedt"
 #. Section: MAIN
 #: utr4wstrings:tc_sorrynolog
 #: tr4w/src/lang/tr4w_consts_eng.pas:47
@@ -308,8 +312,9 @@ msgstr "Voer uw CQ ZONE of JA PREFECTURE in"
 #, fuzzy
 msgctxt "TC_SORRYNOLOG"
 msgid "Sorry!! NO LOG = TRUE which prohibits logging QSOs on this computer"
-msgstr "Sorry! GEEN LOG = WAAR die het loggen van QSO's op deze computer verbiedt"
+msgstr "Sorry!! NO LOG = TRUE, waardoor het loggen van QSO's op deze computer niet is toegestaan"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Computer ID-waarde instellen."
 #. Section: MAIN
 #: utr4wstrings:tc_setcomputeridvalue
 #: tr4w/src/lang/tr4w_consts_eng.pas:48
@@ -317,7 +322,7 @@ msgstr "Sorry! GEEN LOG = WAAR die het loggen van QSO's op deze computer verbied
 #, fuzzy
 msgctxt "TC_SETCOMPUTERIDVALUE"
 msgid "Set COMPUTER ID value."
-msgstr "Computer ID-waarde instellen."
+msgstr "Stel de waarde van COMPUTER ID in."
 
 #. Section: MAIN
 #: utr4wstrings:tc_wanttoconvertlog
@@ -653,6 +658,9 @@ msgctxt "TC_IRTS"
 msgid "EI/GI, enter your County"
 msgstr "EI/GI, kom binnen"
 
+# 2026-10-16: the English changed from "Latest config file" to "Last Contest" -- the button reopens the contest's database, not a config file.
+# Composed from this catalogue's own words, please review: last = 'Last status:' -> 'Laatste status:'; contest = 'Contest' -> 'Wedstrijd'.
+# Previous translation (of the old English): "Laatste configuratiebestand"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_latest_config_file
 #: tr4w/src/lang/tr4w_consts_eng.pas:100
@@ -660,8 +668,8 @@ msgstr "EI/GI, kom binnen"
 #: utr4wstrings.tc_latest_config_file
 #, fuzzy
 msgctxt "TC_LATEST_CONFIG_FILE"
-msgid "Latest config file"
-msgstr "Laatste configuratiebestand"
+msgid "Last Contest"
+msgstr "Laatste wedstrijd"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_openconfigurationfile
@@ -946,6 +954,7 @@ msgctxt "TC_ENTERFIRSTTWODIGITSOFYOURQTH"
 msgid "Enter first two digits of your QTH:"
 msgstr "Voer de eerste twee cijfers van uw QTH in:"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Voer uw leeftijd in MIJN STAAT veld:"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryourageinmystatefield
 #: tr4w/src/lang/tr4w_consts_eng.pas:134
@@ -953,8 +962,9 @@ msgstr "Voer de eerste twee cijfers van uw QTH in:"
 #, fuzzy
 msgctxt "TC_ENTERYOURAGEINMYSTATEFIELD"
 msgid "Enter your age in MY STATE field:"
-msgstr "Voer uw leeftijd in MIJN STAAT veld:"
+msgstr "Voer uw leeftijd in het veld MY STATE in:"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Voer uw QTH in die u wilt verzenden als u in Noord-Amerika bent of uw macht als MIJN STAAT indien buiten:"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryourqthorpower
 #: tr4w/src/lang/tr4w_consts_eng.pas:135
@@ -962,7 +972,7 @@ msgstr "Voer uw leeftijd in MIJN STAAT veld:"
 #, fuzzy
 msgctxt "TC_ENTERYOURQTHORPOWER"
 msgid "Enter your QTH that you want to send if you are in North America or your power as MY STATE if outside:"
-msgstr "Voer uw QTH in die u wilt verzenden als u in Noord-Amerika bent of uw macht als MIJN STAAT indien buiten:"
+msgstr "Voer de QTH in die u wilt verzenden als u in Noord-Amerika bent, of anders uw vermogen als MY STATE:"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enterfirsttwolettersofyourgrid
@@ -2333,6 +2343,7 @@ msgctxt "TC_RECORDDVPPRESSESCAPEORRETURNTOSTOP"
 msgid "Recording DVP. Press ESCAPE or RETURN to stop."
 msgstr "DVP opnemen. Druk op ESCAPE of RETURN om te stoppen."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Alt-R commando vereist 2 RADIO MODE = TRUE"
 #. Section: LOGSUBS1
 #: utr4wstrings:tc_altrcommanddisabled
 #: tr4w/src/lang/tr4w_consts_eng.pas:357
@@ -2340,7 +2351,7 @@ msgstr "DVP opnemen. Druk op ESCAPE of RETURN om te stoppen."
 #, fuzzy
 msgctxt "TC_ALTRCOMMANDDISABLED"
 msgid "Alt-R command requires TWO RADIO MODE = TRUE"
-msgstr "Alt-R commando vereist 2 RADIO MODE = TRUE"
+msgstr "Alt-R-commando vereist TWO RADIO MODE = TRUE"
 
 #. Section: LOGSUBS1
 #: utr4wstrings:tc_nocqmesprogrammedintocqmemoryaltf1
@@ -2360,6 +2371,7 @@ msgctxt "TC_THIS_FILE_DOES_NOT_EXIST"
 msgid "This file does not exist. Create an empty file for editing?"
 msgstr "Dit bestand bestaat niet. Een leeg bestand aanmaken om te bewerken?"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Alt-D commando vereist 2 RADIO MODE = TRUE"
 #. Section: LOGSUBS2
 #: utr4wstrings:tc_altdcommanddisabled
 #: tr4w/src/lang/tr4w_consts_eng.pas:364
@@ -2367,7 +2379,7 @@ msgstr "Dit bestand bestaat niet. Een leeg bestand aanmaken om te bewerken?"
 #, fuzzy
 msgctxt "TC_ALTDCOMMANDDISABLED"
 msgid "Alt-D command requires TWO RADIO MODE = TRUE"
-msgstr "Alt-D commando vereist 2 RADIO MODE = TRUE"
+msgstr "Alt-D-commando vereist TWO RADIO MODE = TRUE"
 
 #. Section: LOGSUBS2
 #: utr4wstrings:tc_youhaverestoredthelastdeleted
@@ -2875,6 +2887,7 @@ msgctxt "TC_INVALIDREMINDERDATE"
 msgid "Invalid reminder date!!"
 msgstr "Ongeldige herinneringsdatum!!"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Te veel totale SCORE boodschappen!!"
 #. Section: CFGCMD
 #: utr4wstrings:tc_toomanytotalscoremessages
 #: tr4w/src/lang/tr4w_consts_eng.pas:453
@@ -2882,8 +2895,9 @@ msgstr "Ongeldige herinneringsdatum!!"
 #, fuzzy
 msgctxt "TC_TOOMANYTOTALSCOREMESSAGES"
 msgid "Too many TOTAL SCORE MESSAGEs!!"
-msgstr "Te veel totale SCORE boodschappen!!"
+msgstr "Te veel TOTAL SCORE MESSAGE-regels!!"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Het eerste commando in config bestand moet de MIJN CALL statement zijn!!"
 #. Section: CFGCMD
 #: utr4wstrings:tc_thefirstcommandinconfigfilemustbe
 #: tr4w/src/lang/tr4w_consts_eng.pas:454
@@ -2891,7 +2905,7 @@ msgstr "Te veel totale SCORE boodschappen!!"
 #, fuzzy
 msgctxt "TC_THEFIRSTCOMMANDINCONFIGFILEMUSTBE"
 msgid "The first command in config file must be the MY CALL statement!!"
-msgstr "Het eerste commando in config bestand moet de MIJN CALL statement zijn!!"
+msgstr "Het eerste commando in het configuratiebestand moet de MY CALL-opdracht zijn!!"
 
 #. Section: USYNTIME
 #. milliseconds
@@ -3218,6 +3232,7 @@ msgctxt "TC_RST_PROMPT"
 msgid "RST prompt"
 msgstr "RST-prompt"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Verzend oproep zoals ingesteld door MIJN CALL commando"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:tc_send_callassetbymycallcommand
 #: tr4w/src/lang/tr4w_consts_eng.pas:511
@@ -3225,7 +3240,7 @@ msgstr "RST-prompt"
 #, fuzzy
 msgctxt "TC_SEND_CALLASSETBYMYCALLCOMMAND"
 msgid "Send call as set by MY CALL command"
-msgstr "Verzend oproep zoals ingesteld door MIJN CALL commando"
+msgstr "Verzend roepnaam zoals ingesteld met het commando MY CALL"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:tc_repeatrstsent
@@ -5023,10 +5038,11 @@ msgstr "Hoofdvenster"
 msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
 msgstr "Het lettertype is van toepassing op het hoofdvenster. Alle vier worden van kracht wanneer TR4W de volgende start."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Deze stonden in het menu Instellingen. Dat raam gaat weg zodra ROW COUNT en WINDOW SITE zich hier bij hen voegen."
 #: tprefsform.lblappearmenunote.caption
 #, fuzzy
 msgid "These were on the Appearance item of the Settings menu. That window goes away once ROW COUNT and WINDOW SIZE join them here."
-msgstr "Deze stonden in het menu Instellingen. Dat raam gaat weg zodra ROW COUNT en WINDOW SITE zich hier bij hen voegen."
+msgstr "Deze stonden onder het onderdeel Weergave van het menu Instellingen. Dat venster verdwijnt zodra ROW COUNT en WINDOW SIZE ook hierheen zijn verplaatst."
 
 #: tprefsform.lblaudioheading.caption
 #, fuzzy
@@ -6354,6 +6370,16 @@ msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
 msgstr "%s vertaling door %s"
 
+# 2026-10-16: new string -- the About box shows it under a machine translation's credit. Machine draft, please review.
+#. Section: General
+#: utr4wstrings:tc_translation_corrections
+#: tr4w/src/lang/tr4w_consts_eng.pas:14
+#: utr4wstrings.tc_translation_corrections
+#, fuzzy
+msgctxt "TC_TRANSLATION_CORRECTIONS"
+msgid "Corrections are appreciated."
+msgstr "Correcties worden op prijs gesteld."
+
 #. Section: UTELNET
 #: utr4wstrings:tc_telnet
 #: tr4w/src/lang/tr4w_consts_eng.pas:195
@@ -6362,6 +6388,7 @@ msgctxt "TC_TELNET"
 msgid "Connect\000Disconnect\000Commands\000Freeze\000Clear\000SH/50\000\000"
 msgstr "Verbinding maken...Verbinding verbreken.."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Bandverandering vereist MULTIPLE BANDEN = WAAR zodra het logboek QSO's heeft"
 #. Section: LOGSUBS2
 #: utr4wstrings:tc_bandchangedisabled
 #: tr4w/src/lang/tr4w_consts_eng.pas:365
@@ -6369,7 +6396,7 @@ msgstr "Verbinding maken...Verbinding verbreken.."
 #, fuzzy
 msgctxt "TC_BANDCHANGEDISABLED"
 msgid "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
-msgstr "Bandverandering vereist MULTIPLE BANDEN = WAAR zodra het logboek QSO's heeft"
+msgstr "Bandwisseling vereist MULTIPLE BANDS = TRUE zodra het log QSO's bevat"
 
 #. Section: UEDITMESSAGE
 #. 4.51.8
@@ -6494,6 +6521,7 @@ msgctxt "RC_SETTIMEZONE"
 msgid "Set time zone"
 msgstr "Tijdzone instellen"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Ping"
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_ping
 #: tr4w/src/lang/tr4w_consts_eng.pas:554
@@ -6501,7 +6529,7 @@ msgstr "Tijdzone instellen"
 #, fuzzy
 msgctxt "RC_PING"
 msgid "Ping [SERVER ADDRESS]"
-msgstr "Ping"
+msgstr "Ping [SERVER ADDRESS]"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_runserver
@@ -7712,6 +7740,7 @@ msgctxt "TC_AUTOSPOTENABLEDTESTMODEONLY"
 msgid "AUTOSPOT is enabled - Test Mode Only"
 msgstr "AUTOSPOT is ingeschakeld - Alleen testmodus"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "HANDLOG MODE = WAAR"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_handlogmodetrue
 #: tr4w/src/lang/tr4w_consts_eng.pas:848
@@ -7719,7 +7748,7 @@ msgstr "AUTOSPOT is ingeschakeld - Alleen testmodus"
 #, fuzzy
 msgctxt "TC_HANDLOGMODETRUE"
 msgid "HAND LOG MODE = TRUE"
-msgstr "HANDLOG MODE = WAAR"
+msgstr "HAND LOG MODE = TRUE"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_trmasterdtas
@@ -7991,6 +8020,7 @@ msgctxt "TC_ENTEREXCHANGEPRESSENTERLOGESCAPEAB"
 msgid "Enter exchange.  Press ENTER to log, ESCAPE to abort QSO."
 msgstr "Kom binnen. Druk op ENTER om te loggen, ESCAPE om QSO af te breken."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "RELAY-CONTROLEPORT = PADDLEPORT"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_relaycontrolportpaddleport
 #: tr4w/src/lang/tr4w_consts_eng.pas:879
@@ -7998,7 +8028,7 @@ msgstr "Kom binnen. Druk op ENTER om te loggen, ESCAPE om QSO af te breken."
 #, fuzzy
 msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
 msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr "RELAY-CONTROLEPORT = PADDLEPORT"
+msgstr "RELAY CONTROL PORT = PADDLE PORT"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_locationfieldempty
@@ -8230,106 +8260,6 @@ msgstr "DX"
 #, fuzzy
 msgid "QTH"
 msgstr "QTH"
-
-#: tfrmfunctionkeys.pnlf1.caption
-#, fuzzy
-msgid "F1"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf10.caption
-#, fuzzy
-msgid "F10"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf11.caption
-#, fuzzy
-msgid "F11"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf12.caption
-#, fuzzy
-msgid "F12"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf2.caption
-#, fuzzy
-msgid "F2"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf3.caption
-#, fuzzy
-msgid "F3"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf4.caption
-#, fuzzy
-msgid "F4"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf5.caption
-#, fuzzy
-msgid "F5"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf6.caption
-#, fuzzy
-msgid "F6"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf7.caption
-#, fuzzy
-msgid "F7"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf8.caption
-#, fuzzy
-msgid "F8"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf9.caption
-#, fuzzy
-msgid "F9"
-msgstr ""
-
-#: tfrmhamscore.lblqueuevalue.caption
-#, fuzzy
-msgid "--"
-msgstr ""
-
-#: tfrmmp3recorder.btncontrol.caption
-#, fuzzy
-msgid "..."
-msgstr ""
-
-#: tfrmpanadapter.btnspannarrow.caption
-#, fuzzy
-msgid "-"
-msgstr ""
-
-#: tfrmpanadapter.btnspanwide.caption
-#, fuzzy
-msgid "+"
-msgstr ""
-
-#: tradioeditform.optdata7.caption
-#, fuzzy
-msgid "7"
-msgstr ""
-
-#: tradioeditform.optdata8.caption
-#, fuzzy
-msgid "8"
-msgstr ""
-
-#: tradioeditform.optstop1.caption
-#, fuzzy
-msgid "1"
-msgstr ""
-
-#: tradioeditform.optstop2.caption
-#, fuzzy
-msgid "2"
-msgstr ""
 
 #: ulclformhelpers.tc_prefs_activate
 #, fuzzy
@@ -8578,15 +8508,6 @@ msgstr "Nieuwe log aanmaken en gebruiken"
 #, fuzzy
 msgid "Get server log"
 msgstr "Serverlog ophalen"
-
-#: tfrmserverlog.lblbytes.caption
-#: tfrmserverlog.lblqsos.caption
-#: tfrmserverlog.lblrecords.caption
-#: tfrmserverlog.lblsent.caption
-#, fuzzy
-msgctxt "tfrmserverlog.lblbytes.caption"
-msgid "0"
-msgstr ""
 
 #: tfrmtelnet.btnconfigure.caption
 #: utr4wstrings.tc_configure_ellipsis
@@ -9444,4 +9365,427 @@ msgstr "TRCLUSTER.DAT is niet naast het programma gevonden, dus de lijst is leeg
 #, fuzzy
 msgid "No DX clusters are defined yet -- click Configure to add one."
 msgstr "Er zijn nog geen DX clusters gedefinieerd -- klik op Configureren om er een toe te voegen."
+
+#: uappstrings.sexchangenoprecedence
+#, fuzzy
+msgid "Missing precedence (Q A B U M S)"
+msgstr "Ontbrekende voorrang (Q A B U M S)"
+
+#: uappstrings.sexchangeoutofstateworkshostonly
+#, fuzzy
+msgid "Out of state: work %s stations only"
+msgstr "Niet in staat: werk %s alleen stations"
+
+#: uappstrings.scontestinactive
+#, fuzzy
+msgid "%s (inactive)"
+msgstr "%s (inactief)"
+
+#: uappstrings.scategorypowerchangedrescored
+#, fuzzy
+msgid "CATEGORY-POWER is now %s -- the scoring category changed and the log was rescored."
+msgstr "CATEGORIE-POWER is nu %s -- de scorecategorie veranderde en het logboek werd gerecordeerd."
+
+#: uappstrings.scontestnotonmultiop
+#, fuzzy
+msgid "%s cannot be used on the multi-op network yet -- the network protocol cannot carry it. Use it only while this station is not connected to a multi-op server."
+msgstr "%s kan nog niet worden gebruikt op het multi-op-netwerk -- het netwerkprotocol kan het niet overbrengen. Gebruik het alleen zolang dit station niet met een multi-op-server is verbonden."
+
+#: uappstrings.snewcontestin7qpneinsideaparty
+#, fuzzy
+msgid "IN7QPNE is for stations outside Indiana, the 7th call area, New England and Delaware. From %s, choose the %s instead."
+msgstr "IN7QPNE is voor stations buiten Indiana, het 7e roepnaamgebied, New England en Delaware. Kies vanuit %s in plaats daarvan %s."
+
+#: uappstrings.speeronanothercontest
+#, fuzzy
+msgid "Station %s is on %s, this station is on %s -- its QSOs are NOT being logged here. All stations must run the same contest."
+msgstr "Station %s doet mee aan %s, dit station aan %s -- de QSO's ervan worden hier NIET gelogd. Alle stations moeten dezelfde contest draaien."
+
+#: uappstrings.sexchangenotagridorreport
+#, fuzzy
+msgid "%s is not a grid square or a signal report"
+msgstr "%s is geen locator en geen rapport"
+
+#: uappstrings.sexchangegridrequired
+#, fuzzy
+msgid "Grid square required"
+msgstr "Locator vereist"
+
+#: uappstrings.scouldnotshowinfilemanager
+#, fuzzy
+msgid ""
+"TR4W could not open this location in your file manager:\n"
+"\n"
+"%s\n"
+"\n"
+"Check that it still exists.  tr4w.log records what was tried."
+msgstr ""
+"TR4W kon deze locatie in uw bestandsbeheerder niet openen:\n"
+"\n"
+"%sControleer of het nog bestaat. tr4w.log registreert wat werd geprobeerd."
+
+#: uappstrings.sdownloadcannotverify
+#, fuzzy
+msgid ""
+"the server's certificate could not be verified (%s).\n"
+"\n"
+"The request was REFUSED rather than sent unverified. Turn off Preferences > Network > verify server certificates if you want to proceed without checking."
+msgstr ""
+"het certificaat van de server kon niet worden geverifieerd (%s).\n"
+"\n"
+"Het verzoek werd WEIGERING in plaats van ongeverifieerd verzonden. Voorkeuren uitzetten > Netwerk > verifieer servercertificaten als u wilt doorgaan zonder te controleren."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(MIJN LAND = %s)"
+#: uappstrings.sexchangemodebriefcountry
+#, fuzzy
+msgid "(MY COUNTRY = %s)"
+msgstr "(MY COUNTRY = %s)"
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(MIJN LAND is leeg)"
+#: uappstrings.sexchangemodebriefemptycountry
+#, fuzzy
+msgid "(MY COUNTRY is empty)"
+msgstr "(MY COUNTRY is leeg)"
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Deze wedstrijd vraagt om een staat, provincie of sectie omdat MIJN LAND %s."
+#: uappstrings.sexchangemodefromcountry
+#, fuzzy
+msgid "This contest is asking for a state, province or section because MY COUNTRY is %s."
+msgstr "Deze wedstrijd vraagt om een staat, provincie of sectie omdat MY COUNTRY %s is."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Deze wedstrijd vraagt om een staat, provincie of sectie omdat MIJN LAND leeg is."
+#: uappstrings.sexchangemodefromemptycountry
+#, fuzzy
+msgid "This contest is asking for a state, province or section because MY COUNTRY is empty."
+msgstr "Deze wedstrijd vraagt om een staat, provincie of sectie omdat MY COUNTRY leeg is."
+
+#: uappstrings.sfilenamecamefromsetting
+#, fuzzy
+msgid "The name came from the %s setting for this contest."
+msgstr "De naam kwam van de %s voor deze wedstrijd."
+
+#: uappstrings.sfilenotfoundthere
+#, fuzzy
+msgid "TR4W could not find this file:"
+msgstr "TR4W kon dit bestand niet vinden:"
+
+#: uappstrings.sfirstrunconvertmissing
+#, fuzzy
+msgid ""
+"TR4W could not find the conversion program:\n"
+"    %s\n"
+"\n"
+"It is installed beside TR4W itself. TR4W will start with its defaults, and your old settings file is left untouched."
+msgstr ""
+"TR4W kon het conversieprogramma niet vinden:\n"
+" %sHet is geïnstalleerd naast TR4W zelf. TR4W zal beginnen met de standaardinstellingen, en uw oude instellingenbestand wordt onaangeroerd gelaten."
+
+#: uappstrings.sfirstrunconvertnothingdone
+#, fuzzy
+msgid ""
+"Nothing was converted.\n"
+"\n"
+"TR4W will start with its defaults and your old settings file is untouched. You can convert at any time by running\n"
+"    %s\n"
+"\n"
+"from a command prompt in that folder. Converting then replaces whatever you have configured in the meantime with the old values."
+msgstr ""
+"Niets werd bekeerd.\n"
+"\n"
+"TR4W zal beginnen met de standaardinstellingen en uw oude instellingenbestand is onaangeroerd. U kunt converteren op elk moment door het uitvoeren van\n"
+" %svanuit een opdrachtprompt in die map. Converteren vervangt dan wat je hebt geconfigureerd in de tussentijd met de oude waarden."
+
+#: uappstrings.sfirstrunconvertnow
+#, fuzzy
+msgid "Convert now"
+msgstr "Nu omzetten"
+
+#: uappstrings.sfirstrunconvertprompt
+#, fuzzy
+msgid ""
+"TR4W has found settings from an earlier version:\n"
+"    %s\n"
+"\n"
+"and it has not written its own settings file yet:\n"
+"    %s\n"
+"\n"
+"TR4W can carry that old configuration across now. The conversion lists what it would change and asks before writing anything, so you can look first and still say no.\n"
+"\n"
+"You do not have to do it now. Nothing is lost by continuing: TR4W starts with its defaults, your old file is left untouched, and converting later simply replaces those defaults with your old values.\n"
+"\n"
+"What is worth knowing is the ORDER. If you continue now and then set TR4W up by hand, converting afterwards overwrites that work with the values from the old file. Converting first avoids the question."
+msgstr ""
+"TR4W heeft instellingen van een eerdere versie gevonden:\n"
+" %sen het heeft nog geen eigen instellingenbestand geschreven:\n"
+" %sTR4W kan die oude configuratie nu overdragen. De conversie geeft aan wat het zou veranderen en vraagt alvorens iets te schrijven, dus je kunt eerst kijken en nog steeds nee zeggen.\n"
+"\n"
+"Je hoeft het nu niet te doen. Niets wordt verloren door verder te gaan: TR4W begint met de standaardwaarden, uw oude bestand wordt onaangeroerd gelaten, en het omzetten later gewoon vervangt die standaardwaarden met uw oude waarden.\n"
+"\n"
+"Wat de moeite waard is, is de Orde. Als je nu verder gaat en vervolgens TR4W met de hand instellen, overschrijft het omzetten achteraf de waarden van het oude bestand. Converteren eerst vermijdt de vraag."
+
+#: uappstrings.sfirstrunconvertskip
+#, fuzzy
+msgid "Continue without converting"
+msgstr "Doorgaan zonder te converteren"
+
+#: uappstrings.sfirstrunconverttitle
+#, fuzzy
+msgid "TR4W -- settings from an earlier version"
+msgstr "TR4W -- instellingen van een eerdere versie"
+
+#: uappstrings.slogfileunavailable
+#, fuzzy
+msgid ""
+"TR4W could not open its log file.\n"
+"\n"
+"%s\n"
+"\n"
+"TR4W will keep running and keep trying to open it. Until it can, nothing from this session is written to the log."
+msgstr ""
+"TR4W kon zijn logbestand niet openen.\n"
+"\n"
+"%sTR4W zal blijven lopen en blijven proberen het te openen. Totdat het kan, niets van deze sessie is geschreven naar het logboek."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Computer-ID %s is al in gebruik door een ander station op dit netwerk.\n\nCOMPUTER wijzigen ID aan een letter geen ander station gebruikt, dan opnieuw verbinden."
+#: uappstrings.snetcomputeridinuse
+#, fuzzy
+msgid ""
+"Computer ID %s is already in use by another station on this network.\n"
+"\n"
+"Change COMPUTER ID to a letter no other station is using, then reconnect."
+msgstr ""
+"Computer-ID %s wordt al door een ander station op dit netwerk gebruikt.\n"
+"\n"
+"Wijzig COMPUTER ID in een letter die geen ander station gebruikt en maak daarna opnieuw verbinding."
+
+#: uappstrings.snewcontestin7qpnecountyorstate
+#, fuzzy
+msgid "Enter your county if you are in Indiana, the 7th call area, New England or Delaware. Enter your state, Canadian Province or \"DX\" if outside all four:"
+msgstr "Voer uw county als je in Indiana, de 7e call area, New England of Delaware. Voer uw staat, Canadese provincie of \"DX\" als buiten alle vier:"
+
+#: uappstrings.sqsonotlogged
+#, fuzzy
+msgid "NOT LOGGED -- the contest log would not accept this QSO. See tr4w.log. Do not clear the entry."
+msgstr "NIET LOGGED -- het wedstrijdlogboek zou deze QSO niet accepteren. Zie tr4w.log. Ontruim de ingang niet."
+
+#: uappstrings.sreadinessdomesticfilemissing
+#, fuzzy
+msgid "This contest scores domestic multipliers from a .DOM file and none is named, so no domestic multiplier will be counted."
+msgstr "Deze wedstrijd scoort binnenlandse multipliers uit een .DOM-bestand en geen wordt genoemd, dus geen binnenlandse multiplier zal worden geteld."
+
+#: uappstrings.sreadinessfooter
+#, fuzzy
+msgid "Set these in Preferences > Station, then restart TR4W: they are read once when the contest is set up, so changing them now will not change this contest."
+msgstr "Stel deze in in Voorkeuren > Station en herstart TR4W: ze worden eenmaal gelezen wanneer de wedstrijd is ingesteld, dus het veranderen van deze wedstrijd zal deze wedstrijd niet veranderen."
+
+#: uappstrings.sreadinessheading
+#, fuzzy
+msgid "This contest is set up, but TR4W is missing information it needs:"
+msgstr "Deze wedstrijd is opgezet, maar TR4W mist informatie die het nodig heeft:"
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Mijn oproep is leeg. TR4W kan uw land, continent of zone niet oplossen zonder, en niets dat van hen afhangt zal juist zijn."
+#: uappstrings.sreadinessmycallmissing
+#, fuzzy
+msgid "MY CALL is empty. TR4W cannot work out your country, continent or zone without it, and nothing that depends on them will be right."
+msgstr "MY CALL is leeg. Zonder deze kan TR4W uw land, continent of zone niet bepalen, en niets wat daarvan afhangt zal kloppen."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Mijn land is leeg. Het wordt normaal gesproken uitgewerkt vanuit MIJN CALL via CTY.DAT. Totdat het een waarde heeft behandelt TR4W dit station als DX -- in ARRL DX betekent dat het elk station zal vragen om een staat of provincie en weigeren een macht zoals K of 100."
+#: uappstrings.sreadinessmycountrymissing
+#, fuzzy
+msgid "MY COUNTRY is empty. It is normally worked out from MY CALL through CTY.DAT. Until it has a value TR4W treats this station as DX -- in ARRL DX that means it will ask every station for a state or province and refuse a power such as K or 100."
+msgstr "MY COUNTRY is leeg. Normaal wordt dit via CTY.DAT afgeleid uit MY CALL. Zolang het geen waarde heeft, behandelt TR4W dit station als DX -- in de ARRL DX betekent dat dat het elk station om een staat of provincie vraagt en een vermogen zoals K of 100 weigert."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "MIJN GRID is leeg en deze wedstrijd stuurt jullie raster vierkant."
+#: uappstrings.sreadinessmygridmissing
+#, fuzzy
+msgid "MY GRID is empty and this contest sends your grid square."
+msgstr "MY GRID is leeg en deze wedstrijd verstuurt uw locator."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "MIJN STAAT is leeg en deze wedstrijd stuurt jullie staat, provincie of sectie. TR4W stuurt in plaats daarvan een serienummer."
+#: uappstrings.sreadinessmystatemissing
+#, fuzzy
+msgid "MY STATE is empty and this contest sends your state, province or section. TR4W will send a serial number instead."
+msgstr "MY STATE is leeg en deze wedstrijd verstuurt uw staat, provincie of sectie. TR4W verstuurt in plaats daarvan een volgnummer."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "MIJN ZONE is leeg en deze wedstrijd stuurt jullie zone."
+#: uappstrings.sreadinessmyzonemissing
+#, fuzzy
+msgid "MY ZONE is empty and this contest sends your zone."
+msgstr "MY ZONE is leeg en deze wedstrijd verstuurt uw zone."
+
+#: uappstrings.sverifyallpassed
+#, fuzzy
+msgid "All %d check(s) passed."
+msgstr "Alles %d check(s) geslaagd."
+
+#: uappstrings.sverifyclose
+#, fuzzy
+msgid "&Close"
+msgstr "&Sluiten"
+
+#: uappstrings.sverifycolumncheck
+#, fuzzy
+msgid "Check"
+msgstr "Controleren"
+
+#: uappstrings.sverifycolumnresult
+#, fuzzy
+msgid "Result"
+msgstr "Resultaat"
+
+#: uappstrings.sverifyfailed
+#, fuzzy
+msgid "FAILED"
+msgstr "NIET VERMIST"
+
+#: uappstrings.sverifypassed
+#, fuzzy
+msgid "Passed"
+msgstr "geslaagd"
+
+#: uappstrings.sverifyrun
+#, fuzzy
+msgid "&Run checks"
+msgstr "Controles uitvoeren"
+
+#: uappstrings.sverifyrunning
+#, fuzzy
+msgid "Running %d check(s)..."
+msgstr "Uitvoeren %d check(s)..."
+
+#: uappstrings.sverifysomefailed
+#, fuzzy
+msgid "%d of %d check(s) FAILED. Select a row for details."
+msgstr "%d van %d Geen controle. Selecteer een rij voor details."
+
+#: uappstrings.sverifytitle
+#, fuzzy
+msgid "Verification checks"
+msgstr "Controles"
+
+#: uprogrammain.scontestfileforeigndatabase
+#, fuzzy
+msgid ""
+"This file is a database, but it was not created by TR4W:\n"
+"\n"
+"%s\n"
+"\n"
+"TR4W cannot open another program's log. Choose a TR4W log (.db) or a contest configuration file (.cfg)."
+msgstr ""
+"Dit bestand is een database, maar het is niet gemaakt door TR4W:\n"
+"\n"
+"%sTR4W kan het logboek van een ander programma niet openen. Kies een TR4W log (.db) of een wedstrijdconfiguratiebestand (.cfg)."
+
+#: uprogrammain.scontestfilenotrecognised
+#, fuzzy
+msgid ""
+"This file is not a TR4W log and is not a contest configuration file:\n"
+"\n"
+"%s\n"
+"\n"
+"Choose a TR4W log (.db) or a contest configuration file (.cfg)."
+msgstr ""
+"Dit bestand is geen TR4W log en is geen wedstrijd configuratie bestand:\n"
+"\n"
+"%sKies een TR4W log (.db) of een wedstrijdconfiguratiebestand (.cfg)."
+
+#: utr4wstrings.tc_bankalt
+#, fuzzy
+msgid "Alt"
+msgstr "Alt"
+
+#: utr4wstrings.tc_bankcontrol
+#, fuzzy
+msgid "Control"
+msgstr "Controle"
+
+#: utr4wstrings.tc_bankstandard
+#, fuzzy
+msgid "Standard"
+msgstr "Standaard"
+
+#: utr4wstrings.tc_ignoredunknownqth
+#, fuzzy
+msgid "Ignored, not a known QTH:"
+msgstr "Onbekend, geen bekend QTH:"
+
+# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output left the English; this catalogue's 'Contest' is 'Wedstrijd'. Machine output was: "CONTEST"
+#: uappstrings.snewcontestcontestlabel
+#, fuzzy
+msgid "CONTEST"
+msgstr "WEDSTRIJD"
+
+#: uappstrings.snewcontestsearchhint
+#, fuzzy
+msgid "Search: type part of a name, e.g. QSO"
+msgstr "Zoeken: typ onderdeel van een naam, bijvoorbeeld QSO"
+
+#: uappstrings.simportmyfactsdifference
+#, fuzzy
+msgid "%s: %d QSO(s), e.g. %s (this contest: %s)"
+msgstr "%s: %d QSO(s), bv. %s (deze wedstrijd: %s)"
+
+#: uappstrings.simportmyfactskept
+#, fuzzy
+msgid "The file's station was kept for %d QSO(s)."
+msgstr "Het station van het dossier werd bewaard voor %d QSO(s)."
+
+#: uappstrings.simportmyfactsquestion
+#, fuzzy
+msgid ""
+"This file names our station for %d of its %d QSO(s) (%s), and it is not what this contest has:%s\n"
+"\n"
+"Keep the file's values for those QSOs?\n"
+"Yes keeps the file's. No gives them this contest's, as a new QSO would get."
+msgstr ""
+
+#: uappstrings.simportmyfactsreplaced
+#, fuzzy
+msgid "%d QSO(s) were given this contest's station in place of the file's."
+msgstr "%d QSO(s) kregen deze wedstrijd station in plaats van het bestand."
+
+#: uappstrings.simportmyfactssame
+#, fuzzy
+msgid "%d QSO(s) named our station (%s), the same as this contest's."
+msgstr "%d QSO(s) genoemd ons station (%s), hetzelfde als deze wedstrijd."
+
+#: uappstrings.simportmyfactsstamped
+#, fuzzy
+msgid "%d QSO(s) named no station of ours and were given this contest's."
+msgstr "%d QSO(s) genoemd geen station van ons en kregen deze wedstrijd."
+
+#: uappstrings.snewcontestshowinactive
+#, fuzzy
+msgid "Show inactive contests"
+msgstr "Inactieve wedstrijden tonen"
+
+#: uappstrings.slatestcontestdetail
+#, fuzzy
+msgid "%0:s - %1:s"
+msgstr "%0:s - %1:s"
+
+#: uappstrings.slatestcontestline
+#, fuzzy
+msgid "%0:s %1:d"
+msgstr "%0:s %1:d"
+
+#: uappstrings.snewcontestfilescall
+#, fuzzy
+msgid "Call"
+msgstr "Roepnaam"
+
+#: uappstrings.snewcontestfilescontest
+#, fuzzy
+msgid "Contest"
+msgstr "Wedstrijd"
+
+#: uappstrings.snewcontestfilesfile
+#, fuzzy
+msgid "File"
+msgstr "Bestand"
+
+#: uappstrings.snewcontestfilesyear
+#, fuzzy
+msgid "Year"
+msgstr "Jaar"
 

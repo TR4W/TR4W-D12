@@ -118,7 +118,10 @@ implementation
 
 uses
    SysUtils,
-   Classes;
+   Classes,
+   (* ContestSplitsRoverCallOnExport and ContestAllowsCountyLineOnImport --
+      the two questions the deleted row's CountyLineAllowed answered. *)
+   uContestRegistry;
 
 // ---------------------------------------------------------------------------
 // Harness helpers
@@ -549,9 +552,24 @@ begin
    // for this contest's enum value so the import dupe-bypass does
    // NOT fire.  Asserting the flag's state guards against accidental
    // True flips.
-   CheckFalse(ContestsArray[records[0].ceContest].CountyLineAllowed,
-              'IN7QPNE-style multi-state QP must NOT have '
-              + 'CountyLineAllowed=True until issue #894 lands');
+   //
+   // The flag was ContestsArray's CountyLineAllowed until M10 S8 deleted
+   // the row. Its two readers each ask the class now: the import
+   // dupe-bypass (ContestAllowsCountyLineOnImport, since S7) and the rover
+   // split on export (ContestSplitsRoverCallOnExport, S8). The row said
+   // False for IN7QPNE. The dupe bypass still does (#894).
+   //
+   // THE ROVER SPLIT DOES NOT, since NY4I's ruling on Q90 with Q94
+   // (2026-10-14): "yes QSO parties allow it". A rover is not a county
+   // line; every QSO party, multi-state included, splits a rover's
+   // /county call on export, and IN7QPNE states it on its class.
+   CheckEquals(Ord(IN7QPNE), records[0].ceContest.ToByte,
+               'the fixture imports as IN7QPNE');
+   CheckFalse(ContestAllowsCountyLineOnImport(records[0].ceContest),
+              'IN7QPNE-style multi-state QP must NOT bypass the import '
+              + 'dupe check until issue #894 lands');
+   CheckTrue(ContestSplitsRoverCallOnExport(records[0].ceContest),
+             'IN7QPNE, a QSO party, splits a rover call on export (Q90)');
 end;
 
 // ---------------------------------------------------------------------------
@@ -614,7 +632,7 @@ begin
    CheckEquals(Integer(a.RSTReceived), Integer(b.RSTReceived), ctx + ' RSTReceived');
    CheckEquals(Integer(a.NumberSent),     Integer(b.NumberSent),     ctx + ' NumberSent');
    CheckEquals(Integer(a.NumberReceived), Integer(b.NumberReceived), ctx + ' NumberReceived');
-   CheckEquals(Integer(a.ceContest), Integer(b.ceContest), ctx + ' ceContest');
+   CheckEquals(a.ceContest.ToByte, b.ceContest.ToByte, ctx + ' ceContest');
    // Issue #750: X-QSO flag must round-trip through ADIF.  Export
    // emits APP_TR4W_CLAIMEDQSO=0 for X-QSO records (skipped for
    // normal records); import recognizes both that field and the

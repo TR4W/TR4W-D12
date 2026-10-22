@@ -25,12 +25,12 @@ interface
 
 uses
   TF,
-  Version,
   VC,
   (* LCLType, not Windows (2026-09-08): only TYPES and constants were
     wanted here, and LCLType declares them -- on Windows AS the Windows
     declarations, so no signature moves. *)
   LCLType,
+  uContestBase,       // TNewContestField, TNewContestPrompts -- M9a
   Tree,
   LogDupe,
   LogGrid,
@@ -43,9 +43,10 @@ uses
   uTR4WStrings,
   utils_text,
   LCLStrConsts;
-type
-  InitialCommands =
-    (icmyCheck, icmyFDClass, icmyGrid, icmyFOC, icmyIOTA, icmyName, icmyPark, icmyPrec, icmyQTH, icmySection, icmyState, icmyZone, icmyPostalCode);
+(* ~~InitialCommands~~ IS GONE -- M9a, 2026-10-02. The fields the dialog may
+  ask for are uContestBase.TNewContestField now, because a contest names them
+  (TContestBase.DescribeNewContestPrompts) and a contest class may not reach
+  into this unit. Same members, same order. *)
 
 { GONE WITH THE DIALOG PROCEDURE (2026-08-28): NewContestDlgProc itself,
   NewSelectContestListBoxProc -- a list box SUBCLASSED to catch Enter -- and
@@ -56,9 +57,8 @@ procedure BeginNewContest;
 procedure ClearFields;
 procedure SaveNewContest;
 procedure DisplayCheckBox(Text: string);
-procedure SetCommentAndEnableEditControl(comment: string; EditControl: InitialCommands);
-procedure EnterCountyOrState(State: string);
-procedure DisplayInitialCommand(Command: InitialCommands);
+procedure SetCommentAndEnableEditControl(comment: string; EditControl: TNewContestField);
+procedure DisplayInitialCommand(Command: TNewContestField);
 //procedure FillMyStateComboBox;
 
 
@@ -80,6 +80,7 @@ uses
   SysUtils,            // Format, Trim, FreeAndNil -- the RTL, not TF shims
   Controls,            // mrOk -- the modal results
   uNewContestForm,     // the designed form this unit now drives
+  uLatestContest,      (* TLatestContest -- the last contest, as its log describes it *)
   MainUnit,
   uRadioConfigApply,   // GetLatestConfigFile -- the last contest, from tr4w.json
   uCFG,
@@ -90,7 +91,9 @@ uses
   uTR4WConfigFile,
   uNewContestCommands, // the dialog's choices, applied at startup after the station load
   (* The log file name and its rule -- one artifact, one directory. *)
-  uLogNaming;                // SetCFGCommandValue -- the one route to a [COMMANDS] value
+  uLogNaming,                // SetCFGCommandValue -- the one route to a [COMMANDS] value
+  (* ContestIdentity -- the chosen contest, asked what to prompt for (M9a). *)
+  uContestRegistry;
 
 const
 
@@ -109,7 +112,7 @@ const
     'CATEGORY-POWER',
     'CATEGORY-TRANSMITTER');
 
-  InitialCommandsSA                     : array[InitialCommands] of string =
+  InitialCommandsSA                     : array[TNewContestField] of string =
     (
     'MY CHECK',
     'MY FD CLASS',
@@ -128,8 +131,16 @@ const
 
 var
   NewContestDisplayedCommands           : integer;
+  (* WHICH FIELD EACH CONTEST ROW HOLDS -- Q104. DisplayInitialCommand hands
+    rows out in order and records the field here, so BeginNewContest can ask
+    the contest about a row's value by what it IS, not by its caption. Only
+    1..NewContestDisplayedCommands are meaningful. *)
+  NewContestRowFields                   : array[1..CSAS] of TNewContestField;
+  (* THE CONTEST'S OWN COMMENT for its rows (the prompt text), kept so a
+    refusal shown in the same place can be taken down again -- Q104. *)
+  NewContestPromptComment               : string;
 //  NewContestAllowReturn                 : boolean;
-  SelectedContest                       : ContestType;
+  SelectedContest                       : TContestHandle;
 
 (* sfFLAG IS DELETED (2026-09-08), AND WITH IT AN EMPTY `const` BLOCK. It was DDL_ARCHIVE or DDL_READWRITE or
     DDL_DIRECTORY -- the flag set for a Win32 DlgDirList -- and NOTHING
@@ -138,295 +149,117 @@ var
     keeping this unit on the Windows unit. It was the only member of that
     const section, so the section goes too. *)
 
-{ THE CONTEST-SPECIFIC PROMPTS, MOVED VERBATIM.
+(* THE CONTEST-SPECIFIC PROMPTS ARE THE CONTEST'S -- M9a, 2026-10-02.
 
-  These two case statements are ~240 lines of contest knowledge -- which
-  contest wants a district code, which wants a DOK, which wants an oblast --
-  built up one contest at a time over years. NOTHING here was retyped or
-  reformatted during the LCL conversion: they were lifted out of
-  NewContestDlgProc's WM_COMMAND arms as they stood, because the risk in a
-  conversion is not the code you rewrite carefully, it is the line you retype
-  slightly differently and nobody notices until that contest weekend.
+  Two `case SelectedContest of` statements stood here, ~240 lines of contest
+  knowledge -- which contest wants a district code, which wants a DOK, which
+  wants an oblast -- built up one contest at a time over years. They were
+  lifted verbatim out of NewContestDlgProc in the LCL conversion; at M9a each
+  arm moved, line for line, into its contest's class as
+  TContestBase.DescribeNewContestPrompts, and this unit RENDERS what the
+  contest says (docs/CONTEST_OWNERSHIP_DESIGN.md section 8.2m).
 
-  They reach the screen through five presentation helpers, and it is only
-  those helpers that changed: SetWindowTextA on a control handle became a
-  method on the form. }
+  NOTHING HERE NAMES A CONTEST. The last arms were the classless contests',
+  in a ClasslessPrompts that is deleted: POTA's went to TContestPOTA
+  (2026-10-13, design Q6), RSGB 1.8 MHz's and the UA4W Championship's to
+  their classes (2026-10-14, design Q33 and Q28). *)
 
-{ The 'I am in <state>' box was ticked or cleared. }
+(* ONE STEP OF A CONTEST'S PROMPTS, ON THE FORM -- the five presentation
+  helpers this unit always had, chosen by the step's kind. *)
+procedure RenderPrompt(const aPrompt: TNewContestPrompt);
+begin
+   case aPrompt.Kind of
+      npkField:
+         begin
+         DisplayInitialCommand(aPrompt.Field);
+         end;
+      npkFieldWithComment:
+         begin
+         SetCommentAndEnableEditControl(aPrompt.Text, aPrompt.Field);
+         end;
+      npkIAmIn:
+         begin
+         DisplayCheckBox(aPrompt.Text);
+         end;
+      npkIAmInCaption:
+         begin
+         frmNewContest.ShowIAmIn(aPrompt.Text);
+         end;
+   end;
+end;
+
+(* WHAT THE CHOSEN CONTEST ASKS FOR AT ONE OF THE TWO MOMENTS -- the
+  contest's own steps, in its order. The prompts object is the contest's
+  answer; it is freed here. *)
+procedure ShowContestPrompts(aTicked: boolean);
+var
+   prompts: TNewContestPrompts;
+   i: integer;
+begin
+   prompts := TNewContestPrompts.Create;
+   try
+      ContestIdentity(SelectedContest).DescribeNewContestPrompts(prompts);
+      if aTicked then
+         begin
+         for i := 0 to prompts.InsideCount - 1 do
+            begin
+            RenderPrompt(prompts.Inside(i));
+            end;
+         end
+      else
+         begin
+         for i := 0 to prompts.ChoiceCount - 1 do
+            begin
+            RenderPrompt(prompts.Choice(i));
+            end;
+         end;
+   finally
+      prompts.Free;
+   end;
+end;
+
+(* The 'I am in <state>' box was ticked or cleared. *)
 procedure ApplyIAmIn;
 begin
    ClearFields;
    frmNewContest.SetComment('');
+   NewContestPromptComment := '';
 
-   { Unticked: the prompts below are what ticking it ASKS FOR, so there is
-     nothing to put up. Was an Exit out of the dialog procedure. }
+   (* Unticked: the prompts are what ticking it ASKS FOR, so there is nothing
+     to put up. Was an Exit out of the dialog procedure. *)
    if not frmNewContest.IAmIn then
       begin
       Exit;
       end;
 
-              case SelectedContest of
-              MWC:
-              ;
-              VAQP:
-              ;
-
-                ALRS_UA1DZ_CUP:
-                  SetCommentAndEnableEditControl(TC_ENTERYOURRDAIDORGRID, icmyState);
-
-                NEWENGLANDQSO:
-                  SetCommentAndEnableEditControl(TC_NEWENGLANDSTATEABREVIATION, icmyState);
-
-                ARRL10, ARRL160, ARRLDXCW, ARRL_RTTY_ROUNDUP:
-                  begin
-                     { WAS: SendMessage(107, BM_SETCHECK, ...). 107 is a control
-                       ID, not an HWND, so this addressed whatever window
-                       happened to have handle 107 -- almost certainly nothing.
-                       Pre-existing, and present in the D7 tree too; it is
-                       dropped rather than carried across, because there is no
-                       LCL control it could mean. If these four contests are
-                       supposed to pre-tick something, that is a new decision
-                       and needs saying out loud. }
-                    SetCommentAndEnableEditControl(TC_ENTERTHEQTHTHATYOUWANTTOSEND, icmyState);
-                  end;
-
-                CQWWRTTY, CQ160CW, CQ160SSB:
-                  SetCommentAndEnableEditControl(TC_ENTERSTATEFORUSPROVINCEFORCANADA, icmyState);
-
-                    IRTS:
-                     SetCommentAndEnableEditControl(TC_EnterYourCountyCode,icmyState);
-
-                CANADA_DAY, CANADA_WINTER:
-                  SetCommentAndEnableEditControl(TC_ENTERYOURPROVINCEID, icmyState);
-
-
-                REFSSB, REFCW:
-                  SetCommentAndEnableEditControl(TC_DEPARTMENT, icmyState);
-
-                UKRAINIAN, RUSSIANDX, UNDX, CIS, RU3AXMEMORIAL:
-                  SetCommentAndEnableEditControl(TC_ENTERYOUROBLASTID, icmyState);
-
-                KINGOFSPAINCW, KINGOFSPAINSSB, UBACW, UBASSB, PACC, ARI_DX, HELVETIA:
-                  SetCommentAndEnableEditControl(TC_ENTERYOURPROVINCEID, icmyState);
-
-                CQIR, HADX, YUDX: SetCommentAndEnableEditControl(TC_ENTERYOURCOUNTYCODE, icmyState);
-
-                GagarinCup: SetCommentAndEnableEditControl(TC_Gagarin, icmystate);
-
-                UKEI: SetCommentAndEnableEditControl(TC_EnterYourDistrictCode, icmyState);
-
-                DARC10M, WAG, DARCXMAS: SetCommentAndEnableEditControl(TC_ENTERYOURDOK, icmyState);
-
-                SPDX, OKDX, OKOMSSB, YODX, RSGB18, LZDX, EUDX:                // 4.80.1
-                  SetCommentAndEnableEditControl(TC_ENTERYOURDISTRICTABBREVIATION, icmyState);
-
-                RDA: SetCommentAndEnableEditControl(TC_ENTERYOURRDAID, icmyState);
-
-                BSCI, IARU:
-                  SetCommentAndEnableEditControl('', icmyState);
-
-                IOTA:
-                  SetCommentAndEnableEditControl(TC_ENTERYOURIOTAREFERENCEDESIGNATOR, icmyState);
-
-                WWPMC:
-                  SetCommentAndEnableEditControl(TC_ENTERYOURCITYIDENTIFIER, icmyState);
-                POTA:
-                   SetCommentAndEnableEditControl(TC_ENTERYOURPARKREFERENCEDESIGNATOR, icmyPark);
-                PCC, ARKTIKA_SPRING:
-                  SetCommentAndEnableEditControl(TC_ENTERYOURMEMBERSHIPNUMBER, icmyState);
-
-                JIDXCW, JIDXSSB:
-                  SetCommentAndEnableEditControl(TC_PREFECTURE, icmyState);
-
-              end;
+   ShowContestPrompts(True);
 
    BeginNewContest;
 end;
 
-{ A contest was chosen in the combo. }
+(* The chosen contest changed -- a row was chosen in the contest list, or the
+  search hid the one that was (then SelectedContest is NoContest). *)
 procedure ApplyContestChoice;
 begin
-   SelectedContest := GetContestFromString(frmNewContest.ContestName);
+   (* THE LINE'S IDENTITY, not its caption read back through
+     GetContestFromString -- the caption is the display name since M9b. *)
+   SelectedContest := frmNewContest.SelectedContest;
    ClearFields;
    frmNewContest.SetComment('');
+   NewContestPromptComment := '';
    frmNewContest.ResetIAmIn;
 
-   if (ContestsArray[SelectedContest].p <> 0) and (SelectedContest <> BCQP) then
+   (* NO CONTEST IS CHOSEN ANY MORE -- the search box hid the one that was
+     (Q103). The previous contest's prompts are cleared above and there is no
+     contest to ask for new ones; BeginNewContest disables OK. *)
+   if SelectedContest <> NoContest then
       begin
-      EnterCountyOrState(QSOParties[ContestsArray[SelectedContest].p].StateName);
+      (* THE QSO-PARTY HEAD IS THE CONTEST'S TOO -- TContestBase asks a US state
+        party for its county or state, keyed on the IsUSQSOParty trait, and
+        British Columbia, which this named out of the head, says otherwise in
+        its own class. *)
+      ShowContestPrompts(False);
       end;
-
-             case SelectedContest of
-              LABRE:
-                   SetCommentAndEnableEditControl(TC_LABRE,icmyState);
-            
-                BCQP:            // 4.97.7
-                  SetCommentAndEnableEditControl(TC_ENTERYOURISTRICTIFINVE7,icmyState);
-
-
-               COLORADOQSOPARTY, MINNQSOPARTY :
-                 begin
-                    DisplayInitialCommand(icmyName);
-                 end;
-
-               ALRS_UA1DZ_CUP:
-                 SetCommentAndEnableEditControl(TC_ENTERYOURRDAIDORGRID, icmyState);
-
-               EUSPRINT_SPRING_SSB, EUSPRINT_AUTUMN_CW, EUSPRINT_AUTUMN_SSB, EUSPRINT_SPRING_CW: SetCommentAndEnableEditControl(TC_ENTERYOURNAME, icMyName);
-
-               NZFIELDDAY: SetCommentAndEnableEditControl(TC_ENTERYOURBRANCHNUMBER, icmyZone);
-
-               EUROPEANHFC: SetCommentAndEnableEditControl(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, icmyZone);
-
-               KVP: SetCommentAndEnableEditControl(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, icmyZone);      // 4.65.3
-
-               RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB: SetCommentAndEnableEditControl(TC_ENTERYOURZONE, icmyState);
-               RAEM: SetCommentAndEnableEditControl(TC_ENTERYOURGEOGRAPHICALCOORDINATES, icmyQTH);
-
-               OLDNEWYEAR: SetCommentAndEnableEditControl(TC_ENTERSUMOFYOURAGEANDAMOUNT, icmyQTH);
-               RSGB_ROPOCO_CW, RSGB_ROPOCO_SSB: SetCommentAndEnableEditControl(TC_ENTERYOURPOSTCODE, icmyPostalCode);
-
-             
-               RADIOMEMORY: SetCommentAndEnableEditControl(TC_AGECALLSIGNAGE, icmyQTH);
-               CQMM: SetCommentAndEnableEditControl(TC_ENTERYOURCONTINENT, icmyState);
-
-               NRAUBALTICCW, NRAUBALTICSSB: SetCommentAndEnableEditControl(TC_ENTERYOURPROVINCEID, icmyState);
-               OZCR_O: SetCommentAndEnableEditControl(TC_OZCR, icmyState);
-
-               //RUSSIAN160: SetCommentAndEnableEditControl(TC_ENTERYOURSQUAREID, icmyState);
-               R9W_UW9WK_MEMORIAL: SetCommentAndEnableEditControl(TC_STATIONCLASS, icmyState);
-
-               CUPRFCW, CUPRFSSB, CUPRFDIG: SetCommentAndEnableEditControl(TC_ENTERYOURFOURDIGITGRIDSQUARE, icmyGrid);
-               RFASCHAMPIONSHIPCW: SetCommentAndEnableEditControl(TC_RFAS, icMyQTH);
-                CQVHF,ARRLVHFJAN,ARRLVHFJUN, ARRLVHFSEP,ARRLDIGI, STEWPERRY, BATAVIA_FT8, WWDIGI, MAKROTHEN, RTC: SetCommentAndEnableEditControl(TC_ENTERYOURFOURDIGITGRIDSQUARE, icmyGrid);
-
-               OZHCRVHF, EUROPEANVHF, RADIOVHFFD: SetCommentAndEnableEditControl(TC_ENTERYOURSIXDIGITGRIDSQUARE, icmyGrid);
-
-               TESLA:
-                SetCommentandEnableEditControl(TC_ENTERYOURFOURDIGITGRIDSQUARE,icmyGrid);
-              
-               NEWENGLANDQSO: DisplayCheckBox(TC_NEWENGLAND);
-
-               CQWWRTTY, CQ160CW, CQ160SSB, ARRL10, ARRL160, ARRL_RTTY_ROUNDUP: DisplayCheckBox(TC_NORTHAMERICA);
-
-               RDA, RUSSIANDX, RU3AXMEMORIAL: DisplayCheckBox(TC_RUSSIA);
-               CQIR: DisplayCheckBox(TC_IRELAND);
-               CANADA_DAY, CANADA_WINTER: DisplayCheckBox(TC_CANADA);
-               REFSSB, REFCW: DisplayCheckBox(TC_FRANCE);
-               IRTS: DisplayCheckBox(TC_IRTS);   // 4.93.2
-              EUDX:
-                DisplayCheckBox(TC_EUDX);  // 4.95.6
-               KINGOFSPAINCW, KINGOFSPAINSSB: DisplayCheckBox(TC_SPAIN);
-               JIDXCW, JIDXSSB: DisplayCheckBox(TC_JAPAN);
-               HELVETIA: DisplayCheckBox(TC_SWITZERLAND);
-               ARI_DX: DisplayCheckBox(TC_ITALY);
-               UNDX: DisplayCheckBox(TC_KAZAKHSTAN);
-               UKRAINIAN: DisplayCheckBox(TC_UKRAINE);
-               OKDX, OKOMSSB: DisplayCheckBox(TC_CZECHREPUBLICORINSLOVAKIA);
-      //         LABRE: DisplayCheckBox(TC_LABRE);
-               LZDX: DisplayCheckBox(TC_BULGARIA);
-               YODX: DisplayCheckBox(TC_ROMANIA);
-               HADX: DisplayCheckBox(TC_HUNGARY);
-               YUDX: DisplayCheckBox(TC_YUGOSLAVIA);
-               UKEI: DisplayCheckBox(TC_UKEI);
-               GagarinCup: DisplayCheckBox(TC_GC);
-             //  UKEI: SetCommentAndEnableEditControl(TC_EnterYourDistrictCode, icmyState);
-               UBACW, UBASSB: DisplayCheckBox(TC_BELGIUM);
-               PACC: DisplayCheckBox(TC_NETHERLANDS);
-               DARC10M, WAG, DARCXMAS: DisplayCheckBox(TC_GERMANY);
-               RSGB18: DisplayCheckBox(TC_UK);
-               CIS: DisplayCheckBox(TC_CIS);
-               SPDX: DisplayCheckBox(TC_POLAND);
-               BSCI, IARU: DisplayCheckBox(TC_HQ_OR_MEMBER);
-               IOTA:
-                 begin
-                   frmNewContest.ShowIAmIn(TC_ISLANDSTATION);
-                 end;
-
-               WWPMC: DisplayCheckBox('PMC');
-               PCC,ARKTIKA_SPRING: DisplayCheckBox(TC_ARKTIKACLUB);
-
-               NAQSOCW, NAQSOSSB, NAQSORTTY, SST:
-                 begin
-                   SetCommentAndEnableEditControl(TC_ENTERYOURNAMEANDSTATE, icmyState);
-                   DisplayInitialCommand(icmyName);
-                 end;
-
-               CWOPEN, MST:
-                 begin
-                   SetCommentAndEnableEditControl(TC_ENTERYOURNAME, icmyName);
-                 end;
-
-               CWOPS, LQP, NCCCSPRINT:
-                 begin
-                   DisplayInitialCommand(icmyName);
-                   SetCommentAndEnableEditControl(TC_ENTERYOURNAMEANDQTH, icmyState);
-                 end;
-
-              FOCMarathon:
-              begin
-           //    DisplayInitialCommand(icmyFOC);
-              SetCommentAndEnableEditControl(TC_ENTERYOURFOCNUMBER,icmyFOC);
-              end;
-
-              KCJ:
-              begin
-              SetCommentAndEnableEditControl(TC_PREF_OR_CQZONE,icMyState);    // 4.114.1
-              end;
-
-              POTA:
-                 begin
-                  frmNewContest.ShowIAmIn('Activator');
-                 end;
-              WINTERFIELDDAY:
-                 begin
-                   DisplayInitialCommand(icmyFDClass);
-                   DisplayInitialCommand(icmySection);
-                 end;
-
-               ARRLFIELDDAY:
-                 begin
-                   DisplayInitialCommand(icmyFDClass);
-                   DisplayInitialCommand(icmySection);
-                 end;
-
-               ARRLSSCW, ARRLSSSSB:
-                 begin
-                   SetCommentAndEnableEditControl(TC_ENTERYOURPRECEDENCECHECKSECTION, icMyPrec);
-                   DisplayInitialCommand(icmyCheck);
-                   DisplayInitialCommand(icmySection);
-                 end;
-
-               NASPRINTCW, SPRINTSSB, NASPRINTRTTY:
-                 begin
-                   SetCommentAndEnableEditControl(TC_ENTERYOURQTHANDTHENAME, icmyState);
-                   DisplayInitialCommand(icmyName);
-                 end;
-
-           //    RSGBDX:
-           //    DisplayCheckBox(TC_UKRSGB);
-
-               UA4WCHAMPIONSHIP:
-                 SetCommentAndEnableEditControl('Enter your RDA (for Russian stations) or four digit grid square:', icMyQTH);
-
-               ALLASIANCW, ALLASIANSSB, YOUTHCHAMPIONSHIPRF, YOTA:
-                 SetCommentAndEnableEditControl(TC_ENTERYOURAGEINMYSTATEFIELD, icmyState);
-
-                UKRAINECHAMPIONSHIP:
-                 SetCommentAndEnableEditControl(TC_ENTERYOUROBLASTID, icmyState);
-
-               ARRLDXCW,
-                 ARRLDXSSB:
-                 SetCommentAndEnableEditControl(TC_ENTERYOURQTHORPOWER, icmyState);
-
-               CUPURAL:
-                 SetCommentAndEnableEditControl(TC_ENTERFIRSTTWOLETTERSOFYOURGRID, icmyState);
-
-
-        //        IN7QPNE:
-        //'/}         SetCommentAndEnableEditControl(TC_IN7QPNE, icmyState);
-
-             end;
 
    BeginNewContest;
 end;
@@ -448,12 +281,14 @@ end;
 { WHETHER OK IS LEGAL YET. Same four rules, asked of the form instead of of
   control handles: a contest is chosen, the callsign is at least three
   characters and passes IsAGoodCall, and every row this contest asked for has
-  been filled in. }
+  been filled in -- and, since Q104, with a value the contest does not refuse
+  (TContestBase.NewContestValueRefusal). }
 procedure BeginNewContest;
 var
   res  : boolean;
   i    : integer;
   Call : string;
+  refusal: string;
 begin
   res  := frmNewContest.ContestChosen;
   Call := frmNewContest.MyCall;
@@ -475,6 +310,32 @@ begin
         begin
         res := False;
         end;
+     end;
+
+  (* A FILLED ROW THE CONTEST REFUSES -- Q104. The refusal replaces the
+    prompt's comment while it stands and OK stays disabled; the prompt comes
+    back when the value is changed to one the contest accepts. *)
+  refusal := '';
+  if frmNewContest.ContestChosen then
+     begin
+     for i := 1 to NewContestDisplayedCommands do
+        begin
+        if (i <= CSAS) and (refusal = '') and
+           (Trim(frmNewContest.RowText(i)) <> '') then
+           begin
+           refusal := ContestIdentity(SelectedContest).NewContestValueRefusal(
+                         NewContestRowFields[i], Trim(frmNewContest.RowText(i)));
+           end;
+        end;
+     end;
+  if refusal <> '' then
+     begin
+     res := False;
+     frmNewContest.SetComment(refusal);
+     end
+  else
+     begin
+     frmNewContest.SetComment(NewContestPromptComment);
      end;
 
   frmNewContest.EnableOK(res);
@@ -617,26 +478,26 @@ begin
   frmNewContest.ShowIAmIn(Format(TC_IAMIN, [Text]));
 end;
 
-procedure SetCommentAndEnableEditControl(comment: string; EditControl: InitialCommands);
+procedure SetCommentAndEnableEditControl(comment: string; EditControl: TNewContestField);
 begin
   DisplayInitialCommand(EditControl);
   frmNewContest.SetComment(comment);
+  NewContestPromptComment := comment;
 end;
 
-procedure EnterCountyOrState(State: string);
-begin
-  DisplayInitialCommand(icmyState);
-  { TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX has two %s, both the state. }
-  frmNewContest.SetComment(Format(TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX,
-                                  [State, State]));
-end;
+(* ~~EnterCountyOrState~~ IS GONE -- M9a. The QSO-party head it put up is
+  TContestBase.DescribeNewContestPrompts now, stated once there. *)
 
 { Rows are handed out IN ORDER as contests ask for them -- the counter is the
   next free row, not the command's identity. Two contests wanting two fields
   get rows 1 and 2 whichever fields those are. }
-procedure DisplayInitialCommand(Command: InitialCommands);
+procedure DisplayInitialCommand(Command: TNewContestField);
 begin
   inc(NewContestDisplayedCommands);
+  if NewContestDisplayedCommands <= CSAS then
+     begin
+     NewContestRowFields[NewContestDisplayedCommands] := Command;
+     end;
   frmNewContest.EnableRow(NewContestDisplayedCommands,
                           InitialCommandsSA[Command]);
 end;
@@ -646,10 +507,15 @@ end;
 procedure PrepareForm;
 var
    latest: string;
+   (* Handed to the form, which owns it from then on. *)
+   describedLatest: TLatestContest;
    myCall: string;
    i     : integer;
 begin
-   frmNewContest.Caption := TR4W_CURRENTVERSION + TC_OPENCONFIGURATIONFILE;
+   (* The title is NOT set here: the form owns it (HandleShow, through
+      uNewContestForm.NewContestFormCaption), and OnShow runs after this, so a
+      write here was overwritten -- by a bare TC_OPENCONFIGURATIONFILE that
+      dropped the version. One writer. *)
    (* ContestDir, NOT TR4W_PATH_NAME -- the same distinction the .db creation
       site records at length above, missed at the LISTING site. TR4W_PATH_NAME
       is uAppPaths.DataDir, which on macOS is the read-only Contents/Resources
@@ -726,12 +592,24 @@ begin
         label that contains an UNCLOSED '(' before the '&' would still trip it;
         nothing in the catalogues does, and the guard belongs in a caption lint
         rather than here. *)
-      frmNewContest.ShowLatest(Format(TC_LATEST_CONFIG_FILE + ', Alt+&A:'#13#10'%s',
-                                      [LowerCase(latest)]));
+      (* WHAT CONTEST, AND WHICH YEAR -- asked of the log itself (NY4I,
+        2026-10-19: "make the contest and year more obvious"). A file that
+        cannot say -- an old .cfg, a damaged or foreign database -- keeps the
+        old caption, the path; the reason goes to the debug log only, because
+        nothing is wrong that the operator needs to act on. *)
+      describedLatest := TLatestContest.Create(latest);
+      if (not describedLatest.Described) and
+         logger.IsDebugEnabled then
+         begin
+         logger.Debug('[NewContest] the last contest file does not describe ' +
+                      'itself (%s), so the button shows its path: %s',
+                      [describedLatest.Why, latest]);
+         end;
+      frmNewContest.ShowLatest(TC_LATEST_CONFIG_FILE + ', Alt+&A:', describedLatest);
       end
    else
       begin
-      frmNewContest.ShowLatest('');
+      frmNewContest.ShowLatest('', nil);
       end;
 
    { The six CATEGORY-* rows are labelled once and stay labelled. Rows 1..3 are

@@ -484,13 +484,14 @@ type
       FActiveRotatorName: string;
       { The reference. FActiveRotatorName above is the readable mirror. }
       FActiveRotatorId: string;
-      { The contest .cfg last opened. NOT a setting -- it is bookkeeping, which
-        is why it lives in `general` beside activeProfile rather than in
-        `commands`, and why it is deliberately absent from Preferences and from
-        the search index. It moved here from tr4w.ini (NY4I, 2026-08-16): that
-        one WritePrivateProfileString was the only thing recreating the ini
-        file, so a station whose settings had all reached the JSON still got an
-        ini back on every start. }
+      (* The contest last opened -- its .db, reopened by New Contest's "Last
+         Contest" button (a .cfg before a contest became its database). NOT a
+         setting -- it is bookkeeping, which is why it lives in `general` beside
+         activeProfile rather than in `commands`, and why it is deliberately
+         absent from Preferences and from the search index. It moved here from
+         tr4w.ini (NY4I, 2026-08-16): that one WritePrivateProfileString was the
+         only thing recreating the ini file, so a station whose settings had all
+         reached the JSON still got an ini back on every start. *)
       FLatestConfigFile: string;
       { Whether TR4W has already offered to set MY GRID.  Asked ONCE per
         installation, not once per start: an operator who does not want a grid

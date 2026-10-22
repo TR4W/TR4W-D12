@@ -70,11 +70,19 @@ function LooksLikeAGeoCoordinates(Coordinates: Str40; var LatValue, LongValue: i
 implementation
 
 uses
-   uSettingsModel;   (* Settings.GridMap.RadiusOfEarth *)
+   uSettingsModel,   (* Settings.GridMap.RadiusOfEarth *)
+   uGridShape;       (* IsGoodLookingGrid -- Q37 *)
 
-procedure ConvertGridToLatLon(Grid: string; var Lat, Lon: REAL);
-
-{ Converts a grid to Lat/Lon to the center of the grid }
+(* CONVERTS A GRID TO THE LAT/LON OF ITS CENTRE -- AND REFUSES ONE THAT IS NOT
+  A GRID. Q37 (NY4I, 2026-10-15): this read characters 1 to 6 of whatever it
+  was handed, so a grid shorter than four (an empty QTH reached it as 'LL')
+  was read past its end and a malformed grid's distance followed the heap --
+  identical ALRS QSOs scored 43, 42 and 42. Now a text that is not a grid
+  (uGridShape.IsGoodLookingGrid, the predicate the grid exchange parsers
+  refuse a typed one by) answers False with Lat and Lon 0, and is never read:
+  "a malformed grid should never have been logged", and one a log already
+  holds scores as no distance. *)
+function ConvertGridToLatLon(Grid: string; var Lat, Lon: REAL): boolean;
 
 var
   LonMin, londeg, latmin, latdeg        : REAL;
@@ -86,6 +94,15 @@ begin
     mov dword ptr GR, eax
   end;
 }
+  Lat := 0;
+  Lon := 0;
+  Result := IsGoodLookingGrid(Grid);
+  if not Result then
+     begin
+     Exit;
+     end;
+  Grid := UpperCase(Grid);
+
   (* PAD A FOUR-CHARACTER GRID TO SIX, BY APPENDING.
 
     This wrote Grid[5] and Grid[6] directly, which on a ShortString leaves
@@ -349,10 +366,21 @@ var
   ShortHeading, LongHeading, Distance   : REAL;
 
 begin
-   if length(Grid1) <> 6 then
-      begin
-      Grid1 := Grid1 + 'LL';
-      end;
+  (* NO DISTANCE TO OR FROM A TEXT THAT IS NOT A GRID -- Q37. This padded
+    anything that was not six characters with 'LL' and measured it, so an
+    empty grid became 'LL' and was read past its end, and 'CT' became
+    'CTLLLL' and was measured as letters. Both are 0 now, the answer the
+    callers already give two identical grids. *)
+  if (not IsGoodLookingGrid(Grid1)) or (not IsGoodLookingGrid(Grid2)) then
+     begin
+     GetDistanceBetweenGrids := 0;
+     Exit;
+     end;
+
+  if length(Grid1) <> 6 then
+     begin
+     Grid1 := Grid1 + 'LL';
+     end;
   Grid1 := UpperCase(Grid1);
 
   if length(Grid2) <> 6 then
@@ -394,8 +422,23 @@ var
   X, KM, a, b, FX, FY                   : REAL;
 begin
   Result := 0;
-  if Grid1 = '' then Exit;
-  if Grid2 = '' then Exit;
+  (* NO DISTANCE TO OR FROM A TEXT THAT IS NOT A GRID -- Q37. Only an EMPTY
+    grid was refused here, and characters 5 and 6 were read whatever the
+    length, so a four-character grid was read past its end. A grid that is
+    not one is refused, and a four-character one is centred ('LL') as
+    GetDistanceBetweenGrids centres it. *)
+  if (not IsGoodLookingGrid(Grid1)) or (not IsGoodLookingGrid(Grid2)) then
+     begin
+     Exit;
+     end;
+  if length(Grid1) = 4 then
+     begin
+     Grid1 := Grid1 + 'LL';
+     end;
+  if length(Grid2) = 4 then
+     begin
+     Grid2 := Grid2 + 'LL';
+     end;
 
   Grid1 := UpperCase(Grid1);
   Grid2 := UpperCase(Grid2);
@@ -430,8 +473,12 @@ var
 
 begin
   Result := -1; //wli
-  if not (length(MyGrid) in [4, 6]) then Exit;
-  if not (length(HisGrid) in [4, 6]) then Exit;
+  (* NO HEADING TO OR FROM A TEXT THAT IS NOT A GRID -- Q37; the length
+    alone was tested, so 'ZZ99' was measured as a grid. *)
+  if (not IsGoodLookingGrid(MyGrid)) or (not IsGoodLookingGrid(HisGrid)) then
+     begin
+     Exit;
+     end;
 
 //  if (length(MyGrid) <> 4) and (length(MyGrid) <> 6) then Exit;
 //  if (length(HisGrid) <> 4) and (length(HisGrid) <> 6) then Exit;

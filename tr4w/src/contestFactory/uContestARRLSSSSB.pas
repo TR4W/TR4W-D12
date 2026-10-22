@@ -29,6 +29,11 @@ unit uContestARRLSSSSB;
 interface
 
 uses
+   (* VC: the kind enums the transcribed row getters return (M10 S5). *)
+   VC,
+   (* uContestBase: TExchangeParsers, which the format's signature
+      names (M11 S9d). *)
+   uContestBase,
    uContestARRLSSBase;
 
 type
@@ -43,17 +48,100 @@ type
          ambiguity a property removes, so the getter is not part of the
          surface: callers use the property, descendants override the getter. *)
       function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetFriendlyName: string; override;
+
+      (* STATED AT M10 S5, transcribed from the ContestsArray row the base
+         read until then. The flag set is the family's -- see the base. *)
+      function GetWA7BNMId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function ParseReceivedExchangeFormat(const aText: string;
+                                           aParsers: TExchangeParsers;
+                                           var aExch: ContestExchange): boolean; override;
    public
+   public
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+         and its neighbours (M11 S9d). *)
+      function ExchangeCarriesDomesticQTH: boolean; override;
    end;
 
 implementation
 
 uses
-   VC, uContestRegistry;
+   uExchangeFields,
+   uContestRegistry;
 
 function TContestARRLSSSSB.GetDisplayName: string;
 begin
-   Result := 'ARRL Sweepstakes - Phone';
+   Result := 'ARRL Sweepstakes Contest, SSB';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestARRLSSSSB.GetCabrilloName: string;
+begin
+   Result := 'ARRL-SS-SSB';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestARRLSSSSB.GetADIFContestId: string;
+begin
+   Result := 'ARRL-SS-SSB';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestARRLSSSSB.GetFriendlyName: string;
+begin
+   Result := 'ARRL Sweepstakes Contest, SSB';
+end;
+
+function TContestARRLSSSSB.GetWA7BNMId: integer;
+begin
+   Result := 178;
+end;
+
+function TContestARRLSSSSB.GetSubmissionEmail: string;
+begin
+   Result := 'SSPhone@arrl.org';
+end;
+
+function TContestARRLSSSSB.GetDomesticFileName: string;
+begin
+   Result := 'arrlsect';
+end;
+
+function TContestARRLSSSSB.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := CheckSectionInitialExchange;
+end;
+
+function TContestARRLSSSSB.GetExchangeKind: ExchangeType;
+begin
+   Result := QSONumberPrecedenceCheckDomesticQTHExchange;
+end;
+
+function TContestARRLSSSSB.GetReceivedExchangeFields: ExchangeInformationRecord;
+begin
+   Result := ExchangeFieldsQSONumberPrecedenceCheckQTH;
+end;
+
+function TContestARRLSSSSB.ParseReceivedExchangeFormat(const aText: string;
+                                                       aParsers: TExchangeParsers;
+                                                       var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseQSONumberPrecedenceCheckDomesticQTH(aText, aExch);
+end;
+
+function TContestARRLSSSSB.ExchangeCarriesDomesticQTH: boolean;
+begin
+   Result := True;
 end;
 
 initialization

@@ -1,0 +1,25 @@
+# THE CONTEST MATRIX'S OWN CALL-HISTORY FILE -- the source of
+# MATRIX-TRMASTER.DTA. M11 S0c, 2026-10-14. Regenerate the .DTA with
+#     python tr4w/test/contest-matrix/make-trmaster-fixture.py
+# and commit both, with a reason: a change here moves the matrix's
+# initialexchange section, which is a re-freeze like any other.
+#
+# WHY A FIXTURE AND NOT THE SHIPPED TRMASTER.DTA: the shipped file is
+# refreshed monthly (tr4w/tools/trmaster/build_trmaster.cmd), and every
+# refresh would move every record that reads it. This file changes only when
+# someone means it to.
+#
+# One call per line: CALL then FIELD=VALUE pairs, separated by '|'. The fields
+# are trmaster_codec.py's (Name, QTH, Section, Check, Grid, CQZone, ITUZone,
+# FOC, OldCall, TenTen, User1..User5). Some calls carry only some fields, so
+# an arm that needs two (CheckSection) meets one that has one. K9ABC carries
+# every field, so each command of a CUSTOM INITIAL EXCHANGE STRING reads one.
+W1AW|Name=HIRAM|QTH=CT|Section=CT|Check=14|Grid=FN31|CQZone=5|ITUZone=8
+K4ABC|Name=BOB|QTH=FL|Section=NFL|Check=85|Grid=EL89|CQZone=5|ITUZone=8
+VE3ABC|Name=ANN|QTH=ON|Section=ONE|Check=72|Grid=FN03|CQZone=4|ITUZone=4
+DL1ABC|Name=HANS|Grid=JO62|CQZone=14|ITUZone=28
+JA1ABC|Name=TARO|Grid=PM95|CQZone=25|ITUZone=45
+VK2ABC|Name=BRUCE
+UA9ABC|Name=IVAN|Grid=MO06|CQZone=18|ITUZone=31
+ON4ABC|Name=JEAN|Grid=JO20
+K9ABC|Name=ZED|QTH=IL|Section=IL|Check=90|Grid=EN52|CQZone=4|ITUZone=8|FOC=1234|OldCall=WB9ABC|TenTen=5678|User1=U1|User2=U2|User3=U3|User4=U4|User5=U5

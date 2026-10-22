@@ -122,7 +122,7 @@ procedure SetMicGain(Gain: Byte);
 procedure SetOutGain(Gain: Byte);
 
 function tGetWAVDurationFromHeader(const FileName: AnsiString; var Duration: Cardinal; DisplayError: boolean): boolean;
-procedure tDVPPlayThreadproc;
+function tDVPPlayThreadproc(aParameter: Pointer): DWORD; stdcall;
 procedure tWriteCallsignToMissingCallsignsFile(const Callsign: Str40);
 
 procedure EnumMISSINGCALLSIGNSTXT(FileString: PShortString);
@@ -191,27 +191,6 @@ const
   M2M                                   = $10; { Mic In to Mic Out }
   R2F                                   = $20; { RX to A/D         }
   M2F                                   = $40; { Mic to A/D        }
-
-type
-  DVPSharedMemory = record
-    FileName: array[1..64] of AnsiChar;
-    FileOpen: integer; { + 40h bytes }
-    Command: integer; { + 42h bytes }
-    Handle: integer; { + 44h bytes }
-    RepeatDelay: integer; { + 46h bytes }
-    Start: LONGINT; { + 48h bytes }
-    length: LONGINT; { + 4Ch bytes }
-    InputGain: Byte; { + 50h bytes }
-    OutputGain: Byte; { + 51h bytes }
-    XmitControl: Byte; { + 52h bytes }
-    RecControl: Byte; { + 53h bytes }
-  end;
-
-  SharedMemoryPointer = ^DVPSharedMemory;
-
-//var
- // SharedMemorySegment, SharedMemoryOffset: Word;
-//  SharedMemory                          : SharedMemoryPointer;
 
 function DVPActive: boolean;
 begin
@@ -450,7 +429,7 @@ begin
      end;
 end;
 
-procedure tDVPPlayThreadproc;
+function tDVPPlayThreadproc(aParameter: Pointer): DWORD; stdcall;
 label
   ExitLabel, PlayNextMessage, NextMessage;
 var
@@ -464,6 +443,7 @@ var
 const
   DOTWAVASINTEGER                       = 1447122734;
 begin
+  Result := 0;   (* the thread exit code -- see TF.TTR4WThreadStart *)
   Index := 1;
 
   PlayNextMessage:
@@ -885,8 +865,9 @@ begin
    Result := False;
 end;
 
-procedure tDVPPlayThreadproc;
+function tDVPPlayThreadproc(aParameter: Pointer): DWORD; stdcall;
 begin
+  Result := 0;   (* the thread exit code -- see TF.TTR4WThreadStart *)
 end;
 
 procedure tWriteCallsignToMissingCallsignsFile(const Callsign: Str40);

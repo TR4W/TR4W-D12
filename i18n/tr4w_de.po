@@ -18,13 +18,14 @@ msgctxt "TC_TRANSLATION_LANGUAGE"
 msgid "ENGLISH"
 msgstr "Deutsch"
 
+# 2026-10-16: name from QRZ.com (DL4BBH) -- NY4I, 2026-10-16. Was "DL4BBH".
 #. Section: General
 #: utr4wstrings:tc_translation_author
 #: tr4w/src/lang/tr4w_consts_eng.pas:8
 #: utr4wstrings.tc_translation_author
 msgctxt "TC_TRANSLATION_AUTHOR"
 msgid "N4AF"
-msgstr "DL4BBH"
+msgstr "Friedrich zur Hellen DL4BBH"
 
 #. Section: General
 #: utr4wstrings:tc_translator_email
@@ -84,13 +85,14 @@ msgctxt "TC_FREQ_ZERO"
 msgid "ERROR: Invalid Frequency logged"
 msgstr "ERROR: Ungueltige Frequenz geloggt"
 
+# 2026-10-19 command name restored to English (NY4I ruling: command names are never translated, even in reviewed text); was: "Frequenzanzeige im LOG ist ausgeschaltet"
 #. Section: General
 #: utr4wstrings:tc_freq_off
 #: tr4w/src/lang/tr4w_consts_eng.pas:16
 #: utr4wstrings.tc_freq_off
 msgctxt "TC_FREQ_OFF"
 msgid "SHOW FREQUENCY IN LOG is turned off"
-msgstr "Frequenzanzeige im LOG ist ausgeschaltet"
+msgstr "SHOW FREQUENCY IN LOG ist ausgeschaltet"
 
 #. Section: General
 #: utr4wstrings:tc_checkcallsign
@@ -595,14 +597,18 @@ msgctxt "TC_IRTS"
 msgid "EI/GI, enter your County"
 msgstr "EI/GI, dein County eingeben"
 
+# 2026-10-16: the English changed from "Latest config file" to "Last Contest" -- the button reopens the contest's database, not a config file.
+# Composed from this catalogue's own words, please review: last = 'Last status:' -> 'Letzter Status:'; contest = 'Too many contest dates!!' -> 'Zu viele Contest Dates!!'.
+# Previous translation (of the old English): "Neueste Config Datei"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_latest_config_file
 #: tr4w/src/lang/tr4w_consts_eng.pas:100
 #: tfrmnewcontest.btnlatest.caption
 #: utr4wstrings.tc_latest_config_file
+#, fuzzy
 msgctxt "TC_LATEST_CONFIG_FILE"
-msgid "Latest config file"
-msgstr "Neueste Config Datei"
+msgid "Last Contest"
+msgstr "Letzter Contest"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_openconfigurationfile
@@ -3230,10 +3236,11 @@ msgstr "Beacons-Monitor"
 msgid "CT1BOH information"
 msgstr "CT1BOH Informationen"
 
+# 2026-10-19: term from the EU DX Contest rules, German edition (EUDXCC, https://www.eudx-contest.com/reglen/; machine-quality, only correctly used terms taken): 'Dummblatt' -> 'Dupe Sheet', s.8 'Dupes'; this catalogue's reviewed 'Dupe Sheet bereinigt!' (Dummblatt = stupid sheet). Previous text: "Dummblatt"
 #: tfrmdupesheet.caption
 #, fuzzy
 msgid "Dupe sheet"
-msgstr "Dummblatt"
+msgstr "Dupe Sheet"
 
 #. Section: UEDITMESSAGE
 #. Section: FD Additions NY4I
@@ -3891,10 +3898,11 @@ msgstr "VFO B"
 msgid "XIT"
 msgstr "XIT"
 
+# 2026-10-19: term from the EU DX Contest rules, German edition (EUDXCC, https://www.eudx-contest.com/reglen/; machine-quality, only correctly used terms taken): 'Maulwürfe' -> 'Multiplikatoren', s.5 'Multiplikatoren' (Maulwuerfe = moles). Previous text: "Verbleibende Maulwürfe"
 #: tfrmremmults.caption
 #, fuzzy
 msgid "Remaining mults"
-msgstr "Verbleibende Maulwürfe"
+msgstr "Verbleibende Multiplikatoren"
 
 #. Section: UEDITMESSAGE
 #: tfrmsendkeyboard.btnclose.caption
@@ -4216,10 +4224,11 @@ msgstr "Zurück in den CQ-Modus nach Protokollierung eines QSO"
 msgid "All bands"
 msgstr "Alle Bands"
 
+# 2026-10-19: term from the EU DX Contest rules, German edition (EUDXCC, https://www.eudx-contest.com/reglen/; machine-quality, only correctly used terms taken): 'Alle Prüfphasen' -> 'Alle Betriebsarten', s.10 'die Bänder und Betriebsarten wechseln' (Pruefphasen = test phases). Previous text: "Alle Prüfphasen"
 #: tprefsform.chkbandmapallmodes.caption
 #, fuzzy
 msgid "All modes"
-msgstr "Alle Prüfphasen"
+msgstr "Alle Betriebsarten"
 
 #: tprefsform.chkbandmapcallwindow.caption
 #, fuzzy
@@ -4256,11 +4265,12 @@ msgstr "SO2R-Anzeige"
 msgid "Bold"
 msgstr "Fett"
 
+# 2026-10-19: term from the EU DX Contest rules, German edition (EUDXCC, https://www.eudx-contest.com/reglen/; machine-quality, only correctly used terms taken): 'jeden Punkt' -> 'jeden Spot', s.2.d 'zu spotten'; the reviewed 'Ausgewaehlten Spot loeschen' (Punkt = dot). Previous text: "Zeigen Sie jeden Punkt im Anruffenster an"
 #: tprefsform.chkcallwindowshowallspots.caption
 #: usettingscaptions.rs_bandmap_callwindowshowallspots
 #, fuzzy
 msgid "Show every spot in the call window"
-msgstr "Zeigen Sie jeden Punkt im Anruffenster an"
+msgstr "Zeigen Sie jeden Spot im Anruffenster an"
 
 #: tprefsform.chkchecklogfilesize.caption
 #: usettingscaptions.rs_logging_checklogfilesize
@@ -4590,11 +4600,12 @@ msgstr "Auch ausgestrahlte und zuvor protokollierte QSOs"
 msgid "Broadcast UDP data"
 msgstr "UDP-Ausstrahlungsdaten"
 
+# 2026-10-19: term from the EU DX Contest rules, German edition (EUDXCC, https://www.eudx-contest.com/reglen/; machine-quality, only correctly used terms taken): 'Meldezeichen' -> 'Rufzeichen', s.10 'mit seinem Eu-Rufzeichen' (Meldezeichen is not a radio term). Previous text: "Meldezeichen ohne Länderübereinstimmung"
 #: tprefsform.chkunknowncountryfile.caption
 #: usettingscaptions.rs_logging_unknowncountryfile
 #, fuzzy
 msgid "Record callsigns with no country match"
-msgstr "Meldezeichen ohne Länderübereinstimmung"
+msgstr "Rufzeichen ohne Länderübereinstimmung"
 
 #: tprefsform.chkupdaterestartfile.caption
 #: usettingscaptions.rs_logging_updaterestartfile
@@ -4773,15 +4784,17 @@ msgstr "Hz"
 msgid "Display limit:"
 msgstr "Anzeigegrenzwert:"
 
+# 2026-10-19: term from the EU DX Contest rules, German edition (EUDXCC, https://www.eudx-contest.com/reglen/; machine-quality, only correctly used terms taken): 'flecken' -> 'Spots', s.2.d 'zu spotten'; the reviewed 'Alle Spots etfernen' (Flecken = stains). Previous text: "flecken"
 #: tprefsform.lblbandmaplimitunits.caption
 #, fuzzy
 msgid "spots"
-msgstr "flecken"
+msgstr "Spots"
 
+# 2026-10-19: term from the EU DX Contest rules, German edition (EUDXCC, https://www.eudx-contest.com/reglen/; machine-quality, only correctly used terms taken): 'auch Flecken,' -> 'auch Spots,', s.2.d 'zu spotten'; the reviewed 'Alle Spots etfernen' (Flecken = stains). Previous text: "Eine Bandkarte benötigt keinen DX-Cluster: Sie enthält auch Flecken, die Sie selbst machen, und alles, was das SO2R-Radio hört. Die Clustereinstellungen befinden sich auf der DX Cluster-Seite."
 #: tprefsform.lblbandmapnote.caption
 #, fuzzy
 msgid "A band map does not need a DX cluster: it also holds spots you make yourself and anything the SO2R radio hears.  Cluster settings are on the DX Cluster page."
-msgstr "Eine Bandkarte benötigt keinen DX-Cluster: Sie enthält auch Flecken, die Sie selbst machen, und alles, was das SO2R-Radio hört. Die Clustereinstellungen befinden sich auf der DX Cluster-Seite."
+msgstr "Eine Bandkarte benötigt keinen DX-Cluster: Sie enthält auch Spots, die Sie selbst machen, und alles, was das SO2R-Radio hört. Die Clustereinstellungen befinden sich auf der DX Cluster-Seite."
 
 #: tprefsform.lblbandoutput1.caption
 #, fuzzy
@@ -5135,10 +5148,11 @@ msgstr "Gitterquadrat:"
 msgid "IOTA:"
 msgstr "IOTA:"
 
+# 2026-10-19: term from the EU DX Contest rules, German edition (EUDXCC, https://www.eudx-contest.com/reglen/; machine-quality, only correctly used terms taken): 'ITU-Gebiet:' -> 'ITU-Zone:', s.4 'RST- und ITU-Zone'. Previous text: "ITU-Gebiet:"
 #: tprefsform.lblmyituzone.caption
 #, fuzzy
 msgid "ITU zone:"
-msgstr "ITU-Gebiet:"
+msgstr "ITU-Zone:"
 
 #: tprefsform.lblmykeyers.caption
 #, fuzzy
@@ -5202,10 +5216,11 @@ msgstr "Diese Station:"
 msgid "a single letter, unique in the network"
 msgstr "ein einzelner buchstabe, einzigartig im netzwerk"
 
+# 2026-10-19: term from the EU DX Contest rules, German edition (EUDXCC, https://www.eudx-contest.com/reglen/; machine-quality, only correctly used terms taken): 'mehreren Betreibern' -> 'mehreren Operatoren', s.2 'Multi Op'; the reviewed 'Callsign des aktuellen Operators' (Betreiber = business operator). Previous text: "Netz mit mehreren Betreibern"
 #: tprefsform.lblnetheading.caption
 #, fuzzy
 msgid "Multi-operator network"
-msgstr "Netz mit mehreren Betreibern"
+msgstr "Netz mit mehreren Operatoren"
 
 #: tprefsform.lblnethint.caption
 #, fuzzy
@@ -6030,6 +6045,16 @@ msgstr "Testpaket gesendet an %s:%d. UDP kann nicht bestätigen, dass es angekom
 msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
 msgstr "%s übersetzung von %s"
+
+# 2026-10-16: new string -- the About box shows it only under a machine translation's credit, so this language does not show it today.
+#. Section: General
+#: utr4wstrings:tc_translation_corrections
+#: tr4w/src/lang/tr4w_consts_eng.pas:14
+#: utr4wstrings.tc_translation_corrections
+#, fuzzy
+msgctxt "TC_TRANSLATION_CORRECTIONS"
+msgid "Corrections are appreciated."
+msgstr "Korrekturen werden geschätzt."
 
 #. Section: UTELNET
 #: utr4wstrings:tc_telnet
@@ -7291,6 +7316,7 @@ msgctxt "TC_AUTOSPOTENABLEDTESTMODEONLY"
 msgid "AUTOSPOT is enabled - Test Mode Only"
 msgstr "AUTOSPOT ist aktiviert - Testmodus nur"
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "HANDLOG MODE = WAHR"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_handlogmodetrue
 #: tr4w/src/lang/tr4w_consts_eng.pas:848
@@ -7298,7 +7324,7 @@ msgstr "AUTOSPOT ist aktiviert - Testmodus nur"
 #, fuzzy
 msgctxt "TC_HANDLOGMODETRUE"
 msgid "HAND LOG MODE = TRUE"
-msgstr "HANDLOG MODE = WAHR"
+msgstr "HAND LOG MODE = TRUE"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_trmasterdtas
@@ -7570,6 +7596,7 @@ msgctxt "TC_ENTEREXCHANGEPRESSENTERLOGESCAPEAB"
 msgid "Enter exchange.  Press ENTER to log, ESCAPE to abort QSO."
 msgstr "Enter exchange. Drücken Sie ENTER zum Loggen, ESCAPE zum Abbruch von QSO."
 
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "RELAY-KONTROLLPORT = PADDLE-PORT"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_relaycontrolportpaddleport
 #: tr4w/src/lang/tr4w_consts_eng.pas:879
@@ -7577,7 +7604,7 @@ msgstr "Enter exchange. Drücken Sie ENTER zum Loggen, ESCAPE zum Abbruch von QS
 #, fuzzy
 msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
 msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr "RELAY-KONTROLLPORT = PADDLE-PORT"
+msgstr "RELAY CONTROL PORT = PADDLE PORT"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_locationfieldempty
@@ -7810,106 +7837,6 @@ msgstr "DX"
 msgid "QTH"
 msgstr "QTH"
 
-#: tfrmfunctionkeys.pnlf1.caption
-#, fuzzy
-msgid "F1"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf10.caption
-#, fuzzy
-msgid "F10"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf11.caption
-#, fuzzy
-msgid "F11"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf12.caption
-#, fuzzy
-msgid "F12"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf2.caption
-#, fuzzy
-msgid "F2"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf3.caption
-#, fuzzy
-msgid "F3"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf4.caption
-#, fuzzy
-msgid "F4"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf5.caption
-#, fuzzy
-msgid "F5"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf6.caption
-#, fuzzy
-msgid "F6"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf7.caption
-#, fuzzy
-msgid "F7"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf8.caption
-#, fuzzy
-msgid "F8"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf9.caption
-#, fuzzy
-msgid "F9"
-msgstr ""
-
-#: tfrmhamscore.lblqueuevalue.caption
-#, fuzzy
-msgid "--"
-msgstr ""
-
-#: tfrmmp3recorder.btncontrol.caption
-#, fuzzy
-msgid "..."
-msgstr ""
-
-#: tfrmpanadapter.btnspannarrow.caption
-#, fuzzy
-msgid "-"
-msgstr ""
-
-#: tfrmpanadapter.btnspanwide.caption
-#, fuzzy
-msgid "+"
-msgstr ""
-
-#: tradioeditform.optdata7.caption
-#, fuzzy
-msgid "7"
-msgstr ""
-
-#: tradioeditform.optdata8.caption
-#, fuzzy
-msgid "8"
-msgstr ""
-
-#: tradioeditform.optstop1.caption
-#, fuzzy
-msgid "1"
-msgstr ""
-
-#: tradioeditform.optstop2.caption
-#, fuzzy
-msgid "2"
-msgstr ""
-
 #: ulclformhelpers.tc_prefs_activate
 #, fuzzy
 msgid "Save and activate this profile"
@@ -7956,10 +7883,11 @@ msgstr "Öffnen einer vorhandenen Konfiguration"
 msgid "Start a new contest"
 msgstr "Starten Sie einen neuen Wettbewerb"
 
+# 2026-10-19: term from the EU DX Contest rules, German edition (EUDXCC, https://www.eudx-contest.com/reglen/; machine-quality, only correctly used terms taken): 'KONTROLLE' -> 'WETTBEWERB', s.2 'Der Wettbewerb findet ... statt', as the sibling uappstrings.snewcontestcontestlabel (Kontrolle = inspection). Previous text: "KONTROLLE"
 #: tfrmnewcontest.lblcontest.caption
 #, fuzzy
 msgid "CONTEST"
-msgstr "KONTROLLE"
+msgstr "WETTBEWERB"
 
 #: tfrmnewcontest.lblmycall.caption
 #, fuzzy
@@ -8158,15 +8086,6 @@ msgstr "Erstellen und Verwenden eines neuen Logs"
 msgid "Get server log"
 msgstr "Server-Log"
 
-#: tfrmserverlog.lblbytes.caption
-#: tfrmserverlog.lblqsos.caption
-#: tfrmserverlog.lblrecords.caption
-#: tfrmserverlog.lblsent.caption
-#, fuzzy
-msgctxt "tfrmserverlog.lblbytes.caption"
-msgid "0"
-msgstr ""
-
 #: tfrmtelnet.btnconfigure.caption
 #: utr4wstrings.tc_configure_ellipsis
 #, fuzzy
@@ -8234,10 +8153,11 @@ msgstr "Rate Display"
 msgid "Reminder"
 msgstr "Erinnerung"
 
+# 2026-10-19: term from the EU DX Contest rules, German edition (EUDXCC, https://www.eudx-contest.com/reglen/; machine-quality, only correctly used terms taken): 'Häufigkeit' -> 'Frequenz', s.12 'die genaue Frequenz jedes ... QSO' (Haeufigkeit = how often). Previous text: "Häufigkeit im Log anzeigen"
 #: usettingscaptions.rs_appearance_ctrlj_showfrequencyinlog
 #, fuzzy
 msgid "Show Frequency In Log"
-msgstr "Häufigkeit im Log anzeigen"
+msgstr "Frequenz im Log anzeigen"
 
 #: usettingscaptions.rs_appearance_ctrlj_showtypedcallsign
 #, fuzzy
@@ -8329,10 +8249,11 @@ msgstr "Kategorieband"
 msgid "Category-Mode"
 msgstr "Kategorie-Modus"
 
+# 2026-10-19: term from the EU DX Contest rules, German edition (EUDXCC, https://www.eudx-contest.com/reglen/; machine-quality, only correctly used terms taken): 'Kategoriebetreiber' -> 'Kategorie-Operator', s.2 'Multi Op'; the reviewed 'Operators' (Betreiber = business operator). Previous text: "Kategoriebetreiber"
 #: usettingscaptions.rs_contest_categoryoperator
 #, fuzzy
 msgid "Category-Operator"
-msgstr "Kategoriebetreiber"
+msgstr "Kategorie-Operator"
 
 #: usettingscaptions.rs_contest_categoryoverlay
 #, fuzzy
@@ -8459,10 +8380,11 @@ msgstr "Mehrfachbänder"
 msgid "Multiple Modes"
 msgstr "Mehrere Modi"
 
+# 2026-10-19: term from the EU DX Contest rules, German edition (EUDXCC, https://www.eudx-contest.com/reglen/; machine-quality, only correctly used terms taken): 'mehrere Meldungen' -> 'Multiplikator-Meldungen', s.5 'Multiplikatoren' (mehrere = several). Previous text: "Mindestbands für mehrere Meldungen"
 #: usettingscaptions.rs_contest_multreportminimumbands
 #, fuzzy
 msgid "Mult Report Minimum Bands"
-msgstr "Mindestbands für mehrere Meldungen"
+msgstr "Mindestbands für Multiplikator-Meldungen"
 
 #: usettingscaptions.rs_contest_multsheetautoreset
 #, fuzzy
@@ -8584,10 +8506,11 @@ msgstr "R150S-Modus"
 msgid "Random CQ Mode"
 msgstr "Zufälliger CQ-Modus"
 
+# 2026-10-19: term from the EU DX Contest rules, German edition (EUDXCC, https://www.eudx-contest.com/reglen/; machine-quality, only correctly used terms taken): 'Mehrfachanzeigemodus' -> 'Multiplikator-Anzeigemodus', s.5 'Multiplikatoren' (mehrfach = multiple). Previous text: "Verbleibender Mehrfachanzeigemodus"
 #: usettingscaptions.rs_contest_remainingmultdisplaymode
 #, fuzzy
 msgid "Remaining Mult Display Mode"
-msgstr "Verbleibender Mehrfachanzeigemodus"
+msgstr "Verbleibender Multiplikator-Anzeigemodus"
 
 #: usettingscaptions.rs_contest_reverseinitialex
 #, fuzzy
@@ -8614,10 +8537,11 @@ msgstr "Name des inländischen Multiplikators anzeigen"
 msgid "Sprint Qsy Rule"
 msgstr "Sprint Qsy Regel"
 
+# 2026-10-19: term from the EU DX Contest rules, German edition (EUDXCC, https://www.eudx-contest.com/reglen/; machine-quality, only correctly used terms taken): 'Artikel 10 Minuten' -> '10-Minuten-Regel', s.10 'die 10-Minuten-Regel einhalten' (Artikel = article). Previous text: "Artikel 10 Minuten"
 #: usettingscaptions.rs_contest_tenminuterule
 #, fuzzy
 msgid "Ten Minute Rule"
-msgstr "Artikel 10 Minuten"
+msgstr "10-Minuten-Regel"
 
 #: usettingscaptions.rs_contest_zonemultiplier
 #, fuzzy
@@ -8844,10 +8768,11 @@ msgstr "Digitaler Modus"
 msgid "Distance Mode"
 msgstr "Entfernungsmodus"
 
+# 2026-10-19: term from the EU DX Contest rules, German edition (EUDXCC, https://www.eudx-contest.com/reglen/; machine-quality, only correctly used terms taken): 'Duble Check' -> 'Dupecheck', s.8 'Dupes'; the reviewed 'Dupecheck'. Previous text: "Duble Check Sound"
 #: usettingscaptions.rs_operating_ctrlj_dupechecksound
 #, fuzzy
 msgid "Dupe Check Sound"
-msgstr "Duble Check Sound"
+msgstr "Dupecheck Sound"
 
 #: usettingscaptions.rs_operating_ctrlj_dupesheetautoreset
 #, fuzzy
@@ -9023,4 +8948,426 @@ msgstr "TRCLUSTER.DAT wurde nicht neben dem Programm gefunden, daher ist die Lis
 #, fuzzy
 msgid "No DX clusters are defined yet -- click Configure to add one."
 msgstr "Es sind noch keine DX-Cluster definiert - klicken Sie auf Konfigurieren, um einen hinzuzufügen."
+
+#: uappstrings.sexchangenoprecedence
+#, fuzzy
+msgid "Missing precedence (Q A B U M S)"
+msgstr "Fehlende Priorität (Q A B U M S)"
+
+#: uappstrings.sexchangeoutofstateworkshostonly
+#, fuzzy
+msgid "Out of state: work %s stations only"
+msgstr "Außerhalb des Staates: Arbeit %s nur Stationen"
+
+#: uappstrings.scontestinactive
+#, fuzzy
+msgid "%s (inactive)"
+msgstr "%s (inaktiv)"
+
+#: uappstrings.scategorypowerchangedrescored
+#, fuzzy
+msgid "CATEGORY-POWER is now %s -- the scoring category changed and the log was rescored."
+msgstr "CATEGORY-POWER ist jetzt %s -- die Bewertungskategorie änderte sich und das Protokoll wurde neu bewertet."
+
+#: uappstrings.scontestnotonmultiop
+#, fuzzy
+msgid "%s cannot be used on the multi-op network yet -- the network protocol cannot carry it. Use it only while this station is not connected to a multi-op server."
+msgstr "%s kann noch nicht im Multi-Op-Netzwerk verwendet werden -- das Netzwerkprotokoll kann diesen Contest nicht übertragen. Verwenden Sie ihn nur, solange diese Station nicht mit einem Multi-Op-Server verbunden ist."
+
+#: uappstrings.snewcontestin7qpneinsideaparty
+#, fuzzy
+msgid "IN7QPNE is for stations outside Indiana, the 7th call area, New England and Delaware. From %s, choose the %s instead."
+msgstr "IN7QPNE ist für Stationen außerhalb von Indiana, dem 7. Rufzeichengebiet, Neuengland und Delaware. Wählen Sie von %s aus stattdessen %s."
+
+#: uappstrings.speeronanothercontest
+#, fuzzy
+msgid "Station %s is on %s, this station is on %s -- its QSOs are NOT being logged here. All stations must run the same contest."
+msgstr "Station %s ist im Contest %s, diese Station ist im Contest %s -- ihre QSOs werden hier NICHT geloggt. Alle Stationen müssen denselben Contest fahren."
+
+#: uappstrings.sexchangenotagridorreport
+#, fuzzy
+msgid "%s is not a grid square or a signal report"
+msgstr "%s ist weder ein Grid Locator noch ein Rapport"
+
+#: uappstrings.sexchangegridrequired
+#, fuzzy
+msgid "Grid square required"
+msgstr "Grid Locator erforderlich"
+
+#: uappstrings.scouldnotshowinfilemanager
+#, fuzzy
+msgid ""
+"TR4W could not open this location in your file manager:\n"
+"\n"
+"%s\n"
+"\n"
+"Check that it still exists.  tr4w.log records what was tried."
+msgstr ""
+"TR4W konnte diesen Speicherort in Ihrem Dateimanager nicht öffnen:\n"
+"\n"
+"%sÜberprüfen Sie, ob es noch existiert. tr4w.log zeichnet auf, was versucht wurde."
+
+#: uappstrings.sdownloadcannotverify
+#, fuzzy
+msgid ""
+"the server's certificate could not be verified (%s).\n"
+"\n"
+"The request was REFUSED rather than sent unverified. Turn off Preferences > Network > verify server certificates if you want to proceed without checking."
+msgstr ""
+"Das Zertifikat des Servers konnte nicht verifiziert werden ()%s.\n"
+"\n"
+"Der Antrag wurde abgelehnt und nicht ungeprüft gesendet. Vorlieben ausschalten > Netzwerk > Serverzertifikate überprüfen, wenn Sie ohne Überprüfung fortfahren möchten."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(MEIN LÄNDER =) %s)"
+#: uappstrings.sexchangemodebriefcountry
+#, fuzzy
+msgid "(MY COUNTRY = %s)"
+msgstr "(MY COUNTRY = %s)"
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "(Mein Land ist leer)"
+#: uappstrings.sexchangemodebriefemptycountry
+#, fuzzy
+msgid "(MY COUNTRY is empty)"
+msgstr "(MY COUNTRY ist leer)"
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Dieser Wettbewerb fordert einen Staat, eine Provinz oder einen Abschnitt, weil mein Land %s."
+#: uappstrings.sexchangemodefromcountry
+#, fuzzy
+msgid "This contest is asking for a state, province or section because MY COUNTRY is %s."
+msgstr "Dieser Wettbewerb fragt nach einem Staat, einer Provinz oder einer Sektion, weil MY COUNTRY %s ist."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Dieser Wettbewerb fordert einen Staat, eine Provinz oder einen Abschnitt, weil mein Land leer ist."
+#: uappstrings.sexchangemodefromemptycountry
+#, fuzzy
+msgid "This contest is asking for a state, province or section because MY COUNTRY is empty."
+msgstr "Dieser Wettbewerb fragt nach einem Staat, einer Provinz oder einer Sektion, weil MY COUNTRY leer ist."
+
+#: uappstrings.sfilenamecamefromsetting
+#, fuzzy
+msgid "The name came from the %s setting for this contest."
+msgstr "Der Name stammt von der %s Setzung für diesen Wettbewerb."
+
+#: uappstrings.sfilenotfoundthere
+#, fuzzy
+msgid "TR4W could not find this file:"
+msgstr "TR4W konnte diese Datei nicht finden:"
+
+#: uappstrings.sfirstrunconvertmissing
+#, fuzzy
+msgid ""
+"TR4W could not find the conversion program:\n"
+"    %s\n"
+"\n"
+"It is installed beside TR4W itself. TR4W will start with its defaults, and your old settings file is left untouched."
+msgstr ""
+"TR4W konnte das Konvertierungsprogramm nicht finden:\n"
+" %sEs ist neben TR4W selbst installiert. TR4W beginnt mit seinen Standardeinstellungen und Ihre alte Einstellungsdatei bleibt unberührt."
+
+#: uappstrings.sfirstrunconvertnothingdone
+#, fuzzy
+msgid ""
+"Nothing was converted.\n"
+"\n"
+"TR4W will start with its defaults and your old settings file is untouched. You can convert at any time by running\n"
+"    %s\n"
+"\n"
+"from a command prompt in that folder. Converting then replaces whatever you have configured in the meantime with the old values."
+msgstr ""
+"Nichts wurde umgewandelt.\n"
+"\n"
+"TR4W beginnt mit seinen Standardeinstellungen und Ihre alte Einstellungsdatei ist unberührt. Sie können jederzeit konvertieren, indem Sie\n"
+" %sAus einer Eingabeaufforderung in diesem Ordner. Das Konvertieren ersetzt dann das, was Sie in der Zwischenzeit konfiguriert haben, durch die alten Werte."
+
+#: uappstrings.sfirstrunconvertnow
+#, fuzzy
+msgid "Convert now"
+msgstr "Jetzt konvertieren"
+
+#: uappstrings.sfirstrunconvertprompt
+#, fuzzy
+msgid ""
+"TR4W has found settings from an earlier version:\n"
+"    %s\n"
+"\n"
+"and it has not written its own settings file yet:\n"
+"    %s\n"
+"\n"
+"TR4W can carry that old configuration across now. The conversion lists what it would change and asks before writing anything, so you can look first and still say no.\n"
+"\n"
+"You do not have to do it now. Nothing is lost by continuing: TR4W starts with its defaults, your old file is left untouched, and converting later simply replaces those defaults with your old values.\n"
+"\n"
+"What is worth knowing is the ORDER. If you continue now and then set TR4W up by hand, converting afterwards overwrites that work with the values from the old file. Converting first avoids the question."
+msgstr ""
+"TR4W hat Einstellungen aus einer früheren Version gefunden:\n"
+" %sund es hat noch keine eigene Einstellungsdatei geschrieben:\n"
+" %sTR4W kann diese alte Konfiguration jetzt übertragen. Die Konvertierung listet auf, was sie ändern würde und fragt, bevor Sie etwas schreiben, so dass Sie zuerst schauen und immer noch nein sagen können.\n"
+"\n"
+"Sie müssen es jetzt nicht tun. Nichts geht verloren, wenn Sie fortfahren: TR4W beginnt mit seinen Standardeinstellungen, Ihre alte Datei bleibt unberührt, und die spätere Konvertierung ersetzt diese Standardeinstellungen einfach durch Ihre alten Werte.\n"
+"\n"
+"Was wissenswert ist, ist die Ordnung. Wenn Sie jetzt fortfahren und dann TR4W von Hand einrichten, überschreiben Sie anschließend Überschreiben, die mit den Werten aus der alten Datei funktionieren. Converting zuerst vermeidet die Frage."
+
+#: uappstrings.sfirstrunconvertskip
+#, fuzzy
+msgid "Continue without converting"
+msgstr "Weiter ohne Konvertierung"
+
+#: uappstrings.sfirstrunconverttitle
+#, fuzzy
+msgid "TR4W -- settings from an earlier version"
+msgstr "TR4W - Einstellungen aus einer früheren Version"
+
+#: uappstrings.slogfileunavailable
+#, fuzzy
+msgid ""
+"TR4W could not open its log file.\n"
+"\n"
+"%s\n"
+"\n"
+"TR4W will keep running and keep trying to open it. Until it can, nothing from this session is written to the log."
+msgstr ""
+"TR4W konnte seine Protokolldatei nicht öffnen.\n"
+"\n"
+"%sTR4W wird weiter laufen und weiter versuchen, es zu öffnen. Bis es möglich ist, wird nichts aus dieser Sitzung in das Protokoll geschrieben."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Computer-ID %s bereits von einer anderen Station in diesem Netzwerk verwendet wird.\n\nWechselrechner ID zu einem Brief, den keine andere Station verwendet, und dann wieder verbinden."
+#: uappstrings.snetcomputeridinuse
+#, fuzzy
+msgid ""
+"Computer ID %s is already in use by another station on this network.\n"
+"\n"
+"Change COMPUTER ID to a letter no other station is using, then reconnect."
+msgstr ""
+"Die Computer-ID %s wird in diesem Netzwerk bereits von einer anderen Station verwendet.\n"
+"\n"
+"Ändern Sie COMPUTER ID auf einen Buchstaben, den keine andere Station verwendet, und verbinden Sie sich dann neu."
+
+#: uappstrings.snewcontestin7qpnecountyorstate
+#, fuzzy
+msgid "Enter your county if you are in Indiana, the 7th call area, New England or Delaware. Enter your state, Canadian Province or \"DX\" if outside all four:"
+msgstr "Geben sie ihre grafschaft ein, wenn sie in indiana, dem 7 rufgebiet, new england oder delaware sind. Geben Sie Ihren Staat, die kanadische Provinz oder \"DX\" ein, wenn außerhalb aller vier:"
+
+#: uappstrings.sqsonotlogged
+#, fuzzy
+msgid "NOT LOGGED -- the contest log would not accept this QSO. See tr4w.log. Do not clear the entry."
+msgstr "NICHT LOGGED - das Wettbewerbsprotokoll würde dieses QSO nicht akzeptieren. Siehe tr4w.log. Löschen Sie den Eintrag nicht."
+
+#: uappstrings.sreadinessdomesticfilemissing
+#, fuzzy
+msgid "This contest scores domestic multipliers from a .DOM file and none is named, so no domestic multiplier will be counted."
+msgstr "Dieser Wettbewerb erzielt inländische Multiplikatoren aus einer .DOM-Datei und keiner wird benannt, so dass kein inländischer Multiplikator gezählt wird."
+
+#: uappstrings.sreadinessfooter
+#, fuzzy
+msgid "Set these in Preferences > Station, then restart TR4W: they are read once when the contest is set up, so changing them now will not change this contest."
+msgstr "Setzen Sie diese in Einstellungen > Station, dann starten Sie TR4W neu: Sie werden einmal gelesen, wenn der Wettbewerb eingerichtet ist, so dass das Ändern jetzt diesen Wettbewerb nicht ändert."
+
+#: uappstrings.sreadinessheading
+#, fuzzy
+msgid "This contest is set up, but TR4W is missing information it needs:"
+msgstr "Dieser Wettbewerb ist eingerichtet, aber TR4W fehlt Informationen, die es braucht:"
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Mein Anruf ist leer. TR4W kann Ihr Land, Kontinent oder Zone nicht ohne sie ausarbeiten, und nichts, was von ihnen abhängt, wird richtig sein."
+#: uappstrings.sreadinessmycallmissing
+#, fuzzy
+msgid "MY CALL is empty. TR4W cannot work out your country, continent or zone without it, and nothing that depends on them will be right."
+msgstr "MY CALL ist leer. Ohne dieses Rufzeichen kann TR4W Ihr Land, Ihren Kontinent und Ihre Zone nicht bestimmen, und nichts, was davon abhängt, wird stimmen."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Mein Land ist leer. Es wird normalerweise von MY CALL durch CTY.DAT ausgearbeitet. Bis es einen Wert hat TR4W behandelt diese Station als DX - in ARRL DX bedeutet, dass es jede Station nach einem Staat oder einer Provinz fragt und eine Leistung wie K oder 100 ablehnt."
+#: uappstrings.sreadinessmycountrymissing
+#, fuzzy
+msgid "MY COUNTRY is empty. It is normally worked out from MY CALL through CTY.DAT. Until it has a value TR4W treats this station as DX -- in ARRL DX that means it will ask every station for a state or province and refuse a power such as K or 100."
+msgstr "MY COUNTRY ist leer. Es wird normalerweise über CTY.DAT aus MY CALL ermittelt. Solange es keinen Wert hat, behandelt TR4W diese Station als DX -- im ARRL DX bedeutet das, dass jede Station nach einem Staat oder einer Provinz gefragt und eine Leistungsangabe wie K oder 100 abgelehnt wird."
+
+#: uappstrings.sreadinessmygridmissing
+#, fuzzy
+msgid "MY GRID is empty and this contest sends your grid square."
+msgstr "MY GRID ist leer und dieser Wettbewerb sendet dein Gitterfeld."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Mein Staat ist leer und dieser Wettbewerb sendet Ihren Staat, Provinz oder Abschnitt. TR4W wird stattdessen eine Seriennummer senden."
+#: uappstrings.sreadinessmystatemissing
+#, fuzzy
+msgid "MY STATE is empty and this contest sends your state, province or section. TR4W will send a serial number instead."
+msgstr "MY STATE ist leer, und dieser Wettbewerb sendet Ihren Staat, Ihre Provinz oder Ihre Sektion. TR4W sendet stattdessen eine laufende Nummer."
+
+# 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Meine Zone ist leer und dieser Wettbewerb sendet deine Zone."
+#: uappstrings.sreadinessmyzonemissing
+#, fuzzy
+msgid "MY ZONE is empty and this contest sends your zone."
+msgstr "MY ZONE ist leer, und dieser Wettbewerb sendet Ihre Zone."
+
+#: uappstrings.sverifyallpassed
+#, fuzzy
+msgid "All %d check(s) passed."
+msgstr "alle %d Kontrolle(n) bestanden."
+
+#: uappstrings.sverifyclose
+#, fuzzy
+msgid "&Close"
+msgstr "&Schließen"
+
+#: uappstrings.sverifycolumncheck
+#, fuzzy
+msgid "Check"
+msgstr "Überprüfung"
+
+#: uappstrings.sverifycolumnresult
+#, fuzzy
+msgid "Result"
+msgstr "Ergebnis"
+
+#: uappstrings.sverifyfailed
+#, fuzzy
+msgid "FAILED"
+msgstr "FAIDEN"
+
+#: uappstrings.sverifypassed
+#, fuzzy
+msgid "Passed"
+msgstr "Passiert"
+
+#: uappstrings.sverifyrun
+#, fuzzy
+msgid "&Run checks"
+msgstr "&Run Checks"
+
+#: uappstrings.sverifyrunning
+#, fuzzy
+msgid "Running %d check(s)..."
+msgstr "Laufen %d Kontrolle(n)..."
+
+#: uappstrings.sverifysomefailed
+#, fuzzy
+msgid "%d of %d check(s) FAILED. Select a row for details."
+msgstr "%d von %d Prüfung(en) GEFÄHRT. Wählen Sie eine Zeile für Details."
+
+#: uappstrings.sverifytitle
+#, fuzzy
+msgid "Verification checks"
+msgstr "Überprüfungskontrollen"
+
+#: uprogrammain.scontestfileforeigndatabase
+#, fuzzy
+msgid ""
+"This file is a database, but it was not created by TR4W:\n"
+"\n"
+"%s\n"
+"\n"
+"TR4W cannot open another program's log. Choose a TR4W log (.db) or a contest configuration file (.cfg)."
+msgstr ""
+"Diese Datei ist eine Datenbank, wurde aber nicht von TR4W erstellt:\n"
+"\n"
+"%sTR4W kann das Protokoll eines anderen Programms nicht öffnen. Wählen Sie ein TR4W-Log (.db) oder eine Contest-Konfigurationsdatei (.cfg)."
+
+#: uprogrammain.scontestfilenotrecognised
+#, fuzzy
+msgid ""
+"This file is not a TR4W log and is not a contest configuration file:\n"
+"\n"
+"%s\n"
+"\n"
+"Choose a TR4W log (.db) or a contest configuration file (.cfg)."
+msgstr ""
+"Diese Datei ist kein TR4W-Log und keine Contest-Konfigurationsdatei:\n"
+"\n"
+"%sWählen Sie ein TR4W-Log (.db) oder eine Contest-Konfigurationsdatei (.cfg)."
+
+#: utr4wstrings.tc_bankalt
+#, fuzzy
+msgid "Alt"
+msgstr "Alt"
+
+#: utr4wstrings.tc_bankcontrol
+#, fuzzy
+msgid "Control"
+msgstr "Kontrolle"
+
+#: utr4wstrings.tc_bankstandard
+#, fuzzy
+msgid "Standard"
+msgstr "Standard"
+
+#: utr4wstrings.tc_ignoredunknownqth
+#, fuzzy
+msgid "Ignored, not a known QTH:"
+msgstr "Ignoriert, kein bekanntes QTH:"
+
+# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output say KONTROLLE (control), a mistranslation; this catalogue's 'Contest' is 'Wettbewerb'. Machine output was: "KONTROLLE"
+#: uappstrings.snewcontestcontestlabel
+#, fuzzy
+msgid "CONTEST"
+msgstr "WETTBEWERB"
+
+#: uappstrings.snewcontestsearchhint
+#, fuzzy
+msgid "Search: type part of a name, e.g. QSO"
+msgstr "Suche: Geben Sie einen Teil eines Namens ein, z. B. QSO"
+
+#: uappstrings.simportmyfactsdifference
+#, fuzzy
+msgid "%s: %d QSO(s), e.g. %s (this contest: %s)"
+msgstr "%s: %d QSO(s), z.B. %s (dieser Wettbewerb): %s)"
+
+#: uappstrings.simportmyfactskept
+#, fuzzy
+msgid "The file's station was kept for %d QSO(s)."
+msgstr "Die Station der Datei wurde für %d QSO(s)."
+
+#: uappstrings.simportmyfactsquestion
+#, fuzzy
+msgid ""
+"This file names our station for %d of its %d QSO(s) (%s), and it is not what this contest has:%s\n"
+"\n"
+"Keep the file's values for those QSOs?\n"
+"Yes keeps the file's. No gives them this contest's, as a new QSO would get."
+msgstr ""
+
+#: uappstrings.simportmyfactsreplaced
+#, fuzzy
+msgid "%d QSO(s) were given this contest's station in place of the file's."
+msgstr "%d QSO(s) erhielten die Station dieses Wettbewerbs anstelle der Datei."
+
+#: uappstrings.simportmyfactssame
+#, fuzzy
+msgid "%d QSO(s) named our station (%s), the same as this contest's."
+msgstr "%d QSO(s) nannten unsere Station%sDas gleiche wie dieser Wettbewerb."
+
+#: uappstrings.simportmyfactsstamped
+#, fuzzy
+msgid "%d QSO(s) named no station of ours and were given this contest's."
+msgstr "%d QSO(s) nannten keine Station von uns und erhielten diesen Wettbewerb."
+
+#: uappstrings.snewcontestshowinactive
+#, fuzzy
+msgid "Show inactive contests"
+msgstr "Inaktive Wettbewerbe anzeigen"
+
+#: uappstrings.slatestcontestdetail
+#, fuzzy
+msgid "%0:s - %1:s"
+msgstr "%0:s - %1:s"
+
+#: uappstrings.slatestcontestline
+#, fuzzy
+msgid "%0:s %1:d"
+msgstr "%0:s %1:d"
+
+#: uappstrings.snewcontestfilescall
+#, fuzzy
+msgid "Call"
+msgstr "Rufzeichen"
+
+#: uappstrings.snewcontestfilescontest
+#, fuzzy
+msgid "Contest"
+msgstr "Wettbewerb"
+
+#: uappstrings.snewcontestfilesfile
+#, fuzzy
+msgid "File"
+msgstr "Datei"
+
+#: uappstrings.snewcontestfilesyear
+#, fuzzy
+msgid "Year"
+msgstr "Jahr"
 

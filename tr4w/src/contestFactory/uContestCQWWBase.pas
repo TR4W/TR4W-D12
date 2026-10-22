@@ -55,25 +55,57 @@ uses
 type
    TContestCQWWBase = class(TContestBase)
    protected
-      function GetFormatsExchange: boolean; override;
-   public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
 
-      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                          const aQso: ContestExchange;
-                                          const aRSTSent: string): string; override;
-      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                              const aQso: ContestExchange;
-                                              const aRSTReceived: string;
-                                              const aHisQTH: string): string; override;
-      function FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                      const aQso: ContestExchange): string; override;
+      (* THE FLAG SET IS THE FAMILY'S RULE -- both modes run under one set
+         of rules, so it is stated once, here (M10 S5). See
+         TContestBase.GetFlags. *)
+      function GetFlags: TContestFlags; override;
+
+      (* A BREAK IS 60 MINUTES -- the family's rule, both modes (Q60). See
+         TContestBase.MinimumOffTimeMinutes. *)
+      function GetMinimumOffTimeMinutes: integer; override;
+   public
+
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
+      function GetADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string; override;
+      procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                const aSession: TADIFImportSession;
+                                var aExch: ContestExchange); override;
+   public
+      (* THE CANONICAL RECEIVED EXCHANGE -- see
+         TContestBase.CanonicalReceivedExchange (M9a). *)
+      function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
+   public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+   public
+      (* DOES IT HAVE A ZONE MULTIPLIER? -- see
+         TContestBase.HasZoneMultiplier (M11 S5 part 2). *)
+      function HasZoneMultiplier: boolean; override;
+      (* THE ZONE MULTIPLIER -- see TContestBase.ZoneMultiplierCount and
+         ZoneMultiplierZones (M11 S5). *)
+      function ZoneMultiplierCount: integer; override;
+      function ZoneMultiplierZones: TZoneMultiplierZones; override;
    end;
 
 implementation
 
 uses
-   SysUtils;
+   uCabrilloExchange,
+   uADIF,
+   SysUtils,
+   uCanonicalExchange;
 
 (* THE EXCHANGE IS RST AND A CQ ZONE, zero-padded to two digits.
 
@@ -83,10 +115,10 @@ uses
    log full of "3" where the sponsor expects "03" is a formatting difference a
    robot scorer sees.
 
-   THE JIDX HALF OF THE LEGACY ARM IS NOT HERE. RSTZoneExchange is shared, and
-   inside it `if Contest in [JIDXSSB, JIDXCW]` takes the zone from MyState
-   instead -- that is JIDX's rule and stays in the legacy case until JIDX has a
-   class. *)
+   THE JIDX HALF OF THE LEGACY ARM IS GONE. RSTZoneExchange is shared, and
+   inside it `if Contest in [JIDXSSB, JIDXCW]` took the zone from MyState. It
+   was dead -- the contest matrix shows JIDX always runs RSTPrefectureExchange
+   -- and was deleted at M4 (2026-10-01) rather than given a class to live in. *)
 (* THE ZONE COMES FROM aMy, NOT FROM Station.MyZone, and that is not
    interchangeable. PostUnit.ZoneSentForThisContest decides which zone a contest
    actually sends -- the ITU zone for an ITUZones contest, the CQ zone
@@ -97,28 +129,22 @@ uses
    AnsiString() EXPLICITLY: StrToIntDef resolves to the AnsiString overload, so a
    bare call narrows implicitly. A zone is ASCII digits, so the conversion is
    safe; saying so is the point. *)
-function TContestCQWWBase.GetFormatsExchange: boolean;
+function TContestCQWWBase.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                  const aQso: ContestExchange;
+                                                  const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := True;
+   Result := CabrilloSentRSTZone(aMy, aQso, aCtx);
 end;
 
-function TContestCQWWBase.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                       const aQso: ContestExchange;
-                                       const aRSTSent: string): string;
+function TContestCQWWBase.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                      const aQso: ContestExchange;
+                                                      const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := Format('%-3s %-7.2d', [aRSTSent, StrToIntDef(AnsiString(aMy.MyZone), 0)]);
+   Result := CabrilloReceivedRSTZone(aMy, aQso, aCtx);
 end;
 
-function TContestCQWWBase.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                           const aQso: ContestExchange;
-                                           const aRSTReceived: string;
-                                           const aHisQTH: string): string;
-begin
-   Result := Format('%-3s %-7.2d', [aRSTReceived, aQso.Zone]);
-end;
-
-function TContestCQWWBase.FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                   const aQso: ContestExchange): string;
+function TContestCQWWBase.GetADIFSentExchange(const aMy: TMyStationExchange;
+                                              const aQso: ContestExchange): string;
 begin
    Result := Format('%-3d %-7.2d', [aQso.RSTSent, StrToIntDef(AnsiString(aMy.MyZone), 0)]);
 end;
@@ -144,6 +170,87 @@ begin
       begin
       aQso.QSOPoints := 0;
       end;
+end;
+
+function TContestCQWWBase.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfMultByBand, cfCQZoneMode];
+end;
+
+(* 60 MINUTES -- DXLog.net's CQWW.txt states MIN_OFF_TIME=60, which NY4I
+   took as confirmation (Q60, 2026-10-15). *)
+function TContestCQWWBase.GetMinimumOffTimeMinutes: integer;
+begin
+   Result := 60;
+end;
+
+(* THE RST COMES OFF FIRST. SRX_STRING is '59 8' -- the received RST and the
+   zone -- because the exporter prepends the RST to make the field symmetric
+   with STX_STRING. The old code stored the whole thing as the QTH and then
+   asked StrToIntDef for a zone, which answered 0 because '59 8' is not a
+   number.
+
+   AND A ZONE IS NOT A LOCATION. D7 emits no QTH for these QSOs at all;
+   filling QTHString put a <QTH>59 8 into every re-exported record. The zone
+   has its own field and CQZ already populates it. *)
+procedure TContestCQWWBase.ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                           const aSession: TADIFImportSession;
+                                           var aExch: ContestExchange);
+begin
+   aExch.Zone := StrToIntDef(ExchangeFromSRXString(aTemps.SRX_String,
+                                                   aExch.RSTReceived), 0);
+end;
+
+(* THE CANONICAL RECEIVED EXCHANGE -- uExchangeBuilder's arm for this
+   contest, moved here at M9a (2026-10-02): the RST and the zone. It named
+   CQWWCW and CQWWSSB, the family, so it is the family's. See
+   TContestBase.CanonicalReceivedExchange; the caller collapses the
+   whitespace. *)
+function TContestCQWWBase.CanonicalReceivedExchange(const aQso: ContestExchange): string;
+begin
+   Result := RSTReceivedText(aQso) + ' ' + IntToStr(aQso.Zone);
+end;
+
+(* A DX MULTIPLIER AT EVERY STATION -- M11 S4 part 2, 2026-10-14: the trait
+   CQ WW CW and SSB each stated (`CQDXCC`) until the kind was deleted. Once,
+   here, as the key is. *)
+function TContestCQWWBase.HasDXMultiplier: boolean;
+begin
+   Result := True;
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country counts: the key is the CTY country -- GetDXQTH's `else`
+   arm, for the session's CQDXCC.
+   Stated once, on the family base: CQ WW CW and SSB both ran CQDXCC. *)
+function TContestCQWWBase.DXMultiplierKey(const aQso: ContestExchange;
+                                          out aKey: DXMultiplierString): boolean;
+begin
+   aKey := aQso.QTH.CountryID;
+   Result := True;
+end;
+
+(* THE ZONE MULTIPLIER -- M11 S5, 2026-10-14: the CQ zones, at every
+   station. What the trait's CQZones gave LOGDUPE's zone count and the
+   zone-list readers (LOGEDIT, POSTUNIT) through the session kind until
+   S5. CQ WW CW and SSB both run it, so it is stated once, on their
+   family base. *)
+function TContestCQWWBase.ZoneMultiplierCount: integer;
+begin
+   Result := CQ_ZONE_MULTIPLIERS;
+end;
+
+(* IT HAS A ZONE MULTIPLIER, AT EVERY STATION -- M11 S5 part 2,
+   2026-10-14: the answer the session kind gave (`kind <> NoZoneMults`)
+   before the kind was deleted. *)
+function TContestCQWWBase.HasZoneMultiplier: boolean;
+begin
+   Result := True;
+end;
+
+function TContestCQWWBase.ZoneMultiplierZones: TZoneMultiplierZones;
+begin
+   Result := zmzCQZones;
 end;
 
 end.

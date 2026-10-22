@@ -1414,7 +1414,7 @@ begin
          (* BEFORE the thread exists, deliberately -- see the field. *)
          PollingThreadRunning := True;
          tRadioInterfaceThreadHandle :=
-            tCreateThread(@BeginPolling, tRadioInterfaceThreadID, False, @Self);
+            tCreateThread(BeginPolling, tRadioInterfaceThreadID, False, @Self);
          if not ThreadStarted(tRadioInterfaceThreadHandle) then
             begin
             (* Nothing will ever clear the flag if nothing ever ran. *)

@@ -2,6 +2,7 @@
 name: integrations
 description: Third-party program integration — WSJT-X (UDP), MMTTY (RTTY), and the external logger factory (DXKeeper, ACLog, HRD). Use for digital-mode interop, decode handling, colorization hints, QSO hand-off to another logger, or anything about an out-of-process companion program.
 tools: Read, Grep, Glob, Bash, Edit, Write
+model: sonnet
 ---
 
 You own TR4W's links to other programs on the operator's desk.
@@ -14,7 +15,7 @@ You own TR4W's links to other programs on the operator's desk.
 | MMTTY — RTTY | `tr4w/src/uMMTTY.pas`, `src/ui/lcl/uMMTTYForm.pas` |
 | external logger factory | `uExternalLoggerFactory.pas` |
 | abstract base | `uExternalLoggerBase.pas` (`TExternalLoggerBase`) |
-| implementation | `uExternalLogger.pas`, `uExternalLoggerManager.pas` |
+| implementation | `uExternalLogger.pas` (~~`uExternalLoggerManager.pas`~~ was never linked; deleted 2026-10-16) |
 
 Globals in `MainUnit`: `wsjtx: TWSJTXServer`, `externalLogger: TExternalLogger`.
 
@@ -27,6 +28,60 @@ The UDP thread **does not write the entry fields** — that separation was a fix
 not an accident. Highlighting had two separate defects before it worked reliably;
 dupe and new-multiplier colouring in the decode list is the visible contract.
 
+**The UDP handler runs on Indy's listener thread** (`ThreadedEvent := true`), so
+anything it does that reads the dupe sheet, the multiplier structures or
+`ActiveContest` is a data race with the main thread -- `ActiveContest` can free
+and rebuild the contest object on EVERY call. Fixed 2026-10-14 for the CQ decode:
+the listener parses and copies; `PostCQDecode` queues a job of VALUES through
+`Application.QueueAsyncCall` (FIFO, not `TThread.Queue`, which purges a thread's
+entries when it is destroyed), and `EvaluateCQDecode` -- which refuses off the
+main thread -- does the dupe/mult test and sends the `HighlightCall` reply.
+`Stop` detaches queued jobs from the server; a detached job is popped and dropped.
+`HighlightCall`'s `SendBuffer` is thread-neutral (the binding is fixed when the
+server goes Active), so the reply was never the problem.
+
+**All four UDP messages that touch program state are handed off now** (same day):
+CQ decode, STATUS, CLEAR and LOGGED ADIF -- `PostCQDecode` / `PostStatus` /
+`PostClear` / `PostLoggedADIF` copy values into ONE FIFO, and the matching
+`Evaluate*` runs on the main thread and refuses elsewhere (`OffMainThread`).
+`EvaluateLoggedADIF` is the one that LOGS A QSO. Do not add a second queue:
+the one order is what keeps a QSO's LOGGED message beside the STATUS and decodes
+around it, and the entry-field work an evaluation starts is queued behind it.
+**A logged QSO is never dropped:** `Stop` (main thread, listener already down)
+evaluates every pending LOGGED job in FIFO order before it detaches; pending
+STATUS/CLEAR/CQ jobs are dropped as transient. `tr4w_ShutDown` calls
+`wsjtx.Stop` before `LogStoreClose`, so the log is still open. A `LOST QSO` ERROR
+with the ADIF text is the last resort only (a LOGGED job surviving to
+finalization, a Stop off the main thread, or a failure while logging). The heartbeat and close arms only set
+`WSJTXState`, which is what a network thread is for.
+
+**The TCP command handler is still off the main thread, on purpose.** It is
+request/response against WSJT-X's ~1 s deadline and CmdTX/CmdRX are PTT, so
+queuing is wrong for it; it reads the radio status record unsynchronised and
+writes `Settings.Ptt.ViaCommands`. That belongs to the radio-status snapshot work.
+
+**`destructor Destroy;` without `override` is a WARNING, not an error, and `Free`
+never reaches it.** `TWSJTXServer`'s did not, so `FreeAndNil(wsjtx)` leaked the
+sockets until 2026-10-14. Check the keyword on any destructor you add.
+
+## The local UDP score (`dynamicresults`)
+
+`logsubs2.BuildScoreUDPXml` / `PostScoreToUDP` feed N1MM-style listeners and WRTC's
+local aggregators. **It is never suppressed by a contest's score-posting permission**
+(NY4I, Q109: *"dynamicresults is perfectly fine for wrtc. That was its original
+purpose"*) -- only the ONLINE builder (`uGetScores.BuildDynamicResultsXml`) and
+HamScore ask the contest. The mode loop runs `CW to Both`: the ALL rows carry
+qso/mult/point, and WRTC's HQ/country labels appear only there. Each `total` row is
+its own mode's bands summed. Pinned in `uTestUDPDatagrams`.
+
+**`<contestnr>` (contactinfo, contactreplace, contactdelete, lookupinfo) is
+`uContestRegistry.ContestBroadcastNumber`, the only place** (Q108 S4,
+2026-10-17): the legacy number for a legacy contest -- pinned, it did not move
+-- else `256 + CRC32(the id) mod (2^31 - 256)`. N1MM's appendix defines it as
+*"a unique number assigned to this contest instance in this database"*: local
+to a log, no range, never a shared contest code, so any stable per-contest
+number serves. Never write `Ord(...)` of a contest there again.
+
 ## MMTTY
 
 **MMTTY is out-of-process** — launched with `WinExec`, not loaded as a DLL. That
@@ -36,6 +91,14 @@ The `MMTTYMODE` compile-time switch was **deleted 2026-08-18** (NY4I: *"the
 boolean controls it now"*). It had been `True` for the life of this tree, so all
 20 of its `{$IF}` blocks always compiled and one `{$IF NOT MMTTYMODE}` block never
 did. Do not reintroduce a compile-time gate here.
+
+**An address handed to the RichEdit is `LPARAM(@...)`, never `integer(@...)`**
+(pointer audit P2, 2026-10-16). Three `SendMessage` sites in `uMMTTY` and
+`uMMTTYForm` used `integer`, which is exact on i386 and, with the x86_64
+image based at `$100000000`, would have handed RichEdit half the address of
+`MMTTY.mmttyCF` / `mmttyTwoBytes`. `Lint-PointerTruncation` fails the build on
+the integer form. RTTY text display has no automated oracle -- it is in
+`docs/BENCH_QUEUE.md`.
 
 ## External loggers
 

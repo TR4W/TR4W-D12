@@ -39,7 +39,11 @@ unit uContestARRLDXPhone;
 interface
 
 uses
-   uContestARRLDXBase;
+   (* TNewContestPrompts -- the New Contest dialog's prompts (M9a). *)
+   uContestBase,
+   uContestARRLDXBase,
+   (* VC: the kind enums the transcribed row getters return (M10 S5). *)
+   VC;
 
 type
    TContestARRLDXPhone = class(TContestARRLDXBase)
@@ -53,17 +57,86 @@ type
          ambiguity a property removes, so the getter is not part of the
          surface: callers use the property, descendants override the getter. *)
       function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetFriendlyName: string; override;
+
+      (* STATED AT M10 S5, transcribed from the ContestsArray row the base
+         read until then. The flag set is the family's -- see the base. *)
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetExchangeKind: ExchangeType; override;
    public
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    end;
 
 implementation
 
 uses
-   VC, uContestRegistry;
+   uContestRegistry,
+   uTR4WStrings;
 
 function TContestARRLDXPhone.GetDisplayName: string;
 begin
-   Result := 'ARRL International DX Contest - Phone';
+   Result := 'ARRL Inter. DX Contest, SSB';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestARRLDXPhone.GetCabrilloName: string;
+begin
+   Result := 'ARRL-DX-SSB';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestARRLDXPhone.GetADIFContestId: string;
+begin
+   Result := 'ARRL-DX-SSB';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestARRLDXPhone.GetFriendlyName: string;
+begin
+   Result := 'ARRL Inter. DX Contest, SSB';
+end;
+
+function TContestARRLDXPhone.GetWA7BNMId: integer;
+begin
+   Result := 289;
+end;
+
+function TContestARRLDXPhone.GetQRZRUId: integer;
+begin
+   Result := 334;
+end;
+
+function TContestARRLDXPhone.GetSubmissionEmail: string;
+begin
+   Result := 'DXPhone@arrl.org';
+end;
+
+function TContestARRLDXPhone.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTPowerExchange;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for ARRLDXCW.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestARRLDXPhone.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskFieldWithComment(TC_ENTERYOURQTHORPOWER, ncfMyState);
 end;
 
 initialization

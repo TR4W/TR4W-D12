@@ -45,6 +45,8 @@ type
       procedure Test_RoverAndMobile;
       procedure Test_RootCall_Simple;
       procedure Test_CountryPredicates;
+      procedure Test_FrenchID;
+      procedure Test_RussianStationOblast;
       procedure Test_SimilarCall;
       procedure Test_StandardCallFormat;
    end;
@@ -306,6 +308,44 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
+// FrenchID: F, TM and TK. Design defect #6, fixed at M5a: an EMPTY id raised a
+// range error (ID[1]), and both REF callers hand it a QTH.CountryID that is
+// empty whenever the country lookup found nothing.
+// ---------------------------------------------------------------------------
+procedure TCallSignRoutinesTests.Test_FrenchID;
+begin
+   BeginTest('Test_FrenchID');
+   CheckFalse(FrenchID(''),   'an empty id is not French, and does not raise');
+   CheckTrue(FrenchID('F'),   'F');
+   CheckTrue(FrenchID('FR'),  'any id starting with F');
+   CheckTrue(FrenchID('TM'),  'TM');
+   CheckTrue(FrenchID('TK'),  'TK');
+   CheckFalse(FrenchID('T'),  'T alone is not');
+   CheckFalse(FrenchID('DL'), 'DL is not');
+end;
+
+(* A RUSSIAN STATION'S OBLAST -- the one rule NY4I ruled on Q50
+   (2026-10-15): RussianID of the CTY.DAT COUNTRY decides, GetRussiaOblastID
+   of the call answers. The country is handed in, so this needs no
+   country file. *)
+procedure TCallSignRoutinesTests.Test_RussianStationOblast;
+begin
+   BeginTest('Test_RussianStationOblast');
+   CheckEquals('MA', RussianStationOblast('UA3ABC', 'UA'), 'a European Russian call: its oblast');
+   CheckEquals('KO', RussianStationOblast('RA9XYZ', 'UA9'), 'an Asiatic Russian call: its oblast');
+   CheckEquals('MA', RussianStationOblast('UB3ABC', 'UA'),
+               'a UB call -- RussianID of the CALL refuses it, the country does not');
+   CheckEquals(GetRussiaOblastID('R1FJL'), RussianStationOblast('R1FJL', 'R1FJ'),
+               'Franz Josef Land, an R entity outside UA');
+   CheckEquals('', RussianStationOblast('DL1ABC', 'DL'), 'a non-Russian country: none');
+   CheckEquals('', RussianStationOblast('UA3ABC', 'DL'),
+               'the COUNTRY decides, never the call''s first letters');
+   CheckEquals('', RussianStationOblast('UA3ABC', ''), 'no country: none, and no raise');
+   CheckEquals('', RussianStationOblast('UA3ABC/P', 'UA'), 'a call with a slash: none');
+   CheckEquals('', RussianStationOblast('RA/DL1ABC', 'UA'), 'nor with a leading slash part');
+end;
+
+// ---------------------------------------------------------------------------
 // SimilarCall: true when two calls differ in <=1 position ('?' is a wildcard),
 // or one contains the other. Portable designators are stripped first.
 // ---------------------------------------------------------------------------
@@ -349,6 +389,8 @@ begin
    Test_RoverAndMobile;
    Test_RootCall_Simple;
    Test_CountryPredicates;
+   Test_FrenchID;
+   Test_RussianStationOblast;
    Test_SimilarCall;
    Test_StandardCallFormat;
 end;

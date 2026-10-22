@@ -106,7 +106,7 @@ implementation
 uses
    uPortAddress,   // TPortKind -- see the radio port kind accessors
    uSettingsModel, // Settings.My -- the station's own facts
-  uAppPaths,     // DataFilePath / ResolveDataFileInPlace -- shipped data
+  uAppPaths,     // ShippedDomFilePath -- shipped data
   uCFG,
   MainUnit,
   uRadioPolling,
@@ -114,7 +114,14 @@ uses
    uUDPBroadcastConfig,
    uTR4WConfigFile,
    uRotatorControl,   // OpenRotatorPorts -- the library opens its own ports
-   uContestFileKind;  // a .db chosen as the contest must not be line-parsed
+   uContestFileKind,  // a .db chosen as the contest must not be line-parsed
+   (* ContestIdentity(Contest).CQExchangeDefault and the station it is
+      handed -- tSetupExchangeNumbers (M7a). *)
+   uContestRegistry,
+   uContestFactory;
+   (* uContestSession STOOD HERE for the session's kinds; the last one this
+      unit read, the domestic kind's DoingDomesticMults, is the contest's
+      answer since M11 S6 part 2 (LOGEDIT.DoingDomesticMults). *)
 
 var
   logger: TLogLogger;
@@ -320,15 +327,12 @@ end;
 
 procedure SetUpGlobalsAndInitialize;
 var
-  (* A LOCAL buffer, not the shared wsprintfBuffer global.
+  (* THE DOMESTIC FILE'S PATH, AS A STRING -- 2026-10-01.
 
-    This one genuinely needs a CHARACTER BUFFER rather than a string:
-    ResolveDataFileInPlace takes an open array of AnsiChar by reference and
-    rewrites it, and StrLCopy below reads it. That is the open-array shape CLAUDE.md
-    asks for -- it carries its own bounds -- so what was wrong here was the
-    buffer being GLOBAL and shared with forty other call sites, not the
-    buffer existing. *)
-  domPath                               : array[0..MAX_PATH - 1] of AnsiChar;
+    It was a character buffer because ResolveDataFileInPlace rewrote it in
+    place. uAppPaths.ShippedDomFilePath returns the resolved path, so nothing
+    here writes into a buffer any more and the path is text, as a path is. *)
+  domPath                               : string;
 begin
 
   { GetTickCount64 -- StartCPU is QWord, see MainUnit. }
@@ -373,21 +377,19 @@ begin
      begin
      if fileexists(TR4W_DOM_FILENAME) then                       // 4.100.2
         begin
-        SetCharBuffer(domPath, CharBufferText(TR4W_DOM_FILENAME))
+        domPath := CharBufferText(TR4W_DOM_FILENAME);
         end
       else
          begin
-         (* DataFilePath AND PathDelim, NOT '%sdom\%s' -- 2026-09-20.
+         (* uAppPaths.ShippedDomFilePath, NOT '%sdom\%s' -- 2026-09-20,
+           and one composition for all three dom readers since 2026-10-01.
 
            The literal spelled the separator for Windows, leaving the
            resolver to undo it everywhere else -- and it can only manage
            that when every component of the result exists. Given a path
            already correct for this platform, the resolver is left with the
            one job it is for: matching the CASE of a shipped file. *)
-        SetCharBuffer(domPath,
-            DataFilePath('dom' + PathDelim +
-                         string(Settings.Contest.DomesticFilename)));
-         ResolveDataFileInPlace(domPath);
+        domPath := ShippedDomFilePath(string(Settings.Contest.DomesticFilename));
          end;
       (* THE RESOLVED PATH IS NOT WRITTEN BACK -- 2026-09-20.
 
@@ -398,12 +400,11 @@ begin
         uSettingsModel; the setting holds the NAME and this local holds the
         only path, for as long as it takes to open the file.
 
-        LoadInDomQTHFile IS HANDED domPath'S TEXT. It took a PAnsiChar until
+        LoadInDomQTHFile IS HANDED domPath. It took a PAnsiChar until
         2026-09-15, and PAnsiChar of a property is the address of a
         TEMPORARY -- the compiler accepts it and the pointer dangles at the
-        end of the statement -- which is why it is given the local array and
-        not the setting. It takes a string now. *)
-      if not DomQTHTable.LoadInDomQTHFile(CharBufferText(domPath)) then
+        end of the statement. It takes a string now. *)
+      if not DomQTHTable.LoadInDomQTHFile(domPath) then
          begin
          halt;
          end;
@@ -429,10 +430,8 @@ begin
      Settings.Operating.IncrementTimeEnable := True;
      end;
 
-  DoingDomesticMults := ActiveDomesticMult <> NoDomesticMults;
-  DoingDXMults := ActiveDXMult <> NoDXMults;
-  DoingPrefixMults := ActivePrefixMult <> NoPrefixMults;
-  DoingZoneMults := ActiveZoneMult <> NoZoneMults;
+  (* The four Doing*Mults flags were derived here, once -- M11 S2 made them
+    ContestSession's own answers, computed from the kinds (plan F9). *)
 
   //  NumberDifferentMults := 0;
 
@@ -871,83 +870,19 @@ end;
 procedure tSetupExchangeNumbers;
 var
   tCQExchange, tSPExchange              : ShortString;
-  Grid                                  : ShortString;
 begin
 
 
-  tSPExchange := '';
-  tCQExchange := '';
-  Grid := UTF8Encode(Copy(Settings.My.Grid, 1, 4));
-  case Contest of
-
-    MAKROTHEN:
-      begin
-        tCQExchange := ' ' + Grid + ' ' + Grid;
-      end;
-
-    RADIOMEMORY, WISCONSINQSOPARTY: tCQExchange := UTF8Encode(' ' + Settings.My.State);
-
-    LQP, NCCCSPRINT: tCQExchange := UTF8Encode(' # ' + Settings.My.Name + ' ' + Settings.My.State);
-
-//    JTDX, REGION1FIELDDAY, REGION1FIELDDAY_RCC_CW, UCG: tCQExchange := ' 5NN #';
-
-    R9W_UW9WK_MEMORIAL, CUPURAL, UKRAINECHAMPIONSHIP, RFASCHAMPIONSHIPCW, RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB: tCQExchange := UTF8Encode(' ' + Settings.My.State + '#');
-
-    ALRS_UA1DZ_CUP, OLDNEWYEAR, TENNESSEEQSOPARTY, SALMONRUN, ALLASIANCW, ALLASIANSSB, SEVENQP, ARRL160, ARRLDXCW: tCQExchange := UTF8Encode(' 5NN ' + Settings.My.State);
-
-    OHIOQSOPARTY, CALQSOPARTY, UA4WCHAMPIONSHIP, RAEM, CUPRFCW, CUPRFSSB: tCQExchange := UTF8Encode(' # ' + Settings.My.State);
-{
-    ARI, SPDX, ARKTIKA_SPRING, PACC, WAG, CUPUA1DZ, RUSSIANDX, RDA, OKDX, UKRAINIAN, OLDNEWYEAR, ARRL10, HADX, YODX, RSGB18, DARCXMAS:
-      begin
-        if Settings.My.State <> '' then tCQExchange := ' 5NN ' + Settings.My.State else tCQExchange := ' 5NN #';
-      end;
-}
-    JIDXCW, JIDXSSB, CQ160SSB, CQ160CW, LZDX, IARU, OZCR_O, OZCR_Z:
-      begin
-        if Settings.My.State <> '' then
-           begin
-           tCQExchange := UTF8Encode(' 5NN ' + Settings.My.State)
-           end
-        else
-           begin
-           tCQExchange := UTF8Encode(' 5NN ' + Settings.My.Zone);
-           end;
-      end;
-
-    CQIR:
-      begin
-        if Settings.My.State <> '' then
-           begin
-           tCQExchange := UTF8Encode(' ' + Settings.My.State + ' #')
-           end
-        else
-           begin
-           tCQExchange := ' #';
-           end;
-      end;
-
-    NZFIELDDAY:
-      tCQExchange := UTF8Encode(' 5NN # ' + Settings.My.Zone);
-
-//    EUROPEANHFC, CQWWCW, CQWWSSB, GACWWWSACW, GAGARINCUP: tCQExchange := ' 5NN ' + Settings.My.Zone;
-    {CZECH_ACTIVITY_VHF,}OZHCRVHF, RADIOVHFFD: tCQExchange := UTF8Encode(' 5NN # ' + Settings.My.Grid);
-
-    NRAUBALTICCW, NRAUBALTICSSB, RU3AXMEMORIAL, {WWPMC,} UBACW, UBASSB: tCQExchange := UTF8Encode(' 5NN # ' + Settings.My.State);
-
-   PCC, IOTA, HELVETIA: if Settings.My.State <> '' then tCQExchange := UTF8Encode(' 5NN # ' + Settings.My.State) else tCQExchange := ' 5NN #';
-
-    EUSPRINT_SPRING_SSB, EUSPRINT_AUTUMN_CW, EUSPRINT_AUTUMN_SSB, EUSPRINT_SPRING_CW:
-      begin
-        tCQExchange := UTF8Encode(' DE \ # ' + Settings.My.Name);
-        tSPExchange := '@' + tCQExchange;
-      end;
-
-    CWOPEN:
-      begin
-        tCQExchange := UTF8Encode(' # ' + Settings.My.Name);
-      end;
-
-  end;
+  (* THE CONTEST'S OWN DEFAULT -- M7a, 2026-10-02. Every contest that has a
+    class states its default as TContestBase.CQExchangeDefault (the base
+    offers ''); a classless contest is asked too, through the plain
+    TContestBase that is its identity, and gets ''. The `case` that named the
+    classless contests went with its last, the UA4W Championship's
+    (2026-10-14). The repeat S&P exchange is its sibling,
+    RepeatSPExchangeDefault (M7b, the EU Sprints' arm); the base offers ''
+    there too. *)
+  tSPExchange := UTF8Encode(ContestIdentity(Contest).RepeatSPExchangeDefault(CurrentStation));
+  tCQExchange := UTF8Encode(ContestIdentity(Contest).CQExchangeDefault(CurrentStation));
 
 {
   case Contest of
@@ -1104,9 +1039,13 @@ var
      NoteCommandFromContestCFG(string(ID));
      end;
 
+  (* ApplyContestStatement, NOT CheckCommand: a station fact such as MY STATE
+    or MY ZONE in a contest .cfg is THIS CONTEST'S override and is never
+    written into the station's settings (design 7.12). Every other command is
+    the CheckCommand(.., True) this always was. *)
   if (CurrentConfigFile = cfgCFG) and CommandIsJSONOwned(string(ID)) then
      begin
-     if CheckCommand(ID, CMD, True) then
+     if ApplyContestStatement(string(ID), string(CMD)) then
         begin
         logger.Info('[Config] %s = %s from the contest .cfg -- overrides the stored value for this contest',
                     [ID, CMD]);
