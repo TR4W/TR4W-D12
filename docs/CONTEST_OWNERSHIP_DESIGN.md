@@ -668,7 +668,9 @@ decided:
 
 Neither site names a contest, so no `Lint-ContestNameTests` ceiling moves.
 `Test_EveryOtherContestStillCreditsEveryBand` pins the default for every other
-registered contest. It is a ratchet: a contest that states its bands joins its
+registered contest (~~deleted at Q98 S1, 2026-10-22~~ -- replaced by
+`uTestContestStatesItsRules.Test_EveryContestStatesItsBandsAndModes`, 8.2v).
+It is a ratchet: a contest that states its bands joins its
 exception list in the same commit. Each contest's own band list is that
 contest's own move.
 
@@ -4234,8 +4236,11 @@ the only shared files, and both are the same price a radio pays.
 
 **DESIGN, measured at `f05f3d1b`. S0 is BUILT (2026-10-17), and so are the
 two pre-existing X-QSO findings below that Q51 already settled (the summary
-sheet and the rescore's multiplier flags); S1 onward is not, and S1 waits on
-Q119.** The rulings are in the
+sheet and the rescore's multiplier flags). S1 IS BUILT (2026-10-22, branch
+`q98-s1-cqww`, for NY4I's CQ WW SSB dry run), with CQ WW's S4a statement
+(and CQ WW RTTY's, from S5) -- see "S1 as built" below the stage table.
+S1 did NOT wait for Q119: the predicate leaves the host-area rule out, so
+answering Q119 "yes" is one more term in `QSOIsOffContest`.** The rulings are in the
 open-questions file and are not reopened here: **Q98** (every contest states
 its bands AND modes, no inherited default -- NY4I: *"I would feel better if
 contest classes just explicitly listed the bands they allow"*; an off-band or
@@ -4471,12 +4476,12 @@ fresh as its last freeze).
 | stage | what | size | predicted matrix movement | other oracles |
 |---|---|---|---|---|
 | **S0 -- DONE 2026-10-17** | **The matrix logs its `keys` QSOs (18-36) and its host-area QSO (37) on a band and mode the contest credits** -- its own when credited, else the first credited one from a fixed preference (20, 40, 15, 10, 80, 160, 6, 2 m; CW, Phone, FM, Digital), with that band's fixed frequency. The base QSOs 1-17 are unchanged: they ARE the band and mode test. The keys section exists to exercise key derivation, not the band rule. **Built as `uContestMatrix.CreditedMatrixQSO` (asked of `ActiveContest` through `ContestCreditsBand`) for the BAND half; the MODE half is added with S1, where `ContestCreditsMode` first exists** | `uContestMatrix` only, ~40 lines | the `keys` sections of the four 160 m contests (all their key QSOs move to 160 m and start reaching key derivation); nothing else, because no contest states a mode yet. **Measured: exactly that** -- 183 identical, 4 differing (ARRL-160, CQ-160-CW, CQ-160-SSB, RSGB-160), each 57 lines = QSOs 18-36 x 3 station variants, all in `== keys`; the QSOs now score (e.g. ARRL-160 `ON4ABC Band160 ... pts=5 ... dx=TRUE`); QSO 37 moved nowhere (every host-area contest credits 20 m) | unit tests unchanged; corpus 22/0/4, factory 13 identical, ADIF 12/0/1, rescore unchanged |
-| **S1** | **The mechanism** (above), the ratchet, `Lint-XQSOReads`, the identity-fact invariant, `uTestAutomaticXQSO` (Cabrillo and ADIF through the real writers; the loader, `uScoreTotals` and the live `LogContact` through the real sheets -- no dupe, no worked-there mark, no multiplier, no totals; the serial advances; an edited band re-classifies; the operator flag on an in-band QSO; the summary sheet), the scripts as `tools/contest-factory-q98/`. **No contest's bands change** | ~17 `src` files, ~300 lines; ~450 lines of tests; one lint | **only the 11 contests that already state bands**, export, import and totals only (their scoring already gives 0 and FALSE): the 160 m four -- 16 of 17 base QSOs (all but 6); Idaho, Indiana, 7QP -- 3, 9, 12; New England -- 3, 6, 9, 12; Delaware, Nebraska, IN7QPNE -- 9. Score and `CLAIMED-SCORE` unchanged | corpus 24/0/2 unchanged (no corpus set is one of the 11, and no corpus log holds a flagged X-QSO); `test-contest-factory.sh` unchanged |
+| **S1 -- DONE 2026-10-22** (as built: below the table) | **The mechanism** (above), the ratchet, `Lint-XQSOReads`, the identity-fact invariant, `uTestAutomaticXQSO` (Cabrillo and ADIF through the real writers; the loader, `uScoreTotals` and the live `LogContact` through the real sheets -- no dupe, no worked-there mark, no multiplier, no totals; the serial advances; an edited band re-classifies; the operator flag on an in-band QSO; the summary sheet), the scripts as `tools/contest-factory-q98/`. **No contest's bands change** | ~17 `src` files, ~300 lines; ~450 lines of tests; one lint | **only the 11 contests that already state bands**, export, import and totals only (their scoring already gives 0 and FALSE): the 160 m four -- 16 of 17 base QSOs (all but 6); Idaho, Indiana, 7QP -- 3, 9, 12; New England -- 3, 6, 9, 12; Delaware, Nebraska, IN7QPNE -- 9. Score and `CLAIMED-SCORE` unchanged | corpus 24/0/2 unchanged (no corpus set is one of the 11, and no corpus log holds a flagged X-QSO); `test-contest-factory.sh` unchanged. **Measured 2026-10-22 (with CQ WW, S4a): exactly the 11 plus the CQ WW three moved -- 173 identical, 14 re-frozen, `classify_matrix.py` UNPREDICTED 0; the 11 moved export, import and totals only with every score unchanged; corpus 21/0/5 exit 0 (the baseline), factory 13 identical, ADIF 12/0/2, rescore unchanged** |
 | **S2** | **Q44's three**: RTC states 40-10 m and CW/Phone (FM excluded, as its arm), CQMM and WRTC state 80-10 m (from their scoring arms, Q44); the arms are deleted -- a class never restates its band rule | 3 classes | RTC: 3, 4, 5, 6, 9, 12, 16 -- points stay 0, `inhibit=` TRUE -> FALSE (its body no longer runs); CQMM, WRTC: 3, 6, 9, 12 lose their multiplier flags, so `totals.mults` and the score drop | HamScore: only through the `X-QSO:` line (question below) |
 | **S3** | **Single-band and 160 m**: modes for the four 160 m contests (ARRL 160 CW; CQ 160 CW / SSB by running; RSGB 1.8 MHz CW -- WA7BNM; DXLog says CW;SSB), Stew Perry, ARRL 10 m, DARC 10 m, IRTS, KVP, Baltic, Mini 40, Mini 80, RU3AX, the RoPoCo pair -- **and `RunsInMode` is deleted**: `ContestOfADIFRecordMode` asks `UsesMode`, one answer | ~16 classes | per contest, every base QSO off its band (15-17 of 17) and, by mode, its own band's QSOs in the other mode; S0 has moved their keys onto their band, so key lines move by mode only; NRAU-Baltic (S4a) keeps only 16 (CW) or 10 (SSB). RoPoCo's phone import lines (`ContestOfADIFRecordMode`) unchanged by construction -- the same answer | corpus unchanged (no set) |
-| **S4a** | **The family bases**: CQ WW and CQ WPX (160-10 m on the base, mode on the leaf), ARRL DX (160-10 m), ARRL SS (160-10 m), NRAU-Baltic (80/40 m) | 5 bases, 10 leaves | a CW running: base 2, 3, 4, 5, 7, 9, 10, 12, 14, 15, 17 and key 23; a phone running: base 1, 3, 4, 5, 6, 8, 9, 11, 13, 16 (and 12 off-band) -- its keys moved to Phone by S0; NRAU-Baltic: all but 16 (CW) or 10 (SSB) | **corpus: `arrl_dx_cw` (one 20 m PH QSO) and `arrl_ss_ssb` (one 160 m CW QSO) export an `X-QSO:` line** -- a measured, intended divergence from a D7 reference that is never regenerated: pinned as `known.cbr.diff`/`known.adi.diff` with a `known-divergences.txt` entry (the Michigan pattern), and their `rescored.adi/.cbr` re-frozen with the same reason |
+| **S4a -- CQ WW DONE 2026-10-22** (with S1; CQ WPX, ARRL DX, ARRL SS and NRAU-Baltic still open) | **The family bases**: CQ WW and CQ WPX (160-10 m on the base, mode on the leaf), ARRL DX (160-10 m), ARRL SS (160-10 m), NRAU-Baltic (80/40 m) | 5 bases, 10 leaves | a CW running: base 2, 3, 4, 5, 7, 9, 10, 12, 14, 15, 17 and key 23; a phone running: base 1, 3, 4, 5, 6, 8, 9, 11, 13, 16 (and 12 off-band) -- its keys moved to Phone by S0; NRAU-Baltic: all but 16 (CW) or 10 (SSB) | **corpus: `arrl_dx_cw` (one 20 m PH QSO) and `arrl_ss_ssb` (one 160 m CW QSO) export an `X-QSO:` line** -- a measured, intended divergence from a D7 reference that is never regenerated: pinned as `known.cbr.diff`/`known.adi.diff` with a `known-divergences.txt` entry (the Michigan pattern), and their `rescored.adi/.cbr` re-frozen with the same reason |
 | **S4b** | **The CW/phone sibling pairs** (copies, Q7): All Asian, JIDX, Oceania, King of Spain, NAQP CW/SSB, OK-OM, RF Championship, RF Cup, REF, SAC, UBA, WAE, the four EU Sprints | ~30 classes | as S4a, per running and band list | corpus unchanged |
-| **S5** | **RTTY and digital**, where the `ExtMode` matters: CQ WW RTTY, CQ WPX RTTY, ARRL RTTY Roundup, NAQP RTTY, NA Sprint CW/RTTY (siblings), Makrothen, WW Digi (FT4/FT8 only), ARRL Digi (WA7BNM: digital, no RTTY, 160-6 m), Batavia FT8, RF Cup Digital | ~11 classes | an RTTY contest: every base QSO but 4 (and its band), keys by mode; WW Digi: only 5 credited | **corpus: `arrl_digi` (one 20 m RTTY QSO) exports `X-QSO:`** if ARRL Digi excludes RTTY -- pinned as S4a's |
+| **S5** (CQ WW RTTY DONE 2026-10-22 with S1) | **RTTY and digital**, where the `ExtMode` matters: CQ WW RTTY, CQ WPX RTTY, ARRL RTTY Roundup, NAQP RTTY, NA Sprint CW/RTTY (siblings), Makrothen, WW Digi (FT4/FT8 only), ARRL Digi (WA7BNM: digital, no RTTY, 160-6 m), Batavia FT8, RF Cup Digital | ~11 classes | an RTTY contest: every base QSO but 4 (and its band), keys by mode; WW Digi: only 5 credited | **corpus: `arrl_digi` (one 20 m RTTY QSO) exports `X-QSO:`** if ARRL Digi excludes RTTY -- pinned as S4a's |
 | **S6a** | **The state QSO parties whose sponsor, DXLog and WA7BNM agree**, per class (never on the base); Nebraska's FT8/FT4 rule moves into `UsesMode` (and `CallsignIsDupe` gains the `ExtMode`); the redundant band tests in Missouri's and Nebraska's bonus loops and IN7QPNE's judging go (the view and the predicate already answer), IN7QPNE asking its judging party's band AND mode | ~15 classes | per party: 3 (2 m) where it has no VHF, 5 (FT8) where it refuses FT8, 9 (30 m), 12 (6 m) where it has no 6 m | **corpus: `florida_qp` (two 50 MHz digital QSOs; FQP is 40-10 m CW/SSB) export `X-QSO:`** -- pinned as S4a's |
 | **S6b** | **The parties whose VHF or 160 m line the sources dispute** (Michigan 6 m, North Carolina 160/6/2 m, and every "VHF/UHF" party), after NY4I reads the sponsors | ~15 classes | as S6a | -- |
 | **S7a** | **CW-only HF**: CW Open, CWOps, FOC Marathon, SST, MST, Marconi, PCC, RAEM, Tesla, Minitest, MWC, FISTS, GACW WWSA, Internet Sprint, TOEC, KCJ (160-6 m), CQMM's mode (CW, per both sources), QCWA (CW/digital and phone) | ~17 classes | every phone and digital base QSO, key 23 | -- |
@@ -4485,6 +4490,70 @@ fresh as its last freeze).
 | **S9** | **The 24 contests with no source**, from NY4I's answers; General QSO and POTA state every band and every mode explicitly (a log and an activity, not a contest -- the explicit set is still a statement) | 24 classes | per answer | -- |
 | **S10** | **Close**: both ratchet sets are empty and deleted, so the pin is absolute; `ADDING_A_CONTEST.md` gains "state your bands and modes"; the contest-factory and contest-scoring agent files; the inventory regenerated | docs, one test | none | -- |
 | **S11** | **The New Contest dialog presets CATEGORY-MODE from the contest's stated modes** (Q121, NY4I 2026-10-19). Today every contest gets CW: `FillCategories` selects index 0 of each list and CW is first. After S10 every class answers `UsesMode`, so on choosing a contest: one mode -> that mode (CW; phone -> SSB, FM only for an FM-only contest; RTTY -> RTTY; another single digital mode -> DIGI); more than one -> **MIXED** (NY4I: *"yes start at mixed"*). The operator can still change it before OK. The derivation is one function on the contest side (no LCL, unit-tested over every registered contest); the form only applies it. Same stage: what `MyCategoryMode`'s zero value (cmCW, "an operator who never chooses one exports CATEGORY-MODE: CW") becomes once the contest can answer | the dialog, one function, tests | none -- the matrix does not drive the dialog | the New Contest form tests |
+
+#### S1 as built (2026-10-22) -- and where it differs from the plan
+
+Built on branch `q98-s1-cqww` the day NY4I dry-ran CQ WW SSB, with CQ WW's
+S4a statement and CQ WW RTTY's (S5) in the same commit. The mechanism is the
+table above; these are the DECISIONS the plan left open, each made on
+evidence (delegated design):
+
+1. **`UsesBand` and `UsesMode` are PUBLIC, `ContestCreditsModeKey`
+   is new.** The dupe sheet (`uCallsigns.DupeModeIsOffMode`) and the hint
+   (`logedit`) know only a `ModeType` key, where `Both` and `NoMode` are keys,
+   not modes -- so one function says "a key credits; a mode asks with
+   `eNoMode`", rather than two callers each testing `Both`.
+2. **The initial-exchange history is NOT credit.** The plan put every live
+   sheet behind `QSOCountsTowardTotals`; the matrix's `initialexchange`
+   section (which "never moves") then moved for every off-band QSO: the
+   loader already added the history only inside its `QSOCountsTowardTotals`
+   test, so an automatic X-QSO dropped out of it (NEQP's 160 m K4ABC lost
+   `FL`). An off-band QSO still tells what the station SENDS, so the history
+   is fed by the CONTEST-BLIND test -- `QSOCountsTowardTotals(nil, ...)`, which
+   still keeps the operator's flagged X-QSO out, as since #750 -- in the
+   loader, and beside the serial (outside the guard) in `LogContact`. The
+   matrix's `initialexchange` lines are then unchanged, as predicted.
+3. **`LogContact` is read, not driven.** No unit test can boot the live path
+   (`uTestContestById` says why), so `uTestAutomaticXQSO` pins its ORDER from
+   the source: the serial and the history outside the guard, the totals,
+   continent count, multipliers, sheets, view and dupe sheet behind it; and
+   the loader and the rescore's X arm asking the predicate. The pieces it
+   calls are driven: `ScoreQSO`, the dupe list, `AddLoggedQSO`,
+   `TallySummaryTotals`, `EmitADIFRecord`, HamScore's line.
+4. **`Lint-XQSOReads` allows `VC.pas` too** (the declaration), and `uADIF`
+   only to WRITE the field (its import arms).
+5. **CQ WW SSB refuses FM** (`ModeType` FM) -- the sponsor and WA7BNM 172 say
+   "SSB", which is Q120(a)'s proposal ("SSB -> Phone only"); Q120(a) is
+   unanswered, so this is the proposal, one line to flip. A Phone record
+   with any submode (USB, LSB, AM, none) is credited.
+6. **CQ WW RTTY credits `Digital` with `eRTTY`, `eRTTY_R`, `eData`,
+   `eData_R` or no submode**, 80-10 m (sponsor, DXLog, WA7BNM 130 agree; no
+   160 m). FT8/FT4/PSK are X-QSOs.
+7. **The host-area rule is not in the predicate** (Q119 unanswered): such a
+   QSO still scores 0 with no multiplier and exports as `QSO:`. A "yes" is
+   one more term in `QSOIsOffContest`.
+8. **Edit QSO's read-only caption is NOT built** (lcl-ui + a resourcestring
+   through the catalogues -- i18n). The checkbox shows the operator's stored
+   statement only; the greyed row shows the derived X. Deferred to a
+   follow-up, on the bench list.
+9. **The operator's flag now scores 0 through `ScoreQSO` on every path** (it
+   did only through the rescore's arm), as the table says.
+10. **The matrix's `CreditedMatrixQSO` gained the mode half** (S0's note):
+   CW, phone (eUSB), FM, RTTY, FT8, in that order -- which is what moved CQ
+   WW SSB's keys to phone and CQ WW RTTY's to RTTY.
+11. **The measuring scripts are `tools/contest-factory-q98/`**, paths made
+   repo-relative, plus `classify_matrix.py`, which classified this stage's
+   matrix movement (UNPREDICTED 0) and is edited per stage.
+
+Gates (worktree `C:\tr4w-dryrun`): app full build, narrowing 1233 / range 3
+(ceilings unchanged); unit tests 384,463 passed, 0 failed, and checked
+(`-gt -gh`) the same, 0 corruption, 13,463 unfreed (ceiling); `Run-Lints`
+50/50 with `Lint-XQSOReads` new; server builds; matrix 173 identical + 14
+re-frozen on that reason; corpus 21/0/5 exit 0; factory 13 identical; ADIF
+round trip 12/0/2; rescore unchanged. Every test mutation-checked (the
+predicate, `ScoreQSO`'s exit, both exporters, the dupe sheet, the view, the
+summary sheet, `LogContact`'s guard, the ratchet both ways, the identity
+invariant).
 
 **What no oracle sees, at any stage:** the live entry path end to end (the
 unit tests drive `LogContact` through the real sheets; the window does not

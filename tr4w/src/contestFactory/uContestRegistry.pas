@@ -354,6 +354,14 @@ function ContestAllowsCountyLineOnImport(aContest: TContestHandle): boolean;
   False: there the slash call is the call. *)
 function ContestSplitsRoverCallOnExport(aContest: TContestHandle): boolean;
 
+(* IS A LOGGED RECORD AN X-QSO? -- Q98 S1 (design 8.2v), for a reader that
+   holds only the record: the Cabrillo and ADIF writers, HamScore's line, the
+   score-posting XML, the log grids. uContestBase.QSOIsXQSO of the record's
+   OWN contest (aQso.ceContest) through ContestIdentity -- station-less and
+   thread-safe, which is right because a contest's bands and modes are an
+   identity fact. *)
+function LoggedQSOIsXQSO(const aQso: ContestExchange): boolean;
+
 implementation
 
 uses
@@ -864,6 +872,11 @@ begin
    (* ContestIdentity is never nil; NoContest's plain TContestBase answers
       the base's False. *)
    Result := ContestIdentity(aContest).SplitsRoverCallOnExport;
+end;
+
+function LoggedQSOIsXQSO(const aQso: ContestExchange): boolean;
+begin
+   Result := QSOIsXQSO(ContestIdentity(aQso.ceContest), aQso);
 end;
 
 function ContestOfADIFRecordMode(aContest: TContestHandle;

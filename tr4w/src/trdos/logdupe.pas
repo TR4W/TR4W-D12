@@ -1026,6 +1026,12 @@ begin
      QSO with no multiplier anywhere. AFTER the DomMultQTH fill, too, so the
      QSO still records the QTH it was worked with -- only its credit goes. *)
   contestRules := ActiveContest(Contest);
+  (* AND NONE FOR ANY X-QSO -- off-band, off-mode or flagged by the operator:
+     the ONE predicate ScoreQSO asks too (Q98 S1, design 8.2v). *)
+  if QSOIsXQSO(contestRules, RXData) then
+     begin
+     Exit;
+     end;
   if not ContestCreditsBand(contestRules, RXData.Band) then
      begin
      Exit;

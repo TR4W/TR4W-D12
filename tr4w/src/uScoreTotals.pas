@@ -141,7 +141,7 @@ end;
 procedure AddLoggedQSO(const aQso: ContestExchange;
                        const aMyFacts: TQsoMyFacts);
 begin
-   if QSOCountsTowardTotals(aQso) then
+   if QSOCountsTowardTotals(ContestIdentity(aQso.ceContest), aQso) then
       begin
       LoggedQSOs.Add(aQso, aMyFacts);
       end;

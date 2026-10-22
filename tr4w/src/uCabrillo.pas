@@ -86,7 +86,7 @@ var
    sentExch := BuildSentExchangeText(RXData);
    rcvExch  := BuildRxExchangeText(RXData);
 
-   if RXData.ceXQSO then
+   if LoggedQSOIsXQSO(RXData) then
       begin
       sPrefix := 'X-QSO: '
       end

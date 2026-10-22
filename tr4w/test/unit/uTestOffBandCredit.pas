@@ -166,16 +166,17 @@ begin
 
    (* THE DEFAULT IS UNCHANGED: a contest that states no bands credits every
       band, so a 30 m QSO is a dupe of a 20 m one when QSOs are not per band,
-      exactly as before M8. CQ WW CW is one such contest; its class is
-      registered and states no UsesBand. *)
+      exactly as before M8. General QSO is one such contest (CQ WW CW was
+      until it stated its bands, Q98, 2026-10-22); its class states no
+      UsesBand yet, and its Q98 stage proposes every band. *)
    savedContest := Contest;
    savedByBand := Settings.Qso.ByBand;
    savedByMode := Settings.Qso.ByMode;
    InitList(list);
    try
-      Contest := ContestHandleOf(CQWWCW);
+      Contest := ContestHandleOf(GENERALQSO);
       CheckTrue(ContestCreditsBand(ContestIdentity(Contest), Band30),
-                'CQ WW CW states no bands, so it credits 30 m');
+                'General QSO states no bands, so it credits 30 m');
       Settings.Qso.ByMode := True;
       Settings.Qso.ByBand := False;
 

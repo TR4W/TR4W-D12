@@ -7995,7 +7995,9 @@ begin
              rule reads at the final score holds exactly these. Inside the
              outer test it adds only the X-QSO exclusion, as the line it
              replaced did. *)
-          if QSOCountsTowardTotals(TempRXData) then
+          (* OF THE RECORD'S OWN CONTEST (Q98 S1) -- an off-band or off-mode
+             QSO is an X-QSO by its rule and counts nowhere. *)
+          if QSOCountsTowardTotals(ContestIdentity(TempRXData.ceContest), TempRXData) then
              begin
              TempMode := TempRXData.Mode;
              if TempMode = FM then
@@ -8020,11 +8022,6 @@ begin
                 beside the totals; see uScoreTotals. *)
              AddLoggedQSO(TempRXData, LoadedMyFacts);
              AddQSOToDupeSheets(TempRXData, TempRXData.ceClearDupeSheet);
-             if not IntitialExLoaded then
-                begin
-                CallsignsList.AddIniitialExchange(TempRXData.Callsign,
-                  GetInitialExchangeStringFromContestExchange(TempRXData));
-                end;
 
              if TempRXData.Band in [Band160..Band10] then // 4.115.3
                 begin
@@ -8038,6 +8035,19 @@ begin
              // X-QSO records even though every per-band/per-mode counter
              // skipped them. Moved inside so the totals are consistent.
              inc(QSOTotals[AllBands, Both]);
+             end;
+
+          (* THE INITIAL-EXCHANGE HISTORY IS WHAT THE STATION SENT, NOT CREDIT
+             (Q98 S1, design 8.2v): an AUTOMATIC X-QSO -- off the contest's
+             bands or modes -- still tells what the station sends, so it
+             feeds the history as it did before S1. Only the OPERATOR'S flag
+             keeps a QSO out, as it has since #750: hence the contest-blind
+             test (nil), not the record's contest. LogContact matches it. *)
+          if QSOCountsTowardTotals(nil, TempRXData) and
+             (not IntitialExLoaded)                then
+             begin
+             CallsignsList.AddIniitialExchange(TempRXData.Callsign,
+               GetInitialExchangeStringFromContestExchange(TempRXData));
              end;
           end;
      // else
@@ -8921,7 +8931,10 @@ begin
            // either, so ClearXQSOScoring clears the stored flags too
            // (CONTEST_OWNERSHIP_DESIGN.md 8.2v). The deleted test was
            // written twice here; once now.
-           if RescoredRXData.ceXQSO then
+           (* THE PREDICATE, Q98 S1: the operator's flag OR the record's
+              contest refusing its band or mode -- an edited band
+              re-classifies the QSO here, with nothing written to is_xqso. *)
+           if LoggedQSOIsXQSO(RescoredRXData) then
               begin
               ClearXQSOScoring(RescoredRXData);
               end

@@ -58,6 +58,11 @@ $lints = @(
    # M10 S8 deleted the other two tables (a stale entry fails).
    # docs/CONTEST_FACTORY_M10_PLAN.md, S0 and S8.
    @{ Name = 'Lint-NoContestTables'; Arg = $src;   NeedsFpc = $false }
+   # AN X-QSO IS ONE PREDICATE (Q98 S1, 2026-10-22): the operator's flag OR
+   # the contest's band/mode rule, derived and never stored. A code read of
+   # the stored flag ceXQSO outside its owners sees half of it and fails.
+   # docs/CONTEST_OWNERSHIP_DESIGN.md 8.2v.
+   @{ Name = 'Lint-XQSOReads'; Arg = $src;         NeedsFpc = $false }
    # THE ContestType ENUM IS FROZEN (Q108 S3, 2026-10-17). A member's position
    # is a persisted contest number (.TRW, multi-op packet, server log), so no
    # member is ever added, removed, reordered or renamed: a new contest

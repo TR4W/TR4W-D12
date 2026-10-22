@@ -69,6 +69,11 @@ type
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesZone: boolean; override;
+   public
+      (* THE RUNNING'S MODE -- Q98 S4a (design 8.2v): CW, as the sponsor,
+         DXLog and WA7BNM 192 say. Every other mode is an automatic X-QSO.
+         The bands are the family's (TContestCQWWBase.UsesBand). *)
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
    end;
 
 implementation
@@ -151,6 +156,11 @@ end;
 function TContestCQWWCW.ExchangeCarriesZone: boolean;
 begin
    Result := True;
+end;
+
+function TContestCQWWCW.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   Result := aMode = CW;
 end;
 
 initialization

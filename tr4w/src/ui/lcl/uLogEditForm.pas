@@ -93,6 +93,7 @@ implementation
 
 uses
    uEditQSO,
+   uContestRegistry,  (* LoggedQSOIsXQSO -- a row greys an X-QSO, Q98 S1 *)
    uLCLFormHelpers,   (* SaveFormBounds / TryRestoreFormBounds *)
    uMainForm;   (* TR4WMainForm -- this form's owner; see ShowLogEditForm *)
 
@@ -277,7 +278,7 @@ begin
       begin
       LogRowTextFor(qsos[i], aRows[Low(aRows) + i].Text);
       aRows[Low(aRows) + i].Deleted := qsos[i].ceQSO_Deleted;
-      aRows[Low(aRows) + i].XQSO    := qsos[i].ceXQSO;
+      aRows[Low(aRows) + i].XQSO    := LoggedQSOIsXQSO(qsos[i]);
       aRows[Low(aRows) + i].Valid   := True;
       end;
 end;

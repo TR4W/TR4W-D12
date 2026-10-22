@@ -2092,9 +2092,11 @@ begin
    // X-QSO records so a grep of the ADIF for CLAIMEDQSO finds exactly
    // the not-claimed contacts; normal QSOs are implied by absence.
    // Lives in uADIF (not the tail emitter) because the value is
-   // sourced directly from rec.ceXQSO -- no MainUnit/trdos globals
-   // needed -- and because round-trip tests use a nil tail emitter.
-   if rec.ceXQSO then
+   // sourced from the record -- no MainUnit/trdos globals needed -- and
+   // because round-trip tests use a nil tail emitter.
+   // Q98 S1: LoggedQSOIsXQSO -- the operator's flag OR the record's own
+   // contest refusing its band or mode (an automatic X-QSO, never stored).
+   if LoggedQSOIsXQSO(rec) then
       begin
       Result := Result + EmitADIFField('APP_TR4W_CLAIMEDQSO', '0');
       end;

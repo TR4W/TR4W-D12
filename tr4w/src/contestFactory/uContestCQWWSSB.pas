@@ -69,6 +69,15 @@ type
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesZone: boolean; override;
+   public
+      (* THE RUNNING'S MODE -- Q98 S4a (design 8.2v). Phone: SSB, USB, LSB or
+         a phone record with no submode. NOT FM, which TR4W keeps as its own
+         ModeType: the sponsor and WA7BNM 172 say "SSB", and Q120(a)'s
+         proposal is "where the sponsor says SSB, Phone only" -- NY4I has not
+         answered (Q120(a) open), so FM is refused until he does. Every other
+         mode -- CW, RTTY, FT8 -- is an automatic X-QSO. The bands are the
+         family's (TContestCQWWBase.UsesBand). *)
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
    end;
 
 implementation
@@ -148,6 +157,11 @@ end;
 function TContestCQWWSSB.ExchangeCarriesZone: boolean;
 begin
    Result := True;
+end;
+
+function TContestCQWWSSB.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   Result := aMode = Phone;
 end;
 
 initialization

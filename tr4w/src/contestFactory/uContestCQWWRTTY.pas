@@ -131,6 +131,18 @@ type
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
       function ExchangeCarriesZone: boolean; override;
+   public
+      (* ITS BANDS AND ITS MODE -- Q98 (design 8.2v; its S5 row, built with
+         S1 for the CQ WW dry run, 2026-10-22). Sponsor (cqww.com RTTY rules:
+         3.5, 7, 14, 21 and 28 MHz), DXLog's CQWWRTTY and WA7BNM 130 agree:
+         80, 40, 20, 15 and 10 m -- no 160 m, unlike the CW and SSB
+         runnings, which is one more reason it is not on their family base.
+         RTTY only: a Digital record whose submode is RTTY, or unknown
+         (eNoMode, the generic eData -- an old import is never proven
+         off-mode, design 8.2v and Q120(b)). FT8, FT4, PSK and every non-
+         digital mode are automatic X-QSOs. *)
+      function UsesBand(aBand: BandType): boolean; override;
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
    end;
 
 implementation
@@ -359,6 +371,17 @@ end;
 function TContestCQWWRTTY.SendsStateAfterZone: boolean;
 begin
    Result := True;
+end;
+
+function TContestCQWWRTTY.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand in [Band80, Band40, Band20, Band15, Band10];
+end;
+
+function TContestCQWWRTTY.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   Result := (aMode = Digital) and
+             (aExtMode in [eNoMode, eData, eData_R, eRTTY, eRTTY_R]);
 end;
 
 initialization

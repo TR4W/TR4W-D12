@@ -278,10 +278,39 @@ the target shape, the M-step migration order and the open questions.
   (`TCallsignsList.AddCallsign` / `CallsignIsDupe`) and the need-multiplier
   hint (`LogEdit`, `uContestBase.CreditedBands`). So `CalculateQSOPoints`
   never sees an off-band QSO, and a class must not repeat the band rule
-  there, nor in `CountsAsMultiplier`. When a contest states its bands, add it
-  to the exception list in `Test_EveryOtherContestStillCreditsEveryBand`.
-  Design doc §7.4. `uTestOffBandCredit` pins the multiplier half through the
-  real sheet, and since M8 the dupe half and the hint.
+  there, nor in `CountsAsMultiplier`. ~~When a contest states its bands, add it
+  to the exception list in `Test_EveryOtherContestStillCreditsEveryBand`.~~
+  (deleted at Q98 S1 -- see the next bullet). Design doc §7.4.
+  `uTestOffBandCredit` pins the multiplier half through the real sheet, and
+  since M8 the dupe half and the hint.
+- **Q98 S1 IS BUILT (2026-10-22, design 8.2v): A CONTEST STATES ITS BANDS
+  AND ITS MODES, AND AN OFF-BAND OR OFF-MODE QSO IS AN AUTOMATIC X-QSO**
+  (NY4I: *"automatic X-QSO is OK"*). `TContestBase.UsesMode(aMode, aExtMode)`
+  (base True) beside `UsesBand`; `eNoMode`/`eData` mean "some submode", so an
+  old record is never proven off-mode. ONE predicate,
+  `uContestBase.QSOIsXQSO(contest, qso)` = the operator's `ceXQSO` OR
+  `QSOIsOffContest` (band or mode refused) -- **DERIVED, NEVER STORED**: an
+  edited band re-classifies, nothing writes `is_xqso`. A reader holding only
+  a record asks `uContestRegistry.LoggedQSOIsXQSO` (the record's own
+  `ceContest`). `QSOCountsTowardTotals(contest, qso)` asks it; so do
+  `ScoreQSO` (0 points, the operator flag included), `SetMultFlags`, the
+  live `LogContact` (totals, sheets, view, dupe -- the serial and the
+  initial-exchange history stay OUTSIDE, Q44), the loader, the rescore's X
+  arm, the Cabrillo `X-QSO:` prefix, ADIF `APP_TR4W_CLAIMEDQSO` 0, HamScore's
+  line, the score-posting XML, the five grid fills, the summary sheet; the
+  dupe sheet and the hint ask `ContestCreditsModeKey`. **`Lint-XQSOReads`
+  fails a code read of `ceXQSO` outside its owners.** NOT the host-area rule
+  (Q119 open). **THE RATCHET:** `uTestContestStatesItsRules.
+  Test_EveryContestStatesItsBandsAndModes` -- `BANDS_NOT_YET_STATED` and
+  `MODES_NOT_YET_STATED` (literal ids); a NEW contest, in neither, states
+  both from its first commit; a stage takes its ids out in the same commit;
+  `TContestStateQSOPartyBase` never states a list.
+  `Test_BandsAndModesAreAnIdentityFact` holds them station-free.
+  **CQ WW states its own** (S4a early, for NY4I's dry run): 160-10 m on
+  `TContestCQWWBase`, CW / Phone (FM refused until Q120(a)) on the leaves,
+  and CQ WW RTTY 80-10 m, RTTY only. `uTestAutomaticXQSO` pins it all;
+  `tools/contest-factory-q98/classify_matrix.py` classifies a stage's
+  matrix movement against its prediction.
 - **Multipliers and dupes: the sheet keeps the state, the class declares
   the rules** (M8, 2026-10-02, design §8.2l; `ADDING_A_CONTEST.md` "How a
   contest declares its multipliers"). `CountsAsMultiplier(aQso, aKind)`

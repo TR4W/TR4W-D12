@@ -115,8 +115,10 @@ begin
    savedActiveBand := ActiveBand;
    savedActiveMode := ActiveMode;
    savedCallWindow := CallWindowString;
-   (* CQ WW CW states no bands, so every band is credited. *)
-   Contest := ContestHandleOf(CQWWCW);
+   (* General QSO states no bands or modes yet, so every band and mode is
+      credited. (CQ WW CW was used until it stated its bands and mode for
+      Q98, 2026-10-22 -- a phone QSO is an X-QSO there, and no dupe.) *)
+   Contest := ContestHandleOf(GENERALQSO);
    Settings.Qso.ByBand := True;
    Settings.Qso.ByMode := True;
 end;

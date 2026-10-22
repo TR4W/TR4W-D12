@@ -120,6 +120,22 @@ redeclaration would let a caller score while skipping the band check and the
 overrides. Never repeat the band rule or the overrides in it; state the bands
 in `UsesBand`. Tests call `ScoreQSO`, never the rule directly.
 
+**STATE YOUR BANDS AND YOUR MODES -- `UsesBand` AND `UsesMode` (Q98 S1,
+2026-10-22).** There is no inherited default (NY4I: *"I would feel better if
+contest classes just explicitly listed the bands they allow"*), and
+`uTestContestStatesItsRules.Test_EveryContestStatesItsBandsAndModes` fails a
+new contest that does not state both -- the two `..._NOT_YET_STATED` sets hold
+only the contests that predate the rule. A QSO off your bands or modes is an
+**automatic X-QSO** (NY4I: *"automatic X-QSO is OK"*): logged, 0 points, no
+multiplier, no dupe, out of every total, `X-QSO:` in the Cabrillo and
+`APP_TR4W_CLAIMEDQSO` 0 in the ADIF -- derived each time, never stored, so
+the class says nothing else about it. In `UsesMode`, `eNoMode` and `eData`
+mean "some submode of aMode": answer True for them if you credit any submode,
+and test the submode only to EXCLUDE one you name. Both answers are identity
+facts -- never ask the station (`Test_BandsAndModesAreAnIdentityFact`). A
+family base may state the bands its whole family shares (CQ WW does);
+`TContestStateQSOPartyBase` never does. Design doc 8.2v.
+
 ---
 
 ## 2. How to add a contest

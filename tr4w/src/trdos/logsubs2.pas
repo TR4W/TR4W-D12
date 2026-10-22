@@ -1645,16 +1645,32 @@ begin
      HamScoreOnLog(RXData);
      end;
   if not tAddQSOToLog(RXData) then Exit;
-  //if RXData.Band in [Band160..Band10] then
-  inc(ContinentQSOCount[RXData.Band, RXData.QTH.Continent]);
   TempMode := RXData.Mode;
   if TempMode = FM then
      begin
      TempMode := Phone;
      end;
+  (* THE SERIAL ADVANCES FOR EVERY QSO THAT CONSUMED A NUMBER, X-QSO INCLUDED
+     (Issue #954; Q44: "it is ok to increase the qso number we sent") -- so it
+     stays OUTSIDE the test below, as the loader keeps it. *)
   if ((RXData.Mode <> NoMode) and (RXData.Band <> NoBand) and (RXData.ceRecordKind = rkQSO)) then
      begin
      UpdateMaxSerialSent(RXData.Band, RXData.NumberSent);  // Issue #954: track highest sent serial
+     (* AND THE INITIAL-EXCHANGE HISTORY: what the station SENT, not credit
+        -- an automatic X-QSO still feeds it, as the loader's contest-blind
+        test does (MainUnit.LoadinLog; Q98 S1). *)
+     CallsignsList.AddIniitialExchange(RXData.Callsign, GetInitialExchangeStringFromContestExchange(RXData));
+     end;
+  (* AN X-QSO COUNTS NOWHERE -- Q98 S1 (design 8.2v) and Q51 ("x-qso never
+     counts as worked"): no totals, no multiplier, no dupe or worked-there
+     mark, not in the bonus view. The SAME test the loader asks
+     (QSOCountsTowardTotals), so a QSO logged live and the same QSO after a
+     reopen count alike. An off-band or off-mode QSO is an X-QSO by the
+     contest's rule; it is still logged above and still sent to the network,
+     UDP, the external logger and HamScore. *)
+  if QSOCountsTowardTotals(contestRules, RXData) then
+     begin
+     inc(ContinentQSOCount[RXData.Band, RXData.QTH.Continent]);
      inc(QSOTotals[RXData.Band, TempMode]);
      inc(QSOTotals[RXData.Band, Both]);
      inc(QSOTotals[AllBands, TempMode]);
@@ -1667,7 +1683,6 @@ begin
      (* WITH THE STATION THE STORE JUST RECORDED FOR IT (log schema 3). *)
      AddLoggedQSO(RXData, LogStoreLastAppendedMyFacts);
      AddQSOToDupeSheets(RXData, False);
-     CallsignsList.AddIniitialExchange(RXData.Callsign, GetInitialExchangeStringFromContestExchange(RXData));
      SendStationStatus(sstQSOs);
      end;
   if SingleBand <> AllBands then
@@ -3029,7 +3044,7 @@ begin
             // IsClaimedQso=0 -- same wire-format meaning as a skipped
             // QSO from the consumer's perspective.  N1MM uses the
             // same convention.
-            #9 + '<IsClaimedQso>' + Format('%d',[IfThen(RxData.ceQSO_Deleted or RxData.ceXQSO,0,1)]) + '</IsClaimedQso>' + sLineBreak +
+            #9 + '<IsClaimedQso>' + Format('%d',[IfThen(RxData.ceQSO_Deleted or LoggedQSOIsXQSO(RxData),0,1)]) + '</IsClaimedQso>' + sLineBreak +
             #9 + '<oldtimestamp>' + sTimestamp + '</oldtimestamp>' + sLineBreak +
             #9 + '<oldcall>' + RXData.Callsign + '</oldcall>' + sLineBreak +
             // SentExchange built from the CQ exchange template, not the

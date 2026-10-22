@@ -97,7 +97,6 @@ type
       procedure Test_IdahoOwnsItsRules;
       procedure Test_IdahoCreditsOnlyItsSixBands;
       procedure Test_IdahoQRPScoresFiveOnEveryMode;
-      procedure Test_EveryOtherContestStillCreditsEveryBand;
       procedure Test_FixedPointContestsTranscribeTheirArms;
       procedure Test_EveryQSOPartySplitsARoverCallOnExport;
       procedure Test_RoverSplitAndCountyLineDisagreeOnlyForTheKnownSix;
@@ -1629,88 +1628,6 @@ begin
       station.MyPower := cpHIGH;
       obj.SetStation(station);
       CheckOrdinary('Idaho HIGH');
-   finally
-      obj.Free;
-      end;
-end;
-
-(* THE DEFAULT CHANGES NOTHING. TContestBase.UsesBand answers True for every
-   band, so a contest that has not stated its bands scores and multiplies a
-   30 m QSO exactly as it did before the rule existed -- and a contest with no
-   class (nil) is the same.
-
-   EVERY REGISTERED CONTEST BUT IDAHO IS CHECKED, so the exception list below
-   is a ratchet: when another contest states its bands, it joins the list in
-   the commit that does it, and nothing can narrow its bands by inheriting.
-
-   CQ WW CW is the worked example the other way round: a 30 m QSO with
-   Europe from a North American station scores its three points, as on 20 m. *)
-procedure TContestFactoryTests.Test_EveryOtherContestStillCreditsEveryBand;
-var
-   c: ContestType;
-   b: BandType;
-   obj: TContestBase;
-   station: TStationContext;
-   qso: ContestExchange;
-begin
-   BeginTest('Test_EveryOtherContestStillCreditsEveryBand');
-
-   for b := Low(BandType) to High(BandType) do
-      begin
-      CheckTrue(ContestCreditsBand(nil, b),
-                'a classless contest credits band ' + IntToStr(Ord(b)));
-      end;
-
-   for c := Low(ContestType) to High(ContestType) do
-      begin
-      (* THE CONTESTS THAT STATE THEIR BANDS: Idaho, and Delaware (2026-10-14,
-         uTestContestDelawareQP pins its list); New England, 7QP, Indiana and
-         the IN7QPNE composite (2026-10-16, uTestQSOPartyBands); Nebraska
-         (2026-10-16, uTestContestNebraskaQP); and the four 160 m contests,
-         RSGB 1.8 MHz, ARRL 160 and the CQ 160 CW and SSB runnings
-         (2026-10-17, Q71, uTestContestRulings2026Oct). *)
-      if c in [IDAHOQSOPARTY, DELAWAREQSOPARTY, NEWENGLANDQSO, SEVENQP,
-               INQSOPARTY, IN7QPNE, NEBRASKAQSO,
-               RSGB18, ARRL160, CQ160CW, CQ160SSB] then
-         begin
-         Continue;
-         end;
-      obj := MakeContest(c);
-      if obj = nil then
-         begin
-         Continue;
-         end;
-      try
-         for b := Low(BandType) to High(BandType) do
-            begin
-            CheckTrue(ContestCreditsBand(obj, b),
-                      string(ContestTypeSA[c]) + ' credits band ' + IntToStr(Ord(b)));
-            end;
-      finally
-         obj.Free;
-         end;
-      end;
-
-   obj := MakeContest(CQWWCW);
-   CheckTrue(obj <> nil, 'CQ WW CW has no registered class');
-   if obj = nil then
-      begin
-      Exit;
-      end;
-   try
-      FillChar(station, SizeOf(station), 0);
-      station.MyCountry := 'K';
-      station.MyContinent := NorthAmerica;
-      obj.SetStation(station);
-
-      FillChar(qso, SizeOf(qso), 0);
-      qso.Band := Band30;
-      qso.Mode := CW;
-      qso.QTH.Continent := Europe;
-      qso.QTH.CountryID := 'G';
-      CheckTrue(ContestCreditsBand(obj, qso.Band), 'CQ WW CW still credits 30 m');
-      obj.ScoreQSO(qso);
-      CheckEquals(3, qso.QSOPoints, 'CQ WW CW 30 m QSO with Europe is still 3');
    finally
       obj.Free;
       end;
@@ -4297,7 +4214,6 @@ begin
    Test_IdahoOwnsItsRules;
    Test_IdahoCreditsOnlyItsSixBands;
    Test_IdahoQRPScoresFiveOnEveryMode;
-   Test_EveryOtherContestStillCreditsEveryBand;
    Test_FixedPointContestsTranscribeTheirArms;
    Test_EveryQSOPartySplitsARoverCallOnExport;
    Test_RoverSplitAndCountyLineDisagreeOnlyForTheKnownSix;

@@ -1924,10 +1924,11 @@ type
       (* DOES THIS CONTEST USE THIS BAND? -- the contest owns its bands.
 
          NY4I, 2026-10-01: a QSO on a band the contest does not use is LOGGED
-         normally, "but we should not score it". It is not refused and not an
-         automatic X-QSO ("that would be confusing to an op"), and it earns no
-         multiplier ("correct, no multiplier credit for off-band QSOs"). "This
-         rule applies to basically any contest."
+         normally, "but we should not score it", and it earns no multiplier
+         ("correct, no multiplier credit for off-band QSOs"). "This rule
+         applies to basically any contest." ~~It is not an automatic X-QSO~~
+         -- REVERSED by Q98 (2026-10-15, "automatic X-QSO is OK"): since Q98
+         S1 such a QSO IS an X-QSO, derived and never stored -- QSOIsXQSO.
 
          SO IT IS ONE QUESTION, ASKED WHEREVER A QSO COULD AFFECT THE CONTEST
          -- every time through ContestCreditsBand below, so none can forget
@@ -1951,8 +1952,37 @@ type
          contest did before this existed. A contest that states its bands
          overrides; one that has not yet is unchanged, and a classless contest
          is unchanged by construction because ContestCreditsBand answers True
-         for nil. Each contest's band rule is its own move. Idaho was first. *)
+         for nil. Each contest's band rule is its own move. Idaho was first.
+
+         Q98 S1 (design 8.2v): every contest STATES its bands -- the base
+         answer is DUMMYCONTEST's, and uTestContestStatesItsRules'
+         Test_EveryContestStatesItsBandsAndModes ratchets the contests that
+         have not yet. A contest's bands are an IDENTITY fact, never the
+         entrant's: QSOIsXQSO asks the station-less identity object. *)
       function UsesBand(aBand: BandType): boolean; virtual;
+
+      (* DOES THIS CONTEST CREDIT A QSO IN THIS MODE? -- Q98 S1 (design 8.2v),
+         beside UsesBand and asked the same way, through ContestCreditsMode.
+
+         A QSO in a mode the contest does not credit is logged and is an
+         automatic X-QSO (QSOIsXQSO): 0 points, no multiplier, no dupe, no
+         worked mark, excluded from the totals, X-QSO: in the Cabrillo and
+         APP_TR4W_CLAIMEDQSO 0 in the ADIF (NY4I, Q98).
+
+         eNoMode AND eData MEAN "SOME SUBMODE OF aMode". A contest answers
+         True for them when it credits any submode of aMode, and tests aExtMode
+         only to EXCLUDE submodes it names (CQ WW RTTY's FT8; Nebraska's
+         FT8/FT4 at its stage). So an old record with no submode is never
+         proven off-mode, and the dupe sheet and the need-multiplier hint,
+         which know only the ModeType, can ask too (with eNoMode).
+
+         FM IS ITS OWN ModeType, beside Phone. A contest says whether it
+         credits it (open question Q120(a)).
+
+         AN IDENTITY FACT, never the entrant's -- as UsesBand. THE BASE ANSWERS
+         TRUE for every mode: "no contest"'s answer, and the start of the
+         ratchet in uTestContestStatesItsRules. *)
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; virtual;
 
       (* DOES THIS QSO EARN A MULTIPLIER OF THIS KIND AT ALL? -- M8,
          2026-10-02: stage 2 of design 7.7, "the contest DECLARES the rules;
@@ -3317,6 +3347,39 @@ function ContestIdList(const aIds: array of string): TContestIdList;
    the multipliers cannot disagree about which QSOs count. *)
 function ContestCreditsBand(aContest: TContestBase; aBand: BandType): boolean;
 
+(* DOES A QSO IN aMode (aExtMode) EARN CREDIT IN aContest? -- Q98 S1, see
+   TContestBase.UsesMode. nil answers True, as ContestCreditsBand. The ONE
+   way the mode rule is asked. *)
+function ContestCreditsMode(aContest: TContestBase; aMode: ModeType;
+                            aExtMode: ExtendedModeType): boolean;
+
+(* THE SAME QUESTION FROM A READER THAT KNOWS ONLY A ModeType KEY -- the dupe
+   sheet and the need-multiplier hint (Q98 S1). Both and NoMode are keys, not
+   modes, and are credited; any other mode is asked with eNoMode ("some
+   submode of it"). *)
+function ContestCreditsModeKey(aContest: TContestBase; aMode: ModeType): boolean;
+
+(* IS aQso A QSO aContest DOES NOT CREDIT AT ALL -- off its bands or off its
+   modes? -- Q98 S1 (design 8.2v). A QSO record (rkQSO) with a band and a
+   mode that ContestCreditsBand or ContestCreditsMode refuses. A record with
+   NoBand or NoMode is NOT off-contest: it is malformed, and already counts
+   nowhere. A deleted record is judged the same way -- whether it counts is
+   QSOCountsTowardTotals's question. *)
+function QSOIsOffContest(aContest: TContestBase; const aQso: ContestExchange): boolean;
+
+(* IS aQso AN X-QSO? -- THE PREDICATE (Q98 S1, design 8.2v; Q51).
+
+   The operator's statement (ceXQSO, stored -- Edit QSO's checkbox, or a file
+   that said CLAIMEDQSO 0) OR the contest's band/mode rule (QSOIsOffContest,
+   worked out each time it is asked, NEVER stored). Every reader of "is this
+   an X-QSO" asks this (or LoggedQSOIsXQSO, uContestRegistry, for a reader
+   holding only a record); Lint-XQSOReads fails a code read of ceXQSO
+   anywhere else outside its allow-list.
+
+   NOT the host-area rule (Q107): a QSO it refuses scores 0 but exports as a
+   QSO: line until NY4I answers Q119. *)
+function QSOIsXQSO(aContest: TContestBase; const aQso: ContestExchange): boolean;
+
 (* THE BANDS OF A NEED-MULTIPLIER MASK THE CONTEST CREDITS -- M8, design 7.4:
    "off-band should not impact need multiplier".
 
@@ -3548,8 +3611,14 @@ function ApplyQSOPointOverride(const aOverrides: TQSOPointOverrides;
    what MainUnit.LoadinLog adds to the sheet and the counters, and so what the
    view a bonus rule reads holds. LoadinLog asks this too, so the totals and
    the view cannot disagree about which QSOs exist. So does the summary
-   sheet (POSTUNIT.CalculateTotals, Q51: "x-qso never counts as worked"). *)
-function QSOCountsTowardTotals(const aQso: ContestExchange): boolean;
+   sheet (POSTUNIT.CalculateTotals, Q51: "x-qso never counts as worked"),
+   and since Q98 S1 the live path (LOGSUBS2.LogContact).
+
+   aContest IS THE QSO'S CONTEST (Q98 S1): "not an X-QSO" is QSOIsXQSO, so
+   an off-band or off-mode QSO counts nowhere. nil is a classless contest,
+   which credits every band and mode. *)
+function QSOCountsTowardTotals(aContest: TContestBase;
+                               const aQso: ContestExchange): boolean;
 
 (* OUR SIDE OF ONE LOGGED QSO'S EXCHANGE -- log schema 3, stage 4: the session's
    values (aSession) with the QSO's own recorded station laid over them.
@@ -3864,6 +3933,31 @@ begin
    else
       begin
       Result := aContest.UsesBand(aBand);
+      end;
+end;
+
+function ContestCreditsMode(aContest: TContestBase; aMode: ModeType;
+                            aExtMode: ExtendedModeType): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := True;
+      end
+   else
+      begin
+      Result := aContest.UsesMode(aMode, aExtMode);
+      end;
+end;
+
+function ContestCreditsModeKey(aContest: TContestBase; aMode: ModeType): boolean;
+begin
+   if (aMode = Both) or (aMode = NoMode) then
+      begin
+      Result := True;
+      end
+   else
+      begin
+      Result := ContestCreditsMode(aContest, aMode, eNoMode);
       end;
 end;
 
@@ -4405,8 +4499,16 @@ procedure TContestBase.ScoreQSOWithStation(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := 0;
 
-   (* THROUGH ContestCreditsBand, so the points and LOGDUPE.SetMultFlags's
-      multipliers ask the one function that states the band rule. *)
+   (* AN X-QSO SCORES NOTHING -- the band, the mode and the operator's flag,
+      through the ONE predicate LOGDUPE.SetMultFlags also asks (Q98 S1,
+      design 8.2v). So an operator-flagged QSO scores 0 on every path (Edit
+      QSO, the matrix, a peer), not only the rescore. A record with no band
+      or mode is not an X-QSO by rule, but scores nothing off its band
+      (ContestCreditsBand) as before. *)
+   if QSOIsXQSO(Self, aQso) then
+      begin
+      Exit;
+      end;
    if not ContestCreditsBand(Self, aQso.Band) then
       begin
       Exit;
@@ -4522,13 +4624,32 @@ begin
       end;
 end;
 
-function QSOCountsTowardTotals(const aQso: ContestExchange): boolean;
+function QSOCountsTowardTotals(aContest: TContestBase;
+                               const aQso: ContestExchange): boolean;
 begin
    Result := (aQso.ceRecordKind = rkQSO)  and
              (not aQso.ceQSO_Deleted)     and
              (aQso.Band <> NoBand)        and
              (aQso.Mode <> NoMode)        and
-             (not aQso.ceXQSO);
+             (not QSOIsXQSO(aContest, aQso));
+end;
+
+function QSOIsOffContest(aContest: TContestBase; const aQso: ContestExchange): boolean;
+begin
+   Result := False;
+   if (aQso.ceRecordKind <> rkQSO) or
+      (aQso.Band = NoBand)         or
+      (aQso.Mode = NoMode)         then
+      begin
+      Exit;
+      end;
+   Result := (not ContestCreditsBand(aContest, aQso.Band)) or
+             (not ContestCreditsMode(aContest, aQso.Mode, aQso.ExtMode));
+end;
+
+function QSOIsXQSO(aContest: TContestBase; const aQso: ContestExchange): boolean;
+begin
+   Result := aQso.ceXQSO or QSOIsOffContest(aContest, aQso);
 end;
 
 procedure ClearMultiplierFlags(var aQso: ContestExchange);
@@ -4732,6 +4853,13 @@ begin
    (* Every band, as before -- see the declaration. Not a permissive
       placeholder: it is an exact statement of what TR4W did for every contest
       until a contest stated its own bands. *)
+   Result := True;
+end;
+
+function TContestBase.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   (* Every mode, as before -- see the declaration. "No contest"'s answer;
+      a contest states its own (Q98). *)
    Result := True;
 end;
 
