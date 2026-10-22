@@ -55,7 +55,7 @@ in section 4. One line each -- the full text is further down.
 
 **Raised 2026-10-22, from the Russian rule pages NY4I saved (section 1, "Raised 2026-10-19")**
 
-- **Q97** now has the sponsor's answer (FJL and RI1AN are their own oblasts) -- awaiting your yes.
+- **Q97, Q131-Q136** answered by the sponsors' rules (your standing ruling, 2026-10-22) -- being built.
 - **Q131** Russian DX: count WAE-only entities as multipliers (rule 9: DXCC + WAE list)?
 - **Q132** Russian DX: score Kaliningrad, FJL and RI1AN as European Russia (2, not 3; RI1AN 10 for non-Russians)?
 - **Q133** Russian DX: a /MM contact is 5 points and no multiplier (rule 7.4)?
@@ -107,7 +107,8 @@ contests" (NY4I, 2026-10-19), built in e560f51f.
   `Fj = FJ,^R1FJ`) and its own DXCC entity; RI1AN is likewise `AN`. Today
   the pre-fill/hint gives `SP` for R1FJ, and RI1AN calls resolve to CE9
   (Antarctica) in CTY.DAT so they get no oblast at all. R1MV is not on the
-  page. *Recommended: yes -- build FJ/AN (contest-scoring).* **Answer:**
+  page. **Answer:** by the rules (NY4I, 2026-10-22: "if the rules say to do something, then we can abide by it"): FJ and AN are their own
+  oblasts and DXCC entities. Building (contest-scoring).
 
 ### Added with the UA4W Championship's and RSGB 1.8's classes (2026-10-14)
 
@@ -285,26 +286,27 @@ different event), so Q123 still needs the SRR digital cup's own rules.
 - **Q131** Russian DX: rule 9 counts "территорий (список DXCC + список
   множителей WAE) плюс число областей". TR4W (and D7) count DXCC only, so
   the WAE-only entities (IT9, GM/Shetland, JW/Bear Is., 4U1VIC, TA1) are not
-  multipliers. *Recommended: follow the 2027 rules.* **Answer:**
+  multipliers. **Answer:** by the rules -- DXCC + WAE + oblasts. Building.
 
 - **Q132** Russian DX points: rule 7.3 scores Kaliningrad (UA2F), FJL and
   RI1AN "как за Европейскую Россию". TR4W gives a European Russian station
   3 for UA2/R1FJ (rule: 2), a UA2 station 3 for UA (rule: 2), and reads
   RI1AN as CE9 / South America -- a non-Russian gets 5/3/2 by continent
-  (rule: 10), a European Russian 5 (rule: 2). *Recommended: follow the
-  rules.* **Answer:**
+  (rule: 10), a European Russian 5 (rule: 2). **Answer:** by the rules.
+  Building.
 
 - **Q133** Russian DX: rule 7.4 -- a /MM contact is worth 5 points and is not
-  a multiplier. TR4W has no /MM rule. *Recommended: add it.* **Answer:**
+  a multiplier. TR4W has no /MM rule. **Answer:** by the rules. Building.
 
 - **Q134** Russian DX: the 2027 appendix lists 89 subjects (60 European, 29
   Asian), including ДНР, ЛНР, Херсонская and Запорожская. russian.dom has 85
   besides FJ/AN -- four short. The page gives no codes (it points to
-  rdxc.org/info). Add them, with the codes from rdxc.org? **Answer:**
+  rdxc.org/info). **Answer:** by the rules -- add them, codes from
+  rdxc.org/info. Building.
 
 - **Q135** Russian DX: rule 11.5 -- logs only through the web form at
   ua9qcq.ru/submit_log.php; questions to rdxc@srr.ru or mail@rdxc.org. The
-  class says logs@rdxc.org. Update the address TR4W shows? **Answer:**
+  class says logs@rdxc.org. **Answer:** by the rules. Building.
 
 - **Q136** Radio YOC (the Popov Youth Cup; this page is the UA9QCQ ~2022 copy,
   80/40/20 m, 4 x 60 min -- not newer than the QRZ.RU 2026 text behind the
@@ -312,7 +314,15 @@ different event), so Q123 still needs the SRR digital cup's own rules.
   (b) the text says the exchange is your age + serial, but its Cabrillo
   examples show previous-received number + serial (what TR4W does). (c) a
   repeat is allowed in another round (TR4W only separates by band). Which
-  of these should TR4W follow? **Answer:**
+  of these should TR4W follow? **Answer:** by the CURRENT rules -- the
+  SRR 2026 regulation (QRZ.RU contest 119) states each outright, and it is
+  newer than this page: "За каждую радиосвязь начисляется 1 очко" (1
+  point); the exchange is five digits, "Первые две цифры -- возраст
+  оператора" + a 3-digit serial from 001 (age + serial, NOT the previous
+  number); the multiplier is each Russian subject and each country "один
+  раз за все время ... независимо от диапазона" (once, not per band);
+  repeats allowed in another round, or another band in one round, 3
+  minutes apart; 8 rounds of 30 min; SSB on 7 and 14 MHz. Building.
 
 - **Q137** The Russian WW Digital Contest (RDRC, `CONTEST: RUS-WW-DIGI`) is
   not in TR4W or D7: first full weekend of October 12:00-11:59 UTC; 160-10 m
