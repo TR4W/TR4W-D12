@@ -16,62 +16,34 @@ moves to section 4 in the commit that records it.
 
 ---
 
-## What is still open (index, 2026-10-16)
+## What is still open (index, 2026-10-22)
 
-Re-read 2026-10-16: every question below is genuinely unanswered; the rest are
-in section 4. One line each -- the full text is further down.
+**The governing rule since 2026-10-22 (NY4I):** *"Your ultimate goal is to
+recreate the implemented contests in D7 and D12 prior to the contestFactory
+work. If something is ambiguous, the rules can only augment the way D7/D12
+implemented the contest."* and *"if the current rules contradict D7, then
+the rules win. but it has to be unambigious."* Baselines: D7 = `C:\TR4W`;
+pre-factory D12 = `793133d9^`. Every question was re-read against both that
+day; most closed from the code, and each entry cites it. One line each
+below -- the full text is further down.
 
-**Sponsor rules (section 1)**
+**Still yours -- each is D7 against one of your own earlier rulings, or D7
+against itself**
 
-- **Q27** SAC: is a Russian station not workable, or only not a multiplier?
-- **Q97** Franz Josef Land (R1FJ) oblast reads as "SP" in Russian DX -- **Built 2026-10-22** (FJ and AN by rule 7.3).
-- **Q70** UA4W Championship's 18/19 zone rule.
-- **Q106** Nebraska: answered 2026-10-18 -- FT8/FT4 left out of the score; times are the sponsor's UTC, 1400Z-0200Z; rare grid bonus BUILT (three assumptions to confirm, in the entry); satellite left alone.
+- **Q8** Ten cfg-only D7 point methods (DL-DX-RTTY's DL bonus, TRC Digital, Holy Land, Portugal Day ...) went with QSO POINT METHOD under Q11. None was a D7 contest. Q11 stands, or bring them back as by-id classes?
+- **Q10** D7 offered every ContestType. Withdraw the Q53 (MINITEST) and Q102 (SOUTHAMERICANWW) retirements and retire nothing? *Recommended: yes.*
+- **Q70** UA4W: D7 always used the call's CQ zone; your 7.12 ruling uses a stated zone first. D7, or keep 7.12?
+- **Q111** IRTS: D7 as shipped scored every QSO 10 (a 4.95.6 copy-paste overwrote the row), or D7's own orphaned IRTS arm (8/4, 2/1, 0)? *Recommended: the arm.*
+- **Q40** County-line limits: 7QP 4, NEQP none (stated); a rover logs its own party. *Not yet checked against D7.*
+- **Q106** Nebraska: three assumptions on the rare grid bonus, in the entry.
 
-**Design (section 2) -- each has a recommendation; "accept" is enough**
+**Resolved 2026-10-22 by the D7/D12 baseline or an unambiguous current rule
+(details in each entry)**
 
-- **Q8** Events with no ContestType still named in code (TRC, PGA, EURASIA ...).
-- **Q47** Fix the three kept read-past-the-end shapes now?
-- **Q101** Fill the typed `rcvd_*` columns from each class, or delete them?
-- **Q111** IRTS scores by the EUDX table but its file is Irish counties -- what does its sponsor score?
-- **Q112** Field Day's DX refusal holds only when typed -- apply it to imports/peers/Rescore (as Q107)?
-- **Q113** Edited memories are lost on restart (the message table is written, never read).
-- **Q114** ALRS-UA1DZ: is its exchange a grid (RDA entrants send a district)?
-- **Q116** A malformed grid has no distance -- should it score 0 (not the closest bucket)?
-- **Q119** Is a host-area-refused QSO (Q107) also an automatic X-QSO? (needed before Q98's mechanism)
-- **Q120** Bands and modes per contest: fill `docs/Q98_CONTEST_BANDS_MODES.csv` + five yes/no rulings.
-
-**Raised 2026-10-19 (sections 1 and 2, under "Raised 2026-10-19")**
-
-- **Q122** LABRE: do PY0S / PY0T send a state, or stay DX?
-- **Q123** RF Cup Digital: add BPSK63 to its modes (UA9QCQ lists RTTY75 + BPSK63)?
-- **Q124** OZCHR (RRTC) scoring: 1/2/3 by ITU zone (UA9QCQ 2022) vs TR4W's 1/1/3/5 -- check it?
-- **Q125** UKRAINE CHAMPIONSHIP: is it the Open Ukraine RTTY Championship?
-- **Q126** Q98's five still-unidentified contests: OZHCR-VHF, WWL, JA LONG PREFECT, QCWA GOLDEN, SOUTH AMERICAN WW.
-- **Q127** Four more Cabrillo renames from UA9QCQ: OZCHR->RRTC, the RCC field days -> FD-RCC-CW/SSB, RF-CUP-DIG -> SRR-CUP-DIGI, GAGARIN-CUP -> GC?
-- **Q128** Polish Kill CW: "Przełącz CW" or D7's shipped "Zakończ CW"?
-- **Q129** Seven machine catalogues show "Ping [SERVER ADDRESS]" in English -- leave, or translate?
-
-**Raised 2026-10-22, from the Russian rule pages NY4I saved (section 1, "Raised 2026-10-19")**
-
-- **Q97, Q131-Q136** answered by the sponsors' rules (your standing ruling, 2026-10-22) -- **Built 2026-10-22** (uncommitted; see each entry for what still needs you).
-- **Q131** Russian DX: count WAE-only entities as multipliers (rule 9: DXCC + WAE list)?
-- **Q132** Russian DX: score Kaliningrad, FJL and RI1AN as European Russia (2, not 3; RI1AN 10 for non-Russians)?
-- **Q133** Russian DX: a /MM contact is 5 points and no multiplier (rule 7.4)?
-- **Q134** Russian DX: add the four oblasts russian.dom lacks (89 subjects in the 2027 rules)?
-- **Q135** Russian DX: logs go through the ua9qcq.ru web form, not logs@rdxc.org -- update?
-- **Q136** Radio YOC (Popov Youth Cup): 1 point per QSO (page) or 3 (D7/TR4W); repeats per round?
-- **Q137** Add the Russian WW Digital Contest (RUS-WW-DIGI, RDRC) as a new contest?
-- **Q138** The URC territory list is the URC DX contest's exchange table -- **Built 2026-10-22 as `URC-DX-RTTY`** (the URC DX RTTY Contest, NY4I's rules of that day).
-
-**Awaiting only your yes (section 3)**
-
-- **Q10** Retire unused ContestTypes through `TContestRetired` (MINITEST needs it).
-- **Q26** WAG import with no DOK: empty QTH.
-- **Q88** NA Sprint domestic file (13 vs 14 VE; the SSB Sprint too).
-- **Q95** Croatian ITU zones.
-- **Q23** CUP RF: the QSO line, and the difference never reached a file -- close.
-- **Q40** County-line limits: 7QP 4, NEQP none (stated); a rover logs its own party.
+- **No change -- today already matches D7:** Q27 SAC (a Russian station is not workable), Q88 NA Sprint files, Q95 Croatian / CW Open zones, Q106(6) P13's `LA`, Q114 ALRS (a grid), Q122 PY0S/PY0T stay DX, Q123 RF Cup Digital (no mode limit), Q124 OZCHR 1/1/3/5, Q125 Ukraine Championship, Q126 the five unidentified contests, Q23 Cup RF, Q26 WAG (empty QTH), Q112 peers and Rescore.
+- **To build:** Q47 bound the three read-past-the-end shapes; Q113 edited memories survive a restart (as D7); Q119 a host-area-refused QSO is an X-QSO; Q120 bands and modes (D7's "every band and mode" where no unambiguous rule, ARRL Digi excludes RTTY by its current rules); Q127 GAGARIN-CUP -> `GC` only.
+- **Parked:** Q101 ([#94](https://github.com/TR4W/TR4W-D12/issues/94)), Q137 ([#93](https://github.com/TR4W/TR4W-D12/issues/93)) -- not D7/D12 work; Q128, Q129 -- i18n after contestFactory.
+- **Built earlier from the sponsors' rules:** Q97, Q131-Q136, Q138 (`722690bf`).
 
 **Q59 is settled:** inactive contests are HIDDEN behind "Show inactive
 contests" (NY4I, 2026-10-19), built in e560f51f.
@@ -88,7 +60,12 @@ contests" (NY4I, 2026-10-19), built in e560f51f.
   *Partly settled by 7.10 and FD-DX (2026-10-15): a station the contest does
   not accept is REFUSED WITH AN ERROR, never silently cleared. Still open: is
   a Russian station really not workable in SAC, or only not a multiplier?*
-  **Answer:**
+  **Answer:** resolved by the D7/D12 baseline (NY4I, 2026-10-22: recreate the
+  contests D7 and pre-factory D12 implemented; ambiguity keeps their
+  behaviour). D7 `LOGSTUFF.PAS:4033-4041` refuses UA/UA2/UA9/EU for EVERY
+  entrant (no MyCountry test) -- not workable; pre-factory D12 identical
+  (`:4277`); `uContestSACCW`/`SSB` match, with 7.10's error message. No SAC
+  rules are saved. No change. CLOSED.
 
 - **Q97** (found implementing Q50, 2026-10-15) Franz Josef Land (`R1FJ`)
   is a Russian entity, so the Russian DX contests now pre-fill and hint an
@@ -116,6 +93,11 @@ contests" (NY4I, 2026-10-19), built in e560f51f.
   code always used your call's CQ zone. With no zone stated, the two agree.
   A zone typed for this contest is taken as a CQ zone, as MY ZONE's command
   says. *Recommended: confirm.*
+  *Checked against D7 (2026-10-22):* D7 `LOGSTUFF.PAS:7867-7902` always uses
+  `ctyGetCQZone(MyCall)`; pre-factory D12 identical. Today's stated-zone-first
+  comes from your 7.12 ruling, not a sponsor rule (none saved). Under the
+  recreate-D7 goal: back to the call's CQ zone, unless you keep 7.12 here.
+  **STILL YOURS** (D7 vs your own 7.12).
   **Answer:**
 
 ### Added with the IN7QPNE composite (2026-10-14)
@@ -226,7 +208,10 @@ contests" (NY4I, 2026-10-19), built in e560f51f.
       Labrador alias, which collides with Louisiana; S50 loads first, so `LA`
       means Louisiana in every party that includes both. Labrador is `NL` (with
       `LB`/`NF`). *Recommended: drop `LA` from P13.DOM.*
-      **Answer:**
+      **Answer:** resolved by the D7/D12 baseline: D7's `p13.dom:2` has the
+      same `LA`, and every D7 file including P13 includes S50/S48 first, so
+      `LA` was always Louisiana in D7 (first added wins, `LOGDOM.PAS:356`).
+      The file stays as D7 shipped it. No change. CLOSED.
 
 ### Raised by the M11 plan (2026-10-14; `docs/CONTEST_FACTORY_M11_PLAN.md`)
 
@@ -245,18 +230,26 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   DXCC entity counts, never a state. They are Brazilian territory (part of
   Pernambuco and Espirito Santo), but Table 1 has no code for either.
   *Recommended: leave them DX -- the rules give them no code to send.*
-  **Answer:**
+  **Answer:** resolved by the D7/D12 baseline: D7 (`LOGSTUFF.PAS:9033`) parsed
+  PY0S/PY0T as DX (their own CTY entities, no domestic country), and the
+  rules are silent. They stay DX. CLOSED.
 
 - **Q123** RF Cup Digital (SRR): UA9QCQ's copy of the 2021 regulation lists
   RTTY75 and BPSK63; the Q98 table has RTTY only (from WA7BNM). Add BPSK?
-  **Answer:**
+  **Answer:** resolved by the D7/D12 baseline: D7 restricted no mode or band
+  for RF-CUP-DIG (`VC.pas:3458`, `FCONTEST.PAS:1435`), and neither does
+  `uContestCupRFDIG`. The 2021 mirror is not a current rule. Every band and
+  mode counts, so BPSK63 is already credited. CLOSED.
 
 - **Q124** OZCHR (the Russian Radio Team Championship, RRTC): UA9QCQ's copy
   of the 2022 regulation scores 1 point for a special or LZ0 station, 2 for
   the same ITU zone, 3 for a different zone. TR4W's class scores 1/1/3/5
   (the IARU method). *Recommended: the contest-scoring specialist checks D7
   and the sponsor's current text, and reports before changing anything.*
-  **Answer:**
+  **Answer:** resolved by the D7/D12 baseline: D7's OZCR_Z is
+  `IARUQSOPointMethod` (`LOGSTUFF.PAS:7025`), 1/1/3/5 -- exactly today's
+  class; OZCR_O is 1 per QSO, also as today. The 1/2/3 scheme is a 2022
+  mirror, not a current rule. No change. CLOSED.
 
 - **Q125** UKRAINE CHAMPIONSHIP: the Open Ukraine RTTY Championship
   (UKR-CHAMP-RTTY, WA7BNM 334; 160-10 m RTTY) has a two-letter region +
@@ -264,7 +257,11 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   QSO, as D7. But D7 scores only UR stations and that event is open to all;
   N1MM's "Championship of Ukraine" (c. 2014) is 160/80 m, RTTY/CW/SSB, four
   one-hour sessions, +10 per oblast per session. Which event is TR4W's?
-  **Answer:**
+  **Answer:** resolved by the D7/D12 baseline: TR4W's is D7's own definition
+  (`VC.pas:3546`, `LOGSTUFF.PAS:7920`, `LOGEDIT.PAS:2934`): QSO number +
+  oblast from `ukraine.dom`, 2 points for a UR station only, + 10 x mults,
+  by band, every band and mode. `uContestUkraineChampionship` matches it.
+  Not reinterpreted as another event. CLOSED.
 
 - **Q126** Q98: five contests no source identifies (D7, sponsor, WA7BNM,
   DXLog, N1MM's UDCs and built-ins, QRZ.RU, UA9QCQ were all searched):
@@ -272,7 +269,11 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   WWL (D7's scoring implies HF incl. 160 m), JA LONG PREFECT, QCWA GOLDEN
   (scores as TR4W's QCWA), SOUTH AMERICAN WW (D7: RST + continent, 2/10 --
   not today's WWSA). What are they, and their bands and modes -- or retire?
-  **Answer:**
+  **Answer:** resolved by the D7/D12 baseline: each is what D7 defined, and
+  each class matches D7 (OZHCR-VHF `LOGSTUFF.PAS:6779` + 1000 x mults; WWL
+  `:7762`; JA LONG PREFECT 1 point, 80 m start; QCWA GOLDEN CW 2 / else 1;
+  SOUTH AMERICAN WW `:7571`). D7 stated no band or mode limit for any, so
+  none is added. None is retired. CLOSED.
 
 ### Raised 2026-10-22 -- from the Russian rule pages NY4I saved
 
@@ -340,6 +341,9 @@ different event), so Q123 still needs the SRR digital cup's own rules.
   (no WARC); RTTY45 and BPSK63; RST + oblast (Russia) or RST + serial;
   points by country/continent and band; DXCC + oblast multipliers per mode
   and band. Add it as a new contest (by its id -- the enum is frozen)?
+  *Parked 2026-10-22:* not a D7/D12 contest, so outside the factory's goal
+  (recreate D7/D12). Kept for after contestFactory; tracked as a GitHub
+  issue: https://github.com/TR4W/TR4W-D12/issues/93
   **Answer:**
 
 - **Q138** The URC DX Territories List (unicomradio.com; 1,156 rows of
@@ -371,6 +375,19 @@ different event), so Q123 still needs the SRR digital cup's own rules.
   `'TRC'`, `'PGA'`, `'EURASIA'`, `'DL-DX-RTTY'`. Give each a type and class, or
   delete the tests? *Recommended: give a type to any that is still run; delete the
   rest.*
+  *Checked against D7 (2026-10-22):* none of the four was ever a D7
+  ContestType; each is a name the operator typed (CONTEST TITLE/NAME, MY
+  STATE), and D7 has every one of these tests (`uCabrilloExchange.pas:309-329`,
+  `PostUnit.PAS:2477,3295`, `LOGSTUFF.PAS:6455,6798`). So the TRC, PGA and
+  EURASIA tests stay as D7 had them. BUT two of them fed scoring that is
+  now GONE: D7's `DLRTTY` arm (+5/+3 for DL in 'DL-DX-RTTY') and its
+  `TRCDIGITAL` arm (10/2/1) were reachable only through the `.cfg`'s QSO
+  POINT METHOD, which Q11 retired -- along with eight more cfg-only methods
+  (HolyLand, PortugalDay, HamSpirit, RPX, JAKARTARTTY, XERTTY, OKOMRTTY,
+  CFOQP; `LOGSTUFF.PAS:5959, 6336, 6463, 6902, 8279, 8301, 8339, 8359`).
+  None was a D7 contest row. **STILL YOURS:** does Q11 stand for these ten
+  (they were never D7 contests), or should each come back as a by-id contest
+  class under the recreate-D7 goal?
   **Answer:**
 
 - **Q47** Three harmless read-past-the-end shapes were kept exactly: MWC (a call
@@ -406,7 +423,10 @@ different event), so Q123 still needs the SRR digital cup's own rules.
      the whole call and never reads outside it; an empty MY COUNTRY is simply
      not `G`; RCC scores 4 only when `/P` or `/M` is actually present. The
      contest matrix confirms no frozen QSO moves before the commit.
-     **Answer:**
+     **Answer:** resolved (2026-10-22, design delegated): all three shapes are
+     in D7 and pre-factory D12 verbatim, and they are DEFECTS, not rules -- a
+     memory read has no D7 answer to recreate. Bound all three as above; the
+     matrix must show no frozen QSO moving. To build.
 
 - **Q101** Thirteen typed received-exchange columns are never written or read:
   `rcvd_state`, `rcvd_county`, `rcvd_section`, `rcvd_grid`,
@@ -420,7 +440,10 @@ different event), so Q123 still needs the SRR digital cup's own rules.
   *Recommended: the class fills them* -- it is the one place that knows
   whether a QTH is a county, a section or a grid, which is exactly the
   question Q89's ADIF STATE fix had to answer.
-  **Answer:**
+  **Answer:** deferred (2026-10-22): neither D7 nor pre-factory D12 had these
+  columns, so filling them is not part of recreating D7/D12. Left as they
+  are until contestFactory is complete;
+  https://github.com/TR4W/TR4W-D12/issues/94
 
 - **Q111** (found building Q45, 2026-10-17) **IRTS scores by the EUDX table,
   but its domestic file is `ireland.dom`.** The IRTS class has always used
@@ -433,6 +456,18 @@ different event), so Q123 still needs the SRR digital cup's own rules.
   check against in this tree.) *Needs the sponsor's rules: if IRTS is the
   Irish Radio Transmitters Society's contest scoring by Irish county, the
   EUDX point method was never its rule and the class wants its own.*
+  *Checked against D7 (2026-10-22):* D7 HAD an IRTS arm --
+  `IRTSQSOPointMethod` (`LOGSTUFF.PAS:7195-7225`): EI/GI working EI/GI 8 CW /
+  4 phone; EI/GI working others 2/1; others working EI/GI 8/4; others
+  working non-EI/GI 0, no mult. D7 git `a5d4b475` ("4.95.6 add EUDX contest")
+  overwrote the IRTS row with EUDX's values in the same edit, orphaning that
+  arm. So D7 as SHIPPED scored every IRTS QSO 10 (its EU test was never
+  false); pre-factory D12 the same. Today (after Q45) it scores 10/5/3/2.
+  The only outside source is an N1MM UDC (G4OGB 2017: CW 8, SSB 4, workable
+  EI/EJ/GI/MI/2I), agreeing with D7's own arm; no current IRTS rules found
+  (irts.ie gave none on 2026-10-22). **STILL YOURS:** (a) D7 as shipped (10
+  for everything), or (b) D7's own IRTS arm, which the 4.95.6 edit clobbered
+  by mistake? *Recommended: (b).*
   **Answer:**
 
 - **Q112** (found building FD-DX, 2026-10-17) **Field Day's "`DX` from a
@@ -453,6 +488,9 @@ different event), so Q123 still needs the SRR digital cup's own rules.
   Field Day record that would be refused if typed is an ADIF IMPORT ERROR
   and the whole import is rolled back (the atomic import of log-db ruling
   2). Not built yet. Peers and Rescore are not covered by this answer.
+  *Peers and Rescore, resolved 2026-10-22 by the D7/D12 baseline:* D7
+  refused only what was typed; a record from a peer or a rescore was
+  accepted. That stands -- only your import ruling is added.
 
 - **Q113** (found building Q9, 2026-10-17) **Edited message memories are
   lost on restart.** `uLogStore` writes every memory to the log's `message`
@@ -463,13 +501,24 @@ different event), so Q123 still needs the SRR digital cup's own rules.
   contest's DEFAULTS too, so restoring everything would pin a default built
   from an old MY STATE. *Recommended: store only memories the operator
   edited (a flag per row), and restore only those at open.*
-  **Answer:**
+  **Answer:** resolved by the D7/D12 baseline (2026-10-22): D7 kept an
+  operator's edit across restarts -- `uEditMessage.pas:236/249` wrote it to
+  the contest `.cfg`'s `[Messages]` section and `LogCfg.ReadInConfigFile`
+  re-applied it at start-up; pre-factory D12 did the same
+  (`uEditMessageForm.pas:369`). Recreate that in the SQLite file, as
+  recommended: flag edited rows, restore only those at open, the edit
+  winning over the default. To build.
 
 - **Q114** (Q37) **ALRS-UA1DZ Cup: is its exchange a grid?** Its QTH is
   parsed as a domestic QTH, taken as typed, and then used as a GRID for
   distance -- but an RDA entrant's QTH is a district code. A sponsor
   question: what does an ALRS entrant send?
-  **Answer:**
+  **Answer:** resolved by the D7/D12 baseline: D7 (`VC.pas:3589`,
+  `LOGSTUFF.PAS:6160-6206`) takes the exchange as a GRID for distance, and
+  for an RDA-counting entrant the same AA99 token is the district
+  multiplier (`LOGDOM.PAS:251`). `uContestALRSUA1DZCup` matches; no ALRS
+  rules are saved. No change (Q116 settles a distance that cannot be
+  read). CLOSED.
 
 - **Q116** (Q37) **What should "no distance" score?** After Q37 a malformed
   grid has no distance, and each distance table then pays its CLOSEST
@@ -504,7 +553,10 @@ different event), so Q123 still needs the SRR digital cup's own rules.
   in. *Recommended: yes -- one rule: "logged, scores nothing, not this
   contest's QSO" is exactly what X-QSO says to a log checker, and Q51 says
   an X-QSO is in the log for the other station's sake.*
-  **Answer:**
+  **Answer:** resolved 2026-10-22 (design delegated): yes. D7 had no X-QSO
+  at all, so it gives no answer; Q107 (yours) already makes such a QSO
+  score nothing, and X-QSO is how Cabrillo says so to a log checker. One
+  rule with Q98's off-band case. To build with Q98's mechanism.
 
 - **Q120** (Q98, 2026-10-17) **Bands and modes for every contest -- a CSV
   to fill: `docs/Q98_CONTEST_BANDS_MODES.csv`** (one row per contest;
@@ -530,6 +582,37 @@ different event), so Q123 still needs the SRR digital cup's own rules.
   pinned by `uTestAutomaticXQSO`'s 2 m FM check). The same reading applies
   wherever a sponsor's rules say SSB; a contest whose rules say "phone" is
   read from its own rules. (b)-(e) and the CSV are still open.
+  **(b)-(e) and the CSV, resolved 2026-10-22** (recreate D7/D12; a CURRENT
+  rule wins only when unambiguous -- NY4I that day). Measured: D7 and
+  pre-factory D12 have identical contest tables, and D7 restricted NO band
+  or mode at the contest level except RTC (`LOGSTUFF.PAS:7608-7622`); some
+  point arms paid 0 off their bands (CQMM/WRTC off 80-10, WAE/SAC on 160,
+  `case Band` arms with no `else`). The per-row D7 evidence (file:line for
+  each contested row) goes into `docs/Q98_CONTEST_BANDS_MODES.csv` when Q120
+  is built.
+  - **No-source rows (24) and disagreeing rows (CIS, Michigan, NAQP RTTY,
+    NC QP):** every band and mode, as D7. NC QP's digital stays in (D7
+    scores it 5 on purpose, `:6717`).
+  - **Both-agree rows (80):** the proposal stands -- the rules adding to D7;
+    none contradicts something D7 scored on purpose.
+  - **Single-source rows that would drop a band D7 scored on purpose:**
+    D7 stands -- UA4W keeps 160 m (`:7880-7896`); ARRL VHF Jan/Jun/Sep keep
+    24 GHz and Light (`:6136,6154`); European VHF keeps 432 MHz-24 GHz
+    (`:6807-6815`); Gagarin Cup keeps 2 m and 2.3 GHz (`:8202-8205`); ARRL
+    FD and Winter FD credit FM as phone (`Mode in [Phone, FM]`, `:6077`).
+  - **(b)** yes -- D7 never read the submode in scoring, so every digital
+    QSO counted.
+  - **(c) CQMM:** D7 (`:8211-8230`) credits phone; no current CQMM rules
+    were found (the CWJF site did not resolve; only a 2017 mirror and a 2026
+    newsletter without rules). Not unambiguous, so D7 stands: phone counts.
+  - **(d) ARRL Digi:** the rules win -- ARRL's current published rules
+    (Digital-Rules.pdf, v1.1, 08 Feb 2022), rule 2.2: *"Use any digital mode
+    (excluding RTTY) that supports the contest's 4-digit grid square
+    exchange"*; rule 2.1: 160, 80, 40, 20, 15, 10 and 6 m. RTTY becomes an
+    X-QSO (the corpus `arrl_digi` RTTY QSO moves -- an intended divergence).
+  - **(e)** yes -- General QSO and POTA state every band and mode (D7: one
+    point, no gate).
+  CLOSED.
 
 ### Raised 2026-10-19
 
@@ -538,11 +621,19 @@ different event), so Q123 still needs the SRR digital cup's own rules.
   OZCHR and OZCHR-TEAMS -> `RRTC`; REGION 1 FIELD DAY-RCC-CW / -SSB ->
   `FD-RCC-CW` / `FD-RCC-SSB`; RF-CUP-DIG -> `SRR-CUP-DIGI`; GAGARIN-CUP ->
   `GC` (WA7BNM agrees). Only the CONTEST: line changes (TR4W never reads a
-  Cabrillo name back). *Recommended: yes.* **Answer:**
+  Cabrillo name back). *Recommended: yes.* **Answer:** resolved by the
+  D7/D12 baseline (2026-10-22): D7 wrote `ContestTypeSA` for all six (blank
+  CABName, `PostUnit.PAS:2192`), which is what the classes write today.
+  UA9QCQ's tags are a log robot's, not the sponsors' current rules, so
+  OZCHR, OZCHR-TEAMS, the two RCC field days and RF-CUP-DIG keep D7's names.
+  GAGARIN-CUP -> `GC` follows your 2026-10-19 WA7BNM renames (WA7BNM agrees).
+  To build: GC only.
 
 - **Q128** Polish "Kill CW" (`rc_killcw`): its text was codepage-damaged in
   D7. The bytes recover as "Przełącz CW" (switch CW); D7's shipped Polish
-  menu (Alt+K) reads "Zakończ CW" (end CW). Which? **Answer:**
+  menu (Alt+K) reads "Zakończ CW" (end CW). Which? **Answer:** PARKED
+  (NY4I, 2026-10-22: i18n is reviewed after contestFactory is complete, with
+  Weblate).
 
 - **Q129** "Ping [SERVER ADDRESS]" (`RC_PING`) is a Tools menu caption; TR4W
   fills in the configured server address itself, so it is not a command and
@@ -550,6 +641,7 @@ different event), so Q123 still needs the SRR digital cup's own rules.
   machine pass put the English text into seven fuzzy catalogues (el fi fr nl
   pt pt_BR zh_CN), most of whose previous text was broken anyway.
   *Recommended: leave them; a translator fixes them on review.* **Answer:**
+  PARKED with Q128 (i18n after contestFactory).
 
 - **Q130** Two typos in REVIEWED Spanish entries: `tc_repeating`
   "AvPàg/RePàg" -> "AvPág/RePág"; `tc_improperdomesitcqth` "Impropìo QTH
@@ -578,7 +670,8 @@ closes it; anything else reopens it.
   writer (`CabrilloReceivedQSONumberQTHShort`), and the frozen matrix's QSO
   lines for CUPRFCW and CUPRFDIG are identical (`0101 CT`).
   **Proposed answer:** no change; close.
-  **Answer:**
+  **Answer:** resolved by the D7/D12 baseline (2026-10-22): D7's output was
+  the same for all three runnings, and so is today's. No change. CLOSED.
 
 - **Q40** *Reworded 2026-10-16.* Your answer: IN7QPNE has no rules of its
   own -- it is an umbrella; the open item was whether a rover in, say, New
@@ -599,7 +692,8 @@ closes it; anything else reopens it.
   **Proposed answer:** SETTLED BY Q3 (the log stores only what the operator
   stated) and Q13 (an import keeps the record): an imported WAG record with no
   DOK has an EMPTY QTH -- an RST is not a DOK.
-  **Answer:**
+  **Answer:** resolved 2026-10-22 by your own Q3 and Q13 rulings, as
+  proposed: an empty QTH. CLOSED.
 
 - **Q10** May a `ContestType` nobody runs be deleted instead of given a class?
   *Recommended: yes, with the list shown to you first.*
@@ -619,6 +713,18 @@ closes it; anything else reopens it.
   sponsor's; its matrix record is re-frozen once; and its rules survive only
   in git history and the D7 tree. Candidates are listed to you before any
   class is deleted.
+  *Checked 2026-10-22 against the recreate-D7 goal:* D7's New Contest list
+  offered EVERY ContestType (`uNewContest.pas:206`, `Succ(DUMMYCONTEST) to
+  High`), and every member has its own class today except DUMMYCONTEST.
+  So `TContestRetired` is not needed and is not built. That conflicts with
+  two of your earlier answers, neither yet built: **Q53** retired MINITEST
+  as a duplicate of MINI80 -- but D7's MINITEST is its own contest row
+  (`VC.pas:3489`, writes `MINITEST`); **Q102** retired SOUTHAMERICANWW --
+  D7's own contest (`LOGSTUFF.PAS:7571`). Both still work today.
+  **STILL YOURS:** withdraw the Q53 and Q102 retirements (keep both, as
+  D7), and close Q10 as "nothing is retired"? *Recommended: yes.* (Locust
+  and SA Sprint stay hidden behind "Show inactive contests" -- your Q59
+  ruling, a list choice; both remain full contests.)
   **Answer:**
 
 - **Q88** The NA Sprint CW and RTTY rows name different domestic files:
@@ -633,7 +739,14 @@ closes it; anything else reopens it.
   NA Sprint files count **13** VE multipliers (NL/LB/NF as one; NT, NU, YT
   separate), not 14, and no TR4W file accepts a typed `NT` at all. See
   `docs/DOM_CROSSCHECK_FINDINGS.md`.
-  **Answer:**
+  **Answer:** resolved by the D7/D12 baseline (2026-10-22): D7 loads `naqp`
+  for NA Sprint CW and the SSB Sprint, `s49p8` for NA Sprint RTTY
+  (`VC.pas:3498-3500`); today's classes load the same files, byte-identical
+  to D7's. The 2026-10-14 sponsor research was never saved, and DXLog is a
+  mirror, so nothing unambiguous overrides D7. No change. (Correction: "no
+  TR4W file accepts NT" was wrong -- `s49p8.dom` and the unused
+  `SSBSPRINT.DOM` both do.) If the NCJ rules are saved later,
+  `SSBSPRINT.DOM` (50 + DC + 14 VE) is the ready candidate. CLOSED.
 
 - **Q95** Croatian counts ITU zones but looks zones up with CQ zones, so it
   exports `<ITUZ:2>05` for W1AW (whose CQ zone is 5; its ITU zone is 8).
@@ -645,7 +758,12 @@ closes it; anything else reopens it.
   lookup is the defect. CW Open has **no zones**: serial + name, and the
   multiplier is each call once per session, so TR4W's 40 CQ-zone multipliers
   are a scoring defect.
-  **Answer:**
+  **Answer:** resolved by the D7/D12 baseline (2026-10-22): both classes
+  match D7 -- Croatian's ITU multipliers on a CQ lookup (`FCONTEST.PAS:302`)
+  and CW Open's call multiplier with CQ zones are D7's own rows
+  (`VC.pas:3455, 3581`). The sponsor research cited above was never saved,
+  so it is not an unambiguous current rule. No change; a fix follows only
+  if a sponsor's current rules are saved. CLOSED.
 
 ---
 
