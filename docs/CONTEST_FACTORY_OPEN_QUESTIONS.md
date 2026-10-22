@@ -63,7 +63,7 @@ in section 4. One line each -- the full text is further down.
 - **Q135** Russian DX: logs go through the ua9qcq.ru web form, not logs@rdxc.org -- update?
 - **Q136** Radio YOC (Popov Youth Cup): 1 point per QSO (page) or 3 (D7/TR4W); repeats per round?
 - **Q137** Add the Russian WW Digital Contest (RUS-WW-DIGI, RDRC) as a new contest?
-- **Q138** The URC DX Territories List: which contest did you save it for?
+- **Q138** The URC territory list is the URC DX contest's exchange table -- add the URC DX contest?
 
 **Awaiting only your yes (section 3)**
 
@@ -334,7 +334,14 @@ different event), so Q123 still needs the SRR digital cup's own rules.
 - **Q138** The URC DX Territories List (unicomradio.com; 1,156 rows of
   prefix, territory and a 3-letter code) is used by no TR4W contest, D7 or
   Q98 row, and its 3-letter codes cannot be compared with ukraine.dom's
-  two-letter keys. Which contest did you save it for? **Answer:**
+  two-letter keys. Which contest did you save it for? **Answer:** (NY4I,
+  2026-10-22) the URC DX contest's rules name it: "Each station must send a
+  signal report (RST) followed by a 3-letter territory code based on the URC
+  Territories List" (e.g. GM2G Glasgow 599 SCO, UN8LX Qostanay 599 QTY, YO9HP
+  Southern Romania 599 SRO); maritime mobile sends MMS wherever it is. TR4W
+  has no URC contest, so this is a NEW-CONTEST question: add it? Its full
+  rules (dates, bands, modes, points, multipliers, Cabrillo name) are needed
+  -- unicomradio.com did not answer a fetch on 2026-10-22.
 
 ---
 
