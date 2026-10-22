@@ -53,6 +53,18 @@ in section 4. One line each -- the full text is further down.
 - **Q129** Seven machine catalogues show "Ping [SERVER ADDRESS]" in English -- leave, or translate?
 - **Q130** Two Spanish typos in reviewed entries -- fix them?
 
+**Raised 2026-10-22, from the Russian rule pages NY4I saved (section 1, "Raised 2026-10-19")**
+
+- **Q97** now has the sponsor's answer (FJL and RI1AN are their own oblasts) -- awaiting your yes.
+- **Q131** Russian DX: count WAE-only entities as multipliers (rule 9: DXCC + WAE list)?
+- **Q132** Russian DX: score Kaliningrad, FJL and RI1AN as European Russia (2, not 3; RI1AN 10 for non-Russians)?
+- **Q133** Russian DX: a /MM contact is 5 points and no multiplier (rule 7.4)?
+- **Q134** Russian DX: add the four oblasts russian.dom lacks (89 subjects in the 2027 rules)?
+- **Q135** Russian DX: logs go through the ua9qcq.ru web form, not logs@rdxc.org -- update?
+- **Q136** Radio YOC (Popov Youth Cup): 1 point per QSO (page) or 3 (D7/TR4W); repeats per round?
+- **Q137** Add the Russian WW Digital Contest (RUS-WW-DIGI, RDRC) as a new contest?
+- **Q138** The URC DX Territories List: which contest did you save it for?
+
 **Awaiting only your yes (section 3)**
 
 - **Q10** Retire unused ContestTypes through `TContestRetired` (MINITEST needs it).
@@ -86,7 +98,16 @@ contests" (NY4I, 2026-10-19), built in e560f51f.
   same `SP`; the hint is new. What does the RDXC sponsor count FJL as --
   Arkhangelsk (`AR`, its administrative oblast), its own multiplier, or no
   oblast? Malyj Vysotskij (`R1MV`) has the same shape.
-  **Answer:**
+  *Sponsor's answer (RDXC 2027 rules, Russian, saved by NY4I to
+  docs/ContestRules/RussianDX, read 2026-10-22):* rule 7.3 -- "Земля
+  Франца Иосифа (RI1FJ*) и российские станции в Антарктиде (RI1AN*)
+  засчитываются за отдельную DXCC территорию и отдельную область для
+  множителя (являются двойным множителем)", points as European Russia;
+  rule 9 agrees. So FJL is its OWN oblast (`FJ`, already in russian.dom as
+  `Fj = FJ,^R1FJ`) and its own DXCC entity; RI1AN is likewise `AN`. Today
+  the pre-fill/hint gives `SP` for R1FJ, and RI1AN calls resolve to CE9
+  (Antarctica) in CTY.DAT so they get no oblast at all. R1MV is not on the
+  page. *Recommended: yes -- build FJ/AN (contest-scoring).* **Answer:**
 
 ### Added with the UA4W Championship's and RSGB 1.8's classes (2026-10-14)
 
@@ -252,6 +273,58 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   (scores as TR4W's QCWA), SOUTH AMERICAN WW (D7: RST + continent, 2/10 --
   not today's WWSA). What are they, and their bands and modes -- or retire?
   **Answer:**
+
+### Raised 2026-10-22 -- from the Russian rule pages NY4I saved
+
+Pages under `docs/ContestRules/`: Russian DX 2027 (SRR, Russian), the Popov
+Youth Cup (UA9QCQ copy, ~2022), the Russian WW Digital Contest (UA9QCQ
+copy, ~2022), and the URC DX Territories List. They answer Q97 (above);
+none bears on Q70 or Q123-Q127. RussianDigital is NOT RF-CUP-DIG (a
+different event), so Q123 still needs the SRR digital cup's own rules.
+
+- **Q131** Russian DX: rule 9 counts "территорий (список DXCC + список
+  множителей WAE) плюс число областей". TR4W (and D7) count DXCC only, so
+  the WAE-only entities (IT9, GM/Shetland, JW/Bear Is., 4U1VIC, TA1) are not
+  multipliers. *Recommended: follow the 2027 rules.* **Answer:**
+
+- **Q132** Russian DX points: rule 7.3 scores Kaliningrad (UA2F), FJL and
+  RI1AN "как за Европейскую Россию". TR4W gives a European Russian station
+  3 for UA2/R1FJ (rule: 2), a UA2 station 3 for UA (rule: 2), and reads
+  RI1AN as CE9 / South America -- a non-Russian gets 5/3/2 by continent
+  (rule: 10), a European Russian 5 (rule: 2). *Recommended: follow the
+  rules.* **Answer:**
+
+- **Q133** Russian DX: rule 7.4 -- a /MM contact is worth 5 points and is not
+  a multiplier. TR4W has no /MM rule. *Recommended: add it.* **Answer:**
+
+- **Q134** Russian DX: the 2027 appendix lists 89 subjects (60 European, 29
+  Asian), including ДНР, ЛНР, Херсонская and Запорожская. russian.dom has 85
+  besides FJ/AN -- four short. The page gives no codes (it points to
+  rdxc.org/info). Add them, with the codes from rdxc.org? **Answer:**
+
+- **Q135** Russian DX: rule 11.5 -- logs only through the web form at
+  ua9qcq.ru/submit_log.php; questions to rdxc@srr.ru or mail@rdxc.org. The
+  class says logs@rdxc.org. Update the address TR4W shows? **Answer:**
+
+- **Q136** Radio YOC (the Popov Youth Cup; this page is the UA9QCQ ~2022 copy,
+  80/40/20 m, 4 x 60 min -- not newer than the QRZ.RU 2026 text behind the
+  40/20 m ruling): (a) the page says 1 point per QSO; TR4W and D7 give 3.
+  (b) the text says the exchange is your age + serial, but its Cabrillo
+  examples show previous-received number + serial (what TR4W does). (c) a
+  repeat is allowed in another round (TR4W only separates by band). Which
+  of these should TR4W follow? **Answer:**
+
+- **Q137** The Russian WW Digital Contest (RDRC, `CONTEST: RUS-WW-DIGI`) is
+  not in TR4W or D7: first full weekend of October 12:00-11:59 UTC; 160-10 m
+  (no WARC); RTTY45 and BPSK63; RST + oblast (Russia) or RST + serial;
+  points by country/continent and band; DXCC + oblast multipliers per mode
+  and band. Add it as a new contest (by its id -- the enum is frozen)?
+  **Answer:**
+
+- **Q138** The URC DX Territories List (unicomradio.com; 1,156 rows of
+  prefix, territory and a 3-letter code) is used by no TR4W contest, D7 or
+  Q98 row, and its 3-letter codes cannot be compared with ukraine.dom's
+  two-letter keys. Which contest did you save it for? **Answer:**
 
 ---
 
