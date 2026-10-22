@@ -1,0 +1,56 @@
+var lon = parseFloat(document.getElementsByName('new_long')[0].value);
+var lat = parseFloat(document.getElementsByName('new_lat')[0].value);
+
+var osmUrl = ' http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+//var osmUrl = 'https://osmap.{s}.tile.mapcdn.net/en/map/v1/{z}/{x}/{y}.png',
+	osmTiles = new L.TileLayer(osmUrl, {maxZoom: 22, minZoom:3}),
+	map = new L.Map('mapWrap', 
+	{attributionControl: false, 
+	zoomControl: true, 
+	layers: [osmTiles], 
+	maxBounds:[[-85,-180],[85,180]],
+	maxBoundsViscosity:1.0,
+	center: new L.LatLng(lat,lon), zoom: 14 });
+
+var myAttrControl = L.control.attribution().addTo(map);
+myAttrControl.setPrefix('<a href="https://leafletjs.com/">Leaflet</a>');
+
+const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+	maxZoom:22,
+	minZoom:3,
+    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(map);
+
+var grids=L.maidenhead({color : 'rgba(55, 155, 222, 1)'}).addTo(map);
+
+L.control.scale().addTo(map);
+
+
+marker=L.marker([lat,lon], {keyboard:false, draggable:true})
+	.addTo(map);
+			
+var c = new L.Control.Coordinates().addTo(map);
+map.on('click', function(e) {
+	c.setCoordinates(e);
+	marker.setLatLng(e.latlng);
+	var coordinates={latlng:e.latlng};
+	c.setGrid(grids.getLocator(coordinates.latlng.lng,coordinates.latlng.lat));
+	document.getElementsByName('new_long')[0].value=coordinates.latlng.lng.toFixed(6).toString();
+	document.getElementsByName('new_lat')[0].value=coordinates.latlng.lat.toFixed(6).toString();
+	document.getElementsByName('new_gridloc')[0].value=grids.getLoc8(coordinates.latlng.lng,coordinates.latlng.lat).substring(0,8);
+});
+
+marker.on('drag',function(){
+	var coordinates={latlng:this.getLatLng()};
+	c.setCoordinates(coordinates);
+	c.setGrid(grids.getLocator(coordinates.latlng.lng,coordinates.latlng.lat));
+});
+
+marker.on('dragend',function(){
+	var coordinates={latlng:this.getLatLng()};
+	c.setCoordinates(coordinates);
+	c.setGrid(grids.getLocator(coordinates.latlng.lng,coordinates.latlng.lat));
+	document.getElementsByName('new_long')[0].value=coordinates.latlng.lng.toFixed(6).toString();
+	document.getElementsByName('new_lat')[0].value=coordinates.latlng.lat.toFixed(6).toString();
+	document.getElementsByName('new_gridloc')[0].value=grids.getLoc8(coordinates.latlng.lng,coordinates.latlng.lat).substring(0,8);
+});
