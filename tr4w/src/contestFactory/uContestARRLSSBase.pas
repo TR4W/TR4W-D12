@@ -242,7 +242,8 @@ begin
    Result := '';
    if aQso.QTHString <> 'DX' then
       begin
-      Result := EmitADIFField('ARRL_SECT', string(aQso.QTHString));
+      (* Only a section ADIF's enumeration has (ADIFSectionOf). *)
+      Result := EmitADIFField('ARRL_SECT', ADIFSectionOf(aQso));
       end;
 end;
 

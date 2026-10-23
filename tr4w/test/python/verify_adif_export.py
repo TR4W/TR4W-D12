@@ -313,6 +313,23 @@ def cross_check(log_records, adif_records):
         elif ext == "FT4":
             expected_mode = "MFSK"
             expected_submode = "FT4"
+        elif ext in ("DATA", "DATA-R", "DATA-FM"):
+            # NY4I, 2026-10-23: generic data exports as RTTY (issue 457).
+            expected_mode = "RTTY"
+            expected_submode = None
+        elif ext in ("CW-R", "RTTY-R", "FM-N", "AM-N", "PSK-R", "WFM"):
+            expected_mode = {"CW-R": "CW", "RTTY-R": "RTTY", "FM-N": "FM",
+                             "AM-N": "AM", "PSK-R": "PSK", "WFM": "FM"}[ext]
+            expected_submode = None
+        elif ext == "PSK63":
+            expected_mode = "PSK"
+            expected_submode = "PSK63"
+        elif ext == "JS8":
+            expected_mode = "MFSK"
+            expected_submode = "JS8"
+        elif ext in ("C4FM", "D-STAR"):
+            expected_mode = "DIGITALVOICE"
+            expected_submode = "C4FM" if ext == "C4FM" else "DSTAR"
         else:
             expected_mode = ext
             expected_submode = None

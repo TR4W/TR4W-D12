@@ -178,7 +178,11 @@ end;
 
 function TContestWWDigi.EmitADIFContestFields(const aQso: ContestExchange): string;
 begin
-   Result := EmitADIFField('GRIDSQUARE', string(aQso.QTHString));
+   Result := '';
+   if IsADIFGridSquare(string(aQso.QTHString)) then
+      begin
+      Result := EmitADIFField('GRIDSQUARE', string(aQso.QTHString));
+      end;
 end;
 
 function TContestWWDigi.GetDisplayName: string;

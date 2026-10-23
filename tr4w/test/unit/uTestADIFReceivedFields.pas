@@ -83,7 +83,7 @@ uses
 const
    (* The tags the generic block used to write unconditionally. *)
    EXCHANGE_TAGS: array[0..11] of string = (
-      'AGE', 'CHECK', 'FOC_NUM', 'NAME', 'PRECEDENCE', 'QTH', 'RST_RCVD',
+      'AGE', 'CHECK', 'APP_TR4W_FOC_NUM', 'NAME', 'PRECEDENCE', 'QTH', 'RST_RCVD',
       'RST_SENT', 'RX_PWR', 'SRX', 'STX', 'TEN_TEN');
 
 (* A QSO with EVERY field of the exchange filled, for aContest. *)
@@ -376,7 +376,8 @@ var
 begin
    BeginTest('Test_TheFOCMarathonNumberGoesToFOCNum');
    text := EmitADIFRecord(FullQso(ContestHandleOf(FOCMARATHON)), nil);
-   CheckTrue(Pos('<FOC_NUM:3>100 ', text) > 0, 'FOC Marathon: FOC_NUM: ' + text);
+   CheckTrue(Pos('<APP_TR4W_FOC_NUM:3>100 ', text) > 0, 'FOC Marathon: APP_TR4W_FOC_NUM: ' + text);
+   CheckFalse(HasTag(text, 'FOC_NUM'), 'FOC Marathon: not the non-ADIF FOC_NUM: ' + text);
    CheckFalse(HasTag(text, 'RX_PWR'), 'FOC Marathon: not RX_PWR: ' + text);
 end;
 
@@ -425,6 +426,25 @@ begin
    CheckFalse(HasTag(dxText, 'RX_PWR'), 'DX entrant: no power: ' + dxText);
    CheckTrue(HasTag(dxText, 'QTH'), 'DX entrant: the state or province: ' + dxText);
    CheckTrue(HasTag(dxText, 'SRX'), 'DX entrant: the serial: ' + dxText);
+
+   (* RX_PWR IS AN ADIF NUMBER: ARRL DX's 'K' and 'KW' are words and are left
+     out (they are in SRX_STRING). 2026-10-23, from the ADIF validator. *)
+   qso.Power := 'KW';
+   us := NewContestLike(ContestIdentity(ARRLDXCW), PinStation(psUS, ARRLDXCW));
+   try
+      usText := EmitADIFRecord(qso, us);
+   finally
+      us.Free;
+      end;
+   CheckFalse(HasTag(usText, 'RX_PWR'), 'a power of KW is not written: ' + usText);
+   qso.Power := '1500';
+   us := NewContestLike(ContestIdentity(ARRLDXCW), PinStation(psUS, ARRLDXCW));
+   try
+      usText := EmitADIFRecord(qso, us);
+   finally
+      us.Free;
+      end;
+   CheckTrue(Pos('<RX_PWR:4>1500', usText) > 0, 'a numeric power is: ' + usText);
 end;
 
 procedure TADIFReceivedFieldsTests.Test_ALoggedQSOIsJudgedByItsOwnContest;

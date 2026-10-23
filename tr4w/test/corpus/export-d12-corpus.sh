@@ -252,4 +252,14 @@ if [ "$bad_exit" -gt 0 ]; then
    exit 1
 fi
 
+# THE ADIF IT WROTE, AGAINST AN INDEPENDENT VALIDATOR (2026-10-23). The byte
+# comparison above proves the file is the one expected; this proves it is valid
+# ADIF, which a frozen D7 reference cannot -- the refs themselves carry
+# <MODE:4>DATA, a mode the standard does not have. A full run only: a one-set
+# smoke test has not exported the others.
+if [ -z "$ONLY" ]; then
+   echo
+   bash tr4w/test/adif-validate/validate-adif-outputs.sh corpus || sweep_rc=1
+fi
+
 exit $sweep_rc

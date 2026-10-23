@@ -2667,8 +2667,13 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange;
         ( not ContestDomesticQTHIsNeverAGrid( contestRules ) )
      then
         begin
-        Result := Result + EmitADIFField( 'GRIDSQUARE',
-           string( rec.DomesticQTH ) )
+        (* ONLY A WELL-FORMED LOCATOR (IsADIFGridSquare): LooksLikeAGrid is
+          the entry window's test and passes shapes ADIF does not. *)
+        if IsADIFGridSquare( string( rec.DomesticQTH ) ) then
+           begin
+           Result := Result + EmitADIFField( 'GRIDSQUARE',
+              string( rec.DomesticQTH ) );
+           end;
         end
      else
         begin
@@ -2687,27 +2692,25 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange;
      begin
      if zoneList = zmzCQZones then
         begin
-        Result := Result + EmitADIFField( 'CQZ', sysutils.Format( '%.2d',
-           [ rec.Zone ] ) )
+        (* A zone ADIF has: CQ 1..40, ITU 1..90. A zone of 0 -- unknown -- was
+          written as <CQZ:2>00 and is now left out (ADIFZoneField). *)
+        Result := Result + ADIFZoneField( 'CQZ', rec.Zone, 40 )
         end
      else
        if zoneList = zmzITUZones then
           begin
-          Result := Result + EmitADIFField( 'ITUZ',
-             sysutils.Format( '%.2d', [ rec.Zone ] ) )
+          Result := Result + ADIFZoneField( 'ITUZ', rec.Zone, 90 )
           end
        else
          if (not ContestHasZoneMultiplier( contestRules )) and ExchangeInformation.Zone then
             begin
             if CTY.ctyZoneMode = CQZoneMode then
                begin
-               Result := Result + EmitADIFField( 'CQZ',
-                  sysutils.Format( '%.2d', [ rec.Zone ] ) )
+               Result := Result + ADIFZoneField( 'CQZ', rec.Zone, 40 )
                end
             else
                begin
-               Result := Result + EmitADIFField( 'ITUZ',
-                  sysutils.Format( '%.2d', [ rec.Zone ] ) );
+               Result := Result + ADIFZoneField( 'ITUZ', rec.Zone, 90 );
                end;
             end;
      end;
@@ -2735,6 +2738,7 @@ procedure ExportToADIF;
     rowSent: AnsiString;
     rowFacts: TQsoMyFacts;
     notRecorded: integer;
+    dataModeNote: string;
     dtReportTime: TDateTime;
     adifStr: string;
     extName: AnsiString;
@@ -2761,13 +2765,6 @@ procedure ExportToADIF;
      FileClose(tReportFileWrite);
      Exit;
      end;
-
-  // Banner lines (pre-header, kept for compatibility with older ADIF
-  // consumers that expect the "Created by TR4W..." comment).
-  sWriteFileFromString( tReportFileWrite, 'ADIF File'#13#10 );
-  sWriteFileFromString( tReportFileWrite, 'Created by TR4W version ' +
-     TR4W_CURRENTVERSION + '-D12' + ' on ' +
-     FormatDateTime( 'mmm-dd-yyyy hh:mm:ss', dtReportTime ) + #13#10 );
 
   // Read all "good" QSOs from the log into an in-memory array.
   SetLength( records, 0 );
@@ -2797,6 +2794,25 @@ procedure ExportToADIF;
            Inc( notRecorded );
            end;
         end;
+     end;
+
+  (* Banner lines (pre-header, kept for compatibility with older ADIF
+    consumers that expect the "Created by TR4W..." comment). Written HERE,
+    after the records are read, because the free-text header also says how
+    many generic DATA-mode QSOs were exported as RTTY (NY4I, 2026-10-23) --
+    counted over the array already in memory, so the log is walked once. The
+    line is absent when there are none, and holds no '<' (ADI header text). *)
+  sWriteFileFromString( tReportFileWrite, 'ADIF File'#13#10 );
+  sWriteFileFromString( tReportFileWrite, 'Created by TR4W version ' +
+     TR4W_CURRENTVERSION + '-D12' + ' on ' +
+     FormatDateTime( 'mmm-dd-yyyy hh:mm:ss', dtReportTime ) + #13#10 );
+  dataModeNote := uADIF.ADIFGenericDataModeNote(
+     uADIF.CountGenericDataModeQSOs( records ) );
+  if dataModeNote <> '' then
+     begin
+     (* AnsiString(...) is deliberate: the note is ASCII by construction (a
+       count and fixed English), so the narrowing is bounded. *)
+     sWriteFileFromString( tReportFileWrite, AnsiString( dataModeNote + #13#10 ) );
      end;
 
   (* RULING A'S LOG LINE, ONCE PER EXPORT: a row written before schema 3

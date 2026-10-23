@@ -741,6 +741,20 @@ comparisons).
 - Run the corpus, **read the result, then commit**. Never chain the corpus run and `git commit` in
   one shell block.
 
+**2b. ADIF validator** (2026-10-23) — `tr4w/test/adif-validate/validate-adif-outputs.sh` runs
+K1MU's independent ADIF validator (`tools/adifvalidator/`, **vendored** -- see its `VENDORED.md` for
+origin, commit and the local patches) over the ADIF the corpus, the ADIF round trip and the contest
+matrix write, and each of those three scripts calls it as its last step. A byte-diff against a frozen
+reference proves "same as before"; it cannot prove "valid ADIF" -- the D7 refs themselves carry
+`<MODE:4>DATA`, which the standard does not have. **Any `Compliance error` fails the run;
+`Consistency error` findings (zones, state-versus-DXCC) are counted and reported, never a verdict.**
+A finding is excused only by an exact line in `tr4w/test/adif-validate/known-findings-<source>.txt`
+(synthetic matrix input only), and a pin that matches nothing fails -- the corpus's `known.*.diff` rule.
+It fails closed: no python, no validator, zero files, or a validator crash each exit 1. It is
+vendored because the gate must run on a clean clone with no network; it is Python with tabs, so
+leave its indentation alone and record any patch in `VENDORED.md`. `uTestADIF` also pins every tag
+TR4W writes against ADIF 3.1.6's field list (`ADIF_SPEC_VERSION` in `uADIF`).
+
 **3. Integration / bench** — `tr4w/test/integration/` drives real serial radios (or `tools/radiosim`)
 via `run-bench.ps1`. `tr4w/test/bench/` holds the **measuring instruments** — programs that ask a
 real radio a question and print what it says: `bench_icombands` (which bands does it have; read-only),

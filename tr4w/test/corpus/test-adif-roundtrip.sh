@@ -161,6 +161,11 @@ strip_tags() {
 
 pass=0; fail=0; skip=0; known=0
 
+# Where each round trip's exported ADIF is kept for the validator.
+RT_KEEP="$REPO_ROOT/build-out/adif-validate/roundtrip"
+rm -rf "$RT_KEEP"
+mkdir -p "$RT_KEEP"
+
 # ONE ROUND TRIP: a fresh contest from $d's .CFG, $3 imported into it, the
 # log exported, and the records compared with $3. $1 is the label printed;
 # $2 the set's directory (its .CFG, its pin); $3 the ADIF file to import.
@@ -194,6 +199,10 @@ roundtrip_one() {
       printf "  FAIL  %-28s the export wrote no ADIF\n" "$name"
       fail=$((fail+1)); return
    fi
+
+   # KEEP WHAT WAS WRITTEN for the validator (validate-adif-outputs.sh): this
+   # loop deletes its work files, so the tail of the run is too late.
+   cp "$out" "$RT_KEEP/$(printf '%s' "$name" | tr -c 'A-Za-z0-9_\n' '_').adi" 2>/dev/null
 
    drop=$(ignored_tags_for "$name")
    note=""
@@ -229,8 +238,11 @@ roundtrip_one() {
    records_only "$input" | strip_tags "$drop" > "$WORK.ref.txt"
 
    pin="$d/known.adi.diff"
-   # The normaliser this set's view went through, for the pinned lines.
-   view_filter() { strip_tags "$drop"; }
+   # The normaliser this set's view went through, for the pinned lines. The
+   # view is records_only -- record lines, each ending <EOR> -- so a pinned
+   # HEADER line (the generic-DATA note, 2026-10-23) is outside it and is
+   # dropped here too; the export oracle still matches it.
+   view_filter() { grep -i '<eor>' | strip_tags "$drop"; }
 
    if diff -q "$WORK.cand.txt" "$WORK.ref.txt" >/dev/null 2>&1; then
       if [ -f "$pin" ]; then
@@ -305,4 +317,11 @@ rm -f "$WORK".* "$WORK-my.adi" "$EXE"; corpus_remove_new_logs
 
 echo
 echo "=== $pass passed, $fail failed, $known known-divergence, $skip skipped ==="
+
+# THE ADIF EACH TRIP EXPORTED, AGAINST AN INDEPENDENT VALIDATOR (2026-10-23).
+# A full run only: a single-set run has not exported the others.
+if [ -z "$ONLY" ]; then
+   echo
+   bash "$REPO_ROOT/tr4w/test/adif-validate/validate-adif-outputs.sh" roundtrip || fail=$((fail+1))
+fi
 [ "$fail" -eq 0 ] || exit 1

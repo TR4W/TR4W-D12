@@ -110,6 +110,11 @@ corpus_stage_set(){
 # no reason is exactly the noise a real scoring change would hide in. Only
 # those three header fields are touched; no QSO line is.
 #
+# AND THE DECLARED ADIF VERSION, 2026-10-23: <ADIF_VER> is the spec TR4W
+# declares (3.1.6; it said 3.1.0, which was untrue once MY_ARRL_SECT, a 3.1.3
+# field, was written). It moves when the program adopts a newer spec, so it is
+# masked like the version above. golden_diff.py masks it for the D7 refs.
+#
 # IT LIVES HERE BECAUSE TWO SCRIPTS NEED IT AND A SECOND COPY WOULD DRIFT.
 # freeze-rescore-baseline.sh writes the frozen bytes through it and
 # test-contest-factory.sh compares fresh output through it, so if the two ever
@@ -120,6 +125,7 @@ corpus_norm_artifact(){
            s/<PROGRAMVERSION:[0-9]+>TR4W v\.[^ <\r]*/<PROGRAMVERSION>TR4W v.VERSION/;
            s/^(CREATED-BY: TR4W v\.)[^ \r]*/\1VERSION/;
            s/(<CREATED_TIMESTAMP:15>).*/\1TIME/;
+           s/<ADIF_VER:[0-9]+>[^\r]*/<ADIF_VER>VERSION/;
            s/<APP_TR4W_ID:32>[0-9a-f]*/<APP_TR4W_ID:32>ID/g' "$1" 2>/dev/null
 }
 

@@ -445,7 +445,12 @@ function TContestPOTA.EmitADIFExchangeFields(const aMy: TMyStationExchange;
 begin
    Result := EmitADIFField('MY_SIG', 'POTA');
    Result := Result + EmitADIFField('MY_SIG_INFO', aMy.MyPark);
-   Result := Result + EmitADIFField('MY_POTA_REF', aMy.MyPark);
+   (* MY_POTA_REF IS A POTA REFERENCE (IsValidPOTAPark): a park that is not
+     one stays in MY_SIG_INFO, which takes any text, and is not written here. *)
+   if IsValidPOTAPark(aMy.MyPark) then
+      begin
+      Result := Result + EmitADIFField('MY_POTA_REF', aMy.MyPark);
+      end;
    Result := Result + MyStationLocationFields(aMy.MyPark);
    Result := Result + EmitADIFField('SRX_STRING',
       FormatADIFReceivedExchange(aQso, aExchangeCarriesRST));
@@ -462,7 +467,8 @@ begin
       end
    else
       begin
-      if LooksLikeGridSquare(string(aQso.ExchString)) then
+      if LooksLikeGridSquare(string(aQso.ExchString)) and
+         IsADIFGridSquare(string(aQso.ExchString)) then
          begin
          Result := Result + EmitADIFField('GRIDSQUARE', string(aQso.ExchString));
          end;

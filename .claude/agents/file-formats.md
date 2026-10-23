@@ -73,6 +73,23 @@ diffable, and a guess about its type is not good enough for a regression input.
 
 ## Cross-checks you have
 
+**An independent ADIF validator (2026-10-23).** `tr4w/test/adif-validate/validate-adif-outputs.sh`
+runs K1MU's validator, vendored in `tools/adifvalidator/` (`VENDORED.md` holds origin, commit and
+every local patch -- it is Python with tabs; do not reindent), over the ADIF the corpus, the ADIF
+round trip and the contest matrix produce. A `Compliance error` fails; `Consistency error`
+findings are counted only. The corpus cannot do this job: the D7 references are themselves not
+valid ADIF. `ADIF_SPEC_VERSION` (`uADIF`) is 3.1.6, and `uTestADIF` pins every tag we write against
+that version's field list. A tag we write that the spec lacks is a finding to fix in the exporter, not
+something to patch into the validator (`DOK` became `DARC_DOK` and `FOC_NUM` became
+`APP_TR4W_FOC_NUM` on 2026-10-23; the import still reads the old names). **The export writes a
+field only when its value has ADIF's shape** (`uADIF.IsADIFNumber`, `IsADIFGridSquare`,
+`IsADIFIOTARef`, `ADIFZoneInRange`, `ADIFSectionOf`, `uARRLSections.IsADIFARRLSection`,
+`uPOTAReference.IsValidPOTAPark`): an invalid one is omitted, never "fixed up", and the Cabrillo is
+untouched. The validator gate's `known-findings-<source>.txt` pins excuse only synthetic matrix
+input, and a pin that matches nothing fails. The generic DATA modes export as
+`MODE RTTY` (NY4I, 2026-10-23) with `APP_TR4W_MODE_ASSUMED=Y` per record and a header line with the
+count; import restores `eData` from the flag.
+
 `tr4w/test/logdump/` dumps binary `.dat` logs to JSONL through the canonical
 `ContestExchange`; `tr4w/test/python/verify_adif_export.py` cross-checks ADIF
 export against it. The unit tests cover ADIF, Cabrillo, callsign routines,

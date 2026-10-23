@@ -104,7 +104,15 @@ type
       // the row's my_* columns (MyFactsFromADIF), never today's settings.
       tAdifMY_GRIDSQUARE, tAdifMY_STATE, tAdifMY_CNTY, tAdifMY_ARRL_SECT,
       tAdifMY_SIG, tAdifMY_SIG_INFO, tAdifMY_POTA_REF, tAdifMY_IOTA,
-      tAdifMY_DXCC, tAdifMY_CQ_ZONE, tAdifMY_ITU_ZONE);
+      tAdifMY_DXCC, tAdifMY_CQ_ZONE, tAdifMY_ITU_ZONE,
+      (* A generic DATA mode exported as RTTY (NY4I, 2026-10-23). *)
+      tAdifAPP_TR4W_MODE_ASSUMED,
+      (* THE NAMES THE EXPORT WRITES SINCE 2026-10-23, because ADIF 3.1.6 has
+        no DOK or FOC_NUM: DARC_DOK is the standard WAG field and
+        APP_TR4W_FOC_NUM the FOC Marathon's membership number. The old names
+        (tAdifDOK, tAdifFOC_NUM) are still READ, so files TR4W wrote before
+        then import. *)
+      tAdifDARC_DOK, tAdifAPP_TR4W_FOC_NUM);
 
 // =========================================================================
 // Lexer
@@ -142,6 +150,50 @@ function GetADIFMode(sMode: string): ModeAndExtendedModeType;
 // (Mode, ExtendedMode) pair.  Returns NoMode for unrecognized input.
 // Case-insensitive.
 function GetADIFSubMode(sSubMode: string): ModeAndExtendedModeType;
+
+(* THE ADIF (MODE, SUBMODE) A TR4W EXTENDED MODE EXPORTS AS.  One row per
+  ExtendedModeType, so a new enum value fails to compile until it has a
+  row.  The names are ADIF 3.1.6's Mode enumeration and its submodes, NOT
+  VC.ExtendedModeStringArray's, which are TR4W's own spellings (DATA, CW-R,
+  D-STAR ...) and are not ADIF modes.  SubMode is '' when none is written. *)
+function ADIFModeForExtMode(aExtMode: ExtendedModeType): string;
+function ADIFSubModeForExtMode(aExtMode: ExtendedModeType): string;
+
+(* THE GENERIC DATA MODES (eData, eData_R, eData_FM) are exported as MODE
+  RTTY, so the file says so: each such record carries
+  APP_TR4W_MODE_ASSUMED=Y (import restores eData), and the free-text header
+  before the first tag carries one line with the count.  ADIF 3.1.6 section
+  IV.A.3 allows arbitrary text in the header provided it holds no '<'.
+  ADIFGenericDataModeNote answers '' for a count of 0. *)
+(* WRITE A FIELD ONLY WHEN ITS VALUE IS ONE ADIF 3.1.6 ALLOWS (NY4I,
+  2026-10-23: the ADIF specification governs). Each of these answers whether a
+  value has the field's shape; the emitter writes the field when it does and
+  OMITS it when it does not -- EmitADIFField already omits an empty value, so
+  the call sites pass '' for "not valid". None of them touches the Cabrillo.
+
+  IsADIFNumber        the ADIF Number type: optional '-', digits, optional
+                      '.' and digits ('100', '1.5'; not 'K', 'KW').
+  IsADIFGridSquare    a Maidenhead locator of 2, 4, 6 or 8 characters:
+                      [A-R]{2}, [0-9]{2}, [A-X]{2}, [0-9]{2}, case-folded.
+  IsADIFIOTARef       two continent letters, '-', three digits ('EU-005').
+  ADIFZoneInRange     a CQ zone is 1..40 and an ITU zone 1..90; 0 (unknown)
+                      and out-of-range are not zones.
+  ADIFSectionOf       the QSO's ARRL section as ADIF's enumeration spells it,
+                      or '': the logged QTH when it is one, else the domestic
+                      table's resolved key (an alias such as MD is MDC). DX,
+                      empty and anything else answer ''. *)
+function IsADIFNumber(const aText: string): Boolean;
+function IsADIFGridSquare(const aText: string): Boolean;
+function IsADIFIOTARef(const aText: string): Boolean;
+function ADIFZoneInRange(aZone, aMaxZone: Integer): Boolean;
+(* The <CQZ:2>05 / <ITUZ:2>07 field, two digits as the export always wrote
+  them, or '' for a zone outside 1..aMaxZone. *)
+function ADIFZoneField(const aTag: string; aZone, aMaxZone: Integer): string;
+function ADIFSectionOf(const aQso: ContestExchange): string;
+
+function IsGenericDataMode(aExtMode: ExtendedModeType): Boolean;
+function CountGenericDataModeQSOs(const records: TContestExchangeArray): Integer;
+function ADIFGenericDataModeNote(aCount: Integer): string;
 
 // Parse an ADIF QSO_DATE string ("YYYYMMDD", 8 chars).  Returns True on
 // success and sets qsoTime.qtYear/qtMonth/qtDay.  Returns False (without
@@ -336,6 +388,12 @@ type
 // separation).  Empty value returns ''.
 function EmitADIFField(const name, value: string): string;
 
+const
+   (* THE ADIF SPECIFICATION THIS PROGRAM WRITES.  NY4I, 2026-10-23: it said
+     3.1.0, which was untrue once MY_ARRL_SECT (added in 3.1.3) was written.
+     uTestADIF pins every tag TR4W emits against this version's field list. *)
+   ADIF_SPEC_VERSION = '3.1.6';
+
 // Build the ADIF header (ADIF_VER, CREATED_TIMESTAMP, PROGRAMID,
 // PROGRAMVERSION, <EOH>).  Pure -- caller can prepend a banner line
 // if desired.
@@ -498,7 +556,11 @@ uses
       answers; this unit only caches the first. *)
    uContestRegistry,
    (* ADIFDXCCOfCTYEntity -- a CTY entity's ADIF DXCC code. *)
-   uDXCCEntities;
+   uDXCCEntities,
+   (* IsADIFARRLSection -- the one list of ADIF's section codes. *)
+   uARRLSections,
+   (* IsValidPOTAPark -- the one shape test for a park reference. *)
+   uPOTAReference;
 
 var
    logger : TLogLogger;
@@ -848,8 +910,10 @@ end;
 
 function GetADIFSubMode(sSubMode: string): ModeAndExtendedModeType;
 begin
+   Result.msmExtendedMode := eNoMode;
    case AnsiIndexText(AnsiUpperCase(sSubMode),
-                      ['FT4', 'JS8', 'USB', 'LSB', 'PSK31']) of
+                      ['FT4', 'JS8', 'USB', 'LSB', 'PSK31',
+                       'PSK63', 'C4FM', 'DSTAR']) of
       0:                              // FT4
          begin
          Result.msmMode := Digital;
@@ -875,9 +939,241 @@ begin
          Result.msmMode := Digital;
          Result.msmExtendedMode := ePSK31;
          end;
+      5:                              // PSK63 (a PSK submode)
+         begin
+         Result.msmMode := Digital;
+         Result.msmExtendedMode := ePSK63;
+         end;
+      6:                              // C4FM (a DIGITALVOICE submode)
+         begin
+         Result.msmMode := Phone;
+         Result.msmExtendedMode := eC4FM;
+         end;
+      7:                              // DSTAR (a DIGITALVOICE submode)
+         begin
+         Result.msmMode := Phone;
+         Result.msmExtendedMode := eDStar;
+         end;
    else
       Result.msmMode := NoMode;
    end;
+end;
+
+type
+   TADIFModePair = record
+      Mode    : string;
+      SubMode : string;
+   end;
+
+const
+   (* The one mapping.  eNoMode never reaches it (the caller handles a QSO
+     with no extended mode from its base Mode).
+
+     THE GENERIC DATA MODES (eData, eData_R, eData_FM) EXPORT AS RTTY.
+     NY4I, 2026-10-23: RTTY, as issue 457 -- ADIF has no generic data mode.
+     That is the same rule a Digital QSO with no ExtMode already follows.
+     Changing the ruling is these three rows.
+
+     The reverse (-R) and narrow variants lose only the sideband/width,
+     which ADIF has no mode for; the import still reads TR4W's old spellings
+     (GetADIFMode) so files written before 2026-10-23 load. *)
+   ADIFModePairs : array[ExtendedModeType] of TADIFModePair =
+      ((Mode: '';             SubMode: ''),        // eNoMode
+       (Mode: 'CW';           SubMode: ''),        // eCW
+       (Mode: 'RTTY';         SubMode: ''),        // eRTTY
+       (Mode: 'FT8';          SubMode: ''),        // eFT8
+       (Mode: 'MFSK';         SubMode: 'FT4'),     // eFT4
+       (Mode: 'JT65';         SubMode: ''),        // eJT65
+       (Mode: 'PSK';          SubMode: 'PSK31'),   // ePSK31
+       (Mode: 'PSK';          SubMode: 'PSK63'),   // ePSK63
+       (Mode: 'SSB';          SubMode: ''),        // eSSB
+       (Mode: 'FM';           SubMode: ''),        // eFM
+       (Mode: 'AM';           SubMode: ''),        // eAM
+       (Mode: 'MFSK';         SubMode: ''),        // eMFSK
+       (Mode: 'MFSK';         SubMode: 'JS8'),     // eJS8
+       (Mode: 'SSB';          SubMode: 'USB'),     // eUSB
+       (Mode: 'SSB';          SubMode: 'LSB'),     // eLSB
+       (Mode: 'RTTY';         SubMode: ''),        // eData
+       (Mode: 'CW';           SubMode: ''),        // eCW_R
+       (Mode: 'RTTY';         SubMode: ''),        // eData_R
+       (Mode: 'RTTY';         SubMode: ''),        // eRTTY_R
+       (Mode: 'FM';           SubMode: ''),        // eFM_N
+       (Mode: 'AM';           SubMode: ''),        // eAM_N
+       (Mode: 'RTTY';         SubMode: ''),        // eData_FM
+       (Mode: 'DIGITALVOICE'; SubMode: 'C4FM'),    // eC4FM
+       (Mode: 'DIGITALVOICE'; SubMode: 'DSTAR'),   // eDStar
+       (Mode: 'PSK';          SubMode: ''),        // ePSK_R
+       (Mode: 'FM';           SubMode: ''));       // eWFM
+
+function ADIFModeForExtMode(aExtMode: ExtendedModeType): string;
+begin
+   Result := ADIFModePairs[aExtMode].Mode;
+end;
+
+function ADIFSubModeForExtMode(aExtMode: ExtendedModeType): string;
+begin
+   Result := ADIFModePairs[aExtMode].SubMode;
+end;
+
+(* RANGE COMPARISONS ON Char, not `in [...]`: the string is a UnicodeString and
+  a set of AnsiChar would be the size mismatch this tree has paid for. *)
+function IsADIFDigit(aCh: Char): Boolean;
+begin
+   Result := (aCh >= '0') and (aCh <= '9');
+end;
+
+function IsADIFNumber(const aText: string): Boolean;
+var
+   i      : Integer;
+   digits : Integer;
+   dot    : Boolean;
+begin
+   Result := False;
+   i := 1;
+   if (Length(aText) > 0) and (aText[1] = '-') then
+      begin
+      Inc(i);
+      end;
+   digits := 0;
+   dot := False;
+   while i <= Length(aText) do
+      begin
+      if IsADIFDigit(aText[i]) then
+         begin
+         Inc(digits);
+         end
+      else if (aText[i] = '.') and (not dot) and (digits > 0) then
+         begin
+         dot := True;
+         digits := 0;
+         end
+      else
+         begin
+         Exit;
+         end;
+      Inc(i);
+      end;
+   Result := digits > 0;
+end;
+
+function IsADIFGridSquare(const aText: string): Boolean;
+var
+   g : string;
+begin
+   Result := False;
+   g := UpperCase(aText);
+   if not (Length(g) in [2, 4, 6, 8]) then
+      begin
+      Exit;
+      end;
+   if not ((g[1] >= 'A') and (g[1] <= 'R') and (g[2] >= 'A') and (g[2] <= 'R')) then
+      begin
+      Exit;
+      end;
+   if Length(g) >= 4 then
+      begin
+      if not (IsADIFDigit(g[3]) and IsADIFDigit(g[4])) then
+         begin
+         Exit;
+         end;
+      end;
+   if Length(g) >= 6 then
+      begin
+      if not ((g[5] >= 'A') and (g[5] <= 'X') and (g[6] >= 'A') and (g[6] <= 'X')) then
+         begin
+         Exit;
+         end;
+      end;
+   if Length(g) = 8 then
+      begin
+      if not (IsADIFDigit(g[7]) and IsADIFDigit(g[8])) then
+         begin
+         Exit;
+         end;
+      end;
+   Result := True;
+end;
+
+function IsADIFIOTARef(const aText: string): Boolean;
+var
+   v : string;
+   i : Integer;
+begin
+   Result := False;
+   v := UpperCase(aText);
+   if (Length(v) <> 6) or (v[3] <> '-') then
+      begin
+      Exit;
+      end;
+   if not ((v[1] >= 'A') and (v[1] <= 'Z') and (v[2] >= 'A') and (v[2] <= 'Z')) then
+      begin
+      Exit;
+      end;
+   for i := 4 to 6 do
+      begin
+      if not IsADIFDigit(v[i]) then
+         begin
+         Exit;
+         end;
+      end;
+   Result := True;
+end;
+
+function ADIFZoneInRange(aZone, aMaxZone: Integer): Boolean;
+begin
+   Result := (aZone >= 1) and (aZone <= aMaxZone);
+end;
+
+function ADIFZoneField(const aTag: string; aZone, aMaxZone: Integer): string;
+begin
+   Result := '';
+   if ADIFZoneInRange(aZone, aMaxZone) then
+      begin
+      Result := EmitADIFField(aTag, Format('%.2d', [aZone]));
+      end;
+end;
+
+function ADIFSectionOf(const aQso: ContestExchange): string;
+begin
+   Result := UpperCase(Trim(string(aQso.QTHString)));
+   if IsADIFARRLSection(Result) then
+      begin
+      Exit;
+      end;
+   Result := UpperCase(Trim(string(aQso.DomesticQTH)));
+   if not IsADIFARRLSection(Result) then
+      begin
+      Result := '';
+      end;
+end;
+
+function IsGenericDataMode(aExtMode: ExtendedModeType): Boolean;
+begin
+   Result := aExtMode in [eData, eData_R, eData_FM];
+end;
+
+function CountGenericDataModeQSOs(const records: TContestExchangeArray): Integer;
+var
+   i : Integer;
+begin
+   Result := 0;
+   for i := 0 to High(records) do
+      begin
+      if IsGenericDataMode(records[i].ExtMode) then
+         begin
+         Inc(Result);
+         end;
+      end;
+end;
+
+function ADIFGenericDataModeNote(aCount: Integer): string;
+begin
+   Result := '';
+   if aCount > 0 then
+      begin
+      Result := IntToStr(aCount) + ' QSO(s) logged in an unspecified DATA ' +
+                'mode are exported as MODE RTTY.';
+      end;
 end;
 
 function ADIFDateStringToQSOTime(sDate: string;
@@ -1069,7 +1365,7 @@ end;
 const
    // Order MUST match the TADIF_Fields enum declaration.  Adding a field
    // requires updating BOTH this array AND the enum.
-   ADIF_FIELD_NAMES : array[0..59] of string = (
+   ADIF_FIELD_NAMES : array[0..62] of string = (
       // ADIF spec field name is `CQZ` (no underscore).  The original
       // import lookup had `CQ_Z` which never matched real-world ADIF
       // exports -- the tAdifCQ_Z handler was effectively dead until
@@ -1092,7 +1388,9 @@ const
       // Our station (schema 3) -- order must match the enum
       'MY_GRIDSQUARE', 'MY_STATE', 'MY_CNTY', 'MY_ARRL_SECT',
       'MY_SIG', 'MY_SIG_INFO', 'MY_POTA_REF', 'MY_IOTA',
-      'MY_DXCC', 'MY_CQ_ZONE', 'MY_ITU_ZONE');
+      'MY_DXCC', 'MY_CQ_ZONE', 'MY_ITU_ZONE',
+      'APP_TR4W_MODE_ASSUMED',
+      'DARC_DOK', 'APP_TR4W_FOC_NUM');
 
 // Index of aName in ADIF_FIELD_NAMES, or -1.  Case-insensitive, ASCII-only.
 //
@@ -1167,10 +1465,12 @@ var
    saveDecimalSeparator : Char;
    haveRoverCall        : Boolean;
    contestFromId        : Boolean;
+   modeAssumed          : Boolean;
 begin
    Result := True;
    InitADIFRecordTemps(temps);
    haveRoverCall := False;
+   modeAssumed := False;
    contestFromId := False;
 
    for i := 0 to High(fields) do
@@ -1224,7 +1524,7 @@ begin
                logger.Info('[ApplyADIFFields] CNTY=%s but no destination field',
                            [fieldValue]);
 
-            tAdifFOC_NUM:
+            tAdifFOC_NUM, tAdifAPP_TR4W_FOC_NUM:
                temps.FOC_Num := fieldValue;
 
             tAdifGRIDSQUARE:
@@ -1233,7 +1533,7 @@ begin
             tAdifIOTA:
                temps.IOTA := fieldValue;
 
-            tAdifDOK:
+            tAdifDOK, tAdifDARC_DOK:
                temps.DOK := fieldValue;
 
             (* OUR STATION, AS THE RECORD STATES IT -- MyFactsFromADIF. *)
@@ -1423,6 +1723,10 @@ begin
                   exch.ceXQSO := True;
                   end;
 
+            (* Applied after the loop: the MODE may follow it. *)
+            tAdifAPP_TR4W_MODE_ASSUMED:
+               modeAssumed := UpperCase(Trim(fieldValue)) = 'Y';
+
          else
             // Unknown / unhandled field.  Silently accept anything
             // prefixed with APP_ (third-party extensions).  Log others.
@@ -1441,6 +1745,15 @@ begin
                         [fieldName, fieldValue, e.Message]);
             end;
       end;
+      end;
+
+   (* THE EXPORT'S DEFAULTED MODE, UNDONE.  A generic data QSO is written as
+     MODE RTTY plus APP_TR4W_MODE_ASSUMED=Y; the flag on a real RTTY QSO of
+     any other program never occurs.  DATA-R and DATA-FM collapse to eData:
+     the three differ only in a sideband/FM detail the log never used. *)
+   if modeAssumed and (exch.ExtMode = eRTTY) then
+      begin
+      exch.ExtMode := eData;
       end;
 
    (* ONE ID, TWO CONTESTS: TOLD APART BY THE MODE, ONCE THE WHOLE RECORD IS
@@ -1756,7 +2069,7 @@ end;
 function EmitADIFHeader(const programVersion: string): string;
 begin
    Result :=
-      EmitADIFField('ADIF_VER', '3.1.0') + #13#10 +
+      EmitADIFField('ADIF_VER', ADIF_SPEC_VERSION) + #13#10 +
       EmitADIFField('CREATED_TIMESTAMP',
                     FormatDateTime('yyyymmdd hhnnss', Now)) + #13#10 +
       EmitADIFField('PROGRAMID', 'TR4W') + #13#10 +
@@ -1798,29 +2111,12 @@ begin
          modeStr := ADIFModeString[rec.Mode];
          end;
       end
-   else if rec.ExtMode = eUSB then
-      begin
-      modeStr    := 'SSB';
-      subModeStr := 'USB';
-      end
-   else if rec.ExtMode = eLSB then
-      begin
-      modeStr    := 'SSB';
-      subModeStr := 'LSB';
-      end
-   else if rec.ExtMode = ePSK31 then
-      begin
-      modeStr    := 'PSK';
-      subModeStr := ExtendedModeStringArray[rec.ExtMode];
-      end
-   else if rec.ExtMode = eFT4 then
-      begin
-      modeStr    := 'MFSK';
-      subModeStr := ExtendedModeStringArray[rec.ExtMode];
-      end
    else
       begin
-      modeStr := ExtendedModeStringArray[rec.ExtMode];
+      (* Never ExtendedModeStringArray: those are TR4W's names (DATA, CW-R,
+        D-STAR ...), not ADIF modes. *)
+      modeStr    := ADIFModeForExtMode(rec.ExtMode);
+      subModeStr := ADIFSubModeForExtMode(rec.ExtMode);
       end;
 end;
 
@@ -2100,6 +2396,14 @@ begin
       begin
       Result := Result + EmitADIFField('APP_TR4W_CLAIMEDQSO', '0');
       end;
+
+   (* THE TRUTH ABOUT A DEFAULTED MODE.  MODE says RTTY for a generic data
+     QSO because ADIF has no data mode; this says it was not really RTTY, so
+     TR4W's own import restores the data mode (NY4I, 2026-10-23). *)
+   if IsGenericDataMode(rec.ExtMode) then
+      begin
+      Result := Result + EmitADIFField('APP_TR4W_MODE_ASSUMED', 'Y');
+      end;
 end;
 
 // ---------------------------------------------------------------------------
@@ -2266,13 +2570,31 @@ begin
       Add('STATION_CALLSIGN', string(aFacts.Call));
       end;
 
-   Add('MY_GRIDSQUARE', string(aFacts.Grid));
+   (* EACH ONLY IF ADIF 3.1.6 ALLOWS ITS VALUE (see IsADIFNumber's note): a
+     malformed grid or IOTA reference, a DX or alias "section" and a zone
+     outside 1..40 / 1..90 are left out rather than written invalid. *)
+   if IsADIFGridSquare(string(aFacts.Grid)) then
+      begin
+      Add('MY_GRIDSQUARE', string(aFacts.Grid));
+      end;
    Add('MY_STATE', string(aFacts.State));
    Add('MY_CNTY', string(aFacts.County));
-   Add('MY_ARRL_SECT', string(aFacts.Section));
-   Add('MY_IOTA', string(aFacts.Iota));
-   Add('MY_CQ_ZONE', ZoneValue(aFacts.CQZone));
-   Add('MY_ITU_ZONE', ZoneValue(aFacts.ITUZone));
+   if IsADIFARRLSection(string(aFacts.Section)) then
+      begin
+      Add('MY_ARRL_SECT', UpperCase(string(aFacts.Section)));
+      end;
+   if IsADIFIOTARef(string(aFacts.Iota)) then
+      begin
+      Add('MY_IOTA', string(aFacts.Iota));
+      end;
+   if ADIFZoneInRange(aFacts.CQZone, 40) then
+      begin
+      Add('MY_CQ_ZONE', ZoneValue(aFacts.CQZone));
+      end;
+   if ADIFZoneInRange(aFacts.ITUZone, 90) then
+      begin
+      Add('MY_ITU_ZONE', ZoneValue(aFacts.ITUZone));
+      end;
 
    dxcc := 0;
    if Length(aFacts.Country) > 0 then
@@ -2288,7 +2610,11 @@ begin
       begin
       Add('MY_SIG', 'POTA');
       Add('MY_SIG_INFO', string(aFacts.Park));
-      Add('MY_POTA_REF', string(aFacts.Park));
+      (* MY_POTA_REF only for a well-formed reference (IsValidPOTAPark). *)
+      if IsValidPOTAPark(string(aFacts.Park)) then
+         begin
+         Add('MY_POTA_REF', string(aFacts.Park));
+         end;
       end;
 end;
 

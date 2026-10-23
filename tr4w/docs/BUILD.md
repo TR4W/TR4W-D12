@@ -262,6 +262,7 @@ Clones `HEAD` to a temp directory, builds with **no arguments**, asserts the art
 | Unit tests, checked    | `.\tr4w\build\Build-Tests.ps1 -Checked -Run`      | `corruption reports: 0`, unfreed <= ceiling |
 | Lints only             | `.\tr4w\build\Run-Lints.ps1`                      | `N lint(s) passed`, and N grows           |
 | Corpus oracle          | `bash tr4w/test/corpus/export-d12-corpus.sh`      | `0 failed`, and every export exits 0      |
+| ADIF validity          | `bash tr4w/test/adif-validate/validate-adif-outputs.sh` (the corpus, round-trip and matrix scripts call it themselves) | `0 compliance errors`; consistency findings are reported only |
 | All three platforms    | `gh workflow run release.yml`                     | the run is green; no release is created   |
 | Clone-and-build        | `.\tr4w\build\Test-FreshClone.ps1 -WithInstaller` | `FRESH CLONE OK`                          |
 | App binary             | —                                                 | `tr4w\target\tr4w.exe`                    |

@@ -1,0 +1,5 @@
+# Excused compliance findings of the ADIF round trip's exports, one per line:
+#     <file>|<count>|<message>
+# exactly as validate-adif-outputs.sh prints them under "NOT PINNED". A "#"
+# comment above each block says WHY it is excused. A pin that matches no
+# finding FAILS (stale). Nothing is pinned today.

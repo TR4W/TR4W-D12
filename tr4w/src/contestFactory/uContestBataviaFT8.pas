@@ -181,7 +181,11 @@ end;
 
 function TContestBataviaFT8.EmitADIFContestFields(const aQso: ContestExchange): string;
 begin
-   Result := EmitADIFField('GRIDSQUARE', string(aQso.QTHString));
+   Result := '';
+   if IsADIFGridSquare(string(aQso.QTHString)) then
+      begin
+      Result := EmitADIFField('GRIDSQUARE', string(aQso.QTHString));
+      end;
 end;
 
 function TContestBataviaFT8.GetDisplayName: string;

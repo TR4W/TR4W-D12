@@ -1,0 +1,15 @@
+# Excused compliance findings of the contest matrix's ADIF, one per line:
+#     <file>|<count>|<message>
+# exactly as validate-adif-outputs.sh prints them under "NOT PINNED". A "#"
+# comment above each block says WHY it is excused. A pin that matches no
+# finding FAILS (stale). Pin only SYNTHETIC INPUT -- a value the matrix's one
+# fixed QSO table feeds every contest and no live entry could produce.
+
+# WAG: the matrix feeds W1AW 'CT', K4ABC 'FL', VE3ABC 'ON' and a KH6 'HI' as
+# the received exchange, and WAG writes it as DARC_DOK. DARC_DOK is an ADIF
+# Enumeration (DARC's DOK list); these are not DOKs, and in a real WAG a
+# non-DL station sends a serial, not a DOK. Synthetic input (2026-10-23).
+WAG.adi|15|The tag 'DARC_DOK' has an invalid value 'CT' - not in the enumerations
+WAG.adi|3|The tag 'DARC_DOK' has an invalid value 'FL' - not in the enumerations
+WAG.adi|3|The tag 'DARC_DOK' has an invalid value 'HI' - not in the enumerations
+WAG.adi|3|The tag 'DARC_DOK' has an invalid value 'ON' - not in the enumerations

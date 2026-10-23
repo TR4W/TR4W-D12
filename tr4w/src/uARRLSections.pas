@@ -44,12 +44,35 @@ interface
   (KS, OH) answers itself. *)
 function StateFromARRLSection(const aSection: string): string;
 
+(* IS aCode ONE OF THE CODES OF ADIF 3.1.6's ARRL SECTION ENUMERATION (the
+  ARRL_SECT / MY_ARRL_SECT values)? Case-folded. The enumeration lists the
+  sections ADIF has deleted too (GTA, MAR, NT, NWT, ON), because an old log
+  may carry them, and so does this. 'DX' is not one, and neither is an alias
+  such as 'MD' (the section is MDC): the export writes a section only when it
+  passes this. *)
+function IsADIFARRLSection(const aCode: string): boolean;
+
 implementation
 
 uses
    SysUtils;
 
 const
+   (* ADIF 3.1.6, III.B.2, in the spec's order. The program's own section
+     table, target\dom\arrlsect.dom, has no key that is missing from this
+     list; the five this list has and the dom lacks are the deleted GTA,
+     MAR, NT, NWT and ON. *)
+   ADIF_ARRL_SECTIONS: array[0 .. 89] of string =
+      ('AL', 'AK', 'AB', 'AR', 'AZ', 'BC', 'CO', 'CT', 'DE', 'EB', 'EMA',
+      'ENY', 'EPA', 'EWA', 'GA', 'GH', 'GTA', 'ID', 'IL', 'IN', 'IA', 'KS',
+      'KY', 'LAX', 'LA', 'ME', 'MB', 'MAR', 'MDC', 'MI', 'MN', 'MS', 'MO',
+      'MT', 'NE', 'NV', 'NB', 'NH', 'NM', 'NLI', 'NL', 'NC', 'ND', 'NTX',
+      'NFL', 'NNJ', 'NNY', 'NT', 'NWT', 'NS', 'OH', 'OK', 'ON', 'ONE',
+      'ONN', 'ONS', 'ORG', 'OR', 'PAC', 'PE', 'PR', 'QC', 'RI', 'SV',
+      'SDG', 'SF', 'SJV', 'SB', 'SCV', 'SK', 'SC', 'SD', 'STX', 'SFL',
+      'SNJ', 'TN', 'TER', 'VI', 'UT', 'VT', 'VA', 'WCF', 'WTX', 'WV',
+      'WMA', 'WNY', 'WPA', 'WWA', 'WI', 'WY');
+
    (* THE SECTIONS WHOSE STATE IS NOT THEIR OWN NAME, in PostUnit's order --
       the index is what the case below reads, so the order is load-bearing. *)
    NAMED_SECTIONS: array[0 .. 32] of string =
@@ -164,6 +187,23 @@ begin
       end;
 
    Result := '';
+end;
+
+function IsADIFARRLSection(const aCode: string): boolean;
+var
+   code: string;
+   i: integer;
+begin
+   Result := False;
+   code := UpperCase(aCode);
+   for i := Low(ADIF_ARRL_SECTIONS) to High(ADIF_ARRL_SECTIONS) do
+      begin
+      if ADIF_ARRL_SECTIONS[i] = code then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
 end;
 
 function StateFromARRLSection(const aSection: string): string;

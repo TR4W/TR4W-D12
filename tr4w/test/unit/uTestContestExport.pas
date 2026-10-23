@@ -508,7 +508,7 @@ begin
 
    qso := EmptyQso(WAG);
    qso.QTHString := 'B01';
-   CheckEquals('<DOK:3>B01 ', ContestIdentity(WAG).EmitADIFContestFields(qso), 'WAG DOK');
+   CheckEquals('<DARC_DOK:3>B01 ', ContestIdentity(WAG).EmitADIFContestFields(qso), 'WAG DARC_DOK');
 
    qso := EmptyQso(ARRLDIGI);
    qso.QTHString := 'FN31';
@@ -527,7 +527,7 @@ begin
    CheckFalse(ContestIdentity(GENERALQSO).WritesADIFContestId, 'General QSO writes no CONTEST_ID');
    CheckTrue(ContestIdentity(CQWWCW).WritesADIFContestId, 'CQ WW writes one');
    CheckTrue(ContestIdentity(ARRL10).WritesADIFContestId, 'a classless contest writes one');
-   CheckEquals('FOC_NUM', ContestIdentity(FOCMARATHON).ADIFPowerTag, 'FOC: the number is FOC_NUM');
+   CheckEquals('APP_TR4W_FOC_NUM', ContestIdentity(FOCMARATHON).ADIFPowerTag, 'FOC: the number is APP_TR4W_FOC_NUM');
    CheckEquals('RX_PWR', ContestIdentity(ARRLDXCW).ADIFPowerTag, 'ARRL DX: a power');
    CheckEquals('RX_PWR', ContestIdentity(ARRL10).ADIFPowerTag, 'classless: a power');
 end;
@@ -621,7 +621,7 @@ procedure TContestExportTests.Test_RoundTripThroughTodaysImport;
       CheckEquals(Ord(declared.Check), Ord(Pos('<CHECK:', text) > 0), what + ': CHECK only if declared');
       CheckEquals(Ord(declared.Name), Ord(Pos('<NAME:', text) > 0), what + ': NAME only if declared');
       CheckEquals(Ord(declared.Power),
-                  Ord((Pos('<RX_PWR:', text) > 0) or (Pos('<FOC_NUM:', text) > 0)),
+                  Ord((Pos('<RX_PWR:', text) > 0) or (Pos('<APP_TR4W_FOC_NUM:', text) > 0)),
                   what + ': the power only if declared');
       CheckTrue(Pos('<TEN_TEN:', text) = 0, what + ': no 10-10 number, none declared and none set');
       CheckTrue(Pos('<AGE:', text) = 0, what + ': no age, none declared and none set');
@@ -695,7 +695,7 @@ procedure TContestExportTests.Test_RoundTripThroughTodaysImport;
          island is in no standard tag. *)
       if aContest = WAG then
          begin
-         CheckTrue(Pos('<DOK:3>' + aQTH, text) > 0, what + ': DOK is exported');
+         CheckTrue(Pos('<DARC_DOK:3>' + aQTH, text) > 0, what + ': DARC_DOK is exported');
          CheckEquals(aQTH, temps.DOK, what + ': DOK is captured');
          CheckEquals(aQTH, string(back.QTHString), what + ': DOK is the QTH again');
          end;

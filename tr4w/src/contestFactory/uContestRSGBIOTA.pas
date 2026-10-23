@@ -187,7 +187,11 @@ end;
 (* THE WORKED ISLAND, as its corrected reference. *)
 function TContestRSGBIOTA.EmitADIFContestFields(const aQso: ContestExchange): string;
 begin
-   Result := EmitADIFField('IOTA', string(aQso.DomesticQTH));
+   Result := '';
+   if IsADIFIOTARef(string(aQso.DomesticQTH)) then
+      begin
+      Result := EmitADIFField('IOTA', string(aQso.DomesticQTH));
+      end;
 end;
 
 function TContestRSGBIOTA.GetDisplayName: string;

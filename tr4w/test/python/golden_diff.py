@@ -13,7 +13,7 @@ records must be reproduced exactly by the D12 build.  So we run two gates:
 
   2. FIDELITY (D7 == D12): do the log-derived records match byte-for-byte?
        ADIF     - whole file minus the volatile header bits (version +
-                  export timestamp).  ADIF_VER / PROGRAMID stay as signal.
+                  export timestamp, ADIF_VER).  PROGRAMID stays as signal.
        Cabrillo - ONLY the QSO: / X-QSO: records.  The header is entrant /
                   settings metadata (CATEGORY-*, OPERATORS, ADDRESS, ...) that
                   legitimately varies between exports, so it is ignored
@@ -72,6 +72,12 @@ def normalize_adif(text):
                   "<CREATED_TIMESTAMP:N>" + PLACEHOLDER, text)
     text = re.sub(r"<PROGRAMVERSION:\d+>[^\r\n]*",
                   "<PROGRAMVERSION:N>" + PLACEHOLDER, text)
+    # ADIF_VER is the spec version TR4W DECLARES (3.1.6 since 2026-10-23, NY4I:
+    # 3.1.0 was untrue once MY_ARRL_SECT, a 3.1.3 field, was written). The D7
+    # refs say 3.1.0 and are never regenerated, so the declaration is masked
+    # like the other header lines; every record is still compared exactly.
+    text = re.sub(r"<ADIF_VER:\d+>[^\r\n]*",
+                  "<ADIF_VER:N>" + PLACEHOLDER, text)
     return text
 
 

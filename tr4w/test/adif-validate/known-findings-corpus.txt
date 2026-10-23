@@ -1,0 +1,6 @@
+# Excused compliance findings of the golden corpus's own ADIF, one per line:
+#     <file>|<count>|<message>
+# exactly as validate-adif-outputs.sh prints them under "NOT PINNED". A "#"
+# comment above each block says WHY it is excused. A pin that matches no
+# finding FAILS (stale). Nothing is pinned today: every finding in a set's
+# export is a defect to fix in the exporter.

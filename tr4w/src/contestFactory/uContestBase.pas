@@ -5372,8 +5372,12 @@ begin
 
    (* WHICH TAG THE POWER FIELD GOES TO IS THE CONTEST'S: it holds the FOC
       membership number for the FOC Marathon, a power for everything else. *)
+   (* RX_PWR IS AN ADIF NUMBER (watts). A power that is a word -- ARRL DX's
+      'K' and 'KW' -- is not one and is left out: it is already in SRX_STRING.
+      The membership number is the contest's own and is not so restricted. *)
    if declared.Power and
-      (aQso.Power <> '') then
+      (aQso.Power <> '') and
+      ((ADIFPowerTag <> 'RX_PWR') or IsADIFNumber(string(aQso.Power))) then
       begin
       Result := Result + EmitADIFField(ADIFPowerTag, string(aQso.Power));
       end;

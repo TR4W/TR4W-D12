@@ -183,7 +183,9 @@ end;
 
 function TContestWAG.EmitADIFContestFields(const aQso: ContestExchange): string;
 begin
-   Result := EmitADIFField('DOK', string(aQso.QTHString));
+   (* DARC_DOK, ADIF's own field. It was written as 'DOK' until 2026-10-23,
+     which is no ADIF field; the import still reads both. *)
+   Result := EmitADIFField('DARC_DOK', string(aQso.QTHString));
 end;
 
 function TContestWAG.GetDisplayName: string;

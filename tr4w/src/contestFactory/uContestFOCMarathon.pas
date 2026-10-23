@@ -168,10 +168,12 @@ begin
    Result := Format('%-3d %-7s', [aQso.RSTSent, aMy.MyFOCNumber]);
 end;
 
-(* Power holds his membership number, and ADIF's tag for that is FOC_NUM. *)
+(* Power holds his membership number. ADIF 3.1.6 has no field for it, so the
+   tag is our own application-defined one (it was 'FOC_NUM' until 2026-10-23;
+   the import still reads that). *)
 function TContestFOCMarathon.GetADIFPowerTag: string;
 begin
-   Result := 'FOC_NUM';
+   Result := 'APP_TR4W_FOC_NUM';
 end;
 
 function TContestFOCMarathon.GetDisplayName: string;

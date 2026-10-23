@@ -338,7 +338,11 @@ end;
    a QTH it did not already recognise as a grid. *)
 function TContestARRLDigi.EmitADIFContestFields(const aQso: ContestExchange): string;
 begin
-   Result := EmitADIFField('GRIDSQUARE', string(aQso.QTHString));
+   Result := '';
+   if IsADIFGridSquare(string(aQso.QTHString)) then
+      begin
+      Result := EmitADIFField('GRIDSQUARE', string(aQso.QTHString));
+      end;
 end;
 
 (* THE GRID IS THE EXCHANGE AND THE DOMESTIC QTH. *)

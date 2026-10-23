@@ -76,6 +76,14 @@ type
       procedure Test_GetADIFMode_UnknownMode;
       procedure Test_GetADIFSubMode_KnownSubModes;
       procedure Test_GetADIFSubMode_UnknownSubMode;
+      procedure Test_ExtMode_ExportsAnADIFMode_Exhaustive;
+      procedure Test_ExtMode_ExportPairs;
+      procedure Test_EmittedTagsAreADIF316Fields;
+      procedure Test_ValueShapes;
+      procedure Test_InvalidValuesAreNotWritten;
+      procedure Test_OldDOKAndFOCNamesStillImport;
+      procedure Test_GenericDataMode_SaysSoInTheFile;
+      procedure Test_OldTR4WSpellingsStillImport;
       procedure Test_ADIFDateStringToQSOTime_Valid;
       procedure Test_ADIFDateStringToQSOTime_InvalidLength;
       procedure Test_ADIFDateStringToQSOTime_NonNumeric;
@@ -101,7 +109,10 @@ implementation
 uses
    SysUtils,
    VC,
-   uADIF;
+   uADIF,
+   uARRLSections,
+   uContestRegistry,
+   uQsoMyFacts;
 
 // ---------------------------------------------------------------------------
 // Basic shapes
@@ -805,6 +816,438 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
+// ExtendedModeType -> ADIF (MODE, SUBMODE).  NY4I's bench, 2026-10-23: a
+// validator rejected <MODE:4>DATA, TR4W's own name for a radio data mode.
+// ---------------------------------------------------------------------------
+
+const
+   (* ADIF 3.1.6 Mode enumeration (adif.org.uk/316), the MODE column. *)
+   ADIFModeEnumeration =
+      ',AM,ARDOP,ATV,CHIP,CLO,CONTESTI,CW,DIGITALVOICE,DOMINO,DYNAMIC,FAX,FM,' +
+      'FSK441,FSK,FT8,HELL,ISCAT,JT4,JT6M,JT9,JT44,JT65,MFSK,MSK144,MTONE,MT63,' +
+      'OLIVIA,OPERA,PAC,PAX,PKT,PSK,PSK2K,Q15,QRA64,ROS,RTTY,RTTYM,SSB,SSTV,' +
+      'T10,THOR,THRB,TOR,V4,VOI,WINMOR,WSPR,';
+
+   (* The same enumeration's submodes of the modes TR4W can write, as
+     MODE:SUBMODE pairs. *)
+   ADIFSubModeEnumeration =
+      ',SSB:USB,SSB:LSB,PSK:PSK31,PSK:PSK63,MFSK:FT4,MFSK:JS8,' +
+      'DIGITALVOICE:C4FM,DIGITALVOICE:DSTAR,';
+
+procedure TADIFHelperTests.Test_ExtMode_ExportsAnADIFMode_Exhaustive;
+var
+   e : ExtendedModeType;
+   m : string;
+   s : string;
+begin
+   BeginTest('Test_ExtMode_ExportsAnADIFMode_Exhaustive');
+   for e := Succ(Low(ExtendedModeType)) to High(ExtendedModeType) do
+      begin
+      m := ADIFModeForExtMode(e);
+      s := ADIFSubModeForExtMode(e);
+      CheckTrue(Pos(',' + m + ',', ADIFModeEnumeration) > 0,
+                ExtendedModeStringArray[e] + ' exports MODE "' + m +
+                '", which is not in the ADIF enumeration');
+      if s <> '' then
+         begin
+         CheckTrue(Pos(',' + m + ':' + s + ',', ADIFSubModeEnumeration) > 0,
+                   ExtendedModeStringArray[e] + ' exports SUBMODE "' + s +
+                   '", which does not belong to MODE ' + m);
+         end;
+      end;
+end;
+
+procedure TADIFHelperTests.Test_ExtMode_ExportPairs;
+
+   procedure Pair(aExt: ExtendedModeType; const aMode, aSub: string);
+   begin
+      CheckEquals(aMode, ADIFModeForExtMode(aExt),
+                  ExtendedModeStringArray[aExt] + ' MODE');
+      CheckEquals(aSub, ADIFSubModeForExtMode(aExt),
+                  ExtendedModeStringArray[aExt] + ' SUBMODE');
+   end;
+
+begin
+   BeginTest('Test_ExtMode_ExportPairs');
+   Pair(eCW,     'CW',   '');
+   Pair(eCW_R,   'CW',   '');
+   Pair(eRTTY,   'RTTY', '');
+   Pair(eRTTY_R, 'RTTY', '');
+   // NY4I, 2026-10-23: generic data is RTTY, as issue 457.
+   Pair(eData,    'RTTY', '');
+   Pair(eData_R,  'RTTY', '');
+   Pair(eData_FM, 'RTTY', '');
+   Pair(eFM,     'FM',   '');
+   Pair(eFM_N,   'FM',   '');
+   Pair(eWFM,    'FM',   '');
+   Pair(eAM,     'AM',   '');
+   Pair(eAM_N,   'AM',   '');
+   Pair(ePSK31,  'PSK',  'PSK31');
+   Pair(ePSK63,  'PSK',  'PSK63');
+   Pair(ePSK_R,  'PSK',  '');
+   Pair(eJS8,    'MFSK', 'JS8');
+   Pair(eFT4,    'MFSK', 'FT4');
+   Pair(eMFSK,   'MFSK', '');
+   Pair(eFT8,    'FT8',  '');
+   Pair(eJT65,   'JT65', '');
+   Pair(eC4FM,   'DIGITALVOICE', 'C4FM');
+   Pair(eDStar,  'DIGITALVOICE', 'DSTAR');
+   Pair(eUSB,    'SSB',  'USB');
+   Pair(eLSB,    'SSB',  'LSB');
+   Pair(eSSB,    'SSB',  '');
+end;
+
+(* EVERY NON-APP_ TAG TR4W CAN WRITE IS A FIELD OF THE ADIF VERSION IT DECLARES.
+  NY4I, 2026-10-23: the header said 3.1.0 while MY_ARRL_SECT, a 3.1.3 field, was
+  being written. The list below is the QSO Field table of ADIF 3.1.6
+  (adif.org.uk/316); APP_ fields are application-defined and always legal, so
+  they are not tested. *)
+const
+   ADIF316QSOFields =
+      ',ADDRESS,ADDRESS_INTL,AGE,ALTITUDE,ANT_AZ,ANT_EL,ANT_PATH,ARRL_SECT,' +
+      'AWARD_GRANTED,AWARD_SUBMITTED,A_INDEX,BAND,BAND_RX,CALL,CHECK,CLASS,' +
+      'CLUBLOG_QSO_UPLOAD_DATE,CLUBLOG_QSO_UPLOAD_STATUS,CNTY,CNTY_ALT,' +
+      'COMMENT,COMMENT_INTL,CONT,CONTACTED_OP,CONTEST_ID,COUNTRY,' +
+      'COUNTRY_INTL,CQZ,CREDIT_GRANTED,CREDIT_SUBMITTED,DARC_DOK,' +
+      'DCL_QSLRDATE,DCL_QSLSDATE,DCL_QSL_RCVD,DCL_QSL_SENT,DISTANCE,DXCC,' +
+      'EMAIL,EQSL_AG,EQSL_QSLRDATE,EQSL_QSLSDATE,EQSL_QSL_RCVD,' +
+      'EQSL_QSL_SENT,EQ_CALL,FISTS,FISTS_CC,FORCE_INIT,FREQ,FREQ_RX,' +
+      'GRIDSQUARE,GRIDSQUARE_EXT,GUEST_OP,HAMLOGEU_QSO_UPLOAD_DATE,' +
+      'HAMLOGEU_QSO_UPLOAD_STATUS,HAMQTH_QSO_UPLOAD_DATE,' +
+      'HAMQTH_QSO_UPLOAD_STATUS,HRDLOG_QSO_UPLOAD_DATE,' +
+      'HRDLOG_QSO_UPLOAD_STATUS,IOTA,IOTA_ISLAND_ID,ITUZ,K_INDEX,LAT,LON,' +
+      'LOTW_QSLRDATE,LOTW_QSLSDATE,LOTW_QSL_RCVD,LOTW_QSL_SENT,MAX_BURSTS,' +
+      'MODE,MORSE_KEY_INFO,MORSE_KEY_TYPE,MS_SHOWER,MY_ALTITUDE,MY_ANTENNA,' +
+      'MY_ANTENNA_INTL,MY_ARRL_SECT,MY_CITY,MY_CITY_INTL,MY_CNTY,' +
+      'MY_CNTY_ALT,MY_COUNTRY,MY_COUNTRY_INTL,MY_CQ_ZONE,MY_DARC_DOK,' +
+      'MY_DXCC,MY_FISTS,MY_GRIDSQUARE,MY_GRIDSQUARE_EXT,MY_IOTA,' +
+      'MY_IOTA_ISLAND_ID,MY_ITU_ZONE,MY_LAT,MY_LON,MY_MORSE_KEY_INFO,' +
+      'MY_MORSE_KEY_TYPE,MY_NAME,MY_NAME_INTL,MY_POSTAL_CODE,' +
+      'MY_POSTAL_CODE_INTL,MY_POTA_REF,MY_RIG,MY_RIG_INTL,MY_SIG,' +
+      'MY_SIG_INFO,MY_SIG_INFO_INTL,MY_SIG_INTL,MY_SOTA_REF,MY_STATE,' +
+      'MY_STREET,MY_STREET_INTL,MY_USACA_COUNTIES,MY_VUCC_GRIDS,' +
+      'MY_WWFF_REF,NAME,NAME_INTL,NOTES,NOTES_INTL,NR_BURSTS,NR_PINGS,' +
+      'OPERATOR,OWNER_CALLSIGN,PFX,POTA_REF,PRECEDENCE,PROP_MODE,' +
+      'PUBLIC_KEY,QRZCOM_QSO_DOWNLOAD_DATE,QRZCOM_QSO_DOWNLOAD_STATUS,' +
+      'QRZCOM_QSO_UPLOAD_DATE,QRZCOM_QSO_UPLOAD_STATUS,QSLMSG,QSLMSG_INTL,' +
+      'QSLMSG_RCVD,QSLRDATE,QSLSDATE,QSL_RCVD,QSL_RCVD_VIA,QSL_SENT,' +
+      'QSL_SENT_VIA,QSL_VIA,QSO_COMPLETE,QSO_DATE,QSO_DATE_OFF,QSO_RANDOM,' +
+      'QTH,QTH_INTL,REGION,RIG,RIG_INTL,RST_RCVD,RST_SENT,RX_PWR,SAT_MODE,' +
+      'SAT_NAME,SFI,SIG,SIG_INFO,SIG_INFO_INTL,SIG_INTL,SILENT_KEY,SKCC,' +
+      'SOTA_REF,SRX,SRX_STRING,STATE,STATION_CALLSIGN,STX,STX_STRING,' +
+      'SUBMODE,SWL,TEN_TEN,TIME_OFF,TIME_ON,TX_PWR,UKSMG,USACA_COUNTIES,' +
+      'VE_PROV,VUCC_GRIDS,WEB,WWFF_REF,';
+
+   (* Every tag written by EmitADIFRecord, the contests' EmitADIF* methods and
+     the my-station block. One entry per EmitADIFField name, so a new tag is a
+     new entry here AND a field of the spec, or this test fails. *)
+   TR4WEmittedFields =
+      ',CALL,BAND,QSO_DATE,TIME_ON,TIME_OFF,CONTEST_ID,MODE,SUBMODE,FREQ,' +
+      'STATE,OPERATOR,ARRL_SECT,GRIDSQUARE,CLASS,DXCC,CNTY,CQZ,ITUZ,' +
+      'STATION_CALLSIGN,RST_SENT,RST_RCVD,QTH,PRECEDENCE,CHECK,NAME,SRX,STX,' +
+      'TEN_TEN,AGE,SRX_STRING,STX_STRING,RX_PWR,IOTA,SIG,SIG_INFO,POTA_REF,' +
+      'MY_GRIDSQUARE,MY_STATE,MY_CNTY,MY_ARRL_SECT,MY_IOTA,MY_CQ_ZONE,' +
+      'MY_ITU_ZONE,MY_DXCC,MY_SIG,MY_SIG_INFO,MY_POTA_REF,DARC_DOK,';
+   (* DOK and FOC_NUM, which TR4W wrote until 2026-10-23 and ADIF 3.1.6 does
+     not have, are DARC_DOK and the application-defined APP_TR4W_FOC_NUM now
+     (APP_ tags are always legal and are not listed). *)
+
+   (* Header fields, ADIF 3.1.6. *)
+   ADIF316HeaderFields = ',ADIF_VER,CREATED_TIMESTAMP,PROGRAMID,PROGRAMVERSION,USERDEF,';
+
+procedure TADIFHelperTests.Test_EmittedTagsAreADIF316Fields;
+var
+   rest : string;
+   name : string;
+   p    : Integer;
+   hdr  : string;
+begin
+   BeginTest('Test_EmittedTagsAreADIF316Fields');
+   CheckEquals('3.1.6', ADIF_SPEC_VERSION, 'declared spec version');
+   hdr := EmitADIFHeader('x');
+   CheckTrue(Pos('<ADIF_VER:5>3.1.6', hdr) > 0, 'the header declares 3.1.6');
+   CheckTrue(Pos(',ADIF_VER,', ADIF316HeaderFields) > 0, 'header field ADIF_VER');
+   CheckTrue(Pos(',CREATED_TIMESTAMP,', ADIF316HeaderFields) > 0, 'header field');
+   CheckTrue(Pos(',PROGRAMID,', ADIF316HeaderFields) > 0, 'header field');
+   CheckTrue(Pos(',PROGRAMVERSION,', ADIF316HeaderFields) > 0, 'header field');
+
+   rest := Copy(TR4WEmittedFields, 2, Length(TR4WEmittedFields));
+   while rest <> '' do
+      begin
+      p := Pos(',', rest);
+      name := Copy(rest, 1, p - 1);
+      rest := Copy(rest, p + 1, Length(rest));
+      CheckTrue(Pos(',' + name + ',', ADIF316QSOFields) > 0,
+                name + ' is written but is not a field of ADIF 3.1.6');
+      end;
+end;
+
+(* THE SHAPES THE EXPORT CHECKS BEFORE IT WRITES (NY4I, 2026-10-23: the ADIF
+  specification governs). *)
+procedure TADIFHelperTests.Test_ValueShapes;
+begin
+   BeginTest('Test_ValueShapes');
+   CheckTrue(IsADIFNumber('100'), 'number 100');
+   CheckTrue(IsADIFNumber('1.5'), 'number 1.5');
+   CheckTrue(IsADIFNumber('-3'), 'number -3');
+   CheckFalse(IsADIFNumber('K'), 'K is not a number');
+   CheckFalse(IsADIFNumber('KW'), 'KW is not a number');
+   CheckFalse(IsADIFNumber(''), 'empty is not a number');
+   CheckFalse(IsADIFNumber('1.'), '1. is not a number');
+   CheckFalse(IsADIFNumber('1.2.3'), '1.2.3 is not a number');
+
+   CheckTrue(IsADIFGridSquare('FN'), 'grid 2');
+   CheckTrue(IsADIFGridSquare('FN31'), 'grid 4');
+   CheckTrue(IsADIFGridSquare('fn31pr'), 'grid 6, any case');
+   CheckTrue(IsADIFGridSquare('FN31PR12'), 'grid 8');
+   CheckFalse(IsADIFGridSquare('CT'), 'CT is not a grid (C-T: T is past R)');
+   CheckFalse(IsADIFGridSquare('FN3'), 'grid 3 characters');
+   CheckFalse(IsADIFGridSquare('FN31P'), 'grid 5 characters');
+   CheckFalse(IsADIFGridSquare('FN31ZZ'), 'subsquare past X');
+   CheckFalse(IsADIFGridSquare('SS31'), 'S is past R');
+   CheckFalse(IsADIFGridSquare(''), 'empty');
+
+   CheckTrue(IsADIFIOTARef('EU-005'), 'IOTA');
+   CheckFalse(IsADIFIOTARef('CT'), 'CT is not an IOTA');
+   CheckFalse(IsADIFIOTARef('EU005'), 'IOTA without the hyphen');
+   CheckFalse(IsADIFIOTARef('EU-05'), 'IOTA with two digits');
+
+   CheckTrue(ADIFZoneInRange(1, 40), 'CQ zone 1');
+   CheckTrue(ADIFZoneInRange(40, 40), 'CQ zone 40');
+   CheckFalse(ADIFZoneInRange(0, 40), 'zone 0');
+   CheckFalse(ADIFZoneInRange(41, 40), 'CQ zone 41');
+   CheckTrue(ADIFZoneInRange(90, 90), 'ITU zone 90');
+   CheckFalse(ADIFZoneInRange(91, 90), 'ITU zone 91');
+   CheckEquals('', ADIFZoneField('CQZ', 0, 40), 'no CQZ for zone 0');
+   CheckEquals('<CQZ:2>05 ', ADIFZoneField('CQZ', 5, 40), 'CQZ stays two digits');
+   CheckEquals('<ITUZ:2>27 ', ADIFZoneField('ITUZ', 27, 90), 'ITUZ');
+
+   // The 3.1.6 Section enumeration, including the codes added after 2022.
+   CheckTrue(IsADIFARRLSection('GH'), 'GH (2023)');
+   CheckTrue(IsADIFARRLSection('NB'), 'NB (2023)');
+   CheckTrue(IsADIFARRLSection('NS'), 'NS (2023)');
+   CheckTrue(IsADIFARRLSection('PE'), 'PE (2020)');
+   CheckTrue(IsADIFARRLSection('TER'), 'TER (2023)');
+   CheckTrue(IsADIFARRLSection('mdc'), 'MDC, any case');
+   CheckTrue(IsADIFARRLSection('ON'), 'ON: deleted, still in the enumeration');
+   CheckFalse(IsADIFARRLSection('DX'), 'DX is not a section');
+   CheckFalse(IsADIFARRLSection('MD'), 'MD is an alias of MDC');
+   CheckFalse(IsADIFARRLSection('NY'), 'NY is a state, not a section');
+   CheckFalse(IsADIFARRLSection(''), 'empty');
+end;
+
+procedure TADIFHelperTests.Test_InvalidValuesAreNotWritten;
+var
+   qso   : ContestExchange;
+   facts : TQsoMyFacts;
+   text  : string;
+
+   function Q(aContest: ContestType; const aQTH, aKey: string): ContestExchange;
+   begin
+      Result := Default(ContestExchange);
+      Result.ceContest := ContestHandleOf(aContest);
+      Result.QTHString := ShortString(aQTH);
+      Result.DomesticQTH := ShortString(aKey);
+   end;
+
+begin
+   BeginTest('Test_InvalidValuesAreNotWritten');
+
+   // ARRL_SECT: a section ADIF has, or nothing.
+   CheckEquals('', ContestIdentity(ARRLSSCW).EmitADIFContestFields(Q(ARRLSSCW, 'DX', '')),
+               'SS: DX writes no ARRL_SECT');
+   CheckEquals('<ARRL_SECT:3>MDC ',
+               ContestIdentity(ARRLSSCW).EmitADIFContestFields(Q(ARRLSSCW, 'MD', 'Mdc')),
+               'SS: the alias MD is written as its section MDC');
+   CheckEquals('', ContestIdentity(ARRLSSCW).EmitADIFContestFields(Q(ARRLSSCW, 'NY', '')),
+               'SS: NY is no section');
+   qso := Q(ARRLFIELDDAY, 'HI', '');
+   qso.QTH.CountryID := 'KH6';
+   CheckFalse(Pos('<ARRL_SECT', ContestIdentity(ARRLFIELDDAY).EmitADIFContestFields(qso)) > 0,
+              'Field Day: HI is no section');
+   qso := Q(WINTERFIELDDAY, 'FL', '');
+   qso.QTH.CountryID := 'K';
+   CheckFalse(Pos('<ARRL_SECT', ContestIdentity(WINTERFIELDDAY).EmitADIFContestFields(qso)) > 0,
+              'Winter Field Day: FL is no section');
+   qso := Q(WINTERFIELDDAY, 'EPA', 'EPA');
+   qso.QTH.CountryID := 'K';
+   CheckTrue(Pos('<ARRL_SECT:3>EPA', ContestIdentity(WINTERFIELDDAY).EmitADIFContestFields(qso)) > 0,
+             'Winter Field Day: EPA is written');
+
+   // GRIDSQUARE: a well-formed locator, or nothing.
+   CheckEquals('', ContestIdentity(WWDIGI).EmitADIFContestFields(Q(WWDIGI, 'CT', '')),
+               'WW Digi: CT is no grid');
+   CheckEquals('', ContestIdentity(ARRLDIGI).EmitADIFContestFields(Q(ARRLDIGI, 'CT', '')),
+               'ARRL Digi: CT is no grid');
+   CheckEquals('', ContestIdentity(BATAVIA_FT8).EmitADIFContestFields(Q(BATAVIA_FT8, 'CT', '')),
+               'Batavia: CT is no grid');
+   CheckEquals('<GRIDSQUARE:4>FN31 ',
+               ContestIdentity(WWDIGI).EmitADIFContestFields(Q(WWDIGI, 'FN31', '')),
+               'WW Digi: FN31 is written');
+
+   // IOTA: a reference, or nothing.
+   CheckEquals('', ContestIdentity(IOTA).EmitADIFContestFields(Q(IOTA, 'CT', 'CT')),
+               'IOTA contest: CT is no island');
+
+   // (CQZ / ITUZ of the record are written by PostUnit through
+   // ADIFZoneField, which Test_ValueShapes pins.)
+
+   // Our station: only values ADIF allows.
+   facts := NotCapturedMyFacts;
+   facts.Source := mfsLogged;
+   facts.Call := 'K1ABC';
+   facts.Grid := 'CT';
+   facts.Section := 'DX';
+   facts.Iota := 'CT';
+   facts.CQZone := 0;
+   facts.ITUZone := 99;
+   facts.Park := 'XX';
+   facts.State := 'NE';
+   qso := Q(CQWWCW, 'CT', '');
+   text := EmitADIFMyStationFields(qso, facts, '');
+   CheckTrue(Pos('<MY_GRIDSQUARE', text) = 0, 'MY_GRIDSQUARE CT: ' + text);
+   CheckTrue(Pos('<MY_ARRL_SECT', text) = 0, 'MY_ARRL_SECT DX: ' + text);
+   CheckTrue(Pos('<MY_IOTA', text) = 0, 'MY_IOTA CT: ' + text);
+   CheckTrue(Pos('<MY_CQ_ZONE', text) = 0, 'MY_CQ_ZONE 0: ' + text);
+   CheckTrue(Pos('<MY_ITU_ZONE', text) = 0, 'MY_ITU_ZONE 99: ' + text);
+   CheckTrue(Pos('<MY_POTA_REF', text) = 0, 'MY_POTA_REF XX: ' + text);
+   CheckTrue(Pos('<MY_SIG_INFO:2>XX', text) > 0, 'the text park stays in MY_SIG_INFO: ' + text);
+   CheckTrue(Pos('<MY_STATE:2>NE', text) > 0, 'a valid fact is still written: ' + text);
+
+   facts.Grid := 'FN31pr';
+   facts.Section := 'ENY';
+   facts.Iota := 'NA-001';
+   facts.CQZone := 5;
+   facts.ITUZone := 8;
+   facts.Park := 'US-1234';
+   text := EmitADIFMyStationFields(qso, facts, '');
+   CheckTrue(Pos('<MY_GRIDSQUARE:6>FN31pr', text) > 0, 'a good grid: ' + text);
+   CheckTrue(Pos('<MY_ARRL_SECT:3>ENY', text) > 0, 'a good section: ' + text);
+   CheckTrue(Pos('<MY_IOTA:6>NA-001', text) > 0, 'a good IOTA: ' + text);
+   CheckTrue(Pos('<MY_CQ_ZONE:1>5', text) > 0, 'a good CQ zone: ' + text);
+   CheckTrue(Pos('<MY_ITU_ZONE:1>8', text) > 0, 'a good ITU zone: ' + text);
+   CheckTrue(Pos('<MY_POTA_REF:7>US-1234', text) > 0, 'a good park: ' + text);
+end;
+
+procedure TADIFHelperTests.Test_OldDOKAndFOCNamesStillImport;
+var
+   fields : TADIFFieldList;
+   exch   : ContestExchange;
+   temps  : TADIFRecordTemps;
+
+   procedure ReadTags(const aTags: string);
+   begin
+      CheckTrue(ParseADIFFieldsList(aTags, fields), 'parsed ' + aTags);
+      InitContestExchangeForParse(exch);
+      ApplyADIFFieldsToExchange(fields, exch, temps);
+   end;
+
+begin
+   BeginTest('Test_OldDOKAndFOCNamesStillImport');
+   // Written since 2026-10-23.
+   ReadTags('<CALL:4>DL1A <DARC_DOK:3>B01 <EOR>');
+   CheckEquals('B01', temps.DOK, 'DARC_DOK');
+   ReadTags('<CALL:4>G3AB <APP_TR4W_FOC_NUM:4>1234 <EOR>');
+   CheckEquals('1234', temps.FOC_Num, 'APP_TR4W_FOC_NUM');
+   // Written before it, and still read.
+   ReadTags('<CALL:4>DL1A <DOK:3>B01 <EOR>');
+   CheckEquals('B01', temps.DOK, 'the old DOK');
+   ReadTags('<CALL:4>G3AB <FOC_NUM:4>1234 <EOR>');
+   CheckEquals('1234', temps.FOC_Num, 'the old FOC_NUM');
+end;
+
+procedure TADIFHelperTests.Test_GenericDataMode_SaysSoInTheFile;
+var
+   rec     : ContestExchange;
+   s       : string;
+   records : TContestExchangeArray;
+   none    : TContestExchangeArray;
+   e       : ExtendedModeType;
+begin
+   BeginTest('Test_GenericDataMode_SaysSoInTheFile');
+   for e := Succ(Low(ExtendedModeType)) to High(ExtendedModeType) do
+      begin
+      rec := Default(ContestExchange);
+      rec.Callsign := 'KG1S';
+      rec.Band     := Band20;
+      rec.Mode     := Digital;
+      rec.ExtMode  := e;
+      s := EmitADIFRecord(rec);
+      // The per-record field is there for the generic data modes only.
+      CheckTrue((e in [eData, eData_R, eData_FM]) =
+                (Pos('<APP_TR4W_MODE_ASSUMED:1>Y', s) > 0),
+                ExtendedModeStringArray[e] + ' MODE_ASSUMED flag');
+      end;
+
+   // Round trip: export, import -> the data mode comes back, not RTTY.
+   rec := Default(ContestExchange);
+   rec.Callsign := 'KG1S';
+   rec.Band     := Band20;
+   rec.Mode     := Digital;
+   rec.ExtMode  := eData;
+   s := EmitADIFRecord(rec) + '<EOR>';
+   CheckTrue(Pos('<MODE:4>RTTY', s) > 0, 'exported as MODE RTTY');
+   CheckEquals(1, ImportADIFFromString(s, records), 'one record read back');
+   CheckEquals(Integer(eData), Integer(records[0].ExtMode),
+               'eData restored by the flag');
+
+   // A real RTTY QSO (no flag) stays RTTY.
+   rec.ExtMode := eRTTY;
+   s := EmitADIFRecord(rec) + '<EOR>';
+   CheckEquals(1, ImportADIFFromString(s, records), 'RTTY read back');
+   CheckEquals(Integer(eRTTY), Integer(records[0].ExtMode), 'RTTY stays RTTY');
+
+   // The flag may precede the MODE in a file.
+   CheckEquals(1, ImportADIFFromString(
+      '<CALL:4>KG1S <APP_TR4W_MODE_ASSUMED:1>Y <MODE:4>RTTY <EOR>', records),
+      'flag before MODE');
+   CheckEquals(Integer(eData), Integer(records[0].ExtMode), 'order-independent');
+
+   // The header line: only when there are such records, with the count.
+   SetLength(none, 2);
+   none[0] := Default(ContestExchange);
+   none[1] := Default(ContestExchange);
+   none[0].ExtMode := eRTTY;
+   none[1].ExtMode := eCW_R;
+   CheckEquals(0, CountGenericDataModeQSOs(none), 'no generic data records');
+   CheckEquals('', ADIFGenericDataModeNote(0), 'no note for none');
+   none[0].ExtMode := eData_R;
+   none[1].ExtMode := eData_FM;
+   CheckEquals(2, CountGenericDataModeQSOs(none), 'two generic data records');
+   CheckEquals('2 QSO(s) logged in an unspecified DATA mode are exported ' +
+               'as MODE RTTY.', ADIFGenericDataModeNote(2), 'the note');
+   CheckTrue(Pos('<', ADIFGenericDataModeNote(2)) = 0,
+             'header text must hold no "<"');
+end;
+
+procedure TADIFHelperTests.Test_OldTR4WSpellingsStillImport;
+var
+   m : ModeAndExtendedModeType;
+begin
+   BeginTest('Test_OldTR4WSpellingsStillImport');
+   // Files TR4W wrote before 2026-10-23 carry its own names in MODE.
+   m := GetADIFMode('DATA');
+   CheckEquals(Integer(eData),   Integer(m.msmExtendedMode), 'DATA');
+   m := GetADIFMode('CW-R');
+   CheckEquals(Integer(eCW_R),   Integer(m.msmExtendedMode), 'CW-R');
+   m := GetADIFMode('RTTY-R');
+   CheckEquals(Integer(eRTTY_R), Integer(m.msmExtendedMode), 'RTTY-R');
+   m := GetADIFMode('DATA-R');
+   CheckEquals(Integer(eData_R), Integer(m.msmExtendedMode), 'DATA-R');
+   m := GetADIFMode('FM-N');
+   CheckEquals(Integer(eFM_N),   Integer(m.msmExtendedMode), 'FM-N');
+   m := GetADIFMode('D-STAR');
+   CheckEquals(Integer(eDStar),  Integer(m.msmExtendedMode), 'D-STAR');
+   // and the submodes the new export writes.
+   m := GetADIFSubMode('PSK63');
+   CheckEquals(Integer(ePSK63),  Integer(m.msmExtendedMode), 'PSK63 sub');
+   m := GetADIFSubMode('C4FM');
+   CheckEquals(Integer(eC4FM),   Integer(m.msmExtendedMode), 'C4FM sub');
+   m := GetADIFSubMode('DSTAR');
+   CheckEquals(Integer(eDStar),  Integer(m.msmExtendedMode), 'DSTAR sub');
+end;
+
+// ---------------------------------------------------------------------------
 // ADIFDateStringToQSOTime
 // ---------------------------------------------------------------------------
 
@@ -1019,6 +1462,15 @@ begin
 
    Test_GetADIFSubMode_KnownSubModes;
    Test_GetADIFSubMode_UnknownSubMode;
+
+   Test_ExtMode_ExportsAnADIFMode_Exhaustive;
+   Test_ExtMode_ExportPairs;
+   Test_EmittedTagsAreADIF316Fields;
+   Test_ValueShapes;
+   Test_InvalidValuesAreNotWritten;
+   Test_OldDOKAndFOCNamesStillImport;
+   Test_GenericDataMode_SaysSoInTheFile;
+   Test_OldTR4WSpellingsStillImport;
 
    Test_ADIFDateStringToQSOTime_Valid;
    Test_ADIFDateStringToQSOTime_InvalidLength;

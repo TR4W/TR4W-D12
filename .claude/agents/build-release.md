@@ -242,6 +242,15 @@ keeping:
   printing failure. Capture the command's own status.
 - ~~`xattr -dr com.apple.quarantine`~~ is history. Do not put it in a release body.
 
+## The ADIF validator is a gate step (2026-10-23)
+
+`tr4w/test/adif-validate/validate-adif-outputs.sh` is called at the END of `export-d12-corpus.sh`,
+`test-adif-roundtrip.sh` and `run-contest-matrix.sh` (each has its own output only then), and runs
+the vendored `tools/adifvalidator/` (see its `VENDORED.md`). It needs python on PATH and fails
+closed without it, without the validator, with no files, or on a validator crash -- a runner that
+runs those scripts must have python. Any `Compliance error` fails the run; `Consistency error`
+findings are reported and counted only.
+
 ## The runners are disposable
 
 NY4I, verbatim: *"i do not work on the runners. I consider it the same as a

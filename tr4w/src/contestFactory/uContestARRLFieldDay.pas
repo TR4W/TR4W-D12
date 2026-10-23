@@ -298,7 +298,8 @@ begin
       Result := Result + EmitADIFField('STATE',
          StateFromARRLSection(string(aQso.QTHString)));
       end;
-   Result := Result + EmitADIFField('ARRL_SECT', string(aQso.QTHString));
+   (* Only a section ADIF's enumeration has (ADIFSectionOf). *)
+   Result := Result + EmitADIFField('ARRL_SECT', ADIFSectionOf(aQso));
    Result := Result + EmitADIFField('CLASS', string(aQso.ceClass));
 end;
 

@@ -120,4 +120,10 @@ if [ $((differ + missing + unfrozen)) -ne 0 ]; then
    echo "    Full records: $FRESH  (frozen: $MATRIX_FROZEN)"
    exit 1
 fi
+
+# THE ADIF RECORDS EVERY CONTEST WROTE, AGAINST AN INDEPENDENT VALIDATOR
+# (2026-10-23). Byte-identical to the freeze says nothing about whether the
+# freeze was valid ADIF. Runs on the fresh records, so it needs no re-freeze.
+echo
+bash "$(dirname "${BASH_SOURCE[0]}")/../adif-validate/validate-adif-outputs.sh" matrix || exit 1
 exit 0

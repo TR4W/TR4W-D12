@@ -1,0 +1,17 @@
+# ADIF 3.1.6 (NY4I 2026-10-23): a generic DATA mode is exported as MODE RTTY, marked APP_TR4W_MODE_ASSUMED, and the header says how many
+#
+# 'DATA' is not an ADIF mode (rickmurphy.net's validator rejected NY4I's CQ WW
+# SSB export). ADIF has no generic data mode, so -- NY4I's ruling, as issue
+# 457 already did for Digital with no submode -- such a QSO is written as
+# MODE RTTY, with <APP_TR4W_MODE_ASSUMED:1>Y so TR4W's own import restores the
+# unknown data mode, and one free-text header line before the first tag
+# counting them. ref.adi is D7-written and NEVER regenerated, so the records
+# and the header line are pinned here as the exact expected difference.
+#
+# Read by run-golden-diff.sh AND test-adif-roundtrip.sh through known-pin-lib.sh: the lines
+# below the comments are EXACTLY the changed lines of ref.adi vs the candidate.
+-<CALL:5>W4THY <BAND:2>6m <QSO_DATE:8>20260511 <TIME_ON:6>033939 <TIME_OFF:6>033939 <RST_SENT:3>599 <RST_RCVD:3>599 <CONTEST_ID:12>FL-QSO-PARTY <MODE:4>DATA <FREQ:6>50.313 <STATE:2>FL <QTH:3>PIN <STX:5>00001 <OPERATOR:4>NY4I <APP_TR4W_ID:32>5cd6c61f69cf4422baef44f93b2cbbd2 <STX_STRING:7>599 PIN <SRX_STRING:7>599 PIN <EOR>
+-<CALL:5>W4THY <BAND:2>6m <QSO_DATE:8>20260511 <TIME_ON:6>033939 <TIME_OFF:6>033939 <RST_SENT:3>599 <RST_RCVD:3>599 <CONTEST_ID:12>FL-QSO-PARTY <MODE:4>DATA <FREQ:6>50.313 <STATE:2>FL <QTH:3>HIL <STX:5>00001 <OPERATOR:4>NY4I <APP_TR4W_ID:32>5cd6c61f69cf4422baef44f93b2cbbd2 <STX_STRING:7>599 PIN <SRX_STRING:7>599 HIL <EOR>
++2 QSO(s) logged in an unspecified DATA mode are exported as MODE RTTY.
++<CALL:5>W4THY <BAND:2>6m <QSO_DATE:8>20260511 <TIME_ON:6>033939 <TIME_OFF:6>033939 <RST_SENT:3>599 <RST_RCVD:3>599 <CONTEST_ID:12>FL-QSO-PARTY <MODE:4>RTTY <FREQ:6>50.313 <STATE:2>FL <QTH:3>PIN <STX:5>00001 <OPERATOR:4>NY4I <APP_TR4W_ID:32>5cd6c61f69cf4422baef44f93b2cbbd2 <APP_TR4W_MODE_ASSUMED:1>Y <STX_STRING:7>599 PIN <SRX_STRING:7>599 PIN <EOR>
++<CALL:5>W4THY <BAND:2>6m <QSO_DATE:8>20260511 <TIME_ON:6>033939 <TIME_OFF:6>033939 <RST_SENT:3>599 <RST_RCVD:3>599 <CONTEST_ID:12>FL-QSO-PARTY <MODE:4>RTTY <FREQ:6>50.313 <STATE:2>FL <QTH:3>HIL <STX:5>00001 <OPERATOR:4>NY4I <APP_TR4W_ID:32>5cd6c61f69cf4422baef44f93b2cbbd2 <APP_TR4W_MODE_ASSUMED:1>Y <STX_STRING:7>599 PIN <SRX_STRING:7>599 HIL <EOR>
