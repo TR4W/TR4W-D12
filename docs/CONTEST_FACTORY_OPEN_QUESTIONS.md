@@ -426,7 +426,13 @@ different event), so Q123 still needs the SRR digital cup's own rules.
      **Answer:** resolved (2026-10-22, design delegated): all three shapes are
      in D7 and pre-factory D12 verbatim, and they are DEFECTS, not rules -- a
      memory read has no D7 answer to recreate. Bound all three as above; the
-     matrix must show no frozen QSO moving. To build.
+     matrix must show no frozen QSO moving. **BUILT 2026-10-23** (5.0.29):
+     MWC walks the call itself (`MWCMultiplierFromCall`; a `/` counts only
+     with a character before it and a letter after; no character => no
+     multiplier); an empty MY COUNTRY is not `G`; RCC CW/SSB score 4 only
+     when the call ENDS in `/P` or `/M`. That last one also corrects D7's
+     first-match read (`LOGSTUFF.PAS:8068`), which gave `SP/PA1AB/M` 3.
+     Pinned by `uTestContestReadBounds`; matrix: no frozen QSO moved.
 
 - **Q101** Thirteen typed received-exchange columns are never written or read:
   `rcvd_state`, `rcvd_county`, `rcvd_section`, `rcvd_grid`,
@@ -627,7 +633,10 @@ different event), so Q123 still needs the SRR digital cup's own rules.
   UA9QCQ's tags are a log robot's, not the sponsors' current rules, so
   OZCHR, OZCHR-TEAMS, the two RCC field days and RF-CUP-DIG keep D7's names.
   GAGARIN-CUP -> `GC` follows your 2026-10-19 WA7BNM renames (WA7BNM agrees).
-  To build: GC only.
+  To build: GC only. **BUILT 2026-10-23** (5.0.29): `GetCabrilloName` =
+  `GC`, stored and ADIF id stay `GAGARIN-CUP`; a row in
+  `Test_WA7BNMCabrilloRenamesMoveOnlyTheCabrilloName`; the matrix moved
+  only GAGARIN-CUP's three `CONTEST:` lines (re-frozen).
 
 - **Q128** Polish "Kill CW" (`rc_killcw`): its text was codepage-damaged in
   D7. The bytes recover as "Przełącz CW" (switch CW); D7's shipped Polish

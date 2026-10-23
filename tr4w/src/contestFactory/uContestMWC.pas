@@ -46,10 +46,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   SET-UP: 80 m, MWC as a domestic country.
 
-  THE CALL IS CUT TO TEN CHARACTERS AND WALKED TO ITS FULL LENGTH, as the
-  arm did (a string[10] copy, indexed to Length(Callsign)): a call longer
-  than ten reads past the copy, and one ending in '/' reads one byte past
-  its end. Transcribed, not judged -- no real call reaches either. *)
+  THE ARM CUT THE CALL TO TEN CHARACTERS AND WALKED IT TO ITS FULL LENGTH
+  (a string[10] copy, indexed to Length(Callsign)), reading past the copy
+  for a long portable call. Bounded at design Q47 (2026-10-22): see
+  MWCMultiplierFromCall. *)
 unit uContestMWC;
 
 {$I tr4w.inc}
@@ -115,25 +115,58 @@ uses
 (* MWCQP -- the legacy LOGSTUFF arm for this
    contest's point method, moved here as it stood (M7b batch 2). The arm
    was deleted at M10 S3; see git history or the D7 tree. *)
-procedure TContestMWC.CalculateQSOPoints(var aQso: ContestExchange);
+(* THE MULTIPLIER CHARACTER OF A WORKED CALL -- the character before the
+  first '/' that a letter follows, else the call's last character.
+
+  BOUNDED (design Q47, 2026-10-22). The arm copied the call into a
+  string[10] and walked it to the call's FULL length, so a call of eleven
+  or more characters (PA/W1ABCD/P is legal) was read past the copy, a call
+  ending in '/' was read one byte past its end, and one starting with '/'
+  read the length byte. This walks the call itself and reads only
+  characters inside it, and the answer is never a '/':
+    * a '/' counts only with a character before it (not a '/') and a
+      letter after it;
+    * the fallback is the last character that is not a '/', so W1AW/ gives
+      'W';
+    * an empty call, or one of slashes only, gives '' -- no multiplier from
+      the call.
+  Every call of ten characters or fewer that neither starts nor ends with a
+  '/' gives exactly what the arm gave. *)
+function MWCMultiplierFromCall(const aCall: CallString): DomesticMultiplierString;
 var
    callLength: integer;
    i: integer;
-   k: string[10];
 begin
-   aQso.QSOPoints := 1;
-   callLength := Length(aQso.Callsign);
-   k := aQso.Callsign;
-   for i := 1 to callLength do
+   Result := '';
+   callLength := Length(aCall);
+   for i := 2 to callLength - 1 do
       begin
       (* The rules specify the multiplier number following a slash. *)
-      if (k[i] = '/') and (k[i + 1] in ['A'..'Z']) then
+      if (aCall[i] = '/')          and
+         (aCall[i - 1] <> '/')     and
+         (aCall[i + 1] in ['A'..'Z']) then
          begin
-         aQso.DomMultQTH := k[i - 1];
+         Result := aCall[i - 1];
          Exit;
          end;
       end;
-   aQso.DomMultQTH := k[callLength];
+
+   i := callLength;
+   while i >= 1 do
+      begin
+      if aCall[i] <> '/' then
+         begin
+         Result := aCall[i];
+         Exit;
+         end;
+      Dec(i);
+      end;
+end;
+
+procedure TContestMWC.CalculateQSOPoints(var aQso: ContestExchange);
+begin
+   aQso.QSOPoints := 1;
+   aQso.DomMultQTH := MWCMultiplierFromCall(aQso.Callsign);
 end;
 
 function TContestMWC.GetDisplayName: string;

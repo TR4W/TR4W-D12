@@ -31,6 +31,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
    FriendlyName: 'Yuri Gagarin International DX Contest'
 
   Blank CABName and ADIFName resolve to the enum's spelling, 'GAGARIN-CUP'.
+  The Cabrillo name is 'GC' since 2026-10-22 (design Q127); the ADIF id and
+  the stored id keep 'GAGARIN-CUP'.
 
   WHY IT HAS A CLASS. Milestone M7b (2026-10-02) gives every classless
   contest one, and a registered class is the contest's scorer, set-up,
@@ -187,9 +189,13 @@ end;
 
 function TContestGagarinCup.GetCabrilloName: string;
 begin
-   (* The row's CABName is blank; this is the enum's spelling it resolves
-      to. *)
-   Result := 'GAGARIN-CUP';
+   (* WA7BNM's Cabrillo name (WA7BNM 367), design Q127 (2026-10-22),
+      following NY4I's 2026-10-19 WA7BNM renames. TR4W wrote the enum's
+      spelling 'GAGARIN-CUP' (D7's blank CABName). Only the Cabrillo
+      CONTEST: line (and the UDP <contestname>) moves: the stored id
+      ContestTypeSA and the ADIF id keep 'GAGARIN-CUP'. TR4W reads no
+      Cabrillo CONTEST: value back, so the old name needs no read alias. *)
+   Result := 'GC';
 end;
 
 function TContestGagarinCup.GetADIFContestId: string;

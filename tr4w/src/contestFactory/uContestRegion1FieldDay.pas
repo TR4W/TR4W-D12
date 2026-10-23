@@ -263,7 +263,9 @@ begin
          end;
       end;
 
-   if countryID[1] = 'G' then
+   (* An empty MY COUNTRY is simply not 'G' (design Q47, 2026-10-22): the
+      arm read countryID[1] unchecked, a leftover byte when it was empty. *)
+   if (Length(countryID) > 0) and (countryID[1] = 'G') then
       begin
       if (aQso.Band = Band160) or (aQso.Band = Band10) then
          begin

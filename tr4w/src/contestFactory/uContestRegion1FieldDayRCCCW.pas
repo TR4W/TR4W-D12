@@ -123,7 +123,7 @@ uses
    was deleted at M10 S3; see git history or the D7 tree. *)
 procedure TContestRegion1FieldDayRCCCW.CalculateQSOPoints(var aQso: ContestExchange);
 var
-   suffixAt: integer;
+   callLength: integer;
 begin
    if Station.MyContinent = aQso.QTH.Continent then
       begin
@@ -133,14 +133,21 @@ begin
       begin
       aQso.QSOPoints := 3;
       end;
-   suffixAt := Pos('/P', aQso.Callsign);
-   if suffixAt = 0 then
+
+   (* 4 ONLY WHEN THE CALL ENDS IN /P OR /M (design Q47, 2026-10-22). The
+      arm compared Pos('/P') (else Pos('/M')) with Length - 1, so a
+      one-character call -- "not found" (0) = 1 - 1 -- scored 4, and a call
+      with an earlier '/P' (DL/PA1AB/M) found that one and scored 3. The
+      header's rule, the suffix at the call's last two characters, is now
+      what is tested. *)
+   callLength := Length(aQso.Callsign);
+   if callLength >= 2 then
       begin
-      suffixAt := Pos('/M', aQso.Callsign);
-      end;
-   if suffixAt = Length(aQso.Callsign) - 1 then
-      begin
-      aQso.QSOPoints := 4;
+      if (aQso.Callsign[callLength - 1] = '/') and
+         (aQso.Callsign[callLength] in ['P', 'M']) then
+         begin
+         aQso.QSOPoints := 4;
+         end;
       end;
 end;
 

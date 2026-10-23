@@ -966,7 +966,7 @@ type
       ADIFId: string;
    end;
 const
-   RENAMES: array[0..18] of TCabrilloRename = (
+   RENAMES: array[0..19] of TCabrilloRename = (
       (Contest: CQMM;            OldName: 'CQMM';                 NewName: 'CQMMDX';          ADIFId: 'CQMM'),
       (Contest: CWOPS;           OldName: 'CWOPS';                NewName: 'CW-OPS';          ADIFId: 'CWOPS-CWT'),
       (Contest: UKRAINIAN;       OldName: 'UKRAINIAN';            NewName: 'UKRAINIAN-DX';    ADIFId: 'UKRAINIAN'),
@@ -985,6 +985,8 @@ const
       (Contest: RU3AXMEMORIAL;   OldName: 'RU3AX MEMORIAL';       NewName: 'RADIO-160';       ADIFId: 'RU3AX MEMORIAL'),
       (Contest: TEXASQSOPARTY;   OldName: 'TEXAS QSO PARTY';      NewName: 'TXQP';            ADIFId: 'TX-QSO-PARTY'),
       (Contest: YBDX;            OldName: 'YBDX';                 NewName: 'ORARI-DX';        ADIFId: 'YBDX'),
+      (* Design Q127 (2026-10-22): WA7BNM 367 agrees with the sponsor's GC. *)
+      (Contest: GAGARINCUP;      OldName: 'GAGARIN-CUP';          NewName: 'GC';              ADIFId: 'GAGARIN-CUP'),
       (* NOT a WA7BNM rename: the SSA Jultest's own name, from its sponsor --
          see TContestXmas.GetCabrilloName. *)
       (Contest: XMAS;            OldName: 'XMAS';                 NewName: 'SSA-JULTEST';     ADIFId: 'XMAS')

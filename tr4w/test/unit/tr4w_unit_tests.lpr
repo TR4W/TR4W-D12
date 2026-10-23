@@ -719,6 +719,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestContestIN7QPNE in 'uTestContestIN7QPNE.pas',
    (* NY4I's rulings Q45, Q49, Q84, Q71, Q85 and Q104, built 2026-10-17. *)
    uTestContestRulings2026Oct in 'uTestContestRulings2026Oct.pas',
+   (* Q47: three read-past-the-end shapes bounded (MWC, Region 1 FD, RCC). *)
+   uTestContestReadBounds in 'uTestContestReadBounds.pas',
    (* The Russian DX Contest's 2027 rules and the Popov Youth Cup's SRR 2026
       regulation (Q97, Q131-Q136, built 2026-10-22). *)
    uTestContestRussianRules2026Oct in 'uTestContestRussianRules2026Oct.pas',
@@ -840,6 +842,7 @@ begin
    RegisterSuite(TQSOPartyBandsTests.Create('QSOPartyBands'));
    RegisterSuite(TContestIN7QPNETests.Create('ContestIN7QPNE'));
    RegisterSuite(TContestRulings2026OctTests.Create('ContestRulings2026Oct'));
+   RegisterSuite(TContestReadBoundsTests.Create('ContestReadBounds'));
    RegisterSuite(TContestRussianRules2026OctTests.Create('ContestRussianRules2026Oct'));
    RegisterSuite(THostAreaRuleTests.Create('HostAreaRule'));
    RegisterSuite(TGridExchangeTests.Create('GridExchange'));
