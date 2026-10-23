@@ -1,0 +1,206 @@
+﻿GA QSO Party Rules
+
+WA7BNM ID: 328 (https://www.contestcalendar.com/contestdetails.php?ref=328)
+Cabrillo Name: GA-QSO-PARTY
+ADIF Name: Cabrillo Name: GA-QSO-PARTY
+Relative Date: 2nd Full Weekend of April
+
+OBJECTIVE
+For radio amateurs OUTSIDE of the state of Georgia to make contacts with as many SSB and/or CW Georgia stations in as many of the 159 Georgia counties as possible. Amateurs INSIDE the state of Georgia can make contacts with everyone. NOTE: Digital contacts aren’t allowed in the Georgia QSO Party.
+
+CONTEST PERIOD
+The Georgia QSO Party is held annually the 2nd full weekend of April. There are two operating periods: 1800Z (2:00 pm EDST) Saturday until 0359Z (11:59 pm EDST) and Sunday and 1400Z (10:00 am EDST) to 2359Z. (7:59 pm EDST)
+
+FREQUENCIES
+Here are the suggested frequencies where GQP activity will take place:
+
+SSB: 1.865, 3.810, 7.190, 14.250, 21.300, 28.450, 50.135.
+CW: 1.815, 3.545, 7.045, 14.045, 21.045, 28.045, 50.095.
+Look for SSB activity on the hour and CW on the half hour.
+
+CATEGORIES
+SO Single Operator – One person performs all operating and logging functions. A Single Operator can be Mixed, SSB Only or CW Only.
+Multi Operator – Single Transmitter – More than one person can perform operating and logging functions. Only one transmitter can be operated at any given time. Only ONE call sign is used in this category. 
+Multi Operator – Two Transmitters – More than one person can perform operating and logging functions. ONE call sign is used in this category. Only two transmitters operating on two different bands or modes at any given time. Multi-2 transmitters are allowed on the same band but NOT on the same MODE.
+ROVER (Georgia Only) – Single Operator  – A single Georgia mobile station with one operator that operates from at least two (2) different Georgia counties and making at least one (1) contact from each county. Rovers that move to a new county can work everyone again. It’s suggested that a Single Operator ROVER should not drive when operating. Note that Georgia enacted a distracted drivers law in 2018. While operating an amateur radio transceiver would be allowed under the law using a computer while doing this probably isn’t allowed. If you decide to drive/operate at the same time we urge that you record the contest and transcribe it to a log later. A Rover station can be Mixed, SSB Only or CW Only. Rover stations must use an antenna that is only capable of using while in motion. Rover stations are allowed to stop and operate from county lines. See the County Hunter rules for guidance.
+ROVER Multi Operator Multi-Single (Georgia Only)  – A single Georgia mobile station with more than one operator that operates from at least two (2) different Georgia counties and making at least one (1) contact from each county. Rovers that move to a new county can work everyone again. Rovers with multiple operators and/or multiple simultaneously operated stations in the vehicle use the (RM) category. A Rover Multi-Single station can be Mixed, SSB Only or CW Only. Rover stations must use an antenna that is only capable of using while in motion. Rover stations are allowed to stop and operate from county lines. See the County Hunter rules for guidance.
+ROVER Multi Operator Multi-2 (Georgia Only) – A single Georgia mobile station with more than one operator that operates from at least two (2) different Georgia counties and making at least one (1) contact from each county. Rovers that move to a new county can work everyone again. Rovers with multiple operators and/or multiple simultaneously operated stations in the vehicle use the (RM) category. A M/2 Rover station can only be Mixed Mode. Rover stations must use an antenna that is only capable of using while in motion. Rover stations are allowed to stop and operate from county lines. See the County Hunter rules for guidance.
+Portable (Georgia Only) – A single Georgia station using one call sign, with one or more operators that operates from at least two (2) different Georgia counties and making at least one (1) contact from each county. Portable stations that move to a new county can work everyone again. A Portable station can be Mixed, SSB Only or CW Only. Portable stations must use a temporary antenna that isn’t capable of using while in motion. The use of a mobile antenna attached to a car will put you in the ROVER category. Portable stations are allowed to operate from county lines. See the County Hunter rules for guidance.
+ROVER stations may have a non contest operating driver, for safety, and remain in the Single Operator category. If the driver operates at any time in the contest, that Rover is in the Multi Operator category and enters as (RM). Operating from a county line is allowed. Click here to see how to setup N1MM Logger Plus to operate as a rover or portable operation. This link will also show you how to setup the program to operate at a county line. Please make sure your logging program has this functionality. If it doesn’t you need to log the QSO for each county separately in your logging program. It’s not the responsibility of the contest sponsor to fix your log if you don’t log county line QSO’s correctly.
+
+PORTABLE stations can only transmit one signal at a time. Operating from a county line is allowed. Click here to see how to setup N1MM Logger Plus to operate as a rover or portable operation. This link will also show you how to setup the program to operate at a county line. Please make sure your logging program has this functionality. If it doesn’t you need the log each QSO for each county separately. It’s not the responsibility of the contest sponsor to fix your log if you don’t log county line QSO’s correctly.
+
+It’s suggested the ROVER and PORTABLE stations send their call sign followed by a “/” and the Georgia County Abbreviation. For example KU8E/HARR if I’m operating as a rover from Harris county. KU8E/HARR/MUSC if operating from the Harris/Muscogee county line.
+
+NOTE: ASSISTED OPERATION IS ALLOWED – APRS, RBN and spotting clusters are allowed for all categories. Self-spotting is also allowed. You don’t need to submit your log as ASSISTED. Submit it as SINGLE-OP. Click here for the Georgia QSO Party Spotting page. Note spotting networks and self spotting is allowed in all categories.
+
+CONTEST EXCHANGE
+GEORGIA stations– Send signal report and GA county abbreviation. Georgia stations should call “CQ GQP” on CW or “CQ Georgia QSO Party” on SSB. Note if you are operating from a county line send your call sign with the counties separated with a ‘/”. For example KU8E operating from the Harris and Muscogee county line would send KU8E/HARR/MUSC. If you are using N1MM Logger Plus setup your station as either ROVER or PORTABLE. This link will show you how to setup N1MM Logger Plus to operate from a county line. Please make sure your logging program has this functionality. If it doesn’t you need the log each county separately. It’s not the responsibility of the contest sponsor to fix your log if you don’t log county line QSO’s correctly.
+NON-GEORGIA US stations– Send signal report and STATE (U.S.P.S. abbreviation). Note: Please make sure you log GA county line QSO’s as two separate contacts
+CANADA– Send signal report and Canadian PROVINCE (ARRL Zone abbreviation). Note: Please make sure you log GA county line QSO’s as two separate contacts
+DX– Send signal report and “DX“. Note: Please make sure you log GA county line QSO’s as two separate contacts
+POWER CATEGORIES
+QRP– Five (5) watts CW and 10 watts SSB, maximum.
+Low Power– 150 watts, maximum.
+High Power– Greater than 150 watts.
+MODE CATEGORIES
+Mixed– CW and SSB
+SSB– Phone only contacts
+CW– CW only contacts
+SCORING
+Stations may be worked once per band and mode for QSO Points.
+Stations outside Georgia may not count contacts with non-Georgia or DX stations.
+GEORGIA ROVER stations may be worked once per county, per mode, per band for QSO Points.
+No cross mode contacts allowed.
+No partial contact credit.
+Each completed SSB contact counts one point.
+Each completed CW contact counts two points.
+Each multiplier may be counted once per mode. (Not per band)
+Multipliers – Georgia Stations
+Each USA State and DC, including Georgia (51)
+Each Canadian Province (13)
+DX counts for QSO points only, there are no country multipliers.
+128 possible multipliers. (once on CW and once on SSB)
+Multipliers – Non-Georgia Stations
+Each Georgia county (159)
+318 possible multipliers. (once on CW and once on SSB)
+Final Score -Multiply total QSO points by total multipliers.
+CLUB COMPETITION
+If your club is indicated in your submission, your score will be automatically credited to that club.
+The sponsors of the Georgia QSO Party – SECC and SEDXC aren’t eligible to compete in the club competition and the associated gavel that is awarded for the top club score in Georgia. Please submit your score for your local club.
+A minimum of two entries from a club is required to win a club plaque. If your home QTH is outside Georgia and you operate in-state (Georgia) you can’t submit your score for your home club located outside of Georgia. All entries are required to live in the state where their club is located.
+CABRILLO FILE SPECIFICATION
+If you are a software developer creating a logging program here is the Cabrillo format we would like your program to generate.
+
+Here’s an example of what it should look like using KU8E as the callsign.
+
+START-OF-LOG: 3.0
+LOCATION: GA , STATE or DX
+CALLSIGN: KU8E
+CLUB: SOUTH EAST CONTEST CLUB <– THIS SHOULD BE UPPERCASE LETTERS
+CONTEST: GA-QSO-PARTY
+CATEGORY-OPERATOR: SINGLE-OP or MULTI-OP
+CATEGORY-MODE: MIXED, CW or SSB
+CATEGORY-POWER: HIGH, LOW or QRP
+CATEGORY-STATION: FIXED or ROVER or PORTABLE
+CATEGORY-TRANSMITTER: ONE or TWO
+CLAIMED-SCORE: 42450
+OPERATORS: KU8E
+NAME: Radio Contester
+ADDRESS: 1 Main Street
+ADDRESS-CITY: Columbus
+ADDRESS-STATE-PROVINCE: GA <– Use the two letter US/Canada postal service abbreviation or DX. DO NOT spell out the US state. For example “GEORGIA”
+ADDRESS-POSTALCODE: 31901
+ADDRESS-COUNTRY: UNITED STATES
+EMAIL: gqp@gqp.com
+CREATED-BY: N1MM Logger+ 1.0.6164.0
+QSO: 14000 CW 2016-04-09 1805 KU8E 599 HARR AA3B 599 PA <– NOTE: EACH QSO: LINE SHOULD BE SIMILAR TO THIS LINE. DO NOT ADD ADDITIONAL COLUMNS. ALL TEXT SHOULD BE UPPERCASE.
+END-OF-LOG:
+
+The QSO: line contains the following columns : BAND, MODE, DATE, TIME, YOUR CALL, RST Sent, QTH Sent, CALL Worked, RST Received, QTH Received. DO NOT ADD ADDITIONAL COLUMNS. ALL TEXT SHOULD BE UPPERCASE.
+
+TRY TO NOT EDIT YOUR CABRILLO FILE. I would be OK to edit lines in the Cabrillo header but not the QSO: lines. Don’t add additional columns. All text should be uppercase. THIS MIGHT CAUSE ERRORS DURING LOG PROCESSING. If I can’t resolve problems with your log I will send you an email to submit a correct one. If you don’t respond your log will be listed as a CHECKLOG in the final results
+
+LOG SUBMISSION
+All electronic logs must be submitted in a Cabrillo format.
+If you log on paper you can create an electronic log in a Cabrillo format by going to the WA7BNM Web-to-Cabrillo form.
+Paper logs are no longer accepted. If you need help contact John, K4BAI.
+Your paper log can be submitted to K4BAI to create an electronic file for you :
+
+John Laney, K4BAI
+P.O. Box 421
+Columbus, GA. 31902-0421
+
+Electronic log filenames should be named: “Your Callsign.LOG”. (for example ku8e.log)
+Omission of class or power category will automatically default to the highest class/power for that category.
+If your club is indicated in your submission, your score will be automatically credited to them.
+Rovers may submit a single consolidated Cabrillo file with a claimed score of the entire operation. A single Cabrillo file is the preferred entry for a Rover, and individual county files are not needed in this case. ROVER stations should merge their individual county Cabrillo files into one file.
+Entries are due no later than two weeks after the QSO Party weekend.
+Use the log submission page to submit your log.
+If you have problems submitting your log email it as an attachment to gqplogs@gaqsoparty.com
+
+
+GA County Names and Abbreviations (Two Columns)
+
+
+County	Abbreviation	County	Abbreviation
+Appling	APPL	Jeff Davis	JFDA
+Atkinson	ATKN	Jefferson	JEFF
+Bacon	BACN	Jenkins	JENK
+Baker	BAKR	Johnson	JOHN
+Baldwin	BALD	Jones	JONE
+Banks	BANK	Lamar	LAMA
+Barrow	BARR	Lanier	LANI
+Bartow	BART	Laurens	LAUR
+Ben Hill	BENH	Lee	LEE
+Berrien	BERR	Liberty	LIBE
+Bibb	BIBB	Lincoln	LINC
+Bleckley	BLEC	Long	LONG
+Brantley	BRAN	Lowndes	LOWN
+Brooks	BROK	Lumpkin	LUMP
+Bryan	BRYN	McDuffie	MCDU
+Bulloch	BULL	McIntosh	MCIN
+Burke	BURK	Macon	MACO
+Butts	BUTT	Madison	MADI
+Calhoun	CALH	Marion	MARI
+Camden	CMDN	Meriwether	MERI
+Candler	CAND	Miller	MILL
+Carroll	CARR	Mitchell	MITC
+Catoosa	CATO	Monroe	MNRO
+Charlton	CHAR	Montgomery	MONT
+Chatham	CHTM	Morgan	MORG
+Chattahoochee	CHAT	Murray	MURR
+Chattooga	CHGA	Muscogee	MUSC
+Cherokee	CHER	Newton	NEWT
+Clarke	CLKE	Oconee	OCON
+Clay	CLAY	Oglethorpe	OGLE
+Clayton	CLTN	Paulding	PAUL
+Clinch	CLCH	Peach	PEAC
+Cobb	COBB	Pickens	PICK
+Coffee	COFF	Pierce	PIER
+Colquitt	COLQ	Pike	PIKE
+Columbia	COLU	Polk	POLK
+Cook	COOK	Pulaski	PULA
+Coweta	COWE	Putnam	PUTN
+Crawford	CRAW	Quitman	QUIT
+Crisp	CRIS	Rabun	RABU
+Dade	DADE	Randolph	RAND
+Dawson	DAWS	Richmond	RICH
+Decatur	DECA	Rockdale	ROCK
+DeKalb	DKLB	Schley	SCHL
+Dodge	DODG	Screven	SCRE
+Dooly	DOOL	Seminole	SEMI
+Dougherty	DHTY	Spalding	SPAL
+Douglas	DOUG	Stephens	STEP
+Early	EARL	Stewart	STWT
+Echols	ECHO	Sumter	SUMT
+Effingham	EFFI	Talbot	TLBT
+Elbert	ELBE	Taliaferro	TALI
+Emanuel	EMAN	Tattnall	TATT
+Evans	EVAN	Taylor	TAYL
+Fannin	FANN	Telfair	TELF
+Fayette	FAYE	Terrell	TERR
+Floyd	FLOY	Thomas	THOM
+Forsyth	FORS	Tift	TIFT
+Franklin	FRAN	Toombs	TOOM
+Fulton	FULT	Towns	TOWN
+Gilmer	GILM	Treutlen	TREU
+Glascock	GLAS	Troup	TROU
+Glynn	GLYN	Turner	TURN
+Gordon	GORD	Twiggs	TWIG
+Grady	GRAD	Union	UNIO
+Greene	GREE	Upson	UPSO
+Gwinnett	GWIN	Walker	WLKR
+Habersham	HABE	Walton	WALT
+Hall	HALL	Ware	WARE
+Hancock	HANC	Warren	WARR
+Haralson	HARA	Washington	WASH
+Harris	HARR	Wayne	WAYN
+Hart	HART	Webster	WEBS
+Heard	HEAR	Wheeler	WHEE
+Henry	HNRY	White	WHIT
+Houston	HOUS	Whitfield	WFLD
+Irwin	IRWI	Wilcox	WCOX
+Jackson	JACK	Wilkes	WILK
+Jasper	JASP	Wilkinson	WKSN
+Worth	WORT
