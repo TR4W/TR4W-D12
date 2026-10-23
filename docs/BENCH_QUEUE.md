@@ -23,6 +23,47 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-23 -- HAMSCORE RE-EMITS A STORED QSO FROM ITS RECORD (issue 95, review R6, Q13)
+
+Unit-tested only (`Test_HamScoreStoredQsoReadsItsRecord`,
+`Test_HamScoreStoredQsoGridIsTheFinalExportsGrid`,
+`TestTheSentExchangeReadsBackWithTheFacts`). The corpus never sees HamScore, and
+nothing automated reaches the uploader. What changed: the one-QSO Cabrillo line
+HamScore receives no longer reads today's MY CALL and CQ exchange when it
+describes a QSO that is already in the log. Edit QSO, the Tools -> HamScore
+resync and Alt-Y's undelete now pass the row's recorded station
+(`my_call`, grid) and its `exchange_sent`; a QSO being logged right now passes
+the session's values, which are the ones being recorded.
+
+Needs a HamScore account (or the status window's queue count, if posting is
+off) and a contest HamScore accepts (RTC, or any RTC-capable contest).
+
+- [ ] **Just-logged is unchanged.** HAMSCORE ENABLE on. Log three QSOs as
+      your call and grid. In the HamScore window the queue grows by three and
+      the server shows each with your call and exchange, as before this change.
+- [ ] **A changed session does not rewrite old QSOs.** Change MY CALL (or add
+      a /P) and MY GRID, and edit the CQ exchange (`CQ EXCHANGE CW`, e.g. add a
+      word). Log one more QSO: it carries the NEW call and exchange.
+- [ ] **Edit one OLD QSO** (Edit QSO, change only its callsign or its RST,
+      Save). HamScore shows that QSO still sent from the ORIGINAL call and grid
+      -- not the new ones -- with your correction applied. If you
+      change the "my station" fields in the editor and save, those corrections
+      are what HamScore shows.
+- [ ] **Tools -> HamScore resync** (it wipes the server log and re-sends all
+      QSOs). Every QSO appears with the call and exchange it was logged with:
+      the first three as the original station, the fourth as the new one.
+- [ ] **Alt-Y twice** on the newest QSO (delete, then undelete). After the
+      undelete it reappears with its own recorded station.
+- [ ] **A log from before this build** (a QSO row that never recorded its
+      station -- a log written before schema 3, or migrated from a `.TRW`): resync sends today's call and exchange for it, as before. That is
+      the deliberate fallback, not a regression.
+- [ ] **Edit a SENT serial** (Edit QSO, change the sent number of one QSO,
+      Save). HamScore shows the NEW serial in that QSO's sent exchange (NY4I,
+      2026-10-23), and a Tools resync afterwards still shows it. The sent
+      exchange is rebuilt from the QSO's record and its recorded grid, as the
+      Cabrillo file does; the CQ exchange template is today's. An IMPORTED QSO
+      is the exception: it shows the sent text its file stated.
+
 ## Added 2026-10-22 -- RUSSIAN DX 2027 RULES AND THE POPOV YOUTH CUP (Q97, Q131-Q136)
 
 Unit-tested and matrix-classified only; the corpus has no log of either

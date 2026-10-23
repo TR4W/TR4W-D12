@@ -62,6 +62,9 @@ type
       procedure Test_CabrilloHeaderAndMode;
       procedure Test_WinterFieldDayFMIsWrittenFMAndScoredAsPhone;
       procedure Test_HamScoreLineAsksTheContestForTheMode;
+      procedure Test_HamScoreStoredQsoReadsItsRecord;
+      procedure Test_HamScoreStoredQsoGridIsTheFinalExportsGrid;
+      procedure Test_HamScoreStoredQsoFollowsAnEditedSerial;
       procedure Test_HourTotalsRunningScore;
       procedure Test_OperatingAidsAndScorePosting;
       procedure Test_QTCMenu;
@@ -75,7 +78,10 @@ implementation
 
 uses
    SysUtils,
+   StrUtils,         (* ExtractWord -- the words of a Cabrillo line *)
    VC,
+   uQsoMyFacts,      (* a stored QSO's own station -- issue 95 *)
+   uLogSource,       (* ExportCallFor -- the final export's answer for our call *)
    uContestBase,
    uContestRegistry,
    uTR4WStrings,
@@ -1243,6 +1249,236 @@ begin
    CheckTrue(Pos(' FM ', line) = 0, 'and not as FM: ' + line);
 end;
 
+(* ISSUE 95 (R6 of the Codex review; NY4I's ruling Q13: a logged QSO reads its
+   record, never live state). HamScore's one-QSO line is also built when Edit
+   QSO or the Tools resync re-emits a STORED QSO, possibly after MY CALL, the
+   grid or the CQ exchange has changed. It then says what the record says, by
+   the routines the final Cabrillo writer asks.
+
+   THE WORDS OF THE LINE, 1-BASED: QSO:, freq, mode, date, time, OUR CALL (6),
+   then the sent exchange, then his call and what he sent. *)
+function CanonicalQSO(aContest: ContestType): ContestExchange;
+begin
+   FillChar(Result, SizeOf(Result), 0);
+   Result.ceContest := ContestHandleOf(aContest);
+   Result.Callsign := 'W1AW';
+   Result.Mode := CW;
+   Result.RSTReceived := 0;
+   Result.NumberReceived := 123;
+   Result.NumberSent := 7;
+   Result.Zone := 5;
+   Result.QTHString := ' CT ';
+   Result.Power := '100';
+   Result.Age := 40;
+   Result.Name := ' JOE ';
+   Result.ceClass := '2A';
+   Result.ExchString := '  raw   exch ';
+end;
+
+function LineWord(const aLine: string; aWord: integer): string;
+begin
+   Result := ExtractWord(aWord, aLine, [' ']);
+end;
+
+(* A QSO that can be written as a line: a band for the frequency column and a
+   mode the contest can spell. *)
+function StoredQSO(aContest: ContestType): ContestExchange;
+begin
+   Result := CanonicalQSO(aContest);
+   Result.Band := Band20;
+   Result.ExtMode := eCW;
+end;
+
+(* A ROW THAT RECORDED THE STATION, as the log stores one logged here. *)
+function LoggedFacts(const aCall, aGrid: string): TQsoMyFacts;
+begin
+   Result := NotCapturedMyFacts;
+   Result.Source := mfsLogged;
+   Result.Call := AnsiString(aCall);
+   Result.Grid := AnsiString(aGrid);
+end;
+
+procedure TContestDisplayTests.Test_HamScoreStoredQsoReadsItsRecord;
+var
+   savedCall, savedTemplate, savedGrid: string;
+   q: ContestExchange;
+   facts: TQsoMyFacts;
+   recordedSent: AnsiString;
+   atLogTime, reEmitted, legacy, imported: string;
+begin
+   BeginTest('Test_HamScoreStoredQsoReadsItsRecord');
+   savedCall := Settings.My.Call;
+   savedTemplate := Settings.Messages.CqExchangeCw;
+   savedGrid := Settings.My.Grid;
+   try
+      q := StoredQSO(CQWWCW);
+
+      (* A: the station as the QSO was logged. The store captures the facts
+         and BuildSentExchangeText's output at that moment. *)
+      Settings.My.Call := 'N0AAA';
+      Settings.My.Grid := 'EL88';
+      Settings.Messages.CqExchangeCw := '5nn #';
+      facts := LoggedFacts('N0AAA', 'EL88');
+      recordedSent := AnsiString(BuildSentExchangeText(q));
+      CheckEquals('599 7', string(recordedSent), 'A sent 599 and serial 7');
+
+      (* THE JUST-LOGGED PATH: the record and the session are equal at that
+         moment, so the line is what it was before the fix -- whether the
+         exchange is handed in or built from the session. *)
+      atLogTime := string(BuildSingleQsoCabrilloLine(q, facts, ''));
+      CheckEquals(atLogTime, string(BuildSingleQsoCabrilloLine(q, facts, recordedSent)),
+                  'just logged: the recorded sent exchange is the session''s');
+      CheckEquals(atLogTime, string(BuildSingleQsoCabrilloLine(q)),
+                  'just logged: and the one-argument form is the same line');
+      CheckEquals('N0AAA', LineWord(atLogTime, 6), 'just logged: our call');
+      CheckEquals('599', LineWord(atLogTime, 7), 'just logged: RST sent');
+      CheckEquals('7', LineWord(atLogTime, 8), 'just logged: serial sent');
+
+      (* B: the operator changes MY CALL and the grid. (The CQ exchange
+         template is changed further down: it is a session setting, not a
+         fact the QSO recorded, so a stored QSO follows today's -- NY4I,
+         2026-10-23: the sent exchange is rebuilt from the record.) *)
+      Settings.My.Call := 'K9BBB';
+      Settings.My.Grid := 'FN42';
+
+      (* A STORED QSO RE-EMITTED: Edit QSO, or the Tools -> HamScore resync. *)
+      reEmitted := string(BuildSingleQsoCabrilloLine(q, facts, recordedSent));
+      CheckEquals(atLogTime, reEmitted, 'the re-emitted line is the one logged');
+      CheckEquals(ExportCallFor(facts), LineWord(reEmitted, 6),
+                  'our call is the one the final export writes for the row');
+      CheckEquals('N0AAA', LineWord(reEmitted, 6), 'A''s call, not today''s');
+      CheckEquals(0, Pos('K9BBB', reEmitted), 'today''s MY CALL is nowhere in it');
+
+      (* A ROW THAT NEVER CAPTURED ITS STATION (written before schema 3) FALLS
+         BACK TO THE SESSION, exactly as the final export does (ruling A). *)
+      Settings.Messages.CqExchangeCw := 'TEST #';
+      legacy := string(BuildSingleQsoCabrilloLine(q, NotCapturedMyFacts, ''));
+      CheckEquals(ExportCallFor(NotCapturedMyFacts), LineWord(legacy, 6),
+                  'a legacy row''s call is the final export''s fallback');
+      CheckEquals('K9BBB', LineWord(legacy, 6), 'which is the session''s call');
+      CheckEquals('TEST', LineWord(legacy, 7), 'and the session''s CQ exchange');
+      CheckEquals('7', LineWord(legacy, 8), 'filled with the QSO''s serial');
+
+      (* AN IMPORTED ROW SENT WHAT ITS FILE SAYS, verbatim. *)
+      facts := LoggedFacts('W1IMP/P', 'DM79');
+      facts.Source := mfsImported;
+      imported := string(BuildSingleQsoCabrilloLine(q, facts, 'IMPORTED 55'));
+      CheckEquals('W1IMP/P', LineWord(imported, 6), 'an imported row''s own call');
+      CheckEquals('IMPORTED', LineWord(imported, 7), 'and its file''s sent exchange');
+      CheckEquals('55', LineWord(imported, 8), 'to the end');
+   finally
+      Settings.My.Call := savedCall;
+      Settings.Messages.CqExchangeCw := savedTemplate;
+      Settings.My.Grid := savedGrid;
+      end;
+end;
+
+(* AN EDITED SENT SERIAL SHOWS (NY4I, 2026-10-23: "HamScore should follow the
+   edited serial"). exchange_sent is captured once at log time and is
+   insert-only, so it still says serial 7 after the operator corrects it to 12;
+   the re-emitted line is built from the record, as the final export is. RTC's
+   Cabrillo sent column carries the serial and the grid, so the two can be
+   compared on both. *)
+procedure TContestDisplayTests.Test_HamScoreStoredQsoFollowsAnEditedSerial;
+var
+   savedGrid, savedTemplate: string;
+   q: ContestExchange;
+   facts: TQsoMyFacts;
+   staleSent: AnsiString;
+   session, my: TMyStationExchange;
+   justLogged, edited, exportSent: string;
+begin
+   BeginTest('Test_HamScoreStoredQsoFollowsAnEditedSerial');
+   savedGrid := Settings.My.Grid;
+   savedTemplate := Settings.Messages.CqExchangeCw;
+   try
+      Settings.My.Grid := 'EL88';
+      Settings.Messages.CqExchangeCw := '5nn #';
+
+      (* RTC: serial and grid. *)
+      q := StoredQSO(RTC);
+      facts := LoggedFacts('N0AAA', 'EL88');
+      staleSent := AnsiString(BuildSentExchangeText(q));
+      justLogged := string(BuildSingleQsoCabrilloLine(q, facts, staleSent));
+      CheckTrue(Pos(' 7 EL88 ', justLogged) > 0, 'just logged: serial 7: ' + justLogged);
+      CheckEquals(justLogged, string(BuildSingleQsoCabrilloLine(q, facts, '')),
+                  'just logged: the same line without a stored text');
+
+      q.NumberSent := 12;
+      edited := string(BuildSingleQsoCabrilloLine(q, facts, staleSent));
+      CheckTrue(Pos(' 12 EL88 ', edited) > 0,
+                'the edited serial shows: ' + edited);
+      CheckEquals(0, Pos(' 7 ', edited), 'and the old one is gone: ' + edited);
+
+      session := Default(TMyStationExchange);
+      session.MyGrid := 'EL88';
+      my := MyStationExchangeOfQSO(session, facts, True, False);
+      exportSent := ContestIdentity(q.ceContest).FormatCabrilloSentExchange(
+                       my, q, Default(TCabrilloQSOContext));
+      CheckTrue(Pos('12', exportSent) > 0,
+                'the final export sends the same serial: ' + exportSent);
+
+      (* A template contest: the serial comes through the CQ template. *)
+      q := StoredQSO(CQWWCW);
+      facts := LoggedFacts('N0AAA', 'EL88');
+      staleSent := AnsiString(BuildSentExchangeText(q));
+      q.NumberSent := 12;
+      edited := string(BuildSingleQsoCabrilloLine(q, facts, staleSent));
+      CheckEquals('599', LineWord(edited, 7), 'CQ WW: RST');
+      CheckEquals('12', LineWord(edited, 8), 'CQ WW: the edited serial');
+
+      (* AN IMPORTED ROW CANNOT BE REBUILT: its file's text is what it sent. *)
+      facts.Source := mfsImported;
+      edited := string(BuildSingleQsoCabrilloLine(q, facts, 'IMPORTED 55'));
+      CheckEquals('IMPORTED', LineWord(edited, 7), 'imported: the file''s text');
+   finally
+      Settings.My.Grid := savedGrid;
+      Settings.Messages.CqExchangeCw := savedTemplate;
+      end;
+end;
+
+(* The grid, which is the station-dependent half of an RTC exchange: the
+   re-emitted line and the final export's sent column come from the same
+   record, so both say A's grid. *)
+procedure TContestDisplayTests.Test_HamScoreStoredQsoGridIsTheFinalExportsGrid;
+var
+   savedGrid: string;
+   q: ContestExchange;
+   facts: TQsoMyFacts;
+   recordedSent: AnsiString;
+   session, my: TMyStationExchange;
+   reEmitted, exportSent: string;
+begin
+   BeginTest('Test_HamScoreStoredQsoGridIsTheFinalExportsGrid');
+   savedGrid := Settings.My.Grid;
+   try
+      q := StoredQSO(RTC);
+      Settings.My.Grid := 'EL88';
+      facts := LoggedFacts('N0AAA', 'EL88');
+      recordedSent := AnsiString(BuildSentExchangeText(q));
+      CheckEquals('7 EL88', string(recordedSent), 'A sent its serial and grid');
+
+      Settings.My.Grid := 'FN42';
+      reEmitted := string(BuildSingleQsoCabrilloLine(q, facts, recordedSent));
+      CheckTrue(Pos(' 7 EL88 ', reEmitted) > 0,
+                'the re-emitted line sends A''s grid: ' + reEmitted);
+      CheckEquals(0, Pos('FN42', reEmitted), 'not today''s grid: ' + reEmitted);
+
+      (* THE FINAL EXPORT'S SENT COLUMN for the same row: today's station,
+         overlaid by what the row recorded (CurrentMyStationExchange). *)
+      session := Default(TMyStationExchange);
+      session.MyGrid := 'FN42';
+      my := MyStationExchangeOfQSO(session, facts, True, False);
+      exportSent := ContestIdentity(q.ceContest).FormatCabrilloSentExchange(
+                       my, q, Default(TCabrilloQSOContext));
+      CheckTrue(Pos('EL88', exportSent) > 0,
+                'the final export sends A''s grid too: ' + exportSent);
+      CheckEquals(0, Pos('FN42', exportSent), 'and not today''s: ' + exportSent);
+   finally
+      Settings.My.Grid := savedGrid;
+      end;
+end;
+
 (* ------------------------------------------------------------------------ *)
 (* WRTC, WAE                                                                 *)
 (* ------------------------------------------------------------------------ *)
@@ -1324,24 +1560,6 @@ end;
 
 (* ONE QSO WITH EVERY FIELD A CANONICAL FORM READS, each distinct, spaces
   around the text fields so the trimming shows. *)
-function CanonicalQSO(aContest: ContestType): ContestExchange;
-begin
-   FillChar(Result, SizeOf(Result), 0);
-   Result.ceContest := ContestHandleOf(aContest);
-   Result.Callsign := 'W1AW';
-   Result.Mode := CW;
-   Result.RSTReceived := 0;
-   Result.NumberReceived := 123;
-   Result.NumberSent := 7;
-   Result.Zone := 5;
-   Result.QTHString := ' CT ';
-   Result.Power := '100';
-   Result.Age := 40;
-   Result.Name := ' JOE ';
-   Result.ceClass := '2A';
-   Result.ExchString := '  raw   exch ';
-end;
-
 procedure TContestDisplayTests.Test_CanonicalReceivedExchanges;
 var
    c: ContestType;
@@ -1695,6 +1913,9 @@ begin
    Test_CabrilloHeaderAndMode;
    Test_WinterFieldDayFMIsWrittenFMAndScoredAsPhone;
    Test_HamScoreLineAsksTheContestForTheMode;
+   Test_HamScoreStoredQsoReadsItsRecord;
+   Test_HamScoreStoredQsoGridIsTheFinalExportsGrid;
+   Test_HamScoreStoredQsoFollowsAnEditedSerial;
    Test_HourTotalsRunningScore;
    Test_OperatingAidsAndScorePosting;
    Test_QTCMenu;

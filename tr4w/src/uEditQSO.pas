@@ -459,6 +459,8 @@ var
   TempByte: Byte;
   qsoY, qsoMo, qsoD, qsoH, qsoMi, qsoS, qsoMs: word;
   editedMyFacts: TQsoMyFacts;
+  storedFacts: TQsoMyFacts;
+  storedSent: AnsiString;
 begin
   Result := True;
 
@@ -777,7 +779,12 @@ begin
         externalLogger.ReplaceQSO(EditableQSORXData);
         end;
      // Issue #783 -- HamScore RTC: send <contactreplace> next cycle.
-     HamScoreOnEdit(EditableQSORxData);
+     (* THE EDITED QSO DESCRIBES THE STATION IT RECORDED, not today's settings
+       (issue 95; Q13: an edit changes only what was edited). Our station is
+       what the save will leave -- the recorded one, or the operator's own
+       correction -- and the sent exchange is the row's exchange_sent. *)
+     LogSourceReadStationAtIndex(IndexInMap, storedFacts, storedSent);
+     HamScoreOnEdit(EditableQSORxData, MyFactsAsSaved, storedSent);
      end;
 
   (* THE `if not OpenLogFile then Exit` THAT STOOD HERE DISCARDED EVERY EDIT.

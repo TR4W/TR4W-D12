@@ -19,6 +19,7 @@ unit LOGSUBS2;
 { $ O + }
 interface
 uses
+  uQsoMyFacts,     // TQsoMyFacts -- THamScoreRowSink
   uConfigValues,   // Config -- migrated settings
   uMMTTY,
   uCallSignRoutines,
@@ -148,6 +149,18 @@ function BuildScoreUDPXml(aTotalScore: longint): AnsiString;
 procedure PostScoreToUDP(aTotalScore: longint);
 procedure LogContactToUDP(RXData: ContestExchange); // ny4i
 procedure SendFullLogToHamScore;  // Issue #783 -- enqueue every QSO for RTC resync
+
+type
+   (* WHERE A RESYNC DELIVERS EACH QSO -- HamScoreOnLog's own shape, so the
+     program passes that routine itself and a test passes a collector. *)
+   THamScoreRowSink = procedure(const aQso: ContestExchange;
+                                const aFacts: TQsoMyFacts;
+                                const aRecordedSent: AnsiString);
+
+(* THE LOG WALK BEHIND THE RESYNC (issue 95): every good QSO, each handed to
+  aSink WITH THE STATION AND SENT EXCHANGE ITS ROW RECORDED, never today's.
+  Returns how many were delivered, -1 when the log would not open. *)
+function DeliverLogToHamScore(aSink: THamScoreRowSink): integer;
 procedure LogEditedContactToUDP(RXData: ContestExchange); // ny4i
 procedure LookupInfoToUDP(RXData: ContestExchange); // Issue 612 ny4i
 function BuildUDPContact(RXData: ContestExchange; whichUDP: UDPType): string; // Issue 612 ny4i
@@ -574,6 +587,8 @@ var
   TempRXData                            : ContestExchange;
   lpNumberOfBytesRead                   : Cardinal;
   p                                     : string;   // was PAnsiChar; holds a resourcestring now
+  restoredFacts                         : TQsoMyFacts;
+  restoredSent                          : AnsiString;
 
 begin
   (* THE NEWEST QSO, FROM THE LOG -- whichever store that is. The seek to
@@ -601,7 +616,10 @@ begin
         end;
      // Issue #920 -- mirror restoration to HamScore as a (re-)contactinfo
      // so the server sees the QSO come back with the same ID.
-     HamScoreOnLog(TempRXData);
+     (* A STORED QSO COMING BACK: it describes the station it recorded, not
+       today's settings (issue 95, Q13). It is the newest row. *)
+     LogSourceReadNewestStation(restoredFacts, restoredSent);
+     HamScoreOnLog(TempRXData, restoredFacts, restoredSent);
      end
   else
      begin
@@ -1631,7 +1649,12 @@ begin
            end;
         end;
      // Issue #783 -- HamScore RTC realtime upload (cheap no-op when disabled).
-     HamScoreOnLog(RXData);
+     (* BEING LOGGED NOW, so the session IS the record: LogStoreAppendQSO
+       captures these same values a few lines below (issue 95). *)
+     if HamScoreUploaderRunning then
+        begin
+        HamScoreOnLog(RXData, LogStoreCurrentMyFacts, '');
+        end;
      perfTimeStop := Now;
      logger.Debug('Milliseconds to send UDP and TCP to external logger = %d',[DateUtils.MilliSecondsBetween(perfTimeStop, perfTimeStart)]);
      end
@@ -1642,7 +1665,10 @@ begin
         LogContactToUDP(RXData);
         end;
      // Issue #783 -- network-received QSOs also feed RTC if multi-op uplink is enabled.
-     HamScoreOnLog(RXData);
+     if HamScoreUploaderRunning then
+        begin
+        HamScoreOnLog(RXData, LogStoreCurrentMyFacts, '');
+        end;
      end;
   if not tAddQSOToLog(RXData) then Exit;
   //if RXData.Band in [Band160..Band10] then
@@ -3084,11 +3110,14 @@ end;
 // scratch.  Pairs with HamScoreResyncFromScratch which enqueues the
 // <deletelog> separator first.  Mirrors SendFullLogToUDP's iteration
 // pattern (same OpenLogFile / ReadLogFile / GoodLookingQSO trio).
-procedure SendFullLogToHamScore;
+function DeliverLogToHamScore(aSink: THamScoreRowSink): integer;
 var
   nCount: Integer;
+  rowFacts: TQsoMyFacts;
+  rowSent: AnsiString;
 begin
   nCount := 0;
+  Result := -1;
   if not LogSourceOpen then
      begin
      logger.Error('[SendFullLogToHamScore] Could not open log file');
@@ -3097,12 +3126,15 @@ begin
      end;
   try
     LogSourceRewind;
-    while LogSourceNext( TempRXData ) do  // fills global TempRXData
+    (* EACH QSO WITH THE STATION IT RECORDED (issue 95, Q13): a resync days
+      after the contest began must not re-describe every QSO as sent from
+      today's MY CALL, grid and CQ exchange. *)
+    while LogSourceNext( TempRXData, rowFacts, rowSent ) do  // fills global TempRXData
        begin
        if GoodLookingQSO then
           begin
           Inc(nCount);
-          HamScoreOnLog(TempRXData);
+          aSink(TempRXData, rowFacts, rowSent);
           end;
        end;
     LogSourceClose;
@@ -3113,6 +3145,12 @@ begin
        Logger.Error('[SendFullLogToHamScore] %s', [E.Message]);
        end;
   end;
+  Result := nCount;
+end;
+
+procedure SendFullLogToHamScore;
+begin
+  DeliverLogToHamScore(HamScoreOnLog);
 end;
 
 procedure SendFullLogToUDP;

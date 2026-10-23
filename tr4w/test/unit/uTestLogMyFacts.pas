@@ -64,6 +64,7 @@ type
       procedure TestASchema2LogNeedsBothMigrationsAtOnce;
       (* the repository *)
       procedure TestTheFactsAreCapturedOnInsert;
+      procedure TestTheSentExchangeReadsBackWithTheFacts;
       procedure TestTheNextSaveIsNotCaptured;
       procedure TestAnEditKeepsThem;
       procedure TestTheEditorWriteChangesThem;
@@ -90,6 +91,9 @@ type
       (* the store *)
       procedure TestTheStoreCapturesOurStationAtTheMomentOfTheQSO;
       procedure TestTheEditorReadsAndWritesThroughTheStore;
+      procedure TestHamScoreResyncDeliversEachRowsRecord;
+      procedure TestHamScoreUndeleteReadsTheNewestRowsRecord;
+      procedure TestHamScoreEditReadsTheRowAtItsIndex;
       procedure TestAnImportBatchNeverTakesTheLiveStation;
       procedure TestANoteRecordsNoStation;
       procedure TestAPeersEditKeepsItsProvenance;
@@ -108,6 +112,10 @@ uses
    SysUtils, sqldb, utils_text, uSettingsModel,
    uLogDatabase, uLogSchema, uLogRepository, uLogStore,
    uLogNote,   (* SetNoteText -- a note's text *)
+   StrUtils,   (* ExtractWord -- the words of a Cabrillo line *)
+   uLogSource, (* the reads Edit QSO and the undelete make *)
+   uCabrillo,  (* BuildSingleQsoCabrilloLine -- HamScore's one-QSO line *)
+   LogSubs2,   (* DeliverLogToHamScore -- the resync's log walk *)
    (* DowngradeTestLog and TestLogHasColumn -- the shared fixture helpers *)
    uTestLatestContest;
 
@@ -619,6 +627,57 @@ begin
       try
          CheckTrue(repo.LoadQSOMyFacts(rowId, facts), 'the row is there');
          CheckFactsEqual(SampleFacts, facts, 'after a reopen');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* ISSUE 95: HamScore re-emits a STORED QSO from its record, so the row's
+  exchange_sent must come back beside its my_* columns. *)
+procedure TLogMyFactsTests.TestTheSentExchangeReadsBackWithTheFacts;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   qso: ContestExchange;
+   facts: TQsoMyFacts;
+   sent: AnsiString;
+   fn: string;
+   rowId, bareId: Int64;
+begin
+   BeginTest('LoadQSOMyFacts hands back the row''s exchange_sent with its facts');
+   fn := TempLogName('sentback.db');
+   Scrub(fn);
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         MakeQSO(qso, 1);
+         repo.SetNextMyFacts(SampleFacts);
+         repo.SetNextSentExchange('599 7 EL88');
+         rowId := repo.SaveQSO(qso);
+         MakeQSO(qso, 2);
+         bareId := repo.SaveQSO(qso);
+         repo.Commit;
+
+         sent := 'stale';
+         CheckTrue(repo.LoadQSOMyFacts(rowId, facts, sent), 'the row is there');
+         CheckEquals('599 7 EL88', string(sent), 'its sent exchange');
+         CheckFactsEqual(SampleFacts, facts, 'and its station');
+
+         sent := 'stale';
+         CheckTrue(repo.LoadQSOMyFacts(bareId, facts, sent), 'the bare row is there');
+         CheckEquals('', string(sent), 'a row that recorded none reads empty');
+         CheckEquals(Ord(mfsNotCaptured), Ord(facts.Source),
+                     'and never captured its station');
+
+         sent := 'stale';
+         CheckFalse(repo.LoadQSOMyFacts(bareId + 100, facts, sent), 'no such row');
+         CheckEquals('', string(sent), 'and nothing is left over');
       finally
          repo.Free;
       end;
@@ -1428,6 +1487,210 @@ begin
    end;
 end;
 
+(* ------------------------------------------------------------------------
+  ISSUE 95 -- HAMSCORE RE-EMITS A STORED QSO FROM ITS RECORD (closure
+  evidence). The three paths that re-emit one, each driven against a real log:
+
+    RESYNC    DeliverLogToHamScore -- the log walk SendFullLogToHamScore hands
+              HamScoreOnLog; here a collector renders what HamScore would be sent.
+    UNDELETE  LogSourceReadNewestStation -- what Alt-Y reads for the QSO it
+              brings back.
+    EDIT      LogSourceReadAtIndex + LogSourceReadStationAtIndex -- what Edit
+              QSO reads before HamScoreOnEdit.
+
+  WHAT STAYS BENCH-ONLY: Edit QSO's form read (MyFactsAsSaved reads the
+  editor's controls) and the one-line HamScoreOn* call itself, which needs a
+  running uploader. docs/BENCH_QUEUE.md lists both.
+  ------------------------------------------------------------------------ *)
+
+var
+   GResyncLines: TStringList = nil;
+   GResyncSources: TStringList = nil;
+
+(* THE SINK A RESYNC DELIVERS TO, with HamScoreOnLog's signature. *)
+procedure CollectResyncRow(const aQso: ContestExchange;
+                           const aFacts: TQsoMyFacts;
+                           const aRecordedSent: AnsiString);
+begin
+   GResyncLines.Add(string(BuildSingleQsoCabrilloLine(aQso, aFacts, aRecordedSent)));
+   GResyncSources.Add(IntToStr(Ord(aFacts.Source)));
+end;
+
+function HamScoreWord(const aLine: string; aWord: integer): string;
+begin
+   Result := ExtractWord(aWord, aLine, [' ']);
+end;
+
+procedure TLogMyFactsTests.TestHamScoreResyncDeliversEachRowsRecord;
+var
+   qso: ContestExchange;
+   savedCall, savedTemplate, savedGrid: string;
+   delivered, last: integer;
+begin
+   BeginTest('a HamScore resync describes each row by its record: serial, call, legacy fallback');
+
+   StartStore(FIXTURE_SET + '-resync.trw');
+   savedCall := Settings.My.Call;
+   savedTemplate := Settings.Messages.CqExchangeCw;
+   savedGrid := Settings.My.Grid;
+   GResyncLines := TStringList.Create;
+   GResyncSources := TStringList.Create;
+   try
+      (* LOGGED as N0AAA with the CQ exchange "5nn #". *)
+      Settings.My.Call := 'N0AAA';
+      Settings.Messages.CqExchangeCw := '5nn #';
+      MakeQSO(qso, 1);
+      qso.ceComputerID := Settings.Computer.Id;
+      qso.NumberSent := 7;
+      CheckTrue(LogStoreAppendQSO(qso), 'the first QSO is logged');
+      MakeQSO(qso, 2);
+      qso.ceComputerID := Settings.Computer.Id;
+      qso.NumberSent := 8;
+      CheckTrue(LogStoreAppendQSO(qso), 'the second QSO is logged');
+
+      (* THE OPERATOR CORRECTS THE SECOND'S SENT SERIAL (what Edit QSO writes)
+         ... *)
+      qso.NumberSent := 20;
+      LogStoreUpdateQSOAtIndex(102, qso);
+      (* ... AND THE SESSION MOVES ON: another call and grid. *)
+      Settings.My.Call := 'K9BBB';
+      Settings.My.Grid := 'EN02AB';
+
+      delivered := DeliverLogToHamScore(CollectResyncRow);
+      CheckTrue(delivered >= 3, 'the resync delivered the log: ' + IntToStr(delivered));
+      CheckEquals(delivered, GResyncLines.Count, 'every delivery was rendered');
+      last := GResyncLines.Count - 1;
+
+      CheckEquals(IntToStr(Ord(mfsLogged)), GResyncSources[last],
+                  'the newest row arrives with its recorded station');
+      CheckEquals('N0AAA', HamScoreWord(GResyncLines[last], 6),
+                  'edited QSO: the call it was logged with, not today''s');
+      CheckEquals('20', HamScoreWord(GResyncLines[last], 8),
+                  'edited QSO: the EDITED serial');
+      CheckEquals('N0AAA', HamScoreWord(GResyncLines[last - 1], 6),
+                  'the QSO before it: also the logged call');
+      CheckEquals('7', HamScoreWord(GResyncLines[last - 1], 8),
+                  'and its own serial');
+
+      (* A ROW THAT NEVER RECORDED ITS STATION: the legacy fallback, which is
+         what the final export does for it (ExportCallFor). *)
+      CheckEquals(IntToStr(Ord(mfsNotCaptured)), GResyncSources[0],
+                  'a migrated row arrives never-captured');
+      CheckEquals(ExportCallFor(NotCapturedMyFacts), HamScoreWord(GResyncLines[0], 6),
+                  'and keeps the export''s fallback call (the log''s declared one)');
+   finally
+      GResyncLines.Free;
+      GResyncSources.Free;
+      GResyncLines := nil;
+      GResyncSources := nil;
+      Settings.My.Call := savedCall;
+      Settings.Messages.CqExchangeCw := savedTemplate;
+      Settings.My.Grid := savedGrid;
+      StopStore;
+   end;
+end;
+
+procedure TLogMyFactsTests.TestHamScoreUndeleteReadsTheNewestRowsRecord;
+var
+   qso, restored: ContestExchange;
+   facts: TQsoMyFacts;
+   sent: AnsiString;
+   savedCall, savedTemplate, line: string;
+begin
+   BeginTest('an undelete re-emits the newest row by its record, edited serial and all');
+
+   StartStore(FIXTURE_SET + '-undelete.trw');
+   savedCall := Settings.My.Call;
+   savedTemplate := Settings.Messages.CqExchangeCw;
+   try
+      Settings.My.Call := 'N0AAA';
+      Settings.Messages.CqExchangeCw := '5nn #';
+      MakeQSO(qso, 1);
+      qso.ceComputerID := Settings.Computer.Id;
+      qso.NumberSent := 7;
+      CheckTrue(LogStoreAppendQSO(qso), 'the QSO is logged');
+      qso.NumberSent := 15;
+      LogStoreUpdateQSOAtIndex(101, qso);
+      Settings.My.Call := 'K9BBB';
+
+      (* EXACTLY DeleteLastContact's reads. *)
+      CheckTrue(LogSourceOpen, 'the log opens');
+      try
+         CheckTrue(LogSourceReadFromEnd(1, restored), 'the newest QSO reads');
+         CheckTrue(LogSourceReadNewestStation(facts, sent), 'and its station');
+      finally
+         LogSourceClose;
+      end;
+      CheckEquals(Ord(mfsLogged), Ord(facts.Source), 'it is the logged row, not its neighbour');
+      line := string(BuildSingleQsoCabrilloLine(restored, facts, sent));
+      CheckEquals('N0AAA', HamScoreWord(line, 6), 'the call it was logged with');
+      CheckEquals('15', HamScoreWord(line, 8), 'and the edited serial');
+   finally
+      Settings.My.Call := savedCall;
+      Settings.Messages.CqExchangeCw := savedTemplate;
+      StopStore;
+   end;
+end;
+
+procedure TLogMyFactsTests.TestHamScoreEditReadsTheRowAtItsIndex;
+var
+   qso, loaded: ContestExchange;
+   facts, justLogged: TQsoMyFacts;
+   sent: AnsiString;
+   savedCall, savedTemplate, liveLine, line: string;
+begin
+   BeginTest('Edit QSO re-emits by the row at its index; live entry equals the stored row');
+
+   StartStore(FIXTURE_SET + '-hsedit.trw');
+   savedCall := Settings.My.Call;
+   savedTemplate := Settings.Messages.CqExchangeCw;
+   try
+      Settings.My.Call := 'N0AAA';
+      Settings.Messages.CqExchangeCw := '5nn #';
+      MakeQSO(qso, 1);
+      qso.ceComputerID := Settings.Computer.Id;
+      qso.NumberSent := 7;
+
+      (* LIVE ENTRY: LogContact hands HamScoreOnLog the session's station and
+         no stored text, a moment before the store records the same. *)
+      justLogged := LogStoreCurrentMyFacts;
+      liveLine := string(BuildSingleQsoCabrilloLine(qso, justLogged, ''));
+      CheckTrue(LogStoreAppendQSO(qso), 'the QSO is logged');
+
+      CheckTrue(LogSourceReadStationAtIndex(101, facts, sent), 'the stored station reads');
+      CheckEquals('599 7', string(sent), 'exchange_sent was captured at log time');
+      CheckEquals(liveLine, string(BuildSingleQsoCabrilloLine(qso, facts, sent)),
+                  'the stored row says exactly what live entry said');
+
+      (* THE OPERATOR EDITS THE SENT SERIAL; THE SESSION HAS MOVED. *)
+      Settings.My.Call := 'K9BBB';
+      CheckTrue(LogSourceOpen, 'the log opens');
+      try
+         CheckTrue(LogSourceReadAtIndex(101, loaded), 'Edit QSO loads the QSO');
+      finally
+         LogSourceClose;
+      end;
+      loaded.NumberSent := 15;
+      LogStoreUpdateQSOAtIndex(101, loaded);
+
+      CheckTrue(LogSourceReadStationAtIndex(101, facts, sent), 'the station is read at the index');
+      CheckEquals('599 7', string(sent), 'exchange_sent is insert-only: still the old text');
+      line := string(BuildSingleQsoCabrilloLine(loaded, facts, sent));
+      CheckEquals('N0AAA', HamScoreWord(line, 6), 'the logged call');
+      CheckEquals('15', HamScoreWord(line, 8), 'the EDITED serial, not the stored text''s 7');
+
+      (* A migrated row: the editor is told it was never recorded, and the
+         line falls back as the final export does. *)
+      CheckTrue(LogSourceReadStationAtIndex(0, facts, sent), 'a migrated row reads');
+      CheckEquals(Ord(mfsNotCaptured), Ord(facts.Source), 'never captured');
+      CheckEquals('', string(sent), 'with no stored text');
+   finally
+      Settings.My.Call := savedCall;
+      Settings.Messages.CqExchangeCw := savedTemplate;
+      StopStore;
+   end;
+end;
+
 (* EDIT QSO's TWO CALLS, as the editor makes them: read our station at a
   record position, and write the QSO and its station back as one transaction. *)
 procedure TLogMyFactsTests.TestTheEditorReadsAndWritesThroughTheStore;
@@ -1688,6 +1951,7 @@ begin
    TestASchema2LogNeedsBothMigrationsAtOnce;
 
    TestTheFactsAreCapturedOnInsert;
+   TestTheSentExchangeReadsBackWithTheFacts;
    TestTheNextSaveIsNotCaptured;
    TestAnEditKeepsThem;
    TestTheEditorWriteChangesThem;
@@ -1717,6 +1981,9 @@ begin
      Windows migration path. *)
    TestTheStoreCapturesOurStationAtTheMomentOfTheQSO;
    TestTheEditorReadsAndWritesThroughTheStore;
+   TestHamScoreResyncDeliversEachRowsRecord;
+   TestHamScoreUndeleteReadsTheNewestRowsRecord;
+   TestHamScoreEditReadsTheRowAtItsIndex;
    TestAnImportBatchNeverTakesTheLiveStation;
    TestANoteRecordsNoStation;
 {$ELSE}

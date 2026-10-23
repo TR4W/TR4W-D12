@@ -2419,17 +2419,9 @@ begin
       ( CTY.ctyZoneMode <> CQZoneMode ) );
 end;
 
-(* OUR CALL FOR ONE LOGGED QSO -- D5 (log schema 3, stage 4): the call the QSO
-  recorded (my_call); else the call the log's entry DECLARED (contest.my_call);
-  and only when neither is known, today's MY CALL. Never today's ahead of the
-  record. In every corpus fixture the three agree (measured), so no reference
-  moves. *)
-function ExportCallFor( const aFacts: TQsoMyFacts ): string;
-begin
-   (* The rule is uQsoMyFacts.ExportCallOf, pinned there. *)
-   Result := string( ExportCallOf( aFacts, LogSourceDeclaredCall,
-      UTF8Encode( Settings.My.Call ) ) );
-end;
+(* OUR CALL FOR ONE LOGGED QSO is uLogSource.ExportCallFor (D5, log schema 3,
+  stage 4): it moved there on 2026-10-23 so HamScore's one-QSO line asks the
+  same routine as this writer. *)
 
 (* THE EXCHANGE FAILURES OF ONE EXPORT RUN -- plan F25/F26/F27, NY4I
   2026-10-14: "we should report an error as the silent error is not good".

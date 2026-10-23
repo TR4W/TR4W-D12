@@ -410,7 +410,13 @@ type
 
       (* The row's my_* columns; NotCapturedMyFacts for a row written before
          schema 3. False, and NotCapturedMyFacts, when there is no such row. *)
-      function LoadQSOMyFacts(aRowId: Int64; out aFacts: TQsoMyFacts): boolean;
+      function LoadQSOMyFacts(aRowId: Int64; out aFacts: TQsoMyFacts): boolean; overload;
+
+      (* The same, and the row's exchange_sent beside it ('' for none) -- what a
+         re-emission of one STORED QSO (HamScore's one-QSO line) reads, so it
+         describes the row as recorded (Q13). *)
+      function LoadQSOMyFacts(aRowId: Int64; out aFacts: TQsoMyFacts;
+                              out aSentExchange: AnsiString): boolean; overload;
 
       procedure SetNextQSOSet(const aSetId: AnsiString);
 
@@ -2904,7 +2910,17 @@ end;
 
 function TLogRepository.LoadQSOMyFacts(aRowId: Int64;
                                        out aFacts: TQsoMyFacts): boolean;
+var
+   ignored: AnsiString;
 begin
+   Result := LoadQSOMyFacts(aRowId, aFacts, ignored);
+end;
+
+function TLogRepository.LoadQSOMyFacts(aRowId: Int64;
+                                       out aFacts: TQsoMyFacts;
+                                       out aSentExchange: AnsiString): boolean;
+begin
+   aSentExchange := '';
    FSelectById.Close;
    FSelectById.ParamByName('row_id').AsLargeInt := aRowId;
    OpenQsoReader(FSelectById);
@@ -2912,6 +2928,10 @@ begin
    if Result then
       begin
       ReadMyFacts(FSelectById, aFacts);
+      if not FSelectById.Fields[Ord(qc_exchange_sent)].IsNull then
+         begin
+         aSentExchange := AnsiString(FSelectById.Fields[Ord(qc_exchange_sent)].AsString);
+         end;
       end
    else
       begin

@@ -209,4 +209,29 @@ unfreed (ceiling); contest matrix 188 identical; factory 13 identical; corpus
 
 **Still open:** R1 (Q119/Q120 with the `q98-s1-cqww` merge, plus the
 host-area predicate added to `QSOIsXQSO` and its tests -- the merge alone
-does not do it); R3's legacy `.cfg` + database ordering; R6 lands next (#95).
+does not do it); R3's legacy `.cfg` + database ordering.
+
+### R6 landed (#95)
+
+In the commit titled *"HamScore re-emits a stored QSO from its record (#95,
+review R6)"*. Full gate: app 0 errors, narrowing 1229 / range 3; server
+builds; 49 lints; unit tests **393,423 / 0**; `-Checked` **393,423 / 0**,
+heaptrc 0 corruption, 13,463 unfreed (ceiling); matrix 188 identical; factory
+13 identical; corpus 21/0/5 exit 0 (`ExportCallFor` moved out of postunit);
+ADIF 12/0/2; rescore unchanged.
+
+| Path | Closure evidence | Mutation that fails it |
+| --- | --- | --- |
+| our call, every path | `uLogSource.ExportCallFor(aFacts)` is the one answer; postunit's private copy deleted, its four call sites repointed | ExportCallFor ignores the record: 4 failures |
+| sent exchange | rebuilt from the QSO record (serial) and the row's facts (grid, through `MyStationExchangeOfQSO`), per NY4I's ruling that HamScore follows an edited serial; an IMPORTED row keeps its file's text (`RecordedSentExchange`, the ADIF writer's rule) | stored `exchange_sent` wins again: 3 |
+| Tools resync | `LogSubs2.DeliverLogToHamScore(aSink)` -- production passes the real `HamScoreOnLog`; `TestHamScoreResyncDeliversEachRowsRecord`: the edited serial (20), the logged call after a session change, a migrated row's fallback | resync passes not-captured facts: 1 |
+| Alt-Y undelete | `LogSourceReadNewestStation`; `TestHamScoreUndeleteReadsTheNewestRowsRecord` (serial 15, logged call) | reads the row before the newest: 1 |
+| Edit QSO | `TestHamScoreEditReadsTheRowAtItsIndex`: Edit QSO's reads after a serial edit and a session change; stale `exchange_sent` ignored | stored sent text dropped: 2 |
+| live entry | the just-logged line is byte-identical to the line built from the stored row | (the same test) |
+
+**Bench-only, in `docs/BENCH_QUEUE.md`:** Edit QSO's form read
+(`MyFactsAsSaved` reads the editor's controls) and the final `HamScoreOn*`
+calls, which need a running uploader. **Known consequence of the ruling:** a
+template contest's re-emitted sent text uses TODAY's CQ exchange template
+(there is no per-QSO copy but the ignored `exchange_sent`); the call and grid
+still come from the row.

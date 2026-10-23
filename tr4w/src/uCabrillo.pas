@@ -39,7 +39,8 @@ unit uCabrillo;
 interface
 
 uses
-   VC;
+   VC,
+   uQsoMyFacts;   (* TQsoMyFacts -- a stored QSO's own station *)
 
 // ---------------------------------------------------------------------------
 // BuildSingleQsoCabrilloLine
@@ -53,12 +54,35 @@ uses
 // X-QSO records (RXData.ceXQSO = True) get an "X-QSO: " prefix instead of
 // "QSO: " per Issue #750 / Cabrillo spec.
 // ---------------------------------------------------------------------------
-function BuildSingleQsoCabrilloLine(const RXData: ContestExchange): AnsiString;
+function BuildSingleQsoCabrilloLine(const RXData: ContestExchange): AnsiString; overload;
+
+(* THE SAME LINE FOR A QSO THAT IS ALREADY IN THE LOG (issue 95; NY4I's ruling
+   Q13: a logged QSO reads its record, never live state).
+
+   Edit QSO and the Tools -> HamScore resync re-emit a STORED QSO, possibly
+   days after it was logged and after MY CALL, the grid or the CQ exchange
+   changed. The line then says what the record says, by the same routines the
+   final Cabrillo writer asks:
+
+     our call       uLogSource.ExportCallFor(aFacts) -- the row's my_call, else
+                    the log's declared call, else today's MY CALL
+     sent exchange  rebuilt from the QSO's own fields (an edited serial shows)
+                    and the row's recorded grid -- uExchangeBuilder.
+                    BuildSentExchangeTextOf; aRecordedSent (exchange_sent) is
+                    used verbatim only for an imported row
+
+   aFacts / aRecordedSent are what the log read beside the QSO
+   (LogSourceNext, LogSourceReadStationAtIndex). The one-argument overload is
+   the QSO for which the session IS the record: a row that never captured its
+   station (NotCapturedMyFacts, ruling A) -- and the test harness. *)
+function BuildSingleQsoCabrilloLine(const RXData: ContestExchange;
+                                    const aFacts: TQsoMyFacts;
+                                    const aRecordedSent: AnsiString): AnsiString; overload;
 
 implementation
 
 uses
-   uSettingsModel,   // Settings.My.Call
+   uLogSource,      // ExportCallFor -- the export's own answer for our call
    SysUtils,
    uCabrilloFormat,        // FormatCabrilloFreq
    uContestRegistry,       // ContestIdentity -- the QSO's contest's mode column
@@ -66,6 +90,13 @@ uses
    LogWind;                // the contest globals this renders from
 
 function BuildSingleQsoCabrilloLine(const RXData: ContestExchange): AnsiString;
+begin
+   Result := BuildSingleQsoCabrilloLine(RXData, NotCapturedMyFacts, '');
+end;
+
+function BuildSingleQsoCabrilloLine(const RXData: ContestExchange;
+                                    const aFacts: TQsoMyFacts;
+                                    const aRecordedSent: AnsiString): AnsiString;
 var
    sFreq:     AnsiString;
    sMode:     AnsiString;
@@ -83,7 +114,7 @@ var
    sMode := AnsiString(ContestIdentity(RXData.ceContest).CabrilloModeString(
                RXData.Mode, RXData.ExtMode));
 
-   sentExch := BuildSentExchangeText(RXData);
+   sentExch := BuildSentExchangeTextOf(RXData, aFacts, aRecordedSent);
    rcvExch  := BuildRxExchangeText(RXData);
 
    if RXData.ceXQSO then
@@ -103,7 +134,7 @@ var
        string(sMode),
        RXData.tSysTime.qtYear, RXData.tSysTime.qtMonth, RXData.tSysTime.qtDay,
        RXData.tSysTime.qtHour, RXData.tSysTime.qtMinute,
-       string(Settings.My.Call),
+       ExportCallFor(aFacts),
        sentExch,
        string(RXData.Callsign),
        rcvExch]));

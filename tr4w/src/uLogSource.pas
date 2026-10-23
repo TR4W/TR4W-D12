@@ -122,6 +122,34 @@ procedure LogSourceClose;
   no call of its own (log schema 3, stage 4). *)
 function LogSourceDeclaredCall: AnsiString;
 
+(* OUR CALL FOR ONE LOGGED QSO -- D5 (log schema 3, stage 4): the call the QSO
+  recorded (my_call); else the call the log's entry DECLARED
+  (LogSourceDeclaredCall); and only when neither is known, today's MY CALL.
+  Never today's ahead of the record. In every corpus fixture the three agree
+  (measured), so no reference moves.
+
+  THE ONE ANSWER for every writer that says whose call a stored QSO was made
+  from: PostUnit's Cabrillo and ADIF export and HamScore's one-QSO line
+  (uCabrillo) -- the rule is uQsoMyFacts.ExportCallOf, pinned there. It lived
+  in PostUnit until 2026-10-23 (issue 95), and the second caller is why it was
+  lifted: a copy would drift. *)
+function ExportCallFor(const aFacts: TQsoMyFacts): string;
+
+(* THE RECORD AT aIndex, 0-BASED: our station as it was for that QSO, and its
+  exchange_sent ('' for none). What Edit QSO hands HamScore when it re-emits a
+  STORED QSO, which must describe the station as recorded (Q13), never as
+  today's settings say. False, and NotCapturedMyFacts, when there is no such
+  record. *)
+function LogSourceReadStationAtIndex(aIndex: Int64;
+                                     out aFacts: TQsoMyFacts;
+                                     out aSentExchange: AnsiString): boolean;
+
+(* THE NEWEST RECORD'S STATION AND SENT EXCHANGE -- what Alt-Y's undelete hands
+  HamScore for the QSO it brings back (issue 95). LogSourceReadStationAtIndex
+  of the last index. *)
+function LogSourceReadNewestStation(out aFacts: TQsoMyFacts;
+                                    out aSentExchange: AnsiString): boolean;
+
 (* HOW MANY QSO RECORDS THE LOG HOLDS.  -1 if it cannot be read.
 
   Callers asked this with Windows.GetFileSize(LogHandle) arithmetic, which is
@@ -180,6 +208,7 @@ uses
       The database's NAME still comes from uLogDatabase, which does outlive the
       shadow. *)
    SysUtils, MainUnit, uLogDatabase, uLogRepository, uLogStore,
+   uSettingsModel,   (* Settings.My.Call -- ExportCallFor's last resort *)
    utils_text;   (* CharBufferText -- the log name buffer *)
 
 (* The SQLite log beside the contest's log name.  One call, so no routine
@@ -353,6 +382,40 @@ begin
       begin
       Result := Repo.DeclaredCall;
       end;
+end;
+
+function ExportCallFor(const aFacts: TQsoMyFacts): string;
+begin
+   Result := string(ExportCallOf(aFacts, LogSourceDeclaredCall,
+      UTF8Encode(Settings.My.Call)));
+end;
+
+function LogSourceReadStationAtIndex(aIndex: Int64;
+                                     out aFacts: TQsoMyFacts;
+                                     out aSentExchange: AnsiString): boolean;
+var
+   rowId: Int64;
+begin
+   aFacts := NotCapturedMyFacts;
+   aSentExchange := '';
+   Result := False;
+   if Repo = nil then
+      begin
+      Exit;
+      end;
+
+   rowId := Repo.RowIdAtIndex(aIndex);
+   if rowId > 0 then
+      begin
+      Result := Repo.LoadQSOMyFacts(rowId, aFacts, aSentExchange);
+      end;
+end;
+
+function LogSourceReadNewestStation(out aFacts: TQsoMyFacts;
+                                    out aSentExchange: AnsiString): boolean;
+begin
+   Result := LogSourceReadStationAtIndex(LogSourceRecordCount - 1, aFacts,
+                aSentExchange);
 end;
 
 function LogSourceRecordCount: Int64;

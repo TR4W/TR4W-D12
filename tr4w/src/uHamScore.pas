@@ -34,8 +34,9 @@
 
   Integration points
   ------------------
-    logsubs2.pas:LogContact   -> HamScoreOnLog(RXData)
-    uEditQSO.pas              -> HamScoreOnEdit(RXData)
+    logsubs2.pas:LogContact   -> HamScoreOnLog(RXData, station, sent)
+    logsubs2.pas:SendFullLogToHamScore (Tools resync) -> the same, per row
+    uEditQSO.pas              -> HamScoreOnEdit(RXData, station, sent)
                                  HamScoreOnDelete(RXData)
     Tools menu                -> HamScoreResyncFromScratch (Phase 3)
 
@@ -56,6 +57,7 @@ uses
   (* Windows went with the two raw event handles -- see FWake. *)
   Classes, SysUtils, SyncObjs, uHTTPDownload,
   uConfigValues,   // Config -- the five HAMSCORE settings live here now
+  uQsoMyFacts,     // TQsoMyFacts -- a QSO's own station
   VC, Log4D, Version;
 
 type
@@ -161,9 +163,29 @@ procedure HamScoreShutdown;   // Safe to call even if Init didn't start the work
 // QSO event hooks (cheap no-ops when uploader is not running)
 // ---------------------------------------------------------------------------
 
-procedure HamScoreOnLog(const RXData: ContestExchange);
-procedure HamScoreOnEdit(const RXData: ContestExchange);
+(* THE QSO'S OWN STATION, STATED BY EVERY CALLER (issue 95; NY4I's ruling Q13:
+   a logged QSO reads its record, never live state).
+
+   aFacts is our station as the QSO recorded it (my_call and the rest) and
+   aRecordedSent its exchange_sent, '' for none -- what the one-QSO Cabrillo
+   line says our call and our sent exchange were. A QSO read back from the log
+   passes what the log read beside it (LogSourceNext,
+   LogSourceReadStationAtIndex). A QSO being logged RIGHT NOW passes
+   LogStoreCurrentMyFacts and '': the session is what is being recorded, so the
+   two are equal at that moment. There is no overload without them, because a
+   caller that does not say gets today's settings -- the defect this fixes. *)
+procedure HamScoreOnLog(const RXData: ContestExchange;
+                        const aFacts: TQsoMyFacts;
+                        const aRecordedSent: AnsiString);
+procedure HamScoreOnEdit(const RXData: ContestExchange;
+                         const aFacts: TQsoMyFacts;
+                         const aRecordedSent: AnsiString);
 procedure HamScoreOnDelete(const RXData: ContestExchange);
+
+(* IS THE UPLOADER RUNNING? -- so a caller can skip computing the station it
+   would hand HamScoreOnLog when nothing would be sent (that capture reads the
+   CTY tables). *)
+function HamScoreUploaderRunning: Boolean;
 
 // Tools-menu entry point (Phase 3): wipe the server-side log and re-send
 // every QSO from the current binary log file.
@@ -353,7 +375,9 @@ end;
 //
 // Edits use the same <contactinfo> element as new QSOs, just with the same
 // QSO ID -- no separate <contactreplace> in 3.0.
-function RenderContactBody(AKind: TRTCEventKind; const RXData: ContestExchange): AnsiString;
+function RenderContactBody(AKind: TRTCEventKind; const RXData: ContestExchange;
+                           const aFacts: TQsoMyFacts;
+                           const aRecordedSent: AnsiString): AnsiString;
 var
    cabrillo: AnsiString;
    begin
@@ -363,7 +387,7 @@ var
       Exit;
       end;
 
-   cabrillo := uCabrillo.BuildSingleQsoCabrilloLine(RXData);
+   cabrillo := uCabrillo.BuildSingleQsoCabrilloLine(RXData, aFacts, aRecordedSent);
 
    Result :=
       '<contactinfo>' + sLineBreak +
@@ -941,24 +965,33 @@ function ContactInfoUploadAllowed(const RXData: ContestExchange): Boolean;
    Result := ContestIdentity(RXData.ceContest).RTCCapable;
    end;
 
-procedure HamScoreOnLog(const RXData: ContestExchange);
+function HamScoreUploaderRunning: Boolean;
+begin
+  Result := Uploader <> nil;
+end;
+
+procedure HamScoreOnLog(const RXData: ContestExchange;
+                        const aFacts: TQsoMyFacts;
+                        const aRecordedSent: AnsiString);
 var body: AnsiString;
 begin
   if Uploader = nil then Exit;
   if not ContactInfoUploadAllowed(RXData) then Exit;
-  body := RenderContactBody(rckInfo, RXData);
+  body := RenderContactBody(rckInfo, RXData, aFacts, aRecordedSent);
   if body = '' then Exit;
   Uploader.Enqueue(TRTCContact.Create(rckInfo, AnsiString(RXData.id), body));
 end;
 
-procedure HamScoreOnEdit(const RXData: ContestExchange);
+procedure HamScoreOnEdit(const RXData: ContestExchange;
+                         const aFacts: TQsoMyFacts;
+                         const aRecordedSent: AnsiString);
 var body: AnsiString;
 begin
   if Uploader = nil then Exit;
   if not ContactInfoUploadAllowed(RXData) then Exit;
   // RTC 3.0 (issue #920): edits use <contactinfo> with the same QSO ID --
   // server distinguishes new vs edit by ID-already-seen.
-  body := RenderContactBody(rckInfo, RXData);
+  body := RenderContactBody(rckInfo, RXData, aFacts, aRecordedSent);
   if body = '' then Exit;
   Uploader.Enqueue(TRTCContact.Create(rckInfo, AnsiString(RXData.id), body));
 end;

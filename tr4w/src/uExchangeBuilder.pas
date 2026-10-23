@@ -30,11 +30,37 @@ unit uExchangeBuilder;
 interface
 
 uses
-  VC;
+  VC,
+  uQsoMyFacts;   // TQsoMyFacts -- a stored QSO's own station
 
 // Plain-text builders (no XML escaping).
 function BuildSentExchangeText(const RXData: ContestExchange): string;
 function BuildRxExchangeText  (const RXData: ContestExchange): string;
+
+(* WHAT A STORED QSO SENT, as HamScore's one-QSO line says it (issue 95, Q13).
+
+  THE RECORD WINS, as it does for the final Cabrillo/ADIF (NY4I, 2026-10-23:
+  "HamScore should follow the edited serial"). The sent exchange is rebuilt
+  from the QSO's own fields -- its serial above all -- and from where the
+  station was for that QSO: the grid is the row's (uContestBase.
+  MyStationExchangeOfQSO, the overlay PostUnit applies), never today's for a
+  row that recorded its station. The text is the same canonical spelling
+  BuildSentExchangeText makes, so a QSO whose station did not change reads
+  exactly as it did when logged.
+
+  exchange_sent is NOT the source for a row logged here: it is captured once,
+  at log time, and is insert-only, so after an edit of the sent serial it is
+  stale. It is the source only where the text cannot be rebuilt -- a row
+  imported (or stamped) from a file, whose STX_STRING is what the file says was
+  sent (uQsoMyFacts.RecordedSentExchange, the rule the ADIF writer uses).
+
+  A row that never captured its station (NotCapturedMyFacts) is built from the
+  session, as before (NY4I, ruling A); so is the just-logged QSO, where the
+  session IS what is being recorded. The CQ exchange template is the one input
+  with no per-QSO copy but exchange_sent, and is today's. *)
+function BuildSentExchangeTextOf(const RXData: ContestExchange;
+                                 const aFacts: TQsoMyFacts;
+                                 const aRecordedSent: AnsiString): string;
 
 implementation
 
@@ -46,7 +72,9 @@ uses
   uContestRegistry,    // ContestIdentity -- the QSO's contest
   uCanonicalExchange;  // CollapseWhitespace
 
-function BuildSentExchangeText(const RXData: ContestExchange): string;
+(* THE ONE BUILDER: the session's CQ template and a grid HANDED IN. *)
+function BuildSentExchangeWithGrid(const RXData: ContestExchange;
+                                   const aGrid: string): string;
 var
    ctx: TCanonicalExchangeContext;
 begin
@@ -54,8 +82,36 @@ begin
       template is CQ EXCHANGE CW as it stands; the RTC builds from MY GRID
       instead, with no RST (its HamScore organizer, 2026-05). *)
    ctx.CQExchangeTemplate := string(Settings.Messages.CqExchangeCw);
-   ctx.MyGrid := Settings.My.ResolvedGrid;
+   ctx.MyGrid := aGrid;
    Result := ContestIdentity(RXData.ceContest).CanonicalSentExchange(RXData, ctx);
+end;
+
+function BuildSentExchangeText(const RXData: ContestExchange): string;
+begin
+   Result := BuildSentExchangeWithGrid(RXData, Settings.My.ResolvedGrid);
+end;
+
+function BuildSentExchangeTextOf(const RXData: ContestExchange;
+                                 const aFacts: TQsoMyFacts;
+                                 const aRecordedSent: AnsiString): string;
+var
+   session, my: TMyStationExchange;
+begin
+   (* AN IMPORTED ROW SENT WHAT ITS FILE SAYS -- the rule the ADIF writer
+      applies; a logged row returns '' and is rebuilt. *)
+   if Length(RecordedSentExchange(aFacts, aRecordedSent)) > 0 then
+      begin
+      Result := string(RecordedSentExchange(aFacts, aRecordedSent));
+      Exit;
+      end;
+
+   (* THE STATION AS IT WAS FOR THIS QSO: the session's, overlaid by what the
+      row recorded -- the same function the final export asks. Only the grid
+      is read here. *)
+   session := Default(TMyStationExchange);
+   session.MyGrid := Settings.My.ResolvedGrid;
+   my := MyStationExchangeOfQSO(session, aFacts, False, False);
+   Result := BuildSentExchangeWithGrid(RXData, my.MyGrid);
 end;
 
 function BuildRxExchangeText(const RXData: ContestExchange): string;
