@@ -1685,6 +1685,14 @@ begin
    Self.tFactoryObject.Disconnect;
    Self.tFactoryObject.Free;
    Self.tFactoryObject := nil;
+
+   (* THE SLOT'S STATUS DESCRIBED THE RADIO JUST FREED, so it goes with it.
+     The status is owned by the SLOT (stoRadio1/stoRadio2), not the radio, and
+     only a later SetRadioStatus on that slot ever replaced it -- so a profile
+     that leaves the slot EMPTY left "FT1000: Not connected" on the status bar
+     for the rest of the session (NY4I, 2026-10-23).  A rebuilt radio posts
+     its own condition from SetUpRadioInterface; an empty slot has none. *)
+   SetRadioStatus(@Self, '');
 end;
 
 (* THE "<name>: " A RADIO'S STATUS CARRIES, IN ONE PLACE, because
