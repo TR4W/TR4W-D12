@@ -1,1310 +1,625 @@
 # Adding a contest to the TR4W contest factory
 
-A working guide for the developer moving a contest out of the legacy `case`
-statements and into its own class. Keep it current — **every time you add a
-virtual or a seam, add it to the tables below.** The point is that the next
-person can find out what the base already handles without reading the base.
+**Part A** is the procedure: follow it top to bottom and you have a contest.
+**Part B** is the reference and the reasons, linked from the step that needs
+them. You should not need Part B to finish Part A.
 
-This is the contest counterpart of
-[`ADDING_A_RADIO.md`](ADDING_A_RADIO.md), and deliberately the same shape: the
-radio factory is the model NY4I asked this one to follow.
+Worked examples, both in the tree and both registered by id:
 
----
+| kind | class | its test |
+|---|---|---|
+| a single-state US QSO party | `tr4w/src/contestFactory/uContestGeorgiaQP.pas` | `tr4w/test/unit/uTestContestGeorgiaQP.pas` |
+| any other contest | `tr4w/src/contestFactory/uContestURCDXRTTY.pas` | `tr4w/test/unit/uTestContestURCDXRTTY.pas` |
 
-## 1. The rules that matter
-
-### A base class must NEVER ask which contest it is
-
-```pascal
-// NO -- this is the bug the whole design exists to prevent
-if Contest = WINTERFIELDDAY then ...
-
-// YES -- the contest overrides; the base states the general case
-function TContestWinterFieldDay.GetCabrilloName: string;
-```
-
-Identical to the radio factory's rule with different nouns, and it came from the
-same place: three defects in one afternoon there all had the shape
-`if RadioModel in [FT857, FT897]`. Every `if contest = ...` inside shared code is
-a contest whose rule is written somewhere it cannot be found from its own file.
-
-### A contest RULE has no inherited default -- the class states it
-
-NY4I, 2026-10-15: *"inherited default can get us in trouble for some future
-programming adding a new contest"* -- and *"I would feel better if contest
-classes just explicitly listed the bands they allow."*
-
-A new contest that forgets to override a rule still compiles, runs and scores,
-using whatever the base says. Nothing reports it. **So for a contest RULE --
-which bands it credits first (open-questions Q98) -- the base gives no answer
-and a pin test fails any registered class that states none.** That holds even
-where most contests agree: "HF without WARC" describes most contests, but as a
-default it is still a guess for every class that forgot.
-
-The distinction from "the base states the general case" above: the base may
-hold a shared HELPER a class calls, and genuinely neutral plumbing, but not a
-value that decides how a contest scores or what it credits. When you add a
-contest, every such rule is a line in your class, not an inheritance.
-
-### One class per contest, and one `RegisterContest` per unit
-
-Even when two contests are identical today. **ARRL Field Day and Winter Field
-Day score exactly the same and are still separate classes** — NY4I, 2026-09-02:
-
-> *"I would diverge winter field day and arrl field day. They keep diverging with
-> rule changes each year."*
-
-That is an operational argument and it beats the tidiness one. A shared base
-makes every future divergence a refactor at the exact moment somebody is making a
-small change before a contest weekend. TR4QT reaches the same conclusion:
-`ARRLFieldDayContest` and `WinterFieldDayContest` are separate there too, with no
-base between them.
-
-**So duplication between two contests is sometimes correct**, and where it is, say
-so in the file — otherwise somebody will extract it.
-
-### A family base is for what genuinely cannot differ
-
-`TContestARRLDXBase` (CW + Phone), `TContestARRLSSBase`, `TContestCQWWBase`,
-`TContestCQWPXBase`, `TContestNRAUBalticBase`: two runnings of ONE contest,
-where a rule change reaches both by definition. Compare that with the two Field
-Days, which are two contests run by different organisations.
-
-**A shared MECHANISM is not a family, and gets a helper, not a base.**
-`TContestFixedPoints` was such a base ("a number per mode", ~25 unrelated
-sponsors) and **retired at M3 (2026-10-01)**: it spent the one base class
-Object Pascal gives on arithmetic. The arithmetic survives as the
-`FixedModePoints` function, which a class calls from its own
-`CalculateQSOPoints`. `Test_EveryClassSitsOnTheBaseOrAFamily` holds the list of
-bases closed -- a new base fails it until it is added there, which is the moment
-to ask whether it is a family. A contest that merely RESEMBLES another starts as
-a copy it owns (`CONTEST_OWNERSHIP_DESIGN.md` §1.4).
-
-### Properties for what a contest IS, methods for what it DOES
-
-Declared once in `TContestBase` as `property X: T read GetX`, with a **virtual**
-getter. A descendant overrides `GetX`, never re-declares the property, and puts
-the override in a **`protected`** section — a Pascal class body with no
-visibility section defaults to `public`, which would make both `X.CabrilloName`
-and `X.GetCabrilloName` callable.
-
-`CalculateQSOPoints`, `ValidateClass`, `ValidateDXQTH` and the exchange
-formatters take arguments and do work, so they stay methods.
-
-### Scoring: override `CalculateQSOPoints`, call `ScoreQSO` (M3, 2026-10-01)
-
-**`ScoreQSO(var aQso)` is the one public scoring entry point** -- non-virtual,
-on `TContestBase`. It zeroes the points, scores an off-band QSO 0
-(`UsesBand`), scores 0 a worked station the entrant may not credit
-(`CreditsWorkedStation` -- a QSO party's host-area rule, Q107, 2026-10-16),
-applies the operator's four `QSO POINTS ...` overrides
-(`Station.PointOverrides`), and only then calls the contest's rule.
-
-**A QSO PARTY'S OUT-OF-AREA ENTRANT WORKS ONLY THE HOST AREA, TYPED AND
-LOGGED (Q107).** One predicate, `uContestBase.HostAreaRuleCredits(inArea,
-QTHString, table)`, is called by the class's `ParseReceivedExchange` refusal
-(with `aSession.IsDomesticQTH`) AND its `CreditsWorkedStation` (with
-`Station.IsDomesticQTH`) -- the same engine function,
-`LOGDUPE.DomesticTableKnowsQTH`, on both sides. False: the QSO is logged,
-scores 0 and earns no multiplier (`SetMultFlags` asks it after the band),
-exactly as an off-band QSO -- but the dupe sheet is not asked. Stated once on
-`TContestStateQSOPartyBase`; the 7QP and NEQP state it themselves (their
-in-area test is their own); IN7QPNE asks its judging party. A new state party
-inherits it; a new multi-state party states both sides, and joins
-`uTestHostAreaRule`. Never repeat it in `CalculateQSOPoints` or
-`CountsAsMultiplier`.
-
-**A contest overrides `CalculateQSOPoints`, which is `protected`**, and
-declares its override in a **`protected`** section too -- a `public`
-redeclaration would let a caller score while skipping the band check and the
-overrides. Never repeat the band rule or the overrides in it; state the bands
-in `UsesBand`. Tests call `ScoreQSO`, never the rule directly.
+The design behind all of this is `docs/CONTEST_OWNERSHIP_DESIGN.md`: **a
+contest class owns its rules outright**, through virtuals on `TContestBase`.
+There are no shared strategy objects and no per-rule registries.
 
 ---
 
-## 2. How to add a contest
+# Part A -- Adding a contest
 
-### Step 1 — read what TR4W knew about the contest
+**Before you start, three facts that are not negotiable:**
 
-**There is no row any more.** `ContestsArray`, `ContestsBooleanArray` and
-`QSOParties` were deleted at M10 S8 (2026-10-14): every contest's class states
-what its row held, and a NEW contest has no row to read -- and, since Q108 S3
-(2026-10-17), **no `ContestType` member either**: the enum is frozen
-(`Lint-FrozenContestNumbers`), and a new contest registers by its string id
-(see "A NEW CONTEST REGISTERS BY ITS ID" below). It writes its class from the
-sponsor's rules. To see what an EXISTING contest's
-row said, read it in git history (before S8) or in the class's own header,
-which quotes it. `ADDING_A_NEW_CONTEST.md` section 2 maps each old field to
-the getter that states it now. ARRL Field Day's row was:
+- **A new contest registers by its string id.** The `ContestType` enum is
+  frozen (`Lint-FrozenContestNumbers`), so a new contest has **no `VC.pas`
+  entry**. ([B5](#b5-ids-handles-and-names))
+- **A new contest is its class plus its SQLite log. There is no `.cfg`.** A
+  `.cfg` is only ever read, as an import of an old or external contest.
+- **The sponsor's current rules are the source.** Where they are silent or
+  contradict themselves, ask NY4I; record every decision you made in the
+  class's header comment (Georgia's header lists each rule and where it
+  landed).
 
-```pascal
-Email: 'fieldday@arrl.org';  DF: 'arrlsect';  WA7BNM: 57;  QRZRUID: 0;
-Pxm: NoPrefixMults;  ZnM: NoZoneMults;  AIE: NoInitialExchange;
-{DM: NoDomesticMults;}  P: 0;  AE: ClassDomesticOrDXQTHExchange;
-XM: NoDXMults;
-ADIFName: 'ARRL-FIELD-DAY';  CABName: 'ARRL-FD';  FriendlyName: 'ARRL Field Day'
+## A1. Where the files go
+
+| what | path | notes |
+|---|---|---|
+| the class | `tr4w/src/contestFactory/uContest<Name>.pas` | a QSO party is `uContest<State>QP`. One contest, one unit, one registration |
+| its tests | `tr4w/test/unit/uTestContest<Name>.pas` | [A5](#a5-the-contests-tests) |
+| its multiplier lists, if any | `tr4w/target/dom/<base>.dom` (and, for a state party, `<base>_cty.dom`) | lower-case names; format below. Shipped by the installer's wildcard -- no `full.nsi` edit |
+| the sponsor's rules | `docs/ContestRules/<Contest>/` -- a QSO party under `docs/ContestRules/QSOParties/<State>/` | the rules text as saved from the sponsor, **committed with the contest**. A test may read it (Georgia's county table test does) |
+| its frozen matrix record | `tr4w/test/contest-matrix/frozen/<ID>.matrix` | written by the freeze script in [A6](#a6-prove-it), never by hand. Blanks in the id become `_` |
+| a generator, if a `.dom` is generated | `tools/<name>/` | only if the list will need regenerating (URC: `tools/urc/make_urc_dom.py`). Otherwise let a test check the `.dom` against the rules file, as Georgia does |
+
+Then the edits to shared files listed in [A4](#a4-every-place-outside-the-class-that-names-the-contest).
+
+### The `.dom` format
+
+A `.dom` file maps what the operator TYPES to the MULTIPLIER it counts as.
+The reader is `LOGDOM.EnumDOMFILE`:
+
+```
+Any line with no equals sign is ignored -- this is the only "comment" there is
+INCLUDE FILE S50.DOM
+CLB = CLB,^Colombia
+APPL > Ga = APPL,^Appling
 ```
 
-(`XM` said `ARRLDXCC` until 2026-10-01. NY4I ruled that Field Day has no
-multipliers, and the row and the class were corrected together.)
+- **`KEY = alias,alias,^Name`** -- the multiplier is `KEY`; each alias is
+  something the operator may type; `^Name` is the display name, not an alias.
+- **`KEY > Mult = alias,^Name`** -- for an in-state entrant the multiplier is
+  `Mult` (Georgia's 159 counties all count as `Ga`). For an out-of-state
+  entrant `FCONTEST` sets `MultipliersIsCounties` and each `KEY` is its own
+  multiplier.
+- **Any line holding `=` is an entry, comments included.** There is no comment
+  syntax, so a header line with an `=` in it becomes a bogus multiplier.
+  Georgia's test pins "no `=` outside an entry" for `georgia.dom`.
+- Aliases are matched exactly after upper-casing, are kept to ten characters,
+  and **the first one added wins**. Order the file accordingly (Georgia's
+  header explains why its county file is included first).
+- **`INCLUDE FILE <name>`** reads another file from `target/dom`. Shared lists
+  already exist -- `S50.DOM`, `DC.DOM`, `P13.DOM`, ... (`ls tr4w/target/dom`).
 
-**There is no point method to set.** The row had a `QP:` column -- the
-contest's `QSOPointMethodType`, Field Day's was `ARRLFieldDayQSOPointMethod`
--- and it led to an arm of `case ActiveQSOPointMethod of` in
-`LOGSTUFF.CalculateQSOPoints`. The case was deleted at M10 S3 and the column,
-the enum, `TContestBase.QSOPointMethod` and `ActiveQSOPointMethod` at M10 S4
-(2026-10-14). A contest's scoring is its class's `CalculateQSOPoints`,
-written from the sponsor's rules; to see what TR4W used to do, read the arm in
-git history (before M10 S3) or the D7 tree.
+**A state party ships two files, and their names are tied:**
 
-The field that is still the thread to pull -- the class's `GetExchangeKind`
-now, the row's `AE:` before S8:
+| file | holds | loaded by |
+|---|---|---|
+| `<base>_cty.dom` | the counties, each `ABBR > St = ABBR,^Name`, and **no `INCLUDE`** -- an out-of-state entrant's table must hold only counties, because the host-area rule reads it | an out-of-state entrant |
+| `<base>.dom` | `INCLUDE FILE <base>_cty.dom`, then the states, DC and provinces the rules count (Georgia: `S50.DOM`, `DC.DOM`, `P13.DOM`) | an in-state entrant |
 
-| field | leads to |
+The county file's name **must** be the in-state name plus `_cty`
+(`uTestContestFactory.Test_EveryQSOPartyNamesBothDomesticFiles`). Whether a
+county maps to the state (`> Ga`) or stands alone is the sponsor's rule:
+Nebraska's `nebraska_cty.dom` maps none, so an in-state Nebraska entrant
+counts each county.
+
+## A2. Choose the base class
+
+| the contest is | inherit | copy |
+|---|---|---|
+| a single-state US QSO party: one host state, county multipliers, an out-of-state entrant works only the host state | `TContestStateQSOPartyBase` | `uContestGeorgiaQP` |
+| anything else | `TContestBase` | `uContestURCDXRTTY` |
+| another running of a family that already exists | that family's base: `TContestARRLDXBase`, `TContestARRLSSBase`, `TContestCQWWBase`, `TContestCQWPXBase`, `TContestNRAUBalticBase` | the sibling leaf |
+
+**These are the only bases.** `Test_EveryClassSitsOnTheBaseOrAFamily` holds the
+list closed: a new base fails it until it is added there, on evidence that its
+members are one contest under one rule ([B1](#b1-design-rules)). Multi-state
+parties (7QP, New England, IN7QPNE), NAQP and Locust are NOT on the party
+base. A contest that merely resembles another starts as a **copy** it owns.
+
+## A3. What the class overrides
+
+Declare getters and `CalculateQSOPoints` in a **`protected`** section; the
+public seams in `public`. Copy the declaration layout of your template.
+
+### Required -- every contest
+
+| override | how | what holds you to it |
+|---|---|---|
+| `initialization RegisterContestById('<ID>', TContest<Name>);` | the id is STORED DATA from that moment and is never given to another contest ([B5](#b5-ids-handles-and-names)) | `RegisterContestById` raises on a refused id (`uContestRegistry.ContestIdRefusal`) |
+| `GetDisplayName`, `GetCabrilloName`, `GetADIFContestId` | literals, in the leaf class. The display name is the human name and must be unique; the Cabrillo name must be unique unless the sponsor says two events share it | `uTestContestDisplay.Test_EveryClassStatesItsIdentity`; `uTestContestUI` (no shared display name); `uTestContestIdentityPin.Test_WA7BNMCabrilloRenamesMoveOnlyTheCabrilloName` (no shared Cabrillo name); `uTestContestFactory.Test_EveryContestResolvesItsOwnADIFId` |
+| `GetFriendlyName`, `GetWA7BNMId`, `GetQRZRUId`, `GetSubmissionEmail`, `GetDomesticFileName` | literals; `0` and `''` are statements too | none -- the base answers neutral (`0`, `''`), so an omission is silent. State every one |
+| `GetExchangeKind`, `GetInitialExchangeKind` | the `ExchangeType` / `InitialExchangeType` member (table below) | none; the initial exchange and the matrix's `active.exchange` read them |
+| `GetReceivedExchangeFields` | call the `uExchangeFields` helper for what the exchange carries. **This is also your ADIF export's received tags** | `uTestContestStatesItsRules` |
+| `ParseReceivedExchangeFormat` | `Result := aParsers.Parse<Format>(aText, aExch);` | `uTestContestStatesItsRules` -- the base parses nothing |
+| `GetADIFSentExchange` | call a `uADIFExchange` helper | `uTestContestStatesItsRules` -- the base raises |
+| `GetCabrilloSentExchange`, `GetCabrilloReceivedExchange` | call `uCabrilloExchange` helpers | `uTestContestStatesItsRules` -- the base writes `ERROR EXCHANGE NOT HANDLED` |
+| `GetFlags` | e.g. `[cfQSOByBand, cfQSOByMode, cfMultByMode, cfVHFBandsEnabled]`; `[]` if none applies. `cfVHFBandsEnabled` if 6 m or up is credited | `uTestContestStatesItsRules` |
+| `CalculateQSOPoints` (protected) | the sponsor's points per QSO | `uTestContestStatesItsRules` -- the base scores 0 |
+| `UsesBand` | `Result := aBand in [...]`, the rules' band list | **policy (NY4I), not yet gated**: the base still credits every band (Q98). Never omit it |
+| `HasDXMultiplier`, `HasZoneMultiplier`, `HasPrefixMultiplier` | `False` unless the contest has one; if True, also the key/count virtuals ([B2](#b2-the-base-class-reference)) | the multiplier pin tests' registry walks |
+| `ExchangeCarriesDomesticQTH` / `ExchangeCarriesZone` / `ExchangeCarriesGridSquare` | `True` for what the exchange carries | none; omitted, the readiness check does not ask for MY STATE / MY ZONE / MY GRID |
+| `UsesDomesticFile` | `True` if the received QTH is looked up in your `.dom` (a state party inherits it) | `uTestDomesticMultiplier` (a domestic multiplier exactly where a QTH is read) |
+
+### Required -- a state QSO party, in addition
+
+| override | how | what holds you to it |
+|---|---|---|
+| `GetHostState` | the two-letter state | abstract on the party base: a party that omits it raises `EAbstractError` when asked |
+| `GetInStateDomesticFileName` | **exactly** `begin Result := '<base>'; end;` -- one literal | `Lint-DomCoverage` reads this literal and fails if it cannot, or if `<base>.dom` or `<base>_cty.dom` is not in `target/dom` |
+| `GetDomesticFileName` | `'<base>_cty'` | `Test_EveryQSOPartyNamesBothDomesticFiles` |
+| `GetCountyLineCountiesMax` | the rules' maximum (Georgia: 2); `0` forbids county lines | none; the base allows any number |
+
+**Inherited from `TContestStateQSOPartyBase` -- do not restate:**
+`GetIsUSQSOParty`, `GetQSOPartyArea`, `UsesDomesticFile`, the rover rules
+(`StripsRoverCountyFromCall`, `SplitsRoverCallOnExport`,
+`DupeKeyIncludesReceivedQTH` -- a rover in a new county is a new QSO), ADIF
+`STATE`/`CNTY` (`ADIFCountyState`, `ADIFWorkedStationState`,
+`WritesADIFCounty`), `ValidateQTHCount` (enforces your county-line maximum),
+and the host-area rule (`ParseReceivedExchange` refuses, `CreditsWorkedStation`
+scores 0 -- [B1](#b1-design-rules)). `uTestContestGeorgiaQP.Test_GeorgiaIdentity`
+pins what it inherits so a base change is seen.
+
+### State only if the contest differs from the base
+
+| override | base answer | example |
+|---|---|---|
+| `CountsAsMultiplier(aQso, aKind)` | every QSO counts | URC (MMS is no multiplier) |
+| `ParseReceivedExchange` (call `inherited`) | the plain parse in your format | URC (reads `MMS`), the ARRL VHF runnings (`RequireReceivedGrid`) |
+| `CQExchangeDefault(aStation)` | `''` | Georgia (`' 5NN ' + MyState`, or `DX`) |
+| `DescribeSession(aStation, aSession)` | states nothing | URC (starts in Digital) |
+| `WriteDefaultExchangeMessages(aMessages)` | writes none | URC |
+| `DescribeNewContestPrompts(aPrompts)` | asks a US state party for county/state | URC (MY STATE is the territory code) |
+| `CombineWithMultipliers`, `BonusPoints`, `GetBonusStations` | points x sum of multipliers, no bonus | `uContestWinterFieldDay`, `uContestMissouriQP` |
+| `ApplyADIFImport`, `EmitADIFContestFields`, `EmitADIFExchangeFields` | the generic import / no extra tags | `uContestARRLFieldDay`, POTA |
+| `GetRequiresCabrilloLocation`, `CabrilloQSOLineFormat`, `CabrilloModeString` | not required / the standard `QSO:` line / CW, PH, ... | Arktika Spring's line |
+| `MarksDupes`, `GetIsActive`, `MinimumOffTimeMinutes` | True / True / 30 | `uContestInternetSprint`; `uContestSASprint`; `uContestCQWWBase` (60) |
+| `RunsInMode(aMode)` | every mode -- an IDENTITY question for two contests sharing one ADIF id | the RoPoCo runnings |
+
+Everything else in [B2](#b2-the-base-class-reference). **Do not** repeat the
+band rule or the host-area rule in `CalculateQSOPoints` or
+`CountsAsMultiplier` -- `ScoreQSO` and `SetMultFlags` ask them first.
+
+### The mode rule -- TODO on this branch
+
+There is **no mode-credit seam yet** (`TContestBase.UsesMode` arrives with the
+`q98-s1-cqww` merge). Until then a contest that forbids a mode gives that QSO 0
+in `CalculateQSOPoints` and refuses its multiplier in `CountsAsMultiplier`,
+both marked `TODO(UsesMode)` (Georgia's Digital, Nebraska's FT8/FT4). The QSO is
+still logged. When the merge lands, state the modes there and delete those arms.
+`RunsInMode` is NOT this rule.
+
+### Which exchange helpers go together
+
+The five exchange statements must agree. These sets are in use:
+
+| exchange | `GetExchangeKind` | `GetReceivedExchangeFields` | `ParseReceivedExchangeFormat` | `GetADIFSentExchange` | Cabrillo sent / received | e.g. |
+|---|---|---|---|---|---|---|
+| RST + county/state/province, or DX -- **a DX entrant sends "DX"** | `RSTDomesticOrDXQTHExchange` | `ExchangeFieldsRSTQTH` | `ParseRSTDomesticOrDXQTH` | `ADIFSentRSTState` | `CabrilloSentRSTStateOrDX` / `CabrilloReceivedRSTQTHDX` | Georgia |
+| same, but a DX station's received QTH is written as sent | as above | as above | as above | as above | `CabrilloSentRSTState` / `CabrilloReceivedRSTQTHOrDXQTH` | Nebraska |
+| RST + a code from your `.dom` only | `RSTDomesticQTHExchange` | `ExchangeFieldsRSTQTH` | `ParseRSTDomesticQTH` | `ADIFSentRSTState` | `CabrilloSentRSTState` / `CabrilloReceivedRSTQTH` | URC |
+| RST + serial | `RSTQSONumberExchange` | `ExchangeFieldsRSTQSONumber` | `ParseRSTQSONumber` | `ADIFSentRSTQSONumber` | `CabrilloSentRSTQSONumber` / `CabrilloReceivedRSTQSONumber` | `uContestBaltic` |
+| RST + zone | `RSTZoneExchange` | `ExchangeFieldsRSTZone` | `ParseRSTZone` | `ADIFSentRSTZone` | `CabrilloSentRSTZone` / `CabrilloReceivedRSTZone` | `uContestJIDXCW`, CQ WW |
+| name + state | `NameAndDomesticOrDXQTHExchange` | `ExchangeFieldsNameQTH` | `ParseNameAndDomesticOrDXQTH` | `ADIFSentNameState` | `CabrilloSentNameState` / `CabrilloReceivedNameQTH` | `uContestNAQPCW`, `uContestCWOps` |
+| RST and/or grid (VHF) | `RSTAndOrGridExchange` | `ExchangeFieldsRSTQTH` | `ParseRSTAndOrGrid` | `ADIFSentRSTGrid` | `CabrilloSentRSTGrid` / `CabrilloReceivedRSTQTH` | `uContestARRLVHFJan` |
+
+For any other shape: list the helpers (`rg "^function (ADIFSent|Cabrillo(Sent|Received))" tr4w/src/uADIFExchange.pas tr4w/src/uCabrilloExchange.pas`,
+`rg "^function ExchangeFields" tr4w/src/contestFactory/uExchangeFields.pas`,
+the `Parse...` methods of `uContestBase.TExchangeParsers`), read the bodies,
+and test the columns against the sponsor's own Cabrillo example line, as
+Georgia's `Test_GeorgiaCabrilloLineIsTheRulesExample` does. If no helper fits,
+format in your override; never add a contest's name to a helper.
+
+## A4. Every place outside the class that names the contest
+
+### Required
+
+| file | the edit | if it is missing |
+|---|---|---|
+| `tr4w/tr4w.lpr` | `uContest<Name> in 'src\contestFactory\uContest<Name>.pas',` | the application has no such contest; `Lint-ContestUnitsLinked` fails the build |
+| `tr4w/test/unit/tr4w_unit_tests.lpr` | the contest unit (`in '..\..\src\contestFactory\...'`) | `Lint-ContestUnitsLinked` fails; no registry walk sees it |
+| same file | the test unit (`uTestContest<Name> in 'uTestContest<Name>.pas'`) **and** `RegisterSuite(TContest<Name>Tests.Create('Contest<Name>'));` | **nothing fails** -- your tests just never run. Check the suite's name appears in the test output |
+| `tr4w/target/dom/*.dom` | the files your `GetDomesticFileName` / `GetInStateDomesticFileName` / `DescribeSession` name, and every file they `INCLUDE` | `Lint-DomCoverage` (a party); `Test_EveryDomesticFileAContestCanLoadExists` (every contest); at run time an empty table refuses every QTH |
+| `docs/ContestRules/...` | the sponsor's rules | a test that reads them fails (file not found) |
+| `tr4w/test/contest-matrix/frozen/<ID>.matrix` | written by the freeze in A6 | `run-contest-matrix.sh` fails closed: "a fresh record never frozen" |
+
+**Never** add it to `tr4w/tr4wserver/tr4wserver.lpr` (`Lint-ContestUnitsLinked`
+fails). **No** `VC.pas` line, `full.nsi` line, pin-table row, count, `case` arm
+or exception list.
+
+### Only when it applies
+
+| file | when |
 |---|---|
-| `GetExchangeKind` (the row's `AE:` before S8) | nothing in the parse any more (M11 S9d): the PARSER is your class's `ParseReceivedExchangeFormat`, which calls the engine's parser for your format by name (`aParsers.ParseRSTZone`, ...). Until S9d the kind chose an arm of `LOGSTUFF.ParseExchangeShape`, now deleted. Since M11 S9e part 1 the default CW exchange messages (`WriteDefaultExchangeMessages`), the log's Sweepstakes columns (the field list) and the grid question (`ExchangeTextMayHoldGridSquare`) do not read it either: the kind is read only for the initial-exchange history (S8) and the matrix's `active.exchange` line, until S9e part 2 deletes it |
+| `tr4w/src/uContestNames.pas` `LEGACY_CONTEST_NAMES` | you RENAME a contest's id -- the old id becomes a permanent read alias ([B5](#b5-ids-handles-and-names)) |
+| `docs/BENCH_QUEUE.md` | recommended: typed entry on screen is seen by no gate (B4) |
+| `docs/CONTEST_FACTORY_OPEN_QUESTIONS.md` | a sponsor question for NY4I |
+| `tools/dom-crosscheck/crosscheck_dom_dxlog.py` `CABRILLO_OVERRIDES` | optional; only if your Cabrillo name differs from DXLog.net's for that contest |
+| `docs/CONTEST_RULES_OUTSIDE_FACTORY.md` | regenerated by `python tools/contest-rules-inventory/generate.py` after the commit -- **but its `model.py` still refuses any by-id contest** (since URC), so it cannot run until that is extended. Say so in your hand-back |
 
-The exchange kind no longer decides what the contest's EXPORT looks like. **The ADIF
-`STX_STRING` is YOUR CLASS'S since M11 S9b**: you state `GetADIFSentExchange` by calling one
-of the named helpers in `uADIFExchange` (`ADIFSentRSTState`, `ADIFSentRSTQSONumber`, ...), or
-by formatting it yourself -- the base RAISES (no placeholder string exists since 2026-10-14),
-so a class that forgets it exports NO `STX_STRING`, with an Error per QSO in `tr4w.log` and a
-warning once per export. **THE TWO CABRILLO COLUMNS ARE YOUR
-CLASS'S TOO, since M11 S9c**: you state `GetCabrilloSentExchange` and
-`GetCabrilloReceivedExchange` by calling a named helper in `uCabrilloExchange`
-(`CabrilloSentRSTState` / `CabrilloReceivedRSTQTH`, `CabrilloSentRSTQSONumber` /
-`CabrilloReceivedRSTQSONumber`, ...; one per distinct column, same `(aMy, aQso, aCtx)`
-signature), or by formatting them yourself. The base writes `ERROR EXCHANGE NOT HANDLED`
-in both columns, so a class that forgets them produces a loud marker on every QSO line, and
-`FormatCabrilloSentExchange` logs the Error naming the contest. A contest whose exchange
-depends on the entrant tests the station in its override, as its `DescribeSession` does.
-The helpers name no contest; a rule of your contest's goes in your class (section 3, "How a
-contest formats its export").
+### Not yours to edit (found by search, for the record)
 
-**Watch for a commented-out field.** Field Day's row has `{DM: ...}`, so its
-domestic-multiplier value comes from whatever the record initialises to rather
-than from anyone choosing it. Do **not** override such a field with a guess:
-leave it reading the array and say why.
+Every enum-keyed pin table -- `uTestContestIdentityPin`, `uTestContestKindPin`,
+the key and column pins, `uTestContestUI.INACTIVE_CONTESTS`, the band exception
+list in `Test_EveryOtherContestStillCreditsEveryBand` -- covers the frozen
+legacy contests and cannot name a by-id one; the registry walks hold yours.
+Mentions in design docs and `docs/Q98_CONTEST_BANDS_MODES.csv` are records,
+not wiring.
 
-### Step 2 — decide whether the scoring rule (once the `QP`) or `AE` is worth sharing
+**If a registry-walk test fails for your contest only**, check whether it
+builds its subject from `ContestOf(identity)` (the legacy member --
+`DUMMYCONTEST` for a by-id contest) instead of `HandleOf(identity)`. That was a
+real defect, found adding Georgia (`uTestContestExport.PartyQSO`); fix the
+test, not your contest.
 
-NY4I, 2026-09-02:
+## A5. The contest's tests
 
-> *"You can make the determination if the QP function in question is common to
-> enough contests for it to have its own uQSOPointsHelper... Same goes for the AE
-> parameter... We could then resolve duplications later and see if consolidation
-> in a class helper makes sense."*
-
-**Lift first, consolidate after.** Ten of the 127 scoring arms are "a number per
-mode" and cover more contests than the other 117 combined — that one earned
-a helper, `FixedModePoints` (`uContestFixedPoints`). Most will not.
-
-**A fixed-points contest, since M3 (2026-10-01)**, sits on `TContestBase` (or
-its real family base) and says its numbers in its own rule:
+Copy your template's test unit. A by-id contest builds its own objects --
+`uTestContestObjects.Make` takes a `ContestType` only:
 
 ```pascal
-protected
-   procedure CalculateQSOPoints(var aQso: ContestExchange); override;
-...
-procedure TContestKVP.CalculateQSOPoints(var aQso: ContestExchange);
+function GeorgiaHandle: TContestHandle;     (* FindContestById, raising if absent *)
+function MakeGeorgia(const aStation: TStationContext): TContestBase;
 begin
-   aQso.QSOPoints := FixedModePoints(aQso.Mode, 2, 1, 1);   (* CW, phone, other *)
+   Result := ContestClassFor(GeorgiaHandle).Create(GeorgiaHandle);
+   Result.SetStation(aStation);
 end;
 ```
 
-The third number is digital AND FM. A two-branch legacy arm
-(`if Mode = CW then X else Y`) gives them the phone value, so pass it twice.
-`uContestKVP.pas` and `uContestCQIR.pas` are worked examples, and
-`Test_FixedPointContestsTranscribeTheirArms` is where the numbers are pinned.
+**The unit tests are the only statement that the contest is RIGHT** -- the
+matrix only says it is unchanged (A6). Pin, quoting the rule each test holds:
 
-**And check the helper actually fits before calling it.** Field Day looked like
-a fixed-points contest and is not: it counts FM *with* phone and leaves
-digital at two, which "CW / Phone / everything else" cannot express. Either FM
-would have scored 2 or digital 1, in a contest where nobody would check the FM
-ones. Such a contest writes its own body; do not widen the helper.
+1. **Identity**: id resolves to the class; no legacy number; refused on
+   multi-op (`ContestCanUseMultiOp` False); every name and id; flags; files;
+   and, for a party, what it inherits.
+2. **Bands**: every `BandType`, credited exactly when on the rules' list.
+3. **Points**: every mode, both sides of each edge, through **`ScoreQSO`**
+   (never `CalculateQSOPoints` directly).
+4. **Each multiplier rule**, including off-mode QSOs (`CountsAsMultiplier`).
+5. **A party's host-area rule**: an out-of-state entrant's parse and score need
+   a table that knows the host QTHs -- a `Station.IsDomesticQTH` stub
+   (Georgia's `StubKnowsHostQTHs`) or `uTestContestObjects.WithHostAreaTable`.
+6. **The final score** with a hand-built `TScoreTotals` and a `TLoggedQSOList`.
+7. **The data**: the `.dom` against the rules' own table; the in-state file's
+   `INCLUDE` list and "no `=` in the header" as text.
+8. **The Cabrillo line** against the sponsor's example, word for word.
+9. **One real-engine test** (below).
 
-### Step 3 — write the unit
+**Traps a unit test falls into:**
 
-`src/contestFactory/uContest<Name>.pas`. Copy
-[`uContestARRLFieldDay.pas`](../tr4w/src/contestFactory/uContestARRLFieldDay.pas)
-— it is the worked example and covers every seam that exists today.
+- **A `.dom`'s `INCLUDE` is not followed in a unit test.** It resolves against
+  the program directory, and the test binary's (`tr4w/test/unit`) has no `dom`
+  folder: the file loads with no error and **none** of its includes. Pin the
+  include list as text and load the county file alone; the full in-state load
+  is seen only by the matrix's `us-host` variant.
+- **Look up a table entry with `TDomQTHTable.FindAlias(key, entry)`**, not
+  `GetDomQTH`, which asks the active contest first and answers nothing useful
+  without one.
+- **A real-engine party test must set the domestic countries**
+  (`DomesticCountries.Clear; Add_KVEKH6KL;`, saved and restored). Without them
+  every US call is DX and goes to the DX parser.
+- **What an out-of-state entrant sees when refused depends on the call.** A US
+  call goes to the domestic parser, which refuses a non-county as
+  `TC_IMPROPERDOMESITCQTH`; only a DX call reaches the party's own refusal,
+  `SExchangeOutOfStateWorksHostOnly`. Both refuse; pin both.
+- **Set the engine's flags FROM THE CLASS** (`Settings.Mult.ByMode :=
+  ContestIdentity(h).MultByMode`, ...), as `FCONTEST.ApplyContestTraits` does --
+  hard-coding them makes the engine test blind to a wrong `GetFlags`.
 
-Override only what the contest actually owns; everything else inherits.
-**Since M10 S6 the inherited answer is NEUTRAL** -- DUMMYCONTEST's row, no
-multipliers, `UnknownExchange`, no files, no flags -- **not your row**. The base
-reads no table, so a value you do not state is a value your contest does not
-have (Step 3b).
+**The real-engine test's globals** -- save each, set it, restore it in a
+`finally` (copy `Test_GeorgiaRealEngineOutOfState`): `Contest` (then
+`ReleaseActiveContest`), `Settings.Qso.ByBand/ByMode`,
+`Settings.Mult.ByBand/ByMode`, `DomesticMultByBand`, `StationInHostState`,
+`MultipliersIsCounties`, `ActiveMode`, `CallWindowString`,
+`ExchangeErrorMessage`, `DomQTHTable`, `CallsignsList`, `QualifiedDupes`,
+`DomesticCountries`, the multiplier sheet (`mo.ClearAllMults`) and the
+county-line queue (`ClearPendingCounties`). Load `cty.dat` from `tr4w/target`
+with `ctyLoadInCountryFile`. Enter a QSO through `ParametersOkay`, then
+`VisibleLog.QSOIsADupe`, `Sheet.SetMultFlags`, `Sheet.AddQSOToSheets` and
+`AddQSOToDupeSheets`, as `LogContact` does.
 
-### Step 3b — state the contest's row in the class
+**Prove the tests can fail**: break one rule at a time (a point value, a flag,
+a band, the county-line maximum), rebuild, see a failure, restore.
 
-NY4I, 2026-09-29, pointing at a contest's `ContestsArray` row: *"all the info in
-[the row] should go into the contest class."*
+## A6. Prove it
 
-So a class overrides the row accessors with LITERALS -- and since M10 S6 it
-MUST, because the base no longer defaults to `ContestsArray[FContest]`: it
-answers DUMMYCONTEST's neutral row. Copy
-[`uContestARRLFieldDay.pas`](../tr4w/src/contestFactory/uContestARRLFieldDay.pas)
-or either of the two newest,
-[`uContestArktikaSpring.pas`](../tr4w/src/contestFactory/uContestArktikaSpring.pas)
-and [`uContestARRLDigi.pas`](../tr4w/src/contestFactory/uContestARRLDigi.pas):
-each quotes its array row verbatim in a comment and then states every field.
+Close TR4W first (`Get-Process -Name tr4w` must find nothing). Run the corpus,
+**read the result, then commit** -- never in one shell block.
 
-**THERE IS NO ARRAY ROW TO ADD OR DELETE** (M10 S8, 2026-10-14). The tables
-are gone; a new contest adds its enum member and its `ContestTypeSA` spelling,
-and nothing else in `VC.pas`. `Lint-NoContestTables` fails the build if a new
-hand-typed `array[ContestType]` table appears.
+| # | command | what it says about a NEW contest |
+|---|---|---|
+| 1 | `.\tr4w\build\Build-Tests.ps1 -Run` | your tests and every registry walk; **0 failures**. It also stages the runtime DLLs beside the test exe -- calling FPC directly does not, and the run then fails in SQLite |
+| 2 | `.\tr4w\build\Run-Lints.ps1` | `Lint-ContestUnitsLinked`, `Lint-DomCoverage`, `Lint-FrozenContestNumbers`, `Lint-NoContestTables`, `Lint-ContestNameTests` among the rest |
+| 3 | `.\tr4w\build\Build-App.ps1` (a FULL build, not `-Incremental`) | the binary the matrix records |
+| 4 | `bash tr4w/test/contest-matrix/freeze-contest-matrix.sh --reason "new contest <ID>" "<ID>"` | writes YOUR record only. It demands a reason; put it in the commit message |
+| 5 | `bash tr4w/test/contest-matrix/run-contest-matrix.sh` | every record: yours equals what you just froze, and **no other contest moved** |
+| 6 | `bash tr4w/test/corpus/export-d12-corpus.sh` and `bash tr4w/test/corpus/test-contest-factory.sh` | **nothing about your contest** -- no corpus log is yours. They prove you broke no other contest. Green is `0 failed` with every known divergence pinned, AND exit 0 |
 
-**THREE FIELDS ARE BLANK IN THE ARRAY AND BLANK IS NOT THE ANSWER.** `CABName`,
-`FriendlyName` and `ADIFName` all mean *"use `ContestTypeSA[ct]`"* when empty —
-the array says so itself — so a class transcribing one as `''` silently produces
-a blank `CONTEST:` header line, a nameless contest in the selection UI, or an
-ADIF id that nothing exports. **`ADIFName` joined the other two at M1
-(2026-10-01).** It used to be read as "blank means no ADIF id", while ADIF export
-wrote the enum's spelling anyway — so import, which matches the class's
-`ADIFContestId`, could never resolve TR4W's own export for 139 contests
-(inventory D9). The id is now what export writes, by construction.
+**Read the matrix record before you commit it.** It is your contest's own
+first output, so it asserts "same as the first run", never "correct". Look at
+the `us`, `us-host` (a party), `ve` and `dx` variants' set-up, scoring and
+export lines and check them against the rules.
 
-~~`uTestContestFactory.Test_MovedRowValuesStillMatchTheArray` is the guard.~~
-**It was deleted with the tables at M10 S8**, as it always said it would be:
-it compared each class's literals with the row, and the class is now the only
-statement left. It caught exactly that `FriendlyName` mistake while Arktika
-Spring was written. **`uTestContestIdentityPin` replaced it** (M10 S8): a
-literal row per `ContestType` -- WA7BNM and QRZ.RU ids, submission e-mail,
-friendly, display and domestic file names -- generated once from classes
-proven equal to the table, and **never regenerated to clear a failure**. A
-NEW contest adds its row there by hand (the array is indexed by
-`ContestType`, so the compiler insists), from the sponsor's published values;
-a changed identity value changes its one row in the same commit, on purpose.
-The contest matrix's records hold every contest's Cabrillo `CONTEST:` line
-and ADIF `CONTEST_ID`.
-
-**EVERY CLASS STATES ITS DISPLAY NAME, CABRILLO NAME AND ADIF ID ITSELF** (NY4I's
-ruling, enforced since M9a, 2026-10-02): override `GetDisplayName`,
-`GetCabrilloName` and `GetADIFContestId` in YOUR class, not in a family base --
-a base stating a name would give two contests one name. **The display name is
-the HUMAN name**, the row's `FriendlyName` where it has one -- **the New Contest
-drop-down shows it** (M9b, 2026-10-02; the token `ContestTypeSA` is still what
-the dialog writes); `FriendlyName` is stated too. **Give it a name no other
-contest has**: two contests with one display name are told apart in the
-drop-down only by their tokens in brackets (`<name> [TOKEN]`), and
-`uTestContestUI.Test_ChoicesShowDisplayNamesAndMarkInactive` holds the count of
-lines sharing a name as a ratchet at **zero** -- a new pair fails it. (The one
-pair there was, IARU-HF and WRTC, ended when WRTC took its own name, *"World
-Radiosport Team Championship"*: NY4I, 2026-10-16, design Q58.)
-
-**IF THE CONTEST IS NO LONGER RUN, STATE `GetIsActive` = False** (M9b) -- on
-NY4I's word only. It stays in the factory so an old log still opens and scores;
-the drop-down lists it after every active contest, marked `(inactive)`. Add it
-to `uTestContestUI.INACTIVE_CONTESTS` in the same change.
-`uTestContestDisplay.Test_EveryClassStatesItsIdentity` fails a class whose getter
-is its parent's, and holds the list of contests whose display name is still
-their enum spelling (no `FriendlyName` in the row -- design Q53) as a ratchet:
-**a new contest may not join it.**
-
-### Step 3c — a contest's `ContestTypeSA` spelling is STORED; never reuse one
-
-The spelling is what a `.cfg`'s `CONTEST =` line says and what every SQLite
-contest log stores in its `contest` table. **A name that was ever written to a
-file is never given to a different contest** (2026-10-16, design Q105). When a
-spelling must change, the old one goes into
-`uContestNames.LEGACY_CONTEST_NAMES` in the same commit, as a permanent READ
-alias naming the contest by its CURRENT ID (a string, since Q108 S2 -- so a
-contest registered by id can be renamed the same way): `TryContestFromName` /
-`ContestFromName` (what the log's reopen calls; `TF.GetContestFromString` is
-deleted) resolve it, and the CONTEST setting stores the current spelling in
-its place (`uSettingsModel.RegisterSettingValueSpelling`, registered by uCFG).
-It is the ONE resolver of a contest name, over the registry's ids
-(`uContestRegistry.FindContestById`) -- do not write another loop over
-`ContestTypeSA`, and do not index it by a handle (`ContestId(h)` is the id). The worked example: New England was `NEQP`, is `NEWEQP`, and
-`NEQP` stays an alias for it for good (never Nebraska, `NE-QSO-PARTY`).
-`uTestContestNames` pins that no alias equals a live spelling and that no two
-live spellings differ only by case (the resolver ignores case, as the config
-file always did). The Cabrillo and ADIF names are the class's and are NOT
-this table -- New England's ADIF id stayed `NEQP`, stated in its class.
-
-### Step 4 — register and list it
-
-```pascal
-initialization
-   RegisterContest(ARRLFIELDDAY, TContestARRLFieldDay);
-```
-
-`RegisterContest` **raises** on a duplicate. Two units claiming one contest is a
-programming error, and last-wins would hide it while first-wins would make the
-behaviour depend on the `.lpr`'s uses order — which nobody reads as an ordering.
-
-Then add the unit to `tr4w/tr4w.lpr`. That and the unit itself are the only
-shared files a contest touches; the search path already covers
-`src/contestFactory`.
-
-### Step 5 — prove it
-
-**Run `test-contest-factory.sh` before and after.** It must stay
-`13 identical, 0 differing`.
-
-### Step 5a — a contest is a HANDLE in memory (Q108 S2, 2026-10-16)
-
-**THE IN-MEMORY KEY IS `VC.TContestHandle`, NOT `ContestType`.** The global
-`Contest`, `ContestExchange.ceContest`, `TLogFileInformation.liContest` and
-every registry and factory question take a one-byte handle (a packed record
-with `=` and `<>`, so a band, a mode or a bare number is refused where a
-contest is expected). `NoContest` is "no contest" (handle 0).
-
-**A LEGACY CONTEST'S HANDLE IS ITS LEGACY NUMBER** (`Ord(member)`), which is
-why nothing persisted moved: the `.TRW` byte, the multi-op packet, the
-server's log and the log-compare packet mean what they meant. The registry
-states that rule and is the only converter: `ContestHandleOf(member)`,
-`LegacyContestOf(h)` (DUMMYCONTEST for a handle with no legacy number),
-`ContestLegacyNumber(h, n)`, `ContestId(h)` (the stored name -- for a legacy
-contest its `ContestTypeSA` spelling), `FindContestById`, `KnownContests`
-(every contest with an id, `NoContest` first, handle order) and
-`ContestBroadcastNumber(h)` (`<contestnr>`). The handle's byte is reached
-through `TContestHandle.FromByte` / `ToByte` only, and only at the registry
-and the legacy-number boundaries (the `.TRW` reader, the matrix, logdump).
-
-- **A class is made with its handle**: `TContestBase.Create(aHandle)`; the
-  base reads its `Id` from the registry and its name fallbacks answer it. A
-  test writes `TFoo.Create(ContestHandleOf(FOO))`.
-- **`ContestIdentity`, `ContestClassFor` and `ActiveContest` keep a
-  `ContestType` overload** for the tests and IN7QPNE, which name legacy
-  contests. Nothing else does: pass `ContestHandleOf(X)`.
-- **A rule site outside the factory that still names a contest** compares
-  `LegacyContestOf(Contest) = MEMBER`, so `Lint-ContestNameTests` keeps
-  counting it (five, in MainUnit, logedit and postunit).
-- **The CONTEST setting's vocabulary is a PROVIDER**
-  (`RegisterSettingAllowedValuesProvider`, uCFG's `ContestIdVocabulary`),
-  read when asked: a list copied at uCFG's initialization would miss every
-  contest, because the contest units register later. The CONTEST token is
-  resolved by `TryContestFromName` (`uSettingsEffects`), not by position.
-- **A `.TRW` whose first record names a contest number above the legacy
-  range is refused** with a message, and no log is written
-  (`uTestLogImport.TestImportRefusesAContestNumberItDoesNotKnow`).
-
-`uTestContestFactory.Test_AContestHandleIsItsLegacyNumber` pins the rule for
-every member and every byte above them; `uTestLogBinaryFile` pins the byte's
-offset (265) and size (1) in the 376-byte record.
-
-### Step 5b — what the unit tests hold a new contest to (Q108 S1, 2026-10-16)
-
-**TWO KINDS OF CROSS-CONTEST TEST, AND THEY WALK DIFFERENT THINGS** (design
-8.2u). A **pin table** freezes what each LEGACY contest answers, keyed by
-`ContestType` -- `uTestContestIdentityPin`, `uTestContestKindPin`, the key and
-mode rows of `uTestDXMultiplierKey` / `uTestPrefixMultiplierKey` /
-`uTestZoneMultiplier` / `uTestDomesticMultiplier`, the per-contest `case`s of
-`uTestCabrilloColumns`, `uTestADIFSentExchange`, `uTestExchangeFields`,
-`uTestExchangeParse`. An **invariant** says something about every contest, and
-walks the REGISTRY -- `uContestRegistry.RegisteredContests`, through the test
-helper `uTestRegisteredContests.ContestsToWalk` (which fails below a floor of a
-hundred, so an empty registry cannot pass) -- so a contest registered by its
-string id (Q108 S3, not built yet) is held to it too. A new invariant walks
-`ContestsToWalk`, never `for c := Low(ContestType)`.
-
-**NO HAND-KEPT COUNT OF CONTESTS IS LEFT** (two small facts stay: the
-NRAU-Baltic family has two members, and exactly one pair shares an ADIF id).
-The 35 counts of "how many contests do X" that
-stood beside the sets -- `HAS_DX_COUNT`, `HAS_PREFIX_COUNT`, the zone counts per
-station, the domestic-file counts, `COUNTS` / `COUNT_ANYWHERE`, "24 QSO parties
-split a rover", "188 `ContestType` members", ... -- are deleted. Each restated
-the set beside it; where one stood for something real it is now that thing,
-asserted contest by contest and failing by name: every `ContestType` but
-`DUMMYCONTEST` has a class (`Test_EveryRegisteredContestConstructs`), a key row
-exactly where `HAS_DX` / `HAS_PREFIX` has the contest somewhere, a contest
-writes a worked station's STATE exactly where it splits a rover call, a
-splitter is a QSO party (New England the one frozen exception). **Do not add a
-count back.**
-
-**THE RULES A NEW CONTEST MUST STATE, CHECKED WITHOUT AN EXPECTED VALUE.**
-`uTestContestStatesItsRules` asks every registered contest whether its class
-(or its family base) overrides the base for its Cabrillo sent and received
-columns, its STX_STRING, its parse format, its received-exchange fields, its
-`GetFlags` and its `CalculateQSOPoints` -- the comparison
-`uTestRegisteredContests.ClassOverridesTheBase` makes (the identity test's
-technique, lifted). No contest was excepted when it was written. A class that
-forgets one fails by name.
-
-**EVERY DOMESTIC FILE A CONTEST CAN LOAD EXISTS** --
-`uTestContestFactory.Test_EveryDomesticFileAContestCanLoadExists`: every
-registered contest's `DomesticFileName`, `InStateDomesticFileName` and its
-`DescribeSession` `DomesticFile` at nine entrants, plus every file those
-`INCLUDE`, found in `target/dom` by the program's own case-tolerant lookup.
-The installer ships the whole directory (`File ..\target\dom\*.*`), so a file
-there is a file shipped.
-
-### A NEW CONTEST REGISTERS BY ITS ID (Q108 S3, 2026-10-17)
-
-**THE `ContestType` ENUM IS FROZEN.** A member's position is a persisted
-contest number -- the byte in every `.TRW` record, multi-op packet and server
-log -- and `Lint-FrozenContestNumbers` fails the build if the ordered member
-list changes at all: no member added (appended included), removed, reordered
-or renamed. A new contest has no member and no `ContestTypeSA` spelling.
-
-**A REAL CONTEST MAY REGISTER BY ID SINCE Q108 S4 (2026-10-17, design 8.2u),
-and what S4 did about the wire is worth knowing before you ship one:**
-
-- **MULTI-OP IS REFUSED for it, by design, until the row-based multi-station
-  protocol replaces the V1 packet** (NY4I: "refuse multi-op for new contests
-  until the new protocol"). The packet carries a contest as one byte that only
-  a legacy contest has, and it is not being changed. You write NOTHING for this:
-  `uContestRegistry.ContestCanUseMultiOp` is the one predicate and every door
-  in `uNet` asks it -- connecting while the contest is selected, switching to
-  it while connected (the link is dropped), another station's CONTEST command
-  naming it (not applied), and the send and receive of a QSO packet. The
-  operator reads one translatable message, `SContestNotOnMultiOp`, naming the
-  contest by its display name. Do not add a multi-op check to a contest class.
-- **`<contestnr>`** in the N1MM-format UDP broadcasts is derived from the id
-  (`ContestBroadcastNumber`: `256 + CRC32(id) mod (2^31 - 256)`), stable and
-  never a byte value. N1MM defines the number as local to a log, so any stable
-  per-contest number serves. Nothing to write; do not rename the id lightly --
-  the number moves with it.
-- The unit tests' fixture, `uContestTestFixture`, remains the subject of those
-  tests (`uTestContestById`, `uTestUDPDatagrams`).
-
-**THE STEPS:**
-
-1. **The class**, `src/contestFactory/uContest<Name>.pas`, stating its rules
-   (everything in sections 1 and 3), ending
-   `initialization RegisterContestById('<ID>', TContest<Name>);`. **The id is
-   stored data from that moment** (every log's contest row and every `.cfg`
-   holds it; Step 3c governs a rename). `uContestRegistry.ContestIdRefusal`
-   says what an id may not be: empty, blank-padded, non-ASCII, a legacy
-   contest's `ContestTypeSA` spelling, a legacy alias
-   (`uContestNames.LEGACY_CONTEST_NAMES`), or another by-id contest's id --
-   `RegisterContestById` raises on each, and on a registration after the
-   registry's SEAL (the first lookup). Its handle is assigned at the seal, from
-   `FirstByIdContestHandle` (one above the last legacy number) up, in id order;
-   it has no legacy number (`ContestLegacyNumber` answers False,
-   `LegacyContestOf` DUMMYCONTEST), so no enum-keyed pin table can name it.
-2. **One uses line in each program file**: `tr4w.lpr` and
-   `test/unit/tr4w_unit_tests.lpr`. `Lint-ContestUnitsLinked` fails the build
-   on a factory contest unit missing from either -- or present in
-   `tr4wserver.lpr`.
-3. **Its tests**: its own `uTestContest<Name>.pas` and its `RegisterSuite`
-   line. The registry walks (`ContestsToWalk`) hold it to every invariant
-   without an edit; the frozen pin tables (`IDENTITY_PINS`, `KIND_PINS`, the
-   key and column pins) are over the legacy contests and do NOT grow.
-4. **Its frozen matrix record**, by name: `freeze-contest-matrix.sh --reason
-   "..." "<ID>"`. The record file is the id with blanks as `_`.
-5. **Its data**: its `.dom` files in `target/dom` (a party: `<base>.dom` and
-   `<base>_cty.dom`); the installer's wildcard ships them.
-6. **One regeneration** after the commit:
-   `python tools/contest-rules-inventory/generate.py`. **Its `model.py`
-   refuses a by-id contest in the factory today** (it is keyed by the enum and
-   would otherwise drop it silently). The first real by-id contest,
-   `URC-DX-RTTY`, arrived 2026-10-22, so the S5 extension is owed: until it
-   lands the generator stops on URC and `CONTEST_RULES_OUTSIDE_FACTORY.md`
-   is not regenerated.
-
-Nothing in `VC.pas`, no pin row, no count, no `case` arm, no exception list,
-no `full.nsi` line.
-
-**A TEST-ONLY CONTEST** registers by id from a unit under `tr4w/test/unit`,
-named in the test `.lpr` only. `Lint-ContestUnitsLinked` fails the build if
-`tr4w.lpr` or `tr4wserver.lpr` names it,
-`uTestContestById.Test_TheFixtureIsNotInTheApplication` reads `tr4w.lpr` for
-it, and the contest matrix refuses an application whose `/MATRIXLIST` names a
-contest from a unit outside `src/contestFactory`.
+The PowerShell gates (1-3) cannot run where PowerShell is refused (an isolated
+worktree). If you could not run one, say which in your hand-back; do not report
+a gate you did not run.
 
 ---
 
-## 3. What the base offers today
+# Part B -- Background and reference
 
-### Properties — what a contest is
+## B1. Design rules
 
-| property | default |
-|---|---|
-| `DisplayName` | the enum's spelling. **The New Contest drop-down shows it** (M9b), sorted by it -- every class states its own (see Step 3b) |
-| `IsActive` | True. **SA Sprint and Locust say False** (NY4I) -- the drop-down lists an inactive contest last, marked `(inactive)`; it still opens and scores an old log (M9b) |
-| `CabrilloName` | the enum's spelling (since M10 S6; the row's `CABName`, or the spelling when blank, before). Every class states its own |
-| `ADIFContestId` | the enum's spelling (since M10 S6; the row's `ADIFName`, or the spelling when blank, before). Every class states its own. **It is what ADIF export writes AND what import matches** (M1) — one getter, so a file TR4W exported always reads back to its contest. POTA and GENERALQSO still answer, though export writes no `CONTEST_ID` for them (each says so through `WritesADIFContestId` -- POTA since its class, 2026-10-13, design Q6) |
-| `FormerADIFContestIds` | **empty.** Every CONTEST_ID the contest was exported under before a rename — import accepts them, export never writes them (NY4I, 2026-09-29: *"Yes support old spellings"*). **When you rename an ADIF id, put the old one here in the same change.** That includes the enum spelling when the id used to be BLANK, because export fell back to `ContestTypeSA` then. Whitespace-only differences need no entry: `uContestRegistry.FindContestByADIFContestId` trims its input, tries every contest's current id first and former ids second, and never matches a blank. A contest with **no class** cannot carry one — which is why NZ Field Day's former export spelling `NZ FIELD DAY` did not resolve until its class (`uContestJockWhiteFieldDay`, M3) arrived to carry it |
-| `WA7BNMId`, `QRZRUId`, `SubmissionEmail`, `DomesticFileName`, `FriendlyName` | **neutral since M10 S6**: 0, 0, `''`, `''`, the enum's spelling. They read the array row before |
-| `HasDomesticMultiplier`, `UsesDomesticFile`, `DomesticMultiplierFromQTH`, `DomesticMultiplierHint`, `HasGridSquareMultiplier`, `HasGridFieldMultiplier`, `DomesticQTHReplacesDXMultiplier`, `DomesticQTHIsNeverAGrid` | **the composition / False / hand the text to the file / the text / False / False / False / False.** The domestic multiplier is not a kind since M11 S6 (`DomesticMultType` and the `DomesticMultiplierType` trait were deleted at part 2). **A domestic-file contest states `UsesDomesticFile`** (or inherits it -- every state party does); a contest whose QTH is a grid, a field, the text as typed or an RDA district states its shape answers, calling `uDomesticKey`; `HasDomesticMultiplier` is the base's composition of them, and only a shape with no flag of its own (the RSGB IOTA's reference, WAG's and the DARC 10 m's DOK) overrides it. Where the entrant decides, ask the same predicate against `Station` that its other answers ask. Pin them in `uTestDomesticMultiplier` (the invariant there: `HasDomesticMultiplier` is True exactly where a domestic QTH is read) |
-| `HasZoneMultiplier`, `ZoneMultiplierCount`, `ZoneMultiplierZones`, `NumbersZonesFromZero` | **False / 0 / `zmzNotCQOrITU` / False.** The zone multiplier is not a kind since M11 S5 (`ZoneMultType` and the `ZoneMultiplierType` trait were deleted at part 2): whether the contest has one, how many zones, which list (CQ, ITU, or its own numbering) and zero-based numbering are all the class's. **A zone contest states BOTH `HasZoneMultiplier` and the count** (True exactly where the count is above 0 -- `uTestZoneMultiplier` asserts it for every contest at every station), the list if it is CQ or ITU, and -- where the entrant decides -- asks ONE private predicate against `Station` (JIDX: `IsJapaneseEntrant`). The list is NOT the CTY zone mode (`cfCQZoneMode`; plan F5, Q95). Pin them in `uTestZoneMultiplier` |
-| `HasPrefixMultiplier`, `PrefixMultiplierKey` | **False / no key.** The prefix multiplier is not a kind since M11 S3: a prefix contest overrides both, the first against `Station` where the entrant decides it, and pins both in `uTestPrefixMultiplierKey` |
-| `HasDXMultiplier`, `DXMultiplierKey`, `CountryMode`, `ListsRemainingDXCountry` | **False / no key / the CQ list / list every country.** The DX multiplier is not a kind since M11 S4 (`DXMultType` and the `DXMultiplierType` trait were deleted at part 2): whether the contest has one, its key, the CTY country list and the remaining-mults filter are all the class's. **A DX contest states BOTH `HasDXMultiplier` and the key** -- where the entrant decides, through ONE private predicate both ask, against `Station` -- and `CountryMode` if it counts DXCC only; pin them in `uTestDXMultiplierKey` (`HAS_DX` and the key rows) |
-| `InitialExchangeKind`, `ExchangeKind` | **neutral since M10 S6**: `NoInitialExchange`, `UnknownExchange`. (`QSOPointMethod` is gone -- M10 S4) |
-| `ReceivedExchangeFields` | **no field at all.** Which fields of the received exchange the contest carries (RST, number, QTH, zone, name...), assigned once at start-up into `LOGDUPE.ExchangeInformation`, which the log-string parses (LOGDUPE, LOGSTUFF), LOGSUBS2's age message, the ADIF RST and zone tags and the external logger read. It was `LOGDUPE.SetUpExchangeInformation`, a `case` over the exchange shape, until M11 S9a. **Every contest states it** -- override `GetReceivedExchangeFields` and CALL the helper in `uExchangeFields` named for the fields your exchange carries (`ExchangeFieldsRSTZone`, `ExchangeFieldsRSTQSONumberQTH`, ...); where the entrant decides the exchange, test the same predicate against `Station` that its `DescribeSession` tests. **Inheriting the base is silent and wrong**: none of those readers would see a field (the UA4W Championship does it today, transcribed -- M11 plan F24). Pin it in `uTestExchangeFields` |
-| `IsUSQSOParty` | False since M10 S6 (it was the row's `P <> 0`). A party states True |
-| `ADIFPowerTag` | `RX_PWR` -- the ADIF tag the QSO's `Power` field goes to. FOC Marathon says `FOC_NUM`, because its parser puts the membership number there (M4) |
-| `WritesADIFContestId` | True. General QSO says False -- an operating mode, not a contest (M4) -- and so does POTA, an activation (2026-10-13, design Q6) |
-| `Flags` (`GetFlags: TContestFlags`) | `ContestsBooleanArray`'s word, as a set. **STATE IT -- every registered contest does since M10 S5** (in the leaf; the CW/SSB pair families on their base), e.g. `Result := [cfQSOByBand, cfMultByBand];`, `[]` when none applies. The base answers `[]` (M10 S6). The nine properties below answer from it and are no longer virtual |
-| `QSOByBand`, `QSOByMode`, `MultByBand`, `MultByMode`, `VHFBandsEnabled`, `CountsDomesticCountries`, `ErmakSpecification`, `RTCCapable` | the member of `Flags` of the same name. **Set-up reads the first six** (M2); MainUnit's ERMAK menu and uHamScore's contact upload read the last two (M10 S6) |
-| `ZoneMode` | `CQZoneMode` when `Flags` holds `cfCQZoneMode` (the array's CQ bit), else `ITUZoneMode` -- D7's rule, stated rather than cast (the cast gave 255, design §8.2a #2). **Set-up reads it** |
-| `InStateDomesticFileName` | a QSO party's in-state file, which every party states; the base answers `''` (M10 S6 -- it read the `QSOParties` entry the row's `P` indexed). `DomesticFileName` is the party's county file, which every other station loads and which the in-state test reads. **State it as ONE literal** (`Result := 'idaho';`): `Lint-DomCoverage` reads every party's statement to check that `<base>.dom` and `<base>_cty.dom` ship, and fails on one it cannot read (since M10 S8, when it stopped reading `QSOParties`) |
-| `QSOPartyArea` | the area the New Contest prompt names (M10 S5; `''` on the base since S6). The base's `DescribeNewContestPrompts` and the matrix's contest list ask it; ADIF export's STATE does NOT since Q76/Q89 -- it is the WORKED station's, per QSO, `ADIFWorkedStationState` (a party county gives `ADIFCountyState`, an out-of-state state or VE province gives itself, DX none), and CNTY is written only where `WritesADIFCounty` is True (state parties but BC). A new QSO party states both, and joins uTestContestExport's pins. A state party answers its `HostState` (`TContestStateQSOPartyBase`); 7QP, IN7QPNE and British Columbia state theirs. A new party states its `InStateDomesticFileName` itself |
-| `MarksDupes` | the dupe policy: **True** (since M10 S4; until then "unless the row's `QP` is `AlwaysOnePointPerQSO`", the same answer for every contest, because the only two such rows were the two classes that say False). A contest that ignores dupes overrides it. **`logsubs2` reads it** through `ContestIdentity` when a QSO is logged (M3) -- an operator's `QSO POINT METHOD` no longer reaches it. Internet Sprint and SRR-JR state False |
+**A base class never asks which contest it is.** `if Contest = X` in shared
+code is a contest rule living where the contest's own file cannot find it --
+the same shape as a radio base testing its model. The contest overrides; the
+base states the general case. `Lint-ContestNameTests` ratchets every remaining
+legacy instance outside this directory (lower a file's ceiling when you move
+one in).
 
-**SET-UP ASKS THE CONTEST, SINCE M2 (2026-10-01).** `FCONTEST.FoundContest`'s
-head writes the six `Active*` globals (seven until M10 S4 deleted
-`ActiveQSOPointMethod`), the flags above, the zone list and the
-domestic file from `uContestRegistry.ContestIdentity(Contest)` -- your class --
-through one resolver, `FCONTEST.ApplyContestTraits`, and an **operator's
-statement beats your value** whatever the line order. So a trait override is
-no longer inert: **changing one changes the contest's set-up**, and the
-contest matrix will show it. What your class states in `DescribeSession`
-(below) runs after the head and wins where it assigns, exactly as the arms it
-replaced did. (FoundContest's `case Contest of` for classless contests is gone:
-its last arm, the UA4W Championship's, moved to its class on 2026-10-14.)
-Design §7.9, §8.2i.
-| `HostState` | `''` -- no host state, which is a real answer. Every party states its own (`TContestStateQSOPartyBase` makes it abstract). `VC.USQSOPartyStateName`, which derived it from the array's `P` index, is deleted (M10 S6) |
+**A contest RULE has no inherited default.** NY4I, 2026-10-15: *"inherited
+default can get us in trouble for some future programming adding a new
+contest."* The base answers neutral values and shared plumbing; a value that
+decides scoring or credit is a line in your class (A3).
 
-**`CountyLineCountiesMax` and `CountyLineAllowed` ARE NOT ON THE BASE** — they
-moved to `TContestStateQSOPartyBase` on 2026-09-29 and are listed with it below.
-NY4I: *"Arktika Spring is clearly not a qso party so I am not sure why that
-would be in the conversation of two counties"*, and *"ARRL-DIGI is not of course
-either."* A county line is a QSO-party concept, and on the root every contest in
-the program could state one — three classes did, two of which have no counties.
-| ~~`FormatsExchange`~~ | **DELETED at M4 (2026-10-01).** Every contest formats its own export -- see "How a contest formats its export" below |
-| `CabrilloQSOLineFormat` | `CabrilloQSOLineFormatDefault` — the layout of a whole `QSO:` line, which is NOT the exchange columns. Arktika Spring is the one contest that overrides it, with a narrower line that uses only four of the five arguments; its columns are the base's. PostUnit asks every contest, so the constant exists once |
+**One class per contest, even when two are identical today.** NY4I,
+2026-09-02, of ARRL and Winter Field Day: *"They keep diverging with rule
+changes each year."* A look-alike starts as a copy it owns; say so in the file
+so nobody merges it.
 
-~~**Everything defaults to `ContestsArray` on purpose.**~~ **Not since M10 S6.**
-The defaults were the strangler's: the array answered until a contest stated its
-own. Every registered contest now states its row (M10 S5), so the base answers
-NEUTRAL constants -- exactly DUMMYCONTEST's row, the one contest with no class --
-and reads no table. A value a class does not state is the neutral one, not its
-row. **The tables are deleted (M10 S8, 2026-10-14).**
+**A family base is for two runnings of ONE contest**, where a rule change
+reaches both by definition. A shared mechanism is a helper the class calls
+(`FixedModePoints` in `uContestFixedPoints`, `LOGGRID.GetDistanceBetweenGrids`),
+not a base. Before calling a helper, check it fits: Field Day scores FM with
+phone and digital at two, which `FixedModePoints` cannot express.
 
-#### The county-line worksheet -- numbers established from sponsor rules
+**Properties for what a contest IS, methods for what it DOES.** A property is
+declared once on `TContestBase` with a virtual getter; override the getter in
+`protected`, never redeclare the property.
 
-**A number here has been read out of a sponsor's published rules by NY4I and is
-not a guess.** It is recorded because the party it describes may have no class
-yet: a number established today and implemented next month is otherwise lost in
-a transcript. **A party absent from this table is not "unlimited by decision"** --
-it is simply not looked up yet, and `CountyLineCountiesUnlimited` preserves
-today's behaviour exactly while that stays true.
+**`ScoreQSO` is the one public scoring entry** (non-virtual): zero, the band
+check (`UsesBand`), the host-area check (`CreditsWorkedStation`), the four
+`QSO POINTS ...` overrides, then your protected `CalculateQSOPoints`. Tests
+call `ScoreQSO`.
 
-| party | max | the rule, as the sponsor writes it | class |
-|---|---:|---|---|
-| Florida QSO Party | **2** | *"Florida stations on a county line (maximum of two counties) may be claimed as a separate QSO and multiplier from each county."* | `uContestFloridaQP` |
-| Michigan QSO Party | **0** | *"No station may claim simultaneous operation in more than one county, state, or province."* | `uContestMichiganQP` |
-| Indiana QSO Party | **2** | two counties at once (NY4I, 2026-09-29) | `uContestIndianaQP` |
-| 7QP | **4** | *"County-line contacts may be logged with one entry showing all counties or with separate entries for each county."* -- four being the intersection of four counties meeting at right angles | `uContestSevenQP` since M7b, on `TContestBase` -- multi-state, so NOT on the party base, and the maximum is NOT enforced (nothing enforced it before; design Q40) |
-| California QSO Party | **4** | a four-county junction is claimable -- NY4I, 2026-09-29: "4 since that is the intersection of 4 counties with common 90 degree angle borders" | `uContestCaliforniaQP` |
-| North Carolina QSO Party | **2** | *"A maximum of two counties may be worked simultaneously under this provision."* -- https://ncqsoparty.org/rules/ | `uContestNorthCarolinaQP` |
-| New York QSO Party | **2** | NY4I 2026-09-29: *"NY allows up to 2 counties on a county line."* | `uContestNewYorkQP` |
-| Idaho QSO Party | **2** | NY4I 2026-10-01: *"ID QP allows up to 2 counties on a county line."* Scoring per NY4I the same day: 1 point phone, 2 points CW or digital | `uContestIdahoQP` -- a new `ContestType`, `IDAHOQSOPARTY` (2026-10-01). The sponsor agrees: *"Idaho stations on a county line may be claimed as a QSO and a multiplier from each county (2 QSO's and 2 multipliers)."* -- https://www.idahoqsoparty.org/rules.htm. Until then it was a `.cfg` borrowing `CONTEST = NEQP` |
-| Washington State Salmon Run | **2** | *"In the case of 3-county or more intersections, and in accordance with the MARAC rules, only one county line consisting of two counties may be run at a time."* -- https://salmonrun.wwdxc.org/rules/ | `uContestWashingtonSalmonRun` |
+**A QSO party's out-of-area entrant works only the host area** (Q107): one
+predicate, `uContestBase.HostAreaRuleCredits`, behind both the typed refusal
+and `CreditsWorkedStation` (logged any other way: 0 points, no multiplier).
 
-**THE ARRAY'S FLAG DISAGREES WITH THE RULES FOR HALF OF THESE.** Michigan's row
-says `CountyLineAllowed: True` and the sponsor forbids the practice outright.
-7QP, New York and the Salmon Run are the opposite case: their rows carry **no**
-`CountyLineAllowed` field, so it reads `False`, and all three allow a county
-line. Florida, Indiana, California and North Carolina say `True` and agree.
-~~"Every other number above confirms what the array already says"~~ stood here
-and was already wrong about 7QP when it was written. That is the argument for
-doing the lookup rather than trusting the flag.
+**A rule reads the QSO, never live state.** A time-of-day rule reads
+`aQso.tSysTime` (UTC as logged), never the clock (Croatian, UK/EI). A stored QSO
+is scored with its own recorded grid (`ScoreQSO(aQso, aMyFacts)` overlays
+`Station.MyGrid`), so never call `ActiveContest` inside a rule -- it would reset
+the station. A class reads `Station` and its arguments, never `Settings`, a
+global or CTY.DAT.
 
-**AND `IN7QPNE` CARRIES NO `CountyLineAllowed` FIELD AT ALL** (`VC.pas:4033`),
-so it reads as `False` -- while two of the four events it combines allow a
-county line (Indiana two, 7QP four). A combined entry that forbids what its
-components permit is a defect, not a policy; it is left alone here because the
-multi-state parties are unresolved (see `uContestStateQSOPartyBase`'s header),
-and fixing the flag without deciding whose county rule applies would only move
-the wrongness.
+**Never test multi-op in a class.** A by-id contest is refused on the network
+by the registry (B5).
 
-### Methods — what a contest does
+## B2. The base class reference
 
-| method | base behaviour |
-|---|---|
-| `ScoreQSO` | **not virtual** -- the one public scoring entry point: zero, band check, the host-area check (`CreditsWorkedStation`, Q107), the four overrides, then `CalculateQSOPoints` (section 1) |
-| `CalculateQSOPoints` | **protected**. Scores 0 (the legacy `NoQSOPointMethod` meant exactly this). Asked only by `ScoreQSO`, so never about a QSO on a band the contest does not use, nor one an override already scored |
-| `UsesBand` | **every band**, which is today's behaviour. A contest that states its bands overrides it, and a QSO on any other band is then logged, scores 0 (even under a `QSO POINTS ...` override) and earns no multiplier. Asked through `ContestCreditsBand` by `ScoreQSO` and `logdupe.SetMultFlags` -- and since M8 by the dupe sheet (`TCallsignsList.AddCallsign` marks no dupe bit for it, `CallsignIsDupe` calls none a dupe) and the need-multiplier hint (`LogEdit`, through `CreditedBands`). Idaho is the first overrider (`CONTEST_OWNERSHIP_DESIGN.md` §7.4) |
-| `CountsAsMultiplier` | **True for every QSO and kind** -- whether a QSO earns a multiplier of a kind AT ALL, asked by `logdupe.SetMultFlags` (through `ContestCountsMultiplier`) before the sheet says whether it is new. The BC, New York and Indiana parties (a `DX` QTH), the PCC (its own country's prefix) and the Jock White Field Day (its own branch, and branch 00) override it (M8, below) |
-| `CreditsWorkedStation` | **True** -- may this entrant credit this worked station at all (Q107, 2026-10-16). False: logged, 0 points, no multiplier, asked by `ScoreQSO` before the overrides and by `SetMultFlags` after the band (through `ContestCreditsWorkedStation`). `TContestStateQSOPartyBase`, the 7QP and NEQP answer `HostAreaRuleCredits` -- the predicate their typed refusal calls; IN7QPNE asks its judging party (section 1) |
-| `DomesticMultiplierFromCall` | `''` -- the domestic multiplier a CALL implies before any exchange is typed, for the need-multiplier hint (`LogEdit.GetMultArray`). The Russian DX contest and the RF Championships (a Russian call's oblast), the Ural Cup (CTY.DAT's grid), RDA and YO DX (the remembered exchange) override it (M8, below) |
-| `ParseReceivedExchange` | the plain parse in the contest's format: `ParseReceivedExchangeFormat`, of the contest the session names in `ExchangeFormatOf`, else of this one -- see "How a contest parses and validates" below (M5b, M11 S9d) |
-| `ParseReceivedExchangeFormat` | **protected; parses NOTHING and answers False** (what the classless DUMMYCONTEST gets). EVERY CONTEST STATES IT: call the engine's parser for your format on `aParsers` by name. `uTestExchangeParse` fails for a contest that does not (M11 S9d) |
-| `ExchangeCarriesDomesticQTH` / `ExchangeCarriesZone` / `ExchangeCarriesGridSquare` | False -- does the exchange carry a domestic QTH, a zone, a grid square? The readiness check asks all three (an empty MY STATE, MY ZONE, MY GRID), LOGSTUFF's improper-QTH refusal the first. State True where your exchange carries one (M11 S9d; plan F28 says why the answers are still transcriptions) |
-| `PerQSOExchangeLeadsWithSerial` | False -- the per-QSO SRX_STRING of a multi-county or multi-park entry leads with the RST. True where your exchange leads with a serial (the California, Pennsylvania and Virginia parties) (M11 S9d) |
-| `WriteDefaultExchangeMessages(aMessages)` (protected; behind the public non-virtual `SetUpDefaultExchangeMessages`) | **writes nothing.** The default CW exchange messages set-up installs (CQ/S&P/repeat exchange, exchange memories F3-F5, Alt-F3/F4) after your `DescribeSession`: call ONE of the engine's writers on `aMessages` by name -- `WriteNameAndState`, `WriteRSTQSONumber`, `WriteRSTStateOrQSONumber` (the state you send, else the serial), `WriteRSTZone(SendsStateAfterZone)`, `WriteRSTStateOrZone(SendsStateAfterZone)` -- or none, if your `DescribeSession` memories and LogCfg's defaults are your messages (94 of 187 contests). Where the station decides it, test the station as your parse format does. FoundContest asks `ActiveContest`; `uTestExchangeKindReaders` pins every contest at seven stations (M11 S9e part 1, plan F30) |
-| `ExchangeTextMayHoldGridSquare` | False -- may a word of your exchange (a QTH, the typed exchange, a domestic QTH) be read as a grid square? `TREE.LooksLikeAGrid` asks it first, for the beam heading in the call-history windows, the VHF beam heading and the ADIF/external-logger `GRIDSQUARE`. State True where your exchange can carry a grid (18 contests: the VHF/grid and Digi contests, BWQP, General QSO, POTA). It is asked of your IDENTITY, so it must not depend on `Station` (M11 S9e part 1; plan F34 lists the four grid answers that disagree) |
-| `MayBeACallsign` | every word may be a call (the PCC says `N/X` is not) |
-| `InitialExchangeFromCall` | no answer (the Russian DX contests give a Russian station's oblast) |
-| `FormatADIFReceivedExchange` | the ADIF `SRX_STRING`: the received RST in front of the typed exchange when the session's exchange carries an RST, else the typed exchange (the Field Days write a DX station's `1D DX`; POTA the park worked, else the typed exchange) |
-| `EmitADIFExchangeFields` | the ADIF exchange block PostUnit's tail writes after `STX_STRING`: the `SRX_STRING` alone, from `FormatADIFReceivedExchange`. Override it only to write tags BESIDE the SRX_STRING -- POTA writes its activation (`MY_SIG`/`MY_SIG_INFO`/`MY_POTA_REF`, from `TMyStationExchange.MyPark`) before it and a hunter's `STATE` or `GRIDSQUARE` after it. To change only the SRX_STRING, override `FormatADIFReceivedExchange` (2026-10-13) |
-| `ValidateClass` | accepts anything. Since M5b every contest is asked, a classless one through its identity -- `LOGSTUFF.ValidClass`'s own letter loop is deleted (inventory D1) |
-| `ValidateDXQTH` | accepts nothing. Asked of every contest the same way; the fallback copy in LOGSTUFF is deleted (inventory D2) |
-| `ValidateQTHCount` | **always True, and that is behaviour-preserving by construction.** TR4W has never counted QTHs for any contest, so "no opinion" states what the program does rather than being a permissive placeholder. Takes a COUNT and never a list: the application tokenised the exchange and already has the number, so handing the contest the QTHs would be the first step toward handing it the log. **Virtual**, and `TContestStateQSOPartyBase` is its only overrider |
-| `GetCabrilloSentExchange` / `GetCabrilloReceivedExchange` (behind the public non-virtual `FormatCabrilloSentExchange` / `FormatCabrilloReceivedExchange(aMy, aQso, aCtx)`) | **the error marker** (`uCabrilloExchange.CabrilloExchangeErrorMarker`, both columns) -- every contest states its two columns, by calling a `uCabrilloExchange` helper (M11 S9c). Protected, beside `GetADIFSentExchange`. PostUnit asks the object `ActiveContest` returns, which holds the station |
-| `GetADIFSentExchange` (behind the public `FormatADIFSentExchange(aMy, aQso)`) | **raises** (`uADIFExchange.ADIFSentNotImplemented`; reported, `STX_STRING` left out) -- every contest states its `STX_STRING`, by calling a `uADIFExchange` helper (M11 S9b). Protected, beside `GetExchangeKind` / `GetReceivedExchangeFields` |
-| `GetReceivesGridSquareExchange` (property `ReceivesGridSquareExchange`) | false -- true when the received exchange IS a grid (the Digi contests, the RST-and-grid VHF ones): the generic ADIF import then reads `GRIDSQUARE` into it (M11 S9b) |
-| `EmitADIFContestFields` | nothing -- `uADIF.EmitADIFRecord` has already written the generic `QTH` |
-| `FinalScore` | **not virtual** -- the one final score: `CombineScore` + `BonusPoints`. `LogEdit.TotalScore` is its only caller (M6, below) |
-| `CombineScore` | **not virtual** -- the points for a session with no multiplier or the FISTS exchange, else `CombineWithMultipliers` |
-| `CombineWithMultipliers` | **protected** -- the points (QTCs included) times the sum of every multiplier kind on the scored band |
-| `BonusPoints` | the declared `BonusStations` over the view, else 0 |
-| `BonusStations` / `CountsTowardBonus` / `CreditsBonusMode` | none / every contact / every mode |
-| ~~`TalliesLiveQSO`~~ | **deleted at Q32 (2026-10-17)** -- Missouri's live-only peak-hour tally; its bonus is its `BonusPoints` over the view now |
-| `RunsInMode` | **every mode**. An IDENTITY question, asked only of an ADIF record whose `CONTEST_ID` two contests share: once the whole record is read, the first contest sharing the id that runs in the record's mode is its contest (`uContestRegistry.ContestOfADIFRecordMode`). The RSGB RoPoCo runnings are the only overriders (CW and phone; M7b batch 2, design §8.2k). It scores nothing |
-| `DescribeSession` | states nothing -- see "How a contest describes its session" (M7a) |
-| `CQExchangeDefault` / `RepeatSPExchangeDefault` | `''` -- LogCfg's default CQ and repeat S&P exchanges, used only where the operator has none (M7a; the repeat at M7b, for the EU Sprints) |
+Each row: the virtuals, what the base answers, and a class that overrides
+them. `tr4w/src/contestFactory/uContestBase.pas` declares every one with a
+comment; read it there.
 
-### How a contest formats its export (M4, 2026-10-01)
+### Identity and set-up
 
-**EVERY CONTEST IS ASKED.** PostUnit's Cabrillo writer and ADIF tail, and
-`uADIF.EmitADIFRecord`, call `uContestRegistry.ContestIdentity(c)` -- your
-class, or a plain `TContestBase` for a contest with none -- and there is no
-opt-in switch any more. A contest with no export rule of its own simply
-inherits the base's answer for the Cabrillo columns, which is the shared arm for
-its session's exchange: what an RST-and-serial or a name-and-QTH line LOOKS LIKE
-(the ADIF `STX_STRING` is stated by every class since M11 S9b: see
-`GetADIFSentExchange`). Those arms name no contest, and must not start to:
-**a rule that is your contest's goes in your class.**
-
-- **Your own columns**: override `FormatCabrilloSentExchange` and/or
-  `FormatCabrilloReceivedExchange`, and `GetADIFSentExchange` for the
-  `STX_STRING`. Reproduce the widths exactly -- Cabrillo is a column format.
-  `uContestFOCMarathon`, `uContestPCC`, `uContestARRLSSBase` are examples.
-- **Only an input differs** (a placeholder for an absent QTH, the QSO's own
-  QTH instead of the exporter's choice): copy the context, change the field,
-  and call `inherited` -- the shared arm still lays out the line.
-  `uContestUKEI`, `uContestCaliforniaQP`, `uContestWWDigi`.
-- **Your ADIF fields** (a section, a society, a DOK, a grid): override
-  `EmitADIFContestFields` and call `uADIF.EmitADIFField` -- the tag spelling is
-  ADIF's, the meaning is yours. `uContestARRLFieldDay` (and its copy in
-  `uContestWinterFieldDay`), `uContestWAG`, `uContestIARU`.
-- **What the exporter decides stays the exporter's**: the formatted RSTs, the
-  chosen his-QTH, the previous record's values, the session's exchange --
-  `TCabrilloQSOContext`. Your class reads no global to format a line.
-
-**And pin it**: golden strings in `uTestContestExport`, and a row in its
-round trip (`Test_RoundTripThroughTodaysImport`) for anything that writes ADIF.
-The golden corpus byte-diffs the 13 contests that have a set; the contest
-matrix sees every contest's export.
-
-### How a contest owns its ADIF import (M5a, 2026-10-01)
-
-**IMPORT IS GENERIC FIRST, THEN YOURS.** `uADIF.ApplyADIFFieldsToExchange`
-names no contest: it maps the standard tags (`CALL`, `BAND`, `MODE`, the RSTs,
-`SRX`, `STX`, `QTH`, `CLASS`, `CQZ`/`ITUZ` ...) to the standard fields and
-CAPTURES every tag whose meaning is a contest's into `TADIFRecordTemps` -- the
-raw text, as ADIF carried it. Once the WHOLE record is read, the contest its
-`CONTEST_ID` names interprets them: `TContestBase.ApplyADIFImport(aTemps,
-aSession, var aExch)`. Because it runs after the last tag, **the order a
-logger wrote its tags in cannot change the answer**; the `APP_N1MM_EXCHANGE1`
-arm that read `exch.ceContest` as it went by is the bug that proved why
-(`Test_N1MMTagOrderDoesNotMatter` pins both orders).
-
-- **Do nothing** and you get the base's default -- the old classless `else`:
-  a grid exchange takes `GRIDSQUARE`, a contest with domestic multipliers
-  takes the `QTH` tag (else the letters leading `SRX_STRING`), anything else
-  keeps `SRX_STRING` as the exchange.
-- **Your own rule**: override `ApplyADIFImport` and write the fields your
-  contest keeps. The operator and the received RST are already taken care of
-  for every contest before you are asked (`ApplyADIFCommonImport`): `ExchString`
-  is `SRX_STRING` with the received RST off the front, and `ceOperator` is
-  filled. Call `inherited` only for the cases you do not handle.
-  `uContestARRLSSBase`, `uContestARRLFieldDay`, `uContestCQWWBase`,
-  `uContestIARU`, `uContestUkrainianDX` are examples; **an arm that named
-  several contests is copied into each** (design 1.4).
-- **A tag the generic importer does not capture yet** is a field of
-  `TADIFRecordTemps`, an entry in `TADIF_Fields` and `ADIF_FIELD_NAMES` (their
-  order MUST match), and a `temps.X := fieldValue` arm in `uADIF`. WAG's `DOK`
-  and the RSGB IOTA's `IOTA` were added this way, so the two contests read back
-  what they write.
-- **The session arrives as data** (`TADIFImportSession`: the session's exchange,
-  the open contest's grid-square and domestic-multiplier answers --
-  `CountsGridSquares` and `DoingDomesticMults`, M11 S6 -- and the operator) -- your class reads no global, so a unit test constructs it and
-  asks. **THE SESSION IS THE OPEN CONTEST'S, NOT NECESSARILY YOURS**: an operator
-  can import another contest's log, and the base's default has always read the
-  session for whatever contest the record names.
-- **Pin it**: `uTestContestImport` for the arm, and a row in
-  `uTestContestExport.Test_RoundTripThroughTodaysImport` for anything you export
-  that you must read back.
-
-**No contest keeps an import arm outside its class any more.**
-`MainUnit.ApplyClasslessADIFImport` held the arms of the contests that had no
-class; ARRL 160's left at M7b, when its class was handed the domestic-country
-lookup its scoring needs as a station-context service
-(`TStationContext.IsDomesticCountryCall`), and POTA's on 2026-10-13, when it
-gained its class (design Q6) -- and the routine was deleted with it.
-
-### How a contest parses and validates its received exchange (M5b, 2026-10-02)
-
-**THE CUTTING IS GENERIC, THE MEANING IS YOURS.** `LOGSTUFF.ProcessExchange` --
-what live entry's `ParametersOkay`, the log-line reader and the sender all call
--- runs the contest-blind tokenising gate (`ParseArray`) and then asks the
-contest: `TContestBase.ParseReceivedExchange(aText, aSession, var aExch, out
-aErrorMessage)`. True accepts and False refuses. A refusal that names a reason
-puts it in `aErrorMessage`, and the engine shows it exactly as it shows an
-improper county or a bad ARRL section (`ExchangeErrorMessage`, the main
-window's notice line).
-
-- **State your FORMAT** (M11 S9d): override `ParseReceivedExchangeFormat` and
-  call the engine's parser for it by name on `aParsers` -- one line,
-  `Result := aParsers.ParseRSTQSONumber(aText, aExch);`. The 51 parsers are the
-  methods of `uContestBase.TExchangeParsers`, named for the exchange kind each
-  answered ('Parse' + the `ExchangeType` member, less 'Exchange'); LOGSTUFF's
-  `TEngineExchangeParsers` implements them and names no contest. Where the
-  STATION decides your exchange, test it with the same predicate as your field
-  list and Cabrillo columns (`uContestARRL160`, `uContestJIDXCW`); where the
-  TEXT does, choose by the text (`uContestArktikaSpring`, `uContestPCC`). There
-  is no shared machine left to fall back on: **the base format parses nothing**.
-- **Your own RULE**: override `ParseReceivedExchange` and call `inherited` (the
-  plain parse in your format) or a parser by name (`aSession.Parsers.Parse...`)
-  for what you do not decide yourself. The worked examples: RAC's
-  `uContestCanadaDay` (a VE0 station's serial), `uContestLABRE` (a PY station's
-  state), `uContestIARU` (fills the zone after the parse), `uContestUKEI` and
-  `uContestSACCW` (refuse before it), `uContestARRLSSBase` (names a missing
-  precedence after it), `uContestStateQSOPartyBase` (refuses an out-of-state
-  station working another one -- NY4I's ruling, design 7.10 -- through
-  `HostAreaRuleCredits`, the predicate its scoring asks too since Q107), `uContestIN7QPNE`
-  (lets its judging party's rules judge the exchange in IN7QPNE's own format,
-  through `ExchangeFormatOf`).
-- **A rule never tests the exchange kind** -- the session carries none since
-  S9d. M5b's rules were branches inside one shape's parser and tested the
-  session's shape to stay exact; M11 S2 found every such test always true and
-  deleted them (plan F11).
-- **The session is DATA** (`TReceivedExchangeSession`): the engine's parsers,
-  `ExchangeFormatOf`, and the engine services a rule needs -- `ZoneOfCall`
-  (CTY), `IsDomesticQTH` (the loaded domestic table), `CallWindowHasCall` and
-  `AbandonEntry` (live entry). Your class reads no global; a unit test hands it
-  the shared stub `uTestExchangeParserStub`, which records which parser was
-  asked. **A service is added when the first rule needs one**, like a
-  `TStationContext` field.
-- **Word cutting a class needs is in `uExchangeTokens`**, LIFTED from LOGSTUFF
-  line for line (`SplitExchangeInThree`, `ProcessSweepstakesEntry`,
-  `IsSingleNonNumericToken`) and called by both, so the engine and the class
-  cut one way. Do not write a "tidier" splitter: it would hand your rule a
-  different word than the parser saw.
-- **Two more seams**: `MayBeACallsign` (a word of the exchange that looks like a
-  call and is not one -- the PCC's `N/X`) and `InitialExchangeFromCall` (an
-  initial exchange known from the call alone -- the Russian DX contests'
-  oblast).
-- **Pin it** in `uTestContestParse` (your rule) and `uTestExchangeParse` (your
-  format, and every contest's at seven stations x 66 typed rows -- add your
-  contest to its tables), and know the matrix's `parse` section (section 4)
-  sees what the engine's real parsers did with the same typed text.
-
-Typed entry itself -- that a refusal SHOWS its message, that a valid exchange
-logs -- is seen by no gate; `docs/BENCH_QUEUE.md` carries it.
-
-### How a contest owns its final score and bonuses (M6, 2026-10-02)
-
-**ONE FUNCTION IS THE SCORE.** `LogEdit.TotalScore` gathers the totals the
-program holds (`uScoreTotals.GatherScoreTotals`) and asks your contest
-`FinalScore(totals, view)` -- and the score display, the summary sheet, the
-Cabrillo `CLAIMED-SCORE`, the XML score report and both score-posting
-clients all read `TotalScore`. Your class never sees the sheet, the globals
-or the database:
-
-```
-FinalScore = CombineScore(aTotals) + BonusPoints(aTotals, aView)     (not virtual)
-CombineScore: session with no multiplier, or the FISTS exchange -> the points  (not virtual)
-              otherwise -> CombineWithMultipliers(aTotals)                    (yours)
-```
-
-- **Do nothing** and you get the general case: the points (QTCs included)
-  times the sum of every multiplier kind, on the band a single-band entry
-  scores or on all bands. No bonus.
-- **Your sponsor combines them otherwise**: override the protected
-  `CombineWithMultipliers`. `ContestPoints(aTotals)` and
-  `SummedMultipliers(aTotals)` are the two pieces of the general case, for
-  you to call. `uContestWinterFieldDay` (band-mode multiplier x power),
-  `uContestDARCWAEDCCW` (weighted by band), `uContestUralCup`,
-  `uContestCupRFCW` (points + 100 per multiplier).
-- **A bonus station** -- "a contact with this call pays N, once or once per
-  mode": declare it in `GetBonusStations` (a `TBonusStation` row), and the
-  base pays it over the whole log. Say which contacts count
-  (`CountsTowardBonus`; the base takes every one, dupes included) and which
-  modes pay (`CreditsBonusMode`). `uContestMissouriQP`,
-  `uContestWashingtonSalmonRun`.
-- **Any other bonus** -- override `BonusPoints`, add `inherited`, and compute
-  yours from the view. `uContestNorthCarolinaQP` (the sweep),
-  `uContestIdahoQP` (the dormant county).
-- **What you are handed**: `TScoreTotals` -- the stored QSO points, QTC
-  points, the multiplier and QSO counts by band, mode and kind, the scored
-  band, and the SESSION's facts (does it count multipliers, its exchange, its
-  DX multiplier) -- and a `TLoggedQSOView`: every logged record that counts
-  toward the totals (`QSOCountsTowardTotals`), read-only, in log order. The
-  application keeps it in memory beside the totals (`uScoreTotals` -- reading
-  the database per score was measured at ~130 us a row), so walking it is
-  cheap; do not cache anything from it in your class.
-- **A BONUS IS NEVER DECIDED AS A QSO IS LOGGED** (design 7.7): decided from
-  the whole log at the end, it is the same however the log was reached --
-  live, reloaded, rescored, edited or merged. There is no exception left:
-  Missouri's peak-hour tally, the one that was counted live (`TalliesLiveQSO`),
-  became a rule over the view at Q32 (2026-10-17) and the seam is deleted.
-- **A field you need and nobody has** goes into `TScoreTotals` (filled in
-  `GatherScoreTotals`) or `TStationContext`, with the first rule that needs
-  it. The Salmon Run's single-mode rule brought `MyCategoryMode`.
-- **Pin it** in `uTestContestTotals` with a hand-built `TScoreTotals` and a
-  `TLoggedQSOList`, at the bonus's edges (nine QSOs and ten; four counties and
-  five; one mode and two). The matrix's `totals` section sees the formula for
-  every contest; a bonus its synthetic QSOs do not trigger needs the unit
-  test and a `docs/BENCH_QUEUE.md` item.
-
-### How a contest describes its session (M7a, 2026-10-02)
-
-**SET-UP IS DATA YOUR CLASS HANDS OVER, NOT GLOBALS IT WRITES.**
-`FCONTEST.FoundContest` asks `ContestIdentity(Contest).DescribeSession(
-aStation, aSession)` once per set-up -- after the head has applied your traits
-and the operator's statements and decided whether the station is in a QSO
-party's host state -- and `FCONTEST.ApplySessionDefaults`, the only writer,
-applies what you stated. Then the closing exchange set-up runs. Your class
-reads `aStation` only: the identity object it is asked of carries no station.
-
-- **Do nothing** and nothing is stated: the session is exactly what the head
-  made of your traits. That is what most contests want.
-- **State what your contest sets** on `aSession` (a `TSessionDefaults`):
-  - the engine choices that vary by station -- `Exchange`, `Band`, `Mode`,
-    `DomesticMultByBand`, `AllowDupeQSOs` (`DXMult`, `PrefixMult` and
-    `DomesticMult` went with their kinds at M11 S3-S6: the class answers
-    them);
-  - the session's settings -- `WARCEnabled`, `QSOByMode`, `MultByBand`,
-    `LiteralDomesticQTH`, `SprintQSYRule`, `MinitourDuration`, ... each the
-    setting of the same name;
-  - the CW messages (`CQExchangeCW`, `SPExchangeCW`, `QSLCW`, ...) and the
-    function-key memories (`SetCQMemory(CW, smkF1, ...)`,
-    `SetExchangeMemory`), built from `aStation` -- `MyName`, `MyState`,
-    `MyFDClass`, `MySection`, `MyPrec`, `MyCheck`, `MyCall`;
-  - the domestic countries, in order (`AddDomesticCountry`, or a shared group
-    -- `AddDomesticCountries(DomesticCountriesKVE)`; the groups are
-    `uContestBase` constants that FCONTEST's own helpers read too);
-  - the domestic file (`DomesticFile`, no extension), what your contest
-    SENDS where MY STATE goes when it blanks or replaces it (`SentState` --
-    the session's, never MY STATE itself, since M9a), the contest name;
-  - since M7b: the initial exchange and the zone multiplier
-    (`InitialExchange`, `ZoneMult`), the DX multiplier limit (`DXMultLimit`),
-    the R150S list (`R150SMode`), and ~~`SuppressZoneExchangeMessages`~~ --
-    deleted at M11 S9e part 1: which default exchange messages set-up
-    writes is your class's `WriteDefaultExchangeMessages` now, and the
-    JIDX contests simply write none;
-  - since M7b batch 2: the initial exchange's cursor at the start
-    (`InitialExchangeCursorAtStart` -- IRTS, RAEM), the DXCC multiplier by
-    band (`DXCCMultByBand` -- CQMM), and an exchange memory's CAPTION
-    (`SetExchangeCaptionMemory` -- the RTC's `NR` and `Cl+Ex`), which goes in
-    the same ordered list as the memories;
-  - REQUESTS rather than values, for engine work a contest asks for and
-    cannot undo: `UseRSTQSONumberExchangeMemories` (UK/EI) and, since POTA's
-    class, `UseOperatorNameSet` -- TRMASTER.DTA's operator names indexed for
-    the session, which the applier builds last, where POTA's arm did.
-- **A STATED VALUE IS STATED, EVEN WHEN IT IS FALSE OR EMPTY**, and an
-  unstated one is left alone -- so state only what your contest sets, and
-  never restate a trait "to be safe": a stated value overwrites a statement
-  the operator made before the CONTEST line, as the arms always did.
-- **A CHOICE THAT DEPENDS ON THE STATION IS STATED BOTH WAYS**, on
-  `aStation.InHostState` (a state party's in-state station), the station's
-  country or continent. A trait cannot vary per station; that was inventory
-  D8. `uContestArizonaQP`, `uContestTexasQP`, `uContestARRLDXBase`.
-- **A value nobody has stated yet** joins `TSessionValue` with the first
-  contest that needs it, and FCONTEST's applier gains its line -- the same
-  growth rule as `TStationContext`.
-
-**THE DEFAULT CQ EXCHANGE IS A SIBLING, `CQExchangeDefault(aStation)`** -- and
-the default REPEAT S&P exchange its twin, `RepeatSPExchangeDefault` (M7b) --
-asked
-by `LogCfg.tSetupExchangeNumbers` once the whole configuration is read (a
-station line can follow CONTEST). It is a default in the strict sense -- LogCfg
-uses it only where CQ EXCHANGE is still empty -- and the base offers `''`.
-
-**Pin it** in `uTestContestSession` (hand it a station, read back what it
-stated, both sides of any station-dependent choice). The matrix's `setup`
-section sees the applied result for every contest and variant.
-
-### How a contest declares its multipliers and dupe policy (M8, 2026-10-02)
-
-**THE SHEET KEEPS THE STATE; YOUR CLASS DECLARES THE RULES** -- stage 2 of
-`CONTEST_OWNERSHIP_DESIGN.md` §7.7. Whether a multiplier was worked before,
-and whether a call was, is the shared sheet's question (`logdupe`,
-`uMults`, `uCallsigns`); it never moves into a class and a class is never
-handed the sheet. What your class says is which QSOs COUNT, as data and
-virtuals the sheet asks:
-
-| you declare | with | the sheet asks it |
+| virtuals | base answer | notes |
 |---|---|---|
-| the domestic multiplier, its shape and its file | `UsesDomesticFile`, `DomesticMultiplierFromQTH`, `DomesticMultiplierHint`, the four shape answers, and `HasDomesticMultiplier` where the base's composition cannot see the shape (M11 S6; no kind, no `DescribeSession` statement) | `LOGEDIT.DoingDomesticMults` (or `ContestHasDomesticMultiplier` where the object is in hand -- `SetMultFlags`, `GetDomQTH`, `LogContact`, the hint, the Cabrillo writer, the ADIF import), `LOGDOM.GetDomQTH`, `DomStringParse` and the grid, WYSIWYG and RDA sites ask them, live against `Station` |
-| the zone multiplier, its count, list and numbering | `HasZoneMultiplier`, `ZoneMultiplierCount`, `ZoneMultiplierZones`, `NumbersZonesFromZero` (M11 S5; no kind, no `DescribeSession` statement) | `LOGEDIT.DoingZoneMults` (or `ContestHasZoneMultiplier` where the object is in hand -- `SetMultFlags`, the rescore, the hint, the ADIF export), `LOGDUPE.SetUpRemainingMultiplierArrays`, the zone window and the initial zone ask them, live against `Station` |
-| the prefix multiplier | `HasPrefixMultiplier` and `PrefixMultiplierKey` (M11 S3; no kind, no `DescribeSession` statement) | `LOGEDIT.DoingPrefixMults` and `SetPrefix` ask them, live against `Station` |
-| the DX multiplier, its key, country list and window filter | `HasDXMultiplier`, `DXMultiplierKey`, `CountryMode`, `ListsRemainingDXCountry` (M11 S4; no kind, no `DescribeSession` statement) | `LOGEDIT.DoingDXMults` (or `ContestHasDXMultiplier` where the object is in hand), `LOGDUPE.GetDXQTH`, `uSettingsEffects` and `mo.FillVisibleBytes` ask them, live against `Station` |
-| per band / per mode | `MultByBand`, `MultByMode`, `QSOByBand`, `QSOByMode` (and `DomesticMultByBand`, `DXCCMultByBand` in `DescribeSession`) | the sheet's band and mode keys |
-| the bands at all | `UsesBand` | points, multipliers, dupes and the hint all ask it (§7.4) |
-| a QSO that earns no multiplier of a kind | `CountsAsMultiplier(aQso, aKind)` | `SetMultFlags`, before the sheet's "is it new" |
-| whether a repeat is marked a dupe | `MarksDupes` | `logsubs2` as the QSO is logged |
-| the domestic multiplier a call implies, for the hint | `DomesticMultiplierFromCall(aCall, aLookups)` | `LogEdit.GetMultArray` when no exchange is typed |
+| `GetDisplayName`, `GetFriendlyName`, `GetCabrilloName`, `GetADIFContestId` | the contest's id | every class states the first three itself (A3). The ADIF id is what export writes AND import matches. `FormerADIFContestIds`: old ids import still accepts after a rename |
+| `GetWA7BNMId`, `GetQRZRUId`, `GetSubmissionEmail`, `GetDomesticFileName` | 0, 0, `''`, `''` | |
+| `GetFlags` | `[]` | `QSOByBand`, `QSOByMode`, `MultByBand`, `MultByMode`, `VHFBandsEnabled`, `CountsDomesticCountries`, `ErmakSpecification`, `RTCCapable`, `cfCQZoneMode` (else ITU) read from it. Set-up (`FCONTEST.ApplyContestTraits`) writes them; an operator's statement wins |
+| `GetIsUSQSOParty`, `GetHostState`, `GetQSOPartyArea`, `GetInStateDomesticFileName` | False, `''`, `''`, `''` | the party base answers the first and third |
+| `DescribeSession(aStation, aSession)` | states nothing | session values (bands, mode, memories, domestic countries, `SentState`, ...) on a `TSessionDefaults`. **A stated value is stated even when False**; state only what you set. A choice that depends on the entrant is stated both ways on `aStation` (`uContestARRLDXBase`). What you SEND where MY STATE goes is `SentState`, never MY STATE |
+| `CQExchangeDefault`, `RepeatSPExchangeDefault` | `''` | used only where the operator has none |
+| `WriteDefaultExchangeMessages` | none | call ONE engine writer by name (`WriteRSTQSONumber`, `WriteRSTZone`, ...) |
+| `GetIsActive` | True | False only on NY4I's word; an inactive contest still opens old logs |
 
-- **`CountsAsMultiplier` is about the QSO, never the log.** "A DX station
-  is no multiplier", "our own country's prefixes do not count", "our own
-  branch does not count" -- each a sponsor rule. `aKind` is `rmDomestic`,
-  `rmDX`, `rmZone` or `rmPrefix`. Read the station from `Station` (MY
-  COUNTRY, MY ZONE); the object `SetMultFlags` asks is `ActiveContest`, so
-  its station is current. **Do not restate your band list here** --
-  `SetMultFlags` asks `UsesBand` first, as `ScoreQSO` does.
-- **`DomesticMultiplierFromCall` is a HINT.** What the QSO earns is decided
-  from the typed exchange. What only the engine holds -- the exchange the log
-  remembers for a call, CTY.DAT's grid -- arrives in `aLookups` (a
-  `TMultiplierHintLookups`); a nil lookup answers `''`. Asked of
-  `ContestIdentity`, so it reads no station.
-- **There is no dupe-key virtual, deliberately** (DECIDED at M8). Every dupe
-  rule outside the factory is either one of the declarations above or a
-  shared rule keyed on a multiplier KIND many contests use (a rover in a grid
-  contest is never a dupe -- `GridSquares`, six contests). A seam is added
-  when a contest's own dupe rule moves.
-- **A multiplier KIND's arm stays in the sheet** even when one contest uses
-  it (`BlackSeaCountries`, `GCStation`, ...): the four multiplier commands
-  let an operator state ANY kind for ANY contest, so the arm is the meaning
-  of that statement, not a copy of the contest's rule. It moves into the
-  class when those commands retire (design Q4, M10). Do not copy it into
-  your class now -- that would be two definitions.
+### Bands, dupes and multipliers
 
-**Pin it** in `uTestContestMultipliers` (each override, and the base for
-every other contest, which is a ratchet: a contest that gains a rule joins
-its list in the same commit). The matrix's `scoring` line records every
-multiplier flag for every contest and variant, and the corpus's
-`CLAIMED-SCORE` the counts for its thirteen logs.
-
-### How a contest tells the display and the reports (M9a, 2026-10-02)
-
-**THE CONTEST ANSWERS WITH DATA; THE UI RENDERS IT.** A class never touches a
-form, a canvas or a global. Each seam below stood as a test of a contest's
-name in the unit that renders it, and every base answer is what that unit did
-for a contest it did not name -- so state nothing, and your contest renders as
-every other does. All are asked of `ContestIdentity` (no station) except
-`CabrilloHeaderLinesBeforeTag`, which is handed one.
-
-| you state | with | who asks |
+| virtuals | base answer | notes |
 |---|---|---|
-| what the New Contest dialog asks for | `DescribeNewContestPrompts(aPrompts)` -- `AskField`, `AskFieldWithComment`, `OfferIAmIn`, `OfferIAmInCaption`, and `AskFieldWithCommentWhenInside` for the ticked box. **ORDER MATTERS**: rows are handed out in the order fields are asked, and the last comment wins. The base asks a US state party for its county or state; call `inherited` to keep that | `uNewContest` |
-| how the New Contest drop-down names and places it (M9b) | `GetDisplayName`, `GetIsActive` | `uContestChoices` -- active first, then by display name |
-| whether call entry shows contest status -- new multiplier, needed bands, station information, possible calls (M9b) | `GetShowsContestStatus` (base True; General QSO, a log, False) | `MainUnit`, `LOGEDIT`, `LOGSUBS2`, `LOGWIND` |
-| how many dates a log may span before the summary warns (M9b) | `GetMaximumContestDates` (base 10; 0 never warns -- General QSO) | `PostUnit.CheckForNewContestDate` |
-| whether band up/down steps onto WARC (M9b) | `GetBandStepIncludesWARC` (base False; General QSO True) | `LOGSTUFF`'s band stepping |
-| whether the exchange's power field is an FOC member number (M9b) | `GetPowerFieldIsFOCNumber` (the FOC Marathon) | `MainUnit`'s log columns: FOC# instead of PWR |
-| a warning for where the radio is (M9b) | `CallEntryFrequencyWarning(aFreqKHz)` -- '' for none, else the words (WAG's seven windows, `TC_WAGWarn`) | `MainUnit.ShowCallEntryFrequencyWarning`, as a notice while a call is typed |
-| the totals window's labels and mode shares | `GetTotalsDisplay` (`TTotalsDisplay`) -- start from `inherited` | `uTotal.UpdateTotals2` |
-| the summary sheet's counting | `GetSummarySheet` (`TSummarySheetLayout`) | `PostUnit.WriteScoreInformationToSummarySheet` |
-| whether the hour report carries a running score | `GetReportsRunningScore` | `PostUnit.PrintHourTotals` |
-| the Cabrillo `CONTEST:` name, a required LOCATION, extra header lines, the mode column | `CabrilloContestName`, `GetRequiresCabrilloLocation`, `CabrilloHeaderLinesBeforeTag`, `CabrilloModeString` | PostUnit's Cabrillo writer |
-| the canonical exchanges a scoreboard is sent | `CanonicalReceivedExchange`, `CanonicalSentExchange` -- build from `uCanonicalExchange`'s helpers (`RSTReceivedText`, `CollapseWhitespace`, `CanonicalFromCQTemplate`) | `uExchangeBuilder` -- HamScore, the UDP contact broadcast, the log's `exchange_sent` |
-| the score-posting XML's multiplier labels | `ScorePostingMultiplierType` ('' posts none) | `LOGSUBS2`'s dynamic results |
-| the operating aids it forbids | `GetPermittedOperatingAids` (`TOperatingAid`) | the menus, `OpenTR4WWindow`, `LOGEDIT`'s Super Check Partial |
-| whether it has QTCs | `GetOffersQTCs` | the QTC menu |
-| whether it offers the park tools | `GetOffersParkTools` (POTA) | Download POTA Parks and Repeat POTA Parks (2nd Op), hidden otherwise |
+| `UsesBand` | every band | an off-band QSO is logged, scores 0, earns no multiplier and is not a dupe. Asked through `ContestCreditsBand` by scoring, `SetMultFlags`, the dupe sheet and the need-multiplier hint |
+| `CreditsWorkedStation` | True | the party base: the host-area rule |
+| `CountsAsMultiplier(aQso, aKind)` | True | about the QSO, never the log. `aKind` is `rmDomestic`, `rmDX`, `rmZone`, `rmPrefix` |
+| `MarksDupes` | True | Internet Sprint and the Youth Championship of Russia say False |
+| `DupeKeyIncludesReceivedQTH` | False | **True on the party base (Q118)**: the same call, band and mode is a new QSO when it sent a different county -- the rover rule |
+| `UsesDomesticFile`; `DomesticMultiplierFromQTH`, `DomesticMultiplierHint`, `HasGridSquareMultiplier`, `HasGridFieldMultiplier`, `DomesticQTHReplacesDXMultiplier`, `DomesticQTHIsNeverAGrid` | False; look the text up in the file | a `.dom` contest states the first; a grid/DOK/RDA/IOTA contest states its shape (helpers in `uDomesticKey`). `HasDomesticMultiplier` is composed from them; only a shape with no flag of its own (IOTA, WAG, DARC 10 m) overrides it. Pinned in `uTestDomesticMultiplier` |
+| `HasDXMultiplier`, `DXMultiplierKey`, `CountryMode`, `ListsRemainingDXCountry` | False, none, CQ list, every country | a DX contest states the first two (`uDXMultiplierKey` lists). Where the entrant decides, one private predicate answers both. `uTestDXMultiplierKey` |
+| `HasZoneMultiplier`, `ZoneMultiplierCount`, `ZoneMultiplierZones`, `NumbersZonesFromZero` | False, 0, not CQ/ITU, False | `HasZoneMultiplier` is True exactly where the count is above 0. The list is NOT `cfCQZoneMode`. `uTestZoneMultiplier` |
+| `HasPrefixMultiplier`, `PrefixMultiplierKey` | False, none | False from the key means "leave the prefix as it was", True with `''` means "empty". `uPrefixMultiplierKey`; `uTestPrefixMultiplierKey` |
+| `DomesticMultiplierFromCall(aCall, aLookups)` | `''` | the need-multiplier hint before an exchange is typed |
+| `ValidateQTHCount` | True | the party base enforces `CountyLineCountiesMax` |
 
-**WHAT YOU SEND WHERE MY STATE GOES IS `TSessionDefaults.SentState`** (was
-`MyState` until M9a). It is the SESSION's (`FCONTEST.SentMyState`) and never
-written into MY STATE -- the operator's setting in `settings/tr4w.json` (design
-7.11). Every reader of the sent exchange asks `SentMyState`; a new one must too.
+There is no multiplier "kind" to state any more: the four `Has*` answers are
+read live against `Station` (`LOGEDIT.DoingDXMults` and its siblings).
 
-**Pin it** in `uTestContestDisplay` (M9a's seams) or `uTestContestUI` (M9b's):
-each override, and the base for every other contest as a ratchet. The New Contest prompts are compared, for every contest,
-against a table generated from the dialog's own arms. No oracle but the
-corpus's Cabrillo header (Winter Field Day, General QSO) sees any of this, so a
-change here needs a `BENCH_QUEUE.md` entry too.
+### The received exchange
 
-### Protected helpers — mechanism, not rules
-
-| helper | for |
-|---|---|
-| `ValidateCountAndLetterClass` | "count then one letter" — `2A`, `1O`. The contest supplies the legal letters and the message |
-| `ValidateDXQTHAllowing` | `DX` and empty always pass; the contest supplies whatever else it allows |
-
-The split is deliberate: **splitting digits from letters cannot differ between
-contests; which letters are legal can.** Duplicating the parse into every class
-would duplicate the part that cannot differ.
-
-### Family and mechanism bases that exist today
-
-| base | kind | holds |
+| virtuals | base answer | notes |
 |---|---|---|
-| `TContestARRLDXBase`, `TContestARRLSSBase`, `TContestCQWWBase`, `TContestCQWPXBase` | family | two runnings of one contest |
-| `TContestNRAUBalticBase` | family | the NRAU-Baltic contest, CW and SSB -- NY4I's ruling (2026-10-01), built at M3. The base holds every shared row field and the points; each mode class states only its names and calendar id. **The template for any other two-mode pair, once Q7 says that pair is a family** |
-| ~~`TContestFixedPoints`~~ | ~~mechanism~~ | **retired at M3 (2026-10-01).** Its rule lives on as the helper `FixedModePoints`, called from a class's own `CalculateQSOPoints` (section 2, step 2) |
-| `TContestStateQSOPartyBase` | mechanism | the single-state QSO parties. `IsUSQSOParty` is stated rather than read from the `P` index; `GetHostState` is **abstract**, so a state party that forgets its state cannot be instantiated; and **the whole county-line rule lives here** — `CountyLineCountiesMax` (virtual, defaulting to `CountyLineCountiesUnlimited` **unconditionally**, never read from the array's boolean), `CountyLineAllowed` (derived, **not** virtual, so it cannot contradict the count), the `CountyLineCountiesUnlimited` constant, and the `ValidateQTHCount` override that enforces the maximum. **The rover** is a different rule: `StripsRoverCountyFromCall` (live) and `SplitsRoverCallOnExport` (whether ADIF export writes a rover's `CALL/<county>` as the bare call plus `APP_TR4W_ROVERCALL`) are `TContestBase` virtuals this base answers True to, ONCE, for every state party -- NY4I's ruling on Q94 with Q90 (2026-10-14): *"yes QSO parties allow it but in any contest NY4I/7 or VP9/NY4I is a valid call"* (`Test_EveryQSOPartySplitsARoverCallOnExport`). A rover is not a county line, so neither is derived from `CountyLineAllowed`. Deliberately NOT here: NAQP and the Locust QSO Party (QSO parties by name only -- Locust is `uContestLocustQP` on `TContestBase`), and 7QP / NEQP (multi-state, unresolved -- each has its own class on `TContestBase` since M7b, design Q40) and IN7QPNE (a composite on `TContestBase` that delegates each QSO to its party's class, design 8.2r). Its members are whatever descends from it -- `grep -l TContestStateQSOPartyBase tr4w/src/contestFactory/*.pas` -- and only the ones whose sponsor rule has been read state a county-line maximum, each quoting it |
+| `ParseReceivedExchangeFormat` | parses nothing, False | every contest states it (A3) |
+| `ParseReceivedExchange(aText, aSession, var aExch, out aErrorMessage)` | the format parse | a RULE overrides it and calls `inherited`. A refusal's reason goes in `aErrorMessage`. The session (`TReceivedExchangeSession`) carries the parsers and services (`IsDomesticQTH`, `ZoneOfCall`, ...); a test hands it `uTestExchangeParserStub`. Never test the exchange kind. Word cutting is `uExchangeTokens` |
+| `RequireReceivedGrid` (helper) | -- | a grid contest states what is required after `inherited` (Q115): a format never drops a word |
+| `MayBeACallsign`, `InitialExchangeFromCall` | every word may be a call; none | the PCC's `N/X`; Russian DX's oblast |
+| `ValidateClass`, `ValidateDXQTH` | accept anything; accept nothing | helpers `ValidateCountAndLetterClass`, `ValidateDXQTHAllowing` |
+| `AcceptsBlankExchange`, `LogsSeveralQTHsFromOneEntry`, `SendsStateAfterZone`, `PerQSOExchangeLeadsWithSerial`, `ExchangeTextMayHoldGridSquare` | False | engine questions once asked of the exchange kind |
 
-**THE DEFECT THAT MOVED IT, because the shape will look tempting again.** While
-the rule was on `TContestBase`, the inherited maximum read
-`ContestsArray[c].CountyLineAllowed` — a boolean that most rows do not carry, so
-it answered **0**, and 0 refuses a second QTH. The effect was that **acquiring a
-class of any kind started rejecting a two-QTH exchange**, for contests with no
-counties at all; Arktika Spring hit it the day it was moved, while the comment
-at the `logstuff.pas` call site asserted the opposite. The array's boolean
-carries no *limit*, so the only honest reading of it was never a number — which
-is why the party base's default is unconditional and the array is not consulted.
+### Export and import
 
-**Siblings, not families, on evidence (M3, design §8.2d).** The NA Sprint CW
-and RTTY have no base: their rows already differ (domestic file) and only CW
-owns its export; whether they become a family is NY4I's Q7. The three Minitest
-rows and the two QCWA rows are siblings for the same kind of reason. **The SSB
-Sprint is not an NA Sprint at all** -- a different sponsor (NY4I, 2026-10-01)
--- and is its own class, `uContestSprintSSB`, on `TContestBase`.
-
-**And the thirty-nine of M7b batch 1 are all on `TContestBase`** (design
-§8.2j): CQ WPX RTTY and CQ WW RTTY score by other arms than their CW/SSB
-families, so those bases would change them; 7QP and NEQP are MULTI-STATE
-parties, which the single-state base's rules do not fit (7QP's row still makes
-set-up treat it as a party -- `IsUSQSOParty`); the JIDX, All Asian and Oceania
-pairs, the EU Sprints and the ARRL VHF runnings are copies until Q7 says
-otherwise.
-
-**So are the forty of M7b batch 2** (design §8.2k). UCG scores by the CQ WPX
-arm and WWIH by the CQ WW RTTY arm, but neither is that sponsor's contest and
-both have always exported through the shared arms -- so each COPIES the arm
-rather than joining its owner. The King of Spain, REF and RSGB RoPoCo CW/SSB
-pairs and the two Region 1 Field Day RCC runnings are siblings until Q7; IRTS
-and EUDX share a scoring arm by their rows and nothing else, so they are
-copies too. M7b ended with five contests classless on purpose; POTA left the
-list on 2026-10-13 (NY4I ruled it a class, design Q6 and 8.2o -- `TContestPOTA`,
-on the base like General QSO), and the UA4W Championship and RSGB 1.8 MHz on
-2026-10-14 (design Q28, Q33 and 8.2p -- both on the base too). IN7QPNE
-followed the same day as a COMPOSITE (design 7.14 and 8.2r --
-`TContestIN7QPNE` owns one instance of each of its four party classes and
-hands each QSO to the party of the worked station's county). One remains --
-DUMMYCONTEST, "no contest" -- and `Test_M7bBatch2ContestsAreSiblingsOnTheBase`
-fails if a second appears.
-
-**A COMPOSITE IS NOT A FAMILY BASE AND NOT A STRATEGY.** It holds whole
-contests and forwards per-QSO questions to them -- `ScoreQSO`,
-`CountsAsMultiplier` (with the party's bands, through `ContestCreditsBand`),
-`ParseReceivedExchange` -- and answers everything session-wide or file-wide
-itself. A seam asked without a QSO (`UsesBand`, `ValidateQTHCount`, the set-up
-traits) cannot route, and the composite says so rather than inventing a union
-rule. It OWNS its components (never `ContestIdentity`'s shared instances,
-which carry no station) and pushes its station into them per delegation.
-
-### `TStationContext` — what scoring knows about us
-
-`Station.MyCountry`, `.MyContinent`, `.MyZone`, `.MyZoneValid`, `.MyGrid`,
-`.MyPower`, `.PointOverrides`, since M4 `.MyState` (IOTA, PCC -- since M9a
-the state SENT in the session, `FCONTEST.SentMyState`, which is MY STATE unless
-the contest's set-up stated another) and
-`.ContestTitle` (Batavia FT8), since M5b `.MyCall` and `.InHostState`,
-since M6 `.MyCategoryMode` (the Salmon Run's single-mode rule -- its zero
-value is CW, which is what an operator who never chooses one exports), and
-since M7b `.ContestName` (the European VHF contest's `'EURASIA'` test) and a
-SERVICE, `.IsDomesticCountryCall` (ARRL 160's CTY lookup against the session's
-domestic countries; nil means "not domestic", what the engine answers for an
-empty list -- so guard on `Assigned`), since 2026-10-14 two more SERVICES,
-`.MyCQZone` and `.IsNewMultiplierAnywhere` (below), and
-since M7a `.MyName`, `.MyFDClass`, `.MySection`, `.MyPrec`, `.MyCheck` and
-`.MyZoneText` (MY ZONE as text -- what a message SENDS; compare zones with
-`.MyZone`). `uContestFactory.CurrentStation` fills it; set-up is handed the
-same snapshot as a parameter of `DescribeSession`. ~~`.LogClockUTCHour`~~ is **gone** (2026-10-01,
-design Q21) -- see the next paragraph.
-
-**A TIME-OF-DAY RULE READS THE QSO'S RECORDED TIME, NEVER THE CLOCK.** NY4I,
-2026-10-01: *"the event source is the wall clock recorded in the QSO."* Read
-`aQso.tSysTime` (UTC, as stamped when the QSO was logged or read from
-`TIME_ON` on import). A rule that asks the PC's clock scores by when the
-button was pressed: a rescore, an edit, an import or a multi-op merge at
-23:30 UTC doubled every Croatian QSO until it was fixed. `TStationContext`
-carries no clock and must not grow one. The live path stamps the QSO before
-it is scored (`MainUnit.ParametersOkay`), so live scoring sees the same hour.
-Test such a rule on BOTH sides of its window in one run -- no clock can
-satisfy both -- and pin the edges (`Test_CroatianDoublesByTheQSOsRecordedHour`,
-`Test_UKEIDoublesByTheQSOsRecordedHour`).
-
-`MyGrid` arrived with ARRL-DIGI, whose points are a function of BOTH grids and
-only one of them is on the QSO. That is the growth rule the record states: a
-field arrives with the first contest that needs it.
-
-**Pushed in by the factory, never read from globals.** An earlier version had the
-base reach into `LOGWIND`, which put the display layer in the dependency graph of
-every contest class *and* of anything that wanted to ask a contest a question —
-`uCabrilloExchange` and `uADIFExchange` are dependency-light on purpose and have
-unit tests. A contest class depends on `VC`, `SysUtils` and the string constants,
-which means **a test can construct one and ask it to score a QSO without starting
-TR4W.**
-
-`MyZoneValid` exists so a contest can tell "zone 0" from "no zone set". The
-legacy arms `Val(MyZone, ...)` per QSO and ignore the error code.
-
-**`.MyZone` IS MY ZONE IN THE CONTEST'S ZONE MODE, NOT ALWAYS THE CQ ZONE.**
-An unstated MY ZONE is derived from MY CALL after set-up has put CTY.DAT in the
-contest's zone mode, so in an ITU-zone contest (most of them) it is the ITU
-zone -- and IARU compares it with the worked ITU zone. A rule that needs the CQ
-zone asks **`.MyCQZone()`**: the stated zone (the contest's override, or the
-station's typed MY ZONE), else the CQ zone CTY.DAT gives MY CALL; nil answers 0.
-The UA4W Championship is its reader (design 8.2p, Q69).
-
-**A RULE MAY ASK THE MULTIPLIER SHEET, READ-ONLY -- `.IsNewMultiplierAnywhere(aQso,
-aKind)`** (design 7.13, NY4I: *"All multipliers are based on what was worked
-before"*). `nmkDomestic` asks of `aQso.DomMultQTH`, `nmkDX` of
-`aQso.QTH.Country`, and "anywhere" is the sheet's all-band, both-mode row --
-not the session's by-band or by-mode key. An empty domestic QTH counts as new
-to the sheet, so test for it first. nil is "no sheet": nothing is new. It is a
-question, never a write: a scoring rule still never changes the sheet and
-never reads the log. RSGB 1.8 MHz is its reader (7 for a new multiplier).
-Both services are supplied by `uContestFactory.CurrentStation`; a test hands
-in stubs (`Test_UA4WAsksForMyCQZone`, `Test_RSGB18AsksTheSheetReadOnly`).
-
----
-
-## 4. Which oracle sees what — read this before believing a green run
-
-**The golden corpus is BLIND to scoring.** Measured, not assumed: change ARRL DX
-from 3 points a QSO to 7, rebuild, and `export-d12-corpus.sh` still reports
-`24 passed, 0 failed`. `/EXPORT` reads the QSO points **stored in the log** and
-never recomputes them.
-
-| change | caught by |
-|---|---|
-| scoring | **`test-contest-factory.sh` only** — rescores each log through the factory and diffs against that set's **frozen** `rescored.adi` / `rescored.cbr` -- the legacy output, captured once by `freeze-rescore-baseline.sh`. **`/NOFACTORY` was DELETED 2026-09-29**: it could only work while both paths existed, and the contests were all moving inside two weeks. The frozen bytes are OUR OWN former output, so this gate says the factory agrees with what TR4W did before the move -- not that either answer is correct |
-| Cabrillo / ADIF exchange columns | **the golden corpus** — they are in the QSO lines, which `golden_diff.py` compares. Verified: `%-7s` → `%-8s` gives `FAIL arrl_fd cbr` |
-| Cabrillo *header* | **nothing, EXCEPT `CLAIMED-SCORE:`** — `golden_diff.py` drops every other header line (`golden_diff.py:87-88` keeps that one). It is arithmetic over the log's STORED points, so a per-QSO scoring change still does not move it; a change to the total-score formula or a bonus does (corrected 2026-10-01). For every contest, **the contest matrix's `totals` section** (M6) |
-| exchange validation and parsing | **the contest matrix's `parse` section** (M5b) -- a fixed list of typed exchanges through the real `ParametersOkay`, for every contest; and `uTestContestParse` for a class's own rule. **Nothing sees the window**: whether a refusal's message reaches the screen, and whether the caret lands after the bad token, are `BENCH_QUEUE.md`'s |
-| set-up, per-QSO scoring and export of **every** contest the registry knows (by id too, since Q108 S3) | **the contest matrix** — `bash tr4w/test/contest-matrix/run-contest-matrix.sh` (below) |
-
-So a parse change is seen as "same as before" by the matrix and as "right" by
-nobody -- a refusal NY4I ruled (design 7.10) is a re-freeze with that reason,
-and the typed-entry check belongs in `BENCH_QUEUE.md`.
-
-### The contest matrix -- the legacy fixture (milestone M0, built 2026-10-01)
-
-**What it is.** One headless harness, `tr4w.exe <cfg> /MATRIX <out> <id>`
-(`src/uContestMatrix.pas`), driven by `tr4w/test/contest-matrix/`. For every
-contest the registry knows but `DUMMYCONTEST` -- the program lists them itself
-with `/MATRIXLIST` (`KnownContests`), so nothing names a contest, and a
-contest registered by id is run like any other -- and for four station variants
-(`us` K0AAA/KS, `us-host` for a contest with a host state, `ve` VE3AAA/ON,
-`dx` DL1AAA), it boots the contest through the ordinary `.cfg` path and records:
-
-| section | what | the milestone it gates |
+| virtuals | base answer | notes |
 |---|---|---|
-| `identity` | requested vs selected contest -- `<id> (legacy number N)` since Q108 S3 (it was `N MEMBER`), the class or none | M1 |
-| `setup` | the six `Active*` (seven before M10 S4; the point method's line left at S1), the CTY modes, every engine global `FoundContest` writes, the domestic countries, the county-line answer, the CW memories, **every setting that differs from a fresh settings object** | M2, M7a (185 identical, no re-freeze), M7b |
-| `scoring` | per synthetic QSO (17: CW, phone, FM, RTTY, FT8; 160 to 2 m incl. 30 m and 6 m; every continent; a sparse exchange), every field `/RESCORE` writes -- through `MainUnit.RecomputeQSOScoring`, the rescore's own body. The `keys` section below scores 19 more the same way | M3, M8 |
-| `export.adif` / `export.cabrillo` | those QSOs appended to a scratch log, then the **real** `ExportToADIF` and `CreateCabrilloFile`: every ADIF record, and the Cabrillo `CONTEST:` and `QSO:` lines | M1, M4 |
-| `import` (M5a) | the records the export just wrote, read back through the real import path (`MainUnit.ParseADIFRecord`, what `ImportFromADIF` and the WSJT-X reader call), **plus 38 synthetic foreign-logger records** carrying the contest-dependent tags (SRX_STRING with and without an RST, STATE, ARRL_SECT, VE_PROV, CNTY, GRIDSQUARE, SIG/SIG_INFO/POTA_REF, FOC_NUM, CQZ/ITUZ, DOK, IOTA, N1MM's tag BEFORE and AFTER `CONTEST_ID` ...). Each line lists every `ContestExchange` field the import moved off a cleared record | M5a |
-| `totals` (M6) | the log the scoring section wrote, **reloaded** through `MainUnit.LoadinLog` (what `/EXPORT`'s start runs), then the QSO points, QTCs, QSO and multiplier counts by band and mode, `LogEdit.TotalScore` and the `CLAIMED-SCORE:` line of a Cabrillo file written after the reload. Appended LAST and frozen before the first total-score rule moved | M6 |
-| `parse` (M5b) | **66 typed exchanges** through `MainUnit.ParametersOkay` -- the routine live entry's Enter calls -- with the call in the call window and the band and mode in force: every exchange SHAPE well-formed (serials, states, zones, names, powers, ages, grids, classes and sections, Sweepstakes' four fields, counties and a county line from the contest's own domestic file, prefectures, oblasts, departments, parks) and then the malformed and edge cases (missing and extra fields, the wrong order, a bad section or county, DX, a serial with letters, Sweepstakes without a precedence, an out-of-state station's own state). Each line: accepted or refused, the message and token a refusal shows, the counties a county line queued, and every field the parse set -- **not the points**, which are the scoring section's, and not the QSO's time and GUID, which come from the clock | M5b |
-| `keys` (M11 S0c) | between `parse` and `totals`: `exchange.fields` (what `SetUpExchangeInformation` set) and `zones.max` (`MaxNumberOfZones`); **19 more QSOs, numbered 18-36**, chosen so every live arm of `SetPrefix` and `GetDXQTH` meets a call it acts on (ON, YB, JT, SM/LA/OH/OH0/OX, UA9/UA0, RK1G, I/IS0, LZ/UR, 9A, KL7, HB9, OK), in the scoring section's line format -- **scored but NOT logged**, so export, import and totals never see them; and **8 more typed exchanges** carrying the QTH texts `GetDomQTH`'s arms read (IOTA three ways, a DOK, a six-character grid, a grid field, a short RDA), in the parse section's format | M11 S3-S6 |
-| `initialexchange` (M11 S0c) | LAST: `InitialExchangeEntry` for 33 calls, one `iex` line each, four columns -- `none`, `trmaster` (the matrix's OWN call-history file), `logged` (plus the logged history, by a second `LoadinLog` with the history latch cleared), `custom` (plus a CUSTOM INITIAL EXCHANGE STRING naming every command). See plan findings F17/F18 | M11 S8 |
+| `GetADIFSentExchange` | raises | the `STX_STRING` |
+| `GetCabrilloSentExchange`, `GetCabrilloReceivedExchange` | the error marker | reproduce the column widths exactly |
+| `EmitADIFReportFields`, `EmitADIFReceivedFields` | RST on every QSO; exactly what `GetReceivedExchangeFields` declares | so a field your list forgets silently leaves the ADIF file. `ADIFPowerTag` moves the power tag |
+| `FormatADIFReceivedExchange`, `EmitADIFExchangeFields`, `EmitADIFContestFields` | the `SRX_STRING`; nothing more | override to write tags BESIDE it |
+| `ADIFWorkedStationState`, `ADIFCountyState`, `WritesADIFCounty`, `SplitsRoverCallOnExport` | `''`, False | the party base answers them per QSO |
+| `WritesADIFContestId` | True | General QSO and POTA say False |
+| `ApplyADIFImport(aTemps, aSession, var aExch)` | grid, else the domestic QTH, else `SRX_STRING` | runs after the whole record is read, so tag order cannot matter. A new tag to capture is a `TADIFRecordTemps` field plus `uADIF` entries |
+| `CabrilloQSOLineFormat`, `CabrilloModeString`, `CabrilloContestName`, `GetRequiresCabrilloLocation`, `CabrilloHeaderLinesBeforeTag` | the standard line; CW/PH/...; the Cabrillo name; False; none | |
 
-**THE MATRIX'S CALL-HISTORY FILE IS ITS OWN** (M11 S0c):
-`tr4w/test/contest-matrix/MATRIX-TRMASTER.DTA`, written from
-`trmaster-fixture.txt` by `make-trmaster-fixture.py`. `matrix-lib.sh` copies it
-into each run directory under that name -- never as `TRMASTER.DTA`, so the
-program's own resolution cannot find it -- and only the `initialexchange`
-section opens it. The shipped `TRMASTER.DTA` is refreshed monthly and would
-move every record that read it. (POTA's set-up opens the shipped file itself,
-through `InitOperatorNameSet`; its record says so in
-`initialexchange.trmaster.indexopen`.) Change the fixture only with a reason:
-it is a re-freeze like any other.
+### The final score
 
-One process per contest and variant, because `FoundContest` is not idempotent --
-see the unit header. About five minutes for the whole matrix.
+`LOGEDIT.TotalScore` asks `FinalScore(aTotals, aView)` = `CombineScore` +
+`BonusPoints`, both non-virtual. Override the protected
+`CombineWithMultipliers` (helpers `ContestPoints`, `SummedMultipliers`) for
+another formula; declare bonus stations in `GetBonusStations`
+(`CountsTowardBonus`, `CreditsBonusMode`); otherwise override `BonusPoints`
+and add `inherited`. **A bonus is decided over the whole log
+(`TLoggedQSOView`), never as a QSO is logged.** A whole-log rule reads each
+QSO's own station through `aView.MyFacts(i)`, not `Station.MyGrid`. A rule that
+changes by year asks `uContestBase.LogContestYear`, never the clock
+(`uContestIdahoQP`, `uContestNebraskaQP`). Pin in `uTestContestTotals`.
 
-**PARSING IS CAPTURED (M5b, 2026-10-02)**, appended LAST and frozen before the
-first parse arm moved, with every earlier section proved byte-identical. Two
-findings made it deterministic first: the CQ WW RTTY shape handed `ValidRST` an
-uninitialised word (`FirstStringRST`, the same in D7), so `599 14` -- refused
-either way -- left different fields behind on every run -- fixed; and
-ALRS-UA1DZ's grid-distance scoring of a QTH
-that is not a grid gave a different number every run -- which is why the parse
-lines carry no points.
+### Display and reports
 
-**The N1MM cases name a contest that is not the session's** (`ARRL-FIELD-DAY`,
-`FOC MARATHON`, as literal ADIF text): a record is only misread when the contest
-in force at the tag is not the contest the record names. The record that pinned
-the old order bug is `n1mm.fd.before` in the step-1 freeze, and its fix is in
-the re-freeze that followed (design 8.2f).
+Answered as data the UI renders; a class never touches a form.
+`DescribeNewContestPrompts`, `NewContestValueRefusal`, `GetTotalsDisplay`,
+`GetSummarySheet`, `GetReportsRunningScore`, `CanonicalReceivedExchange` /
+`CanonicalSentExchange`, `ScorePostingMultiplierType`,
+`GetPermittedOperatingAids`, `GetOffersQTCs`, `GetOffersParkTools`,
+`GetShowsContestStatus`, `GetMaximumContestDates`, `GetBandStepIncludesWARC`,
+`GetPowerFieldIsFOCNumber`, `CallEntryFrequencyWarning`. Base: what the UI does
+for any contest. Pinned in `uTestContestDisplay` / `uTestContestUI`; no oracle
+sees the screen, so a change here also gets a `docs/BENCH_QUEUE.md` item.
 
-**It asserts "same as before", never "correct".** The frozen records in
-`tr4w/test/contest-matrix/frozen/` are this program's own output. Defects
-present on the day of the freeze are pinned exactly as faithfully as correct
-rules -- two of them were visible in the first freeze (`NEWENGLANDQSO`'s `dx`
-variant crashed in set-up; `cty.zonemode` read 255 for most contests). Both
-were fixed on purpose at M2 and re-frozen with a reason, for only the contests
-they reached (design §8.2c) -- the procedure below.
+### `TStationContext` -- what a rule knows about the entrant
 
-**NEVER RE-FREEZE TO CLEAR A RED RUN.** `run-contest-matrix.sh` only compares
-and never writes the frozen files. A record that moved is a finding: find out
-why. Only a rule that changed **on purpose** -- a sponsor's change, or a defect
-fixed deliberately -- justifies `freeze-contest-matrix.sh --reason "..."
-NAME...`, for the contests that change reaches and no others, with the
-reason and what moved in the commit message. The script refuses to run without
-a reason. A new contest is frozen the same way, by name.
+`Station` holds the RESOLVED station facts -- `MyCall`, `MyCountry`,
+`MyContinent`, `MyZone` (in the contest's zone mode), `MyGrid`, `MyPower`,
+`MyState` (the state SENT), `MyName`, `MyFDClass`, `MySection`, `MyPrec`,
+`MyCheck`, `InHostState`, `MyCategoryMode`, `ContestName`, `PointOverrides` --
+and services (nil-safe): `IsDomesticQTH`, `IsDomesticCountryCall`, `MyCQZone()`
+(the CQ zone whatever the mode), `IsNewMultiplierAnywhere` (the sheet,
+read-only). Filled by `uContestFactory.CurrentStation`. It carries no clock. A
+field or service is added with the first contest that needs it.
 
-**A RECORD IS NAMED BY ITS CONTEST'S ID, BLANKS AS `_`** (Q108 S3,
-2026-10-17): `frozen/NC_QSO_PARTY.matrix` is `NC QSO PARTY`, one rule for a
-legacy contest and one registered by id. The name is derived ONCE, by the
-program (`uContestMatrix.MatrixRecordName`), and arrives as `/MATRIXLIST`'s
-first field; `/MATRIXLIST` refuses an id that is no portable file name and two
-ids that map to one. Name a record to freeze by that name or by its id, quoted.
-A reader that needs the contest reads the record's own `contest.requested`
-line, never the file name (`tools/dom-crosscheck`,
-`tools/contest-factory-m11/kind-reach.py`). The 187 files were renamed from the
-enum member with `git mv` and re-frozen for the identity lines alone, proved
-first: 1,168 identity lines over 584 variants changed, 0 other lines.
+### Adding a virtual
 
-It fails closed: no contests captured, a frozen record with no fresh one, a
-fresh record never frozen, or any byte difference exits 1. A record carrying
-`RUN FAILED` or `RAISED` passes only if it said so when frozen, and is listed on
-every run.
+When a contest needs a rule no virtual expresses, add the virtual to
+`TContestBase` with a base answer that is exactly what TR4W does today for
+every other contest, ask it where the engine decides, pin it, and add its row
+here in the same commit.
 
-~~**RUN IT OUTSIDE 23:00-05:00 UTC, or expect CROATIAN to differ**~~ -- **NO
-LONGER TRUE (fixed 2026-10-01, design Q21).** The Croatian and UK/EI night
-rules read the QSO's recorded time, and the matrix stamps its QSOs 12:xx UTC,
-so the run is independent of the time of day. Verified by running it at
-23:45 UTC: CROATIAN differed in `contest.class =` only. A CROATIAN record whose
-points all doubled now means a real regression, not the clock.
-
-Comparing a rescore against the D7 references was tried as a scoring gate and
-rejected: 7 of the 13 logs move when rescored, before any factory work, because
-our CTY.DAT is not the one D7 used. That is unexplored and recorded in
-`test-contest-factory.sh`'s header.
-
----
-
-## 5. Where the truth lives
+## B3. Where the truth lives
 
 | question | answer |
 |---|---|
-| what does this contest score | its class's `ScoreQSO` (asked by `LOGSTUFF.CalculateQSOPoints`); the classless DUMMYCONTEST scores the four `QSO POINTS ...` overrides, then 0 (the legacy case is deleted, M10 S3) |
-| what does its session start from | its traits (`FCONTEST.ApplyContestTraits`), the operator's statements, then its class's `DescribeSession` applied by `FCONTEST.ApplySessionDefaults` (M7a); no classless arm remains (2026-10-14). LogCfg's default CQ exchange is `CQExchangeDefault` |
-| what is its final score | its class's `FinalScore` (asked by `LOGEDIT.TotalScore`, which every score reader reads), else the base's general formula through its identity -- section 3, M6 |
-| what is its exchange | its class's `ExchangeKind` (the SESSION's exchange, after its `DescribeSession`; the row's `AE` until M10 S8) → `LOGSTUFF.ProcessExchange` → its class's `ParseReceivedExchange` (M5b), whose base asks its `ParseReceivedExchangeFormat` -- the engine's parser for its format, called by name (M11 S9d) |
-| its Cabrillo / ADIF name, friendly name, calendar ids | **`uContestRegistry.ContestIdentity(c)`** — its class, else a plain `TContestBase` answering the neutral row (only DUMMYCONTEST has no class). Never nil, owned by the registry, and every consumer outside the factory asks it (M1). Do not spell `ContestTypeSA` as a fallback for one of these: that is the copy M1 removed seven of (`ContestsArray`, the other source, is deleted -- M10 S8) |
-| what D7 did | the D7 tree at `C:\TR4W` — read it, never mirror a fix back into it |
-| how TR4QT decomposes a contest | `C:\projects\tr4qt\docs\CONTEST_DEVELOPMENT.md` and `src/contests/` |
+| what a contest scores | its class's `ScoreQSO`, asked by `LOGSTUFF.CalculateQSOPoints` |
+| its session | its traits (`FCONTEST.ApplyContestTraits`), the operator's statements, then its `DescribeSession` (`FCONTEST.ApplySessionDefaults`) |
+| its final score | `FinalScore`, asked by `LOGEDIT.TotalScore` |
+| its exchange | `LOGSTUFF.ProcessExchange` -> its `ParseReceivedExchange` |
+| its names and ids | `uContestRegistry.ContestIdentity(h)` -- never nil, carries no station; ask it what a contest IS, never to score |
+| what D7 did | the D7 tree at `C:\TR4W`; read it, never fix it |
+| TR4QT | `C:\projects\tr4qt` -- useful for structure, not an authority on rules |
 
-### On TR4QT
+## B4. Which oracle sees what -- read this before believing a green run
 
-**Useful for STRUCTURE, and not an authority on rules.** It is a
-reimplementation, not a specification, and not independent corroboration. Its
-`ARRLDXBase` says *"W/VE stations may ONLY work DX stations"* and means it
-literally — the contact cannot be logged. TR4W logs it at zero points with
-`InhibitMults`. NY4I, 2026-09-02:
+(Cited elsewhere as "section 4".)
 
-> *"when TR4QT says we do not work them... we will not allow it to be logged. But
-> they would be zero points as TR4W does today."*
+**The golden corpus is blind to scoring.** `/EXPORT` writes the points stored
+in the log; changing a point value leaves `export-d12-corpus.sh` green.
 
-TR4W's behaviour is what a move must preserve. Whether TR4W *should* refuse
-instead is a decision, queued in `BENCH_QUEUE.md`.
+| change | seen by |
+|---|---|
+| per-QSO scoring | `test-contest-factory.sh` over its 13 logs (rescored, diffed against frozen output); the contest matrix for every contest |
+| Cabrillo/ADIF exchange columns | the golden corpus (13 logs); the matrix for every contest |
+| Cabrillo header | only `CLAIMED-SCORE:` in the corpus; the matrix's `totals` |
+| exchange parsing and refusals | the matrix's `parse` section; your unit tests. **Whether a refusal's message reaches the screen: no gate** -- `docs/BENCH_QUEUE.md` |
+| set-up, scoring, export, import, totals of **every** contest | the contest matrix |
+| whether any of it is RIGHT | **your unit tests, and nothing else** |
 
----
+### The contest matrix
 
-## 6. Not built yet
+`tr4w.exe <cfg> /MATRIX <out> <id>` (`src/uContestMatrix.pas`), driven by
+`tr4w/test/contest-matrix/`. For every contest `/MATRIXLIST` names, at four
+stations (`us` K0AAA/KS, `us-host` for a contest with a host state, `ve`
+VE3AAA/ON, `dx` DL1AAA), it records: `identity`; `setup` (every value set-up
+writes); `scoring` of synthetic QSOs; `export.adif` / `export.cabrillo` through
+the real exporters; `import` of those records and of synthetic foreign-logger
+ones; `parse` of typed exchanges through `ParametersOkay`; `keys` (more QSOs and
+exchanges, scored and parsed but not logged); `totals` after a reload; and
+`initialexchange` with the matrix's OWN `MATRIX-TRMASTER.DTA`, never the
+shipped one. The QSOs are stamped 12:xx UTC, so the run does not depend on the
+time of day. Read `run-contest-matrix.sh`'s header for the exact table.
 
-Named here so nobody assumes they exist. TR4QT's `ContestBase` has all of them
-and is the target shape:
+**It asserts "same as when frozen", never "correct".** It fails closed: no
+contests captured, a record with no fresh run, a fresh run never frozen, or any
+byte difference.
 
-- `getReceivedExchangeFields` / `getSentExchangeFields` — a structured
-  description of the exchange
-- ~~`parseReceivedExchange`~~ -- **BUILT at M5b** as `ParseReceivedExchange`
-  (section 3). `formatSentExchange` is M4's `FormatCabrillo...` /
-  `FormatADIFSentExchange`
-- `getMultiplierTypes` / `getMultiplierValue` -- **partly built at M8**:
-  which QSOs count is `CountsAsMultiplier`, and the hint's call-to-multiplier
-  `DomesticMultiplierFromCall` (section 3). The multiplier KEY itself -- the
-  `case` arms of `GetDXQTH`, `SetPrefix` and the remaining-multiplier lists
-  -- stays keyed on the KIND until the four multiplier commands retire (Q4)
-- ~~`calculateTotalScore`~~ -- **BUILT at M6** as `FinalScore` = `CombineScore` +
-  `BonusPoints` (section 3)
-- `getCabrilloHeaders` -- **partly built at M9a**: the contest-specific lines
-  (`CabrilloHeaderLinesBeforeTag`, `RequiresCabrilloLocation`,
-  `CabrilloContestName`) and the mode column (`CabrilloModeString`, section 3).
-  The general header (CATEGORY-*, the summary tags) is still PostUnit's and the
-  Cabrillo summary dialog's, and CATEGORY-POWER's one value is M9b (design 7.6)
-- an order-agnostic parser. TR4W **does** parse out of order today — the
-  "flips it around if given in section class order" block in
-  `ProcessClassAndDomesticOrDXQTHExchange` — but per-arm, not as a shared
-  facility like TR4QT's `SmartExchangeParser`.
+**Never re-freeze to clear a red run.** A record that moved is a finding: find
+out why. Only a rule changed **on purpose** -- a sponsor's change, a defect
+fixed deliberately -- justifies `freeze-contest-matrix.sh --reason "..."
+NAME...`, for exactly the contests it reaches, with the reason and what moved
+in the commit message. When a change is only a new `contest.class =` line,
+diff the records excluding that line before believing it.
 
-**These are added when the responsibility is actually moved**, not in advance. A
-virtual nobody calls is a decision nobody has made.
+Headless runs cannot see two things: TRMASTER is not loaded for `/MATRIX` and
+`/EXPORT`, and logged initial-exchange history is latched after the first log
+load (`docs/CONTEST_FACTORY_M11_PLAN.md` F17, F18).
 
-One thing from TR4QT's guide worth knowing before writing a validator: **`FL` is
-a valid *state* but not a *section*** — Florida is NFL/WCF/SFL. Use a state test
-for ARRL DX and NAQP, a section test for Sweepstakes and Field Day.
+## B5. Ids, handles and names
+
+(Cited elsewhere as "Step 3c" and "Step 5a".)
+
+**The id is stored data.** It is what every SQLite log's `contest` row and
+every `.cfg`'s `CONTEST =` line holds. `ContestIdRefusal` refuses an id that is
+empty, blank-padded, not printable ASCII, a legacy contest's stored spelling,
+a legacy alias, or another contest's id.
+
+**A name that was ever written is never given to another contest.** To rename
+an id, add the old one to `uContestNames.LEGACY_CONTEST_NAMES` (old name ->
+the contest's CURRENT id) in the same commit. `TryContestFromName` is the one
+resolver of a contest name; do not write another loop. `uTestContestNames`
+pins that no alias equals a live id. The Cabrillo name is write-only (TR4W has
+no Cabrillo import), so renaming it needs no alias; the ADIF id is matched by
+import, so a renamed ADIF id keeps its old one in `FormerADIFContestIds`.
+
+**A contest is a one-byte handle in memory** (`VC.TContestHandle`;
+`NoContest` is 0). A legacy contest's handle is its legacy number; a by-id
+contest is given one when the registry SEALS -- at the first question that
+depends on which contests exist -- from `FirstByIdContestHandle` up in id
+order. Every registration after the seal raises. The registry is the only
+converter: `ContestHandleOf`, `LegacyContestOf`, `ContestLegacyNumber`,
+`ContestId(h)`, `FindContestById`, `KnownContests`. Never index
+`ContestTypeSA` by a handle.
+
+**A by-id contest is refused on the multi-op network** (the V1 packet carries
+only a legacy number, and is not being changed): `ContestCanUseMultiOp` is the
+one predicate and every door in `uNet` asks it. Its UDP `<contestnr>` is
+derived from the id (`ContestBroadcastNumber`), so renaming the id moves it.
+Neither is written in a class.
+
+**A test-only contest** (the unit tests' fixture, `uContestTestFixture`)
+registers by id from `tr4w/test/unit`, is named in the test `.lpr` only, and
+`Lint-ContestUnitsLinked`, `uTestContestById` and the matrix refuse it in the
+application.
+
+## B6. The legacy contests (the frozen enum)
+
+The contests that existed before 2026-10-17 are `ContestType` members with a
+`ContestTypeSA` spelling in `VC.pas`. **No member may be added, removed,
+reordered or renamed** (`Lint-FrozenContestNumbers`): a member's position is
+the contest number in every `.TRW` record and multi-op packet. Changing an
+existing legacy contest differs from adding one in three ways:
+
+- its identity values are pinned in `uTestContestIdentityPin` (and its kinds
+  in `uTestContestKindPin`). Change its one row by hand, deliberately; never
+  regenerate a pin to clear a failure;
+- many pin tables and exception lists are keyed by its member -- a contest
+  that gains a rule joins the list in the same commit;
+- engine code that still names it compares `LegacyContestOf(Contest) = MEMBER`
+  and is counted by `Lint-ContestNameTests`. Moving such a rule into the class
+  lowers that file's ceiling in the same commit.
+
+## B7. Engine facts that surprise
+
+- **`ModeType = (CW, Digital, Phone, Both, NoMode, FM)`.** `Phone` is SSB and
+  AM, not FM; `Digital` is every data mode. A rule that must tell FT8 from RTTY
+  reads `aQso.ExtMode` (`ExtendedModeType`; Nebraska's FT8/FT4 test). `Both`
+  and `NoMode` are not modes a contact is made in -- score them 0.
+- **`BandType` is not in frequency order**: the WARC bands (`Band30`, `Band17`,
+  `Band12`) come after `Band10`. Test a band list with `in [...]`, never a range.
+- **`LOGGRID.GetDistanceBetweenGrids` is not Haversine** and does not take a
+  4-character square's centre. A contest whose rules define the distance
+  writes its own helper (`LOGGRID.RTCGridDistance`) and pins the rules'
+  published example.
+
+## B8. Not built yet
+
+(Cited elsewhere as "section 6".) TR4QT's `ContestBase` has these; TR4W adds
+each when the responsibility actually moves, never in advance:
+
+- `getSentExchangeFields` -- a structured description of the sent exchange
+  (the received one is `GetReceivedExchangeFields`; `parseReceivedExchange`,
+  `formatSentExchange`, `calculateTotalScore` and most of `getMultiplierValue`
+  are built);
+- `getCabrilloHeaders` -- only the contest-specific lines are the class's; the
+  general `CATEGORY-*` header is PostUnit's;
+- an order-agnostic exchange parser as a shared facility;
+- the mode-credit seam, `UsesMode` (A3).
+
+One validator fact worth knowing: **`FL` is a valid state but not an ARRL
+section** (Florida is NFL/WCF/SFL) -- a state test for ARRL DX and NAQP, a
+section test for Sweepstakes and Field Day.

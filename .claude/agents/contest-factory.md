@@ -23,8 +23,10 @@ CQ WPX, NRAU-Baltic); adding one means adding it there, on evidence.
 
 **Count them with `ls tr4w/src/contestFactory` — never write the number down.**
 
-Read **`docs/ADDING_A_CONTEST.md`** before touching this, and **section 4 before
-believing a green run**.
+Read **`docs/ADDING_A_CONTEST.md`** before touching this -- **Part A is the
+step-by-step procedure for a new contest** (files, base, overrides, every
+outside reference, tests, gates), Part B the reference -- and **B4 ("section
+4") before believing a green run**.
 
 ## The thing that will burn you
 
@@ -51,8 +53,11 @@ which side of that seam you are on before you change anything.
 
 | job | doc |
 |---|---|
-| the **data** — its `.dom` files in `target/dom/` (no `.cfg` -- that folder is `.dom` only, NY4I 2026-10-15). **No `VC.pas` entry since Q108 S3: the `ContestType` enum is FROZEN** | `docs/ADDING_A_NEW_CONTEST.md` |
-| the **class** in this factory | `docs/ADDING_A_CONTEST.md` |
+| the **data** — its `.dom` files in `target/dom/` (no `.cfg` -- that folder is `.dom` only, NY4I 2026-10-15), their format and the state-party pair. **No `VC.pas` entry since Q108 S3: the `ContestType` enum is FROZEN** | `docs/ADDING_A_CONTEST.md` A1 |
+| the **class** in this factory | `docs/ADDING_A_CONTEST.md` A2-A6 |
+
+`docs/ADDING_A_NEW_CONTEST.md` describes the LEGACY (enum) model and is
+largely stale; do not follow its checklist.
 
 **No `.cfg` borrows another contest's type** (NY4I, 2026-10-01: *"The only
 contest that should say CONTEST = NEQP is the NEQP."*). A new event is a new
@@ -62,17 +67,16 @@ member added -- appended included -- removed, reordered or renamed, because a
 member's position is the persisted number in the `.TRW` record and the
 multi-op packet). A new contest registers by its id (`RegisterContestById`),
 and **a real contest may since Q108 S4** (2026-10-17, below): it is refused on
-the multi-op network and its `<contestnr>` is derived. Idaho
-(`uContestIdahoQP`) is the worked example of a LEGACY addition: the enum member and its
-`ContestTypeSA` spelling (the ONLY two `VC.pas` entries since M10 S8 deleted
-`ContestsArray`, `ContestsBooleanArray` and `QSOParties`), the class -- a state
-party states its `InStateDomesticFileName` as one literal, and ships both
-`.dom` files in `full.nsi`, which `Lint-DomCoverage` checks against that
-statement -- and a `.cfg` that overrides nothing.
-Delaware (`uContestDelawareQP`, design 8.2q) is the second, and adds two traps:
-**`*.CFG` is gitignored**, so the template `.cfg` needs `git add -f`; and **a
-`.dom` line holding `=` is an ENTRY, comments included** (`logdom.EnumDOMFILE`
-has no comment syntax), so a header must not contain one. A county file an
+the multi-op network and its `<contestnr>` is derived. **The worked examples of a
+by-id addition are the Georgia QSO Party (`uContestGeorgiaQP`, a state party)
+and URC (`uContestURCDXRTTY`, anything else).** A state party states its
+`InStateDomesticFileName` as ONE literal and puts both `.dom` files in
+`target/dom`; the installer ships that folder by wildcard (`full.nsi`: `File
+..\target\dom\*.*`), so there is NO `full.nsi` edit -- `Lint-DomCoverage` reads
+the literal and checks `<base>.dom` and `<base>_cty.dom` are on disk. Idaho and
+Delaware were the last LEGACY (enum) additions. **A `.dom` line holding `=` is
+an ENTRY, comments included** (`logdom.EnumDOMFILE` has no comment syntax), so
+a header must not contain one. A county file an
 in-state file INCLUDEs maps each county with `KEY > Mult = ...` (Idaho's and
 Delaware's), or each county becomes its own in-state multiplier -- which is
 what Nebraska (`uContestNebraskaQP`, 2026-10-16, design Q105) wants: its
@@ -89,14 +93,14 @@ log repository's `ContestFromName` and, through
 `tr4wserver` through TF). Nebraska
 is `NE-QSO-PARTY` (Cabrillo and ADIF too); New England's Cabrillo is
 `NEWE-QSO-PARTY` and its ADIF id stays `NEQP`, stated in its class. A rename
-adds its alias in the same commit (`ADDING_A_CONTEST.md` Step 3c).
+adds its alias in the same commit (`ADDING_A_CONTEST.md` B5).
 `docs/CONTEST_RULES_OUTSIDE_FACTORY.md` is generated from `git ls-files`, so it
 cannot see a new unit until it is committed -- regenerate after the commit.
 
-`Lint-DomCoverage.ps1` checks that every party class's `<base>.dom` and
-`<base>_cty.dom` are in `target/dom/` and named in `full.nsi`; since M10 S8 it
-reads the classes' `GetInStateDomesticFileName` literals (floor 22, fails on
-one it cannot read). It is in `Run-Lints.ps1` since M10 S8 -- before that
+`Lint-DomCoverage.ps1` reads every party class's `GetInStateDomesticFileName`
+literal (a floor, not a count to raise; fails on one it cannot read) and checks
+that `<base>.dom` and `<base>_cty.dom` are in `target/dom/` -- `full.nsi`'s dom
+section is a wildcard, which the lint honours. It is in `Run-Lints.ps1` since M10 S8 -- before that
 nothing had run it since the FPC FullBuild rewrite (2026-08-13).
 `Lint-ContestNameTests.ps1` ratchets per file every use of a `ContestType` member as
 a comparison operand (any operand, not just the global `Contest`), an `in [...]`
@@ -287,8 +291,8 @@ the target shape, the M-step migration order and the open questions.
   Design doc §7.4. `uTestOffBandCredit` pins the multiplier half through the
   real sheet, and since M8 the dupe half and the hint.
 - **Multipliers and dupes: the sheet keeps the state, the class declares
-  the rules** (M8, 2026-10-02, design §8.2l; `ADDING_A_CONTEST.md` "How a
-  contest declares its multipliers"). `CountsAsMultiplier(aQso, aKind)`
+  the rules** (M8, 2026-10-02, design §8.2l; `ADDING_A_CONTEST.md` B2 "Bands,
+  dupes and multipliers"). `CountsAsMultiplier(aQso, aKind)`
   (base True) is asked by `SetMultFlags` before the sheet; the BC, NY and
   Indiana parties, the PCC and the Jock White Field Day override it.
   `DomesticMultiplierFromCall(aCall, aLookups)` (base `''`) is the hint's;
@@ -784,7 +788,7 @@ the target shape, the M-step migration order and the open questions.
   value its arm always set (Q38 asks whether it should count one at all).
   The matrix was 185 identical with no re-freeze; `uTestContestSession` pins
   the base stating nothing, the three-state values, and D8's four state lines.
-  Design §8.2i; `ADDING_A_CONTEST.md` "How a contest describes its session".
+  Design §8.2i; `ADDING_A_CONTEST.md` B2 "Identity and set-up".
   **What a contest SENDS where MY STATE goes is `TSessionDefaults.SentState`**
   (was `MyState`; M9a, design 7.11): the applier holds it as the SESSION's
   (`FCONTEST.SentMyState`, cleared at FoundContest's head) and **never writes
@@ -861,8 +865,8 @@ the target shape, the M-step migration order and the open questions.
   (`ContestPermitsScorePosting` -- it asked nothing before, so WRTC's rule
   never reached HamScore; Q83).
 - **A contest tells the display and the reports what to show, as DATA the
-  UI renders** (M9a, 2026-10-02, design §8.2m; `ADDING_A_CONTEST.md` "How a
-  contest tells the display and the reports"). No class touches a form, a
+  UI renders** (M9a, 2026-10-02, design §8.2m; `ADDING_A_CONTEST.md` B2 "Display
+  and reports"). No class touches a form, a
   canvas or a global. Seams: `DescribeNewContestPrompts(TNewContestPrompts)`
   -- the New Contest dialog's two `case`s, ordered steps (rows go out in the
   order asked, the last comment wins), the QSO-party head on the base from
