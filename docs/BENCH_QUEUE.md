@@ -42,6 +42,10 @@ nothing sees the window.
 - [ ] **A stated MY COUNTRY no longer shows on screen** in a refusal (it did as
       `(MY COUNTRY = K)` in several QSO parties); it is still in `tr4w.log`. An
       EMPTY MY COUNTRY in ARRL DX still shows `(MY COUNTRY is empty)`.
+- [ ] **ARRL Field Day, a bad section.** Type `2A WSX` for W1AW. EXPECT
+      `Invalid ARRL Section (WSX not in arrlsect.dom)` (46 characters), the
+      caret after `WSX` as before (issue #1010). `2A` alone:
+      `Invalid ARRL Section (no QTH)`. Winter Field Day the same.
 
 ## Added 2026-10-23 -- HAMSCORE RE-EMITS A STORED QSO FROM ITS RECORD (issue 95, review R6, Q13)
 

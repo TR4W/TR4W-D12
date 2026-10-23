@@ -271,6 +271,7 @@ resourcestring
    TC_IMPROPERDOMESTICQTHNOTINFILE       = '(%s not in %s)';
    TC_IMPROPERDOMESTICQTHUNKNOWN         = '(%s not known)';
    TC_IMPROPERDOMESTICQTHHOSTONLY        = '(%s: work %s stations only)';
+   TC_INVALIDARRLSECTION                 = 'Invalid ARRL Section';
    TC_IGNOREDUNKNOWNQTH                  = 'Ignored, not a known QTH:';
    TC_TOOMANYCOUNTIES                    = 'Too many counties for this contest (maximum %d)!!';
    TC_BANKSTANDARD                       = 'Standard';

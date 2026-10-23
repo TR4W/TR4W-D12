@@ -269,6 +269,7 @@
   TC_IMPROPERDOMESTICQTHNOTINFILE       = '(%s not in %s)';
   TC_IMPROPERDOMESTICQTHUNKNOWN         = '(%s not known)';
   TC_IMPROPERDOMESTICQTHHOSTONLY        = '(%s: work %s stations only)';
+  TC_INVALIDARRLSECTION                 = 'Invalid ARRL Section';
   TC_IGNOREDUNKNOWNQTH                  = 'Ignored, not a known QTH:';
   TC_TOOMANYCOUNTIES                    = 'Too many counties for this contest (maximum %d)!!';
   { Alt-P bank filter.  F1-F12, Ctrl+F1-F12 and Alt+F1-F12 are three banks of

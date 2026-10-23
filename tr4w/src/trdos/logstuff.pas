@@ -857,8 +857,9 @@ end;
   NY4I: "Improper domestic QTH is the historical message TR sent but I am
   open to a clearer message as long as it is consistent in other places."
   So the historical text stays as the stem (aStem: TC_IMPROPERDOMESITCQTH,
-  or ...ORMISSINGNAME where a name shares the exchange) and ONE reason is
-  appended, the same way at every site:
+  or ...ORMISSINGNAME where a name shares the exchange, or the Field Days'
+  TC_INVALIDARRLSECTION) and ONE reason is appended, the same way at every
+  site:
 
     SCREEN  stem + the brief reason -- ExchangeErrorMessage, which
             QuickDisplayError writes into a main-window element a few words
@@ -1577,10 +1578,19 @@ begin
      logger.debug('Calling FoundDomesticQTH from ProcessClassAndDomesticOrDXQTHExchange - QTHString = (%s)', [RXData.QTHString]);
      if not FoundDomesticQTH(RXData) then
         begin
-        ExchangeErrorMessage := 'Invalid ARRL Section'; {TC_IMPROPERDOMESITCQTH;}
+        (* THE FIELD DAYS' REFUSAL, WITH ITS REASON -- 2026-10-23, the same
+          routine as every other domestic-QTH refusal (RefuseDomesticQTH).
+          NY4I's stem 'Invalid ARRL Section' is kept, now a constant
+          (TC_INVALIDARRLSECTION) as D7's note asked, and the brief reason is
+          appended: '(WSX not in arrlsect.dom)', '(no QTH)', or
+          '(MY COUNTRY is empty)'. Field Day is not a QSO party, so the
+          host-area reason never applies. RefuseDomesticQTH writes the message
+          only; the caret token below is this site's. *)
+        RefuseDomesticQTH('ProcessClassAndDomesticOrDXQTHExchange',
+                          TC_INVALIDARRLSECTION,
+                          string(RXData.QTHString),
+                          string(Exchange));
         ExchangeErrorToken := RXData.QTHString;   // Issue #1010: caret goes after the bad section
-        logger.error('[ProcessClassAndDomesticOrDXQTHExchange] Improper Domestic QTH = Exchange = (%s), DomesticQTH = (%s)', [Exchange, RXData.QTHString]);
-        // misspelled in the constants file //ny4i 4.45.3
         Exit; // This was before the above code that flips the values. // ny4i 4.45.3
         end;
      isClassValid := ValidClass(RXData.ceClass);

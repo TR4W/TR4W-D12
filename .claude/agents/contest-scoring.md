@@ -278,7 +278,8 @@ the single-word test) is LIFTED to `uExchangeTokens` and called by both.
 **Two refusals NY4I ruled (design 7.10)**: Sweepstakes without a precedence
 says so; a state party's out-of-state station working a non-host station is
 refused. **Every improper-domestic-QTH refusal goes through ONE routine,
-`LOGSTUFF.RefuseDomesticQTH` (2026-10-23)**: the historical stem plus one brief
+`LOGSTUFF.RefuseDomesticQTH` (2026-10-23)**, the Field Days' "Invalid ARRL
+Section" (`TC_INVALIDARRLSECTION`, a stem like the others) included: the historical stem plus one brief
 reason on screen ("(CT: work GA stations only)", "(X not in <file>.dom)",
 "(no QTH)", "(MY COUNTRY is empty)"), the full sentence in the log; wording in
 `uContestReadiness.DomesticQTHRefusalReason`. Do not write a refusal message at

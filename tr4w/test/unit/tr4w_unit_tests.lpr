@@ -720,6 +720,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* The RTC's 2026 rules: dupes per band AND mode, grids per band
       (2026-10-23). *)
    uTestContestRTC      in 'uTestContestRTC.pas',
+   (* The Field Days' "Invalid ARRL Section" names its reason, through the
+      one domestic-QTH refusal (2026-10-23). *)
+   uTestFieldDaySectionRefusal in 'uTestFieldDaySectionRefusal.pas',
    uTestContestNames    in 'uTestContestNames.pas',
    (* Every QSO party's stated bands (NY4I, 2026-10-16). *)
    uTestQSOPartyBands   in 'uTestQSOPartyBands.pas',
@@ -848,6 +851,7 @@ begin
    RegisterSuite(TContestURCDXRTTYTests.Create('ContestURCDXRTTY'));
    RegisterSuite(TContestGeorgiaQPTests.Create('ContestGeorgiaQP'));
    RegisterSuite(TContestRTCTests.Create('ContestRTC'));
+   RegisterSuite(TFieldDaySectionRefusalTests.Create('FieldDaySectionRefusal'));
    RegisterSuite(TContestNamesTests.Create('ContestNames'));
    RegisterSuite(TQSOPartyBandsTests.Create('QSOPartyBands'));
    RegisterSuite(TContestIN7QPNETests.Create('ContestIN7QPNE'));
