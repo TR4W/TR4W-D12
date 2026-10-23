@@ -133,9 +133,20 @@ the code before it was accepted.
 - **R5 -- accept.** Confirmed at `uLogDatabase.pas:1574-1583`: the ALTERs
   commit, then `ExecPragma` stamps `user_version` separately. The stamp moves
   into the same transaction.
-- **R6 -- defer.** Outside the Q113/Q47 work; its reachability (which HamScore
-  paths re-emit a stored QSO) is checked first and the item filed as a GitHub
-  issue.
+- **R6 -- accept, being fixed as #95** (first filed as a deferral; NY4I asked
+  for it now, ahead of his HamScore bench run). Reachability confirmed by the
+  code: three paths re-emit a stored QSO with today's station -- Edit QSO
+  (`uEditQSO.pas:780`, `HamScoreOnEdit`), the Tools resync
+  (`LOGSUBS2.SendFullLogToHamScore`), and the Alt-Y undelete in
+  `DeleteLastContact`. This contradicts NY4I's ruling Q13 (a logged QSO reads
+  its record, never live state). The fix: our call comes from one routine,
+  `uLogSource.ExportCallFor` (postunit's private copy deleted, its call sites
+  repointed), and each re-emitting path passes the row's recorded station.
+  NY4I ruled 2026-10-23 that HamScore follows an EDITED sent serial, so the sent
+  exchange is rebuilt from the QSO record the way the final export builds it,
+  not taken from the insert-only `exchange_sent`. The just-logged line is
+  unchanged.
 
-R2-R5 are with the log-database specialist; the commit that lands them will
-cite this section.
+**Status at the time of writing:** R2-R5 (log-database) and R6 (file-formats
++ integrations) are being built; nothing beyond this document has landed yet.
+The commits that land them will cite this section and list their tests here.
