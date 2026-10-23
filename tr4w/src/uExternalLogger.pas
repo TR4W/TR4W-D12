@@ -55,6 +55,7 @@ var
 implementation
 
 Uses
+   uADIF,            // ResolveADIFModeSubmode
    uSettingsModel,   // Settings.My.Call
    MainUnit,
    uContestRegistry; // ContestIdentity -- the contest's ADIF id
@@ -305,25 +306,9 @@ This is all we need to send as we DO NOT want to send every contact to any of th
       sOperator := ce.ceOperator;
       end;
 
-   if ce.ExtMode <> eNoMode then
-      begin
-      sMode := ExtendedModeStringArray[ce.extMode];
-      if ce.ExtMode = eFT4 then    // ??? In MFSKModes[TempRXData.ExtMode]?
-         begin
-         sMode := 'MFSK';
-         sSubMode := ExtendedModeStringArray[ce.ExtMode];
-         end
-      end
-   else
-      begin
-      case ce.Mode of
-         CW: sMode := 'CW';
-         Phone: sMode := 'SSB';
-         Digital: sMode := 'RTTY';
-         FM: sMode := 'FM';
-         else sMode := 'CW';
-         end; // of case
-      end;
+   (* The same (MODE, SUBMODE) pair the ADIF export writes -- ADIF's names,
+      never VC.ExtendedModeStringArray's (DATA, CW-R, D-STAR ...). *)
+   ResolveADIFModeSubmode(ce, sMode, sSubMode);
 
   sCoreADIF :=   AddADIFField('CALL',ce.Callsign)
                + AddADIFField('RST_SENT',ce.RSTSent)

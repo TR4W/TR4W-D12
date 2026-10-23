@@ -720,6 +720,7 @@ uLogEditForm in 'src\ui\lcl\uLogEditForm.pas',
   // D12: transitively-compiled units added so project-wide file searches see them
   // (they were pulled in via other units' uses clauses but never listed here).
   uADIF in 'src\uADIF.pas',
+  uN1MMMode in 'src\uN1MMMode.pas',
   uCabrillo in 'src\uCabrillo.pas',
   uCallCompress in 'src\uCallCompress.pas',
   uFlexRadioUtils in 'src\radioFactory\uFlexRadioUtils.pas',

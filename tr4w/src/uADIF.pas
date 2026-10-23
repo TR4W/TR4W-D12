@@ -159,6 +159,12 @@ function GetADIFSubMode(sSubMode: string): ModeAndExtendedModeType;
 function ADIFModeForExtMode(aExtMode: ExtendedModeType): string;
 function ADIFSubModeForExtMode(aExtMode: ExtendedModeType): string;
 
+(* The (MODE, SUBMODE) ADIF pair for one QSO: ExtMode when it has one, else
+  the base Mode (Digital with no ExtMode is RTTY).  Public so every sender of
+  ADIF text -- export, the external logger -- shares the one answer. *)
+procedure ResolveADIFModeSubmode(const rec: ContestExchange;
+                                 out modeStr, subModeStr: string);
+
 (* THE GENERIC DATA MODES (eData, eData_R, eData_FM) are exported as MODE
   RTTY, so the file says so: each such record carries
   APP_TR4W_MODE_ASSUMED=Y (import restores eData), and the free-text header

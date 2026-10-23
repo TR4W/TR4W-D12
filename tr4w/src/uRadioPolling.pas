@@ -137,6 +137,7 @@ function  ClearRadioLinkFailure(rig: RadioPtr): boolean;
 implementation
 
 uses
+   uN1MMMode,       // N1MMModeName -- the mode name RadioInfo sends
    (* SetCharBuffer / CharBufferText -- a fixed AnsiChar buffer written
      and read through its OWN bounds, replacing StrPCopy and
      PAnsiChar(@buf[0]). *)
@@ -1734,27 +1735,7 @@ begin
       freq := rig.CurrentStatus.Freq;
       end;
 
-   case rig.CurrentStatus.Mode of
-      CW: sMode := 'CW';
-      Phone:
-         if freq < 10000000 then
-            // It seems like this should be in the radio object instead of us guessing // ny4i
-            begin
-            sMode := 'LSB';
-            if (freq > 5300000) and (freq < 5400000) then
-               begin
-               sMode := 'USB';
-               end;
-            end
-         else
-            begin
-            sMode := 'USB';
-            end;
-      Digital: sMode := 'RTTY';
-      else
-         sMode := ' ';
-   end; // of case
-   sMode := ExtendedModeStringArray[rig.currentStatus.ExtendedMode];
+   sMode := N1MMModeName(rig.CurrentStatus.Mode, rig.CurrentStatus.ExtendedMode, freq);
    sBuf := '<?xml version="1.0" encoding="utf-8"?>' + sLineBreak +
       '<RadioInfo>' + sLineBreak +
       #9 + '<app>TR4W</app>' + sLineBreak +

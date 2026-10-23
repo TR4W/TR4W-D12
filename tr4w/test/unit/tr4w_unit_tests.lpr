@@ -166,6 +166,8 @@ uses
    uTestWindowLayoutStore in 'uTestWindowLayoutStore.pas',
    uTestComputerID in 'uTestComputerID.pas',
    uTestUDPBroadcaster  in 'uTestUDPBroadcaster.pas',
+   uN1MMMode            in '..\..\src\uN1MMMode.pas',
+   uTestN1MMMode        in 'uTestN1MMMode.pas',
    uTestUDPContactXml   in 'uTestUDPContactXml.pas',
    uTestUDPDatagrams    in 'uTestUDPDatagrams.pas',
    uTestUtilsFile       in 'uTestUtilsFile.pas',
@@ -802,6 +804,7 @@ begin
    WriteLn('');
 
    RegisterSuite(TUDPBroadcasterTests.Create('UDPBroadcaster'));
+   RegisterSuite(TN1MMModeTests.Create('N1MMMode'));
    RegisterSuite(TUDPContactXmlTests.Create('UDPContactXml'));
    RegisterSuite(TUDPDatagramTests.Create('UDPDatagrams'));
    RegisterSuite(TIcomCIVTests.Create('IcomCIV'));

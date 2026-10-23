@@ -187,6 +187,7 @@ function ConvertBandTypeToUDPContactBand(band: BandType): string;
 implementation
 
 uses
+   uN1MMMode,      // N1MMModeName -- the mode name the UDP broadcast sends
    uPortAddress,   // TPortKind -- see the radio port kind accessors
    uPlatformFonts, // UninstallPrivateFont -- the gate lives there, not here
   uSettingsModel,     // Settings.ExternalLogger -- see the note in logstuff
@@ -2895,34 +2896,7 @@ begin
       freq := StrToIntDef(AnsiString(tCabrilloFreqString[RxData.Band]), 0) * 1000; //14000 in array but needs to be 14000000
       txFreq := freq;
       end;
-   if RXData.ExtMode <> eNoMode then
-      begin
-      sMode := ExtendedModeStringArray[RXData.extMode];
-      end
-   else
-      begin
-      case RXData.Mode of
-         CW: sMode := 'CW';
-         Phone:
-            begin
-            if IntegerBetween(freq,5300000,5500000) then
-               begin
-               sMode := 'USB'; // 60m band is USB
-               end
-            else if freq < 8000000 then
-               begin
-               sMode := 'LSB';
-               end
-            else
-               begin
-               sMode := 'USB';
-               end;
-            end;
-         Digital: sMode := 'RTTY';
-         FM: sMode := 'FM';
-         else sMode := 'CW';
-       end; // of case
-      end;
+   sMode := N1MMModeName(RXData.Mode, RXData.ExtMode, freq);
     if RxData.ceComputerID = #0 then
        begin
        sComputerID := ' ';

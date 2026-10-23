@@ -119,6 +119,20 @@ the `case`.** That is the standing instruction, not a suggestion.
 Note `TReadingThread` here owns its own `radioWasDisconnected` flag and holds no
 radio reference — do not reach for a radio from inside it.
 
+## Mode names on the wire (2026-10-23)
+
+**Never send `VC.ExtendedModeStringArray` to another program** -- `DATA`,
+`CW-R`, `FM-N`, `D-STAR`, `NoMode` are TR4W's own spellings. Two answers, one
+each:
+
+- **ADIF text** (export, the DXKeeper external log): `uADIF.ResolveADIFModeSubmode`.
+- **N1MM-format XML** (the UDP contact broadcast, RadioInfo):
+  `uN1MMMode.N1MMModeName` -- N1MM's name where it has one, else ADIF's;
+  generic data is RTTY; SSB is USB/LSB by frequency (60 m USB).
+
+Both are `array[ExtendedModeType]` tables, so a new mode fails to compile until
+it has a row. Pinned in `uTestN1MMMode` and `uTestUDPContactXml`.
+
 ## Gone — do not restore
 
 **MixW was deleted 2026-09-05** (NY4I: *"you can remove all traces of mixw. I

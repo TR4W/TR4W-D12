@@ -28,6 +28,7 @@ type
       procedure Test_ContactCarriesTheStationCallUnderMyCall;
       procedure Test_ContactTagNamesAreTheN1MMNames;
       procedure Test_EachRecordTypeIsItsOwnRoot;
+      procedure Test_ModeIsAnN1MMNameNotATR4WName;
    public
       procedure RunAllTests; override;
    end;
@@ -89,6 +90,33 @@ begin
              '<contestname> carries the contest''s Cabrillo name');
 end;
 
+(* The band decides the frequency the broadcast uses when no radio is
+  attached, which is the case under test. *)
+function ModeContactXml(aBand: BandType; aMode: ModeType;
+                        aExtMode: ExtendedModeType): string;
+var
+   q: ContestExchange;
+begin
+   q := Default(ContestExchange);
+   q.ceContest := ContestHandleOf(CQWWCW);
+   q.Callsign := 'W1AW';
+   q.Band := aBand;
+   q.Mode := aMode;
+   q.ExtMode := aExtMode;
+   Result := BuildUDPContact(q, udpContactInfo);
+end;
+
+procedure TUDPContactXmlTests.Test_ModeIsAnN1MMNameNotATR4WName;
+begin
+   BeginTest('Test_ModeIsAnN1MMNameNotATR4WName');
+   CheckTrue(Pos('<mode>RTTY</mode>', ModeContactXml(Band20, Digital, eData)) > 0,
+             'generic data goes as RTTY, not DATA');
+   CheckTrue(Pos('<mode>LSB</mode>', ModeContactXml(Band40, Phone, eNoMode)) > 0,
+             '40 m phone with no extended mode is LSB');
+   CheckTrue(Pos('<mode>FT4</mode>', ModeContactXml(Band20, Digital, eFT4)) > 0,
+             'FT4 goes as FT4');
+end;
+
 procedure TUDPContactXmlTests.Test_EachRecordTypeIsItsOwnRoot;
 begin
    BeginTest('Test_EachRecordTypeIsItsOwnRoot');
@@ -102,6 +130,7 @@ begin
    Test_ContactCarriesTheStationCallUnderMyCall;
    Test_ContactTagNamesAreTheN1MMNames;
    Test_EachRecordTypeIsItsOwnRoot;
+   Test_ModeIsAnN1MMNameNotATR4WName;
 end;
 
 end.

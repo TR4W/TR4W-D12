@@ -35,7 +35,9 @@ against itself**
 - **Q70** UA4W: D7 always used the call's CQ zone; your 7.12 ruling uses a stated zone first. D7, or keep 7.12?
 - **Q111** IRTS: D7 as shipped scored every QSO 10 (a 4.95.6 copy-paste overwrote the row), or D7's own orphaned IRTS arm (8/4, 2/1, 0)? *Recommended: the arm.*
 - **Q40** County-line limits: 7QP 4, NEQP none (stated); a rover logs its own party. *Not yet checked against D7.*
-- **Q106** Nebraska: three assumptions on the rare grid bonus, in the entry.
+
+**Q106 is closed (2026-10-23):** NY4I supplied the sponsor's Rare Grid
+Worksheet, which settles the last open part -- see the end of the entry.
 
 **Resolved 2026-10-22 by the D7/D12 baseline or an unambiguous current rule
 (details in each entry)**
@@ -161,7 +163,17 @@ contests" (NY4I, 2026-10-19), built in e560f51f.
   one Error; `Test_NebraskaHasARareGridTableForTheCurrentYear` fails on the
   first run of a year with no list (the yearly reminder). Pinned in
   `uTestContestNebraskaQP`.
-  *ASSUMPTIONS for NY4I:* (a) the sentence "5 points per QSO" contradicts the
+  **CLOSED 2026-10-23 -- the assumptions below are confirmed by the sponsor's
+  Rare Grid Worksheet**, which NY4I supplied: one block per rare grid, each
+  line "CW 3 points per QSO ___ x 5 (Rare points multiplier) =" (Phone 1,
+  Digital 1, Satellite 4), then "Total Points". So the bonus is the count of
+  QSOs per mode x that mode's points x 5 -- (a) as built; the QSO's own mode
+  points, with no power or mobile factor -- (c) as built; and it counts QSOs,
+  so a QSO that does not count (a dupe, off-band, FT8/FT4 under answer (3))
+  is not on the sheet -- (b) as built. The sheet is 2025's (grids EN01mi/ni/mh/nh,
+  Phone 1); the 2026 rules' Phone 2 and DN91CE/DE/EE are what TR4W scores for
+  2026. No code change.
+  *ASSUMPTIONS for NY4I (as originally asked):* (a) the sentence "5 points per QSO" contradicts the
   sponsor's own example and its 2025 worksheet ("CW 3 points per QSO x 5
   (Rare points multiplier)"); the example and worksheet are built. (b)
   "unique" = a QSO that counts. (c) the points are the QSO's SCORED points

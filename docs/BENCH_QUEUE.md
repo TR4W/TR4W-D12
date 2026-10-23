@@ -23,6 +23,22 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-23 -- MODE NAMES SENT TO OTHER PROGRAMS (UDP, RADIOINFO, DXKEEPER)
+
+Unit-tested (`uTestN1MMMode`, `uTestUDPContactXml`); nothing sees a listener.
+
+- [ ] **UDP contact broadcast.** With a UDP listener (N1MM-format: Log4OM,
+      GridTracker, a scoreboard) log an SSB QSO on 40 m and one on 20 m with
+      the radio in plain SSB, and a QSO with the K4 in DATA A. EXPECT
+      `<mode>LSB</mode>`, `<mode>USB</mode>` and `<mode>RTTY</mode>` -- never
+      `SSB` or `DATA` -- and the listener logs each in the right mode.
+- [ ] **N1MM RadioInfo.** Watch the RadioInfo packet while the radio is in
+      CW-R, FM-N or DATA. EXPECT `CW`, `FM` and `RTTY` (it sent `CW-R`, `FM-N`,
+      `DATA`, and `NoMode` for a radio with no extended mode).
+- [ ] **DXKeeper external log.** Log an FT4 QSO and a DATA A QSO with the
+      external logger on. EXPECT DXKeeper records MODE MFSK / SUBMODE FT4, and
+      MODE RTTY; before, a DATA QSO went as MODE `DATA`.
+
 ## Added 2026-10-23 -- RTC 2026 RULES AND THE CLEARER IMPROPER-QTH MESSAGE
 
 Unit-tested (`uTestContestRTC`, `uTestContestGeorgiaQP`,
