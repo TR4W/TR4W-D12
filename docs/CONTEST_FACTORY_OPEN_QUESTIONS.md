@@ -590,7 +590,8 @@ different event), so Q123 still needs the SRR digital cup's own rules.
   (e) General QSO and POTA state EVERY band and mode explicitly? *proposed yes*.
   **Answer:** (a) NY4I, 2026-10-22: *"FM is not valid in CQ WW SSB. just
   ssb."* CQ WW SSB credits SSB only, and an FM QSO is an automatic X-QSO.
-  That is already the q98-s1-cqww build's behaviour (`TContestCQWWSSB.UsesMode`,
+  That is the q98-s1-cqww branch's behaviour -- NOT yet on contestFactory,
+  it arrives with that merge (`TContestCQWWSSB.UsesMode`,
   pinned by `uTestAutomaticXQSO`'s 2 m FM check). The same reading applies
   wherever a sponsor's rules say SSB; a contest whose rules say "phone" is
   read from its own rules. (b)-(e) and the CSV are still open.
