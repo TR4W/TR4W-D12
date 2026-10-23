@@ -508,6 +508,7 @@ resourcestring
    TC_IMPROPERARRLFIELDDAYCLASS          = 'Field Day class must be A, B, C, D, E or F.';
    TC_IMPROPERWINTERFIELDDAYCLASS        = 'Winter Field Day class must be H, I, O or M.';
    TC_ARRLFIELDDAYIMPROPERDXEXCHANGE     = 'DX Station exchange must be "DX".';
+   TC_QSONUMBERZERONOTVALID              = 'QSO number 0 is not valid in this contest.';
    TC_RUNWARN                            = 'Another instance of TR4W is already running';
    TC_SHOW_PASSWORDS                     = 'Show passwords';
    TC_TOOLTIP_DISCOVERY                  = 'Discover radios on the network';

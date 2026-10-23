@@ -4240,7 +4240,8 @@ sheet and the rescore's multiplier flags). S1 IS BUILT (2026-10-22, branch
 `q98-s1-cqww`, for NY4I's CQ WW SSB dry run), with CQ WW's S4a statement
 (and CQ WW RTTY's, from S5) -- see "S1 as built" below the stage table.
 S1 did NOT wait for Q119: the predicate leaves the host-area rule out, so
-answering Q119 "yes" is one more term in `QSOIsOffContest`.** The rulings are in the
+answering Q119 "yes" is one more term in `QSOIsOffContest`.** (That term is
+BUILT, 2026-10-23 -- see item 7 of "S1 as built".) The rulings are in the
 open-questions file and are not reopened here: **Q98** (every contest states
 its bands AND modes, no inherited default -- NY4I: *"I would feel better if
 contest classes just explicitly listed the bands they allow"*; an off-band or
@@ -4529,9 +4530,22 @@ evidence (delegated design):
 6. **CQ WW RTTY credits `Digital` with `eRTTY`, `eRTTY_R`, `eData`,
    `eData_R` or no submode**, 80-10 m (sponsor, DXLog, WA7BNM 130 agree; no
    160 m). FT8/FT4/PSK are X-QSOs.
-7. **The host-area rule is not in the predicate** (Q119 unanswered): such a
+7. ~~**The host-area rule is not in the predicate** (Q119 unanswered): such a
    QSO still scores 0 with no multiplier and exports as `QSO:`. A "yes" is
-   one more term in `QSOIsOffContest`.
+   one more term in `QSOIsOffContest`.~~ **IN IT SINCE 2026-10-23 (Q119
+   ruled yes):** `QSOIsOffContest` adds `not CreditsWorkedStation(aQso)` --
+   the existing Q107 virtual, no new hook -- asked only of an object that
+   `HasStation` (the rule depends on the entrant). A reader holding only a
+   record asks `uContestRegistry.LoggedQSOContest(ceContest)`: the session's
+   object (`uContestFactory` registers the provider; `GActive` as it is,
+   never a fresh `ActiveContest`), else the station-less identity, which
+   judges bands and modes alone. The loader and the summary sheet ask it
+   too. Such a QSO is now off the dupe sheet (an X-QSO is never "worked",
+   Q51), which Q107 had left on it. The provider is main-thread only
+   (audited 2026-10-23; IN7QPNE's answer writes its component's station).
+   A RECORD A CONTEST REFUSES OUTRIGHT is not an X-QSO: it is
+   `TContestBase.LoggedQSORefusal` (2026-10-23, RTC's serial 0), asked by
+   typed entry, Edit QSO's save and the ADIF import, which stops whole.
 8. **Edit QSO's read-only caption is NOT built** (lcl-ui + a resourcestring
    through the catalogues -- i18n). The checkbox shows the operator's stored
    statement only; the greyed row shows the derived X. Deferred to a

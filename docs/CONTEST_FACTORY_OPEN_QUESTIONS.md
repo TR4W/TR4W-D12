@@ -41,7 +41,7 @@ against itself**
 (details in each entry)**
 
 - **No change -- today already matches D7:** Q27 SAC (a Russian station is not workable), Q88 NA Sprint files, Q95 Croatian / CW Open zones, Q106(6) P13's `LA`, Q114 ALRS (a grid), Q122 PY0S/PY0T stay DX, Q123 RF Cup Digital (no mode limit), Q124 OZCHR 1/1/3/5, Q125 Ukraine Championship, Q126 the five unidentified contests, Q23 Cup RF, Q26 WAG (empty QTH), Q112 peers and Rescore.
-- **To build:** Q47 bound the three read-past-the-end shapes; ~~Q113 edited memories survive a restart (as D7)~~ (built 2026-10-23); Q119 a host-area-refused QSO is an X-QSO; Q120 bands and modes (D7's "every band and mode" where no unambiguous rule, ARRL Digi excludes RTTY by its current rules); Q127 GAGARIN-CUP -> `GC` only.
+- **To build:** Q47 bound the three read-past-the-end shapes; ~~Q113 edited memories survive a restart (as D7)~~ (built 2026-10-23); ~~Q119 a host-area-refused QSO is an X-QSO~~ (built 2026-10-23); Q120 bands and modes (D7's "every band and mode" where no unambiguous rule, ARRL Digi excludes RTTY by its current rules); Q127 GAGARIN-CUP -> `GC` only.
 - **Parked:** Q101 ([#94](https://github.com/TR4W/TR4W-D12/issues/94)), Q137 ([#93](https://github.com/TR4W/TR4W-D12/issues/93)) -- not D7/D12 work; Q128, Q129 -- i18n after contestFactory.
 - **Built earlier from the sponsors' rules:** Q97, Q131-Q136, Q138 (`722690bf`).
 
@@ -499,6 +499,17 @@ different event), so Q123 still needs the SRR digital cup's own rules.
   *Peers and Rescore, resolved 2026-10-22 by the D7/D12 baseline:* D7
   refused only what was typed; a record from a peer or a rescore was
   accepted. That stands -- only your import ruling is added.
+  **The mechanism is BUILT 2026-10-23, for one rule:** `TContestBase.
+  LoggedQSORefusal` ('' accepts) is asked of every record by
+  `MainUnit.ImportFromADIF` before it joins the one-transaction batch; the
+  first refusal stops the import with NOTHING written and is reported through
+  `ReportNothingImported` (record number, call, band, mode, time, reason).
+  Its first statement is RTC's serial 0 (sent or received). **What is left of
+  Q112:** Field Day's sectioned-station `DX` (Field Day states no
+  `LoggedQSORefusal` yet), and the broader "a record typing would refuse" --
+  the format parsers' refusals and the class rules in `ParseReceivedExchange`
+  (Q115's grid requirement among them) are not re-asked on import. The binary
+  `.TRW` import does not ask it either.
 
 - **Q113** (found building Q9, 2026-10-17) **Edited message memories are
   lost on restart.** `uLogStore` writes every memory to the log's `message`
@@ -569,7 +580,13 @@ different event), so Q123 still needs the SRR digital cup's own rules.
   **Answer:** resolved 2026-10-22 (design delegated): yes. D7 had no X-QSO
   at all, so it gives no answer; Q107 (yours) already makes such a QSO
   score nothing, and X-QSO is how Cabrillo says so to a log checker. One
-  rule with Q98's off-band case. To build with Q98's mechanism.
+  rule with Q98's off-band case. ~~To build with Q98's mechanism.~~ **Built
+  2026-10-23** (NY4I re-ruled it for building the same day): `QSOIsOffContest`
+  asks the existing `CreditsWorkedStation` (party base, 7QP, NEQP, IN7QPNE)
+  of an object that `HasStation`; record readers get the session's object
+  through `uContestRegistry.LoggedQSOContest`. Pinned in
+  `uTestContestGeorgiaQP.Test_GeorgiaRealEngineOutOfState`. Q112 (Field Day
+  DX) is NOT in it -- Field Day states no `CreditsWorkedStation`.
 
 - **Q120** (Q98, 2026-10-17) **Bands and modes for every contest -- a CSV
   to fill: `docs/Q98_CONTEST_BANDS_MODES.csv`** (one row per contest;
@@ -991,7 +1008,10 @@ closes it; anything else reopens it.
     NY4I's Q112 rule (a record typing would refuse is an import error that
     rolls back the whole import) applies here too, and wants ONE mechanism for
     both: a refusal out of `ApplyADIFImport` (or a validation virtual beside
-    it) and the importer's rollback.
+    it) and the importer's rollback. **That mechanism exists since
+    2026-10-23** (`TContestBase.LoggedQSORefusal`, asked by the import, which
+    stops whole -- see Q112); the five grid contests do not state the grid
+    requirement through it yet.
 
 - **Q118** (Q73; NY4I's NYQP field report, 2026-10-17, the contest running
   that day) **A mobile signing its BARE call** and sending a new county was a

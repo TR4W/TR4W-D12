@@ -141,6 +141,8 @@ uses
   MainUnit,
   uEditQSOForm,     // the LCL form, and the id-to-control accessors
   uHamScore,         // Issue #783 -- HamScoreOnEdit / HamScoreOnDelete hooks
+  uContestBase,      // ContestLoggedQSORefusal -- the contest refuses a record
+  uContestRegistry,  // ContestIdentity -- the record's own contest
   uLogNote,         // NoteText -- the note's text
   uConfigValues;
 
@@ -598,6 +600,20 @@ begin
      begin
      FillChar(EditableQSORXData.NumberReceived, SizeOf(EditableQSORXData.NumberReceived), 0);
      EditableQSORXData.NumberReceived := TempInteger;
+     end;
+
+  (* THE CONTEST MAY REFUSE THE RECORD OUTRIGHT -- TContestBase.
+    LoggedQSORefusal (2026-10-23; RTC's serial 0: "should have never made it
+    past input editing"). Shown and refused exactly as the bad call above:
+    nothing is written and the form stays open. Asked of the record's own
+    contest, station-less -- the rule is about the record. *)
+  TempString := ContestLoggedQSORefusal(ContestIdentity(EditableQSORXData.ceContest),
+                                        EditableQSORXData);
+  if TempString <> '' then
+     begin
+     showwarning(TempString);
+     Result := False;
+     Exit;
      end;
 
   {DomMultQTH}

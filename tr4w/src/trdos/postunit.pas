@@ -1250,8 +1250,10 @@ procedure TallySummaryTotals( aNext: TSummaryRecordReader );
         both columns (CONTEST_OWNERSHIP_DESIGN.md 8.2v). A record with no
         band or no mode is now left out of the raw column as well, as the
         loader leaves it out of every total. ceQSO_Skiped was tested here as a
-        SECOND delete flag once; one flag now. *)
-     if not QSOCountsTowardTotals(ContestIdentity(TempRXData.ceContest), TempRXData) then
+        SECOND delete flag once; one flag now. LoggedQSOContest, not
+        ContestIdentity, so the host-area X-QSO (Q119) is judged with the
+        entrant. *)
+     if not QSOCountsTowardTotals(LoggedQSOContest(TempRXData.ceContest), TempRXData) then
         begin
         Continue;
         end;

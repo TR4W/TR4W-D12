@@ -354,12 +354,27 @@ function ContestAllowsCountyLineOnImport(aContest: TContestHandle): boolean;
   False: there the slash call is the call. *)
 function ContestSplitsRoverCallOnExport(aContest: TContestHandle): boolean;
 
+(* THE OBJECT THAT JUDGES A LOGGED RECORD OF CONTEST aContest -- Q119
+   (2026-10-23).
+
+   A contest's bands and modes are identity facts, but its host-area rule
+   (Q107) depends on the ENTRANT, which a station-less identity object does
+   not have. So the record's contest is asked through a provider the
+   application registers (uContestFactory: the session's own object when
+   aContest is the session's contest, which carries the entrant), and
+   ContestIdentity(aContest) otherwise -- a record of another contest, or a
+   program that registered none. Never nil. *)
+type
+   TLoggedQSOContestProvider = function(aContest: TContestHandle): TContestBase;
+
+procedure RegisterLoggedQSOContestProvider(aProvider: TLoggedQSOContestProvider);
+function LoggedQSOContest(aContest: TContestHandle): TContestBase;
+
 (* IS A LOGGED RECORD AN X-QSO? -- Q98 S1 (design 8.2v), for a reader that
    holds only the record: the Cabrillo and ADIF writers, HamScore's line, the
    score-posting XML, the log grids. uContestBase.QSOIsXQSO of the record's
-   OWN contest (aQso.ceContest) through ContestIdentity -- station-less and
-   thread-safe, which is right because a contest's bands and modes are an
-   identity fact. *)
+   OWN contest (aQso.ceContest) through LoggedQSOContest (Q119 -- it was
+   ContestIdentity, which cannot judge the entrant's host-area rule). *)
 function LoggedQSOIsXQSO(const aQso: ContestExchange): boolean;
 
 implementation
@@ -874,9 +889,30 @@ begin
    Result := ContestIdentity(aContest).SplitsRoverCallOnExport;
 end;
 
+var
+   GLoggedQSOContestProvider: TLoggedQSOContestProvider = nil;
+
+procedure RegisterLoggedQSOContestProvider(aProvider: TLoggedQSOContestProvider);
+begin
+   GLoggedQSOContestProvider := aProvider;
+end;
+
+function LoggedQSOContest(aContest: TContestHandle): TContestBase;
+begin
+   Result := nil;
+   if Assigned(GLoggedQSOContestProvider) then
+      begin
+      Result := GLoggedQSOContestProvider(aContest);
+      end;
+   if Result = nil then
+      begin
+      Result := ContestIdentity(aContest);
+      end;
+end;
+
 function LoggedQSOIsXQSO(const aQso: ContestExchange): boolean;
 begin
-   Result := QSOIsXQSO(ContestIdentity(aQso.ceContest), aQso);
+   Result := QSOIsXQSO(LoggedQSOContest(aQso.ceContest), aQso);
 end;
 
 function ContestOfADIFRecordMode(aContest: TContestHandle;

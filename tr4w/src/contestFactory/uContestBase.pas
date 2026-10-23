@@ -691,6 +691,12 @@ type
       exchange windows are cleared and the cursor goes back to the call. *)
    TEntryAbandon = procedure;
 
+   (* WHERE A REFUSAL POINTS -- the word of the typed exchange a contest's
+      refusal is about, so live entry puts the caret just after it
+      (LOGSTUFF's ExchangeErrorToken, Issue #1010). The engine's parsers set
+      it themselves; a CLASS's refusal names its word through this. *)
+   TRefusedWordMark = procedure(const aWord: string);
+
    (* A TEXT ANSWER ABOUT A CALL THAT ONLY THE ENGINE HOLDS -- M8. '' when the
       engine has none. *)
    TCallTextLookup = function(const aCall: string): string;
@@ -773,7 +779,11 @@ type
       KIND, which was IN7QPNE's.
 
       CallWindowHasCall says the exchange is being entered against a call in
-      the call window -- live entry. SAC's rule acts only then. *)
+      the call window -- live entry. SAC's rule acts only then.
+
+      MarkRefusedWord names the word a class's refusal is about (nil: no
+      caret service; a class asks Assigned first). RTC's serial-0 refusal is
+      its first reader (2026-10-23). *)
    TReceivedExchangeSession = record
       Parsers: TExchangeParsers;
       ExchangeFormatOf: TContestBase;
@@ -781,6 +791,7 @@ type
       IsDomesticQTH: TDomesticQTHTest;
       CallWindowHasCall: boolean;
       AbandonEntry: TEntryAbandon;
+      MarkRefusedWord: TRefusedWordMark;
    end;
 
    (* A LIST OF IDENTIFIERS A CONTEST ANSWERS TO -- see FormerADIFContestIds. *)
@@ -1338,6 +1349,8 @@ type
          read once at construction (Q108 S2). *)
       FId: string;
       FStation: TStationContext;
+      (* True once SetStation has been called -- see HasStation. *)
+      FHasStation: boolean;
       (* THE STATION OF THE QSO BEING SCORED -- what ScoreQSO was handed, for
          the length of that one call; NotCapturedMyFacts otherwise. *)
       FScoringMyFacts: TQsoMyFacts;
@@ -1958,7 +1971,7 @@ type
          answer is DUMMYCONTEST's, and uTestContestStatesItsRules'
          Test_EveryContestStatesItsBandsAndModes ratchets the contests that
          have not yet. A contest's bands are an IDENTITY fact, never the
-         entrant's: QSOIsXQSO asks the station-less identity object. *)
+         entrant's: QSOIsXQSO may ask the station-less identity object. *)
       function UsesBand(aBand: BandType): boolean; virtual;
 
       (* DOES THIS CONTEST CREDIT A QSO IN THIS MODE? -- Q98 S1 (design 8.2v),
@@ -2028,8 +2041,13 @@ type
          SetMultFlags, after its band exit, through
          ContestCreditsWorkedStation. So CalculateQSOPoints and
          CountsAsMultiplier never see such a QSO, and a class must not repeat
-         the rule there. The dupe sheet is NOT asked (an uncredited QSO is
-         still a contact with that call), unlike the band rule.
+         the rule there. ~~The dupe sheet is NOT asked (an uncredited QSO is
+         still a contact with that call), unlike the band rule.~~ SINCE Q119
+         (2026-10-23) such a QSO IS an automatic X-QSO -- QSOIsOffContest asks
+         this of an object with a station -- so, like an off-band QSO, it is
+         kept off the totals, the sheets and the dupe sheet, and exports as
+         X-QSO:. The two direct asks above stay: they also serve a
+         station-less object, which the X-QSO predicate does not judge.
 
          A CLASS THAT STATES THE RULE CALLS HostAreaRuleCredits -- the ONE
          predicate, which its ParseReceivedExchange refusal calls too, with
@@ -2699,6 +2717,24 @@ type
                                      var aExch: ContestExchange;
                                      out aErrorMessage: string): boolean; virtual;
 
+      (* DOES THIS CONTEST REFUSE THIS QSO RECORD OUTRIGHT? -- 2026-10-23
+         (NY4I: "a qso with a serial number of 0 should have never made it
+         past input editing (or import)"). '' accepts; any other answer is
+         the reason, shown as the caller already shows a refusal.
+
+         A RULE ABOUT THE RECORD ITSELF, asked wherever a record is made or
+         changed: the contest's own ParseReceivedExchange after its format's
+         parse (typed entry), Edit QSO's save, and the ADIF import, which
+         aborts the WHOLE import on the first refusal with nothing written
+         (Q112's ruling). It is NOT an X-QSO rule: a refused record never
+         reaches the log, where an X-QSO is logged and scores nothing
+         (QSOIsOffContest).
+
+         Needs no station -- asked of ContestIdentity on import and edit.
+         THE BASE ACCEPTS EVERY RECORD, which is what every contest did
+         before this existed. RTC is the first (serial 0). *)
+      function LoggedQSORefusal(const aQso: ContestExchange): string; virtual;
+
       (* MAY THIS WORD OF A TYPED EXCHANGE BE A CALLSIGN? -- M5b.
 
          LOGSTUFF.LooksLikeACallSign decides, from the word's shape, whether a
@@ -3192,6 +3228,15 @@ type
 
       procedure SetStation(const aStation: TStationContext);
 
+      (* HAS THIS OBJECT BEEN GIVEN AN ENTRANT? -- Q119 (2026-10-23).
+
+         False for the registry's station-less identity objects
+         (ContestIdentity), True once SetStation has run (ActiveContest, a
+         test's object). A rule that depends on WHO IS ENTERING cannot be
+         judged without one, so the X-QSO predicate asks the host-area rule
+         only of an object that has one -- see QSOIsOffContest. *)
+      property HasStation: boolean read FHasStation;
+
       (* THE FINAL SCORE -- STAGE 3, M6 (2026-10-02; design 5 and 7.7).
 
          ONE FUNCTION, AND EVERY READER OF THE SCORE ASKS IT: LogEdit.TotalScore
@@ -3378,24 +3423,34 @@ function ContestCreditsMode(aContest: TContestBase; aMode: ModeType;
 function ContestCreditsModeKey(aContest: TContestBase; aMode: ModeType): boolean;
 
 (* IS aQso A QSO aContest DOES NOT CREDIT AT ALL -- off its bands or off its
-   modes? -- Q98 S1 (design 8.2v). A QSO record (rkQSO) with a band and a
-   mode that ContestCreditsBand or ContestCreditsMode refuses. A record with
-   NoBand or NoMode is NOT off-contest: it is malformed, and already counts
-   nowhere. A deleted record is judged the same way -- whether it counts is
-   QSOCountsTowardTotals's question. *)
+   modes, or a worked station its entrant may not credit? -- Q98 S1 (design
+   8.2v) and Q119. A QSO record (rkQSO) with a band and a mode that
+   ContestCreditsBand or ContestCreditsMode refuses, or whose worked station
+   CreditsWorkedStation refuses (a QSO party's host-area rule, Q107: an
+   out-of-area entrant's QSO with a station outside the host area). A record
+   with NoBand or NoMode is NOT off-contest: it is malformed, and already
+   counts nowhere. A deleted record is judged the same way -- whether it
+   counts is QSOCountsTowardTotals's question.
+
+   THE HOST-AREA TERM NEEDS THE ENTRANT, so it is asked only of an object
+   that HasStation: the session's (ActiveContest, or
+   uContestRegistry.LoggedQSOContest for a reader holding a record). A
+   station-less identity object answers the band and mode terms alone, as
+   before Q119 -- it cannot know whether the entrant is in the host area. *)
 function QSOIsOffContest(aContest: TContestBase; const aQso: ContestExchange): boolean;
 
 (* IS aQso AN X-QSO? -- THE PREDICATE (Q98 S1, design 8.2v; Q51).
 
    The operator's statement (ceXQSO, stored -- Edit QSO's checkbox, or a file
-   that said CLAIMEDQSO 0) OR the contest's band/mode rule (QSOIsOffContest,
-   worked out each time it is asked, NEVER stored). Every reader of "is this
-   an X-QSO" asks this (or LoggedQSOIsXQSO, uContestRegistry, for a reader
-   holding only a record); Lint-XQSOReads fails a code read of ceXQSO
-   anywhere else outside its allow-list.
+   that said CLAIMEDQSO 0) OR the contest's band/mode/host-area rule
+   (QSOIsOffContest, worked out each time it is asked, NEVER stored). Every
+   reader of "is this an X-QSO" asks this (or LoggedQSOIsXQSO,
+   uContestRegistry, for a reader holding only a record); Lint-XQSOReads
+   fails a code read of ceXQSO anywhere else outside its allow-list.
 
-   NOT the host-area rule (Q107): a QSO it refuses scores 0 but exports as a
-   QSO: line until NY4I answers Q119. *)
+   THE HOST-AREA RULE IS IN IT SINCE Q119 (ruled 2026-10-22, built
+   2026-10-23): a QSO Q107 refuses is logged, scores 0, earns no multiplier,
+   is not worked for the dupe sheet and exports as X-QSO: / CLAIMEDQSO 0. *)
 function QSOIsXQSO(aContest: TContestBase; const aQso: ContestExchange): boolean;
 
 (* THE BANDS OF A NEED-MULTIPLIER MASK THE CONTEST CREDITS -- M8, design 7.4:
@@ -3424,6 +3479,11 @@ function ContestCountsMultiplier(aContest: TContestBase; const aQso: ContestExch
    ContestCreditsBand is for the band. *)
 function ContestCreditsWorkedStation(aContest: TContestBase;
                                      const aQso: ContestExchange): boolean;
+
+(* DOES aContest REFUSE THIS RECORD? -- see TContestBase.LoggedQSORefusal.
+   nil (a classless contest) refuses nothing. *)
+function ContestLoggedQSORefusal(aContest: TContestBase;
+                                 const aQso: ContestExchange): string;
 
 (* THE HOST-AREA RULE -- THE ONE PREDICATE, Q107 (NY4I, 2026-10-16) and
    design 7.10 (2026-10-02): "In QSO parties, out of state stations usually
@@ -3758,6 +3818,7 @@ end;
 procedure TContestBase.SetStation(const aStation: TStationContext);
 begin
    FStation := aStation;
+   FHasStation := True;
 end;
 
 function TContestBase.IsContestOfQso(const aQso: ContestExchange): boolean;
@@ -4661,8 +4722,11 @@ begin
       begin
       Exit;
       end;
-   Result := (not ContestCreditsBand(aContest, aQso.Band)) or
-             (not ContestCreditsMode(aContest, aQso.Mode, aQso.ExtMode));
+   Result := (not ContestCreditsBand(aContest, aQso.Band))                  or
+             (not ContestCreditsMode(aContest, aQso.Mode, aQso.ExtMode))    or
+             ((aContest <> nil)                                and
+              aContest.HasStation                              and
+              (not aContest.CreditsWorkedStation(aQso)));
 end;
 
 function QSOIsXQSO(aContest: TContestBase; const aQso: ContestExchange): boolean;
@@ -4887,6 +4951,25 @@ begin
    (* The sheet decides, as it did for every contest SetMultFlags did not
       name -- see the declaration. *)
    Result := True;
+end;
+
+function TContestBase.LoggedQSORefusal(const aQso: ContestExchange): string;
+begin
+   (* Every record accepted -- see the declaration. *)
+   Result := '';
+end;
+
+function ContestLoggedQSORefusal(aContest: TContestBase;
+                                 const aQso: ContestExchange): string;
+begin
+   if aContest = nil then
+      begin
+      Result := '';
+      end
+   else
+      begin
+      Result := aContest.LoggedQSORefusal(aQso);
+      end;
 end;
 
 function TContestBase.CreditsWorkedStation(const aQso: ContestExchange): boolean;

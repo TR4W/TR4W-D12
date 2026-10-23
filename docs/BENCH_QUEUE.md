@@ -46,6 +46,20 @@ nothing sees the window.
       `Invalid ARRL Section (WSX not in arrlsect.dom)` (46 characters), the
       caret after `WSX` as before (issue #1010). `2A` alone:
       `Invalid ARRL Section (no QTH)`. Winter Field Day the same.
+- [ ] **RTC, serial 0 is refused everywhere.** Type `0 FN31`: EXPECT
+      `QSO number 0 is not valid in this contest.`, the caret after `0`, and
+      nothing logged. In Edit QSO, set a QSO's received (or sent) number to 0
+      and save: the same warning, the window stays open, nothing changes.
+      Import an ADIF with one RTC record whose SRX is 0: EXPECT the import
+      stops, names that record, and imports NOTHING.
+- [ ] **Q119, an out-of-area QSO that reaches the log is an X-QSO.** With
+      MY STATE outside Georgia, import (or receive from a peer) a GA QSO Party
+      QSO with W1AW `CT`. EXPECT it greyed as an X-QSO, scoring nothing, and
+      `X-QSO:` in the Cabrillo. A Georgia county QSO stays a plain `QSO:`.
+- [ ] **Opening a log uses ITS OWN MY STATE.** With the station's MY STATE
+      FL, open a QSO party log made at a host county (the Michigan corpus log,
+      MY STATE `WAYN`). EXPECT it opens IN STATE: QSOs with DC/MD/VA/OH are
+      plain QSOs and score. Until this fix it opened out of state.
 
 ## Added 2026-10-23 -- HAMSCORE RE-EMITS A STORED QSO FROM ITS RECORD (issue 95, review R6, Q13)
 

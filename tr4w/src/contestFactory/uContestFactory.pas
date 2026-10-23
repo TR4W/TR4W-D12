@@ -324,6 +324,37 @@ begin
    GHaveActive := False;
 end;
 
+(* THE OBJECT THAT JUDGES A LOGGED RECORD -- uContestRegistry.LoggedQSOContest
+   (Q119, 2026-10-23). The session's object when the record is of the
+   session's contest: it carries the entrant, which the host-area rule needs.
+   nil otherwise, and the registry answers with the station-less identity.
+
+   GActive AS IT IS, NOT A FRESH ActiveContest. Readers of a record -- the
+   ADIF and Cabrillo writers, the grids, the score-posting XML -- may run off
+   the main thread or inside another call on this object, and ActiveContest
+   would rebuild its station (and could free it for another contest). Every
+   main-thread scoring request refreshes the station, and the two facts the
+   host-area rule reads -- the in-area answer and the domestic-table service
+   -- change only at set-up, which itself asks ActiveContest.
+
+   MAIN THREAD ONLY -- an invariant, audited 2026-10-23: every reader of a
+   logged record's X-QSO status (Cabrillo/ADIF export, /EXPORT, the loader,
+   the rescore, the summary sheet, UDP and score-posting XML, HamScore's
+   render, the grids, the peer and WSJT-X arms through QueueAsyncCall) runs on
+   the main thread. IN7QPNE's answer WRITES its component party's station
+   (PartyContest), so a reader added off the main thread must not come here. *)
+function SessionLoggedQSOContest(aContest: TContestHandle): TContestBase;
+begin
+   Result := nil;
+   if GHaveActive and (GActiveFor = aContest) then
+      begin
+      Result := GActive;
+      end;
+end;
+
+initialization
+   RegisterLoggedQSOContestProvider(@SessionLoggedQSOContest);
+
 finalization
    ReleaseActiveContest;
 

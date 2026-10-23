@@ -298,18 +298,45 @@ the target shape, the M-step migration order and the open questions.
   (base True) beside `UsesBand`; `eNoMode`/`eData` mean "some submode", so an
   old record is never proven off-mode. ONE predicate,
   `uContestBase.QSOIsXQSO(contest, qso)` = the operator's `ceXQSO` OR
-  `QSOIsOffContest` (band or mode refused) -- **DERIVED, NEVER STORED**: an
+  `QSOIsOffContest` (band or mode refused, or -- since Q119, 2026-10-23 --
+  `CreditsWorkedStation` refused, asked ONLY of an object that `HasStation`)
+  -- **DERIVED, NEVER STORED**: an
   edited band re-classifies, nothing writes `is_xqso`. A reader holding only
   a record asks `uContestRegistry.LoggedQSOIsXQSO` (the record's own
-  `ceContest`). `QSOCountsTowardTotals(contest, qso)` asks it; so do
+  `ceContest`, through `LoggedQSOContest`: the session's object when it is
+  the session's contest -- `uContestFactory` registers the provider and
+  hands `GActive` as it is -- else the station-less identity, which judges
+  bands and modes only). The loader and the summary sheet ask
+  `LoggedQSOContest` too; never `ContestIdentity` for an X-QSO question. `QSOCountsTowardTotals(contest, qso)` asks it; so do
   `ScoreQSO` (0 points, the operator flag included), `SetMultFlags`, the
   live `LogContact` (totals, sheets, view, dupe -- the serial and the
   initial-exchange history stay OUTSIDE, Q44), the loader, the rescore's X
   arm, the Cabrillo `X-QSO:` prefix, ADIF `APP_TR4W_CLAIMEDQSO` 0, HamScore's
   line, the score-posting XML, the five grid fills, the summary sheet; the
   dupe sheet and the hint ask `ContestCreditsModeKey`. **`Lint-XQSOReads`
-  fails a code read of `ceXQSO` outside its owners.** NOT the host-area rule
-  (Q119 open). **THE RATCHET:** `uTestContestStatesItsRules.
+  fails a code read of `ceXQSO` outside its owners.** ~~NOT the host-area rule
+  (Q119 open).~~ The host-area rule IS in it since Q119 (above). **A RECORD
+  RULE THAT REFUSES INPUT IS NOT AN X-QSO**: RTC's serial 0 (2026-10-23,
+  NY4I: *"should have never made it past input editing (or import)"*) is
+  ONE virtual, `TContestBase.LoggedQSORefusal(aQso): string` ('' accepts;
+  nil-safe `ContestLoggedQSORefusal`; station-less, asked of
+  `ContestIdentity`), asked by typed entry (the class's own
+  `ParseReceivedExchange` after `inherited`, caret through the session's
+  `MarkRefusedWord`), Edit QSO's save (shown like the bad-call refusal,
+  before anything leaves) and `ImportFromADIF` (first refusal stops the WHOLE
+  import, nothing written -- Q112's ruling). A missing serial (-1, ADIF
+  $FFFF) is not 0. NOT asked: the binary `.TRW` import, a multi-op peer's
+  QSO. A test that parses an exchange must give the record a sent serial
+  (live entry sets it before the parse) -- `uTestExchangeParse.RowExchange`.
+  `LoggedQSOContest`'s provider is MAIN-THREAD ONLY (audited 2026-10-23):
+  IN7QPNE's answer writes its component's station. **The in-host-area
+  answer is ONE value, `FCONTEST.StationInHostState`, decided by
+  FoundContest from the RESOLVED MY STATE** -- so a log's own station facts
+  (source 'contest') must be applied BEFORE its CONTEST:
+  `uLogStore.LogStoreApplyContestConfigWith` hoists them beside MY CALL
+  (2026-10-23; the corpus's michigan_qp, MY STATE = WAYN, was set up OUT of
+  state and exported X-QSO: lines until then).
+  `uTestHostAreaRule.Test_ALogsOwnMyStateDecidesInStateAtOpen` pins it. **THE RATCHET:** `uTestContestStatesItsRules.
   Test_EveryContestStatesItsBandsAndModes` -- `BANDS_NOT_YET_STATED` and
   `MODES_NOT_YET_STATED` (literal ids); a NEW contest, in neither, states
   both from its first commit; a stage takes its ids out in the same commit;
@@ -548,7 +575,10 @@ the target shape, the M-step migration order and the open questions.
   2026-10-16).** An out-of-area entrant's QSO whose received QTH the session's
   domestic table does not know is refused when typed AND, logged any other way
   (import, peer, the Rescore menu, the matrix), scores 0 with no multiplier --
-  the off-band shape, but the dupe sheet is NOT asked. ONE predicate,
+  the off-band shape. ~~but the dupe sheet is NOT asked.~~ Since Q119
+  (2026-10-23) it is an automatic X-QSO (Cabrillo `X-QSO:`, CLAIMEDQSO 0, off
+  the totals and the dupe sheet) wherever it is judged with the entrant --
+  see Q98 S1 above. ONE predicate,
   `uContestBase.HostAreaRuleCredits(inArea, QTHString, table)`, called by the
   refusal (`aSession.IsDomesticQTH`) and by `CreditsWorkedStation` (base True;
   `Station.IsDomesticQTH`, a new `TStationContext` service) -- both are

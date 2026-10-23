@@ -71,6 +71,11 @@ type
       procedure Test_TheLoaderAndTheRescoreAskThePredicate;
    end;
 
+(* A SOURCE FILE UNDER tr4w/src, as text -- for a test that pins the ORDER of
+   calls in a routine no headless test can drive. Exported 2026-10-23 for
+   uTestContestRTC (the Edit QSO and import refusals). *)
+function SourceText(const aRelative: string): string;
+
 implementation
 
 uses
@@ -432,7 +437,9 @@ var
 begin
    BeginTest('Test_TheLoaderAndTheRescoreAskThePredicate');
    text := SourceText('MainUnit.pas');
-   CheckTrue(Pos('if QSOCountsTowardTotals(ContestIdentity(TempRXData.ceContest), TempRXData) then', text) > 0,
+   (* LoggedQSOContest since Q119: the record's contest, judged with the
+      entrant when it is the session's (the host-area X-QSO). *)
+   CheckTrue(Pos('if QSOCountsTowardTotals(LoggedQSOContest(TempRXData.ceContest), TempRXData) then', text) > 0,
              'the loader asks QSOCountsTowardTotals of the record''s contest');
    CheckTrue(Pos('if LoggedQSOIsXQSO(RescoredRXData) then', text) > 0,
              'the rescore''s X arm asks LoggedQSOIsXQSO');

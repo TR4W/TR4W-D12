@@ -93,6 +93,8 @@ uses
    LogStuff,
    PostUnit,
    FCONTEST,
+   (* BuildSingleQsoCabrilloLine -- the X-QSO: prefix, Q119. *)
+   uCabrillo,
    MainUnit;
 
 (* ---------------------------------------------------------------------------
@@ -981,6 +983,52 @@ begin
       CheckTrue(QSOIsXQSO(ContestIdentity(GeorgiaHandle), rx), 'as an X-QSO');
       CheckEquals(0, Integer(rx.QSOPoints), 'and scores 0');
       CheckFalse(rx.DomesticMult, 'and earns no multiplier');
+
+      (* Q119 (ruled 2026-10-22, built 2026-10-23): A QSO THE HOST-AREA RULE
+         REFUSES IS AN AUTOMATIC X-QSO. Typing W1AW's CT is refused above; the
+         same QSO arriving as a LOGGED RECORD -- an import, a peer, an edit --
+         is logged, and for this Florida entrant it is an X-QSO: the record's
+         contest judged with the entrant (LoggedQSOContest), X-QSO: in the
+         Cabrillo. *)
+      rx := Default(ContestExchange);
+      rx.ceRecordKind := rkQSO;
+      rx.ceContest := Contest;
+      rx.Callsign := 'W1AW';
+      rx.Band := Band20;
+      rx.Mode := CW;
+      rx.ExtMode := eCW;
+      rx.Frequency := 14025000;
+      rx.RSTSent := 599;
+      rx.RSTReceived := 599;
+      rx.QTHString := 'CT';
+      rx.tSysTime.qtYear := 26;
+      rx.tSysTime.qtMonth := 4;
+      rx.tSysTime.qtDay := 9;
+      (* The session's object, its station as set-up leaves it. *)
+      ActiveContest(Contest);
+      CheckTrue(LoggedQSOIsXQSO(rx), 'out of state, a logged W1AW CT is an X-QSO');
+      CheckEquals('X-QSO:', Copy(string(BuildSingleQsoCabrilloLine(rx)), 1, 6),
+                  'and its Cabrillo line says so');
+      CheckFalse(QSOCountsTowardTotals(LoggedQSOContest(Contest), rx),
+                 'and it counts toward no total');
+      (* A STATION-LESS IDENTITY CANNOT JUDGE THE ENTRANT, so it answers the
+         band and mode terms alone. *)
+      CheckFalse(QSOIsXQSO(ContestIdentity(GeorgiaHandle), rx),
+                 'the identity object does not judge the host-area rule');
+
+      (* THE CONTROLS: a Georgia county out of state, and CT in state. *)
+      rx.QTHString := 'COBB';
+      CheckFalse(LoggedQSOIsXQSO(rx), 'out of state, a logged Cobb QSO is not');
+      CheckEquals('QSO: ', Copy(string(BuildSingleQsoCabrilloLine(rx)), 1, 5),
+                  'a plain QSO: line');
+      rx.QTHString := 'CT';
+      StationInHostState := True;
+      ActiveContest(Contest);
+      CheckFalse(LoggedQSOIsXQSO(rx), 'in state, a logged W1AW CT is not an X-QSO');
+      CheckEquals('QSO: ', Copy(string(BuildSingleQsoCabrilloLine(rx)), 1, 5),
+                  'a plain QSO: line in state');
+      StationInHostState := False;
+      ActiveContest(Contest);
    finally
       DomesticCountries.Clear;
       for i := 0 to savedCountries.Count - 1 do

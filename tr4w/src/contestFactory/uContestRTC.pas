@@ -65,8 +65,17 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   multiplier -- which is what the arm's InhibitMults did (Q44). Not reached
   by design Q37: the haversine bounds a short grid.
 
-  NOT BUILT, REPORTED: "sent or received QSO serial number 0" makes a QSO
-  invalid; nothing here refuses a 0 serial.
+  SERIAL 0 (built 2026-10-23): "A QSO is not valid for scoring (0 points and
+  no multiplier) if: ... The QSO is logged with sent or reseived QSO serial
+  number 0", and the exchange is a "QSO serial number, starting with 001".
+  NY4I, 2026-10-23: "a qso with a serial number of 0 should have never made
+  it past input editing (or import)" -- so it is REFUSED, not logged as an
+  X-QSO. ONE rule, LoggedQSORefusal (TC_QSONUMBERZERONOTVALID), asked by
+  typed entry (ParseReceivedExchange, the caret after the word), Edit QSO's
+  save (the bad-call refusal's shape) and the ADIF import (the WHOLE import
+  stops, nothing written -- Q112's ruling). Our sent serial starts at 1. A
+  MISSING serial (-1, or ADIF's $FFFF) is not 0. Not asked: the binary .TRW
+  import and a multi-op peer's QSO (reported 2026-10-23).
 
   SET-UP: WARC off; the CQ, S&P and repeat S&P exchanges are the serial and
   MY GRID; CQ F3, and exchange F4, F5 and Alt-F4, are the serial and grid
@@ -105,6 +114,15 @@ type
       function ParseReceivedExchangeFormat(const aText: string;
                                            aParsers: TExchangeParsers;
                                            var aExch: ContestExchange): boolean; override;
+   public
+      (* A SERIAL OF 0, SENT OR RECEIVED, IS REFUSED -- see the header. *)
+      function LoggedQSORefusal(const aQso: ContestExchange): string; override;
+      (* Typed entry asks it -- see the header. *)
+      function ParseReceivedExchange(const aText: string;
+                                     const aSession: TReceivedExchangeSession;
+                                     var aExch: ContestExchange;
+                                     out aErrorMessage: string): boolean; override;
+   protected
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -269,6 +287,94 @@ function TContestRTC.ParseReceivedExchangeFormat(const aText: string;
                                                  var aExch: ContestExchange): boolean;
 begin
    Result := aParsers.ParseRSTQSONumberAndGridSquare(aText, aExch);
+end;
+
+(* THE WORD OF aText THAT CARRIED A SERIAL OF 0: a word of '0' digits -- '0',
+   '000'. '' when no word has that shape. Only the caret needs it; the
+   refusal does not. A cut zero ('TTT') cannot reach here: the format reads
+   a word that is not all digits as the grid (measured 2026-10-23). *)
+function ZeroSerialWord(const aText: string): string;
+var
+   text: string;
+   word: string;
+   i: integer;
+   isZero: boolean;
+begin
+   Result := '';
+   (* One pass, a blank after the text closing the last word. *)
+   text := aText + ' ';
+   word := '';
+   isZero := True;
+   for i := 1 to Length(text) do
+      begin
+      if text[i] = ' ' then
+         begin
+         if (word <> '') and isZero then
+            begin
+            Result := word;
+            Exit;
+            end;
+         word := '';
+         isZero := True;
+         end
+      else
+         begin
+         word := word + text[i];
+         if text[i] <> '0' then
+            begin
+            isZero := False;
+            end;
+         end;
+      end;
+end;
+
+(* "A QSO is not valid for scoring (0 points and no multiplier) if: ... The
+   QSO is logged with sent or reseived QSO serial number 0" -- and the
+   serial starts "with 001". NY4I, 2026-10-23: "a qso with a serial number
+   of 0 should have never made it past input editing (or import)", so such a
+   record is REFUSED -- the ONE statement of the rule, asked by typed entry
+   (ParseReceivedExchange below), Edit QSO's save and the ADIF import. The
+   sent serial is ours and starts at 1 (LOGEDIT.NextSerialToSend); it can be
+   0 only from an edit or a file. A serial that is MISSING (-1, or $FFFF from
+   an ADIF record with no SRX/STX) is not 0, and is not refused. *)
+function TContestRTC.LoggedQSORefusal(const aQso: ContestExchange): string;
+begin
+   if (aQso.NumberReceived = 0) or (aQso.NumberSent = 0) then
+      begin
+      Result := TC_QSONUMBERZERONOTVALID;
+      end
+   else
+      begin
+      Result := '';
+      end;
+end;
+
+(* TYPED ENTRY: the record's refusal, asked once the format's parse accepted,
+   with the caret after the word that carried a received 0. A serial the
+   format could not find at all is the format's refusal, as before. *)
+function TContestRTC.ParseReceivedExchange(const aText: string;
+                                           const aSession: TReceivedExchangeSession;
+                                           var aExch: ContestExchange;
+                                           out aErrorMessage: string): boolean;
+var
+   refusal: string;
+begin
+   Result := inherited ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
+   if not Result then
+      begin
+      Exit;
+      end;
+
+   refusal := LoggedQSORefusal(aExch);
+   if refusal <> '' then
+      begin
+      Result := False;
+      aErrorMessage := refusal;
+      if (aExch.NumberReceived = 0) and Assigned(aSession.MarkRefusedWord) then
+         begin
+         aSession.MarkRefusedWord(ZeroSerialWord(aText));
+         end;
+      end;
 end;
 
 function TContestRTC.ExchangeTextMayHoldGridSquare: boolean;

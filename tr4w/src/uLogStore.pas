@@ -2275,8 +2275,9 @@ begin
            unaffected only because their MY CALL arrives from an older
            configuration.
 
-           ONE COMMAND, HOISTED, NOT A SORT. Everything else here is a value
-           CONTEST does not read. *)
+           ONE COMMAND, HOISTED, NOT A SORT. ~~Everything else here is a value
+           CONTEST does not read.~~ The contest's station facts are hoisted
+           too (2026-10-23, below): CONTEST reads MY STATE. *)
          idx := rows.IndexOfName('MY CALL');
          if idx >= 0 then
             begin
@@ -2290,6 +2291,35 @@ begin
                               'contest, so the country and zone derived ' +
                               'from it are settled before FCONTEST reads them',
                               [string(valAsShort)]);
+                  end;
+               end;
+            end;
+
+         (* AND THE CONTEST'S OWN STATION FACTS BEFORE THE CONTEST TOO --
+           2026-10-23, the same ordering defect as MY CALL's, found by Q119.
+
+           FoundContest DECIDES WITH THEM: a QSO party's in-state answer
+           (FCONTEST.StationInHostState, from the RESOLVED MY STATE), and
+           with it the domestic file, the contest name and the multipliers;
+           the sent state; a contest's default memories (DescribeSession reads
+           MY GRID, MY STATE, ...). Applied after CONTEST, a log whose MY STATE
+           is its own (source 'contest') was set up from the STATION's value:
+           MEASURED, the corpus's michigan_qp_2026_ny4i -- MY STATE = WAYN, a
+           Michigan county -- opened OUT OF STATE (its stored CONTEST NAME says
+           so), and once the X-QSO predicate asked the host-area rule every
+           QSO with DC, MD, VA and OH exported as X-QSO: with a claimed score
+           of 0.
+
+           Recording an override assigns nothing and runs no setter (see the
+           loop below), so doing it here is safe; the loop skips these rows. *)
+         for i := 0 to rows.Count - 1 do
+            begin
+            cmd := rows.Names[i];
+            if (cmd <> '') and Settings.CommandIsContestOverridable(cmd) then
+               begin
+               if ApplyContestStatement(cmd, rows.ValueFromIndex[i]) then
+                  begin
+                  inc(Result);
                   end;
                end;
             end;
@@ -2589,12 +2619,9 @@ begin
               from a .cfg or the New Contest dialog), so it reads exactly as
               it did: the contest's value in force. A log with no such row
               resolves to the station's value, as it always did. *)
+            (* APPLIED ABOVE, BEFORE THE CONTEST (2026-10-23) -- see there. *)
             if Settings.CommandIsContestOverridable(cmd) then
                begin
-               if ApplyContestStatement(cmd, val) then
-                  begin
-                  inc(Result);
-                  end;
                Continue;
                end;
 

@@ -7021,6 +7021,14 @@ begin
   InitializeQSO;
 end;
 
+(* The word a class's refusal is about, where live entry puts the caret --
+  the TReceivedExchangeSession service RTC's serial-0 refusal asks for. The
+  word is ASCII exchange text, cut from what was typed. *)
+procedure ParseSessionMarkRefusedWord(const aWord: string);
+begin
+  ExchangeErrorToken := Str40(aWord);
+end;
+
 (* THE CONTEST PARSES AND VALIDATES ITS RECEIVED EXCHANGE -- M5b, 2026-10-02.
 
   The tokenising gate stays here, contest-blind: an exchange ParseArray cannot
@@ -7058,6 +7066,7 @@ begin
   session.IsDomesticQTH := @DomesticTableKnowsQTH;
   session.CallWindowHasCall := CallWindowString <> '';
   session.AbandonEntry := @ParseSessionAbandonEntry;
+  session.MarkRefusedWord := @ParseSessionMarkRefusedWord;
 
   Result := contestRules.ParseReceivedExchange(string(ExchangeString),
                                                session, RData, refusal);

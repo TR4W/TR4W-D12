@@ -294,6 +294,7 @@ begin
    session.IsDomesticQTH := @PinIsDomesticQTH;
    session.CallWindowHasCall := aLive;
    session.AbandonEntry := @PinAbandonEntry;
+   session.MarkRefusedWord := nil;
    Result := aContestObject.ParseReceivedExchange(aText, session, aExch, aMessage);
 end;
 
@@ -307,6 +308,11 @@ begin
    Result.Callsign := ShortString(BATTERY_CALL[aRow mod CALLS].Call);
    Result.QTH.CountryID := ShortString(BATTERY_CALL[aRow mod CALLS].Country);
    Result.Zone := DUMMYZONE;
+   (* OUR SERIAL, AS LIVE ENTRY SETS IT BEFORE THE PARSE (ParametersOkay:
+      NextSerialToSend, never below 1) and as the matrix's parse section
+      has it. Default's 0 is a record no entry makes -- and since 2026-10-23
+      RTC refuses a sent serial of 0 (LoggedQSORefusal). *)
+   Result.NumberSent := 1;
 end;
 
 function RowText(aRow: integer): string;

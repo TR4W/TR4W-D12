@@ -141,7 +141,9 @@ end;
 procedure AddLoggedQSO(const aQso: ContestExchange;
                        const aMyFacts: TQsoMyFacts);
 begin
-   if QSOCountsTowardTotals(ContestIdentity(aQso.ceContest), aQso) then
+   (* LoggedQSOContest, not ContestIdentity: the host-area X-QSO (Q119)
+      needs the entrant. *)
+   if QSOCountsTowardTotals(LoggedQSOContest(aQso.ceContest), aQso) then
       begin
       LoggedQSOs.Add(aQso, aMyFacts);
       end;

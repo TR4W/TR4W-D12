@@ -69,6 +69,7 @@ type
       procedure Test_OverridesCannotScoreAnUncreditedQSO;
       procedure Test_EntryRefusalAndScoringGiveOneAnswer;
       procedure Test_RescoreGivesAnOutOfStateQSOZero;
+      procedure Test_ALogsOwnMyStateDecidesInStateAtOpen;
       procedure CheckParty(aContest: ContestType; const aHostCounty: string);
    end;
 
@@ -88,6 +89,14 @@ uses
    PostUnit,
    FCONTEST,
    MainUnit,
+   (* The open's replay and the test log -- Test_ALogsOwnMyStateDecidesInStateAtOpen *)
+   uLogStore,
+   uLogDatabase,
+   uLogRepository,
+   uDomFileKeys,
+   uCabrillo,
+   utils_text,
+   uTestLatestContest,
    uTestContestObjects,
    uTestExchangeParserStub;
 
@@ -445,6 +454,152 @@ begin
       end;
 end;
 
+(* ---------------------------------------------------------------------------
+   THE LOG'S OWN MY STATE DECIDES IN STATE, AT OPEN -- 2026-10-23
+   --------------------------------------------------------------------------- *)
+
+var
+   (* What the test's contest set-up saw, and decided. *)
+   GSetUpResolvedState: string;
+   GSetUpCalls: integer;
+
+(* THE TEST'S CONTEST SET-UP for LogStoreApplyContestConfigWith: the one
+   decision of FoundContest's this is about -- StationInHostState from the
+   RESOLVED MY STATE against the party's county file (FoundMyStateInDomFile's
+   rule, read from the tree's dom folder) -- and the Contest handle. Nothing
+   else of the session is rewritten. *)
+function SetUpMichiganAsFoundContestDecides(const aContestId: ShortString): boolean;
+var
+   h: TContestHandle;
+begin
+   Inc(GSetUpCalls);
+   Result := FindContestById(string(aContestId), h);
+   if not Result then
+      begin
+      Exit;
+      end;
+   Contest := h;
+   GSetUpResolvedState := Settings.My.ResolvedState;
+   StationInHostState := DomFileOnDiskDeclaresKey(
+      ShippedDomDir + ContestIdentity(h).DomesticFileName + '.dom',
+      Settings.My.ResolvedState);
+end;
+
+(* THE CORPUS'S michigan_qp_2026_ny4i, REDUCED: a database-only Michigan log
+   whose OWN MY STATE (source 'contest') is WAYN -- a Michigan county -- on a
+   station whose MY STATE is something else. Opened through the replay every
+   start-up and /EXPORT runs (LogStoreApplyContestConfigWith, the body of
+   LogStoreApplyContestConfig), the contest must be set up with WAYN in
+   force: an in-state entrant, who works anyone. The corpus exported its DC,
+   MD, VA and OH QSOs as X-QSO: once the X-QSO predicate asked the host-area
+   rule (Q119), because CONTEST was replayed before MY STATE and the set-up
+   read the station's value. *)
+procedure THostAreaRuleTests.Test_ALogsOwnMyStateDecidesInStateAtOpen;
+var
+   savedContest: TContestHandle;
+   savedInHostState: boolean;
+   savedSilent: boolean;
+   savedLogName: string;
+   savedStation: string;
+   hadOverride: boolean;
+   savedOverride: string;
+   trw: string;
+   dbName: string;
+   db: TLogDatabase;
+   repo: TLogRepository;
+   michigan: TContestHandle;
+   rx: ContestExchange;
+begin
+   BeginTest('Test_ALogsOwnMyStateDecidesInStateAtOpen');
+   michigan := ContestHandleOf(MICHQSOPARTY);
+   savedContest := Contest;
+   savedInHostState := StationInHostState;
+   savedSilent := tSilentExport;
+   savedLogName := CharBufferText(TR4W_LOG_FILENAME);
+   savedStation := Settings.My.State;
+   hadOverride := Settings.My.HasContestOverride(sfState);
+   savedOverride := Settings.My.ContestOverride(sfState);
+   trw := IncludeTrailingPathDelimiter(GetTempDir) + 'tr4w_hostarea_' +
+          IntToStr(GetProcessID) + '.trw';
+   dbName := LogDatabaseFileName(trw);
+   try
+      (* No capture at close, and whatever an earlier suite left open shut. *)
+      tSilentExport := True;
+      LogStoreClose;
+
+      MakeTestContestLog(dbName, michigan, 'NY4I');
+      db := TLogDatabase.Create;
+      try
+         db.Open(dbName);
+         repo := TLogRepository.Create(db);
+         try
+            repo.SaveConfigValue('MY STATE', 'WAYN', 'contest');
+            repo.Commit;
+         finally
+            repo.Free;
+         end;
+      finally
+         db.Free;
+      end;
+      SetCharBuffer(TR4W_LOG_FILENAME, trw);
+
+      (* THE STATION IS ELSEWHERE, and no contest override is in force yet:
+         only the log can say WAYN. Contest is NoContest, so the replay sets
+         the log's own contest up. *)
+      Settings.My.ClearContestOverride(sfState);
+      Settings.My.State := 'FL';
+      Contest := NoContest;
+      ReleaseActiveContest;
+      StationInHostState := False;
+
+      GSetUpCalls := 0;
+      GSetUpResolvedState := '';
+      LogStoreApplyContestConfigWith(@SetUpMichiganAsFoundContestDecides);
+      CheckEquals(1, GSetUpCalls, 'the open set the log''s contest up');
+      CheckEquals('WAYN', GSetUpResolvedState,
+                  'with the log''s own MY STATE in force at set-up');
+      CheckTrue(StationInHostState, 'so a WAYN entrant is IN STATE');
+
+      (* AND THE X-QSO PREDICATE READS THAT ONE ANSWER: DC, worked by an
+         in-state entrant, is a plain QSO -- the export's own Cabrillo line. *)
+      ActiveContest(Contest);
+      rx := Default(ContestExchange);
+      rx.ceRecordKind := rkQSO;
+      rx.ceContest := Contest;
+      rx.Callsign := 'W3ED';
+      rx.Band := Band20;
+      rx.Mode := CW;
+      rx.ExtMode := eCW;
+      rx.Frequency := 14020000;
+      rx.RSTSent := 599;
+      rx.RSTReceived := 599;
+      rx.QTHString := 'DC';
+      rx.tSysTime.qtYear := 26;
+      rx.tSysTime.qtMonth := 4;
+      rx.tSysTime.qtDay := 8;
+      CheckFalse(LoggedQSOIsXQSO(rx), 'in state, W3ED in DC is not an X-QSO');
+      CheckEquals('QSO: ', Copy(string(BuildSingleQsoCabrilloLine(rx)), 1, 5),
+                  'and its Cabrillo line is a plain QSO:');
+   finally
+      LogStoreClose;
+      SetCharBuffer(TR4W_LOG_FILENAME, savedLogName);
+      ScrubTestLog(dbName);
+      Settings.My.State := savedStation;
+      if hadOverride then
+         begin
+         Settings.My.SetContestOverride(sfState, savedOverride);
+         end
+      else
+         begin
+         Settings.My.ClearContestOverride(sfState);
+         end;
+      tSilentExport := savedSilent;
+      StationInHostState := savedInHostState;
+      Contest := savedContest;
+      ReleaseActiveContest;
+   end;
+end;
+
 procedure THostAreaRuleTests.RunAllTests;
 begin
    Test_SingleStatePartiesCreditOnlyTheHostOutOfState;
@@ -452,6 +607,7 @@ begin
    Test_OverridesCannotScoreAnUncreditedQSO;
    Test_EntryRefusalAndScoringGiveOneAnswer;
    Test_RescoreGivesAnOutOfStateQSOZero;
+   Test_ALogsOwnMyStateDecidesInStateAtOpen;
 end;
 
 end.

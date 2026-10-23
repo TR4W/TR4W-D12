@@ -49,6 +49,9 @@ type
    private
       procedure Test_RTCStatesItsBandsModesAndFlags;
       procedure Test_RTCDupesPerBandAndModeMultipliersPerBand;
+      procedure Test_RTCRefusesARecordWithSerialZero;
+      procedure Test_EditQSOSaveAsksTheRefusalFirst;
+      procedure Test_RTCImportWithASerialZeroImportsNothing;
    end;
 
 implementation
@@ -58,6 +61,16 @@ uses
    uSettingsModel,
    Classes,
    SysUtils,
+   (* PosEx *)
+   StrUtils,
+   (* SourceText -- a routine's source, for an order no headless test can drive. *)
+   uTestAutomaticXQSO,
+   (* SetCharBuffer / CharBufferText -- TR4W_LOG_FILENAME *)
+   utils_text,
+   (* LogStoreClose -- the import test's scratch log *)
+   uLogStore,
+   (* LogDatabaseFileName -- the same *)
+   uLogDatabase,
    VC,
    uMults,
    uCallsigns,
@@ -68,6 +81,8 @@ uses
    uContestFactory,
    (* DomesticCountries -- the engine's domestic-country list. *)
    ZoneCont,
+   (* TC_QSONUMBERZERONOTVALID *)
+   uTR4WStrings,
    LogDupe,
    LogEdit,
    LogWind,
@@ -153,6 +168,7 @@ var
       ActiveMode := aMode;
       CallWindowString := CallString(aCall);
       ExchangeErrorMessage := '';
+      ExchangeErrorToken := '';
       aAccepted := ParametersOkay(CallString(aCall), Str40(aExch), aBand, aMode,
                                   14025000, aRX);
       aRX.ceRecordKind := rkQSO;
@@ -251,6 +267,35 @@ begin
       CheckTrue(QSOIsXQSO(ContestIdentity(rtcHandle), rx), 'as an X-QSO');
       CheckEquals(0, Integer(rx.QSOPoints), 'and scores 0');
       CheckFalse(rx.DomesticMult, 'and earns no multiplier');
+
+      (* "The QSO is logged with sent or reseived QSO serial number 0" is not
+         valid, and NY4I (2026-10-23): "a qso with a serial number of 0 should
+         have never made it past input editing" -- REFUSED, with its reason
+         and the caret after the word that carried it. *)
+      Enter('DL3CCC', '0 FN31', Band20, CW, accepted, rx);
+      CheckFalse(accepted, '0 FN31 is refused');
+      CheckEquals(TC_QSONUMBERZERONOTVALID, string(ExchangeErrorMessage),
+                  'with the serial-0 reason');
+      CheckEquals('0', string(ExchangeErrorToken), 'the caret goes after the 0');
+      Enter('DL3CCC', '599 000 FN31', Band20, CW, accepted, rx);
+      CheckFalse(accepted, '599 000 FN31 is refused');
+      CheckEquals(TC_QSONUMBERZERONOTVALID, string(ExchangeErrorMessage),
+                  '000 is a serial of 0 too');
+      CheckEquals('000', string(ExchangeErrorToken), 'the caret goes after the 000');
+
+      (* THE CONTROL: serial 1 is taken. *)
+      dupe := Enter('DL3CCC', '599 1 FN31', Band20, CW, accepted, rx);
+      CheckTrue(accepted, '599 1 FN31 is taken: ' + string(ExchangeErrorMessage));
+      CheckEquals(1, rx.NumberReceived, 'serial 1');
+      CheckEquals('', string(ExchangeErrorToken), 'no caret');
+
+      (* NO SERIAL AT ALL -- the format's own refusal, unchanged and measured
+         2026-10-23: refused, and WITHOUT a message (LOGSTUFF's
+         ProcessRSTAndQSONumberExchange exits on Val('') before it names
+         one -- the positional parsers' known silence, Q115). *)
+      Enter('DL4DDD', 'FN31', Band20, CW, accepted, rx);
+      CheckFalse(accepted, 'FN31 alone is refused (no serial)');
+      CheckEquals('', string(ExchangeErrorMessage), 'with no message today');
    finally
       DomesticCountries.Clear;
       for i := 0 to savedCountries.Count - 1 do
@@ -277,10 +322,226 @@ begin
    end;
 end;
 
+(* ---------------------------------------------------------------------------
+   A SERIAL OF 0 IS REFUSED OUTRIGHT -- TContestBase.LoggedQSORefusal
+   (2026-10-23). NY4I: "a qso with a serial number of 0 should have never
+   made it past input editing (or import)". ONE rule, asked by typed entry
+   (above), Edit QSO's save and the ADIF import, which aborts the WHOLE import
+   with nothing written (Q112's ruling).
+   --------------------------------------------------------------------------- *)
+
+(* An ADIF record line for the import tests. *)
+function AdifRecord(const aCall: string; const aContestId: string;
+                    const aSent: string; const aReceived: string): string;
+begin
+   Result := '<CALL:' + IntToStr(Length(aCall)) + '>' + aCall +
+             '<BAND:3>20m<MODE:2>CW<QSO_DATE:8>20260115<TIME_ON:4>1200' +
+             '<RST_SENT:3>599<RST_RCVD:3>599' +
+             '<STX:' + IntToStr(Length(aSent)) + '>' + aSent +
+             '<SRX:' + IntToStr(Length(aReceived)) + '>' + aReceived +
+             '<GRIDSQUARE:4>JO62' +
+             '<CONTEST_ID:' + IntToStr(Length(aContestId)) + '>' + aContestId +
+             '<EOR>';
+end;
+
+(* THE DECISION -- what Edit QSO's save and the import ask, of the record's
+   own contest, station-less. *)
+procedure TContestRTCTests.Test_RTCRefusesARecordWithSerialZero;
+var
+   rtcRules: TContestBase;
+   q: ContestExchange;
+begin
+   BeginTest('Test_RTCRefusesARecordWithSerialZero');
+   rtcRules := ContestIdentity(RTC);
+   q := Default(ContestExchange);
+   q.ceContest := ContestHandleOf(RTC);
+
+   q.NumberSent := 5;
+   q.NumberReceived := 0;
+   CheckEquals(TC_QSONUMBERZERONOTVALID, ContestLoggedQSORefusal(rtcRules, q),
+               'a received serial of 0 is refused');
+   q.NumberSent := 0;
+   q.NumberReceived := 7;
+   CheckEquals(TC_QSONUMBERZERONOTVALID, ContestLoggedQSORefusal(rtcRules, q),
+               'a sent serial of 0 is refused');
+   q.NumberSent := 5;
+   CheckEquals('', ContestLoggedQSORefusal(rtcRules, q), 'serials 5 and 7 are taken');
+   (* MISSING IS NOT 0: ClearContestExchange's -1, and ADIF's $FFFF for a
+      record with no SRX/STX tag. *)
+   q.NumberReceived := -1;
+   CheckEquals('', ContestLoggedQSORefusal(rtcRules, q), 'a missing received serial (-1) is not 0');
+   q.NumberReceived := $FFFF;
+   CheckEquals('', ContestLoggedQSORefusal(rtcRules, q), 'a missing ADIF SRX ($FFFF) is not 0');
+
+   (* THE BASE ACCEPTS EVERY RECORD: CQ WW with a 0 is not refused. *)
+   q.ceContest := ContestHandleOf(CQWWCW);
+   q.NumberSent := 0;
+   q.NumberReceived := 0;
+   CheckEquals('', ContestLoggedQSORefusal(ContestIdentity(CQWWCW), q),
+               'CQ WW states no such rule');
+   CheckEquals('', ContestLoggedQSORefusal(nil, q), 'nor does a classless contest');
+end;
+
+(* EDIT QSO'S SAVE -- READ, because the form is not driven headless: it asks
+   the refusal of the record's contest, shows it as the bad-call refusal is
+   shown, and refuses BEFORE anything leaves -- the UDP and HamScore notices
+   and the store's write. *)
+procedure TContestRTCTests.Test_EditQSOSaveAsksTheRefusalFirst;
+var
+   text: string;
+   save: integer;
+   ask: integer;
+begin
+   BeginTest('Test_EditQSOSaveAsksTheRefusalFirst');
+   text := SourceText('uEditQSO.pas');
+   save := Pos('function SaveQSOToEditableLog: boolean;' + sLineBreak + 'label', text);
+   CheckTrue(save > 0, 'SaveQSOToEditableLog is found');
+   ask := PosEx('TempString := ContestLoggedQSORefusal(ContestIdentity(EditableQSORXData.ceContest),',
+                text, save);
+   CheckTrue(ask > save, 'the save asks the record''s contest');
+   CheckTrue(PosEx('showwarning(TempString);', text, ask) > ask, 'and shows its reason');
+   CheckTrue(ask < PosEx('SendDeletedContactToUDP(EditableQSORXData);', text, save),
+             'before any UDP notice');
+   CheckTrue(ask < PosEx('HamScoreOnEdit(', text, save), 'before HamScore');
+   CheckTrue(ask < PosEx('LogStoreUpdateQSOAtIndex(', text, save), 'before the store''s write');
+   (* After the two serials are read from the form, or it would judge the old
+      values. *)
+   CheckTrue(ask > PosEx('EditableQSORXData.NumberReceived := TempInteger;', text, save),
+             'after the received serial is read');
+   CheckTrue(ask > PosEx('EditableQSORXData.NumberSent := EditQSOGetInt(FLD_NUMBERSEND',
+                         text, save),
+             'after the sent serial is read');
+end;
+
+(* THE ADIF IMPORT, DRIVEN: three RTC records, the second with a received
+   serial of 0. NOTHING is imported -- the import stops before its one write
+   -- and the report names the record, its time and the reason. *)
+procedure TContestRTCTests.Test_RTCImportWithASerialZeroImportsNothing;
+const
+   SCRATCH_SUFFIXES: array[0..3] of string = ('', '-wal', '-shm', '-journal');
+var
+   savedContest: TContestHandle;
+   savedSilent: boolean;
+   savedLogName: string;
+   scratchLog: string;
+   fileName: string;
+   lines: TStringList;
+   report: string;
+   text: string;
+   refuse: integer;
+   rx: ContestExchange;
+   i: integer;
+begin
+   BeginTest('Test_RTCImportWithASerialZeroImportsNothing');
+   savedContest := Contest;
+   savedSilent := tSilentExport;
+   savedLogName := CharBufferText(TR4W_LOG_FILENAME);
+   fileName := ExtractFilePath(ParamStr(0)) + 'rtc_serial_zero_import.adi';
+   (* THE LOG, IN THE SYSTEM'S TEMP DIRECTORY: if the refusal ever stops
+      working, the import goes on to write -- and must not write into the
+      tree (a mutation run left tr4w/test/unit/.db behind, 2026-10-23). *)
+   scratchLog := GetTempDir(False) + 'tr4w_rtc_serial_zero.trw';
+   lines := TStringList.Create;
+   try
+      Contest := ContestHandleOf(RTC);
+      ReleaseActiveContest;
+      SetCharBuffer(TR4W_LOG_FILENAME, scratchLog);
+      (* Headless: a refusal is a log line and a False, never a modal. *)
+      tSilentExport := True;
+
+      (* THE PRECONDITION, so a broken rule fails here rather than letting
+         the import go on to its write and rescore. *)
+      ClearContestExchange(rx);
+      CheckTrue(ParseADIFRecord(AdifRecord('DL2BBB', 'RTC', '2', '0'), rx), 'the 0 record parses');
+      if ContestLoggedQSORefusal(ContestIdentity(rx.ceContest), rx) = '' then
+         begin
+         CheckTrue(False, 'RTC does not refuse a received serial of 0 -- the import is not driven');
+         Exit;
+         end;
+      rx := Default(ContestExchange);
+      ClearContestExchange(rx);
+      CheckTrue(ParseADIFRecord(AdifRecord('DL4DDD', 'RTC', '0', '14'), rx), 'the sent-0 record parses');
+      if ContestLoggedQSORefusal(ContestIdentity(rx.ceContest), rx) = '' then
+         begin
+         CheckTrue(False, 'RTC does not refuse a sent serial of 0 -- the import is not driven');
+         Exit;
+         end;
+
+      lines.Add('TR4W unit test');
+      lines.Add('<EOH>');
+      lines.Add(AnsiString(AdifRecord('DL1AAA', 'RTC', '1', '11')));
+      lines.Add(AnsiString(AdifRecord('DL2BBB', 'RTC', '2', '0')));
+      lines.Add(AnsiString(AdifRecord('DL3CCC', 'RTC', '3', '13')));
+      lines.SaveToFile(AnsiString(fileName));
+
+      CheckFalse(ImportFromADIF(fileName, report), 'the import fails');
+      CheckTrue(Pos('NOTHING was imported', report) > 0, 'nothing was imported: ' + report);
+      CheckTrue(Pos('record 2 (DL2BBB', report) > 0, 'the second record is named: ' + report);
+      CheckTrue(Pos(TC_QSONUMBERZERONOTVALID, report) > 0, 'with the reason: ' + report);
+
+      (* A SENT serial of 0 is refused the same way. *)
+      lines.Clear;
+      lines.Add('<EOH>');
+      lines.Add(AnsiString(AdifRecord('DL4DDD', 'RTC', '0', '14')));
+      lines.SaveToFile(AnsiString(fileName));
+      CheckFalse(ImportFromADIF(fileName, report), 'a sent 0 fails the import too');
+      CheckTrue(Pos('record 1 (DL4DDD', report) > 0, 'and names it: ' + report);
+
+      (* THE CLEAN RECORD AND ANOTHER CONTEST'S 0 ARE NOT REFUSED. The write
+         path itself (the store's one transaction, the rescore) is not driven
+         here -- the corpus round trip drives it; this asks exactly what the
+         loop asks of each record. *)
+      ClearContestExchange(rx);
+      CheckTrue(ParseADIFRecord(AdifRecord('DL1AAA', 'RTC', '1', '11'), rx), 'a clean RTC record');
+      CheckEquals('', ContestLoggedQSORefusal(ContestIdentity(rx.ceContest), rx),
+                  'is not refused');
+      Contest := ContestHandleOf(CQWWCW);
+      ReleaseActiveContest;
+      ClearContestExchange(rx);
+      CheckTrue(ParseADIFRecord(AdifRecord('DL1AAA', 'CQ-WW-CW', '0', '0'), rx),
+                'a CQ WW record with serials of 0');
+      CheckEquals(0, rx.NumberReceived, 'carries its 0');
+      CheckEquals('', ContestLoggedQSORefusal(ContestIdentity(rx.ceContest), rx),
+                  'and is not refused');
+
+      (* AND THE ORDER, READ: the refusal is asked before a record joins the
+         batch, and the abort comes before the batch's one write. *)
+      text := SourceText('MainUnit.pas');
+      refuse := Pos('refusal := ContestLoggedQSORefusal(ContestIdentity(TempRXData.ceContest),', text);
+      CheckTrue(refuse > 0, 'the import asks the record''s contest');
+      CheckTrue(refuse < PosEx('Pending.Add(TempRXData, recordMyFacts, recordSentExchange);', text, refuse),
+                'before the record joins the batch');
+      CheckTrue(PosEx('if refusedRecord <> '''' then', text, refuse) <
+                PosEx('if not LogStoreAppendQSOs(Pending, FailedIndex, Failure) then', text, refuse),
+                'and the abort comes before the one write');
+   finally
+      lines.Free;
+      if FileExists(fileName) then
+         begin
+         DeleteFile(fileName);
+         end;
+      LogStoreClose;
+      for i := Low(SCRATCH_SUFFIXES) to High(SCRATCH_SUFFIXES) do
+         begin
+         if FileExists(LogDatabaseFileName(scratchLog) + SCRATCH_SUFFIXES[i]) then
+            begin
+            DeleteFile(LogDatabaseFileName(scratchLog) + SCRATCH_SUFFIXES[i]);
+            end;
+         end;
+      SetCharBuffer(TR4W_LOG_FILENAME, savedLogName);
+      tSilentExport := savedSilent;
+      Contest := savedContest;
+      ReleaseActiveContest;
+   end;
+end;
+
 procedure TContestRTCTests.RunAllTests;
 begin
    Test_RTCStatesItsBandsModesAndFlags;
    Test_RTCDupesPerBandAndModeMultipliersPerBand;
+   Test_RTCRefusesARecordWithSerialZero;
+   Test_EditQSOSaveAsksTheRefusalFirst;
+   Test_RTCImportWithASerialZeroImportsNothing;
 end;
 
 end.

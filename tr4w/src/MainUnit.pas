@@ -7996,8 +7996,9 @@ begin
              outer test it adds only the X-QSO exclusion, as the line it
              replaced did. *)
           (* OF THE RECORD'S OWN CONTEST (Q98 S1) -- an off-band or off-mode
-             QSO is an X-QSO by its rule and counts nowhere. *)
-          if QSOCountsTowardTotals(ContestIdentity(TempRXData.ceContest), TempRXData) then
+             QSO is an X-QSO by its rule and counts nowhere. LoggedQSOContest,
+             not ContestIdentity: a host-area X-QSO (Q119) needs the entrant. *)
+          if QSOCountsTowardTotals(LoggedQSOContest(TempRXData.ceContest), TempRXData) then
              begin
              TempMode := TempRXData.Mode;
              if TempMode = FM then
@@ -10255,9 +10256,11 @@ var
   FailedIndex: integer;
   Failure: string;
   failedRec: ContestExchange;
-  failedCall: string;
-  failedWhen: string;
-  failedBandMode: string;
+  (* THE FIRST RECORD THE CONTEST REFUSES (LoggedQSORefusal), described for
+    the report; '' while none has. *)
+  refusedRecord: string;
+  (* The contest's reason for refusing the record in hand; '' accepts. *)
+  refusal: string;
   // County-line detection during import.  Within a single ImportFromADIF
   // pass we remember the first QTHString seen for each (call|band|mode)
   // tuple.  When a later record reuses the same (call|band|mode) with a
@@ -10369,6 +10372,41 @@ var
     SetTextInQuickCommandWindow('ADIF import FAILED -- nothing was imported');
     showwarning(aReport);
   end;
+
+  (* ONE RECORD, AS THE FILE HAS IT: "call, band mode, date time" -- what both
+    failure reports name (NY4I, 2026-10-14: "notify the user with the
+    callsign, band, mode and timestamp"). Lifted from the write-failure
+    branch when the contest's refusal became its second reader. *)
+  function ImportedRecordText(const aRec: ContestExchange): string;
+  var
+    recCall: string;
+    recWhen: string;
+  begin
+    (* NAMED AS THE FILE HAS IT. The realistic failure is a record with
+      no CALL -- callsign is NOT NULL -- and such a record often has no
+      date either, so "( , 00-00-00 0000z)" would describe nothing. *)
+    recCall := string(aRec.Callsign);
+    if recCall = '' then
+       begin
+       recCall := 'no CALL';
+       end;
+    if (aRec.tSysTime.qtYear = 0) and
+       (aRec.tSysTime.qtMonth = 0) and
+       (aRec.tSysTime.qtDay = 0) then
+       begin
+       recWhen := 'no QSO_DATE';
+       end
+    else
+       begin
+       recWhen := tGetDateFormat(aRec.tSysTime) +
+                  SysUtils.Format(' %.2d%.2dz',
+                     [aRec.tSysTime.qtHour, aRec.tSysTime.qtMinute]);
+       end;
+    (* The spellings the log window and the edit dialog use. *)
+    Result := recCall + ', ' +
+              Trim(BandStringsArrayWithOutSpaces[aRec.Band]) + ' ' +
+              ModeStringArray[aRec.Mode] + ', ' + recWhen;
+  end;
 begin
   { This is a total rewrite of the ADIF import processing. - NY4I 2020 Jul 2
   }
@@ -10471,9 +10509,11 @@ begin
   Reset(adif);
   Pending := TLogQsoAppends.Create;
   seenCallBandMode := TStringList.Create;
+  refusedRecord := '';
   try
     seenCallBandMode.CaseSensitive := False;
-    while not Eof(adif) do
+    (* STOPS AT THE FIRST RECORD THE CONTEST REFUSES -- see below. *)
+    while (not Eof(adif)) and (refusedRecord = '') do
        begin
        ReadLn(adif, sBuffer);
        if not FoundEOH then
@@ -10494,6 +10534,23 @@ begin
              // this wrapper the post-ParseADIFRecord lookup overwrites the
              // QTH set inside ParseADIFRecord and we end up with DX=G.
              ctyLocateCallStripRover(TempRXData.Callsign, TempRXData.QTH);
+
+             (* A RECORD THE CONTEST REFUSES IS AN IMPORT ERROR, AND THE WHOLE
+               IMPORT STOPS WITH NOTHING WRITTEN -- NY4I's Q112 ruling
+               (2026-10-18: "that is an import error to stop the import (all
+               or nothing)"), built 2026-10-23 for TContestBase.
+               LoggedQSORefusal (RTC's serial 0). Nothing has been written
+               yet -- the write is one transaction after the loop -- so
+               stopping here leaves the log exactly as it was. Asked of the
+               record's own contest, station-less: the rule is the record's. *)
+             refusal := ContestLoggedQSORefusal(ContestIdentity(TempRXData.ceContest),
+                                                TempRXData);
+             if refusal <> '' then
+                begin
+                refusedRecord := SysUtils.Format('record %d (%s) is refused by the contest: %s',
+                   [QSOCounter + 1, ImportedRecordText(TempRXData), refusal]);
+                Continue;
+                end;
 
              // County-line follow-up detection.  If the imported record
              // reuses (call|band|mode) with a different QTHString AND the
@@ -10563,6 +10620,17 @@ begin
     if binaryLogOpen then
        begin
        CloseLogFile;
+       end;
+
+    (* THE CONTEST REFUSED A RECORD: NOTHING IS IMPORTED (Q112's ruling, see
+      the loop). Reported before the station question is asked -- there is
+      nothing to ask about. *)
+    if refusedRecord <> '' then
+       begin
+       ReportNothingImported(refusedRecord);
+       Result := False;
+       ClearThread(ImportFromADIFThreadID);
+       Exit;
        end;
 
     (* THE FILE NAMES OUR STATION: REPORT IT, AND ASK WHEN IT IS NOT THIS
@@ -10639,36 +10707,10 @@ begin
        if (FailedIndex >= 0) and (FailedIndex < Pending.Count) then
           begin
           failedRec := Pending.Row(FailedIndex);
-          (* NAMED AS THE FILE HAS IT. The realistic failure is a record with
-            no CALL -- callsign is NOT NULL -- and such a record often has no
-            date either, so "( , 00-00-00 0000z)" would describe nothing. *)
-          failedCall := string(failedRec.Callsign);
-          if failedCall = '' then
-             begin
-             failedCall := 'no CALL';
-             end;
-          if (failedRec.tSysTime.qtYear = 0) and
-             (failedRec.tSysTime.qtMonth = 0) and
-             (failedRec.tSysTime.qtDay = 0) then
-             begin
-             failedWhen := 'no QSO_DATE';
-             end
-          else
-             begin
-             failedWhen := tGetDateFormat(failedRec.tSysTime) +
-                           SysUtils.Format(' %.2d%.2dz',
-                              [failedRec.tSysTime.qtHour,
-                               failedRec.tSysTime.qtMinute]);
-             end;
-          (* THE BAND AND MODE TOO -- NY4I, 2026-10-14: "notify the user with
-            the callsign, band, mode and timestamp". The spellings the log
-            window and the edit dialog use. *)
-          failedBandMode := Trim(BandStringsArrayWithOutSpaces[failedRec.Band]) + ' ' +
-                            ModeStringArray[failedRec.Mode];
           ReportNothingImported(SysUtils.Format(
-             'record %d of %d (%s, %s, %s) could not be written to the log: %s',
-             [FailedIndex + 1, Pending.Count, failedCall, failedBandMode,
-              failedWhen, Failure]));
+             'record %d of %d (%s) could not be written to the log: %s',
+             [FailedIndex + 1, Pending.Count, ImportedRecordText(failedRec),
+              Failure]));
           end
        else
           begin
