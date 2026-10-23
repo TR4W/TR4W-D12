@@ -1,0 +1,13 @@
+Entries for the Georgia QSO Party used by in-state stations
+50 states including Georgia + DC + 13 Canadian provinces and territories (51 + 13).
+The 159 Georgia counties count as Ga (georgia_cty.dom maps each county to Ga).
+DX stations count for QSO points only: there is no DX multiplier.
+The county file comes FIRST, so the S48.DOM line for Ga is read after it and the
+multiplier keeps the name Georgia rather than the last county name.
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
+https://gaqsoparty.com
+
+INCLUDE FILE georgia_cty.dom
+INCLUDE FILE S50.DOM
+INCLUDE FILE DC.DOM
+INCLUDE FILE P13.DOM

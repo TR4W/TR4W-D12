@@ -415,6 +415,7 @@ uses
    uContestHADX in '..\..\src\contestFactory\uContestHADX.pas',
    uContestYUDX in '..\..\src\contestFactory\uContestYUDX.pas',
    uContestURCDXRTTY in '..\..\src\contestFactory\uContestURCDXRTTY.pas',
+   uContestGeorgiaQP in '..\..\src\contestFactory\uContestGeorgiaQP.pas',
    uContestHelvetia in '..\..\src\contestFactory\uContestHelvetia.pas',
    uContestJIDXCW in '..\..\src\contestFactory\uContestJIDXCW.pas',
    uContestJIDXSSB in '..\..\src\contestFactory\uContestJIDXSSB.pas',
@@ -712,6 +713,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* The URC DX RTTY Contest, the first real contest registered by its id
       (Q138, 2026-10-22). *)
    uTestContestURCDXRTTY in 'uTestContestURCDXRTTY.pas',
+   (* The Georgia QSO Party, a new contest registered by its id
+      (2026-10-23). *)
+   uTestContestGeorgiaQP in 'uTestContestGeorgiaQP.pas',
    uTestContestNames    in 'uTestContestNames.pas',
    (* Every QSO party's stated bands (NY4I, 2026-10-16). *)
    uTestQSOPartyBands   in 'uTestQSOPartyBands.pas',
@@ -838,6 +842,7 @@ begin
    RegisterSuite(TContestDelawareQPTests.Create('ContestDelawareQP'));
    RegisterSuite(TContestNebraskaQPTests.Create('ContestNebraskaQP'));
    RegisterSuite(TContestURCDXRTTYTests.Create('ContestURCDXRTTY'));
+   RegisterSuite(TContestGeorgiaQPTests.Create('ContestGeorgiaQP'));
    RegisterSuite(TContestNamesTests.Create('ContestNames'));
    RegisterSuite(TQSOPartyBandsTests.Create('QSOPartyBands'));
    RegisterSuite(TContestIN7QPNETests.Create('ContestIN7QPNE'));

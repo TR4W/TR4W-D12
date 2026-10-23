@@ -763,17 +763,28 @@ end;
    itself when ADIF allows that code for the station's country; DX, or a code
    ADIF does not allow for that country, gives none. The key is the domestic
    table's (DomesticQTH) when there is one, else the logged QTH. *)
-function PartyQSO(aContest: ContestType;
-                  const aQTH, aDomesticKey, aCountryID: string): ContestExchange;
+function PartyQSO(aContest: TContestHandle;
+                  const aQTH, aDomesticKey, aCountryID: string): ContestExchange; overload;
 begin
    FillChar(Result, SizeOf(Result), 0);
-   Result.ceContest := ContestHandleOf(aContest);
+   Result.ceContest := aContest;
    Result.Callsign := 'K1ABC';
    Result.Band := Band20;
    Result.Mode := CW;
    Result.QTHString := ShortString(aQTH);
    Result.DomesticQTH := ShortString(aDomesticKey);
    Result.QTH.CountryID := ShortString(aCountryID);
+end;
+
+(* A LEGACY CONTEST BY ITS MEMBER -- the pins below name legacy contests. A
+   registry walk passes the HANDLE (HandleOf): a contest registered by its id
+   has no member, and ContestOf answers DUMMYCONTEST for it, so a QSO built
+   from the member would ask "no contest" and pass or fail for the wrong
+   contest (found adding the Georgia QSO Party, 2026-10-23). *)
+function PartyQSO(aContest: ContestType;
+                  const aQTH, aDomesticKey, aCountryID: string): ContestExchange; overload;
+begin
+   Result := PartyQSO(ContestHandleOf(aContest), aQTH, aDomesticKey, aCountryID);
 end;
 
 procedure TContestExportTests.Test_ADIFStateIsTheWorkedStations;
@@ -899,14 +910,16 @@ begin
       isParty := identity.SplitsRoverCallOnExport;
       CheckTrue(isParty or not isStateParty,
                 ContestWho(identity) + ': a state party is a QSO party');
+      (* THE HANDLE, NEVER c, for the QSO: c is DUMMYCONTEST for a contest
+         registered by its id (see PartyQSO). *)
       if isParty then
          begin
-         CheckEquals('CT', GetADIFStateForQSO(PartyQSO(c, 'CT', 'Ct', 'K')),
+         CheckEquals('CT', GetADIFStateForQSO(PartyQSO(HandleOf(identity), 'CT', 'Ct', 'K')),
                      ContestWho(identity) + ': a Connecticut station is CT');
          end
       else
          begin
-         CheckEquals('', GetADIFStateForQSO(PartyQSO(c, 'CT', 'Ct', 'K')),
+         CheckEquals('', GetADIFStateForQSO(PartyQSO(HandleOf(identity), 'CT', 'Ct', 'K')),
                      ContestWho(identity) + ': not a QSO party, no STATE');
          end;
 
@@ -918,7 +931,7 @@ begin
          CheckEquals(2, Length(identity.HostState),
                      ContestWho(identity) + ': the host is a two-letter code');
          CheckEquals(identity.HostState,
-                     GetADIFStateForQSO(PartyQSO(c, 'XYZ', 'Xyz', 'K')),
+                     GetADIFStateForQSO(PartyQSO(HandleOf(identity), 'XYZ', 'Xyz', 'K')),
                      ContestWho(identity) + ': a host county is the host''s state');
          end;
       end;
