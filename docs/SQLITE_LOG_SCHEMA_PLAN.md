@@ -2589,6 +2589,60 @@ Eight mutations were run and each failed a test:
 **The consequence, as for schema 3:** once a schema-4 build has opened a log,
 no earlier build can open it.
 
+#### 12i-bis. The Codex review of Q113: R2-R5 and follow-ups A, B (2026-10-23)
+
+`docs/CONTEST_FACTORY_CODEX_REVIEW_2026-10-23.md` found four gaps; all four were
+accepted and fixed in one change.
+
+**R2 -- an accepted edit is committed at once, as D7 wrote its `.cfg` on OK.**
+- `uLogStore.LogStoreRecordContestStatement` (Q61's "record one statement now
+  and commit it") is extended rather than copied. When the command names a
+  function-key memory (`LogCW.ParseMessageMemoryCommand`, the parse half lifted
+  out of `TryApplyMessageCommand`), it writes that key's row through
+  `CaptureMessageMemory`: text, caption and `edited`, one row, one commit.
+  `CaptureMessageMemory` is the single-row rule; `CaptureMessageMemories` loops
+  over it.
+- The dialog's OK is `uEditMessageForm.ApplyAcceptedMessageEdit`. It applies
+  the text and the caption, and then records the key ONCE, so the text is never
+  committed without its caption. `TryApplyMessageCommand` writes nothing.
+- `LogCW.MemoryProgram`'s line-input CQ and EX edits record too
+  (`MessageMemoryCommand` names the key). **`MemoryProgram` has no caller in
+  this tree, and it had none in D7 either**, so that wiring cannot be exercised.
+- Default writers and the open-time replay never record, so startup is not a
+  write per memory. The close capture stays and acts as reconciliation.
+- **A disabled store records nothing and says so in the log.** The edit is in
+  force for that session only. A batch run (`tSilentExport`) records nothing.
+- **Follow-up A:** the result is True only AFTER the commit, and False on the
+  exception path. Before this fix a failed commit answered True. The dialog
+  does not repeat the result to the operator: a failed commit has already
+  shown `Disable`'s one modal.
+
+**R3 -- the restore's ORDER is tested through production code.**
+`LogStoreApplyContestConfig` is now `LogStoreApplyContestConfigWith(@SetUpContestByCommand)`.
+A test hands in a set-up that writes the contest's default memories and does
+nothing else. **It does not run the real `FoundContest` or the GUI startup.**
+**The legacy `.cfg` + database ordering is NOT covered** and stays open.
+
+**R4 -- the historical fixtures are genuine.** The shared
+`uTestLatestContest.DowngradeTestLog(file, version, firstV3Dropped)` removes
+every later addition. The old "schema-2" fixture had kept `message.edited`, and
+the old "schema-1" fixture had kept every v3 and v4 column.
+
+**R5 -- one migration, one commit.** `user_version` is stamped inside the ALTERs'
+transaction (it is transactional; `journal_mode` is not). **Follow-up B:**
+`TestAMigrationIsOneCommit` counts the commit frames in the `-wal` after a
+2 -> 4 open and expects 1. The old protocol writes 2.
+
+**Two test seams in `uLogStore`, used by the test program and by nothing else:**
+- `LogStoreFailureNotice` takes `Disable`'s modal, so a test can see the notice
+  without hanging.
+- `LogStoreForgetFailureForTests` clears `GDisabled`.
+
+**The store's fault-injection tests are writable now:**
+`Test_R2_ACommitThatFailsIsNotReportedSaved` makes the COMMIT itself fail. A
+trigger plants a row that breaks a DEFERRED foreign key, and SQLite checks that
+only at commit.
+
 ---
 
 ## 13. What is built so far

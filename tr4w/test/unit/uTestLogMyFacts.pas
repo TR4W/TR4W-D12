@@ -61,6 +61,7 @@ type
       procedure TestASchema2LogMigratesAndKeepsItsRows;
       procedure TestAMigrationLeavesAColumnAlreadyThere;
       procedure TestOpeningAnOlderLogStampsTheNewSchema;
+      procedure TestASchema2LogNeedsBothMigrationsAtOnce;
       (* the repository *)
       procedure TestTheFactsAreCapturedOnInsert;
       procedure TestTheNextSaveIsNotCaptured;
@@ -106,7 +107,9 @@ uses
    uContestBase,
    SysUtils, sqldb, utils_text, uSettingsModel,
    uLogDatabase, uLogSchema, uLogRepository, uLogStore,
-   uLogNote;   (* SetNoteText -- a note's text *)
+   uLogNote,   (* SetNoteText -- a note's text *)
+   (* DowngradeTestLog and TestLogHasColumn -- the shared fixture helpers *)
+   uTestLatestContest;
 
 const
    (* 101 records -- the store suite's log. *)
@@ -231,31 +234,18 @@ begin
    end;
 end;
 
-(* A REAL DOWNGRADE, as TestAnOlderLogGainsTheSessionTable makes one: a log
-  created at the current schema with the v3 columns DROPPED and user_version
-  set back -- so the file is what a schema-2 build wrote, not a hand-built
-  imitation of it. ALTER TABLE DROP COLUMN needs SQLite 3.35; the shipped
-  library is 3.53. *)
+(* A REAL DOWNGRADE: a log created at the current schema, every later
+  addition DROPPED and user_version set back -- so the file is what a
+  schema-2 build wrote, not a hand-built imitation of it.
+
+  IT USED TO DROP ONLY THE v3 COLUMNS (R4, 2026-10-23), and left schema 4's
+  message.edited in place: every "schema-2" log here was a 2 + 4 hybrid, so
+  nothing tested a 2 -> 4 open that has to make both changes at once. The
+  shared DowngradeTestLog removes every later addition. *)
 procedure TLogMyFactsTests.DowngradeToSchema2(const aFileName: string;
                                               aFirstDropped: integer);
-var
-   db: TLogDatabase;
-   i: integer;
 begin
-   db := TLogDatabase.Create;
-   try
-      db.Open(aFileName);
-      for i := aFirstDropped to High(LOG_V3_QSO_COLUMNS) do
-         begin
-         db.Connection.ExecuteDirect(UTF8Encode('ALTER TABLE qso DROP COLUMN ' +
-                                                string(LOG_V3_QSO_COLUMNS[i].Name)));
-         end;
-      db.Transaction.Commit;
-      db.Connection.ExecuteDirect('PRAGMA user_version = 2');
-      db.Transaction.Commit;
-   finally
-      db.Free;
-   end;
+   DowngradeTestLog(aFileName, 2, aFirstDropped);
 end;
 
 (* -------------------------------------------------------------- the leaf *)
@@ -497,6 +487,98 @@ begin
    finally
       db.Free;
    end;
+   Scrub(fn);
+end;
+
+(* R4: A GENUINE SCHEMA-2 LOG NEEDS BOTH LATER MIGRATIONS IN ONE OPEN -- the
+  v3 my_* columns AND v4's message.edited -- and keeps the rows it had in
+  both tables. Every earlier "schema-2" fixture still carried
+  message.edited, so this open was never tested. A second open is a no-op. *)
+procedure TLogMyFactsTests.TestASchema2LogNeedsBothMigrationsAtOnce;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   qso, back: ContestExchange;
+   fn: string;
+   rowId: Int64;
+   q: TSQLQuery;
+   columnsAfterFirst: string;
+begin
+   BeginTest('a schema-2 log gains the v3 AND v4 columns in one open, keeping its rows');
+   fn := TempLogName('migrate2to4.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         MakeQSO(qso, 2);
+         rowId := repo.SaveQSO(qso);
+         repo.SaveMessage('CQ', 'CW', 'F3', 'WRITTEN BY SCHEMA 2', 'CAP2');
+         repo.Commit;
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   DowngradeTestLog(fn, 2, Low(LOG_V3_QSO_COLUMNS));
+   db := TLogDatabase.Create;
+   try
+      db.OpenReadOnly(fn);
+      CheckEquals(2, db.SchemaVersion, 'the fixture is stamped 2');
+      CheckFalse(TestLogHasColumn(db, 'qso', 'my_source'), 'with no v3 column');
+      CheckFalse(TestLogHasColumn(db, 'message', 'edited'),
+                 'and no v4 column -- a genuine schema-2 file');
+   finally
+      db.Free;
+   end;
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      CheckEquals(LOG_SCHEMA_VERSION, db.SchemaVersion, 'one open migrates 2 to current');
+      CheckTrue(TestLogHasColumn(db, 'qso', 'my_source'), 'the v3 columns are added');
+      CheckTrue(TestLogHasColumn(db, 'message', 'edited'), 'and the v4 column');
+      repo := TLogRepository.Create(db);
+      try
+         CheckTrue(repo.LoadQSO(rowId, back), 'the QSO row survived');
+         CheckEquals(string(qso.Callsign), string(back.Callsign), 'intact');
+      finally
+         repo.Free;
+      end;
+      q := TSQLQuery.Create(nil);
+      try
+         q.DataBase := db.Connection;
+         q.UsePrimaryKeyAsKey := False;
+         q.SQL.Text := 'SELECT text, caption, edited FROM message ' +
+                       'WHERE kind = ''CQ'' AND mode = ''CW'' AND key_id = ''F3''';
+         q.Open;
+         CheckFalse(q.EOF, 'the message row survived');
+         CheckEquals('WRITTEN BY SCHEMA 2', q.Fields[0].AsString, 'its text');
+         CheckEquals('CAP2', q.Fields[1].AsString, 'its caption');
+         CheckEquals(0, q.Fields[2].AsInteger,
+                     'and it is not an edit: an older build never recorded one');
+         q.Close;
+      finally
+         q.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   columnsAfterFirst := QsoColumnNames(fn);
+
+   (* IDEMPOTENT: a second open finds nothing to do and fails on nothing. *)
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      CheckEquals(LOG_SCHEMA_VERSION, db.SchemaVersion, 'a second open keeps the version');
+   finally
+      db.Free;
+   end;
+   CheckEquals(columnsAfterFirst, QsoColumnNames(fn), 'and adds no column');
    Scrub(fn);
 end;
 
@@ -1603,6 +1685,7 @@ begin
    TestASchema2LogMigratesAndKeepsItsRows;
    TestAMigrationLeavesAColumnAlreadyThere;
    TestOpeningAnOlderLogStampsTheNewSchema;
+   TestASchema2LogNeedsBothMigrationsAtOnce;
 
    TestTheFactsAreCapturedOnInsert;
    TestTheNextSaveIsNotCaptured;

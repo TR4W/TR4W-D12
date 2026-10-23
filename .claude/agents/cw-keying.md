@@ -128,6 +128,15 @@ bank and the captions, where Q9 covered only CQ.
   records that key as edited, so the default is pinned at the next open.
 - **`ForgetMemoryStatementsOfOtherContests`** (renamed from
   `...CQMemory...`) clears both banks when a different contest is set up.
+- **The latch applies; it does not save.** `TryApplyMessageCommand` writes
+  nothing to the log. The dialog's OK
+  (`uEditMessageForm.ApplyAcceptedMessageEdit`) records the key once, after
+  the text and the caption are both applied, and so do `MemoryProgram`'s
+  line-input edits (R2, 2026-10-23). **`MemoryProgram` has no caller, and had
+  none in D7.** `ParseMessageMemoryCommand` and `MessageMemoryCommand` are the
+  name's parse and its inverse. Build a key with `AnsiChar(n)` or
+  `AnsiChar(Ord(aChar))`, never by an implicit `Char` -> `AnsiChar`
+  conversion: that one goes through the code page and loses #128 and up.
 - **The log restores the latched memories at open**
   (`uLogStore.RestoreEditedMessageMemories`, after the contest's set-up).
   `cfgdef.UpdateSAndPF1Caption` runs after that restore, which is why it now

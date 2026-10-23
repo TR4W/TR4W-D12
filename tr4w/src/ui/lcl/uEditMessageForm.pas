@@ -57,10 +57,10 @@ unit uEditMessageForm;
   reverse copy loop before calling SetWindowTextA. It is OnKeyDown and SelStart
   here.
 
-  THE .cfg WRITE STAYS A .cfg WRITE. WritePrivateProfileString to
-  TR4W_CFG_FILENAME is the CONTEST configuration file, not tr4w.ini, so the
-  "nothing uses the ini" rule does not apply to it -- see c823c055, which
-  classified every remaining call site.
+  ~~THE .cfg WRITE STAYS A .cfg WRITE~~ -- there is no .cfg write any more:
+  TR4W_CFG_FILENAME names the contest's SQLite file, and an accepted edit is
+  committed to its message table on OK (ApplyAcceptedMessageEdit, R2,
+  2026-10-23).
 }
 
 interface
@@ -107,6 +107,24 @@ type
 // that the window opens.
 procedure ShowEditMessage(const aMessage: lParam);
 
+(* WHAT OK DOES, WITHOUT THE FORM -- R2, 2026-10-23. aKeyName is the Alt-P
+  row's name ('CQ CW MEMORY F3', or a message template such as 'CQ
+  EXCHANGE'); aText is the message with its escape characters already
+  resolved. A function-key memory takes aCaption as well when aHasCaption
+  (a template has no button, so no caption).
+
+  Both fields are APPLIED first, and then the edit is RECORDED in the
+  contest log and committed, once (uLogStore.LogStoreRecordContestStatement)
+  -- so an accepted edit survives a crash, as D7's .cfg write did, and the
+  text and caption are one row. Returns what the record returned: False when
+  nothing was committed (no log being written, a template the operator has
+  not stated, a batch run). Never raises. A plain procedure, so the test
+  program drives the production path without a form. *)
+function ApplyAcceptedMessageEdit(const aKeyName: AnsiString;
+                                  const aText: ShortString;
+                                  aHasCaption: boolean;
+                                  const aCaption: ShortString): boolean;
+
 implementation
 
 {$R *.lfm}
@@ -120,6 +138,7 @@ uses
   TF,             // Format, YesOrNo
   uCFG,           // CheckCommand -- the named message templates
   LogCW,          // TryApplyMessageCommand -- the function-key memories
+  uLogStore,      // LogStoreRecordContestStatement -- an accepted edit, committed
   Tree,           // GetRealPath
   utils_file,     // tOpenFileForWrite, sWriteFile, GetRealPath, waveheader
   uSettingsModel, // Settings.Dvk.Recorder, Settings.Dvk.Path
@@ -338,117 +357,141 @@ begin
    RunProgram(Settings.Dvk.Recorder, [path]);
 end;
 
+(* ONE FIELD OF AN ACCEPTED EDIT, APPLIED. Nothing is written here; see
+  ApplyAcceptedMessageEdit. *)
+procedure ApplyMessageField(const aKey: AnsiString; const aCheckValue: ShortString);
+var
+   k: ShortString;
+begin
+   // TWO SPELLINGS OF THE SAME KEY, DELIBERATELY, AND THIS IS WHERE IT BIT.
+   //
+   // WritePrivateProfileStringA wanted a NULL-TERMINATED PAnsiChar (that write
+   // is gone -- see below).  CheckCommand takes the ShortString itself: until
+   // 2026-09-15 it was handed @k, the address of the length byte, typed as
+   // PAnsiChar -- so passing it the other layout was silent corruption. It
+   // is a type error now.
+   //
+   // NY4I found exactly that: `id := ShortString(caption)` sets the length
+   // byte and leaves NO terminator, so @id[1] ran past the text into stale
+   // stack bytes and the .cfg got
+   //     CQ CW MEMORY F5<A4><AE>6w=<01>
+   // -- a brand new key rather than an edit of the real one, which is why the
+   // memory "showed up differently". Same defect class as the radio-name
+   // overrun (56a8ae97); the Win32 original avoided it only by accident,
+   // because GetDlgItemTextA null-terminates what it writes.
+   k := ShortString(aKey);
+
+   (* APPLIED HERE, PERSISTED BY THE LOG.
+
+     An INI write to TR4W_CFG_FILENAME stood here, and that name is a .db
+     now -- so it asked Windows to parse a SQLite database as an INI and
+     rewrite it. Slow enough to freeze the program and no business being
+     attempted at all.
+
+     WHERE AN EDIT IS KEPT NOW, AND THIS COMMENT ONCE GOT IT WRONG. It said
+     the log's `message` table was "where they come back from". Nothing read
+     that table back (Q113, found 2026-10-17), so an edited memory was lost
+     at every restart -- which D7 never did: its dialog wrote the edit to the
+     contest .cfg's [Messages] section and the next start applied it.
+
+     FIXED 2026-10-23 (Q113), IN THE LOG. TryApplyMessageCommand below
+     applies the edit and LATCHES it as the operator's statement (LogCW,
+     the Q9 latch, both banks and the caption). ApplyAcceptedMessageEdit
+     then writes that key's row -- text, caption, edited -- to the log's
+     `message` table and COMMITS it, the moment OK is pressed, as D7 wrote
+     its .cfg (R2; it had waited for the capture at close, so a crash lost
+     it). At the next open uLogStore.RestoreEditedMessageMemories puts back
+     ONLY the edited rows, after the contest has built its defaults. An
+     unedited memory is not restored -- the contest builds it afresh, from
+     today's MY STATE.
+
+     So the memory is applied now and kept by the log, and the file that
+     used to hold it is not a file this program writes. *)
+   (* TRUSTED, so aApplyJSONOwned IS TRUE -- and it has to be as of
+     2026-09-12, when the eight "other message" templates left CFGCA
+     for Settings.Messages.
+
+     CheckCommand's migrated arm ACCEPTS AND IGNORES a value from an
+     untrusted caller, which is the guard that stops a stale tr4w.ini
+     overriding settings/tr4w.json. This dialog is not a stale file --
+     it is the operator typing the message -- so without the flag an
+     Alt-P edit of the CQ exchange would be silently discarded, exactly
+     as Preferences would be without ApplyAndStoreCommand's own True.
+
+     IT ALSO FIXES THE FIVE THAT WERE ALREADY BROKEN: QUICK QSL CW
+     MESSAGE and its four siblings were csJSON rows, and csJSON has
+     carried the same guard for longer -- so editing a quick QSL here
+     has been doing nothing at all. *)
+   (* THE FUNCTION-KEY MEMORIES GO STRAIGHT TO THE PARSER -- 2026-09-14.
+
+     This dialog edits two different things and the key tells them apart: a
+     MEMORY ('CQ CW MEMORY CONTROLF5') and a named message template ('CQ
+     EXCHANGE', which is a property on Settings.Messages).
+
+     The memory used to reach LogCW by being dressed up as a config line and
+     pushed through CheckCommand's pattern arm -- an operator's keystroke
+     taking the shape of a file. LogCW.TryApplyMessageCommand IS that parser,
+     moved to sit beside the setters it calls, so the dialog asks it
+     directly and the arm could be deleted.
+
+     IT ANSWERS FALSE for a name that is not a memory, and the template path
+     below is unchanged: CheckCommand resolves it against the settings
+     object, with aApplyJSONOwned TRUE because this is the operator typing,
+     not a stale file. *)
+   if not TryApplyMessageCommand(k, aCheckValue) then
+      begin
+      CheckCommand(k, aCheckValue, True);
+      end;
+end;
+
+function ApplyAcceptedMessageEdit(const aKeyName: AnsiString;
+                                  const aText: ShortString;
+                                  aHasCaption: boolean;
+                                  const aCaption: ShortString): boolean;
+begin
+   ApplyMessageField(aKeyName, aText);
+
+   (* AN EMPTY CAPTION IS PASSED ON AS AN EMPTY VALUE. A nil stood here once,
+     and told the INI write to DELETE the key rather than write a blank one.
+     That write is gone. *)
+   if aHasCaption then
+      begin
+      ApplyMessageField(aKeyName + AnsiString(' CAPTION'), aCaption);
+      end;
+
+   (* THE USER-ACTION BOUNDARY: both fields are in force, so the key is
+     recorded once -- one row, one commit. NOT in ApplyMessageField and NOT
+     in TryApplyMessageCommand, which apply one field each: recording there
+     would commit the text without its caption. A template ('CQ EXCHANGE')
+     goes down the same call and is recorded by the contest-statement rule,
+     as the close capture would record it. *)
+   Result := LogStoreRecordContestStatement(string(aKeyName));
+end;
+
 procedure TfrmEditMessage.SaveToConfig;
 var
-  idShort, cmdShort: ShortString;
-  idText, valueText: AnsiString;
-
-  procedure WriteKey(const aKey: AnsiString; const aCheckValue: ShortString);
-  var
-     k: ShortString;
-  begin
-     // TWO SPELLINGS OF THE SAME KEY, DELIBERATELY, AND THIS IS WHERE IT BIT.
-     //
-     // WritePrivateProfileStringA wanted a NULL-TERMINATED PAnsiChar (that write
-     // is gone -- see below).  CheckCommand takes the ShortString itself: until
-     // 2026-09-15 it was handed @k, the address of the length byte, typed as
-     // PAnsiChar -- so passing it the other layout was silent corruption. It
-     // is a type error now.
-     //
-     // NY4I found exactly that: `id := ShortString(caption)` sets the length
-     // byte and leaves NO terminator, so @id[1] ran past the text into stale
-     // stack bytes and the .cfg got
-     //     CQ CW MEMORY F5<A4><AE>6w=<01>
-     // -- a brand new key rather than an edit of the real one, which is why the
-     // memory "showed up differently". Same defect class as the radio-name
-     // overrun (56a8ae97); the Win32 original avoided it only by accident,
-     // because GetDlgItemTextA null-terminates what it writes.
-     k := ShortString(aKey);
-
-     (* APPLIED HERE, PERSISTED BY THE LOG.
-
-       An INI write to TR4W_CFG_FILENAME stood here, and that name is a .db
-       now -- so it asked Windows to parse a SQLite database as an INI and
-       rewrite it. Slow enough to freeze the program and no business being
-       attempted at all.
-
-       WHERE AN EDIT IS KEPT NOW, AND THIS COMMENT ONCE GOT IT WRONG. It said
-       the log's `message` table was "where they come back from". Nothing read
-       that table back (Q113, found 2026-10-17), so an edited memory was lost
-       at every restart -- which D7 never did: its dialog wrote the edit to the
-       contest .cfg's [Messages] section and the next start applied it.
-
-       FIXED 2026-10-23 (Q113), IN THE LOG. TryApplyMessageCommand below
-       applies the edit and LATCHES it as the operator's statement (LogCW,
-       the Q9 latch, both banks and the caption). At close
-       uLogStore.CaptureMessageMemories writes every memory to the `message`
-       table and flags the latched ones `edited`; at the next open
-       uLogStore.RestoreEditedMessageMemories puts back ONLY those, after the
-       contest has built its defaults. An unedited memory is not restored --
-       the contest builds it afresh, from today's MY STATE.
-
-       So the memory is applied now and kept by the log, and the file that
-       used to hold it is not a file this program writes. *)
-     (* TRUSTED, so aApplyJSONOwned IS TRUE -- and it has to be as of
-       2026-09-12, when the eight "other message" templates left CFGCA
-       for Settings.Messages.
-
-       CheckCommand's migrated arm ACCEPTS AND IGNORES a value from an
-       untrusted caller, which is the guard that stops a stale tr4w.ini
-       overriding settings/tr4w.json. This dialog is not a stale file --
-       it is the operator typing the message -- so without the flag an
-       Alt-P edit of the CQ exchange would be silently discarded, exactly
-       as Preferences would be without ApplyAndStoreCommand's own True.
-
-       IT ALSO FIXES THE FIVE THAT WERE ALREADY BROKEN: QUICK QSL CW
-       MESSAGE and its four siblings were csJSON rows, and csJSON has
-       carried the same guard for longer -- so editing a quick QSL here
-       has been doing nothing at all. *)
-     (* THE FUNCTION-KEY MEMORIES GO STRAIGHT TO THE PARSER -- 2026-09-14.
-
-       This dialog edits two different things and the key tells them apart: a
-       MEMORY ('CQ CW MEMORY CONTROLF5') and a named message template ('CQ
-       EXCHANGE', which is a property on Settings.Messages).
-
-       The memory used to reach LogCW by being dressed up as a config line and
-       pushed through CheckCommand's pattern arm -- an operator's keystroke
-       taking the shape of a file. LogCW.TryApplyMessageCommand IS that parser,
-       moved to sit beside the setters it calls, so the dialog asks it
-       directly and the arm could be deleted.
-
-       IT ANSWERS FALSE for a name that is not a memory, and the template path
-       below is unchanged: CheckCommand resolves it against the settings
-       object, with aApplyJSONOwned TRUE because this is the operator typing,
-       not a stale file. *)
-     if not TryApplyMessageCommand(k, aCheckValue) then
-        begin
-        CheckCommand(k, aCheckValue, True);
-        end;
-  end;
-
+  cmdShort: ShortString;
 begin
    (* NO FILE IS WRITTEN HERE -- neither the contest .cfg nor tr4w.ini. The
-     edit is applied, and the log keeps it (Q113; see WriteKey). *)
-   idText  := AnsiString(lblKeyName.Caption);
-
+     edit is applied, and committed to the contest log
+     (ApplyAcceptedMessageEdit). *)
    cmdShort := ShortString(edtMessage.Text);
    DeleteEscapeChars(cmdShort);
 
-   WriteKey(idText, cmdShort);
+   (* NO CAPTION FOR AN "OTHER" MESSAGE: it has no function-key button.
 
-   if MesWindow = OtherMsgWin then
-      begin
-      Exit;      // no function-key button, so no caption
-      end;
-
-   valueText := AnsiString(edtCaption.Text);
-
-   (* AN EMPTY CAPTION IS PASSED ON AS AN EMPTY VALUE. A nil stood here, and
-     told the INI write to DELETE the key rather than write a blank one. That
-     write is gone, and nothing after it read the nil -- WriteKey hands the
-     parser the ShortString, which was '' either way. *)
-   idShort := ShortString(valueText);
-   WriteKey(idText + ' CAPTION', idShort);
+     THE RESULT IS NOT SHOWN AGAIN HERE, AND THAT IS A CHOICE (2026-10-23).
+     False means the edit is in force for this session and NOT saved in the
+     log, which is not the same thing as saved -- and the store already says
+     so: a failed commit disables the store and puts "THE CONTEST LOG IS NOT
+     BEING SAVED" in front of the operator once (uLogStore.Disable), and an
+     already-disabled store logs that the edit holds for this session only. A
+     second dialog here would repeat the first on every later edit. False is
+     also the ordinary answer for a message template the operator has not
+     stated, which is no failure at all. *)
+   ApplyAcceptedMessageEdit(AnsiString(lblKeyName.Caption), cmdShort,
+                            MesWindow <> OtherMsgWin,
+                            ShortString(AnsiString(edtCaption.Text)));
 end;
 
 procedure TfrmEditMessage.btnOKClick(Sender: TObject);

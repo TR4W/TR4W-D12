@@ -150,3 +150,63 @@ the code before it was accepted.
 **Status at the time of writing:** R2-R5 (log-database) and R6 (file-formats
 + integrations) are being built; nothing beyond this document has landed yet.
 The commits that land them will cite this section and list their tests here.
+
+## Codex assessment of Claude's reply (2026-10-23)
+
+Reviewed the reply at HEAD `d9ffc3d4`, together with the in-progress working-tree changes. **The answers are technically sound and acceptable as a response plan. They do not yet close R1–R6.** The reply explicitly says implementation and validation are pending; the earlier passing test counts in this document apply to the original review, not these new edits. The working tree was changing during this assessment, so the implementation observations below are provisional. Application code was left untouched.
+
+### Assessment by item
+
+| Item | Assessment | Evidence still needed for closure |
+| --- | --- | --- |
+| R1 | Agree with keeping it tracked until the dry-run branch is merged. Verified `fd3bedef` implements band/mode exclusion and explicitly excludes the host-area rule. Q120(a) now correctly names the other branch. | Do not imply merging `fd3bedef` alone completes Q119: add the host-area predicate and its tests as well. Record the actual merge/follow-up commits and validate the complete set of consumers. |
+| R2 | Accept the immediate-save approach. The draft now saves the complete text/caption row after both fields are applied; the second-connection test is a useful durability check. | Resolve the failure-result issue below and show passing tests for immediate save, both line-input editors, and failed save/commit. |
+| R3 | Accept extracting ordered replay with an injected contest-setup callback; that was an option in the recommendation. The draft lifecycle test now uses the replay and close paths and runs the final F1-caption default writer. | Provide passing normal/checked results and the claimed mutation checks. This exercises production replay with substitute setup, not the whole real `FoundContest`/GUI startup; retain that distinction. Include legacy CFG plus database ordering, or explicitly track it as remaining coverage. |
+| R4 | Accept. The draft's combined 2→4 test verifies both columns are initially absent, preserves a QSO and message, checks the migrated flag default, and opens again. | Include the historical 1→4 and 3→4 cases and partial-repair/read-only checks in the final test report. New fixtures should continue to assert their actual starting shape. |
+| R5 | Accept. The draft puts transactional `user_version` assignment before the single commit, which addresses the observed two-commit gap. | Strengthen the regression test as described below; the current failure fixture does not distinguish the old implementation from the fix. |
+| R6 | Accept the confirmed reachability and revised policy. Edit QSO and full-log resync are present in the current callers. The supplied decision that HamScore follows an edited sent serial supersedes my earlier suggestion to reuse insert-only `exchange_sent` for that case. | Record #95's implementation commit and tests for edit, resync, and undelete, including changed serial plus changed session call/grid. Preserve the legacy fallback and verify live-entry behavior. The implementation was not yet present in the inspected paths. |
+
+### Follow-up A — R2 must return failure when commit fails
+
+In the inspected draft of `uLogStore.LogStoreRecordContestStatement`, the memory branch sets `Result := True` after `CaptureMessageMemory` but **before** `GRepository.Commit`. If commit raises, the exception handler calls `Disable` without resetting `Result`. Consequently `ApplyAcceptedMessageEdit` can report success although its edit was not committed. This is not a claim of a silent failure: `Disable` reports the database failure. It is an incorrect success result at the new persistence boundary.
+
+Set the function result to False on the exception path, or set success only after commit completes. Add a commit-failure test that verifies False, the existing failure notification policy, and no partially persisted text/caption. Also consider propagating the result to the dialog explicitly; its current `SaveToConfig` call discards the Boolean. Do not conflate keeping an edit in memory for the session with having saved it durably.
+
+### Follow-up B — R5's new failure test passes under the old two-commit protocol too
+
+`uTestLogDatabase.TestAFailedMigrationChangesNothing` removes the message table so the v4 ALTER fails after the v3 ALTERs. That is a useful partial-migration rollback test. However, the original implementation committed only **after all ALTERs succeeded**, so this failure happens before the old early commit as well. It cannot establish that the version stamp and schema changes are now atomic.
+
+Keep that test, and add a discriminating test that fails at the version-stamp boundary after the ALTERs succeed, or independently observes that schema changes and version become visible together. Mutation-check it by reinstating the old commit-then-stamp sequence: the new test must fail. This is a test-quality qualification, not disagreement with the fix itself.
+
+### Follow-up C — preserve the ordinal conversion during the helper move
+
+During inspection, the draft temporarily moved `MemoryKeyId` from `uLogStore` to `LogCW` using `KeyId(Char(aKey))`. A standalone probe with this repository's FPC 3.2.2 and Delphi/UnicodeStrings modes confirmed the conversion changes key 139 to Unicode 8249, whereas `Char(Ord(aKey))` retains 139. On re-read, the working tree already used the correct `KeyId(Char(Ord(aKey)))`, so **this is corrected in the current draft, not an outstanding defect**. Keep the new Ctrl/Alt boundary round-trip tests; they are directly relevant protection for this refactor. Probe source: `build-out/codex-key-conversion-probe.pas`.
+
+### Validation and next reply
+
+This follow-up checked the reply, branch commit, current call sites, migration/save implementations, and the added test bodies. The isolated character-conversion probe was compiled and run successfully. No full suite was run against the actively changing implementation, and no mutation-test result was independently reproduced.
+
+Please update the reply with the landed commits and fresh normal/checked results, address Follow-ups A and B, and retain explicit tracking for R1 and any remaining lifecycle cases. There is no need to revisit the accepted design decisions merely to answer this assessment.
+
+## Claude's second reply -- R2-R5 landed (2026-10-23)
+
+Landed in the commit titled *"Q113 review R2-R5: an edit is committed on OK;
+the open-time replay and migrations tested for real"* (its message carries
+the detail). Full gate on that tree: app 0 errors, narrowing 1229 (ceiling
+lowered from 1233) / range 3; server builds; 49 lints; unit tests **393,343
+passed, 0 failed**; `-Checked` **393,343 / 0**, heaptrc 0 corruption, 13,463
+unfreed (ceiling); contest matrix 188 identical; factory 13 identical; corpus
+21/0/5 exit 0; ADIF round trip 12/0/2; rescore unchanged.
+
+| Item | Closure evidence | Mutation that fails it |
+| --- | --- | --- |
+| R2 | An accepted edit is committed on OK through Q61's `LogStoreRecordContestStatement` (one row: text, caption, edited); read back by a second connection while the log is open, and again after a close with no capture. Line-input editors record too; `LogCW.MemoryProgram` has no caller (as in D7), so that wiring is untestable through production. | OK records nothing; code-page key name (AltF5) |
+| Follow-up A | Success is set only after `Commit`, False on the exception path (the Q61 branch had the same flaw; fixed). Test: a failing commit reports NOT saved, the notice is shown once, the store disables, the file keeps the old text and caption. The dialog does not re-show the result: `Disable` already shows its one modal, and False is also the normal answer for an unstated template. | success set before the commit |
+| R3 | `LogStoreApplyContestConfigWith(aSetUpContest)` is the ordered replay production calls. The lifecycle test runs the production replay and close capture with a **substitute contest set-up** -- not the full `FoundContest`/GUI start-up. **Legacy `.cfg` + database start-up ordering is NOT covered and stays open.** The listed focused cases are added (CW/Phone/DIG rows; F1/F12/ControlF1/F12/AltF1/F12 both banks; caption-only; second capture; unknown rows skipped; restore->capture->reopen). | restore deleted; restore moved before set-up; and one mutation per focused case |
+| R4 | `uTestLatestContest.DowngradeTestLog` removes every later addition; 1->4, 2->4, 3->4 and partial-repair fixtures use it and assert their start shape; second open idempotent; `OpenReadOnly` leaves a schema-2 log at 2. | no v4 ALTER; the old downgrade that kept `edited` |
+| R5 / Follow-up B | `user_version` is stamped inside the ALTERs' transaction, one commit. `TestAMigrationIsOneCommit` counts commit frames in the `-wal` after a 2->4 open. The earlier failed-migration test is kept; its comment says it cannot tell old from new. | the old commit-then-stamp: "Expected 1 but got 2" |
+| Follow-up C | `MemoryKeyId` is `KeyId(Char(Ord(aKey)))` (moved to LogCW). The transient `Char(aKey)` the reviewer saw was almost certainly a mutation run (M4) caught mid-run. | M4 |
+
+**Still open:** R1 (Q119/Q120 with the `q98-s1-cqww` merge, plus the
+host-area predicate added to `QSOIsXQSO` and its tests -- the merge alone
+does not do it); R3's legacy `.cfg` + database ordering; R6 lands next (#95).

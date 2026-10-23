@@ -59,6 +59,9 @@ type
 
       (* backup *)
       procedure TestAnOlderLogGainsTheSessionTable;
+      procedure TestAStampBehindItsColumnsOpensCurrent;
+      procedure TestAFailedMigrationChangesNothing;
+      procedure TestAMigrationIsOneCommit;
       procedure TestSnapshotIncludesCommitsStillInTheWAL;
       procedure TestSnapshotRefusesAnExistingDestination;
       procedure TestSnapshotRefusesAClosedLog;
@@ -82,7 +85,9 @@ uses
      the same unit. *)
    BaseUnix,
 {$ENDIF}
-   uLogDatabase, uLogSchema;
+   uLogDatabase, uLogSchema,
+   (* DowngradeTestLog and TestLogHasColumn -- the shared fixture helpers *)
+   uTestLatestContest;
 
 function TLogDatabaseTests.TempLogName(const aLeaf: string): string;
 begin
@@ -1105,15 +1110,20 @@ begin
    try
       db.CreateNew(fn);
       CheckEquals(LOG_SCHEMA_VERSION, db.SchemaVersion, 'created current');
+   finally
+      db.Free;
+   end;
 
-      (* BACK TO SCHEMA 1, on disk. *)
-      db.Connection.ExecuteDirect('DROP TABLE session_state');
-      db.Transaction.Commit;
-      (* user_version IS settable inside a transaction, unlike synchronous
-        and journal_mode -- which is why this goes through ExecuteDirect
-        and does not need the connection-level pragma path. *)
-      db.Connection.ExecuteDirect('PRAGMA user_version = 1');
-      db.Transaction.Commit;
+   (* BACK TO SCHEMA 1, on disk -- EVERY later addition removed (R4,
+     2026-10-23). This dropped session_state alone, so the "schema-1" file
+     still had the v3 and v4 columns and the open was a 1 -> 2 test only. *)
+   DowngradeTestLog(fn, 1, Low(LOG_V3_QSO_COLUMNS));
+   db := TLogDatabase.Create;
+   try
+      db.OpenReadOnly(fn);
+      CheckEquals(1, db.SchemaVersion, 'the fixture is stamped 1');
+      CheckFalse(TestLogHasColumn(db, 'qso', 'my_source'), 'with no v3 column');
+      CheckFalse(TestLogHasColumn(db, 'message', 'edited'), 'and no v4 column');
    finally
       db.Free;
    end;
@@ -1123,6 +1133,8 @@ begin
       db.Open(fn);
       CheckEquals(LOG_SCHEMA_VERSION, db.SchemaVersion,
                   'opening an older log stamps the current schema version');
+      CheckTrue(TestLogHasColumn(db, 'qso', 'my_source'), '1 -> current adds the v3 columns');
+      CheckTrue(TestLogHasColumn(db, 'message', 'edited'), 'and the v4 column');
 
       q := TSQLQuery.Create(nil);
       try
@@ -1147,6 +1159,198 @@ begin
       db.Free;
    end;
 
+   Scrub(fn);
+end;
+
+(* R5: THE STATE THE OLD TWO-COMMIT MIGRATION COULD LEAVE -- the v4 column
+  already added, the version still 3 (a failure between the ALTERs' commit
+  and the stamp). The column guard must let it open, and the open stamps
+  the current version without trying to add the column twice. *)
+procedure TLogDatabaseTests.TestAStampBehindItsColumnsOpensCurrent;
+var
+   db: TLogDatabase;
+   fn: string;
+begin
+   BeginTest('a log whose columns are current but whose stamp says 3 opens and is stamped current');
+   fn := TempLogName('stampbehind.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      db.Connection.ExecuteDirect('PRAGMA user_version = 3');
+      db.Transaction.Commit;
+   finally
+      db.Free;
+   end;
+   db := TLogDatabase.Create;
+   try
+      db.OpenReadOnly(fn);
+      CheckEquals(3, db.SchemaVersion, 'the fixture is stamped 3');
+      CheckTrue(TestLogHasColumn(db, 'message', 'edited'), 'and already has message.edited');
+   finally
+      db.Free;
+   end;
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      CheckEquals(LOG_SCHEMA_VERSION, db.SchemaVersion, 'it opens with no error, stamped current');
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* HOW MANY TRANSACTIONS A WAL FILE HOLDS. Each frame is a 24-byte header
+  and one page, after a 32-byte file header whose bytes 8..11 are the page
+  size (big-endian). A frame whose header bytes 4..7 -- the database size
+  after the commit -- are non-zero is a COMMIT frame, and every commit ends
+  with exactly one. Read with the file shared, because the connection that
+  wrote it is still open: that is what keeps SQLite from checkpointing and
+  deleting it. *)
+function CommitFramesInWal(const aWal: string): integer;
+var
+   f: TFileStream;
+   header: array[0..31] of byte;
+   frame: array[0..23] of byte;
+   pageSize: int64;
+   position: int64;
+begin
+   Result := 0;
+   if not FileExists(aWal) then
+      begin
+      Exit;
+      end;
+   f := TFileStream.Create(aWal, fmOpenRead or fmShareDenyNone);
+   try
+      if f.Read(header, SizeOf(header)) <> SizeOf(header) then
+         begin
+         Exit;
+         end;
+      pageSize := (int64(header[8]) shl 24) or (int64(header[9]) shl 16) or
+                  (int64(header[10]) shl 8) or int64(header[11]);
+      (* The format writes 1 for a 65536-byte page. *)
+      if pageSize = 1 then
+         begin
+         pageSize := 65536;
+         end;
+      position := SizeOf(header);
+      while position + SizeOf(frame) + pageSize <= f.Size do
+         begin
+         f.Position := position;
+         f.ReadBuffer(frame, SizeOf(frame));
+         if (frame[4] or frame[5] or frame[6] or frame[7]) <> 0 then
+            begin
+            Inc(Result);
+            end;
+         position := position + SizeOf(frame) + pageSize;
+         end;
+   finally
+      f.Free;
+   end;
+end;
+
+(* R5, DISCRIMINATING (Codex follow-up B, 2026-10-23): THE MIGRATION IS ONE
+  COMMIT. TestAFailedMigrationChangesNothing cannot tell the old protocol
+  from the new -- both failed before their first commit there. This counts
+  the commits instead. A schema-2 log needs every v3 ALTER, the v4 ALTER and
+  the version stamp; opened with no WAL beside it, the WAL afterwards holds
+  exactly what the open wrote. ONE commit frame means the columns and
+  user_version became visible together. The old protocol -- commit the
+  ALTERs, then stamp through ExecPragma -- writes TWO. *)
+procedure TLogDatabaseTests.TestAMigrationIsOneCommit;
+var
+   db: TLogDatabase;
+   fn: string;
+begin
+   BeginTest('a migration is ONE commit: the columns and the version stamp land together');
+   fn := TempLogName('onecommit.db');
+   Scrub(fn);
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+   finally
+      db.Free;
+   end;
+   DowngradeTestLog(fn, 2, Low(LOG_V3_QSO_COLUMNS));
+   CheckFalse(FileExists(fn + '-wal'), 'precondition: no WAL is left by the fixture');
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      CheckEquals(1, CommitFramesInWal(fn + '-wal'),
+                  'every ALTER and the version stamp went in ONE commit');
+      CheckEquals(LOG_SCHEMA_VERSION, db.SchemaVersion, 'stamped current');
+      CheckTrue(TestLogHasColumn(db, 'message', 'edited'), 'with the v4 column');
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* R5: A MIGRATION THAT FAILS PART WAY COMMITS NOTHING. The fixture is a
+  schema-2 log whose message table is GONE, so the v3 ALTERs on qso succeed
+  and the v4 ALTER on message then fails -- a failure after the first
+  change and before the stamp. The open must raise, and the file must read
+  exactly as it did: still 2, still without the v3 columns. A migration
+  that committed anything before the end would leave the columns under the
+  old stamp. NOT a test of the stamp's own transaction: the two-commit
+  protocol before 2026-10-23 also failed before its first commit here.
+  TestAMigrationIsOneCommit is that test. *)
+procedure TLogDatabaseTests.TestAFailedMigrationChangesNothing;
+var
+   db: TLogDatabase;
+   fn: string;
+   raised: boolean;
+   i: integer;
+begin
+   BeginTest('a migration that fails part way leaves the version and the columns as they were');
+   fn := TempLogName('failedmigration.db');
+   Scrub(fn);
+
+   (* BUILT BY HAND, because it is broken on purpose: a schema-2 file with
+     no message table at all. *)
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      for i := Low(LOG_V3_QSO_COLUMNS) to High(LOG_V3_QSO_COLUMNS) do
+         begin
+         db.Connection.ExecuteDirect(UTF8Encode('ALTER TABLE qso DROP COLUMN ' +
+                                                string(LOG_V3_QSO_COLUMNS[i].Name)));
+         end;
+      db.Connection.ExecuteDirect('DROP TABLE message');
+      db.Connection.ExecuteDirect('PRAGMA user_version = 2');
+      db.Transaction.Commit;
+   finally
+      db.Free;
+   end;
+
+   raised := False;
+   db := TLogDatabase.Create;
+   try
+      try
+         db.Open(fn);
+      except
+         raised := True;
+      end;
+   finally
+      (* What a crash leaves: nothing committed, the connection closed. *)
+      db.Free;
+   end;
+   CheckTrue(raised, 'the open raises: the v4 ALTER has no table to alter');
+
+   db := TLogDatabase.Create;
+   try
+      db.OpenReadOnly(fn);
+      CheckEquals(2, db.SchemaVersion, 'the version is still 2');
+      CheckFalse(TestLogHasColumn(db, 'qso', 'my_source'),
+                 'and the v3 columns the migration had added are rolled back');
+      CheckFalse(TestLogHasColumn(db, 'qso', string(LOG_V3_QSO_COLUMNS[Low(LOG_V3_QSO_COLUMNS)].Name)),
+                 'every one of them');
+   finally
+      db.Free;
+   end;
    Scrub(fn);
 end;
 
@@ -1303,6 +1507,9 @@ begin
    TestWritableReportsAClosedLog;
    TestWritableReportsAReadOnlyFile;
    TestAnOlderLogGainsTheSessionTable;
+   TestAStampBehindItsColumnsOpensCurrent;
+   TestAFailedMigrationChangesNothing;
+   TestAMigrationIsOneCommit;
    TestSnapshotIncludesCommitsStillInTheWAL;
    TestSnapshotRefusesAnExistingDestination;
    TestSnapshotRefusesAClosedLog;

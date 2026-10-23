@@ -1478,10 +1478,11 @@ end;
   table_info, per the note on LOG_SCHEMA_VERSION -- and a changed column
   wants a plan, not a line here.
 
-  THE VERSION IS STAMPED LAST. If the CREATE fails the transaction carries
-  the statement away with it and user_version still reads the old number,
-  so the next open tries again rather than believing a migration that did
-  not happen. *)
+  THE VERSION IS STAMPED LAST, IN THE SAME TRANSACTION AS EVERY CHANGE, AND
+  THERE IS ONE COMMIT (since 2026-10-23; before, the stamp was a second
+  commit). If any statement fails, nothing has committed: the tables, the
+  columns and user_version all read as they did, and the next open tries
+  again rather than believing a migration that did not happen. *)
 procedure TLogDatabase.MigrateSchema;
 var
    version: integer;
@@ -1569,18 +1570,25 @@ begin
          ' ' + string(LOG_V4_MESSAGE_COLUMN.Declaration)));
       end;
 
-   (* ExecuteDirect is what begins a transaction; with nothing to do there is
-     none to commit. *)
-   if FTransaction.Active then
-      begin
-      FTransaction.Commit;
-      end;
-   (* The version is a small integer, so its digits are ASCII and UTF8Encode
+   (* AND THE VERSION, IN THE SAME TRANSACTION, THEN ONE COMMIT (R5,
+     2026-10-23). This committed the ALTERs and then stamped the version
+     through ExecPragma, which ends the transaction around itself -- two
+     commits, so a failure between them left the new columns under the old
+     number. The presence checks above would have finished the job at the
+     next open, but the comments here claimed one transaction and it was
+     not. user_version IS transactional in SQLite (journal_mode and
+     synchronous are not, which is why those go through ExecPragmaRaw), so
+     it rides with the ALTERs: everything lands, or nothing does and the
+     next open starts again from the old number. ExecuteDirect begins the
+     transaction when no change above already has.
+
+     The version is a small integer, so its digits are ASCII and UTF8Encode
      is exact where an AnsiString cast would be a narrowing the build
      counts. Encoded LAST: concatenating onto the result would promote it
      back to UnicodeString. *)
-   ExecPragma(UTF8Encode('PRAGMA user_version = '
-                         + IntToStr(LOG_SCHEMA_VERSION)));
+   FConnection.ExecuteDirect(UTF8Encode('PRAGMA user_version = '
+                                        + IntToStr(LOG_SCHEMA_VERSION)));
+   FTransaction.Commit;
 end;
 
 procedure TLogDatabase.Close;

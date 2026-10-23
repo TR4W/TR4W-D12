@@ -401,6 +401,39 @@ every edit was lost. Detail: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12i.
 - **Walk the memory modes as `CW`, `Phone`, never `CW to Phone`.** `Digital`
   sits between them; the accessors fold it into CW, and `MessageModeName`
   calls it PHONE.
+- **AN ACCEPTED EDIT IS COMMITTED ON OK (R2, 2026-10-23)**, as D7 wrote its
+  `.cfg`. Two routes record one: `uEditMessageForm.ApplyAcceptedMessageEdit`
+  (it applies both fields and then records the key once) and
+  `LogCW.MemoryProgram`'s line-input edits. **`MemoryProgram` has no caller,
+  and had none in D7.** Both go through `LogStoreRecordContestStatement`.
+  That routine is Q61's, EXTENDED, not copied: a memory name
+  (`ParseMessageMemoryCommand`) writes the key's row through
+  `CaptureMessageMemory`, the single-row rule the close capture loops over.
+  **Never call it from a default writer or the open replay.** The close
+  capture stays, as reconciliation.
+- **ITS RESULT IS TRUE ONLY AFTER THE COMMIT** (Codex follow-up A). The result
+  was set before `Commit`, so a failed commit answered "saved". Pinned by
+  `Test_R2_ACommitThatFailsIsNotReportedSaved`. That test makes the COMMIT
+  itself fail: a trigger inserts a row that breaks a `DEFERRABLE INITIALLY
+  DEFERRED` foreign key, and SQLite checks a deferred key only at commit.
+- **`GDisabled` CAN BE CLEARED NOW, BY A TEST ONLY.**
+  `LogStoreForgetFailureForTests` clears it. `LogStoreFailureNotice` takes
+  `Disable`'s modal, so a test can see the notice without hanging. The program
+  touches neither. **The store-level fault-injection tests that were owed are
+  writable now.** A test that disables the store must call the reset in its
+  `finally`.
+- **THE ORDERED REPLAY IS `LogStoreApplyContestConfigWith(aSetUpContest)`**
+  (R3). The program hands in `CheckCommand('CONTEST')`. A test hands in a
+  set-up that writes only the memories. **That is not `FoundContest`**, and
+  the legacy `.cfg` + database ordering is still not covered.
+- **A MIGRATION IS ONE COMMIT, AND A TEST COUNTS IT** (R5, follow-up B).
+  `user_version` rides in the ALTERs' transaction.
+  `TestAMigrationIsOneCommit` counts the commit frames in the `-wal`. A test
+  that fails on an ALTER cannot tell one commit from two, because both fail
+  before their first commit.
+- **AN OLD-SCHEMA FIXTURE COMES FROM `DowngradeTestLog`** (R4,
+  `uTestLatestContest`). It removes EVERY later addition. A downgrade that
+  drops only the column under test leaves a hybrid file.
 - **PowerShell is refused in an isolated worktree** (the worktree-isolation
   guard cannot prove it runs no git). Run `Build-Tests.ps1`'s FPC command
   directly instead: `-Mdelphi -Pi386 -Twin32 -Sc -B`, the `Get-SearchPaths.ps1`
@@ -489,7 +522,9 @@ contract (a commit that fails must make `LogStoreAppendQSO` return False). The
 repository half is pinned as of 2026-10-14
 (`TestEveryWriteWaitsForItsCommit`): a QSO the store did not commit is no
 longer durable. ~~The store-level test still needs `uLogStore` to be
-linkable~~ -- **it IS linkable** (2026-10-17, `uTestLogStore`), so nothing
+linkable~~ -- **it IS linkable** (2026-10-17, `uTestLogStore`). Since
+2026-10-23 the two test seams and the deferred-foreign-key commit trap exist
+(`Test_R2_ACommitThatFailsIsNotReportedSaved` is the pattern), so nothing
 blocks those tests now; they are simply not written.
 
 ## Coordinate with

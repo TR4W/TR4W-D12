@@ -87,7 +87,51 @@ procedure WriteDamagedTestLog(const aFileName: string);
 (* aFileName and its -wal and -shm, gone. *)
 procedure ScrubTestLog(const aFileName: string);
 
+(* A LOG TAKEN BACK TO AN OLDER SCHEMA, ON DISK -- R4, 2026-10-23. Opened at
+  the current schema, then EVERY addition made after aToVersion is removed
+  and user_version is stamped aToVersion:
+
+    v4  message.edited
+    v3  the LOG_V3_QSO_COLUMNS, from index aFirstV3Dropped on (pass
+        Low(LOG_V3_QSO_COLUMNS) for a genuine schema-2 file; a later index
+        keeps the first few, for a half-repaired one)
+    v2  the session_state table
+
+  THE SHARED ONE, because each suite had its own and each dropped only the
+  addition it was about: a "schema-2" fixture still had message.edited, and
+  the "schema-1" one still had every v3 column. A fixture that keeps a later
+  addition cannot test a migration that has to make it. ALTER TABLE DROP
+  COLUMN needs SQLite 3.35; the shipped library is newer. *)
+procedure DowngradeTestLog(const aFileName: string; aToVersion: integer;
+                           aFirstV3Dropped: integer);
+
+(* Does aTable have a column aColumn, asked of an open log -- the question
+  every migration test asks of the file before and after. *)
+function TestLogHasColumn(aDb: TLogDatabase; const aTable, aColumn: string): boolean;
+
 implementation
+
+uses
+   sqldb,        (* TSQLQuery -- TestLogHasColumn *)
+   uLogSchema;   (* LOG_V3_QSO_COLUMNS and LOG_V4_MESSAGE_COLUMN -- DowngradeTestLog *)
+
+function TestLogHasColumn(aDb: TLogDatabase; const aTable, aColumn: string): boolean;
+var
+   q: TSQLQuery;
+begin
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := aDb.Connection;
+      q.UsePrimaryKeyAsKey := False;
+      q.SQL.Text := 'SELECT name FROM pragma_table_info(''' + aTable +
+                    ''') WHERE name = ''' + aColumn + '''';
+      q.Open;
+      Result := not q.EOF;
+      q.Close;
+   finally
+      q.Free;
+   end;
+end;
 
 procedure ScrubTestLog(const aFileName: string);
 begin
@@ -103,6 +147,42 @@ begin
       begin
       DeleteFile(aFileName + '-shm');
       end;
+end;
+
+procedure DowngradeTestLog(const aFileName: string; aToVersion: integer;
+                           aFirstV3Dropped: integer);
+var
+   db: TLogDatabase;
+   i: integer;
+begin
+   db := TLogDatabase.Create;
+   try
+      db.Open(aFileName);
+      if aToVersion < 4 then
+         begin
+         db.Connection.ExecuteDirect(UTF8Encode('ALTER TABLE message DROP COLUMN ' +
+                                                string(LOG_V4_MESSAGE_COLUMN.Name)));
+         end;
+      if aToVersion < 3 then
+         begin
+         for i := aFirstV3Dropped to High(LOG_V3_QSO_COLUMNS) do
+            begin
+            db.Connection.ExecuteDirect(UTF8Encode('ALTER TABLE qso DROP COLUMN ' +
+                                                   string(LOG_V3_QSO_COLUMNS[i].Name)));
+            end;
+         end;
+      if aToVersion < 2 then
+         begin
+         db.Connection.ExecuteDirect('DROP TABLE session_state');
+         end;
+      (* user_version IS settable inside a transaction, so the stamp rides
+        with the drops and there is one commit. *)
+      db.Connection.ExecuteDirect(UTF8Encode('PRAGMA user_version = ' +
+                                             IntToStr(aToVersion)));
+      db.Transaction.Commit;
+   finally
+      db.Free;
+   end;
 end;
 
 procedure MakeTestContestLog(const aFileName: string; aContest: TContestHandle;

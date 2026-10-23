@@ -417,7 +417,10 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # 1235 -> 1233, 2026-10-19: the New Contest dialog's Last Contest button and
 # log grid (uLatestContest, uLogFileFacts) build their captions from native
 # strings; measured by the full builds of that work.
-$NARROW_CEILING = 1233
+# 1233 -> 1229, 2026-10-23: the Q113 review fixes (R2-R5, LogCW and
+# uLogStore's memory parse/capture rework); measured by the full build of
+# that work.
+$NARROW_CEILING = 1229
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

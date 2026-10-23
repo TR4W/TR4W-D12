@@ -172,10 +172,39 @@ function TimeString: Str10;
   a config parser owned a function-key parser, and the memories could only be
   set by something shaped like a config line.
 
-  THE BODY IS UNCHANGED, including the guard in the middle: an unrecognised
-  prefix leaves TempValue at 0, and the note there records the out-of-bounds
-  New() that caused the Ctrl-P crash of 2026-08-15. *)
+  THE PARSE IS ParseMessageMemoryCommand since 2026-10-23, including the
+  guard in the middle: an unrecognised prefix leaves TempValue at 0, and the
+  note there records the out-of-bounds New() that caused the Ctrl-P crash of
+  2026-08-15. This applies what it names and latches it; it writes nothing
+  to the log. *)
 function TryApplyMessageCommand(const aCommand, aValue: ShortString): boolean;
+
+(* WHICH MEMORY A COMMAND NAMES, WITHOUT APPLYING ANYTHING -- the parse half
+  of TryApplyMessageCommand, lifted 2026-10-23 when the log became its
+  second reader (uLogStore.LogStoreRecordContestStatement records the
+  memory an accepted edit named, R2). aMode comes back as the memory ROW,
+  CW or Phone: Digital is folded into CW and FM into Phone, as every
+  accessor folds them. aIsCaption says the name ends in CAPTION. False, with
+  nothing usable in the outs, for a name that is not a function-key memory:
+  a message template ('CQ EXCHANGE'), a contest setting, anything else. *)
+function ParseMessageMemoryCommand(const aCommand: ShortString;
+                                   out aCQBank: boolean;
+                                   out aMode: ModeType;
+                                   out aKey: AnsiChar;
+                                   out aIsCaption: boolean): boolean;
+
+(* THE NAME OF A MEMORY -- 'CQ CW MEMORY F3', 'EX SSB MEMORY AltF4' -- the
+  inverse of ParseMessageMemoryCommand, which reads it back as the same
+  bank, row and key. '' for a key that is not a function key or a mode that
+  has no memory row. *)
+function MessageMemoryCommand(aCQBank: boolean; aMode: ModeType;
+                              aKey: AnsiChar): ShortString;
+
+(* A MEMORY KEY'S NAME -- KeyId's spelling, the log's message.key_id -- or ''
+  for a code that is not a function key. BY ORDINAL: see the implementation.
+  Lifted from uLogStore (2026-10-23) when MessageMemoryCommand became its
+  second user. *)
+function MemoryKeyId(aKey: AnsiChar): AnsiString;
 
 procedure SetCQMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString {Str80});
 procedure SetEXMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString {Str80});
@@ -244,6 +273,9 @@ uses
   uCWKeyerWinKey,
   uCWKeyerYCCC,
   uCWKeyerCPU,
+  (* LogStoreRecordContestStatement -- a line-input memory edit is committed
+     to the log as it is made (R2, 2026-10-23). *)
+  uLogStore,
   MainUnit; {KK1L: 6.72 Allows use of SniffOutControlCharacters}
 
 type
@@ -1202,19 +1234,19 @@ begin
                {KK1L: 6.73 Added mode}
            (GetCQMemoryString(ActiveMode, FunctionKey) <> TempString) then
               begin
-              SetCQMemoryString(ActiveMode, FunctionKey, TempString);
+              SetCQMemoryString(ActiveMode, AnsiChar(Ord(FunctionKey)), TempString);
               (* THE OPERATOR STATED IT -- Q9: set-up leaves it alone now, and
                 the log restores it at open (Q113). *)
-              NoteCQMemoryStatedByOperator(ActiveMode, FunctionKey);
+              NoteCQMemoryStatedByOperator(ActiveMode, AnsiChar(Ord(FunctionKey)));
 
-              if ActiveMode = Phone then
-                 begin
-                 AppendConfigFile('CQ SSB MEMORY ' + KeyId(FunctionKey) + ' = ' + TempString)
-                 end
-              else
-                 begin
-                 AppendConfigFile('CQ MEMORY ' + KeyId(FunctionKey) + ' = ' + TempString);
-                 end;
+              (* AND IT IS IN THE LOG NOW, COMMITTED (R2, 2026-10-23) -- where
+                D7 appended it to the .cfg at this point. AppendConfigFile
+                stood here and has been an empty procedure since the .cfg
+                stopped being written. BY ORDINAL: FunctionKey is a Char, and
+                an implicit Char -> AnsiChar conversion goes through the code
+                page, which loses every key from #128 up. *)
+              LogStoreRecordContestStatement(string(
+                 MessageMemoryCommand(True, ActiveMode, AnsiChar(Ord(FunctionKey)))));
               end;
 
              //          RemoveAndRestorePreviousWindow;
@@ -1309,18 +1341,13 @@ begin
 
            if TempString <> EscapeKey then
               begin
-              SetEXMemoryString(ActiveMode, FunctionKey, TempString);
+              SetEXMemoryString(ActiveMode, AnsiChar(Ord(FunctionKey)), TempString);
               (* THE OPERATOR STATED IT -- Q9 / Q113, as the CQ edit above. *)
-              NoteEXMemoryStatedByOperator(ActiveMode, FunctionKey);
+              NoteEXMemoryStatedByOperator(ActiveMode, AnsiChar(Ord(FunctionKey)));
 
-              if ActiveMode = Phone then
-                 begin
-                 AppendConfigFile('EX SSB MEMORY ' + KeyId(FunctionKey) + ' = ' + TempString)
-                 end
-              else
-                 begin
-                 AppendConfigFile('EX MEMORY ' + KeyId(FunctionKey) + ' = ' + TempString)
-                 end
+              (* AND COMMITTED TO THE LOG, as the CQ edit above (R2). *)
+              LogStoreRecordContestStatement(string(
+                 MessageMemoryCommand(False, ActiveMode, AnsiChar(Ord(FunctionKey)))));
               end;
 
              //          RemoveAndRestorePreviousWindow;
@@ -2464,17 +2491,71 @@ begin
 end;
 
 
-function TryApplyMessageCommand(const aCommand, aValue: ShortString): boolean;
+function MemoryKeyId(aKey: AnsiChar): AnsiString;
+begin
+   (* BY ORDINAL, AND THAT IS THE WHOLE POINT. The memory keys are AnsiChar
+     codes 112..147, and KeyId takes a Char, which tr4w.inc makes a
+     WideChar. Char(anAnsiChar) is a CODE-PAGE CONVERSION, not a cast: #139
+     (AltF4) arrives as U+2039, which is no function key, so KeyId answered
+     '' for nearly every Ctrl and every Alt key -- the codes from #128 up.
+     The log's capture skipped every one of them (found by Q113's test,
+     2026-10-23). Char(Ord(...)) keeps the code. *)
+   Result := AnsiString(KeyId(Char(Ord(aKey))));
+end;
+
+function MessageMemoryCommand(aCQBank: boolean; aMode: ModeType;
+                              aKey: AnsiChar): ShortString;
 var
-   ID, CMD: ShortString;
-   CQMessage: boolean;
+   keyName: AnsiString;
+   bank: AnsiString;
+   modeName: AnsiString;
+begin
+   Result := '';
+   keyName := MemoryKeyId(aKey);
+   if keyName = '' then
+      begin
+      Exit;
+      end;
+   if not FunctionKeyMemorySlot('MessageMemoryCommand', aMode, aKey) then
+      begin
+      Exit;
+      end;
+
+   if aCQBank then
+      begin
+      bank := 'CQ';
+      end
+   else
+      begin
+      bank := 'EX';
+      end;
+   (* THE .cfg SPELLINGS ParseMessageMemoryCommand READS: CW, and SSB for the
+     Phone row (the slot has already folded Digital and FM). *)
+   if aMode = CW then
+      begin
+      modeName := 'CW';
+      end
+   else
+      begin
+      modeName := 'SSB';
+      end;
+   Result := ShortString(bank + ' ' + modeName + ' MEMORY ' + keyName);
+end;
+
+function ParseMessageMemoryCommand(const aCommand: ShortString;
+                                   out aCQBank: boolean;
+                                   out aMode: ModeType;
+                                   out aKey: AnsiChar;
+                                   out aIsCaption: boolean): boolean;
+var
+   ID: ShortString;
    TempValue: integer;
    TempMode: ModeType;
-   Offset: Cardinal;
-   FuncKey: Cardinal;
+   Offset: integer;
+   FuncKey: integer;
+   key: AnsiChar;
 begin
    ID  := aCommand;
-   CMD := aValue;
    {
    CQ DIG MEMORY F1=CQ CQ CQ \ \ TEST
    CQ DIG MEMORY ALTF1=CQ CQ CQ \ \ TEST
@@ -2485,9 +2566,25 @@ begin
    CQ CW MEMORY CONTROLF5 CAPTION=PLAYCH1MSG
    }
 
-   //  if ID[1] = 'C' then CQMessage := True else CQMessage := False;
    Result := False;
-   CQMessage := ID[1] = 'C';
+   aCQBank := False;
+   aMode := NoMode;
+   aKey := F1;
+   aIsCaption := False;
+
+   (* A NAME THAT IS NOT A MEMORY IS REFUSED BEFORE ANY CHARACTER IS READ BY
+     POSITION (2026-10-23). The parse below indexes ID[4] and ID[Offset + 7]
+     without asking the length, which was safe only while every caller
+     handed it a memory or a message template. The log now hands it every
+     statement it records -- 'CATEGORY-POWER', 'MY CALL' -- and a short name
+     would have been read past its end into stale bytes. A memory name starts
+     with its bank. *)
+   if (Length(ID) < 8) or
+      ((Copy(ID, 1, 3) <> 'CQ ') and (Copy(ID, 1, 3) <> 'EX ')) then
+      begin
+      Exit;
+      end;
+
    TempMode := NoMode;
 
    Offset := 8; //Pos of  "MEMORY"
@@ -2513,6 +2610,11 @@ begin
       Exit;
       end;
 
+   if Length(ID) < Offset + 7 then
+      begin
+      Exit;
+      end;
+
    TempValue := 0;
    case ID[Offset + 7] of
       'F':
@@ -2532,7 +2634,7 @@ begin
          end;
    end;
 
-   { THE CASE ABOVE HAS NO else, AND THAT WAS A CRASH.
+   (* THE CASE ABOVE HAS NO else, AND THAT WAS A CRASH.
 
      TempValue is the base of the function-key code: 111 for plain F-keys,
      123 for Ctrl, 135 for Alt. If the character is none of F/A/C it stays
@@ -2549,55 +2651,85 @@ begin
      units, which is why it took a symbolicated backtrace to find.
 
      An unrecognised prefix means this is not a function-key memory command
-     at all, so refuse it rather than inventing a key for it. }
-   if TempValue = 0 then
+     at all, so refuse it rather than inventing a key for it. *)
+   if (TempValue = 0) or (Length(ID) < Offset) then
       begin
       Exit;
       end;
    FuncKey := Ord(ID[Offset]) - Ord('0');
    if length(ID) > Offset then
+      begin
       if ID[Offset + 1] in ['0'..'2'] then
          begin
          FuncKey := Ord(ID[Offset + 1]) - Ord('0') + 10;
          end;
+      end;
 
-   if not (FuncKey in [1..12]) then
+   if (FuncKey < 1) or (FuncKey > 12) then
       begin
       Exit;
       end;
 
+   (* BY ORDINAL -- AnsiChar(n), not CHR(n), so nothing between the number
+     and the key can be a conversion. The slot folds Digital into CW and FM
+     into Phone, which is the memory row the name means. *)
+   key := AnsiChar(TempValue + FuncKey);
+   if not FunctionKeyMemorySlot('ParseMessageMemoryCommand', TempMode, key) then
+      begin
+      Exit;
+      end;
+
+   aCQBank := ID[1] = 'C';
+   aMode := TempMode;
+   aKey := key;
+   aIsCaption := ID[length(ID)] = 'N';
    Result := True;
+end;
+
+function TryApplyMessageCommand(const aCommand, aValue: ShortString): boolean;
+var
+   cqBank: boolean;
+   mode: ModeType;
+   key: AnsiChar;
+   isCaption: boolean;
+begin
+   Result := ParseMessageMemoryCommand(aCommand, cqBank, mode, key, isCaption);
+   if not Result then
+      begin
+      Exit;
+      end;
 
    (* EVERY BRANCH IS AN OPERATOR STATEMENT -- Q9, and since Q113 the EX
      bank and the captions too: set-up leaves the key alone, and the log
-     records it as edited at close. *)
-   if ID[length(ID)] = 'N' then
+     records it as edited. NOTHING IS WRITTEN TO THE LOG HERE: the dialog
+     applies the text and the caption as two calls, and records the key
+     once, after both (uEditMessageForm.ApplyAcceptedMessageEdit). *)
+   if isCaption then
       begin
-      if CQMessage then
+      if cqBank then
          begin
-         SetCQCaptionMemoryString(TempMode, CHR(TempValue + FuncKey), CMD);
-         NoteCQMemoryStatedByOperator(TempMode, CHR(TempValue + FuncKey));
+         SetCQCaptionMemoryString(mode, key, aValue);
+         NoteCQMemoryStatedByOperator(mode, key);
          end
       else
          begin
-         SetEXCaptionMemoryString(TempMode, CHR(TempValue + FuncKey), CMD);
-         NoteEXMemoryStatedByOperator(TempMode, CHR(TempValue + FuncKey));
+         SetEXCaptionMemoryString(mode, key, aValue);
+         NoteEXMemoryStatedByOperator(mode, key);
          end;
       end
    else
       begin
-      if CQMessage then
+      if cqBank then
          begin
-         SetCQMemoryString(TempMode, CHR(TempValue + FuncKey), CMD);
-         NoteCQMemoryStatedByOperator(TempMode, CHR(TempValue + FuncKey));
+         SetCQMemoryString(mode, key, aValue);
+         NoteCQMemoryStatedByOperator(mode, key);
          end
       else
          begin
-         SetEXMemoryString(TempMode, CHR(TempValue + FuncKey), CMD);
-         NoteEXMemoryStatedByOperator(TempMode, CHR(TempValue + FuncKey));
+         SetEXMemoryString(mode, key, aValue);
+         NoteEXMemoryStatedByOperator(mode, key);
          end;
       end;
-
 end;
 
 begin

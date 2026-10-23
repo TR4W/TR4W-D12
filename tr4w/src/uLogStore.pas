@@ -215,6 +215,25 @@ function LogStoreRepository: TLogRepository;
 
 function LogStoreIsUsable: boolean;
 
+(* TWO SEAMS FOR THE TEST PROGRAM, AND ONLY FOR IT (2026-10-23). The program
+  never assigns or calls either.
+
+  A store failure disables the store and puts a modal in front of the
+  operator (Disable). Neither can happen in a test run: the modal would hang
+  it, and GDisabled was "never cleared", so a test that disabled the store
+  broke every store test after it -- which is why the store's fault-injection
+  tests had not been written. LogStoreFailureNotice, when assigned, takes the
+  operator's notice instead of the modal, so a test can SEE the notice was
+  given; LogStoreForgetFailureForTests closes the store and clears the
+  failure, so the next suite starts from a closed, usable store. *)
+type
+   TLogStoreFailureNotice = procedure(const aText: RawByteString);
+
+var
+   LogStoreFailureNotice: TLogStoreFailureNotice = nil;
+
+procedure LogStoreForgetFailureForTests;
+
 (* APPLIES THE CONTEST CONFIGURATION THE LOG CARRIES -- phase E2.
 
   NY4I: "when done, the .cfg file should not be necessary."
@@ -229,6 +248,24 @@ function LogStoreIsUsable: boolean;
   AND LAST, THE MEMORIES THE OPERATOR EDITED (Q113) --
   RestoreEditedMessageMemories, after the contest has been set up. *)
 function LogStoreApplyContestConfig: integer;
+
+type
+   (* HOW THE CONTEST A LOG NAMES IS SET UP -- given its stored id, True when
+     it was accepted. The program's is CheckCommand('CONTEST', id), whose
+     effect is FoundContest. *)
+   TLogContestSetUp = function(const aContestId: ShortString): boolean;
+
+(* LogStoreApplyContestConfig'S ORDERED REPLAY, with the contest's set-up
+  handed in -- R3, 2026-10-23. The program calls it only through
+  LogStoreApplyContestConfig, which hands in CheckCommand('CONTEST').
+
+  WHY IT EXISTS: the order is the point -- the restore of the edited
+  memories must run after every default writer in the replay -- and the
+  replay's set-up is FoundContest, which rewrites the whole session. A test
+  hands in a set-up that writes the contest's default memories and nothing
+  else, and so proves the ORDER through the production routine: delete or
+  move the restore and it fails. *)
+function LogStoreApplyContestConfigWith(aSetUpContest: TLogContestSetUp): integer;
 
 (* THE FUNCTION-KEY MEMORIES INTO THE LOG'S message TABLE -- every memory the
   program holds, both banks and both modes, with its button caption. A row is
@@ -261,9 +298,21 @@ function RestoreEditedMessageMemories(aRepository: TLogRepository): integer;
   close, so a crash lost it. uLogContestStatements.CaptureContestStatement
   is the rule (written while stated, deleted otherwise).
 
+  AND A FUNCTION-KEY MEMORY (R2, 2026-10-23). When aCommand names one --
+  'CQ CW MEMORY F3', with or without CAPTION; LogCW's
+  ParseMessageMemoryCommand decides -- that key's row in the message table
+  is written as the program holds it now: text, caption and edited flag,
+  one row, one commit (CaptureMessageMemory). The Alt-P dialog calls this
+  once per accepted edit, after it has applied both fields; LogCW's
+  line-input edits call it too. The close-time capture still rewrites the
+  table whole, as reconciliation. NEVER call it from a default writer or
+  from the open-time replay: those are not statements, and startup must not
+  become a write per memory.
+
   True when the row is committed. A batch /EXPORT writes nothing, like the
-  close capture. A write failure disables the store, as every write here
-  does. Never raises. *)
+  close capture. With the store disabled nothing is written, a warning says
+  so, and the statement holds for the session only. A write failure
+  disables the store, as every write here does. Never raises. *)
 function LogStoreRecordContestStatement(const aCommand: string): boolean;
 
 (* MAKES THE LOG EXIST, and returns whether it can be relied on.  Its file
@@ -360,9 +409,13 @@ uses
    (* The value and provenance accessors -- phase E1. CFGCA is gone; uCFG
       still owns CheckCommand and the renderer. *)
    uCFG,
-   (* GetCQMemoryString / GetEXMemoryString -- the program's own accessors. *)
+   (* GetCQMemoryString / GetEXMemoryString -- the program's own accessors --
+     and MemoryKeyId / ParseMessageMemoryCommand, which name a memory. *)
    LogCW,
-   (* KeyId, which is the spelling a .cfg already uses for a function key. *)
+   (* Tree. Its KeyId was the reason, and went to LogCW.MemoryKeyId
+     (2026-10-23). LEFT IN PLACE: this tree resolves a name to the LAST unit
+     declaring it, so taking a unit out of a uses clause is its own measured
+     change, not a tidy-up on the way past. *)
    Tree,
    (* MyPark, which is not a Cabrillo tag: it is a per-log fact TR4W keeps as
       its own global. *)
@@ -415,6 +468,28 @@ begin
    Result := (not GDisabled) and (GRepository <> nil);
 end;
 
+(* THE OPERATOR'S NOTICE of a store failure: the modal, unless a test has
+  installed LogStoreFailureNotice to take it instead. *)
+procedure ShowFailureNotice(const aText: RawByteString);
+begin
+   if Assigned(LogStoreFailureNotice) then
+      begin
+      LogStoreFailureNotice(aText);
+      end
+   else
+      begin
+      ShowMessage(aText);
+      end;
+end;
+
+procedure LogStoreForgetFailureForTests;
+begin
+   GDisabled := False;
+   GTriedToOpen := False;
+   FreeAndNil(GRepository);
+   FreeAndNil(GDatabase);
+end;
+
 (* Report once and stand down.  Called from every except block here. *)
 (* A FAILURE HERE IS NOW A LOST QSO, AND MUST BE SAID OUT LOUD.
 
@@ -463,7 +538,7 @@ begin
          quiet here. *)
       if not tSilentExport then
          begin
-         ShowMessage(LclText(
+         ShowFailureNotice(LclText(
          'THE CONTEST LOG IS NOT BEING SAVED.' + #13#10#13#10 +
          'Writing to the log database failed in ' + aWhere + ':' + #13#10 +
          E.ClassName + ' -- ' + E.Message + #13#10#13#10 +
@@ -590,20 +665,59 @@ const
      restored CW text into a Phone key. *)
    MESSAGE_MODES: array[0..1] of ModeType = (CW, Phone);
 
-(* A MEMORY KEY'S NAME -- KeyId's spelling, the message table's key_id -- or
-  '' for a code that is not a function key.
+(* ONE MEMORY, AS THE LOG RECORDS IT -- the single-row rule, which
+  CaptureMessageMemories loops over and LogStoreRecordContestStatement
+  applies to the one key an accepted edit named (R2, 2026-10-23), as
+  CaptureContestStatement is for a contest setting. One row carries the
+  text, the caption and the edited flag together, so a key is recorded
+  whole or not at all.
 
-  BY ORDINAL, AND THAT IS THE WHOLE POINT. The memory keys are AnsiChar
-  codes 112..147, and KeyId takes a Char, which tr4w.inc makes a WideChar.
-  Char(anAnsiChar) is a CODE-PAGE CONVERSION, not a cast: #139 (AltF4)
-  arrives as U+2039, which is no function key, so KeyId answered '' for
-  nearly every Ctrl and every Alt key -- the codes from #128 up. The capture
-  skipped every one of them, which is why a ControlF11 'QRL?' was once
-  recorded under an empty key and why no Alt-key memory ever reached the
-  table (found by Q113's test, 2026-10-23). Char(Ord(...)) keeps the code. *)
-function MemoryKeyId(aKey: AnsiChar): AnsiString;
+  AN EMPTY MEMORY NOBODY EDITED IS NOTHING TO RECORD. An EDITED empty memory
+  is the operator saying it is empty, and is kept so the open restores it.
+  An immediate record always follows an edit, which latches the key, so it
+  always writes; a row that should no longer exist is the close capture's
+  to clear, and it rewrites the table whole.
+
+  aMode is the memory ROW, CW or Phone; ParseMessageMemoryCommand and
+  MESSAGE_MODES both hand it one. KeyId's '' (not a function key) records
+  nothing -- the message table is keyed (kind, mode, key_id), so every
+  unnamed code would collapse onto one row. Does not commit. *)
+procedure CaptureMessageMemory(aRepository: TLogRepository; aCQBank: boolean;
+                               aMode: ModeType; aKey: AnsiChar);
+var
+   keyName: AnsiString;
+   kind: AnsiString;
+   text: AnsiString;
+   caption: AnsiString;
+   edited: boolean;
 begin
-   Result := AnsiString(KeyId(Char(Ord(aKey))));
+   keyName := MemoryKeyId(aKey);
+   if (keyName = '') or ((aMode <> CW) and (aMode <> Phone)) then
+      begin
+      Exit;
+      end;
+
+   if aCQBank then
+      begin
+      kind := 'CQ';
+      text := AnsiString(GetCQMemoryString(aMode, aKey));
+      caption := CQCaptionMemory[aMode, aKey];
+      edited := CQMemoryIsOperatorStated(aMode, aKey);
+      end
+   else
+      begin
+      kind := 'EX';
+      text := AnsiString(GetEXMemoryString(aMode, aKey));
+      caption := EXCaptionMemory[aMode, aKey];
+      edited := EXMemoryIsOperatorStated(aMode, aKey);
+      end;
+
+   if (text = '') and (not edited) then
+      begin
+      Exit;
+      end;
+   aRepository.SaveMessage(kind, MessageModeName(aMode), keyName, text,
+                           caption, edited);
 end;
 
 procedure CaptureMessageMemories(aRepository: TLogRepository);
@@ -611,54 +725,24 @@ var
    m: integer;
    mode: ModeType;
    key: AnsiChar;
-   keyName: AnsiString;
-
-   (* AN EMPTY MEMORY NOBODY EDITED IS NOTHING TO RECORD. An EDITED one is
-     the operator saying it is empty, and is kept so the open restores it. *)
-   procedure CaptureOne(const aKind, aText, aCaption: AnsiString; aEdited: boolean);
-   begin
-      if (aText = '') and (not aEdited) then
-         begin
-         Exit;
-         end;
-      aRepository.SaveMessage(aKind, MessageModeName(mode), keyName, aText,
-                              aCaption, aEdited);
-   end;
-
 begin
    (* REWRITTEN WHOLE. An upsert alone left a row behind for a memory that
      was emptied, or that a different contest's set-up no longer counts as
-     edited -- and a stale row flagged edited would be restored. *)
+     edited -- and a stale row flagged edited would be restored. It also
+     clears any row under a key this build cannot name. *)
    aRepository.DeleteAllMessages;
 
    for m := Low(MESSAGE_MODES) to High(MESSAGE_MODES) do
       begin
       mode := MESSAGE_MODES[m];
+      (* F1..AltF12 is a CHARACTER range, not an enumeration of function
+        keys, so it walks codes that are not function keys at all; the
+        single-row rule records nothing for those (the first capture once
+        put a 'CQ/CW' "QRL?" under an empty key that way). *)
       for key := F1 to AltF12 do
          begin
-         (* ONLY KEYS THE PROGRAM CAN NAME.
-
-            F1..AltF12 is a CHARACTER range, not an enumeration of function
-            keys, so iterating it walks every code in between -- and several of
-            those are not function keys at all. KeyId answers '' for them.
-
-            That is not a cosmetic problem: the message table is keyed
-            (kind, mode, key_id), so every unnamed key collapses onto the SAME
-            row and each one silently overwrites the last. The first capture
-            recorded a 'CQ/CW' memory of "QRL?" under an empty key, which is
-            one of those codes winning the race. *)
-         keyName := MemoryKeyId(key);
-         if keyName = '' then
-            begin
-            Continue;
-            end;
-
-         CaptureOne('CQ', AnsiString(GetCQMemoryString(mode, key)),
-                    CQCaptionMemory[mode, key],
-                    CQMemoryIsOperatorStated(mode, key));
-         CaptureOne('EX', AnsiString(GetEXMemoryString(mode, key)),
-                    EXCaptionMemory[mode, key],
-                    EXMemoryIsOperatorStated(mode, key));
+         CaptureMessageMemory(aRepository, True, mode, key);
+         CaptureMessageMemory(aRepository, False, mode, key);
          end;
       end;
 end;
@@ -1995,12 +2079,33 @@ end;
 function LogStoreRecordContestStatement(const aCommand: string): boolean;
 var
    rebuilt: boolean;
+   (* What the rule wrote -- reported only once it has committed. *)
+   written: boolean;
+   cqBank: boolean;
+   mode: ModeType;
+   key: AnsiChar;
+   isCaption: boolean;
 begin
    Result := False;
 
    (* /EXPORT is read-only for the log -- see CaptureConfigurationOnClose. *)
-   if tSilentExport or GDisabled then
+   if tSilentExport then
       begin
+      Exit;
+      end;
+
+   (* NO LOG TO WRITE TO, AND SAID: the failure that disabled the store has
+     already been put in front of the operator once (Disable). The statement
+     stays in force for this session -- applied, and latched if it is a
+     memory -- and nothing records it, as nothing records a QSO now. *)
+   if GDisabled then
+      begin
+      if logger <> nil then
+         begin
+         logger.Warn('[LogStore] %s is NOT recorded in the log: the log is ' +
+                     'not being written (see the error above). It holds for ' +
+                     'this session only.', [aCommand]);
+         end;
       Exit;
       end;
 
@@ -2010,10 +2115,32 @@ begin
          Exit;
          end;
 
-      (* COMMITTED EITHER WAY: an unstated setting's row is DELETED by the
-        same rule, and that is a write too. *)
-      Result := CaptureContestStatement(Settings, GRepository, aCommand);
+      (* A FUNCTION-KEY MEMORY IS A CONTEST-SCOPED STATEMENT TOO (R2,
+        2026-10-23): the log's message table is per contest, and an edit is
+        what the operator stated. D7 wrote an accepted Alt-P edit to the
+        contest .cfg the moment OK was pressed (uEditMessage.pas:236/249);
+        this is that write. The key's row -- text, caption, edited -- goes
+        in as one, so a crash can lose the whole edit but never half of it.
+
+        Otherwise the setting's own rule. COMMITTED EITHER WAY: an unstated
+        setting's row is DELETED by the same rule, and that is a write too. *)
+      if ParseMessageMemoryCommand(ShortString(AnsiString(aCommand)), cqBank,
+                                   mode, key, isCaption) then
+         begin
+         CaptureMessageMemory(GRepository, cqBank, mode, key);
+         written := True;
+         end
+      else
+         begin
+         written := CaptureContestStatement(Settings, GRepository, aCommand);
+         end;
       GRepository.Commit;
+
+      (* TRUE ONLY NOW, AFTER THE COMMIT (Codex follow-up A, 2026-10-23).
+        Result was set before the Commit, so a commit that raised went to
+        Disable with Result already True: the caller was told an edit was
+        saved that was not. *)
+      Result := written;
       if Result then
          begin
          if logger <> nil then
@@ -2025,12 +2152,30 @@ begin
    except
       on E: Exception do
          begin
+         Result := False;
          Disable('recording a contest setting', E);
          end;
    end;
 end;
 
+(* The program's set-up: the CONTEST command, applied as a trusted caller --
+  see the note on CheckCommand in the replay below. *)
+function SetUpContestByCommand(const aContestId: ShortString): boolean;
+var
+   cmdName: ShortString;
+   valName: ShortString;
+begin
+   cmdName := ShortString(AnsiString('CONTEST'));
+   valName := aContestId;
+   Result := CheckCommand(cmdName, valName, True);
+end;
+
 function LogStoreApplyContestConfig: integer;
+begin
+   Result := LogStoreApplyContestConfigWith(@SetUpContestByCommand);
+end;
+
+function LogStoreApplyContestConfigWith(aSetUpContest: TLogContestSetUp): integer;
 var
    rebuilt: boolean;
    rows: TStringList;
@@ -2180,7 +2325,6 @@ begin
              (CFGCommandValueAsString('CONTEST') =
               ContestId(NoContest))) then
             begin
-            cmdName := ShortString(AnsiString('CONTEST'));
             valName := ShortString(AnsiString(
                ContestId(GRepository.LogContest)));
             (* ONLY IF IT IS NOT ALREADY RIGHT. FoundContest is NOT
@@ -2191,7 +2335,7 @@ begin
                because that is what the hook maintains; the VALUE comes from
                the contest table because that is what is trustworthy. *)
             if (CFGCommandValueAsString('CONTEST') <> string(valName)) and
-               CheckCommand(cmdName, valName, True) then
+               aSetUpContest(valName) then
                begin
                if logger <> nil then
                   begin
@@ -2595,7 +2739,12 @@ end;
   THE COST IS A CRASH. Kill TR4W mid-contest and the settings changed in that
   session are not in the log, though every QSO is -- QSOs are committed as they
   are made. Recording changes as they happen is the fix, and it belongs with
-  the settings work rather than here. *)
+  the settings work rather than here.
+
+  TWO KINDS ARE RECORDED AS THEY HAPPEN ALREADY, through
+  LogStoreRecordContestStatement: the Cabrillo summary window's categories
+  (Q61) and an accepted function-key memory edit (R2, 2026-10-23). For those
+  this capture is reconciliation, and rewrites what is already there. *)
 procedure CaptureConfigurationOnClose;
 begin
    (* A BATCH EXPORT DOES NOT REWRITE THE LOG IT IS EXPORTING.
