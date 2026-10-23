@@ -3888,17 +3888,23 @@ begin
       station.MyContinent := NorthAmerica;
       station.MyGrid := 'FN36';
 
-      (* RTC: off its bands, or off CW and phone, 0 AND no multiplier; on them
-         the haversine tier -- FN36 to DM18 is the rules' 3664.72 km, tier 2. *)
+      (* RTC: off its bands, or off CW and phone, an X-QSO -- 0, and
+         SetMultFlags gives an X-QSO no multiplier (since 2026-10-23 its
+         UsesBand / UsesMode; the arm's InhibitMults is gone); on them the
+         haversine tier -- FN36 to DM18 is the rules' 3664.72 km, tier 2. *)
       Use(RTC);
       Fresh(Band80, CW, 'K', NorthAmerica);
       qso.QTHString := 'DM18';
       CheckEquals(0, Scored, 'RTC 80 m: 0');
-      CheckTrue(qso.InhibitMults, 'RTC 80 m: no multiplier');
+      CheckTrue(QSOIsXQSO(obj, qso), 'RTC 80 m: an X-QSO, so no multiplier');
       Fresh(Band20, Digital, 'K', NorthAmerica);
       qso.QTHString := 'DM18';
       CheckEquals(0, Scored, 'RTC digital: 0');
-      CheckTrue(qso.InhibitMults, 'RTC digital: no multiplier');
+      CheckTrue(QSOIsXQSO(obj, qso), 'RTC digital: an X-QSO, so no multiplier');
+      Fresh(Band20, FM, 'K', NorthAmerica);
+      qso.QTHString := 'DM18';
+      CheckEquals(0, Scored, 'RTC FM: 0 -- SSB is Phone, FM refused');
+      CheckTrue(QSOIsXQSO(obj, qso), 'RTC FM: an X-QSO');
       Fresh(Band20, Phone, 'K', NorthAmerica);
       qso.QTHString := 'DM18';
       CheckEquals(2, Scored, 'RTC FN36 to DM18: 2000-4000 km, 2');

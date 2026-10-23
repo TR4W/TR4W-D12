@@ -39,13 +39,34 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   contest matrix is the proof: every line of its record but `contest.class`
   is unchanged.
 
-  SCORING: RTCQSOPointMethod (Issue #902) -- on 40, 20, 15 and 10 m, CW or
-  phone, with MY GRID and the received grid: the haversine distance between
-  the two four-character squares' centres (LOGGRID.RTCGridDistance) scores
-  1 under 2000 km, 2 under 4000, 3 under 8000 and 4 beyond. Any other band
-  or mode: 0 AND no multiplier (InhibitMults) -- the arm's own band rule,
-  kept in the arm (UsesBand would not set InhibitMults; Q44). Not reached by
-  design Q37: the haversine bounds a short grid.
+  THE SPONSOR'S RULES (https://blog.contestonlinescore.com/real-time-contest-rtc-rules/,
+  read 2026-10-23; an unambiguous CURRENT sponsor rule overrides D7):
+    MODES      "mixed mode format (CW and SSB)" -- UsesMode: CW and Phone.
+               "SSB" reads as Phone and refuses FM, as CQ WW SSB's
+               (Q120(a)). Any other mode is an automatic X-QSO.
+    BANDS      "40m, 20m, 15m, 10m" -- UsesBand. Another band is an
+               automatic X-QSO ("logged on the wrong band": 0 points, no
+               multiplier).
+    DUPES      "Each station may be worked only ONCE per band on CW, and
+               ONCE per band on SSB" -- cfQSOByBand AND cfQSOByMode. The
+               mode half is the 2026 update ("the most important change");
+               until 2026-10-23 a station was once per band in any mode.
+    MULTIPLIER "unique 4-character grid locators worked per band" --
+               cfMultByBand and NOT cfMultByMode: a grid worked on 20 m CW is
+               not a new multiplier on 20 m SSB.
+
+  SCORING: RTCQSOPointMethod (Issue #902) -- with MY GRID and the received
+  grid: the haversine distance between the two four-character squares'
+  centres (LOGGRID.RTCGridDistance) scores 1 under 2000 km, 2 under 4000, 3
+  under 8000 and 4 beyond -- the sponsor's table ("1 point up to 1,999.99
+  km", ..., "4 points from 8,000.00 km and over"). The band and mode rule
+  is NOT here any more: an off-band or off-mode QSO is an X-QSO (Q98 S1)
+  and never reaches CalculateQSOPoints, and SetMultFlags gives an X-QSO no
+  multiplier -- which is what the arm's InhibitMults did (Q44). Not reached
+  by design Q37: the haversine bounds a short grid.
+
+  NOT BUILT, REPORTED: "sent or received QSO serial number 0" makes a QSO
+  invalid; nothing here refuses a 0 serial.
 
   SET-UP: WARC off; the CQ, S&P and repeat S&P exchanges are the serial and
   MY GRID; CQ F3, and exchange F4, F5 and Alt-F4, are the serial and grid
@@ -100,6 +121,11 @@ type
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
+      (* 40, 20, 15 AND 10 METRES -- see TContestBase.UsesBand. *)
+      function UsesBand(aBand: BandType): boolean; override;
+      (* CW AND SSB -- see TContestBase.UsesMode. *)
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
+   public
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
@@ -153,25 +179,15 @@ uses
    uCanonicalExchange;
 
 (* RTCQSOPointMethod -- the legacy LOGSTUFF arm for this
-   contest's point method, moved here as it stood (M7b batch 2). The arm
-   was deleted at M10 S3; see git history or the D7 tree. *)
+   contest's point method, moved here (M7b batch 2). The arm was deleted at
+   M10 S3; see git history or the D7 tree. Its band and mode arms are gone
+   (2026-10-23): UsesBand and UsesMode state them, so an off-band or
+   off-mode QSO is an X-QSO and never reaches this. *)
 procedure TContestRTC.CalculateQSOPoints(var aQso: ContestExchange);
 var
    distanceKm: Double;
 begin
-   (* Rules permit only 40/20/15/10 m on CW and SSB: any QSO outside
-      those bands or modes scores 0 and does NOT count as a multiplier. *)
-   if not (aQso.Band in [Band40, Band20, Band15, Band10]) then
-      begin
-      aQso.QSOPoints := 0;
-      aQso.InhibitMults := True;
-      end
-   else if not (aQso.Mode in [CW, Phone]) then
-      begin
-      aQso.QSOPoints := 0;
-      aQso.InhibitMults := True;
-      end
-   else if (Station.MyGrid <> '') and (aQso.QTHString <> '') then
+   if (Station.MyGrid <> '') and (aQso.QTHString <> '') then
       begin
       distanceKm := RTCGridDistance(Station.MyGrid, aQso.QTHString);
       if distanceKm < 2000.0 then
@@ -285,9 +301,28 @@ begin
    Result := CabrilloReceivedRSTQSONumberGrid(aMy, aQso, aCtx);
 end;
 
+(* "Each station may be worked only ONCE per band on CW, and ONCE per band
+   on SSB" (2026 rules): QSOs by band AND mode. Multipliers are "unique
+   4-character grid locators worked per band": by band only -- never
+   cfMultByMode. *)
 function TContestRTC.GetFlags: TContestFlags;
 begin
-   Result := [cfQSOByBand, cfMultByBand, cfRTCCapable];
+   Result := [cfQSOByBand, cfQSOByMode, cfMultByBand, cfRTCCapable];
+end;
+
+(* "Bands: 40m, 20m, 15m, 10m." An identity fact: no station is asked. *)
+function TContestRTC.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand in [Band40, Band20, Band15, Band10];
+end;
+
+(* "mixed mode format (CW and SSB)". SSB reads as Phone and refuses FM, the
+   reading NY4I gave CQ WW SSB (Q120(a)). Every CW and Phone submode is
+   credited, so eNoMode (a record with no submode) is never proven
+   off-mode. *)
+function TContestRTC.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   Result := aMode in [CW, Phone];
 end;
 
 function TContestRTC.GetIsUSQSOParty: boolean;

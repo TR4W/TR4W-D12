@@ -717,6 +717,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* The Georgia QSO Party, a new contest registered by its id
       (2026-10-23). *)
    uTestContestGeorgiaQP in 'uTestContestGeorgiaQP.pas',
+   (* The RTC's 2026 rules: dupes per band AND mode, grids per band
+      (2026-10-23). *)
+   uTestContestRTC      in 'uTestContestRTC.pas',
    uTestContestNames    in 'uTestContestNames.pas',
    (* Every QSO party's stated bands (NY4I, 2026-10-16). *)
    uTestQSOPartyBands   in 'uTestQSOPartyBands.pas',
@@ -844,6 +847,7 @@ begin
    RegisterSuite(TContestNebraskaQPTests.Create('ContestNebraskaQP'));
    RegisterSuite(TContestURCDXRTTYTests.Create('ContestURCDXRTTY'));
    RegisterSuite(TContestGeorgiaQPTests.Create('ContestGeorgiaQP'));
+   RegisterSuite(TContestRTCTests.Create('ContestRTC'));
    RegisterSuite(TContestNamesTests.Create('ContestNames'));
    RegisterSuite(TQSOPartyBandsTests.Create('QSOPartyBands'));
    RegisterSuite(TContestIN7QPNETests.Create('ContestIN7QPNE'));

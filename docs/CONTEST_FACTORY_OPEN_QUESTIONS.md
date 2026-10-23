@@ -903,6 +903,27 @@ closes it; anything else reopens it.
 
 ### Answered since the table was last updated (full text)
 
+- **RTC 2026 rules: each station workable once per band per mode (CW and
+  SSB)** -- sponsor update read 2026-10-23,
+  <https://blog.contestonlinescore.com/real-time-contest-rtc-rules/>: *"Each
+  station may be worked only ONCE per band on CW, and ONCE per band on
+  SSB"* (the sponsor's "most important change"). Multipliers stay *"unique
+  4-character grid locators worked per band"* -- per band, not per mode.
+  An unambiguous current sponsor rule, so it overrides D7 (NY4I's standing
+  rule, 2026-10-22); no question was asked.
+  **BUILT 2026-10-23:** `TContestRTC.GetFlags` gains `cfQSOByMode` (still
+  `cfMultByBand`, never `cfMultByMode`). The class also states its bands
+  (`UsesBand`: 40/20/15/10 m) and modes (`UsesMode`: CW and Phone; "SSB"
+  refuses FM, Q120(a)'s reading) and leaves `BANDS_NOT_YET_STATED` and
+  `MODES_NOT_YET_STATED`; its off-band / off-mode arms in `CalculateQSOPoints`
+  are deleted, so such a QSO is an automatic X-QSO (Q98 S1) -- 0 points, no
+  multiplier -- which is RTC's part of Q44. Points table, exchange, bands and
+  Cabrillo name `RTC` already matched the page. Not built, reported: a QSO
+  with a sent or received serial of 0 is invalid. Pinned by
+  `uTestContestRTC` (the real engine: 20 m CW then 20 m SSB is not a dupe and
+  scores; the same mode again is; the grid is not a new multiplier on 20 m
+  SSB, and is on 40 m).
+
 - **Q110** (found building Q108 S4, 2026-10-17) **Multi-op: a peer's QSO is
   logged even when the peer is running a DIFFERENT contest.** `uNet`'s
   `NET_QSOINFO` arm called `LogContact` for every QSO from another station
