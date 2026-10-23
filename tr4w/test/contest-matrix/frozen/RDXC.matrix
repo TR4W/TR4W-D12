@@ -229,7 +229,7 @@ parse uk.serial.district G3ABC Band20/CW "599 123 LN" | ok=TRUE err="" token="" 
 parse ja.prefecture JA1ABC Band15/CW "599 13" | ok=TRUE err="" token="" pending="" call=JA1ABC band=Band15 mode=CW/eNoMode freq=21025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=13 exch=599 13 cty=JA/45/Asia/JA1 dxqth=JA
 parse ru.oblast UA3ABC Band20/CW "599 MO" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=MO domqth=Mo dommultqth=Mo exch=599 MO cty=UA/29/Europe/UA3 dxqth=UA
 parse ru.serial UA3ABC Band20/CW "599 123" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=123 exch=599 123 cty=UA/29/Europe/UA3 dxqth=UA
-parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=FALSE err="Improper domestic QTH!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=UA/29/Europe/UA3 dxqth=UA
+parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=FALSE err="Improper domestic QTH!! (MO12 not in russian.dom)" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=UA/29/Europe/UA3 dxqth=UA
 parse py.state PY2ABC Band20/CW "599 SP" | ok=FALSE err="" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=0 cty=PY/15/SouthAmerica/PY2 dxqth=PY
 parse f.department F5ABC Band20/CW "599 75" | ok=TRUE err="" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=75 exch=599 75 cty=F/27/Europe/F5 dxqth=F
 == keys
@@ -261,7 +261,7 @@ parse dok DL1ABC Band40/CW "599 A01" | ok=TRUE err="" token="" pending="" call=D
 parse serial.dok DL1ABC Band40/CW "599 123 A01" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=123 exch=599 123 A01 cty=DL/28/Europe/DL1 dxqth=DL
 parse grid6 W1AW Band20/CW "599 FN31PR" | ok=TRUE err="" token="" pending="" call=FN31PR band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=599 exch=599 cty=F/27/Europe/FN31 dxqth=F
 parse grid.field W1AW Band20/CW "599 FN" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=0 cty=K/8/NorthAmerica/W1 dxqth=K
-parse rda.short UA3ABC Band20/CW "599 MO1" | ok=FALSE err="Improper domestic QTH!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=UA/29/Europe/UA3 dxqth=UA
+parse rda.short UA3ABC Band20/CW "599 MO1" | ok=FALSE err="Improper domestic QTH!! (MO1 not in russian.dom)" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=UA/29/Europe/UA3 dxqth=UA
 == totals
 totals.qsopoints = 60
 totals.qtcs = 0
@@ -590,7 +590,7 @@ parse uk.serial.district G3ABC Band20/CW "599 123 LN" | ok=TRUE err="" token="" 
 parse ja.prefecture JA1ABC Band15/CW "599 13" | ok=TRUE err="" token="" pending="" call=JA1ABC band=Band15 mode=CW/eNoMode freq=21025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=13 exch=599 13 cty=JA/45/Asia/JA1 dxqth=JA
 parse ru.oblast UA3ABC Band20/CW "599 MO" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=MO domqth=Mo dommultqth=Mo exch=599 MO cty=UA/29/Europe/UA3 dxqth=UA
 parse ru.serial UA3ABC Band20/CW "599 123" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=123 exch=599 123 cty=UA/29/Europe/UA3 dxqth=UA
-parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=FALSE err="Improper domestic QTH!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=UA/29/Europe/UA3 dxqth=UA
+parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=FALSE err="Improper domestic QTH!! (MO12 not in russian.dom)" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=UA/29/Europe/UA3 dxqth=UA
 parse py.state PY2ABC Band20/CW "599 SP" | ok=FALSE err="" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=0 cty=PY/15/SouthAmerica/PY2 dxqth=PY
 parse f.department F5ABC Band20/CW "599 75" | ok=TRUE err="" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=75 exch=599 75 cty=F/27/Europe/F5 dxqth=F
 == keys
@@ -622,7 +622,7 @@ parse dok DL1ABC Band40/CW "599 A01" | ok=TRUE err="" token="" pending="" call=D
 parse serial.dok DL1ABC Band40/CW "599 123 A01" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=123 exch=599 123 A01 cty=DL/28/Europe/DL1 dxqth=DL
 parse grid6 W1AW Band20/CW "599 FN31PR" | ok=TRUE err="" token="" pending="" call=FN31PR band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=599 exch=599 cty=F/27/Europe/FN31 dxqth=F
 parse grid.field W1AW Band20/CW "599 FN" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=0 cty=K/8/NorthAmerica/W1 dxqth=K
-parse rda.short UA3ABC Band20/CW "599 MO1" | ok=FALSE err="Improper domestic QTH!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=UA/29/Europe/UA3 dxqth=UA
+parse rda.short UA3ABC Band20/CW "599 MO1" | ok=FALSE err="Improper domestic QTH!! (MO1 not in russian.dom)" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=UA/29/Europe/UA3 dxqth=UA
 == totals
 totals.qsopoints = 66
 totals.qtcs = 0
@@ -949,7 +949,7 @@ parse uk.serial.district G3ABC Band20/CW "599 123 LN" | ok=TRUE err="" token="" 
 parse ja.prefecture JA1ABC Band15/CW "599 13" | ok=TRUE err="" token="" pending="" call=JA1ABC band=Band15 mode=CW/eNoMode freq=21025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=13 exch=599 13 cty=JA/45/Asia/JA1 dxqth=JA
 parse ru.oblast UA3ABC Band20/CW "599 MO" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=MO domqth=Mo dommultqth=Mo exch=599 MO cty=UA/29/Europe/UA3 dxqth=UA
 parse ru.serial UA3ABC Band20/CW "599 123" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=123 exch=599 123 cty=UA/29/Europe/UA3 dxqth=UA
-parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=FALSE err="Improper domestic QTH!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=UA/29/Europe/UA3 dxqth=UA
+parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=FALSE err="Improper domestic QTH!! (MO12 not in russian.dom)" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=UA/29/Europe/UA3 dxqth=UA
 parse py.state PY2ABC Band20/CW "599 SP" | ok=FALSE err="" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=0 cty=PY/15/SouthAmerica/PY2 dxqth=PY
 parse f.department F5ABC Band20/CW "599 75" | ok=TRUE err="" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=75 exch=599 75 cty=F/27/Europe/F5 dxqth=F
 == keys
@@ -981,7 +981,7 @@ parse dok DL1ABC Band40/CW "599 A01" | ok=TRUE err="" token="" pending="" call=D
 parse serial.dok DL1ABC Band40/CW "599 123 A01" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=123 exch=599 123 A01 cty=DL/28/Europe/DL1 dxqth=DL
 parse grid6 W1AW Band20/CW "599 FN31PR" | ok=TRUE err="" token="" pending="" call=FN31PR band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=599 exch=599 cty=F/27/Europe/FN31 dxqth=F
 parse grid.field W1AW Band20/CW "599 FN" | ok=FALSE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=0 cty=K/8/NorthAmerica/W1 dxqth=K
-parse rda.short UA3ABC Band20/CW "599 MO1" | ok=FALSE err="Improper domestic QTH!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=UA/29/Europe/UA3 dxqth=UA
+parse rda.short UA3ABC Band20/CW "599 MO1" | ok=FALSE err="Improper domestic QTH!! (MO1 not in russian.dom)" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=UA/29/Europe/UA3 dxqth=UA
 == totals
 totals.qsopoints = 78
 totals.qtcs = 0

@@ -398,6 +398,12 @@ var
     are resourcestrings now. Its one reader tested it against nil and now
     tests for empty -- see MainUnit. }
   ExchangeErrorMessage: string;
+  (* WHERE RefuseDomesticQTH LOOKS FOR A PARTY'S IN-STATE FILE -- 2026-10-23.
+    Empty, as the program leaves it: the shipped dom directory
+    (uAppPaths.DataFilePath). A unit test points it at the tree's
+    target/dom, because the test binary's own directory has no dom folder;
+    nothing else writes it. *)
+  DomesticQTHRefusalDomDir: string = '';
   ExchangeErrorToken: Str40;   // Issue #1010: the offending exchange token, so the caller can place the caret right after it
   ExchangeMemoryFileEnable: boolean;
   ExchangeWindowString: Str40;
@@ -758,6 +764,10 @@ uses uNet,
   (* ExchangeModeAttribution -- which SETTING put this contest in
     domestic-QTH mode. See the rejections below. *)
   uContestReadiness,
+  (* DomFileInDirHasAlias -- whether a party's in-state file knows a QTH,
+    for RefuseDomesticQTH's reason. DataFilePath -- where that file is. *)
+  uDomFileKeys,
+  uAppPaths,
   (* SExchangeNotAGridOrReport -- the RST-and/or-grid parser's refusal of a
     word that is neither (Q115). *)
   uAppStrings,
@@ -777,6 +787,125 @@ begin
   if Result = nil then
      begin
      Result := ContestIdentity(Contest);
+     end;
+end;
+
+(* WHY THIS DOMESTIC QTH WAS REFUSED -- 2026-10-23. See
+  uContestReadiness.TDomesticQTHRefusal for the three reasons; this decides
+  which applies, from facts only the engine has.
+
+  THE HOST-AREA REASON IS MEASURED, NOT ASSUMED. An out-of-state entrant in
+  a QSO party has the host's COUNTY file loaded (FCONTEST), so 'CT' and a
+  typo are refused alike by the table. The difference is whether the party's
+  IN-STATE file -- the one a host station loads, holding the states,
+  provinces and counties -- knows the text: then it is a real place this
+  entrant may not work, and the reason is the host-area rule. Read from disk
+  on the refusal path only (uDomFileKeys), never into the live table.
+
+  aQTH is already upper-cased and trimmed by the caller. *)
+function ClassifyDomesticQTHRefusal(aContest: TContestBase;
+                                    const aQTH: string;
+                                    out aListName: string;
+                                    out aHostArea: string): TDomesticQTHRefusal;
+var
+  domDir: string;
+begin
+  aListName := '';
+  aHostArea := '';
+
+  if aQTH = '' then
+     begin
+     Result := dqrNoQTH;
+     Exit;
+     end;
+
+  (* InHostState FROM CurrentStation -- the record ActiveContest stamps on
+    the contest object, so it is the answer the party's own host-area rule
+    reads (Station is not public). Refusal path only. *)
+  if aContest.IsUSQSOParty                     and
+     (aContest.InStateDomesticFileName <> '')   and
+     (not CurrentStation.InHostState)           then
+     begin
+     domDir := DomesticQTHRefusalDomDir;
+     if domDir = '' then
+        begin
+        domDir := DataFilePath('dom');
+        end;
+     if DomFileInDirHasAlias(domDir,
+                             aContest.InStateDomesticFileName + string(DOM_EXTENSION),
+                             aQTH) then
+        begin
+        aHostArea := aContest.QSOPartyArea;
+        Result := dqrHostAreaOnly;
+        Exit;
+        end;
+     end;
+
+  (* THE LIST THIS SESSION LOADED -- the setting holds its name, never a
+    path (TContestSettings.SetDomesticFilename). A contest whose domestic
+    QTH is a rule rather than a file names none. *)
+  if ContestUsesDomesticFile(aContest) then
+     begin
+     aListName := string(Settings.Contest.DomesticFilename);
+     end;
+  Result := dqrNotInList;
+end;
+
+(* THE ONE REFUSAL OF A DOMESTIC QTH -- 2026-10-23, every parser that
+  refuses one calls it.
+
+  NY4I: "Improper domestic QTH is the historical message TR sent but I am
+  open to a clearer message as long as it is consistent in other places."
+  So the historical text stays as the stem (aStem: TC_IMPROPERDOMESITCQTH,
+  or ...ORMISSINGNAME where a name shares the exchange) and ONE reason is
+  appended, the same way at every site:
+
+    SCREEN  stem + the brief reason -- ExchangeErrorMessage, which
+            QuickDisplayError writes into a main-window element a few words
+            wide: 'Improper domestic QTH!! (CT: work GA stations only)'.
+    LOG     stem + the reason as a sentence + ExchangeModeAttribution's
+            sentence (which setting put the contest in domestic-QTH mode).
+
+  ExchangeModeAttribution'S BRIEF FORM ('(MY COUNTRY is empty)', 2026-09-20)
+  STILL WINS THE SCREEN WHEN MY COUNTRY IS EMPTY. That is a configuration
+  gap that can put the whole contest in the wrong mode -- NY4I's ARRL DX
+  bench case -- so it is the first thing to fix, ahead of any QTH reason.
+  A STATED country is no longer shown on screen ('(MY COUNTRY = K)' read as
+  a reason in a QSO party, where no country chose anything); the log keeps
+  it. *)
+procedure RefuseDomesticQTH(const aCaller: string;
+                            const aStem: string;
+                            const aQTH: string;
+                            const aExchange: string);
+var
+  contestRules: TContestBase;
+  refusal: TDomesticQTHRefusal;
+  qth: string;
+  listName: string;
+  hostArea: string;
+  carriesDomesticQTH: boolean;
+  country: string;
+begin
+  contestRules := ExchangeContest;
+  qth := UpperCase(Trim(aQTH));
+  refusal := ClassifyDomesticQTHRefusal(contestRules, qth, listName, hostArea);
+  carriesDomesticQTH := contestRules.ExchangeCarriesDomesticQTH;
+  country := string(Settings.My.Country);
+
+  logger.Error('[%s] %s Exchange = (%s). %s %s',
+               [aCaller, aStem, aExchange,
+                DomesticQTHRefusalReason(refusal, qth, listName, hostArea, False),
+                ExchangeModeAttribution(carriesDomesticQTH, country, False)]);
+
+  if carriesDomesticQTH and (Trim(country) = '') then
+     begin
+     ExchangeErrorMessage := aStem +
+        ExchangeModeAttribution(carriesDomesticQTH, country, True);
+     end
+  else
+     begin
+     ExchangeErrorMessage := aStem +
+        DomesticQTHRefusalReason(refusal, qth, listName, hostArea, True);
      end;
 end;
 
@@ -1792,7 +1921,10 @@ begin
      end;
   if Result = False then
      begin
-     ExchangeErrorMessage := TC_IMPROPERDOMESITCQTHORMISSINGNAME;
+     (* The one refusal, with its reason -- see RefuseDomesticQTH. *)
+     RefuseDomesticQTH('ProcessNameAndDomesticOrDXQTHExchange',
+                       TC_IMPROPERDOMESITCQTHORMISSINGNAME,
+                       string(RXData.QTHString), string(Exchange));
      end;
 
 end;
@@ -1926,6 +2058,7 @@ begin
 end;
 
 function ApplyFirstQTHAndQueueRest(ValidQTHs: TStringList;
+  UnknownTokens: TStringList; const aCaller: string; const aExchange: string;
   var RXData: ContestExchange): boolean;
 
 { The first valid QTH in user-typed order belongs to the QSO being built: put
@@ -1933,23 +2066,32 @@ function ApplyFirstQTHAndQueueRest(ValidQTHs: TStringList;
   DomMultQTH / DomesticQTH carry the canonical name.  Every further QTH is
   queued for TryLogContact, which drains the queue immediately after writing
   this QSO and logs one more QSO per queued county -- all of them sharing the
-  one transmitted serial number.
+  one transmitted serial number. }
 
-  Returns False, with ExchangeErrorMessage set, when the exchange named no
-  recognisable domestic QTH at all.  The caller logs the failure, because the
-  two callers name themselves differently in the log. }
+(* Returns False, with ExchangeErrorMessage set and the failure logged, when
+  the exchange named no recognisable domestic QTH at all -- through
+  RefuseDomesticQTH since 2026-10-23, named for aCaller, so the reason names
+  the first word that was not a QTH (UnknownTokens, in typed order), or says
+  there was none. The callers logged the failure themselves before; the
+  reason is the half they could not give. *)
 
 var
   i                                     : integer;
   contestObject                         : TContestBase;
   countyCountError                      : string;
+  refusedQTH                            : string;
 
 begin
   Result := False;
 
   if ValidQTHs.Count = 0 then
      begin
-     ExchangeErrorMessage := TC_IMPROPERDOMESITCQTH;
+     refusedQTH := '';
+     if UnknownTokens.Count > 0 then
+        begin
+        refusedQTH := UnknownTokens[0];
+        end;
+     RefuseDomesticQTH(aCaller, TC_IMPROPERDOMESITCQTH, refusedQTH, aExchange);
      Exit;
      end;
 
@@ -1992,7 +2134,7 @@ begin
 
   if not Result then
      begin
-     ExchangeErrorMessage := TC_IMPROPERDOMESITCQTH;
+     RefuseDomesticQTH(aCaller, TC_IMPROPERDOMESITCQTH, ValidQTHs[0], aExchange);
      Exit;
      end;
 
@@ -2074,9 +2216,12 @@ begin
      { This exchange is "number and QTH": a bare QTH with no number has always
        been rejected here, and still is. }
 
+     (* A MISSING OR BAD NUMBER IS SAID AS ONE -- 2026-10-23. Both said
+       "Improper domestic QTH!!", which sent the operator to look at a
+       county that was fine. *)
      if NumericTokens.Count = 0 then
         begin
-        ExchangeErrorMessage := TC_IMPROPERDOMESITCQTH;
+        ExchangeErrorMessage := TC_NOQSONUMBERFOUND;
         logger.Error('[ProcessQSONumberAndDomesticQTHExchange] No QSO number in exchange (%s)', [Exchange]);
         Exit;
         end;
@@ -2085,18 +2230,17 @@ begin
 
      if ConversionResult <> 0 then
         begin
-        ExchangeErrorMessage := TC_IMPROPERDOMESITCQTH;
+        ExchangeErrorMessage := TC_NOQSONUMBERFOUND;
         logger.Error('[ProcessQSONumberAndDomesticQTHExchange] Bad QSO number (%s)', [NumericTokens[0]]);
         Exit;
         end;
 
-     Result := ApplyFirstQTHAndQueueRest(ValidQTHs, RXData);
+     (* A refusal is logged inside, with its reason. *)
+     Result := ApplyFirstQTHAndQueueRest(ValidQTHs, UnknownTokens,
+                                         'ProcessQSONumberAndDomesticQTHExchange',
+                                         string(Exchange), RXData);
 
-     if not Result then
-        begin
-        logger.Error('[ProcessQSONumberAndDomesticQTHExchange] Improper Domestic QTH - Exchange = (%s)', [Exchange]);
-        end
-     else
+     if Result then
         begin
         { Only once the exchange stands.  A rejected exchange already reports
           itself above, and two complaints about one entry is noise. }
@@ -3072,7 +3216,11 @@ begin
         end
      else
         begin
-        ExchangeErrorMessage := TC_IMPROPERDOMESITCQTHORMISSINGNAME;
+        (* The QTH AS IT WAS FIRST READ -- the swap above has put it in
+          Name. The one refusal, with its reason -- see RefuseDomesticQTH. *)
+        RefuseDomesticQTH('ProcessQSONumberNameAndDomesticOrDXQTHExchange',
+                          TC_IMPROPERDOMESITCQTHORMISSINGNAME,
+                          string(RXData.Name), string(Exchange));
         end;
 
      end;
@@ -3773,7 +3921,6 @@ var
   NumericTokens : TStringList;
   ValidQTHs     : TStringList;
   UnknownTokens : TStringList;
-  carriesDomesticQTH: boolean;
 
 begin
   ProcessRSTAndDomesticQTHExchange := False;
@@ -3810,33 +3957,18 @@ begin
         end;
      if Result = False then
         begin
-        (* NAME THE SETTING THAT PUT THE CONTEST IN THIS MODE -- 2026-09-20.
+        (* NAME WHY -- 2026-09-20 for the setting, 2026-10-23 for the QTH.
 
           "Improper domestic QTH" is a complete description of what was
-          refused and says nothing about WHY the contest wanted one. In ARRL
-          DX the answer is MY COUNTRY, which the operator never typed --
-          FCONTEST derives it from the callsign -- so there is nothing on
-          screen connecting the refusal to a setting. NY4I typed K for a
-          kilowatt into a correctly-configured ARRL DX SSB contest and got
-          this line (2026-09-20).
-
-          The attribution is empty for the exchanges no setting chose, and
-          then the message is exactly what it was. *)
-        (* Whether the contest's exchange carries a domestic QTH is its own
-          answer since M11 S9d (it was the session's kind, in a set of
-          uContestReadiness). Asked once, on the refusal path only. *)
-        carriesDomesticQTH := ExchangeContest.ExchangeCarriesDomesticQTH;
-        logger.Error('[ProcessRSTAndDomesticQTHExchange] Improper domestic ' +
-                     'QTH - Exchange = (%s). %s',
-                     [Exchange,
-                      ExchangeModeAttribution(carriesDomesticQTH,
-                                              Settings.My.Country, False)]);
-        (* THE BRIEF FORM ON SCREEN. QuickDisplayError writes into a
-          main-window element, not a dialog, so what goes there has to be a
-          few words -- '(MY COUNTRY is empty)' rather than the sentence the
-          log gets. *)
-        ExchangeErrorMessage := TC_IMPROPERDOMESITCQTH +
-           ExchangeModeAttribution(carriesDomesticQTH, Settings.My.Country, True);
+          refused and says nothing about WHY. NY4I typed K for a kilowatt
+          into ARRL DX SSB with MY COUNTRY empty (2026-09-20), and typed CT
+          as an out-of-state entrant in the Georgia QSO Party (2026-10-23).
+          RefuseDomesticQTH gives the one reason for every parser: the
+          empty MY COUNTRY first, else what was wrong with the QTH. Its
+          header holds the rule. *)
+        RefuseDomesticQTH('ProcessRSTAndDomesticQTHExchange',
+                          TC_IMPROPERDOMESITCQTH,
+                          string(Exchange), string(Exchange));
         end;
      (* IARU's ZONE FROM THE CALL, for a member society's single-word exchange,
        stood here as `if Contest = IARU` (NY4I 2026JUL07). It is the IARU
@@ -3887,13 +4019,12 @@ begin
         RXData.RSTReceived := DefaultRST;
         end;
 
-     Result := ApplyFirstQTHAndQueueRest(ValidQTHs, RXData);
+     (* A refusal is logged inside, with its reason. *)
+     Result := ApplyFirstQTHAndQueueRest(ValidQTHs, UnknownTokens,
+                                         'ProcessRSTAndDomesticQTHExchange',
+                                         string(Exchange), RXData);
 
-     if not Result then
-        begin
-        logger.Error('[ProcessRSTAndDomesticQTHExchange] Improper Domestic QTH - Exchange = (%s)', [Exchange]);
-        end
-     else
+     if Result then
         begin
         ReportIgnoredQTHTokens('ProcessRSTAndDomesticQTHExchange', UnknownTokens);
         end;

@@ -23,6 +23,26 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-23 -- RTC 2026 RULES AND THE CLEARER IMPROPER-QTH MESSAGE
+
+Unit-tested (`uTestContestRTC`, `uTestContestGeorgiaQP`,
+`uTestContestReadiness`); the matrix sees the parse result and the error text,
+nothing sees the window.
+
+- [ ] **RTC, same station twice on one band.** Work DL1xxx on 20 m CW, then on
+      20 m SSB. EXPECT the SSB QSO is NOT a dupe and earns its distance
+      points, but its grid is NOT a new multiplier (grids count per band).
+      Work it again on 20 m CW: a dupe. A QSO on 80 m, or in FM or a digital
+      mode, is a greyed X-QSO.
+- [ ] **Georgia, as an out-of-state entrant** (MY STATE outside GA), type
+      `599 CT` for W1AW. EXPECT the message reads
+      `Improper domestic QTH!! (CT: work GA stations only)` and **fits** the
+      main-window element (52 characters; the old longest form was 45). Type
+      `599 HARX`: `(HARX not in georgia_cty.dom)`.
+- [ ] **A stated MY COUNTRY no longer shows on screen** in a refusal (it did as
+      `(MY COUNTRY = K)` in several QSO parties); it is still in `tr4w.log`. An
+      EMPTY MY COUNTRY in ARRL DX still shows `(MY COUNTRY is empty)`.
+
 ## Added 2026-10-23 -- HAMSCORE RE-EMITS A STORED QSO FROM ITS RECORD (issue 95, review R6, Q13)
 
 Unit-tested only (`Test_HamScoreStoredQsoReadsItsRecord`,

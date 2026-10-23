@@ -759,6 +759,9 @@ var
    savedList: TCallsignsList;
    savedQualified: TQualifiedDupeSheet;
    savedCountries: TStringList;
+   savedRefusalDomDir: string;
+   savedMyCountry: string;
+   savedDomesticFilename: string;
    ctyPath: string;
    rx: ContestExchange;
    accepted: boolean;
@@ -814,6 +817,9 @@ begin
    savedTable := DomQTHTable;
    savedList := CallsignsList;
    savedQualified := QualifiedDupes;
+   savedRefusalDomDir := DomesticQTHRefusalDomDir;
+   savedMyCountry := Settings.My.Country;
+   savedDomesticFilename := Settings.Contest.DomesticFilename;
    savedCountries := TStringList.Create;
    for i := 0 to DomesticCountries.Count - 1 do
       begin
@@ -890,11 +896,62 @@ begin
          QTH -- before the party's own rule is asked. A DX call goes to the
          DX branch, which accepts any QTH, and the party's host-area rule
          refuses it with its own reason. *)
+      (* THE IMPROPER QTH NAMES ITS REASON -- NY4I, 2026-10-23, after typing
+         CT as an out-of-state entrant and reading only "Improper domestic
+         QTH!!". The historical text is the stem; the reason is the one
+         LOGSTUFF.RefuseDomesticQTH gives at every parser. As FoundContest
+         leaves it for this station: MY COUNTRY derived (K), the county file
+         named, and the in-state file found in the tree's dom folder (the
+         test binary's own directory has none). *)
+      DomesticQTHRefusalDomDir := ShippedDomDir;
+      Settings.My.DeriveCountry('K');
+      Settings.Contest.DomesticFilename := 'georgia_cty.dom';
+
+      (* A STATE: a place the contest knows (georgia.dom has PA through
+         S50), which an out-of-state entrant may not work. *)
       accepted := True;
       Enter('AA3B', '599 PA', Band20, CW, accepted, rx);
       CheckFalse(accepted, 'a Pennsylvania station is refused');
-      CheckEquals(TC_IMPROPERDOMESITCQTH, string(ExchangeErrorMessage),
-                  'as an improper QTH: the county file does not know PA');
+      CheckEquals('Improper domestic QTH!! (PA: work GA stations only)',
+                  string(ExchangeErrorMessage),
+                  'as an improper QTH, with the host-area reason');
+
+      (* The SAME reason from the single-word parser -- CT typed alone. *)
+      accepted := True;
+      Enter('W1AW', 'CT', Band20, CW, accepted, rx);
+      CheckFalse(accepted, 'a Connecticut station is refused');
+      CheckEquals('Improper domestic QTH!! (CT: work GA stations only)',
+                  string(ExchangeErrorMessage),
+                  'the single-word parser gives the same reason');
+
+      (* A TYPO: not a county, not a state -- not in the file this entrant
+         loaded, which is named. *)
+      accepted := True;
+      Enter('K4BAI', '599 HARX', Band20, CW, accepted, rx);
+      CheckFalse(accepted, 'a misspelt county is refused');
+      CheckEquals('Improper domestic QTH!! (HARX not in georgia_cty.dom)',
+                  string(ExchangeErrorMessage),
+                  'as not in the county file');
+
+      (* NOTHING THAT COULD BE A QTH -- a report alone. *)
+      accepted := True;
+      Enter('K4BAI', '599', Band20, CW, accepted, rx);
+      CheckFalse(accepted, 'a report alone is refused');
+      CheckEquals('Improper domestic QTH!! (no QTH)',
+                  string(ExchangeErrorMessage),
+                  'as no QTH');
+
+      (* MY COUNTRY EMPTY WINS THE SCREEN (2026-09-20's attribution): a
+         configuration gap comes before any QTH reason. *)
+      Settings.My.DeriveCountry('');
+      accepted := True;
+      Enter('AA3B', '599 PA', Band20, CW, accepted, rx);
+      CheckFalse(accepted, 'still refused with no MY COUNTRY');
+      CheckEquals(TC_IMPROPERDOMESITCQTH + ' ' + SExchangeModeBriefEmptyCountry,
+                  string(ExchangeErrorMessage),
+                  'and the screen names the empty MY COUNTRY');
+      Settings.My.DeriveCountry('K');
+
       accepted := True;
       Enter('DL1AAA', '599 DX', Band20, CW, accepted, rx);
       CheckFalse(accepted, 'a DX station is refused');
@@ -948,6 +1005,9 @@ begin
       Settings.Mult.ByBand := savedMultByBand;
       Settings.Qso.ByMode := savedQsoByMode;
       Settings.Qso.ByBand := savedQsoByBand;
+      Settings.Contest.DomesticFilename := savedDomesticFilename;
+      Settings.My.DeriveCountry(savedMyCountry);
+      DomesticQTHRefusalDomDir := savedRefusalDomDir;
       ExchangeErrorMessage := '';
       Contest := savedContest;
       ReleaseActiveContest;

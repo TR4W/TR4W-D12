@@ -105,6 +105,35 @@ function ExchangeModeAttribution(const aCarriesDomesticQTH: boolean;
                                  const aCountry: string;
                                  const aBrief: boolean): string;
 
+type
+   (* WHY A DOMESTIC QTH WAS REFUSED -- 2026-10-23. NY4I: "Improper domestic
+     QTH is the historical message TR sent but I am open to a clearer message
+     as long as it is consistent in other places."
+
+     The historical text stays as the STEM, so the line is still recognisably
+     TR's; the reason is appended by the same rule as ExchangeModeAttribution
+     (brief for the screen, a sentence for the log). LOGSTUFF decides which
+     reason applies (RefuseDomesticQTH); this unit only words it, so the
+     wording is pinned without an engine.
+
+       dqrNoQTH         nothing in the exchange could be a QTH;
+       dqrNotInList     the text is not in the list this entrant's session
+                        loaded (aListName, the DOMESTIC FILENAME -- '' when
+                        the contest's QTH is a rule rather than a file);
+       dqrHostAreaOnly  the text IS a place the contest knows (its in-state
+                        file has it), but this entrant is outside the host
+                        area and may work host stations only (aHostArea). *)
+   TDomesticQTHRefusal = (dqrNoQTH, dqrNotInList, dqrHostAreaOnly);
+
+(* THE REASON, with a leading space when aBrief (as ExchangeModeAttribution),
+  so the caller writes STEM + reason. The full form is a sentence for the
+  log and has no leading space. *)
+function DomesticQTHRefusalReason(const aRefusal: TDomesticQTHRefusal;
+                                  const aQTH: string;
+                                  const aListName: string;
+                                  const aHostArea: string;
+                                  const aBrief: boolean): string;
+
 (* THE GAPS AS ONE BLOCK OF TEXT FOR A DIALOG. Empty when there are none.
 
   THE UNIT STOPS HERE, AND THAT IS THE POINT. Reading the live globals means
@@ -118,7 +147,19 @@ implementation
 
 uses
    SysUtils,
-   uAppStrings;
+   uAppStrings,
+   (* TC_IMPROPERDOMESTICQTH* -- the brief reasons, beside the stem. *)
+   uTR4WStrings;
+
+const
+   (* THE LOG'S SENTENCES. The log is the developer's channel and is
+     English; the screen's brief forms are the translatable ones. *)
+   DOMESTIC_QTH_REFUSAL_NO_QTH_LOG      = 'No domestic QTH was found in the exchange.';
+   DOMESTIC_QTH_REFUSAL_NOT_IN_FILE_LOG = '%s is not in the domestic file %s.';
+   DOMESTIC_QTH_REFUSAL_UNKNOWN_LOG     = '%s is not a domestic QTH this contest recognises.';
+   DOMESTIC_QTH_REFUSAL_HOST_AREA_LOG   = '%s is a QTH this contest knows, but a station ' +
+                                          'outside %s may work %s stations only ' +
+                                          '(the host-area rule).';
 
 procedure CollectContestSettingsGaps(const aContestActive: boolean;
                                      const aCarriesDomesticQTH: boolean;
@@ -230,6 +271,76 @@ begin
          Result := SysUtils.Format(SExchangeModeFromCountry, [Trim(aCountry)]);
          end;
       end;
+end;
+
+function DomesticQTHRefusalReason(const aRefusal: TDomesticQTHRefusal;
+                                  const aQTH: string;
+                                  const aListName: string;
+                                  const aHostArea: string;
+                                  const aBrief: boolean): string;
+var
+   qth: string;
+   listName: string;
+begin
+   qth := Trim(aQTH);
+   listName := Trim(aListName);
+   Result := '';
+
+   case aRefusal of
+      dqrNoQTH:
+         begin
+         if aBrief then
+            begin
+            Result := ' ' + TC_IMPROPERDOMESTICQTHNOQTH;
+            end
+         else
+            begin
+            Result := DOMESTIC_QTH_REFUSAL_NO_QTH_LOG;
+            end;
+         end;
+
+      dqrNotInList:
+         begin
+         if listName <> '' then
+            begin
+            if aBrief then
+               begin
+               Result := ' ' + SysUtils.Format(TC_IMPROPERDOMESTICQTHNOTINFILE,
+                                               [qth, listName]);
+               end
+            else
+               begin
+               Result := SysUtils.Format(DOMESTIC_QTH_REFUSAL_NOT_IN_FILE_LOG,
+                                         [qth, listName]);
+               end;
+            end
+         else
+            begin
+            if aBrief then
+               begin
+               Result := ' ' + SysUtils.Format(TC_IMPROPERDOMESTICQTHUNKNOWN, [qth]);
+               end
+            else
+               begin
+               Result := SysUtils.Format(DOMESTIC_QTH_REFUSAL_UNKNOWN_LOG, [qth]);
+               end;
+            end;
+         end;
+
+      dqrHostAreaOnly:
+         begin
+         if aBrief then
+            begin
+            Result := ' ' + SysUtils.Format(TC_IMPROPERDOMESTICQTHHOSTONLY,
+                                            [qth, aHostArea]);
+            end
+         else
+            begin
+            Result := SysUtils.Format(DOMESTIC_QTH_REFUSAL_HOST_AREA_LOG,
+                                      [qth, aHostArea, aHostArea]);
+            end;
+         end;
+   end;
 end;
 
 function FormatReadinessMessage(aGaps: TStrings): string;

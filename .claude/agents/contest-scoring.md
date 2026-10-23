@@ -277,7 +277,12 @@ deleted). Word cutting a class also needs (`ParseExchange`, `ProcessSSEntry`,
 the single-word test) is LIFTED to `uExchangeTokens` and called by both.
 **Two refusals NY4I ruled (design 7.10)**: Sweepstakes without a precedence
 says so; a state party's out-of-state station working a non-host station is
-refused. The matrix's `parse` section sees all of it; nothing sees the window
+refused. **Every improper-domestic-QTH refusal goes through ONE routine,
+`LOGSTUFF.RefuseDomesticQTH` (2026-10-23)**: the historical stem plus one brief
+reason on screen ("(CT: work GA stations only)", "(X not in <file>.dom)",
+"(no QTH)", "(MY COUNTRY is empty)"), the full sentence in the log; wording in
+`uContestReadiness.DomesticQTHRefusalReason`. Do not write a refusal message at
+a parse site. The matrix's `parse` section sees all of it; nothing sees the window
 (`BENCH_QUEUE.md`). **Since Q107 (2026-10-16) the host-area refusal is also
 SCORING**: a logged out-of-area x non-host QSO (import, peer, rescore) scores
 0 and earns no multiplier, through the class's `CreditsWorkedStation` --

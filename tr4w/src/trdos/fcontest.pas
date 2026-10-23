@@ -53,11 +53,8 @@ uses
   (* TSessionDefaults -- ApplyContestSentState's parameter (M9a). *)
   uContestBase;
 
-const
-  { TYPED, so appending it to an AnsiString is not a narrowing conversion.
-    A bare '.dom' is a UnicodeString literal in this tree and the ratchet
-    counts every one of those. }
-  DOM_EXTENSION: AnsiString = '.dom';
+(* DOM_EXTENSION MOVED TO uDomFileKeys -- 2026-10-23, when LOGSTUFF's
+  domestic-QTH refusal became its second user. *)
 //  Help,
 //  Country9;
 

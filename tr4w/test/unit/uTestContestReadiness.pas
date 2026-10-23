@@ -69,6 +69,12 @@ type
       (* the rejection's attribution *)
       procedure Test_Attribution_NamesMyCountry;
       procedure Test_Attribution_EmptyForAnUnrelatedExchange;
+
+      (* the improper domestic QTH's reason (2026-10-23) *)
+      procedure Test_RefusalReason_BriefFormsExactly;
+      procedure Test_RefusalReason_LogFormsAreSentences;
+      procedure Test_DomFileAlias_LineRule;
+      procedure Test_DomFileAlias_FollowsIncludes;
    end;
 
 implementation
@@ -80,7 +86,11 @@ uses
    uCTYDAT,
    uAppPaths,
    uSettingsModel,
-   uContestReadiness;
+   uContestReadiness,
+   (* DomFileLineHasAlias, DomFileInDirHasAlias -- the in-state lookup. *)
+   uDomFileKeys,
+   (* ShippedDomDir -- the tree's target/dom, from the test binary. *)
+   uTestContestObjects;
 
 const
    (* VERBATIM from NY4I's ARRL-DX-SSB 2026-09-20 contest database, read off
@@ -454,6 +464,94 @@ begin
                'no attribution, brief form');
 end;
 
+{ ------------------------------ the improper domestic QTH's reason -------- }
+
+procedure TContestReadinessTests.Test_RefusalReason_BriefFormsExactly;
+begin
+   BeginTest('Test_RefusalReason_BriefFormsExactly');
+   (* THE SCREEN'S TEXT, EXACTLY: appended to "Improper domestic QTH!!" in a
+     main-window element a few words wide, so each is pinned whole -- a
+     longer wording has to be a decision, not a drift. Each leads with its
+     own space, as ExchangeModeAttribution's brief form does. *)
+   CheckEquals(' (no QTH)',
+               DomesticQTHRefusalReason(dqrNoQTH, '', 'georgia_cty.dom', '', True),
+               'no QTH');
+   CheckEquals(' (HARX not in georgia_cty.dom)',
+               DomesticQTHRefusalReason(dqrNotInList, 'HARX', 'georgia_cty.dom',
+                                        '', True),
+               'not in the loaded file, which is named');
+   CheckEquals(' (RDX not known)',
+               DomesticQTHRefusalReason(dqrNotInList, 'RDX', '', '', True),
+               'not known, when the contest names no file');
+   CheckEquals(' (CT: work GA stations only)',
+               DomesticQTHRefusalReason(dqrHostAreaOnly, 'CT', 'georgia_cty.dom',
+                                        'GA', True),
+               'a known place an out-of-state entrant may not work');
+end;
+
+procedure TContestReadinessTests.Test_RefusalReason_LogFormsAreSentences;
+var
+   s: string;
+begin
+   BeginTest('Test_RefusalReason_LogFormsAreSentences');
+   (* THE LOG CARRIES THE WHOLE REASON: each names what it is about and
+     has no leading space -- it follows the stem in a format string. *)
+   s := DomesticQTHRefusalReason(dqrHostAreaOnly, 'CT', 'georgia_cty.dom',
+                                 'GA', False);
+   CheckTrue(Pos('CT', s) > 0, 'host area: names the QTH');
+   CheckTrue(Pos('outside GA', s) > 0, 'host area: names the host area');
+   CheckTrue(Pos('host-area rule', s) > 0, 'host area: names the rule');
+   CheckFalse(Copy(s, 1, 1) = ' ', 'host area: no leading space');
+
+   s := DomesticQTHRefusalReason(dqrNotInList, 'HARX', 'georgia_cty.dom', '',
+                                 False);
+   CheckTrue(Pos('HARX', s) > 0, 'not in list: names the QTH');
+   CheckTrue(Pos('georgia_cty.dom', s) > 0, 'not in list: names the file');
+
+   s := DomesticQTHRefusalReason(dqrNoQTH, '', '', '', False);
+   CheckTrue(Pos('No domestic QTH', s) > 0, 'no QTH: says so');
+end;
+
+procedure TContestReadinessTests.Test_DomFileAlias_LineRule;
+begin
+   BeginTest('Test_DomFileAlias_LineRule');
+   (* EnumDOMFILE's rule for what the table stores -- see uDomFileKeys. *)
+   CheckTrue(DomFileLineHasAlias('Ct = CT, CON,^Connecticut', 'CT'),
+             'the first alias');
+   CheckTrue(DomFileLineHasAlias('Ct = CT, CON,^Connecticut', 'con'),
+             'a later alias, in any case');
+   CheckFalse(DomFileLineHasAlias('Ct = CT, CON,^Connecticut', 'CONNECTICUT'),
+              'a ^ display name is not an alias');
+   CheckTrue(DomFileLineHasAlias('HARR > Ga = HARR,^Harris', 'HARR'),
+             'a county line with a multiplier');
+   CheckFalse(DomFileLineHasAlias('HARR > Ga = HARR,^Harris', 'GA'),
+              'the multiplier on the left is not, by itself, an alias');
+   CheckFalse(DomFileLineHasAlias('INCLUDE FILE S48.DOM', 'S48'),
+              'an INCLUDE line gives no alias');
+   CheckEquals('S48.DOM', DomFileLineInclude('INCLUDE FILE S48.DOM'),
+               'and names its file');
+   CheckEquals('', DomFileLineInclude('Ct = CT, CON,^Connecticut'),
+               'an entry includes nothing');
+   CheckFalse(DomFileLineHasAlias('Ct = CT', ''), 'an empty text is no alias');
+end;
+
+procedure TContestReadinessTests.Test_DomFileAlias_FollowsIncludes;
+begin
+   BeginTest('Test_DomFileAlias_FollowsIncludes');
+   (* THE SHIPPED FILES. georgia.dom holds no entry of its own: the states
+     come through S50 -> S48, the counties through georgia_cty. *)
+   CheckTrue(DomFileInDirHasAlias(ShippedDomDir, 'georgia.dom', 'CT'),
+             'Connecticut, two INCLUDEs down');
+   CheckTrue(DomFileInDirHasAlias(ShippedDomDir, 'georgia.dom', 'HARR'),
+             'a Georgia county, one INCLUDE down');
+   CheckFalse(DomFileInDirHasAlias(ShippedDomDir, 'georgia.dom', 'HARX'),
+              'a typo is in no file');
+   CheckFalse(DomFileInDirHasAlias(ShippedDomDir, 'georgia_cty.dom', 'CT'),
+              'the out-of-state county file has no states');
+   CheckFalse(DomFileInDirHasAlias(ShippedDomDir, 'no_such_file_x.dom', 'CT'),
+              'a missing file knows nothing');
+end;
+
 { --------------------------------------------------------------------------- }
 
 procedure TContestReadinessTests.RunAllTests;
@@ -485,6 +583,11 @@ begin
 
    Test_Attribution_NamesMyCountry;
    Test_Attribution_EmptyForAnUnrelatedExchange;
+
+   Test_RefusalReason_BriefFormsExactly;
+   Test_RefusalReason_LogFormsAreSentences;
+   Test_DomFileAlias_LineRule;
+   Test_DomFileAlias_FollowsIncludes;
 end;
 
 end.
