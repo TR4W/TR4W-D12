@@ -81,6 +81,8 @@ type
       procedure Test_TCIMigratesFromGeneralTciServer;
       procedure Test_TCINewSectionWinsOverTheOldKey;
       procedure Test_TCIDefaultsWhenAbsent;
+      procedure Test_TCIServerPortClashWithLocalTCIRadio;
+      procedure Test_TCIServerPortNoClash;
       procedure Test_TCISaveStopsWritingTheOldKey;
       procedure Test_LoggingRoundTrips;
       procedure Test_LoggingLevelIsAName;
@@ -2326,6 +2328,93 @@ begin
    end;
 end;
 
+(* A one-radio library, for the TCI server port clash check. *)
+function MakeClashStore(const aRegistryId, aAddress: string;
+                        const aPort: integer): TRadioConfigStore;
+var
+   radio: TRadioDefinition;
+   err: string;
+begin
+   Result := TRadioConfigStore.Create;
+   radio := TRadioDefinition.Create;
+   radio.Name       := 'My SDR';
+   radio.RegistryId := aRegistryId;
+   radio.IPAddress  := aAddress;
+   radio.TCPPort    := aPort;
+   Result.AddRadio(radio, err);
+end;
+
+procedure TRadioConfigStoreTests.Test_TCIServerPortClashWithLocalTCIRadio;
+const
+   ADDRESSES: array[0..5] of string =
+      ('127.0.0.1', '127.1.2.3', 'localhost', 'LocalHost', '', '::1');
+var
+   store: TRadioConfigStore;
+   i: integer;
+begin
+   BeginTest('Test_TCIServerPortClashWithLocalTCIRadio');
+   for i := Low(ADDRESSES) to High(ADDRESSES) do
+      begin
+      store := MakeClashStore('TCI', ADDRESSES[i], 40001);
+      try
+         CheckEquals('My SDR', TCIRadioUsingServerPort(store, 40001, 50001),
+                     'clash for address "' + ADDRESSES[i] + '"');
+      finally
+         store.Free;
+      end;
+      end;
+
+   // Port 0 on the radio means the model's default, passed in by the caller.
+   store := MakeClashStore('TCI', '127.0.0.1', 0);
+   try
+      CheckEquals('My SDR', TCIRadioUsingServerPort(store, 50001, 50001),
+                  'radio default port clashes with server on that port');
+      CheckEquals('', TCIRadioUsingServerPort(store, 40001, 50001),
+                  'radio default port does not clash with another port');
+   finally
+      store.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_TCIServerPortNoClash;
+var
+   store: TRadioConfigStore;
+begin
+   BeginTest('Test_TCIServerPortNoClash');
+
+   store := MakeClashStore('TCI', '127.0.0.1', 40001);
+   try
+      CheckEquals('', TCIRadioUsingServerPort(store, 50001, 50001),
+                  'a different server port does not clash');
+   finally
+      store.Free;
+   end;
+
+   store := MakeClashStore('TCI', '192.168.1.50', 40001);
+   try
+      CheckEquals('', TCIRadioUsingServerPort(store, 40001, 50001),
+                  'a TCI radio on another PC does not clash');
+   finally
+      store.Free;
+   end;
+
+   store := MakeClashStore('K4', '127.0.0.1', 40001);
+   try
+      CheckEquals('', TCIRadioUsingServerPort(store, 40001, 50001),
+                  'a non-TCI radio on the same port does not clash');
+   finally
+      store.Free;
+   end;
+
+   store := TRadioConfigStore.Create;
+   try
+      CheckEquals('', TCIRadioUsingServerPort(store, 40001, 50001),
+                  'an empty library does not clash');
+   finally
+      store.Free;
+   end;
+end;
+
 procedure TRadioConfigStoreTests.Test_TCIDefaultsWhenAbsent;
 var
    store: TRadioConfigStore;
@@ -2538,6 +2627,8 @@ begin
    Test_TCIMigratesFromGeneralTciServer;
    Test_TCINewSectionWinsOverTheOldKey;
    Test_TCIDefaultsWhenAbsent;
+   Test_TCIServerPortClashWithLocalTCIRadio;
+   Test_TCIServerPortNoClash;
    Test_TCISaveStopsWritingTheOldKey;
    Test_LoggingRoundTrips;
    Test_LoggingLevelIsAName;

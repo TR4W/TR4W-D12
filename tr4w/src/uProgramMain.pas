@@ -2853,7 +2853,15 @@ begin
          RadioLibraryTCIPort := TCI_SERVER_DEFAULT_PORT;
          end;
 
-      if not TCIServer.Start(RadioLibraryTCIPort, RadioLibraryTCIBindAll) then
+      if RadioLibraryTCIClashingRadio <> '' then
+         begin
+         // Same port as the operator's own TCI radio: the bind could only
+         // fail, so say why and do not try.
+         QuickDisplay(Format(TC_TCISERVERPORTUSEDBYTCIRADIO,
+                             [RadioLibraryTCIPort, RadioLibraryTCIClashingRadio,
+                              TCI_SERVER_DEFAULT_PORT]));
+         end
+      else if not TCIServer.Start(RadioLibraryTCIPort, RadioLibraryTCIBindAll) then
          begin
          QuickDisplay('TCI server could not open port ' + IntToStr(RadioLibraryTCIPort));
          end;

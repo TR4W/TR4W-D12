@@ -881,6 +881,21 @@ const
 function TransportToStr(const aTransport: TRadioTransport): string;
 function StrToTransport(const aValue: string): TRadioTransport;
 
+(* The NAME of a TCI radio in the library that connects, on THIS machine, to
+  aServerPort -- the port TR4W's own TCI server wants to listen on.  '' when
+  none does.  Two listeners cannot share a port, so such a pair means the
+  server can never bind; this lets the caller say WHY instead of reporting a
+  bare "could not bind".
+
+  "This machine" is the loopback range 127.x.x.x, 'localhost', '::1' (with or
+  without brackets) and an empty address.  A radio TCPPort of 0 means the
+  model's default, which the caller states in aRadioDefaultPort (the store
+  cannot know it and stays pure RTL).  A non-TCI radio never clashes: the id
+  is compared, not the port alone. *)
+function TCIRadioUsingServerPort(const aStore: TRadioConfigStore;
+                                 const aServerPort: integer;
+                                 const aRadioDefaultPort: integer): string;
+
 implementation
 
 uses
@@ -3880,6 +3895,50 @@ begin
    else
       begin
       prof.Free;
+      end;
+end;
+
+function IsThisMachineAddress(const aAddress: string): boolean;
+var
+   addr: string;
+begin
+   addr := LowerCase(Trim(aAddress));
+   Result := (addr = '')          or
+             (addr = 'localhost') or
+             (addr = '::1')       or
+             (addr = '[::1]')     or
+             (Copy(addr, 1, 4) = '127.');
+end;
+
+function TCIRadioUsingServerPort(const aStore: TRadioConfigStore;
+                                 const aServerPort: integer;
+                                 const aRadioDefaultPort: integer): string;
+var
+   i: integer;
+   radio: TRadioDefinition;
+   radioPort: integer;
+begin
+   Result := '';
+   for i := 0 to aStore.RadioCount - 1 do
+      begin
+      radio := aStore.Radio(i);
+      (* UnicodeSameText, NOT SameText: the plain name takes AnsiStrings and
+        narrows RegistryId (see uAppPaths). *)
+      if UnicodeSameText(radio.RegistryId, 'TCI') and
+         IsThisMachineAddress(radio.IPAddress) then
+         begin
+         radioPort := radio.TCPPort;
+         if radioPort <= 0 then
+            begin
+            radioPort := aRadioDefaultPort;
+            end;
+
+         if radioPort = aServerPort then
+            begin
+            Result := radio.Name;
+            Exit;
+            end;
+         end;
       end;
 end;
 

@@ -1714,6 +1714,7 @@ end;
 function TPrefsForm.SaveStore(out aError: string): boolean;
 var
    tciPort: integer;
+   clashRadio: string;
    bindErrors: string;
 begin
    Result := FStore.Validate(aError);
@@ -1812,7 +1813,16 @@ begin
                tciPort := TCI_SERVER_DEFAULT_PORT;
                end;
 
-            if not TCIServer.Start(tciPort, FStore.TCIBindAll) then
+            clashRadio := TCIRadioUsingServerPort(FStore, tciPort,
+                                                  RegisteredNetworkPortId('TCI'));
+            if clashRadio <> '' then
+               begin
+               // The server and the operator's own TCI radio want one port on
+               // this PC.  The bind could only fail; say why instead.
+               ShowMessage(Format(TC_TCISERVERPORTUSEDBYTCIRADIO,
+                                  [tciPort, clashRadio, TCI_SERVER_DEFAULT_PORT]));
+               end
+            else if not TCIServer.Start(tciPort, FStore.TCIBindAll) then
                begin
                // Reported, not swallowed.  A port already in use is the
                // common case and the operator cannot diagnose silence.

@@ -888,6 +888,7 @@ TC_SHOW_ALL_SERIAL_PORTS = 'Show all serial ports';
   TC_PREFERENCESCOULDOPENEDS            = 'Preferences could not be opened (%s).';
   TC_THESEENTRIESWEREACCEPTEDBEENSAVED  = 'These entries were not accepted and have not been saved:';
   TC_TCISERVERCOULDOPENPORTDS           = 'The TCI server could not open port %d: %s';
+  TC_TCISERVERPORTUSEDBYTCIRADIO        = 'The TCI server cannot use port %d: your TCI radio ''%s'' connects to the SDR on that port on this PC. Choose a different port for the TCI server (default %d) or turn the TCI server off.';
   TC_KEYERNAMEDSALREADYEXISTS           = 'A keyer named "%s" already exists.';
   TC_SSTILLUSEDBYS                      = '"%s" is still used by: %s';
   TC_REMOVECLUSTERS                     = 'Remove the cluster "%s"?';

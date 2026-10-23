@@ -153,6 +153,12 @@ var
    RadioLibraryTCIPort: integer = 0;
    RadioLibraryTCIBindAll: boolean = False;
 
+   // The name of a TCI RADIO in the library that connects to the SDR on this
+   // PC at the port the TCI SERVER wants, or '' -- so startup can say why the
+   // server cannot bind instead of only that it could not.  See
+   // uRadioConfigStore.TCIRadioUsingServerPort.
+   RadioLibraryTCIClashingRadio: string = '';
+
 // Logging settings from the store into the globals -- see the implementation
 // for why the level cannot simply be assigned.
 procedure ApplyLoggingSettings(const aStore: TRadioConfigStore);
@@ -286,6 +292,7 @@ uses
    uRadioRegistry,
    uKeyerConfigApply,   // resolve a named keyer device and configure it
    uTR4WConfigFile,     // LoadConfig -- both libraries live in the one file
+   uTCIServer,          // TCI_SERVER_DEFAULT_PORT -- the clash check
    uSettingsModel,      // Settings.OwnsCommand -- a setting that left CFGCA
    uUDPBroadcastConfig, // round-tripped by ApplyPeerCommand so its section survives
    LOGRADIO,
@@ -2580,6 +2587,7 @@ var
    loadErr: string;
    before, after: string;
    i: integer;
+   tciServerPort: integer;
 begin
    aError := '';
    Result := True;
@@ -2684,6 +2692,19 @@ begin
 
       RadioLibraryTCIPort    := store.TCIPort;
       RadioLibraryTCIBindAll := store.TCIBindAll;
+
+      // The effective server port, exactly as startup resolves it (0 = the
+      // server's default).  A TCI radio's own port 0 is ITS registered
+      // default, which happens to be the same number today but is not the
+      // same fact.
+      tciServerPort := RadioLibraryTCIPort;
+      if tciServerPort <= 0 then
+         begin
+         tciServerPort := TCI_SERVER_DEFAULT_PORT;
+         end;
+      RadioLibraryTCIClashingRadio :=
+         TCIRadioUsingServerPort(store, tciServerPort,
+                                 RegisteredNetworkPortId('TCI'));
 
       // APPLIED AT STARTUP, and all three of these were missing -- the store
       // held the values, Preferences displayed them, and the program never
