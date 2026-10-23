@@ -335,6 +335,7 @@ different event), so Q123 still needs the SRR digital cup's own rules.
   RFOBL MODE for the subject multiplier; a repeat in another 30-minute tour
   from 07:00 UTC is a new QSO (TContestBase.DupeKeyTour). Not built: the
   3-minute spacing.
+  NY4I 2026-10-23: phone only (SSB); CW, FM and digital are automatic X-QSOs.
 
 - **Q137** The Russian WW Digital Contest (RDRC, `CONTEST: RUS-WW-DIGI`) is
   not in TR4W or D7: first full weekend of October 12:00-11:59 UTC; 160-10 m

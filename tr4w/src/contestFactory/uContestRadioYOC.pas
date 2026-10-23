@@ -60,11 +60,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     REPEATS    "allowed in different tours, and in one tour on different
                bands" -- 8 tours of 30 minutes from the 07:00 UTC start
                (DupeKeyTour).
-    BANDS      7 and 14 MHz, SSB (UsesBand; the session starts in phone).
-               The SSB-only rule is NOT YET STATED: no UsesMode, so a CW
-               QSO still scores. It is a later Q98 stage's, and this
-               contest is in uTestContestStatesItsRules' MODES_NOT_YET_STATED
-               until then.
+    BANDS      7 and 14 MHz (UsesBand; the session starts in phone).
+    MODES      SSB only (UsesMode) -- NY4I 2026-10-23: phone only; CW, FM
+               and digital are automatic X-QSOs. "SSB" reads as Phone and
+               refuses FM, as CQ WW SSB's (Q120(a)).
 
   NOT BUILT, REPORTED: "at least three minutes must pass between repeat
   contacts on the same band" -- a dupe key cannot see the time of the
@@ -125,6 +124,8 @@ type
    public
       (* 40 AND 20 METRES -- see TContestBase.UsesBand. *)
       function UsesBand(aBand: BandType): boolean; override;
+      (* SSB ONLY -- see TContestBase.UsesMode. *)
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
       (* THE TOUR A QSO FALLS IN -- see TContestBase.DupeKeyTour. *)
       function DupeKeyTour(const aQso: ContestExchange): string; override;
    public
@@ -143,7 +144,6 @@ uses
    uCabrilloExchange,
    uADIFExchange,
    uContestRegistry,
-   uContestFixedPoints,
    uTR4WStrings,
    SysUtils;
 
@@ -154,11 +154,12 @@ const
    TOUR_MINUTES             = 30;
    TOUR_COUNT               = 8;
 
-(* "1 point is awarded for each contact" -- in every mode (SRR 2026 regulation, Q136, 2026-10-22). It was
-   ThreePointsPerQSO, D7's arm. *)
+(* "1 point is awarded for each contact" (SRR 2026 regulation, Q136,
+   2026-10-22). It was ThreePointsPerQSO, D7's arm. No mode test here: an
+   off-mode QSO never reaches this (UsesMode makes it an X-QSO). *)
 procedure TContestRadioYOC.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   aQso.QSOPoints := FixedModePoints(aQso.Mode, 1, 1, 1);
+   aQso.QSOPoints := 1;
 end;
 
 (* "bands: 7 MHz, 14 MHz" -- 40 and 20 m (and the Q98 ruling, 40/20 m
@@ -167,6 +168,16 @@ end;
 function TContestRadioYOC.UsesBand(aBand: BandType): boolean;
 begin
    Result := (aBand = Band40) or (aBand = Band20);
+end;
+
+(* "mode of emission: SSB" -- NY4I 2026-10-23: phone only. CW, FM and digital
+   are automatic X-QSOs. SSB reads as Phone and refuses FM, the reading NY4I
+   gave CQ WW SSB (Q120(a)). An identity fact: no station is asked. Every
+   Phone submode is credited, so eNoMode (a record with no submode) is never
+   proven off-mode. *)
+function TContestRadioYOC.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   Result := aMode = Phone;
 end;
 
 (* "Repeat contacts are allowed in different tours, and within one tour on

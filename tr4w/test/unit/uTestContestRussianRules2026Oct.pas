@@ -36,6 +36,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
       Q136        1 point; age + serial; 40 and 20 m; a repeat in another
                   30-minute tour is a new QSO; the multiplier is the subject
                   or the country once per contest; MY STATE is the age.
+                  NY4I 2026-10-23: phone only (SSB); CW, FM and digital
+                  are automatic X-QSOs.
 
   Each rule is pinned both ways -- what it gives, and the case beside it
   that it must not touch. *)
@@ -65,6 +67,7 @@ type
       procedure Test_RussianDomHoldsTheAppendixSubjects;
       procedure Test_MaritimeMobileStation;
       procedure Test_RadioYOCPointsAndBands;
+      procedure Test_RadioYOCIsPhoneOnly;
       procedure Test_RadioYOCExchange;
       procedure Test_RadioYOCTours;
       procedure Test_RadioYOCSetUp;
@@ -483,6 +486,44 @@ begin
    end;
 end;
 
+function YOCModeQso(aBand: BandType; aMode: ModeType; aExt: ExtendedModeType): ContestExchange;
+begin
+   Result := Qso('RK3ABC', 'UA', Europe);
+   Result.ceRecordKind := rkQSO;
+   Result.Band := aBand;
+   Result.Mode := aMode;
+   Result.ExtMode := aExt;
+end;
+
+(* NY4I 2026-10-23: PHONE ONLY (SSB). CW, FM and digital are automatic
+   X-QSOs; SSB on 40 and 20 m is not. FM is refused, the reading NY4I gave
+   CQ WW SSB (Q120(a)). An identity fact: the station-less object answers. *)
+procedure TContestRussianRules2026OctTests.Test_RadioYOCIsPhoneOnly;
+var
+   c: TContestBase;
+begin
+   BeginTest('Test_RadioYOCIsPhoneOnly');
+   c := ContestIdentity(RADIOYOC);
+   CheckFalse(QSOIsXQSO(c, YOCModeQso(Band40, Phone, eLSB)), '40 m LSB is a RADIO-YOC QSO');
+   CheckFalse(QSOIsXQSO(c, YOCModeQso(Band20, Phone, eUSB)), '20 m USB is a RADIO-YOC QSO');
+   CheckFalse(QSOIsXQSO(c, YOCModeQso(Band20, Phone, eNoMode)),
+              'phone with no submode is never proven off-mode');
+   CheckTrue(QSOIsXQSO(c, YOCModeQso(Band20, CW, eCW)), 'a CW QSO is an X-QSO');
+   CheckTrue(QSOIsXQSO(c, YOCModeQso(Band40, CW, eNoMode)), 'CW with no submode too');
+   CheckTrue(QSOIsXQSO(c, YOCModeQso(Band20, FM, eFM)), 'an FM QSO is an X-QSO');
+   CheckTrue(QSOIsXQSO(c, YOCModeQso(Band40, Digital, eRTTY)), 'an RTTY QSO is an X-QSO');
+   CheckTrue(QSOIsXQSO(c, YOCModeQso(Band20, Digital, eFT8)), 'an FT8 QSO is an X-QSO');
+
+   CheckTrue(ContestCreditsMode(c, Phone, eNoMode), 'credits Phone');
+   CheckFalse(ContestCreditsMode(c, CW, eNoMode), 'refuses CW');
+   CheckFalse(ContestCreditsMode(c, FM, eNoMode), 'refuses FM');
+   CheckFalse(ContestCreditsMode(c, Digital, eNoMode), 'refuses digital');
+
+   CheckEquals(0, YOCPoints(Band20, CW), 'a 20 m CW QSO scores 0');
+   CheckEquals(0, YOCPoints(Band40, Digital), 'a 40 m digital QSO scores 0');
+   CheckEquals(0, YOCPoints(Band20, FM), 'a 20 m FM QSO scores 0');
+end;
+
 (* Q136: the exchange is the age and the serial. One five-digit word is split
    before the engine's age + serial parser sees it; two words pass as typed. *)
 procedure TContestRussianRules2026OctTests.Test_RadioYOCExchange;
@@ -636,6 +677,7 @@ begin
    Test_RussianDomHoldsTheAppendixSubjects;
    Test_MaritimeMobileStation;
    Test_RadioYOCPointsAndBands;
+   Test_RadioYOCIsPhoneOnly;
    Test_RadioYOCExchange;
    Test_RadioYOCTours;
    Test_RadioYOCSetUp;
