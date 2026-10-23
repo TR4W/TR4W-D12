@@ -59,10 +59,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   MODES -- CW; phone (SSB, AM, FM); digital (RTTY, PSK and other digital
     modes) but NOT FT8 or FT4: "FT8/FT4 is a SEPARATE competition with a
-    separate log". An FT8 or FT4 QSO is OFF-MODE here (open questions Q98):
-    logged, scores 0 (CalculateQSOPoints), earns no multiplier
-    (CountsAsMultiplier) and pays no bonus (BonusPoints). Which digital mode
-    a QSO was is its ExtMode.
+    separate log". UsesMode credits CW, phone, FM and every digital submode
+    but FT8 and FT4 (its ExtMode), so an FT8 or FT4 QSO is logged and is an
+    automatic X-QSO (Q98, QSOIsXQSO): 0 points, no multiplier, no dupe, no
+    bonus. CalculateQSOPoints and the multiplier sheet never see one.
 
   BANDS -- "160, 80, 40, 20, 15, 10 m; WARC contacts do not count; all
     VHF/UHF bands are allowed". UsesBand: those six and every band from 6 m
@@ -237,9 +237,8 @@ type
       (* 160-10 m without WARC, and 6 m up -- the header. *)
       function UsesBand(aBand: BandType): boolean; override;
 
-      (* AN FT8 OR FT4 QSO EARNS NO MULTIPLIER -- off-mode, the header. *)
-      function CountsAsMultiplier(const aQso: ContestExchange;
-                                  aKind: RemainingMultiplierType): boolean; override;
+      (* CW, phone, FM and digital but FT8/FT4 -- the header. *)
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
 
       (* ' 5NN ' and the state or county this station sends. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
@@ -297,9 +296,6 @@ function NebraskaRareGrid(aYear: integer; const aGrid: string;
 (* THE POWER MULTIPLIER FOR A CATEGORY-POWER -- HIGH x1, LOW x2, QRP x5.
    Public so the tests assert the mapping itself, not only a product. *)
 function NebraskaPowerMultiplier(aPower: tCategoryPower): longint;
-
-(* IS THIS QSO PART OF THE SEPARATE FT8/FT4 COMPETITION? -- off-mode here. *)
-function IsNebraskaFTQSO(const aQso: ContestExchange): boolean;
 
 implementation
 
@@ -395,11 +391,6 @@ begin
          Result := 1;
          end;
       end;
-end;
-
-function IsNebraskaFTQSO(const aQso: ContestExchange): boolean;
-begin
-   Result := aQso.ExtMode in [eFT8, eFT4];
 end;
 
 function TContestNebraskaQP.GetDisplayName: string;
@@ -515,18 +506,11 @@ begin
    Result := 2;
 end;
 
-(* DIGITAL 1, PHONE 2, CW 3. FM is phone. An FT8 or FT4 QSO belongs to the
-   separate competition and scores nothing here; Both and NoMode are not
-   modes a contact is made in. An off-band QSO never reaches here
-   (UsesBand). *)
+(* DIGITAL 1, PHONE 2, CW 3. FM is phone. An FT8 or FT4 QSO never reaches
+   here (UsesMode), nor an off-band one (UsesBand); Both and NoMode are not
+   modes a contact is made in. *)
 procedure TContestNebraskaQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   if IsNebraskaFTQSO(aQso) then
-      begin
-      aQso.QSOPoints := 0;
-      Exit;
-      end;
-
    case aQso.Mode of
       CW:
          begin
@@ -561,11 +545,26 @@ begin
                        BandLight];
 end;
 
-function TContestNebraskaQP.CountsAsMultiplier(const aQso: ContestExchange;
-                                               aKind: RemainingMultiplierType): boolean;
+(* "FT8/FT4 is a SEPARATE competition with a separate log": every other
+   digital submode is credited, eNoMode and eData included ("some submode of
+   Digital", the contract); CW, phone and FM are. An identity fact: no
+   station is asked. *)
+function TContestNebraskaQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
 begin
-   Result := (not IsNebraskaFTQSO(aQso)) and
-             inherited CountsAsMultiplier(aQso, aKind);
+   case aMode of
+      CW, Phone, FM:
+         begin
+         Result := True;
+         end;
+      Digital:
+         begin
+         Result := not (aExtMode in [eFT8, eFT4]);
+         end;
+      else
+         begin
+         Result := False;
+         end;
+      end;
 end;
 
 function TContestNebraskaQP.CQExchangeDefault(const aStation: TStationContext): string;
@@ -588,9 +587,9 @@ begin
    for i := 0 to aView.Count - 1 do
       begin
       qso := aView.QSO(i);
-      if qso.ceDupe                          or
-         IsNebraskaFTQSO(qso)                or
-         (not ContestCreditsBand(Self, qso.Band)) then
+      if qso.ceDupe                                              or
+         (not ContestCreditsMode(Self, qso.Mode, qso.ExtMode)) or
+         (not ContestCreditsBand(Self, qso.Band))               then
          begin
          Continue;
          end;
@@ -630,10 +629,10 @@ begin
    for i := 0 to aView.Count - 1 do
       begin
       qso := aView.QSO(i);
-      if qso.ceDupe                              or
-         IsNebraskaFTQSO(qso)                    or
-         (not ContestCreditsBand(Self, qso.Band)) or
-         (qso.QSOPoints <= 0) then
+      if qso.ceDupe                                              or
+         (not ContestCreditsMode(Self, qso.Mode, qso.ExtMode)) or
+         (not ContestCreditsBand(Self, qso.Band))               or
+         (qso.QSOPoints <= 0)                                   then
          begin
          Continue;
          end;

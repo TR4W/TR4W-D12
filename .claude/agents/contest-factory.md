@@ -316,7 +316,11 @@ the target shape, the M-step migration order and the open questions.
   `Test_BandsAndModesAreAnIdentityFact` holds them station-free.
   **CQ WW states its own** (S4a early, for NY4I's dry run): 160-10 m on
   `TContestCQWWBase`, CW / Phone (FM refused until Q120(a)) on the leaves,
-  and CQ WW RTTY 80-10 m, RTTY only. `uTestAutomaticXQSO` pins it all;
+  and CQ WW RTTY 80-10 m, RTTY only. Georgia (CW, phone, FM; no digital),
+  Nebraska (every mode but FT8/FT4) and URC (RTTY only) state their own
+  modes since the merge into contestFactory (2026-10-23). **A mode rule is
+  `UsesMode`, never a 0-point arm in `CalculateQSOPoints` or
+  `CountsAsMultiplier`** -- those never see an off-mode QSO. `uTestAutomaticXQSO` pins it all;
   `tools/contest-factory-q98/classify_matrix.py` classifies a stage's
   matrix movement against its prediction.
 - **Multipliers and dupes: the sheet keeps the state, the class declares

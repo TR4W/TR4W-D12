@@ -308,31 +308,31 @@ begin
    CheckEquals(0, PointsFor(Band20, NoMode, eNoMode), 'no mode');
 end;
 
-(* "FT8/FT4 is a SEPARATE competition with a separate log": logged here,
-   scores nothing, earns no multiplier, pays no bonus. *)
+(* "FT8/FT4 is a SEPARATE competition with a separate log": an FT8 or FT4
+   QSO is logged here and is an automatic X-QSO (Q98, QSOIsXQSO) -- no
+   points, no multiplier, no bonus. Every other digital submode is credited,
+   an old record with no submode included. Asked of the station-less
+   identity, as every X-QSO reader asks it. *)
 procedure TContestNebraskaQPTests.Test_NebraskaFTIsOffMode;
 var
-   contestObject: TContestBase;
-   k: RemainingMultiplierType;
+   identity: TContestBase;
 begin
    BeginTest('Test_NebraskaFTIsOffMode');
+   identity := ContestIdentity(ContestHandleOf(NEBRASKAQSO));
+   CheckTrue(QSOIsXQSO(identity, QsoOn(Band20, Digital, eFT8)), 'FT8 is an X-QSO');
+   CheckTrue(QSOIsXQSO(identity, QsoOn(Band40, Digital, eFT4)), 'FT4 is an X-QSO');
+   CheckFalse(QSOIsXQSO(identity, QsoOn(Band20, Digital, eRTTY)), 'RTTY is not');
+   CheckFalse(QSOIsXQSO(identity, QsoOn(Band20, Digital, ePSK31)), 'nor PSK');
+   CheckFalse(QSOIsXQSO(identity, QsoOn(Band20, Digital, eNoMode)),
+              'nor a digital record with no submode');
+   CheckFalse(QSOIsXQSO(identity, QsoOn(Band20, CW, eCW)), 'nor CW');
+   CheckFalse(QSOIsXQSO(identity, QsoOn(Band20, Phone, eUSB)), 'nor phone');
+   CheckFalse(QSOIsXQSO(identity, QsoOn(Band2, FM, eFM)), 'nor FM');
+   CheckTrue(ContestCreditsModeKey(identity, Digital),
+             'the Digital key is credited: only two submodes are refused');
+
    CheckEquals(0, PointsFor(Band20, Digital, eFT8), 'FT8 scores 0');
    CheckEquals(0, PointsFor(Band40, Digital, eFT4), 'FT4 scores 0');
-   CheckTrue(IsNebraskaFTQSO(QsoOn(Band20, Digital, eFT8)), 'FT8 is the other competition');
-   CheckFalse(IsNebraskaFTQSO(QsoOn(Band20, Digital, eRTTY)), 'RTTY is not');
-
-   contestObject := Make(NEBRASKAQSO, StationAt(True));
-   try
-      for k := Low(RemainingMultiplierType) to High(RemainingMultiplierType) do
-         begin
-         CheckFalse(contestObject.CountsAsMultiplier(QsoOn(Band20, Digital, eFT8), k),
-                    'an FT8 QSO earns no multiplier, kind ' + IntToStr(Ord(k)));
-         CheckTrue(contestObject.CountsAsMultiplier(QsoOn(Band20, Digital, eRTTY), k),
-                   'an RTTY QSO does, kind ' + IntToStr(Ord(k)));
-         end;
-   finally
-      contestObject.Free;
-   end;
 end;
 
 (* "160, 80, 40, 20, 15, 10 m; WARC contacts do not count; all VHF/UHF bands

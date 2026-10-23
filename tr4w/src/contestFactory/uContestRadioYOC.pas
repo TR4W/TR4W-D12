@@ -60,8 +60,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     REPEATS    "allowed in different tours, and in one tour on different
                bands" -- 8 tours of 30 minutes from the 07:00 UTC start
                (DupeKeyTour).
-    BANDS      7 and 14 MHz, SSB (UsesBand; the session starts in phone --
-               nothing yet credits by mode, Q98).
+    BANDS      7 and 14 MHz, SSB (UsesBand; the session starts in phone).
+               The SSB-only rule is NOT YET STATED: no UsesMode, so a CW
+               QSO still scores. It is a later Q98 stage's, and this
+               contest is in uTestContestStatesItsRules' MODES_NOT_YET_STATED
+               until then.
 
   NOT BUILT, REPORTED: "at least three minutes must pass between repeat
   contacts on the same band" -- a dupe key cannot see the time of the

@@ -27,7 +27,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     * its identity: the id, no legacy number, refused on multi-op, the
       names, the files, the flags, the party base and what it inherits;
     * its bands and its points, both sides of each edge;
-    * a digital QSO earns nothing (TODO UsesMode, see the class);
+    * a digital QSO is an automatic X-QSO (UsesMode);
     * the out-of-state entrant's host-area rule, typed and scored;
     * the county line (two counties) and the final score's formula;
     * the two .dom files against the rules' county table;
@@ -52,7 +52,7 @@ type
       procedure Test_GeorgiaIdentity;
       procedure Test_GeorgiaBands;
       procedure Test_GeorgiaPoints;
-      procedure Test_GeorgiaDigitalEarnsNothing;
+      procedure Test_GeorgiaDigitalIsAnXQSO;
       procedure Test_GeorgiaOutOfStateWorksOnlyGeorgia;
       procedure Test_GeorgiaCountyLineIsTwoCounties;
       procedure Test_GeorgiaScoreIsPointsTimesMultipliers;
@@ -345,33 +345,51 @@ begin
    CheckEquals(0, PointsFor(True, Band20, NoMode, 'PA'), 'nor this one');
 end;
 
-(* "Digital contacts aren't allowed in the Georgia QSO Party." Logged,
-   0 points, no multiplier of any kind. TODO(UsesMode): the merge moves this
-   to the mode seam; the outcome pinned here must not move. *)
-procedure TContestGeorgiaQPTests.Test_GeorgiaDigitalEarnsNothing;
+(* "Digital contacts aren't allowed in the Georgia QSO Party." A digital QSO,
+   whatever its submode, is an automatic X-QSO (Q98, QSOIsXQSO): logged, 0
+   points, no multiplier. CW, SSB and FM ("SSB -- Phone only contacts") are
+   credited, an old record with no submode included. Asked of the
+   station-less identity, as every X-QSO reader asks it. *)
+procedure TContestGeorgiaQPTests.Test_GeorgiaDigitalIsAnXQSO;
 var
    identity: TContestBase;
    qso: ContestExchange;
-   kind: RemainingMultiplierType;
+   ext: ExtendedModeType;
 begin
-   BeginTest('Test_GeorgiaDigitalEarnsNothing');
+   BeginTest('Test_GeorgiaDigitalIsAnXQSO');
    GHostQTHs := 'HARR';
+   identity := ContestIdentity(GeorgiaHandle);
+
+   for ext := Low(ExtendedModeType) to High(ExtendedModeType) do
+      begin
+      CheckFalse(ContestCreditsMode(identity, Digital, ext),
+                 'no digital submode is credited, ext ' + IntToStr(Ord(ext)));
+      qso := GeorgiaQso(Band20, Digital, 'HARR');
+      qso.ExtMode := ext;
+      CheckTrue(QSOIsXQSO(identity, qso),
+                'a digital QSO is an X-QSO, ext ' + IntToStr(Ord(ext)));
+      end;
+
+   qso := GeorgiaQso(Band20, CW, 'HARR');
+   CheckFalse(QSOIsXQSO(identity, qso), 'a CW QSO is not an X-QSO');
+   qso := GeorgiaQso(Band20, Phone, 'HARR');
+   CheckFalse(QSOIsXQSO(identity, qso), 'an SSB QSO is not');
+   qso := GeorgiaQso(Band6, FM, 'HARR');
+   CheckFalse(QSOIsXQSO(identity, qso), 'nor an FM one: FM is phone');
+   CheckTrue(ContestCreditsMode(identity, CW, eCW), 'CW is credited');
+   CheckTrue(ContestCreditsMode(identity, Phone, eUSB), 'USB is credited');
+   CheckTrue(ContestCreditsMode(identity, Phone, eNoMode), 'phone with no submode is credited');
+   CheckTrue(ContestCreditsMode(identity, FM, eFM), 'FM is credited');
+
+   (* The readers that know only a ModeType key: the dupe sheet and the
+      need-multiplier hint. *)
+   CheckFalse(ContestCreditsModeKey(identity, Digital), 'the Digital key is not credited');
+   CheckTrue(ContestCreditsModeKey(identity, CW), 'the CW key is');
+   CheckTrue(ContestCreditsModeKey(identity, Phone), 'the Phone key is');
+
+   (* THE OUTCOME, through ScoreQSO. *)
    CheckEquals(0, PointsFor(False, Band20, Digital, 'HARR'), 'outside GA, digital scores 0');
    CheckEquals(0, PointsFor(True, Band20, Digital, 'PA'), 'in GA, digital scores 0');
-
-   identity := ContestIdentity(GeorgiaHandle);
-   for kind := Low(RemainingMultiplierType) to High(RemainingMultiplierType) do
-      begin
-      qso := GeorgiaQso(Band20, Digital, 'HARR');
-      CheckFalse(identity.CountsAsMultiplier(qso, kind),
-                 'a digital QSO earns no multiplier, kind ' + IntToStr(Ord(kind)));
-      qso := GeorgiaQso(Band20, CW, 'HARR');
-      CheckTrue(identity.CountsAsMultiplier(qso, kind),
-                'a CW QSO may, kind ' + IntToStr(Ord(kind)));
-      qso := GeorgiaQso(Band20, Phone, 'HARR');
-      CheckTrue(identity.CountsAsMultiplier(qso, kind),
-                'an SSB QSO may, kind ' + IntToStr(Ord(kind)));
-      end;
 end;
 
 (* ---------------------------------------------------------------------------
@@ -899,9 +917,11 @@ begin
                   'with the county-count message');
       ClearPendingCounties;
 
-      (* "Digital contacts aren't allowed": logged, nothing earned. *)
+      (* "Digital contacts aren't allowed": logged, an automatic X-QSO,
+         nothing earned. *)
       dupe := Enter('N4DIG', '599 BIBB', Band20, Digital, accepted, rx);
       CheckTrue(accepted, 'a digital QSO is logged');
+      CheckTrue(QSOIsXQSO(ContestIdentity(GeorgiaHandle), rx), 'as an X-QSO');
       CheckEquals(0, Integer(rx.QSOPoints), 'and scores 0');
       CheckFalse(rx.DomesticMult, 'and earns no multiplier');
    finally
@@ -939,7 +959,7 @@ begin
    Test_GeorgiaIdentity;
    Test_GeorgiaBands;
    Test_GeorgiaPoints;
-   Test_GeorgiaDigitalEarnsNothing;
+   Test_GeorgiaDigitalIsAnXQSO;
    Test_GeorgiaOutOfStateWorksOnlyGeorgia;
    Test_GeorgiaCountyLineIsTwoCounties;
    Test_GeorgiaScoreIsPointsTimesMultipliers;

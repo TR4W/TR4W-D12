@@ -38,7 +38,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     * schedule -- the 1st Friday of October, 00:00-23:59 UTC. TR4W has no
       schedule seam; stated here only.
     * mode -- RTTY only: RunsInMode (Digital), and DescribeSession starts
-      the session in Digital.
+      the session in Digital. UsesMode credits RTTY and nothing else, so a
+      CW, phone or other digital (FT8, PSK, ...) QSO is logged and is an
+      automatic X-QSO (Q98, QSOIsXQSO).
     * bands -- 160, 80, 40, 20, 15 and 10 m, no WARC: UsesBand. A QSO on
       any other band is logged, scores 0 and earns no multiplier (ScoreQSO,
       SetMultFlags, the dupe sheet).
@@ -131,6 +133,7 @@ type
       (* THE BANDS AND THE MODE -- see the header and TContestBase.UsesBand,
          RunsInMode. *)
       function UsesBand(aBand: BandType): boolean; override;
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
       function RunsInMode(aMode: ModeType): boolean; override;
       (* MMS IS NO MULTIPLIER -- see TContestBase.CountsAsMultiplier. *)
       function CountsAsMultiplier(const aQso: ContestExchange;
@@ -347,6 +350,15 @@ end;
 function TContestURCDXRTTY.UsesBand(aBand: BandType): boolean;
 begin
    Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10];
+end;
+
+(* "Modes: RTTY". A Digital QSO with no submode, or a generic data one, is
+   "some submode of Digital" and credited (TContestBase.UsesMode); a named
+   digital submode other than RTTY is not. *)
+function TContestURCDXRTTY.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   Result := (aMode = Digital) and
+             (aExtMode in [eNoMode, eData, eData_R, eRTTY, eRTTY_R]);
 end;
 
 function TContestURCDXRTTY.RunsInMode(aMode: ModeType): boolean;

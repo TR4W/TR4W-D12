@@ -46,12 +46,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   MODES -- "Digital contacts aren't allowed". CW and SSB. FM is phone here,
     as in every party: the rules' mode categories are "CW" and "SSB -- Phone
-    only contacts". A digital QSO is logged, scores 0 (CalculateQSOPoints)
-    and earns no multiplier (CountsAsMultiplier).
-      TODO(UsesMode): the automatic off-mode rule (TContestBase.UsesMode)
-      arrives with the q98-s1-cqww merge. When it does, state the two modes
-      there and delete the Digital arms of CalculateQSOPoints and
-      CountsAsMultiplier, which then never see a digital QSO.
+    only contacts". UsesMode credits CW, Phone and FM and refuses Digital,
+    whatever its submode, so a digital QSO is logged and is an automatic
+    X-QSO (Q98, QSOIsXQSO): 0 points, no multiplier, no dupe. Neither
+    CalculateQSOPoints nor the multiplier sheet ever sees one.
 
   BANDS -- the rules' frequency list: 160, 80, 40, 20, 15, 10 and 6 m. No
     WARC. UsesBand; cfVHFBandsEnabled so 6 m can be reached.
@@ -157,9 +155,8 @@ type
       (* 160, 80, 40, 20, 15, 10 and 6 m -- the header. *)
       function UsesBand(aBand: BandType): boolean; override;
 
-      (* A DIGITAL QSO EARNS NO MULTIPLIER -- the header (TODO UsesMode). *)
-      function CountsAsMultiplier(const aQso: ContestExchange;
-                                  aKind: RemainingMultiplierType): boolean; override;
+      (* CW and phone (FM is phone); no digital -- the header. *)
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
 
       (* ' 5NN ' and the county, state or province this station sends; DX
          when it sends none. *)
@@ -176,9 +173,6 @@ type
       function ExchangeCarriesDomesticQTH: boolean; override;
    end;
 
-(* IS THIS QSO A DIGITAL ONE? -- not allowed here (the header). *)
-function IsGeorgiaDigitalQSO(const aQso: ContestExchange): boolean;
-
 implementation
 
 uses
@@ -187,11 +181,6 @@ uses
    uCabrilloExchange,
    uADIFExchange,
    uContestRegistry;
-
-function IsGeorgiaDigitalQSO(const aQso: ContestExchange): boolean;
-begin
-   Result := aQso.Mode = Digital;
-end;
 
 function TContestGeorgiaQP.GetDisplayName: string;
 begin
@@ -313,10 +302,10 @@ begin
    Result := 2;
 end;
 
-(* SSB 1, CW 2. FM is phone. Digital is not allowed (TODO UsesMode); Both
-   and NoMode are not modes a contact is made in. An off-band QSO never
-   reaches here (UsesBand), nor a station an out-of-state entrant may not
-   credit (CreditsWorkedStation). *)
+(* SSB 1, CW 2. FM is phone. A digital QSO never reaches here (UsesMode),
+   nor an off-band one (UsesBand), nor a station an out-of-state entrant may
+   not credit (CreditsWorkedStation). Both and NoMode are not modes a contact
+   is made in. *)
 procedure TContestGeorgiaQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    case aQso.Mode of
@@ -340,11 +329,13 @@ begin
    Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10, Band6];
 end;
 
-function TContestGeorgiaQP.CountsAsMultiplier(const aQso: ContestExchange;
-                                              aKind: RemainingMultiplierType): boolean;
+(* "Digital contacts aren't allowed"; "SSB -- Phone only contacts", so FM is
+   phone. Any submode of CW, Phone or FM is credited -- eNoMode and eData
+   included, as the contract asks -- and no submode of Digital is. An
+   identity fact: no station is asked. *)
+function TContestGeorgiaQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
 begin
-   Result := (not IsGeorgiaDigitalQSO(aQso)) and
-             inherited CountsAsMultiplier(aQso, aKind);
+   Result := aMode in [CW, Phone, FM];
 end;
 
 function TContestGeorgiaQP.CQExchangeDefault(const aStation: TStationContext): string;

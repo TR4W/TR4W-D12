@@ -195,6 +195,18 @@ begin
       CheckTrue(identity.RunsInMode(m) = (m = Digital),
                 'mode ' + IntToStr(Ord(m)) + ': RTTY only');
       end;
+
+   (* THE CREDITED MODES (Q98): RTTY, or a digital record with no submode or
+      a generic data one; everything else is an automatic X-QSO. *)
+   CheckTrue(ContestCreditsMode(identity, Digital, eRTTY), 'RTTY is credited');
+   CheckTrue(ContestCreditsMode(identity, Digital, eRTTY_R), 'reverse RTTY is credited');
+   CheckTrue(ContestCreditsMode(identity, Digital, eNoMode), 'digital with no submode is credited');
+   CheckTrue(ContestCreditsMode(identity, Digital, eData), 'generic data is credited');
+   CheckFalse(ContestCreditsMode(identity, Digital, eFT8), 'FT8 is not');
+   CheckFalse(ContestCreditsMode(identity, Digital, ePSK31), 'PSK is not');
+   CheckFalse(ContestCreditsMode(identity, CW, eCW), 'CW is not');
+   CheckFalse(ContestCreditsMode(identity, Phone, eUSB), 'phone is not');
+   CheckFalse(ContestCreditsMode(identity, FM, eFM), 'FM is not');
    CheckEquals(0, PointsFor(Band30, 'LPK', Asia), 'a 30 m QSO scores 0');
    CheckEquals(0, PointsFor(Band6, 'NJR', NorthAmerica), 'a 6 m QSO scores 0');
 end;
