@@ -2517,6 +2517,78 @@ a migration that adds nothing.
   exchange" built from the CQ template over the note's fields. Only an
   `rkQSO` captures either now.
 
+### 12i. Schema 4 — an edited function-key memory survives a restart (Q113, 2026-10-23)
+
+**The defect.** The capture at close wrote every memory to the `message`
+table, and nothing read that table back. An Alt-P or line-input edit was lost
+at every restart. `uEditMessageForm` and `uCFG` both carried comments saying
+the table was "where they come back from"; both are corrected.
+
+**The baseline.** D7 kept the edit: `C:\TR4W\tr4w\src\uEditMessage.pas:236/249`
+wrote the text and the caption to the contest `.cfg`'s `[Messages]` section,
+and `LogCfg.ReadInConfigFile` applied them again at start-up. Pre-factory D12
+did the same (`git show 793133d9^:tr4w/src/ui/lcl/uEditMessageForm.pas`,
+`SaveToConfig`). A contest is its SQLite file now, so the log carries it.
+
+**The rule (approved design):** only the memories the operator EDITED come
+back. Every other row is the contest's default as it stood at close. That is a
+record, not a setting: restoring it would pin a default built from an old MY
+STATE.
+
+| | |
+|---|---|
+| schema | `LOG_SCHEMA_VERSION = 4`; `message.edited INTEGER NOT NULL DEFAULT 0`, the table's last column (`LOG_V4_MESSAGE_COLUMN`) |
+| migration | `MigrateSchema` asks `pragma_table_info('message')` before changing anything, then `ALTER TABLE ... ADD COLUMN`, in the same transaction as the v3 columns. Every older row reads 0, so an old log restores nothing |
+| "edited" | LogCW's Q9 latch, **widened to the EX bank and the captions**: `TryApplyMessageCommand` (every branch) and both line-input edits latch the key; FCONTEST's EX default writers and `UpdateSAndPF1Caption` go through `SetContestDefaultEX...`, which leave a latched key alone, as Q9 did for CQ. `ForgetCQMemoryStatementsOfOtherContests` is now `ForgetMemoryStatementsOfOtherContests` |
+| capture | `uLogStore.CaptureMessageMemories`: the table is rewritten whole (`DeleteAllMessages`, then every non-empty memory with its caption, and every latched one even when empty), `edited` from the latch |
+| restore | `uLogStore.RestoreEditedMessageMemories`, at the END of `LogStoreApplyContestConfig`. It applies each `edited = 1` row as an edit is applied (text, caption, latch) |
+
+**Why the restore runs there.** The contest is set up by then, whether by the
+`.cfg` read earlier or by `CONTEST` from the contest table. The set-up writes
+its defaults, and before that it forgets any statement made under another
+contest. Restoring earlier would be forgotten or overwritten. Restored through
+the latch, an edit is also kept by a later re-selection of the same contest.
+**One rule for a re-select and for a restart.**
+
+**Why the EX bank had to join the latch.** The latch is what the capture
+records as "edited". If an edited EX F4 were overwritten by a re-selection
+while still latched, the log would record the default as an edit and pin it on
+the next open.
+
+**Two older defects in the capture loop, both fixed here:**
+- **`for mode := CW to Phone` includes `Digital`.** The accessors fold Digital
+  into CW, and `MessageModeName(Digital)` is `'PHONE'`. So each CW memory was
+  written a second time under the PHONE key, and it stayed there whenever the
+  Phone memory was empty. The capture now walks `CW` and `Phone` only. If the
+  old loop is put back, the restart test fails (6 restored, not 3).
+- **`KeyId(Char(key))` converted through the code page.** `key` is an
+  `AnsiChar` and `Char` is a `WideChar`, so `#139` (AltF4) became U+2039 and
+  `KeyId` answered `''`. Nearly every Ctrl key and every Alt key was skipped,
+  which is how a ControlF11 `'QRL?'` was once recorded under an empty key.
+  `MemoryKeyId` converts by ordinal.
+
+**Pins** (`uTestOperatorCQMemory`, through the store's own capture and restore
+against a real file):
+- an edited memory survives close and reopen: CQ F3 and its caption, EX F4,
+  and EX AltF4 edited to empty. A re-selection after the restore keeps all of
+  them;
+- an unedited memory comes back as the CURRENT default, not the one the table
+  holds;
+- a schema-3 log opens, gains the column, and restores nothing.
+
+Eight mutations were run and each failed a test:
+- the capture never flags a row;
+- the restore takes every row;
+- the migration's DEFAULT is 1;
+- the migration adds no column;
+- the restore does not latch;
+- a contest's EX default is written unguarded;
+- the key name goes back to the code-page conversion;
+- the capture walks Digital again.
+
+**The consequence, as for schema 3:** once a schema-4 build has opened a log,
+no earlier build can open it.
+
 ---
 
 ## 13. What is built so far
@@ -2619,8 +2691,9 @@ reading the DDL back. `key_id` uses `KeyId`'s spelling because
 `AppendConfigFile` already writes `CQ MEMORY F1 = ...` into a `.cfg` today
 (`LogCW.pas:1366`).
 
-**Still owed:** the reader and writer. The tables exist and are tested; nothing
-populates them yet. `fcontest.pas` is the reference NY4I named for which
+~~**Still owed:** the reader and writer. The tables exist and are tested; nothing
+populates them yet.~~ The capture at close writes `message`. Since schema 4
+(§12i, Q113) the open reads back the rows the operator edited, and only those. `fcontest.pas` is the reference NY4I named for which
 parameters are contest-scoped, and it is also where the *sending* half of the
 rover problem lives (§12d) — so read it once, for both.
 

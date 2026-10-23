@@ -21,7 +21,9 @@ unit uEditMessageForm;
 
   Reached from Alt-P: pick a function-key memory in the list, press Edit. The
   three fields come straight out of that list's row -- key name, message text,
-  button caption -- and go back to the CONTEST .cfg on OK.
+  button caption -- and are applied on OK. ~~go back to the CONTEST .cfg~~: a
+  contest is its SQLite file, and an edited memory is kept there (Q113, see
+  SaveToConfig).
 
   THE FEATURE THIS DIALOG EXISTS FOR is not the text boxes, it is inserting CW
   CONTROL CHARACTERS into a message. Ctrl+P arms the escape, and the NEXT
@@ -370,14 +372,22 @@ var
        rewrite it. Slow enough to freeze the program and no business being
        attempted at all.
 
-       IT WAS ALSO REDUNDANT, which is the better reason to delete it than the
-       danger. CheckCommand below puts the message into the running program,
-       and uLogStore.CaptureConfiguration walks every function-key memory at
-       close -- GetCQMemoryString / GetExMemoryString over both modes and every
-       named key -- and writes them to the log's `message` table. That is where
-       they come back from. NY4I's log holds 36 of them.
+       WHERE AN EDIT IS KEPT NOW, AND THIS COMMENT ONCE GOT IT WRONG. It said
+       the log's `message` table was "where they come back from". Nothing read
+       that table back (Q113, found 2026-10-17), so an edited memory was lost
+       at every restart -- which D7 never did: its dialog wrote the edit to the
+       contest .cfg's [Messages] section and the next start applied it.
 
-       So the memory is applied now and saved with the log, and the file that
+       FIXED 2026-10-23 (Q113), IN THE LOG. TryApplyMessageCommand below
+       applies the edit and LATCHES it as the operator's statement (LogCW,
+       the Q9 latch, both banks and the caption). At close
+       uLogStore.CaptureMessageMemories writes every memory to the `message`
+       table and flags the latched ones `edited`; at the next open
+       uLogStore.RestoreEditedMessageMemories puts back ONLY those, after the
+       contest has built its defaults. An unedited memory is not restored --
+       the contest builds it afresh, from today's MY STATE.
+
+       So the memory is applied now and kept by the log, and the file that
        used to hold it is not a file this program writes. *)
      (* TRUSTED, so aApplyJSONOwned IS TRUE -- and it has to be as of
        2026-09-12, when the eight "other message" templates left CFGCA
@@ -417,8 +427,8 @@ var
   end;
 
 begin
-   // THE CONTEST .cfg, NOT tr4w.ini. Different file, different rule -- see the
-   // unit header and c823c055.
+   (* NO FILE IS WRITTEN HERE -- neither the contest .cfg nor tr4w.ini. The
+     edit is applied, and the log keeps it (Q113; see WriteKey). *)
    idText  := AnsiString(lblKeyName.Caption);
 
    cmdShort := ShortString(edtMessage.Text);

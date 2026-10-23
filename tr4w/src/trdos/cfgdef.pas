@@ -65,13 +65,16 @@ begin
 {$IF LANG = 'RUS'}
    // RUS S&P F1 caption is language-fixed; nothing to recompute.
 {$ELSE}
+   (* A DEFAULT, SO IT LEAVES AN OPERATOR'S EDIT ALONE (Q113): this runs at
+     startup AFTER the log has restored the memories the operator edited,
+     and would otherwise overwrite an edited S&P F1 caption every start. *)
    if Settings.Message.DeEnable then
       begin
-      SetEXCaptionMemoryString(CW, F1, 'DE+Call');
+      SetContestDefaultEXCaptionMemoryString(CW, F1, 'DE+Call');
       end
    else
       begin
-      SetEXCaptionMemoryString(CW, F1, 'Call');
+      SetContestDefaultEXCaptionMemoryString(CW, F1, 'Call');
       end;
 {$IFEND}
 end;

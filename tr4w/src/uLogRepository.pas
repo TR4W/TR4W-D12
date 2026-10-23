@@ -67,7 +67,10 @@ interface
 uses
    (* Windows for MAXBYTE / MAXWORD, which are the sentinels
      ClearContestExchange writes. DateUtils for the unix epoch. *)
-   LCLType, Classes, SysUtils, DateUtils, db, sqldb, VC, uLogDatabase,
+   LCLType, Classes,
+   (* TObjectList -- LoadEditedMessages hands back owned rows. *)
+   Contnrs,
+   SysUtils, DateUtils, db, sqldb, VC, uLogDatabase,
    (* TQsoMyFacts -- our station as it was for one QSO, the my_* columns.
       Last, and it declares nothing any unit above also does. *)
    uQsoMyFacts;
@@ -170,6 +173,18 @@ type
    public
       function Count: integer;
       function Row(aIndex: integer): ContestExchange;
+   end;
+
+   (* ONE FUNCTION-KEY MEMORY THE OPERATOR EDITED, as the log's message table
+     holds it -- a row with edited = 1 (schema 4, Q113). The spellings are
+     the table's: kind 'CQ' | 'EX', mode 'CW' | 'PHONE', key_id KeyId's. *)
+   TLogStoredMessage = class(TObject)
+   public
+      Kind: AnsiString;
+      Mode: AnsiString;
+      KeyId: AnsiString;
+      Text: AnsiString;
+      Caption: AnsiString;
    end;
 
    TLogRowUpdates = class(TLogQsoList)
@@ -537,8 +552,21 @@ type
       procedure SaveSessionValue(const aKey, aValue: AnsiString);
       function SessionValue(const aKey: AnsiString;
                             const aDefault: AnsiString = ''): AnsiString;
+      (* aEdited is the row's edited flag (schema 4, Q113): True for a memory
+         the OPERATOR edited, which LoadEditedMessages hands back at open.
+         Every other row records the contest's default as it stood. *)
       procedure SaveMessage(const aKind, aMode, aKeyId, aText,
-                            aCaption: AnsiString);
+                            aCaption: AnsiString; aEdited: boolean = False);
+
+      (* EMPTY THE message TABLE -- the capture at close rewrites it whole, so
+         a memory emptied this session, or no longer edited, leaves no row
+         behind to be restored. Does not commit. *)
+      procedure DeleteAllMessages;
+
+      (* THE MEMORIES THE OPERATOR EDITED -- the rows with edited = 1, as
+         TLogStoredMessage objects aInto owns, ordered by kind, mode, key.
+         aInto is cleared first. A log written before schema 4 has none. *)
+      procedure LoadEditedMessages(aInto: TObjectList);
 
       (* How many rows each holds -- for verifying a capture actually captured
          something, which is the failure a silent upsert loop would otherwise
@@ -2403,7 +2431,7 @@ begin
 end;
 
 procedure TLogRepository.SaveMessage(const aKind, aMode, aKeyId, aText,
-                                     aCaption: AnsiString);
+                                     aCaption: AnsiString; aEdited: boolean = False);
 var
    q: TSQLQuery;
 begin
@@ -2411,17 +2439,69 @@ begin
    try
       q.DataBase := FDatabase.Connection;
       q.SQL.Text :=
-         'INSERT INTO message (kind, mode, key_id, text, caption) ' +
-         'VALUES (:kind, :mode, :key_id, :text, :caption) ' +
+         'INSERT INTO message (kind, mode, key_id, text, caption, edited) ' +
+         'VALUES (:kind, :mode, :key_id, :text, :caption, :edited) ' +
          'ON CONFLICT(kind, mode, key_id) DO UPDATE SET ' +
          '  text = excluded.text, ' +
-         '  caption = excluded.caption';
+         '  caption = excluded.caption, ' +
+         '  edited = excluded.edited';
       q.ParamByName('kind').AsString := aKind;
       q.ParamByName('mode').AsString := aMode;
       q.ParamByName('key_id').AsString := aKeyId;
       q.ParamByName('text').AsString := aText;
       q.ParamByName('caption').AsString := aCaption;
+      q.ParamByName('edited').AsInteger := Ord(aEdited);
       q.ExecSQL;
+   finally
+      q.Free;
+   end;
+end;
+
+procedure TLogRepository.DeleteAllMessages;
+var
+   q: TSQLQuery;
+begin
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      q.SQL.Text := 'DELETE FROM message';
+      q.ExecSQL;
+   finally
+      q.Free;
+   end;
+end;
+
+procedure TLogRepository.LoadEditedMessages(aInto: TObjectList);
+var
+   q: TSQLQuery;
+   row: TLogStoredMessage;
+begin
+   if aInto = nil then
+      begin
+      Exit;
+      end;
+   aInto.Clear;
+
+   q := NewReadQuery;
+   try
+      (* caption is nullable; IFNULL so a NULL reads as the empty caption the
+         program holds for "none". *)
+      q.SQL.Text := 'SELECT kind, mode, key_id, text, IFNULL(caption, '''') ' +
+                    'FROM message WHERE edited = 1 ' +
+                    'ORDER BY kind, mode, key_id';
+      q.Open;
+      while not q.EOF do
+         begin
+         row := TLogStoredMessage.Create;
+         aInto.Add(row);
+         row.Kind    := q.Fields[0].AsAnsiString;
+         row.Mode    := q.Fields[1].AsAnsiString;
+         row.KeyId   := q.Fields[2].AsAnsiString;
+         row.Text    := q.Fields[3].AsAnsiString;
+         row.Caption := q.Fields[4].AsAnsiString;
+         q.Next;
+         end;
+      q.Close;
    finally
       q.Free;
    end;

@@ -180,18 +180,26 @@ function TryApplyMessageCommand(const aCommand, aValue: ShortString): boolean;
 procedure SetCQMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString {Str80});
 procedure SetEXMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString {Str80});
 
-(* AN OPERATOR-STATED CQ MEMORY SURVIVES RE-SELECTING THE CONTEST -- Q9
-  (2026-10-17); see the implementation. NoteCQMemoryStatedByOperator latches
-  a memory the operator edited (TryApplyMessageCommand, the line-input
-  edit); FCONTEST's set-up forgets another contest's statements first
-  (ForgetCQMemoryStatementsOfOtherContests) and then writes each default CQ
-  memory through SetContestDefaultCQMemoryString, which leaves a latched one
-  alone. *)
+(* AN OPERATOR-STATED MEMORY SURVIVES RE-SELECTING THE CONTEST -- Q9
+  (2026-10-17) -- AND A RESTART -- Q113 (2026-10-23); see the
+  implementation. Note...StatedByOperator latches a memory the operator
+  edited (TryApplyMessageCommand, the line-input edits, and the log's
+  restore of an edited memory at open); FCONTEST's set-up forgets another
+  contest's statements first (ForgetMemoryStatementsOfOtherContests) and
+  then writes each default memory through SetContestDefault..., which
+  leaves a latched one alone. The latch is also what the log records as
+  "edited" at close. *)
 procedure NoteCQMemoryStatedByOperator(Mode: ModeType; Key: AnsiChar);
 function CQMemoryIsOperatorStated(Mode: ModeType; Key: AnsiChar): boolean;
-procedure ForgetCQMemoryStatementsOfOtherContests(aContest: TContestHandle);
+procedure NoteEXMemoryStatedByOperator(Mode: ModeType; Key: AnsiChar);
+function EXMemoryIsOperatorStated(Mode: ModeType; Key: AnsiChar): boolean;
+procedure ForgetMemoryStatementsOfOtherContests(aContest: TContestHandle);
 procedure SetContestDefaultCQMemoryString(Mode: ModeType; Key: AnsiChar;
                                           MemoryString: ShortString);
+procedure SetContestDefaultEXMemoryString(Mode: ModeType; Key: AnsiChar;
+                                          MemoryString: ShortString);
+procedure SetContestDefaultEXCaptionMemoryString(Mode: ModeType; Key: AnsiChar;
+                                                 MemoryString: ShortString);
 
 procedure SetCQCaptionMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString);
 procedure SetEXCaptionMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString);
@@ -1195,7 +1203,8 @@ begin
            (GetCQMemoryString(ActiveMode, FunctionKey) <> TempString) then
               begin
               SetCQMemoryString(ActiveMode, FunctionKey, TempString);
-              (* THE OPERATOR STATED IT -- Q9: set-up leaves it alone now. *)
+              (* THE OPERATOR STATED IT -- Q9: set-up leaves it alone now, and
+                the log restores it at open (Q113). *)
               NoteCQMemoryStatedByOperator(ActiveMode, FunctionKey);
 
               if ActiveMode = Phone then
@@ -1301,6 +1310,8 @@ begin
            if TempString <> EscapeKey then
               begin
               SetEXMemoryString(ActiveMode, FunctionKey, TempString);
+              (* THE OPERATOR STATED IT -- Q9 / Q113, as the CQ edit above. *)
+              NoteEXMemoryStatedByOperator(ActiveMode, FunctionKey);
 
               if ActiveMode = Phone then
                  begin
@@ -2110,29 +2121,38 @@ begin
   CQMemory[Mode, Key] := MemoryString;
 end;
 
-(* THE CQ MEMORIES THE OPERATOR HAS STATED THIS CONTEST -- Q9 (NY4I,
+(* THE MEMORIES THE OPERATOR HAS STATED THIS CONTEST -- Q9 (NY4I,
   2026-10-15: "Accept" -- "an edited memory is an operator statement").
 
-  A CONTEST'S SET-UP WRITES DEFAULT CQ MEMORIES (FCONTEST: its contest's
+  A CONTEST'S SET-UP WRITES DEFAULT MEMORIES (FCONTEST: its contest's
   TSessionDefaults memories and the engine's default exchange messages),
   and until Q9 it overwrote an operator's edit every time the contest was
   selected again. A memory the operator STATED -- the Alt-P edit dialog
-  (TryApplyMessageCommand, whose only caller it is) or the line-input edit
-  -- is latched here, and set-up writes its default only where nothing is
-  latched.
+  (TryApplyMessageCommand) or a line-input edit -- is latched here, and
+  set-up writes its default only where nothing is latched. A key is latched
+  as a whole: its text and its button caption are one statement, as the
+  dialog writes them together.
+
+  BOTH BANKS SINCE Q113 (2026-10-23). Q9 latched the CQ bank only. The
+  latch is now also what the log records as an edit at close and restores at
+  open (uLogStore.CaptureMessageMemories / RestoreEditedMessageMemories), so
+  an exchange memory had to be latched as well: an edited EX F4 that a
+  re-selection then overwrote would otherwise be recorded as "edited" with
+  the DEFAULT'S text, and pinned by the next open. D7 kept both banks' edits
+  (its .cfg [Messages] section).
 
   THE LATCH BELONGS TO ONE CONTEST: the one set up last. FCONTEST's set-up
-  hands each contest it sets up to ForgetCQMemoryStatementsOfOtherContests
+  hands each contest it sets up to ForgetMemoryStatementsOfOtherContests
   before writing a default, so another contest's edit is never carried into
   this one -- that contest writes its own defaults, as before -- and
   re-selecting the SAME contest keeps them. A statement is made under the
   contest set up last; one made before any is set up is forgotten by the
-  first. Main thread only, as every memory write is. Nothing here is
-  persisted: the log's `message` table holds every memory at close and is
-  not read back (reported 2026-10-17). *)
+  first, which is why the log's restore runs AFTER the contest is set up.
+  Main thread only, as every memory write is. *)
 var
   CQMemoryStated: array[CW..Phone, F1..AltF12] of boolean;
-  CQMemoryStatementsContest: TContestHandle;
+  EXMemoryStated: array[CW..Phone, F1..AltF12] of boolean;
+  MemoryStatementsContest: TContestHandle;
 
 procedure NoteCQMemoryStatedByOperator(Mode: ModeType; Key: AnsiChar);
 begin
@@ -2153,12 +2173,31 @@ begin
   Result := CQMemoryStated[Mode, Key];
 end;
 
-procedure ForgetCQMemoryStatementsOfOtherContests(aContest: TContestHandle);
+procedure NoteEXMemoryStatedByOperator(Mode: ModeType; Key: AnsiChar);
+begin
+  if not FunctionKeyMemorySlot('NoteEXMemoryStatedByOperator', Mode, Key) then
+     begin
+     Exit;
+     end;
+  EXMemoryStated[Mode, Key] := True;
+end;
+
+function EXMemoryIsOperatorStated(Mode: ModeType; Key: AnsiChar): boolean;
+begin
+  Result := False;
+  if not FunctionKeyMemorySlot('EXMemoryIsOperatorStated', Mode, Key) then
+     begin
+     Exit;
+     end;
+  Result := EXMemoryStated[Mode, Key];
+end;
+
+procedure ForgetMemoryStatementsOfOtherContests(aContest: TContestHandle);
 var
   m: ModeType;
   k: AnsiChar;
 begin
-  if CQMemoryStatementsContest = aContest then
+  if MemoryStatementsContest = aContest then
      begin
      Exit;
      end;
@@ -2167,9 +2206,10 @@ begin
      for k := F1 to AltF12 do
         begin
         CQMemoryStated[m, k] := False;
+        EXMemoryStated[m, k] := False;
         end;
      end;
-  CQMemoryStatementsContest := aContest;
+  MemoryStatementsContest := aContest;
 end;
 
 procedure SetContestDefaultCQMemoryString(Mode: ModeType; Key: AnsiChar;
@@ -2180,6 +2220,26 @@ begin
      Exit;
      end;
   SetCQMemoryString(Mode, Key, MemoryString);
+end;
+
+procedure SetContestDefaultEXMemoryString(Mode: ModeType; Key: AnsiChar;
+                                          MemoryString: ShortString);
+begin
+  if EXMemoryIsOperatorStated(Mode, Key) then
+     begin
+     Exit;
+     end;
+  SetEXMemoryString(Mode, Key, MemoryString);
+end;
+
+procedure SetContestDefaultEXCaptionMemoryString(Mode: ModeType; Key: AnsiChar;
+                                                 MemoryString: ShortString);
+begin
+  if EXMemoryIsOperatorStated(Mode, Key) then
+     begin
+     Exit;
+     end;
+  SetEXCaptionMemoryString(Mode, Key, MemoryString);
 end;
 
 procedure SetEXMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString {Str80});
@@ -2508,15 +2568,20 @@ begin
 
    Result := True;
 
+   (* EVERY BRANCH IS AN OPERATOR STATEMENT -- Q9, and since Q113 the EX
+     bank and the captions too: set-up leaves the key alone, and the log
+     records it as edited at close. *)
    if ID[length(ID)] = 'N' then
       begin
       if CQMessage then
          begin
-         SetCQCaptionMemoryString(TempMode, CHR(TempValue + FuncKey), CMD)
+         SetCQCaptionMemoryString(TempMode, CHR(TempValue + FuncKey), CMD);
+         NoteCQMemoryStatedByOperator(TempMode, CHR(TempValue + FuncKey));
          end
       else
          begin
          SetEXCaptionMemoryString(TempMode, CHR(TempValue + FuncKey), CMD);
+         NoteEXMemoryStatedByOperator(TempMode, CHR(TempValue + FuncKey));
          end;
       end
    else
@@ -2524,12 +2589,12 @@ begin
       if CQMessage then
          begin
          SetCQMemoryString(TempMode, CHR(TempValue + FuncKey), CMD);
-         (* THE OPERATOR STATED IT -- Q9: set-up leaves it alone now. *)
          NoteCQMemoryStatedByOperator(TempMode, CHR(TempValue + FuncKey));
          end
       else
          begin
          SetEXMemoryString(TempMode, CHR(TempValue + FuncKey), CMD);
+         NoteEXMemoryStatedByOperator(TempMode, CHR(TempValue + FuncKey));
          end;
       end;
 

@@ -305,8 +305,9 @@ program. Detail: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12g.
 NY4I: *"The QSO record should have all the MY_ values (such as MY_GRID)."*
 Detail, rulings A to E, and measurements: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12h.
 
-- **`LOG_SCHEMA_VERSION = 3`. ONCE A SCHEMA-3 BUILD HAS OPENED A LOG, NO
-  EARLIER 5.0.x BUILD CAN OPEN IT** (accepted by NY4I). `Open` migrates;
+- **`LOG_SCHEMA_VERSION` WAS 3 HERE, AND IS 4 SINCE Q113 (below). ONCE A
+  SCHEMA-3 BUILD HAS OPENED A LOG, NO EARLIER 5.0.x BUILD CAN OPEN IT**
+  (accepted by NY4I). `Open` migrates;
   `OpenReadOnly` does not. The corpus is safe because every script works on a
   COPY of the tracked `log.db`. Never point a writing `Open` at a tracked
   fixture.
@@ -372,6 +373,39 @@ Detail, rulings A to E, and measurements: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12h
 - **The lints scan nothing in a `.claude\worktrees\` checkout** (by design,
   `Get-ScanExclusions.ps1`), and twenty of them then FAIL as "no files
   scanned". Lint a copy of the change from a checkout outside that path.
+
+## SCHEMA 4: AN EDITED FUNCTION-KEY MEMORY SURVIVES A RESTART (Q113, 2026-10-23)
+
+D7 kept an Alt-P edit across a restart, through the `.cfg`'s `[Messages]`
+section. The log's `message` table was written at close and never read, so
+every edit was lost. Detail: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12i.
+
+- **`message.edited` (`LOG_V4_MESSAGE_COLUMN`, `NOT NULL DEFAULT 0`).** It is
+  migrated like the v3 columns: asked first, then `ALTER`, in one transaction.
+  An old log restores nothing.
+- **"Edited" IS LogCW's Q9 LATCH**, now covering both banks and the captions.
+  It is not a second record of the same fact. The capture
+  (`uLogStore.CaptureMessageMemories`) rewrites the table whole and flags the
+  latched keys. The restore (`RestoreEditedMessageMemories`) applies only the
+  flagged rows, and it applies them through the latch.
+- **THE RESTORE RUNS LAST IN `LogStoreApplyContestConfig`**, after the contest
+  is set up. The set-up forgets another contest's statements and writes its
+  defaults, so an earlier restore would be lost. A new default writer for a
+  memory must go through `SetContestDefault...`, or it overwrites an edit
+  while the log still records it as one.
+- **`KeyId(Char(anAnsiChar))` IS A CODE-PAGE CONVERSION, NOT A CAST.** `Char`
+  is `WideChar` here, so a memory key from #128 up becomes another character
+  and `KeyId` answers `''`. That covers nearly every Ctrl key and every Alt
+  key, and the old capture skipped all of them. Use `MemoryKeyId`, which
+  converts by ordinal.
+- **Walk the memory modes as `CW`, `Phone`, never `CW to Phone`.** `Digital`
+  sits between them; the accessors fold it into CW, and `MessageModeName`
+  calls it PHONE.
+- **PowerShell is refused in an isolated worktree** (the worktree-isolation
+  guard cannot prove it runs no git). Run `Build-Tests.ps1`'s FPC command
+  directly instead: `-Mdelphi -Pi386 -Twin32 -Sc -B`, the `Get-SearchPaths.ps1`
+  Tests list, run from `tr4w/test/unit`. Then copy the runtime DLLs from
+  `tr4w/target`.
 
 ## The `config` table holds only what the operator STATED (2026-10-01)
 

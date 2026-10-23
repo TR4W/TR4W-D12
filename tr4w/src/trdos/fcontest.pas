@@ -404,11 +404,11 @@ begin
 
   Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Code599 + ' ' + zoneText);
   SetContestDefaultCQMemoryString(CW, F3, UTF8Encode(' ' + Code599 + ' ' + zoneText));
-  SetEXMemoryString(CW, F3, Code599);
-  SetEXMemoryString(CW, F4, UTF8Encode(zoneText));
-  SetEXMemoryString(CW, F5, UTF8Encode('@ DE \ ' + Code599 + ' ' + zoneText));
-  SetEXMemoryString(CW, AltF3, 'RST?');
-  SetEXMemoryString(CW, AltF4, 'NR?');
+  SetContestDefaultEXMemoryString(CW, F3, Code599);
+  SetContestDefaultEXMemoryString(CW, F4, UTF8Encode(zoneText));
+  SetContestDefaultEXMemoryString(CW, F5, UTF8Encode('@ DE \ ' + Code599 + ' ' + zoneText));
+  SetContestDefaultEXMemoryString(CW, AltF3, 'RST?');
+  SetContestDefaultEXMemoryString(CW, AltF4, 'NR?');
   Settings.Messages.RepeatSpExchangeCw :=
      UTF8Encode(' ' + Code599 + ' ' + zoneText + ' ' + zoneText);
   Settings.Messages.SpExchangeCw := UTF8Encode(' ' + Code599 + ' ' + zoneText);
@@ -429,11 +429,11 @@ begin
 
   SetContestDefaultCQMemoryString(CW, F3, UTF8Encode('5NN ' + SentMyState));
 
-  SetEXMemoryString(CW, F3, '5NN');
-  SetEXMemoryString(CW, F4, UTF8Encode(SentMyState));
-  SetEXMemoryString(CW, F5, UTF8Encode('@ DE \ 5NN ' + SentMyState));
-  SetEXMemoryString(CW, AltF3, 'RST?');
-  SetEXMemoryString(CW, AltF4, 'QTH?');
+  SetContestDefaultEXMemoryString(CW, F3, '5NN');
+  SetContestDefaultEXMemoryString(CW, F4, UTF8Encode(SentMyState));
+  SetContestDefaultEXMemoryString(CW, F5, UTF8Encode('@ DE \ 5NN ' + SentMyState));
+  SetContestDefaultEXMemoryString(CW, AltF3, 'RST?');
+  SetContestDefaultEXMemoryString(CW, AltF4, 'QTH?');
 end;
 
 procedure SetUpRSTQSONumberExchange;
@@ -443,21 +443,21 @@ begin
   Settings.Messages.SpExchangeCw := ' 5NN #';
   SetContestDefaultCQMemoryString(CW, F3, '5NN #');
 
-  SetEXMemoryString(CW, F3, '5NN');
-  SetEXMemoryString(CW, F4, 'NR #');
-  SetEXMemoryString(CW, F5, '@ DE \ 5NN #');
-  SetEXMemoryString(CW, AltF3, 'RST?');
-  SetEXMemoryString(CW, AltF4, 'NR?');
+  SetContestDefaultEXMemoryString(CW, F3, '5NN');
+  SetContestDefaultEXMemoryString(CW, F4, 'NR #');
+  SetContestDefaultEXMemoryString(CW, F5, '@ DE \ 5NN #');
+  SetContestDefaultEXMemoryString(CW, AltF3, 'RST?');
+  SetContestDefaultEXMemoryString(CW, AltF4, 'NR?');
 
 {$IF LANG = 'RUS'}
-  SetEXCaptionMemoryString(CW, F4, '????? ?????');
-  SetEXCaptionMemoryString(CW, F5, '??? ???????? + ?????');
+  SetContestDefaultEXCaptionMemoryString(CW, F4, '????? ?????');
+  SetContestDefaultEXCaptionMemoryString(CW, F5, '??? ???????? + ?????');
 {$ELSE}
-  SetEXCaptionMemoryString(CW, F4, 'NR');
-  SetEXCaptionMemoryString(CW, F5, 'Cl+Ex');
+  SetContestDefaultEXCaptionMemoryString(CW, F4, 'NR');
+  SetContestDefaultEXCaptionMemoryString(CW, F5, 'Cl+Ex');
 {$IFEND}
 
-  SetEXCaptionMemoryString(CW, F3, 'RST');
+  SetContestDefaultEXCaptionMemoryString(CW, F3, 'RST');
 end;
 
 (* THE ENGINE'S DEFAULT EXCHANGE-MESSAGE WRITERS -- M11 S9e part 1,
@@ -740,11 +740,11 @@ begin
          end;
        smbExchange:
          begin
-         SetEXMemoryString(memory.Mode, EngineMemoryKey(memory.Key), UTF8Encode(memory.Text));
+         SetContestDefaultEXMemoryString(memory.Mode, EngineMemoryKey(memory.Key), UTF8Encode(memory.Text));
          end;
        smbExchangeCaption:
          begin
-         SetEXCaptionMemoryString(memory.Mode, EngineMemoryKey(memory.Key), UTF8Encode(memory.Text));
+         SetContestDefaultEXCaptionMemoryString(memory.Mode, EngineMemoryKey(memory.Key), UTF8Encode(memory.Text));
          end;
      end;
      end;
@@ -890,7 +890,7 @@ begin
     SetContestDefaultCQMemoryString, which leaves a memory the operator
     stated alone; a statement made under ANOTHER contest is forgotten here
     first, so it is not carried into this one. See LogCW. *)
-  ForgetCQMemoryStatementsOfOtherContests(Contest);
+  ForgetMemoryStatementsOfOtherContests(Contest);
 
   Settings.Contest.Name := CMD;
 

@@ -1388,8 +1388,11 @@ begin
 
      NOTHING LOST FROM THE LIVE PATHS, measured on NY4I's own log first: the
      contest database keeps the memories in its OWN `message` table
-     (kind/mode/key_id/text, 41 rows) and restores them through LogCW's
-     accessors -- not one config row in 410 reaches this arm. uEditMessageForm
+     (kind/mode/key_id/text, 41 rows) -- not one config row in 410 reaches
+     this arm. ~~and restores them through LogCW's accessors~~ was FALSE when
+     written: nothing read that table back until Q113 (2026-10-23), and now
+     only the rows the operator edited are restored
+     (uLogStore.RestoreEditedMessageMemories). uEditMessageForm
      calls the parser directly now instead of dressing an operator's edit up
      as a config line.
 

@@ -208,7 +208,11 @@ const
      HAS OPENED CAN NO LONGER BE OPENED BY ANY EARLIER 5.0.x BUILD. Opening is
      enough: TLogDatabase.Open migrates. Keep a copy of a log before trying a
      new build on it if an older build must read it again. *)
-   LOG_SCHEMA_VERSION = 3;
+   (* 4 SINCE 2026-10-23 (Q113): message.edited -- which function-key
+     memories the OPERATOR edited, so those, and only those, come back when
+     the log is opened (LOG_V4_MESSAGE_COLUMN). The same consequence as 3: a
+     log a schema-4 build has opened is refused by every earlier build. *)
+   LOG_SCHEMA_VERSION = 4;
 
 type
    (* A COLUMN A MIGRATION ADDS to an existing table. *)
@@ -233,6 +237,13 @@ const
       (Name: 'my_cq_zone';   Declaration: 'INTEGER'),
       (Name: 'my_itu_zone';  Declaration: 'INTEGER'),
       (Name: 'my_source';    Declaration: 'TEXT'));
+
+   (* THE message COLUMN SCHEMA 4 ADDED -- the last column of the CREATE TABLE
+     below, so ADD COLUMN gives a migrated log the same shape as a new one.
+     NOT NULL DEFAULT 0: every row an older build wrote reads as NOT edited,
+     which is what restores nothing from an old log. *)
+   LOG_V4_MESSAGE_COLUMN: TLogAddedColumn = (
+      Name: 'edited'; Declaration: 'INTEGER NOT NULL DEFAULT 0');
 
    (* EXECUTED IN ORDER, ONE STATEMENT PER ELEMENT.
 
@@ -609,6 +620,11 @@ const
       '    -- The button label. A separate string in the program'#10 +
       '    -- (SetCQCaptionMemoryString), so it is a separate column.'#10 +
       '    caption   TEXT,'#10 +
+      '    -- SCHEMA 4 (Q113): 1 when the OPERATOR edited this memory. Only'#10 +
+      '    -- these rows are put back when the log is opened; every other row'#10 +
+      '    -- is the contest''s default as it stood at close, a record and not'#10 +
+      '    -- a setting -- the contest builds its defaults afresh each time.'#10 +
+      '    edited    INTEGER NOT NULL DEFAULT 0,'#10 +
       '    PRIMARY KEY (kind, mode, key_id)'#10 +
       ')'
    );

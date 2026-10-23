@@ -322,15 +322,16 @@ var
    fn, names, tail: string;
    i: integer;
 begin
-   BeginTest('a new log is schema 3 and its qso table ends with the v3 columns');
-   CheckEquals(3, LOG_SCHEMA_VERSION, 'the schema this build writes');
+   BeginTest('a new log is schema 3 or later and its qso table ends with the v3 columns');
+   (* 4 since Q113 added message.edited; the qso table is unchanged by it. *)
+   CheckTrue(LOG_SCHEMA_VERSION >= 3, 'the schema this build writes includes v3');
    fn := TempLogName('new3.db');
    Scrub(fn);
 
    db := TLogDatabase.Create;
    try
       db.CreateNew(fn);
-      CheckEquals(3, db.SchemaVersion, 'a new log is stamped 3');
+      CheckEquals(LOG_SCHEMA_VERSION, db.SchemaVersion, 'a new log is stamped current');
    finally
       db.Free;
    end;
@@ -461,7 +462,7 @@ var
    db: TLogDatabase;
    fn: string;
 begin
-   BeginTest('opening a schema-2 log stamps 3 into the file, which older builds refuse');
+   BeginTest('opening a schema-2 log stamps the current schema into the file, which older builds refuse');
    fn := TempLogName('stamp.db');
    Scrub(fn);
    db := TLogDatabase.Create;
@@ -491,8 +492,8 @@ begin
    db := TLogDatabase.Create;
    try
       db.OpenReadOnly(fn);
-      CheckEquals(3, db.SchemaVersion,
-                  'after one Open the FILE says 3 -- a schema-2 build refuses it');
+      CheckEquals(LOG_SCHEMA_VERSION, db.SchemaVersion,
+                  'after one Open the FILE says the current schema -- a schema-2 build refuses it');
    finally
       db.Free;
    end;

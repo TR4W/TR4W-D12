@@ -115,6 +115,24 @@ for every End <> 0. Pinned by `Test_DeleteLastCharacterAtEndZero`.
 (`uNet` reads them), and `K1EAKeyer` is still an old-style `object` -- audit
 item 6.5, its conversion to a class, was not part of P6.
 
+## An edited memory is an operator statement, and the log keeps it (Q9, Q113)
+
+`LogCW` latches every function-key memory the operator edits.
+`TryApplyMessageCommand` latches every branch, CQ or EX, text or caption, and
+so do both line-input edits. Since Q113 (2026-10-23) the latch covers the EX
+bank and the captions, where Q9 covered only CQ.
+- **A CONTEST DEFAULT GOES THROUGH `SetContestDefaultCQMemoryString` /
+  `SetContestDefaultEXMemoryString` / `SetContestDefaultEXCaptionMemoryString`.**
+  Each of them leaves a latched key alone. A plain `SetEXMemoryString` in a
+  default writer overwrites the operator's edit. Worse, the contest log still
+  records that key as edited, so the default is pinned at the next open.
+- **`ForgetMemoryStatementsOfOtherContests`** (renamed from
+  `...CQMemory...`) clears both banks when a different contest is set up.
+- **The log restores the latched memories at open**
+  (`uLogStore.RestoreEditedMessageMemories`, after the contest's set-up).
+  `cfgdef.UpdateSAndPF1Caption` runs after that restore, which is why it now
+  uses the guarded caption writer.
+
 ## Open, and decided
 
 **Open (NY4I — design, not refactor):** `ActiveCWKeyer`'s precedence chain

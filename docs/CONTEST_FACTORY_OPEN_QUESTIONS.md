@@ -41,7 +41,7 @@ against itself**
 (details in each entry)**
 
 - **No change -- today already matches D7:** Q27 SAC (a Russian station is not workable), Q88 NA Sprint files, Q95 Croatian / CW Open zones, Q106(6) P13's `LA`, Q114 ALRS (a grid), Q122 PY0S/PY0T stay DX, Q123 RF Cup Digital (no mode limit), Q124 OZCHR 1/1/3/5, Q125 Ukraine Championship, Q126 the five unidentified contests, Q23 Cup RF, Q26 WAG (empty QTH), Q112 peers and Rescore.
-- **To build:** Q47 bound the three read-past-the-end shapes; Q113 edited memories survive a restart (as D7); Q119 a host-area-refused QSO is an X-QSO; Q120 bands and modes (D7's "every band and mode" where no unambiguous rule, ARRL Digi excludes RTTY by its current rules); Q127 GAGARIN-CUP -> `GC` only.
+- **To build:** Q47 bound the three read-past-the-end shapes; ~~Q113 edited memories survive a restart (as D7)~~ (built 2026-10-23); Q119 a host-area-refused QSO is an X-QSO; Q120 bands and modes (D7's "every band and mode" where no unambiguous rule, ARRL Digi excludes RTTY by its current rules); Q127 GAGARIN-CUP -> `GC` only.
 - **Parked:** Q101 ([#94](https://github.com/TR4W/TR4W-D12/issues/94)), Q137 ([#93](https://github.com/TR4W/TR4W-D12/issues/93)) -- not D7/D12 work; Q128, Q129 -- i18n after contestFactory.
 - **Built earlier from the sponsors' rules:** Q97, Q131-Q136, Q138 (`722690bf`).
 
@@ -431,7 +431,8 @@ different event), so Q123 still needs the SRR digital cup's own rules.
      with a character before it and a letter after; no character => no
      multiplier); an empty MY COUNTRY is not `G`; RCC CW/SSB score 4 only
      when the call ENDS in `/P` or `/M`. That last one also corrects D7's
-     first-match read (`LOGSTUFF.PAS:8068`), which gave `SP/PA1AB/M` 3.
+     first-match read (`LOGSTUFF.PAS:8068`), which gave `SP/PA1AB/M` 3 --
+     NY4I, 2026-10-23: *"keep the RCC /M change"*.
      Pinned by `uTestContestReadBounds`; matrix: no frozen QSO moved.
 
 - **Q101** Thirteen typed received-exchange columns are never written or read:
@@ -513,7 +514,12 @@ different event), so Q123 still needs the SRR digital cup's own rules.
   re-applied it at start-up; pre-factory D12 did the same
   (`uEditMessageForm.pas:369`). Recreate that in the SQLite file, as
   recommended: flag edited rows, restore only those at open, the edit
-  winning over the default. To build.
+  winning over the default. ~~To build.~~ **Built 2026-10-23** (both citations
+  re-checked first). Log schema 4 adds `message.edited`. The Q9 latch now covers
+  the EX bank and the captions as well, so a re-selection and a restart follow
+  one rule. The restore runs at the end of `LogStoreApplyContestConfig`, after
+  the contest has set up its defaults. Pinned by `uTestOperatorCQMemory`.
+  Detail: `docs/SQLITE_LOG_SCHEMA_PLAN.md` section 12i. CLOSED.
 
 - **Q114** (Q37) **ALRS-UA1DZ Cup: is its exchange a grid?** Its QTH is
   parsed as a domestic QTH, taken as typed, and then used as a GRID for

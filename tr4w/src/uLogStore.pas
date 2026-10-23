@@ -224,8 +224,33 @@ function LogStoreIsUsable: boolean;
   file is not consulted. Returns how many commands it applied, so a caller can
   tell "this log has none" from "this log has been read".
 
-  ONLY source = 'contest'. See TLogRepository.LoadContestConfig for why. *)
+  ONLY source = 'contest'. See TLogRepository.LoadContestConfig for why.
+
+  AND LAST, THE MEMORIES THE OPERATOR EDITED (Q113) --
+  RestoreEditedMessageMemories, after the contest has been set up. *)
 function LogStoreApplyContestConfig: integer;
+
+(* THE FUNCTION-KEY MEMORIES INTO THE LOG'S message TABLE -- every memory the
+  program holds, both banks and both modes, with its button caption. A row is
+  flagged edited when the operator stated that key (LogCW's Q9 latch:
+  CQMemoryIsOperatorStated / EXMemoryIsOperatorStated), and only those rows
+  come back at open. The table is rewritten whole, so a row no longer edited
+  or emptied does not linger. Does not commit -- the caller's capture does.
+  Public so the tests can drive it with their own repository. *)
+procedure CaptureMessageMemories(aRepository: TLogRepository);
+
+(* THE MEMORIES THE OPERATOR EDITED, BACK INTO THE PROGRAM (Q113). Each row
+  flagged edited is applied as the operator's edit is -- text, caption, and
+  the Q9 latch -- so the contest's set-up leaves it alone from here on, and
+  the next close records it as edited again. A row NOT flagged is the
+  contest's default as it stood at close and is NOT applied: the contest
+  builds its defaults afresh, from today's MY STATE and the rest.
+
+  CALL IT AFTER THE CONTEST IS SET UP. The set-up forgets statements made
+  under any other contest, and one made before the first set-up is under
+  none. Returns how many memories it restored. A row naming a kind, a mode or
+  a key this build does not know is reported and skipped. *)
+function RestoreEditedMessageMemories(aRepository: TLogRepository): integer;
 
 (* RECORD ONE CONTEST-SCOPED STATEMENT IN THE LOG NOW, AND COMMIT IT -- Q61.
 
@@ -315,7 +340,9 @@ uses
       values a QSO records are the ones scoring saw at that moment (country,
       continent, MY CQ ZONE); TStationContext is uContestBase's.
       ctyGetITUZone -- MY ITU ZONE when the operator stated none. *)
-   SysUtils, Classes, uContestBase, uContestFactory, uCTYDAT,
+   SysUtils, Classes,
+   Contnrs,   (* TObjectList -- the edited memories RestoreEditedMessageMemories reads *)
+   uContestBase, uContestFactory, uCTYDAT,
    (* uLogRepository is in the INTERFACE uses now -- LogStoreRepository's
       return type. *)
    MainUnit, uLogDatabase, uLogImport,
@@ -554,6 +581,170 @@ begin
       end;
 end;
 
+const
+   (* THE TWO MODES THE message TABLE HOLDS, and NOT `CW to Phone`. ModeType
+     runs CW, Digital, Phone, and the memory accessors fold Digital into CW --
+     so walking the range wrote each CW memory a second time under the PHONE
+     key (MessageModeName(Digital) is 'PHONE'), where it stood whenever the
+     Phone memory was empty. With an edited flag on the row that would have
+     restored CW text into a Phone key. *)
+   MESSAGE_MODES: array[0..1] of ModeType = (CW, Phone);
+
+(* A MEMORY KEY'S NAME -- KeyId's spelling, the message table's key_id -- or
+  '' for a code that is not a function key.
+
+  BY ORDINAL, AND THAT IS THE WHOLE POINT. The memory keys are AnsiChar
+  codes 112..147, and KeyId takes a Char, which tr4w.inc makes a WideChar.
+  Char(anAnsiChar) is a CODE-PAGE CONVERSION, not a cast: #139 (AltF4)
+  arrives as U+2039, which is no function key, so KeyId answered '' for
+  nearly every Ctrl and every Alt key -- the codes from #128 up. The capture
+  skipped every one of them, which is why a ControlF11 'QRL?' was once
+  recorded under an empty key and why no Alt-key memory ever reached the
+  table (found by Q113's test, 2026-10-23). Char(Ord(...)) keeps the code. *)
+function MemoryKeyId(aKey: AnsiChar): AnsiString;
+begin
+   Result := AnsiString(KeyId(Char(Ord(aKey))));
+end;
+
+procedure CaptureMessageMemories(aRepository: TLogRepository);
+var
+   m: integer;
+   mode: ModeType;
+   key: AnsiChar;
+   keyName: AnsiString;
+
+   (* AN EMPTY MEMORY NOBODY EDITED IS NOTHING TO RECORD. An EDITED one is
+     the operator saying it is empty, and is kept so the open restores it. *)
+   procedure CaptureOne(const aKind, aText, aCaption: AnsiString; aEdited: boolean);
+   begin
+      if (aText = '') and (not aEdited) then
+         begin
+         Exit;
+         end;
+      aRepository.SaveMessage(aKind, MessageModeName(mode), keyName, aText,
+                              aCaption, aEdited);
+   end;
+
+begin
+   (* REWRITTEN WHOLE. An upsert alone left a row behind for a memory that
+     was emptied, or that a different contest's set-up no longer counts as
+     edited -- and a stale row flagged edited would be restored. *)
+   aRepository.DeleteAllMessages;
+
+   for m := Low(MESSAGE_MODES) to High(MESSAGE_MODES) do
+      begin
+      mode := MESSAGE_MODES[m];
+      for key := F1 to AltF12 do
+         begin
+         (* ONLY KEYS THE PROGRAM CAN NAME.
+
+            F1..AltF12 is a CHARACTER range, not an enumeration of function
+            keys, so iterating it walks every code in between -- and several of
+            those are not function keys at all. KeyId answers '' for them.
+
+            That is not a cosmetic problem: the message table is keyed
+            (kind, mode, key_id), so every unnamed key collapses onto the SAME
+            row and each one silently overwrites the last. The first capture
+            recorded a 'CQ/CW' memory of "QRL?" under an empty key, which is
+            one of those codes winning the race. *)
+         keyName := MemoryKeyId(key);
+         if keyName = '' then
+            begin
+            Continue;
+            end;
+
+         CaptureOne('CQ', AnsiString(GetCQMemoryString(mode, key)),
+                    CQCaptionMemory[mode, key],
+                    CQMemoryIsOperatorStated(mode, key));
+         CaptureOne('EX', AnsiString(GetEXMemoryString(mode, key)),
+                    EXCaptionMemory[mode, key],
+                    EXMemoryIsOperatorStated(mode, key));
+         end;
+      end;
+end;
+
+function RestoreEditedMessageMemories(aRepository: TLogRepository): integer;
+var
+   rows: TObjectList;
+   row: TLogStoredMessage;
+   i: integer;
+   m: integer;
+   mode: ModeType;
+   key: AnsiChar;
+   k: AnsiChar;
+   known: boolean;
+begin
+   Result := 0;
+   rows := TObjectList.Create(True);
+   try
+      aRepository.LoadEditedMessages(rows);
+      for i := 0 to rows.Count - 1 do
+         begin
+         row := TLogStoredMessage(rows[i]);
+
+         (* THE ROW'S NAMES BACK TO THE PROGRAM'S -- the inverse of the
+           capture's MessageModeName and KeyId, asked of the same two. *)
+         known := False;
+         mode := CW;
+         for m := Low(MESSAGE_MODES) to High(MESSAGE_MODES) do
+            begin
+            if MessageModeName(MESSAGE_MODES[m]) = row.Mode then
+               begin
+               mode := MESSAGE_MODES[m];
+               known := True;
+               end;
+            end;
+         key := F1;
+         if known then
+            begin
+            known := False;
+            for k := F1 to AltF12 do
+               begin
+               if (MemoryKeyId(k) <> '') and
+                  (MemoryKeyId(k) = row.KeyId) then
+                  begin
+                  key := k;
+                  known := True;
+                  end;
+               end;
+            end;
+         if known then
+            begin
+            known := (row.Kind = 'CQ') or (row.Kind = 'EX');
+            end;
+         if not known then
+            begin
+            if logger <> nil then
+               begin
+               logger.Warn('[LogStore] an edited memory %s/%s/%s names nothing ' +
+                           'this build knows -- not restored',
+                           [row.Kind, row.Mode, row.KeyId]);
+               end;
+            Continue;
+            end;
+
+         (* AS THE OPERATOR'S EDIT IS APPLIED: the text, the caption, and the
+           latch -- which keeps it through a re-selection of this contest
+           and flags it edited again at the next close. *)
+         if row.Kind = 'CQ' then
+            begin
+            SetCQMemoryString(mode, key, ShortString(row.Text));
+            SetCQCaptionMemoryString(mode, key, ShortString(row.Caption));
+            NoteCQMemoryStatedByOperator(mode, key);
+            end
+         else
+            begin
+            SetEXMemoryString(mode, key, ShortString(row.Text));
+            SetEXCaptionMemoryString(mode, key, ShortString(row.Caption));
+            NoteEXMemoryStatedByOperator(mode, key);
+            end;
+         Inc(Result);
+         end;
+   finally
+      rows.Free;
+   end;
+end;
+
 procedure CaptureConfiguration(const aWhy: string);
 var
    i: integer;
@@ -561,10 +752,7 @@ var
    src: AnsiString;
    value: AnsiString;
    renderable: boolean;
-   mode: ModeType;
    Column: LogColumnsType;
-   key: AnsiChar;
-   memText: ShortString;
    saved: integer;
    (* The contest-scoped settings that have left the array -- see below. *)
    names: TStringList;
@@ -750,51 +938,8 @@ begin
          'contest');
       end;
 
-   (* THE FUNCTION-KEY MEMORIES, both kinds and both modes. GetCQMemoryString /
-      GetEXMemoryString are the accessors the program itself uses, and KeyId is
-      the spelling AppendConfigFile already writes into a .cfg -- so a message
-      round-trips through the same names it has always had. *)
-   for mode := CW to Phone do
-      begin
-      for key := F1 to AltF12 do
-         begin
-         (* ONLY KEYS THE PROGRAM CAN NAME.
-
-            F1..AltF12 is a CHARACTER range, not an enumeration of function
-            keys, so iterating it walks every code in between -- and several of
-            those are not function keys at all. KeyId answers '' for them.
-
-            That is not a cosmetic problem: the message table is keyed
-            (kind, mode, key_id), so every unnamed key collapses onto the SAME
-            row and each one silently overwrites the last. The first capture
-            recorded a 'CQ/CW' memory of "QRL?" under an empty key, which is
-            one of those codes winning the race.
-
-            A key the program cannot name is also one a .cfg could never have
-            expressed -- AppendConfigFile writes "CQ MEMORY " + KeyId(...) --
-            so there is nothing here that a config file could round-trip. *)
-         if KeyId(Char(key)) = '' then
-            begin
-            Continue;
-            end;
-
-         memText := GetCQMemoryString(mode, key);
-         if memText <> '' then
-            begin
-            GRepository.SaveMessage('CQ', MessageModeName(mode),
-                                    AnsiString(KeyId(Char(key))),
-                                    AnsiString(memText), '');
-            end;
-
-         memText := GetEXMemoryString(mode, key);
-         if memText <> '' then
-            begin
-            GRepository.SaveMessage('EX', MessageModeName(mode),
-                                    AnsiString(KeyId(Char(key))),
-                                    AnsiString(memText), '');
-            end;
-         end;
-      end;
+   (* THE FUNCTION-KEY MEMORIES, flagged where the operator edited them. *)
+   CaptureMessageMemories(GRepository);
 
    GRepository.Commit;
 
@@ -2396,6 +2541,27 @@ begin
          begin
          RecalculateMyCountryContinentAndZoneNew(
             CallString(UTF8Encode(Settings.My.Call)));
+         end;
+
+      (* THE MEMORIES THE OPERATOR EDITED -- Q113, LAST, AND THAT IS THE POINT.
+
+        D7 kept an operator's Alt-P edit across a restart: the dialog wrote it
+        to the contest .cfg's [Messages] section and ReadInConfigFile applied
+        it again at start-up (C:\TR4W uEditMessage.pas:236/249). A contest is
+        its SQLite file now, so the log's message table is where it lives.
+
+        HERE, BECAUSE EVERY DEFAULT WRITER HAS RUN BY NOW. The contest was set
+        up above -- by the .cfg read earlier, or by CONTEST from the contest
+        table -- and its set-up writes its default memories and, before that,
+        forgets any statement made under another contest. Restoring earlier
+        would be forgotten or overwritten. Restored through LogCW's Q9 latch,
+        so a later re-selection of THIS contest keeps the edits too: one rule
+        for a re-select and for a restart, not two. *)
+      i := RestoreEditedMessageMemories(GRepository);
+      if (i > 0) and (logger <> nil) then
+         begin
+         logger.Info('[LogStore] %d function-key memory(ies) the operator ' +
+                     'edited restored from the log', [i]);
          end;
    except
       on E: Exception do

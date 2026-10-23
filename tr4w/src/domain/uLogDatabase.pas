@@ -1487,11 +1487,24 @@ var
    version: integer;
    i: integer;
    missing: array of integer;
+   messageEditedMissing: boolean;
 begin
    version := PragmaAsInteger('PRAGMA user_version');
    if version >= LOG_SCHEMA_VERSION then
       begin
       Exit;
+      end;
+
+   (* v3 -> v4: IS message.edited MISSING, asked here with the v3 question and
+     for the same reason -- before anything changes, so the migration stays
+     one transaction. *)
+   messageEditedMissing := False;
+   if version < 4 then
+      begin
+      messageEditedMissing :=
+         PragmaAsString(UTF8Encode('SELECT name FROM pragma_table_info(''message'') ' +
+                        'WHERE name = ''' + string(LOG_V4_MESSAGE_COLUMN.Name) +
+                        '''')) = '';
       end;
 
    (* v2 -> v3: WHICH my_* COLUMNS ARE MISSING, asked BEFORE anything is
@@ -1543,6 +1556,17 @@ begin
       FConnection.ExecuteDirect(UTF8Encode(
          'ALTER TABLE qso ADD COLUMN ' + string(LOG_V3_QSO_COLUMNS[missing[i]].Name) +
          ' ' + string(LOG_V3_QSO_COLUMNS[missing[i]].Declaration)));
+      end;
+
+   (* v3 -> v4: message.edited, 0 in every existing row -- an older build
+     never recorded which memories the operator edited, so none is restored
+     (Q113). Appended, like the v3 columns, so a migrated table and a new
+     one match. *)
+   if messageEditedMissing then
+      begin
+      FConnection.ExecuteDirect(UTF8Encode(
+         'ALTER TABLE message ADD COLUMN ' + string(LOG_V4_MESSAGE_COLUMN.Name) +
+         ' ' + string(LOG_V4_MESSAGE_COLUMN.Declaration)));
       end;
 
    (* ExecuteDirect is what begins a transaction; with nothing to do there is

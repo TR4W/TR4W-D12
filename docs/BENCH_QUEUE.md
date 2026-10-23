@@ -3702,6 +3702,15 @@ ANSWERS; they cannot press a key.
       `<STATE:2>PA`; a DX QSO carries no STATE. **No corpus log covers
       NYQP.**
 
+- [ ] **An edited memory survives a restart** (Q113, 5.0.29). Open a
+      contest, edit a CQ memory, an EX memory and an Alt-key memory (Alt-P),
+      change one button caption; close TR4W and reopen the same contest. All
+      four edits are back; an unedited key shows the contest's default.
+      Change MY STATE and reopen: the unedited defaults follow it, the edits
+      do not. The log says `function-key memory(ies) the operator edited
+      restored`. Then open the log in 5.0.28: it is refused (schema 4) --
+      expected, keep a copy if an older build must read it.
+
 ---
 
 ## Decisions owed from NY4I -- contest factory
