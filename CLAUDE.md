@@ -1613,7 +1613,6 @@ Read the specific doc before acting in its area — these are current and this f
 | **Band plan: frequency memories and band-map cutoffs (DESIGN, nothing built)** | **[`docs/BAND_PLAN_SETTINGS_DESIGN.md`](docs/BAND_PLAN_SETTINGS_DESIGN.md)** -- the two rows that are unsafe to render as ordinary settings, and why |
 | Legacy removal plan | **archived** — `docs/migration_interim_artifacts/LEGACY_DEPENDENCY_AUDIT.md`, `.../PHASE_INVENTORIES.md`. The legacy radio path was deleted 2026-08-02 and live `asm` is zero |
 | CW keyer factory | `docs/CW_Keyer_Factory_Plan.md` |
-| ~~Adding a contest -- the DATA~~ | `docs/ADDING_A_NEW_CONTEST.md` -- **STALE, the legacy enum model; do not follow its checklist.** Everything current is in `ADDING_A_CONTEST.md` |
 | **Adding a contest -- the procedure (Part A) and the reference (Part B)** | **`docs/ADDING_A_CONTEST.md`** -- Part A is the checklist; read **B4** before believing a green run: the golden corpus is BLIND to scoring, and for a NEW contest only its unit tests say it is right |
 | **What a contest OWNS -- the factory's target shape (DESIGN; NY4I's ruling 2026-10-01)** | **`docs/CONTEST_OWNERSHIP_DESIGN.md`** -- a contest class owns its rules outright through `TContestBase` virtuals (scoring, parsing, ADIF import interpretation, ADIF/Cabrillo export, setup, total score); NO shared strategies and NO registries; family bases only for one family under one rule; a look-alike contest starts as a COPY it owns. Holds the migration order M0-M10, the checkable definition of "a contest has moved", the rotated `QSOPointMethodArray` finding (moot: that table went at M10 S2, and the point method itself as a concept at M10 S4) and open questions Q1-Q13 |
 | **M10, the contest-factory endpoint -- the STAGED plan (S0-S9)** | **`docs/CONTEST_FACTORY_M10_PLAN.md`** -- measured at `de62e724` with `tools/contest-factory-m10/`; re-measure before acting on a number. Deleting the legacy scoring case changes no registered contest (checked two ways, design §8.2s); the six multiplier/exchange KIND enums outlive M10 and go at M11 |
@@ -1719,8 +1718,8 @@ Follow **Part A of [`docs/ADDING_A_CONTEST.md`](docs/ADDING_A_CONTEST.md)** top 
 files and the `.dom` format (A1), the base class (A2), exactly which virtuals to override (A3),
 every place outside the class that names the contest (A4), its tests (A5), and the gates in
 order (A6). The worked examples are `uContestGeorgiaQP` (a state QSO party) and
-`uContestURCDXRTTY` (any other contest). ~~`docs/ADDING_A_NEW_CONTEST.md`~~ is the legacy enum
-model and is stale -- do not follow its checklist.
+`uContestURCDXRTTY` (any other contest). The legacy enum-model guide is archived at
+`docs/migration_interim_artifacts/ADDING_A_NEW_CONTEST.md` (2026-10-23) -- history, not a checklist.
 
 **The `ContestType` enum is FROZEN** (`Lint-FrozenContestNumbers`, since Q108 S3): a new contest
 registers by its string id (`RegisterContestById`) with **no `VC.pas` entry**. It is refused on

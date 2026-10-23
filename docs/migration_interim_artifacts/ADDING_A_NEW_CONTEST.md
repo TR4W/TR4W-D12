@@ -1,5 +1,10 @@
 # Adding a New Contest to TR4W
 
+> **ARCHIVED 2026-10-23 (NY4I). Do not follow this checklist.** It describes the
+> legacy model, where a contest was a `ContestType` enum value; that enum is
+> FROZEN and a new contest registers by id. The current procedure is
+> [`docs/ADDING_A_CONTEST.md`](../ADDING_A_CONTEST.md) Part A. Kept for its history.
+
 *Source: distilled from the RTC (Real-Time Contest) work, May 2026, issue #902. Read this before adding any new contest definition.*
 
 ---

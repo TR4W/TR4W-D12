@@ -56,8 +56,9 @@ which side of that seam you are on before you change anything.
 | the **data** — its `.dom` files in `target/dom/` (no `.cfg` -- that folder is `.dom` only, NY4I 2026-10-15), their format and the state-party pair. **No `VC.pas` entry since Q108 S3: the `ContestType` enum is FROZEN** | `docs/ADDING_A_CONTEST.md` A1 |
 | the **class** in this factory | `docs/ADDING_A_CONTEST.md` A2-A6 |
 
-`docs/ADDING_A_NEW_CONTEST.md` describes the LEGACY (enum) model and is
-largely stale; do not follow its checklist.
+The legacy enum-model guide is archived at
+`docs/migration_interim_artifacts/ADDING_A_NEW_CONTEST.md` (2026-10-23); do
+not follow its checklist.
 
 **No `.cfg` borrows another contest's type** (NY4I, 2026-10-01: *"The only
 contest that should say CONTEST = NEQP is the NEQP."*). A new event is a new
