@@ -154,6 +154,7 @@ uses
   VC,                 // TR4W_SYN_FILENAME
   TF,                 // tCreateThread
   MainUnit,           // LogRowTextFor, logger
+  uContestRegistry,   // LoggedQSOIsXQSO -- a row greys an X-QSO (Q98 S1)
   Log4D;
 
 var
@@ -273,7 +274,7 @@ begin
 
       LogRowTextFor(rec, aRows[i].Text);
       aRows[i].Deleted := rec.ceQSO_Deleted;
-      aRows[i].XQSO    := rec.ceXQSO;
+      aRows[i].XQSO    := LoggedQSOIsXQSO(rec);
       end;
 end;
 

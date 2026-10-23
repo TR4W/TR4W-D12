@@ -835,6 +835,7 @@ uses
    uEditingKeys,       // KeystrokeBelongsToTheFocusedControl -- see IsShortcut
    uSystemWatch,       // the clock/display poll -- see SystemWatchTick
    uGetServerLog,      // the headless-sync state
+   uContestRegistry,   // LoggedQSOIsXQSO -- a grid row greys an X-QSO (Q98 S1)
    SysUtils,           // UpperCase
    uCrashLog,          // OnMainThread / ReportOffMainThread / LogCaughtException
    uMacMenuBar,        // ForceMenuBarRedraw -- the macOS bar, see ScheduleMainWindowActivation
@@ -2635,7 +2636,7 @@ begin
         screen and what is written out cannot disagree. *)
       LogRowTextFor(qsos[i], aRows[Low(aRows) + i].Text);
       aRows[Low(aRows) + i].Deleted := qsos[i].ceQSO_Deleted;
-      aRows[Low(aRows) + i].XQSO    := qsos[i].ceXQSO;
+      aRows[Low(aRows) + i].XQSO    := LoggedQSOIsXQSO(qsos[i]);
       aRows[Low(aRows) + i].Valid   := True;
       end;
 end;
@@ -2966,7 +2967,7 @@ begin
 
       LogRowTextFor(GDupeQsos[m], aRows[i].Text);
       aRows[i].Deleted := GDupeQsos[m].ceQSO_Deleted;
-      aRows[i].XQSO    := GDupeQsos[m].ceXQSO;
+      aRows[i].XQSO    := LoggedQSOIsXQSO(GDupeQsos[m]);
       aRows[i].Valid   := True;
       end;
 end;

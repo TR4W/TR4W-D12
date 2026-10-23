@@ -79,6 +79,15 @@ type
                                 const aSession: TADIFImportSession;
                                 var aExch: ContestExchange); override;
    public
+      (* THE FAMILY'S BANDS -- Q98 S4a (design 8.2v; built with S1 for
+         NY4I's CQ WW SSB dry run, 2026-10-22). Sponsor (cqww.com rules:
+         1.8, 3.5, 7, 14, 21 and 28 MHz), DXLog's CQWW.txt and WA7BNM
+         192/172 agree: 160, 80, 40, 20, 15 and 10 m -- no WARC, no 6 m and
+         up. Both runnings share it, so it is stated once, here (a family
+         base may: design 8.2v). A QSO on any other band is an automatic
+         X-QSO. The MODE is each running's own. *)
+      function UsesBand(aBand: BandType): boolean; override;
+   public
       (* THE CANONICAL RECEIVED EXCHANGE -- see
          TContestBase.CanonicalReceivedExchange (M9a). *)
       function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
@@ -170,6 +179,11 @@ begin
       begin
       aQso.QSOPoints := 0;
       end;
+end;
+
+function TContestCQWWBase.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10];
 end;
 
 function TContestCQWWBase.GetFlags: TContestFlags;

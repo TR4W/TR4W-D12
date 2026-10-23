@@ -933,23 +933,23 @@ begin
    BeginTest('Test_QSOCountsTowardTotals');
 
    qso := LoggedQSO('W1AW', Band20, CW);
-   CheckTrue(QSOCountsTowardTotals(qso), 'a QSO counts');
+   CheckTrue(QSOCountsTowardTotals(nil, qso), 'a QSO counts');
    qso.ceDupe := True;
-   CheckTrue(QSOCountsTowardTotals(qso), 'a dupe counts -- the loader counts it');
+   CheckTrue(QSOCountsTowardTotals(nil, qso), 'a dupe counts -- the loader counts it');
 
    qso := LoggedQSO('W1AW', Band20, CW);
    qso.ceQSO_Deleted := True;
-   CheckFalse(QSOCountsTowardTotals(qso), 'deleted');
+   CheckFalse(QSOCountsTowardTotals(nil, qso), 'deleted');
    qso := LoggedQSO('W1AW', Band20, CW);
    qso.ceXQSO := True;
-   CheckFalse(QSOCountsTowardTotals(qso), 'an X-QSO');
+   CheckFalse(QSOCountsTowardTotals(nil, qso), 'an X-QSO');
    qso := LoggedQSO('W1AW', NoBand, CW);
-   CheckFalse(QSOCountsTowardTotals(qso), 'no band');
+   CheckFalse(QSOCountsTowardTotals(nil, qso), 'no band');
    qso := LoggedQSO('W1AW', Band20, NoMode);
-   CheckFalse(QSOCountsTowardTotals(qso), 'no mode');
+   CheckFalse(QSOCountsTowardTotals(nil, qso), 'no mode');
    qso := LoggedQSO('W1AW', Band20, CW);
    qso.ceRecordKind := rkQTCS;
-   CheckFalse(QSOCountsTowardTotals(qso), 'a QTC record');
+   CheckFalse(QSOCountsTowardTotals(nil, qso), 'a QTC record');
 end;
 
 (* THE RECORDS THE SUMMARY-SHEET TEST HANDS TallySummaryTotals, in order --
@@ -1008,7 +1008,7 @@ begin
    counted := 0;
    for i := Low(GSummaryRecords) to High(GSummaryRecords) do
       begin
-      if QSOCountsTowardTotals(GSummaryRecords[i]) then
+      if QSOCountsTowardTotals(nil, GSummaryRecords[i]) then
          begin
          Inc(counted);
          end;

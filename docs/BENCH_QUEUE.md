@@ -87,6 +87,40 @@ contest, and the matrix's call roster has no WAE-only, UA2, FJL, RI1AN or
   contest, as for SRR-JR). Check the Ermak/Cabrillo QSO line against
   ua9qcq's Ermak example: TR4W prints the SRR-JR layout.
 
+## Added 2026-10-22 -- THE AUTOMATIC X-QSO (Q98 S1) AND CQ WW'S BANDS AND MODES
+
+Unit-pinned (`uTestAutomaticXQSO`, the ratchet in `uTestContestStatesItsRules`)
+and seen by the contest matrix (scoring, both exports, import, totals). What no
+gate reaches is the live window, the log grids, the summary sheet and the far
+end of HamScore. Design 8.2v "S1 as built". Run in a CQ WW SSB log:
+
+- [ ] **A CW QSO in CQ WW SSB** (switch the radio or mode to CW, log a DX
+      station on 20 m). EXPECT: it is logged; its row in the log window is
+      GREYED as an X-QSO; 0 points; no multiplier is shown as new; the totals
+      window does not count it (the per-minute rate still does -- it counts
+      contacts); the NEXT QSO's sent serial is
+      one higher (it advances). Then work the SAME station on 20 m SSB:
+      EXPECT it is NOT called a dupe and DOES count as a new multiplier if
+      the country/zone was new.
+- [ ] **An off-band QSO** (log a phone QSO on 17 m, 12 m or 6 m). EXPECT the
+      same: greyed, 0 points, no multiplier, not a dupe of anything, no "new
+      multiplier" hint while on that band.
+- [ ] **Edit the band of that QSO to 20 m** (Edit QSO). EXPECT the row turns
+      ordinary and the score includes it after the rescore -- nothing was
+      stored. Edit QSO's X-QSO checkbox stays UNCHECKED throughout: it is the
+      operator's statement only (the read-only "X-QSO by rule" caption is NOT
+      built -- 8.2v decision 8).
+- [ ] **Export**: the Cabrillo writes `X-QSO:` for those lines and the
+      CLAIMED-SCORE leaves them out; the ADIF carries
+      `<APP_TR4W_CLAIMEDQSO:1>0` on them only.
+- [ ] **Summary sheet** (post-contest): QSO totals and points leave them out.
+- [ ] **Reopen the log**: totals, multipliers and the greyed rows are the
+      same as before closing.
+- [ ] **HamScore**: an X-QSO goes up as an `X-QSO:` line -- does hamscore.com
+      leave it out of its counts? (design 8.2v question 7)
+- [ ] **FM in CQ WW SSB is an X-QSO** (Q120(a) proposal, unanswered) -- say
+      if that is wrong.
+
 ## Added 2026-10-19 -- THE NEW CONTEST DIALOG: LAST CONTEST BUTTON AND THE LOG GRID
 
 No window is shown by any test; all of this is compiled and unit-tested only.

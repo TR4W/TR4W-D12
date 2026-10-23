@@ -1251,7 +1251,7 @@ procedure TallySummaryTotals( aNext: TSummaryRecordReader );
         band or no mode is now left out of the raw column as well, as the
         loader leaves it out of every total. ceQSO_Skiped was tested here as a
         SECOND delete flag once; one flag now. *)
-     if not QSOCountsTowardTotals( TempRXData ) then
+     if not QSOCountsTowardTotals(ContestIdentity(TempRXData.ceContest), TempRXData) then
         begin
         Continue;
         end;
@@ -3338,7 +3338,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 // Issue #750: X-QSO records use the 'X-QSO:' prefix instead of 'QSO:';
                 // only the literal prefix differs (the 2-char-wider prefix shifts later
                 // columns by 2 -- Cabrillo parsers tolerate X-QSO column alignment).
-                if TempRXData.ceXQSO then
+                if LoggedQSOIsXQSO(TempRXData) then
                    begin
                    sPrefix := 'X-QSO: '
                    end

@@ -161,14 +161,25 @@ Everything else in [B2](#b2-the-base-class-reference). **Do not** repeat the
 band rule or the host-area rule in `CalculateQSOPoints` or
 `CountsAsMultiplier` -- `ScoreQSO` and `SetMultFlags` ask them first.
 
-### The mode rule -- TODO on this branch
+### State your bands AND your modes -- `UsesBand` and `UsesMode`
 
-There is **no mode-credit seam yet** (`TContestBase.UsesMode` arrives with the
-`q98-s1-cqww` merge). Until then a contest that forbids a mode gives that QSO 0
-in `CalculateQSOPoints` and refuses its multiplier in `CountsAsMultiplier`,
-both marked `TODO(UsesMode)` (Georgia's Digital, Nebraska's FT8/FT4). The QSO is
-still logged. When the merge lands, state the modes there and delete those arms.
-`RunsInMode` is NOT this rule.
+There is no inherited default (Q98 S1, 2026-10-22; NY4I: *"I would feel
+better if contest classes just explicitly listed the bands they allow"*), and
+`uTestContestStatesItsRules.Test_EveryContestStatesItsBandsAndModes` fails a
+new contest that does not state both -- the two `..._NOT_YET_STATED` sets hold
+only the contests that predate the rule. A QSO off your bands or modes is an
+**automatic X-QSO** (NY4I: *"automatic X-QSO is OK"*): logged, 0 points, no
+multiplier, no dupe, out of every total, `X-QSO:` in the Cabrillo and
+`APP_TR4W_CLAIMEDQSO` 0 in the ADIF -- derived each time, never stored, so the
+class says nothing else about it. **Do not** also give such a QSO 0 in
+`CalculateQSOPoints` or refuse it in `CountsAsMultiplier`.
+
+In `UsesMode`, `eNoMode` and `eData` mean "some submode of aMode": answer True
+for them if you credit any submode, and test the submode only to EXCLUDE one
+you name. Both answers are identity facts -- never ask the station
+(`Test_BandsAndModesAreAnIdentityFact`). A family base may state the bands its
+whole family shares (CQ WW does); `TContestStateQSOPartyBase` never does.
+`RunsInMode` is NOT this rule. Design doc 8.2v.
 
 ### Which exchange helpers go together
 

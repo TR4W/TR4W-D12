@@ -825,8 +825,10 @@ begin
      NY4I: "off-band should not impact need multiplier. It is really a
      one-off with no impact on the contest at all." Band is the real band the
      hint is for (the radio's, or a spot's), asked before it becomes the
-     AllBands key of a contest whose multipliers are not counted per band. *)
-  if not ContestCreditsBand(ContestIdentity(Contest), Band) then
+     AllBands key of a contest whose multipliers are not counted per band.
+     NOR IN A MODE IT DOES NOT CREDIT (Q98 S1): such a QSO is an X-QSO. *)
+  if (not ContestCreditsBand(ContestIdentity(Contest), Band)) or
+     (not ContestCreditsModeKey(ContestIdentity(Contest), Mode)) then
      begin
      Result := False;
      Exit;
@@ -1214,7 +1216,8 @@ begin
 
   (* AND NO "NEW MULTIPLIER" WHILE THE OPERATOR IS ON SUCH A BAND -- the
      AllBands bit below is kept by CreditedBands, so it is asked here. *)
-  if not ContestCreditsBand(ContestIdentity(Contest), ActiveBand) then
+  if (not ContestCreditsBand(ContestIdentity(Contest), ActiveBand)) or
+     (not ContestCreditsModeKey(ContestIdentity(Contest), ActiveMode)) then
      begin
      DispalayNewMult(nCmndShow);
      Exit;

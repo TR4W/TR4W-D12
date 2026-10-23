@@ -896,6 +896,26 @@ const
    MATRIX_CREDITED_BAND_PREFERENCE: array[1..8] of BandType =
       (Band20, Band40, Band15, Band10, Band80, Band160, Band6, Band2);
 
+type
+   (* ONE MODE A MOVED QSO MAY TAKE -- the mode and the submode it is logged
+     with, the spellings the base QSOs use. *)
+   TMatrixModeChoice = record
+      Mode: ModeType;
+      Ext: ExtendedModeType;
+   end;
+
+const
+   (* THE MODES A KEY OR HOST-AREA QSO MOVES TO, in order (Q98 stage S1, the
+     mode half of S0's band preference). *)
+   MATRIX_CREDITED_MODE_PREFERENCE: array[1..5] of TMatrixModeChoice =
+      (
+      (Mode: CW;      Ext: eCW),
+      (Mode: Phone;   Ext: eUSB),
+      (Mode: FM;      Ext: eFM),
+      (Mode: Digital; Ext: eRTTY),
+      (Mode: Digital; Ext: eFT8)
+      );
+
 (* THE FIXED FREQUENCY OF A MOVED QSO: the CW or the phone end of aBand, the
   values the base QSOs use where one of them is on that band. Phone and FM
   take the phone end; every other mode the CW end -- only CW and phone QSOs
@@ -975,27 +995,50 @@ end;
   contest the scoring path asks (ActiveContest), through the same
   ContestCreditsBand.
 
-  THE MODE HALF IS NOT HERE YET: no mode seam exists until Q98's S1 adds
-  ContestCreditsMode, and the mode preference (CW, Phone, FM, Digital) is
-  added beside the band one in that stage. *)
+  THE MODE HALF (Q98 S1): aSpec in a mode the contest does not credit
+  (ContestCreditsMode) moves to the first credited mode of
+  MATRIX_CREDITED_MODE_PREFERENCE, the same way, and its frequency follows.
+  The mode is decided first, so a QSO moved in both takes the frequency of
+  its new mode on its new band. *)
 function CreditedMatrixQSO(aContest: TContestBase; const aSpec: TMatrixQSO): TMatrixQSO;
 var
    i: integer;
+   moved: boolean;
 begin
    Result := aSpec;
-   if ContestCreditsBand(aContest, aSpec.Band) then
+   moved := False;
+
+   if not ContestCreditsMode(aContest, Result.Mode, Result.Ext) then
       begin
-      Exit;
+      for i := Low(MATRIX_CREDITED_MODE_PREFERENCE) to High(MATRIX_CREDITED_MODE_PREFERENCE) do
+         begin
+         if ContestCreditsMode(aContest, MATRIX_CREDITED_MODE_PREFERENCE[i].Mode,
+                                         MATRIX_CREDITED_MODE_PREFERENCE[i].Ext) then
+            begin
+            Result.Mode := MATRIX_CREDITED_MODE_PREFERENCE[i].Mode;
+            Result.Ext := MATRIX_CREDITED_MODE_PREFERENCE[i].Ext;
+            moved := True;
+            Break;
+            end;
+         end;
       end;
 
-   for i := Low(MATRIX_CREDITED_BAND_PREFERENCE) to High(MATRIX_CREDITED_BAND_PREFERENCE) do
+   if not ContestCreditsBand(aContest, Result.Band) then
       begin
-      if ContestCreditsBand(aContest, MATRIX_CREDITED_BAND_PREFERENCE[i]) then
+      for i := Low(MATRIX_CREDITED_BAND_PREFERENCE) to High(MATRIX_CREDITED_BAND_PREFERENCE) do
          begin
-         Result.Band := MATRIX_CREDITED_BAND_PREFERENCE[i];
-         Result.FreqHz := MatrixBandFrequencyHz(Result.Band, Result.Mode);
-         Exit;
+         if ContestCreditsBand(aContest, MATRIX_CREDITED_BAND_PREFERENCE[i]) then
+            begin
+            Result.Band := MATRIX_CREDITED_BAND_PREFERENCE[i];
+            moved := True;
+            Break;
+            end;
          end;
+      end;
+
+   if moved then
+      begin
+      Result.FreqHz := MatrixBandFrequencyHz(Result.Band, Result.Mode);
       end;
 end;
 

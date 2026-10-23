@@ -171,9 +171,12 @@ var
   MarkDupeBits: an off-band QSO (the contest does not use the band) marks
   nothing; otherwise the band and AllBands bits of the mode's slot and of
   Both. DupeBitsSay: an off-band question (Band <> AllBands) is never a
-  dupe; otherwise the QSO-by-band and QSO-by-mode settings choose the bit. *)
+  dupe; otherwise the QSO-by-band and QSO-by-mode settings choose the bit.
+  Since Q98 S1 an off-MODE QSO is the same: it marks nothing and is never a
+  dupe (DupeModeIsOffMode). *)
 procedure MarkDupeBits(var aDupes: TDupesArray; Mode: ModeType; Band: BandType);
 function DupeBandIsOffBand(Band: BandType): boolean;
+function DupeModeIsOffMode(Mode: ModeType): boolean;
 function DupeBitsSay(const aDupes: TDupesArray; Band: BandType; Mode: ModeType): boolean;
 
 (* CLEARS EVERY DUPE SHEET'S MARKS -- CallsignsList and QualifiedDupes,
@@ -315,6 +318,13 @@ begin
      Exit;
      end;
 
+  (* NOR AN OFF-MODE QSO -- Q98 S1 (design 8.2v): it is an X-QSO, and "x-qso
+    never counts as worked" (Q51). *)
+  if DupeModeIsOffMode(Mode) then
+     begin
+     Exit;
+     end;
+
   (* FM SHARES PHONE'S SLOT, as DupeBitsSay reads it. Until P8 this
     indexed the bits with Mode itself, and TDupesArray stops at NoMode, so
     an FM QSO wrote four bytes PAST the array -- into the length and first
@@ -336,12 +346,19 @@ begin
             (not ContestCreditsBand(ContestIdentity(Contest), Band));
 end;
 
+function DupeModeIsOffMode(Mode: ModeType): boolean;
+begin
+  (* Both and NoMode are keys, not modes, and ask nothing; the sheet knows no
+    submode -- see uContestBase.ContestCreditsModeKey. *)
+  Result := not ContestCreditsModeKey(ContestIdentity(Contest), Mode);
+end;
+
 function DupeBitsSay(const aDupes: TDupesArray; Band: BandType; Mode: ModeType): boolean;
 var
   TempMode                              : ModeType;
   TempBand                              : BandType;
 begin
-  if DupeBandIsOffBand(Band) then
+  if DupeBandIsOffBand(Band) or DupeModeIsOffMode(Mode) then
      begin
      Result := False;
      Exit;

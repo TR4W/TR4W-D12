@@ -186,6 +186,7 @@ uses
    uTestSortedStringList in 'uTestSortedStringList.pas',
    uTestCallsignsList   in 'uTestCallsignsList.pas',
    uTestOffBandCredit   in 'uTestOffBandCredit.pas',
+   uTestAutomaticXQSO   in 'uTestAutomaticXQSO.pas',
    uTestMalformedGrid   in 'uTestMalformedGrid.pas',
    uTestRoverDupeKey    in 'uTestRoverDupeKey.pas',
    uTestNYQPRover       in 'uTestNYQPRover.pas',
@@ -904,6 +905,7 @@ begin
    RegisterSuite(TCWFramingTests.Create('CWFraming'));
    RegisterSuite(TContestFactoryTests.Create('ContestFactory'));
    RegisterSuite(TOffBandCreditTests.Create('OffBandCredit'));
+   RegisterSuite(TAutomaticXQSOTests.Create('AutomaticXQSO'));
    RegisterSuite(TMalformedGridTests.Create('MalformedGrid'));
    RegisterSuite(TRoverDupeKeyTests.Create('RoverDupeKey'));
    RegisterSuite(TNYQPRoverTests.Create('NYQPRover'));

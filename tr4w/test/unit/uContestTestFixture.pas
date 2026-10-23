@@ -84,6 +84,12 @@ type
       function GetFlags: TContestFlags; override;
       function GetIsUSQSOParty: boolean; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* ITS BANDS AND MODES -- a contest that registers by id states both
+         from its first commit (Q98 S1, Test_EveryContestStatesItsBandsAndModes):
+         160-10 m without WARC, CW and phone. *)
+      function UsesBand(aBand: BandType): boolean; override;
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
    end;
 
 implementation
@@ -194,6 +200,16 @@ end;
 function TContestTestFixture.GetIsUSQSOParty: boolean;
 begin
    Result := False;
+end;
+
+function TContestTestFixture.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10];
+end;
+
+function TContestTestFixture.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   Result := aMode in [CW, Phone];
 end;
 
 initialization
