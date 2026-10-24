@@ -44,6 +44,204 @@ month group below, and bump tr4w/src/Version.pas to match. Keep entries
 user-facing — no file paths or source-level jargon.
 -->
 
+---
+
+## 5.0.x — October 2026
+
+### 5.0.33 (2026-10-24) - NY4I
+
+#### Logging
+
+- **Clear Log saves a copy of your log first.** Before anything is cleared, the
+  log is backed up beside itself as your log's name followed by "before clear" and the UTC date and time,
+  which opens like any other contest log. If the backup cannot be made, nothing is
+  cleared and TR4W tells you why.
+- **Clear Log no longer touches the old .TRW file**, and it records in the debug log
+  how long each step took.
+- **The automatic log backup works again.** It had been failing with "cannot VACUUM
+  from within a transaction" during ordinary operation.
+
+#### Contests
+
+- **No more false "domestic country list is EMPTY" error** in contests that have no
+  domestic countries, such as CQ WW. It appeared most often after clearing the log
+  with spots in the band map.
+
+### 5.0.32 (2026-10-23) - NY4I
+
+- No operator-visible change. 5.0.31's Linux build never finished, because of a
+  test that waited on a dialog; 5.0.32 is the same program, built on all three
+  platforms.
+
+### 5.0.31 (2026-10-23) - NY4I
+
+The largest release of the 5.x line. Every contest is now a self-contained
+definition of its own rules -- bands, modes, points, multipliers, exchange,
+dupes, Cabrillo and ADIF -- instead of entries scattered across shared tables.
+Most of the work is invisible on the air, and it was checked against a frozen
+record of every contest's behaviour. Where scoring did change, it was to follow
+the sponsor's current rules. (Version numbers 5.0.27 to 5.0.30 were internal
+test builds and were never released.)
+
+#### New contests
+
+- **Georgia QSO Party, Delaware QSO Party, Nebraska QSO Party, the URC DX RTTY
+  Contest and IN7QPNE** (the combined Indiana, 7th Area, New England and
+  Delaware parties, for stations outside those areas).
+- **The Idaho QSO Party is a contest of its own**, with its QRP rule and the
+  dormant-county bonus. The bonus county list follows the year of the log, not
+  today's date.
+- **POTA, UA4W Championship and RSGB 1.8 MHz** are full contests in the new model.
+
+#### Contest rules brought up to date
+
+- **New England QSO Party**: digital QSOs score 2 points, the 14 Canadian
+  provinces count, DC counts as Maryland, a digital QSO is a dupe of a CW one, and
+  rovers are handled. New England is now listed as NEWEQP. Logs that say NEQP
+  still open as New England.
+- **Salmon Run** (CW 3, phone 2, county lines up to 2 counties), **New York**
+  (county lines up to 2 counties), **North Carolina, Salmon Run and Idaho bonuses**,
+  and **Missouri's peak-hour bonus**.
+- **Russian DX (2027 rules), the Popov Youth Cup (phone only) and the RTC**
+  (each station workable once per band per mode; serial number 0 is refused).
+- **CQ WW CW fills in the zone** as its initial exchange, as SSB and RTTY already did.
+- **The minimum off time comes from the contest**: 60 minutes for CQ WW, 30 by default.
+- **Night-time doubling** (Croatian, UK/EI) uses the time the QSO was made, so a
+  rescore at night no longer doubles daytime QSOs.
+- **VHF contests and the Stew Perry require the grid.** "599 FN3" is no longer
+  logged as a QSO without a grid.
+- **A QSO on a band or mode the contest does not use is logged, scores nothing
+  and earns no multiplier.** It is marked as an X-QSO automatically.
+- **The exchange refusal says why.** "Improper domestic QTH" and Field Day's
+  "Invalid ARRL Section" now give a short reason on screen, with the full
+  explanation in the debug log. Stations a contest does not allow are refused at
+  entry.
+- **Field Day has no multipliers**, and a DX station's "DX" is never written as an
+  ARRL section.
+- **Cabrillo and ADIF contest names follow ADIF 3.1.7 and the sponsors** (for
+  example AADX-CW / AADX-SSB, ICWC-MST, EU-HF, NRAU-CW / NRAU-SSB). Logs using the
+  old names still import.
+- **Retired from the New Contest list**: FISTS, QCWA Golden, WWL, XMAS and Locust.
+  An existing log for one of them still opens, rescores and exports.
+- **Sponsor data refreshed**: LABRE (Brazil) and EU DX multiplier lists, New
+  England counties, and the Cabrillo names of 19 contests.
+
+#### Starting a contest
+
+- **The New Contest window has a search box** over a plain list of full contest
+  names. Contests that no longer run are hidden.
+- **The "Last Contest" button names the contest and its year**, and the list of
+  existing logs is a grid you can open with Enter.
+- **The window title shows the TR4W version again.**
+- **A new contest is just its log file.** No .cfg file is written; a .cfg is only
+  read when importing an old contest.
+
+#### Logging and the log file
+
+- **Each QSO remembers your own station as it was when you logged it** (your
+  call, grid, park, zones and so on). Rescores, edits, exports and HamScore use
+  that record instead of today's settings, so a rover log or a grid corrected
+  mid-contest scores and exports correctly.
+- **Edited function-key memories survive a restart.**
+- **ADIF import is all-or-nothing**: a failed import leaves the log as it was,
+  and the error names the record's band and mode. Tag order no longer matters,
+  and a POTA park given only in SIG_INFO imports as a park.
+- **TR4W re-imports its own ADIF export.**
+- **A log being converted from an old .TRW is never left half-written** if TR4W
+  stops partway.
+- **Rescoring and loading a large log are much faster.**
+- **The category fields (assisted, band, mode, operator) have one home in the
+  log**, so an edit in the summary window is no longer lost.
+
+#### ADIF and Cabrillo export
+
+- **ADIF export is valid ADIF 3.1.6.** Modes such as DATA and CW-R are written as
+  standard modes, and every export is now checked by an independent ADIF validator.
+- **Each contest exports only its own exchange fields**, instead of every field
+  that happened to be filled in.
+- **Five contests no longer export "Error generating my exchange"** as every QSO's
+  sent exchange (the Cup RF contests, CQ WW RTTY and others).
+- **POTA export**: the worked station's DXCC comes from its callsign, and your own
+  MY_DXCC and MY_STATE come from your park.
+
+#### Integration with other programs
+
+- **N1MM-format UDP broadcasts include your call again** (it had been missing
+  since September), and the score message now sends the "all modes" rows and
+  correct per-mode totals.
+- **UDP broadcasts, N1MM RadioInfo and the DXKeeper link send standard mode names.**
+- **WSJT-X decodes are evaluated safely**, which removes a possible crash or wrong
+  colouring while QSOs are being logged.
+
+#### Multi-Op / Networking
+
+- **A QSO from a station on a different contest is refused and reported**,
+  instead of being scored under the wrong rules.
+- **A contest added in this release cannot be used on the multi-op network yet**,
+  and TR4W says so.
+
+#### Radio Control and CW
+
+- **Replacing a radio profile clears the old radio's status.** An empty slot no
+  longer shows the old radio's "Not connected" for the rest of the session.
+- **The TCI server names the TCI radio already using its port**, instead of only
+  reporting that it could not bind.
+- **CPU (DTR/RTS) keying**: Esc and Backspace no longer replay stale CW.
+
+#### Fixes
+
+- **Super Check Partial**: whether a call containing "JA" was found no longer
+  depended on the call looked up before it.
+- **WAG and DARC 10 m**: a DOK with no letter no longer shows a random
+  need-multiplier hint.
+- **A /suffix call is treated as a county rover only in a QSO party.** In other
+  contests, calls such as NY4I/7 are ordinary calls.
+- **An FM QSO's call is no longer corrupted by a rescore.**
+- **The installer ships every domestic multiplier file**, including one New York
+  needed that was missing.
+
+#### Translations
+
+- Translations now reach the program on every build, and the catalogues have
+  been filled out. New strings arrive as machine-seeded drafts for translators to
+  review.
+
+---
+
+## 5.0.x — September 2026
+
+### 5.0.26 (2026-09-28) - NY4I
+
+#### macOS
+
+- **TR4W has a proper icon in Finder and Applications**, matching the one in the Dock.
+- **The macOS download notes describe all three downloads** and which one
+  includes the multi-op server.
+
+#### Usability
+
+- **The status bar names what each panel is about** -- "DX Cluster" or "Network"
+  -- instead of a generic "Connected to host".
+
+### 5.0.25 (2026-09-28) - NY4I
+
+- **The macOS release builds again.** 5.0.24's macOS files were built and then
+  discarded because of a missing signing setting.
+
+### 5.0.24 (2026-09-28) - NY4I
+
+#### macOS
+
+- **A signed macOS installer package (.pkg)** is offered beside the .dmg.
+- **A macOS crash report names the exact build it came from**, so it can be
+  matched to the right debug symbols.
+
+#### Crash reporting
+
+- **Crash reports are actually written to the log.** The crash reporter's own
+  lines had never reached the log because of a log-level default. TR4W, its
+  server and the unit tests now all install it.
+
 #### Diagnostics
 
 - **The debug log is far quieter.** At DEBUG level TR4W wrote two lines for every
@@ -72,10 +270,6 @@ user-facing — no file paths or source-level jargon.
   IC-7760 and an IC-9700 ran connected over LAN for 7 hours 52 minutes with two
   logins in total -- one each, in the first three seconds -- and no CI-V dropouts.
   Before 5.0.20 that link failed roughly every 90 seconds.
-
----
-
-## 5.0.x — September 2026
 
 ### 5.0.23 (2026-09-26) - NY4I
 

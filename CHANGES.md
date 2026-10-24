@@ -41,6 +41,213 @@ rename this "## Unreleased" to "### X.X.X (YYYY-MM-DD) — HANDLE", move it unde
 appropriate month group below, and bump tr4w/src/Version.pas to match.
 -->
 
+---
+
+## 5.0.x — October 2026
+
+### 5.0.33 (2026-10-24) - NY4I
+
+#### Clear Log backs up first and leaves the `.TRW` alone (`src/MainUnit.pas`, `src/uLogStore.pas`)
+
+- **`LogStoreBackupBeforeClear`** takes a verified `LogStoreBackup` snapshot to
+  `<log> before clear yyyy-mm-dd hhnnssZ.db` (name rule: the pure
+  `LogStoreClearBackupFileName`). A failed backup aborts the clear with an Error
+  line, a quick display and a modal warning.
+- **D7's `ReplaceLogByServerLog(False)` and the `.TRW`-to-`.imported` rename are
+  removed from `ClearLog`.** With no `.TRW`, the D7 copy failed for all 1000
+  `LOGBACKUP_nnn` slots. A `.TRW` is imported only when the `.db` is absent, so a
+  clear, which keeps the `.db`, never needed either.
+- **`[ClearLog]` started / backed up / finished lines** time each step (backup,
+  clear, restart reset, reload, stations, station status).
+- **`TLogStoreBackup.SnapshotTo` commits before `VACUUM INTO`.** sqldb leaves a
+  read's transaction open, and SQLite refuses VACUUM inside one, so the periodic
+  BACKUP LOG had been failing. It refuses while a batch is in progress.
+
+#### Empty domestic list reported only when the set-up claims one (`src/trdos/zonecont.pas`, `src/trdos/fcontest.pas`)
+
+- `FoundContest` records `ContestSetUpStatesDomesticCountries` (a US QSO party, or
+  `DescribeSession`'s `DomesticCountryCount > 0`) through
+  `TDomesticCountryList.RecordContestSetUp`. `ClaimEmptyReport` stays silent while
+  the set-up stated none, and `Create`/`Clear` reset it. Reached in CQ WW through
+  the band map's need-multiplier pass after a clear.
+
+### 5.0.32 (2026-10-23) - NY4I
+
+#### NEQP tests follow `.dom` includes themselves (`test/unit/uTestContestNewEnglandQP.pas`)
+
+- 5.0.31's Linux job timed out at 45 minutes, blocked in `gtk_dialog_run` on the
+  queued "could not find this file" warning for an `INCLUDE FILE` that resolved
+  under the test directory. The test now splits each shipped `.dom` at its
+  includes and reads every segment through the real `ReadDomQTHFile`, raising on a
+  missing file instead of letting `UnableToFindFileMessage` queue a modal.
+
+### 5.0.31 (2026-10-23) - NY4I
+
+**The contest factory reaches `main`** (versions 5.0.27-5.0.30 were untagged test
+builds). Design: `docs/CONTEST_OWNERSHIP_DESIGN.md`; staged plan:
+`docs/CONTEST_FACTORY_M10_PLAN.md`; procedure: `docs/ADDING_A_CONTEST.md`
+(rewritten checklist-first, 1310 to 625 lines). Every stage was gated by the
+contest matrix (`test/contest-matrix/`, M0), which freezes every registered
+contest's parse, score, totals and export. A record was re-frozen only with the
+reason stated.
+
+#### Migration M0-M11 (`src/contestFactory/`, `src/trdos/logstuff.pas`, `fcontest.pas`, `logedit.pas`, `postunit.pas`, `src/uADIF.pas`, `src/MainUnit.pas`)
+
+- **M1** identity (ADIF `CONTEST_ID`, Cabrillo `CONTEST:`, friendly, WA7BNM and
+  QRZ.RU ids) through `ContestIdentity`. Seven hand-written fallbacks collapse into
+  the class getters. **M2** the log stores only what the operator stated; setup
+  reads the class. **M3** `ScoreQSO` is the one scoring entry; `TContestFixedPoints`
+  retires. **M4** each contest formats its own export; `FormatsExchange` is gone.
+- **M5a** `ApplyADIFImport` per contest after a contest-blind general pass
+  (`TADIFRecordTemps`), so tag order no longer matters. **M5b**
+  `ParseReceivedExchange` per contest; invalid stations are refused.
+- **M6** `FinalScore` over `TScoreTotals` / `TLoggedQSOView`, with the NC, Salmon
+  Run and Idaho bonuses. **M7** `DescribeSession` for all; 79 classless contests
+  gain classes. **M8** multiplier rules are declared; an off-band QSO touches no
+  dupe or need-mult. **M9** displays and reports ask the contest; the New Contest
+  list shows display names.
+- **M10 S0-S9** `ContestsArray`, `ContestsBooleanArray`, `QSOParties`, LOGSTUFF's
+  legacy scoring case and `QSOPointMethod` are deleted. `Lint-NoContestTables`
+  gates it. The seven contest-rule settings join `RETIRED_COMMANDS`. A contest
+  session object holds the multiplier and exchange kinds.
+- **M11** the four multiplier-kind enums (`PrefixMultType`, `DXMultType`,
+  `ZoneMultType`, `DomesticMultType`) are deleted; each class states its keys,
+  received-field list, ADIF sent exchange, Cabrillo columns and parser.
+- **Q108** a contest registers by string id (`RegisterContestById`); the
+  `ContestType` enum is frozen (`Lint-FrozenContestNumbers`); a contest is a
+  one-byte handle in memory; adding one moves no hand-maintained count. A by-id
+  contest is refused on multi-op (`ContestCanUseMultiOp`), and its UDP
+  `<contestnr>` is derived.
+- **Q98** `UsesBand` / `UsesMode` on every class (no inherited default).
+  `QSOIsXQSO` = the operator's flag OR the contest's band/mode rule, derived and
+  never stored.
+- `Lint-ContestNameTests`: shared code may not grow a contest-name test.
+  `docs/CONTEST_RULES_OUTSIDE_FACTORY.md` is generated by
+  `tools/contest-rules-inventory/generate.py`.
+
+#### Contests added or re-modelled (`src/contestFactory/`, `target/dom/`)
+
+- New: Georgia QP (by id), Delaware QP, Nebraska QP (rare-grid bonus from each
+  QSO's recorded grid), URC DX RTTY, IN7QPNE (a composite over four component
+  instances, routed by the worked county's party), Idaho QP, POTA, UA4W
+  Championship (`MyCQZone`), RSGB 1.8 MHz.
+- Current rules: NEQP (`NEWEQP`; `NEQP` is a permanent read alias), Salmon Run,
+  New York, Missouri peak-hour bonus, Russian DX 2027, RADIO-YOC phone only, RTC
+  2026 (once per band per mode; serial 0 refused through the new
+  `LoggedQSORefusal`), CQ WW CW `ZoneInitialExchange`, `MinimumOffTimeMinutes`
+  (CQ WW 60), VHF and Stew Perry require the grid (Q115), night rules read
+  `tSysTime`, Idaho dormant-county table by `LogContestYear`.
+- Names: ADIF 3.1.7 ids with `FormerADIFContestIds` on import; AADX-CW/SSB;
+  NRAU-CW/SSB; Q53's 24 display names. Retired from the list (enum, spelling and
+  class kept): FISTS, QCWA Golden, WWL, XMAS, Locust.
+- Data: `brazil.dom` codes are the multiplier (RN/RS split; GO, FN, HQ added), EU
+  DX, New England's 68 state-first keys, `prov12.dom` shipped. `full.nsi` ships
+  `target\dom\*.*` by wildcard.
+- `RefuseDomesticQTH`: one routine, the historical stem plus one reason, the full
+  sentence in `tr4w.log`.
+
+#### The log (`src/uLogStore.pas`, `uLogRepository.pas`, `uLogSchema.pas`, `uLogSource.pas`)
+
+- **Schema 3**: nine `my_*` columns. Each QSO records our station at log time;
+  import reads and export writes MY_ tags; stored QSOs score from their own grid
+  (about a dozen distance contests rescored from today's grid before); peers'
+  QSOs store no invented sent exchange. **Schema 4**: `message.edited`, so
+  Alt-P edits survive a restart (Q113).
+- Staged `.TRW` migration (`<log>.db.importing`, published by rename only when
+  complete and with no sidecars); all-or-nothing ADIF import; no-mint rescore.
+- A write waits for its commit (prepared statements had run in autocommit after
+  any Commit); survive SQLite's own rollback.
+- Reads resolve columns by position (`TQsoColumn`; FPC's `FieldByName` was a
+  linear upper-casing scan, about 190 us/row) and skip sqldb's per-Open index
+  probe. Rescore is one cursor and one transaction.
+- CATEGORY-ASSISTED/-BAND/-MODE/-OPERATOR are one config row each (Q61). An
+  append always inserts; the rebuilt-from-`.TRW` branches are gone.
+
+#### ADIF and Cabrillo (`src/uADIF.pas`, `src/uCabrillo.pas`, `src/trdos/postunit.pas`)
+
+- **ADIF 3.1.6 MODE/SUBMODE** through one complete table (`ADIFModePairs`), so a
+  new mode fails to compile. `tools/adifvalidator/` (K1MU, vendored) gates the
+  corpus, the round trip and the matrix; any Compliance error fails.
+- `EmitADIFReceivedFields`: the class decides which exchange fields export (8.2w).
+- F25/F27: five contests' `STX_STRING` was "Error generating my exchange"; export
+  errors are reported, not swallowed. POTA DXCC from the worked callsign
+  (generated `uDXCCEntities`).
+- TR4W re-imports its own export; a POTA park in `SIG_INFO` only imports.
+
+#### Integrations and networking (`src/uWSJTX.pas`, `src/trdos/logsubs2.pas`, `src/uNet.pas`, `src/uExternalLogger.pas`)
+
+- WSJT-X CQ, STATUS, CLEAR and LOGGED handling moves to the main thread; the
+  listener read the dupe and multiplier sheets the main thread mutates.
+- N1MM contact XML `<mycall>` restored (a blanket rename had rewritten the
+  literal); `uTestUDPContactXml` pins the tags. The score XML sends the ALL rows
+  and per-mode totals (Q109).
+- UDP, N1MM RadioInfo and the DXKeeper link use `ResolveADIFModeSubmode`.
+- `PeerRecordInOurContest`: a peer's QSO from another contest is refused and logged (Q110).
+
+#### Pointer audit #89 (`src/trdos/LOGK1EA.pas`, `logscp.pas`, `src/uSpots.pas`, `src/uDXSpotParse.pas`, `src/trdos/zonecont.pas`)
+
+- The CPU keyer's element ring is a field (nil write and leak gone; Esc and
+  Backspace no longer wrap into stale CW). SCP cells, the spot store, the sorted
+  list, the multiplier object, the callsign list and the domestic country list
+  are classes. Typed CQ/NEW markers replace an integer pun that misread a reused
+  record. Untyped buffers become open arrays (the framer no longer reads past a
+  short buffer). Thread starts are typed; 64-bit truncation is gone. The
+  Move/FillChar counter gates at 466.
+- F22: `BestTwoLetters` read an unwritten slot, so a TRMASTER "JA" lookup depended
+  on the previous call. F6: the DOK hint returned stack residue.
+
+#### Radio and UI (`src/trdos/logradio.pas`, `src/uRadioConfigStore.pas`, `src/ui/lcl/uNewContestForm.pas`)
+
+- `ShutDownRadioInterface` clears the slot's status.
+  `TCIRadioUsingServerPort` names the TCI radio that already holds the server's
+  port.
+- New Contest: a search `TEdit` over a plain `TListBox` (inactive contests
+  hidden); the Last Contest button reads `uLogFileFacts` / `uLatestContest`; the
+  log list is a grid; the title has a single writer again.
+
+#### Build, test and i18n (`build/`, `test/`, `i18n/`, `tools/i18n/`)
+
+- Checked unit-test gate (`-gt` + heaptrc, `Build-Tests.ps1 -Checked`). It found
+  `FillChar(x, SizeOf(x))` on a virtual old-style object (`SizeOf` goes through the
+  VMT).
+- `block-stdin-readers.py` blocks heredocs and a bare `cat`. Corpus scripts no
+  longer delete `target/*.LOG`. Lints skip worktrees and `graphify-out`. The macOS
+  bundle step fails loudly, and release jobs gate the language `.res` (#90). The
+  CI runner service runs as LocalSystem.
+- The build regenerates `tr4w_languages.res`; `pofile` round-trips losslessly;
+  `po_merge` stops duplicating; no English catalogue; strings missing from every
+  catalogue merged and machine-seeded as fuzzy. Two reviewed Spanish typos fixed
+  with approval (Q130).
+
+---
+
+## 5.0.x — September 2026
+
+### 5.0.26 (2026-09-28) - NY4I
+
+#### macOS icon (`build/build-unix.sh`, `res/`)
+
+- A `.icns` is built at sizes Finder renders, and `CFBundleIconFile` is set. There
+  had been no `.icns` at all, so Finder showed the generic placeholder while the
+  Dock used the LCL's run-time icon.
+
+#### A status panel names its subsystem (`src/uPanelUpdate.pas`)
+
+- `StatusSubsystemName` supplies `RC_TELNET` / `RC_NETWORK` ("DX Cluster",
+  "Network") to the existing prefixes, measured in pixels: the longest string
+  fills the 187 usable pixels exactly.
+
+### 5.0.25 (2026-09-28) - NY4I
+
+#### A step may only withhold its own artifacts (`.github/workflows/release.yml`)
+
+- `TR4W_PKG_IDENTITY` was unset, so the `.pkg` stage failed and took all four good
+  macOS artifacts with it. The identity follows `TR4W_SIGN_IDENTITY`'s pattern.
+- A CLAUDE.md audit of nineteen claims, the worst a dead reason that
+  `FullBuild.ps1` printed to the operator.
+
+### 5.0.24 (2026-09-28) - NY4I
+
 #### Log level follows rate, not importance (`src/uIcomNetworkTransport.pas`)
 
 - **Per-packet is TRACE.** `SEND ENTER`/`SEND EXIT` fired on every UDP send. Every
@@ -142,9 +349,18 @@ appropriate month group below, and bump tr4w/src/Version.pas to match.
   ships one, and nothing decides what a macOS uninstall does with the directory
   holding the log database, the settings and the downloaded country file.
 
----
+#### A signed macOS `.pkg` beside the `.dmg` (`build/mac-sign.sh`, `release.yml`)
 
-## 5.0.x — September 2026
+- `pkgbuild` + `productbuild --distribution`, signed with Developer ID Installer,
+  notarized and stapled through the `.dmg`'s helpers with `-t install`.
+
+#### A crash report names its build, and the reporter writes at all (`src/uCrashLog.pas`, `tr4wserver/`, `build/Lint-CrashLogInstalled.ps1`)
+
+- The Mach-O UUID is logged for matching against `symbols-<version>-<arch>.txt`.
+- `InstallCrashLog` sets its own subtree's level: Log4D's root defaulted to Error,
+  so no `[CRASH]` line had ever been written. `tr4wserver` installs
+  `InstallCrashLogLCL`, and `Lint-CrashLogInstalled` asserts every shipping
+  program does.
 
 ### 5.0.23 (2026-09-26) - NY4I
 
