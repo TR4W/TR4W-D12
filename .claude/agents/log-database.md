@@ -69,6 +69,22 @@ because it only reads. `Open` is unchanged and still fail-closed. The backup
 verifier uses it, so a published backup is now byte-identical to the snapshot
 (pinned by an MD5 comparison in `uTestLogBackup`).
 
+**CLEAR LOG TAKES A VERIFIED BACKUP FIRST, AND DOES NOT CLEAR WITHOUT ONE
+(2026-10-23).** `MainUnit.ClearLog` calls `LogStoreBackupBeforeClear` ->
+`LogStoreBackup` to `<log name less .db> before clear <UTC yyyy-mm-dd
+hhnnss>Z.db` beside the log (`LogStoreClearBackupFileName`, pinned in
+`uTestLogStore`). A failed backup is an Error line plus `showwarning`, and
+nothing is deleted. The `.TRW` is not read, copied or named. An empty log is
+backed up like any other.
+- **`VACUUM INTO` REFUSES AN OPEN READ TRANSACTION**, and sqldb leaves one
+  after any fresh query prepares (a sequential cursor, the open of a new
+  log). `TLogStoreBackup.SnapshotTo` commits it first and refuses during a
+  batch. Before that fix, a backup after `LoadinLog` failed with "cannot
+  VACUUM from within a transaction" (measured in the unit test). The periodic
+  `BackupLogNow` goes through the same path; no live session was measured.
+  A kept, already-prepared statement runs in autocommit and does NOT open
+  one, so a test of this must read through a fresh query.
+
 **And the stray-`-wal` worry that went with that finding did NOT reproduce**
 (measured 2026-09-19): on a clean close SQLite removed both sidecars, so the
 old code left nothing behind. The exposure was only a crash mid-check, and a

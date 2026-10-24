@@ -9294,81 +9294,122 @@ end;
   "clear the log" would quietly mean "set the whole station up again" -- which
   is not what the operator pressing it means.
 
-  RENAME THE .TRW, DO NOT TRUNCATE IT. That file is import-only now: the log is
-  SQLite, and the .TRW exists so a 4.x operator can carry an old log forward on
-  Windows. Truncating it DESTROYS the pre-migration original -- the one copy of
-  data this program did not create. Renamed to .imported instead, which also
-  stops the importer offering it again, and a numbered suffix is used rather
-  than overwriting an existing .imported: this path must not be able to lose an
-  operator's log. *)
+  ~~RENAME THE .TRW, DO NOT TRUNCATE IT~~ -- SUPERSEDED 2026-10-23. NY4I:
+  "the TRW file should be a relic we do not touch anymore." Clear Log neither
+  renames, truncates nor backs up the .TRW. Leaving it is safe: uLogStore
+  imports a .TRW only when the .db does not exist, and a clear keeps the .db. *)
 procedure ClearLog;
 var
-   (* AnsiString, NOT string. The name originates as BYTES -- StrPas of the
-     TR4W_LOG_FILENAME buffer -- and every routine it is handed to
-     (FileExists, ChangeFileExt, RenameFile) has a byte-string overload.
-     Declaring it UnicodeString made the round trip narrow twice for no
-     gain. *)
-   trw: AnsiString;
-   dest: AnsiString;
-   n: integer;
+   (* THE TIMING OF A CLEAR (diagnostics only). A clear runs on the main
+     thread and logged nothing on success, so a slow one showed in tr4w.log as
+     a silent gap with no way to tell which step it was. GetTickCount64: the
+     RTL's monotonic millisecond clock, as GetCPU uses. Int64 so Format's %d
+     takes the values directly. *)
+   startTick: QWord;
+   stepTick: QWord;
+   backupMs: Int64;
+   backupPath: string;
+   backupReport: string;
+   clearMs: Int64;
+   resetMs: Int64;
+   loadMs: Int64;
+   stationsMs: Int64;
+   statusMs: Int64;
+   (* AnsiString, built with Format: in FPC 3.2.2 both Format and IntToStr
+     answer an AnsiString, so a string here adds an implicit conversion
+     (measured: the build warned on each spelling that used one). *)
+   stationsText: AnsiString;
+   clearedRecords: integer;
+
+   function MsSince(aTick: QWord): Int64;
+   begin
+      Result := Int64(GetTickCount64 - aTick);
+   end;
+
 begin
-  // Windows.CopyFileA(NewLogFileName, 'NewLogFileName', False);
-  ReplaceLogByServerLog(False);
+  startTick := GetTickCount64;
+  (* The count is the running total the loader and every append keep; it
+    covers every record kind (QSOs, QTCs, notes), which is what DELETE FROM
+    qso removes. Read from memory, so it costs no query. *)
+  clearedRecords := tRestartInfo.riTotalRecordsInLog;
+  logger.Info('[ClearLog] started: clearing %d log records', [clearedRecords]);
+
+  (* A VERIFIED SQLITE BACKUP FIRST, AND NO CLEAR WITHOUT ONE (2026-10-23).
+    D7 called ReplaceLogByServerLog(False) here, which copied the .TRW to
+    LOGBACKUP_nnn.TRW; the .TRW is import-only now, so that call copied
+    nothing (with no .TRW its copy failed for all 1000 slots) and it is gone.
+    What replaces it is the store's own verified snapshot of the SQLite log
+    (LogStoreBackup: staged, integrity-checked by a second open and only
+    after that published), named beside the log by LogStoreClearBackupFileName. The .TRW
+    is not read, copied or named -- NY4I: "you can backup the sqlite file but
+    the TRW file should be a relic we do not touch anymore."
+
+    IF THE BACKUP FAILS NOTHING IS CLEARED, and the operator is TOLD, in the
+    warning dialog the import's failure report uses: they have just confirmed
+    a destructive action, so a line in the quick-command window alone could
+    be missed and they would believe the log was empty. *)
+  stepTick := GetTickCount64;
+  if not LogStoreBackupBeforeClear(backupPath, backupReport) then
+     begin
+     logger.Error('[ClearLog] not cleared: the backup before clearing failed -- %s '
+                  + '(after %d ms)', [backupReport, MsSince(startTick)]);
+     QuickDisplay('Clear Log FAILED -- the log was NOT cleared');
+     showwarning('The log was NOT cleared, because the backup that is taken '
+                 + 'before clearing it failed:' + LineEnding + LineEnding
+                 + backupReport);
+     Exit;
+     end;
+  backupMs := MsSince(stepTick);
+  logger.Info('[ClearLog] backed up to %s in %d ms', [backupPath, backupMs]);
 
   (* THE LOG ITSELF. If this fails the store has disabled itself and said so;
     carrying on would clear the display over a log that is still full, so the
     binary file is left alone too and the operator sees an unchanged log. *)
+  stepTick := GetTickCount64;
   if not LogStoreClearAllQSOs then
      begin
+     clearMs := MsSince(stepTick);
      logger.Error('[ClearLog] the contest log could not be emptied -- nothing '
-                  + 'has been changed. See the errors above.');
+                  + 'has been changed. See the errors above. Failed after %d ms.',
+                  [MsSince(startTick)]);
      Exit;
      end;
+  clearMs := MsSince(stepTick);
 
+  stepTick := GetTickCount64;
   FillChar(tRestartInfo, SizeOf(tRestartInfo), 0);
+  resetMs := MsSince(stepTick);
 
-  (* AND THE OLD BINARY LOG, IF ONE IS STILL BESIDE IT -- moved aside, never
-    destroyed. *)
-  trw := LclText(CharBufferText(TR4W_LOG_FILENAME));
-  if FileExists(trw) then
-     begin
-     (* The literal is cast so the overload is unambiguous: ChangeFileExt
-       has both a byte-string and a UnicodeString form, and an untyped
-       literal matches neither better than the other. *)
-     dest := ChangeFileExt(trw, AnsiString('.imported'));
-     n := 1;
-     while FileExists(dest) do
-        begin
-        (* The cast is EXPLICIT, so nothing narrows silently: IntToStr
-          returns a UnicodeString and everything here is bytes. *)
-        dest := ChangeFileExt(trw, AnsiString('.imported' + IntToStr(n)));
-        Inc(n);
-        end;
-     if RenameFile(trw, dest) then
-        begin
-        logger.Info('[ClearLog] the binary log was moved aside to %s -- it is '
-                    + 'import-only now and is never deleted.', [dest]);
-        end
-     else
-        begin
-        (* Not fatal: the log IS cleared, and this file is not read. Reported
-          because a stale .TRW beside a cleared log is confusing later. *)
-        logger.Warn('[ClearLog] could not rename %s to %s (%s). The log is '
-                    + 'cleared; the old binary file is still there.',
-                    [trw, dest, SysErrorMessage(GetLastOSError)]);
-        end;
-     end;
+  (* THE .TRW IS NOT TOUCHED. NY4I, 2026-10-23: "the TRW file should be a
+    relic we do not touch anymore." It is import-only; clearing the log is a
+    database operation and leaves that file exactly as it is. *)
 
+  stepTick := GetTickCount64;
   LoadinLog;
+  loadMs := MsSince(stepTick);
+
+  stationsText := 'no Stations window';
   if tr4w_WindowsArray[tw_STATIONS_INDEX].WndForm <> nil then
      begin
      // Was LVM_DELETEALLITEMS on wh[mweStations].  The rows are a model now, so
      // emptying the control alone would leave the model holding every callsign
      // and the two halves out of step for the rest of the contest.
+     stepTick := GetTickCount64;
      ClearStationsColumn;
      FillStationsColumn;
+     stationsMs := MsSince(stepTick);
+     stationsText := Format('%d ms', [stationsMs]);
      end;
+
+  stepTick := GetTickCount64;
   SendStationStatus(sstQSOs);
+  statusMs := MsSince(stepTick);
+
+  logger.Info('[ClearLog] finished: cleared %d log records in %d ms (backup '
+              + '%d ms, clear %d ms, restart reset %d ms, reload %d ms, '
+              + 'stations %s, station status %d ms)',
+              [clearedRecords, MsSince(startTick), backupMs, clearMs, resetMs,
+               loadMs, stationsText, statusMs]);
 end;
 {
 procedure GetLogColumnsWidth;

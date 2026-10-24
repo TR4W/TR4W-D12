@@ -24,7 +24,11 @@ unit uTestLogStore;
   LogStoreApplyContestConfig before any write -- but the store's contract
   cannot depend on its caller having opened it first. These tests make the
   write the first thing that touches the log, which is the case the branches
-  were for. *)
+  were for.
+
+  AND CLEAR LOG'S BACKUP (2026-10-23): its name rule, and that the backup is
+  taken from the SQLite log alone -- it holds every row, an empty log
+  included, with no .TRW beside it. *)
 
 {$I ..\..\src\tr4w.inc}
 
@@ -41,6 +45,8 @@ type
       FSavedSilent: boolean;
       FTrw: string;
       FDb: string;
+      (* A backup a test made, scrubbed by Restore with its .new/.bak. *)
+      FBackup: string;
       (* A fresh copy of a D7 fixture in a scratch directory, with no .db
         beside it, made the log the store will open. *)
       procedure PrepareMigration(const aSet: string);
@@ -50,11 +56,16 @@ type
       procedure ReadBinaryLog(aCalls: TStringList; out aLast: ContestExchange);
       (* Every callsign the published log holds, in log order. *)
       procedure ReadLogCalls(aCalls: TStringList);
+      (* Every callsign the database aDb holds, opened read-only. *)
+      procedure ReadCallsFrom(const aDb: string; aCalls: TStringList);
       procedure CheckImportedIntact(aBinary, aLog: TStringList; const aWhat: string);
    protected
       procedure TestAnAppendThatMigratesTheLogInsertsTheQSO;
       procedure TestAnAppendAfterAnEarlierMigrationInsertsTheQSO;
       procedure TestARewriteThatMigratesTheLogRewritesTheNewestQSO;
+      procedure TestTheClearBackupNameRule;
+      procedure TestABackupBeforeClearHoldsTheLogAndNeedsNoTrw;
+      procedure TestAnEmptyLogIsBackedUpBeforeClear;
    public
       procedure RunAllTests; override;
    end;
@@ -63,7 +74,7 @@ implementation
 
 uses
    SysUtils, utils_text, uLogStore, uLogDatabase, uLogRepository,
-   uLogBinaryFile;
+   uLogBinaryFile, uLogSource;
 
 const
    (* 101 records, a DX zone contest -- the repository round-trip's log. *)
@@ -129,11 +140,27 @@ begin
 end;
 
 procedure TLogStoreTests.Restore;
+const
+   BACKUP_SUFFIXES: array[0..5] of string = ('', '.new', '.bak', '-wal', '-shm',
+      '-journal');
+var
+   i: integer;
 begin
    LogStoreClose;
    SetCharBuffer(TR4W_LOG_FILENAME, FSavedLogName);
    tSilentExport := FSavedSilent;
    ScrubDb;
+   if FBackup <> '' then
+      begin
+      for i := Low(BACKUP_SUFFIXES) to High(BACKUP_SUFFIXES) do
+         begin
+         if FileExists(FBackup + BACKUP_SUFFIXES[i]) then
+            begin
+            DeleteFile(FBackup + BACKUP_SUFFIXES[i]);
+            end;
+         end;
+      FBackup := '';
+      end;
    if FileExists(FTrw) then
       begin
       DeleteFile(FTrw);
@@ -165,6 +192,11 @@ begin
 end;
 
 procedure TLogStoreTests.ReadLogCalls(aCalls: TStringList);
+begin
+   ReadCallsFrom(FDb, aCalls);
+end;
+
+procedure TLogStoreTests.ReadCallsFrom(const aDb: string; aCalls: TStringList);
 var
    db: TLogDatabase;
    repo: TLogRepository;
@@ -172,7 +204,7 @@ var
 begin
    db := TLogDatabase.Create;
    try
-      db.OpenReadOnly(FDb);
+      db.OpenReadOnly(aDb);
       repo := TLogRepository.Create(db);
       try
          repo.OpenSequentialRead;
@@ -329,8 +361,146 @@ begin
    end;
 end;
 
+(* CLEAR LOG'S BACKUP NAME (2026-10-23): beside the log, the log's name less
+  its final .db, " before clear ", the UTC moment as yyyy-mm-dd hhnnss, "Z.db".
+  Pure, so it runs on every platform. *)
+procedure TLogStoreTests.TestTheClearBackupNameRule;
+var
+   dir: string;
+   moment: TDateTime;
+   name: string;
+begin
+   BeginTest('Clear Log''s backup is named "<log> before clear <UTC>Z.db" beside the log');
+
+   dir := 'logs' + PathDelim;
+   moment := EncodeDate(2026, 10, 23) + EncodeTime(23, 1, 44, 0);
+
+   CheckEquals(dir + 'CQ-WW-SSB 2026-10-19 NY4I before clear 2026-10-23 230144Z.db',
+               LogStoreClearBackupFileName(dir + 'CQ-WW-SSB 2026-10-19 NY4I.db', moment),
+               'the worked example, exactly');
+
+   CheckEquals(dir + 'K.1 ABC.v2 before clear 2026-10-23 230144Z.db',
+               LogStoreClearBackupFileName(dir + 'K.1 ABC.v2.db', moment),
+               'only the final .db is removed; the other dots stay');
+
+   CheckEquals(dir + 'LOG before clear 2026-10-23 230144Z.db',
+               LogStoreClearBackupFileName(dir + 'LOG.DB', moment),
+               'the .db is recognised in any case');
+
+   CheckEquals(dir + 'log.sqlite before clear 2026-10-23 230144Z.db',
+               LogStoreClearBackupFileName(dir + 'log.sqlite', moment),
+               'a name not ending in .db keeps all of it');
+
+   name := LogStoreClearBackupFileName(dir + 'x.db',
+                                       EncodeDate(2027, 1, 2) + EncodeTime(3, 4, 5, 0));
+   CheckEquals(dir + 'x before clear 2027-01-02 030405Z.db', name,
+               'month, day, hour, minute and second are zero-padded');
+   CheckEquals('Z.db', Copy(name, Length(name) - 3, 4), 'the name ends in Z.db');
+   CheckEquals(dir, ExtractFilePath(name), 'and it lies in the log''s directory');
+end;
+
+(* THE BACKUP CLEAR LOG TAKES HOLDS THE LOG, AND IS TAKEN FROM SQLITE ALONE.
+  The .TRW the log was migrated from is deleted BEFORE the backup, so a backup
+  that read, copied or needed it could not succeed; and none is created. *)
+procedure TLogStoreTests.TestABackupBeforeClearHoldsTheLogAndNeedsNoTrw;
+var
+   log, saved: TStringList;
+   path, report: string;
+   ok: boolean;
+   qso: ContestExchange;
+   i: integer;
+begin
+   BeginTest('the backup before Clear Log holds every row of the SQLite log and needs no .TRW');
+
+   PrepareMigration(FIXTURE_SET);
+   log := TStringList.Create;
+   saved := TStringList.Create;
+   try
+      CheckTrue(LogStoreEnsureOpen, 'the open migrates the log');
+      DeleteFile(FTrw);
+      CheckFalse(FileExists(FTrw), 'the .TRW is gone before the backup');
+      (* A READ through the sequential cursor first, as LoadinLog reads: the
+        cursor is a fresh query, so preparing it starts sqldb's transaction
+        and closing it ends nothing -- which VACUUM INTO refuses unless the
+        backup ends it. (A kept, already-prepared statement would not do:
+        it runs in autocommit and opens no sqldb transaction.) *)
+      CheckTrue(LogSourceOpen, 'the log source opens');
+      LogSourceRewind;
+      CheckTrue(LogSourceNext(qso), 'and reads a QSO');
+      LogSourceClose;
+
+      (* Called first: as an argument beside the message, FPC may build the
+        message before the call has filled report. *)
+      ok := LogStoreBackupBeforeClear(path, report);
+      CheckTrue(ok, 'the backup before clearing succeeds: ' + report);
+      FBackup := path;
+      CheckEquals(ExtractFilePath(FDb), ExtractFilePath(path),
+                  'it is written beside the log');
+      CheckTrue(FileExists(path), 'the backup exists at the path it names');
+      CheckFalse(FileExists(path + '.new'), 'and nothing is left staged');
+      CheckFalse(Pos('.trw', LowerCase(path)) > 0, 'its name is not the .TRW''s');
+      CheckFalse(FileExists(FTrw), 'no .TRW was created');
+      LogStoreClose;
+
+      ReadLogCalls(log);
+      (* Only when there is a file: opening a missing one raises, and a
+        failure must be a FAIL line, not a crash that ends the run. *)
+      if FileExists(path) then
+         begin
+         ReadCallsFrom(path, saved);
+         end;
+      CheckTrue(log.Count > 1, 'the log holds the migrated QSOs');
+      CheckEquals(log.Count, saved.Count, 'the backup holds every row of the log');
+      for i := 0 to log.Count - 1 do
+         begin
+         if i >= saved.Count then
+            begin
+            Break;
+            end;
+         CheckEquals(log[i], saved[i], 'backup row ' + IntToStr(i + 1));
+         end;
+   finally
+      saved.Free;
+      log.Free;
+      Restore;
+   end;
+end;
+
+(* AN EMPTY LOG IS STILL BACKED UP -- LogStoreBackup does not refuse it, and
+  the file it writes opens and holds no rows. *)
+procedure TLogStoreTests.TestAnEmptyLogIsBackedUpBeforeClear;
+var
+   saved: TStringList;
+   path, report: string;
+   ok: boolean;
+begin
+   BeginTest('an empty log is backed up before Clear Log, to a file that opens');
+
+   PrepareMigration(FIXTURE_SET);
+   DeleteFile(FTrw);
+   saved := TStringList.Create;
+   try
+      CheckTrue(LogStoreEnsureOpen, 'with no .TRW the open makes a new, empty log');
+      ok := LogStoreBackupBeforeClear(path, report);
+      CheckTrue(ok, 'the backup of an empty log succeeds: ' + report);
+      FBackup := path;
+      LogStoreClose;
+
+      CheckTrue(FileExists(path), 'the backup exists');
+      if FileExists(path) then
+         begin
+         ReadCallsFrom(path, saved);
+         CheckEquals(0, saved.Count, 'and opens, holding no rows');
+         end;
+   finally
+      saved.Free;
+      Restore;
+   end;
+end;
+
 procedure TLogStoreTests.RunAllTests;
 begin
+   TestTheClearBackupNameRule;
 {$IFNDEF WINDOWS}
    (* SAID, NOT SILENT -- as the LogImport suite: these migrate a D7 binary
      log, which is a Windows migration path. *)
@@ -340,6 +510,8 @@ begin
    TestAnAppendThatMigratesTheLogInsertsTheQSO;
    TestAnAppendAfterAnEarlierMigrationInsertsTheQSO;
    TestARewriteThatMigratesTheLogRewritesTheNewestQSO;
+   TestABackupBeforeClearHoldsTheLogAndNeedsNoTrw;
+   TestAnEmptyLogIsBackedUpBeforeClear;
 end;
 
 end.

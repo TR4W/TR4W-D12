@@ -359,6 +359,22 @@ function LogStoreEnsureOpen: boolean;
   case that has to be visible. Never raises. *)
 function LogStoreBackup(const aDestination: string; out aReport: string): boolean;
 
+(* THE NAME OF THE BACKUP CLEAR LOG TAKES (2026-10-23): beside the log,
+  "<log name without .db> before clear <UTC yyyy-mm-dd hhnnss>Z.db", e.g.
+  "CQ-WW-SSB 2026-10-19 NY4I before clear 2026-10-23 230144Z.db".
+
+  Only a final ".db" is removed (any case); a name with other dots keeps them,
+  and a name not ending in .db keeps all of it. aUTC is the moment, already in
+  UTC -- the caller converts, so this stays pure and a test can pin it. *)
+function LogStoreClearBackupFileName(const aLogFile: string; aUTC: TDateTime): string;
+
+(* A VERIFIED BACKUP OF THE CONTEST LOG, TAKEN BEFORE CLEAR LOG DELETES
+  ANYTHING. LogStoreBackup to LogStoreClearBackupFileName of the live log at
+  this moment in UTC. aPath is the file it was written to (set either way),
+  aReport LogStoreBackup's sentence for the operator. The .TRW is not read,
+  copied or named: the source is the SQLite log only. Never raises. *)
+function LogStoreBackupBeforeClear(out aPath, aReport: string): boolean;
+
 (* IS THE CONTEST LOG SOUND? ASKED ON PURPOSE, RATHER THAN ON THE WAY PAST.
 
   The same integrity_check and foreign_key_check the open path runs, exposed
@@ -390,6 +406,7 @@ uses
       continent, MY CQ ZONE); TStationContext is uContestBase's.
       ctyGetITUZone -- MY ITU ZONE when the operator stated none. *)
    SysUtils, Classes,
+   DateUtils, (* LocalTimeToUniversal -- the UTC stamp in a pre-clear backup's name *)
    Contnrs,   (* TObjectList -- the edited memories RestoreEditedMessageMemories reads *)
    uContestBase, uContestFactory, uCTYDAT,
    (* uLogRepository is in the INTERFACE uses now -- LogStoreRepository's
@@ -1577,6 +1594,25 @@ end;
 
 procedure TLogStoreBackup.SnapshotTo(const aStaged: string);
 begin
+   (* END THE TRANSACTION A READ LEFT OPEN, OR VACUUM INTO REFUSES.
+
+     sqldb starts a transaction when ANY statement prepares, a read included,
+     and nothing ends a read's. Measured 2026-10-23 (uTestLogStore): on a log
+     EnsureOpen had just created, whose open reads the contest row and commits
+     nothing, the snapshot failed with "cannot VACUUM from within a
+     transaction". Any read since the last commit does the same in a session.
+
+     Committing here writes nothing that was not already promised: every
+     store entry point that writes commits before it returns, so between them
+     an open transaction holds reads only. A batch is the one exception, and
+     it never spans entry points; refuse rather than commit half of one.
+     TSQLTransaction.Commit is a no-op when nothing is open (sqldb.pp:2410). *)
+   if GRepository.InBatch then
+      begin
+      raise ELogDatabaseError.Create(
+         'A batch of writes is in progress, so the log cannot be backed up now.');
+      end;
+   GRepository.Commit;
    GDatabase.SnapshotTo(aStaged);
 end;
 
@@ -1590,6 +1626,35 @@ begin
    finally
       backup.Free;
    end;
+end;
+
+function LogStoreClearBackupFileName(const aLogFile: string; aUTC: TDateTime): string;
+var
+   base: string;
+begin
+   (* The suffix is compared in place, NOT through ExtractFileExt: in FPC
+     3.2.2 that is AnsiString-only (as is SameText), so a path with a
+     non-ASCII name would go through the system code page and could come back
+     changed. UnicodeSameText is the RTL's UnicodeString comparison. *)
+   base := aLogFile;
+   if UnicodeSameText(Copy(base, Length(base) - Length('.db') + 1, Length('.db')), '.db') then
+      begin
+      base := Copy(base, 1, Length(base) - Length('.db'));
+      end;
+   (* '-' and a space are literals to FormatDateTime; only '/' and ':' are
+     locale separators, and neither is used, so no FormatSettings is needed.
+     'hh' is the 24-hour clock because the format names no am/pm. The cast
+     widens digits only, so it loses nothing. *)
+   Result := base + ' before clear ' +
+             string(FormatDateTime('yyyy-mm-dd hhnnss', aUTC)) + 'Z.db';
+end;
+
+function LogStoreBackupBeforeClear(out aPath, aReport: string): boolean;
+begin
+   (* The name rule's input is the DATABASE's name, never TR4W_LOG_FILENAME
+     itself: that names the .TRW, which is a relic nothing here touches. *)
+   aPath := LogStoreClearBackupFileName(LogStoreFileName, LocalTimeToUniversal(Now));
+   Result := LogStoreBackup(aPath, aReport);
 end;
 
 (* OUR STATION, AS IT IS AT THIS MOMENT -- what a QSO being logged now
