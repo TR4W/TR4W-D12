@@ -35,7 +35,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   NEW BEHAVIOUR, SO THE MATRIX'S FROZEN RECORD CANNOT JUDGE IT. The two .dom
   rules go through the REAL loader (TDomQTHTable over the shipped
-  neqsow1.dom and the files it includes), and the dupe rule through the
+  neqsow1.dom and the files it includes -- the includes followed by the
+  test, LoadShippedDomFollowingIncludes says why), and the dupe rule through the
   real dupe sheet (TCallsignsList). *)
 unit uTestContestNewEnglandQP;
 
@@ -78,6 +79,8 @@ uses
    uContestRegistry,
    uADIF,
    uPendingCounties,
+   (* ExistingDataFile -- a shipped file, whatever case it is spelled in. *)
+   uAppPaths,
    (* DomesticCountries -- the engine's domestic-country list. *)
    ZoneCont,
    uTestContestObjects,
@@ -131,26 +134,143 @@ begin
    end;
 end;
 
-(* THE TARGET DIRECTORY, where the program runs: EnumDOMFILE finds an
-   INCLUDE FILE in DataDir's dom folder (uAppPaths.ShippedDomFilePath), and
-   DataDir is the working directory on Windows. *)
-function ShippedTargetDir: string;
+(* ---------------------------------------------------------------------------
+   LOADING A SHIPPED .dom, ITS INCLUDEs FOLLOWED BY THE TEST
+
+   THE LOADER CANNOT FOLLOW AN INCLUDE FILE FROM HERE. EnumDOMFILE resolves
+   one through uAppPaths.ShippedDomFilePath, which is DataDir's dom folder --
+   the working directory on Windows, but /usr/share/tr4w/ or the binary's
+   own directory (tr4w/test/unit, which has no dom folder) on Linux. So on
+   Linux the include is missing, the loader queues its modal "could not
+   find this file" warning, and the first later test that pumps messages
+   blocks for ever under xvfb (the v5.0.31 release run). uTestContestGeorgiaQP
+   records the same limit ("Its INCLUDEs cannot be followed here").
+
+   So the test follows them itself, and the REAL loader still reads every
+   line of every real file: each file is cut at its INCLUDE FILE lines into
+   segments, each segment is written to a temp copy and read by
+   ReadDomQTHFile, and each named file is loaded the same way, in the
+   file's order -- depth first, exactly where the loader would have
+   re-entered. Only the first segment of the top-level file is read as a
+   top-level file (it clears the table, as LoadInDomQTHFile's one call to
+   ReadDomQTHFile(..., False) does); every other one is read as included.
+   No temp copy holds an INCLUDE line, so the loader never resolves a path
+   itself, and every file is proved to exist BEFORE it is read -- a missing
+   one fails here with its path, instead of queuing the warning.
+   --------------------------------------------------------------------------- *)
+
+const
+   DOM_INCLUDE_KEYWORD = 'INCLUDE FILE';
+
+   (* neqsow1.dom's INCLUDE FILE lines, in its order: "states(50)" and
+      "Canadian provinces (14 -- VO1/VO2 are separate)". *)
+   NEW_ENGLAND_ENTRANT_INCLUDES = 'S50.DOM P14.DOM';
+
+(* The file an INCLUDE FILE line names, read as EnumDOMFILE reads it (leading
+   blanks dropped, the keyword case-sensitive); '' for any other line. *)
+function DomIncludeName(const aLine: string): string;
+var
+   trimmed: string;
 begin
-   Result := ExpandFileName(ShippedDomDir + '..');
+   Result := '';
+   trimmed := TrimLeft(aLine);
+   if Copy(trimmed, 1, Length(DOM_INCLUDE_KEYWORD)) = DOM_INCLUDE_KEYWORD then
+      begin
+      Result := Trim(Copy(trimmed, Length(DOM_INCLUDE_KEYWORD) + 2, 200));
+      end;
+end;
+
+(* One segment of aFileName, through the real loader, from a temp copy. The
+   copy starts with a line naming its source -- no '=', so not an entry --
+   which also keeps it from being empty: EnumerateLinesInFile refuses an
+   empty file, and the loader would queue the warning for it. *)
+procedure LoadDomSegment(aTable: TDomQTHTable; aSegment: TStringList;
+                         const aFileName: string; aTopLevel: boolean);
+var
+   path: string;
+begin
+   aSegment.Insert(0, 'TEST COPY OF ' + UpperCase(aFileName) + ', INCLUDES REMOVED');
+   path := GetTempFileName(GetTempDir, 'tr4wdom');
+   try
+      aSegment.SaveToFile(AnsiString(path));
+      if not aTable.ReadDomQTHFile(path, not aTopLevel) then
+         begin
+         raise Exception.Create('the loader refused a segment of ' + aFileName + ': ' + path);
+         end;
+   finally
+      SysUtils.DeleteFile(path);
+   end;
+   aSegment.Clear;
+end;
+
+(* aFileName (a name in the shipped dom folder, in any case) into aTable,
+   as the loader would, its INCLUDEs followed as above. Answers the file's
+   OWN INCLUDE FILE names, upper-cased, in its order, blank-separated. *)
+function LoadShippedDomFollowingIncludes(aTable: TDomQTHTable;
+                                         const aFileName: string;
+                                         aTopLevel: boolean;
+                                         aDepth: integer): string;
+var
+   path: string;
+   included: string;
+   lines: TStringList;
+   segment: TStringList;
+   firstSegment: boolean;
+   i: integer;
+begin
+   Result := '';
+   if aDepth > 8 then
+      begin
+      raise Exception.Create('INCLUDE FILE nests too deep at ' + aFileName);
+      end;
+   (* THE SAME FILE, WHATEVER CASE IT IS SPELLED IN: the .dom says P14.DOM,
+      and on Linux the shipped file is p14.dom. *)
+   path := ExistingDataFile(ShippedDomDir + aFileName);
+   if not FileExists(path) then
+      begin
+      raise Exception.Create('a shipped .dom is missing, so the loader would queue its '
+                             + '"could not find" warning: ' + path);
+      end;
+   lines := TStringList.Create;
+   segment := TStringList.Create;
+   try
+      lines.LoadFromFile(AnsiString(path));
+      firstSegment := aTopLevel;
+      for i := 0 to lines.Count - 1 do
+         begin
+         included := DomIncludeName(lines[i]);
+         if included = '' then
+            begin
+            segment.Add(lines[i]);
+            end
+         else
+            begin
+            LoadDomSegment(aTable, segment, aFileName, firstSegment);
+            firstSegment := False;
+            if Result <> '' then
+               begin
+               Result := Result + ' ';
+               end;
+            Result := Result + UpperCase(included);
+            LoadShippedDomFollowingIncludes(aTable, included, False, aDepth + 1);
+            end;
+         end;
+      LoadDomSegment(aTable, segment, aFileName, firstSegment);
+   finally
+      segment.Free;
+      lines.Free;
+   end;
 end;
 
 (* aTable, the multiplier sheet and MultipliersIsCounties as a New England
    entrant's session loads them: neqsow1.dom, through the real loader, with
-   its INCLUDEs. The caller saved and restores the sheet, the flag and the
-   working directory. *)
-procedure LoadNewEnglandEntrantTable(aTable: TDomQTHTable);
+   its INCLUDEs. Answers neqsow1.dom's own INCLUDE FILE names, for the caller
+   to hold to NEW_ENGLAND_ENTRANT_INCLUDES. The caller saved and restores the
+   sheet and the flag. *)
+function LoadNewEnglandEntrantTable(aTable: TDomQTHTable): string;
 begin
    MultipliersIsCounties := False;
-   SetCurrentDir(ShippedTargetDir);
-   if not aTable.ReadDomQTHFile(ShippedDomDir + 'neqsow1.dom', False) then
-      begin
-      raise Exception.Create('neqsow1.dom did not load');
-      end;
+   Result := LoadShippedDomFollowingIncludes(aTable, 'neqsow1.dom', True, 0);
 end;
 
 function MultiplierOf(aTable: TDomQTHTable; const aAlias: string): string;
@@ -245,17 +365,16 @@ procedure TContestNewEnglandQPTests.Test_NEQPVO1AndVO2AreTwoProvinces;
 var
    savedSheet: TMultsObject;
    savedCounties: boolean;
-   savedDir: string;
    table: TDomQTHTable;
 begin
    BeginTest('Test_NEQPVO1AndVO2AreTwoProvinces');
    savedSheet := mo;
    savedCounties := MultipliersIsCounties;
-   savedDir := GetCurrentDir;
    mo := TMultsObject.Create;
    table := TDomQTHTable.Create;
    try
-      LoadNewEnglandEntrantTable(table);
+      CheckEquals(NEW_ENGLAND_ENTRANT_INCLUDES, LoadNewEnglandEntrantTable(table),
+                  'neqsow1.dom includes the 50 states, then the 14 provinces');
       CheckEquals('NF', MultiplierOf(table, 'VO1'), 'VO1 is Newfoundland');
       CheckEquals('LB', MultiplierOf(table, 'VO2'), 'VO2 is Labrador');
       CheckTrue(MultiplierOf(table, 'VO1') <> MultiplierOf(table, 'VO2'),
@@ -268,7 +387,6 @@ begin
       mo.Free;
       mo := savedSheet;
       MultipliersIsCounties := savedCounties;
-      SetCurrentDir(savedDir);
    end;
 end;
 
@@ -279,19 +397,48 @@ procedure TContestNewEnglandQPTests.Test_NEQPCountsDCAsMaryland;
 var
    savedSheet: TMultsObject;
    savedCounties: boolean;
-   savedDir: string;
    table: TDomQTHTable;
+   lines: TStringList;
+   dcLine: integer;
+   s50Line: integer;
+   i: integer;
    contestObject: TContestBase;
    qso: ContestExchange;
 begin
    BeginTest('Test_NEQPCountsDCAsMaryland');
+
+   (* THE FILE SAYS SO, BEFORE S50: the first entry added for an alias wins,
+      so DC's line must come before the states' file is included. *)
+   lines := TStringList.Create;
+   try
+      lines.LoadFromFile(AnsiString(ShippedDomDir + 'neqsow1.dom'));
+      dcLine := -1;
+      s50Line := -1;
+      for i := 0 to lines.Count - 1 do
+         begin
+         if (dcLine < 0) and (Trim(lines[i]) = 'Dc > Md = DC') then
+            begin
+            dcLine := i;
+            end;
+         if (s50Line < 0) and (UpperCase(DomIncludeName(lines[i])) = 'S50.DOM') then
+            begin
+            s50Line := i;
+            end;
+         end;
+      CheckTrue(dcLine >= 0, 'neqsow1.dom holds Dc > Md = DC');
+      CheckTrue(s50Line >= 0, 'neqsow1.dom includes S50.DOM');
+      CheckTrue(dcLine < s50Line, 'DC is mapped to MD before S50.DOM is included');
+   finally
+      lines.Free;
+   end;
+
    savedSheet := mo;
    savedCounties := MultipliersIsCounties;
-   savedDir := GetCurrentDir;
    mo := TMultsObject.Create;
    table := TDomQTHTable.Create;
    try
-      LoadNewEnglandEntrantTable(table);
+      CheckEquals(NEW_ENGLAND_ENTRANT_INCLUDES, LoadNewEnglandEntrantTable(table),
+                  'neqsow1.dom includes the 50 states, then the 14 provinces');
       CheckEquals('MD', MultiplierOf(table, 'DC'), 'DC counts as Maryland');
       CheckEquals('MD', MultiplierOf(table, 'MD'), 'and so does Maryland');
       CheckEquals('DC', QTHOf(table, 'DC'), 'the QTH stays DC');
@@ -300,7 +447,6 @@ begin
       mo.Free;
       mo := savedSheet;
       MultipliersIsCounties := savedCounties;
-      SetCurrentDir(savedDir);
    end;
 
    contestObject := Make(NEWENGLANDQSO, Entrant(True));
@@ -450,7 +596,6 @@ var
    savedSheet: TMultsObject;
    savedCountries: TStringList;
    savedMyState: string;
-   savedDir: string;
    who: string;
    myState: string;
    domFile: string;
@@ -523,7 +668,6 @@ begin
    savedQualified := QualifiedDupes;
    savedSheet := mo;
    savedMyState := Settings.My.State;
-   savedDir := GetCurrentDir;
    savedCountries := TStringList.Create;
    for i := 0 to DomesticCountries.Count - 1 do
       begin
@@ -535,15 +679,23 @@ begin
    QualifiedDupes := TQualifiedDupeSheet.Create;
    try
       (* AS FoundContest SETS IT UP: K, VE, KH6 and KL domestic, the
-         entrant's county file (its INCLUDEs found in the program's dom
-         folder), and the class's flags -- QSOs by band and mode,
-         multipliers once per contest. *)
+         entrant's county file (its INCLUDEs followed by the test -- see
+         LoadShippedDomFollowingIncludes), and the class's flags -- QSOs by
+         band and mode, multipliers once per contest. *)
       DomesticCountries.Clear;
       Add_KVEKH6KL;
       MultipliersIsCounties := False;
       StationInHostState := False;
-      SetCurrentDir(ShippedTargetDir);
-      CheckTrue(DomQTHTable.LoadInDomQTHFile(ShippedDomDir + domFile), who + domFile + ' loads');
+      if aInNewEngland then
+         begin
+         CheckEquals(NEW_ENGLAND_ENTRANT_INCLUDES, LoadNewEnglandEntrantTable(DomQTHTable),
+                     who + domFile + ' loads, with the states and the provinces');
+         end
+      else
+         begin
+         CheckEquals('', LoadShippedDomFollowingIncludes(DomQTHTable, domFile, True, 0),
+                     who + domFile + ' loads, and includes nothing');
+         end;
       Settings.My.State := myState;
       ClearContestSentState;
       Contest := ContestHandleOf(NEWENGLANDQSO);
@@ -634,7 +786,6 @@ begin
       Settings.My.State := savedMyState;
       ClearContestSentState;
       ExchangeErrorMessage := '';
-      SetCurrentDir(savedDir);
       Contest := savedContest;
       ReleaseActiveContest;
    end;
