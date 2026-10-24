@@ -76,14 +76,25 @@ hhnnss>Z.db` beside the log (`LogStoreClearBackupFileName`, pinned in
 `uTestLogStore`). A failed backup is an Error line plus `showwarning`, and
 nothing is deleted. The `.TRW` is not read, copied or named. An empty log is
 backed up like any other.
-- **`VACUUM INTO` REFUSES AN OPEN READ TRANSACTION**, and sqldb leaves one
-  after any fresh query prepares (a sequential cursor, the open of a new
-  log). `TLogStoreBackup.SnapshotTo` commits it first and refuses during a
-  batch. Before that fix, a backup after `LoadinLog` failed with "cannot
-  VACUUM from within a transaction" (measured in the unit test). The periodic
-  `BackupLogNow` goes through the same path; no live session was measured.
-  A kept, already-prepared statement runs in autocommit and does NOT open
-  one, so a test of this must read through a fresh query.
+- **NEVER RUN `VACUUM` (INTO OR NOT) ON THE LIVE CONNECTION (2026-10-24).**
+  A VACUUM resets every schema of the connection that runs it, and FPC's
+  connector prepares with the LEGACY `sqlite3_prepare`, which never
+  re-prepares. So every KEPT statement is broken for good. Live in CQ WW SSB
+  on 5.0.33: after each periodic backup the grid's `ReadRange` raised
+  `TLogConnection : not an error` on every repaint. `TLogDatabase.SnapshotTo`
+  now opens its own short-lived `OpenReadOnly` connection to the file and
+  runs `VACUUM INTO` there. It copies every COMMITTED row, the `-wal` included.
+  Pinned by `uTestLogStore.TestTheGridReadsTheLogAfterABackup`, which was
+  seen to fail on the old code with that exact message.
+- **So `TLogStoreBackup.SnapshotTo` no longer commits and no longer refuses
+  during a batch.** Both existed only because `VACUUM INTO` on the live
+  connection refuses the read transaction sqldb leaves open ("cannot VACUUM
+  from within a transaction", 2026-10-23). A separate connection ignores it.
+  Do not put the commit back: a backup must not decide a write.
+- The same hazard covers any statement that expires prepared statements
+  (`OP_Expire`: a flag pragma such as `foreign_keys`; ATTACH/DETACH; DDL that
+  bumps the schema cookie). Today every one of them runs at open or migration,
+  before `TLogRepository.Create` prepares anything. Keep it that way.
 
 **And the stray-`-wal` worry that went with that finding did NOT reproduce**
 (measured 2026-09-19): on a clean close SQLite removed both sidecars, so the

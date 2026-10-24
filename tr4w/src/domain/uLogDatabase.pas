@@ -348,12 +348,18 @@ type
         live .db can also catch it mid-write and yield a torn file that opens
         and then fails a check.
 
-        VACUUM INTO, not the C backup API. It is one SQL statement through the
-        connection this unit already owns, it takes a read lock for the
-        duration so the result is a point-in-time snapshot INCLUDING committed
-        WAL content, and it needs no new binding to sqlite3.dll -- which is
-        the standing rule here (see CLAUDE.md). SQLite 3.27 and later; the
-        shipped library is 3.53.
+        VACUUM INTO, not the C backup API. It is one SQL statement, it takes a
+        read lock for the duration so the result is a point-in-time snapshot
+        INCLUDING committed WAL content, and it needs no new binding to
+        sqlite3.dll -- which is the standing rule here (see CLAUDE.md).
+        SQLite 3.27 and later; the shipped library is 3.53.
+
+        IT RUNS ON A SEPARATE READ-ONLY CONNECTION TO THIS FILE, NEVER ON
+        THIS ONE: a VACUUM resets the schemas of the connection that runs it,
+        which permanently breaks every statement this connection has kept
+        prepared. The implementation has the detail. The copy therefore holds
+        what is COMMITTED, and this connection's open transaction, if any,
+        neither blocks it nor is ended by it.
 
         The destination must NOT exist: SQLite refuses rather than overwrite,
         which is the right default and is why the caller stages to a new name
@@ -1201,6 +1207,8 @@ begin
 end;
 
 procedure TLogDatabase.SnapshotTo(const aDestination: string);
+var
+   source: TLogDatabase;
 begin
    if not IsOpen then
       begin
@@ -1218,11 +1226,42 @@ begin
          [aDestination]);
       end;
 
-   (* ExecPragmaRaw, NOT ExecuteDirect. VACUUM cannot run inside a transaction
-     and sqldb starts one on any statement -- the same trap ApplyPragmas
-     documents at length a few routines up. This path goes to the connection's
-     own handle, transaction-free. *)
-   ExecPragmaRaw(VacuumIntoSQL(aDestination));
+   (* FROM A CONNECTION OF ITS OWN, NEVER FROM THIS ONE.
+
+     A VACUUM -- VACUUM INTO included -- ends by resetting every schema of
+     the connection that ran it (sqlite3RunVacuum calls
+     sqlite3ResetAllSchemasOfConnection, SQLite 3.53.4), so every statement
+     already prepared on that connection meets SQLITE_SCHEMA on its next run.
+     FPC's connector prepares with the LEGACY sqlite3_prepare, which never
+     re-prepares, so each kept statement was broken for good: the main log
+     grid's range read raised "TLogConnection : not an error" on every
+     repaint after each periodic backup, until a restart (CQ WW SSB,
+     2026-10-24; pinned by uTestLogStore.TestTheGridReadsTheLogAfterABackup).
+
+     A short-lived READ-ONLY connection to the same file, then. OpenReadOnly
+     applies no write-side pragma and does not migrate; its one flag pragma
+     (foreign_keys) expires statements on ITS connection, which has none.
+     Under WAL it reads the -wal, so the copy holds every COMMITTED row --
+     and only those, which is what a backup should hold. It needs nothing of
+     this connection: an open read transaction here does not stop it. A
+     rollback-journal log (a network share) behaves the same unless this
+     connection holds an uncommitted write that has spilled to the file, and
+     then SQLite answers BUSY and the backup is reported as failed.
+
+     It leaves no sidecar: the -wal and -shm are this connection's, and a
+     second connection closing does not remove them.
+
+     ExecPragmaRaw, NOT ExecuteDirect: VACUUM cannot run inside a transaction
+     and sqldb starts one on any statement -- the trap ApplyPragmas documents
+     a few routines up. OpenReadOnly's own pragma reads end theirs, so none
+     is open when it runs. *)
+   source := TLogDatabase.Create;
+   try
+      source.OpenReadOnly(FFileName);
+      source.ExecPragmaRaw(VacuumIntoSQL(aDestination));
+   finally
+      source.Free;
+   end;
 end;
 
 constructor TLogDatabase.Create;

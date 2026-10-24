@@ -1594,25 +1594,23 @@ end;
 
 procedure TLogStoreBackup.SnapshotTo(const aStaged: string);
 begin
-   (* END THE TRANSACTION A READ LEFT OPEN, OR VACUUM INTO REFUSES.
+   (* NO COMMIT AND NO BATCH REFUSAL HERE, and both were deliberate removals
+     (2026-10-24).
 
-     sqldb starts a transaction when ANY statement prepares, a read included,
-     and nothing ends a read's. Measured 2026-10-23 (uTestLogStore): on a log
-     EnsureOpen had just created, whose open reads the contest row and commits
-     nothing, the snapshot failed with "cannot VACUUM from within a
-     transaction". Any read since the last commit does the same in a session.
+     They existed because VACUUM INTO ran on the live connection, which
+     refuses it inside a transaction -- and sqldb leaves one open after any
+     fresh query prepares ("cannot VACUUM from within a transaction",
+     measured 2026-10-23). Running it there also broke every kept statement
+     on the connection; see TLogDatabase.SnapshotTo, which now takes the
+     snapshot through a read-only connection of its own. That connection does
+     not care what this one has open, so there is nothing to end.
 
-     Committing here writes nothing that was not already promised: every
-     store entry point that writes commits before it returns, so between them
-     an open transaction holds reads only. A batch is the one exception, and
-     it never spans entry points; refuse rather than commit half of one.
-     TSQLTransaction.Commit is a no-op when nothing is open (sqldb.pp:2410). *)
-   if GRepository.InBatch then
-      begin
-      raise ELogDatabaseError.Create(
-         'A batch of writes is in progress, so the log cannot be backed up now.');
-      end;
-   GRepository.Commit;
+     Committing would now be a write decided by a backup: every store entry
+     point that writes commits before it returns, so the copy already holds
+     everything acknowledged, and a backup has no business committing
+     anything else. A batch never spans entry points, and if one were open
+     the copy would hold the log as it was before it -- a consistent point in
+     time, never half of one. *)
    GDatabase.SnapshotTo(aStaged);
 end;
 

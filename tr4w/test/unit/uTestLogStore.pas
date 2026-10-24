@@ -66,6 +66,7 @@ type
       procedure TestTheClearBackupNameRule;
       procedure TestABackupBeforeClearHoldsTheLogAndNeedsNoTrw;
       procedure TestAnEmptyLogIsBackedUpBeforeClear;
+      procedure TestTheGridReadsTheLogAfterABackup;
    public
       procedure RunAllTests; override;
    end;
@@ -421,9 +422,11 @@ begin
       CheckFalse(FileExists(FTrw), 'the .TRW is gone before the backup');
       (* A READ through the sequential cursor first, as LoadinLog reads: the
         cursor is a fresh query, so preparing it starts sqldb's transaction
-        and closing it ends nothing -- which VACUUM INTO refuses unless the
-        backup ends it. (A kept, already-prepared statement would not do:
-        it runs in autocommit and opens no sqldb transaction.) *)
+        and closing it ends nothing. When the snapshot ran on the live
+        connection, VACUUM INTO refused that open transaction; it runs on a
+        connection of its own now, and this keeps the case covered. (A kept,
+        already-prepared statement would not do: it runs in autocommit and
+        opens no sqldb transaction.) *)
       CheckTrue(LogSourceOpen, 'the log source opens');
       LogSourceRewind;
       CheckTrue(LogSourceNext(qso), 'and reads a QSO');
@@ -498,6 +501,116 @@ begin
    end;
 end;
 
+(* THE GRID STILL READS THE LOG AFTER A BACKUP (2026-10-24, CQ WW SSB).
+
+  The periodic backup ran VACUUM INTO on the LIVE connection. SQLite resets
+  every schema of the connection that runs a VACUUM, and FPC's connector
+  prepares with the legacy sqlite3_prepare, which never re-prepares: so the
+  repository's KEPT range query, the one the main log grid reads through,
+  failed on every later run with "TLogConnection : not an error". The QSO
+  was committed; the grid could no longer show it, until a restart.
+
+  So the read goes through the grid's own path, LogSourceReadRange, BEFORE
+  the backup (that prepares and caches the statement) and AFTER it. A QSO is
+  appended first, committed by the store, so the snapshot is also shown to
+  hold a row that has not been checkpointed out of the -wal. *)
+procedure TLogStoreTests.TestTheGridReadsTheLogAfterABackup;
+var
+   binary, log, saved: TStringList;
+   last, fresh: ContestExchange;
+   rows: array[0..9] of ContestExchange;
+   dest, report, failure: string;
+   ok: boolean;
+   n, i: integer;
+begin
+   BeginTest('the grid''s cached range read still reads the log after a backup');
+
+   PrepareMigration(FIXTURE_SET);
+   binary := TStringList.Create;
+   log := TStringList.Create;
+   saved := TStringList.Create;
+   try
+      ReadBinaryLog(binary, last);
+      CheckTrue(LogStoreEnsureOpen, 'the open migrates the log');
+
+      fresh := last;
+      fresh.Callsign := NEW_CALL;
+      fresh.id := 'test-logstore-backup-qso';
+      CheckTrue(LogStoreAppendQSO(fresh), 'the append reports the QSO logged');
+
+      n := LogSourceReadRange(0, rows);
+      CheckEquals(Length(rows), n, 'the range read fills its rows before the backup');
+
+      dest := IncludeTrailingPathDelimiter(FDir) + 'periodic backup.db';
+      FBackup := dest;
+      (* Called first: as an argument beside the message, FPC may build the
+        message before the call has filled report. *)
+      ok := LogStoreBackup(dest, report);
+      CheckTrue(ok, 'the backup succeeds: ' + report);
+
+      (* THE DEFECT: this raised ESQLDatabaseError on the old code. *)
+      failure := '';
+      n := 0;
+      try
+         n := LogSourceReadRange(0, rows);
+      except
+         on E: Exception do
+            begin
+            failure := E.ClassName + ': ' + E.Message;
+            end;
+      end;
+      CheckEquals('', failure, 'the range read does not raise after the backup');
+      CheckEquals(Length(rows), n, 'and fills its rows');
+      if n > 0 then
+         begin
+         CheckEquals(binary[0], string(rows[0].Callsign),
+                     'and the first row is the log''s first QSO');
+         end;
+
+      (* And again, from further in: the read is not fixed by one retry. *)
+      failure := '';
+      n := 0;
+      try
+         n := LogSourceReadRange(binary.Count - 4, rows);
+      except
+         on E: Exception do
+            begin
+            failure := E.ClassName + ': ' + E.Message;
+            end;
+      end;
+      CheckEquals('', failure, 'a second range read after the backup does not raise');
+      CheckEquals(5, n, 'and reads the last five rows, the new QSO among them');
+      if n = 5 then
+         begin
+         CheckEquals(NEW_CALL, string(rows[4].Callsign), 'the last row is the new QSO');
+         end;
+
+      CheckTrue(LogStoreIsUsable, 'the store is still usable');
+      LogStoreClose;
+
+      ReadLogCalls(log);
+      if FileExists(dest) then
+         begin
+         ReadCallsFrom(dest, saved);
+         end;
+      CheckEquals(binary.Count + 1, log.Count, 'the log holds every QSO');
+      CheckEquals(log.Count, saved.Count, 'the backup holds every committed row');
+      for i := 0 to log.Count - 1 do
+         begin
+         if i >= saved.Count then
+            begin
+            Break;
+            end;
+         CheckEquals(log[i], saved[i], 'backup row ' + IntToStr(i + 1));
+         end;
+   finally
+      saved.Free;
+      log.Free;
+      binary.Free;
+      Restore;
+   end;
+end;
+
 procedure TLogStoreTests.RunAllTests;
 begin
    TestTheClearBackupNameRule;
@@ -512,6 +625,7 @@ begin
    TestARewriteThatMigratesTheLogRewritesTheNewestQSO;
    TestABackupBeforeClearHoldsTheLogAndNeedsNoTrw;
    TestAnEmptyLogIsBackedUpBeforeClear;
+   TestTheGridReadsTheLogAfterABackup;
 end;
 
 end.
