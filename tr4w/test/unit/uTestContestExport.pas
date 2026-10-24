@@ -854,6 +854,12 @@ begin
    Pin(NEWENGLANDQSO, 'FL', 'Fl', 'K', 'FL');
    Pin(NEWENGLANDQSO, 'QC', 'Qc', 'VE', 'QC');
    Pin(NEWENGLANDQSO, 'DX', 'dx', 'DL', '');
+   (* The sponsor's 2026-10-23 rules: DC counts as MD for the multiplier but
+      is DC to ADIF; P14's VO1 (Nf) and VO2 (Lb) are both ADIF's NL. *)
+   Pin(NEWENGLANDQSO, 'DC', 'Dc', 'K', 'DC');
+   Pin(NEWENGLANDQSO, 'VO1', 'Nf', 'VE', 'NL');
+   Pin(NEWENGLANDQSO, 'VO2', 'Lb', 'VE', 'NL');
+   Pin(NEWENGLANDQSO, 'VO1', 'Nf', 'K', '');            (* not a VE: none invented *)
 
    (* IN7QPNE: the composite's own routing (in7qpne_cty.dom's spelling). *)
    Pin(IN7QPNE, 'INADA', 'Inada', 'K', 'IN');

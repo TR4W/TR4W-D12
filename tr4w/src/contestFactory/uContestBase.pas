@@ -2488,6 +2488,23 @@ type
          compromise" (Q118). *)
       function DupeKeyQualifier(const aQso: ContestExchange): string;
 
+      (* WHICH MODE A QSO IN aMode IS A DUPE IN -- aMode itself (the base):
+         where the contest counts QSOs by mode, CW, digital and phone are
+         three separate dupe modes, as they always were. A contest whose
+         sponsor groups modes for dupes answers the mode it groups aMode
+         under: the New England QSO Party (2026-10-23, the neqp.org FAQ: "the
+         same station can be contacted on CW and SSB on each band ... digital
+         QSOs are considered the same as CW") answers CW for Digital.
+
+         ASKED BY THE DUPE SHEETS ONLY (uCallsigns' MarkDupeBits, DupeBitsSay
+         and the dupe-sheet window), through ContestDupeModeOf, which keeps
+         the keys Both and NoMode as they are. Never the multiplier sheets --
+         a multiplier counted by mode is another rule -- and never the
+         points. The QSO's OWN logged mode is what is asked, so live entry,
+         the loader, the rescore and import build one sheet. Asked of
+         ContestIdentity: the answer must not depend on the station. *)
+      function DupeModeOf(aMode: ModeType): ModeType; virtual;
+
       (* WHOSE COUNTY IS THIS QSO'S QTH? -- the state (or province) of the
          party county the QSO's QTH names, '' when it names none (a state, a
          province, DX, nothing). Read by ADIFWorkedStationState, below, and
@@ -3619,6 +3636,12 @@ function ContestAcceptsBlankExchange(aContest: TContestBase): boolean;
 function ContestDupeKeyQualifier(aContest: TContestBase; const aQso: ContestExchange): string;
 function ContestDupeKeyIncludesReceivedQTH(aContest: TContestBase): boolean;
 
+(* aContest's TContestBase.DupeModeOf for aMode -- the mode a QSO in aMode is
+   a dupe in. Both and NoMode are KEYS, not modes, and are answered as they
+   are whatever the class says; nil (the classless DUMMYCONTEST) answers
+   aMode. *)
+function ContestDupeModeOf(aContest: TContestBase; aMode: ModeType): ModeType;
+
 (* WHAT aContest's EXCHANGE CARRIES, AND HOW ITS PER-QSO STRING LEADS -- see
    TContestBase.ExchangeCarriesDomesticQTH and its neighbours (M11 S9d). nil
    answers False to each: the classless DUMMYCONTEST ran UnknownExchange,
@@ -4377,6 +4400,18 @@ begin
    else
       begin
       Result := aContest.DupeKeyQualifier(aQso);
+      end;
+end;
+
+function ContestDupeModeOf(aContest: TContestBase; aMode: ModeType): ModeType;
+begin
+   if (aContest = nil) or (aMode = Both) or (aMode = NoMode) then
+      begin
+      Result := aMode;
+      end
+   else
+      begin
+      Result := aContest.DupeModeOf(aMode);
       end;
 end;
 
@@ -5144,6 +5179,12 @@ begin
       begin
       Result := Result + #1 + tour;
       end;
+end;
+
+function TContestBase.DupeModeOf(aMode: ModeType): ModeType;
+begin
+   (* Every mode is its own dupe mode -- see the declaration. *)
+   Result := aMode;
 end;
 
 function TContestBase.ADIFCountyState(const aQso: ContestExchange): string;

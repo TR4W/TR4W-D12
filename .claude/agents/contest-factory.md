@@ -359,8 +359,14 @@ the target shape, the M-step migration order and the open questions.
   `DomesticMultiplierFromCall(aCall, aLookups)` (base `''`) is the hint's;
   Russian DX, both RF Championships, Ural Cup, RDA and YO DX override it.
   `uTestContestMultipliers` holds both, with every other contest as a
-  ratchet. **No dupe-key virtual** -- no contest's own dupe rule exists to
-  move. A multiplier KIND's arm stays in the sheet until Q4 -- except the
+  ratchet. ~~No dupe-key virtual~~ -- **the dupe rule IS the class's now**:
+  `DupeKeyIncludesReceivedQTH` / `DupeKeyTour` (Q118, Q136) add to the key,
+  and `DupeModeOf(aMode)` (2026-10-23, base: the mode itself) groups modes --
+  New England answers CW for Digital. It is asked ONLY by the dupe sheets,
+  through `uCallsigns.ContestDupeSlot` (nil-safe `ContestDupeModeOf` keeps
+  the keys Both/NoMode), never the multiplier sheets;
+  `uTestContestNewEnglandQP`'s walk holds every other contest to identity.
+  A multiplier KIND's arm stays in the sheet until Q4 -- except the
   PREFIX kind's, below.
 - **THE PREFIX MULTIPLIER KEY IS THE CLASS'S (M11 S3 part 1, 2026-10-14).**
   `PrefixMultiplierKey(aQso, out aKey: PrefixMultiplierString): boolean`

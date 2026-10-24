@@ -67,15 +67,53 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   base of its own is a design question recorded in the design doc (M7b),
   not answered here.
 
-  SCORING: OnePhoneTwoCW -- 2 on CW, 1 otherwise.
+  THE SPONSOR'S RULES, READ 2026-10-23 (neqp.org/rules and the neqp.org FAQ
+  NY4I supplied). A current rule stated outright overrides D7 (NY4I's
+  standing rule), and six of them changed this class that day:
+
+    * POINTS: "Count one point per phone QSO, and two points per CW
+      (includes digital modes) QSO." CW 2, DIGITAL 2 (it was 1, the
+      OnePhoneTwoCW row's `else`), phone 1, and FM 1 as phone -- it was 1
+      and the rule's phone covers it. Three numbers per mode cannot say
+      "digital with CW, FM with phone", so CalculateQSOPoints states it
+      itself (uContestFixedPoints' own advice).
+    * NO DX MULTIPLIER CAP: "DXCC countries (not USA) as multipliers" -- no
+      limit stated. DescribeSession stated DXMultLimit := 20 (D7's arm) and
+      no longer states one. (That limit has no reader in the engine, here or
+      in D7 -- only the contest matrix prints it -- so the cap never applied;
+      the statement is removed so the class says what the sponsor says.)
+    * FOURTEEN PROVINCES: "Canadian provinces (14 -- VO1/VO2 are
+      separate)". neqsow1.dom includes P14.DOM (Nf = VO1, Lb = VO2) where it
+      included P13.DOM (one Nl for both).
+    * DC IS MARYLAND: "states(50) (Count DC as MD)". neqsow1.dom maps DC to
+      the Md multiplier on a line of its own (Dc > Md), BEFORE the shared
+      S50.DOM -- which other contests read, and which knows no DC.
+    * DUPES: "the same station can be contacted on CW and SSB on each band
+      for QSO points (digital QSOs are considered the same as CW)" (FAQ).
+      DupeModeOf answers CW for Digital; QSOs still count by band and by
+      mode (GetFlags), so a digital QSO is a dupe of a CW QSO on its band.
+    * ROVERS: "Mobiles that change counties are considered to be new
+      stations" and "can be worked for both multiplier and QSO Point
+      credit"; "County line QSOs should be logged as two separate QSOs".
+      DupeKeyIncludesReceivedQTH answers True, as every single-state party
+      has since Q118: the same call from another county is a new QSO, the
+      same call and county on the same band and mode is a dupe. It was the
+      call alone, so a rover logged under its bare call from a new county --
+      and the second QSO of a county-line pair -- was a dupe. Multipliers
+      still count once each (the sheet, not the dupe key, decides those).
+
+  CONFIRMED UNCHANGED THE SAME DAY: multipliers count once per contest
+  (no cfMultByBand / cfMultByMode); Alaska and Hawaii are states and the DX
+  key leaves out the USA, Canada, KH6 and KL7; an entrant outside New England
+  counts the 68 counties of NEQSO (Connecticut's nine planning regions).
 
   SET-UP, both branches stated. A NEW ENGLAND STATION is one whose MY STATE
   begins with ME, NH, VT, MA, CT or RI -- a string comparison of the first
   two characters, D7's rule, as M2 restored it (inventory defect #3: the
   PWORD read never matched, and crashed on an empty MY STATE). It loads
   NEQSOW1, sends RST and its county or DX, and counts DXCC without
-  W/VE/KH6/KL7. Everyone else loads NEQSO and sends RST and a county. Both
-  count at most 20 DX multipliers, and K, VE, KH6 and KL are domestic. *)
+  W/VE/KH6/KL7. Everyone else loads NEQSO and sends RST and a county. K, VE,
+  KH6 and KL are domestic for both. *)
 unit uContestNewEnglandQP;
 
 {$I tr4w.inc}
@@ -125,6 +163,15 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* DIGITAL IS A DUPE OF CW -- see TContestBase.DupeModeOf and the
+         header (the FAQ, 2026-10-23). *)
+      function DupeModeOf(aMode: ModeType): ModeType; override;
+      (* A MOBILE IN A NEW COUNTY IS A NEW STATION -- the received QTH is
+         part of the dupe key, as on every single-state party since Q118.
+         See TContestBase.DupeKeyIncludesReceivedQTH and the header (the
+         sponsor, 2026-10-23). *)
+      function DupeKeyIncludesReceivedQTH: boolean; override;
    private
       (* Does MY STATE begin with one of the six New England states? *)
       class function IsNewEnglandState(const aMyState: string): boolean;
@@ -210,8 +257,6 @@ uses
    uADIFExchange,
    uDXMultiplierKey,
    uContestRegistry,
-   (* FixedModePoints -- the helper for a number per mode. *)
-   uContestFixedPoints,
    uTR4WStrings,
    (* SExchangeOutOfStateWorksHostOnly -- the host-area refusal (Q107). *)
    uAppStrings;
@@ -248,9 +293,43 @@ begin
                                  Station.IsDomesticQTH);
 end;
 
+(* "two points per CW (includes digital modes) QSO", one per phone QSO --
+   the sponsor, 2026-10-23 (the header). FM is phone; anything else (no
+   mode recorded) scores the phone point, as the old row's `else` did. *)
 procedure TContestNewEnglandQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   aQso.QSOPoints := FixedModePoints(aQso.Mode, 2, 1, 1);
+   case aQso.Mode of
+      CW, Digital:
+         begin
+         aQso.QSOPoints := 2;
+         end;
+      else
+         begin
+         aQso.QSOPoints := 1;
+         end;
+      end;
+end;
+
+(* DIGITAL IS CW FOR DUPES -- the FAQ, 2026-10-23 (the header). Every other
+   mode is its own. *)
+function TContestNewEnglandQP.DupeModeOf(aMode: ModeType): ModeType;
+begin
+   if aMode = Digital then
+      begin
+      Result := CW;
+      end
+   else
+      begin
+      Result := aMode;
+      end;
+end;
+
+(* THE ROVER RULE -- "Mobiles that change counties are considered to be new
+   stations", 2026-10-23 (the header). At both kinds of entrant: the
+   received QTH, whatever it names, joins the call in the dupe key. *)
+function TContestNewEnglandQP.DupeKeyIncludesReceivedQTH: boolean;
+begin
+   Result := True;
 end;
 
 class function TContestNewEnglandQP.IsNewEnglandState(const aMyState: string): boolean;
@@ -435,7 +514,8 @@ begin
       aSession.Exchange := RSTDomesticQTHExchange;
       end;
 
-   aSession.DXMultLimit := 20;
+   (* NO DXMultLimit: the sponsor sets no cap (2026-10-23, the header). D7's
+      arm stated 20 here. *)
    aSession.AddDomesticCountries(DomesticCountriesKVEKH6KL);
 end;
 
@@ -558,8 +638,24 @@ begin
       end;
 end;
 
+(* VO1 AND VO2 ARE TWO MULTIPLIERS BUT ONE ADIF PROVINCE. Since 2026-10-23
+   neqsow1.dom includes P14.DOM, whose keys are Nf (VO1) and Lb (VO2); ADIF's
+   Canadian list has neither, only NL, which P13's single key was. So either
+   half writes NL, when the worked station is Canadian. *)
 function TContestNewEnglandQP.ADIFWorkedStationState(const aQso: ContestExchange): string;
+var
+   key: string;
 begin
+   key := UpperCase(ADIFPartyQTHKey(aQso));
+   if (key = 'NF') or (key = 'LB') then
+      begin
+      Result := '';
+      if IsADIFPrimarySubdivision(string(aQso.QTH.CountryID), 'NL') then
+         begin
+         Result := 'NL';
+         end;
+      Exit;
+      end;
    Result := ADIFStateOfPartyQSO(ADIFCountyState(aQso), aQso);
 end;
 

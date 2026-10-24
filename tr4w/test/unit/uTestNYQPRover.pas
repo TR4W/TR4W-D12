@@ -56,8 +56,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
        compromise."
     4. A rescore of that log marks exactly the dupes the live path marked.
     5. NYQP is in the rover set (TContestStateQSOPartyBase, Q90/Q94); every
-       state party, and no other contest, qualifies its dupe key by the
-       received QTH ("All state parties").
+       state party, and no other contest but New England (its sponsor,
+       2026-10-23), qualifies its dupe key by the received QTH ("All state
+       parties").
 
   "Hint, don't block" (2026-10-17) was WITHDRAWN on 2026-10-18 and its
   pins with it: no check made before the exchange exists consults the
@@ -96,6 +97,9 @@ uses
    uContestFactory,
    uContestRegistry,
    uContestStateQSOPartyBase,
+   (* TContestNewEnglandQP -- the one contest off the party base that
+      qualifies its dupe key (its sponsor, 2026-10-23). *)
+   uContestNewEnglandQP,
    LogDupe,
    LogDom,
    LogEdit,
@@ -116,14 +120,18 @@ end;
 
 (* Q118, "All state parties": by a walk of the registry, a contest
    qualifies its dupe key by the received QTH exactly when it is on
-   TContestStateQSOPartyBase; every other contest (the multi-state 7QP, New
-   England and IN7QPNE included) answers '' -- the call alone. *)
+   TContestStateQSOPartyBase -- or is New England, whose sponsor says so in
+   its own words (2026-10-23: "Mobiles that change counties are considered
+   to be new stations"; uTestContestNewEnglandQP pins it). Every other
+   contest (the multi-state 7QP and IN7QPNE included) answers '' -- the call
+   alone. *)
 procedure TNYQPRoverTests.Test_EveryStatePartyQualifiesItsDupeKey;
 var
    contests: TContestIdentityList;
    i: integer;
    qso: ContestExchange;
    isParty: boolean;
+   qualifies: boolean;
    parties: integer;
 begin
    BeginTest('Test_EveryStatePartyQualifiesItsDupeKey');
@@ -141,10 +149,11 @@ begin
          begin
          Inc(parties);
          end;
-      CheckTrue(ContestDupeKeyIncludesReceivedQTH(contests[i]) = isParty,
-                contests[i].ClassName + ': qualifies its dupe key exactly when a state party');
-      CheckTrue((ContestDupeKeyQualifier(contests[i], qso) <> '') = isParty,
-                contests[i].ClassName + ': answers a qualifier exactly when a state party');
+      qualifies := isParty or (contests[i] is TContestNewEnglandQP);
+      CheckTrue(ContestDupeKeyIncludesReceivedQTH(contests[i]) = qualifies,
+                contests[i].ClassName + ': qualifies its dupe key exactly when a state party or New England');
+      CheckTrue((ContestDupeKeyQualifier(contests[i], qso) <> '') = qualifies,
+                contests[i].ClassName + ': answers a qualifier exactly when a state party or New England');
       end;
    CheckTrue(parties >= 21, 'the state parties were found (' + IntToStr(parties) + ')');
    CheckTrue(ContestDupeKeyIncludesReceivedQTH(ContestIdentity(ContestHandleOf(CALQSOPARTY))),

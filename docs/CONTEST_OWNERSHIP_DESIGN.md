@@ -4998,10 +4998,19 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
     summary, not of the sponsor's page. Confirm both (an off-band QSO scores 0
     and earns no multiplier, 7.4).
   - **Q73** "A DE mobile that changes county is a new station." TR4W's dupe
-    sheet keys on the call, band and mode, and there is no dupe-key seam
-    (8.2l), so a mobile's second county is a dupe unless the operator works
+    sheet keys on the call, band and mode, ~~and there is no dupe-key seam
+    (8.2l)~~, so a mobile's second county is a dupe unless the operator works
     it as a county line. Build a contest dupe-key seam (the QSO's received
     county joins the key for a state party), or leave it to the operator?
+    **Since built -- the dupe rule is the class's:**
+    `TContestBase.DupeKeyIncludesReceivedQTH` (Q118, 2026-10-17: True on
+    `TContestStateQSOPartyBase`, so Delaware's mobile in a new county is a new
+    station; New England states it too, from its sponsor's 2026-10-23 text)
+    and `DupeKeyTour` (Q136) join the key through `DupeKeyQualifier`, and
+    `DupeModeOf(aMode)` (2026-10-23, base: the mode itself) groups modes for
+    dupes -- New England answers CW for Digital ("digital QSOs are considered
+    the same as CW"). `DupeModeOf` is asked only by the dupe sheets
+    (`uCallsigns.ContestDupeSlot`), never the multiplier sheets.
   - **Q74** The Cabrillo header must carry `ARRL-SECTION:` or `LOCATION:` --
     DE for a DE station, the state or section otherwise, DX for DX. The class
     makes the writer refuse a file with no LOCATION; the operator types it.

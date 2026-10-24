@@ -730,6 +730,14 @@ closes it; anything else reopens it.
   maximum, stated explicitly** -- neqp.org/rules:
   *"County line QSOs should be logged as two separate QSOs"*, and no limit is
   given. (Indiana and Delaware already state 2.)
+  *NEQP rovers, re-read 2026-10-23 (neqp.org/rules):* "Mobiles count QSO
+  points per county and multipliers from all counties (counted once)";
+  "Mobiles that change counties are considered to be new stations" and "can
+  be worked for both multiplier and QSO Point credit"; "County line QSOs
+  should be logged as two separate QSOs". No limit on county-line QSOs or on
+  re-working a rover in a new county. The FAQ NY4I supplied says nothing on
+  rovers or county lines. So NEQP: no cap, confirmed. 7QP's 4 is still not
+  re-read.
   **Answer:**
 
 - **Q26** WAG: an imported record with no `DOK` keeps its received RST (`599`) as

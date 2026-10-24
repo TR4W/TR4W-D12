@@ -179,6 +179,14 @@ function DupeBandIsOffBand(Band: BandType): boolean;
 function DupeModeIsOffMode(Mode: ModeType): boolean;
 function DupeBitsSay(const aDupes: TDupesArray; Band: BandType; Mode: ModeType): boolean;
 
+(* THE DUPE SLOT A QSO IN Mode IS WRITTEN TO AND READ FROM -- the session's
+  contest's dupe mode (TContestBase.DupeModeOf, asked of ContestIdentity:
+  New England counts digital as CW, 2026-10-23), then DupeSlot's FM rule.
+  The ONE answer for MarkDupeBits, DupeBitsSay and the dupe-sheet window,
+  so the sheet is written and read in the same slot. Both and NoMode are
+  keys and stay as they are. *)
+function ContestDupeSlot(Mode: ModeType): ModeType;
+
 (* CLEARS EVERY DUPE SHEET'S MARKS -- CallsignsList and QualifiedDupes,
   which must never disagree about what has been worked. *)
 procedure ClearAllDupeSheets;
@@ -331,7 +339,7 @@ begin
     characters of the entry's call. The loader and LogContact remap FM
     before calling; the rescore (MainUnit.RecomputeQSOScoring) passes the
     record's mode as stored, and GetModeFromExtendedMode stores FM. *)
-  slot := DupeSlot(Mode);
+  slot := ContestDupeSlot(Mode);
   aDupes[slot] := aDupes[slot] or (1 shl Ord(Band));
   aDupes[Both] := aDupes[Both] or (1 shl Ord(Band));
   aDupes[slot] := aDupes[slot] or (1 shl Ord(AllBands));
@@ -351,6 +359,11 @@ begin
   (* Both and NoMode are keys, not modes, and ask nothing; the sheet knows no
     submode -- see uContestBase.ContestCreditsModeKey. *)
   Result := not ContestCreditsModeKey(ContestIdentity(Contest), Mode);
+end;
+
+function ContestDupeSlot(Mode: ModeType): ModeType;
+begin
+  Result := DupeSlot(ContestDupeModeOf(ContestIdentity(Contest), Mode));
 end;
 
 function DupeBitsSay(const aDupes: TDupesArray; Band: BandType; Mode: ModeType): boolean;
@@ -381,7 +394,7 @@ begin
      TempBand := AllBands;
      end;
 
-  TempMode := DupeSlot(TempMode);
+  TempMode := ContestDupeSlot(TempMode);
 
   Result := (aDupes[TempMode] and (1 shl Ord(TempBand))) <> 0;
 end;
@@ -706,8 +719,9 @@ begin
   if frm = nil then Exit;
 
   Band := Radio.BandMemory;
-  (* FM reads Phone's slot -- see DupeSlot; it read past the array. *)
-  Mode := DupeSlot(Radio.ModeMemory);
+  (* FM reads Phone's slot -- see DupeSlot; it read past the array. And the
+    contest's dupe mode, as the sheet was written -- see ContestDupeSlot. *)
+  Mode := ContestDupeSlot(Radio.ModeMemory);
 
   frm.Calls.BeginRebuild;
 

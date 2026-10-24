@@ -407,9 +407,11 @@ begin
                ScoreWith(IN7QPNE, OutOfArea, QsoAt('Azaph', Band40, CW)),
                '7QP: the 7QP class''s answer');
 
-   (* NEW ENGLAND: two on CW, one otherwise. *)
+   (* NEW ENGLAND: two on CW and digital, one on phone -- the NEQP class's
+      rule since its sponsor's 2026-10-23 text, which the composite follows
+      for a New England QSO. *)
    CheckEquals(2, ScoreWith(IN7QPNE, OutOfArea, QsoAt('MEAnd', Band80, CW)), 'NEQP CW');
-   CheckEquals(1, ScoreWith(IN7QPNE, OutOfArea, QsoAt('MEAnd', Band80, Digital)), 'NEQP digital');
+   CheckEquals(2, ScoreWith(IN7QPNE, OutOfArea, QsoAt('MEAnd', Band80, Digital)), 'NEQP digital');
    CheckEquals(ScoreWith(NEWENGLANDQSO, OutOfArea, QsoAt('MEAnd', Band80, Phone)),
                ScoreWith(IN7QPNE, OutOfArea, QsoAt('MEAnd', Band80, Phone)),
                'NEQP: the NEQP class''s answer');

@@ -489,8 +489,8 @@ end;
    FoundContest's in-state answer (its row's P makes set-up run the party
    head); NEQP on MY STATE's first two characters, D7's rule as M2 restored
    it, which an EMPTY state must survive -- the defect #3 crash. Each side
-   states its own values, and the DX multiplier limit is NEQP's for every
-   station but 7QP's only in state. *)
+   states its own values, and the DX multiplier limit is 7QP's only in
+   state; NEQP states none at all since its sponsor's 2026-10-23 rules. *)
 procedure TContestSessionTests.Test_MultiStatePartiesDescribeBothSides;
 var
    inState, outOfState, maine, noState: TStationContext;
@@ -524,7 +524,8 @@ begin
    try
       CheckEquals('NEQSOW1', session.DomesticFile, 'NEQP inside New England: NEQSOW1');
       CheckTrue(session.Exchange = RSTDomesticOrDXQTHExchange, 'NEQP inside: county or DX');
-      CheckEquals(20, session.DXMultLimit, 'NEQP inside: limit 20');
+      (* NO CAP: the sponsor's rules, 2026-10-23 -- D7's 20 is gone. *)
+      CheckFalse(session.IsStated(svDXMultLimit), 'NEQP inside: no DX multiplier limit');
       CheckEquals(4, session.DomesticCountryCount, 'NEQP: K, VE, KH6, KL');
    finally
       session.Free;
@@ -533,7 +534,7 @@ begin
    try
       CheckEquals('NEQSO', session.DomesticFile, 'NEQP outside New England: NEQSO');
       CheckTrue(session.Exchange = RSTDomesticQTHExchange, 'NEQP outside: a county');
-      CheckEquals(20, session.DXMultLimit, 'NEQP outside: limit 20 too');
+      CheckFalse(session.IsStated(svDXMultLimit), 'NEQP outside: no limit either');
    finally
       session.Free;
       end;
