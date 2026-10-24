@@ -63,7 +63,12 @@ prefer new units in `src/`. The no-LCL half of that boundary was rescinded
 decides DX vs domestic for every domestic contest (`DomesticCountryCall`).
 **`FoundContest` APPENDS to it and never clears it** -- only `LogCfg` (just
 before a text `.cfg` is parsed) and `ADD DOMESTIC COUNTRY = CLEAR` do, and
-`Clear` re-arms the once-only "domestic country list is EMPTY" error. Order
+`Clear` re-arms the once-only "domestic country list is EMPTY" error.
+**That error is withheld for a contest whose set-up stated NO domestic
+country** (CQ WW; 2026-10-23): FoundContest records
+`FCONTEST.ContestSetUpStatesDomesticCountries` (the QSO-party head, or
+`DescribeSession`'s count) via `RecordContestSetUp`, and `Clear` forgets
+it, so a contest that was never set up still reports. Order
 and duplicates are kept, IDs are ASCII-uppercased and kept to six
 characters, the compare is exact. Read the class header before changing any
 of it; `uTestDomesticCountryList` pins it.

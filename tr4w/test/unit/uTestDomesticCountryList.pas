@@ -52,6 +52,9 @@ type
       procedure Test_AnEmptyIDIsStoredAndMatchesAnEmptyCountry;
       procedure Test_ClearEmptiesAndReArmsTheEmptyReport;
       procedure Test_TheFreeRoutinesUseTheLiveList;
+      procedure Test_AContestThatStatesNoneIsNotReportedEmpty;
+      procedure Test_AContestThatStatesCountriesIsReportedEmpty;
+      procedure Test_WhichContestsStateDomesticCountries;
    end;
 
 implementation
@@ -59,7 +62,10 @@ implementation
 uses
    SysUtils,
    VC,
-   ZoneCont;
+   ZoneCont,
+   uContestBase,
+   FCONTEST,
+   uTestContestObjects;
 
 function ListText(aList: TDomesticCountryList): string;
 var
@@ -216,6 +222,120 @@ begin
    end;
 end;
 
+(* A DX CONTEST'S EMPTY LIST IS ITS ANSWER, NOT A MISSING INPUT -- 2026-10-23.
+   NY4I's CQ WW SSB log logged "the domestic country list is EMPTY ... the
+   contest was not set up" on File > Clear log, of a contest that was set up
+   and has no domestic country. FoundContest records the set-up's statement
+   (RecordContestSetUp); the report is withheld while it said none. *)
+procedure TDomesticCountryListTests.Test_AContestThatStatesNoneIsNotReportedEmpty;
+var
+   list: TDomesticCountryList;
+begin
+   BeginTest('Test_AContestThatStatesNoneIsNotReportedEmpty');
+
+   list := TDomesticCountryList.Create;
+   try
+      list.RecordContestSetUp(False);
+      CheckEquals(0, list.Count, 'the contest added nothing');
+      CheckFalse(list.ClaimEmptyReport, 'a contest that states none is not reported empty');
+      CheckFalse(list.ClaimEmptyReport, 'nor on a later ask');
+
+      (* CLEAR FORGETS THE STATEMENT: a .cfg that never reaches its CONTEST
+         line is the case the report exists for, and the previous contest
+         must not excuse it. *)
+      list.Clear;
+      CheckTrue(list.ClaimEmptyReport, 'after Clear an empty list is reported again');
+   finally
+      list.Free;
+   end;
+end;
+
+(* THE CASE THE REPORT WAS BUILT FOR STILL REPORTS: never set up, or set up by
+   a contest that states countries and left empty (an operator's
+   ADD DOMESTIC COUNTRY = CLEAR, after which the statement is forgotten, is
+   the one route; here the statement is kept to pin the rule itself). *)
+procedure TDomesticCountryListTests.Test_AContestThatStatesCountriesIsReportedEmpty;
+var
+   list: TDomesticCountryList;
+begin
+   BeginTest('Test_AContestThatStatesCountriesIsReportedEmpty');
+
+   list := TDomesticCountryList.Create;
+   try
+      CheckTrue(list.ClaimEmptyReport, 'never set up: an empty list is reported');
+   finally
+      list.Free;
+   end;
+
+   list := TDomesticCountryList.Create;
+   try
+      list.RecordContestSetUp(True);
+      CheckTrue(list.ClaimEmptyReport, 'a contest that states countries, empty: reported');
+      CheckFalse(list.ClaimEmptyReport, 'once');
+   finally
+      list.Free;
+   end;
+
+   (* THE LATEST SET-UP'S ANSWER STANDS: a DX contest followed by a domestic
+      one (a peer's CONTEST line) reports again. *)
+   list := TDomesticCountryList.Create;
+   try
+      list.RecordContestSetUp(False);
+      CheckFalse(list.ClaimEmptyReport, 'the DX contest first: not reported');
+      list.RecordContestSetUp(True);
+      CheckTrue(list.ClaimEmptyReport, 'then a domestic contest, still empty: reported');
+   finally
+      list.Free;
+   end;
+end;
+
+function StatesCountries(aContest: ContestType; const aStation: TStationContext): boolean;
+var
+   obj: TContestBase;
+   session: TSessionDefaults;
+begin
+   obj := Make(aContest, aStation);
+   session := TSessionDefaults.Create;
+   try
+      obj.DescribeSession(aStation, session);
+      Result := ContestSetUpStatesDomesticCountries(obj, session);
+   finally
+      session.Free;
+      obj.Free;
+      end;
+end;
+
+(* WHICH CONTESTS STATE DOMESTIC COUNTRIES -- the statement FoundContest
+   records. CQ WW none at any station (D7's CQWW arms added none; CQ WW
+   RTTY's Add_KVE was commented out there too); ARRL 10 states
+   K/VE/KH6/KL and XE; a US QSO party's head adds K/VE/KH6/KL. *)
+procedure TDomesticCountryListTests.Test_WhichContestsStateDomesticCountries;
+var
+   usStation, dxStation: TStationContext;
+begin
+   BeginTest('Test_WhichContestsStateDomesticCountries');
+
+   usStation := NoStation;
+   usStation.MyCall := 'NY4I';
+   usStation.MyCountry := 'K';
+   usStation.MyContinent := NorthAmerica;
+   usStation.MyState := 'FL';
+
+   dxStation := NoStation;
+   dxStation.MyCall := 'DL1AAA';
+   dxStation.MyCountry := 'DL';
+   dxStation.MyContinent := Europe;
+
+   CheckFalse(StatesCountries(CQWWSSB, usStation), 'CQ WW SSB, US station: none');
+   CheckFalse(StatesCountries(CQWWSSB, dxStation), 'CQ WW SSB, DL station: none');
+   CheckFalse(StatesCountries(CQWWCW, usStation), 'CQ WW CW, US station: none');
+   CheckFalse(StatesCountries(CQWWCW, dxStation), 'CQ WW CW, DL station: none');
+
+   CheckTrue(StatesCountries(ARRL10, usStation), 'ARRL 10, US station: K/VE/KH6/KL and XE');
+   CheckTrue(StatesCountries(ARRL10, dxStation), 'ARRL 10, DL station: the same');
+   CheckTrue(StatesCountries(IDAHOQSOPARTY, usStation), 'Idaho QP: the party head adds K/VE/KH6/KL');
+end;
+
 procedure TDomesticCountryListTests.RunAllTests;
 begin
    Test_OrderAndDuplicatesAreKept;
@@ -223,6 +343,9 @@ begin
    Test_AnEmptyIDIsStoredAndMatchesAnEmptyCountry;
    Test_ClearEmptiesAndReArmsTheEmptyReport;
    Test_TheFreeRoutinesUseTheLiveList;
+   Test_AContestThatStatesNoneIsNotReportedEmpty;
+   Test_AContestThatStatesCountriesIsReportedEmpty;
+   Test_WhichContestsStateDomesticCountries;
 end;
 
 end.

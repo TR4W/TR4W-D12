@@ -61,9 +61,16 @@ type
       * AN EMPTY ID IS STORED, and it matches a call whose CTY ID is empty
         (an unknown country). 'ADD DOMESTIC COUNTRY =' with no value adds one.
       * AN EMPTY LIST is a missing input, not an answer: DomesticCountryCall
-        logs it ONCE (ClaimEmptyReport) and answers False -- "DX".
+        logs it ONCE (ClaimEmptyReport) and answers False -- "DX". UNLESS THE
+        CONTEST'S SET-UP SAID NONE (2026-10-23): a DX contest -- CQ WW, which
+        neither D7 nor its class ever gave a domestic country -- runs on an
+        empty list by design, and FoundContest records that through
+        RecordContestSetUp. Reporting it was a false error on every DX
+        contest (NY4I's CQ WW SSB log, File > Clear log).
       * RESET: only Clear empties it, and Clear also re-arms the once-only
-        empty report. FoundContest does NOT clear -- it appends -- so a
+        empty report and forgets what the last set-up stated -- so a .cfg
+        that never reaches its CONTEST line (the case the report was built
+        for) is reported, not excused by the previous contest. FoundContest does NOT clear -- it appends -- so a
         CONTEST applied twice without a .cfg read between accumulates, as it
         always did. Clear is reached from LogCfg (just before a text .cfg is
         parsed) and 'ADD DOMESTIC COUNTRY = CLEAR'.
@@ -76,6 +83,9 @@ type
   private
     FIDs: TList<AnsiString>;
     FEmptyReported: boolean;
+    (* True once a contest's set-up ran and stated NO domestic country; False
+      after Create and Clear, and after a set-up that stated some. *)
+    FContestStatesNone: boolean;
     function GetID(aIndex: integer): string;
   public
     constructor Create;
@@ -86,8 +96,14 @@ type
     function Count: integer;
     (* True when aCountryID equals an entry exactly. *)
     function HoldsCountry(const aCountryID: ShortString): boolean;
+    (* WHAT THE CONTEST'S SET-UP STATED -- FoundContest, after it has added
+      the contest's countries (FCONTEST.ContestSetUpStatesDomesticCountries).
+      The latest set-up's answer stands; Clear forgets it. *)
+    procedure RecordContestSetUp(aStatesCountries: boolean);
     (* True ONCE after Create or Clear, then False: the caller reports an
-      empty list when this answers True. *)
+      empty list when this answers True. ALWAYS False while the last set-up
+      stated no domestic country -- an empty list is then the contest's
+      answer, not a missing input -- and the once-only latch is left armed. *)
     function ClaimEmptyReport: boolean;
     property IDs[aIndex: integer]: string read GetID;
   end;
@@ -200,6 +216,7 @@ begin
   inherited Create;
   FIDs := TList<AnsiString>.Create;
   FEmptyReported := False;
+  FContestStatesNone := False;
 end;
 
 destructor TDomesticCountryList.Destroy;
@@ -222,6 +239,12 @@ procedure TDomesticCountryList.Clear;
 begin
   FIDs.Clear;
   FEmptyReported := False;
+  FContestStatesNone := False;
+end;
+
+procedure TDomesticCountryList.RecordContestSetUp(aStatesCountries: boolean);
+begin
+  FContestStatesNone := not aStatesCountries;
 end;
 
 function TDomesticCountryList.Count: integer;
@@ -253,6 +276,11 @@ end;
 
 function TDomesticCountryList.ClaimEmptyReport: boolean;
 begin
+  if FContestStatesNone then
+     begin
+     Result := False;
+     Exit;
+     end;
   Result := not FEmptyReported;
   FEmptyReported := True;
 end;
@@ -296,7 +324,13 @@ begin
     ONCE PER SESSION, not once per callsign: this is called for every entry
     and a per-call message would be a flood rather than a diagnosis. The
     condition cannot come and go within a contest -- the list is loaded when
-    the contest is set up -- so one line carries the whole story. *)
+    the contest is set up -- so one line carries the whole story.
+
+    NOT FOR A CONTEST THAT HAS NONE (2026-10-23). CQ WW states no domestic
+    country, so this fired on every DX contest the first time anything asked
+    -- GetDXQTH, through a spot's need-multiplier hint after File > Clear log
+    -- and said "the contest was not set up" of a contest that was.
+    ClaimEmptyReport now answers False when the set-up stated none. *)
   if DomesticCountries.Count = 0 then
      begin
      if DomesticCountries.ClaimEmptyReport then

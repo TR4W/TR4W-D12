@@ -107,6 +107,18 @@ procedure ApplyContestSentState(aSession: TSessionDefaults);
 procedure ClearContestSentState;
 
 function FoundContest(CMD: ShortString): boolean;
+
+(* DOES THIS CONTEST'S SET-UP STATE ANY DOMESTIC COUNTRY? -- 2026-10-23.
+
+  The two places FoundContest adds them, and nothing else: the US QSO-party
+  head (Add_KVEKH6KL, on IsUSQSOParty) and what the contest's DescribeSession
+  stated (aSession.DomesticCountryCount, for the station it was handed). An
+  operator's ADD DOMESTIC COUNTRY is not the contest's statement. False for
+  CQ WW, whose empty list is therefore its answer and not a missing input --
+  see ZoneCont.TDomesticCountryList.RecordContestSetUp. *)
+function ContestSetUpStatesDomesticCountries(aContest: TContestBase;
+                                             aSession: TSessionDefaults): boolean;
+
 procedure SetUpFileNames;
 procedure RecalculateMyCountryContinentAndZone;
 procedure RecalculateMyCountryContinentAndZoneNew(Call: CallString);
@@ -952,6 +964,10 @@ begin
      try
         definition.DescribeSession(CurrentStation, session);
         ApplySessionDefaults(session, TempDomesticQTHDataFileName);
+        (* SO AN EMPTY LIST IS REPORTED ONLY WHERE IT IS WRONG -- a contest
+          that states none (CQ WW) runs on an empty one by design. *)
+        DomesticCountries.RecordContestSetUp(
+           ContestSetUpStatesDomesticCountries(definition, session));
      finally
         session.Free;
         end;
@@ -1008,6 +1024,12 @@ begin
 
   SetContestTitle;
 
+end;
+
+function ContestSetUpStatesDomesticCountries(aContest: TContestBase;
+                                             aSession: TSessionDefaults): boolean;
+begin
+  Result := aContest.IsUSQSOParty or (aSession.DomesticCountryCount > 0);
 end;
 
 procedure AddRussianDomesticCountrys;
