@@ -1482,6 +1482,13 @@ the abstract base; `uExternalLogger.pas` carries the implementation. ~~`uExterna
 line, so it described a multi-logger manager the program has never had. `uRadioManager.pas` went
 with it for the same reason. Each logger runs its own reading/sender thread pair.
 
+**A QSO LEAVES THE PROGRAM THROUGH ONE THREAD (2026-10-24).** The main thread builds an immutable
+message (`logsubs2.PostQsoEvent`) and posts it to `uQsoDispatcher`; its thread delivers to UDP, the
+external logger and HamScore, in that order (`uQsoSinks`). The UDP broadcaster's `SendNow` blocks and
+is for that thread only -- two QSOs froze the operator 2.7 s each in CQ WW SSB when a host-name UDP
+destination was resolved inline. The builders read live state on the main thread; the dispatcher never
+does. See the integrations agent for the details.
+
 | Type | Status |
 |---|---|
 | `lt_DXKeeper` | Complete |

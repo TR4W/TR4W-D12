@@ -400,9 +400,10 @@ begin
                 text, save);
    CheckTrue(ask > save, 'the save asks the record''s contest');
    CheckTrue(PosEx('showwarning(TempString);', text, ask) > ask, 'and shows its reason');
-   CheckTrue(ask < PosEx('SendDeletedContactToUDP(EditableQSORXData);', text, save),
-             'before any UDP notice');
-   CheckTrue(ask < PosEx('HamScoreOnEdit(', text, save), 'before HamScore');
+   (* PostQsoEvent is the one call that carries the UDP, external-logger and
+      HamScore notices to the QSO dispatcher (2026-10-24). *)
+   CheckTrue(ask < PosEx('PostQsoEvent(', text, save),
+             'before any UDP, external-logger or HamScore notice');
    CheckTrue(ask < PosEx('LogStoreUpdateQSOAtIndex(', text, save), 'before the store''s write');
    (* After the two serials are read from the form, or it would judge the old
       values. *)

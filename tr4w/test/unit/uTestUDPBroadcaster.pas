@@ -39,6 +39,9 @@ type
       procedure Test_MasterSwitchSilencesWithoutLosingDestinations;
       procedure Test_TestDestinationIgnoresTheMasterSwitch;
       procedure Test_TestDestinationRefusesWhatCannotBeSent;
+      procedure Test_ASlowDestinationIsCountedAndNamed;
+      procedure Test_ADestinationThatRaisesDoesNotStopTheNext;
+      procedure Test_SendDirectBypassesTheConfiguration;
    public
       procedure RunAllTests; override;
    end;
@@ -89,14 +92,14 @@ begin
       b.Configure(c);
 
       ResetRecorder;
-      b.Send(usContact, 'payload');
+      b.SendNow(usContact, 'payload');
       CheckEquals(0, gSends, 'a stream with no destination must not reach the transport');
       CheckFalse(b.Enabled(usContact), 'and it reports as not enabled');
 
       c.AddDestination('192.168.1.255', 12060, [usContact]);
       b.Configure(c);
       ResetRecorder;
-      b.Send(usContact, 'payload');
+      b.SendNow(usContact, 'payload');
       CheckEquals(1, gSends, 'a subscribed stream sends');
       CheckEquals('192.168.1.255', gLastAddress, 'to the configured address');
       CheckTrue(b.Enabled(usContact), 'enabled is emergent from having a destination');
@@ -127,12 +130,12 @@ begin
       c.AddDestination('1.1.1.1', 6666, [usAppInfo]);
       b.Configure(c);
 
-      ResetRecorder; b.Send(usContact, 'x'); CheckEquals(1111, gLastPort, 'contact');
-      ResetRecorder; b.Send(usScore,   'x'); CheckEquals(2222, gLastPort, 'score');
-      ResetRecorder; b.Send(usRadio,   'x'); CheckEquals(3333, gLastPort, 'radio');
-      ResetRecorder; b.Send(usRotor,   'x'); CheckEquals(4444, gLastPort, 'rotor');
-      ResetRecorder; b.Send(usLookup,  'x'); CheckEquals(5555, gLastPort, 'lookup');
-      ResetRecorder; b.Send(usAppInfo, 'x'); CheckEquals(6666, gLastPort, 'app info');
+      ResetRecorder; b.SendNow(usContact, 'x'); CheckEquals(1111, gLastPort, 'contact');
+      ResetRecorder; b.SendNow(usScore,   'x'); CheckEquals(2222, gLastPort, 'score');
+      ResetRecorder; b.SendNow(usRadio,   'x'); CheckEquals(3333, gLastPort, 'radio');
+      ResetRecorder; b.SendNow(usRotor,   'x'); CheckEquals(4444, gLastPort, 'rotor');
+      ResetRecorder; b.SendNow(usLookup,  'x'); CheckEquals(5555, gLastPort, 'lookup');
+      ResetRecorder; b.SendNow(usAppInfo, 'x'); CheckEquals(6666, gLastPort, 'app info');
    finally
       c.Free;
       b.Free;
@@ -160,7 +163,7 @@ begin
       c.Clear;
 
       ResetRecorder;
-      b.Send(usContact, 'x');
+      b.SendNow(usContact, 'x');
       CheckEquals(1, gSends, 'the broadcaster keeps the settings it was given');
       CheckEquals(1111, gLastPort, 'not the ones edited afterwards');
    finally
@@ -182,7 +185,7 @@ begin
    try
       c.AddDestination('1.1.1.1', 12060, [usContact]);
       b.Configure(c);
-      b.Send(usContact, 'x');       // must not raise
+      b.SendNow(usContact, 'x');       // must not raise
       Check(True, 'no exception with no transport');
    finally
       c.Free;
@@ -428,12 +431,12 @@ begin
       b.Configure(c);
 
       ResetRecorder;
-      b.Send(usContact, 'x');
+      b.SendNow(usContact, 'x');
       CheckEquals(3, gSends, 'one call, three destinations');
 
       // And the score listener is NOT among them.
       ResetRecorder;
-      b.Send(usScore, 'x');
+      b.SendNow(usScore, 'x');
       CheckEquals(1, gSends, 'a different stream reaches only its own');
       CheckEquals(9999, gLastPort, 'on its own port');
    finally
@@ -458,11 +461,11 @@ begin
       c.AddDestination('10.0.0.5', 12060, [usContact, usScore]);
       b.Configure(c);
 
-      ResetRecorder; b.Send(usContact, 'x');
+      ResetRecorder; b.SendNow(usContact, 'x');
       CheckEquals(1, gSends, 'contact is carried');
-      ResetRecorder; b.Send(usScore, 'x');
+      ResetRecorder; b.SendNow(usScore, 'x');
       CheckEquals(1, gSends, 'score is carried');
-      ResetRecorder; b.Send(usRadio, 'x');
+      ResetRecorder; b.SendNow(usRadio, 'x');
       CheckEquals(0, gSends, 'radio was not asked for and must not be sent');
       CheckFalse(b.Enabled(usRadio), 'and it reports as not enabled');
    finally
@@ -491,8 +494,8 @@ begin
       b.Configure(c);
 
       ResetRecorder;
-      b.Send(usContact, 'x');
-      b.Send(usScore, 'x');
+      b.SendNow(usContact, 'x');
+      b.SendNow(usScore, 'x');
       CheckEquals(0, gSends, 'nothing goes out while the master switch is off');
       CheckFalse(b.Enabled(usContact), 'and every stream reports as not enabled');
       CheckFalse(b.MasterEnabled, 'which the UI can distinguish from "no destination"');
@@ -508,7 +511,7 @@ begin
       c.Enabled := True;
       b.Configure(c);
       ResetRecorder;
-      b.Send(usContact, 'x');
+      b.SendNow(usContact, 'x');
       CheckEquals(1, gSends, 'and it broadcasts again');
    finally
       c.Free;
@@ -570,8 +573,100 @@ begin
    end;
 end;
 
+procedure SlowSend(const aAddress: string; const aPort: integer;
+                   const aPayload: AnsiString);
+begin
+   Sleep(80);
+end;
+
+procedure FailingFirstSend(const aAddress: string; const aPort: integer;
+                           const aPayload: AnsiString);
+begin
+   // One dead destination: Indy raises for a name that will not resolve.
+   if aAddress = '10.0.0.1' then
+      begin
+      raise Exception.Create('host not found');
+      end;
+   RecordSend(aAddress, aPort, aPayload);
+end;
+
+procedure TUDPBroadcasterTests.Test_ASlowDestinationIsCountedAndNamed;
+var
+   b: TUDPBroadcaster;
+   c: TUDPBroadcastConfig;
+begin
+   // The diagnostic that makes the next stall name its cause: a send over the
+   // threshold is counted and logged with its address and port.
+   BeginTest('a send slower than SlowSendMs is counted');
+   b := TUDPBroadcaster.Create;
+   c := TUDPBroadcastConfig.Create;
+   try
+      b.SetTransport(SlowSend);
+      b.SlowSendMs := 20;
+      c.AddDestination('pi400', 12062, [usContact]);
+      b.Configure(c);
+
+      b.SendNow(usContact, 'x');
+      CheckEquals(1, b.SlowSendCount, 'the 80 ms send is over the 20 ms threshold');
+
+      b.SlowSendMs := 5000;
+      b.SendNow(usContact, 'x');
+      CheckEquals(1, b.SlowSendCount, 'and a send under the threshold is not counted');
+   finally
+      c.Free;
+      b.Free;
+   end;
+end;
+
+procedure TUDPBroadcasterTests.Test_ADestinationThatRaisesDoesNotStopTheNext;
+var
+   b: TUDPBroadcaster;
+   c: TUDPBroadcastConfig;
+begin
+   BeginTest('one destination raising is contained and the next one is still sent');
+   b := TUDPBroadcaster.Create;
+   c := TUDPBroadcastConfig.Create;
+   try
+      b.SetTransport(FailingFirstSend);
+      c.AddDestination('10.0.0.1', 1001, [usContact]);
+      c.AddDestination('10.0.0.2', 1002, [usContact]);
+      b.Configure(c);
+
+      ResetRecorder;
+      b.SendNow(usContact, 'x');       // must not raise
+      CheckEquals(1, gSends, 'the second destination was still sent to');
+      CheckEquals('10.0.0.2', gLastAddress, 'and it is the second one');
+      CheckEquals(1, b.FailedSendCount, 'the failure is counted');
+   finally
+      c.Free;
+      b.Free;
+   end;
+end;
+
+procedure TUDPBroadcasterTests.Test_SendDirectBypassesTheConfiguration;
+var
+   b: TUDPBroadcaster;
+begin
+   // PstRotator's own UDP port is not a configured destination.
+   BeginTest('SendDirect sends to an endpoint that is in no configuration');
+   b := TUDPBroadcaster.Create;
+   try
+      b.SetTransport(RecordSend);
+      ResetRecorder;
+      b.SendDirect('192.168.1.50', 12000, '<PST><AZIMUTH>90</AZIMUTH></PST>');
+      CheckEquals(1, gSends, 'one packet');
+      CheckEquals('192.168.1.50', gLastAddress, 'to the address given');
+      CheckEquals(12000, gLastPort, 'on the port given');
+   finally
+      b.Free;
+   end;
+end;
+
 procedure TUDPBroadcasterTests.RunAllTests;
 begin
+   Test_ASlowDestinationIsCountedAndNamed;
+   Test_ADestinationThatRaisesDoesNotStopTheNext;
+   Test_SendDirectBypassesTheConfiguration;
    Test_DisabledStreamSendsNothing;
    Test_EachStreamUsesItsOwnPort;
    Test_ConfigureIsACopyNotAReference;

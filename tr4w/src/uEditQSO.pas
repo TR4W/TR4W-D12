@@ -141,6 +141,9 @@ uses
   MainUnit,
   uEditQSOForm,     // the LCL form, and the id-to-control accessors
   uHamScore,         // Issue #783 -- HamScoreOnEdit / HamScoreOnDelete hooks
+  uQsoDispatcher,    // TQsoMessageKind -- PostQsoEvent
+  uUDPBroadcaster,   // Enabled(usContact)
+  uUDPBroadcastConfig, // usContact
   uContestBase,      // ContestLoggedQSORefusal -- the contest refuses a record
   uContestRegistry,  // ContestIdentity -- the record's own contest
   uLogNote,         // NoteText -- the note's text
@@ -761,13 +764,10 @@ begin
   // Edited (non-deleted) QSOs send a contactreplace so consumers update in place.
   if EditableQSORXData.ceQSO_Deleted then
      begin
-     SendDeletedContactToUDP(EditableQSORXData);
-     if Assigned(externalLogger) then
-        begin
-        externalLogger.DeleteQSO(EditableQSORXData);
-        end;
      // Issue #783 -- HamScore RTC: send <contactdelete> next cycle.
-     HamScoreOnDelete(EditableQSORXData);
+     // ONE MESSAGE to the QSO dispatcher: UDP, external logger, HamScore.
+     PostQsoEvent(qmDeleted, EditableQSORXData, NotCapturedMyFacts, '',
+                  UDPBroadcaster.Enabled(usContact), True);
      end
   else if EditableQSORXData.ceXQSO then
      begin
@@ -779,28 +779,24 @@ begin
      // the next serial is the high-water mark of numbers actually sent, not a
      // QSO count -- the X-QSO record stays in the log so it still counts toward
      // that mark.  See NextSerialToSend / MaxSerialSent, Issue #954.)
-     SendDeletedContactToUDP(EditableQSORXData);
-     HamScoreOnDelete(EditableQSORXData);
+     PostQsoEvent(qmDeleted, EditableQSORXData, NotCapturedMyFacts, '',
+                  UDPBroadcaster.Enabled(usContact), False);
      end
   else
      begin
-     LogEditedContactToUDP(EditableQSORxData);
-     if Assigned(externalLogger) then
-        begin
-        // Issue #957 -- an edit is a delete of the original record followed by a
-        // re-log of the edited one.  ReplaceQSO queues this as ONE atomic operation
-        // delivered off the main thread: the delete and re-log go on separate
-        // connections (DXKeeper reads one command per connection), and the re-log is
-        // sent only if the delete succeeds.  Non-blocking -- no UI freeze.
-        externalLogger.ReplaceQSO(EditableQSORXData);
-        end;
+     // Issue #957 -- an edit is a delete of the original record followed by a
+     // re-log of the edited one.  The external logger gets it as ONE atomic
+     // replace (the PrepareOp / SubmitOp pair): the delete and re-log go on
+     // separate connections (DXKeeper reads one command per connection), and
+     // the re-log is sent only if the delete succeeds.
      // Issue #783 -- HamScore RTC: send <contactreplace> next cycle.
      (* THE EDITED QSO DESCRIBES THE STATION IT RECORDED, not today's settings
        (issue 95; Q13: an edit changes only what was edited). Our station is
        what the save will leave -- the recorded one, or the operator's own
        correction -- and the sent exchange is the row's exchange_sent. *)
      LogSourceReadStationAtIndex(IndexInMap, storedFacts, storedSent);
-     HamScoreOnEdit(EditableQSORxData, MyFactsAsSaved, storedSent);
+     PostQsoEvent(qmEdited, EditableQSORxData, MyFactsAsSaved, storedSent,
+                  UDPBroadcaster.Enabled(usContact), True);
      end;
 
   (* THE `if not OpenLogFile then Exit` THAT STOOD HERE DISCARDED EVERY EDIT.

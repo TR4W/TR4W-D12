@@ -91,6 +91,12 @@ type
       FConfig: TUDPBroadcastConfig;
       FSend: TUDPSendProc;
       FLock: TCriticalSection;
+      FSlowSendMs: integer;
+      FSlowSends: integer;
+      FFailedSends: integer;
+      // One transport call, timed, with its exception contained.
+      procedure TimedSend(const aSendProc: TUDPSendProc; const aAddress: string;
+                          const aPort: integer; const aPayload: AnsiString);
       // Sends to every destination registered for the stream.  Caller holds
       // the lock; the transport is called OUTSIDE it -- see Send.
       procedure CollectTargets(const aStream: TUDPStream;
@@ -138,9 +144,31 @@ type
       function TestDestination(const aAddress: string; const aPort: integer;
                                out aError: string): boolean;
 
-      // Sends, IF the stream is enabled.  Silently doing nothing is correct
-      // here: "not enabled" is the operator's decision, not a fault.
-      procedure Send(const aStream: TUDPStream; const aPayload: AnsiString);
+      (* Sends, IF the stream is enabled, ON THE CALLING THREAD AND BLOCKING
+        for as long as the network takes.  Silently doing nothing is correct
+        when the stream is off: "not enabled" is the operator's decision, not a
+        fault.
+
+        NOT FOR THE MAIN THREAD, and not for any caller that is not the QSO
+        dispatcher (uQsoDispatcher; the sink is in uQsoSinks).  It was called
+        Send and was called inline from ProcessReturn until 2026-10-24, when a
+        host-name destination froze the operator for 2.7 s.  The new name is the
+        warning, and it makes every old call site fail to compile.
+
+        Each destination is contained: one that raises is logged and the next
+        is still tried, and a send slower than SlowSendMs is logged naming
+        the address and port. *)
+      procedure SendNow(const aStream: TUDPStream; const aPayload: AnsiString);
+
+      // The same containment and timing, to ONE endpoint that is not in the
+      // configuration (PstRotator's own UDP port).  Same threading rule.
+      procedure SendDirect(const aAddress: string; const aPort: integer;
+                           const aPayload: AnsiString);
+
+      // A send slower than this is logged (Warn).  Default 250 ms.
+      property SlowSendMs: integer read FSlowSendMs write FSlowSendMs;
+      function SlowSendCount: integer;
+      function FailedSendCount: integer;
 
       // The one policy flag that is not a stream: whether an edited or
       // previously-logged QSO is rebroadcast, or only new ones.
@@ -153,9 +181,13 @@ function UDPBroadcaster: TUDPBroadcaster;
 
 implementation
 
+uses
+   Log4D;
+
 var
    gBroadcaster: TUDPBroadcaster = nil;
    gCreateLock: TCriticalSection = nil;
+   logger: TLogLogger;
 
 function UDPBroadcaster: TUDPBroadcaster;
 begin
@@ -177,6 +209,7 @@ begin
    FLock   := TCriticalSection.Create;
    FConfig := TUDPBroadcastConfig.Create;   // documented defaults until configured
    FSend   := nil;
+   FSlowSendMs := 250;
 end;
 
 destructor TUDPBroadcaster.Destroy;
@@ -339,7 +372,90 @@ begin
    end;
 end;
 
-procedure TUDPBroadcaster.Send(const aStream: TUDPStream; const aPayload: AnsiString);
+procedure TUDPBroadcaster.TimedSend(const aSendProc: TUDPSendProc; const aAddress: string;
+                                    const aPort: integer; const aPayload: AnsiString);
+var
+   started: QWord;
+   elapsed: QWord;
+   slowMs: integer;
+begin
+   FLock.Enter;
+   try
+      slowMs := FSlowSendMs;
+   finally
+      FLock.Leave;
+   end;
+
+   started := GetTickCount64;
+   try
+      aSendProc(aAddress, aPort, aPayload);
+   except
+      on E: Exception do
+         begin
+         FLock.Enter;
+         try
+            Inc(FFailedSends);
+         finally
+            FLock.Leave;
+         end;
+         logger.Warn('[UDP] Send to %s:%d failed: %s - %s',
+                     [aAddress, aPort, E.ClassName, E.Message]);
+         end;
+   end;
+   elapsed := GetTickCount64 - started;
+
+   if elapsed > QWord(slowMs) then
+      begin
+      FLock.Enter;
+      try
+         Inc(FSlowSends);
+      finally
+         FLock.Leave;
+      end;
+      logger.Warn('[UDP] Send to %s:%d took %d ms (threshold %d ms)',
+                  [aAddress, aPort, Integer(elapsed), slowMs]);
+      end;
+end;
+
+function TUDPBroadcaster.SlowSendCount: integer;
+begin
+   FLock.Enter;
+   try
+      Result := FSlowSends;
+   finally
+      FLock.Leave;
+   end;
+end;
+
+function TUDPBroadcaster.FailedSendCount: integer;
+begin
+   FLock.Enter;
+   try
+      Result := FFailedSends;
+   finally
+      FLock.Leave;
+   end;
+end;
+
+procedure TUDPBroadcaster.SendDirect(const aAddress: string; const aPort: integer;
+                                     const aPayload: AnsiString);
+var
+   sendProc: TUDPSendProc;
+begin
+   FLock.Enter;
+   try
+      sendProc := FSend;
+   finally
+      FLock.Leave;
+   end;
+   if not Assigned(sendProc) then
+      begin
+      Exit;
+      end;
+   TimedSend(sendProc, aAddress, aPort, aPayload);
+end;
+
+procedure TUDPBroadcaster.SendNow(const aStream: TUDPStream; const aPayload: AnsiString);
 var
    sendProc: TUDPSendProc;
    addresses: TArray<string>;
@@ -385,7 +501,7 @@ begin
    // several destinations that risk is multiplied.
    for i := 0 to High(addresses) do
       begin
-      sendProc(addresses[i], ports[i], aPayload);
+      TimedSend(sendProc, addresses[i], ports[i], aPayload);
       end;
 end;
 
@@ -401,6 +517,7 @@ end;
 
 initialization
    gCreateLock := TCriticalSection.Create;
+   logger := TLogLogger.GetLogger('TR4WDebugLog.UDP');
 
 finalization
    FreeAndNil(gBroadcaster);

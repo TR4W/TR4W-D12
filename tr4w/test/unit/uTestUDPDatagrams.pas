@@ -38,6 +38,7 @@ type
       procedure Test_ContactIsOnTheContactStream;
       procedure Test_EditedContactIsAContactReplace;
       procedure Test_DeletedContactIsAContactDelete;
+      procedure Test_PostQsoEventMakesOneMessageForTheUDPSink;
       procedure Test_AContestWithNoLegacyNumberGetsADerivedContestnr;
       procedure Test_LookupGoesToTheLookupStream;
       procedure Test_ScoreIsADynamicResults;
@@ -53,12 +54,15 @@ type
 implementation
 
 uses
+   uQsoMyFacts,        (* NotCapturedMyFacts *)
    uContestRegistry,   (* ContestHandleOf -- a legacy contest's handle, Q108 S2 *)
    uContestTestFixture, (* TEST_FIXTURE_CONTEST_ID -- a contest with no legacy number *)
    VC,
    uSettingsModel,
    uUDPBroadcastConfig,
    uUDPBroadcaster,
+   uQsoDispatcher,
+   uQsoSinks,
    uMults,
    LogDupe,
    PostUnit,
@@ -281,6 +285,38 @@ begin
    CheckEquals(Settings.Computer.Name, TagValue(xml, 'StationName'), 'StationName');
    CheckEquals(0, Pos('<mycall>', xml), 'a delete carries no contact body');
    CheckTrue(Pos('</contactdelete>', xml) > 0, 'and it is closed');
+end;
+
+procedure TUDPDatagramTests.Test_PostQsoEventMakesOneMessageForTheUDPSink;
+var
+   facts: TQsoMyFacts;
+begin
+   // The combined path (UDP + external logger + HamScore) that LogContact, the
+   // edit dialog and Alt-Y now use.  Neither the external logger nor HamScore
+   // exists in this test, so what is pinned is the UDP part of the message and
+   // that the kind chooses the XML.
+   BeginTest('PostQsoEvent: new, edited and deleted pick contactinfo / contactreplace / contactdelete');
+   ConfigureAllStreams(True);
+   facts := NotCapturedMyFacts;
+
+   ResetCapture;
+   PostQsoEvent(qmNew, SampleQSO, facts, '', True, False);
+   CheckEquals(1, Length(gSent), 'a new QSO is one datagram');
+   CheckEquals('contactinfo', RootOf(string(gSent[0].Payload)), 'contactinfo');
+
+   ResetCapture;
+   PostQsoEvent(qmEdited, SampleQSO, facts, '', True, False);
+   CheckEquals(1, Length(gSent), 'an edit is one datagram');
+   CheckEquals('contactreplace', RootOf(string(gSent[0].Payload)), 'contactreplace');
+
+   ResetCapture;
+   PostQsoEvent(qmDeleted, SampleQSO, facts, '', True, True);
+   CheckEquals(1, Length(gSent), 'a delete is one datagram');
+   CheckEquals('contactdelete', RootOf(string(gSent[0].Payload)), 'contactdelete');
+
+   ResetCapture;
+   PostQsoEvent(qmNew, SampleQSO, facts, '', False, False);
+   CheckEquals(0, Length(gSent), 'with UDP not wanted for the event, nothing is sent');
 end;
 
 (* Q108 S4. A contest registered by id has no legacy number, so its
@@ -566,10 +602,16 @@ begin
    try
       Settings.My.Call := 'NY4I';
       UDPBroadcaster.SetTransport(RecordSend);
+      (* INLINE DELIVERY: these tests read gSent straight after the call that
+        posted the message, so the dispatcher runs on this thread. The
+        threaded path is pinned in uTestQsoDispatcher. *)
+      QsoDispatcher.Synchronous := True;
+      InstallQsoSinks;
 
       Test_ContactIsOnTheContactStream;
       Test_EditedContactIsAContactReplace;
       Test_DeletedContactIsAContactDelete;
+      Test_PostQsoEventMakesOneMessageForTheUDPSink;
       Test_AContestWithNoLegacyNumberGetsADerivedContestnr;
       Test_LookupGoesToTheLookupStream;
       Test_ScoreIsADynamicResults;
@@ -579,6 +621,7 @@ begin
       Test_TheMasterSwitchSilencesEveryMessage;
       Test_ScoreEntryPointSendsNothingWhenOff;
    finally
+      QsoDispatcher.Synchronous := False;
       UDPBroadcaster.SetTransport(nil);
       UDPBroadcaster.Configure(gSavedConfig);
       FreeAndNil(gSavedConfig);

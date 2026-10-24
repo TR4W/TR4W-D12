@@ -104,6 +104,7 @@ var
 implementation
 
 uses
+   SyncObjs,       // TCriticalSection -- the udp client's lock
    uPortAddress,   // TPortKind -- see the radio port kind accessors
    uSettingsModel, // Settings.My -- the station's own facts
   uAppPaths,     // ShippedDomFilePath -- shipped data
@@ -312,6 +313,9 @@ begin
    end;
 end;
 
+var
+   gUdpLock: TCriticalSection;   // created with the udp client, below
+
 // The transport the broadcaster calls.  It lives here because `udp` does, and
 // it is the ONLY place that knows both the socket and the broadcaster.
 procedure SendUDPPayload(const aAddress: string; const aPort: integer;
@@ -321,8 +325,18 @@ begin
       begin
       Exit;
       end;
-   udp.BroadcastEnabled := True;
-   udp.Send(aAddress, aPort, aPayload);
+   (* ONE THREAD AT A TIME ON THE INDY CLIENT, which is not for sharing.
+     The QSO dispatcher thread is the only sender in normal running; the other
+     caller is the Test button of the UDP destination dialog (an operator
+     asking a question, on the main thread), which therefore waits behind a
+     send already in progress. *)
+   gUdpLock.Enter;
+   try
+      udp.BroadcastEnabled := True;
+      udp.Send(aAddress, aPort, aPayload);
+   finally
+      gUdpLock.Leave;
+   end;
 end;
 
 procedure SetUpGlobalsAndInitialize;
@@ -337,6 +351,7 @@ begin
 
   { GetTickCount64 -- StartCPU is QWord, see MainUnit. }
   StartCPU := GetTickCount64;
+  gUdpLock := TCriticalSection.Create;
   udp := TIdUDPClient.Create(nil); // ny4i Issue #99
   // The broadcaster owns WHETHER and WHERE; this unit owns the socket, so it
   // hands over the transport once the socket exists.  Keeping Indy out of

@@ -3,7 +3,7 @@ unit uExternalLogger;
 
 interface
 uses uExternalLoggerBase, StrUtils, SysUtils, Math, TF, VC, LOGSUBS2, LogWind, LogDupe, Tree, uCFG, PostUnit,
-     IdTCPClient;
+     IdTCPClient, uQsoDispatcher;
 
 
 Type TExternalLogger = class(TExternalLoggerBase)
@@ -46,6 +46,18 @@ Type TExternalLogger = class(TExternalLoggerBase)
       function DeleteQSO(ce: ContestExchange): integer;
       function ReplaceQSO(ce: ContestExchange): integer;   // Issue #957 -- edit = atomic delete + re-log
       function LookupCallsign(ce:ContestExchange): integer;
+
+      (* THE SAME OPERATIONS, SPLIT AT THE THREAD BOUNDARY (2026-10-24).
+
+        PrepareOp BUILDS the command text, which reads live state (the
+        operator, MY CALL, the contest, the sent-exchange template), so it runs
+        on the MAIN thread. SubmitOp only appends to this logger's own locked
+        queue, so the QSO dispatcher thread calls it. LogQSO, DeleteQSO and
+        ReplaceQSO are Prepare + Submit in a row. *)
+      function PrepareOp(const aKind: TQsoMessageKind; const ce: ContestExchange;
+                         out aCommand1: string; out aCommand2: string): TQsoExternalOp;
+      procedure SubmitOp(const aOp: TQsoExternalOp; const aCommand1: string;
+                         const aCommand2: string; const aDescription: string);
 
 end;
 
@@ -190,7 +202,56 @@ begin
 
 end;
 
+function TExternalLogger.PrepareOp(const aKind: TQsoMessageKind; const ce: ContestExchange;
+                                   out aCommand1: string; out aCommand2: string): TQsoExternalOp;
+begin
+   aCommand1 := '';
+   aCommand2 := '';
+   Result := xoNone;
+   // Only DXKeeper builds commands; ACLog and HRD are the incomplete types.
+   if Self.logType <> lt_DxKeeper then
+      begin
+      Exit;
+      end;
+   case aKind of
+      qmNew:
+         begin
+         aCommand1 := Self.BuildDXKeeperLogMessage(ce);
+         Result := xoSingle;
+         end;
+      qmDeleted:
+         begin
+         aCommand1 := Self.BuildDXKeeperDeleteMessage(ce);
+         Result := xoSingle;
+         end;
+      qmEdited:
+         begin
+         // Delete of the original first, then the re-log: see ReplaceQSO.
+         aCommand1 := Self.BuildDXKeeperDeleteMessage(ce);
+         aCommand2 := Self.BuildDXKeeperLogMessage(ce);
+         Result := xoReplace;
+         end;
+   end;
+end;
+
+procedure TExternalLogger.SubmitOp(const aOp: TQsoExternalOp; const aCommand1: string;
+                                   const aCommand2: string; const aDescription: string);
+begin
+   case aOp of
+      xoSingle:
+         begin
+         Self.QueueSingleCommand(aCommand1, aDescription);
+         end;
+      xoReplace:
+         begin
+         Self.QueueReplace(aCommand1, aCommand2, aDescription);
+         end;
+   end;
+end;
+
 function TExternalLogger.LogQSO(ce: ContestExchange): integer;
+var
+   cmd1, cmd2: string;
 begin
    case Self.logType of
       lt_NoExternalLogger:
@@ -200,7 +261,7 @@ begin
          end;
       lt_DxKeeper:
          begin
-         Self.QueueSingleCommand(Self.BuildDXKeeperLogMessage(ce), 'Log ' + ce.Callsign);
+         Self.SubmitOp(Self.PrepareOp(qmNew, ce, cmd1, cmd2), cmd1, cmd2, 'Log ' + ce.Callsign);
          Result := 0;
          end;
       lt_ACLog: Result := Self.LogQSOToACLog(ce);
@@ -209,6 +270,8 @@ begin
 end;
 
 function TExternalLogger.DeleteQSO(ce: ContestExchange): integer;
+var
+   cmd1, cmd2: string;
 begin
    case Self.logType of
       lt_NoExternalLogger:
@@ -218,7 +281,7 @@ begin
          end;
       lt_DxKeeper:
          begin
-         Self.QueueSingleCommand(Self.BuildDXKeeperDeleteMessage(ce), 'Delete ' + ce.Callsign);
+         Self.SubmitOp(Self.PrepareOp(qmDeleted, ce, cmd1, cmd2), cmd1, cmd2, 'Delete ' + ce.Callsign);
          Result := 0;
          end;
       //lt_ACLog: Result := Self.LogQSOToACLog(ce);
@@ -227,6 +290,8 @@ begin
 end;
 
 function TExternalLogger.ReplaceQSO(ce: ContestExchange): integer;
+var
+   cmd1, cmd2: string;
 begin
    // Issue #957 -- an edit is a delete of the original followed by a re-log of the
    // edited QSO.  Queue it as ONE atomic replace so the re-log is sent only if the
@@ -240,9 +305,7 @@ begin
          end;
       lt_DxKeeper:
          begin
-         Self.QueueReplace(Self.BuildDXKeeperDeleteMessage(ce),
-                           Self.BuildDXKeeperLogMessage(ce),
-                           'Replace ' + ce.Callsign);
+         Self.SubmitOp(Self.PrepareOp(qmEdited, ce, cmd1, cmd2), cmd1, cmd2, 'Replace ' + ce.Callsign);
          Result := 0;
          end;
       else

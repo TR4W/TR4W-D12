@@ -27,6 +27,7 @@ uses
   uConfigValues,
    uUDPBroadcastConfig, (* TUDPStream / usRadio *)
    uUDPBroadcaster,     (* the one place that knows where a stream goes *)
+   uQsoDispatcher,      (* the thread that sends it *)
    //FmtBcd,
    LogDupe,
    VC,
@@ -1780,7 +1781,11 @@ begin
         N1MM on 12060 and to a second listener elsewhere could not be
         expressed at all before, and the address the globals held was the
         one a config file last set rather than the one Preferences shows. *)
-      UDPBroadcaster.Send(usRadio, sBuf);
+      (* QUEUED, NOT SENT: this runs on the radio's polling thread, and a
+        destination that is slow to resolve must not stall the poll. The QSO
+        dispatcher delivers it, dropping the oldest radio packet first if a
+        destination falls behind. *)
+      QsoDispatcher.PostUDP(usRadio, sBuf, 'radio');
       logger.trace('[SendRadioInfoToUDP] %s', [sBuf]);
       dtLastUDPRadio := Now;
    except

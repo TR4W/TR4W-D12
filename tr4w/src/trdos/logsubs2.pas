@@ -20,6 +20,7 @@ unit LOGSUBS2;
 interface
 uses
   uQsoMyFacts,     // TQsoMyFacts -- THamScoreRowSink
+  uQsoDispatcher,  // TQsoMessageKind -- PostQsoEvent
   uConfigValues,   // Config -- migrated settings
   uMMTTY,
   uCallSignRoutines,
@@ -149,6 +150,29 @@ function BuildScoreUDPXml(aTotalScore: longint): AnsiString;
 procedure PostScoreToUDP(aTotalScore: longint);
 procedure LogContactToUDP(RXData: ContestExchange); // ny4i
 procedure SendFullLogToHamScore;  // Issue #783 -- enqueue every QSO for RTC resync
+
+(* TELL THE OUTSIDE WORLD ABOUT ONE QSO -- the only way a logged, edited or
+  deleted QSO leaves the program (2026-10-24).
+
+  Runs on the MAIN thread and does no I/O: it reads the live state the message
+  needs (radio, operator, contest, settings, CTY tables), renders each sink's
+  text, and posts ONE immutable message to the QSO dispatcher, whose thread
+  delivers it to UDP, the external logger and HamScore in that order.
+
+  aUDP / aExternal say whether those sinks are wanted for this event (the
+  callers differ: a network-received QSO is broadcast only when BROADCAST ALL
+  QSOS is on, and never goes to the external logger). HamScore is asked of the
+  uploader itself. aFacts and aRecordedSent are the station the QSO recorded
+  (Q13); PostLoggedQso captures the session's own for a QSO being logged now. *)
+procedure PostQsoEvent(const aKind: TQsoMessageKind;
+                       const RXData: ContestExchange;
+                       const aFacts: TQsoMyFacts;
+                       const aRecordedSent: AnsiString;
+                       const aUDP: boolean;
+                       const aExternal: boolean);
+procedure PostLoggedQso(const RXData: ContestExchange;
+                        const aUDP: boolean;
+                        const aExternal: boolean);
 
 type
    (* WHERE A RESYNC DELIVERS EACH QSO -- HamScoreOnLog's own shape, so the
@@ -610,31 +634,24 @@ begin
 
      TempRXData.ceQSO_Deleted := False;
      p := TC_YOUHAVERESTOREDTHELASTDELETED;
-     LogContactToUDP(TempRXData);
-     if Assigned(externalLogger) then
-        begin
-        externalLogger.LogQSO(TempRXData);
-        end;
      // Issue #920 -- mirror restoration to HamScore as a (re-)contactinfo
      // so the server sees the QSO come back with the same ID.
      (* A STORED QSO COMING BACK: it describes the station it recorded, not
        today's settings (issue 95, Q13). It is the newest row. *)
      LogSourceReadNewestStation(restoredFacts, restoredSent);
-     HamScoreOnLog(TempRXData, restoredFacts, restoredSent);
+     PostQsoEvent(qmNew, TempRXData, restoredFacts, restoredSent,
+                  UDPBroadcaster.Enabled(usContact), True);
      end
   else
      begin
      TempRXData.ceQSO_Deleted := True;
      p := TC_YOUHAVEDELETEDTHELASTLOGENTRY;
-     SendDeletedContactToUDP(TempRXData);
-     if Assigned(externalLogger) then
-        begin
-        externalLogger.DeleteQSO(TempRXData);
-        end;
      // Issue #920 -- mirror the deletion to HamScore via <contactdelete>.
      // Previously only LogContact had a HamScore hook; ALT-Y deletes
      // dropped silently from the server's view.
-     HamScoreOnDelete(TempRXData);
+     restoredFacts := NotCapturedMyFacts;
+     PostQsoEvent(qmDeleted, TempRXData, restoredFacts, '',
+                  UDPBroadcaster.Enabled(usContact), True);
      end;
   InvertBoolean(tLastLogEntryIsDeleted);
   (* Rewrites the newest row. The seek-and-write it replaces addressed the same
@@ -898,7 +915,20 @@ begin
      scpClose;
      end;
 {$IFEND}
-  FreeAndNil(udp); // ny4i 4.44.9 Destroy the udp object
+  (* THE QSO DISPATCHER GOES FIRST (2026-10-24). Its thread delivers through
+    the UDP socket freed on the next line, the external logger freed in
+    tr4w_ShutDown and the HamScore uploader freed at its end; all three must
+    outlive it. Shutdown lets what is queued go out, up to a second, then stops
+    the thread. If it is STILL inside a send the process is exiting anyway, so
+    the socket is left for the operating system rather than freed under it. *)
+  if QsoDispatcher.Shutdown(1000) then
+     begin
+     FreeAndNil(udp); // ny4i 4.44.9 Destroy the udp object
+     end
+  else
+     begin
+     logger.Error('[ExitProgram] The QSO dispatcher is still inside a send; the UDP socket is not freed');
+     end;
   FreeAndNil(slElements);
   (* Restore StickyKeys.  ny4i Issue 126.
 
@@ -1637,39 +1667,24 @@ begin
         begin
         inc(tUSQ);
         end;
+     (* ONE MESSAGE TO THE QSO DISPATCHER (2026-10-24). What was timed here
+       made three deliveries inline -- UDP, the external logger, HamScore -- and
+       the UDP one froze the operator for 2.7 s when a destination was a host
+       name that was slow to resolve. This now builds the text each sink needs
+       (the part that reads live state) and posts; the dispatcher thread
+       delivers, in that order. The timing line stays: it measures the build
+       and the post, which is what the main thread still pays. *)
      perfTimeStart := Now;
-     if UDPBroadcaster.Enabled(usContact) then
-        begin
-        LogContactToUDP(RXData);
-        end;
-     if Settings.ExternalLogger.Enabled then
-        begin
-        if Assigned(externalLogger) then
-           begin
-           externalLogger.LogQSO(RXData);
-           end;
-        end;
-     // Issue #783 -- HamScore RTC realtime upload (cheap no-op when disabled).
-     (* BEING LOGGED NOW, so the session IS the record: LogStoreAppendQSO
-       captures these same values a few lines below (issue 95). *)
-     if HamScoreUploaderRunning then
-        begin
-        HamScoreOnLog(RXData, LogStoreCurrentMyFacts, '');
-        end;
+     PostLoggedQso(RXData,
+                   UDPBroadcaster.Enabled(usContact),
+                   Settings.ExternalLogger.Enabled);
      perfTimeStop := Now;
-     logger.Debug('Milliseconds to send UDP and TCP to external logger = %d',[DateUtils.MilliSecondsBetween(perfTimeStop, perfTimeStart)]);
+     logger.Debug('Milliseconds to build and post the QSO to the dispatcher = %d',[DateUtils.MilliSecondsBetween(perfTimeStop, perfTimeStart)]);
      end
   else
      begin     // ny4i issue 82 - If the option is set, broadcast contacts received from the Network
-     if UDPBroadcaster.BroadcastAllQSOs then
-        begin
-        LogContactToUDP(RXData);
-        end;
      // Issue #783 -- network-received QSOs also feed RTC if multi-op uplink is enabled.
-     if HamScoreUploaderRunning then
-        begin
-        HamScoreOnLog(RXData, LogStoreCurrentMyFacts, '');
-        end;
+     PostLoggedQso(RXData, UDPBroadcaster.BroadcastAllQSOs, False);
      end;
   if not tAddQSOToLog(RXData) then Exit;
   TempMode := RXData.Mode;
@@ -2789,7 +2804,7 @@ var
 begin
    sBuf := BuildScoreUDPXml(aTotalScore);
    logger.debug('[SendScoreToUDP] \n %s',[sBuf]);
-   UDPBroadcaster.Send(usScore, sBuf);
+   QsoDispatcher.PostUDP(usScore, sBuf, 'score');
 end;
 
 procedure SendScoreToUDP;
@@ -2802,13 +2817,12 @@ begin
       PostScoreToUDP(TotalScore);
       end;
 end;
-procedure SendDeletedContactToUDP(RXData: ContestExchange);
+(* THE <contactdelete> XML, built on the calling (main) thread because it reads
+  Settings.Computer.Name and the contest's broadcast number. *)
+function BuildDeletedContactXml(RXData: ContestExchange): AnsiString;
 var
     sBuf: AnsiString;
 begin
-   // Enabled() here is an OPTIMISATION, not the rule -- Send tests it again.
-   if UDPBroadcaster.Enabled(usContact) then  // Issue 165 NY4I
-      begin
       sBuf := '<?xml version="1.0"?>' + sLineBreak +
              '<contactdelete>' +  sLineBreak +
              #9 + '<app>TR4W</app>' + sLineBreak +
@@ -2826,7 +2840,17 @@ begin
              #9 + '<StationName>' +  Settings.Computer.Name + '</StationName>' + sLineBreak + // Issue 263 NY4I
              #9 + '<ID>' + RxData.id + '</ID>' + sLineBreak +
        '</contactdelete>'+ sLineBreak ;
-       UDPBroadcaster.Send(usContact, sBuf);
+   Result := sBuf;
+end;
+
+procedure SendDeletedContactToUDP(RXData: ContestExchange);
+begin
+   // Enabled() here is an OPTIMISATION, not the rule -- the broadcaster tests
+   // it again when the dispatcher delivers.
+   if UDPBroadcaster.Enabled(usContact) then  // Issue 165 NY4I
+      begin
+      QsoDispatcher.PostUDP(usContact, BuildDeletedContactXml(RXData),
+                            'delete ' + string(RXData.Callsign));
       end;
 end;
 
@@ -3069,8 +3093,8 @@ var
 begin
 
    sBuf := BuildUDPContact(RXData, udpContactInfo);
-   logger.Trace('Sending UDP Broadcast data: ' + sBuf);
-   UDPBroadcaster.Send(usContact, sBuf);
+   logger.Trace('Queueing UDP Broadcast data: ' + sBuf);
+   QsoDispatcher.PostUDP(usContact, sBuf, 'contact ' + string(RXData.Callsign));
 end;
 
 procedure LogEditedContactToUDP(RXData: ContestExchange);
@@ -3079,8 +3103,8 @@ var
 begin
 
    sBuf := BuildUDPContact(RXData, udpContactReplace);
-   logger.Trace('Sending UDP Broadcast data: ' + sBuf);
-   UDPBroadcaster.Send(usContact, sBuf);
+   logger.Trace('Queueing UDP Broadcast data: ' + sBuf);
+   QsoDispatcher.PostUDP(usContact, sBuf, 'replace ' + string(RXData.Callsign));
 end;
 
 procedure LookupInfoToUDP(RXData: ContestExchange);
@@ -3089,8 +3113,83 @@ var
 begin
 
    sBuf := BuildUDPContact(RXData, udpLookupInfo);
-   logger.Trace('Sending UDP Broadcast data: ' + sBuf);
-   UDPBroadcaster.Send(usLookup, sBuf);
+   logger.Trace('Queueing UDP Broadcast data: ' + sBuf);
+   QsoDispatcher.PostUDP(usLookup, sBuf, 'lookup ' + string(RXData.Callsign));
+end;
+
+procedure PostQsoEvent(const aKind: TQsoMessageKind;
+                       const RXData: ContestExchange;
+                       const aFacts: TQsoMyFacts;
+                       const aRecordedSent: AnsiString;
+                       const aUDP: boolean;
+                       const aExternal: boolean);
+var
+   msg: TQsoMessage;
+begin
+   msg := TQsoMessage.Create(aKind, string(RXData.Callsign));
+   try
+      if aUDP then
+         begin
+         msg.UDPStream := usContact;
+         case aKind of
+            qmNew:
+               begin
+               msg.UDPPayload := AnsiString(BuildUDPContact(RXData, udpContactInfo));
+               end;
+            qmEdited:
+               begin
+               msg.UDPPayload := AnsiString(BuildUDPContact(RXData, udpContactReplace));
+               end;
+            qmDeleted:
+               begin
+               msg.UDPPayload := BuildDeletedContactXml(RXData);
+               end;
+         end;
+         end;
+
+      if aExternal and Assigned(externalLogger) then
+         begin
+         msg.ExtOp := externalLogger.PrepareOp(aKind, RXData, msg.ExtCommand1, msg.ExtCommand2);
+         end;
+
+      if HamScoreUploaderRunning then
+         begin
+         msg.HamQSOID := AnsiString(RXData.id);
+         if aKind = qmDeleted then
+            begin
+            HamScorePrepareDelete(RXData, msg.HamBody);
+            msg.HamOp := hoDelete;
+            end
+         else
+            begin
+            HamScorePrepareInfo(RXData, aFacts, aRecordedSent, msg.HamBody);
+            msg.HamOp := hoInfo;
+            end;
+         end;
+   except
+      msg.Free;
+      raise;
+   end;
+   QsoDispatcher.Post(msg);
+end;
+
+procedure PostLoggedQso(const RXData: ContestExchange;
+                        const aUDP: boolean;
+                        const aExternal: boolean);
+var
+   facts: TQsoMyFacts;
+begin
+   (* BEING LOGGED NOW, so the session IS the record (issue 95). The capture
+     reads the CTY tables, so it is taken only when HamScore will use it. *)
+   if HamScoreUploaderRunning then
+      begin
+      facts := LogStoreCurrentMyFacts;
+      end
+   else
+      begin
+      facts := NotCapturedMyFacts;
+      end;
+   PostQsoEvent(qmNew, RXData, facts, '', aUDP, aExternal);
 end;
 
 

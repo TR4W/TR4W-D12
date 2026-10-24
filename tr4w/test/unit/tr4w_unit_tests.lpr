@@ -156,6 +156,9 @@ uses
    uTestUILanguage      in 'uTestUILanguage.pas',
    uUDPBroadcastConfig  in '..\..\src\uUDPBroadcastConfig.pas',
    uUDPBroadcaster      in '..\..\src\uUDPBroadcaster.pas',
+   uQsoDispatcher       in '..\..\src\uQsoDispatcher.pas',
+   uQsoSinks            in '..\..\src\uQsoSinks.pas',
+   uTestQsoDispatcher   in 'uTestQsoDispatcher.pas',
    uWindowLayoutStore   in '..\..\src\uWindowLayoutStore.pas',
    uTestKeyerConfigStore in 'uTestKeyerConfigStore.pas',
    uTestWebSocketFraming in 'uTestWebSocketFraming.pas',
@@ -807,6 +810,7 @@ begin
    WriteLn('');
 
    RegisterSuite(TUDPBroadcasterTests.Create('UDPBroadcaster'));
+   RegisterSuite(TQsoDispatcherTests.Create('QsoDispatcher'));
    RegisterSuite(TN1MMModeTests.Create('N1MMMode'));
    RegisterSuite(TUDPContactXmlTests.Create('UDPContactXml'));
    RegisterSuite(TUDPDatagramTests.Create('UDPDatagrams'));

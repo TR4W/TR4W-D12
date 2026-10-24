@@ -738,6 +738,7 @@ implementation
 uses uNet,
    uUDPBroadcastConfig, (* TUDPStream / usRotor *)
    uUDPBroadcaster,     (* the one place that knows where a stream goes *)
+   uQsoDispatcher,      (* the thread that sends it *)
    uSettingsModel,     // Settings.Bands -- HF / VHF / WARC enables
    (* The B4 list is an LCL grid on the main form -- TR4WPreviousDupesSet. *)
    uMainForm,
@@ -7334,7 +7335,7 @@ begin
     not the other two. *)
   logger.Trace('[SendUDPRotorCommand] N1MM rotor -> %s',   // Issue #989
     [sBuf]);
-  UDPBroadcaster.Send(usRotor, sBuf);
+  QsoDispatcher.PostUDP(usRotor, sBuf, 'rotor');
 
 end; // SendUDPRotatorCommand
 
@@ -7356,7 +7357,9 @@ begin
   // The caller nominates the rotator; the transport only sends.
   logger.Trace('[SendPSTRotorCommand] -> %s:%d %s',   // Issue #989
     [IPAddress, UDPPort, sBuf]);
-  udp.Send(IPAddress, UDPPort, sBuf);
+  (* THE QSO DISPATCHER SENDS IT, not this thread: the 'udp' client is not for
+    sharing across threads, and a host name here would resolve on the caller. *)
+  QsoDispatcher.PostUDPDirect(IPAddress, UDPPort, sBuf, 'PstRotator');
 end; // SendPSTRotorCommand
 
 function ValidClass(sClass: Str10): boolean; // ny4i 4.45.3

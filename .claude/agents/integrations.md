@@ -16,6 +16,7 @@ You own TR4W's links to other programs on the operator's desk.
 | external logger factory | `uExternalLoggerFactory.pas` |
 | abstract base | `uExternalLoggerBase.pas` (`TExternalLoggerBase`) |
 | implementation | `uExternalLogger.pas` (~~`uExternalLoggerManager.pas`~~ was never linked; deleted 2026-10-16) |
+| outbound delivery of a QSO | `uQsoDispatcher.pas` (thread, queue, message) and `uQsoSinks.pas` (UDP, external logger, HamScore sinks) |
 
 Globals in `MainUnit`: `wsjtx: TWSJTXServer`, `externalLogger: TExternalLogger`.
 
@@ -99,6 +100,53 @@ image based at `$100000000`, would have handed RichEdit half the address of
 `MMTTY.mmttyCF` / `mmttyTwoBytes`. `Lint-PointerTruncation` fails the build on
 the integer form. RTTY text display has no automated oracle -- it is in
 `docs/BENCH_QUEUE.md`.
+
+## The QSO dispatcher -- ONE thread delivers to every outside program (2026-10-24)
+
+**Why:** two QSOs in CQ WW SSB froze the main thread 2.7 s each (tr4w.log
+`Milliseconds to send UDP...` = 2702 / 2680; the others 2-6 ms). External logger and
+HamScore were off, so the UDP broadcast ran inline on the Enter key to a destination
+named by HOST NAME. Indy resolves it on every send. The DNS cause is an inference (DNS
+client log was off); the fix does not depend on it.
+
+**Shape (NY4I):** the main thread builds an immutable `TQsoMessage` and `Post`s it,
+nothing more. `TQsoDispatcher` (own thread, bounded FIFO) fans each message to the
+`TQsoSink`s in order: UDP, external logger, HamScore. A sink that is slow (> 250 ms, Warn
+naming the sink; the broadcaster also names address:port) or raises is contained.
+
+- **A message holds RESULTS, not state.** Whatever reads live state (Settings, contest,
+  radio status, CTY, operator) is read by the BUILDER on the main thread and stored as
+  text: `logsubs2.PostQsoEvent` / `PostLoggedQso`, `HamScorePrepareInfo/Delete`,
+  `TExternalLogger.PrepareOp`. Those reads are NOT thread-safe (the contest object can
+  be freed and rebuilt on any call) -- do not move a Prepare onto the dispatcher thread.
+  The sinks' `Wants`/`Deliver` read only their own locked configuration
+  (`UDPBroadcaster`'s swap-under-lock `Configure`) or hand a finished value to a queue
+  (`SubmitOp`, `HamScoreSubmit`).
+- **`UDPBroadcaster.SendNow` / `SendDirect` BLOCK and are for the dispatcher thread
+  only.** It was `Send` and the rename is the guard: every old inline call stopped
+  compiling. UDP from anywhere else goes `QsoDispatcher.PostUDP` / `PostUDPDirect`
+  (score, radio -- from the poll thread --, rotor, lookup, PstRotator).
+- **The Indy `udp` client is not shared:** `LogCfg.SendUDPPayload` holds a lock. The
+  Test button (`TestDestination`) stays SYNCHRONOUS on purpose -- an operator asking
+  "does this work", expecting the answer in the dialog -- and so waits behind a send in
+  progress; it is not on the logging path.
+- **Queue:** `QueueLimit` 256 counts DROPPABLE messages only (lookup, score, radio,
+  rotor): at the limit the oldest droppable goes. A QSO-bearing message (new, edited,
+  deleted) is NEVER dropped and Post never refuses it -- the full-log UDP resend and the
+  HamScore resync post thousands; they grow the queue (~0.5-2 KB each). Drops are logged
+  once per episode (ends when the queue empties). Order is global FIFO, so a stalled
+  destination delays the ones behind it -- the price of one thread; the Warn names the
+  destination if it ever matters.
+- **Shutdown:** `ExitProgram` calls `QsoDispatcher.Shutdown(1000)` BEFORE freeing `udp`;
+  `externalLogger` and the HamScore uploader are freed later and must outlive it. False
+  means a sink is stuck: do not free what it uses.
+- **Not a sink:** multi-op `SendRecordToServer` (multi-op-network; ordering and serial
+  lockout).
+- **Their own threads stay:** the external logger's `TSenderThread` does connect-per-
+  command with retry/backoff; the HamScore uploader batches on a 2-minute cycle with
+  retry. Neither exists merely to get off the main thread.
+- Tests: `uTestQsoDispatcher` (stub sinks), `uTestUDPBroadcaster`, `uTestUDPDatagrams`
+  (runs the dispatcher `Synchronous`).
 
 ## External loggers
 

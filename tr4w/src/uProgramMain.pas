@@ -187,6 +187,8 @@ uses
   uKeyerConfigApply,
   uUDPBroadcastConfig,
   uUDPBroadcaster,
+  uQsoDispatcher,
+  uQsoSinks,
   uWindowLayoutStore,
   uTR4WConfigFile,
   uSettingsModel,   // Settings -- where retired CFGCA rows now live
@@ -2190,6 +2192,10 @@ begin
   // Issue #783 -- start the HamScore RTC uploader if HAMSCORE ENABLE = TRUE.
   // No-op if disabled or password is empty.
   HamScoreInit;
+  (* THE SINKS OF THE QSO DISPATCHER (2026-10-24): UDP, external logger,
+    HamScore. After the last two exist, though the sinks only look at them
+    when a message arrives. *)
+  InstallQsoSinks;
   UpdateDebugLogLevel;
   //logger.debug('**************** Program Startup ************************');
   logger.info('DecimalSeparator = ' + FormatSettings.DecimalSeparator);

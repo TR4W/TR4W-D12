@@ -182,6 +182,24 @@ procedure HamScoreOnEdit(const RXData: ContestExchange;
                          const aRecordedSent: AnsiString);
 procedure HamScoreOnDelete(const RXData: ContestExchange);
 
+(* THE SAME THREE HOOKS, SPLIT AT THE THREAD BOUNDARY (2026-10-24).
+
+   Prepare reads live state -- the contest, the settings, the CTY tables -- so
+   it runs on the MAIN thread and returns the rendered body ('' = send nothing).
+   Submit only appends to the uploader's locked queue, so the QSO dispatcher
+   thread may call it. The QSO dispatcher (uQsoDispatcher) carries the body
+   between the two; HamScoreOnLog and its siblings are Prepare + Submit in a
+   row, for the callers that are not on that path. *)
+procedure HamScorePrepareInfo(const RXData: ContestExchange;
+                              const aFacts: TQsoMyFacts;
+                              const aRecordedSent: AnsiString;
+                              out aBody: AnsiString);
+procedure HamScorePrepareDelete(const RXData: ContestExchange;
+                                out aBody: AnsiString);
+procedure HamScoreSubmit(const aDelete: Boolean;
+                         const aQSOID: AnsiString;
+                         const aBody: AnsiString);
+
 (* IS THE UPLOADER RUNNING? -- so a caller can skip computing the station it
    would hand HamScoreOnLog when nothing would be sent (that capture reads the
    CTY tables). *)
@@ -970,16 +988,52 @@ begin
   Result := Uploader <> nil;
 end;
 
+procedure HamScorePrepareInfo(const RXData: ContestExchange;
+                              const aFacts: TQsoMyFacts;
+                              const aRecordedSent: AnsiString;
+                              out aBody: AnsiString);
+begin
+  aBody := '';
+  if Uploader = nil then Exit;
+  if not ContactInfoUploadAllowed(RXData) then Exit;
+  aBody := RenderContactBody(rckInfo, RXData, aFacts, aRecordedSent);
+end;
+
+procedure HamScorePrepareDelete(const RXData: ContestExchange;
+                                out aBody: AnsiString);
+begin
+  aBody := '';
+  if Uploader = nil then Exit;
+  if not ContactInfoUploadAllowed(RXData) then Exit;
+  aBody := RenderDeleteBody(AnsiString(RXData.id));
+end;
+
+procedure HamScoreSubmit(const aDelete: Boolean;
+                         const aQSOID: AnsiString;
+                         const aBody: AnsiString);
+begin
+  (* THREAD-SAFE: Enqueue takes the uploader's queue lock and nothing else.
+    The uploader is freed in HamScoreShutdown, which runs AFTER the QSO
+    dispatcher has been stopped (ExitProgram). *)
+  if Uploader = nil then Exit;
+  if aBody = '' then Exit;
+  if aDelete then
+     begin
+     Uploader.Enqueue(TRTCContact.Create(rckDelete, aQSOID, aBody));
+     end
+  else
+     begin
+     Uploader.Enqueue(TRTCContact.Create(rckInfo, aQSOID, aBody));
+     end;
+end;
+
 procedure HamScoreOnLog(const RXData: ContestExchange;
                         const aFacts: TQsoMyFacts;
                         const aRecordedSent: AnsiString);
 var body: AnsiString;
 begin
-  if Uploader = nil then Exit;
-  if not ContactInfoUploadAllowed(RXData) then Exit;
-  body := RenderContactBody(rckInfo, RXData, aFacts, aRecordedSent);
-  if body = '' then Exit;
-  Uploader.Enqueue(TRTCContact.Create(rckInfo, AnsiString(RXData.id), body));
+  HamScorePrepareInfo(RXData, aFacts, aRecordedSent, body);
+  HamScoreSubmit(False, AnsiString(RXData.id), body);
 end;
 
 procedure HamScoreOnEdit(const RXData: ContestExchange;
@@ -987,22 +1041,17 @@ procedure HamScoreOnEdit(const RXData: ContestExchange;
                          const aRecordedSent: AnsiString);
 var body: AnsiString;
 begin
-  if Uploader = nil then Exit;
-  if not ContactInfoUploadAllowed(RXData) then Exit;
   // RTC 3.0 (issue #920): edits use <contactinfo> with the same QSO ID --
   // server distinguishes new vs edit by ID-already-seen.
-  body := RenderContactBody(rckInfo, RXData, aFacts, aRecordedSent);
-  if body = '' then Exit;
-  Uploader.Enqueue(TRTCContact.Create(rckInfo, AnsiString(RXData.id), body));
+  HamScorePrepareInfo(RXData, aFacts, aRecordedSent, body);
+  HamScoreSubmit(False, AnsiString(RXData.id), body);
 end;
 
 procedure HamScoreOnDelete(const RXData: ContestExchange);
 var body: AnsiString;
 begin
-  if Uploader = nil then Exit;
-  if not ContactInfoUploadAllowed(RXData) then Exit;
-  body := RenderDeleteBody(AnsiString(RXData.id));
-  Uploader.Enqueue(TRTCContact.Create(rckDelete, AnsiString(RXData.id), body));
+  HamScorePrepareDelete(RXData, body);
+  HamScoreSubmit(True, AnsiString(RXData.id), body);
 end;
 
 procedure HamScoreResyncFromScratch;
