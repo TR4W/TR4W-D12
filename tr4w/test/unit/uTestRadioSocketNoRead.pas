@@ -55,6 +55,9 @@ type
       procedure HangUpLocally;
       function  BufferedInbound: Integer;
       function  WaitInboundArrived(AMs: Integer): Boolean;
+      function  Handler: TIdIOHandler;
+      function  HandlerIsManaged: Boolean;
+      procedure ConnectThroughRadio(const AHost: string; APort: Integer);
    end;
 
    TRadioSocketNoReadTests = class(TTestCase)
@@ -67,6 +70,7 @@ type
       procedure ServerExecute(AContext: TIdContext);
       function  StartServer: Word;
       procedure StopServer;
+      function  ClosedLoopbackPort: Word;
       function  ReceivedCount: Integer;
       function  WaitForReceived(const ALine: string; ATimeoutMs: Integer): Boolean;
    protected
@@ -74,6 +78,8 @@ type
       procedure Test_IsConnected_DoesNotReadTheSocket;
       procedure Test_SendToRadio_NotConnected_WritesNothingAndDoesNotRaise;
       procedure Test_SendToRadio_AfterPeerHangsUp_DoesNotRaise;
+      procedure Test_FailedConnect_KeepsTheSameIOHandler;
+      procedure Test_ConnectAfterFailedConnect_ReusesTheHandler;
    public
       procedure RunAllTests; override;
    end;
@@ -145,6 +151,27 @@ begin
    Result := (socket.IOHandler <> nil) and socket.IOHandler.Readable(AMs);
 end;
 
+function TSocketNoReadProbe.Handler: TIdIOHandler;
+begin
+   Result := socket.IOHandler;
+end;
+
+function TSocketNoReadProbe.HandlerIsManaged: Boolean;
+begin
+   Result := socket.ManagedIOHandler;
+end;
+
+(* The SHIPPED connect path -- TK4Radio.Connect into TFactoryRadioBase.Connect
+  into Indy -- with OnConnected removed so a success starts no reading thread.
+  On failure the base's own except arm logs and swallows, as in production. *)
+procedure TSocketNoReadProbe.ConnectThroughRadio(const AHost: string; APort: Integer);
+begin
+   socket.OnConnected := nil;
+   radioAddress := AHost;
+   radioPort := APort;
+   Connect;
+end;
+
 (* ---- fixture server (its own threads) ------------------------------------- *)
 
 procedure TRadioSocketNoReadTests.ServerConnect(AContext: TIdContext);
@@ -203,6 +230,14 @@ begin
       FServer.Active := False;
       FreeAndNil(FServer);
       end;
+end;
+
+(* A loopback port nothing listens on: bind an ephemeral one, then let it go.
+  A connect to it is refused, which is Indy's failed-connect path. *)
+function TRadioSocketNoReadTests.ClosedLoopbackPort: Word;
+begin
+   Result := StartServer;
+   StopServer;
 end;
 
 function TRadioSocketNoReadTests.ReceivedCount: Integer;
@@ -302,7 +337,7 @@ var
 begin
    BeginTest('SendToRadio with no connection writes nothing and raises nothing');
 
-   (* A radio switched off at startup: Indy has not even made an IOHandler. *)
+   (* A radio switched off at startup: the IOHandler exists but was never opened. *)
    neverConnected := TSocketNoReadProbe.Create;
    try
       CheckFalse(neverConnected.IsConnected, 'a never-connected radio is not connected');
@@ -382,6 +417,81 @@ begin
    end;
 end;
 
+(* THE IOHANDLER OUTLIVES A FAILED CONNECT.
+
+  Indy's implicit handler is ManagedIOHandler, and TIdTCPClientCustom.Connect
+  FREES it when the connect fails (IdTCPClient.pas:338-342).  The polling thread
+  runs that Connect unlocked while the main thread's SendToRadio and the reading
+  thread dereference socket.IOHandler -- a use-after-free on every failed
+  reconnect of a switched-off radio.
+
+  As with the no-read tests, this pins the lifetime INVARIANT rather than racing
+  threads for the freed pointer: after a refused connect a handler still exists,
+  it is not managed, and a second refused connect leaves the SAME instance in
+  place.  Against the old base the first check fails -- the failure nilled and
+  freed the handler (verified: run before the fix, both new tests FAIL). *)
+procedure TRadioSocketNoReadTests.Test_FailedConnect_KeepsTheSameIOHandler;
+var
+   probe: TSocketNoReadProbe;
+   before: TIdIOHandler;
+   closedPort: Word;
+begin
+   BeginTest('A failed connect does not free or replace the radio''s IOHandler');
+
+   closedPort := ClosedLoopbackPort;
+
+   probe := TSocketNoReadProbe.Create;
+   try
+      probe.ConnectThroughRadio('127.0.0.1', closedPort);
+      CheckFalse(probe.IsConnected, 'precondition: the connect was refused');
+
+      before := probe.Handler;
+      CheckTrue(before <> nil,
+                'a failed Connect freed the IOHandler -- another thread holding ' +
+                'socket.IOHandler would dereference freed memory');
+      CheckFalse(probe.HandlerIsManaged,
+                 'the IOHandler is not Indy-managed (a managed one is freed by a failed Connect)');
+
+      probe.ConnectThroughRadio('127.0.0.1', closedPort);
+      CheckTrue(probe.Handler = before, 'a second failed Connect kept the same IOHandler');
+      CheckFalse(probe.HandlerIsManaged, 'still not managed after two failed connects');
+   finally
+      ReleaseProbe(probe);
+   end;
+end;
+
+(* Reusing the handler is the behaviour change, so pin that it WORKS: refused
+  once, then a live server, and the link comes up on the same instance and
+  carries a command. *)
+procedure TRadioSocketNoReadTests.Test_ConnectAfterFailedConnect_ReusesTheHandler;
+var
+   probe: TSocketNoReadProbe;
+   before: TIdIOHandler;
+   closedPort: Word;
+begin
+   BeginTest('A connect after a failed connect comes up on the same IOHandler');
+
+   closedPort := ClosedLoopbackPort;
+
+   probe := TSocketNoReadProbe.Create;
+   try
+      probe.ConnectThroughRadio('127.0.0.1', closedPort);
+      CheckFalse(probe.IsConnected, 'precondition: the first connect was refused');
+      before := probe.Handler;
+      CheckTrue(before <> nil, 'precondition: the refused connect left a handler');
+
+      probe.ConnectThroughRadio('127.0.0.1', StartServer);
+      CheckTrue(probe.IsConnected, 'the reconnect came up');
+      CheckTrue(probe.Handler = before, 'on the handler the failed connect left behind');
+
+      probe.SendToRadio(TUNE_CMD);
+      CheckTrue(WaitForReceived(TUNE_CMD, 3000), 'and it carries a command');
+   finally
+      ReleaseProbe(probe);
+      StopServer;
+   end;
+end;
+
 procedure TRadioSocketNoReadTests.RunAllTests;
 begin
    FLock := TCriticalSection.Create;
@@ -391,6 +501,8 @@ begin
       Test_IsConnected_DoesNotReadTheSocket;
       Test_SendToRadio_NotConnected_WritesNothingAndDoesNotRaise;
       Test_SendToRadio_AfterPeerHangsUp_DoesNotRaise;
+      Test_FailedConnect_KeepsTheSameIOHandler;
+      Test_ConnectAfterFailedConnect_ReusesTheHandler;
    finally
       StopServer;
       FReceived.Free;

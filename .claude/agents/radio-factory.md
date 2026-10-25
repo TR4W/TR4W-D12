@@ -104,6 +104,23 @@ double-click went to `TK4Radio.SetFrequency`, then `SendToRadio`, then
   and `uExternalLoggerBase` (sender path against its `TReadingThread`). `uNetClient`
   already uses a flag for this reason.
 
+**THE RADIO OWNS ITS IOHANDLER; INDY MUST NEVER MANAGE IT** (2026-10-25). Indy's
+implicit handler is `ManagedIOHandler`, and a **failed** `TIdTCPClientCustom.Connect`
+sets `IOHandler := nil`, which **frees** it (`include/Core/IdTCPClient.pas:338-342`,
+`IdTCPConnection.pas:722-726`). `ro.Connect` runs on the polling thread with no lock
+while the main thread (`SendToRadio`) and the reading thread (`FConn.Connected`)
+dereference `socket.IOHandler` -- a use-after-free on every failed reconnect of a
+switched-off radio. `TFactoryRadioBase.Connect` now assigns its own
+`MakeDefaultIOHandler(socket)` on first use (owned by the socket component, so not
+managed, so a failed connect only Closes it). Also know: `TIdIOHandler.Open` sets
+`Opened` **before** the socket connects (`IdIOHandler.pas:866`), so `SocketIsConnected`
+is True for the whole `ConnectTimeout` of an attempt in flight; a write then raises
+inside `SendToRadio`'s except. Pinned by the two `*FailedConnect*` tests in
+`uTestRadioSocketNoRead`. A radio created with a bare `Free` never runs its
+destructor (the hidden-destructor defect), so anything allocated in the
+**constructor** leaks per radio -- an eager handler there raised the checked run's
+unfreed blocks 13463 -> 20935. Allocate on first use.
+
 **`uRadioPolling.BeginPolling` is `function(aParameter: Pointer): DWORD;
 stdcall`** (`TF.TTR4WThreadStart`, pointer audit P1, 2026-10-16) and reads its
 RadioObject as `RadioPtr(aParameter)` -- `SetUpRadioInterface` passes `@Self`

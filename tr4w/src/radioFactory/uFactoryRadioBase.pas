@@ -1110,7 +1110,7 @@ implementation
 // something from LogRadio, that is the signal the concept belongs ON THE RADIO,
 // not that this uses clause should come back.
 Uses TypInfo,   // TypInfo: GetEnumName, for CapabilitiesAsText
-     IdIOHandler, IdIOHandlerSocket;   // SocketIsConnected reads their FIELDS, never Connected
+     uIndyLink;   // IndyLinkIsOpen and IndyLinkOwnHandler: the two rules for a shared Indy link
 
 const
    // How long the radio must be SILENT before its poll counts as answered.
@@ -1218,6 +1218,7 @@ begin
    socket.OnDisconnected := Self.OnRadioDisconnected;
    socket.OnConnected := Self.OnRadioConnected;
    socket.OnStatus := Self.OnRadioStatus;
+   // The IOHandler is created by Connect, owned and never managed -- see there.
 
    serialPortObj := nil;  // Will be created when needed for serial connections
 
@@ -1792,6 +1793,20 @@ begin
       // in ~5s when a radio is genuinely off. - raised from 10 on 2026-05-31.
       socket.ConnectTimeout := 5000;
 
+      (* THE RADIO OWNS ITS IOHANDLER, AND ONCE MADE IT LIVES AS LONG AS THE
+        SOCKET.  NEVER LET INDY MANAGE IT: a managed handler is FREED by a
+        failed Connect, here on the polling thread with no lock, while the main
+        thread (SendToRadio, a band-map tune) and the reading thread hold it.
+        uIndyLink's header has the Indy lines.
+
+        Made HERE rather than in the constructor so a serial radio, or one never
+        connected, allocates nothing: the radio's destructor is hidden and never
+        runs, so a constructor allocation leaks once per radio.  OnStatus is
+        forwarded because the [Link] trace reads it.
+
+        Pinned by test/unit/uTestRadioSocketNoRead, the two FailedConnect tests. *)
+      IndyLinkOwnHandler(socket, Self.OnRadioStatus);
+
       try
           (* Force disconnect to clear any corrupted socket state.
 
@@ -1901,32 +1916,8 @@ end;
 (* See the declaration: field reads only, NEVER socket.Connected, because that
   reads the socket and the reading thread owns reading. *)
 function TFactoryRadioBase.SocketIsConnected: boolean;
-var
-   io: TIdIOHandler;
-   sockHandler: TIdIOHandlerSocket;
 begin
-   Result := False;
-
-   if socket = nil then
-      begin
-      Exit;
-      end;
-
-   io := socket.IOHandler;
-   if io = nil then
-      begin
-      Exit;      // never connected: Indy creates the IOHandler on the first Connect
-      end;
-
-   sockHandler := socket.Socket;   // nil when the IOHandler is not socket-based
-   if sockHandler = nil then
-      begin
-      Exit;
-      end;
-
-   Result := io.Opened and
-             (not io.ClosedGracefully) and
-             sockHandler.BindingAllocated;
+   Result := IndyLinkIsOpen(socket);
 end;
 
 procedure TFactoryRadioBase.Disconnect;
