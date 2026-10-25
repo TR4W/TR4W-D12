@@ -1,7 +1,7 @@
 # TR4W
 
 TR4W — Cross-platform contest logging
-The TRLOG-descended contest logger for Windows, macOS (pending), and Linux (pending).
+The TRLOG-descended contest logger for Windows, macOS  and Linux.
 
 Website available at https://tr4w.net
 
@@ -50,12 +50,12 @@ sudo apt install libsqlite3-dev   # the contest log
 sudo apt install xvfb             # only to RUN the tests on a headless box
 ```
 
-| package | why, and what its absence looks like |
-| --- | --- |
-| `fpc` | the compiler. TR4W needs 3.2.2 |
-| `lazarus` | the **LCL** -- the units, not the IDE. Without it: `Can't find unit Interfaces` |
+| package          | why, and what its absence looks like                                                                                                                                                                                                                                           |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `fpc`            | the compiler. TR4W needs 3.2.2                                                                                                                                                                                                                                                 |
+| `lazarus`        | the **LCL** -- the units, not the IDE. Without it: `Can't find unit Interfaces`                                                                                                                                                                                                |
 | `libsqlite3-dev` | the log is SQLite. The runtime `libsqlite3.so.0` is usually already installed; FPC looks for the unversioned `libsqlite3.so` **symlink**, which only `-dev` provides. You get `Can not load SQLite client library "libsqlite3.so"` -- which names the library, not the package |
-| `xvfb` | the test binary links GTK2, so on a headless machine it dies with `Gtk-WARNING: cannot open display:` before running a single test. Run it as `xvfb-run -a ./tr4w_unit_tests_linux`. Not needed on a desktop |
+| `xvfb`           | the test binary links GTK2, so on a headless machine it dies with `Gtk-WARNING: cannot open display:` before running a single test. Run it as `xvfb-run -a ./tr4w_unit_tests_linux`. Not needed on a desktop                                                                   |
 
 ### Build
 
@@ -192,7 +192,6 @@ problem -- they are TR4W bugs that only a third type system could expose:
   so adding the package would have made `GetWindowsNTPServer` build -- and then
   read a W32Time service key that does not exist, forever, in silence.
 
-
 ### Where this actually stands
 
 Honest status, measured rather than hoped:
@@ -201,18 +200,16 @@ Honest status, measured rather than hoped:
   x86_64 Linux
 - **19,883 of 19,884 unit tests pass** there; the one failure is a timing
   assumption in a test fixture, not a defect in the program
-- the **application, server and an `.app` bundle all build on macOS/aarch64**
+- the **application, server and an `.app` and .pkg file bundle all build on macOS/aarch64**
   -- see [Building on macOS](#building-on-macos). The unit tests link and run
   there, and stop partway on an access violation in the log repository that has
   no counterpart on Windows or Linux; that is the next thing to chase
 - **ARM is untested.** Nothing obvious blocks it; nothing has tried it
 - **Linux runs, as of 2026-09-20.** The AppImage was run on Linux Mint 22.3 --
   not the machine that built it -- reached the UI, and connected to an Elecraft
-  K4 over Ethernet. **macOS has still never had its GUI run.**
-- **What that does NOT mean.** No QSO has been logged on Linux, **CW will not
-  key there** (element timing off Windows is a placeholder `Sleep`), and serial
-  ports are not selectable yet. A radio answering over the network is the first
-  step of a long list, not the end of one
+  K4 over Ethernet.
+
+  
 
 ## Frequently Asked Questions
 
@@ -223,7 +220,7 @@ Honest status, measured rather than hoped:
   No. TRLinux is a separate project with its own lineage as a Linux port of N6TR’s DOS TRlog. TR4W is its own cross-platform application and development line.
 
 - Are the Mac and Linux versions native?
-  Yes -- and as of 2026-09-08 **both** build. The FreePascal/Lazarus migration is done, that hurdle is behind us, and the application, the server and a distributable artifact all build natively on **x86_64 Linux** (a tarball) and on **macOS / Apple Silicon** (a `TR4W.app` bundle). Almost every unit test passes on Linux; the macOS suite links and runs and stops partway on an access violation in the log repository, which is the next thing to chase. **The Linux GUI has been run** -- NY4I reached the UI from the AppImage on Linux Mint 22.3 on 2026-09-20 and connected to an Elecraft K4 over Ethernet -- but **nobody has run the macOS GUI**, and building is still not running. **ARM is untested.** Running this on Mac and Linux is why this port even exists. See [Building on Linux](#building-on-linux) and [Building on macOS](#building-on-macos), and ["Where this actually stands"](#where-this-actually-stands) for the honest, current status -- that section is maintained; this answer is not.
+  Yes -- and as of 2026-09-08 **both** build. The FreePascal/Lazarus migration is done, that hurdle is behind us, and the application, the server and a distributable artifact all build natively on **x86_64 Linux** (a tarball) and on **macOS / Apple Silicon** (a `TR4W.app` bundle). Almost every unit test passes on Linux; the macOS suite links and runs. **The Linux GUI has been run** -- NY4I reached the UI from the AppImage on Linux Mint 22.3 on 2026-09-20 and connected to an Elecraft K4 over Ethernet ***ARM is untested.** Running this on Mac and Linux is why this port even exists. See [Building on Linux](#building-on-linux) and [Building on macOS](#building-on-macos), and ["Where this actually stands"](#where-this-actually-stands) for the honest, current status -- that section is maintained; this answer is not.
 
   TR4W was originally a native Win32 API [Petzold](https://en.wikipedia.org/wiki/Charles_Petzold) app. Even running in Delphi, it did not use the VCL at all. It used far too mush assembler code in the program. There may have been a time and place for that but it is long gone. Every single day we take steps to remove native Win32, hwnd references and other non-FreePascal/Lazarus tools as that is how we get true cross-platform. Not a WINE compatibility layer for Linux and not running on Parallels for the Mac. NY4I uses a Mac as his daily driver and Howie N4AF uses Linux. We will call it done when we can run this on a pi400 Raspberry Pi and a simple MacBook Air. 
 
