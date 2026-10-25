@@ -145,6 +145,29 @@ function SettingsFileOverride: string;
 function DownloadedDataDir: string;
 function DownloadedDataFilePath(const aName: string): string;
 
+(* WHERE TR4W'S OWN BACKUPS OF A CONTEST LOG GO -- 'backup' under the
+  writable settings directory, with a trailing separator, created on first
+  use (issue #98, step 1, 2026-10-24).
+
+  NOT THE CONTEST DIRECTORY, ON PURPOSE. NY4I: "the contest folder holds only
+  contest SQLite files." The Open dialog lists every .db in ContestDir, so a
+  backup written there was listed as a contest of its own -- and sorted by
+  Last QSO, a cleared log (0 QSOs) showed BELOW its own backup, which is how
+  an operator came to open the backup believing the clear had failed. The
+  dialog's scan is not recursive, and this is a subdirectory of the settings
+  area: target\settings\backup\ on Windows, beside the binary's settings, and
+  under the settings home on macOS and Linux -- never ContestDir itself.
+
+  --settings MOVES IT, exactly as it moves DownloadedDataDir: the same base,
+  so a test or the corpus that points the program at its own settings never
+  writes a backup into the developer's real one.
+
+  CREATION IS ATTEMPTED, NOT PROMISED. A folder that cannot be made (a file
+  in the way, no permission) is returned anyway, and the caller's write
+  fails: a backup that cannot be written is a reportable event, not a
+  path this unit could quietly substitute. *)
+function BackupDir: string;
+
 (* THE WRITABLE COPY IF THERE IS ONE, THE SHIPPED COPY OTHERWISE.
 
   The two-tier lookup in ONE place, so "downloaded beats shipped" is stated
@@ -716,7 +739,12 @@ begin
    Result := GSettingsOverride;
 end;
 
-function DownloadedDataDir: string;
+(* THE WRITABLE SETTINGS DIRECTORY AS THIS RUN SEES IT: SettingsDir, unless
+  --settings named a file elsewhere, in which case that file's directory.
+  One answer for every writable file that belongs with the settings -- a
+  download and a backup -- so the two cannot disagree about where --settings
+  moved them. *)
+function WritableSettingsDir: string;
 var
    settingsFile: string;
 begin
@@ -732,6 +760,16 @@ begin
      downloaded country file wherever the program happened to be started from
      rather than beside the settings it belongs to. *)
    Result := EnsureDir(ExtractFilePath(ExpandFileName(settingsFile)));
+end;
+
+function DownloadedDataDir: string;
+begin
+   Result := WritableSettingsDir;
+end;
+
+function BackupDir: string;
+begin
+   Result := EnsureDir(WritableSettingsDir + 'backup');
 end;
 
 function DownloadedDataFilePath(const aName: string): string;

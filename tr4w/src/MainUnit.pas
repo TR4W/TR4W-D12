@@ -689,7 +689,7 @@ implementation
 
 uses
    uSettingsModel,   // Settings -- where retired CFGCA rows live
-  uAppPaths,   // ContestDir, DownloadedDataFilePath -- where files live
+  uAppPaths,   // ContestDir, DownloadedDataFilePath, BackupDir -- where files live
    uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
   Menus,              // TMenuItem -- the menu is a TMainMenu now
    uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF }
@@ -9340,7 +9340,12 @@ begin
     nothing (with no .TRW its copy failed for all 1000 slots) and it is gone.
     What replaces it is the store's own verified snapshot of the SQLite log
     (LogStoreBackup: staged, integrity-checked by a second open and only
-    after that published), named beside the log by LogStoreClearBackupFileName. The .TRW
+    after that published), written to uAppPaths.BackupDir -- the local
+    backup folder under the settings, NOT beside the log, where the Open
+    dialog listed it as a contest (issue #98 step 1, 2026-10-24) -- and named
+    by LogStoreClearBackupFileName. A folder that cannot be made is a failed
+    backup like any other. It runs here, synchronously, and the delete
+    follows with no message pumped in between. The .TRW
     is not read, copied or named -- NY4I: "you can backup the sqlite file but
     the TRW file should be a relic we do not touch anymore."
 
@@ -9349,7 +9354,7 @@ begin
     a destructive action, so a line in the quick-command window alone could
     be missed and they would believe the log was empty. *)
   stepTick := GetTickCount64;
-  if not LogStoreBackupBeforeClear(backupPath, backupReport) then
+  if not LogStoreBackupBeforeClear(BackupDir, backupPath, backupReport) then
      begin
      logger.Error('[ClearLog] not cleared: the backup before clearing failed -- %s '
                   + '(after %d ms)', [backupReport, MsSince(startTick)]);

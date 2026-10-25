@@ -72,10 +72,26 @@ verifier uses it, so a published backup is now byte-identical to the snapshot
 **CLEAR LOG TAKES A VERIFIED BACKUP FIRST, AND DOES NOT CLEAR WITHOUT ONE
 (2026-10-23).** `MainUnit.ClearLog` calls `LogStoreBackupBeforeClear` ->
 `LogStoreBackup` to `<log name less .db> before clear <UTC yyyy-mm-dd
-hhnnss>Z.db` beside the log (`LogStoreClearBackupFileName`, pinned in
-`uTestLogStore`). A failed backup is an Error line plus `showwarning`, and
-nothing is deleted. The `.TRW` is not read, copied or named. An empty log is
-backed up like any other.
+hhnnss>Z.db` (`LogStoreClearBackupFileName`, pinned in `uTestLogStore`). A
+failed backup is an Error line plus `showwarning`, and nothing is deleted.
+The `.TRW` is not read, copied or named. An empty log is backed up like any
+other.
+- **IT IS WRITTEN TO `uAppPaths.BackupDir`, NOT BESIDE THE LOG (issue #98
+  step 1, 2026-10-24).** `BackupDir` is `backup` under the writable settings
+  directory (`target\settings\backup\` on Windows), and `--settings` moves it
+  with `DownloadedDataDir` (one base, `WritableSettingsDir`). A backup beside
+  the log was listed by the Open dialog (it scans `ContestDir` for `*.db`,
+  not recursively) as a contest, and sorted below its own cleared log. The
+  caller passes the folder (`LogStoreBackupBeforeClear(BackupDir, ...)`), so
+  a test hands in a scratch one; **never call `BackupDir` from a test** --
+  the unit-test binary would create it under the real settings directory.
+- **Names never stack**: every trailing ` before clear <stamp>Z` of exactly
+  that shape is removed from the log's name first. **A folder that cannot be
+  made fails the backup** (no fallback beside the log); the test uses a file
+  occupying the folder's name. Backups already beside logs are left alone.
+- **The periodic backup (`logback.db`, `BACKUP LOG FILE NAME`) is NOT moved
+  yet**; the rest of #98 (remote copy, worker thread, catalog, restore) is
+  open.
 - **NEVER RUN `VACUUM` (INTO OR NOT) ON THE LIVE CONNECTION (2026-10-24).**
   A VACUUM resets every schema of the connection that runs it, and FPC's
   connector prepares with the LEGACY `sqlite3_prepare`, which never

@@ -359,21 +359,43 @@ function LogStoreEnsureOpen: boolean;
   case that has to be visible. Never raises. *)
 function LogStoreBackup(const aDestination: string; out aReport: string): boolean;
 
-(* THE NAME OF THE BACKUP CLEAR LOG TAKES (2026-10-23): beside the log,
+(* THE NAME OF THE BACKUP CLEAR LOG TAKES: in aBackupDir (the program passes
+  uAppPaths.BackupDir), NOT beside the log (issue #98 step 1, 2026-10-24 --
+  a backup beside the log was listed by the Open dialog as a contest),
   "<log name without .db> before clear <UTC yyyy-mm-dd hhnnss>Z.db", e.g.
   "CQ-WW-SSB 2026-10-19 NY4I before clear 2026-10-23 230144Z.db".
 
-  Only a final ".db" is removed (any case); a name with other dots keeps them,
-  and a name not ending in .db keeps all of it. aUTC is the moment, already in
-  UTC -- the caller converts, so this stays pure and a test can pin it. *)
-function LogStoreClearBackupFileName(const aLogFile: string; aUTC: TDateTime): string;
+  The log's FILE NAME only; its directory is not part of the answer. Only a
+  final ".db" is removed (any case); a name with other dots keeps them, and a
+  name not ending in .db keeps all of it.
+
+  NAMES NEVER STACK. A log that is itself a pre-clear backup -- named
+  "X before clear <stamp>Z.db" -- is backed up as "X before clear <new
+  stamp>Z.db", not "X before clear <stamp>Z before clear <new stamp>Z.db".
+  Every trailing " before clear <stamp>Z" of exactly that shape is removed
+  first; anything that merely contains the words keeps them.
+
+  aBackupDir may or may not end in a separator. aUTC is the moment, already
+  in UTC -- the caller converts, so this stays pure and a test can pin it. *)
+function LogStoreClearBackupFileName(const aLogFile, aBackupDir: string;
+   aUTC: TDateTime): string;
 
 (* A VERIFIED BACKUP OF THE CONTEST LOG, TAKEN BEFORE CLEAR LOG DELETES
-  ANYTHING. LogStoreBackup to LogStoreClearBackupFileName of the live log at
-  this moment in UTC. aPath is the file it was written to (set either way),
-  aReport LogStoreBackup's sentence for the operator. The .TRW is not read,
-  copied or named: the source is the SQLite log only. Never raises. *)
-function LogStoreBackupBeforeClear(out aPath, aReport: string): boolean;
+  ANYTHING. LogStoreBackup to LogStoreClearBackupFileName of the live log, in
+  aBackupDir, at this moment in UTC. aPath is the file it was written to (set
+  either way), aReport LogStoreBackup's sentence for the operator.
+
+  A BACKUP FOLDER THAT IS NOT THERE IS A FAILED BACKUP. uAppPaths.BackupDir
+  tries to create it; if it still is not a directory (a file in the way, no
+  permission) this answers False and says so, and there is NO fallback to
+  beside the log -- that is the place the backup was moved away from.
+
+  SYNCHRONOUS, on the caller's thread, and it pumps no messages: Clear Log
+  runs it and then deletes, with nothing able to interleave (issue #98). The
+  .TRW is not read, copied or named: the source is the SQLite log only.
+  Never raises. *)
+function LogStoreBackupBeforeClear(const aBackupDir: string;
+   out aPath, aReport: string): boolean;
 
 (* IS THE CONTEST LOG SOUND? ASKED ON PURPOSE, RATHER THAN ON THE WAY PAST.
 
@@ -1626,32 +1648,117 @@ begin
    end;
 end;
 
-function LogStoreClearBackupFileName(const aLogFile: string; aUTC: TDateTime): string;
+const
+   CLEAR_BACKUP_INFIX = ' before clear ';
+   (* The stamp's shape, one character per position: 'd' a digit, anything
+     else itself. The FormatDateTime pattern below writes exactly this. *)
+   CLEAR_BACKUP_STAMP_SHAPE = 'dddd-dd-dd ddddddZ';
+
+(* Does aBase END in " before clear <stamp>Z", the suffix the name rule
+  writes? Exact shape only, so a log merely called "... before clear ..."
+  keeps its name. *)
+function EndsInClearBackupSuffix(const aBase: string): boolean;
+var
+   suffixLength, start, i: integer;
+   c, shape: Char;
+begin
+   Result := False;
+   suffixLength := Length(CLEAR_BACKUP_INFIX) + Length(CLEAR_BACKUP_STAMP_SHAPE);
+   if Length(aBase) < suffixLength then
+      begin
+      Exit;
+      end;
+
+   start := Length(aBase) - suffixLength + 1;
+   if Copy(aBase, start, Length(CLEAR_BACKUP_INFIX)) <> CLEAR_BACKUP_INFIX then
+      begin
+      Exit;
+      end;
+
+   start := start + Length(CLEAR_BACKUP_INFIX);
+   for i := 1 to Length(CLEAR_BACKUP_STAMP_SHAPE) do
+      begin
+      c := aBase[start + i - 1];
+      shape := CLEAR_BACKUP_STAMP_SHAPE[i];
+      if shape = 'd' then
+         begin
+         if (c < '0') or (c > '9') then
+            begin
+            Exit;
+            end;
+         end
+      else if c <> shape then
+         begin
+         Exit;
+         end;
+      end;
+
+   Result := True;
+end;
+
+function LogStoreClearBackupFileName(const aLogFile, aBackupDir: string;
+   aUTC: TDateTime): string;
 var
    base: string;
+   i: integer;
 begin
+   (* THE FILE NAME, without its directory. Scanned by hand rather than
+     through ExtractFileName for the reason below, and a separator is '/' or
+     this platform's own: on Unix a backslash is a legal name character. *)
+   base := aLogFile;
+   for i := Length(base) downto 1 do
+      begin
+      if (base[i] = '/') or (base[i] = DirectorySeparator) then
+         begin
+         base := Copy(base, i + 1, Length(base) - i);
+         Break;
+         end;
+      end;
+
    (* The suffix is compared in place, NOT through ExtractFileExt: in FPC
      3.2.2 that is AnsiString-only (as is SameText), so a path with a
      non-ASCII name would go through the system code page and could come back
      changed. UnicodeSameText is the RTL's UnicodeString comparison. *)
-   base := aLogFile;
    if UnicodeSameText(Copy(base, Length(base) - Length('.db') + 1, Length('.db')), '.db') then
       begin
       base := Copy(base, 1, Length(base) - Length('.db'));
       end;
+
+   (* NO STACKING: every earlier pre-clear suffix goes, so a backup of a
+     backup is named for the log it came from. A loop, because a name that
+     stacked before this rule existed carries more than one. *)
+   while EndsInClearBackupSuffix(base) do
+      begin
+      base := Copy(base, 1, Length(base) - Length(CLEAR_BACKUP_INFIX)
+                            - Length(CLEAR_BACKUP_STAMP_SHAPE));
+      end;
+
    (* '-' and a space are literals to FormatDateTime; only '/' and ':' are
      locale separators, and neither is used, so no FormatSettings is needed.
      'hh' is the 24-hour clock because the format names no am/pm. The cast
      widens digits only, so it loses nothing. *)
-   Result := base + ' before clear ' +
+   Result := IncludeTrailingPathDelimiter(aBackupDir) + base + CLEAR_BACKUP_INFIX +
              string(FormatDateTime('yyyy-mm-dd hhnnss', aUTC)) + 'Z.db';
 end;
 
-function LogStoreBackupBeforeClear(out aPath, aReport: string): boolean;
+function LogStoreBackupBeforeClear(const aBackupDir: string;
+   out aPath, aReport: string): boolean;
 begin
    (* The name rule's input is the DATABASE's name, never TR4W_LOG_FILENAME
      itself: that names the .TRW, which is a relic nothing here touches. *)
-   aPath := LogStoreClearBackupFileName(LogStoreFileName, LocalTimeToUniversal(Now));
+   aPath := LogStoreClearBackupFileName(LogStoreFileName, aBackupDir,
+                                        LocalTimeToUniversal(Now));
+
+   (* Asked before the snapshot so the operator reads WHY, rather than the
+     SQLite error a VACUUM INTO a missing directory would give. *)
+   if not DirectoryExists(aBackupDir) then
+      begin
+      aReport := 'the backup folder ' + aBackupDir + ' does not exist and could '
+                 + 'not be created, so no backup was written';
+      Result := False;
+      Exit;
+      end;
+
    Result := LogStoreBackup(aPath, aReport);
 end;
 

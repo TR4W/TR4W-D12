@@ -28,7 +28,9 @@ unit uTestLogStore;
 
   AND CLEAR LOG'S BACKUP (2026-10-23): its name rule, and that the backup is
   taken from the SQLite log alone -- it holds every row, an empty log
-  included, with no .TRW beside it.
+  included, with no .TRW beside it. Since 2026-10-24 (issue #98 step 1) it
+  is written to a backup folder, never beside the log, its name never
+  stacks, and a folder that cannot be made fails the backup.
 
   AND THAT WHAT IS DELETED STAYS DELETED ON DISK (2026-10-24): a cleared
   log holds no row once the program lets go of it, read by a connection
@@ -73,6 +75,15 @@ type
       procedure ReadContestRow(const aDb: string; out aType, aCall, aGuid: string);
       (* Which SQLite sidecars lie beside aDb now, by name; '' for none. *)
       function SidecarsBeside(const aDb: string): string;
+      (* THE BACKUP FOLDER A TEST HANDS LogStoreBackupBeforeClear: 'backup'
+        inside this suite's scratch directory, created here -- the program
+        passes uAppPaths.BackupDir, which is under the settings and must not
+        be written by a test. Restore removes it once it is empty. *)
+      function ScratchBackupDir: string;
+      (* Its name, without creating it. *)
+      function ScratchBackupDirName: string;
+      (* The names of the files in aDir, sorted, one per line. *)
+      function FilesIn(const aDir: string): string;
    protected
       procedure TestAnAppendThatMigratesTheLogInsertsTheQSO;
       procedure TestAnAppendAfterAnEarlierMigrationInsertsTheQSO;
@@ -80,6 +91,7 @@ type
       procedure TestTheClearBackupNameRule;
       procedure TestABackupBeforeClearHoldsTheLogAndNeedsNoTrw;
       procedure TestAnEmptyLogIsBackedUpBeforeClear;
+      procedure TestABackupFolderThatCannotBeMadeFailsTheBackup;
       procedure TestTheGridReadsTheLogAfterABackup;
       procedure TestAClearedLogIsEmptyOnDiskAfterClose;
       procedure TestAClearIsCommittedBeforeTheLogIsClosed;
@@ -101,6 +113,9 @@ const
    (* 101 records, a DX zone contest -- the repository round-trip's log. *)
    FIXTURE_SET = 'cqww_ssb_2025_ny4i';
    NEW_CALL = 'N0NEW';
+   SQL_ALL_ROWS     = 'SELECT COUNT(*) FROM qso';
+   SQL_NOTE_ROWS    = 'SELECT COUNT(*) FROM qso WHERE record_kind = ''NOTE''';
+   SQL_DELETED_ROWS = 'SELECT COUNT(*) FROM qso WHERE deleted <> 0';
 
 procedure TLogStoreTests.PrepareMigration(const aSet: string);
 var
@@ -192,7 +207,12 @@ begin
       DeleteFile(FTrw);
       end;
    (* Only succeeds when empty, which is the point: anything left in it is a
-     file this suite failed to scrub, and stays to be seen. *)
+     file this suite failed to scrub, and stays to be seen. The backup folder
+     first, because it lies inside FDir. *)
+   if (FDir <> '') and DirectoryExists(ScratchBackupDirName) then
+      begin
+      RemoveDir(ScratchBackupDirName);
+      end;
    if RemoveDir(FDir) then
       begin
       FDir := '';
@@ -347,6 +367,41 @@ begin
          Result := Result + ' ' + SIDECARS[i];
          end;
       end;
+end;
+
+function TLogStoreTests.ScratchBackupDirName: string;
+begin
+   Result := IncludeTrailingPathDelimiter(FDir) + 'backup';
+end;
+
+function TLogStoreTests.ScratchBackupDir: string;
+begin
+   Result := ScratchBackupDirName;
+   ForceDirectories(Result);
+end;
+
+function TLogStoreTests.FilesIn(const aDir: string): string;
+var
+   found: TSearchRec;
+   names: TStringList;
+begin
+   names := TStringList.Create;
+   try
+      names.Sorted := True;
+      if FindFirst(IncludeTrailingPathDelimiter(aDir) + '*', faAnyFile, found) = 0 then
+         begin
+         repeat
+            if (found.Attr and faDirectory) = 0 then
+               begin
+               names.Add(found.Name);
+               end;
+         until FindNext(found) <> 0;
+         FindClose(found);
+         end;
+      Result := names.Text;
+   finally
+      names.Free;
+   end;
 end;
 
 (* How many times aNeedle occurs in aText. *)
@@ -524,42 +579,78 @@ begin
    end;
 end;
 
-(* CLEAR LOG'S BACKUP NAME (2026-10-23): beside the log, the log's name less
-  its final .db, " before clear ", the UTC moment as yyyy-mm-dd hhnnss, "Z.db".
-  Pure, so it runs on every platform. *)
+(* CLEAR LOG'S BACKUP NAME (2026-10-23; moved to the backup folder
+  2026-10-24, issue #98 step 1): IN THE BACKUP FOLDER, the log's file name
+  less its final .db and less any earlier " before clear <stamp>Z", then
+  " before clear ", the UTC moment as yyyy-mm-dd hhnnss, "Z.db". Pure, so it
+  runs on every platform. *)
 procedure TLogStoreTests.TestTheClearBackupNameRule;
 var
-   dir: string;
+   logs, backups: string;
    moment: TDateTime;
    name: string;
 begin
-   BeginTest('Clear Log''s backup is named "<log> before clear <UTC>Z.db" beside the log');
+   BeginTest('Clear Log''s backup is "<log> before clear <UTC>Z.db" in the backup folder');
 
-   dir := 'logs' + PathDelim;
+   logs := 'logs' + PathDelim;
+   backups := 'settings' + PathDelim + 'backup' + PathDelim;
    moment := EncodeDate(2026, 10, 23) + EncodeTime(23, 1, 44, 0);
 
-   CheckEquals(dir + 'CQ-WW-SSB 2026-10-19 NY4I before clear 2026-10-23 230144Z.db',
-               LogStoreClearBackupFileName(dir + 'CQ-WW-SSB 2026-10-19 NY4I.db', moment),
+   CheckEquals(backups + 'CQ-WW-SSB 2026-10-19 NY4I before clear 2026-10-23 230144Z.db',
+               LogStoreClearBackupFileName(logs + 'CQ-WW-SSB 2026-10-19 NY4I.db',
+                                           backups, moment),
                'the worked example, exactly');
 
-   CheckEquals(dir + 'K.1 ABC.v2 before clear 2026-10-23 230144Z.db',
-               LogStoreClearBackupFileName(dir + 'K.1 ABC.v2.db', moment),
+   CheckEquals(backups + 'K.1 ABC.v2 before clear 2026-10-23 230144Z.db',
+               LogStoreClearBackupFileName(logs + 'K.1 ABC.v2.db', backups, moment),
                'only the final .db is removed; the other dots stay');
 
-   CheckEquals(dir + 'LOG before clear 2026-10-23 230144Z.db',
-               LogStoreClearBackupFileName(dir + 'LOG.DB', moment),
+   CheckEquals(backups + 'LOG before clear 2026-10-23 230144Z.db',
+               LogStoreClearBackupFileName(logs + 'LOG.DB', backups, moment),
                'the .db is recognised in any case');
 
-   CheckEquals(dir + 'log.sqlite before clear 2026-10-23 230144Z.db',
-               LogStoreClearBackupFileName(dir + 'log.sqlite', moment),
+   CheckEquals(backups + 'log.sqlite before clear 2026-10-23 230144Z.db',
+               LogStoreClearBackupFileName(logs + 'log.sqlite', backups, moment),
                'a name not ending in .db keeps all of it');
 
-   name := LogStoreClearBackupFileName(dir + 'x.db',
+   name := LogStoreClearBackupFileName(logs + 'x.db', backups,
                                        EncodeDate(2027, 1, 2) + EncodeTime(3, 4, 5, 0));
-   CheckEquals(dir + 'x before clear 2027-01-02 030405Z.db', name,
+   CheckEquals(backups + 'x before clear 2027-01-02 030405Z.db', name,
                'month, day, hour, minute and second are zero-padded');
    CheckEquals('Z.db', Copy(name, Length(name) - 3, 4), 'the name ends in Z.db');
-   CheckEquals(dir, ExtractFilePath(name), 'and it lies in the log''s directory');
+   CheckEquals(backups, ExtractFilePath(name),
+               'and it lies in the backup folder, not the log''s directory');
+
+   CheckEquals(backups + 'x before clear 2026-10-23 230144Z.db',
+               LogStoreClearBackupFileName(logs + 'x.db', 'settings' + PathDelim + 'backup',
+                                           moment),
+               'a backup folder named without its trailing separator gains one');
+
+   CheckEquals(backups + 'x before clear 2026-10-23 230144Z.db',
+               LogStoreClearBackupFileName('x.db', backups, moment),
+               'a log named with no directory at all');
+
+   (* NAMES NEVER STACK. *)
+   CheckEquals(backups + 'POTA K-1234 before clear 2026-10-23 230144Z.db',
+               LogStoreClearBackupFileName(logs + 'POTA K-1234 before clear 2026-10-22 101500Z.db',
+                                           backups, moment),
+               'a log that is itself a pre-clear backup is named for the log it came from');
+
+   CheckEquals(backups + 'POTA before clear 2026-10-23 230144Z.db',
+               LogStoreClearBackupFileName(logs + 'POTA before clear 2026-10-21 000000Z'
+                                           + ' before clear 2026-10-22 101500Z.db',
+                                           backups, moment),
+               'a name that stacked before the rule loses every suffix');
+
+   CheckEquals(backups + 'POTA before clear 2026-10-22 before clear 2026-10-23 230144Z.db',
+               LogStoreClearBackupFileName(logs + 'POTA before clear 2026-10-22.db',
+                                           backups, moment),
+               'words that only look like the suffix are part of the log''s name');
+
+   CheckEquals(backups + 'POTA before clear 2026-10-22 10150XZ before clear 2026-10-23 230144Z.db',
+               LogStoreClearBackupFileName(logs + 'POTA before clear 2026-10-22 10150XZ.db',
+                                           backups, moment),
+               'a stamp with a non-digit in it is not a stamp');
 end;
 
 (* THE BACKUP CLEAR LOG TAKES HOLDS THE LOG, AND IS TAKEN FROM SQLITE ALONE.
@@ -568,7 +659,7 @@ end;
 procedure TLogStoreTests.TestABackupBeforeClearHoldsTheLogAndNeedsNoTrw;
 var
    log, saved: TStringList;
-   path, report: string;
+   path, report, contestFiles: string;
    ok: boolean;
    qso: ContestExchange;
    i: integer;
@@ -594,13 +685,20 @@ begin
       CheckTrue(LogSourceNext(qso), 'and reads a QSO');
       LogSourceClose;
 
+      (* THE CONTEST DIRECTORY GAINS NOTHING (issue #98 step 1): the Open
+        dialog lists every .db there, so a backup beside the log was listed
+        as a contest. Its files are named before the backup and after. *)
+      contestFiles := FilesIn(FDir);
+
       (* Called first: as an argument beside the message, FPC may build the
         message before the call has filled report. *)
-      ok := LogStoreBackupBeforeClear(path, report);
+      ok := LogStoreBackupBeforeClear(ScratchBackupDir, path, report);
       CheckTrue(ok, 'the backup before clearing succeeds: ' + report);
       FBackup := path;
-      CheckEquals(ExtractFilePath(FDb), ExtractFilePath(path),
-                  'it is written beside the log');
+      CheckEquals(IncludeTrailingPathDelimiter(ScratchBackupDirName), ExtractFilePath(path),
+                  'it is written to the backup folder');
+      CheckEquals(contestFiles, FilesIn(FDir),
+                  'and the log''s directory gains no file from it');
       CheckTrue(FileExists(path), 'the backup exists at the path it names');
       CheckFalse(FileExists(path + '.new'), 'and nothing is left staged');
       CheckFalse(Pos('.trw', LowerCase(path)) > 0, 'its name is not the .TRW''s');
@@ -646,7 +744,7 @@ begin
    saved := TStringList.Create;
    try
       CheckTrue(LogStoreEnsureOpen, 'with no .TRW the open makes a new, empty log');
-      ok := LogStoreBackupBeforeClear(path, report);
+      ok := LogStoreBackupBeforeClear(ScratchBackupDir, path, report);
       CheckTrue(ok, 'the backup of an empty log succeeds: ' + report);
       FBackup := path;
       LogStoreClose;
@@ -659,6 +757,58 @@ begin
          end;
    finally
       saved.Free;
+      Restore;
+   end;
+end;
+
+(* A BACKUP FOLDER THAT CANNOT BE MADE IS A FAILED BACKUP, AND THE LOG IS LEFT
+  ALONE (issue #98 step 1).
+
+  Made deterministic on every platform by a FILE occupying the folder's name:
+  ForceDirectories cannot turn it into a directory, which is exactly what
+  uAppPaths.BackupDir meets when it cannot create the folder. The backup must
+  answer False with a report, write nothing anywhere -- in particular NOT fall
+  back to beside the log -- and the log must still hold every row, because
+  MainUnit.ClearLog clears only after a backup that answered True. *)
+procedure TLogStoreTests.TestABackupFolderThatCannotBeMadeFailsTheBackup;
+var
+   blocker: TFileStream;
+   blockerName, path, report, contestFiles: string;
+   ok: boolean;
+   before: Int64;
+begin
+   BeginTest('a backup folder that cannot be made fails the backup and leaves the log as it was');
+
+   PrepareMigration(FIXTURE_SET);
+   blockerName := IncludeTrailingPathDelimiter(FDir) + 'backup-blocked';
+   try
+      CheckTrue(LogStoreEnsureOpen, 'the open migrates the log');
+      before := ScalarFromFile(FDb, SQL_ALL_ROWS);
+      CheckTrue(before > 1, 'the log holds its rows');
+
+      blocker := TFileStream.Create(blockerName, fmCreate);
+      blocker.Free;
+      ForceDirectories(blockerName);
+      CheckFalse(DirectoryExists(blockerName),
+                 'with a file in the way, the folder cannot be made');
+
+      contestFiles := FilesIn(FDir);
+      ok := LogStoreBackupBeforeClear(blockerName, path, report);
+      CheckFalse(ok, 'the backup fails');
+      CheckTrue(report <> '', 'and says why: ' + report);
+      CheckTrue(Pos(blockerName, report) > 0, 'naming the folder');
+      CheckFalse(FileExists(path), 'no backup file exists at the path it named');
+      CheckFalse(FileExists(path + '.new'), 'and nothing is staged there');
+      CheckEquals(contestFiles, FilesIn(FDir),
+                  'and nothing was written beside the log instead');
+      CheckTrue(LogStoreIsUsable, 'the store is still usable');
+      CheckEquals(before, ScalarFromFile(FDb, SQL_ALL_ROWS),
+                  'and the log still holds every row');
+   finally
+      if FileExists(blockerName) then
+         begin
+         DeleteFile(blockerName);
+         end;
       Restore;
    end;
 end;
@@ -773,11 +923,6 @@ begin
    end;
 end;
 
-const
-   SQL_ALL_ROWS     = 'SELECT COUNT(*) FROM qso';
-   SQL_NOTE_ROWS    = 'SELECT COUNT(*) FROM qso WHERE record_kind = ''NOTE''';
-   SQL_DELETED_ROWS = 'SELECT COUNT(*) FROM qso WHERE deleted <> 0';
-
 (* CLEAR LOG EMPTIES THE FILE, AND THE FILE STAYS EMPTY (2026-10-24).
 
   NY4I ran Clear Log in POTA, quit, restarted and saw four QSOs. The log
@@ -834,7 +979,7 @@ begin
       CheckTrue(guidBefore <> '', 'and carries the log''s guid');
 
       (* MainUnit.ClearLog's two calls, in its order. *)
-      ok := LogStoreBackupBeforeClear(path, report);
+      ok := LogStoreBackupBeforeClear(ScratchBackupDir, path, report);
       CheckTrue(ok, 'the backup before clearing succeeds: ' + report);
       FBackup := path;
       CheckTrue(LogStoreClearAllQSOs, 'the clear reports success');
@@ -926,7 +1071,7 @@ begin
       before := ScalarFromFile(FDb, SQL_ALL_ROWS);
       CheckTrue(before > 1, 'another connection sees the log''s rows');
 
-      ok := LogStoreBackupBeforeClear(path, report);
+      ok := LogStoreBackupBeforeClear(ScratchBackupDir, path, report);
       CheckTrue(ok, 'the backup before clearing succeeds: ' + report);
       FBackup := path;
       CheckTrue(LogStoreClearAllQSOs, 'the clear reports success');
@@ -1128,6 +1273,7 @@ begin
    TestARewriteThatMigratesTheLogRewritesTheNewestQSO;
    TestABackupBeforeClearHoldsTheLogAndNeedsNoTrw;
    TestAnEmptyLogIsBackedUpBeforeClear;
+   TestABackupFolderThatCannotBeMadeFailsTheBackup;
    TestTheGridReadsTheLogAfterABackup;
    TestAClearedLogIsEmptyOnDiskAfterClose;
    TestAClearIsCommittedBeforeTheLogIsClosed;
