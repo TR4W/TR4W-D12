@@ -166,6 +166,23 @@ naming the sink; the broadcaster also names address:port) or raises is contained
 
 Each logger runs its own `TReadingThread` / `TSenderThread` pair.
 
+**Only the reading thread may call Indy's `Connected`** (2026-10-25, after the
+network-radio hang a4866344): it does a select plus a BLOCKING recv, so from any other
+thread it can hang for ever or steal the reader's bytes. A bare `Disconnect` is
+`Disconnect(True)` and asks `Connected` first. Everywhere else: `IndyLinkIsOpen`
+(`uIndyLink`, fields only) and `Disconnect(False)`; give the client an IOHandler it
+owns (`uIndyLink.IndyLinkOwnHandler`) because Indy frees a managed one on a failed
+Connect. **DXKeeper never uses the persistent `socket`**: `TExternalLogger.DeliverCommand`
+opens a local client per command on the sender thread (its sole owner, no reader), so
+`client.Connected` there is legal -- keep it that way. Nothing calls the base
+`Connect`/`SendToLogger`/`IsConnected` in production today (ACLog/HRD are stubs and
+`LookupCallsign` has no caller); the rule is for the day they do. Pinned in
+`uTestExternalLoggerSocket`.
+
+**`TExternalLoggerBase.Destroy` was `overload; virtual`, hiding `TObject.Destroy`**, so
+`FreeAndNil(externalLogger)` ran no destructor: no `ShutdownDrain`, queued QSOs lost at
+exit unreported. It is `override` since 2026-10-25.
+
 **This is the OLDER factory shape** — a `case` in one class function
 (`TExternalLoggerFactory.CreateLogger`) raising
 `EExternalLoggerFactoryException`, not the radio factory's self-registration

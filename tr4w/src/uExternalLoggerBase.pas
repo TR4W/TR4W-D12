@@ -142,7 +142,11 @@ Type
    public
       constructor Create(ProcRef: TProcessMsgRef); overload;
       constructor Create(address: string; port: integer;ProcRef: TProcessMsgRef); overload;
-      Destructor Destroy; overload; Virtual;
+      (* override, NOT overload; virtual: that spelling declared a NEW slot that
+        hid TObject.Destroy, so FreeAndNil(externalLogger) ran NO destructor --
+        no ShutdownDrain, so QSOs still queued at exit were never flushed or
+        even reported. *)
+      Destructor Destroy; override;
 
       // Issue #957 -- enqueue from the main thread (cheap; returns immediately).
       procedure QueueSingleCommand(const cmd, description: string);
@@ -170,7 +174,22 @@ end;
   TOKEN. The enum stays here because it is what CreateLogger takes. *)
 implementation
 
-Uses MainUnit;
+Uses MainUnit,
+     uIndyLink;         (* IndyLinkIsOpen and IndyLinkOwnHandler -- see its header *)
+
+(* THE RULE FOR THE PERSISTENT SOCKET (ACLog / HRD; DXKeeper does not use it).
+
+  ONLY THE READING THREAD (TReadingThread) MAY CALL socket.Connected, and a
+  bare socket.Disconnect is Disconnect(True), which calls Connected first.
+  Indy's Connected READS the socket -- a zero-timeout select and then a
+  blocking recv into the InputBuffer the reader is consuming -- so from the
+  main thread or the sender thread it can block for ever or steal the reader's
+  bytes (the network-radio hang of 2026-10-25, commit a4866344).  Everything
+  else asks IndyLinkIsOpen (fields only) and calls Disconnect(False).
+
+  DXKeeper never reaches this: TExternalLogger.DeliverCommand opens a client of
+  its own per command on the sender thread, and that thread is the only one that
+  ever touches it, so its Connected is a read by the owner. *)
 
 
 Constructor TExternalLoggerBase.Create(ProcRef: TProcessMsgRef);
@@ -216,19 +235,33 @@ begin
    FreeAndNil(FQueueLock);
    FreeAndNil(FQueueEvent);
 
+   (* Order matters.  Close the socket first (that pulls the reading thread off
+     ReadLn and, through OnDisconnected, stops it).  Make sure the reading
+     thread is gone.  Only then free the socket: the thread dereferences it,
+     so freeing it earlier left a reader in its reconnect loop calling Connect
+     on freed memory. *)
    if socket <> nil then
       begin
-      if socket.Connected then
-         begin
-         socket.Disconnect;
-         end;
-      FreeAndNil(socket);
+      try
+         if IndyLinkIsOpen(socket) then
+            begin
+            socket.Disconnect(False);
+            end;
+      except
+         on E: Exception do
+            begin
+            logger.Debug('[TExternalLoggerBase.Destroy] Exception during disconnect: %s', [E.Message]);
+            end;
+      end;
       end;
 
-      if assigned(rt) then
-         begin
-         FreeAndNil(rt)
-         end;
+   if assigned(rt) then
+      begin
+      FreeAndNil(rt);
+      end;
+
+   FreeAndNil(socket);
+   inherited Destroy;
 end;
 
 // Events
@@ -324,6 +357,10 @@ begin
     socket.Host := Self.loggerAddress;
     socket.ConnectTimeout := 10;
 
+    (* An IOHandler of our own, so a failed Connect cannot free it under the
+      reading thread or a sender -- see uIndyLink. *)
+    IndyLinkOwnHandler(socket, Self.OnLoggerStatus);
+
     try
         socket.Connect;
         logger.Info('[TExternalLoggerBase.Connect] Connected successfully to external logger');
@@ -344,12 +381,13 @@ end;
 
 procedure TExternalLoggerBase.Disconnect;
 begin
-   if socket.Connected then
+   if IndyLinkIsOpen(socket) then
       begin
       try
          logger.debug('Calling Disconnect - user request');
          // Disconnect the socket to pull it off the ReadLn so the thread in Execute sees that it is Terminated.
-         socket.Disconnect;
+         // Disconnect(False): the bare form asks Connected, which reads the socket the reader owns.
+         socket.Disconnect(False);
          if rt <> nil then
             begin
             rt.Terminate;
@@ -369,11 +407,11 @@ procedure TExternalLoggerBase.SendToLogger(s: string);
 var nLen: integer;
 begin
    try
-      if not socket.Connected then
+      if not IndyLinkIsOpen(socket) then
          begin
          Self.Connect;
          end;
-      if socket.Connected then
+      if IndyLinkIsOpen(socket) then
          begin
          logger.Trace('[%s SendToLogger] Sending to radio: (%s) Hex:[%s]',[Self.loggerID,s, String2Hex(s)]);
          //nLen := length(s);
@@ -397,7 +435,7 @@ function TExternalLoggerBase.GetIsConnected: boolean;
 begin
    if Assigned(Self.socket) then
       begin
-      Result := socket.Connected;
+      Result := IndyLinkIsOpen(socket);
       end
    else
       begin
@@ -433,6 +471,8 @@ begin
    while not Terminated do
       begin
       try
+         (* FConn.Connected is correct HERE and only here: this is the reading
+           thread, the one party allowed to read the socket. *)
          if FConn.Connected then
             begin
             // Reset retry logic on successful connection
@@ -708,11 +748,11 @@ begin
    // overrides this with a connect-per-command transport (Issue #957).
    Result := False;
    try
-      if not socket.Connected then
+      if not IndyLinkIsOpen(socket) then
          begin
          Self.Connect;
          end;
-      if socket.Connected then
+      if IndyLinkIsOpen(socket) then
          begin
          socket.IOHandler.WriteLn(cmd);
          Result := True;

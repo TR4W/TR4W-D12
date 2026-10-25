@@ -124,6 +124,8 @@ uses
    uK4SpectrumThread    in '..\..\src\radioFactory\uK4SpectrumThread.pas',
    uTestK4Spectrum      in 'uTestK4Spectrum.pas',
    uTestRadioSocketNoRead in 'uTestRadioSocketNoRead.pas',
+   uTestClusterSocketNoRead in 'uTestClusterSocketNoRead.pas',
+   uTestExternalLoggerSocket in 'uTestExternalLoggerSocket.pas',
    uIcomScope           in '..\..\src\radioFactory\uIcomScope.pas',
    uTestIcomScope       in 'uTestIcomScope.pas',
    uTestIcomScopeSeam   in 'uTestIcomScopeSeam.pas',
@@ -886,6 +888,8 @@ begin
    RegisterSuite(TLogSCPTests.Create('LogSCP'));
    RegisterSuite(TK4SpectrumTests.Create('K4Spectrum'));
    RegisterSuite(TRadioSocketNoReadTests.Create('RadioSocketNoRead'));
+   RegisterSuite(TClusterSocketNoReadTests.Create('ClusterSocketNoRead'));
+   RegisterSuite(TExternalLoggerSocketTests.Create('ExternalLoggerSocket'));
    RegisterSuite(TIcomScopeTests.Create('IcomScope'));
    RegisterSuite(TIcomScopeSeamTests.Create('IcomScopeSeam'));
    RegisterSuite(TUtilsMathTests.Create('UtilsMath'));

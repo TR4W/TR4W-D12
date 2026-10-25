@@ -80,6 +80,19 @@ You own how spots reach TR4W and how they are shown.
   "begins with" helper measured 2x slower per spot. Do not bring the integer
   constants back. Pins: `Test_Marker_*` in `uTestDXSpotParse`.
 
+- **ONLY THE READER THREAD READS THE CLUSTER SOCKET** (2026-10-25, same defect
+  as the network-radio band-map hang, a4866344). Indy's `Connected` does a
+  select plus a BLOCKING recv into the InputBuffer, and a bare `Disconnect` is
+  `Disconnect(True)`, which probes it. `TDXClusterClient.GetIsConnected` and
+  `Disconnect` use `uIndyLink.IndyLinkIsOpen` (fields only) and
+  `Disconnect(False)`; **never write `FTCP.Connected` or a bare
+  `FTCP.Disconnect`**. The IOHandler is made once by `IndyLinkOwnHandler` in
+  the constructor and is never Indy-managed: `Connect` runs on uTelnet's
+  CONNECT thread while the main thread calls `Disconnect`/`IsConnected`/
+  `SendLine`, and a managed handler is freed by a failed Connect. The client
+  has a `StartReader` virtual seam so `uTestClusterSocketNoRead` can run with
+  no reading thread and watch the InputBuffer stay empty.
+
 ## Open
 
 **`uSpots` `ERangeError` is STILL OPEN** — see the `winter-fd-corpus-crash`

@@ -59,6 +59,7 @@ interface
 uses
    Classes, SysUtils, IdTCPClient, IdGlobal, IdException, IdExceptionCore,
    IdStack,
+   uIndyLink,        // IndyLinkIsOpen / IndyLinkOwnHandler -- see ITS header
    IdBuffer;   // TIdBuffer -- the non-destructive PeekByte in ReportPendingText
 
 type
@@ -86,8 +87,13 @@ type
    end;
 
    TDXClusterClient = class
-   private
+   protected
       FTCP:      TIdTCPClient;
+      // Starts the reading thread.  A seam for uTestClusterSocketNoRead, which
+      // overrides it to nothing so that NO thread reads and an unread byte in
+      // the kernel can only be consumed by the code under test.
+      procedure StartReader; virtual;
+   private
       FReader:   TDXClusterReader;
       FStopping: Boolean;
       FOnLine:         TDXClusterLineEvent;
@@ -235,6 +241,23 @@ constructor TDXClusterClient.Create;
 begin
    inherited Create;
    FTCP := TIdTCPClient.Create(nil);
+
+   (* THE CLIENT OWNS ITS IOHANDLER, AND IT LIVES AS LONG AS FTCP.  NEVER LET
+     INDY MANAGE IT.
+
+     Left to itself, TIdTCPClientCustom.Connect makes an implicit handler and
+     marks it ManagedIOHandler (include/Core/IdTCPClient.pas:288-290); when the
+     connect FAILS its except arm sets IOHandler := nil (:338-342), which FREES
+     it.  Connect runs on the connect thread (uTelnet), while Disconnect,
+     IsConnected and SendLine run on the main thread, and all of them load
+     FTCP.IOHandler and dereference it -- a use-after-free on every refused or
+     timed-out connect.  Assigned explicitly, the handler is NOT managed
+     (SetIOHandler clears the flag), so a failed Connect only Closes it and the
+     pointer is stable.  Owned by FTCP, so FTCP.Free frees it.  The reader
+     thread's FTCP.IOHandler loads are safe for the same reason.
+
+     Pinned by uTestClusterSocketNoRead. *)
+   IndyLinkOwnHandler(FTCP, nil);
    FTCP.ConnectTimeout := 10000;
    FTCP.ReadTimeout    := READ_POLL_MS;
 end;
@@ -320,13 +343,19 @@ end;
 
 function TDXClusterClient.GetIsConnected: Boolean;
 begin
-   // Indy raises if the IOHandler has gone; a dead link is simply "not
-   // connected" to every caller here.
-   try
-      Result := (FTCP <> nil) and FTCP.Connected;
-   except
-      Result := False;
-   end;
+   (* IndyLinkIsOpen, NEVER FTCP.Connected.  Indy's Connected READS the socket
+     (select, then a blocking recv into the InputBuffer), and this is asked from
+     the main thread and the connect thread while the reader thread sits in
+     ReadLn: it can block for ever or steal the reader's bytes.  A peer that has
+     hung up is the READER's to notice -- it sees the close and raises
+     OnDisconnected; a SendLine in that gap raises inside Indy's write.  See
+     uIndyLink. *)
+   Result := IndyLinkIsOpen(FTCP);
+end;
+
+procedure TDXClusterClient.StartReader;
+begin
+   FReader := TDXClusterReader.Create(Self);
 end;
 
 function TDXClusterClient.Connect(const Host: string; Port: Word): Boolean;
@@ -372,7 +401,7 @@ begin
          end;
    end;
 
-   FReader := TDXClusterReader.Create(Self);
+   StartReader;
    if Assigned(FOnConnected) then
       begin
       FOnConnected;
@@ -390,9 +419,12 @@ begin
          FReader.Terminate;
          end;
       try
-         if FTCP.Connected then
+         // IndyLinkIsOpen and Disconnect(False): a bare Disconnect is
+         // Disconnect(True), which probes Connected -- a READ -- while the
+         // reader is blocked in ReadLn.  See uIndyLink.
+         if IndyLinkIsOpen(FTCP) then
             begin
-            FTCP.Disconnect;
+            FTCP.Disconnect(False);
             end;
       except
          // already gone; nothing to report

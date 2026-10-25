@@ -132,6 +132,9 @@ begin
    // fresh connection: connect -> send -> read any response until DXKeeper closes.
    // Runs on the sender thread, never the main thread.  The caller (DeliverWithRetry)
    // handles bounded retry on failure.
+   (* client is local to this call and this thread: no reading thread exists for
+     it, so client.Connected below (a read) is a read by the socket's sole
+     owner.  It must stay that way -- see the rule in uExternalLoggerBase. *)
    Result := False;
    client := TIdTCPClient.Create(nil);
    try
