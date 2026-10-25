@@ -9789,3 +9789,13 @@ msgstr "Bestand"
 msgid "Year"
 msgstr "Jaar"
 
+#: uappstrings.snewcontestfileslastqso
+#, fuzzy
+msgid "Last QSO"
+msgstr ""
+
+#: uappstrings.snewcontestfilesqsos
+#, fuzzy
+msgid "QSOs"
+msgstr ""
+

@@ -9060,3 +9060,13 @@ msgstr "Fil"
 msgid "Year"
 msgstr "År"
 
+#: uappstrings.snewcontestfileslastqso
+#, fuzzy
+msgid "Last QSO"
+msgstr ""
+
+#: uappstrings.snewcontestfilesqsos
+#, fuzzy
+msgid "QSOs"
+msgstr ""
+

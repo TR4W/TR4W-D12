@@ -12860,3 +12860,13 @@ msgstr "Plik"
 msgid "Year"
 msgstr "Rok"
 
+#: uappstrings.snewcontestfileslastqso
+#, fuzzy
+msgid "Last QSO"
+msgstr ""
+
+#: uappstrings.snewcontestfilesqsos
+#, fuzzy
+msgid "QSOs"
+msgstr "QSOs"
+

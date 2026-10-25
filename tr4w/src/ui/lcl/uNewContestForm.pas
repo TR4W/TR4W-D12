@@ -103,6 +103,8 @@ type
        where String is AnsiString, and this unit's string is UnicodeString. *)
     procedure grdFilesGetCellHint(Sender: TObject; ACol, ARow: Integer;
                                   var HintText: AnsiString);
+    procedure grdFilesPrepareCanvas(Sender: TObject; aCol, aRow: Integer;
+                                    aState: TGridDrawState);
     procedure btnLatestClick(Sender: TObject);
     procedure btnBrowseClick(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
@@ -309,7 +311,9 @@ const
   COL_CONTEST = 0;
   COL_YEAR    = 1;
   COL_CALL    = 2;
-  COL_FILE    = 3;
+  COL_LASTQSO = 3;
+  COL_QSOS    = 4;
+  COL_FILE    = 5;
 
 function TfrmNewContest.GetRowCount: integer;
 begin
@@ -444,8 +448,8 @@ end;
 
 (* THE LOGS WHERE TR4W KEEPS THEM -- the one-click common case.
 
-  A GRID SINCE 2026-10-19 (NY4I): Contest, Year, Call and File, the first
-  three read from inside each log by uLatestContest -- the very description
+  A GRID SINCE 2026-10-19 (NY4I): Contest, Year, Call, Last QSO, QSOs
+  (2026-10-24) and File, all but the last read from inside each log by uLatestContest -- the very description
   the Last Contest button shows, so the two cannot disagree. FillFileGrid.
 
   This list is deliberately NOT a file browser. Two were tried first and both
@@ -528,7 +532,7 @@ begin
    end;
 end;
 
-(* THE GRID'S FOUR HEADERS, from the resourcestrings -- a header typed into
+(* THE GRID'S SIX HEADERS, from the resourcestrings -- a header typed into
   the .lfm would ship as English in every language. Set at creation, not on
   show, because SizeFileGrid measures them and PopulateFiles runs before the
   form is shown. *)
@@ -537,6 +541,8 @@ begin
    grdFiles.Cells[COL_CONTEST, 0] := UTF8Encode(SNewContestFilesContest);
    grdFiles.Cells[COL_YEAR, 0]    := UTF8Encode(SNewContestFilesYear);
    grdFiles.Cells[COL_CALL, 0]    := UTF8Encode(SNewContestFilesCall);
+   grdFiles.Cells[COL_LASTQSO, 0] := UTF8Encode(SNewContestFilesLastQSO);
+   grdFiles.Cells[COL_QSOS, 0]    := UTF8Encode(SNewContestFilesQSOs);
    grdFiles.Cells[COL_FILE, 0]    := UTF8Encode(SNewContestFilesFile);
 end;
 
@@ -549,12 +555,15 @@ end;
 
   A FILE THAT CANNOT DESCRIBE ITSELF IS STILL LISTED -- an old .cfg waiting
   to be migrated, a damaged or foreign database. Its File cell is filled and
-  the other three are blank; why goes to the debug log, because nothing is
+  the others are blank; why goes to the debug log, because nothing is
   wrong that the operator must act on, and opening it is what tells them.
 
-  THE ORDER IS uLatestContest.SortContestFiles' (NY4I, 2026-10-19): newest
-  year first, then contest, then file name, with the files that cannot
-  describe themselves last -- unit tested there, without a form.
+  THE ORDER IS uLatestContest.SortContestFiles' (NY4I, 2026-10-19, and
+  2026-10-24): the newest last QSO first; logs with no QSOs after, newest
+  year, then contest, then file name; the files that cannot describe
+  themselves last -- see CompareContestFiles for why, unit tested there
+  without a form. The grid does not sort itself: its rows are FFiles' order,
+  and a header-click sort of the Cells would reorder them behind FFiles.
 
   aNames holds file names; aBase is their directory, with its trailing
   delimiter. *)
@@ -596,12 +605,18 @@ begin
                   grdFiles.Cells[COL_YEAR, row] := '';
                   end;
                grdFiles.Cells[COL_CALL, row] := UTF8Encode(described.Call);
+               grdFiles.Cells[COL_LASTQSO, row] :=
+                  UTF8Encode(LatestContestLastQSOText(described.LastQSOTime));
+               (* A described empty log says 0: it IS a log, with none in it. *)
+               grdFiles.Cells[COL_QSOS, row] := IntToStr(described.QSOCount);
                end
             else
                begin
                grdFiles.Cells[COL_CONTEST, row] := '';
                grdFiles.Cells[COL_YEAR, row]    := '';
                grdFiles.Cells[COL_CALL, row]    := '';
+               grdFiles.Cells[COL_LASTQSO, row] := '';
+               grdFiles.Cells[COL_QSOS, row]    := '';
                if logger.IsDebugEnabled then
                   begin
                   logger.Debug('[NewContest] %s does not describe itself (%s); ' +
@@ -1567,6 +1582,23 @@ procedure TfrmNewContest.grdFilesGetCellHint(Sender: TObject; ACol, ARow: Intege
                                              var HintText: AnsiString);
 begin
    HintText := UTF8Encode(FileOnRow(ARow));
+end;
+
+(* THE QSO COUNT RIGHT-ALIGNED, header and all, as a column of numbers reads.
+  The grid's own drawing, told the alignment through its colour-and-style
+  hook; nothing else about the cell changes. *)
+procedure TfrmNewContest.grdFilesPrepareCanvas(Sender: TObject; aCol, aRow: Integer;
+                                               aState: TGridDrawState);
+var
+   style: TTextStyle;
+begin
+   if aCol <> COL_QSOS then
+      begin
+      Exit;
+      end;
+   style := grdFiles.Canvas.TextStyle;
+   style.Alignment := taRightJustify;
+   grdFiles.Canvas.TextStyle := style;
 end;
 
 { Every edit that can invalidate the OK button routes here; uNewContest owns

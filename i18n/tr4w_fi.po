@@ -9068,3 +9068,13 @@ msgstr "Tiedosto"
 msgid "Year"
 msgstr "Vuosi"
 
+#: uappstrings.snewcontestfileslastqso
+#, fuzzy
+msgid "Last QSO"
+msgstr ""
+
+#: uappstrings.snewcontestfilesqsos
+#, fuzzy
+msgid "QSOs"
+msgstr ""
+

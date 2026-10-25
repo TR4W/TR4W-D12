@@ -67,6 +67,10 @@ type
       procedure Test_TheContestNameIsCutAtItsEndKeepingTheYear;
       procedure Test_AnUndescribedFileKeepsItsPath;
       procedure Test_NoYearShowsTheBareName;
+
+      procedure Test_TheLastQSOAndCountAreRealQSOsOnly;
+      procedure Test_ALogWithNoQSOsHasNoLastQSO;
+      procedure Test_TheLastQSOText;
    public
       destructor Destroy; override;
       procedure RunAllTests; override;
@@ -79,6 +83,10 @@ type
   my_call empty). Anything already at aFileName is scrubbed first. *)
 procedure MakeTestContestLog(const aFileName: string; aContest: TContestHandle;
                              const aCall: string);
+
+(* One real QSO at aWhen (unix UTC seconds) added to the closed log at
+  aFileName -- what dates a log for the grid's newest-last-QSO order. *)
+procedure AddTestQSOAt(const aFileName: string; aWhen: Int64);
 
 (* A FILE THAT PASSES THE BYTE CHECK for a TR4W log and fails in SQLite: the
   magic, a zero application id, then rubbish. *)
@@ -321,7 +329,9 @@ begin
    MakeTestContestLog(aFileName, CQWW, 'NY4I');
 end;
 
-procedure TLatestContestTests.Exec(const aFileName, aSQL: string);
+(* aSQL run on the closed log at aFileName, committed, and the log closed
+  again -- Exec, and AddTestQSOAt for uTestNewContestForm. *)
+procedure ExecOnTestLog(const aFileName, aSQL: string);
 var
    db: TLogDatabase;
 begin
@@ -333,6 +343,11 @@ begin
    finally
       db.Free;
    end;
+end;
+
+procedure TLatestContestTests.Exec(const aFileName, aSQL: string);
+begin
+   ExecOnTestLog(aFileName, aSQL);
 end;
 
 function TLatestContestTests.FileBytes(const aFileName: string): TBytes;
@@ -358,6 +373,26 @@ begin
              'freq_rx_hz, band, mode) VALUES (''g' + IntToStr(aWhen) + ''', ''s' +
              IntToStr(aWhen) + ''', ' + IntToStr(aWhen) +
              ', ''K1AR'', 14200000, 14200000, ''20M'', ''SSB'')';
+end;
+
+(* A log row of any kind at aWhen -- a 'NOTE', a deleted or skipped QSO --
+  each with its own guid, so several can share one time. *)
+function InsertRowAt(aWhen: Int64; const aKind: string;
+                     aDeleted, aSkipped: integer): string;
+var
+   tag: string;
+begin
+   tag := aKind + IntToStr(aDeleted) + IntToStr(aSkipped) + '-' + IntToStr(aWhen);
+   Result := 'INSERT INTO qso (guid, qso_set_id, record_kind, qso_at, callsign, ' +
+             'freq_tx_hz, freq_rx_hz, band, mode, deleted, is_skipped) VALUES (''g' +
+             tag + ''', ''s' + tag + ''', ''' + aKind + ''', ' + IntToStr(aWhen) +
+             ', ''K1AR'', 14200000, 14200000, ''20M'', ''SSB'', ' +
+             IntToStr(aDeleted) + ', ' + IntToStr(aSkipped) + ')';
+end;
+
+procedure AddTestQSOAt(const aFileName: string; aWhen: Int64);
+begin
+   ExecOnTestLog(aFileName, InsertQSOAt(aWhen));
 end;
 
 (* ---------------------------------------------------------------------------
@@ -1065,6 +1100,102 @@ begin
    CheckEquals('cqww.db', LatestContestDetail('', 'cqww.db'), 'no call, bare file name');
 end;
 
+(* ---------------------------------------------------------------------------
+  the last QSO and the QSO count -- NY4I, 2026-10-24
+  --------------------------------------------------------------------------- *)
+
+(* ONLY REAL QSOs: a note, a deleted QSO and a skipped QSO, each NEWER than
+  every real one, change neither the newest QSO nor the count. A dupe and an
+  X-QSO are rows of the log and count (NY4I). *)
+procedure TLatestContestTests.Test_TheLastQSOAndCountAreRealQSOsOnly;
+var
+   fn, why: string;
+   facts: TLogFileFacts;
+   latest: TLatestContest;
+   newest: Int64;
+begin
+   BeginTest('Test_TheLastQSOAndCountAreRealQSOsOnly');
+
+   fn := TempName('last qso.db');
+   MakeLog(fn);
+   newest := UnixOf(2026, 10, 24) + 23 * 3600 + 18 * 60;
+   Exec(fn, InsertQSOAt(UnixOf(2026, 10, 24)));
+   Exec(fn, InsertQSOAt(newest));
+   Exec(fn, 'UPDATE qso SET is_dupe = 1, is_xqso = 1 WHERE qso_at = ' + IntToStr(newest));
+   Exec(fn, InsertRowAt(newest + 60, 'NOTE', 0, 0));
+   Exec(fn, InsertRowAt(newest + 120, 'QSO', 1, 0));
+   Exec(fn, InsertRowAt(newest + 180, 'QSO', 0, 1));
+
+   facts := ReadLogFileFacts(fn, why);
+   try
+      CheckTrue(facts <> nil, 'described: ' + why);
+      if facts <> nil then
+         begin
+         CheckEquals(2, facts.QSOCount,
+                     'two QSOs: not the note, the deleted or the skipped one');
+         CheckEquals(IntToStr(newest), IntToStr(DateTimeToUnix(facts.LastQSOTime)),
+                     'the newest REAL QSO, a dupe X-QSO included');
+         end;
+   finally
+      facts.Free;
+   end;
+
+   latest := TLatestContest.Create(fn);
+   try
+      CheckTrue(latest.Described, 'described: ' + latest.Why);
+      CheckEquals(2, latest.QSOCount, 'the count reaches the description');
+      CheckEquals(IntToStr(newest), IntToStr(DateTimeToUnix(latest.LastQSOTime)),
+                  'and so does the newest QSO');
+      CheckEquals('2026-10-24 2318z', LatestContestLastQSOText(latest.LastQSOTime),
+                  'as the grid shows it, UTC');
+   finally
+      latest.Free;
+   end;
+
+   Scrub(fn);
+end;
+
+procedure TLatestContestTests.Test_ALogWithNoQSOsHasNoLastQSO;
+var
+   fn, why: string;
+   facts: TLogFileFacts;
+begin
+   BeginTest('Test_ALogWithNoQSOsHasNoLastQSO');
+
+   fn := TempName('no qsos.db');
+   MakeLog(fn);
+   (* A note alone is still no QSO. *)
+   Exec(fn, InsertRowAt(UnixOf(2026, 10, 24), 'NOTE', 0, 0));
+
+   facts := ReadLogFileFacts(fn, why);
+   try
+      CheckTrue(facts <> nil, 'an empty log still describes itself: ' + why);
+      if facts <> nil then
+         begin
+         CheckEquals(0, facts.QSOCount, 'no QSOs');
+         CheckTrue(facts.LastQSOTime = 0, 'no last QSO -- 0, never 1970');
+         end;
+   finally
+      facts.Free;
+   end;
+   Scrub(fn);
+end;
+
+procedure TLatestContestTests.Test_TheLastQSOText;
+begin
+   BeginTest('Test_TheLastQSOText');
+
+   CheckEquals('', LatestContestLastQSOText(0), 'no QSO, an empty cell');
+   (* 23:18:45.678 -- the seconds and milliseconds are not shown, and the
+     z is a letter, not FormatDateTime's milliseconds. *)
+   CheckEquals('2026-10-24 2318z',
+               LatestContestLastQSOText(EncodeDateTime(2026, 10, 24, 23, 18, 45, 678)),
+               'ISO date, HHMM, z');
+   CheckEquals('2026-01-02 0005z',
+               LatestContestLastQSOText(EncodeDateTime(2026, 1, 2, 0, 5, 0, 0)),
+               'leading zeros kept');
+end;
+
 procedure TLatestContestTests.RunAllTests;
 begin
    Test_ARealLogDescribesItself;
@@ -1093,6 +1224,9 @@ begin
    Test_TheContestNameIsCutAtItsEndKeepingTheYear;
    Test_AnUndescribedFileKeepsItsPath;
    Test_NoYearShowsTheBareName;
+   Test_TheLastQSOAndCountAreRealQSOsOnly;
+   Test_ALogWithNoQSOsHasNoLastQSO;
+   Test_TheLastQSOText;
 end;
 
 end.

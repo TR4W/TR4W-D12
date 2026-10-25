@@ -29,7 +29,7 @@ object frmNewContest: TfrmNewContest
       Top = 8
       Width = 276
       Anchors = [akTop, akLeft, akRight, akBottom]
-      ColCount = 4
+      ColCount = 6
       FixedCols = 0
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRowSelect, goThumbTracking, goSmoothScroll, goCellHints]
       RowCount = 1
@@ -38,6 +38,7 @@ object frmNewContest: TfrmNewContest
       OnDblClick = grdFilesDblClick
       OnGetCellHint = grdFilesGetCellHint
       OnKeyDown = grdFilesKeyDown
+      OnPrepareCanvas = grdFilesPrepareCanvas
     end
     object btnBrowse: TButton
       Left = 10

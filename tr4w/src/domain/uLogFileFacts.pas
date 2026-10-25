@@ -60,6 +60,8 @@ type
       FStartTime: TDateTime;
       FFirstQSOTime: TDateTime;
       FCreatedAt: TDateTime;
+      FLastQSOTime: TDateTime;
+      FQSOCount: integer;
    public
       (* THE YEAR THIS LOG'S CONTEST WAS RUN, or 0 when nothing says.
 
@@ -80,6 +82,16 @@ type
       property StartTime: TDateTime read FStartTime;
       property FirstQSOTime: TDateTime read FFirstQSOTime;
       property CreatedAt: TDateTime read FCreatedAt;
+      (* THE NEWEST QSO and HOW MANY -- NY4I, 2026-10-24: the New Contest
+        dialog's grid lists them so two logs of one contest can be told apart
+        (a file name carries the day the log was CREATED, not operated).
+
+        A QSO here is a record_kind 'QSO' row that is neither deleted nor
+        skipped -- the reader folds is_skipped into ceQSO_Deleted. Notes and
+        QTC traffic are not QSOs; dupes and X-QSOs are, since they are rows
+        of the log. LastQSOTime is 0 and QSOCount 0 for a log with none. *)
+      property LastQSOTime: TDateTime read FLastQSOTime;
+      property QSOCount: integer read FQSOCount;
    end;
 
 (* THE FACTS OF THE LOG AT aFileName, or nil with aWhy saying why not. The
@@ -121,7 +133,7 @@ begin
       end;
 end;
 
-(* The two reads, on an open read-only connection. False with aWhy when the
+(* The three reads, on an open read-only connection. False with aWhy when the
   log has no contest row. *)
 function ReadFacts(aDatabase: TLogDatabase; aFacts: TLogFileFacts;
                    out aWhy: string): boolean;
@@ -160,6 +172,27 @@ begin
       if not q.EOF then
          begin
          aFacts.FFirstQSOTime := UnixColumn(q.Fields[0]);
+         end;
+      q.Close;
+
+      (* THE COUNT AND THE NEWEST, IN ONE PASS -- and NOT INDEXED on purpose.
+
+        A peeked log is read-only, so it has no ANALYZE statistics, and the
+        planner then picks the partial index idx_qso_dupe (WHERE deleted = 0)
+        and looks every row up in the table through it. Measured 2026-10-24
+        on a 19,740-row log: 52 ms that way, 8.7 ms as a plain table scan;
+        ORDER BY qso_at DESC LIMIT 1 fell into the same index and was no
+        better. A 101-row log is 0.4 ms either way. Stated rather than left
+        to a planner whose choice depends on statistics this read cannot
+        write. *)
+      q.SQL.Text := 'SELECT COUNT(*), MAX(qso_at) FROM qso NOT INDEXED ' +
+                    'WHERE record_kind = ''QSO'' AND deleted = 0 ' +
+                    'AND is_skipped = 0';
+      q.Open;
+      if not q.EOF then
+         begin
+         aFacts.FQSOCount := q.Fields[0].AsInteger;
+         aFacts.FLastQSOTime := UnixColumn(q.Fields[1]);
          end;
       q.Close;
 

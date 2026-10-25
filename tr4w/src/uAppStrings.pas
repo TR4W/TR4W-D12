@@ -423,10 +423,14 @@ resourcestring
    (* THE NEW CONTEST DIALOG'S EXISTING-LOG GRID, its four column headers --
      NY4I 2026-10-19. One row per log in the contest directory: the contest's
      display name, the year it was run, the entry's callsign, and the file
-     name without its directory. *)
+     name without its directory. And, since 2026-10-24 (NY4I, two logs of one
+     contest he could not tell apart), the UTC date and time of the log's
+     newest QSO and how many QSOs it holds -- "QSOs" is that count. *)
    SNewContestFilesContest = 'Contest';
    SNewContestFilesYear = 'Year';
    SNewContestFilesCall = 'Call';
+   SNewContestFilesLastQSO = 'Last QSO';
+   SNewContestFilesQSOs = 'QSOs';
    SNewContestFilesFile = 'File';
 
    (* CATEGORY-POWER CHANGED WITH QSOs IN THE LOG. NY4I, 2026-10-01: "Maybe

@@ -36,8 +36,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   and the full path goes in the hint, always.
 
   THE SAME DESCRIPTION FILLS THE DIALOG'S EXISTING-LOG GRID (NY4I,
-  2026-10-19): one TLatestContest per listed file, its ContestName, Year and
-  Call in the columns. One reader and one name/year rule for the button and
+  2026-10-19): one TLatestContest per listed file, its ContestName, Year,
+  Call, LastQSOTime and QSOCount (2026-10-24) in the columns. One reader and one name/year rule for the button and
   the grid -- a second would drift from this one.
 
   WHEN THE LOG CANNOT SAY -- a missing file, an old .cfg, a damaged or foreign
@@ -72,10 +72,13 @@ type
       FContestName: string;
       FYear: integer;
       FCall: string;
+      FLastQSOTime: TDateTime;
+      FQSOCount: integer;
       FDetail: string;
       FWhy: string;
       procedure Describe(const aContestName: string; aYear: integer;
-                         const aCall: string);
+                         const aCall: string; aLastQSOTime: TDateTime;
+                         aQSOCount: integer);
    public
       (* Reads the log at aFileName (uLogFileFacts) and resolves its contest
         through the registry. Never raises. *)
@@ -85,7 +88,8 @@ type
         builds once the log has answered, and how a test states one without a
         file. *)
       constructor CreateFor(const aFileName, aContestName: string;
-                            aYear: integer; const aCall: string);
+                            aYear: integer; const aCall: string;
+                            aLastQSOTime: TDateTime = 0; aQSOCount: integer = 0);
 
       (* The full path -- the button's hint. *)
       property FileName: string read FFileName;
@@ -99,6 +103,11 @@ type
       (* The entry's declared callsign; '' when the log declares none or
         cannot describe itself. *)
       property Call: string read FCall;
+      (* The newest QSO's UTC time, 0 when the log has none or cannot
+        describe itself (uLogFileFacts.LastQSOTime says what a QSO is). *)
+      property LastQSOTime: TDateTime read FLastQSOTime;
+      (* How many QSOs the log holds; 0 when none or not Described. *)
+      property QSOCount: integer read FQSOCount;
       (* The last line: call + file name, or the lower-cased path when not
         Described. *)
       property Detail: string read FDetail;
@@ -113,13 +122,24 @@ type
    (* The New Contest dialog's files, each described -- owned by the list. *)
    TContestFileList = TObjectList<TLatestContest>;
 
-(* THE ORDER THE NEW CONTEST DIALOG LISTS LOGS IN -- NY4I, 2026-10-19.
+(* THE ORDER THE NEW CONTEST DIALOG LISTS LOGS IN -- NY4I, 2026-10-19, and
+  2026-10-24.
 
-  Logs that describe themselves first: the NEWEST YEAR first (a log with no
-  year after every dated one), then the contest's name, then the file name.
-  Files that cannot describe themselves -- an old .cfg, a damaged or foreign
-  database -- after all of those, by file name. File names compare without
-  case; the full path breaks a remaining tie, so the order is total.
+  THE NEWEST LAST QSO FIRST, since 2026-10-24. NY4I opened
+  "CQ-WW-SSB 2026-10-19 NY4I.db" for a contest operated on 10-24 and could not
+  tell his logs apart: the file name carries the day the log was CREATED, and
+  year-then-contest put every CQ WW 2026 log side by side in file-name order.
+  The log knows when it was last worked, so that decides.
+
+      1. logs with QSOs, the newest last QSO first;
+      2. logs with none, the NEWEST YEAR first (a log with no year after every
+         dated one), then the contest's name, then the file name -- the
+         2026-10-19 order, unchanged;
+      3. files that cannot describe themselves -- an old .cfg, a damaged or
+         foreign database -- by file name.
+
+  A tie in 1 falls through to 2's keys. File names compare without case; the
+  full path breaks a remaining tie, so the order is total.
 
   Negative when aLeft lists first. *)
 function CompareContestFiles(constref aLeft, aRight: TLatestContest): integer;
@@ -129,6 +149,10 @@ procedure SortContestFiles(aFiles: TContestFileList);
 
 (* The contest line: "<name> <year>", or the bare name when aYear is 0. *)
 function LatestContestLine(const aName: string; aYear: integer): string;
+
+(* THE GRID'S LAST QSO CELL: "2026-10-24 2318z", UTC, or '' for 0. ISO date
+  and the log's HHMM time, so it reads the same in every language. *)
+function LatestContestLastQSOText(aWhen: TDateTime): string;
 
 (* The detail line: "<call> - <file name>", or the bare name with no call. *)
 function LatestContestDetail(const aCall, aFileName: string): string;
@@ -170,6 +194,16 @@ begin
    else
       begin
       Result := aName;
+      end;
+end;
+
+function LatestContestLastQSOText(aWhen: TDateTime): string;
+begin
+   Result := '';
+   if aWhen > 0 then
+      begin
+      (* The "z" QUOTED: a bare z in FormatDateTime is milliseconds. *)
+      Result := FormatDateTime('yyyy-mm-dd hhnn"z"', aWhen);
       end;
 end;
 
@@ -222,8 +256,18 @@ begin
    Result := 0;
    if aLeft.Described then
       begin
+      (* The newest last QSO first; 0 (no QSO) is below every real time, so
+        a log with none lists after every log with one. *)
+      if aLeft.LastQSOTime > aRight.LastQSOTime then
+         begin
+         Result := -1;
+         end
+      else if aLeft.LastQSOTime < aRight.LastQSOTime then
+         begin
+         Result := 1;
+         end
       (* Newest year first; 0 (no year) is below every real year, so last. *)
-      if aLeft.Year > aRight.Year then
+      else if aLeft.Year > aRight.Year then
          begin
          Result := -1;
          end
@@ -278,26 +322,31 @@ begin
          FWhy := 'the contest row names no contest';
          Exit;
          end;
-      Describe(name, facts.ContestYear, facts.MyCall);
+      Describe(name, facts.ContestYear, facts.MyCall, facts.LastQSOTime,
+               facts.QSOCount);
    finally
       facts.Free;
    end;
 end;
 
 constructor TLatestContest.CreateFor(const aFileName, aContestName: string;
-                                     aYear: integer; const aCall: string);
+                                     aYear: integer; const aCall: string;
+                                     aLastQSOTime: TDateTime; aQSOCount: integer);
 begin
    inherited Create;
    FFileName := aFileName;
-   Describe(aContestName, aYear, aCall);
+   Describe(aContestName, aYear, aCall, aLastQSOTime, aQSOCount);
 end;
 
 procedure TLatestContest.Describe(const aContestName: string; aYear: integer;
-                                  const aCall: string);
+                                  const aCall: string; aLastQSOTime: TDateTime;
+                                  aQSOCount: integer);
 begin
    FContestName := aContestName;
    FYear := aYear;
    FCall := aCall;
+   FLastQSOTime := aLastQSOTime;
+   FQSOCount := aQSOCount;
    FDetail := LatestContestDetail(aCall, ExtractFileName(FFileName));
    FDescribed := True;
    FWhy := '';

@@ -81,6 +81,8 @@ type
       (* NY4I 2026-10-19: Enter opens the selected log; the order is newest
         year first. The order is pinned without a form. *)
       procedure Test_LogsSortNewestYearFirst;
+      (* NY4I 2026-10-24: the newest last QSO lists first. *)
+      procedure Test_LogsSortNewestLastQSOFirst;
       procedure Test_TheGridListsInTheSortedOrder;
       procedure Test_EnterOpensTheSelectedLog;
    private
@@ -95,6 +97,15 @@ type
    end;
 
 implementation
+
+const
+   (* grdFiles' columns, as uNewContestForm orders them. *)
+   COL_CONTEST = 0;
+   COL_YEAR = 1;
+   COL_CALL = 2;
+   COL_LASTQSO = 3;
+   COL_QSOS = 4;
+   COL_FILE = 5;
 
 var
    (* How many times the form told uNewContest the contest changed. *)
@@ -809,7 +820,7 @@ begin
    Result := -1;
    for r := aForm.grdFiles.FixedRows to aForm.grdFiles.RowCount - 1 do
       begin
-      if aForm.grdFiles.Cells[3, r] = aName then
+      if aForm.grdFiles.Cells[COL_FILE, r] = aName then
          begin
          Result := r;
          Exit;
@@ -843,11 +854,6 @@ end;
   Each described row must say exactly what TLatestContest says of the same
   file, which is what the Last Contest button shows: one rule, not two. *)
 procedure TNewContestFormTests.Test_TheFileGridDescribesEachLog;
-const
-   COL_CONTEST = 0;
-   COL_YEAR = 1;
-   COL_CALL = 2;
-   COL_FILE = 3;
 var
    frm: TfrmNewContest;
    dir: string;
@@ -874,6 +880,11 @@ var
                      aName + ': the Year column is the button''s year');
          CheckEquals(UTF8Encode(expected.Call), frm.grdFiles.Cells[COL_CALL, row],
                      aName + ': the Call column is the declared call');
+         CheckEquals(UTF8Encode(LatestContestLastQSOText(expected.LastQSOTime)),
+                     frm.grdFiles.Cells[COL_LASTQSO, row],
+                     aName + ': the Last QSO column is the newest QSO, UTC');
+         CheckEquals(IntToStr(expected.QSOCount), frm.grdFiles.Cells[COL_QSOS, row],
+                     aName + ': the QSOs column is the count');
       finally
          expected.Free;
       end;
@@ -894,6 +905,8 @@ var
       CheckEquals('', frm.grdFiles.Cells[COL_CONTEST, row], aName + ': no contest');
       CheckEquals('', frm.grdFiles.Cells[COL_YEAR, row], aName + ': no year');
       CheckEquals('', frm.grdFiles.Cells[COL_CALL, row], aName + ': no call');
+      CheckEquals('', frm.grdFiles.Cells[COL_LASTQSO, row], aName + ': no last QSO');
+      CheckEquals('', frm.grdFiles.Cells[COL_QSOS, row], aName + ': no count, not 0');
       CheckEquals(dir + aName, frm.FileOnRow(row), aName + ': its own full path');
    end;
 
@@ -916,6 +929,11 @@ begin
                   'the Year header');
       CheckEquals(UTF8Encode(SNewContestFilesCall), frm.grdFiles.Cells[COL_CALL, 0],
                   'the Call header');
+      CheckEquals(UTF8Encode(SNewContestFilesLastQSO), frm.grdFiles.Cells[COL_LASTQSO, 0],
+                  'the Last QSO header');
+      CheckEquals(UTF8Encode(SNewContestFilesQSOs), frm.grdFiles.Cells[COL_QSOS, 0],
+                  'the QSOs header');
+      CheckEquals(6, frm.grdFiles.ColCount, 'six columns');
       CheckEquals(UTF8Encode(SNewContestFilesFile), frm.grdFiles.Cells[COL_FILE, 0],
                   'the File header');
       CheckEquals(1, frm.grdFiles.FixedRows, 'one header row');
@@ -1000,7 +1018,7 @@ begin
       for r := 1 to frm.grdFiles.RowCount - 1 do
          begin
          frm.grdFiles.Row := r;
-         CheckEquals(dir + frm.grdFiles.Cells[3, r], frm.SelectedFile,
+         CheckEquals(dir + frm.grdFiles.Cells[COL_FILE, r], frm.SelectedFile,
                      'selecting row ' + IntToStr(r) + ' selects its own file');
          end;
 
@@ -1038,11 +1056,12 @@ end;
 procedure TNewContestFormTests.Test_TheFileGridIsWideEnoughAndSizesOnce;
 var
    frm: TfrmNewContest;
-   dir, where: string;
+   dir, empty, where: string;
    probe: TBitmap;
    c, r, w, columns, w0, g0, min0, w1, g1, room, designedGrid: integer;
 begin
    BeginTest('Test_TheFileGridIsWideEnoughAndSizesOnce');
+   empty := '';
 
    dir := NewFilesDir('size');
    MakeTestContestLog(dir + 'a rather long file name for a contest log 2026.db',
@@ -1055,6 +1074,14 @@ begin
       CheckTrue(frm.gbNew.AnchorSideLeft.Control = frm.gbExisting,
                 'gbNew''s left side follows gbExisting''s right (.lfm)');
       CheckTrue(akLeft in frm.gbNew.Anchors, 'and gbNew is anchored on the left');
+
+      (* THE BASELINE IS THE GRID WITH ITS HEADERS ONLY -- an empty
+        directory -- not the designed width: since 2026-10-24 the six headers
+        alone are wider than the designed grid, so a form shown over an empty
+        directory has already grown by that much. What the files add, and
+        what emptying the directory gives back, is measured from here. *)
+      empty := NewFilesDir('size-empty');
+      frm.PopulateFiles(empty);
 
       w0   := frm.Width;
       g0   := frm.gbExisting.Width;
@@ -1131,6 +1158,10 @@ begin
       probe.Free;
       frm.Free;
       RemoveFilesDir(dir);
+      if empty <> '' then
+         begin
+         RemoveFilesDir(empty);
+         end;
    end;
 end;
 
@@ -1194,7 +1225,7 @@ begin
       WriteLn('  [NewContest] file grid: ', COPIES, ' logs described in ', took, ' ms');
 
       CheckEquals(1 + COPIES, frm.grdFiles.RowCount, 'every copy is a row');
-      CheckEquals('NY4I', frm.grdFiles.Cells[2, COPIES], 'and the last is described');
+      CheckEquals('NY4I', frm.grdFiles.Cells[COL_CALL, COPIES], 'and the last is described');
       CheckTrue(took < 3000, 'filling the grid took ' + IntToStr(took) + ' ms');
    finally
       frm.Free;
@@ -1202,7 +1233,9 @@ begin
    end;
 end;
 
-(* THE ORDER, WITHOUT A FORM OR A FILE. Added scrambled; read back as:
+(* THE ORDER, WITHOUT A FORM OR A FILE -- of logs with NO QSOs, which since
+  2026-10-24 is the tier after every log with one (Test_LogsSortNewestLastQSOFirst)
+  and keeps the 2026-10-19 order. Added scrambled; read back as:
 
     b.db   ARRL DX 2026     newest year first ...
     Y.db   arrl dx 2026     ... the same contest (its name compared without
@@ -1264,7 +1297,76 @@ begin
    CheckFalse(DirectoryExists(gone), 'describing a missing file created nothing');
 end;
 
-(* THE GRID SHOWS THAT ORDER, over real files: two years of logs and a .cfg. *)
+(* THE NEWEST LAST QSO FIRST -- NY4I, 2026-10-24. His case: two CQ WW SSB 2026
+  logs, the one NAMED for 10-19 worked on 10-24. Added scrambled; read back:
+
+    cqww 2026-10-19.db  CQ WW  2026  last QSO 10-24 23:18   worked last
+    cqww 2026-10-12.db  CQ WW  2026  last QSO 10-12         same contest, earlier
+    arrl 2025.db        ARRL   2025  last QSO 2025-11-30    an OLDER year, but worked
+    tie b.db / tie a.db Zed    2024  one shared last QSO    a tie falls to the
+                                                            2026-10-19 keys: file name
+    empty 2026.db       CQ WW  2026  no QSOs                a log with none after
+                                                            every log with one, even
+                                                            from a newer year
+    empty 2025.db       CQ WW  2025  no QSOs                and those in year order
+    m.cfg               (undescribed)                       last *)
+procedure TNewContestFormTests.Test_LogsSortNewestLastQSOFirst;
+const
+   EXPECTED: array[0..7] of string =
+      ('cqww 2026-10-19.db', 'cqww 2026-10-12.db', 'arrl 2025.db', 'tie a.db',
+       'tie b.db', 'empty 2026.db', 'empty 2025.db', 'm.cfg');
+var
+   files: TContestFileList;
+   gone: string;
+   i: integer;
+   tie: TDateTime;
+begin
+   BeginTest('Test_LogsSortNewestLastQSOFirst');
+
+   gone := IncludeTrailingPathDelimiter(GetTempDir) + 'tr4w_no_such_dir_' +
+           IntToStr(GetProcessID) + PathDelim;
+   tie := EncodeDate(2024, 6, 1);
+
+   files := TContestFileList.Create(True);
+   try
+      files.Add(TLatestContest.CreateFor('c:\logs\empty 2025.db', 'CQ WW', 2025, ''));
+      files.Add(TLatestContest.CreateFor('c:\logs\tie b.db', 'Zed', 2024, '', tie, 3));
+      files.Add(TLatestContest.CreateFor('c:\logs\cqww 2026-10-12.db', 'CQ WW', 2026,
+                                         'NY4I', EncodeDate(2026, 10, 12), 40));
+      files.Add(TLatestContest.Create(gone + 'm.cfg'));
+      files.Add(TLatestContest.CreateFor('c:\logs\arrl 2025.db', 'ARRL', 2025, 'NY4I',
+                                         EncodeDate(2025, 11, 30), 900));
+      files.Add(TLatestContest.CreateFor('c:\logs\empty 2026.db', 'CQ WW', 2026, ''));
+      files.Add(TLatestContest.CreateFor('c:\logs\cqww 2026-10-19.db', 'CQ WW', 2026,
+                                         'NY4I', EncodeDate(2026, 10, 24) +
+                                         EncodeTime(23, 18, 0, 0), 1500));
+      files.Add(TLatestContest.CreateFor('c:\logs\tie a.db', 'Zed', 2024, '', tie, 5));
+
+      SortContestFiles(files);
+
+      CheckEquals(Length(EXPECTED), files.Count, 'sorting keeps every file');
+      for i := 0 to files.Count - 1 do
+         begin
+         CheckEquals(EXPECTED[i], ExtractFileName(files[i].FileName),
+                     'position ' + IntToStr(i));
+         end;
+
+      CheckEquals(0, CompareContestFiles(files[0], files[0]), 'a file equals itself');
+      for i := 0 to files.Count - 2 do
+         begin
+         CheckTrue(CompareContestFiles(files[i], files[i + 1]) < 0,
+                   EXPECTED[i] + ' lists before ' + EXPECTED[i + 1]);
+         CheckTrue(CompareContestFiles(files[i + 1], files[i]) > 0,
+                   'and ' + EXPECTED[i + 1] + ' after ' + EXPECTED[i]);
+         end;
+   finally
+      files.Free;
+   end;
+   CheckFalse(DirectoryExists(gone), 'describing a missing file created nothing');
+end;
+
+(* THE GRID SHOWS THAT ORDER, over real files: logs worked at different times,
+  one never worked, and a .cfg. *)
 procedure TNewContestFormTests.Test_TheGridListsInTheSortedOrder;
 var
    frm: TfrmNewContest;
@@ -1280,6 +1382,9 @@ begin
    MakeTestContestLog(dir + 'b.db', ContestFromName('CQ-WW-SSB'), 'NY4I');
    MakeTestContestLog(dir + 'c.db', ContestFromName('CQ-WW-SSB'), 'K1AR');
    WriteTextFile(dir + '0 old.cfg', 'MY CALL = NY4I');
+   (* c worked last, a before it, b not at all. *)
+   AddTestQSOAt(dir + 'c.db', 1761350280);   (* 2025-10-24 23:58 UTC *)
+   AddTestQSOAt(dir + 'a.db', 1729900800);   (* 2024-10-26 00:00 UTC *)
 
    frm := NewForm;
    expected := TContestFileList.Create(True);
@@ -1304,12 +1409,16 @@ begin
          CheckEquals(expected[r - 1].FileName, frm.FileOnRow(r),
                      'row ' + IntToStr(r) + ' is SortContestFiles'' file ' + IntToStr(r - 1));
          end;
-      (* All three logs were made this year: the contest names decide, and
-        the file name breaks the tie between the two CQ WW logs. *)
-      CheckEquals('b.db', frm.grdFiles.Cells[3, 1], 'CQ WW (b) first');
-      CheckEquals('c.db', frm.grdFiles.Cells[3, 2], 'then CQ WW (c)');
-      CheckEquals('a.db', frm.grdFiles.Cells[3, 3], 'then the party');
-      CheckEquals('0 old.cfg', frm.grdFiles.Cells[3, 4],
+      (* The newest last QSO first -- c, though b is the same contest and
+        sorts before it by name -- then a's older one, then b with none. *)
+      CheckEquals('c.db', frm.grdFiles.Cells[COL_FILE, 1], 'CQ WW (c), worked last, first');
+      CheckEquals('a.db', frm.grdFiles.Cells[COL_FILE, 2], 'then the party, worked earlier');
+      CheckEquals('b.db', frm.grdFiles.Cells[COL_FILE, 3], 'then CQ WW (b), no QSOs');
+      CheckEquals('2025-10-24 2358z', frm.grdFiles.Cells[COL_LASTQSO, 1], 'c''s last QSO, UTC');
+      CheckEquals('1', frm.grdFiles.Cells[COL_QSOS, 1], 'c holds one QSO');
+      CheckEquals('', frm.grdFiles.Cells[COL_LASTQSO, 3], 'b has no last QSO');
+      CheckEquals('0', frm.grdFiles.Cells[COL_QSOS, 3], 'and says 0, being a log');
+      CheckEquals('0 old.cfg', frm.grdFiles.Cells[COL_FILE, 4],
                   'and the .cfg last, though its name sorts first');
    finally
       expected.Free;
@@ -1412,6 +1521,7 @@ begin
    Test_GrowthStopsAtTheWorkArea;
    Test_AHundredLogsFillQuickly;
    Test_LogsSortNewestYearFirst;
+   Test_LogsSortNewestLastQSOFirst;
    Test_TheGridListsInTheSortedOrder;
    Test_EnterOpensTheSelectedLog;
 end;
