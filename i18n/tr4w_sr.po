@@ -9175,7 +9175,7 @@ msgstr "Veza"
 
 #: uappstrings.sbackupdestinationreachable
 #, fuzzy
-msgid "Backups will also be copied to %s."
+msgid "Backup destination %s is reachable."
 msgstr ""
 
 #: uappstrings.sbackupcopyfailed

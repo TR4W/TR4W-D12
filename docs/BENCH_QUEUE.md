@@ -37,7 +37,7 @@ Unit-tested with real files and a fault-injecting file layer (`uTestBackupCopier
       "logback.db"`. EXPECT Preferences' "Copy to:" EMPTY (a bare name meant
       beside the logs, which is now the local folder). Put `\\NAS2\Backups` (or a
       Dropbox folder) there and press OK. EXPECT within a few seconds, on the
-      status line: "Backups will also be copied to ...", and `tr4w.log`
+      status line: "Backup destination ... is reachable.", and `tr4w.log`
       `[BackupCopy] ... reachable`.
 - [ ] **A copy arrives.** Five more QSOs. EXPECT `<log> periodic.db` in the
       share, and no `.partial` left there; then `.bak` beside it after the next.

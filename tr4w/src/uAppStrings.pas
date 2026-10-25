@@ -474,7 +474,7 @@ resourcestring
      locally. Each of the first three is shown ONCE per change of state, on
      the status line; %s is the folder, and in SBackupCopyFailed the second
      %s is the reason, in English. *)
-   SBackupDestinationReachable = 'Backups will also be copied to %s.';
+   SBackupDestinationReachable = 'Backup destination %s is reachable.';
    SBackupCopyFailed =
       'Backups are NOT reaching %s: %s. Logging continues, and TR4W keeps trying.';
    SBackupCopyRecovered = 'Backups are reaching %s again.';
