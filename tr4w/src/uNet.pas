@@ -997,6 +997,23 @@ begin
    Application.QueueAsyncCall(GNetDrainer.ReportDropped, 0);
 end;
 
+const
+   (* The packet kind the writer reports as lost when it was a new QSO; also the
+     name NetPacketKind gives NET_QSOINFO_ID. *)
+   KIND_QSOINFO = 'QSOINFO';
+
+(* ON THE WRITER THREAD.  A QSO packet whose write failed is a QSO the server
+  does not have: count it as unsent, which is what SendRecordToServer's False
+  did when the send used to fail inline.  InterLockedIncrement because the
+  counter is also written on the main thread. *)
+procedure NetPacketLost(const aKind: string);
+begin
+   if aKind = KIND_QSOINFO then
+      begin
+      InterLockedIncrement(PLongInt(@tUSQ)^);
+      end;
+end;
+
 procedure NetDisconnect;
 begin
   // The WSAAsyncSelect(..., 0, 0) that stood here was cancelling the socket's
@@ -1286,6 +1303,7 @@ begin
       NetClient := TNetClient.Create;
       NetClient.OnData := @NetDataArrived;
       NetClient.OnDisconnected := @NetLinkDropped;
+      NetClient.OnPacketLost := @NetPacketLost;
       end;
 
    Result := NetClient.Connect(Settings.Server.Address, Settings.Server.Port,
@@ -1778,12 +1796,52 @@ begin
       end;
 end;
 
+(* WHAT A PACKET IS CALLED IN THE LOG.  Every record of this protocol opens
+  with a Word id (VC: NET_*_ID); the one exception, NET_LOGINFO_MESSAGE, is a
+  DWORD whose low word is not an id and falls through to the hex form. *)
+function NetPacketKind(var buf; Len: integer): string;
+var
+   id: Word;
+begin
+   Result := 'packet';
+   if Len < SizeOf(Word) then
+      begin
+      Exit;
+      end;
+   id := Word(buf);
+   case id of
+      NET_MESSAGESTATE_ID:       Result := 'MESSAGESTATE';
+      NET_LOGCOMPARE_ID:         Result := 'LOGCOMPARE';
+      NET_INTERCOMMESSAGE_ID:    Result := 'INTERCOM';
+      NET_NETWORKDXSPOT_ID:      Result := 'DXSPOT';
+      NET_QSOINFO_ID:            Result := KIND_QSOINFO;
+      NET_EDITEDQSO_ID:          Result := 'EDITEDQSO';
+      NET_OFFLINEQSO_ID:         Result := 'OFFLINEQSO';
+      NET_THIS_QTC_WAS__SEND_ID: Result := 'QTCSENT';
+      NET_TAKESERVERQSO_ID:      Result := 'TAKESERVERQSO';
+      NET_TIMESYN_ID:            Result := 'TIMESYNC';
+      NET_PARAMETER_ID:          Result := 'PARAMETER';
+      NET_STATIONSTATUS_ID:      Result := 'STATIONSTATUS';
+      NET_CLIENTSTATUS_ID:       Result := 'CLIENTSTATUS';
+      NET_SPOTVIANETWORK_ID:     Result := 'SPOTVIANETWORK';
+      NET_COMPUTERID_ID:         Result := 'COMPUTERID';
+      NET_SERVERMESSAGE_ID:      Result := 'SERVERMESSAGE';
+   else
+      Result := SysUtils.Format('packet $%.4x', [id]);
+   end;
+end;
+
+(* POSTS, DOES NOT WRITE.  The packet bytes are copied here, on the caller's
+  thread, and a single writer thread sends them in order (uNetSendQueue). The
+  result is the count POSTED -- 0 when there is no link -- so a caller that
+  compared it with the record size still reads "accepted"; a write that fails
+  later is reported through NetPacketLost. *)
 function SendToNet(var buf; Len: integer): integer;
 begin
   Result := 0;
   if NetIsConnected then
      begin
-     Result := NetClient.Send(buf, Len);
+     Result := NetClient.Send(NetPacketKind(buf, Len), buf, Len);
      end;
 end;
 

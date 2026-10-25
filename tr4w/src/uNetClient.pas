@@ -41,7 +41,8 @@ interface
 uses
    Classes, SysUtils, IdTCPClient, IdGlobal, IdException, IdExceptionCore,
    IdStack,
-   IdStackConsts;   { Id_IPPROTO_TCP, Id_TCP_NODELAY }
+   IdStackConsts,   { Id_IPPROTO_TCP, Id_TCP_NODELAY }
+   uNetSendQueue;
 
 type
    { Raw bytes as they arrived.  Fires on the READER THREAD. }
@@ -88,7 +89,16 @@ type
       FConnected: boolean;
       FOnData:         TNetDataEvent;
       FOnDisconnected: TNetErrorEvent;
+      (* THE ONE WRITER (2026-10-24).  Every outbound packet goes through this
+        queue and its thread, never through the caller's: see uNetSendQueue.
+        WriteToSocket is the only place after the handshake that touches
+        IOHandler.Write. *)
+      FSendQueue: TNetSendQueue;
       function GetIsConnected: boolean;
+      function WriteToSocket(const aBytes: TBytes): boolean;
+      procedure CutStalledLink;
+      function GetOnPacketLost: TNetLostEvent;
+      procedure SetOnPacketLost(const aValue: TNetLostEvent);
    public
       constructor Create;
       destructor Destroy; override;
@@ -111,10 +121,18 @@ type
         blocked in a read -- disconnecting the IOHandler is what unblocks it. }
       procedure Disconnect;
 
-      { Byte-exact.  Returns the count written, or 0 when there is no link. }
-      function Send(var aBuf; const aLen: integer): integer;
+      (* Byte-exact, and it NEVER BLOCKS ON THE NETWORK: the bytes are copied now
+        -- so the packet is the state of this moment -- and a writer thread
+        sends them later, in the order they were posted.  Returns the count
+        POSTED, or 0 when there is no link (nothing was queued).  A write that
+        fails afterwards is reported through OnPacketLost, not here.  aKind
+        names the packet in the log. *)
+      function Send(const aKind: string; var aBuf; const aLen: integer): integer;
 
       property IsConnected: boolean read GetIsConnected;
+
+      (* A packet's write FAILED.  Fires on the WRITER THREAD. *)
+      property OnPacketLost: TNetLostEvent read GetOnPacketLost write SetOnPacketLost;
 
       { BOTH FIRE ON THE READER THREAD. }
       property OnData: TNetDataEvent read FOnData write FOnData;
@@ -175,6 +193,19 @@ const
 
    HANDSHAKE_TIMEOUT_MS = 5000;
 
+   (* A single write that has been in flight this long is a link that has
+     stopped accepting bytes (a send buffer that never drains).  The reader,
+     which wakes every READ_POLL_MS, cuts the socket: the write fails, the
+     reader sees the drop, and the ordinary reconnect takes over.  Without this
+     an Indy write has no timeout at all. *)
+   WRITE_STALL_LIMIT_MS = 8000;
+
+   (* How long Disconnect lets queued packets go out on a LIVE link, and then how
+     long it waits for a write it has had to cut loose.  Both only ever cost
+     time when the link is already stalled. *)
+   SEND_DRAIN_MS = 250;
+   SEND_CUT_WAIT_MS = 750;
+
 { ------------------------------------------------------------ TNetReader -- }
 
 constructor TNetReader.Create(AOwner: TNetClient);
@@ -195,6 +226,14 @@ begin
       while not Terminated do
          begin
          try
+            // The writer is a different thread; this is its watchdog.
+            if FOwner.FSendQueue.WriteStalledMs > WRITE_STALL_LIMIT_MS then
+               begin
+               logger.Error('[NetClient] a write to TR4WServer has been blocked for %d ms; cutting the link',
+                            [Integer(FOwner.FSendQueue.WriteStalledMs)]);
+               FOwner.CutStalledLink;
+               end;
+
             // Wait for something to arrive, then take ALL of it.  The framing
             // in uNet copes with a short tail, so there is no reason to try to
             // deliver whole messages from here.
@@ -260,13 +299,67 @@ constructor TNetClient.Create;
 begin
    inherited Create;
    FTCP := TIdTCPClient.Create(nil);
+   FSendQueue := TNetSendQueue.Create(WriteToSocket);
 end;
 
 destructor TNetClient.Destroy;
 begin
    Disconnect;
-   FreeAndNil(FTCP);
+   (* THE WRITER STOPS BEFORE THE SOCKET IS FREED, and the wait is bounded.
+     Disconnect has already cut a stuck write loose, so this normally returns at
+     once; if the thread is somehow still inside Indy, leaking the socket and
+     the queue beats freeing memory a live thread is using (the process is
+     exiting). *)
+   if FSendQueue.Shutdown(SEND_CUT_WAIT_MS) then
+      begin
+      FreeAndNil(FSendQueue);
+      FreeAndNil(FTCP);
+      end
+   else
+      begin
+      logger.Error('[NetClient] the writer thread did not stop; leaving the socket allocated');
+      end;
    inherited Destroy;
+end;
+
+function TNetClient.GetOnPacketLost: TNetLostEvent;
+begin
+   Result := FSendQueue.OnLost;
+end;
+
+procedure TNetClient.SetOnPacketLost(const aValue: TNetLostEvent);
+begin
+   FSendQueue.OnLost := aValue;
+end;
+
+(* RUNS ON THE WRITER THREAD.  The old Send, minus the copying (Post already
+  did that on the caller's thread).  A link that is down is a failed write, as
+  it was: Send returned 0 and the caller treated the packet as unsent. *)
+function TNetClient.WriteToSocket(const aBytes: TBytes): boolean;
+begin
+   Result := False;
+   if (Length(aBytes) = 0) or (not FConnected) then
+      begin
+      Exit;
+      end;
+   FTCP.IOHandler.Write(TIdBytes(aBytes));
+   Result := True;
+end;
+
+(* ON THE READER THREAD.  Closing a socket from another thread is the standard
+  way to make a blocked send return; the writer then sees an error and the
+  reader's next read raises, which is the ordinary "link lost" path.  Wrapped
+  because the handle may already be gone. *)
+procedure TNetClient.CutStalledLink;
+begin
+   try
+      FTCP.Socket.Binding.CloseSocket;
+   except
+      on E: Exception do
+         begin
+         logger.Debug('[NetClient] CutStalledLink: %s', [E.Message]);
+         end;
+   end;
 end;
 
 function TNetClient.GetIsConnected: boolean;
@@ -373,9 +466,35 @@ end;
   OnDisconnected -- marshal with Application.QueueAsyncCall, which posts and
   returns; neither is a Synchronize waiting on the thread being blocked. *)
 procedure TNetClient.Disconnect;
+var
+   wasUp: boolean;
 begin
    FStopping := True;
+   wasUp := FConnected;
+
+   (* THE WRITER FIRST, BOUNDED.  On a live link, packets already posted get
+     SEND_DRAIN_MS to go out (a QSO logged a moment before the operator quit
+     should arrive).  Then the link is marked down, so anything still queued
+     fails fast instead of writing to a closing socket -- those are reported as
+     lost, once each, by the queue.  A write that is STILL in flight is stuck
+     in the socket: close it from here to make the write return, and wait a
+     bounded time for it.  Only then does the reader stop and the IOHandler
+     close, so the writer never uses a freed handler. *)
+   if wasUp then
+      begin
+      FSendQueue.WaitIdle(SEND_DRAIN_MS);
+      end;
    FConnected := False;
+   if not FSendQueue.WaitIdle(0) then
+      begin
+      logger.Warn('[NetClient] Disconnect: a write is still pending; closing the socket to release it');
+      CutStalledLink;
+      if not FSendQueue.WaitIdle(SEND_CUT_WAIT_MS) then
+         begin
+         logger.Error('[NetClient] Disconnect: the writer is still busy %d ms after the link was cut',
+                      [SEND_CUT_WAIT_MS]);
+         end;
+      end;
 
    if FReader <> nil then
       begin
@@ -404,9 +523,9 @@ begin
       end;
 end;
 
-function TNetClient.Send(var aBuf; const aLen: integer): integer;
+function TNetClient.Send(const aKind: string; var aBuf; const aLen: integer): integer;
 var
-   bytes: TIdBytes;
+   bytes: TBytes;
 begin
    Result := 0;
    if (aLen <= 0) or (not IsConnected) then
@@ -414,17 +533,11 @@ begin
       Exit;
       end;
 
-   try
-      SetLength(bytes, aLen);
-      Move(aBuf, bytes[0], aLen);
-      FTCP.IOHandler.Write(bytes);
+   SetLength(bytes, aLen);
+   Move(aBuf, bytes[0], aLen);
+   if FSendQueue.Post(aKind, bytes) then
+      begin
       Result := aLen;
-   except
-      on E: Exception do
-         begin
-         logger.Warn('[NetClient] send failed: %s', [E.Message]);
-         Result := 0;
-         end;
       end;
 end;
 

@@ -104,6 +104,47 @@ thread's SEH chain head at exit (`docs/POINTER_AUDIT.md`, D2).
 `Lint-PointerTruncation` keeps the integer form out. (The dialog is still
 unreachable: `ProcessServerLogInfo` compares nothing, as above.)
 
+## Outbound writes never run on the caller's thread (2026-10-24)
+
+`TNetClient.Send` used to call Indy's `IOHandler.Write` on the caller's thread --
+the main thread for every QSO, status, time sync, intercom line, spot and
+serial-number request -- and Indy has no write timeout, so a server that stopped
+reading froze logging. It is now `uNetSendQueue.TNetSendQueue`: `Send` copies the
+complete packet bytes on the caller's thread (so a packet holds the state of the
+moment it was built) and posts them; ONE writer thread owned by `TNetClient`
+writes them in FIFO order. `uNet.SendToNet` names the packet from its leading
+Word id (`NetPacketKind`) for the log. **The only `IOHandler.Write`s left are the
+handshake password in `Connect` (connect thread) and `WriteToSocket` (writer
+thread); a unit test reads `uNetClient.pas` and fails if `Send` touches the
+IOHandler again.** Do not add a path that writes the socket directly.
+
+What to keep true:
+
+- **Never dropped, unbounded queue.** Nothing on this link is stale. A packet is
+  lost only when its WRITE fails (link down, exception): Warn naming the kind, and
+  `OnPacketLost` -> `uNet.NetPacketLost`, which counts a lost `QSOINFO` into `tUSQ`.
+- **`SendToNet`'s result is the count POSTED**, 0 when the link is down.
+  `SendRecordToServer`'s True therefore means *accepted*, not *delivered*; the
+  flags it restores on a failed send are restored only for a link that was
+  already down. A write failing afterwards leaves `ceSendToServer` True and bumps
+  `tUSQ`. Nothing awaits a send's result otherwise; `tNet_Event` (the server's
+  ack, `CommitChangesInLocalLog`, a dead resend path) is still a 1 s wait that
+  carries on regardless.
+- **A write over 250 ms logs a Warn with the packet kind.** A write in flight
+  over `WRITE_STALL_LIMIT_MS` (8 s) is cut by the READER thread (it wakes every
+  250 ms): `Binding.CloseSocket`, the write fails, the reader sees the drop, the
+  ordinary reconnect runs.
+- **`Disconnect` is bounded** (250 ms drain on a live link, 750 ms after a cut)
+  and stops the writer's work BEFORE the reader and the IOHandler go. The queue
+  and its thread live as long as the client; `Destroy` shuts the queue down
+  before freeing the socket and leaks the socket rather than free it under a
+  stuck thread.
+- Packets queued when a link drops fail fast (not written to a closing socket)
+  and are reported lost one by one.
+- `SendFullStationStatus` (answering `SM_GETSTATUS_MESSAGE`, on the MAIN thread)
+  still `Sleep(20)`s between statuses -- a pacing delay from before the queue,
+  not a network wait, and not touched.
+
 ## The transport, and its one sharp edge
 
 The client is **Indy**, not Winsock. `uNet` used to drive a raw socket and have

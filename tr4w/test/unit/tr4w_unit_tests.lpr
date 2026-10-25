@@ -158,6 +158,8 @@ uses
    uUDPBroadcaster      in '..\..\src\uUDPBroadcaster.pas',
    uQsoDispatcher       in '..\..\src\uQsoDispatcher.pas',
    uQsoSinks            in '..\..\src\uQsoSinks.pas',
+   uNetSendQueue        in '..\..\src\uNetSendQueue.pas',
+   uTestNetSendQueue    in 'uTestNetSendQueue.pas',
    uTestQsoDispatcher   in 'uTestQsoDispatcher.pas',
    uWindowLayoutStore   in '..\..\src\uWindowLayoutStore.pas',
    uTestKeyerConfigStore in 'uTestKeyerConfigStore.pas',
@@ -811,6 +813,7 @@ begin
 
    RegisterSuite(TUDPBroadcasterTests.Create('UDPBroadcaster'));
    RegisterSuite(TQsoDispatcherTests.Create('QsoDispatcher'));
+   RegisterSuite(TNetSendQueueTests.Create('NetSendQueue'));
    RegisterSuite(TN1MMModeTests.Create('N1MMMode'));
    RegisterSuite(TUDPContactXmlTests.Create('UDPContactXml'));
    RegisterSuite(TUDPDatagramTests.Create('UDPDatagrams'));

@@ -1467,6 +1467,13 @@ network window *was* part of the transport and could not become a form.
 modelled on `TDXClusterClient` but byte-oriented. `NetSocket` is gone; ask
 `NetIsConnected`.
 
+**WRITES NEVER RUN ON THE CALLER'S THREAD (2026-10-24).** Indy's `IOHandler.Write` has no
+timeout, so the old synchronous `TNetClient.Send` let a stalled server freeze the main
+thread. `Send` now copies the complete packet and posts it to `uNetSendQueue`; one writer
+thread sends in FIFO order, never drops, Warns on a write over 250 ms naming the packet
+kind, and a write stuck over 8 s is cut by the reader thread. `SendToNet` returns the count
+POSTED. Detail: `.claude/agents/multi-op-network.md`.
+
 Parsing still runs on the **main thread**: the reader appends bytes under a lock
 and `Application.QueueAsyncCall`s a drain, so every message arm is unchanged. The
 short tail is now KEPT between reads — which is why an unrecognised message id
