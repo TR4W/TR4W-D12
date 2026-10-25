@@ -43,6 +43,8 @@ uses
                       StatusSubsystemName, the one statement of "a panel names
                       its owner" that a test can reach *)
    uRadioPolling,   (* ShowRadioLinkFailure -- the condition/remedy split *)
+   uElementPanel,   (* TElementPanel -- the need-strip cells *)
+   uMainGrids,      (* BindMainGrids / SetMultNeedBands -- the need strips *)
    uMainForm;       (* the form, the panels and the notice timer *)
 
 type
@@ -75,6 +77,7 @@ type
       procedure Test_APanelOpeningLaterCanReadTheCondition;
       procedure Test_EveryStatusNamesItsOwnSubsystem;
       procedure Test_NoStatusOverrunsItsPanel;
+      procedure Test_ANotNeededBandIsAnEmptyCellNotAHiddenOne;
    public
       procedure RunAllTests; override;
    end;
@@ -190,6 +193,8 @@ begin
    frm := TR4WMainForm;
    TR4WMainForm := nil;
    BindMainElements;
+   (* The need strips too: with no form, BindMainGrids forgets its panels. *)
+   BindMainGrids;
    frm.Free;
 end;
 
@@ -852,6 +857,82 @@ begin
    end;
 end;
 
+(* A BAND THAT IS NOT NEEDED IS AN EMPTY CELL, NOT A HIDDEN ONE.
+
+  NY4I, CQ WW SSB 2026-10-24: "Mult needs for D4K", and the 15 m cell -- the
+  one band not needed -- showed a block of dark stripes instead of plain
+  background. The cell had just been HIDDEN, which left its rectangle for the
+  form to repaint. The strips no longer hide a cell; this pins that, and that
+  what each cell means is in its own Caption and Color where it can be read. *)
+procedure TStatusAndNoticeTests.Test_ANotNeededBandIsAnEmptyCellNotAHiddenOne;
+var
+   cell:  array[Band160..Band10] of TElementPanel;
+   band:  BandType;
+   mask:  Cardinal;
+   multBack: integer;
+begin
+   EnsureMainForm;
+   BindMainGrids;
+
+   cell[Band160] := TR4WMainForm.FindComponent('pnlMultNeedR1_160') as TElementPanel;
+   cell[Band80]  := TR4WMainForm.FindComponent('pnlMultNeedR1_80') as TElementPanel;
+   cell[Band40]  := TR4WMainForm.FindComponent('pnlMultNeedR1_40') as TElementPanel;
+   cell[Band20]  := TR4WMainForm.FindComponent('pnlMultNeedR1_20') as TElementPanel;
+   cell[Band15]  := TR4WMainForm.FindComponent('pnlMultNeedR1_15') as TElementPanel;
+   cell[Band10]  := TR4WMainForm.FindComponent('pnlMultNeedR1_10') as TElementPanel;
+
+   for band := Band160 to Band10 do
+      begin
+      if cell[band] = nil then
+         begin
+         CheckTrue(False, 'uMainForm.lfm has every mult-need cell of row 1');
+         Exit;
+         end;
+      end;
+
+   multBack := tr4wColorsArray[TWindows[mweNewMultStatus].mweBackG];
+
+   (* Bound and nothing needed yet: six empty cells, all shown. *)
+   for band := Band160 to Band10 do
+      begin
+      CheckTrue(cell[band].Visible, 'a cell is shown from the moment it is bound');
+      CheckEquals('', cell[band].Caption, 'nothing is needed before a call is typed');
+      end;
+
+   (* The screenshot: every band but 15 m. *)
+   mask := 0;
+   for band := Band160 to Band10 do
+      begin
+      if band <> Band15 then
+         begin
+         mask := mask or (1 shl Ord(band));
+         end;
+      end;
+   SetMultNeedBands(Both, mask);
+
+   CheckTrue(cell[Band15].Visible, 'the band not needed is still SHOWN -- never hidden');
+   CheckEquals('', cell[Band15].Caption, 'the band not needed has no text');
+   CheckTrue(cell[Band15].ParentColor, 'the band not needed takes the form''s colour');
+   CheckEquals('20', Trim(string(cell[Band20].Caption)), 'a needed band reads its name');
+   CheckEquals('10', Trim(string(cell[Band10].Caption)), 'a needed band reads its name');
+   CheckEquals(multBack, integer(cell[Band20].Color), 'a needed band has the new-mult colour');
+   CheckFalse(cell[Band20].ParentColor, 'a needed band does not take the form''s colour');
+
+   (* And back: 15 m needed again gets its name and its colour back. *)
+   SetMultNeedBands(Both, mask or (1 shl Ord(Band15)));
+   CheckEquals('15', Trim(string(cell[Band15].Caption)), 'needed again, the cell reads 15');
+   CheckEquals(multBack, integer(cell[Band15].Color), 'needed again, the cell is the new-mult colour');
+   CheckFalse(cell[Band15].ParentColor, 'needed again, the cell no longer follows the form');
+
+   (* Nothing needed: every cell empty, every cell still shown. *)
+   SetMultNeedBands(Both, 0);
+   for band := Band160 to Band10 do
+      begin
+      CheckTrue(cell[band].Visible, 'no band needed hides no cell');
+      CheckEquals('', cell[band].Caption, 'no band needed leaves every cell empty');
+      end;
+end;
+
 procedure TStatusAndNoticeTests.RunAllTests;
 begin
    Test_TheStripHasOnePanelPerOwner;
@@ -871,6 +952,7 @@ begin
    Test_APanelOpeningLaterCanReadTheCondition;
    Test_EveryStatusNamesItsOwnSubsystem;
    Test_NoStatusOverrunsItsPanel;
+   Test_ANotNeededBandIsAnEmptyCellNotAHiddenOne;
    ReleaseMainForm;
 end;
 

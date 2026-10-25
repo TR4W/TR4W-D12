@@ -12,7 +12,7 @@ unit uMainGrids;
   WHAT CHANGES HERE IS NOT THE WIDGET, IT IS WHO KNOWS WHAT.
 
   No caller gets a control. They get SetTotalsCell, HighlightTotalsColumn and
-  SetMultNeedVisible -- what they MEAN, not a window to poke. LOGEDIT called
+  SetMultNeedBands -- what they MEAN, not a window to poke. LOGEDIT called
   Windows.ShowWindow nine times with a handle out of a global array; it now
   names a band and a mode, and this unit is the only thing that knows "mult
   needed on 20m in CW" is a panel in row one.
@@ -100,11 +100,6 @@ procedure SetTotalsHeader(const aColumn: integer; const aText: TCaption);
   no such gap. *)
 procedure HighlightTotalsColumn(const aColumn: integer);
 
-procedure SetQSONeedVisible(const aMode: ModeType; const aBand: BandType;
-                            const aVisible: boolean);
-procedure SetMultNeedVisible(const aMode: ModeType; const aBand: BandType;
-                             const aVisible: boolean);
-
 (* SHOW EXACTLY THE BANDS IN aBandMask, in one call.
 
   aBandMask is the value CreateModeSpecificQSOInfo and
@@ -112,7 +107,16 @@ procedure SetMultNeedVisible(const aMode: ModeType; const aBand: BandType;
   is still needed. Taking it whole rather than a band at a time is what lets
   LOGEDIT say what it means in one line -- it had SIX copies of the same
   band loop and bit test, one per mode per strip, each with its own
-  ShowWindow call and its own integer() cast of a boolean. *)
+  ShowWindow call and its own integer() cast of a boolean.
+
+  A BAND THAT IS NOT NEEDED IS AN EMPTY CELL, NOT A HIDDEN ONE (2026-10-24).
+  The cells used to be hidden and shown, which was the nine ShowWindow calls
+  translated one for one. Hiding a cell leaves its rectangle for the FORM to
+  repaint, and in CQ WW SSB NY4I saw a cell that had just been hidden come
+  back as a block of dark stripes instead of plain background ("Mult needs for
+  D4K", 15 m). The pixels were not text from any of our controls. Every cell
+  now stays visible and holds what it means in its own Caption and Color, so
+  each cell paints itself and nothing ever uncovers a rectangle. *)
 procedure SetQSONeedBands(const aMode: ModeType; const aBandMask: Cardinal);
 procedure SetMultNeedBands(const aMode: ModeType; const aBandMask: Cardinal);
 
@@ -292,6 +296,53 @@ begin
    aPanel.Caption := aCaption;
 end;
 
+(* ONE NEED CELL, SAYING WHETHER ITS BAND IS NEEDED -- IN ITS OWN CAPTION AND
+  COLOUR, NEVER BY HIDING IT. See the note on SetQSONeedBands for the defect
+  hiding produced.
+
+  NEEDED: the band's name in the element's colours (the yellow of a new mult).
+  NOT NEEDED: no text, and the PARENT'S colour, which is exactly what the
+  hidden cell used to show. ParentColor is the LCL's own way to say "look like
+  the form"; it assigns Color, so TElementPanel.SetColor still maps the
+  neutral surface on macOS. Assigning Color again later clears ParentColor.
+
+  COMPARED BEFORE ASSIGNING, as SetTotalsCell is: this runs for every call
+  typed, and an unchanged cell should not repaint. *)
+procedure SetNeedCell(const aPanel: TElementPanel; const aBand: BandType;
+                      const aElement: TMainWindowElement;
+                      const aNeeded: boolean);
+var
+   wanted: TCaption;
+begin
+   if aPanel = nil then
+      begin
+      Exit;
+      end;
+
+   if aNeeded then
+      begin
+      wanted := LclText(BandStringsArray[aBand]);
+      if aPanel.ParentColor or
+         (aPanel.Color <> tr4wColorsArray[TWindows[aElement].mweBackG]) then
+         begin
+         ApplyElementColors(aPanel, aElement);
+         end;
+      end
+   else
+      begin
+      wanted := '';
+      if not aPanel.ParentColor then
+         begin
+         aPanel.ParentColor := True;
+         end;
+      end;
+
+   if aPanel.Caption <> wanted then
+      begin
+      aPanel.Caption := wanted;
+      end;
+end;
+
 procedure BindMainGrids;
 var
    c, r: integer;
@@ -302,7 +353,37 @@ begin
    (* NO FORM, NOTHING TO BIND, AND SAY IT ONCE. Without this, every one of the
      110 lookups reports its own missing panel -- which is not a diagnosis, it
      is a wall. The headless /EXPORT path is the case that matters: it runs
-     through this on its way to writing the files. *)
+     through this on its way to writing the files.
+
+     AND FORGET ANY EARLIER FORM FIRST, as BindMainElements does: called with
+     no form, this is how a caller that frees the main window (the unit
+     tests) leaves no reference to its freed panels behind. *)
+   GBound := False;
+
+   for c := 0 to TOTALS_COLUMNS - 1 do
+      begin
+      for r := 0 to TOTALS_ROWS - 1 do
+         begin
+         GTotalsCell[c, r] := nil;
+         end;
+      end;
+
+   for c := TOTALS_FIRST_HEADER to TOTALS_COLUMNS - 1 do
+      begin
+      GTotalsHead[c] := nil;
+      end;
+
+   for row := Low(TNeedRow) to High(TNeedRow) do
+      begin
+      GQSONeedLabel[row] := nil;
+      GMultNeedLabel[row] := nil;
+      for band := Band160 to Band10 do
+         begin
+         GQSONeed[row, band] := nil;
+         GMultNeed[row, band] := nil;
+         end;
+      end;
+
    if TR4WMainForm = nil then
       begin
       if logger <> nil then
@@ -347,6 +428,22 @@ begin
          GMultNeed[row, band] := BindPanel(Format('pnlMultNeedR%d_%s', [row, suffix]));
          PrepareNeedPanel(GMultNeed[row, band], mweNewMultStatus,
                           LclText(BandStringsArray[band]));
+
+         (* SHOWN ONCE, HERE, AND NEVER HIDDEN AGAIN -- a band that is not
+           needed is an empty cell (SetNeedCell). The .lfm carries
+           Visible = False from the generator; that is the design-time
+           picture, and the starting state it stood for -- nothing needed
+           yet -- is what SetNeedCell(False) says. *)
+         SetNeedCell(GQSONeed[row, band], band, mweWholeScreen, False);
+         SetNeedCell(GMultNeed[row, band], band, mweNewMultStatus, False);
+         if GQSONeed[row, band] <> nil then
+            begin
+            GQSONeed[row, band].Visible := True;
+            end;
+         if GMultNeed[row, band] <> nil then
+            begin
+            GMultNeed[row, band].Visible := True;
+            end;
          end;
       end;
 
@@ -628,59 +725,31 @@ begin
       end;
 end;
 
-procedure SetNeedVisible(const aGrid: TNeedGrid; const aMode: ModeType;
-                        const aBand: BandType; const aVisible: boolean);
-var
-   p: TElementPanel;
-begin
-   (* THE STRIPS COVER Band160..Band10 ONLY. BandType runs well past 10m -- 6m
-     up to Light -- and a caller looping the whole enum would index off the
-     end of a six-band array with range checking off, which is the same class
-     of fault the totals guard exists for. *)
-   if (aBand < Band160) or (aBand > Band10) then
-      begin
-      Exit;
-      end;
-
-   p := aGrid[NeedRowForMode(aMode), aBand];
-   if p <> nil then
-      begin
-      p.Visible := aVisible;
-      end;
-end;
-
 procedure SetNeedBands(const aGrid: TNeedGrid; const aMode: ModeType;
+                      const aElement: TMainWindowElement;
                       const aBandMask: Cardinal);
 var
+   row:  TNeedRow;
    band: BandType;
 begin
+   (* THE STRIPS COVER Band160..Band10 ONLY, and this loop is the only thing
+     that indexes them, so no band outside the six can reach the array. *)
+   row := NeedRowForMode(aMode);
    for band := Band160 to Band10 do
       begin
-      SetNeedVisible(aGrid, aMode, band,
-                     (aBandMask and (1 shl Ord(band))) <> 0);
+      SetNeedCell(aGrid[row, band], band, aElement,
+                  (aBandMask and (1 shl Ord(band))) <> 0);
       end;
-end;
-
-procedure SetQSONeedVisible(const aMode: ModeType; const aBand: BandType;
-                            const aVisible: boolean);
-begin
-   SetNeedVisible(GQSONeed, aMode, aBand, aVisible);
-end;
-
-procedure SetMultNeedVisible(const aMode: ModeType; const aBand: BandType;
-                             const aVisible: boolean);
-begin
-   SetNeedVisible(GMultNeed, aMode, aBand, aVisible);
 end;
 
 procedure SetQSONeedBands(const aMode: ModeType; const aBandMask: Cardinal);
 begin
-   SetNeedBands(GQSONeed, aMode, aBandMask);
+   SetNeedBands(GQSONeed, aMode, mweWholeScreen, aBandMask);
 end;
 
 procedure SetMultNeedBands(const aMode: ModeType; const aBandMask: Cardinal);
 begin
-   SetNeedBands(GMultNeed, aMode, aBandMask);
+   SetNeedBands(GMultNeed, aMode, mweNewMultStatus, aBandMask);
 end;
 
 initialization
