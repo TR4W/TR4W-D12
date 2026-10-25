@@ -2772,6 +2772,17 @@ Two things that follow, neither of them cosmetic:
 - **`LockUntilFinished = True`, on the logging thread** (§6). At a few hundred KB
   the copy is milliseconds, and the alternative starves under sustained writes.
 
+> **Update, issue #98 step 2 (2026-10-25).** The trigger is still the QSO count,
+> and `BACKUP LOG FREQUENCY = 0` is now the only off switch. The destination
+> changed twice: every backup is written LOCALLY to `uAppPaths.BackupDir` as
+> `<log> periodic.db` (one per log; `logback.db` was one name for every contest,
+> beside the logs), and `BACKUP LOG FILE NAME` became `BACKUP DESTINATION`, a
+> FOLDER the verified local file is then copied to on a worker thread
+> (`uBackupCopier`). The old name still resolves and its value is converted to
+> the folder of the file it named. The local snapshot is `VACUUM INTO` on its
+> own read-only connection (`TLogDatabase.SnapshotTo`), not the online backup
+> API, and is still taken on the main thread. See `.claude/agents/log-database.md`.
+
 ### 14.3 Integrity checking, read against TR4QT
 
 > *"If our sql document doesn't mention it, look at c:\projects\tr4qt to see

@@ -1949,7 +1949,8 @@ type
      a broad word and the next person adding to this file will have to
      decide whether their setting belongs here.
 
-     No hooks on any of them.
+     ONE SETTER: BackupDestination raises its change, so a new folder is
+     probed at once (2026-10-25).
    *)
    TLogSettings = class(TSettingsGroup)
    private
@@ -1968,7 +1969,8 @@ type
       FShowFrequency: boolean;
       FDistanceMode: DistanceDisplayType;
       FDebugLevel: tLogLevels;
-      FBackupFileName: string;
+      FBackupDestination: string;
+      procedure SetBackupDestination(const aValue: string);
    public
       constructor Create;
    published
@@ -1981,18 +1983,28 @@ type
          read FConfirmEditChanges write FConfirmEditChanges;
       // Was Config.CheckLogFileSize. CHECK LOG FILE SIZE.
       property CheckFileSize: boolean read FCheckFileSize write FCheckFileSize;
-      (* Was the global TR4W_BACKUP_FILENAME in VC.pas, a FileNameType buffer.
-        BACKUP LOG FILE NAME, aliased: the derived name would put LOG in the
-        middle rather than the front.
+      (* BACKUP DESTINATION -- a FOLDER the periodic backup is COPIED to after
+        it is written locally: a NAS share (\\NAS2\Backups), a mounted volume
+        (/Volumes/nas2/TR4W), a Dropbox folder. EMPTY MEANS LOCAL ONLY. Issue
+        #98 step 2, 2026-10-25.
 
-        EMPTY MEANS NO BACKUP, which BackupLogNow tests before it does
-        anything -- so this is not an unset value, it is the off switch.
+        IT REPLACED BACKUP LOG FILE NAME (Log.BackupFileName), a FILE name
+        whose default 'logback.db' put one backup, shared by every contest,
+        beside the logs. The local backup is uAppPaths.BackupDir's now and is
+        named for the log, so the only thing an operator ever had to say was
+        WHERE ELSE -- which is what this is. The old name still resolves, to
+        this property, and its value is CONVERTED, not copied: a file name
+        with a folder carries the folder over, and a bare name becomes empty
+        (FolderOfFormerBackupFileName). The settings file's old member is
+        converted by CarryFormerBackupFileName.
 
-        'logback.db', NOT '.trw': the backup is a SQLite snapshot of the
-        contest log now, so the old extension named a format it no longer
-        is. *)
-      property BackupFileName: string
-         read FBackupFileName write FBackupFileName;
+        NOT shared with multi-op peers: a folder path is a fact about THIS
+        machine.
+
+        THE SETTER RAISES THE CHANGE, so Preferences reaching it re-probes the
+        folder (uSettingsEffects -> uBackupCopyService). *)
+      property BackupDestination: string
+         read FBackupDestination write SetBackupDestination;
       // Was Config.UpdateRestartFileEnable. UPDATE RESTART FILE ENABLE.
       property UpdateRestartFile: boolean
          read FUpdateRestartFile write FUpdateRestartFile;
@@ -3619,6 +3631,8 @@ type
         object, NOT inside the streamer. See ProtectSecretsInDocument. *)
       procedure ProtectSecretsInDocument(const aDoc: TJSONObject);
       procedure UnprotectSecretsAfterLoad;
+      (* A settings file written before BACKUP DESTINATION: see FromJSON. *)
+      procedure CarryFormerBackupFileName(const aObj: TJSONObject);
       procedure SkipContestScoped(aSender: TObject; aObject: TObject;
                                   aInfo: PPropInfo; var aResult: TJSONData);
       (* THE STREAMER'S ONE HOOK, and it does two jobs: the contest-scoped
@@ -3965,6 +3979,28 @@ type
 procedure RegisterSettingValueSpelling(const aPath: string;
                                        const aSpelling: TSettingValueSpelling);
 
+(* A FORMER COMMAND NAME WHOSE VALUE MEANT SOMETHING ELSE -- the same kind of
+  translation, keyed by the NAME a value arrived under rather than by the
+  property (2026-10-25).
+
+  The first is BACKUP LOG FILE NAME, which named a FILE and is now a second
+  name of BACKUP DESTINATION, a FOLDER. The value alone cannot say which it
+  is -- '\\NAS2\Backups' is a folder and 'Z:\LOGBACK.TR4W' a file, and
+  nothing in the text tells them apart -- so the name it came with decides.
+  Applied before the path's own spelling, the check and the vocabulary, and
+  only for that exact name (case-insensitive). It TRANSLATES; it never
+  refuses. *)
+procedure RegisterCommandValueSpelling(const aCommand: string;
+                                       const aSpelling: TSettingValueSpelling);
+
+(* THE FOLDER OF A FORMER BACKUP LOG FILE NAME VALUE: everything up to and
+  including the last separator ('/' or this platform's own), or '' for a bare
+  file name such as 'logback.db' -- which was beside the logs, and is now
+  simply "no destination", because the local backup has its own folder.
+  'Z:\LOGBACK.TR4W' gives 'Z:\'; '\\NAS2\Backups\logback.db' gives
+  '\\NAS2\Backups\'. A relative folder is carried over as written. *)
+function FolderOfFormerBackupFileName(const aValue: string): string;
+
 (*
   THE VALUES A SETTING ACCEPTS, WHEN THEY ARE A LIST AND NOT A RANGE.
 
@@ -4111,6 +4147,15 @@ type
 
 var
    GValueSpellings: array of TRegisteredSpelling;
+
+type
+   TRegisteredCommandSpelling = record
+      Command: string;
+      Spelling: TSettingValueSpelling;
+   end;
+
+var
+   GCommandSpellings: array of TRegisteredCommandSpelling;
 
 type
    TRegisteredValues = record
@@ -4272,6 +4317,69 @@ begin
    SetLength(GValueSpellings, i + 1);
    GValueSpellings[i].Path := aPath;
    GValueSpellings[i].Spelling := aSpelling;
+end;
+
+procedure RegisterCommandValueSpelling(const aCommand: string;
+                                       const aSpelling: TSettingValueSpelling);
+var
+   i: integer;
+begin
+   if not Assigned(aSpelling) then
+      begin
+      Exit;
+      end;
+
+   (* REGISTERING A NAME TWICE REPLACES, as for a path. *)
+   for i := 0 to High(GCommandSpellings) do
+      begin
+      if UnicodeSameText(GCommandSpellings[i].Command, aCommand) then
+         begin
+         GCommandSpellings[i].Spelling := aSpelling;
+         Exit;
+         end;
+      end;
+
+   i := Length(GCommandSpellings);
+   SetLength(GCommandSpellings, i + 1);
+   GCommandSpellings[i].Command := aCommand;
+   GCommandSpellings[i].Spelling := aSpelling;
+end;
+
+(* The value as the property means it, for a value that arrived under
+  aCommand -- unchanged for every name but the former ones registered. *)
+function CommandSpellingOf(const aCommand, aValue: string): string;
+var
+   i: integer;
+begin
+   Result := aValue;
+   for i := 0 to High(GCommandSpellings) do
+      begin
+      if UnicodeSameText(GCommandSpellings[i].Command, Trim(aCommand)) then
+         begin
+         Result := GCommandSpellings[i].Spelling(aValue);
+         Exit;
+         end;
+      end;
+end;
+
+function FolderOfFormerBackupFileName(const aValue: string): string;
+var
+   i: integer;
+   value: string;
+begin
+   (* By hand, not ExtractFilePath: on Unix a backslash is a legal name
+     character, so only '/' and this platform's own separator divide -- the
+     same rule uLogBackup.LogBackupBaseName applies to a log's name. *)
+   Result := '';
+   value := Trim(aValue);
+   for i := Length(value) downto 1 do
+      begin
+      if (value[i] = '/') or (value[i] = DirectorySeparator) then
+         begin
+         Result := Copy(value, 1, i);
+         Exit;
+         end;
+      end;
 end;
 
 (* The value as it is spelled now -- unchanged for a path with no spelling
@@ -5203,8 +5311,14 @@ begin
    FDisabled           := False;
    (* tShowFrequencyinLog was declared TRUE in postunit.pas. *)
    FShowFrequency      := True;
-   (* 'logback.db' -- the name uCFG's defaults routine appended. *)
-   FBackupFileName := 'logback.db';
+   (* LOCAL ONLY until the operator names a folder. The local backup needs no
+     setting: it always goes to uAppPaths.BackupDir. *)
+   FBackupDestination := '';
+end;
+
+procedure TLogSettings.SetBackupDestination(const aValue: string);
+begin
+   SetStr(FBackupDestination, aValue, 'BackupDestination');
 end;
 
 constructor TCqSettings.Create;
@@ -6147,7 +6261,13 @@ begin
    Alias('DIGITAL MODE ENABLE',      'Contest.DigitalModeEnable');
    Alias('DOMESTIC FILENAME',        'Contest.DomesticFilename');
    Alias('INITIAL EXCHANGE FILENAME', 'Contest.InitialExchangeFilename');
-   Alias('BACKUP LOG FILE NAME',      'Log.BackupFileName');
+   (* THE FOLDER A BACKUP IS COPIED TO, and its former name. BACKUP LOG FILE
+     NAME named a FILE; a value arriving under it is converted to the folder
+     that file was in (see RegisterCommandValueSpelling below), so a .cfg, the
+     legacy commands bucket, tr4wconvert and an older peer all still land.
+     Alias first: it removes the derived LOG BACKUP DESTINATION. *)
+   Alias('BACKUP DESTINATION',        'Log.BackupDestination');
+   AlsoKnownAs('BACKUP LOG FILE NAME', 'Log.BackupDestination');
    Alias('EXCHANGE MEMORY ENABLE',   'Contest.ExchangeMemoryEnable');
    Alias('MULTIPLE BANDS',           'Contest.MultipleBands');
    Alias('MULTIPLE MODES',           'Contest.MultipleModes');
@@ -6501,7 +6621,7 @@ begin
    (* A FORMER SPELLING BECOMES THE CURRENT ONE FIRST, so the vocabulary,
      the check and the property all see what is stored from now on. See
      RegisterSettingValueSpelling. *)
-   text := CurrentSpellingOf(path, Trim(aValue));
+   text := CurrentSpellingOf(path, CommandSpellingOf(aCommand, Trim(aValue)));
 
    (* ASKED BEFORE ANY ARM ASSIGNS, so a refusal leaves the property exactly
      as it was. See RegisterSettingValueCheck. *)
@@ -7147,6 +7267,36 @@ begin
      are re-imposed here: the de-streamer assigned what the file carried, and
      for a secret the file carries nothing. *)
    UnprotectSecretsAfterLoad;
+   CarryFormerBackupFileName(aObj);
+end;
+
+(* Log.BackupFileName, A MEMBER NO PROPERTY CARRIES ANY MORE, becomes
+  Log.BackupDestination by its old command's own conversion -- the folder of
+  the file it named, or '' for a bare name. Only when the file has no
+  BackupDestination of its own: a file this build wrote is never converted
+  twice, and the next save drops the old member, because SaveSettings writes
+  the section from the object. *)
+procedure TR4WSettings.CarryFormerBackupFileName(const aObj: TJSONObject);
+var
+   logIndex, oldIndex: integer;
+   logNode: TJSONObject;
+begin
+   logIndex := aObj.IndexOfName(UTF8Encode('Log'));
+   if (logIndex < 0) or (not (aObj.Items[logIndex] is TJSONObject)) then
+      begin
+      Exit;
+      end;
+   logNode := TJSONObject(aObj.Items[logIndex]);
+   oldIndex := logNode.IndexOfName(UTF8Encode('BackupFileName'));
+   if (oldIndex < 0) or (logNode.IndexOfName(UTF8Encode('BackupDestination')) >= 0) then
+      begin
+      Exit;
+      end;
+   if logNode.Items[oldIndex].JSONType <> jtString then
+      begin
+      Exit;
+      end;
+   AssignByCommand('BACKUP LOG FILE NAME', UTF8Decode(logNode.Items[oldIndex].AsString));
 end;
 
 procedure TR4WSettings.UnprotectSecretsAfterLoad;
@@ -7382,6 +7532,10 @@ begin
 end;
 
 initialization
+   (* BACKUP LOG FILE NAME's value was a FILE; the property it reaches is a
+     FOLDER. Here because this unit owns both names (BuildCommandMap). *)
+   RegisterCommandValueSpelling('BACKUP LOG FILE NAME', @FolderOfFormerBackupFileName);
+
    (* THE VOCABULARY OF EVERY ENUMERATED SETTING THIS UNIT OWNS.
 
      Here rather than in uCFG, unlike the two integer allow-lists: those read

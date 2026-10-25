@@ -23,6 +23,36 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-25 -- THE PERIODIC BACKUP AND BACKUP DESTINATION (issue #98 step 2)
+
+Unit-tested with real files and a fault-injecting file layer (`uTestBackupCopier`,
+`uTestLogStore`); nothing has run against a real share.
+
+- [ ] **The local backup moved.** With BACKUP LOG FREQUENCY = 5, log five QSOs.
+      EXPECT `settings\backup\<log> periodic.db` (beside `tr4w.json`), the status
+      line saying so, and NOTHING new beside the logs -- the Open dialog must not
+      list a backup. A second five gives `<log> periodic.db.bak`. Old
+      `logback.db` files are left where they are.
+- [ ] **Your setting carried over.** Your `tr4w.json` says `BackupFileName:
+      "logback.db"`. EXPECT Preferences' "Copy to:" EMPTY (a bare name meant
+      beside the logs, which is now the local folder). Put `\\NAS2\Backups` (or a
+      Dropbox folder) there and press OK. EXPECT within a few seconds, on the
+      status line: "Backups will also be copied to ...", and `tr4w.log`
+      `[BackupCopy] ... reachable`.
+- [ ] **A copy arrives.** Five more QSOs. EXPECT `<log> periodic.db` in the
+      share, and no `.partial` left there; then `.bak` beside it after the next.
+- [ ] **The share goes away.** Unplug or unshare it, log five QSOs. EXPECT ONE
+      status-line message and a beep ("Backups are NOT reaching ..."), one Error
+      line in `tr4w.log`, logging uninterrupted, and NO further message on later
+      backups. Restore the share and wait up to a minute WITHOUT logging. EXPECT
+      "Backups are reaching ... again".
+- [ ] **A hung share at exit.** With a copy in progress to a slow or hanging
+      share, close TR4W. EXPECT it to close within about two seconds, with
+      `[BackupCopy] shutdown: still copying ...` in `tr4w.log` if the copy was cut.
+- [ ] **Caught up at start.** Make the share unreachable, log five QSOs, close,
+      restore the share, start TR4W. EXPECT the periodic backup copied at start
+      with no new QSO.
+
 ## Added 2026-10-23 -- MODE NAMES SENT TO OTHER PROGRAMS (UDP, RADIOINFO, DXKEEPER)
 
 Unit-tested (`uTestN1MMMode`, `uTestUDPContactXml`); nothing sees a listener.

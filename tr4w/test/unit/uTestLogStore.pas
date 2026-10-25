@@ -89,6 +89,8 @@ type
       procedure TestAnAppendAfterAnEarlierMigrationInsertsTheQSO;
       procedure TestARewriteThatMigratesTheLogRewritesTheNewestQSO;
       procedure TestTheClearBackupNameRule;
+      procedure TestThePeriodicBackupNameRule;
+      procedure TestAPeriodicBackupGoesToTheFolderItIsGiven;
       procedure TestABackupBeforeClearHoldsTheLogAndNeedsNoTrw;
       procedure TestAnEmptyLogIsBackedUpBeforeClear;
       procedure TestABackupFolderThatCannotBeMadeFailsTheBackup;
@@ -651,6 +653,105 @@ begin
                LogStoreClearBackupFileName(logs + 'POTA before clear 2026-10-22 10150XZ.db',
                                            backups, moment),
                'a stamp with a non-digit in it is not a stamp');
+end;
+
+(* THE PERIODIC BACKUP'S NAME (issue #98 step 2): IN THE BACKUP FOLDER,
+  "<log> periodic.db", one per log -- where 'logback.db' had been one name
+  every contest overwrote. The base is the same rule as Clear Log's, so
+  NEITHER SUFFIX STACKS ON THE OTHER, in either order. *)
+procedure TLogStoreTests.TestThePeriodicBackupNameRule;
+var
+   logs, backups: string;
+   moment: TDateTime;
+begin
+   BeginTest('the periodic backup is "<log> periodic.db" in the backup folder, and never stacks');
+
+   logs := 'logs' + PathDelim;
+   backups := 'settings' + PathDelim + 'backup' + PathDelim;
+   moment := EncodeDate(2026, 10, 23) + EncodeTime(23, 1, 44, 0);
+
+   CheckEquals(backups + 'CQ-WW-SSB 2026-10-19 NY4I periodic.db',
+               LogStorePeriodicBackupFileName(logs + 'CQ-WW-SSB 2026-10-19 NY4I.db', backups),
+               'the worked example, exactly');
+   CheckEquals(backups + 'LOG periodic.db',
+               LogStorePeriodicBackupFileName(logs + 'LOG.DB', 'settings' + PathDelim + 'backup'),
+               'the .db in any case, and a folder without its separator');
+   CheckEquals(backups + 'x periodic.db',
+               LogStorePeriodicBackupFileName('x.db', backups),
+               'a log named with no directory at all');
+
+   (* NEITHER SUFFIX STACKS. *)
+   CheckEquals(backups + 'POTA periodic.db',
+               LogStorePeriodicBackupFileName(logs + 'POTA periodic.db', backups),
+               'a periodic backup opened as a log is named for the log it came from');
+   CheckEquals(backups + 'POTA periodic.db',
+               LogStorePeriodicBackupFileName(logs + 'POTA periodic periodic.db', backups),
+               'a stacked periodic suffix goes entirely');
+   CheckEquals(backups + 'POTA periodic.db',
+               LogStorePeriodicBackupFileName(logs + 'POTA before clear 2026-10-22 101500Z periodic.db',
+                                              backups),
+               'a pre-clear suffix under a periodic one goes too');
+   CheckEquals(backups + 'POTA periodic.db',
+               LogStorePeriodicBackupFileName(logs + 'POTA periodic before clear 2026-10-22 101500Z.db',
+                                              backups),
+               'and a periodic suffix under a pre-clear one');
+   CheckEquals(backups + 'POTA before clear 2026-10-23 230144Z.db',
+               LogStoreClearBackupFileName(logs + 'POTA periodic.db', backups, moment),
+               'clearing a log opened from a periodic backup names the log it came from');
+
+   (* ONLY THE EXACT SUFFIX. *)
+   CheckEquals(backups + 'Periodic periodic.db',
+               LogStorePeriodicBackupFileName(logs + 'Periodic.db', backups),
+               'a log called Periodic keeps its name: the suffix has a leading space');
+   CheckEquals(backups + 'Sprint PERIODIC periodic.db',
+               LogStorePeriodicBackupFileName(logs + 'Sprint PERIODIC.db', backups),
+               'and is matched in the case it is written');
+end;
+
+(* THE PERIODIC BACKUP GOES TO THE FOLDER IT IS GIVEN, AND THE LOG'S
+  DIRECTORY GAINS NOTHING -- the Open dialog lists every .db there, which is
+  how 'logback.db' came to be listed as a contest. The second backup displaces
+  the first to .bak (TLogBackup's publish, kept). *)
+procedure TLogStoreTests.TestAPeriodicBackupGoesToTheFolderItIsGiven;
+var
+   saved: TStringList;
+   path, secondPath, report, contestFiles: string;
+   ok: boolean;
+begin
+   BeginTest('the periodic backup is written to the folder it is given, never beside the log');
+
+   PrepareMigration(FIXTURE_SET);
+   saved := TStringList.Create;
+   try
+      CheckTrue(LogStoreEnsureOpen, 'the open migrates the log');
+      contestFiles := FilesIn(FDir);
+
+      ok := LogStoreBackupPeriodic(ScratchBackupDir, path, report);
+      CheckTrue(ok, 'the periodic backup succeeds: ' + report);
+      FBackup := path;
+      CheckEquals(IncludeTrailingPathDelimiter(ScratchBackupDirName) + FIXTURE_SET + ' periodic.db',
+                  path, 'it is "<log> periodic.db" in the backup folder');
+      CheckEquals(contestFiles, FilesIn(FDir), 'the log''s directory gains no file from it');
+      CheckEquals(LogStorePeriodicBackupPath(ScratchBackupDirName), path,
+                  'and it is the name the program asks for at open');
+
+      ok := LogStoreBackupPeriodic(ScratchBackupDir, secondPath, report);
+      CheckTrue(ok, 'a second periodic backup succeeds: ' + report);
+      CheckEquals(path, secondPath, 'to the same name -- one per log');
+      CheckTrue(FileExists(path + '.bak'), 'the first is kept as .bak');
+      CheckFalse(FileExists(path + '.new'), 'and nothing is left staged');
+      CheckEquals(contestFiles, FilesIn(FDir), 'still nothing beside the log');
+      LogStoreClose;
+
+      if FileExists(path) then
+         begin
+         ReadCallsFrom(path, saved);
+         end;
+      CheckTrue(saved.Count > 1, 'the backup holds the log''s QSOs');
+   finally
+      saved.Free;
+      Restore;
+   end;
 end;
 
 (* THE BACKUP CLEAR LOG TAKES HOLDS THE LOG, AND IS TAKEN FROM SQLITE ALONE.
@@ -1262,6 +1363,8 @@ end;
 procedure TLogStoreTests.RunAllTests;
 begin
    TestTheClearBackupNameRule;
+   TestThePeriodicBackupNameRule;
+   TestAPeriodicBackupGoesToTheFolderItIsGiven;
 {$IFNDEF WINDOWS}
    (* SAID, NOT SILENT -- as the LogImport suite: these migrate a D7 binary
      log, which is a Windows migration path. *)

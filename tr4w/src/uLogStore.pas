@@ -372,13 +372,43 @@ function LogStoreBackup(const aDestination: string; out aReport: string): boolea
   NAMES NEVER STACK. A log that is itself a pre-clear backup -- named
   "X before clear <stamp>Z.db" -- is backed up as "X before clear <new
   stamp>Z.db", not "X before clear <stamp>Z before clear <new stamp>Z.db".
-  Every trailing " before clear <stamp>Z" of exactly that shape is removed
-  first; anything that merely contains the words keeps them.
+  Every trailing " before clear <stamp>Z" of exactly that shape, and every
+  trailing " periodic", is removed first; anything that merely contains the
+  words keeps them. The base is uLogBackup.LogBackupBaseName, which the
+  periodic name below shares.
 
   aBackupDir may or may not end in a separator. aUTC is the moment, already
   in UTC -- the caller converts, so this stays pure and a test can pin it. *)
 function LogStoreClearBackupFileName(const aLogFile, aBackupDir: string;
    aUTC: TDateTime): string;
+
+(* THE NAME OF THE PERIODIC BACKUP (issue #98 step 2): in aBackupDir,
+  "<log name without .db> periodic.db", e.g. "CQ-WW-SSB 2026-10-19 NY4I
+  periodic.db". The same base as LogStoreClearBackupFileName, so names never
+  stack. ONE PER LOG -- each generation replaces the last, and the one before
+  it is kept as ".bak" by TLogBackup. It replaced 'logback.db', one name that
+  every contest overwrote, beside the logs. *)
+function LogStorePeriodicBackupFileName(const aLogFile, aBackupDir: string): string;
+
+(* The periodic backup's name for THE LIVE LOG, in aBackupDir. Whether the
+  file exists is the caller's question. *)
+function LogStorePeriodicBackupPath(const aBackupDir: string): string;
+
+(* THE PERIODIC BACKUP, every BACKUP LOG FREQUENCY QSOs and from the Backup
+  Log menu: LogStoreBackup to LogStorePeriodicBackupFileName of the live log,
+  in aBackupDir (the program passes uAppPaths.BackupDir; a test its own).
+  aPath is the file it was written to, set either way.
+
+  A folder that is not there fails the backup, as for Clear Log, and there is
+  no fallback to beside the log.
+
+  SYNCHRONOUS ON THE CALLER'S THREAD, which in the program is the main
+  thread. That is deliberate for this step and it is LOCAL disk only: the
+  copy to BACKUP DESTINATION is uBackupCopyService's, on its own thread.
+  Taking the snapshot off the main thread is a later step of issue #98.
+  Never raises. *)
+function LogStoreBackupPeriodic(const aBackupDir: string;
+   out aPath, aReport: string): boolean;
 
 (* A VERIFIED BACKUP OF THE CONTEST LOG, TAKEN BEFORE CLEAR LOG DELETES
   ANYTHING. LogStoreBackup to LogStoreClearBackupFileName of the live log, in
@@ -1648,107 +1678,36 @@ begin
    end;
 end;
 
-const
-   CLEAR_BACKUP_INFIX = ' before clear ';
-   (* The stamp's shape, one character per position: 'd' a digit, anything
-     else itself. The FormatDateTime pattern below writes exactly this. *)
-   CLEAR_BACKUP_STAMP_SHAPE = 'dddd-dd-dd ddddddZ';
-
-(* Does aBase END in " before clear <stamp>Z", the suffix the name rule
-  writes? Exact shape only, so a log merely called "... before clear ..."
-  keeps its name. *)
-function EndsInClearBackupSuffix(const aBase: string): boolean;
-var
-   suffixLength, start, i: integer;
-   c, shape: Char;
-begin
-   Result := False;
-   suffixLength := Length(CLEAR_BACKUP_INFIX) + Length(CLEAR_BACKUP_STAMP_SHAPE);
-   if Length(aBase) < suffixLength then
-      begin
-      Exit;
-      end;
-
-   start := Length(aBase) - suffixLength + 1;
-   if Copy(aBase, start, Length(CLEAR_BACKUP_INFIX)) <> CLEAR_BACKUP_INFIX then
-      begin
-      Exit;
-      end;
-
-   start := start + Length(CLEAR_BACKUP_INFIX);
-   for i := 1 to Length(CLEAR_BACKUP_STAMP_SHAPE) do
-      begin
-      c := aBase[start + i - 1];
-      shape := CLEAR_BACKUP_STAMP_SHAPE[i];
-      if shape = 'd' then
-         begin
-         if (c < '0') or (c > '9') then
-            begin
-            Exit;
-            end;
-         end
-      else if c <> shape then
-         begin
-         Exit;
-         end;
-      end;
-
-   Result := True;
-end;
-
 function LogStoreClearBackupFileName(const aLogFile, aBackupDir: string;
    aUTC: TDateTime): string;
-var
-   base: string;
-   i: integer;
 begin
-   (* THE FILE NAME, without its directory. Scanned by hand rather than
-     through ExtractFileName for the reason below, and a separator is '/' or
-     this platform's own: on Unix a backslash is a legal name character. *)
-   base := aLogFile;
-   for i := Length(base) downto 1 do
-      begin
-      if (base[i] = '/') or (base[i] = DirectorySeparator) then
-         begin
-         base := Copy(base, i + 1, Length(base) - i);
-         Break;
-         end;
-      end;
+   (* The base is uLogBackup's one rule, shared with the periodic name:
+     directory and .db removed, no suffix of either kind left to stack.
 
-   (* The suffix is compared in place, NOT through ExtractFileExt: in FPC
-     3.2.2 that is AnsiString-only (as is SameText), so a path with a
-     non-ASCII name would go through the system code page and could come back
-     changed. UnicodeSameText is the RTL's UnicodeString comparison. *)
-   if UnicodeSameText(Copy(base, Length(base) - Length('.db') + 1, Length('.db')), '.db') then
-      begin
-      base := Copy(base, 1, Length(base) - Length('.db'));
-      end;
-
-   (* NO STACKING: every earlier pre-clear suffix goes, so a backup of a
-     backup is named for the log it came from. A loop, because a name that
-     stacked before this rule existed carries more than one. *)
-   while EndsInClearBackupSuffix(base) do
-      begin
-      base := Copy(base, 1, Length(base) - Length(CLEAR_BACKUP_INFIX)
-                            - Length(CLEAR_BACKUP_STAMP_SHAPE));
-      end;
-
-   (* '-' and a space are literals to FormatDateTime; only '/' and ':' are
+     '-' and a space are literals to FormatDateTime; only '/' and ':' are
      locale separators, and neither is used, so no FormatSettings is needed.
      'hh' is the 24-hour clock because the format names no am/pm. The cast
      widens digits only, so it loses nothing. *)
-   Result := IncludeTrailingPathDelimiter(aBackupDir) + base + CLEAR_BACKUP_INFIX +
+   Result := IncludeTrailingPathDelimiter(aBackupDir) + LogBackupBaseName(aLogFile) +
+             CLEAR_BACKUP_INFIX +
              string(FormatDateTime('yyyy-mm-dd hhnnss', aUTC)) + 'Z.db';
 end;
 
-function LogStoreBackupBeforeClear(const aBackupDir: string;
-   out aPath, aReport: string): boolean;
+function LogStorePeriodicBackupFileName(const aLogFile, aBackupDir: string): string;
 begin
-   (* The name rule's input is the DATABASE's name, never TR4W_LOG_FILENAME
-     itself: that names the .TRW, which is a relic nothing here touches. *)
-   aPath := LogStoreClearBackupFileName(LogStoreFileName, aBackupDir,
-                                        LocalTimeToUniversal(Now));
+   Result := IncludeTrailingPathDelimiter(aBackupDir) + LogBackupBaseName(aLogFile) +
+             PERIODIC_BACKUP_SUFFIX + '.db';
+end;
 
+function LogStorePeriodicBackupPath(const aBackupDir: string): string;
+begin
+   Result := LogStorePeriodicBackupFileName(LogStoreFileName, aBackupDir);
+end;
+
+(* LogStoreBackup to aPath in aBackupDir, refusing a folder that is not there
+  -- the half both backup entry points share. *)
+function BackupIntoFolder(const aBackupDir, aPath: string; out aReport: string): boolean;
+begin
    (* Asked before the snapshot so the operator reads WHY, rather than the
      SQLite error a VACUUM INTO a missing directory would give. *)
    if not DirectoryExists(aBackupDir) then
@@ -1760,6 +1719,23 @@ begin
       end;
 
    Result := LogStoreBackup(aPath, aReport);
+end;
+
+function LogStoreBackupBeforeClear(const aBackupDir: string;
+   out aPath, aReport: string): boolean;
+begin
+   (* The name rule's input is the DATABASE's name, never TR4W_LOG_FILENAME
+     itself: that names the .TRW, which is a relic nothing here touches. *)
+   aPath := LogStoreClearBackupFileName(LogStoreFileName, aBackupDir,
+                                        LocalTimeToUniversal(Now));
+   Result := BackupIntoFolder(aBackupDir, aPath, aReport);
+end;
+
+function LogStoreBackupPeriodic(const aBackupDir: string;
+   out aPath, aReport: string): boolean;
+begin
+   aPath := LogStorePeriodicBackupPath(aBackupDir);
+   Result := BackupIntoFolder(aBackupDir, aPath, aReport);
 end;
 
 (* OUR STATION, AS IT IS AT THIS MOMENT -- what a QSO being logged now

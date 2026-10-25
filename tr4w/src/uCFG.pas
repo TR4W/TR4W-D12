@@ -741,10 +741,14 @@ var
   INITIAL EXCHANGE and the four multiplier commands are retired
   (RETIRED_COMMANDS). This build neither sends them nor applies them; an
   older peer that still sends one lands in CheckCommand's withdrawn arm and
-  is ignored. *)
+  is ignored.
+
+  BACKUP LOG FILE NAME LEFT ON 2026-10-25 (issue #98 step 2). It is a second
+  name of BACKUP DESTINATION now, a folder on THIS machine -- a Mac path means
+  nothing on a Windows peer -- and sending a folder under the old name would
+  make an older peer write its backup to a FILE called after the folder. *)
 const
-   SHARED_WITH_PEERS: array[0..37] of string = (
-      'BACKUP LOG FILE NAME',
+   SHARED_WITH_PEERS: array[0..36] of string = (
       'BAND',
       'CATEGORY-ASSISTED',
       'CATEGORY-BAND',

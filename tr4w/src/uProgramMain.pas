@@ -189,6 +189,7 @@ uses
   uUDPBroadcaster,
   uQsoDispatcher,
   uQsoSinks,
+  uBackupCopyService, (* BackupCopyStart -- the backup destination's copier *)
   uWindowLayoutStore,
   uTR4WConfigFile,
   uSettingsModel,   // Settings -- where retired CFGCA rows now live
@@ -2540,6 +2541,13 @@ begin
   tCallWindowSetFocus;
 
   CheckNTPAtStartup;
+
+  (* THE BACKUP DESTINATION'S COPIER (issue #98 step 2) -- its own thread, so
+    a share that is down or slow never reaches the main thread. HERE, after
+    every headless Halt above, so /EXPORT and the corpus never probe a share;
+    and after the log is open, so its periodic backup can be named and, if the
+    destination missed it, copied now rather than at the next QSO. *)
+  BackupCopyStart(BackupDir, LogStorePeriodicBackupPath(BackupDir));
 
   // Load POTA parks database off the UI thread (file may be ~3 MB / 50k entries).
   // TPOTALoadThread parses the CSV and posts WM_POTA_LOAD_DONE when done.

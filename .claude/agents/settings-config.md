@@ -129,6 +129,20 @@ that in both directions.
   two lists are kept in step by hand and drifted (eleven groups leaked, one
   created twice); `uTestSettingsFreshInstall` measures the heap across builds.
 
+## A former name whose VALUE meant something else (2026-10-25)
+
+`BACKUP LOG FILE NAME` named a FILE; it is now the second name
+(`AlsoKnownAs`) of `BACKUP DESTINATION` (`Log.BackupDestination`), a FOLDER.
+The value alone cannot say which it is, so the translation is keyed by the
+NAME it arrived under: `RegisterCommandValueSpelling(aCommand, ...)`, applied
+in `AssignByCommand` before the path's own `RegisterSettingValueSpelling`.
+That one hook covers the `.cfg`, the legacy bucket, `tr4wconvert`, the ini
+seed and an older peer. The settings FILE's old member (`Log.BackupFileName`,
+which no property carries) is converted after de-streaming by
+`TR4WSettings.CarryFormerBackupFileName`, only when `BackupDestination` is
+absent; the next save drops it. Pinned by `uTestBackupCopier`'s setting suite.
+Use the same pair for the next rename that changes a value's meaning.
+
 ## Nothing touches `Settings` before `LoadSettingsForStartup`
 
 **The New Contest dialog runs BEFORE the settings object is loaded**

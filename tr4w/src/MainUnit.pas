@@ -696,6 +696,8 @@ uses
   { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
     cycle. It never raises and never blocks logging: see uLogStore. }
   uLogStore,
+  uBackupCopyService, (* BackupCopyStop -- the backup destination's copier,
+                        stopped before the log closes *)
   uLogEditForm,       // View / Edit Log -- an LCL virtual list now; also
                       // SaveLogEditLayout, see SaveTR4WPOSFILE
   uContestFileKind,   // a .db is not an INI -- see SaveColumnWidthToConfig
@@ -3975,6 +3977,11 @@ begin
     removing one by hand loses QSOs. The only safe disposal is the one SQLite
     documents: open the database and close it cleanly -- which, from this commit
     on, simply happens the next time that contest is opened. *)
+  (* THE BACKUP COPIER FIRST, BOUNDED (issue #98 step 2): it waits at most
+    BACKUP_COPY_SHUTDOWN_MS for a copy to a share, and holds no SQLite object,
+    so it never delays the log's close for long and never needs it. Before the
+    logger goes, because its last word is a log line. *)
+  BackupCopyStop;
   LogStoreClose;
 
   if Assigned(logger) then

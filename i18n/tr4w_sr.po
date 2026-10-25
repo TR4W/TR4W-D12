@@ -9173,3 +9173,23 @@ msgstr ""
 msgid "QSOs"
 msgstr "Veza"
 
+#: uappstrings.sbackupdestinationreachable
+#, fuzzy
+msgid "Backups will also be copied to %s."
+msgstr ""
+
+#: uappstrings.sbackupcopyfailed
+#, fuzzy
+msgid "Backups are NOT reaching %s: %s. Logging continues, and TR4W keeps trying."
+msgstr ""
+
+#: uappstrings.sbackupcopyrecovered
+#, fuzzy
+msgid "Backups are reaching %s again."
+msgstr ""
+
+#: uappstrings.sbackupdestinationdialogtitle
+#, fuzzy
+msgid "Backup destination folder"
+msgstr ""
+

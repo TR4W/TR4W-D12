@@ -297,8 +297,8 @@ begin
    try
       ok := backup.Run('   ', report);
       CheckFalse(ok, 'a blank name does not back up');
-      CheckEquals('No backup file name is set. See BACKUP LOG FILE NAME.',
-                  report, 'and says which setting to fix');
+      CheckEquals('No backup file name was given, so nothing was backed up.',
+                  report, 'and says so');
       CheckEquals(0, backup.Calls.Count, 'and the log was never asked anything');
    finally
       backup.Free;

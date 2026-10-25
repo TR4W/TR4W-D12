@@ -1246,6 +1246,7 @@ uses
    MainUnit,    // logger, and `appender` for the log file's real path
    uPasswordReveal,     // AttachPasswordReveal -- the eye beside a password
    uSettingsModel,      // Settings.AllowedValuesForCommand -- the level list
+   uAppStrings,         (* SBackupDestinationDialogTitle -- the folder chooser *)
    VC;          // TR4W_TCI_DEBUG (the log-level names moved to uSettingsModel)
 
 var
@@ -3885,7 +3886,7 @@ begin
 
    // --- layBackup ---
    AddHandWiredToSearchIndex(aN, 'BACKUP LOG FREQUENCY',              edtBackupEvery);
-   AddHandWiredToSearchIndex(aN, 'BACKUP LOG FILE NAME',              edtBackupFile);
+   AddHandWiredToSearchIndex(aN, 'BACKUP DESTINATION',                edtBackupFile);
 
    // --- layBandMap ---
    AddHandWiredToSearchIndex(aN, 'BAND MAP ALL BANDS',                chkBandMapAllBands);
@@ -6480,8 +6481,12 @@ begin
 
    edtBackupEvery.Text := FStore.CommandValue('BACKUP LOG FREQUENCY',
                              CFGCommandValueAsString('BACKUP LOG FREQUENCY'));
-   edtBackupFile.Text  := FStore.CommandValue('BACKUP LOG FILE NAME',
-                             CFGCommandValueAsString('BACKUP LOG FILE NAME'));
+   (* BACKUP DESTINATION, a FOLDER, since issue #98 step 2. The field kept
+     its name (edtBackupFile) and its "Copy to:" label, which already said
+     what it is now: where the backup is copied, the local one being written
+     to the backup folder regardless. *)
+   edtBackupFile.Text  := FStore.CommandValue('BACKUP DESTINATION',
+                             CFGCommandValueAsString('BACKUP DESTINATION'));
 end;
 
 procedure TPrefsForm.SaveRemainingPanels;
@@ -6508,23 +6513,24 @@ begin
    SetCommandBool('COLUMN DUPESHEET COLOR', chkDupeSheetColor.Checked);
 
    ApplyIfChanged('BACKUP LOG FREQUENCY', Trim(edtBackupEvery.Text));
-   ApplyIfChanged('BACKUP LOG FILE NAME', Trim(edtBackupFile.Text));
+   (* A CHANGED FOLDER IS PROBED AT ONCE, off this thread: the property's
+     setter raises the change and uSettingsEffects hands it to
+     uBackupCopyService. The result arrives on the status line. *)
+   ApplyIfChanged('BACKUP DESTINATION', Trim(edtBackupFile.Text));
 end;
 
 procedure TPrefsForm.btnBrowseBackupClick(Sender: TObject);
 var
-   dlg: TSaveDialog;
+   dlg: TSelectDirectoryDialog;
 begin
-   // SAVE dialog, not Open: the backup file is somewhere to WRITE, and it
-   // usually does not exist yet.  An Open dialog would refuse to name it.
-   dlg := TSaveDialog.Create(nil);
+   (* A FOLDER CHOOSER, NOT A SAVE DIALOG: BACKUP DESTINATION names a folder
+     (issue #98 step 2). The LCL's own dialog, on every platform. *)
+   dlg := TSelectDirectoryDialog.Create(nil);
    try
-      dlg.Title   := 'Backup log file';
-      dlg.Filter  := 'Log files (*.dat)|*.dat|All files (*.*)|*.*';
-      dlg.Options := dlg.Options - [TOpenOption.ofOverwritePrompt];
+      dlg.Title := SBackupDestinationDialogTitle;
       if Trim(edtBackupFile.Text) <> '' then
          begin
-         dlg.FileName := Trim(edtBackupFile.Text);
+         dlg.InitialDir := Trim(edtBackupFile.Text);
          end;
       if dlg.Execute then
          begin

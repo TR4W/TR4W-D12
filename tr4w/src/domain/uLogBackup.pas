@@ -84,10 +84,130 @@ type
   real integrity_check plus foreign_key_check. Pinned by uTestLogBackup. *)
 function StagedBackupIsSound(const aPath: string; out aWhy: string): boolean;
 
+const
+   (* The two suffixes a backup's name adds to the log's (issue #98). *)
+   CLEAR_BACKUP_INFIX = ' before clear ';
+   PERIODIC_BACKUP_SUFFIX = ' periodic';
+
+(* THE LOG'S NAME AS A BACKUP IS NAMED FOR IT -- the one rule both backup
+  names start from (LogStoreClearBackupFileName and
+  LogStorePeriodicBackupFileName in uLogStore).
+
+  The FILE NAME only, without its directory; a separator is '/' or this
+  platform's own, because on Unix a backslash is a legal name character. Only
+  a final ".db" is removed (any case).
+
+  NAMES NEVER STACK. Every trailing " before clear <yyyy-mm-dd hhnnss>Z" (that
+  exact shape) and every trailing " periodic" is removed, in any order and any
+  number, so a backup of a log that is itself a backup is named for the log it
+  came from. Anything that merely CONTAINS the words keeps them. *)
+function LogBackupBaseName(const aLogFile: string): string;
+
 implementation
 
 uses
    SysUtils, uLogDatabase;
+
+const
+   (* The stamp's shape, one character per position: 'd' a digit, anything
+     else itself. uLogStore's FormatDateTime pattern writes exactly this. *)
+   CLEAR_BACKUP_STAMP_SHAPE = 'dddd-dd-dd ddddddZ';
+
+(* Does aBase END in " before clear <stamp>Z", the suffix the pre-clear name
+  rule writes? Exact shape only, so a log merely called "... before clear ..."
+  keeps its name. *)
+function EndsInClearBackupSuffix(const aBase: string): boolean;
+var
+   suffixLength, start, i: integer;
+   c, shape: Char;
+begin
+   Result := False;
+   suffixLength := Length(CLEAR_BACKUP_INFIX) + Length(CLEAR_BACKUP_STAMP_SHAPE);
+   if Length(aBase) < suffixLength then
+      begin
+      Exit;
+      end;
+
+   start := Length(aBase) - suffixLength + 1;
+   if Copy(aBase, start, Length(CLEAR_BACKUP_INFIX)) <> CLEAR_BACKUP_INFIX then
+      begin
+      Exit;
+      end;
+
+   start := start + Length(CLEAR_BACKUP_INFIX);
+   for i := 1 to Length(CLEAR_BACKUP_STAMP_SHAPE) do
+      begin
+      c := aBase[start + i - 1];
+      shape := CLEAR_BACKUP_STAMP_SHAPE[i];
+      if shape = 'd' then
+         begin
+         if (c < '0') or (c > '9') then
+            begin
+            Exit;
+            end;
+         end
+      else if c <> shape then
+         begin
+         Exit;
+         end;
+      end;
+
+   Result := True;
+end;
+
+(* Does aBase END in " periodic"? Case as written: the rule writes it lower
+  case, and a log the operator happened to call "... PERIODIC" keeps it. *)
+function EndsInPeriodicBackupSuffix(const aBase: string): boolean;
+begin
+   Result := (Length(aBase) > Length(PERIODIC_BACKUP_SUFFIX)) and
+             (Copy(aBase, Length(aBase) - Length(PERIODIC_BACKUP_SUFFIX) + 1,
+                   Length(PERIODIC_BACKUP_SUFFIX)) = PERIODIC_BACKUP_SUFFIX);
+end;
+
+function LogBackupBaseName(const aLogFile: string): string;
+var
+   i: integer;
+   stripped: boolean;
+begin
+   (* THE FILE NAME, without its directory. Scanned by hand rather than
+     through ExtractFileName for the reason in the header: on Unix a backslash
+     is a legal name character, so only '/' and this platform's own separator
+     divide. *)
+   Result := aLogFile;
+   for i := Length(Result) downto 1 do
+      begin
+      if (Result[i] = '/') or (Result[i] = DirectorySeparator) then
+         begin
+         Result := Copy(Result, i + 1, Length(Result) - i);
+         Break;
+         end;
+      end;
+
+   (* The suffix is compared in place, NOT through ExtractFileExt or
+     SameText: UnicodeSameText is the RTL's UnicodeString comparison, so a
+     non-ASCII name is not sent through the system code page. *)
+   if UnicodeSameText(Copy(Result, Length(Result) - Length('.db') + 1, Length('.db')), '.db') then
+      begin
+      Result := Copy(Result, 1, Length(Result) - Length('.db'));
+      end;
+
+   (* A LOOP, in either order, because a name that stacked before this rule
+     existed can carry several of each. *)
+   repeat
+      stripped := False;
+      if EndsInClearBackupSuffix(Result) then
+         begin
+         Result := Copy(Result, 1, Length(Result) - Length(CLEAR_BACKUP_INFIX)
+                                   - Length(CLEAR_BACKUP_STAMP_SHAPE));
+         stripped := True;
+         end;
+      if EndsInPeriodicBackupSuffix(Result) then
+         begin
+         Result := Copy(Result, 1, Length(Result) - Length(PERIODIC_BACKUP_SUFFIX));
+         stripped := True;
+         end;
+   until not stripped;
+end;
 
 function StagedBackupIsSound(const aPath: string; out aWhy: string): boolean;
 var
@@ -135,7 +255,7 @@ begin
 
    if Trim(aDestination) = '' then
       begin
-      aReport := 'No backup file name is set. See BACKUP LOG FILE NAME.';
+      aReport := 'No backup file name was given, so nothing was backed up.';
       Exit;
       end;
 

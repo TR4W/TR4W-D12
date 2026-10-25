@@ -468,6 +468,19 @@ resourcestring
    SImportMyFactsStamped =
       '%d QSO(s) named no station of ours and were given this contest''s.';
 
+   (* ---------------------------------------- the backup destination - *)
+
+   (* ISSUE #98 STEP 2: the folder a backup is COPIED to after it is written
+     locally. Each of the first three is shown ONCE per change of state, on
+     the status line; %s is the folder, and in SBackupCopyFailed the second
+     %s is the reason, in English. *)
+   SBackupDestinationReachable = 'Backups will also be copied to %s.';
+   SBackupCopyFailed =
+      'Backups are NOT reaching %s: %s. Logging continues, and TR4W keeps trying.';
+   SBackupCopyRecovered = 'Backups are reaching %s again.';
+   (* The title of the folder chooser on the Preferences backup page. *)
+   SBackupDestinationDialogTitle = 'Backup destination folder';
+
 implementation
 
 end.

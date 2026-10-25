@@ -772,6 +772,9 @@ uses uNet,
   (* SExchangeNotAGridOrReport -- the RST-and/or-grid parser's refusal of a
     word that is neither (Q115). *)
   uAppStrings,
+  (* BackupCopySubmit -- the periodic backup's copy to BACKUP DESTINATION,
+    off this thread (issue #98 step 2). *)
+  uBackupCopyService,
   Classes; // TStringList — used by ProcessRSTAndDomesticQTHExchange
 
 (* THE CONTEST THAT PARSES AND VALIDATES AN EXCHANGE -- M5b, 2026-10-02.
@@ -5625,34 +5628,34 @@ end;
 
   THE NAME. Floppy disks are not a thing any more, and the config commands have
   said BACKUP LOG FILE NAME and BACKUP LOG FREQUENCY since 4.56.11 -- only the
-  identifiers were still stuck in 1995. *)
+  identifiers were still stuck in 1995.
+
+  WHERE, SINCE ISSUE #98 STEP 2 (2026-10-25). ALWAYS LOCAL FIRST, to
+  uAppPaths.BackupDir, as "<log> periodic.db" -- one per log, no longer the
+  one 'logback.db' every contest overwrote beside the logs, where the Open
+  dialog listed it as a contest. So there is no file name to set any more, and
+  an empty one no longer switches the backup off: BACKUP LOG FREQUENCY = 0
+  does that (logsubs2 asks it), and the Backup Log menu always backs up.
+
+  THEN, IF BACKUP DESTINATION NAMES A FOLDER, the verified local file is
+  queued for it (uBackupCopyService). That copy runs on its own thread; this
+  one only queues.
+
+  THE LOCAL SNAPSHOT IS STILL SYNCHRONOUS ON THE MAIN THREAD -- local disk, a
+  VACUUM INTO and a verification. Moving it off is a later step of #98. *)
 procedure BackupLogNow;
 var
-  report: string;
+  path, report: string;
 begin
-  if Settings.Log.BackupFileName = '' then
-     begin
-     Exit;
-     end;
-
-  (* SysUtils.Format STRAIGHT INTO QuickDisplay, which takes a string.
-
-    TF.Format wrote into QuickDisplayBuffer -- a 256-byte global AnsiChar
-    array -- and QuickDisplay then converted it back. The buffer was never
-    wanted here: it is a leftover from when TF.Format was `external user32
-    name 'wsprintfA'` and the destination had to be memory the API could
-    write. It is pure Pascal now and already builds a string internally, so
-    the round trip through a global bought nothing and capped the result at
-    1023 bytes on the way. *)
-  QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_SAVINGTO)),
-                               [CharBufferText(TR4W_LOG_FILENAME), Settings.Log.BackupFileName]));
-
   (* THE REPORT IS THE ROUTINE'S OUTPUT, success or failure, and it names the
     file either way -- a periodic backup runs unattended and the only place an
-    operator will ever see it is this line. *)
-  if LogStoreBackup(Settings.Log.BackupFileName, report) then
+    operator will ever see it is this line. The "Saving to" line that stood
+    before it is gone: it was replaced in the same call, before anything could
+    paint it, so nobody ever saw it. *)
+  if LogStoreBackupPeriodic(BackupDir, path, report) then
      begin
      QuickDisplay(AnsiString(report));
+     BackupCopySubmit(path);
      end
   else
      begin

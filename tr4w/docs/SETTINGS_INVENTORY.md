@@ -61,7 +61,7 @@ comes last, a word run together.
 | `AUTO SEND CHARACTER COUNT` |  | global | `Settings.Cw.AutoSendCharacterCount` | TAutoSendCharacterCount |  |
 | `AUTO TIME INCREMENT` |  | global | `Settings.Operating.AutoTimeIncrement` | TAutoTimeIncrement |  |
 | `AUTO-CQ DELAY TIME` |  | global | `Settings.Cq.AutoDelay` | TAutoCqDelay |  |
-| `BACKUP LOG FILE NAME` |  | global | `Settings.Log.BackupFileName` | string |  |
+| `BACKUP DESTINATION` | `BACKUP LOG FILE NAME` | global | `Settings.Log.BackupDestination` | string |  |
 | `BACKUP LOG FREQUENCY` |  | global | `Settings.Log.BackupFrequency` | TBackupLogFrequency |  |
 | `BAND` |  | **CONTEST** | `Settings.Contest.Band` | string |  |
 | `BAND MAP ALL BANDS` |  | global | `Settings.BandMap.AllBands` | boolean |  |
@@ -346,7 +346,7 @@ is read out of the live settings object, so if the generator and the program
 ever disagree, the generator is wrong. `tools/settings_inventory_doc.py`
 makes that comparison every time it runs and refuses to write this file
 when the two differ; when this file was written they agreed exactly on all
-291 command names.
+292 command names.
 
 Run `tools/settings_inventory.py`, then `tools/settings_inventory_doc.py`.
 

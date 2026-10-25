@@ -13,6 +13,7 @@ You own the contest log. **It is SQLite, and has been since 2026-09-01.**
 |---|---|
 | database + pragmas + integrity | `tr4w/src/domain/uLogDatabase.pas` |
 | backup orchestration (stage, verify, `.bak`, publish) | `tr4w/src/domain/uLogBackup.pas` — `LogStoreBackup` is a thin caller; tests in `test/unit/uTestLogBackup.pas` |
+| the copy to BACKUP DESTINATION (worker thread, file I/O only) | `tr4w/src/domain/uBackupCopier.pas`, glue `tr4w/src/uBackupCopyService.pas`; tests in `test/unit/uTestBackupCopier.pas` |
 | schema | `tr4w/src/domain/uLogSchema.pas` |
 | repository | `tr4w/src/uLogRepository.pas` |
 | the read seam — SQLite only, no source selection | `tr4w/src/uLogSource.pas` |
@@ -86,12 +87,47 @@ other.
   a test hands in a scratch one; **never call `BackupDir` from a test** --
   the unit-test binary would create it under the real settings directory.
 - **Names never stack**: every trailing ` before clear <stamp>Z` of exactly
-  that shape is removed from the log's name first. **A folder that cannot be
-  made fails the backup** (no fallback beside the log); the test uses a file
-  occupying the folder's name. Backups already beside logs are left alone.
-- **The periodic backup (`logback.db`, `BACKUP LOG FILE NAME`) is NOT moved
-  yet**; the rest of #98 (remote copy, worker thread, catalog, restore) is
-  open.
+  that shape, and every trailing ` periodic`, is removed from the log's name
+  first -- ONE rule, `uLogBackup.LogBackupBaseName`, under both names.
+  **A folder that cannot be made fails the backup** (no fallback beside the
+  log); the test uses a file occupying the folder's name. Backups already
+  beside logs (old `logback.db` files included) are left alone.
+
+**THE PERIODIC BACKUP IS LOCAL FIRST, THEN COPIED (issue #98 step 2,
+2026-10-25).**
+- **Local**: `logstuff.BackupLogNow` -> `LogStoreBackupPeriodic(BackupDir,
+  ...)` -> `LogStoreBackup` to `<log> periodic.db` in `BackupDir`
+  (`LogStorePeriodicBackupFileName`), one per log, `.bak` kept by
+  `TLogBackup`. It replaced `logback.db`, one name every contest overwrote
+  beside the logs. **BACKUP LOG FREQUENCY = 0 is the off switch**; an empty
+  name no longer is (there is no name). Still SYNCHRONOUS on the main thread
+  -- local disk; moving the snapshot off is a later #98 step.
+- **Copy**: `BACKUP DESTINATION` (`Settings.Log.BackupDestination`, a
+  FOLDER, '' = local only) replaced `BACKUP LOG FILE NAME`, which is now its
+  second name; a value under the old name is converted by NAME
+  (`RegisterCommandValueSpelling` -> `FolderOfFormerBackupFileName`: a folder
+  carries over, a bare name becomes ''), and an old settings file's
+  `Log.BackupFileName` member by `TR4WSettings.CarryFormerBackupFileName`.
+  Not in `SHARED_WITH_PEERS` any more.
+- **`src/domain/uBackupCopier.pas`** (one worker thread, file I/O only, NO
+  SQLite object) and its glue `src/uBackupCopyService.pas`. The worker never
+  opens the published local file: `Submit` copies it into `BackupDir\outbox`
+  under a unique name, so a slow share can never make the next local
+  publish's rename fail (Windows refuses to rename an open file). Pending
+  jobs coalesce per file name. Copy = `.partial` (unique, same folder),
+  `FileFlush`, byte read-back, then a rename dance that never targets an
+  existing name and rolls back on failure. **The destination folder is never
+  created** (an unmounted `/Volumes` share is a local folder). Retries every
+  60 s on its own clock; reports are TRANSITIONS (reachable / failed /
+  recovered), marshalled by `QueueAsyncCall`. `Shutdown` is bounded
+  (`BACKUP_COPY_SHUTDOWN_MS`); on False the copier is not freed.
+- **Started in `uProgramMain` after every headless Halt** (so the corpus
+  never probes a share), which also offers this log's existing periodic
+  backup to the destination, copied only if it differs. Tests:
+  `uTestBackupCopier` (copier + setting), `uTestLogStore` (names, folder).
+- **Still open in #98**: the snapshot off the main thread, the 60 s dirty
+  timer, generations/catalog/SHA-256, retention, Restore, and reconciling an
+  ambiguous rename on a share by name + hash.
 - **NEVER RUN `VACUUM` (INTO OR NOT) ON THE LIVE CONNECTION (2026-10-24).**
   A VACUUM resets every schema of the connection that runs it, and FPC's
   connector prepares with the LEGACY `sqlite3_prepare`, which never

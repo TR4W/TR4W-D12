@@ -634,6 +634,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestLogDatabase     in 'uTestLogDatabase.pas',
    uLogBackup           in '..\..\src\domain\uLogBackup.pas',
    uTestLogBackup       in 'uTestLogBackup.pas',
+   uBackupCopier        in '..\..\src\domain\uBackupCopier.pas',
+   uTestBackupCopier    in 'uTestBackupCopier.pas',
    uQsoMyFacts          in '..\..\src\domain\uQsoMyFacts.pas',
    uTestLogMyFacts      in 'uTestLogMyFacts.pas',
    uTestScoringMyFacts  in 'uTestScoringMyFacts.pas',
@@ -960,6 +962,8 @@ begin
    RegisterSuite(TLogBinaryFileTests.Create('LogBinaryFile'));
    RegisterSuite(TLogDatabaseTests.Create('LogDatabase'));
    RegisterSuite(TLogBackupTests.Create('LogBackup'));
+   RegisterSuite(TBackupCopierTests.Create('BackupCopier'));
+   RegisterSuite(TBackupDestinationSettingTests.Create('BackupDestinationSetting'));
    RegisterSuite(TNewContestCommandsTests.Create('NewContestCommands'));
    RegisterSuite(TStationFactOverrideTests.Create('StationFactOverrides'));
    RegisterSuite(TSettingsFreshInstallTests.Create('SettingsFreshInstall'));

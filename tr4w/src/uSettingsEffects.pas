@@ -134,7 +134,9 @@ uses
    uNet,           // SetComputerName -- announce the name to the other position
    uBandMapView,   // BandMapRefresh -- the band map's own view seam
    MainUnit,       // wsjtx -- the server object these three act on
-   uStateBridge;   // RefreshWSJTXIndicator -- the main window's box
+   uStateBridge,   // RefreshWSJTXIndicator -- the main window's box
+   uBackupCopyService; (* BackupCopyDestinationChanged -- the new folder is
+                         probed *)
 
 const
    (* The property path prefix that names a group.  Spelled once, here, and
@@ -248,6 +250,11 @@ const
    (* AutoQSLCount is the live countdown; this is what it reloads from, so
      changing it re-seeds the counter. *)
    AUTO_QSL_INTERVAL = 'Message.AutoQslInterval';
+
+   (* BACKUP DESTINATION: a new folder is probed at once, off the main thread,
+     and the old folder's state is dropped (issue #98 step 2). Startup does not
+     need this -- uProgramMain starts the copier with the loaded value. *)
+   BACKUP_DESTINATION = 'Log.BackupDestination';
 
 
 function InGroup(const aPath, aPrefix: string): boolean;
@@ -537,6 +544,11 @@ begin
    if UnicodeSameText(aPath, COMPUTER_NAME) then
       begin
       SetComputerName;
+      end;
+
+   if UnicodeSameText(aPath, BACKUP_DESTINATION) then
+      begin
+      BackupCopyDestinationChanged;
       end;
 
    if UnicodeSameText(aPath, WSJTX_ENABLED) then
