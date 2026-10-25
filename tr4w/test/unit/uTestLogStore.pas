@@ -28,7 +28,13 @@ unit uTestLogStore;
 
   AND CLEAR LOG'S BACKUP (2026-10-23): its name rule, and that the backup is
   taken from the SQLite log alone -- it holds every row, an empty log
-  included, with no .TRW beside it. *)
+  included, with no .TRW beside it.
+
+  AND THAT WHAT IS DELETED STAYS DELETED ON DISK (2026-10-24): a cleared
+  log holds no row once the program lets go of it, read by a connection
+  that is not the store's; the clear is committed before the close; and a
+  QSO deleted through Edit QSO is still flagged after a reopen and is
+  neither counted nor exported. *)
 
 {$I ..\..\src\tr4w.inc}
 
@@ -59,6 +65,14 @@ type
       (* Every callsign the database aDb holds, opened read-only. *)
       procedure ReadCallsFrom(const aDb: string; aCalls: TStringList);
       procedure CheckImportedIntact(aBinary, aLog: TStringList; const aWhat: string);
+      (* ONE NUMBER FROM THE FILE aDb, asked through a connection of the
+        test's own -- TLogDatabase.OpenReadOnly, never the store's. aSql
+        selects one integer. *)
+      function ScalarFromFile(const aDb, aSql: string): Int64;
+      (* The contest row of the file aDb, read the same way. *)
+      procedure ReadContestRow(const aDb: string; out aType, aCall, aGuid: string);
+      (* Which SQLite sidecars lie beside aDb now, by name; '' for none. *)
+      function SidecarsBeside(const aDb: string): string;
    protected
       procedure TestAnAppendThatMigratesTheLogInsertsTheQSO;
       procedure TestAnAppendAfterAnEarlierMigrationInsertsTheQSO;
@@ -67,6 +81,9 @@ type
       procedure TestABackupBeforeClearHoldsTheLogAndNeedsNoTrw;
       procedure TestAnEmptyLogIsBackedUpBeforeClear;
       procedure TestTheGridReadsTheLogAfterABackup;
+      procedure TestAClearedLogIsEmptyOnDiskAfterClose;
+      procedure TestAClearIsCommittedBeforeTheLogIsClosed;
+      procedure TestADeletedQSOStaysDeletedAndIsNotExported;
    public
       procedure RunAllTests; override;
    end;
@@ -75,7 +92,10 @@ implementation
 
 uses
    SysUtils, utils_text, uLogStore, uLogDatabase, uLogRepository,
-   uLogBinaryFile, uLogSource;
+   uLogBinaryFile, uLogSource,
+   sqldb,      (* TSQLQuery -- ScalarFromFile and ReadContestRow *)
+   uLogNote,   (* SetNoteText -- a NOTE record, as MainUnit's note command makes *)
+   PostUnit;   (* ExportToADIF -- the export a deleted QSO must not reach *)
 
 const
    (* 101 records, a DX zone contest -- the repository round-trip's log. *)
@@ -162,6 +182,11 @@ begin
          end;
       FBackup := '';
       end;
+   (* ExportToADIF writes the log's name with .ADI beside the .trw. *)
+   if FileExists(ChangeFileExt(FTrw, '.ADI')) then
+      begin
+      DeleteFile(ChangeFileExt(FTrw, '.ADI'));
+      end;
    if FileExists(FTrw) then
       begin
       DeleteFile(FTrw);
@@ -239,6 +264,143 @@ begin
       CheckEquals(aBinary[i], aLog[i],
                   aWhat + ': imported QSO ' + IntToStr(i + 1) + ' is intact');
       end;
+end;
+
+(* A CONNECTION OF ITS OWN, so what it reads is what the FILE holds: another
+  connection sees only what has been COMMITTED (WAL included), never the
+  store's open transaction. Read-only, so it writes nothing to the file --
+  but on a WAL-mode log it can leave a -wal behind, which is why every test
+  below looks for sidecars BEFORE it reads through here. *)
+function TLogStoreTests.ScalarFromFile(const aDb, aSql: string): Int64;
+var
+   db: TLogDatabase;
+   q: TSQLQuery;
+begin
+   Result := -1;
+   db := TLogDatabase.Create;
+   try
+      db.OpenReadOnly(aDb);
+      q := TSQLQuery.Create(nil);
+      try
+         q.DataBase := db.Connection;
+         q.Transaction := db.Transaction;
+         q.UsePrimaryKeyAsKey := False;
+         q.SQL.Text := aSql;
+         q.Open;
+         if not q.EOF then
+            begin
+            Result := q.Fields[0].AsLargeInt;
+            end;
+         q.Close;
+      finally
+         q.Free;
+      end;
+   finally
+      db.Free;
+   end;
+end;
+
+procedure TLogStoreTests.ReadContestRow(const aDb: string; out aType, aCall, aGuid: string);
+var
+   db: TLogDatabase;
+   q: TSQLQuery;
+begin
+   aType := '';
+   aCall := '';
+   aGuid := '';
+   db := TLogDatabase.Create;
+   try
+      db.OpenReadOnly(aDb);
+      q := TSQLQuery.Create(nil);
+      try
+         q.DataBase := db.Connection;
+         q.Transaction := db.Transaction;
+         q.UsePrimaryKeyAsKey := False;
+         q.SQL.Text := 'SELECT contest_type, my_call, guid FROM contest WHERE id = 1';
+         q.Open;
+         if not q.EOF then
+            begin
+            aType := q.Fields[0].AsString;
+            aCall := q.Fields[1].AsString;
+            aGuid := q.Fields[2].AsString;
+            end;
+         q.Close;
+      finally
+         q.Free;
+      end;
+   finally
+      db.Free;
+   end;
+end;
+
+function TLogStoreTests.SidecarsBeside(const aDb: string): string;
+const
+   SIDECARS: array[0..2] of string = ('-wal', '-shm', '-journal');
+var
+   i: integer;
+begin
+   Result := '';
+   for i := Low(SIDECARS) to High(SIDECARS) do
+      begin
+      if FileExists(aDb + SIDECARS[i]) then
+         begin
+         Result := Result + ' ' + SIDECARS[i];
+         end;
+      end;
+end;
+
+(* How many times aNeedle occurs in aText. *)
+function CountOccurrences(const aNeedle, aText: string): integer;
+var
+   p: integer;
+   rest: string;
+begin
+   Result := 0;
+   rest := aText;
+   p := Pos(aNeedle, rest);
+   while p > 0 do
+      begin
+      Inc(Result);
+      rest := Copy(rest, p + Length(aNeedle), MaxInt);
+      p := Pos(aNeedle, rest);
+      end;
+end;
+
+(* Do the raw bytes of aFile contain aText anywhere -- live pages, free
+  pages, anything? A byte search, not a query: it asks what is ON THE DISK,
+  which no SELECT can. *)
+function FileHoldsText(const aFile: string; const aText: AnsiString): boolean;
+var
+   stream: TBytesStream;
+   bytes: TBytes;
+   i, j: integer;
+   matched: boolean;
+begin
+   Result := False;
+   stream := TBytesStream.Create;
+   try
+      stream.LoadFromFile(aFile);
+      bytes := stream.Bytes;
+      for i := 0 to integer(stream.Size) - Length(aText) do
+         begin
+         matched := True;
+         for j := 1 to Length(aText) do
+            begin
+            if bytes[i + j - 1] <> Ord(aText[j]) then
+               begin
+               matched := False;
+               Break;
+               end;
+            end;
+         if matched then
+            begin
+            Result := True;
+            Exit;
+            end;
+         end;
+   finally
+      stream.Free;
+   end;
 end;
 
 (* THE CASE THE DELETED BRANCH WAS FOR: the append is the first thing to open
@@ -611,6 +773,347 @@ begin
    end;
 end;
 
+const
+   SQL_ALL_ROWS     = 'SELECT COUNT(*) FROM qso';
+   SQL_NOTE_ROWS    = 'SELECT COUNT(*) FROM qso WHERE record_kind = ''NOTE''';
+   SQL_DELETED_ROWS = 'SELECT COUNT(*) FROM qso WHERE deleted <> 0';
+
+(* CLEAR LOG EMPTIES THE FILE, AND THE FILE STAYS EMPTY (2026-10-24).
+
+  NY4I ran Clear Log in POTA, quit, restarted and saw four QSOs. The log
+  and tr4w.log showed the clear had worked and the file he opened was Clear
+  Log's backup. The tests above prove the BACKUP holds the rows; nothing
+  proved the CLEARED LOG is empty ON DISK once the program has let go of it.
+
+  The program's order (MainUnit.ClearLog): LogStoreBackupBeforeClear, then
+  LogStoreClearAllQSOs. Then the program closes (LogStoreClose), and the
+  file is read by a connection that is NOT the store's. The log holds every
+  kind of row first -- QSOs, a NOTE, a soft-deleted QSO -- because DELETE
+  FROM qso must take them all.
+
+  THE .TRW STAYS BESIDE THE LOG ON PURPOSE. A reopen of an empty log must
+  open the database, not re-import the binary log it was migrated from;
+  that would bring every QSO back, which is the symptom being ruled out. *)
+procedure TLogStoreTests.TestAClearedLogIsEmptyOnDiskAfterClose;
+var
+   path, report, sidecars: string;
+   typeBefore, callBefore, guidBefore, typeAfter, callAfter, guidAfter: string;
+   ok, residue: boolean;
+   note, qso, newest: ContestExchange;
+   before, notes, deleted: Int64;
+begin
+   BeginTest('Clear Log leaves the log file with no rows of any kind once the program closes it');
+
+   PrepareMigration(FIXTURE_SET);
+   try
+      CheckTrue(LogStoreEnsureOpen, 'the open migrates the log');
+
+      (* A NOTE, as MainUnit's note command logs one. *)
+      note := Default(ContestExchange);
+      note.ceRecordKind := rkNote;
+      SetNoteText(note, 'a note logged before Clear Log');
+      CheckTrue(LogStoreAppendQSO(note), 'a note is logged');
+
+      (* A SOFT-DELETED QSO, as Edit QSO leaves one. *)
+      CheckTrue(LogSourceReadAtIndex(0, qso), 'the first QSO reads');
+      qso.ceQSO_Deleted := True;
+      LogStoreUpdateQSOAtIndex(0, qso);
+      CheckTrue(LogStoreIsUsable, 'the store is usable after the delete');
+
+      (* A callsign whose bytes are searched for in the file afterwards. *)
+      CheckTrue(LogSourceReadFromEnd(2, newest), 'the newest QSO before the note reads');
+
+      before := ScalarFromFile(FDb, SQL_ALL_ROWS);
+      notes := ScalarFromFile(FDb, SQL_NOTE_ROWS);
+      deleted := ScalarFromFile(FDb, SQL_DELETED_ROWS);
+      CheckTrue(before > 2, 'the file holds the log''s rows before the clear');
+      CheckEquals(1, notes, 'the file holds the note');
+      CheckEquals(1, deleted, 'and the deleted QSO');
+      ReadContestRow(FDb, typeBefore, callBefore, guidBefore);
+      CheckTrue(typeBefore <> '', 'the contest row names a contest');
+      CheckTrue(guidBefore <> '', 'and carries the log''s guid');
+
+      (* MainUnit.ClearLog's two calls, in its order. *)
+      ok := LogStoreBackupBeforeClear(path, report);
+      CheckTrue(ok, 'the backup before clearing succeeds: ' + report);
+      FBackup := path;
+      CheckTrue(LogStoreClearAllQSOs, 'the clear reports success');
+      LogStoreClose;
+
+      (* SIDECARS FIRST, before anything opens the file to look: a read-only
+        connection to a WAL-mode log leaves its own -wal behind. With none,
+        the .db alone is the log -- the WAL was checkpointed into it and
+        removed when the store's connection, the last one, closed cleanly. So
+        no stray -wal or -journal can carry the deleted rows back in. *)
+      sidecars := SidecarsBeside(FDb);
+      CheckEquals('', sidecars, 'after the close nothing lies beside the log');
+
+      (* AND THE BYTES. REPORTED, NOT ASSERTED: SQLite's DELETE frees the
+        pages without overwriting them unless secure_delete is on, which this
+        log does not set and which the shipped library decides by default.
+        So the rows are gone from every query while old bytes may survive on
+        free pages until reused. Said here so that is known, not discovered. *)
+      residue := FileHoldsText(FDb, AnsiString(newest.Callsign));
+      if residue then
+         begin
+         WriteLn('  NOTE: "', string(newest.Callsign), '" is still present in the ',
+                 'cleared file''s bytes (no secure_delete; ',
+                 ScalarFromFile(FDb, 'SELECT freelist_count FROM pragma_freelist_count()'),
+                 ' free pages); no query can read it.');
+         end
+      else
+         begin
+         WriteLn('  NOTE: "', string(newest.Callsign), '" is not present anywhere in ',
+                 'the cleared file''s bytes.');
+         end;
+
+      CheckEquals(0, ScalarFromFile(FDb, SQL_ALL_ROWS),
+                  'the cleared file holds no row in qso, of any record kind');
+      CheckEquals(0, ScalarFromFile(FDb, SQL_NOTE_ROWS), 'no note');
+      CheckEquals(0, ScalarFromFile(FDb, SQL_DELETED_ROWS), 'no deleted QSO');
+
+      ReadContestRow(FDb, typeAfter, callAfter, guidAfter);
+      CheckEquals(typeBefore, typeAfter, 'the contest row keeps its contest');
+      CheckEquals(callBefore, callAfter, 'and its call');
+      CheckEquals(guidBefore, guidAfter, 'and its identity');
+
+      if FileExists(path) then
+         begin
+         CheckEquals(before, ScalarFromFile(path, SQL_ALL_ROWS),
+                     'the backup still holds every row the log had');
+         CheckEquals(1, ScalarFromFile(path, SQL_NOTE_ROWS), 'the note among them');
+         end
+      else
+         begin
+         CheckTrue(False, 'the backup exists at ' + path);
+         end;
+
+      (* THE PROGRAM'S OWN VIEW, ON THE NEXT START. *)
+      CheckTrue(FileExists(FTrw), 'the .TRW the log came from is still beside it');
+      CheckTrue(LogStoreEnsureOpen, 'the cleared log reopens');
+      CheckEquals(0, LogSourceRecordCount, 'the log source counts no record');
+      if LogStoreRepository <> nil then
+         begin
+         CheckEquals(0, LogStoreRepository.RecordCount, 'the repository counts no row');
+         CheckEquals(0, LogStoreRepository.QSOCount, 'and no QSO');
+         end;
+      CheckTrue(LogSourceOpen, 'the log source opens');
+      LogSourceRewind;
+      CheckFalse(LogSourceNext(qso), 'and reads nothing');
+      LogSourceClose;
+   finally
+      Restore;
+   end;
+end;
+
+(* THE CLEAR IS COMMITTED WHEN LogStoreClearAllQSOs RETURNS -- not at close.
+
+  Read from a connection of the test's own while the store still holds the
+  log open. Another connection sees only committed data, so an empty answer
+  here means a crash straight after Clear Log could not bring the rows back:
+  there is nothing uncommitted left for a rollback to undo. *)
+procedure TLogStoreTests.TestAClearIsCommittedBeforeTheLogIsClosed;
+var
+   path, report: string;
+   ok: boolean;
+   before: Int64;
+begin
+   BeginTest('Clear Log is committed before the program closes the log');
+
+   PrepareMigration(FIXTURE_SET);
+   try
+      CheckTrue(LogStoreEnsureOpen, 'the open migrates the log');
+      before := ScalarFromFile(FDb, SQL_ALL_ROWS);
+      CheckTrue(before > 1, 'another connection sees the log''s rows');
+
+      ok := LogStoreBackupBeforeClear(path, report);
+      CheckTrue(ok, 'the backup before clearing succeeds: ' + report);
+      FBackup := path;
+      CheckTrue(LogStoreClearAllQSOs, 'the clear reports success');
+      CheckTrue(LogStoreIsUsable, 'and the store is still usable');
+
+      CheckEquals(0, ScalarFromFile(FDb, SQL_ALL_ROWS),
+                  'with the store still open, another connection sees no row');
+      if FileExists(path) then
+         begin
+         CheckEquals(before, ScalarFromFile(path, SQL_ALL_ROWS),
+                     'and the backup holds them all');
+         end;
+   finally
+      Restore;
+   end;
+end;
+
+(* ONE QSO DELETED THROUGH EDIT QSO STAYS DELETED, AND NOTHING COUNTS OR
+  EXPORTS IT.
+
+  WHAT "DELETED" MEANS IN THE FILE: A FLAG, NOT A REMOVAL. uEditQSO sets
+  ceQSO_Deleted and calls LogStoreUpdateQSOAtIndex, which rewrites the row
+  with deleted = 1 (Alt-Y's LogStoreUpdateNewestQSO writes the same column).
+  The row and its data stay in qso -- the D7 binary log kept deleted
+  records too, and Edit QSO can bring one back. So this pins the flag
+  surviving a close and a reopen, and every reader that must leave it out:
+  the repository's QSO count, the log reader's "good" filter, and the ADIF
+  export, which is exported before the delete as well so the check is shown
+  to see the QSO when it is there. *)
+procedure TLogStoreTests.TestADeletedQSOStaysDeletedAndIsNotExported;
+var
+   calls: TStringList;
+   good: array of boolean;
+   rec: ContestExchange;
+   adif: TStringList;
+   adiFile, target, tag, sidecars: string;
+   total, liveBefore, goodBefore, goodAfter, index, i, j, n: integer;
+   rowId: Int64;
+begin
+   BeginTest('a QSO deleted through Edit QSO stays deleted on disk and is not counted or exported');
+
+   PrepareMigration(FIXTURE_SET);
+   calls := TStringList.Create;
+   adif := TStringList.Create;
+   try
+      CheckTrue(LogStoreEnsureOpen, 'the open migrates the log');
+
+      (* Every record, and whether the export would take it. *)
+      SetLength(good, 0);
+      CheckTrue(LogSourceOpen, 'the log source opens');
+      LogSourceRewind;
+      while LogSourceNext(rec) do
+         begin
+         calls.Add(string(rec.Callsign));
+         SetLength(good, Length(good) + 1);
+         good[High(good)] := uLogBinaryFile.GoodLookingQSO(rec);
+         end;
+      LogSourceClose;
+      total := calls.Count;
+      goodBefore := 0;
+      for i := 0 to High(good) do
+         begin
+         if good[i] then
+            begin
+            Inc(goodBefore);
+            end;
+         end;
+
+      (* A QSO the export takes, whose call is in the log once and plain, so
+        its ADIF CALL field is unambiguous. From the middle of the log. *)
+      index := -1;
+      i := total div 2;
+      while (index < 0) and (i < total) do
+         begin
+         target := calls[i];
+         n := 0;
+         if good[i]                    and
+            (Pos('/', target) = 0)     and
+            (Length(target) >= 3)      then
+            begin
+            for j := 0 to total - 1 do
+               begin
+               if calls[j] = target then
+                  begin
+                  Inc(n);
+                  end;
+               end;
+            end;
+         if n = 1 then
+            begin
+            index := i;
+            end;
+         Inc(i);
+         end;
+      CheckTrue(index >= 0, 'the fixture has a QSO with a call of its own');
+      if index < 0 then
+         begin
+         Exit;
+         end;
+      target := calls[index];
+      tag := '<CALL:' + IntToStr(Length(target)) + '>' + target + ' ';
+      adiFile := ChangeFileExt(FTrw, '.ADI');
+
+      liveBefore := -1;
+      if LogStoreRepository <> nil then
+         begin
+         liveBefore := LogStoreRepository.QSOCount;
+         end;
+
+      PostUnit.ExportToADIF;
+      CheckTrue(FileExists(adiFile), 'the export before the delete writes its file');
+      if FileExists(adiFile) then
+         begin
+         adif.LoadFromFile(adiFile);
+         CheckEquals(goodBefore, CountOccurrences('<CALL:', adif.Text),
+                     'before the delete the export holds every good QSO');
+         CheckEquals(1, CountOccurrences(tag, adif.Text),
+                     'and the QSO about to be deleted, once');
+         DeleteFile(adiFile);
+         end;
+
+      (* UEDITQSO'S WRITE: the record as read, its deleted box ticked. *)
+      CheckTrue(LogSourceReadAtIndex(index, rec), 'the QSO reads by its index');
+      rec.ceQSO_Deleted := True;
+      LogStoreUpdateQSOAtIndex(index, rec);
+      CheckTrue(LogStoreIsUsable, 'the store is usable after the delete');
+      LogStoreClose;
+
+      sidecars := SidecarsBeside(FDb);
+      CheckEquals('', sidecars, 'after the close nothing lies beside the log');
+
+      (* THE FILE, through a connection of the test's own. *)
+      rowId := ScalarFromFile(FDb, 'SELECT id FROM qso ORDER BY id LIMIT 1 OFFSET ' +
+                              IntToStr(index));
+      CheckTrue(rowId > 0, 'the deleted QSO''s row is still in the file');
+      CheckEquals(total, ScalarFromFile(FDb, SQL_ALL_ROWS),
+                  'a delete removes no row: it is a flag');
+      CheckEquals(1, ScalarFromFile(FDb, 'SELECT deleted FROM qso WHERE id = ' +
+                                    IntToStr(rowId)),
+                  'the row is marked deleted on disk');
+      CheckEquals(1, ScalarFromFile(FDb, SQL_DELETED_ROWS), 'and it is the only one');
+
+      (* THE PROGRAM'S VIEW, AFTER A RESTART. *)
+      CheckTrue(LogStoreEnsureOpen, 'the log reopens');
+      CheckEquals(total, LogSourceRecordCount, 'the log source still counts every record');
+      if LogStoreRepository <> nil then
+         begin
+         CheckEquals(liveBefore - 1, LogStoreRepository.QSOCount,
+                     'the repository''s QSO count leaves the deleted QSO out');
+         end;
+      CheckTrue(LogSourceReadAtIndex(index, rec), 'the deleted QSO still reads by index');
+      CheckTrue(rec.ceQSO_Deleted, 'and reads back deleted');
+      CheckEquals(target, string(rec.Callsign), 'with its data intact');
+      CheckFalse(uLogBinaryFile.GoodLookingQSO(rec), 'so the export filter refuses it');
+
+      goodAfter := 0;
+      CheckTrue(LogSourceOpen, 'the log source opens');
+      LogSourceRewind;
+      while LogSourceNext(rec) do
+         begin
+         if uLogBinaryFile.GoodLookingQSO(rec) then
+            begin
+            Inc(goodAfter);
+            CheckFalse(string(rec.Callsign) = target,
+                       'the sequential reader''s good QSOs leave the deleted one out');
+            end;
+         end;
+      LogSourceClose;
+      CheckEquals(goodBefore - 1, goodAfter, 'one good QSO fewer');
+
+      PostUnit.ExportToADIF;
+      CheckTrue(FileExists(adiFile), 'the export after the delete writes its file');
+      if FileExists(adiFile) then
+         begin
+         adif.LoadFromFile(adiFile);
+         CheckEquals(goodBefore - 1, CountOccurrences('<CALL:', adif.Text),
+                     'the export holds one QSO fewer');
+         CheckEquals(0, CountOccurrences(tag, adif.Text),
+                     'and not the deleted one');
+         end;
+   finally
+      adif.Free;
+      calls.Free;
+      Restore;
+   end;
+end;
+
 procedure TLogStoreTests.RunAllTests;
 begin
    TestTheClearBackupNameRule;
@@ -626,6 +1129,9 @@ begin
    TestABackupBeforeClearHoldsTheLogAndNeedsNoTrw;
    TestAnEmptyLogIsBackedUpBeforeClear;
    TestTheGridReadsTheLogAfterABackup;
+   TestAClearedLogIsEmptyOnDiskAfterClose;
+   TestAClearIsCommittedBeforeTheLogIsClosed;
+   TestADeletedQSOStaysDeletedAndIsNotExported;
 end;
 
 end.
