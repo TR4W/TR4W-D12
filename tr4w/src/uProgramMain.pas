@@ -1387,6 +1387,30 @@ begin
    TLogBasicConfigurator.Configure(appender);
    logger := TLogLogger.GetLogger('TR4WDebugLog');
 
+   (* THE BANNER IS THE FIRST LINE A RUN WRITES (2026-10-25). It used to be
+     written after the settings registry and UpdateDebugLogLevel, so
+     InstallCrashLogLCL's setup lines -- which carry their own level and are
+     always written -- landed in tr4w.log BEFORE it, directly under the
+     previous run's 'Program shutdown', and read as part of that shutdown.
+
+     ITS OWN LOGGER, AND THAT IS WHAT MAKES THIS POSITION POSSIBLE. At this
+     point DEBUG LOG LEVEL has not been applied: Log4D's root is still at its
+     default of Error, so logger.Info here would be discarded. Setting
+     'TR4WDebugLog' itself to Info this early would also un-gate every Info
+     line /IMPORTLOG and /MATRIXLIST write before UpdateDebugLogLevel runs, a
+     behaviour change this does not want. A child with its own level changes
+     nothing else -- the same device InstallCrashLog uses for its subtree --
+     and it means the run delimiter is written whatever DEBUG LOG LEVEL says,
+     which a delimiter needs: the crash reporter's lines are written whatever
+     it says too.
+
+     Nothing that can fault runs before it: the appender is created above and
+     a failure to open it is recorded, not raised (see OpenError below). The
+     crash reporter is still installed on the very next statement. *)
+   TLogLogger.GetLogger('TR4WDebugLog.Startup').Level := Log4D.Info;
+   TLogLogger.GetLogger('TR4WDebugLog.Startup').Info(
+      '******************** PROGRAM STARTUP ************************');
+
    // IMMEDIATELY AFTER THE LOGGER EXISTS, and before anything that could
    // fault. Until now an unhandled exception left tr4w.log ending in the
    // ordinary unit finalizations -- indistinguishable from a clean exit --
@@ -1484,7 +1508,7 @@ begin
    //
    // It also gates the radio-library apply below: an automated export must
    // never write to the operator's live settings (NY4I, 2026-08-06).
-   // Reported at the startup banner below, NOT here: the file appender is not
+   // Reported by the [Startup] batch line below, NOT here: the file appender is not
    // attached yet at this point, so a line logged now goes nowhere.
    //
    // ASSIGNED ABOVE, before the single-instance check -- see the note there.
@@ -1516,7 +1540,8 @@ begin
       end;
    UpdateDebugLogLevel;
 
-   logger.info('******************** PROGRAM STARTUP ************************');
+   (* The PROGRAM STARTUP banner that stood here is written straight after
+     the logger is created now -- see the note there. *)
    if tSilentExport then
       begin
       logger.Info('[Startup] batch /EXPORT: settings are READ-ONLY for this run ' +

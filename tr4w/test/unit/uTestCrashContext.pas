@@ -28,6 +28,8 @@ type
       procedure TestTheWriterReachesTheDumper;
       procedure TestARaisingDumperDoesNotEscape;
       procedure TestARaisingDumperDoesNotStopTheNextOne;
+      procedure TestSetupLinesCarryTheSetupTag;
+      procedure TestAContextSectionCarriesTheCrashTag;
    public
       procedure RunAllTests; override;
    end;
@@ -35,7 +37,63 @@ type
 implementation
 
 uses
-   SysUtils, uCrashLog;
+   SysUtils, Classes, Log4D, uCrashLog;
+
+type
+   (* Holds every line the crash logger writes while a test has it attached.
+     The lines go to GCaptured, a test-owned list, because the appender is an
+     interface and the logger frees it when it is removed. *)
+   TCaptureAppender = class(TLogCustomAppender)
+   protected
+      procedure DoAppend(const aMessage: string); override;
+   end;
+
+var
+   GCaptured: TStringList = nil;
+
+procedure TCaptureAppender.DoAppend(const aMessage: string);
+begin
+   (* The appender also receives the layout's header and footer, which are
+     empty for the simple layout; only real lines are kept. *)
+   if (GCaptured <> nil) and
+      (Trim(aMessage) <> '') then
+      begin
+      GCaptured.Add(aMessage);
+      end;
+end;
+
+(* Run aProc with a capture appender on the crash logger, and return what it
+  wrote. The level is set exactly as InstallCrashLog sets it, so this does not
+  depend on whether another suite has installed the reporter first. *)
+type
+   TCapturedProc = procedure;
+
+procedure Capture(aProc: TCapturedProc);
+var
+   crashLogger: TLogLogger;
+   appender: ILogAppender;
+begin
+   crashLogger := TLogLogger.GetLogger('TR4WDebugLog.CrashLog');
+   crashLogger.Level := All;
+   GCaptured.Clear;
+   appender := TCaptureAppender.Create('unit-test capture');
+   crashLogger.AddAppender(appender);
+   try
+      aProc;
+   finally
+      crashLogger.RemoveAppender(appender);
+   end;
+end;
+
+procedure WriteSymbolState;
+begin
+   ReportSymbolState;
+end;
+
+procedure WriteAContext;
+begin
+   WriteCrashContext('unit test');
+end;
 
 var
    GCalledA: integer = 0;
@@ -110,12 +168,61 @@ begin
    CheckTrue(GCalledB > 0, 'the dumper after the broken one still ran');
 end;
 
+procedure TCrashContextTests.TestSetupLinesCarryTheSetupTag;
+var
+   i: integer;
+begin
+   (* THE SETUP LINES ARE NOT CRASHES. They are written on every ordinary
+     start, and while they said '[CRASH]' a search for that tag could not
+     tell a crash from a start -- and an operator reading tr4w.log took them
+     for an alarm (NY4I, 2026-10-25). ReportSymbolState is the bulk of them
+     and is the one a test can call on its own. *)
+   BeginTest('TestSetupLinesCarryTheSetupTag');
+   Capture(@WriteSymbolState);
+   CheckTrue(GCaptured.Count > 0, 'the symbol state wrote something');
+   for i := 0 to GCaptured.Count - 1 do
+      begin
+      CheckTrue(Pos(CRASH_SETUP_TAG, GCaptured[i]) > 0,
+                'a setup line carries ' + CRASH_SETUP_TAG + ': ' + GCaptured[i]);
+      CheckTrue(Pos('[CRASH]', GCaptured[i]) = 0,
+                'a setup line does not say [CRASH]: ' + GCaptured[i]);
+      end;
+end;
+
+procedure TCrashContextTests.TestAContextSectionCarriesTheCrashTag;
+var
+   i: integer;
+begin
+   (* THE OTHER DIRECTION. A context section is written with a crash report,
+     so it keeps '[CRASH]' -- relabelling it with the setup lines would hide
+     the part of a report that explains it from the search that finds it. *)
+   BeginTest('TestAContextSectionCarriesTheCrashTag');
+   // DumperA was registered by TestARegisteredDumperIsCalled, which runs first.
+   Capture(@WriteAContext);
+   CheckTrue(GCaptured.Count > 0, 'the context sections wrote something');
+   for i := 0 to GCaptured.Count - 1 do
+      begin
+      CheckTrue(Pos('[CRASH]', GCaptured[i]) > 0,
+                'a context line carries [CRASH]: ' + GCaptured[i]);
+      CheckTrue(Pos(CRASH_SETUP_TAG, GCaptured[i]) = 0,
+                'a context line does not carry the setup tag: ' + GCaptured[i]);
+      end;
+end;
+
 procedure TCrashContextTests.RunAllTests;
 begin
    TestARegisteredDumperIsCalled;
    TestTheWriterReachesTheDumper;
    TestARaisingDumperDoesNotEscape;
    TestARaisingDumperDoesNotStopTheNextOne;
+
+   GCaptured := TStringList.Create;
+   try
+      TestSetupLinesCarryTheSetupTag;
+      TestAContextSectionCarriesTheCrashTag;
+   finally
+      FreeAndNil(GCaptured);
+   end;
 end;
 
 end.

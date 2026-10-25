@@ -80,6 +80,18 @@ uses
    SysUtils;    // TObject, Exception -- in the INTERFACE because
                 // WriteCrashReport is exported; see below
 
+const
+   (* THE TAG ON THE REPORTER'S OWN SETUP LINES -- installed, the build, the
+     symbol state, a full context table.
+
+     '[CRASH]' IS KEPT FOR REAL REPORTS ONLY: an unhandled or caught
+     exception, its frames and image base, and the context sections written
+     with it. Until 2026-10-25 the setup lines carried '[CRASH]' too, so every
+     ordinary start put five of them in tr4w.log, at info, and a search for
+     '[CRASH]' could not tell a crash from a start. NY4I read them as an
+     alarm. Exported so uCrashLogLCL and the tests use the one spelling. *)
+   CRASH_SETUP_TAG = '[CrashLog]';
+
 (* WHAT ELSE WAS GOING ON, FROM THE SUBSYSTEM THAT KNOWS.
 
   A backtrace says where the program died. It does not say what the DX cluster
@@ -1226,7 +1238,7 @@ begin
 
    if GContextCount >= MAX_CRASH_CONTEXTS then
       begin
-      CrashLogger.Warn('[CRASH] crash-context table full -- "%s" will not be '
+      CrashLogger.Warn(CRASH_SETUP_TAG + ' crash-context table full -- "%s" will not be '
                        + 'dumped; raise MAX_CRASH_CONTEXTS', [aName]);
       Exit;
       end;
@@ -1496,7 +1508,7 @@ var
    {$ENDIF}
 begin
    // The build itself, so an archived .dbg can be matched to this log.
-   CrashLogger.Info('[CRASH] TR4W %s built %s %s',
+   CrashLogger.Info(CRASH_SETUP_TAG + ' TR4W %s built %s %s',
                [TR4W_CURRENTVERSION_NUMBER, {$I %DATE%}, {$I %TIME%}]);
 
    (* WHICH .dbg THIS BUILD WANTS, before saying whether one is present.
@@ -1505,7 +1517,7 @@ begin
    {$IFDEF WINDOWS}
    if MainImageDebugLink(linkName, linkCRC, linkWhy) then
       begin
-      CrashLogger.Info('[CRASH] symbol file link: %s crc32 %s -- the .dbg this '
+      CrashLogger.Info(CRASH_SETUP_TAG + ' symbol file link: %s crc32 %s -- the .dbg this '
                   + 'binary was linked against. Choose an archived '
                   + 'tr4w-<version>.dbg by matching that CRC32 (7z h '
                   + '-scrcCRC32 <file>, or zlib.crc32) rather than by version, '
@@ -1516,7 +1528,7 @@ begin
       end
    else
       begin
-      CrashLogger.Info('[CRASH] symbol file link UNREADABLE (%s) -- this build '
+      CrashLogger.Info(CRASH_SETUP_TAG + ' symbol file link UNREADABLE (%s) -- this build '
                   + 'cannot be matched to a .dbg by checksum. That is NOT a '
                   + 'statement that it has no symbols; the line below says '
                   + 'whether symbols resolve.',
@@ -1529,20 +1541,20 @@ begin
 
    if line > 0 then
       begin
-      CrashLogger.Info('[CRASH] symbols OK -- backtraces will name file and line '
+      CrashLogger.Info(CRASH_SETUP_TAG + ' symbols OK -- backtraces will name file and line '
                   + '(probe resolved to %s)', [Trim(resolved)]);
       end
    else if FileExists(dbg) then
       begin
       // The dangerous-looking case, and the reason for the whole check.
-      CrashLogger.Warn('[CRASH] %s EXISTS BUT WAS REJECTED -- it does not belong to '
+      CrashLogger.Warn(CRASH_SETUP_TAG + ' %s EXISTS BUT WAS REJECTED -- it does not belong to '
                   + 'this build. Backtraces will show raw addresses only. '
                   + 'Replace it with the .dbg archived for TR4W %s.',
                   [dbg, TR4W_CURRENTVERSION_NUMBER]);
       end
    else
       begin
-      CrashLogger.Info('[CRASH] no %s -- backtraces will show raw addresses. That is '
+      CrashLogger.Info(CRASH_SETUP_TAG + ' no %s -- backtraces will show raw addresses. That is '
                   + 'normal; the addresses can still be resolved from the .dbg '
                   + 'archived for TR4W %s.',
                   [ExtractFileName(dbg), TR4W_CURRENTVERSION_NUMBER]);
@@ -1567,7 +1579,8 @@ begin
      Info line below is discarded.
 
      MEASURED, WHICH IS THE ONLY REASON THIS IS HERE: a 642 MB tr4w.log from an
-     ordinary session contained ZERO '[CRASH]' lines. The installation record
+     ordinary session contained ZERO '[CRASH]' lines (the setup lines were
+     tagged that way then; they are CRASH_SETUP_TAG now). The installation record
      and the whole of ReportSymbolState -- the two things a reader needs before
      trusting any address in that file -- had never once been written, on any
      build, since the unit was created.
@@ -1590,7 +1603,7 @@ begin
    // uCrashLogLCL, on the line after this one. The old message claimed both
    // hooks unconditionally, which in a console program would have been a
    // written record of a handler that was never installed.
-   CrashLogger.Info('[CRASH] unhandled-exception logging installed (RTL)');
+   CrashLogger.Info(CRASH_SETUP_TAG + ' unhandled-exception logging installed (RTL)');
    ReportSymbolState;
 end;
 
