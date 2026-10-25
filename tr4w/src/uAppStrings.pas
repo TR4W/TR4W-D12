@@ -478,6 +478,12 @@ resourcestring
    SBackupCopyFailed =
       'Backups are NOT reaching %s: %s. Logging continues, and TR4W keeps trying.';
    SBackupCopyRecovered = 'Backups are reaching %s again.';
+   (* Shown when a backup has been written locally and its copy is queued;
+     %s is the DESTINATION folder, not the local file. *)
+   SBackupCopyingToDestination = 'Log backed up; copying to %s ...';
+   (* Shown when a copy has arrived and read back the same; %s is the file
+     at the destination. *)
+   SBackupCopiedTo = 'Backup copied to %s.';
    (* The title of the folder chooser on the Preferences backup page. *)
    SBackupDestinationDialogTitle = 'Backup destination folder';
 

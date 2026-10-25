@@ -46,11 +46,14 @@ unit uBackupCopyService;
   pattern: TThread.Queue would purge its own callback when the queuing thread
   ends. The notices wait in a locked list, and the main thread drains it.
 
-  WHAT AN OPERATOR SEES IS A TRANSITION. One line when the destination first
-  answers, one when backups stop reaching it (with a warning beep, and an
-  Error line in tr4w.log), one when they reach it again. Repeated failures are
-  silent; each generation that arrives is a Debug line only. A failure NEVER
-  stops logging -- nothing here can refuse a QSO.
+  WHAT AN OPERATOR SEES. The health is reported as TRANSITIONS: one line when
+  the destination first answers, one when backups stop reaching it (with a
+  warning beep, and an Error line in tr4w.log), one when they reach it again.
+  Repeated failures are silent. Each generation that ARRIVES says so --
+  "Backup copied to <file>", no beep, and an Info line -- because without it
+  the only thing on screen was the local file's name, and NY4I read that as
+  the destination being ignored (2026-10-25). A failure NEVER stops logging --
+  nothing here can refuse a QSO.
 
   SHUTDOWN WAITS AT MOST BACKUP_COPY_SHUTDOWN_MS. If the worker is still
   inside a file operation -- a share that hangs -- the copier is NOT freed:
@@ -65,6 +68,9 @@ unit uBackupCopyService;
 
 interface
 
+uses
+   uBackupCopier;    (* TBackupCopyEvent *)
+
 (* Start the copier, once. aBackupDir is uAppPaths.BackupDir; the outbox is
   'outbox' inside it. aLocalPeriodic is this log's periodic backup there
   (uLogStore.LogStorePeriodicBackupFileName); if it exists it is offered to
@@ -76,8 +82,27 @@ procedure BackupCopyStart(const aBackupDir, aLocalPeriodic: string);
 procedure BackupCopyDestinationChanged;
 
 (* A local backup was just published at aLocalBackup: queue it for the
-  destination, if there is one. Returns at once; never raises. *)
-procedure BackupCopySubmit(const aLocalBackup: string);
+  destination, if there is one. Returns at once; never raises.
+  True: queued, and aDestination is the folder it is going to. False with an
+  empty aWhy: there is no destination (or no copier). False with aWhy set: the
+  queueing failed -- logged at Error here, and aWhy is the sentence for the
+  status line. *)
+function BackupCopySubmit(const aLocalBackup: string;
+   out aDestination, aWhy: string): boolean;
+
+(* WHAT THE STATUS LINE SAYS WHEN A BACKUP HAS BEEN WRITTEN LOCALLY. With a
+  copy queued, it names the DESTINATION folder, not the local file -- NY4I
+  read the local file's name as "the destination was ignored". A failed
+  queueing says why. With no destination, the local report as it was. *)
+function BackupDoneText(const aLocalReport: string; aQueued: boolean;
+   const aDestination, aSubmitWhy: string): string;
+
+(* THE STATUS-LINE NOTICE FOR ONE COPIER REPORT: its text, and whether it is a
+  failure (which beeps). Every event has one, bceCopied included. Pure; the
+  log lines are the receiver's. *)
+procedure BackupCopyNotice(aEvent: TBackupCopyEvent;
+   const aDestination, aDetail: string;
+   out aText: string; out aIsFailure: boolean);
 
 (* Stop the worker, waiting at most BACKUP_COPY_SHUTDOWN_MS. *)
 procedure BackupCopyStop;
@@ -90,7 +115,6 @@ implementation
 uses
    SysUtils, Classes, SyncObjs, Contnrs,
    Forms,            (* Application.QueueAsyncCall -- the main-thread hop *)
-   uBackupCopier,
    uSettingsModel,   (* Settings.Log.BackupDestination *)
    uAppStrings,      (* the operator's sentences *)
    MainUnit,         (* logger *)
@@ -130,41 +154,81 @@ begin
       end;
 end;
 
+function BackupDoneText(const aLocalReport: string; aQueued: boolean;
+   const aDestination, aSubmitWhy: string): string;
+begin
+   if aQueued then
+      begin
+      Result := SysUtils.Format(SBackupCopyingToDestination, [aDestination]);
+      end
+   else if aSubmitWhy <> '' then
+      begin
+      Result := aSubmitWhy;
+      end
+   else
+      begin
+      Result := aLocalReport;
+      end;
+end;
+
+procedure BackupCopyNotice(aEvent: TBackupCopyEvent;
+   const aDestination, aDetail: string;
+   out aText: string; out aIsFailure: boolean);
+begin
+   aIsFailure := False;
+   case aEvent of
+      bceReachable:
+         begin
+         aText := SysUtils.Format(SBackupDestinationReachable, [aDestination]);
+         end;
+      bceFailed:
+         begin
+         aText := SysUtils.Format(SBackupCopyFailed, [aDestination, aDetail]);
+         aIsFailure := True;
+         end;
+      bceRecovered:
+         begin
+         aText := SysUtils.Format(SBackupCopyRecovered, [aDestination]);
+         end;
+      bceCopied:
+         begin
+         (* aDetail is the file written at the destination. Said for every
+           generation, periodic and Backup Log alike: it is the only sign on
+           screen that the copy arrived. No beep. *)
+         aText := SysUtils.Format(SBackupCopiedTo, [aDetail]);
+         end;
+   end;
+end;
+
 procedure TBackupCopyReceiver.Received(aEvent: TBackupCopyEvent;
    const aDestination, aDetail: string);
 var
    notice: TBackupNotice;
 begin
-   notice := TBackupNotice.Create;
-   notice.IsFailure := False;
    case aEvent of
       bceReachable:
          begin
          logger.Info('[BackupCopy] %s is reachable and a file can be written, '
                      + 'renamed and deleted there', [aDestination]);
-         notice.Text := SysUtils.Format(SBackupDestinationReachable, [aDestination]);
          end;
       bceFailed:
          begin
          logger.Error('[BackupCopy] backups are NOT reaching %s: %s. Logging '
                       + 'continues; retrying every %d s.',
                       [aDestination, aDetail, BACKUP_COPY_RETRY_MS div 1000]);
-         notice.Text := SysUtils.Format(SBackupCopyFailed, [aDestination, aDetail]);
-         notice.IsFailure := True;
          end;
       bceRecovered:
          begin
          logger.Info('[BackupCopy] backups are reaching %s again', [aDestination]);
-         notice.Text := SysUtils.Format(SBackupCopyRecovered, [aDestination]);
          end;
-   else
-      begin
-      (* bceCopied: every generation, so a log line and nothing on screen. *)
-      logger.Debug('[BackupCopy] copied and verified: %s', [aDetail]);
-      notice.Free;
-      Exit;
-      end;
+      bceCopied:
+         begin
+         logger.Info('[BackupCopy] copied and verified: %s', [aDetail]);
+         end;
    end;
+
+   notice := TBackupNotice.Create;
+   BackupCopyNotice(aEvent, aDestination, aDetail, notice.Text, notice.IsFailure);
 
    GNoticeLock.Acquire;
    try
@@ -260,20 +324,23 @@ begin
    GCopier.SetDestination(folder);
 end;
 
-procedure BackupCopySubmit(const aLocalBackup: string);
-var
-   why: string;
+function BackupCopySubmit(const aLocalBackup: string;
+   out aDestination, aWhy: string): boolean;
 begin
+   Result := False;
+   aDestination := '';
+   aWhy := '';
    if (GCopier = nil) or (GCopier.Destination = '') then
       begin
       Exit;
       end;
-   if not GCopier.Submit(aLocalBackup, False, why) then
+   aDestination := GCopier.Destination;
+   Result := GCopier.Submit(aLocalBackup, False, aWhy);
+   if not Result then
       begin
-      (* LOCAL, so it is said on the spot: the outbox copy failed, or the
-        destination is the local backup folder itself. *)
-      logger.Error('[BackupCopy] %s', [why]);
-      QuickDisplay(why);
+      (* LOCAL, so the caller says it on the spot: the outbox copy failed, or
+        the destination is the local backup folder itself. *)
+      logger.Error('[BackupCopy] %s', [aWhy]);
       end;
 end;
 

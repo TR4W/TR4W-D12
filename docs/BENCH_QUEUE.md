@@ -41,6 +41,14 @@ Unit-tested with real files and a fault-injecting file layer (`uTestBackupCopier
       `[BackupCopy] ... reachable`.
 - [ ] **A copy arrives.** Five more QSOs. EXPECT `<log> periodic.db` in the
       share, and no `.partial` left there; then `.bak` beside it after the next.
+- [ ] **The status line says where it went** (2026-10-25, after NY4I read the
+      local file's name as "the destination was ignored"). With the destination
+      set, press Backup Log (Alt-F). EXPECT first "Log backed up; copying to
+      <the destination folder> ..." (the folder, not the local file), then within
+      a few seconds "Backup copied to <the file in the share>.", with no beep,
+      and `[BackupCopy] copied and verified:` at INFO in `tr4w.log`. The same two
+      lines on a periodic backup. With "Copy to:" empty, EXPECT the old "Log
+      backed up to ..." and nothing after it.
 - [ ] **The share goes away.** Unplug or unshare it, log five QSOs. EXPECT ONE
       status-line message and a beep ("Backups are NOT reaching ..."), one Error
       line in `tr4w.log`, logging uninterrupted, and NO further message on later

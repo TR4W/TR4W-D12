@@ -63,10 +63,24 @@ type
       procedure RunAllTests; override;
    end;
 
+   (* WHAT THE STATUS LINE SAYS (uBackupCopyService's two pure functions).
+     NY4I saw only the local file's name after Backup Log and concluded the
+     destination was ignored; the copy had worked. *)
+   TBackupCopyNoticeTests = class(TTestCase)
+   protected
+      procedure TestAQueuedCopyNamesTheDestinationNotTheLocalFile;
+      procedure TestNoDestinationKeepsTheLocalReport;
+      procedure TestAFailedQueueingSaysWhy;
+      procedure TestEveryCopierEventHasANoticeAndOnlyAFailureBeeps;
+   public
+      procedure RunAllTests; override;
+   end;
+
 implementation
 
 uses
-   SysUtils, Classes, SyncObjs, uJSON, uKeychain, uSettingsModel, uBackupCopier;
+   SysUtils, Classes, SyncObjs, uJSON, uKeychain, uSettingsModel, uBackupCopier,
+   uBackupCopyService, uAppStrings;
 
 const
    ABSENT = '<absent>';
@@ -1060,6 +1074,75 @@ begin
    TestASettingsFileWithTheFormerMemberIsConverted;
    TestTheFormerCommandInTheLegacyBucketIsConverted;
    TestTheSettingsFileNoLongerCarriesTheFormerMember;
+end;
+
+(* TBackupCopyNoticeTests *)
+
+const
+   LOCAL_REPORT = 'Log backed up to C:\settings\backup\CQ-WW-SSB NY4I periodic.db.';
+   SHARE_FOLDER = '\\nas2\shared\TR4W-Log-Backups';
+
+procedure TBackupCopyNoticeTests.TestAQueuedCopyNamesTheDestinationNotTheLocalFile;
+var
+   text: string;
+begin
+   BeginTest('a backup with a destination says it is copying there, and names the folder');
+   text := BackupDoneText(LOCAL_REPORT, True, SHARE_FOLDER, '');
+   CheckEquals(SysUtils.Format(SBackupCopyingToDestination, [SHARE_FOLDER]), text,
+               'the copying sentence');
+   CheckTrue(Pos(SHARE_FOLDER, text) > 0, 'the destination folder is named');
+   CheckEquals(0, Pos('periodic.db', text), 'the local file is not');
+end;
+
+procedure TBackupCopyNoticeTests.TestNoDestinationKeepsTheLocalReport;
+begin
+   BeginTest('a backup with no destination says what it said before');
+   CheckEquals(LOCAL_REPORT, BackupDoneText(LOCAL_REPORT, False, '', ''),
+               'the local report, unchanged');
+end;
+
+procedure TBackupCopyNoticeTests.TestAFailedQueueingSaysWhy;
+begin
+   BeginTest('a copy that could not be queued says why, not that it is copying');
+   CheckEquals('the outbox copy failed',
+               BackupDoneText(LOCAL_REPORT, False, SHARE_FOLDER, 'the outbox copy failed'),
+               'the reason');
+end;
+
+procedure TBackupCopyNoticeTests.TestEveryCopierEventHasANoticeAndOnlyAFailureBeeps;
+var
+   text: string;
+   isFailure: boolean;
+   finalFile: string;
+begin
+   BeginTest('every copier report has a status-line notice; bceCopied names the file, no beep');
+   finalFile := SHARE_FOLDER + '\' + FINAL_NAME;
+
+   BackupCopyNotice(bceCopied, SHARE_FOLDER, finalFile, text, isFailure);
+   CheckEquals(SysUtils.Format(SBackupCopiedTo, [finalFile]), text, 'bceCopied: the sentence');
+   CheckTrue(Pos(finalFile, text) > 0, 'bceCopied names the destination file');
+   CheckFalse(isFailure, 'bceCopied does not beep');
+
+   BackupCopyNotice(bceReachable, SHARE_FOLDER, '', text, isFailure);
+   CheckEquals(SysUtils.Format(SBackupDestinationReachable, [SHARE_FOLDER]), text, 'bceReachable');
+   CheckFalse(isFailure, 'bceReachable does not beep');
+
+   BackupCopyNotice(bceFailed, SHARE_FOLDER, 'the share is down', text, isFailure);
+   CheckEquals(SysUtils.Format(SBackupCopyFailed, [SHARE_FOLDER, 'the share is down']), text,
+               'bceFailed');
+   CheckTrue(isFailure, 'bceFailed beeps');
+
+   BackupCopyNotice(bceRecovered, SHARE_FOLDER, '', text, isFailure);
+   CheckEquals(SysUtils.Format(SBackupCopyRecovered, [SHARE_FOLDER]), text, 'bceRecovered');
+   CheckFalse(isFailure, 'bceRecovered does not beep');
+end;
+
+procedure TBackupCopyNoticeTests.RunAllTests;
+begin
+   TestAQueuedCopyNamesTheDestinationNotTheLocalFile;
+   TestNoDestinationKeepsTheLocalReport;
+   TestAFailedQueueingSaysWhy;
+   TestEveryCopierEventHasANoticeAndOnlyAFailureBeeps;
 end;
 
 end.

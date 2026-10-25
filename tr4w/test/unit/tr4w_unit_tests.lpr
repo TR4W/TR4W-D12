@@ -964,6 +964,7 @@ begin
    RegisterSuite(TLogBackupTests.Create('LogBackup'));
    RegisterSuite(TBackupCopierTests.Create('BackupCopier'));
    RegisterSuite(TBackupDestinationSettingTests.Create('BackupDestinationSetting'));
+   RegisterSuite(TBackupCopyNoticeTests.Create('BackupCopyNotice'));
    RegisterSuite(TNewContestCommandsTests.Create('NewContestCommands'));
    RegisterSuite(TStationFactOverrideTests.Create('StationFactOverrides'));
    RegisterSuite(TSettingsFreshInstallTests.Create('SettingsFreshInstall'));

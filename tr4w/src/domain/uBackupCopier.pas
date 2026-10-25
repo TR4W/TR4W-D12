@@ -75,7 +75,8 @@ unit uBackupCopier;
   REPORTS ARE BY TRANSITION. One report when the destination first answers,
   one when it goes from working (or unknown) to failing, one when it recovers;
   repeated failures say nothing. bceCopied is reported for every generation
-  that arrives and is meant for a log line, not for the operator. Reports are
+  that arrives (or that the destination already held, at open); what the
+  program shows for it is uBackupCopyService's decision. Reports are
   made ON THE WORKER THREAD, outside the job lock; the receiver must marshal
   anything it shows.
 
@@ -134,7 +135,7 @@ type
       bceReachable,   (* the destination answered its first probe: writable *)
       bceFailed,      (* it went from working, or unknown, to failing *)
       bceRecovered,   (* it went from failing to working *)
-      bceCopied);     (* a generation arrived -- for a log line, not a notice *)
+      bceCopied);     (* a generation arrived, or was already there *)
 
    (* aDetail is the reason for bceFailed and the file written for
      bceCopied; empty otherwise. Called on the worker thread. *)

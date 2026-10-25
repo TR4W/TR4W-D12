@@ -9819,3 +9819,13 @@ msgstr ""
 msgid "Backup destination folder"
 msgstr ""
 
+#: uappstrings.sbackupcopyingtodestination
+#, fuzzy
+msgid "Log backed up; copying to %s ..."
+msgstr ""
+
+#: uappstrings.sbackupcopiedto
+#, fuzzy
+msgid "Backup copied to %s."
+msgstr ""
+

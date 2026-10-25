@@ -121,6 +121,16 @@ other.
   60 s on its own clock; reports are TRANSITIONS (reachable / failed /
   recovered), marshalled by `QueueAsyncCall`. `Shutdown` is bounded
   (`BACKUP_COPY_SHUTDOWN_MS`); on False the copier is not freed.
+- **What the operator sees (2026-10-25).** With a destination, `BackupLogNow`
+  says "Log backed up; copying to <FOLDER> ..." -- the destination, not the
+  local file; NY4I read the local name as "the destination was ignored" when
+  the copy had worked. Every arriving generation (`bceCopied`) then shows
+  "Backup copied to <file>", no beep, and is an INFO line. Both texts are
+  `uBackupCopyService.BackupDoneText` / `BackupCopyNotice`, pure and pinned in
+  `uTestBackupCopier` (`TBackupCopyNoticeTests`). `BackupCopySubmit` now
+  returns whether it queued, and no longer writes the status line itself.
+  At open, a destination that already holds the generation is also
+  `bceCopied`, so it too says "Backup copied to".
 - **Started in `uProgramMain` after every headless Halt** (so the corpus
   never probes a share), which also offers this log's existing periodic
   backup to the destination, copied only if it differs. Tests:

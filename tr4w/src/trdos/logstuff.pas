@@ -5645,17 +5645,21 @@ end;
   VACUUM INTO and a verification. Moving it off is a later step of #98. *)
 procedure BackupLogNow;
 var
-  path, report: string;
+  path, report, destination, why: string;
+  queued: boolean;
 begin
   (* THE REPORT IS THE ROUTINE'S OUTPUT, success or failure, and it names the
     file either way -- a periodic backup runs unattended and the only place an
     operator will ever see it is this line. The "Saving to" line that stood
     before it is gone: it was replaced in the same call, before anything could
-    paint it, so nobody ever saw it. *)
+    paint it, so nobody ever saw it.
+    WITH A DESTINATION, the line names the destination folder instead
+    (BackupDoneText), and "Backup copied to ..." follows when the copy
+    arrives. *)
   if LogStoreBackupPeriodic(BackupDir, path, report) then
      begin
-     QuickDisplay(AnsiString(report));
-     BackupCopySubmit(path);
+     queued := BackupCopySubmit(path, destination, why);
+     QuickDisplay(AnsiString(BackupDoneText(report, queued, destination, why)));
      end
   else
      begin
