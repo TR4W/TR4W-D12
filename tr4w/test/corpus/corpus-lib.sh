@@ -44,6 +44,11 @@
 # one under test.
 CORPUS_WORK="${CORPUS_WORK:-build-out/corpus-work}"
 
+# tr4w_refuse_if_running -- a headless run writes tr4w.log in tr4w/target.
+# Found beside this file, because its callers source it from three different
+# working directories.
+. "$(dirname "${BASH_SOURCE[0]}")/../tr4w-not-running.sh"
+
 # corpus_manifest_get <manifest.json> <dotted.key>
 corpus_manifest_get(){
    python -c 'import json,sys

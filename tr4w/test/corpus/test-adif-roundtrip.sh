@@ -80,6 +80,9 @@ fi
 
 cd "$TARGET" || exit 1
 . "$CORPUS/corpus-lib.sh"
+if ! tr4w_refuse_if_running "test-adif-roundtrip"; then
+   exit 1
+fi
 cp "$EXE_SRC" "$EXE" || exit 1
 corpus_logs_snapshot
 SETTINGS_WIN="$(cygpath -d "$SETTINGS")"
@@ -176,6 +179,16 @@ roundtrip_one() {
    # A FRESH CONTEST WITH NO BINARY LOG -- which is what a converted contest is,
    # and what made the import refuse before /IMPORT stopped requiring one.
    rm -f "$WORK".*; corpus_remove_new_logs
+
+   # AGAIN BEFORE EVERY TRIP, not only at the start: a TR4W started during the
+   # run shares tr4w.log from then on (2026-10-25). Stops the whole run, after
+   # removing what this script put in tr4w/target.
+   if ! tr4w_refuse_if_running "test-adif-roundtrip"; then
+      echo "test-adif-roundtrip: STOPPED before $name -- the run is incomplete." >&2
+      rm -f "$WORK".* "$WORK-my.adi" "$EXE"; corpus_remove_new_logs
+      exit 1
+   fi
+
    cp "$d/log.cfg" "$WORK.CFG" || return
 
    MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /IMPORT "$(cygpath -d "$input")" \

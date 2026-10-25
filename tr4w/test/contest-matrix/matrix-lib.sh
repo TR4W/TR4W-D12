@@ -89,6 +89,9 @@ MATRIX_EXE_SRC="$MATRIX_REPO_ROOT/build-out/app-i386-win32/tr4w_fpc.exe"
 MATRIX_EXE="matrix-run.exe"
 MATRIX_WORK="$MATRIX_REPO_ROOT/build-out/contest-matrix-work"
 
+# tr4w_refuse_if_running -- a run writes tr4w.log in tr4w/target.
+. "$MATRIX_REPO_ROOT/tr4w/test/tr4w-not-running.sh"
+
 # A record line ends CRLF, the same as the lines the program writes, so a
 # concatenated record has one line ending throughout.
 matrix_line(){
@@ -113,6 +116,9 @@ matrix_exit_reason(){
 # matrix_preflight -- every condition that would make a run measure the wrong
 # thing is a refusal, not a warning.
 matrix_preflight(){
+   if ! tr4w_refuse_if_running "contest-matrix"; then
+      return 1
+   fi
    if [ ! -f "$MATRIX_EXE_SRC" ]; then
       echo "contest-matrix: no app at $MATRIX_EXE_SRC -- run Build-App.ps1 first" >&2
       return 1
@@ -172,7 +178,8 @@ matrix_write_cfg(){
 # matrix_run_one <record-file> <id> <label> <call> <state> <section> <grid>
 # Appends one variant's record to <record-file>.  The id is both the .cfg's
 # CONTEST spelling and the contest /MATRIX is asked for.  Returns 3 when
-# another TR4W holds the install's mutex, which the caller treats as fatal:
+# another TR4W is running or holds the install's mutex, which the caller
+# treats as fatal:
 # every later run would be refused the same way.
 matrix_run_one(){
    local rec="$1" id="$2" label="$3"
@@ -184,6 +191,13 @@ matrix_run_one(){
    matrix_write_cfg "$run/MATRIX.CFG" "$call" "$state" "$section" "$grid" "$id"
    cp "$MATRIX_SETTINGS" "$run/tr4w.json" || return 1
    cp "$MATRIX_TRMASTER" "$run/MATRIX-TRMASTER.DTA" || return 1
+
+   # AGAIN BEFORE EVERY LAUNCH, not only at the start: a full run takes
+   # minutes, and a TR4W started during it shares tr4w.log from then on
+   # (2026-10-25). Stopping is the caller's rc 3 path.
+   if ! tr4w_refuse_if_running "contest-matrix"; then
+      return 3
+   fi
 
    ( cd "$MATRIX_TARGET" && MSYS_NO_PATHCONV=1 timeout 60 "./$MATRIX_EXE" \
         "$(cygpath -w "$run/MATRIX.CFG")" /MATRIX "$(cygpath -w "$run/out.matrix")" \
@@ -310,8 +324,8 @@ matrix_run(){
    rm -rf "$MATRIX_WORK/run"
 
    if [ "${rc:-0}" -eq 3 ]; then
-      echo "contest-matrix: REFUSED -- another TR4W holds this install's mutex." >&2
-      echo "                Close it (Get-Process -Name tr4w) and run again." >&2
+      echo "contest-matrix: STOPPED -- another TR4W is running (or holds this" >&2
+      echo "                install's mutex). Close it and run again." >&2
       return 1
    fi
 

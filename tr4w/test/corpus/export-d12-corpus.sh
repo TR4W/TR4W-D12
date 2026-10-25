@@ -34,6 +34,9 @@
 set -u
 here="tr4w/test/corpus"
 . "$here/corpus-lib.sh"
+if ! tr4w_refuse_if_running "corpus"; then
+   exit 1
+fi
 EXE_NAME="${TR4W_EXE:-tr4w.exe}"
 EXE="tr4w/target/$EXE_NAME"
 
@@ -191,6 +194,13 @@ for m in "$here"/*/manifest.json; do
    # per-set timeout: a stray load dialog can't hang the whole run
    # --settings: the app reads and writes the corpus's fixture, never the
    # operator's. The path is absolute because the export runs from tr4w/target.
+   # AGAIN BEFORE EVERY EXPORT, not only at the start: a TR4W started during
+   # the run shares tr4w.log from then on (2026-10-25). A partial run is
+   # reported as a failure, never as a pass.
+   if ! tr4w_refuse_if_running "corpus"; then
+      echo "corpus: STOPPED before exporting $slug -- the run is incomplete." >&2
+      exit 1
+   fi
    ( cd tr4w/target && MSYS_NO_PATHCONV=1 timeout 45 "./$EXE_NAME" "$(towin "$log")" /EXPORT --settings "$SETTINGS_WIN" >/dev/null 2>&1 )
    rc=$?
 
