@@ -27,6 +27,11 @@ program bench_callsign;
 {$H+}
 
 uses
+   (* Interfaces FIRST: uCallSignRoutines reaches the LCL through uCTYDAT
+      (LCLType) and TF, and the LCL linked without its widgetset half fails
+      at LINK time with ~50 undefined WSRegisterXxx symbols. Nothing here
+      opens a window; this is a link-time requirement. *)
+   Interfaces,
    SysUtils,
    Classes,
 {$IFDEF WINDOWS}
