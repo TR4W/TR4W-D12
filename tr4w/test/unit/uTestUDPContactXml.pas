@@ -29,6 +29,9 @@ type
       procedure Test_ContactTagNamesAreTheN1MMNames;
       procedure Test_EachRecordTypeIsItsOwnRoot;
       procedure Test_ModeIsAnN1MMNameNotATR4WName;
+      procedure Test_LoggedQsoCarriesItsOwnFrequencyNotTheRadios;
+      procedure Test_RecordWithNoFrequencyGetsTheBandDefault;
+      procedure Test_LookupInfoStillFollowsTheRadio;
    public
       procedure RunAllTests; override;
    end;
@@ -39,6 +42,8 @@ uses
    uContestRegistry,   (* ContestHandleOf -- a legacy contest's handle, Q108 S2 *)
    VC,
    uSettingsModel,
+   LogRadio,
+   uCabrilloFormat,
    logsubs2;
 
 function ContactXml(aWhich: UDPType): string;
@@ -125,8 +130,75 @@ begin
    CheckTrue(Pos('<lookupinfo>', ContactXml(udpLookupInfo)) > 0, 'lookupinfo');
 end;
 
+(* A QSO logged on 7.025 MHz, built while the active radio says 14.311 MHz.
+  The XML carries tens of Hz, so 7025000 Hz is 702500. *)
+function FreqContactXml(aWhich: UDPType; aFrequency: integer): string;
+var
+   q: ContestExchange;
+   rig: RadioPtr;
+   savedModel: InterfacedRadioType;
+   savedStatus: RadioStatusRecord;
+begin
+   q := Default(ContestExchange);
+   q.ceContest := ContestHandleOf(CQWWCW);
+   q.Callsign := 'W1AW';
+   q.Band := Band40;
+   q.Mode := CW;
+   q.Frequency := aFrequency;
+   rig := ActiveRadioPtr;
+   savedModel := rig^.RadioModel;
+   savedStatus := rig^.CurrentStatus;
+   try
+      rig^.RadioModel := K3;
+      rig^.CurrentStatus.Freq := 14311500;
+      rig^.CurrentStatus.Split := False;
+      Result := BuildUDPContact(q, aWhich);
+   finally
+      rig^.RadioModel := savedModel;
+      rig^.CurrentStatus := savedStatus;
+   end;
+end;
+
+procedure TUDPContactXmlTests.Test_LoggedQsoCarriesItsOwnFrequencyNotTheRadios;
+var
+   xml: string;
+begin
+   BeginTest('Test_LoggedQsoCarriesItsOwnFrequencyNotTheRadios');
+   xml := FreqContactXml(udpContactInfo, 7025000);
+   CheckTrue(Pos('<rxfreq>702500</rxfreq>', xml) > 0, 'contactinfo rxfreq: ' + xml);
+   CheckTrue(Pos('<txfreq>702500</txfreq>', xml) > 0, 'contactinfo txfreq');
+   xml := FreqContactXml(udpContactReplace, 7025000);
+   CheckTrue(Pos('<rxfreq>702500</rxfreq>', xml) > 0, 'contactreplace rxfreq: ' + xml);
+   CheckTrue(Pos('<txfreq>702500</txfreq>', xml) > 0, 'contactreplace txfreq');
+end;
+
+procedure TUDPContactXmlTests.Test_RecordWithNoFrequencyGetsTheBandDefault;
+var
+   xml: string;
+begin
+   BeginTest('Test_RecordWithNoFrequencyGetsTheBandDefault');
+   xml := FreqContactXml(udpContactInfo, 0);
+   CheckEquals(0, Pos('<rxfreq>1431150</rxfreq>', xml),
+               'the radio''s frequency is not used for a logged QSO');
+   CheckTrue(Pos('<rxfreq>' + IntToStr(StrToIntDef(tCabrilloFreqString[Band40], 0) * 100) +
+                 '</rxfreq>', xml) > 0, 'band default rxfreq: ' + xml);
+end;
+
+procedure TUDPContactXmlTests.Test_LookupInfoStillFollowsTheRadio;
+var
+   xml: string;
+begin
+   BeginTest('Test_LookupInfoStillFollowsTheRadio');
+   xml := FreqContactXml(udpLookupInfo, 7025000);
+   CheckTrue(Pos('<rxfreq>1431150</rxfreq>', xml) > 0,
+             'lookupinfo describes the call being typed now: ' + xml);
+end;
+
 procedure TUDPContactXmlTests.RunAllTests;
 begin
+   Test_LoggedQsoCarriesItsOwnFrequencyNotTheRadios;
+   Test_RecordWithNoFrequencyGetsTheBandDefault;
+   Test_LookupInfoStillFollowsTheRadio;
    Test_ContactCarriesTheStationCallUnderMyCall;
    Test_ContactTagNamesAreTheN1MMNames;
    Test_EachRecordTypeIsItsOwnRoot;

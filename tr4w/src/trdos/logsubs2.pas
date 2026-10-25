@@ -2866,7 +2866,6 @@ var
    radioStatus: RadioStatusRecord;   // one coherent read; see where it is taken
    nMultCount: integer;
    sContestName: AnsiString;
-   sOperator : AnsiString;
    sRecType: AnsiString;
    sExchange: AnsiString;
    sMultiplierFields: AnsiString;
@@ -2888,11 +2887,18 @@ begin
       end;
 
    
-   // This is actually wrong. We should send the info from the Contact not the actual radio. NY4I 2021 July 1
+   (* A LOGGED QSO'S RECORD READS THE RECORD, NEVER THE RADIO (NY4I).  The
+     frequency was stored when the QSO was logged (MainUnit.ParametersOkay);
+     the radio's frequency NOW is some other moment -- a whole-log resend
+     (contactreplace) once carried the radio's frequency on every one of 53
+     QSOs across four bands.  Split transmit is not recorded, so
+     contactinfo/contactreplace send txfreq = rxfreq = the record's frequency.
+     Only lookupinfo describes the call being typed now, and reads the radio. *)
    freq := RXData.Frequency;
    txFreq := RXData.Frequency;
 
-   if ActiveRadioPtr.RadioModel <> NoInterfacedRadio then
+   if (whichUDP = udpLookupInfo) and
+      (ActiveRadioPtr.RadioModel <> NoInterfacedRadio) then
       begin
       // ONE read of the radio, three fields used from it.  The split flag, the
       // RX frequency and the VFO B frequency go out together in a single UDP
@@ -2913,9 +2919,10 @@ begin
          txFreq := freq;
          end;
       end
-   else
+   else if freq = 0 then
       begin // ny4i Issue 82 The Cabrillo reference is just because this array was declared in Cabrillo.
-      (* AnsiString: SysUtils' StrToIntDef takes 8-bit strings, and the band
+      (* No radio, or a record with no frequency: the band default.
+        AnsiString: SysUtils' StrToIntDef takes 8-bit strings, and the band
         default is an ASCII token, so the conversion is lossless. *)
       freq := StrToIntDef(AnsiString(tCabrilloFreqString[RxData.Band]), 0) * 1000; //14000 in array but needs to be 14000000
       txFreq := freq;
@@ -2929,15 +2936,6 @@ begin
        begin
        sComputerID := RxData.ceComputerID;
        end;
-
-       if CurrentOperator[0] = #0 then
-          begin
-          sOperator := UTF8Encode(Settings.My.Call);
-          end
-   else
-      begin
-      sOperator := CurrentOperator;
-      end;
 
    (* COUNTED FROM ZERO, WHICH IT WAS NOT.  The first touch of nMultCount was
      the Inc below, so it counted up from whatever was on the stack, and the

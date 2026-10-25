@@ -83,6 +83,14 @@ its own mode's bands summed. Pinned in `uTestUDPDatagrams`.
 to a log, no range, never a shared contest code, so any stable per-contest
 number serves. Never write `Ord(...)` of a contest there again.
 
+**A logged QSO's UDP record reads the RECORD, never the radio** (2026-10-25, NY4I).
+`BuildUDPContact` sends `RXData.Frequency` (stored at log time) as rxfreq AND txfreq for
+contactinfo and contactreplace; split TX is not recorded, so there is no separate TX
+value. Band default only when the record's frequency is 0. A whole-log resend once put
+the radio's frequency on 53 QSOs across four bands. Only `lookupinfo` (the call being
+typed NOW) reads the live radio. `<operator>` is `RXData.ceOperator`. Pinned in
+`uTestUDPContactXml`.
+
 ## MMTTY
 
 **MMTTY is out-of-process** — launched with `WinExec`, not loaded as a DLL. That

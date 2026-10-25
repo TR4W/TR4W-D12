@@ -222,10 +222,10 @@ begin
    CheckEquals('CQ-WW-CW', TagValue(xml, 'contestname'), 'contestname');
    CheckEquals('2026-10-16 12:34:56', TagValue(xml, 'timestamp'), 'timestamp');
    CheckEquals('GUID-0001', TagValue(xml, 'ID'), 'ID');
-   (* No radio is interfaced here, so the frequency is the band's default and
-     not the QSO's own Frequency field: 14000 kHz, in 10 Hz units. *)
-   CheckEquals('1400000', TagValue(xml, 'rxfreq'), 'rxfreq');
-   CheckEquals('1400000', TagValue(xml, 'txfreq'), 'txfreq');
+   (* The frequency is the QSO's own Frequency field (14025000 Hz), in 10 Hz
+     units, whether or not a radio is interfaced. *)
+   CheckEquals('1402500', TagValue(xml, 'rxfreq'), 'rxfreq');
+   CheckEquals('1402500', TagValue(xml, 'txfreq'), 'txfreq');
    (* PINNED: Ord of the contest enum -- a legacy contest's number, which Q108
      S4 left exactly as it was. *)
    CheckEquals(IntToStr(Ord(CQWWCW)), TagValue(xml, 'contestnr'), 'contestnr');
