@@ -538,38 +538,42 @@ Type TFactoryRadioBase = class(TObject)
       // everyone's, the same split as the coverage queries above.
       procedure PublishSpectrumFrame(const AFrame: TSpectrumFrame);
 
-      (* ASK THE SOCKET WHETHER IT IS CONNECTED, AND NEVER LET THE ASKING BE
-        THE THING THAT FAILS.
+      (* IS THE SOCKET OPEN FOR WRITING -- ANSWERED WITHOUT TOUCHING THE WIRE.
 
-        Indy's TIdTCPConnection.Connected is NOT a flag read.  It reaches
+        NEVER CALL INDY'S socket.Connected FROM ANYWHERE BUT THE READING
+        THREAD.  TIdTCPConnection.Connected is NOT a flag read: it reaches
         TIdIOHandlerStack.Connected (include/Core/IdIOHandlerStack.pas:241),
-        which PROBES the socket -- ReadFromSource(False, 0, False) -- and
-        swallows exactly three errors, no more:
+        which calls ReadFromSource(False, 0, False) -- a zero-timeout select
+        and then a BLOCKING recv on this socket, appending what it gets to the
+        InputBuffer the reading thread is consuming.
 
-           Id_WSAESHUTDOWN, Id_WSAECONNABORTED, Id_WSAECONNRESET
+        The reading thread reads this socket concurrently and without
+        SocketLock.  When the select says "readable" and the reading thread
+        takes the bytes first, the other thread's recv waits for MORE data --
+        indefinitely.  That is the main-thread hang of 2026-10-25 (NY4I, K4 on
+        the network at AI5): a band-map double-click went
+        TuneRadioToSpot -> TK4Radio.SetFrequency -> SendToRadio ->
+        socket.Connected -> recv, and the program never came back.  Rare and
+        data-timing dependent, which is why it took a process dump to see.
 
-        and RE-RAISES everything else.  Id_WSAENOTCONN is not on that list.
+        So this reads FIELDS ONLY, each a plain boolean or pointer in Indy:
+        the IOHandler exists, it is Opened, it has not been ClosedGracefully,
+        and its socket handle is allocated.  None of them calls ReadFromSource,
+        CheckForDisconnect or Readable.
 
-        On Unix, IdStackConsts.pas maps Id_WSAENOTCONN to the C ENOTCONN --
-        errno 107 on Linux -- so probing a socket that NEVER CONNECTED raises
-        EIdSocketError 'Socket Error # 107'.  On Windows the same constant is
-        WSAENOTCONN (10057), a different numeric space and, in practice, a
-        quiet False.  So a guard written to AVOID an error was the thing
-        raising it, and only off Windows: NY4I quit 5.0.15 on Linux Mint with
-        his K4 switched off and got the LCL's unhandled-exception modal out of
-        ExitProgram (2026-09-21).
+        WHAT IT CANNOT SEE is a peer that hung up while nobody has read since.
+        That is not this check's job and never safely was: the READING THREAD
+        is the one place that reads, it sees the close (EIdConnClosedGracefully
+        / a socket error out of ReadLn), and it sets Disconnecting, which
+        GetIsConnected and SendToRadio test first.  A write that lands on a
+        dead socket in the gap raises, SendToRadio's except logs it, and the
+        polling thread's reconnect takes over.
 
-        Answering False on ANY exception is the correct reading and not merely
-        the convenient one: the question is "can I write to this socket", and
-        a probe that failed has already answered no.  It is reported at Debug,
-        not swallowed -- see the tree's rule about silent fallbacks -- because
-        a probe failing is normal on the way out and pathological anywhere
-        else, and the log line is what tells the two apart.
+        It can no longer raise, which also retires the 2026-09-21 defect this
+        helper was first written for (Indy re-raising ENOTCONN, errno 107, out
+        of the probe on Linux during ExitProgram).
 
-        A method on the BASE, so the idiom exists once for every radio rather
-        than as a try/except copied to each call site.  uExternalLoggerBase has
-        the same Indy shape and the same exposure; it is a separate subsystem
-        and is reported, not changed, here. *)
+        A method on the BASE, so the rule exists once for every radio. *)
       function SocketIsConnected: boolean;
 
 
@@ -1105,7 +1109,8 @@ implementation
 // factory replaced.  Removed 2026-08-08.  If a future change here needs
 // something from LogRadio, that is the signal the concept belongs ON THE RADIO,
 // not that this uses clause should come back.
-Uses TypInfo;   // TypInfo: GetEnumName, for CapabilitiesAsText
+Uses TypInfo,   // TypInfo: GetEnumName, for CapabilitiesAsText
+     IdIOHandler, IdIOHandlerSocket;   // SocketIsConnected reads their FIELDS, never Connected
 
 const
    // How long the radio must be SILENT before its poll counts as answered.
@@ -1516,16 +1521,15 @@ begin
       FreeAndNil(rt);
       end;
 
-   (* SocketIsConnected, not socket.Connected: this is the destructor, so an
-     EIdSocketError escaping here leaves the object half-freed and takes out
-     whatever was tearing it down.  See SocketIsConnected for what Indy's
-     probe does on a socket that never connected. *)
+   (* SocketIsConnected, not socket.Connected: Indy's Connected READS the
+     socket (and on Linux raised ENOTCONN here for a radio that never
+     connected).  See SocketIsConnected. *)
    if socket <> nil then
       begin
       try
          if SocketIsConnected then
             begin
-            socket.Disconnect;
+            socket.Disconnect(False);   // False: no Connected probe -- see SocketIsConnected
             end;
       except
          on E: Exception do
@@ -1789,20 +1793,27 @@ begin
       socket.ConnectTimeout := 5000;
 
       try
-          // Force disconnect to clear any corrupted socket state
+          (* Force disconnect to clear any corrupted socket state.
+
+            SocketIsConnected and Disconnect(False), not socket.Connected and
+            a bare Disconnect: the reading thread is alive across reconnects,
+            and both of Indy's spellings READ the socket -- a bare Disconnect
+            is Disconnect(True), which asks Connected before calling a
+            DisconnectNotifyPeer that is empty for a TIdTCPClient.  See
+            SocketIsConnected. *)
           try
-             if socket.Connected then
+             if SocketIsConnected then
                 begin
                 logger.Debug('[TFactoryRadioBase.Connect] Socket already connected, disconnecting first');
-                socket.Disconnect;
+                socket.Disconnect(False);
                 end;
           except
              on E: Exception do
                 begin
-                logger.Debug('[TFactoryRadioBase.Connect] Exception during disconnect check: %s - forcing disconnect', [E.Message]);
-                // Force disconnect even if Connected check fails
+                logger.Debug('[TFactoryRadioBase.Connect] Exception during disconnect: %s - forcing disconnect', [E.Message]);
+                // Force disconnect even if the first attempt failed
                 try
-                   socket.Disconnect;
+                   socket.Disconnect(False);
                 except
                    // Ignore disconnect errors
                 end;
@@ -1820,7 +1831,7 @@ begin
              logger.Error('[TFactoryRadioBase.Connect] Exception when connecting to radio (%s:%d]: %s', [socket.Host, socket.Port, E.Message]);
              // Try to disconnect to clear bad state for next attempt
              try
-                socket.Disconnect;
+                socket.Disconnect(False);   // False: no Connected probe -- see SocketIsConnected
              except
                 // Ignore disconnect errors
              end;
@@ -1887,8 +1898,12 @@ begin
    Result := Self.Connect;
 end;
 
-(* See the declaration for why this exists and what Indy does. *)
+(* See the declaration: field reads only, NEVER socket.Connected, because that
+  reads the socket and the reading thread owns reading. *)
 function TFactoryRadioBase.SocketIsConnected: boolean;
+var
+   io: TIdIOHandler;
+   sockHandler: TIdIOHandlerSocket;
 begin
    Result := False;
 
@@ -1897,17 +1912,21 @@ begin
       Exit;
       end;
 
-   try
-      Result := socket.Connected;
-   except
-      on E: Exception do
-         begin
-         logger.Debug('[SocketIsConnected] the connected-probe raised %s (%s) -- ' +
-                      'treating the socket as NOT connected',
-                      [E.ClassName, E.Message]);
-         Result := False;
-         end;
-   end;
+   io := socket.IOHandler;
+   if io = nil then
+      begin
+      Exit;      // never connected: Indy creates the IOHandler on the first Connect
+      end;
+
+   sockHandler := socket.Socket;   // nil when the IOHandler is not socket-based
+   if sockHandler = nil then
+      begin
+      Exit;
+      end;
+
+   Result := io.Opened and
+             (not io.ClosedGracefully) and
+             sockHandler.BindingAllocated;
 end;
 
 procedure TFactoryRadioBase.Disconnect;
@@ -1932,7 +1951,9 @@ begin
       try
          logger.debug('Calling Disconnect - user request');
          // Disconnect the socket to pull it off the ReadLn so the thread in Execute sees that it is Terminated.
-         socket.Disconnect;
+         // Disconnect(False): a bare Disconnect asks Indy's Connected, which
+         // READS -- while the reading thread is parked in that very ReadLn.
+         socket.Disconnect(False);
       except
          on E: Exception do
             begin
@@ -2250,9 +2271,13 @@ begin
                serialPortObj.WriteString(s + #13);  // K4 expects CR terminator
                end;
             end
-         else if socket.Connected then
+         else if SocketIsConnected then
             begin
-            // Network connection
+            (* Network connection.  SocketIsConnected, NEVER socket.Connected:
+              this runs on the main thread (a band-map double-click) and on the
+              polling thread, and Indy's Connected does a recv that races the
+              reading thread and can block for ever -- the 2026-10-25 hang.
+              See SocketIsConnected. *)
             logger.Trace('[%s %s TX] (%s) Hex:[%s]',[Self.rigLabel, Self.radioModel, s, WireHex(s)]);
             nLen := length(s);
             // Most network radios accept or simply ignore a trailing CR/LF, so

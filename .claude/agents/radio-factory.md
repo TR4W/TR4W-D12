@@ -81,6 +81,29 @@ Disconnection sets the `radioWasDisconnected` flag rather than tearing the objec
 down. Note `TReadingThread` owns its own copy of that flag and holds **no radio
 reference** — per-radio reset work belongs in `Connect`.
 
+**NEVER CALL INDY'S `Connected` FROM OUTSIDE THE READING THREAD.** It is not a
+flag read: `TIdIOHandlerStack.Connected` calls `ReadFromSource(False, 0, False)`,
+which is a zero-timeout select followed by a **blocking `recv`**, and it appends the
+bytes to the `InputBuffer` the reading thread is consuming. The reading thread reads
+the same socket with no lock. If the select says "readable" and the reading thread
+takes the bytes first, the other thread's `recv` waits for ever. That was the
+**main-thread hang of 2026-10-25**, captured in a process dump: a band-map
+double-click went to `TK4Radio.SetFrequency`, then `SendToRadio`, then
+`socket.Connected`, then `recv`. A bare `Disconnect` is `Disconnect(True)`, which asks
+`Connected` first, so it carries the same trap.
+- Ask **`SocketIsConnected`** on the base. It reads only fields (`IOHandler.Opened`,
+  `not ClosedGracefully`, `Socket.BindingAllocated`) and cannot raise.
+- Disconnect with **`socket.Disconnect(False)`**. `DisconnectNotifyPeer` is empty for
+  a `TIdTCPClient`, so the only thing `False` drops is the read.
+- Detecting a hung-up peer is the **reading thread's** job. It sets `Disconnecting`.
+  A write in the gap raises inside `SendToRadio`'s except.
+- Pinned by `test/unit/uTestRadioSocketNoRead.pas`: the two `*_DoesNotReadTheSocket`
+  tests fail on the old code.
+- The same shape is still live **outside** the factory: `uDXClusterClient`
+  (`IsConnected`/`SendLine`/`Disconnect` on the main thread against `TDXClusterReader`)
+  and `uExternalLoggerBase` (sender path against its `TReadingThread`). `uNetClient`
+  already uses a flag for this reason.
+
 **`uRadioPolling.BeginPolling` is `function(aParameter: Pointer): DWORD;
 stdcall`** (`TF.TTR4WThreadStart`, pointer audit P1, 2026-10-16) and reads its
 RadioObject as `RadioPtr(aParameter)` -- `SetUpRadioInterface` passes `@Self`

@@ -125,11 +125,14 @@ begin
    // Break a read that is parked in CheckForDataOnSource so WaitFor does not
    // have to sit out the full poll interval.  Disconnecting a socket the thread
    // may still be reading is deliberate: it is what makes the read return.
+   (* UNCONDITIONAL, with no FClient.Connected guard.  This runs on the thread
+     that frees us, not on Execute's, and Indy's Connected READS the socket
+     (a select and then a blocking recv) while Execute reads it too -- the race
+     that hung the main thread on 2026-10-25 through TFactoryRadioBase's send
+     path.  Disconnect(False) is already a no-op on a handler that is not
+     open, so the guard bought nothing. *)
    try
-      if FClient.Connected then
-         begin
-         FClient.Disconnect(False);
-         end;
+      FClient.Disconnect(False);
    except
       // Shutting down; a failure to disconnect is not worth propagating.
    end;
