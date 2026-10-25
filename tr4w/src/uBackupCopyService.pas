@@ -52,7 +52,10 @@ unit uBackupCopyService;
   Repeated failures are silent. Each generation that ARRIVES says so --
   "Backup copied to <file>", no beep, and an Info line -- because without it
   the only thing on screen was the local file's name, and NY4I read that as
-  the destination being ignored (2026-10-25). A failure NEVER stops logging --
+  the destination being ignored (2026-10-25). A generation the destination
+  ALREADY HELD -- the at-open offer, found identical -- writes nothing and
+  shows nothing; it is an Info line only ("already up to date at <file>").
+  A failure NEVER stops logging --
   nothing here can refuse a QSO.
 
   SHUTDOWN WAITS AT MOST BACKUP_COPY_SHUTDOWN_MS. If the worker is still
@@ -98,8 +101,10 @@ function BackupDoneText(const aLocalReport: string; aQueued: boolean;
    const aDestination, aSubmitWhy: string): string;
 
 (* THE STATUS-LINE NOTICE FOR ONE COPIER REPORT: its text, and whether it is a
-  failure (which beeps). Every event has one, bceCopied included. Pure; the
-  log lines are the receiver's. *)
+  failure (which beeps). Every event has one, bceCopied included, EXCEPT
+  bceAlreadyCurrent: an empty aText means nothing is shown (NY4I,
+  2026-10-25 -- at open, a destination already holding the backup is not
+  news). Pure; the log lines are the receiver's. *)
 procedure BackupCopyNotice(aEvent: TBackupCopyEvent;
    const aDestination, aDetail: string;
    out aText: string; out aIsFailure: boolean);
@@ -197,6 +202,11 @@ begin
            screen that the copy arrived. No beep. *)
          aText := SysUtils.Format(SBackupCopiedTo, [aDetail]);
          end;
+      bceAlreadyCurrent:
+         begin
+         (* Nothing was written, so nothing is said on screen. *)
+         aText := '';
+         end;
    end;
 end;
 
@@ -225,10 +235,20 @@ begin
          begin
          logger.Info('[BackupCopy] copied and verified: %s', [aDetail]);
          end;
+      bceAlreadyCurrent:
+         begin
+         logger.Info('[BackupCopy] already up to date at %s', [aDetail]);
+         end;
    end;
 
    notice := TBackupNotice.Create;
    BackupCopyNotice(aEvent, aDestination, aDetail, notice.Text, notice.IsFailure);
+   if notice.Text = '' then
+      begin
+      (* No status-line notice for this event. *)
+      notice.Free;
+      Exit;
+      end;
 
    GNoticeLock.Acquire;
    try

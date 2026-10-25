@@ -44,6 +44,7 @@ type
       procedure TestTheProbeRunsOffTheCallersThread;
       procedure TestADestinationChangeForgetsTheOldOneAndProbes;
       procedure TestAnUnchangedCopyIsNotCopiedAgainAtOpen;
+      procedure TestASkipAfterAFailureIsARecoveryOnce;
       procedure TestTheLocalBackupFolderIsNotADestination;
       procedure TestLeftoverOutboxFilesAreDeletedAtStart;
    public
@@ -71,7 +72,7 @@ type
       procedure TestAQueuedCopyNamesTheDestinationNotTheLocalFile;
       procedure TestNoDestinationKeepsTheLocalReport;
       procedure TestAFailedQueueingSaysWhy;
-      procedure TestEveryCopierEventHasANoticeAndOnlyAFailureBeeps;
+      procedure TestEveryCopierEventButAlreadyCurrentHasANoticeAndOnlyAFailureBeeps;
    public
       procedure RunAllTests; override;
    end;
@@ -789,6 +790,7 @@ var
    ops: TFaultyOps;
    copier: TBackupCopier;
    local, final, why: string;
+   stamp: LongInt;
 begin
    BeginTest('at open, a destination copy that is already the same is not copied again');
    ScrubAll;
@@ -805,16 +807,85 @@ begin
       CheckEquals(1, ops.PartialCopies, 'a missing copy IS made');
       CheckEquals('generation one', ReadText(final), 'and arrives');
 
+      CheckEquals(1, rec.Count(bceCopied), 'the missing copy is reported copied');
+
+      (* AN OLD TIME STAMP ON THE FINAL, so a rewrite of the same bytes would
+        show: the content alone cannot tell "skipped" from "written again". *)
+      CheckEquals(0, FileSetDate(final, DateTimeToFileDate(EncodeDate(2020, 1, 1))),
+                  'the final is given an old time stamp');
+      stamp := FileAge(final);
+
       CheckTrue(copier.Submit(local, True, why), 'the same generation again: ' + why);
       CheckTrue(copier.WaitUntilSettled(SETTLE_MS), 'settles');
       CheckEquals(1, ops.PartialCopies, 'an identical copy is NOT made again');
       CheckEquals(ABSENT, ReadText(final + '.bak'), 'and nothing was displaced');
+      CheckEquals(stamp, FileAge(final), 'the final is not rewritten');
+      CheckEquals('', NamesEndingIn(DestDir, BACKUP_PARTIAL_SUFFIX), 'no .partial is left');
+      CheckEquals(1, FileCountIn(DestDir), 'the destination holds the final only');
+      CheckEquals(1, rec.Count(bceCopied),
+                  'an identical destination is NOT reported copied -- nothing arrived');
+      CheckEquals(1, rec.Count(bceAlreadyCurrent), 'it is reported already current, once');
+      CheckEquals(0, rec.Count(bceFailed), 'and it is not a failure');
+      CheckTrue(copier.Health = bdhWorking, 'the destination is still working');
 
       WriteText(local, 'generation two');
       CheckTrue(copier.Submit(local, True, why), 'a different generation: ' + why);
       CheckTrue(copier.WaitUntilSettled(SETTLE_MS), 'settles');
       CheckEquals(2, ops.PartialCopies, 'a copy that differs IS made');
       CheckEquals('generation two', ReadText(final), 'and arrives');
+      CheckEquals(2, rec.Count(bceCopied), 'and IS reported copied');
+      CheckEquals(1, rec.Count(bceAlreadyCurrent), 'not already current');
+      CheckEquals(0, FileCountIn(OutboxDir), 'and the outbox is empty');
+   finally
+      copier.Free;
+      rec.Free;
+   end;
+end;
+
+procedure TBackupCopierTests.TestASkipAfterAFailureIsARecoveryOnce;
+var
+   rec: TReportRecorder;
+   ops: TFaultyOps;
+   copier: TBackupCopier;
+   local, final, why, away: string;
+begin
+   BeginTest('a destination that comes back already holding the generation: recovered once, already current, not copied');
+   ScrubAll;
+   local := IncludeTrailingPathDelimiter(LocalDir) + FINAL_NAME;
+   final := IncludeTrailingPathDelimiter(DestDir) + FINAL_NAME;
+   away := DestDir + '-away';
+   rec := TReportRecorder.Create;
+   ops := TFaultyOps.Create;
+   copier := TBackupCopier.Create(ops, OutboxDir, TEST_RETRY_MS, rec.Received);
+   try
+      copier.SetDestination(DestDir);
+      WriteText(local, 'generation one');
+      CheckTrue(copier.Submit(local, False, why), 'queued: ' + why);
+      CheckTrue(copier.WaitUntilSettled(SETTLE_MS), 'the first copy settles');
+      CheckEquals(1, rec.Count(bceCopied), 'the first generation is copied');
+
+      (* THE SHARE GOES, and the at-open offer of the same generation fails. *)
+      CheckTrue(RenameFile(DestDir, away), 'the destination is taken away');
+      CheckTrue(copier.Submit(local, True, why), 'the same generation is offered: ' + why);
+      CheckTrue(copier.WaitUntilSettled(SETTLE_MS), 'the failed attempt settles');
+      CheckEquals(1, rec.Count(bceFailed), 'the failure is reported');
+      CheckTrue(copier.Health = bdhFailing, 'the destination is failing');
+
+      (* IT COMES BACK holding exactly that generation. *)
+      CheckTrue(RenameFile(away, DestDir), 'the destination returns');
+      copier.RetryNow;
+      CheckTrue(copier.WaitUntilSettled(SETTLE_MS), 'the retry settles');
+      copier.RetryNow;
+      CheckTrue(copier.WaitUntilSettled(SETTLE_MS), 'and nothing more is due');
+      CheckEquals(1, rec.Count(bceRecovered), 'the recovery is reported once');
+      CheckEquals(1, rec.Count(bceFailed), 'the failure still only once');
+      CheckEquals(1, rec.Count(bceAlreadyCurrent), 'the waiting job found it already current');
+      CheckEquals(1, rec.Count(bceCopied), 'and it is not reported copied');
+      CheckEquals(1, ops.PartialCopies, 'no second copy was written');
+      CheckTrue(copier.Health = bdhWorking, 'the destination is working');
+      CheckEquals('generation one', ReadText(final), 'the final is as it was');
+      CheckEquals(ABSENT, ReadText(final + '.bak'), 'with no .bak rotation');
+      CheckEquals(0, copier.PendingCount, 'nothing waits');
       CheckEquals(0, FileCountIn(OutboxDir), 'and the outbox is empty');
    finally
       copier.Free;
@@ -881,6 +952,7 @@ begin
    TestTheProbeRunsOffTheCallersThread;
    TestADestinationChangeForgetsTheOldOneAndProbes;
    TestAnUnchangedCopyIsNotCopiedAgainAtOpen;
+   TestASkipAfterAFailureIsARecoveryOnce;
    TestTheLocalBackupFolderIsNotADestination;
    TestLeftoverOutboxFilesAreDeletedAtStart;
 
@@ -1109,13 +1181,13 @@ begin
                'the reason');
 end;
 
-procedure TBackupCopyNoticeTests.TestEveryCopierEventHasANoticeAndOnlyAFailureBeeps;
+procedure TBackupCopyNoticeTests.TestEveryCopierEventButAlreadyCurrentHasANoticeAndOnlyAFailureBeeps;
 var
    text: string;
    isFailure: boolean;
    finalFile: string;
 begin
-   BeginTest('every copier report has a status-line notice; bceCopied names the file, no beep');
+   BeginTest('every copier report but bceAlreadyCurrent has a status-line notice; bceCopied names the file, no beep');
    finalFile := SHARE_FOLDER + '\' + FINAL_NAME;
 
    BackupCopyNotice(bceCopied, SHARE_FOLDER, finalFile, text, isFailure);
@@ -1135,6 +1207,12 @@ begin
    BackupCopyNotice(bceRecovered, SHARE_FOLDER, '', text, isFailure);
    CheckEquals(SysUtils.Format(SBackupCopyRecovered, [SHARE_FOLDER]), text, 'bceRecovered');
    CheckFalse(isFailure, 'bceRecovered does not beep');
+
+   (* THE ONE EXCEPTION (NY4I, 2026-10-25): a destination that already held the
+     generation wrote nothing, so the screen says nothing. *)
+   BackupCopyNotice(bceAlreadyCurrent, SHARE_FOLDER, finalFile, text, isFailure);
+   CheckEquals('', text, 'bceAlreadyCurrent: no on-screen notice');
+   CheckFalse(isFailure, 'bceAlreadyCurrent does not beep');
 end;
 
 procedure TBackupCopyNoticeTests.RunAllTests;
@@ -1142,7 +1220,7 @@ begin
    TestAQueuedCopyNamesTheDestinationNotTheLocalFile;
    TestNoDestinationKeepsTheLocalReport;
    TestAFailedQueueingSaysWhy;
-   TestEveryCopierEventHasANoticeAndOnlyAFailureBeeps;
+   TestEveryCopierEventButAlreadyCurrentHasANoticeAndOnlyAFailureBeeps;
 end;
 
 end.

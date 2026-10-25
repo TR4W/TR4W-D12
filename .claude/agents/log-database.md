@@ -129,8 +129,14 @@ other.
   `uBackupCopyService.BackupDoneText` / `BackupCopyNotice`, pure and pinned in
   `uTestBackupCopier` (`TBackupCopyNoticeTests`). `BackupCopySubmit` now
   returns whether it queued, and no longer writes the status line itself.
-  At open, a destination that already holds the generation is also
-  `bceCopied`, so it too says "Backup copied to".
+  ~~At open, a destination that already holds the generation is also
+  `bceCopied`~~ -- **NOT SINCE 2026-10-25 (NY4I: hide it).** An
+  `OnlyIfDifferent` job that finds identical bytes writes nothing and
+  reports **`bceAlreadyCurrent`**: no status-line notice (`BackupCopyNotice`
+  gives empty text, and the receiver queues nothing), an Info line "already
+  up to date at <file>". It is still a SUCCESS for the health transitions:
+  after a failure it reports `bceRecovered` once, as a write would
+  (`TestASkipAfterAFailureIsARecoveryOnce`). `bceCopied` means a real write.
 - **Started in `uProgramMain` after every headless Halt** (so the corpus
   never probes a share), which also offers this log's existing periodic
   backup to the destination, copied only if it differs. Tests:

@@ -75,8 +75,12 @@ unit uBackupCopier;
   REPORTS ARE BY TRANSITION. One report when the destination first answers,
   one when it goes from working (or unknown) to failing, one when it recovers;
   repeated failures say nothing. bceCopied is reported for every generation
-  that arrives (or that the destination already held, at open); what the
-  program shows for it is uBackupCopyService's decision. Reports are
+  that is WRITTEN there. An OnlyIfDifferent job (the at-open reconciliation)
+  that finds the destination already holding the same bytes writes nothing
+  and reports bceAlreadyCurrent instead -- nothing arrived, so it must not
+  read as a copy. It is still a success for the destination's health: after
+  a failure it reports bceRecovered first, exactly as a write would. What the
+  program shows for either is uBackupCopyService's decision. Reports are
   made ON THE WORKER THREAD, outside the job lock; the receiver must marshal
   anything it shows.
 
@@ -135,10 +139,14 @@ type
       bceReachable,   (* the destination answered its first probe: writable *)
       bceFailed,      (* it went from working, or unknown, to failing *)
       bceRecovered,   (* it went from failing to working *)
-      bceCopied);     (* a generation arrived, or was already there *)
+      bceCopied,      (* a generation was written and verified there *)
+      bceAlreadyCurrent); (* an OnlyIfDifferent job found the destination's
+                             final already holding the same bytes, and wrote
+                             nothing. A success for the destination's health *)
 
-   (* aDetail is the reason for bceFailed and the file written for
-     bceCopied; empty otherwise. Called on the worker thread. *)
+   (* aDetail is the reason for bceFailed, the file written for bceCopied and
+     the file found identical for bceAlreadyCurrent; empty otherwise. Called
+     on the worker thread. *)
    TBackupCopyReport = procedure(aEvent: TBackupCopyEvent;
                                  const aDestination, aDetail: string) of object;
 
@@ -174,7 +182,8 @@ type
       function ProbeDestination(const aFolder: string; out aWhy: string): boolean;
       function CopyToDestination(const aOutbox, aFinalName, aFolder: string;
                                  aOnlyIfDifferent: boolean;
-                                 out aWritten, aWhy: string): boolean;
+                                 out aWritten, aWhy: string;
+                                 out aAlreadyCurrent: boolean): boolean;
    public
       (* Takes ownership of aOps. aOutboxDir is created if it is missing, and
         any outbox file a previous run left there is deleted -- nothing is in
@@ -879,7 +888,8 @@ begin
 end;
 
 function TBackupCopier.CopyToDestination(const aOutbox, aFinalName, aFolder: string;
-   aOnlyIfDifferent: boolean; out aWritten, aWhy: string): boolean;
+   aOnlyIfDifferent: boolean; out aWritten, aWhy: string;
+   out aAlreadyCurrent: boolean): boolean;
 var
    final, previous, partial, aside: string;
    hadPrevious: boolean;
@@ -887,6 +897,7 @@ var
 begin
    Result := False;
    aWhy := '';
+   aAlreadyCurrent := False;
    final := IncludeTrailingPathDelimiter(aFolder) + aFinalName;
    aWritten := final;
    previous := final + '.bak';
@@ -905,7 +916,9 @@ begin
          if aOnlyIfDifferent and FOps.FileExists(final) and
             FOps.SameContent(aOutbox, final) then
             begin
-            (* The destination already holds this generation. *)
+            (* The destination already holds this generation: nothing is
+              written, and the report says so. *)
+            aAlreadyCurrent := True;
             Result := True;
             Exit;
             end;
@@ -985,7 +998,7 @@ var
    doProbe: boolean;
    folder, why, written, deleteAfter: string;
    epoch: integer;
-   ok, superseded, sameEpoch: boolean;
+   ok, superseded, sameEpoch, alreadyCurrent: boolean;
    i: integer;
    events: array[0..1] of TBackupCopyEvent;
    eventCount: integer;
@@ -1058,6 +1071,7 @@ begin
          (* THE FILE I/O, WITH NO LOCK HELD. *)
          written := '';
          ok := False;
+         alreadyCurrent := False;
          try
             if doProbe then
                begin
@@ -1066,7 +1080,8 @@ begin
             else
                begin
                ok := CopyToDestination(job.Outbox, job.FinalName, folder,
-                                       job.OnlyIfDifferent, written, why);
+                                       job.OnlyIfDifferent, written, why,
+                                       alreadyCurrent);
                end;
          except
             on E: Exception do
@@ -1128,9 +1143,19 @@ begin
                      end;
                   FHealth := bdhWorking;
                   FProbeDueAt := NOT_DUE;
+                  (* A skip is a success like a write -- the health and the
+                    recovery above are the same for both -- but it is told
+                    apart, because nothing arrived. *)
                   if not doProbe then
                      begin
-                     events[eventCount] := bceCopied;
+                     if alreadyCurrent then
+                        begin
+                        events[eventCount] := bceAlreadyCurrent;
+                        end
+                     else
+                        begin
+                        events[eventCount] := bceCopied;
+                        end;
                      eventDetail[eventCount] := written;
                      Inc(eventCount);
                      end;
