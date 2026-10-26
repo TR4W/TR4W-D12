@@ -42,6 +42,13 @@ There are no shared strategy objects and no per-rule registries.
 | its frozen matrix record | `tr4w/test/contest-matrix/frozen/<ID>.matrix` | written by the freeze script in [A6](#a6-prove-it), never by hand. Blanks in the id become `_` |
 | a generator, if a `.dom` is generated | `tools/<name>/` | only if the list will need regenerating (URC: `tools/urc/make_urc_dom.py`). Otherwise let a test check the `.dom` against the rules file, as Georgia does |
 
+**Only the `.dom` files go under `tr4w/target/`.** The class, its tests and
+everything else go where the table says. `tr4w/target/` is the program's run
+folder, and git ignores almost all of it (`.gitignore`: `tr4w/target/*`, with
+`dom/` and a few data files let back in): a unit saved there is never compiled and never committed,
+and nothing reports it. NY4I's first new contest was saved there by mistake
+(2026-10-26, the North Dakota QSO Party).
+
 Then the edits to shared files listed in [A4](#a4-every-place-outside-the-class-that-names-the-contest).
 
 ### The `.dom` format
@@ -97,6 +104,19 @@ counts each county.
 | a single-state US QSO party: one host state, county multipliers, an out-of-state entrant works only the host state | `TContestStateQSOPartyBase` | `uContestGeorgiaQP` |
 | anything else | `TContestBase` | `uContestURCDXRTTY` |
 | another running of a family that already exists | that family's base: `TContestARRLDXBase`, `TContestARRLSSBase`, `TContestCQWWBase`, `TContestCQWPXBase`, `TContestNRAUBalticBase` | the sibling leaf |
+
+**Copy the template, not the party that looks closest.** Every party class
+carries its own sponsor's rules, AND whatever it inherited from the class it
+was copied from -- Nebraska was copied from Delaware and keeps Delaware's
+power multiplier, plus its own rare-grid bonus and DX multiplier. A new party
+started from Nebraska therefore arrives with three rules its sponsor never
+wrote, and each one compiles and scores without complaint (the North Dakota
+QSO Party, 2026-10-26: its rules say "no power limitations" and "DXCC
+countries for points only - no multipliers"). The templates above state the
+fewest rules. Whatever you copy, read every override and delete each one your
+own sponsor's rules do not state; then rewrite the header comment from your
+rules, because a copied header describes the other contest and the next
+reader will believe it.
 
 **These are the only bases.** `Test_EveryClassSitsOnTheBaseOrAFamily` holds the
 list closed: a new base fails it until it is added there, on evidence that its
