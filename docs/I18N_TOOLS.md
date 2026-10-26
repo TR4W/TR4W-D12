@@ -41,9 +41,33 @@ python tools\i18n\mt_seed.py --lang POL              # do it
 Takes roughly **one second per entry** — about 11 minutes for a full language, since
 it sends one string per request rather than batching (batching misaligned entries).
 
-**It cannot damage finished work.** It only touches entries that are *both* marked
-"Needs work" *and* empty, so a reviewed translation fails both tests. It also drops any
-string whose `%s`/`%d` placeholders came back wrong rather than writing a broken one.
+**It cannot damage finished work.** It only touches entries that are **empty** --
+anything with text in it, reviewed or not, is left alone. (It used to require "Needs
+work" as well; Poedit strips that flag from empty entries on save, so it keys on empty
+alone.)
+
+**It writes nothing `po_lint` would reject.** Every draft is checked with
+`po_lint.draft_defects()` -- the same function `po_lint` itself uses -- and dropped,
+not written, if its line breaks, tabs or `%s`/`%d` sequence differ from the English.
+The dropped entries are listed at the end of the run with the reason. This is what
+LibreTranslate does to a multi-line message: it flattens the line breaks
+(`SImportMyFactsQuestion`, 2026-10-19, all 19 languages, issue #92). A dropped entry
+stays empty, and an empty entry is a visible to-do.
+
+**To keep an entry out for good**, put a translator comment on it:
+
+```
+# mt-seed: skip -- 2026-10-19, the engine flattens its line breaks
+#: uappstrings.simportmyfactsquestion
+msgid "..."
+msgstr ""
+```
+
+It is never seeded, and `--reseed` never clears it. Write the reason after `skip`.
+A `# ` translator comment is the kind gettext tools keep: `msgmerge`, Poedit, Weblate
+and `pofile` all carry it through. Do **not** use `#.` -- that is the template's, and
+the next merge rewrites it. Without the marker, an entry you clear because its draft
+was bad comes straight back on the next run, because empty is what `mt_seed` fills.
 
 Do **not** use `--reseed` unless you mean it — that clears drafts that already have
 text, including any a person typed and left flagged.

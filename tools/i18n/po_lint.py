@@ -23,9 +23,11 @@ find later.
 
 3. AN EMPTY ENTRY THAT IS NOT FUZZY
    Poedit clears the fuzzy flag on an entry with no translation, because in
-   gettext that state is meaningless. It is meaningful here: fuzzy+empty is what
-   mt_seed selects, so a cleared one is invisible to the seeder and will never be
-   filled. 25 arrived that way from the first review round.
+   gettext that state is meaningless. mt_seed selects on EMPTY alone (see its
+   "EMPTY IS THE CONDITION" note), so the seeder still finds such an entry; what
+   is lost is the "Needs work" marker a translator filters on. 25 arrived that
+   way from the first review round. An entry that must STAY empty carries the
+   translator comment `# mt-seed: skip` instead.
 
 EXIT CODE is non-zero if anything in the first two categories is found, so this
 can gate. The third is reported and repaired by --fix, since it is Poedit doing
@@ -79,6 +81,28 @@ def controls(text):
 
 def specifiers(text):
    return _FMT.findall(text)
+
+
+CONTROL_DEFECT = "CONTROL CHARS differ"
+FORMAT_DEFECT = "FORMAT SPECIFIERS differ"
+
+
+def draft_defects(source, target):
+   """Why this translation fails the two GATING checks, or [] if it passes.
+
+   THE ONE RULE, asked from two places: check() below, and mt_seed before it
+   writes a machine draft (#92). mt_seed used to have only its own specifier
+   test, so on 2026-10-19 it wrote SImportMyFactsQuestion with its line breaks
+   flattened into 19 catalogues -- LibreTranslate under format=html treats a
+   newline as whitespace -- and only this script noticed. A copy of these two
+   comparisons inside mt_seed would be the same drift waiting to happen again.
+   """
+   out = []
+   if controls(source) != controls(target):
+      out.append(CONTROL_DEFECT)
+   if specifiers(source) != specifiers(target):
+      out.append(FORMAT_DEFECT)
+   return out
 
 
 
@@ -292,9 +316,10 @@ def check(path, fix):
       if (not e.fuzzy) and same_text(e.source, e.target):
          english.append(e)
 
-      if controls(e.source) != controls(e.target):
+      defects = draft_defects(e.source, e.target)
+      if CONTROL_DEFECT in defects:
          ctrl_bad.append(e)
-      if specifiers(e.source) != specifiers(e.target):
+      if FORMAT_DEFECT in defects:
          fmt_bad.append(e)
 
       # ACCELERATORS. The letter legitimately MOVES between languages -- '&Yes'

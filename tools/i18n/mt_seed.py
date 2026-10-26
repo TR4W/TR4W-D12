@@ -16,12 +16,19 @@ enforce that:
      DROPPED rather than seeded on mismatch. TR4W formats through wsprintfA --
      unchecked varargs -- so a %d turned into %s dereferences an integer as a
      pointer. An empty entry is a visible to-do; a corrupted one is a crash.
+     A draft is ALSO dropped if po_lint.draft_defects() rejects it -- line
+     breaks, tabs or the exact specifier sequence changed (#92) -- so a seed
+     run can never add a defect po_lint --all then reports.
   3. Leading/trailing whitespace is mirrored from the source. Sixteen values
      carry it as a concatenation seam ('Failed to connect to ' is followed
      straight by the host), and engines strip it.
 
 Only EMPTY entries are touched, so re-running is safe: a translation
 and incremental: reviewed work and earlier seeding are left alone.
+
+An entry carrying the translator comment '# mt-seed: skip' is never seeded and
+never wiped by --reseed, so an entry cleared because its draft was bad STAYS
+cleared. See marked_skip().
 """
 
 import argparse
@@ -35,6 +42,7 @@ import urllib.request
 
 import pasconsts as pc
 import pofile
+import po_lint
 
 # ONE STRING PER REQUEST by default. Batching maps results back BY POSITION, so
 # it trusts the engine to return the array in request order -- and a reordered
@@ -46,7 +54,7 @@ import pofile
 #
 # The cost is per-request model inference, not transport, so it does not vanish
 # on localhost. NY4I's call (2026-08-13) is to pay it: seeding a catalogue is
-# rare, and because only fuzzy-and-empty entries are touched, every later run
+# rare, and because only empty entries are touched, every later run
 # handles just the delta -- a handful of new strings, not 400.
 #
 # --batch >1 is still available and is then automatically alignment-checked: a
@@ -98,6 +106,41 @@ DEFAULT_VERIFY = 25
 TOKEN_RE = re.compile(r'<ph id="(\d+)"\s*></ph>')
 LANGUAGE_KEY = "TC_TRANSLATION_LANGUAGE"
 SKIP_KEYS = {"TC_TRANSLATION_AUTHOR", "TC_TRANSLATOR_EMAIL"}
+
+# A PER-ENTRY "NEVER SEED THIS", WRITTEN IN THE CATALOGUE (#92).
+#
+#     # mt-seed: skip -- 2026-10-19, the engine flattens its line breaks
+#     #: uappstrings.simportmyfactsquestion
+#     msgid "..."
+#     msgstr ""
+#
+# WHY A MARKER AND NOT A LONGER SKIP_KEYS. An empty msgstr is exactly what this
+# script fills, so an entry cleared because its draft was bad came straight
+# back on the next run: SImportMyFactsQuestion was cleared in 19 catalogues on
+# 2026-10-19 and re-seeded by the very next run, for an unrelated string. The
+# decision belongs to ONE entry in ONE language, so it lives on that entry.
+#
+# WHY A TRANSLATOR COMMENT ('# '). It is the one comment kind gettext treats
+# as the translator's own: msgmerge carries it across a template merge, Poedit
+# shows and keeps it, Weblate keeps it, and pofile round-trips it byte for
+# byte. A '#.' extracted comment would be rewritten from the .pot on the next
+# merge; a '#,' flag would be dropped by tools that do not know it.
+#
+# Anything after 'skip' is the reason, and should be there. Case and spacing
+# are forgiven; 'skipped' is not the marker.
+_SKIP_MARKER = re.compile(r"^#\s*mt-seed:\s*skip\b", re.I)
+
+
+def marked_skip(entry):
+   """True if a translator comment on this entry says '# mt-seed: skip'."""
+   return any(_SKIP_MARKER.match(line.strip()) for line in entry.comments)
+
+
+def entry_label(entry):
+   """How to name an entry in a report. Most of our entries carry no msgctxt
+   -- a uAppStrings or .lfm entry is identified by its '#:' line -- so the key
+   alone printed a blank."""
+   return entry.key or (entry.refs[0] if entry.refs else repr(entry.source[:40]))
 
 # Sources that are an AUTHORING TO-DO rather than help text. Translating
 # "TO BE COMPLETED" into ten languages produces ten to-dos nobody can act on and
@@ -292,6 +335,10 @@ def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
       kept_salvage = 0
       for e in entries:
          if e.fuzzy and e.target.strip() and not e.obsolete:
+            if marked_skip(e):
+               # Somebody put this text here by hand and said "machine, keep
+               # out". Wiping it would leave an entry nothing refills.
+               continue
             if any(SALVAGE_MARK in n for n in e.notes):
                # NOT machine output. salvage_lossy.py recovered this from a
                # damaged lang file -- it is a native speaker's words, wearing
@@ -319,9 +366,15 @@ def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
    # What protects human work is the NON-empty half: an entry with text in it is
    # never touched here, reviewed or not. Dropping the fuzzy requirement costs
    # nothing and makes seeding independent of which editor last wrote the file.
-   candidates = [e for e in entries
-                 if not e.target.strip() and not e.obsolete
-                 and e.key not in SKIP_KEYS]
+   empty = [e for e in entries
+            if not e.target.strip() and not e.obsolete
+            and e.key not in SKIP_KEYS]
+   marked = [e for e in empty if marked_skip(e)]
+   candidates = [e for e in empty if not marked_skip(e)]
+   if marked:
+      print("%d entr%s marked '# mt-seed: skip' -- left empty: %s"
+            % (len(marked), "y" if len(marked) == 1 else "ies",
+               ", ".join(entry_label(e) for e in marked[:6])))
 
    # THE WIDGET SET ALREADY TRANSLATED THESE, SO DO NOT ASK A MACHINE.
    #
@@ -362,6 +415,10 @@ def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
                # caption with no accelerator.
                remaining.append(e)
                continue
+            if po_lint.draft_defects(e.source, hit):
+               # The same gate the machine's drafts face, below.
+               remaining.append(e)
+               continue
             e.target = hit
             e.fuzzy = True
             from_lcl.append(e)
@@ -400,7 +457,7 @@ def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
    print("%d entr%s to seed" % (len(todo), "y" if len(todo) == 1 else "ies"))
    if dry_run:
       for e in todo[:10]:
-         print("   %-38s %r" % (e.key, e.source[:60]))
+         print("   %-38s %r" % (entry_label(e), e.source[:60]))
       return 0
    if not todo:
       # STILL WRITE, if the LCL supplied anything. Returning without saving
@@ -462,20 +519,32 @@ def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
       chunk = "\r".join(restored[pos:pos + count])
       pos += count
       if bad:
-         dropped.append((e.key, bad[0]))
+         dropped.append((entry_label(e), bad[0]))
          continue
       if not chunk.strip():
-         dropped.append((e.key, "engine returned nothing"))
+         dropped.append((entry_label(e), "engine returned nothing"))
          continue
       text = mirror_edge_space(e.source, chunk)
       if pc.specifier_types(e.source) != pc.specifier_types(text):
-         dropped.append((e.key, "specifiers %s -> %s"
-                                % (pc.specifier_types(e.source),
-                                   pc.specifier_types(text))))
+         dropped.append((entry_label(e), "specifiers %s -> %s"
+                                         % (pc.specifier_types(e.source),
+                                            pc.specifier_types(text))))
          continue
       # The engine emits HTML entities -- the French model renders the space
       # before a colon as &#160; -- and TR4W paints them verbatim.
-      e.target = pofile.unescape_entities(text)     # stays fuzzy
+      text = pofile.unescape_entities(text)
+      # AND NOTHING po_lint WOULD REJECT (#92). Asked of the FINAL text, after
+      # the entities are resolved, because that is what gets written. The
+      # format=html channel that keeps specifiers safe also makes a newline
+      # plain whitespace, so a multi-line message comes back as one line --
+      # which the specifier test above cannot see. Dropped, not written: an
+      # empty entry is a visible to-do, a flattened one ships.
+      defects = po_lint.draft_defects(e.source, text)
+      if defects:
+         dropped.append((entry_label(e), "; ".join(defects)
+                         + " -- po_lint would reject it"))
+         continue
+      e.target = text     # stays fuzzy
       seeded += 1
 
    # ONLY IF EMPTY. This used to overwrite unconditionally, and
