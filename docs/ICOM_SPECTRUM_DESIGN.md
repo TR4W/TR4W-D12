@@ -846,10 +846,15 @@ weaker fix, it is an impossible one.
 | caller | flag | why |
 |---|---|---|
 | `ShutDownRadioInterface` (profile change) | close | the radio is gone; an empty frame is worse than no window. NY4I: *"if the radio does not support a spectrum scope, those windows should be closed."* |
-| `MainUnit` shutdown | **detach only** | closing records `visible=False`, which at exit would silently discard "this window was open" and stop it reopening next run |
+| `ShutDownRadioInterface(AProgramExit = True)` (program exit) | **detach only** | closing records `visible=False`, which at exit would silently discard "this window was open" and stop it reopening next run |
 
-`MainUnit` frees the radios directly rather than through
-`ShutDownRadioInterface`, so it is a second free site and needed its own call.
+~~`MainUnit` frees the radios directly rather than through
+`ShutDownRadioInterface`, so it is a second free site and needed its own call.~~
+**Since issue #107 (2026-10-26) exit goes through `ShutDownRadioInterface` too**
+(`ExitProgram` → `LogRadio.ShutDownRadiosForExit`), with the exit flag
+choosing detach. `tr4w_ShutDown`'s own detach-and-free remains as a backstop
+for an exit that bypasses `ExitProgram`; after `ExitProgram` it finds both slots
+empty.
 
 **And the Spectrum button now follows the radio.** `UpdateSpectrumButton`
 already re-read `tFactoryObject` and asked both gates; nothing *called* it on a

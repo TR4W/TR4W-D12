@@ -834,34 +834,25 @@ begin
     change, not a gap in it.  NY4I, 2026-09-24: "a crash or reboot loses it
     but that is tolerable to remove any io we can." *)
 
-  // Stop polling threads FIRST so they don't recreate transports or call
-  // SendMessage (SetDlgItemText) while we're tearing down on the main thread.
-  // Use MsgWaitForMultipleObjects to pump messages while waiting — polling
-  // threads call SetDlgItemText which uses SendMessage to the main thread.
-  // Plain WaitForSingleObject deadlocks because SendMessage blocks until
-  // the owning thread processes the message.
-  logger.Info('[ExitProgram] Step 2: Stopping polling threads');
-  Radio1.PollingStopRequested := True;
-  Radio2.PollingStopRequested := True;
-  logger.Info('[ExitProgram] Step 2a: Waiting for Radio1 (handle=%u)', [PtrUInt(Radio1.tRadioInterfaceThreadHandle)]);
-  WaitForPollingThreadWithMessages(@Radio1, 3000);
-  logger.Info('[ExitProgram] Step 2b: Waiting for Radio2 (handle=%u)', [PtrUInt(Radio2.tRadioInterfaceThreadHandle)]);
-  WaitForPollingThreadWithMessages(@Radio2, 3000);
-  logger.Info('[ExitProgram] Step 2c: Polling threads done');
+  (* STEPS 2-4: STOP THE POLLERS, THEN DISCONNECT AND FREE THE RADIOS -- the
+    same sequence Reset Radio Ports uses, not a copy of it (issue #107).
+    ShutDownRadioInterface interrupts the link first, so a switched-off
+    network radio no longer holds exit for the whole wait; it waits pumping
+    messages (WaitForPollingThreadWithMessages), because a poller can be inside
+    a cross-thread SendMessage; and it frees a radio only once its poller has
+    stopped, leaking it with an ERROR otherwise.
 
-  // Disconnect network radios BEFORE WSACleanup kills the sockets.
-  // Without this, the radio never receives disconnect packets and keeps
-  // the session alive, blocking reconnection on next program start.
-  logger.Info('[ExitProgram] Step 3: Disconnecting Radio1');
-  if Radio1.tFactoryObject <> nil then
-     begin
-     Radio1.tFactoryObject.Disconnect;
-     end;
-  logger.Info('[ExitProgram] Step 4: Disconnecting Radio2');
-  if Radio2.tFactoryObject <> nil then
-     begin
-     Radio2.tFactoryObject.Disconnect;
-     end;
+    STILL BEFORE ANYTHING ELSE IS TORN DOWN: the polling threads must not
+    recreate transports or touch windows while the main thread dismantles
+    them, and a network radio must get its disconnect packets or it keeps the
+    session alive and refuses the next start.
+
+    Afterwards Radio1/Radio2.tFactoryObject are nil.  Everything later on this
+    path that reaches a radio tests for nil -- the backstop unkey in
+    tr4w_ShutDown, its panadapter release and its FreeAndNil. *)
+  logger.Info('[ExitProgram] Step 2: Stopping polling threads and shutting down the radios');
+  ShutDownRadiosForExit([@Radio1, @Radio2]);
+  logger.Info('[ExitProgram] Step 4: Radios shut down');
   (* STEP 5 WAS WSACleanup, AND IT IS GONE WITH utils_net (2026-09-08).
 
     WindowsSocketsInitialised was set in exactly one place -- GetConnection's

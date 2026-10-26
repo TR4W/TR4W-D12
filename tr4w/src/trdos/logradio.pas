@@ -427,7 +427,11 @@ type
       // genuinely empty.  Split out of SetUpRadioInterface because CLEARING a
       // slot needs exactly this and nothing else -- see the call in
       // CheckAndInitializePorts_ForThisRadio.
-      procedure ShutDownRadioInterface;
+      //
+      // AProgramExit: the program is closing, not the radio being replaced.
+      // The only difference is the panadapter -- DETACHED, not closed, so the
+      // saved layout still says it was open and it comes back next run.
+      procedure ShutDownRadioInterface(const AProgramExit: Boolean = False);
       // Starts uRadioPolling.BeginPolling for this radio.  The ONE place that
       // does it, so the flag-before-thread rule (PollingThreadRunning) is
       // written once; CheckAndInitializePorts_ForThisRadio and the unit tests
@@ -747,6 +751,13 @@ function tPTTVIACAT(PTTOn: boolean): boolean;
 // exactly how a rig gets left on.  It also bypasses tPTTVIACAT, which answers
 // only for ActiveRadio -- the second radio can be the one transmitting.
 procedure PutAllRadiosIntoReceive;
+
+// THE RADIOS' HALF OF ExitProgram (issue #107).  Every slot goes through
+// RadioObject.ShutDownRadioInterface -- interrupt the link, wait for the
+// poller, free only a radio whose poller stopped, leak and log an ERROR
+// otherwise -- so exit and Reset Radio Ports cannot drift apart again.  Here,
+// not in LOGSUBS2, so the unit tests can drive the exit path itself.
+procedure ShutDownRadiosForExit(const ARigs: array of RadioPtr);
 //function GetRadioFromString(RadioName: ShortString): InterfacedRadioType;
 procedure TestRadioInterface;
 
@@ -1733,7 +1744,7 @@ const
   do in that last pass is write this slot's status once, and its exit clears
   PollingThreadRunning, which by then may describe the new thread.  Both are
   confined to the case this branch exists for and both are logged. *)
-procedure RadioObject.ShutDownRadioInterface;
+procedure RadioObject.ShutDownRadioInterface(const AProgramExit: Boolean = False);
 var
    ro: TFactoryRadioBase;
    pollerStopped: Boolean;
@@ -1759,7 +1770,7 @@ begin
       ClearThread(Self.tRadioInterfaceThreadID);
       end;
 
-   { A PANADAPTER MAY BE HOLDING THIS RADIO, and it does not own it.
+   (* A PANADAPTER MAY BE HOLDING THIS RADIO, and it does not own it.
 
      BEFORE Disconnect and before Free, while the object is still alive: the
      window's teardown calls StopSpectrum, which terminates and JOINS its
@@ -1769,8 +1780,11 @@ begin
      thread accessing freed memory (dangling pointer AV)".  The panadapter is a
      second holder of exactly that kind, added long after that comment was
      written, and it crashed for exactly that reason on 2026-08-26 when NY4I
-     switched a K4 profile to FT1000/K3 -- see PanadapterRadioGoingAway. }
-   PanadapterRadioGoingAway(ro);
+     switched a K4 profile to FT1000/K3 -- see PanadapterRadioGoingAway.
+
+     AT EXIT THE WINDOW IS DETACHED, NOT CLOSED: closing records visible=False,
+     which would stop the panadapter reopening next run. *)
+   PanadapterRadioGoingAway(ro, not AProgramExit);
 
    (* The slot lets go of the radio BEFORE the stop request is withdrawn --
      see the header: that order is what keeps a leaked poller from resuming. *)
@@ -2780,6 +2794,44 @@ procedure PutAllRadiosIntoReceive;
 begin
    Unkey(@Radio1, 'radio 1');
    Unkey(@Radio2, 'radio 2');
+end;
+
+(* ExitProgram used to carry its own copy of the stop sequence -- stop
+  request, a 3 s wait whose answer it ignored, then Disconnect -- with no
+  InterruptLink.  A switched-off network radio therefore held exit for the
+  whole 3 s (NY4I, 2026-10-26 10:23:58, K4 off), and a poller still inside a
+  5 s Connect when the wait gave up ran on while Disconnect freed its reading
+  thread; tr4w_ShutDown then freed the radio itself under it (issue #107).
+
+  EVERY STOP REQUEST GOES UP FIRST, so the second radio's poller is not
+  starting new work while the first radio is waited for.  Only an occupied
+  slot is flagged: ShutDownRadioInterface returns at once on an empty one and
+  would leave the flag set behind it.
+
+  AFTERWARDS THE SLOTS ARE EMPTY -- tFactoryObject is nil, freed or leaked --
+  so tr4w_ShutDown's later PanadapterRadioGoingAway and FreeAndNil find
+  nothing, and a leaked radio is never freed under its thread. *)
+procedure ShutDownRadiosForExit(const ARigs: array of RadioPtr);
+var
+   i: Integer;
+begin
+   for i := Low(ARigs) to High(ARigs) do
+      begin
+      if (ARigs[i] <> nil) and (ARigs[i]^.tFactoryObject <> nil) then
+         begin
+         ARigs[i]^.PollingStopRequested := True;
+         end;
+      end;
+
+   for i := Low(ARigs) to High(ARigs) do
+      begin
+      if ARigs[i] = nil then
+         begin
+         Continue;
+         end;
+      logger.Info('[ExitProgram] Shutting down %s', [ARigs[i]^.RadioName]);
+      ARigs[i]^.ShutDownRadioInterface(True);
+      end;
 end;
 
 function tPTTVIACATForRadio(aRadio: RadioPtr; PTTOn: boolean): boolean;

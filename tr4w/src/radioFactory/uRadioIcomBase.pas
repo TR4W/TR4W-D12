@@ -158,7 +158,8 @@ type
     FScopeSpanHz: Integer;               // TOTAL width the RIG reports ($27 $15 x 2); 0 = not yet said
     FScopeStreaming: Boolean;            // StartSpectrum sent the enables and has not stopped them
     FOnScopePayload: TIcomScopePayloadProc;   // capture hook -- see TIcomScopePayloadProc
-    procedure ApplyScopeEnables;   // $27 $10 + $27 $11; see OnNetworkStateChange
+    procedure ApplyScopeEnables;   // $27 $10 + $27 $11; see CIVStreamOpened
+    procedure RequestScopeSpan;    // $27 $15 read; see CIVStreamOpened
     procedure ProcessScopeWaveData(const data: string);
     procedure ProcessScopeSpanReply(const data: string);
     function ScopeSelector: string;      // the selector byte $27 $15 and friends carry
@@ -191,6 +192,13 @@ type
     procedure ProcessCIVMessage(msg: string);
     procedure ProcessNetworkCivData(msg: string);
     procedure OnNetworkStateChange(Sender: TObject);
+
+  protected
+    (* The network CI-V stream has just opened -- on the first connect and on
+      every reconnect.  Sends what must be asked or re-applied each time a
+      link comes up.  Called only from OnNetworkStateChange; protected so the
+      unit tests can play a link-up without a UDP handshake. *)
+    procedure CIVStreamOpened;
 
   protected
     FTransceiveMenuBytes: string;  // 2-byte menu item for CI-V transceive query (radio-specific)
@@ -1467,39 +1475,56 @@ begin
 
   if FNetworkTransport.State = icsConnected then
      begin
-     // CI-V stream is now open. Send Icom-specific one-shot queries.
-     // Freq/mode/RIT/XIT/split/TX are handled by the polling thread's connected
-     // block (pFactoryRadio), which owns the display-update path.
-     // Queries here are for state that the polling thread doesn't know about.
-     SendToRadio(BuildCIVCommand($1A, #$05 + FTransceiveMenuBytes));  // Transceive state
-     if SupportsDataMode then
-        begin
-        SendToRadio(BuildCIVCommand($1A, #$06));                       // Data mode on/off
-        end;
-     SendToRadio(BuildCIVCommand($14, CIV_SUBCMD_CW_SPEED));          // CW speed ($14 $0C)
-
-     (* THE BANDSCOPE ENABLES BELONG HERE, NOT IN StartSpectrum.
-
-        A command sent before the CI-V stream is open is DROPPED -- the
-        transport logs "SendCivData called while CI-V stream not open" and
-        returns -- and StartSpectrum can easily run first: the window opens
-        whenever the operator presses the button, and uPanadapterRestore fires
-        it at start-up while the radio is still handshaking.
-
-        THIS COST A WHOLE BENCH SESSION.  On NY4I's IC-9700 the first enable
-        ($27 $10, the scope FUNCTION) was dropped this way while the second
-        ($27 $11, the CI-V wave output) went out 32 ms later and succeeded.  The
-        result is the worst possible symptom: the radio streams perfectly
-        well-formed 490-byte sweeps at 30 frames a second, every field correct,
-        and every level ZERO.  Nothing errors, nothing is missing, and the
-        display is simply flat -- which reads as "the band is dead" rather than
-        as a command that never arrived.
-
-        Re-sending unconditionally on every connect is deliberate: these are
-        idempotent set commands, a reconnect loses them anyway, and the cost is
-        two frames. *)
-     ApplyScopeEnables;
+     CIVStreamOpened;
      end;
+end;
+
+procedure TIcomRadio.CIVStreamOpened;
+begin
+   // CI-V stream is now open. Send Icom-specific one-shot queries.
+   // Freq/mode/RIT/XIT/split/TX are handled by the polling thread's connected
+   // block (pFactoryRadio), which owns the display-update path.
+   // Queries here are for state that the polling thread doesn't know about.
+   SendToRadio(BuildCIVCommand($1A, #$05 + FTransceiveMenuBytes));  // Transceive state
+   if SupportsDataMode then
+      begin
+      SendToRadio(BuildCIVCommand($1A, #$06));                       // Data mode on/off
+      end;
+   SendToRadio(BuildCIVCommand($14, CIV_SUBCMD_CW_SPEED));          // CW speed ($14 $0C)
+
+   (* THE BANDSCOPE ENABLES BELONG HERE, NOT IN StartSpectrum.
+
+      A command sent before the CI-V stream is open is DROPPED -- the
+      transport logs "SendCivData called while CI-V stream not open" and
+      returns -- and StartSpectrum can easily run first: the window opens
+      whenever the operator presses the button, and uPanadapterRestore fires
+      it at start-up while the radio is still handshaking.
+
+      THIS COST A WHOLE BENCH SESSION.  On NY4I's IC-9700 the first enable
+      ($27 $10, the scope FUNCTION) was dropped this way while the second
+      ($27 $11, the CI-V wave output) went out 32 ms later and succeeded.  The
+      result is the worst possible symptom: the radio streams perfectly
+      well-formed 490-byte sweeps at 30 frames a second, every field correct,
+      and every level ZERO.  Nothing errors, nothing is missing, and the
+      display is simply flat -- which reads as "the band is dead" rather than
+      as a command that never arrived.
+
+      Re-sending unconditionally on every connect is deliberate: these are
+      idempotent set commands, a reconnect loses them anyway, and the cost is
+      two frames. *)
+   ApplyScopeEnables;
+
+   (* AND THE SPAN READ, FOR THE SAME REASON (issue #106).  The rig pushes
+      $27 $15 when the operator changes the span, never on connect, so a read
+      StartSpectrum sent while the handshake ran was dropped and nothing
+      learnt the span.  Asked whenever this link CAN carry a scope, open window
+      or not: it is one frame, and a window opened later then has a span to
+      show and to step from.  The K4 asks #SPN; in its Connect for the
+      identical reason (#99). *)
+   if SpectrumAvailable then
+      begin
+      RequestScopeSpan;
+      end;
 end;
 
 
@@ -3585,6 +3610,17 @@ begin
                                CivChr(ICOM_SCOPE_SUB_DATAOUTPUT) + #$01));
 end;
 
+(* ASK THE RIG WHAT ITS SPAN IS ($27 $15, a read).  One routine because three
+  places ask: StartSpectrum, SetSpectrumSpan after a set, and CIVStreamOpened
+  on every link-up.  WITH THE SELECTOR: a read of a scope sub-command carries
+  the scope byte just as a set does, and omitting it is a frame the rig ignores
+  in silence. *)
+procedure TIcomRadio.RequestScopeSpan;
+begin
+   SendToRadio(BuildCIVCommand(ICOM_SCOPE_CMD,
+                               CivChr(ICOM_SCOPE_SUB_SPAN) + ScopeSelector));
+end;
+
 procedure TIcomRadio.StartSpectrum;
 begin
    if FScopeStreaming then
@@ -3628,10 +3664,12 @@ begin
      reported one" in the meantime.  The K4 needs the identical ask for the
      identical reason (#SPN at connect).
 
-     WITH THE SELECTOR.  A read of a scope sub-command carries the scope byte
-     just as a set does; omitting it is a frame the rig ignores in silence. }
-   SendToRadio(BuildCIVCommand(ICOM_SCOPE_CMD,
-                               CivChr(ICOM_SCOPE_SUB_SPAN) + ScopeSelector));
+     ASKED HERE AND AGAIN IN CIVStreamOpened.  Here for a window opened on a
+     link that is already up; there because a window opened while the link is
+     still handshaking -- uPanadapterRestore at start-up -- has this ask
+     dropped by the transport, and because a reconnect loses nothing the rig
+     then pushes (issue #106). }
+   RequestScopeSpan;
 
    logger.Info('[%s] bandscope started: %d points, levels 0..%d, scope %d',
                [radioModel, FScopeGeometry.Points, FScopeGeometry.MaxLevel,
@@ -3704,8 +3742,7 @@ begin
      on what it settled on, and a driver that believed its own request would
      step from a number the radio never had.  This is the same lesson the K4's
      span buttons taught (docs/PANADAPTER_LCL_DESIGN.md section 10.2). }
-   SendToRadio(BuildCIVCommand(ICOM_SCOPE_CMD,
-                               CivChr(ICOM_SCOPE_SUB_SPAN) + ScopeSelector));
+   RequestScopeSpan;
 end;
 
 procedure TIcomRadio.StepSpectrumSpan(const aDirection: Integer);

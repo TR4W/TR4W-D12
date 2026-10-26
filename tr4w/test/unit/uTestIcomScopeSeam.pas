@@ -45,10 +45,27 @@ unit uTestIcomScopeSeam;
 interface
 
 uses
-   SysUtils, uTR4WTestFramework, VC, uSpectrumTypes, uIcomScope,
-   uFactoryRadioBase, uRadioRegistry, uRadioIcomBase;
+   SysUtils, Classes, uTR4WTestFramework, VC, uSpectrumTypes, uIcomScope,
+   uFactoryRadioBase, uRadioRegistry, uRadioIcomBase,
+   uRadioIcom9700;   // the probe below is a real IC-9700 -- issue #106
 
 type
+   (* A REAL IC-9700 WHOSE WIRE IS A LIST.  SendToRadio is the radio's one way
+     out, so overriding it records every frame the driver writes, in order,
+     with no transport and no queue thread.  PlayLinkUp is the CI-V stream
+     opening -- what OnNetworkStateChange does at icsConnected, on the first
+     connect and on every reconnect -- without a UDP handshake. *)
+   TIcomSpanProbe = class(TIcom9700Radio)
+   private
+      FSent: TStringList;
+   public
+      constructor CreateProbe;
+      destructor Destroy; override;
+      procedure SendToRadio(s: string); overload; override;
+      procedure PlayLinkUp;
+      procedure ClearSent;
+      function SpanReadsSent: Integer;
+   end;
    TIcomScopeSeamTests = class(TTestCase)
    protected
       function MakeNetworkIcom(model: InterfacedRadioType): TIcomRadio;
@@ -63,6 +80,7 @@ type
       procedure Test_SourceIdMatchesWhatTheDecoderStamps;
       procedure Test_StopWithoutStartIsSafe;
       procedure Test_SpanIsUnknownUntilTheRadioSaysSo;
+      procedure Test_SpanIsAskedOnEveryLinkUp;
       procedure Test_SpanLadderStepsAndClamps;
       procedure Test_SpanLadderAnchorsOffLadderValues;
       procedure Test_HalfAndTotalWidthsRoundTrip;
@@ -103,6 +121,62 @@ const
    // network link was configured, not that anything is listening.
    TEST_HOST = '192.0.2.10';       // TEST-NET-1, guaranteed unroutable
    TEST_PORT = 50001;
+
+(* ---- TIcomSpanProbe --------------------------------------------------------- *)
+
+constructor TIcomSpanProbe.CreateProbe;
+begin
+   (* The list FIRST: the inherited constructor may already send. *)
+   FSent := TStringList.Create;
+   inherited Create;
+   (* THROUGH THE BASE: inside an Icom, RadioAddress is the CI-V address byte,
+     which hides the base's network host of the same name. *)
+   TFactoryRadioBase(Self).radioAddress := TEST_HOST;
+   radioPort := TEST_PORT;
+end;
+
+destructor TIcomSpanProbe.Destroy;
+begin
+   (* inherited FIRST: TIcomRadio's destructor calls StopSpectrum, which sends
+     -- into FSent, which must still exist. *)
+   inherited Destroy;
+   FSent.Free;
+end;
+
+procedure TIcomSpanProbe.SendToRadio(s: string);
+begin
+   FSent.Add(s);
+end;
+
+procedure TIcomSpanProbe.PlayLinkUp;
+begin
+   CIVStreamOpened;
+end;
+
+procedure TIcomSpanProbe.ClearSent;
+begin
+   FSent.Clear;
+end;
+
+(* A span READ is FE FE <to> <from> 27 15 <selector> FD -- eight bytes.  A span
+  SET carries five BCD bytes more, so the length tells the two apart. *)
+function TIcomSpanProbe.SpanReadsSent: Integer;
+var
+   i: Integer;
+   f: string;
+begin
+   Result := 0;
+   for i := 0 to FSent.Count - 1 do
+      begin
+      f := FSent[i];
+      if (Length(f) = 8)     and
+         (Ord(f[5]) = $27)   and
+         (Ord(f[6]) = $15) then
+         begin
+         Inc(Result);
+         end;
+      end;
+end;
 
 function TIcomScopeSeamTests.MakeNetworkIcom(model: InterfacedRadioType): TIcomRadio;
 var
@@ -488,6 +562,44 @@ begin
    end;
 end;
 
+procedure TIcomScopeSeamTests.Test_SpanIsAskedOnEveryLinkUp;
+var
+   probe: TIcomSpanProbe;
+begin
+   (* ISSUE #106.  The span read went out only from StartSpectrum.  On a
+     network Icom a panadapter reopened at start-up (uPanadapterRestore) calls
+     StartSpectrum while the handshake is still running, so the transport
+     drops that read -- and the rig pushes $27 $15 only when the operator
+     changes the span, so nothing learnt it.  The scope ENABLES were already
+     re-sent on every link-up for the same reason; the read was not.  The K4's
+     #SPN; had the identical defect (#99) and is asked in its Connect now. *)
+   BeginTest('the scope span is asked once on every link-up, not only from StartSpectrum');
+
+   probe := TIcomSpanProbe.CreateProbe;
+   try
+      CheckTrue(probe.SpectrumAvailable, 'precondition: a network IC-9700 offers a scope');
+
+      (* The window opens BEFORE the link is up.  What it sends here is lost
+        on a real transport, so it is cleared rather than counted. *)
+      probe.StartSpectrum;
+      CheckTrue(probe.SpectrumStreaming, 'precondition: the spectrum started');
+      probe.ClearSent;
+
+      probe.PlayLinkUp;
+      CheckEquals(1, probe.SpanReadsSent,
+                  'the CI-V stream opened with the scope running: the span read must go ' +
+                  'out exactly once, or the window never learns the span (issue #106)');
+
+      (* The link drops and comes back. *)
+      probe.ClearSent;
+      probe.PlayLinkUp;
+      CheckEquals(1, probe.SpanReadsSent,
+                  'a reconnect must ask the span again, exactly once');
+   finally
+      probe.Free;
+   end;
+end;
+
 // ---------------------------------------------------------------------------
 // The span ladder
 // ---------------------------------------------------------------------------
@@ -579,6 +691,7 @@ begin
    Test_SourceIdMatchesWhatTheDecoderStamps;
    Test_StopWithoutStartIsSafe;
    Test_SpanIsUnknownUntilTheRadioSaysSo;
+   Test_SpanIsAskedOnEveryLinkUp;
 
    Test_SpanLadderStepsAndClamps;
    Test_SpanLadderAnchorsOffLadderValues;

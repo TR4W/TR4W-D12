@@ -132,6 +132,28 @@ live LogContact path has not been run.
       station's call already in the strips, let the previous QSO log. EXPECT both
       strips to keep naming the NEXT call, not the one just logged.
 
+## Added 2026-10-26 -- EXIT AND THE ICOM SPAN AT LINK-UP (issues #106, #107)
+
+Unit-tested with a blocking fake radio and a real IC-9700 whose wire is a list
+(`uTestRadioDestructors.Test_Exit*`, `uTestIcomScopeSeam.Test_SpanIsAskedOnEveryLinkUp`);
+not yet run against a radio.
+
+- [ ] **Exit with a network radio switched off: no 3 s pause.** K4 (or any
+      network radio) off, wait for its reconnect attempts in the log, then
+      exit. EXPECT TR4W to close at once; in `tr4w.log` EXPECT
+      `[ExitProgram] Shutting down` and `Freeing radio object` for that radio
+      within a fraction of a second, and NO `did not stop within` ERROR.
+      (NY4I's 2026-10-26 10:23:58 exit with the K4 off waited exactly 3 s.)
+- [ ] **The panadapter still comes back after exit.** Panadapter open, exit,
+      restart. EXPECT it to reopen: exit detaches it, it does not close it.
+- [ ] **Icom panadapter span known after startup.** Network IC-9700 (or
+      IC-7610/IC-705), panadapter open at shutdown. Start TR4W. EXPECT
+      `radio reports scope span <n> Hz` (TRACE) after the CI-V stream opens,
+      and the span buttons work at once, before the span is changed at the rig.
+- [ ] **Again after a reconnect.** Pull the radio's network cable and restore
+      it (or power-cycle). After it reconnects, EXPECT the span read again in
+      the log, once.
+
 ## Added 2026-10-26 -- K4 STARTUP SENDS AND RADIO REBUILD (issues #99, #104)
 
 Unit-tested against a loopback server and a blocking fake radio

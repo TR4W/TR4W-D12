@@ -52,6 +52,10 @@ unit uTestRadioDestructors;
     (InterruptLink), and must be freed only after its thread has exited; the
     other is not (a wedged serial write), and must be LEAKED, not freed, with
     its thread leaving on its own once the call returns.
+  - Test_Exit* (issue #107) -- the same two probes through
+    ShutDownRadiosForExit, ExitProgram's radio step.  It kept its own copy of
+    the stop sequence (3 s wait, answer ignored, no InterruptLink), so the
+    first must now be freed promptly and the second leaked with one ERROR.
 *)
 
 interface
@@ -60,7 +64,9 @@ uses
    SysUtils, Classes, SyncObjs, IdTCPServer, IdContext, IdGlobal,
    uTR4WTestFramework, uFactoryRadioBase, uRadioRegistry, uRadioElecraftK4,
    uRadioIcomBase,   // TCIVSendThread -- issue #105
-   LogRadio,         // RadioObject, ShutDownRadioInterface -- issue #104
+   LogRadio,         // RadioObject, ShutDownRadioInterface -- issue #104;
+                     // ShutDownRadiosForExit -- issue #107
+   MainUnit,         // logger -- LOGRADIO's ERROR on a leaked radio, issue #107
    VC,               // Serial1 -- placing a radio on a serial link
    Log4D, uTestLogCapture;   // the stop walk's ERROR capture -- issue #99
 
@@ -152,6 +158,8 @@ type
       procedure Test_FreeNeverStartedCIVSendThread;
       procedure Test_ShutDownFreesTheRadioOnlyAfterThePollerStops;
       procedure Test_ShutDownLeaksARadioWhosePollerWillNotStop;
+      procedure Test_ExitInterruptsTheLinkAndFreesPromptly;
+      procedure Test_ExitLeaksARadioWhosePollerWillNotStop;
    public
       procedure RunAllTests; override;
    end;
@@ -755,6 +763,116 @@ begin
       end;
 end;
 
+(* ---- issue #107: the same probes through the EXIT path ----------------------- *)
+
+(* ExitProgram had its own copy of the stop sequence: a 3 s wait whose answer
+  it ignored, then Disconnect, and no InterruptLink -- so a switched-off
+  network radio held exit for the full 3 s, and a poller still inside a call
+  ran on while the radio was torn down.  ShutDownRadiosForExit is that step
+  of ExitProgram, and it must be the #104 sequence. *)
+procedure TRadioDestructorTests.Test_ExitInterruptsTheLinkAndFreesPromptly;
+const
+   (* Interrupting releases this probe at once; the old exit waited 3000 ms
+     for a thread nothing had told to let go. *)
+   PROMPT_MS = 2000;
+var
+   probe: TBlockingPollProbe;
+   started: QWord;
+   elapsed: QWord;
+begin
+   BeginTest('exit interrupts each radio''s link and frees it as soon as its poller stops');
+
+   probe := StartBlockedPoller(True);
+   CheckTrue(probe <> nil, 'precondition: the polling thread is blocked in a call on the radio');
+   if probe = nil then
+      begin
+      Exit;
+      end;
+
+   started := GetTickCount64;
+   ShutDownRadiosForExit([@gPollRig]);
+   elapsed := GetTickCount64 - started;
+
+   CheckTrue(gPollProbeFreed,
+             'exit must free a radio whose poller stopped -- it used to Disconnect it and leave ' +
+             'it in the slot for tr4w_ShutDown to free (issue #107)');
+   CheckFalse(gPollerRunningAtFree, 'the radio was freed while its polling thread still ran');
+   CheckTrue(gPollRig.tFactoryObject = nil, 'the slot is empty');
+   CheckTrue(elapsed < PROMPT_MS,
+             Format('exit took %d ms on a radio whose link it can interrupt -- it must close the ' +
+                    'link first, not wait the poller out (issue #107)', [elapsed]));
+
+   if not gPollProbeFreed then
+      begin
+      (* The old path: the slot still holds it.  Release, wait, free here. *)
+      gPollRelease.SetEvent;
+      gPollRig.tFactoryObject := nil;
+      if WaitPollerGone(POLL_RELEASE_MAX_MS) then
+         begin
+         probe.Free;
+         end;
+      end;
+   gPollRig.PollingStopRequested := False;
+end;
+
+procedure TRadioDestructorTests.Test_ExitLeaksARadioWhosePollerWillNotStop;
+var
+   probe: TBlockingPollProbe;
+   capture: TCaptureAppender;
+   keep: ILogAppender;
+   savedLevel: TLogLevel;
+   errors: Integer;
+   i: Integer;
+begin
+   BeginTest('exit with a poller that will not stop: the radio is leaked, not freed, and an ERROR says so');
+
+   probe := StartBlockedPoller(False);
+   CheckTrue(probe <> nil, 'precondition: the polling thread is blocked in a call on the radio');
+   if probe = nil then
+      begin
+      Exit;
+      end;
+
+   (* LOGRADIO writes through MainUnit's global logger. *)
+   capture := TCaptureAppender.Create('exit-capture');
+   keep := capture;
+   savedLevel := MainUnit.logger.Level;
+   MainUnit.logger.Level := Log4D.Error;
+   MainUnit.logger.AddAppender(keep);
+   try
+      ShutDownRadiosForExit([@gPollRig]);
+   finally
+      MainUnit.logger.RemoveAppender(keep);
+      MainUnit.logger.Level := savedLevel;
+   end;
+
+   errors := 0;
+   for i := 0 to capture.Lines.Count - 1 do
+      begin
+      if Pos('did not stop', capture.Lines[i]) > 0 then
+         begin
+         Inc(errors);
+         end;
+      end;
+   keep := nil;
+
+   CheckFalse(gPollProbeFreed,
+              'exit freed a radio whose polling thread was still inside a call on it (issue #107)');
+   CheckTrue(gPollRig.tFactoryObject = nil,
+             'the slot must let go of a leaked radio, or tr4w_ShutDown frees it under its thread');
+   CheckEquals(1, errors, 'exactly one ERROR naming the poller that did not stop');
+
+   (* Let the wedged call return; the thread leaves because the slot no longer
+     holds its radio.  Then the test owns the leaked radio. *)
+   gPollRelease.SetEvent;
+   if WaitPollerGone(10000) and (not gPollProbeFreed) then
+      begin
+      gPollRig.tFactoryObject := nil;
+      probe.Free;
+      end;
+   gPollRig.PollingStopRequested := False;
+end;
+
 procedure TRadioDestructorTests.RunAllTests;
 begin
    Test_FreeThroughBaseReferenceRunsTheDestructor;
@@ -770,6 +888,8 @@ begin
    try
       Test_ShutDownFreesTheRadioOnlyAfterThePollerStops;
       Test_ShutDownLeaksARadioWhosePollerWillNotStop;
+      Test_ExitInterruptsTheLinkAndFreesPromptly;
+      Test_ExitLeaksARadioWhosePollerWillNotStop;
    finally
       (* A thread still blocked holds gPollRelease: release it, and leak the
         two events rather than free them under it if it has not left. *)
