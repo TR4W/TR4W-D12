@@ -32,6 +32,18 @@ const
 
    
 
+(* THE SIGNATURE IS OVER BYTES. SHA-256 of the secret's ASCII bytes followed by
+  the file's raw bytes, lower-case hex. SendFile once built it from a `string`
+  holding the file, and in this tree `string` is UnicodeString: N file bytes
+  were Moved into N WideChars (two bytes per char, the second half never
+  written) and then UTF-8 encoded, so the Hash could never equal the server's
+  hash of the real file and the server answered 400 (CQ WW SSB, 2026-10-25).
+  A pure function of its two inputs, so a test can pin it. *)
+function SCPSignature(const secret: string; const fileBytes: TBytes): string;
+
+(* Base64 of the same bytes the signature covers. *)
+function SCPEncodeBase64(const fileBytes: TBytes): string;
+
 Type TSCPUpload = class(TObject)
    private
       m_loggerName: string;
@@ -71,6 +83,20 @@ Type TSCPUpload = class(TObject)
    end;
 
 implementation
+
+function SCPSignature(const secret: string; const fileBytes: TBytes): string;
+var
+   secretRaw: RawByteString;
+begin
+   (* The secret is a hex digest, so UTF-8 is the same bytes as ASCII. *)
+   secretRaw := UTF8Encode(secret);
+   Result := SHA256OfByteArrays([BytesOf(secretRaw), fileBytes]);
+end;
+
+function SCPEncodeBase64(const fileBytes: TBytes): string;
+begin
+   Result := TIdEncoderMime.EncodeBytes(TIdBytes(fileBytes));
+end;
 
 constructor TSCPUpload.Create(bProduction: boolean; FLogger: TLogLogger);
 
@@ -180,13 +206,10 @@ end;
 
 function TSCPUpload.SendFile(_filename: string): boolean;
 var fs: TFileStream;
-    ms: TMemoryStream;
-    //s: string;
+    fileBytes: TBytes;
     httpResult: string;
     hash: string;
     json: TSTringStream;
-   // response: TStringStream;
-    sCabRaw: string;
 begin
    //Result := false;
    // First check that the log file exists
@@ -206,39 +229,26 @@ begin
    // Store the hash of the CAB file
    Self.m_cabHash := Self.GetHashSHA256File(_filename);
 
-   // Get the Base64 encoded value of file
+   (* The file is read ONCE, as bytes. The Base64 and the signature both come
+     from this one array, so they cannot describe different files. *)
+   fs := TFileStream.Create(_filename, fmOpenRead or fmShareDenyNone);
    try
-      fs:= TFileStream.Create(_filename, fmOpenRead);
-      Self.m_cabEncoded := TIdEncoderMime.EncodeStream(fs);
+      SetLength(fileBytes, fs.Size);
+      if fs.Size > 0 then
+         begin
+         fs.ReadBuffer(fileBytes[0], fs.Size);
+         end;
    finally
       fs.Free;
    end;
 
-   // Read the entire log into memory
-   try
-      ms := TMemoryStream.Create;
-      ms.LoadFromFile(_filename);
-      if ms.Size > 0 then
-         begin
-         SetLength(sCabRaw,ms.Size);
-         Move(ms.Memory^,sCabRaw[1],ms.Size);
-         end;
-   finally
-      if ms <> nil then
-         begin
-         ms.Free;
-         end;
-   end;
-
-
+   Self.m_cabEncoded := SCPEncodeBase64(fileBytes);
 
    // Set the logger name
    Self.loggerName := 'TR4W';  // Sets m_loggerHash too.
 
-
-   // Set the hash-signature
-   // Build the hash from the sharedSecret sha256[(m_credentials) and can (plain text)]
-   hash := AnsiLowerCase(Self.GetHashSHA256(Self.m_loggerHash + sCabRaw));
+   // Set the hash-signature: sha256 over (shared secret, then the raw file bytes)
+   hash := SCPSignature(Self.m_loggerHash, fileBytes);
 
    // Build the JSON
    Self.m_JSON := '{' +
@@ -255,10 +265,24 @@ begin
       Self.m_httpStatusCode := Self.http.ResponseCode;
       Result := Self.http.ResponseCode = 200;
    except
+      on E: EIdHTTPProtocolException do
+         begin
+         (* The status line alone ("400 Bad Request") says nothing; the body
+           is where the server says what it rejected. *)
+         Result := false;
+         Self.m_httpStatusCode := E.ErrorCode;
+         Self.m_errorResult := '***ERROR*** ' + E.ClassName + ' ' + E.Message;
+         if E.ErrorMessage <> '' then
+            begin
+            Self.m_errorResult := Self.m_errorResult + ' - server said: ' + E.ErrorMessage;
+            end;
+         logger.Error('SCP upload rejected: %s', [Self.m_errorResult]);
+         end;
       on E: Exception do
          begin
          Result := false;
          Self.m_errorResult := '***ERROR*** ' + E.ClassName + ' ' + E.Message;
+         logger.Error('SCP upload failed: %s', [Self.m_errorResult]);
          end;
    end;
 end;

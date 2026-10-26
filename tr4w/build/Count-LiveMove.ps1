@@ -75,7 +75,9 @@ param(
 # 453 -> 444, 2026-10-18: P12 -- untyped byte buffers became open arrays:
 # uSHA256 (one Move, two FillChar), uWinKey.wkWriteRaw (one Move), and the
 # five FillChar in uTestNetFraming became a zeroing loop.
-$MOVE_CEILING = 444
+# 444 -> 443, 2026-10-25: uSuperCheckPartialFileUpload reads the Cabrillo file
+# as TBytes; the Move of file bytes into a UnicodeString went.
+$MOVE_CEILING = 443
 # Floors for -Gate: the tree has ~800 Pascal files and several hundred live
 # calls, so fewer than these means the reader failed, not that the tree is clean.
 $FILE_FLOOR  = 300

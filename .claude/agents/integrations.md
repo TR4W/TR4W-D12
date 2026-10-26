@@ -215,6 +215,16 @@ tree, and defining it would not have helped — the var block was commented out 
 `tw_MixWWINDOW_INDEX` was never declared. `SendMessageToMixW` compiled to an empty
 procedure and its six live callers did nothing.
 
+## SuperCheckPartial upload (2026-10-25)
+
+`uSuperCheckPartialFileUpload`. **The signature is over BYTES:** `SCPSignature(secret,
+fileBytes)` = SHA-256 of the secret's ASCII then the raw file bytes (`SHA256OfByteArrays`);
+`SCPEncodeBase64` encodes the same array. `string` is UnicodeString here, so the old
+`Move` of N file bytes into a `string` made garbage and the server answered 400. Read the
+file once as `TBytes`; never route file content through a `string`. A failed POST keeps the
+server's body (`EIdHTTPProtocolException.ErrorMessage`) in `errorResult` and `tr4w.log`.
+Pinned in `uTestSCPUpload` against a hashlib digest. Still Indy (see the unit's comment).
+
 ## Prefer a reported error over a silent fallback
 
 Several defects on this branch were silent downgrades. A companion program that

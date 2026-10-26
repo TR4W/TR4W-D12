@@ -39,7 +39,7 @@ unit uSHA256;
 interface
 
 uses
-   Classes;
+   Classes, SysUtils;   (* SysUtils: TBytes, for SHA256OfByteArrays *)
 
 (* Lower-case hex, 64 characters. Takes BYTES: a digest is defined over bytes,
   and leaving the encoding to the caller is what stops the same text hashing
@@ -52,10 +52,11 @@ function SHA256OfStream(aStream: TStream): string;
 
 function SHA256OfFile(const aPath: string): string;
 
-implementation
+(* The digest of the parts laid end to end, without building the joined copy.
+  The SCP upload signs a secret followed by a whole file. *)
+function SHA256OfByteArrays(const aParts: array of TBytes): string;
 
-uses
-   SysUtils;
+implementation
 
 type
    TSHA256State = record
@@ -285,6 +286,19 @@ begin
      parameter: an AnsiString is not an array of Byte. Measured against the
      pointer version on 20 MB (docs/POINTER_AUDIT.md, P12). *)
    SHA256Update(st, BytesOf(aBytes));
+   Result := SHA256Final(st);
+end;
+
+function SHA256OfByteArrays(const aParts: array of TBytes): string;
+var
+   st: TSHA256State;
+   i:  integer;
+begin
+   SHA256Init(st);
+   for i := Low(aParts) to High(aParts) do
+      begin
+      SHA256Update(st, aParts[i]);
+      end;
    Result := SHA256Final(st);
 end;
 
