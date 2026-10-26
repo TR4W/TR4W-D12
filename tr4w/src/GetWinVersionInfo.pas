@@ -527,8 +527,7 @@ const
   REG_KEY = 'SOFTWARE\Microsoft\Windows NT\CurrentVersion';
 var
   Reg: TRegistry;
-  sDisplay, sBuild: string;
-  nUBR: integer;
+  sDisplay, sBuild, sUBR: string;
 begin
   Result := '';
   Reg := TRegistry.Create;
@@ -537,10 +536,29 @@ begin
     if Reg.OpenKeyReadOnly(REG_KEY) then
        begin
        try
-         sDisplay := Reg.ReadString('DisplayVersion');
-         sBuild   := Reg.ReadString('CurrentBuildNumber');
-         nUBR     := Reg.ReadInteger('UBR');
-         Result   := sDisplay + ' (Build ' + sBuild + '.' + IntToStr(nUBR) + ')';
+         (* EVERY VALUE IS ASKED FOR BEFORE IT IS READ. UBR exists only on
+           Windows 10 and later, DisplayVersion only on 20H2 and later, and
+           TRegistry.ReadInteger RAISES on a missing value (fcl-registry
+           registry.pp GetData, SRegGetDataFailed). The one caller is the
+           startup version line in uProgramMain, so an unguarded read stopped
+           TR4W starting on Windows 7 -- reported against 4.151.0 by EI3CTB,
+           D7 PR #1086. Windows 10 and 11 output is unchanged. *)
+         sDisplay := '';
+         if Reg.ValueExists('DisplayVersion') then
+            begin
+            sDisplay := Reg.ReadString('DisplayVersion');
+            end;
+         sBuild := '';
+         if Reg.ValueExists('CurrentBuildNumber') then
+            begin
+            sBuild := Reg.ReadString('CurrentBuildNumber');
+            end;
+         sUBR := '';
+         if Reg.ValueExists('UBR') then
+            begin
+            sUBR := '.' + IntToStr(Reg.ReadInteger('UBR'));
+            end;
+         Result   := sDisplay + ' (Build ' + sBuild + sUBR + ')';
        finally
          Reg.CloseKey;
        end;
