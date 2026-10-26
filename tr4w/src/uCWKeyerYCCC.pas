@@ -28,7 +28,7 @@ unit uCWKeyerYCCC;
 interface
 
 uses
-   VC, uCWKeyerBase;
+   VC, LogRadio, uCWKeyerBase;
 
 type
    TCWKeyerYCCC = class(TCWKeyer)
@@ -40,12 +40,28 @@ type
       function DeleteLastChar: boolean; override;
       procedure Flush; override;
       // SetSpeed: inherited no-op (Q2 -- YCCCSetSpeed commented out today).
+      (* The box's own TX radio (uYCCCSO2R.YCCCTxRadio, set by
+        YCCCSetActiveRadio) -- the box keys whichever radio it is switched to,
+        not the swap rule's. *)
+      function KeyedRadio: RadioPtr; override;
    end;
 
 implementation
 
 uses
    uYCCCSO2R;
+
+function TCWKeyerYCCC.KeyedRadio: RadioPtr;
+begin
+   if YCCCTxRadio = 2 then
+      begin
+      Result := @Radio2;
+      end
+   else
+      begin
+      Result := @Radio1;
+      end;
+end;
 
 constructor TCWKeyerYCCC.Create;
 begin

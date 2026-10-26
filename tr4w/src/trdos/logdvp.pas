@@ -137,6 +137,7 @@ uses
    uAudio,           // PlayFile -- the .WAV, on every platform uAudio supports
    uConfigValues,
    uSettingsModel,   // Settings.Dvk
+   uTXInhibitView,   // NoteTransmitStarting -- issue #97, trigger 1
   MainUnit,
   LogStuff;
 
@@ -660,6 +661,11 @@ begin
   end;
 }
   if not SysUtils.FileExists(aFileName) then Exit;
+  (* ISSUE #97, TRIGGER 1: A VOICE MESSAGE IS ABOUT TO KEY THE ACTIVE RADIO.
+    Here as well as in PTTOn because a station keying on VOX has PTT ENABLE
+    off, and then PTTOn returns before its own hook.  Asked once per message,
+    after the file is known to exist -- a missing file keys nothing. *)
+  NoteTransmitStarting(ActiveRadioPtr);
   if ActiveRadioPtr.tPTTStatus = PTT_OFF then
      begin
      PTTOn;

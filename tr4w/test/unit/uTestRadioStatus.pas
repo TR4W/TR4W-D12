@@ -48,10 +48,12 @@ const
    // Derived, not guessed: VFOStatusType declares two longints and six
    // one-byte enums (14 bytes) and aligns to 16.  RadioStatusRecord is the two
    // 4-slot VFO arrays (2 x 4 x 16 = 128), six 4-byte scalars -- Split/RIT/XIT
-   // are longbool, not byte -- (24), and six one-byte enums padded to 8: 160.
+   // are longbool, not byte -- (24), six one-byte enums (6), and since issue
+   // #97 the TXInhibited boolean (1) and its string[31] reason (32), padded to
+   // a multiple of 4: 192.
    // Test_RecordSizeIsPinned is what proves the arithmetic.
    EXPECTED_VFO_SIZE    = 16;
-   EXPECTED_STATUS_SIZE = 160;
+   EXPECTED_STATUS_SIZE = 192;
 
 // A non-zero baseline.  Testing from an all-zero record would let a comparison
 // that accidentally asked `<> 0` instead of `a <> b` pass everything.
@@ -72,7 +74,9 @@ begin
    Result.VFOStatus     := VFOA;
    Result.PrevVFOStatus := VFOB;
    Result.TXOn          := False;
-   for v := Low(ActiveVFOStatusType) to High(ActiveVFOStatusType) do
+   Result.TXInhibited   := True;
+   Result.TXInhibitReason := 'TX test mode';
+   for v :=Low(ActiveVFOStatusType) to High(ActiveVFOStatusType) do
       begin
       Result.VFO[v].Frequency    := 14025000 + Ord(v);
       Result.VFO[v].RITFreq      := -250 - Ord(v);
@@ -154,6 +158,9 @@ begin
    b.VFOStatus := VFOB;                 Restored('VFOStatus');
    b.PrevVFOStatus := VFOA;             Restored('PrevVFOStatus');
    b.TXOn := not a.TXOn;                Restored('TXOn');
+   b.TXInhibited := not a.TXInhibited;  Restored('TXInhibited');
+   b.TXInhibitReason := 'TX test modf'; Restored('TXInhibitReason (one character)');
+   b.TXInhibitReason := 'TX test';      Restored('TXInhibitReason (shorter)');
 end;
 
 // vfoUnknown and vfoMem are included deliberately.  pFactoryRadio only fills

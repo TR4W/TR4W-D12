@@ -487,6 +487,18 @@ resourcestring
    (* The title of the folder chooser on the Preferences backup page. *)
    SBackupDestinationDialogTitle = 'Backup destination folder';
 
+   (* ------------------------------------------- TX inhibited (#97) - *)
+
+   (* THE KEYED RADIO'S STATUS PANEL, for the key-up only: the station is
+     transmitting and the radio says it will not radiate.  %s is the radio's
+     own words for why ("TX test mode" from a K4) -- bounded to 31 characters
+     by TTXInhibitReason, so this stays inside a status panel. *)
+   STXInhibitedStatus = 'TX INHIBITED: %s';
+   (* THE PTT INDICATOR'S CAPTION for the same key-up.  The indicator is three
+     character cells wide (VC.TWindows[mwePTTStatus]), so the sentence cannot
+     go there; the status panel above carries it. *)
+   STXInhibitedIndicator = 'INH';
+
 implementation
 
 end.

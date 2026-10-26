@@ -251,6 +251,9 @@ begin
                          RS_PTT_TURNONDELAY);
    RegisterModelSetting( 'ptt.noPollDuringPTT',   'NO POLL DURING PTT',
                          RS_PTT_NOPOLLDURINGPTT);
+   (* Issue #97: the optional beep on a key-up the radio will not radiate. *)
+   RegisterModelSetting( 'ptt.txInhibitBeep',     'PTT TX INHIBIT BEEP',
+                         RS_PTT_TXINHIBITBEEP);
 
    { Operating and PTT, 2026-08-15. Captions follow each command's help entry:
      AUTO CALL TERMINATE stops sending when the call window changes, and

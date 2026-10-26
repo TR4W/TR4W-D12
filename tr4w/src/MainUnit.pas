@@ -608,6 +608,10 @@ procedure RefreshMainWindowElementColors;
 { See the implementation: the one rule both the sweep and uStateBridge use. }
 function WSJTXIndicatorBack: tr4wColors;
 
+{ The PTT indicator's background -- the sweep's one rule for it, named so a
+  test can ask it.  See the implementation. }
+function PTTIndicatorBack: tr4wColors;
+
 procedure ProcessFuntionKeys(Key: integer);
 procedure CreateDirectoryIfNotExist;
 procedure CheckAndSetInitialExchangeCursorPos;
@@ -766,6 +770,9 @@ uses
   uWindowLayoutStore, // the window layout, keyed by name
   uTR4WConfigFile,   // TR4WConfigFileName / Save- LoadWindowLayout
   uWSJTXState,       // the state the WSJT-X indicator paints from
+  uRadioState,       // TXInhibitAlert -- the PTT indicator's alert (issue #97)
+  uTXInhibitAlert,   // PTTIndicatorRole -- what the PTT indicator means
+  uTXInhibitView,    // NoteTransmitStarting / NoteTransmitEnded -- trigger 1
   uLogNote,          // NoteText / SetNoteText -- a note's text, spelled once
   uPanadapterForm,   // it is not a tw_ window, so it saves its own row
   uContestRegistry,  // ContestIdentity -- the contest's calendar ids, M1; ContestId, the handle (Q108 S2)
@@ -1655,6 +1662,44 @@ begin
       end;
 end;
 
+(* THE PTT INDICATOR'S BACKGROUND, from its ROLE (uTXInhibitAlert).
+
+  Transmitting is red on radio one and yellow on radio two (n4af 4.46.4) --
+  unchanged.  An inhibited key-up (issue #97) is AlertColor, the operator's
+  alert swatch and the closest thing this palette has to a role
+  (docs\COLOR_ROLES_DESIGN.md: RoleAlert, default trAlert).  On the default
+  palette that is as red as radio one's TX, so the CAPTION carries the
+  difference ('INH', uStateBridge.ApplyPTT) and the keyed radio's status panel
+  carries the sentence.  Idle is the element's own designed background. *)
+function PTTIndicatorBack: tr4wColors;
+var
+   pttOn: boolean;
+begin
+   pttOn := (ActiveRadioPtr <> nil) and (ActiveRadioPtr.tPTTStatus = PTT_ON);
+
+   case PTTIndicatorRole(pttOn, (RadioState <> nil) and RadioState.TXInhibitAlert) of
+      tirInhibited:
+         begin
+         Result := AlertColor;
+         end;
+      tirTransmitting:
+         begin
+         if ActiveRadio = RadioOne then
+            begin
+            Result := trRed;        // n4af 4.46.4
+            end
+         else
+            begin
+            Result := trYellow;
+            end;
+         end;
+      else
+         begin
+         Result := TWindows[mwePTTStatus].mweBackG;
+         end;
+      end;
+end;
+
 procedure RefreshMainWindowElementColors;
 const
    { Hoisted out of DrawWindows, which is the only place it used to be needed. }
@@ -1683,17 +1728,7 @@ begin
 
       if (e = mwePTTStatus) and (ActiveRadioPtr <> nil) then
          begin
-         if ActiveRadioPtr.tPTTStatus = PTT_ON then
-            begin
-            if ActiveRadio = RadioOne then
-               begin
-               back := trRed        // n4af 4.46.4
-               end
-            else
-               begin
-               back := trYellow;
-               end;
-            end;
+         back := PTTIndicatorBack;
          end;
 
       if e = mweWSJTX then
@@ -11204,6 +11239,12 @@ begin
        logger.debug('Entering Main.PTTOn');
        ActiveRadioPtr.tPTTStatus := PTT_ON;
        PTTStatusChanged;
+       (* ISSUE #97, TRIGGER 1: TR4W HAS ASSERTED PTT.  Every PTT TR4W raises
+         comes through here -- the CPU keyer, the paddle, the footswitch port,
+         digital, a DVK message -- and only once PTT has actually gone on.
+         The paddle and footswitch arrive on their own threads; the call
+         marshals. *)
+       NoteTransmitStarting(ActiveRadioPtr);
 
        Sleep(Settings.Ptt.TurnOnDelay);
        end;
@@ -11253,6 +11294,8 @@ begin
      DrawPTTLabel:
      ActiveRadioPtr.tPTTStatus := PTT_OFF;
      PTTStatusChanged;
+     (* ...and has dropped it: the key-up TR4W began is over (issue #97). *)
+     NoteTransmitEnded(ActiveRadioPtr);
 
      end;
 end;

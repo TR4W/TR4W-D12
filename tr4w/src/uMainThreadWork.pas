@@ -131,7 +131,13 @@ type
         COALESCED, which is the whole reason this unit exists rather than
         uMainThread: the poll loop asks on every pass and the clock only needs
         drawing once per turn of the main loop. }
-      mtOnAirTime
+      mtOnAirTime,
+
+      { ISSUE #97: a radio's settled status changed, or its link came or went,
+        so the TX-inhibited alert is reviewed against it.  Coalesced: the
+        review reads the LATEST settled status of both radios, so a request
+        that finds one already pending loses nothing.  uTXInhibitView owns it. }
+      mtTXInhibitAlert
    );
 
    TMainThreadProc = procedure;

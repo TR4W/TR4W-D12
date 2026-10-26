@@ -357,7 +357,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(292, names.Count,
+         CheckEquals(293, names.Count,
                      'one name per migrated setting, plus the eleven that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -376,7 +376,10 @@ begin
                      + ' the four multipliers (M10 S2, NY4I Q4),'
                      + ' 2026-10-14; 292 with BACKUP DESTINATION, whose'
                      + ' former name BACKUP LOG FILE NAME still answers'
-                     + ' (issue #98 step 2), 2026-10-25');
+                     + ' (issue #98 step 2), 2026-10-25; 293 with PTT TX'
+                     + ' INHIBIT BEEP, the optional beep on a key-up the'
+                     + ' radio will not radiate (new, no CFGCA row, issue'
+                     + ' #97), 2026-10-26');
       finally
          names.Free;
       end;
@@ -1605,6 +1608,7 @@ const
       + '"PTT ENABLE",'
       + '"PTT LOCKOUT",'
       + '"PTT TURN ON DELAY",'
+      + '"PTT TX INHIBIT BEEP",'
       + '"PTT VIA COMMANDS",'
       + '"QSL CW MESSAGE",'
       + '"QSL MESSAGE",'

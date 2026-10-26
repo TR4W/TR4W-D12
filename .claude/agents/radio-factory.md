@@ -184,6 +184,37 @@ now and so goes again on every reconnect. The Icom `$27 $15` span read is
 still sent only from `StartSpectrum` (its enables are re-sent on connect, its
 span read is not) -- same shape, not yet fixed.
 
+**TX INHIBITED IS A RADIO CONDITION CARRIED IN THE STATUS (issue #97, phase 1,
+2026-10-26).** A radio that can say "I will not radiate when keyed" declares
+`rcReportsTXInhibit`; its parser calls the base's protected
+`SetTXInhibited(on, reason)` with the radio's own words. The base refuses an
+ON from a radio that has not declared the trait (ERROR once) -- the guard is
+the trait, never the model. `TFactoryRadioBase.Connect` clears it (a new link
+says nothing yet). The pair is guarded by its own `FTXInhibitLock`, not
+`SocketLock`: written on the reading thread, read on the polling thread.
+- **The status carries it**: `RadioStatusRecord.TXInhibited` +
+  `TXInhibitReason`, copied by `LogRadio.CaptureTXInhibit` beside `TXOn` in
+  `pFactoryRadio`, compared in `RadioStatusDiffers`. The reason is
+  `TTXInhibitReason = string[31]`, a ShortString **on purpose**: the record is
+  block-copied (seqlock snapshot, `scExchangeRadios`' `CopyMemory`) and
+  `FillChar`-zeroed, so a managed `string` there would be copied without its
+  refcount. A ShortString's `<>` compares content up to its length byte, never
+  the stale bytes past it (pinned).
+- **The program's read is `LogRadio.RadioTXInhibited(rig, out reason)`**, from
+  the SETTLED status (`ReadRadioStatus`), the same snapshot `TXOn` is taken from
+  for `PTTStatusChanged`. Nothing above the factory reads the driver.
+- **The K4** parses `TSn;` (0 off, 1 on, reason `"TX test mode"`), asks `TS;`
+  in `Connect` and from `PollRadioState` every `K4_TX_TEST_POLL_MS` (5 s) on its
+  own clock -- NOT appended to every `IF;`. Whether it PUSHES `TS` under
+  auto-info is unverified (`docs/BENCH_QUEUE.md`); do not claim it does.
+- **Only the K4 declares it**, pinned by a registry walk
+  (`uTestTXInhibit.Test_OnlyTheK4DeclaresTheTrait`). The K3/K3S/KX have no
+  documented equivalent: Hamlib's `rigs/kenwood/k3.c`/`elecraft.c` carry no TX
+  TEST read, and `uRadioElecraftSerial` already notes `TQ` reports TX TEST as
+  transmitting rather than as a separate state. Candidates not wired: the Flex
+  API's `interlock` reason (`uRadioFlexAPI.ProcessInterlockStatus` reads only
+  `state`), the IC-7610's `$16 $66`, the FT-990/FT-1000D read-flags inhibit bits.
+
 **`uRadioPolling.BeginPolling` is `function(aParameter: Pointer): DWORD;
 stdcall`** (`TF.TTR4WThreadStart`, pointer audit P1, 2026-10-16) and reads its
 RadioObject as `RadioPtr(aParameter)` -- `SetUpRadioInterface` passes `@Self`

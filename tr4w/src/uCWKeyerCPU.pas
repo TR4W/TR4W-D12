@@ -31,7 +31,7 @@ unit uCWKeyerCPU;
 interface
 
 uses
-   VC, uCWKeyerBase;
+   VC, LogRadio, uCWKeyerBase;
 
 type
    TCWKeyerCPU = class(TCWKeyer)
@@ -44,6 +44,10 @@ type
       procedure Flush; override;
       procedure SetSpeed(wpm: integer); override;
       // No tune: Settings.Cw.TuneWithDits is functionally dead -- out of scope.
+      (* ActiveRadioPtr, swapped or not: the CPU keyer drives the ACTIVE radio's
+        keying line (LOGK1EA DriveCWLine(ActiveRadioPtr, ...)), and the port
+        swap in SetUpToSendOnInactiveRadio is commented out, as it was in D7. *)
+      function KeyedRadio: RadioPtr; override;
    end;
 
 implementation
@@ -56,9 +60,13 @@ uses
    TF,         // tCreateThread
    MainUnit,   // PTTOn, logger
    uConfigValues, // Config.PTTEnable and the paddle settings
-   LogRadio,   // ActiveRadioPtr, PTT_OFF
    LogK1EA,    // CPUKeyer, CWThreadProc
    uWinKey;    // wkBusy (Q8)
+
+function TCWKeyerCPU.KeyedRadio: RadioPtr;
+begin
+   Result := ActiveRadioPtr;
+end;
 
 constructor TCWKeyerCPU.Create;
 begin

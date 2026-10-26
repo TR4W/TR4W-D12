@@ -39,7 +39,8 @@ unit uCWKeyerBase;
 interface
 
 uses
-   VC;   // Str160
+   VC,         // Str160
+   LogRadio;   // RadioPtr -- KeyedRadio (issue #97)
 
 type
    TCWKeyerCapability = (
@@ -67,7 +68,8 @@ type
       // Make the radio that is about to key the ONLY one keying.  Cross-radio
       // policy, so it belongs to the keyer rather than to a radio driver: a
       // driver would have to know about the other radio to enforce it.
-      // Takes a bool, not a RadioPtr, to keep LogRadio out of this interface.
+      // Takes a bool, not a RadioPtr -- written to keep LogRadio out of this
+      // interface, which KeyedRadio (below) has since brought in.
       //
       // Default no-op, and NOT because the other keyers are single-radio -- the
       // WinKeyer and the YCCC box both have TWO keying outputs and switch
@@ -84,6 +86,16 @@ type
       procedure EnsureSoleTransmitter(sendingOnActiveRadio: boolean); virtual;
       procedure SetSpeed(wpm: integer); virtual;
       procedure ToggleTune; virtual;                    // default no-op
+      (* WHICH RADIO THIS KEYER WILL KEY WITH THE NEXT MESSAGE, OR nil WHEN
+        IT WILL KEY NONE.  Each adapter STATES it, because the answer differs
+        by keyer and nothing outside the factory may branch on keyer type:
+        CW-by-CAT and the WinKeyer follow the SO2R swap (LogCW.
+        KeyerOutputRadioPtr), the CPU keyer always drives the ACTIVE radio
+        line, and the YCCC box keys its own TX radio.  Asked by the TX-inhibit
+        warning (issue #97) so it checks the radio that is really keyed.
+        Default nil: a keyer that does not say keys nothing we can name, and
+        uTestCWKeyer pins that all four adapters say. *)
+      function KeyedRadio: RadioPtr; virtual;
       function Supports(cap: TCWKeyerCapability): boolean;
       property Name: string read FName;
       property Capabilities: TCWKeyerCapabilitySet read FCapabilities;
@@ -135,7 +147,7 @@ implementation
 
 uses
    uSettingsModel,   // Settings -- where retired CFGCA rows live
-   SysUtils, Log4D, MainUnit, uWinKey, uYCCCSO2R, LogRadio, uRadioRegistry;
+   SysUtils, Log4D, MainUnit, uWinKey, uYCCCSO2R, uRadioRegistry;
 
 var
    // Log-on-change memory for ActiveCWKeyer.  Read/written from more than one
@@ -171,6 +183,11 @@ end;
 procedure TCWKeyer.StopSending;
 begin
    // Default: no-op.
+end;
+
+function TCWKeyer.KeyedRadio: RadioPtr;
+begin
+   Result := nil;
 end;
 
 procedure TCWKeyer.EnsureSoleTransmitter(sendingOnActiveRadio: boolean);

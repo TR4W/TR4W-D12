@@ -86,6 +86,7 @@ resourcestring
    RS_PTT_NOPOLLDURINGPTT                     = 'Stop polling the radio while transmitting';
    RS_PTT_VIACOMMANDS                         = 'Key the transmitter with a CAT command';
    RS_PTT_LOCKOUT                             = 'Lock out PTT';
+   RS_PTT_TXINHIBITBEEP                       = 'Beep when keying a radio that will not transmit';
    RS_OPERATING_AUTOCALLTERMINATE             = 'Stop sending when the call window changes';
    RS_OPERATING_AUTORETURNTOCQ                = 'Return to CQ mode after logging';
    RS_OPERATING_ESCAPEEXITSSAP                = 'Escape leaves search and pounce';

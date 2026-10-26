@@ -40,6 +40,84 @@ corpus checks the bytes; the menu route and the SCP upload have not been run.
 A sponsor that wants the call as the file name (Georgia QP, Russian DX) gets a
 manual rename by the operator. NY4I, 2026-10-26: no export option for it.
 
+## Added 2026-10-26 -- K4 TX TEST MODE IS SHOWN ON A KEY-UP (issue #97 phase 2)
+
+Unit-tested: the decision (`uTestTXInhibitAlert`), a CW message through the
+keying facade on an inhibited radio, SO2R and a down link included
+(`uTestCWKeyer`), and the PTT indicator and status panel on the streamed main
+window (`uTestStatusAndNotice`). What no test can see is a real K4 and a real
+screen. Put the K4 in TX TEST mode (`TS1`) and keep tr4w.log open.
+
+- [x] **The INH display -- CONFIRMED 2026-10-26, NY4I** ("INH works nicely",
+      K4 in TX test mode, uncommitted phase 2 build). The split stands: `INH`
+      in the three-cell PTT box, the sentence on the status panel. The items
+      below that he did not report on stay open.
+- [ ] **Does a K4 in TX TEST report TX at all while its icon flashes?** Watch a
+      TRACE log during a long CQ (20 s or more) in test mode: does `TX;` (AI4
+      and up), `IF` with the TX flag, or a `TQ` answer say TRANSMITTING? If it
+      does NOT, a key-up TR4W started is never confirmed by the radio, and the
+      alert DROPS 3 s after the CQ starts (the wait in uTXInhibitView) while
+      the CQ is still going. Report which, network and serial.
+- [ ] **F1 CQ turns the indicator red AT ONCE.** CW, F1. EXPECT the PTT box
+      (between USER INFO and OP MODE) to read `INH` on the alert colour, and
+      the radio's status panel (bottom strip, radio 1's quarter) to read
+      `TX INHIBITED: TX test mode`, as the CQ starts -- not a poll later. One
+      line in tr4w.log: `[TX inhibit] <radio> is keyed and reports TX
+      inhibited (TX test mode) -- no RF is going out`. Repeat on SSB with a DVK
+      message (F1 on a .WAV).
+- [ ] **The footswitch does too.** Key from the K4's footswitch or mic PTT (TR4W
+      did not start it). EXPECT the same box and panel within about a poll.
+      Serial K4 at AI2: TX is learned from the poll, so note the delay.
+- [ ] **It clears on unkey.** When the CQ ends, or the footswitch is released,
+      EXPECT the box back to `OFF` on its normal colour and the status panel
+      empty. Also take the K4 OUT of test mode mid-transmission: EXPECT it to
+      clear at once.
+- [ ] **One log line per key-up.** Send CQ three times (or AUTO-CQ). EXPECT
+      exactly three `[TX inhibit]` lines -- not one per poll.
+- [ ] **The beep, when enabled.** Preferences, PTT: tick *Beep when keying a
+      radio that will not transmit* (`PTT TX INHIBIT BEEP`). BEEP ENABLE must
+      also be on -- it is the master cue every beep obeys. EXPECT one warning
+      beep per key-up and none with the box unticked.
+- [ ] **No dialog, ever**, and nothing at all while receiving in test mode.
+- [ ] **SO2R, keyers swapped (issue #97 review).** Two radios on CW-by-CAT,
+      radio 2 in test mode, send to the inactive radio (Ctrl-A or a dueling
+      CQ), then press SPACE in S&P with nothing in the call window (it sends
+      MY CALL through SendStringAndStop). EXPECT radio 2 to key it -- it used
+      to sit in radio 2's buffer unsent -- and the warning on radio 2's
+      status panel, not radio 1's.
+- [ ] **Out of test mode, nothing changes.** F1 CQ: `ON ` on radio 1's red, as
+      before, no status text, no log line.
+
+## Added 2026-10-26 -- K4 TX TEST MODE REACHES THE STATUS (issue #97 phase 1)
+
+Unit-tested: the `TSn;` parse, a reply split across reads, the connect-time
+`TS;` against a loopback server, the status change detection
+(`uTestTXInhibit`, `uTestRadioSocketNoRead`). These items need no key-up, so
+the evidence is the log (what a key-up SHOWS is the phase 2 entry above). Set DEBUG LOG LEVEL = DEBUG (TRACE for
+the second item's raw lines).
+
+- [ ] **Does the K4 PUSH `TS` when test mode is toggled at the front panel?**
+      TR4W asks `TS;` at every link-up and then every 5 s, because whether the
+      radio sends it unsolicited under auto-info is UNKNOWN. Network K4 (AI5),
+      then serial K4 (AI2). Toggle TX TEST on and off at the rig several times,
+      a few seconds apart. EXPECT `[TX inhibit] ON -- the radio reports: TX
+      test mode` and `[TX inhibit] OFF` for each toggle. The QUESTION is the
+      delay: if every line lands within a fraction of a second of the toggle,
+      the K4 pushes it; if they land up to 5 s late, only the poll is finding
+      it. At TRACE, a pushed one shows `Received from radio: (TS1)` with no
+      `TS;` sent just before it. Report which, per transport -- if it is
+      pushed, the 5 s poll can go.
+- [ ] **How fast does the K4 report TX state?** Matters only for phase 2's
+      second trigger (keying from a footswitch or mic PTT, which TR4W did not
+      start). Key the K4 from the front panel / PTT, network and serial. At
+      TRACE, measure from the key-down to the `TX` line in `tr4w.log`, and
+      from key-up to `RX`. (Serial auto-info never reports a T/R transition
+      on a K3S, so on serial expect it to arrive only with the next `IF;`
+      poll -- note the delay you see.)
+- [ ] **No change to the frequency poll.** Serial K4 at a fast FREQUENCY POLL
+      RATE: EXPECT the VFO display to track the knob as before, and one `TS;`
+      roughly every 5 s in a TRACE log -- not one per `IF;`.
+
 ## Added 2026-10-26 -- THE NEEDS STRIPS AFTER A QSO IS LOGGED (issue #100)
 
 Unit-tested on the real form and sheets

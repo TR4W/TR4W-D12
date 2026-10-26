@@ -96,6 +96,7 @@ uses
    uWSJTXState,
    uRadioState,    // PTT as state, set from the radio polling thread
    uKeyerState,    // WinKeyer as state, set from the two read threads
+   uAppStrings,    // STXInhibitedIndicator -- issue #97
    Tree;           // PTTStatusString -- the ONE rendering of PTT_ON/PTT_OFF
 
 type
@@ -174,6 +175,11 @@ begin
                     IfThen(Settings.Wsjtx.Enabled, 'show', 'hide')]);
       end;
 
+   if TR4WMainForm = nil then    (* see ApplyPTT *)
+      begin
+      Exit;
+      end;
+
    if not Settings.Wsjtx.Enabled then
       begin
       TR4WMainForm.pnlWSJTX.Caption := '';
@@ -223,7 +229,9 @@ begin
      Note 'ON ' carries a trailing space in that table. Preserved deliberately:
      this is a behaviour-preserving move of WHERE the decision is made, not a
      change to what the operator sees. }
-   if RadioState = nil then
+   (* NO FORM, NOTHING TO PAINT -- a queued apply can outlive the form (at
+     shutdown, and in a test that frees it), and this writes a field of it. *)
+   if (RadioState = nil) or (TR4WMainForm = nil) then
       begin
       Exit;
       end;
@@ -232,7 +240,16 @@ begin
      value to be decided, and the Win32 ratchet counts them -- it went 65 to 66
      on the first draft of this, which was the right complaint about the wrong
      thing: the surface had not grown, the same write had been spelt twice. }
-   if RadioState.PTTOn then
+   (* ISSUE #97 FIRST: a key-up the radio says will not radiate.  The box is
+     three cells wide, so it says INH; the keyed radio's status panel carries
+     "TX INHIBITED: <reason>" (uTXInhibitView).  The caption change is also
+     what repaints the colour -- TElementPanel reports it and the sweep runs
+     MainUnit.PTTIndicatorBack, the one rule for this box. *)
+   if RadioState.TXInhibitAlert then
+      begin
+      caption := STXInhibitedIndicator;
+      end
+   else if RadioState.PTTOn then
       begin
       caption := PTTStatusString[PTT_ON];
       end
@@ -269,7 +286,7 @@ var
    family, version: integer;
    caption: string;
 begin
-   if KeyerState = nil then
+   if (KeyerState = nil) or (TR4WMainForm = nil) then    (* see ApplyPTT *)
       begin
       Exit;
       end;
@@ -365,6 +382,11 @@ begin
 end;
 
 finalization
-   FreeAndNil(GBridge);
+   (* UNQUEUED, THEN FREED.  InstallStateBridge and every off-thread state
+     change queue calls against GBridge, and the LCL drains its async queue
+     after unit finalization -- a call still queued would run on freed memory.
+     FreeAndNil alone stood here; uMainForm.FreeDeferralTarget is the one
+     statement of the safe order. *)
+   FreeDeferralTarget(TObject(GBridge));
 
 end.

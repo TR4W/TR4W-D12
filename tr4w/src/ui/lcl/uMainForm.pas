@@ -693,6 +693,13 @@ procedure SetStatusText(const aOwner: TStatusOwner; const aText: string);
   is how a test -- or anything else -- asks; there is no shadow flag. *)
 function  StatusText(const aOwner: TStatusOwner): string;
 
+(* FREE AN OBJECT THAT Application.QueueAsyncCall MAY STILL HOLD A CALL FOR --
+  unqueue its calls first, then free it.  For a unit's finalization: the LCL
+  drains the async queue AFTER unit finalization, so a queued call against a
+  freed target runs on freed memory.  The body says more.  Public since
+  2026-10-26: uStateBridge's GBridge is its second caller. *)
+procedure FreeDeferralTarget(var aTarget: TObject);
+
 (* SHARE THE STRIP'S WIDTH OUT BETWEEN ITS PANELS.
 
   A TStatusBar PANEL HAS A FIXED WIDTH AND DOES NOT FOLLOW ITS PARENT.  The

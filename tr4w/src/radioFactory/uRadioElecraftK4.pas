@@ -37,6 +37,13 @@ Type TK4Radio = class(TElecraftRadio)
       // stopped, which is also how StartSpectrum/StopSpectrum stay idempotent.
       FSpectrumThread: TK4SpectrumThread;
 
+      // When TS; (TX test mode) was last asked -- see AskTXTestIfDue.
+      FTXTestAskedTick: QWord;
+
+      // Ask TS; if K4_TX_TEST_POLL_MS has passed since it was last asked.
+      procedure AskTXTestIfDue;
+      procedure AskTXTest;
+
       // Handed to the thread as its callback so the Assigned check on
       // OnSpectrumFrame happens per frame -- a window that unsubscribes stops
       // being called immediately, rather than the thread holding a handler it
@@ -174,9 +181,11 @@ begin
    // network, because which transport carries it is a separate question and is
    // answered by SpectrumAvailable below.  A constructor could not answer it
    // anyway: serialPort is assigned by TRadioFactory after this runs.
+   // rcReportsTXInhibit: TS<n>; reports TX TEST mode (issue #97) -- see the
+   // TS arm of ProcessMessage.
    FCapabilities.Flags := FCapabilities.Flags +
                           [rcCWByCAT, rcCWSpeedSync, rcPlayDVK, rcSpectrum,
-                           rcSplitClearedByModeChange];
+                           rcSplitClearedByModeChange, rcReportsTXInhibit];
    // ---- CW-by-CAT framing --------------------------------------------------
    // Same 22-and-pad rule as the serial Elecrafts: a short KY is swallowed when
    // it follows the keyer abort TR4W sends before every message, and padding
@@ -419,6 +428,46 @@ begin
          begin
          Self.SendToRadio('#SPN;');
          end;
+
+      (* ASK WHETHER TX TEST MODE IS ON, ON EVERY LINK-UP (issue #97), for the
+        same reason as the span: the base Connect has just forgotten what the
+        last session said, and whether the K4 PUSHES TS under auto-info is
+        unverified -- so it is asked, here and from the poll, rather than
+        waited for. *)
+      AskTXTest;
+      end;
+end;
+
+(* TX TEST MODE -- `TSn;`, n = 0 off, 1 on (K4 Programmer's Reference: "If TX
+  test mode is in effect, the TX icon flashes and the transceiver will not put
+  out power, though it still keys any downstream gear").
+
+  ASKED, NOT TRUSTED TO ARRIVE.  Whether the K4 sends TS unsolicited when test
+  mode is toggled at the front panel is a bench question nobody has answered
+  (docs/BENCH_QUEUE.md).  So TR4W asks at link-up and every K4_TX_TEST_POLL_MS
+  after that.  If the bench shows it IS pushed, the poll can go; until then it
+  is the only thing that guarantees the state is ever learned.
+
+  MODEST ON PURPOSE.  Test mode is set by hand and changes rarely, and on
+  serial every command in the poll costs roughly 125 ms of CAT time while
+  transmitting (see uRadioPolling's flow-control note).  One TS; in five
+  seconds does not touch the frequency/mode poll's own cadence -- it is a
+  separate command on its own clock, not added to every IF;. *)
+const
+   K4_TX_TEST_POLL_MS = 5000;
+   K4_TX_TEST_REASON  = 'TX test mode';
+
+procedure TK4Radio.AskTXTest;
+begin
+   FTXTestAskedTick := GetTickCount64;
+   Self.SendToRadio('TS;');
+end;
+
+procedure TK4Radio.AskTXTestIfDue;
+begin
+   if GetTickCount64 - FTXTestAskedTick >= K4_TX_TEST_POLL_MS then
+      begin
+      AskTXTest;
       end;
 end;
 procedure TK4Radio.Transmit;
@@ -805,7 +854,7 @@ begin
       SetLength(sData,length(sData)-1);
       end;
 
-   Case AnsiIndexText(AnsiUppercase(sCommand), ['AI','BI','BN','DT','FA','FB','FT','IF','KS','MA','MD','RT','RX','TX','XT','RO','FP','PO']) of
+   Case AnsiIndexText(AnsiUppercase(sCommand), ['AI','BI','BN','DT','FA','FB','FT','IF','KS','MA','MD','RT','RX','TX','XT','RO','FP','PO','TS']) of
       0: begin                                     // AI
          logger.debug('[ProcessMessage] AI command set to %s',[sData]);
          end;
@@ -979,6 +1028,24 @@ begin
          // an expected message and is handled, not ignored by accident.
          logger.Trace('[ProcessMessage] PONG keep-alive response');
          end;
+      18:begin    // TS -- TX test mode; see AskTXTest
+         // Compared as text: SysUtils.StrToIntDef takes an AnsiString in FPC
+         // 3.2.2, so converting would narrow the native string for nothing.
+         if Copy(sData, 1, 1) = '0' then
+            begin
+            Self.SetTXInhibited(False, '');
+            end
+         else if Copy(sData, 1, 1) = '1' then
+            begin
+            Self.SetTXInhibited(True, K4_TX_TEST_REASON);
+            end
+         else
+            begin
+            // Neither documented value: say so and leave the state alone,
+            // rather than guess which way an unknown answer leans.
+            logger.Warn('[ProcessMessage] TS (TX test) with an undocumented value (%s) -- ignored',[sData]);
+            end;
+         end;
    end; // of case
    if firstProcessMessage then
       begin
@@ -1022,6 +1089,10 @@ begin
       // PING; at 1 Hz from Connect's pollingInterval.
       Self.SendToRadio('PING;');
       end;
+
+   // Both transports: see AskTXTest.  On its own clock, so the IF; above
+   // keeps its cadence.
+   AskTXTestIfDue;
 end;
 
 procedure TK4Radio.SetAIMode(i: integer);

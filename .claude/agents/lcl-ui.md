@@ -181,6 +181,29 @@ WHEN they are rewritten is the engine (`LOGEDIT.ShowNeedsForCall`, asked by
 problem -- do not add an `Invalidate` or a timer. A test can drive them on the
 streamed form: `uTestStatusAndNotice`'s `EnsureMainForm` + `BindMainGrids`.
 
+**The PTT box has ONE colour rule and ONE caption rule** (issue #97,
+2026-10-26). Colour: `MainUnit.PTTIndicatorBack`, from
+`uTXInhibitAlert.PTTIndicatorRole` (idle / transmitting / inhibited), used by
+the sweep. Caption: `uStateBridge.ApplyPTT`, from `RadioState` (`PTTOn`,
+`TXInhibitAlert`). A caption change is what repaints the colour
+(`ElementCaptionChanged` requests the sweep) -- do not add a second colour
+write. The box is THREE cells wide, so an inhibited key-up says `INH`
+(`STXInhibitedIndicator`) and the sentence `TX INHIBITED: <reason>` goes on the
+keyed radio's status panel. `uTXInhibitView` owns when, on the main thread only
+(the `mtTXInhibitAlert` job); it clears only a status text it posted, by asking
+`CurrentStatusText`. On the default palette `AlertColor` (trAlert) is the same
+red as radio one's TX, so the caption, not the colour, is the distinguishing
+signal there. NY4I confirmed the `INH` display on his K4 (2026-10-26).
+`uTXInhibitView`'s triggers sit inside `PTTOn` and `AddStringToBuffer`, so
+they catch everything and never raise; the status sentence is built by
+`TXInhibitedStatusText`, which falls back to the English if a (shipped, fuzzy)
+translation of the format will not take the reason. A key-up TR4W started is
+reviewed once, not once per character (`GKeyUpNoted`).
+
+`uStateBridge`'s three `Apply*` exit when `TR4WMainForm` is nil (a queued
+apply can outlive the form), and `GBridge` is freed through
+`uMainForm.FreeDeferralTarget`, which is public now for that reason.
+
 ## Coordinate with
 
 Every other agent — each owns a window. `i18n` on any caption.

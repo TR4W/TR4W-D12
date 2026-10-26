@@ -33,7 +33,7 @@ where a property does not. It is a staging post: every row that reaches the
 settings model leaves the record, and it is down to a handful of fields.
 Read `Config.X` as "a station setting that has not finished moving yet".
 
-## Settings that have moved (281)
+## Settings that have moved (282)
 
 These are published properties. The command name is DERIVED from the
 property path unless an alias says otherwise, and an alias exists only
@@ -224,6 +224,7 @@ comes last, a word run together.
 | `PTT ENABLE` |  | global | `Settings.Ptt.Enable` | boolean |  |
 | `PTT LOCKOUT` |  | global | `Settings.Ptt.Lockout` | boolean |  |
 | `PTT TURN ON DELAY` |  | global | `Settings.Ptt.TurnOnDelay` | TPttTurnOnDelay |  |
+| `PTT TX INHIBIT BEEP` |  | global | `Settings.Ptt.TxInhibitBeep` | boolean |  |
 | `PTT VIA COMMANDS` |  | global | `Settings.Ptt.ViaCommands` | boolean |  |
 | `QSL CW MESSAGE` | `QSL MESSAGE` | **CONTEST** | `Settings.Messages.QslCw` | string |  |
 | `QSL MODE` |  | **CONTEST** | `Settings.Contest.QslMode` | string |  |
@@ -346,7 +347,7 @@ is read out of the live settings object, so if the generator and the program
 ever disagree, the generator is wrong. `tools/settings_inventory_doc.py`
 makes that comparison every time it runs and refuses to write this file
 when the two differ; when this file was written they agreed exactly on all
-292 command names.
+293 command names.
 
 Run `tools/settings_inventory.py`, then `tools/settings_inventory_doc.py`.
 

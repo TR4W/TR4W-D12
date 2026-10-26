@@ -56,6 +56,11 @@ uses
 // on a nominated radio.
 procedure CWByCATSend(radio: RadioPtr; const Msg: Str160);
 
+(* WILL CWByCATSend KEY THIS RADIO AT ALL -- the operator asked for CAT keying
+  on it (CWByCAT), the radio can (rcCWByCAT), and it has a driver.  Exactly
+  CWByCATSends own gate, which now asks this, so the two cannot disagree. *)
+function CATCanKey(radio: RadioPtr): boolean;
+
 type
    TCWKeyerCAT = class(TCWKeyer)
    public
@@ -67,6 +72,9 @@ type
       procedure Flush; override;
       procedure StopSending; override;
       procedure EnsureSoleTransmitter(sendingOnActiveRadio: boolean); override;
+      (* The radio SendString keys -- LogCW.KeyerOutputRadioPtr -- or nil when
+        CATCanKey says CWByCATSend will key nothing there. *)
+      function KeyedRadio: RadioPtr; override;
       // SetSpeed: inherited no-op.  Radio speed-sync is orthogonal to which
       // keyer keys (it must fire even when the WinKeyer keys), so it stays in
       // the LogCW facade, not here.
@@ -118,6 +126,18 @@ begin
                 [radio.RadioName]);
 end;
 
+function CATCanKey(radio: RadioPtr): boolean;
+begin
+   (* No driver means construction was refused or failed, which
+     SetUpRadioInterface has already reported as an ERROR.  There is no legacy
+     path left to fall back to, and doing nothing beats half-keying through
+     code nobody else runs. *)
+   Result := (radio <> nil) and
+             radio.CWByCAT and
+             radio.HasCapability(rcCWByCAT) and
+             (radio.tFactoryObject <> nil);
+end;
+
 procedure CWByCATSend(radio: RadioPtr; const Msg: Str160);
 var
    frameRule: uCWFraming.TCWFrameRule;
@@ -151,23 +171,15 @@ begin
        failure.  It is also the shape of every defect this file documents: TCI
        keyed nothing, and the TS-850 declared the capability with no frame
        rule. }
-   if not radio.CWByCAT then
+   if not CATCanKey(radio) then
       begin
-      Exit;
-      end;
-
-   if not radio.HasCapability(rcCWByCAT) then
-      begin
-      ReportCannotKeyByCAT(radio);
-      Exit;
-      end;
-
-   // No driver means construction was refused or failed, which
-   // SetUpRadioInterface has already reported as an ERROR.  There is no legacy
-   // path left to fall back to, and doing nothing beats half-keying through
-   // code nobody else runs.
-   if radio.tFactoryObject = nil then
-      begin
+      (* The one failure of the three that is REPORTED -- see above.  CWByCAT
+        off is silent, and no driver was already reported as an ERROR by
+        SetUpRadioInterface. *)
+      if radio.CWByCAT and (not radio.HasCapability(rcCWByCAT)) then
+         begin
+         ReportCannotKeyByCAT(radio);
+         end;
       Exit;
       end;
 
@@ -283,15 +295,20 @@ end;
 
 procedure TCWKeyerCAT.SendString(const Msg: Str160; Tone: integer);
 begin
-   // Verbatim from LogCW.AddStringToBuffer's CAT arm; Tone is not a CAT
-   // concept and is ignored.
-   if KeyersSwapped then
+   // From LogCW.AddStringToBuffer's CAT arm; Tone is not a CAT concept and is
+   // ignored.  The radio is LogCW.KeyerOutputRadioPtr -- the KeyersSwapped rule
+   // this carried inline (InactiveRadioPtr when swapped, else ActiveRadioPtr),
+   // stated once for this keyer and the WinKeyer.  uTestCWKeyer pins the
+   // routing both ways.
+   CWByCATSend(KeyerOutputRadioPtr, Msg);
+end;
+
+function TCWKeyerCAT.KeyedRadio: RadioPtr;
+begin
+   Result := KeyerOutputRadioPtr;
+   if not CATCanKey(Result) then
       begin
-      CWByCATSend(InactiveRadioPtr, Msg);
-      end
-   else
-      begin
-      CWByCATSend(ActiveRadioPtr, Msg);
+      Result := nil;
       end;
 end;
 

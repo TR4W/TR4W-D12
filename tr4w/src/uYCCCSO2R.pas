@@ -75,6 +75,12 @@ procedure YCCCClose;
 { SO2R switching - call from SwapRadios with 1=Radio1 or 2=Radio2 }
 procedure YCCCSetActiveRadio(radio: integer);
 
+(* WHICH RADIO THE BOX TRANSMITS ON: 2 when its TX2 bit is set, else 1 -- the
+  state YCCCSetActiveRadio last sent.  The YCCC keyer adapter answers
+  KeyedRadio from it (issue #97).  1 off Windows, where the box is never
+  opened. *)
+function  YCCCTxRadio: integer;
+
 { Stereo RX toggle - call from ToggleStereoPin with current StereoPinState }
 procedure YCCCSetStereo(stereo: boolean);
 
@@ -521,7 +527,6 @@ function YCCCOpen: boolean;
 begin
    Result := False;
 
-   logger := TLogLogger.GetLogger('uYCCCSO2R');
    logger.Debug('YCCC opening device');
 
    FHandle := YCCCFindDevice;
@@ -672,6 +677,18 @@ begin
    YCCCSendCmd(CMD_SO2R_STATE, FSO2RState);
 end;
 
+function YCCCTxRadio: integer;
+begin
+   if (FSO2RState and SO2R_TX2) <> 0 then
+      begin
+      Result := 2;
+      end
+   else
+      begin
+      Result := 1;
+      end;
+end;
+
 procedure YCCCSetStereo(stereo: boolean);
 begin
    if stereo then
@@ -804,6 +821,11 @@ procedure YCCCSetActiveRadio(radio: integer);
 begin
 end;
 
+function YCCCTxRadio: integer;
+begin
+   Result := 1;
+end;
+
 procedure YCCCSetStereo(stereo: boolean);
 begin
 end;
@@ -834,6 +856,16 @@ procedure YCCCSetSpeed(wpm: integer);
 begin
 end;
 
+{$ENDIF}
+
+{$IFDEF WINDOWS}
+initialization
+   (* AT LOAD, not in YCCCOpen, where it used to be assigned: YCCCSetActiveRadio
+     and YCCCSetStereo log, and a call before the box was opened dereferenced
+     a nil logger.  The program only calls them while ycccActive, so it was
+     latent; a test asking the box which radio it keys found it (issue #97
+     review, 2026-10-26). *)
+   logger := TLogLogger.GetLogger('uYCCCSO2R');
 {$ENDIF}
 
 end.

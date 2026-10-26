@@ -125,6 +125,18 @@ var
     digits at every startup. *)
 
 procedure AddStringToBuffer(Msg: Str160; Tone: integer);
+
+(* THE RADIO A SWITCHED KEYER OUTPUT POINTS AT -- the inactive one while the
+  keyers are swapped (SetUpToSendOnInactiveRadio), else the active one.  The
+  rule CW-by-CAT routes by and the WinKeyer's output follows
+  (wkSetKeyerOutput); stated once, for both adapters.  NOT the CPU keyer's or
+  the YCCC box's -- see KeyedRadioPtr. *)
+function KeyerOutputRadioPtr: RadioPtr;
+
+(* THE RADIO THE NEXT CW MESSAGE KEYS, OR nil IF NONE: the active keyer's own
+  answer (TCWKeyer.KeyedRadio).  The TX-inhibit warning (issue #97) checks
+  this radio. *)
+function KeyedRadioPtr: RadioPtr;
 procedure BeginCWCapture;   // '=' repeat-last-CW-message
 procedure EndCWCapture;
 procedure AppendConfigFile(AddedLine: Str160);
@@ -276,6 +288,7 @@ uses
   (* LogStoreRecordContestStatement -- a line-input memory edit is committed
      to the log as it is made (R2, 2026-10-23). *)
   uLogStore,
+  uTXInhibitView,   (* NoteTransmitStarting -- issue #97, trigger 1 *)
   MainUnit; {KK1L: 6.72 Allows use of SniffOutControlCharacters}
 
 type
@@ -305,6 +318,32 @@ begin
       end;
 end;
 
+(* ISSUE #97, TRIGGER 1: TR4W IS ABOUT TO KEY A RADIO WITH CW.  Called from the
+  two arms of AddStringToBuffer that SEND -- every CW message, every F-key, the
+  autosend start, the keyboard window and a repeat come through them, so a
+  check per caller would be thirty-odd copies.  Inside the arms, so only where
+  the send is known to proceed: not with CW off, not in the digital arm (which
+  keys through PTTOn's own hook), not for the CW-by-CAT terminator (a control
+  sentinel) and not for '' (the sidetone toggle sends one).  The radio is the
+  keyer's own answer, and nil -- a CW-by-CAT radio whose CAT keying is off --
+  means nothing is keyed.  Asked BEFORE the send so the warning is not behind
+  the radio's TX report; NoteTransmitStarting never raises into this path. *)
+procedure NoteCWKeyUp(const Msg: Str160);
+var
+   radio: RadioPtr;
+begin
+   if (Msg = '') or (Msg = CWByCATBufferTerminator) then
+      begin
+      Exit;
+      end;
+
+   radio := KeyedRadioPtr;
+   if radio <> nil then
+      begin
+      NoteTransmitStarting(radio);
+      end;
+end;
+
 procedure AddStringToBuffer(Msg: Str160; Tone: integer);
 var
   i                                     : integer;
@@ -323,6 +362,7 @@ begin
    if ( (Msg = CWByCATBufferTerminator) or
         ((Config.CWEnable and CWEnabled and IsCWByCATActive )) ) then   // ny4i 4.44.5    + Issue 111
       begin
+      NoteCWKeyUp(Msg);    (* issue #97 -- see NoteCWKeyUp *)
       // Gate expression unchanged (note the terminator BYPASSES the enable
       // gates on purpose).  The arm body moved verbatim into
       // TCWKeyerCAT.SendString, including the KeyersSwapped resolution.
@@ -378,8 +418,26 @@ begin
     // (ActiveCWKeyer cannot return KeyerCAT here in practice -- IsCWByCATActive
     // was just tested False above; a mid-call flip harmlessly routes to the CAT
     // adapter, which is the correct destination anyway.)
+    NoteCWKeyUp(Msg);    (* issue #97 -- see NoteCWKeyUp *)
     ActiveCWKeyer.SendString(Msg, Tone);
   end;
+end;
+
+function KeyerOutputRadioPtr: RadioPtr;
+begin
+   if KeyersSwapped then
+      begin
+      Result := InactiveRadioPtr;
+      end
+   else
+      begin
+      Result := ActiveRadioPtr;
+      end;
+end;
+
+function KeyedRadioPtr: RadioPtr;
+begin
+   Result := ActiveCWKeyer.KeyedRadio;
 end;
 
 {------------------------------------------------------------------------------
@@ -583,7 +641,14 @@ begin
        begin
        // Q7 no longer bypasses the factory: the terminator goes through the
        // CAT keyer like everything else now that the send logic lives there.
-       uCWKeyerCAT.CWByCATSend(ActiveRadioPtr, CWByCATBufferTerminator); // ny4i Issue 149 This closes and sends the buffer
+       //
+       // AND TO THE SAME RADIO AS THE TEXT (2026-10-26).  This sent the
+       // terminator to ActiveRadioPtr while AddStringToBuffer had routed the
+       // text by KeyerOutputRadioPtr -- the INACTIVE radio while the keyers are
+       // swapped -- and CWByCATSend holds a radio's text until ITS terminator,
+       // so the text sat in the other radio's buffer unsent.  The CAT keyer's
+       // own SendString routes both.
+       KeyerCAT.SendString(CWByCATBufferTerminator, Config.CWTone); // ny4i Issue 149 This closes and sends the buffer
        end;
         end;
      Exit;

@@ -1360,6 +1360,7 @@ type
       FViaCommands: boolean;
       FNoPollDuring: boolean;
       FTurnOnDelay: TPttTurnOnDelay;
+      FTxInhibitBeep: boolean;
    public
       constructor Create;
    published
@@ -1378,6 +1379,12 @@ type
       property NoPollDuring: boolean read FNoPollDuring write FNoPollDuring;
       // Was Config.PTTTurnOnDelay, in milliseconds.
       property TurnOnDelay: TPttTurnOnDelay read FTurnOnDelay write FTurnOnDelay;
+      (* NEW, issue #97 (2026-10-26): beep once when a key-up starts on a
+        radio that reports it will not radiate (a K4 in TX test mode).  Off
+        by default; the red indicator and the status line are always shown.
+        It goes through DoABeep, so BEEP ENABLE -- the master audible cue --
+        must also be on.  No setter: it is read at the key-up. *)
+      property TxInhibitBeep: boolean read FTxInhibitBeep write FTxInhibitBeep;
    end;
 
    (*
@@ -4623,6 +4630,7 @@ begin
    FViaCommands  := True;
    FNoPollDuring := False;
    FTurnOnDelay  := 15;
+   FTxInhibitBeep := False;
 end;
 
 { TBandSettings }

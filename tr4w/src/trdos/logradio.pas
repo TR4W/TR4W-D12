@@ -162,6 +162,14 @@ type
       {01}VFOStatus: ActiveVFOStatusType;
       {01}PrevVFOStatus: ActiveVFOStatusType;
       {01}TXOn:      boolean;
+      (* THE RADIO WILL NOT RADIATE WHEN KEYED, and why, in its own words
+        (issue #97; K4: "TX test mode").  Always False/'' for a radio that does
+        not declare rcReportsTXInhibit.  Copied from the driver by
+        CaptureTXInhibit; read by the program through RadioTXInhibited.
+        The reason is a ShortString, not a string -- see TTXInhibitReason for
+        why a managed field cannot live in this record. *)
+      TXInhibited:     boolean;
+      TXInhibitReason: TTXInhibitReason;
         //  ModeActual:ExtendedRadioModeType; // tom
    end;
 
@@ -689,6 +697,30 @@ function ReadRadioStatus(rig: RadioPtr): RadioStatusRecord;
 
 // The same, for the live (unsettled) status.
 function ReadRadioCurrentStatus(rig: RadioPtr): RadioStatusRecord;
+
+(* COPY THE DRIVER'S TX-INHIBIT CONDITION INTO A STATUS RECORD (issue #97).
+  The polling thread calls this with the rest of its CurrentStatus fill, so the
+  condition rides the same change detection, seqlock and filtering as TXOn.
+  A nil radio clears it.  One routine, so the poll loop and the tests copy it
+  the same way. *)
+procedure CaptureTXInhibit(var aStatus: RadioStatusRecord; aRadio: TFactoryRadioBase);
+
+(* IS THIS RADIO INHIBITED FROM RADIATING, AND WHY -- THE READ FOR THE PROGRAM.
+
+  Issue #97 phase 2 calls this, typically as RadioTXInhibited(ActiveRadioPtr,
+  why), to decide whether a key-up deserves a warning.  It names no radio and
+  needs no radio-specific code: the radio's own words come back in aReason
+  ("TX test mode" from a K4), ready to show.
+
+  READS THE SETTLED STATUS (ReadRadioStatus -> FilteredStatus), the same record
+  PTTStatusChanged takes TXOn from, so "is it transmitting" and "will it
+  radiate" are answered from one coherent snapshot of one poll.  Main-thread
+  safe: the seqlock snapshot, no driver call, no lock on the radio.
+
+  False with aReason '' for a nil rig, an empty slot, a radio that cannot
+  report the condition (no rcReportsTXInhibit), and a radio that has not said
+  anything since its link came up. *)
+function RadioTXInhibited(rig: RadioPtr; out aReason: string): boolean;
 
 // Key or unkey a SPECIFIC radio.  aRadio nil means "whichever is active",
 // which is what an operator-driven action wants.
@@ -2589,7 +2621,9 @@ begin
       (a.ExtendedMode  <> b.ExtendedMode)  or
       (a.VFOStatus     <> b.VFOStatus)     or
       (a.PrevVFOStatus <> b.PrevVFOStatus) or
-      (a.TXOn          <> b.TXOn)          then
+      (a.TXOn          <> b.TXOn)          or
+      (a.TXInhibited   <> b.TXInhibited)   or
+      (a.TXInhibitReason <> b.TXInhibitReason) then
       begin
       Exit;
       end;
@@ -2671,6 +2705,42 @@ end;
 function ReadRadioCurrentStatus(rig: RadioPtr): RadioStatusRecord;
 begin
    Result := ReadStatusSnapshot(rig, False);
+end;
+
+procedure CaptureTXInhibit(var aStatus: RadioStatusRecord; aRadio: TFactoryRadioBase);
+var
+   reason: TTXInhibitReason;
+begin
+   if aRadio = nil then
+      begin
+      aStatus.TXInhibited := False;
+      aStatus.TXInhibitReason := '';
+      Exit;
+      end;
+
+   aStatus.TXInhibited := aRadio.ReadTXInhibit(reason);
+   aStatus.TXInhibitReason := reason;
+end;
+
+function RadioTXInhibited(rig: RadioPtr; out aReason: string): boolean;
+var
+   snap: RadioStatusRecord;
+begin
+   aReason := '';
+   Result := False;
+
+   if rig = nil then
+      begin
+      Exit;
+      end;
+
+   snap := ReadRadioStatus(rig);
+   Result := snap.TXInhibited;
+
+   if Result then
+      begin
+      aReason := string(snap.TXInhibitReason);
+      end;
 end;
 
 procedure PutAllRadiosIntoReceive;

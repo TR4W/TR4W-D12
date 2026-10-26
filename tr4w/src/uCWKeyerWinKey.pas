@@ -31,7 +31,7 @@ unit uCWKeyerWinKey;
 interface
 
 uses
-   VC, uCWKeyerBase;
+   VC, LogRadio, uCWKeyerBase;
 
 type
    TCWKeyerWinKey = class(TCWKeyer)
@@ -44,12 +44,22 @@ type
       procedure Flush; override;
       procedure SetSpeed(wpm: integer); override;
       procedure ToggleTune; override;
+      (* LogCW.KeyerOutputRadioPtr: the WinKeyer has one engine and two outputs,
+        and SetUpToSendOn*Radio switches the output (wkSetKeyerOutput) to
+        exactly that radio. *)
+      function KeyedRadio: RadioPtr; override;
    end;
 
 implementation
 
 uses
-   uWinKey, TF;
+   uWinKey, TF,
+   LogCW;     // KeyerOutputRadioPtr
+
+function TCWKeyerWinKey.KeyedRadio: RadioPtr;
+begin
+   Result := KeyerOutputRadioPtr;
+end;
 
 constructor TCWKeyerWinKey.Create;
 begin

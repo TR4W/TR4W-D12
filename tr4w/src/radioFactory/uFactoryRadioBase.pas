@@ -163,8 +163,41 @@ Type
                        // "split can get turned off when modes are changing"), so
                        // those very likely share it -- but only the K4 has been
                        // watched, so only the K4 declares it.
+      ,
+      rcReportsTXInhibit
+                       // The radio can REPORT that it will not radiate even when
+                       // keyed -- issue #97.  The K4's TX TEST mode (TS1;) keys
+                       // the radio and every downstream device and puts out no
+                       // RF, and in CQ WW SSB 2026 nothing in TR4W said so.
+                       //
+                       // A TRAIT, NOT A MODEL TEST.  Only a radio that declares
+                       // this can raise the condition: SetTXInhibited refuses an
+                       // ON from one that has not, so the base never needs to
+                       // know which radio is speaking.  What the condition MEANS
+                       // to the operator -- when to warn, how loud -- is the
+                       // program's decision, not the radio's; see
+                       // LogRadio.RadioTXInhibited.
+                       //
+                       // Others that could map onto it, none wired yet: the Flex
+                       // API's interlock reason, the IC-7610's $16 $66 TX
+                       // inhibit, the FT-990/FT-1000D read-flags inhibit bits.
    );
    TRadioCapabilitySet = set of TRadioCapability;
+
+   (* WHY A RADIO WILL NOT RADIATE, IN THE RADIO'S OWN WORDS -- "TX test mode".
+
+     A SHORTSTRING ON PURPOSE, and the width is a decision, not an accident.
+     The reason travels inside LogRadio.RadioStatusRecord, which is copied as a
+     block (the seqlock snapshot, scExchangeRadios' CopyMemory) and zeroed with
+     FillChar by ClearRadioStatus.  A managed string there would be copied
+     without its reference count and freed twice.  A ShortString is a value: it
+     copies with the record, zeroes to '', and `<>` compares its CONTENT up to
+     its length byte -- never the stale bytes past it -- so change detection
+     sees exactly the text and nothing else.
+
+     31 characters: a reason is a short label for an indicator, not a sentence.
+     A longer one is truncated, visibly, rather than refused. *)
+   TTXInhibitReason = string[31];
 
    // One span this radio can transmit on, in Hz.
    TRadioFreqRange = record
@@ -353,6 +386,17 @@ Type TFactoryRadioBase = class(TObject)
       FSerialReopenDelay: Integer;      // grows to RECONNECT_MAX_DELAY while silent
       FFrequencyOffset: integer;   // transverter offset in Hz; 0 = none
       FActiveVFO: TVFO;  // RX/operating VFO; nrVFOA = swap model (K4: A/B swaps contents so A is always active), selectable-model radios (Kenwood FR, Flex slice) drive it via SetActiveVFO
+
+      (* TX INHIBITED (issue #97) -- see rcReportsTXInhibit.  WRITTEN on the
+        reading thread (SetTXInhibited, from the driver's parser) and READ on
+        the polling thread (ReadTXInhibit), so the pair is guarded by its own
+        lock: the flag and the reason must never be seen half-changed.  Not
+        SocketLock, which serialises writes to the radio and would make a
+        status read wait behind a send. *)
+      FTXInhibited: boolean;
+      FTXInhibitReason: TTXInhibitReason;
+      FTXInhibitLock: TCriticalSection;
+      FTXInhibitRefusalLogged: boolean;   // the undeclared-ON error, once per radio
 
       function GetRadioPort: integer;
       procedure SetRadioPort(Value: Integer);
@@ -616,6 +660,19 @@ Type TFactoryRadioBase = class(TObject)
         puts a stop at the front.  Returns True when it was handed over, so a caller
         with a follow-up (a settle delay) can skip it when nothing was sent. *)
       function SendStopToRadio(const s: string): boolean;
+
+      (* THE RADIO SAID IT WILL / WILL NOT RADIATE WHEN KEYED (issue #97).
+        A driver calls this from its parser with what the radio reported;
+        aReason is the radio's own words ("TX test mode") and is ignored when
+        aOn is False.
+
+        GUARDED ON THE TRAIT, NEVER THE MODEL: a radio that has not declared
+        rcReportsTXInhibit cannot raise the condition -- an ON from it is
+        refused and logged once at ERROR, because it means a driver parses
+        something its constructor does not admit to.  Clearing is always
+        allowed.  Logged at INFO when the state actually changes, which is the
+        line to watch on the bench. *)
+      procedure SetTXInhibited(aOn: boolean; const aReason: string);
 
 
    public
@@ -941,6 +998,17 @@ Type TFactoryRadioBase = class(TObject)
         that is fixed, restarted or swapped gets a fresh hearing rather than
         being remembered as broken for the life of the program. *)
       procedure ResetCWSpeedSync;
+
+      (* IS THIS RADIO INHIBITED FROM RADIATING, AND WHY -- one coherent read
+        of the pair SetTXInhibited writes.  False, with aReason '', for every
+        radio that does not declare rcReportsTXInhibit and for one that has
+        not said anything since its link came up.
+
+        FOR THE POLLING THREAD.  The program does not read the driver: the
+        polling loop copies this into the slot's status (RadioStatusRecord),
+        and LogRadio.RadioTXInhibited is the read for everything above the
+        factory. *)
+      function ReadTXInhibit(out aReason: TTXInhibitReason): boolean;
       { CONNECT MAY RETURN BEFORE THE RADIO IS USABLE, and for every network
         radio it does.  0 means "the attempt was started without error", not
         "connected" -- an Icom is still mid-RS-BA1-handshake when this
@@ -1328,6 +1396,10 @@ begin
    DeclareCoverage;
 
    SocketLock := TCriticalSection.Create;
+   FTXInhibitLock := TCriticalSection.Create;
+   FTXInhibited := False;
+   FTXInhibitReason := '';
+   FTXInhibitRefusalLogged := False;
    Disconnecting := False;
    FLastValidResponse := Now;  // Initialize to current time
    FPollAwaitingReply := False;
@@ -1693,6 +1765,8 @@ begin
       end;
 
    FreeAndNil(SocketLock);
+   (* After StopReadingThread: the reader is the writer of this pair. *)
+   FreeAndNil(FTXInhibitLock);
    inherited Destroy;
 end;
 
@@ -1831,6 +1905,13 @@ begin
      come through this one function, so serial and network are covered by one
      line instead of two. *)
    Self.ResetCWSpeedSync;
+
+   (* AND ON TX INHIBIT (issue #97).  What the last session reported is not a
+     fact about the radio on the end of THIS link -- it may have been switched
+     off, or taken out of test mode, while the link was down.  A radio that
+     reports the condition asks again once connected (the K4 does, in its
+     Connect), so the gap is one round trip. *)
+   Self.SetTXInhibited(False, '');
 
    (* IN SerialPorts, NOT merely <> NoPort.  The old test let a port
      configured as NETWORK -- ordinal 65 -- through to a name formatter that
@@ -2456,6 +2537,70 @@ begin
    Result := (Self.radioState = rsTransmit);
 end;
 
+procedure TFactoryRadioBase.SetTXInhibited(aOn: boolean; const aReason: string);
+var
+   changed: boolean;
+   reason: TTXInhibitReason;
+begin
+   if aOn and (not Supports(rcReportsTXInhibit)) then
+      begin
+      (* The trait is the gate.  A driver that parses the condition without
+        declaring it is a defect in that driver, so it is named -- once, not on
+        every poll -- and the condition stays off. *)
+      if not FTXInhibitRefusalLogged then
+         begin
+         FTXInhibitRefusalLogged := True;
+         logger.Error('[TX inhibit] %s reported TX inhibited (%s) but does not declare ' +
+                      'rcReportsTXInhibit -- ignored', [Self.radioModel, aReason]);
+         end;
+      Exit;
+      end;
+
+   if aOn then
+      begin
+      (* Truncates to the declared width, by design.  The explicit cast is the
+        same conversion as a bare assignment (uTestShortStringConversion) --
+        written so because this narrowing is the point, not an accident. *)
+      reason := ShortString(aReason);
+      end
+   else
+      begin
+      reason := '';
+      end;
+
+   FTXInhibitLock.Enter;
+   try
+      changed := (FTXInhibited <> aOn) or (FTXInhibitReason <> reason);
+      FTXInhibited := aOn;
+      FTXInhibitReason := reason;
+   finally
+      FTXInhibitLock.Leave;
+   end;
+
+   if changed then
+      begin
+      if aOn then
+         begin
+         logger.Info('[TX inhibit] ON -- the radio reports: %s', [string(reason)]);
+         end
+      else
+         begin
+         logger.Info('[TX inhibit] OFF');
+         end;
+      end;
+end;
+
+function TFactoryRadioBase.ReadTXInhibit(out aReason: TTXInhibitReason): boolean;
+begin
+   FTXInhibitLock.Enter;
+   try
+      Result := FTXInhibited;
+      aReason := FTXInhibitReason;
+   finally
+      FTXInhibitLock.Leave;
+   end;
+end;
+
 function TFactoryRadioBase.GetIsReceiving: boolean;
 begin
    Result := (Self.radioState = rsReceive);
@@ -2864,7 +3009,8 @@ const
    CapabilityNames: array[TRadioCapability] of string =
       ('ReadVFOB', 'ReadRIT', 'ReadSplit', 'ReadTXStatus', 'DataMode', 'CWByCAT',
        'PlayDVK', 'CWSpeedSync',
-       'SharedRITXITOffset', 'Spectrum', 'SplitClearedByModeChange');
+       'SharedRITXITOffset', 'Spectrum', 'SplitClearedByModeChange',
+       'ReportsTXInhibit');
 var
    c: TRadioCapability;
 begin

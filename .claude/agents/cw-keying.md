@@ -142,6 +142,44 @@ bank and the captions, where Q9 covered only CQ.
   `cfgdef.UpdateSAndPF1Caption` runs after that restore, which is why it now
   uses the guarded caption writer.
 
+## Where TR4W starts a transmission (issue #97, 2026-10-26)
+
+The TX-inhibited warning hooks the ONE place each kind of key-up begins, and
+nothing per caller: `LogCW.AddStringToBuffer` (every CW message -- F-keys,
+autosend start, the keyboard window), `MainUnit.PTTOn` (every PTT TR4W
+asserts: CPU keyer, paddle, footswitch port, digital, DVK) and
+`logdvp.tsndPlaySound` (a voice message, which covers VOX where `PTTOn` exits
+early). `PTTOff` reports the end. Each calls `uTXInhibitView.NoteTransmitStarting`
+/ `NoteTransmitEnded`, which marshal (the paddle and footswitch are threads)
+and **never raise into the keying path** -- a fault is logged at Error and
+keying carries on (`Test_AFaultInTheReviewNeverReachesKeying`). In
+`AddStringToBuffer` the call is `NoteCWKeyUp`, inside the two arms that send,
+and never for `''` (the sidetone toggle sends one) or the CAT terminator.
+
+**WHICH RADIO A KEYER KEYS IS THE KEYER'S ANSWER: `TCWKeyer.KeyedRadio`**,
+nil when it keys none. CW-by-CAT and the WinKeyer follow the swap
+(`LogCW.KeyerOutputRadioPtr`: inactive while `KeyersSwapped`); CW-by-CAT also
+answers nil when `CATCanKey` says `CWByCATSend` will send nothing. The CPU
+keyer is ALWAYS `ActiveRadioPtr` -- it drives the active radio's line and the
+port swap in `SetUpToSendOnInactiveRadio` is commented out, as in D7. The YCCC
+box keys its own TX radio (`uYCCCSO2R.YCCCTxRadio`). `LogCW.KeyedRadioPtr` asks
+`ActiveCWKeyer`. `uTestCWKeyer` pins each adapter both ways and the CAT routing.
+
+**`SendStringAndStop` sends its CAT terminator through `KeyerCAT.SendString`**
+(fixed 2026-10-26): it sent it to `ActiveRadioPtr` while the text went to the
+swapped radio, and `CWByCATSend` holds a radio's text until ITS terminator, so
+the inactive radio's text was never sent. Every other terminator goes through
+`AddStringToBuffer`, so it already matched. `TCWKeyerCAT.SendChar` still sends
+char and terminator to `ActiveRadioPtr` -- consistent, and unswapped.
+
+`uYCCCSO2R.logger` is assigned at unit load now; it was assigned only in
+`YCCCOpen`, so calling `YCCCSetActiveRadio` before the box opened was a nil
+dereference (the program only calls it while `ycccActive`).
+
+Autosend characters after the first (`ActiveCWKeyer.SendChar`) and PTT raised
+directly through `tPTTVIACATForRadio` (WSJT-X, the TCI server, `TXON`) are NOT
+hooked; the radio's own TX report (trigger 2) covers them.
+
 ## Open, and decided
 
 **Open (NY4I — design, not refactor):** `ActiveCWKeyer`'s precedence chain

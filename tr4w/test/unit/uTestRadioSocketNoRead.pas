@@ -48,6 +48,13 @@ unit uTestRadioSocketNoRead;
   - Test_StopAndUnkey_NotConnected_LogNoError: StopCW and Receive on a radio
     with no link are no-ops -- nothing to stop -- and log no ERROR.  StopCW
     is what PTTOff reaches through StopSendingCW at startup.
+
+  ISSUE #97 -- TX TEST MODE on the same fixture:
+  - Test_TXTestAskedOnConnect_AndOnReconnect: TS; is asked at every link-up.
+  - Test_TXTestSplitAcrossReads_IsParsed: through the REAL reading thread, a
+    TS reply cut in two by the network and mixed with other replies still
+    raises and clears the condition.  The parsing without a socket is pinned
+    in uTestTXInhibit.
 *)
 
 interface
@@ -70,6 +77,7 @@ type
       function  Handler: TIdIOHandler;
       function  HandlerIsManaged: Boolean;
       procedure ConnectThroughRadio(const AHost: string; APort: Integer);
+      procedure ConnectWithReader(const AHost: string; APort: Integer);
       function  RadioLogger: TLogLogger;
    end;
 
@@ -88,6 +96,7 @@ type
       function  CountReceived(const ALine: string): Integer;
       function  WaitForReceived(const ALine: string; ATimeoutMs: Integer): Boolean;
       function  WaitForCount(const ALine: string; ACount, ATimeoutMs: Integer): Boolean;
+      procedure PushFromRadio(const AText: string);
    protected
       procedure Test_SendToRadio_DoesNotReadTheSocket;
       procedure Test_IsConnected_DoesNotReadTheSocket;
@@ -98,6 +107,8 @@ type
       procedure Test_SpanAskedAfterConnect_WhenSpectrumStartedFirst;
       procedure Test_SpanAskedAgainOnReconnect;
       procedure Test_StopAndUnkey_NotConnected_LogNoError;
+      procedure Test_TXTestAskedOnConnect_AndOnReconnect;
+      procedure Test_TXTestSplitAcrossReads_IsParsed;
    public
       procedure RunAllTests; override;
    end;
@@ -173,6 +184,16 @@ end;
 procedure TSocketNoReadProbe.ConnectThroughRadio(const AHost: string; APort: Integer);
 begin
    socket.OnConnected := nil;
+   radioAddress := AHost;
+   radioPort := APort;
+   Connect;
+end;
+
+(* The shipped connect path WITH OnConnected left in place, so a success starts
+  the radio's real reading thread -- for the tests that need bytes from the
+  "radio" parsed exactly as production parses them. *)
+procedure TSocketNoReadProbe.ConnectWithReader(const AHost: string; APort: Integer);
+begin
    radioAddress := AHost;
    radioPort := APort;
    Connect;
@@ -303,6 +324,23 @@ begin
          Inc(waited, 20);
          end;
       end;
+end;
+
+(* The "radio" sends AText, exactly those bytes and no terminator added, on the
+  one connection the fixture server holds. *)
+procedure TRadioSocketNoReadTests.PushFromRadio(const AText: string);
+var
+   list: TIdContextList;
+begin
+   list := FServer.Contexts.LockList;
+   try
+      if list.Count > 0 then
+         begin
+         TIdContext(list.Items[0]).Connection.IOHandler.Write(AText, IndyTextEncoding_8Bit);
+         end;
+   finally
+      FServer.Contexts.UnlockList;
+   end;
 end;
 
 (* ---- tests ------------------------------------------------------------------ *)
@@ -638,6 +676,121 @@ begin
    end;
 end;
 
+(* ---- issue #97: TX test mode on a network K4 ------------------------------ *)
+
+const
+   TX_TEST_QUERY = 'TS;';
+
+(* Whether the K4 PUSHES TS under auto-info is unverified, so it is ASKED at
+  every link-up, beside the span question -- and a link-up is where the base
+  forgets the last session's answer, so asking anywhere later leaves a gap. *)
+procedure TRadioSocketNoReadTests.Test_TXTestAskedOnConnect_AndOnReconnect;
+var
+   probe: TSocketNoReadProbe;
+   port: Word;
+begin
+   BeginTest('K4: TX test mode (TS;) is asked once the CAT link connects, and again on reconnect');
+
+   probe := TSocketNoReadProbe.Create;
+   try
+      port := StartServer;
+      probe.ConnectThroughRadio('127.0.0.1', port);
+      CheckTrue(probe.IsConnected, 'precondition: the CAT link came up');
+
+      CheckTrue(WaitForReceived(TX_TEST_QUERY, 3000),
+                'TS; never reached the radio -- whether it pushes TX test mode is ' +
+                'unverified, so the link-up must ask (issue #97)');
+      Sleep(200);    // room for a duplicate to arrive, if there were one
+      CheckEquals(1, CountReceived(TX_TEST_QUERY), 'asked exactly once per link-up');
+
+      probe.ConnectThroughRadio('127.0.0.1', port);
+      CheckTrue(probe.IsConnected, 'precondition: the second link came up');
+      CheckTrue(WaitForCount(TX_TEST_QUERY, 2, 3000),
+                'a reconnect did not ask again -- the radio may have entered or left ' +
+                'test mode while the link was down');
+   finally
+      ReleaseProbe(probe);
+      StopServer;
+   end;
+end;
+
+(* Through the REAL reading thread: the TS reply is cut in two by the network,
+  and each half arrives beside other replies.  The thread joins it on the ';'
+  terminator before the driver ever sees it, which is the whole claim. *)
+function WaitInhibited(probe: TSocketNoReadProbe; AWant: Boolean; ATimeoutMs: Integer): Boolean;
+var
+   waited: Integer;
+   reason: TTXInhibitReason;
+begin
+   waited := 0;
+   Result := probe.ReadTXInhibit(reason) = AWant;
+
+   while (not Result) and (waited <= ATimeoutMs) do
+      begin
+      Sleep(20);
+      Inc(waited, 20);
+      Result := probe.ReadTXInhibit(reason) = AWant;
+      end;
+end;
+
+function WaitGreetingParsed(probe: TSocketNoReadProbe; ATimeoutMs: Integer): Boolean;
+var
+   waited: Integer;
+begin
+   waited := 0;
+   Result := probe.frequency[nrVFOA] = 14000000;    (* GREETING's FA *)
+
+   while (not Result) and (waited <= ATimeoutMs) do
+      begin
+      Sleep(20);
+      Inc(waited, 20);
+      Result := probe.frequency[nrVFOA] = 14000000;
+      end;
+end;
+
+procedure TRadioSocketNoReadTests.Test_TXTestSplitAcrossReads_IsParsed;
+var
+   probe: TSocketNoReadProbe;
+   reason: TTXInhibitReason;
+begin
+   BeginTest('K4: a TS reply split across reads and mixed with others is parsed');
+
+   probe := TSocketNoReadProbe.Create;
+   try
+      probe.ConnectWithReader('127.0.0.1', StartServer);
+      CheckTrue(probe.IsConnected, 'precondition: the CAT link came up');
+      CheckFalse(probe.ReadTXInhibit(reason), 'precondition: not inhibited');
+
+      (* The server's greeting is written from ITS thread and can land after
+        Connect returns -- interleaved with the first push, it would cut the
+        stream somewhere this test did not choose.  Wait until the reader has
+        parsed it. *)
+      CheckTrue(WaitGreetingParsed(probe, 3000),
+                'precondition: the reading thread parsed the server''s greeting');
+
+      PushFromRadio('FA00014100000;T');
+      Sleep(150);                       (* the halves really are two reads *)
+      CheckFalse(probe.ReadTXInhibit(reason), 'half a TS reply raises nothing');
+      PushFromRadio('S1;FB00007100000;');
+
+      CheckTrue(WaitInhibited(probe, True, 3000),
+                'TS1, split as "T" + "S1;" between other replies, never raised TX inhibited');
+      probe.ReadTXInhibit(reason);
+      CheckEquals('TX test mode', string(reason), 'with the radio''s words');
+      CheckEquals(14100000, probe.frequency[nrVFOA], 'the FA before it was parsed');
+      CheckEquals(7100000, probe.frequency[nrVFOB], 'and the FB after it');
+
+      PushFromRadio('RX;FA00014200000;TS');
+      Sleep(150);
+      PushFromRadio('0;');
+      CheckTrue(WaitInhibited(probe, False, 3000),
+                'TS0, split as "TS" + "0;", never cleared TX inhibited');
+   finally
+      ReleaseProbe(probe);
+      StopServer;
+   end;
+end;
+
 procedure TRadioSocketNoReadTests.RunAllTests;
 begin
    FLock := TCriticalSection.Create;
@@ -652,6 +805,8 @@ begin
       Test_SpanAskedAfterConnect_WhenSpectrumStartedFirst;
       Test_SpanAskedAgainOnReconnect;
       Test_StopAndUnkey_NotConnected_LogNoError;
+      Test_TXTestAskedOnConnect_AndOnReconnect;
+      Test_TXTestSplitAcrossReads_IsParsed;
    finally
       StopServer;
       FReceived.Free;

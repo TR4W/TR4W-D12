@@ -79,6 +79,7 @@ type
       procedure Test_NoStatusOverrunsItsPanel;
       procedure Test_ANotNeededBandIsAnEmptyCellNotAHiddenOne;
       procedure Test_LoggingAQSOTakesItsBandOutOfTheNeedsStrips;
+      procedure Test_AnInhibitedKeyUpTurnsThePTTIndicator;
    public
       procedure RunAllTests; override;
    end;
@@ -97,7 +98,17 @@ uses
    LogDupe,            (* Sheet, ClearContestExchange, NumberDifferentMults *)
    LogEdit,            (* ShowStationInformation, SetDXQTHAndPrefix, AddQSOToDupeSheets *)
    LogSubs2,           (* RefreshNeedsAfterLoggedQSO -- issue #100 *)
-   PostUnit;           (* Contest -- the active contest's handle *)
+   PostUnit,           (* Contest -- the active contest's handle *)
+   ExtCtrls,           (* TPanel -- MainElement's type *)
+   Log4D,              (* TLogLevel, ILogAppender *)
+   Tree,               (* PTTStatusString -- the indicator's ordinary text *)
+   MainUnit,           (* logger, PTTIndicatorBack, RefreshMainWindowElementColors *)
+   uAppStrings,        (* STXInhibitedStatus, STXInhibitedIndicator *)
+   uRadioState,        (* RadioState.PTTOn -- what the bridge paints from *)
+   uStateBridge,       (* InstallStateBridge -- the PTT indicator's painter *)
+   uTXInhibitView,     (* ReviewTXInhibit, ResetTXInhibitAlerts -- issue #97 *)
+   uTestLogCapture,    (* TCaptureAppender *)
+   uTestTXInhibitAlert; (* SetSettledTXState *)
 
 (* A WORKER THREAD THAT WRITES ONE STATUS AND EXITS.
 
@@ -1110,6 +1121,165 @@ begin
       end;
 end;
 
+(* ISSUE #97 ON THE STREAMED MAIN WINDOW: the PTT indicator and radio 1's status
+  panel for a key-up on a radio in TX test mode, driven exactly as the program
+  drives them -- the settled status, then the review the polling thread asks
+  for (ReviewTXInhibit is the mtTXInhibitAlert job), then the state bridge
+  painting from RadioState.
+
+  - key-up while inhibited: the indicator reads INH on the alert colour, and
+    the status panel says TX INHIBITED: <reason>;
+  - re-reading the same key-up does not log again -- one Warn per key-up;
+  - unkey: the indicator and the status panel go back;
+  - a second key-up logs a second line;
+  - not inhibited: the ordinary ON on the ordinary colour, nothing logged;
+  - and the sentence fits radio 1's status panel at the narrow strip width. *)
+function CountTXInhibitWarnings(aCapture: TCaptureAppender): integer;
+var
+   i: integer;
+begin
+   Result := 0;
+   for i := 0 to aCapture.Lines.Count - 1 do
+      begin
+      if Pos('[TX inhibit]', aCapture.Lines[i]) > 0 then
+         begin
+         Inc(Result);
+         end;
+      end;
+end;
+
+procedure TStatusAndNoticeTests.Test_AnInhibitedKeyUpTurnsThePTTIndicator;
+const
+   REASON = 'TX test mode';
+   NARROW_STRIP = 782;      (* Test_NoStatusOverrunsItsPanel's narrow width *)
+   PANEL_PADDING = 8;
+var
+   pnl: TPanel;
+   capture: TCaptureAppender;
+   keep: ILogAppender;
+   savedLevel: TLogLevel;
+   savedStatus1: RadioStatusRecord;
+   savedDisc1: boolean;
+   savedPTT1: PTTStatusType;
+   sentence: string;
+   probe: TBitmap;
+   i: integer;
+
+   procedure KeyUp(const aInhibited: boolean);
+   begin
+      if aInhibited then
+         begin
+         SetSettledTXState(@Radio1, True, True, REASON);
+         end
+      else
+         begin
+         SetSettledTXState(@Radio1, True, False, '');
+         end;
+      (* What ProcessFilteredStatus and PTTStatusChanged do with TXOn. *)
+      Radio1.tPTTStatus := PTT_ON;
+      RadioState.PTTOn := True;
+      ReviewTXInhibit;
+      RefreshMainWindowElementColors;
+   end;
+
+   procedure Unkey;
+   begin
+      SetSettledTXState(@Radio1, False, True, REASON);
+      Radio1.tPTTStatus := PTT_OFF;
+      RadioState.PTTOn := False;
+      ReviewTXInhibit;
+      RefreshMainWindowElementColors;
+   end;
+
+begin
+   BeginTest('Test_AnInhibitedKeyUpTurnsThePTTIndicator');
+   EnsureMainForm;
+   InstallStateBridge;
+   Drain;
+
+   pnl := MainElement(mwePTTStatus);
+   CheckTrue(pnl = TR4WMainForm.pnlPTTStatus, 'mwePTTStatus is the designed pnlPTTStatus');
+   pnl.HandleNeeded;
+   CheckTrue(ActiveRadioPtr = @Radio1, 'precondition: radio 1 is active');
+
+   sentence := Format(STXInhibitedStatus, [REASON]);
+   savedStatus1 := ReadRadioStatus(@Radio1);
+   savedDisc1 := Radio1.RadioDisconnected;
+   savedPTT1 := Radio1.tPTTStatus;
+
+   capture := TCaptureAppender.Create('tx-inhibit');
+   keep := capture;
+   savedLevel := logger.Level;
+   logger.Level := Log4D.Warn;
+   logger.AddAppender(keep);
+   try
+      Radio1.RadioDisconnected := False;
+      ResetTXInhibitAlerts;
+
+      (* TRIGGER 2: the radio reports TX -- a footswitch TR4W never saw. *)
+      KeyUp(True);
+      CheckEquals(STXInhibitedIndicator, pnl.Caption,
+                  'the PTT indicator says the key-up is inhibited');
+      CheckTrue(PTTIndicatorBack = AlertColor,
+                'its background is the alert role, not radio 1''s TX red');
+      CheckEquals(tr4wColorsArray[AlertColor], pnl.Color, 'and the panel is painted so');
+      CheckTrue(DrainUntilStatus(stoRadio1, sentence, 2000),
+                'radio 1''s status panel says "' + sentence + '", got "' +
+                StatusText(stoRadio1) + '"');
+      CheckEquals(1, CountTXInhibitWarnings(capture), 'one Warn line for the key-up');
+
+      for i := 1 to 5 do
+         begin
+         ReviewTXInhibit;      (* the same key-up, re-read *)
+         end;
+      CheckEquals(1, CountTXInhibitWarnings(capture),
+                  'one line per KEY-UP, not per status update');
+
+      Unkey;
+      CheckEquals(PTTStatusString[PTT_OFF], pnl.Caption, 'unkey: the indicator says OFF');
+      CheckEquals(tr4wColorsArray[TWindows[mwePTTStatus].mweBackG], pnl.Color,
+                  'and is back on its own background');
+      CheckTrue(DrainUntilStatus(stoRadio1, '', 2000),
+                'and the status panel is cleared, got "' + StatusText(stoRadio1) + '"');
+
+      KeyUp(True);
+      CheckEquals(2, CountTXInhibitWarnings(capture), 'the next key-up logs again');
+      Unkey;
+
+      (* NOT INHIBITED: an ordinary key-up looks as it always has. *)
+      KeyUp(False);
+      CheckEquals(PTTStatusString[PTT_ON], pnl.Caption, 'not inhibited: the ordinary ON');
+      CheckTrue(PTTIndicatorBack = trRed, 'on radio 1''s ordinary TX colour');
+      CheckEquals('', StatusText(stoRadio1), 'nothing on the status panel');
+      CheckEquals(2, CountTXInhibitWarnings(capture), 'and nothing logged');
+      Unkey;
+
+      (* THE SENTENCE FITS radio 1's panel at the narrow strip width. *)
+      probe := TBitmap.Create;
+      try
+         probe.Canvas.Font.Assign(TR4WMainForm.sbStatus.Font);
+         TR4WMainForm.sbStatus.Width := NARROW_STRIP;
+         LayOutStatusPanels;
+         CheckTrue(probe.Canvas.TextWidth(sentence) <=
+                   TR4WMainForm.sbStatus.Panels[Ord(stoRadio1)].Width - PANEL_PADDING,
+                   '"' + sentence + '" fits radio 1''s status panel');
+      finally
+         probe.Free;
+      end;
+   finally
+      logger.RemoveAppender(keep);
+      logger.Level := savedLevel;
+      keep := nil;
+      SetSettledTXState(@Radio1, savedStatus1.TXOn, savedStatus1.TXInhibited,
+                        string(savedStatus1.TXInhibitReason));
+      Radio1.RadioDisconnected := savedDisc1;
+      Radio1.tPTTStatus := savedPTT1;
+      RadioState.PTTOn := False;
+      ResetTXInhibitAlerts;
+      Drain;
+   end;
+end;
+
 procedure TStatusAndNoticeTests.RunAllTests;
 begin
    Test_TheStripHasOnePanelPerOwner;
@@ -1131,6 +1301,7 @@ begin
    Test_NoStatusOverrunsItsPanel;
    Test_ANotNeededBandIsAnEmptyCellNotAHiddenOne;
    Test_LoggingAQSOTakesItsBandOutOfTheNeedsStrips;
+   Test_AnInhibitedKeyUpTurnsThePTTIndicator;
    ReleaseMainForm;
 end;
 

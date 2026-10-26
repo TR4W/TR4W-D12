@@ -364,6 +364,9 @@ const
          logger.Info('[pFactoryRadio] %s � alert color OFF', [rig^.RadioName]);
          end;
       RequestMainThreadJob(mtMainWindowElementColors);
+      (* The link came or went: a TX-inhibited alert is not believed across a
+        dropped link (issue #97), so it is reviewed now. *)
+      RequestMainThreadJob(mtTXInhibitAlert);
    end;
 
    (* ONE REPORT PER RUN OF FAILURES.
@@ -760,6 +763,8 @@ begin
             rig^.CurrentStatus.RIT := ro.IsRITOn[actVFO];
             rig^.CurrentStatus.XIT := ro.IsXITOn[actVFO];
             rig^.CurrentStatus.TXOn := ro.IsTransmitting;
+            // Issue #97: the radio's TX-inhibited condition rides with TXOn.
+            CaptureTXInhibit(rig^.CurrentStatus, ro);
             if actVFO = nrVFOB then
                begin
                rig^.CurrentStatus.VFOStatus := VFOB
@@ -1129,6 +1134,11 @@ begin
             end;
          ProcessFilteredStatus(rig);
          rig.FilteredStatusChanged := False;
+         (* ISSUE #97, TRIGGER 2: the SETTLED status moved -- TX on or off, or
+           the radio's TX-inhibit condition -- so the alert is reviewed on the
+           main thread, from this same snapshot.  This thread touches no
+           control (issue #108). *)
+         RequestMainThreadJob(mtTXInhibitAlert);
          end;
       end;
    rig.PreviousStatus := rig.CurrentStatus;
@@ -1563,6 +1573,7 @@ begin
       logger.Info('[SerialLiveness] %s -> alert color OFF', [rig^.RadioName]);
       end;
    RequestMainThreadJob(mtMainWindowElementColors);
+   RequestMainThreadJob(mtTXInhibitAlert);    (* as SetRadioAlertState, issue #97 *)
 end;
 
 // Update the serial liveness indicator from one read attempt.  Shared by the

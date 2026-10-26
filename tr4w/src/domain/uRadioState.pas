@@ -58,8 +58,11 @@ type
    TRadioState = class(TDomainState)
    private
       FPTTOn: boolean;
+      FTXInhibitAlert: boolean;
       function  GetPTTOn: boolean;
       procedure SetPTTOn(const aValue: boolean);
+      function  GetTXInhibitAlert: boolean;
+      procedure SetTXInhibitAlert(const aValue: boolean);
    public
       { Set from the radio polling thread; read from the main thread. Both go
         through the lock, and setting it to what it already is notifies nobody --
@@ -67,6 +70,11 @@ type
         pass. That coalescing is free here and was hand-built in uPanelUpdate
         precisely because the transport had to do it. }
       property PTTOn: boolean read GetPTTOn write SetPTTOn;
+      (* ISSUE #97: a key-up is under way on a radio that says it will not
+        radiate.  Set on the main thread by uTXInhibitView, which owns WHEN
+        (uTXInhibitAlert decides); the bridge decides what the PTT indicator
+        looks like.  Same coalescing as PTTOn. *)
+      property TXInhibitAlert: boolean read GetTXInhibitAlert write SetTXInhibitAlert;
    end;
 
 { THE ONE INSTANCE. A global, as uWSJTXState is, and for the same reason: making
@@ -101,6 +109,35 @@ begin
 
    // OUTSIDE THE LOCK. See TDomainState.NotifyChanged -- a subscriber that
    // called back into the state while the lock was held would deadlock.
+   if changed then
+      begin
+      NotifyChanged;
+      end;
+end;
+
+function TRadioState.GetTXInhibitAlert: boolean;
+begin
+   Lock;
+   try
+      Result := FTXInhibitAlert;
+   finally
+      Unlock;
+   end;
+end;
+
+procedure TRadioState.SetTXInhibitAlert(const aValue: boolean);
+var
+   changed: boolean;
+begin
+   Lock;
+   try
+      changed := FTXInhibitAlert <> aValue;
+      FTXInhibitAlert := aValue;
+   finally
+      Unlock;
+   end;
+
+   (* Outside the lock, as SetPTTOn does. *)
    if changed then
       begin
       NotifyChanged;
