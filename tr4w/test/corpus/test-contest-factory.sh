@@ -69,7 +69,7 @@ fi
 
 cd "$TARGET" || exit 1
 cp "$EXE_SRC" "$EXE" || exit 1
-corpus_logs_snapshot
+corpus_cleanup_on_exit
 
 pass=0; fail=0; failed=""
 for d in "$CORPUS"/*/; do
@@ -86,7 +86,7 @@ for d in "$CORPUS"/*/; do
    # memories, carried between sessions -- so leaving one behind means this run
    # starts from the previous set's state and the comparison measures that
    # instead of the scoring.
-   rm -f "$WORK".*; corpus_remove_new_logs
+   rm -f "$WORK".*
    cp "$d/log.cfg" "$WORK.CFG" || continue
    # A FRESH COPY OF THE FIXTURE: /RESCORE writes back into the database it is
    # given, so the run must start from the untouched tracked log.
@@ -107,10 +107,10 @@ for d in "$CORPUS"/*/; do
    # The golden corpus is NOT affected and is right to name the .db: /EXPORT
    # reads stored values and never rescores.
    MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /RESCORE >/dev/null 2>&1
-   rm -f "$WORK.ADI"; corpus_remove_new_logs
+   rm -f "$WORK.adi" "$WORK.log"
    MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT >/dev/null 2>&1
 
-   cbr=$(corpus_new_logs | head -1)
+   cbr="$WORK.log"; [ -f "$cbr" ] || cbr=""
    ok=1; detail=""
 
    # AN EXCHANGE ID IS COMPARED ONLY WHERE THE FIXTURE HAS ONE (2026-10-14).
@@ -123,9 +123,9 @@ for d in "$CORPUS"/*/; do
       detail=" (no exchange id in the fixture: APP_TR4W_ID set aside)"
    fi
 
-   if [ ! -f "$WORK.ADI" ]; then
+   if [ ! -f "$WORK.adi" ]; then
       ok=0; detail=" (the factory pass produced no ADIF)"
-   elif ! diff <(corpus_norm_artifact "$WORK.ADI" | $adi_filter) \
+   elif ! diff <(corpus_norm_artifact "$WORK.adi" | $adi_filter) \
                <($adi_filter < "$d/rescored.adi") >/dev/null 2>&1; then
       ok=0; detail="$detail rescored.adi"
    fi
@@ -150,7 +150,7 @@ for d in "$CORPUS"/*/; do
    fi
 done
 
-rm -f "$WORK".* "$EXE"; corpus_remove_new_logs
+rm -f "$WORK".* "$EXE"
 
 echo "=== factory vs frozen legacy: $pass identical, $fail differing ==="
 if [ $fail -ne 0 ]; then

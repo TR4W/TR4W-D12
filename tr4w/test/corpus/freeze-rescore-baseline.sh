@@ -84,7 +84,7 @@ echo "               $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 
 cd "$TARGET" || exit 1
 cp "$EXE_SRC" "$EXE" || exit 1
-corpus_logs_snapshot
+corpus_cleanup_on_exit
 
 froze=0; skipped=0; failed=""
 
@@ -101,7 +101,7 @@ for d in "$CORPUS"/*/; do
       [ $want -eq 1 ] || continue
    fi
 
-   rm -f "$WORK".*; corpus_remove_new_logs
+   rm -f "$WORK".*
    cp "$d/log.cfg" "$WORK.CFG" || { skipped=$((skipped+1)); continue; }
    cp "$d/log.db"  "$WORK.db"  || { skipped=$((skipped+1)); continue; }
 
@@ -112,17 +112,17 @@ for d in "$CORPUS"/*/; do
    # a contest that has no domestic countries.  Freezing THAT would bake the
    # crippled answer into the gate permanently.
    MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /RESCORE /NOFACTORY >/dev/null 2>&1
-   rm -f "$WORK.ADI"; corpus_remove_new_logs
+   rm -f "$WORK.adi" "$WORK.log"
    MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT >/dev/null 2>&1
 
-   cbr=$(corpus_new_logs | head -1)
-   if [ ! -f "$WORK.ADI" ] || [ -z "$cbr" ]; then
+   cbr="$WORK.log"; [ -f "$cbr" ] || cbr=""
+   if [ ! -f "$WORK.adi" ] || [ -z "$cbr" ]; then
       printf "  FAIL  %-28s (produced nothing)\n" "$name"
       failed="$failed $name"
       continue
    fi
 
-   corpus_norm_artifact "$WORK.ADI" > "$d/rescored.adi" || { failed="$failed $name"; continue; }
+   corpus_norm_artifact "$WORK.adi" > "$d/rescored.adi" || { failed="$failed $name"; continue; }
    corpus_norm_artifact "$cbr"      > "$d/rescored.cbr" || { failed="$failed $name"; continue; }
 
    score=$(grep -h '^CLAIMED-SCORE:' "$d/rescored.cbr" 2>/dev/null | head -1)
@@ -130,7 +130,7 @@ for d in "$CORPUS"/*/; do
    froze=$((froze+1))
 done
 
-rm -f "$WORK".* "$EXE"; corpus_remove_new_logs
+rm -f "$WORK".* "$EXE"
 
 echo "=== froze $froze set(s), skipped $skipped ==="
 if [ -n "$failed" ]; then

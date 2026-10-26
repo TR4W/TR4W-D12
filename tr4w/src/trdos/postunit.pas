@@ -437,6 +437,8 @@ uses
   MainUnit,
   (* Which store an export reads from -- step B3. *)
   uLogSource,
+  (* LogExportFileName -- the .adi, .log and .csv names, from the log's. *)
+  uLogDatabase,
   (* LogRecordIsContact -- what GoodLookingQSO asks; the operator list asks it too. *)
   uOperatorList,
   (* TMyStationExchange and TCabrilloQSOContext -- what the exporter hands a
@@ -560,6 +562,14 @@ procedure WriteADIFField( sFieldName: string; sFieldValue: string );
    ContestsArray's P index instead of naming contests. *)
 
 
+(* THE ONE PLACE tReportsFilename GETS AN EXPORT'S NAME FROM THE LOG. The rule is
+  uLogDatabase.LogExportFileName's; this only moves it through the buffers. *)
+procedure NameReportsFileAfterLog(aKind: TLogExportKind);
+begin
+   SetCharBuffer( tReportsFilename,
+      LogExportFileName( CharBufferText( TR4W_LOG_FILENAME ), aKind ) );
+end;
+
 procedure CreateCabrilloFile;
   label
     1;
@@ -569,9 +579,10 @@ procedure CreateCabrilloFile;
   begin
 
   SetTransmittersId := False;
-  SetCharBuffer( tReportsFilename,
-     CharBufferText( TR4W_LOG_PATH_NAME ) + Settings.My.Call + '.LOG' );
-  DeleteSlashes( tReportsFilename );
+  (* THE CABRILLO'S NAME IS THE LOG'S, NOT THE CALL'S (NY4I, 2026-10-26):
+    <log name>.log beside <log name>.adi and the .db. LogExportFileName owns
+    the rule for every export. *)
+  NameReportsFileAfterLog( lekCabrillo );
 
   FillChar(Radio1IDs, SizeOf( Radio1IDs ), 0);
 
@@ -2578,16 +2589,10 @@ procedure ExportToADIF;
     dataModeNote: string;
     dtReportTime: TDateTime;
     adifStr: string;
-    extName: AnsiString;
   begin
   dtReportTime := Now;
-  (* THE EXPORT'S FILE NAME: the log's name with .ADI for its extension.
-    CharBufferBytes and SetCharBufferBytes carry it as the bytes SetCharBuffer
-    wrote, with no code-page conversion in between, and SetCharBufferBytes
-    bounds and terminates the buffer. The truncate, FillChar and Move that
-    stood here did exactly that by hand. *)
-  extName := ChangeFileExt(CharBufferBytes(TR4W_LOG_FILENAME), AnsiString('.ADI'));
-  SetCharBufferBytes(tReportsFilename, extName);
+  (* THE EXPORT'S FILE NAME: the log's name with .adi for its extension. *)
+  NameReportsFileAfterLog(lekADIF);
   if not tOpenFileForWrite( tReportFileWrite, CharBufferText( tReportsFilename ) ) then
      begin
      Exit;
@@ -2686,18 +2691,10 @@ procedure ExportToADIF;
 procedure ExportToCSV; // n4af 04/18/14 new procedure added
   label
     1;
-  var
-    extName: AnsiString;
-
   begin
 
-  (* THE EXPORT'S FILE NAME: the log's name with .CSV for its extension.
-    CharBufferBytes and SetCharBufferBytes carry it as the bytes SetCharBuffer
-    wrote, with no code-page conversion in between, and SetCharBufferBytes
-    bounds and terminates the buffer. The truncate, FillChar and Move that
-    stood here did exactly that by hand. *)
-  extName := ChangeFileExt(CharBufferBytes(TR4W_LOG_FILENAME), AnsiString('.CSV'));
-  SetCharBufferBytes(tReportsFilename, extName);
+  (* THE EXPORT'S FILE NAME: the log's name with .csv for its extension. *)
+  NameReportsFileAfterLog(lekCSV);
   if not tOpenFileForWrite( tReportFileWrite, CharBufferText( tReportsFilename ) ) then
      begin
      Exit;

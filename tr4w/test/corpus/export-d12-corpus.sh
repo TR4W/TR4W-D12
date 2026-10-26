@@ -5,7 +5,7 @@
 # Cabrillo?  For each corpus set it runs the build's batch-export mode:
 #     tr4w.exe "<contest>.db" /EXPORT
 # (in uProgramMain after SetUpGlobalsAndInitialize -- opens the contest, writes
-# <log>.ADI + <CALL>.LOG with the -D12 banner, then Halts before the GUI/network
+# <log>.adi + <log>.log with the -D12 banner, then Halts before the GUI/network
 # init), then pull-d12-candidates.sh diffs everything vs the frozen D7 refs.
 #
 # Usage:  rebuild the app first, then:
@@ -181,7 +181,7 @@ for m in "$here"/*/manifest.json; do
    log=$(ls "$d12"/*.db 2>/dev/null | head -1)
    [ -n "$log" ] || { printf '  MISS   %-26s (no log database in %s)\n' "$slug" "$d12"; continue; }
    printf '  export %-26s\n' "$slug"
-   # Fail-loud: delete this set's prior export outputs (ADIF + the Cabrillo .LOG,
+   # Fail-loud: delete this set's prior export outputs (ADIF + the Cabrillo .log,
    # identified by its START-OF-LOG header) so an aborted export leaves NO stale
    # candidate. A missing candidate then surfaces as a strict FAIL, not a pass.
    rm -f "$d12"/*.ADI "$d12"/*.adi 2>/dev/null

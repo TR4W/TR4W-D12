@@ -18,7 +18,7 @@ that is the half of the oracle we did not write.
                  test-adif-roundtrip.sh needs it to create a fresh empty
                  contest of the right type before importing ref.adi
   ref.adi        fresh D7 ADIF export      — GOLDEN MASTER
-  ref.cbr        fresh D7 Cabrillo export  — GOLDEN MASTER  (TR4W emits it as <CALL>.LOG)
+  ref.cbr        fresh D7 Cabrillo export  — GOLDEN MASTER  (D7 emitted it as <CALL>.LOG; D12 names it after the log, <log>.log)
   manifest.json  provenance: source dir, D7 version, QSO count, claimed score
 ```
 

@@ -71,7 +71,7 @@ fi
 cd "$TARGET" || exit 1
 . "$REPO_ROOT/tr4w/test/corpus/corpus-lib.sh"
 cp "$EXE_SRC" "$EXE" || exit 1
-corpus_logs_snapshot
+corpus_cleanup_on_exit
 
 norm() { sed -E 's/(Created by TR4W version .* on ).*/\1TIME/; s/(<CREATED_TIMESTAMP:15>).*/\1TIME/' "$1" 2>/dev/null; }
 
@@ -80,7 +80,7 @@ for d in "$REPO_ROOT"/tr4w/test/corpus/*/; do
    name=$(basename "$d")
    [ -f "$d/log.db" ] || continue
 
-   rm -f "$WORK".*; corpus_remove_new_logs
+   rm -f "$WORK".*
    cp "$d/log.cfg" "$WORK.CFG" || continue
    cp "$d/log.db" "$WORK.db" || continue
 
@@ -90,12 +90,12 @@ for d in "$REPO_ROOT"/tr4w/test/corpus/*/; do
    # so the log is simply copied.  The QUESTION is unchanged: does emptying
    # the .cfg change the exported bytes?)
    MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT >/dev/null 2>&1
-   with=$(mktemp -d); cp "$WORK.ADI" "$with/" 2>/dev/null; corpus_new_logs | while IFS= read -r lg; do cp -- "$lg" "$with/"; done
+   with=$(mktemp -d); cp "$WORK.adi" "$WORK.log" "$with/" 2>/dev/null
    produced=$(ls "$with" 2>/dev/null)
 
    # Without it.  The file stays -- it names the contest -- but says nothing.
    : > "$WORK.CFG"
-   rm -f "$WORK.ADI"; corpus_remove_new_logs
+   rm -f "$WORK.adi" "$WORK.log"
    MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT >/dev/null 2>&1
 
    ok=1; detail=""
@@ -118,7 +118,7 @@ for d in "$REPO_ROOT"/tr4w/test/corpus/*/; do
    fi
 done
 
-rm -f "$WORK".* "$EXE"; corpus_remove_new_logs
+rm -f "$WORK".* "$EXE"
 
 echo "=== with a .cfg vs an EMPTY .cfg: $pass identical, $fail differing ==="
 [ $fail -eq 0 ] || exit 1

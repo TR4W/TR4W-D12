@@ -84,7 +84,7 @@ if ! tr4w_refuse_if_running "test-adif-roundtrip"; then
    exit 1
 fi
 cp "$EXE_SRC" "$EXE" || exit 1
-corpus_logs_snapshot
+corpus_cleanup_on_exit
 SETTINGS_WIN="$(cygpath -d "$SETTINGS")"
 
 # Everything from the first ADIF record onward.  <EOH> ends the header, and a
@@ -178,14 +178,14 @@ roundtrip_one() {
 
    # A FRESH CONTEST WITH NO BINARY LOG -- which is what a converted contest is,
    # and what made the import refuse before /IMPORT stopped requiring one.
-   rm -f "$WORK".*; corpus_remove_new_logs
+   rm -f "$WORK".*
 
    # AGAIN BEFORE EVERY TRIP, not only at the start: a TR4W started during the
    # run shares tr4w.log from then on (2026-10-25). Stops the whole run, after
    # removing what this script put in tr4w/target.
    if ! tr4w_refuse_if_running "test-adif-roundtrip"; then
       echo "test-adif-roundtrip: STOPPED before $name -- the run is incomplete." >&2
-      rm -f "$WORK".* "$WORK-my.adi" "$EXE"; corpus_remove_new_logs
+      rm -f "$WORK".* "$WORK-my.adi" "$EXE"
       exit 1
    fi
 
@@ -207,7 +207,7 @@ roundtrip_one() {
       fail=$((fail+1)); return
    fi
 
-   out=$(ls "$WORK".ADI "$WORK".adi 2>/dev/null | head -1)
+   out=$(ls "$WORK".adi "$WORK".ADI 2>/dev/null | head -1)
    if [ -z "$out" ]; then
       printf "  FAIL  %-28s the export wrote no ADIF\n" "$name"
       fail=$((fail+1)); return
@@ -326,7 +326,7 @@ if [ -z "$ONLY" ] || [ "$ONLY" = "$MY_SET" ]; then
    fi
 fi
 
-rm -f "$WORK".* "$WORK-my.adi" "$EXE"; corpus_remove_new_logs
+rm -f "$WORK".* "$WORK-my.adi" "$EXE"
 
 echo
 echo "=== $pass passed, $fail failed, $known known-divergence, $skip skipped ==="

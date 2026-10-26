@@ -71,6 +71,12 @@ type
       procedure TestPEArchitectureOfSomethingThatIsNotPE;
       procedure TestPEArchitectureOfAMissingFile;
       procedure TestDiagnosisNamesAMissingLibrary;
+
+      (* the export file names *)
+      procedure TestExportNamesFollowTheLogName;
+      procedure TestExportNamesKeepSpacesAndTheDirectory;
+      procedure TestExportNamesOfALogWithNoExtension;
+      procedure TestTwoLogsOfOneCallExportToTwoFiles;
    public
       procedure RunAllTests; override;
    end;
@@ -1062,6 +1068,66 @@ begin
              'and says it was not found');
 end;
 
+(* ---------------------------------------------------------------------------
+  the export file names (NY4I, 2026-10-26)
+
+  The Cabrillo was <MYCALL>.LOG, so every contest of one operator wrote the
+  same file. It is the log's own name now, with .adi and .csv derived the same
+  way, in lowercase: case is real on Linux and macOS, and the .db is lowercase.
+  --------------------------------------------------------------------------- *)
+
+procedure TLogDatabaseTests.TestExportNamesFollowTheLogName;
+const
+   LOG = 'CQ-WW-SSB-2026-NY4I';
+begin
+   BeginTest('TestExportNamesFollowTheLogName');
+   CheckEquals(LOG + '.log', LogExportFileName(LOG + '.db', lekCabrillo),
+               'the Cabrillo takes the log''s name');
+   CheckEquals(LOG + '.adi', LogExportFileName(LOG + '.db', lekADIF),
+               'the ADIF takes the log''s name, lowercase');
+   CheckEquals(LOG + '.csv', LogExportFileName(LOG + '.db', lekCSV),
+               'the CSV takes the log''s name');
+   (* The binary log's name, which is what TR4W_LOG_FILENAME still holds. *)
+   CheckEquals(LOG + '.log', LogExportFileName(LOG + '.TRW', lekCabrillo),
+               'whatever the log''s own extension was, it is replaced');
+end;
+
+procedure TLogDatabaseTests.TestExportNamesKeepSpacesAndTheDirectory;
+var
+   dir: string;
+begin
+   BeginTest('TestExportNamesKeepSpacesAndTheDirectory');
+   dir := PathDelim + 'logs' + PathDelim + 'my contests' + PathDelim;
+   CheckEquals(dir + 'CQ-WW-SSB 2026-10-19 NY4I.log',
+      LogExportFileName(dir + 'CQ-WW-SSB 2026-10-19 NY4I.db', lekCabrillo),
+      'spaces in the name and the directory survive, and so does the directory');
+   CheckEquals(dir + 'CQ-WW-SSB 2026-10-19 NY4I.adi',
+      LogExportFileName(dir + 'CQ-WW-SSB 2026-10-19 NY4I.db', lekADIF),
+      'the ADIF sits beside the Cabrillo');
+end;
+
+procedure TLogDatabaseTests.TestExportNamesOfALogWithNoExtension;
+var
+   dir: string;
+begin
+   BeginTest('TestExportNamesOfALogWithNoExtension');
+   CheckEquals('NY4I.log', LogExportFileName('NY4I', lekCabrillo),
+               'no extension: one is added');
+   (* A dot in a DIRECTORY is not an extension. *)
+   dir := PathDelim + 'logs.2026' + PathDelim;
+   CheckEquals(dir + 'NY4I.log', LogExportFileName(dir + 'NY4I', lekCabrillo),
+               'a dotted directory is left alone');
+end;
+
+procedure TLogDatabaseTests.TestTwoLogsOfOneCallExportToTwoFiles;
+begin
+   BeginTest('TestTwoLogsOfOneCallExportToTwoFiles');
+   (* The defect: both were NY4I.LOG, the second export overwriting the first. *)
+   CheckTrue(LogExportFileName('CQ-WW-SSB 2026-10-19 NY4I.db', lekCabrillo) <>
+             LogExportFileName('ARRL-DX-CW 2026-02-21 NY4I.db', lekCabrillo),
+             'one operator, two contests, two Cabrillo files');
+end;
+
 (* --------------------------------------------------------------------------- *)
 
 (* ---------------------------------------------------------------------------
@@ -1518,6 +1584,11 @@ begin
    TestPEArchitectureOfSomethingThatIsNotPE;
    TestPEArchitectureOfAMissingFile;
    TestDiagnosisNamesAMissingLibrary;
+
+   TestExportNamesFollowTheLogName;
+   TestExportNamesKeepSpacesAndTheDirectory;
+   TestExportNamesOfALogWithNoExtension;
+   TestTwoLogsOfOneCallExportToTwoFiles;
 
    if (FDir <> '') and DirectoryExists(FDir) then
       begin

@@ -74,6 +74,23 @@ uses
   what keeps the domain layer a domain layer. *)
 function LogDatabaseFileName(const aBinaryLogPath: string): string;
 
+type
+   TLogExportKind = (lekADIF, lekCabrillo, lekCSV);
+
+(* THE FILE AN EXPORT OF A LOG IS WRITTEN TO -- the log's own name, with the
+  export's extension, in the log's directory (NY4I, 2026-10-26).
+
+  ONE RULE FOR ALL THREE, so the .db, .log and .adi of a contest sort together.
+  The Cabrillo used to be <MYCALL>.LOG, so every contest of an operator wrote
+  the same file and the last export won. A log's name is unique per log (contest,
+  start date, call), and the extensions are lowercase on every platform: case is
+  real on Linux and macOS, and the .db is lowercase.
+
+  aLogPath may carry any extension, or none; the extension is replaced. A
+  PARAMETER for the same reason LogDatabaseFileName takes one. *)
+function LogExportFileName(const aLogPath: string;
+                           aKind: TLogExportKind): string;
+
 (* THE file: URI THAT OPENS aFileName IMMUTABLE -- see OpenToPeek. Public so
   the escaping is pinned by a test, the UNC form included. *)
 function ImmutableURI(const aFileName: string): AnsiString;
@@ -458,6 +475,15 @@ uses
 function LogDatabaseFileName(const aBinaryLogPath: string): string;
 begin
    Result := ChangeFileExt(aBinaryLogPath, '.db');
+end;
+
+function LogExportFileName(const aLogPath: string;
+                           aKind: TLogExportKind): string;
+const
+   EXPORT_EXTENSION: array [TLogExportKind] of string =
+      ('.adi', '.log', '.csv');
+begin
+   Result := ChangeFileExt(aLogPath, EXPORT_EXTENSION[aKind]);
 end;
 
 procedure TLogConnection.ExecutePragma(const aSQL: AnsiString);

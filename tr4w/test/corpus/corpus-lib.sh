@@ -38,7 +38,7 @@
 # contest definition, and test-adif-roundtrip.sh needs it to create a FRESH
 # empty contest of the right type before importing ref.adi.
 #
-# The export is DESTRUCTIVE -- it deletes the prior .ADI and the Cabrillo .LOG
+# The export is DESTRUCTIVE -- it deletes the prior .adi and the Cabrillo .log
 # from the directory it runs in, and it writes to the log it opens -- so the
 # fixture is COPIED into a scratch directory and the tracked file is never the
 # one under test.
@@ -170,42 +170,26 @@ corpus_drop_app_id(){
 }
 
 # ---------------------------------------------------------------------------
-# THE CABRILLO .LOG FILES IN tr4w/target ARE NOT OURS (2026-10-17).
+# THE CABRILLO IS NAMED AFTER THE LOG, SO A RUN'S OWN NAME FINDS IT (2026-10-26).
 # ---------------------------------------------------------------------------
-# The scripts that run the app in tr4w/target (test-contest-factory,
-# test-rescore, test-adif-roundtrip, freeze-rescore-baseline) used to clean
-# up with `rm -f ./*.LOG` -- deleting EVERY Cabrillo export an operator had in
-# that folder -- and to take "the" Cabrillo output as `ls ./*.LOG | head -1`,
-# which picks an unrelated file whenever one is there. Now:
+# TR4W writes <log name>.adi, <log name>.log and <log name>.db side by side
+# (postunit.pas, uLogDatabase.LogExportFileName). The scripts that run the app
+# in tr4w/target give each run a private log name ($WORK), so its Cabrillo is
+# "$WORK.log" and nothing else -- no snapshot of the folder's .LOG files and no
+# "the new one" guess. Until 2026-10-26 the Cabrillo was <MYCALL>.LOG, so those
+# scripts had to diff the folder before and after, and a stray NY4I.LOG there
+# could be mistaken for the run's output.
 #
-#   corpus_logs_snapshot   once, after cd to the target folder and BEFORE the
-#                          first run: remembers which .LOG files exist, and
-#                          says so loudly if any do.
-#   corpus_new_logs        the .LOG files that appeared since the snapshot.
-#   corpus_remove_new_logs deletes those, and only those.
-#
-# A pre-existing file is never deleted. If a run's Cabrillo has the SAME name
-# as a pre-existing one the app overwrites it -- nothing here can prevent that,
-# which is why the snapshot names every file it found.
-corpus_list_logs(){
-   ls -1 ./*.LOG 2>/dev/null | sort
-}
-
-corpus_logs_snapshot(){
-   CORPUS_LOGS_BEFORE=$(corpus_list_logs)
-   if [ -n "$CORPUS_LOGS_BEFORE" ]; then
-      echo "NOTE: .LOG files already in $(pwd) are left alone (a run's Cabrillo of the same name would overwrite one):" >&2
-      printf '%s\n' "$CORPUS_LOGS_BEFORE" | sed 's/^/   /' >&2
-   fi
-}
-
-corpus_new_logs(){
-   comm -13 <(printf '%s\n' "${CORPUS_LOGS_BEFORE:-}" | sed '/^$/d') \
-            <(corpus_list_logs) | sed '/^$/d'
-}
-
-corpus_remove_new_logs(){
-   corpus_new_logs | while IFS= read -r f; do
-      rm -f -- "$f"
-   done
+# corpus_cleanup_on_exit  removes what a run created -- "$WORK".*, "$WORK"-* and
+#                         "$EXE" -- however the script ends, an interrupt
+#                         included. An interrupted run left NY4I.LOG behind
+#                         before this. It names only the run's private stem,
+#                         which every script already clears at its start, so
+#                         it cannot touch a file that existed before the run.
+#                         Call it once WORK and EXE are set, in the folder the
+#                         run uses.
+corpus_cleanup_on_exit(){
+   trap 'rm -f "${WORK:?}".* "${WORK:?}"-* ${EXE:+"$EXE"}' EXIT
+   trap 'exit 130' INT
+   trap 'exit 143' TERM
 }

@@ -23,6 +23,23 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-26 -- THE CABRILLO IS NAMED AFTER THE LOG (NY4I)
+
+The name rule is unit-tested (`uTestLogDatabase`, `TestExportNames*`) and the
+corpus checks the bytes; the menu route and the SCP upload have not been run.
+
+- [ ] **The three names sort together.** Open a real contest log, e.g.
+      `CQ-WW-SSB 2026-10-19 NY4I.db`. File > Export ADIF, then Create Cabrillo.
+      EXPECT `CQ-WW-SSB 2026-10-19 NY4I.adi` and `CQ-WW-SSB 2026-10-19 NY4I.log`
+      beside the `.db`, in the log's folder, and no `NY4I.LOG`. Export a second
+      contest: it gets its own `.log`, the first is untouched.
+- [ ] **SCP uploads the new file.** Answer Yes to the upload prompt after
+      Create Cabrillo. EXPECT the log line `...NY4I.log file uploaded to SCP`
+      naming the new file.
+- [ ] **A sponsor that wants the call as the file name** (Georgia QP: "Your
+      Callsign.LOG"; Russian DX: callsign.cbr/.log) now needs a manual rename.
+      Tell NY4I if that is wanted as an export option.
+
 ## Added 2026-10-26 -- THE NEEDS STRIPS AFTER A QSO IS LOGGED (issue #100)
 
 Unit-tested on the real form and sheets

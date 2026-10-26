@@ -336,6 +336,17 @@ multipliers, CTY.DAT, band lookup and CRC32.
   row's `my_call`, else the log's declared call, never today's ahead of them. Detail: `docs/SQLITE_LOG_SCHEMA_PLAN.md`
   §12h. `test-adif-roundtrip.sh` has a MY_ case.
 
+- **THE EXPORT FILE NAMES ARE THE LOG'S (2026-10-26, NY4I).** `uLogDatabase.LogExportFileName(log,
+  kind)` is the ONE rule: the log's name with `.adi`, `.log` or `.csv` (lowercase on every platform --
+  case is real on Linux and macOS), in the log's directory. PostUnit's `NameReportsFileAfterLog`
+  moves it into `tReportsFilename` for the ADIF, the Cabrillo and the CSV. The Cabrillo used to be
+  `<MYCALL>.LOG`, so every contest of one operator overwrote the last; the per-band EDI is the one
+  export still named by call. A sponsor who wants the call as the file name (Georgia QP, Russian DX)
+  means a manual rename. **The corpus scripts that run the app in `tr4w/target` give a run a private
+  stem (`$WORK`), so its Cabrillo is `"$WORK.log"` and nothing else** -- the folder-snapshot helpers
+  are gone and `corpus_cleanup_on_exit` (corpus-lib.sh) removes `$WORK.*`, `$WORK-*` and `$EXE` on any
+  exit. Pinned by `uTestLogDatabase.TestExportNames*`.
+
 ## Coordinate with
 
 `contest-scoring` (Cabrillo is scored output) · `log-database` (import lands in

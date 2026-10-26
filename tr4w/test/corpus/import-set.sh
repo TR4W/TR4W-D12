@@ -7,7 +7,7 @@
 #               golden run -- test-adif-roundtrip.sh needs it to create a fresh
 #               empty contest of the right type)
 #   ref.adi  <- the fresh D7 ADIF export        (golden master)
-#   ref.cbr  <- the fresh D7 Cabrillo export     (golden master; TR4W names it <CALL>.LOG)
+#   ref.cbr  <- the fresh D7 Cabrillo export     (golden master; D7 named it <CALL>.LOG, D12 names it after the log: <log>.log)
 #   manifest.json <- provenance (source dir, D7 version, QSO count, claimed score)
 #
 # The ADIF/Cabrillo MUST be regenerated from a single CURRENT D7 build (v4.149.x).
