@@ -181,6 +181,65 @@ you name. Both answers are identity facts -- never ask the station
 whole family shares (CQ WW does); `TContestStateQSOPartyBase` never does.
 `RunsInMode` is NOT this rule. Design doc 8.2v.
 
+### Your 3830scores report -- `Get3830Summary`
+
+The operator fills in the contest's form on 3830scores.com from
+`3830Score.txt` (File > Reports > 3830 Score). The report has one row per
+band, then the QSO columns (`CW Qs`, `Ph Qs`, `Dig Qs`), then the multiplier
+columns. The class decides only the multiplier columns. Everything else comes
+from what you have already stated:
+
+| part of the report | where it comes from | you write |
+|---|---|---|
+| the band rows | your `UsesBand` bands that have QSOs | nothing more -- never a second band list |
+| the QSO columns | the modes the log has QSOs in | nothing |
+| the multiplier columns | `Get3830Summary` | an override **only if the form breaks the multipliers out** |
+
+**First, look at the contest's real 3830 form.** Open a claimed-score post for
+the contest on 3830scores.com. Its band table heading (`Band  QSOs  Zones
+Countries` for CQ WW) names the columns, in order. Use the form, not a guess
+or another contest's form: the operator copies the report across one column at
+a time.
+
+**If the form has one multiplier column, state nothing.** The base gives one
+`Mults` column that adds every multiplier kind the contest has.
+
+**If the form breaks them out, override `Get3830Summary` (protected).** Add one
+`Make3830Column(<heading>, [<kinds>])` per form column, in the form's order,
+with the heading spelled as the form spells it. The kinds are
+`RemainingMultiplierType`: `rmDomestic` (state, province, county, section),
+`rmDX` (country), `rmZone` and `rmPrefix`. CQ WW (`uContestCQWWBase`):
+
+```pascal
+function TContestCQWWBase.Get3830Summary: T3830SummaryLayout;
+begin
+   SetLength(Result.MultiplierColumns, 2);
+   Result.MultiplierColumns[0] := Make3830Column('Zones', [rmZone]);
+   Result.MultiplierColumns[1] := Make3830Column('Countries', [rmDX]);
+end;
+```
+
+CQ WW RTTY (`uContestCQWWRTTY`) has three: `State/Prov` `[rmDomestic]`, `DX`
+`[rmDX]`, then `Zones` `[rmZone]`.
+
+**What `uTestScore3830Report.Test_EveryContestStatesAWellFormedLayout` fails,
+for every registered contest:**
+- no columns at all;
+- a blank heading, or one that spans two lines;
+- a column that adds no kind, or names `rmNoRemMultDisplay`;
+- one kind in two columns (it would be counted twice).
+
+A column may add two kinds together when the form does (`Mults` is all of
+them). Name only kinds the contest actually has; a kind it never counts prints
+a column of zeros.
+
+**Pin your own layout** (A5): the column count, each heading and each column's
+kinds, in order. Copy `Test_CQWWLayoutIsZonesThenCountries`, making the
+contest from its handle rather than `ContestIdentity(<enum>)` if it is a by-id
+contest. No automated test writes `3830Score.txt` from a real log, so add a
+`docs/BENCH_QUEUE.md` item: export the report from a real log and check it
+against the form. Design doc 8.2x.
+
 ### Which exchange helpers go together
 
 The five exchange statements must agree. These sets are in use:
@@ -276,6 +335,9 @@ matrix only says it is unchanged (A6). Pin, quoting the rule each test holds:
    `INCLUDE` list and "no `=` in the header" as text.
 8. **The Cabrillo line** against the sponsor's example, word for word.
 9. **One real-engine test** (below).
+10. **The 3830 layout**, if you override `Get3830Summary`: the column count,
+    headings and kinds, in order, against the contest's 3830 form
+    ([A3](#your-3830scores-report----get3830summary)).
 
 **Traps a unit test falls into:**
 
@@ -475,13 +537,11 @@ Answered as data the UI renders; a class never touches a form.
 for any contest. Pinned in `uTestContestDisplay` / `uTestContestUI`; no oracle
 sees the screen, so a change here also gets a `docs/BENCH_QUEUE.md` item.
 
-**The 3830scores report** (`Get3830Summary`, design 8.2x): its rows are your
-`UsesBand` bands -- state nothing more -- and its multiplier columns are what
-`Get3830Summary` returns, each built with `Make3830Column` from the form's heading
-and the kinds it adds (CQ WW: `Make3830Column('Zones', [rmZone])`). The base gives one `Mults` column adding every kind. State your own
-only from the contest's actual 3830 form (a claimed-score post on
-3830scores.com shows its `Band QSOs ...` heading); `uTestScore3830Report`'s
-walks hold it well formed, and a pin of your columns goes beside CQ WW's there.
+**The 3830scores report** (`Get3830Summary`, `Make3830Column`, design 8.2x):
+the rows are your `UsesBand` bands, and the multiplier columns are what
+`Get3830Summary` returns; the base gives one `Mults` column. What to write and
+what the tests hold you to is in
+[A3](#your-3830scores-report----get3830summary).
 
 ### `TStationContext` -- what a rule knows about the entrant
 
