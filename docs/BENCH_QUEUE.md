@@ -36,9 +36,9 @@ corpus checks the bytes; the menu route and the SCP upload have not been run.
 - [ ] **SCP uploads the new file.** Answer Yes to the upload prompt after
       Create Cabrillo. EXPECT the log line `...NY4I.log file uploaded to SCP`
       naming the new file.
-- [ ] **A sponsor that wants the call as the file name** (Georgia QP: "Your
-      Callsign.LOG"; Russian DX: callsign.cbr/.log) now needs a manual rename.
-      Tell NY4I if that is wanted as an export option.
+
+A sponsor that wants the call as the file name (Georgia QP, Russian DX) gets a
+manual rename by the operator. NY4I, 2026-10-26: no export option for it.
 
 ## Added 2026-10-26 -- THE NEEDS STRIPS AFTER A QSO IS LOGGED (issue #100)
 
