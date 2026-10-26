@@ -43,6 +43,12 @@ uses
    the registry answers with -- with the station given. Caller frees. *)
 function Make(aContest: ContestType; const aStation: TStationContext): TContestBase; overload;
 
+(* THE SAME FOR A HANDLE -- a contest registered by its id has no
+   ContestType member, so a party test helper that takes one cannot name it
+   (the North Dakota QSO Party, 2026-10-26). The ContestType form is this
+   one through ContestHandleOf. *)
+function Make(aContest: TContestHandle; const aStation: TStationContext): TContestBase; overload;
+
 (* The same, with no station: every station field zero. *)
 function Make(aContest: ContestType): TContestBase; overload;
 
@@ -95,17 +101,22 @@ begin
 end;
 
 function Make(aContest: ContestType; const aStation: TStationContext): TContestBase;
+begin
+   Result := Make(ContestHandleOf(aContest), aStation);
+end;
+
+function Make(aContest: TContestHandle; const aStation: TStationContext): TContestBase;
 var
    cls: TContestClass;
 begin
    cls := ContestClassFor(aContest);
    if cls = nil then
       begin
-      Result := TContestBase.Create(ContestHandleOf(aContest));
+      Result := TContestBase.Create(aContest);
       end
    else
       begin
-      Result := cls.Create(ContestHandleOf(aContest));
+      Result := cls.Create(aContest);
       end;
    Result.SetStation(aStation);
 end;

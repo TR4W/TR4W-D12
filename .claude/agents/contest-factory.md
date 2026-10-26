@@ -385,7 +385,12 @@ the target shape, the M-step migration order and the open questions.
   shared S50.DOM, and never on the party base (FL, WI and the 7QP count
   their own state). A party test asks the REAL in-state file through
   `test/unit/uTestQSOPartyRules` (`InStateMultiplierOf`, `CountsForEntrant`,
-  `RoverDupeAnswers`).
+  `RoverDupeAnswers`). Each takes a `TContestHandle` too (2026-10-26, the
+  North Dakota QSO Party), as does `uTestContestObjects.Make`, so a by-id
+  party reuses them; the `ContestType` forms delegate. A test that needs the
+  real COUNTY file as the host-area table loads it with
+  `uTestShippedDom.LoadShippedDomFollowingIncludes` behind its own
+  `TDomesticQTHTest` (`uTestContestNorthDakotaQP.CountyFileKnowsQTH`).
 - **THE PREFIX MULTIPLIER KEY IS THE CLASS'S (M11 S3 part 1, 2026-10-14).**
   `PrefixMultiplierKey(aQso, out aKey: PrefixMultiplierString): boolean`
   (base False) is stated by the 32 prefix contests; `LOGEDIT.SetPrefix`

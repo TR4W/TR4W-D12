@@ -332,6 +332,7 @@ uses
    uContestIdahoQP in '..\..\src\contestFactory\uContestIdahoQP.pas',
    uContestDelawareQP in '..\..\src\contestFactory\uContestDelawareQP.pas',
    uContestNebraskaQP in '..\..\src\contestFactory\uContestNebraskaQP.pas',
+   uContestNorthDakotaQP in '..\..\src\contestFactory\uContestNorthDakotaQP.pas',
    uContestIN7QPNE in '..\..\src\contestFactory\uContestIN7QPNE.pas',
    uContestQCWA in '..\..\src\contestFactory\uContestQCWA.pas',
    uContestQCWAGolden in '..\..\src\contestFactory\uContestQCWAGolden.pas',
@@ -737,6 +738,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* The Georgia QSO Party, a new contest registered by its id
       (2026-10-23). *)
    uTestContestGeorgiaQP in 'uTestContestGeorgiaQP.pas',
+   (* The North Dakota QSO Party, a new contest registered by its id
+      (2026-10-26) -- NY4I's acceptance test of ADDING_A_CONTEST.md. *)
+   uTestContestNorthDakotaQP in 'uTestContestNorthDakotaQP.pas',
    (* A shipped .dom through the real loader, its INCLUDEs followed by the
       test -- lifted from the New England tests (#88, 2026-10-26). *)
    uTestShippedDom in 'uTestShippedDom.pas',
@@ -905,6 +909,7 @@ begin
    RegisterSuite(TContestNebraskaQPTests.Create('ContestNebraskaQP'));
    RegisterSuite(TContestURCDXRTTYTests.Create('ContestURCDXRTTY'));
    RegisterSuite(TContestGeorgiaQPTests.Create('ContestGeorgiaQP'));
+   RegisterSuite(TContestNorthDakotaQPTests.Create('ContestNorthDakotaQP'));
    RegisterSuite(TContestNewEnglandQPTests.Create('ContestNewEnglandQP'));
    RegisterSuite(TContestMissouriQPTests.Create('ContestMissouriQP'));
    RegisterSuite(TContestCaliforniaQPTests.Create('ContestCaliforniaQP'));

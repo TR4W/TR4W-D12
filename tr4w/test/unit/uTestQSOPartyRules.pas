@@ -26,7 +26,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   one way and cannot drift. Each answer comes from the REAL thing: the
   shipped in-state .dom through the real loader (uTestShippedDom), the
   class's own CountsAsMultiplier, and the dupe path LogContact takes
-  (VisibleLog.QSOIsADupe, AddQSOToDupeSheets). *)
+  (VisibleLog.QSOIsADupe, AddQSOToDupeSheets).
+
+  EACH TAKES A HANDLE TOO (2026-10-26, the North Dakota QSO Party): a
+  contest registered by its id has no ContestType member. The handle form
+  is the one body; the ContestType form is it through ContestHandleOf. *)
 unit uTestQSOPartyRules;
 
 {$I ..\..\src\tr4w.inc}
@@ -39,7 +43,8 @@ uses
 (* THE MULTIPLIER aContest's IN-STATE FILE GIVES aAlias -- upper case, ''
    when the file does not know it. The file is the class's own
    InStateDomesticFileName, loaded with its INCLUDEs. *)
-function InStateMultiplierOf(aContest: ContestType; const aAlias: string): string;
+function InStateMultiplierOf(aContest: ContestType; const aAlias: string): string; overload;
+function InStateMultiplierOf(aContest: TContestHandle; const aAlias: string): string; overload;
 
 (* DOES aContest COUNT aMultiplier (a QSO's DomMultQTH) AS A MULTIPLIER OF
    aKind for an entrant in its host state (aInState) or outside it? The
@@ -47,7 +52,10 @@ function InStateMultiplierOf(aContest: ContestType; const aAlias: string): strin
    asks. *)
 function CountsForEntrant(aContest: ContestType; aInState: boolean;
                           const aMultiplier: string;
-                          aKind: RemainingMultiplierType): boolean;
+                          aKind: RemainingMultiplierType): boolean; overload;
+function CountsForEntrant(aContest: TContestHandle; aInState: boolean;
+                          const aMultiplier: string;
+                          aKind: RemainingMultiplierType): boolean; overload;
 
 (* A ROVER'S BARE CALL, WORKED IN aFirstQTH ON 20 m CW, THEN IN aSecondQTH,
    THEN IN aFirstQTH AGAIN, all on 20 m CW, through the dupe path LogContact
@@ -60,7 +68,13 @@ procedure RoverDupeAnswers(aContest: ContestType;
                            const aFirstQTH: string;
                            const aSecondQTH: string;
                            out aNewCountyIsDupe: boolean;
-                           out aSameCountyIsDupe: boolean);
+                           out aSameCountyIsDupe: boolean); overload;
+procedure RoverDupeAnswers(aContest: TContestHandle;
+                           const aCall: string;
+                           const aFirstQTH: string;
+                           const aSecondQTH: string;
+                           out aNewCountyIsDupe: boolean;
+                           out aSameCountyIsDupe: boolean); overload;
 
 implementation
 
@@ -79,6 +93,11 @@ uses
    uTestShippedDom;
 
 function InStateMultiplierOf(aContest: ContestType; const aAlias: string): string;
+begin
+   Result := InStateMultiplierOf(ContestHandleOf(aContest), aAlias);
+end;
+
+function InStateMultiplierOf(aContest: TContestHandle; const aAlias: string): string;
 var
    savedSheet: TMultsObject;
    savedCounties: boolean;
@@ -107,6 +126,13 @@ end;
 function CountsForEntrant(aContest: ContestType; aInState: boolean;
                           const aMultiplier: string;
                           aKind: RemainingMultiplierType): boolean;
+begin
+   Result := CountsForEntrant(ContestHandleOf(aContest), aInState, aMultiplier, aKind);
+end;
+
+function CountsForEntrant(aContest: TContestHandle; aInState: boolean;
+                          const aMultiplier: string;
+                          aKind: RemainingMultiplierType): boolean;
 var
    station: TStationContext;
    contestObject: TContestBase;
@@ -132,6 +158,17 @@ begin
 end;
 
 procedure RoverDupeAnswers(aContest: ContestType;
+                           const aCall: string;
+                           const aFirstQTH: string;
+                           const aSecondQTH: string;
+                           out aNewCountyIsDupe: boolean;
+                           out aSameCountyIsDupe: boolean);
+begin
+   RoverDupeAnswers(ContestHandleOf(aContest), aCall, aFirstQTH, aSecondQTH,
+                    aNewCountyIsDupe, aSameCountyIsDupe);
+end;
+
+procedure RoverDupeAnswers(aContest: TContestHandle;
                            const aCall: string;
                            const aFirstQTH: string;
                            const aSecondQTH: string;
@@ -166,7 +203,7 @@ begin
    CallsignsList := TCallsignsList.Create;
    QualifiedDupes := TQualifiedDupeSheet.Create;
    try
-      Contest := ContestHandleOf(aContest);
+      Contest := aContest;
       Settings.Qso.ByBand := ContestIdentity(aContest).QSOByBand;
       Settings.Qso.ByMode := ContestIdentity(aContest).QSOByMode;
 

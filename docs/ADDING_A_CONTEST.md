@@ -335,8 +335,14 @@ or `HandleOf` it; see A5's traps.
 
 ## A5. The contest's tests
 
-Copy your template's test unit. A by-id contest builds its own objects --
-`uTestContestObjects.Make` takes a `ContestType` only:
+Copy your template's test unit. A by-id contest has no `ContestType`, so use
+the `TContestHandle` form of every helper: `uTestContestObjects.Make(handle,
+station)`; for a QSO party, `uTestQSOPartyRules.InStateMultiplierOf`,
+`CountsForEntrant` and `RoverDupeAnswers` (the real in-state `.dom` through the
+real loader, the class's `CountsAsMultiplier`, the real dupe sheet); and
+`uTestShippedDom.LoadShippedDomFollowingIncludes` to load a shipped `.dom` with
+its INCLUDEs followed. Reuse them rather than copying a helper into your unit.
+Georgia's own unit builds its objects by hand, like this:
 
 ```pascal
 function GeorgiaHandle: TContestHandle;     (* FindContestById, raising if absent *)
@@ -350,22 +356,32 @@ end;
 **The unit tests are the only statement that the contest is RIGHT** -- the
 matrix only says it is unchanged (A6). Pin, quoting the rule each test holds:
 
-1. **Identity**: id resolves to the class; no legacy number; refused on
+1. **Identity**: id resolves to the class; no legacy number
+   (`ContestLegacyNumber` False, and `TryLegacyContestOf` False); refused on
    multi-op (`ContestCanUseMultiOp` False); every name and id; flags; files;
    and, for a party, what it inherits.
 2. **Bands**: every `BandType`, credited exactly when on the rules' list.
 3. **Points**: every mode, both sides of each edge, through **`ScoreQSO`**
    (never `CalculateQSOPoints` directly).
 4. **Each multiplier rule**, including off-mode QSOs (`CountsAsMultiplier`).
-5. **A party's host-area rule**: an out-of-state entrant's parse and score need
+5. **County lines**, for a party: the maximum, a county-line entry within it
+   (the first county is this QSO, the next is queued -- `PendingCountiesCount`),
+   and one county too many refused with `Format(TC_TOOMANYCOUNTIES, [max])`,
+   nothing queued. Georgia's and North Dakota's tests do this.
+6. **A party's host-area rule**: an out-of-state entrant's parse and score need
    a table that knows the host QTHs -- a `Station.IsDomesticQTH` stub
    (Georgia's `StubKnowsHostQTHs`) or `uTestContestObjects.WithHostAreaTable`.
-6. **The final score** with a hand-built `TScoreTotals` and a `TLoggedQSOList`.
-7. **The data**: the `.dom` against the rules' own table; the in-state file's
+   Better, back it with the SHIPPED county file through
+   `LoadShippedDomFollowingIncludes`, so the test also proves the real data
+   (North Dakota's test does).
+7. **The final score** with a hand-built `TScoreTotals` and a `TLoggedQSOList`.
+8. **The data**: the `.dom` against the rules' own table; the in-state file's
    `INCLUDE` list and "no `=` in the header" as text.
-8. **The Cabrillo line** against the sponsor's example, word for word.
-9. **One real-engine test** (below).
-10. **The 3830 layout**, if you override `Get3830Summary`: the column count,
+9. **The Cabrillo line** against the sponsor's example, word for word. Where
+   the rules give no example (North Dakota's list only the fields), pin the
+   fields the rules name, in their order, and say so in the test.
+10. **One real-engine test** (below).
+11. **The 3830 layout**, if you override `Get3830Summary`: the column count,
     headings and kinds, in order, against the contest's 3830 form
     ([A3](#your-3830scores-report----get3830summary)).
 
@@ -380,11 +396,12 @@ matrix only says it is unchanged (A6). Pin, quoting the rule each test holds:
   MEMBER)` or `TryLegacyContestOf(obj, member)` (False for a by-id contest).
   `ContestTypeSA[...]` of a member derived from an object is the same mistake.
   `Lint-RegistryWalks` gates the two derivations; the rest is review.
-- **A `.dom`'s `INCLUDE` is not followed in a unit test.** It resolves against
-  the program directory, and the test binary's (`tr4w/test/unit`) has no `dom`
-  folder: the file loads with no error and **none** of its includes. Pin the
-  include list as text and load the county file alone; the full in-state load
-  is seen only by the matrix's `us-host` variant.
+- **A plain `.dom` load does not follow `INCLUDE` in a unit test.** It
+  resolves against the program directory, and the test binary's
+  (`tr4w/test/unit`) has no `dom` folder: the file loads with no error and
+  **none** of its includes. Use `uTestShippedDom.LoadShippedDomFollowingIncludes`,
+  which follows them through the real loader, for the full in-state table;
+  still pin the include list as text.
 - **Look up a table entry with `TDomQTHTable.FindAlias(key, entry)`**, not
   `GetDomQTH`, which asks the active contest first and answers nothing useful
   without one.
@@ -405,8 +422,17 @@ matrix only says it is unchanged (A6). Pin, quoting the rule each test holds:
 `Settings.Mult.ByBand/ByMode`, `DomesticMultByBand`, `StationInHostState`,
 `MultipliersIsCounties`, `ActiveMode`, `CallWindowString`,
 `ExchangeErrorMessage`, `DomQTHTable`, `CallsignsList`, `QualifiedDupes`,
-`DomesticCountries`, the multiplier sheet (`mo.ClearAllMults`) and the
-county-line queue (`ClearPendingCounties`). Load `cty.dat` from `tr4w/target`
+`DomesticCountries`, `DomesticQTHRefusalDomDir`, `Settings.My.Country`,
+`Settings.Contest.DomesticFilename`, the multiplier sheet (`mo.ClearAllMults`)
+and the county-line queue (`ClearPendingCounties`).
+
+**An IN-STATE entrant in the real engine** needs, besides the above:
+`StationInHostState := True`, `MultipliersIsCounties := False` BEFORE the
+load, the in-state file loaded through `LoadShippedDomFollowingIncludes`, and
+`Settings.Contest.DomesticFilename` naming it. **A contest that refuses one
+digital submode** (FT8, say) needs the submode in the QSO: Georgia's `Enter`
+helper takes no submode, so add the parameter -- `ParametersOkay` keeps an
+`ExtMode` set beforehand (North Dakota's test does). Load `cty.dat` from `tr4w/target`
 with `ctyLoadInCountryFile`. Enter a QSO through `ParametersOkay`, then
 `VisibleLog.QSOIsADupe`, `Sheet.SetMultFlags`, `Sheet.AddQSOToSheets` and
 `AddQSOToDupeSheets`, as `LogContact` does.

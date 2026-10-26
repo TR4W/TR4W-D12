@@ -1,0 +1,14 @@
+Entries for the North Dakota QSO Party used by in-state stations
+The 53 North Dakota counties (each its own multiplier), then the 50 states, DC and the 13 Canadian provinces and territories.
+North Dakota itself is not a multiplier for an in-state entrant: the class refuses it (49 states excluding North Dakota).
+DXCC countries count for points only, never as a multiplier, so there is no DX entry.
+NL, NF and LB all resolve to Newfoundland and Labrador (NL): P13 knows NL, and the last line adds the rules' NF and LB.
+S50 is included BEFORE P13: P13 also spells Newfoundland LA, and the first alias added wins, so LA stays Louisiana.
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
+https://ndarrlsection.com
+
+INCLUDE FILE northdakota_cty.dom
+INCLUDE FILE S50.DOM
+INCLUDE FILE DC.DOM
+INCLUDE FILE P13.DOM
+Nl = NF,LB
