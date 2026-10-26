@@ -276,6 +276,7 @@ function TExternalLogger.DeleteQSO(ce: ContestExchange): integer;
 var
    cmd1, cmd2: string;
 begin
+   Result := -1;   // ACLog and HRD have no arm: not supported, never garbage
    case Self.logType of
       lt_NoExternalLogger:
          begin
@@ -321,19 +322,29 @@ begin
    end;
 end;
 
+(* Result: 0 = the lookup was queued for the logger; -1 = this logger type does
+  not support a lookup (none, ACLog, HRD).  Assigned up front so no path of
+  the case can return an unassigned value (garbage under -gt). *)
 function TExternalLogger.LookupCallsign(ce: ContestExchange): integer;
 begin
+   Result := -1;
    case Self.logType of
       lt_NoExternalLogger:
          begin
-         Result := -1;
          logger.Error('Within TExternalLogger.LookupCallsign, logType set to NoExternalLogger');
          end;
-      lt_DxKeeper: Result := Self.LookupCallsign(ce);
-      //lt_ACLog: Result := Self.LogQSOToACLog(ce);
-      //lt_HRD: Result := Self.LogQSOToHRD(ce);
+      lt_DxKeeper:
+         begin
+         (* This arm called LookupCallsign, i.e. ITSELF, until 2026-10-26
+           (issue #101); the D7 tree has the same self-call. *)
+         Result := Self.LookupCallsignToDXKeeper(ce);
+         end;
+      lt_ACLog,
+      lt_HRD:
+         begin
+         logger.Info('Callsign lookup is not implemented for this external logger type');
+         end;
    end;
-
 end;
 
 function TExternalLogger.BuildDXKeeperLogMessage(ce: ContestExchange): string;
@@ -521,18 +532,25 @@ function TExternalLogger.LookupCallsignToDXKeeper(ce: ContestExchange): integer;
 var sMessage: string;
 begin
   sMessage := '<command:5>check<parameters:' + IntToStr(length(ce.Callsign)) + '>' + ce.Callsign;
-  logger.Debug('[TExternalLogger.LookupQSOToDXKeeper] Sending message to external logger: [%s]',[sMessage]);
-  Self.SendToLogger(sMessage);
+  logger.Debug('[TExternalLogger.LookupQSOToDXKeeper] Queueing message to external logger: [%s]',[sMessage]);
+  (* DXKeeper takes one command per connection, so the lookup goes through the
+    same queue and connect-per-command transport as a log or a delete.  The
+    base SendToLogger it used would have opened the PERSISTENT socket, which
+    DXKeeper never uses (see the rule in uExternalLoggerBase). *)
+  Self.QueueSingleCommand(sMessage, 'Lookup ' + ce.Callsign);
+  Result := 0;
 end;
 //--------------------------------
 function TExternalLogger.LogQSOToACLog(ce: ContestExchange): integer;
 begin
    logger.Info('Logging to ACLog not yet implemented');
+   Result := -1;
 end;
 
 function TExternalLogger.LogQSOToHRD(ce: ContestExchange): integer;
 begin
    logger.Info('Logging to HRD not yet implemented');
+   Result := -1;
 end;
 
 function TExternalLogger.AddADIFField(sFieldName: string; sValue: string): string;

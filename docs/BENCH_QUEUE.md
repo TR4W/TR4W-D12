@@ -23,6 +23,41 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-26 -- THE NEEDS STRIPS AFTER A QSO IS LOGGED (issue #100)
+
+Unit-tested on the real form and sheets
+(`uTestStatusAndNotice.Test_LoggingAQSOTakesItsBandOutOfTheNeedsStrips`); the
+live LogContact path has not been run.
+
+- [ ] **A new multiplier drops its band from both strips.** CQ WW, S&P: type a
+      station in a country not yet worked, press Enter, log it on 20 m. EXPECT
+      "QSO needs for <call>" and "Mult needs for <call>" both to lose 20 at once,
+      before anything else is typed, and the other bands to stay.
+- [ ] **Tail-ending keeps the NEXT call.** In a run, tail-end: with the next
+      station's call already in the strips, let the previous QSO log. EXPECT both
+      strips to keep naming the NEXT call, not the one just logged.
+
+## Added 2026-10-26 -- K4 STARTUP SENDS AND RADIO REBUILD (issues #99, #104)
+
+Unit-tested against a loopback server and a blocking fake radio
+(`uTestRadioSocketNoRead`, `uTestRadioDestructors`); not yet run against a K4.
+
+- [ ] **The span is known without touching the rig.** Network K4, panadapter
+      open at shutdown. Start TR4W. EXPECT no `Cannot send command (#SPN;)` and
+      no `Cannot send command (KY ;RX;)` error in `tr4w.log`; EXPECT
+      `radio reports spectrum span <n> Hz` (TRACE) shortly after
+      `Network Radio connected`; and the span +/- buttons work at once, before
+      the span is changed at the rig.
+- [ ] **Again after a reconnect.** Power-cycle the K4 (or pull its network
+      cable and restore it). After it reconnects, change the span AT THE RIG
+      while TR4W is disconnected if you can, then press a span button: EXPECT it
+      to step from the rig's current span.
+- [ ] **Reset Radio Ports with the K4 switched off.** Turn the K4 off, wait for
+      the reconnect attempts in the log, then Reset Radio Ports several times.
+      EXPECT no crash and no `did not stop within` ERROR; each reset logs
+      `Freeing radio object`. (The old 3 s wait was shorter than a 5 s connect
+      attempt, so this freed the radio under its polling thread.)
+
 ## Added 2026-10-25 -- THE PERIODIC BACKUP AND BACKUP DESTINATION (issue #98 step 2)
 
 Unit-tested with real files and a fault-injecting file layer (`uTestBackupCopier`,

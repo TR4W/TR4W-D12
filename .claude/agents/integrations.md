@@ -179,6 +179,20 @@ opens a local client per command on the sender thread (its sole owner, no reader
 `LookupCallsign` has no caller); the rule is for the day they do. Pinned in
 `uTestExternalLoggerSocket`.
 
+**ONE CONNECT AT A TIME, AND RECONNECTION IS THE READER'S JOB (2026-10-26, #102).** Every
+connect goes through `ConnectGuarded` (`FConnectLock`): it returns at once if
+`IndyLinkIsOpen`, and refuses (-4) a non-reader caller while a reading thread exists. The
+reader reconnects through `ReconnectFromReader` (same lock, RAISES so its back-off still
+sees the exception). `DoSocketConnect` is the single protected seam where the socket's
+`Connect` is called -- a test counts attempts there. The timeout is
+`uIndyLink.INDY_LINK_CONNECT_TIMEOUT_MS` (5000; Indy's `ConnectTimeout` is MILLISECONDS --
+it was 10). `TFactoryRadioBase.Connect` still has its own literal 5000. Not pinned: the
+reader-exists refusal (needs a live reading thread against a peer that stays up).
+`TExternalLogger.LookupCallsign`'s DXKeeper arm called ITSELF until #101; it queues through
+`QueueSingleCommand` like every DXKeeper command (never the persistent socket), and the
+unsupported types return -1 -- assign `Result` on every path (`-gt`). Pinned in
+`uTestExternalLoggerLookup` (a recording `DeliverCommand`).
+
 **`TExternalLoggerBase.Destroy` was `overload; virtual`, hiding `TObject.Destroy`**, so
 `FreeAndNil(externalLogger)` ran no destructor: no `ShutdownDrain`, queued QSOs lost at
 exit unreported. It is `override` since 2026-10-25.
@@ -223,7 +237,21 @@ fileBytes)` = SHA-256 of the secret's ASCII then the raw file bytes (`SHA256OfBy
 `Move` of N file bytes into a `string` made garbage and the server answered 400. Read the
 file once as `TBytes`; never route file content through a `string`. A failed POST keeps the
 server's body (`EIdHTTPProtocolException.ErrorMessage`) in `errorResult` and `tr4w.log`.
-Pinned in `uTestSCPUpload` against a hashlib digest. Still Indy (see the unit's comment).
+Pinned in `uTestSCPUpload` against a hashlib digest. **The transport is `uHTTPDownload.THttpPost`
+since 2026-10-26** (no Indy HTTP/SSL left; Indy is Base64 only). Certificate checking is
+`ApplyTLSVerification`'s and fails closed. **TEST THE BYTES THAT ARE SENT, not just the values
+signed:** production got HTTP 400 "key must be a string at line 1 column 2" because
+`TStringStream.Create(<UnicodeString>)` is UTF-16LE in FPC 3.2.2 (`{` #0 `"` #0). `SCPRequestBody`
+builds the text; `uHTTPDownload.CreateWireBodyStream` (a `TRawByteStringStream`, never a
+`TStringStream`) is the one place a body becomes wire bytes. `THttpPost.Send` returns True for a
+non-2xx (Post allows every status): `StatusCode` + `Response` carry the refusal, and
+`SendFile` puts both in `errorResult`. Tests run a loopback HTTP fixture, no internet.
+`TSCPUpload.Destroy` is `override` since 2026-10-26 (#103; it hid `TObject.Destroy`, so
+`scp.Free` freed nothing). It frees http, sslOpts, indyLog. The logger-less constructor path
+(`FLogger = nil`) builds an scp.log appender and `Configure`s it onto the GLOBAL root: the
+field is an `ILogAppender` (Log4D appenders are ref-counted; a class field plus `Free`
+freed an object the root still held) and the destructor `RemoveAppender`s it. The logger
+itself is hierarchy-owned: never freed here.
 
 ## Prefer a reported error over a silent fallback
 

@@ -78,11 +78,26 @@ type
       procedure Test_EveryStatusNamesItsOwnSubsystem;
       procedure Test_NoStatusOverrunsItsPanel;
       procedure Test_ANotNeededBandIsAnEmptyCellNotAHiddenOne;
+      procedure Test_LoggingAQSOTakesItsBandOutOfTheNeedsStrips;
    public
       procedure RunAllTests; override;
    end;
 
 implementation
+
+uses
+   uSettingsModel,     (* Settings.Qso / Settings.Mult -- by band, not by mode *)
+   uCTYDAT,            (* ctyLoadInCountryFile, ctyLocateCall *)
+   uMults,             (* mo -- the multiplier sheet the Mult strip reads *)
+   uCallsigns,         (* ClearAllDupeSheets -- the dupe sheet the QSO strip reads *)
+   uContestRegistry,   (* ContestHandleOf *)
+   uContestFactory,    (* ReleaseActiveContest *)
+   LogWind,            (* ActiveBand, ActiveMode *)
+   LogStuff,           (* StationInformationCall, the "already shown" latch *)
+   LogDupe,            (* Sheet, ClearContestExchange, NumberDifferentMults *)
+   LogEdit,            (* ShowStationInformation, SetDXQTHAndPrefix, AddQSOToDupeSheets *)
+   LogSubs2,           (* RefreshNeedsAfterLoggedQSO -- issue #100 *)
+   PostUnit;           (* Contest -- the active contest's handle *)
 
 (* A WORKER THREAD THAT WRITES ONE STATUS AND EXITS.
 
@@ -933,6 +948,168 @@ begin
       end;
 end;
 
+(* A LOGGED QSO TAKES ITS BAND OUT OF BOTH NEEDS STRIPS -- issue #100.
+
+  NY4I, CQ WW SSB 2026-10-25 23:29Z: PJ4K logged on 20 m SSB as a new country,
+  and afterwards "QSO needs for PJ4K" and "Mult needs for PJ4K" both still read
+  160 80 40 20. The sheets had the QSO; nothing asked the strips again. The
+  post-log ShowStationInformation in TryLogContact met its own "already shown"
+  latch (StationInformationCall, cleared only after it) and returned at once.
+
+  SO THIS TEST TAKES THE PATH THE OPERATOR TOOK: ShowStationInformation on the
+  typed call (which sets that latch), the QSO onto the same sheets LogContact
+  writes and in its order, then LogContact's post-log step. The database and
+  the network are not reached -- RefreshNeedsAfterLoggedQSO is that step, made
+  public for this.
+
+  AND IT MUST NOT OVERWRITE THE NEXT CALL. Tail-ending, the strips already show
+  the station being worked next when the previous QSO is logged; a peer's QSO
+  arrives while this operator looks at someone else. Neither may replace what
+  is on screen. *)
+procedure TStatusAndNoticeTests.Test_LoggingAQSOTakesItsBandOutOfTheNeedsStrips;
+var
+   savedContest:      TContestHandle;
+   savedQsoByBand:    boolean;
+   savedQsoByMode:    boolean;
+   savedMultByBand:   boolean;
+   savedMultByMode:   boolean;
+   savedNumberMults:  Byte;
+   savedActiveBand:   BandType;
+   savedActiveMode:   ModeType;
+   savedLatch:        CallString;
+   savedRestart:      RestartInfo;
+   ctyPath:           string;
+   qsoNeed20:         TElementPanel;
+   qsoNeed40:         TElementPanel;
+   multNeed20:        TElementPanel;
+   multNeed40:        TElementPanel;
+
+   (* One SSB QSO, onto the sheets as LogContact puts it there: the flags, the
+     multiplier sheet, the dupe sheet. The country, DX QTH and zone are what
+     ParametersOkay would have left on the record. *)
+   procedure LogOnTheSheets(const aCall: CallString; aBand: BandType);
+   var
+      rx: ContestExchange;
+   begin
+      ClearContestExchange(rx);
+      rx.ceRecordKind := rkQSO;
+      rx.Callsign := aCall;
+      rx.Band := aBand;
+      rx.Mode := Phone;
+      ctyLocateCall(aCall, rx.QTH);
+      rx.Zone := rx.QTH.Zone;
+      SetDXQTHAndPrefix(rx);
+      Sheet.SetMultFlags(rx);
+      Sheet.AddQSOToSheets(@rx, False);
+      AddQSOToDupeSheets(rx, False);
+   end;
+
+   function Cell(const aName: string): TElementPanel;
+   begin
+      Result := TR4WMainForm.FindComponent(aName) as TElementPanel;
+   end;
+
+   function Reads(const aPanel: TElementPanel): string;
+   begin
+      Result := Trim(string(aPanel.Caption));
+   end;
+
+begin
+   BeginTest('Test_LoggingAQSOTakesItsBandOutOfTheNeedsStrips');
+
+   EnsureMainForm;
+   BindMainGrids;
+
+   qsoNeed20  := Cell('pnlQSONeedR1_20');
+   qsoNeed40  := Cell('pnlQSONeedR1_40');
+   multNeed20 := Cell('pnlMultNeedR1_20');
+   multNeed40 := Cell('pnlMultNeedR1_40');
+   if (qsoNeed20 = nil) or (qsoNeed40 = nil) or
+      (multNeed20 = nil) or (multNeed40 = nil) then
+      begin
+      CheckTrue(False, 'uMainForm.lfm has the 20 m and 40 m need cells of row 1');
+      Exit;
+      end;
+
+   (* The country and zone come from the shipped CTY.DAT, as uTestOffBandCredit
+     loads it. *)
+   ctyPath := ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' +
+              PathDelim + 'target' + PathDelim + 'cty.dat';
+   CheckTrue(ctyLoadInCountryFile(ctyPath, False, False, True), 'cty.dat loads');
+
+   savedContest     := Contest;
+   savedQsoByBand   := Settings.Qso.ByBand;
+   savedQsoByMode   := Settings.Qso.ByMode;
+   savedMultByBand  := Settings.Mult.ByBand;
+   savedMultByMode  := Settings.Mult.ByMode;
+   savedNumberMults := NumberDifferentMults;
+   savedActiveBand  := ActiveBand;
+   savedActiveMode  := ActiveMode;
+   savedLatch       := StationInformationCall;
+   savedRestart     := tRestartInfo;
+   try
+      (* CQ WW SSB as NY4I ran it: QSOs and multipliers per band, not per mode;
+        a DX and a zone multiplier. NumberDifferentMults is counted once at
+        start-up by LogCfg, which a test binary never runs -- with it at 0 the
+        Mult strip is never written at all. *)
+      Contest := ContestHandleOf(CQWWSSB);
+      Settings.Qso.ByBand := True;
+      Settings.Qso.ByMode := False;
+      Settings.Mult.ByBand := True;
+      Settings.Mult.ByMode := False;
+      NumberDifferentMults := 2;
+      ActiveBand := Band20;
+      ActiveMode := Phone;
+      mo.ClearAllMults;
+      ClearAllDupeSheets;
+      StationInformationCall := '';
+
+      (* THE CALL IS TYPED AND ENTER IS PRESSED: everything is needed. *)
+      ShowStationInformation('PJ4K');
+      CheckEquals('20', Reads(qsoNeed20), 'before the QSO, PJ4K is a needed QSO on 20 m');
+      CheckEquals('20', Reads(multNeed20), 'before the QSO, PJ4K is a needed mult on 20 m');
+
+      (* THE QSO IS LOGGED, then LogContact's post-log step. *)
+      LogOnTheSheets('PJ4K', Band20);
+      RefreshNeedsAfterLoggedQSO('PJ4K', True, False);
+
+      CheckEquals('', Reads(qsoNeed20), 'after the 20 m QSO, PJ4K is no longer needed on 20 m');
+      CheckEquals('', Reads(multNeed20), 'after the 20 m QSO, PJ4 is no longer a mult on 20 m');
+      CheckEquals('40', Reads(qsoNeed40), 'and PJ4K is still a needed QSO on 40 m');
+      CheckEquals('40', Reads(multNeed40), 'and PJ4 is still a needed mult on 40 m');
+
+      (* TAIL-ENDING: the strips show the NEXT call, DL1ABC, when PJ4K's 40 m
+        QSO is logged. They must keep showing DL1ABC. *)
+      ShowNeedsForCall('DL1ABC');
+      LogOnTheSheets('PJ4K', Band40);
+      RefreshNeedsAfterLoggedQSO('PJ4K', True, True);
+      CheckTrue(Pos('DL1ABC', string(TR4WMainForm.pnlQSONeedsHeader.Caption)) > 0,
+                'tail-ending: the QSO strip still names the next call');
+      CheckEquals('40', Reads(qsoNeed40),
+                  'tail-ending: the next call''s 40 m is still shown needed');
+
+      (* A PEER'S QSO: the same, for the call this operator is looking at. *)
+      LogOnTheSheets('PJ4K', Band40);
+      RefreshNeedsAfterLoggedQSO('PJ4K', False, False);
+      CheckTrue(Pos('DL1ABC', string(TR4WMainForm.pnlMultNeedsHeader.Caption)) > 0,
+                'a peer''s QSO: the Mult strip still names this operator''s call');
+   finally
+      mo.ClearAllMults;
+      ClearAllDupeSheets;
+      tRestartInfo := savedRestart;
+      StationInformationCall := savedLatch;
+      ActiveMode := savedActiveMode;
+      ActiveBand := savedActiveBand;
+      NumberDifferentMults := savedNumberMults;
+      Settings.Mult.ByMode := savedMultByMode;
+      Settings.Mult.ByBand := savedMultByBand;
+      Settings.Qso.ByMode := savedQsoByMode;
+      Settings.Qso.ByBand := savedQsoByBand;
+      Contest := savedContest;
+      ReleaseActiveContest;
+      end;
+end;
+
 procedure TStatusAndNoticeTests.RunAllTests;
 begin
    Test_TheStripHasOnePanelPerOwner;
@@ -953,6 +1130,7 @@ begin
    Test_EveryStatusNamesItsOwnSubsystem;
    Test_NoStatusOverrunsItsPanel;
    Test_ANotNeededBandIsAnEmptyCellNotAHiddenOne;
+   Test_LoggingAQSOTakesItsBandOutOfTheNeedsStrips;
    ReleaseMainForm;
 end;
 

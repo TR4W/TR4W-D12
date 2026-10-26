@@ -414,7 +414,14 @@ begin
    loggedNoConnInfo := False;
 
    // Keep polling thread alive until stop is requested (e.g. on Reset Radio Ports)
-   while not rig^.PollingStopRequested do
+   (* ...OR UNTIL THE SLOT NO LONGER HOLDS THIS RADIO.  ShutDownRadioInterface
+     leaks a radio whose poller did not stop in time rather than free it under
+     the thread (issue #104), clears the slot, and only then withdraws the stop
+     request -- so when this thread's blocked call finally returns, it must
+     not carry on polling a radio the slot has let go of, beside the new
+     radio's own thread.  The slot's pointer is read without a lock; the worst
+     a stale read costs is one more pass on a radio that is still alive. *)
+   while (not rig^.PollingStopRequested) and (rig^.tFactoryObject = ro) do
       begin
       try
          if ro.IsConnected then

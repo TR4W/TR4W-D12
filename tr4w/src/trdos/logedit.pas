@@ -191,6 +191,12 @@ function QuickEditResponseWithPartials(Prompt: Str80; MaxInputLength: integer):
   Str80;
 procedure Send88Message;
 procedure ShowStationInformation(const Call: CallString);
+(* THE TWO NEEDS STRIPS FOR ONE CALL -- "QSO needs for" and "Mult needs for",
+  from the dupe sheet and the multiplier sheet as they stand NOW. The needs
+  half of ShowStationInformation, lifted so LogContact can ask it again after
+  a QSO has changed those sheets (issue #100). It has no "already shown"
+  latch: every call recomputes. *)
+procedure ShowNeedsForCall(const Call: CallString);
 function TotalContacts: integer;
 function NextSerialToSend: integer;  { Issue #954: next serial to send = highest sent + 1 }
 procedure UpdateMaxSerialSent(Band: BandType; SerialNum: integer);  { Issue #954 }
@@ -1012,7 +1018,7 @@ procedure EditableLog.ShowMultiplierStatus(const Call: CallString);
 begin
   if length(Call) < 2 then
      begin
-     logger.warn('ShowDomesticMultiplierStatus called with DomesticQTH length < 2 %s   Exiting...',[Call]);
+     logger.warn('ShowMultiplierStatus called with Call length < 2 %s   Exiting...',[Call]);
      Exit;
      end;
   (* THE DELETED ASSEMBLY THAT USED TO STAND HERE IS WHERE THE DEFECT CAME
@@ -2089,16 +2095,59 @@ begin
   until False;
 end;
 
-procedure ShowStationInformation(const Call: CallString);
+procedure ShowNeedsForCall(const Call: CallString);
 var
   TempString: ShortString;
   TempExchange: Str14;
   ParsedTempExchange: Str14;
+begin
+  (* Gav 4.44.8: uses the initial exchange and the previous QSO's domestic
+    QTH to show the domestic multiplier status -- not for General QSO, a log
+    (TContestBase.ShowsContestStatus, M9b). *)
+  if not ContestIdentity(Contest).ShowsContestStatus then
+     begin
+     Exit;
+     end;
 
+  if DoingDomesticMults then
+     begin
+     TempString := Call;
+     if TempString <> '' then
+        begin
+        TempExchange := CallsignsList.GetIniitialExchange(TempString);
+        if TempExchange <> '' then
+           begin
+           ParsedTempExchange := DomStringParse(TempExchange);
+           if ParsedTempExchange <> '' then
+              begin
+              VisibleLog.ShowDomesticMultiplierStatus(ParsedTempExchange);
+              end;
+           end
+        else
+           begin
+           VisibleLog.ShowMultiplierStatus(Call);
+           end;
+        VisibleLog.ShowQSOStatus(Call);
+        end;
+     end
+  else
+     begin
+     VisibleLog.ShowMultiplierStatus(Call);
+     VisibleLog.ShowQSOStatus(Call);
+     end;
+end;
+
+procedure ShowStationInformation(const Call: CallString);
 begin
   { Took next line out in 6.27.  What if you are working the same guy
     on a different band?  I put it back in in 6.72 - and clared
     StationInformationCall when logging a QSO }
+  (* THAT CLEAR MOVED, AND THE POST-LOG REFRESH WENT WITH IT (issue #100). D7
+    e569269f (4.91.1, 2020) moved the reset from the head of LogContact to
+    the end of TryLogContact, so the post-log call TryLogContact made here
+    met this latch and did nothing from then on -- the needs strips kept the
+    bands they showed before the QSO. LogContact now asks ShowNeedsForCall
+    itself; this latch still stops the rest of this routine repeating. *)
 
   if Call = StationInformationCall then   // This is a flag to show we have been here before ny4i
      begin
@@ -2118,38 +2167,7 @@ begin
      DisplayQTCNumber(NumberQTCsThisStation(StandardCallFormat(Call, False)));
      end;
 
-  (* Gav 4.44.8: uses the initial exchange and the previous QSO's domestic
-    QTH to show the domestic multiplier status -- not for General QSO, a log
-    (TContestBase.ShowsContestStatus, M9b). *)
-  if ContestIdentity(Contest).ShowsContestStatus then
-     begin
-     if DoingDomesticMults then
-        begin
-        TempString := Call;
-        if TempString <> '' then
-           begin
-           TempExchange := CallsignsList.GetIniitialExchange(TempString);
-           if TempExchange <> '' then
-              begin
-              ParsedTempExchange := DomStringParse(TempExchange);
-              if ParsedTempExchange <> '' then
-                 begin
-                 VisibleLog.ShowDomesticMultiplierStatus(ParsedTempExchange);
-                 end;
-              end
-           else
-              begin
-              VisibleLog.ShowMultiplierStatus(Call);
-              end;
-           VisibleLog.ShowQSOStatus(Call);
-           end;
-        end
-     else
-        begin
-        VisibleLog.ShowMultiplierStatus(Call);
-        VisibleLog.ShowQSOStatus(Call);
-        end;
-     end;
+  ShowNeedsForCall(Call);
 
   DisplayUserInfo(Call);
   DisplayBeamHeading(Call, '');

@@ -205,7 +205,8 @@ end;
 
 procedure TYaesuSerial.Receive;
 begin
-   Self.SendToRadio('TX0;');
+   // An unkey: a no-op with no open link -- see SendStopToRadio (issue #99).
+   Self.SendStopToRadio('TX0;');
 end;
 
 // CW keying owned by the legacy path / future CW Keyer Factory -- inert stubs.

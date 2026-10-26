@@ -211,7 +211,8 @@ end;
 
 procedure TElecraftSerial.Receive;
 begin
-   Self.SendToRadio('RX;');
+   // An unkey: with no open link there is nothing to unkey -- see SendStopToRadio.
+   Self.SendStopToRadio('RX;');
 end;
 
 
@@ -255,8 +256,13 @@ begin
    // sends the next KY.  It costs latency ONLY on the interrupt path (a flush
    // with CW actually in progress), which is already the slow path -- the guard
    // in TCWKeyerCAT.Flush means an idle radio never gets here at all.
-   Self.SendToRadio('KY ' + Self.CWAbortChar + ';RX;');
-   Sleep(CW_ABORT_SETTLE_MS);
+   //
+   // SendStopToRadio: with the port closed there is nothing to abort, so no
+   // error and no settle either (issue #99).
+   if Self.SendStopToRadio('KY ' + Self.CWAbortChar + ';RX;') then
+      begin
+      Sleep(CW_ABORT_SETTLE_MS);
+      end;
 end;
 
 procedure TElecraftSerial.SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode);

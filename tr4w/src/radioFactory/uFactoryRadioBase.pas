@@ -388,6 +388,9 @@ Type TFactoryRadioBase = class(TObject)
         idempotent and neither lets an exception escape. *)
       procedure CloseNetworkLink;     // Disconnect(False) if the socket is open
       procedure StopReadingThread;    // Terminate, join, free rt
+      // The serial arm of SendToRadio's "where does this go" test, named once
+      // so LinkIsOpen asks exactly what SendToRadio asks.
+      function SerialLinkIsOpen: boolean;
 
    protected
       Disconnecting: Boolean;
@@ -581,6 +584,38 @@ Type TFactoryRadioBase = class(TObject)
 
         A method on the BASE, so the rule exists once for every radio. *)
       function SocketIsConnected: boolean;
+
+      (* COULD A COMMAND HANDED TO SendToRadio(s) NOW REACH THE WIRE?
+
+        TRANSPORT STATE ONLY -- deliberately NOT IsConnected.  For a serial
+        radio IsConnected also asks whether the radio has ANSWERED lately, and a
+        radio that has stopped answering CAT can still be keyed; a stop or an
+        unkey must go out to it.  This answers the narrower question: is the
+        port, socket or transport this class writes through open.
+
+        The rule for overriding: a class that overrides SendToRadio(s) with its
+        own transport (TIcomRadio's CI-V queue and UDP link, TTCIRadio's
+        WebSocket) overrides this too, so the two cannot disagree.  The base
+        answers for the base's own serial port and socket.  Field reads only;
+        never raises -- see SocketIsConnected. *)
+      function LinkIsOpen: boolean; virtual;
+
+      (* SEND A COMMAND WHOSE ONLY PURPOSE IS TO STOP SOMETHING -- an unkey, a
+        CW abort -- and say whether it went.
+
+        With no open link there is nothing to stop: a radio TR4W cannot write to
+        is not transmitting anything TR4W keyed.  So that case is a no-op logged
+        at DEBUG, and NOT the "Cannot send ... not connected" ERROR, which is
+        for a command that should have reached the radio and could not.  The
+        error fired on every start for a network K4 (issue #99), because
+        LogCW clears CW on the radio being left before its CAT link is up, and
+        an error that fires every start teaches the operator to ignore radio
+        errors.
+
+        Sent through SendToRadioUrgent, so a radio that queues its commands
+        puts a stop at the front.  Returns True when it was handed over, so a caller
+        with a follow-up (a settle delay) can skip it when nothing was sent. *)
+      function SendStopToRadio(const s: string): boolean;
 
 
    public
@@ -834,6 +869,11 @@ Type TFactoryRadioBase = class(TObject)
 
       procedure SendToRadio(s: string); overload; virtual;
       procedure SendToRadio(whichVFO: TVFO; sCmd: string; sData: string); overload; Virtual; Abstract;
+      (* A command that must not wait behind others -- an unkey, a CW abort.
+        The base has no queue, so it is SendToRadio; a radio that queues its
+        commands (TIcomRadio's CI-V send thread) overrides it to jump the
+        queue.  SendStopToRadio sends through here. *)
+      procedure SendToRadioUrgent(const s: string); virtual;
       // Per-radio state setters -- base owns storage; radio classes call these to
       // reflect on/off state into the field the matching display getter reads.
       procedure SetRITOn(value: boolean);
@@ -965,6 +1005,23 @@ Type TFactoryRadioBase = class(TObject)
 
       function BaseConstructorRan: Boolean;
       procedure Disconnect; overload; virtual;
+
+      (* MAKE ANY CALL BLOCKED ON THIS RADIO'S LINK RETURN -- from ANOTHER
+        thread, and without freeing or joining anything.
+
+        RadioObject.ShutDownRadioInterface calls it on the main thread while the
+        polling thread may be inside a call on this radio, so it must be safe
+        against that thread: it closes, it does not tear down.  Disconnect is
+        NOT safe there -- it frees the reading thread, which the polling thread
+        may be touching in Connect -- so this is a separate, narrower step.
+
+        The base closes its own socket (CloseNetworkLink: Disconnect(False), no
+        read), which fails a blocked Indy write or an in-flight connect.  It
+        does NOT close the serial port: closing a handle under another thread's
+        WriteFile is a race on the handle, not an interrupt, and a serial write
+        is bounded by its own timeout.  A class with its own transport may
+        override; the override must obey the same rules. *)
+      procedure InterruptLink; virtual;
       property IsTransmitting: boolean read GetIsTransmitting;
       property IsReceiving: boolean read GetIsReceiving;
       property IsConnected: boolean read GetIsConnected;
@@ -1873,7 +1930,9 @@ begin
       // handshake finished (ARCP and telnet succeed because they use the multi-
       // second OS default). 5000ms covers a slow/jittery VPN while still failing
       // in ~5s when a radio is genuinely off. - raised from 10 on 2026-05-31.
-      socket.ConnectTimeout := 5000;
+      // The constant is shared with the external logger (issue #102), and
+      // LOGRADIO's POLLING_THREAD_STOP_TIMEOUT_MS is sized against it.
+      socket.ConnectTimeout := INDY_LINK_CONNECT_TIMEOUT_MS;
 
       (* THE RADIO OWNS ITS IOHANDLER, AND ONCE MADE IT LIVES AS LONG AS THE
         SOCKET.  NEVER LET INDY MANAGE IT: a managed handler is FREED by a
@@ -2002,6 +2061,37 @@ end;
 function TFactoryRadioBase.SocketIsConnected: boolean;
 begin
    Result := IndyLinkIsOpen(socket);
+end;
+
+function TFactoryRadioBase.SerialLinkIsOpen: boolean;
+begin
+   Result := (Self.serialPort <> NoPort) and Assigned(serialPortObj) and serialPortObj.IsOpen;
+end;
+
+function TFactoryRadioBase.LinkIsOpen: boolean;
+begin
+   Result := SerialLinkIsOpen or SocketIsConnected;
+end;
+
+function TFactoryRadioBase.SendStopToRadio(const s: string): boolean;
+begin
+   Result := LinkIsOpen;
+   if not Result then
+      begin
+      logger.Debug('[SendStopToRadio] (%s) not sent -- no open link, so nothing to stop', [WireHex(s)]);
+      Exit;
+      end;
+   SendToRadioUrgent(s);
+end;
+
+procedure TFactoryRadioBase.SendToRadioUrgent(const s: string);
+begin
+   SendToRadio(s);
+end;
+
+procedure TFactoryRadioBase.InterruptLink;
+begin
+   CloseNetworkLink;
 end;
 
 procedure TFactoryRadioBase.Disconnect;
@@ -2298,7 +2388,7 @@ begin
    try
       try
          // Check if using serial or network
-         if (Self.serialPort <> NoPort) and Assigned(serialPortObj) and serialPortObj.IsOpen then
+         if SerialLinkIsOpen then
             begin
             // Serial connection.  On a BINARY protocol the frame is raw bytes, so it
             // must NOT be echoed through %s: any $0A/$0D in it (the Yaesu FT-1000MP

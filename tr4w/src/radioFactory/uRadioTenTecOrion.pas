@@ -439,7 +439,8 @@ begin
    // radio's CW buffer, or merely drops the carrier while the buffer drains.
    // If a bench test shows CW resuming after Escape, that is the reason, and
    // the fix is an additional buffer-clear command -- not more *TU.
-   Self.SendToRadio('*TU' + ORION_CR);
+   // SendStopToRadio: with no open link there is nothing to unkey (issue #99).
+   Self.SendStopToRadio('*TU' + ORION_CR);
 end;
 
 function TTenTecOrionRadio.CWIsFactoryOwned: Boolean;

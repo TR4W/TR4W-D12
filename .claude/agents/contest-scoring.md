@@ -611,6 +611,25 @@ Phone) -- `AddCallsign` indexed it with FM until P8 and wrote into the
 entry's CALL, reached by the rescore, which passes a record's stored mode.
 Pinned by `uTestSortedStringList` and `uTestCallsignsList`.
 
+## The needs strips are recomputed after a QSO is logged (issue #100, 2026-10-26)
+
+"QSO needs for" / "Mult needs for" are computed from `CallsignsList` and
+`mo` by `LOGEDIT.ShowNeedsForCall` -- the needs half of
+`ShowStationInformation`, ONE routine; do not copy its body. **`LogContact`
+asks it again** after the sheets have the QSO, through
+`LOGSUBS2.RefreshNeedsAfterLoggedQSO(call, MyComputer, TailEnding)`, which
+does nothing for a peer's QSO or while tail-ending (the strips already show
+the NEXT call). Until then nothing did: the post-log `ShowStationInformation`
+in `TryLogContact` met the `StationInformationCall` latch, which D7 e569269f
+(4.91.1, 2020) moved to be cleared only AFTER it, so the strips showed the
+bands from before the QSO. That dead call is deleted. **Do not move the latch
+clear back into `LogContact`** -- that brings the rest of
+`ShowStationInformation` back on every logged QSO, which is what the 2020
+change stopped. A test of the strips must set `NumberDifferentMults` (LogCfg
+counts it at start-up; at 0 the Mult strip is never written). Pinned by
+`uTestStatusAndNotice.Test_LoggingAQSOTakesItsBandOutOfTheNeedsStrips`.
+`LOGSTUFF.ShowQSOStatusCall` is dead (cleared in `LogContact`, read nowhere).
+
 ## Coordinate with
 
 `contest-factory` (behaviour is migrating there — check which side you are on) ·

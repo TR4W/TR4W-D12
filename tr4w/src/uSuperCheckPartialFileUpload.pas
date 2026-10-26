@@ -20,17 +20,15 @@ unit uSuperCheckPartialFileUpload;
 interface
 
 
-uses Classes, SysUtils, IdSSLOpenSSLHeaders, uSHA256, IdHTTP, IdGlobal, Log4D, uLogConfig,
-     IdCoderMIME, IdSSLOpenSSL, IdIOHandler, IdIOHandlerSocket, IdLogFile, DateUtils;
+uses Classes, SysUtils, uSHA256, IdGlobal, Log4D, uLogConfig,
+     IdCoderMIME;  (* Indy here is Base64 only; the transport is uHTTPDownload *)
 
 
 const
    SCP_TESTURL = 'https://www.supercheckpartial.com/api/v1/testcabsubmit';
    //SCP_TESTURL = 'https://192.168.1.1';
    SCP_PRODURL = 'https://www.supercheckpartial.com/api/v1/cabsubmit';
-   SCP_CANAME = 'Encrypt';
 
-   
 
 (* THE SIGNATURE IS OVER BYTES. SHA-256 of the secret's ASCII bytes followed by
   the file's raw bytes, lower-case hex. SendFile once built it from a `string`
@@ -44,34 +42,41 @@ function SCPSignature(const secret: string; const fileBytes: TBytes): string;
 (* Base64 of the same bytes the signature covers. *)
 function SCPEncodeBase64(const fileBytes: TBytes): string;
 
+(* THE REQUEST BODY, exactly the text that is sent. It is pure ASCII (hex,
+  Base64 and constants), so its UTF-8 bytes on the wire are the same characters
+  one-for-one; THttpPost.Body goes out through uHTTPDownload.CreateWireBodyStream.
+  Version, Logger, Timestamp, Hash, File -- the five keys the server requires.
+  The 2026-10-26 production 400 ("key must be a string at line 1 column 2")
+  was this text sent as UTF-16LE; the signature was right and the BYTES SENT
+  were never tested. aSecret is the shared secret that signs the file. *)
+function SCPRequestBody(const aLogger, aTimestamp, aSecret: string;
+                        const fileBytes: TBytes): string;
+
 Type TSCPUpload = class(TObject)
    private
       m_loggerName: string;
-      m_trace: boolean;
       m_loggerHash: string;
       m_production: boolean;
       m_timestamp: string;
       m_uploadURL: string;
       m_cabHash: string;
-      m_cabEncoded: string;
       m_httpResult: string;
       m_errorResult: string;
       m_httpStatusCode: integer;
       m_JSON: string;
-      indyLog: TIdLogFile;
-      sslOpts: TIdSSLIOHandlerSocketOpenSSL;
-      http: TIdHTTP;
       logger: TLogLogger;
-      appender: TLogFileAppender;
+      (* An INTERFACE reference, not a class one: Log4D's appenders are
+        reference counted, and the root logger holds its own reference once
+        Configure has added it. A class-typed field plus Free freed an object
+        the root still pointed at. *)
+      appender: ILogAppender;
       localLog: boolean;
       function GetLoggerName: string;
       procedure SetLoggerName(loggerName: string);
-      function SSLIOHandlerVerifyPeer(ThePeerCert: TIdX509; AOk: Boolean; ADepth, AError: Integer): Boolean;
-
 
    public
       constructor Create(bProduction: boolean; FLogger: TLogLogger);
-      destructor Destroy;
+      destructor Destroy; override;
       function GetHashSHA256(_string: string): string;
       function GetHashSHA256File(_filename: string): string;
       function SendFile(_filename: string): boolean;
@@ -79,10 +84,12 @@ Type TSCPUpload = class(TObject)
       property httpStatusCode: integer read m_httpStatusCode;
       property errorResult: string read m_errorResult;
       property httpResult: string read m_httpResult;
-      property trace: boolean read m_trace write m_trace;
    end;
 
 implementation
+
+uses
+   uHTTPDownload;   (* THttpPost: FPC's client, with certificate checking *)
 
 function SCPSignature(const secret: string; const fileBytes: TBytes): string;
 var
@@ -98,15 +105,27 @@ begin
    Result := TIdEncoderMime.EncodeBytes(TIdBytes(fileBytes));
 end;
 
-constructor TSCPUpload.Create(bProduction: boolean; FLogger: TLogLogger);
-
+function SCPRequestBody(const aLogger, aTimestamp, aSecret: string;
+                        const fileBytes: TBytes): string;
 begin
-   Self.m_trace := false;
-   IdSSLOpenSSLHeaders.Load();
+   Result := '{' +
+             '"Version": "1.0",' +
+             '"Logger": "' + aLogger + '",' +
+             '"Timestamp": "' + aTimestamp + '",' +
+             '"Hash": "' + SCPSignature(aSecret, fileBytes) + '",' +
+             '"File": "' + SCPEncodeBase64(fileBytes) + '"' +
+             '}';
+end;
+
+constructor TSCPUpload.Create(bProduction: boolean; FLogger: TLogLogger);
+var
+   fileAppender: TLogRollingFileAppender;
+begin
    if FLogger = nil then
       begin
-      appender := TLogRollingFileAppender.Create('name','scp.log');
-      appender.Layout := CreateTR4WLogLayout;
+      fileAppender := TLogRollingFileAppender.Create('name','scp.log');
+      fileAppender.Layout := CreateTR4WLogLayout;
+      appender := fileAppender;
       TLogBasicConfigurator.Configure(appender);
       //logLevels := llError; // For after we load config so we can set the value.
       //TLogLogger.GetRootLogger.Level := Error;
@@ -132,86 +151,51 @@ begin
       Self.m_timestamp := '2022-04-01 00:01:02';
       m_production := false;
       end;
-   (* STILL ON INDY, AND THEREFORE STILL BROKEN ON LINUX (2026-09-09).
+   (* THE TRANSPORT IS uHTTPDownload.THttpPost (FPC's client), NOT INDY.
 
-     The other four HTTPS users moved to uHTTPDownload because Indy 10.6.3.3
-     cannot speak to OpenSSL 3 -- it finds the library and refuses it,
-     "Unsupported SSL Library version: 300000D0". This upload will fail the
-     same way on any current Linux, and that is a known gap, not an oversight.
+     This used to be TIdHTTP with Indy's OpenSSL handler and an OnVerifyPeer
+     callback that accepted a certificate on its dates plus an issuer or host
+     substring. Certificate checking is ApplyTLSVerification's now: the chain
+     against the shipped root bundle AND the host name against the certificate,
+     and it FAILS CLOSED -- if verification cannot be set up the request is
+     refused. That is stronger than the old callback, which never checked the
+     chain's signatures or that the name matched the host it connected to.
 
-     IT WAS LEFT DELIBERATELY BECAUSE TWO THINGS HERE ARE NOT A TRANSPORT
-     DETAIL:
-
-       sslOpts.SSLOptions.VerifyMode := [sslvrfPeer] with OnVerifyPeer --
-       this is the only HTTPS caller in the program that verifies the server's
-       certificate and inspects the result itself. Moving it without working
-       out the equivalent would mean quietly downgrading certificate checking
-       on an upload that carries a shared secret, which is exactly the silent
-       downgrade this codebase treats as a defect.
-
-       TIdLogFile as an Intercept -- the wire log this unit writes when tracing
-       is on has no direct counterpart in FPC's client.
-
-     So this needs a decision about verification behaviour, not a search and
-     replace. Until then it works on Windows, which is where SCP uploads are
-     actually done, and reports a TLS failure on Linux. *)
-   http := TIdHttp.Create(nil);
-   http.HandleRedirects := true;
-   http.Request.ContentType := 'application/json';
-   http.Request.UserAgent := 'TR4W';
-   http.Request.Accept := 'application/json';
-   sslOpts := TIdSSLIOHandlerSocketOpenSSL.Create;
-   sslOpts.SSLOptions.Method := TIdSSLVersion(sslvTLSv1_2);
-   //sslOpts.SSLOptions.CertFile := 'cacert.pem';
-   sslOpts.SSLOptions.VerifyMode := [sslvrfPeer];
-   sslOpts.OnVerifyPeer := Self.SSLIOHandlerVerifyPeer;
-   http.IOHandler := sslOpts;
-
-   // Logging
-   if Self.m_trace then
-      begin
-      indyLog := TIdLogFile.Create(nil);
-      indyLog.Filename := 'indy.log';
-      http.Intercept := indyLog;
-      indyLog.Active := true;
-      end;
-
-
-
-
+     Nothing in this class owns a socket, a handler or an intercept any more;
+     SendFile makes a THttpPost per call and frees it. *)
 end;
 
+(* Frees what the constructor made and nothing else.
+
+  The constructor creates no objects of its own except, when the caller passed
+  no logger, the scp.log appender it adds to the GLOBAL root logger. That one
+  is taken back off the root, which drops the last reference and frees it.
+
+  NOT freed: the logger. GetLogger returns an object the Log4D hierarchy owns
+  (and keeps in its registry), so freeing it left a dangling entry for the next
+  GetLogger('SCPDebugLog'). A logger the caller passed in (localLog false) is
+  the caller's and is left alone. *)
 destructor TSCPUpload.Destroy;
 begin
-   if http <> nil then
+   if localLog then
       begin
-      FreeAndNil(http);
+      if appender <> nil then
+         begin
+         TLogLogger.GetRootLogger.RemoveAppender(appender);
+         appender := nil;
+         end;
+      logger := nil;
       end;
-  if sslOpts <> nil then
-     begin
-     FreeANdNil(sslOpts);
-     end;
-  if localLog then
-     begin
-     if logger <> nil then
-        begin
-        FreeAndNil(logger);
-        end;
-     if appender <> nil then
-        begin
-        FreeAndNil(appender);
-        end;
-     end;
+   inherited Destroy;
 end;
 
 function TSCPUpload.SendFile(_filename: string): boolean;
-var fs: TFileStream;
-    fileBytes: TBytes;
-    httpResult: string;
-    hash: string;
-    json: TSTringStream;
+var
+   fs: TFileStream;
+   fileBytes: TBytes;
+   post: THttpPost;
+   sent: boolean;
 begin
-   //Result := false;
    // First check that the log file exists
    if not FileExists(_filename) then
       begin
@@ -242,48 +226,45 @@ begin
       fs.Free;
    end;
 
-   Self.m_cabEncoded := SCPEncodeBase64(fileBytes);
-
    // Set the logger name
    Self.loggerName := 'TR4W';  // Sets m_loggerHash too.
 
-   // Set the hash-signature: sha256 over (shared secret, then the raw file bytes)
-   hash := SCPSignature(Self.m_loggerHash, fileBytes);
+   Self.m_JSON := SCPRequestBody(Self.GetLoggerName, Self.m_timestamp,
+                                 Self.m_loggerHash, fileBytes);
 
-   // Build the JSON
-   Self.m_JSON := '{' +
-                  '"Version": "1.0",' +
-                  '"Logger": "' + Self.GetLoggerName + '",' +
-                  '"Timestamp": "' + Self.m_timestamp + '",' +
-                  '"Hash": "' + hash + '",' +
-                  '"File": "' + Self.m_cabEncoded + '"' +
-                  '}';
-   json := TStringStream.Create(Self.m_JSON);
+   post := THttpPost.Create(Self.m_uploadURL);
    try
-      httpResult := Self.http.Post(Self.m_uploadURL, json);
-      Self.m_httpResult := httpResult;
-      Self.m_httpStatusCode := Self.http.ResponseCode;
-      Result := Self.http.ResponseCode = 200;
-   except
-      on E: EIdHTTPProtocolException do
+      post.Body        := Self.m_JSON;
+      post.ContentType := 'application/json';
+      post.UserAgent   := Self.m_loggerName;
+      sent := post.Send;
+      Self.m_httpStatusCode := post.StatusCode;
+      Self.m_httpResult := post.Response;
+      Result := sent and (post.StatusCode = 200);
+      if not Result then
          begin
-         (* The status line alone ("400 Bad Request") says nothing; the body
-           is where the server says what it rejected. *)
-         Result := false;
-         Self.m_httpStatusCode := E.ErrorCode;
-         Self.m_errorResult := '***ERROR*** ' + E.ClassName + ' ' + E.Message;
-         if E.ErrorMessage <> '' then
+         (* THE OPERATOR SEES THE STATUS AND THE SERVER'S OWN WORDS. A refusal
+           is an answer, not a transport failure: Send returns True with the
+           status and the body, and the body is where the server says what it
+           rejected ("Failed to parse the request body as JSON ..."). When
+           the server never answered, FailReason says why. *)
+         if sent then
             begin
-            Self.m_errorResult := Self.m_errorResult + ' - server said: ' + E.ErrorMessage;
+            Self.m_errorResult := '***ERROR*** HTTP ' + IntToStr(post.StatusCode);
+            if post.Response <> '' then
+               begin
+               Self.m_errorResult := Self.m_errorResult + ' - server said: ' + post.Response;
+               end;
+            logger.Error('SCP upload rejected: %s', [Self.m_errorResult]);
+            end
+         else
+            begin
+            Self.m_errorResult := '***ERROR*** ' + post.FailReason;
+            logger.Error('SCP upload failed: %s', [Self.m_errorResult]);
             end;
-         logger.Error('SCP upload rejected: %s', [Self.m_errorResult]);
          end;
-      on E: Exception do
-         begin
-         Result := false;
-         Self.m_errorResult := '***ERROR*** ' + E.ClassName + ' ' + E.Message;
-         logger.Error('SCP upload failed: %s', [Self.m_errorResult]);
-         end;
+   finally
+      post.Free;
    end;
 end;
 
@@ -296,7 +277,6 @@ procedure TSCPUpload.SetLoggerName(loggerName: string);
 //var s: string;
 begin
    Self.m_loggerName := loggerName;
-   Self.http.Request.UserAgent := loggerName;
    if Self.m_production then
       begin
       // Assemble the shared secret key into m_credentials
@@ -348,40 +328,4 @@ begin
    Result := SHA256OfBytes(UTF8Encode(_string));
 end;
 
-function TSCPUpload.SSLIOHandlerVerifyPeer(ThePeerCert: TIdX509; AOk: Boolean; ADepth, AError: Integer): Boolean;
-var sTemp: string;
-   sActualIssuerName: string;
-   sActualPeerName: string;
-  // bVerifiedPeer: boolean;
-   begin
-//Note this is called MULTIPLE times, one for each cert in the chain, starting
-//with the CA cert & ending with the user cert.
-   Result := false;
-   if AOk = True then
-      begin
-      sTemp := 'SSLIOHandlerVerifyPeer called with AOk = TRUE';
-      end
-   else
-      begin
-      sTemp := 'SSLIOHandlerVerifyPeer called with AOk = FALSE';
-      end;
-  // TheHttpLog.LogWriteString(sTemp+#13#10);
-   sActualIssuerName := ThePeerCert.Issuer.OneLine;
-   //TheHttpLog.LogWriteString('Peer certificate issuer name: '+sActualPeerName+#13#10);
-   sActualPeerName := ThePeerCert.Subject.OneLine;
-   //TheHttpLog.LogWriteString('Peer certificate subject name: '+sActualPeerName+#13#10);
-   //TheHttpLog.LogWriteString('Peer certificate fingerprint: '+ThePeerCert.FingerprintAsString+#13#10);
-   if CompareDateTime(Now,ThePeerCert.notBefore) = 1 then
-      begin
-      if CompareDateTime(Now,ThePeerCert.notAfter) = -1 then
-         begin
-         if (Pos(UpperCase(SCP_CANAME), UpperCase(sActualIssuerName)) > 0) or
-            ((Pos(UpperCase('supercheckpartial.com'), UpperCase(sActualPeerName)) > 0)) then
-            begin
-            //bVerifiedPeer := True;
-            Result := True;
-            end;
-         end;
-      end;
-   end;
 end.

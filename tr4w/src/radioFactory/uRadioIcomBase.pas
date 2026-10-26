@@ -220,6 +220,9 @@ type
     function BCDToFreq(bcd: string): LongInt;
     procedure ProcessCIVFrame(frame: string); virtual;
     function GetIsConnected: boolean; override;
+    (* SendToRadio(s) is overridden here -- network frames go to the UDP
+      transport, serial ones to the base's port -- so this says which is open. *)
+    function LinkIsOpen: boolean; override;
     function GetIsOperational: boolean; override;             // Strict: true only when handshake fully complete
     function GetCanRecycleOnStuckHandshake: boolean; override; // True for network -- fresh AYH is the recovery
     function GetAuthFailed: boolean; override;
@@ -258,7 +261,7 @@ type
     function Connect: integer; override;
     procedure Disconnect; override;
     procedure SendToRadio(s: string); overload; override;
-    procedure SendToRadioUrgent(const s: string);  // Bypasses normal queue order (PTT, CW stop)
+    procedure SendToRadioUrgent(const s: string); override;  // Bypasses normal queue order (PTT, CW stop)
 
     // Polling interface implementation
     procedure QueryVFOAFrequency; override;
@@ -460,13 +463,28 @@ begin
   FreeOnTerminate := False;
 end;
 
+(* STOP AND JOIN THE THREAD, THEN FREE WHAT IT USES -- in that order, and with
+  no help from the caller (issue #105).
+
+  This freed the event, the lock and both queues FIRST and only then called
+  inherited Destroy, which is what terminates and joins.  A thread still
+  running was therefore left in FHasWork.WaitFor / DrainQueues on freed
+  objects.  It was latent only because the one caller, StopCIVSendQueue,
+  happened to Stop and WaitFor before freeing.
+
+  Stop sets Terminated and wakes the wait; TThread.Destroy then joins (and
+  starts a never-started thread so that it can finish).  Freeing the fields
+  AFTER inherited Destroy is sound: TObject.Destroy releases nothing, and the
+  instance memory goes in FreeInstance, after this destructor returns.  The
+  frees tolerate nil, for a constructor that raised part-way. *)
 destructor TCIVSendThread.Destroy;
 begin
+  Stop;
+  inherited Destroy;
   FHasWork.Free;
   FLock.Free;
   FUrgentQueue.Free;
   FNormalQueue.Free;
-  inherited Destroy;
 end;
 
 procedure TCIVSendThread.Execute;
@@ -543,7 +561,11 @@ end;
 procedure TCIVSendThread.Stop;
 begin
   Terminate;         // Sets Terminated := True
-  FHasWork.SetEvent; // Wake up immediately if waiting
+  // nil only when the constructor raised before creating it -- Destroy runs then
+  if FHasWork <> nil then
+     begin
+     FHasWork.SetEvent; // Wake up immediately if waiting
+     end;
 end;
 
 // ---- CI-V Protocol Constants -----------------------------------------------
@@ -1202,7 +1224,12 @@ begin
 end;
 
 (* Stop and free the CI-V send queue thread.  Idempotent; shared by
-  Disconnect and Destroy so the stop-then-join is written once. *)
+  Disconnect and Destroy so the stop-then-join is written once.
+
+  The thread's destructor now stops and joins by itself (issue #105); the
+  explicit Stop and WaitFor stay here so FCIVSendThread is not nilled until the
+  thread has finished -- SendToRadio reads that field from other threads and
+  falls back to a direct send when it is nil. *)
 procedure TIcomRadio.StopCIVSendQueue;
 begin
   if FCIVSendThread = nil then
@@ -1326,6 +1353,22 @@ begin
   else
      begin
      Result := inherited GetIsConnected;
+     end;
+end;
+
+(* The network arm of GetIsConnected is transport STATE, with no freshness
+  test, which is what LinkIsOpen asks.  The serial arm of GetIsConnected is NOT
+  (it also asks whether the radio answered lately), so serial goes to the
+  base's port test instead. *)
+function TIcomRadio.LinkIsOpen: boolean;
+begin
+  if IsNetworkConnection then
+     begin
+     Result := GetIsConnected;
+     end
+  else
+     begin
+     Result := inherited LinkIsOpen;
      end;
 end;
 
@@ -2687,7 +2730,10 @@ end;
 
 procedure TIcomRadio.Receive;
 begin
-  SendToRadioUrgent(BuildCIVCommand($1C, CIV_PAYLOAD_PTT_OFF));  // PTT off — urgent
+  // An unkey: urgent (SendStopToRadio sends through SendToRadioUrgent), and a
+  // no-op with no open link -- before Connect, or a network radio whose UDP
+  // transport does not exist yet (issue #99).
+  SendStopToRadio(BuildCIVCommand($1C, CIV_PAYLOAD_PTT_OFF));
 end;
 
 procedure TIcomRadio.SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode);
@@ -2905,8 +2951,9 @@ end;
 
 procedure TIcomRadio.StopCW;
 begin
-  // CI-V command $17 $FF stops CW sending — sent urgent to jump the queue
-  SendToRadioUrgent(BuildCIVCommand($17, #$FF));
+  // CI-V command $17 $FF stops CW sending -- urgent, to jump the queue, and a
+  // no-op with no open link (SendStopToRadio; issue #99)
+  SendStopToRadio(BuildCIVCommand($17, #$FF));
   logger.debug('[%s.StopCW] CW transmission stopped', [radioModel]);
 end;
 

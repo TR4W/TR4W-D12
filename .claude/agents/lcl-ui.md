@@ -174,6 +174,13 @@ FORM.** Load the resource.
 **GUI defects need a running program.** The corpus and the unit tests are blind to
 the UI; measure the screen, not the source.
 
+**The needs strips (`uMainGrids`) are written, never polled** (issue #100,
+2026-10-26). Their cells hold the answer in `Caption` and colour; what decides
+WHEN they are rewritten is the engine (`LOGEDIT.ShowNeedsForCall`, asked by
+`LogContact` after a QSO). A stale strip is a missing call there, not a repaint
+problem -- do not add an `Invalidate` or a timer. A test can drive them on the
+streamed form: `uTestStatusAndNotice`'s `EnsureMainForm` + `BindMainGrids`.
+
 ## Coordinate with
 
 Every other agent — each owns a window. `i18n` on any caption.

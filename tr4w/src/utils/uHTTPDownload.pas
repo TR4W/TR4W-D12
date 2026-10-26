@@ -15,6 +15,21 @@ unit uHTTPDownload;
 
 interface
 
+uses
+   Classes;
+
+(* THE STREAM THAT CARRIES A REQUEST BODY: the body's UTF-8 bytes, untouched.
+
+  Exposed so a test can read the bytes that are really SENT. It is a
+  TRawByteStringStream and NOT a TStringStream, on purpose: in FPC 3.2.2
+  TStringStream is encoding-aware. TStringStream.Create(<UnicodeString>)
+  encodes as UTF-16LE (streams.inc:874-876), which put '{' #0 '"' #0 on the
+  wire for the SCP upload and drew "key must be a string at line 1 column 2"
+  from the server; and the plain-string overload re-encodes to the ANSI
+  codepage, which loses anything outside it. A raw byte stream does neither.
+  The caller owns the result. *)
+function CreateWireBodyStream(const aBody: string): TRawByteStringStream;
+
 function DownloadFileToPath(const AURL, ATargetFile: string;
                             const AAllowInsecure: boolean = False): boolean; overload;
 // Downloads AURL to ATargetFile.  Returns True only if the file is on disk
@@ -127,8 +142,7 @@ implementation
 
 uses
    SysUtils,
-   Classes,
-   fphttpclient,      (* FPC's own client -- see the note on the transport *)
+   fphttpclient,     (* FPC's own client -- see the note on the transport *)
    opensslsockets,    (* registers the TLS handler fphttpclient asks for *)
    uOpenSSLLoader,
    uTLSTrust,
@@ -190,6 +204,11 @@ end;
 function FromWire(const aBytes: RawByteString): string;
 begin
    Result := UTF8Decode(aBytes);
+end;
+
+function CreateWireBodyStream(const aBody: string): TRawByteStringStream;
+begin
+   Result := TRawByteStringStream.Create(ToWire(aBody));
 end;
 
 
@@ -521,8 +540,8 @@ function THttpPost.Send: boolean;
 var
    http:    TFPHTTPClient;
    useTLS:  boolean;
-   bodyIn:  TStringStream;
-   bodyOut: TStringStream;
+   bodyIn:  TRawByteStringStream;
+   bodyOut: TRawByteStringStream;
 begin
    Result     := False;
    Response   := '';
@@ -561,23 +580,25 @@ begin
          http.Password := ToWire(Password);
          end;
 
-      bodyIn  := TStringStream.Create(ToWire(Body));
-      bodyOut := TStringStream.Create('');
+      bodyIn  := CreateWireBodyStream(Body);
+      bodyOut := TRawByteStringStream.Create('');
       try
          try
             http.RequestBody := bodyIn;
             http.Post(ToWire(URL), bodyOut);
+            (* Post allows EVERY status code (HTTPMethod's allowed list is
+              empty), so a 400 does not raise: Send returns True, StatusCode
+              holds 400 and Response holds the server's own explanation. *)
             Response   := FromWire(bodyOut.DataString);
             StatusCode := http.ResponseStatusCode;
             Result     := True;
          except
             on E: Exception do
                begin
-               (* A NON-2xx IS AN EXCEPTION HERE, unlike Indy, which returned
-                 and left ResponseCode to be read. The status is still
-                 recorded, so a caller that wants to distinguish "the server
-                 said no" from "the server was not there" can, and the two
-                 callers that checked for 200 keep working. *)
+               (* TRANSPORT FAILURES ONLY (no route, TLS, timeout): a non-2xx
+                 answer does not raise, see above. The status is recorded
+                 anyway (0 when the server never answered), so a caller can
+                 tell "the server said no" from "the server was not there". *)
                StatusCode := http.ResponseStatusCode;
                logger.Error('[Download] POST %s failed: %s: %s',
                             [URL, E.ClassName, E.Message]);

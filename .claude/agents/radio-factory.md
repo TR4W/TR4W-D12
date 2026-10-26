@@ -140,6 +140,49 @@ down. It is `override` with `inherited Destroy` now. Rules that came with it:
 - Pinned by `test/unit/uTestRadioDestructors.pas`: Free through a base reference
   reaches the destructor; every registry entry frees, with and without Disconnect
   first; a connected K4 with a live reader frees within a watchdog.
+- **A thread's destructor stops and joins it BEFORE freeing what it uses** --
+  `TCIVSendThread.Destroy` freed its event, lock and queues first (issue #105).
+  Free fields AFTER `inherited Destroy` (which joins, and starts a never-started
+  thread so it can finish); that is sound because the instance memory goes in
+  `FreeInstance`. Under `-Checked` heaptrc fills freed memory with `$F0`, so a
+  virtual call on a freed object AVs every time -- that is how the test sees it.
+
+**A RADIO IS FREED ONLY AFTER ITS POLLING THREAD HAS STOPPED** (issue #104,
+2026-10-26). `ShutDownRadioInterface`: `PollingStopRequested`, then
+**`ro.InterruptLink`** (close the link from another thread, free nothing -- base
+closes its socket; NOT the serial port, a handle race), then
+`LogSUBS2.WaitForPollingThreadWithMessages` (pumps sent messages: the poller
+can be inside a cross-thread `SetWindowText`, e.g. `DisplayCodeSpeed`), bounded
+by `POLLING_THREAD_STOP_TIMEOUT_MS` (6 s, longer than a 5 s connect). On a
+timeout the radio is **deliberately leaked**, never freed, and the slot is
+cleared BEFORE the stop request is withdrawn -- `pFactoryRadio` leaves its loop
+when `rig^.tFactoryObject <> ro`, so a leaked poller cannot become a second
+one. `RadioObject.StartPollingThread` is the one place a poller starts.
+Pinned by the two `Test_ShutDown*` tests. **`ExitProgram` still waits 3 s
+without `InterruptLink`** -- it does not free the radios, so it is not the
+same defect, but it is the same blind spot.
+
+**A STOP OR AN UNKEY ON A RADIO WITH NO LINK IS A NO-OP** (issue #99):
+`SendStopToRadio` (debug, not the "Cannot send" ERROR), gated on
+`LinkIsOpen` -- transport state only, never "has it answered lately", because a
+mute radio may still be keyed. A class that overrides `SendToRadio(s)` with its
+own transport overrides `LinkIsOpen` too (Icom, TCI). It sends through the
+virtual `SendToRadioUrgent` (base: `SendToRadio`; the Icom overrides it to jump
+its CI-V queue). **Every driver's `StopCW` and `Receive` now goes through it**,
+and that is asserted over the WHOLE REGISTRY, not driver by driver:
+`uTestRadioDestructors.Test_EveryRegisteredRadio_StopAndUnkeyWithNoLink_LogNoError`
+builds every entry on every link it claims, places it on that link without
+connecting, and fails on any exception or ERROR line. A new driver that sends
+its stop unconditionally fails there by name. A byte-frame stop builds its
+frame and hands it over (`TYaesuBinary.Frame5`, `TFlexAPI.FlexCmdLine`) rather
+than growing a second send path.
+
+**A QUESTION ASKED AT CONNECT BELONGS IN THE DRIVER'S `Connect`, NOT IN A UI
+PATH.** The K4's spectrum socket connects before its CAT link, so `#SPN;` sent
+from `StartSpectrum` was dropped at every start; it is in `TK4Radio.Connect`
+now and so goes again on every reconnect. The Icom `$27 $15` span read is
+still sent only from `StartSpectrum` (its enables are re-sent on connect, its
+span read is not) -- same shape, not yet fixed.
 
 **`uRadioPolling.BeginPolling` is `function(aParameter: Pointer): DWORD;
 stdcall`** (`TF.TTR4WThreadStart`, pointer audit P1, 2026-10-16) and reads its

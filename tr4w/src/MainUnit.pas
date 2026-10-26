@@ -1145,8 +1145,11 @@ begin
 
       tElapsedTimeFromLastQSO := GetTickCount64;
       UpdateWindows;
-    // It is not clear to me why we would call SHowStationInformation again.
-      ShowStationInformation(ReceivedData.Callsign);
+      (* NO ShowStationInformation HERE ANY MORE -- issue #100. It was meant to
+        refresh the needs strips after the QSO, but StationInformationCall is
+        only cleared at the end of this routine, so it exited at once from
+        2020 (D7 e569269f) on. LogContact refreshes them itself now
+        (RefreshNeedsAfterLoggedQSO). *)
       ClearContestExchange(ReceivedData);
       CallAlreadySent := False;
       ExchangeHasBeenSent := False;

@@ -420,6 +420,11 @@ type
       // slot needs exactly this and nothing else -- see the call in
       // CheckAndInitializePorts_ForThisRadio.
       procedure ShutDownRadioInterface;
+      // Starts uRadioPolling.BeginPolling for this radio.  The ONE place that
+      // does it, so the flag-before-thread rule (PollingThreadRunning) is
+      // written once; CheckAndInitializePorts_ForThisRadio and the unit tests
+      // both come through here.
+      procedure StartPollingThread;
       procedure StopSendingCW;
       //    procedure StartNextPoll;
       //    function TimeToGiveUp: boolean;
@@ -1410,20 +1415,25 @@ begin
       begin
       if PollingEnable then
          begin
-         tPollCount := -1;
-         (* BEFORE the thread exists, deliberately -- see the field. *)
-         PollingThreadRunning := True;
-         tRadioInterfaceThreadHandle :=
-            tCreateThread(BeginPolling, tRadioInterfaceThreadID, False, @Self);
-         if not ThreadStarted(tRadioInterfaceThreadHandle) then
-            begin
-            (* Nothing will ever clear the flag if nothing ever ran. *)
-            PollingThreadRunning := False;
-            end;
-         logger.Info('Created Radio %s thread with threadid of %u',[Self.RadioName, PtrUInt(tRadioInterfaceThreadID)] );
+         StartPollingThread;
          end;
       end;
 
+end;
+
+procedure RadioObject.StartPollingThread;
+begin
+   tPollCount := -1;
+   (* BEFORE the thread exists, deliberately -- see the field. *)
+   PollingThreadRunning := True;
+   tRadioInterfaceThreadHandle :=
+      tCreateThread(BeginPolling, tRadioInterfaceThreadID, False, @Self);
+   if not ThreadStarted(tRadioInterfaceThreadHandle) then
+      begin
+      (* Nothing will ever clear the flag if nothing ever ran. *)
+      PollingThreadRunning := False;
+      end;
+   logger.Info('Created Radio %s thread with threadid of %u',[Self.RadioName, PtrUInt(tRadioInterfaceThreadID)] );
 end;
 
 function FrequencyFromFourBytes(FreqStr: string): longint;
@@ -1644,29 +1654,78 @@ begin
    Self.tFactoryObject.serialPortName := Self.tCATPortName;
 end;
 
+(* HOW LONG THE POLLING THREAD GETS TO STOP before its radio is leaked rather
+  than freed.  Longer than the longest step the thread can be in that
+  InterruptLink cannot cut short: a network Connect that had not yet opened
+  its socket when the link was interrupted -- Sleep(100) plus the 5000 ms
+  ConnectTimeout in TFactoryRadioBase.Connect (uIndyLink's
+  INDY_LINK_CONNECT_TIMEOUT_MS; raise this if that is raised).  Every other wait in the loop
+  is a slice of 250 ms or less that re-tests PollingStopRequested, and the
+  error back-off sleeps 1000.  The old figure, 3000, was shorter than that
+  connect, so a Reset Radio Ports while a switched-off network radio was
+  mid-reconnect freed it under the thread (issue #104). *)
+const
+   POLLING_THREAD_STOP_TIMEOUT_MS = 6000;
+
+(* STOP THE POLLER, AND FREE THE RADIO ONLY ONCE IT HAS STOPPED (issue #104).
+
+  This used to wait 3 s, ignore the answer and free the radio anyway, so a
+  poller still inside a call on the radio carried on in freed memory.  It runs
+  on every rebuild -- Reset Radio Ports, applying or saving a profile -- not
+  only at exit.  Now, in order:
+
+  1. PollingStopRequested, which the loop tests at the top of every pass and
+     inside its back-off sleep.
+  2. ro.InterruptLink: close the radio's link, so a call blocked on it
+     returns.  It closes and frees nothing else, because the poller may be
+     inside the radio at this moment -- Disconnect would free the reading
+     thread under it.
+  3. Wait, PUMPING SENT MESSAGES: the polling thread can be inside a
+     cross-thread SendMessage (an LCL caption set from that thread, such as
+     DisplayCodeSpeed on a CW speed sync), and a wait that does not pump
+     deadlocks against it.  WaitForPollingThreadWithMessages is the routine
+     ExitProgram already uses for that reason.
+  4. Stopped: Disconnect and Free, as before.  NOT stopped: log an ERROR and
+     LEAK the radio on purpose.  A leak is harmless; a use-after-free is not.
+
+  WHY BOUNDED AND NOT FOR EVER.  InterruptLink cannot unblock everything: a
+  serial WriteFile is bounded only by its own 30 s write timeout, and a HamLib
+  call by HamLib's.  An unbounded wait would freeze the main window for that
+  long, or for good if something hangs.
+
+  THE LEAKED THREAD CANNOT BECOME A SECOND POLLER.  The slot's tFactoryObject
+  is cleared BEFORE PollingStopRequested is cleared, and pFactoryRadio leaves
+  its loop once the slot no longer holds the radio it started with -- so when
+  the stuck call finally returns, the old thread finishes its pass and exits
+  instead of polling the leaked radio beside the new thread.  What it can still
+  do in that last pass is write this slot's status once, and its exit clears
+  PollingThreadRunning, which by then may describe the new thread.  Both are
+  confined to the case this branch exists for and both are logged. *)
 procedure RadioObject.ShutDownRadioInterface;
+var
+   ro: TFactoryRadioBase;
+   pollerStopped: Boolean;
 begin
    if Self.tFactoryObject = nil then
       begin
       Exit;
       end;
+   ro := Self.tFactoryObject;
 
    logger.Info('[%s.ShutDownRadioInterface] Stopping polling thread', [Self.RadioName]);
    Self.PollingStopRequested := True;
+   ro.InterruptLink;
+
+   pollerStopped := True;
    if ThreadStarted(Self.tRadioInterfaceThreadHandle) then
       begin
-      (* THE RTL's OWN PAIR, not Win32's. tCreateThread has used FPC's
-        BeginThread since 2026-08-23 -- see the note in TF -- so what this
-        holds is a TThreadID, and WaitForThreadTerminate / CloseThread are
-        what the RTL provides for one on every platform. Same timeout, same
-        semantics; WaitForSingleObject only ever worked because on Windows a
-        TThreadID IS a handle. *)
-      WaitForThreadTerminate(Self.tRadioInterfaceThreadHandle, 3000);
+      pollerStopped := WaitForPollingThreadWithMessages(@Self, POLLING_THREAD_STOP_TIMEOUT_MS);
+      (* CloseThread releases the handle, not the thread, so it is right on
+        both paths: a thread that is still running keeps running. *)
       CloseThread(Self.tRadioInterfaceThreadHandle);
       ClearThread(Self.tRadioInterfaceThreadHandle);
       ClearThread(Self.tRadioInterfaceThreadID);
       end;
-   Self.PollingStopRequested := False;
 
    { A PANADAPTER MAY BE HOLDING THIS RADIO, and it does not own it.
 
@@ -1679,12 +1738,25 @@ begin
      second holder of exactly that kind, added long after that comment was
      written, and it crashed for exactly that reason on 2026-08-26 when NY4I
      switched a K4 profile to FT1000/K3 -- see PanadapterRadioGoingAway. }
-   PanadapterRadioGoingAway(Self.tFactoryObject);
+   PanadapterRadioGoingAway(ro);
 
-   logger.Info('[%s.ShutDownRadioInterface] Freeing radio object', [Self.RadioName]);
-   Self.tFactoryObject.Disconnect;
-   Self.tFactoryObject.Free;
+   (* The slot lets go of the radio BEFORE the stop request is withdrawn --
+     see the header: that order is what keeps a leaked poller from resuming. *)
    Self.tFactoryObject := nil;
+   if pollerStopped then
+      begin
+      logger.Info('[%s.ShutDownRadioInterface] Freeing radio object', [Self.RadioName]);
+      ro.Disconnect;
+      ro.Free;
+      end
+   else
+      begin
+      logger.Error('[%s.ShutDownRadioInterface] The polling thread did not stop within %d ms -- ' +
+                   'the radio object is deliberately LEAKED, not freed, so that thread cannot ' +
+                   'run on freed memory.  It exits when its blocked call returns.',
+                   [Self.RadioName, POLLING_THREAD_STOP_TIMEOUT_MS]);
+      end;
+   Self.PollingStopRequested := False;
 
    (* THE SLOT'S STATUS DESCRIBED THE RADIO JUST FREED, so it goes with it.
      The status is owned by the SLOT (stoRadio1/stoRadio2), not the radio, and

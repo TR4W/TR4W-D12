@@ -510,7 +510,8 @@ end;
 
 procedure TFlexCAT.Receive;
 begin
-   Self.SendToRadio('ZZTX0;');
+   // An unkey: a no-op with no open link -- see SendStopToRadio (issue #99).
+   Self.SendStopToRadio('ZZTX0;');
 end;
 
 procedure TFlexCAT.Split(splitOn: boolean);
@@ -619,7 +620,7 @@ begin
    // SmartSDR extended command with no Kenwood-subset equivalent -- the plain
    // KY0;/RX; pair the other Kenwood-protocol radios use does not stop a Flex.
    CWBuffer := '';
-   Self.SendToRadio('ZZSS;');
+   Self.SendStopToRadio('ZZSS;');   // a no-op with no open link (issue #99)
 end;
 
 procedure TFlexCAT.SetCWSpeed(speed: integer);

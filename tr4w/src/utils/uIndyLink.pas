@@ -49,6 +49,14 @@ interface
 uses
    IdTCPConnection, IdTCPClient, IdComponent;
 
+const
+   (* The connect timeout for a persistent Indy link, in MILLISECONDS (Indy's
+     ConnectTimeout is milliseconds -- the external logger passed 10 and gave
+     up after 10 ms).  5000 is what TFactoryRadioBase.Connect uses, raised from
+     the same mistake on 2026-05-31.  The radio base still carries its own
+     literal; repoint it here when that file is next open. *)
+   INDY_LINK_CONNECT_TIMEOUT_MS = 5000;
+
 (* True when the link is open, from fields only -- never Connected.  False for
   a nil client, a client with no handler yet, or a handler that is not
   socket-based. *)

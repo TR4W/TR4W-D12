@@ -129,6 +129,10 @@ type
 
     // Send one 5-byte Yaesu command byte-exact (opcode last).
     procedure SendBytes(b0, b1, b2, b3, b4: Byte);
+    // The same 5-byte command as a frame, for a caller that sends it some other
+    // way -- SendStopToRadio for an unkey.  SendBytes is built on it, so the
+    // byte rule in the note above SendBytes exists once.
+    function Frame5(b0, b1, b2, b3, b4: Byte): string;
 
     // Sideband for a mode byte that says only "phone".
     //
@@ -347,9 +351,14 @@ end;
   braces do not nest -- the directive's own closing brace would end a brace
   comment early and compile the rest as code. That is exactly what happened on
   the first attempt at this comment, which is the third time in this tree. *)
+function TYaesuBinary.Frame5(b0, b1, b2, b3, b4: Byte): string;
+begin
+   Result := Char(b0) + Char(b1) + Char(b2) + Char(b3) + Char(b4);
+end;
+
 procedure TYaesuBinary.SendBytes(b0, b1, b2, b3, b4: Byte);
 begin
-   Self.SendToRadio(Char(b0) + Char(b1) + Char(b2) + Char(b3) + Char(b4));
+   Self.SendToRadio(Frame5(b0, b1, b2, b3, b4));
 end;
 
 // ---------------------------------------------------------------------------
@@ -383,7 +392,8 @@ begin
       logger.Warn('[Receive] PTT-via-CAT not supported by %s', [Self.radioModel]);
       Exit;
       end;
-   Self.SendToRadio(PTTFrameOff);
+   // An unkey: a no-op with no open link -- see SendStopToRadio (issue #99).
+   Self.SendStopToRadio(PTTFrameOff);
 end;
 
 procedure TYaesuBinary.BufferCW(cwChars: string);

@@ -86,6 +86,9 @@ type
 
       function  GetISConnected: boolean; override;
       function  GetIsOperational: boolean; override;
+      // This class's SendToRadio writes to its WebSocket and gates on
+      // GetISConnected, so that is what "the link is open" means here.
+      function  LinkIsOpen: boolean; override;
 
       // WebSocket callbacks (raised on the WS reader thread).
       procedure WSText(const Text: string);
@@ -371,6 +374,11 @@ begin
    // finished its init burst.  Sending before `ready;` is the documented way
    // to have commands silently ignored.
    Result := GetISConnected and FReady;
+end;
+
+function TTCIRadio.LinkIsOpen: boolean;
+begin
+   Result := GetISConnected;
 end;
 
 procedure TTCIRadio.SendToRadio(s: string);

@@ -194,6 +194,16 @@ procedure ToggleModes;
 procedure ToggleStereoPin; {KK1L: 6.71}
 procedure OTRSPCommand;
 procedure LogContact(var RXData: ContestExchange; MyComputer: boolean);
+(* THE NEEDS STRIPS, ASKED AGAIN ONCE A QSO HAS REACHED THE SHEETS -- issue
+  #100. LogContact calls it after the dupe and multiplier sheets are updated,
+  so the band just worked drops out of "QSO needs" and "Mult needs" for that
+  call. Nothing is refreshed for a peer's QSO (aMyComputer False: the strips
+  show what THIS operator is working) or while tail-ending (the strips
+  already show the NEXT call, and the logged call must not replace it).
+  Public so a test can reach it without a database. *)
+procedure RefreshNeedsAfterLoggedQSO(const aCall: CallString;
+                                     aMyComputer: boolean;
+                                     aTailEnding: boolean);
 procedure SwapMultDisplay;
 procedure DeleteLastContact;
 //procedure MoveEditableLogIntoLogFile;
@@ -206,6 +216,10 @@ procedure DupeCheckOnInactiveRadio(Tune: boolean);
 function GotExchange: boolean;
 procedure ProcessExchangeFunctionKey(ExtendedKey: Char);
 procedure ExitProgram(Ask: boolean);
+(* True when the radio's polling thread has STOPPED; False when the wait ran
+  out with it still running.  Pumps sent messages while it waits -- see the
+  body.  Public since issue #104: ShutDownRadioInterface needs the answer. *)
+function WaitForPollingThreadWithMessages(ARig: RadioPtr; TimeoutMs: DWORD): boolean;
 function tAddQSOToLog(RXData: ContestExchange): boolean;
 function ConvertBandTypeToUDPContactBand(band: BandType): string;
 implementation
@@ -669,7 +683,7 @@ end;
 (* TAKES THE RADIO, NOT A BARE HANDLE, since 2026-09-21.  Off Windows there is
   nothing to wait on but the radio's own PollingThreadRunning flag, so the
   routine needs the radio to reach it; the handle is one field away. *)
-procedure WaitForPollingThreadWithMessages(ARig: RadioPtr; TimeoutMs: DWORD);
+function WaitForPollingThreadWithMessages(ARig: RadioPtr; TimeoutMs: DWORD): boolean;
 var
    H: TThreadID;
    { QWord: see the note at the assignment -- a 32-bit deadline can wrap
@@ -694,6 +708,8 @@ begin
    (* ThreadStarted, not `= 0` -- TThreadID is a pointer on the BSD/macOS RTL
      and an integer elsewhere, so the ordinal comparison is a type error
      there. See TF. *)
+   (* No radio, or no thread: nothing is running, so it has stopped. *)
+   Result := True;
    if ARig = nil then
       begin
       Exit;
@@ -714,6 +730,7 @@ begin
            reports and breaks first -- but off Windows it is the ordinary way
            the wait ends, and a shutdown that gave up needs to say so. *)
          logger.Info('[WaitForPollingThread] TIMED OUT after %dms', [TimeoutMs]);
+         Result := False;
          Break;
          end;
 {$IFDEF WINDOWS}
@@ -726,6 +743,7 @@ begin
       if WaitResult = WAIT_TIMEOUT then
          begin
          logger.Info('[WaitForPollingThread] TIMED OUT after %dms', [TimeoutMs]);
+         Result := False;
          Break;  // timed out
          end;
 {$ELSE}
@@ -746,9 +764,10 @@ begin
         The flag gives the same answer inside a bounded wait and needs no
         platform call at all.
 
-        (ShutDownRadioInterface in LOGRADIO does use WaitForThreadTerminate.
-        That is a different situation -- a radio being reset while the program
-        stays up, where blocking is recoverable -- and it is left alone.)
+        (ShutDownRadioInterface in LOGRADIO used WaitForThreadTerminate, ignored
+        its result and freed the radio anyway -- issue #104.  It calls this
+        routine now, and a False answer makes it leak the radio rather than
+        free it under a running thread.)
 
         20 ms slices: the polling loop re-tests PollingStopRequested at the top
         of every pass and inside its backoff sleep, so it exits promptly; the
@@ -1515,6 +1534,18 @@ begin
   end;
   KeyStamp(ExtendedKey);
 end;
+
+procedure RefreshNeedsAfterLoggedQSO(const aCall: CallString;
+                                     aMyComputer: boolean;
+                                     aTailEnding: boolean);
+begin
+   if (not aMyComputer) or aTailEnding then
+      begin
+      Exit;
+      end;
+   ShowNeedsForCall(aCall);
+end;
+
 procedure LogContact(var RXData: ContestExchange; MyComputer: boolean);
 { This procedure will log the contact just completed.  It will be
   pushed onto the editable log and the log entry popped off the editable
@@ -1748,9 +1779,12 @@ begin
   if MyComputer then
     if not TailEnding then
        begin
-       //      ShowStationInformation(RXData.Callsign);
              UpdateStationStatus(RXData.Callsign, -1);
        end;
+  (* AFTER THE SHEETS ABOVE HAVE THE QSO -- issue #100. This is where D7 left
+    a commented-out ShowStationInformation; see RefreshNeedsAfterLoggedQSO
+    for the two cases it leaves alone. *)
+  RefreshNeedsAfterLoggedQSO(RXData.Callsign, MyComputer, TailEnding);
   if ContestHasDomesticMultiplier(contestRules) and                               // Gav 4.44.8   uncommented section
     (Settings.Mult.ByBand or Settings.Mult.ByMode) and
     (RXData.DomesticQTH <> '') then

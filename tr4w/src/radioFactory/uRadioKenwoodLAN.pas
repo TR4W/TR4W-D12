@@ -380,7 +380,10 @@ end;
 
 procedure TKenwoodLAN.InitializeAfterAuth;
 begin
-   if FInitialized then Exit;
+   if FInitialized then
+      begin
+      Exit;
+      end;
    FInitialized := True;
 
    logger.Info('[%s.InitializeAfterAuth] Sending TS-890 init sequence', [Self.rigLabel]);
@@ -411,7 +414,10 @@ end;
 
 procedure TKenwoodLAN.ProcessMessage(sMessage: string);
 begin
-   if sMessage = '' then Exit;
+   if sMessage = '' then
+      begin
+      Exit;
+      end;
 
    // Refresh the disconnect watchdog -- any well-formed reply means the
    // radio is alive, even pre-auth handshake bytes.
@@ -820,7 +826,10 @@ end;
 
 procedure TKenwoodLAN.PollRadioState;
 begin
-   if FAuthState <> ksAuthenticated then Exit;
+   if FAuthState <> ksAuthenticated then
+      begin
+      Exit;
+      end;
    // LAN-only requirement: the TS-890 closes the TCP connection if it
    // receives nothing from us for 10 seconds. ARCP and other Kenwood-
    // documented clients send PS; every 5 seconds as a heartbeat. The
@@ -835,14 +844,20 @@ end;
 
 procedure TKenwoodLAN.Transmit;
 begin
-   if FAuthState <> ksAuthenticated then Exit;
+   if FAuthState <> ksAuthenticated then
+      begin
+      Exit;
+      end;
    Self.SendToRadio('TX;');
 end;
 
 procedure TKenwoodLAN.Receive;
 begin
-   if FAuthState <> ksAuthenticated then Exit;
-   Self.SendToRadio('RX;');
+   if FAuthState <> ksAuthenticated then
+      begin
+      Exit;
+      end;
+   Self.SendStopToRadio('RX;');   // a no-op with no open link (issue #99)
 end;
 
 // ============================================================================
@@ -870,8 +885,11 @@ end;
 
 procedure TKenwoodLAN.StopCW;
 begin
-   if FAuthState <> ksAuthenticated then Exit;
-   Self.SendToRadio('KY0;RX;');
+   if FAuthState <> ksAuthenticated then
+      begin
+      Exit;
+      end;
+   Self.SendStopToRadio('KY0;RX;');   // a no-op with no open link (issue #99)
 end;
 
 // ============================================================================
@@ -881,7 +899,10 @@ end;
 procedure TKenwoodLAN.SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode);
 var sCmd: string;
 begin
-   if FAuthState <> ksAuthenticated then Exit;
+   if FAuthState <> ksAuthenticated then
+      begin
+      Exit;
+      end;
 
    case vfo of
       nrVFOA: sCmd := 'FA';
@@ -903,10 +924,16 @@ var
    modeChar: Char;
    vfoChar: Char;
 begin
-   if FAuthState <> ksAuthenticated then Exit;
+   if FAuthState <> ksAuthenticated then
+      begin
+      Exit;
+      end;
 
    modeChar := ModeToModeChar(mode);
-   if modeChar = #0 then Exit;
+   if modeChar = #0 then
+      begin
+      Exit;
+      end;
 
    // KENWOOD QUIRK: per the TS-890 PC Command Reference, the OM command's
    // P1 (VFO) byte is "ignored with the setting command" -- the radio always
@@ -933,7 +960,10 @@ end;
 
 procedure TKenwoodLAN.SetCWSpeed(speed: integer);
 begin
-   if FAuthState <> ksAuthenticated then Exit;
+   if FAuthState <> ksAuthenticated then
+      begin
+      Exit;
+      end;
    if not IntegerBetween(speed, MIN_CW_SPEED, MAX_CW_SPEED) then
       begin
       logger.Error('[%s.SetCWSpeed] TS-890 CW range is %d..%d wpm (got %d)',
@@ -950,50 +980,74 @@ end;
 
 procedure TKenwoodLAN.RITClear(whichVFO: TVFO);
 begin
-   if FAuthState <> ksAuthenticated then Exit;
+   if FAuthState <> ksAuthenticated then
+      begin
+      Exit;
+      end;
    Self.SendToRadio('RC;');
 end;
 
 procedure TKenwoodLAN.XITClear(whichVFO: TVFO);
 begin
-   if FAuthState <> ksAuthenticated then Exit;
+   if FAuthState <> ksAuthenticated then
+      begin
+      Exit;
+      end;
    // TS-890 shares the offset between RIT and XIT; clearing RC also clears XIT.
    Self.SendToRadio('RC;');
 end;
 
 procedure TKenwoodLAN.RITBumpDown;
 begin
-   if FAuthState <> ksAuthenticated then Exit;
+   if FAuthState <> ksAuthenticated then
+      begin
+      Exit;
+      end;
    Self.SendToRadio('RD;');
 end;
 
 procedure TKenwoodLAN.RITBumpUp;
 begin
-   if FAuthState <> ksAuthenticated then Exit;
+   if FAuthState <> ksAuthenticated then
+      begin
+      Exit;
+      end;
    Self.SendToRadio('RU;');
 end;
 
 procedure TKenwoodLAN.RITOn(whichVFO: TVFO);
 begin
-   if FAuthState <> ksAuthenticated then Exit;
+   if FAuthState <> ksAuthenticated then
+      begin
+      Exit;
+      end;
    Self.SendToRadio('RT1;');
 end;
 
 procedure TKenwoodLAN.RITOff(whichVFO: TVFO);
 begin
-   if FAuthState <> ksAuthenticated then Exit;
+   if FAuthState <> ksAuthenticated then
+      begin
+      Exit;
+      end;
    Self.SendToRadio('RT0;');
 end;
 
 procedure TKenwoodLAN.XITOn(whichVFO: TVFO);
 begin
-   if FAuthState <> ksAuthenticated then Exit;
+   if FAuthState <> ksAuthenticated then
+      begin
+      Exit;
+      end;
    Self.SendToRadio('XT1;');
 end;
 
 procedure TKenwoodLAN.XITOff(whichVFO: TVFO);
 begin
-   if FAuthState <> ksAuthenticated then Exit;
+   if FAuthState <> ksAuthenticated then
+      begin
+      Exit;
+      end;
    Self.SendToRadio('XT0;');
 end;
 
@@ -1001,7 +1055,10 @@ procedure TKenwoodLAN.SetRITFreq(whichVFO: TVFO; hz: integer);
 var
    magnitude: Integer;
 begin
-   if FAuthState <> ksAuthenticated then Exit;
+   if FAuthState <> ksAuthenticated then
+      begin
+      Exit;
+      end;
 
    // TS-890 sets a specific RIT/XIT offset in two steps:
    //   1. Clear the current offset:           RC;
@@ -1016,7 +1073,10 @@ begin
    // keys are press-repeatedly UI affordances; once at the radio's limit,
    // further presses are no-ops, no warning needed.
    Self.SendToRadio('RC;');
-   if hz = 0 then Exit;
+   if hz = 0 then
+      begin
+      Exit;
+      end;
 
    magnitude := Abs(hz);
    if magnitude > 9999 then
@@ -1047,7 +1107,10 @@ end;
 
 procedure TKenwoodLAN.Split(splitOn: boolean);
 begin
-   if FAuthState <> ksAuthenticated then Exit;
+   if FAuthState <> ksAuthenticated then
+      begin
+      Exit;
+      end;
    // FT1 = TX on VFO B, FT0 = TX on VFO A.  UNCHANGED from the D7
    // implementation, which is reported working against a real radio.
    //
@@ -1074,7 +1137,10 @@ end;
 
 procedure TKenwoodLAN.SetBand(band: TRadioBand; vfo: TVFO = nrVFOA);
 begin
-   if FAuthState <> ksAuthenticated then Exit;
+   if FAuthState <> ksAuthenticated then
+      begin
+      Exit;
+      end;
    // The TS-890 changes band via a frequency set, so route through SetFrequency.
    Self.SetFrequency(Self.BandToFreq(band), vfo, rmNone);
 end;
@@ -1086,7 +1152,10 @@ end;
 
 procedure TKenwoodLAN.SetFilter(filter: TRadioFilter; vfo: TVFO = nrVFOA);
 begin
-   if FAuthState <> ksAuthenticated then Exit;
+   if FAuthState <> ksAuthenticated then
+      begin
+      Exit;
+      end;
 
    // TS-890 has 3 receive filter slots, A / B / C, selected via the FL0
    // command (P1 = 0/1/2). The bandwidth of each slot is user-configurable
@@ -1112,21 +1181,33 @@ end;
 function TKenwoodLAN.MemoryKeyer(mem: integer): boolean;
 begin
    Result := False;
-   if FAuthState <> ksAuthenticated then Exit;
-   if not IntegerBetween(mem, 1, 6) then Exit;
+   if FAuthState <> ksAuthenticated then
+      begin
+      Exit;
+      end;
+   if not IntegerBetween(mem, 1, 6) then
+      begin
+      Exit;
+      end;
    Self.SendToRadio(Format('PB%d;', [mem]));
    Result := True;
 end;
 
 procedure TKenwoodLAN.VFOBumpDown(whichVFO: TVFO);
 begin
-   if FAuthState <> ksAuthenticated then Exit;
+   if FAuthState <> ksAuthenticated then
+      begin
+      Exit;
+      end;
    Self.SendToRadio('DN;');
 end;
 
 procedure TKenwoodLAN.VFOBumpUp(whichVFO: TVFO);
 begin
-   if FAuthState <> ksAuthenticated then Exit;
+   if FAuthState <> ksAuthenticated then
+      begin
+      Exit;
+      end;
    Self.SendToRadio('UP;');
 end;
 

@@ -236,11 +236,12 @@ begin
       logger,
       Self.radioModel);
 
-   { ASK WHAT THE SPAN IS.  The radio pushes #SPN whenever it changes, but not
-     unprompted at connect -- so without this the first press of the span
-     buttons would have nothing to step from until the operator happened to
-     change it at the rig. }
-   Self.SendToRadio('#SPN;');
+   (* THE SPAN IS NOT ASKED FOR HERE ANY MORE (issue #99).  It was, and the
+     panadapter reopens at startup BEFORE the CAT link is up -- the spectrum
+     socket (CAT port + 1) connects on its own and earlier -- so the question
+     met a closed link and was dropped with an error, and the span buttons had
+     nothing to step from until the operator changed the span at the rig.
+     Connect asks instead, on every link-up, which also covers a reconnect. *)
 end;
 
 { #SPN -- the display span in Hz, 1..999999, captured from a real K4 and
@@ -404,6 +405,20 @@ begin
          end;
       Self.SendToRadio('RT;XT;RO;FT;ID;MD;DT$;IF;');
       Self.SendToRadio('RT$;XT$;RO$;MD$;DT$;IF$;');
+
+      (* ASK WHAT THE SPAN IS, ON EVERY LINK-UP.  The radio pushes #SPN whenever
+        it changes, but not unprompted at connect -- so without this the span
+        buttons have nothing to step from until the operator happens to change
+        it at the rig.  Asked HERE, with the other on-connect questions, and
+        not from StartSpectrum: the spectrum socket connects on its own and
+        usually first, so a question sent from there met a CAT link that was
+        not up yet (issue #99).  Asked whether or not a panadapter is open,
+        because one opened later steps from this answer.  Network only: the
+        stream needs the network (SpectrumAvailable). *)
+      if SpectrumAvailable then
+         begin
+         Self.SendToRadio('#SPN;');
+         end;
       end;
 end;
 procedure TK4Radio.Transmit;
@@ -413,7 +428,8 @@ end;
 
 procedure TK4Radio.Receive;
 begin
-   Self.SendToRadio('RX;');
+   // An unkey: with no open link there is nothing to unkey -- see SendStopToRadio.
+   Self.SendStopToRadio('RX;');
 end;
 
 function TK4Radio.CWIsFactoryOwned: Boolean;
@@ -432,7 +448,11 @@ begin
    //     KY <04> ; R X ;   ->  4B 59 20 04 3B 52 58 3B
    // Never noticed because Escape was only ever tested on the K3, which is not
    // CWIsFactoryOwned and therefore took the legacy path instead of this one.
-   Self.SendToRadio('KY ' + Chr(4) + ';RX;');
+   //
+   // SendStopToRadio: at startup LogCW clears CW on the radio being left
+   // before this radio's CAT link is up, and that is a no-op, not an error
+   // (issue #99).
+   Self.SendStopToRadio('KY ' + Chr(4) + ';RX;');
 end;
 
 

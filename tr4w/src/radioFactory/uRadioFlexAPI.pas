@@ -50,6 +50,9 @@ type TFlexAPI = class(TFactoryRadioBase)
 
       function  NextSeq: integer;
       procedure SendFlexCmd(cmd: string);
+      // The wire line for a command, sequence number included -- SendFlexCmd
+      // sends it, and a stop hands it to SendStopToRadio (issue #99).
+      function  FlexCmdLine(const cmd: string): string;
       function  SplitDelimiter(const s: string; delimiter: Char; index: integer): string;
       function  ParseKeyValue(const s: string; const key: string): string;
       function  FlexModeToRadioMode(const sMode: string): TRadioMode;
@@ -241,11 +244,16 @@ begin
    Result := FCmdSeq;
 end;
 
+function TFlexAPI.FlexCmdLine(const cmd: string): string;
+begin
+   Result := Format('C%d|%s', [NextSeq, cmd]);
+end;
+
 procedure TFlexAPI.SendFlexCmd(cmd: string);
 var
    fullCmd: string;
 begin
-   fullCmd := Format('C%d|%s', [NextSeq, cmd]);
+   fullCmd := FlexCmdLine(cmd);
    logger.trace('[FlexAPI TX] %s', [fullCmd]);
    inherited SendToRadio(fullCmd);
 end;
@@ -765,7 +773,9 @@ end;
 
 procedure TFlexAPI.Receive;
 begin
-   SendFlexCmd('xmit 0');
+   // An unkey: a no-op with no open link -- see SendStopToRadio (issue #99).
+   // Through the base's own socket, the same path SendFlexCmd takes.
+   SendStopToRadio(FlexCmdLine('xmit 0'));
 end;
 
 // ---------------------------------------------------------------------------
@@ -893,7 +903,7 @@ end;
 procedure TFlexAPI.StopCW;
 begin
    FCWBuffer := '';
-   SendFlexCmd('cwx clear');
+   SendStopToRadio(FlexCmdLine('cwx clear'));   // a no-op with no open link (issue #99)
 end;
 
 procedure TFlexAPI.SetCWSpeed(speed: integer);

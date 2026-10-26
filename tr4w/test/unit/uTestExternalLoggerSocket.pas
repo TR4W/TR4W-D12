@@ -37,6 +37,7 @@ interface
 
 uses
    SysUtils, Classes, SyncObjs, IdTCPServer, IdContext, IdGlobal, IdIOHandler,
+   IdExceptionCore,
    uTR4WTestFramework, uExternalLoggerBase, uExternalLogger, uIndyLink;
 
 type
@@ -44,14 +45,38 @@ type
      shipped code.  It reaches the protected socket through the door any
      descendant has, and never starts a reading thread -- see the unit header. *)
    TLoggerSocketProbe = class(TExternalLogger)
+   private
+      FAttempts: Integer;          // calls into the socket's Connect (issue #102)
+      FAlreadyConnected: Integer;  // of those, how many raised EIdAlreadyConnected
+      FConnectDelayMs: Integer;    // widens the race window for the two-thread test
+   protected
+      procedure DoSocketConnect; override;
    public
+      function  ConnectTimeoutValue: Integer;
+      property  ConnectAttempts: Integer read FAttempts;
+      property  AlreadyConnectedCount: Integer read FAlreadyConnected;
+      property  ConnectDelayMs: Integer read FConnectDelayMs write FConnectDelayMs;
       procedure AttachWithoutReader(const AHost: string; APort: Integer);
-      procedure ConnectThroughBase(const AHost: string; APort: Integer);
+      function  ConnectThroughBase(const AHost: string; APort: Integer): Integer;
       procedure SendThroughBase(const AText: string);
       function  BufferedInbound: Integer;
       function  WaitInboundArrived(AMs: Integer): Boolean;
       function  Handler: TIdIOHandler;
       function  HandlerIsManaged: Boolean;
+   end;
+
+   (* Calls the shipped Connect once the gate opens, so two of them start
+     together. *)
+   TConnectRacer = class(TThread)
+   private
+      FProbe:  TLoggerSocketProbe;
+      FHost:   string;
+      FPort:   Integer;
+      FGate:   TEvent;
+   public
+      Answer:  Integer;
+      constructor Create(AProbe: TLoggerSocketProbe; const AHost: string; APort: Integer; AGate: TEvent);
+      procedure Execute; override;
    end;
 
    TExternalLoggerSocketTests = class(TTestCase)
@@ -72,6 +97,8 @@ type
       procedure Test_NotConnected_SendRaisesNothing;
       procedure Test_FailedConnect_KeepsTheSameIOHandler;
       procedure Test_AttachAfterFailedConnect_ReusesTheHandler;
+      procedure Test_ConnectTimeout_IsARealValue;
+      procedure Test_TwoConcurrentConnects_MakeOneAttempt;
    public
       procedure RunAllTests; override;
    end;
@@ -102,10 +129,39 @@ end;
 (* The SHIPPED connect path (TExternalLoggerBase.Connect), with OnConnected
   removed so a success would start no reading thread.  It catches and logs its
   own failures, as in production. *)
-procedure TLoggerSocketProbe.ConnectThroughBase(const AHost: string; APort: Integer);
+function TLoggerSocketProbe.ConnectThroughBase(const AHost: string; APort: Integer): Integer;
 begin
    socket.OnConnected := nil;
-   TExternalLoggerBase(Self).Connect(AHost, APort);
+   Result := TExternalLoggerBase(Self).Connect(AHost, APort);
+end;
+
+(* Counts every attempt that reaches the socket, and records an
+  EIdAlreadyConnected (Connect called while connected -- the symptom of two
+  threads connecting at once).  The optional delay keeps the first attempt in
+  flight long enough for a second thread to arrive. *)
+procedure TLoggerSocketProbe.DoSocketConnect;
+begin
+   InterlockedIncrement(FAttempts);
+
+   if FConnectDelayMs > 0 then
+      begin
+      Sleep(FConnectDelayMs);
+      end;
+
+   try
+      inherited DoSocketConnect;
+   except
+      on EIdAlreadyConnected do
+         begin
+         InterlockedIncrement(FAlreadyConnected);
+         raise;
+         end;
+   end;
+end;
+
+function TLoggerSocketProbe.ConnectTimeoutValue: Integer;
+begin
+   Result := socket.ConnectTimeout;
 end;
 
 (* The base one-argument SendToLogger, named through the base so the private
@@ -140,6 +196,23 @@ end;
 function TLoggerSocketProbe.HandlerIsManaged: Boolean;
 begin
    Result := socket.ManagedIOHandler;
+end;
+
+constructor TConnectRacer.Create(AProbe: TLoggerSocketProbe; const AHost: string;
+                                 APort: Integer; AGate: TEvent);
+begin
+   FProbe := AProbe;
+   FHost := AHost;
+   FPort := APort;
+   FGate := AGate;
+   Answer := MaxInt;
+   inherited Create(False);
+end;
+
+procedure TConnectRacer.Execute;
+begin
+   FGate.WaitFor(5000);
+   Answer := FProbe.ConnectThroughBase(FHost, FPort);
 end;
 
 (* ---- fixture server (its own threads) ------------------------------------- *)
@@ -407,11 +480,89 @@ begin
    end;
 end;
 
+(* ISSUE #102, FIRST HALF.  Indy's ConnectTimeout is in MILLISECONDS and the
+  connect set it to 10, so it gave up after 10 ms on any real network.  The
+  value must be the shared 5000 ms constant (TFactoryRadioBase.Connect's), and
+  it must be what the socket actually carries after a connect. *)
+procedure TExternalLoggerSocketTests.Test_ConnectTimeout_IsARealValue;
+var
+   probe: TLoggerSocketProbe;
+begin
+   BeginTest('the external logger connects with a 5000 ms timeout, not 10');
+
+   CheckEquals(5000, INDY_LINK_CONNECT_TIMEOUT_MS, 'the shared constant is the radio base''s 5000 ms');
+
+   probe := TLoggerSocketProbe.Create(lt_ACLog);
+   try
+      CheckEquals(INDY_LINK_CONNECT_TIMEOUT_MS, probe.ConnectTimeoutValue,
+                  'a new logger starts with it');
+
+      CheckEquals(0, probe.ConnectThroughBase('127.0.0.1', StartServer), 'connected');
+      CheckTrue(probe.WaitInboundArrived(3000),
+                'precondition: the server has finished setting up the connection');
+      CheckEquals(INDY_LINK_CONNECT_TIMEOUT_MS, probe.ConnectTimeoutValue,
+                  'and Connect leaves it at the constant (it set 10 ms)');
+   finally
+      probe.Free;
+      StopServer;
+   end;
+end;
+
+(* ISSUE #102, SECOND HALF.  Two threads asking to connect at the same moment
+  (the main thread's Connect and the reading thread's reconnect) must produce
+  ONE attempt on the socket: the second waits for the first, finds the link
+  open and returns.  Before, both ran Socket.Connect -- EIdAlreadyConnected, or
+  two connections.  The probe's 250 ms delay inside the attempt holds the first
+  in flight so the second arrives while it is. *)
+procedure TExternalLoggerSocketTests.Test_TwoConcurrentConnects_MakeOneAttempt;
+var
+   probe: TLoggerSocketProbe;
+   gate: TEvent;
+   first, second: TConnectRacer;
+   port: Word;
+begin
+   BeginTest('two concurrent Connect calls make exactly one connection attempt');
+
+   gate := TEvent.Create(nil, True, False, '');   // manual reset: opens both
+   probe := TLoggerSocketProbe.Create(lt_ACLog);
+   first := nil;
+   second := nil;
+   try
+      probe.ConnectDelayMs := 250;
+      port := StartServer;
+
+      first := TConnectRacer.Create(probe, '127.0.0.1', port, gate);
+      second := TConnectRacer.Create(probe, '127.0.0.1', port, gate);
+      gate.SetEvent;
+      first.WaitFor;
+      second.WaitFor;
+
+      CheckEquals(1, probe.ConnectAttempts, 'exactly one attempt reached the socket');
+      CheckEquals(0, probe.AlreadyConnectedCount, 'no EIdAlreadyConnected');
+      CheckEquals(0, first.Answer, 'the first caller reports connected');
+      CheckEquals(0, second.Answer, 'the second finds it connected and reports so');
+      CheckTrue(probe.IsConnected, 'one live connection');
+
+      (* The greeting proves the server finished setting the connection up;
+        stopping it before that can hang Indy's shutdown for ever. *)
+      CheckTrue(probe.WaitInboundArrived(3000),
+                'precondition for stopping the server: it has finished setting up the connection');
+   finally
+      first.Free;
+      second.Free;
+      probe.Free;
+      gate.Free;
+      StopServer;
+   end;
+end;
+
 procedure TExternalLoggerSocketTests.RunAllTests;
 begin
    FLock := TCriticalSection.Create;
    FReceived := TStringList.Create;
    try
+      Test_ConnectTimeout_IsARealValue;
+      Test_TwoConcurrentConnects_MakeOneAttempt;
       Test_IsConnected_DoesNotReadTheSocket;
       Test_SendToLogger_DoesNotReadTheSocket;
       Test_Disconnect_ClosesTheLink;

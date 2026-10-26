@@ -37,12 +37,24 @@ unit uTestRadioSocketNoRead;
   socket.Connected) the two *_DoesNotReadTheSocket tests FAIL: the greeting is
   found in the InputBuffer.  The other two pin the not-connected half: sending
   then writes nothing and raises nothing.
+
+  ISSUE #99 -- WHAT A NETWORK K4 SENDS AROUND CONNECT, on the same fixture
+  server, which records every line the radio writes:
+  - Test_SpanAskedAfterConnect_WhenSpectrumStartedFirst: the panadapter is
+    started BEFORE the CAT link, as it is when it reopens at startup.  The
+    span question must reach the radio exactly once, when the link comes up.
+    It used to be sent from StartSpectrum, met a closed link and was dropped.
+  - Test_SpanAskedAgainOnReconnect: a second link-up asks again.
+  - Test_StopAndUnkey_NotConnected_LogNoError: StopCW and Receive on a radio
+    with no link are no-ops -- nothing to stop -- and log no ERROR.  StopCW
+    is what PTTOff reaches through StopSendingCW at startup.
 *)
 
 interface
 
 uses
    SysUtils, Classes, SyncObjs, IdTCPServer, IdContext, IdGlobal, IdIOHandler,
+   Log4D, uTestLogCapture,
    uTR4WTestFramework, uFactoryRadioBase, uRadioElecraftK4;
 
 type
@@ -58,6 +70,7 @@ type
       function  Handler: TIdIOHandler;
       function  HandlerIsManaged: Boolean;
       procedure ConnectThroughRadio(const AHost: string; APort: Integer);
+      function  RadioLogger: TLogLogger;
    end;
 
    TRadioSocketNoReadTests = class(TTestCase)
@@ -72,7 +85,9 @@ type
       procedure StopServer;
       function  ClosedLoopbackPort: Word;
       function  ReceivedCount: Integer;
+      function  CountReceived(const ALine: string): Integer;
       function  WaitForReceived(const ALine: string; ATimeoutMs: Integer): Boolean;
+      function  WaitForCount(const ALine: string; ACount, ATimeoutMs: Integer): Boolean;
    protected
       procedure Test_SendToRadio_DoesNotReadTheSocket;
       procedure Test_IsConnected_DoesNotReadTheSocket;
@@ -80,6 +95,9 @@ type
       procedure Test_SendToRadio_AfterPeerHangsUp_DoesNotRaise;
       procedure Test_FailedConnect_KeepsTheSameIOHandler;
       procedure Test_ConnectAfterFailedConnect_ReusesTheHandler;
+      procedure Test_SpanAskedAfterConnect_WhenSpectrumStartedFirst;
+      procedure Test_SpanAskedAgainOnReconnect;
+      procedure Test_StopAndUnkey_NotConnected_LogNoError;
    public
       procedure RunAllTests; override;
    end;
@@ -160,6 +178,11 @@ begin
    Connect;
 end;
 
+function TSocketNoReadProbe.RadioLogger: TLogLogger;
+begin
+   Result := logger;
+end;
+
 (* ---- fixture server (its own threads) ------------------------------------- *)
 
 procedure TRadioSocketNoReadTests.ServerConnect(AContext: TIdContext);
@@ -238,7 +261,32 @@ begin
    end;
 end;
 
+function TRadioSocketNoReadTests.CountReceived(const ALine: string): Integer;
+var
+   i: Integer;
+begin
+   Result := 0;
+   FLock.Enter;
+   try
+      for i := 0 to FReceived.Count - 1 do
+         begin
+         if FReceived[i] = ALine then
+            begin
+            Inc(Result);
+            end;
+         end;
+   finally
+      FLock.Leave;
+   end;
+end;
+
 function TRadioSocketNoReadTests.WaitForReceived(const ALine: string; ATimeoutMs: Integer): Boolean;
+begin
+   Result := WaitForCount(ALine, 1, ATimeoutMs);
+end;
+
+(* True once the server has heard ALine at least ACount times. *)
+function TRadioSocketNoReadTests.WaitForCount(const ALine: string; ACount, ATimeoutMs: Integer): Boolean;
 var
    waited: Integer;
 begin
@@ -247,12 +295,7 @@ begin
 
    while (not Result) and (waited <= ATimeoutMs) do
       begin
-      FLock.Enter;
-      try
-         Result := FReceived.IndexOf(ALine) >= 0;
-      finally
-         FLock.Leave;
-      end;
+      Result := CountReceived(ALine) >= ACount;
 
       if not Result then
          begin
@@ -488,6 +531,113 @@ begin
    end;
 end;
 
+(* ---- issue #99: what a network K4 sends around connect ------------------- *)
+
+const
+   SPAN_QUERY = '#SPN;';
+
+procedure TRadioSocketNoReadTests.Test_SpanAskedAfterConnect_WhenSpectrumStartedFirst;
+var
+   probe: TSocketNoReadProbe;
+   port: Word;
+begin
+   BeginTest('K4: the span is asked for once the CAT link connects, when the panadapter started first');
+
+   probe := TSocketNoReadProbe.Create;
+   try
+      port := StartServer;
+      probe.radioAddress := '127.0.0.1';
+      probe.radioPort := port;
+
+      (* The startup order of 2026-10-25: the panadapter reopens -- its own
+        socket, CAT port + 1, which nothing serves here -- before the CAT link
+        is up. *)
+      probe.StartSpectrum;
+      CheckEquals(0, ReceivedCount, 'precondition: no CAT link yet, so nothing has reached the radio');
+
+      probe.ConnectThroughRadio('127.0.0.1', port);
+      CheckTrue(probe.IsConnected, 'precondition: the CAT link came up');
+
+      CheckTrue(WaitForReceived(SPAN_QUERY, 3000),
+                'the span question never reached the radio -- it must be asked when the CAT ' +
+                'link comes up, not when the spectrum starts (issue #99)');
+      Sleep(200);    // room for a duplicate to arrive, if there were one
+      CheckEquals(1, CountReceived(SPAN_QUERY), 'asked exactly once per link-up');
+   finally
+      ReleaseProbe(probe);
+      StopServer;
+   end;
+end;
+
+procedure TRadioSocketNoReadTests.Test_SpanAskedAgainOnReconnect;
+var
+   probe: TSocketNoReadProbe;
+   port: Word;
+begin
+   BeginTest('K4: the span is asked for again on every reconnect');
+
+   probe := TSocketNoReadProbe.Create;
+   try
+      port := StartServer;
+      probe.ConnectThroughRadio('127.0.0.1', port);
+      CheckTrue(WaitForReceived(SPAN_QUERY, 3000), 'precondition: the first link-up asked');
+
+      (* The polling thread's reconnect is exactly this call: Connect again on
+        the same radio object. *)
+      probe.ConnectThroughRadio('127.0.0.1', port);
+      CheckTrue(probe.IsConnected, 'precondition: the second link came up');
+
+      CheckTrue(WaitForCount(SPAN_QUERY, 2, 3000),
+                'a reconnect did not ask for the span again -- a K4 that was restarted may ' +
+                'have a different span, and it does not push it unprompted');
+   finally
+      ReleaseProbe(probe);
+      StopServer;
+   end;
+end;
+
+procedure TRadioSocketNoReadTests.Test_StopAndUnkey_NotConnected_LogNoError;
+var
+   probe: TSocketNoReadProbe;
+   capture: TCaptureAppender;
+   keep: ILogAppender;
+   lg: TLogLogger;
+   savedLevel: TLogLevel;
+begin
+   BeginTest('K4: StopCW and Receive with no link write nothing and log no error');
+
+   probe := TSocketNoReadProbe.Create;
+   capture := TCaptureAppender.Create('capture');
+   keep := capture;
+   lg := probe.RadioLogger;
+   savedLevel := lg.Level;
+   (* ERROR and above only: a debug line saying "nothing to stop" is allowed. *)
+   lg.Level := Log4D.Error;
+   lg.AddAppender(keep);
+   try
+      try
+         (* What PTTOff reaches at startup through StopSendingCW, and the unkey
+           PTT-via-CAT sends. *)
+         probe.StopCW;
+         probe.Receive;
+         CheckTrue(True, 'no exception');
+      except
+         on E: Exception do
+            begin
+            CheckTrue(False, 'StopCW/Receive with no link raised ' + E.ClassName + ': ' + E.Message);
+            end;
+      end;
+
+      CheckEquals(0, capture.Lines.Count,
+                  'a stop or unkey on a radio with no link logged at ERROR -- there is nothing ' +
+                  'to stop, so it is a no-op (issue #99): ' + capture.Lines.Text);
+   finally
+      lg.RemoveAppender(keep);
+      lg.Level := savedLevel;
+      ReleaseProbe(probe);
+   end;
+end;
+
 procedure TRadioSocketNoReadTests.RunAllTests;
 begin
    FLock := TCriticalSection.Create;
@@ -499,6 +649,9 @@ begin
       Test_SendToRadio_AfterPeerHangsUp_DoesNotRaise;
       Test_FailedConnect_KeepsTheSameIOHandler;
       Test_ConnectAfterFailedConnect_ReusesTheHandler;
+      Test_SpanAskedAfterConnect_WhenSpectrumStartedFirst;
+      Test_SpanAskedAgainOnReconnect;
+      Test_StopAndUnkey_NotConnected_LogNoError;
    finally
       StopServer;
       FReceived.Free;

@@ -433,7 +433,8 @@ end;
 
 procedure TYaesuFT817Group.Receive;
 begin
-   Self.SendBytes($00, $00, $00, $00, FT817_PTT_OFF_OPCODE);
+   // An unkey: a no-op with no open link -- see SendStopToRadio (issue #99).
+   Self.SendStopToRadio(Frame5($00, $00, $00, $00, FT817_PTT_OFF_OPCODE));
 end;
 
 // ---------------------------------------------------------------------------

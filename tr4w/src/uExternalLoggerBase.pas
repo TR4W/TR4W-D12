@@ -36,15 +36,22 @@ Type
 
 
 Type TSimpleEventProc = procedure(const aStrParam:string) of object;
+
+(* The reading thread's way back into the owner's connect: it takes the owner's
+  connect lock and RAISES on failure, so the thread's back-off still sees the
+  exception.  See TExternalLoggerBase.ReconnectFromReader. *)
+Type TReconnectProc = procedure of object;
+
 Type TReadingThread = class(TThread)
   protected
     readTerminator: string;
     FConn: TIdTCPConnection;
     msgHandler: TProcessMsgRef;
+    FReconnect: TReconnectProc;
     procedure Execute; override;
     procedure DoTerminate; override;
   public
-    constructor Create(AConn: TIdTCPConnection; proc: TProcessMsgRef); reintroduce;
+    constructor Create(AConn: TIdTCPConnection; proc: TProcessMsgRef; AReconnect: TReconnectProc); reintroduce;
   end;
 
 function BoolToString(b: boolean): string;
@@ -110,6 +117,17 @@ Type
       FSenderThread: TSenderThread;
       FShuttingDown: boolean;
 
+      (* ONE CONNECT AT A TIME, AND RECONNECTION IS THE READING THREAD'S JOB.
+        The main thread's Connect and the reading thread's reconnect used to
+        run on the one socket at once: EIdAlreadyConnected, or two connections
+        and double reader state (issue #102).  Every connect goes through
+        ConnectGuarded, which holds this lock, returns at once if the link is
+        already open, and refuses a non-reader caller while a reading thread
+        exists. *)
+      FConnectLock: SyncObjs.TCriticalSection;
+
+      function ConnectGuarded(aRaiseOnFailure: boolean): integer;
+      procedure ReconnectFromReader;
       procedure InitOutboundQueue;
       procedure ProcessOp(op: TExternalLogOp);
       function DequeueOp: TExternalLogOp;
@@ -138,6 +156,10 @@ Type
       // The base default uses the persistent socket (for future ACLog/HRD);
       // DXKeeper overrides it with a connect-per-command transport (Issue #957).
       function DeliverCommand(const cmd: string): boolean; virtual;
+
+      (* The one place the socket's Connect is called (issue #102).  A seam so
+        a test can count attempts; ConnectGuarded holds FConnectLock around it. *)
+      procedure DoSocketConnect; virtual;
 
    public
       constructor Create(ProcRef: TProcessMsgRef); overload;
@@ -196,8 +218,9 @@ Constructor TExternalLoggerBase.Create(ProcRef: TProcessMsgRef);
 begin
    baseProcMsg := ProcRef;
 
+   FConnectLock := SyncObjs.TCriticalSection.Create;
    socket := TIdTCPClient.Create();
-   socket.ConnectTimeout := 10000;  // TODO Make this a property
+   socket.ConnectTimeout := INDY_LINK_CONNECT_TIMEOUT_MS;
    socket.OnDisconnected := Self.OnLoggerDisconnected;
    socket.OnConnected := Self.OnLoggerConnected;
    socket.OnStatus := Self.OnLoggerStatus;
@@ -261,6 +284,7 @@ begin
       end;
 
    FreeAndNil(socket);
+   FreeAndNil(FConnectLock);
    inherited Destroy;
 end;
 
@@ -273,7 +297,7 @@ begin
    // (the thread creates itself during reconnection)
    if rt = nil then
       begin
-      rt := TReadingThread.Create(socket, baseProcMsg);
+      rt := TReadingThread.Create(socket, baseProcMsg, Self.ReconnectFromReader);
       rt.readTerminator := Self.readTerminator;
       logger.Info('Created new reading thread');
       end
@@ -351,25 +375,73 @@ begin
     if not Assigned(socket) then
        begin
        logger.fatal('In TExternalLoggerBase.Connect, socket is NUL');
+       Result := -3;
+       Exit;
        end;
-       
-    socket.Port := Self.loggerPort;
-    socket.Host := Self.loggerAddress;
-    socket.ConnectTimeout := 10;
 
-    (* An IOHandler of our own, so a failed Connect cannot free it under the
-      reading thread or a sender -- see uIndyLink. *)
-    IndyLinkOwnHandler(socket, Self.OnLoggerStatus);
+    Result := Self.ConnectGuarded(False);
+end;
 
-    try
-        socket.Connect;
-        logger.Info('[TExternalLoggerBase.Connect] Connected successfully to external logger');
-    except
-        on E: Exception do
-           begin
-           logger.Error('[TExternalLoggerBase.Connect] Exception when connecting to external logger (%s:%d]: %s', [socket.Host, socket.Port, E.Message]);
-           end;
-    end;
+procedure TExternalLoggerBase.DoSocketConnect;
+begin
+   socket.Connect;
+end;
+
+(* 0 = connected (now, or already); -3 = the attempt failed; -4 = not attempted
+  because a reading thread exists and the caller is not it.
+
+  The reading thread passes aRaiseOnFailure so its exponential back-off can
+  tell a timeout from a refusal; every other caller gets a logged -3. *)
+function TExternalLoggerBase.ConnectGuarded(aRaiseOnFailure: boolean): integer;
+begin
+   Result := 0;
+   FConnectLock.Enter;
+   try
+      if IndyLinkIsOpen(socket) then
+         begin
+         logger.Debug('[TExternalLoggerBase.Connect] already connected; nothing to do');
+         Exit;
+         end;
+
+      (* Once a reading thread exists, reconnecting is ITS job (it backs off
+        and retries for ever).  A second connector would race it. *)
+      if (not aRaiseOnFailure) and (rt <> nil) and (rt.ThreadID <> GetCurrentThreadId) then
+         begin
+         logger.Debug('[TExternalLoggerBase.Connect] link is down; the reading thread is reconnecting it');
+         Result := -4;
+         Exit;
+         end;
+
+      socket.Port := Self.loggerPort;
+      socket.Host := Self.loggerAddress;
+      socket.ConnectTimeout := INDY_LINK_CONNECT_TIMEOUT_MS;
+
+      (* An IOHandler of our own, so a failed Connect cannot free it under the
+        reading thread or a sender -- see uIndyLink. *)
+      IndyLinkOwnHandler(socket, Self.OnLoggerStatus);
+
+      try
+         Self.DoSocketConnect;
+         logger.Info('[TExternalLoggerBase.Connect] Connected successfully to external logger');
+      except
+         on E: Exception do
+            begin
+            Result := -3;
+            logger.Error('[TExternalLoggerBase.Connect] Exception when connecting to external logger (%s:%d]: %s', [socket.Host, socket.Port, E.Message]);
+            if aRaiseOnFailure then
+               begin
+               raise;
+               end;
+            end;
+      end;
+   finally
+      FConnectLock.Leave;
+   end;
+end;
+
+procedure TExternalLoggerBase.ReconnectFromReader;
+begin
+   Self.ConnectGuarded(True);
 end;
 
 function TExternalLoggerBase.Connect(address: string; port: integer): integer;
@@ -443,10 +515,11 @@ begin
       Result := false;
       end;
 end;
-constructor TReadingThread.Create(AConn: TIdTCPConnection; proc: TProcessMsgRef);
+constructor TReadingThread.Create(AConn: TIdTCPConnection; proc: TProcessMsgRef; AReconnect: TReconnectProc);
 begin
   logger.debug('************* DEBUG: TExternalLoggerBase.TReadingThread.Create');
   FConn := AConn;
+  FReconnect := AReconnect;
 
   msgHandler := proc;
   logger.Info('Created ExternalLogger::TReadingTYhreadthread with id %u',[PtrUInt(Self.ThreadID)]);
@@ -541,7 +614,9 @@ begin
                begin
                try
                   logger.Debug('[TExternalLoggerBase.TReadingThread] Attempting to reconnect');
-                  TIdTCPClient(FConn).Connect;
+                  (* Through the owner's guarded connect, so this and a
+                    main-thread Connect can never run at once (issue #102). *)
+                  FReconnect;
 
                   if FConn.Connected then
                      begin

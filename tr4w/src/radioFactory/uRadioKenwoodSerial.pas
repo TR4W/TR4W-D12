@@ -564,7 +564,8 @@ end;
 
 procedure TKenwoodSerial.Receive;
 begin
-  Self.SendToRadio('RX;');
+  // An unkey: a no-op with no open link -- see SendStopToRadio (issue #99).
+  Self.SendStopToRadio('RX;');
 end;
 
 
@@ -583,8 +584,9 @@ begin
    // leave it keyed down with nothing to send.  Two separate writes, as the
    // legacy code sent them.
    Self.CWBuffer := '';
-   Self.SendToRadio('KY0;');
-   Self.SendToRadio('RX;');
+   // SendStopToRadio: with no open link there is nothing to stop (issue #99).
+   Self.SendStopToRadio('KY0;');
+   Self.SendStopToRadio('RX;');
 end;
 
 

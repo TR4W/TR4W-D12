@@ -126,6 +126,7 @@ uses
    uTestRadioSocketNoRead in 'uTestRadioSocketNoRead.pas',
    uTestClusterSocketNoRead in 'uTestClusterSocketNoRead.pas',
    uTestExternalLoggerSocket in 'uTestExternalLoggerSocket.pas',
+   uTestExternalLoggerLookup in 'uTestExternalLoggerLookup.pas',
    uIcomScope           in '..\..\src\radioFactory\uIcomScope.pas',
    uTestIcomScope       in 'uTestIcomScope.pas',
    uTestIcomScopeSeam   in 'uTestIcomScopeSeam.pas',
@@ -895,6 +896,7 @@ begin
    RegisterSuite(TRadioSocketNoReadTests.Create('RadioSocketNoRead'));
    RegisterSuite(TClusterSocketNoReadTests.Create('ClusterSocketNoRead'));
    RegisterSuite(TExternalLoggerSocketTests.Create('ExternalLoggerSocket'));
+   RegisterSuite(TExternalLoggerLookupTests.Create('ExternalLoggerLookup'));
    RegisterSuite(TIcomScopeTests.Create('IcomScope'));
    RegisterSuite(TIcomScopeSeamTests.Create('IcomScopeSeam'));
    RegisterSuite(TUtilsMathTests.Create('UtilsMath'));
