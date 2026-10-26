@@ -1,19 +1,61 @@
-Entries for NC QSO Party used by in-state stations
-100 NC Counties + 50 states + DC + 13 Canadian mults + DX
+NC QSO PARTY - for North Carolina entrants: the 100 NC counties, 49 US states (not NC) plus DC, the 13 Canadian provinces and territories, and one DX multiplier
+The sponsor's 2026 rules: "NC participants: Work 100 North Carolina Counties, 49 US States (not NC) plus DC, 13 Canadian Provinces/Territories (AB, BC, MB, NB, NL, NS, NT, NU, ON, PE, QC, SK, and YT), plus one DX."
+The states are listed here rather than included from S50.DOM, so North Carolina can be left out; the shared file is never edited for one contest.
+Until #88 round 3 (2026-10-26) this file said INCLUDE without FILE, which the loader skipped, so no US state could be logged by an NC entrant (D7 too).
+The counties come first, so a county code wins over a state or province alias spelled the same.
 
-Dx = DX
-
-INCLUDE S50.DOM
-INCLUDE P13.DOM
-Dc = DC
-Qc = VE2, QU, PQ, QC
-On = VE3, ON
-Mb = VE4, MB, MAN
-Sk = VE5, SK, SAS
-Ab = VE6, AB, ALT
-Bc = VE7, BC
-Nwt = VE8, NW
-Nf = VO1, NF, LAB, VO2
-Yt = VY1, YU, YK
-Ns = VY2, PEI, VE9, NB, VE1, NS, MARIT
 INCLUDE FILE NC_CTY.DOM
+Al = AL,^Alabama
+Ar = AR,^Arkansas
+Az = AZ, ARI,^Arizona
+Ca = CA,^California
+Co = CO,^Colorado
+Ct = CT, CON,^Connecticut
+De = DE,^Delaware
+Fl = F,FL,^Florida
+Ga = G,GA,^Georgia
+Ia = IA, IO,^Iowa
+Id = ID,^Idaho
+Il = IL,^Illinois
+In = IN,^Indiana
+Ks = KA, KS,^Kansas
+Ky = KE, KY,^Kentucky
+La = L,LA,^Louisiana
+Ma = MA,^Massachusetts
+Md = MD, MARY,^Maryland
+Me = ME,^Maine
+Mi = MI,^Michigan
+Mn = MN, MIN,^Minnesota
+Mo = MO, MISSO,^Missouri
+Ms = MS, MIS,^Mississippi
+Mt = MT, ^Montana
+Nd = ND,^North Dakota
+Ne = NE,^Nebraska
+Nh = NH,^New Hampshire
+Nj = NJ,^New Jersey
+Nm = NM,^New Mexico
+Nv = NV, NEV,^Nevada
+Ny = NY,^New York
+Oh = OH,^Ohio
+Ok = OK,^Oklahoma
+Or = OR,^Oregon
+Pa = PA,^Pennsylvania
+Ri = RI,^Rhode Island
+Sc = SC,^South Carolina
+Sd = SD,^South Dakota
+Tn = TN, ^Tennessee
+Tx = TX,^Texas
+Ut = UT,^Utah
+Va = VA, ^Virginia
+Vt = VT,^Vermont
+Wa = WA,^Washington
+Wi = WI,^Wisconsin
+Wv = WV,^West Virginia
+Wy = WY,^Wyoming
+Ak = AK, ALK, KL7,^Alaska
+Hi = HI, KH6,^Hawaii
+Dc = DC,^District of Columbia
+INCLUDE FILE P13.DOM
+The old spellings this file accepted for Newfoundland and Labrador
+Nf > Nl = NF, LAB
+Dx = DX

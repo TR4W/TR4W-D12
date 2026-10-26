@@ -70,6 +70,12 @@ APPL > Ga = APPL,^Appling
   header explains why its county file is included first).
 - **`INCLUDE FILE <name>`** reads another file from `target/dom`. Shared lists
   already exist -- `S50.DOM`, `DC.DOM`, `P13.DOM`, ... (`ls tr4w/target/dom`).
+  Spell it exactly so, upper case: `INCLUDE S50.DOM` is NOT followed (the
+  loader warns, `Lint-DomCoverage` fails it -- nc.dom lost every US state
+  that way until #88 round 3). **Never edit a shared list for one contest**:
+  if the sponsor leaves the host state out of an in-state entrant's states,
+  list the 49 in the party's own file (missouri.dom, nc.dom) or refuse it in
+  the class's `CountsAsMultiplier` with `DomesticMultiplierIsHostState`.
 
 **A state party ships two files, and their names are tied:**
 

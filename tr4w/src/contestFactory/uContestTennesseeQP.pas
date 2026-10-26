@@ -116,6 +116,11 @@ type
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
+   public
+      (* TENNESSEE IS NOT A STATE MULTIPLIER FOR A TENNESSEE ENTRANT --
+         #88 round 3 (2026-10-26). See the implementation. *)
+      function CountsAsMultiplier(const aQso: ContestExchange;
+                                  aKind: RemainingMultiplierType): boolean; override;
    end;
 
 implementation
@@ -256,6 +261,22 @@ end;
 function TContestTennesseeQP.LogsSeveralQTHsFromOneEntry: boolean;
 begin
    Result := True;
+end;
+
+(* TENNESSEE IS NOT A STATE MULTIPLIER FOR A TENNESSEE ENTRANT -- #88
+   round 3 (2026-10-26), the sponsor's 2026 rules:
+   "U.S. states (49 max/band - do not count Tennessee as a state, District
+   of Columbia counts as Maryland)".
+   tennessee.dom includes the shared S50.DOM, which holds Tn; an
+   in-state entrant's QSO whose domestic multiplier is the host state
+   itself earns no multiplier and keeps its points. Outside Tennessee the
+   multipliers are the counties, and none is spelled as the state. The
+   shared file is never edited for this: other contests read it. *)
+function TContestTennesseeQP.CountsAsMultiplier(const aQso: ContestExchange;
+                                                aKind: RemainingMultiplierType): boolean;
+begin
+   Result := not (Station.InHostState and
+                  DomesticMultiplierIsHostState(string(aQso.DomMultQTH), HostState));
 end;
 
 initialization

@@ -511,7 +511,8 @@ var
   DisplayedCodeSpeed                    : Byte;
 
 //  DVPEnabled                            : boolean = True;
-  DXMultLimit                           : integer = 32766; {KK1L: 6.65}
+  (* DXMultLimit (KK1L 6.65) stood here until #88 round 3 (2026-10-26):
+    written by the NEQP and 7QP arms, read by nothing, in D7 or here. *)
 
 //  EditableLogDisplayed                  : boolean;
   EscapeFromEditBandMap                 : boolean;

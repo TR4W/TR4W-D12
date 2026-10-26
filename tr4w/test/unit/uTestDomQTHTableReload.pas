@@ -53,6 +53,7 @@ type
    private
       procedure Test_ASecondLoadReplacesTheFirst;
       procedure Test_TheStoreKeepsTheListsRules;
+      procedure Test_AnIncludeWithoutFileIsReportedNotSkipped;
    end;
 
 implementation
@@ -62,7 +63,10 @@ uses
    SysUtils,
    VC,
    uMults,
-   LogDom;
+   LogDom,
+   (* The loader's warning, captured (#88 round 3). *)
+   Log4D,
+   uTestLogCapture;
 
 const
    MULT_Z = 'ZZRLD';
@@ -201,10 +205,71 @@ begin
    end;
 end;
 
+(* AN INCLUDE THE LOADER WILL NOT FOLLOW IS REPORTED -- #88 round 3
+   (2026-10-26). Only `INCLUDE FILE <name>` includes a file; nc.dom's
+   `INCLUDE S50.DOM` was skipped in silence since D7, and no NC entrant could
+   log a US state. The loader still does not follow such a line (guessing
+   at another spelling would make a file mean what this reader tolerates),
+   but it WARNS, naming the file and the line, and the rest of the file
+   loads. The predicate is pinned on its own, the shapes Lint-DomCoverage
+   checks the same way. *)
+procedure TDomQTHTableReloadTests.Test_AnIncludeWithoutFileIsReportedNotSkipped;
+var
+   capture: TCaptureAppender;
+   keep: ILogAppender;
+   lg: TLogLogger;
+   savedLevel: TLogLevel;
+   table: TDomQTHTable;
+   path: string;
+   hadZ: boolean;
+   index: integer;
+begin
+   BeginTest('Test_AnIncludeWithoutFileIsReportedNotSkipped');
+
+   CheckFalse(DomLineIsAnUnfollowedInclude('INCLUDE FILE S50.DOM'), 'INCLUDE FILE is followed');
+   CheckFalse(DomLineIsAnUnfollowedInclude('   INCLUDE FILE S50.DOM'), 'after leading blanks too');
+   CheckFalse(DomLineIsAnUnfollowedInclude(#9'INCLUDE FILE S50.DOM'), 'and a tab');
+   CheckTrue(DomLineIsAnUnfollowedInclude('INCLUDE S50.DOM'), 'INCLUDE without FILE is not');
+   CheckTrue(DomLineIsAnUnfollowedInclude('include file s50.dom'), 'nor is a lower-case one -- the reader is case-sensitive');
+   CheckTrue(DomLineIsAnUnfollowedInclude('Include'), 'nor the word alone');
+   CheckFalse(DomLineIsAnUnfollowedInclude('INCLUDED states'), 'a header word that only begins INCLUDE is no include');
+   CheckFalse(DomLineIsAnUnfollowedInclude('Maryland includes the District of Columbia'), 'nor prose');
+   CheckFalse(DomLineIsAnUnfollowedInclude('[INCLUDE FILE ARIZONA_CTY.DOM]'), 'nor a bracketed, disabled line');
+   CheckFalse(DomLineIsAnUnfollowedInclude(''), 'nor an empty line');
+
+   hadZ := mo.DomList.FindMult(MULT_Z, index);
+   path := WriteDomFile('tr4w_dom_include_without_file.dom',
+                        ['INCLUDE S50.DOM', 'include file p13.dom', MULT_Z + ' = ZZRA']);
+   capture := TCaptureAppender.Create('capture');
+   keep := capture;
+   lg := TLogLogger.GetLogger('LogDom');
+   savedLevel := lg.Level;
+   lg.Level := Log4D.Warn;
+   lg.AddAppender(keep);
+   table := TDomQTHTable.Create;
+   try
+      CheckTrue(table.ReadDomQTHFile(path, False), 'the file loads');
+      CheckTrue(table.HasPrefix('ZZRA'), 'and its entry after the two lines is read');
+      CheckFalse(table.HasPrefix('CT') or table.HasPrefix('ON'), 'neither include was followed');
+      CheckEquals(2, capture.Lines.Count, 'each unfollowed include is REPORTED: ' + capture.Lines.Text);
+      CheckTrue(Pos('INCLUDE S50.DOM', capture.Lines.Text) > 0, 'naming the line: ' + capture.Lines.Text);
+      CheckTrue(Pos('tr4w_dom_include_without_file.dom', capture.Lines.Text) > 0,
+                'and the file: ' + capture.Lines.Text);
+   finally
+      table.Free;
+      lg.RemoveAppender(keep);
+      lg.Level := savedLevel;
+      keep := nil;
+      DeleteFile(path);
+      RemoveTestMultiplier(MULT_Z, hadZ);
+   end;
+end;
+
 procedure TDomQTHTableReloadTests.RunAllTests;
 begin
    Test_ASecondLoadReplacesTheFirst;
    Test_TheStoreKeepsTheListsRules;
+   Test_AnIncludeWithoutFileIsReportedNotSkipped;
 end;
 
 end.

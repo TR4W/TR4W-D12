@@ -40,6 +40,13 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   BANDS (NY4I, 2026-10-16, from the four parties' rules): 160, 80, 40, 20,
   15 and 10 m -- no WARC, no VHF. UsesBand states them; a QSO anywhere else
   is logged, scores 0 and earns no multiplier (design 7.4).
+
+  #88 ROUND 3 (2026-10-26), the sponsor's 2026 rules
+  (docs/ContestRules/QSOParties/Indiana/IN-QSO-PARTY-Rules.txt):
+  multipliers once per MODE (GetFlags' cfMultByMode), and for an Indiana
+  entrant the states are "the other 49" -- Indiana itself is no multiplier
+  (CountsAsMultiplier). Rovers in a new county were already new QSOs here
+  (the state-party base's dupe key, Q118).
  *)
 unit uContestIndianaQP;
 
@@ -144,6 +151,17 @@ function TContestIndianaQP.CountsAsMultiplier(const aQso: ContestExchange;
 begin
    (* Every kind: the legacy rule returned before any flag was set. *)
    Result := not DomesticMultiplierIsDX(string(aQso.DomMultQTH));
+
+   (* "Indiana stations: The 92 Indiana counties (see Section 9). The other
+      49 U.S. states" -- #88 round 3 (2026-10-26). in.dom includes the shared
+      S50.DOM, which holds In; for an Indiana entrant that is not a
+      multiplier (an Indiana station sends its county). *)
+   if Result and
+      Station.InHostState and
+      DomesticMultiplierIsHostState(string(aQso.DomMultQTH), HostState) then
+      begin
+      Result := False;
+      end;
 end;
 
 function TContestIndianaQP.GetDisplayName: string;
@@ -253,9 +271,13 @@ begin
    Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10];
 end;
 
+(* MULTIPLIERS ONCE PER MODE -- #88 round 3 (2026-10-26): "Multipliers
+   count once per mode (i.e. once on CW and once on phone). This means you
+   can double your possible mults by working both modes." For every entrant,
+   inside Indiana and out. *)
 function TContestIndianaQP.GetFlags: TContestFlags;
 begin
-   Result := [cfQSOByBand, cfQSOByMode];
+   Result := [cfQSOByBand, cfQSOByMode, cfMultByMode];
 end;
 
 function TContestIndianaQP.GetCountyLineCountiesMax: integer;

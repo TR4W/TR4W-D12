@@ -1,0 +1,138 @@
+﻿Washington State Salmon Run Rules
+
+Source: https://salmonrun.wwdxc.org/rules/
+Fetched: 2026-10-26
+WA7BNM ID: 126 (https://www.contestcalendar.com/contestdetails.php?ref=126)
+Cabrillo Name: WA-SALMON-RUN
+ADIF Name: WA-QSO-PARTY
+
+ Rules
+ Log Submission
+ Logs Received
+ Certificates
+ Washington Salmon Run Rules
+ SPONSORED BY WESTERN WASHINGTON DX CLUB
+ Updated – July 22, 2024
+ Rules Manager: Contact the Salmon Run Committee or the current WWDXC Secretary
+ OBJECT
+ Stations outside Washington state work only Washington state stations for QSO Points and County Multiplier credit. Stations within Washington state work stations in States, Canadian call areas, DXCC entities, and Washington Counties for QSO Points and Multiplier credit.
+ CONTEST PERIOD
+ The third full (two-day) weekend of September from 1600Z (9AM PDT) Saturday through 0700Z (12AM PDT) Sunday and then from 1600Z – 2400Z (9AM-5PM PDT) Sunday. All entry classes may operate the full 23 hours of the contest.
+ FREQUENCIES & MODES
+ Contest Bands: 160, 80, 40, 20, 15, 10, and 6 meters
+ No contacts on 60, 30, 17, or 12 meters are allowed
+ Contest Modes: Phone and CW.
+ We cannot accept WJST modes (e.g. FT-8/FT-4) because they do not provide the proper exchange.
+ For single-mode entries, contacts on modes other than the mode of entry may not be counted for QSO point, multiplier, or bonus credit.
+ Suggested Frequencies:
+ CW: 1830, 3550, 7045, 14050, 21050, 28040 kHz and 50.095 MHz
+ Phone: 1850, 3925, 7260, 14280, 21380, 28380 kHz and 50.130 MHz
+ CW QSOs must not be made on any frequency where SSB operation is also permitted (except on 160m).
+ Mobile frequencies are 5 kHz lower – please keep them clear for weak mobile and Washington County Expedition signals!
+ Try CW on the half-hour; 160 meters at 0500Z; 80/75 meters at 0300Z and 0600Z
+ Mobiles are encouraged to try 75 and/or 40 meters at the top of each hour through the day for WA stations to have the opportunity to contact some of the rarer counties.
+ EXCHANGE
+ Washington state stations: RS(T) and County (see Washington multiplier list )
+ USA stations: RS(T) and State
+ Canadian Stations: RS(T) and Canadian multipler
+ DX stations send DXCC entity prefix
+ ENTRY CLASSES
+ Single-Operator, All Bands (SOAB) – 9 classes
+ Washington Single-Operator, All Bands (WA-SOAB)
+ Non-Washington Single-Operator, All Bands (NONWA-SOAB)
+ Mode: CW, Phone, Mixed
+ Power: HP (more than 100 watts output), LP, QRP (5 watts or less)
+ Multi-Operator Single-Transmitter – 2 classes
+ Washington non-Club (MOST-WA)
+ Non-Washington (MOST-NONWA)
+ MOST entries must be from a permanent, fixed station
+ Mixed-mode only, no separate power classes
+ Washington Club Station – 2 classes
+ Washington Club Multi-Operator Single-Transmitter (WA-CLUB-MOST)
+ Washington Club Multi-Operator Two-Transmitter (WA-CLUB-MO2T)
+ WA-CLUB must be from a permanent, fixed station
+ Must use a club callsign
+ Operators must be club members
+ Mixed-mode only, no separate power classes
+ Multi-Mode operation in one band is permitted for MO2T entries.
+ Washington Mobile – 3 classes, no separate power classes
+ Mobile (MOB): Mode: CW, Phone,  Mixed
+ Mobile includes single-operator, single-operator assisted, and multi-operator.
+ More than one individual may participate in driving and operating, including non-licensed family members.
+ Mobile class entrants must operate from a station that is self-contained, capable of legal motion (street, water, or air) while operating, motion optional.
+ A Mobile station cannot use land-based supports for any antennas at any time – no dipole strung in trees, no counterpoises stretched from a mobile antenna to a convenient fence post, etc. If such an antenna arrangement is used – the entry class is “Expedition” (see below)
+ A Mobile station that changes counties may be contacted again for point and multiplier credit.
+ Non-Washington Mobiles will be classified as SOAB
+ Washington County Expedition – 3 classes, no separate power classes, mixed mode only
+ Single-operator, Single-transmitter (EXP-SOST)
+ Multi-operator, Single transmitter (EXP-MOST)
+ Multi-operator, Two-transmitter (EXP-MO2T)
+ Simultaneous multi-mode operation in one band is permitted for MO2T entries.
+ The Washington County Expedition class is intended for those who would like to activate one or more rare counties by going to a state park or farmer’s field and throwing up a dipole or other portable antenna “Field Day Style”.
+ Expedition class stations may operate from one or more fixed locations and while mobile traveling to, from, or between portable locations
+ The location may not be that of a permanent amateur station
+ Portable or mobile antennas must be used.  All portable antennas must be temporarily erected for the contest and removed afterwards.
+ Commercial power may be used
+ Single-County and Multi-County (including county line) Expedition entries will be scored separately in the results.
+ Unlimited
+ In the spirit of innovation and experimentation, we encourage creative entries using remote operation, distributed operations, and any other configuration and operating aids you can imagine.  All transmitters/antennas must be in the same multiplier location (Washington County/county-line, State, VE or DX entity).
+ Please include a description of your Unlimited entry.  Unlimited entries will be listed separately in the results.
+ Washington Club Scoring Aggregate
+ The sum of all member scores from any class of Washington entry submitted (no non-WA scores).
+ Each log submitted must include the name of the club to which the score should be credited. Use the Cabrillo Tag “CLUB:” to indicate your club.
+ You must be an actual member in good standing with the Club you list.
+ The Western Washington DX Club is ineligible for the club aggregate.
+ GENERAL RULES
+ Use of cluster spots is allowed in all classes. Self-spotting is allowed in all classes.
+ Only a single transmitted signal is allowed at any time except for Multi-Operator Two-Transmitter and Unlimited entries.
+ All contacts must be made without the assistance of intermediary stations, such as repeaters, digipeaters, satellites, etc.
+ A station that changes counties may be contacted again for point and multiplier credit.
+ Contacts with stations operating from a county-line must log one QSO from each county. County lines, whether land or water, are defined in accordance with the County Line Definition in the MARAC rules . See “County Line” and "Wet County Line"
+ Operation from “wet” county lines must comply with County Hunter rules stating that the vehicle or station must be on the line. Specifically, it is not acceptable to operate from the shore of a body of water and claim a county line that runs through the body of water. It is acceptable to operate from bridges or islands in the body of water that are crossed by or about the county line.
+ In the case of 3-county or more intersections, and in accordance with the MARAC rules, only one county line consisting of two counties may be run at a time.
+ Transmitting and receiving equipment for all stations other than those in the Unlimited category shall be co-located on the same premises and within a 1000-ft diameter circle.
+ The entry location and exchange of remote stations must reflect where the transmitter is located.
+ QSO POINTS
+ 2 points for Phone
+ 3 points for CW
+ The same station may be worked for QSO points on each band on Phone and CW.
+ MULTIPLIERS
+ Washington stations:
+ Washington counties (39)
+ US States less WA (49) – District of Columbia counts as MD, Alaska and Hawaii count as states.
+ VE multipliers (13) - Canadian Provinces and Territories as defined by the Candian Multipliers List
+ Up to 10 DXCC entities other than US and VE can be worked for multiplier credit. US and VE do not count as DX entities.
+ Non-Washington stations:
+ Washington counties (39 total)
+ Each multiplier may be counted ONLY ONCE regardless of mode or band
+ Expedition and Mobile stations count multipliers ONLY ONCE and not once from each county activated
+ SPECIAL BONUS STATION
+ A QSO with the sponsoring club’s (Western Washington DX Club) call sign, W7DX, will add a 500-point bonus for each mode (Phone and CW). A total of 1000 points may be earned in this manner (not 500 points for each QSO on each different band). A single-mode entry (Phone and CW) may claim the 500-point bonus only once.
+ Bonus points are added after all other scoring is completed (they are not multiplied by the “multiplier”). The Special Bonus Station will count for its normal county multiplier. Contacts with the Special Bonus Stations will also earn 2 points on phone and 3 points on CW.
+ SCORING
+ Total = QSO points from all bands x total multipliers + Special Bonus Station bonus points
+ Mobile and Expedition classes sum QSO points from all counties before multiplying. Do not calculate separate scores from each county.
+ LOGS
+ Log review has become the most challenging part of running the WA-SALMON-RUN (our official name). Please help us by following these guidelines:
+ Cabrillo format logs are required; v3.0 preferred. Please review your Cabrillo log to ensure that county-line stations are logged as two QSOs and that abbreviations are consistent.
+ DXCC entities claimed for multiplier credit must match the entity prefix in the most current ARRL DXCC Entities List. Invalid Washington county, state, province, or DXCC entities will count for QSO credit but not multiplier credit.
+ Your email address must be included in the Cabrillo file (use the Cabrillo Tag “EMAIL: xyz@email.com” for example.
+ Do not use TABS in a manually constructed Cabrillo log.
+ ADIF format logs and paper logs cannot be scored.
+ Logs must show date and time in UTC, stations worked, exchange sent and received, band and modes used and QSO points claimed.
+ Submit logs by uploading the Cabrillo file to the SR logs web page at wwdxc.org .
+ All submitted logs and check logs are cross-checked. QSO credit towards awards may be lost due to incomplete or incorrect QSO data.
+ Log Deadline: Entries MUST BE SUBMITTED ONLINE NO LATER THAN TWO WEEKS AFTER THE CLOSE OF THE SALMON RUN.  If your log is not in proper Cabrillo format, it will not be scored.
+ AWARDS
+ Plaques: Plaques will be awarded to top scorers in several different categories including Washington and Non-Washington high and low power entrants, top DX, and top single-county and multi-county expedition.
+ Horse Race Plaques : Plaques will be awarded to the first Non-WA entrant to work all 39 WA counties and the first WA entrant to work 100 multipliers across WA Counties, US States, Canadian Provinces, and (up to 10) DX entities.
+ Smoked Salmon Prizes : Packages of smoked salmon will be awarded to the highest scoring entry in each US Call District (Ø through 9), Alaska, and Hawaii. To qualify for prizes the minimum number of QSOs for U.S. stations is 50. Stations in Washington are not eligible for the smoked salmon prize for the 7th Call District.
+ Clean Sweep Glasses : US Pint Glasses commemorating the event will be sent to all stations earning a validated clean sweep of all Washington Counties.
+ Certificates: All entries will be able to print out a Certificate of Achievement .
+ Only one Plaque OR Smoked Salmon award per participant. Other salmon prizes, awards, and sponsored plaques are awarded at the discretion of the awards committee.
+ JUDGING
+ The Salmon Run Contest Committee is responsible for checking and adjudicating the contest entries and determining category and awards winners. Entrants are expected to follow the rules and best amateur radio practices.
+ All decisions of the judges are final.
+ Salmon Run 2026:
+ 1600Z Saturday, September 19, 2026 - 2359Z Sunday, September 20
+ 2026 Salmon Run Starts:

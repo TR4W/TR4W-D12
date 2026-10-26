@@ -203,6 +203,11 @@ type
       function GetCountyLineCountiesMax: integer; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
 
+      (* POINTS TIMES THE MULTIPLIERS, AT MOST 10 OF THEM DX -- #88 round 3
+         (2026-10-26): "Up to 10 DXCC entities other than US and VE can be
+         worked for multiplier credit." Only the DX kind is capped. *)
+      function CombineWithMultipliers(const aTotals: TScoreTotals): longint; override;
+
       (* THE W7DX BONUS -- declared data and the two answers that qualify it;
          see the header. *)
       function GetBonusStations: TBonusStationList; override;
@@ -229,6 +234,11 @@ type
                                out aKey: DXMultiplierString): boolean; override;
       (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
       function CountryMode: CountryModeType; override;
+      (* WASHINGTON IS NOT A STATE MULTIPLIER FOR A WASHINGTON ENTRANT --
+         #88 round 3 (2026-10-26): "US States less WA (49)". See the
+         implementation. *)
+      function CountsAsMultiplier(const aQso: ContestExchange;
+                                  aKind: RemainingMultiplierType): boolean; override;
       (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
       function LogsSeveralQTHsFromOneEntry: boolean; override;
    public
@@ -431,6 +441,33 @@ begin
          aQso.QSOPoints := 0;
          end;
       end;
+end;
+
+const
+   (* "Up to 10 DXCC entities other than US and VE can be worked for
+      multiplier credit" -- the sponsor's MULTIPLIERS, 2026-10-26. *)
+   SALMON_RUN_MAXIMUM_DX_MULTIPLIERS = 10;
+
+(* THE DX CAP -- see the declaration. Outside Washington there is no DX
+   multiplier, so the DX count is 0 and the cap never bites. KH6 and KL7 are
+   left as they are (they count as a state AND as DX today; the sponsor says
+   "Alaska and Hawaii count as states", which is not yet ruled on). *)
+function TContestWashingtonSalmonRun.CombineWithMultipliers(const aTotals: TScoreTotals): longint;
+begin
+   Result := ContestPoints(aTotals) *
+             SummedMultipliersWithKindCapped(aTotals, rmDX, SALMON_RUN_MAXIMUM_DX_MULTIPLIERS);
+end;
+
+(* "US States less WA (49)" -- the sponsor's MULTIPLIERS. A Washington
+   entrant's QSO whose domestic multiplier is WA itself (washington.dom
+   includes the shared S50.DOM, which holds Wa) earns no multiplier; the
+   QSO keeps its points. Outside Washington the multipliers are the
+   counties, and no county is spelled WA. *)
+function TContestWashingtonSalmonRun.CountsAsMultiplier(const aQso: ContestExchange;
+                                                        aKind: RemainingMultiplierType): boolean;
+begin
+   Result := not (Station.InHostState and
+                  DomesticMultiplierIsHostState(string(aQso.DomMultQTH), HostState));
 end;
 
 function TContestWashingtonSalmonRun.GetBonusStations: TBonusStationList;

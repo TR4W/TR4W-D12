@@ -752,6 +752,20 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
       2, 2026-10-26). *)
    uTestContestFloridaQP in 'uTestContestFloridaQP.pas',
    uTestContestWisconsinQP in 'uTestContestWisconsinQP.pas',
+   (* #88 round 3 (2026-10-26): the 7QP and Salmon Run DX caps, the rover
+      dupe key, Indiana per mode, NC's states, and the host state that is no
+      multiplier for an in-state entrant -- one unit per party, and the
+      questions they share. *)
+   uTestQSOPartyRules in 'uTestQSOPartyRules.pas',
+   uTestContestSevenQP in 'uTestContestSevenQP.pas',
+   uTestContestWashingtonSalmonRun in 'uTestContestWashingtonSalmonRun.pas',
+   uTestContestIndianaQP in 'uTestContestIndianaQP.pas',
+   uTestContestNorthCarolinaQP in 'uTestContestNorthCarolinaQP.pas',
+   uTestContestMichiganQP in 'uTestContestMichiganQP.pas',
+   uTestContestOhioQP in 'uTestContestOhioQP.pas',
+   uTestContestTennesseeQP in 'uTestContestTennesseeQP.pas',
+   uTestContestTexasQP in 'uTestContestTexasQP.pas',
+   uTestContestVirginiaQP in 'uTestContestVirginiaQP.pas',
    (* The RTC's 2026 rules: dupes per band AND mode, grids per band
       (2026-10-23). *)
    uTestContestRTC      in 'uTestContestRTC.pas',
@@ -897,6 +911,15 @@ begin
    RegisterSuite(TContestBritishColumbiaQPTests.Create('ContestBritishColumbiaQP'));
    RegisterSuite(TContestFloridaQPTests.Create('ContestFloridaQP'));
    RegisterSuite(TContestWisconsinQPTests.Create('ContestWisconsinQP'));
+   RegisterSuite(TContestSevenQPTests.Create('ContestSevenQP'));
+   RegisterSuite(TContestWashingtonSalmonRunTests.Create('ContestWashingtonSalmonRun'));
+   RegisterSuite(TContestIndianaQPTests.Create('ContestIndianaQP'));
+   RegisterSuite(TContestNorthCarolinaQPTests.Create('ContestNorthCarolinaQP'));
+   RegisterSuite(TContestMichiganQPTests.Create('ContestMichiganQP'));
+   RegisterSuite(TContestOhioQPTests.Create('ContestOhioQP'));
+   RegisterSuite(TContestTennesseeQPTests.Create('ContestTennesseeQP'));
+   RegisterSuite(TContestTexasQPTests.Create('ContestTexasQP'));
+   RegisterSuite(TContestVirginiaQPTests.Create('ContestVirginiaQP'));
    RegisterSuite(TContestRTCTests.Create('ContestRTC'));
    RegisterSuite(TFieldDaySectionRefusalTests.Create('FieldDaySectionRefusal'));
    RegisterSuite(TContestNamesTests.Create('ContestNames'));

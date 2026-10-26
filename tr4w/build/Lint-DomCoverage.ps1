@@ -1,7 +1,9 @@
 # Lint-DomCoverage.ps1
 #
 # Every US QSO party TR4W defines must have BOTH of its domestic multiplier
-# files in the installer.  Fails the build when one is missing.
+# files in the installer.  Fails the build when one is missing -- and, since
+# #88 round 3 (2026-10-26), when any .dom in target\dom holds an INCLUDE line
+# the reader skips (see "an INCLUDE the reader will not follow" below).
 #
 # ---------------------------------------------------------------------------
 # WHY THIS EXISTS
@@ -153,6 +155,41 @@ $onDisk = New-Object System.Collections.Generic.HashSet[string]
 foreach ($f in Get-ChildItem -Path $DomDir -File)
    {
    [void]$onDisk.Add($f.Name.ToLowerInvariant())
+   }
+
+# --- an INCLUDE the reader will not follow ---------------------------------
+# #88 round 3 (2026-10-26).  LogDom follows exactly `INCLUDE FILE <name>`
+# (upper case, leading blanks allowed).  Any other line whose first word is
+# INCLUDE, in any case, holds no `=` and so is skipped -- nc.dom's
+# `INCLUDE S50.DOM` was skipped that way since D7, and no NC entrant could log
+# a US state.  The reader now WARNS on such a line (LogDom.
+# DomLineIsAnUnfollowedInclude); this fails the build on one, in every file in
+# target\dom, because a warning in a log is read only after a contest goes
+# wrong.  The same rule as the Pascal predicate: keep the two in step.
+$includeProblems = New-Object System.Collections.ArrayList
+foreach ($f in Get-ChildItem -Path $DomDir -File -Filter '*.dom')
+   {
+   $n = 0
+   foreach ($line in Get-Content -LiteralPath $f.FullName)
+      {
+      $n++
+      $trimmed = $line.TrimStart(' ', "`t")
+      if ($trimmed.StartsWith('INCLUDE FILE', [System.StringComparison]::Ordinal)) { continue }
+      $firstWord = ($trimmed -split ' ', 2)[0]
+      if ($firstWord -ieq 'INCLUDE')
+         {
+         [void]$includeProblems.Add("  $($f.Name) line ${n}: '$line' -- only INCLUDE FILE <name> is followed")
+         }
+      }
+   }
+
+if ($includeProblems.Count -gt 0)
+   {
+   Write-Host ""
+   Write-Host "Lint-DomCoverage: $($includeProblems.Count) .dom line(s) name an INCLUDE the reader skips:" -ForegroundColor Red
+   $includeProblems | ForEach-Object { Write-Host $_ -ForegroundColor Red }
+   Write-Host "  Write it as INCLUDE FILE <name>, upper case, or the file's states/provinces never load." -ForegroundColor Yellow
+   exit 1
    }
 
 # --- compare ---------------------------------------------------------------

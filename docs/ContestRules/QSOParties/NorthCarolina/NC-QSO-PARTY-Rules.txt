@@ -1,0 +1,333 @@
+﻿North Carolina QSO Party Rules
+
+Source: http://ncqsoparty.org/wp-content/uploads/2025/10/Rules_2026_251013.pdf (linked from http://ncqsoparty.org/rules/)
+Fetched: 2026-10-26
+WA7BNM ID: 265 (https://www.contestcalendar.com/contestdetails.php?ref=265)
+Cabrillo Name: NC-QSO-PARTY
+ADIF Name: NC-QSO-PARTY
+
+2026 North Carolina QSO Party Contest Rules
+
+Updated 10/13/2025
+
+Object
+
+For amateur radio operators outside the state of North Carolina: make contact with North Carolina
+stations. For amateur radio operators within North Carolina: Activate as many NC counties as possible
+and make contact with everyone.
+
+Contest Period
+
+1500 UTC March 1 to 0100 UTC March 2, 2026. (10 am to 8 pm EST on March 1, 2026). All stations
+may operate the entire contest period.
+
+Categories
+
+Single-Operator (Single-Op)
+One person performs all operating and logging functions operating from only one fixed location used
+for permanent amateur radio operation. This category allows QRP, Low Power, or High Power.
+
+Multi-Operator (Multi-Op)
+More than one person performs transmitting, receiving and logging functions, all using the same call
+sign. All apparatus to be located in the same location (within a 1000' diameter circle). A maximum of
+two simultaneous transmitted signals may be on the air at a given time. If two transmitters are used,
+they may be on the same or different bands. The operation is required to be in, and stay in, one fixed
+location for the duration of the contest. This category allows Mixed mode operation using High or Low
+power. Submit one combined electronic Cabrillo log file. Each participant's call sign should be listed in
+the Cabrillo header on the "OPERATORS:" line. Individual participants may not use their own call
+sign to work their own multi operation for QSO credit at any time during the event.
+
+Mobile
+One or more persons perform operating and logging functions from a self-contained vehicle capable of
+operating while in motion. Motion is optional. All apparatus used must be capable of operating while in
+motion and wholly contained in, on or attached to the vehicle. Attention to driving and safety is top
+priority. Use of a separate driver (whether an amateur radio operator or not) is allowed and encouraged.
+Mobile stations that choose to move to a new county may work everyone again for QSO credit. If
+returning to a previously activated county, only new stations, respective of band and mode, not
+previously worked from there, may be counted as QSO credit. Mobiles may give out two counties in
+one QSO if part of the vehicle is physically and safely located in both counties simultaneously. See
+County Line Contacts paragraph below. This category allows only Mixed mode Low Power award
+class.
+
+Portable
+One or more persons operating from a temporary, stationary location using portable antennas and
+radios. No permanent radio installations or antenna structures may be used. Use of trees, buildings,
+etc., to raise antennas is allowed as long as it is safe to do so and not originally intended for that
+purpose. Mobile radios, equipment, and antennas installed in, on or attached to a vehicle are permitted.
+All operating must take place while stationary. No QSOs may be made for credit when in motion at any
+time. All apparatus are to be located in the same location within a 1000' diameter circle during
+operation.
+
+Portable category stations that choose may move to a new county and work everyone again for QSO
+credit. When moving, all radio, antenna, and related accessories must be moved also, and this same
+equipment used/moved for the duration of this event. If returning to a previously activated county, only
+new stations, respective of band and mode, not previously worked from there, may be counted as QSO
+credit.
+
+Portable category stations may give out two counties in one QSO if part of the radio, feed line, or
+antenna is physically and safely located in both counties simultaneously and all equipment is still
+within the 1000' diameter circle. See County Line Contacts below. This category allows only Mixed
+mode Low Power award class.
+
+Expedition
+Same as Portable above, except:
+The station operation is required to be in, and stay in, one fixed location for the duration of the contest.
+
+Operating Details
+
+Non-NC participants: Work stations in 100 North Carolina Counties.
+NC Participants: Work all stations.
+
+Exchange
+North Carolina (NC) stations work everyone, send call sign and NC county. Use county abbreviations
+as needed. Stations outside of North Carolina (Non-NC) work NC stations only. Send call sign and
+state/province, or "DX". Use abbreviations as needed. Sending signal report (i.e., 59) is optional.
+
+Bands
+Operate on 80/75, 40, 20, 15, 10, 6, and 2 meters. No 160, WARC, or above 2 meters.
+Suggested operating frequencies (MHz) CW: 3.540, 7.040, 14.040, 21.040, 28.040, 50.040, 144.040.
+Phone: 3.860, 7.260, 14.260, 21.360, 28.360, 50.160 (SSB), 52.040 (FM), 144.260 (SSB), 146.520
+(FM). Digital: (Use standard digital frequencies per band plan) Check the North Carolina Facebook
+Group for latest info on the most active areas. No cross-band QSOs are allowed. No repeater, satellite,
+or other relaying device may be used to complete a QSO for award credit.
+
+Power
+Highest power used determines the award class entered.
+QRP - 5 watts or less for CW/Digital, 10W-PEP for Phone.
+Low - 150 watts or less.
+High - Legal limit power.
+
+Modes
+Phone - Includes SSB, AM, and FM voice
+CW - All CW QSO's for award credit must take place in the CW sub portion of the band.
+Digital - Except for FT-8/4 as noted below in Weak Signal Showcase, all other digital modes are
+allowed and considered one mode. (Note: QSO's made using FT-8/4 should not be included.)
+Mixed Mode - Use of one or more modes as described above. No cross mode QSOs are allowed.
+(Digital mode QSOs, except for FT-8/4, are part of a Mixed category operation.)
+
+County Line Contacts
+
+A Mobile (while stationary,) Portable, or Expedition may operate on a county line and contacts can be
+used as credit for two counties. A maximum of two counties may be worked simultaneously under this
+provision. Some part of the vehicle, radio apparatus, or antenna must rest within and be located in each
+of the two counties on the county line. The methods to determine the county line are dictated by
+MARAC County Hunter rules outlining the definition of a county border.
+(http://www.marac.org/awards/Award-rules.pdf page 6) Note that this reference to MARAC is officially
+part of these rules. The entrant is responsible to document any county line determination, but this is not
+submitted with the log entry. County line information is subject to audit and the committee will request
+this from the participant should the need arise.
+
+Scoring
+
+QSO Points
+Phone - 2 points each
+CW - 3 points each
+Digital - 5 points each
+
+It is permissible to work the same station on each mode (Phone, CW, Digital) on each band for credit. A
+valid QSO logged for award credit consists of date, time, mode, call sign, and location as described in
+Exchange above. For in state NC Mobile or Portable participants: It is permissible to include two
+counties in a QSO where applicable. A two county QSO must be logged as separate QSOs with two
+lines in the log, one for each of the two counties.
+
+Multipliers
+NC participants: Work 100 North Carolina Counties, 49 US States (not NC) plus DC, 13 Canadian
+Provinces/Territories (AB, BC, MB, NB, NL, NS, NT, NU, ON, PE, QC, SK, and YT), plus one DX.
+164 total possible. Note: NC stations may include the county from which operation takes place in the
+Multiplier count regardless of whether any QSOs are logged from that same county. This includes
+Mobile and Portable stations where operations may take place in more than one county. In that case
+this provision is applied to each county activated where at least one QSO was completed.
+
+Any location not listed above is considered DX. This includes US Territories, Mexican provinces, and
+DXCC countries. No restriction on NC stations to work DX for QSO credit, but only one "DX"
+multiplier is applied in the calculation of the final score representing all DX worked.
+
+Count each multiplier worked only once across all modes, bands, and operating location.
+
+Bonus QSO Points
+Ten NC Counties designated below as "Rarest of NC".
+A QSO with someone in one of these counties will be scored 10X QSO points as follows:
+Phone - 20 points each
+CW - 30 points each
+Digital - 50 points each
+Note: These points are added to the rest of the regular QSO Points prior to MULT multiplication so
+they have a significant positive effect on the final score.
+
+Rarest of NC Counties
+
+Cabarrus CAB
+
+Graham   GRM
+
+Vance    VAN
+
+Macon    MAC
+
+Davie    DAV
+
+Currituck CUR
+
+Pamlico  PAM
+
+Alleghany ALL
+
+Person   PER
+
+Caswell  CAS
+
+Bonus Points
+If at least one QSO is made with a station in five of the "Rarest of NC" counties, 500 additional bonus
+points are added to the score after multiplication. This would constitute a sweep. A certificate via
+email will be awarded to all participants achieving this sweep.
+
+Final Score
+Multiply the total (QSO points plus Bonus QSO Points) times the total multiplier value. Add bonus
+points to score (as applicable) after the multiplication.
+
+Awards
+
+Plaques for first place, and certificates for second place (if applicable) will be awarded in the following
+categories:
+
+Single-Op / NC / Phone (Low Power)
+Single-Op / NC / Phone (High Power)
+Single-Op / NC / CW (Low Power)
+Single-Op / NC / CW (High Power)
+Single-Op / NC / Mixed Mode (Low Power)
+Single-Op / NC / Mixed Mode (High Power)
+Single-Op / NC / Mixed Mode (QRP)
+Multi-Op / NC / Mixed Mode (Low Power)
+Multi-Op / NC / Mixed Mode (High Power)
+Mobile / NC
+Portable / NC
+Expedition / NC
+Weak Signal Showcase / NC / FT-8/4
+
+Single-Op / Non-NC / Phone (Low Power)
+Single-Op / Non-NC / Phone (High Power)
+Single-Op / Non-NC / CW (Low Power)
+Single-Op / Non-NC / CW (High Power)
+Single-Op / Non-NC / Mixed Mode (Low Power)
+Single-Op / Non-NC / Mixed Mode (High Power)
+Single-Op / Non-NC / Mixed Mode (QRP)
+Weak Signal Showcase / Non-NC / FT-8/4
+Top DX Score
+100 County Sweep (if achieved)
+
+Submitting Logs
+
+Cabrillo format is required for all electronic logs submitted via the website. Carefully check and verify
+the category items that are in your log's header with the valid selections to ensure proper scoring.
+
+CATEGORY-OPERATOR: Single-Op, Multi-Op, Mobile, Portable, Expedition, or Checklog
+CATEGORY-MODE: CW, SSB, or MIXED
+CATEGORY-POWER: HIGH, LOW, or QRP
+ARRL-SECTION: <Your ARRL Section>
+ADDRESS: <Address where your awards should be mailed: (Use as many lines as needed
+ADDRESS: for address)>
+EMAIL: Valid email address for submitter
+OPERATORS: <At least two participating operator call signs required for Multi-Op category,
+OPERATORS: one for Single op category, and one or more for Mobile, Portable, and
+OPERATORS: Expedition.>
+
+General
+All logs must be received by March 15, 2026. Electronic submission via the website is required. (Paper
+logs are no longer accepted). Web Page: Go to http://www.ncqsoparty.org "Logs" tab to submit.
+
+Miscellaneous Rules
+
+For entrants in the Single-Op, Mobile, Portable, and Expedition categories competing for awards only
+one transmitted signal is permitted to be on the air at a time. Multi-Op entries may have a maximum of
+two transmitted signals on the air simultaneously. There are no band or mode change limits.
+
+In order to receive any award, regardless of category, entrants must have completed at least 25 QSOs.
+These QSOs must be logged within the same log that qualifies for the award. This applies to all
+plaques, certificates, prizes, drawings, and sweeps.
+
+Use of spotting networks, nets, Packet Cluster, Skimmer, RBN, or other assistance is allowed in all
+categories.
+
+Use of remote radio equipment and antennas (via remote link) is permitted in the Single-Op category
+only. Both receiving and transmitting equipment are required to be at the same location. Entry category
+QTH is based on the location of the transmitter, receiver, and antennas. Note: In all cases, whether
+
+operating remotely or in a conventional manner, all receiving and transmitting equipment must be
+located in one place together.
+
+For the Top DX award: Any participant located outside of the 50 US states and DC is eligible. This
+includes US Territories, Canadian and Mexican provinces, and world-wide DXCC countries.
+
+Final results will be posted on the NCQP web site, http://www.ncqsoparty.org. First place awards will
+be mailed to the recipients at the address provided in the Cabrillo log header. Second place certificates
+will be mailed to the recipient. Other non-category certificates awarded will be sent by e-mail.
+
+Members of the North Carolina QSO Party Committee may participate but are not eligible for
+individual awards. A committee member's participation within a Multi-Op, Mobile, Portable, or
+Expedition category activation recuses that operation from award eligibility. Members of the NCQP
+Advisory Committee are eligible for awards.
+
+By reference, the World Wide Radio Operators Foundation (WWROF) Contester's Code of Ethics is
+incorporated in these rules and each entrant submitting a log for an award agrees to apply these
+principles during and after the event. More information is found here https://wwrof.org/contester-
+codeof-ethics/ Each entrant submitting a log for an award agrees to be bound by the provisions, and
+intent, of these rules, the requirements of his or her amateur license, and the decisions of the North
+Carolina QSO Party committee. The NCQP Committee and Advisory Committee are the final arbiters
+on all matters concerning the North Carolina QSO Party.
+
+FT-8/4: Weak Signal Showcase
+
+The special activity using FT-8/4 mode will be continued this year. All may participate, including NC
+stations and Non-NC-Stations. Both are permitted to submit their special ADIF log file for an award for
+this event.
+
+Stations make regular FT-8/4 QSOs as is customary in usual operation during the time frame and date
+of the regular NCQP contest. Submit FT-8/4 log in ADIF format separately using the special form pro-
+vided on the NCQP website set up specially for this purpose.
+
+DO NOT INCLUDE FT-8/4 QSOS in the regular Cabrillo log. Making QSOs in this activity does not
+change the category status of a station participating in the regular contest. (i.e., A single-op/CW/Low
+Power station DOES NOT go into the Mixed mode if they participate in this special activity)
+
+The intent is to showcase NCQP to FT8/FT4 operators while allowing for normal operations of these
+modes. Below are the details of the 2026 Weak Signal Showcase:
+
+ The Weak Signal Showcase is a separate event from the main NC QSO Party.
+ This competition is open to both in-state (NC) and out-of-state (non-NC) participants.
+ QSO credit will be given for QSOs made between NC stations and any other station. No NCQP
+
+    credit is given for non-NC stations contacting one another.
+ After all logs are submitted, the logs will be scored and valid NC-to-non-NC QSOs awarded credit.
+
+ For a non-NC station to receive QSO credit, NCQP must receive a log from the NC station involved
+    in the contact.
+
+ NC stations will receive QSO credit regardless of whether the other station submits a matching
+    log.
+
+ It may not be possible during the contest to determine whether a station is in NC or not; we en-
+    courage non-NC stations to work as many "CQ NCQP" stations as possible and submit logs. Some-
+    times it's fun to receive an award you didn't know you'd be getting.
+
+ Stations may be worked again on a different band. There is no provision for stations moving be-
+    tween grid squares during the contest. Should a station move to a new grid square, the "work
+    once per band" restriction does not reset.
+
+ Low power (100W or less) must be used for this competition.
+ Only weak-signal (FT8/FT4) digital QSOs are included in this competition.
+ Stations may submit a log for the Weak Signal Showcase as well as the main NCQP contest, but
+
+    weak-signal QSOs may only appear in the Weak Signal Showcase log.
+ Only one weak-signal transmission is allowed at a time.
+ Stations will exchange the standard weak-signal reports of grid squares and optional SNR. Call
+
+    signs and grid squares for both stations in a QSO must be logged.
+ Scores will be computed based on five points per QSO, multiplied by the number of grid squares
+
+    (ie., FM05) worked.
+ Directions for log submission will be posted to ncqsoparty.org/logs. The log deadline is concurrent
+
+    with the main NC QSO Party.
+ A plaque will be awarded for first-place, and certificate for second place, finisher in each category
+
+    (NC, non-NC).
+

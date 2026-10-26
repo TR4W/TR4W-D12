@@ -61,6 +61,7 @@ type
       procedure Test_DelawareCabrillo;
       procedure Test_DelawareADIFIdRoundTrips;
       procedure Test_DelawareCQExchangeSendsTheSentState;
+      procedure Test_DelawareToDelawareEarnsPointsOnly;
    end;
 
 implementation
@@ -73,7 +74,9 @@ uses
    uContestStateQSOPartyBase, uContestDelawareQP, uDomFileKeys,
    uAppStrings, uTR4WStrings,
    uTestContestObjects,
-   uTestExchangeParserStub;
+   uTestExchangeParserStub,
+   (* InStateMultiplierOf, CountsForEntrant -- #88 round 3. *)
+   uTestQSOPartyRules;
 
 (* ---------------------------------------------------------------------------
    HELPERS
@@ -497,8 +500,39 @@ begin
                'no repeat S&P default');
 end;
 
+(* "Delaware stations may contact other Delaware stations but only count for
+   QSO point credit." -- #88 round 3 (2026-10-26; docs/ContestRules/
+   QSOParties/Delaware/DE-QSO-PARTY-Rules.txt). delaware.dom maps each of the
+   three counties to De, so a Delaware entrant's QSO with any Delaware
+   station has De for its multiplier: none of any kind. Another state still
+   counts, and outside Delaware every county counts. The points are pinned
+   by Test_DelawarePointsFollowTheEntrant and are untouched. *)
+procedure TContestDelawareQPTests.Test_DelawareToDelawareEarnsPointsOnly;
+const
+   KINDS: array[0..3] of RemainingMultiplierType = (rmDomestic, rmDX, rmZone, rmPrefix);
+var
+   county: string;
+   i: integer;
+begin
+   BeginTest('Test_DelawareToDelawareEarnsPointsOnly');
+   county := InStateMultiplierOf(DELAWAREQSOPARTY, 'NDE');
+   CheckEquals('DE', county, 'delaware.dom gives New Castle the multiplier DE');
+   CheckEquals('DE', InStateMultiplierOf(DELAWAREQSOPARTY, 'DE'), 'and DE itself the same');
+   for i := Low(KINDS) to High(KINDS) do
+      begin
+      CheckFalse(CountsForEntrant(DELAWAREQSOPARTY, True, county, KINDS[i]),
+                 'in state: a Delaware station earns no multiplier, kind ' + IntToStr(Ord(KINDS[i])));
+      end;
+   CheckFalse(CountsForEntrant(DELAWAREQSOPARTY, True, 'De', rmDomestic), 'in the file''s own spelling either');
+   CheckTrue(CountsForEntrant(DELAWAREQSOPARTY, True, InStateMultiplierOf(DELAWAREQSOPARTY, 'PA'), rmDomestic),
+             'Pennsylvania is a multiplier');
+   CheckTrue(CountsForEntrant(DELAWAREQSOPARTY, False, 'NDE', rmDomestic),
+             'outside Delaware, New Castle is');
+end;
+
 procedure TContestDelawareQPTests.RunAllTests;
 begin
+   Test_DelawareToDelawareEarnsPointsOnly;
    Test_DelawareIsAnAppendedStateParty;
    Test_DelawarePointsFollowTheEntrant;
    Test_DelawareBandsSkipWARC;

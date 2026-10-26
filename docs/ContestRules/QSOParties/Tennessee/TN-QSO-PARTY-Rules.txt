@@ -1,0 +1,217 @@
+﻿Tennessee QSO Party Rules
+
+Source: https://tnqp.org/wp-content/uploads/2026/08/Tennessee-QSO-Party-2026-Rules.pdf (embedded at https://tnqp.org/rules/)
+Fetched: 2026-10-26
+WA7BNM ID: 115 (https://www.contestcalendar.com/contestdetails.php?ref=115)
+Cabrillo Name: TN-QSO-PARTY
+ADIF Name: TN-QSO-PARTY
+
+         Tennessee QSO Party 2026 Rules
+
+CONTEST PERIOD
+        1700z Sunday, September 6 until 0300z Monday, September 7, 2026
+
+OBJECT
+        Stations outside of Tennessee work as many Tennessee stations in as many
+        Tennessee counties as possible. Stations in Tennessee work everyone.
+
+BANDS
+        All amateur bands are valid, with the exception of 60, 30, 17 and 12 meters.
+
+MODES
+         Phone-SSB, FM (no repeater QSOs)
+         CW
+         Digital (Any digital mode that supports the required exchange)
+
+EXCHANGE
+        RS(T) and Tennessee County, U.S. state, Canadian province/territory, or
+        DXCC entity. (All radio equipment, including antennas, must be located within
+        the county, state, province/territory or entity given in the exchange).
+         Tennessee stations may work anyone
+         Stations outside of Tennessee work only Tennessee stations
+         Fixed Stations may be worked once per band/mode
+         Mobiles and Rovers may be worked again if they change counties
+
+CATEGORIES (High: >100 watts, Low: 5-100 watts, QRP: <= 5 watts)
+
+         1. Fixed
+                      A. Single Op
+                                  i. High, Low & QRP
+                                 ii. CW, SSB, Digital & Mixed
+                      B. Multi-Op
+                                  i. High, Low & QRP
+                                 ii. CW, SSB, Digital & Mixed
+
+         2. Mobile & Rover
+                      A. Single Op
+                                  i. High, Low & QRP
+                                 ii. CW, SSB, Digital & Mixed
+                      B. Multi-Op
+
+                                  i. High, Low & QRP
+                                 ii. CW, SSB, Digital & Mixed
+
+All Out-of-State entries compete in the Fixed categories.
+All Tennessee portable operations operating from a single location compete in the
+Fixed categories.
+
+Mobile stations - must be self-contained and capable of legal motion while operating.
+Motion is optional. Single-Op Mobiles may use a driver, but that person may not
+assist in the operation of the radio equipment.
+
+Rover stations - may use vehicle mounted antennas and/or temporary antennas. Rover
+stations must remain stationary while operating in each county. If they do operate
+while in motion, then their category changes to Mobile.
+
+County line operation - Mobile and Rover stations are permitted to operate on country
+lines, as long as they follow the official County Hunter definitions and rules. Refer to
+the "Definition - County Line" section of the MARAC awards packet at
+https://countyhunter.com/awardmain.htm . It is important to note that:
+
+    1) Three and four county lines may not be run simultaneously.
+    2) A part of the vehicle must be in each of the 2 counties simultaneously.
+    3) A county line that is "wet" (like a bridge over a river county line) is allowed
+
+        only if can be done safely and legally.
+    4) The logging software, such as N1MM, must generate 2 rows in the log file, one
+
+        for each county.
+
+Spotting: The spotting of stations, especially mobile and rover stations, is encouraged.
+All categories of entrants are permitted to self-spot.
+
+SCORING
+QSO Points:
+3 points per QSO regardless of mode.
+Repeater QSOs DO NOT count (this includes packet digipeaters). However, direct
+station-to-station packet contacts do count.
+On all acceptable bands, CW and digital modes count separately. For example, you
+can work W9WI on 3540 kHz CW; 3585 kHz Baudot RTTY; and 3820 kHz SSB, for
+three contacts on 80 meters. All voice modes are considered Phone and therefore
+equivalent. For example, if you work W9WI on 2M SSB, you cannot work him again
+on 2M FM simplex for point credit. All digital modes besides CW are equivalent. If
+
+you work W9WI on 14085 kHz Baudot RTTY you cannot work him again on 14070
+kHz FT8 for point credit.
+
+Multipliers:
+Outside of Tennessee Stations - Multipliers accumulate on a per band basis.
+Multipliers are Tennessee counties (95 max/band). For example, if you work all 95
+Tennessee counties on 40M and again on 20M you earn 190 multipliers.
+
+Tennessee Stations - Multipliers accumulate on a per band basis. Multipliers are:
+         Tennessee counties (95 max/band)
+         U.S. states (49 max/band - do not count Tennessee as a state, District of
+            Columbia counts as Maryland)
+         Canadian provinces/territories (13 max/band: British Columbia, Alberta,
+            Manitoba, Saskatchewan, Ontario, Quebec, New Brunswick, Nova Scotia,
+            Prince Edward Island, Newfoundland & Labrador, Yukon, NWT and
+            Nunavut).
+         DXCC entities (see ARRL DXCC list - less USA, Canada, Alaska &
+            Hawaii -- Do not count USA nor Canada as countries; Alaska & Hawaii
+            count as states only).
+
+Tennessee Mobile & Rover Stations - Tennessee mobiles and rovers may claim one
+multiplier for any Tennessee county from which they complete at least 10 QSOs if
+they do not earn a multiplier for that county otherwise.
+
+Bonus Points:
+All entrants may claim 100 bonus points for each QSO (one per band/mode) with
+TCG headquarters station K4TCG.
+Tennessee mobile & rover operators may claim 500 bonus points for each Tennessee
+county from which they complete at least 10 QSOs. All bonus points are added after
+the geographic multiplier.
+
+WHERE TO LOOK
+         CW: 1815, 3540, 7040, 14040, 21040, 28040
+         Digital: 3585, 7085, 14085, 21085, 28085
+         SSB: 1855, 3820, 7240, 14280, 21390, 28390
+         VHF/UHF: 50.195, 144.195, 146.55, 223.50, 446.0
+
+        Where to listen for TN Counties by band & time:
+                 Check 15 meters on the half-hour.
+                 Check 10 meters on the hour.
+
+                 Check 6 meters and other VHF+ frequencies 15 minutes after the
+                    hour.
+
+                 Check RTTY at 10 minutes after each hour.
+
+AWARDS
+         Certificates will be awarded to the three highest scoring Tennessee entrants
+            in each category.
+         Certificates will be awarded to the highest scoring entrant from each
+            category in each U.S. state, Canadian province or territory and DXCC
+            entity.
+         A certificate will be awarded to the highest-scoring in-state mobile & in-
+            state rover operated entirely by amateurs who don't reside in Tennessee.
+         Plaques will be awarded to the highest-scoring station making at least 100
+            QSOs in each of the following categories:
+
+                     TN - Single Op High Power
+                     TN - Single Op Low Power
+                     TN - Single Op QRP
+                     TN - Multi Op
+                     TN - Single Op Mobile
+                     TN - Multi Op Mobile
+                     TN - Rover
+                     Outside TN - Single Op High Power
+                     Outside TN - Single Op Low Power
+                     Outside TN - Single Op QRP
+                     DX (Outside of NA)
+
+     All award certificates will be emailed as PDF files. Be sure your current,
+        accurate email is included in your Cabrillo file entry.
+
+     Bonus station K4TCG and the TCG itself are not eligible for awards.
+
+LOGS
+Prior to submitting a log file, entrants should review the information contained in the
+header field of their Cabrillo file to make sure it is complete and accurate. In
+particular, make sure entry class, personal information, call sign, station location
+(state, province or DXCC entity, NOT ARRL section), and email address are correctly
+shown. The header information is used by the processing software and must be
+complete and accurate.
+Logs must be submitted online in Cabrillo format
+at https://tnqp.contesting.com/ . The site will validate your log and email you a
+confirmation.
+
+Logs must be received by 15 September 2026. Thanks!
+Don't forget your mailing address - you might win something!
+
+List of Tennessee Counties and Abbreviations:
+
+Anderson ANDE    Hamilton HAMI    Morgan MORG
+Bedford BEDF     Hancock HANC     Obion OBIO
+Benton BENT      Hardeman HARD    Overton OVER
+Bledsoe BLED     Hardin HARN      Perry PERR
+Blount BLOU      Hawkins HAWK     Pickett PICK
+Bradley BRAD     Haywood HAYW     Polk POLK
+Campbell CAMP    Henderson HEND   Putnam PUTN
+Cannon CANN      Henry HENR       Rhea RHEA
+Carroll CARR     Hickman HICK     Roane ROAN
+Carter CART      Houston HOUS     Robertson ROBE
+Cheatham CHEA    Humphreys HUMP   Rutherford RUTH
+Chester CHES     Jackson JACK     Scott SCOT
+Claiborne CLAI   Jefferson JEFF   Sequatchie SEQU
+Clay CLAY        Johnson JOHN     Sevier SEVI
+Cocke COCK       Knox KNOX        Shelby SHEL
+Coffee COFF      Lake LAKE        Smith SMIT
+Crockett CROC    Lauderdale LAUD  Stewart STEW
+Cumberland CUMB  Lawrence LAWR    Sullivan SULL
+Davidson DAVI    Lewis LEWI       Sumner SUMN
+Decatur DECA     Lincoln LINC     Tipton TIPT
+Dekalb DEKA      Loudon LOUD      Trousdale TROU
+Dickson DICK     Macon MACO       Unicoi UNIC
+Dyer DYER        Madison MADI     Union UNIO
+Fayette FAYE     Marion MARI      Van Buren VANB
+Fentress FENT    Marshall MARS    Warren WARR
+Franklin FRAN    Maury MAUR       Washington WASH
+Gibson GIBS      McMinn MCMI      Wayne WAYN
+Giles GILE       McNairy MCNA     Weakley WEAK
+Grainger GRAI    Meigs MEIG       White WHIT
+Greene GREE      Monroe MONR      Williamson WILL
+Grundy GRUN      Montgomery MONT  Wilson WILS
+Hamblen HAMB     Moore MOOR
+
+

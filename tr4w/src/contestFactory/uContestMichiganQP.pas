@@ -126,6 +126,11 @@ type
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
+   public
+      (* MICHIGAN IS NOT A STATE MULTIPLIER FOR A MICHIGAN ENTRANT --
+         #88 round 3 (2026-10-26). See the implementation. *)
+      function CountsAsMultiplier(const aQso: ContestExchange;
+                                  aKind: RemainingMultiplierType): boolean; override;
    end;
 
 implementation
@@ -254,6 +259,22 @@ end;
 function TContestMichiganQP.LogsSeveralQTHsFromOneEntry: boolean;
 begin
    Result := True;
+end;
+
+(* MICHIGAN IS NOT A STATE MULTIPLIER FOR A MICHIGAN ENTRANT -- #88
+   round 3 (2026-10-26), the sponsor's 2026 rules:
+   "For Michigan stations, multipliers are the 83 Michigan counties, 49
+   American states (excluding Michigan) + 1 District of Columbia".
+   michigan.dom includes the shared S51.DOM, which holds Mi; an
+   in-state entrant's QSO whose domestic multiplier is the host state
+   itself earns no multiplier and keeps its points. Outside Michigan the
+   multipliers are the counties, and none is spelled as the state. The
+   shared file is never edited for this: other contests read it. *)
+function TContestMichiganQP.CountsAsMultiplier(const aQso: ContestExchange;
+                                               aKind: RemainingMultiplierType): boolean;
+begin
+   Result := not (Station.InHostState and
+                  DomesticMultiplierIsHostState(string(aQso.DomMultQTH), HostState));
 end;
 
 initialization

@@ -2377,7 +2377,10 @@ arm is its `ApplyADIFImport`; POTA is the only contest left named in either.
 **DECIDED: the session values the classless arms wrote join `TSessionValue`**,
 by M7a's growth rule, each with its line in `FCONTEST.ApplySessionDefaults`:
 `InitialExchange` and `ZoneMult` (JIDX, JT DX, KCJ -- `ActiveInitialExchange`,
-`ActiveZoneMult`), `DXMultLimit` (7QP, NEQP), `R150SMode` (CQ-M, Gagarin Cup,
+`ActiveZoneMult`), `DXMultLimit` (7QP, NEQP -- **deleted at #88 round 3,
+2026-10-26**: the global it wrote had no reader in D7 or here, so no cap ever
+applied; the 7QP's and the Salmon Run's sponsor cap of 10 DX is each class's
+`CombineWithMultipliers`), `R150SMode` (CQ-M, Gagarin Cup,
 OZCHR teams), and **`SuppressZoneExchangeMessages`**: FoundContest's closing
 `case ActiveExchange` skipped `SetUpRSTMyZoneExchange` for
 `Contest in [JIDXCW, JIDXSSB]`; the JIDX classes state the flag (both

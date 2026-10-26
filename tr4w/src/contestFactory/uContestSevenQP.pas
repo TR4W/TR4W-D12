@@ -59,8 +59,21 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   SET-UP: an in-state station (FoundContest's own in-state answer,
   aStation.InHostState -- the arm asked FoundMyStateInDomFile again, which
   is the same question on the same data) sends RST and its county or DX
-  and counts DXCC without W/VE/KH6/KL7, at most 20; everyone else sends RST
-  and a county. LogCfg's CQ exchange: 5NN and MY STATE.
+  and counts DXCC without W/VE/KH6/KL7; everyone else sends RST and a
+  county. LogCfg's CQ exchange: 5NN and MY STATE.
+
+  #88 ROUND 3 (2026-10-26), the sponsor's 2026 rules
+  (docs/ContestRules/QSOParties/SeventhCallArea/7QP-Rules.txt):
+    * THE DX CAP IS 10, ON THE DX KIND ONLY: "7th-area stations multiply
+      total QSO points by the total of states (50), provinces (13) and other
+      DXCC entities (maximum of 10) worked." CombineWithMultipliers caps the
+      DX count; the states and provinces are not capped. D7's arm stated a
+      limit of 20 into a global that NOTHING read, in D7 or here, so no cap
+      had ever applied -- that statement and the global are deleted.
+    * A ROVER IN A NEW COUNTY IS A NEW QSO: "7th-area mobiles ... may be
+      worked again as they enter new counties." The received QTH joins the
+      dupe key (DupeKeyIncludesReceivedQTH), as on every single-state party
+      since Q118 -- the /county suffix already did; now the bare call does.
 
   BANDS (NY4I, 2026-10-16, from the four parties' rules): 160, 80, 40, 20,
   15 and 10 m -- no WARC, no VHF. UsesBand states them; a QSO anywhere else
@@ -116,9 +129,15 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+      (* Points times the multipliers, at most 10 of them DX -- the header. *)
+      function CombineWithMultipliers(const aTotals: TScoreTotals): longint; override;
    public
       (* 160 to 10 m without WARC -- the header. *)
       function UsesBand(aBand: BandType): boolean; override;
+      (* A MOBILE IN A NEW COUNTY IS A NEW QSO -- the received QTH is part of
+         the dupe key. See TContestBase.DupeKeyIncludesReceivedQTH and the
+         header. *)
+      function DupeKeyIncludesReceivedQTH: boolean; override;
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
@@ -243,6 +262,26 @@ begin
       begin
       aQso.QSOPoints := FixedModePoints(aQso.Mode, 3, 2, 2);
       end;
+end;
+
+const
+   (* "other DXCC entities (maximum of 10)" -- the sponsor's Scoring. *)
+   SEVENQP_MAXIMUM_DX_MULTIPLIERS = 10;
+
+(* THE DX CAP -- the header. Out of the 7th area there is no DX multiplier,
+   so the DX count is 0 and the cap never bites. *)
+function TContestSevenQP.CombineWithMultipliers(const aTotals: TScoreTotals): longint;
+begin
+   Result := ContestPoints(aTotals) *
+             SummedMultipliersWithKindCapped(aTotals, rmDX, SEVENQP_MAXIMUM_DX_MULTIPLIERS);
+end;
+
+(* "7th-area mobiles (and those participating in other concurrent QSO
+   parties or contests) may be worked again as they enter new counties" --
+   the sponsor's 2026 rules. At both kinds of entrant. *)
+function TContestSevenQP.DupeKeyIncludesReceivedQTH: boolean;
+begin
+   Result := True;
 end;
 
 function TContestSevenQP.GetDisplayName: string;
@@ -417,7 +456,8 @@ begin
    if aStation.InHostState then
       begin
       aSession.Exchange := RSTDomesticOrDXQTHExchange;
-      aSession.DXMultLimit := 20;
+      (* NO DX LIMIT HERE: D7's 20 went into a global nothing read. The
+         sponsor's 10 is CombineWithMultipliers' (#88 round 3). *)
       end
    else
       begin

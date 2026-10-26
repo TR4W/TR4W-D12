@@ -1,0 +1,50 @@
+﻿7th Call Area QSO Party Rules
+
+Source: http://7QP.org/new/Page.asp?content=rules
+Fetched: 2026-10-26
+WA7BNM ID: 404 (https://www.contestcalendar.com/contestdetails.php?ref=404)
+Cabrillo Name: 7QP
+ADIF Name: 7QP
+
+ 7QP: 7QP Rules
+ General:
+ Home
+ About 7QP
+ Rules
+ States & Counties
+ Awards
+ State Coordinators
+ & Sponsors
+ FAQs
+ Advice...
+ Logging Software
+ History:
+ Activated Counties
+ Lookup by Call
+ 2024 - 2025
+ 2021 - 2023
+ 2018 - 2020
+ 2014 - 2017
+ 2010 - 2013
+ 2006 - 2009
+ Oregon QP - RIP
+ Links:
+ CODXC
+ Contest Calendar
+ QTH Classifieds
+ 7QP - the 7th Call Area QSO Party
+ 7QP Rules
+ Contact us: 7qpinfo@codxc.org
+ 7th Call Area QSO Party -- 2026 Rules
+ 1300 UTC Saturday to 0700 UTC Sunday (6 AM to midnight PDT the first Saturday in May). 7th call area stations work everyone, others work 7th-area stations only. Work stations once per band/mode. 7th-area mobiles (and those participating in other concurrent QSO parties or contests) may be worked again as they enter new counties. ARRL Contest and HF Contest rules apply, but these 7QP Rules take precedence. Rule changes are shown in bold italic . Entry categories: � � � � (Use of spotting assistance is permitted in all categories) Single-op: high-power, low-power , QRP Multi-single: high-power, low-power
+ Multi-multi. No differentiated mode or power levels
+ 7th-area County Expedition (an operation from a temporary location using antennas installed for the contest period, using temporary supports or trees): either single-county, county-line; single-op, multi-single, multi-multi; or
+ open (anything else, including location changes)
+ Mobile (station self-contained and capable of motion): single-op (unassisted -- performs all operating, logging and driving; for safety reasons, should operate only while parked), multi-single (any other mobile operation); high-power, low-power; CW, Phone, Mixed. Use of APRS (location and call only) is allowed.
+ ������Mixed-mode entries with the same mode for all valid QSOs will be re-classified to single-mode. Awards: Certificates will be awarded to the top three finishers in each category within and outside the 7th call area, plus the top overall finisher in DX and in each state/province and 7th-area county; a 25-QSO minimum applies. See the website for a list of plaques to be awarded. Exchange: 7th-area stations send signal report plus 5-letter state/county code (e.g., ORDES; see list). County-line stations send multiple codes, e.g., UTRIC/IDBEA (state code needed only once, e.g., ORDES/JEF). Non-7th-area stations send signal report plus state/province/"DX" two-letter codes. Stations in other QSO parties send their appropriate exchange. The 13 "Provinces" are VE1-9, VO and VY0-2. County-line contacts may be logged with one entry showing all counties or with separate entries for each county. Bands: 160, 80, 40, 20, 15 and 10m. Suggested operating frequencies: 1815 and 40 kHz up on CW, except on 40m, where 7025-7035 is suggested (a window for mobiles to call CQ should be observed from 35 to 40 kHz up; others should not call CQ or run stations there); 1845, 3855, 7180, 14255, 21355 and 28455 on SSB; 80 kHz up on PSK; 86 kHz up on RTTY. Check 80m at 0500Z, 160m at 0530Z. All CW and Digital contacts must be in the CW/Data sub-bands. Scoring: 2 points per SSB QSO, 3 points per CW QSO, 4 points per Digital QSO. County-line contacts count as multiple QSOs for both stations. 7th-area stations multiply total QSO points by the total of states (50), provinces (13) and other DXCC entities (maximum of 10) worked. Non-7th-area stations multiply total QSO points by 7th-area counties (259) worked. Logs: ���Logs must be submitted online by May 13 . Cabrillo logs (preferred) here )--> may be uploaded to https://7qp.contesting.com .
+ Non-Cabrillo plain-text logs may be uploaded via web form .
+ Log submission via email is no longer available.
+ Paper logs (containing no more than 40 QSOs) may be mailed, with a completed summary sheet , to 7QP, c/o CODXC, 61255 Ferguson Rd, Bend OR 97702. --> 7qplogs@codxc.org with the station callsign in the "Subject" line and the log file as an attachment (not in the message body). Be sure your log includes name, address, email address, station callsign, entry category, location code(s) and operator callsigns (if Cabrillo, they should appear within the Cabrillo attachment itself; the log processor ignores the rest of the message) . You should receive a confirmation email, normally within one day of receipt; if not, check to be sure your callsign, with correct entry category , appears on our Received Logs page at http://7qp.org . --> ������You'll receive a confirmation email, and your callsign will appear on the Received Logs page at https://7qp.contesting.com . Other: All equipment and antennas must lie within a 1000-foot diameter circle. County-line operations must be within 500 feet of the county line. Any computer-to-computer mode is considered digital. WSJT modes do not support the 7QP exchange, so are not allowed. The same station may be worked on each band on CW, Phone, and Digital. All contacts must be made without using repeaters, digipeaters, satellites, etc. Self-spotting is allowed. Only one entry per callsign (can't do, e.g., mobile and expedition entries). Include operator callsign(s) in your log if different from the station callsign. Help: On the website at http://7qp.org are these complete rules; FAQs ( please read ); lists of county names and abbreviations: state/county maps; county sign-up sheet; summary sheet; state coordinators; logging-program info and configuration files; list of plaques and donors. 02/09/2026
+ Site last updated on: September 10, 2026
+7QP / The 7th Call Area QSO Party
+ eMail Webmaster

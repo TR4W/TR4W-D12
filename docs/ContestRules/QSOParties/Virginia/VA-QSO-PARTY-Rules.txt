@@ -1,0 +1,201 @@
+﻿Virginia QSO Party Rules
+
+Source: https://www.qsl.net/sterling/VA_QSO_Party/2026_VQP/2026_VAQP_Rules.htm
+Fetched: 2026-10-26
+WA7BNM ID: 302 (https://www.contestcalendar.com/contestdetails.php?ref=302)
+Cabrillo Name: VA-QSO-PARTY
+ADIF Name: VA-QSO-PARTY
+
+ charset=windows-1252">
+ �
+<!--
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+a:link, span.MsoHyperlink
+a:visited, span.MsoHyperlinkFollowed
+p
+@page WordSection1
+div.WordSection1
+@page WordSection2
+div.WordSection2
+@page WordSection3
+div.WordSection3
+-->
+ <span
+ Rules
+ Roman","serif";color:#990000"><br
+ 12.0pt;margin-left:0in"> <span
+ Sponsored by the Sterling Park Amateur Radio Club, Call Box
+ 29, Sterling, VA 20167.
+ OBJECTIVE
+ To promote amateur radio activity in the 95 Virginia Counties
+ and 38 Virginia Independent Cities.
+ DATES
+ Saturday, 21 March 2026, 1400 UTC - Sunday, 22 March, 0400 UTC
+ and Sunday, 22 March, 1200 UTC - 2400 UTC.
+ 12.0pt;margin-left:0in"><span
+ Saturday 10 AM - 12 Midnight and Sunday 8 AM - 8 PM Virginia
+ local time.)
+ ENTRY CATEGORIES
+ Operator Categories
+ Single Operator - One person performs all operating
+ and only one transmitter may be on the air at a time.
+ Multi Operator / Single Transmitter - Two or more
+ operators with one transmitter on the air at one time.
+ Multi Operator / Multi Transmitter - Two or more
+ operators with two or more transmitters on the air at one
+ time.
+ Station Categories
+ * Fixed Station
+ * Mobile � <span
+ is capable of operating while in motion and operates
+ stationary in the same configuration, i.e., able to travel
+ at any time without having to disconnect any wiring or
+ change any antennas in order to move. A mobile station is
+ self-contained and capable of legal motion (land, water or
+ air) while operating. Commercial power may not be used.
+ Contacts may be made while moving or stopped.
+ * Expedition � A
+ station that moves between two or more Virginia
+ non-permanent station locations. All radio equipment, power
+ supplies and antennas must be transported to each operating
+ site. Commercial power may be used. Mobile radios,
+ equipment, and antennas installed in, on or attached to a
+ vehicle wholly for normal mobile operation are not permitted
+ to be used in this class. The vehicle may be used as part of
+ the setup once stopped in the temporary location. An
+ expedition may not make contest contacts (including contest
+ QSO coordination) while moving regardless of origin or
+ destination.
+ * Rover � A
+ vehicle-mounted designed for contesting and is not a mobile
+ or expedition station. The rover may make contacts while
+ stationary and/or while moving. The rover may change
+ equipment and antenna configurations. The rover may operate
+ from a vehicle and/or off a vehicle. The rover may or may
+ not use commercial power.
+ Power Categories
+ High (greater than 150 watts), Low (150 watts or less) and
+ QRP (5 watts or less)
+ Band Categories
+ Multi-Band or Single Band
+ Mode Categories
+ Phone, CW, Digital, and Mixed
+ Club Entry
+ Club - Minimum of three valid contest entries each
+ indicating club affiliation.
+ 12.0pt;margin-left:0in"> <span
+ All stations should operate safely. For mobiles and rovers,
+ motion is optional and discouraged during operation, unless
+ there is a separate driver who is not operating while driving.
+ VALID CONTACTS
+ Virginia stations work all stations. Out-of-State stations
+ work Virginia stations only. Work fixed stations once per
+ band/mode.
+ Work Virginia Expeditions, Rovers, and Mobiles in each
+ Virginia County or Independent City from which they operate.
+ Stations on County or Independent City lines count as one QSO
+ and one County/Independent City multiplier. Mobile, Rover, and
+ Expedition stations must use appropriate suffix in call sign.
+ 12.0pt;margin-left:0in"><span
+ allowed.
+ 12.0pt;margin-left:0in"><span
+ stations is allowed.
+ 12.0pt;margin-left:0in"><span
+ QSO's.
+ 12.0pt;margin-left:0in"><span
+ clusters, etc., may be used to locate other stations.
+ Self-spotting permitted.
+ 12.0pt;margin-left:0in"><span
+ number of QSOs with the same station will be categorized as
+ check logs.
+ <span
+ <span
+ QTH (Virginia County or Independent City for VA stations;
+ State, Province or "DX" for others).
+ Virginia Stations log QSO's by Virginia Independent City or
+ County of operation.
+ Identify all QSO's with band/mode, sequential QSO number
+ sent/received and date/time of contact in UTC.
+ Please follow standard contest practices by making and
+ responding to "CQ Virginia QSO Party" calls.
+ Multiple transmitter stations may maintain sequential QSO
+ numbers independently for each transmitter.
+ SCORING
+ QSO Points:
+ QSO's count 1 point per Phone, 2 points per CW, 2 points per
+ digital mode (RTTY, PSK31,etc.), and 3 points per contact made
+ with a Virginia Mobile, Expedition, or Rover.
+ Multipliers:
+ Multipliers are only counted once, i.e., contacting the
+ same Virginia County, Independent City, State, Province or
+ Country using a different band or mode counts only as a new
+ QSO, not as a new multiplier.
+ Virginia Mobile, Rover, Expedition, and Fixed Station
+ multipliers are the total number of Virginia counties,
+ Virginia Independent cities, U. S. States (except Virginia),
+ Canadian Provinces, and DX entities. No extra DX
+ multiplier for U.S. (including Alaska and Hawaii), Virginia,
+ and Canada.
+ <span
+ <span
+ Expedition stations that contact 10 (ten) or more different
+ stations while operating from a county or independent city may
+ claim it as a multiplier, if not otherwise worked.
+ Outside of Virginia station multipliers are the total number
+ of Virginia Counties (95) and Independent Cities (38) worked.
+ Bonus Points:
+ Virginia Mobile, Rover, and Expedition stations receive a
+ bonus of 100 additional points for each Virginia County/
+ Independent City from which they log a valid QSO.
+ <span
+ <span
+ different VA QSO Party Bonus Station gives a one-time bonus of
+ 50 points. Bonus stations are listed on the VaQP Web
+ Site.
+ Final score:
+ Final score is the number of QSO Points multiplied by the
+ number of Multipliers plus Bonus Points.
+ FREQUENCIES
+ 160 meters and up, except no WARC band QSO's permitted.
+ Suggested frequencies:
+ CW - 1805 KHz and 50 KHz up from band edge
+ on others.
+ PHONE -1845, 3860, 7260, 14270, 21370 and
+ 28370 KHz.
+ Novice/Tech Plus - 10 KHz up from the edge
+ of the CW band and 28370 KHz on PHONE.
+ VHF - 50.130, 144.200 (CW & SSB),
+ 146.580 and 223.50 MHz.
+ UHF - 446.00 MHz.
+ Digital contacts should use normally
+ accepted sub-bands for these modes.
+ ENTRIES
+ For award purposes, Fixed, Expedition, Mobile and Rover
+ operations will be considered separately. Please submit
+ separate logs for Fixed, Expedition, Mobile, and Rover
+ operation.
+ Multiple operator stations should list all operators by call
+ sign.
+ Electronic (preferred) or paper logs, summary and dupe sheets
+ (200 or more QSO's) are required for all entries. The summary
+ and 'dupe sheet' requirement is waived if recognized
+ contesting software is used. Paper forms are available at the
+ contest web site.
+ For Club Competition purposes, be sure to indicate club name
+ on summary sheet and log.
+ Submit log entries by 15 April by online portal; mail to the
+ VA QSO Party, Call Box 29, Sterling, VA 20167; or by email to
+ [email&#160;protected] . If you have problems, please send an email to
+ [email&#160;protected] .
+ A donation to help defray the costs of printing and mailing is
+ encouraged.
+ AWARDS
+ VA participants will automatically receive a certificate. All
+ others should include �CERTIFICATE: YES� in the Cabrillo log
+ file to receive a certificate.
+ The Plaques are identified on the contest web site.
+ INFORMATION
+ Additional information may be obtained by mail at VA QSO
+ Party, Call Box 29, Sterling, VA 20167; from the SPARC website
+ www.qsl.net/sterling; or by email to [email&#160;protected] .
+ Roman","serif";color:black"><br

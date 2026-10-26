@@ -505,15 +505,15 @@ begin
    session := Describe(SEVENQP, inState);
    try
       CheckTrue(session.Exchange = RSTDomesticOrDXQTHExchange, '7QP in state: county or DX');
-      CheckTrue(session.IsStated(svDXMultLimit) and (session.DXMultLimit = 20),
-                '7QP in state: at most 20 DX multipliers');
+      (* NO DX LIMIT IS STATED: the 7QP's cap of 10 is its score's
+         (uTestContestSevenQP), and the session value D7's 20 went into was
+         deleted at #88 round 3 -- nothing read it. *)
    finally
       session.Free;
       end;
    session := Describe(SEVENQP, outOfState);
    try
       CheckTrue(session.Exchange = RSTDomesticQTHExchange, '7QP out of state: a county');
-      CheckTrue(not session.IsStated(svDXMultLimit), '7QP out of state states no limit');
    finally
       session.Free;
       end;
@@ -524,8 +524,8 @@ begin
    try
       CheckEquals('NEQSOW1', session.DomesticFile, 'NEQP inside New England: NEQSOW1');
       CheckTrue(session.Exchange = RSTDomesticOrDXQTHExchange, 'NEQP inside: county or DX');
-      (* NO CAP: the sponsor's rules, 2026-10-23 -- D7's 20 is gone. *)
-      CheckFalse(session.IsStated(svDXMultLimit), 'NEQP inside: no DX multiplier limit');
+      (* NO CAP: the sponsor's rules, 2026-10-23 -- D7's 20 is gone, and
+         uTestContestNewEnglandQP holds the score to it. *)
       CheckEquals(4, session.DomesticCountryCount, 'NEQP: K, VE, KH6, KL');
    finally
       session.Free;
@@ -534,7 +534,6 @@ begin
    try
       CheckEquals('NEQSO', session.DomesticFile, 'NEQP outside New England: NEQSO');
       CheckTrue(session.Exchange = RSTDomesticQTHExchange, 'NEQP outside: a county');
-      CheckFalse(session.IsStated(svDXMultLimit), 'NEQP outside: no limit either');
    finally
       session.Free;
       end;

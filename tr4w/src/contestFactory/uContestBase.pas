@@ -947,7 +947,9 @@ type
 
       M7b (2026-10-02) brought the first of them: the initial exchange and
       the zone multiplier (JIDX, JTDX, KCJ), the DX multiplier limit (NEQP,
-      7QP), the R150S list (CQ-M, Gagarin Cup, OZCHR teams), and JIDX's
+      7QP -- DELETED at #88 round 3, 2026-10-26: nothing in D7 or here ever
+      READ it; the 7QP's cap of 10 is its CombineWithMultipliers now), the
+      R150S list (CQ-M, Gagarin Cup, OZCHR teams), and JIDX's
       refusal of the shared zone-exchange messages (gone at M11 S9e part 1:
       the contest's own choice of messages). M7b batch 2 brought the
       last two the arms wrote: the initial-exchange cursor at the start (IRTS,
@@ -955,7 +957,7 @@ type
    TSessionValue = (
       svExchange,
       svBand, svMode, svDomesticMultByBand, svAllowDupeQSOs,
-      svInitialExchange, svDXMultLimit,
+      svInitialExchange,
       svInitialExchangeCursorAtStart, svDXCCMultByBand,
       svR150SMode,
       svMultByBand, svQSOByMode, svQSOByBand,
@@ -1030,7 +1032,6 @@ type
       FMode: ModeType;
       FDomesticMultByBand: TAdditionalMultByBand;
       FInitialExchange: InitialExchangeType;
-      FDXMultLimit: integer;
       FDXCCMultByBand: TAdditionalMultByBand;
       FMinitourDuration: TTourDuration;
       FContactsPerPage: TContactsPerPage;
@@ -1045,7 +1046,6 @@ type
       procedure SetMode(aValue: ModeType);
       procedure SetDomesticMultByBand(aValue: TAdditionalMultByBand);
       procedure SetInitialExchange(aValue: InitialExchangeType);
-      procedure SetDXMultLimit(aValue: integer);
       procedure SetDXCCMultByBand(aValue: TAdditionalMultByBand);
       procedure SetMinitourDuration(aValue: TTourDuration);
       procedure SetContactsPerPage(aValue: TContactsPerPage);
@@ -1071,12 +1071,12 @@ type
       property AllowDupeQSOs: boolean index Ord(svAllowDupeQSOs)
          read GetFlag write SetFlag;
 
-      (* The session's InitialExchange (uContestSession, M10 S9a) and
-         DXMultLimit -- M7b. (ZoneMult went with the zone kind at M11 S5
-         part 2: the contest answers HasZoneMultiplier.) *)
+      (* The session's InitialExchange (uContestSession, M10 S9a) -- M7b.
+         (ZoneMult went with the zone kind at M11 S5 part 2: the contest
+         answers HasZoneMultiplier. DXMultLimit stood beside it until #88
+         round 3, 2026-10-26: no reader, in D7 or here.) *)
       property InitialExchange: InitialExchangeType
          read FInitialExchange write SetInitialExchange;
-      property DXMultLimit: integer read FDXMultLimit write SetDXMultLimit;
 
       (* THE INITIAL EXCHANGE'S CURSOR AT THE START OF THE WINDOW -- M7b
          batch 2. The engine's InitialExchangeCursorPos (LOGWIND), which the
@@ -3399,6 +3399,17 @@ type
       function ContestPoints(const aTotals: TScoreTotals): longint;
       function SummedMultipliers(const aTotals: TScoreTotals): longint;
 
+      (* MECHANISM: THE GENERAL CASE'S SUM WITH ONE KIND CAPPED -- for a
+         sponsor that limits one KIND of multiplier and not the total (#88
+         round 3, 2026-10-26: the 7QP's "other DXCC entities (maximum of
+         10)" and the Salmon Run's "Up to 10 DXCC entities"). aKind counts at
+         most aMaximum on the scored band; every other kind adds as
+         SummedMultipliers adds it. California caps the SUM, so it does not
+         use this. *)
+      function SummedMultipliersWithKindCapped(const aTotals: TScoreTotals;
+                                               aKind: RemainingMultiplierType;
+                                               aMaximum: longint): longint;
+
       (* WHICH LOGGED CONTACTS A BONUS STATION'S CONTACT MAY BE.
 
          The base takes every QSO in the view, dupes included -- exactly the
@@ -3604,6 +3615,20 @@ function HostAreaRuleCredits(aEntrantInHostArea: boolean;
    spelling with `<>`: BC tested 'dx' against a file that maps to 'DX', so its
    rule never fired (Q49), and Indiana's 'DX' missed IN7QPNE's 'dx'. *)
 function DomesticMultiplierIsDX(const aMultiplier: string): boolean;
+
+(* IS THIS DOMESTIC MULTIPLIER THE HOST STATE ITSELF? -- #88 round 3
+   (2026-10-26). Several parties' sponsors leave their own state out of an
+   in-state entrant's multipliers ("49 American states (excluding
+   Michigan)", "the other 49 U.S. states", "do not count Tennessee as a
+   state"), and Delaware's in-state file maps its three counties to De, so a
+   DE-to-DE QSO's multiplier is De ("only count for QSO point credit"). The
+   class asks this of the QSO's DomMultQTH in its own CountsAsMultiplier,
+   for an in-state entrant only -- the shared S50.DOM is never edited for
+   it. Case and surrounding blanks are ignored, as in DomesticMultiplierIsDX:
+   S48.DOM spells the multiplier 'Mi', the class states 'MI'. An empty host
+   state matches nothing. *)
+function DomesticMultiplierIsHostState(const aMultiplier: string;
+                                       const aHostState: string): boolean;
 
 (* THE PREFIX MULTIPLIER KEY aQso EARNS IN aContest -- see
    TContestBase.PrefixMultiplierKey. nil answers False, leaving the prefix as
@@ -4205,6 +4230,13 @@ begin
       `string` is UnicodeString here -- the registry's compare for the same
       reason. *)
    Result := UnicodeSameText(aMultiplier, 'DX');
+end;
+
+function DomesticMultiplierIsHostState(const aMultiplier: string;
+                                       const aHostState: string): boolean;
+begin
+   Result := (Trim(aHostState) <> '') and
+             UnicodeSameText(Trim(aMultiplier), Trim(aHostState));
 end;
 
 function ContestPrefixMultiplierKey(aContest: TContestBase; const aQso: ContestExchange;
@@ -4958,6 +4990,21 @@ begin
       begin
       Result := Result + aTotals.Mults[aTotals.ScoredBand, Both, m];
       end;
+end;
+
+function TContestBase.SummedMultipliersWithKindCapped(const aTotals: TScoreTotals;
+                                                     aKind: RemainingMultiplierType;
+                                                     aMaximum: longint): longint;
+var
+   capped: longint;
+begin
+   capped := aTotals.Mults[aTotals.ScoredBand, Both, aKind];
+   Result := SummedMultipliers(aTotals) - capped;
+   if capped > aMaximum then
+      begin
+      capped := aMaximum;
+      end;
+   Result := Result + capped;
 end;
 
 function TContestBase.CombineWithMultipliers(const aTotals: TScoreTotals): longint;
@@ -6143,12 +6190,6 @@ procedure TSessionDefaults.SetInitialExchange(aValue: InitialExchangeType);
 begin
    FInitialExchange := aValue;
    Stated(svInitialExchange);
-end;
-
-procedure TSessionDefaults.SetDXMultLimit(aValue: integer);
-begin
-   FDXMultLimit := aValue;
-   Stated(svDXMultLimit);
 end;
 
 procedure TSessionDefaults.SetDXCCMultByBand(aValue: TAdditionalMultByBand);

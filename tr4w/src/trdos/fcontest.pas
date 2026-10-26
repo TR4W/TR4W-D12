@@ -617,10 +617,6 @@ begin
      begin
      ContestSession.WriteInitialExchange(aSession.InitialExchange);
      end;
-  if aSession.IsStated(svDXMultLimit) then
-     begin
-     DXMultLimit := aSession.DXMultLimit;
-     end;
   if aSession.IsStated(svInitialExchangeCursorAtStart) then
      begin
      if aSession.InitialExchangeCursorAtStart then

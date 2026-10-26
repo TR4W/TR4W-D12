@@ -1,0 +1,89 @@
+﻿Texas QSO Party Rules
+
+Source: https://www.txqp.net/?page_id=23
+Fetched: 2026-10-26
+WA7BNM ID: 133 (https://www.contestcalendar.com/contestdetails.php?ref=133)
+Cabrillo Name: TXQP
+ADIF Name: TX-QSO-PARTY
+
+ Rules - Texas QSO Party
+ Skip to content
+ Rules
+ Logs Log Submission
+ Received Logs
+ Awards
+ Resources Mobile Tracker
+ Planned Activity
+ Logging Software
+ County Abbreviation Codes
+ Rules
+ General
+ The Texas QSO Party is SCHEDULED TO OCCUR ANNUALLY ON THE THIRD WEEKEND (SATURDAY AND SUNDAY) IN SEPTEMBER. Operating times are from 1400Z on SATURDAY to 0200Z on SUNDAY and from 1400Z to 2000Z on SUNDAY. Stations may work the entire contest period.
+ All logs must be submitted no later than two weeks immediately following the QSO party.
+Texas mobiles must submit a single log of all contacts. NEW FOR 2026:  E-mail and paper log submissions will no longer be accepted. Logs must be submmitted online at  https://txqp.contesting.com/
+ Exchange
+ Stations outside Texas use RS/T and State, Country, Canadian Province, or maritime region. DX stations should send the primary prefix assigned to their country.
+ Texas stations use RS/T and Texas County using the TQP standard abbreviations available on the TQP web site Resource's link.
+ Operating
+ All operation must follow current FCC rules or your country’s rules.
+ The use of spotting nets on repeaters, packet nodes, simplex operation, telephone or by any other means is permissible.
+ Operation on all Amateur bands is permitted, except on 60 meters, 30 meters, 17 meters and 12 meters.
+ Operation in all modes (Phone, CW, Digital) is permitted in all contest categories except for the CW Only and Phone Only categories. For duping purposes, all digital sub modes are considered to be the same mode (Digital). So, working a fixed given station on RTTY and again on JT65 on the same band will result in credit for one QSO. ***Digital modes must be capable of sending and receiving the full contest exchange. ***
+ Contacts made through repeaters, digipeaters, internet, or gateways are not permitted.
+ If a Texas mobile and/or a portable station is on a county line or junction between 2 or more Texas counties, a separate QSO and exchange must be logged for each county worked (e.g. SSB: NM5G 59 HARR, 59 MGMY). Note that the actual exchange may be grouped or done with separate transmissions at the discretion of the operator. The station located at the county line does not need to be on the line but must have visual contact with a county line marker. This provides operation from a safe location in case the county line is on a bridge or other hazardous location.
+ IMPORTANT : Mobile operators considering county line operations should keep safety in mind. Operators must obtain permission to enter private property when such entrance is required to reach a county line(s).
+ Contacts made with captive stations do not support the stated purpose of the QSO party and will not be counted. This includes contacts made with other passengers in a mobile as well as so-called California Train operations wherein a group of mobiles travel together for purposes of making contacts within the group.
+ Suggested Frequencies
+ CW—20 kHz to 40 kHz up from the bottom of the band, +/- 50.090 MHz, +/- 144.050
+ PHONE—25 kHz up in General segments, 28.300 - 28.500 MHz, 50.120 - 50.150 MHz,
+ Contest Categories
+ Texas - Fixed Station
+ TX SO LP — Single Operator Mixed Mode (150 watts power limit)
+ TX SO HP — Single Operator Mixed Mode High-Power (&gt;150 watts power)
+ TX MO LP — Multi Operators (150 watts power limit)
+ TX MO HP — Multi Operators High-Power (&gt;150 watts power)
+ TX QRP SO — QRP Single Operator (10 watts or less phone and 5 watts or less CW and other modes)
+ TX CWO SO LP — CW Only Single Operator (150 watts power limit)
+ TX CWO SO HP — CW Only Single Operator High-Power (&gt;150 watts power)
+ TX PHO SO LP — Phone Only Single Operator (150 watts power limit)
+ TX PHO SO HP — Phone Only Single Operator High-Power (&gt;150 watts power)
+ Texas - Mobile Stations
+ TXM SO — Texas Mobile Single Operator Mixed Mode–may be assisted (no contest power limit)
+ TXM MO — Texas Mobile Multi Operators (no contest power limit)
+ TXM SO CWO — Texas Mobile CW Only Single Operator–may be assisted (no contest power limit)
+ TXM SO PHO — Texas Mobile Phone Only Single Operator–may be assisted (no contest power limit)
+ Note: The spirit of the mobile category is for vehicle-based *or* non-permanent stations who work from multiple counties during the event.
+ Non-Texas Stations
+ NTX SO — Single Operator Mixed Mode (no contest power limits)
+ NTX SO QRP — QRP Single Operator (10 watts or less phone and 5 watts or less CW and other modes)
+ NTX SO CWO — CW Only Single Operator (no contest power limits)
+ NTX SO PHO — Phone Only Single Operator (no contest power limits)
+ DX Stations
+ DX SO — Single Operator Mixed (no contest power limits)
+ Texas Club Aggregate Award
+ This award goes to the Texas club with the highest total score from the sum of all logs submitted across all categories. The club name and call sign must be identified in the header section of each stations Cabrillo log to be included in the count. All participating stations must be in Texas.
+ Scoring
+ Stations may be worked only once per band per mode for QSO count.
+ Texas mobiles may be worked only once per band per mode from each county for QSO count.
+ Texas mobiles may work other stations only once per band per mode from each county covered for QSO count.
+ Non - Texas Stations
+ Count two (2) points per phone QSO with any Texas station
+ Count three (3) points per CW and other digital mode QSOs with any Texas Station.
+ Your multiplier is the number of Texas counties worked. The maximum possible multiplier is 254.
+ Texas Stations
+ Count two (2) points per phone QSO with any station.
+ Count three (3) points per CW and other digital mode QSOs with any station.
+ Your multipliers are the number of states worked (not including Texas) plus the number of Texas counties worked plus each Canadian province worked (13 total) plus each DXCC country worked excluding USA, Canada, Alaska and Hawaii.
+ All additional DXCC contacts worked count for points.
+ Washington DC QSOs count as Maryland contacts.
+ Multipliers are counted once for the QSO Party. For example, if you work NC on SSB and on CW that counts as one multiplier.
+ Multiply the total QSO points times your multiplier, then add applicable bonus points to arrive at your final score
+ Bonus Points
+ Non - Texas Stations—Add five hundred (500) bonus points to your FINAL SCORE for each Texas mobile worked in five (5) different counties regardless of band or mode. If you work the same Texas mobile in five (5) additional counties, you add an additional five hundred (500) bonus points to your FINAL SCORE, etc. However, for bonus points you can only count one (1) contact per county per mobile.
+ Texas Stations—Add five hundred (500) bonus points to your FINAL SCORE for each Texas mobile worked in five (5) different counties regardless of band or mode. If you work the same Texas mobile in five (5) additional counties, you add an additional five hundred (500) bonus points to your FINAL SCORE, etc. However, for bonus points you can only count one (1) contact per county per mobile.
+ Texas Mobiles—Add one thousand (1000) points to your FINAL SCORE per every county covered with at least five non-duplicate Add five hundred (500) bonus points to your FINAL SCORE for each Texas mobile worked in five (5) different counties regardless of band or mode. If you work the same Texas mobile in five (5) additional counties, you add an additional five hundred (500) bonus points to your FINAL SCORE, etc. However, for bonus points you can only count one (1) contact per county per mobile.
+ Facebook
+ YouTube
+ Instagram
+ Texas QSO Party — sponsored by the Texas DX Society . 73!
+ © Texas QSO Party. All rights reserved.

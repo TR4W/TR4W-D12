@@ -1,0 +1,146 @@
+﻿Michigan QSO Party Rules
+
+Source: https://miqp.org/index.php/rules/
+Fetched: 2026-10-26
+WA7BNM ID: 323 (https://www.contestcalendar.com/contestdetails.php?ref=323)
+Cabrillo Name: MI-QSO-PARTY
+ADIF Name: MI-QSO-PARTY
+
+ Rules &#038; Awards - Michigan QSO Party
+ -->
+ Rules &#038; Awards
+ Records
+ Enter Plans
+ View Plans
+ Submit Log
+ Logs Received by Call
+ Logs Received by Category with Scores
+ Logs Received by Club
+ Certificates
+ 2026 Results
+ 2025 Results
+ 2024 Results
+ 2023 Results
+ 2022 Results
+ 2021 Results
+ 2020 Results
+ 2019 Results
+ 2018 Results
+ 2017 Results
+ 2016 Results
+ 2015 Results
+ 2014 Results
+ 2013 Results
+ 2012 Results
+ 2011 Results
+ 2010 Results
+ 2009 Results
+ 2008 Results
+ Privacy Policy
+ K1USN Slow Speed Test 0000Z-0100Z, Oct 26
+ UKEICC 80m Contest 2000Z-2100Z, Oct 28
+ High Speed Club CW Contest 1400Z-1700Z, Nov 1
+ Classic Exchange, CW 1400Z, Nov 1 to 0800Z, Nov 2 and 1400Z, Mar 3 to 0800Z, Nov 4
+ EANET Sprint 0800Z-1200Z, Nov 1
+ North American SSB Sprint Contest 0000Z-0400Z, Nov 1
+ Russian WW MultiMode Contest 1200Z, Oct 31 to 1159Z, Nov 1
+ UK/EI DX Contest, SSB 1200Z, Oct 31 to 1200Z, Nov 1
+ ARRL EME Contest 0000Z, Oct 31 to 2359Z, Nov 1
+ K1USN Slow Speed Test 2000Z-2100Z, Oct 30
+ ARRL News
+ The ARRL Solar Update
+ eBay Restricts Listings of Radio Equipment, but Exempts Ham-Band-Only Gear
+ Florida Hams Provide Communications Support During Hurricane Isaias
+ The ARRL Solar Update
+ The 2026 ARRL Online Auction Is Now Open
+ Object:
+For amateurs outside the state of Michigan to make contact with as many Michigan stations as possible. Non-Michigan stations may work only Michigan stations, while Michigan stations may contact anyone.
+ Contest Period:
+The Michigan QSO Party (MiQP) occurs annually on the Saturday of the third full weekend in April.  The contest period runs from 1200 EDT (noon in Detroit, MI) to 2400 EDT (midnight in Detroit, MI) (16Z Saturday until 04Z Sunday UTC).  All stations may operate the full twelve hours.
+ Frequency Bands and Modes:
+CW and SSB on 80, 40, 20, 15 and 10 meters.
+Stations may be worked once per band and mode.
+Example: K8MQP is a station operating from OAKL county.  K8MQP may be contacted on each of the (5) bands [80m-10m] on each of the (2) modes [CW,SSB]  for a maximum of (10) ten QSOs.
+ Contest Exchange:
+ Michigan stations send a RST, and their Michigan county.
+ Non-Michigan W/VE stations (including KH6/KL7) send a RST, and their state or province.
+ Stations outside of the U.S.A. (including KP2/KP4) or Canada send a RST, and "DX".
+ The Official list of abbreviations is found here:  Official List of Mults .  To guarantee multiplier credit in scoring these abbreviations must be used.
+A County map can be found here: MiCountyMap .
+ The Contest Logging Software community was made aware of the change from QSO# to RST for 2022 and as of Mar 2022 the following have posted updates: N1MM (Version 1.0.9450 February 15, 2022), N3FJP (Michigan 4.4.2 In State and 4.3.2 Out of State), TR4W (4.108.07 # 579), Skookum (3.2.9)
+ Entry Categories:
+All categories may make use of spotting nets (i.e. PacketCluster, Reverse Beacon Network, Skimmer) for the purposes of encouraging contest participation.  There are no assisted categories and single-ops are no longer reclassified as multi-op for use of spotting nets.
+All categories are mixed-mode (CW,SSB).  There are no single mode categories.
+All categories are all-band (80m-10m).  There are no single band categories.
+ Single Operator – Entries where one person performs all operating and logging functions.  Only one (1) transmitted signal on the air at any time. Single operator entries are categorized by output power:
+ QRP (5W transmitter output or less)
+ low power (100W transmitter output or less)
+ high power (greater than 100W transmitter output).
+ Multi Operator – Entries where more than one operator performs the operating and logging functions. Multi-operator entries are categorized in two ways:
+ Single-Transmitter - Entries with only one transmitted signal on the air at any time.
+ Multi-Transmitter - Entries with multiple transmitted signals on the air at any time.
+ Multi-operator entries must operate under a single callsign. Multi-operator entries are not categorized by power.
+ Mobile – Entries which are self-contained (radio, antenna, and power source) and capable of motion while making QSO's. Motion is not required.
+ All mobile entries are limited to a single transmitter of 100W output or less. The county operated from must be shown clearly for each QSO in a mobile log.
+ Rover - Entries which are from non-permanent station locations in two or more counties. Use of any power source, including AC mains (commercial power), is permitted. Operation while in motion between fixed sites is permitted. Rover entries may have multiple operators and are limited to 100 W output or less and only (1) one transmitted signal at a time. Rover stations that change geographic area (counties for Michigan stations, state or province for others) may be contacted again for QSO points and multiplier credit. The geographic area (county) must be clearly marked in the log for each qso.
+ Emergency Operations Center (EOC) Station - Michigan entries located at an established EOC site, activated by an individual or group. An EOC category entry may utilize permanently installed equipment and antennas, or equipment/antennas temporarily installed at the EOC for the event. EOC entries are not categorized by the number of transmitters, the power used, or the number of operators.
+ Scoring:
+ QSO Points – Each complete non-duplicate SSB contact is worth one point. Each complete non-duplicate CW contact is worth two points. Duplicate contacts are worth zero points.
+ Multipliers – Multipliers are counted once per mode. Working the same multiplier on both CW and SSB counts as two multipliers.
+ For Michigan stations, multipliers are the 83 Michigan counties, 49 American states (excluding Michigan) + 1 District of Columbia, 13 Canadian provinces (NL, NB, NS, PE, QC, ON, MB, SK, AB, BC, NT, YT, NU), and "DX" (a non-W/VE station).
+ Multipliers for mobile entrants are the same as above and apply to the overall log regardless of the number of counties activated.
+ For non-Michigan stations, multipliers are the 83 Michigan counties.
+ See the official list of multiplier abbreviations located here  Official List of Mults .  Note that the official abbreviations must be used to assure scoring credit.
+ Final Score – multiply total QSO points by the total number of multipliers.
+ Club Competition – Scores attributed to any amateur radio club are credited towards that club.  The club is determined by selecting the club name from the official list when submitting a log.  Note that in-state and out-state are treated differently and determined by where the entrant operated from during the event.  Michigan and non-Michigan club scores are reported separately.
+ As the sponsoring club of the MiQP, the Mad River Radio Club is excluded from this competition, although its members may attribute their scores for other clubs to which they belong.
+ Suggested Frequencies:
+CW – 3.545, 7.045, 14.045, 21.045 and 28.045.
+SSB – 3.800, 7.200, 14.250, 21.300 and 28.450.
+Fixed stations are urged to call CQ away from these frequencies to keep them clear for mobile stations. Look for 28 MHz activity during the even-numbered daylight hours, and 21 MHz activity during the odd-numbered daylight hours. Look for SSB activity on the hour and CW on the half hour.
+ Miscellaneous:
+ Callsigns and exchanged information must be received and confirmed by both stations for a complete QSO.
+ No cross-mode contacts. Both stations must be using the same mode of transmission. Also, CW contacts are prohibited in the SSB portions of the band.
+ A station (fixed or mobile or rover) used to make one or more MiQP QSOs may not be subsequently used under any other callsign to make MiQP QSOs. The one exception to this are family stations where more than one call is assigned. No individual shall make MiQP QSOs utilizing more than one callsign from a single station.
+ Operators of a multi-operator station may not make MiQP QSOs with that station from another location (fixed or mobile) regardless of the location the QSOs are made from or the callsign used for the QSOs.
+ Mobile or Rover stations that change the geographic entity they're operating from (counties for Michigan stations, state or province for others) are considered to be a new station and may be contacted again for QSO points and multiplier credit. No station may claim simultaneous operation in more than one county, state, or province. A mobile or rover station must move a minimum of 500 feet before claiming to be in a new county, state or province.
+ Operating from a single portable location falls under the Single Operator or Multi Operator categories.  Operating portable does not make one eligible for the rover category unless one operates from more than one county.
+ Self spotting on the “spotting nets” is permitted. (new in 2024)
+ Reporting:
+ All entries must be submitted as a Cabrillo file uploaded to the MiQP Log Submittal Page on the MiQP web site.
+ The log submittal period ends 7 days after the event ends.
+ Final results of the contest are posted on the MiQP web site.
+ The Michigan QSO Party Awards Program recognizes entries for their accomplishments that year through a variety of plaques and certificates.
+ Plaque Program
+ Plaques will be awarded in the following categories:
+ High Score - Michigan Single Operator - High Power
+ High Score - Michigan Single Operator - Low Power
+ High Score - Michigan Single Operator - QRP
+ High Score - Michigan Multi Operator - Single-Transmitter
+ High Score - Michigan Multi Operator - Multi-Transmitter
+ High Score - Michigan Mobile
+ High Score - Michigan Rover
+ High Score - Michigan Emergency Operations Center Station
+ High Score - Michigan Club
+ High Score - Out of State Single Operator - Eastern Region (see note **)
+ High Score - Out of State Single Operator - Western Region (see note **)
+ High Score - Out of State Club
+ ** For purposes of the Out of State Single Operator award, the "western region" is defined as those states which lie entirely or mostly in the Pacific or Mountain Time Zones. This includes the states of AZ, CA, CO, ID, MT, NM, NV, OR, UT, WA and WY, plus the Canadian provinces of SK, AB, BC, NT and YT. All other states and Canadian provinces are located in the "eastern region", which in general covers the Eastern and Central Time Zones.
+ Info for Plaque Sponsors :
+Please make check out to Mad River Radio Club in the amount of $70 and send to the club treasurer:
+Tim Sullivan KE8OC
+39991 Finley Dr
+Canton, MI 48188
+ If paying by PayPal:
+Please transfer $70 PayPal to ke8oc@comcast.net.
+With all PayPal transactions please include Mad River Radio Club and MiQP Plaque in the comments section.
+ Certificate Program
+ All entrants can now download a certificate with details of their entry from the MiQP website.
+ The MiQP Awards Program is supported by donations from clubs and private individuals. Groups or individuals who wish to contribute towards the MiQP Awards Program should contact us at info@MiQP.org.
+ Notes:
+The MiQP Committee reserves the right to refrain from awarding plaques in instances where there were fewer than three entries within the category.
+ Ken Meier, W8MJ – Chairman
+ Earl Morse, N8SS
+ Greg Chapoton, NA8V
+ Tim Mitchell, K9TM
+ Vic Kean, K1LT

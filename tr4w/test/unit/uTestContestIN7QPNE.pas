@@ -55,6 +55,7 @@ type
       procedure Test_AQSOInNoPartyIsTheEntrantsOrNothing;
       procedure Test_MultipliersArePerParty;
       procedure Test_DupesAndSessionTraits;
+      procedure Test_ARoverInANewCountyIsANewQSO;
       procedure Test_ParseIsThePartysOwn;
       procedure Test_CabrilloAndADIFNameIN7QPNE;
       procedure Test_NoScorePosting;
@@ -66,7 +67,9 @@ uses
    Classes, SysUtils, VC, uContestBase, uContestRegistry,
    uContestIN7QPNE, uDomFileKeys, uAppStrings,
    uTestContestObjects,
-   uTestExchangeParserStub;
+   uTestExchangeParserStub,
+   (* RoverDupeAnswers -- the dupe path LogContact takes (#88 round 3). *)
+   uTestQSOPartyRules;
 
 (* ---------------------------------------------------------------------------
    HELPERS
@@ -661,6 +664,34 @@ begin
              'Super Check Partial and the cluster stay');
 end;
 
+(* A MOBILE OR ROVER IN A NEW COUNTY IS A NEW QSO, IN EACH PARTY -- #88
+   round 3 (2026-10-26). Indiana: "Mobile and rover stations may be worked
+   in each county of operation"; the 7QP: "7th-area mobiles ... may be
+   worked again as they enter new counties"; New England: "Mobiles that
+   change counties are considered to be new stations". The bare call, a
+   county of each party as in7qpne_cty.dom spells it, through the dupe path
+   LogContact takes. Until round 3 the composite's dupe key was the call
+   alone, and every new county was a dupe. *)
+procedure TContestIN7QPNETests.Test_ARoverInANewCountyIsANewQSO;
+const
+   FIRST: array[TIN7QPNEParty] of string = ('INADA', 'Azaph', 'MEAnd', 'NDE');
+   SECOND: array[TIN7QPNEParty] of string = ('INALL', 'Azcno', 'MECum', 'KDE');
+var
+   p: TIN7QPNEParty;
+   newCountyIsDupe: boolean;
+   sameCountyIsDupe: boolean;
+begin
+   BeginTest('Test_ARoverInANewCountyIsANewQSO');
+   CheckTrue(ContestDupeKeyIncludesReceivedQTH(ContestIdentity(IN7QPNE)),
+             'the received county is part of the IN7QPNE dupe key');
+   for p := Low(TIN7QPNEParty) to High(TIN7QPNEParty) do
+      begin
+      RoverDupeAnswers(IN7QPNE, 'K9XYZ', FIRST[p], SECOND[p], newCountyIsDupe, sameCountyIsDupe);
+      CheckFalse(newCountyIsDupe, FIRST[p] + ' then ' + SECOND[p] + ': the new county is NOT a dupe');
+      CheckTrue(sameCountyIsDupe, FIRST[p] + ' again IS a dupe');
+      end;
+end;
+
 procedure TContestIN7QPNETests.RunAllTests;
 begin
    Test_IN7QPNEIsACompositeOnTheBase;
@@ -670,6 +701,7 @@ begin
    Test_AQSOInNoPartyIsTheEntrantsOrNothing;
    Test_MultipliersArePerParty;
    Test_DupesAndSessionTraits;
+   Test_ARoverInANewCountyIsANewQSO;
    Test_ParseIsThePartysOwn;
    Test_CabrilloAndADIFNameIN7QPNE;
    Test_NoScorePosting;

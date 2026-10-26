@@ -57,7 +57,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     4. A rescore of that log marks exactly the dupes the live path marked.
     5. NYQP is in the rover set (TContestStateQSOPartyBase, Q90/Q94); every
        state party, and no other contest but New England (its sponsor,
-       2026-10-23), qualifies its dupe key by the received QTH ("All state
+       2026-10-23), the 7QP and IN7QPNE (their sponsors, #88 round 3,
+       2026-10-26), qualifies its dupe key by the received QTH ("All state
        parties").
 
   "Hint, don't block" (2026-10-17) was WITHDRAWN on 2026-10-18 and its
@@ -100,6 +101,10 @@ uses
    (* TContestNewEnglandQP -- the one contest off the party base that
       qualifies its dupe key (its sponsor, 2026-10-23). *)
    uContestNewEnglandQP,
+   (* TContestSevenQP and TContestIN7QPNE -- the multi-state parties that
+      qualify it by their sponsors' rules (#88 round 3, 2026-10-26). *)
+   uContestSevenQP,
+   uContestIN7QPNE,
    LogDupe,
    LogDom,
    LogEdit,
@@ -120,11 +125,14 @@ end;
 
 (* Q118, "All state parties": by a walk of the registry, a contest
    qualifies its dupe key by the received QTH exactly when it is on
-   TContestStateQSOPartyBase -- or is New England, whose sponsor says so in
-   its own words (2026-10-23: "Mobiles that change counties are considered
-   to be new stations"; uTestContestNewEnglandQP pins it). Every other
-   contest (the multi-state 7QP and IN7QPNE included) answers '' -- the call
-   alone. *)
+   TContestStateQSOPartyBase -- or is one of the three multi-state parties
+   off that base whose sponsors say so in their own words: New England
+   (2026-10-23: "Mobiles that change counties are considered to be new
+   stations"; uTestContestNewEnglandQP), and since #88 round 3 (2026-10-26)
+   the 7QP ("7th-area mobiles ... may be worked again as they enter new
+   counties"; uTestContestSevenQP) and IN7QPNE (every one of its parties
+   says so; uTestContestIN7QPNE). Every other contest answers '' -- the
+   call alone. *)
 procedure TNYQPRoverTests.Test_EveryStatePartyQualifiesItsDupeKey;
 var
    contests: TContestIdentityList;
@@ -149,11 +157,14 @@ begin
          begin
          Inc(parties);
          end;
-      qualifies := isParty or (contests[i] is TContestNewEnglandQP);
+      qualifies := isParty or
+                   (contests[i] is TContestNewEnglandQP) or
+                   (contests[i] is TContestSevenQP) or
+                   (contests[i] is TContestIN7QPNE);
       CheckTrue(ContestDupeKeyIncludesReceivedQTH(contests[i]) = qualifies,
-                contests[i].ClassName + ': qualifies its dupe key exactly when a state party or New England');
+                contests[i].ClassName + ': qualifies its dupe key exactly when a state party, New England, 7QP or IN7QPNE');
       CheckTrue((ContestDupeKeyQualifier(contests[i], qso) <> '') = qualifies,
-                contests[i].ClassName + ': answers a qualifier exactly when a state party or New England');
+                contests[i].ClassName + ': answers a qualifier exactly when a state party, New England, 7QP or IN7QPNE');
       end;
    CheckTrue(parties >= 21, 'the state parties were found (' + IntToStr(parties) + ')');
    CheckTrue(ContestDupeKeyIncludesReceivedQTH(ContestIdentity(ContestHandleOf(CALQSOPARTY))),
@@ -162,8 +173,10 @@ begin
              'Pennsylvania (DXLog RECINFO) qualifies');
    CheckTrue(ContestDupeKeyIncludesReceivedQTH(ContestIdentity(ContestHandleOf(VAQP))),
              'Virginia (DXLog RECINFO) qualifies');
-   CheckFalse(ContestDupeKeyIncludesReceivedQTH(ContestIdentity(ContestHandleOf(SEVENQP))),
-              '7QP is not on the state-party base and does not qualify');
+   CheckTrue(ContestDupeKeyIncludesReceivedQTH(ContestIdentity(ContestHandleOf(SEVENQP))),
+             '7QP is not on the state-party base and qualifies by its own rule (#88 round 3)');
+   CheckTrue(ContestDupeKeyIncludesReceivedQTH(ContestIdentity(ContestHandleOf(IN7QPNE))),
+             'IN7QPNE qualifies by its parties'' rules (#88 round 3)');
    CheckFalse(ContestDupeKeyIncludesReceivedQTH(ContestIdentity(ContestHandleOf(NAQSOCW))),
               'NAQP is no state party');
    CheckFalse(ContestDupeKeyIncludesReceivedQTH(nil), 'the classless contest does not');

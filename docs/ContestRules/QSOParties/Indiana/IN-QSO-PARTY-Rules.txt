@@ -1,0 +1,178 @@
+﻿Indiana QSO Party Rules
+
+Source: http://www.hdxcc.org/inqp/rules.html
+Fetched: 2026-10-26
+WA7BNM ID: 8 (https://www.contestcalendar.com/contestdetails.php?ref=8)
+Cabrillo Name: IN-QSO-PARTY
+ADIF Name: IN-QSO-PARTY
+
+ Indiana QSO Party Rules
+CQ INQP CQ INQP
+ Sponsored
+by HDXCC the Hoosier DX and Contest Club
+ 2026 Indiana QSO Party Rules
+<!--
+County name abbreviations changed in 2017.
+See the revised list here .
+-->
+ Objective: For Amateurs worldwide to contact as many stations in Indiana as
+possible on the 160, 80, 40, 20, 15 and 10 meter Amateur bands.
+Date and Contest Period: Contest starts at 1500 UTC Saturday and ends
+at 0259 UTC Sunday the first full weekend of May.
+(Saturday 11am to 11pm EDT or 10am to 10pm CDT.)
+For 2026, this is May 2-3.
+All stations may operate the full 12-hour period.
+Entry Categories:
+ Single-operator (High Power, Low Power or QRP). One person performs all logging, spotting, and operating functions.
+ Low Power is transmitter output of 100 watts or less.
+ QRP is transmitter output power of 5 watts or less.
+ Multi-operator single transmitter (Multi-Single). Only one signal is permitted on the air at any time.
+ Multi-Operator Multi-transmitter (Multi-Multi). Stations may operate without limit on the number of operators,
+ transmitters or signals per band. Any station that transmits more than one simultaneous signal must
+ enter as Multi-Mutli.
+ Mobile. Mobile is defined as a self-contained single or multi-operator station, capable of legal motion
+ (land, water or air), motion optional. A mobile station that at any time uses a larger antenna incapable of
+ being used in motion is considered a rover (see below).
+ Portable (one county). A single transmitter station set up in a temporary location with temporary
+ antennas (Field Day style). Portable stations may be either single or multiple operator. All operations
+ to be conducted from a single county.
+ Portable (county line). A single transmitter station set up in a temporary location with temporary
+ antennas (Field Day style). Portable stations may be either single or multiple operator. The station must sit
+ on a county line, operating equally from both counties.
+ Rover. A portable or a mobile station using larger (non-mobile) antennas, that
+ operates from more than one location.
+ A portable station may move (in entirety -- antennas included) to a new county or county
+ line, thereby becoming a rover.
+ Rover stations may be worked again when they change counties (same as mobile stations).
+ Operation while mobile is permitted.
+ A county line mobile, portable, or rover may operate from only
+ one or two counties at a time. In other words, three and four county
+ operations are not allowed.
+ Multi-Multi entrants may transmit any number of signals simultaneously. All others may transmit only one
+ signal on the air at any given time.
+ All entrants may use spotting assistance (DX cluster, etc) including self-spotting.
+ Pre-contest announcements of planned operations and estimated times are allowed (and encouraged!).
+ The use of APRS or other position/location reporting technologies by mobiles/rovers
+ to broadcast the operator location is allowed, so long as the operating band or frequency is not included
+ in the broadcast.
+ Fixed stations must enter as Single-operator, Multi-Single or Multi-Multi only.
+ Simultaneous use of a single call sign by more than one active station (e.g., by local club members
+ active in different locations using the club call sign) is not permitted. Logs submitted for such
+ operations will be categorized as checklogs and are not eligible for certificates or plaques.
+Contest Exchange:
+Indiana stations send RS(T) plus their INQP
+exchange from this list . For
+example, an Indiana station in Marion county would send "59 INMRN".
+Non-Indiana stations in the USA and Canada send RS(T) and state, province or territory.
+All others send RS(T) and "DX".
+Scoring:
+<!-- 2026 Change: All QSOs score two points
+ Count one point for each complete two-way phone QSO.
+ Count two points for each complete two-way CW QSO.
+-->
+Count two points for each complete two-way QSO (both CW and Phone)
+ Rule change for 2026.
+Stations may be worked once in each mode (CW/phone) on each band (160, 80, 40, 20, 15, 10).
+The same fixed station could theoretically be worked twelve times. Exception: Mobile and
+rover stations may be worked in each county of operation. For example, you may rework the
+same mobile station in both modes on every band every time the mobile moves to a new county.
+Stations on county boundaries may be worked for multiple county credit (stations need not
+physically move to declare a new county). Contacts with such stations should be
+logged in either of two ways:
+ as multiple QSOs, one per county.
+ as one QSO with each county duly noted.
+Note that most contest logging programs have a mechanism for entering multiple counties for each QSO.
+Non-Indiana stations may work only Indiana stations.
+Repeater, cross-band and cross-mode contacts are not allowed.
+Multipliers:
+Non-Indiana stations:
+The 92 Indiana counties (see Section 9).
+Indiana stations:
+The 92 Indiana counties (see Section 9).
+The other 49 U.S. states (District of Columbia counts as Maryland).
+The 13 Canadian Provinces/Territories: NB, NS, QC, ON, MB, SK, AB, BC, NT, NL, YT, PE and NU.
+Multipliers count once per mode (i.e. once on CW and once on phone). This means you can double your possible mults by working both modes.
+Indiana stations may work DX stations for QSO point credit, but there are no DX multipliers.
+Final Scoring:
+Multiply QSO points by total multipliers.
+Example #1: KX9IO (in Indiana) has 354 valid QSOs with stations in 39 states/provinces and 27 Indiana counties.
+Total score = ((354) * 2) * (39 + 27)
+Total score = 708 x 66
+Total score = 46,728
+Example #2: WX5ZR (outside Indiana) has 103 valid QSOs with stations in 24 Indiana counties.
+Total score = ((103 x 2) * 24)
+Total score = 206 x 24
+Total score = 4,944
+ Club Competition:
+ In addition to individual awards, there is an award for the Indiana Amateur Radio Club
+ whose members turn in the highest total aggregate score.
+ Clubs must be legitimate radio clubs, meeting FCC requirements for club licensing. Clubs
+ need not have a club license. The sponsor of Indiana QSO Party, currently
+ the Hoosier DX and Contest Club, is not eligible for this award.
+ Logs turned in by a club's members must be for contacts made from within the state of
+ Indiana for the Indiana QSO Party.
+ Club members must CLEARLY indicate the club name when submitting logs.
+ The club name should be spelled out fully in the Cabrillo header. Do not use abbreviations
+ or club callsigns.
+Example for the club Hot Dog Amateur Radio Club
+ CLUB: HDARC
+ CLUB: WX9HDC
+ CLUB: Hot Dog Amatuer Radio Club
+ CLUB: Hot Dog Amateur Radio Club
+ #1 is not acceptable because the abbreviated name is ambiguous. The log
+ checking software cannot positively identify the club.
+ #2 is a callsign - not a club name.
+ #3 is almost correct, but the name is spelled incorrectly (this is a common error).
+ #4 is correct.
+ To be eligible for the club competition award, at least three club members must participate.
+ One of the following conditions must be satisfied:
+ at least three club members submit individual logs meeting the above requirements for single operator logs, or
+ the club submits a single log for a multi-operator station (single or multi transmitter) with
+ at least three club members shown as operators, or
+ the club submits a combination of single and multi-operator station logs to meet the minimum
+ participation requirement.
+ It is not necessary for a log to be from a station using a club's call sign, although the
+ activation of club stations is encouraged.
+Awards:
+ The top scoring station in each category receives a plaque.
+ Sponsors for plaques are always welecome. Contact HDXCC for additional information.
+ The top scoring club (aggregate score of three or more members' logs from Indiana operations) will receive a plaque.
+ Additional plaques may be awarded for "Rare County" activations. The list of "rare" counties changes each year.
+ See Rare County Plaques for details.
+ Certificates for each entry category, each Indiana county, each state/province/territory and each country will be awarded
+ where significant effort or competition is evident.
+Log Submissions:
+Cabrillo format logs are required . Send logs via e-mail to
+ inqp@hdxcc.org .
+ -->
+ inqplogs@fastmail.com .
+NOTE: This address is for logs only. Do not use it for any other purpose as it is unmonitored.
+ Please name the log file with your call (e.g., N9NS.LOG). No summary sheet is required
+with Cabrillo logs.
+ Note: Files in ADIF, Excel, Word, PDF or any other format will not be accepted.
+<!--
+Hand-written paper logs may be submitted by postal mail to HDXCC, c/o Tim Gardner, 332 S28th St, Lafayette, IN 47904
+ (Only hand-written paper logs can be accepted. If you use computer logging, send a computer generated file - not paper!)
+paper logs references removed June 2023 -->
+<!--
+All entries must include a summary with at least the following information:
+ Call sign used for INQP
+ Names and Call signs of all operators
+ Mailing address
+ Entry Category (Single-Op entries must specify power level: High/Low/QRP)
+ The QTH of the operation (e.g., Indiana county, State or Province)
+ Note that Cabrillo format logs normally have this information (and more) in the log header, and in
+that case, there is no need for a separate summary sheet.
+-->
+ Logs must be received no later than June 1 .
+Suggested Frequencies:
+CW: 1.805 MHz and 30 kHz up from the band edge on 80-10 meters.
+A window for only mobiles to call CQ should be observed from 35 to 40 KHz up.
+SSB: 1.845, 3.820, 7.190, 14.250, 21.300 and 28.400 MHz.
+Try 160 meters at 0200 UTC.
+Web Site: www.hdxcc.org/inqp
+Please visit the web site for additional information including:
+A list of Indiana counties and abbreviations
+Indiana county map
+Notes on compatible logging software
+Mobile and county expedition plans

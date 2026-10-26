@@ -194,6 +194,11 @@ type
       (* THE ELECTRONIC-LOG BONUS, 50, always -- the header. *)
       function BonusPoints(const aTotals: TScoreTotals;
                            aView: TLoggedQSOView): longint; override;
+
+      (* A DE-TO-DE QSO EARNS NO MULTIPLIER -- #88 round 3 (2026-10-26). See
+         the implementation. *)
+      function CountsAsMultiplier(const aQso: ContestExchange;
+                                  aKind: RemainingMultiplierType): boolean; override;
    private
       (* DOES THIS ENTRANT COUNT A DX MULTIPLIER? -- the station test
          DescribeSession stated the DX kind under (deleted at M11 S4 part 2);
@@ -417,6 +422,21 @@ function TContestDelawareQP.CombineWithMultipliers(const aTotals: TScoreTotals):
 begin
    Result := inherited CombineWithMultipliers(aTotals) *
              DelawarePowerMultiplier(Station.MyPower);
+end;
+
+(* "Delaware stations may contact other Delaware stations but only count for
+   QSO point credit." -- the sponsor's Valid Contacts (#88 round 3,
+   2026-10-26). delaware.dom, the in-state file, maps each of the three
+   counties to De, and S50.DOM's De is the state itself, so a Delaware
+   entrant's QSO with ANY Delaware station has De for its domestic
+   multiplier: no multiplier of any kind, and its points as scored.
+   Outside Delaware every QSO is with a Delaware station and its county is
+   the multiplier, so the rule is asked of an in-state entrant only. *)
+function TContestDelawareQP.CountsAsMultiplier(const aQso: ContestExchange;
+                                               aKind: RemainingMultiplierType): boolean;
+begin
+   Result := not (Station.InHostState and
+                  DomesticMultiplierIsHostState(string(aQso.DomMultQTH), HostState));
 end;
 
 function TContestDelawareQP.UsesBand(aBand: BandType): boolean;

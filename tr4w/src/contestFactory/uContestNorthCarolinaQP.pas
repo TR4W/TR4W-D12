@@ -93,6 +93,17 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   So GetCountyLineCountiesMax returns 2, the way Florida's does from its own
   rules. That number has been READ OUT OF THE RULES and is not derived from
   ContestsArray's CountyLineAllowed boolean, which carries no limit at all.
+
+  ---------------------------------------------------------------------------
+  AN NC ENTRANT'S MULTIPLIERS ARE DATA, IN nc.dom -- #88 round 3
+  (2026-10-26), the sponsor's 2026 rules
+  (docs/ContestRules/QSOParties/NorthCarolina/NC-QSO-PARTY-Rules.txt): "NC
+  participants: Work 100 North Carolina Counties, 49 US States (not NC) plus
+  DC, 13 Canadian Provinces/Territories ... plus one DX." Until then nc.dom
+  wrote `INCLUDE S50.DOM` and `INCLUDE P13.DOM` without FILE, which the
+  loader skipped in silence (D7 too), so an NC entrant could log no US state
+  at all ("CT not in nc.dom"). The file now lists the 49 states itself (S50
+  would bring NC), DC, P13 and DX, and the loader warns on such a line.
  *)
 unit uContestNorthCarolinaQP;
 

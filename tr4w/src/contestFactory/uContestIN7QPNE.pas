@@ -263,6 +263,10 @@ type
                                       const aValue: string): string; override;
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
+      (* A MOBILE OR ROVER IN A NEW COUNTY IS A NEW QSO -- the received QTH is
+         part of the dupe key (#88 round 3, 2026-10-26). See the
+         implementation for the sponsors' words. *)
+      function DupeKeyIncludesReceivedQTH: boolean; override;
       (* THE ROVER COUNTY -- see TContestBase.StripsRoverCountyFromCall (M11 S7)
          and SplitsRoverCallOnExport (Q90/Q94). *)
       function StripsRoverCountyFromCall: boolean; override;
@@ -741,6 +745,20 @@ end;
    station -- M11 S6 part 1b, 2026-10-14. It was the session's
    `= DomesticFile` (the trait); see TContestBase.UsesDomesticFile. *)
 function TContestIN7QPNE.UsesDomesticFile: boolean;
+begin
+   Result := True;
+end;
+
+(* A MOBILE OR ROVER IN A NEW COUNTY IS A NEW QSO, IN EVERY ONE OF THE FOUR
+   PARTIES -- #88 round 3, 2026-10-26. Indiana: "Mobile and rover stations
+   may be worked in each county of operation"; the 7QP: "7th-area mobiles
+   ... may be worked again as they enter new counties"; New England:
+   "Mobiles that change counties are considered to be new stations"; and
+   Delaware, on the state-party base, answers True since Q118. All four
+   components say so, so the composite says it once: the dupe key is asked
+   without routing a QSO to a party (ContestIdentity, no station), so it
+   cannot delegate. *)
+function TContestIN7QPNE.DupeKeyIncludesReceivedQTH: boolean;
 begin
    Result := True;
 end;

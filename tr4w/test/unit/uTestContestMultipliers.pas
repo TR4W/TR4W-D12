@@ -194,8 +194,14 @@ const
    (* The contests whose CountsAsMultiplier says no to something. A contest
       that gains a multiplier rule joins this list in the same commit.
       IN7QPNE (2026-10-14) answers with the judging party's rule, and no for
-      a QSO in no party -- uTestContestIN7QPNE pins it. *)
-   STATED: array[0..5] of ContestType = (BCQP, NYQP, INQSOPARTY, PCC, NZFIELDDAY, IN7QPNE);
+      a QSO in no party -- uTestContestIN7QPNE pins it. #88 round 3
+      (2026-10-26): the host state is no multiplier for an in-state entrant
+      in Michigan, Ohio, Tennessee, Texas, Virginia and the Salmon Run, and a
+      DE-to-DE QSO earns none -- each party's own test unit pins it
+      (uTestQSOPartyRules). *)
+   STATED: array[0..12] of ContestType = (BCQP, NYQP, INQSOPARTY, PCC, NZFIELDDAY, IN7QPNE,
+                                          MICHQSOPARTY, OHIOQSOPARTY, TENNESSEEQSOPARTY,
+                                          TEXASQSOPARTY, VAQP, SALMONRUN, DELAWAREQSOPARTY);
 var
    ct: ContestType;
    i: integer;

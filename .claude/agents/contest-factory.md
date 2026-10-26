@@ -77,7 +77,11 @@ and URC (`uContestURCDXRTTY`, anything else).** A state party states its
 the literal and checks `<base>.dom` and `<base>_cty.dom` are on disk. Idaho and
 Delaware were the last LEGACY (enum) additions. **A `.dom` line holding `=` is
 an ENTRY, comments included** (`logdom.EnumDOMFILE` has no comment syntax), so
-a header must not contain one. A county file an
+a header must not contain one. **Only `INCLUDE FILE <name>` (upper case)
+includes a file**: any other line whose first word is INCLUDE is skipped --
+nc.dom's `INCLUDE S50.DOM` was, from D7 until #88 round 3 (2026-10-26) -- so
+the loader WARNS on one (`LogDom.DomLineIsAnUnfollowedInclude`) and
+`Lint-DomCoverage` FAILS any `.dom` in `target/dom` holding one. A county file an
 in-state file INCLUDEs maps each county with `KEY > Mult = ...` (Idaho's and
 Delaware's), or each county becomes its own in-state multiplier -- which is
 what Nebraska (`uContestNebraskaQP`, 2026-10-16, design Q105) wants: its
@@ -372,6 +376,16 @@ the target shape, the M-step migration order and the open questions.
   `uTestContestNewEnglandQP`'s walk holds every other contest to identity.
   A multiplier KIND's arm stays in the sheet until Q4 -- except the
   PREFIX kind's, below.
+  **#88 round 3 (2026-10-26)**: the received-QTH dupe key is every state
+  party's, New England's, the 7QP's and IN7QPNE's (their sponsors' rover
+  rules; `uTestNYQPRover`'s walk). "The host state is no multiplier for an
+  in-state entrant" is ONE predicate, `uContestBase.DomesticMultiplierIsHostState`,
+  asked in each class's own `CountsAsMultiplier` (IN, MI, OH, TN, TX, VA,
+  the Salmon Run; Delaware for its DE-to-DE QSOs) -- never by editing the
+  shared S50.DOM, and never on the party base (FL, WI and the 7QP count
+  their own state). A party test asks the REAL in-state file through
+  `test/unit/uTestQSOPartyRules` (`InStateMultiplierOf`, `CountsForEntrant`,
+  `RoverDupeAnswers`).
 - **THE PREFIX MULTIPLIER KEY IS THE CLASS'S (M11 S3 part 1, 2026-10-14).**
   `PrefixMultiplierKey(aQso, out aKey: PrefixMultiplierString): boolean`
   (base False) is stated by the 32 prefix contests; `LOGEDIT.SetPrefix`
@@ -891,7 +905,11 @@ the target shape, the M-step migration order and the open questions.
   and ARRL VHF runnings are copies until Q7. New seams it added:
   `TStationContext.IsDomesticCountryCall` (a SERVICE -- ARRL 160's CTY lookup;
   nil means not domestic) and `.ContestName`; `TSessionDefaults.InitialExchange`,
-  `ZoneMult`, `DXMultLimit`, `R150SMode`, `SuppressZoneExchangeMessages` (the
+  `ZoneMult`, ~~`DXMultLimit`~~ (DELETED at #88 round 3, 2026-10-26, with
+  LOGWIND's global and the matrix's `dxmultlimit` line: nothing, in D7 or
+  here, ever READ it -- a sponsor's cap on one multiplier kind is the class's
+  `CombineWithMultipliers` over the base's `SummedMultipliersWithKindCapped`,
+  the 7QP's and the Salmon Run's 10 DX), `R150SMode`, `SuppressZoneExchangeMessages` (the
   JIDX name test in FoundContest's closing `case`; deleted at M11 S9e part 1 --
   the JIDX state no `WriteDefaultExchangeMessages`); the sibling
   `RepeatSPExchangeDefault` (the EU Sprints). The CQ-M okrug test was lifted to

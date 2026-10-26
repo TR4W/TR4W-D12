@@ -60,7 +60,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   ONE CONTEST PER PROCESS, AND THAT IS NOT A CONVENIENCE. FoundContest is not
   idempotent: it ADDS to the domestic country list (only ReadInConfigFile
   clears it), and its arms set Settings.Bands.WarcEnabled, MultipliersIsCounties,
-  DXMultLimit, tAllowDupeQSOs and a dozen more that no other arm resets. A
+  tAllowDupeQSOs and a dozen more that no other arm resets. A
   harness looping over contests in one process would record each contest
   polluted by every contest before it, so the record would depend on the
   enum's ORDER. A fresh process per contest is also simply what an operator
@@ -764,7 +764,8 @@ begin
    EmitField('cty.countrymode', EnumText(TypeInfo(CountryModeType), Ord(CTY.ctyCountryMode)));
    EmitField('cty.zonemode', EnumText(TypeInfo(ZoneModeType), Ord(CTY.ctyZoneMode)));
    EmitField('my.continent', EnumText(TypeInfo(ContinentType), Ord(MyContinent)));
-   EmitField('dxmultlimit', IntToStr(DXMultLimit));
+   (* NO dxmultlimit LINE since #88 round 3 (2026-10-26): the global it
+     printed is deleted -- nothing ever read it. *)
    EmitField('dxccmultbyband', EnumText(TypeInfo(TAdditionalMultByBand), Ord(DXCCMultByBand)));
    EmitField('multipliersarecounties', BoolText(MultipliersIsCounties));
    EmitField('nomultmarinemobile', BoolText(NoMultMarineMobile));

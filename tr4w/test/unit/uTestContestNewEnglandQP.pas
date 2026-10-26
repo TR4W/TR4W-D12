@@ -188,27 +188,38 @@ end;
    --------------------------------------------------------------------------- *)
 
 (* "DXCC countries (not USA) as multipliers" -- no limit. D7's arm stated
-   20; the session states none now, at either kind of entrant. *)
+   20, which nothing ever read (the session value was deleted at #88 round 3,
+   2026-10-26); the score is what says there is no cap: 25 DX multipliers
+   all score, at either kind of entrant. *)
 procedure TContestNewEnglandQPTests.Test_NEQPHasNoDXMultiplierCap;
 var
    inside: boolean;
    contestObject: TContestBase;
-   session: TSessionDefaults;
+   view: TLoggedQSOList;
+   t: TScoreTotals;
 begin
    BeginTest('Test_NEQPHasNoDXMultiplierCap');
-   for inside := False to True do
-      begin
-      contestObject := Make(NEWENGLANDQSO);
-      session := TSessionDefaults.Create;
-      try
-         contestObject.DescribeSession(Entrant(inside), session);
-         CheckFalse(session.IsStated(svDXMultLimit),
-                    'no DX multiplier limit (in New England: ' + BoolToStr(inside, True) + ')');
-      finally
-         session.Free;
-         contestObject.Free;
-      end;
-      end;
+   t := Default(TScoreTotals);
+   t.QSOPoints := 100;
+   t.ScoredBand := AllBands;
+   t.SessionCountsMultipliers := True;
+   t.Mults[AllBands, Both, rmDomestic] := 40;
+   t.Mults[AllBands, Both, rmDX] := 25;
+   view := TLoggedQSOList.Create;
+   try
+      for inside := False to True do
+         begin
+         contestObject := Make(NEWENGLANDQSO, Entrant(inside));
+         try
+            CheckEquals(100 * (40 + 25), contestObject.FinalScore(t, view),
+                        'every DX multiplier scores (in New England: ' + BoolToStr(inside, True) + ')');
+         finally
+            contestObject.Free;
+         end;
+         end;
+   finally
+      view.Free;
+   end;
 end;
 
 (* ---------------------------------------------------------------------------

@@ -124,6 +124,11 @@ type
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
+   public
+      (* OHIO IS NOT A STATE MULTIPLIER FOR A OHIO ENTRANT --
+         #88 round 3 (2026-10-26). See the implementation. *)
+      function CountsAsMultiplier(const aQso: ContestExchange;
+                                  aKind: RemainingMultiplierType): boolean; override;
    end;
 
 implementation
@@ -267,6 +272,22 @@ end;
 function TContestOhioQP.CQExchangeDefault(const aStation: TStationContext): string;
 begin
    Result := ' # ' + aStation.MyState;
+end;
+
+(* OHIO IS NOT A STATE MULTIPLIER FOR A OHIO ENTRANT -- #88
+   round 3 (2026-10-26), the sponsor's 2026 rules:
+   "For OHIO STATIONS - multipliers are the 49 American States (excluding
+   Ohio), 1 Washington DC".
+   ohio.dom includes the shared S50.DOM, which holds Oh; an
+   in-state entrant's QSO whose domestic multiplier is the host state
+   itself earns no multiplier and keeps its points. Outside Ohio the
+   multipliers are the counties, and none is spelled as the state. The
+   shared file is never edited for this: other contests read it. *)
+function TContestOhioQP.CountsAsMultiplier(const aQso: ContestExchange;
+                                           aKind: RemainingMultiplierType): boolean;
+begin
+   Result := not (Station.InHostState and
+                  DomesticMultiplierIsHostState(string(aQso.DomMultQTH), HostState));
 end;
 
 initialization

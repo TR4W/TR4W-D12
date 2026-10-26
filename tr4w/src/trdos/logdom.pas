@@ -108,6 +108,17 @@ type
   end;
 
 procedure EnumDOMFILE(FileString: PShortString);
+
+(* IS THIS .dom LINE AN INCLUDE THE READER WILL NOT FOLLOW? -- #88 round 3
+  (2026-10-26). The reader follows exactly `INCLUDE FILE <name>` (upper
+  case, leading blanks allowed). A line whose first word is INCLUDE in any
+  case and which is not that is skipped -- it holds no `=`, so it is no entry
+  either -- and nc.dom's `INCLUDE S50.DOM` lived that way since D7, so no NC
+  entrant could log a US state. EnumDOMFILE warns on such a line, and
+  Lint-DomCoverage fails a shipped file that holds one. Public so a test
+  asks it directly. *)
+function DomLineIsAnUnfollowedInclude(const aLine: string): boolean;
+
 (* The const section held one live entry, RemainingMultDisplayModeTypeSA,
   which moved to uSettingsModel with its type on 2026-09-13. The only other
   line in it was already commented out. *)
@@ -137,7 +148,10 @@ uses
   (* ContestDomesticMultiplierFromQTH, TDomesticQTHAnswer -- GetDomQTH asks
     the contest what a received QTH means (M11 S6). *)
   uContestBase,
-  uContestFactory;
+  uContestFactory,
+  (* The unit's own logger -- an INCLUDE the reader will not follow is
+    reported, never skipped in silence (#88 round 3). *)
+  Log4D;
 
 var
   (* THE TABLE A .dom IS BEING READ INTO. EnumDOMFILE is a line callback
@@ -146,6 +160,38 @@ var
     DomQTHTable before, whatever object the read was called on -- the same
     object in the program, which is why nothing saw it. nil between reads. *)
   GLoadTarget: TDomQTHTable = nil;
+  (* AND THE FILE, for the same reason -- so a warning names it. '' between
+    reads. *)
+  GLoadFileName: string = '';
+  domLogger: TLogLogger;
+
+function DomLineIsAnUnfollowedInclude(const aLine: string): boolean;
+var
+  firstWord: string;
+  blank: integer;
+  i: integer;
+begin
+  (* LEADING BLANKS AND TABS ARE THE READER'S: GetRidOfPrecedingSpaces. *)
+  i := 1;
+  while (i <= Length(aLine)) and ((aLine[i] = ' ') or (aLine[i] = #9)) do
+     begin
+     Inc(i);
+     end;
+  firstWord := Copy(aLine, i, Length(aLine));
+  (* EnumDOMFILE's own test, character for character: the twelve letters,
+    case-sensitive. *)
+  if Copy(firstWord, 1, Length('INCLUDE FILE')) = 'INCLUDE FILE' then
+     begin
+     Result := False;
+     Exit;
+     end;
+  blank := Pos(' ', firstWord);
+  if blank > 0 then
+     begin
+     firstWord := Copy(firstWord, 1, blank - 1);
+     end;
+  Result := UpperCase(firstWord) = 'INCLUDE';
+end;
 
 constructor TDomQTHTable.Create;
 begin
@@ -336,6 +382,7 @@ function TDomQTHTable.ReadDomQTHFile(const FileName: string; IncludedFile: boole
 
 var
   PreviousTarget                        : TDomQTHTable;
+  PreviousFileName                      : string;
   Enumerated                            : boolean;
 
 begin
@@ -351,11 +398,14 @@ begin
   (* THE LINES GO INTO THIS TABLE -- see GLoadTarget. Restored after, so an
     INCLUDE FILE (which re-enters here for the same table) leaves it set. *)
   PreviousTarget := GLoadTarget;
+  PreviousFileName := GLoadFileName;
   GLoadTarget := Self;
+  GLoadFileName := FileName;
   try
      Enumerated := EnumerateLinesInFile(FileName, EnumDOMFILE, False);
   finally
      GLoadTarget := PreviousTarget;
+     GLoadFileName := PreviousFileName;
   end;
 
   if not Enumerated then
@@ -399,6 +449,14 @@ begin
        in one place now, uAppPaths.ShippedDomFilePath. *)
      SetCharBuffer(TempFileName, ShippedDomFilePath(string(TempString)));
      GLoadTarget.ReadDomQTHFile(CharBufferText(TempFileName), True);
+     end
+  else if DomLineIsAnUnfollowedInclude(string(FileString^)) then
+     begin
+     (* REPORTED, NOT FOLLOWED: only `INCLUDE FILE <name>` is an include,
+       and guessing at another spelling would make the file's meaning
+       depend on this reader's leniency. See DomLineIsAnUnfollowedInclude. *)
+     domLogger.Warn('[LogDom] ' + GLoadFileName + ': "' + string(FileString^) +
+                    '" is not followed -- only INCLUDE FILE <name> includes a file');
      end;
 //todo process ;
   if StringHas(FileString^, '=') then
@@ -506,6 +564,7 @@ begin
 end;
 
 initialization
+  domLogger := TLogLogger.GetLogger('LogDom');
   (* BEFORE ANY READER: the one load is LogCfg.SetUpGlobalsAndInitialize, at
     run time, long after every unit's initialization. *)
   DomQTHTable := TDomQTHTable.Create;

@@ -1,0 +1,204 @@
+﻿Delaware QSO Party Rules
+
+Source: https://www.fsarc.org/qsoparty/rules-2024.html
+Fetched: 2026-10-26
+WA7BNM ID: 240 (https://www.contestcalendar.com/contestdetails.php?ref=240)
+Cabrillo Name: DE-QSO-PARTY
+ADIF Name: DE-QSO-PARTY
+
+ FSARC - QSO Party Rules
+ delaware qso party rules
+ First State Amateur Radio Club
+ Home
+ Logging Software
+ Cabrillo Info
+ Sidebar Menu
+ Home
+ Logging Software
+ Cabrillo Info
+ 2022 Results
+ 2021 Results
+ 2020 Results
+ 2019 Results
+ Older
+ Delaware QSO Party
+ The
+county designations are:
+ New
+Castle County NDE
+ Kent
+County
+ KDE
+ Sussex
+County
+SDE
+ Object :
+To contact as many in the Delaware Stations
+as possible.
+ Date :
+First full weekend in May
+ Log Submission Date : June 10th
+ Categories :
+Power categories
+are accounted for in the multiplier section of the rules.
+ Multi-Ops: Only Multi-Single is permitted..
+ Self-Spotting: Self-Spotting is permitted..
+ Exchange :
+Delaware stations send signal report and
+county. Stations outside Delaware send signal report and state,
+province or DX.
+ Valid
+Contacts : Work stations once per band per mode. The three valid mode categories are CW, Phone, and Digital.
+ Delaware stations work everyone.
+ Non-Delaware stations work Delaware only.
+ Delaware stations may contact other Delaware stations but only count for QSO point credit.
+ Delaware Mobiles that change counties are considered new
+stations, and can be worked for both multiplier and QSO Point credit.
+ County
+line QSOs should be logged as
+two separate QSOs
+ QSO
+Points:
+ Stations
+inside DE earn 1 point per phone QSO, 2
+points for digital QSO, and 2 points per CW QSO. Stations outside DE earn 10 points
+per
+phone QSO, 20 points per digital QSO and 20 points per CW QSO.
+ Multipliers :
+ Multipliers are counted only once.
+ Multipliers are by Band.
+ Delaware stations use, states, Canadian
+provinces, and DXCC countries.
+ Stations outside Delaware use Delaware
+counties,
+New Castle (NDE), Kent (KDE), and Sussex (SDE).
+ Power
+Multiplier : Stations
+not indicating power level
+within their log will be scored as operating with greater than 100
+watts.
+ -Greater than 100 watts (&gt;100 watts), total score X1
+ -100 watts or
+less (&lt;
+= 100 watts) total score X2
+ -5 watts or less (&lt; = 5 watts), total
+score X3
+ Scoring :
+Final score = the total of QSO points X
+location multipliers X power multiplier, + 50
+point electronic submission bonus if applicable.
+ Suggested
+frequencies : All HF bands excluding WARC bands
+ Phone: 1860, 3960, 7260, 14.280, 21,360,
+28.360.
+ CW: 1825, 3550, 7050, 14.050, 21.050, 28.050.
+ Digital modes
+per ARRL band plan.
+ DEQP also allows contacts on any band and mode 6 meters and up
+to include repeater contacts within Delaware. 1 point per voice contact, 2
+points per digital contact to include CW.
+ FT8/FT4---WSJT-X
+contacts:
+ Stations
+using these modes must use the Field Day contest
+overlay in WSJT-X.
+ DELAWARE
+stations will use the county number below and letter
+combination, and “DE” as the section.
+ For NEW CASTLE COUNTY ,
+the
+exchange needs to
+be 1A DE .
+ For KENT COUNTY ,
+the exchange
+needs to be 2A DE .
+ For
+ SUSSEX COUNTY , the exchange
+needs to be 3A DE .
+ Out
+of state stations would use a 1A
+prefix followed by their
+ ARRL/RAC
+section or DX .
+ Non-Delaware
+Examples:
+ For
+an Arizona contact, they would use “1A AZ”.
+ A
+San Diego, California station would use a “1A SDG”.
+ A
+Pittsburg, PA
+station
+would use “1A WPA”.
+ Japan
+stations would use “1A DX”.
+ Look
+for stations calling “CQ DE &lt;CALLSIGN&gt; FM29” or “CQ
+FD ,&lt;CALLSIGN&gt; FM29” for stations wanting Delaware contacts, where
+“&lt;CALLSIGN&gt;" is your callsign without brackets.
+ All
+WSJT contacts
+must be submitted in a second Cabrillo log file named
+“&lt;callsign&gt;.cbr”
+(which is how WSJTX
+default labels the file—so do not change that name until after you have
+attached a copy to your entry)
+ Please use frequencies 4kHz higher than the
+standard FT frequencies to avoid interference from the normal traffic
+ No
+paper
+logs with more than 50 contacts will be accepted for award credit.
+ Electronic
+entries
+are STRONGLY encouraged and should include a
+complete Cabrillo
+format log.
+ If
+your software does not provide that option, please try out this link to
+convert your log into a cabrillo file. Use this form to
+manually
+enter your Delaware QSO Party log data if you used paper logging or
+logging software that doesn't produce a Cabrillo file. The form
+software will convert your info into a properly formatted Cabrillo file
+and submit it to the contest sponsor for log checking. You will have
+the opportunity to view and confirm the Cabrillo file contents before
+it is submitted. Items in red are required.
+ Logs
+should indicate times in UTC, bands, modes, calls and complete
+exchange.
+ Cabrillo log filenames must be either 'urCall.log'
+or
+"urCall.cbr'.
+ Delaware stations should use the ARRL section
+designator DE as their location in the log setup.
+ Non DE stations
+should use their ARRL Section or 2 letter state abbreviation.
+ DX
+stations should use DX.
+ Please remember if your software only outputs ADIF
+format there are
+many ADIF to Cabrillo converters available on the Internet.
+ Paper entries are to use the provided summary and
+ log sheets .
+Awards will be presented to the following:
+ Top
+3 scoring stations in Delaware
+ Top
+3 scoring stations in each Delaware County
+ Top
+3 scoring stations in the Continental United States
+ Top
+3 DX stations
+ Electronic
+entries (carillo format preferred) must be sent via e-mail within 30 days to qsoparty at google's
+mail system:
+ Make sure to put your call sign and
+DEQSO
+in
+Subject Line, example: (K3QBD DE QSO Party Log).
+ Paper logs with less than 50 contacts may be sent within 30 days to
+ DE
+QSO Party P.O. Box
+1050, Newark, Delaware 19715-1050
+ © 2012 FSARC | Home
+| DE QSO Home
