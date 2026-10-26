@@ -677,9 +677,10 @@ begin
   ShowMessage(p);
   //  QuickDisplay(p);
 end;
-// Wait for a thread handle to signal, pumping Windows messages so that
-// cross-thread SendMessage calls (e.g. SetDlgItemText from the polling
-// thread) don't deadlock the main thread.
+// Wait for a thread handle to signal, pumping Windows messages so that a
+// cross-thread SendMessage from the polling thread cannot deadlock the main
+// thread.  No poller path sends one since issue #108; the pump stays as the
+// backstop the off-thread report cannot be -- see ShutDownRadioInterface.
 (* TAKES THE RADIO, NOT A BARE HANDLE, since 2026-09-21.  Off Windows there is
   nothing to wait on but the radio's own PollingThreadRunning flag, so the
   routine needs the radio to reach it; the handle is one field away. *)
@@ -838,8 +839,9 @@ begin
     same sequence Reset Radio Ports uses, not a copy of it (issue #107).
     ShutDownRadioInterface interrupts the link first, so a switched-off
     network radio no longer holds exit for the whole wait; it waits pumping
-    messages (WaitForPollingThreadWithMessages), because a poller can be inside
-    a cross-thread SendMessage; and it frees a radio only once its poller has
+    messages (WaitForPollingThreadWithMessages) -- kept as a backstop since
+    issue #108 took every control write off the poller, see the note in
+    ShutDownRadioInterface; and it frees a radio only once its poller has
     stopped, leaking it with an ERROR otherwise.
 
     STILL BEFORE ANYTHING ELSE IS TORN DOWN: the polling threads must not

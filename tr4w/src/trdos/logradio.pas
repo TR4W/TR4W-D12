@@ -939,6 +939,12 @@ procedure TEventHandlers.OnTimerTick(Sender : TObject);
 var callInactive: boolean;
 begin
   DebugMsg('TimerTick event fired');
+  (* WAS NEVER INITIALISED, so a tick with neither radio sending -- the poller
+    had already ended the message -- called BackToInactiveRadioAfterQSO on
+    whatever the stack held.  It
+    matters more since issue #108: the poller's stop of this timer now runs a
+    main-loop turn later, so that tick is more likely. *)
+  callInactive := False;
   TTimer(Sender).Enabled := false;
   if IsCWByCATActive(ActiveRadioPtr) then
      begin
@@ -1723,11 +1729,15 @@ const
      returns.  It closes and frees nothing else, because the poller may be
      inside the radio at this moment -- Disconnect would free the reading
      thread under it.
-  3. Wait, PUMPING SENT MESSAGES: the polling thread can be inside a
-     cross-thread SendMessage (an LCL caption set from that thread, such as
-     DisplayCodeSpeed on a CW speed sync), and a wait that does not pump
-     deadlocks against it.  WaitForPollingThreadWithMessages is the routine
-     ExitProgram already uses for that reason.
+  3. Wait, PUMPING SENT MESSAGES.  The poller used to write LCL controls --
+     DisplayCodeSpeed on a CW speed sync was the example -- and on Windows each
+     such write is a cross-thread SendMessage that a non-pumping wait
+     deadlocks against.  Since issue #108 NO poller path writes a control: it
+     publishes state and requests uMainThreadWork jobs.  THE PUMP IS KEPT ANYWAY,
+     on purpose: the guard that keeps it that way (uCrashLog.ReportOffMainThread,
+     an ERROR) REPORTS a stray write, it does not stop it, so a future one would
+     turn a log line into a 6 s stall and a leaked radio.  Pumping costs
+     nothing here.  WaitForPollingThreadWithMessages is the routine.
   4. Stopped: Disconnect and Free, as before.  NOT stopped: log an ERROR and
      LEAK the radio on purpose.  A leak is harmless; a use-after-free is not.
 

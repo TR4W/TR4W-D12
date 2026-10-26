@@ -202,8 +202,20 @@ function OnMainThread: boolean;
   DEDUPED BY CALLER, because these sit on paths that run at poll rates -- a
   violation would otherwise produce a log flood rather than a diagnosis.  Each
   distinct call site is reported once, with its address resolved symbolically,
-  which is the thing actually needed: WHICH caller, not how many times. }
+  which is the thing actually needed: WHICH caller, not how many times.
+
+  AN ERROR SINCE ISSUE #108 (2026-10-26), it was a Warn.  Every LCL write path
+  that can tell -- TElementPanel.Caption, the element, status and entry-field
+  accessors -- reports through here, and a control written off the main thread
+  is a defect to fix, not a condition to watch.  STILL NEVER RAISES: a keying or
+  polling thread must not die of being reported. }
 procedure ReportOffMainThread(const aSite: string; const aCaller: CodePointer);
+
+{ HOW MANY TIMES ReportOffMainThread HAS BEEN ASKED, BEFORE THE DEDUPE.
+
+  For tests: run a worker path, and assert the count did not move.  Counted
+  from InstallCrashLog on, because before it no thread can be judged. }
+function OffMainThreadReportCount: LongInt;
 
 implementation
 
@@ -1378,9 +1390,15 @@ var
       Thread: PtrUInt;
    end;
    GOffThreadCapped: boolean = False;
+   GOffThreadReports: LongInt = 0;   (* every report, deduped or not *)
 
 const
    OFF_THREAD_REPORT_CAP = 64;
+
+function OffMainThreadReportCount: LongInt;
+begin
+   Result := InterlockedCompareExchange(GOffThreadReports, 0, 0);
+end;
 
 procedure ReportOffMainThread(const aSite: string; const aCaller: CodePointer);
 var
@@ -1395,6 +1413,8 @@ begin
       begin
       Exit;
       end;
+
+   InterlockedIncrement(GOffThreadReports);
 
    key := PtrUInt(aCaller);
    fresh := True;
@@ -1442,9 +1462,9 @@ begin
       Exit;
       end;
 
-   // WARN, not Debug: this is a latent crash, and nobody runs at debug level
-   // when it happens.
-   CrashLogger.Warn('[Thread] %s called from thread %d, NOT the main thread -- '
+   // ERROR (issue #108; it was Warn, and Debug before that): this is a latent
+   // crash, and nobody runs at debug level when it happens.
+   CrashLogger.Error('[Thread] %s called from thread %d, NOT the main thread -- '
                     + 'caller %s', [aSite, GetCurrentThreadId,
                                     BackTraceStrFunc(aCaller)]);
 end;

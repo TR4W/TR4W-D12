@@ -204,6 +204,64 @@ begin
    ShowFMessages(0);
 end;
 
+(* ISSUE #108: WHAT THE POLLING THREAD HANDS THE MAIN THREAD, BESIDE THE JOB.
+
+  A job takes no argument, so a value it needs is published here first --
+  InterlockedExchange, then RequestMainThreadJob.  The frequencies are LATEST
+  WINS by design (only the frequency the VFO is on now is worth acting on);
+  the two flags are EVENTS, taken with InterlockedExchange so one recorded
+  twice before the job runs acts once, and one recorded while it runs queues
+  another pass (the job's bit is cleared before it runs). *)
+var
+   gCallOnFrequencyHz: LongInt = 0;
+   gTuneDupeFrequencyHz: LongInt = 0;
+   gCWByCATReturnToCQ: LongInt = 0;      (* auto-call-terminate: ReturnInCQOpMode *)
+   gCWByCATResumeAfterTX: LongInt = 0;   (* back to the inactive radio, auto-CQ *)
+
+(* THE ACTIVE RADIO'S VFO MOVED: the band map's call for that frequency. *)
+procedure RunBandMapCallOnFrequency;
+begin
+   SpotsList.DisplayCallsignOnThisFreq(gCallOnFrequencyHz);
+end;
+
+(* THE INACTIVE RADIO WAS TUNED with TUNE ALT-D on. *)
+procedure RunTuneDupeCheck;
+begin
+   SpotsList.TuneDupeCheck(gTuneDupeFrequencyHz);
+end;
+
+(* A RADIO THAT IS NO LONGER SENDING HAS NO BUSY WINDOW TO TIME.  Asked of the
+  radio's own state rather than remembered for it: if a new message started
+  between the request and this run, CWByCAT_Sending is True again and its
+  freshly armed timer is left alone. *)
+procedure StopIdleCWByCATTimer(const aRig: RadioPtr);
+begin
+   if (aRig <> nil) and (aRig^.tmrCWByCAT <> nil) and (not aRig^.CWByCAT_Sending) then
+      begin
+      aRig^.tmrCWByCAT.Enabled := False;
+      end;
+end;
+
+(* A CW-BY-CAT MESSAGE ENDED.  The order is the one the polling thread used:
+  ProcessFilteredStatus's return to CQ came before PTTStatusChanged's
+  resume, in the same pass. *)
+procedure RunCWByCATMessageEnded;
+begin
+   StopIdleCWByCATTimer(ActiveRadioPtr);
+   StopIdleCWByCATTimer(InActiveRadioPtr);
+
+   if InterlockedExchange(gCWByCATReturnToCQ, 0) <> 0 then
+      begin
+      ReturnInCQOpMode;
+      end;
+
+   if InterlockedExchange(gCWByCATResumeAfterTX, 0) <> 0 then
+      begin
+      BackToInactiveRadioAfterQSO;
+      tStartAutoCQ;
+      end;
+end;
+
 (* THE FAILURE MESSAGE A RADIO PUTS ON SCREEN, SET AND CLEARED IN ONE PLACE.
 
   There are TWO surfaces -- this radio's own panel on the main window's status
@@ -798,8 +856,14 @@ begin
                and (rig = ActiveRadioPtr) then
                begin
                logger.Info('[pFactoryRadio] CWSpeedSync: radio speed %d WPM -> CodeSpeed', [ro.CWSpeed]);
+               (* THE LIVE VALUE IS SET HERE; THE READOUT IS DRAWN ON THE MAIN
+                 THREAD (issue #108).  CodeSpeed is the speed every keyer reads,
+                 so it changes at once.  DisplayCodeSpeed assigns
+                 pnlCodeSpeed.Caption (and stores SpeedMemory), which this thread
+                 must not do -- on Windows that write was a cross-thread
+                 SendMessage, the reason the shutdown wait has to pump. *)
                CodeSpeed := ro.CWSpeed;
-               DisplayCodeSpeed;  // Refreshes display and persists to SpeedMemory
+               RequestMainThreadJob(mtCodeSpeedDisplay);
                end;
 
             // HamLib Direct skips this � SendPollRequests already logs individual values.
@@ -1174,15 +1238,20 @@ begin
                begin
                logger.trace('rig.CWByCAT_Sending set to FALSE - %s (%s)',
                         [rig.RadioName, RadioTypeToken(rig.RadioModel)]);
-                     rig.tmrCWByCAT.Enabled := false;
-                        // ny4i Issue 153 Disable timer so we do not fire if we get the this event here
-                     //BackToInactiveRadioAfterQSO; // Moved to Timer event // ny4i Issue 153 We have to try here as WK and Serial do it in their threads when not busy
-                     rig.CWByCAT_Sending := false;
-                     if rig.CheckAutoCallTerminate then
-                        begin
-                        DebugMsg('rig.CheckAutoCallTerminate is true - Enter ReturnInCQMode');
-                        ReturnInCQOpMode;
-                        end;
+               rig.CWByCAT_Sending := false;
+               (* THE STATE IS SET HERE; THE TIMER AND THE RETURN TO CQ RUN ON
+                 THE MAIN THREAD (issue #108).  rig.tmrCWByCAT is an LCL TTimer
+                 (ny4i Issue 153: stop it so it does not fire for a message
+                 already over) and ReturnInCQOpMode drives the call window and
+                 sends a message -- neither is this thread's to touch.  The job
+                 stops the timer of any radio no longer sending, then returns
+                 to CQ if that was decided here. *)
+               if rig.CheckAutoCallTerminate then
+                  begin
+                  DebugMsg('rig.CheckAutoCallTerminate is true - Enter ReturnInCQMode');
+                  InterlockedExchange(gCWByCATReturnToCQ, 1);
+                  end;
+               RequestMainThreadJob(mtCWByCATMessageEnded);
                end;
             end;
          end;
@@ -1269,7 +1338,10 @@ begin
          or (BandMapMode <> ActiveMode)) and (rig.FilteredStatus.Freq <> 0)) then
          // Gav 4.47.4 #015
          begin
-         SpotsList.DisplayCallsignOnThisFreq(rig.FilteredStatus.Freq);
+         (* The call window is the main thread's (issue #108): publish the
+           frequency and ask; the job reads the latest one. *)
+         InterlockedExchange(gCallOnFrequencyHz, rig.FilteredStatus.Freq);
+         RequestMainThreadJob(mtBandMapCallOnFrequency);
          BandMapCursorFrequency := rig.FilteredStatus.Freq;
          BandMapBand := ActiveBand;
          BandMapMode := ActiveMode;
@@ -1281,7 +1353,10 @@ begin
 
       if Settings.Operating.TuneAltDEnable then
          begin
-         SpotsList.TuneDupeCheck(rig.FilteredStatus.Freq);
+         (* TuneDupeCheck writes the call window and takes the focus -- the
+           main thread's (issue #108).  Latest frequency only. *)
+         InterlockedExchange(gTuneDupeFrequencyHz, rig.FilteredStatus.Freq);
+         RequestMainThreadJob(mtTuneDupeCheck);
          end;
 
       if (rig.BandMemory <> rig.FilteredStatus.Band) or (rig.ModeMemory <>
@@ -1685,10 +1760,17 @@ begin
             begin
             ActiveRadioPtr.CWByCAT_Sending := false;
                // If we were sending but the PTT goes off, now reset this.
-            BackToInactiveRadioAfterQSO; // ny4i Issue 153 We have to try here as WK and Serial do it in their threads when not busy
             logger.trace('[Active] CWByCAT_Sending set to FALSE - %s (%s)',
                [ActiveRadioPtr.RadioName, RadioTypeToken(ActiveRadioPtr.RadioModel)]);
-            tStartAutoCQ; // this is totally bizzare but the way autocqresume works is you call this and it checks.
+            (* ny4i Issue 153: back to the inactive radio, then tStartAutoCQ
+              ("the way autocqresume works is you call this and it checks").
+              BOTH ON THE MAIN THREAD (issue #108): the first swaps radios and
+              sets the op mode, the second arms an LCL TTimer, and on Windows a
+              TTimer enabled from this thread is a SetTimer owned by a thread
+              with no message loop (uAppTimers records the same trap for the
+              retired atQuickDisplayClear). *)
+            InterlockedExchange(gCWByCATResumeAfterTX, 1);
+            RequestMainThreadJob(mtCWByCATMessageEnded);
             end;
       if tr4w_PTTStartTime <> 0 then
          begin
@@ -1818,5 +1900,9 @@ initialization
    RegisterMainThreadJob(mtBandModeDisplay, @RunBandModeDisplay);
    RegisterMainThreadJob(mtMainWindowElementColors, @RefreshMainWindowElementColors);
    RegisterMainThreadJob(mtOnAirTime, @tDispalyOnAirTime);
+   (* Issue #108 -- the rest of what this thread used to do to the UI. *)
+   RegisterMainThreadJob(mtCWByCATMessageEnded, @RunCWByCATMessageEnded);
+   RegisterMainThreadJob(mtBandMapCallOnFrequency, @RunBandMapCallOnFrequency);
+   RegisterMainThreadJob(mtTuneDupeCheck, @RunTuneDupeCheck);
 
 end.

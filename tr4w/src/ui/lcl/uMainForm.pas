@@ -2017,43 +2017,123 @@ end;
 type
    (* ONE OBJECT SO QueueAsyncCall HAS A METHOD TO CALL.  Same shape as
      TEntryDeferrer further down, and for the same reason. *)
+   (* THE NOTICE A WORKER THREAD ASKED FOR, HELD UNTIL THE MAIN THREAD SHOWS IT
+     (issue #108).  LATEST WINS: each notice replaces the caption and restarts
+     the wipe, so showing only the newest of several that arrived between two
+     turns of the main loop leaves the screen exactly as showing them in order
+     would.  Holding the text here rather than in a queued payload also means
+     a call dropped at shutdown (FreeDeferralTarget) leaks nothing. *)
    TNoticeArmer = class(TObject)
-      procedure Arm(Data: PtrInt);
+   private
+      FLock: TRTLCriticalSection;
+      FText: string;
+      FQueued: boolean;
+   public
+      constructor Create;
+      destructor Destroy; override;
+      (* True when the caller must queue Show; False when one is already
+        queued and will pick this text up. *)
+      function Hold(const aText: string): boolean;
+      procedure Forget;
+      procedure Show(Data: PtrInt);
    end;
 
 var
    GNoticeArmer: TNoticeArmer = nil;
 
-procedure TNoticeArmer.Arm(Data: PtrInt);
+constructor TNoticeArmer.Create;
 begin
-   ArmQuickCommandNotice(Data <> 0);
+   inherited Create;
+   InitCriticalSection(FLock);
+   FText := '';
+   FQueued := False;
+end;
+
+destructor TNoticeArmer.Destroy;
+begin
+   DoneCriticalSection(FLock);
+   inherited Destroy;
+end;
+
+function TNoticeArmer.Hold(const aText: string): boolean;
+begin
+   EnterCriticalSection(FLock);
+   try
+      FText := aText;
+      Result := not FQueued;
+      FQueued := True;
+   finally
+      LeaveCriticalSection(FLock);
+   end;
+end;
+
+procedure TNoticeArmer.Forget;
+begin
+   EnterCriticalSection(FLock);
+   try
+      FQueued := False;
+   finally
+      LeaveCriticalSection(FLock);
+   end;
+end;
+
+procedure TNoticeArmer.Show(Data: PtrInt);
+var
+   text: string;
+begin
+   (* Taken and released BEFORE it is shown, so a notice arriving while this
+     runs queues another pass rather than being lost. *)
+   EnterCriticalSection(FLock);
+   try
+      text := FText;
+      FQueued := False;
+   finally
+      LeaveCriticalSection(FLock);
+   end;
+   ShowQuickCommandNotice(text);
 end;
 
 procedure ShowQuickCommandNotice(const aText: string);
 begin
-   (* The TEXT is safe from any thread -- SetElementText defers and reports.
-     THE TIMER IS NOT: TTimer.Enabled reaches into the widget set. *)
-   SetElementText(mweQuickCommand, aText);
-
-   if OnMainThread then
+   (* OFF THE MAIN THREAD THE WHOLE NOTICE IS HANDED OVER -- caption AND timer
+     (issue #108).  The caption used to be written through SetElementText,
+     which defers it but REPORTS the caller, so every notice from a worker
+     thread (the radio poller's link-failure remedy among them) was logged as
+     a stray control write although this routine is the marshalling seam for
+     it.  One hop also keeps the order the old two had: the 30 s wipe starts
+     when the text appears. *)
+   if not OnMainThread then
       begin
-      ArmQuickCommandNotice(aText <> '');
+      if (Application = nil) or Application.Terminated then
+         begin
+         Exit;      (* shutting down: nothing will draw it *)
+         end;
+
+      if GNoticeArmer = nil then
+         begin
+         GNoticeArmer := TNoticeArmer.Create;
+         end;
+
+      if GNoticeArmer.Hold(aText) then
+         begin
+         try
+            Application.QueueAsyncCall(GNoticeArmer.Show, 0);
+         except
+            on E: TObject do
+               begin
+               (* The async queue raises once it is shut down -- an ordinary
+                 exit, as uMainThreadWork records.  Nothing is queued, so the
+                 next notice must try again. *)
+               GNoticeArmer.Forget;
+               LogCaughtException('ShowQuickCommandNotice', E);
+               end;
+         end;
+         end;
       Exit;
       end;
 
-   if (Application = nil) or Application.Terminated then
-      begin
-      Exit;      (* shutting down; the caption write above dropped too *)
-      end;
-
-   if GNoticeArmer = nil then
-      begin
-      GNoticeArmer := TNoticeArmer.Create;
-      end;
-
-   (* AFTER the deferred caption write, because QueueAsyncCall is FIFO -- so the
-     30 s starts when the text actually appears, not before. *)
-   Application.QueueAsyncCall(GNoticeArmer.Arm, PtrInt(Ord(aText <> '')));
+   SetElementText(mweQuickCommand, aText);
+   ArmQuickCommandNotice(aText <> '');
 end;
 
 procedure TTR4WMainForm.QuickCommandNoticeExpired(Sender: TObject);
@@ -3864,10 +3944,11 @@ begin
      because every one of those looks the element up in GElements. *)
    BindMainElements;
 
-   (* THE DETECTOR THE SetMainWindowText FUNNEL USED TO BE. Injected rather
-     than referenced, so uElementPanel stays a leaf the lintlfm checker can
-     link -- see TElementOffThreadReport. *)
-   ElementOffThreadReport := @ReportElementOffThread;
+   (* THE DETECTOR THE SetMainWindowText FUNNEL USED TO BE is injected in this
+     unit's initialization now, not here (issue #108): wired only by this
+     routine, it was blind to every panel created any other way -- the unit
+     tests stream this form themselves, and a test proving the radio poller
+     writes no panel passed against the code that did. *)
    ElementCaptionChanged  := @RequestElementColourRefresh;
    ElementOverflowReport  := @ReportElementOverflow;
 
@@ -4387,6 +4468,13 @@ initialization
      26 failing in one step. Not "the bars are missing": the main window never
      finishes streaming, so the headless export dies before writing anything. *)
    RegisterClass(TProgressBar);
+
+   (* THE OFF-THREAD DETECTOR FOR EVERY TElementPanel, from the moment this unit
+     is linked (issue #108).  Injected rather than referenced, so uElementPanel
+     stays a leaf the lintlfm checker can link -- see TElementOffThreadReport.
+     It used to be assigned in CreateTR4WMainForm, which left it unset for any
+     panel streamed another way. *)
+   ElementOffThreadReport := @ReportElementOffThread;
 
    InitCriticalSection(GPendingLock);
 

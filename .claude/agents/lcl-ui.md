@@ -204,6 +204,26 @@ reviewed once, not once per character (`GKeyUpNoted`).
 apply can outlive the form), and `GBridge` is freed through
 `uMainForm.FreeDeferralTarget`, which is public now for that reason.
 
+**No worker thread writes a control; the guard says so as an ERROR** (issue
+#108, 2026-10-26). `uCrashLog.ReportOffMainThread` is the one off-thread
+report -- `TElementPanel.Caption`, the element, status and entry-field
+accessors all call it -- and it logs at **Error** (deduped per call site and
+thread; never raises). `OffMainThreadReportCount` counts every call, for
+tests: run the worker path, assert the count did not move.
+`ElementOffThreadReport` is wired in `uMainForm`'s **initialization**, not in
+`CreateTR4WMainForm` -- wired there it was blind in every test that streams
+the form itself, and the #108 test passed against the defect until it moved.
+A worker that changes state the UI shows publishes the state and requests a
+`uMainThreadWork` job (`mtCodeSpeedDisplay`, `mtCWByCATMessageEnded`,
+`mtBandMapCallOnFrequency`, `mtTuneDupeCheck`, and the older ones); a job
+takes no argument, so a value it needs is published first with
+`InterlockedExchange`. **`ShowQuickCommandNotice` from a worker hands the whole
+notice over** (caption and 30 s wipe, latest text wins, held in
+`GNoticeArmer`) instead of writing through `SetElementText`, which reported
+it. Pinned by `uTestStatusAndNotice`'s `Test_ARadioSpeedChangeIsDrawnOnTheMainThread`
+(the SHIPPED polling thread over a probe radio) and
+`Test_ANoticeFromAWorkerThreadIsHandedOverWhole`.
+
 ## Coordinate with
 
 Every other agent — each owns a window. `i18n` on any caption.

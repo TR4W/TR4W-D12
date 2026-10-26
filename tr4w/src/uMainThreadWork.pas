@@ -137,7 +137,32 @@ type
         so the TX-inhibited alert is reviewed against it.  Coalesced: the
         review reads the LATEST settled status of both radios, so a request
         that finds one already pending loses nothing.  uTXInhibitView owns it. }
-      mtTXInhibitAlert
+      mtTXInhibitAlert,
+
+      (* ISSUE #108: THE CODE SPEED READOUT.  A thread that changes CodeSpeed
+        -- the radio polling thread on a CW speed sync, the WinKeyer reader on
+        a speed-pot turn -- sets the live value and asks for this; the main
+        thread draws it.  Coalesced: the readout shows the CURRENT CodeSpeed,
+        so a request that finds one pending loses nothing.  LOGWIND owns it. *)
+      mtCodeSpeedDisplay,
+
+      (* ISSUE #108: A CW-BY-CAT MESSAGE ENDED, as the polling thread saw it.
+        Stopping the radio's busy timer, the auto-call-terminate return to CQ
+        and the auto-CQ resume are all UI or LCL-timer work, so the poller
+        records which of them is due and this runs them.  uRadioPolling owns
+        it. *)
+      mtCWByCATMessageEnded,
+
+      (* ISSUE #108: THE ACTIVE RADIO'S VFO MOVED -- put the band map's call
+        for the new frequency into the call window.  Coalesced on purpose: the
+        LATEST frequency is the only one worth showing.  uRadioPolling owns
+        it. *)
+      mtBandMapCallOnFrequency,
+
+      (* ISSUE #108: THE INACTIVE RADIO WAS TUNED with TUNE ALT-D enabled --
+        the Alt-D dupe check against the band map, latest frequency only.
+        uRadioPolling owns it. *)
+      mtTuneDupeCheck
    );
 
    TMainThreadProc = procedure;

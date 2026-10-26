@@ -151,8 +151,9 @@ down. It is `override` with `inherited Destroy` now. Rules that came with it:
 2026-10-26). `ShutDownRadioInterface`: `PollingStopRequested`, then
 **`ro.InterruptLink`** (close the link from another thread, free nothing -- base
 closes its socket; NOT the serial port, a handle race), then
-`LogSUBS2.WaitForPollingThreadWithMessages` (pumps sent messages: the poller
-can be inside a cross-thread `SetWindowText`, e.g. `DisplayCodeSpeed`), bounded
+`LogSUBS2.WaitForPollingThreadWithMessages` (pumps sent messages -- no poller
+path writes a control since issue #108, but the pump stays as the backstop the
+off-thread report cannot be: it reports, it does not stop a write), bounded
 by `POLLING_THREAD_STOP_TIMEOUT_MS` (6 s, longer than a 5 s connect). On a
 timeout the radio is **deliberately leaked**, never freed, and the slot is
 cleared BEFORE the stop request is withdrawn -- `pFactoryRadio` leaves its loop

@@ -23,6 +23,32 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-26 -- THE RADIO POLLER WRITES NO CONTROL (issue #108)
+
+The poller now sets state and asks the main thread to draw it. The unit test
+runs the real polling thread over a probe radio; a real rig, the CW-by-CAT end
+of message and the band map's call-on-frequency have not been run.
+
+- [ ] **A CW speed change at the rig updates the WPM panel.** K4 (or a network
+  Icom), CW, CW SPEED SYNC on for that radio. Turn the rig's keyer speed knob.
+  EXPECT the WPM panel to follow within a poll, and an F-key message to go out
+  at the new speed. Then switch to radio 2 and back: the speed it remembers is
+  the one you set at the rig.
+- [ ] **The WinKeyer speed pot updates it too.** With a WinKeyer and its pot
+  enabled, turn the pot. EXPECT the WPM panel to follow.
+- [ ] **CW-by-CAT, end of message.** K4 CW-by-CAT, AUTO-CQ on: F1 CQ. EXPECT the
+  CQ to repeat after the auto-CQ delay (the resume used to arm its timer from the
+  poller). With AUTO CALL TERMINATE, type a call and send: EXPECT the return to
+  CQ mode exactly as before.
+- [ ] **The band map still fills the call window.** S&P with spots on the band
+  map; tune the active radio onto a spot. EXPECT the spot's call in the call
+  window, as before. SO2R with TUNE ALT-D: tune the inactive radio onto a spot,
+  EXPECT the Alt-D dupe check as before.
+- [ ] **Nothing in the log.** After the session, search `tr4w.log` for
+  `NOT the main thread`. Any line is now an ERROR and names the caller; report
+  it (the CW thread and the WinKeyer reader are known still to do some -- see
+  `.claude/agents/cw-keying.md`).
+
 ## Added 2026-10-26 -- THE CABRILLO IS NAMED AFTER THE LOG (NY4I)
 
 The name rule is unit-tested (`uTestLogDatabase`, `TestExportNames*`) and the

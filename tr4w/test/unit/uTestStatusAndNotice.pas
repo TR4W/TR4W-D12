@@ -80,6 +80,9 @@ type
       procedure Test_ANotNeededBandIsAnEmptyCellNotAHiddenOne;
       procedure Test_LoggingAQSOTakesItsBandOutOfTheNeedsStrips;
       procedure Test_AnInhibitedKeyUpTurnsThePTTIndicator;
+      procedure Test_ARadioSpeedChangeIsDrawnOnTheMainThread;
+      procedure Test_ANoticeFromAWorkerThreadIsHandedOverWhole;
+      procedure HandleRadioMessage(sMessage: string);
    public
       procedure RunAllTests; override;
    end;
@@ -108,7 +111,68 @@ uses
    uStateBridge,       (* InstallStateBridge -- the PTT indicator's painter *)
    uTXInhibitView,     (* ReviewTXInhibit, ResetTXInhibitAlerts -- issue #97 *)
    uTestLogCapture,    (* TCaptureAppender *)
-   uTestTXInhibitAlert; (* SetSettledTXState *)
+   uTestTXInhibitAlert, (* SetSettledTXState *)
+   uFactoryRadioBase;  (* TFactoryRadioBase -- the speed-reporting probe, #108 *)
+
+(* ISSUE #108: A RADIO THAT IS UP AND REPORTS A KEYER SPEED, AND NOTHING ELSE.
+
+  Connected and operational from the first call, no polling of its own, every
+  query the base's do-nothing, and the speed set once through the same door a
+  driver uses (NoteCWSpeedFromRadio).  Run under the SHIPPED polling thread
+  (uRadioPolling.BeginPolling), so what is tested is the poller's real pass. *)
+type
+   TSpeedReportingRadio = class(TFactoryRadioBase)
+   protected
+      function GetISConnected: boolean; override;
+   public
+      constructor CreateProbe(AHandler: TProcessMsgRef; ASpeed: integer);
+      procedure SetCWSpeed(speed: integer); override;
+   end;
+
+   (* Puts one notice up from a worker thread, then exits. *)
+   TNoticeWriterThread = class(TThread)
+   private
+      FText: string;
+   protected
+      procedure Execute; override;
+   public
+      constructor Create(const aText: string);
+   end;
+
+var
+   (* The probe's slot.  A global, because RadioObject is an old-style object
+     and its polling thread is handed @Self -- the address must outlive the
+     test.  Not Radio1: the test makes it the ACTIVE radio and puts it back. *)
+   gSpeedRig: RadioObject;
+
+constructor TSpeedReportingRadio.CreateProbe(AHandler: TProcessMsgRef; ASpeed: integer);
+begin
+   inherited Create(AHandler);
+   requiresPolling := False;
+   NoteCWSpeedFromRadio(ASpeed);
+end;
+
+function TSpeedReportingRadio.GetISConnected: boolean;
+begin
+   Result := True;
+end;
+
+procedure TSpeedReportingRadio.SetCWSpeed(speed: integer);
+begin
+   (* Never pushed to: the probe's slot has CW SPEED SYNC on. *)
+end;
+
+constructor TNoticeWriterThread.Create(const aText: string);
+begin
+   FText := aText;
+   FreeOnTerminate := False;
+   inherited Create(False);
+end;
+
+procedure TNoticeWriterThread.Execute;
+begin
+   ShowQuickCommandNotice(FText);
+end;
 
 (* A WORKER THREAD THAT WRITES ONE STATUS AND EXITS.
 
@@ -1280,6 +1344,143 @@ begin
    end;
 end;
 
+procedure TStatusAndNoticeTests.HandleRadioMessage(sMessage: string);
+begin
+   (* The probe reports nothing worth asserting. *)
+end;
+
+(* ISSUE #108: THE RADIO POLLING THREAD WRITES NO CONTROL.
+
+  A radio with CW SPEED SYNC on reports 27 WPM; the shipped polling thread
+  sees it.  The live speed must change and the WPM panel must show it -- and
+  the panel must be written on the MAIN thread.  The poller called
+  DisplayCodeSpeed itself, which assigns pnlCodeSpeed.Caption from the poller;
+  TElementPanel reports that through uCrashLog.ReportOffMainThread, and this
+  test fails on the count.  The panel gets a real window first, so the old
+  write really went through the widget set (a cross-thread WM_SETTEXT, which
+  Drain's ProcessMessages answers). *)
+procedure TStatusAndNoticeTests.Test_ARadioSpeedChangeIsDrawnOnTheMainThread;
+const
+   WANTED = 27;
+   BUDGET_MS = 3000;
+var
+   probe: TSpeedReportingRadio;
+   savedActive: RadioPtr;
+   savedSpeed: integer;
+   savedMode: ModeType;
+   savedCWEnabled: boolean;
+   reportsBefore: LongInt;
+   started: QWord;
+   shown: boolean;
+   handler: TProcessMsgRef;
+begin
+   BeginTest('Test_ARadioSpeedChangeIsDrawnOnTheMainThread');
+   EnsureMainForm;
+   MainElement(mweCodeSpeed).HandleNeeded;
+
+   savedActive := ActiveRadioPtr;
+   savedSpeed := CodeSpeed;
+   savedMode := ActiveMode;
+   savedCWEnabled := CWEnabled;
+   try
+      ActiveMode := CW;
+      CWEnabled := True;
+      CodeSpeed := 20;
+      SetElementText(mweCodeSpeed, '');
+
+      gSpeedRig.RadioName := 'SPEEDRIG';
+      gSpeedRig.tRadioPanelSlot := 0;
+      gSpeedRig.CWSpeedSync := True;
+      gSpeedRig.PollingStopRequested := False;
+      handler := HandleRadioMessage;
+      probe := TSpeedReportingRadio.CreateProbe(handler, WANTED);
+      gSpeedRig.tFactoryObject := probe;
+      ActiveRadioPtr := @gSpeedRig;
+      Drain;
+
+      reportsBefore := OffMainThreadReportCount;
+      gSpeedRig.StartPollingThread;
+
+      started := GetTickCount64;
+      repeat
+         Drain;
+         Sleep(1);
+         shown := (CodeSpeed = WANTED) and
+                  (string(MainElement(mweCodeSpeed).Caption) = '27 WPM');
+      until shown or (GetTickCount64 - started >= BUDGET_MS);
+
+      (* Stopped before asserting, so nothing the poller does afterwards can
+        move the count under the assertion. *)
+      gSpeedRig.ShutDownRadioInterface;
+      Drain;
+
+      CheckEquals(WANTED, CodeSpeed, 'the live speed follows the radio');
+      CheckEquals('27 WPM', string(MainElement(mweCodeSpeed).Caption),
+                  'the WPM panel shows the radio''s speed');
+      CheckEquals(WANTED, gSpeedRig.SpeedMemory,
+                  'and the radio remembers it (DisplayCodeSpeed stores SpeedMemory)');
+      CheckEquals(reportsBefore, OffMainThreadReportCount,
+                  'the polling thread wrote a control: every write must run on the ' +
+                  'main thread, through a uMainThreadWork job (issue #108)');
+   finally
+      if gSpeedRig.tFactoryObject <> nil then
+         begin
+         gSpeedRig.ShutDownRadioInterface;
+         end;
+      ActiveRadioPtr := savedActive;
+      CodeSpeed := savedSpeed;
+      ActiveMode := savedMode;
+      CWEnabled := savedCWEnabled;
+      SetElementText(mweCodeSpeed, '');
+      Drain;
+   end;
+end;
+
+(* ISSUE #108: A NOTICE FROM A WORKER THREAD IS HANDED OVER, NOT REPORTED.
+
+  ShowQuickCommandNotice is the marshalling seam for a notice -- the radio
+  poller's link-failure remedy goes through it.  It used to write the caption
+  through SetElementText from the worker, which deferred it but reported the
+  caller as a stray control write.  Now the text and the wipe make one hop, and
+  the report count must not move. *)
+procedure TStatusAndNoticeTests.Test_ANoticeFromAWorkerThreadIsHandedOverWhole;
+const
+   NOTICE_TEXT = 'from a worker thread';
+var
+   writer: TNoticeWriterThread;
+   reportsBefore: LongInt;
+   started: QWord;
+begin
+   BeginTest('Test_ANoticeFromAWorkerThreadIsHandedOverWhole');
+   EnsureMainForm;
+   ShowQuickCommandNotice('');
+   Drain;
+
+   reportsBefore := OffMainThreadReportCount;
+   writer := TNoticeWriterThread.Create(NOTICE_TEXT);
+   try
+      writer.WaitFor;
+   finally
+      writer.Free;
+   end;
+   CheckEquals(reportsBefore, OffMainThreadReportCount,
+               'a notice from a worker thread was reported as a stray control write');
+
+   started := GetTickCount64;
+   repeat
+      Drain;
+      Sleep(1);
+   until (string(MainElement(mweQuickCommand).Caption) = NOTICE_TEXT) or
+         (GetTickCount64 - started >= 2000);
+
+   CheckEquals(NOTICE_TEXT, string(MainElement(mweQuickCommand).Caption),
+               'the notice reached the panel');
+   CheckTrue(QuickCommandNoticeArmed, 'and its wipe is armed, on the main thread');
+
+   ShowQuickCommandNotice('');
+   Drain;
+end;
+
 procedure TStatusAndNoticeTests.RunAllTests;
 begin
    Test_TheStripHasOnePanelPerOwner;
@@ -1302,6 +1503,8 @@ begin
    Test_ANotNeededBandIsAnEmptyCellNotAHiddenOne;
    Test_LoggingAQSOTakesItsBandOutOfTheNeedsStrips;
    Test_AnInhibitedKeyUpTurnsThePTTIndicator;
+   Test_ARadioSpeedChangeIsDrawnOnTheMainThread;
+   Test_ANoticeFromAWorkerThreadIsHandedOverWhole;
    ReleaseMainForm;
 end;
 

@@ -336,6 +336,7 @@ uses
   uMainForm,   { the main window's elements are LCL controls }
   uKeyerState, { the keyer's state. This unit runs on read threads and must not
                  name a control -- see wkDispayState and wkOpen }
+  uMainThreadWork, (* mtCodeSpeedDisplay -- the speed pot's readout, issue #108 *)
   SysUtils,
   uNet,
   LogDupe,
@@ -865,7 +866,9 @@ begin
               if not WinKeySettings.wksIgnoreSpeedSpot then
                  begin
                  SetSpeed(wkThreadReadBuffer[i] - 128 + wkMINWPM);
-                 DisplayCodeSpeed;
+                 (* A READ THREAD: the readout is drawn on the main thread
+                   (issue #108) -- DisplayCodeSpeed assigns a caption. *)
+                 RequestMainThreadJob(mtCodeSpeedDisplay);
                  end;
             end
             else
@@ -991,7 +994,8 @@ begin
       if (wkThreadReadBuffer[i] and $C0) = $80 then if not WinKeySettings.wksIgnoreSpeedSpot then
                                                        begin
                                                        SetSpeed(wkThreadReadBuffer[i] - 128 + wkMINWPM);
-                                                       DisplayCodeSpeed;
+                                                       (* A read thread too: see wkReadThreadProc (issue #108). *)
+                                                       RequestMainThreadJob(mtCodeSpeedDisplay);
                                                        end;
     end;
 {$IF WINKEYDEBUG}

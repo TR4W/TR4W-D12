@@ -180,6 +180,28 @@ Autosend characters after the first (`ActiveCWKeyer.SendChar`) and PTT raised
 directly through `tPTTVIACATForRadio` (WSJT-X, the TCI server, `TXON`) are NOT
 hooked; the radio's own TX report (trigger 2) covers them.
 
+## A speed change or a message end seen on a thread is drawn on the main thread (issue #108, 2026-10-26)
+
+`CodeSpeed` is live shared state and is still set where the change is seen --
+the radio poller's CW SPEED SYNC, the WinKeyer speed pot (`SetSpeed`). The
+**readout** is not: `DisplayCodeSpeed` assigns `pnlCodeSpeed.Caption` and
+stores `SpeedMemory`, so a thread requests `uMainThreadWork.mtCodeSpeedDisplay`
+(registered by LOGWIND) and never calls it. **The CW-by-CAT end of message
+seen by the poller** sets `CWByCAT_Sending := False` there and requests
+`mtCWByCATMessageEnded` (uRadioPolling): on the main thread it stops the busy
+timer of any radio no longer sending, then `ReturnInCQOpMode` (auto-call
+terminate) and `BackToInactiveRadioAfterQSO` + `tStartAutoCQ`, in the order
+the poller used. `tStartAutoCQ` enables an LCL TTimer, which from the poller
+was a Win32 timer owned by a thread with no message loop.
+`TEventHandlers.OnTimerTick` initialises `callInactive` now (it was read
+uninitialised when the tick found nothing sending).
+**NOT FIXED, and they are this area's:** `CWThreadProc` (`tStartAutoCQ`,
+`BackToInactiveRadioAfterQSO`, `tStartAutoCallTerminate` ->
+`ReturnInCQOpMode`), the WinKeyer reader (`tStartAutoCallTerminate`,
+`tStartAutoCQ`, `BackToInactiveRadioAfterQSO`) and `logdvp` still run that UI
+work on their own threads. The off-thread report (an Error since #108) names
+each one in `tr4w.log`.
+
 ## Open, and decided
 
 **Open (NY4I — design, not refactor):** `ActiveCWKeyer`'s precedence chain

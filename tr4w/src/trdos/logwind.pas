@@ -952,7 +952,9 @@ uses
   LogDupe,
   uBandMapView,
   (* ContestIdentity -- what call entry shows, asked of the contest (M9b). *)
-  uContestRegistry;
+  uContestRegistry,
+  (* mtCodeSpeedDisplay -- the readout a worker thread asks for (issue #108). *)
+  uMainThreadWork;
 
 
 function DEPlusMyCall: Str160;
@@ -1317,7 +1319,11 @@ begin
     as DisplayInsertMode's.
 
     ActiveRadioPtr IS ASKED SEPARATELY, below, because it is nil at a
-    different time: the radios are built after the window. *)
+    different time: the radios are built after the window.
+
+    MAIN THREAD ONLY (issue #108): it assigns a caption.  A worker thread
+    that changed CodeSpeed requests uMainThreadWork's mtCodeSpeedDisplay,
+    which runs this. *)
   if TR4WMainForm = nil then
      begin
      Exit;
@@ -3347,6 +3353,10 @@ end;
 
 begin
   WindInit;
+  (* THE CODE SPEED READOUT, DRAWN ON THE MAIN THREAD (issue #108).  A thread
+    that changes CodeSpeed requests mtCodeSpeedDisplay instead of calling
+    DisplayCodeSpeed, which assigns pnlCodeSpeed.Caption. *)
+  RegisterMainThreadJob(mtCodeSpeedDisplay, @DisplayCodeSpeed);
 end.
 
 
