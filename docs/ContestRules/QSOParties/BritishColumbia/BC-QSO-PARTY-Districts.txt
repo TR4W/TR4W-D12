@@ -1,0 +1,143 @@
+﻿BC QSO Party Multipliers (Federal Electoral Districts)
+
+Source: https://www.orcadxcc.org/bcqp_districts.html
+Fetched: 2026-10-26
+WA7BNM ID: 269 (https://www.contestcalendar.com/contestdetails.php?ref=269)
+Cabrillo Name: BC-QSO-PARTY
+ADIF Name: BC-QSO-PARTY
+
+Orca DX and Contest Club -- BCQP Multipliers
+
+* Home
+
+* Club Info
+
+* Tips and Tools
+
+* Contact Us
+
+* BC QSO Party
+
+BCQP Tools
+
+*
+ BCQP home page
+
+*
+ FAQs
+
+*
+ Awards
+
+*
+ Rules
+
+*
+ Results
+
+*
+ Multipliers
+
+*
+ Summary Sheet (PDF)
+
+*
+ History
+
+*
+ Contact BCQP
+
+BC's Federal Electoral Districts
+
+Here's a handy list of federal electoral districts in British Columbia and the three-character abbreviations to use as your exhange in the BC QSO Party. Note that these districts came into effect in 2025 and are used for the 2026 BCQP and until further notice.
+
+ View a map of British Columbia's electoral districts
+
+Detailed inset maps of British Columbia electoral districts (multipliers) by region
+
+ North and Central BC
+
+ South Coast, Lower Mainland and Vancouver Island
+
+ Southern Interior
+
+ Metro Vancouver
+
+View a printer-friendly PDF of the multipliers (electoral districts)
+
+ASL Abbotsford-South Langley
+BNS Burnaby North-Seymour
+BUC Burnaby Central
+CHP Chilliwack-Hope
+CKS Columbia-Kootenay-Southern Rockies
+CLC Cloverdale-Langley City
+CML Cowichan-Malahat-Langford
+COA Courtenay-Alberni
+CPC Coquitlam-Port Coquitlam
+CPG Cariboo-Prince George
+DEL Delta
+ESQ Esquimalt-Saanich-Sooke
+FPK Fleetwood-Port Kells
+KEL Kelowna
+KSC Kamloops-Shuwswap-Central Rockies
+KTN Kamloops-Thompson-Nicola
+LTF Langley Township-Fraser Heights
+MMA Mission-Matsqui-Abbotsford
+NAL Nanaimo-Ladysmith
+NBM New Westminster-Burnaby-Maillardville
+NPR North Island-Powell River
+NVC North Vancouver-Capilano
+OSK Okanagan Lake West-South Kelowna
+PMC Port Moody-Coquitlam
+PMM Pitt Meadows-Maple Ridge
+PPN Prince George-Peace River-Northern Rockies
+RCM Richmond Center-Marpole
+RES Richmond East-Steveston
+SBV Skeena-Bulkley Valley
+SGI Saanich-Gulf Islands
+SSW Similkameen-South Okangan-West Kootenay
+SUC Surrey Centre
+SUN Surrey Newton
+SWR South Surrey-White Rock
+VAC Vancouver Centre
+VAE Vancouver East
+VAG Vancouver Granville
+VAK Vancouver Kingsway
+VAQ Vancouver Quadra
+VIC Victoria
+VLM Vernon-Lake Country-Monashee
+VSB Vancouver Fraserview-South Burnaby
+WVS West Vancouver-Sunshine Coast-Sea to Sky Country
+
+United States Abbreviations
+
+US State Abbreviation US State Abbreviation
+Alabama AL Montana MT
+Alaska AK Nebraska NE
+Arizona AZ Nevada NV
+Arkansas AR New Hampshire NH
+California CA New Jersey NJ
+Colorado CO New Mexico NM
+Connecticut CT New York NY
+Delaware DE North Carolina NC
+Florida FL North Dakota ND
+Georgia GA Ohio OH
+Hawaii HI Oklahoma OK
+Idaho ID Oregon OR
+Illinois IL Pennsylvania PA
+Indiana IN Rhode Island RI
+Iowa IA South Carolina SC
+Kansas KS South Dakota SD
+Kentucky KY Tennessee TN
+Louisiana LA Texas TX
+Maine ME Utah UT
+Maryland MD Vermont VT
+Massachusetts MA Virginia VA
+Michigan MI Washington WA
+Minnesota MN West Virginia WV
+Mississippi MS Wisconsin WI
+Missouri MO Wyoming WY
+
+ © 2024 Orca DX and Contest Club
+
+ Updated: July 4, 2025 VA7ST

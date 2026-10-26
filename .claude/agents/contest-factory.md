@@ -687,9 +687,14 @@ the target shape, the M-step migration order and the open questions.
   memory beside the totals (`uScoreTotals`), because reading the database per
   score was measured at ~130 us a row. Bonuses: **declared data**
   where they share a shape (`GetBonusStations` -> `TBonusStation`, paid by the
-  base, qualified by `CountsTowardBonus` / `CreditsBonusMode` -- Missouri's
-  W0MA/K0GQ, the Salmon Run's W7DX once per mode with the single-mode rule
-  from `Station.MyCategoryMode`), otherwise the class's own `BonusPoints` over
+  base, qualified by `CountsTowardBonus` / `CreditsBonusMode`, paid as often
+  as its `Scope: TBonusStationScope` says -- `bsOnce` (Missouri's W0MA/K0GQ),
+  `bsOncePerMode` (the Salmon Run's W7DX, with the single-mode rule from
+  `Station.MyCategoryMode`), `bsOncePerBandAndMode` (BC's VA7ODX since #88,
+  2026-10-26, dupes and X-QSOs excluded by its `CountsTowardBonus`; Wisconsin's
+  W9FK is the next). A new pay-out shape is a new `Scope` member in the base,
+  never a class-local copy; `uTestContestTotals.Test_BonusStationScopes` pins
+  all three over one log), otherwise the class's own `BonusPoints` over
   the view, adding `inherited` (NC's Rarest-of-NC sweep, Idaho's dormant
   county, and since Q32 -- 2026-10-17 -- Missouri's peak-hour bonus: one
   point per valid 80/40 m QSO logged 1400-1959 UTC, to 250, from each QSO's

@@ -270,17 +270,18 @@ type
 const
    (* THE 2026 BONUS STATIONS -- THE SPONSOR CHANGES THIS LIST EVERY YEAR.
       TBonusStation's shape, but NOT declared through GetBonusStations: the
-      base pays a declared station once (or once per mode), and Nebraska
-      pays every counting QSO -- BonusPoints walks this list itself.
+      base pays a declared station once, once per mode or once per band and
+      mode (TBonusStationScope), and Nebraska pays every counting QSO --
+      BonusPoints walks this list itself, so Scope is not read here.
       The sponsor writes KA0BOJ with a slashed zero; the call is KA0BOJ. *)
    NEBRASKA_BONUS_STATIONS: array[0..6] of TBonusStation = (
-      (Call: 'KA0BOJ'; Points: 100; OncePerMode: False),
-      (Call: 'K0SMM';  Points: 50; OncePerMode: False),
-      (Call: 'K0RPT';  Points: 50; OncePerMode: False),
-      (Call: 'K0NEB';  Points: 50; OncePerMode: False),
-      (Call: 'NF0N';   Points: 50; OncePerMode: False),
-      (Call: 'N0FER';  Points: 50; OncePerMode: False),
-      (Call: 'KE0XQ';  Points: 50; OncePerMode: False)
+      (Call: 'KA0BOJ'; Points: 100; Scope: bsOnce),
+      (Call: 'K0SMM';  Points: 50; Scope: bsOnce),
+      (Call: 'K0RPT';  Points: 50; Scope: bsOnce),
+      (Call: 'K0NEB';  Points: 50; Scope: bsOnce),
+      (Call: 'NF0N';   Points: 50; Scope: bsOnce),
+      (Call: 'N0FER';  Points: 50; Scope: bsOnce),
+      (Call: 'KE0XQ';  Points: 50; Scope: bsOnce)
    );
 
    (* "5 points times the rare grid multiplier of 5" -- the header. *)

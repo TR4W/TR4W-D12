@@ -1,0 +1,523 @@
+﻿California QSO Party Rules
+
+Source: https://www.cqp.org/Rules.html
+Fetched: 2026-10-26
+WA7BNM ID: 140 (https://www.contestcalendar.com/contestdetails.php?ref=140)
+Cabrillo Name: CA-QSO-PARTY
+ADIF Name: CA-QSO-PARTY
+
+CQP Rules
+
+ |
+
+ |
+ |
+
+61st Running Of The CQP!
+
+ 1600 UTC October 3, 2026 to 2200 UTC October 4, 2026
+
+ CQP 2026 Begins:
+
+ |
+
+ |
+
+HOME
+
+ Awards
+
+ Activate Your County
+
+ Audio-Video
+
+ CountyTracker
+
+ CA  Counties Map
+
+ Club Competition
+
+ CQP Certificate
+
+ CQP Multipliers
+
+ Data Graphs
+
+ FAQ
+
+ History
+
+ Log Submission
+
+ Records
+
+ Results
+
+ Rules
+
+ Scores Database
+
+ Software
+
+ Strategy
+
+ Other NCCC Websites
+
+ |
+
+Rules: 2026 California QSO Party (CQP)
+
+Last Update: 19-July-2026 at 1500 UTC
+
+Click HERE for a printable copy (PDF) of this Rules page.
+
+ Logs are due by 2359 UTC on Monday, October 19, 2026.
+
+ Logs must be submitted electronically in Cabrillo format – paper, Excel, and ADIF logs are NOT acceptable.
+
+ DATES + TIMES:
+
+ Begins: 1600 UTC - 03 October 2026     Ends: 2200 UTC - 04 October 2026
+
+ OBJECTIVE:
+
+ Stations outside of California work as many California stations in as many CA Counties as possible.
+
+ Stations inside California work
+ everyone. Non-CA to non-CA contacts do not count for QSO credit.
+
+ EXCHANGE:
+
+ 1. California stations send QSO number and 4-letter county abbreviation.
+
+ 2. Stations outside of California send QSO
+ number and 2-letter State, Canadian province/territory, or "DX".
+
+ QSO number = contact serial number starting with 1 for the first contact, progressing to 2 for the next contact, and so on. It is unnecessary to send leading zeros in the QSO number.
+
+ How to log a county-line QSO in N1MM+, N3FJP, and Writelog. Click HERE
+
+ QSO POINTS:
+
+ Each complete non-duplicate Phone contact is worth 3 points.  **NEW IN 2026**
+
+ Each complete non-duplicate CW contact is worth 3
+ points.
+
+Although there is no credit for duplicate contacts, there's no penalty either, so please do not remove them from your log as they help with log checking.
+
+ MULTIPLIERS:
+
+ A. California Stations: Maximum of 58 Scored Multipliers out of 63 Total Multipliers
+
+ (U.S. states = 50 and Canadian provinces/territories = 13).
+
+Notes:
+
+* Although there are 63 possible multipliers that can accrue toward the CA station's multiplier tally, the maximum number of counted multipliers toward the CA station's final score is 58.
+
+* DX is the QTH sent by all stations outside of the U.S. and Canada, however it does not count as an additional multiplier toward the CA station's multiplier tally. DX QSOs count as QSO credit.
+
+* The first valid CA QSO logged with 4-letter county abbreviation will count as the multiplier for California. California stations must log all CA contacts with their 4-letter county abbreviation.
+
+ B. Non-California Stations
+
+ Count all 58 California Counties for a maximum of 58 multipliers.
+
+ SCORE:
+
+ The final score is the total number of QSO
+ Points multiplied by the total number of scored multipliers (58 maximum).
+
+ QSO Points = (CW Qs x 3 pts) + (Phone Qs x 3 pts)
+
+ Final Score = QSO Points  x  # Multipliers
+
+ MODES:  CW, Phone
+
+ BANDS:  160, 80, 40, 20, 15, and 10 meters
+
+ Frequencies:
+
+ CW: 40 kHz up from the bottom band edge on 10m-80m; 160m at 1815 kHz
+
+ SSB: 1845 kHz, 3750-3820 kHz (avoiding 3790-3800 kHz DX window), 7230 kHz, 14250 kHz, 21300 kHz, 28450 kHz.
+
+ Rallies:
+
+ 1900z: Try 10m at 28040 and 28450 kHz
+
+ 0300z and 0600z: Try 80CW at 3540 kHz and 75PH at 3750-3820 kHz (avoiding 3790-3800 kHz DX window)
+
+ 0500z: Try 160CW at 1815 kHz
+
+ 0530z: Try 160PH at 1845 kHz
+
+Notes:
+
+ 1. Stations may be worked once on CW and once on Phone on each of the 6 bands (maximum of 12 QSOs with any one station).
+
+ 2. All CW contacts must be made outside the Phone sub-bands except for 160 meters.
+
+ 3. At any given time, a station's transmitters, receivers and amplifiers must be located within a single 500-meter diameter circle. The center of this 500-meter diameter circle is allowed to move during the contest for the following exceptions only:
+
+ • Mobile stations
+
+ • Stations that operate from two or more expedition locations at different times
+
+ • Stations that operate from an expedition location and a fixed station at different times
+
+4. Audio recordings and other information may be used by the CQP Chair to determine if any station’s operation is inconsistent with any CQP rule. Entrants are subject to reclassification or disqualification at the discretion of the CQP Chair.
+
+Best Practices:
+
+ 1. Avoid frequencies already in use by any mode.
+
+ 2. Follow the WWROF Contester's Code of Ethics.
+
+ 3. When calling CQ and running stations, identify your callsign frequently. Best is to identify your callsign after every QSO, but consider the minimum ID frequency to be once for every three QSOs made when running.
+
+ 4. Spotting stations on a spotting network is encouraged, especially on SSB. When spotting, please spot more than one particular callsign. Multiple spots for just one station and not any others is called packet cheerleading and is not a best practice.
+
+ | CLASS ENTRY OPTIONS
+
+ | Single-Operator
+
+ | Category
+ | Code
+ | Power
+
+ Output
+ | #
+
+ Transmit Signals
+ | #
+
+ Operators
+ | Maximum
+
+ Operating Hrs
+
+ | Single Operator - High Power
+ | SO-HP
+ | > 100 watts
+ | one
+ | one
+ | 24
+
+ | Single Operator - Low Power
+ | SO-LP
+ | 100 watts or less
+ | one
+ | one
+ | 24
+
+ | Single Operator - QRP
+ | SO-QRP
+ | 5 watts or less
+ | one
+ | one
+ | 24
+
+ | Note: Off-times must be a minimum of 15 minutes.  It is prohibited to use spotting nets (operator arrangements involving any assistance through RBN, DX packet cluster, county spotting networks, CW Skimmer, self-spotting, or live streaming). SO2R operation is perfectly acceptable. QSOs made after 24 hours of operating time will be unscored and entry will remain Single-Operator. Only one transmitted signal is permitted at any time.
+
+ | Single-Operator-Assisted
+
+ | Category
+ | Code
+ | Power
+
+ Output
+ | #
+
+ Transmit Signals
+ | #
+
+ Operators
+ | Maximum
+
+ Operating Hrs
+
+ | Single Operator - Assisted - High Power
+ | SOA-HP
+ | > 100 watts
+ | one
+ | one
+ | 24
+
+ | Single Operator - Assisted - Low Power
+ | SOA-LP
+ | 100 watts or less
+ | one
+ | one
+ | 24
+
+ | Single Operator - Assisted - QRP
+ | SOA-QRP
+ | 5 watts or less
+ | one
+ | one
+ | 24
+
+ | Note: Off-times must be a minimum of 15 minutes. It is allowed to use RBN, DX packet cluster, county spotting networks, CW Skimmer and other similar alerting arrangements, but self-spotting and live streaming is prohibited. SO2R operation is perfectly acceptable. QSOs made after 24 hours of operating time will be unscored and entry will remain Single-Operator-Assisted. Only one transmitted signal is permitted at any time.
+
+ | Multi-Single
+
+ | Category
+ | Code
+ | Power
+
+ Output
+ | #
+
+ Transmit Signals
+ | #
+
+ Operators
+ | Maximum
+
+ Operating Hrs
+
+ | Multi-Single - High Power
+
+ | MS-HP
+ | > 100 watts
+ | one
+ | multiple
+ | 30
+
+ | Multi-Single - Low Power
+
+ | MS-LP
+ | 100 watts or less
+ | one
+ | multiple
+ | 30
+
+ | Multi-Single - QRP
+
+ | MS-QRP
+ | 5 watts or less
+ | one
+ | multiple
+ | 30
+
+ | Note: The single transmitting operator cannot be replaced before 10 minutes after their first transmission. There is no time limit on band or mode changes. During any given 10-minute period, other operators can listen, spot, or perform any other station function except transmitting. Multi-Single entrants must have at least two different transmitting operators over the 30-hour period. Self spotting or live streaming is not allowed. Only one transmitted signal is permitted at any time.
+
+ | Multi-Two
+
+ | Category
+ | Code
+ | Power
+
+ Output
+ | #
+
+ Transmit Signals
+ | #
+
+ Operators
+ | Maximum
+
+ Operating Hrs
+
+ | Multi-Two - High Power
+
+ | M2-HP
+ | > 100 watts
+ | two
+ | multiple
+ | 30
+
+ | Multi-Two - Low Power
+
+ | M2-LP
+ | 100 watts or less
+ | two
+ | multiple
+ | 30
+
+ | Multi-Two - QRP
+
+ | M2-QRP
+ | 5 watts or less
+ | two
+ | multiple
+ | 30
+
+ | Note: The two transmitting operators cannot be replaced before 10 minutes after their first transmission. There is no time limit on band or mode changes. During any given 10-minute period, other operators can listen, spot, or perform any other station function except transmitting. Multi-Two entrants must have at least two different transmitting operators over the 30-hour period. Self spotting or live streaming is not allowed.
+
+ | Multi-Multi
+
+ | Category
+ | Code
+ | Power
+
+ Output
+ | #
+
+ Transmit Signals
+ | #
+
+ Operators
+ | Maximum
+
+ Operating Hrs
+
+ | Multi-Multi - High Power
+
+ | MM-HP
+ | > 100 watts
+ | multiple
+ | multiple
+ | 30
+
+ | Multi-Multi - Low Power
+
+ | MM-LP
+ | 100 watts or less
+ | multiple
+ | multiple
+ | 30
+
+ | Multi-Multi - QRP
+
+ | MM-QRP
+ | 5 watts or less
+ | multiple
+ | multiple
+ | 30
+
+ | Note: There are no time limits on band or mode changes. Multi-Multi entrants must have at least three different transmitting operators over the 30-hour period. Self spotting or live streaming is not allowed.
+
+ |
+SPECIAL AWARD CATEGORIES
+
+ Note: Stations are allowed to claim as many special award categories as apply to their log.
+
+ Please indicate if any of these award categories applied to you by using a text editor
+
+ to insert any of these lines in your Cabrillo log file header:
+
+ SOAPBOX: EXPEDITION
+
+ SOAPBOX: COUNTY-LINE EXPEDITION
+
+ SOAPBOX: ONE-DAY EXPEDITION
+
+ SOAPBOX: MOBILE
+
+ SOAPBOX: YL
+
+ SOAPBOX: YOUTH
+
+ SOAPBOX: NEW CONTESTER
+
+ | California County Expedition
+
+ | A California County Expedition is an operation from a temporary location using temporary antennas -- and operating positions installed no more than one (1) week prior to the contest period -- using temporary antenna supports (however, natural supports like trees are permitted).
+
+ | California County-Line Station
+
+ | A California County-line station is an expedition or mobile operating with all radios and antennas within 150 meters (492 feet) of more than one county and sending all such counties in a single exchange. Operators may rely on county line road signs, Google Earth or information obtained from a county surveyor’s office to determine the eligibility of a county-line operating location. Logs for county-line operations will be scored by individual county for county ranking, county records and award determination. The County-Line station can be any class entry. The highest S/O and S/O-Assisted county-line score wins the Single-Op County-Line award.  The highest M/S, M/2 and M/M county-line score wins the Multi-Op County-Line award. State-line operations are not allowed.
+
+ | California County One-Day Expedition
+ | Stations interested in an expedition may be unable or unwilling to operate both Saturday and Sunday.  This award is to inspire such stations to still go on a county expedition and operate for one day only.  The California County One-Day Expedition station can be any class entry. The highest S/O and S/O-Assisted single day expedition score wins the Single-Op One-Day award.  The highest M/S, M/2 and M/M single day expedition score wins the Multi-Op One-Day award.  One-Day is defined as either 12 hours operating maximum on Saturday (Pacific Daylight Time) or 12 hours operating maximum on Sunday (Pacific Daylight Time).
+
+ | Mobile
+ | "Mobile" means operating in or on a movable vehicle, independent of all commercial power sources, which is able to travel at any time without having to disconnect any wiring or change any antennas in order to move to another location.  Note: California Mobile stations which change counties or states are considered to be new stations and may be contacted again for point and multiplier credit.  Note: The California Mobile station which makes the most total QSOs during CQP wins the Mobile award.
+
+ | YL Operator
+ | Only YLs entering in the Single-Operator or Single-Operator-Assisted classes are eligible for the YL Operator award; those working as part of Multi-Operator teams are not eligible.
+
+ | Youth Operator
+ |
+A Youth Operator is an operator who is younger than 18 years old in his/her local time zone on the last day of the contest.  Only Youth Operators entering in the Single-Operator or Single-Operator-Assisted classes are eligible for the Youth Operator award; those working as part of Multi-Operator teams are not eligible.
+
+ | New Contester
+ | Open to any Single-Operator or Single-Operator Assisted station that meets one condition below:
+
+Either
+
+a) Newly licensed: Obtained amateur radio license 3 years or less, prior to the start of CQP.
+
+Or
+
+b) New to contesting: Never submitted a log with 100 or more QSOs in any contest.
+
+A minimum of 50 QSOs must be made in CQP to qualify for this award.  An operator may only win this award once.
+
+ | FUN CHALLENGES
+
+ |
+There are four fun challenges that run concurrently with the main CQP event. These side contests are intended to inspire additional motivation by participants and highlight recognition of participants in worthy areas. Unique awards will be offered to the winners of these challenges. Participants do not need to sign up for any of these challenges before CQP.
+
+• Time Challenge
+
+ • POTA Challenge
+
+ • Video Challenge
+
+ • Sunday Challenge
+
+ Complete rules for all Fun Challenges can be found HERE.
+
+ | CLUB COMPETITION
+
+ | Complete Rules for Club Competition can be found on the Club Competition page located HERE.
+
+ | LOGGING SOFTWARE
+
+ | Please visit the CQP Software Page.
+
+ | ENTRIES
+
+ | Please submit your log by either one of the following
+ methods.
+
+ |
+ | Option
+ | Comment
+ | Link
+
+ |
+
+ | 1. Use The CQP
+
+ Log Submission Form
+ | Preferred Method
+
+ Please use this form
+
+ if at all possible. It's easy.
+ |
+
+ |
+ | 2. Email Your Log As Attachment
+ | Please consider
+
+ Option 1 First.
+ |
+
+ | NOTES:
+
+ 1. Logs are due by 2359 UTC on Monday, October 19, 2026. Logs must be submitted electronically in Cabrillo format – paper, Excel, and ADIF logs are NOT acceptable.
+
+ 2. If you need to correct something in your log, you can resubmit it. The last version of your log received before the log submission deadline will be considered "your official" log. . If you have any difficulty with either submission method, please email a
+ description of the problem to: info@cqp.org.
+
+ 3. Regardless of the method you use to submit your log, it is your responsibility to check our Logs Received page and verify that it has been listed.  You can check the CQP Logs Received server here: robot.cqp.org  The server is updated daily.
+
+ 4. By submitting a log the submitter agrees that the log is a public document which may be released at the discretion of the Contest Sponsor.
+
+ | AWARDS
+
+ | See the CQP Awards Page for a complete list of Awards and Sponsors.
+
+ | CERTIFICATES
+
+ | All entries will be able to print out a Certificate of Achievement.
+
+CQP is sponsored by the Northern California Contest Club
+
+ | All NCCC web sites are hosted by QTH.com.  Web design and maintenance by K6MM

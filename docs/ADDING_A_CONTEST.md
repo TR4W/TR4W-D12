@@ -518,7 +518,9 @@ read live against `Station` (`LOGEDIT.DoingDXMults` and its siblings).
 `BonusPoints`, both non-virtual. Override the protected
 `CombineWithMultipliers` (helpers `ContestPoints`, `SummedMultipliers`) for
 another formula; declare bonus stations in `GetBonusStations`
-(`CountsTowardBonus`, `CreditsBonusMode`); otherwise override `BonusPoints`
+(`CountsTowardBonus`, `CreditsBonusMode`; each station's `Scope` says how
+often it pays -- `bsOnce`, `bsOncePerMode` or `bsOncePerBandAndMode`, BC's
+VA7ODX being the worked example of the last); otherwise override `BonusPoints`
 and add `inherited`. **A bonus is decided over the whole log
 (`TLoggedQSOView`), never as a QSO is logged.** A whole-log rule reads each
 QSO's own station through `aView.MyFacts(i)`, not `Station.MyGrid`. A rule that

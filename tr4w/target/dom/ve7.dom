@@ -1,5 +1,7 @@
 
 dx=DX
+Maryland and DC are lumped together as MD (sponsor's multiplier rule)
+Dc > Md = DC
 INCLUDE FILE VE7_CTY.DOM
 INCLUDE FILE S50.DOM
 INCLUDE FILE P13.DOM

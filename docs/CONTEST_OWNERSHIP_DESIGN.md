@@ -425,7 +425,7 @@ final score = contest.FinalScore(totals, view)
 | `FinalScore` | `TContestBase`, **not virtual** | the one entry point; a bonus cannot be folded into the formula or applied per QSO |
 | `CombineScore` | `TContestBase`, **not virtual** | a TEMPLATE: a session with no multiplier, or the FISTS exchange, scores its points -- TotalScore's first two tests, which name no contest -- otherwise `CombineWithMultipliers` |
 | `CombineWithMultipliers` | protected virtual | the base is TotalScore's general case: points times the sum of every multiplier kind on the scored band |
-| `BonusPoints` | virtual | the base pays the DECLARED bonus stations over the view (`BonusStations`, `TBonusStation`: call, points, once or once per mode); a contest with a rule of its own overrides and adds `inherited` |
+| `BonusPoints` | virtual | the base pays the DECLARED bonus stations over the view (`BonusStations`, `TBonusStation`: call, points, and a `Scope` -- once, once per mode, or once per band and mode since #88, 2026-10-26); a contest with a rule of its own overrides and adds `inherited` |
 | `CountsTowardBonus`, `CreditsBonusMode` | protected virtual | which contacts and which modes a declared station is paid for (base: every contact, every mode) |
 | ~~`TalliesLiveQSO`~~ | -- | **DELETED at Q32 (2026-10-17)** -- Missouri's live-only peak-hour count; the bonus is Missouri's `BonusPoints` over the view |
 

@@ -44,7 +44,26 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   Florida two, California four -- which is precisely why the rule is a COUNT on
   the base and not a boolean. A flag can express only the first distinction and
   the wrong answer would read as a legal one.
- *)
+
+  ---------------------------------------------------------------------------
+  THE 2026 RULES, CHECKED AGAINST THE SPONSOR (#88, 2026-10-26). The text is
+  docs/ContestRules/QSOParties/California/CA-QSO-PARTY-Rules.txt.
+
+  POINTS -- "Each complete non-duplicate Phone contact is worth 3 points.
+    **NEW IN 2026**"; "Each complete non-duplicate CW contact is worth 3
+    points." FM is phone.
+
+  MODES -- "MODES: CW, Phone". A digital QSO is an automatic X-QSO
+    (UsesMode); CalculateQSOPoints never sees one.
+
+  BANDS -- "BANDS: 160, 80, 40, 20, 15, and 10 meters". UsesBand.
+
+  THE MULTIPLIER CAP -- "California Stations: Maximum of 58 Scored
+    Multipliers out of 63 Total Multipliers"; "The final score is the total
+    number of QSO Points multiplied by the total number of scored
+    multipliers (58 maximum)." CombineWithMultipliers caps the sum. An
+    entrant outside California counts the 58 counties, so the cap never
+    bites there. *)
 unit uContestCaliforniaQP;
 
 {$I tr4w.inc}
@@ -110,6 +129,15 @@ type
       (* The county-line maximum, from the sponsor -- see the header. *)
       function GetCountyLineCountiesMax: integer; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+
+      (* Points times the multipliers, at most 58 of them -- the header. *)
+      function CombineWithMultipliers(const aTotals: TScoreTotals): longint; override;
+   public
+      (* 160, 80, 40, 20, 15 and 10 m -- the header. *)
+      function UsesBand(aBand: BandType): boolean; override;
+
+      (* CW and phone (FM is phone); no digital -- the header. *)
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
    public
       (* The received column -- see the implementation. *)
       function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
@@ -134,8 +162,13 @@ uses
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
-   uContestFixedPoints,   (* FixedModePoints *)
    uContestRegistry;
+
+const
+   (* "Maximum of 58 Scored Multipliers out of 63 Total Multipliers" -- the
+      sponsor's MULTIPLIERS section, and its SCORE: "the total number of
+      scored multipliers (58 maximum)". *)
+   CQP_MAXIMUM_SCORED_MULTIPLIERS = 58;
 
 (* THE RECEIVED COUNTY IS THE QSO'S OWN QTHString, OR 'DX' -- M4, 2026-10-01.
 
@@ -303,12 +336,51 @@ begin
    Result := 4;
 end;
 
-(* ThreePointsPerQSO -- `RXData.QSOPoints := 3`, a flat three whatever the
-   mode. All three numbers are the same and are still written out: the
-   day this contest gains a mode rule, the shape is already here. *)
+(* CW 3, PHONE 3 -- the header. FM is phone. A digital QSO never reaches
+   here (UsesMode), nor an off-band one (UsesBand), nor a station an
+   out-of-state entrant may not credit (CreditsWorkedStation). Both and
+   NoMode are not modes a contact is made in. *)
 procedure TContestCaliforniaQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   aQso.QSOPoints := FixedModePoints(aQso.Mode, 3, 3, 3);
+   case aQso.Mode of
+      CW:
+         begin
+         aQso.QSOPoints := 3;
+         end;
+      Phone, FM:
+         begin
+         aQso.QSOPoints := 3;
+         end;
+      else
+         begin
+         aQso.QSOPoints := 0;
+         end;
+      end;
+end;
+
+function TContestCaliforniaQP.CombineWithMultipliers(const aTotals: TScoreTotals): longint;
+var
+   multipliers: longint;
+begin
+   multipliers := SummedMultipliers(aTotals);
+   if multipliers > CQP_MAXIMUM_SCORED_MULTIPLIERS then
+      begin
+      multipliers := CQP_MAXIMUM_SCORED_MULTIPLIERS;
+      end;
+   Result := ContestPoints(aTotals) * multipliers;
+end;
+
+function TContestCaliforniaQP.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10];
+end;
+
+(* "MODES: CW, Phone". Any submode of CW, Phone or FM is credited -- eNoMode
+   and eData included, as the contract asks -- and no submode of Digital
+   is. An identity fact: no station is asked. *)
+function TContestCaliforniaQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   Result := aMode in [CW, Phone, FM];
 end;
 
 (* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as

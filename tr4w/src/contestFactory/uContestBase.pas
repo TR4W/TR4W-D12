@@ -909,15 +909,28 @@ type
    (* A STATION WHOSE CONTACT EARNS A BONUS -- DECLARED DATA (M6).
 
       The contest LISTS its bonus stations; the base counts them over the view
-      (TContestBase.BonusPoints). The two contests that have them -- Missouri's
-      W0MA and K0GQ, the Salmon Run's W7DX -- differ only in these three
-      values and in which contacts and modes they credit, which are the two
-      virtuals beside BonusPoints. Points is paid once, or once for each mode
-      the contest credits when OncePerMode. *)
+      (TContestBase.BonusPoints). The contests that have them -- Missouri's
+      W0MA and K0GQ, the Salmon Run's W7DX, British Columbia's VA7ODX --
+      differ only in these three values and in which contacts and modes they
+      credit, which are the two virtuals beside BonusPoints. Points is paid
+      as often as Scope says (TBonusStationScope). *)
+   TBonusStationScope = (
+      (* ONCE, whatever band or mode -- Missouri's W0MA and K0GQ. *)
+      bsOnce,
+      (* ONCE IN EACH MODE the contest credits (CW, digital, phone; FM is
+         phone) -- the Salmon Run's W7DX. *)
+      bsOncePerMode,
+      (* ONCE ON EACH BAND IN EACH MODE -- British Columbia's VA7ODX, "Any
+         QSO with ... VA7ODX will be worth an additional 20 points", where
+         "the same station may be worked ... on each band on CW and Phone"
+         (#88, 2026-10-26). Wisconsin's W9FK is the next. *)
+      bsOncePerBandAndMode
+   );
+
    TBonusStation = record
       Call: string;
       Points: longint;
-      OncePerMode: boolean;
+      Scope: TBonusStationScope;
    end;
    TBonusStationList = array of TBonusStation;
 
@@ -3393,8 +3406,9 @@ type
          sponsor wants valid contacts only says so (the Salmon Run). *)
       function CountsTowardBonus(const aQso: ContestExchange): boolean; virtual;
 
-      (* WHICH MODES A OncePerMode BONUS IS PAID IN -- aMode is CW, Digital or
-         Phone (FM is phone). The base pays every mode. *)
+      (* WHICH MODES A bsOncePerMode OR bsOncePerBandAndMode BONUS IS PAID
+         IN -- aMode is CW, Digital or Phone (FM is phone). The base pays
+         every mode. *)
       function CreditsBonusMode(aMode: ModeType): boolean; virtual;
 
       (* MECHANISM: was aCall worked in the view, in aMode (CW, Digital or
@@ -3404,6 +3418,12 @@ type
                                   const aCall: string;
                                   aAnyMode: boolean;
                                   aMode: ModeType): boolean;
+
+      (* MECHANISM: on how many distinct (band, mode) pairs was aCall worked
+         in the view, by a contact CountsTowardBonus accepts, in a mode
+         (CW, Digital or Phone; FM is phone) CreditsBonusMode pays? *)
+      function BonusStationBandModesWorked(aView: TLoggedQSOView;
+                                           const aCall: string): integer;
 
       (* THE PARSE, WHICH IS MECHANISM AND NOT A RULE.
 
@@ -4976,12 +4996,45 @@ begin
       end;
 end;
 
+const
+   (* THE THREE MODES A PER-MODE BONUS CAN BE PAID IN. FM counts as phone
+      (BonusModeOf), so it is not a fourth. *)
+   BONUS_MODES: array[0..2] of ModeType = (CW, Digital, Phone);
+
+type
+   (* WHICH (band, mode) PAIRS A bsOncePerBandAndMode STATION HAS PAID --
+      indexed by ModeType, not BONUS_MODES' position, because BonusModeOf
+      answers a ModeType. *)
+   TBonusPaidGrid = array[BandType, ModeType] of boolean;
+
+function TContestBase.BonusStationBandModesWorked(aView: TLoggedQSOView;
+                                                  const aCall: string): integer;
+var
+   paid: TBonusPaidGrid;
+   i: integer;
+   qso: ContestExchange;
+   mode: ModeType;
+begin
+   Result := 0;
+   paid := Default(TBonusPaidGrid);
+   for i := 0 to aView.Count - 1 do
+      begin
+      qso := aView.QSO(i);
+      mode := BonusModeOf(qso.Mode);
+      if (string(qso.Callsign) = aCall)        and
+         (mode in [CW, Digital, Phone])        and
+         (not paid[qso.Band, mode])            and
+         CreditsBonusMode(mode)                and
+         CountsTowardBonus(qso)                then
+         begin
+         paid[qso.Band, mode] := True;
+         inc(Result);
+         end;
+      end;
+end;
+
 function TContestBase.BonusPoints(const aTotals: TScoreTotals;
                                   aView: TLoggedQSOView): longint;
-const
-   (* THE THREE MODES A OncePerMode BONUS CAN BE PAID IN. FM counts as
-      phone (BonusModeOf), so it is not a fourth. *)
-   BONUS_MODES: array[0..2] of ModeType = (CW, Digital, Phone);
 var
    stations: TBonusStationList;
    i, m: integer;
@@ -4991,20 +5044,31 @@ begin
    (* A CONTEST WITH NO BONUS STATION NEVER TOUCHES THE VIEW. *)
    for i := 0 to High(stations) do
       begin
-      if stations[i].OncePerMode then
-         begin
-         for m := Low(BONUS_MODES) to High(BONUS_MODES) do
+      case stations[i].Scope of
+         bsOncePerMode:
             begin
-            if CreditsBonusMode(BONUS_MODES[m])                                    and
-               BonusStationWorked(aView, stations[i].Call, False, BONUS_MODES[m])  then
+            for m := Low(BONUS_MODES) to High(BONUS_MODES) do
+               begin
+               if CreditsBonusMode(BONUS_MODES[m])                                    and
+                  BonusStationWorked(aView, stations[i].Call, False, BONUS_MODES[m])  then
+                  begin
+                  Result := Result + stations[i].Points;
+                  end;
+               end;
+            end;
+         bsOncePerBandAndMode:
+            begin
+            Result := Result + stations[i].Points *
+                      BonusStationBandModesWorked(aView, stations[i].Call);
+            end;
+         else
+            begin
+            (* bsOnce. *)
+            if BonusStationWorked(aView, stations[i].Call, True, CW) then
                begin
                Result := Result + stations[i].Points;
                end;
             end;
-         end
-      else if BonusStationWorked(aView, stations[i].Call, True, CW) then
-         begin
-         Result := Result + stations[i].Points;
          end;
       end;
 end;

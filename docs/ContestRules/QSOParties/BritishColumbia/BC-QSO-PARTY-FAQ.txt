@@ -1,0 +1,404 @@
+﻿BC QSO Party Frequently Asked Questions
+
+Source: https://www.orcadxcc.org/bcqp_faq.html
+Fetched: 2026-10-26
+WA7BNM ID: 269 (https://www.contestcalendar.com/contestdetails.php?ref=269)
+Cabrillo Name: BC-QSO-PARTY
+ADIF Name: BC-QSO-PARTY
+
+Orca DX and Contest Club -- BCQP Frequently Asked Questions
+
+* Home
+
+* Club Info
+
+* Tips and Tools
+
+* Contact Us
+
+* BC QSO Party
+
+BCQP Tools
+
+*
+ BCQP home page
+
+*
+ FAQs
+
+*
+ Awards
+
+*
+ Rules
+
+*
+ Results
+
+*
+ Multipliers
+
+*
+ Summary Sheet (PDF)
+
+*
+ History
+
+*
+ Contact BCQP
+
+BC QSO Party Frequently Asked Questions
+
+Purpose
+
+What is a QSO party?
+
+What is the objective of BCQP?
+
+Date
+
+When does BCQP take place?
+
+Participation, Reasons to Participate
+
+Who can participate in BCQP?
+
+Why should I participate in BCQP?
+
+Who can I contact?
+
+I'm in BC.
+
+I'm outside BC.
+
+Categories of Entry
+
+What are the categories of entry for BCQP?
+
+How are power categories defined?
+
+Is there a mobile or rover category?
+
+QSO Points, Exchange, Multipliers
+
+Are there more points for certain modes or power classes?
+
+Are there bonus points for contacting the sponsor station?
+
+What is the exchange?
+
+What is a federal electoral district?
+
+Are the multipliers different for in-province and out-of-province stations?
+
+What happens if an operator doesn't know his/her federal electoral district?
+
+Calling CQ
+
+Who can call CQ?
+
+Do you have suggested frequencies?
+
+Do I have to stick to the suggested frequencies if I'm calling CQ?
+
+Logging
+
+Can I use any logging software?
+
+What is 'Cabrillo'?
+
+Does my computer have to be interfaced with my radio?
+
+Will you accept paper logs?
+
+Do I have to submit a log?
+
+I didn't make very many contacts. Do you really want my log?
+
+How do I submit a log?
+
+How do I know my log was received?
+
+Maximizing Same-Day Events
+
+There are several QSO parties going on in the U.S. and other contests taking place at the same time as BCQP. How do I deal with that?
+
+How do I trade a Q?
+
+How do I actually deal with all the different exchanges? It could get really confusing. How do I know what information to give?
+
+Awards
+
+Do you offer certificates and plaques?
+
+How do I qualify for an award?
+
+Results
+
+When and how are results announced?
+
+Miscellaneous
+
+Is there required off-time?
+
+From past experience, CW becomes difficult after 0000z because of NA Sprint. Time to throw in the towel?
+
+Can I use spotting networks and other forms of assistance?
+
+I have a question not answered in the FAQ.
+
+Purpose
+
+ What is a QSO party?
+
+It's a casual, on-air event typically organized by a contesting club in a state or province to spur on-air HF activity in that area.
+
+ What is the objective of BCQP?
+
+The primary objective is to encourage BC stations to get on the air in a relaxed setting to gain on-air experience or help others gain on-air experience, and at the same time offer stations outside BC a chance to connect with VE7/VA7s on various bands and modes.
+
+Date
+
+ When does BCQP take place?
+
+The first Saturday and Sunday of February.
+
+Participation, Reasons to Participate
+
+ Who can participate in BCQP?
+
+BCQP is open to radio amateurs everywhere.
+
+ Why should I participate in BCQP?
+
+For BC stations: This is one of the very few annual, on-air events that puts BC in the spotlight. The BCQP profile is quite high and operators near and far are keen to contact you.
+
+ BCQP is a low-pressure event, which is ideal for newcomers to the hobby, but still offers great QSO potential, so if you are an experienced operator and want fast and furious pileups'and conditions are right'just call CQ. If necessary, add 'anyone anywhere' to alert operators outside BC that they, too, are welcome to respond to your CQ.
+
+ BCQP is an opportunity to polish operating skills, to try out contesting strategies, practice different modes in a low-pressure situation, acquire familiarity with logging software, pass on knowledge to others, support a home-grown contest, meet up with some nice people, capture a lovely photo certificate or plaque... The reasons to participate are as varied as the people who get on the air.
+
+For operators outside BC: Support for BCQP inevitably encourages reciprocal support for other events, whether it is a QSO party or a weekend contest marathon where the BC mult helps build a winning log. Also, it is much easier to capture a certificate in a small contest, like BCQP, than in the more competitive contests, and the photo-based certificates handed out in BCQP are definitely worthy of the shack wall.
+
+Who can I contact?
+
+ I'm in BC.
+
+BC stations may contact anyone anywhere: Other stations in BC, the rest of Canada, the U.S., and all around the world.
+
+ I'm outside BC.
+
+Stations outside BC must find VE7/VA7s.
+
+Categories of Entry
+
+ What are the categories of entry for BCQP?
+
+Enter as a single operator or a multi-op station. You may operate on all bands, or just one, though there is no single-band category. (No WARC bands) You may choose SSB or CW -- or a combination (mixed). You may operate high power, low power or QRP.
+
+ How are power categories defined?
+
+High power is output greater than 100w. Low power is 100w or less. QRP is 5w or less.
+
+ Is there a mobile or rover category?
+
+No. Driving around to activate multiple districts in BCQP isn't a particularly practical or safe option for operating in BCQP due to weather conditions in February'still lots of snow in many areas'as well as the fact that federal electoral districts beyond the Lower Mainland and Vancouver Island are vast, sparsely populated and generally mountainous.
+
+QSO Points, Exchange, Multipliers
+
+ Are there more points for certain modes or power classes?
+
+CW contacts are worth 4 points. SSB contacts are worth 2 points.
+
+There is no power multiple.
+
+ Are there bonus points for contacting the sponsor station?
+
+Yes. Each QSO with VA7ODX will add 20 points to your score AFTER all other calculations.
+
+ | Example 1
+
+ |
+
+* You made 100 QSOs on CW. Each CW contact is worth 4 points.
+
+* You had a total of 33 multipliers.
+
+* You had 5 QSOs with VA7ODX.
+
+ | ((100 x 4) x 33) + (5 x 20) = 13,300
+
+ | Example 2
+
+ |
+
+* You made 25 QSOs on CW and 25 QSOs on SSB.
+
+* Each CW contact is worth 4 points.
+
+* Each SSB contact is worth 2 points.
+
+* You had a total of 50 multipliers.
+
+* You had 6 QSOs with VA7ODX overall.
+
+ | (((25 x 4) + (25 x 2)) x 50) + (6 x 20) = ((100+50) x 50)) + 120 = 7,620
+
+ What is the exchange?
+
+BC stations give RS(T) + federal electoral district.
+
+Stations outside BC give RS(T) + state/province or 'DX'.
+
+Note: In BCQP, Alaska and Hawaii are 'states' rather than 'DX'.
+
+ What is a federal electoral district?
+
+British Columbia does not have counties -- the typical multiplier in QSO parties. Therefore, in BCQP, we have opted to use federal electoral districts. These districts, or ridings, are not demarcated by signposts and are not part of any street addresses. They are electoral divisions. A redrawing of the electoral map for the October 2025 election gave BC 43 federal electoral districts. For BCQP purposes -- and only for BCQP purposes -- each district has been given a three-letter abbreviation.
+
+Please go to the BCQP homepage and click on "Multipliers" to download the list of federal electoral districts, as well as US states, and associated abbreviations.
+
+ Are the multipliers different for in-province and out-of-province stations?
+
+Yes.
+
+* For BC stations: 43 BC federal electoral districts, Canadian provinces and U.S. states. DX contacts are worth QSO points but do not provide a multiplier.
+
+* Stations outside BC: 43 BC federal electoral districts.
+
+ What happens if an operator doesn't know his/her federal electoral district?
+
+If that operator is you, go to Elections Canada (http://www.elections.ca/home.aspx) and find the district by typing in your postal code.
+
+If the operator is someone you contact, ask him/her to execute the aforementioned online search'it's quick'or ask the operator for his/her postal code, and you can look it up for him/her.
+
+Calling CQ
+
+ Who can call CQ?
+
+Anyone can call CQ.
+
+Obviously, operators in BC are more likely to call CQ to attract attention from everyone everywhere. But if all BC stations call CQ, none will ever work each other. So, a combination of CQing and search-and-pounce is best.
+
+Operators outside BC can also call CQ. But if you are outside the province, be sure to indicate that you are looking for BC stations or else you may get operators responding to your CQ who are also outside BC, and those QSOs will not count for points in BCQP. A station outside BC may only contact VE7/VA7s for points.
+
+ Do you have suggested frequencies?
+
+Yes. Please look in the rules.
+
+ Do I have to stick to the suggested frequencies if I'm calling CQ?
+
+Not necessarily. Imagine the QRM if everyone called CQ on the same frequency! Move up or down the respective band within the limits of your license to find a place where you will not cause any interference.
+
+Logging
+
+ Can I use any logging software?
+
+You can use any logging software that creates a Cabrillo file.
+
+BCQP is fully supported by N1MM Logger+, N3FJP, CTESTWIN, DXLog, SkookumLogger, and TR4W. Other programs may have generic QSO party modules, but they are unlikely to generate an accurate claimed score because they lack details specific to BCQP, such as multipliers and bonus points.
+
+Make sure you are using the most recent versions of the logging programs that support BCQP to ensure you are up to date with the most current multiplier list.
+
+ What is "Cabrillo"?
+
+Cabrillo refers to a standardized format for logs that places data (frequency, mode, date, UTC time, sent/received callsign and exchange) in designated columns. This format enables contest sponsors to cross-check logs more easily.
+
+BCQP-supported logging software put all the data in the right places. An example is provided in the BCQP rules.
+
+ Does my computer have to be interfaced with my radio?
+
+If you want the logging software to work as intended, then, yes, your computer and radio must be interfaced. If not, the software will not be able to follow frequency/band/mode changes and your log may not score correctly. Check your logging software to confirm supported radios.
+
+ Will you accept paper logs?
+
+Yes, if the log has fewer than 25 QSOs. If the paper log has been generated on a computer, you will be asked to submit an electronic version. This facilitates log-checking.
+
+ Do I have to submit a log?
+
+No. But you have a better chance of capturing a certificate in a QSO party than you would in a cut-throat, gotta-beat-the-world international weekend marathon contest, and you must submit a log to be eligible for a certificate. Also, the more logs we receive, the easier it is to cross-check them. In addition, logs provide a valuable source of data which we can use to reveal trends that might otherwise be missed, and we use what we glean from the data to make BCQP better.
+
+ I didn't make very many contacts. Do you really want my log?
+
+Yes. Every log, big or small, provides concrete data for confirming results and tracking progress from year to year. The more logs received, the more accurate the analysis. In addition, 'not very many contacts' is quite subjective. In a big contest, a log of 10 QSOs might indeed be not very many, but it is great for a station outside BC in BCQP because stations outside the province are limited to a smaller pool of potential contacts. Meanwhile, BC stations, which are able to contact anyone anywhere, can build bigger logs. A log with 50 QSOs is very good for a BC station.
+
+ How do I submit a log?
+
+We prefer electronic logs. Submit your log by filling in the form at bcqp.contesting.com.
+
+If you used pen and paper, you can create a Cabrillo log using this online log converter: www.b4h.net/cabforms/bcqp_cab.php
+
+Then copy the log you receive back and paste the data into the submission form.
+
+If you cannot create an electronic log and you have fewer than 25 QSOs, you may send your log, with a summary sheet downloaded from the BCQP homepage, to:
+
+371 56th Street,
+
+Delta, BC V4L 1Z4
+
+Canada
+
+ How do I know my log was received?
+
+A confirmation email will be sent to the email address in the log header of logs uploaded to the bcqp.contesting.com log uploader. If you are sure you uploaded your log but didn't get the confirmation and/or don't see the callsign you used in the Logs Received list on the log uploader page, please try again. If the callsign you used isn't there, resend. If the log deadline has already passed, contact the contest coordinator at va7bec [at] gmail [dot] com for assistance.
+
+Maximizing Same-Day Events
+
+ There are several QSO parties going on in the U.S. and other contests taking place at the same time as BCQP. How do I deal with that?
+
+If you are in BC and you are CQing, you must identify as "CQ BCQP + (callsign)". This will alert operators to which QSO party you are in.
+
+If the operator who contacts you is unfamiliar with the BCQP exchange, you may have to explain. If that operator is in the host state of one of the other QSO parties, he/she may give information, such as a name or a county, which you can't put into your BCQP log. That operator probably intends to put you in his/her own QSO party log. But if you are calling CQ and someone answers that CQ, they are 'entering' your QSO party and should provide the information you require. You may then offer to trade a Q. Be sure to get the information you need first, and then provide the information that the other operator is looking for.
+
+ How do I trade a Q?
+
+For examples on how to trade Qs, go to the "Helpful Hints" document.
+
+ How do I actually deal with all the different exchanges? It could get really confusing. How do I know what information to give?
+
+A one-page, at-a-glance schedule of coinciding events and the required exchanges for each event can be downloaded from the Rules page on the BCQP site.
+
+Prepare possible exchange data, print it out and keep it nearby to facilitate the trade.
+
+Awards
+
+ Do you offer certificates and plaques?
+
+Yes. We have beautiful, photo-based certificates, different every year, for top scores in all categories of entry for stations in BC and outside BC.
+
+Certificates are also presented for results that merit special recognition in any given year.
+
+With the support of radio-related organizations and individuals, we maintain a plaque program. The number of plaques varies, as do the categories sponsored, depending on how many sponsors step up and which categories they choose to sponsor. The plaques are also photo-based and different every year.
+
+ How do I qualify for an award?
+
+To qualify for a certificate, you have to make valid QSOs and send in your log. You must make at least 10 valid QSOs to be eligible for a certificate or a plaque.
+
+Results
+
+ When and how are results announced?
+
+The goal is to announce results by June. A detailed report and a breakdown of scores are posted to the BCQP homepage, and emails with access information are sent to participants who submitted logs electronically.
+
+Scores by Canadian operators are published in the January/February issue of The Canadian Amateur.
+
+Miscellaneous
+
+ Is there required off-time?
+
+No. All stations may work both segments -- that is, all 20 hours -- of the contest.
+
+ From past experience, CW becomes difficult after 0000z because of NA Sprint. Time to throw in the towel?
+
+NO!! Consider the alternate suggested frequencies shown in the rules.
+
+ Can I use spotting networks and other forms of assistance?
+
+Yes. But no self-spotting!
+
+ I have a question not answered in the FAQ.
+
+Email the contest coordinator at va7bec@gmail.com
+
+ © 2025 Orca DX and Contest Club
+
+ Updated: Nov. 27, 2025 VA7ST

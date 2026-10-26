@@ -888,8 +888,10 @@ procedure TContestFactoryTests.Test_TenStatePartiesScoreTheirLegacyArms;
 begin
    BeginTest('Test_TenStatePartiesScoreTheirLegacyArms');
 
-   (* ThreePointsPerQSO: RXData.QSOPoints := 3, whatever the mode. *)
-   CheckPoints(CALQSOPARTY, 'California', 3, 3, 3);
+   (* CALIFORNIA AND MISSOURI LEFT THIS LIST AT #88 (2026-10-26): their
+      sponsors' 2026 points (California 3/3 with no digital, Missouri 2/1/2)
+      are no longer the legacy arms, and are pinned in their own units,
+      uTestContestCaliforniaQP and uTestContestMissouriQP. *)
 
    (* TwoPointsPerQSO: RXData.QSOPoints := 2, whatever the mode. *)
    CheckPoints(INQSOPARTY, 'Indiana', 2, 2, 2);
@@ -897,7 +899,6 @@ begin
    CheckPoints(MINNQSOPARTY, 'Minnesota', 2, 2, 2);
 
    (* OnePhoneTwoCW: if Mode = CW then 2 else 1 -- digital takes the 1. *)
-   CheckPoints(MOQSOPARTY, 'Missouri', 2, 1, 1);
    CheckPoints(OHIOQSOPARTY, 'Ohio', 2, 1, 1);
    CheckPoints(WISCONSINQSOPARTY, 'Wisconsin', 2, 1, 1);
    CheckPoints(ArizonaQsoParty, 'Arizona', 2, 1, 1);
@@ -1066,8 +1067,9 @@ procedure TContestFactoryTests.Test_FourBespokeArmsScoreTheirLegacyShape;
 begin
    BeginTest('Test_FourBespokeArmsScoreTheirLegacyShape');
 
-   (* BCQPQSOPointMethod: if Mode = PHONE then 2 else 4. *)
-   CheckPoints(BCQP, 'British Columbia', 4, 2, 4);
+   (* BRITISH COLUMBIA LEFT THIS LIST AT #88 (2026-10-26): "Contest modes:
+      Phone and CW", so a digital QSO is an X-QSO, not 4 points. Its points
+      are pinned in uTestContestBritishColumbiaQP. *)
 
    (* PAQSOPointMethod: if Mode = PHONE then 1 else 2. *)
    CheckPoints(PAQSOPARTY, 'Pennsylvania', 2, 1, 2);

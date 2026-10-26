@@ -98,7 +98,35 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   Florida's two and California's four did. Deriving one from the boolean is the
   defect that made a contest start refusing a two-QTH exchange the moment it
   got a class.
- *)
+
+  ---------------------------------------------------------------------------
+  THE 2026 RULES, CHECKED AGAINST THE SPONSOR (#88, 2026-10-26). The texts
+  are docs/ContestRules/QSOParties/BritishColumbia/ (the rules page, the FAQ
+  and the district list).
+
+  POINTS -- "2 points for Phone QSOs; 4 points for CW QSOs" (the FAQ: "CW
+    contacts are worth 4 points. SSB contacts are worth 2 points."). FM is
+    phone.
+
+  BANDS AND MODES -- "Contest bands: 160m to 10m, no WARC bands. Contest
+    modes: Phone and CW". UsesBand, UsesMode; a digital QSO is an automatic
+    X-QSO. Until #88 the legacy BCQPQSOPointMethod's phone-versus-not test
+    gave digital the CW value, 4.
+
+  VA7ODX -- "Any QSO with the Orca DXCC station, VA7ODX, will be worth an
+    additional 20 points. Bonus points are added after calculating QSO points
+    and location multipliers." The FAQ's example: ((100 x 4) x 33) + (5 x
+    20). "The same station may be worked for QSO points on each band on CW
+    and Phone", so a declared bonus station paid ONCE ON EACH BAND IN EACH
+    MODE (bsOncePerBandAndMode), by a contact that is neither a dupe nor an
+    X-QSO (CountsTowardBonus). The legacy arm's commented-out per-QSO +20 is
+    replaced by it.
+
+  DC IS MARYLAND -- "Maryland and DC are lumped together as MD." ve7.dom
+    (the in-province file, where states are multipliers) maps Dc > Md.
+
+  THE DISTRICT LIST IS NOT CHANGED HERE -- the October 2025 redistribution
+    retired 14 codes; whether to drop them is NY4I's open question on #88. *)
 unit uContestBritishColumbiaQP;
 
 {$I tr4w.inc}
@@ -167,7 +195,20 @@ type
       function GetQSOPartyArea: string; override;
       function GetFlags: TContestFlags; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+
+      (* VA7ODX, 20 once on each band in each mode -- the header. *)
+      function GetBonusStations: TBonusStationList; override;
+
+      (* A VA7ODX contact pays only if it is neither a dupe nor an X-QSO --
+         the header. *)
+      function CountsTowardBonus(const aQso: ContestExchange): boolean; override;
    public
+      (* 160-10 m without WARC -- the header. *)
+      function UsesBand(aBand: BandType): boolean; override;
+
+      (* CW and phone (FM is phone); no digital -- the header. *)
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
+
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
@@ -203,7 +244,6 @@ uses
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
-   uContestFixedPoints,   (* FixedModePoints *)
    uContestRegistry,
    uTR4WStrings;
 
@@ -349,25 +389,57 @@ begin
    Result := [cfQSOByBand, cfQSOByMode, cfMultByBand, cfMultByMode];
 end;
 
-(* BCQPQSOPointMethod -- `if Mode = PHONE then 2 else 4`.
-
-   THE INVERTED SHAPE, AND THE THIRD ARGUMENT IS WHERE IT SHOWS. The test is
-   PHONE-versus-not, so DIGITAL takes the CW value of 4, not the phone value of
-   2. Most of the state parties test CW-versus-not and their digital number is
-   the phone one; writing 2 here would reproduce the phone and CW arms
-   perfectly and be silently wrong about every digital QSO.
-
-   THE COMMENTED-OUT VA7ODX BONUS IN THE LEGACY ARM IS LEFT COMMENTED AND IS
-   NOT IMPLEMENTED:
-
-     if RXData.Callsign = 'VA7ODX' then
-        rxdata.QSOPoints := rxdata.qsopoints + 20;
-
-   It is not live code today, so implementing it would be new scoring
-   behaviour, and this move changes no score. *)
+(* CW 4, PHONE 2 -- the header. FM is phone. A digital QSO never reaches here
+   (UsesMode), nor an off-band one (UsesBand), nor a station an
+   out-of-province entrant may not credit (CreditsWorkedStation). Both and
+   NoMode are not modes a contact is made in. The VA7ODX bonus is not a
+   point here: it is added after the multiplication (GetBonusStations). *)
 procedure TContestBritishColumbiaQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   aQso.QSOPoints := FixedModePoints(aQso.Mode, 4, 2, 4);
+   case aQso.Mode of
+      CW:
+         begin
+         aQso.QSOPoints := 4;
+         end;
+      Phone, FM:
+         begin
+         aQso.QSOPoints := 2;
+         end;
+      else
+         begin
+         aQso.QSOPoints := 0;
+         end;
+      end;
+end;
+
+function TContestBritishColumbiaQP.GetBonusStations: TBonusStationList;
+begin
+   Result := nil;
+   SetLength(Result, 1);
+   Result[0].Call := 'VA7ODX';
+   Result[0].Points := 20;
+   Result[0].Scope := bsOncePerBandAndMode;
+end;
+
+(* A VALID CONTACT ONLY: not a dupe, and not an X-QSO -- off the bands, off
+   the modes, or marked by the operator (QSOIsXQSO, the one predicate). The
+   application's view already leaves X-QSOs out; this says so for any view. *)
+function TContestBritishColumbiaQP.CountsTowardBonus(const aQso: ContestExchange): boolean;
+begin
+   Result := (not aQso.ceDupe) and (not QSOIsXQSO(Self, aQso));
+end;
+
+function TContestBritishColumbiaQP.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10];
+end;
+
+(* "Contest modes: Phone and CW". Any submode of CW, Phone or FM is credited
+   -- eNoMode and eData included, as the contract asks -- and no submode of
+   Digital is. An identity fact: no station is asked. *)
+function TContestBritishColumbiaQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   Result := aMode in [CW, Phone, FM];
 end;
 
 (* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as

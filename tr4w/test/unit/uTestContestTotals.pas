@@ -68,6 +68,7 @@ type
       procedure Test_NCSweepNeedsFiveRareCounties;
       procedure Test_SalmonRunW7DXOncePerMode;
       procedure Test_SalmonRunSingleModeEntry;
+      procedure Test_BonusStationScopes;
       procedure Test_IdahoDormantCountyNeedsTenQSOs;
       procedure Test_LogContestYearReadsTheLog;
       procedure Test_IdahoPaysTheTableOfTheLogsYear;
@@ -709,6 +710,85 @@ begin
    end;
 end;
 
+type
+   (* ONE DECLARED BONUS STATION, K1BON, 10 points, at the scope the test
+      names -- the base's payment rule with nothing of a contest's on it. *)
+   TScopedBonusContest = class(TContestBase)
+   private
+      FScope: TBonusStationScope;
+   protected
+      function GetBonusStations: TBonusStationList; override;
+   public
+      constructor CreateScoped(aScope: TBonusStationScope);
+   end;
+
+constructor TScopedBonusContest.CreateScoped(aScope: TBonusStationScope);
+begin
+   inherited Create(NoContest);
+   FScope := aScope;
+end;
+
+function TScopedBonusContest.GetBonusStations: TBonusStationList;
+begin
+   Result := nil;
+   SetLength(Result, 1);
+   Result[0].Call := 'K1BON';
+   Result[0].Points := 10;
+   Result[0].Scope := FScope;
+end;
+
+(* THE THREE SCOPES OVER ONE LOG (#88, 2026-10-26: bsOncePerBandAndMode was
+   added for British Columbia's VA7ODX). bsOnce and bsOncePerMode are the
+   two the base had -- Missouri's and the Salmon Run's -- and must pay
+   exactly what they paid before; the third pays each (band, mode) pair
+   once. The base's CountsTowardBonus takes every QSO, dupes included, so
+   the dupe on 15 m is a pair of its own; FM is phone. *)
+procedure TContestTotalsTests.Test_BonusStationScopes;
+var
+   view: TLoggedQSOList;
+   t: TScoreTotals;
+
+   function PaidAt(aScope: TBonusStationScope): longint;
+   var
+      contestObject: TScopedBonusContest;
+   begin
+      contestObject := TScopedBonusContest.CreateScoped(aScope);
+      try
+         Result := contestObject.BonusPoints(t, view);
+      finally
+         contestObject.Free;
+      end;
+   end;
+
+begin
+   BeginTest('Test_BonusStationScopes');
+   t := Totals(0);
+   view := TLoggedQSOList.Create;
+   try
+      CheckEquals(0, PaidAt(bsOnce), 'an empty log pays nothing once');
+      CheckEquals(0, PaidAt(bsOncePerMode), 'nor per mode');
+      CheckEquals(0, PaidAt(bsOncePerBandAndMode), 'nor per band and mode');
+
+      view.Add(LoggedQSO('K1BON', Band20, CW));
+      view.Add(LoggedQSO('K1BON', Band20, CW));
+      view.Add(LoggedQSO('K1BON', Band40, CW));
+      view.Add(LoggedQSO('K1BON', Band20, Phone));
+      view.Add(LoggedQSO('K1BON', Band20, FM));
+      view.Add(LoggedQSO('K1BON', Band20, Digital));
+      view.Add(AsDupe(LoggedQSO('K1BON', Band15, CW)));
+      view.Add(LoggedQSO('K1BONX', Band10, CW));
+      view.Add(LoggedQSO('W1AW', Band10, Phone));
+
+      CheckEquals(10, PaidAt(bsOnce), 'once: 10, however often it was worked');
+      CheckEquals(30, PaidAt(bsOncePerMode), 'per mode: CW, phone (FM is phone), digital');
+      (* 20 CW, 40 CW, 15 CW (a dupe), 20 phone (and FM), 20 digital. *)
+      CheckEquals(50, PaidAt(bsOncePerBandAndMode),
+                  'per band and mode: five pairs, 20 m CW and 20 m phone once each');
+   finally
+      view.Free;
+   end;
+end;
+
 procedure TContestTotalsTests.Test_IdahoDormantCountyNeedsTenQSOs;
 var
    view: TLoggedQSOList;
@@ -1211,7 +1291,10 @@ begin
          contestObject.Free;
       end;
       end;
-   CheckEquals(' MISSOURI QSO PARTY SALMON RUN', declaring, 'the contests that declare bonus stations');
+   (* BCQP joined at #88 (2026-10-26): "Any QSO with the Orca DXCC
+      station, VA7ODX, will be worth an additional 20 points." *)
+   CheckEquals(' MISSOURI QSO PARTY SALMON RUN BCQP', declaring,
+               'the contests that declare bonus stations');
 end;
 
 procedure TContestTotalsTests.RunAllTests;
@@ -1229,6 +1312,7 @@ begin
    Test_NCSweepNeedsFiveRareCounties;
    Test_SalmonRunW7DXOncePerMode;
    Test_SalmonRunSingleModeEntry;
+   Test_BonusStationScopes;
    Test_IdahoDormantCountyNeedsTenQSOs;
    Test_LogContestYearReadsTheLog;
    Test_IdahoPaysTheTableOfTheLogsYear;

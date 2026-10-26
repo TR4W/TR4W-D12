@@ -735,9 +735,17 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* The Georgia QSO Party, a new contest registered by its id
       (2026-10-23). *)
    uTestContestGeorgiaQP in 'uTestContestGeorgiaQP.pas',
+   (* A shipped .dom through the real loader, its INCLUDEs followed by the
+      test -- lifted from the New England tests (#88, 2026-10-26). *)
+   uTestShippedDom in 'uTestShippedDom.pas',
    (* The New England QSO Party's 2026-10-23 sponsor rules: digital points,
       no DX cap, 14 provinces, DC as MD, digital dupes as CW. *)
    uTestContestNewEnglandQP in 'uTestContestNewEnglandQP.pas',
+   (* The Missouri, California and British Columbia QSO parties' 2026
+      sponsor rules (#88, 2026-10-26). *)
+   uTestContestMissouriQP in 'uTestContestMissouriQP.pas',
+   uTestContestCaliforniaQP in 'uTestContestCaliforniaQP.pas',
+   uTestContestBritishColumbiaQP in 'uTestContestBritishColumbiaQP.pas',
    (* The RTC's 2026 rules: dupes per band AND mode, grids per band
       (2026-10-23). *)
    uTestContestRTC      in 'uTestContestRTC.pas',
@@ -877,6 +885,9 @@ begin
    RegisterSuite(TContestURCDXRTTYTests.Create('ContestURCDXRTTY'));
    RegisterSuite(TContestGeorgiaQPTests.Create('ContestGeorgiaQP'));
    RegisterSuite(TContestNewEnglandQPTests.Create('ContestNewEnglandQP'));
+   RegisterSuite(TContestMissouriQPTests.Create('ContestMissouriQP'));
+   RegisterSuite(TContestCaliforniaQPTests.Create('ContestCaliforniaQP'));
+   RegisterSuite(TContestBritishColumbiaQPTests.Create('ContestBritishColumbiaQP'));
    RegisterSuite(TContestRTCTests.Create('ContestRTC'));
    RegisterSuite(TFieldDaySectionRefusalTests.Create('FieldDaySectionRefusal'));
    RegisterSuite(TContestNamesTests.Create('ContestNames'));

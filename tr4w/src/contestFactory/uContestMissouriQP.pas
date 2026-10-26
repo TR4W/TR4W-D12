@@ -88,7 +88,37 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   UNTIL Q32 THIS WAS A PRESERVED DEFECT: live entry counted it
   (TalliesLiveQSO, LOGDUPE.LiveSessionTally) and the log's loader never did,
-  so a reopened log lost it. Both are deleted. *)
+  so a reopened log lost it. Both are deleted.
+
+  ---------------------------------------------------------------------------
+  THE 2026 RULES, CHECKED AGAINST THE SPONSOR (#88, 2026-10-26). The text is
+  docs/ContestRules/QSOParties/Missouri/MO-QSO-PARTY-Rules.txt.
+
+  POINTS -- "Valid phone contacts equals one point each. Valid CW contacts
+    equals two points each. Valid digital contacts equals two points each."
+    Digital was 1 until #88: the legacy OnePhoneTwoCW tested CW-versus-not.
+    FM is phone.
+
+  BANDS -- "CW, Digital, and phone operation on 160M, 80M, 40M, 20M, 15M,
+    10M, 6M, 2M, 1.25M, and 70cm." No WARC. UsesBand.
+
+  MODES -- "FT4/FT8 or similar modes that do not allow free text sending
+    will not be allowed." UsesMode refuses the digital submodes TR4W can
+    name as such -- FT8, FT4 and JT65, the WSJT structured-message modes --
+    so such a QSO is an automatic X-QSO. Every other digital submode, and a
+    digital QSO whose submode is not known (eNoMode, eData), is credited.
+
+  BONUSES -- W0MA, K0GQ and the peak-hour bonus are unchanged. The 100-point
+    bonus "for successfully submitting a Cabrillo log electronically" is NOT
+    added: TR4W cannot know whether a log was submitted (asked of NY4I on
+    #88).
+
+  HOLT COUNTY STAYS HTL -- the sponsor's Table 1 says "Holt HTL"; DXLog's
+    HLT is the error.
+
+  DC IS MARYLAND -- "Note: 'Maryland' includes the District of Columbia."
+    missouri.dom (the in-state file, where states are multipliers) maps
+    Dc > Md. *)
 unit uContestMissouriQP;
 
 {$I tr4w.inc}
@@ -162,6 +192,13 @@ type
          whose logged hour is 14 to 19 UTC. See the header (Q32). *)
       function IsPeakHourContact(const aQso: ContestExchange): boolean;
    public
+      (* 160-10 m without WARC, 6 m, 2 m, 1.25 m and 70 cm -- the header. *)
+      function UsesBand(aBand: BandType): boolean; override;
+
+      (* CW, phone (FM is phone) and digital but FT8, FT4 and JT65 -- the
+         header. *)
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
+
       (* The bonus stations, plus one point per peak-hour contact in the
          log, capped at 250 -- see the header. *)
       function BonusPoints(const aTotals: TScoreTotals;
@@ -180,7 +217,6 @@ uses
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
-   uContestFixedPoints,   (* FixedModePoints *)
    uContestRegistry;
 
 function TContestMissouriQP.GetDisplayName: string;
@@ -290,12 +326,56 @@ begin
    Result := [cfQSOByBand, cfQSOByMode, cfVHFBandsEnabled];
 end;
 
-(* OnePhoneTwoCW -- `if Mode = CW then 2 else 1`, so DIGITAL scores the
-   PHONE value. That is why the third number is stated rather than left to
-   a CW-versus-not test, which would be wrong here and silent about it. *)
+(* CW 2, PHONE 1, DIGITAL 2 -- the sponsor's Points 1-3 (see the header).
+   FM is phone. A QSO off the bands or modes never reaches here (UsesBand,
+   UsesMode), nor one an out-of-state entrant may not credit
+   (CreditsWorkedStation). Both and NoMode are not modes a contact is made
+   in. *)
 procedure TContestMissouriQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   aQso.QSOPoints := FixedModePoints(aQso.Mode, 2, 1, 1);
+   case aQso.Mode of
+      CW, Digital:
+         begin
+         aQso.QSOPoints := 2;
+         end;
+      Phone, FM:
+         begin
+         aQso.QSOPoints := 1;
+         end;
+      else
+         begin
+         aQso.QSOPoints := 0;
+         end;
+      end;
+end;
+
+function TContestMissouriQP.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10,
+                       Band6, Band2, Band222, Band432];
+end;
+
+(* "FT4/FT8 or similar modes that do not allow free text sending will not be
+   allowed." The submode is tested only to EXCLUDE the ones named: eNoMode
+   and eData mean "some digital submode" and are credited, as the contract
+   asks (ADDING_A_CONTEST, UsesMode). An identity fact: no station is
+   asked. *)
+function TContestMissouriQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   case aMode of
+      CW, Phone, FM:
+         begin
+         Result := True;
+         end;
+      Digital:
+         begin
+         Result := not (aExtMode in [eFT8, eFT4, eJT65]);
+         end;
+      else
+         begin
+         Result := False;
+         end;
+      end;
 end;
 
 const
@@ -308,18 +388,20 @@ begin
    SetLength(Result, 2);
    Result[0].Call := 'W0MA';
    Result[0].Points := 100;
-   Result[0].OncePerMode := False;
+   Result[0].Scope := bsOnce;
    Result[1].Call := 'K0GQ';
    Result[1].Points := 100;
-   Result[1].OncePerMode := False;
+   Result[1].Scope := bsOnce;
 end;
 
 function TContestMissouriQP.IsPeakHourContact(const aQso: ContestExchange): boolean;
 begin
-   (* VALID FIRST, by the two questions ScoreQSO asks before it scores, so a
-      QSO that scores nothing earns no bonus point either. *)
-   Result := (not aQso.ceDupe)                        and
-             ContestCreditsBand(Self, aQso.Band)      and
+   (* VALID FIRST, by the questions ScoreQSO asks before it scores, so a
+      QSO that scores nothing earns no bonus point either -- an FT8 QSO
+      (UsesMode) included. *)
+   Result := (not aQso.ceDupe)                                     and
+             ContestCreditsBand(Self, aQso.Band)                   and
+             ContestCreditsMode(Self, aQso.Mode, aQso.ExtMode)     and
              CreditsWorkedStation(aQso)               and
              (aQso.Band in [Band80, Band40])          and
              (aQso.tSysTime.qtHour >= 14)             and

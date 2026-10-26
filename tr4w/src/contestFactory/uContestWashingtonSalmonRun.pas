@@ -439,7 +439,7 @@ begin
    SetLength(Result, 1);
    Result[0].Call := 'W7DX';
    Result[0].Points := 500;
-   Result[0].OncePerMode := True;
+   Result[0].Scope := bsOncePerMode;
 end;
 
 function TContestWashingtonSalmonRun.CountsTowardBonus(const aQso: ContestExchange): boolean;

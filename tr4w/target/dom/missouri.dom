@@ -1,5 +1,7 @@
 Domestic template for non-Missouri stations in MO QSO Party
 
+Maryland includes the District of Columbia (sponsor's state table)
+Dc > Md = DC
 INCLUDE FILE S50.DOM
 INCLUDE FILE MISSOURI_CTY.DOM
 Dx = DX

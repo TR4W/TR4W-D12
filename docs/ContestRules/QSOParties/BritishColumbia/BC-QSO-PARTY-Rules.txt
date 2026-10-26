@@ -1,0 +1,239 @@
+﻿BC QSO Party Rules
+
+Source: https://www.orcadxcc.org/bcqp_rules.html
+Fetched: 2026-10-26
+WA7BNM ID: 269 (https://www.contestcalendar.com/contestdetails.php?ref=269)
+Cabrillo Name: BC-QSO-PARTY
+ADIF Name: BC-QSO-PARTY
+
+Orca DX and Contest Club -- BCQP Rules
+
+* Home
+
+* Club Info
+
+* Tips and Tools
+
+* Contact Us
+
+* BC QSO Party
+
+BCQP Tools
+
+*
+ BCQP home page
+
+*
+ FAQs
+
+*
+ Awards
+
+*
+ Rules
+
+*
+ Results
+
+*
+ Multipliers
+
+*
+ Summary Sheet (PDF)
+
+*
+ History
+
+*
+ Contact BCQP
+
+British Columbia QSO Party Rules
+
+Sponsored by the Orca DX and Contest Club
+
+February 7-8, 2026 -- Two Segments:
+
+1. Starts 1600z Saturday, Feb. 7 -- Ends 0359z Sunday, Feb. 8
+
+2. Starts 1600z Sunday -- Ends 2359z Sunday, Feb. 8
+
+Helpful hints for BC stations
+
+BCQP 2026 Weekend -- schedule of BCQP and other overlapping events (PDF)
+
+ Announced Operations (PDF) | Map of BC Electoral Districts (PDF)
+
+OBJECT
+
+Stations outside British Columbia to work only BC stations in the 43 BC Federal Electoral Districts.
+Stations in BC to work anyone, anywhere.
+
+CONTEST PERIOD
+
+The contest comprises two segments. The first segment starts Saturday, Feb. 7, 2026 at 1600z, and runs for 12 hours until 0359z Sunday Feb. 8, 2026. The second segment starts Sunday, Feb. 2, 2025 at 1600z, and runs for eight hours until 2359z Sunday Feb. 8, 2026. Participants may operate during both segments or just one segment but not during the gap between the two segments. Participants may operate all 20 hours of the contest.
+
+FREQUENCIES & MODES
+
+Contest bands: 160m to 10m, no WARC bands.
+Contest modes: Phone and CW
+
+Suggested Frequencies (+/- 5 kHz or so):
+
+CW - 1815, 3535, 7035, 14035, 21035, 28035 kHz.
+Phone - 1845, 3850, 7230, 14250, 21300, 28490 kHz. (check for US General)
+
+ | Band
+ | Freq. (Khz)
+ | Band
+ | Freq. (Khz)
+
+ | 160M CW | 1815 | 160M PH | 1845
+
+ | 80M CW * | 3535 | 80M PH | 3850
+
+ | 40M CW * | 7035 | 40M PH | 7230
+
+ | 20M CW * | 14035 | 20M PH | 14250
+
+ | 15M CW | 21035 | 15M PH | 21300
+
+ | 10M CW | 28035 | 10M PH | 28490
+
+ | * For CW when the NA CW Sprint is under way, consider 3570, 7070 and 14050 (due to NA Sprint CW activity)
+
+Suggested CQ Pattern
+
+CW: CQ BCQP de
+Phone: CQ BC QSO Party
+
+CLASSES
+
+Single-Operator, All Bands (SOAB)
+Multi-Operator, All Bands (Multi-Multi or Multi-Single)
+
+Modes: CW, Phone, Mixed
+Power: QRP - 5 watts or less; Low - up to 100 watts; High - over 100 watts.
+
+GENERAL RULES
+
+Use of packet spots, Skimmer is allowed in all classes.
+Requests to be spotted or self-spotting is prohibited in all classes.
+Any participant operating remotely, that is, the radio is not in the same location as the antennas, must indicate this in the soapbox of the submitted log.
+
+EXCHANGE
+
+British Columbia stations send: RS(T) and District (three letter abbreviation)
+Non-British Columbia stations send: RS(T) and state/province/territory or DX.
+Note: Hawaii and Alaska should be included under state, not DX. (Examples: enter a QSO from Hawaii as "59 HI" and a
+QSO from Japan as "59 DX".
+
+QSO POINTS
+
+2 points for Phone QSOs
+4 points for CW QSOs
+The same station may be worked for QSO points on each band on CW and Phone.
+
+MULTIPLIERS
+
+For BC stations:
+
+43 British Columbia electoral districts (see multiplier list);
+13 Canadian provinces/territories:
+NL, PE, NS, NB, QC, ON, MB, SK, AB, BC, YT, NT, NU; and US states, including Hawaii and Alaska. Maryland and DC are lumped together as MD.
+
+For non-BC stations:
+
+43 British Columbia electoral districts (see multiplier list).
+
+Multipliers can be counted only once per band and mode. Example: A mixed mode op can count DEL on CW 20 and Phone 20 as well as CW 40 and Phone 40, etc.
+
+SPECIAL BONUS STATION
+
+Any QSO with the Orca DXCC station, VA7ODX, will be worth an additional 20 points. Bonus points are added after calculating QSO points and location multipliers.
+
+SCORING
+
+Total = (QSO points from all bands X total location multipliers) plus bonus station points
+
+AWARDS: CERTIFICATES AND PLAQUES
+
+(A) Certificates will be awarded to stations achieving top score by class, mode and power category in BC and outside BC. Certificate eligibility requires at least 10 valid QSOs. Plaques will be awarded to stations with top results in sponsored categories.
+(B) Special recognition may be given in the form of a certificate or plaque, as the BCQP Contest Committee deems appropriate, based on log submissions and content thereof.
+(C) Notes
+1. To be eligible for a plaque, a station must submit a log with at least 10 valid QSOs. A valid QSO is one that contains all the required information. See REPORTING section below.
+2. A station may receive only one plaque. For example, if the operator at the station placing first in BC is a YL, she will receive EITHER the YL plaque OR the Top Score BC plaque but not both. A plaque allocation policy has been established, so that in the event a station qualifies in multiple plaque categories, including top score in BC, the US or other geographical location, the priority shall be placed on top score geographically, as applicable.
+Going forward, plaques will be awarded in accordance with this priority structure, and special plaques shall be awarded, as appropriate, to stations with the next highest scores, with approval from the plaque sponsor(s). In some cases, the category title shall be revised, in consultation with the respective plaque sponsor(s).
+
+3. Winning multi-op teams will receive one plaque and certificates for each member of the team.
+4. Entry for Highest Team Result will be a maximum of five single-op operators. Pre-contest registration is required. Send team names and callsigns to va7bec@gmail.com
+5. Entry for Highest Club Score will require that club affiliation is clearly indicated in the station logs for respective scores to be allocated to that club's aggregate score.
+6. An interested party becomes a confirmed sponsor when payment is received by the Orca DXCC Treasurer. Only then may the sponsor lock up a sponsorship category.
+7. Previous year sponsors have first right of refusal on sponsorship of their sponsored category in the next year.
+(D) Orca DXCC welcomes sponsorship by individuals, clubs and amateur radio-related organizations and businesses. A list of available awards and respective sponsors is provided at http://orcadxcc.org/bcqp_awards.html.
+
+Please contact the BCQP Contest Coordinator at va7bec@gmail.com if you would like to sponsor one of the open categories or if you have an idea for a different category that you would like to sponsor. All reasonable suggestions will be considered.
+
+Plaque sponsorship may be revised at the discretion of the BCQP Contest Committee, based on the number of logs submitted and content thereof.
+
+REPORTING
+
+(A) Logs must be submitted within 14 days of contest completion.
+
+Upload electronic logs at bcqp.contesting.com/bcqpsubmitlog.php. Follow these guidelines:
+
+1) Cabrillo format is required. For file name, use CALLSIGN.LOG - example: VA7ODX.log
+
+Summary sheet not required with Cabrillo logs.
+
+You will receive a confirmation e-mail, but you can verify receipt of your log at bcqp.contesting.com/bcqplogsrcvd.php
+
+2) Paper logs are accepted but must be postmarked no later than 14 days after the end of the contest. Send paper logs to:
+
+BCQP Log Submissions
+
+371 56th Street
+
+Delta, BC V4L 1Z4
+
+Canada
+
+Please include a summary sheet.
+
+(B) Logs must show band, mode, date/time in UTC, calls, sent (signal report and BC Electoral District/Province /State/DX) and received exchange (signal report and BC Electoral District/Province /State/DX).
+
+(1) Rules, summary sheet, and multipliers (three-letter BC Electoral District abbreviations and two-letter US state abbreviations) are available for downloading.
+
+(C) Final results will be posted on the BC QSO Party section of the Orca DX and Contest Club website.
+
+Cabrillo 3.0 format sample follows.
+
+START-OF-LOG: 3.0
+ARRL-SECTION: BC
+CALLSIGN: VA7ODX
+CLUB: Orca DX and Contest Club
+CONTEST: BC-QSO-PARTY
+CATEGORY: SINGLE-OP ALL LOW MIX
+CLAIMED-SCORE: xxxxx
+OPERATORS: VA7BEC
+NAME: Kewpie Dawl
+ADDRESS: 371 56th Street
+ADDRESS: Delta, BC V4L 1Z4
+ADDRESS: CANADA
+CREATED-BY: N1MM Logger V10.2.5
+QSO: 14035 CW 2018-02-04 1601 VA7ODX 599 NWB K7CUL 599 AZ
+QSO: 14051 CW 2018-02-04 1604 VA7ODX 599 NWB KL7/VA7BEC 599 AK
+QSO: 7228 PH 2018-02-04 1608 VA7ODX 59 NWB KH6TU 59 HI
+QSO: 3552 CW 2018-02-04 1627 VA7ODX 599 NWB VE7AGN 599 CML
+QSO: 14286 PH 2018-02-04 1629 VA7ODX 59 NWB JA1ABC 59 DX
+QSO: 7036 CW 2018-02-04 1702 VA7ODX 599 NWB VA7SPK 599 VAC
+END-OF-LOG:
+
+Convert your paper log to electronic format using this online log converter: www.b4h.net/cabforms/bcqp_cab.php
+
+Condition of Entry: Each entrant agrees to be bound by the provisions, as well as the intent, of this announcement, the regulations of his or her licensing authority and the decisions of the BC QSO Party Contest Committee.
+
+Helpful hints for BC stations
+
+ © 2025 Orca DX and Contest Club
+
+ Updated: Feb. 5, 2026 VA7ST

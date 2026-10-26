@@ -1,0 +1,485 @@
+﻿MO QSO Party Rules
+
+Source: https://www.w0ma.org/mo_qso_party/results/thisyear/moqp-2026-rules-final.pdf
+Fetched: 2026-10-26
+WA7BNM ID: 327 (https://www.contestcalendar.com/contestdetails.php?ref=327)
+Cabrillo Name: MO-QSO-PARTY
+ADIF Name: MO-QSO-PARTY
+
+         2026 Missouri QSO Party Rules
+
+Scope/Rules/Eligibility
+
+This document outlines the rules for the Missouri QSO Party, sponsored by the Boeing
+Employees Amateur Radio Society-St. Louis (BEARS-St. Louis). The General Rules for All
+ARRL contests will apply except as noted. Any licensed radio amateur may enter.
+
+Objective
+
+The objective of the contest is to work as many stations as possible during the contest period, to
+provide all licensed radio amateurs outside the state of Missouri the opportunity to work
+Missouri counties and to provide all licensed radio amateurs in Missouri an opportunity to work
+other states and countries. Missouri stations should call CQ Missouri QSO Party or CQ MOQP.
+Stations calling Missouri should call CQ Missouri or CQ MO.
+
+Date and Time Period
+
+The contest has two separate operating periods. For 2026 due to the Easter weekend the
+contest is on 11-12th of April.
+
+Day      Begin              End
+1st Day  1400 UTC Saturday  0400 UTC Sunday
+2nd Day  1400 UTC Sunday    2000 UTC Sunday
+
+Modes and Frequencies
+
+CW, Digital, and phone operation on 160M, 80M, 40M, 20M, 15M, 10M, 6M, 2M, 1.25M, and
+70cm. Suggested frequencies are 1.820 MHz on 160M or 40 kHz up from the band edge on
+CW, and 1.880, 3.825, 7.220, 14.250, 21.380, and 28.350 MHz on SSB.. Suggested
+frequencies on VHF/UHF are the standard calling frequencies.
+
+Exchange
+
+Missouri Stations
+Missouri stations will provide call sign, RST, and a three letter county code as defined in Table 1.
+Non-Missouri Stations
+Non-Missouri stations will provide call sign, RST, and their US state (as defined in Table 2) or
+Canadian province or territory (as defined in Table 3).
+
+DX Stations
+DX stations will provide callsign, RST, and the exchange "DX".
+
+Score
+
+The score for a participating station will be determined by multiplying the total number of valid
+contact points by the total number of multipliers worked, then adding the bonus points (if
+applicable).
+
+Points
+Points for valid contacts will be awarded in the following manner:
+
+    1. Valid phone contacts equals one point each.
+    2. Valid CW contacts equals two points each.
+    3. Valid digital contacts equals two points each.
+    4. At least one valid contact with the WØMA special event station will count as a single
+
+         100-point bonus added to the total score.
+    5. At least one valid contact with special event station KØGQ will count as a single
+
+         100-point bonus added to the total score.
+    6. A 100 point bonus will be awarded for successfully submitting a Cabrillo log
+
+         electronically.
+    7. Any valid contacts made between the hours of 1400 UTC Saturday to 2000 UTC
+
+         Saturday and 1400 UTC Sunday to 2000 UTC Sunday on the 40 and 80 meter bands
+         will count as an additional point each. Up to 250-point bonus can be added to the total
+         score.
+
+Multipliers
+Multipliers will be awarded in the following manner:
+
+    1. The multipliers for Missouri stations are Missouri counties (115 maximum), US states (49
+         maximum), and Canadian provinces and territories (13 maximum) worked. An additional
+         multiplier of the value of one will be added if at least one DX station is worked.
+
+    2. The multipliers for Non-Missouri and DX stations are Missouri Counties (115 maximum)
+         worked.
+
+    3. Any mobile or portable category entry that makes 50 or more valid contacts from a
+         county or county lines will be given the multiplier for that county or counties.
+Entry Classifications
+
+All Missouri stations may work any other Missouri station once per mode on each band per
+Missouri county. Missouri stations may work non-Missouri stations once per mode per band. All
+non-Missouri stations may work Missouri stations once per mode on each band per Missouri
+county. MOQP participants may not submit entries in multiple categories. Single operator
+stations may only have one transmitted signal at a time.
+
+Missouri Fixed Stations
+Missouri Fixed stations will operate from a single county within the State of Missouri. Fixed
+stations may operate in one of the following categories:
+
+         Missouri Fixed Multi-Op - any legal power, multi/multi allowed
+         Missouri Fixed Single-Op, High Power - over 150W, one transmitted signal
+         Missouri Fixed Single-Op, Low Power - 150W or less, one transmitted signal
+         Missouri Fixed Single-Op, QRP - 5W or less, one transmitted signal
+
+Missouri Expedition
+Missouri Expedition stations will operate from a single fixed geographic location. Commercial
+power may be used. The station and all antennas must be temporarily erected for the contest
+and removed afterwards. The location may not be that of a permanent amateur station.
+
+Expedition stations may be located at the intersection of two or more counties. County line
+operations must log these contacts as separate QSOs. Single-op expedition operations from
+county lines must have a portion of the station physically located inside each county claimed.
+Multi-op expedition operations from county lines must have a portion of at least one station
+physically located inside each county claimed. All equipment (including antennas) must lie
+within a circle whose diameter does not exceed 300 meters (1000 feet).
+
+Expedition stations may operate from one of the following categories:
+
+         Missouri Expedition Multi-Op - any legal power, multi/multi allowed
+         Missouri Expedition Single-Op, High Power - over 150W
+         Missouri Expedition Single-Op, Low Power - 150W or less
+         Missouri Expedition Single-Op, QRP - 5W or less
+
+Missouri Mobile Stations
+Mobile stations must operate from at least two counties within the State of Missouri and may
+operate in motion. Mobile operation on county lines is permitted. When operating from a county
+line, each contact must be logged as a separate QSO for each county claimed.
+Mobile entries with one operator will be classified as Single-Op. Mobile entries with two or more
+operators, regardless of driving responsibilities, will be classified as Multi-Op.
+Mobile stations may operate from one of the following categories:
+
+         Missouri Mobile Unlimited - over 150W multi/multi allowed
+         Missouri Mobile Multi-Op, Low Power - 150W or less,
+         Missouri Mobile Single-Op, Low Power, Mixed - 150W or less
+         Missouri Mobile Single-Op, Low Power, CW - 150W or less
+         Missouri Mobile Single-Op, Low Power, Phone - 150W or less
+
+Missouri Portable Stations
+Portable stations must operate from at least two counties within the State of Missouri and may
+not operate while in motion. Portable operation on county lines is permitted. County line
+operations must log all contacts as separate QSOs.
+
+Portable stations may operate from one of the following categories:
+
+         Missouri Portable Unlimited - over 150W multi/multi allowed
+         Missouri Portable Multi-Op, Low Power - 150W or less,
+         Missouri Portable Single-Op, Low Power, Mixed - 150W or less
+         Missouri Portable Single-Op, Low Power, CW - 150W or less
+         Missouri Portable Single-Op, Low Power, Phone - 150W or less
+
+Non-Missouri Stations
+Non-Missouri stations are from any other state in the United States (including the District of
+Columbia (DC), Alaska and Hawaii), or any Canadian province or territory.
+
+         Non-Missouri US Single Operator High Power - Over 150W
+         Non-Missouri US Single Operator Low Power - 150W or less
+         Non-Missouri US Single Operator QRP - 5W or less
+         Non-Missouri Multi Operator - Any legal power, multi/multi allowed
+         Canada - Any legal power, multi/multi allowed
+
+DX Stations
+DX stations are from any entity on the ARRL DXCC Countries list excluding the United States,
+Canada, Alaska, and Hawaii. DX stations can operate any legal power. Single op or Multi Op is
+allowed.
+
+Missouri School Club Category
+Missouri School clubs entries can be any university, college, technical, primary, or secondary
+school. Only currently enrolled students and faculty/staff of the institution are eligible to operate
+a school club entry. Alumni may participate on the air with students, however it is not in the spirit
+of the category for alumni exclusively to use the club station. Alumni should make every effort to
+continue in an Elmer role to current student club members. If no on campus station exists, a
+club may operate from a members station or set up a portable station on campus.
+
+Missouri Rookie Category
+
+All Missouri amateurs who are 18 years old or younger or have been licensed less than 3 years
+are eligible to enter in the rookie category in addition to the categories defined above. Rookie
+entries should be noted as such in the Cabrillo file header.
+
+Missouri Club Category
+
+Missouri stations may specify a club affiliation with their entry. Club scores will be determined by
+adding the scores of all Missouri stations that specify a particular club in their entry. At least
+three logs must be submitted to constitute a valid club entry. A club entry form is not required.
+
+Miscellaneous Rules
+
+The following miscellaneous rules will apply:
+
+    1. As a condition of entry, participants are bound to the provisions and intent of these rules,
+         and bound to the decisions of the contest sponsor regarding award distribution.
+
+    2. The use of spotting assistance or nets (operating arrangements involving other
+         individuals, DX-alerting nets, packet clusters, etc.) not physically located at the station is
+         permitted. Stations may spot themselves. Please see the BEARS website for APRS
+         tracking, spotting and the MOQP Facebook page links.
+
+    3. Cross-band and cross-mode contacts will not be permitted.
+    4. Repeaters and gateways may not be used to complete QSOs.
+    5. Soliciting a simplex contact during the contest period is permitted. APRS or other similar
+
+         means may be used for posting location, frequency, and mode but may not be used for
+         conducting QSOs.
+    6. Satellite contacts are prohibited.
+    7. Any digital mode contact counts as a valid QSO for digital. You can only work the same
+         digital station once per band. (The intent of this rule is to prevent working the same
+         station on a band via multiple digital modes.)
+    8. FT4/FT8 or similar modes that do not allow free text sending will not be allowed.
+    9. All stations should provide the opportunity to be worked by everyone involved in the
+         contest. Stations whose operation appears to be providing QSOs or multipliers only to a
+         specific station or stations is considered unsportsmanlike conduct and may be
+         disqualified.
+    10.Should more than one station attain the same score, the station with the most Missouri
+         counties worked will be awarded the higher position. The highest number of MO counties
+         plaques and certificates will be awarded to the station with the earliest QSO time of their
+         last county worked.
+Special Event Stations
+
+The BEARS-St. Louis will operate a special event station, WØMA as part of the contest. A
+one-time (first QSO only) 100-point bonus will be added to the total score of stations working
+special event station WØMA. WØMA is normally located in St. Louis County (SLC), but the
+station may operate portable in a different Missouri county for the QSO party.
+
+The Raytown ARC will operate a second event station, KØGQ as part of the contest. A one-time
+(first QSO only) 100-point bonus will be added to the total score of stations working special
+event station KØGQ. KØGQ will be operated out of Jackson County (JAC).
+
+Reporting, Submissions & Results
+
+Entries must be submitted to the contest sponsor within 15 days after the conclusion of the
+contest. No late entries will be accepted. All logs generated electronically, must be submitted
+electronically in Cabrillo format. No paper logs will be accepted. Entry can be found at:
+https://www.w0ma.org/index.php/missouri-qso-party. Official results will be published on the
+BEARS-St. Louis web site approximately 90 days after entry submittal deadline.
+
+All entries must specify their entry class and power level in the Cabrillo file header or summary
+sheet. (Note that some logging software does not correctly populate this information. Please
+verify the accuracy of your Cabrillo header using a text editor before submission). Incomplete or
+illegible entries will be classified as check-logs. Non-Cabrillo entries without a summary sheet
+will be scored as check-logs.
+
+E-mail Entry
+E-mail entries to: moqsoparty@w0ma.org
+
+AWARDS
+
+Winners
+
+Plaques (if sponsored) will be awarded for first place scores (with 50 or more QSOs) in each of
+the following categories:
+
+     Missouri Fixed Multi-Op
+     Missouri Fixed Single-Op, High Power
+     Missouri Fixed Single-Op, Low Power
+     Missouri Fixed Single-Op, QRP
+     Missouri Expedition
+     Missouri Mobile Unlimited
+     Missouri Mobile Multi-Op, Low Power
+     Missouri Mobile Single-Op, Low Power, Mixed
+     Missouri Mobile Single-Op, Low Power, CW
+     Missouri Mobile Single-Op, Low Power, Phone
+     Missouri Portable Unlimited
+     Missouri Portable Multi-Op, Low Power
+     Missouri Portable Single-Op, Low Power, Mixed
+     Missouri Portable Single-Op, Low Power, CW
+     Missouri Portable Single-Op, Low Power, Phone
+     Non-Missouri US Single Operator, High Power
+     Non-Missouri US Single Operator, Low Power
+     Non-Missouri US Single Operator, QRP
+     DX
+     Missouri Rookie
+     Missouri School club
+     Highest Digital score
+     Highest Number of Counties
+
+In the event a plaque does not get sponsored. or the minimum QSO count is not met, the first
+place score will still be awarded a certificate.
+
+Certificates will be awarded for first and second place scores in each of the following categories:
+
+     Missouri Fixed Multi-Op
+     Missouri Fixed Single-Op High Power
+     Missouri Fixed Single-Op Low Power
+     Missouri Fixed Single-Op QRP
+     Missouri Expedition Multi-Op
+     Missouri Expedition Single-Op High Power
+     Missouri Expedition Single-Op Low Power
+     Missouri Expedition Single-Op QRP
+     Missouri Mobile Unlimited
+     Missouri Mobile Multi-Op Low Power
+     Missouri Mobile Single-Op Low Power, Mixed
+     Missouri Mobile Single-Op Low Power, CW
+     Missouri Mobile Single-Op Low Power, Phone
+     Missouri Portable Unlimited
+     Missouri Portable Multi-Op Low Power
+     Missouri Portable Single-Op Low Power, Mixed
+     Missouri Portable Single-Op Low Power, CW
+     Missouri Portable Single-Op Low Power, Phone
+     Non-Missouri US Single Operator, High Power
+     Non-Missouri US Single Operator, Low Power
+     Non-Missouri US Single Operator, QRP
+     Non-Missouri US Multi-Op
+     Canada
+     DX
+     Missouri Rookie
+     Missouri School Club
+     Missouri clubs
+     Missouri Digital
+     Non Missouri Digital
+     Missouri VHF
+     Non-Missouri VHF
+     Highest Number of Counties
+     Each US state
+     Each Canadian province and territory
+
+Additional certificates may be awarded at the discretion of the contest sponsor.
+
+Bonus Missouri QSO Party Certificates
+
+Awarded to stations who spell SHOWME or MISSOURI using the suffixes of selected 1x1 calls
+listed below. For letters that occur more than once, the 1x1 stations may be reused if worked on
+additional bands or modes. Special Event Stations WØMA and KØGQ count as wild cards and
+may be used in place of one missing letter.
+
+Example: NØS WØH KØO NØW KØM NØE or NØS WØH WØMA NØW KØM NØE
+
+The following 1x1 call signs count towards the bonus Awards: KØE, KØH, KØI, KØM, KØO,
+KØR, KØS, KØU, KØW, NØE, NØH, NØI, NØM, NØO, NØR, NØS, NØU, NØW, WØE, WØH,
+WØI, WØM, WØO, WØR, WØS, WØU, and WØW.
+
+All bonus certificate winners will be notified via email that their certificate is available to be
+downloaded from www.w0ma.org
+
+Digital awards
+
+The digital mode plaque and certificates will be awarded to stations with the most digital QSOs
+multiplied by the most multipliers worked digitally. Entries do not have to be digital only entries
+and logs may also include non-digital contacts.
+
+VHF awards
+
+The VHF certificates will be awarded to stations with the most VHF QSOs multiplied by the most
+multipliers worked on VHF. Entries do not have to be VHF only entries and logs may also
+include non-VHF contacts.
+1x1 SHOWME & MISSOURI Callsign Suggestion Assignments
+
+1x1 S  H  O  W  M  E  I  U  R
+
+K  CW SSB ANY CW SSB ANY CW SSB ANY
+
+N  SSB ANY CW SSB ANY CW SSB ANY CW
+
+W  ANY CW SSB ANY CW SSB ANY CW SSB
+                    Table 1: Missouri County List
+
+County Name Exchange  County Name Exchange  County Name Exchange
+
+Adair      ADR        Harrison     HAR             Pemiscot   PEM
+
+Andrew     AND        Henry        HEN             Perry      PER
+
+Atchison   ATC        Hickory      HIC             Pettis     PET
+
+Audrain    AUD        Holt         HTL             Phelps     PHE
+
+Barry      BAR        Howard       HOW             Pike       PIK
+
+Barton     BTN        Howell       HWL             Platte     PLA
+
+Bates      BAT        Iron         IRN             Polk       POL
+
+Benton     BEN        Jackson      JAC             Pulaski    PUL
+
+Bollinger  BOL        Jasper       JAS             Putnam     PUT
+
+Boone      BOO        Jefferson    JEF             Ralls      RAL
+
+Buchanan   BUC        Johnson      JON             Randolph   RAN
+
+Butler     BTR        Knox         KNX             Ray        RAY
+
+Caldwell   CWL        Laclede      LAC             Reynolds   REY
+
+Callaway   CAL        Lafayette    LAF             Ripley     RIP
+
+Camden     CAM        Lawrence     LAW             Saline     SAL
+
+Cape Girardeau CPG    Lewis        LEW             Schuyler   SCH
+
+Carroll    CRL        Lincoln      LCN             Scotland   SCT
+
+Carter     CAR        Linn         LIN             Scott      SCO
+
+Cass       CAS        Livingston   LIV             Shannon    SHA
+
+Cedar      CED        Macon        MAC             Shelby     SHL
+
+Chariton   CHN        Madison      MAD      St. Charles       STC
+
+Christian  CHR        Maries       MRE             St. Clair  SCL
+
+Clark      CLK        Marion       MAR      St. Francois      STF
+
+Clay       CLA        McDonald     MCD      St. Louis County SLC
+
+Clinton    CLN        Mercer       MER      St. Louis City    STL
+
+Cole       COL        Miller       MIL      Ste. Genevieve STG
+
+Cooper     COP        Mississippi  MIS             Stoddard   STD
+
+Crawford   CRA        Moniteau     MNT             Stone      STN
+
+Dade       DAD        Monroe       MON             Sullivan   SUL
+   Dallas   DAL  Montgomery  MGM     Taney    TAN
+  Daviess   DVS     Morgan   MOR     Texas    TEX
+  DeKalb    DEK              NMD     Vernon   VRN
+            DEN  New Madrid  NWT     Warren   WAR
+    Dent    DGL     Newton   NOD  Washington  WAS
+  Douglas   DUN    Nodaway   ORE     Wayne    WAY
+  Dunklin   FRA     Oregon   OSA    Webster   WEB
+  Franklin  GAS     Osage    OZA     Worth    WOR
+Gasconade   GEN      Ozark           Wright   WRT
+   Gentry   GRN
+  Greene    GRU
+  Grundy
+               Table 2: State & Canada Province Listing
+
+  State        Exchange        State     Exchange         Province        Exchange
+Alabama             AL    New Mexico         NM             Alberta            AB
+ Alaska             AK                        NY                               BC
+ Arizona            AZ      New York         NC      British Columbia         MB
+Arkansas            AR   North Carolina      ND           Manitoba             NB
+                         North Dakota
+                                                      New Brunswick            NL
+California     CA        Ohio            OH          Newfoundland &            NT
+                                                                               NS
+Colorado       CO        Oklahoma        OK               Labrador            NU
+                                                   Northwest Territories
+Connecticut    CT        Oregon          OR
+                                                        Nova Scotia
+Delaware       DE        Maryland        MD                Nunavut
+
+District of
+
+Columbia       DC        Massachusetts   MA        Ontario                ON
+
+Florida        FL        Michigan        MI        Saskatchewan           SK
+
+Georgia        GA        Minnesota       MN        Prince Edward Island   PE
+
+Hawaii         HI        Mississippi     MS        Quebec                 QC
+
+Idaho          ID        Missouri        MO        Yukon                  YT
+
+Illinois       IL        Pennsylvania    PA
+
+Indiana        IN        Rhode Island    RI
+
+Iowa           IA        South Carolina  SC
+
+Kansas         KS        South Dakota    SD
+
+Kentucky       KY        Tennessee       TN
+
+Louisiana      LA        Texas           TX
+
+Maine          ME        Utah            UT
+
+Montana        MT        Vermont         VT
+
+Nebraska       NE        Virginia        VA
+
+Nevada         NV        Washington      WA
+
+New Hampshire  NH        West Virginia   WV
+
+New Jersey     NJ        Wisconsin       WI
+
+                         Wyoming         WY
+
+Note: "Maryland" includes the District of Columbia.
