@@ -132,6 +132,7 @@ uses
    VC,                    { ErmakSpecification, ERMAKSECTION, CABRILLOSECTION }
    PostUnit,              { ErmakOverlayCategory, NumberErmakOverlayCategories }
    uCabrilloHeader,       { the header store, settings\tr4w.json }
+   uOperatorList,         (* OperatorListFromLog -- the OPERATORS row *)
    uLCLFormHelpers,       { ApplyContentMinimumSize, ShowModalOverWin32Parent }
    MainUnit,              { logger, RescoreLog }
    Log4D,
@@ -376,7 +377,16 @@ begin
          end
       else if FRow[tag] is TEdit then
          begin
-         if CabrilloTagsArray[tag].ctrSave then
+         if tag = ctOperators then
+            begin
+            (* THE LOG'S OWN LIST, READ-ONLY: contacts only, most first. A typed
+              value would be ignored by every writer, so it is not offered.
+              uCbrSum.CabrilloTagText answers the same routine while the
+              window is open. *)
+            TEdit(FRow[tag]).ReadOnly := True;
+            TEdit(FRow[tag]).Text     := AnsiString(OperatorListFromLog);
+            end
+         else if CabrilloTagsArray[tag].ctrSave then
             begin
             TEdit(FRow[tag]).Text :=
                AnsiString(HeaderValue(section,

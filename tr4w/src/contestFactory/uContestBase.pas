@@ -1284,6 +1284,31 @@ type
       ClaimedScoreIsQSOPoints: boolean;
    end;
 
+   (* THE MULTIPLIER KINDS ONE COLUMN ADDS TOGETHER. *)
+   TRemainingMultiplierKinds = set of RemainingMultiplierType;
+
+   (* ONE MULTIPLIER COLUMN OF THE 3830SCORES.COM SUMMARY TABLE -- the
+      column's heading, as the sponsor's 3830 form spells it ('Zones',
+      'Countries', 'State/Prov', 'DX'), and the kinds of the multiplier sheet
+      (uMults.MTotals) whose counts it shows, added together. A RECORD BECAUSE
+      IT IS AN INTERFACE PARAMETER, as TSummarySheetLayout is. *)
+   T3830MultiplierColumn = record
+      Title: string;
+      Kinds: TRemainingMultiplierKinds;
+   end;
+
+   T3830MultiplierColumns = array of T3830MultiplierColumn;
+
+   (* WHAT THIS CONTEST'S 3830SCORES REPORT SHOWS -- PostUnit.ExportTo3830Scores
+      (NY4I, CQ WW SSB 2026: "allow the contest class to tell the main program
+      what to show in the 3830scores report as they can all be different").
+      The multiplier columns, left to right. THE ROWS ARE NOT HERE: they are
+      the bands the contest credits (UsesBand), so a contest states its bands
+      once. See TContestBase.Get3830Summary and uScore3830Report. *)
+   T3830SummaryLayout = record
+      MultiplierColumns: T3830MultiplierColumns;
+   end;
+
    (* AN OPERATING AID A SPONSOR MAY FORBID -- M9a. WRTC is the contest that
       forbids them: no Super Check Partial (the master file and its window),
       no DX cluster, no live score posting. The menus, OpenTR4WWindow and
@@ -1671,6 +1696,9 @@ type
       (* WHAT THE DISPLAY AND THE REPORTS ASK -- M9a. See the properties. *)
       function GetTotalsDisplay: TTotalsDisplay; virtual;
       function GetSummarySheet: TSummarySheetLayout; virtual;
+      (* THE 3830SCORES REPORT'S MULTIPLIER COLUMNS -- see the property
+         Summary3830. *)
+      function Get3830Summary: T3830SummaryLayout; virtual;
       function GetRequiresCabrilloLocation: boolean; virtual;
       function GetReportsRunningScore: boolean; virtual;
       function GetPermittedOperatingAids: TOperatingAids; virtual;
@@ -3108,6 +3136,17 @@ type
       (* How the summary sheet counts -- see TSummarySheetLayout. *)
       property SummarySheet: TSummarySheetLayout read GetSummarySheet;
 
+      (* WHAT THE 3830SCORES REPORT SHOWS -- its multiplier columns; the rows
+         are the bands the contest credits (UsesBand). A DISPLAY LAYOUT, NOT A
+         RULE: it scores and credits nothing, so the base answers what the
+         report showed for every contest before a contest could say (one
+         'Mults' column adding every kind), as SummarySheet and TotalsDisplay
+         do (M9a). A contest whose 3830 form breaks its multipliers out states
+         its columns -- the CQ WW runnings first (design 8.2x). Asked of the
+         contest with its station (ActiveContest), so a layout MAY depend on the
+         entrant, as ARRL DX's form would. *)
+      property Summary3830: T3830SummaryLayout read Get3830Summary;
+
       (* DOES THE CABRILLO HEADER NEED A LOCATION? The writer refuses to start
          the file without one (TC_LOCATIONFIELDEMPTY) -- ARRL 10 and Winter
          Field Day. The base does not. *)
@@ -3482,6 +3521,11 @@ function QSOIsXQSO(aContest: TContestBase; const aQso: ContestExchange): boolean
    back unchanged for a classless contest and for every contest that states
    no bands. *)
 function CreditedBands(aContest: TContestBase; aBandMask: Cardinal): Cardinal;
+
+(* ONE 3830SCORES COLUMN -- its heading and the kinds it adds together; what
+   a contest's Get3830Summary builds its answer from. *)
+function Make3830Column(const aTitle: string;
+                        aKinds: TRemainingMultiplierKinds): T3830MultiplierColumn;
 
 (* DOES aQso EARN A MULTIPLIER OF aKind IN aContest AT ALL? -- see
    TContestBase.CountsAsMultiplier. nil answers True: a classless contest's
@@ -4075,6 +4119,13 @@ begin
          Result := Result and not (Cardinal(1) shl Ord(b));
          end;
       end;
+end;
+
+function Make3830Column(const aTitle: string;
+                        aKinds: TRemainingMultiplierKinds): T3830MultiplierColumn;
+begin
+   Result.Title := aTitle;
+   Result.Kinds := aKinds;
 end;
 
 function ContestCountsMultiplier(aContest: TContestBase; const aQso: ContestExchange;
@@ -5839,6 +5890,16 @@ function TContestBase.GetSummarySheet: TSummarySheetLayout;
 begin
    Result.MultiplierPerBandModeRow := False;
    Result.ClaimedScoreIsQSOPoints := False;
+end;
+
+function TContestBase.Get3830Summary: T3830SummaryLayout;
+begin
+   (* What PostUnit.ExportTo3830Scores showed for every contest until a
+      contest could say: ONE column, 'Mults', adding every kind the sheet
+      counts. See the property. *)
+   SetLength(Result.MultiplierColumns, 1);
+   Result.MultiplierColumns[0] := Make3830Column('Mults',
+                                                 [rmDomestic, rmDX, rmZone, rmPrefix]);
 end;
 
 function TContestBase.GetRequiresCabrilloLocation: boolean;

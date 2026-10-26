@@ -151,7 +151,7 @@ const
     (ctrTag: '_CATEGORY-TRANSMITTER';   ctrCFG:False; ctrSave: True; ctrList: True;  ctrOpen: True),
     (ctrTag: '_CATEGORY-OVERLAY';       ctrCFG:True;  ctrSave: True; ctrList:  True; ctrOpen: False),  // Issue #976: persist + restore selection
     (ctrTag: '_CERTIFICATE';            ctrCFG:True;  ctrSave: True; ctrList: False; ctrOpen: False),
-    (ctrTag: '_OPERATORS';              ctrCFG:True;  ctrSave: True; ctrList: False; ctrOpen: False),
+    (ctrTag: '_OPERATORS';              ctrCFG:True;  ctrSave: False; ctrList: False; ctrOpen: False), // derived from the log, not stored
     (ctrTag: '_CLUB';                   ctrCFG:False; ctrSave: True;  ctrList: False; ctrOpen: False),
     (ctrTag: '_LOCATION';               ctrCFG:True;  ctrSave: True; ctrList: False; ctrOpen: False),
     (ctrTag: '_NAME';                   ctrCFG:False; ctrSave: True;  ctrList: False; ctrOpen: False),
@@ -199,6 +199,7 @@ implementation
 
 uses
   uCabrilloHeader,          { the header store, settings\tr4w.json }
+  uOperatorList,            (* OperatorListFromLog -- the OPERATORS answer *)
   uCabrilloSummaryForm;
 
 (* ONE HELPER, because the six settings tables and the three PostUnit ones are
@@ -267,6 +268,17 @@ function CabrilloTagText(const aTag: CabrilloTags): string;
 var
    section: string;
 begin
+   (* OPERATORS IS THE LOG'S, NEVER A TYPED OR STORED VALUE -- NY4I, CQ WW SSB
+     2026. The Cabrillo header already overrode the saved field, but the 3830
+     report and the summary sheet printed it, so a multi-op log said 'NY4I'.
+     One routine now (uOperatorList): contacts only, most first. It reads the
+     log, so call this when no other reader has the log source open. *)
+   if aTag = ctOperators then
+      begin
+      Result := OperatorListFromLog;
+      Exit;
+      end;
+
    if CabrilloSummaryOpen then
       begin
       Result := CabrilloSummary.TagText(aTag);

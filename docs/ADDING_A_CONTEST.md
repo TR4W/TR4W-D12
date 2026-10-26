@@ -475,6 +475,14 @@ Answered as data the UI renders; a class never touches a form.
 for any contest. Pinned in `uTestContestDisplay` / `uTestContestUI`; no oracle
 sees the screen, so a change here also gets a `docs/BENCH_QUEUE.md` item.
 
+**The 3830scores report** (`Get3830Summary`, design 8.2x): its rows are your
+`UsesBand` bands -- state nothing more -- and its multiplier columns are what
+`Get3830Summary` returns, each built with `Make3830Column` from the form's heading
+and the kinds it adds (CQ WW: `Make3830Column('Zones', [rmZone])`). The base gives one `Mults` column adding every kind. State your own
+only from the contest's actual 3830 form (a claimed-score post on
+3830scores.com shows its `Band QSOs ...` heading); `uTestScore3830Report`'s
+walks hold it well formed, and a pin of your columns goes beside CQ WW's there.
+
 ### `TStationContext` -- what a rule knows about the entrant
 
 `Station` holds the RESOLVED station facts -- `MyCall`, `MyCountry`,

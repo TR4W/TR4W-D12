@@ -159,9 +159,6 @@ procedure CreateCabrilloFile;
 procedure CheckForNewContestDate( Date: TQSOTime );
 
 procedure WriteADIFField( sFieldName: string; sFieldValue: string );
-function SLOperatorsSortProc( List: TStringList;
-   Index1, Index2: integer ): integer;
-function GetOperatorsFromLog: string;
 function DeleteRepeatedSpaces( const s: string ): string;
 
 procedure WriteTitleBlockToSummarySheet;
@@ -440,6 +437,8 @@ uses
   MainUnit,
   (* Which store an export reads from -- step B3. *)
   uLogSource,
+  (* LogRecordIsContact -- what GoodLookingQSO asks; the operator list asks it too. *)
+  uOperatorList,
   (* TMyStationExchange and TCabrilloQSOContext -- what the exporter hands a
      contest when it asks for its exchange columns. *)
   uContestBase,
@@ -453,6 +452,9 @@ uses
   (* CurrentStation -- the station a contest's Cabrillo header lines are for
      (M9a). *)
   uContestFactory,
+  (* Render3830Summary -- the 3830scores report's table, laid out by the
+     contest (design 8.2x). *)
+  uScore3830Report,
   (* SentMyState -- the state SENT in this contest, design 7.11 (M9a). *)
   FCONTEST,
   uCFG,
@@ -713,53 +715,24 @@ procedure SummarySheet;
   end;
 
 procedure ExportTo3830Scores;
-  // 3830Scores.com quick-submission report.  Layout adapts to contest rules:
-  // - Mode columns (CW Qs / Ph Qs / Dig Qs) appear only for modes that have
-  // at least one logged QSO.  Ph = USB+LSB+FM per spec.
-  // - Per-band Mults column appears iff Settings.Mult.ByBand = TRUE (CQ-WW, etc).
-  // - Bottom Mults summary: per-mode breakdown if Settings.Mult.ByMode = TRUE (FQP,
-  // NAQP); single 'Mults: N' otherwise.
-  // - All 8 standard 3830-form bands always rendered (160-2), even when
-  // zero.  Extra VHF/UHF rows appended only if they have QSOs.
-  const
-    STD_BANDS: array [ 0 .. 7 ] of BandType = ( Band160, Band80, Band40, Band20,
-       Band15, Band10, Band6, Band2 );
-    STD_BAND_LABELS: array [ 0 .. 7 ] of string = ( '160', ' 80', ' 40', ' 20',
-       ' 15', ' 10', '  6', '  2' );
+  (* 3830Scores.com quick-submission report: the header block here, then the
+    summary table, which uScore3830Report renders from a tally gathered here.
+    THE CONTEST SAYS WHAT THE TABLE SHOWS (design 8.2x, NY4I after CQ WW SSB
+    2026): its rows are the bands it credits (UsesBand), its multiplier
+    columns its Summary3830 -- CQ WW's Zones and Countries, the base's one
+    'Mults' column for every contest that states none. Asked of the contest
+    WITH its station (ActiveContest), so a layout may depend on the entrant;
+    "no contest" answers through its identity.
+
+    RawQSOTotals and mo.MTotals are indexed by the CW..Both subrange: FM is
+    folded into Phone by LoadTotalCount before either is filled. *)
   var
     buf: string;
     Band: BandType;
-    i: integer;
-    m: RemainingMultiplierType;
-    showCW, showPh, showDig: boolean;
-    bandQsCW, bandQsPh, bandQsDig: integer;
-    bandMults: integer;
-    sumCW, sumPh, sumDig, sumBandMults: integer;
-    cwMults, phMults, digMults, totalMults: integer;
+    Mode: ModeType;
+    tally: T3830Tally;
+    layoutContest: TContestBase;
     operatorsStr, classStr, powerStr: string;
-
-    function CalcBandMults( b: BandType ): integer;
-      var
-        mm: RemainingMultiplierType;
-      begin
-      Result := 0;
-      // Note: FM QSOs are folded into Phone by LoadTotalCount (PostUnit ~986)
-      // before RawQSOTotals/MTotals are populated, so RawQSOTotals/MTotals
-      // are indexed by the CW..Both subrange of ModeType.  Don't reference
-      // FM here (compile error: 'Constant expression violates subrange bounds').
-      for mm := Low( RemainingMultiplierType )
-         to High( RemainingMultiplierType ) do
-        if Settings.Mult.ByMode then
-           begin
-           Result := Result + mo.MTotals[ b, CW, mm ] + mo.MTotals
-              [ b, Phone, mm ] + mo.MTotals[ b, Digital, mm ]
-           end
-        else
-           begin
-           Result := Result + mo.MTotals[ b, Both, mm ];
-           end;
-      end;
-
   begin
   if not CheckLog then
      begin
@@ -770,11 +743,6 @@ procedure ExportTo3830Scores;
      begin
      Exit;
      end;
-
-  // RawQSOTotals[band, Phone] already includes FM (folded in by LoadTotalCount).
-  showCW  := RawQSOTotals[ AllBands, CW ] > 0;
-  showPh  := RawQSOTotals[ AllBands, Phone ] > 0;
-  showDig := RawQSOTotals[ AllBands, Digital ] > 0;
 
   buf := sysutils.Format( 'SOFTWARE: %s https://tr4w.net'#13#10#13#10,
      [ TR4W_CURRENTVERSION ] );
@@ -797,7 +765,11 @@ procedure ExportTo3830Scores;
     ONE BEHAVIOUR CHANGE, DELIBERATE: the old form truncated to 255 bytes
     because that was the stack buffer's size.  Nothing in a Cabrillo header
     is that long, and a silent truncation is not a property worth keeping. *)
-  operatorsStr := HeaderValue( CABRILLOSECTION, '_OPERATORS' );
+  (* THE LOG'S OWN LIST, most contacts first -- not the field the entrant
+    typed into the summary once (NY4I, CQ WW SSB 2026: the report said
+    'NY4I' for a NY4I + KS4FLA multi-op). Same routine as the Cabrillo line.
+    The log source is closed here: CheckLog's CalculateTotals closed it. *)
+  operatorsStr := CabrilloTagText( ctOperators );
   (* CATEGORY-OPERATOR IS ONE SETTING TOO -- Q61. This read the header
     store's '_CATEGORY-OPERATOR', which nothing writes (its ctrSave is
     False), so the report's Class line showed whatever an older build left
@@ -813,162 +785,27 @@ procedure ExportTo3830Scores;
   buf := buf + sysutils.Format( 'Class:     %s'#13#10, [ classStr ] );
   buf := buf + sysutils.Format( 'Power:     %s'#13#10#13#10, [ powerStr ] );
 
-  // Header row
-  buf := buf + '     ';
-  if showCW then
+  (* THE TALLY THE TABLE IS RENDERED FROM -- the summary's QSO totals,
+    the multiplier sheet's per-band counts, the session's by-band and
+    by-mode flags and the final score. *)
+  for Band := Low( BandType ) to High( BandType ) do
      begin
-     buf := buf + '    CW Qs';
+     for Mode := CW to Both do
+        begin
+        tally.QSOs[ Band, Mode ] := RawQSOTotals[ Band, Mode ];
+        end;
      end;
-  if showPh then
-     begin
-     buf := buf + '    Ph Qs';
-     end;
-  if showDig then
-     begin
-     buf := buf + '   Dig Qs';
-     end;
-  if Settings.Mult.ByBand then
-     begin
-     buf := buf + '    Mults';
-     end;
-  buf   := buf + #13#10;
+  tally.Mults      := mo.MTotals;
+  tally.MultByBand := Settings.Mult.ByBand;
+  tally.MultByMode := Settings.Mult.ByMode;
+  tally.TotalScore := TotalScore;
 
-  sumCW        := 0;
-  sumPh        := 0;
-  sumDig       := 0;
-  sumBandMults := 0;
-
-  // Standard 8 HF/Low-band rows (always shown, even when zero)
-  for i := Low( STD_BANDS ) to High( STD_BANDS ) do
+  layoutContest := ActiveContest( Contest );
+  if layoutContest = nil then
      begin
-     Band      := STD_BANDS[ i ];
-     bandQsCW  := RawQSOTotals[ Band, CW ];
-     bandQsPh  := RawQSOTotals[ Band, Phone ];
-     bandQsDig := RawQSOTotals[ Band, Digital ];
-
-     buf := buf + sysutils.Format( '%4s ', [ STD_BAND_LABELS[ i ] ] );
-     if showCW then
-        begin
-        buf := buf + sysutils.Format( '%9d', [ bandQsCW ] );
-        end;
-     if showPh then
-        begin
-        buf := buf + sysutils.Format( '%9d', [ bandQsPh ] );
-        end;
-     if showDig then
-        begin
-        buf := buf + sysutils.Format( '%9d', [ bandQsDig ] );
-        end;
-     if Settings.Mult.ByBand then
-        begin
-        bandMults    := CalcBandMults( Band );
-        buf          := buf + sysutils.Format( '%9d', [ bandMults ] );
-        sumBandMults := sumBandMults + bandMults;
-        end;
-     buf := buf + #13#10#13#10; // blank line between rows for readability
-
-     sumCW  := sumCW + bandQsCW;
-     sumPh  := sumPh + bandQsPh;
-     sumDig := sumDig + bandQsDig;
+     layoutContest := ContestIdentity( Contest );
      end;
-
-  // Extra VHF/UHF rows beyond 2m, only if they have QSOs
-  for Band := Band222 to Band24G do
-     begin
-     bandQsCW  := RawQSOTotals[ Band, CW ];
-     bandQsPh  := RawQSOTotals[ Band, Phone ];
-     bandQsDig := RawQSOTotals[ Band, Digital ];
-     if ( bandQsCW + bandQsPh + bandQsDig ) = 0 then
-        begin
-        Continue;
-        end;
-
-     buf := buf + sysutils.Format( '%4s ', [ BandStringsArray[ Band ] ] );
-     if showCW then
-        begin
-        buf := buf + sysutils.Format( '%9d', [ bandQsCW ] );
-        end;
-     if showPh then
-        begin
-        buf := buf + sysutils.Format( '%9d', [ bandQsPh ] );
-        end;
-     if showDig then
-        begin
-        buf := buf + sysutils.Format( '%9d', [ bandQsDig ] );
-        end;
-     if Settings.Mult.ByBand then
-        begin
-        bandMults    := CalcBandMults( Band );
-        buf          := buf + sysutils.Format( '%9d', [ bandMults ] );
-        sumBandMults := sumBandMults + bandMults;
-        end;
-     buf := buf + #13#10#13#10; // blank line between rows for readability
-
-     sumCW  := sumCW + bandQsCW;
-     sumPh  := sumPh + bandQsPh;
-     sumDig := sumDig + bandQsDig;
-     end;
-
-  // Total row
-  buf := buf + 'Total';
-  if showCW then
-     begin
-     buf := buf + sysutils.Format( '%9d', [ sumCW ] );
-     end;
-  if showPh then
-     begin
-     buf := buf + sysutils.Format( '%9d', [ sumPh ] );
-     end;
-  if showDig then
-     begin
-     buf := buf + sysutils.Format( '%9d', [ sumDig ] );
-     end;
-  if Settings.Mult.ByBand then
-     begin
-     buf := buf + sysutils.Format( '%9d', [ sumBandMults ] );
-     end;
-  buf   := buf + #13#10#13#10;
-
-  // Mults summary
-  if Settings.Mult.ByMode then
-     begin
-     cwMults  := 0;
-     phMults  := 0;
-     digMults := 0;
-     for m    := Low( RemainingMultiplierType )
-        to High( RemainingMultiplierType ) do
-        begin
-        cwMults  := cwMults + mo.MTotals[ AllBands, CW, m ];
-        phMults  := phMults + mo.MTotals[ AllBands, Phone, m ];
-        digMults := digMults + mo.MTotals[ AllBands, Digital, m ];
-        end;
-     if showCW then
-        begin
-        buf := buf + sysutils.Format( 'CW Mults: %d'#13#10, [ cwMults ] );
-        end;
-     if showPh then
-        begin
-        buf := buf + sysutils.Format( 'Ph Mults: %d'#13#10, [ phMults ] );
-        end;
-     if showDig then
-        begin
-        buf      := buf + sysutils.Format( 'Dig Mults: %d'#13#10, [ digMults ] );
-        end;
-     totalMults := cwMults + phMults + digMults;
-     buf := buf + sysutils.Format( 'Total Mults: %d'#13#10, [ totalMults ] );
-     end
-  else
-     begin
-     totalMults := 0;
-     for m      := Low( RemainingMultiplierType )
-        to High( RemainingMultiplierType ) do
-        begin
-        totalMults := totalMults + mo.MTotals[ AllBands, Both, m ];
-        end;
-     buf          := buf + sysutils.Format( 'Mults: %d'#13#10, [ totalMults ] );
-     end;
-
-  buf := buf + sysutils.Format( 'Total Score: %d'#13#10, [ TotalScore ] );
+  buf := buf + Render3830Summary( layoutContest, tally );
 
   sWriteFileFromString( tReportFileWrite, buf );
   FileClose(tReportFileWrite);
@@ -3033,14 +2870,23 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
             begin
             sWriteFileFromString( tReportFileWrite, UTF8Encode( contestLines ) );
             end;
+         (* OPERATORS: CabrilloTagText answers the log's own sorted list
+           (uOperatorList), as the 3830 report and the summary sheet's copy do,
+           and the specification caps the line at 75 characters, so a long list
+           is continued on further OPERATORS lines. Asked as a string, not read
+           back out of TempBuffer2: that buffer holds 255 characters, and a big
+           multi-op list would be cut short with no warning. *)
          if TempTag = ctOperators then
             begin
-            SetCharBuffer( TempBuffer2, GetOperatorsFromLog );
-            // Issue #998 (was custom Format '%s')
+            sWriteFileFromString( tReportFileWrite,
+               CabrilloOperatorLines( CabrilloTagText( ctOperators ) ) );
+            end
+         else
+            begin
+            // Issue #998: %s=tag(tagName), %s=value(TempBuffer2).
+            sWriteFileFromString( tReportFileWrite, sysutils.Format( '%s: %s'#13#10,
+               [ tagName, CharBufferText( TempBuffer2 ) ] ) );
             end;
-         // Issue #998: %s=tag(tagName), %s=value(TempBuffer2).
-         sWriteFileFromString( tReportFileWrite, sysutils.Format( '%s: %s'#13#10,
-            [ tagName, CharBufferText( TempBuffer2 ) ] ) );
          end;
 
       if Settings.My.ResolvedGrid <> '' then
@@ -3942,30 +3788,9 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
 
     function GoodLookingQSO: boolean;
       begin
-      Result := False;
-
-      if TempRXData.ceRecordKind <> rkQSO then
-         begin
-         Exit;
-         end;
-      if TempRXData.ceQSO_Deleted = true then
-         begin
-         Exit;
-         end;
-      if TempRXData.Band = NoBand then
-         begin
-         Exit;
-         end;
-      if TempRXData.Mode = NoMode then
-         begin
-         Exit;
-         end;
-      if TempRXData.ceQSO_Deleted = true then
-         begin
-         Exit;
-         end;
-
-      Result := true;
+      (* THE RULE LIVES IN uOperatorList.LogRecordIsContact, so the operator
+        list and the QSO lines of one file count the same records. *)
+      Result := LogRecordIsContact( TempRXData );
       end;
 
     (* THE BUFFER IS BOTH A ShortString AND NUL-TERMINATED, and it has to stay
@@ -4048,104 +3873,6 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       Result := MyExchangeForExport( ActiveContest( Contest ), NotCapturedMyFacts, '' );
       end;
   (* ---------------------------------------------------------------------------- *)
-    function GetOperatorsFromLog: string;
-      var
-        slOperators: TStringList;
-        Index: integer;
-      begin
-      Result := '';
-      if not LogSourceOpen then
-         begin
-         Exit;
-         end;
-
-      LogSourceRewind;
-
-      try
-        try
-          slOperators            := TStringList.Create;
-          slOperators.Duplicates := dupIgnore;
-          slOperators.Sorted     := False;
-
-          while LogSourceNext( TempRXData ) do
-             begin
-             // slOperators.Add(TempRXData.ceOperator);
-             slOperators.Values[ TempRXData.ceOperator ] :=
-                IntToStr( StrToIntDef( slOperators.Values
-                [ TempRXData.ceOperator ], 0 ) + 1 );
-             end;
-          LogSourceClose;
-          logger.debug( 'Before operators sort' );
-          for Index := 0 to slOperators.Count - 1 do
-             begin
-             logger.debug( '   %s = %s', [ slOperators.Names[ Index ],
-                slOperators.ValueFromIndex[ Index ] ] );
-             end;
-          slOperators.CustomSort( SLOperatorsSortProc );
-          // Result := slOperators.DelimitedText;
-          logger.debug( 'After operators sort' );
-          for Index := 0 to slOperators.Count - 1 do
-             begin
-             logger.debug( '[%d]   %s', [ Index, slOperators.Names[ Index ] ] );
-             Result := Result + slOperators.Names[ Index ];
-             if Index < ( slOperators.Count - 1 ) then
-                begin
-                Result := Result + ', ';
-                end;
-             end;
-        except
-          on E: Exception do
-             begin
-             logger.Error( 'Exception in GetOperatorsFromLog ', E );
-             end;
-        end;
-      finally
-        FreeANdNil( slOperators );
-      end;
-      end;
-
-    function SLOperatorsSortProc( List: TStringList;
-       Index1, Index2: integer ): integer;
-      var
-        i1, i2: integer;
-      begin
-      i1     := StrToIntDef( List.ValueFromIndex[ Index1 ], 0 );
-      i2     := StrToIntDef( List.ValueFromIndex[ Index2 ], 0 );
-      Result := i2 - i1;   (* most QSOs first -- DESCENDING, whatever the
-                              comment here used to say *)
-
-      (* A TOTAL ORDER, NOT A PARTIAL ONE -- and this is a defect fix, not
-         tidying.
-
-         Returning 0 for two operators with the same QSO count leaves their
-         order to the sort, and FPC's is not stable. TStringList.CustomSort
-         reaches TStringList.QuickSort, which picks its pivot at RANDOM:
-
-             Pivot := L + Random(R - L); // they say random is best
-                       -- rtl/objpas/classes/stringl.inc:1741, FPC 3.2.2
-
-         TR4W calls Randomize, so the seed differs per run and the tie breaks
-         differently each time. MEASURED on arrl_fd_2026_ny4i, where N4KIN has
-         22 QSOs and NY4I and AF4O have 6 each: six exports of the SAME log by
-         the SAME binary gave 'N4KIN, AF4O, NY4I' four times and 'N4KIN, NY4I,
-         AF4O' twice. The sort's INPUT was identical every run -- same names,
-         same order, same counts, confirmed from the debug log -- so the
-         variation was entirely the pivot.
-
-         That is a SUBMITTED FILE changing between identical runs. Nothing was
-         wrong with the content and nothing failed; it simply was not
-         reproducible, which is the kind of thing nobody notices until two
-         people compare their copies of the same log.
-
-         Alphabetical is an arbitrary tie-break, and arbitrary is fine here.
-         STABLE is the requirement. *)
-      if Result = 0 then
-         begin
-         Result := CompareText( List.Names[ Index1 ], List.Names[ Index2 ] );
-         end;
-      end;
-
-
     function DeleteRepeatedSpaces( const s: string ): string;
       var
         i, j, State: integer;

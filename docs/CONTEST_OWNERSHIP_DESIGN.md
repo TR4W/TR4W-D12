@@ -76,7 +76,7 @@ lives in a helper or in the format's own unit.
 | session setup: memories, settings defaults, domestic file and countries, band/mode | **the class, for every contest that has one** (M7a, done 2026-10-02): `FoundContest` asks `DescribeSession` and `FCONTEST.ApplySessionDefaults` writes it; LogCfg's CQ-exchange default is `CQExchangeDefault`. M7b gave the classless contests classes (batch 1, thirty-nine, §8.2j; batch 2, forty, §8.2k); `FoundContest`'s `case` is gone: POTA's arm became its `DescribeSession` (§8.2o) and the UA4W Championship's, the last, its own (§8.2p) | `DescribeSession`, `CQExchangeDefault` (**existing**, §4, §8.2i) |
 | total score and bonuses | **the class, for every contest** (M6, done 2026-10-02): `logedit.TotalScore` gathers the totals and asks `FinalScore`, and names no contest: RSGB 1.8 MHz's "times one", held there at M6 (§8.2h), is its `CombineWithMultipliers` (§8.2p) | `FinalScore` = `CombineScore` + `BonusPoints`; `CombineWithMultipliers`, `BonusStations` (**existing**, §5) |
 | multipliers and dupes | **the sheet keeps the state; the class declares the rules** (M8, done 2026-10-02, §8.2l): the kinds and by-band/by-mode traits, `UsesBand` (now asked by the dupe sheet and the need-multiplier hint too), `CountsAsMultiplier` (asked by `logdupe.SetMultFlags`), `MarksDupes`, and the hint's `DomesticMultiplierFromCall`. A multiplier KIND's arm stays in the sheet until the multiplier commands retire (Q4). RSGB 1.8 MHz's scoring ASKS the sheet, read-only, through the station context (7.13, §8.2p) | `CountsAsMultiplier`, `DomesticMultiplierFromCall` (**existing**, M8); `MarksDupes`, `UsesBand` (**existing**); `TStationContext.IsNewMultiplierAnywhere` (**existing**, §8.2p); the multiplier KEY at M10 |
-| summary sheet, totals window, new-contest prompts, hour report, HamScore's canonical exchanges, score-posting labels, operating aids, the QTC menu | **the class, as data the UI renders** (M9a, done 2026-10-02, §8.2m); uNewContest names no contest (POTA's arms moved at §8.2o, RSGB 1.8's and the UA4W Championship's at §8.2p, and `ClasslessPrompts` is deleted); POTA's park menu rows are `OffersParkTools` | `SummarySheet`, `TotalsDisplay`, `DescribeNewContestPrompts`, `ReportsRunningScore`, `CanonicalReceived/SentExchange`, `ScorePostingMultiplierType`, `PermittedOperatingAids`, `OffersQTCs` (**existing**, M9a) |
+| summary sheet, totals window, new-contest prompts, hour report, HamScore's canonical exchanges, score-posting labels, operating aids, the QTC menu, the 3830scores report's table | **the class, as data the UI renders** (M9a, done 2026-10-02, §8.2m; the 3830 table 2026-10-25, §8.2x); uNewContest names no contest (POTA's arms moved at §8.2o, RSGB 1.8's and the UA4W Championship's at §8.2p, and `ClasslessPrompts` is deleted); POTA's park menu rows are `OffersParkTools` | `SummarySheet`, `TotalsDisplay`, `DescribeNewContestPrompts`, `ReportsRunningScore`, `CanonicalReceived/SentExchange`, `ScorePostingMultiplierType`, `PermittedOperatingAids`, `OffersQTCs` (**existing**, M9a); `Summary3830` (§8.2x) |
 | the New Contest drop-down's name and place, call entry's contest status, the ten-date warning, WARC band stepping, the FOC# log column, a frequency warning | **the class, as data the UI renders** (M9b, done 2026-10-02, §8.2n); the off-time minimum since Q60 (2026-10-15) | `DisplayName`, `IsActive`, `ShowsContestStatus`, `MaximumContestDates`, `BandStepIncludesWARC`, `PowerFieldIsFOCNumber`, `CallEntryFrequencyWarning` (**existing**, M9b) |
 
 The seam names on the right are the generator's
@@ -4657,6 +4657,80 @@ rule (§1) applied to the one block of the record that had stayed generic.
   the class does not declare. `ref.adi` is never regenerated, so
   `tr4w/test/corpus/winter_fd_2025_w4ta/known.adi.diff` pins the five records
   line for line (read by `run-golden-diff.sh` and `test-adif-roundtrip.sh`).
+
+### 8.2x The 3830scores report's table is the contest's (2026-10-25)
+
+NY4I, after CQ WW SSB 2026, of `PostUnit.ExportTo3830Scores` (the text he
+copies into the 3830scores.com form): *"we need to see a break out of both zone
+and country multipliers. The challenge is you need to allow the contest class
+to tell the main program what to show in the 3830scores report as they can all
+be different."* The report wrote ONE combined `Mults` column for every contest
+and always listed 6 m and 2 m, which CQ WW does not have.
+
+**Built (delegated design, decided on the evidence below):**
+
+- **The ROWS are the contest's bands -- `UsesBand`, asked through
+  `ContestCreditsBand`.** No second band list. Of the credited bands, the 3830
+  form's standard rows (160-10, 6, 2 -- the eight the report always printed)
+  are always shown; any other credited band only when it has QSOs. So CQ WW
+  CW/SSB print 160-10 and CQ WW RTTY 80-10, with nothing on 6 or 2 m.
+- **The COLUMNS are `TContestBase.Summary3830: T3830SummaryLayout`** -- the
+  getter `Get3830Summary` (protected virtual, M9a's shape): an ordered list of
+  `T3830MultiplierColumn = (Title, Kinds: TRemainingMultiplierKinds)`, each
+  column's heading as the 3830 form spells it and the multiplier-sheet kinds
+  (`rmDomestic`, `rmDX`, `rmZone`, `rmPrefix`) whose counts it adds. Built with
+  `uContestBase.Make3830Column`.
+- **The VALUES are the sheet's own** -- `uMults.mo.MTotals[band, mode, kind]`,
+  the per-band per-kind counts the totals window reads; the QSO counts are
+  PostUnit's `RawQSOTotals`. Nothing is recounted.
+- **The renderer is a leaf, `src/uScore3830Report.pas`** (`T3830Tally`,
+  `Is3830Row`, `Render3830Summary`): pure, reads no global, so a test hands it
+  a tally. PostUnit keeps the header block (SOFTWARE, Call Used, Operators from
+  `CabrilloTagText(ctOperators)`, Class, Power) and gathers the tally. The
+  mode columns (CW/Ph/Dig Qs for modes with QSOs), the per-band cells only when
+  the session counts multipliers per band, and the per-mode lines when it
+  counts per mode stay the report's, unchanged.
+- **Asked of `ActiveContest(Contest)`** (identity for "no contest"), so a
+  layout MAY read the entrant -- ARRL DX's form differs for W/VE and DX.
+
+**DECIDED: THE BASE HAS A DEFAULT, BECAUSE THIS IS A DISPLAY LAYOUT, NOT A
+RULE.** NY4I's "no inherited default" (Q98, design 8.2v) covers a value that
+decides scoring or crediting -- a forgotten override there credits wrongly and
+silently. A layout scores and credits nothing, and the M9a display seams
+(`SummarySheet`, `TotalsDisplay`) carry base defaults for the same reason. The
+base answers exactly what the report showed before: one `Mults` column adding
+every kind. The band rows, which ARE a rule, come from `UsesBand` and its
+ratchet. Considered and rejected: making all 187 classes state a layout now --
+it would mean inventing 3830 column titles for contests whose forms nobody has
+read, which is guessing; and composing a default per kind from
+`Has*Multiplier` -- it would change every contest's report at once with
+generic headings that match no form.
+
+**WHO STATES ONE, AND THE SOURCE:**
+
+| class | columns | source |
+|---|---|---|
+| `TContestCQWWBase` (CQ WW CW and SSB; one rule for the family) | Zones, Countries | 3830scores.com claimed-score posts for both runnings, read 2026-10-25 (`Band QSOs Zones Countries`), and NY4I's statement of the form |
+| `TContestCQWWRTTY` | State/Prov, DX, Zones | a 2026 claimed-score post (`Band QSOs State/Prov DX Zones`), read 2026-10-25 |
+
+**THE ONE DELIBERATE CHANGE FOR A CONTEST STATING NOTHING:** a credited band
+outside the standard rows -- the WARC bands included -- now has a row when it
+has QSOs. The WARC bands had no row at all before, so their QSOs were also
+missing from the Total row. Everything else is byte for byte as it was.
+
+**Pinned by `uTestScore3830Report` (`TScore3830ReportTests`):** the base layout,
+CQ WW's and CQ WW RTTY's layouts and rows, the rendered CQ WW SSB table for
+NY4I's 2026 shape, the base's rendered table as the old routine wrote it (per
+band, not per band, per mode), the WARC change, and two registry walks -- every
+contest's layout is well formed, and no contest has a row on a band it does not
+credit. No oracle writes this report (corpus, matrix and `/EXPORT` do not), so
+these tests are the only statement it is right.
+
+**Open for NY4I:** whether the QSO column should read the form's `QSOs` rather
+than `Ph Qs` for a single-mode contest (unchanged here: it is the report's, not
+the contest's); and which other contests' forms to state next (CQ WPX
+prefixes, ARRL DX by entrant, ARRL SS sections, NAQP) -- each needs its form
+read first.
 
 ### 8.3 What "a contest has moved" means -- checkably
 

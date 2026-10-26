@@ -99,6 +99,9 @@ type
       (* A BREAK IS 60 MINUTES -- see TContestBase.MinimumOffTimeMinutes
          (Q60). *)
       function GetMinimumOffTimeMinutes: integer; override;
+      (* THE 3830SCORES SUMMARY -- State/Prov, DX, Zones, this running's
+         form. See TContestBase.Summary3830. *)
+      function Get3830Summary: T3830SummaryLayout; override;
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
@@ -293,6 +296,20 @@ end;
 function TContestCQWWRTTY.GetMinimumOffTimeMinutes: integer;
 begin
    Result := 60;
+end;
+
+(* THE 3830 FORM'S SUMMARY TABLE IS "Band QSOs State/Prov DX Zones", per band
+   80-10 m then Total -- read from a claimed-score post for the 2026 edition on
+   3830scores.com (2026-10-25). NOT the CW and SSB runnings' form: this one
+   counts the W/VE states and provinces (the domestic multiplier, s48p14dc)
+   and puts the countries before the zones -- one more reason it is not on
+   their family base. The rows are UsesBand's five bands. *)
+function TContestCQWWRTTY.Get3830Summary: T3830SummaryLayout;
+begin
+   SetLength(Result.MultiplierColumns, 3);
+   Result.MultiplierColumns[0] := Make3830Column('State/Prov', [rmDomestic]);
+   Result.MultiplierColumns[1] := Make3830Column('DX', [rmDX]);
+   Result.MultiplierColumns[2] := Make3830Column('Zones', [rmZone]);
 end;
 
 function TContestCQWWRTTY.GetIsUSQSOParty: boolean;

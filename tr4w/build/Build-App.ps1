@@ -420,7 +420,10 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # 1233 -> 1229, 2026-10-23: the Q113 review fixes (R2-R5, LogCW and
 # uLogStore's memory parse/capture rework); measured by the full build of
 # that work.
-$NARROW_CEILING = 1228
+# 1228 -> 1227, 2026-10-25: the operator-list work deleted PostUnit's
+# GetOperatorsFromLog and its sort, and uOperatorList compares native strings
+# ordinally; measured by the full build of that work.
+$NARROW_CEILING = 1227
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

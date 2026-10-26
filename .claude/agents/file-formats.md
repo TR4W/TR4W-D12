@@ -296,6 +296,20 @@ multipliers, CTY.DAT, band lookup and CRC32.
   (`MapModeForRTC`, dead since RTC 3.0) is deleted. The summary sheet asks
   `SummarySheet` and the hour report `ReportsRunningScore`. The corpus sees the
   header for its Winter Field Day and General QSO sets; nothing else does.
+- **THE OPERATOR LIST IS ONE ROUTINE, `uOperatorList` (2026-10-25, NY4I, CQ WW SSB
+  multi-op).** `OperatorListFromLog` (most contacts first; ties alphabetical, a TOTAL
+  order; no TStringList sort, whose quicksort pivot is random) is what
+  `uCbrSum.CabrilloTagText(ctOperators)` answers, so the Cabrillo `OPERATORS:` line,
+  the 3830 report and the summary sheet cannot differ; the summary dialog's row is
+  read-only and `_OPERATORS` is `ctrSave: False`. A "contact" is
+  `LogRecordIsContact` -- rkQSO, not deleted, with a band and a mode -- which
+  PostUnit's `GoodLookingQSO` now calls, so the list and the QSO lines count the same
+  records (the 3830 report printed the stored field, and the old count included
+  NOTE rows). The separator is still `, ` (`OPERATOR_LIST_SEPARATOR`): the D7
+  references of winter_fd, arrl_fd and arrl_ss_ssb hold `A, B, C`, and the Cabrillo 3.0
+  header is read as space-delimited -- changing it is NY4I's decision, and the
+  corpus compares only QSO lines, not the header, but the frozen rescored.cbr would move.
+  Pinned by `uTestOperatorList`.
 - **THE STATE SENT IS NOT MY STATE (M9a, design 7.11).** The Cabrillo sent
   column and the ADIF `STX_STRING` read `FCONTEST.SentMyState` -- MY STATE,
   unless the contest's set-up states what it sends instead (Canada Day/Winter

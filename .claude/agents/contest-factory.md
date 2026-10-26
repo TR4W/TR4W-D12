@@ -959,6 +959,20 @@ the target shape, the M-step migration order and the open questions.
   was deleted with RSGB 1.8's and UA4W's classes (2026-10-14). `uTestContestDisplay`
   pins every seam and compares every contest's prompts with a table
   generated from the dialog's own arms.
+- **THE 3830SCORES REPORT'S TABLE IS THE CONTEST'S (2026-10-25, design
+  §8.2x).** Rows = the bands `UsesBand` credits (the form's standard 160-10/6/2
+  always, any other credited band only with QSOs -- so WARC QSOs now reach the
+  Total row); columns = `Summary3830` (`Get3830Summary`, protected virtual):
+  `T3830MultiplierColumn = (Title, Kinds)` over the sheet's kinds, built with
+  `Make3830Column`. A DISPLAY LAYOUT, so the base has a default (one `Mults`
+  column, every kind -- the old report byte for byte); NOT the bands, which
+  stay the ratcheted rule. CQ WW CW/SSB (on `TContestCQWWBase`): Zones,
+  Countries; CQ WW RTTY: State/Prov, DX, Zones -- both read from 3830 claimed
+  posts. Values are `mo.MTotals` and `RawQSOTotals`, never recounted; the leaf
+  renderer is `src/uScore3830Report.pas` (`Render3830Summary`), PostUnit keeps
+  the header block and asks `ActiveContest` (identity for "no contest").
+  `uTestScore3830Report` pins it; no oracle writes this report. State a
+  contest's columns only from its actual 3830 form.
 - **The UI itself asks the contest** (M9b, 2026-10-02, design §8.2n).
   `IsActive` (base True; SA Sprint and Locust False, on NY4I's word only --
   `uTestContestUI.INACTIVE_CONTESTS` is the ratchet) places a contest in the

@@ -271,6 +271,11 @@ uses
    uTestEditingKeys   in 'uTestEditingKeys.pas',
    uSHA256 in '..\..\src\utils\uSHA256.pas',
    uTestSHA256 in 'uTestSHA256.pas',
+   uTestSCPUpload in 'uTestSCPUpload.pas',
+   uOperatorList in '..\..\src\uOperatorList.pas',
+   uTestOperatorList in 'uTestOperatorList.pas',
+   uTestScore3830Report in 'uTestScore3830Report.pas',
+   uTestRadioDestructors in 'uTestRadioDestructors.pas',
    uTestAllSettings in 'uTestAllSettings.pas',
    uTestCWFraming in 'uTestCWFraming.pas',
    (* THE CONTEST FACTORY. uContestFactory is deliberately NOT here: it reads
@@ -932,6 +937,10 @@ begin
    RegisterSuite(TCWKeyerTests.Create('CWKeyer'));
    RegisterSuite(TCPUKeyerRingTests.Create('CPUKeyerRing'));
    RegisterSuite(TSHA256Tests.Create('SHA256'));
+   RegisterSuite(TSCPUploadTests.Create('SCPUpload'));
+   RegisterSuite(TOperatorListTests.Create('OperatorList'));
+   RegisterSuite(TScore3830ReportTests.Create('Score3830Report'));
+   RegisterSuite(TRadioDestructorTests.Create('RadioDestructors'));
    RegisterSuite(TCWFramingTests.Create('CWFraming'));
    RegisterSuite(TContestFactoryTests.Create('ContestFactory'));
    RegisterSuite(TOffBandCreditTests.Create('OffBandCredit'));

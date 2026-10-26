@@ -65,6 +65,10 @@ type
       (* A BREAK IS 60 MINUTES -- the family's rule, both modes (Q60). See
          TContestBase.MinimumOffTimeMinutes. *)
       function GetMinimumOffTimeMinutes: integer; override;
+
+      (* THE 3830SCORES SUMMARY -- Zones, then Countries, the family's form.
+         See TContestBase.Summary3830. *)
+      function Get3830Summary: T3830SummaryLayout; override;
    public
 
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -196,6 +200,18 @@ end;
 function TContestCQWWBase.GetMinimumOffTimeMinutes: integer;
 begin
    Result := 60;
+end;
+
+(* THE 3830 FORM'S SUMMARY TABLE IS "Band QSOs Zones Countries", per band
+   160-10 m then Total -- read from claimed-score posts on 3830scores.com for
+   both runnings (2026-10-25: the CW and SSB editions' showrumor pages), and
+   NY4I's statement of the form after CQ WW SSB 2026. Both runnings share it,
+   so it is stated once, here. The rows are UsesBand's six bands. *)
+function TContestCQWWBase.Get3830Summary: T3830SummaryLayout;
+begin
+   SetLength(Result.MultiplierColumns, 2);
+   Result.MultiplierColumns[0] := Make3830Column('Zones', [rmZone]);
+   Result.MultiplierColumns[1] := Make3830Column('Countries', [rmDX]);
 end;
 
 (* THE RST COMES OFF FIRST. SRX_STRING is '59 8' -- the received RST and the
