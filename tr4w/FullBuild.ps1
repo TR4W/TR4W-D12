@@ -272,6 +272,17 @@ else
 
    & (Join-Path $BUILD_DIR 'Build-Tests.ps1') -Checked -Run -Cpu $Cpu -Os $Os -Fpc $tc.FpcExe -Laz $tc.LazDir | Out-Host
    if ($LASTEXITCODE -ne 0) { Fail 'checked unit tests failed -- app build aborted' }
+
+   # -----------------------------------------------------------------------
+   # The bench programs: BUILT, never run (they talk to real radios). They
+   # link the same units as the tests and nothing else compiled them, so
+   # bench_callsign lost its Interfaces and failed to link for weeks. Tied to
+   # -SkipTests, which already means "skip the test-side steps"; no new switch.
+   # -----------------------------------------------------------------------
+   Phase 'Bench programs (build only)'
+
+   & (Join-Path $BUILD_DIR 'Build-Bench.ps1') | Out-Host
+   if ($LASTEXITCODE -ne 0) { Fail 'bench program build failed -- app build aborted' }
    }
 
 # ---------------------------------------------------------------------------

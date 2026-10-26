@@ -107,10 +107,9 @@ program bench_icombands;
   With too few arguments it SKIPS cleanly (exit 0), so a script on a machine
   with no radio is safe.  Exit 1 means it ran and something was wrong.
 
-  NOTE: NOTHING BUILDS THIS AUTOMATICALLY.  Build-Bench.ps1 is not called by
-  FullBuild.ps1 or by any CI workflow, so a change that breaks this program
-  will not fail anyone's build.  Build it by hand after touching the radio
-  factory.
+  NOTE: FullBuild.ps1 builds every bench program (Build-Bench.ps1, after the
+  unit tests; -SkipTests skips it), so a change that breaks this program fails
+  the build there.  No Unix build builds it.
 }
 
 {$I ..\..\src\tr4w.inc}

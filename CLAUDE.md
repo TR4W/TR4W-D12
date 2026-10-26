@@ -759,8 +759,11 @@ TR4W writes against ADIF 3.1.6's field list (`ADIF_SPEC_VERSION` in `uADIF`).
 via `run-bench.ps1`. `tr4w/test/bench/` holds the **measuring instruments** — programs that ask a
 real radio a question and print what it says: `bench_icombands` (which bands does it have; read-only),
 `bench_icomscope` and `bench_k4spectrum` (scope geometry). Build them with
-`tr4w/build/Build-Bench.ps1`, **which no gate and no CI runs**, so a change that breaks one fails
-nobody's build. `tr4w/test/logdump/` dumps binary `.dat` logs to JSONL through the canonical
+`tr4w/build/Build-Bench.ps1` (no `-Program` builds every `bench_*.lpr`, floor 5). **`FullBuild.ps1`
+BUILDS them all after the unit tests** (skipped by `-SkipTests`; build only, never run) --
+`bench_callsign` failed to link for weeks before that because nothing compiled it. The Windows CI
+job builds them too, because it runs `FullBuild.ps1` (`release.yml`); `build-unix.sh` has no bench
+stage, so no Unix build does. `tr4w/test/logdump/` dumps binary `.dat` logs to JSONL through the canonical
 `ContestExchange`; `tr4w/test/python/verify_adif_export.py` cross-checks ADIF export against it.
 
 **Lint scripts** in `tr4w/build/`. `Lint-PCharAnsi.ps1`, `Lint-RadioRegistry.ps1` and

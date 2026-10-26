@@ -91,8 +91,8 @@ if (-not (Test-Path -LiteralPath $crashUnit))
 #
 # Exempt-by-location is not laziness: test\, tools\ and build\ hold diagnostic
 # probes, one-shot converters and lint helpers. They are run at a console by a
-# developer who is watching, several are built by scripts no gate runs at all
-# (CLAUDE.md records that nothing runs Build-Bench), and a crash reporter buys
+# developer who is watching, several are built only by scripts that build and
+# never run them (Build-Bench, from FullBuild), and a crash reporter buys
 # them nothing a visible stack trace does not already give.
 # ---------------------------------------------------------------------------
 $required = @(

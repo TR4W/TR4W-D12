@@ -89,8 +89,8 @@ TR4W's bands the radio can work; the log beside it holds every `$1E` and `$02`
 payload as hex next to the driver's decode. Read its header before running it
 against a live station.
 
-Nothing builds it automatically — `Build-Bench.ps1` is called by neither
-`FullBuild.ps1` nor CI — so build it by hand after touching the radio factory.
+`FullBuild.ps1` builds it (through `Build-Bench.ps1`, after the unit tests), so
+a change that breaks it fails the build. No Unix build builds it.
 
 The machinery it drives is ordinary driver code, so the same lines appear in
 `tr4w.log` during a normal session: `tr4w/src/radioFactory/uRadioIcomBase.pas`

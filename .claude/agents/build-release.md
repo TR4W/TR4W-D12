@@ -28,6 +28,9 @@ only, cannot build a Win32 target).
 .\build\Build-App.ps1 -Incremental
 .\build\Build-Tests.ps1 -Run
 .\build\Build-Tests.ps1 -Checked -Run   # -gt -gh; FullBuild.ps1 runs it too
+.\build\Build-Bench.ps1          # builds EVERY test/bench/bench_*.lpr (floor 5); FullBuild.ps1
+                                 # runs it after the tests, build only, skipped by -SkipTests.
+                                 # -Program <name> for one; -Run needs a single -Program
 .\build\Build-Server.ps1
 .\build\Run-Lints.ps1
 ```
