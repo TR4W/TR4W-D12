@@ -895,7 +895,6 @@ procedure TContestExportTests.Test_EveryPartyAndOnlyAPartyWritesAState;
 var
    contests: TContestIdentityList;
    k: integer;
-   c: ContestType;
    identity: TContestBase;
    isStateParty: boolean;
    isParty: boolean;
@@ -911,13 +910,12 @@ begin
    for k := 0 to High(contests) do
       begin
       identity := contests[k];
-      c := ContestOf(identity);
       isStateParty := identity is TContestStateQSOPartyBase;
       isParty := identity.SplitsRoverCallOnExport;
       CheckTrue(isParty or not isStateParty,
                 ContestWho(identity) + ': a state party is a QSO party');
-      (* THE HANDLE, NEVER c, for the QSO: c is DUMMYCONTEST for a contest
-         registered by its id (see PartyQSO). *)
+      (* THE HANDLE for the QSO, never the legacy member: that is
+         DUMMYCONTEST for a contest registered by its id (see PartyQSO). *)
       if isParty then
          begin
          CheckEquals('CT', GetADIFStateForQSO(PartyQSO(HandleOf(identity), 'CT', 'Ct', 'K')),
@@ -929,7 +927,8 @@ begin
                      ContestWho(identity) + ': not a QSO party, no STATE');
          end;
 
-      CheckEquals(Ord(isStateParty and (c <> BCQP)), Ord(identity.WritesADIFCounty),
+      CheckEquals(Ord(isStateParty and not IsLegacyContest(identity, BCQP)),
+                  Ord(identity.WritesADIFCounty),
                   ContestWho(identity) + ': CNTY exactly for the state parties but BC');
 
       if isStateParty then

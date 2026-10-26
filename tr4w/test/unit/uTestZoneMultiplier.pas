@@ -260,12 +260,19 @@ const
    BRANCH_EVERYWHERE: set of ContestType = [NZFIELDDAY];
    RF_EVERYWHERE: set of ContestType = [RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB];
 
-function PinStation(aStation: TPinStation; aContest: ContestType): TStationContext;
+(* The handle form is the registry walk's: a contest registered by its id
+  gets its own session name (issue #96). *)
+function PinStation(aStation: TPinStation; aContest: TContestHandle): TStationContext; overload;
 begin
    Result := MatrixStation(STATIONS[aStation].Call, STATIONS[aStation].Country,
                            STATIONS[aStation].Continent, STATIONS[aStation].State,
                            'DX', '', STATIONS[aStation].InHostState,
                            SessionContestName(aContest, STATIONS[aStation].InHostState));
+end;
+
+function PinStation(aStation: TPinStation; aContest: ContestType): TStationContext; overload;
+begin
+   Result := PinStation(aStation, ContestHandleOf(aContest));
 end;
 
 (* The zone list as the literals spell it. *)
@@ -469,7 +476,7 @@ begin
       begin
       for s := Low(TPinStation) to High(TPinStation) do
          begin
-         obj := NewContestLike(contests[k], PinStation(s, ContestOf(contests[k])));
+         obj := NewContestLike(contests[k], PinStation(s, HandleOf(contests[k])));
          try
             CheckEquals(BoolToStr(ContestZoneMultiplierCount(obj) > 0, True),
                         BoolToStr(ContestHasZoneMultiplier(obj), True),

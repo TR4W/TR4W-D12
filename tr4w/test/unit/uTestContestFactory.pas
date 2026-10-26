@@ -244,7 +244,6 @@ procedure TContestFactoryTests.Test_EveryStatePartyNamesItsState;
 var
    contests: TContestIdentityList;
    k: integer;
-   c: ContestType;
    obj: TContestBase;
    parties: integer;
 begin
@@ -256,19 +255,18 @@ begin
    for k := 0 to High(contests) do
       begin
       obj := NewContestLike(contests[k], WithHostAreaTable(NoStation));
-      c := ContestOf(obj);
       try
          if obj is TContestStateQSOPartyBase then
             begin
             inc(parties);
             CheckTrue(obj.IsUSQSOParty,
-                      string(ContestTypeSA[c]) + ' is a state party class but'
+                      ContestWho(obj) + ' is a state party class but'
                       + ' does not say so');
             CheckEquals(2, Length(obj.HostState),
-                        string(ContestTypeSA[c]) + ' HostState is not a'
+                        ContestWho(obj) + ' HostState is not a'
                         + ' two-letter code: ' + obj.HostState);
             end
-         else if c = SEVENQP then
+         else if IsLegacyContest(obj, SEVENQP) then
             begin
             (* THE ONE EXCEPTION, AND IT IS A MULTI-STATE PARTY (M7b,
                2026-10-02). 7QP's row indexed QSOParties (P: 10), so set-up
@@ -280,7 +278,7 @@ begin
             CheckTrue(obj.IsUSQSOParty, '7QP is a party to set-up, by its row');
             CheckEquals('', obj.HostState, '7QP has no single host state');
             end
-         else if c = IN7QPNE then
+         else if IsLegacyContest(obj, IN7QPNE) then
             begin
             (* THE SECOND, 2026-10-14: the composite of four parties (design
                7.14, 8.2r). Its row indexed QSOParties (P: 18), so set-up runs
@@ -292,7 +290,7 @@ begin
          else
             begin
             CheckFalse(obj.IsUSQSOParty,
-                       string(ContestTypeSA[c]) + ' claims to be a US QSO'
+                       ContestWho(obj) + ' claims to be a US QSO'
                        + ' party without being on the state-party base');
             end;
       finally
@@ -319,7 +317,6 @@ procedure TContestFactoryTests.Test_CountyLineAllowedIsDerivedEverywhere;
 var
    contests: TContestIdentityList;
    k: integer;
-   c: ContestType;
    obj: TContestBase;
    party: TContestStateQSOPartyBase;
    checked: integer;
@@ -332,7 +329,6 @@ begin
    for k := 0 to High(contests) do
       begin
       obj := NewContestLike(contests[k], WithHostAreaTable(NoStation));
-      c := ContestOf(obj);
       try
          if not (obj is TContestStateQSOPartyBase) then
             begin
@@ -341,7 +337,7 @@ begin
          party := TContestStateQSOPartyBase(obj);
          inc(checked);
          CheckTrue(party.CountyLineAllowed = (party.CountyLineCountiesMax > 0),
-                   string(ContestTypeSA[c])
+                   ContestWho(obj)
                    + ': CountyLineAllowed disagrees with the count');
       finally
          obj.Free;
@@ -1822,13 +1818,12 @@ begin
    for k := 0 to High(contests) do
       begin
       obj := contests[k];
-      c := ContestOf(obj);
       splits := obj.SplitsRoverCallOnExport;
       strips := ContestStripsRoverCountyFromCall(obj);
 
       (* The live strip agrees with the export split, but for County Hunter,
          which strips and does not split -- a recorded decision on Q94. *)
-      if c = COUNTYHUNTER then
+      if IsLegacyContest(obj, COUNTYHUNTER) then
          begin
          CheckTrue(strips, 'County Hunter strips a rover''s county live');
          CheckFalse(splits, 'County Hunter does not split on export -- not a QSO party');
@@ -1855,7 +1850,7 @@ begin
          but for New England, a multi-state party set-up has never run the
          party head for (its row's P was 0). That exception is frozen: a new
          contest may not join it. *)
-      if splits and (c <> NEWENGLANDQSO) then
+      if splits and not IsLegacyContest(obj, NEWENGLANDQSO) then
          begin
          CheckTrue(obj.IsUSQSOParty,
                    ContestWho(obj) + ': splits a rover call, so it must be a QSO party');
@@ -2399,7 +2394,6 @@ procedure TContestFactoryTests.Test_EveryContestResolvesItsOwnADIFId;
 var
    contests: TContestIdentityList;
    k: integer;
-   c: ContestType;
    found: TContestHandle;
    id: string;
    who: string;
@@ -2414,14 +2408,13 @@ begin
    contests := ContestsToWalk;
    for k := 0 to High(contests) do
       begin
-      c := ContestOf(contests[k]);
       who := ContestWho(contests[k]);
       id := contests[k].ADIFContestId;
       CheckTrue(id <> '', who + ' has an ADIF id');
       CheckTrue(FindContestByADIFContestId(id, found),
                 who + ': its own id [' + id + '] resolves to nothing');
 
-      if c = RSGB_ROPOCO_SSB then
+      if IsLegacyContest(contests[k], RSGB_ROPOCO_SSB) then
          begin
          CheckEquals(Ord(RSGB_ROPOCO_CW), found.ToByte,
                      who + ': the shared RSGB-ROLO resolves to the CW running');
@@ -2448,7 +2441,6 @@ procedure TContestFactoryTests.Test_OnlyRSGBRoloSharesACurrentADIFId;
 var
    identities: TContestIdentityList;
    k, m: integer;
-   c, d: ContestType;
    pairs: integer;
    idC: string;
 begin
@@ -2459,15 +2451,15 @@ begin
    for k := 0 to High(identities) - 1 do
       begin
       idC := identities[k].ADIFContestId;
-      c := ContestOf(identities[k]);
       for m := k + 1 to High(identities) do
          begin
          if idC = identities[m].ADIFContestId then
             begin
             inc(pairs);
-            d := ContestOf(identities[m]);
-            CheckTrue(((c = RSGB_ROPOCO_CW) and (d = RSGB_ROPOCO_SSB)) or
-                      ((c = RSGB_ROPOCO_SSB) and (d = RSGB_ROPOCO_CW)),
+            CheckTrue((IsLegacyContest(identities[k], RSGB_ROPOCO_CW) and
+                       IsLegacyContest(identities[m], RSGB_ROPOCO_SSB))      or
+                      (IsLegacyContest(identities[k], RSGB_ROPOCO_SSB) and
+                       IsLegacyContest(identities[m], RSGB_ROPOCO_CW)),
                       '[' + idC + '] is the ADIF id of both ' +
                       ContestWho(identities[k]) + ' and ' + ContestWho(identities[m]));
             end;
@@ -2564,7 +2556,6 @@ procedure TContestFactoryTests.Test_EveryQSOPartyNamesBothDomesticFiles;
 var
    contests: TContestIdentityList;
    k: integer;
-   c: ContestType;
    obj: TContestBase;
    who: string;
    parties: integer;
@@ -2577,15 +2568,14 @@ begin
    for k := 0 to High(contests) do
       begin
       obj := contests[k];
-      c := ContestOf(obj);
+      who := ContestWho(obj);
       if not obj.IsUSQSOParty then
          begin
          CheckEquals('', obj.InStateDomesticFileName,
-                     string(ContestTypeSA[c]) + ' is no party and has no in-state file');
+                     who + ' is no party and has no in-state file');
          Continue;
          end;
       inc(parties);
-      who := string(ContestTypeSA[c]);
       CheckTrue(obj.InStateDomesticFileName <> '', who + ' names its in-state file');
       CheckEquals(obj.InStateDomesticFileName + '_cty', obj.DomesticFileName,
                   who + ' county file is the in-state name plus _cty');
@@ -2784,7 +2774,6 @@ procedure TContestFactoryTests.Test_AnInStateStationIsFoundInItsCountyFile;
 var
    contests: TContestIdentityList;
    k: integer;
-   c: ContestType;
    obj: TContestBase;
    lines: TStringList;
    path, firstKey: string;
@@ -2797,7 +2786,6 @@ begin
    for k := 0 to High(contests) do
       begin
       obj := contests[k];
-      c := ContestOf(obj);
       if not obj.IsUSQSOParty then
          begin
          Continue;
@@ -2821,11 +2809,11 @@ begin
       finally
          lines.Free;
          end;
-      CheckTrue(firstKey <> '', string(ContestTypeSA[c]) + ' county file declares a key');
+      CheckTrue(firstKey <> '', ContestWho(obj) + ' county file declares a key');
       CheckTrue(DomFileOnDiskDeclaresKey(path, firstKey),
-                string(ContestTypeSA[c]) + ' finds ' + firstKey + ' in state');
+                ContestWho(obj) + ' finds ' + firstKey + ' in state');
       CheckFalse(DomFileOnDiskDeclaresKey(path, 'NOT-A-COUNTY'),
-                 string(ContestTypeSA[c]) + ' does not find a non-key in state');
+                 ContestWho(obj) + ' does not find a non-key in state');
       end;
 end;
 
@@ -2946,7 +2934,6 @@ procedure TContestFactoryTests.Test_EveryContestMarksDupesButTheTwoThatIgnoreThe
 var
    identities: TContestIdentityList;
    k: integer;
-   c: ContestType;
    ignoresDupes: boolean;
 begin
    BeginTest('Test_EveryContestMarksDupesButTheTwoThatIgnoreThem');
@@ -2955,8 +2942,8 @@ begin
    identities := IdentitiesToWalk;
    for k := 0 to High(identities) do
       begin
-      c := ContestOf(identities[k]);
-      ignoresDupes := (c = INTERNETSPRINT) or (c = YOUTHCHAMPIONSHIPRF);
+      ignoresDupes := IsLegacyContest(identities[k], INTERNETSPRINT) or
+                      IsLegacyContest(identities[k], YOUTHCHAMPIONSHIPRF);
       CheckTrue(identities[k].MarksDupes = not ignoresDupes,
                 ContestWho(identities[k]) + ' MarksDupes');
       end;
@@ -2993,7 +2980,6 @@ var
    q108Contests: TContestIdentityList;
    k: integer;
    families: array[0..FamilyCount - 1] of TClass;
-   c: ContestType;
    obj: TContestBase;
    parent: TClass;
    i, direct, nrau: integer;
@@ -3023,7 +3009,6 @@ begin
    for k := 0 to High(q108Contests) do
       begin
       obj := NewContestLike(q108Contests[k], WithHostAreaTable(NoStation));
-      c := ContestOf(obj);
       try
          parent := obj.ClassParent;
          known := parent = TContestBase;
@@ -3043,7 +3028,7 @@ begin
             inc(nrau);
             end;
          CheckTrue(known,
-                   string(ContestTypeSA[c]) + ' (' + obj.ClassName + ') sits on '
+                   ContestWho(obj) + ' sits on '
                    + parent.ClassName + ', which is neither TContestBase nor a'
                    + ' listed family base');
       finally

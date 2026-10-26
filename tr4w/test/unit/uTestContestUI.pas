@@ -91,14 +91,16 @@ const
       word, and in the same commit as its class's GetIsActive. *)
    INACTIVE_CONTESTS: array[0..1] of ContestType = (SASPRINT, LQP);
 
-function IsListedInactive(aContest: ContestType): boolean;
+(* Asked of the walked object (issue #96): a contest registered by its id is
+  no legacy member, so it is never on the list -- it must be active. *)
+function IsListedInactive(aContest: TContestBase): boolean;
 var
    i: integer;
 begin
    Result := False;
    for i := Low(INACTIVE_CONTESTS) to High(INACTIVE_CONTESTS) do
       begin
-      if INACTIVE_CONTESTS[i] = aContest then
+      if IsLegacyContest(aContest, INACTIVE_CONTESTS[i]) then
          begin
          Result := True;
          Exit;
@@ -302,7 +304,6 @@ procedure TContestUITests.Test_OnlyNamedContestsAreInactive;
 var
    contests: TContestIdentityList;
    k: integer;
-   c: ContestType;
    obj: TContestBase;
 begin
    BeginTest('Test_OnlyNamedContestsAreInactive');
@@ -312,10 +313,9 @@ begin
    for k := 0 to High(contests) do
       begin
       obj := NewContestLike(contests[k], NoStation);
-      c := ContestOf(obj);
       try
-         CheckEquals(Ord(not IsListedInactive(c)), Ord(obj.IsActive),
-                     string(ContestTypeSA[c]) + ': IsActive');
+         CheckEquals(Ord(not IsListedInactive(obj)), Ord(obj.IsActive),
+                     ContestWho(obj) + ': IsActive');
       finally
          obj.Free;
       end;
@@ -330,7 +330,6 @@ procedure TContestUITests.Test_GeneralQSOIsALog;
 var
    contests: TContestIdentityList;
    k: integer;
-   c: ContestType;
    obj: TContestBase;
    who: string;
    isLog: boolean;
@@ -342,10 +341,9 @@ begin
    for k := 0 to High(contests) do
       begin
       obj := NewContestLike(contests[k], NoStation);
-      c := ContestOf(obj);
       try
-         who := string(ContestTypeSA[c]);
-         isLog := c = GENERALQSO;
+         who := ContestWho(obj);
+         isLog := IsLegacyContest(obj, GENERALQSO);
          CheckEquals(Ord(not isLog), Ord(obj.ShowsContestStatus),
                      who + ': call entry shows contest status');
          if isLog then
@@ -368,7 +366,6 @@ procedure TContestUITests.Test_FOCMarathonPowerColumn;
 var
    contests: TContestIdentityList;
    k: integer;
-   c: ContestType;
    obj: TContestBase;
 begin
    BeginTest('Test_FOCMarathonPowerColumn');
@@ -378,10 +375,9 @@ begin
    for k := 0 to High(contests) do
       begin
       obj := NewContestLike(contests[k], NoStation);
-      c := ContestOf(obj);
       try
-         CheckEquals(Ord(c = FOCMARATHON), Ord(obj.PowerFieldIsFOCNumber),
-                     string(ContestTypeSA[c]) + ': the power field is an FOC number');
+         CheckEquals(Ord(IsLegacyContest(obj, FOCMARATHON)), Ord(obj.PowerFieldIsFOCNumber),
+                     ContestWho(obj) + ': the power field is an FOC number');
       finally
          obj.Free;
       end;
@@ -411,7 +407,6 @@ const
 var
    contests: TContestIdentityList;
    k: integer;
-   c: ContestType;
    obj: TContestBase;
    i: integer;
    expected: string;
@@ -423,17 +418,16 @@ begin
    for k := 0 to High(contests) do
       begin
       obj := NewContestLike(contests[k], NoStation);
-      c := ContestOf(obj);
       try
          for i := Low(EDGES) to High(EDGES) do
             begin
             expected := '';
-            if (c = WAG) and EDGES[i].warns then
+            if IsLegacyContest(obj, WAG) and EDGES[i].warns then
                begin
                expected := TC_WAGWarn;
                end;
             CheckEquals(expected, obj.CallEntryFrequencyWarning(EDGES[i].kHz),
-                        string(ContestTypeSA[c]) + ' at ' + IntToStr(EDGES[i].kHz) + ' kHz');
+                        ContestWho(obj) + ' at ' + IntToStr(EDGES[i].kHz) + ' kHz');
             end;
       finally
          obj.Free;
@@ -578,7 +572,6 @@ procedure TContestUITests.Test_OnlyCQWWHasASixtyMinuteBreak;
 var
    q108Contests: TContestIdentityList;
    k: integer;
-   c: ContestType;
    obj: TContestBase;
    expected: integer;
 begin
@@ -589,18 +582,21 @@ begin
    for k := 0 to High(q108Contests) do
       begin
       obj := NewContestLike(q108Contests[k], NoStation);
-      c := ContestOf(obj);
       try
          expected := 30;
-         if c in [CQWWCW, CQWWSSB, CQWWRTTY] then
+         if IsLegacyContest(obj, CQWWCW)  or
+            IsLegacyContest(obj, CQWWSSB) or
+            IsLegacyContest(obj, CQWWRTTY) then
             begin
             expected := 60;
             end;
          CheckEquals(expected, obj.MinimumOffTimeMinutes,
-                     string(ContestTypeSA[c]) + ': the minimum off time');
+                     ContestWho(obj) + ': the minimum off time');
+         (* THE IDENTITY BY ITS HANDLE: by the legacy member, a contest
+           registered by its id asked "no contest" (issue #96). *)
          CheckEquals(obj.MinimumOffTimeMinutes,
-                     ContestIdentity(c).MinimumOffTimeMinutes,
-                     string(ContestTypeSA[c]) + ': the identity gives the same break');
+                     ContestIdentity(HandleOf(obj)).MinimumOffTimeMinutes,
+                     ContestWho(obj) + ': the identity gives the same break');
       finally
          obj.Free;
       end;

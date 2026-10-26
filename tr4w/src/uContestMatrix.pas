@@ -768,7 +768,10 @@ begin
    EmitField('dxccmultbyband', EnumText(TypeInfo(TAdditionalMultByBand), Ord(DXCCMultByBand)));
    EmitField('multipliersarecounties', BoolText(MultipliersIsCounties));
    EmitField('nomultmarinemobile', BoolText(NoMultMarineMobile));
-   EmitField('literaldomesticqth', BoolText(LiteralDomesticQTH));
+   (* THE SETTING THE CABRILLO WRITER READS (issue #109, 2026-10-26). This
+     printed LOGDOM's old global until then, which nothing wrote after the
+     setting replaced it, so every record froze FALSE. *)
+   EmitField('literaldomesticqth', BoolText(Settings.Contest.LiteralDomesticQth));
    EmitField('allowdupeqsos', BoolText(tAllowDupeQSOs));
    EmitField('activeband', EnumText(TypeInfo(BandType), Ord(ActiveBand)));
    EmitField('activemode', EnumText(TypeInfo(ModeType), Ord(ActiveMode)));

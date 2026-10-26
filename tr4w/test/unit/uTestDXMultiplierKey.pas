@@ -566,12 +566,19 @@ const
       SACCW, SACSSB, SALMONRUN, SEVENQP, TEXASQSOPARTY, UNDX, WINTERFIELDDAY,
       WRTC, YBDX, YODX, YOUTHCHAMPIONSHIPRF, YUDX];
 
-function PinStation(aStation: TPinStation; aContest: ContestType): TStationContext;
+(* The handle form is the registry walk's: a contest registered by its id
+  gets its own session name (issue #96). *)
+function PinStation(aStation: TPinStation; aContest: TContestHandle): TStationContext; overload;
 begin
    Result := MatrixStation(STATIONS[aStation].Call, STATIONS[aStation].Country,
                            STATIONS[aStation].Continent, STATIONS[aStation].State,
                            'DX', '', STATIONS[aStation].InHostState,
                            SessionContestName(aContest, STATIONS[aStation].InHostState));
+end;
+
+function PinStation(aStation: TPinStation; aContest: ContestType): TStationContext; overload;
+begin
+   Result := PinStation(aStation, ContestHandleOf(aContest));
 end;
 
 function PinQso(aQso: TPinQso): ContestExchange;
@@ -775,7 +782,7 @@ begin
       begin
       for s := Low(TPinStation) to High(TPinStation) do
          begin
-         station := PinStation(s, ContestOf(contests[k]));
+         station := PinStation(s, HandleOf(contests[k]));
          obj := NewContestLike(contests[k], station);
          try
             if not ContestHasDXMultiplier(obj) then

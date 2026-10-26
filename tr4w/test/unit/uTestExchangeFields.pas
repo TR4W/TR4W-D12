@@ -73,8 +73,11 @@ type
       procedure Test_EachHelperMarksItsFields;
    end;
 
-(* The roster station, resolved the way the matrix resolves one, for aContest. *)
-function PinStation(aStation: TPinStation; aContest: ContestType): TStationContext;
+(* The roster station, resolved the way the matrix resolves one, for aContest.
+  The handle form is for a registry walk, so a contest registered by its id
+  gets its own session name (issue #96). *)
+function PinStation(aStation: TPinStation; aContest: ContestType): TStationContext; overload;
+function PinStation(aStation: TPinStation; aContest: TContestHandle): TStationContext; overload;
 
 (* The roster station's call, for a failure message. *)
 function PinStationCall(aStation: TPinStation): string;
@@ -302,6 +305,11 @@ begin
 end;
 
 function PinStation(aStation: TPinStation; aContest: ContestType): TStationContext;
+begin
+   Result := PinStation(aStation, ContestHandleOf(aContest));
+end;
+
+function PinStation(aStation: TPinStation; aContest: TContestHandle): TStationContext;
 begin
    Result := MatrixStation(STATIONS[aStation].Call, STATIONS[aStation].Country,
                            STATIONS[aStation].Continent, STATIONS[aStation].State,

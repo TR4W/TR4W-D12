@@ -54,8 +54,12 @@ function Make(aContest: ContestType): TContestBase; overload;
    LIFTED 2026-10-14 (M11 S9a): uTestDomesticMultiplier,
    uTestDXMultiplierKey, uTestZoneMultiplier and uTestExchangeRules each held
    an identical private copy, and uTestExchangeFields would have been the
-   fifth. *)
-function MakeContestOrNil(aContest: ContestType; const aStation: TStationContext): TContestBase;
+   fifth.
+
+   The handle form is for a registry walk, so a contest registered by its id
+   is made as itself rather than as "no contest" (issue #96). *)
+function MakeContestOrNil(aContest: ContestType; const aStation: TStationContext): TContestBase; overload;
+function MakeContestOrNil(aContest: TContestHandle; const aStation: TStationContext): TContestBase; overload;
 
 (* A station with every field zero -- what an object holds before SetStation. *)
 function NoStation: TStationContext;
@@ -112,6 +116,11 @@ begin
 end;
 
 function MakeContestOrNil(aContest: ContestType; const aStation: TStationContext): TContestBase;
+begin
+   Result := MakeContestOrNil(ContestHandleOf(aContest), aStation);
+end;
+
+function MakeContestOrNil(aContest: TContestHandle; const aStation: TStationContext): TContestBase;
 var
    cls: TContestClass;
 begin
@@ -119,7 +128,7 @@ begin
    cls := ContestClassFor(aContest);
    if cls <> nil then
       begin
-      Result := cls.Create(ContestHandleOf(aContest));
+      Result := cls.Create(aContest);
       Result.SetStation(aStation);
       end;
 end;

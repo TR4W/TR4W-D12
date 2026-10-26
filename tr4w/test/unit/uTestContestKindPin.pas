@@ -141,7 +141,10 @@ function MatrixStation(const aCall: string;
                        const aGrid: string;
                        aInHostState: boolean;
                        const aContestName: string): TStationContext;
-function SessionContestName(aContest: ContestType; aInHostState: boolean): string;
+function SessionContestName(aContest: ContestType; aInHostState: boolean): string; overload;
+(* The same for any registered contest, a by-id one included (issue #96):
+  its id, never ContestTypeSA -- a by-id contest has no member. *)
+function SessionContestName(aContest: TContestHandle; aInHostState: boolean): string; overload;
 function Kinds(aContest: ContestType; const aStation: TStationContext): TSessionKinds;
 
 implementation
@@ -1233,7 +1236,12 @@ end;
    party the in-state or out-of-state suffix. *)
 function SessionContestName(aContest: ContestType; aInHostState: boolean): string;
 begin
-   Result := string(ContestTypeSA[aContest]);
+   Result := SessionContestName(ContestHandleOf(aContest), aInHostState);
+end;
+
+function SessionContestName(aContest: TContestHandle; aInHostState: boolean): string;
+begin
+   Result := ContestId(aContest);
    if ContestIdentity(aContest).IsUSQSOParty then
       begin
       if aInHostState then

@@ -88,11 +88,28 @@ function NewContestLike(aIdentity: TContestBase;
   reads it through a descendant declared here (Q108 S2). *)
 function HandleOf(aObj: TContestBase): TContestHandle;
 
-(* WHICH LEGACY CONTEST aObj IS -- for a test that must look the contest up
-  in a pin table or a set keyed by the frozen enum. Its handle's legacy
-  number (uContestRegistry.LegacyContestOf); a contest with none (Q108 S3)
-  answers DUMMYCONTEST, which no pin names. *)
-function ContestOf(aObj: TContestBase): ContestType;
+(* THERE IS NO ContestOf ANY MORE -- issue #96, 2026-10-26.
+
+  It answered the legacy member of aObj, and DUMMYCONTEST for a contest
+  registered by its id (Q108 S3). Inside a registry walk that silently turned
+  a by-id contest into "no contest": a station built for it, an identity
+  asked about it, a name printed for it were all DUMMYCONTEST's, and the
+  walk passed because nothing it asked happened to differ. So the walk now
+  keeps the OBJECT (or HandleOf it), and reaches the frozen enum only through
+  the two questions below, each of which answers a by-id contest truthfully.
+  Lint-RegistryWalks fails the build if ContestOf, or the same thing spelled
+  LegacyContestOf(HandleOf(...)), comes back in a test. *)
+
+(* IS aObj THE LEGACY CONTEST aMember? -- a handle comparison. A contest
+  registered by its id is no legacy contest, so it answers False for every
+  member; "no contest" (NoContest) is DUMMYCONTEST. *)
+function IsLegacyContest(aObj: TContestBase; aMember: ContestType): boolean;
+
+(* aObj's LEGACY MEMBER, for a pin keyed by the frozen enum: True with it for
+  a legacy contest; FALSE (aMember DUMMYCONTEST) for a contest registered by
+  its id, which no pin names -- so the caller must say what such a contest is
+  held to, instead of asking about "no contest" without knowing it. *)
+function TryLegacyContestOf(aObj: TContestBase; out aMember: ContestType): boolean;
 
 (* "<contest> (<class>)" -- the name a failure message gives a contest. The
   one place that spells a contest for a message: its id, since Q108 S2. *)
@@ -113,7 +130,7 @@ uses
    SysUtils;
 
 type
-   (* Reaches the protected Contest property -- see ContestOf. *)
+   (* Reaches the protected Contest property -- see HandleOf. *)
    TContestKeyReader = class(TContestBase);
 
 const
@@ -152,9 +169,24 @@ begin
    Result := TContestKeyReader(aObj).Contest;
 end;
 
-function ContestOf(aObj: TContestBase): ContestType;
+function IsLegacyContest(aObj: TContestBase; aMember: ContestType): boolean;
 begin
-   Result := LegacyContestOf(HandleOf(aObj));
+   Result := HandleOf(aObj) = ContestHandleOf(aMember);
+end;
+
+function TryLegacyContestOf(aObj: TContestBase; out aMember: ContestType): boolean;
+var
+   n: integer;
+begin
+   Result := ContestLegacyNumber(HandleOf(aObj), n);
+   if Result then
+      begin
+      aMember := ContestType(n);
+      end
+   else
+      begin
+      aMember := DUMMYCONTEST;
+      end;
 end;
 
 function NewContestLike(aIdentity: TContestBase;

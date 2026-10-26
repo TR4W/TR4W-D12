@@ -297,11 +297,15 @@ legacy contests and cannot name a by-id one; the registry walks hold yours.
 Mentions in design docs and `docs/Q98_CONTEST_BANDS_MODES.csv` are records,
 not wiring.
 
-**If a registry-walk test fails for your contest only**, check whether it
-builds its subject from `ContestOf(identity)` (the legacy member --
-`DUMMYCONTEST` for a by-id contest) instead of `HandleOf(identity)`. That was a
-real defect, found adding Georgia (`uTestContestExport.PartyQSO`); fix the
-test, not your contest.
+**If a registry-walk test fails for your contest only**, read it before
+your contest: is the walk asking about YOUR contest? Until issue #96
+(2026-10-26) the walks turned each object into its legacy member with
+`ContestOf`, which is `DUMMYCONTEST` for a by-id contest, so they built
+stations, asked identities and printed names for "no contest" and passed
+without testing yours (found adding Georgia, `uTestContestExport.PartyQSO`).
+`ContestOf` is deleted and `Lint-RegistryWalks` fails a test that brings it
+back, or spells it `LegacyContestOf(HandleOf(...))`. A walk keeps the object
+or `HandleOf` it; see A5's traps.
 
 ## A5. The contest's tests
 
@@ -341,6 +345,15 @@ matrix only says it is unchanged (A6). Pin, quoting the rule each test holds:
 
 **Traps a unit test falls into:**
 
+- **A registry walk keeps the contest, never its legacy member** (issue #96).
+  Inside a walk over `ContestsToWalk`/`IdentitiesToWalk`, name the contest
+  with `ContestWho(obj)`, ask its identity with `ContestIdentity(HandleOf(obj))`,
+  build its objects and stations through the `TContestHandle` overloads
+  (`MakeContestOrNil`, `SessionContestName`, each unit's `PinStation`), and
+  reach the frozen enum only through `uTestRegisteredContests.IsLegacyContest(obj,
+  MEMBER)` or `TryLegacyContestOf(obj, member)` (False for a by-id contest).
+  `ContestTypeSA[...]` of a member derived from an object is the same mistake.
+  `Lint-RegistryWalks` gates the two derivations; the rest is review.
 - **A `.dom`'s `INCLUDE` is not followed in a unit test.** It resolves against
   the program directory, and the test binary's (`tr4w/test/unit`) has no `dom`
   folder: the file loads with no error and **none** of its includes. Pin the

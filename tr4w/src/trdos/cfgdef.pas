@@ -234,7 +234,6 @@ begin
 
   //  Config.LeadingZeros := 0;
   //  Config.LeadingZeroCharacter := 'T';
-  //  LiteralDomesticQTH := False;
 
   //  LogSubTitle := '';
 

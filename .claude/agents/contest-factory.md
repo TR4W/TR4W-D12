@@ -197,8 +197,12 @@ the target shape, the M-step migration order and the open questions.
   identity objects in registry order (unused by production); tests walk it
   through `uTestRegisteredContests.ContestsToWalk` (raises below 100 --
   an emptied registry cannot pass) or `IdentitiesToWalk` (with "no
-  contest"). `ContestOf` reads an object's legacy member (the property is
-  protected on purpose), `ContestWho` names it in a message, and
+  contest"). `HandleOf` reads an object's handle (the property is
+  protected on purpose); **`ContestOf` IS DELETED (issue #96, 2026-10-26)**
+  -- it gave a by-id contest's walk "no contest" -- so a walk reaches the
+  enum only through `IsLegacyContest(obj, MEMBER)` / `TryLegacyContestOf`,
+  and `Lint-RegistryWalks` fails `ContestOf` or
+  `LegacyContestOf(HandleOf(...))` in a test. `ContestWho` names it in a message, and
   `ClassStatesItself` / `ClassOverridesTheBase` ask whether a class states a
   virtual (the identity test's `GetterCode` technique, lifted, not copied).
   `uTestContestStatesItsRules` holds every registered contest to stating its
@@ -1045,7 +1049,14 @@ the target shape, the M-step migration order and the open questions.
   itself (there is no `inherited` to call).
   No contest is named in PostUnit's ADIF tail any more (ARRL 160 left at
   M7b, POTA with its class); CUP RF's his-QTH, LABRE/EURASIA and the
-  `'TRC'`/`'PGA'` tests stay in the Cabrillo writer. **`EmitADIFExchangeFields`**
+  `'TRC'`/`'PGA'` tests stay in the Cabrillo writer. **The his-QTH decision
+  is `PostUnit.CabrilloReceivedQTH`** (issue #109, 2026-10-26): with LITERAL
+  DOMESTIC QTH -- the SESSION setting `Settings.Contest.LiteralDomesticQth`,
+  which FCONTEST fills from the 15 classes' `DescribeSession` and the operator
+  may state, and which the log window reads too -- it writes `QTHString`, else
+  the resolved `DomesticQTH` (D7's rule). It read LOGDOM's global, unwritten
+  since 2026-09-12, so NAQP exported "vE3" for ON and "Ct" for CT; that global
+  is deleted. **`EmitADIFExchangeFields`**
   (POTA's class) is the tail's exchange block -- base: the `SRX_STRING` from
   `FormatADIFReceivedExchange`; override it only to write tags BESIDE it.
 - **A contest interprets its own ADIF import** (M5a, 2026-10-01).

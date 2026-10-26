@@ -497,12 +497,19 @@ const
       (Contest: RSGB18;            Station: psDX;  Text: ptIOTA4;    Hint: 'EU12')
    );
 
-function PinStation(aStation: TPinStation; aContest: ContestType): TStationContext;
+(* The handle form is the registry walk's: a contest registered by its id
+  gets its own session name (issue #96). *)
+function PinStation(aStation: TPinStation; aContest: TContestHandle): TStationContext; overload;
 begin
    Result := MatrixStation(STATIONS[aStation].Call, STATIONS[aStation].Country,
                            STATIONS[aStation].Continent, STATIONS[aStation].State,
                            'DX', '', STATIONS[aStation].InHostState,
                            SessionContestName(aContest, STATIONS[aStation].InHostState));
+end;
+
+function PinStation(aStation: TPinStation; aContest: ContestType): TStationContext; overload;
+begin
+   Result := PinStation(aStation, ContestHandleOf(aContest));
 end;
 
 (* One line per answer, so '' and "not found" read apart on the page. *)
@@ -532,9 +539,9 @@ end;
    and the flag sites ask. BEFORE THE MOVE each returned the frozen legacy
    rule above, selected by Kinds(aContest, aStation).DomesticMult -- the run
    that made the literals. *)
-function ProgramKey(aContest: ContestType;
+function ProgramKey(aContest: TContestHandle;
                     const aStation: TStationContext;
-                    const aText: Str20): string;
+                    const aText: Str20): string; overload;
 var
    obj: TContestBase;
    multiplier: Str10;
@@ -555,6 +562,14 @@ begin
    Result := KeyAnswer(follows, found, multiplier, qth);
 end;
 
+(* The legacy pins' form; a registry walk passes the handle (issue #96). *)
+function ProgramKey(aContest: ContestType;
+                    const aStation: TStationContext;
+                    const aText: Str20): string; overload;
+begin
+   Result := ProgramKey(ContestHandleOf(aContest), aStation, aText);
+end;
+
 function ProgramHint(aContest: ContestType;
                      const aStation: TStationContext;
                      const aText: Str14): string;
@@ -569,9 +584,9 @@ begin
       end;
 end;
 
-function ProgramFlag(aContest: ContestType;
+function ProgramFlag(aContest: TContestHandle;
                      const aStation: TStationContext;
-                     aFlag: TPinFlag): boolean;
+                     aFlag: TPinFlag): boolean; overload;
 var
    obj: TContestBase;
 begin
@@ -600,9 +615,24 @@ begin
       end;
 end;
 
-function Who(aContest: ContestType; aStation: TPinStation): string;
+(* The legacy pins' form; a registry walk passes the handle (issue #96). *)
+function ProgramFlag(aContest: ContestType;
+                     const aStation: TStationContext;
+                     aFlag: TPinFlag): boolean; overload;
 begin
-   Result := string(ContestTypeSA[aContest]) + ' at ' + STATIONS[aStation].Call;
+   Result := ProgramFlag(ContestHandleOf(aContest), aStation, aFlag);
+end;
+
+(* A contest at a roster station, for a message -- by its id, so a contest
+  registered by id is named as itself (issue #96). *)
+function Who(aContest: TContestHandle; aStation: TPinStation): string; overload;
+begin
+   Result := ContestId(aContest) + ' at ' + STATIONS[aStation].Call;
+end;
+
+function Who(aContest: ContestType; aStation: TPinStation): string; overload;
+begin
+   Result := Who(ContestHandleOf(aContest), aStation);
 end;
 
 (* THE PINNED SET OF CONTESTS ANSWERING aFlag AT aStation -- the literal
@@ -641,7 +671,7 @@ end;
    holding the station. BEFORE THE MOVE it returned the frozen old test,
    `kind = DomesticFile`, under the kind Kinds(aContest, aStation)
    resolves -- the run that made the literals. *)
-function ProgramUsesFile(aContest: ContestType; const aStation: TStationContext): boolean;
+function ProgramUsesFile(aContest: TContestHandle; const aStation: TStationContext): boolean; overload;
 var
    obj: TContestBase;
 begin
@@ -651,6 +681,11 @@ begin
    finally
       obj.Free;
       end;
+end;
+
+function ProgramUsesFile(aContest: ContestType; const aStation: TStationContext): boolean; overload;
+begin
+   Result := ProgramUsesFile(ContestHandleOf(aContest), aStation);
 end;
 
 (* THE PINNED ANSWER: the set above, and the nine whose entrant decides --
@@ -721,7 +756,9 @@ procedure TDomesticMultiplierTests.Test_ADomesticFileContestStatesNoShape;
 var
    q108Contests: TContestIdentityList;
    k: integer;
-   c: ContestType;
+   (* THE HANDLE, never the legacy member: a contest registered by its id
+     has none, and was walked as "no contest" until issue #96. *)
+   c: TContestHandle;
    s: TPinStation;
    t: TPinText;
    f: TPinFlag;
@@ -735,7 +772,7 @@ begin
    q108Contests := ContestsToWalk;
    for k := 0 to High(q108Contests) do
       begin
-      c := ContestOf(q108Contests[k]);
+      c := HandleOf(q108Contests[k]);
       for s := Low(TPinStation) to High(TPinStation) do
          begin
          station := PinStation(s, c);
@@ -771,7 +808,7 @@ begin
              ((aContest = WAG) and (aStation <> psDX));
 end;
 
-function ProgramHasDomestic(aContest: ContestType; const aStation: TStationContext): boolean;
+function ProgramHasDomestic(aContest: TContestHandle; const aStation: TStationContext): boolean; overload;
 var
    obj: TContestBase;
 begin
@@ -781,6 +818,11 @@ begin
    finally
       obj.Free;
       end;
+end;
+
+function ProgramHasDomestic(aContest: ContestType; const aStation: TStationContext): boolean; overload;
+begin
+   Result := ProgramHasDomestic(ContestHandleOf(aContest), aStation);
 end;
 
 (* EVERY CONTEST'S DOMESTIC MULTIPLIER, AT EVERY STATION -- M11 S6 part 2.
@@ -820,7 +862,8 @@ procedure TDomesticMultiplierTests.Test_ADomesticMultiplierIsWhereAQTHIsRead;
 var
    contests: TContestIdentityList;
    k: integer;
-   c: ContestType;
+   (* The handle -- see Test_ADomesticFileContestStatesNoShape. *)
+   c: TContestHandle;
    s: TPinStation;
    t: TPinText;
    station: TStationContext;
@@ -834,7 +877,7 @@ begin
    contests := ContestsToWalk;
    for k := 0 to High(contests) do
       begin
-      c := ContestOf(contests[k]);
+      c := HandleOf(contests[k]);
       for s := Low(TPinStation) to High(TPinStation) do
          begin
          station := PinStation(s, c);

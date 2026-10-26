@@ -156,6 +156,10 @@ function GapIsOperatingTime( aGapSeconds: integer;
                              aMinimumOffTimeMinutes: integer ): boolean;
 procedure SummarySheet;
 procedure CreateCabrilloFile;
+(* THE RECEIVED QTH A CABRILLO QSO LINE CARRIES -- the text as logged, or the
+  domestic multiplier it resolved to. See the body. *)
+function CabrilloReceivedQTH( aCountsDomesticMultiplier: boolean;
+                              const aQso: ContestExchange ): string;
 procedure CheckForNewContestDate( Date: TQSOTime );
 
 procedure WriteADIFField( sFieldName: string; sFieldValue: string );
@@ -533,6 +537,64 @@ function ZoneSentForThisContest(aContest: TContestBase): string;
       end;
    Result := Settings.My.ResolvedZone;
    end;
+
+(* THE RECEIVED QTH A CABRILLO QSO LINE CARRIES -- lifted out of
+  tGenerateLogPortionOfCabrilloFile (issue #109, 2026-10-26) so the rule can
+  be tested.
+
+  A contest with a domestic multiplier writes the multiplier the QTH
+  resolved to (DomesticQTH -- NAQP's "ON" is "vE3", its "CT" is "Ct") unless
+  the session says LITERAL DOMESTIC QTH, when it writes what was logged
+  (QTHString). D7's PostUnit made exactly that choice on exactly that flag.
+
+  THE FLAG IS THE SESSION'S SETTING, Settings.Contest.LiteralDomesticQth --
+  NOT a class answer. Fifteen contests state it in DescribeSession, and
+  FCONTEST.ApplySessionDefaults writes their statement into that setting; the
+  operator may also state LITERAL DOMESTIC QTH himself, and a later line wins
+  as for every session default. So the setting is the RESOLVED answer, and it
+  is what the log window's QTH column (MainUnit) already reads: asking the
+  class would ignore the operator and let the file and the window disagree.
+  This read LOGDOM's old global until #109; nothing had written that since
+  the setting replaced it (c6131d81, 2026-09-12), so every one of those
+  contests exported the resolved multiplier.
+
+  WWDIGI's own QTHString is TContestWWDigi's override since M4. LABRE and
+  EURASIA have no ContestType of those names and are told by the session's
+  name; the RF Cups state LITERAL DOMESTIC QTH as well, so their arm is a
+  second statement of that rule, kept as it stood. *)
+function CabrilloReceivedQTH( aCountsDomesticMultiplier: boolean;
+                              const aQso: ContestExchange ): string;
+begin
+   if aCountsDomesticMultiplier then
+      begin
+      if Settings.Contest.LiteralDomesticQth then
+         begin
+         Result := string( aQso.QTHString );
+         end
+      else if Settings.Contest.Name = 'LABRE' then
+         begin
+         Result := string( aQso.QTHString );
+         end
+      else
+         begin
+         Result := string( aQso.DomesticQTH );
+         end;
+      end
+   else
+      begin
+      Result := string( aQso.QTHString );
+      end;
+
+   if LegacyContestOf( Contest ) in [ CUPRFCW, CUPRFSSB ] then
+      begin
+      Result := string( aQso.QTHString );
+      end;
+
+   if Settings.Contest.Name = 'EURASIA' then
+      begin
+      Result := string( aQso.QTHString );
+      end;
+end;
 
 
 procedure WriteADIFField( sFieldName: string; sFieldValue: string );
@@ -3148,42 +3210,11 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
              ModeString := ContestIdentity( Contest ).CabrilloModeString(
                               TempRXData.Mode, TempRXData.ExtMode );
 
-             (* The contest's answer (M11 S6 part 2), on the object this
-               writer holds for the whole log; it was the session's flag. *)
-             if ContestHasDomesticMultiplier( stationContest ) then
-                begin
-                if LiteralDomesticQTH then
-                   begin
-                   csQTHString := string( TempRXData.QTHString )
-                   end
-                else
-                  (* WWDIGI's own QTHString is TContestWWDigi's override since
-                    M4 -- the test named the contest by Settings.Contest.Name,
-                    which FoundContest sets to the contest's own spelling.
-                    LABRE has no ContestType of that name; its test stays. *)
-                  if Settings.Contest.Name = 'LABRE' then
-                     begin
-                     csQTHString := string( TempRXData.QTHString )
-                     end
-                  else
-                     begin
-                     csQTHString := string( TempRXData.DomesticQTH ) { DomMultQTH };
-                     end;
-                end
-             else
-                begin
-                csQTHString := string( TempRXData.QTHString );
-                end;
-
-             if LegacyContestOf( Contest ) in [ CUPRFCW, CUPRFSSB ] then
-                begin
-                csQTHString := string( TempRXData.QTHString );
-                end;
-
-             if Settings.Contest.Name = 'EURASIA' then
-                begin
-                csQTHString := string( TempRXData.QTHString );
-                end;
+             (* Whether the contest counts a domestic multiplier is its own
+               answer (M11 S6 part 2), on the object this writer holds for
+               the whole log. *)
+             csQTHString := CabrilloReceivedQTH(
+                ContestHasDomesticMultiplier( stationContest ), TempRXData );
 
              (* California's QTHString-or-'DX' is TContestCaliforniaQP's
                received column since M4. *)

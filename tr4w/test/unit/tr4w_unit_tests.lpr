@@ -705,6 +705,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
       station, frozen against the old FormatCabrilloExchangeOfKind before it
       moved into the classes. *)
    uTestCabrilloColumns in 'uTestCabrilloColumns.pas',
+   (* #109: LITERAL DOMESTIC QTH writes the logged QTH on a Cabrillo line. *)
+   uTestCabrilloReceivedQTH in 'uTestCabrilloReceivedQTH.pas',
    (* M11 S9d: how every contest parses a typed exchange at every roster
       station -- which engine parser it asks for and every rule around it --
       frozen against the old ParseExchangeShape before it moved into the
@@ -880,6 +882,7 @@ begin
    RegisterSuite(TADIFSentExchangeTests.Create('ADIFSentExchange'));
    RegisterSuite(TADIFReceivedFieldsTests.Create('ADIFReceivedFields'));
    RegisterSuite(TCabrilloColumnsTests.Create('CabrilloColumns'));
+   RegisterSuite(TCabrilloReceivedQTHTests.Create('CabrilloReceivedQTH'));
    RegisterSuite(TExchangeParseTests.Create('ExchangeParse'));
    RegisterSuite(TExchangeKindReadersTests.Create('ExchangeKindReaders'));
    RegisterSuite(TContestPOTATests.Create('ContestPOTA'));

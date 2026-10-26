@@ -1000,8 +1000,10 @@ var
    contests: TContestIdentityList;
    shared: string;
 
-   (* Is the pair (a, b), in either order, one of SHARED_ON_PURPOSE? *)
-   function IsSharedOnPurpose(a, b: ContestType): boolean;
+   (* Is the pair (a, b), in either order, one of SHARED_ON_PURPOSE? Asked of
+     the walked objects (issue #96): a contest registered by its id is no
+     legacy member, so it is in no pair. *)
+   function IsSharedOnPurpose(a, b: TContestBase): boolean;
    type
       TContestPair = record
          First: ContestType;
@@ -1020,8 +1022,10 @@ var
       Result := False;
       for k := Low(SHARED_ON_PURPOSE) to High(SHARED_ON_PURPOSE) do
          begin
-         if ((a = SHARED_ON_PURPOSE[k].First) and (b = SHARED_ON_PURPOSE[k].Second)) or
-            ((a = SHARED_ON_PURPOSE[k].Second) and (b = SHARED_ON_PURPOSE[k].First)) then
+         if (IsLegacyContest(a, SHARED_ON_PURPOSE[k].First) and
+             IsLegacyContest(b, SHARED_ON_PURPOSE[k].Second))     or
+            (IsLegacyContest(a, SHARED_ON_PURPOSE[k].Second) and
+             IsLegacyContest(b, SHARED_ON_PURPOSE[k].First)) then
             begin
             Result := True;
             end;
@@ -1069,7 +1073,7 @@ begin
          begin
          if SameText(contests[i].CabrilloName, contests[j].CabrilloName) then
             begin
-            if not IsSharedOnPurpose(ContestOf(contests[i]), ContestOf(contests[j])) then
+            if not IsSharedOnPurpose(contests[i], contests[j]) then
                begin
                shared := shared + ' ' + ContestWho(contests[i]) + ' and ' +
                          ContestWho(contests[j]) + ' both write "' +

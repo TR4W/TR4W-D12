@@ -63,6 +63,11 @@ $lints = @(
    # the stored flag ceXQSO outside its owners sees half of it and fails.
    # docs/CONTEST_OWNERSHIP_DESIGN.md 8.2v.
    @{ Name = 'Lint-XQSOReads'; Arg = $src;         NeedsFpc = $false }
+   # A REGISTRY WALK KEEPS THE CONTEST, NOT ITS LEGACY MEMBER (issue #96,
+   # 2026-10-26). A contest registered by its id has no ContestType member,
+   # so a test that derived one from the walked object (ContestOf, deleted)
+   # tested "no contest" for it. Scans tr4w\test.
+   @{ Name = 'Lint-RegistryWalks'; Arg = (Join-Path $Tr4wDir 'test'); NeedsFpc = $false }
    # THE ContestType ENUM IS FROZEN (Q108 S3, 2026-10-17). A member's position
    # is a persisted contest number (.TRW, multi-op packet, server log), so no
    # member is ever added, removed, reordered or renamed: a new contest

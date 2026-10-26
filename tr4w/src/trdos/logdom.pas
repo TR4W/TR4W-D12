@@ -120,7 +120,10 @@ var
     (TContestBase.DomesticMultiplierFromQTH, HasDomesticMultiplier). *)
   (* Created in this unit's initialization, freed in its finalization. *)
   DomQTHTable                           : TDomQTHTable;
-  LiteralDomesticQTH                    : boolean; //QTHString (if true) or DomesticQTH {if false}
+  (* LiteralDomesticQTH WAS HERE -- deleted for issue #109 (2026-10-26).
+    Settings.Contest.LiteralDomesticQth replaced it on 2026-09-12 and nothing
+    wrote this global after that, while the Cabrillo writer and the contest
+    matrix still read it. *)
   MultipliersIsCounties                 : boolean;
 implementation
 

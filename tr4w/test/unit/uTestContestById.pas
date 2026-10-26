@@ -176,6 +176,7 @@ procedure TContestByIdTests.Test_TheRegistryWalkSeesIt;
 var
    contests: TContestIdentityList;
    k, seen: integer;
+   member: ContestType;
 begin
    BeginTest('Test_TheRegistryWalkSeesIt');
    contests := ContestsToWalk;
@@ -190,8 +191,9 @@ begin
          end;
       end;
    CheckEquals(1, seen, 'every invariant that walks the registry meets the fixture once');
-   CheckTrue(ContestOf(ContestIdentity(FixtureHandle)) = DUMMYCONTEST,
-             'and no enum-keyed pin can name it');
+   CheckFalse(TryLegacyContestOf(ContestIdentity(FixtureHandle), member),
+              'and no enum-keyed pin can name it');
+   CheckEquals(Ord(DUMMYCONTEST), Ord(member), 'its legacy member is "no contest"');
 end;
 
 procedure TContestByIdTests.Test_TheChoicesAndTheContestVocabularyOfferIt;

@@ -259,7 +259,7 @@ begin
       qso := FullQso(HandleOf(contests[k]));
       for s := Low(TPinStation) to High(TPinStation) do
          begin
-         obj := NewContestLike(contests[k], PinStation(s, ContestOf(contests[k])));
+         obj := NewContestLike(contests[k], PinStation(s, HandleOf(contests[k])));
          try
             CheckEquals(ExpectedTags(obj),
                         ExchangeTagsOf(EmitADIFRecord(qso, obj)),

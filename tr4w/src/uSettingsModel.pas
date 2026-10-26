@@ -3060,9 +3060,13 @@ type
         progress bar. FCONTEST sets 15 and 20 for two contests. *)
       property MinitourDuration: TTourDuration
          read FMinitourDuration write FMinitourDuration;
-      (* Was LiteralDomesticQTH -- take the received domestic QTH as
-        typed rather than resolving it against the .DOM file. FCONTEST
-        sets it for the contests whose exchange is free text. *)
+      (* Was LiteralDomesticQTH -- SHOW AND EXPORT the received domestic
+        QTH as typed (QTHString) rather than the multiplier it resolved to
+        in the .DOM file (DomesticQTH). It does not stop the lookup. Read by
+        the log window's QTH column and the Cabrillo received column
+        (PostUnit.CabrilloReceivedQTH, issue #109). FCONTEST writes the
+        contest's own statement (DescribeSession) here; the operator may
+        state it too. *)
       property LiteralDomesticQth: boolean
          read FLiteralDomesticQth write FLiteralDomesticQth;
       (* Was CustomInitialExchangeString, a Str40 -- the exchange the

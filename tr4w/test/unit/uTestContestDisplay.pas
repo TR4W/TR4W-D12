@@ -1831,14 +1831,16 @@ const
       SOUTHAMERICANWW, UCG, UKEI, UKRAINECHAMPIONSHIP, WWL, XMAS,
       YOUTHCHAMPIONSHIPRF);
 
-function IsEnumSpelledDisplayName(aContest: ContestType): boolean;
+(* Asked of the walked object (issue #96): a contest registered by its id is
+  no legacy member, so it is never on the list. *)
+function IsEnumSpelledDisplayName(aContest: TContestBase): boolean;
 var
    i: integer;
 begin
    Result := False;
    for i := Low(ENUM_SPELLED_DISPLAY_NAMES) to High(ENUM_SPELLED_DISPLAY_NAMES) do
       begin
-      if ENUM_SPELLED_DISPLAY_NAMES[i] = aContest then
+      if IsLegacyContest(aContest, ENUM_SPELLED_DISPLAY_NAMES[i]) then
          begin
          Result := True;
          Exit;
@@ -1878,12 +1880,16 @@ begin
 
       CheckTrue(obj.DisplayName <> '', who + ': a display name');
       (* THE HUMAN NAME: the friendly name where the contest has one. *)
-      if obj.FriendlyName <> string(ContestTypeSA[ContestOf(obj)]) then
+      (* THE CONTEST'S OWN ID, never ContestTypeSA of its legacy member: a
+        contest registered by its id has none, and was compared with
+        "DUMMY CONTEST" until issue #96. For a legacy contest the id IS the
+        enum spelling. *)
+      if obj.FriendlyName <> ContestId(HandleOf(obj)) then
          begin
          CheckEquals(obj.FriendlyName, obj.DisplayName, who + ': display name is the friendly name');
          end;
-      CheckEquals(Ord(IsEnumSpelledDisplayName(ContestOf(obj))),
-                  Ord(obj.DisplayName = string(ContestTypeSA[ContestOf(obj)])),
+      CheckEquals(Ord(IsEnumSpelledDisplayName(obj)),
+                  Ord(obj.DisplayName = ContestId(HandleOf(obj))),
                   who + ': display name is the enum spelling only where listed');
       end;
 
