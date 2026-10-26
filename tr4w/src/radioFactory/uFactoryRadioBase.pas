@@ -383,6 +383,12 @@ Type TFactoryRadioBase = class(TObject)
       procedure OnRadioStatus(Sender: TObject; const Status: TIdStatus; const AStatusText: TIdText);
       //procedure IdThreadComponentRun(Sender: TIdThreadComponent);
 
+      (* The two halves of tearing the base's link down, shared by Disconnect,
+        BeforeDestruction and Destroy so the order is written once.  Both are
+        idempotent and neither lets an exception escape. *)
+      procedure CloseNetworkLink;     // Disconnect(False) if the socket is open
+      procedure StopReadingThread;    // Terminate, join, free rt
+
    protected
       Disconnecting: Boolean;
       readTerminator: string;
@@ -813,7 +819,18 @@ Type TFactoryRadioBase = class(TObject)
 
       constructor Create(ProcRef: TProcessMsgRef); overload;
       constructor Create(address: string; port: integer;ProcRef: TProcessMsgRef); overload;
-      Destructor Destroy; overload; Virtual;
+      (* override, NOT `overload; Virtual;`.  That spelling declared a NEW slot
+        which hid TObject.Destroy, so Free and FreeAndNil -- every caller --
+        went to TObject.Destroy and NO radio destructor ever ran: not this one,
+        not TK4Radio's, not the Icom family's.  Pinned by
+        test/unit/uTestRadioDestructors. *)
+      Destructor Destroy; override;
+      (* Runs BEFORE any destructor in the chain, while the object is whole.
+        Stops the base's reading thread, whose message handler is the
+        SUBCLASS's ProcessMsg: left to the base destructor it would still be
+        delivering frames into a subclass whose destructor had already freed
+        what those frames touch. *)
+      procedure BeforeDestruction; override;
 
       procedure SendToRadio(s: string); overload; virtual;
       procedure SendToRadio(whichVFO: TVFO; sCmd: string; sData: string); overload; Virtual; Abstract;
@@ -1500,6 +1517,84 @@ begin
   QuerySplitState;
 end;
 
+(* CLOSE THE SOCKET WITHOUT READING IT.  SocketIsConnected, not
+  socket.Connected, and Disconnect(False), not a bare Disconnect: Indy's
+  Connected READS the socket, racing the reading thread parked in ReadLn (the
+  2026-10-25 hang), and on Linux raised ENOTCONN for a radio that never
+  connected.  Closing is also what pulls that ReadLn out, so the reading thread
+  can see it has been terminated -- a network ReadLn has no timeout of its own. *)
+procedure TFactoryRadioBase.CloseNetworkLink;
+begin
+   if not SocketIsConnected then
+      begin
+      Exit;
+      end;
+   try
+      logger.Debug('[TFactoryRadioBase] Closing the network link');
+      socket.Disconnect(False);
+   except
+      on E: Exception do
+         begin
+         logger.Error('[TFactoryRadioBase] Exception closing the socket: %s - %s',
+                      [E.ClassName, E.Message]);
+         end;
+   end;
+end;
+
+(* JOIN THE READING THREAD.  Bounded: its worst sleep is 1000 ms and it tests
+  Terminated on every iteration -- PROVIDED nothing is blocking it, which for a
+  network radio means CloseNetworkLink has run first. *)
+procedure TFactoryRadioBase.StopReadingThread;
+begin
+   if rt = nil then
+      begin
+      Exit;
+      end;
+   try
+      rt.Terminate;
+      rt.WaitFor;
+      FreeAndNil(rt);
+   except
+      on E: Exception do
+         begin
+         logger.Error('[TFactoryRadioBase] Exception stopping the reading thread: %s - %s',
+                      [E.ClassName, E.Message]);
+         end;
+   end;
+end;
+
+(* BEFORE ANY DESTRUCTOR RUNS, STOP THE THREAD THAT CALLS INTO THE SUBCLASS.
+
+  The reading thread's handler is the radio's own ProcessMsg.  Destructors run
+  most-derived first, so if the base destructor were the one to stop it, every
+  subclass destructor would run with frames still arriving into fields it was
+  freeing (TIcomRadio's scope decoder and send queue, TK4Radio's spectrum
+  thread).  No caller frees a CONNECTED radio today -- ShutDownRadioInterface
+  and ExitProgram both Disconnect first -- so this is the destructor being
+  safe on its own rather than safe because of its callers.
+
+  The SERIAL PORT IS NOT CLOSED HERE.  A serial read returns by itself within
+  milliseconds, and a family may have its own writer on the port (the Icom
+  CI-V send queue), which its destructor stops before the port goes; closing
+  the port under that writer would be a race on the handle.
+
+  NOT CALLED when a constructor raised -- FPC skips BeforeDestruction then --
+  which is why Destroy repeats both steps; they are idempotent. *)
+procedure TFactoryRadioBase.BeforeDestruction;
+begin
+   if rt <> nil then
+      begin
+      rt.Terminate;      // first, so the reader leaves as soon as its read fails
+      end;
+   CloseNetworkLink;
+   StopReadingThread;
+   inherited BeforeDestruction;
+end;
+
+(* RUNS NOW -- see the declaration -- so everything below executes for the
+  first time in this tree's history, and every subclass destructor ahead of it.
+  Any of it may meet a radio that never connected, that Disconnect already tore
+  down, or whose constructor raised part-way (fields still nil). *)
 Destructor TFactoryRadioBase.Destroy;
 var iVFO: TVFO;
 begin
@@ -1509,52 +1604,39 @@ begin
    // the port stays open, preventing the new radio from opening it.
    if serialPortObj <> nil then
       begin
-      if serialPortObj.IsOpen then
-         begin
-         serialPortObj.Close;
-         end;
-      end;
-
-   if rt <> nil then
-      begin
-      rt.Terminate;
-      rt.WaitFor;
-      FreeAndNil(rt);
-      end;
-
-   (* SocketIsConnected, not socket.Connected: Indy's Connected READS the
-     socket (and on Linux raised ENOTCONN here for a radio that never
-     connected).  See SocketIsConnected. *)
-   if socket <> nil then
-      begin
       try
-         if SocketIsConnected then
+         if serialPortObj.IsOpen then
             begin
-            socket.Disconnect(False);   // False: no Connected probe -- see SocketIsConnected
+            serialPortObj.Close;
             end;
       except
          on E: Exception do
             begin
-            logger.Error('[TFactoryRadioBase.Destroy] Exception closing the socket: %s - %s',
+            logger.Error('[TFactoryRadioBase.Destroy] Exception closing the serial port: %s - %s',
                          [E.ClassName, E.Message]);
             end;
       end;
-      FreeAndNil(socket);
       end;
 
-   if serialPortObj <> nil then
-      begin
-      FreeAndNil(serialPortObj);
-      end;
+   (* Close BEFORE the join: a network reader is parked in a ReadLn with no
+     timeout.  The old body joined first, which would have hung on any
+     connected network radio -- it never ran, so it never did. *)
+   CloseNetworkLink;
+   StopReadingThread;
+
+   (* The socket component OWNS its IOHandler (Connect's IndyLinkOwnHandler
+     makes it with the socket as Owner, not Indy-managed), so freeing the
+     socket frees the handler. *)
+   FreeAndNil(socket);
+   FreeAndNil(serialPortObj);
 
    for iVFO := Low(TVFO) to High(TVFO) do
       begin
       FreeAndNil(Self.vfo[iVFO]);
       end;
-   //FreeAndNil(Self.vfo[1]);
-   //FreeAndNil(Self.vfo[2]);
 
    FreeAndNil(SocketLock);
+   inherited Destroy;
 end;
 
 // Events
@@ -1800,9 +1882,11 @@ begin
         uIndyLink's header has the Indy lines.
 
         Made HERE rather than in the constructor so a serial radio, or one never
-        connected, allocates nothing: the radio's destructor is hidden and never
-        runs, so a constructor allocation leaks once per radio.  OnStatus is
-        forwarded because the [Link] trace reads it.
+        connected, allocates nothing.  (It was also forced here while the
+        destructor was hidden and never ran, so a constructor allocation leaked
+        once per radio; the destructor runs now, and freeing the socket frees
+        this handler, which the socket component owns.)  OnStatus is forwarded
+        because the [Link] trace reads it.
 
         Pinned by test/unit/uTestRadioSocketNoRead, the two FailedConnect tests. *)
       IndyLinkOwnHandler(socket, Self.OnRadioStatus);
@@ -1939,18 +2023,8 @@ begin
      failure -- the same intent TK4Radio.Disconnect states. *)
    if SocketIsConnected then
       begin
-      try
-         logger.debug('Calling Disconnect - user request');
-         // Disconnect the socket to pull it off the ReadLn so the thread in Execute sees that it is Terminated.
-         // Disconnect(False): a bare Disconnect asks Indy's Connected, which
-         // READS -- while the reading thread is parked in that very ReadLn.
-         socket.Disconnect(False);
-      except
-         on E: Exception do
-            begin
-            logger.Error('Exception when disconnecting from radio: %s - %s', [E.ClassName, E.Message]);
-            end;
-      end;
+      // Pulls the reading thread off its ReadLn so it sees it is Terminated.
+      CloseNetworkLink;
       end
    else if (serialPortObj <> nil) and serialPortObj.IsOpen then
       begin
@@ -1967,20 +2041,7 @@ begin
       end;
       end;
 
-   if rt <> nil then
-      begin
-      try
-         rt.Terminate;
-         rt.WaitFor;
-         FreeAndNil(rt);
-      except
-         on E: Exception do
-            begin
-            logger.Error('[TFactoryRadioBase.Disconnect] Exception stopping the reading thread: %s - %s',
-                         [E.ClassName, E.Message]);
-            end;
-      end;
-      end;
+   StopReadingThread;
 end;
 
 // Accept every candidate frame -- the behaviour before validation existed.  Radios

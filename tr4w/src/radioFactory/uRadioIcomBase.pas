@@ -165,6 +165,8 @@ type
 
     // Actual UDP send — only called by TCIVSendThread.DrainQueues
     procedure DoSendDirect(const s: string);
+    // Stop, join and free FCIVSendThread -- Disconnect and Destroy
+    procedure StopCIVSendQueue;
 
     // One-shot $19 $00 transceiver-ID query, triggered by the FIRST mode
     // response of the connection rather than the connect burst itself.
@@ -758,6 +760,14 @@ begin
   // call through a nil pointer.  (StopSpectrum is safe to call when nothing was
   // started -- see its own guard.)
   StopSpectrum;
+
+  (* THE SEND QUEUE BEFORE ANYTHING IT WRITES THROUGH.  Its thread calls
+    DoSendDirect on this object, which reaches FNetworkTransport and the
+    base's serial port and SocketLock -- all freed below or by the base.
+    Disconnect normally stopped it already; a radio freed without one (or with
+    StopSpectrum's frame just queued above) still has it running.  This line
+    did not exist while the destructor never ran. *)
+  StopCIVSendQueue;
   FreeAndNil(FScopeDecoder);
 
   if FNetworkTransport <> nil then
@@ -1191,18 +1201,26 @@ begin
      end;
 end;
 
+(* Stop and free the CI-V send queue thread.  Idempotent; shared by
+  Disconnect and Destroy so the stop-then-join is written once. *)
+procedure TIcomRadio.StopCIVSendQueue;
+begin
+  if FCIVSendThread = nil then
+     begin
+     Exit;
+     end;
+  logger.Debug('[TIcomRadio] Stopping CI-V send queue thread');
+  FCIVSendThread.Stop;
+  FCIVSendThread.WaitFor;
+  FreeAndNil(FCIVSendThread);
+  logger.Debug('[TIcomRadio] CI-V send queue thread stopped');
+end;
+
 procedure TIcomRadio.Disconnect;
 begin
   // Stop the send queue first — prevents the queue thread from writing to a
   // port/socket that is about to be closed by inherited Disconnect below.
-  if FCIVSendThread <> nil then
-     begin
-     logger.Debug('[TIcomRadio.Disconnect] Stopping CI-V send queue thread');
-     FCIVSendThread.Stop;
-     FCIVSendThread.WaitFor;
-     FreeAndNil(FCIVSendThread);
-     logger.Debug('[TIcomRadio.Disconnect] CI-V send queue thread stopped');
-     end;
+  StopCIVSendQueue;
 
   if IsNetworkConnection and (FNetworkTransport <> nil) then
      begin

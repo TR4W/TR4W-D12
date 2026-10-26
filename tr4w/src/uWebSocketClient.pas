@@ -324,16 +324,28 @@ begin
       end;
    FConnected := False;
 
+   (* Disconnect(False), NEVER the bare Disconnect: that is Disconnect(True),
+     which asks Indy's Connected first, and Connected READS the socket -- here
+     on the caller's thread while the reader sits in a blocking read, the race
+     that hung the band map on 2026-10-25 (see uIndyLink). *)
    if Assigned(FReader) then
       begin
       FReader.Terminate;
-      try FTCP.Disconnect; except end;
+      try
+         FTCP.Disconnect(False);
+      except
+         // the link is already gone
+      end;
       FReader.WaitFor;
       FreeAndNil(FReader);
       end
    else
       begin
-      try FTCP.Disconnect; except end;
+      try
+         FTCP.Disconnect(False);
+      except
+         // the link is already gone
+      end;
       end;
 end;
 

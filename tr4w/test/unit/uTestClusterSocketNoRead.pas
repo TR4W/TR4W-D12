@@ -255,6 +255,14 @@ begin
    probe := TClusterNoReadProbe.Create;
    try
       CheckTrue(probe.Connect('127.0.0.1', StartServer), 'precondition: connected');
+      (* WAIT FOR THE GREETING BEFORE TEARING DOWN. The greeting is written by
+        the server's OnConnect, so its arrival proves the server finished
+        setting this connection up. Stopping a TIdTCPServer while a connection
+        is still in setup can leave Indy's TerminateAllYarns waiting for ever
+        (IdScheduler.pas, a 500 ms sleep loop with no timeout) -- this test hung
+        one run in twenty that way. *)
+      CheckTrue(probe.WaitInboundArrived(3000),
+                'precondition: the server has finished setting up the connection');
       CheckTrue(probe.IsConnected, 'precondition: up');
 
       probe.Disconnect;

@@ -116,10 +116,30 @@ managed, so a failed connect only Closes it). Also know: `TIdIOHandler.Open` set
 `Opened` **before** the socket connects (`IdIOHandler.pas:866`), so `SocketIsConnected`
 is True for the whole `ConnectTimeout` of an attempt in flight; a write then raises
 inside `SendToRadio`'s except. Pinned by the two `*FailedConnect*` tests in
-`uTestRadioSocketNoRead`. A radio created with a bare `Free` never runs its
-destructor (the hidden-destructor defect), so anything allocated in the
-**constructor** leaks per radio -- an eager handler there raised the checked run's
-unfreed blocks 13463 -> 20935. Allocate on first use.
+`uTestRadioSocketNoRead`. The handler is still made on first use, so a serial or
+never-connected radio allocates nothing; freeing the socket frees it.
+
+**THE RADIO DESTRUCTORS RUN NOW, AND THEY NEVER DID BEFORE 2026-10-25.**
+`TFactoryRadioBase.Destroy` was `overload; Virtual;` -- a new slot that hid
+`TObject.Destroy`, so every `Free`/`FreeAndNil` ran **no** radio destructor (base,
+K4, Icom, HamLib, TCI, Kenwood LAN): the memory went, nothing inside it was torn
+down. It is `override` with `inherited Destroy` now. Rules that came with it:
+- **Every radio destructor is `override` and ends with `inherited Destroy`.** A
+  `Destroy; overload; virtual;` anywhere in a hierarchy re-creates the defect.
+- **`TFactoryRadioBase.BeforeDestruction` stops the base reading thread** while
+  the object is whole: its handler is the subclass's `ProcessMsg`, and destructors
+  run most-derived first. It closes the **socket** (a network `ReadLn` has no
+  timeout) but **not the serial port** -- a family may have its own writer on it
+  (the Icom CI-V send queue), which its own destructor stops first.
+- **Close before join.** The old never-run body joined the reader before closing
+  the socket, which would have hung on any connected network radio.
+- **Teardown is idempotent.** Every caller Disconnects before Free
+  (`ShutDownRadioInterface`, `ExitProgram`), so each step runs twice. Shared steps
+  are one routine each: `CloseNetworkLink`/`StopReadingThread` (base),
+  `StopCIVSendQueue` (Icom), `CloseRig` (HamLib).
+- Pinned by `test/unit/uTestRadioDestructors.pas`: Free through a base reference
+  reaches the destructor; every registry entry frees, with and without Disconnect
+  first; a connected K4 with a live reader frees within a watchdog.
 
 **`uRadioPolling.BeginPolling` is `function(aParameter: Pointer): DWORD;
 stdcall`** (`TF.TTR4WThreadStart`, pointer audit P1, 2026-10-16) and reads its
@@ -153,8 +173,8 @@ reading could not, and in the same run exposed a false `$1E`-unsupported log
 line that no compiler, lint, test or corpus could have seen — that class of
 defect needs a radio that answers. Reach for it (or write its sibling) rather
 than a throwaway. `bench_icomscope` is the same idea for the bandscope, but it
-DOES touch the radio. **Nothing builds either automatically**: `Build-Bench.ps1`
-is in neither `FullBuild.ps1` nor CI, so build by hand after touching a driver.
+DOES touch the radio. **`FullBuild.ps1` builds both** (through `Build-Bench.ps1`,
+after the unit tests), so a driver change that breaks them fails the build.
 
 `tools/radiosim` **proves things about TR4W, not about radios** — when a driver
 and the simulator disagree, suspect the simulator first.

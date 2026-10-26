@@ -287,6 +287,11 @@ begin
    probe := TLoggerSocketProbe.Create(lt_ACLog);
    try
       probe.AttachWithoutReader('127.0.0.1', StartServer);
+      (* The greeting proves the server finished setting the connection up;
+        stopping it mid-setup can hang Indy's shutdown for ever. See the same
+        wait in uTestClusterSocketNoRead. *)
+      CheckTrue(probe.WaitInboundArrived(3000),
+                'precondition: the server has finished setting up the connection');
       CheckTrue(probe.IsConnected, 'precondition: the link is open');
 
       probe.Disconnect;

@@ -233,7 +233,7 @@ end;
 
 Destructor TKenwoodLAN.Destroy;
 begin
-   inherited;
+   inherited Destroy;
 end;
 
 // ============================================================================

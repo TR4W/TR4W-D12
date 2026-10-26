@@ -86,26 +86,14 @@ type
 
 implementation
 
-(* RELEASE A PROBE THROUGH THE DESTRUCTOR THAT ACTUALLY TEARS IT DOWN.
-
-  NOT probe.Free, and the reason is a defect, reported and NOT fixed here:
-  TFactoryRadioBase declares `Destructor Destroy; overload; Virtual;` -- a NEW
-  virtual slot that HIDES TObject.Destroy (the compiler says so, every build:
-  "An inherited method is hidden by destructor Destroy").  TObject.Free calls
-  TObject's slot, so Free runs NO radio destructor at all -- verified with a
-  six-line FPC program.  Every connected probe then leaked its TIdTCPClient,
-  IOHandler and binding (104 heaptrc blocks over the -Checked ceiling).
-
-  Calling Destroy through the radio's own static type reaches the radio's
-  slot, so the real teardown runs.  When the base destructor becomes
-  `override`, this becomes probe.Free and nothing else changes. *)
+(* RELEASE A PROBE.  This called probe.Destroy directly until the base
+  destructor was `overload; Virtual;` -- a slot that hid TObject.Destroy, so
+  Free ran no radio destructor and every connected probe leaked its
+  TIdTCPClient, IOHandler and binding.  The destructor is `override` now
+  (pinned by uTestRadioDestructors), so it is an ordinary FreeAndNil. *)
 procedure ReleaseProbe(var probe: TSocketNoReadProbe);
 begin
-   if probe <> nil then
-      begin
-      probe.Destroy;
-      probe := nil;
-      end;
+   FreeAndNil(probe);
 end;
 
 const
@@ -358,6 +346,11 @@ begin
    closed := TSocketNoReadProbe.Create;
    try
       closed.AttachWithoutReader('127.0.0.1', StartServer);
+      (* The greeting proves the server finished setting the connection up;
+        stopping it mid-setup can hang Indy's shutdown for ever (IdScheduler
+        TerminateAllYarns has no timeout). *)
+      CheckTrue(closed.WaitInboundArrived(3000),
+                'precondition: the server has finished setting up the connection');
       closed.HangUpLocally;
 
       CheckFalse(closed.IsConnected, 'a closed link is not connected');
@@ -395,6 +388,9 @@ begin
    probe := TSocketNoReadProbe.Create;
    try
       probe.AttachWithoutReader('127.0.0.1', StartServer);
+      (* Set up fully before the hang-up, for the same reason as above. *)
+      CheckTrue(probe.WaitInboundArrived(3000),
+                'precondition: the server has finished setting up the connection');
       FHangUp := True;
       Sleep(300);       // let the server thread act on it
 

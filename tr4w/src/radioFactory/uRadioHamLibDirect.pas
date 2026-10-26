@@ -130,6 +130,10 @@ type
 
     procedure Initialize;
 
+    // rig_close + rig_cleanup, then FRig := nil.  Idempotent; the ONE copy,
+    // shared by Disconnect and Destroy (which had drifted into two).
+    procedure CloseRig;
+
   protected
     // Override GetISConnected to check FRig instead of socket
     function GetISConnected: boolean; override;
@@ -400,23 +404,12 @@ end;
 
 destructor THamLibDirect.Destroy;
 begin
-  if FRig <> nil then
-     begin
-     try
-       logger.Info('[THamLibDirect] Cleaning up HamLib rig handle');
-       rig_close(FRig);
-       rig_cleanup(FRig);
-     except
-       on E: Exception do
-          begin
-          logger.Error('[THamLibDirect.Destroy] Exception during cleanup: %s', [E.Message]);
-          end;
-     end;
-     FRig := nil;
-     end;
+  CloseRig;
 
-  // Drain and free the queue — any pending commands are discarded since the
-  // radio is already closed.  Must happen before deleting the critical section.
+  // Drain and free the queue -- any pending commands are discarded, because
+  // ExecuteCommand does nothing once FRig is nil.  Must happen before deleting
+  // the critical section.  The poller that also drains it has been stopped by
+  // every caller that frees a radio (ShutDownRadioInterface, ExitProgram).
   DrainUrgentQueue;
   FUrgentQueue.Free;
   DoneCriticalSection(FCritSect);
@@ -650,6 +643,11 @@ begin
 end;
 
 procedure THamLibDirect.Disconnect;
+begin
+  CloseRig;
+end;
+
+procedure THamLibDirect.CloseRig;
 var
   err: Integer;
 begin

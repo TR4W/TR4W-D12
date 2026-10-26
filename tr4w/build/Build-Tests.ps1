@@ -128,7 +128,10 @@ catch
 # THE LEAK CEILING for -Checked: unfreed heap blocks at exit. Ratchets DOWN only.
 # Measured 2026-10-14 (79,026 tests, 119 suites): 13,469, identical on two runs.
 # -1 would mean "not yet measured" and is reported, never enforced.
-$LEAK_CEILING = 13463
+# 2026-10-25: 13,463 -> 625 when the radio base destructor became `override`.
+# Until then Free on a factory radio ran no radio destructor at all, so every
+# radio a test built leaked its socket, VFOs, lock and per-family objects.
+$LEAK_CEILING = 625
 
 if ($Checked)
    {
