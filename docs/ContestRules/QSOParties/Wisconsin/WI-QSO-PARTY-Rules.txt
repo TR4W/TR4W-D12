@@ -1,0 +1,308 @@
+﻿Wisconsin QSO Party Rules
+
+Source: https://www.warac.org/wqp/wiqp_rules.htm
+Fetched: 2026-10-26
+WA7BNM ID: 330 (https://www.contestcalendar.com/contestdetails.php?ref=330)
+Cabrillo Name: WI-QSO-PARTY
+ADIF Name: WI-QSO-PARTY
+
+Wisconsin QSO Party Rules
+
+ |
+
+ |
+ West Allis Radio Amateur Club
+
+ A Non-Profit Educational Organization
+
+ 2026
+
+ Wisconsin QSO Party
+
+ RULES
+
+ |
+
+ WIQP Home
+
+ Cabrillo Format
+
+ Entry Form (pdf)
+
+ Multiplier List
+
+ County Map
+
+ WARAC Home
+
+ |
+ OBJECTIVE
+
+ |
+ Stations anywhere contact Wisconsin stations for points. Wisconsin stations contact stations
+ anywhere for points. Everybody has fun!
+
+ |
+ DATE/TIME
+
+ |
+ March 15, 2026 from 1800Z to 0100Z March 16
+
+ (1:00PM CDT to 8:00PM CDT on March 15)
+
+ |
+ MODES
+
+ |
+ CW, Phone and Digital (RTTY, PSK, Olivia, Feld-Hell). FT8/FT4 QSO's are not accepted.
+ All stations may be worked once per mode on each band. Cannot work the same station on
+ more than one Digital mode on the same band.
+
+ |
+ MOBILE and PORTABLE
+
+ OPERATION
+
+ |
+ Mobiles and portables may be worked once per mode per Wisconsin county that they operate
+ from. Mobiles or portables may not sit on a county line. Drivers may navigate and
+ drive � any other assistance must be considered multi-op.
+
+ |
+ SPOTTING
+
+ |
+ Spotting may be used. Self-spotting is allowed.
+
+ |
+ REMOTE
+
+ OPERATION
+
+ |
+ Stations operated remotely will be considered pre-existing Portables (not eligible
+ for Bonus points). The transmitter location must be given as the sent exchange.
+
+ |
+ ENTRY CATEGORIES
+
+ |
+
+* Single Operator Fixed (SOF)
+
+* Single Operator Mobile (SOM)
+
+* Single Operator Rookie (SOR)
+
+ |
+
+* Multi Operator Fixed (MOF)
+
+* Multi Operator Mobile (MOM)
+
+* Multi Xmtr/Multi Op Fixed (MMF)
+
+* Multi Xmtr/Multi Op Mobile (MMM)
+
+ |
+
+ |
+ ROOKIE
+
+ |
+ The rules for the Rookie category are:
+
+* No previous WIQP entry other than in the Rookie category
+
+* May enter this category no more than twice and entries must be in two
+ consecutive years
+
+* Entries may be single operator only
+
+ To indicate this category on your log submission, please select Novice
+ or Rookie on your entry form or logging program.
+
+ |
+ EXCHANGE
+
+ |
+ Wisconsin stations send County.
+
+ Non-Wisconsin stations send State or Province or Country.
+
+ |
+ BANDS
+
+ |
+ All amateur bands and modes not prohibited for contesting may be used. No Repeater QSO's.
+
+ |
+ Suggested frequencies
+
+ |
+
+ | CW:
+ | 1.820, 3.550, 7.050, 14.050, 21.050, 28.050
+
+ | Phone:
+ | 1.870, 3.860, 7.230, 14.260, 21.350, 28.400
+
+ | VHF:
+ | 6 meters
+ | 50.140(SSB), 52.530(FM)
+
+ |
+ | 2 meters
+ | 146.550
+
+ |
+ | 1.25 meters
+ | 223.520
+
+ |
+ | 70 cm
+ | 446.025
+
+ Please do not use the National Calling Frequencies:
+
+      52.525, 146.52, 223.50, 446.00, 906.50, 1294.50
+
+ |
+ POWER LEVEL
+
+ |
+
+ | QRP
+ | less than 5 watts
+ | Power Mult = 2
+
+ | Low
+ | 5 to 100 watts
+ | Power Mult = 1.5
+
+ | High
+ | over 100 watts
+ | Power Mult = 1
+
+ |
+ MULTIPLIERS
+
+ |
+ Wisconsin Stations: The sum of Wisconsin counties (max. 72), plus US states
+ (max. 50) plus Canadian provinces (max. 13) worked. Wisconsin may be counted as
+ a state multiplier. DX countries worked count for QSO points but not as multipliers.
+
+ Non-Wisconsin Stations: The number of Wisconsin counties worked (max.72). Only
+ Wisconsin stations may be worked.
+
+ |
+ BONUSES
+
+ |
+ Wisconsin Mobiles/Portables: Add 500 bonus points for each county that you operate
+ from outside your home county. A minimum of 12 QSO�s per county is required to
+ qualify. Portable stations must be set up for WIQP; pre-existing station locations
+ cannot be considered portables.
+
+ W9FK: Add 100 points for each time you work W9FK on each band and mode below 50Mhz. (W9FK is the
+ West Allis Club callsign).
+
+ |
+ SCORING
+
+ |
+ Phone contacts count 1 point; CW and Digital contacts count 2 points.
+
+* Add CW, Phone and Digital points.
+
+* Then multiply by Power Level multiplier.
+
+* Then multiply by your multiplier count under MULTIPLIERS.
+
+* Finally, add your bonus points.
+
+ |
+ LOG SUBMISSION
+
+ |
+ Electronic logs are preferred - please submit your log in electronic format if at all
+ possible. Printed computer logs will not be accepted.
+ If your log is in a computer, please send it to us electronically.
+
+ Handwritten logs will be accepted if they are 50 QSO's or less and are complete. To be
+ complete, a log must contain the header information (see
+ Entry Form) plus QSO data
+ that includes time (UTC), call, band, mode, sent and received exchanges. Paper logs
+ must be accompanied by an Entry Form. And, should you
+ need it, here's in-depth information on our
+ Cabrillo Log Format.
+
+ No log changes will be accepted after the submission deadline. Decisions of the WIQP
+ committee are final.
+
+ |
+
+ |
+ Email to wiqp-logs@warac.org
+
+ Regular mail to:
+
+      Wisconsin QSO Party
+
+      West Allis Radio Amateur Club
+
+      PO Box 511381
+
+      New Berlin, WI 53151
+
+ |
+
+ We want your Log!
+
+ Logs due March 29
+
+ |
+
+ |
+ AWARDS
+
+ |
+ Plaques will be awarded to the:
+
+* Highest Single Operator Fixed (SOF) score in Wisconsin
+
+* Highest Single Transmitter Mobile (SOM and MOM) score in Wisconsin
+
+* Highest Single Operator QRP score in Wisconsin
+
+* Highest Single Operator QRP score outside Wisconsin
+
+* Highest single operator score in the QSO Party outside Wisconsin
+
+* Highest Single Operator Phone-only mode in Wisconsin
+
+* Highest Single Operator VHF score in Wisconsin (50Mhz and above). Will not be awarded if top score is less than 500 points.
+
+* Highest DX station score (outside the US and Canada) where:
+
+    > there are at least 5 DX entries -or-
+
+    > the top DX score is higher than 25th place in the Outside WI listing
+
+* Highest aggregate club score (club member stations to be located within 50 miles of the
+ club, except for mobiles and portables). This award is for Wisconsin-based clubs only. Also,
+ stations in MMF category may not be included in a club aggregate.
+
+ Certificates will be presented to the:
+
+* 10 highest single operator scores in each entry category
+
+* 5 highest multi-operator scores in each entry category
+
+* 5 highest single operator scores in QRP and VHF categories
+
+* Highest single operator score in each single operator category in each state/province
+
+* All Rookie (SOR) category entries
+
+© 1990-2026 WARAC, Inc.

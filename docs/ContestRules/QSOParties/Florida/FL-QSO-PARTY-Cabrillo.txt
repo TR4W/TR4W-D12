@@ -1,0 +1,121 @@
+﻿Florida QSO Party Cabrillo Specification
+
+Source: https://floridaqsoparty.org/wp-content/uploads/Cabrillo-Specification-V3-FQP.pdf
+Fetched: 2026-10-26
+WA7BNM ID: 325 (https://www.contestcalendar.com/contestdetails.php?ref=325)
+Cabrillo Name: FCG-FQP
+ADIF Name: FL-QSO-PARTY
+
+Cabrillo Specification V3
+
+Florida QSO Party
+
+This page details the subset of tags supported by the Cabrillo Specification V3 that apply to the
+Florida QSO Party. The format for each line is TAG: followed by at least one space, followed
+by the data. The tags may be listed in any order except for START-OF-LOG: and END-OF-
+LOG:
+
+Required Tags
+
+START-OF-LOG: 3.0
+Must be the first line of the log submission. The current version-number is 3.0.
+END-OF-LOG:
+Must be the last line of the log submission.
+CALLSIGN: callsign
+The callsign used during the contest.
+CONTEST: FCG-FQP
+CATEGORY-OPERATOR:
+
+    · SINGLE-OP
+    · MULTI-OP
+    · CHECKLOG
+CATEGORY-TRANSMITTER:
+Only required for multi-operator entries and must be either of the following:
+    · ONE
+    · UNLIMITED
+CATEGORY-ASSISTED:
+    · ASSISTED
+    · NON-ASSISTED
+CATEGORY-MODE:
+    · SSB
+    · CW
+    · MIXED
+CATEGORY-POWER:
+    · HIGH
+    · LOW
+· QRP
+
+QSO: qso-data
+One line per contact. All QSO lines should appear in chronological order.
+
+Example:
+
+                   --------info sent------- -------info rcvd------
+
+QSO: freq mo date  time call        rst exch call                          rst exch
+
+QSO: ***** ** yyyy-mm-dd nnnn ************* nnn ****** ************* nnn ****
+
+QSO: 14045 CW 2019-04-27 1600 K4KG  599 POL K9NW                           599 IN
+
+QSO: 14275 PH 2019-04-27 1602 K4KG  59 POL K0HC                            59 KS
+
+Each line must begin with "QSO:" followed by a space. The example shows each item at a
+specific column, but different spacing is allowed as long as the data is in the correct sequence.
+
+Common Tags
+
+CATEGORY-STATION:
+    · FIXED
+    · MOBILE
+    · EXPEDITION
+    · SCHOOL
+
+CATEGORY-OVERLAY:
+    · DRIVER Use this if you are a SINGLE-OP MOBILE who had someone else drive.
+    · NO-DRIVER Use this if you are a SINGLE-OP MOBILE and did all of the driving.
+
+CLAIMED-SCORE: nnnnn
+The claimed-score of the log submission, in integer form such as 1217315 or 19113 or 12.
+CLUB: text
+Name of your local radio club to which the score should be applied.
+CREATED-BY: text
+Name and version of the logging program used to create the Cabrillo file.
+EMAIL: text
+Contact e-mail address for the entrant.
+NAME: text
+Name. Maximum of 75 characters long.
+ADDRESS: text
+Mailing address. Each line should be a maximum of 45 characters long. Up to 6 address lines
+are permitted.
+ADDRESS-CITY: text
+ADDRESS-STATE-PROVINCE: text
+ADDRESS-POSTALCODE: text
+ADDRESS-COUNTRY: text
+Optional fields for providing mailing address details.
+
+OPERATORS: callsign1 [callsign2 callsign3...]
+A space or comma-delimited list of operator callsign(s). Use multiples lines if needed. You may
+also list the callsign of the host station by placing an "@" character in front of the callsign within
+the operator list. Ex:
+
+OPERATORS: K1ABC N5XYZ @N6IJ
+OPERATORS: K1ABC, N5XYZ, @N6IJ
+
+SOAPBOX: text
+Soapbox comments. Enter as many lines of soapbox text as you wish. Each line is a maximum
+of 75 characters long and must begin with SOAPBOX: . If you are a Novice or Technician and/
+or a YL and/or a Rookie (licensed less than three years) and/or an SWL, indicate that here.
+
+X-<anything>: text
+Lines beginning with X- are ignored by the robot and log checking software. Use this for adding
+comment lines to your log. Exception: See X-QSO below.
+
+X-QSO: qso-data
+Any QSO marked with this tag will be ignored in your log. Use to mark QSOs made that you do
+not want to count toward your score.
+
+Adopted from the WWROF master version at https://wwrof.org/cabrillo/cabrillo-
+specification-v3/
+
+Last FQP update: February 2, 2019

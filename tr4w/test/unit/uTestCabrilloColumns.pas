@@ -953,7 +953,31 @@ begin
                '579 ZZ     '],
               aSent, aRec);
          end;
-      MICHQSOPARTY, MOQSOPARTY, NCQSOPARTY, TOEC, WISCONSINQSOPARTY, NYQP,
+      WISCONSINQSOPARTY:
+         begin
+         (* THE LOCATION ALONE (#88 round 2, 2026-10-26): the sponsor's
+            Cabrillo page, "RST columns are not needed". The RST arm below
+            with its four-character RST field taken off, nothing else. *)
+         Take(aVariant,
+              ['FL     ',
+               'DX     ',
+               'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+               'TRC    ',
+               'FL     ',
+               '99     ',
+               'DX     ',
+               'FL     '],
+              ['GA     ',
+               'DX     ',
+               'ABCDEFGHIJ',
+               'TRC    ',
+               'GA     ',
+               'GA     ',
+               '       ',
+               'DX     '],
+              aSent, aRec);
+         end;
+      MICHQSOPARTY, MOQSOPARTY, NCQSOPARTY, TOEC, NYQP,
       TENNESSEEQSOPARTY, ALRS_UA1DZ_CUP, INQSOPARTY, BCQP, IN7QPNE:
          begin
          Take(aVariant,

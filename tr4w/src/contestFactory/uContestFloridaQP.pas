@@ -19,9 +19,50 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  *)
 
-(* Florida QSO Party.
+(* FLORIDA QSO PARTY.
 
-  OnePhoneTwoCW: CW is worth double. Written as two numbers rather than a mode test, because DIGITAL scores the phone value here -- which is what the legacy 'if Mode = CW then 2 else 1' does and what a CW-versus-not model would get wrong. *)
+  THE 2026 RULES, CHECKED AGAINST THE SPONSOR (#88, 2026-10-26). The texts are
+  docs/ContestRules/QSOParties/Florida/ (the rules page, the state and
+  province list, the county list and the Cabrillo specification).
+
+  POINTS -- "Each complete non-duplicate Phone contact is worth 1 point per
+    band. Each complete non-duplicate CW contact is worth 2 points per band."
+    FM is phone.
+
+  MODES -- "No digital QSOs are allowed in the FQP". UsesMode credits CW,
+    phone and FM; a digital QSO is an automatic X-QSO. Until #88 the legacy
+    OnePhoneTwoCW arm scored it the phone value, 1.
+
+  BANDS -- "No 160 or 80 meters, WARC or VHF bands." 40, 20, 15 and 10 m.
+
+  POWER -- "Calculate the Power Multiplier after you have calculated your QSO
+    Points times Multiplier": QRP (5 W or less) x3, LOW (under 100 W) x2,
+    HIGH x1, and "If no power is indicated ... it will default to High
+    Power." CombineWithMultipliers, from Station.MyPower (the entrant's
+    CATEGORY-POWER); FloridaPowerMultiplier is the mapping.
+
+  MULTIPLIERS -- "A multiplier is counted once per mode, regardless of the
+    number of bands" (cfMultByMode). For a Florida entrant: "50 States
+    (including Florida); District of Columbia (DC); 13 Canadian Provinces ...;
+    DXCC Countries (outside the US and Canada); Maritime Mobile (ITU Regions
+    R1, R2, R3). There is no in-state County multiplier." florida.dom holds the
+    states, DC and the provinces, each county mapped to Fl; the DXCC country is
+    the DX multiplier (DXMultiplierKey), which leaves out KH6 and KL7 because
+    "US (including KH6/KL7) operators send State" -- they count once, as the
+    states HI and AK. For an entrant outside Florida: the 67 counties
+    (florida_cty.dom).
+
+  NOT BUILT -- each needs a fact scoring does not have, listed on #88:
+    * MARITIME MOBILE R1/R2/R3. A /MM station is not a domestic call, so its
+      exchange goes to the DX parser, which takes the QTH as text and asks no
+      table; a .dom entry for R1-R3 would never be read. It needs a rule of
+      its own (a /MM call's DX key from its region) and a ruling.
+    * "Mobile and Expedition scores are based on cumulative QSOs and
+      multipliers counted once overall" and "Special 1x1 stations have no
+      multiplier": both depend on the entrant's CATEGORY-STATION, which does
+      not reach scoring.
+
+  CABRILLO -- CONTEST: FCG-FQP, the sponsor's Cabrillo specification. *)
 unit uContestFloridaQP;
 
 {$I tr4w.inc}
@@ -29,6 +70,9 @@ unit uContestFloridaQP;
 interface
 
 uses
+   (* cpLOW / cpQRP -- the entrant's CATEGORY-POWER, as TStationContext
+      carries it. First, so VC's names win wherever the two overlap. *)
+   uSettingsModel,
    VC, uContestBase, uContestStateQSOPartyBase;
 
 type
@@ -84,8 +128,18 @@ type
       function GetInStateDomesticFileName: string; override;
       function GetFlags: TContestFlags; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+
+      (* Points times the multipliers, then times the power multiplier -- the
+         header. *)
+      function CombineWithMultipliers(const aTotals: TScoreTotals): longint; override;
    public
       constructor Create(aContest: TContestHandle); override;
+
+      (* 40, 20, 15 and 10 m -- the header. *)
+      function UsesBand(aBand: BandType): boolean; override;
+
+      (* CW and phone (FM is phone); no digital -- the header. *)
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
 
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
                                        const aQso: ContestExchange;
@@ -110,38 +164,82 @@ type
       function ExchangeCarriesDomesticQTH: boolean; override;
    end;
 
+(* THE POWER MULTIPLIER FOR A CATEGORY-POWER -- QRP x3, LOW x2, anything else
+   (HIGH, or none stated) x1. Public so the tests assert the mapping itself,
+   not only a product. *)
+function FloridaPowerMultiplier(aPower: tCategoryPower): longint;
+
 implementation
 
 uses
    uCabrilloExchange,
    uExchangeFields,
    uDXMultiplierKey,
-   SysUtils, uContestFixedPoints, uContestRegistry;
+   SysUtils, uContestRegistry;
+
+function FloridaPowerMultiplier(aPower: tCategoryPower): longint;
+begin
+   case aPower of
+      cpLOW:
+         begin
+         Result := 2;
+         end;
+      cpQRP:
+         begin
+         Result := 3;
+         end;
+      else
+         begin
+         (* "If no power is indicated ... it will default to High Power." *)
+         Result := 1;
+         end;
+      end;
+end;
 
 constructor TContestFloridaQP.Create(aContest: TContestHandle);
 begin
    inherited Create(aContest);
 end;
 
-(* OnePhoneTwoCW, AND THE RULE IS CALLED RATHER THAN INHERITED.
-
-   THIS CLASS USED TO DESCEND FROM TContestFixedPoints, which is a mechanism
-   base for "a number per mode" -- and mechanism is all it ever gave: three
-   integers and a case. Being a state QSO party is the stronger classification
-   and there is only one base class to spend, so the scoring arrives as a call
-   to the FixedModePoints helper. No behaviour moved and nothing is
-   duplicated. (Florida was the first to leave that base; the base itself
-   retired at M3, 2026-10-01, and every contest that used it now calls the
-   helper the same way.)
-
-   THE THIRD NUMBER MATTERS AND IS NOT A GUESS: the legacy arm is
-   `if Mode = CW then 2 else 1`, so DIGITAL scores the PHONE value. Passing 1
-   for it is reproducing the arm, not rounding it off -- the corpus log for this
-   contest contains a 6 m digital QSO, and a CW-versus-not model would have
-   scored it the same by luck while being wrong in principle. *)
+(* CW 2, PHONE 1 -- the header. FM is phone. A digital QSO never reaches here
+   (UsesMode), nor an off-band one (UsesBand), nor a station an out-of-state
+   entrant may not credit (CreditsWorkedStation). Both and NoMode are not
+   modes a contact is made in. *)
 procedure TContestFloridaQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   aQso.QSOPoints := FixedModePoints(aQso.Mode, 2, 1, 1);
+   case aQso.Mode of
+      CW:
+         begin
+         aQso.QSOPoints := 2;
+         end;
+      Phone, FM:
+         begin
+         aQso.QSOPoints := 1;
+         end;
+      else
+         begin
+         aQso.QSOPoints := 0;
+         end;
+      end;
+end;
+
+function TContestFloridaQP.CombineWithMultipliers(const aTotals: TScoreTotals): longint;
+begin
+   Result := inherited CombineWithMultipliers(aTotals) *
+             FloridaPowerMultiplier(Station.MyPower);
+end;
+
+function TContestFloridaQP.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand in [Band40, Band20, Band15, Band10];
+end;
+
+(* "No digital QSOs are allowed in the FQP". Any submode of CW, Phone or FM is
+   credited -- eNoMode and eData included, as the contract asks -- and no
+   submode of Digital is. An identity fact: no station is asked. *)
+function TContestFloridaQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   Result := aMode in [CW, Phone, FM];
 end;
 
 function TContestFloridaQP.GetDisplayName: string;
@@ -289,13 +387,17 @@ begin
 end;
 
 (* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
-   Every country but the USA and Canada -- the ARRLDXCCWithNoUSAOrCanada arm. *)
+   "DXCC Countries (outside the US and Canada)", where "US (including
+   KH6/KL7) operators send State": Hawaii and Alaska are the states HI and AK
+   in florida.dom, so they are not also a DXCC multiplier (#88, 2026-10-26;
+   until then this was every country but the USA and Canada, and only the
+   session's domestic-country list kept KH6 and KL from counting twice). *)
 function TContestFloridaQP.DXMultiplierKey(const aQso: ContestExchange;
                                            out aKey: DXMultiplierString): boolean;
 begin
    aKey := '';
    Result := False;
-   if not IsUSAOrCanadaCountry(aQso.QTH.CountryID) then
+   if not IsUSACanadaHawaiiOrAlaskaCountry(aQso.QTH.CountryID) then
       begin
       aKey := aQso.QTH.CountryID;
       Result := True;

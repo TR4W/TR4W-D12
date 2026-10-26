@@ -159,6 +159,13 @@ function CabrilloSentRSTStateOrDX(const aMy: TMyStationExchange;
                                   const aQso: ContestExchange;
                                   const aCtx: TCabrilloQSOContext): string;
 
+(* The state -- 'DX' when we have none -- and NO RST: '%-7s'. The
+   location-only column (Wisconsin's Cabrillo page: "RST columns are not
+   needed"; #88, 2026-10-26). *)
+function CabrilloSentStateOrDX(const aMy: TMyStationExchange;
+                               const aQso: ContestExchange;
+                               const aCtx: TCabrilloQSOContext): string;
+
 (* RST and the grid: '%-3s %-7s'. *)
 function CabrilloSentRSTGrid(const aMy: TMyStationExchange;
                              const aQso: ContestExchange;
@@ -360,6 +367,12 @@ function CabrilloReceivedRSTQTHDX(const aMy: TMyStationExchange;
                                   const aQso: ContestExchange;
                                   const aCtx: TCabrilloQSOContext): string;
 
+(* His-QTH -- 'DX' when the QSO has none -- and NO RST: '%-7s'. The
+   location-only column (Wisconsin, #88). *)
+function CabrilloReceivedQTHDX(const aMy: TMyStationExchange;
+                               const aQso: ContestExchange;
+                               const aCtx: TCabrilloQSOContext): string;
+
 (* RST and his-QTH -- when the QSO has none, its DX QTH, or 'DX':
    '%-3s %-7s'. *)
 function CabrilloReceivedRSTQTHOrDXQTH(const aMy: TMyStationExchange;
@@ -496,18 +509,41 @@ begin
   Result := SysUtils.Format('%-3s %-7s', [aCtx.RSTSent, aMy.MyState]);
 end;
 
+(* THE STATE WE SEND, 'DX' WHEN WE HAVE NONE -- the one statement of it, for
+   the RST and the location-only columns alike. *)
+function SentStateOrDX(const aMy: TMyStationExchange): string;
+begin
+  Result := aMy.MyState;
+  if aMy.MyState = '' then
+     begin
+     Result := 'DX';
+     end;
+end;
+
+(* HIS QTH, 'DX' WHEN THE QSO HAS NONE -- the one statement of it, for the
+   RST and the location-only columns alike. *)
+function ReceivedQTHOrDX(const aQso: ContestExchange;
+                         const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := aCtx.HisQTH;
+  if aQso.QTHString = '' then
+     begin
+     Result := 'DX';
+     end;
+end;
+
 function CabrilloSentRSTStateOrDX(const aMy: TMyStationExchange;
                                   const aQso: ContestExchange;
                                   const aCtx: TCabrilloQSOContext): string;
-var
-  state: string;
 begin
-  state := aMy.MyState;
-  if aMy.MyState = '' then
-     begin
-     state := 'DX';
-     end;
-  Result := SysUtils.Format('%-3s %-7s', [aCtx.RSTSent, state]);
+  Result := SysUtils.Format('%-3s %-7s', [aCtx.RSTSent, SentStateOrDX(aMy)]);
+end;
+
+function CabrilloSentStateOrDX(const aMy: TMyStationExchange;
+                               const aQso: ContestExchange;
+                               const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-7s', [SentStateOrDX(aMy)]);
 end;
 
 function CabrilloSentRSTGrid(const aMy: TMyStationExchange;
@@ -867,15 +903,15 @@ end;
 function CabrilloReceivedRSTQTHDX(const aMy: TMyStationExchange;
                                   const aQso: ContestExchange;
                                   const aCtx: TCabrilloQSOContext): string;
-var
-  qth: string;
 begin
-  qth := aCtx.HisQTH;
-  if aQso.QTHString = '' then
-     begin
-     qth := 'DX';
-     end;
-  Result := SysUtils.Format('%-3s %-7s', [aCtx.RSTReceived, qth]);
+  Result := SysUtils.Format('%-3s %-7s', [aCtx.RSTReceived, ReceivedQTHOrDX(aQso, aCtx)]);
+end;
+
+function CabrilloReceivedQTHDX(const aMy: TMyStationExchange;
+                               const aQso: ContestExchange;
+                               const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-7s', [ReceivedQTHOrDX(aQso, aCtx)]);
 end;
 
 function CabrilloReceivedRSTQTHOrDXQTH(const aMy: TMyStationExchange;

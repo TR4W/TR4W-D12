@@ -1,0 +1,131 @@
+﻿Wisconsin QSO Party Cabrillo Log File Information
+
+Source: https://www.warac.org/wqp/wiqp_cabrillo.htm
+Fetched: 2026-10-26
+WA7BNM ID: 330 (https://www.contestcalendar.com/contestdetails.php?ref=330)
+Cabrillo Name: WI-QSO-PARTY
+ADIF Name: WI-QSO-PARTY
+
+Electronic Logs for WIQP
+
+ |
+
+ |
+ West Allis Radio Amateur Club
+
+ A Non-Profit Educational Organization
+
+ Wisconsin QSO Party
+
+ Cabrillo Log File Information
+
+ v 3.1
+
+ |
+
+ WIQP Home
+
+ WIQP Rules
+
+ WARAC Home
+
+This document lays out the preferred submission file for the Wisconsin QSO Party (WIQP). This information
+ is intended primarily for logging program developers, but WIQP participants looking for more in-depth
+ information on WIQP log files may also find it useful.
+
+There are two considerations behind our log file format. First is that the log file contain all
+ information needed to check and score an entrant's log per our rules. Second is our desire to make
+ our log format compliant with the Cabrillo specification.
+
+Wisconsin QSO Party log sample
+
+START-OF-LOG: 3.0
+CREATED-BY: [Name and version of logging software]
+CONTEST: WI-QSO-PARTY
+CALLSIGN: W9HNW
+NAME: Harry N Workem
+ADDRESS: 6537 Hightower Road
+ADDRESS-CITY: Hamberg
+ADDRESS-STATE-PROVINCE: WI
+ADDRESS-POSTALCODE: 53086
+ADDRESS-COUNTRY: USA
+ADDRESS-COUNTY: WAS
+EMAIL: hworkem@email.net
+LOCATION: WI
+CATEGORY: MOM
+CATEGORY-OPERATOR: MULTI-OP
+CATEGORY-STATION: MOBILE
+CATEGORY-TRANSMITTER: ONE
+CATEGORY-OVERLAY:
+CATEGORY-POWER: LOW
+CLAIMED-SCORE: 4210
+OPERATORS: @W9HNW WA9RAC W9UPM
+CLUB: West Allis RAC
+SOAPBOX: Fine party! TU to WARAC for sponsoring it.
+SOAPBOX:
+QSO: 7240 PH 2020-03-15 1801 W9HNW RAC ND9Z BRO
+QSO: 7240 PH 2020-03-15 1804 W9HNW RAC N9EZ/RAC RAC
+QSO: 7240 PH 2020-03-15 1802 W9HNW RAC AB9DI/WIN WIN
+QSO: 21030 CW 2020-03-15 1924 W9HNW RAC K6LL AZ
+QSO: 14022 CW 2020-03-15 1933 W9HNW RAC VE1OP NS
+QSO: 28403 PH 2020-03-15 1942 W9HNW RAC W1AW CT
+QSO: 28455 PH 2020-03-15 2111 W9HNW RAC VE5SF SK
+QSO: 28567 PH 2020-03-15 2145 W9HNW RAC DL6QK DX
+QSO: 7240 PH 2020-03-15 2255 W9HNW KEN WA9AXQ MIL
+QSO: 7240 PH 2020-03-15 2256 W9HNW KEN N9QA OZA
+QSO: 7240 PH 2020-03-15 2310 W9HNW WAL WA9AXQ MIL
+QSO: 7240 PH 2020-03-15 2313 W9HNW WAL N9QA OZA
+.
+.
+END-OF-LOG:
+
+Header Notes
+
+All tags should be in standard Cabrillo tag format: (left justified; upper case followed by a colon; words
+coupled with dashes).
+
+LOCATION: is for two-character S/P/C information (State, Province or "DX") only. It should never contain
+county information. LOCATION: is the preferred tag name, but the older ARRL-SECTION: tag may be used.
+
+There are two log header fields that are very helpful to WIQP but are not in the Cabrillo specification -
+ADDRESS-COUNTY: and CATEGORY:.
+
+WIQP Rules call for Wisconsin stations to receive a bonus for each county they operate from outside their home QTH
+county, so a tag called ADDRESS-COUNTY: has been added for WIQP logs. This field needs to contain the primary
+operator's home QTH county.
+
+There are seven traditional entry categories for WIQP, abbreviated SOF, SOM, SOR, MOF, MMF, MOM, MMM (See
+Rules). If the CATEGORY: tag contains one of these three-character groups, it unambiguously provides the entry
+category information. If CATEGORY: XXX is used, the next four CATEGORY- tags in the sample are not needed.
+
+Although these two non-standard tags are helpful for accurately analyzing logs, they are not essential.
+[ADDRESS-COUNTY can be looked up from the home QTH zipcode and the entry category can be
+determined from the standard Cabrillo V3 CATEGORY- tags if they are all present in the log.]
+
+CATEGORY-POWER: should be one of three power levels listed in the Rules (QRP, LOW, HIGH).
+
+ QSO Data Notes
+
+The column alignment of the QSO data lines are the same as the ARRL 160M contest example in the Cabrillo
+specification except that RST columns are not needed. There should always be at least one space between fields.
+
+Each QSO�s data should be on one line. Individual fields must be truncated if necessary to avoid wraps.
+
+Non-Wisconsin stations must have their state or province in the sent exchange field and the county of the
+Wisconsin station worked in the received exchange field.
+
+Wisconsin stations must have their current county in the sent exchange field and the received S/P/C or county
+in the received exchange field. Mobiles and Rovers should report their county operated from in the sent exchange field.
+See example.
+
+The received exchange for QSO�s with stations outside the U.S. states and Canadian provinces should show �DX�.
+
+ Feedback
+
+Please contact the West Allis Radio Amateur Club with any questions, comments or suggestions.
+
+ References
+
+ WWROF cabrillo spec
+
+ © 1979-2026 WARAC, Inc.

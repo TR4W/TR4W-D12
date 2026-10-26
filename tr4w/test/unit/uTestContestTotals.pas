@@ -1292,8 +1292,10 @@ begin
       end;
       end;
    (* BCQP joined at #88 (2026-10-26): "Any QSO with the Orca DXCC
-      station, VA7ODX, will be worth an additional 20 points." *)
-   CheckEquals(' MISSOURI QSO PARTY SALMON RUN BCQP', declaring,
+      station, VA7ODX, will be worth an additional 20 points." Wisconsin at
+      round 2: "Add 100 points for each time you work W9FK on each band and
+      mode below 50Mhz." *)
+   CheckEquals(' MISSOURI QSO PARTY SALMON RUN WISCONSIN QSO PARTY BCQP', declaring,
                'the contests that declare bonus stations');
 end;
 

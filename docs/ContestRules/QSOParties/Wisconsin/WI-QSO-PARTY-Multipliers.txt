@@ -1,0 +1,81 @@
+﻿Wisconsin QSO Party Multiplier List
+
+Source: https://www.warac.org/wqp/wiqp_mults.htm
+Fetched: 2026-10-26
+WA7BNM ID: 330 (https://www.contestcalendar.com/contestdetails.php?ref=330)
+Cabrillo Name: WI-QSO-PARTY
+ADIF Name: WI-QSO-PARTY
+
+WIQP Multipliers
+
+ |
+
+ |
+ West Allis Radio Amateur Club
+
+ A Non-Profit Educational Organization
+
+ Wisconsin QSO Party
+
+ Multiplier List
+
+ |
+
+ WIQP Home
+
+ WARAC Home
+
+ |
+
+ |
+
+ WISCONSIN COUNTIES
+
+ ADA Adams FLO Florence MAR Marathon RUS Rusk
+ ASH Ashland FON Fond du Lac MRN Marinette SAU Sauk
+ BAR Barron FOR Forest MRQ Marquette SAW Sawyer
+ BAY Bayfield GRA Grant MEN Menominee SHA Shawano
+ BRO Brown GRE Green MIL Milwaukee SHE Sheboygan
+ BUF Buffalo GRL Green Lake MON Monroe STC St Croix
+ BUR Burnett IOW Iowa OCO Oconto TAY Taylor
+ CAL Calumet IRO Iron ONE Oneida TRE Trempealeau
+ CHI Chippewa JAC Jackson OUT Outagamie VER Vernon
+ CLA Clark JEF Jefferson OZA Ozaukee VIL Vilas
+ COL Columbia JUN Juneau PEP Pepin WAL Walworth
+ CRA Crawford KEN Kenosha PIE Pierce WSB Washburn
+ DAN Dane KEW Kewaunee POL Polk WAS Washington
+ DOD Dodge LAC La Crosse POR Portage WAU Waukesha
+ DOO Door LAF Lafayette PRI Price WAP Waupaca
+ DOU Douglas LAN Langlade RAC Racine WSR Waushara
+ DUN Dunn LIN Lincoln RIC Richland WIN Winnebago
+ EAU Eau Claire MAN Manitowoc ROC Rock WOO Wood
+
+ STATES
+
+ AL Alabama LA Louisiana OH Ohio
+ AK Alaska MD Maryland/(D.C.) OK Oklahoma
+ AZ Arizona MA Massachusetts OR Oregon
+ AR Arkansas ME Maine PA Pennsylvania
+ CA California MI Michigan RI Rhode Island
+ CO Colorado MN Minnesota SC South Carolina
+ CT Connecticut MS Mississippi SD South Dakota
+ DE Delaware MO Missouri TN Tennessee
+ FL Florida MT Montana TX Texas
+ GA Georgia NE Nebraska UT Utah
+ HI Hawaii NV Nevada VT Vermont
+ IA Iowa NH New Hampshire VA Virginia
+ ID Idaho NJ New Jersey WA Washington
+ IL Illinois NM New Mexico WV West Virginia
+ IN Indiana NY New York WI Wisconsin
+ KS Kansas NC North Carolina WY Wyoming
+ KY Kentucky ND North Dakota
+
+ CANADIAN PROVINCES
+
+ AB Alberta NS Nova Scotia PE Prince Edward Island
+ BC British Columbia NT Northwest Territories QC Quebec
+ MB Manitoba NU Nunavut SK Saskatchewan
+ NB New Brunswick ON Ontario YT Yukon Territory
+ NL Newfoundland & Labrador
+
+© 1990-2025 WARAC, Inc.

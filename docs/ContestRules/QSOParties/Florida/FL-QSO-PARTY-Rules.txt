@@ -1,0 +1,265 @@
+﻿Florida QSO Party Rules
+
+Source: https://floridaqsoparty.org/rules/
+Fetched: 2026-10-26
+WA7BNM ID: 325 (https://www.contestcalendar.com/contestdetails.php?ref=325)
+Cabrillo Name: FCG-FQP
+ADIF Name: FL-QSO-PARTY
+
+Rules – Florida QSO Party
+
+ Skip to content
+
+Florida QSO Party
+
+Sponsored by the Florida Contest Group
+
+ Menu
+
+Primary menu
+
+* Home
+
+* Rules
+
+* FQP Spelling Bee
+
+* Log Submission
+
+* Logs Received
+
+* Florida County Map
+
+* County Abbreviations
+
+* View Florida QSO Party County Activations
+
+* Enter Your Florida QSO Party County Activity
+
+* Logging
+
+* FQP Tools
+
+* Software
+
+* Results
+
+* Records
+
+* FQP Plaque Sponsors
+
+* Worked All Florida Award
+
+* PRINT MY CERTIFICATES
+
+* QSLs
+
+* Florida ARRL Sections
+
+* About Us
+
+* Flyer
+
+* FQP Reflector
+
+* Friends of FQP
+
+* Contact the FQP
+
+Rules
+
+Florida QSO Party Rules – Sponsored by the Florida Contest Group
+
+Participate in the Worked All Florida Award ( link )
+
+OBJECT: For radio amateurs outside of the state of Florida to make contacts with as many Florida stations in as many of the 67 Florida counties as possible. Florida operators can work anyone outside and within Florida.
+
+CONTEST PERIOD: Starts the last Saturday of April. For 2026, the Florida QSO Party dates will be April 25th- 26th.
+
+ There are two 10-hour operating periods separated by a 10-hour break period. All operators may operate the full 20 hours.
+
+Saturday 16:00:00Z (Noon EDT) – Sunday 01:59:59Z (9:59:59 PM EDT)
+
+Sunday 12:00:00Z (8 AM EDT) – 21:59:59Z (5:59:59 PM EDT)
+
+CATEGORIES
+
+Fixed Station Categories
+
+* Single-Operator. One person performs all operating and logging functions. Use of spotting nets (operator arrangements involving assistance through DX-alerting nets, Packet Cluster, Reverse Beacon Network, etc.) is not permitted. Use of spotting assistance will have your log reclassified as Single-Operator Assisted.  Only one transmitted signal is allowed on the air at any time.
+
+* Single-Operator-Assisted. One person performs all operating and logging functions. Use of spotting nets is permitted. Only one transmitted signal is allowed on the air at any time.
+
+* Multi-Single.  More than one person contributing to the score, such as relief operators or loggers. Only one transmitted signal at any time.
+
+* Multi-Multi. More than one person contributing to the score, such as relief operators or loggers. Only one transmitted signal on the air per band/mode at any time. More than one transmitted signal may be on the air on different bands at any time.
+
+ Mobile Categories
+
+A mobile station is defined as a station that has an antenna that is capable of being used when in motion.
+
+This category is for Florida stations only. You must operate from a minimum of two Florida counties.
+
+* Mobile – Single-Op No Driver. The same person does all operating and driving.
+
+* Mobile – Single-Op with a Driver. One person does all operating and another does all the driving.
+
+* Mobile – Multi-Single. Two or more people can share operating and driving.
+
+* Mobile – Multi-Multi. Two or more people can share operating and driving.
+
+Portable Categories
+
+A portable station is defined as a station that has an antenna that isn’t capable of being used when in motion.
+
+This category is for Florida stations only.
+
+Expedition – A stationary portable operation from one or more Florida counties using temporary antennas. The antennas should be taken down and reinstalled at the next county. One or more operators are allowed.
+
+Florida Mobiles and Expeditions that move to a new county are considered to be a new station and may be contacted again for QSO Point credit.
+
+Florida stations on a county line (maximum of two counties) may be claimed as a separate QSO and multiplier from each county. County lines are defined per the County Hunter guidelines. See http://countyhunter.com/awardmain.htm
+
+Other Special Categories
+
+* School – (University, College, High School, etc.) Operation takes place from a station on campus. Operation from a club member’s home station is allowed only if there is no station on campus. Operators can be students, faculty, staff and alumni of the school.
+
+* Novice/Technician– Operator(s) must hold a Novice or Technician license.
+
+* Special 1×1 callsign Florida QSO Party Spelling Bee stations – The final score is based on total QSOs.  No multipliers. Scores are not included in the Club Competition. Click here for more information on the FQP Spelling Bee.
+
+* SWL. – Shortwave listeners. Log the time, band, callsign and exchange of both of the stations you hear.
+
+* Check Log- An Entry to assist with log checking.  The entry will not have a score listed in the results.
+
+Please indicate in the Category-Overlay section of the Cabrillo file if any of these apply: Novice/Technician, SWL, Rookie (licensed less than 3 years), YL, Under 25 years of age.
+
+MODES
+
+* Phone, CW, Mixed (Phone and CW)
+
+* If you want to enter on a single mode and make a few QSOs on another mode this is perfectly acceptable. We will treat the “other” mode QSOs as a check log.
+
+* No digital QSOs are allowed in the FQP
+
+EXCHANGE
+
+* Signal report (RS or RST) and location (as specified below).
+
+* Florida operators send county.  A list of abbreviations is here https://floridaqsoparty.org/counties/counties-list/
+
+* US (including KH6/KL7) operators send State. Canadian operators send province. Abbreviations are here https://floridaqsoparty.org/wp-content/uploads/State-and-Province-Abbreviations.pdf
+
+* DX (including KP4, etc.) operators send DXCC prefix.  Maritime mobile operators send ITU Region (1, 2 or 3).
+
+SCORING
+
+* QSO POINTS: Each complete non-duplicate Phone contact is worth 1 point per band. Each complete non-duplicate CW contact is worth 2 points per band. No credit for a partial contact or duplicate.  A penalty of one additional QSO is assessed for an incorrectly logged callsign or QTH, or if you are not in the other station’s log. If that was the only QSO with that QTH, then the multiplier is also lost (no penalty multipliers, however).
+
+* MULTIPLIERS:  A multiplier is counted once per mode, regardless of the number of bands on which it is worked. For Florida entrants:  50 States (including Florida);  District of Columbia (DC);  13 Canadian Provinces NS (VE1), NB (VE1, VE9), NL (VO1, VO2), PE (VY2), QC (VE2), ON (VE3), MB (VE4), SK (VE5), AB (VE6), BC (VE7), NT (VE8), NU (VY0), YT (VY1); DXCC Countries (outside the US and Canada); Maritime Mobile (ITU Regions R1, R2, R3)  There is no in-state County multiplier. For non-Florida entrants: 67 Florida Counties. Florida Mobiles and Expeditions that change County are considered to be a new station and may be contacted again for multiplier credit.
+
+POWER MULTIPLIER
+
+* If all QSOs were made using 5 watts output or less, use a Power Multiplier of 3.
+
+* If all QSOs were made using greater 5 watts and less than 100 watts output, use a Power Multiplier of 2.
+
+* If all QSOs were made using more than 100 watts output, there is no Power Multiplier.
+
+* Calculate the Power Multiplier after you have calculated your QSO Points times Multiplier. Multiply that value times the Power Multiplier.
+
+* If no power is indicated on your score submission it will default to High Power.
+
+FINAL SCORE
+
+QSO Points times Multipliers then times Power Multiplier
+
+Exceptions:  Mobile and Expedition scores are based on cumulative QSOs and multipliers counted once overall.  Special 1×1 stations have no multiplier to encourage them to run.
+
+SUGGESTED OPERATING FREQUENCIES
+
+* These ranges encompass the Mobile Windows which are areas for Fixed stations to avoid CQing.  Contacts outside these frequency ranges are still valid.
+
+* CW:  7.025-7.055, 14.025-14.055, 21.025-21.055, 28.025-28.055 MHz
+
+* Phone:  7.185-7.285, 14.225-14.325, 21.300-21.400, and 28.400-28.500 MHz
+
+* No 160 or 80 meters, WARC or VHF bands.
+
+Mobile Windows
+
+* CW:  7.025-7.035, 14.040-14.050, 21.040-21.050, 28.040-28.050 MHz
+
+* Fixed (in FL and out of state) and Expedition stations shouldn’t call CQ or run stations in the mobile window.
+
+MISCELLANEOUS
+
+* No cross-mode contacts.  CW contacts must be made in the CW portion of the band. Use of a remote receiver/transmitter/antenna is permitted.  The entry location is the location of the receiver/transmitter/antenna. Operators may use multiple remote locations during the FQP, but not simultaneously.
+
+* No separate receiving sites are allowed.
+
+* Contacts with Florida stations must include their county as part of the received exchange. Don’t log the exchange as FL.
+
+* Stations may be worked once per mode per band for a total of 8 maximum QSOs.  Mobiles and Expeditions may be worked in each county in which they operate. No limits on band changes in any category.
+
+* Club competition.  Entered as CLUB: in Cabrillo header.  Florida entrants who are members of the sponsoring club (FCG) are encouraged to enter with their local club instead. The club aggregate is total QSOs (not total score). Entries from Mobiles and Expeditions are included for FL Clubs.  Entries from Special 1x1s are not included.”In order to be listed in the results, a club must have more than one entry. Splits of QSO’s by club are permitted for Multi-Ops.
+
+* No self-spotting or asking to be spotted (except by the special 1×1 stations).
+
+* Please exhibit good sportsmanship and distribute your contacts among the various mobiles. “Cheerleading”, defined as working only one mobile as they change counties, is highly discouraged. Extra contacts using your second callsigns are not given credit.
+
+REPORTING
+
+*
+
+* No registration prior to the FQP is required, although Florida entrants are encouraged to post their intended operation here https://floridaqsoparty.org/counties/
+
+* All entrants are encouraged to submit their log electronically in Cabrillo format.  Log must indicate for each QSO the band, mode, date, UTC time, callsign sent, signal report sent and Location sent, callsign received, signal report received and location received.  Specific Cabrillo details can be found at https://floridaqsoparty.org/wp-content/uploads/Cabrillo-Specification-V3-FQP.pdf
+
+* Log Upload page (preferred method) https://fqp.contesting.com/fqpsubmitlog.php
+
+* E-Mail to logs@floridaqsoparty.org
+
+* Web Page. Entrants who do not use computer logging during the FQP are encouraged to use the log-entry web form https://www.b4h.net/cabforms/flqp_cab3.php to enter the QSO info from their paper logs.
+
+*
+
+* Send paper logs to:
+
+Dan Street K1TO
+
+9933 289th St E
+
+Myakka City, FL 34251
+
+* Entries must be received (postmarked for mailed logs) no later than 10 days after the end of the FQP.
+
+* Valid logs received are listed on the FQP web site https://fqp.contesting.com/fqplogsrcvd.php
+
+* Final results are posted on the FQP web site at https://floridaqsoparty.org/results-page/
+
+* All-time record scores are posted on the FQP web site at https://floridaqsoparty.org/records-page/
+
+*
+
+Please be patient after you submit your log. The FQP has at least 1000 entries or more every year. It takes almost a year to compile the results.
+
+AWARDS
+
+* Plaques are awarded for many achievements.  Current list of available plaques and sponsors here: https://floridaqsoparty.org/plaque-sponsors/
+
+* Downloadable certificates are also awarded to those who contact all of the 1×1 stations.  Log submission is preferred, but not mandatory.
+
+CONDITION OF ENTRY
+
+Each entrant agrees to be bound by the provisions and intent of these rules, the regulations of his/her licensing authority and the decisions of the Florida QSO Party Contest Committee
+
+* Facebook
+
+* Google Plus
+
+Copyright © 2026 Florida QSO Party. All Rights Reserved.
+
+Theme: Catch Box by Catch Themes
+
+Scroll Up

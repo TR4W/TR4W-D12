@@ -638,7 +638,17 @@ begin
    // normal records); import recognizes both that field and the
    // N1MM / DXLog.net equivalents.  Cast to Integer because the
    // CheckEquals overloads don't include Boolean.
-   CheckEquals(Integer(a.ceXQSO), Integer(b.ceXQSO), ctx + ' ceXQSO');
+   //
+   // WHAT MUST SURVIVE IS "THIS QSO IS AN X-QSO", NOT THE STORED FLAG
+   // (#88 round 2, 2026-10-26). A QSO the contest refuses -- off its bands
+   // or modes -- is an X-QSO DERIVED each time (QSOIsXQSO) with ceXQSO
+   // False; export writes CLAIMEDQSO 0 for it, and import cannot tell that
+   // from an operator's X-QSO, so it comes back STORED. The FQP fixture's
+   // two 6 m QSOs became exactly that when Florida stated its bands. So
+   // the question is asked as every X-QSO reader asks it
+   // (LoggedQSOIsXQSO, which includes the operator's flag). The stored
+   // half of the drift is reported on #88.
+   CheckEquals(Integer(LoggedQSOIsXQSO(a)), Integer(LoggedQSOIsXQSO(b)), ctx + ' is an X-QSO');
 end;
 
 procedure TADIFFixtureTests.CheckRoundTrip(const fixtureName: string);

@@ -691,8 +691,9 @@ the target shape, the M-step migration order and the open questions.
   as its `Scope: TBonusStationScope` says -- `bsOnce` (Missouri's W0MA/K0GQ),
   `bsOncePerMode` (the Salmon Run's W7DX, with the single-mode rule from
   `Station.MyCategoryMode`), `bsOncePerBandAndMode` (BC's VA7ODX since #88,
-  2026-10-26, dupes and X-QSOs excluded by its `CountsTowardBonus`; Wisconsin's
-  W9FK is the next). A new pay-out shape is a new `Scope` member in the base,
+  2026-10-26, and Wisconsin's W9FK below 50 MHz since round 2; each excludes
+  dupes and X-QSOs in its `CountsTowardBonus` through the base's
+  `IsCreditedContact`, the one statement of "a valid contact"). A new pay-out shape is a new `Scope` member in the base,
   never a class-local copy; `uTestContestTotals.Test_BonusStationScopes` pins
   all three over one log), otherwise the class's own `BonusPoints` over
   the view, adding `inherited` (NC's Rarest-of-NC sweep, Idaho's dormant

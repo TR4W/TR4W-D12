@@ -251,7 +251,11 @@ end;
 (* Table 2's note: "'Maryland' includes the District of Columbia." A
    Missouri entrant's multipliers are states, so missouri.dom -- the
    in-state file -- maps DC to MD; read through the real loader with its
-   INCLUDEs. And Table 1's "Holt HTL" (DXLog's HLT is not the sponsor's). *)
+   INCLUDEs. And Table 1's "Holt HTL" (DXLog's HLT is not the sponsor's).
+   Round 2: "Missouri counties (115 maximum), US states (49 maximum), and
+   Canadian provinces and territories (13 maximum) ... An additional
+   multiplier of the value of one will be added if at least one DX station
+   is worked" -- Missouri is not one of the 49. *)
 procedure TContestMissouriQPTests.Test_MissouriCountsDCAsMaryland;
 var
    savedSheet: TMultsObject;
@@ -272,14 +276,34 @@ begin
    MultipliersIsCounties := False;
    table := TDomQTHTable.Create;
    try
-      CheckEquals('S50.DOM MISSOURI_CTY.DOM',
+      (* THE COUNTIES FIRST, and no S50: the states are listed so Missouri
+         can be left out (#88 round 2). *)
+      CheckEquals('MISSOURI_CTY.DOM',
                   LoadShippedDomFollowingIncludes(table, 'missouri.dom', True, 0),
-                  'missouri.dom includes the 50 states, then the counties');
+                  'missouri.dom includes the counties and no states file');
       CheckEquals('MD', MultiplierOf(table, 'DC'), 'DC counts as Maryland');
       CheckEquals('MD', MultiplierOf(table, 'MD'), 'and so does Maryland');
       CheckEquals('DC', QTHOf(table, 'DC'), 'the QTH stays DC');
       CheckEquals('HTL', MultiplierOf(table, 'HTL'), 'Holt County is HTL');
       CheckEquals('', MultiplierOf(table, 'HLT'), 'HLT is not a Missouri county');
+
+      (* "US states (49 maximum)": every state but Missouri, Alaska and
+         Hawaii included; the provinces; one DX multiplier. *)
+      CheckEquals('', MultiplierOf(table, 'MO'), 'Missouri is not a state multiplier');
+      CheckEquals('', MultiplierOf(table, 'MISSO'), 'nor under its other alias');
+      CheckEquals('KS', MultiplierOf(table, 'KS'), 'Kansas is');
+      CheckEquals('AK', MultiplierOf(table, 'AK'), 'Alaska is');
+      CheckEquals('HI', MultiplierOf(table, 'HI'), 'Hawaii is');
+      CheckEquals('MS', MultiplierOf(table, 'MS'), 'Mississippi is');
+      CheckEquals('VE3', MultiplierOf(table, 'ON'), 'Ontario is');
+      CheckEquals('NU', MultiplierOf(table, 'NU'), 'Nunavut is');
+      CheckEquals('DX', MultiplierOf(table, 'DX'), 'and DX is one multiplier');
+
+      (* MIS IS MISSISSIPPI COUNTY, NOT THE STATE: s48.dom gives Mississippi
+         the alias MIS, and the table keeps the first entry added -- so the
+         counties come first. NWT likewise is Newton County, not the NWT. *)
+      CheckEquals('MIS', MultiplierOf(table, 'MIS'), 'MIS is Mississippi County');
+      CheckEquals('NWT', MultiplierOf(table, 'NWT'), 'NWT is Newton County');
    finally
       table.Free;
       mo.Free;

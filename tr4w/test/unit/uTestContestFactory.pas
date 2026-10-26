@@ -99,7 +99,7 @@ type
       procedure Test_IdahoQRPScoresFiveOnEveryMode;
       procedure Test_FixedPointContestsTranscribeTheirArms;
       procedure Test_EveryQSOPartySplitsARoverCallOnExport;
-      procedure Test_RoverSplitAndCountyLineDisagreeOnlyForTheKnownSix;
+      procedure Test_RoverSplitAndCountyLineDisagreeOnlyForTheKnownSeven;
       procedure Test_DummyContestScoresOnlyTheOverrides;
       procedure Test_ADIFIdsResolveOldAndNew;
       procedure Test_AContestHandleIsItsLegacyNumber;
@@ -486,16 +486,9 @@ var
    obj: TContestBase;
 begin
    BeginTest('Test_BothPartiesScoreOnePhoneTwoCW');
-   obj := MakeContest(FLORIDAQSOPARTY);
-   try
-      CheckEquals(2, PointsFor(obj, CW), 'Florida CW');
-      CheckEquals(1, PointsFor(obj, Phone), 'Florida phone');
-      CheckEquals(1, PointsFor(obj, Digital),
-                  'Florida digital scores the phone value');
-   finally
-      obj.Free;
-      end;
-
+   (* FLORIDA LEFT THIS TEST AT #88 round 2 (2026-10-26): "No digital QSOs are
+      allowed in the FQP" and "No 160 or 80 meters" -- its points are pinned
+      in uTestContestFloridaQP. *)
    obj := MakeContest(MICHQSOPARTY);
    try
       CheckEquals(2, PointsFor(obj, CW), 'Michigan CW');
@@ -900,8 +893,11 @@ begin
 
    (* OnePhoneTwoCW: if Mode = CW then 2 else 1 -- digital takes the 1. *)
    CheckPoints(OHIOQSOPARTY, 'Ohio', 2, 1, 1);
-   CheckPoints(WISCONSINQSOPARTY, 'Wisconsin', 2, 1, 1);
    CheckPoints(ArizonaQsoParty, 'Arizona', 2, 1, 1);
+
+   (* WISCONSIN LEFT THIS LIST AT #88 round 2 (2026-10-26): its sponsor
+      scores digital 2, not the phone value. Pinned in
+      uTestContestWisconsinQP. *)
 
    (* TwoPhoneThreeCW: if Mode = CW then 3 else 2 -- digital takes the 2. *)
    CheckPoints(TENNESSEEQSOPARTY, 'Tennessee', 3, 2, 2);
@@ -1021,7 +1017,8 @@ begin
    CheckUnlimited(MINNQSOPARTY, 'Minnesota');
    CheckUnlimited(MOQSOPARTY, 'Missouri');
    CheckUnlimited(OHIOQSOPARTY, 'Ohio');
-   CheckUnlimited(WISCONSINQSOPARTY, 'Wisconsin');
+   (* WISCONSIN LEFT THIS LIST AT #88 round 2: "Mobiles or portables may not
+      sit on a county line" -- zero, pinned in uTestContestWisconsinQP. *)
    CheckUnlimited(TENNESSEEQSOPARTY, 'Tennessee');
    CheckUnlimited(TEXASQSOPARTY, 'Texas');
    CheckUnlimited(ArizonaQsoParty, 'Arizona');
@@ -1875,18 +1872,20 @@ begin
               'New England is the one splitter set-up does not treat as a party');
 end;
 
-(* THE DELETED ROW AND THE CLASS'S COUNTY LINE DISAGREE FOR SIX CONTESTS --
+(* THE DELETED ROW AND THE CLASS'S COUNTY LINE DISAGREE FOR SEVEN CONTESTS --
    M10 S0 (plan finding F3, design 8.2s); restated at S8 and at Q90/Q94.
 
    The deleted row's CountyLineAllowed (OLD_ROW_COUNTY_LINE_ALLOWED) once
    decided both the rover split on export and the import's dupe bypass; the
    state-party class's CountyLineAllowed (a county-line maximum above zero)
    is what live entry obeys AND, since S7 (DECIDED 2026-10-14), what the
-   importer asks through ContestAllowsCountyLineOnImport. THIS pins the six
+   importer asks through ContestAllowsCountyLineOnImport. THIS pins the seven
    places the row and the class differ, and that the import follows the
    class in every one of them:
 
      Michigan             the row said True, no county line (its sponsor allows none)
+     Wisconsin            the same since #88 round 2 (2026-10-26): "Mobiles or
+                          portables may not sit on a county line" -- the seventh
      Arizona, BC, VA,
      Salmon Run, NY       the row said False, county line allowed
 
@@ -1895,7 +1894,7 @@ end;
    imported county-line repeat at S7, and the other five STARTED. The rover
    split no longer follows the row at all since Q90 (2026-10-14) -- every QSO
    party splits; Test_EveryQSOPartySplitsARoverCallOnExport holds it. *)
-procedure TContestFactoryTests.Test_RoverSplitAndCountyLineDisagreeOnlyForTheKnownSix;
+procedure TContestFactoryTests.Test_RoverSplitAndCountyLineDisagreeOnlyForTheKnownSeven;
 var
    c: ContestType;
    obj: TContestBase;
@@ -1903,7 +1902,7 @@ var
    classAllows: boolean;
    disagreements: integer;
 begin
-   BeginTest('Test_RoverSplitAndCountyLineDisagreeOnlyForTheKnownSix');
+   BeginTest('Test_RoverSplitAndCountyLineDisagreeOnlyForTheKnownSeven');
    disagreements := 0;
    for c := Low(ContestType) to High(ContestType) do
       begin
@@ -1935,12 +1934,12 @@ begin
          CheckTrue(ContestAllowsCountyLineOnImport(ContestHandleOf(c)) = classAllows,
                    string(ContestTypeSA[c]) + ': the import follows the class, not the row');
          case c of
-            MICHQSOPARTY:
+            MICHQSOPARTY, WISCONSINQSOPARTY:
                begin
-               CheckTrue(rowAllows, 'Michigan: the old row said CountyLineAllowed');
-               CheckFalse(classAllows, 'Michigan: the class allows none');
+               CheckTrue(rowAllows, string(ContestTypeSA[c]) + ': the old row said CountyLineAllowed');
+               CheckFalse(classAllows, string(ContestTypeSA[c]) + ': the class allows none');
                CheckFalse(ContestAllowsCountyLineOnImport(ContestHandleOf(c)),
-                          'Michigan: an imported county-line repeat is a dupe again');
+                          string(ContestTypeSA[c]) + ': an imported county-line repeat is a dupe again');
                end;
             ArizonaQsoParty, BCQP, VAQP, SALMONRUN, NYQP:
                begin
@@ -1959,7 +1958,7 @@ begin
          obj.Free;
          end;
       end;
-   CheckEquals(6, disagreements, 'exactly six contests where the old row and the county line disagree');
+   CheckEquals(7, disagreements, 'exactly seven contests where the old row and the county line disagree');
 end;
 
 (* DUMMYCONTEST -- "no contest" -- SCORES ONLY THE OVERRIDES, THEN ZERO.
@@ -4224,7 +4223,7 @@ begin
    Test_IdahoQRPScoresFiveOnEveryMode;
    Test_FixedPointContestsTranscribeTheirArms;
    Test_EveryQSOPartySplitsARoverCallOnExport;
-   Test_RoverSplitAndCountyLineDisagreeOnlyForTheKnownSix;
+   Test_RoverSplitAndCountyLineDisagreeOnlyForTheKnownSeven;
    Test_DummyContestScoresOnlyTheOverrides;
    Test_ADIFIdsResolveOldAndNew;
    Test_AContestHandleIsItsLegacyNumber;

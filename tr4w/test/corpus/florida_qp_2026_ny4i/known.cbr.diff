@@ -1,0 +1,19 @@
+# #88 (sponsor rule, verified 2026-10-26): the Florida QSO Party has no 6 m and no digital
+#
+# The 2026 FQP rules (docs/ContestRules/QSOParties/Florida/): "No 160 or 80
+# meters, WARC or VHF bands." and "No digital QSOs are allowed in the FQP".
+# Both W4THY QSOs in this log are 6 m DATA, so TContestFloridaQP's UsesBand and
+# UsesMode make them automatic X-QSOs: logged, 0 points, no multiplier, written
+# with the X-QSO: tag. The third QSO (KG1S/MON, 20 m phone) has no received
+# county and was never credited, so CLAIMED-SCORE goes from 6 to 0. ref.cbr is
+# D7-written and is NEVER regenerated, so the change is pinned here exactly.
+#
+# Read by run-golden-diff.sh: the lines below the comments are EXACTLY the
+# changed lines golden_diff.py must report for ref.cbr vs cand.cbr -- any
+# other difference in this artifact is a FAIL.
+-CLAIMED-SCORE: 6
+-QSO:    50 DG 2026-05-11 0339 NY4I    599 PIN    W4THY          599 PIN          
+-QSO:    50 DG 2026-05-11 0339 NY4I    599 PIN    W4THY          599 HIL          
++CLAIMED-SCORE: 0
++X-QSO:    50 DG 2026-05-11 0339 NY4I    599 PIN    W4THY          599 PIN          
++X-QSO:    50 DG 2026-05-11 0339 NY4I    599 PIN    W4THY          599 HIL          

@@ -30,17 +30,50 @@ http://www.gnu.org/licenses/gpl-3.0.txt
    CABName: 'WIQP';  CountyLineAllowed: True;
    FriendlyName: 'Wisconsin QSO Party'
 
-  NO COUNTY-LINE MAXIMUM IS ESTABLISHED FOR THIS PARTY, so it inherits
-  TContestStateQSOPartyBase's CountyLineCountiesUnlimited -- which is exactly
-  what TR4W does today, because nothing in the program has ever counted the
-  queued counties.
+  ---------------------------------------------------------------------------
+  THE 2026 RULES, CHECKED AGAINST THE SPONSOR (#88, 2026-10-26). The texts are
+  docs/ContestRules/QSOParties/Wisconsin/ (the rules, the Cabrillo page and
+  the multiplier list).
 
-  THAT IS "NOT LOOKED UP YET", NOT "UNLIMITED BY DECISION", and the difference
-  matters: a number here would have to come from the sponsor's published rules,
-  the way Florida's two and California's four did. It must NOT be derived from
-  ContestsArray's CountyLineAllowed boolean, which carries no limit at all --
-  reading it as a number is the defect that made a class of any kind start
-  refusing a two-QTH exchange.
+  POINTS -- "Phone contacts count 1 point; CW and Digital contacts count 2
+    points." FM is phone. Until #88 the legacy OnePhoneTwoCW arm scored
+    digital the phone value, 1.
+
+  MODES -- "CW, Phone and Digital (RTTY, PSK, Olivia, Feld-Hell). FT8/FT4
+    QSO's are not accepted." UsesMode refuses FT8 and FT4 -- only the two the
+    sponsor names (Missouri's "or similar" also refuses JT65; each states its
+    own list) -- so such a QSO is an automatic X-QSO.
+
+  BANDS -- "All amateur bands and modes not prohibited for contesting may be
+    used." Read as every band but the WARC bands (30, 17 and 12 m), where
+    contesting is prohibited by band-plan convention (60 m has no BandType).
+    The VHF bands are credited, so cfVHFBandsEnabled is stated.
+
+  COUNTY LINES -- "Mobiles or portables may not sit on a county line", and a
+    fixed station has one location: GetCountyLineCountiesMax is 0, as
+    Michigan's. A rover is still not a county line.
+
+  W9FK -- "Add 100 points for each time you work W9FK on each band and mode
+    below 50Mhz", added after multiplying: a declared bonus station paid
+    once on each band in each mode (bsOncePerBandAndMode), by a contact that
+    is neither a dupe nor an X-QSO and is below 6 m (CountsTowardBonus).
+
+  CABRILLO -- "CONTEST: WI-QSO-PARTY", and the QSO columns are the location
+    alone: "RST columns are not needed"; "The received exchange for QSO's with
+    stations outside the U.S. states and Canadian provinces should show 'DX'."
+    The Cabrillo name is write-only; the stored id (WISCONSIN QSO PARTY) and
+    the ADIF id (WI-QSO-PARTY) do not move.
+
+  NOT BUILT, listed on #88:
+    * THE POWER MULTIPLIER (QRP x2, LOW x1.5): NY4I has not ruled how a
+      fractional score rounds.
+    * THE MOBILE/PORTABLE 500-POINT COUNTY BONUS: it needs the entrant's
+      CATEGORY-STATION and home county, which do not reach scoring.
+    * A WISCONSIN ENTRANT'S DX QSO: "DX countries worked count for QSO points
+      but not as multipliers", but the exchange is domestic-only
+      (RSTDomesticQTH) and wisconsin.dom has no DX entry, so a typed "599 DX"
+      is refused as an improper QTH. A DX QSO that is logged (import, peer)
+      scores its points and no multiplier. Reported, not changed.
  *)
 unit uContestWisconsinQP;
 
@@ -107,7 +140,23 @@ type
       function GetInStateDomesticFileName: string; override;
       function GetFlags: TContestFlags; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+
+      (* No county line -- the header. *)
+      function GetCountyLineCountiesMax: integer; override;
+
+      (* W9FK, 100 once on each band in each mode below 50 MHz -- the header. *)
+      function GetBonusStations: TBonusStationList; override;
+
+      (* A W9FK contact pays only if it is neither a dupe nor an X-QSO and is
+         below 50 MHz -- the header. *)
+      function CountsTowardBonus(const aQso: ContestExchange): boolean; override;
    public
+      (* Every band but WARC -- the header. *)
+      function UsesBand(aBand: BandType): boolean; override;
+
+      (* CW, phone (FM is phone) and digital but FT8 and FT4 -- the header. *)
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
+
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
       (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
@@ -124,7 +173,6 @@ uses
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
-   uContestFixedPoints,   (* FixedModePoints *)
    uContestRegistry;
 
 function TContestWisconsinQP.GetDisplayName: string;
@@ -139,7 +187,9 @@ end;
 
 function TContestWisconsinQP.GetCabrilloName: string;
 begin
-   Result := 'WIQP';
+   (* The sponsor's Cabrillo page: "CONTEST: WI-QSO-PARTY" (#88). TR4W wrote
+      'WIQP' until then. Write-only, so the old name needs no read alias. *)
+   Result := 'WI-QSO-PARTY';
 end;
 
 function TContestWisconsinQP.GetADIFContestId: string;
@@ -214,14 +264,16 @@ function TContestWisconsinQP.GetCabrilloSentExchange(const aMy: TMyStationExchan
                                                      const aQso: ContestExchange;
                                                      const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := CabrilloSentRSTStateOrDX(aMy, aQso, aCtx);
+   (* The location alone -- "RST columns are not needed". *)
+   Result := CabrilloSentStateOrDX(aMy, aQso, aCtx);
 end;
 
 function TContestWisconsinQP.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                                          const aQso: ContestExchange;
                                                          const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := CabrilloReceivedRSTQTHDX(aMy, aQso, aCtx);
+   (* The location alone, 'DX' for a station outside the US and Canada. *)
+   Result := CabrilloReceivedQTHDX(aMy, aQso, aCtx);
 end;
 
 function TContestWisconsinQP.GetInStateDomesticFileName: string;
@@ -231,15 +283,87 @@ end;
 
 function TContestWisconsinQP.GetFlags: TContestFlags;
 begin
-   Result := [cfQSOByBand, cfQSOByMode];
+   (* The VHF bands are credited -- the header. *)
+   Result := [cfQSOByBand, cfQSOByMode, cfVHFBandsEnabled];
 end;
 
-(* OnePhoneTwoCW -- `if Mode = CW then 2 else 1`, so DIGITAL scores the
-   PHONE value. That is why the third number is stated rather than left to
-   a CW-versus-not test, which would be wrong here and silent about it. *)
+(* CW 2, DIGITAL 2, PHONE 1 -- the header. FM is phone. A QSO off the bands
+   or modes never reaches here (UsesBand, UsesMode), nor one an out-of-state
+   entrant may not credit (CreditsWorkedStation). Both and NoMode are not
+   modes a contact is made in. *)
 procedure TContestWisconsinQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   aQso.QSOPoints := FixedModePoints(aQso.Mode, 2, 1, 1);
+   case aQso.Mode of
+      CW, Digital:
+         begin
+         aQso.QSOPoints := 2;
+         end;
+      Phone, FM:
+         begin
+         aQso.QSOPoints := 1;
+         end;
+      else
+         begin
+         aQso.QSOPoints := 0;
+         end;
+      end;
+end;
+
+function TContestWisconsinQP.GetCountyLineCountiesMax: integer;
+begin
+   (* "Mobiles or portables may not sit on a county line." Zero, so the
+      derived CountyLineAllowed reads False, as Michigan's. *)
+   Result := 0;
+end;
+
+function TContestWisconsinQP.GetBonusStations: TBonusStationList;
+begin
+   Result := nil;
+   SetLength(Result, 1);
+   Result[0].Call := 'W9FK';
+   Result[0].Points := 100;
+   Result[0].Scope := bsOncePerBandAndMode;
+end;
+
+(* "on each band and mode below 50Mhz": a credited contact (not a dupe, not
+   an X-QSO) on 160-10 m. *)
+function TContestWisconsinQP.CountsTowardBonus(const aQso: ContestExchange): boolean;
+begin
+   Result := IsCreditedContact(aQso) and
+             (aQso.Band in [Band160, Band80, Band40, Band20, Band15, Band10]);
+end;
+
+(* "All amateur bands and modes not prohibited for contesting may be used":
+   every band but the WARC bands, where contesting is prohibited by band-plan
+   convention. *)
+function TContestWisconsinQP.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10,
+                       Band6, Band2, Band222, Band432, Band902, Band1296,
+                       Band2304, Band3456, Band5760, Band10G, Band24G,
+                       BandLight];
+end;
+
+(* "FT8/FT4 QSO's are not accepted." The submode is tested only to EXCLUDE
+   the two named: eNoMode and eData mean "some digital submode" and are
+   credited, as the contract asks (ADDING_A_CONTEST, UsesMode). An identity
+   fact: no station is asked. *)
+function TContestWisconsinQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   case aMode of
+      CW, Phone, FM:
+         begin
+         Result := True;
+         end;
+      Digital:
+         begin
+         Result := not (aExtMode in [eFT8, eFT4]);
+         end;
+      else
+         begin
+         Result := False;
+         end;
+      end;
 end;
 
 (* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE --

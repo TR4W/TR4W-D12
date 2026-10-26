@@ -426,7 +426,7 @@ end;
    application's view already leaves X-QSOs out; this says so for any view. *)
 function TContestBritishColumbiaQP.CountsTowardBonus(const aQso: ContestExchange): boolean;
 begin
-   Result := (not aQso.ceDupe) and (not QSOIsXQSO(Self, aQso));
+   Result := IsCreditedContact(aQso);
 end;
 
 function TContestBritishColumbiaQP.UsesBand(aBand: BandType): boolean;

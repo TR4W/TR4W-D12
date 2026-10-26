@@ -99,7 +99,7 @@ const
       that already had them and the CQ WW three; the modes by the CQ WW three
       alone. Generated once from the frozen contest matrix's ids; edited by
       hand from then on, only ever DOWN. *)
-   BANDS_NOT_YET_STATED: array[0..167] of string = (
+   BANDS_NOT_YET_STATED: array[0..165] of string = (
       'ALL JA', 'ALL-ASIAN-DX-CW', 'ALL-ASIAN-DX-SSB', 'ALRS-UA1DZ-CUP',
       'AP-SPRINT', 'ARCI', 'ARI-DX', 'ARIZONA QSO PARTY',
       'ARKTIKA-SPRING', 'ARRL-10', 'ARRL-DIGI', 'ARRL-DX-CW',
@@ -113,7 +113,7 @@ const
       'CWOPEN', 'CWOPS', 'DARC-10M', 'DARC-WAEDC-CW',
       'DARC-WAEDC-SSB', 'DARC-XMAS', 'EU-SPRINT-AUTUMN-CW', 'EU-SPRINT-AUTUMN-SSB',
       'EU-SPRINT-SPRING-CW', 'EU-SPRINT-SPRING-SSB', 'EUDX', 'EUROPEAN HFC',
-      'EUROPEAN VHF', 'FISTS', 'FLORIDA QSO PARTY', 'FOC MARATHON',
+      'EUROPEAN VHF', 'FISTS', 'FOC MARATHON',
       'GACW-WWSA-CW', 'GAGARIN-CUP', 'GENERAL QSO', 'GRID LOC',
       'HA DX', 'HELVETIA', 'HF-TESLA', 'IARU-HF',
       'INTERNET SPRINT', 'IRTS', 'JA LONG PREFECT', 'JIDX-CW',
@@ -140,13 +140,13 @@ const
       'TENNESSEE QSO PARTY', 'TEXAS QSO PARTY', 'TOEC', 'UBA-DX-CW',
       'UBA-DX-SSB', 'UCG', 'UKEI', 'UKRAINE CHAMPIONSHIP',
       'UKRAINIAN', 'UN DX', 'URAL-CUP', 'VAQP',
-      'WAG', 'WINTER FIELD DAY', 'WISCONSIN QSO PARTY', 'WRTC',
+      'WAG', 'WINTER FIELD DAY', 'WRTC',
       'WW PMC', 'WWDIGI', 'WWIH', 'WWL',
       'XMAS', 'YBDX', 'YO-DX-HF', 'YOTA',
       'YUDX'
       );
 
-   MODES_NOT_YET_STATED: array[0..177] of string = (
+   MODES_NOT_YET_STATED: array[0..175] of string = (
       '7QP', 'ALL JA', 'ALL-ASIAN-DX-CW', 'ALL-ASIAN-DX-SSB',
       'ALRS-UA1DZ-CUP', 'AP-SPRINT', 'ARCI', 'ARI-DX',
       'ARIZONA QSO PARTY', 'ARKTIKA-SPRING', 'ARRL-10', 'ARRL-160',
@@ -161,7 +161,7 @@ const
       'CWOPEN', 'CWOPS', 'DARC-10M', 'DARC-WAEDC-CW',
       'DARC-WAEDC-SSB', 'DARC-XMAS', 'DELAWARE QSO PARTY', 'EU-SPRINT-AUTUMN-CW',
       'EU-SPRINT-AUTUMN-SSB', 'EU-SPRINT-SPRING-CW', 'EU-SPRINT-SPRING-SSB', 'EUDX',
-      'EUROPEAN HFC', 'EUROPEAN VHF', 'FISTS', 'FLORIDA QSO PARTY',
+      'EUROPEAN HFC', 'EUROPEAN VHF', 'FISTS',
       'FOC MARATHON', 'GACW-WWSA-CW', 'GAGARIN-CUP', 'GENERAL QSO',
       'GRID LOC', 'HA DX', 'HELVETIA', 'HF-TESLA',
       'IARU-HF', 'IDAHO QSO PARTY', 'IN QSO PARTY', 'IN7QPNE',
@@ -189,7 +189,7 @@ const
       'TEXAS QSO PARTY', 'TOEC', 'UBA-DX-CW', 'UBA-DX-SSB',
       'UCG', 'UKEI', 'UKRAINE CHAMPIONSHIP', 'UKRAINIAN',
       'UN DX', 'URAL-CUP', 'VAQP', 'WAG',
-      'WINTER FIELD DAY', 'WISCONSIN QSO PARTY', 'WRTC', 'WW PMC',
+      'WINTER FIELD DAY', 'WRTC', 'WW PMC',
       'WWDIGI', 'WWIH', 'WWL', 'XMAS',
       'YBDX', 'YO-DX-HF', 'YOTA', 'YUDX'
       );

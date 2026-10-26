@@ -923,7 +923,7 @@ type
       (* ONCE ON EACH BAND IN EACH MODE -- British Columbia's VA7ODX, "Any
          QSO with ... VA7ODX will be worth an additional 20 points", where
          "the same station may be worked ... on each band on CW and Phone"
-         (#88, 2026-10-26). Wisconsin's W9FK is the next. *)
+         (#88, 2026-10-26) -- and Wisconsin's W9FK below 50 MHz. *)
       bsOncePerBandAndMode
    );
 
@@ -3406,6 +3406,13 @@ type
          sponsor wants valid contacts only says so (the Salmon Run). *)
       function CountsTowardBonus(const aQso: ContestExchange): boolean; virtual;
 
+      (* MECHANISM: IS aQso A CONTACT THIS CONTEST CREDITS? Not a dupe, and not
+         an X-QSO (QSOIsXQSO: the operator's flag, or off the bands, the modes
+         or -- for an object with a station -- the host area). What a bonus
+         rule that pays "valid contacts" only asks from its CountsTowardBonus
+         (British Columbia's VA7ODX, Wisconsin's W9FK; #88, 2026-10-26). *)
+      function IsCreditedContact(const aQso: ContestExchange): boolean;
+
       (* WHICH MODES A bsOncePerMode OR bsOncePerBandAndMode BONUS IS PAID
          IN -- aMode is CW, Digital or Phone (FM is phone). The base pays
          every mode. *)
@@ -4967,6 +4974,11 @@ end;
 function TContestBase.CountsTowardBonus(const aQso: ContestExchange): boolean;
 begin
    Result := True;
+end;
+
+function TContestBase.IsCreditedContact(const aQso: ContestExchange): boolean;
+begin
+   Result := (not aQso.ceDupe) and (not QSOIsXQSO(Self, aQso));
 end;
 
 function TContestBase.CreditsBonusMode(aMode: ModeType): boolean;

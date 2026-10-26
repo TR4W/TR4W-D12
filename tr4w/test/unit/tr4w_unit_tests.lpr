@@ -746,6 +746,10 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestContestMissouriQP in 'uTestContestMissouriQP.pas',
    uTestContestCaliforniaQP in 'uTestContestCaliforniaQP.pas',
    uTestContestBritishColumbiaQP in 'uTestContestBritishColumbiaQP.pas',
+   (* The Florida and Wisconsin QSO parties' 2026 sponsor rules (#88 round
+      2, 2026-10-26). *)
+   uTestContestFloridaQP in 'uTestContestFloridaQP.pas',
+   uTestContestWisconsinQP in 'uTestContestWisconsinQP.pas',
    (* The RTC's 2026 rules: dupes per band AND mode, grids per band
       (2026-10-23). *)
    uTestContestRTC      in 'uTestContestRTC.pas',
@@ -888,6 +892,8 @@ begin
    RegisterSuite(TContestMissouriQPTests.Create('ContestMissouriQP'));
    RegisterSuite(TContestCaliforniaQPTests.Create('ContestCaliforniaQP'));
    RegisterSuite(TContestBritishColumbiaQPTests.Create('ContestBritishColumbiaQP'));
+   RegisterSuite(TContestFloridaQPTests.Create('ContestFloridaQP'));
+   RegisterSuite(TContestWisconsinQPTests.Create('ContestWisconsinQP'));
    RegisterSuite(TContestRTCTests.Create('ContestRTC'));
    RegisterSuite(TFieldDaySectionRefusalTests.Create('FieldDaySectionRefusal'));
    RegisterSuite(TContestNamesTests.Create('ContestNames'));
