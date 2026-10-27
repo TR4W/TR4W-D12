@@ -701,6 +701,9 @@ begin
       my := Default(TMyStationExchange);
       my.MyState := 'HARR';
       qso := GeorgiaQso(Band20, CW, 'PA');
+      (* The domestic table's key -- the record's DomesticQTH -- is what makes
+         a QTH a county, state or province; a typed DX QTH has none. *)
+      qso.DomesticQTH := 'PA';
       qso.RSTSent := 599;
       ctx := Default(TCabrilloQSOContext);
       ctx.RSTSent := '599';
@@ -725,9 +728,21 @@ begin
       (* "DX -- Send signal report and 'DX'": a DX station received, and a
          DX entrant's own column. *)
       qso.QTHString := '';
+      qso.DomesticQTH := '';
       ctx.HisQTH := '';
       CheckEquals('599 DX     ', contestObject.FormatCabrilloReceivedExchange(my, qso, ctx),
                   'a DX station''s column is DX');
+
+      (* A DX STATION LOGGED WITH A TYPED QTH ("599 DL") is still DX: the DX
+         branch keeps the text in QTHString and the table resolves nothing, so
+         no DomesticQTH and the exporter's HisQTH is empty. The column used
+         to be empty (CabrilloReceivedRSTQTHDX tests QTHString); the rules
+         say "DX -- Send signal report and DX" (2026-10-27). *)
+      qso.QTHString := 'DL';
+      CheckEquals('599 DX     ', contestObject.FormatCabrilloReceivedExchange(my, qso, ctx),
+                  'a typed DX QTH is still DX in the column');
+      qso.QTHString := '';
+
       my.MyState := '';
       CheckEquals('599 DX     ', contestObject.FormatCabrilloSentExchange(my, qso, ctx),
                   'a DX entrant sends DX');

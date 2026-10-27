@@ -281,8 +281,12 @@ function TContestGeorgiaQP.GetCabrilloReceivedExchange(const aMy: TMyStationExch
                                                        const aQso: ContestExchange;
                                                        const aCtx: TCabrilloQSOContext): string;
 begin
-   (* A DX station's column is "DX", what it sent. *)
-   Result := CabrilloReceivedRSTQTHDX(aMy, aQso, aCtx);
+   (* A DX station's column is "DX", what it sent -- also when its entity was
+      TYPED ("599 DL"): the DX branch keeps that text in QTHString and the
+      table resolves nothing, so the record has no DomesticQTH. The rules:
+      "DX -- Send signal report and DX". CabrilloReceivedRSTQTHDX tests
+      QTHString and would leave the column empty (2026-10-27). *)
+   Result := CabrilloReceivedRSTDomesticQTHOrDX(aMy, aQso, aCtx);
 end;
 
 function TContestGeorgiaQP.GetInStateDomesticFileName: string;
