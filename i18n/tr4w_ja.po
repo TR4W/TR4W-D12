@@ -9427,11 +9427,6 @@ msgstr "%s (非アクティブ)"
 msgid "CATEGORY-POWER is now %s -- the scoring category changed and the log was rescored."
 msgstr "CATEGORY-POWER がリリースされました %s -- スコアリングカテゴリが変更され、ログは再scoredでした。"
 
-#: uappstrings.scontestnotonmultiop
-#, fuzzy
-#~ msgid "%s cannot be used on the multi-op network yet -- the network protocol cannot carry it. Use it only while this station is not connected to a multi-op server."
-#~ msgstr "%s はまだマルチオペレーター ネットワークでは使用できません -- ネットワーク プロトコルがこれを伝送できないためです。このステーションがマルチオペレーター サーバーに接続されていない間だけ使用してください。"
-
 #: uappstrings.snewcontestin7qpneinsideaparty
 #, fuzzy
 msgid "IN7QPNE is for stations outside Indiana, the 7th call area, New England and Delaware. From %s, choose the %s instead."
@@ -9903,16 +9898,42 @@ msgstr ""
 
 #: uappstrings.snetnohelloanswer
 #, fuzzy
-msgid "The multi-op server closed the connection without answering. It is probably older than this TR4W (which speaks network protocol %d). Update TR4WServer on the server computer, then open the Network window again."
+msgid "The multi-op server closed the connection without answering. It is probably older than this TR4W (which speaks network protocol %d). Update TR4WServer on the server computer, then choose Connect on the Net menu."
 msgstr ""
 
 #: uappstrings.snetserverprotocolnewer
 #, fuzzy
-msgid "The multi-op server speaks network protocol %d, which is newer than the protocol %d this TR4W speaks. Update TR4W on this computer, then open the Network window again."
+msgid "The multi-op server speaks network protocol %d, which is newer than the protocol %d this TR4W speaks. Update TR4W on this computer, then choose Connect on the Net menu."
 msgstr ""
 
 #: uappstrings.snetserverprotocololder
 #, fuzzy
-msgid "The multi-op server speaks network protocol %d, but this TR4W needs protocol %d. Update TR4WServer on the server computer, then open the Network window again."
+msgid "The multi-op server speaks network protocol %d, but this TR4W needs protocol %d. Update TR4WServer on the server computer, then choose Connect on the Net menu."
+msgstr ""
+
+#: uappstrings.snetmenuconnect
+#, fuzzy
+msgid "Connect"
+msgstr ""
+
+#: uappstrings.snetmenudisconnect
+#, fuzzy
+msgid "Disconnect"
+msgstr ""
+
+#: uappstrings.snetmenureconnect
+#, fuzzy
+msgid "Reconnect"
+msgstr ""
+
+#: uappstrings.snetmenushowwindow
+#, fuzzy
+msgid "Show Network window"
+msgstr ""
+
+#: tprefsform.chknetautoconnect.caption
+#: usettingscaptions.rs_network_autoconnect
+#, fuzzy
+msgid "Connect to the multi-op server when TR4W starts"
 msgstr ""
 
