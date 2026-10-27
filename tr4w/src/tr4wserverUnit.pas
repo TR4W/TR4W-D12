@@ -55,7 +55,8 @@ uses
     a line edit, and it is written down here rather than half-done. *)
   VC,
   uNetFraming,  // NetMessageSize -- the one size table the client parses with
-  Log4D,        // server logging: InitServerLogger / logger, restored from the fork
+  uNetHello,    // THelloMessage, JudgeProtocol -- the first message on every link
+  Log4D,       // server logging: InitServerLogger / logger, restored from the fork
   Version,      // TR4WSERVER_CURRENTVERSION, used by FullServerVersion below
   TF,
   uCRC32,
@@ -133,6 +134,14 @@ type
     clSerialNumberStatus: TSerialNumberType;
     clConnectedToTelnet: boolean;
     clID: AnsiChar;
+    (* NETWORK PROTOCOL 2.  clHelloSeen: this connection has sent its HELLO, so
+      anything else from it is now allowed.  clHello: the last HELLO it sent
+      that the server ACCEPTED (clHello.hmID is NET_HELLO_ID once there is
+      one) -- kept so a station that joins later is told what everyone else
+      announced.  Both are cleared with the rest of the slot when it is
+      reused. *)
+    clHelloSeen: boolean;
+    clHello: THelloMessage;
   end;
 
 type
@@ -162,7 +171,8 @@ type
     dmSeverLogChanged,
     dmMessage,
     dmTR4W,
-    dmROLQ
+    dmROLQ,
+    dmHello
     );
 
 const
@@ -223,6 +233,12 @@ var
   ContestExchangesBuffer                : array[1..MaxContestExchangesBufferSize] of ContestExchange;
 
   ServerSyncMode                        : boolean;
+  (* SET BY ProcessClientBuffer WHEN THE CONNECTION IT WAS PARSING MUST BE
+    CLOSED -- a first message that was not HELLO, or a protocol the server does
+    not speak -- and read, then cleared, by the caller (uServerNet.SyncParse).
+    A flag rather than a Disconnect from here: the engine runs on the main
+    thread and the connection belongs to its own. *)
+  DropRequested                         : boolean = False;
   ServerLogOpened                       : boolean = False;
 
   NetSynQSOInformation                  : TNetSynQSOInformation = (qsID: NET_TAKESERVERQSO_ID);
@@ -354,7 +370,15 @@ procedure WriteContestExchangesBufferToServerLog;
 procedure SendLogFileInformation(s: TClientHandle);
 function ClearServerLog: boolean;
 procedure SendDisconnectMessage(Client: AnsiChar);
-procedure SetComputerID(ID: AnsiChar; s: TClientHandle);
+(* True when the id was accepted; False when it was refused (the station has been
+  told). *)
+function SetComputerID(ID: AnsiChar; s: TClientHandle): boolean;
+(* NETWORK PROTOCOL 2 -- see uNetHello. MessageAllowedNow: may this connection
+  send a message with this id yet (only HELLO until it has sent one)?
+  AcceptHello: judge a HELLO, answer it, record it and tell the others. *)
+function ClientSlot(s: TClientHandle): integer;
+function MessageAllowedNow(s: TClientHandle; aId: word): boolean;
+procedure AcceptHello(s: TClientHandle; const aHello: THelloMessage);
 procedure SetStatus(Status: TClientStatus; s: TClientHandle);
 procedure SendSpotViaNet(Status: TSendSpotViaNetwork; s: TClientHandle);
 function CorrectPassword(s: TClientHandle; BytesReceived: integer): boolean;
@@ -597,7 +621,27 @@ begin
 
         StepStart := Bufindex;
 
+        (* NETWORK PROTOCOL 2: UNTIL A CONNECTION HAS SENT ITS HELLO, ANYTHING
+          ELSE IS A REFUSAL. A 4.x station sends COMPUTERID first and is told
+          nothing it could read; it is logged and dropped. Asked before the
+          case so no arm below ever runs for an unidentified connection. *)
+        if not MessageAllowedNow(aSocket, PWORD(@ServerBuffer[Bufindex])^) then
+           begin
+           DropRequested := True;
+           goto 1;
+           end;
+
         case PWORD(@ServerBuffer[Bufindex])^ of
+
+          NET_HELLO_ID:
+            begin
+              AcceptHello(aSocket, THelloMessagePtr(@ServerBuffer[Bufindex])^);
+              Bufindex := Bufindex + SizeOf(THelloMessage);
+              if DropRequested then
+                 begin
+                 goto 1;
+                 end;
+            end;
 
           NET_MESSAGESTATE_ID:
             begin
@@ -1099,7 +1143,7 @@ end;
   FIRST COME, FIRST SERVED.  The station already holding the id is operating;
   the one that just arrived is not.  Disturbing the wrong one of those in the
   middle of a contest would be worse than the collision. }
-procedure SetComputerID(ID: AnsiChar; s: TClientHandle);
+function SetComputerID(ID: AnsiChar; s: TClientHandle): boolean;
 var
   i                                     : integer;
   mine                                  : integer;
@@ -1108,14 +1152,9 @@ var
     An address is worth more to the operator than "some other station". }
   holder                                : array[FIRST_COMPUTER_ID..LAST_COMPUTER_ID] of integer;
 begin
+  Result := False;
   FillChar(holder, SizeOf(holder), 0);
-  mine := 0;
-  for i := 1 to maxclients do
-    if ClientsSoocketsArray[i].clSocket = s then
-       begin
-       mine := i;
-       Break;
-       end;
+  mine := ClientSlot(s);
 
   if mine = 0 then
      begin
@@ -1159,6 +1198,115 @@ begin
   ClientsSoocketsArray[mine].clID := ID;
   logger.Debug('Computer ID %s accepted for client %d',
                [ComputerIDLetter(ID), mine]);
+  Result := True;
+end;
+
+(* WHICH SLOT OF ClientsSoocketsArray IS THIS CONNECTION, or 0.  One lookup for
+  the code written with protocol 2; the older loops of the same shape (SetStatus,
+  DeleteSocketFromArray) are left as they were. *)
+function ClientSlot(s: TClientHandle): integer;
+var
+  i                                     : integer;
+begin
+  Result := 0;
+  for i := 1 to maxclients do
+     begin
+     if ClientsSoocketsArray[i].clSocket = s then
+        begin
+        Result := i;
+        Exit;
+        end;
+     end;
+end;
+
+function MessageAllowedNow(s: TClientHandle; aId: word): boolean;
+var
+  slot                                  : integer;
+begin
+  Result := True;
+  slot := ClientSlot(s);
+  if (slot = 0) or (aId = NET_HELLO_ID) or ClientsSoocketsArray[slot].clHelloSeen then
+     begin
+     Exit;
+     end;
+
+  Result := False;
+  logger.Warn('[Net] %s: first message was not HELLO (id %d): a 4.x client? ' +
+              'Connection dropped.',
+              [CharBufferText(ClientsSoocketsArray[slot].clIPAdr), aId]);
+end;
+
+(* A HELLO, JUDGED, ANSWERED, RECORDED AND PASSED ON.
+
+  The order is deliberate. The protocol is judged first, because a station that
+  speaks another protocol cannot be told anything else. The server's own HELLO
+  is sent BEFORE the computer id is judged, so a station refused for its id has
+  already seen which protocol it is talking to. The id is judged by the rule
+  the COMPUTERID message always used. Only an ACCEPTED hello is kept and
+  passed on, so a refused station never appears to the others.
+
+  The server reads no contest from it. It stores the text and relays it. *)
+procedure AcceptHello(s: TClientHandle; const aHello: THelloMessage);
+var
+  slot, i                               : integer;
+  first                                 : boolean;
+  reply                                 : THelloMessage;
+begin
+  slot := ClientSlot(s);
+  if slot = 0 then
+     begin
+     Exit;
+     end;
+
+  if JudgeProtocol(NET_PROTOCOL_VERSION, aHello.hmProtocol) <> pvSame then
+     begin
+     ServerMessage.smMessage := SM_PROTOCOL_MISMATCH_MESSAGE;
+     ServerMessage.smParam := NET_PROTOCOL_VERSION;
+     sSend(s, ServerMessage, SizeOf(ServerMessage), dmDisc);
+     logger.Warn('[Net] %s: refused, it speaks network protocol %d (version %s) ' +
+                 'and this server speaks %d. Connection dropped.',
+                 [CharBufferText(ClientsSoocketsArray[slot].clIPAdr),
+                  aHello.hmProtocol, HelloAppVersion(aHello), NET_PROTOCOL_VERSION]);
+     DropRequested := True;
+     Exit;
+     end;
+
+  first := not ClientsSoocketsArray[slot].clHelloSeen;
+  ClientsSoocketsArray[slot].clHelloSeen := True;
+
+  if first and BuildHello(NET_PROTOCOL_VERSION, 0, TR4WSERVER_CURRENTVERSION, '', reply) then
+     begin
+     sSend(s, reply, SizeOf(reply), dmHello);
+     end;
+
+  if not SetComputerID(AnsiChar(aHello.hmComputerID), s) then
+     begin
+     Exit;
+     end;
+
+  ClientsSoocketsArray[slot].clHello := aHello;
+  logger.Info('[Net] station %s hello: protocol %d, version %s, contest "%s"',
+              [ComputerIDLetter(AnsiChar(aHello.hmComputerID)), aHello.hmProtocol,
+               HelloAppVersion(aHello), HelloContestId(aHello)]);
+
+  for i := 1 to maxclients do
+     begin
+     if (i = slot) or (ClientsSoocketsArray[i].clSocket = 0) then
+        begin
+        Continue;
+        end;
+
+     if first and (ClientsSoocketsArray[i].clHello.hmID = NET_HELLO_ID) then
+        begin
+        sSend(s, ClientsSoocketsArray[i].clHello, SizeOf(THelloMessage), dmHello);
+        end;
+
+     if ClientsSoocketsArray[i].clHelloSeen then
+        begin
+        sSend(ClientsSoocketsArray[i].clSocket, ClientsSoocketsArray[slot].clHello,
+              SizeOf(THelloMessage), dmHello);
+        end;
+     end;
 end;
 
 procedure SetStatus(Status: TClientStatus; s: TClientHandle);

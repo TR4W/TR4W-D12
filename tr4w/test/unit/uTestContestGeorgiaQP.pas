@@ -24,7 +24,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   below quotes the rule it holds.
 
   WHAT IS PINNED
-    * its identity: the id, no legacy number, refused on multi-op, the
+    * its identity: the id, no legacy number, the
       names, the files, the flags, the party base and what it inherits;
     * its bands and its points, both sides of each edge;
     * a digital QSO is an automatic X-QSO (UsesMode);
@@ -235,7 +235,6 @@ begin
              'on the state-party base, directly');
    CheckEquals('GA-QSO-PARTY', ContestId(h), 'the stored id');
    CheckFalse(ContestLegacyNumber(h, legacy), 'a new contest has no legacy number');
-   CheckFalse(ContestCanUseMultiOp(h), 'and is refused on the multi-op network');
 
    identity := ContestIdentity(h);
    CheckEquals('Georgia QSO Party', identity.DisplayName, 'display name');

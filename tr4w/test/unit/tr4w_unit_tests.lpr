@@ -603,9 +603,11 @@ uses
    uTestIcomTeardown    in 'uTestIcomTeardown.pas',
    uTestHamLibIDs       in 'uTestHamLibIDs.pas',
    uTestDXClusterClient in 'uTestDXClusterClient.pas',
+   uNetHello in '..\..\src\uNetHello.pas',
    uNetFraming in '..\..\src\uNetFraming.pas',
    uTestNetFraming in 'uTestNetFraming.pas',
    uTestNetWireSizes in 'uTestNetWireSizes.pas',
+   uTestNetHello in 'uTestNetHello.pas',
    uDXSpotParse         in '..\..\src\uDXSpotParse.pas',
    uSpotAge             in '..\..\src\uSpotAge.pas',
    uTelnetTrace         in '..\..\src\uTelnetTrace.pas',
@@ -996,6 +998,7 @@ begin
    RegisterSuite(TCallsignsListTests.Create('CallsignsList'));
    RegisterSuite(TTestNetFraming.Create('NetFraming'));
    RegisterSuite(TTestNetWireSizes.Create('NetWireSizes'));
+   RegisterSuite(TTestNetHello.Create('NetHello'));
    RegisterSuite(TTestADIFExchange.Create('ADIFExchange'));
    RegisterSuite(TCallSignRoutinesTests.Create('CallSignRoutines'));
    RegisterSuite(TYaesuASCIITests.Create('YaesuASCII'));

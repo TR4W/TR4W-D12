@@ -44,10 +44,13 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   (Lint-FrozenContestNumbers) -- and its handle is assigned when the registry
   SEALS, from Ord(High(ContestType)) + 1 up, in id order (CompareText), so the
   same set of linked contests gives the same handles in every program. S4
-  (2026-10-17) keeps such a handle off the V1 multi-op wire --
-  ContestCanUseMultiOp, below, is the one question every door asks -- and
-  gives it a derived <contestnr>, so a real contest MAY register this way.
-  The unit-test program's fixture is the one that does today.
+  (2026-10-17) gave it a derived <contestnr>, so a real contest MAY register
+  this way; the QSO parties do. Its handle is meaningless OUTSIDE this
+  program, so it never crosses the multi-op wire as a contest: network
+  protocol 2 (2026-10-27) announces the contest by its ID STRING, in the HELLO
+  message (uNetHello), and the receiver stamps its own handle on a record it
+  accepts. (S4's ContestCanUseMultiOp guard, which refused such a contest on
+  the V1 link, is gone.)
 
   THE SEAL. The first question that could depend on WHICH contests exist --
   an id, a class, an identity, the known list -- seals the registry. After
@@ -55,7 +58,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   too late (or one that asks too early, from its initialization section)
   fails the program on launch instead of silently missing a contest. Only
   the legacy-number arithmetic (ContestHandleOf, ContestLegacyNumber,
-  LegacyContestOf, ContestCanUseMultiOp) never seals: its answer does not
+  LegacyContestOf) never seals: its answer does not
   depend on what is registered. (ContestBroadcastNumber seals only for a
   contest registered by id, whose number is derived from its id -- and such a
   handle exists only after the seal.)
@@ -169,26 +172,6 @@ function LegacyContestOf(aHandle: TContestHandle): ContestType;
 
   logsubs2 asks only this. *)
 function ContestBroadcastNumber(aHandle: TContestHandle): integer;
-
-(* MAY THIS CONTEST TRAVEL THE V1 MULTI-OP PACKET? -- Q108 S4, 2026-10-17.
-  THE ONE QUESTION EVERY DOOR ASKS (uNet: connect, switch, a peer's CONTEST
-  command, the send and the receive of a QSO packet; design 8.2u).
-
-  ContestExchange.ceContest and TLogFileInformation.liContest are ONE BYTE that
-  only a legacy contest has (its legacy number), and a D7 peer, the server's
-  log and the log-compare packet read it as that number. A contest registered
-  by id has none, so it must never reach the wire -- and the packet itself is
-  NOT being converted (NY4I, P14): this is a guard, not a format change. It
-  lasts until the row-based multi-station protocol replaces the packet.
-
-  True for every legacy contest and for NoContest (a station with no contest
-  chosen is not carrying one). Never seals. *)
-function ContestCanUseMultiOp(aHandle: TContestHandle): boolean;
-
-(* THE ONE MESSAGE an operator reads when a door refuses (SContestNotOnMultiOp,
-  translatable), naming the contest by its display name. '' when the contest
-  CAN use multi-op, so a caller can use the text as the question. *)
-function MultiOpRefusalText(aHandle: TContestHandle): string;
 
 (* THE CONTEST'S ID -- its stored name. For a legacy contest, its
   ContestTypeSA spelling; for one registered by id, that id; '' for a handle
@@ -384,7 +367,6 @@ uses
    SyncObjs,
    uContestNames,      (* LEGACY_CONTEST_NAMES -- an alias is never a new id *)
    uCRC32,             (* ContestBroadcastNumber -- a by-id contest's number *)
-   uAppStrings,        (* SContestNotOnMultiOp *)
    uContestStateQSOPartyBase;
 
 type
@@ -637,22 +619,6 @@ begin
    crc := GetCRC32(TEncoding.UTF8.GetBytes(ContestId(aHandle)));
    Result := DERIVED_FLOOR +
              Integer(Int64(crc) mod (Int64(High(Integer)) - DERIVED_FLOOR + 1));
-end;
-
-function ContestCanUseMultiOp(aHandle: TContestHandle): boolean;
-var
-   n: integer;
-begin
-   Result := ContestLegacyNumber(aHandle, n);
-end;
-
-function MultiOpRefusalText(aHandle: TContestHandle): string;
-begin
-   Result := '';
-   if not ContestCanUseMultiOp(aHandle) then
-      begin
-      Result := Format(SContestNotOnMultiOp, [ContestIdentity(aHandle).DisplayName]);
-      end;
 end;
 
 function ContestId(aHandle: TContestHandle): string;

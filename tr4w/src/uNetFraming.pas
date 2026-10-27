@@ -49,7 +49,8 @@ unit uNetFraming;
 interface
 
 uses
-   VC;
+   VC,
+   uNetHello;   (* THelloMessage -- the size of the first message *)
 
 type
    { Why a walk stopped. }
@@ -157,6 +158,7 @@ begin
       NET_SPOTVIANETWORK_ID:   Result := SizeOf(TSendSpotViaNetwork);
       NET_COMPUTERID_ID:       Result := SizeOf(TComputerNetID);
       NET_SERVERMESSAGE_ID:    Result := SizeOf(TServerMessage);
+      NET_HELLO_ID:            Result := SizeOf(THelloMessage);
    else
       // NET_THIS_QTC_WAS__SEND_ID (1056) is DELIBERATELY ABSENT: the constant
       // exists in VC.pas but nothing on either side sends or handles it, and

@@ -87,6 +87,10 @@ type
       FPeerName:  string;
       FAdmitted:  boolean;
       FRefused:   boolean;
+      (* THE ENGINE ASKED FOR THIS CONNECTION TO BE CLOSED while it parsed what
+        this connection sent (no HELLO first, or a protocol the server does not
+        speak). The connection's own thread does the closing. *)
+      FDrop:      boolean;
       (* THE HANDLE AS IT WAS WHEN THE CLIENT WAS ADMITTED.
 
         Handle asks the CONNECTION for its binding, and by the time SyncDrop
@@ -313,7 +317,10 @@ procedure TServerConn.SyncParse;
 begin
    Move(FBuf[0], ServerBuffer[0], FLen);
    BytesRCVD := BytesRCVD + Cardinal(FLen);
+   DropRequested := False;
    ProcessClientBuffer(FHandle, FLen);
+   FDrop := DropRequested;
+   DropRequested := False;
 end;
 
 procedure TServerConn.SyncDrop;
@@ -443,6 +450,16 @@ begin
       c.FStream.Discard(whole);
       end;
 
+   (* THE ENGINE REFUSED THIS CONNECTION (see DropRequested). Whatever else it
+     had sent is not parsed: the reason has already been logged and, where the
+     station can read one, told to it. *)
+   if c.FDrop then
+      begin
+      c.FDrop := False;
+      c.Connection.Disconnect;
+      Exit;
+      end;
+
    if walk = nwUnknownId then
       begin
       room := c.FStream.Count;
@@ -498,6 +515,7 @@ begin
    c.FPeerName := '?';
    c.FAdmitted := False;
    c.FRefused  := False;
+   c.FDrop     := False;
 
    (* THE HANDLE, CAPTURED WHILE IT CAN STILL BE READ.
 

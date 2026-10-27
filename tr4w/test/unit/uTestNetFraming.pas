@@ -124,6 +124,7 @@ begin
    Check(NetMessageSize(NET_SPOTVIANETWORK_ID) > 0, 'spot via network');
    Check(NetMessageSize(NET_COMPUTERID_ID) > 0, 'computer id');
    Check(NetMessageSize(NET_SERVERMESSAGE_ID) > 0, 'server message');
+   Check(NetMessageSize(NET_HELLO_ID) > 0, 'hello (network protocol 2)');
 end;
 
 { THE DEFECT THIS UNIT WAS WRITTEN FOR.  The spot arm advanced by

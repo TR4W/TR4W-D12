@@ -64,8 +64,12 @@ so operators can confirm in `tr4w.log` that the sync happened.
 
 ## Related: Python TR4WServer
 
-The Python reimplementation of TR4WServer (in c:\projects\TR4WServer)
-mirrors the Delphi server's wire protocol exactly. It does not need any
+The Python reimplementation of TR4WServer (c:\projects\TR4WServerPy)
+speaks the same wire protocol as the Delphi server -- network protocol 2,
+since 2026-10-27, checked by tools/netprobe against both -- but it is a
+SEPARATE implementation with its own size table, and it drifted once already
+(its DX spot stayed 98 bytes after this tree's became 106, 2026-08-25 to
+2026-10-27), so "exactly" is a claim to re-measure, not to trust. It does not need any
 changes for this feature — the auto-sync logic is purely client-side. If
 the protocol ever does grow an auto-sync hint field, both servers would
 need a coordinated update.

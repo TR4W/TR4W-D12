@@ -577,6 +577,13 @@ const
   NET_COMPUTERID_ID                     = 1130;
   NET_SERVERMESSAGE_ID                  = 1140;
 
+  (* NETWORK PROTOCOL 2: THE FIRST MESSAGE AFTER THE PASSWORD (2026-10-27).
+
+    A station sends THelloMessage (uNetHello) before anything else and the
+    server answers with its own; anything else first is refused. The record,
+    its size and the rules are in uNetHello.pas. *)
+  NET_HELLO_ID                          = 1150;
+
   SM_CLEARALLLOGS_MESSAGE               = 8230;
 //  SM_CLEARSERVERLOG_MESSAGE        = 8231;
 
@@ -594,6 +601,12 @@ const
     TComputerNetID).  Sent to the station that arrived SECOND: the one already
     holding the id is operating and is not disturbed. }
   SM_COMPUTERID_IN_USE_MESSAGE          = 8320;
+
+  { THE SERVER WILL NOT SPEAK THIS STATION'S NETWORK PROTOCOL.  smParam carries
+    the protocol version the SERVER speaks, so the station can say in plain
+    words which side is older.  Sent in answer to a THelloMessage whose version
+    differs; the server closes the connection after it. }
+  SM_PROTOCOL_MISMATCH_MESSAGE          = 8330;
 
 const
 
@@ -2371,7 +2384,13 @@ type
     qiID: Word;
     qiInformation: ContestExchange;
     qiComputerID: Cardinal;
-    qiReservedByte1: Byte;
+    (* THE STATION THAT PUT THIS PACKET ON THE WIRE, as its ordinal 1..26
+      (network protocol 2; it was a reserved byte, always 0). NOT the
+      record's own ceComputerID: an EDIT is sent by whoever edited the QSO,
+      and the QSO may have been logged by a station that has since left. The
+      receiver judges the packet's contest by what THIS station announced in
+      its HELLO. 0 = not stated, and the packet is refused. *)
+    qiSenderID: Byte;
     qiReservedByte2: Byte;
   end;
 

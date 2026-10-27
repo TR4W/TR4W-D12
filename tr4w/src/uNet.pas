@@ -36,6 +36,7 @@ uses
   VC,
   TF,
   uNetFraming,   { NetMessageSize -- one table, no per-arm advances }
+  uNetHello,     { THelloMessage, TNetPeers -- the first message on a link }
   utils_file,
   uTotal,
   uSpots,
@@ -181,44 +182,51 @@ procedure SendParameterToNetwork(const aCommand, aValue: string);
   were reading directly. }
 function NetIsConnected: boolean;
 
-(* A CONTEST WITH NO LEGACY NUMBER CANNOT TRAVEL THIS LINK -- Q108 S4,
-  2026-10-17 (design 8.2u; NY4I: "refuse multi-op for new contests until the
-  new protocol").
+(* EVERY CONTEST TRAVELS THIS LINK -- network protocol 2, 2026-10-27 (NY4I: "ALL
+  contests must work on the network, including those registered by id").
 
-  The V1 packet carries a contest as ONE BYTE that only a legacy contest has,
-  and a D7 peer, the server's log and the log-compare packet read it as that
-  number. The packet is NOT being converted, so the doors are guarded. THE
-  QUESTION IS ONE FUNCTION, uContestRegistry.ContestCanUseMultiOp; every door
-  below asks it and none restates it:
+  The V1 packet named a contest with one byte that only a legacy contest has;
+  Q108 S4 therefore guarded six doors against a contest registered by its id,
+  whose byte is assigned when the registry seals and differs between builds.
+  THE BYTE IS NO LONGER READ. Stations agree on the contest by its ID STRING,
+  announced in the HELLO message (uNetHello) right after the password and again
+  whenever the operator changes contest; a received QSO is judged by what its
+  SENDER announced, and an accepted record is stamped with THIS station's own
+  contest handle before it is logged. So every guard is gone, and with them
+  ContestCanUseMultiOp, MultiOpRefusalText and SContestNotOnMultiOp. *)
 
-      connect         TryConnectToNetwork, ConnectToTR4WServer
-      switch          NetContestChanged   (from the CONTEST setting's effect)
-      a peer's CONTEST  PeerContestRefusal (the NET_PARAMETER arm)
-      send            SendRecordToServer
-      receive         the NET_QSOINFO and NET_EDITEDQSO arms
+(* THE CONTEST HAS CHANGED: TELL THE OTHER STATIONS. Sends a new HELLO when a
+  link is up; nothing happens otherwise. *)
+procedure NetContestChanged;
 
-  NetCarriesContest asks and, when it refuses, logs which door (aDoor) turned
-  which contest (by id) away. The operator-facing doors show
-  MultiOpRefusalText on top of it. *)
-function NetCarriesContest(aContest: TContestHandle; const aDoor: string): boolean;
+(* THIS STATION'S HELLO -- protocol, program version, computer id and the ID of
+  the contest it is on. The first thing sent on every link. False when it
+  cannot be built whole (an id longer than the field): nothing is sent. *)
+function SendHello: boolean;
 
-(* THE CONTEST HAS CHANGED: DROP A LINK THAT CANNOT CARRY THE NEW ONE, and say
-  why. Nothing happens when there is no link or the contest travels. *)
-procedure NetContestChanged(aContest: TContestHandle);
+(* WHAT EVERY STATION HAS ANNOUNCED, for this link. Read by the unit tests. *)
+function NetPeers: TNetPeers;
 
-(* ANOTHER STATION'S PARAMETER, JUDGED BEFORE IT IS APPLIED. '' to apply it;
-  otherwise the operator message, and the parameter is NOT applied. Only the
-  CONTEST command naming a contest that cannot travel is refused. *)
-function PeerContestRefusal(const aCommand, aValue: string): string;
+(* THE SERVER OR ITS PROTOCOL HAS BEEN REFUSED FOR THIS ADDRESS AND PORT, and the
+  operator has been told. The connect timer then stops retrying (every five
+  seconds for ever would be the same message again); showing the Network window
+  calls this, so reopening it tries again after the server has been updated. *)
+procedure ForgetServerRefusal;
 
 (* PEERS HAVE TO BE ON THE SAME CONTEST -- Q110, NY4I 2026-10-18: "Peers have to
   be on the same contest and that is a flagged error to be reported."
 
-  A record from another station whose contest is not THIS station's is never
-  logged, scored or applied: the NET_QSOINFO arm (QSO, note, QTC) and the
-  NET_EDITEDQSO arm both ask here first, after NetCarriesContest has judged the
-  byte. There is no other receive path -- the server's log sync reads no QSO
-  packet in this client. The wire is untouched.
+  A record from another station on a different contest is never logged, scored
+  or applied: the NET_QSOINFO arm (QSO, note, QTC) and the NET_EDITEDQSO arm
+  both ask here first. There is no other receive path -- the server's log sync
+  reads no QSO packet in this client.
+
+  THE JUDGEMENT (protocol 2): the packet's sender (aSender, qiSenderID, its
+  ordinal 1..26) announced a contest id in its HELLO; the record is accepted
+  when that id is the id of THIS station's contest, and then stamped with this
+  station's own handle (aRec.ceContest), whatever byte the sender wrote. A
+  sender that has announced nothing is refused too: nothing says what it is
+  running.
 
   False means REFUSED, and the refusal is REPORTED, not silent:
     the log     one Error line per record (peer, its contest, ours, the call);
@@ -226,10 +234,11 @@ function PeerContestRefusal(const aCommand, aValue: string): string;
                 not rate-limited
     the screen  one QuickDisplay notice per (peer, peer's contest) per link
                 session, so a busy peer cannot flood the operator; the latch is
-                forgotten when the link comes up (ForgetPeerContestNotices)
+                forgotten when the link comes up (ForgetPeerContestNotices).
+                A sender that never said HELLO is a log line only.
 
   aDoor names the arm for the log. *)
-function PeerRecordInOurContest(const aRec: ContestExchange;
+function PeerRecordInOurContest(var aRec: ContestExchange; const aSender: integer;
                                 const aDoor: string): boolean;
 
 (* How many operator notices PeerRecordInOurContest has raised since the last
@@ -301,7 +310,6 @@ var
   NetIntercomMessage                    : TIntercomMessage     ;// = (imID: NET_INTERCOMMESSAGE_ID);//84
   ParameterToNetwork                    : TParameterToNetwork  ;// = (pnID: NET_PARAMETER_ID; );//514
   SendSpotViaNetwork                    : TSendSpotViaNetwork  ;// = (vnID: NET_SPOTVIANETWORK_ID);//48
-  ComputerNetID                         : TComputerNetID        = (ciID: NET_COMPUTERID_ID);//4
   ServerMessage                         : TServerMessage        = (smID: NET_SERVERMESSAGE_ID);//8
 {*)}
   NetThreadID                           : TThreadID;
@@ -347,8 +355,8 @@ uses
   LOGSUBS2,
   uRadioPolling,
   uRadioConfigApply,   // ApplyPeerCommand -- a peer's config change
-  uContestRegistry,    // ContestCanUseMultiOp, MultiOpRefusalText -- Q108 S4
-  uContestNames,       // TryContestFromName -- a peer's CONTEST value
+  uContestRegistry,    // ContestId, ContestIdentity -- the ID a HELLO carries
+  Version,             // TR4W_CURRENTVERSION_NUMBER -- the HELLO's program version
   uTelnet,
   uGetServerLog,
   MainUnit,
@@ -376,6 +384,94 @@ uses
   it compiled at the write and vanished at the read. }
 var
   FRefusedComputerID : AnsiChar = #0;
+
+(* NETWORK PROTOCOL 2 -- WHAT THIS STATION KNOWS ABOUT THE OTHER ENDS.
+
+  GPeers: what each station announced in its HELLO (uNetHello). Created with the
+  unit, emptied when a link comes up, read and written on the MAIN thread by the
+  message arms.
+
+  THE SERVER'S ANSWER. FHelloSentTick is when this station's HELLO went out and
+  FServerHelloSeen whether the server has said anything back. A server that
+  does not know HELLO (every server before protocol 2) drops the link the moment
+  it reads one, so "the link dropped within a few seconds of the HELLO and the
+  server never answered" is how that case is told from an ordinary drop.
+
+  FServerRefusedFor: the server address and port the operator was last told this
+  build cannot talk to -- the same refusal-without-nagging shape as
+  FRefusedComputerID, and re-armed by ForgetServerRefusal. *)
+var
+  GPeers:            TNetPeers = nil;
+  FHelloSentTick:    QWord = 0;
+  FServerHelloSeen:  boolean = False;
+  FServerRefusedFor: string = '';
+
+const
+  (* An older server drops the link within a read or two of the HELLO; an
+    ordinary failure at any other time is not blamed on the protocol. *)
+  HELLO_ANSWER_WINDOW_MS = 5000;
+
+function ServerKey: string;
+begin
+   Result := Settings.Server.Address + ':' + IntToStr(Settings.Server.Port);
+end;
+
+(* THE SERVER CANNOT BE USED: TELL THE OPERATOR ONCE AND LET GO.
+
+  Latches the address and port so the connect timer stops retrying, then closes
+  the link. Runs on the main thread (a message arm, or the drop report). *)
+procedure RefuseServer(const aWhy: string);
+begin
+   FServerRefusedFor := ServerKey;
+   NetDisconnect;
+   showwarning(aWhy);
+end;
+
+(* THE SERVER SPEAKS ANOTHER PROTOCOL: SAY WHICH END IS BEHIND, in words. *)
+procedure RefuseServerProtocol(const aServerProtocol: Word);
+begin
+   logger.Warn('[Net] the server speaks network protocol %d and this TR4W speaks %d',
+               [aServerProtocol, NET_PROTOCOL_VERSION]);
+   if JudgeProtocol(NET_PROTOCOL_VERSION, aServerProtocol) = pvTheirsNewer then
+      begin
+      RefuseServer(SysUtils.Format(SNetServerProtocolNewer,
+                                   [aServerProtocol, NET_PROTOCOL_VERSION]));
+      end
+   else
+      begin
+      RefuseServer(SysUtils.Format(SNetServerProtocolOlder,
+                                   [aServerProtocol, NET_PROTOCOL_VERSION]));
+      end;
+end;
+
+(* A HELLO: THE SERVER'S OWN (computer id 0) OR A STATION'S, relayed. *)
+procedure HandleHelloReceived(const aHello: THelloMessage);
+begin
+   if aHello.hmComputerID = 0 then
+      begin
+      FServerHelloSeen := True;
+      logger.Info('[Net] server hello: network protocol %d, server version %s',
+                  [aHello.hmProtocol, HelloAppVersion(aHello)]);
+      if JudgeProtocol(NET_PROTOCOL_VERSION, aHello.hmProtocol) <> pvSame then
+         begin
+         RefuseServerProtocol(aHello.hmProtocol);
+         end;
+      Exit;
+      end;
+
+   if GPeers.Announce(aHello) then
+      begin
+      logger.Info('[Net] station %s announced contest "%s" (TR4W %s, protocol %d)',
+                  [ComputerIDLetter(AnsiChar(aHello.hmComputerID)),
+                   HelloContestId(aHello), HelloAppVersion(aHello),
+                   aHello.hmProtocol]);
+      end
+   else
+      begin
+      logger.Warn('[Net] a hello with computer id %d was ignored',
+                  [aHello.hmComputerID]);
+      end;
+end;
 
 procedure InitializeNetworkColumnTitles;
 { Indices, not names: the array is positional and the four translatable
@@ -433,9 +529,6 @@ var
   NetTimeSyncPtr                        : TNetTimeSyncPtr;
   ParameterToNetworkPtr                 : TParameterToNetworkPtr;
   IntercomMessagePtr                    : TIntercomMessagePtr;
-  (* A peer's CONTEST command this build refuses to follow -- see
-     PeerContestRefusal. '' when the parameter is to be applied. *)
-  Refusal                               : string;
 
    { The label lives HERE: a goto may not cross a procedure boundary. }
    procedure Walk;
@@ -534,30 +627,23 @@ var
           NET_PARAMETER_ID:
             begin
               ParameterToNetworkPtr := @NetBuffer[Bufindex];
-              (* A PEER'S CONTEST THIS LINK CANNOT CARRY IS NOT FOLLOWED (Q108
-                S4). The refusal is said once, to the operator, and the
-                parameter is dropped -- this station keeps the contest it has. *)
-              Refusal := PeerContestRefusal(string(ParameterToNetworkPtr^.pnCommand),
-                                            string(ParameterToNetworkPtr^.pnValue));
-              if Refusal <> '' then
+              // ApplyPeerCommand, not CheckCommand + an ini write.  A row that
+              // has moved to settings\tr4w.json is INERT to CheckCommand, so
+              // this returned False for seventeen rows -- the UDP broadcast
+              // block among them -- and the operator was told nothing while the
+              // station that made the change saw it take effect.  The routine
+              // routes on the row's own state and persists to whichever file is
+              // that row's system of record.
+              //
+              // A peer's CONTEST command is followed whatever the contest (it
+              // used to be refused for a contest with no legacy number): the
+              // setting's effect re-announces THIS station's contest in a new
+              // HELLO (NetContestChanged), which is how the others learn it.
+              if ApplyPeerCommand(string(ParameterToNetworkPtr^.pnCommand),
+                                  string(ParameterToNetworkPtr^.pnValue)) then
                  begin
-                 showwarning(Refusal);
-                 end
-              else
-                 begin
-                 // ApplyPeerCommand, not CheckCommand + an ini write.  A row that
-                 // has moved to settings\tr4w.json is INERT to CheckCommand, so
-                 // this returned False for seventeen rows -- the UDP broadcast
-                 // block among them -- and the operator was told nothing while the
-                 // station that made the change saw it take effect.  The routine
-                 // routes on the row's own state and persists to whichever file is
-                 // that row's system of record.
-                 if ApplyPeerCommand(string(ParameterToNetworkPtr^.pnCommand),
-                                     string(ParameterToNetworkPtr^.pnValue)) then
-                    begin
- //                   ShowTrayTips();
-                    QuickDisplay(string(ParameterToNetworkPtr^.pnCommand) + ' was changed by other station in network');
-                    end;
+ //                ShowTrayTips();
+                 QuickDisplay(string(ParameterToNetworkPtr^.pnCommand) + ' was changed by other station in network');
                  end;
             end;
 
@@ -615,14 +701,12 @@ var
           NET_QSOINFO_ID:
             begin
               NetQSOInfoPtr := @NetBuffer[Bufindex];
-              (* A RECORD WHOSE CONTEST BYTE IS NO LEGACY NUMBER IS NEVER READ
-                (Q108 S4): no legacy contest has that byte, so it names
-                something this protocol cannot mean -- a peer on a newer build
-                with a contest this one lacks, or a damaged packet. It is
-                dropped and the log says so; nothing is logged from it. *)
-              if NetCarriesContest(NetQSOInfoPtr^.qiInformation.ceContest,
-                                   'receive of a NET_QSOINFO packet') and
-                 PeerRecordInOurContest(NetQSOInfoPtr^.qiInformation,
+              (* JUDGED BY WHAT THE SENDER ANNOUNCED, NOT BY THE RECORD'S BYTE
+                (protocol 2). An accepted record comes back stamped with THIS
+                station's contest; one from a station on another contest, or
+                one that never said HELLO, is dropped whole and reported. *)
+              if PeerRecordInOurContest(NetQSOInfoPtr^.qiInformation,
+                                        NetQSOInfoPtr^.qiSenderID,
                                         'NET_QSOINFO') then
                  begin
                  if NetQSOInfoPtr^.qiInformation.ceRecordKind = rkQSO then
@@ -672,9 +756,8 @@ var
               NetQSOInfoPtr := @NetBuffer[Bufindex];
 
               if (NetQSOInfoPtr^.qiComputerID <> NetQSOInfoToSend.qiComputerID) and
-                 NetCarriesContest(NetQSOInfoPtr^.qiInformation.ceContest,
-                                   'receive of a NET_EDITEDQSO packet') and
                  PeerRecordInOurContest(NetQSOInfoPtr^.qiInformation,
+                                        NetQSOInfoPtr^.qiSenderID,
                                         'NET_EDITEDQSO') then
                  begin
                  if FindAndUpdateQSOInLog(NetQSOInfoPtr^.qiInformation) then
@@ -702,6 +785,11 @@ var
               // disagreed with the cast.  One network spot desynchronised the
               // rest of the buffer, and the desync is silent (see the
               // no-advance guard at the foot of this loop).
+            end;
+
+          NET_HELLO_ID:
+            begin
+              HandleHelloReceived(THelloMessagePtr(@NetBuffer[Bufindex])^);
             end;
 
           NET_SERVERMESSAGE_ID:
@@ -739,7 +827,19 @@ var
                        begin
                        FillChar(StatusArray[DisconnectedClient], SizeOf(TStationState), 0);
                        DisplayClientStatus(DisconnectedClient);
+                       (* A STATION THAT HAS GONE ANNOUNCED NOTHING NOW: its
+                         HELLO would otherwise vouch for a contest that no
+                         longer has anyone on it. *)
+                       GPeers.Forget(DisconnectedClient);
                        end;
+                  end;
+
+                { THE SERVER WILL NOT SPEAK THIS STATION'S PROTOCOL: smParam is
+                  the one it speaks. Said once; the link goes. }
+                SM_PROTOCOL_MISMATCH_MESSAGE:
+                  begin
+                    FServerHelloSeen := True;
+                    RefuseServerProtocol(Word(ServerMessagePtr^.smParam));
                   end;
 
                 { THE SERVER WILL NOT HAVE THIS ID.  Latch, say so once, and go
@@ -960,6 +1060,22 @@ begin
      caption.  Two spellings of one fact, and the shorter-lived one was the one
      an operator saw. *)
    ShowConnectionStatus(TC_DISCONNECTEDFROM);
+
+   (* THE LINK WENT WITHIN SECONDS OF OUR HELLO AND THE SERVER NEVER ANSWERED IT.
+     A server that does not know HELLO closes the link on reading one, and says
+     nothing a station could read -- so this is how "your server is older than
+     this TR4W" is told from an ordinary drop. Said once per address and port;
+     the connect timer then stops retrying (ForgetServerRefusal re-arms it). *)
+   if (not FServerHelloSeen) and (FHelloSentTick <> 0) and
+      (FServerRefusedFor = '') and
+      (GetTickCount64 - FHelloSentTick < HELLO_ANSWER_WINDOW_MS) then
+      begin
+      logger.Warn('[Net] the server closed the link without answering HELLO ' +
+                  '(network protocol %d); it is probably older than this TR4W',
+                  [NET_PROTOCOL_VERSION]);
+      FServerRefusedFor := ServerKey;
+      showwarning(SysUtils.Format(SNetNoHelloAnswer, [NET_PROTOCOL_VERSION]));
+      end;
 end;
 
 { ON THE READER THREAD. }
@@ -1193,12 +1309,6 @@ var
   // the thread is created stays put for that thread's whole life.
   FConnectThreadAnnounced : boolean = False;
 
-  (* THE CONTEST THE OPERATOR WAS LAST TOLD THIS LINK CANNOT CARRY (Q108 S4),
-    so the connect timer's retries do not say it again. NoContest -- handle 0,
-    which every unit-level variable starts as -- means "nothing outstanding";
-    TryConnectToNetwork clears it as soon as the contest travels. *)
-  FMultiOpRefusalSaidFor : TContestHandle;
-
 { THIS STATION'S ID AS THE WIRE CARRIES IT.
 
   AN ORDINAL, 1..26 -- NOT THE LETTER, whatever TClientEntry.clID's AnsiChar and
@@ -1241,22 +1351,12 @@ begin
      end;
   FRefusedComputerID := #0;
 
-  (* A CONTEST THIS LINK CANNOT CARRY (Q108 S4): NO CONNECTION IS ATTEMPTED.
-    The same refusal-without-nagging shape as the computer id above -- said
-    ONCE per contest, silent on the timer's retries, and re-armed by choosing
-    a contest that travels (the latch clears below). Asked on the main thread,
-    before any thread exists. *)
-  if not ContestCanUseMultiOp(Contest) then
+  { THE SERVER WAS REFUSED (its protocol, or no answer to HELLO) and the
+    operator has been told. The same silence as above. }
+  if FServerRefusedFor = ServerKey then
      begin
-     if FMultiOpRefusalSaidFor <> Contest then
-        begin
-        FMultiOpRefusalSaidFor := Contest;
-        NetCarriesContest(Contest, 'TryConnectToNetwork');
-        showwarning(MultiOpRefusalText(Contest));
-        end;
      Exit;
      end;
-  FMultiOpRefusalSaidFor := NoContest;
 
   // Issue #1041: log the "trying" line only on a GENUINE new attempt -- the
   // first one (nclsInitial) or after we'd been connected and dropped
@@ -1288,16 +1388,6 @@ var
    err: string;
    wrongPassword: boolean;
 begin
-   (* THE SECOND DOOR TO CONNECTING (Q108 S4). TryConnectToNetwork refuses
-     before it starts this thread; the contest can still change between that
-     and here, and this is the routine that actually opens the link. It only
-     logs: the operator was, or will be, told at the first door. *)
-   if not NetCarriesContest(Contest, 'ConnectToTR4WServer') then
-      begin
-      Result := False;
-      Exit;
-      end;
-
    if NetClient = nil then
       begin
       NetClient := TNetClient.Create;
@@ -1353,27 +1443,41 @@ begin
      // now, and the handshake happens inside Connect because a link the server
      // has not acknowledged is not a link.
      FillChar(StatusArray, SizeOf(StatusArray), 0);
-     ForgetPeerContestNotices;   (* a new link is a new session (Q110) *)
+     (* A NEW LINK IS A NEW SESSION (Q110, protocol 2): nobody has announced
+       anything yet, and the server has not answered. Before the HELLO goes
+       out, so nothing it provokes can arrive into the old state. *)
+     GPeers.Clear;
+     ForgetPeerContestNotices;
+     FServerHelloSeen := False;
      (* Cardinal(GetTickCount64) -- TRUNCATED DELIBERATELY. qiComputerID is a
     field of TNetQSOInformation, which is a PACKED RECORD SENT BETWEEN
     STATIONS, so its width is on the wire and is not ours to widen. The
     value is only ever used as a distinguishing number. *)
   NetQSOInfoToSend.qiComputerID := Cardinal(GetTickCount64);
 
- //    sCIDMESSAGE[4] := Char(Ord(Settings.Computer.Id) - Ord('A') + 1);
-     ComputerNetID.ciComputerID := WireComputerID;
-     SendToNet(ComputerNetID, SizeOf(ComputerNetID));
-     SendFullStationStatus;
-     SendClientStatus;
-     ServerMessage.smMessage := SM_GETSTATUS_MESSAGE;
-     SendToNet(ServerMessage, SizeOf(ServerMessage));
- //    SendStationStatus;
-     EnableNetworkMenuItem(True);
-     ShowConnectionStatus(TC_CONNECTEDTO);
-     if FConnectLogState <> nclsConnected then
+     (* HELLO FIRST. It carries the computer id that COMPUTERID used to (the
+       server judges it the same way) and the server refuses a link whose first
+       message is anything else. An id that cannot be sent whole ends the
+       attempt rather than going out truncated. *)
+     if not SendHello then
         begin
-        logger.Info('Connected to TR4WServer at %s:%d', [Settings.Server.Address, Settings.Server.Port]);
-        FConnectLogState := nclsConnected;
+        NetDisconnect;
+        ShowConnectionStatus(TC_FAILEDTOCONNECTTO);
+        end
+     else
+        begin
+        SendFullStationStatus;
+        SendClientStatus;
+        ServerMessage.smMessage := SM_GETSTATUS_MESSAGE;
+        SendToNet(ServerMessage, SizeOf(ServerMessage));
+ //     SendStationStatus;
+        EnableNetworkMenuItem(True);
+        ShowConnectionStatus(TC_CONNECTEDTO);
+        if FConnectLogState <> nclsConnected then
+           begin
+           logger.Info('Connected to TR4WServer at %s:%d', [Settings.Server.Address, Settings.Server.Port]);
+           FConnectLogState := nclsConnected;
+           end;
         end;
      end
   else
@@ -1850,113 +1954,122 @@ begin
   Result := (NetClient <> nil) and NetClient.IsConnected;
 end;
 
-function NetCarriesContest(aContest: TContestHandle; const aDoor: string): boolean;
-begin
-   Result := ContestCanUseMultiOp(aContest);
-   if (not Result) and (logger <> nil) then
-      begin
-      (* ContestId, not the display name: it is what a log line is searched
-         by, and it names a handle this build cannot name ('') too. *)
-      logger.Warn('[Net] %s refused contest "%s" (handle %d): it has no legacy ' +
-                  'contest number, and the V1 multi-op packet carries only that ' +
-                  'byte (design 8.2u, Q108 S4).',
-                  [aDoor, ContestId(aContest), aContest.ToByte]);
-      end;
-end;
-
-procedure NetContestChanged(aContest: TContestHandle);
+procedure NetContestChanged;
 begin
    if not NetIsConnected then
       begin
       Exit;
       end;
-   if NetCarriesContest(aContest, 'a switch of contest while connected') then
-      begin
-      Exit;
-      end;
 
-   (* THE LINK GOES: the contest the operator chose cannot be carried, and a
-     link that stays up would be offered every QSO of it. The other half of
-     the refusal at connect -- and like it, the operator is told once. *)
-   NetDisconnect;
-   ShowConnectionStatus(TC_DISCONNECTEDFROM);
-   showwarning(MultiOpRefusalText(aContest));
+   (* NOTHING IS REFUSED ANY MORE (protocol 2): every contest travels this
+     link. The others only need to be told which one this station is on now,
+     because they judge each QSO by what its sender last announced. *)
+   SendHello;
 end;
 
-function PeerContestRefusal(const aCommand, aValue: string): string;
+function SendHello: boolean;
 var
-   chosen: TContestHandle;
+   hello: THelloMessage;
 begin
-   Result := '';
-   (* 'CONTEST' IS THE COMMAND THAT SELECTS THE CONTEST (settings path
-     Contest.ContestToken); 'CONTEST NAME' is a different setting. The value
-     is resolved by the ONE resolver of a contest name. A value this build
-     cannot resolve is not ours to judge: ApplyPeerCommand refuses it as it
-     always has. *)
-   if (not UnicodeSameText(Trim(aCommand), 'CONTEST')) or
-      (not TryContestFromName(aValue, chosen))         then
+   Result := BuildHello(NET_PROTOCOL_VERSION, Ord(WireComputerID),
+                        TR4W_CURRENTVERSION_NUMBER, ContestId(Contest), hello);
+   if not Result then
       begin
+      (* AN ID THAT DOES NOT FIT IS NOT TRUNCATED: a truncated id names another
+        contest. Nothing is sent, and the link is not used. *)
+      logger.Error('[Net] cannot announce contest "%s": it does not fit the ' +
+                   'HELLO message (%d characters of printable ASCII at most)',
+                   [ContestId(Contest), HELLO_CONTEST_CHARS]);
       Exit;
       end;
-   if NetCarriesContest(chosen, 'a peer''s CONTEST command') then
-      begin
-      Exit;
-      end;
-   Result := MultiOpRefusalText(chosen);
+
+   FHelloSentTick := GetTickCount64;
+   SendToNet(hello, SizeOf(hello));
+   logger.Debug('[Net] sent hello: protocol %d, contest "%s", computer id %d',
+                [hello.hmProtocol, ContestId(Contest), hello.hmComputerID]);
 end;
 
-type
-   TPeerNoticeLatch = array[0..26, 0..255] of boolean;
+function NetPeers: TNetPeers;
+begin
+   Result := GPeers;
+end;
+
+procedure ForgetServerRefusal;
+begin
+   FServerRefusedFor := '';
+end;
 
 var
-   (* [peer slot 0..26, the peer's contest byte]. Slot 0 is a peer whose
-     ceComputerID is not a letter. Zero-initialised, like every unit variable. *)
-   FPeerContestNoticed: TPeerNoticeLatch;
    FPeerContestNotices: integer;
 
-function PeerRecordInOurContest(const aRec: ContestExchange;
+function PeerRecordInOurContest(var aRec: ContestExchange; const aSender: integer;
                                 const aDoor: string): boolean;
 var
-   slot: integer;
-   peer, notice: string;
+   peer, ours, theirs, theirsName, notice: string;
+   theirHandle: TContestHandle;
+   verdict: TPeerContestVerdict;
 begin
-   Result := (aRec.ceContest = Contest);
-   if Result then
-      begin
-      Exit;
-      end;
+   Result := False;
 
-   if aRec.ceComputerID in ['A'..'Z'] then
+   if (aSender >= FIRST_COMPUTER_ID) and (aSender <= LAST_COMPUTER_ID) then
       begin
-      slot := Ord(aRec.ceComputerID) - Ord('A') + 1;
-      peer := string(aRec.ceComputerID);
+      peer := string(ComputerIDLetter(AnsiChar(aSender)));
       end
    else
       begin
-      slot := 0;
       peer := '?';
+      end;
+
+   ours := ContestId(Contest);
+   verdict := JudgePeerContest(GPeers, aSender, ours);
+
+   if verdict = pcSame then
+      begin
+      (* THE SENDER'S BYTE IS NEVER READ. A contest registered by id has a byte
+        that differs between builds, so the record is stamped with THIS
+        station's own handle before anything stores or scores it. *)
+      aRec.ceContest := Contest;
+      Result := True;
+      Exit;
+      end;
+
+   if verdict = pcNoHello then
+      begin
+      if logger <> nil then
+         begin
+         logger.Error('[Net] %s from station %s REFUSED: that station has ' +
+                      'not announced a contest (no HELLO from it), so there ' +
+                      'is nothing to say it is on "%s" (call %s).',
+                      [aDoor, peer, ours, string(aRec.Callsign)]);
+         end;
+      Exit;
       end;
 
    (* EVERY RECORD IS LOGGED, ONCE PER LINK IS SHOWN. The log line is the only
      record of which QSOs were dropped, so it is not rate-limited; the screen
      is, because a peer logging a QSO a minute would otherwise bury every other
      notice for the length of the contest. *)
+   theirs := GPeers.ContestIdOf(aSender);
    if logger <> nil then
       begin
       logger.Error('[Net] %s from station %s REFUSED: it is on contest "%s" and ' +
                    'this station is on "%s" (call %s). Peers must run the same ' +
                    'contest (Q110).',
-                   [aDoor, peer, ContestId(aRec.ceContest), ContestId(Contest),
-                    string(aRec.Callsign)]);
+                   [aDoor, peer, theirs, ours, string(aRec.Callsign)]);
       end;
 
-   if not FPeerContestNoticed[slot, aRec.ceContest.ToByte] then
+   if GPeers.FirstNotice(aSender, theirs) then
       begin
-      FPeerContestNoticed[slot, aRec.ceContest.ToByte] := True;
       inc(FPeerContestNotices);
+      (* A contest this build does not know (a peer on a newer one) is named by
+        its id, which is all there is. *)
+      theirsName := theirs;
+      if FindContestById(theirs, theirHandle) then
+         begin
+         theirsName := ContestIdentity(theirHandle).DisplayName;
+         end;
       notice := SysUtils.Format(SPeerOnAnotherContest,
-                          [peer, ContestIdentity(aRec.ceContest).DisplayName,
-                           ContestIdentity(Contest).DisplayName]);
+                          [peer, theirsName, ContestIdentity(Contest).DisplayName]);
       if Assigned(PeerContestNoticeSink) then
          begin
          PeerContestNoticeSink(notice);
@@ -1976,7 +2089,7 @@ end;
 procedure ForgetPeerContestNotices;
 begin
    FPeerContestNotices := 0;
-   FPeerContestNoticed := Default(TPeerNoticeLatch);
+   GPeers.ForgetNotices;
 end;
 
 procedure CommitChangesInLocalLog;
@@ -2067,16 +2180,6 @@ begin
   Result := False;
   if not NetIsConnected then Exit;
 
-  (* A RECORD WITH NO LEGACY CONTEST NUMBER IS NEVER WRITTEN TO THE WIRE (Q108
-    S4). Every QSO, edit and offline resend goes through here, so this is the
-    one place that keeps the by-id handle out of the packet, the server's log
-    and, through it, a D7 peer. The flags are untouched: the record is left
-    exactly as unsent, which is what it is. *)
-  if not NetCarriesContest(rec.ceContest, 'send of a QSO packet') then
-     begin
-     Exit;
-     end;
-
   SendToServer := rec.ceSendToServer;
   SendToServerAE := rec.ceNeedSendToServerAE;
 
@@ -2085,6 +2188,12 @@ begin
 
   NetQSOInfoToSend.qiID := RecordType;
   NetQSOInfoToSend.qiInformation := rec;
+  (* WHO PUT THIS ON THE WIRE (protocol 2). Every QSO, edit and offline resend
+    goes through here, so this is the one place the sender is stated: the
+    receivers judge the packet's contest by what THIS station announced, not by
+    ceContest -- which, for a contest registered by id, means nothing outside
+    this program. *)
+  NetQSOInfoToSend.qiSenderID := Ord(WireComputerID);
 
   BytesSent := SendToNet(NetQSOInfoToSend, SizeOf(NetQSOInfoToSend)); // <> SizeOf(NetQSOInfoToSend)
   if BytesSent <> SizeOf(NetQSOInfoToSend) then
@@ -2165,6 +2274,7 @@ initialization
 
   GNetLock    := SyncObjs.TCriticalSection.Create;
   GNetDrainer := TNetDrainer.Create;
+  GPeers      := TNetPeers.Create;
 
   (* OWNED HERE NOW, not created in uProgramMain's CreateEvent block with the
     three CW/DVP events. It is this unit's signal and nothing outside uses it,
@@ -2178,6 +2288,7 @@ finalization
     which now stops the reader thread and waits for it. So nothing is inside
     the lock, or about to take it, when it goes. *)
   FreeAndNil(GNetDrainer);
+  FreeAndNil(GPeers);
   FreeAndNil(GNetLock);
   FreeAndNil(tNet_Event);
 

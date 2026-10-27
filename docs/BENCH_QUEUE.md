@@ -847,55 +847,69 @@ live entry window, and the corpus is blind to points.
 
 ---
 
-## Added 2026-10-17 -- Q108 S4: A CONTEST WITH NO LEGACY NUMBER IS REFUSED ON MULTI-OP
+## Added 2026-10-27 -- NETWORK PROTOCOL 2: HELLO, AND EVERY CONTEST TRAVELS
 
-Nothing automated drives a socket, so no gate has seen any of this end to end
-(the unit tests reach the predicate, the message, `PeerContestRefusal`,
-`TryConnectToNetwork`'s refusal and a source read of every door). **WHAT YOU
-NEED:** a contest registered by id. The application links none until the first
-real one (design 8.2u S5); until then use a LOCAL build with
-`uContestTestFixture in '..\test\unit\uContestTestFixture.pas'` added to
-`tr4w.lpr` (`TR4W-TEST-FIXTURE`; it appears in the New Contest list) -- do not
-commit that, `Lint-ContestUnitsLinked` will fail it. **Two machines**, one
-running `tr4wserver`.
+Replaces the Q108 S4 items (a contest with no legacy number was REFUSED on
+multi-op; it is not any more). Nothing automated drives a real client against a
+real server: the unit tests reach the HELLO, the judgement and the receive arms,
+and `tools/netprobe --case hello` speaks the protocol to `tr4wserver` and to
+TR4WServerPy, but no gate has seen a TR4W station do it. **WHAT YOU NEED:** two
+machines (Windows and Mint), one running `tr4wserver` or the Python server, both
+stations on a contest registered BY ID (any QSO party, e.g. `GA-QSO-PARTY`) and
+then on a legacy one.
 
-- [ ] **Connect with such a contest selected is refused, once, and cleanly.**
-      Select `TR4W-TEST-FIXTURE`, open the Network window (or restart with it
-      active) with the server running. EXPECT: NO connection attempt (the
-      status never says "Connecting"), ONE warning dialog reading "TR4W-TEST-FIXTURE
-      cannot be used on the multi-op network yet -- the network protocol cannot
-      carry it. Use it only while this station is not connected to a multi-op
-      server.", and NOTHING more on the 5-second timer's retries (it is silent
-      after the first). `tr4w.log` has one `[Net] TryConnectToNetwork refused
-      contest "TR4W-TEST-FIXTURE" (handle 188)` line. Then switch to a legacy
-      contest: the next retry connects normally; switch back and the message
-      appears again once.
-- [ ] **A legacy contest still works exactly as before** on the same two
-      machines: connect, log QSOs at one station and see them arrive at the
-      other, edit one, change a shared setting. (This is the regression check
-      for the guards on the send and receive paths.)
-- [ ] **Switching to such a contest while connected drops the link, with the
-      message.** Connect on a legacy contest, then choose `TR4W-TEST-FIXTURE`
-      (New Contest, or CONTEST in Preferences). EXPECT: the link closes (the
-      Network window shows disconnected), one dialog with the same message, and
-      no QSO of the new contest ever reaches the server (`tr4wserver.log`).
-- [ ] **A peer's CONTEST change is not followed.** Station B, on a build that
-      CAN select it, changes the contest to `TR4W-TEST-FIXTURE` while station A
-      is connected on a legacy contest. EXPECT at A: the message, A keeps its
-      contest, and `tr4w.log` has `[Net] a peer's CONTEST command refused ...`.
-      (B itself is dropped from the network by the switch door above, so this
-      needs B to switch before it notices -- or a hand-sent packet.)
+- [ ] **Connect, both stations, a by-id contest.** Select the same QSO party on
+      both, open the Network window on each. EXPECT: connected; each station's
+      row on the other; `tr4w.log` has `[Net] server hello: network protocol 2`
+      and `[Net] station B announced contest "GA-QSO-PARTY"` (the other letter on
+      the other station). NO dialog.
+- [ ] **A QSO crosses and is logged.** Log one at A. EXPECT at B: it appears in
+      B's log, scores, and the dupe sheet knows it -- ON A BY-ID CONTEST. Edit it
+      at A and Alt-Y delete another: both arrive. (`tr4w.log` at B: no
+      `REFUSED`.) The same on a legacy contest.
+- [ ] **The two builds do not agree on the handle byte, and it does not matter.**
+      If the two stations' by-id handles differ (compare `handle` in a debug
+      build, or just link a different set of contests on one), the QSO still
+      arrives and carries B's own contest.
+- [ ] **A contest change is announced.** With both connected on contest X, change
+      A to contest Y (Preferences, or New Contest). EXPECT at A: `[Net] sent
+      hello` with Y; at B: `station A announced contest "Y"`. Log a QSO at A:
+      B refuses it (below). Change B to Y: the next QSO arrives.
+- [ ] **A peer on another contest is refused and reported, once** (this is Q110,
+      now by announcement). EXPECT at B: the QSO is NOT logged; one panel notice
+      "Station A is on Y, this station is on X -- ..."; one `REFUSED` Error line
+      per QSO; no second notice for the same station and contest until the link
+      is re-established.
+- [ ] **A server from before protocol 2.** Point the station at an old
+      `tr4wserver.exe` (any build before this change) or the Python server at
+      tag `d7-protocol`. EXPECT: the connection closes at once, and ONE dialog
+      "The multi-op server closed the connection without answering. It is
+      probably older than this TR4W ..." -- not repeated every five seconds.
+      Closing and reopening the Network window tries again.
+- [ ] **A station from before protocol 2** (or the probe's `--case hello`)
+      against the NEW server: refused, the server log says `first message was not
+      HELLO ... a 4.x client?`.
+- [ ] **A mismatched protocol number** (hand edit, or run `netprobe` against a
+      patched server): the dialog says which end is behind and what to update.
+- [ ] **Duplicate computer id**, as before: the second station gets the
+      "Computer ID is already in use" dialog; the first is undisturbed. Then
+      stop the first and reconnect the second: accepted.
+- [ ] **A station that leaves is forgotten.** Close B's Network window; at A the
+      row clears (this was broken against the Python server), and a QSO
+      forged under B's id is refused ("has not announced a contest").
 - [ ] **`<contestnr>` on the wire.** With a UDP listener (N1MM-format) on the
-      contact stream and the fixture selected, log a QSO: the datagram carries
-      `<contestnr>1862707066</contestnr>`; a legacy contest still carries its
-      legacy number (the `ContestType` ordinal -- compare with a capture from
-      before this change). Wireshark on the contact stream's port will do.
+      contact stream and a by-id contest selected, log a QSO: the datagram
+      carries a `<contestnr>` that is NOT a byte value (the id's derived number);
+      a legacy contest still carries its legacy number (the `ContestType`
+      ordinal -- compare with a capture from before this change).
 
 ---
 
 ## Added 2026-10-18 -- Q110: PEERS ON DIFFERENT CONTESTS
 
-Two machines, one `tr4wserver`, two LEGACY contests (e.g. ARRL DX CW and CQ WW CW).
+Two machines, one `tr4wserver`, two contests (e.g. ARRL DX CW and CQ WW CW). Since
+2026-10-27 the judgement is by what the SENDER announced in its HELLO, not by the
+record's contest byte (the first item above covers it for by-id contests too).
 Unit tests feed the real receive arms but cannot log a QSO or show a panel.
 
 - [ ] **A QSO from a peer on another contest is refused and reported.** Station

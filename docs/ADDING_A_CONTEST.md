@@ -552,9 +552,8 @@ end;
 matrix only says it is unchanged (A6). Pin, quoting the rule each test holds:
 
 1. **Identity**: id resolves to the class; no legacy number
-   (`ContestLegacyNumber` False, and `TryLegacyContestOf` False); refused on
-   multi-op (`ContestCanUseMultiOp` False); every name and id; flags; files;
-   and, for a party, what it inherits.
+   (`ContestLegacyNumber` False, and `TryLegacyContestOf` False); every name
+   and id; flags; files; and, for a party, what it inherits.
 2. **Bands**: every `BandType`, credited exactly when on the rules' list.
 3. **Points**: every mode, both sides of each edge, through **`ScoreQSO`**
    (never `CalculateQSOPoints` directly).
@@ -952,11 +951,14 @@ converter: `ContestHandleOf`, `LegacyContestOf`, `ContestLegacyNumber`,
 `ContestId(h)`, `FindContestById`, `KnownContests`. Never index
 `ContestTypeSA` by a handle.
 
-**A by-id contest is refused on the multi-op network** (the V1 packet carries
-only a legacy number, and is not being changed): `ContestCanUseMultiOp` is the
-one predicate and every door in `uNet` asks it. Its UDP `<contestnr>` is
-derived from the id (`ContestBroadcastNumber`), so renaming the id moves it.
-Neither is written in a class.
+**A by-id contest works on the multi-op network** (network protocol 2,
+2026-10-27): stations agree on the contest by its ID STRING, announced in the
+HELLO message, and never read the handle byte, which differs between builds
+(`uNetHello`, `uNet.PeerRecordInOurContest`). Renaming the id therefore
+breaks a mixed-version network until every station has the new build, as it
+already moves the UDP `<contestnr>` (derived from the id by
+`ContestBroadcastNumber`). Neither is written in a class; an id must be 48
+printable-ASCII characters or fewer to fit the HELLO.
 
 **A test-only contest** (the unit tests' fixture, `uContestTestFixture`)
 registers by id from `tr4w/test/unit`, is named in the test `.lpr` only, and

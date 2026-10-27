@@ -128,6 +128,7 @@ uses
   uEditQSO in 'src\uEditQSO.pas',
   uLogSearch in 'src\uLogSearch.pas',
   uBeacons in 'src\uBeacons.pas',
+  uNetHello in 'src\uNetHello.pas',
   uNetFraming in 'src\uNetFraming.pas',
   uNet in 'src\uNet.pas',
   uNetSendQueue in 'src\uNetSendQueue.pas',

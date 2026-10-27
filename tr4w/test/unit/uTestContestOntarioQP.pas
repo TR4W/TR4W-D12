@@ -28,7 +28,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   assumed from another party's rules.
 
   WHAT IS PINNED
-    * its identity: the id, no legacy number, refused on multi-op, the
+    * its identity: the id, no legacy number, the
       names, the files, the flags, the party base and what it inherits (and
       the CNTY it does not write), LOCATION required, its own prompt;
     * its bands, and its points in every mode through ScoreQSO -- 2, and 10
@@ -294,7 +294,6 @@ begin
    CheckFalse(TryLegacyContestOf(identity, member), 'a new contest has no ContestType member');
    CheckTrue(member = DUMMYCONTEST, 'so the walk names none');
    CheckFalse(ContestLegacyNumber(h, legacy), 'and no legacy number');
-   CheckFalse(ContestCanUseMultiOp(h), 'and is refused on the multi-op network');
 
    CheckEquals('Ontario QSO Party', identity.DisplayName, 'display name');
    CheckEquals('Ontario QSO Party', identity.FriendlyName, 'friendly name');

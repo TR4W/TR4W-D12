@@ -15,6 +15,8 @@ You own the link between stations at a multi-op.
 | client socket + password handshake | `tr4w/src/uNetClient.pas` (`TNetClient`) |
 | message dispatch | `tr4w/src/uNet.pas` |
 | framing | `tr4w/src/uNetFraming.pas` |
+| the HELLO message, protocol version, per-station contest table | `tr4w/src/uNetHello.pas` |
+| a probe that speaks the protocol to any server | `tools/netprobe/` |
 | engine side | `tr4w/src/trdos/lognet.pas` |
 | server log sync | `tr4w/src/uGetServerLog.pas`, `src/ui/lcl/uServerLogForm.pas` |
 | CRC32 packets | `tr4w/src/utils/networkmessageutils.pas` |
@@ -37,48 +39,95 @@ would tell an operator their log matches when nothing was checked; reporting
 read. *"Are these two logs the same"* belongs to the new multi-station protocol
 and will be asked over **rows**.
 
-## The contest byte on the wire (Q108 S2, 2026-10-16)
+## Network protocol 2: HELLO, and every contest travels (2026-10-27)
 
-`ContestExchange.ceContest` and `TLogFileInformation.liContest` are a
-`TContestHandle` now, not the `ContestType` enum -- ONE byte at the same
-offsets (265 of 376; 18 of 19), pinned in `uTestLogBinaryFile`. A legacy
-contest's handle IS its legacy number, so a D7 peer, the server's log and
-the log-compare packet read exactly what they did. The server still links
-no contest-factory unit (it uses `NoContest` from `VC`) and needed no change.
-A contest with no legacy number (Q108 S3, registered by id) must never reach
-these records, and **since Q108 S4 (2026-10-17) it cannot**: the V1 packet is
-NOT being converted (NY4I), so every door is a GUARD -- one predicate,
-`uContestRegistry.ContestCanUseMultiOp`, one message, `SContestNotOnMultiOp`,
-and `uNet.NetCarriesContest` as the logging wrapper. The doors, all in `uNet`:
-`TryConnectToNetwork` (before any thread; said once per contest, silent on the
-5 s retries) and `ConnectToTR4WServer`; `NetContestChanged` (from
-`uSettingsEffects`' CONTEST arm, which drops a live link); `PeerContestRefusal`
-in the `NET_PARAMETER` arm (a peer's CONTEST naming one is NOT applied);
-`SendRecordToServer` (the one place every QSO, edit and offline resend goes
-out); and the `NET_QSOINFO` / `NET_EDITEDQSO` arms (a byte with no legacy
-number is dropped, whole). **Do not add a record path that writes to the
-socket without going through `SendRecordToServer`.** A unit test reaches the
-predicate, the wrapper, `PeerContestRefusal`, `TryConnectToNetwork`'s
-refusal and a source read of every door; the live link is two machines and a
-BENCH_QUEUE item.
+NY4I: *"D7 (4.x) NEVER joins a 5.x network. V1 may change."* and *"ALL contests
+must work on the network, including those registered by id."* The wire is
+**protocol 2** now. `d7-protocol` is the git tag on TR4WServerPy that last spoke
+V1 (98-byte spot, letter-coded disconnect, COMPUTERID first, no HELLO); a V1
+station and a protocol 2 server refuse each other, and say so.
 
-## Peers must be on the same contest (Q110, NY4I 2026-10-18)
+**`uNetHello.pas` (a leaf: sockets-free, so it is unit-tested) holds the whole
+of it.** `NET_HELLO_ID = 1150`, `THelloMessage`, packed, **70 bytes**, pinned in
+`uTestNetWireSizes` and `uTestNetHello`:
 
-*"Peers have to be on the same contest and that is a flagged error to be
-reported."* `uNet.PeerRecordInOurContest(rec, door)` is asked by the
-`NET_QSOINFO` arm (QSO, note and QTC records) and the `NET_EDITEDQSO` arm,
-after `NetCarriesContest`: a record whose `ceContest` is not this station's
-`Contest` is dropped whole -- not logged, scored or applied. It is REPORTED,
-not silent: a `logger.Error` per record (the audit trail, not rate-limited)
-and one `QuickDisplay` notice (`SPeerOnAnotherContest`) per peer and per peer
-contest per link session (`ForgetPeerContestNotices` runs when the link
-comes up). The wire is untouched. Those two arms are the only places a
-received QSO is logged or edited -- do not add a receive path that skips
-the check. `tr4wserver` relays and stores every QSO whatever its contest
-(one binary server log, `ceContest` read only for the compare header); the
-check is the client's. Tests: `uTestContestById` (the judge, the arms fed
-through `NetBuffer` by `ConsumeNetBuffer`, now in `uNet`'s interface, and a
-source-order read).
+| offset | field |
+|---|---|
+| 0 | `hmID` Word = 1150 |
+| 2 | `hmProtocol` Word = `NET_PROTOCOL_VERSION` (2) |
+| 4 | `hmComputerID` Byte, 1..26; **0 is the SERVER's own HELLO** |
+| 5 | `hmReserved` Byte |
+| 6 | `hmAppVersion` 16 chars, NUL padded |
+| 22 | `hmContestId` 48 chars, NUL padded; `''` from the server |
+
+The rules, identical in `tr4wserverUnit` (`MessageAllowedNow`, `AcceptHello`)
+and in TR4WServerPy (`_require_hello`, `_accept_hello`):
+
+- The client sends HELLO right after the password (`ConnectThread`, `SendHello`)
+  and no longer sends COMPUTERID: the HELLO carries the id, and the server
+  judges it with the same rule (`SetComputerID`, first come first served, own
+  slot ignored). Anything else first is a log line (`first message was not
+  HELLO ... a 4.x client?`) and the connection is dropped (`DropRequested`, read
+  by `uServerNet.SyncParse`; the connection thread does the closing).
+- Versions must be **equal** (`JudgeProtocol`). A different one is sent
+  `SM_PROTOCOL_MISMATCH` (8330, `smParam` = the server's protocol) and dropped;
+  the client turns that into `SNetServerProtocolOlder` / `Newer`, once per
+  address and port (`FServerRefusedFor`; opening the Network window re-arms it,
+  `ForgetServerRefusal`).
+- The server answers a first HELLO with its own (id 0) **before** judging the
+  computer id, so a station refused for its id has seen the protocol.
+  `FServerHelloSeen` / `FHelloSentTick`: a link that drops within 5 s of our
+  HELLO with no server HELLO is reported as "probably an older server"
+  (`SNetNoHelloAnswer`): an older server cannot say anything a station could
+  read.
+- **Relay, not a separate message.** The server keeps each accepted HELLO in its
+  slot (`clHello`), tells a newcomer every other station's, and relays a station's
+  HELLO to the rest. A contest change is therefore just another HELLO
+  (`NetContestChanged` -> `SendHello`), with no message type of its own, and the
+  server stays contest-agnostic: it stores and forwards text, it never judges a
+  contest. A pull (answering `SM_GETSTATUS`) was rejected: the server already
+  holds the state and a station that is silent would leave a hole.
+- Only an ACCEPTED hello is kept and relayed, so a station refused for its id
+  never appears to the others. The server sends it nothing more than the 8320.
+
+**Contests are agreed by ID STRING, never by the byte.** `ContestCanUseMultiOp`,
+`MultiOpRefusalText`, `SContestNotOnMultiOp`, `NetCarriesContest` and
+`PeerContestRefusal` are GONE (Q108 S4's six doors). `uNet.GPeers` (`TNetPeers`)
+holds what each station announced; `PeerRecordInOurContest(var rec, sender,
+door)` asks `uNetHello.JudgePeerContest` (case-insensitive id compare), then
+**stamps `rec.ceContest := Contest`** on an accepted record, so a by-id handle
+(assigned at the registry seal, different between builds) is never stored from
+the wire. A sender that never said HELLO is refused and logged (Error, no
+notice); a sender on another contest is refused, logged per record and noticed
+once per (station, contest id) per link (`SPeerOnAnotherContest`,
+`ForgetPeerContestNotices` at link-up). `GPeers.Clear` runs at link-up, and the
+`SM_DISCONECT_CLIENT` arm forgets a departed station.
+
+**`TNetQSOInformation.qiSenderID` (was a reserved byte, always 0) names the
+STATION THAT SENT THE PACKET**, ordinal 1..26, set in `SendRecordToServer`. It is
+NOT `ceComputerID` (who logged the QSO): an edit is sent by whoever edited, and
+the QSO's logger may have left. The receiver judges the packet by what THAT
+station announced. **Do not add a record path that writes to the socket without
+going through `SendRecordToServer`**, or the packet has no sender and is
+refused. The sender leaves `ceContest` as its own handle; nothing reads it.
+
+Every received QSO is still logged or edited in exactly two places (the
+`NET_QSOINFO` and `NET_EDITEDQSO` arms), both behind `PeerRecordInOurContest`;
+do not add a receive path that skips it. Tests: `uTestNetHello` (layout, build
+and refusals, the version judge, the table, the contest judge, framing),
+`uTestContestById` (a by-id and a legacy peer accepted and restamped, the byte
+never read, case, no HELLO, a departed station, a re-announcement, the notice
+latch, source reads of the wiring), `tools/netprobe` `--case hello` against both
+servers. The live link (a real client against a real server, a contest change,
+an old server) is two machines and a BENCH_QUEUE item.
+
+Also changed in the same pass, in the Python server (parity with this tree's
+server): the DX spot is **106** bytes, `SM_DISCONECT_CLIENT` carries the
+ordinal 1..26 (not the ASCII letter), and a duplicate computer id is refused
+with `SM_COMPUTERID_IN_USE`; its computer id is no longer taken from
+`TStationState`, which let a refused station take the id it was refused.
+
+The server's own log holds each sender's `ceContest` byte as it came (a by-id handle means nothing outside the program that wrote it), and the log-compare packet reads the first record's. Neither is judged; a late catch-up that reads that log must restamp, as the receive arms do.
 
 ## What a received QSO records about OUR station (log schema 3, stage 5, 2026-10-19)
 

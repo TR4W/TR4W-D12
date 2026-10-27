@@ -29,14 +29,18 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   spelling, a legacy alias or a duplicate is refused; a registration after
   the seal raises; and the fixture is not in the application.
 
-  Q108 S4 (2026-10-17) IS HERE TOO: the multi-op refusal and the broadcast
-  number. ContestCanUseMultiOp is the one predicate and NetCarriesContest the
-  one logging wrapper every uNet door calls; the doors that need a socket
-  (connect's second door, the send and the two receives) cannot be driven
-  from a unit test, so Test_EveryMultiOpDoorIsWired reads uNet.pas for each
-  call -- the wiring is also a BENCH_QUEUE item. The <contestnr> on the wire
-  is uTestUDPDatagrams'. The .TRW import's refusal of such a handle is
-  uTestLogImport's. *)
+  Q108 S4 (2026-10-17) IS HERE TOO: the broadcast number. Its multi-op
+  refusal (ContestCanUseMultiOp and six doors in uNet) was REPLACED on
+  2026-10-27 by network protocol 2: every contest travels the link, stations
+  agree on it by the ID STRING in their HELLO (uNetHello), a received QSO is
+  judged by what its SENDER announced, and an accepted record is stamped with
+  this station's own handle. The tests for that are below, through the real
+  uNet arms where a unit test can reach them (the HELLO and the server
+  messages) and PeerRecordInOurContest where it cannot (the QSO arm logs
+  through a booted contest session); the wiring a socket would be needed to
+  drive is read from the source and is also a BENCH_QUEUE item. The
+  <contestnr> on the wire is uTestUDPDatagrams'. The .TRW import's refusal of
+  such a handle is uTestLogImport's. *)
 unit uTestContestById;
 
 {$I ..\..\src\tr4w.inc}
@@ -44,7 +48,7 @@ unit uTestContestById;
 interface
 
 uses
-   uTR4WTestFramework;
+   uTR4WTestFramework, VC;
 
 type
    TContestByIdTests = class(TTestCase)
@@ -59,29 +63,36 @@ type
       procedure Test_AnIdIsRefusedForTheRightReasons;
       procedure Test_ARegistrationAfterTheSealRaises;
       procedure Test_TheFixtureIsNotInTheApplication;
-      procedure Test_AContestWithNoLegacyNumberCannotUseMultiOp;
       procedure Test_TheBroadcastNumberIsTheLegacyNumberOrDerivedFromTheId;
-      procedure Test_NetCarriesContestAsksTheOnePredicate;
-      procedure Test_APeerCannotMoveThisStationOntoSuchAContest;
-      procedure Test_ConnectingIsRefusedWithNoAttemptMade;
-      procedure Test_ChangingContestWithNoLinkDropsNothing;
-      procedure Test_EveryMultiOpDoorIsWired;
-      procedure Test_APeerOnOurContestIsAccepted;
+      procedure Test_NoDoorRefusesAContestAnyMore;
+      procedure Test_AByIdContestPeerIsAcceptedAndRestamped;
+      procedure Test_ALegacyContestPeerIsJudgedByItsAnnouncementNotItsByte;
+      procedure Test_TheIdComparisonIgnoresCase;
+      procedure Test_AStationThatNeverSaidHelloIsRefused;
+      procedure Test_AStationThatLeftIsForgotten;
+      procedure Test_AReAnnouncedContestIsJudgedByTheLatest;
+      procedure Test_ChangingContestWithNoLinkSendsNothing;
       procedure Test_APeerOnAnotherContestIsRefusedAndReportedOncePerContest;
       procedure Test_ThePeerContestGateIsAheadOfEveryLoggingCall;
+   private
+      (* A PEER'S HELLO, or the server's (aStation 0), through the real arm. *)
+      procedure FeedHello(const aStation: Byte; const aContestId: string);
+      (* A QSO or an edit from aSender, through the real arm. *)
+      procedure FeedQSO(const aMessage: Word; const aSender: Byte;
+                        const aLoggedBy: AnsiChar; const aByte: TContestHandle);
    end;
 
 implementation
 
 uses
    SysUtils, Classes,
-   VC, TF, uContestBase, uContestRegistry, uContestNames, uContestChoices,
+   TF, uContestBase, uContestRegistry, uContestNames, uContestChoices,
    uSettingsModel,
    uCFG,                  (* registers the CONTEST setting's vocabulary *)
    uCRC32,                (* the broadcast number's independent arithmetic *)
    PostUnit,              (* Contest -- the active contest *)
-   uNet,                  (* the doors *)
-   uAppStrings,           (* SContestNotOnMultiOp *)
+   uNet,                  (* the arms, the peers, the judge *)
+   uNetHello,             (* the HELLO a station announces itself with *)
    uTestRegisteredContests,
    uContestTestFixture;
 
@@ -323,43 +334,6 @@ begin
    end;
 end;
 
-(* THE ONE PREDICATE. Exactly the contests with a legacy number can use the V1
-  multi-op packet -- walked over every KNOWN contest, so a contest added later
-  is held to it without an edit -- and the refusal text is non-empty exactly
-  where the predicate says no. *)
-procedure TContestByIdTests.Test_AContestWithNoLegacyNumberCannotUseMultiOp;
-var
-   h: TContestHandle;
-   known: TContestHandleList;
-   k, n: integer;
-   text: string;
-begin
-   BeginTest('Test_AContestWithNoLegacyNumberCannotUseMultiOp');
-   h := FixtureHandle;
-   CheckFalse(ContestCanUseMultiOp(h), 'the fixture cannot use multi-op');
-   CheckTrue(ContestCanUseMultiOp(ContestHandleOf(ARRLDXCW)), 'a legacy contest can');
-   CheckTrue(ContestCanUseMultiOp(NoContest),
-             'no contest chosen is not carrying one, so a station with none may connect');
-   CheckFalse(ContestCanUseMultiOp(TContestHandle.FromByte(255)),
-              'a byte that names no contest is no legacy number either');
-
-   known := KnownContests;
-   for k := 0 to High(known) do
-      begin
-      CheckTrue(ContestCanUseMultiOp(known[k]) = ContestLegacyNumber(known[k], n),
-                ContestId(known[k]) + ': can use multi-op exactly when it has a legacy number');
-      CheckTrue(ContestCanUseMultiOp(known[k]) = (MultiOpRefusalText(known[k]) = ''),
-                ContestId(known[k]) + ': the refusal text is empty exactly when it can');
-      end;
-
-   text := MultiOpRefusalText(h);
-   CheckTrue(Pos(ContestIdentity(h).DisplayName, text) > 0,
-             'the message names the contest by its display name: ' + text);
-   CheckEquals(Format(SContestNotOnMultiOp, [ContestIdentity(h).DisplayName]), text,
-               'and it is the one translatable resourcestring, formatted');
-   CheckEquals('', MultiOpRefusalText(ContestHandleOf(ARRLDXCW)), 'a legacy contest has none');
-end;
-
 (* <contestnr>: a legacy contest's is its legacy number (the broadcast is
   byte-identical to before S4), every other is 256 + CRC32(id) mod (2^31 - 256).
   The fixture's literal is zlib.crc32(b'TR4W-TEST-FIXTURE') + 256 done outside
@@ -408,117 +382,58 @@ begin
       end;
 end;
 
-(* The wrapper every door calls: the predicate's answer, and nothing else. *)
-procedure TContestByIdTests.Test_NetCarriesContestAsksTheOnePredicate;
 var
-   h: TContestHandle;
-   known: TContestHandleList;
-   k: integer;
+   GNoticeTexts: TStringList = nil;
+
+procedure RecordNotice(const aText: string);
 begin
-   BeginTest('Test_NetCarriesContestAsksTheOnePredicate');
-   h := FixtureHandle;
-   CheckFalse(NetCarriesContest(h, 'the test'), 'the fixture is turned away');
-   CheckTrue(NetCarriesContest(ContestHandleOf(ARRLDXCW), 'the test'), 'a legacy contest is carried');
-   CheckTrue(NetCarriesContest(NoContest, 'the test'), 'no contest is carried');
-   known := KnownContests;
-   for k := 0 to High(known) do
-      begin
-      CheckTrue(NetCarriesContest(known[k], 'the test') = ContestCanUseMultiOp(known[k]),
-                ContestId(known[k]) + ': the wrapper never disagrees with the predicate');
-      end;
+   GNoticeTexts.Add(aText);
 end;
 
-(* A peer's CONTEST command naming a contest that cannot travel is refused with
-  the message and NOT applied; everything else is left to ApplyPeerCommand. *)
-procedure TContestByIdTests.Test_APeerCannotMoveThisStationOntoSuchAContest;
+procedure TContestByIdTests.FeedHello(const aStation: Byte; const aContestId: string);
 var
-   h: TContestHandle;
-   text: string;
+   hello: THelloMessage;
+   desync: boolean;
 begin
-   BeginTest('Test_APeerCannotMoveThisStationOntoSuchAContest');
-   h := FixtureHandle;
-   text := MultiOpRefusalText(h);
-   CheckTrue(text <> '', 'there is a message to give');
-   CheckEquals(text, PeerContestRefusal('CONTEST', TEST_FIXTURE_CONTEST_ID),
-               'the CONTEST command naming it is refused with that message');
-   CheckEquals(text, PeerContestRefusal(' contest ', '  ' + LowerCase(TEST_FIXTURE_CONTEST_ID) + ' '),
-               'whatever the case and the blanks, as the name resolver reads it');
-   CheckEquals('', PeerContestRefusal('CONTEST', 'ARRL-DX-CW'), 'a legacy contest is followed');
-   CheckEquals('', PeerContestRefusal('CONTEST', 'NEQP'), 'and so is a legacy alias');
-   CheckEquals('', PeerContestRefusal('CONTEST', 'NO SUCH CONTEST ANYWHERE'),
-               'a name this build cannot resolve is not judged here');
-   CheckEquals('', PeerContestRefusal('CONTEST NAME', TEST_FIXTURE_CONTEST_ID),
-               'CONTEST NAME is a different setting');
-   CheckEquals('', PeerContestRefusal('BAND', TEST_FIXTURE_CONTEST_ID),
-               'only the command that selects the contest is asked');
-   CheckEquals('', PeerContestRefusal('', ''), 'an empty parameter is nothing');
+   CheckTrue(BuildHello(NET_PROTOCOL_VERSION, aStation, '5.0.99', aContestId, hello),
+             'the hello for "' + aContestId + '" can be built');
+   THelloMessagePtr(@NetBuffer[1])^ := hello;
+   CheckEquals(SizeOf(THelloMessage), ConsumeNetBuffer(SizeOf(THelloMessage), desync),
+               'the whole hello was consumed');
+   CheckFalse(desync, 'and the stream stayed on a message boundary');
 end;
 
-(* The first connect door: with the fixture selected, TryConnectToNetwork makes
-  NO attempt -- no thread. (If the guard were missing this would start a real
-  connect thread, which is why the test is the failing direction only.) The
-  warning is shown through showwarning, silenced here as in a batch export. *)
-procedure TContestByIdTests.Test_ConnectingIsRefusedWithNoAttemptMade;
+procedure TContestByIdTests.FeedQSO(const aMessage: Word; const aSender: Byte;
+                                    const aLoggedBy: AnsiChar;
+                                    const aByte: TContestHandle);
 var
-   savedContest: TContestHandle;
-   savedSilent: boolean;
+   pkt: NetQSOInformationPtr;
+   desync: boolean;
 begin
-   BeginTest('Test_ConnectingIsRefusedWithNoAttemptMade');
-   savedContest := Contest;
-   savedSilent := tSilentExport;
-   tSilentExport := True;
-   try
-      Contest := FixtureHandle;
-      CheckFalse(NetIsConnected, 'there is no link to begin with');
-      TryConnectToNetwork;
-      CheckFalse(ThreadStarted(NetThreadID), 'no connect thread was started');
-      CheckFalse(NetIsConnected, 'and nothing connected');
-      TryConnectToNetwork;
-      CheckFalse(ThreadStarted(NetThreadID), 'the timer''s retry makes no attempt either');
-   finally
-      Contest := savedContest;
-      tSilentExport := savedSilent;
-   end;
+   pkt := NetQSOInformationPtr(@NetBuffer[1]);
+   pkt^ := Default(TNetQSOInformation);
+   pkt^.qiID := aMessage;
+   pkt^.qiComputerID := 2;              (* not this station's id *)
+   pkt^.qiSenderID := aSender;
+   pkt^.qiInformation.ceContest := aByte;
+   pkt^.qiInformation.ceRecordKind := rkQSO;
+   pkt^.qiInformation.ceComputerID := aLoggedBy;
+   pkt^.qiInformation.Callsign := 'K1ABC';
+   CheckEquals(SizeOf(TNetQSOInformation),
+               ConsumeNetBuffer(SizeOf(TNetQSOInformation), desync),
+               'the whole packet was consumed');
+   CheckFalse(desync, 'and the stream stayed on a message boundary');
 end;
 
-(* The switch door, as far as a unit test reaches it: with no link up, choosing
-  the contest drops nothing, says nothing and changes nothing. The branch that
-  drops a live link needs a socket -- BENCH_QUEUE. *)
-procedure TContestByIdTests.Test_ChangingContestWithNoLinkDropsNothing;
+(* NO DOOR IS LEFT. The guards Q108 S4 put on six doors are gone with their
+  predicate, their text and the resourcestring; what stands in their place is
+  the announcement, so the connect path says HELLO before anything else and
+  every packet names its sender. Source reads, like the others: the connect and
+  send paths need a socket. *)
+procedure TContestByIdTests.Test_NoDoorRefusesAContestAnyMore;
 var
-   savedContest: TContestHandle;
-begin
-   BeginTest('Test_ChangingContestWithNoLinkDropsNothing');
-   savedContest := Contest;
-   try
-      Contest := FixtureHandle;
-      NetContestChanged(Contest);
-      CheckTrue(Contest = FixtureHandle, 'the contest stays what the operator chose');
-      CheckFalse(NetIsConnected, 'and there is still no link');
-      NetContestChanged(ContestHandleOf(ARRLDXCW));
-   finally
-      Contest := savedContest;
-   end;
-end;
-
-(* THE DOORS A UNIT TEST CANNOT DRIVE (they need a socket) are checked by their
-  CALL SITES: each door string below is the aDoor argument of a
-  NetCarriesContest call in uNet.pas, so deleting a guard fails this test. It
-  is a source read, like Test_TheFixtureIsNotInTheApplication, and no
-  substitute for the two-station bench test in BENCH_QUEUE. *)
-procedure TContestByIdTests.Test_EveryMultiOpDoorIsWired;
-const
-   DOORS: array[0..6] of string = (
-      'NetCarriesContest(Contest, ''TryConnectToNetwork'')',
-      'NetCarriesContest(Contest, ''ConnectToTR4WServer'')',
-      '''send of a QSO packet''',
-      '''receive of a NET_QSOINFO packet''',
-      '''receive of a NET_EDITEDQSO packet''',
-      '''a peer''''s CONTEST command''',
-      '''a switch of contest while connected''');
-var
-   unitText, effectsText, root: string;
-   k: integer;
+   root, netText, effectsText, registryText, stringsText: string;
+   helloAt: integer;
 
    function Slurp(const aRelative: string): string;
    var
@@ -542,54 +457,245 @@ var
    end;
 
 begin
-   BeginTest('Test_EveryMultiOpDoorIsWired');
+   BeginTest('Test_NoDoorRefusesAContestAnyMore');
    root := ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' + PathDelim +
            'src' + PathDelim;
-   unitText := Slurp('uNet.pas');
+   netText := Slurp('uNet.pas');
    effectsText := Slurp('uSettingsEffects.pas');
-   for k := Low(DOORS) to High(DOORS) do
-      begin
-      CheckTrue(Pos(DOORS[k], unitText) > 0, 'uNet.pas has the door ' + DOORS[k]);
-      end;
-   CheckTrue(Pos('ContestCanUseMultiOp(Contest)', unitText) > 0,
-             'TryConnectToNetwork asks the predicate before it starts a thread');
-   CheckTrue(Pos('PeerContestRefusal(', unitText) > 0,
-             'the NET_PARAMETER arm asks PeerContestRefusal');
-   CheckTrue(Pos('NetContestChanged(Contest)', effectsText) > 0,
-             'the CONTEST setting''s effect (the only call of FoundContest) calls NetContestChanged');
+   registryText := Slurp('contestFactory' + PathDelim + 'uContestRegistry.pas');
+   stringsText := Slurp('uAppStrings.pas');
+
+   CheckEquals(0, Pos('ContestCanUseMultiOp(', netText), 'uNet asks no predicate');
+   CheckEquals(0, Pos('NetCarriesContest(', netText), 'uNet has no guard wrapper');
+   CheckEquals(0, Pos('PeerContestRefusal(', netText), 'and does not refuse a peer''s CONTEST');
+   CheckEquals(0, Pos('MultiOpRefusalText(', netText), 'nor show a refusal');
+   CheckEquals(0, Pos('function ContestCanUseMultiOp', registryText), 'the predicate is gone');
+   CheckEquals(0, Pos('function MultiOpRefusalText', registryText), 'and so is its text');
+   CheckEquals(0, Pos('SContestNotOnMultiOp =', stringsText), 'and the resourcestring');
+
+   CheckTrue(Pos('NetQSOInfoToSend.qiSenderID := Ord(WireComputerID)', netText) > 0,
+             'every packet SendRecordToServer builds names its sender');
+   helloAt := Pos('if not SendHello then', netText);
+   CheckTrue(helloAt > 0, 'the connect path announces itself');
+   CheckTrue((helloAt > 0) and
+             (Pos('SendFullStationStatus;', Copy(netText, helloAt, MaxInt)) > 0),
+             'and does it before the first station status');
+   CheckEquals(0, Pos('ComputerNetID', netText),
+               'COMPUTERID is no longer sent: the HELLO carries the id');
+   CheckTrue(Pos('NetContestChanged;', effectsText) > 0,
+             'the CONTEST setting''s effect (the only call of FoundContest) re-announces');
 end;
 
-var
-   GNoticeTexts: TStringList = nil;
-
-procedure RecordNotice(const aText: string);
-begin
-   GNoticeTexts.Add(aText);
-end;
-
-(* Q110 (NY4I 2026-10-18: "Peers have to be on the same contest and that is a
-  flagged error to be reported"). The judge, on its own: a record in OUR
-  contest passes and raises nothing. The LogContact that follows it in the real
-  arm needs a booted contest session, so the pass-through is read from the
-  source in Test_ThePeerContestGateIsAheadOfEveryLoggingCall. *)
-procedure TContestByIdTests.Test_APeerOnOurContestIsAccepted;
+(* A BY-ID CONTEST'S PEER. The fixture's handle is a byte assigned at the seal
+  that no other build shares; the peer announces the contest by its ID and the
+  record's own byte is whatever its build made of it. The record is accepted
+  and STAMPED with this station's own handle. *)
+procedure TContestByIdTests.Test_AByIdContestPeerIsAcceptedAndRestamped;
 var
    savedContest: TContestHandle;
    rec: ContestExchange;
 begin
-   BeginTest('Test_APeerOnOurContestIsAccepted');
+   BeginTest('Test_AByIdContestPeerIsAcceptedAndRestamped');
    savedContest := Contest;
+   NetPeers.Clear;
+   ForgetPeerContestNotices;
+   try
+      Contest := FixtureHandle;
+      CheckTrue(Contest.ToByte >= FirstByIdContestHandle.ToByte, 'this station is on a by-id contest');
+      FeedHello(2, TEST_FIXTURE_CONTEST_ID);
+
+      rec := Default(ContestExchange);
+      rec.ceContest := TContestHandle.FromByte(77);   (* what the peer's build called it *)
+      CheckTrue(PeerRecordInOurContest(rec, 2, 'the test'),
+                'a peer that announced our by-id contest is accepted');
+      CheckTrue(rec.ceContest = Contest, 'and the record carries THIS station''s handle');
+      CheckEquals(0, PeerContestNoticeCount, 'nothing is reported');
+   finally
+      Contest := savedContest;
+      NetPeers.Clear;
+      ForgetPeerContestNotices;
+   end;
+end;
+
+(* THE BYTE IS NEVER READ, in either direction: the wrong byte under the right
+  announcement is accepted; the right byte under another announcement is not. *)
+procedure TContestByIdTests.Test_ALegacyContestPeerIsJudgedByItsAnnouncementNotItsByte;
+var
+   savedContest: TContestHandle;
+   rec: ContestExchange;
+   ours, theirs: TContestHandle;
+begin
+   BeginTest('Test_ALegacyContestPeerIsJudgedByItsAnnouncementNotItsByte');
+   savedContest := Contest;
+   ours := ContestHandleOf(ARRLDXCW);
+   theirs := ContestHandleOf(CQWWCW);
+   NetPeers.Clear;
+   ForgetPeerContestNotices;
+   GNoticeTexts := TStringList.Create;
+   PeerContestNoticeSink := RecordNotice;
+   try
+      Contest := ours;
+      FeedHello(2, ContestId(ours));
+      FeedHello(3, ContestId(theirs));
+
+      rec := Default(ContestExchange);
+      rec.ceContest := theirs;
+      CheckTrue(PeerRecordInOurContest(rec, 2, 'the test'),
+                'B announced our contest: accepted although the byte says another');
+      CheckTrue(rec.ceContest = ours, 'and the byte is replaced by ours');
+
+      rec := Default(ContestExchange);
+      rec.ceContest := ours;
+      CheckFalse(PeerRecordInOurContest(rec, 3, 'the test'),
+                 'C announced another contest: refused although the byte says ours');
+      CheckTrue(rec.ceContest = ours, 'a refused record is left as it came');
+      CheckEquals(1, PeerContestNoticeCount, 'and the operator is told once');
+      CheckEquals(1, GNoticeTexts.Count, 'one notice reached the operator');
+      CheckTrue(Pos('Station C', GNoticeTexts[0]) = 1, 'naming the station: ' + GNoticeTexts[0]);
+   finally
+      PeerContestNoticeSink := nil;
+      GNoticeTexts.Free;
+      GNoticeTexts := nil;
+      Contest := savedContest;
+      NetPeers.Clear;
+      ForgetPeerContestNotices;
+   end;
+end;
+
+procedure TContestByIdTests.Test_TheIdComparisonIgnoresCase;
+var
+   savedContest: TContestHandle;
+   rec: ContestExchange;
+begin
+   BeginTest('Test_TheIdComparisonIgnoresCase');
+   savedContest := Contest;
+   NetPeers.Clear;
+   try
+      Contest := FixtureHandle;
+      FeedHello(2, LowerCase(TEST_FIXTURE_CONTEST_ID));
+      rec := Default(ContestExchange);
+      CheckTrue(PeerRecordInOurContest(rec, 2, 'the test'),
+                'the name resolver ignores case, so the judge does too');
+   finally
+      Contest := savedContest;
+      NetPeers.Clear;
+      ForgetPeerContestNotices;
+   end;
+end;
+
+(* NOTHING SAYS WHAT IT IS RUNNING: refused and logged, with no notice (it is not
+  a contest mismatch, it is a station outside the protocol). The sender byte can
+  also be absent (0) or out of range. *)
+procedure TContestByIdTests.Test_AStationThatNeverSaidHelloIsRefused;
+var
+   savedContest: TContestHandle;
+   rec: ContestExchange;
+   k: integer;
+const
+   SILENT_SENDERS: array[0..5] of integer = (0, 1, 3, 26, 27, 255);
+begin
+   BeginTest('Test_AStationThatNeverSaidHelloIsRefused');
+   savedContest := Contest;
+   NetPeers.Clear;
    ForgetPeerContestNotices;
    try
       Contest := ContestHandleOf(ARRLDXCW);
+      FeedHello(2, ContestId(Contest));
+      for k := Low(SILENT_SENDERS) to High(SILENT_SENDERS) do
+         begin
+         rec := Default(ContestExchange);
+         rec.ceContest := Contest;
+         CheckFalse(PeerRecordInOurContest(rec, SILENT_SENDERS[k], 'the test'),
+                    'sender ' + IntToStr(SILENT_SENDERS[k]) + ' announced nothing: refused');
+         end;
+      CheckEquals(0, PeerContestNoticeCount, 'and it is a log line, not an operator notice');
       rec := Default(ContestExchange);
-      rec.ceContest := ContestHandleOf(ARRLDXCW);
-      rec.ceComputerID := 'B';
-      CheckTrue(PeerRecordInOurContest(rec, 'the test'), 'the same contest is accepted');
-      CheckEquals(0, PeerContestNoticeCount, 'and nothing is reported');
+      CheckTrue(PeerRecordInOurContest(rec, 2, 'the test'), 'while B, who did, is still accepted');
    finally
       Contest := savedContest;
+      NetPeers.Clear;
       ForgetPeerContestNotices;
+   end;
+end;
+
+(* The server's "that station left" (SM_DISCONECT_CLIENT, its ordinal) empties
+  the station's announcement, through the real arm. *)
+procedure TContestByIdTests.Test_AStationThatLeftIsForgotten;
+var
+   savedContest: TContestHandle;
+   rec: ContestExchange;
+   msg: TServerMessagePtr;
+   desync: boolean;
+begin
+   BeginTest('Test_AStationThatLeftIsForgotten');
+   savedContest := Contest;
+   NetPeers.Clear;
+   try
+      Contest := ContestHandleOf(ARRLDXCW);
+      FeedHello(2, ContestId(Contest));
+      CheckTrue(NetPeers.Knows(2), 'B is known');
+
+      msg := TServerMessagePtr(@NetBuffer[1]);
+      msg^ := Default(TServerMessage);
+      msg^.smID := NET_SERVERMESSAGE_ID;
+      msg^.smMessage := SM_DISCONECT_CLIENT_MESSAGE;
+      msg^.smParam := 2;
+      CheckEquals(SizeOf(TServerMessage), ConsumeNetBuffer(SizeOf(TServerMessage), desync),
+                  'the message was consumed');
+      CheckFalse(NetPeers.Knows(2), 'B is forgotten when it leaves');
+      rec := Default(ContestExchange);
+      CheckFalse(PeerRecordInOurContest(rec, 2, 'the test'), 'and its QSOs are no longer vouched for');
+   finally
+      Contest := savedContest;
+      NetPeers.Clear;
+      ForgetPeerContestNotices;
+   end;
+end;
+
+(* A CONTEST CHANGE IS A SECOND HELLO. The latest announcement is the one that
+  counts, in both directions. *)
+procedure TContestByIdTests.Test_AReAnnouncedContestIsJudgedByTheLatest;
+var
+   savedContest: TContestHandle;
+   rec: ContestExchange;
+begin
+   BeginTest('Test_AReAnnouncedContestIsJudgedByTheLatest');
+   savedContest := Contest;
+   NetPeers.Clear;
+   ForgetPeerContestNotices;
+   PeerContestNoticeSink := nil;
+   try
+      Contest := ContestHandleOf(ARRLDXCW);
+      FeedHello(2, ContestId(ContestHandleOf(CQWWCW)));
+      FeedHello(2, ContestId(Contest));
+      rec := Default(ContestExchange);
+      CheckTrue(PeerRecordInOurContest(rec, 2, 'the test'),
+                'B moved onto our contest: accepted');
+      FeedHello(2, TEST_FIXTURE_CONTEST_ID);
+      CheckEquals(TEST_FIXTURE_CONTEST_ID, NetPeers.ContestIdOf(2), 'B''s announcement is the latest');
+   finally
+      Contest := savedContest;
+      NetPeers.Clear;
+      ForgetPeerContestNotices;
+   end;
+end;
+
+(* The switch, as far as a unit test reaches it: with no link up, choosing a
+  contest announces nothing and changes nothing. The re-announcement itself needs
+  a socket -- BENCH_QUEUE. *)
+procedure TContestByIdTests.Test_ChangingContestWithNoLinkSendsNothing;
+var
+   savedContest: TContestHandle;
+begin
+   BeginTest('Test_ChangingContestWithNoLinkSendsNothing');
+   savedContest := Contest;
+   try
+      Contest := FixtureHandle;
+      NetContestChanged;
+      CheckTrue(Contest = FixtureHandle, 'the contest stays what the operator chose');
+      CheckFalse(NetIsConnected, 'and there is still no link');
+   finally
+      Contest := savedContest;
    end;
 end;
 
@@ -602,53 +708,42 @@ procedure TContestByIdTests.Test_APeerOnAnotherContestIsRefusedAndReportedOncePe
 var
    savedContest: TContestHandle;
    savedID: Cardinal;
-   desync: boolean;
-   pkt: NetQSOInformationPtr;
-
-   procedure Feed(aMessage: Word; aPeer: AnsiChar; aPeerContest: ContestType);
-   var
-      used: integer;
-   begin
-      pkt := NetQSOInformationPtr(@NetBuffer[1]);
-      pkt^ := Default(TNetQSOInformation);
-      pkt^.qiID := aMessage;
-      pkt^.qiComputerID := 2;              (* not this station's id *)
-      pkt^.qiInformation.ceContest := ContestHandleOf(aPeerContest);
-      pkt^.qiInformation.ceRecordKind := rkQSO;
-      pkt^.qiInformation.ceComputerID := aPeer;
-      pkt^.qiInformation.Callsign := 'K1ABC';
-      used := ConsumeNetBuffer(SizeOf(TNetQSOInformation), desync);
-      CheckEquals(SizeOf(TNetQSOInformation), used, 'the whole packet was consumed');
-      CheckFalse(desync, 'and the stream stayed on a message boundary');
-   end;
-
+   cqwwHandle, ssbHandle: TContestHandle;
 begin
    BeginTest('Test_APeerOnAnotherContestIsRefusedAndReportedOncePerContest');
    savedContest := Contest;
    savedID := NetQSOInfoToSend.qiComputerID;
+   cqwwHandle := ContestHandleOf(CQWWCW);
+   ssbHandle := ContestHandleOf(ARRLDXSSB);
+   NetPeers.Clear;
    ForgetPeerContestNotices;
    GNoticeTexts := TStringList.Create;
    PeerContestNoticeSink := RecordNotice;
    try
       Contest := ContestHandleOf(ARRLDXCW);
       NetQSOInfoToSend.qiComputerID := 1;
+      FeedHello(2, ContestId(cqwwHandle));
+      FeedHello(3, ContestId(cqwwHandle));
 
-      Feed(NET_QSOINFO_ID, 'B', CQWWCW);
+      (* ceComputerID 'Z' is who LOGGED the QSO; the sender byte is who SENT it,
+        and it is the sender the notice names. *)
+      FeedQSO(NET_QSOINFO_ID, 2, 'Z', ContestHandleOf(ARRLDXCW));
       CheckEquals(1, PeerContestNoticeCount, 'the first mismatched QSO raises the notice');
       CheckEquals(1, GNoticeTexts.Count, 'one notice reached the operator');
-      CheckTrue(Pos('Station B', GNoticeTexts[0]) = 1, 'and it names the peer');
-      Feed(NET_QSOINFO_ID, 'B', CQWWCW);
+      CheckTrue(Pos('Station B', GNoticeTexts[0]) = 1, 'and it names the sender: ' + GNoticeTexts[0]);
+      FeedQSO(NET_QSOINFO_ID, 2, 'Z', cqwwHandle);
       CheckEquals(1, PeerContestNoticeCount, 'a second one from the same peer does not');
-      Feed(NET_EDITEDQSO_ID, 'B', CQWWCW);
+      FeedQSO(NET_EDITEDQSO_ID, 2, 'Z', cqwwHandle);
       CheckEquals(1, PeerContestNoticeCount, 'nor does that peer''s edit: one latch for both arms');
-      Feed(NET_QSOINFO_ID, 'C', CQWWCW);
+      FeedQSO(NET_QSOINFO_ID, 3, 'Z', cqwwHandle);
       CheckEquals(2, PeerContestNoticeCount, 'another peer is its own notice');
-      Feed(NET_QSOINFO_ID, 'B', ARRLDXSSB);
+      FeedHello(2, ContestId(ssbHandle));
+      FeedQSO(NET_QSOINFO_ID, 2, 'Z', cqwwHandle);
       CheckEquals(3, PeerContestNoticeCount, 'and so is the same peer on a third contest');
 
       ForgetPeerContestNotices;
       CheckEquals(0, PeerContestNoticeCount, 'a new link starts the count over');
-      Feed(NET_QSOINFO_ID, 'B', CQWWCW);
+      FeedQSO(NET_QSOINFO_ID, 2, 'Z', cqwwHandle);
       CheckEquals(1, PeerContestNoticeCount, 'and the notice can be raised again');
       CheckEquals(4, GNoticeTexts.Count, 'four notices reached the operator in all');
    finally
@@ -657,6 +752,7 @@ begin
       GNoticeTexts := nil;
       Contest := savedContest;
       NetQSOInfoToSend.qiComputerID := savedID;
+      NetPeers.Clear;
       ForgetPeerContestNotices;
    end;
 end;
@@ -697,14 +793,15 @@ begin
    Test_AnIdIsRefusedForTheRightReasons;
    Test_ARegistrationAfterTheSealRaises;
    Test_TheFixtureIsNotInTheApplication;
-   Test_AContestWithNoLegacyNumberCannotUseMultiOp;
    Test_TheBroadcastNumberIsTheLegacyNumberOrDerivedFromTheId;
-   Test_NetCarriesContestAsksTheOnePredicate;
-   Test_APeerCannotMoveThisStationOntoSuchAContest;
-   Test_ConnectingIsRefusedWithNoAttemptMade;
-   Test_ChangingContestWithNoLinkDropsNothing;
-   Test_EveryMultiOpDoorIsWired;
-   Test_APeerOnOurContestIsAccepted;
+   Test_NoDoorRefusesAContestAnyMore;
+   Test_AByIdContestPeerIsAcceptedAndRestamped;
+   Test_ALegacyContestPeerIsJudgedByItsAnnouncementNotItsByte;
+   Test_TheIdComparisonIgnoresCase;
+   Test_AStationThatNeverSaidHelloIsRefused;
+   Test_AStationThatLeftIsForgotten;
+   Test_AReAnnouncedContestIsJudgedByTheLatest;
+   Test_ChangingContestWithNoLinkSendsNothing;
    Test_APeerOnAnotherContestIsRefusedAndReportedOncePerContest;
    Test_ThePeerContestGateIsAheadOfEveryLoggingCall;
 end;

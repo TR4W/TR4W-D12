@@ -45,6 +45,27 @@
 > | No error recovery: `recv() <= 0` disconnects for good | **Stale** -- true when written, superseded by the Indy move of 2026-08-25 |
 > | Plaintext 10-byte password | Holds |
 >
+> **THE WIRE CHANGED ON 2026-10-27, AND EVERY "V1" SECTION BELOW IS NOW THE D7
+> WIRE.** This tree speaks **network protocol 2**; what follows describes V1,
+> which only a D7 (4.x) station and the `d7-protocol` tag of TR4WServerPy still
+> speak, and **a D7 station never joins a 5.x network** (NY4I). Protocol 2
+> differs from what this document describes in exactly these ways:
+>
+> | V1 (this document) | protocol 2 |
+> |---|---|
+> | the first message is `NET_COMPUTERID_ID` | the first message is `NET_HELLO_ID` (1150), 70 bytes: protocol, computer id, program version, **contest id string** (`uNetHello.pas`); anything else first is refused and the link dropped |
+> | a contest is the one byte `ceContest`; a contest with no legacy number cannot travel | stations agree on the contest by its id string in their HELLO (re-announced on a change, relayed by the server); the byte is never read, and an accepted record is stamped with the receiver's own handle |
+> | a QSO packet has two reserved bytes | `qiSenderID` (was `qiReservedByte1`) names the station that sent the packet; the receiver judges the packet by what that station announced |
+> | `TNetDXSpot` is 98 bytes | **106** (`TSpotRecord.FSysTime` became a `TDateTime`, 2026-08-25; the Python server followed on 2026-10-27) |
+> | `SM_DISCONECT_CLIENT` parameter is the computer id | its ordinal 1..26, in both servers (the Python one sent the ASCII letter until 2026-10-27) |
+> | a duplicate computer id is accepted | refused with `SM_COMPUTERID_IN_USE` (8320), in both servers |
+> | no protocol version | `SM_PROTOCOL_MISMATCH` (8330) carries the server's version to a station whose HELLO differs |
+>
+> The sizes in section 2 of this document are therefore **not** to be used to
+> write a protocol 2 peer; `tr4w/test/unit/uTestNetWireSizes.pas` pins what this
+> tree sends and `tools/netprobe/netprobe.py` is an independent client that
+> checks any server against it.
+>
 > The V2 half of the document is not checked against anything: it describes
 > software that does not exist here.
 

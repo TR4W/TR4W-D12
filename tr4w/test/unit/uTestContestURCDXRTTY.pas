@@ -24,7 +24,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   test below quotes the rule it holds.
 
   WHAT IS PINNED
-    * its identity: the id, no legacy number, refused on multi-op, the names,
+    * its identity: the id, no legacy number, the names,
       urc.dom, the flags;
     * its bands (160/80/40/20/15/10 m) and its mode (RTTY);
     * every row of the points table, the same territory and MMS;
@@ -156,7 +156,6 @@ begin
    CheckTrue(ContestClassFor(h) = TContestURCDXRTTY, 'to its class');
    CheckEquals('URC-DX-RTTY', ContestId(h), 'the stored id');
    CheckFalse(ContestLegacyNumber(h, legacy), 'a new contest has no legacy number');
-   CheckFalse(ContestCanUseMultiOp(h), 'and is refused on the multi-op network');
    identity := ContestIdentity(h);
    CheckEquals('URC DX RTTY Contest', identity.DisplayName, 'display name');
    CheckEquals('URC DX RTTY Contest', identity.FriendlyName, 'friendly name');

@@ -47,6 +47,12 @@ NET_CLIENTSTATUS_ID = 1110
 NET_SPOTVIANETWORK_ID = 1120
 NET_COMPUTERID_ID = 1130
 NET_SERVERMESSAGE_ID = 1140
+NET_HELLO_ID = 1150
+
+NET_PROTOCOL_VERSION = 2        # network protocol 2: the first message is a HELLO
+HELLO_VERSION_CHARS = 16
+HELLO_CONTEST_CHARS = 48
+HELLO_SIZE = 2 + 2 + 1 + 1 + HELLO_VERSION_CHARS + HELLO_CONTEST_CHARS     # 70
 
 SM_CLEARALLLOGS = 8230
 SM_SERVERLOG_CHANGED = 8250
@@ -55,6 +61,7 @@ SM_GETSTATUS = 8270
 SM_RECEIVED_UPDATED_QSO = 8300
 SM_SERIAL_NUMBER_CHANGED = 8310
 SM_COMPUTERID_IN_USE = 8320
+SM_PROTOCOL_MISMATCH = 8330
 
 SNT_FREE = 0
 SNT_RESERVED = 1
@@ -87,6 +94,7 @@ MESSAGE_SIZE = {
    NET_SPOTVIANETWORK_ID: 48,
    NET_COMPUTERID_ID: 4,
    NET_SERVERMESSAGE_ID: 8,
+   NET_HELLO_ID: HELLO_SIZE,
 }
 
 MESSAGE_NAME = {
@@ -94,7 +102,7 @@ MESSAGE_NAME = {
    1030: 'DXSPOT', 1040: 'QSOINFO', 1050: 'EDITEDQSO', 1055: 'OFFLINEQSO',
    1060: 'TAKESERVERQSO', 1070: 'TIMESYN', 1080: 'PARAMETER',
    1090: 'STATIONSTATUS', 1110: 'CLIENTSTATUS', 1120: 'SPOTVIANETWORK',
-   1130: 'COMPUTERID', 1140: 'SERVERMESSAGE',
+   1130: 'COMPUTERID', 1140: 'SERVERMESSAGE', 1150: 'HELLO',
 }
 
 PASSWORD_BYTES = 10
@@ -135,9 +143,27 @@ def exchange_call(rec):
    return rec[CE_CALLSIGN + 1:CE_CALLSIGN + 1 + length].decode('ascii', 'replace')
 
 
-def build_qso(msg_id, exchange, computer_id):
-   """TNetQSOInformation: id, ContestExchange, computer id (Cardinal), 2 bytes."""
-   return struct.pack('<H', msg_id) + exchange + struct.pack('<IBB', computer_id, 0, 0)
+def build_qso(msg_id, exchange, computer_id, sender=0):
+   """TNetQSOInformation: id, ContestExchange, a Cardinal that tells one run
+   of a station from another, then qiSenderID (the sending station's ordinal
+   1..26, network protocol 2) and one reserved byte."""
+   return struct.pack('<H', msg_id) + exchange + struct.pack('<IBB', computer_id, sender, 0)
+
+
+def build_hello(protocol, ordinal, version, contest_id):
+   """THelloMessage (70 bytes): id, protocol, computer id (0 = the server),
+   reserved, 16 bytes of program version and 48 bytes of contest id, each NUL
+   padded."""
+   return struct.pack('<HHBB16s48s', NET_HELLO_ID, protocol, ordinal, 0,
+                      version.encode('ascii'), contest_id.encode('ascii'))
+
+
+def parse_hello(msg):
+   """(protocol, computer id, version, contest id) of a 70-byte HELLO."""
+   _id, protocol, ordinal, _reserved, version, contest = struct.unpack('<HHBB16s48s', msg)
+   return (protocol, ordinal,
+           version.split(b'\x00', 1)[0].decode('ascii'),
+           contest.split(b'\x00', 1)[0].decode('ascii'))
 
 
 def build_spot(call='K1ABC', freq_hz=14025000):
@@ -188,9 +214,11 @@ def server_message_fields(msg):
 class Probe:
    """One client connection: handshake, framed receive, timed waits."""
 
-   def __init__(self, name, host, port, password, ordinal, timeout):
+   def __init__(self, name, host, port, password, ordinal, timeout,
+                contest_id='ARRL-DX-CW'):
       self.name = name
       self.ordinal = ordinal
+      self.contest_id = contest_id
       self.timeout = timeout
       self.buf = b''
       self.inbox = []             # (id, bytes) in arrival order
@@ -220,6 +248,13 @@ class Probe:
       self.sock.sendall(data)
 
    def claim_id(self):
+      """Network protocol 2: the first message is a HELLO, and it carries the
+      computer id (and the contest) that COMPUTERID used to."""
+      self.send(build_hello(NET_PROTOCOL_VERSION, self.ordinal, 'netprobe',
+                            self.contest_id))
+
+   def claim_id_v1(self):
+      """What a 4.x station sends first. A protocol 2 server refuses it."""
       self.send(build_computer_id(self.ordinal))
 
    def pump(self, wait):
@@ -252,15 +287,18 @@ class Probe:
          self.inbox.append((msg_id, self.buf[:size]))
          self.buf = self.buf[size:]
 
-   def take(self, msg_id, wait, message=None):
+   def take(self, msg_id, wait, message=None, where=None):
       """Pop the first message with this id (and, for a server message, this
-      smMessage) that arrives within `wait` seconds, or None."""
+      smMessage; and, when `where` is given, for which `where(data)` is true)
+      that arrives within `wait` seconds, or None."""
       deadline = time.time() + wait
       while True:
          for index, (found_id, data) in enumerate(self.inbox):
             if found_id != msg_id:
                continue
             if message is not None and server_message_fields(data)[0] != message:
+               continue
+            if where is not None and not where(data):
                continue
             del self.inbox[index]
             return data
@@ -384,9 +422,9 @@ class Context:
       self.probes = []
       self.serial = int(time.time()) & 0x7FFFFFF0
 
-   def probe(self, name, ordinal, claim=True):
+   def probe(self, name, ordinal, claim=True, contest_id=None):
       p = Probe(name, self.args.host, self.args.port, self.args.password,
-                ordinal, self.args.timeout)
+                ordinal, self.args.timeout, contest_id or self.args.contest)
       self.probes.append(p)
       if claim:
          p.claim_id()
@@ -468,7 +506,7 @@ def case_qso(ctx):
    before = ctx.log_records()
    id1, id2 = ctx.next_ids()
    exchange = build_exchange('K1QSO', id1, id2)
-   msg = build_qso(NET_QSOINFO_ID, exchange, 1)
+   msg = build_qso(NET_QSOINFO_ID, exchange, 1, a.ordinal)
    r.add('qso', 'size sent', 'INFO', '%d bytes' % len(msg))
    a.send(msg)
    got = b.take(NET_QSOINFO_ID, ctx.args.timeout)
@@ -500,7 +538,7 @@ def case_burst(ctx):
    blob = b''
    for _ in range(count):
       id1, id2 = ctx.next_ids()
-      blob += build_qso(NET_QSOINFO_ID, build_exchange('K1BST', id1, id2), 1)
+      blob += build_qso(NET_QSOINFO_ID, build_exchange('K1BST', id1, id2), 1, a.ordinal)
    a.send(blob)                       # ONE write: the server sees a coalesced read
    r.add('burst', 'bytes written in one send', 'INFO', str(len(blob)))
    got = b.count(NET_QSOINFO_ID, count, ctx.args.timeout + 3)
@@ -524,12 +562,12 @@ def case_edit(ctx):
    b.settle(0.5)
    id1, id2 = ctx.next_ids()
    original = build_exchange('K1OLD', id1, id2)
-   a.send(build_qso(NET_QSOINFO_ID, original, 1))
+   a.send(build_qso(NET_QSOINFO_ID, original, 1, a.ordinal))
    b.take(NET_QSOINFO_ID, ctx.args.timeout)
    time.sleep(0.5)
    before = ctx.log_records()
    edited = build_exchange('K1NEW', id1, id2)
-   msg = build_qso(NET_EDITEDQSO_ID, edited, 1)
+   msg = build_qso(NET_EDITEDQSO_ID, edited, 1, a.ordinal)
    a.send(msg)
    got = b.take(NET_EDITEDQSO_ID, ctx.args.timeout)
    r.add('edit', 'B receives the edit', 'PASS' if got == msg else 'FAIL',
@@ -579,6 +617,17 @@ def case_dup(ctx):
    r.add('dup', 'first holder not refused',
          'PASS' if a.take(NET_SERVERMESSAGE_ID, 0.5, SM_COMPUTERID_IN_USE) is None
          else 'FAIL')
+   # Only CONNECTED stations count, and a station's own claim is not a clash.
+   a.claim_id()
+   r.add('dup', 'a station re-announcing its own id is not refused',
+         'PASS' if a.take(NET_SERVERMESSAGE_ID, 0.5, SM_COMPUTERID_IN_USE) is None
+         else 'FAIL')
+   a.close()
+   time.sleep(1.0)
+   d = ctx.probe('D', 1)
+   r.add('dup', 'the id of a station that has left can be taken again',
+         'PASS' if d.take(NET_SERVERMESSAGE_ID, 1.0, SM_COMPUTERID_IN_USE) is None
+         else 'FAIL')
 
 
 def case_serial(ctx):
@@ -624,6 +673,138 @@ def case_time(ctx):
             'relayed' if relayed else 'not relayed')
 
 
+def hello_of(station):
+   """A `where` for Probe.take: a HELLO announcing this station."""
+   return lambda data: parse_hello(data)[1] == station
+
+
+def wait_closed(probe, wait):
+   """Did the server close this connection within `wait` seconds?"""
+   deadline = time.time() + wait
+   while time.time() < deadline and not probe.eof:
+      probe.pump(0.1)
+   return probe.eof
+
+
+def case_hello(ctx):
+   """Network protocol 2: the HELLO handshake, the contest id it carries and
+   what a server does with a station that does not speak it."""
+   r = ctx.report
+   timeout = ctx.args.timeout
+
+   # --- a good HELLO is admitted and answered ------------------------------
+   a = ctx.probe('A', 1, contest_id='ARRL-DX-CW')
+   server_hello = a.take(NET_HELLO_ID, timeout, where=hello_of(0))
+   if server_hello is None:
+      r.add('hello', 'server answers a HELLO with its own', 'FAIL', a.why_dead())
+   else:
+      protocol, _ordinal, version, contest = parse_hello(server_hello)
+      r.add('hello', 'server answers a HELLO with its own', 'PASS',
+            'protocol %d, version "%s"' % (protocol, version))
+      r.add('hello', 'the server speaks protocol %d' % NET_PROTOCOL_VERSION,
+            'PASS' if protocol == NET_PROTOCOL_VERSION else 'FAIL')
+      r.add('hello', "the server's HELLO has a version text",
+            'PASS' if version else 'FAIL')
+      r.add('hello', "the server's HELLO names no contest",
+            'PASS' if contest == '' else 'FAIL', '"%s"' % contest)
+   alive = a.alive(timeout)
+   r.add('hello', 'a good HELLO is admitted (link stays up)',
+         'PASS' if alive else 'FAIL', '' if alive else a.why_dead())
+
+   # --- the contest id reaches the others, byte for byte -------------------
+   # A long id with blanks on purpose: 26 characters of the 48.
+   long_id = 'REGION 1 FIELD DAY-RCC-SSB'
+   b = ctx.probe('B', 2, contest_id=long_id)
+   replay = b.take(NET_HELLO_ID, timeout, where=hello_of(1))
+   r.add('hello', 'a station that joins is told what A announced',
+         'PASS' if replay and parse_hello(replay)[3] == 'ARRL-DX-CW' else 'FAIL',
+         parse_hello(replay)[3] if replay else b.why_dead())
+   sent_by_b = build_hello(NET_PROTOCOL_VERSION, 2, 'netprobe', long_id)
+   relayed = a.take(NET_HELLO_ID, timeout, where=hello_of(2))
+   r.add('hello', 'A is told what B announced, byte for byte',
+         'PASS' if relayed == sent_by_b else 'FAIL',
+         '' if relayed == sent_by_b else
+         (parse_hello(relayed)[3] if relayed else a.why_dead()))
+   r.add('hello', 'a HELLO is not echoed to its sender',
+         'PASS' if b.take(NET_HELLO_ID, 0.5, where=hello_of(2)) is None else 'FAIL')
+
+   # --- a change of contest is a second HELLO, relayed ---------------------
+   a.send(build_hello(NET_PROTOCOL_VERSION, 1, 'netprobe', 'CQ-WW-CW'))
+   again = b.take(NET_HELLO_ID, timeout, where=hello_of(1))
+   r.add('hello', 'a contest change is relayed',
+         'PASS' if again and parse_hello(again)[3] == 'CQ-WW-CW' else 'FAIL',
+         parse_hello(again)[3] if again else b.why_dead())
+   c = ctx.probe('C', 3, contest_id='CQ-WW-SSB')
+   latest = c.take(NET_HELLO_ID, timeout, where=hello_of(1))
+   r.add('hello', 'a later joiner is told the LATEST contest, not the first',
+         'PASS' if latest and parse_hello(latest)[3] == 'CQ-WW-CW' else 'FAIL',
+         parse_hello(latest)[3] if latest else c.why_dead())
+   other = c.take(NET_HELLO_ID, timeout, where=hello_of(2))
+   r.add('hello', "and every other station's as well",
+         'PASS' if other and parse_hello(other)[3] == long_id else 'FAIL')
+
+   # --- the QSO still flows, and carries the sender --------------------------
+   id1, id2 = ctx.next_ids()
+   qso = build_qso(NET_QSOINFO_ID, build_exchange('K1HLO', id1, id2), 1, a.ordinal)
+   a.send(qso)
+   got = b.take(NET_QSOINFO_ID, timeout)
+   r.add('hello', 'a QSO after the HELLO is relayed with its sender byte intact',
+         'PASS' if got == qso else 'FAIL', describe_receipt(got, qso, b))
+
+   # --- what is refused ----------------------------------------------------
+   v1 = ctx.probe('V1', 4, claim=False)
+   v1.claim_id_v1()
+   r.add('hello', "no HELLO first (a 4.x station's COMPUTERID): connection closed",
+         'PASS' if wait_closed(v1, timeout) else 'FAIL')
+   # Only what the server sends on admission (the log-compare packet and, with
+   # the lockout on, a serial number) may be in the inbox: no HELLO, no refusal
+   # message a 4.x station could misread.
+   stray = [MESSAGE_NAME.get(found_id, str(found_id)) for found_id, _data in v1.inbox
+            if found_id not in (NET_LOGCOMPARE_ID, NET_SERVERMESSAGE_ID)]
+   r.add('hello', 'and it was answered with no HELLO',
+         'PASS' if not stray else 'FAIL', ', '.join(stray))
+
+   q = ctx.probe('Q', 5, claim=False)
+   id1, id2 = ctx.next_ids()
+   q.send(build_qso(NET_QSOINFO_ID, build_exchange('K1NOH', id1, id2), 1, 5))
+   r.add('hello', 'a QSO sent before any HELLO: connection closed',
+         'PASS' if wait_closed(q, timeout) else 'FAIL')
+   r.add('hello', 'and it was not relayed',
+         'PASS' if a.take(NET_QSOINFO_ID, 0.5) is None else 'FAIL')
+
+   for version, label in ((1, 'older'), (3, 'newer')):
+      p = ctx.probe('P%d' % version, 6, claim=False)
+      p.send(build_hello(version, 6, 'netprobe', 'X'))
+      refusal = p.take(NET_SERVERMESSAGE_ID, timeout, SM_PROTOCOL_MISMATCH)
+      r.add('hello', 'protocol %d (%s) is refused with 8330' % (version, label),
+            'PASS' if refusal else 'FAIL', '' if refusal else p.why_dead())
+      if refusal:
+         param = server_message_fields(refusal)[1]
+         r.add('hello', "8330 carries the server's protocol",
+               'PASS' if param == NET_PROTOCOL_VERSION else 'FAIL', 'param %d' % param)
+      r.add('hello', 'protocol %d: connection closed afterwards' % version,
+            'PASS' if wait_closed(p, timeout) else 'FAIL')
+   r.add('hello', 'a refused station is never announced to the others',
+         'PASS' if a.take(NET_HELLO_ID, 0.5, where=hello_of(6)) is None else 'FAIL')
+
+   dup = ctx.probe('D', 1, claim=False, contest_id='DUP-CONTEST')
+   dup.send(build_hello(NET_PROTOCOL_VERSION, 1, 'netprobe', 'DUP-CONTEST'))
+   refusal = dup.take(NET_SERVERMESSAGE_ID, timeout, SM_COMPUTERID_IN_USE)
+   r.add('hello', "a HELLO claiming A's id is refused with 8320",
+         'PASS' if refusal else 'FAIL', '' if refusal else 'accepted')
+   r.add('hello', 'and its contest is not announced',
+         'PASS' if b.take(NET_HELLO_ID, 0.5,
+                          where=lambda d: parse_hello(d)[3] == 'DUP-CONTEST') is None
+         else 'FAIL')
+
+   for bad in (0, 27):
+      p = ctx.probe('I%d' % bad, bad, claim=False)
+      p.send(build_hello(NET_PROTOCOL_VERSION, bad, 'netprobe', 'X'))
+      refusal = p.take(NET_SERVERMESSAGE_ID, timeout, SM_COMPUTERID_IN_USE)
+      r.add('hello', 'computer id %d is refused with 8320' % bad,
+            'PASS' if refusal else 'FAIL')
+
+
 CASES = {
    'connect': case_connect,
    'spot': case_spot,
@@ -634,6 +815,7 @@ CASES = {
    'dup': case_dup,
    'serial': case_serial,
    'time': case_time,
+   'hello': case_hello,
 }
 
 
@@ -667,6 +849,8 @@ def parse_args(argv):
                   help='bytes written as the password on the sync port')
    p.add_argument('--burst', type=int, default=30,
                   help='QSOs in the burst case')
+   p.add_argument('--contest', default='ARRL-DX-CW',
+                  help='the contest id the probes announce in their HELLO')
    p.add_argument('--expect-time', choices=('relay', 'none', 'any'), default='any',
                   help='whether the server is configured to relay TIMESYN')
    return p.parse_args(argv)

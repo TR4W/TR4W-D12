@@ -291,21 +291,32 @@ resourcestring
       'Change COMPUTER ID to a letter no other station is using, then ' +
       'reconnect.';
 
-   (* A CONTEST THE V1 MULTI-OP PACKET CANNOT CARRY -- Q108 S4, 2026-10-17
-     (NY4I: "refuse multi-op for new contests until the new protocol").
+   (* SContestNotOnMultiOp WAS HERE and is gone (2026-10-27): network protocol
+     2 carries every contest, so no door refuses one any more. *)
 
-     THE ONE MESSAGE for every door that refuses it: connecting while that
-     contest is selected, switching to it while connected (the link is
-     dropped), another station's CONTEST command naming it (not applied). So
-     it states the fact and the way out, and promises nothing about which door
-     it came through. A contest has no number in the packet unless it is one of
-     the legacy contests, and the packet is not being changed.
+   (* THE SERVER SPEAKS ANOTHER NETWORK PROTOCOL THAN THIS TR4W (protocol 2,
+     2026-10-27). Two messages, because the way out differs: the server is the
+     older end, or this program is. The first %d is the protocol the server
+     speaks, the second the one this TR4W speaks. They say what to update and
+     on which computer; the operator has nothing else to act on. *)
+   SNetServerProtocolOlder =
+      'The multi-op server speaks network protocol %d, but this TR4W needs ' +
+      'protocol %d. Update TR4WServer on the server computer, then open the ' +
+      'Network window again.';
 
-     %s is the contest's display name. *)
-   SContestNotOnMultiOp =
-      '%s cannot be used on the multi-op network yet -- the network protocol ' +
-      'cannot carry it. Use it only while this station is not connected to a ' +
-      'multi-op server.';
+   SNetServerProtocolNewer =
+      'The multi-op server speaks network protocol %d, which is newer than ' +
+      'the protocol %d this TR4W speaks. Update TR4W on this computer, then ' +
+      'open the Network window again.';
+
+   (* THE SERVER HUNG UP ON THE FIRST MESSAGE WITHOUT ANSWERING. A server from
+     before protocol 2 does exactly that, and it cannot say so. %d is the
+     protocol this TR4W speaks. *)
+   SNetNoHelloAnswer =
+      'The multi-op server closed the connection without answering. It is ' +
+      'probably older than this TR4W (which speaks network protocol %d). ' +
+      'Update TR4WServer on the server computer, then open the Network ' +
+      'window again.';
 
    (* PEERS MUST BE ON THE SAME CONTEST -- Q110, NY4I 2026-10-18. A QSO from
      another station on a different contest is refused and this is the

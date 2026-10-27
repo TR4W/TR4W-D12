@@ -50,13 +50,13 @@ type
 implementation
 
 uses
-   SysUtils, VC, uNetFraming;
+   SysUtils, VC, uNetFraming, uNetHello;
 
 const
    (* The sentence every failure ends with. *)
    WHAT_ELSE = ' changed size: this is a V1 wire change. Update ' +
                '_build_message_sizes in TR4WServerPy (tr4wserver.py), its ' +
-               'CLAUDE.md and README size tables, ' +
+               'CLAUDE.md size table, tools/netprobe/netprobe.py, ' +
                'docs/TR4W_NETWORKING_ANALYSIS.md, and say so to any D7 (4.x) ' +
                'station on the network.';
 
@@ -82,6 +82,7 @@ begin
    CheckWire('TSendSpotViaNetwork (1120)',      48,  SizeOf(TSendSpotViaNetwork));
    CheckWire('TComputerNetID (1130)',           4,   SizeOf(TComputerNetID));
    CheckWire('TServerMessage (1140)',           8,   SizeOf(TServerMessage));
+   CheckWire('THelloMessage (1150)',            70,  SizeOf(THelloMessage));
 end;
 
 (* The client's own framing table must give the same answers as the records.
@@ -101,6 +102,7 @@ begin
    CheckWire('NetMessageSize(SPOTVIANETWORK)', 48,  NetMessageSize(NET_SPOTVIANETWORK_ID));
    CheckWire('NetMessageSize(COMPUTERID)',     4,   NetMessageSize(NET_COMPUTERID_ID));
    CheckWire('NetMessageSize(SERVERMESSAGE)',  8,   NetMessageSize(NET_SERVERMESSAGE_ID));
+   CheckWire('NetMessageSize(HELLO)',          70,  NetMessageSize(NET_HELLO_ID));
    CheckEquals(0, NetMessageSize(NET_THIS_QTC_WAS__SEND_ID),
                'id 1056 has no record and must stay out of the framing table');
 end;

@@ -41,6 +41,37 @@ rename this "## Unreleased" to "### X.X.X (YYYY-MM-DD) — HANDLE", move it unde
 appropriate month group below, and bump tr4w/src/Version.pas to match.
 -->
 
+### Network protocol 2: HELLO, and every contest travels the multi-op link - NY4I
+
+**The multi-op wire changed; a 4.x (D7) station never joins a 5.x network.** A
+5.x client and server speak *protocol 2*, and refuse anything else with a message.
+
+- **`NET_HELLO_ID` (1150), 70 bytes, is the first message after the password**
+  (`src/uNetHello.pas`): protocol version, computer id, program version, and the
+  **contest id string**. The server refuses a link whose first message is anything
+  else (a 4.x station's COMPUTERID), answers with its own HELLO, stores each
+  station's HELLO, tells a newcomer everyone else's and relays a change. A
+  different protocol version gets `SM_PROTOCOL_MISMATCH` (8330) and the client
+  tells the operator which end to update. A server that closes the link without
+  answering is reported as probably older (`SNetNoHelloAnswer`).
+- **Every contest works on the network, including those registered by id.**
+  Stations agree on the contest by its ID, not by the one-byte handle (which
+  is assigned at the registry seal and differs between builds). A received QSO is
+  judged by what its SENDER announced, and an accepted record is stamped with the
+  receiver's own contest handle. `ContestCanUseMultiOp`, `MultiOpRefusalText`,
+  `SContestNotOnMultiOp`, `NetCarriesContest` and `PeerContestRefusal` are gone.
+- **`TNetQSOInformation.qiSenderID`** (was a reserved byte) names the station
+  that sent the packet.
+- **`tr4wserver`** (`tr4wserverUnit`, `uServerNet`): HELLO gate, protocol
+  judgement, per-slot HELLO store and relay; `SetComputerID` returns whether the
+  id was accepted; a refused connection is closed by its own thread
+  (`DropRequested`).
+- **Resourcestrings:** `SContestNotOnMultiOp` removed; `SNetServerProtocolOlder`,
+  `SNetServerProtocolNewer` and `SNetNoHelloAnswer` added (`uAppStrings`).
+- **`tools/netprobe`** gained a `hello` case (good HELLO, no HELLO, wrong
+  version, contest id relayed, duplicate id) and sends HELLO first; TR4WServerPy
+  (separate repository) passes the same cases.
+
 ---
 
 ## 5.0.x — October 2026

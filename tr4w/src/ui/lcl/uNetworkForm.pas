@@ -95,7 +95,10 @@ end;
 procedure TfrmNetwork.HandleShow(Sender: TObject);
 begin
    // What WM_INITDIALOG did after building the list: try the link, then keep
-   // trying on the timer.
+   // trying on the timer.  Opening the window is also the operator's way of
+   // trying again after a server was refused for its protocol -- the timer
+   // does not, or it would repeat the message every five seconds.
+   ForgetServerRefusal;
    TryConnectToNetwork;
    tmrStatus.Interval := Settings.Network.StatusUpdateInterval;
    tmrStatus.Enabled := True;

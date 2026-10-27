@@ -392,14 +392,14 @@ begin
         order is unchanged. *)
       CTY.ctyCountryMode := ContestCountryMode(ActiveContest(Contest));
 
-      (* A CONTEST THE MULTI-OP LINK CANNOT CARRY ENDS THE LINK (Q108 S4,
-        design 8.2u). THIS ARM IS EVERY WAY THE CONTEST CHANGES -- the CONTEST
+      (* THE OTHER STATIONS ARE TOLD WHICH CONTEST THIS ONE IS ON NOW (network
+        protocol 2). THIS ARM IS EVERY WAY THE CONTEST CHANGES -- the CONTEST
         setting from Preferences, a config or a new log's database, and a
-        peer's CONTEST command that PeerContestRefusal let through -- and it
-        holds the only live call of FoundContest, so it is the door the
-        design names as FoundContest. Last, after the set-up above, so a modal
-        notice never interrupts it. Nothing happens unless a link is up. *)
-      NetContestChanged(Contest);
+        peer's CONTEST command -- and it holds the only live call of
+        FoundContest. Last, after the set-up above, so the announcement names
+        the contest the station is really on. Nothing happens unless a link is
+        up. *)
+      NetContestChanged;
       end;
 
    if UnicodeSameText(aPath, INITIAL_EXCHANGE_CURSOR_POS) then
