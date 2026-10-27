@@ -404,8 +404,10 @@ begin
          end;
 
       (* Once a reading thread exists, reconnecting is ITS job (it backs off
-        and retries for ever).  A second connector would race it. *)
-      if (not aRaiseOnFailure) and (rt <> nil) and (rt.ThreadID <> GetCurrentThreadId) then
+        and retries for ever).  A second connector would race it.
+        The thread OBJECT is compared, not its id: on macOS a TThreadID is a
+        pointer, and comparing it with GetCurrentThreadId does not compile. *)
+      if (not aRaiseOnFailure) and (rt <> nil) and (TThread.CurrentThread <> rt) then
          begin
          logger.Debug('[TExternalLoggerBase.Connect] link is down; the reading thread is reconnecting it');
          Result := -4;
