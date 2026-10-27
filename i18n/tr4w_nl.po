@@ -9901,3 +9901,33 @@ msgstr ""
 msgid "Connect to the multi-op server when TR4W starts"
 msgstr ""
 
+#: usettingscaptions.rs_appearance_alertcolor
+#, fuzzy
+msgid "Alert Color"
+msgstr ""
+
+#: usettingscaptions.rs_appearance_language
+#, fuzzy
+msgid "Language"
+msgstr ""
+
+#: usettingscaptions.rs_appearance_language_system
+#, fuzzy
+msgid "System default"
+msgstr ""
+
+#: usettingscaptions.rs_cluster_ctrlj_consolelines
+#, fuzzy
+msgid "Telnet Console Lines"
+msgstr ""
+
+#: usettingscaptions.rs_operating_standardeditkeys
+#, fuzzy
+msgid "Ctrl+C, Ctrl+V, Ctrl+X and Ctrl+A edit the field outside the main window"
+msgstr ""
+
+#: usettingscaptions.rs_ptt_txinhibitbeep
+#, fuzzy
+msgid "Beep when keying a radio that will not transmit"
+msgstr ""
+
