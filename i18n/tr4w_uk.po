@@ -8875,3 +8875,39 @@ msgstr ""
 msgid "Backup copied to %s."
 msgstr ""
 
+#: uappstrings.sdomincludenotread
+#, fuzzy
+msgid ""
+"The domestic file %s names a file TR4W could not read, on the line \"%s\".\n"
+"\n"
+"It was looked for here:\n"
+"%s\n"
+"\n"
+"The rest of the file was loaded; the entries in the missing file were not."
+msgstr ""
+
+#: uappstrings.sdomincludetoodeep
+#, fuzzy
+msgid "The domestic file %s nests INCLUDE FILE more than %d deep, on the line \"%s\". That line was not followed: the files probably include one another in a circle."
+msgstr ""
+
+#: uappstrings.snewcontestontarioqpcountyorlocation
+#, fuzzy
+msgid "Enter your Ontario county code (e.g. TOR) if you are in Ontario. Enter your state or Canadian province if outside Ontario; leave it empty if you are DX (your country prefix is sent):"
+msgstr ""
+
+#: uappstrings.snewcontestquebecqpregionorlocation
+#, fuzzy
+msgid "Enter your Quebec administrative region code (e.g. MTL) if you are in Quebec. Enter your state or Canadian province if outside Quebec; leave it empty if you are DX (DX is sent):"
+msgstr ""
+
+#: uappstrings.stxinhibitedindicator
+#, fuzzy
+msgid "INH"
+msgstr ""
+
+#: uappstrings.stxinhibitedstatus
+#, fuzzy
+msgid "TX INHIBITED: %s"
+msgstr ""
+
