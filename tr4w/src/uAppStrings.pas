@@ -301,13 +301,13 @@ resourcestring
      on which computer; the operator has nothing else to act on. *)
    SNetServerProtocolOlder =
       'The multi-op server speaks network protocol %d, but this TR4W needs ' +
-      'protocol %d. Update TR4WServer on the server computer, then open the ' +
-      'Network window again.';
+      'protocol %d. Update TR4WServer on the server computer, then choose ' +
+      'Connect on the Net menu.';
 
    SNetServerProtocolNewer =
       'The multi-op server speaks network protocol %d, which is newer than ' +
       'the protocol %d this TR4W speaks. Update TR4W on this computer, then ' +
-      'open the Network window again.';
+      'choose Connect on the Net menu.';
 
    (* THE SERVER HUNG UP ON THE FIRST MESSAGE WITHOUT ANSWERING. A server from
      before protocol 2 does exactly that, and it cannot say so. %d is the
@@ -315,8 +315,16 @@ resourcestring
    SNetNoHelloAnswer =
       'The multi-op server closed the connection without answering. It is ' +
       'probably older than this TR4W (which speaks network protocol %d). ' +
-      'Update TR4WServer on the server computer, then open the Network ' +
-      'window again.';
+      'Update TR4WServer on the server computer, then choose Connect on the ' +
+      'Net menu.';
+
+   (* THE NET MENU'S LINK COMMANDS (2026-10-27). The multi-op link belongs to the
+     program, not to the Network window, so the operator is offered its verbs.
+     SNetMenuShowWindow brings the station list forward; it does not connect. *)
+   SNetMenuConnect    = 'Connect';
+   SNetMenuDisconnect = 'Disconnect';
+   SNetMenuReconnect  = 'Reconnect';
+   SNetMenuShowWindow = 'Show Network window';
 
    (* PEERS MUST BE ON THE SAME CONTEST -- Q110, NY4I 2026-10-18. A QSO from
      another station on a different contest is refused and this is the

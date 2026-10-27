@@ -927,6 +927,13 @@ begin
      scpClose;
      end;
 {$IFEND}
+  (* LEAVE THE MULTI-OP NETWORK (2026-10-27), after the log and the restart file
+    are saved and before the logger goes: the client drains what is posted
+    (bounded), stops its writer, then its reader, then the socket, in that
+    order, and nothing after this sends to the network. Without it the server
+    learned of the departure from a dead socket. *)
+  NetLinkShutdown;
+
   (* THE QSO DISPATCHER GOES FIRST (2026-10-24). Its thread delivers through
     the UDP socket freed on the next line, the external logger freed in
     tr4w_ShutDown and the HamScore uploader freed at its end; all three must

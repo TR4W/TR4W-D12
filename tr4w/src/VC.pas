@@ -2975,6 +2975,13 @@ const
   menu_compare_logs                     = 10512;
   menu_login                            = 10517;
 
+  (* The Net menu's link commands (2026-10-27): the multi-op link belongs to the
+    program, not to the Network window, so the operator is offered its verbs. *)
+  menu_net_connect                      = 10520;
+  menu_net_disconnect                   = 10521;
+  menu_net_reconnect                    = 10522;
+  menu_net_showwindow                   = 10523;
+
   menu_clear_dupesheet_in_network       = 10515;
   menu_clear_multsheet_in_network       = 10516;
 

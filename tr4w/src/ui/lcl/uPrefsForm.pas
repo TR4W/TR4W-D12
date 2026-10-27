@@ -449,6 +449,7 @@ type
       chkWaitForStrength: TCheckBox;
       chkMultiMultsOnly: TCheckBox;
       chkIntercomFile: TCheckBox;
+      chkNetAutoConnect: TCheckBox;
 
       // --- Rotators (Tag = NAV_ROTATORS) --------------------------------------
       layRotators: TPanel;
@@ -5411,6 +5412,7 @@ begin
    FBindings.Bind(chkWaitForStrength,   'operating.tworadio.waitForStrength');
    FBindings.Bind(chkMultiMultsOnly,    'network.multiMultsOnly');
    FBindings.Bind(chkIntercomFile,      'network.intercomFile');
+   FBindings.Bind(chkNetAutoConnect,    'network.autoConnect');
 
    // Operating - Online scoring
    FBindings.Bind(chkHamScoreEnable,  'scoring.hamscore.enable');

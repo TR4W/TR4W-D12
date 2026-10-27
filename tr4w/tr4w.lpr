@@ -129,6 +129,7 @@ uses
   uLogSearch in 'src\uLogSearch.pas',
   uBeacons in 'src\uBeacons.pas',
   uNetHello in 'src\uNetHello.pas',
+  uNetLink in 'src\uNetLink.pas',
   uNetFraming in 'src\uNetFraming.pas',
   uNet in 'src\uNet.pas',
   uNetSendQueue in 'src\uNetSendQueue.pas',

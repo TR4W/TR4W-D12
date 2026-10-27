@@ -4567,7 +4567,9 @@ begin
      SetMenuEnabled(menu_windows_getscores, False);
      end;
 
-  EnableNetworkMenuItem(False);
+  (* The Net menu's rows follow the link; NetLinkStartup (uProgramMain) sets
+    them from the real state once startup has decided whether to connect. *)
+  ApplyNetworkMenuState;
 
   // Windows.EnableMenuItem(tr4w_main_menu, menu_windows_mmtty, MF_BYCOMMAND or MF_ENABLED);
 
@@ -4941,6 +4943,32 @@ begin
       end;
 end;
 
+(* SHOW A TOOL WINDOW AND BRING IT FORWARD -- never closes it.
+
+  The window menu's rows toggle: picking one that is on screen closes it. The Net
+  menu's "Show Network window" must not, and the case ProcessMenu already
+  handled - the window exists but is hidden - is the same act, so both use this
+  one routine. A window that has not been created yet is opened. *)
+procedure ShowTR4WWindow(const aID: WindowsType);
+var
+  lclForm: TCustomForm;
+begin
+  if not tWindowsExist(aID) then
+     begin
+     OpenTR4WWindow(aID);
+     Exit;
+     end;
+
+  lclForm := LclFormFor(aID);
+  if lclForm <> nil then
+     begin
+     lclForm.Visible := True;
+     lclForm.BringToFront;
+     end;
+  SetMenuChecked(10199 + Ord(aID), True);
+  tr4w_WindowsArray[aID].WndVisible := True;
+end;
+
 procedure ProcessMenu(menuID: integer);
 var
   LowordWparam: integer;
@@ -4989,10 +5017,7 @@ begin
        else if (lclForm <> nil) and (not lclForm.Visible) then
           begin
           { Exists but hidden -- the case that used to close it again. }
-          lclForm.Visible := True;
-          lclForm.BringToFront;
-          SetMenuChecked(LowordWparam, True);
-          tr4w_WindowsArray[ID].WndVisible := True;
+          ShowTR4WWindow(ID);
           end
        else
           begin
@@ -5815,6 +5840,18 @@ begin
            end;
         // ShowMessage(CurrentOperator);
       end;
+
+    menu_net_connect:
+      NetLinkConnect;
+
+    menu_net_disconnect:
+      NetLinkDisconnect;
+
+    menu_net_reconnect:
+      NetLinkReconnect;
+
+    menu_net_showwindow:
+      ShowTR4WWindow(tw_NETWINDOW_INDEX);
 
     menu_getserverlog:
       SendToNet(NET_LOGINFO_MESSAGE, SizeOf(NET_LOGINFO_MESSAGE));

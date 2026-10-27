@@ -26,8 +26,4 @@ object frmNetwork: TfrmNetwork
     ViewStyle = vsReport
     OnCustomDrawItem = ClientsCustomDrawItem
   end
-  object tmrStatus: TTimer
-    Enabled = False
-    OnTimer = StatusTick
-  end
 end

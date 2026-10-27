@@ -37,6 +37,7 @@ uses
   TF,
   uNetFraming,   { NetMessageSize -- one table, no per-arm advances }
   uNetHello,     { THelloMessage, TNetPeers -- the first message on a link }
+  uNetLink,      { TNetLinkState -- what the link is doing, and who is told }
   utils_file,
   uTotal,
   uSpots,
@@ -141,7 +142,6 @@ procedure AddNewClient(ClientID: integer);
 function ConnectThread(aParameter: Pointer): DWORD; stdcall;
 procedure DisplayClientStatus(Index: integer);
 procedure DisplayMessageStatus(Index: integer; Msg: TMessageState);
-procedure EnableNetworkMenuItem(const aEnabled: boolean);
 procedure NetDisconnect;
 procedure ProcessServerLogInfo(s: PLogFileInformation);
 procedure SetStatusByte;
@@ -182,6 +182,85 @@ procedure SendParameterToNetwork(const aCommand, aValue: string);
   were reading directly. }
 function NetIsConnected: boolean;
 
+(* THE LINK BELONGS TO THE PROGRAM, NOT TO THE NETWORK WINDOW (2026-10-27).
+
+  NY4I: "I never liked the idea that we only connected when the Network window
+  was up." Until today TryConnectToNetwork had two callers, both in
+  uNetworkForm, and closing that window dropped the link. Now:
+
+    WHO WANTS A LINK    GLinkWanted, the operator's wish for this session. It is
+                        set by NetLinkConnect / NetLinkReconnect (the Net menu)
+                        and at startup by NetLinkStartup (Network.AutoConnect),
+                        and cleared by NetLinkDisconnect.
+    WHO RETRIES         the atNetReconnect timer, on the main thread, runs only
+                        while a link is wanted. It is NetLinkTick. Opening,
+                        closing or hiding the Network window starts and stops
+                        nothing.
+    WHO IS TOLD         uNetLink.NetLinkObservers. The window subscribes in its
+                        constructor and unsubscribes in its destructor; this unit
+                        never names it for notification. NetLinkChanged may be
+                        called from any thread: it hops to the main thread.
+    THE REFUSAL LATCH   (a server refused for its protocol, or an id refused) is
+                        re-armed by NetLinkConnect and NetLinkReconnect, which
+                        used to be done by opening the window. *)
+
+(* What the link is doing now, from live facts. Main thread. *)
+function NetLinkState: TNetLinkState;
+
+(* Does the operator want a link this session? *)
+function NetLinkWanted: boolean;
+
+(* A refusal is standing: the operator has been told and nothing is retried. *)
+function NetLinkRefused: boolean;
+
+procedure NetLinkConnect;
+procedure NetLinkDisconnect;
+procedure NetLinkReconnect;
+
+(* LEAVE THE NETWORK AT EXIT. Stops the retry timer and closes a live link, so
+  the server sees a clean departure and the other stations clear this one's row
+  at once instead of when the socket times out. Packets already posted get the
+  client's bounded drain (a QSO logged a moment ago still goes). A connect that
+  is still being built is left alone - the client is that thread's until it
+  returns, and the process is ending. Main thread, from ExitProgram. *)
+procedure NetLinkShutdown;
+
+(* The one place startup decides: connects when Network.AutoConnect says so and
+  this station has a legal computer id (uNetLink.ShouldConnectAtStartup). Always
+  brings the Net menu into line with the state. Call once, after the menu is
+  built. *)
+procedure NetLinkStartup;
+
+(* The retry timer's tick. Public so a test can drive it. *)
+procedure NetLinkTick;
+
+(* The state changed (or a status line did): tell the Net menu and everyone on
+  NetLinkObservers. Any thread; the work runs on the main thread. *)
+procedure NetLinkChanged;
+
+(* The link is down for good reasons of its own (dropped, refused): close it,
+  forget the other stations, say so in the status panel. Main thread. *)
+procedure NetLinkWentDown;
+
+(* Enable the Net menu's rows from the link's state: Connect, Disconnect and
+  Reconnect by their own rules, the rows that send to other stations only on a
+  live link. The top-level Net menu itself is always available. *)
+procedure ApplyNetworkMenuState;
+
+(* The same, for a state the caller names: what ApplyNetworkMenuState does with
+  the live one, and how a test shows every state on the real menu. *)
+procedure ApplyNetworkMenuStateFor(const aState: TNetLinkState);
+
+(* The Network window's title, from the last status line the link reported.
+  Safe to call from any thread. *)
+function NetWindowCaption: string;
+
+(* Write every station the link knows into the Network window's list. This is
+  what a window opened MID-SESSION needs: it was not there to see the status
+  messages go by, so it asks for the state instead of waiting for the next
+  message. A no-op while there is no window. *)
+procedure DisplayAllClients;
+
 (* EVERY CONTEST TRAVELS THIS LINK -- network protocol 2, 2026-10-27 (NY4I: "ALL
   contests must work on the network, including those registered by id").
 
@@ -209,8 +288,10 @@ function NetPeers: TNetPeers;
 
 (* THE SERVER OR ITS PROTOCOL HAS BEEN REFUSED FOR THIS ADDRESS AND PORT, and the
   operator has been told. The connect timer then stops retrying (every five
-  seconds for ever would be the same message again); showing the Network window
-  calls this, so reopening it tries again after the server has been updated. *)
+  seconds for ever would be the same message again); Connect and Reconnect on
+  the Net menu call this, so trying again after the server has been updated is
+  the operator's act. It also forgets a refused computer id: whoever asks to
+  connect again wants the attempt made. *)
 procedure ForgetServerRefusal;
 
 (* PEERS HAVE TO BE ON THE SAME CONTEST -- Q110, NY4I 2026-10-18: "Peers have to
@@ -367,7 +448,7 @@ uses
 { THE ID THE SERVER REFUSED, in the ordinal form the wire uses, or #0.
 
   WITHOUT THIS THE CLIENT RETRIES THE REFUSAL EVERY FIVE SECONDS FOREVER.  The
-  network window's timer calls TryConnectToNetwork whenever the link is down, so
+  retry timer (NetLinkTick) calls TryConnectToNetwork whenever the link is down, so
   a station kicked for a duplicate id would reconnect, be refused, drop and come
   straight back -- flooding both logs and telling the operator nothing he had not
   already dismissed once.
@@ -405,6 +486,11 @@ var
   FHelloSentTick:    QWord = 0;
   FServerHelloSeen:  boolean = False;
   FServerRefusedFor: string = '';
+  (* THE OPERATOR'S WISH FOR A LINK THIS SESSION, and the last status line the
+    link reported (the Network window's title, read under GNetLock because the
+    connect thread writes it). See NetLinkConnect. *)
+  GLinkWanted:       boolean = False;
+  GLinkOperation:    string = '';
 
 const
   (* An older server drops the link within a read or two of the HELLO; an
@@ -423,7 +509,7 @@ end;
 procedure RefuseServer(const aWhy: string);
 begin
    FServerRefusedFor := ServerKey;
-   NetDisconnect;
+   NetLinkWentDown;
    showwarning(aWhy);
 end;
 
@@ -851,7 +937,7 @@ var
                     logger.Warn('[Net] server refused computer ID %s -- ' +
                                 'another station is already using it',
                                 [string(Settings.Computer.Id)]);
-                    NetDisconnect;
+                    NetLinkWentDown;
                     showwarning(SysUtils.Format(SNetComputerIDInUse,
                                                 [string(Settings.Computer.Id)]));
                   end;
@@ -958,6 +1044,7 @@ type
    public
       procedure Drain(Data: PtrInt);
       procedure ReportDropped(Data: PtrInt);
+      procedure LinkChanged(Data: PtrInt);
    end;
 
 var
@@ -1043,23 +1130,15 @@ end;
   nothing.  Auto-reconnect still comes from the WM_TIMER path, which retries
   while the link is down. }
 procedure TNetDrainer.ReportDropped(Data: PtrInt);
-var
-   i: integer;
 begin
-   NetDisconnect;
-   FillChar(StatusArray, SizeOf(StatusArray), 0);
-   for i := 1 to 26 do
-      begin
-      DisplayClientStatus(i);
-      end;
    (* THE LOST-LINK MESSAGE IS THE STATUS NOW, AND THE QuickDisplay THAT STOOD
-     HERE IS DELETED RATHER THAN MOVED.  ShowConnectionStatus one line up
-     already says the same thing and now writes the Network panel, which HOLDS
-     it until the link comes back -- whereas the notice it replaced was wiped
-     after 30 s, or sooner by any of the ~120 other things that write that
+     HERE IS DELETED RATHER THAN MOVED.  ShowConnectionStatus (inside
+     NetLinkWentDown) says the same thing and writes the Network panel, which
+     HOLDS it until the link comes back -- whereas the notice it replaced was
+     wiped after 30 s, or sooner by any of the ~120 other things that write that
      caption.  Two spellings of one fact, and the shorter-lived one was the one
      an operator saw. *)
-   ShowConnectionStatus(TC_DISCONNECTEDFROM);
+   NetLinkWentDown;
 
    (* THE LINK WENT WITHIN SECONDS OF OUR HELLO AND THE SERVER NEVER ANSWERED IT.
      A server that does not know HELLO closes the link on reading one, and says
@@ -1074,8 +1153,33 @@ begin
                   '(network protocol %d); it is probably older than this TR4W',
                   [NET_PROTOCOL_VERSION]);
       FServerRefusedFor := ServerKey;
+      NetLinkChanged;
       showwarning(SysUtils.Format(SNetNoHelloAnswer, [NET_PROTOCOL_VERSION]));
       end;
+end;
+
+(* THE STATE CHANGED, from any thread. The Net menu and the observers are
+  touched on the main thread only: the connect thread reports through here, and
+  so does the status line it writes. *)
+procedure TNetDrainer.LinkChanged(Data: PtrInt);
+begin
+   ApplyNetworkMenuState;
+   NetLinkObservers.Notify(nil);
+end;
+
+procedure NetLinkChanged;
+begin
+   if GetCurrentThreadId = MainThreadID then
+      begin
+      GNetDrainer.LinkChanged(0);
+      Exit;
+      end;
+
+   if (Application = nil) or Application.Terminated then
+      begin
+      Exit;
+      end;
+   Application.QueueAsyncCall(GNetDrainer.LinkChanged, 0);
 end;
 
 { ON THE READER THREAD. }
@@ -1140,8 +1244,8 @@ begin
      end;
   GNetPending := nil;
   ServerSerialNumber := 0;
-  EnableNetworkMenuItem(False);
   FillChar(MF, SizeOf(MultsFrequencies), 0);
+  NetLinkChanged;
 //  DisplayMultsFrequencies;
 end;
 
@@ -1336,7 +1440,8 @@ begin
     "reconnect" -- it silently kills a working link and builds a new one. The
     network window's timer checks NetIsConnected before calling, but the
     invariant belongs with the routine that owns it rather than with one of its
-    callers, and this is the exact failure that was chased on 2026-09-06. *)
+    callers, and this is the exact failure that was chased on 2026-09-06.
+    (The caller is the retry timer, NetLinkTick, since 2026-10-27.) *)
   if NetIsConnected then
      begin
      Exit;
@@ -1376,6 +1481,7 @@ begin
      begin
      FConnectThreadAnnounced := announce;
      tCreateThread(ConnectThread, NetThreadID, not announce {Quiet on silent retries});
+     NetLinkChanged;
      end;
 end;
 
@@ -1471,7 +1577,6 @@ begin
         ServerMessage.smMessage := SM_GETSTATUS_MESSAGE;
         SendToNet(ServerMessage, SizeOf(ServerMessage));
  //     SendStationStatus;
-        EnableNetworkMenuItem(True);
         ShowConnectionStatus(TC_CONNECTEDTO);
         if FConnectLogState <> nclsConnected then
            begin
@@ -1492,6 +1597,15 @@ begin
         end;
      end;
   2:
+  (* THE OPERATOR ASKED FOR DISCONNECT WHILE THIS ATTEMPT WAS IN FLIGHT.
+    NetLinkDisconnect cannot close a link whose thread is still building it, so
+    it clears the wish and leaves this to notice. A link that came up anyway is
+    dropped here, and the retry timer is already stopped. *)
+  if (not NetLinkWanted) and NetIsConnected then
+     begin
+     NetDisconnect;
+     ShowConnectionStatus(TC_DISCONNECTEDFROM);
+     end;
   // Issue #1041: log destruction at the same volume as creation -- debug on a
   // genuine (announced) attempt so create/destroy pair up in the log, trace
   // during the silent retry loop so it stays quiet.
@@ -1504,6 +1618,9 @@ begin
      logger.Trace('[ConnectThread] Thread %u exiting, NetThreadID cleared', [PtrUInt(GetCurrentThreadId)]);
      end;
   ClearThread(NetThreadID);
+  (* AFTER the thread id is cleared: the state is "connecting" while it is set,
+    so the change that ends an attempt must be announced once it is not. *)
+  NetLinkChanged;
 end;
 
 { ONE CELL OF THE STATION LIST.
@@ -1523,7 +1640,13 @@ begin
      end;
 end;
 
-procedure DisplayClientStatus(Index: integer);
+(* ONE FIELD OF ONE STATION'S ROW, chosen by the status type it came from.
+
+  This was the body of DisplayClientStatus, which always drew the field named by
+  the LAST message's own type. Drawing a whole row (a window opened mid-session)
+  needs every type, so the type is a parameter and the two callers differ only in
+  which they pass. *)
+procedure DisplayClientField(Index: integer; aType: StationStatusType);
 var
   i, i2                                 : integer;
 //  p                                     : PChar;
@@ -1536,7 +1659,9 @@ begin
 
   if StatusArray[Index].ssComputerID = #0 then
      begin
-     for i2 := 0 to 7 do
+     (* EVERY COLUMN, not the first eight: the D flag and the operator sit in
+       columns 8 and 9 and a station that left kept them. *)
+     for i2 := 0 to NetColumns - 1 do
         begin
         SetClientCell(i, i2, '');
         end;
@@ -1544,7 +1669,7 @@ begin
      end;
 
   //LastStatus := StatusArray[Index].ssType;
-  case StatusArray[Index].ssType of
+  case aType of
 
     sstComputerNameAndID:
       begin
@@ -1608,6 +1733,31 @@ begin
 
 end;
 
+procedure DisplayClientStatus(Index: integer);
+begin
+  DisplayClientField(Index, StatusArray[Index].ssType);
+end;
+
+procedure DisplayAllClients;
+var
+   id: integer;
+   kind: StationStatusType;
+begin
+   for id := Low(StatusArray) to High(StatusArray) do
+      begin
+      (* A STATION THAT HAS A ROW. PosInClientsList is set the first time a
+        station is heard and never cleared, so a row that has been blanked
+        (the station left) is blanked again rather than skipped. *)
+      if PosInClientsList[id] > 0 then
+         begin
+         for kind := Low(StationStatusType) to High(StationStatusType) do
+            begin
+            DisplayClientField(id, kind);
+            end;
+         end;
+      end;
+end;
+
 function FindAndUpdateQSOInLog(var RXData: ContestExchange): boolean;
 label
   1, 2;
@@ -1633,37 +1783,10 @@ begin
   end;
 end;
 
-(* THE WHOLE NETWORK MENU, ENABLED OR NOT -- addressed by POSITION.
-
-  It is the eighth top-level popup and has no command id of its own, which is
-  why this was EnableMenuItem(handle, 7, ...) with MF_BYPOSITION rather than by
-  id. TopLevelMenuItem(7) is the same row.
-
-  DrawMenuBar goes with it: the LCL redraws the bar when an item changes.
-
-  IT TAKES A BOOLEAN NOW (2026-09-08). The parameter was a Cardinal carrying
-  Win32 MENU FLAGS -- callers wrote `MF_GRAYED + MF_BYPOSITION` and the body
-  did `(uEnable and MF_GRAYED) = 0` -- which is a Win32 calling convention
-  surviving inside a routine whose entire body is already `item.Enabled := ...`.
-
-  MF_BYPOSITION was the giveaway. It told EnableMenuItem how to INTERPRET its
-  second argument, and there has been no second argument since TopLevelMenuItem
-  replaced it; every caller still passed it, and the body never looked at it.
-  A flag word that no longer means anything reads as though it does, which is
-  the whole reason to remove it rather than add LCLType to the uses clause.
-
-  All three call sites passed a constant, so this is a rename of a value, not
-  a change of behaviour. *)
-procedure EnableNetworkMenuItem(const aEnabled: boolean);
-var
-   item: TMenuItem;
-begin
-   item := TopLevelMenuItem(7);
-   if item <> nil then
-      begin
-      item.Enabled := aEnabled;
-      end;
-end;
+(* EnableNetworkMenuItem IS GONE (2026-10-27). It greyed the WHOLE Net menu, by
+  position, whenever there was no link - which would now hide the very commands
+  that make one. The Net menu is always available; ApplyNetworkMenuState enables
+  each row by the link's state. *)
 
 (* Said once per session -- see below. *)
 var
@@ -1800,16 +1923,20 @@ end;
   bytes. No
   buffer, no WinAnsi round trip, no pointer into a ShortString's first byte. *)
 procedure ShowConnectionStatus(Operation: string);
-var
-   text: string;
 begin
-  text := Format(TC_NETWORK,
-                 [Operation, Settings.Server.Address, Settings.Server.Port]);
-
-  if TR4WNetworkForm <> nil then
-     begin
-     TR4WNetworkForm.Caption := TCaption(text);
-     end;
+  (* THE LAST STATUS LINE IS KEPT, and the Network window is TOLD rather than
+    written to. This used to set TR4WNetworkForm.Caption here, and ConnectThread
+    calls this from a WORKER: an LCL control written off the main thread. The
+    window follows the link through NetLinkObservers instead, asks
+    NetWindowCaption for the title, and gets the right one when it opens
+    mid-session as well. *)
+  GNetLock.Acquire;
+  try
+     GLinkOperation := Operation;
+  finally
+     GNetLock.Release;
+  end;
+  NetLinkChanged;
 
   (* AND THE MAIN WINDOW'S NETWORK STATUS PANEL, FROM THE SAME ONE PLACE.
 
@@ -1822,7 +1949,7 @@ begin
 
     Posted rather than assigned: ConnectThread runs this off the main thread.
 
-    AND THE PANEL DOES NOT GET `text`.  TC_NETWORK is 'Network : %s %s:%d' and
+    AND THE PANEL DOES NOT GET THE WINDOW'S TITLE.  TC_NETWORK is 'Network : %s %s:%d' and
     the %s is the server address, which has no bounded length -- the caption of
     a window the operator sized can carry that; a panel a quarter of the main
     window wide cannot.  NY4I, 2026-09-26: state it generically and let the
@@ -1844,6 +1971,192 @@ begin
     -- and the caption still carries the address, which is the detail view this
     panel points at. *)
   PostStatusText(stoNetwork, Operation + StatusSubsystemName(stoNetwork));
+end;
+
+function NetWindowCaption: string;
+var
+   operation: string;
+begin
+   GNetLock.Acquire;
+   try
+      operation := GLinkOperation;
+   finally
+      GNetLock.Release;
+   end;
+
+   (* NOTHING HAS BEEN REPORTED YET: no attempt has been made this session, so
+     the honest title is the one for a link that is not there. *)
+   if operation = '' then
+      begin
+      operation := TC_DISCONNECTEDFROM;
+      end;
+
+   Result := Format(TC_NETWORK,
+                    [operation, Settings.Server.Address, Settings.Server.Port]);
+end;
+
+(* ------------------------------------------------------- THE LINK'S OWNER *)
+
+function NetLinkWanted: boolean;
+begin
+   Result := GLinkWanted;
+end;
+
+function NetLinkRefused: boolean;
+begin
+   Result := (FServerRefusedFor = ServerKey) or
+             ((FRefusedComputerID <> #0) and (FRefusedComputerID = WireComputerID));
+end;
+
+function NetLinkState: TNetLinkState;
+begin
+   Result := ResolveLinkState(GLinkWanted, NetIsConnected,
+                              ThreadStarted(NetThreadID), NetLinkRefused);
+end;
+
+procedure ApplyNetworkMenuState;
+begin
+   ApplyNetworkMenuStateFor(NetLinkState);
+end;
+
+procedure ApplyNetworkMenuStateFor(const aState: TNetLinkState);
+const
+   (* THE ROWS THAT SEND SOMETHING TO THE OTHER STATIONS. *)
+   NEEDS_A_LIVE_LINK: array[0..5] of word = (
+      menu_alt_setnettime, menu_send_message, menu_getserverlog,
+      menu_clearserverlog, menu_clear_dupesheet_in_network,
+      menu_clear_multsheet_in_network);
+var
+   i: integer;
+
+   procedure SetRow(const aId: word; const aEnabled: boolean);
+   var
+      item: TMenuItem;
+   begin
+      item := MenuItemById(aId);
+      if item <> nil then
+         begin
+         item.Enabled := aEnabled;
+         end;
+   end;
+
+begin
+   SetRow(menu_net_connect,    LinkCommandEnabled(aState, nlcConnect));
+   SetRow(menu_net_disconnect, LinkCommandEnabled(aState, nlcDisconnect));
+   SetRow(menu_net_reconnect,  LinkCommandEnabled(aState, nlcReconnect));
+   SetRow(menu_net_showwindow, LinkCommandEnabled(aState, nlcShowWindow));
+   for i := Low(NEEDS_A_LIVE_LINK) to High(NEEDS_A_LIVE_LINK) do
+      begin
+      SetRow(NEEDS_A_LIVE_LINK[i], LinkNeedsLiveLink(aState));
+      end;
+end;
+
+procedure NetLinkWentDown;
+var
+   i: integer;
+begin
+   NetDisconnect;
+   FillChar(StatusArray, SizeOf(StatusArray), 0);
+   for i := 1 to 26 do
+      begin
+      DisplayClientStatus(i);
+      end;
+   ShowConnectionStatus(TC_DISCONNECTEDFROM);
+end;
+
+procedure NetLinkTick;
+begin
+   (* THE RETRY, FOR AS LONG AS A LINK IS WANTED. TryConnectToNetwork refuses on
+     its own while connected, while a refusal stands, and while an attempt is
+     already running, so this needs no state of its own. *)
+   if GLinkWanted and (not NetIsConnected) then
+      begin
+      TryConnectToNetwork;
+      end;
+end;
+
+procedure NetLinkConnect;
+begin
+   (* NO LEGAL COMPUTER ID, NO LINK. The whole protocol indexes stations by that
+     letter and the server refuses a link without one, so asking would only
+     produce a refusal. Say what to change instead - the route the Network
+     window's old open-gate took. *)
+   if not (Settings.Computer.Id in ['A'..'Z']) then
+      begin
+      SetCommand('COMPUTER ID');
+      Exit;
+      end;
+
+   GLinkWanted := True;
+   ForgetServerRefusal;
+   StartAppTimer(atNetReconnect, Settings.Network.StatusUpdateInterval, @NetLinkTick);
+   if not NetIsConnected then
+      begin
+      TryConnectToNetwork;
+      end;
+   NetLinkChanged;
+end;
+
+procedure NetLinkDisconnect;
+begin
+   GLinkWanted := False;
+   StopAppTimer(atNetReconnect);
+
+   (* A CONNECT THAT IS STILL BEING BUILT IS NOT CLOSED FROM HERE: the client is
+     the connect thread's until it returns. Clearing the wish is enough, because
+     the thread looks at it before it ends and drops a link nobody wants. *)
+   if ThreadStarted(NetThreadID) then
+      begin
+      NetLinkChanged;
+      Exit;
+      end;
+
+   NetLinkWentDown;
+end;
+
+procedure NetLinkReconnect;
+begin
+   if ThreadStarted(NetThreadID) then
+      begin
+      Exit;
+      end;
+
+   NetLinkWentDown;
+   NetLinkConnect;
+end;
+
+procedure NetLinkShutdown;
+begin
+   GLinkWanted := False;
+   StopAppTimer(atNetReconnect);
+   if ThreadStarted(NetThreadID) then
+      begin
+      logger.Info('[Net] exiting while a connect is in flight; the link is left to the process end');
+      Exit;
+      end;
+
+   if NetIsConnected then
+      begin
+      logger.Info('[Net] leaving the network');
+      end;
+   NetDisconnect;
+end;
+
+procedure NetLinkStartup;
+begin
+   if ShouldConnectAtStartup(Settings.Network.AutoConnect, Settings.Computer.Id) then
+      begin
+      logger.Info('[Net] connecting to %s:%d at startup (NETWORK AUTO CONNECT)',
+                  [Settings.Server.Address, Settings.Server.Port]);
+      NetLinkConnect;
+      Exit;
+      end;
+
+   logger.Info('[Net] not connecting at startup (NETWORK AUTO CONNECT is %s, ' +
+               'COMPUTER ID is "%s"); Connect on the Net menu does it',
+               [BoolToStr(Settings.Network.AutoConnect, 'on', 'off'),
+                string(Settings.Computer.Id)]);
+   ApplyNetworkMenuState;
 end;
 
 procedure DisplayMessageStatus(Index: integer; Msg: TMessageState);
@@ -1997,6 +2310,7 @@ end;
 procedure ForgetServerRefusal;
 begin
    FServerRefusedFor := '';
+   FRefusedComputerID := #0;
 end;
 
 var
@@ -2284,8 +2598,10 @@ initialization
 
 finalization
   (* SAFE BY ORDER, not by a lock. Unit finalization runs after the program
-    body has returned, and ExitProgram calls NetDisconnect long before that --
-    which now stops the reader thread and waits for it. So nothing is inside
+    body has returned, and ExitProgram calls NetLinkShutdown (which calls
+    NetDisconnect) long before that -- which stops the writer and the reader
+    thread and waits for them. (Until 2026-10-27 this comment said so and no
+    such call existed.) So nothing is inside
     the lock, or about to take it, when it goes. *)
   FreeAndNil(GNetDrainer);
   FreeAndNil(GPeers);

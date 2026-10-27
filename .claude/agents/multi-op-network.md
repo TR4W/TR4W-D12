@@ -16,6 +16,8 @@ You own the link between stations at a multi-op.
 | message dispatch | `tr4w/src/uNet.pas` |
 | framing | `tr4w/src/uNetFraming.pas` |
 | the HELLO message, protocol version, per-station contest table | `tr4w/src/uNetHello.pas` |
+| the link as a state, the Net-menu rules, the startup rule, the observer list | `tr4w/src/uNetLink.pas` (a leaf: no sockets, no widget set) |
+| the Network window (a VIEW of the link) | `tr4w/src/ui/lcl/uNetworkForm.pas` |
 | a probe that speaks the protocol to any server | `tools/netprobe/` |
 | engine side | `tr4w/src/trdos/lognet.pas` |
 | server log sync | `tr4w/src/uGetServerLog.pas`, `src/ui/lcl/uServerLogForm.pas` |
@@ -72,8 +74,9 @@ and in TR4WServerPy (`_require_hello`, `_accept_hello`):
 - Versions must be **equal** (`JudgeProtocol`). A different one is sent
   `SM_PROTOCOL_MISMATCH` (8330, `smParam` = the server's protocol) and dropped;
   the client turns that into `SNetServerProtocolOlder` / `Newer`, once per
-  address and port (`FServerRefusedFor`; opening the Network window re-arms it,
-  `ForgetServerRefusal`).
+  address and port (`FServerRefusedFor`; Net > Connect or Reconnect re-arm it
+  through `NetLinkConnect`, which calls `ForgetServerRefusal` -- that also
+  forgets a refused computer id. Opening the Network window no longer does).
 - The server answers a first HELLO with its own (id 0) **before** judging the
   computer id, so a station refused for its id has seen the protocol.
   `FServerHelloSeen` / `FHelloSentTick`: a link that drops within 5 s of our
@@ -128,6 +131,78 @@ with `SM_COMPUTERID_IN_USE`; its computer id is no longer taken from
 `TStationState`, which let a refused station take the id it was refused.
 
 The server's own log holds each sender's `ceContest` byte as it came (a by-id handle means nothing outside the program that wrote it), and the log-compare packet reads the first record's. Neither is judged; a late catch-up that reads that log must restamp, as the receive arms do.
+
+## The link belongs to the program, not to the Network window (2026-10-27)
+
+NY4I: *"I never liked the idea that we only connected when the Network window
+was up."* Until then `TryConnectToNetwork` had two callers, both in
+`uNetworkForm`, and closing the window dropped the link. Now:
+
+- **Who wants a link:** `GLinkWanted` (uNet), the operator's wish for this
+  session. `NetLinkConnect` / `NetLinkReconnect` (Net menu) and `NetLinkStartup`
+  set it; `NetLinkDisconnect` clears it. It is not persisted.
+- **Startup rule:** `uNetLink.ShouldConnectAtStartup(Network.AutoConnect,
+  Computer.Id)`. The setting is `NETWORK AUTO CONNECT`, default **False** on
+  purpose: `SERVER ADDRESS` defaults to LOCALHOST, so a default of True makes
+  every single-operator station knock on its own door for ever. A blank computer
+  id never connects at startup; Net > Connect with no id opens Preferences at
+  COMPUTER ID (`SetCommand`) instead.
+- **Who retries:** the `atNetReconnect` app timer (`NetLinkTick`, main thread,
+  `Network.StatusUpdateInterval`), running only while a link is wanted. It was
+  the Network window's `tmrStatus`.
+- **State:** `NetLinkState` = `ResolveLinkState(wanted, connected, connecting
+  (ThreadStarted(NetThreadID)), refused (NetLinkRefused))`. Off, Connecting,
+  Connected, Waiting (wanted, down, the timer is retrying), Refused (latched,
+  nothing retried). `LinkCommandEnabled` says which of Connect / Disconnect /
+  Reconnect / Show window each state offers; `LinkNeedsLiveLink` is the rule for
+  the rows that send to other stations (set time, send message, synchronize,
+  the clear rows).
+- **The Net menu** (top-level, always enabled; the old `EnableNetworkMenuItem`
+  greyed all of it and is gone): `ApplyNetworkMenuState` /
+  `ApplyNetworkMenuStateFor(state)` enable each row. ProcessMenu arms:
+  `menu_net_connect/disconnect/reconnect/showwindow` (VC ids 10520-10523);
+  `MainUnit.ShowTR4WWindow` shows and fronts a tool window and never closes it.
+- **Who is told:** `uNetLink.NetLinkObservers`, a list of `TNotifyEvent`. The
+  window adds a method in `HandleCreate` and removes it in its destructor; the
+  link never holds a form. `NetLinkChanged` may be called from ANY thread (the
+  connect thread does) and hops to the main thread with `QueueAsyncCall`; it
+  re-applies the menu and notifies. `ShowConnectionStatus` keeps the last status
+  line (`GLinkOperation`, under `GNetLock`) and the window's title is
+  `NetWindowCaption` -- the worker thread no longer writes the form's Caption.
+- **A window opened mid-session** missed every status message, so
+  `TfrmNetwork.RefreshFromLink` (called from `HandleShow`) takes the title from
+  `NetWindowCaption` and calls `DisplayAllClients`, which redraws every station
+  in `StatusArray` through `DisplayClientField(Index, type)` (the old
+  `DisplayClientStatus` body with the type as a parameter). A station that left
+  is blanked across ALL columns (it used to leave the D flag and the operator).
+- **Cancelling a connect in flight:** `NetLinkDisconnect` while the connect
+  thread is running only clears the wish (the client is the thread's until it
+  returns); `ConnectThread` drops a link nobody wants before it ends.
+  `NetLinkReconnect` is refused while connecting.
+- **Dropped/refused links** go through `NetLinkWentDown` (close, blank every
+  station, status line): `ReportDropped`, `RefuseServer`, the id-in-use arm and
+  Disconnect. A refusal used to leave the strip saying "Connected".
+- **Exit leaves the network:** `ExitProgram` calls `NetLinkShutdown` (stop the
+  retry timer, `NetDisconnect`) after the restart file is saved and before the
+  QSO dispatcher goes. `Disconnect` already orders it: bounded drain of posted
+  packets, writer stopped, reader stopped, socket closed. A connect still in
+  flight is left to the process end.
+
+**tr4wserver: a closed context must not answer for its handle (2026-10-27).**
+Windows reuses socket handle values at once. `ContextOf` matched `FHandle`, and a
+context the server had just closed (a refused station) stayed in the list until
+its thread ended, so the next connection, sometimes holding the same number, was
+matched to the dead one: the 'TR4W' write failed ("could not answer TR4W") or hit
+a freed context (EAccessViolation in the read path). netprobe's hello case showed
+it in 5 runs of 20. Every server-initiated close now goes through
+`TServerConn.CloseConnection` (sets `FClosed`), `SyncDrop` sets it too, and
+`ContextOf` skips closed contexts. 25 clean runs after (20 hello, 5 all).
+
+Tests: `uTestNetLink` (decision table, command and menu enablement on the real
+built menu in every state, startup rule, observers incl. removal during
+notification, the refusal latch through the real arms, the window drawing a
+mid-session state and unsubscribing, source reads of the wiring). Real
+connect / drop / retry is two machines and BENCH_QUEUE.
 
 ## What a received QSO records about OUR station (log schema 3, stage 5, 2026-10-19)
 

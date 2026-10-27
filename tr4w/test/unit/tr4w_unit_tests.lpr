@@ -604,10 +604,12 @@ uses
    uTestHamLibIDs       in 'uTestHamLibIDs.pas',
    uTestDXClusterClient in 'uTestDXClusterClient.pas',
    uNetHello in '..\..\src\uNetHello.pas',
+   uNetLink in '..\..\src\uNetLink.pas',
    uNetFraming in '..\..\src\uNetFraming.pas',
    uTestNetFraming in 'uTestNetFraming.pas',
    uTestNetWireSizes in 'uTestNetWireSizes.pas',
    uTestNetHello in 'uTestNetHello.pas',
+   uTestNetLink in 'uTestNetLink.pas',
    uDXSpotParse         in '..\..\src\uDXSpotParse.pas',
    uSpotAge             in '..\..\src\uSpotAge.pas',
    uTelnetTrace         in '..\..\src\uTelnetTrace.pas',
@@ -1044,6 +1046,10 @@ begin
    RegisterSuite(TWSJTXThreadingTests.Create('WSJTXThreading'));
    RegisterSuite(TAcceleratorTests.Create('Accelerators'));
    RegisterSuite(TMenuShortcutTests.Create('MenuShortcuts'));
+   (* AFTER MenuShortcuts, which builds the one real menu a test run keeps: this
+     suite reuses it rather than building a second (every build leaks, by
+     design - see BuiltNetMenuItem). *)
+   RegisterSuite(TTestNetLink.Create('NetLink'));
    RegisterSuite(TEditingKeysTests.Create('EditingKeys'));
    RegisterSuite(TPrefsSearchTests.Create('PrefsSearch'));
    RegisterSuite(TRadioStatusTests.Create('RadioStatus'));

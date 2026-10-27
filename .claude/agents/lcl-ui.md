@@ -244,6 +244,31 @@ it. Pinned by `uTestStatusAndNotice`'s `Test_ARadioSpeedChangeIsDrawnOnTheMainTh
   pins an order uses `CustomSort` with `CompareStr`. `TStringList.Text` joins with
   `LineEnding`, not `#13#10`.
 
+## A window that is a VIEW of something longer-lived (2026-10-27)
+
+The Network window is the worked example. The multi-op link belongs to the
+program (`uNet`, owned by the `multi-op-network` agent); the window used to
+connect on show, drop on close and run the retry timer, so closing a window
+decided whether stations could talk. Now it connects nothing and stops nothing:
+
+- It **subscribes** (`uNetLink.NetLinkObservers.Add`) in `HandleCreate` and
+  **unsubscribes in its destructor**, which also clears its global only if the
+  global is `Self`. The model never holds a form; a window created and destroyed
+  while the model lives is safe. Copy this for the next view of a long-lived
+  object (radio panel, cluster) rather than a global the model writes into.
+- It **asks for state when shown** (`RefreshFromLink` from `HandleShow`): a view
+  opened mid-session saw none of the messages that built the state, so relying
+  on the next message draws it half empty. Put the model's redraw behind a
+  function the view can call (`uNet.DisplayAllClients`).
+- It never has its Caption written from a worker thread. Status that arrives off
+  the main thread is kept by the model, and the view reads it on notification.
+- Test it by creating the real form (`TfrmNetwork.Create(nil)`), loading the
+  model, calling the refresh and reading `lvClients.Items`; and by counting the
+  observers before and after `Free`.
+- The Net menu rows are enabled by the model's state (`ApplyNetworkMenuState`),
+  not by the window. The top-level popup is never greyed, because it holds the
+  way to get started.
+
 ## Coordinate with
 
 Every other agent — each owns a window. `i18n` on any caption.

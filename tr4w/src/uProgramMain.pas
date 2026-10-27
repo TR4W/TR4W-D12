@@ -2540,6 +2540,13 @@ begin
     the sound now and needs no initialisation. *)
   OpenOtherWindows;
 
+  (* THE MULTI-OP LINK STARTS WITH THE PROGRAM, NOT WITH A WINDOW (2026-10-27).
+    After the main window and the Net menu exist, and after every headless
+    Halt above, so /EXPORT and the corpus never open a socket. It connects only
+    when NETWORK AUTO CONNECT is on and this station has a computer id; the Net
+    menu's Connect does it by hand otherwise. *)
+  NetLinkStartup;
+
   { THE DOMAIN LAYER'S ONE CROSSING INTO THE UI, and it has to be AFTER the
     main window is SHOWN -- not merely after the form or the elements exist.
 

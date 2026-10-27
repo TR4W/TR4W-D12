@@ -131,7 +131,11 @@ catch
 # 2026-10-25: 13,463 -> 625 when the radio base destructor became `override`.
 # Until then Free on a factory radio ran no radio destructor at all, so every
 # radio a test built leaked its socket, VFOs, lock and per-family objects.
-$LEAK_CEILING = 625
+# 2026-10-27: 625 -> 57. 568 of the 625 were the real main menu that
+# uTestMenuShortcuts builds for the run and never freed (uMenu cannot unpublish
+# it, so it cannot be freed mid-run). It is freed in that unit's finalization
+# now, when nothing can ask for an item. 57 on four runs.
+$LEAK_CEILING = 57
 
 if ($Checked)
    {

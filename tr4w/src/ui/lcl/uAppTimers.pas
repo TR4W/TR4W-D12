@@ -42,6 +42,7 @@ type
    TAppTimer = (
       atAutoCQ,            (* the auto-CQ repeat, one shot per CQ *)
       atNetCWStatus,       (* tell the multi-op network what CW is sending *)
+      atNetReconnect,      (* retry the multi-op link while one is wanted and it is down *)
       atOneSecond);        (* the clock and rate displays *)
 
    TAppTimerProc = procedure;

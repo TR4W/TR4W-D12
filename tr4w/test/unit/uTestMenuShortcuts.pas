@@ -550,4 +550,14 @@ begin
    Test_MenuCommandExistsFindsAndMisses;
 end;
 
+initialization
+
+finalization
+   (* FREED WHEN THE RUN ENDS, which is the only moment nothing can ask the menu
+     for an item: uMenu still holds the item pointers (it cannot unpublish
+     them), so freeing earlier would leave MenuItemById dangling for the suites
+     after this one. Left alone it was ~580 unfreed blocks, the bulk of the
+     checked run's leak count. *)
+   FreeAndNil(GTestMenuOwner);
+
 end.

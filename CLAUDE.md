@@ -1477,6 +1477,16 @@ thread sends in FIFO order, never drops, Warns on a write over 250 ms naming the
 kind, and a write stuck over 8 s is cut by the reader thread. `SendToNet` returns the count
 POSTED. Detail: `.claude/agents/multi-op-network.md`.
 
+**THE LINK BELONGS TO THE PROGRAM, NOT TO THE NETWORK WINDOW (2026-10-27).** It used to
+connect when the Network window was shown and drop when it was closed (NY4I: *"I never
+liked the idea that we only connected when the Network window was up."*). Now `uNet`
+owns it: the **Net menu** has Connect, Disconnect, Reconnect and Show Network window
+(rows enabled by the link's state, `uNetLink`), a retry timer runs while a link is
+wanted, and the setting `NETWORK AUTO CONNECT` (default off) connects at startup. The
+window is only a view: it subscribes to `uNetLink.NetLinkObservers`, redraws every
+station when shown, and starts and stops nothing. Detail:
+`.claude/agents/multi-op-network.md`.
+
 Parsing still runs on the **main thread**: the reader appends bytes under a lock
 and `Application.QueueAsyncCall`s a drain, so every message arm is unchanged. The
 short tail is now KEPT between reads — which is why an unrecognised message id

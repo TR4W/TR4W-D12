@@ -643,9 +643,21 @@ type
       FShowTypedCallsign: boolean;
       FStatusUpdateInterval: TNetStatusInterval;
       FIntercomFileEnable: boolean;
+      FAutoConnect: boolean;
    public
       constructor Create;
    published
+      (* NEW 2026-10-27 -- connect to the multi-op server when TR4W starts.
+
+        The link belongs to the program, not to the Network window (NY4I:
+        "I never liked the idea that we only connected when the Network window
+        was up"). A station that is not on a multi-op network must not try:
+        SERVER ADDRESS defaults to LOCALHOST, so a default of True would have
+        every single-operator station knocking on its own door every few
+        seconds for ever. FALSE is therefore the default, and a multi-op
+        position turns it on once. Connect on the Net menu works either way. *)
+      property AutoConnect: boolean
+         read FAutoConnect write FAutoConnect;
       (* Was tAllowAutoUpdate in uNet -- whether a correction arriving from
         another position is applied to a QSO already in this log. Defaults
         TRUE, which is what a multi-op network is for. *)
@@ -4970,6 +4982,7 @@ begin
    FShowTypedCallsign    := True;
    FStatusUpdateInterval := 5000;
    FIntercomFileEnable   := False;
+   FAutoConnect          := False;
 end;
 
 constructor TWsjtxSettings.Create;

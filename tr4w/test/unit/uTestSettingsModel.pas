@@ -367,7 +367,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(293, names.Count,
+         CheckEquals(294, names.Count,
                      'one name per migrated setting, plus the eleven that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -389,7 +389,9 @@ begin
                      + ' (issue #98 step 2), 2026-10-25; 293 with PTT TX'
                      + ' INHIBIT BEEP, the optional beep on a key-up the'
                      + ' radio will not radiate (new, no CFGCA row, issue'
-                     + ' #97), 2026-10-26');
+                     + ' #97), 2026-10-26; 294 with NETWORK AUTO CONNECT,'
+                     + ' connect to the multi-op server at startup (new, no'
+                     + ' CFGCA row), 2026-10-27');
       finally
          names.Free;
       end;
@@ -1598,6 +1600,7 @@ const
       + '"MY ZONE",'
       + '"NAME FLAG ENABLE",'
       + '"NET STATUS UPDATE INTERVAL",'
+      + '"NETWORK AUTO CONNECT",'
       + '"NO BORDER",'
       + '"NO CAPTION",'
       + '"NO COLUMN HEADER",'

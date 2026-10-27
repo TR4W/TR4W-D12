@@ -148,10 +148,11 @@ function BuildTR4WMainMenu(const aOwner: TComponent;
   item's ancestors and gives up if any of them is disabled (menu.inc:265-272),
   where the input hook dispatched whatever the menu looked like. That is the
   native semantic and it matches what each grey-out was already saying:
-  Ctrl+Alt+T, Shift+' and Ctrl+Alt+S do nothing until uNet enables the Network
-  popup; Ctrl+Shift+3 and Ctrl+Shift+8 do nothing in WRTC; and Alt+1..Alt+0 do
-  nothing in hand-log mode, where uProgramMain greys them because they "do
-  nothing" anyway.
+  Ctrl+Alt+T, Shift+' and Ctrl+Alt+S do nothing until the multi-op link is up
+  (uNet enables those rows, not the whole Net popup, since 2026-10-27);
+  Ctrl+Shift+3 and Ctrl+Shift+8 do nothing in WRTC; and in hand-log mode
+  Alt+1..Alt+0 do nothing, because uProgramMain greys them as they have
+  no effect there anyway.
 
   AND THEY NOW WORK WHILE THE CLUSTER WINDOW HAS FOCUS. uAppInputHooks exits
   early for the Telnet form -- a blunt guard whose stated reason is the EDITING
@@ -214,7 +215,7 @@ const
     // per-slot entries to ONE item opening the Preferences window, removing
     // the MAXWORD-1 submenu marker, the two Radio entries and the MAXWORD-2
     // terminator, and adding one item (net -3).
-    T_MENU_ARRAY_SIZE                     = 176 + 1 {MMTTY window}{$IFDEF LANG_RUS} + 1{$ENDIF} {menu_wiki_rus -- was +3 until 2026-09-08, when Help->Contents and its separator had already gone} + 2 {RC_RESET_RADIO_PORTS, separator, Repeat POTA Parks} + 2 {HamScore Resync (Tools) + HamScore Status (Windows menu), Issue #783} + 1 {3830 Score under File-Reports} + 1 {Edit Cabrillo Summary under Tools, Issue #914} + 1 {Download TRMASTER.DTA, 2026-08-16} - 1 {Appearance removed, 2026-08-16} - 1 {Synchronize PC time removed, 2026-08-25 -- setting the clock needs UAC} - 1 {Device Manager removed, 2026-09-01 -- an application does not shell out to mmc} - 1 {MP3 Recorder removed, 2026-09-07 -- recording moves to QSOCapture} + 1 {Run Verification Checks under Tools, 2026-09-12} - 1 {LPT ports removed, 2026-09-13 -- the parallel port is gone from the program}
+    T_MENU_ARRAY_SIZE                     = 176 + 1 {MMTTY window}{$IFDEF LANG_RUS} + 1{$ENDIF} {menu_wiki_rus -- was +3 until 2026-09-08, when Help->Contents and its separator had already gone} + 2 {RC_RESET_RADIO_PORTS, separator, Repeat POTA Parks} + 2 {HamScore Resync (Tools) + HamScore Status (Windows menu), Issue #783} + 1 {3830 Score under File-Reports} + 1 {Edit Cabrillo Summary under Tools, Issue #914} + 1 {Download TRMASTER.DTA, 2026-08-16} - 1 {Appearance removed, 2026-08-16} - 1 {Synchronize PC time removed, 2026-08-25 -- setting the clock needs UAC} - 1 {Device Manager removed, 2026-09-01 -- an application does not shell out to mmc} - 1 {MP3 Recorder removed, 2026-09-07 -- recording moves to QSOCapture} + 1 {Run Verification Checks under Tools, 2026-09-12} - 1 {LPT ports removed, 2026-09-13 -- the parallel port is gone from the program} + 5 {Net menu: Connect, Disconnect, Reconnect, Show Network window and a separator, 2026-10-27}
                                             - 0 {Check for Updates taken OFF the menu 2026-08-28 -- see the row below};
 
 var
@@ -472,6 +473,14 @@ var
     (mrText: ''; mrId: 0),
     (mrText: ''; mrId: MAXWORD),
  //{
+    (* THE LINK'S OWN COMMANDS lead the Net menu (2026-10-27): the link belongs
+      to the program and these are how an operator drives it. The rows below
+      them need a live link and are enabled by uNet.ApplyNetworkMenuState. *)
+    (mrText: ''; mrId: menu_net_connect),
+    (mrText: ''; mrId: menu_net_disconnect),
+    (mrText: ''; mrId: menu_net_reconnect),
+    (mrText: ''; mrId: menu_net_showwindow),
+    (mrText: ''; mrId: 0),
     (mrText: ''; mrId: menu_alt_setnettime),
     (mrText: ''; mrId: menu_send_message),
     (mrText: ''; mrId: menu_getserverlog),
@@ -555,6 +564,9 @@ var
     (mrText: ''; mrId: 104));
 
 implementation
+
+uses
+  uAppStrings;     // SNetMenuConnect... -- new UI text does not go in uTR4WStrings
 
 procedure InitializeMenuText;
 { Menu captions, assigned at RUN time so a translated resourcestring reaches
@@ -739,6 +751,11 @@ begin
    Inc(i); T_MENU_ARRAY[i].mrText := RC_3830_arrl;
    Inc(i); T_MENU_ARRAY[i].mrText := '-';
    Inc(i); T_MENU_ARRAY[i].mrText := RC_NET;
+   Inc(i); T_MENU_ARRAY[i].mrText := SNetMenuConnect;
+   Inc(i); T_MENU_ARRAY[i].mrText := SNetMenuDisconnect;
+   Inc(i); T_MENU_ARRAY[i].mrText := SNetMenuReconnect;
+   Inc(i); T_MENU_ARRAY[i].mrText := SNetMenuShowWindow;
+   Inc(i); T_MENU_ARRAY[i].mrText := '-';
    Inc(i); T_MENU_ARRAY[i].mrText := RC_TIMESYN;
    Inc(i); T_MENU_ARRAY[i].mrText := RC_SENDMESSAGE;
    Inc(i); T_MENU_ARRAY[i].mrText := RC_SYNLOG;

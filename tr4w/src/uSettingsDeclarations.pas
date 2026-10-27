@@ -338,6 +338,8 @@ begin
                          RS_NETWORK_MULTIMULTSONLY);
    RegisterModelSetting( 'network.intercomFile',              'INTERCOM FILE ENABLE',
                          RS_NETWORK_INTERCOMFILE);
+   RegisterModelSetting( 'network.autoConnect',               'NETWORK AUTO CONNECT',
+                         RS_NETWORK_AUTOCONNECT);
 
    { Super Check Partial, band map and log files, 2026-08-15. }
    RegisterModelSetting( 'scp.possibleCalls',                 'POSSIBLE CALLS',

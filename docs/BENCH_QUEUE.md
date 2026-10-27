@@ -23,6 +23,81 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-27 -- THE MULTI-OP LINK BELONGS TO THE PROGRAM, NOT THE NETWORK WINDOW
+
+NY4I: *"I never liked the idea that we only connected when the Network window
+was up."* Until now the link was connected by showing the Network window and
+dropped by closing it. Now the program owns it: the **Net menu** has Connect,
+Disconnect, Reconnect and Show Network window, `NETWORK AUTO CONNECT` (Preferences
+> Network; default OFF) connects at startup, and the window is only a view.
+The unit tests reach the state table, the menu rows in every state, the refusal
+latch, the observer list and the window drawing the stations it was not open to
+see. They cannot connect. **WHAT YOU NEED:** `tr4wserver` (or the Python server)
+and TWO stations, A and B (Windows and Mint), both with a COMPUTER ID and the
+server address set, on the same contest. Start with NETWORK AUTO CONNECT off.
+
+- [ ] **Nothing connects by itself.** Start A. EXPECT: no connection attempt in
+      `tr4w.log` (`[Net] not connecting at startup (NETWORK AUTO CONNECT is off ...)`),
+      the status strip's Network panel is empty or "Disconnected from Network",
+      and the Net menu offers Connect and Show Network window only (Disconnect,
+      Reconnect, Set time, Send message, Synchronize and the clear rows are grey).
+- [ ] **Connect with the Network window CLOSED.** Net > Connect at A and at B,
+      never opening the window. EXPECT: the strip reads "Connected to Network";
+      Connect greys, Disconnect and Reconnect and the sending rows light.
+- [ ] **QSOs cross with the window closed.** Log at A, then at B, then the same
+      call on the same band and mode at both. EXPECT: each arrives at the other, and
+      the second is flagged a dupe. The Network window has not been opened once.
+- [ ] **Open the window mid-session.** Net > Show Network window (and again from
+      Windows > Network). EXPECT: BOTH stations are in the list at once with name,
+      id, band and frequency, QSO count and call, the title reads
+      `Network : Connected to <address>:<port>` -- without waiting for either
+      station to do anything. Log a QSO at B: A's row count moves.
+- [ ] **Closing the window drops nothing.** Close it (Escape and the close box).
+      EXPECT: still connected, QSOs still cross, the strip still says connected.
+      Reopen: the list is right again. Show Network window while it is open
+      brings it forward and does not close it.
+- [ ] **Disconnect.** Net > Disconnect at B. EXPECT: B's strip reads
+      "** DISCONNECTED from Network", B's list is empty, A's row for B clears,
+      and B does NOT reconnect by itself. Connect, Disconnect and the rest of the
+      menu keep their greying right. Log at B while disconnected: nothing
+      reaches A (and, as before this change, it is not re-sent on reconnect).
+- [ ] **Reconnect.** Net > Reconnect at B while connected. EXPECT: a clean drop
+      and a new link, both rows back, no dialog.
+- [ ] **Auto-reconnect without the window.** With the window closed and B
+      connected, stop the server, wait ten seconds, start it again. EXPECT: B
+      reconnects by itself within the retry interval (`NET STATUS UPDATE
+      INTERVAL`, 5 s by default), the strip goes disconnected, "Connecting" and
+      connected, with no dialog and no storm of log lines. Then Net > Disconnect
+      during an outage: the retries stop.
+- [ ] **A server that is not there.** Net > Connect with the server stopped.
+      EXPECT: the Disconnect item is lit while it retries (it stops the
+      retrying), one "Failed to connect" line in the log, not one per attempt.
+- [ ] **The refusal latch is re-armed by Connect.** Point B at an old server
+      (before protocol 2) or give B a computer id already in use. EXPECT: the
+      dialog ONCE, then silence (no retry every five seconds), the Net menu
+      offering Connect and Reconnect. Fix the cause and choose Net > Connect:
+      it is tried again and works. (Before this change the way back was
+      closing and reopening the Network window.)
+- [ ] **NETWORK AUTO CONNECT.** Turn it on in Preferences > Network, restart
+      B with the server up. EXPECT: connected a moment after the main window
+      appears, with the Network window never opened. Restart with the server
+      down: the retries run quietly and it connects when the server comes up.
+      With COMPUTER ID blank: no attempt at startup; Net > Connect opens
+      Preferences at COMPUTER ID instead of connecting.
+- [ ] **Restore.** Leave the Network window open, quit, relaunch with AUTO
+      CONNECT off. EXPECT: the window comes back showing the disconnected title and
+      an empty list, and nothing connects until you ask.
+- [ ] **Preferences > Network layout.** The new checkbox ("Connect to the
+      multi-op server when TR4W starts") sits above the grey hint text without
+      overlapping it or the "Radio sharing" heading below, and (issue #142) the
+      Network panel in the status strip is not clipped.
+- [ ] **Quit while connected and while retrying.** Exit from each: no hang, no
+      error. Exit now disconnects first (`NetLinkShutdown` from `ExitProgram`):
+      after a quit while connected, the server logs the departure and the other
+      stations clear this station's row at once, not after a timeout.
+
+---
+
 ## Added 2026-10-27 -- THE QUEBEC QSO PARTY (issue #128)
 
 A new by-id contest (`QC-QSO-PARTY`), the third Canadian host on the party
@@ -859,7 +934,8 @@ stations on a contest registered BY ID (any QSO party, e.g. `GA-QSO-PARTY`) and
 then on a legacy one.
 
 - [ ] **Connect, both stations, a by-id contest.** Select the same QSO party on
-      both, open the Network window on each. EXPECT: connected; each station's
+      both, choose Net > Connect on each (the link no longer needs the Network
+      window; see the section above). EXPECT: connected; each station's
       row on the other; `tr4w.log` has `[Net] server hello: network protocol 2`
       and `[Net] station B announced contest "GA-QSO-PARTY"` (the other letter on
       the other station). NO dialog.
@@ -885,7 +961,7 @@ then on a legacy one.
       tag `d7-protocol`. EXPECT: the connection closes at once, and ONE dialog
       "The multi-op server closed the connection without answering. It is
       probably older than this TR4W ..." -- not repeated every five seconds.
-      Closing and reopening the Network window tries again.
+      Net > Connect (or Reconnect) tries again; it is not retried by itself.
 - [ ] **A station from before protocol 2** (or the probe's `--case hello`)
       against the NEW server: refused, the server log says `first message was not
       HELLO ... a 4.x client?`.
@@ -894,7 +970,7 @@ then on a legacy one.
 - [ ] **Duplicate computer id**, as before: the second station gets the
       "Computer ID is already in use" dialog; the first is undisturbed. Then
       stop the first and reconnect the second: accepted.
-- [ ] **A station that leaves is forgotten.** Close B's Network window; at A the
+- [ ] **A station that leaves is forgotten.** Net > Disconnect at B; at A the
       row clears (this was broken against the Python server), and a QSO
       forged under B's id is refused ("has not announced a contest").
 - [ ] **`<contestnr>` on the wire.** With a UDP listener (N1MM-format) on the
