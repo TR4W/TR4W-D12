@@ -212,7 +212,7 @@ end;
 function TContestTennesseeQP.GetADIFSentExchange(const aMy: TMyStationExchange;
                                                  const aQso: ContestExchange): string;
 begin
-   Result := ADIFSentRSTState(aMy, aQso);
+   Result := ADIFSentRSTStateOrDX(aMy, aQso);
 end;
 
 function TContestTennesseeQP.GetCabrilloSentExchange(const aMy: TMyStationExchange;

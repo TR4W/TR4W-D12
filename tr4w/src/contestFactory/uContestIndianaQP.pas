@@ -244,7 +244,7 @@ end;
 function TContestIndianaQP.GetADIFSentExchange(const aMy: TMyStationExchange;
                                                const aQso: ContestExchange): string;
 begin
-   Result := ADIFSentRSTState(aMy, aQso);
+   Result := ADIFSentRSTStateOrDX(aMy, aQso);
 end;
 
 function TContestIndianaQP.GetCabrilloSentExchange(const aMy: TMyStationExchange;

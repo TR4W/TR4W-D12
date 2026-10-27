@@ -122,8 +122,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     its country: so NOT the party base's SentLocation (North Dakota,
     Oklahoma, New Mexico, Ontario) -- the StateOrDX Cabrillo helper writes DX
     when MY STATE is empty, and the CQ exchange says DX, as Georgia's do.
-    The ADIF STX_STRING is ADIFSentRSTState, which writes the empty MY STATE
-    -- Georgia's, NC's and Missouri's answer for the same rule.
+    The ADIF STX_STRING is ADIFSentRSTStateOrDX, so it says DX too (it is the
+    information transmitted; 2026-10-27) -- as Georgia's, NC's and Missouri's
+    do.
 
   SCORE -- "QSO-score = (Total of the QSO points) * (Total of the multiplier
     points)": the base's CombineWithMultipliers. No power multiplier (QRP 5
@@ -358,7 +359,7 @@ end;
 function TContestQuebecQP.GetADIFSentExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange): string;
 begin
-   Result := ADIFSentRSTState(aMy, aQso);
+   Result := ADIFSentRSTStateOrDX(aMy, aQso);
 end;
 
 function TContestQuebecQP.GetCabrilloSentExchange(const aMy: TMyStationExchange;

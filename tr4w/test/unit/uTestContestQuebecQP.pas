@@ -1182,8 +1182,9 @@ begin
 
    (* A DX ENTRANT: MY STATE is empty and it sends DX -- "Non-VE2 stations:
       Must send a signal report and their province, US state or DX for other
-      entities". NOT its prefix. The ADIF STX_STRING is ADIFSentRSTState's
-      empty state (Georgia's, NC's and Missouri's answer for the same rule). *)
+      entities". NOT its prefix. The ADIF STX_STRING says DX too, as the
+      Cabrillo column does (Georgia's, NC's and Missouri's answer for the same
+      rule, 2026-10-27): it is the information transmitted. *)
    contestObject := MakeQuebec(DXStation('DL'));
    try
       my := Default(TMyStationExchange);
@@ -1196,8 +1197,8 @@ begin
       ctx.HisQTH := 'MTL';
       CheckEquals('599 DX     ', contestObject.FormatCabrilloSentExchange(my, qso, ctx),
                   'sent: RST and DX');
-      CheckEquals('599        ', contestObject.FormatADIFSentExchange(my, qso),
-                  'ADIF STX_STRING: RST and the empty MY STATE');
+      CheckEquals('599 DX     ', contestObject.FormatADIFSentExchange(my, qso),
+                  'ADIF STX_STRING: RST and DX, what was sent');
    finally
       contestObject.Free;
    end;

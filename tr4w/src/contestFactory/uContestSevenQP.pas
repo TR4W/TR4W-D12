@@ -386,7 +386,16 @@ end;
 function TContestSevenQP.GetADIFSentExchange(const aMy: TMyStationExchange;
                                              const aQso: ContestExchange): string;
 begin
-   Result := ADIFSentRSTState(aMy, aQso);
+   (* WHAT THE CABRILLO SENT COLUMN SAYS (below): an entrant who counts DX
+      sends its state, the others its state or DX. *)
+   if CountsDXMultiplier then
+      begin
+      Result := ADIFSentRSTState(aMy, aQso);
+      end
+   else
+      begin
+      Result := ADIFSentRSTStateOrDX(aMy, aQso);
+      end;
 end;
 
 function TContestSevenQP.GetCabrilloSentExchange(const aMy: TMyStationExchange;

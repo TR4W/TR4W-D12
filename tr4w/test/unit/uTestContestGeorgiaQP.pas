@@ -746,6 +746,8 @@ begin
       my.MyState := '';
       CheckEquals('599 DX     ', contestObject.FormatCabrilloSentExchange(my, qso, ctx),
                   'a DX entrant sends DX');
+      CheckEquals('599 DX     ', contestObject.FormatADIFSentExchange(my, qso),
+                  'and its ADIF STX_STRING says what was sent: DX');
 
       my.MyState := 'HARR';
       CheckEquals('599 HARR   ', contestObject.FormatADIFSentExchange(my, qso),

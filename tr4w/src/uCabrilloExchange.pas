@@ -154,6 +154,12 @@ function CabrilloSentRSTState(const aMy: TMyStationExchange;
                               const aQso: ContestExchange;
                               const aCtx: TCabrilloQSOContext): string;
 
+(* THE STATE WE SEND, 'DX' WHEN WE HAVE NONE -- the one statement of it. The
+   Cabrillo columns below and the ADIF STX_STRING (uADIFExchange.
+   ADIFSentRSTStateOrDX) both ask it, so a DX entrant's sent exchange cannot
+   be spelled two ways (2026-10-27). *)
+function SentStateOrDX(const aMy: TMyStationExchange): string;
+
 (* RST and the state -- 'DX' when we have none: '%-3s %-7s'. *)
 function CabrilloSentRSTStateOrDX(const aMy: TMyStationExchange;
                                   const aQso: ContestExchange;
@@ -521,8 +527,8 @@ begin
   Result := SysUtils.Format('%-3s %-7s', [aCtx.RSTSent, aMy.MyState]);
 end;
 
-(* THE STATE WE SEND, 'DX' WHEN WE HAVE NONE -- the one statement of it, for
-   the RST and the location-only columns alike. *)
+(* THE STATE WE SEND, 'DX' WHEN WE HAVE NONE -- see the declaration. For the
+   RST and the location-only columns alike. *)
 function SentStateOrDX(const aMy: TMyStationExchange): string;
 begin
   Result := aMy.MyState;

@@ -59,7 +59,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     DX branch: the session's domestic table takes a county, state or
     province, and a DX QTH otherwise. A DX entrant SENDS "DX": the sent
     columns are the StateOrDX helpers, which write DX when MY STATE is
-    empty.
+    empty (the ADIF STX_STRING too: ADIFSentRSTStateOrDX); a DX station
+    received is DX whatever was typed (CabrilloReceivedRSTDomesticQTHOrDX).
 
   QSO POINTS -- "Each completed SSB contact counts one point. Each completed
     CW contact counts two points."
@@ -266,7 +267,7 @@ end;
 function TContestGeorgiaQP.GetADIFSentExchange(const aMy: TMyStationExchange;
                                                const aQso: ContestExchange): string;
 begin
-   Result := ADIFSentRSTState(aMy, aQso);
+   Result := ADIFSentRSTStateOrDX(aMy, aQso);
 end;
 
 function TContestGeorgiaQP.GetCabrilloSentExchange(const aMy: TMyStationExchange;

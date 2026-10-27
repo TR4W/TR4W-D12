@@ -184,8 +184,19 @@ the target shape, the M-step migration order and the open questions.
   (every digital submode RY, FM PH -- Delaware and New Mexico) and
   `uCabrilloExchange.CabrilloReceivedRSTDomesticQTHOrDX` ("DX" whenever the
   record holds no `DomesticQTH`). **`CabrilloReceivedRSTQTHDX` tests
-  `QTHString`, so a DX station whose entity was TYPED exports an empty QTH
-  column** (non-literal `HisQTH` is `DomesticQTH`); Georgia uses it.
+  `QTHString`, so under `RSTDomesticOrDXQTHExchange` a DX station whose entity
+  was TYPED exports an empty QTH column** (non-literal `HisQTH` is
+  `DomesticQTH`); Georgia used it until 2026-10-27 and now states
+  `CabrilloReceivedRSTDomesticQTHOrDX`. Under `RSTDomesticQTHExchange` (NC,
+  Missouri, Quebec ...) a DX station is looked up in the `.dom`, so the
+  record carries a `DomesticQTH` and the helper is right. **A DX entrant's
+  ADIF `STX_STRING` says what was sent (2026-10-27):**
+  `uADIFExchange.ADIFSentRSTStateOrDX` asks the same
+  `uCabrilloExchange.SentStateOrDX` as `CabrilloSentRSTStateOrDX`, so a party
+  whose DX entrant sends "DX" exports `599 DX`; a party that chooses between
+  the plain and OrDX helpers by station (Arizona, Texas, New England, 7QP,
+  Salmon Run, ARRL 160) mirrors the choice in its ADIF statement. The parties
+  whose DX entrant sends its country (ND, OK, NM, ON) are unchanged.
 - **`QSO POINT METHOD` IS RETIRED (M10 S2, 2026-10-14)**, with `EXCHANGE
   RECEIVED`, `INITIAL EXCHANGE` and the four multiplier commands -- names in
   `uCFG.RETIRED_COMMANDS`, no effect. The class decides all seven. The four

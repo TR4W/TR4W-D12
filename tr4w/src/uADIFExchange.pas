@@ -113,6 +113,15 @@ function ADIFSentPark(const aMy: TMyStationExchange;
 function ADIFSentRSTState(const aMy: TMyStationExchange;
                           const aQso: ContestExchange): string;
 
+(* ADIFSentRSTState with 'DX' for a station that has no state: '%-3d %-7s'.
+   THE STX_STRING IS THE INFORMATION TRANSMITTED (2026-10-27, NY4I), so a DX
+   entrant in a party whose rules have it send "DX" exports "599 DX", the
+   text its Cabrillo sent column (CabrilloSentRSTStateOrDX) prints. The
+   plain helper above writes the empty MY STATE as it is, for the contests
+   whose entrant sends nothing in that place. *)
+function ADIFSentRSTStateOrDX(const aMy: TMyStationExchange;
+                              const aQso: ContestExchange): string;
+
 (* '%-3d %-7s' of the RST and the grid. *)
 function ADIFSentRSTGrid(const aMy: TMyStationExchange;
                          const aQso: ContestExchange): string;
@@ -278,6 +287,18 @@ function ADIFSentRSTState(const aMy: TMyStationExchange;
                           const aQso: ContestExchange): string;
 begin
   Result := Format('%-3d %-7s', [aQso.RSTSent, ClippedState(aMy)]);
+end;
+
+(* The DX rule is uCabrilloExchange.SentStateOrDX's, substituted for MY STATE
+   before the plain helper cuts and prints it (the same twenty characters). *)
+function ADIFSentRSTStateOrDX(const aMy: TMyStationExchange;
+                              const aQso: ContestExchange): string;
+var
+  sent: TMyStationExchange;
+begin
+  sent := aMy;
+  sent.MyState := SentStateOrDX(aMy);
+  Result := ADIFSentRSTState(sent, aQso);
 end;
 
 function ADIFSentRSTGrid(const aMy: TMyStationExchange;

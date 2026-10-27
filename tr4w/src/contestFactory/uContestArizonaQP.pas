@@ -254,7 +254,16 @@ end;
 function TContestArizonaQP.GetADIFSentExchange(const aMy: TMyStationExchange;
                                                const aQso: ContestExchange): string;
 begin
-   Result := ADIFSentRSTState(aMy, aQso);
+   (* WHAT THE CABRILLO SENT COLUMN SAYS (below): the host state's entrant
+      sends its state, anyone else its state or DX. *)
+   if Station.InHostState then
+      begin
+      Result := ADIFSentRSTState(aMy, aQso);
+      end
+   else
+      begin
+      Result := ADIFSentRSTStateOrDX(aMy, aQso);
+      end;
 end;
 
 function TContestArizonaQP.GetCabrilloSentExchange(const aMy: TMyStationExchange;

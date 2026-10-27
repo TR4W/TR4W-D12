@@ -421,11 +421,11 @@ The five exchange statements must agree. These sets are in use:
 
 | exchange | `GetExchangeKind` | `GetReceivedExchangeFields` | `ParseReceivedExchangeFormat` | `GetADIFSentExchange` | Cabrillo sent / received | e.g. |
 |---|---|---|---|---|---|---|
-| RST + county/state/province, or DX -- **a DX entrant sends "DX"** | `RSTDomesticOrDXQTHExchange` | `ExchangeFieldsRSTQTH` | `ParseRSTDomesticOrDXQTH` | `ADIFSentRSTState` | `CabrilloSentRSTStateOrDX` / `CabrilloReceivedRSTQTHDX` | Georgia |
-| same, but a DX station's received QTH is written as sent | as above | as above | as above | as above | `CabrilloSentRSTState` / `CabrilloReceivedRSTQTHOrDXQTH` | Nebraska |
+| RST + county/state/province, or DX -- **a DX entrant sends "DX"** | `RSTDomesticOrDXQTHExchange` | `ExchangeFieldsRSTQTH` | `ParseRSTDomesticOrDXQTH` | `ADIFSentRSTStateOrDX` | `CabrilloSentRSTStateOrDX` / `CabrilloReceivedRSTDomesticQTHOrDX` | Georgia |
+| same, but a DX station's received QTH is written as sent | as above | as above | as above | `ADIFSentRSTState` | `CabrilloSentRSTState` / `CabrilloReceivedRSTQTHOrDXQTH` | Nebraska |
 | same, and **a DX entrant sends its own country prefix**, not "DX" (a state party) | as above | as above | as above | `ADIFSentRSTState(SentLocation(aMy), aQso)` | `CabrilloSentRSTState(SentLocation(aMy), ...)` / `CabrilloReceivedRSTQTHOrDXQTH`; `CQExchangeDefault` is `' 5NN ' + LocationOrOwnCountry(aStation.MyState, aStation.MyCountry)` -- both helpers are protected on `TContestStateQSOPartyBase` | North Dakota, Oklahoma |
 | same, but a DX entrant sends its entity ON THE AIR while the Cabrillo QTH column is only "county, state/province or DX" | as above | as above | as above | `ADIFSentRSTState(SentLocation(aMy), aQso)` (STX_STRING is what was transmitted) | `CabrilloSentRSTStateOrDX` / `CabrilloReceivedRSTDomesticQTHOrDX` (DX whenever the record holds no domestic QTH -- `CabrilloReceivedRSTQTHDX` writes a typed `599 LY` as an empty column); `CQExchangeDefault` with `LocationOrOwnCountry` | New Mexico |
-| RST + county/state/province or `DX`, where **"DX" is ONE multiplier** (a `Dx = DX` entry in the in-state `.dom`), a DX entrant sends "DX" | `RSTDomesticQTHExchange` -- every QTH, `DX` included, is looked up in the `.dom` | `ExchangeFieldsRSTQTH` | `ParseRSTDomesticQTH` | `ADIFSentRSTState` | `CabrilloSentRSTStateOrDX` / `CabrilloReceivedRSTQTHDX`; `HasDXMultiplier` False (the multiplier is the domestic `Dx` entry) | Quebec, as North Carolina and Missouri |
+| RST + county/state/province or `DX`, where **"DX" is ONE multiplier** (a `Dx = DX` entry in the in-state `.dom`), a DX entrant sends "DX" | `RSTDomesticQTHExchange` -- every QTH, `DX` included, is looked up in the `.dom` | `ExchangeFieldsRSTQTH` | `ParseRSTDomesticQTH` | `ADIFSentRSTStateOrDX` | `CabrilloSentRSTStateOrDX` / `CabrilloReceivedRSTQTHDX`; `HasDXMultiplier` False (the multiplier is the domestic `Dx` entry) | Quebec, as North Carolina and Missouri |
 | RST + a code from your `.dom` only | `RSTDomesticQTHExchange` | `ExchangeFieldsRSTQTH` | `ParseRSTDomesticQTH` | `ADIFSentRSTState` | `CabrilloSentRSTState` / `CabrilloReceivedRSTQTH` | URC |
 
 **Read these before you pick a row:**
@@ -440,15 +440,25 @@ The five exchange statements must agree. These sets are in use:
   domestic parser**, so an out-of-area entrant's refusals all read as an
   improper domestic QTH (A5's traps).
 - **`CabrilloReceivedRSTQTHDX` writes `DX` only when NOTHING was typed** --
-  it tests `QTHString`. A DX station logged `599 DL` gets an EMPTY QTH
-  column. If your rules want `DX` in that column whatever was typed, use
-  `CabrilloReceivedRSTDomesticQTHOrDX` (`DX` whenever the record holds no
-  domestic QTH -- New Mexico). Georgia's row carries this latent defect.
-- **`ADIFSentRSTState` writes MY STATE as it is -- empty for a DX entrant**,
-  while `CabrilloSentRSTStateOrDX` writes `DX`. So the "sends DX" rows give a
-  DX entrant an ADIF `STX_STRING` with no location and a Cabrillo line with
-  `DX`. Georgia, North Carolina, Missouri and Quebec all do this today; know
-  it before you copy it, and pin what your class writes.
+  it tests `QTHString`. Under `RSTDomesticOrDXQTHExchange` a DX station
+  logged `599 DL` has a `QTHString` and no `DomesticQTH`, so the column is
+  EMPTY. Use `CabrilloReceivedRSTDomesticQTHOrDX` (`DX` whenever the record
+  holds no domestic QTH -- New Mexico, and Georgia since 2026-10-27) when
+  your rules want `DX` there. Under `RSTDomesticQTHExchange` (Quebec, NC,
+  Missouri ...) the DX station is looked up in the `.dom`, the record carries
+  its `Dx` key and `CabrilloReceivedRSTQTHDX` is right.
+- **A DX entrant's ADIF `STX_STRING` says what was sent.** MY STATE is empty
+  for a DX entrant; `ADIFSentRSTState` writes it as it is (`599 `) and the
+  Cabrillo `CabrilloSentRSTStateOrDX` writes `DX`. A party whose DX entrant
+  sends `DX` states `ADIFSentRSTStateOrDX` (`599 DX`), which asks the same
+  `uCabrilloExchange.SentStateOrDX` the column does, so the two cannot spell
+  it differently (2026-10-27: Georgia, NC, Missouri, Quebec and every other
+  contest whose Cabrillo sent column is the `StateOrDX` helper; a party that
+  chooses between the helpers by station -- Arizona, Texas, New England, the
+  7QP, the Salmon Run, ARRL 160 -- mirrors the same choice in its ADIF
+  statement). A DX entrant that sends its COUNTRY (North Dakota, Oklahoma,
+  New Mexico, Ontario) uses `ADIFSentRSTState(SentLocation(aMy), aQso)` as
+  before.
 | RST + serial | `RSTQSONumberExchange` | `ExchangeFieldsRSTQSONumber` | `ParseRSTQSONumber` | `ADIFSentRSTQSONumber` | `CabrilloSentRSTQSONumber` / `CabrilloReceivedRSTQSONumber` | `uContestBaltic` |
 | RST + zone | `RSTZoneExchange` | `ExchangeFieldsRSTZone` | `ParseRSTZone` | `ADIFSentRSTZone` | `CabrilloSentRSTZone` / `CabrilloReceivedRSTZone` | `uContestJIDXCW`, CQ WW |
 | name + state | `NameAndDomesticOrDXQTHExchange` | `ExchangeFieldsNameQTH` | `ParseNameAndDomesticOrDXQTH` | `ADIFSentNameState` | `CabrilloSentNameState` / `CabrilloReceivedNameQTH` | `uContestNAQPCW`, `uContestCWOps` |

@@ -231,6 +231,27 @@ begin
       Exit;
       end;
 
+   (* A DX ENTRANT'S STX_STRING SAYS WHAT WAS SENT: "DX" (2026-10-27, NY4I).
+      The ADIF STX_STRING is the information transmitted, and these contests'
+      Cabrillo sent column (CabrilloSentRSTStateOrDX, uTestCabrilloColumns)
+      writes DX for a station with no state; ADIFSentRSTState wrote nothing.
+      Only input 1 (no state) differs from the plain RST-and-state rows below.
+      The stations that send DX are the Cabrillo pin's own: the five parties
+      that send their state in the host area and DX elsewhere (the host
+      station sends nothing), ARRL 160 (W/VE send nothing), and the rest at
+      every station. *)
+   if (aVariant = 1) and
+      ((aContest in [ALRS_UA1DZ_CUP, BCQP, IN7QPNE, INQSOPARTY, MICHQSOPARTY, MOQSOPARTY,
+                     NCQSOPARTY, NYQP, TENNESSEEQSOPARTY, TOEC, WISCONSINQSOPARTY]) or
+       ((aContest in [SEVENQP, ArizonaQsoParty, NEWENGLANDQSO, SALMONRUN, TEXASQSOPARTY]) and
+        (aStation in [psUS, psVE, psDX, psPA, psKH6, psJA])) or
+       ((aContest = ARRL160) and
+        (aStation in [psDX, psPA, psJA]))) then
+      begin
+      Result := '59  DX     ';
+      Exit;
+      end;
+
    case aContest of
       (* F25, FIXED 2026-10-14 (NY4I: "F25 was an artifact ... we should
          report an error as the silent error is not good"). These five WERE
@@ -582,6 +603,11 @@ begin
    CheckHelper('ADIFSentRSTState', ADIFSentRSTState,
                '599 FL     ',
                '59         ',
+               '599 ABCDEFGHIJKLMNOPQRST',
+               '599 TRC    ');
+   CheckHelper('ADIFSentRSTStateOrDX', ADIFSentRSTStateOrDX,
+               '599 FL     ',
+               '59  DX     ',
                '599 ABCDEFGHIJKLMNOPQRST',
                '599 TRC    ');
    CheckHelper('ADIFSentRSTGrid', ADIFSentRSTGrid,
