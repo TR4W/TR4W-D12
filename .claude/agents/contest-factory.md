@@ -70,7 +70,13 @@ multi-op packet). A new contest registers by its id (`RegisterContestById`),
 and **a real contest may since Q108 S4** (2026-10-17, below): it is refused on
 the multi-op network and its `<contestnr>` is derived. **The worked examples of a
 by-id addition are the Georgia QSO Party (`uContestGeorgiaQP`, a state party)
-and URC (`uContestURCDXRTTY`, anything else).** A state party states its
+and URC (`uContestURCDXRTTY`, anything else).** Copy Georgia's CLASS but
+NOT its test, which lacks the shipped county table and the in-state
+real-engine half: a new party copies the test of North Dakota (`5857a251`),
+Oklahoma (`4f7e9892`), New Mexico (`f2454a67`), Ontario (`926617b3`) or
+Quebec (`e751a346`) -- `ADDING_A_CONTEST.md`'s top table says which shows
+what. A new contest's sponsor questions go on its GitHub issue, not
+`CONTEST_FACTORY_OPEN_QUESTIONS.md`. A state party states its
 `InStateDomesticFileName` as ONE literal and puts both `.dom` files in
 `target/dom`; the installer ships that folder by wildcard (`full.nsi`: `File
 ..\target\dom\*.*`), so there is NO `full.nsi` edit -- `Lint-DomCoverage` reads
@@ -170,7 +176,7 @@ the target shape, the M-step migration order and the open questions.
   Mexico, Oklahoma, Texas and Ontario carried word for word. The class keeps
   WHO counts (its own `CountsDXMultiplier` / `HasDXMultiplier`; Florida
   passes True). The 7QP, New England and ARCI carry the same bodies but sit
-  on `TContestBase`, so they are NOT repointed -- an open copy. Two
+  on `TContestBase`, so they are NOT repointed -- an open copy (#136). Two
   leaf helpers came with New Mexico: `uCabrilloFormat.FormatCabrilloModeDigitalAsRY`
   (every digital submode RY, FM PH -- Delaware and New Mexico) and
   `uCabrilloExchange.CabrilloReceivedRSTDomesticQTHOrDX` ("DX" whenever the
@@ -874,7 +880,10 @@ the target shape, the M-step migration order and the open questions.
   host by `IsADIFPrimarySubdivision('VE', HostState)`, not by name. **A
   `ADIFCountyState` KEY OF THREE LETTERS IS TAKEN AS A HOST COUNTY EVEN WHEN
   IT IS A TYPED DX QTH** (no `DomesticQTH`, `QTHString` `KP4`/`UA9`): STATE
-  then names the host -- found adding Ontario, not fixed. D7's
+  then names the host -- found adding Ontario, open as issue 134 (and issue
+  137 holds the matrix totals' double count). In a commit message, never put
+  "fixed:" or another closing word before an issue number the commit does not
+  fix: GitHub closed both from "Found, not fixed: #134". D7's
   host-state-on-every-QSO and `GetStateForContest` are gone; a new QSO party
   states both answers and joins `uTestContestExport`'s pins (no count:
   STATE exactly where it splits a rover call is walked over the registry
