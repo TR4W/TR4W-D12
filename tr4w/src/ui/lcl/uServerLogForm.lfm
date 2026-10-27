@@ -5,7 +5,7 @@ object frmServerLog: TfrmServerLog
   Width = 860
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
-  Caption = 'Synchronize log'
+  Caption = 'Server log'
   ClientHeight = 396
   ClientWidth = 860
   Position = poMainFormCenter

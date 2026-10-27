@@ -51,7 +51,7 @@ B = Mint), NETWORK AUTO CONNECT off, a throwaway log of the contest.
 3. **Offline resend** (section C5): drop, log 5 and edit 1, reconnect; the
    reboot variant; nothing owed afterwards.
 4. **Late catch-up** (section C6): the reboot scenario; the question with
-   the setting off; Net > Synchronize; the backup file.
+   the setting off; Net > Add missing QSOs from the server; the backup file.
 5. **Repeat 1-4 against TR4WServerPy**, then with `tr4wserver` on Mint.
 6. **The long outage and the cable pull** (C5 and C6), last, because they
    leave the logs large.
@@ -70,7 +70,7 @@ ends and REPLACED the local log with the server's file. This build keeps no
 per link, after the server's HELLO, it **downloads the server's log on the second
 port and ADDS the QSOs it lacks -- insert only, after a verified backup, in one
 transaction, then a rescore**. With `SERVER AUTO SYNCHRONIZE LOG ON CONNECT` on it
-just does it; with it off the operator is asked, with the count. Net > Synchronize
+just does it; with it off the operator is asked, with the count. Net > Add missing QSOs from the server
 opens the window that shows the server's log and adds the same way. The unit tests
 drive the merge over a scratch SQLite log and the download against an in-process
 socket; `tools/netprobe --case catchup` (`--burst 200 --timeout 12`) proves the
@@ -100,10 +100,10 @@ deleted between runs, and a backup folder you can look in (the line
       EXPECT: B is ASKED "The server holds 20 QSO(s) that this log does not have.
       Add them to this log now? ..." and nothing is added until Yes. Answer No: the
       log is unchanged, `tr4w.log` says the operator declined, and the question
-      comes again on the next connect. Net > Synchronize afterwards still works
+      comes again on the next connect. Net > Add missing QSOs from the server afterwards still works
       (next item).
-- [ ] **Net > Synchronize (the window).** At B, Net > Synchronize. EXPECT: a window
-      titled Synchronize log; Get server log fills the Received bytes / records /
+- [ ] **Net > Add missing QSOs from the server (the window).** At B, Net > Add missing QSOs from the server. EXPECT: a window
+      titled Server log; Get server log fills the Received bytes / records /
       QSOs counters and the grid with the server's QSOs (greyed if deleted); the
       second button reads "Add 20 missing QSOs" and is enabled; clicking it closes
       the window and the 20 appear in B's log with the notice. Get server log again
@@ -148,7 +148,7 @@ deleted between runs, and a backup folder you can look in (the line
 - [ ] **The server is reachable but the sync port is not.** Block port+1 at the
       server (firewall), connect B. EXPECT: the link stays up; a notice "Could not
       read the server's log to catch up: could not connect to host:port ..." and an
-      Error line; Net > Synchronize shows a warning and the Get server log button
+      Error line; Net > Add missing QSOs from the server shows a warning and the Get server log button
       comes back.
 - [ ] **TR4WServerPy and Mint.** Repeat the first item against `python
       tr4wserver.py --display`, and with B on Linux Mint (its backup folder is under
@@ -240,7 +240,7 @@ server address set, on the same contest. Start with NETWORK AUTO CONNECT off.
       `tr4w.log` (`[Net] not connecting at startup (NETWORK AUTO CONNECT is off ...)`),
       the status strip's Network panel is empty or "Disconnected from Network",
       and the Net menu offers Connect and Show Network window only (Disconnect,
-      Reconnect, Set time, Send message, Synchronize and the clear rows are grey).
+      Reconnect, Set time, Send message, Add missing QSOs and the clear rows are grey).
 - [ ] **Connect with the Network window CLOSED.** Net > Connect at A and at B,
       never opening the window. EXPECT: the strip reads "Connected to Network";
       Connect greys, Disconnect and Reconnect and the sending rows light.

@@ -326,6 +326,17 @@ resourcestring
    SNetMenuReconnect  = 'Reconnect';
    SNetMenuShowWindow = 'Show Network window';
 
+   (* THE NET MENU ROW THAT OPENS THE SERVER-LOG WINDOW, AND THAT WINDOW'S TITLE
+     (2026-10-27). They replace RC_SYNLOG ("Compare and synchronize logs") and
+     RC_SYNLOG2 ("Synchronize log"): since the late catch-up the window only ADDS
+     the server's QSOs this log is missing -- it compares nothing and replaces
+     nothing. NEW KEYS rather than new English under the old ones, because the
+     catalogues translate by key and ignore the msgid, so a reworded RC_SYNLOG
+     would go on showing the old meaning in every reviewed language. The row
+     keeps its keystroke (Ctrl+Alt+S, uAccelerators, by menu_getserverlog). *)
+   SNetMenuServerLog = 'Add missing QSOs from the server...';
+   SServerLogTitle   = 'Server log';
+
    (* PEERS MUST BE ON THE SAME CONTEST -- Q110, NY4I 2026-10-18. A QSO from
      another station on a different contest is refused and this is the
      notice, raised once per station and contest per link. %s: the station

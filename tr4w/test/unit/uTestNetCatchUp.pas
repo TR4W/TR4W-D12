@@ -1279,7 +1279,7 @@ begin
 
    (* The menu row opens the window and sends nothing. *)
    CheckTrue(Pos('ShowServerLogSync', Between(mainText, 'menu_getserverlog:', 'menu_clearserverlog:')) > 0,
-             'Net > Synchronize opens the window');
+             'Net > Add missing QSOs from the server opens the window');
    CheckEquals(0, Pos('NET_LOGINFO_MESSAGE', Between(mainText, 'menu_getserverlog:', 'menu_clearserverlog:')),
                'and no longer asks the server for a CRC');
 end;

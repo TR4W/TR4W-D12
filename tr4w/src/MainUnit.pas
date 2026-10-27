@@ -745,7 +745,7 @@ uses
   uIntercomForm,           // CreateTR4WIntercomWindow
   uRadioPanelForm,         // CreateTR4WRadioPanelWindow -- both radios
   uNetworkForm,            // CreateTR4WNetworkWindow
-  uServerLogForm,          // ShowServerLogSync -- Net > Synchronize
+  uServerLogForm,          // ShowServerLogSync -- Net > Add missing QSOs from the server
   uRemMultsForm,      // CreateTR4WRemMultsWindow -- all five mult windows
   uFunctionKeysForm,   // CreateTR4WFunctionKeysWindow -- the first LCL tool window a TForm now -- CreateTR4WMainForm
   uPrefsForm,       // the PREF command -- the radio Preferences window

@@ -758,7 +758,7 @@ begin
    Inc(i); T_MENU_ARRAY[i].mrText := '-';
    Inc(i); T_MENU_ARRAY[i].mrText := RC_TIMESYN;
    Inc(i); T_MENU_ARRAY[i].mrText := RC_SENDMESSAGE;
-   Inc(i); T_MENU_ARRAY[i].mrText := RC_SYNLOG;
+   Inc(i); T_MENU_ARRAY[i].mrText := SNetMenuServerLog;
    Inc(i); T_MENU_ARRAY[i].mrText := '-';
    Inc(i); T_MENU_ARRAY[i].mrText := RC_CLEARALLLOGS;
    Inc(i); T_MENU_ARRAY[i].mrText := '-';

@@ -45,7 +45,7 @@ uses
       server holds QSOs this log lacks, SERVER AUTO SYNCHRONIZE LOG ON CONNECT
       adds them; with it off the operator is ASKED, with the count. Nothing is
       said when the log is already complete.
-    NET > SYNCHRONIZE opens the Synchronize window (uServerLogForm): Get server
+    NET > ADD MISSING QSOs FROM THE SERVER opens the Server log window (uServerLogForm): Get server
       log downloads and SHOWS the server's log, and the button that D7 called
       "Create and use new log" now ADDS the QSOs this log lacks. It no longer
       replaces anything.

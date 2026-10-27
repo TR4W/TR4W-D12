@@ -21,7 +21,8 @@ unit uServerLogForm;
 
   Dialog 73, and THE LAST Win32 dialog template in the program. It downloads the
   multi-op server's log over a second socket, shows it arriving, and ADDS the
-  QSOs this log lacks. Reached from Net > Synchronize.
+  QSOs this log lacks. Reached from Net > Add missing QSOs from the server
+  (SNetMenuServerLog); its title is SServerLogTitle.
 
   IT NO LONGER REPLACES ANYTHING (Phase 1, C6, 2026-10-27). In D7 the second
   button was "Create and use new log": it copied the downloaded file over the
@@ -119,7 +120,7 @@ implementation
 uses
   uLCLFormHelpers,    // ShowModalOverWin32Parent -- ownership and centring
   uGetServerLog,      // the download, the rows, the merge, the progress seam
-  uAppStrings,        // SServerLogAdd, SServerLogAddMissing
+  uAppStrings,        // SServerLogTitle, SServerLogAdd, SServerLogAddMissing
   MainUnit,           // LogRowTextFor, logger
   uContestRegistry,   // LoggedQSOIsXQSO -- a row greys an X-QSO (Q98 S1)
   VC,                 // ContestExchange
@@ -136,7 +137,7 @@ procedure TfrmServerLog.HandleShow(Sender: TObject);
 begin
    // EVERY caption, from the constants the catalogues translate.  The .lfm text
    // is a designer placeholder -- see the unit header.
-   Caption                    := string(RC_SYNLOG2);
+   Caption                    := SServerLogTitle;
    lblQSOsCaption.Caption     := string(RC_RECVQSOS);
    lblBytesCaption.Caption    := string(RC_RECVBYTES);
    lblRecordsCaption.Caption  := string(RC_RECVRECORDS);
