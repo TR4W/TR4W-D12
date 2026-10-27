@@ -23,6 +23,44 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## MULTI-OP PHASE 1: ONE BENCH SESSION, IN THIS ORDER (2026-10-27)
+
+The four multi-op sections below (C6, C5, the link, protocol 2) are one
+piece of work and run best as one session. This block is only the ORDER;
+the expectations live in the items, so nothing here can drift from them.
+Tick items in their own sections.
+
+**Build both stations from `main` at or after the catch-up commit
+(`02fa68d9`).** A released 5.0.35 station cannot connect: it sends no
+HELLO and both servers drop it. Windows: `build-out\app-i386-win32\tr4w_fpc.exe`.
+Mint: the Linux artifact of a `release.yml` dispatch run on that commit.
+Servers: `tr4wserver` built from the same commit (`Build-Server.ps1`; it can
+also run on Mint, which has a display), and TR4WServerPy at `master`
+(`python tr4wserver.py --display`). **One server at a time**; delete its
+`SERVERLOG.TRW` between runs. Same password on both ends (the default
+`TR4WSERVER`: a non-default one is lost on restart on Linux, issue #143).
+Both stations: `DEBUG LOG LEVEL = DEBUG`, distinct COMPUTER IDs (A = Windows,
+B = Mint), NETWORK AUTO CONNECT off, a throwaway log of the contest.
+
+1. **The link** (section "THE MULTI-OP LINK BELONGS TO THE PROGRAM"): nothing
+   connects by itself; Connect with the window closed; QSOs cross; open the
+   window mid-session; close it; Disconnect; Reconnect; auto-reconnect.
+2. **Protocol 2** (section "NETWORK PROTOCOL 2"): a by-id contest connects
+   and a QSO crosses; a contest change; a peer on another contest; an old
+   server (TR4WServerPy at tag `d7-protocol`); a duplicate id.
+3. **Offline resend** (section C5): drop, log 5 and edit 1, reconnect; the
+   reboot variant; nothing owed afterwards.
+4. **Late catch-up** (section C6): the reboot scenario; the question with
+   the setting off; Net > Synchronize; the backup file.
+5. **Repeat 1-4 against TR4WServerPy**, then with `tr4wserver` on Mint.
+6. **The long outage and the cable pull** (C5 and C6), last, because they
+   leave the logs large.
+
+Capture for any failure: `tr4w.log` from both stations (the `[Net]` lines),
+the server's log (`tr4wserver.log` or the Python `--log-file`), and the time.
+
+---
+
 ## Added 2026-10-27 -- A STATION THAT COMES UP LATE CATCHES UP FROM THE SERVER (Phase 1, C6)
 
 NY4I: *"Late catch-up has to be supported as it was ... to handle a station that
@@ -222,7 +260,7 @@ server address set, on the same contest. Start with NETWORK AUTO CONNECT off.
       "** DISCONNECTED from Network", B's list is empty, A's row for B clears,
       and B does NOT reconnect by itself. Connect, Disconnect and the rest of the
       menu keep their greying right. Log at B while disconnected: nothing
-      reaches A (and, as before this change, it is not re-sent on reconnect).
+      reaches A until B connects again, and then it is resent (C5, below).
 - [ ] **Reconnect.** Net > Reconnect at B while connected. EXPECT: a clean drop
       and a new link, both rows back, no dialog.
 - [ ] **Auto-reconnect without the window.** With the window closed and B
