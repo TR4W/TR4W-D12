@@ -174,7 +174,10 @@ implementation
 uses
    uCabrilloExchange,
    uExchangeFields,
-   SysUtils, uContestRegistry;
+   SysUtils,
+   (* DXCCKeyExceptUSACanadaHawaiiAlaska, DXCCCountryMode -- issue #136. *)
+   uDXMultiplierKey,
+   uContestRegistry;
 
 function FloridaPowerMultiplier(aPower: tCategoryPower): longint;
 begin

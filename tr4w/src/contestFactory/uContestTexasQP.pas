@@ -153,6 +153,8 @@ uses
    uCabrilloExchange,
    uADIFExchange,
    uContestFixedPoints,   (* FixedModePoints *)
+   (* DXCCKeyExceptUSACanadaHawaiiAlaska, DXCCCountryMode -- issue #136. *)
+   uDXMultiplierKey,
    uContestRegistry;
 
 function TContestTexasQP.GetDisplayName: string;

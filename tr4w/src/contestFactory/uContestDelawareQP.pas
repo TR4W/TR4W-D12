@@ -235,6 +235,8 @@ uses
    uCabrilloExchange,
    uADIFExchange,
    uCabrilloFormat,   (* FormatCabrilloModeDigitalAsRY *)
+   (* DXCCKeyExceptUSACanadaHawaiiAlaska, DXCCCountryMode -- issue #136. *)
+   uDXMultiplierKey,
    uContestRegistry;
 
 function DelawarePowerMultiplier(aPower: tCategoryPower): longint;

@@ -281,12 +281,17 @@ needs it, repoint the first in the same commit, and pin it in
 | helper on `TContestStateQSOPartyBase` | what it is | callers |
 |---|---|---|
 | `LocationOrOwnCountry(location, country)`, `SentLocation(aMy)` | a station that states a location sends it; one that states none (a DX entrant) sends its own country | North Dakota, Oklahoma, New Mexico, Ontario |
-| `DXCCKeyExceptUSACanadaHawaiiAlaska(counts, qso, key)`, `DXCCCountryMode(counts)` | the DX multiplier key -- every CTY country but K, VE, KH6, KL -- and the ARRL list it is counted on. The class passes WHO counts | Delaware, Florida, Nebraska, New Mexico, Oklahoma, Texas, Ontario |
 | `ReportNoTableForYear(logger, year, table, rule, source)` | the once-per-year Error a year-table rule writes for a year it has no table for | Idaho, Nebraska, New Mexico |
 
-The 7QP, New England and ARCI carry copies of the DX key but do not sit on
-the party base (issue #136). A helper that is not about parties goes in a
-leaf unit: `uCabrilloFormat.FormatCabrilloModeDigitalAsRY` (every digital
+A helper that is not about parties goes in a leaf unit, where any contest
+can call it. The DX multiplier key -- every CTY country but K, VE, KH6, KL --
+and the ARRL list it is counted on are
+`uDXMultiplierKey.DXCCKeyExceptUSACanadaHawaiiAlaska(counts, qso, key)` and
+`DXCCCountryMode(counts)`; the class passes WHO counts. Seven parties
+(Delaware, Florida, Nebraska, New Mexico, Oklahoma, Texas, Ontario) and the
+7QP, New England and ARCI call them -- they sat on the party base until
+issue #136 (2026-10-27) moved them to the leaf so the three on `TContestBase`
+could stop carrying copies. Pinned in `uTestDXMultiplierKey`. Others: `uCabrilloFormat.FormatCabrilloModeDigitalAsRY` (every digital
 submode RY, called from a class's own `CabrilloModeString` -- Delaware, New
 Mexico) and `uCabrilloExchange.CabrilloReceivedRSTDomesticQTHOrDX` (below).
 

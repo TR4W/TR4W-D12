@@ -106,7 +106,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
                           "DXCC countries* (excluding US, Canada, KH6 and
                           KL7)": the DX multiplier, IN STATE ONLY, every
                           country but K, VE, KH6 and KL
-                          (the party base's DXCCKeyExceptUSACanadaHawaiiAlaska),
+                          (uDXMultiplierKey.DXCCKeyExceptUSACanadaHawaiiAlaska),
                           on the DXCC (ARRL) list (DXCCCountryMode) -- one
                           private predicate CountsDXMultiplier asked by
                           HasDXMultiplier, DXMultiplierKey and CountryMode.
@@ -241,6 +241,8 @@ uses
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
+   (* DXCCKeyExceptUSACanadaHawaiiAlaska, DXCCCountryMode -- issue #136. *)
+   uDXMultiplierKey,
    uContestRegistry;
 
 function TContestOklahomaQP.GetDisplayName: string;

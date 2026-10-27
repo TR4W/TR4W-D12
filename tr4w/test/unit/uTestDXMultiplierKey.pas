@@ -107,6 +107,7 @@ type
       procedure Test_EveryContestHasItsPinnedDXMultiplier;
       procedure Test_EveryContestGivesItsPinnedCountryMode;
       procedure Test_RemainingCountriesFilterGivesItsPinnedAnswer;
+      procedure Test_ADXCCKeyIsEveryCountryButKVEKH6KL;
    end;
 
 implementation
@@ -116,6 +117,8 @@ uses
    VC,
    uContestBase,
    uContestRegistry,
+   (* DXCCKeyExceptUSACanadaHawaiiAlaska, DXCCCountryMode -- issue #136. *)
+   uDXMultiplierKey,
    uTestContestObjects,
    uTestContestKindPin,
    (* ContestsToWalk -- the invariant walks the registry (Q108 S1). *)
@@ -215,7 +218,7 @@ const
    (* WRITTEN BY HAND FROM THE OLD CASE AND RUN GREEN AGAINST IT -- see the
       unit header. Every one of the 79 DX contests has a row that gives a
       key, and every station branch its rule has. *)
-   KEY_PINS: array[0..170] of TKeyPin = (
+   KEY_PINS: array[0..172] of TKeyPin = (
       (* EVERY COUNTRY, AT EVERY STATION -- the old ARRLDXCC / CQDXCC kinds,
          the case's `else`. *)
       (Contest: ARRL_RTTY_ROUNDUP;       Station: psUS; Qso: pqW1AW; Assigns: True; Key: 'K'),
@@ -339,6 +342,12 @@ const
       (Contest: NEWENGLANDQSO;           Station: psHost; Qso: pqKL7;  Assigns: False; Key: ''),
       (Contest: NEWENGLANDQSO;           Station: psHost; Qso: pqXE1;  Assigns: True;  Key: 'XE'),
       (Contest: NEWENGLANDQSO;           Station: psUS;   Qso: pqXE1;  Assigns: False; Key: ''),
+      (* Added by hand 2026-10-27 (issue #136): the 7QP's in-area exclusions
+         were unpinned, so a change to the shared key on Hawaii or Alaska
+         reached the 7QP unseen. The values are the legacy
+         ARRLDXCCWithNoUSACanadaKH6OrKL7 arm's. *)
+      (Contest: SEVENQP;                 Station: psHost; Qso: pqKH6;  Assigns: False; Key: ''),
+      (Contest: SEVENQP;                 Station: psHost; Qso: pqKL7;  Assigns: False; Key: ''),
       (Contest: SEVENQP;                 Station: psHost; Qso: pqJA1;  Assigns: True;  Key: 'JA'),
       (Contest: SEVENQP;                 Station: psUS;   Qso: pqJA1;  Assigns: False; Key: ''),
       (Contest: TEXASQSOPARTY;           Station: psHost; Qso: pqVE3;  Assigns: False; Key: ''),
@@ -704,6 +713,7 @@ begin
    Test_EveryContestHasItsPinnedDXMultiplier;
    Test_EveryContestGivesItsPinnedCountryMode;
    Test_RemainingCountriesFilterGivesItsPinnedAnswer;
+   Test_ADXCCKeyIsEveryCountryButKVEKH6KL;
 end;
 
 procedure TDXMultiplierKeyTests.Test_EveryDXContestGivesItsPinnedKey;
@@ -853,6 +863,48 @@ begin
                                                 PinQso(pin.Qso)), True),
                   Who(pin.Contest, pin.Station) + ' listing ' + QSOS[pin.Qso].CountryID);
       end;
+end;
+
+(* THE SHARED DXCC KEY ITSELF -- uDXMultiplierKey.DXCCKeyExceptUSACanadaHawaiiAlaska
+   and DXCCCountryMode (issue #136, 2026-10-27; moved here from
+   uTestContestStateQSOPartyBase, where it pinned the party base's copy). Ten
+   contests call it; KEY_PINS and MODE_PINS above pin which of their
+   entrants count, this pins the key and the list once, by name. *)
+function SharedDXCCKey(aCounts: boolean; const aCountryID: string; out aKey: string): boolean;
+var
+   qso: ContestExchange;
+   key: DXMultiplierString;
+begin
+   qso := Default(ContestExchange);
+   qso.QTH.CountryID := ShortString(aCountryID);
+   key := 'JUNK';
+   Result := DXCCKeyExceptUSACanadaHawaiiAlaska(aCounts, qso, key);
+   aKey := string(key);
+end;
+
+procedure TDXMultiplierKeyTests.Test_ADXCCKeyIsEveryCountryButKVEKH6KL;
+var
+   key: string;
+begin
+   BeginTest('Test_ADXCCKeyIsEveryCountryButKVEKH6KL');
+   CheckTrue(SharedDXCCKey(True, 'DL', key), 'Germany is a DX multiplier');
+   CheckEquals('DL', key, 'keyed by its CTY country');
+   CheckTrue(SharedDXCCKey(True, 'JA', key), 'Japan is');
+   CheckEquals('JA', key, 'keyed JA');
+   CheckTrue(SharedDXCCKey(True, 'KP4', key), 'Puerto Rico is DX, not a state');
+   CheckEquals('KP4', key, 'keyed KP4');
+   CheckTrue(SharedDXCCKey(True, 'KH2', key), 'and Guam');
+   CheckTrue(SharedDXCCKey(True, 'XE', key), 'and Mexico');
+   CheckFalse(SharedDXCCKey(True, 'K', key), 'the USA is no DX multiplier');
+   CheckEquals('', key, 'and the key is written empty');
+   CheckFalse(SharedDXCCKey(True, 'VE', key), 'nor Canada');
+   CheckEquals('', key, 'empty');
+   CheckFalse(SharedDXCCKey(True, 'KH6', key), 'nor Hawaii');
+   CheckFalse(SharedDXCCKey(True, 'KL', key), 'nor Alaska');
+   CheckFalse(SharedDXCCKey(False, 'DL', key), 'a contest that counts none: no key for Germany');
+   CheckEquals('', key, 'and the key is written empty');
+   CheckTrue(DXCCCountryMode(True) = ARRLCountryMode, 'counted on the DXCC (ARRL) list');
+   CheckTrue(DXCCCountryMode(False) = CQCountryMode, 'the CQ list where none is counted');
 end;
 
 end.

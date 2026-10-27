@@ -302,7 +302,10 @@ uses
    uQsoMyFacts,
    (* The "no rare-grid table for this year" Error. *)
    Log4D,
-   SysUtils, uContestRegistry;
+   SysUtils,
+   (* DXCCKeyExceptUSACanadaHawaiiAlaska, DXCCCountryMode -- issue #136. *)
+   uDXMultiplierKey,
+   uContestRegistry;
 
 const
    (* THE 2026 CONTEST'S RARE SUBSQUARES -- the sponsor's "Rules for 2026

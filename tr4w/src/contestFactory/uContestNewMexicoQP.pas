@@ -115,7 +115,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
                       Hawaii count as state multipliers only ... United States
                       and Canada do not count as DX entity multipliers": the
                       DX multiplier, IN STATE ONLY, every DXCC entity but K,
-                      VE, KH6 and KL (the party base's
+                      VE, KH6 and KL (uDXMultiplierKey's
                       DXCCKeyExceptUSACanadaHawaiiAlaska) -- NY4I: US
                       possessions such as KP4 count as DX -- on the ARRL list
                       ("See http://www.arrl.org/country-lists-prefixes"). One
@@ -323,6 +323,8 @@ uses
    (* FormatCabrilloModeDigitalAsRY -- "Use RY to designate all digital
       modes". *)
    uCabrilloFormat,
+   (* DXCCKeyExceptUSACanadaHawaiiAlaska, DXCCCountryMode -- issue #136. *)
+   uDXMultiplierKey,
    uContestRegistry;
 
 const

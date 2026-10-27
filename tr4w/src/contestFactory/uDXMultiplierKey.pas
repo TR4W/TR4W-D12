@@ -37,7 +37,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   the arm's field was, so no comparison here converts or allocates a string
   the arm did not.
 
-  WHAT IS DELIBERATELY NOT A HELPER. Every country (the key is the CTY
+  ONE KEY IS A HELPER TOO (issue #136, 2026-10-27): every country but K, VE,
+  KH6 and KL, which ten contests keyed with the same body. The contest still
+  passes whether it counts one -- see DXCCKeyExceptUSACanadaHawaiiAlaska.
+
+  WHAT IS DELIBERATELY NOT A HELPER. Every other country (the key is the CTY
   country), a continent filter (WAE's Europe), a one-country exclusion (JT,
   ARI's first letter), UBA's and the Black Sea lists (uCallSignRoutines
   already holds them, one contest each) and PACC's own key: each is one or two
@@ -72,6 +76,31 @@ function IsARRLSectionCountry(const aCountryID: ShortString): boolean;
 function IsNorthAmericanDXCountry(const aCountryID: ShortString;
                                   aContinent: ContinentType): boolean;
 
+(* A DXCC MULTIPLIER OF EVERY COUNTRY BUT THE USA, CANADA, HAWAII AND ALASKA
+   -- the KEY, not only the country list. Issue #136, 2026-10-27: ten
+   contests carried this body word for word -- the Delaware, Florida,
+   Nebraska, New Mexico, Oklahoma, Texas and Ontario QSO parties (on
+   TContestStateQSOPartyBase since 926617b3), and the 7QP, the New England
+   QSO Party and ARCI (on TContestBase, which could not reach the party
+   base's copy). It lives here so every contest calls ONE routine.
+
+   WHETHER THE CONTEST COUNTS ONE, AND FOR WHICH ENTRANTS, STAYS THE
+   CLASS'S: it passes its own answer as aCounts (the 7QP and most parties
+   ask Station.InHostState, New England asks for a New England entrant,
+   Florida and ARCI count for every entrant and pass True), and states its
+   own HasDXMultiplier. With aCounts, the key is the worked station's CTY
+   country unless IsUSACanadaHawaiiOrAlaskaCountry; without, no key. aKey is
+   '' whenever the answer is False, which is "leave the DX QTH as it was"
+   (TContestBase.DXMultiplierKey).
+
+   DXCCCountryMode is the list that key is counted on: DXCC (the ARRL list)
+   where the contest counts it, the CQ list where it does not. Pinned by
+   uTestDXMultiplierKey. *)
+function DXCCKeyExceptUSACanadaHawaiiAlaska(aCounts: boolean;
+                                            const aQso: ContestExchange;
+                                            out aKey: DXMultiplierString): boolean;
+function DXCCCountryMode(aCounts: boolean): CountryModeType;
+
 implementation
 
 uses
@@ -102,6 +131,34 @@ begin
              (aCountryID <> 'K')         and
              (aCountryID <> 'VE')        and
              (aCountryID <> 'KL');
+end;
+
+(* Every DXCC country but K, VE, KH6 and KL, where the contest counts one --
+   see the declaration. *)
+function DXCCKeyExceptUSACanadaHawaiiAlaska(aCounts: boolean;
+                                            const aQso: ContestExchange;
+                                            out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if aCounts and
+      not IsUSACanadaHawaiiOrAlaskaCountry(aQso.QTH.CountryID) then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
+end;
+
+function DXCCCountryMode(aCounts: boolean): CountryModeType;
+begin
+   if aCounts then
+      begin
+      Result := ARRLCountryMode;
+      end
+   else
+      begin
+      Result := CQCountryMode;
+      end;
 end;
 
 end.

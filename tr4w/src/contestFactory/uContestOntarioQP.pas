@@ -109,7 +109,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
                        the worked station's CTY country -- one private
                        predicate, CountsDXMultiplier, asked by
                        HasDXMultiplier, DXMultiplierKey and CountryMode; the
-                       key and the list are the party base's shared
+                       key and the list are uDXMultiplierKey's shared
                        DXCCKeyExceptUSACanadaHawaiiAlaska and DXCCCountryMode.
 
   SCORE -- "Total Score = Total QSO points x total multiplier points": the
@@ -275,6 +275,8 @@ uses
    uADIFExchange,
    (* SNewContestOntarioQPCountyOrLocation. *)
    uAppStrings,
+   (* DXCCKeyExceptUSACanadaHawaiiAlaska, DXCCCountryMode -- issue #136. *)
+   uDXMultiplierKey,
    uContestRegistry;
 
 function TContestOntarioQP.GetDisplayName: string;

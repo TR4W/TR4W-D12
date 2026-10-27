@@ -167,16 +167,19 @@ the target shape, the M-step migration order and the open questions.
   `ReportNoTableForYear(logger, year, table, rule, source)`, the
   once-per-year "no table for this year" Error a year-table rule writes
   (lifted from Idaho and Nebraska, which carried it word for word; the
-  caller passes its own unit logger, so tests capture by unit name). And
-  since Ontario (2026-10-26, NY4I: identical code is one routine -- "a
-  contest owns its copy" covers rules that DIFFER, not identical lines):
-  `DXCCKeyExceptUSACanadaHawaiiAlaska(aCounts, aQso, aKey)` and
-  `DXCCCountryMode(aCounts)`, the DXCC key (every CTY country but K, VE,
-  KH6, KL) and the ARRL/CQ list, which Delaware, Florida, Nebraska, New
-  Mexico, Oklahoma, Texas and Ontario carried word for word. The class keeps
-  WHO counts (its own `CountsDXMultiplier` / `HasDXMultiplier`; Florida
-  passes True). The 7QP, New England and ARCI carry the same bodies but sit
-  on `TContestBase`, so they are NOT repointed -- an open copy (#136). Two
+  caller passes its own unit logger, so tests capture by unit name). NY4I:
+  identical code is one routine -- "a contest owns its copy" covers rules
+  that DIFFER, not identical lines. So the DXCC key (every CTY country but
+  K, VE, KH6, KL) and its ARRL/CQ list are ONE LEAF ROUTINE since #136
+  (2026-10-27): `uDXMultiplierKey.DXCCKeyExceptUSACanadaHawaiiAlaska(aCounts,
+  aQso, aKey)` and `DXCCCountryMode(aCounts)`, called by ten contests --
+  Delaware, Florida, Nebraska, New Mexico, Oklahoma, Texas, Ontario, the
+  7QP, New England and ARCI (lifted to the party base at Ontario, then to
+  the leaf so the three on `TContestBase` could reach it; the party base no
+  longer holds it). The class keeps WHO counts (its own
+  `CountsDXMultiplier` / `HasDXMultiplier`; Florida and ARCI pass True,
+  New England only for a New England entrant). Pinned by
+  `uTestDXMultiplierKey.Test_ADXCCKeyIsEveryCountryButKVEKH6KL`. Two
   leaf helpers came with New Mexico: `uCabrilloFormat.FormatCabrilloModeDigitalAsRY`
   (every digital submode RY, FM PH -- Delaware and New Mexico) and
   `uCabrilloExchange.CabrilloReceivedRSTDomesticQTHOrDX` ("DX" whenever the

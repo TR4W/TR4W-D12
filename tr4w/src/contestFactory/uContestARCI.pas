@@ -251,24 +251,20 @@ end;
 
 (* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
    Every country but the USA, Canada, Hawaii and Alaska -- the
-   ARRLDXCCWithNoUSACanadaKH6OrKL7 arm. *)
+   ARRLDXCCWithNoUSACanadaKH6OrKL7 arm. The key is uDXMultiplierKey's
+   shared one (issue #136); ARCI counts it for EVERY entrant, so it passes
+   True. *)
 function TContestARCI.DXMultiplierKey(const aQso: ContestExchange;
                                       out aKey: DXMultiplierString): boolean;
 begin
-   aKey := '';
-   Result := False;
-   if not IsUSACanadaHawaiiOrAlaskaCountry(aQso.QTH.CountryID) then
-      begin
-      aKey := aQso.QTH.CountryID;
-      Result := True;
-      end;
+   Result := DXCCKeyExceptUSACanadaHawaiiAlaska(True, aQso, aKey);
 end;
 
 (* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
    DXCC only, at every station. *)
 function TContestARCI.CountryMode: CountryModeType;
 begin
-   Result := ARRLCountryMode;
+   Result := DXCCCountryMode(True);
 end;
 
 

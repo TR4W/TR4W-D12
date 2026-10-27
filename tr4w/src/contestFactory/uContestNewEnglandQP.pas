@@ -548,18 +548,12 @@ end;
 
 (* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
    Every country but the USA, Canada, Hawaii and Alaska, for an entrant in New England (ARRLDXCCWithNoUSACanadaKH6OrKL7, which
-   DescribeSession stated there); none for anyone else. *)
+   DescribeSession stated there); none for anyone else. The key is
+   uDXMultiplierKey's shared one (issue #136); WHO counts is this class's. *)
 function TContestNewEnglandQP.DXMultiplierKey(const aQso: ContestExchange;
                                               out aKey: DXMultiplierString): boolean;
 begin
-   aKey := '';
-   Result := False;
-   if CountsDXMultiplier and
-      not IsUSACanadaHawaiiOrAlaskaCountry(aQso.QTH.CountryID) then
-      begin
-      aKey := aQso.QTH.CountryID;
-      Result := True;
-      end;
+   Result := DXCCKeyExceptUSACanadaHawaiiAlaska(CountsDXMultiplier, aQso, aKey);
 end;
 
 (* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
@@ -567,14 +561,7 @@ end;
    for anyone else, who counts none. *)
 function TContestNewEnglandQP.CountryMode: CountryModeType;
 begin
-   if CountsDXMultiplier then
-      begin
-      Result := ARRLCountryMode;
-      end
-   else
-      begin
-      Result := CQCountryMode;
-      end;
+   Result := DXCCCountryMode(CountsDXMultiplier);
 end;
 
 
