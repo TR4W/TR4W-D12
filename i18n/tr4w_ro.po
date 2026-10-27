@@ -8934,8 +8934,8 @@ msgstr "CATEGORIA POWER este acum %s -- categoria punctajului s-a schimbat şi j
 
 #: uappstrings.scontestnotonmultiop
 #, fuzzy
-msgid "%s cannot be used on the multi-op network yet -- the network protocol cannot carry it. Use it only while this station is not connected to a multi-op server."
-msgstr "%s nu poate fi încă folosit în rețeaua multi-op -- protocolul de rețea nu îl poate transporta. Folosiți-l doar cât timp această stație nu este conectată la un server multi-op."
+#~ msgid "%s cannot be used on the multi-op network yet -- the network protocol cannot carry it. Use it only while this station is not connected to a multi-op server."
+#~ msgstr "%s nu poate fi încă folosit în rețeaua multi-op -- protocolul de rețea nu îl poate transporta. Folosiți-l doar cât timp această stație nu este conectată la un server multi-op."
 
 #: uappstrings.snewcontestin7qpneinsideaparty
 #, fuzzy
@@ -9409,5 +9409,20 @@ msgstr ""
 #: uappstrings.stxinhibitedstatus
 #, fuzzy
 msgid "TX INHIBITED: %s"
+msgstr ""
+
+#: uappstrings.snetnohelloanswer
+#, fuzzy
+msgid "The multi-op server closed the connection without answering. It is probably older than this TR4W (which speaks network protocol %d). Update TR4WServer on the server computer, then open the Network window again."
+msgstr ""
+
+#: uappstrings.snetserverprotocolnewer
+#, fuzzy
+msgid "The multi-op server speaks network protocol %d, which is newer than the protocol %d this TR4W speaks. Update TR4W on this computer, then open the Network window again."
+msgstr ""
+
+#: uappstrings.snetserverprotocololder
+#, fuzzy
+msgid "The multi-op server speaks network protocol %d, but this TR4W needs protocol %d. Update TR4WServer on the server computer, then open the Network window again."
 msgstr ""
 
