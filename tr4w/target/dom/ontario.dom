@@ -1,0 +1,25 @@
+Ontario QSO Party -- entries used by an Ontario entrant
+The 50 Ontario multipliers (each its own multiplier), then the 50 US states, DC and the 12 provinces and territories other than Ontario.
+The Ontario file comes FIRST, so MAN is Manitoulin District and not P12's Manitoba alias (the first alias added wins).
+The provinces are listed here and not taken from P13.DOM: Ontario is no province multiplier for an Ontario entrant (an Ontario station sends its county),
+P13.DOM accepts neither NF nor LB for Newfoundland and Labrador, and P12.DOM gives MAN to Manitoba.
+DXCC countries are a DX multiplier from the call (the class), so there is no DX entry.
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
+http://www.va3cco.com/oqp/
+
+INCLUDE FILE ontario_cty.dom
+INCLUDE FILE S50.DOM
+INCLUDE FILE DC.DOM
+
+Ns = VE1,NS,^Nova Scotia
+Qc = VE2,QC,QUE,QU,PQ,^Quebec
+Mb = VE4,MB,^Manitoba
+Sk = VE5,SK,SAS,SASK,^Saskatchewan
+Ab = VE6,AB,ALB,ALT,^Alberta
+Bc = VE7,BC,^British Columbia
+Nt = VE8,NT,NW,NWT,^Northwest Territories
+Nb = VE9,NB,^New Brunswick
+Nu = VY0,NU,^Nunavut
+Yt = VY1,YT,YK,YU,^Yukon
+Pe = VY2,PE,PEI,^Prince Edward Island
+Nl = VO1,VO2,NL,NF,LB,LAB,^Newfoundland and Labrador

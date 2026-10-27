@@ -161,8 +161,17 @@ the target shape, the M-step migration order and the open questions.
   `ReportNoTableForYear(logger, year, table, rule, source)`, the
   once-per-year "no table for this year" Error a year-table rule writes
   (lifted from Idaho and Nebraska, which carried it word for word; the
-  caller passes its own unit logger, so tests capture by unit name). Two
-  leaf helpers came with it: `uCabrilloFormat.FormatCabrilloModeDigitalAsRY`
+  caller passes its own unit logger, so tests capture by unit name). And
+  since Ontario (2026-10-26, NY4I: identical code is one routine -- "a
+  contest owns its copy" covers rules that DIFFER, not identical lines):
+  `DXCCKeyExceptUSACanadaHawaiiAlaska(aCounts, aQso, aKey)` and
+  `DXCCCountryMode(aCounts)`, the DXCC key (every CTY country but K, VE,
+  KH6, KL) and the ARRL/CQ list, which Delaware, Florida, Nebraska, New
+  Mexico, Oklahoma, Texas and Ontario carried word for word. The class keeps
+  WHO counts (its own `CountsDXMultiplier` / `HasDXMultiplier`; Florida
+  passes True). The 7QP, New England and ARCI carry the same bodies but sit
+  on `TContestBase`, so they are NOT repointed -- an open copy. Two
+  leaf helpers came with New Mexico: `uCabrilloFormat.FormatCabrilloModeDigitalAsRY`
   (every digital submode RY, FM PH -- Delaware and New Mexico) and
   `uCabrilloExchange.CabrilloReceivedRSTDomesticQTHOrDX` ("DX" whenever the
   record holds no `DomesticQTH`). **`CabrilloReceivedRSTQTHDX` tests
@@ -385,7 +394,9 @@ the target shape, the M-step migration order and the open questions.
   ratchet. ~~No dupe-key virtual~~ -- **the dupe rule IS the class's now**:
   `DupeKeyIncludesReceivedQTH` / `DupeKeyTour` (Q118, Q136) add to the key,
   and `DupeModeOf(aMode)` (2026-10-23, base: the mode itself) groups modes --
-  New England answers CW for Digital. It is asked ONLY by the dupe sheets,
+  New England answers CW for Digital. FM needs no answer: the sheet's
+  `uSortedStringList.DupeSlot` already files FM under Phone (pinned by the
+  Oklahoma and Ontario real-engine tests), so no class states FM -> Phone. It is asked ONLY by the dupe sheets,
   through `uCallsigns.ContestDupeSlot` (nil-safe `ContestDupeModeOf` keeps
   the keys Both/NoMode), never the multiplier sheets;
   `uTestContestNewEnglandQP`'s walk holds every other contest to identity.
@@ -854,7 +865,13 @@ the target shape, the M-step migration order and the open questions.
   read their own key spellings), an out-of-state station's state or a VE's
   province is written as itself when `uADIF.IsADIFPrimarySubdivision` allows
   it for the station's country, DX gets none (`uADIF.ADIFStateOfPartyQSO`
-  composes it). CNTY: `WritesADIFCounty`, every state party but BC. D7's
+  composes it). CNTY: `WritesADIFCounty`, every state party with a US host;
+  a Canadian host (BC, Ontario since #127) states False -- ADIF has no
+  Canadian CNTY -- and `Test_EveryPartyAndOnlyAPartyWritesAState` judges the
+  host by `IsADIFPrimarySubdivision('VE', HostState)`, not by name. **A
+  `ADIFCountyState` KEY OF THREE LETTERS IS TAKEN AS A HOST COUNTY EVEN WHEN
+  IT IS A TYPED DX QTH** (no `DomesticQTH`, `QTHString` `KP4`/`UA9`): STATE
+  then names the host -- found adding Ontario, not fixed. D7's
   host-state-on-every-QSO and `GetStateForContest` are gone; a new QSO party
   states both answers and joins `uTestContestExport`'s pins (no count:
   STATE exactly where it splits a rover call is walked over the registry

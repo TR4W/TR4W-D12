@@ -888,9 +888,12 @@ end;
    An out-of-state station in Connecticut gets STATE:CT from exactly the QSO
    parties -- every state party (TContestStateQSOPartyBase), the 7QP, New
    England and IN7QPNE -- and nothing from any other contest. CNTY is
-   written by every state party but British Columbia (ADIF has no Canadian
-   county enumeration), and by no multi-state party, as before. A state
-   party's host county is its HostState, a two-letter code. *)
+   written by every state party whose host is a US state, and by no party
+   whose host is a Canadian province (ADIF has no Canadian county
+   enumeration: British Columbia since Q89, Ontario since #127 -- the host
+   judged by IsADIFPrimarySubdivision('VE', HostState), not by naming the
+   contests), and by no multi-state party, as before. A state party's host
+   county is its HostState, a two-letter code. *)
 procedure TContestExportTests.Test_EveryPartyAndOnlyAPartyWritesAState;
 var
    contests: TContestIdentityList;
@@ -927,9 +930,10 @@ begin
                      ContestWho(identity) + ': not a QSO party, no STATE');
          end;
 
-      CheckEquals(Ord(isStateParty and not IsLegacyContest(identity, BCQP)),
+      CheckEquals(Ord(isStateParty and
+                      not IsADIFPrimarySubdivision('VE', identity.HostState)),
                   Ord(identity.WritesADIFCounty),
-                  ContestWho(identity) + ': CNTY exactly for the state parties but BC');
+                  ContestWho(identity) + ': CNTY exactly for the state parties with a US host');
 
       if isStateParty then
          begin

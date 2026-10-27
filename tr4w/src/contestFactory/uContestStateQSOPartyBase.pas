@@ -265,6 +265,35 @@ type
                                           const aCountry: CallString): string;
       function SentLocation(const aMy: TMyStationExchange): TMyStationExchange;
 
+      (* A DXCC MULTIPLIER OF EVERY COUNTRY BUT THE USA, CANADA, HAWAII AND
+         ALASKA -- a HELPER a party CALLS, never a rule this base applies.
+         Lifted 2026-10-26 (NY4I's rule: duplicated code is one routine)
+         when the Ontario QSO Party became the seventh party carrying the
+         same key and country-list bodies word for word: Delaware, Florida,
+         Nebraska, New Mexico, Oklahoma, Texas and Ontario.
+
+         WHETHER THE PARTY COUNTS ONE, AND FOR WHICH ENTRANTS, STAYS THE
+         CLASS'S: it passes its own answer as aCounts (most ask
+         Station.InHostState through their private CountsDXMultiplier;
+         Florida counts for every entrant and passes True), and states its
+         own HasDXMultiplier. What is shared is the predicate: with aCounts,
+         the key is the worked station's CTY country unless it is K, VE, KH6
+         or KL (those are states and provinces in these parties --
+         uDXMultiplierKey.IsUSACanadaHawaiiOrAlaskaCountry); without, no key
+         and aKey ''. False is "leave the DX QTH as it was", as
+         TContestBase.DXMultiplierKey says.
+
+         DXCCCountryMode is the list that key is counted on: DXCC (the ARRL
+         list) where the party counts it, the CQ list where it does not.
+
+         NOT REACHABLE FROM THE 7QP, NEW ENGLAND OR ARCI, which carry the same
+         bodies but do not sit on this base. Pinned by
+         uTestContestStateQSOPartyBase. *)
+      class function DXCCKeyExceptUSACanadaHawaiiAlaska(aCounts: boolean;
+                                                        const aQso: ContestExchange;
+                                                        out aKey: DXMultiplierString): boolean;
+      class function DXCCCountryMode(aCounts: boolean): CountryModeType;
+
       (* A RULE THAT CHANGES BY YEAR, ASKED FOR A YEAR IT HAS NO TABLE FOR,
          SAYS SO -- a HELPER a party CALLS, never a rule this base applies.
          Lifted 2026-10-26 from the Idaho QSO Party (its dormant-county
@@ -423,7 +452,8 @@ uses
    SysUtils,        (* Format *)
    uTR4WStrings,    (* TC_TOOMANYCOUNTIES *)
    uAppStrings,     (* SExchangeOutOfStateWorksHostOnly *)
-   uADIF;           (* ADIFPartyQTHKey, ADIFStateOfPartyQSO -- Q76/Q89 *)
+   uADIF,           (* ADIFPartyQTHKey, ADIFStateOfPartyQSO -- Q76/Q89 *)
+   uDXMultiplierKey; (* IsUSACanadaHawaiiOrAlaskaCountry *)
 
 function TContestStateQSOPartyBase.ParseReceivedExchange(const aText: string;
                                                          const aSession: TReceivedExchangeSession;
@@ -506,6 +536,34 @@ function TContestStateQSOPartyBase.SentLocation(const aMy: TMyStationExchange): 
 begin
    Result := aMy;
    Result.MyState := LocationOrOwnCountry(aMy.MyState, Station.MyCountry);
+end;
+
+(* Every DXCC country but K, VE, KH6 and KL, where the party counts one --
+   see the declaration. *)
+class function TContestStateQSOPartyBase.DXCCKeyExceptUSACanadaHawaiiAlaska(aCounts: boolean;
+                                                                            const aQso: ContestExchange;
+                                                                            out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if aCounts and
+      not IsUSACanadaHawaiiOrAlaskaCountry(aQso.QTH.CountryID) then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
+end;
+
+class function TContestStateQSOPartyBase.DXCCCountryMode(aCounts: boolean): CountryModeType;
+begin
+   if aCounts then
+      begin
+      Result := ARRLCountryMode;
+      end
+   else
+      begin
+      Result := CQCountryMode;
+      end;
 end;
 
 (* Once per year per object -- see the declaration. *)

@@ -385,6 +385,17 @@ resourcestring
       'IN7QPNE is for stations outside Indiana, the 7th call area, New ' +
       'England and Delaware. From %s, choose the %s instead.';
 
+   (* THE ONTARIO QSO PARTY'S NEW CONTEST PROMPT -- #127, NY4I 2026-10-26:
+     "Its own province prompt". The shared prompt reads "Enter your county if
+     you are in ON state", and an Ontario entrant's MY STATE is its OQP
+     county code: one who types ON is set up OUTSIDE Ontario, silently. A DX
+     entrant states nothing and sends its own country prefix (the party
+     base's SentLocation). *)
+   SNewContestOntarioQPCountyOrLocation =
+      'Enter your Ontario county code (e.g. TOR) if you are in Ontario. ' +
+      'Enter your state or Canadian province if outside Ontario; leave it ' +
+      'empty if you are DX (your country prefix is sent):';
+
    (* --------------------------------------------- the contest UI (M9b) - *)
 
    (* AN INACTIVE CONTEST'S LINE IN THE NEW CONTEST DROP-DOWN. NY4I,

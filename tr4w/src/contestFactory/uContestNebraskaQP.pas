@@ -298,7 +298,6 @@ uses
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
-   uDXMultiplierKey,
    (* TQsoMyFacts -- each QSO's recorded station, for the rare grid. *)
    uQsoMyFacts,
    (* The "no rare-grid table for this year" Error. *)
@@ -691,28 +690,14 @@ end;
 function TContestNebraskaQP.DXMultiplierKey(const aQso: ContestExchange;
                                             out aKey: DXMultiplierString): boolean;
 begin
-   aKey := '';
-   Result := False;
-   if CountsDXMultiplier and
-      not IsUSACanadaHawaiiOrAlaskaCountry(aQso.QTH.CountryID) then
-      begin
-      aKey := aQso.QTH.CountryID;
-      Result := True;
-      end;
+   Result := DXCCKeyExceptUSACanadaHawaiiAlaska(CountsDXMultiplier, aQso, aKey);
 end;
 
 (* DXCC where the entrant counts the DX multiplier; the CQ list for anyone
    else, who counts none. *)
 function TContestNebraskaQP.CountryMode: CountryModeType;
 begin
-   if CountsDXMultiplier then
-      begin
-      Result := ARRLCountryMode;
-      end
-   else
-      begin
-      Result := CQCountryMode;
-      end;
+   Result := DXCCCountryMode(CountsDXMultiplier);
 end;
 
 initialization

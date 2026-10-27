@@ -1,0 +1,25 @@
+﻿Ontario QSO Party -- the sponsor's logging set-up page
+
+Source: http://www.va3cco.com/oqp/setup.htm ("Updated: 2026-03-17")
+Fetched: 2026-10-26
+WA7BNM ID: 357 (https://www.contestcalendar.com/contestdetails.php?ref=357)
+Cabrillo Name: ON-QSO-PARTY (WA7BNM 357; the sponsor states no CONTEST: value)
+ADIF Name: ON-QSO-PARTY (ADIF 3.1.6 / 3.1.7 Contest_ID)
+NY4I's decisions: GitHub #127 (2026-10-26).
+
+==============================================================================
+OQP Logging Setup
+Updated: 2026-03-17
+Cabrillo files are preferred as it takes a bit of time to reformat a text file (depending on your number of contacts) into a cabrillo format for the scoring program to evaluate your submission.
+In your contest software setup please fill in the "ARRL-SECTION:" field. This field determines how your log is scored as in-Province or Out-of-Province. It must be a section as defined by the ARRL (i.e. DX), please don't put in your county or city name, Grid Square or OQP Multiplier. In Ontario you are one of: ONN, ONS, ONE, or GH.
+Many thanks to W3KM for the cabrillo evaluator software, once the logs are converted to cabrillo format, and proofed, it makes scoring a whole lot easier.
+Please indicate your entry class in your cabrillo header, it makes it easier to sort the scores based on what is submitted instead of our "best guess."
+Ensure the "CALLSIGN:" field matches what you are using for the contest. The "OPERATORS:" field of the cabrillo file can designate your personal callsign if you are using a special event callsign. You can also list callsigns if you are running a multi operator station.
+The exchange for OQP requires the sent and received QTH, not a serial number.
+Also please ensure you are sending in the log for the ON QSO Party, and not a logfile from another contest.
+If you submit a text file, ensure you capture the band, date and time, mode, callsign you worked and the sent and received QTH, one line per contact.
+If you are operating rover or portable even though you are sending CALL/QTH to indicate your location, just submit your log qso lines using your CALL without /QTH appended. Your location is captured in your QTH exchange field. Mobile logs have to be split to separate logs for each area you operate from for the evaluation software to score the multipliers properly - we do that for you as part of the evaluation process.
+Dupes are not counted against you, so work them and submit anyway.
+There are a number of logging programs to use for the Ontario QSO Party.
+Check them out and choose the one most suited to your operating style.
+®

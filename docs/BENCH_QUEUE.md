@@ -23,6 +23,38 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-26 -- THE ONTARIO QSO PARTY (issue #127)
+
+A new by-id contest (`ON-QSO-PARTY`), the second Canadian host on the party
+base. Unit-tested (`uTestContestOntarioQP`, including a real-engine run for
+both entrants); nothing sees the screen, the multiplier windows or a written
+file.
+
+- [ ] **The New Contest dialog.** Choose the Ontario QSO Party: EXPECT the
+      MY STATE comment asks for the Ontario county code (e.g. TOR), not "if
+      you are in ON state". With MY STATE `TOR` the session is in province;
+      with `ON` it is OUTSIDE Ontario (no guard refuses it -- the prompt is
+      the only one).
+- [ ] **In Ontario** (MY STATE `TOR`). Type `599 MAN` for VE3xxx: EXPECT the
+      multiplier is Manitoulin (MAN), not Manitoba; `599 MB` is Manitoba, a
+      second multiplier. `599 DC` then `599 MD`: TWO multipliers. `599 NF`
+      then `599 LB`: one (NL). `599 ON`: refused. Work DL1xxx `599 DL` on 20
+      and on 40 m: a new DX multiplier on EACH band; the remaining-countries
+      window lists DXCC countries but not K, VE, KH6 or KL.
+- [ ] **The club stations.** VE3CCO, VA3CCO, VE3ODX, VA3RAC, VE3RHQ score
+      10, also as `VE3CCO/TOR` (the rover strip); `VE3CCO/M` scores 2.
+- [ ] **A county-line junction.** `599 TOR/YRK/PEL/DUR/HTN` logs five QSOs,
+      one per county; nothing is refused (no maximum).
+- [ ] **The Cabrillo file.** EXPECT the writer refuses to start without
+      LOCATION (the sponsor scores in/out of province from ARRL-SECTION:
+      ONN, ONS, ONE or GH; DX outside North America); an FM QSO's mode is
+      `FM`; a DX entrant (no MY STATE) sends its own prefix (`599 DL`); the
+      ADIF carries STATE `ON` for a county and no CNTY.
+- [ ] **File > Reports > 3830 Score** from a real log: one `Mults` column (no
+      3830 form was read for this contest).
+- [ ] **NOT BUILT (#133)**: a rover's claimed score is a fixed station's --
+      one multiplier sheet, no 300-point area bonus. Expect it low.
+
 ## Added 2026-10-26 -- THE NEW MEXICO QSO PARTY (issue #125)
 
 A new by-id contest (`NM-QSO-PARTY`). Unit-tested (`uTestContestNewMexicoQP`,

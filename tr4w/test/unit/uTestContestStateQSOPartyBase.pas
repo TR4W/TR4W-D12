@@ -33,7 +33,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   ReportNoTableForYear (2026-10-26): a year-table rule's once-per-year
   Error, lifted from the Idaho and Nebraska QSO Parties when the New Mexico
   QSO Party became its third user. Each user's own test pins its outcome
-  through its BonusPoints; this pins the latch and the two messages. *)
+  through its BonusPoints; this pins the latch and the two messages.
+
+  DXCCKeyExceptUSACanadaHawaiiAlaska and DXCCCountryMode (2026-10-26): the
+  DXCC multiplier key and list seven parties carried word for word, lifted
+  when the Ontario QSO Party became the seventh. Each party's test pins
+  which of its entrants count; this pins the key and the list. *)
 unit uTestContestStateQSOPartyBase;
 
 {$I ..\..\src\tr4w.inc}
@@ -50,6 +55,7 @@ type
    private
       procedure Test_ADXEntrantSendsItsOwnCountry;
       procedure Test_AYearWithNoTableIsReportedOncePerYear;
+      procedure Test_ADXCCKeyIsEveryCountryButKVEKH6KL;
    end;
 
 implementation
@@ -75,7 +81,26 @@ type
       function Location(const aLocation: string; const aCountry: CallString): string;
       function Sent(const aMy: TMyStationExchange): TMyStationExchange;
       procedure Report(aLogger: TLogLogger; aYear: integer);
+      function DXKey(aCounts: boolean; const aCountryID: string; out aKey: string): boolean;
+      function DXMode(aCounts: boolean): CountryModeType;
    end;
+
+function TSentLocationProbe.DXKey(aCounts: boolean; const aCountryID: string; out aKey: string): boolean;
+var
+   qso: ContestExchange;
+   key: DXMultiplierString;
+begin
+   qso := Default(ContestExchange);
+   qso.QTH.CountryID := ShortString(aCountryID);
+   key := 'JUNK';
+   Result := DXCCKeyExceptUSACanadaHawaiiAlaska(aCounts, qso, key);
+   aKey := string(key);
+end;
+
+function TSentLocationProbe.DXMode(aCounts: boolean): CountryModeType;
+begin
+   Result := DXCCCountryMode(aCounts);
+end;
 
 function TSentLocationProbe.GetHostState: string;
 begin
@@ -219,10 +244,49 @@ begin
    end;
 end;
 
+(* THE DXCC KEY SEVEN PARTIES SHARE (Delaware, Florida, Nebraska, New Mexico,
+   Oklahoma, Texas, Ontario): where the party counts one, the worked
+   station's CTY country, unless it is the USA, Canada, Hawaii or Alaska --
+   those are states and provinces in these parties; US possessions (KP4,
+   KH2) and every other country are DX. Where it counts none, no key and an
+   empty one written over whatever was there. The list is DXCC (ARRL) where
+   it counts, the CQ list where not. Each party's own test pins who counts. *)
+procedure TContestStateQSOPartyBaseTests.Test_ADXCCKeyIsEveryCountryButKVEKH6KL;
+var
+   probe: TSentLocationProbe;
+   key: string;
+begin
+   BeginTest('Test_ADXCCKeyIsEveryCountryButKVEKH6KL');
+   probe := TSentLocationProbe.Create(NoContest);
+   try
+      CheckTrue(probe.DXKey(True, 'DL', key), 'Germany is a DX multiplier');
+      CheckEquals('DL', key, 'keyed by its CTY country');
+      CheckTrue(probe.DXKey(True, 'JA', key), 'Japan is');
+      CheckEquals('JA', key, 'keyed JA');
+      CheckTrue(probe.DXKey(True, 'KP4', key), 'Puerto Rico is DX, not a state');
+      CheckEquals('KP4', key, 'keyed KP4');
+      CheckTrue(probe.DXKey(True, 'KH2', key), 'and Guam');
+      CheckTrue(probe.DXKey(True, 'XE', key), 'and Mexico');
+      CheckFalse(probe.DXKey(True, 'K', key), 'the USA is no DX multiplier');
+      CheckEquals('', key, 'and the key is written empty');
+      CheckFalse(probe.DXKey(True, 'VE', key), 'nor Canada');
+      CheckEquals('', key, 'empty');
+      CheckFalse(probe.DXKey(True, 'KH6', key), 'nor Hawaii');
+      CheckFalse(probe.DXKey(True, 'KL', key), 'nor Alaska');
+      CheckFalse(probe.DXKey(False, 'DL', key), 'a party that counts none: no key for Germany');
+      CheckEquals('', key, 'and the key is written empty');
+      CheckTrue(probe.DXMode(True) = ARRLCountryMode, 'counted on the DXCC (ARRL) list');
+      CheckTrue(probe.DXMode(False) = CQCountryMode, 'the CQ list where none is counted');
+   finally
+      probe.Free;
+   end;
+end;
+
 procedure TContestStateQSOPartyBaseTests.RunAllTests;
 begin
    Test_ADXEntrantSendsItsOwnCountry;
    Test_AYearWithNoTableIsReportedOncePerYear;
+   Test_ADXCCKeyIsEveryCountryButKVEKH6KL;
 end;
 
 end.

@@ -1,0 +1,61 @@
+﻿Ontario QSO Party -- the Ontario multiplier list
+
+Source: http://www.va3cco.com/oqp/OQPMultList.pdf ("OQP Ontario Multiplier List - Effective 01Jan2023"), committed beside this file.
+Fetched: 2026-10-26
+WA7BNM ID: 357 (https://www.contestcalendar.com/contestdetails.php?ref=357)
+Cabrillo Name: ON-QSO-PARTY (WA7BNM 357; the sponsor states no CONTEST: value)
+ADIF Name: ON-QSO-PARTY (ADIF 3.1.6 / 3.1.7 Contest_ID)
+NY4I's decisions: GitHub #127 (2026-10-26).
+One multiplier a line, in the list's order: CODE ARRL-SECTION Name.
+
+==============================================================================
+ALG ONN Algoma District
+BRA ONS Brant County
+BFD ONS City of Brantford
+BRU ONS Bruce County
+CHK ONS City of Chatham-Kent
+COC ONN Cochrane District
+DUF ONS Dufferin County
+DUR GH  Durham Regional Municipality
+ELG ONS Elgin County
+ESX ONS Essex County
+FRO ONE Frontenac County
+GRY ONS Grey County
+HAL ONS Town of Haldimand
+HLB ONE Haliburton County
+HTN GH  Halton Regional Municipality
+HAM GH  City of Hamilton
+HAS ONE Hastings County
+HUR ONS Huron County
+KAW ONE City of Kawartha Lakes
+KEN ONN Kenora District
+LAM ONS Lambton County
+LAN ONE Lanark County
+LGR ONE Leeds & Grenville United Counties
+LXA ONE Lennox-Addington County
+MAN ONN Manitoulin District
+MSX ONS Middlesex County
+MUS ONS Muskoka District
+NIA GH  Niagara Regional Municipality
+NIP ONN Nipissing District
+NFK ONS Town of Norfolk
+NOR ONE Northumberland County
+OTT ONE City of Ottawa
+OXF ONS Oxford County
+PSD ONS Parry Sound District
+PEL GH  Peel Regional Municipality
+PER ONS Perth County
+PET ONE Peterborough County
+PRU ONE United Counties of Prescott & Russell
+PED ONE City of Prince Edward
+RAI ONN Rainy River District
+REN ONE Renfrew County
+SIM ONS Simcoe County
+SDG ONE United Counties of Stormont, Dundas & Glengarry
+SUD ONN Sudbury District
+TBY ONN Thunder Bay District
+TIM ONN Timiskaming District
+TOR GH  City of Toronto
+WAT ONS Waterloo Regional Municipality
+WEL ONS Wellington County
+YRK GH  York Regional Municipality

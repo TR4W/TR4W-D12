@@ -1,0 +1,56 @@
+Ontario QSO Party -- the Ontario multipliers (counties, districts, regional municipalities and single-tier cities)
+Loaded by an entrant outside Ontario; each entry is its own multiplier, and an Ontario entrant counts each too (no > On mapping).
+Source: the sponsor's OQPMultList.pdf, Effective 01Jan2023 (http://www.va3cco.com/oqp/OQPMultList.pdf).
+No INCLUDE here: the host-area rule reads this file as the host's QTHs and nothing else.
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
+
+ALG = ALG,^Algoma District
+BRA = BRA,^Brant County
+BFD = BFD,^City of Brantford
+BRU = BRU,^Bruce County
+CHK = CHK,^City of Chatham-Kent
+COC = COC,^Cochrane District
+DUF = DUF,^Dufferin County
+DUR = DUR,^Durham Regional Municipality
+ELG = ELG,^Elgin County
+ESX = ESX,^Essex County
+FRO = FRO,^Frontenac County
+GRY = GRY,^Grey County
+HAL = HAL,^Town of Haldimand
+HLB = HLB,^Haliburton County
+HTN = HTN,^Halton Regional Municipality
+HAM = HAM,^City of Hamilton
+HAS = HAS,^Hastings County
+HUR = HUR,^Huron County
+KAW = KAW,^City of Kawartha Lakes
+KEN = KEN,^Kenora District
+LAM = LAM,^Lambton County
+LAN = LAN,^Lanark County
+LGR = LGR,^Leeds & Grenville United Counties
+LXA = LXA,^Lennox-Addington County
+MAN = MAN,^Manitoulin District
+MSX = MSX,^Middlesex County
+MUS = MUS,^Muskoka District
+NIA = NIA,^Niagara Regional Municipality
+NIP = NIP,^Nipissing District
+NFK = NFK,^Town of Norfolk
+NOR = NOR,^Northumberland County
+OTT = OTT,^City of Ottawa
+OXF = OXF,^Oxford County
+PSD = PSD,^Parry Sound District
+PEL = PEL,^Peel Regional Municipality
+PER = PER,^Perth County
+PET = PET,^Peterborough County
+PRU = PRU,^United Counties of Prescott & Russell
+PED = PED,^City of Prince Edward
+RAI = RAI,^Rainy River District
+REN = REN,^Renfrew County
+SIM = SIM,^Simcoe County
+SDG = SDG,^United Counties of Stormont, Dundas & Glengarry
+SUD = SUD,^Sudbury District
+TBY = TBY,^Thunder Bay District
+TIM = TIM,^Timiskaming District
+TOR = TOR,^City of Toronto
+WAT = WAT,^Waterloo Regional Municipality
+WEL = WEL,^Wellington County
+YRK = YRK,^York Regional Municipality

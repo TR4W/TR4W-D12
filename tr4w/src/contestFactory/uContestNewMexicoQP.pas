@@ -115,8 +115,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
                       Hawaii count as state multipliers only ... United States
                       and Canada do not count as DX entity multipliers": the
                       DX multiplier, IN STATE ONLY, every DXCC entity but K,
-                      VE, KH6 and KL (uDXMultiplierKey.
-                      IsUSACanadaHawaiiOrAlaskaCountry) -- NY4I: US
+                      VE, KH6 and KL (the party base's
+                      DXCCKeyExceptUSACanadaHawaiiAlaska) -- NY4I: US
                       possessions such as KP4 count as DX -- on the ARRL list
                       ("See http://www.arrl.org/country-lists-prefixes"). One
                       private predicate, CountsDXMultiplier, asked by
@@ -323,8 +323,6 @@ uses
    (* FormatCabrilloModeDigitalAsRY -- "Use RY to designate all digital
       modes". *)
    uCabrilloFormat,
-   (* IsUSACanadaHawaiiOrAlaskaCountry -- the rules' DX exclusion. *)
-   uDXMultiplierKey,
    uContestRegistry;
 
 const
@@ -623,14 +621,7 @@ end;
 function TContestNewMexicoQP.DXMultiplierKey(const aQso: ContestExchange;
                                              out aKey: DXMultiplierString): boolean;
 begin
-   aKey := '';
-   Result := False;
-   if CountsDXMultiplier and
-      not IsUSACanadaHawaiiOrAlaskaCountry(aQso.QTH.CountryID) then
-      begin
-      aKey := aQso.QTH.CountryID;
-      Result := True;
-      end;
+   Result := DXCCKeyExceptUSACanadaHawaiiAlaska(CountsDXMultiplier, aQso, aKey);
 end;
 
 (* The ARRL DXCC list where the entrant counts the DX multiplier ("See
@@ -638,14 +629,7 @@ end;
    the CQ list for anyone else, who counts none. *)
 function TContestNewMexicoQP.CountryMode: CountryModeType;
 begin
-   if CountsDXMultiplier then
-      begin
-      Result := ARRLCountryMode;
-      end
-   else
-      begin
-      Result := CQCountryMode;
-      end;
+   Result := DXCCCountryMode(CountsDXMultiplier);
 end;
 
 function TContestNewMexicoQP.HasZoneMultiplier: boolean;

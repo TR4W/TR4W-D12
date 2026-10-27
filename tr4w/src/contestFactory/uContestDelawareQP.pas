@@ -234,7 +234,6 @@ uses
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
-   uDXMultiplierKey,
    uCabrilloFormat,   (* FormatCabrilloModeDigitalAsRY *)
    uContestRegistry;
 
@@ -492,14 +491,7 @@ end;
 function TContestDelawareQP.DXMultiplierKey(const aQso: ContestExchange;
                                             out aKey: DXMultiplierString): boolean;
 begin
-   aKey := '';
-   Result := False;
-   if CountsDXMultiplier and
-      not IsUSACanadaHawaiiOrAlaskaCountry(aQso.QTH.CountryID) then
-      begin
-      aKey := aQso.QTH.CountryID;
-      Result := True;
-      end;
+   Result := DXCCKeyExceptUSACanadaHawaiiAlaska(CountsDXMultiplier, aQso, aKey);
 end;
 
 (* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
@@ -507,14 +499,7 @@ end;
    for anyone else, who counts none. *)
 function TContestDelawareQP.CountryMode: CountryModeType;
 begin
-   if CountsDXMultiplier then
-      begin
-      Result := ARRLCountryMode;
-      end
-   else
-      begin
-      Result := CQCountryMode;
-      end;
+   Result := DXCCCountryMode(CountsDXMultiplier);
 end;
 
 initialization

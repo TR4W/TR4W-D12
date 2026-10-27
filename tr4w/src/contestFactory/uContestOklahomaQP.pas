@@ -106,8 +106,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
                           "DXCC countries* (excluding US, Canada, KH6 and
                           KL7)": the DX multiplier, IN STATE ONLY, every
                           country but K, VE, KH6 and KL
-                          (uDXMultiplierKey.IsUSACanadaHawaiiOrAlaskaCountry),
-                          on the DXCC (ARRL) list -- Nebraska's pattern, one
+                          (the party base's DXCCKeyExceptUSACanadaHawaiiAlaska),
+                          on the DXCC (ARRL) list (DXCCCountryMode) -- one
                           private predicate CountsDXMultiplier asked by
                           HasDXMultiplier, DXMultiplierKey and CountryMode.
       Non Oklahoma        oklahoma_cty.dom: "The 77 Oklahoma counties", each
@@ -241,8 +241,6 @@ uses
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
-   (* IsUSACanadaHawaiiOrAlaskaCountry -- the rules' DX exclusion. *)
-   uDXMultiplierKey,
    uContestRegistry;
 
 function TContestOklahomaQP.GetDisplayName: string;
@@ -450,28 +448,14 @@ end;
 function TContestOklahomaQP.DXMultiplierKey(const aQso: ContestExchange;
                                             out aKey: DXMultiplierString): boolean;
 begin
-   aKey := '';
-   Result := False;
-   if CountsDXMultiplier and
-      not IsUSACanadaHawaiiOrAlaskaCountry(aQso.QTH.CountryID) then
-      begin
-      aKey := aQso.QTH.CountryID;
-      Result := True;
-      end;
+   Result := DXCCKeyExceptUSACanadaHawaiiAlaska(CountsDXMultiplier, aQso, aKey);
 end;
 
 (* DXCC (the ARRL list) where the entrant counts the DX multiplier; the CQ
    list for anyone else, who counts none. *)
 function TContestOklahomaQP.CountryMode: CountryModeType;
 begin
-   if CountsDXMultiplier then
-      begin
-      Result := ARRLCountryMode;
-      end
-   else
-      begin
-      Result := CQCountryMode;
-      end;
+   Result := DXCCCountryMode(CountsDXMultiplier);
 end;
 
 function TContestOklahomaQP.HasZoneMultiplier: boolean;

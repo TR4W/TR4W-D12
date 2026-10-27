@@ -174,7 +174,6 @@ implementation
 uses
    uCabrilloExchange,
    uExchangeFields,
-   uDXMultiplierKey,
    SysUtils, uContestRegistry;
 
 function FloridaPowerMultiplier(aPower: tCategoryPower): longint;
@@ -395,20 +394,14 @@ end;
 function TContestFloridaQP.DXMultiplierKey(const aQso: ContestExchange;
                                            out aKey: DXMultiplierString): boolean;
 begin
-   aKey := '';
-   Result := False;
-   if not IsUSACanadaHawaiiOrAlaskaCountry(aQso.QTH.CountryID) then
-      begin
-      aKey := aQso.QTH.CountryID;
-      Result := True;
-      end;
+   Result := DXCCKeyExceptUSACanadaHawaiiAlaska(True, aQso, aKey);
 end;
 
 (* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
    DXCC only, at every station. *)
 function TContestFloridaQP.CountryMode: CountryModeType;
 begin
-   Result := ARRLCountryMode;
+   Result := DXCCCountryMode(True);
 end;
 
 initialization

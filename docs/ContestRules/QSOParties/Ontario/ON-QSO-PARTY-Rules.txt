@@ -1,0 +1,145 @@
+﻿Ontario QSO Party -- the sponsor's rules (Contest Club Ontario, CCO)
+
+Source: http://www.va3cco.com/oqp/rules.htm ("2026 Ontario QSO Party Rules (revised 01 March 2026)")
+        and http://www.va3cco.com/oqp/2026OQPRules.pdf ("Updated 01 March, 2026"), committed beside this file.
+Fetched: 2026-10-26
+WA7BNM ID: 357 (https://www.contestcalendar.com/contestdetails.php?ref=357)
+Cabrillo Name: ON-QSO-PARTY (WA7BNM 357; the sponsor states no CONTEST: value)
+ADIF Name: ON-QSO-PARTY (ADIF 3.1.6 / 3.1.7 Contest_ID)
+NY4I's decisions: GitHub #127 (2026-10-26).
+The HTML page's text follows, one line per line of the page, as fetched.
+
+WHERE THE PDF DIFFERS (quoted from 2026OQPRules.pdf; the PDF is the newer statement):
+  "All Stations claim 1 multiplier point for each Ontario county worked on each band."
+  Mobile/Rover bonus: "A station must make at least three contacts with three different stations
+  from the multiplier area (they can't be all to the same station on different bands).
+  A minimum of 3 multiplier areas must be activated to enable the mobile/rover bonus."
+  "Score 10 QSO points for each contact made with CCO club stations VA3CCO & VE3CCO, ODXA club
+  station VE3ODX, and RAC stations VE3RHQ and VA3RAC."
+
+==============================================================================
+2026 Ontario QSO Party Rules (revised 01 March 2026)
+-------------------------------------------
+New for 2026: Bonus Station VE3RHQ added.
+Phone contacts now count as 2 points.
+Contest times adjusted (moved 2 hours from Saturday night to Sunday night)
+County line proximity definition (250m)
+Clarification of Fixed Station County Line Operation.
+--------------------------------------------
+The Ontario QSO Party is open to all amateur radio
+operators regardless of license class
+world-wide.
+Dates and Times: Held on the third full
+weekend of April each Year. For 2026, the contest periods are 1800Z
+April 18 to 0300Z April 19,
+and 1200Z to 2000Z April 19.
+Objectives: For Ontario stations to contact
+as many amateur radio stations as possible on as many bands as
+possible world-wide. For stations outside Ontario to make as many
+contacts with Ontario amateur radio stations as possible.
+Frequencies: All Bands 160-2 meters with the
+exception of the WARC bands.
+Suggested Frequencies for Mobiles/QRP:
+HF SSB: 1.870, 3.735, 7.070, 7.260, 14.130, 14.265, 21.260, 28.360
+HF CW: 1.830, 3.530, 7.030, 14.030, 21.030, 28.030
+VHF/UHF SSB: 50.130, 144.205
+VHF/UHF FM: 52.540, 146.550
+Suggested Manner of Operation: Work HF SSB on
+the hour, work HF CW on the half hour.
+Use of FM: Operators can not use repeaters
+for either contest contacts or for soliciting contacts. Please keep
+the FM Simplex calling frequency of 146.520 MHz clear.
+Categories:
+FIXED STATIONS
+Multi-operator multi-transmitter
+Multi-operator two-transmitter
+Multi-operator single-transmitter
+Single Operator QRP Mixed mode (5 watts and
+under)
+Single Operator Mixed Mode - Low Power (100 Watts and under)
+Single Operator Mixed Mode - High Power (over 100
+Watts)
+Single Operator Phone only - Low Power (100 watts and under)
+Single Operator Phone only - High Power (over 100
+Watts)
+Single Operator CW only - Low Power (100
+Watts and under)
+Single Operator CW only - High Power (over 100 Watts)
+MM means any number of simultaneous transmissions allowed, M2 means only two simultaneous transmissions allowed and MS means only one transmission allowed at any time.
+Fixed Station County Line - A station operating from a fixed location within 250m of a county line.
+A seperate QSO and complete exchange must be logged for each county.
+ROVER/MOBILE
+Multi-operator
+Single-operator
+A mobile station is a station that moves
+between multiplier areas operating from a vehicle (either stopped or
+in motion) only using antennas that have the capability of being
+used while in motion. All antennas must be on the vehicle and
+contacts may be made either while moving or stationary.*
+A rover station is a station that moves
+between multiplier areas. Antennas may be mounted off the vehicle
+when stopped but contacts can be made with vehicular antennas when
+in motion. All antennas must be transported by the vehicle.*
+If a mobile or a rover station is on a county line
+or junction between 2 or more counties (within 250m of a county line) , a separate QSO and complete
+exchange must be made and logged for each county worked.
+* Please note that for all intents and purposes
+rover/mobile are treated the same in the OQP. They are NOT separate
+categories.
+Mobile and rover stations are encouraged to sign
+"/" and present multiplier location as part of the CQ e.g. VE3xxx/TOR This way other operators can
+anticipate their moves to a new multiplier area.
+Remote operation is permitted in all fixed categories. When operating remote, send the county/QTH where the transmitter is located.
+Distributed Multi-Operator: Two or more stations can operate using a single callsign from two or more locations, acting as a single station. This is supported by N1MM as a distributed multi-operator station. Other logging programs may also support this. In this category, all station(s) must be located within one county, and all stations will send the same county for their exchange. For all practical purposes, a distributed multi-operator station will appear (on the air) to be operating from a single location.
+Exchange: Ontario stations send signal report
+and their county abbreviation as per the
+Ontario county
+multiplier list. Ontario stations must log received signal
+report and county, province, state, or DXCC country abbreviation
+(the abbreviation “DX” is also acceptable.
+Non-Ontario stations send signal report and
+province, state, or DXCC country or abbreviation. Non-Ontario stations must log received
+signal report and county abbreviation as per the
+Ontario County
+list.
+Scoring: Ontario stations work everyone.
+Non-Ontario stations work Ontario stations only. Mobile/Rover
+stations may be worked again when they change multiplier areas.
+Score 2 QSO points for each station worked on phone
+per band. Score 2 QSO points for each station worked on CW per band.
+You may work a station TWICE per band: once on phone and once on CW.
+Score 10 QSO points for each contact made with CCO
+club stations VA3CCO & VE3CCO, ODXA club station VE3ODX, and RAC Ontario
+stations VA3RAC and VE3RHQ.
+Stations claim 1 multiplier point for each
+Ontario county worked on each band. see
+Ontario county multiplier list.
+Ontario stations also claim 1 multiplier point for
+each Canadian province/territory, U.S. state (plus District of Columbia) and DXCC country worked
+on each band.
+Rover/Mobile stations claim the
+sum of multipliers worked from each different Ontario multiplier location.
+SWL's claim only Ontario multipliers heard.
+Total Score = Total QSO points x total multiplier
+points.
+Mobile/Rover Bonus: Mobile/Rover stations add
+300 bonus points for each Ontario multiplier activated. To earn the
+mobile/rover bonus a station must make at least three contacts with
+three different stations from the multiplier area.
+Mobile/Rover Score = (total QSO points x total multiplier points) + bonus.
+Use of DX spotting networks: The use of DX spotting networks is permitted. Self spotting is permitted.
+Awards:
+See the Awards page for
+details.
+Log Submission: Entries should be submitted
+via the online web page no later than one month after the OQP, for 2025 that will be May 18, 2026.
+(or after Dayton Hamvention weekend).
+Late submissions will be treated as Check Logs.
+On-Line Log submittal page (preferred) : Go to log submit
+Text to Cabrillo converter (if needed):
+http://b4h.net/cabforms/onqp_cab3.php
+Results: Results will be posted on the CCO website. Final results will be published on the web site and
+may also be published in "The Canadian Amateur" depending on
+available space.
+Top
+®
