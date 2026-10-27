@@ -226,6 +226,36 @@ type
          merely discouraged -- so this is a decision, not a missing keyword. *)
       function GetCountyLineCountiesMax: integer; virtual;
       function GetCountyLineAllowed: boolean;
+
+      (* A DX ENTRANT SENDS ITS OWN COUNTRY -- a HELPER a party CALLS, never a
+         rule this base applies. Lifted 2026-10-26 from the North Dakota QSO
+         Party when the Oklahoma QSO Party became its second user (the rule
+         "do not duplicate code": copies drift).
+
+         Some sponsors have a DX station send its DXCC prefix ("DX Stations
+         give RST and DX country" -- North Dakota; "DX stations ... send
+         signal report and DXCC prefix" -- Oklahoma); others have it send the
+         letters DX (Georgia: the StateOrDX export helpers). Which one is
+         each sponsor's rule, so nothing here is asked unless a class asks:
+         a party whose DX entrant sends "DX" never calls these, and that is
+         why they are not virtual and not wired into an export.
+
+         THE ONE STATEMENT: a station that states a location (MY STATE, the
+         state the session SENDS -- design 7.11/7.12: an in-state station's
+         county, anyone else's state or province) sends it AS STATED; one
+         that states none -- a DX entrant -- sends its own country, the
+         country FCONTEST derives from MY CALL (Settings.My.Country, which
+         CurrentStation hands every contest object as MyCountry).
+
+         LocationOrOwnCountry is the rule over plain values, so the CQ
+         exchange (which is handed its station) and the exports (which ask
+         the object's Station) say it once. SentLocation is the export form:
+         the sent exchange with MY STATE filled in, handed to the column
+         helpers unchanged, so the column format stays theirs. Pinned by
+         uTestContestStateQSOPartyBase. *)
+      class function LocationOrOwnCountry(const aLocation: string;
+                                          const aCountry: CallString): string;
+      function SentLocation(const aMy: TMyStationExchange): TMyStationExchange;
    public
       property CountyLineCountiesMax: integer read GetCountyLineCountiesMax;
       property CountyLineAllowed: boolean read GetCountyLineAllowed;
@@ -417,6 +447,27 @@ end;
 function TContestStateQSOPartyBase.GetCountyLineAllowed: boolean;
 begin
    Result := GetCountyLineCountiesMax > 0;
+end;
+
+(* The stated location as stated; the own country when none is stated -- see
+   the declaration. *)
+class function TContestStateQSOPartyBase.LocationOrOwnCountry(const aLocation: string;
+                                                              const aCountry: CallString): string;
+begin
+   if Trim(aLocation) = '' then
+      begin
+      Result := string(aCountry);
+      end
+   else
+      begin
+      Result := aLocation;
+      end;
+end;
+
+function TContestStateQSOPartyBase.SentLocation(const aMy: TMyStationExchange): TMyStationExchange;
+begin
+   Result := aMy;
+   Result.MyState := LocationOrOwnCountry(aMy.MyState, Station.MyCountry);
 end;
 
 function TContestStateQSOPartyBase.StripsRoverCountyFromCall: boolean;

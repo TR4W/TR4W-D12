@@ -274,6 +274,7 @@ The five exchange statements must agree. These sets are in use:
 |---|---|---|---|---|---|---|
 | RST + county/state/province, or DX -- **a DX entrant sends "DX"** | `RSTDomesticOrDXQTHExchange` | `ExchangeFieldsRSTQTH` | `ParseRSTDomesticOrDXQTH` | `ADIFSentRSTState` | `CabrilloSentRSTStateOrDX` / `CabrilloReceivedRSTQTHDX` | Georgia |
 | same, but a DX station's received QTH is written as sent | as above | as above | as above | as above | `CabrilloSentRSTState` / `CabrilloReceivedRSTQTHOrDXQTH` | Nebraska |
+| same, and **a DX entrant sends its own country prefix**, not "DX" (a state party) | as above | as above | as above | `ADIFSentRSTState(SentLocation(aMy), aQso)` | `CabrilloSentRSTState(SentLocation(aMy), ...)` / `CabrilloReceivedRSTQTHOrDXQTH`; `CQExchangeDefault` is `' 5NN ' + LocationOrOwnCountry(aStation.MyState, aStation.MyCountry)` -- both helpers are protected on `TContestStateQSOPartyBase` | North Dakota, Oklahoma |
 | RST + a code from your `.dom` only | `RSTDomesticQTHExchange` | `ExchangeFieldsRSTQTH` | `ParseRSTDomesticQTH` | `ADIFSentRSTState` | `CabrilloSentRSTState` / `CabrilloReceivedRSTQTH` | URC |
 | RST + serial | `RSTQSONumberExchange` | `ExchangeFieldsRSTQSONumber` | `ParseRSTQSONumber` | `ADIFSentRSTQSONumber` | `CabrilloSentRSTQSONumber` / `CabrilloReceivedRSTQSONumber` | `uContestBaltic` |
 | RST + zone | `RSTZoneExchange` | `ExchangeFieldsRSTZone` | `ParseRSTZone` | `ADIFSentRSTZone` | `CabrilloSentRSTZone` / `CabrilloReceivedRSTZone` | `uContestJIDXCW`, CQ WW |

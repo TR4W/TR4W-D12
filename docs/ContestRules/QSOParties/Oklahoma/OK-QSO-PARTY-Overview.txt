@@ -1,0 +1,75 @@
+﻿Oklahoma QSO Party -- the sponsor's overview page
+
+Source: http://k5cm.com/oklahoma_qso_party_for_2012_will.htm (the main frame of http://k5cm.com/okqp.htm); Last-Modified 2026-08-13
+Fetched: 2026-10-26
+WA7BNM ID: 293 (https://www.contestcalendar.com/contestdetails.php?ref=293)
+Cabrillo Name: OK-QSO-PARTY
+ADIF Name: OK-QSO-PARTY
+Quoted by NY4I's decision on GitHub #126: "Only PSK, RTTY and JS8Call are allowed as digital contacts."
+
+==============================================================================
+ 
+ Oklahoma QSO Party for 2018 
+  Oklahoma QSO Party 2026 
+-  March 14  and 15 - 2026  
+   RESULTS
+2026   
+   COMMENTS
+2025   
+  OKQP Just for the fun of it.  
+  1400  - 0200 UTC on
+Saturday,    1400 - 2200 UTC Sunday  
+  That would be 9 to 9 on Saturday,
+and 9 to 5 on Sunday, local Oklahoma time  (DST does NOT start on this weekend)  
+   If your an Oklahoma station
+please consider going mobile this year, and help get all 77 counties on in a big
+way!!   
+  If you operate both Fixed and
+Mobile,
+please submit two logs and use two different call signs.  
+     Please submit your
+log, (by April 5 ) even if only for a few Q's.  
+   SPOT
+YOUR SELF HERE   
+   This is a summary please see  Rules
+2026 
+for all details.    No FT8 is allowed, but will be included when it supports OKQP
+The 2026 running will continue to allow DXCC to be counted as mults by Oklahoma stations, the 13 Canadian
+Multipliers that most other QSO Parties are now using are available as
+mults.  If your software does not recognize the mults, just
+keep track by hand and then add them to the Cabrillo file manually after the
+contest is over.    
+   If your a mobile please operate below .040 (on CW).
+Consider signing with a /M, /CTY, or a space and CTY.  If your a Oklahoma fixed station please CQ
+.041 and above and please do NOT sign your call with a /CTY. See the rules for
+suggested SSB frequencies.  
+              For 2026:   Oklahoma Mobile  stations can earn 500 points per
+        county by making at least 10 QSO in the county.    
+  Again this year, CW and Digital
+contacts will be scored separately, so you can work the same station on both CW
+and PSK and get credit for both modes. Only PSK, RTTY and JS8Call are allowed as digital
+contacts.   Just to be clear, no FT8 or FT4.    
+   Please exhibit good sportsmanship and distribute your
+contacts among the various mobiles. “Cheerleading”, defined as working only
+one mobile as they change counties, is highly discouraged.    
+  Be sure to use the county abbreviations
+shown with  Counties Map . Make sure
+your logging software enters the correct county when you type the three letter abbreviations. Note that in the past,
+"GAR-Garfield / GRV-Garvin",  "GRA-Grady / GNT-Grant", 
+"HAR-Harmon / HRP-Harper",  "MCL-McClain /
+MCU-McCurtain", "ROG-Rogers / RGM-Roger Mills",  "WAS-Washington /  WAT
+/ Washita",  "WOO-Woods / WDW-Woodward"  cause
+considerable confusion. Check your logging software before the contest and verify
+what gets entered as the county, when you type the above, three letter
+abbreviations.  
+  Please use NOTEPAD.EXE or NOTEPAD++
+to edit or make your Cabrillo file. DO NOT use a word processor like Microsoft
+word or Excel.  
+  Please use the the Web-to-Cabrillo file maker
+(compliments of Bruce WA7BNM) if you need to convert your paper log to a
+Cabrillo file.   
+   https://www.b4h.net/cabforms/okqp_cab3.php   
+  If your an Oklahoma station,
+please share your operating plans and I will post to the website.  
+  73 and see you in the party,  
+  Connie, K5CM  

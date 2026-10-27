@@ -1,0 +1,220 @@
+﻿Oklahoma QSO Party Rules
+
+Source: http://k5cm.com/okqp2026rules.pdf (linked from http://k5cm.com/okqp.htm); PDF Last-Modified 2026-03-14; text by pdftotext -layout
+Fetched: 2026-10-26
+WA7BNM ID: 293 (https://www.contestcalendar.com/contestdetails.php?ref=293)
+Cabrillo Name: OK-QSO-PARTY
+ADIF Name: OK-QSO-PARTY
+The document states "The 2026 Oklahoma QSO Party"; no revision number.
+The county table is a separate sponsor page: OK-QSO-PARTY-Counties.txt.
+
+==============================================================================
+             The 2026 Oklahoma QSO Party
+
+                    Saturday March 14 1400 to 0200 UTC
+                    Sunday March 15 1400 to 2200 UTC
+        9 to 9 on Saturday, 9 to 5 on Sunday, local Oklahoma time
+ Go here for a quick overview - Website - http://k5cm.com/okqp.htm
+
+                         SUBMIT LOGS BY APRIL 5
+
+· Objective: For Amateurs outside of Oklahoma to make contact with as many Oklahoma
+    stations as possible. For Oklahoma Amateurs to activate as many Oklahoma counties as
+    possible and work everyone.
+
+· Period of Operation: Everyone may operate the entire 19 hour period.
+· Bands: Operate only the 3.5, 7, 14, 21, 28, 50, and 144 MHz bands.
+
+             Suggested frequencies for CW - 3541, 7041, 14041, 21041, 28041
+              Phone - plus or minus 3.805, 7.195, 14.260, 21.335, 28.470, 50.130 MHz.
+             If your are a Mobile station, please CQ (on CW) below the suggested frequencies, if
+             your a Fixed station please CQ (on CW) above the suggested frequencies.
+· Modes: Operators may operate the following. (Fixed Multi op must enter HIGH MIXED)
+             Mixed mode (Phone, CW, Digital (NO FT8 allowed).
+             Phone only.
+             CW only.
+· Exchange:
+             Oklahoma stations send signal report and county.
+             W/VE stations (including KH6/KL7) send signal report and state or province.
+             DX stations (including KH2/KP4) send signal report and DXCC prefix.
+· QSO Points:
+             Oklahoma stations work anyone
+             Count two points per phone QSO with any station.
+             Count three points per CW QSO.
+             Count three points per Digital QSO (No FT8/FT4)
+             Stations may be worked again on each band and mode.
+             Non Oklahoma stations work only Oklahoma stations
+             Count two points per phone QSO with any OK station.
+             Count three points per CW QSO with any OK station
+             Count three points per Digital QSO (No FT8/FT4)
+             Stations may be worked again on each band and mode.
+· Multipliers:
+             Oklahoma stations
+             The 50 states (DC counts as Maryland); The 13 Canadian Provinces/Territories - NS,
+             NB, NL, PE, QC, ON, MB, SK, AB, BC, NT, NU, YT ; The 77 Oklahoma counties;
+             DXCC countries* (excluding US, Canada, KH6 and KL7). A Multiplier counts once,
+             regardless of the number bands or modes it is worked on. *(note: OK stations please do
+             not abuse the unlimited dxcc mult rule by s/p only DX stations).
+             Non Oklahoma stations
+             The 77 Oklahoma counties.
+
+             Oklahoma mobile stations that change counties are considered to be a new station and
+             may be worked again for QSO and multiplier credit. Oklahoma mobile stations
+             operating on a 2, 3, or 4 county line may be counted as 2, 3, or 4 QSO and
+             multipliers. Separate log entries must be entered for each county/QSO by both
+             Oklahoma and Non Oklahoma stations. Make sure you can get to the County line.
+             Operate close by if it is not safe to be on the line. Operating from either end of a
+             bridge on a water county line is OK. Do not operate in a unsafe spot. Do not park
+             in the middle of a bridge. Note that County hunters may require different criterion
+             than the OKQP. A multiplier counts once, regardless of the number of bands or modes
+             it is worked on.
+·
+· Categories:
+             Oklahoma - Fixed station
+
+                      SOHP - Single operator high power (over 100 watts)
+                      SOLP - Single operator low power ( less than 100 watts)
+                      QRP - Single operator QRP (5 watts or less)
+                      Multi-operator - any number of operators. No power limits, mixed mode only
+
+                          Multi 1 - One transmitted signal.
+                          Multi Multi - Any number of transmitted signals. (only one per band/mode)
+
+Oklahoma Mobile
+        OKLAHOMA MOBILE NON-ASSISTED - Oklahoma Mobile No driver or
+        second op. CW only, SSB only, or Mixed allowed. (100 watts max)
+        OKLAMOMA MOBILE ASSISTED - Oklahoma Mobile with a driver. Driver
+        can NOT operate (100 watts max). There can be more than two people in the
+        Mobile, but they may not operate or assist the operator or driver at anytime. This
+        means they can not be the navigator. If you want another operator or navigator
+        please enter as Mobile Unlimited. The driver may use a different call sign to
+        operate.
+        OKLAHOMA MOBILE UNLIMITED - Oklahoma Mobile Unlimited - any
+        number of operators or drivers. No power limit (other than legal). Only one
+        transmitted signal at a time. Mixed mode only.
+
+     Examples below: If you can, please paste one into your cab file and
+     delete all the others from the cab file.
+
+     CATEGORY: OKLAHOMA MOBILE NON-ASSISTED LOW CW
+
+     CATEGORY: OKLAHOMA MOBILE NON-ASSISTED LOW SSB
+     CATEGORY: OKLAHOMA MOBILE NON-ASSISTED LOW MIXED
+
+     CATEGORY: OKLAHOMA MOBILE ASSISTED LOW CW
+     CATEGORY: OKLAHOMA MOBILE ASSISTED LOW SSB
+
+     CATEGORY: OKLAHOMA MOBILE ASSISTED LOW MIXED
+     CATEGORY: OKLAHOMA MOBILE UNLIMITED
+
+        CATEGORY: OKLAHOMA  FIXED  SINGLE-OP LOW SSB
+        CATEGORY: OKLAHOMA  FIXED  SINGLE-OP LOW MIXED
+        CATEGORY: OKLAHOMA  FIXED  SINGLE-OP LOW CW
+        CATEGORY: OKLAHOMA  FIXED  SINGLE-OP HIGH SSB
+        CATEGORY: OKLAHOMA  FIXED  SINGLE-OP HIGH MIXED
+        CATEGORY: OKLAHOMA  FIXED  SINGLE-OP HIGH CW
+        CATEGORY: OKLAHOMA  FIXED  MULTI
+        CATEGORY: OKLAHOMA  FIXED  MULTI MULTI
+
+Non  Oklahoma station
+                      CATEGORY: NON-OKLAHOMA SINGLE-OP HIGH MIXED
+                      CATEGORY: NON-OKLAHOMA SINGLE-OP HIGH SSB
+                      CATEGORY: NON-OKLAHOMA SINGLE-OP HIGH CW
+
+                      CATEGORY: NON-OKLAHOMA SINGLE-OP LOW MIXED
+                      CATEGORY: NON-OKLAHOMA SINGLE-OP LOW SSB
+                      CATEGORY: NON-OKLAHOMA SINGLE-OP LOW CW
+
+                      CATEGORY: NON-OKLAHOMA SINGLE-OP QRP MIXED
+                      CATEGORY: NON-OKLAHOMA SINGLE-OP QRP SSB
+                      CATEGORY: NON-OKLAHOMA SINGLE-OP QRP CW
+
+                      CATEGORY: DX SINGLE-OP HIGH CW
+                      CATEGORY: DX SINGLE-OP HIGH SSB
+                      CATEGORY: DX SINGLE-OP HIGH MIXED
+                      CATEGORY: DX SINGLE-OP LOW CW
+                      CATEGORY: DX SINGLE-OP LOW SSB
+                      CATEGORY: DX SINGLE-OP LOW MIXED
+
+                      (High power is more than 100 watts)
+
+                      Multi-operator -Any number of operators, one transmitted signal. No power
+                      limit. Mixed only
+                      CATEGORY: NON-OKLAHOMA MULTI-OP
+
+· Scoring:
+             Multiply total QSO Points by total Multipliers.
+
+· Bonus
+
+             Oklahoma Mobile stations can earn 500 points per county by making at least 10 QSO in
+             the county.
+             -
+· Miscellaneous:
+             Spotting nets, packet node, internet spotting websites etc, can be used by all stations.
+             Contacts through repeaters, digipeaters, internet, or gateways are not permitted.
+             Pack Roving / California train operation is absolutely not allowed. Two mobiles
+             traveling together may work each other one time from each county combination (for
+             example only on 40 meters or only on 20 meters not all bands). This does not preclude
+             mobiles that happen to cross paths by chance from working each other on all bands. Do
+             not put PIT/LAT/HAS on the same line in your log. Use a separate line for each county.
+             No FT8/FT4. No repeaters.
+
+             Please exhibit good sportsmanship and distribute your contacts among the various
+             mobiles. "Cheerleading", defined as working only one mobile as they change counties,
+             is highly discouraged.
+· Log Submission:
+             Logs must be received by April 5.
+             If you submit by Email, name your log with your call sign (example: k5cm.log), put
+             your call in the subject line. If you have both Phone and CW qso's in your log and are
+             not entering "Mixed mode", please put a statement in the Email stating what mode you
+             are entering even though you have it in you cab file.
+
+             Use Cabrillo format as shown below. Note that the two rows of numbers show the
+             column number and are not part of the cabrillo file. For example the call sign in the
+             example below starts at 31. Use a text editor such as "notepad" to edit or generate the
+             Cabrillo file. DO NOT USE A WORD PROCESSOR TO EDIT THE CAB FILE. DO
+             NOT USE EXCEL TO GENERATE THE CAB FILE. USE NOTEPAD. If possible
+             remove all the /M and /CTY from the calls of the mobile station.
+
+                111111111122222222223333333333444444444455555555556666666666777777
+123456789012345678901234567890123456789012345678901234567890123456789012345
+
+CALLSIGN: K5CM
+CONTEST: OK-QSO-PARTY
+
+LOCATION: OK
+CATEGORY: OKLAHOMA MOBILE ASSISTED LOW MIXED
+
+QSO: 7042 CW 2014-03-22 1301 K5CM    599 MUS  K4AMC   599 TN
+QSO: 14038 CW 2014-03-22 1514 K5CM   599 MAY  N2JJ    599 NY
+
+QSO: 7035 CW 2014-03-22 1602 K5CM    599 ROG  WB8WKQ  599 MI
+QSO: 7035 CW 2014-03-22 1603 K5CM    599 ROG  N6MU    599 CA
+
+QSO: 7035 CW 2014-03-22 1612 K5CM    599 ROG W5CW     599 MUS
+END-OF-LOG:
+
+· Please edit your Cabrillo file so that ONLY the three letter Oklahoma county abbreviations are used in
+
+the Cab file. Also remove all /M and /CTY from the calls of the mobiles. Do not put multiple
+
+counties in a single line. Ex: MUS/OKM/MCI is NOT exceptable. Each county must have a
+
+separate line in the Cabrillo file.
+
+Submit logs: https://okqp.contesting.com/
+
+Please use electronic entry if at all possible.
+However,
+Hand written paper logs with less than 50 QSO'S may be mailed to:
+Oklahoma QSO party
+Connie Marshall
+2991 S. Woodland Rd.
+Muskogee, Ok 74403
+Paper copies of computer generated logs will not be accepted.
+Paper logs must have a complete summary sheet with number of QSO on each mode, list
+of multipliers, points per mode, and score calculations MUST be included.
+
+OKQP Website-----
+

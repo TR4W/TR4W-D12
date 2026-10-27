@@ -1,0 +1,14 @@
+Entries for the Oklahoma QSO Party used by in-state (Oklahoma) stations
+The 77 Oklahoma counties (each its own multiplier), the 50 states with DC counted as Maryland, and the 13 Canadian provinces and territories.
+DXCC countries other than the USA, Canada, Hawaii and Alaska are the class's DX multiplier, not entries here.
+The county file comes FIRST, so a county code wins over any state or province alias spelled the same.
+DC is mapped to Md before S50.DOM (the rules: DC counts as Maryland).
+NF and LB are read as NL (the last line), as nebraska.dom does; the rules list NL.
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
+http://k5cm.com/okqp.htm
+
+INCLUDE FILE oklahoma_cty.dom
+Dc > Md = DC
+INCLUDE FILE S50.DOM
+INCLUDE FILE P13.DOM
+Nl = NF,LB

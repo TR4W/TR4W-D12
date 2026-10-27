@@ -152,7 +152,12 @@ the target shape, the M-step migration order and the open questions.
   ownership, not drift, so never merge such copies.
 - **Helpers only for genuinely shared computation**, called by the class's own
   code. `uContestARRLDigi` calling `LOGGRID.GetDistanceBetweenGrids` is the
-  worked example.
+  worked example. A helper the state parties share sits PROTECTED on
+  `TContestStateQSOPartyBase` and is asked only by a class that calls it:
+  `SentLocation` / `LocationOrOwnCountry` (a DX entrant sends its own country,
+  not "DX"), lifted from North Dakota when Oklahoma became the second user
+  (2026-10-26), pinned by `uTestContestStateQSOPartyBase` through an
+  unregistered probe class.
 - **`QSO POINT METHOD` IS RETIRED (M10 S2, 2026-10-14)**, with `EXCHANGE
   RECEIVED`, `INITIAL EXCHANGE` and the four multiplier commands -- names in
   `uCFG.RETIRED_COMMANDS`, no effect. The class decides all seven. The four

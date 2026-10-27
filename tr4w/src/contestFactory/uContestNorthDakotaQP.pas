@@ -58,7 +58,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     give RST and State, Province or Territories DX Stations give RST and DX
     country." RSTDomesticOrDXQTHExchange; the three-letter county codes are
     northdakota_cty.dom. A DX entrant sends its own country prefix (NY4I,
-    2026-10-26) -- SentLocation, used by the CQ exchange, Cabrillo and ADIF.
+    2026-10-26) -- the party base's SentLocation / LocationOrOwnCountry
+    (lifted there when Oklahoma became the second user), used by the CQ
+    exchange, Cabrillo and ADIF.
 
   QSO POINTS -- "All contacts count as 1 point per non-duplicated phone, CW or
     Digital contact on each band." FM is phone.
@@ -106,10 +108,6 @@ const
 
 type
    TContestNorthDakotaQP = class(TContestStateQSOPartyBase)
-   private
-      (* What a station sends as its location: its stated state, province or
-         county, or its own country when it has none (a DX entrant). *)
-      function SentLocation(const aMy: TMyStationExchange): TMyStationExchange;
    protected
       (* PROTECTED, MATCHING THE BASE -- callers use the property; descendants
          override the getter. *)
@@ -178,7 +176,6 @@ type
 implementation
 
 uses
-   SysUtils,
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
@@ -269,17 +266,9 @@ end;
 
 (* "DX Stations give RST and DX country" (NY4I, 2026-10-26: their country
    prefix). A DX entrant has no MY STATE, so the exchange it sends is its own
-   country; anyone else sends the state, province or county it stated. The
+   country; anyone else sends the state, province or county it stated --
+   the party base's SentLocation, which the Oklahoma QSO Party shares. The
    existing helpers are handed that value, so the column format stays theirs. *)
-function TContestNorthDakotaQP.SentLocation(const aMy: TMyStationExchange): TMyStationExchange;
-begin
-   Result := aMy;
-   if Trim(aMy.MyState) = '' then
-      begin
-      Result.MyState := string(Station.MyCountry);
-      end;
-end;
-
 function TContestNorthDakotaQP.GetADIFSentExchange(const aMy: TMyStationExchange;
                                                    const aQso: ContestExchange): string;
 begin
@@ -374,15 +363,9 @@ function TContestNorthDakotaQP.CQExchangeDefault(const aStation: TStationContext
 begin
    (* aStation.MyState is the state the session SENDS (design 7.11/7.12): a
       North Dakota station's county, anyone else's state or province. A DX
-      entrant has none and sends its country -- see SentLocation. *)
-   if Trim(aStation.MyState) = '' then
-      begin
-      Result := ' 5NN ' + string(aStation.MyCountry);
-      end
-   else
-      begin
-      Result := ' 5NN ' + aStation.MyState;
-      end;
+      entrant has none and sends its country -- the party base's
+      LocationOrOwnCountry, the rule SentLocation states for the exports. *)
+   Result := ' 5NN ' + LocationOrOwnCountry(aStation.MyState, aStation.MyCountry);
 end;
 
 function TContestNorthDakotaQP.HasDXMultiplier: boolean;

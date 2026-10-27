@@ -23,6 +23,36 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-26 -- THE OKLAHOMA QSO PARTY (issue #126)
+
+A new by-id contest (`OK-QSO-PARTY`). Unit-tested (`uTestContestOklahomaQP`,
+including a real-engine run for both entrants, and
+`uTestContestStateQSOPartyBase` for the DX entrant's sent prefix, now shared
+with North Dakota); nothing sees the screen, the multiplier windows or a
+written file.
+
+- [ ] **In Oklahoma** (New Contest, MY STATE `MUS`). Type `599 DC` for W3DC:
+      EXPECT it is taken and the multiplier shown is **MD** ("DC counts as
+      Maryland"); `599 MD` afterwards is no new multiplier. Type `599 OK`:
+      a new multiplier (NY4I: OK stays a state). Work DL1xxx `599 DL`: a new
+      **DX** multiplier, and the remaining-countries window lists DXCC
+      countries but not K, VE, KH6 or KL.
+- [ ] **A mobile on a four-county line.** In Oklahoma, enter
+      `599 PIT/LAT/HAS/LEF` for one call: EXPECT FOUR QSOs in the log, one per
+      county, each scored. `599 PIT/LAT/HAS/LEF/MCU` is refused
+      ("too many counties", maximum 4) and nothing is logged.
+- [ ] **A DX entrant** (MY CALL DL1xxx, no MY STATE): EXPECT the CQ exchange
+      is `5NN DL`, and the Cabrillo QSO lines and the ADIF `STX_STRING` carry
+      `DL`, not `DX` (North Dakota the same -- its code moved to the party
+      base).
+- [ ] **Digital.** A JS8 or PSK QSO scores 3; an FT8 or FT4 QSO is a greyed
+      X-QSO. CW and PSK with the same station on one band are two QSOs.
+- [ ] **The Cabrillo header.** The rules ask for one custom
+      `CATEGORY: OKLAHOMA MOBILE ...` line; TR4W writes `CATEGORY-*` tags.
+      Check okqp.contesting.com accepts the file as written (NY4I: bench).
+- [ ] **File > Reports > 3830 Score** from a real log: one `Mults` column,
+      as the 3830 form has (checked against the 2026 breakdown page).
+
 ## Added 2026-10-26 -- THE RADIO POLLER WRITES NO CONTROL (issue #108)
 
 The poller now sets state and asks the main thread to draw it. The unit test
