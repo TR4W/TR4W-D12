@@ -48,6 +48,53 @@ user-facing — no file paths or source-level jargon.
 
 ## 5.0.x — October 2026
 
+### 5.0.34 (2026-10-27) - NY4I
+
+#### Contests
+
+- **Five new QSO parties: North Dakota, Oklahoma, New Mexico, Ontario and Quebec.**
+  Each follows its sponsor's 2026 rules. That includes New Mexico's power
+  multiplier and W1AW/5 bonus, Ontario's 10-point club stations, and Quebec's
+  regions with a single "DX" multiplier. Mobile and rover bonuses are not scored
+  yet; mobiles score as fixed stations.
+- **Missouri, California, British Columbia, Florida and Wisconsin follow their 2026
+  sponsor rules.** In Missouri, Missouri itself is no longer a multiplier.
+- QSO parties: rovers are duped correctly, DX multiplier caps are applied, and in
+  several parties the host state is no longer counted as a multiplier.
+- Contests that log the QTH exactly as typed write it to Cabrillo that way again.
+- The 3830 score report shows the summary columns each contest asks for, and the
+  operator list comes from the log, sorted.
+
+#### Radio Control
+
+- **TR4W warns when you key up and the radio will not transmit**, for example when
+  an Elecraft K4 is in TX test mode.
+- Exiting TR4W now shuts each radio down cleanly, the way Reset Radio Ports does.
+- Network Icom radios set the scope span every time the link comes up.
+- Fixed a hang when tuning from the band map to a network radio, and a crash when
+  a network radio failed to reconnect.
+
+#### Logging and Backup
+
+- **Backups go to a local backup folder for each log** and are copied to your
+  BACKUP DESTINATION in the background. The status line names the destination
+  and says when the copy arrived. Clear Log's safety copy goes to the same folder.
+- The log backup no longer interrupts the log window.
+- The Open dialog shows each log's last QSO and QSO count, newest first.
+- Exports are named after the log: `<log>.adi`, `<log>.log` and `<log>.csv` are
+  written beside the log.
+
+#### Usability
+
+- **Super Check Partial upload works.** The server accepts the file, and if it ever
+  refuses one, TR4W shows the server's reason.
+- Logging a QSO no longer pauses the program while UDP, an external logger or the
+  multi-op server receives it.
+- Fixed a crash at start-up on Windows 7.
+- UDP contact records carry the QSO's own frequency.
+- In the "needs" windows, a band that is not needed shows an empty cell instead of
+  disappearing.
+
 ### 5.0.33 (2026-10-24) - NY4I
 
 #### Logging
