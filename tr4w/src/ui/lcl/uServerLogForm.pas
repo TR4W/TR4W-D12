@@ -69,12 +69,14 @@ unit uServerLogForm;
   uTR4WStrings and then the catalogues on the next regeneration.
 
   ALL THIRTEEN CONTROLS ARE HERE. The 'sent records' field (111/112) looks dead
-  from this unit -- nothing in uGetServerLog writes it -- and its writer is in a
-  different unit again: uNet.CommitChangesInLocalLog, which RunSyncThread calls
-  before it opens the socket. Worth remembering as a general caution about
-  Win32 dialogs: a control id is written by SetDlgItemInt from ANYWHERE that
-  has the window handle, so "grep this unit" is not how you find out whether a
-  field is live. The compiler found this one.
+  from this unit -- nothing in uGetServerLog writes it -- and it now is: its
+  writer was uNet.CommitChangesInLocalLog, which RunSyncThread called before it
+  opened the socket, and the resend of what was logged offline moved to the
+  main thread (uNet.ResendOfflineWork, Phase 1, C5), which has no business in
+  this window. The field stays until the sync window is revived or retired.
+  Worth remembering as a general caution about Win32 dialogs: a control id is
+  written by SetDlgItemInt from ANYWHERE that has the window handle, so "grep
+  this unit" is not how you find out whether a field is live.
 
   Its English caption was 'Sended records:'; corrected to 'Sent records:' in the
   same change, which is free exactly once -- the string had never been

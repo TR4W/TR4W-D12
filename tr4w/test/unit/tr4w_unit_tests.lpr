@@ -606,9 +606,12 @@ uses
    uNetHello in '..\..\src\uNetHello.pas',
    uNetLink in '..\..\src\uNetLink.pas',
    uNetFraming in '..\..\src\uNetFraming.pas',
+   uNetResend in '..\..\src\uNetResend.pas',
+   uServerQsoIndex in '..\..\src\uServerQsoIndex.pas',
    uTestNetFraming in 'uTestNetFraming.pas',
    uTestNetWireSizes in 'uTestNetWireSizes.pas',
    uTestNetHello in 'uTestNetHello.pas',
+   uTestNetResend in 'uTestNetResend.pas',
    uTestNetLink in 'uTestNetLink.pas',
    uDXSpotParse         in '..\..\src\uDXSpotParse.pas',
    uSpotAge             in '..\..\src\uSpotAge.pas',
@@ -1001,6 +1004,7 @@ begin
    RegisterSuite(TTestNetFraming.Create('NetFraming'));
    RegisterSuite(TTestNetWireSizes.Create('NetWireSizes'));
    RegisterSuite(TTestNetHello.Create('NetHello'));
+   RegisterSuite(TNetResendTests.Create('NetResend'));
    RegisterSuite(TTestADIFExchange.Create('ADIFExchange'));
    RegisterSuite(TCallSignRoutinesTests.Create('CallSignRoutines'));
    RegisterSuite(TYaesuASCIITests.Create('YaesuASCII'));

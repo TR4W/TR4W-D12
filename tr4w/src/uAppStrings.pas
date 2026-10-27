@@ -334,6 +334,14 @@ resourcestring
       'Station %s is on %s, this station is on %s -- its QSOs are NOT being ' +
       'logged here. All stations must run the same contest.';
 
+   (* CATCHING UP AFTER A LINK THAT WAS DOWN (Phase 1, C5, 2026-10-27). Said once
+     per link, when the QSOs logged and the edits made while this station was
+     disconnected have been handed to the server. %d: how many QSOs, then how
+     many edits. *)
+   SNetResent =
+      'Resent to the server what was logged while disconnected: %d QSO(s), ' +
+      '%d edit(s).';
+
    { --------------------------------------------------- verification checks - }
 
    (* Tools -> Run Verification Checks.  The window title names the thing an

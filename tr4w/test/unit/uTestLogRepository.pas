@@ -58,6 +58,8 @@ type
       procedure TestQSOsWithoutAnExchangeIdAreReported;
       procedure TestTheContestStartTimeIsReadAtOpen;
       procedure TestEveryNowTheLogStoresIsUTC;
+      procedure TestTheRepositoryFindsExactlyTheRowsTheServerIsOwed;
+      procedure TestMarkingServerProgressWritesTheFlagsAndNothingElse;
       procedure TestOneQSORoundTrips;
       procedure Test_LegacySkippedIsReadAsDeleted;
       procedure TestSentinelsBecomeNullAndComeBack;
@@ -1878,7 +1880,8 @@ begin
          '(SELECT group_concat(c, '','') FROM (SELECT callsign || '':'' || ' +
          'IFNULL(qso_points, '''') || '':'' || IFNULL(exchange_sent, '''') ' +
          '|| '':'' || IFNULL(my_grid, '''') || '':'' || IFNULL(my_source, '''') ' +
-         'AS c FROM qso ORDER BY id)), ' +
+         '|| '':'' || IFNULL(sent_to_server, '''') || '':'' || ' +
+         'IFNULL(server_dirty, '''') AS c FROM qso ORDER BY id)), ' +
          '(SELECT contest_type || '':'' || my_call FROM contest WHERE id = 1), ' +
          '(SELECT group_concat(c, '','') FROM (SELECT command || ''='' || ' +
          'value AS c FROM config ORDER BY command)), ' +
@@ -1920,7 +1923,7 @@ end;
   in the -wal -- and the reopened file must match the seed exactly. *)
 procedure TLogRepositoryTests.TestEveryWriteWaitsForItsCommit;
 const
-   STEPS = 16;
+   STEPS = 17;
    NAMES: array[0..STEPS - 1] of string = (
       'SaveQSO',
       'UpdateQSO',
@@ -1937,11 +1940,13 @@ const
       'DeleteAllQSOs',
       'two SaveQSOs in a row',
       'UpdateQSO and then SaveConfigValue',
-      'UpdateQSOMyFacts');
+      'UpdateQSOMyFacts',
+      'MarkServerProgress');
 var
    db: TLogDatabase;
    repo: TLogRepository;
    seed, other, changed: ContestExchange;
+   marks: TQsoSessionKeys;
    seedId: Int64;
    seedGuid: AnsiString;
    seedPrint, written: string;
@@ -2056,6 +2061,15 @@ begin
                   facts.Source := mfsEdited;
                   facts.Grid := 'FN31PR';
                   repo.UpdateQSOMyFacts(seedId, facts);
+                  end;
+               16:
+                  begin
+                  (* The seed is unsent and dirty (MakeDistinctQSO's seed 0),
+                    so both flags have something to change. *)
+                  SetLength(marks, 1);
+                  marks[0].SessionId := seed.ceQSOID1;
+                  marks[0].SessionSeq := seed.ceQSOID2;
+                  repo.MarkServerProgress(marks, marks);
                   end;
             end;
 
@@ -3013,6 +3027,180 @@ begin
    Scrub(fn);
 end;
 
+(* WHICH ROWS THE MULTI-OP SERVER STILL HAS TO BE TOLD ABOUT (Phase 1, C5).
+
+  A row is owed a QSO packet while sent_to_server is 0 and an edit packet while
+  server_dirty is 1 -- but only a row with a network identity. Eight rows cover
+  every combination, and the two with both ids 0 are what an import writes: they
+  must never be sent, however their flags read, or a station that opened an
+  imported log would flood the network with it. Order is log order. *)
+procedure TLogRepositoryTests.TestTheRepositoryFindsExactlyTheRowsTheServerIsOwed;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   qso: ContestExchange;
+   expected: array of ContestExchange;
+   owed: TLogRowUpdates;
+   fn: string;
+   unsent, dirty, i: integer;
+
+   (* Saves one row; aOwed says whether it should come back. *)
+   procedure Add(aSeed: integer; aSent, aDirty: boolean; aId1, aId2: Cardinal;
+                 aOwed: boolean);
+   begin
+      MakeDistinctQSO(qso, aSeed);
+      qso.ceSendToServer := aSent;
+      qso.ceNeedSendToServerAE := aDirty;
+      qso.ceQSOID1 := aId1;
+      qso.ceQSOID2 := aId2;
+      repo.SaveQSO(qso);
+      if aOwed then
+         begin
+         SetLength(expected, Length(expected) + 1);
+         expected[High(expected)] := qso;
+         end;
+   end;
+
+begin
+   BeginTest('the repository finds exactly the rows the server is owed');
+   fn := TempLogName('owed.db');
+   Scrub(fn);
+   SetLength(expected, 0);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         Add(1, True,  False, 1, 1, False);   (* the server has it, current *)
+         Add(2, False, False, 2, 2, True);    (* never sent *)
+         Add(3, True,  True,  3, 3, True);    (* sent, edited since *)
+         Add(4, False, True,  4, 4, True);    (* both *)
+         Add(5, False, False, 0, 0, False);   (* an import: no identity *)
+         Add(6, False, True,  0, 0, False);   (* an import, edited *)
+         Add(7, False, False, 7, 0, True);    (* a half-zero pair is still a pair *)
+         Add(8, False, False, 0, 8, True);
+         repo.Commit;
+
+         owed := TLogRowUpdates.Create;
+         try
+            CheckEquals(5, repo.CollectUnsentToServer(owed), 'five rows are owed');
+            CheckEquals(5, owed.Count, 'and five were collected');
+            for i := 0 to owed.Count - 1 do
+               begin
+               CompareQSO(expected[i], owed.Row(i), 'owed row ' + IntToStr(i));
+               end;
+            CheckTrue(owed.RowId(0) < owed.RowId(4), 'oldest first');
+         finally
+            owed.Free;
+         end;
+
+         repo.CountUnsentToServer(unsent, dirty);
+         CheckEquals(4, unsent, 'four networked rows were never sent');
+         CheckEquals(2, dirty, 'two networked rows were edited since');
+
+         CheckTrue(repo.HasQSOBySessionIds(2, 2), 'a stored key is found');
+         CheckTrue(repo.HasQSOBySessionIds(7, 0), 'a half-zero key is found');
+         CheckFalse(repo.HasQSOBySessionIds(9, 9), 'an unknown key is not');
+         CheckFalse(repo.HasQSOBySessionIds(0, 0),
+                    '(0, 0) names nothing, though rows carry it');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* MARKING WRITES THE TWO FLAGS AND NOTHING ELSE, and only where they change.
+  Every other column of every row is compared after, field by field, against
+  the record that was saved with the flags it should now have. *)
+procedure TLogRepositoryTests.TestMarkingServerProgressWritesTheFlagsAndNothingElse;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   a, b, c, back, want: ContestExchange;
+   idA, idB, idC: Int64;
+   sent, edits: TQsoSessionKeys;
+   none: TQsoSessionKeys;
+   unsent, dirty: integer;
+   fn: string;
+
+   function Key(const aQso: ContestExchange): TQsoSessionKey;
+   begin
+      Result.SessionId := aQso.ceQSOID1;
+      Result.SessionSeq := aQso.ceQSOID2;
+   end;
+
+begin
+   BeginTest('marking server progress writes the two flags and nothing else');
+   fn := TempLogName('marks.db');
+   Scrub(fn);
+   SetLength(none, 0);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         MakeDistinctQSO(a, 10);
+         a.ceSendToServer := False;
+         a.ceNeedSendToServerAE := True;
+         idA := repo.SaveQSO(a);
+         MakeDistinctQSO(b, 11);
+         b.ceSendToServer := False;
+         b.ceNeedSendToServerAE := True;
+         idB := repo.SaveQSO(b);
+         MakeDistinctQSO(c, 12);
+         c.ceSendToServer := True;
+         c.ceNeedSendToServerAE := False;
+         idC := repo.SaveQSO(c);
+         repo.Commit;
+
+         (* A is sent; its edit is still owed. B and C are untouched. *)
+         SetLength(sent, 1);
+         sent[0] := Key(a);
+         CheckEquals(1, repo.MarkServerProgress(sent, none), 'one row changed');
+         repo.Commit;
+         want := a;
+         want.ceSendToServer := True;
+         CheckTrue(repo.LoadQSO(idA, back), 'A reads');
+         CompareQSO(want, back, 'A: sent, still dirty, nothing else changed');
+         CheckTrue(repo.LoadQSO(idB, back), 'B reads');
+         CompareQSO(b, back, 'B is untouched');
+
+         (* Marking it again changes nothing: the flag is already set. *)
+         CheckEquals(0, repo.MarkServerProgress(sent, none), 'a flag already set is left alone');
+         repo.Commit;
+
+         (* A's edit is done; C was not dirty and stays as it is. A key that
+           matches no row is not an error. *)
+         SetLength(edits, 3);
+         edits[0] := Key(a);
+         edits[1] := Key(c);
+         edits[2].SessionId := 999;
+         edits[2].SessionSeq := 999;
+         CheckEquals(1, repo.MarkServerProgress(none, edits), 'only A was dirty');
+         repo.Commit;
+         want.ceNeedSendToServerAE := False;
+         CheckTrue(repo.LoadQSO(idA, back), 'A reads again');
+         CompareQSO(want, back, 'A: sent and current, nothing else changed');
+         CheckTrue(repo.LoadQSO(idC, back), 'C reads');
+         CompareQSO(c, back, 'C is untouched');
+
+         repo.CountUnsentToServer(unsent, dirty);
+         CheckEquals(1, unsent, 'only B was never sent');
+         CheckEquals(1, dirty, 'only B is still edited');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
 procedure TLogRepositoryTests.RunAllTests;
 begin
    (* FIRST, AND ON EVERY PLATFORM: these need no D7 fixture, and they pin
@@ -3036,6 +3224,8 @@ begin
    TestQSOsWithoutAnExchangeIdAreReported;
    TestTheContestStartTimeIsReadAtOpen;
    TestEveryNowTheLogStoresIsUTC;
+   TestTheRepositoryFindsExactlyTheRowsTheServerIsOwed;
+   TestMarkingServerProgressWritesTheFlagsAndNothingElse;
 
 {$IFNDEF WINDOWS}
    (* SAID, NOT SILENT: a suite that quietly contributes nothing is

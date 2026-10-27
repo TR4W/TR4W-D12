@@ -56,6 +56,7 @@ uses
   VC,
   uNetFraming,  // NetMessageSize -- the one size table the client parses with
   uNetHello,    // THelloMessage, JudgeProtocol -- the first message on every link
+  uServerQsoIndex,  // which QSOs the log already holds -- a resend is stored once
   Log4D,       // server logging: InitServerLogger / logger, restored from the fork
   Version,      // TR4WSERVER_CURRENTVERSION, used by FullServerVersion below
   TF,
@@ -272,6 +273,10 @@ var
     TFileStream is the RTL's, works on every platform FPC targets, and knows
     its own size -- which is most of what the old code asked the handle for. *)
   ServerLog                             : TFileStream = nil;
+  (* THE (ceQSOID1, ceQSOID2) PAIRS THE LOG HOLDS, so a QSO sent twice is stored
+    and relayed once. Created at first use; the log file is the authority --
+    see uServerQsoIndex. *)
+  ServerQsoIndex                        : TServerQsoIndex = nil;
   (* ServerTempLogHandle went with them: a THandle initialised to
     INVALID_HANDLE_VALUE and referenced nowhere, which is the last thing in
     this unit that named the Windows unit. *)
@@ -365,6 +370,15 @@ function OpenServerLog(aMode: TServerLogOpenMode): boolean;
 { Open the log, creating it if it is not there -- see the body. }
 function OpenOrCreateServerLog: boolean;
 procedure CloseServerLog;
+(* DOES THE SERVER LOG ALREADY HOLD THIS QSO -- the same (ceQSOID1, ceQSOID2)?
+  Phase 1, C5: a station that was disconnected sends again what it logged
+  meanwhile, and one that crashed sends some twice. False for the pair (0, 0),
+  and for a log that cannot be opened (the QSO is then kept in memory, as it
+  always was). Opens and closes the log itself; call it with the log CLOSED. *)
+function ServerHoldsQSO(const CE: ContestExchange): boolean;
+(* The server has just appended CE to the log, which is OPEN. Keeps the set of
+  held QSOs in step. Call it after the write and before CloseServerLog. *)
+procedure NoteQsoStored(const CE: ContestExchange);
 procedure AddContestExchangeToBuffer(CE: ContestExchange);
 procedure WriteContestExchangesBufferToServerLog;
 procedure SendLogFileInformation(s: TClientHandle);
@@ -697,11 +711,18 @@ begin
           NET_OFFLINEQSO_ID:
             begin
               ServerNewQSOPtr := @ServerBuffer[Bufindex];
-              if OpenServerLog(slOpenExisting) then
+              (* A QSO THE LOG ALREADY HOLDS IS NOT STORED AGAIN, but it is
+                acknowledged: the sender asked, and it is told the server has it. *)
+              if ServerHoldsQSO(ServerNewQSOPtr^.qiInformation) then
+                begin
+                SendConfirmMessage(aSocket);
+                end
+              else if OpenServerLog(slOpenExisting) then
               begin
                 ServerLog.Seek(0, soEnd);
                 ServerLog.WriteBuffer(ServerNewQSOPtr.qiInformation, SizeOf(ContestExchange));
                 FileFlush(ServerLog.Handle);
+                NoteQsoStored(ServerNewQSOPtr^.qiInformation);
                 DisplayServerLogSize;
                 CloseServerLog;
                 SendConfirmMessage(aSocket);
@@ -716,17 +737,35 @@ begin
                 ' band=' + IntToStr(Ord(ServerNewQSOPtr^.qiInformation.Band)) +
                 ' mode=' + IntToStr(Ord(ServerNewQSOPtr^.qiInformation.Mode)) +
                 ' exch=' + string(ServerNewQSOPtr^.qiInformation.ExchString));
-              SendMessageToClients(aSocket, SizeOf(TNetQSOInformation), False, dmQSOInfo);
-              if OpenServerLog(slOpenExisting) then
-              begin
-                ServerLog.Seek(0, soEnd);
-                ServerLog.WriteBuffer(ServerNewQSOPtr.qiInformation, SizeOf(ContestExchange));
-                FileFlush(ServerLog.Handle);
-                DisplayServerLogSize;
-                CloseServerLog;
-              end
+              (* A QSO THE LOG ALREADY HOLDS IS NEITHER STORED NOR RELAYED. It
+                reached the other stations when it first arrived, and each of
+                them ignores a second copy anyway (uNet.ReceivedQsoIsKnown), so
+                relaying it again would cost them a packet each and tell them
+                nothing; storing it would put two of one QSO in the server's
+                log. An edit is different and is always applied and relayed:
+                it is the same change however many times it is sent. *)
+              if ServerHoldsQSO(ServerNewQSOPtr^.qiInformation) then
+                begin
+                logger.Info('[Net] QSO ' + string(ServerNewQSOPtr^.qiInformation.Callsign) +
+                  ' (' + IntToStr(ServerNewQSOPtr^.qiInformation.ceQSOID1) + '/' +
+                  IntToStr(ServerNewQSOPtr^.qiInformation.ceQSOID2) +
+                  ') is already in the server log -- not stored, not relayed');
+                end
               else
-                AddContestExchangeToBuffer(ServerNewQSOPtr.qiInformation);
+                begin
+                SendMessageToClients(aSocket, SizeOf(TNetQSOInformation), False, dmQSOInfo);
+                if OpenServerLog(slOpenExisting) then
+                begin
+                  ServerLog.Seek(0, soEnd);
+                  ServerLog.WriteBuffer(ServerNewQSOPtr.qiInformation, SizeOf(ContestExchange));
+                  FileFlush(ServerLog.Handle);
+                  NoteQsoStored(ServerNewQSOPtr^.qiInformation);
+                  DisplayServerLogSize;
+                  CloseServerLog;
+                end
+                else
+                  AddContestExchangeToBuffer(ServerNewQSOPtr.qiInformation);
+                end;
               Bufindex := Bufindex + SizeOf(TNetQSOInformation);
             end;
 
@@ -1038,6 +1077,45 @@ begin
   ServerLogOpened := False;
 end;
 
+function ServerHoldsQSO(const CE: ContestExchange): boolean;
+begin
+  Result := False;
+  if (CE.ceQSOID1 = 0) and (CE.ceQSOID2 = 0) then
+     begin
+     Exit;
+     end;
+  if not OpenServerLog(slOpenExisting) then
+     begin
+     Exit;
+     end;
+  try
+     if ServerQsoIndex = nil then
+        begin
+        ServerQsoIndex := TServerQsoIndex.Create;
+        end;
+     (* THE FILE IS THE AUTHORITY: a set built from a log of another size is
+       stale -- the file was cleared, replaced or appended to by someone else --
+       and is built again. *)
+     if not ServerQsoIndex.ReflectsLog(ServerLog.Size) then
+        begin
+        ServerQsoIndex.LoadFromLog(ServerLog, SizeOfTLogHeader);
+        end;
+     Result := ServerQsoIndex.Contains(CE.ceQSOID1, CE.ceQSOID2);
+  finally
+     CloseServerLog;
+  end;
+end;
+
+procedure NoteQsoStored(const CE: ContestExchange);
+begin
+  if ServerQsoIndex = nil then
+     begin
+     Exit;
+     end;
+  ServerQsoIndex.Add(CE.ceQSOID1, CE.ceQSOID2);
+  ServerQsoIndex.NoteLogSize(ServerLog.Size);
+end;
+
 procedure AddContestExchangeToBuffer(CE: ContestExchange);
 begin
   if ContestExchangesBufferIndex = MaxContestExchangesBufferSize then Exit;
@@ -1091,6 +1169,10 @@ begin
   if not OpenServerLog(slOpenExisting) then Exit;
   ServerLog.Seek(SizeOfTLogHeader, soBeginning);
   ServerLog.Size := ServerLog.Position;
+  if ServerQsoIndex <> nil then
+     begin
+     ServerQsoIndex.Clear;
+     end;
   DisplayServerLogSize;
   CloseServerLog;
   ScanLogForSerialsNumbers;

@@ -33,6 +33,7 @@ type
       procedure Test_AFailedWriteIsLostAndReportedAndTheRestFollow;
       procedure Test_ASlowWriteIsCountedAndTheStallIsMeasured;
       procedure Test_PostAfterShutdownIsRefused;
+      procedure Test_TheTagComesBackWithTheOutcome;
       procedure Test_TheClientNoLongerWritesOnTheCallersThread;
    public
       procedure RunAllTests; override;
@@ -61,6 +62,9 @@ type
 
 var
    gLostKinds: TStringList;
+   (* 'W<tag>' for a packet written, 'L<tag>' for one lost, in the order the
+     writer thread reported them. *)
+   gLostTags: TStringList;
    gLostLock: TCriticalSection;
 
 constructor TStubWriter.Create;
@@ -131,11 +135,22 @@ begin
    end;
 end;
 
-procedure OnLostStub(const aKind: string);
+procedure OnLostStub(const aKind: string; const aTag: Int64);
 begin
    gLostLock.Enter;
    try
       gLostKinds.Add(aKind);
+      gLostTags.Add('L' + IntToStr(aTag));
+   finally
+      gLostLock.Leave;
+   end;
+end;
+
+procedure OnWrittenStub(const aKind: string; const aTag: Int64);
+begin
+   gLostLock.Enter;
+   try
+      gLostTags.Add('W' + IntToStr(aTag));
    finally
       gLostLock.Leave;
    end;
@@ -397,6 +412,39 @@ begin
    end;
 end;
 
+(* THE TAG A POSTER ATTACHES COMES BACK WITH THE OUTCOME (Phase 1, C5): written
+  or lost, in the order the packets were written, and a packet posted with no
+  tag comes back as 0. This is how a QSO's row is found when its write
+  finishes. *)
+procedure TNetSendQueueTests.Test_TheTagComesBackWithTheOutcome;
+var
+   w: TStubWriter;
+   q: TNetSendQueue;
+begin
+   BeginTest('a packet''s tag comes back through OnWritten or OnLost');
+   gLostTags.Clear;
+   w := TStubWriter.Create;
+   w.FailOn := 2;
+   q := TNetSendQueue.Create(w.Write);
+   try
+      q.OnLost := OnLostStub;
+      q.OnWritten := OnWrittenStub;
+      q.Post('QSOINFO', Packet(1), 111);
+      q.Post('EDITEDQSO', Packet(2), 222);
+      q.Post('QSOINFO', Packet(3), 333);
+      q.Post('STATIONSTATUS', Packet(4));
+      CheckTrue(q.WaitIdle(5000), 'drained');
+      (* WaitIdle fires when the last write returns; its OnWritten runs just
+        after, on the same thread. *)
+      Sleep(100);
+      CheckEquals('W111,L222,W333,W0', gLostTags.CommaText,
+                  'each outcome carries its own tag, in order');
+   finally
+      q.Free;
+      w.Free;
+   end;
+end;
+
 (* A SOURCE READ.  The behavioural tests above prove the queue; this proves the
   client USES it: after the handshake the only IOHandler.Write is in
   WriteToSocket, and Send contains none.  Without it someone could put the
@@ -444,6 +492,7 @@ end;
 procedure TNetSendQueueTests.RunAllTests;
 begin
    gLostKinds := TStringList.Create;
+   gLostTags := TStringList.Create;
    gLostLock := TCriticalSection.Create;
    try
       Test_PostReturnsWhileTheWriterIsBlocked;
@@ -454,9 +503,11 @@ begin
       Test_AFailedWriteIsLostAndReportedAndTheRestFollow;
       Test_ASlowWriteIsCountedAndTheStallIsMeasured;
       Test_PostAfterShutdownIsRefused;
+      Test_TheTagComesBackWithTheOutcome;
       Test_TheClientNoLongerWritesOnTheCallersThread;
    finally
       FreeAndNil(gLostLock);
+      FreeAndNil(gLostTags);
       FreeAndNil(gLostKinds);
    end;
 end;

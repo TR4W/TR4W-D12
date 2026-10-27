@@ -195,6 +195,16 @@ type
       function RowId(aIndex: integer): Int64;
    end;
 
+   (* A QSO'S NETWORK KEY: ceQSOID1 and ceQSOID2, which are session_id and
+     session_seq. Wide enough for both Cardinals, so a stored value is never
+     read back negative. *)
+   TQsoSessionKey = record
+      SessionId: Int64;
+      SessionSeq: Int64;
+   end;
+
+   TQsoSessionKeys = array of TQsoSessionKey;
+
    (* QSOS TO APPEND IN ONE TRANSACTION -- TLogRepository.AppendBatch.
 
       The ADIF import's batch (NY4I, 2026-10-14: all or nothing). Its rows
@@ -646,6 +656,37 @@ type
         all of them with one record. *)
       function UpdateQSOBySessionIds(aSessionId, aSessionSeq: Int64;
                                      const aQso: ContestExchange): boolean;
+
+      (* THE MULTI-OP SERVER'S BOOKKEEPING (Phase 1, C5, 2026-10-27).
+
+        sent_to_server = 0 says the server has never been given the QSO;
+        server_dirty = 1 says it holds an older version. idx_qso_unsent is a
+        partial index over exactly those two conditions, so the rows still owed
+        are found without reading the log.
+
+        A ROW WITH BOTH NETWORK IDS 0 IS NEVER OWED. That pair is what a QSO
+        that did not go through the network path carries (an import: 1,314 of
+        winter_fd's 1,316 rows), so it identifies nothing on the wire and cannot
+        be marked afterwards by its ids.
+
+        CollectUnsentToServer appends the owed rows to aInto, oldest first, with
+        their row ids, and answers how many. It only reads. *)
+      function CollectUnsentToServer(aInto: TLogRowUpdates): integer;
+
+      (* Does the log already hold a QSO with this network key? False for the
+        pair (0, 0), which is every unnetworked row's. *)
+      function HasQSOBySessionIds(aSessionId, aSessionSeq: Int64): boolean;
+
+      (* WRITES THE TWO FLAGS AND NOTHING ELSE. aSent get sent_to_server = 1;
+        aEditsDone get server_dirty = 0. Each is addressed by its network key,
+        and a flag already in the state asked for is left alone. Answers how
+        many rows changed. Does NOT commit; the caller decides. A key that
+        matches no row is not an error: the row was cleared or never stored. *)
+      function MarkServerProgress(const aSent, aEditsDone: TQsoSessionKeys): integer;
+
+      (* How many networked rows the server has never been given, and how many
+        it holds an older version of. *)
+      procedure CountUnsentToServer(out aUnsent, aDirty: integer);
 
       (* SEQUENTIAL READ, IN LOG ORDER -- what an export walks.
 
@@ -1443,6 +1484,17 @@ const
      position QSO_COLUMN_COUNT. A `string` constant because it is only ever
      compared with a FieldName and put in a message, both `string`. *)
    ROW_ID_COLUMN = 'id';
+
+   (* THE ROWS THE MULTI-OP SERVER STILL HAS TO BE TOLD ABOUT, as a WHERE clause.
+
+     The first term is idx_qso_unsent's own predicate, spelled the way the index
+     spells it, which is what lets SQLite read the index and not the table
+     (measured with EXPLAIN QUERY PLAN: SCAN qso USING INDEX idx_qso_unsent). The
+     second leaves out a row with no network identity -- see
+     CollectUnsentToServer. *)
+   UNSENT_TO_SERVER_WHERE =
+      '(sent_to_server = 0 OR server_dirty = 1) ' +
+      'AND NOT (session_id = 0 AND session_seq = 0)';
 
 var
    (* FILLED ONCE, by BuildQsoColumnTable from the initialization section, and
@@ -2786,6 +2838,118 @@ begin
       end;
 
    Result := UpdateQSO(rowId, aQso);
+end;
+
+function TLogRepository.CollectUnsentToServer(aInto: TLogRowUpdates): integer;
+var
+   q: TSQLQuery;
+   qso: ContestExchange;
+begin
+   Result := 0;
+   q := NewReadQuery;
+   try
+      q.SQL.Text := 'SELECT ' + QSO_COLUMNS + ', ' + ROW_ID_COLUMN +
+                    ' FROM qso WHERE ' + UNSENT_TO_SERVER_WHERE + ' ORDER BY id';
+      OpenQsoReader(q, True);
+      try
+         while not q.EOF do
+            begin
+            ReadRecord(q, qso);
+            aInto.Add(q.Fields[QSO_COLUMN_COUNT].AsLargeInt, qso);
+            Inc(Result);
+            q.Next;
+            end;
+      finally
+         q.Close;
+      end;
+   finally
+      q.Free;
+   end;
+end;
+
+function TLogRepository.HasQSOBySessionIds(aSessionId, aSessionSeq: Int64): boolean;
+var
+   q: TSQLQuery;
+begin
+   Result := False;
+
+   (* (0, 0) names no QSO: it is what every unnetworked row carries. *)
+   if (aSessionId = 0) and (aSessionSeq = 0) then
+      begin
+      Exit;
+      end;
+
+   q := NewReadQuery;
+   try
+      q.SQL.Text := 'SELECT 1 FROM qso WHERE session_id = :sid ' +
+                    'AND session_seq = :sseq LIMIT 1';
+      q.ParamByName('sid').AsLargeInt := aSessionId;
+      q.ParamByName('sseq').AsLargeInt := aSessionSeq;
+      q.Open;
+      Result := not q.EOF;
+      q.Close;
+   finally
+      q.Free;
+   end;
+end;
+
+function TLogRepository.MarkServerProgress(const aSent,
+                                           aEditsDone: TQsoSessionKeys): integer;
+var
+   q: TSQLQuery;
+   i: integer;
+begin
+   Result := 0;
+
+   if Length(aSent) > 0 then
+      begin
+      q := TSQLQuery.Create(nil);
+      try
+         q.DataBase := FDatabase.Connection;
+         (* THE FLAG AND NOTHING BESIDE IT, and only where it is not already
+           set. The partial index serves the lookup. *)
+         q.SQL.Text := 'UPDATE qso SET sent_to_server = 1 ' +
+                       'WHERE sent_to_server = 0 AND session_id = :sid ' +
+                       'AND session_seq = :sseq';
+         for i := 0 to High(aSent) do
+            begin
+            q.ParamByName('sid').AsLargeInt := aSent[i].SessionId;
+            q.ParamByName('sseq').AsLargeInt := aSent[i].SessionSeq;
+            q.ExecSQL;
+            Inc(Result, q.RowsAffected);
+            end;
+      finally
+         q.Free;
+      end;
+      end;
+
+   if Length(aEditsDone) > 0 then
+      begin
+      q := TSQLQuery.Create(nil);
+      try
+         q.DataBase := FDatabase.Connection;
+         q.SQL.Text := 'UPDATE qso SET server_dirty = 0 ' +
+                       'WHERE server_dirty = 1 AND session_id = :sid ' +
+                       'AND session_seq = :sseq';
+         for i := 0 to High(aEditsDone) do
+            begin
+            q.ParamByName('sid').AsLargeInt := aEditsDone[i].SessionId;
+            q.ParamByName('sseq').AsLargeInt := aEditsDone[i].SessionSeq;
+            q.ExecSQL;
+            Inc(Result, q.RowsAffected);
+            end;
+      finally
+         q.Free;
+      end;
+      end;
+end;
+
+procedure TLogRepository.CountUnsentToServer(out aUnsent, aDirty: integer);
+begin
+   aUnsent := CountRows('SELECT COUNT(*) FROM qso WHERE sent_to_server = 0 ' +
+                        'AND NOT (session_id = 0 AND session_seq = 0)');
+   aDirty := CountRows('SELECT COUNT(*) FROM qso WHERE server_dirty = 1 ' +
+                       'AND NOT (session_id = 0 AND session_seq = 0)');
 end;
 
 procedure TLogRepository.InvalidateRecordCount;

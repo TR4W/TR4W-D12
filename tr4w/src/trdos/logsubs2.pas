@@ -47,6 +47,7 @@ uses
   uCabrilloFormat,  // tCabrilloFreqString moved here from PostUnit (extracted for unit testing)
   uTotal,
   uNet,
+  uNetResend,   (* NextQsoSequence *)
   BeepUnit,
   LOGSUBS1,
   //Country9,
@@ -670,6 +671,12 @@ begin
   InvertBoolean(tLastLogEntryIsDeleted);
   (* Rewrites the newest row. The seek-and-write it replaces addressed the same
      record as "the last SizeOf(ContestExchange) bytes of the file". *)
+  (* THE SERVER HAS TO HEAR OF THE DELETE (or the undelete), and the log says so
+    until the packet has been written. The row is stored dirty and the flag is
+    cleared when the edit reaches the socket (uNet.SettleServerProgress). With
+    no link the row simply stays dirty and goes when one comes. It was sent
+    AFTER the rewrite and the flag never set, so a delete made offline was lost. *)
+  TempRXData.ceNeedSendToServerAE := True;
   LogStoreUpdateNewestQSO(TempRXData);
   SendRecordToServer(NET_EDITEDQSO_ID, TempRXData);
   LogSourceClose;
@@ -1686,8 +1693,13 @@ begin
     of ContestExchange, whose layout is annotated byte-by-byte in VC because
     it is written to the log file and sent between stations. Its width is
     not ours to widen. *)
-  RXData.ceQSOID2 := Cardinal(GetTickCount64);
+  RXData.ceQSOID2 := NextQsoSequence(Cardinal(GetTickCount64));
      RXData.ceOperator := CurrentOperator;
+     (* NOT SENT YET, whatever this record held before: the flag is set when the
+       packet has been written to the socket (uNet.SettleServerProgress), and
+       it is stored as it stands here. *)
+     RXData.ceSendToServer := False;
+     RXData.ceNeedSendToServerAE := False;
      (* THE PER-QSO RECORDING HOOK IS GONE (2026-09-07) with the built-in MP3
        recorder. RXData.MP3Record itself STAYS: it is a field of
        ContestExchange, which is the on-disk log record, and it is persisted as

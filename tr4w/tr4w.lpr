@@ -131,6 +131,7 @@ uses
   uNetHello in 'src\uNetHello.pas',
   uNetLink in 'src\uNetLink.pas',
   uNetFraming in 'src\uNetFraming.pas',
+  uNetResend in 'src\uNetResend.pas',
   uNet in 'src\uNet.pas',
   uNetSendQueue in 'src\uNetSendQueue.pas',
   uNetClient in 'src\uNetClient.pas',

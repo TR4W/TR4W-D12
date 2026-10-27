@@ -23,6 +23,73 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-27 -- A STATION THAT LOST THE LINK CATCHES UP (Phase 1, C5)
+
+NY4I: a station that reboots or loses the link mid-contest must catch up --
+required. The QSOs and edits made while it was down used to be sent by a loop
+that read the binary `.TRW` this build no longer keeps, so they were never sent
+and nothing said so. They are rows in the SQLite log now (`sent_to_server = 0`,
+`server_dirty = 1`) and go to the server -- as QSOINFO, which both servers relay
+-- once the server's own HELLO has arrived on the new link. A QSO is marked sent
+when the writer thread has handed its bytes to the socket, not when it was
+posted. Both servers and the receiving client ignore a QSO they already hold.
+The unit tests drive all of this through the real queue and writer thread, to a
+stub with no socket, on a scratch SQLite log; `tools/netprobe --case resend`
+(`--burst 200 --timeout 10`) proves the duplicate rules against both real servers.
+They cannot pull a cable, run two programs, or see the QSOs arrive in the other
+station's log. **WHAT YOU NEED:** `tr4wserver` (then TR4WServerPy, one at a time),
+stations A and B on a LEGACY or by-id contest (both work now), same contest, empty
+logs of that contest, **NETWORK AUTO CONNECT off**, `DEBUG LOG LEVEL = DEBUG`.
+Delete each server's `SERVERLOG.TRW` between runs.
+
+- [ ] **Drop the link, log 5 QSOs, edit 1, reconnect.** Connect A and B (Net >
+      Connect). At A: Net > Disconnect. Log FIVE QSOs at A, then edit one of
+      them (change its exchange). A's Network status reads disconnected. Net >
+      Connect at A. EXPECT: within a few seconds B's log holds ALL FIVE QSOs and the
+      edited exchange on the one that was edited, nothing twice (B's QSO count and
+      score moved by five); a notice at A reads "Resent to the server what was
+      logged while disconnected: 5 QSO(s), 1 edit(s)." (the edited QSO was never
+      sent either, so it travels as a QSO AND as an edit); B shows "Server log
+      changed: 5". `tr4w.log` at A: `[Net] resending
+      what was logged while disconnected: 5 QSO(s), 1 edit(s)`, no `[NetSend]`
+      Warn or Error. The server log shows five `NET_QSOINFO` and one `NET_EDITEDQSO`.
+- [ ] **Nothing is owed afterwards.** `tr4w.log` at A (DEBUG) ends the catch-up
+      with `[Net] still owed to the server: 0 QSO(s), 0 edit(s)` (the log compare
+      window that would show the same two numbers is not reachable). Net >
+      Disconnect and Connect again at A. EXPECT: NO second notice, nothing resent
+      (`tr4w.log` has no `resending` line for the second link).
+- [ ] **Reboot variant.** With A connected log nothing; Net > Disconnect at A;
+      log 3 QSOs and edit one; QUIT TR4W at A; start TR4W at A, open the same
+      contest; Net > Connect. EXPECT: the same as above for three QSOs: B gets them
+      all, once each, and the edit lands. (The flags are in the log file, so they
+      survive the restart. Check that A did NOT resend anything it had sent before
+      it was disconnected: `tr4w.log` counts only the three.)
+- [ ] **A QSO is not "sent" until it is written.** With both connected, log a QSO
+      at A and at once pull A's network cable (or kill the server) so the write
+      cannot finish. EXPECT: after the link is reported lost the QSO is counted as
+      unsent at A (`still owed ... 1 QSO(s)` in `tr4w.log`), and when the link is back it reaches B exactly once.
+      If the cable was pulled just AFTER the write and B already had it, A may
+      send it again: B must not log it twice (`[Net] QSO ... is already in the
+      log; the copy that just arrived is ignored` at B).
+- [ ] **An import is never sent.** Open a contest log that has imported QSOs
+      (ADIF or an old `.TRW`), Net > Connect. EXPECT: NO resend notice, nothing
+      reaches the server from the imported rows (`still owed ... 0 QSO(s)`).
+- [ ] **A refused station does not push.** Start A with COMPUTER ID the same as
+      B's (B connected). EXPECT: A is refused (8320), A's QSOs logged while
+      disconnected stay UNSENT and no resend notice appears. Change A's id to
+      another letter and Connect: now they go.
+- [ ] **A long outage.** Disconnect A and log a few hundred QSOs at A with the
+      link down (only QSOs LOGGED at A count; an ADIF import does not travel),
+      then reconnect. EXPECT: the main window never freezes while they go, all
+      arrive at B, and the notice names the count. In-tree `tr4wserver` relays
+      about 34 QSOs a second (200 in about 6 s), so B's log fills in over that long.
+- [ ] **Python server.** Repeat the first item against TR4WServerPy
+      (`python tr4wserver.py --display`). EXPECT the same, and the server log says
+      `QSOINFO already in the server log - not stored, not relayed` for anything
+      sent twice.
+
+---
+
 ## Added 2026-10-27 -- THE MULTI-OP LINK BELONGS TO THE PROGRAM, NOT THE NETWORK WINDOW
 
 NY4I: *"I never liked the idea that we only connected when the Network window

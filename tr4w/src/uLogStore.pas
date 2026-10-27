@@ -185,6 +185,36 @@ function LogStoreCheckExchangeIds(out aReport: string): boolean;
   found one. The scan is gone; the answer has to come from here. *)
 function LogStoreUpdateQSOBySessionIds(const aQso: ContestExchange): boolean;
 
+type
+   (* Re-exported, as TLogRowUpdates is, so a caller needs no uLogRepository. *)
+   TQsoSessionKey = uLogRepository.TQsoSessionKey;
+   TQsoSessionKeys = uLogRepository.TQsoSessionKeys;
+
+(* THE MULTI-OP SERVER'S BOOKKEEPING -- Phase 1, C5 (2026-10-27). See
+  TLogRepository.CollectUnsentToServer for what "owed" means.
+
+  LogStoreCollectUnsentToServer appends every row the server still has to hear
+  about to aInto, oldest first. False when the log cannot be read; a READ, so a
+  failure is reported and the store stays enabled. It leaves the log as it was.
+
+  LogStoreHasQSOBySessionIds: does the log already hold a QSO with this network
+  key? What makes a received QSO safe to receive twice. False for (0, 0) and,
+  reported, when the log cannot be read -- a station that cannot ask records the
+  QSO, because a duplicate is the lesser harm than a lost contact.
+
+  LogStoreMarkServerProgress writes sent_to_server = 1 for aSent and
+  server_dirty = 0 for aEditsDone, ONE TRANSACTION, FLAGS ONLY, and commits. A
+  key that matches no row changes nothing. A write failure disables the store
+  like every other write here. True when the transaction committed (also for two
+  empty lists).
+
+  LogStoreCountUnsentToServer: how many networked rows the server has never been
+  given, and how many it holds an older version of. *)
+function LogStoreCollectUnsentToServer(aInto: TLogRowUpdates): boolean;
+function LogStoreHasQSOBySessionIds(aSessionId, aSessionSeq: Int64): boolean;
+function LogStoreMarkServerProgress(const aSent, aEditsDone: TQsoSessionKeys): boolean;
+function LogStoreCountUnsentToServer(out aUnsent, aDirty: integer): boolean;
+
 (* EMPTY THE LOG. False if there was no usable store to empty, so a caller can
   tell "cleared" from "could not".
 
@@ -2218,6 +2248,129 @@ begin
       on E: Exception do
          begin
          Disable('rewriting a QSO by its network key', E);
+         end;
+   end;
+end;
+
+function LogStoreCollectUnsentToServer(aInto: TLogRowUpdates): boolean;
+var
+   rebuilt: boolean;
+begin
+   Result := False;
+   if GDisabled then
+      begin
+      Exit;
+      end;
+
+   try
+      if not EnsureOpen(rebuilt) then
+         begin
+         Exit;
+         end;
+      GRepository.CollectUnsentToServer(aInto);
+      Result := True;
+   except
+      on E: Exception do
+         begin
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] could not read the QSOs the multi-op server ' +
+                         'still has to hear about: %s', [E.Message]);
+            end;
+         end;
+   end;
+end;
+
+function LogStoreHasQSOBySessionIds(aSessionId, aSessionSeq: Int64): boolean;
+var
+   rebuilt: boolean;
+begin
+   Result := False;
+   if GDisabled then
+      begin
+      Exit;
+      end;
+
+   try
+      if not EnsureOpen(rebuilt) then
+         begin
+         Exit;
+         end;
+      Result := GRepository.HasQSOBySessionIds(aSessionId, aSessionSeq);
+   except
+      on E: Exception do
+         begin
+         Result := False;
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] could not ask whether QSO %d/%d is in the ' +
+                         'log: %s', [aSessionId, aSessionSeq, E.Message]);
+            end;
+         end;
+   end;
+end;
+
+function LogStoreMarkServerProgress(const aSent, aEditsDone: TQsoSessionKeys): boolean;
+var
+   rebuilt: boolean;
+begin
+   Result := False;
+   if GDisabled then
+      begin
+      Exit;
+      end;
+
+   if (Length(aSent) = 0) and (Length(aEditsDone) = 0) then
+      begin
+      Result := True;
+      Exit;
+      end;
+
+   try
+      if not EnsureOpen(rebuilt) then
+         begin
+         Exit;
+         end;
+      GRepository.MarkServerProgress(aSent, aEditsDone);
+      GRepository.Commit;
+      Result := True;
+   except
+      on E: Exception do
+         begin
+         Disable('recording what the multi-op server has been sent', E);
+         end;
+   end;
+end;
+
+function LogStoreCountUnsentToServer(out aUnsent, aDirty: integer): boolean;
+var
+   rebuilt: boolean;
+begin
+   Result := False;
+   aUnsent := 0;
+   aDirty := 0;
+   if GDisabled then
+      begin
+      Exit;
+      end;
+
+   try
+      if not EnsureOpen(rebuilt) then
+         begin
+         Exit;
+         end;
+      GRepository.CountUnsentToServer(aUnsent, aDirty);
+      Result := True;
+   except
+      on E: Exception do
+         begin
+         aUnsent := 0;
+         aDirty := 0;
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] could not count the QSOs the multi-op server ' +
+                         'has not been sent: %s', [E.Message]);
+            end;
          end;
    end;
 end;

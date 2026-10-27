@@ -112,6 +112,7 @@ uses
   VC,
   uGradient,
   uNet,
+  uNetResend,   (* ResendNeedsOf, NextQsoSequence *)
   uCAT,
   uAutoCQ,
   uFileView,
@@ -476,7 +477,6 @@ function OpenLogFile: boolean;
 function tSetFilePointer(lDistanceToMove: LONGINT; aOrigin: Longint): Int64;
 
 procedure CloseLogFile;
-function ReadLogFile: boolean;
 procedure ShowPreviousDupeQSOsWnd(show: boolean);
 procedure TryPutSpaceinExchangeWindow;
 procedure ShowInformation;
@@ -8031,11 +8031,14 @@ begin
   if LogSourceNext(TempRXData, LoadedMyFacts) then
      begin
 
-     if TempRXData.ceSendToServer = False then
+     (* WHAT THE SERVER STILL HAS TO HEAR ABOUT -- the rows ResendOfflineWork
+       will send. A row with no network identity (an import) is never owed, so
+       it is not counted: the figure would otherwise never fall to zero. *)
+     if ResendNeedsOf(TempRXData).NeedsQso then
         begin
         inc(tUSQ);
         end;
-     if TempRXData.ceNeedSendToServerAE = True then
+     if ResendNeedsOf(TempRXData).NeedsEdit then
         begin
         inc(tUSQE);
         end;
@@ -9235,14 +9238,11 @@ begin
   FileClose(LogHandle);
 end;
 
-function ReadLogFile: boolean;
-begin
-  (* FileRead returns the byte count directly, where ReadFile returned it
-    through a var parameter. The test is the same one: a whole record, or the
-    caller stops. *)
-  Result := FileRead(LogHandle, TempRXData, SizeOf(ContestExchange)) =
-            SizeOf(ContestExchange);
-end;
+(* ReadLogFile STOOD HERE and is gone (2026-10-27): its last caller was the
+  offline resend, uNet.CommitChangesInLocalLog, which read the .TRW record by
+  record and was replaced by a read of the SQLite log (Phase 1, C5). The two
+  that remain have live callers: OpenLogFile (uQTCS.SetSendedQSOs and the ADIF
+  import's optional binary-log append) and ReadVersionBlock (uQTCS). *)
 
 (* THE B4 LIST AND THE LOG SHARE ONE RECTANGLE, so showing either hides the
   other. Both are LCL grids now -- see TR4WPreviousDupesShow, which owns the
@@ -9652,7 +9652,11 @@ end;
 function AddRecordToLogAndSendToNetwork(var CE: ContestExchange): boolean;
 begin
   CE.ceQSOID1 := STARTTIMEOFTHETR4W;
-  CE.ceQSOID2 := GetTickCount64;
+  (* UNIQUE WITHIN THIS RUN, not just a tick: the QTC loops that call this make
+    several records inside one clock step while the link is down, and two with
+    one (ceQSOID1, ceQSOID2) pair would be taken for the same QSO by the servers
+    and the other stations. See uNetResend.NextQsoSequence. *)
+  CE.ceQSOID2 := NextQsoSequence(Cardinal(GetTickCount64));
   CE.ceComputerID := Settings.Computer.Id;
   CE.ceContest := Contest;
   CE.Band := ActiveBand;
@@ -9660,6 +9664,11 @@ begin
   SetExtendedModeFromMode(CE);
   tGetQSOSystemTime(CE.tSysTime);
   CE.ceOperator := CurrentOperator;
+  (* NOT SENT YET, and the log is told so: the flag is set when the packet has
+    been written to the socket (uNet.SettleServerProgress), never because it was
+    merely posted. *)
+  CE.ceSendToServer := False;
+  CE.ceNeedSendToServerAE := False;
 
   Result := SendRecordToServer(NET_QSOINFO_ID, CE);
   if not Result then

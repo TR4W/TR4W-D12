@@ -1487,6 +1487,15 @@ window is only a view: it subscribes to `uNetLink.NetLinkObservers`, redraws eve
 station when shown, and starts and stops nothing. Detail:
 `.claude/agents/multi-op-network.md`.
 
+**A STATION THAT LOST THE LINK CATCHES UP (Phase 1, C5, 2026-10-27).** The QSOs and
+edits made while it was down are SQLite rows with `sent_to_server = 0` /
+`server_dirty = 1`; once per link, after the server's own HELLO, `uNet.ResendOfflineWork`
+posts them (as QSOINFO, which the servers relay -- not OFFLINEQSO, which they do not)
+from the main thread. A row is marked sent when the writer thread has WRITTEN its
+packet, never when it was merely posted, and both servers and the client ignore a
+QSO whose `(ceQSOID1, ceQSOID2)` they already hold. `CommitChangesInLocalLog`, which
+read the `.TRW`, is gone. Detail: `.claude/agents/multi-op-network.md`.
+
 Parsing still runs on the **main thread**: the reader appends bytes under a lock
 and `Application.QueueAsyncCall`s a drain, so every message arm is unchanged. The
 short tail is now KEPT between reads — which is why an unrecognised message id

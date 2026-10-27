@@ -378,6 +378,7 @@ begin
 
            The three sites that legitimately mean "the newest" all seek
            FILE_END; this one never did. *)
+        TempRXData.ceNeedSendToServerAE := True;
         LogStoreUpdateQSOAtIndex(RecordIndex, TempRXData);
         if SendRecordToServer(NET_EDITEDQSO_ID, TempRXData) then
            begin

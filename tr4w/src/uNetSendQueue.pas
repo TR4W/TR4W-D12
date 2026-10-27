@@ -77,8 +77,16 @@ type
      False). *)
    TNetWriteFunc = function(const aBytes: TBytes): boolean of object;
 
-   (* A packet was lost because its write failed.  Runs on the WRITER THREAD. *)
-   TNetLostEvent = procedure(const aKind: string);
+   (* A packet's write FINISHED, one way or the other.  Both run on the WRITER
+     THREAD.  aTag is whatever the poster attached (0 for none): the queue
+     never reads it, it hands it back so the owner can tell WHICH packet.
+
+     OnWritten means the bytes were handed to the socket -- not that the far
+     end read them.  OnLost means the write failed, or the link was already
+     down, and the packet is gone.  A packet still queued when Shutdown ends
+     is reported by neither: it was never attempted. *)
+   TNetLostEvent = procedure(const aKind: string; const aTag: Int64);
+   TNetWrittenEvent = procedure(const aKind: string; const aTag: Int64);
 
    TNetSendQueue = class
    private
@@ -90,6 +98,7 @@ type
       FWorker: TThread;
       FWriter: TNetWriteFunc;
       FOnLost: TNetLostEvent;
+      FOnWritten: TNetWrittenEvent;
       FStopping: boolean;
       FInFlight: boolean;
       FWriteStarted: QWord;
@@ -106,8 +115,10 @@ type
       destructor Destroy; override;
 
       (* Copies aBytes and returns at once; never blocks on the network, never
-        raises for it.  False only after Shutdown. *)
-      function Post(const aKind: string; const aBytes: TBytes): boolean;
+        raises for it.  False only after Shutdown.  aTag rides with the packet
+        and comes back through OnWritten or OnLost. *)
+      function Post(const aKind: string; const aBytes: TBytes;
+                    const aTag: Int64 = 0): boolean;
 
       // True when everything posted has been written (or lost).
       function WaitIdle(const aTimeoutMs: Cardinal): boolean;
@@ -126,6 +137,7 @@ type
 
       property SlowMs: integer read FSlowMs write FSlowMs;
       property OnLost: TNetLostEvent read FOnLost write FOnLost;
+      property OnWritten: TNetWrittenEvent read FOnWritten write FOnWritten;
 
       function Posted: integer;
       function Written: integer;
@@ -147,6 +159,7 @@ type
    public
       Kind: string;
       Bytes: TBytes;
+      Tag: Int64;
    end;
 
    TNetSendThread = class(TThread)
@@ -237,13 +250,15 @@ begin
       end;
 end;
 
-function TNetSendQueue.Post(const aKind: string; const aBytes: TBytes): boolean;
+function TNetSendQueue.Post(const aKind: string; const aBytes: TBytes;
+                            const aTag: Int64 = 0): boolean;
 var
    item: TNetSendItem;
 begin
    item := TNetSendItem.Create;
    item.Kind  := aKind;
    item.Bytes := Copy(aBytes, 0, Length(aBytes));
+   item.Tag   := aTag;
 
    FLock.Enter;
    try
@@ -354,6 +369,19 @@ begin
                            [item.Kind, Length(item.Bytes), Integer(elapsed)]);
                end;
 
+            if ok and Assigned(FOnWritten) then
+               begin
+               try
+                  FOnWritten(item.Kind, item.Tag);
+               except
+                  on E: Exception do
+                     begin
+                     logger.Error('[NetSend] OnWritten for %s raised %s - %s',
+                                  [item.Kind, E.ClassName, E.Message]);
+                     end;
+               end;
+               end;
+
             if not ok then
                begin
                if failure = '' then
@@ -365,7 +393,7 @@ begin
                if Assigned(FOnLost) then
                   begin
                   try
-                     FOnLost(item.Kind);
+                     FOnLost(item.Kind, item.Tag);
                   except
                      on E: Exception do
                         begin

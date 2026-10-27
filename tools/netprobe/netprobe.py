@@ -415,12 +415,20 @@ class Report:
 
 # --- The cases --------------------------------------------------------------
 
+# THE QSO IDS A RUN HANDS OUT ARE UNIQUE ACROSS ITS CASES, AND ACROSS RUNS. A
+# server now stores a QSO once whatever number of times it arrives (the pair
+# ceQSOID1/ceQSOID2 is the key), so two cases that happened to reuse an id would
+# find the second one "already held" and every check about it would fail for a
+# reason that has nothing to do with the server. The seed is in milliseconds,
+# so a run that starts seconds after another is past all the ids it used.
+_NEXT_ID = [int(time.time() * 1000) & 0x7FFFFFF0]
+
+
 class Context:
    def __init__(self, args, report):
       self.args = args
       self.report = report
       self.probes = []
-      self.serial = int(time.time()) & 0x7FFFFFF0
 
    def probe(self, name, ordinal, claim=True, contest_id=None):
       p = Probe(name, self.args.host, self.args.port, self.args.password,
@@ -431,8 +439,8 @@ class Context:
       return p
 
    def next_ids(self):
-      self.serial += 2
-      return self.serial, self.serial + 1
+      _NEXT_ID[0] += 2
+      return _NEXT_ID[0], _NEXT_ID[0] + 1
 
    def close_all(self):
       for p in self.probes:
@@ -805,6 +813,164 @@ def case_hello(ctx):
             'PASS' if refusal else 'FAIL')
 
 
+def log_growth(before, after):
+   """Records added between two downloads of the server log, or None when
+   either could not be read."""
+   if before is None or after is None:
+      return None
+   return len(after) - len(before)
+
+
+def case_resend(ctx):
+   """A station that was disconnected sends again what it logged meanwhile, and
+   one that crashed before it noted what it had sent sends some of it twice.
+   The server must store a QSO ONCE however many times it arrives, relay it
+   once, and still tell every sender it has it. A QSO is told from another by
+   the pair (ceQSOID1, ceQSOID2); the pair (0, 0) identifies nothing."""
+   r = ctx.report
+   timeout = ctx.args.timeout
+   a = ctx.probe('A', 1)
+   b = ctx.probe('B', 2)
+   a.settle(0.5)
+   b.settle(0.5)
+
+   # 1. A new QSO is relayed and stored, as ever.
+   before = ctx.log_records()
+   id1, id2 = ctx.next_ids()
+   exchange = build_exchange('K1RS1', id1, id2)
+   first = build_qso(NET_QSOINFO_ID, exchange, 1, a.ordinal)
+   a.send(first)
+   got = b.take(NET_QSOINFO_ID, timeout)
+   r.add('resend', 'a new QSO is relayed', 'PASS' if got == first else 'FAIL',
+         describe_receipt(got, first, b))
+   time.sleep(0.5)
+   held = ctx.log_records()
+   grew = log_growth(before, held)
+   if grew is None:
+      r.add('resend', 'a new QSO is stored once', 'SKIP', 'log not readable')
+   else:
+      r.add('resend', 'a new QSO is stored once', 'PASS' if grew == 1 else 'FAIL',
+            'grew by %d' % grew)
+
+   # 2. The same QSO as QSOINFO again: neither stored nor relayed.
+   a.send(first)
+   again = b.take(NET_QSOINFO_ID, 1.5)
+   r.add('resend', 'a second QSOINFO of a held QSO is not relayed',
+         'PASS' if again is None else 'FAIL',
+         '' if again is None else 'B received it again')
+   time.sleep(0.5)
+   after = ctx.log_records()
+   grew = log_growth(held, after)
+   if grew is None:
+      r.add('resend', 'a second QSOINFO of a held QSO is not stored', 'SKIP',
+            'log not readable')
+   else:
+      r.add('resend', 'a second QSOINFO of a held QSO is not stored',
+            'PASS' if grew == 0 else 'FAIL', 'grew by %d' % grew)
+   r.add('resend', 'the sender stays connected', 'PASS' if a.alive(timeout) else 'FAIL')
+
+   # 3. The same QSO as OFFLINEQSO: not stored, but acknowledged.
+   a.take(NET_SERVERMESSAGE_ID, 0.2, SM_RECEIVED_UPDATED_QSO)
+   a.send(build_qso(NET_OFFLINEQSO_ID, exchange, 1, a.ordinal))
+   ack = a.take(NET_SERVERMESSAGE_ID, timeout, SM_RECEIVED_UPDATED_QSO)
+   r.add('resend', 'an OFFLINEQSO of a held QSO is acknowledged',
+         'PASS' if ack else 'FAIL')
+   time.sleep(0.5)
+   grew = log_growth(held, ctx.log_records())
+   if grew is None:
+      r.add('resend', 'an OFFLINEQSO of a held QSO is not stored', 'SKIP',
+            'log not readable')
+   else:
+      r.add('resend', 'an OFFLINEQSO of a held QSO is not stored',
+            'PASS' if grew == 0 else 'FAIL', 'grew by %d' % grew)
+
+   # 4. An OFFLINEQSO the server has never seen is stored and acknowledged. It
+   #    is not relayed: that is why the client resends as QSOINFO.
+   n1, n2 = ctx.next_ids()
+   new_offline = build_qso(NET_OFFLINEQSO_ID, build_exchange('K1RS2', n1, n2), 1, a.ordinal)
+   a.send(new_offline)
+   ack = a.take(NET_SERVERMESSAGE_ID, timeout, SM_RECEIVED_UPDATED_QSO)
+   r.add('resend', 'a new OFFLINEQSO is acknowledged', 'PASS' if ack else 'FAIL')
+   time.sleep(0.5)
+   grew = log_growth(held, ctx.log_records())
+   if grew is None:
+      r.add('resend', 'a new OFFLINEQSO is stored', 'SKIP', 'log not readable')
+   else:
+      r.add('resend', 'a new OFFLINEQSO is stored', 'PASS' if grew == 1 else 'FAIL',
+            'grew by %d' % grew)
+   relayed = b.take(NET_OFFLINEQSO_ID, 1.0) or b.take(NET_QSOINFO_ID, 0.2)
+   r.add('resend', 'an OFFLINEQSO is not relayed (the client resends as QSOINFO)',
+         'INFO', 'relayed' if relayed else 'not relayed')
+
+   # 5. The pair (0, 0) identifies nothing: such a QSO is never a duplicate.
+   held = ctx.log_records()
+   anon = build_qso(NET_QSOINFO_ID, build_exchange('K1RS3', 0, 0), 1, a.ordinal)
+   a.send(anon)
+   a.send(anon)
+   got = b.count(NET_QSOINFO_ID, 2, timeout)
+   time.sleep(0.5)
+   grew = log_growth(held, ctx.log_records())
+   r.add('resend', 'a QSO with ids (0, 0) is relayed every time',
+         'PASS' if got >= 2 else 'FAIL', 'B has %d QSOINFO' % got)
+   if grew is None:
+      r.add('resend', 'a QSO with ids (0, 0) is stored every time', 'SKIP',
+            'log not readable')
+   else:
+      r.add('resend', 'a QSO with ids (0, 0) is stored every time',
+            'PASS' if grew == 2 else 'FAIL', 'grew by %d' % grew)
+
+   # 6. An edit of a held QSO is still relayed and applied.
+   held = ctx.log_records()
+   edited = build_exchange('K1RS1X', id1, id2)
+   edit = build_qso(NET_EDITEDQSO_ID, edited, 1, a.ordinal)
+   a.send(edit)
+   got = b.take(NET_EDITEDQSO_ID, timeout)
+   r.add('resend', 'an edit of a held QSO is relayed', 'PASS' if got == edit else 'FAIL',
+         describe_receipt(got, edit, b))
+   time.sleep(0.5)
+   after = ctx.log_records()
+   if held is None or after is None:
+      r.add('resend', 'an edit of a held QSO is applied in place', 'SKIP',
+            'log not readable')
+   else:
+      applied = edited in after and exchange not in after
+      r.add('resend', 'an edit of a held QSO is applied in place',
+            'PASS' if (applied and len(after) == len(held)) else 'FAIL',
+            'records %d -> %d' % (len(held), len(after)))
+
+   # 7. A whole burst sent twice -- a station that lost the link half way
+   #    through a catch-up and sent all of it again -- is relayed and stored once.
+   count = ctx.args.burst
+   held = ctx.log_records()
+   blob = b''
+   for _ in range(count):
+      b1, b2 = ctx.next_ids()
+      blob += build_qso(NET_QSOINFO_ID, build_exchange('K1RS4', b1, b2), 1, a.ordinal)
+   b.inbox = [item for item in b.inbox if item[0] != NET_QSOINFO_ID]   # count only this burst
+   a.send(blob)
+   got = b.count(NET_QSOINFO_ID, count, timeout + 3)
+   r.add('resend', 'a burst of %d is relayed whole' % count,
+         'PASS' if got >= count else 'FAIL', 'B has %d' % got)
+   have = sum(1 for found_id, _ in b.inbox if found_id == NET_QSOINFO_ID)
+   a.send(blob)
+   time.sleep(1.5)
+   b.pump(0.5)
+   now = sum(1 for found_id, _ in b.inbox if found_id == NET_QSOINFO_ID)
+   r.add('resend', 'the same burst sent again is not relayed again',
+         'PASS' if now == have else 'FAIL', 'B went from %d to %d' % (have, now))
+   time.sleep(0.5)
+   grew = log_growth(held, ctx.log_records())
+   if grew is None:
+      r.add('resend', 'the same burst sent again is stored once', 'SKIP',
+            'log not readable')
+   else:
+      r.add('resend', 'the same burst sent again is stored once',
+            'PASS' if grew == count else 'FAIL',
+            'grew by %d, wanted %d' % (grew, count))
+   r.add('resend', 'both stations still connected',
+         'PASS' if (a.alive(timeout) and b.alive(timeout)) else 'FAIL')
+
+
 CASES = {
    'connect': case_connect,
    'spot': case_spot,
@@ -816,6 +982,7 @@ CASES = {
    'serial': case_serial,
    'time': case_time,
    'hello': case_hello,
+   'resend': case_resend,
 }
 
 

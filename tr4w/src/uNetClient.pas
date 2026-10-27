@@ -99,8 +99,16 @@ type
       procedure CutStalledLink;
       function GetOnPacketLost: TNetLostEvent;
       procedure SetOnPacketLost(const aValue: TNetLostEvent);
+      function GetOnPacketWritten: TNetWrittenEvent;
+      procedure SetOnPacketWritten(const aValue: TNetWrittenEvent);
    public
       constructor Create;
+      (* A CLIENT WITH NO SOCKET, FOR THE UNIT TESTS AND ONLY THEM: its link reads
+        as up and every packet goes to aWriter instead of the network, through
+        the same queue and the same writer thread a real link uses. That is what
+        lets a test watch a QSO go posted, then written or lost, and the flags
+        that follow, without a server. The program never calls it. *)
+      constructor CreateWithWriter(const aWriter: TNetWriteFunc);
       destructor Destroy; override;
 
       { Blocking connect INCLUDING the password handshake, because a socket
@@ -126,13 +134,20 @@ type
         sends them later, in the order they were posted.  Returns the count
         POSTED, or 0 when there is no link (nothing was queued).  A write that
         fails afterwards is reported through OnPacketLost, not here.  aKind
-        names the packet in the log. *)
-      function Send(const aKind: string; var aBuf; const aLen: integer): integer;
+        names the packet in the log.  aTag rides with it and comes back through
+        OnPacketWritten or OnPacketLost: uNet puts a QSO's identity there. *)
+      function Send(const aKind: string; var aBuf; const aLen: integer;
+                    const aTag: Int64 = 0): integer;
 
       property IsConnected: boolean read GetIsConnected;
 
       (* A packet's write FAILED.  Fires on the WRITER THREAD. *)
       property OnPacketLost: TNetLostEvent read GetOnPacketLost write SetOnPacketLost;
+
+      (* A packet's bytes were handed to the socket.  Fires on the WRITER
+        THREAD.  Not proof the server read them. *)
+      property OnPacketWritten: TNetWrittenEvent read GetOnPacketWritten
+                                                 write SetOnPacketWritten;
 
       { BOTH FIRE ON THE READER THREAD. }
       property OnData: TNetDataEvent read FOnData write FOnData;
@@ -302,6 +317,14 @@ begin
    FSendQueue := TNetSendQueue.Create(WriteToSocket);
 end;
 
+constructor TNetClient.CreateWithWriter(const aWriter: TNetWriteFunc);
+begin
+   inherited Create;
+   FTCP := TIdTCPClient.Create(nil);
+   FSendQueue := TNetSendQueue.Create(aWriter);
+   FConnected := True;
+end;
+
 destructor TNetClient.Destroy;
 begin
    Disconnect;
@@ -330,6 +353,16 @@ end;
 procedure TNetClient.SetOnPacketLost(const aValue: TNetLostEvent);
 begin
    FSendQueue.OnLost := aValue;
+end;
+
+function TNetClient.GetOnPacketWritten: TNetWrittenEvent;
+begin
+   Result := FSendQueue.OnWritten;
+end;
+
+procedure TNetClient.SetOnPacketWritten(const aValue: TNetWrittenEvent);
+begin
+   FSendQueue.OnWritten := aValue;
 end;
 
 (* RUNS ON THE WRITER THREAD.  The old Send, minus the copying (Post already
@@ -523,7 +556,8 @@ begin
       end;
 end;
 
-function TNetClient.Send(const aKind: string; var aBuf; const aLen: integer): integer;
+function TNetClient.Send(const aKind: string; var aBuf; const aLen: integer;
+                         const aTag: Int64 = 0): integer;
 var
    bytes: TBytes;
 begin
@@ -535,7 +569,7 @@ begin
 
    SetLength(bytes, aLen);
    Move(aBuf, bytes[0], aLen);
-   if FSendQueue.Post(aKind, bytes) then
+   if FSendQueue.Post(aKind, bytes, aTag) then
       begin
       Result := aLen;
       end;

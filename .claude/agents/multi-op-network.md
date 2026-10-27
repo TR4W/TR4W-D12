@@ -17,6 +17,8 @@ You own the link between stations at a multi-op.
 | framing | `tr4w/src/uNetFraming.pas` |
 | the HELLO message, protocol version, per-station contest table | `tr4w/src/uNetHello.pas` |
 | the link as a state, the Net-menu rules, the startup rule, the observer list | `tr4w/src/uNetLink.pas` (a leaf: no sockets, no widget set) |
+| what each row still owes the server, when a flag may change, unique QSO ids (a leaf) | `tr4w/src/uNetResend.pas` |
+| which QSOs the in-tree server's log already holds (a leaf) | `tr4w/src/uServerQsoIndex.pas` |
 | the Network window (a VIEW of the link) | `tr4w/src/ui/lcl/uNetworkForm.pas` |
 | a probe that speaks the protocol to any server | `tools/netprobe/` |
 | engine side | `tr4w/src/trdos/lognet.pas` |
@@ -246,14 +248,16 @@ What to keep true:
 
 - **Never dropped, unbounded queue.** Nothing on this link is stale. A packet is
   lost only when its WRITE fails (link down, exception): Warn naming the kind, and
-  `OnPacketLost` -> `uNet.NetPacketLost`, which counts a lost `QSOINFO` into `tUSQ`.
+  `OnPacketLost` -> `uNet.NetPacketLost`. Since C5 (below) both `OnPacketLost`
+  and the new `OnPacketWritten` carry the packet's TAG, and a QSO packet's row is
+  settled from them; `NetPacketLost` no longer bumps `tUSQ` itself (it did, from
+  the writer thread) -- `SettleServerProgress` counts the rows.
 - **`SendToNet`'s result is the count POSTED**, 0 when the link is down.
-  `SendRecordToServer`'s True therefore means *accepted*, not *delivered*; the
-  flags it restores on a failed send are restored only for a link that was
-  already down. A write failing afterwards leaves `ceSendToServer` True and bumps
-  `tUSQ`. Nothing awaits a send's result otherwise; `tNet_Event` (the server's
-  ack, `CommitChangesInLocalLog`, a dead resend path) is still a 1 s wait that
-  carries on regardless.
+  `SendRecordToServer`'s True therefore means *posted*, not *delivered*, and it no
+  longer touches the record it is given (C5): the log's flags change when the
+  writer has WRITTEN the packet. Nothing awaits a send's result;
+  `tNet_Event` (the server's 8300 ack) is still set by its arm and nothing waits
+  on it since the `.TRW` resend loop went.
 - **A write over 250 ms logs a Warn with the packet kind.** A write in flight
   over `WRITE_STALL_LIMIT_MS` (8 s) is cut by the READER thread (it wakes every
   250 ms): `Binding.CloseSocket`, the write fails, the reader sees the drop, the
@@ -268,6 +272,84 @@ What to keep true:
 - `SendFullStationStatus` (answering `SM_GETSTATUS_MESSAGE`, on the MAIN thread)
   still `Sleep(20)`s between statuses -- a pacing delay from before the queue,
   not a network wait, and not touched.
+
+## Catching up after a lost link (Phase 1, C5, 2026-10-27)
+
+NY4I: a station that reboots or loses the link mid-contest must catch up -- required.
+The QSOs and edits made while the link was down are rows in the SQLite log
+(`sent_to_server = 0`, `server_dirty = 1`); they go to the server when it is back.
+**`uNet.CommitChangesInLocalLog` is GONE** -- it read the `.TRW` and only
+`RunSyncThread` called it. `uNetResend.pas` (a leaf: no socket, no store, no
+widget set; `uTestNetResend`) holds the decisions; `uNet` does the work.
+
+- **Selection is the repository's** (`TLogRepository.CollectUnsentToServer`, store
+  `LogStoreCollectUnsentToServer`): rows with `(sent_to_server = 0 OR server_dirty
+  = 1)` that have a network identity, oldest first. The WHERE reuses
+  `idx_qso_unsent`'s own predicate, so SQLite reads the partial index (checked
+  with EXPLAIN QUERY PLAN). **A row with ceQSOID1 = ceQSOID2 = 0 is never owed**:
+  that is what an import carries, it identifies nothing on the wire and cannot be
+  marked afterwards by its ids. `LoadinLog` counts `tUSQ`/`tUSQE` with the same
+  rule (`ResendNeedsOf`).
+- **When: once per link, after the SERVER'S OWN HELLO** (proves the protocol), at
+  the END of the drain that handled it (`HandleHelloReceived` sets `GResendDue`;
+  `TNetDrainer.Drain` calls `NetServiceResend` after `DrainBuffer`), so a refusal
+  (8320) sent in the same read has already been acted on. Guards in
+  `ResendOfflineWork`: link up, server HELLO seen, no standing id refusal, not
+  already done this link (`GResentThisLink`). `NetBeginLinkSession` resets all of
+  it and the peer table; the connect thread calls it before the HELLO goes out.
+- **What goes: a row owing a QSO goes as `NET_QSOINFO_ID`, NOT `NET_OFFLINEQSO_ID`.**
+  Both servers STORE an OFFLINEQSO and ACK it (8300) but never RELAY it, so the
+  other stations would never see it. A row owing an edit goes as
+  `NET_EDITEDQSO_ID` (a row owing both sends both, QSO first). One main-thread
+  pass, no per-record wait (the old loop waited 1 s each: 200 QSOs = 200 s).
+  Then `SM_SERVERLOG_CHANGED` with the QSO count (as D7 did), and ONE notice
+  (`SNetResent`, via `QuickDisplay` / `ResendNoticeSink`).
+- **When a QSO counts as SENT: when the writer thread has handed its bytes to the
+  socket** (`OnPacketWritten`), not when posted. `SendToNet`/`TNetClient.Send`/
+  `TNetSendQueue.Post` take an `aTag` (`NetQsoTag(ceQSOID1, ceQSOID2)`, 0 = none)
+  and hand it back. The writer thread only `TNetDelivery.Report`s; the MAIN thread
+  `SettleServerProgress`es (scheduled by `QueueAsyncCall`, one per batch) and
+  writes the two FLAGS ONLY, in one transaction (`LogStoreMarkServerProgress`).
+  Written is not read-by-the-server: a packet in the kernel send buffer when the
+  cable is pulled is lost, and the next link sends it again -- harmless because
+  receivers ignore a held pair. No ack exists on the wire for a QSO (the 8300 does
+  not say which), so (c) would be a protocol change.
+- **SendRecordToServer does not mutate the record** (it used to set
+  `ceSendToServer := True` before posting, and the caller then stored that). The
+  PACKET carries sent/not-dirty; the caller stores the record as it made it
+  (`LogContact` and `AddRecordToLogAndSendToNetwork` now state `False/False`
+  explicitly). `DeleteLastContact` and `uQTCS` set `ceNeedSendToServerAE := True`
+  before storing -- a delete made offline was lost before.
+- **An edit's `server_dirty` is cleared only when EVERY edit packet posted for
+  that QSO was written** (`TNetDelivery.EditPosted` / `Settle`). A failed edit
+  leaves it set for good; a later edit that is written carries the whole record
+  and clears it. A packet still queued at `Shutdown` is neither written nor lost,
+  so its row stays owing; `NetLinkShutdown` settles what the final drain wrote.
+- **ceQSOID2 must be unique per QSO** (`uNetResend.NextQsoSequence`): it was
+  `GetTickCount64`, 10-16 ms resolution, and the QTC loops make records inside one
+  step while the link is down. `LogContact` and `AddRecordToLogAndSendToNetwork` use it.
+- **Idempotence, everywhere a QSO is received.** A known `(ceQSOID1, ceQSOID2)` is
+  ignored: in-tree `tr4wserver` (`ServerHoldsQSO`, `uServerQsoIndex.pas`, a sorted
+  set rebuilt from the log file whenever the file's size is not the one it was
+  built from), TR4WServerPy (`qso_in_log`, same rule), and the client's QSOINFO arm
+  (`ReceivedQsoIsKnown` -> `LogStoreHasQSOBySessionIds`, after the contest gate).
+  **The server neither stores NOR RELAYS a duplicate QSOINFO** (the first copy
+  reached the others; each ignores a second anyway) and still ACKs a duplicate
+  OFFLINEQSO. Edits are always applied and relayed. The pair (0, 0) is never a
+  duplicate. `tools/netprobe` `--case resend` pins all of it against both servers.
+- **A refused station can still push**: the server answers the HELLO before it
+  judges the id, so QSOs posted in the gap before the 8320 is read are accepted by
+  the server. The deferral to the end of the drain closes the usual case (same
+  read); a refusal in a later segment is not covered. Existing behaviour for the
+  seven status packets, not new.
+- **Throughput, measured 2026-10-27:** the in-tree server relays about 34 QSOs a
+  second (29 ms each, 200 in 6 s) with or without the dedupe; the probe's burst
+  window must be generous (`--timeout 10` for `--burst 200`).
+- Tests: `uTestNetResend` (leaf, the ledger, and the real uNet over
+  `TNetClient.CreateWithWriter` -- a client whose writer is a stub, through the
+  real queue and thread -- on a scratch SQLite log); `uTestLogRepository` (the
+  selection, flag-only marking, and `MarkServerProgress` as the 17th write path).
+  **The real two-station check is BENCH_QUEUE.**
 
 ## The transport, and its one sharp edge
 

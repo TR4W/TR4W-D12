@@ -260,11 +260,13 @@ is. On failure, nothing commits, and `TLogDatabase.Close` rolls back.
   `Transaction.Rollback`. It resyncs the two with a raw `BEGIN` and matches no
   message text. Pinned by `TestABatchSQLiteRollsBackItself...` and
   `TestALogSQLiteRolledBackClosesCleanly`.
-- **The pin covers 16 write paths.** `SetSentExchange` joined it and left
+- **The pin covers 17 write paths.** `SetSentExchange` joined it and left
   again the same day (2026-10-17) when its only caller was deleted; the
   fingerprint still includes `exchange_sent`. `UpdateQSOMyFacts` (the Edit
   QSO write of the my_* columns) joined on 2026-10-18, and the fingerprint
-  now also includes `my_grid` and `my_source`.
+  now also includes `my_grid` and `my_source`. `MarkServerProgress` (the
+  multi-op bookkeeping, 2026-10-27) is the 17th, and the fingerprint also
+  includes `sent_to_server` and `server_dirty`.
 - **`BeginBatchUpdate` still commits what is pending and then starts its own
   transaction**, so a batch's rollback undoes the batch and nothing before it.
 - **How to test a "one transaction" claim:**
@@ -534,6 +536,38 @@ every edit was lost. Detail: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12i.
   directly instead: `-Mdelphi -Pi386 -Twin32 -Sc -B`, the `Get-SearchPaths.ps1`
   Tests list, run from `tr4w/test/unit`. Then copy the runtime DLLs from
   `tr4w/target`.
+
+## THE MULTI-OP SERVER'S BOOKKEEPING: `sent_to_server`, `server_dirty` (Phase 1, C5, 2026-10-27)
+
+The two columns were always in the schema; nothing used them since the `.TRW`
+resend died. Now (design and threading: the `multi-op-network` agent):
+
+- **Owed rows** = `TLogRepository.CollectUnsentToServer`: `(sent_to_server = 0 OR
+  server_dirty = 1) AND NOT (session_id = 0 AND session_seq = 0)`, oldest first,
+  through `OpenQsoReader(q, True)` like the cursor. The first term is
+  `idx_qso_unsent`'s predicate verbatim, so SQLite uses the partial index
+  (EXPLAIN QUERY PLAN: `SCAN qso USING INDEX idx_qso_unsent`, also for the two
+  UPDATEs and both counts). **Both ids 0 means NOT OWED**: that is every import's
+  pair (1,314 of winter_fd's 1,316 rows) and it cannot be addressed by its ids.
+- **`MarkServerProgress(aSent, aEditsDone)` writes the two flags and nothing else**,
+  each only where it is not already in the wanted state, addressed by the network
+  key. It is a per-call statement (prepares each time, so it begins its own
+  transaction) and is the **17th write path** in `TestEveryWriteWaitsForItsCommit`
+  (whose fingerprint now includes the two flags). `LogStoreMarkServerProgress` runs
+  a whole batch in ONE transaction and commits. A key that matches no row is not
+  an error.
+- **`HasQSOBySessionIds`** is a full scan of `qso` (there is NO index on
+  `session_id, session_seq` -- `uNet.FindAndUpdateQSOInLog`'s old comment claimed
+  one). Measured 1.7 ms per miss on 11,800 rows, so no index was added; a schema
+  change for it would cost a migration, fixtures and a version bump.
+- **The pair is not unique in old logs** (see `SaveQSO`'s note) and was not unique
+  in new ones either: `ceQSOID2` was a 10-16 ms tick. `uNetResend.NextQsoSequence`
+  makes it strictly increasing within a run, which is what lets the receiver treat
+  a held pair as "the same QSO".
+- **Do not store `sent_to_server = 1` for a packet that was only posted.** The flag
+  changes when the writer thread has written the bytes (`SettleServerProgress`).
+  `tUSQ`/`tUSQE` are a recount from the log (`CountUnsentToServer`) after each
+  settle, not increments.
 
 ## The `config` table holds only what the operator STATED (2026-10-01)
 

@@ -137,9 +137,11 @@ const
   SYNC_FIELD_BYTES          = 2;
   SYNC_FIELD_QSOS           = 3;
   SYNC_FIELD_ENABLE_REPLACE = 4;   // lParam unused
-  // Written from uNet.CommitChangesInLocalLog, which RunSyncThread calls before
-  // it opens the socket -- so this field is fed from a DIFFERENT unit on the
-  // same worker thread.  It is why the old control id 112 looked unreferenced.
+  // The 'sent records' field. NOTHING WRITES IT NOW: uNet.CommitChangesInLocalLog
+  // did, from this worker thread, until the resend moved to the main thread
+  // (uNet.ResendOfflineWork, once per link, after the server's HELLO -- Phase 1,
+  // C5). The field and its constant stay for the sync window until it is
+  // revived or retired with the rest of the log-compare machinery.
   SYNC_FIELD_SENT           = 5;
 
 implementation
@@ -437,7 +439,10 @@ var
 begin
   Result := 0;   (* the thread exit code -- see TF.TTR4WThreadStart *)
 
-  CommitChangesInLocalLog;
+  (* THE RESEND OF WHAT WAS LOGGED OFFLINE USED TO RUN HERE and is not this
+    thread's work: it reads the log and posts to the link, both main-thread
+    things, and it is due on EVERY link-up, not only when a download is.
+    uNet.ResendOfflineWork does it (Phase 1, C5). *)
 
   TotalRecords := 0;
   TotalQ := 0;

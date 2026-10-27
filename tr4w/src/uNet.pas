@@ -38,6 +38,7 @@ uses
   uNetFraming,   { NetMessageSize -- one table, no per-arm advances }
   uNetHello,     { THelloMessage, TNetPeers -- the first message on a link }
   uNetLink,      { TNetLinkState -- what the link is doing, and who is told }
+  uNetResend,    { TNetDelivery -- what became of each QSO packet }
   utils_file,
   uTotal,
   uSpots,
@@ -148,7 +149,9 @@ procedure SetStatusByte;
 procedure SendStationStatus(ssType: StationStatusType);
 procedure SendMessageStatus;
 procedure TryConnectToNetwork;
-function SendToNet(var buf; Len: integer): integer;
+(* aTag is a QSO packet's identity (uNetResend.NetQsoTag), handed back when the
+  packet's write finishes. 0 for everything else. *)
+function SendToNet(var buf; Len: integer; aTag: Int64 = 0): integer;
 
 (* TELL THE OTHER POSITIONS A SETTING CHANGED.
 
@@ -335,13 +338,85 @@ type
   that live for the whole process. *)
 var
   PeerContestNoticeSink: TPeerNoticeProc = nil;
+  (* The same for the catch-up notice ("Resent to the server ..."), said once per
+    link by ResendOfflineWork. *)
+  ResendNoticeSink: TPeerNoticeProc = nil;
 
 (* The walk over NetBuffer, one arm per message id. In the interface so the
   unit tests can put a packet in NetBuffer and hand it to the real arms. *)
 function ConsumeNetBuffer(const i: integer; out aDesync: boolean): integer;
 
-procedure CommitChangesInLocalLog;
-function SendRecordToServer(RecordType: Word; var rec: ContestExchange): boolean;
+(* THE QSOS AND EDITS MADE WHILE THE LINK WAS DOWN MUST REACH THE SERVER WHEN IT
+  COMES BACK -- Phase 1, C5 (2026-10-27). NY4I: a station that reboots or loses
+  the link mid-contest must catch up.
+
+  WHAT IT REPLACES. CommitChangesInLocalLog read the binary .TRW with
+  OpenLogFile / ReadLogFile, which this build no longer keeps, so it returned at
+  once; and its only caller was RunSyncThread, which nothing starts. A QSO
+  logged offline was never sent and nothing said so. It is gone.
+
+  THE ROWS ARE THE LOG'S. sent_to_server = 0 marks a QSO the server has not been
+  given and server_dirty = 1 one it holds an older version of; the repository
+  answers which rows (uLogStore.LogStoreCollectUnsentToServer). A row owing a QSO
+  goes as NET_QSOINFO_ID -- NOT NET_OFFLINEQSO_ID, which both servers store and
+  never relay, so the other stations would not get it. A row owing an edit goes
+  as NET_EDITEDQSO_ID. Both are posted from the MAIN thread to the send queue in
+  one go, with no wait for an answer per record (the old loop waited a second
+  for each).
+
+  WHEN. Once per link, after the SERVER'S OWN HELLO has arrived (it proves the
+  server speaks this protocol; a link that is merely connected proves nothing),
+  at the end of the drain that handled it, so a refusal sent in the same breath
+  has already been acted on. NetServiceResend is that step; ResendOfflineWork is
+  the work and may be called directly.
+
+  WHEN A QSO COUNTS AS SENT is uNetResend's header: when the writer thread has
+  handed its bytes to the socket, not when it was posted. A flag changes only
+  then, on the main thread (SettleServerProgress). A packet that is never
+  written leaves its row owing, and the next link sends it again.
+
+  WHAT A SECOND SEND DOES. Nothing: both servers and this client ignore a QSO
+  whose (ceQSOID1, ceQSOID2) they already hold (ReceivedQsoIsKnown). *)
+type
+   TResendResult = record
+      (* QSO packets and edit packets posted. *)
+      Qsos: integer;
+      Edits: integer;
+   end;
+
+function ResendOfflineWork: TResendResult;
+procedure NetServiceResend;
+
+(* Record what became of the QSO packets the writer thread has finished with,
+  and bring tUSQ / tUSQE into line with the log. Main thread. The writer
+  schedules it; a test calls it. *)
+procedure SettleServerProgress;
+
+(* Do we already hold this QSO? A QSO arriving twice -- a resend of one the
+  server had, an overlap of a live send and a resend -- must be logged once. The
+  pair (0, 0) is never "known": it identifies nothing. *)
+function ReceivedQsoIsKnown(const aRec: ContestExchange): boolean;
+
+(* How many received QSOs ReceivedQsoIsKnown has turned away since start. *)
+function NetDuplicateQsosIgnored: integer;
+
+(* A NEW LINK IS A NEW SESSION (Q110, protocol 2, and C5): nobody has announced
+  anything yet, the server has not answered, and nothing has been caught up.
+  The connect thread calls it before the HELLO goes out; a test calls it to
+  start a link from nothing. *)
+procedure NetBeginLinkSession;
+
+(* What the writer thread has reported and the main thread has not yet settled
+  -- the test's way to wait for a write to finish. *)
+function NetDeliveryLedger: TNetDelivery;
+
+(* Hang the handlers on a client: bytes, drops, and what became of each QSO
+  packet. ConnectToTR4WServer does it for the real client; a test does it for a
+  TNetClient.CreateWithWriter so the real posting, writing and settling run
+  without a server. *)
+procedure AttachNetClient(aClient: TNetClient);
+
+function SendRecordToServer(RecordType: Word; const rec: ContestExchange): boolean;
 procedure SendFullStationStatus;
 procedure SendSerialNumberChange(Status: TSerialNumberType);
 
@@ -491,6 +566,16 @@ var
     connect thread writes it). See NetLinkConnect. *)
   GLinkWanted:       boolean = False;
   GLinkOperation:    string = '';
+  (* CATCHING UP (Phase 1, C5). GResendDue: the server's own HELLO has arrived on
+    this link and the work it unlocks has not been done. GResentThisLink: it has,
+    so a second server HELLO on the same link does not do it again. Both are
+    cleared when a link comes up. Main thread. *)
+  GResendDue:        boolean = False;
+  GResentThisLink:   boolean = False;
+  (* What became of the QSO packets: the writer thread reports, the main thread
+    settles (uNetResend). *)
+  GNetDelivery:      TNetDelivery = nil;
+  GDuplicateQsos:    integer = 0;
 
 const
   (* An older server drops the link within a read or two of the HELLO; an
@@ -541,6 +626,15 @@ begin
       if JudgeProtocol(NET_PROTOCOL_VERSION, aHello.hmProtocol) <> pvSame then
          begin
          RefuseServerProtocol(aHello.hmProtocol);
+         end
+      else
+         begin
+         (* THE SERVER SPEAKS THIS PROTOCOL: what was logged while the link was
+           down can go. Not here -- the server answers a HELLO before it judges
+           the computer id, so a refusal may be in the same buffer -- but when
+           the drain that is handling this buffer has finished with it
+           (NetServiceResend). *)
+         GResendDue := True;
          end;
       Exit;
       end;
@@ -791,9 +885,18 @@ var
                 (protocol 2). An accepted record comes back stamped with THIS
                 station's contest; one from a station on another contest, or
                 one that never said HELLO, is dropped whole and reported. *)
+              (* AND NOT ONE THIS STATION ALREADY HOLDS (Phase 1, C5). A station
+                that was disconnected sends again what it logged meanwhile, and
+                one it had already sent whose flag was never set (a crash, a
+                write that finished as the link fell) goes twice; the server
+                relays a QSO it did not have, but another station may still meet
+                the same pair twice. The first copy is logged; the next ones are
+                counted and ignored. Judged AFTER the contest gate, so a QSO from
+                another contest is still reported as that. *)
               if PeerRecordInOurContest(NetQSOInfoPtr^.qiInformation,
                                         NetQSOInfoPtr^.qiSenderID,
-                                        'NET_QSOINFO') then
+                                        'NET_QSOINFO') and
+                 (not ReceivedQsoIsKnown(NetQSOInfoPtr^.qiInformation)) then
                  begin
                  if NetQSOInfoPtr^.qiInformation.ceRecordKind = rkQSO then
                     begin
@@ -1041,10 +1144,15 @@ end;
 
 type
    TNetDrainer = class(TObject)
+   private
+      procedure DrainBuffer;
    public
       procedure Drain(Data: PtrInt);
       procedure ReportDropped(Data: PtrInt);
       procedure LinkChanged(Data: PtrInt);
+      (* The writer thread has finished with QSO packets: record what became of
+        them. See SettleServerProgress. *)
+      procedure Settle(Data: PtrInt);
    end;
 
 var
@@ -1057,6 +1165,20 @@ var
    GNetPending: TBytes;   { nil to begin with -- a dynamic array is }
 
 procedure TNetDrainer.Drain(Data: PtrInt);
+begin
+   DrainBuffer;
+   (* AFTER everything that arrived has been handled, whatever it was: a server
+     HELLO and the refusal that may follow it in one read are both acted on
+     before any QSO is posted. *)
+   NetServiceResend;
+end;
+
+procedure TNetDrainer.Settle(Data: PtrInt);
+begin
+   SettleServerProgress;
+end;
+
+procedure TNetDrainer.DrainBuffer;
 var
    take, used: integer;
    desync: boolean;
@@ -1218,20 +1340,82 @@ begin
 end;
 
 const
-   (* The packet kind the writer reports as lost when it was a new QSO; also the
-     name NetPacketKind gives NET_QSOINFO_ID. *)
-   KIND_QSOINFO = 'QSOINFO';
+   (* The packet kind the writer reports for a new QSO; also the name
+     NetPacketKind gives NET_QSOINFO_ID. *)
+   KIND_QSOINFO = NET_KIND_QSOINFO;
 
-(* ON THE WRITER THREAD.  A QSO packet whose write failed is a QSO the server
-  does not have: count it as unsent, which is what SendRecordToServer's False
-  did when the send used to fail inline.  InterLockedIncrement because the
-  counter is also written on the main thread. *)
-procedure NetPacketLost(const aKind: string);
+(* ON THE WRITER THREAD.  A QSO or edit packet's write FINISHED -- written, or
+  failed -- and this is how the main thread learns it. Only the three kinds that
+  carry a QSO are of interest; the rest (a status, a spot) are not in the log.
+
+  Nothing is written to the log HERE: the repository is the main thread's. The
+  outcome is queued (TNetDelivery) and the main thread is asked to settle it,
+  once for however many arrive before it gets there. Until it does, the row
+  stays as it was: owing. *)
+procedure ReportPacketOutcome(const aKind: string; aTag: Int64; aWritten: boolean);
 begin
-   if aKind = KIND_QSOINFO then
+   if (aKind <> NET_KIND_QSOINFO) and (aKind <> NET_KIND_EDITEDQSO) and
+      (aKind <> NET_KIND_OFFLINEQSO) then
       begin
-      InterLockedIncrement(PLongInt(@tUSQ)^);
+      Exit;
       end;
+   if GNetDelivery = nil then
+      begin
+      Exit;
+      end;
+
+   if GNetDelivery.Report(aKind, aTag, aWritten) then
+      begin
+      if (Application <> nil) and (not Application.Terminated) then
+         begin
+         Application.QueueAsyncCall(GNetDrainer.Settle, 0);
+         end;
+      end;
+end;
+
+(* ON THE WRITER THREAD. The bytes of a packet went to the socket. *)
+procedure NetPacketWritten(const aKind: string; const aTag: Int64);
+begin
+   ReportPacketOutcome(aKind, aTag, True);
+end;
+
+(* ON THE WRITER THREAD. A packet's write failed, or the link was already down:
+  the packet is gone and its row still owes it. It used to add one to tUSQ right
+  here, from the wrong thread; SettleServerProgress counts the rows instead. *)
+procedure NetPacketLost(const aKind: string; const aTag: Int64);
+begin
+   ReportPacketOutcome(aKind, aTag, False);
+end;
+
+procedure NetBeginLinkSession;
+begin
+   GPeers.Clear;
+   ForgetPeerContestNotices;
+   FServerHelloSeen := False;
+   (* AND NOTHING HAS BEEN CAUGHT UP YET: the QSOs logged while the last link
+     was down go once the server's HELLO has come on THIS one. These are the
+     main thread's variables, written by the connect thread before the HELLO is
+     sent -- nothing can be reading them until the server has answered it. *)
+   GResendDue := False;
+   GResentThisLink := False;
+   (* Cardinal(GetTickCount64) -- TRUNCATED DELIBERATELY. qiComputerID is a
+     field of TNetQSOInformation, which is a PACKED RECORD SENT BETWEEN
+     STATIONS, so its width is on the wire and is not ours to widen. The
+     value is only ever used as a distinguishing number. *)
+   NetQSOInfoToSend.qiComputerID := Cardinal(GetTickCount64);
+end;
+
+function NetDeliveryLedger: TNetDelivery;
+begin
+   Result := GNetDelivery;
+end;
+
+procedure AttachNetClient(aClient: TNetClient);
+begin
+   aClient.OnData := @NetDataArrived;
+   aClient.OnDisconnected := @NetLinkDropped;
+   aClient.OnPacketLost := @NetPacketLost;
+   aClient.OnPacketWritten := @NetPacketWritten;
 end;
 
 procedure NetDisconnect;
@@ -1497,9 +1681,7 @@ begin
    if NetClient = nil then
       begin
       NetClient := TNetClient.Create;
-      NetClient.OnData := @NetDataArrived;
-      NetClient.OnDisconnected := @NetLinkDropped;
-      NetClient.OnPacketLost := @NetPacketLost;
+      AttachNetClient(NetClient);
       end;
 
    Result := NetClient.Connect(Settings.Server.Address, Settings.Server.Port,
@@ -1552,14 +1734,7 @@ begin
      (* A NEW LINK IS A NEW SESSION (Q110, protocol 2): nobody has announced
        anything yet, and the server has not answered. Before the HELLO goes
        out, so nothing it provokes can arrive into the old state. *)
-     GPeers.Clear;
-     ForgetPeerContestNotices;
-     FServerHelloSeen := False;
-     (* Cardinal(GetTickCount64) -- TRUNCATED DELIBERATELY. qiComputerID is a
-    field of TNetQSOInformation, which is a PACKED RECORD SENT BETWEEN
-    STATIONS, so its width is on the wire and is not ours to widen. The
-    value is only ever used as a distinguishing number. *)
-  NetQSOInfoToSend.qiComputerID := Cardinal(GetTickCount64);
+     NetBeginLinkSession;
 
      (* HELLO FIRST. It carries the computer id that COMPUTERID used to (the
        server judges it the same way) and the server refuses a link whose first
@@ -1771,8 +1946,10 @@ begin
 
      This walked the .TRW from the end, one record at a time, comparing
      (ceQSOID1, ceQSOID2) until it found the QSO -- then seeked back and
-     rewrote it in place. The database has an index on exactly that pair, so
-     the search and the write are a single UPDATE ... WHERE.
+     rewrote it in place. The search and the write are a single UPDATE ...
+     WHERE on that pair. (This said "the database has an index on exactly that
+     pair" until 2026-10-27, and it has none: the statement reads the table,
+     about 2 ms for 12,000 rows, measured. Cheap enough not to add one.)
 
      The scan and its FilePointer are gone with the binary log. FilePointer is
      kept only because the surrounding routine still reports it. *)
@@ -2140,6 +2317,12 @@ begin
       logger.Info('[Net] leaving the network');
       end;
    NetDisconnect;
+   (* THE DRAIN THAT NetDisconnect GIVES THE WRITER IS WHEN THE LAST QSOS GO, and
+     the main thread's settle is queued behind this very call, so it would never
+     run: the program is exiting. Record what became of them now, while the log
+     is still open. Whatever it misses is sent again next time and ignored by
+     whoever already has it. *)
+   SettleServerProgress;
 end;
 
 procedure NetLinkStartup;
@@ -2232,8 +2415,8 @@ begin
       NET_INTERCOMMESSAGE_ID:    Result := 'INTERCOM';
       NET_NETWORKDXSPOT_ID:      Result := 'DXSPOT';
       NET_QSOINFO_ID:            Result := KIND_QSOINFO;
-      NET_EDITEDQSO_ID:          Result := 'EDITEDQSO';
-      NET_OFFLINEQSO_ID:         Result := 'OFFLINEQSO';
+      NET_EDITEDQSO_ID:          Result := NET_KIND_EDITEDQSO;
+      NET_OFFLINEQSO_ID:         Result := NET_KIND_OFFLINEQSO;
       NET_THIS_QTC_WAS__SEND_ID: Result := 'QTCSENT';
       NET_TAKESERVERQSO_ID:      Result := 'TAKESERVERQSO';
       NET_TIMESYN_ID:            Result := 'TIMESYNC';
@@ -2252,13 +2435,14 @@ end;
   thread, and a single writer thread sends them in order (uNetSendQueue). The
   result is the count POSTED -- 0 when there is no link -- so a caller that
   compared it with the record size still reads "accepted"; a write that fails
-  later is reported through NetPacketLost. *)
-function SendToNet(var buf; Len: integer): integer;
+  later is reported through NetPacketLost (and a good one through
+  NetPacketWritten, with aTag). *)
+function SendToNet(var buf; Len: integer; aTag: Int64 = 0): integer;
 begin
   Result := 0;
   if NetIsConnected then
      begin
-     Result := NetClient.Send(NetPacketKind(buf, Len), buf, Len);
+     Result := NetClient.Send(NetPacketKind(buf, Len), buf, Len, aTag);
      end;
 end;
 
@@ -2406,121 +2590,276 @@ begin
    GPeers.ForgetNotices;
 end;
 
-procedure CommitChangesInLocalLog;
-label
-  1;
+(* WHAT THE SERVER STILL HAS TO HEAR ABOUT, POSTED. See the declaration for the
+  design; this is the work.
+
+  THE GUARDS ARE THE POINT. Posting to a link that is not up posts nothing; one
+  whose server has not yet said HELLO may be a server that will close it; and a
+  station refused for its computer id must not push its QSOs through a link the
+  server has disowned. Once per link, because the server's HELLO comes once and
+  a second would otherwise send everything twice.
+
+  THE ROWS ARE READ INTO MEMORY FIRST and the cursor is closed before anything
+  is posted: a burst of a few hundred 376-byte records is under 200 KB, and it
+  keeps the store from being read while the main thread is busy writing. Nothing
+  is written to the log here -- the flags change when the packets are WRITTEN
+  (SettleServerProgress). *)
+function ResendOfflineWork: TResendResult;
 var
-  SendedQSOs                            : integer;
-  (* WHICH record the scan is standing on, 0-based.  See UpdateRec. *)
-  RecordIndex                           : integer;
-
-  procedure UpdateRec;
-  begin
-
-    (* BY INDEX, NOT "THE NEWEST" -- and calling it "the newest" was wrong.
-
-       CommitChangesInLocalLog scans FORWARD from ReadVersionBlock, so the seek
-       above is -1 from CURRENT: the record just read, anywhere in the log. The
-       database call said LogStoreUpdateNewestQSO, which rewrote the LAST row.
-       So a QSO was marked as sent to the server in the binary log while a
-       different one was marked in the database -- and since B4 the database is
-       what every window and every export reads.
-
-       The three sites that legitimately mean "the newest" all seek FILE_END;
-       this one never did. *)
-    LogStoreUpdateQSOAtIndex(RecordIndex, TempRXData);
-    inc(SendedQSOs);
-    (* WaitFor, not WaitForSingleObject. Same one-second budget and the same
-      meaning -- wait for the server to acknowledge this QSO, and carry on
-      regardless when it does not. The result is deliberately ignored, as the
-      Win32 return was: a timeout here is not an error, it just means the
-      acknowledgement has not arrived yet. *)
-    tNet_Event.WaitFor(1000);
-    // Runs on the sync WORKER thread and the window is an LCL form now, so this
-    // goes through the marshalling seam rather than writing a control directly.
-    // See uGetServerLog.ReportSyncProgress.
-    ReportSyncProgress(SYNC_FIELD_SENT, SendedQSOs);
-  end;
+   rows: TLogRowUpdates;
+   i: integer;
+   needs: TResendNeeds;
+   rec: ContestExchange;
+   posted: boolean;
+   notice: string;
 begin
-  if (tUSQE = 0) and (tUSQ = 0) then Exit;
-  SendedQSOs := 0;
-  if not OpenLogFile then Exit;
+   Result.Qsos := 0;
+   Result.Edits := 0;
 
-  ReadVersionBlock;
-  RecordIndex := -1;
-  1:
-  if ReadLogFile then
-     begin
-     inc(RecordIndex);
+   if GResentThisLink then
+      begin
+      Exit;
+      end;
+   if not NetIsConnected then
+      begin
+      Exit;
+      end;
+   if not FServerHelloSeen then
+      begin
+      Exit;
+      end;
+   if FRefusedComputerID <> #0 then
+      begin
+      Exit;
+      end;
+   GResentThisLink := True;
 
-     if TempRXData.ceSendToServer = False then
-        begin
-        if SendRecordToServer(NET_OFFLINEQSO_ID, TempRXData) then
-           begin
-           UpdateRec;
-           dec(tUSQ)
-           end;
+   rows := TLogRowUpdates.Create;
+   try
+      if not LogStoreCollectUnsentToServer(rows) then
+         begin
+         logger.Error('[Net] could not read the log to find the QSOs logged ' +
+                      'while the link was down; nothing was resent. They stay ' +
+                      'unsent and go on the next link.');
+         Exit;
+         end;
 
-        end;
+      posted := True;
+      for i := 0 to rows.Count - 1 do
+         begin
+         rec := rows.Row(i);
+         needs := ResendNeedsOf(rec);
 
-     if TempRXData.ceNeedSendToServerAE = True then
-        begin
-        if SendRecordToServer(NET_EDITEDQSO_ID, TempRXData) then
-           begin
-           UpdateRec;
-           dec(tUSQE)
-           end;
-        end;
+         if needs.NeedsQso then
+            begin
+            (* A QSO the server has never been given goes whole, with whatever
+              edits it has had: the packet is the record as it stands. *)
+            posted := SendRecordToServer(NET_QSOINFO_ID, rec);
+            if not posted then
+               begin
+               Break;
+               end;
+            Inc(Result.Qsos);
+            end;
 
-     goto 1;
-     end;
+         if needs.NeedsEdit then
+            begin
+            posted := SendRecordToServer(NET_EDITEDQSO_ID, rec);
+            if not posted then
+               begin
+               Break;
+               end;
+            Inc(Result.Edits);
+            end;
+         end;
 
-  if SendedQSOs > 0 then
-     begin
-     ServerMessage.smMessage := SM_SERVERLOG_CHANGED_MESSAGE;
-     ServerMessage.smParam := SendedQSOs;
-     SendToNet(ServerMessage, SizeOf(ServerMessage));
-     end;
+      if not posted then
+         begin
+         logger.Warn('[Net] the link went down while the QSOs logged ' +
+                     'meanwhile were being sent; %d QSO(s) and %d edit(s) were ' +
+                     'posted, the rest stay unsent', [Result.Qsos, Result.Edits]);
+         end;
+   finally
+      rows.Free;
+   end;
 
-  CloseLogFile;
+   if (Result.Qsos = 0) and (Result.Edits = 0) then
+      begin
+      Exit;
+      end;
+
+   logger.Info('[Net] resending what was logged while disconnected: %d QSO(s), ' +
+               '%d edit(s)', [Result.Qsos, Result.Edits]);
+
+   (* THE OTHER STATIONS ARE TOLD A BATCH ARRIVED, as the D7 resend did: the
+     server relays this message and each station shows the count. *)
+   if Result.Qsos > 0 then
+      begin
+      ServerMessage.smMessage := SM_SERVERLOG_CHANGED_MESSAGE;
+      ServerMessage.smParam := Result.Qsos;
+      SendToNet(ServerMessage, SizeOf(ServerMessage));
+      end;
+
+   notice := SysUtils.Format(SNetResent, [Result.Qsos, Result.Edits]);
+   if Assigned(ResendNoticeSink) then
+      begin
+      ResendNoticeSink(notice);
+      end
+   else
+      begin
+      QuickDisplay(notice);
+      end;
 end;
 
-function SendRecordToServer(RecordType: Word; var rec: ContestExchange): boolean;
-var
-  BytesSent                             : integer;
-  SendToServer                          : boolean;
-  SendToServerAE                        : boolean;
+procedure NetServiceResend;
 begin
-  Result := False;
-  if not NetIsConnected then Exit;
+   if not GResendDue then
+      begin
+      Exit;
+      end;
+   GResendDue := False;
+   ResendOfflineWork;
+end;
 
-  SendToServer := rec.ceSendToServer;
-  SendToServerAE := rec.ceNeedSendToServerAE;
+(* WHAT BECAME OF THE QSO PACKETS THE WRITER HAS FINISHED WITH, written down.
+  Main thread. Flags only, in one transaction; a QSO whose bytes reached the
+  socket is marked sent, an edit is cleared when every edit packet for it has,
+  and anything that failed is left exactly as it was -- owing. *)
+procedure SettleServerProgress;
+var
+   sent, edited: TNetTags;
+   sentKeys, editKeys: TQsoSessionKeys;
+   lost, i, unsent, dirty: integer;
+   id1, id2: Cardinal;
+begin
+   if GNetDelivery = nil then
+      begin
+      Exit;
+      end;
 
-  rec.ceSendToServer := True;
-  rec.ceNeedSendToServerAE := False;
+   GNetDelivery.Settle(sent, edited, lost);
+   if (Length(sent) = 0) and (Length(edited) = 0) and (lost = 0) then
+      begin
+      Exit;
+      end;
 
-  NetQSOInfoToSend.qiID := RecordType;
-  NetQSOInfoToSend.qiInformation := rec;
-  (* WHO PUT THIS ON THE WIRE (protocol 2). Every QSO, edit and offline resend
-    goes through here, so this is the one place the sender is stated: the
-    receivers judge the packet's contest by what THIS station announced, not by
-    ceContest -- which, for a contest registered by id, means nothing outside
-    this program. *)
-  NetQSOInfoToSend.qiSenderID := Ord(WireComputerID);
+   SetLength(sentKeys, Length(sent));
+   for i := 0 to High(sent) do
+      begin
+      NetTagIds(sent[i], id1, id2);
+      sentKeys[i].SessionId := id1;
+      sentKeys[i].SessionSeq := id2;
+      end;
+   SetLength(editKeys, Length(edited));
+   for i := 0 to High(edited) do
+      begin
+      NetTagIds(edited[i], id1, id2);
+      editKeys[i].SessionId := id1;
+      editKeys[i].SessionSeq := id2;
+      end;
 
-  BytesSent := SendToNet(NetQSOInfoToSend, SizeOf(NetQSOInfoToSend)); // <> SizeOf(NetQSOInfoToSend)
-  if BytesSent <> SizeOf(NetQSOInfoToSend) then
-     begin
-     rec.ceSendToServer := SendToServer;
-     rec.ceNeedSendToServerAE := SendToServerAE;
-     end
-  else
-     begin
-     Result := True;
- //    if not SendToServer then dec(tUSQ);
- //    if not SendToServerAE then dec(tUSQE);
-     end;
+   if (Length(sentKeys) > 0) or (Length(editKeys) > 0) then
+      begin
+      if not LogStoreMarkServerProgress(sentKeys, editKeys) then
+         begin
+         logger.Error('[Net] could not record that %d QSO(s) and %d edit(s) ' +
+                      'reached the server; they stay unsent and go again on ' +
+                      'the next link', [Length(sentKeys), Length(editKeys)]);
+         end;
+      end;
+
+   if lost > 0 then
+      begin
+      logger.Warn('[Net] %d QSO packet(s) did not reach the server; their rows ' +
+                  'stay unsent and go again when the link is back', [lost]);
+      end;
+
+   if LogStoreCountUnsentToServer(unsent, dirty) then
+      begin
+      tUSQ := unsent;
+      tUSQE := dirty;
+      (* THE ONLY PLACE THESE TWO NUMBERS CAN BE READ is this line: the log
+        compare window that shows them is reached only from a branch that never
+        runs (ProcessServerLogInfo compares nothing). *)
+      logger.Debug('[Net] still owed to the server: %d QSO(s), %d edit(s)',
+                   [unsent, dirty]);
+      end;
+end;
+
+function ReceivedQsoIsKnown(const aRec: ContestExchange): boolean;
+begin
+   Result := False;
+   if not QsoHasNetworkIdentity(aRec) then
+      begin
+      Exit;
+      end;
+
+   Result := LogStoreHasQSOBySessionIds(aRec.ceQSOID1, aRec.ceQSOID2);
+   if Result then
+      begin
+      Inc(GDuplicateQsos);
+      logger.Info('[Net] QSO %s (%d/%d) is already in the log; the copy that ' +
+                  'just arrived is ignored',
+                  [string(aRec.Callsign), aRec.ceQSOID1, aRec.ceQSOID2]);
+      end;
+end;
+
+function NetDuplicateQsosIgnored: integer;
+begin
+   Result := GDuplicateQsos;
+end;
+
+(* ONE QSO OR EDIT PACKET, built from a record and posted.
+
+  THE RECORD IS NEVER CHANGED. It used to set ceSendToServer on it before
+  posting, and callers then stored it, so the log said "sent" for a packet that
+  was only queued -- and a link that died with it still queued lost the QSO
+  without a trace. The log's flags now change when the packet is WRITTEN
+  (SettleServerProgress), so the record goes to the log as the caller made it:
+  a new QSO unsent, an edited one dirty.
+
+  THE PACKET says the opposite: sent, not dirty. That is what the server stores
+  and what every other station logs for a QSO that came from the network, and
+  those must not try to send it back.
+
+  THE TAG is the QSO's network key, handed back when the write finishes so the
+  right row is marked. A QSO with no key (both ids 0) travels, as it always
+  did, but cannot be marked afterwards; it is not owed after a link-up either.
+
+  True means POSTED, not delivered. *)
+function SendRecordToServer(RecordType: Word; const rec: ContestExchange): boolean;
+var
+   tag: Int64;
+begin
+   Result := False;
+   if not NetIsConnected then
+      begin
+      Exit;
+      end;
+
+   NetQSOInfoToSend.qiID := RecordType;
+   NetQSOInfoToSend.qiInformation := rec;
+   NetQSOInfoToSend.qiInformation.ceSendToServer := True;
+   NetQSOInfoToSend.qiInformation.ceNeedSendToServerAE := False;
+   (* WHO PUT THIS ON THE WIRE (protocol 2). Every QSO, edit and offline resend
+     goes through here, so this is the one place the sender is stated: the
+     receivers judge the packet's contest by what THIS station announced, not by
+     ceContest -- which, for a contest registered by id, means nothing outside
+     this program. *)
+   NetQSOInfoToSend.qiSenderID := Ord(WireComputerID);
+
+   tag := NetQsoTag(rec.ceQSOID1, rec.ceQSOID2);
+   if SendToNet(NetQSOInfoToSend, SizeOf(NetQSOInfoToSend), tag) <>
+      SizeOf(NetQSOInfoToSend) then
+      begin
+      Exit;
+      end;
+
+   if (RecordType = NET_EDITEDQSO_ID) and (GNetDelivery <> nil) then
+      begin
+      GNetDelivery.EditPosted(tag);
+      end;
+   Result := True;
 end;
 
 procedure ShowServerMessage(ServMess: TServerMessage);
@@ -2589,6 +2928,7 @@ initialization
   GNetLock    := SyncObjs.TCriticalSection.Create;
   GNetDrainer := TNetDrainer.Create;
   GPeers      := TNetPeers.Create;
+  GNetDelivery := TNetDelivery.Create;
 
   (* OWNED HERE NOW, not created in uProgramMain's CreateEvent block with the
     three CW/DVP events. It is this unit's signal and nothing outside uses it,
@@ -2605,6 +2945,7 @@ finalization
     the lock, or about to take it, when it goes. *)
   FreeAndNil(GNetDrainer);
   FreeAndNil(GPeers);
+  FreeAndNil(GNetDelivery);
   FreeAndNil(GNetLock);
   FreeAndNil(tNet_Event);
 
