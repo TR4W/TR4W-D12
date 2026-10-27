@@ -1891,6 +1891,8 @@ end;
    party splits; Test_EveryQSOPartySplitsARoverCallOnExport holds it. *)
 procedure TContestFactoryTests.Test_RoverSplitAndCountyLineDisagreeOnlyForTheKnownSeven;
 var
+   contests: TContestIdentityList;
+   k: integer;
    c: ContestType;
    obj: TContestBase;
    rowAllows: boolean;
@@ -1954,6 +1956,19 @@ begin
          end;
       end;
    CheckEquals(7, disagreements, 'exactly seven contests where the old row and the county line disagree');
+
+   (* THE IMPORT FOLLOWS THE CLASS FOR EVERY REGISTERED CONTEST -- by-id
+      ones included (issue #135), which the frozen row comparison above
+      cannot see. *)
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
+      begin
+      obj := contests[k];
+      classAllows := (obj is TContestStateQSOPartyBase) and
+                     TContestStateQSOPartyBase(obj).CountyLineAllowed;
+      CheckTrue(ContestAllowsCountyLineOnImport(HandleOf(obj)) = classAllows,
+                ContestWho(obj) + ': the import follows the class''s county line');
+      end;
 end;
 
 (* DUMMYCONTEST -- "no contest" -- SCORES ONLY THE OVERRIDES, THEN ZERO.

@@ -34,7 +34,11 @@ implementation
 
 
 uses
-   uContestRegistry;   (* ContestHandleOf -- a legacy contest's handle, Q108 S2 *)
+   uContestRegistry,   (* ContestHandleOf -- a legacy contest's handle, Q108 S2 *)
+   uContestBase,
+   (* ContestsToWalk, HandleOf, IsLegacyContest, ContestWho -- the round trip
+      walks the registry (issue #135). *)
+   uTestRegisteredContests;
 procedure TADIFRegressionTests.Test_Import_CQZField_PopulatesZone;
 var
    records : TContestExchangeArray;
@@ -223,11 +227,13 @@ end;
    IARU among them -- never resolved back to its contest. Both sides now ask
    the same getter.
 
-   THROUGH THE REAL EMITTER AND THE REAL IMPORTER, for every ContestType, so
-   the assertion covers the lexer and the cache as well as the lookup.
+   THROUGH THE REAL EMITTER AND THE REAL IMPORTER, for every REGISTERED
+   contest -- by-id ones included since issue #135; it walked the enum until
+   then -- so the assertion covers the lexer and the cache as well as the
+   lookup.
 
    THE EXCEPTIONS, each asserted rather than skipped:
-     DUMMYCONTEST     "no contest". Not exported for, never selectable.
+     no contest       not registered, so not walked. Never exported for.
      POTA, GENERALQSO export writes NO CONTEST_ID at all, so there is nothing
                       to read back -- asserted absent.
      RSGB_ROPOCO_SSB  shares 'RSGB-ROLO' with the CW running, the one current
@@ -235,37 +241,49 @@ end;
                       them apart by the record's MODE (RunsInMode,
                       ContestOfADIFRecordMode), so the SSB running round-trips
                       too -- exported as a PHONE QSO, which is what it is. It
-                      read back as CW before. *)
+                      read back as CW before. So the record is logged in a
+                      mode each contest RUNS in -- CW, else phone, else
+                      digital -- which is that rule, and URC's RTTY, without
+                      naming either. *)
 procedure TADIFRegressionTests.Test_ContestID_EveryContestReimportsItsOwnExport;
 var
-   c        : ContestType;
+   contests : TContestIdentityList;
+   k        : integer;
+   obj      : TContestBase;
    rec      : ContestExchange;
    s        : string;
    records  : TContestExchangeArray;
    who      : string;
-   expected : ContestType;
    resolved : integer;
 begin
    BeginTest('Test_ContestID_EveryContestReimportsItsOwnExport');
-   CheckEquals(Ord(DUMMYCONTEST), Ord(Low(ContestType)),
-               'DUMMYCONTEST is the first ContestType');
 
    resolved := 0;
-   for c := Succ(Low(ContestType)) to High(ContestType) do
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
       begin
-      who := string(ContestTypeSA[c]);
+      obj := contests[k];
+      who := ContestWho(obj);
 
       FillChar(rec, SizeOf(rec), 0);
-      rec.ceContest := ContestHandleOf(c);
+      rec.ceContest := HandleOf(obj);
       rec.Band      := Band20;
       rec.Callsign  := 'KG1S';
-      if c = RSGB_ROPOCO_SSB then
+      if obj.RunsInMode(CW) then
+         begin
+         rec.Mode := CW;
+         end
+      else if obj.RunsInMode(Phone) then
          begin
          rec.Mode := Phone;
+         end
+      else
+         begin
+         rec.Mode := Digital;
          end;
       s := EmitADIFRecord(rec) + '<EOR>';
 
-      if c in [POTA, GENERALQSO] then
+      if IsLegacyContest(obj, POTA) or IsLegacyContest(obj, GENERALQSO) then
          begin
          CheckTrue(Pos('<CONTEST_ID', s) = 0,
                    who + ' writes no CONTEST_ID -- got: ' + s);
@@ -280,20 +298,18 @@ begin
          Continue;
          end;
 
-      expected := c;
-      CheckEquals(Ord(expected), records[0].ceContest.ToByte,
-                  who + ' read back as ' +
-                  ContestId(records[0].ceContest) + ' -- wrote: ' + s);
-      if records[0].ceContest = ContestHandleOf(c) then
+      CheckEquals(ContestId(HandleOf(obj)), ContestId(records[0].ceContest),
+                  who + ' read back as itself -- wrote: ' + s);
+      if records[0].ceContest = HandleOf(obj) then
          begin
          inc(resolved);
          end;
       end;
 
-   (* A FLOOR, so the loop cannot pass by checking nothing: every contest but
-      the three exceptions above (DUMMYCONTEST, POTA, GENERALQSO) round-trips
-      to itself. *)
-   CheckEquals(Ord(High(ContestType)) + 1 - 3, resolved,
+   (* A FLOOR, so the loop cannot pass by checking nothing: every registered
+      contest but the two exceptions above (POTA, GENERALQSO) round-trips to
+      itself. *)
+   CheckEquals(Length(contests) - 2, resolved,
                'contests whose own export reads back to them');
 end;
 

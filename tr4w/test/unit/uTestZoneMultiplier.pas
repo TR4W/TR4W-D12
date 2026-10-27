@@ -550,19 +550,29 @@ end;
    the entrant fails this, and HISTORY_PINS must then name a station. *)
 procedure TZoneMultiplierTests.Test_TheITUQuestionDependsOnNoStation;
 var
-   c: ContestType;
+   contests: TContestIdentityList;
+   k: integer;
    s: TPinStation;
+   obj: TContestBase;
    identityITU: boolean;
 begin
    BeginTest('Test_TheITUQuestionDependsOnNoStation');
-   for c := Low(ContestType) to High(ContestType) do
+   (* Every registered contest, by-id ones included (issue #135). *)
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
       begin
-      identityITU := ContestZoneMultiplierZones(ContestIdentity(c)) = zmzITUZones;
+      identityITU := ContestZoneMultiplierZones(contests[k]) = zmzITUZones;
       for s := Low(TPinStation) to High(TPinStation) do
          begin
-         CheckEquals(BoolToStr(identityITU, True),
-                     BoolToStr(ProgramZones(c, PinStation(s, c)) = 'ITU', True),
-                     Who(c, s) + ' ITU zone list, identity versus station');
+         obj := NewContestLike(contests[k], PinStation(s, HandleOf(contests[k])));
+         try
+            CheckEquals(BoolToStr(identityITU, True),
+                        BoolToStr(ContestZoneMultiplierZones(obj) = zmzITUZones, True),
+                        ContestWho(obj) + ' at ' + STATIONS[s].Call +
+                        ' ITU zone list, identity versus station');
+         finally
+            obj.Free;
+            end;
          end;
       end;
 end;

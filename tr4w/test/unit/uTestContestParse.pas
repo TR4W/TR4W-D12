@@ -84,11 +84,38 @@ implementation
 
 uses
    Classes, SysUtils, VC, uContestBase, uContestRegistry,
-   uContestStateQSOPartyBase, uExchangeTokens, uCallSignRoutines,
+   uExchangeTokens, uCallSignRoutines,
    uDomFileKeys, uAppStrings, uTR4WStrings,
    (* ShippedDomDir -- the test binary's view of target\dom. *)
    uTestContestObjects,
-   uTestExchangeParserStub;
+   uTestExchangeParserStub,
+   (* StatePartiesToWalk, WalkIncludes, NewContestLike, ContestWho -- the
+      party walks are registry walks (issue #135). *)
+   uTestRegisteredContests;
+
+const
+   (* A FIXED GUARD, NOT A LIST TO KEEP: two parties registered by their id
+      (Q108 S3), which a walk of the ContestType enum cannot see. A party walk
+      asserts it reached both, so it cannot go quietly back to the enum or
+      empty. Every other party, by-id or legacy, is covered by the registry
+      walk itself. *)
+   GUARD_BY_ID_PARTIES: array[0..1] of string = ('ND-QSO-PARTY', 'QC-QSO-PARTY');
+
+(* The guard parties aParties does NOT hold, blank-separated; '' when the
+   walk reached both. *)
+function MissingByIdParties(const aParties: TContestIdentityList): string;
+var
+   i: integer;
+begin
+   Result := '';
+   for i := Low(GUARD_BY_ID_PARTIES) to High(GUARD_BY_ID_PARTIES) do
+      begin
+      if not WalkIncludes(aParties, GUARD_BY_ID_PARTIES[i]) then
+         begin
+         Result := Result + ' ' + GUARD_BY_ID_PARTIES[i];
+         end;
+      end;
+end;
 
 (* ---------------------------------------------------------------------------
    THE STUBBED ENGINE -- what each service was asked, and what it answers
@@ -561,28 +588,31 @@ end;
 
 (* THE DEFAULT IS THE BASE'S, SO EVERY SINGLE-STATE PARTY HAS IT -- and no
    class overrides it today. A party whose sponsor rules otherwise joins an
-   exception list here, in the commit that states the rule. *)
+   exception list here, in the commit that states the rule.
+
+   EVERY REGISTERED PARTY, by-id ones included (issue #135): the walk is the
+   registry's, and a fixed guard asserts it reached two by-id parties. *)
 procedure TContestParseTests.Test_EveryStatePartyRefusesAnOutOfStateContact;
 var
-   c: ContestType;
-   cls: TContestClass;
+   parties: TContestIdentityList;
+   k: integer;
+   station: TStationContext;
    contestObject: TContestBase;
    exch: ContestExchange;
    msg: string;
    ok: boolean;
-   parties: integer;
 begin
    BeginTest('Test_EveryStatePartyRefusesAnOutOfStateContact');
-   parties := 0;
-   for c := Succ(Low(ContestType)) to High(ContestType) do
+   parties := StatePartiesToWalk;
+   CheckEquals('', MissingByIdParties(parties),
+               'the party walk reached the by-id guard parties (ND, QC)');
+   CheckTrue(WalkIncludes(parties, ContestId(ContestHandleOf(FLORIDAQSOPARTY))),
+             'and the legacy parties -- Florida among them');
+   station := NoStation;
+   station.InHostState := False;
+   for k := 0 to High(parties) do
       begin
-      cls := ContestClassFor(c);
-      if (cls = nil) or (not cls.InheritsFrom(TContestStateQSOPartyBase)) then
-         begin
-         Continue;
-         end;
-      inc(parties);
-      contestObject := Make(c, False);
+      contestObject := NewContestLike(parties[k], station);
       try
          ResetStub;
          GDomesticKeys := 'HOSTCOUNTY';
@@ -590,13 +620,12 @@ begin
          exch := NewExch('DL1ABC', 'DL');
          ok := contestObject.ParseReceivedExchange('599 DX',
                   Session(True), exch, msg);
-         CheckFalse(ok, string(ContestTypeSA[c]) + ': out of state, a DX station is refused');
-         CheckTrue(msg <> '', string(ContestTypeSA[c]) + ': and the refusal says why');
+         CheckFalse(ok, ContestWho(contestObject) + ': out of state, a DX station is refused');
+         CheckTrue(msg <> '', ContestWho(contestObject) + ': and the refusal says why');
       finally
          contestObject.Free;
       end;
       end;
-   CheckTrue(parties >= 19, 'every single-state party was asked -- found ' + IntToStr(parties));
 end;
 
 procedure TContestParseTests.Test_RussianDXInitialExchangeIsTheOblast;
@@ -821,25 +850,34 @@ end;
    loads, so whatever else it declared -- NC's pulled in the fifty states with
    an INCLUDE and listed DC and the provinces -- an out-of-state station could
    work, and a station from there counted as "in state". No county file
-   includes another; the in-state file is where the rest belongs. *)
+   includes another; the in-state file is where the rest belongs.
+
+   WHAT IS CHECKED is that no line begins INCLUDE -- the shape NC's took. A
+   county file listing a non-county key outright is not caught here.
+
+   EVERY REGISTERED PARTY, by-id ones included (issue #135): until then this
+   walked the frozen ContestType enum, so no by-id party's county file was
+   ever read. A fixed guard asserts the walk reached two by-id parties. *)
 procedure TContestParseTests.Test_EveryPartyCountyFileHoldsOnlyCounties;
 var
-   c: ContestType;
-   cls: TContestClass;
+   parties: TContestIdentityList;
+   k: integer;
+   party: TContestBase;
    lines: TStringList;
    i: integer;
    path: string;
 begin
    BeginTest('Test_EveryPartyCountyFileHoldsOnlyCounties');
-   for c := Succ(Low(ContestType)) to High(ContestType) do
+   parties := StatePartiesToWalk;
+   CheckEquals('', MissingByIdParties(parties),
+               'the party walk reached the by-id guard parties (ND, QC)');
+   CheckTrue(WalkIncludes(parties, ContestId(ContestHandleOf(NCQSOPARTY))),
+             'and the legacy parties -- North Carolina among them');
+   for k := 0 to High(parties) do
       begin
-      cls := ContestClassFor(c);
-      if (cls = nil) or (not cls.InheritsFrom(TContestStateQSOPartyBase)) then
-         begin
-         Continue;
-         end;
-      path := ShippedDomDir + ContestIdentity(c).DomesticFileName + '.dom';
-      CheckTrue(FileExists(path), string(ContestTypeSA[c]) + ': its county file ships');
+      party := parties[k];
+      path := ShippedDomDir + party.DomesticFileName + '.dom';
+      CheckTrue(FileExists(path), ContestWho(party) + ': its county file ships');
       if not FileExists(path) then
          begin
          Continue;
@@ -850,7 +888,7 @@ begin
          for i := 0 to lines.Count - 1 do
             begin
             CheckFalse(Pos('INCLUDE', UpperCase(Trim(string(lines[i])))) = 1,
-                       string(ContestTypeSA[c]) + ': ' + ContestIdentity(c).DomesticFileName +
+                       ContestWho(party) + ': ' + party.DomesticFileName +
                        '.dom line ' + IntToStr(i + 1) + ' includes another file');
             end;
       finally

@@ -97,6 +97,43 @@ uses
    (* ContestsToWalk, ContestWho, ClassStatesItself -- Q108 S1. *)
    uTestRegisteredContests;
 
+(* THE MEMBER A CLOSED-LIST TEST'S ARMS ARE ASKED ABOUT, for aObj from a
+   registry walk (issue #135): its legacy member -- or, for a contest
+   registered by its id, DUMMYCONTEST, which no arm names, so a by-id contest
+   is held to every OTHER contest's answer unless the test names it by id.
+   A failure message names aObj (ContestWho), never this member. *)
+function ArmMemberOf(aObj: TContestBase): ContestType;
+begin
+   TryLegacyContestOf(aObj, Result);
+end;
+
+(* WHICH CLASS SUPPLIES THE CABRILLO LOCATION AND MODE ANSWERS -- for a
+   contest registered by its id, which no closed list names: the frozen lists
+   hold the legacy contests, and a by-id contest is held to the base's answer
+   exactly where nothing above TContestBase states one
+   (uTestRegisteredContests.ClassOverridesTheBase). So a new contest that
+   states its own rule needs no entry here; its own unit pins the value. *)
+type
+   TCabrilloCracker = class(TContestBase);
+   TRequiresLocationGetter = function: boolean of object;
+   TCabrilloModeGetter = function(aMode: ModeType; aExtMode: ExtendedModeType): string of object;
+
+function RequiresLocationCode(aObj: TContestBase): CodePointer;
+var
+   getter: TRequiresLocationGetter;
+begin
+   getter := TCabrilloCracker(aObj).GetRequiresCabrilloLocation;
+   Result := TMethod(getter).Code;
+end;
+
+function CabrilloModeStringCode(aObj: TContestBase): CodePointer;
+var
+   getter: TCabrilloModeGetter;
+begin
+   getter := aObj.CabrilloModeString;
+   Result := TMethod(getter).Code;
+end;
+
 (* ------------------------------------------------------------------------ *)
 (* THE NEW CONTEST PROMPTS                                                   *)
 (* ------------------------------------------------------------------------ *)
@@ -1028,14 +1065,20 @@ end;
 
 procedure TContestDisplayTests.Test_TotalsDisplay;
 var
+   identities: TContestIdentityList;
+   k: integer;
    c: ContestType;
    obj: TContestBase;
    d: TTotalsDisplay;
+   who: string;
 begin
    BeginTest('Test_TotalsDisplay');
-   for c := Low(ContestType) to High(ContestType) do
+   identities := IdentitiesToWalk;
+   for k := 0 to High(identities) do
       begin
-      obj := Make(c);
+      c := ArmMemberOf(identities[k]);
+      who := ContestWho(identities[k]);
+      obj := Make(HandleOf(identities[k]), NoStation);
       try
          d := obj.TotalsDisplay;
          case c of
@@ -1048,10 +1091,10 @@ begin
                end;
             RUSSIANDX, RU3AXMEMORIAL:
                begin
-               CheckEquals(TC_OBLASTS, d.DomesticMultsCaption, string(ContestTypeSA[c]) + ': oblasts');
-               CheckEquals('CW Dom', d.DomesticMultsCaptionCW, string(ContestTypeSA[c]) + ' on CW');
-               CheckEquals('Ph Dom', d.DomesticMultsCaptionPhone, string(ContestTypeSA[c]) + ' on phone');
-               CheckFalse(d.ShowsModeShares, string(ContestTypeSA[c]) + ' shows QSO rows');
+               CheckEquals(TC_OBLASTS, d.DomesticMultsCaption, who + ': oblasts');
+               CheckEquals('CW Dom', d.DomesticMultsCaptionCW, who + ' on CW');
+               CheckEquals('Ph Dom', d.DomesticMultsCaptionPhone, who + ' on phone');
+               CheckFalse(d.ShowsModeShares, who + ' shows QSO rows');
                end;
             OZCR_O:
                begin
@@ -1060,10 +1103,10 @@ begin
                end;
          else
             begin
-            CheckFalse(d.ShowsModeShares, string(ContestTypeSA[c]) + ' shows QSO rows');
-            CheckEquals(TC_DOMMULTS, d.DomesticMultsCaption, string(ContestTypeSA[c]) + ' label');
-            CheckEquals('CW Dom', d.DomesticMultsCaptionCW, string(ContestTypeSA[c]) + ' CW label');
-            CheckEquals('Ph Dom', d.DomesticMultsCaptionPhone, string(ContestTypeSA[c]) + ' phone label');
+            CheckFalse(d.ShowsModeShares, who + ' shows QSO rows');
+            CheckEquals(TC_DOMMULTS, d.DomesticMultsCaption, who + ' label');
+            CheckEquals('CW Dom', d.DomesticMultsCaptionCW, who + ' CW label');
+            CheckEquals('Ph Dom', d.DomesticMultsCaptionPhone, who + ' phone label');
             end;
          end;
       finally
@@ -1074,20 +1117,26 @@ end;
 
 procedure TContestDisplayTests.Test_SummarySheet;
 var
+   identities: TContestIdentityList;
+   k: integer;
    c: ContestType;
    obj: TContestBase;
    s: TSummarySheetLayout;
+   who: string;
 begin
    BeginTest('Test_SummarySheet');
-   for c := Low(ContestType) to High(ContestType) do
+   identities := IdentitiesToWalk;
+   for k := 0 to High(identities) do
       begin
-      obj := Make(c);
+      c := ArmMemberOf(identities[k]);
+      who := ContestWho(identities[k]);
+      obj := Make(HandleOf(identities[k]), NoStation);
       try
          s := obj.SummarySheet;
          CheckEquals(Ord(c = WINTERFIELDDAY), Ord(s.MultiplierPerBandModeRow),
-                     string(ContestTypeSA[c]) + ': one multiplier per band/mode row');
+                     who + ': one multiplier per band/mode row');
          CheckEquals(Ord(c = ARRLFIELDDAY), Ord(s.ClaimedScoreIsQSOPoints),
-                     string(ContestTypeSA[c]) + ': claims the QSO points');
+                     who + ': claims the QSO points');
       finally
          obj.Free;
          end;
@@ -1096,19 +1145,23 @@ end;
 
 procedure TContestDisplayTests.Test_HourTotalsRunningScore;
 var
+   identities: TContestIdentityList;
+   k: integer;
    c: ContestType;
    obj: TContestBase;
 begin
    BeginTest('Test_HourTotalsRunningScore');
-   for c := Low(ContestType) to High(ContestType) do
+   identities := IdentitiesToWalk;
+   for k := 0 to High(identities) do
       begin
-      obj := Make(c);
+      c := ArmMemberOf(identities[k]);
+      obj := Make(HandleOf(identities[k]), NoStation);
       try
          CheckEquals(Ord(not (c in [CUPRFCW, CUPRFSSB, RU3AXMEMORIAL, CUPURAL,
                                     UKRAINECHAMPIONSHIP, RFCHAMPIONSHIPCW,
                                     RFCHAMPIONSHIPSSB])),
                      Ord(obj.ReportsRunningScore),
-                     string(ContestTypeSA[c]) + ': the hour report''s score column');
+                     ContestWho(identities[k]) + ': the hour report''s score column');
       finally
          obj.Free;
          end;
@@ -1121,48 +1174,69 @@ end;
 
 procedure TContestDisplayTests.Test_CabrilloHeaderAndMode;
 var
+   identities: TContestIdentityList;
+   k: integer;
    c: ContestType;
    obj: TContestBase;
    station: TStationContext;
+   who: string;
+   isLegacy: boolean;
 begin
    BeginTest('Test_CabrilloHeaderAndMode');
    station := NoStation;
    station.MyFDClass := '2O';
-   for c := Low(ContestType) to High(ContestType) do
+   identities := IdentitiesToWalk;
+   for k := 0 to High(identities) do
       begin
-      obj := Make(c);
+      isLegacy := TryLegacyContestOf(identities[k], c);
+      who := ContestWho(identities[k]);
+      obj := Make(HandleOf(identities[k]), NoStation);
       try
-         CheckEquals(Ord(c in [ARRL10, WINTERFIELDDAY, DELAWAREQSOPARTY]),
-                     Ord(obj.RequiresCabrilloLocation),
-                     string(ContestTypeSA[c]) + ': needs a LOCATION');
+         (* THE LEGACY CONTESTS, FROZEN: exactly these three. A contest
+            registered by its id requires none unless its class states the
+            rule (see RequiresLocationCode) -- New Mexico and Ontario do,
+            from their sponsors' rules, pinned by their own units. *)
+         if isLegacy then
+            begin
+            CheckEquals(Ord(c in [ARRL10, WINTERFIELDDAY, DELAWAREQSOPARTY]),
+                        Ord(obj.RequiresCabrilloLocation),
+                        who + ': needs a LOCATION');
+            end
+         else if not ClassOverridesTheBase(identities[k], RequiresLocationCode) then
+            begin
+            CheckFalse(obj.RequiresCabrilloLocation,
+                       who + ': states no LOCATION rule, so needs none');
+            end;
          if c <> WINTERFIELDDAY then
             begin
             CheckEquals('', obj.CabrilloHeaderLinesBeforeTag('LOCATION', 'FL', station),
-                        string(ContestTypeSA[c]) + ': no lines before LOCATION');
+                        who + ': no lines before LOCATION');
             end;
-         (* FM AS PHONE AND EVERY DIGITAL MODE AS RY: the Delaware QSO Party
-            alone (uTestContestDelawareQP). Winter Field Day wrote FM as PH
-            until Q54 (NY4I, 2026-10-16) and writes FM now, as every other
-            contest does. *)
-         if c <> DELAWAREQSOPARTY then
+         (* FM AS PHONE AND EVERY DIGITAL MODE AS RY: of the legacy contests,
+            the Delaware QSO Party alone (uTestContestDelawareQP). Winter
+            Field Day wrote FM as PH until Q54 (NY4I, 2026-10-16) and writes
+            FM now, as every other contest does. A contest registered by its
+            id is held to the base's column unless its class states its own
+            (New Mexico: "Use RY to designate all digital modes", pinned by
+            uTestContestNewMexicoQP). *)
+         if (isLegacy and (c <> DELAWAREQSOPARTY)) or
+            ((not isLegacy) and
+             (not ClassOverridesTheBase(identities[k], CabrilloModeStringCode))) then
             begin
             CheckEquals('FM', obj.CabrilloModeString(FM, eFM),
-                        string(ContestTypeSA[c]) + ': FM is FM');
-            end;
-         if c <> DELAWAREQSOPARTY then
-            begin
-            CheckEquals('DG', obj.CabrilloModeString(Digital, eFT8), string(ContestTypeSA[c]) + ' FT8');
+                        who + ': FM is FM');
+            CheckEquals('DG', obj.CabrilloModeString(Digital, eFT8), who + ' FT8');
             end;
          if c <> GENERALQSO then
             begin
             CheckEquals(obj.CabrilloName, obj.CabrilloContestName('A TITLE', 'A NAME'),
-                        string(ContestTypeSA[c]) + ': the CONTEST: name is the Cabrillo name');
+                        who + ': the CONTEST: name is the Cabrillo name');
             end;
          (* The base column, every contest: digital RY or DG, CW, phone. *)
-         CheckEquals('RY', obj.CabrilloModeString(Digital, eRTTY), string(ContestTypeSA[c]) + ' RTTY');
-         CheckEquals('RY', obj.CabrilloModeString(Digital, eNoMode), string(ContestTypeSA[c]) + ' digital');
-         CheckEquals('CW', obj.CabrilloModeString(CW, eCW), string(ContestTypeSA[c]) + ' CW');
-         CheckEquals('PH', obj.CabrilloModeString(Phone, eUSB), string(ContestTypeSA[c]) + ' phone');
+         CheckEquals('RY', obj.CabrilloModeString(Digital, eRTTY), who + ' RTTY');
+         CheckEquals('RY', obj.CabrilloModeString(Digital, eNoMode), who + ' digital');
+         CheckEquals('CW', obj.CabrilloModeString(CW, eCW), who + ' CW');
+         CheckEquals('PH', obj.CabrilloModeString(Phone, eUSB), who + ' phone');
       finally
          obj.Free;
          end;
@@ -1257,10 +1331,10 @@ end;
 
    THE WORDS OF THE LINE, 1-BASED: QSO:, freq, mode, date, time, OUR CALL (6),
    then the sent exchange, then his call and what he sent. *)
-function CanonicalQSO(aContest: ContestType): ContestExchange;
+function CanonicalQSO(aContest: TContestHandle): ContestExchange; overload;
 begin
    FillChar(Result, SizeOf(Result), 0);
-   Result.ceContest := ContestHandleOf(aContest);
+   Result.ceContest := aContest;
    Result.Callsign := 'W1AW';
    Result.Mode := CW;
    Result.RSTReceived := 0;
@@ -1273,6 +1347,11 @@ begin
    Result.Name := ' JOE ';
    Result.ceClass := '2A';
    Result.ExchString := '  raw   exch ';
+end;
+
+function CanonicalQSO(aContest: ContestType): ContestExchange; overload;
+begin
+   Result := CanonicalQSO(ContestHandleOf(aContest));
 end;
 
 function LineWord(const aLine: string; aWord: integer): string;
@@ -1488,14 +1567,20 @@ const
    BASE_LABELS: array[RemainingMultiplierType] of string =
       ('', 'state', 'country', 'zone', 'prefix');
 var
+   identities: TContestIdentityList;
+   k: integer;
    c: ContestType;
    obj: TContestBase;
    m: RemainingMultiplierType;
+   who: string;
 begin
    BeginTest('Test_OperatingAidsAndScorePosting');
-   for c := Low(ContestType) to High(ContestType) do
+   identities := IdentitiesToWalk;
+   for k := 0 to High(identities) do
       begin
-      obj := Make(c);
+      c := ArmMemberOf(identities[k]);
+      who := ContestWho(identities[k]);
+      obj := Make(HandleOf(identities[k]), NoStation);
       try
          if c = WRTC then
             begin
@@ -1521,13 +1606,13 @@ begin
          else
             begin
             CheckTrue(obj.PermittedOperatingAids = [oaSuperCheckPartial, oaDXCluster, oaScorePosting],
-                      string(ContestTypeSA[c]) + ' allows every aid');
+                      who + ' allows every aid');
             for m := Low(RemainingMultiplierType) to High(RemainingMultiplierType) do
                begin
                CheckEquals(BASE_LABELS[m], obj.ScorePostingMultiplierType(m, False),
-                           string(ContestTypeSA[c]) + ' labels');
+                           who + ' labels');
                CheckEquals(BASE_LABELS[m], obj.ScorePostingMultiplierType(m, True),
-                           string(ContestTypeSA[c]) + ' labels, all modes');
+                           who + ' labels, all modes');
                end;
             end;
       finally
@@ -1538,16 +1623,20 @@ end;
 
 procedure TContestDisplayTests.Test_QTCMenu;
 var
+   identities: TContestIdentityList;
+   k: integer;
    c: ContestType;
    obj: TContestBase;
 begin
    BeginTest('Test_QTCMenu');
-   for c := Low(ContestType) to High(ContestType) do
+   identities := IdentitiesToWalk;
+   for k := 0 to High(identities) do
       begin
-      obj := Make(c);
+      c := ArmMemberOf(identities[k]);
+      obj := Make(HandleOf(identities[k]), NoStation);
       try
          CheckEquals(Ord(c in [DARCWAEDCCW..DARCWAEDCSSB]), Ord(obj.OffersQTCs),
-                     string(ContestTypeSA[c]) + ': the QTC menu');
+                     ContestWho(identities[k]) + ': the QTC menu');
       finally
          obj.Free;
          end;
@@ -1562,14 +1651,18 @@ end;
   around the text fields so the trimming shows. *)
 procedure TContestDisplayTests.Test_CanonicalReceivedExchanges;
 var
+   identities: TContestIdentityList;
+   k: integer;
    c: ContestType;
    q: ContestExchange;
    expected: string;
 begin
    BeginTest('Test_CanonicalReceivedExchanges');
-   for c := Low(ContestType) to High(ContestType) do
+   identities := IdentitiesToWalk;
+   for k := 0 to High(identities) do
       begin
-      q := CanonicalQSO(c);
+      c := ArmMemberOf(identities[k]);
+      q := CanonicalQSO(HandleOf(identities[k]));
       case c of
          CQWPXCW, CQWPXSSB, DARCWAEDCCW:
             begin
@@ -1610,7 +1703,7 @@ begin
          expected := 'raw exch';
          end;
       end;
-      CheckEquals(expected, BuildRxExchangeText(q), string(ContestTypeSA[c]) + ' received');
+      CheckEquals(expected, BuildRxExchangeText(q), ContestWho(identities[k]) + ' received');
       end;
 
    (* ARRL DX's DX side: no state, so the power. *)
@@ -1627,7 +1720,8 @@ end;
 
 procedure TContestDisplayTests.Test_CanonicalSentExchanges;
 var
-   c: ContestType;
+   identities: TContestIdentityList;
+   k: integer;
    q: ContestExchange;
    savedTemplate: string;
    savedGrid: string;
@@ -1638,17 +1732,18 @@ begin
    try
       Settings.My.Grid := ' FN42 ';
       Settings.Messages.CqExchangeCw := ' 5nn  # ';
-      for c := Low(ContestType) to High(ContestType) do
+      identities := IdentitiesToWalk;
+      for k := 0 to High(identities) do
          begin
-         q := CanonicalQSO(c);
-         if c = RTC then
+         q := CanonicalQSO(HandleOf(identities[k]));
+         if IsLegacyContest(identities[k], RTC) then
             begin
             CheckEquals('7 FN42', BuildSentExchangeText(q), 'RTC: serial and grid, no RST');
             end
          else
             begin
             CheckEquals('599 7', BuildSentExchangeText(q),
-                        string(ContestTypeSA[c]) + ': the template, filled');
+                        ContestWho(identities[k]) + ': the template, filled');
             end;
          end;
 

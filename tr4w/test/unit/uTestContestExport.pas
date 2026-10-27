@@ -85,11 +85,16 @@ uses
    (* ContestsToWalk -- the invariants walk the registry (Q108 S1). *)
    uTestRegisteredContests;
 
-function EmptyQso(aContest: ContestType): ContestExchange;
+function EmptyQso(aContest: TContestHandle): ContestExchange; overload;
 begin
    FillChar(Result, SizeOf(Result), 0);
-   Result.ceContest := ContestHandleOf(aContest);
+   Result.ceContest := aContest;
    Result.ceRecordKind := rkQSO;
+end;
+
+function EmptyQso(aContest: ContestType): ContestExchange; overload;
+begin
+   Result := EmptyQso(ContestHandleOf(aContest));
 end;
 
 function EmptyMy: TMyStationExchange;
@@ -153,12 +158,14 @@ begin
                'the one line layout');
 end;
 
-(* EVERY ContestType ANSWERS, for its own exchange, without raising. The
+(* EVERY REGISTERED CONTEST ANSWERS, for its own exchange, without raising --
+   by-id ones included (issue #135; it walked the enum until then). The
    exporters ask every contest now, so a contest whose answer raised would
    take an export down rather than fall back to anything. *)
 procedure TContestExportTests.Test_EveryContestFormatsItsOwnExchange;
 var
-   c: ContestType;
+   contests: TContestIdentityList;
+   k: integer;
    qso: ContestExchange;
    my: TMyStationExchange;
    context: TCabrilloQSOContext;
@@ -169,10 +176,11 @@ begin
    BeginTest('Test_EveryContestFormatsItsOwnExchange');
    failed := '';
    my := EmptyMy;
-   for c := Succ(Low(ContestType)) to High(ContestType) do
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
       begin
-      contest := ContestIdentity(c);
-      qso := EmptyQso(c);
+      contest := contests[k];
+      qso := EmptyQso(HandleOf(contest));
       context := Ctx('599', 'GA');
       try
          line := contest.FormatCabrilloSentExchange(my, qso, context)
@@ -181,7 +189,7 @@ begin
       except
          on E: Exception do
             begin
-            failed := failed + ' ' + string(ContestTypeSA[c]) + '(' + E.Message + ')';
+            failed := failed + ' ' + ContestWho(contest) + '(' + E.Message + ')';
             end;
       end;
       end;

@@ -80,7 +80,10 @@ uses
    uGridShape,
    uPOTAParks,
    Classes,
-   uTestContestObjects;
+   uTestContestObjects,
+   (* IdentitiesToWalk, IsLegacyContest, HandleOf, ContestWho -- the two
+      every-contest invariants walk the registry (issue #135). *)
+   uTestRegisteredContests;
 
 (* A QSO WITH THE FIELDS THE POTA RULES READ, everything else zero. *)
 function POTAQso(const aQTH, aExch: string): ContestExchange;
@@ -404,26 +407,30 @@ begin
    CheckEquals(Tags('', '', ''), Mine(''), 'no MY PARK');
 end;
 
-(* EVERY OTHER CONTEST'S BLOCK IS THE SRX_STRING THE TAIL ALWAYS WROTE. *)
+(* EVERY OTHER CONTEST'S BLOCK IS THE SRX_STRING THE TAIL ALWAYS WROTE --
+   every identity the registry answers with, by-id contests included
+   (issue #135). *)
 procedure TContestPOTATests.Test_TheBaseExchangeBlockIsTheSRXString;
 var
-   c: ContestType;
+   identities: TContestIdentityList;
+   k: integer;
    qso: ContestExchange;
    contest: TContestBase;
 begin
    BeginTest('Test_TheBaseExchangeBlockIsTheSRXString');
-   for c := Low(ContestType) to High(ContestType) do
+   identities := IdentitiesToWalk;
+   for k := 0 to High(identities) do
       begin
-      if c = POTA then
+      contest := identities[k];
+      if IsLegacyContest(contest, POTA) then
          begin
          Continue;
          end;
       qso := POTAQso('CT', '123');
-      qso.ceContest := ContestHandleOf(c);
-      contest := ContestIdentity(c);
+      qso.ceContest := HandleOf(contest);
       CheckEquals(EmitADIFField('SRX_STRING', contest.FormatADIFReceivedExchange(qso, True)),
                   contest.EmitADIFExchangeFields(MyPark('US-0663'), qso, True),
-                  string(ContestTypeSA[c]) + ': the SRX_STRING alone');
+                  ContestWho(contest) + ': the SRX_STRING alone');
       end;
 end;
 
@@ -466,18 +473,22 @@ begin
    CheckEquals('KEPT', string(x.DomesticQTH), 'neither: the domestic QTH kept');
 end;
 
+(* ONLY POTA -- among every identity the registry answers with, by-id
+   contests included (issue #135). *)
 procedure TContestPOTATests.Test_OnlyPOTAOffersTheParkTools;
 var
-   c: ContestType;
+   identities: TContestIdentityList;
+   k: integer;
    obj: TContestBase;
 begin
    BeginTest('Test_OnlyPOTAOffersTheParkTools');
-   for c := Low(ContestType) to High(ContestType) do
+   identities := IdentitiesToWalk;
+   for k := 0 to High(identities) do
       begin
-      obj := Make(c);
+      obj := Make(HandleOf(identities[k]), NoStation);
       try
-         CheckEquals(Ord(c = POTA), Ord(obj.OffersParkTools),
-                     string(ContestTypeSA[c]) + ': the park tools');
+         CheckEquals(Ord(IsLegacyContest(identities[k], POTA)), Ord(obj.OffersParkTools),
+                     ContestWho(identities[k]) + ': the park tools');
       finally
          obj.Free;
          end;

@@ -77,6 +77,21 @@ function ContestsToWalk: TContestIdentityList;
   program can answer with, such as "no ADIF id is claimed twice". *)
 function IdentitiesToWalk: TContestIdentityList;
 
+(* EVERY REGISTERED STATE QSO PARTY -- each contest in ContestsToWalk whose
+  class descends from TContestStateQSOPartyBase, legacy and by-id alike, in
+  registry order (issue #135: a party walk over the frozen enum never saw
+  Georgia, North Dakota, Oklahoma, New Mexico, Ontario or Quebec).
+
+  RAISES when it finds none, for ContestsToWalk's reason. A test that walks
+  it may also guard, with WalkIncludes, that a named by-id party is in it --
+  a fixed guard against a walk gone back to the enum, never a list every
+  new party must join. *)
+function StatePartiesToWalk: TContestIdentityList;
+
+(* IS THE CONTEST REGISTERED AS aId IN aContests? -- the pin a walk states so
+  that it cannot go quietly empty of the contests it exists to reach. *)
+function WalkIncludes(const aContests: TContestIdentityList; const aId: string): boolean;
+
 (* A NEW object of aIdentity's class, for the same contest, holding aStation.
   The caller frees it. For a test that needs a station or must not touch the
   shared identity object. *)
@@ -127,7 +142,7 @@ function ClassOverridesTheBase(aObj: TContestBase; aCodeOf: TContestMethodCode):
 implementation
 
 uses
-   SysUtils;
+   SysUtils, uContestStateQSOPartyBase;
 
 type
    (* Reaches the protected Contest property -- see HandleOf. *)
@@ -161,6 +176,46 @@ begin
    for k := 0 to High(contests) do
       begin
       Result[k + 1] := contests[k];
+      end;
+end;
+
+function StatePartiesToWalk: TContestIdentityList;
+var
+   contests: TContestIdentityList;
+   k: integer;
+   n: integer;
+begin
+   contests := ContestsToWalk;
+   Result := nil;
+   SetLength(Result, Length(contests));
+   n := 0;
+   for k := 0 to High(contests) do
+      begin
+      if contests[k] is TContestStateQSOPartyBase then
+         begin
+         Result[n] := contests[k];
+         inc(n);
+         end;
+      end;
+   SetLength(Result, n);
+   if n = 0 then
+      begin
+      raise Exception.Create('no registered contest is a state QSO party -- ' +
+                             'is the factory linked into the test program?');
+      end;
+end;
+
+function WalkIncludes(const aContests: TContestIdentityList; const aId: string): boolean;
+var
+   k: integer;
+begin
+   Result := False;
+   for k := 0 to High(aContests) do
+      begin
+      if ContestId(HandleOf(aContests[k])) = aId then
+         begin
+         Result := True;
+         end;
       end;
 end;
 

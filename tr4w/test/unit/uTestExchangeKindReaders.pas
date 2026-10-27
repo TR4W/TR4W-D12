@@ -80,7 +80,10 @@ uses
    uExchangeFields,
    uTestContestObjects,
    uTestContestKindPin,
-   uTestExchangeFields;
+   uTestExchangeFields,
+   (* ContestsToWalk, NewContestLike, HandleOf, ContestWho -- the
+      station-independence invariant walks the registry (issue #135). *)
+   uTestRegisteredContests;
 
 function Who(aContest: ContestType; aStation: TPinStation): string;
 begin
@@ -505,30 +508,31 @@ end;
    hand) against the identity. *)
 procedure TExchangeKindReadersTests.Test_TheGridReadingDependsOnNoStation;
 var
-   c: ContestType;
+   contests: TContestIdentityList;
+   k: integer;
    s: TPinStation;
    obj: TContestBase;
-   checked: integer;
 begin
    BeginTest('Test_TheGridReadingDependsOnNoStation');
-   checked := 0;
-   for c := Low(ContestType) to High(ContestType) do
+   (* Every registered contest, by-id ones included (issue #135); "no
+      contest" has no class, so the nil-safe answer and its identity's are
+      the base's and cannot differ. *)
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
       begin
       for s := Low(TPinStation) to High(TPinStation) do
          begin
-         obj := MakeContestOrNil(c, PinStation(s, c));
+         obj := NewContestLike(contests[k], PinStation(s, HandleOf(contests[k])));
          try
             CheckTrue(ContestExchangeTextMayHoldGridSquare(obj) =
-                      ContestIdentity(c).ExchangeTextMayHoldGridSquare,
-                      Who(c, s) + ' grid reading is the identity''s');
+                      contests[k].ExchangeTextMayHoldGridSquare,
+                      ContestWho(obj) + ' at ' + PinStationCall(s) +
+                      ' grid reading is the identity''s');
          finally
             obj.Free;
             end;
-         Inc(checked);
          end;
       end;
-   CheckEquals((Ord(High(ContestType)) + 1) * (Ord(High(TPinStation)) + 1), checked,
-               'contest x station grid readings compared with the identity');
 end;
 
 procedure TExchangeKindReadersTests.RunAllTests;

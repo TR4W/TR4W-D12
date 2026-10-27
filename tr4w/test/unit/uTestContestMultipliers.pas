@@ -69,7 +69,10 @@ implementation
 
 uses
    SysUtils, VC, uContestBase, uContestRegistry, uCallSignRoutines,
-   uTestContestObjects;
+   uTestContestObjects,
+   (* IdentitiesToWalk, IsLegacyContest, HandleOf, ContestWho -- the two
+      "every other contest" ratchets walk the registry (issue #135). *)
+   uTestRegisteredContests;
 
 const
    KINDS: array[0..3] of RemainingMultiplierType = (rmDomestic, rmDX, rmZone, rmPrefix);
@@ -189,6 +192,33 @@ begin
       end;
 end;
 
+type
+   TCountsAsMultiplierMethod = function(const aQso: ContestExchange;
+                                        aKind: RemainingMultiplierType): boolean of object;
+
+(* The code behind aObj's CountsAsMultiplier -- for
+   uTestRegisteredContests.ClassOverridesTheBase. *)
+function CountsAsMultiplierCode(aObj: TContestBase): CodePointer;
+var
+   method: TCountsAsMultiplierMethod;
+begin
+   method := aObj.CountsAsMultiplier;
+   Result := TMethod(method).Code;
+end;
+
+type
+   TMultiplierFromCallMethod = function(const aCall: string;
+                                        const aLookups: TMultiplierHintLookups): string of object;
+
+(* The code behind aObj's DomesticMultiplierFromCall -- the same. *)
+function MultiplierFromCallCode(aObj: TContestBase): CodePointer;
+var
+   method: TMultiplierFromCallMethod;
+begin
+   method := aObj.DomesticMultiplierFromCall;
+   Result := TMethod(method).Code;
+end;
+
 procedure TContestMultipliersTests.Test_EveryOtherContestCountsEveryMultiplier;
 const
    (* The contests whose CountsAsMultiplier says no to something. A contest
@@ -203,34 +233,48 @@ const
                                           MICHQSOPARTY, OHIOQSOPARTY, TENNESSEEQSOPARTY,
                                           TEXASQSOPARTY, VAQP, SALMONRUN, DELAWAREQSOPARTY);
 var
-   ct: ContestType;
+   identities: TContestIdentityList;
+   k: integer;
    i: integer;
    isStated: boolean;
    c: TContestBase;
+   member: ContestType;
 begin
    BeginTest('Test_EveryOtherContestCountsEveryMultiplier');
 
-   for ct := Low(ContestType) to High(ContestType) do
+   (* Every identity the registry answers with, by-id contests included
+      (issue #135). *)
+   identities := IdentitiesToWalk;
+   for k := 0 to High(identities) do
       begin
       isStated := False;
       for i := Low(STATED) to High(STATED) do
          begin
-         if STATED[i] = ct then
+         if IsLegacyContest(identities[k], STATED[i]) then
             begin
             isStated := True;
             end;
+         end;
+      (* A CONTEST REGISTERED BY ITS ID is in no list: it states a rule
+         exactly where its class overrides CountsAsMultiplier (North Dakota's
+         host state, URC's maritime mobile today), and each such rule is
+         pinned by its own unit. *)
+      if (not TryLegacyContestOf(identities[k], member)) and
+         ClassOverridesTheBase(identities[k], CountsAsMultiplierCode) then
+         begin
+         isStated := True;
          end;
       if isStated then
          begin
          Continue;
          end;
 
-      c := Make(ct);
+      c := Make(HandleOf(identities[k]), NoStation);
       try
          (* The shapes the five rules turn on: a DX QTH, either case, our own
             country (the zero station's is ''), our own zone (0), zone 0. *)
          CheckTrue(CountsAll(c, Qso('DX', '', 0)) and CountsAll(c, Qso('dx', 'PY', 0)),
-                   string(ContestTypeSA[ct]) + ' counts every multiplier the sheet finds');
+                   ContestWho(identities[k]) + ' counts every multiplier the sheet finds');
       finally
          c.Free;
          end;
@@ -368,33 +412,46 @@ const
    STATED: array[0..5] of ContestType = (RUSSIANDX, RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB,
                                          CUPURAL, RDA, YODX);
 var
-   ct: ContestType;
+   identities: TContestIdentityList;
+   k: integer;
    i: integer;
    isStated: boolean;
    c: TContestBase;
+   member: ContestType;
 begin
    BeginTest('Test_EveryOtherContestImpliesNoMultiplierFromACall');
 
-   for ct := Low(ContestType) to High(ContestType) do
+   (* Every identity the registry answers with, by-id contests included
+      (issue #135). *)
+   identities := IdentitiesToWalk;
+   for k := 0 to High(identities) do
       begin
       isStated := False;
       for i := Low(STATED) to High(STATED) do
          begin
-         if STATED[i] = ct then
+         if IsLegacyContest(identities[k], STATED[i]) then
             begin
             isStated := True;
             end;
+         end;
+      (* A CONTEST REGISTERED BY ITS ID is in no list: it states a rule
+         exactly where its class overrides DomesticMultiplierFromCall (none
+         does today), and its own unit pins it. *)
+      if (not TryLegacyContestOf(identities[k], member)) and
+         ClassOverridesTheBase(identities[k], MultiplierFromCallCode) then
+         begin
+         isStated := True;
          end;
       if isStated then
          begin
          Continue;
          end;
 
-      c := Make(ct);
+      c := Make(HandleOf(identities[k]), NoStation);
       try
          CheckEquals('', c.DomesticMultiplierFromCall('UA3ABC', Lookups) +
                          c.DomesticMultiplierFromCall('YO3ABC', Lookups),
-                     string(ContestTypeSA[ct]) + ' implies no multiplier from a call');
+                     ContestWho(identities[k]) + ' implies no multiplier from a call');
       finally
          c.Free;
          end;

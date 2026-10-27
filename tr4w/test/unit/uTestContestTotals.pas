@@ -86,7 +86,7 @@ type
 implementation
 
 uses
-   SysUtils, VC, uSettingsModel, uContestBase, uContestRegistry,
+   Classes, SysUtils, VC, uSettingsModel, uContestBase, uContestRegistry,
    (* The application's view, kept beside the totals. *)
    uScoreTotals,
    (* Make and NoStation -- lifted there at M8, the third copy being due. *)
@@ -97,7 +97,10 @@ uses
       written. *)
    uContestIdahoQP,
    Log4D,
-   uTestLogCapture;
+   uTestLogCapture,
+   (* ContestsToWalk, NewContestLike, HandleOf -- the bonus-station list is
+      a registry walk (issue #135). *)
+   uTestRegisteredContests;
 
 (* ---------------------------------------------------------------------------
    HAND-BUILT INPUTS
@@ -1266,37 +1269,53 @@ end;
 
 procedure TContestTotalsTests.Test_OnlyBonusContestsDeclareStations;
 var
-   c: ContestType;
+   contests: TContestIdentityList;
+   k: integer;
    contestObject: TContestBase;
-   declaring: string;
+   declaring: TStringList;
+   joined: string;
 begin
    BeginTest('Test_OnlyBonusContestsDeclareStations');
 
    (* THE LIST IS CLOSED: a contest that gains a bonus station joins it here,
-      in the commit that gives it one, with its sponsor's rule. *)
-   declaring := '';
-   for c := Low(ContestType) to High(ContestType) do
-      begin
-      if ContestClassFor(c) = nil then
+      in the commit that gives it one, with its sponsor's rule. Every
+      registered contest, by-id ones included (issue #135), named by its id
+      and SORTED -- the registry's order is its units' initialization order,
+      which says nothing about a contest. *)
+   declaring := TStringList.Create;
+   try
+      contests := ContestsToWalk;
+      for k := 0 to High(contests) do
          begin
-         Continue;
+         contestObject := NewContestLike(contests[k], NoStation);
+         try
+            if Length(contestObject.BonusStations) > 0 then
+               begin
+               declaring.Add(AnsiString(ContestId(HandleOf(contests[k]))));
+               end;
+         finally
+            contestObject.Free;
          end;
-      contestObject := Make(c, NoStation);
-      try
-         if Length(contestObject.BonusStations) > 0 then
+         end;
+      declaring.Sort;
+      joined := '';
+      for k := 0 to declaring.Count - 1 do
+         begin
+         if k > 0 then
             begin
-            declaring := declaring + ' ' + ContestTypeSA[c];
+            joined := joined + '|';
             end;
-      finally
-         contestObject.Free;
-      end;
-      end;
-   (* BCQP joined at #88 (2026-10-26): "Any QSO with the Orca DXCC
-      station, VA7ODX, will be worth an additional 20 points." Wisconsin at
-      round 2: "Add 100 points for each time you work W9FK on each band and
-      mode below 50Mhz." *)
-   CheckEquals(' MISSOURI QSO PARTY SALMON RUN WISCONSIN QSO PARTY BCQP', declaring,
-               'the contests that declare bonus stations');
+         joined := joined + string(declaring[k]);
+         end;
+      (* BCQP joined at #88 (2026-10-26): "Any QSO with the Orca DXCC
+         station, VA7ODX, will be worth an additional 20 points." Wisconsin
+         at round 2: "Add 100 points for each time you work W9FK on each band
+         and mode below 50Mhz." *)
+      CheckEquals('BCQP|MISSOURI QSO PARTY|SALMON RUN|WISCONSIN QSO PARTY', joined,
+                  'the contests that declare bonus stations');
+   finally
+      declaring.Free;
+   end;
 end;
 
 procedure TContestTotalsTests.RunAllTests;
