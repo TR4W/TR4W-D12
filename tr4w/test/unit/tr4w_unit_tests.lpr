@@ -605,6 +605,7 @@ uses
    uTestDXClusterClient in 'uTestDXClusterClient.pas',
    uNetFraming in '..\..\src\uNetFraming.pas',
    uTestNetFraming in 'uTestNetFraming.pas',
+   uTestNetWireSizes in 'uTestNetWireSizes.pas',
    uDXSpotParse         in '..\..\src\uDXSpotParse.pas',
    uSpotAge             in '..\..\src\uSpotAge.pas',
    uTelnetTrace         in '..\..\src\uTelnetTrace.pas',
@@ -994,6 +995,7 @@ begin
    RegisterSuite(TSortedStringListTests.Create('SortedStringList'));
    RegisterSuite(TCallsignsListTests.Create('CallsignsList'));
    RegisterSuite(TTestNetFraming.Create('NetFraming'));
+   RegisterSuite(TTestNetWireSizes.Create('NetWireSizes'));
    RegisterSuite(TTestADIFExchange.Create('ADIFExchange'));
    RegisterSuite(TCallSignRoutinesTests.Create('CallSignRoutines'));
    RegisterSuite(TYaesuASCIITests.Create('YaesuASCII'));
