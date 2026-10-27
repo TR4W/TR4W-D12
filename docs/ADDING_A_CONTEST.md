@@ -253,10 +253,14 @@ state:**
   multipliers, but ADIF's code for Newfoundland and Labrador is NL, so
   `TContestQuebecQP.ADIFCountyState` answers `NL` for those two keys and asks
   `inherited` for the rest. Know one inherited defect before you pin your
-  ADIF: the base takes any key that is not two letters as a host county, so
-  a DX station typed with a three-letter QTH (`KP4`, `UA9`) exports `STATE`
-  as the HOST -- every party, found adding Ontario (open: issue 134). Pin today's answer with the issue named, or leave
-  that case out; do not code around it in your class.
+  ADIF: the base takes a key as a host county only when it is not two
+  letters AND the party's table resolved it -- the record's `DomesticQTH`,
+  else the typed QTH when the station's `IsDomesticQTH` knows it (a rover
+  QSO has no `DomesticQTH`). A DX station typed with a three-letter QTH
+  (`KP4`, `UA9`) is no county, so it exports neither `STATE` nor `CNTY`
+  (issue 134, fixed 2026-10-27); that needs the export to ask the object
+  that holds the station (`uADIF.ContestForRecord`), which the party tests
+  reach with `Station.IsDomesticQTH` set.
 - **A Canadian host states `WritesADIFCounty` False** -- ADIF's `CNTY`
   enumeration defines nothing for Canada (British Columbia, Ontario,
   Quebec). The party base still writes `STATE`.

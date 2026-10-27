@@ -54,6 +54,7 @@ type
    private
       procedure Test_ADXEntrantSendsItsOwnCountry;
       procedure Test_AYearWithNoTableIsReportedOncePerYear;
+      procedure Test_ADIFStateNeedsAQTHTheTableResolved;
    end;
 
 implementation
@@ -64,6 +65,8 @@ uses
    VC,
    uContestBase,
    uContestStateQSOPartyBase,
+   uContestRegistry,   (* ContestIdentity *)
+   uADIF,              (* ContestForRecord *)
    uTestContestObjects,
    uTestLogCapture;
 
@@ -223,10 +226,78 @@ begin
    end;
 end;
 
+function StubKnowsMON(const aQTH: string): boolean;
+begin
+   Result := aQTH = 'MON';
+end;
+
+(* A HOST COUNTY IS A QTH THE PARTY'S TABLE RESOLVED (issue #134). The base
+   took ANY key that is not two letters as a host county, and a DX QSO has no
+   DomesticQTH, so the typed QTH ('KP4', 'UA9') was judged instead and the
+   worked DX station's ADIF STATE named the HOST. The county is the record's
+   DomesticQTH -- what the domestic table answered when the QSO was logged --
+   and nothing typed. No county means no CNTY either: PostUnit writes CNTY
+   only where this answers a state. *)
+procedure TContestStateQSOPartyBaseTests.Test_ADIFStateNeedsAQTHTheTableResolved;
+var
+   probe: TSentLocationProbe;
+   station: TStationContext;
+   rec: ContestExchange;
+
+   function CountyStateOf(const aTyped: string; const aKey: string): string;
+   var
+      qso: ContestExchange;
+   begin
+      qso := Default(ContestExchange);
+      qso.QTHString := ShortString(aTyped);
+      qso.DomesticQTH := ShortString(aKey);
+      Result := probe.ADIFCountyState(qso);
+   end;
+
+begin
+   BeginTest('Test_ADIFStateNeedsAQTHTheTableResolved');
+   probe := TSentLocationProbe.Create(NoContest);
+   try
+      CheckEquals('XX', CountyStateOf('TOR', 'Tor'), 'a county the table resolved is the host''s');
+      CheckEquals('XX', CountyStateOf('MUS', 'MUS'), 'whatever its case');
+      CheckEquals('', CountyStateOf('KP4', ''), 'a typed DX QTH the table did not resolve is not');
+      CheckEquals('', CountyStateOf('UA9', ''), 'UA9');
+      CheckEquals('', CountyStateOf('VP9', ''), 'VP9');
+      CheckEquals('', CountyStateOf('DX', ''), 'nor is DX');
+      CheckEquals('', CountyStateOf('', ''), 'nor is nothing');
+      CheckEquals('', CountyStateOf('NY', 'NY'), 'a two-letter state is not a county');
+      CheckEquals('', CountyStateOf('ON', ''), 'nor a two-letter code the table did not resolve');
+
+      (* A ROVER'S QSO has no DomesticQTH -- the county came from the call's
+         /SUFFIX -- so the typed QTH is asked of the station's table. *)
+      station := NoStation;
+      station.IsDomesticQTH := @StubKnowsMON;
+      probe.SetStation(station);
+      CheckEquals('XX', CountyStateOf('MON', ''), 'a typed county the table knows is the host''s');
+      CheckEquals('XX', CountyStateOf(' MON ', ''), 'whatever the padding');
+      CheckEquals('', CountyStateOf('KP4', ''), 'a typed DX QTH the table does not know still is not');
+      CheckEquals('', CountyStateOf('', ''), 'nor is nothing');
+      CheckEquals('XX', CountyStateOf('KP4', 'Mon'), 'the record''s own key wins over the typed text');
+
+      (* THE EXPORT ASKS THE OBJECT THAT HOLDS THE STATION, never the identity
+         object, which has no table: ContestForRecord hands back the contest
+         it is given when the QSO is that contest's own. *)
+      rec := Default(ContestExchange);
+      rec.ceContest := NoContest;
+      CheckTrue(ContestForRecord(rec, probe) = TContestBase(probe),
+                'the QSO''s own contest speaks for it');
+      CheckTrue(ContestForRecord(rec, nil) = ContestIdentity(rec.ceContest),
+                'and with none given, the identity object');
+   finally
+      probe.Free;
+   end;
+end;
+
 procedure TContestStateQSOPartyBaseTests.RunAllTests;
 begin
    Test_ADXEntrantSendsItsOwnCountry;
    Test_AYearWithNoTableIsReportedOncePerYear;
+   Test_ADIFStateNeedsAQTHTheTableResolved;
 end;
 
 end.

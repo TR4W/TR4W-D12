@@ -1070,6 +1070,8 @@ begin
    CheckEquals('ON', StateOf('ON', 'On', 'VE'), 'an Ontario station is in ON');
    CheckEquals('NY', StateOf('NY', 'NY', 'K'), 'a New York station is in NY');
    CheckEquals('', StateOf('DX', 'Dx', 'DL'), 'a DX station has no STATE');
+   CheckEquals('', StateOf('KP4', '', 'KP4'), 'nor does a typed three-letter DX QTH (issue #134)');
+   CheckEquals('QC', StateOf('OTS', 'OTS', 'VE'), 'while a region the table resolved still does');
    CheckFalse(identity.WritesADIFCounty, 'and no CNTY is written');
 end;
 

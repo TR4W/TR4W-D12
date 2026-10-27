@@ -333,10 +333,14 @@ type
       (* THE WORKED STATION'S ADIF STATE, AND ITS COUNTY AS CNTY -- Q76/Q89
          (NY4I, 2026-10-16). See TContestBase.ADIFCountyState,
          ADIFWorkedStationState and WritesADIFCounty. STATED ONCE, HERE: a
-         QTH key that is not two letters is one of this party's counties,
-         so the worked station is in the host (HostState -- 'BC' for British
-         Columbia, which wrote no STATE until Q89); anything else is judged
-         by uADIF.ADIFStateOfPartyQSO. British Columbia overrides
+         QTH key that is not two letters AND that the party's table resolves
+         -- the record's DomesticQTH, else the typed QTH when
+         Station.IsDomesticQTH knows it (a rover's) -- is one of this party's
+         counties, so the worked station is in the host (HostState -- 'BC'
+         for British Columbia, which wrote no STATE until Q89); anything
+         else is judged by uADIF.ADIFStateOfPartyQSO. A typed QTH the table
+         does not know (a DX station's 'KP4') is no county, so it gets
+         neither STATE nor CNTY (issue #134, 2026-10-27). British Columbia overrides
          WritesADIFCounty -- ADIF has no Canadian county enumeration. *)
       function ADIFCountyState(const aQso: ContestExchange): string; override;
       function ADIFWorkedStationState(const aQso: ContestExchange): string; override;
@@ -423,7 +427,7 @@ uses
    SysUtils,        (* Format *)
    uTR4WStrings,    (* TC_TOOMANYCOUNTIES *)
    uAppStrings,     (* SExchangeOutOfStateWorksHostOnly *)
-   uADIF;           (* ADIFPartyQTHKey, ADIFStateOfPartyQSO -- Q76/Q89 *)
+   uADIF;           (* ADIFStateOfPartyQSO -- Q76/Q89 *)
 
 function TContestStateQSOPartyBase.ParseReceivedExchange(const aText: string;
                                                          const aSession: TReceivedExchangeSession;
@@ -560,10 +564,26 @@ end;
 function TContestStateQSOPartyBase.ADIFCountyState(const aQso: ContestExchange): string;
 var
    key: string;
+   typed: string;
 begin
-   (* A key that is not two letters is a county of this party -- see the
-      declaration (Q76/Q89, 2026-10-16). *)
-   key := ADIFPartyQTHKey(aQso);
+   (* A key that is not two letters AND that the party's table resolved is a
+      county of this party -- see the declaration (Q76/Q89, 2026-10-16; #134).
+      The record's DomesticQTH is what the table answered when the QSO was
+      logged. A rover's QSO carries none (the county came from the call's
+      /SUFFIX, after the exchange was parsed), so the typed QTH is asked of
+      the SAME table the score asks (Station.IsDomesticQTH). A DX QSO's typed
+      'KP4' is in no county file, so it is not a county however long it is. *)
+   key := Trim(string(aQso.DomesticQTH));
+   if (key = '') and
+      Assigned(Station.IsDomesticQTH) then
+      begin
+      typed := Trim(string(aQso.QTHString));
+      if (typed <> '') and
+         Station.IsDomesticQTH(typed) then
+         begin
+         key := typed;
+         end;
+      end;
    if (key <> '') and (Length(key) <> 2) then
       begin
       Result := HostState;

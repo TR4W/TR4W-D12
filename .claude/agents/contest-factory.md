@@ -881,10 +881,15 @@ the target shape, the M-step migration order and the open questions.
   a Canadian host (BC, Ontario since #127) states False -- ADIF has no
   Canadian CNTY -- and `Test_EveryPartyAndOnlyAPartyWritesAState` judges the
   host by `IsADIFPrimarySubdivision('VE', HostState)`, not by name. **A
-  `ADIFCountyState` KEY OF THREE LETTERS IS TAKEN AS A HOST COUNTY EVEN WHEN
-  IT IS A TYPED DX QTH** (no `DomesticQTH`, `QTHString` `KP4`/`UA9`): STATE
-  then names the host -- found adding Ontario, open as issue 134 (and issue
-  137 holds the matrix totals' double count). In a commit message, never put
+  `ADIFCountyState` KEY IS A HOST COUNTY ONLY WHEN THE PARTY'S TABLE
+  RESOLVED IT** (issue 134, fixed 2026-10-27): the record's `DomesticQTH`,
+  else the typed `QTHString` when `Station.IsDomesticQTH` knows it (a rover
+  QSO has no `DomesticQTH`). A typed DX QTH (`KP4`, `UA9`) is no county: no
+  STATE, no CNTY. The export therefore asks the object that HOLDS THE STATION
+  -- `uADIF.ContestForRecord(rec, ActiveContest)`, for STATE (EmitADIFRecord)
+  and for PostUnit's CNTY block -- never `ContestIdentity`, which has no
+  table; `GetADIFStateForQSO` is the identity-only form, for tests. (Issue
+  137 holds the matrix totals' double count.) In a commit message, never put
   "fixed:" or another closing word before an issue number the commit does not
   fix: GitHub closed both from "Found, not fixed: #134". D7's
   host-state-on-every-QSO and `GetStateForContest` are gone; a new QSO party

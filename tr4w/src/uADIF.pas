@@ -488,7 +488,17 @@ function PadInt(n: Integer; minLen: Integer): string;
 // every contest but the QSO parties).  Used by EmitADIFRecord.  Was
 // GetStateForContest(c), which wrote the PARTY's state on every QSO --
 // D7's rule, fixed at Q76/Q89 (NY4I, 2026-10-16).
+// THIS ASKS THE IDENTITY OBJECT, WHICH HOLDS NO STATION: a party that asks
+// its station's domestic table (the state-party base, issue #134) sees none
+// here.  The export asks ContestForRecord's answer instead.
 function GetADIFStateForQSO(const rec: ContestExchange): string;
+
+// THE CONTEST THAT SPEAKS FOR rec: aContest when it is rec's own contest (it
+// carries the station), else the identity object.  Never the live contest -- a
+// QSO of another contest is judged by its own.  PostUnit's CNTY block asks it
+// so STATE and CNTY are judged by the same object.
+function ContestForRecord(const rec: ContestExchange;
+                          aContest: TContestBase): TContestBase;
 
 // ADIF's Primary Administrative Subdivision enumeration, for the four
 // entities a North American QSO party hears from: is aCode (upper case)
@@ -2357,7 +2367,7 @@ begin
    // answer.  Contest-specific STATE that must be derived (e.g. Field Day:
    // section -> state) is emitted by the PostUnit tail emitter.  See
    // Issue #1050.
-   stateForQP := GetADIFStateForQSO(rec);
+   stateForQP := rules.ADIFWorkedStationState(rec);
    if (stateForQP <> '') and (rec.QTHString <> '') then
       begin
       Result := Result + EmitADIFField('STATE', stateForQP);

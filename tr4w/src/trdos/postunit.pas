@@ -2532,8 +2532,11 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange;
   // state, a province or DX, so an out-of-state QSO writes no CNTY), and
   // whether ADIF has a county enumeration for it at all -- British
   // Columbia writes STATE:BC and no CNTY (Q76/Q89, 2026-10-16).
-  stateCode := ContestIdentity( rec.ceContest ).ADIFCountyState( rec );
-  if ( stateCode <> '' ) and ContestIdentity( rec.ceContest ).WritesADIFCounty and
+  (* ASKED OF THE OBJECT THAT HOLDS THE STATION, as STATE is: a county is a
+    QTH the station's domestic table knows (issue #134), and only that object
+    carries the table. *)
+  stateCode := ContestForRecord( rec, contestRules ).ADIFCountyState( rec );
+  if ( stateCode <> '' ) and ContestForRecord( rec, contestRules ).WritesADIFCounty and
      ( rec.QTHString <> '' ) and
      ( length( rec.QTHString ) <> 2 ) then
      begin

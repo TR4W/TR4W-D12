@@ -810,7 +810,8 @@ begin
 
    (* A SINGLE-STATE PARTY: Florida. *)
    Pin(FLORIDAQSOPARTY, 'LEE', 'Lee', 'K', 'FL');      (* in-state county *)
-   Pin(FLORIDAQSOPARTY, 'MON', '', 'K', 'FL');         (* no key: the logged QTH *)
+   Pin(FLORIDAQSOPARTY, 'MON', '', 'K', '');           (* no key and no table: no county (#134; with a table the QTH is asked of it) *)
+   Pin(FLORIDAQSOPARTY, 'KP4', '', 'KP4', '');         (* a typed DX QTH is no county (#134) *)
    Pin(FLORIDAQSOPARTY, 'CT', 'Ct', 'K', 'CT');        (* out-of-state station *)
    Pin(FLORIDAQSOPARTY, 'CON', 'Ct', 'K', 'CT');       (* an alias: the key decides *)
    Pin(FLORIDAQSOPARTY, 'DC', 'DC', 'K', 'DC');        (* DC is a 291 subdivision *)

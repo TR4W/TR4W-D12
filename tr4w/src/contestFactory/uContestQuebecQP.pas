@@ -263,7 +263,7 @@ uses
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
-   (* ADIFPartyQTHKey -- the QTH key the party base's ADIFCountyState reads. *)
+   (* ADIFPartyQTHKey -- the QTH key the NF and LB test reads. *)
    uADIF,
    (* SNewContestQuebecQPRegionOrLocation. *)
    uAppStrings,
