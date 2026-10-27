@@ -745,7 +745,8 @@ uses
   uIntercomForm,           // CreateTR4WIntercomWindow
   uRadioPanelForm,         // CreateTR4WRadioPanelWindow -- both radios
   uNetworkForm,            // CreateTR4WNetworkWindow
-  uRemMultsForm,       // CreateTR4WRemMultsWindow -- all five mult windows
+  uServerLogForm,          // ShowServerLogSync -- Net > Synchronize
+  uRemMultsForm,      // CreateTR4WRemMultsWindow -- all five mult windows
   uFunctionKeysForm,   // CreateTR4WFunctionKeysWindow -- the first LCL tool window a TForm now -- CreateTR4WMainForm
   uPrefsForm,       // the PREF command -- the radio Preferences window
   uTCIServer,       // the TCI server, stopped in tr4w_ShutDown
@@ -5854,7 +5855,13 @@ begin
       ShowTR4WWindow(tw_NETWINDOW_INDEX);
 
     menu_getserverlog:
-      SendToNet(NET_LOGINFO_MESSAGE, SizeOf(NET_LOGINFO_MESSAGE));
+      (* SYNCHRONIZE. D7 sent the server a request for its log-compare packet,
+        compared CRC32s of the two .TRW files and, when they differed, opened
+        the Difference-in-logs dialog and from it the window below. There is no
+        CRC to compare now, so the row opens the window: Get server log fetches
+        and shows the server's log, and the second button ADDS the QSOs this log
+        lacks (Phase 1, C6). *)
+      ShowServerLogSync;
 
     menu_clearserverlog:
       begin

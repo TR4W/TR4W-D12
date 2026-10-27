@@ -3197,9 +3197,10 @@ var
     session_state table in the contest database now; see
     DupeAndMultSheet.SaveRestartFile for what moved and what turned out to
     be derivable. *)
-  TR4W_SYN_FILENAME                     : FileNameType;
+  (* TR4W_SYN_FILENAME DELETED (Phase 1, C6): the downloaded server log is held
+    in memory and merged. *)
 
-  TR4W_DEFMESSAGES_FILENAME             : FileNameType;
+  TR4W_DEFMESSAGES_FILENAME            : FileNameType;
 
   TR4W_INTERCOM_FILENAME                : FileNameType;
   TR4W_REMAININGMULTS_FILENAME          : FileNameType;

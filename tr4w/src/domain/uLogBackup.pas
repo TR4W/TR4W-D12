@@ -87,6 +87,10 @@ function StagedBackupIsSound(const aPath: string; out aWhy: string): boolean;
 const
    (* The two suffixes a backup's name adds to the log's (issue #98). *)
    CLEAR_BACKUP_INFIX = ' before clear ';
+   (* The dated backup taken before a catch-up from the multi-op server's log
+     adds QSOs (Phase 1, C6): the same shape as the pre-clear one, a different
+     purpose, so it is never mistaken for it and never rotates anything. *)
+   CATCHUP_BACKUP_INFIX = ' before catch-up ';
    PERIODIC_BACKUP_SUFFIX = ' periodic';
 
 (* THE LOG'S NAME AS A BACKUP IS NAMED FOR IT -- the one rule both backup
@@ -97,8 +101,9 @@ const
   platform's own, because on Unix a backslash is a legal name character. Only
   a final ".db" is removed (any case).
 
-  NAMES NEVER STACK. Every trailing " before clear <yyyy-mm-dd hhnnss>Z" (that
-  exact shape) and every trailing " periodic" is removed, in any order and any
+  NAMES NEVER STACK. Every trailing " before clear <yyyy-mm-dd hhnnss>Z" or
+  " before catch-up <yyyy-mm-dd hhnnss>Z" (those exact shapes) and every
+  trailing " periodic" is removed, in any order and any
   number, so a backup of a log that is itself a backup is named for the log it
   came from. Anything that merely CONTAINS the words keeps them. *)
 function LogBackupBaseName(const aLogFile: string): string;
@@ -113,28 +118,28 @@ const
      else itself. uLogStore's FormatDateTime pattern writes exactly this. *)
    CLEAR_BACKUP_STAMP_SHAPE = 'dddd-dd-dd ddddddZ';
 
-(* Does aBase END in " before clear <stamp>Z", the suffix the pre-clear name
-  rule writes? Exact shape only, so a log merely called "... before clear ..."
-  keeps its name. *)
-function EndsInClearBackupSuffix(const aBase: string): boolean;
+(* Does aBase END in aInfix and a stamp, " before clear <stamp>Z" or " before
+  catch-up <stamp>Z", the suffixes the dated name rule writes? Exact shape only,
+  so a log merely called "... before clear ..." keeps its name. *)
+function EndsInDatedBackupSuffix(const aBase, aInfix: string): boolean;
 var
    suffixLength, start, i: integer;
    c, shape: Char;
 begin
    Result := False;
-   suffixLength := Length(CLEAR_BACKUP_INFIX) + Length(CLEAR_BACKUP_STAMP_SHAPE);
+   suffixLength := Length(aInfix) + Length(CLEAR_BACKUP_STAMP_SHAPE);
    if Length(aBase) < suffixLength then
       begin
       Exit;
       end;
 
    start := Length(aBase) - suffixLength + 1;
-   if Copy(aBase, start, Length(CLEAR_BACKUP_INFIX)) <> CLEAR_BACKUP_INFIX then
+   if Copy(aBase, start, Length(aInfix)) <> aInfix then
       begin
       Exit;
       end;
 
-   start := start + Length(CLEAR_BACKUP_INFIX);
+   start := start + Length(aInfix);
    for i := 1 to Length(CLEAR_BACKUP_STAMP_SHAPE) do
       begin
       c := aBase[start + i - 1];
@@ -195,9 +200,15 @@ begin
      existed can carry several of each. *)
    repeat
       stripped := False;
-      if EndsInClearBackupSuffix(Result) then
+      if EndsInDatedBackupSuffix(Result, CLEAR_BACKUP_INFIX) then
          begin
          Result := Copy(Result, 1, Length(Result) - Length(CLEAR_BACKUP_INFIX)
+                                   - Length(CLEAR_BACKUP_STAMP_SHAPE));
+         stripped := True;
+         end;
+      if EndsInDatedBackupSuffix(Result, CATCHUP_BACKUP_INFIX) then
+         begin
+         Result := Copy(Result, 1, Length(Result) - Length(CATCHUP_BACKUP_INFIX)
                                    - Length(CLEAR_BACKUP_STAMP_SHAPE));
          stripped := True;
          end;

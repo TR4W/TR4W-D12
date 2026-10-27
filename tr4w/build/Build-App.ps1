@@ -423,7 +423,9 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # 1228 -> 1227, 2026-10-25: the operator-list work deleted PostUnit's
 # GetOperatorsFromLog and its sort, and uOperatorList compares native strings
 # ordinally; measured by the full build of that work.
-$NARROW_CEILING = 1225
+# 1225 -> 1216, 2026-10-27: Phase 1, C6 -- uGetServerLog was rewritten and
+# uLogCompareForm deleted; measured by the full build of that work.
+$NARROW_CEILING = 1216
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

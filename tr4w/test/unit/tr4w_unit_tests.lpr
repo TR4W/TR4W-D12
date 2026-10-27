@@ -608,10 +608,13 @@ uses
    uNetFraming in '..\..\src\uNetFraming.pas',
    uNetResend in '..\..\src\uNetResend.pas',
    uServerQsoIndex in '..\..\src\uServerQsoIndex.pas',
+   uNetCatchUp in '..\..\src\uNetCatchUp.pas',
+   uTestNetSupport in 'uTestNetSupport.pas',
    uTestNetFraming in 'uTestNetFraming.pas',
    uTestNetWireSizes in 'uTestNetWireSizes.pas',
    uTestNetHello in 'uTestNetHello.pas',
    uTestNetResend in 'uTestNetResend.pas',
+   uTestNetCatchUp in 'uTestNetCatchUp.pas',
    uTestNetLink in 'uTestNetLink.pas',
    uDXSpotParse         in '..\..\src\uDXSpotParse.pas',
    uSpotAge             in '..\..\src\uSpotAge.pas',
@@ -1005,6 +1008,7 @@ begin
    RegisterSuite(TTestNetWireSizes.Create('NetWireSizes'));
    RegisterSuite(TTestNetHello.Create('NetHello'));
    RegisterSuite(TNetResendTests.Create('NetResend'));
+   RegisterSuite(TNetCatchUpTests.Create('NetCatchUp'));
    RegisterSuite(TTestADIFExchange.Create('ADIFExchange'));
    RegisterSuite(TCallSignRoutinesTests.Create('CallSignRoutines'));
    RegisterSuite(TYaesuASCIITests.Create('YaesuASCII'));

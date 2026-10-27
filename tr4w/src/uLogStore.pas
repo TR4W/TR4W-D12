@@ -212,6 +212,12 @@ type
   given, and how many it holds an older version of. *)
 function LogStoreCollectUnsentToServer(aInto: TLogRowUpdates): boolean;
 function LogStoreHasQSOBySessionIds(aSessionId, aSessionSeq: Int64): boolean;
+
+(* EVERY NETWORK KEY IN THE LOG, for the catch-up from the server (Phase 1, C6).
+  False, with no keys, when the log cannot be read: a catch-up that cannot tell
+  what the log holds must not insert, or it would add what is already there. A
+  READ, so a failure is reported and the store stays enabled. *)
+function LogStoreCollectSessionKeys(out aKeys: TQsoSessionKeys): boolean;
 function LogStoreMarkServerProgress(const aSent, aEditsDone: TQsoSessionKeys): boolean;
 function LogStoreCountUnsentToServer(out aUnsent, aDirty: integer): boolean;
 
@@ -412,6 +418,14 @@ function LogStoreBackup(const aDestination: string; out aReport: string): boolea
 function LogStoreClearBackupFileName(const aLogFile, aBackupDir: string;
    aUTC: TDateTime): string;
 
+(* THE DATED NAME, FOR ANY PURPOSE: "<base><aInfix><stamp>Z.db" in aBackupDir.
+  Clear Log's name above is this with ' before clear ' and is byte-identical to
+  what it was; the catch-up from the multi-op server's log (Phase 1, C6) uses
+  ' before catch-up '. A DATED BACKUP IS NEVER ROTATED: each is its own file, so
+  neither takes the place of the periodic backup or of the other. *)
+function LogStoreDatedBackupFileName(const aLogFile, aBackupDir, aInfix: string;
+   aUTC: TDateTime): string;
+
 (* THE NAME OF THE PERIODIC BACKUP (issue #98 step 2): in aBackupDir,
   "<log name without .db> periodic.db", e.g. "CQ-WW-SSB 2026-10-19 NY4I
   periodic.db". The same base as LogStoreClearBackupFileName, so names never
@@ -455,6 +469,21 @@ function LogStoreBackupPeriodic(const aBackupDir: string;
   .TRW is not read, copied or named: the source is the SQLite log only.
   Never raises. *)
 function LogStoreBackupBeforeClear(const aBackupDir: string;
+   out aPath, aReport: string): boolean;
+
+(* A DATED, VERIFIED BACKUP BEFORE <PURPOSE>: the one routine behind Clear Log's
+  and the catch-up's. aInfix is the purpose in the name (' before clear ',
+  ' before catch-up ': uLogBackup's constants, which the never-stack rule
+  knows). Same folder rule, same verification, same "no fallback beside the
+  log". Never rotates the periodic backup. Never raises. *)
+function LogStoreBackupBefore(const aInfix, aBackupDir: string;
+   out aPath, aReport: string): boolean;
+
+(* THE BACKUP A CATCH-UP FROM THE SERVER'S LOG TAKES FIRST (Phase 1, C6):
+  "<log> before catch-up <UTC stamp>Z.db" in aBackupDir. It is NOT the periodic
+  slot, so the operator's last periodic backup is not rotated into .bak, and it
+  is taken whatever BACKUP LOG FREQUENCY says. *)
+function LogStoreBackupBeforeCatchUp(const aBackupDir: string;
    out aPath, aReport: string): boolean;
 
 (* IS THE CONTEST LOG SOUND? ASKED ON PURPOSE, RATHER THAN ON THE WAY PAST.
@@ -1708,7 +1737,7 @@ begin
    end;
 end;
 
-function LogStoreClearBackupFileName(const aLogFile, aBackupDir: string;
+function LogStoreDatedBackupFileName(const aLogFile, aBackupDir, aInfix: string;
    aUTC: TDateTime): string;
 begin
    (* The base is uLogBackup's one rule, shared with the periodic name:
@@ -1719,8 +1748,15 @@ begin
      'hh' is the 24-hour clock because the format names no am/pm. The cast
      widens digits only, so it loses nothing. *)
    Result := IncludeTrailingPathDelimiter(aBackupDir) + LogBackupBaseName(aLogFile) +
-             CLEAR_BACKUP_INFIX +
+             aInfix +
              string(FormatDateTime('yyyy-mm-dd hhnnss', aUTC)) + 'Z.db';
+end;
+
+function LogStoreClearBackupFileName(const aLogFile, aBackupDir: string;
+   aUTC: TDateTime): string;
+begin
+   Result := LogStoreDatedBackupFileName(aLogFile, aBackupDir,
+                                         CLEAR_BACKUP_INFIX, aUTC);
 end;
 
 function LogStorePeriodicBackupFileName(const aLogFile, aBackupDir: string): string;
@@ -1751,14 +1787,26 @@ begin
    Result := LogStoreBackup(aPath, aReport);
 end;
 
-function LogStoreBackupBeforeClear(const aBackupDir: string;
+function LogStoreBackupBefore(const aInfix, aBackupDir: string;
    out aPath, aReport: string): boolean;
 begin
    (* The name rule's input is the DATABASE's name, never TR4W_LOG_FILENAME
      itself: that names the .TRW, which is a relic nothing here touches. *)
-   aPath := LogStoreClearBackupFileName(LogStoreFileName, aBackupDir,
+   aPath := LogStoreDatedBackupFileName(LogStoreFileName, aBackupDir, aInfix,
                                         LocalTimeToUniversal(Now));
    Result := BackupIntoFolder(aBackupDir, aPath, aReport);
+end;
+
+function LogStoreBackupBeforeClear(const aBackupDir: string;
+   out aPath, aReport: string): boolean;
+begin
+   Result := LogStoreBackupBefore(CLEAR_BACKUP_INFIX, aBackupDir, aPath, aReport);
+end;
+
+function LogStoreBackupBeforeCatchUp(const aBackupDir: string;
+   out aPath, aReport: string): boolean;
+begin
+   Result := LogStoreBackupBefore(CATCHUP_BACKUP_INFIX, aBackupDir, aPath, aReport);
 end;
 
 function LogStoreBackupPeriodic(const aBackupDir: string;
@@ -2305,6 +2353,37 @@ begin
             begin
             logger.Error('[LogStore] could not ask whether QSO %d/%d is in the ' +
                          'log: %s', [aSessionId, aSessionSeq, E.Message]);
+            end;
+         end;
+   end;
+end;
+
+function LogStoreCollectSessionKeys(out aKeys: TQsoSessionKeys): boolean;
+var
+   rebuilt: boolean;
+begin
+   Result := False;
+   aKeys := nil;
+   if GDisabled then
+      begin
+      Exit;
+      end;
+
+   try
+      if not EnsureOpen(rebuilt) then
+         begin
+         Exit;
+         end;
+      aKeys := GRepository.CollectSessionKeys;
+      Result := True;
+   except
+      on E: Exception do
+         begin
+         aKeys := nil;
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] could not read the network keys of the ' +
+                         'log: %s', [E.Message]);
             end;
          end;
    end;

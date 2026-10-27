@@ -14,8 +14,8 @@
  GNU General Public License for more details.
 
  You should have received a copy of the GNU General
-     Public License along with TR4W in  GPL_License.TXT. 
-If not, ref: 
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uGetServerLog;
@@ -24,70 +24,104 @@ unit uGetServerLog;
 interface
 
 uses
+  Classes,
+  IdGlobal,    // TIdBytes -- the password's wire form, in FetchServerLog
   TF,
   VC,
-  utils_file,
-  FileUtil,    // CopyFile -- LazUtils, and it is NOT LazFileUtils
-  IdTCPClient, // the log download -- see FetchServerLog
-  IdGlobal,    // TIdBytes, RawToBytes
-  IdException, // EIdConnClosedGracefully and friends, per CLAUDE.md's snag list
-  IdStack,
-  LogStuff,
-  LogWind,
-  uNet,
-  LogDupe,
-  Tree
-  ,
-  uTR4WStrings;
-(* WHAT THE HEADLESS SYNC DOES WHEN THE DOWNLOAD IS FINISHED, on the main
-  thread.
+  uNetCatchUp;
 
-  Was the WM_USER_HEADLESS_SYNC_REPLACE arm of uMainWindowProc.WindowProc,
-  reached by SendMessage from the download worker. Every piece of state it
-  touches belongs to THIS unit, which is why that arm made the window procedure
-  use uGetServerLog. It is a procedure now, handed to RunOnMainThread. *)
-procedure HeadlessSyncFinished(aData: PtrInt);
+(* CATCHING UP FROM THE SERVER'S LOG -- Phase 1, C6 (2026-10-27).
 
-procedure ReplaceLogByServerLog(Replace: boolean);
-function RunSyncThread(aParameter: Pointer): DWORD; stdcall;
+  NY4I: "Late catch-up has to be supported as it was ... to handle a station
+  that comes up (reboots) in the middle of the contest." The rules, and why
+  the D7 mechanism (a CRC32 of the .TRW, then REPLACE the log with the server's
+  file) could not be kept, are uNetCatchUp's header. This unit is the part that
+  has a socket, a thread and a log.
 
-{ HOW THE DOWNLOAD THREAD TALKS TO THE WINDOW.
+  WHAT THE OPERATOR SEES, as it was in D7:
 
-  RunSyncThread is a raw thread. It used to write straight into the dialog's
-  item ids with SetDlgItemInt, which was safe only because they were Win32
-  controls; the window is an LCL form now (ui\lcl\uServerLogForm) and touching
-  a control's properties off the main thread is not safe at all.
+    ON CONNECT, once the server's HELLO has proved the link (uNet.
+      NetServiceCatchUp): the log is fetched and compared with this one. If the
+      server holds QSOs this log lacks, SERVER AUTO SYNCHRONIZE LOG ON CONNECT
+      adds them; with it off the operator is ASKED, with the count. Nothing is
+      said when the log is already complete.
+    NET > SYNCHRONIZE opens the Synchronize window (uServerLogForm): Get server
+      log downloads and SHOWS the server's log, and the button that D7 called
+      "Create and use new log" now ADDS the QSOs this log lacks. It no longer
+      replaces anything.
 
-  So the thread calls this, and this SendMessage's -- Windows marshals the call
-  onto the window's own thread and blocks until the handler returns, so the
-  handler may assign an LCL property directly. Post would NOT do: the values are
-  a running total and the thread overwrites its locals immediately.
+  THE THREADS. The download is a worker (a socket read cannot be allowed to
+  freeze the keyboard). It owns its own connection and only fills memory: no
+  settings, no log, no widget. The comparison, the backup, the write and the
+  rescore are the MAIN thread's, because the repository is not thread-safe. The
+  worker hands over by RunOnMainThread. *)
+type
+  (* WHO ASKED FOR THE FETCH. *)
+  TCatchUpOrigin = (
+     cuOnConnect,    // the link came up: add on its own, or ask
+     cuInWindow      // the Synchronize window's Get server log: show, and add on request
+  );
 
-  A no-op when no window is listening, which is both the headless path and the
-  window having closed mid-download. }
+(* START A CATCH-UP FETCH. MAIN THREAD. False, and nothing started, when one is
+  already under way (it is the operator's to retry) or when no contest is
+  selected. *)
+function StartServerCatchUp(aOrigin: TCatchUpOrigin): boolean;
+
+(* THE MERGE: add to the contest log every record of aImage that it lacks and
+  that is for this contest (uNetCatchUp.BuildCatchUpPlan), INSERT ONLY.
+
+  MAIN THREAD. The plan is made HERE, from the keys the log holds at this
+  moment, so a QSO that reached the log between a question and its answer is
+  not added twice. Nothing is changed unless there is something to add. If there
+  is, it goes in this order: a verified backup of the log in aBackupDir (a log
+  that cannot be backed up is not written to), then ONE transaction for every
+  record (all or none). aAdded is how many went in; aSkippedContest how many were left
+  out because they belong to another contest or to none that can be told. False
+  says why in aWhy and the log is as it was. It does not rescore. *)
+function MergeServerLog(aImage: TServerLogImage; const aBackupDir: string;
+                        out aAdded, aSkippedContest: integer;
+                        out aWhy: string): boolean;
+
+(* THE MERGE AND EVERYTHING AROUND IT, as the operator meets it: MergeServerLog
+  into uAppPaths.BackupDir, then a rescore (the new rows are scored like any
+  other import), the notice, and the log line; a failure is a warning and an
+  Error line. True when the log was brought up to date (also when there was
+  nothing to add). MAIN THREAD. *)
+function AddServerLogToLog(aImage: TServerLogImage): boolean;
+
+(* THE DOWNLOAD ITSELF, on a connection of its own to the server's second port.
+  Exported for the unit tests, which run it against a socket they serve; the
+  program calls it from the worker. Runs on the CALLING thread and reads no
+  setting: the host, the port and the password's wire form are handed in. True
+  when exactly the size the server stated has been written to aInto. False says
+  why in aWhy and aInto holds whatever arrived. *)
+function FetchServerLog(const aHost: AnsiString; aPort: integer;
+                        const aPassword: TIdBytes; aInto: TStream;
+                        out aDeclaredSize: Int64; out aWhy: string): boolean;
+
+(* HOW MANY QSOS THE SERVER HOLDS THAT THIS LOG DOES NOT, without changing
+  anything. False when the log could not be read. MAIN THREAD. *)
+function CountMissingFromServer(aImage: TServerLogImage; out aMissing: integer): boolean;
+
+(* HOW THE DOWNLOAD THREAD TALKS TO THE WINDOW.
+
+  The worker may not touch an LCL control, so it calls this, and this queues
+  the report to the main thread (RunOnMainThread) where the form's handler
+  runs. A report is a field and a value; the worker overwrites its locals
+  immediately, so the pair travels as a record.
+
+  A no-op when no window is listening, which is both the on-connect path and the
+  window having closed mid-download. *)
 procedure ReportSyncProgress(aField: integer; aValue: integer);
 
-(* THE DOWNLOADED SERVER LOG, AS RECORDS, FOR THE SYNC WINDOW'S GRID.
-
-  RunSyncThread is a WORKER, and it used to fill a Win32 list view a row at a
-  time with ListView_InsertItem -- safe by accident, as every raw Win32 call
-  from a worker was. An LCL control cannot be touched off the main thread, so
-  the grid is VIRTUAL: the worker fills this array and the grid asks for the
-  rows it is painting, on the thread that owns them.
-
-  NO LOCK, AND THE REASON IS THE ALLOCATION AND NOT THE ACCESS. The array is
-  sized ONCE by ResetServerLogRows, from the record count the download already
-  knows -- the same number the old LVM_SETITEMCOUNT carried -- so it never
-  reallocates under a reader. Which rows the grid may read is published through
-  ReportSyncProgress, a SendMessage, which is the ordering barrier; the grid is
-  never told a count the worker has not finished writing. TryGetServerLogRow
-  bounds-checks anyway, because a window that closes mid-download is ordinary
-  rather than exceptional. *)
-procedure ResetServerLogRows(const aCount: integer);
-procedure SetServerLogRow(const aIndex: integer;
-                          const aRecord: ContestExchange);
+(* THE LAST DOWNLOAD THE SYNCHRONIZE WINDOW SHOWS, as records, for its grid. The
+  grid is virtual: it asks for the rows it paints, on the main thread, and the
+  image behind it is only ever replaced or released on the main thread. The
+  window releases it when it closes. *)
 function TryGetServerLogRow(const aIndex: integer;
                             out aRecord: ContestExchange): boolean;
+function ServerLogWindowImage: TServerLogImage;
+procedure ReleaseServerLogImage;
 
 type
   (* WHAT A PROGRESS REPORT IS. A plain procedure, not a method: the worker
@@ -104,9 +138,6 @@ type
   end;
 
 var
-
-  NewServerLogHandle                    : THandle;
-  AmountQSOsFromServer                  : Cardinal;
   { Installed last in HandleShow and cleared FIRST in HandleClose. }
   (* WHERE A PROGRESS REPORT GOES, or nil while no window is listening.
 
@@ -116,81 +147,71 @@ var
     the form that installs it, so the form's behaviour is discoverable from the
     form. *)
   SyncProgressHandler                   : TSyncProgressProc = nil;
-  SynQSOTotalArray                      : QSOTotalArray;
-  SyncMode                              : boolean;
-  LogSyncThreadID                       : TThreadID;
   showresverlogcontent                  : boolean = True;
-  HeadlessSyncMode                      : boolean = False;  // Issue #912 - run sync without any dialog UI
 
 const
-  // Issue #912: SendMessage from RunSyncThread (worker) to the UI thread to
-  // drive the post-download replace.  Cannot do this from the worker because
-  // LoadinLog (called by ReplaceLogByServerLog) accesses ListView controls,
-  // and Win32 controls require all messages from their creating thread.
-
-  // Progress, worker -> sync window.  wParam is one of SYNC_FIELD_*, lParam the
-  // value.  Same reasoning as above, generalised: see ReportSyncProgress.
-  (* WM_USER_SYNC_PROGRESS IS GONE (2026-09-07) -- see SyncProgressHandler.
-    A private window message needed a window; a callback does not. *)
-
-  SYNC_FIELD_RECORDS        = 1;
-  SYNC_FIELD_BYTES          = 2;
-  SYNC_FIELD_QSOS           = 3;
-  SYNC_FIELD_ENABLE_REPLACE = 4;   // lParam unused
-  // The 'sent records' field. NOTHING WRITES IT NOW: uNet.CommitChangesInLocalLog
-  // did, from this worker thread, until the resend moved to the main thread
-  // (uNet.ResendOfflineWork, once per link, after the server's HELLO -- Phase 1,
-  // C5). The field and its constant stay for the sync window until it is
-  // revived or retired with the rest of the log-compare machinery.
-  SYNC_FIELD_SENT           = 5;
+  (* Progress, worker -> sync window. See ReportSyncProgress. The first four are
+    reported ON THE MAIN THREAD once the download is whole. *)
+  SYNC_FIELD_RECORDS        = 1;   // records in the server's log
+  SYNC_FIELD_BYTES          = 2;   // bytes received so far (from the worker)
+  SYNC_FIELD_QSOS           = 3;   // the QSOs among them that count
+  SYNC_FIELD_ENABLE_REPLACE = 4;   // the log lacks QSOs; the value is how many
+  SYNC_FIELD_FAILED         = 5;   // the download failed; Get server log may be pressed again
 
 implementation
-uses SysUtils,   { Format, StrPCopy -- replaced TF.Format/wsprintfA }
-   (* SetCharBuffer / CharBufferText -- a fixed AnsiChar buffer written
-     and read through its OWN bounds, replacing StrPCopy and
-     PAnsiChar(@buf[0]). *)
-   utils_text,
-   uMainThread,  { RunOnMainThread -- the finished handoff, see HeadlessSyncFinished }
-  MainUnit,
-  uNetClient,       (* ServerPasswordOnWire -- the one wire form *)
-  uSettingsModel;   (* Settings.Server *)
+uses SysUtils,
+   IdTCPClient, // the log download -- see FetchServerLog
+   LCLType,     // IDYES
+   LogWind,     // QuickDisplay
+   PostUnit,    // Contest
+   uMainThread,  { RunOnMainThread -- the finished handoff, see CatchUpFetched }
+   MainUnit,     // RescoreLog, YesOrNo, logger
+   uNet,         // NetPeers, NetIsConnected
+   uNetClient,       (* ServerPasswordOnWire -- the one wire form *)
+   uSettingsModel,   (* Settings.Server *)
+   uAppStrings,
+   uTR4WStrings,     (* TC_FAILEDTORECEIVESERVERLOG *)
+   uAppPaths,        (* BackupDir *)
+   uContestRegistry,
+   uLogStore,
+   uQsoMyFacts,
+   uServerQsoIndex;
 
 { GetServerLogDlgProc STOOD HERE and went with dialog template 73 on
   2026-08-29 -- the last Win32 dialog in the program. Its window is
   ui\lcl\uServerLogForm now, and every arm of that case statement is a method
-  on the form. Only the parts a CONSOLE-reachable unit may own stayed here: the
-  download thread, the log replacement, and the progress seam below. }
+  on the form. }
 
 var
-   GServerLogRows: array of ContestExchange;
+   (* The download the Synchronize window is showing. MAIN thread only. *)
+   GWindowImage: TServerLogImage = nil;
+   (* A fetch is under way, or the question it raised is open. MAIN thread only.
+     The worker's thread id is not used for this: it is written by the starter
+     after BeginThread returns, and a thread that finishes first would clear it
+     before it was set. *)
+   GCatchUpBusy: boolean = False;
+   GCatchUpThreadID: TThreadID;
 
-procedure ResetServerLogRows(const aCount: integer);
-begin
-   if aCount < 0 then
-      begin
-      SetLength(GServerLogRows, 0);
-      Exit;
-      end;
-   SetLength(GServerLogRows, aCount);
-end;
+(* ------------------------------------------------------------ the window's rows *)
 
-procedure SetServerLogRow(const aIndex: integer;
-                          const aRecord: ContestExchange);
+function ServerLogWindowImage: TServerLogImage;
 begin
-   if (aIndex >= 0) and (aIndex < Length(GServerLogRows)) then
-      begin
-      GServerLogRows[aIndex] := aRecord;
-      end;
+   Result := GWindowImage;
 end;
 
 function TryGetServerLogRow(const aIndex: integer;
                             out aRecord: ContestExchange): boolean;
 begin
-   Result := (aIndex >= 0) and (aIndex < Length(GServerLogRows));
-   if Result then
+   Result := False;
+   if GWindowImage <> nil then
       begin
-      aRecord := GServerLogRows[aIndex];
+      Result := GWindowImage.Row(aIndex, aRecord);
       end;
+end;
+
+procedure ReleaseServerLogImage;
+begin
+   FreeAndNil(GWindowImage);
 end;
 
 (* Delivers one report on the main thread, and owns the record it was handed. *)
@@ -214,13 +235,8 @@ end;
   It was SendMessage to the form's HWND -- which crosses to the window's thread
   and BLOCKS the worker until the labels have been repainted. RunOnMainThread
   does not block, and a progress report is exactly the kind of thing that should
-  not hold up the work it is reporting on.
-
-  ASYNC IS SAFE HERE, and the direction matters: SYNC_FIELD_RECORDS also tells
-  the grid how many rows exist, and the grid must never be told about a row the
-  worker has not written yet. A report that arrives LATE understates the count,
-  which is the safe side; only an early one would be a fault, and deferring
-  cannot make a message early. *)
+  not hold up the work it is reporting on. A report that arrives LATE
+  understates the count, which is the safe side. *)
 procedure ReportSyncProgress(aField: integer; aValue: integer);
 var
    p: PSyncProgress;
@@ -235,127 +251,54 @@ begin
    RunOnMainThread(@DeliverSyncProgress, PtrInt(p));
 end;
 
-(* feInvalidHandle, NOT INVALID_HANDLE_VALUE.
+(* --------------------------------------------------------------- the download *)
 
-  Same value, and that is exactly why it is worth changing: the handle here
-  comes from FileOpen and is closed by FileClose, both RTL, so the only Win32
-  thing left about it was the NAME of the sentinel it is compared against.
-  feInvalidHandle is SysUtils' spelling of it and exists on every target. *)
-procedure HeadlessSyncFinished(aData: PtrInt);
-begin
-   if NewServerLogHandle <> feInvalidHandle then
-      begin
-      FileClose(NewServerLogHandle);
-      NewServerLogHandle := feInvalidHandle;
-      end;
-   ReplaceLogByServerLog(True);
-   logger.Info('Auto-sync: local log replaced with server log.');
-   HeadlessSyncMode := False;
-end;
-
-procedure ReplaceLogByServerLog(Replace: boolean);
-var
-  counter                               : Cardinal;
-begin
-  for counter := 1 to 1000 do
-     begin
-     { '%.3d', not '%03d'. Delphi zero-pads by PRECISION; the width flag it
-       would otherwise read pads with spaces, and a backup called
-       'LOGBACKUP_  1.TRW' is not what the next run looks for. }
-
-     SetCharBuffer(TempBuffer2,
-                      SysUtils.Format('%sLOGBACKUP_%.3d.TRW',
-                                      [CharBufferText(TR4W_LOG_PATH_NAME), counter]));
-     (* THE THIRD ARGUMENT WAS DOING THE WORK, so it is worth saying what
-       replaced it.  CopyFileA's bFailIfExists=True is how this loop FINDS a
-       free slot: it tries LOGBACKUP_001, _002, ... and stops at the first
-       name that did not already exist.  An overwriting copy would succeed on
-       the first try and silently destroy backup 001 every time.
-
-       LazUtils' CopyFile expresses that as the ABSENCE of cffOverwriteFile:
-       with empty flags it returns False when the destination exists
-       (fileutil.inc:226).  The one behavioural difference is that it tests
-       with FileExists and then copies, where CopyFileA decided inside one
-       call -- so there is a window between the two.  It does not matter here:
-       the single-instance mutex means no second TR4W is choosing the same
-       slot, and both copies are into the operator's own log directory. *)
-     if FileUtil.CopyFile(CharBufferBytes(TR4W_LOG_FILENAME),
-                          AnsiString(TempBuffer2), []) then
-        begin
-        (* THE .RST COPY IS GONE, 2026-09-12. This backed the restart file up
-          beside the log before replacing the log from the server. Nothing
-          writes a .RST any more -- session state lives in the contest
-          database's session_state table -- so the copy could only ever fail,
-          and its result was never checked. *)
-        Break;
-        end;
-     end;
-  if Replace then
-     begin
-     FileUtil.CopyFile(AnsiString(TR4W_SYN_FILENAME),
-                       CharBufferBytes(TR4W_LOG_FILENAME), [cffOverwriteFile]);
-     LoadinLog;
-     end;
-  SendStationStatus(sstQSOs);
-end;
-
-(* THE LOG DOWNLOAD, ON INDY -- and EXTRACTED, which is most of the value.
-
-  This was inline in RunSyncThread: a raw WinSock connect through
-  utils_net.GetConnection, a WSAEventSelect/WSAWaitForMultipleEvents pump, a
-  recv loop, and two `goto`s. Pulling it out gives the network step one entry
-  and one exit, so the caller tests a boolean instead of jumping, and every
-  socket call in TR4W is now Indy's (NY4I, 2026-09-08: "Any remaining socket
-  calls that are not using Indy ... should switch to Indy").
+(* THE LOG DOWNLOAD, ON INDY -- into MEMORY, on the worker's own connection.
 
   THE PROTOCOL, which was never written down: connect to the server's port
-  PLUS ONE, write ten bytes of password, then read until the peer stops. The
-  first four bytes are the log size in NATIVE byte order, and the count it
-  states EXCLUDES itself.
+  PLUS ONE, write ten bytes of password, then read a four-byte size in NATIVE
+  byte order and exactly that many bytes. The size is the file's, header
+  included.
+
+  D7 READ UNTIL THE PEER WENT QUIET (two seconds of silence ended the transfer)
+  and compared the byte count with the size afterwards. The size is stated up
+  front, so this reads exactly that many and a short transfer is a read that
+  fails, naming how far it got.
 
   TWO THINGS THAT LOOK LIKE TRANSLATION AND ARE NOT:
 
   1. ReadInt32(AConvert := False). Indy converts from NETWORK byte order by
-     default; the old code read those four bytes with PInteger, which is
-     native. On a little-endian machine the default would have turned a
-     25,000-byte log into 3,347,644,416 and failed every size check.
-  2. THE FOUR-BYTE HEADER IS NOW READ AS A HEADER. The old loop carried a
-     FirstPacket flag and skipped four bytes of whatever the first recv
-     happened to return -- which is correct only while that recv returns at
-     least four bytes. TCP does not promise that. Reading it explicitly makes
-     a short first segment a non-event instead of a corrupted log, and it
-     deletes the flag and the offset arithmetic.
+     default; those four bytes are native. On a little-endian machine the
+     default would have turned a 25,000-byte log into 3,347,644,416.
+  2. THE FOUR-BYTE HEADER IS READ AS A HEADER, not skipped out of whatever the
+     first read happened to return. TCP does not promise four bytes at once.
 
-  ENDING THE TRANSFER IS UNCHANGED IN MEANING: two seconds with nothing
-  arriving, or a close, finishes it -- which is what the 2000 ms
-  WSAWaitForMultipleEvents timeout did. There is no length-prefixed framing to
-  wait on beyond the size field, so silence is still the signal.
-
-  NOT BENCH TESTED. It needs a running tr4wserver and a second station; see
-  BENCH_QUEUE.md. *)
-function FetchServerLog(out aTotalBytes, aLogSize: integer): boolean;
+  NO SETTINGS ARE READ HERE: the starter captured the address, port and the
+  password's wire form on the main thread. Runs on the worker; aProgress is
+  called there too. *)
+function FetchServerLog(const aHost: AnsiString; aPort: integer;
+                        const aPassword: TIdBytes; aInto: TStream;
+                        out aDeclaredSize: Int64; out aWhy: string): boolean;
 const
    CONNECT_TIMEOUT_MS = 5000;
-   IDLE_TIMEOUT_MS    = 2000;   // as the old WSAWaitForMultipleEvents wait
-   (* PASSWORD_BYTES moved to uNetClient.ServerPasswordOnWire, which is
-     now the only place that knows the field is ten bytes. *)
+   IDLE_TIMEOUT_MS    = 15000;   // nothing arriving for this long ends the transfer
+   CHUNK_BYTES        = 65536;
 var
    Client:    TIdTCPClient;
    Chunk:     TIdBytes;
-   Available: integer;
+   Remaining: Int64;
+   Take:      integer;
+   Received:  Int64;
 begin
-   Result      := False;
-   aTotalBytes := 0;
-   aLogSize    := 0;
+   Result        := False;
+   aDeclaredSize := 0;
+   aWhy          := '';
+   Received      := 0;
 
    Client := TIdTCPClient.Create(nil);
    try
-      (* AnsiString, not string(...).  Indy is built without UnicodeStrings
-        here, so Host is an AnsiString; a cast to the generic string type
-        widens and then narrows again -- a silent round trip the ratchet
-        counts -- the same note logstuff carries about LazUtils' CopyFile. *)
-      Client.Host           := AnsiString(Settings.Server.Address);
-      Client.Port           := Settings.Server.Port + 1;
+      Client.Host           := aHost;
+      Client.Port           := aPort;
       Client.ConnectTimeout := CONNECT_TIMEOUT_MS;
       Client.ReadTimeout    := IDLE_TIMEOUT_MS;
 
@@ -364,197 +307,451 @@ begin
       except
          on E: Exception do
             begin
-            (* REPORTED, not silent. The WinSock version returned False and
-              the caller showed a generic warning, so a wrong address and a
-              refused connection looked identical. *)
-            logger.Error('[SyncLog] connect to %s:%d failed -- %s',
-                         [Client.Host, Client.Port, E.Message]);
+            (* REPORTED, not silent: a wrong address and a refused connection
+              are different answers. *)
+            aWhy := 'could not connect to ' + string(aHost) + ':' +
+                    IntToStr(aPort) + ' -- ' + E.Message;
             Exit;
             end;
       end;
 
       try
-         (* ONE COPY OF THE WIRE FORMAT, in uNetClient. This built its own
-           -- ten bytes from a ShortString's first character -- and that
-           stopped being the password's shape the moment it became a
-           native string. *)
-         Client.IOHandler.Write(
-            ServerPasswordOnWire(AnsiString(Settings.Server.Password)));
+         Client.IOHandler.Write(aPassword);
 
-         aLogSize := Client.IOHandler.ReadInt32(False);   // native order
-
-         repeat
-            try
-               Client.IOHandler.CheckForDataOnSource(IDLE_TIMEOUT_MS);
-            except
-               on E: Exception do
-                  begin
-                  (* A close is how a COMPLETE transfer ends, so this is not
-                    an error path -- the size check in the caller decides
-                    whether what arrived is whole. *)
-                  Break;
-                  end;
+         aDeclaredSize := Client.IOHandler.ReadInt32(False);   // native order
+         if (aDeclaredSize < 0) or (aDeclaredSize > SERVER_LOG_MAX_BYTES) then
+            begin
+            aWhy := 'the server stated an impossible log size (' +
+                    IntToStr(aDeclaredSize) + ' bytes)';
+            Exit;
             end;
 
-            Available := Client.IOHandler.InputBuffer.Size;
-            if Available = 0 then
+         Remaining := aDeclaredSize;
+         while Remaining > 0 do
+            begin
+            Take := CHUNK_BYTES;
+            if Remaining < Take then
                begin
-               Break;   // idle for the timeout: the server has finished
+               Take := Integer(Remaining);
                end;
 
             SetLength(Chunk, 0);
-            Client.IOHandler.InputBuffer.ExtractToBytes(Chunk, Available);
-            sWriteFile(NewServerLogHandle, Chunk[0], Length(Chunk));
-            Inc(aTotalBytes, Length(Chunk));
-
-            if not HeadlessSyncMode then
-               begin
-               ReportSyncProgress(SYNC_FIELD_BYTES, aTotalBytes);
-               end;
-         until False;
+            Client.IOHandler.ReadBytes(Chunk, Take, False);
+            aInto.WriteBuffer(Chunk[0], Length(Chunk));
+            Inc(Received, Length(Chunk));
+            Dec(Remaining, Length(Chunk));
+            ReportSyncProgress(SYNC_FIELD_BYTES, Received);
+            end;
 
          Result := True;
       except
          on E: Exception do
             begin
-            logger.Error('[SyncLog] transfer failed after %d byte(s) -- %s',
-                         [aTotalBytes, E.Message]);
+            (* A READ THAT FAILS LEAVES WHAT HAD ARRIVED IN INDY'S BUFFER. Keep it
+              -- the caller was promised whatever arrived -- and count it, so the
+              report says how far the transfer really got. *)
+            try
+               if Client.IOHandler.InputBuffer.Size > 0 then
+                  begin
+                  SetLength(Chunk, 0);
+                  Client.IOHandler.InputBuffer.ExtractToBytes(
+                     Chunk, Client.IOHandler.InputBuffer.Size);
+                  aInto.WriteBuffer(Chunk[0], Length(Chunk));
+                  Inc(Received, Length(Chunk));
+                  end;
+            except
+               (* What could not be salvaged is simply not counted. *)
+            end;
+            aWhy := 'the transfer failed after ' + IntToStr(Received) +
+                    ' of ' + IntToStr(aDeclaredSize) + ' byte(s) -- ' + E.Message;
             end;
       end;
    finally
-      Client.Disconnect;
+      try
+         Client.Disconnect;
+      except
+         (* Closing a connection that already failed has nothing to add. *)
+      end;
       Client.Free;
    end;
 end;
 
-function RunSyncThread(aParameter: Pointer): DWORD; stdcall;
-label
-  e, 2;
-var
-  TotalBytes, TotalRecords, TotalQ      : integer;
-  lpNumberOfBytesWritten                : LongInt;   { FileRead's result }
-  TempRXData                            : ContestExchange;
-  ServerLogFillIndex                    : integer;
-  LogSize                               : integer;
+type
+   (* ONE FETCH, from the main thread that asked to the worker and back. *)
+   TFetchJob = class(TObject)
+   public
+      Origin:   TCatchUpOrigin;
+      Host:     AnsiString;
+      Port:     integer;
+      Password: TIdBytes;
+      Image:    TServerLogImage;
+      Ok:       boolean;
+      Why:      string;
+      destructor Destroy; override;
+   end;
+
+destructor TFetchJob.Destroy;
 begin
-  Result := 0;   (* the thread exit code -- see TF.TTR4WThreadStart *)
-
-  (* THE RESEND OF WHAT WAS LOGGED OFFLINE USED TO RUN HERE and is not this
-    thread's work: it reads the log and posts to the link, both main-thread
-    things, and it is due on EVERY link-up, not only when a download is.
-    uNet.ResendOfflineWork does it (Phase 1, C5). *)
-
-  TotalRecords := 0;
-  TotalQ := 0;
-
-  if not FetchServerLog(TotalBytes, LogSize) then
-     begin
-     goto e;
-     end;
-
-  if TotalBytes > SizeOfTLogHeader then
-     begin
-     if (LogSize <> TotalBytes) or ((TotalBytes - SizeOfTLogHeader) mod SizeOf(ContestExchange) <> 0) then
-        begin
-        if HeadlessSyncMode then
-           begin
-           logger.Error('Auto-sync: failed to receive server log (size=%d, expected=%d)', [TotalBytes, LogSize])
-           end
-        else
-           begin
-           showwarning(TC_FAILEDTORECEIVESERVERLOG);
-           end;
-        goto e;
-        end;
-     if (not HeadlessSyncMode) and showresverlogcontent then
-        begin
-        (* SIZED ONCE, HERE. See the note on the row store: this is what makes
-          the array safe to fill from this thread and read from the other. *)
-        ResetServerLogRows(TotalBytes div SizeOf(ContestExchange));
-        end;
-     { FileSeek from the start -- what SetFilePointer(FILE_BEGIN) did. }
-     FileSeek(NewServerLogHandle, Int64(SizeOfTLogHeader), fsFromBeginning);
-
-     ServerLogFillIndex := 0;
-     (* THE tSetWindowRedraw FREEZE/THAW PAIR IS GONE. It stopped a list view
-       repainting itself once per inserted row. A virtual grid paints only what
-       is on screen and is not told about rows at all, so there is nothing to
-       freeze. *)
-     2:
-     (* FileRead RETURNS the count that ReadFile delivered through a var
-       parameter, and -1 on failure. The variable is signed now so a
-       failure stays negative instead of becoming a huge Cardinal; the
-       test below is unchanged either way, since neither equals the
-       record size. *)
-     lpNumberOfBytesWritten := FileRead(NewServerLogHandle, TempRXData,
-                                       SizeOf(ContestExchange));
-     if lpNumberOfBytesWritten = SizeOf(ContestExchange) then
-        begin
-        inc(TotalRecords);
-        if ((TempRXData.Band <> NoBand) and
-          (TempRXData.Mode <> NoMode) and
-          (not TempRXData.ceQSO_Deleted)) and
-          (TempRXData.ceQSO_Deleted = False) then inc(TotalQ);
-
-        if not HeadlessSyncMode then
-           begin
-           if TotalRecords mod 10 = 0 then
-              begin
-              ReportSyncProgress(SYNC_FIELD_RECORDS, TotalRecords);
-              end;
-           if showresverlogcontent then
-              begin
-              SetServerLogRow(ServerLogFillIndex, TempRXData);
-              Inc(ServerLogFillIndex);
-              end;
-           end;
-        goto 2;
-        end;
-     end;
-  if not HeadlessSyncMode then
-     begin
-     ReportSyncProgress(SYNC_FIELD_RECORDS, TotalRecords);
-     ReportSyncProgress(SYNC_FIELD_QSOS, TotalQ);
-     if TotalQ > 0 then
-        begin
-        ReportSyncProgress(SYNC_FIELD_ENABLE_REPLACE, 0);
-        end;
-     end;
-  e:
-  ClearThread(LogSyncThreadID);
-  (* Issue #912: the replace runs on the UI thread, because LoadinLog touches
-    controls and a control belongs to the thread that made it.
-
-    RunOnMainThread, not SendMessage(tr4whandle, WM_USER_...). The message
-    needed an id, the main window's HANDLE, an entry in uMainForm's list of
-    messages TR4W claims, and an arm in the window procedure -- none of which
-    is about the work. It is the same move the other six background results
-    made.
-
-    QUEUED RATHER THAN BLOCKING, and that is safe here rather than merely
-    convenient: this is the last statement in the branch, the branch is the
-    last in the routine, and the handler takes nothing from this thread. *)
-  if HeadlessSyncMode then
-     begin
-     if TotalQ > 0 then
-        begin
-        logger.Info('Auto-sync: download complete (%d records, %d QSOs).  Marshalling replace to UI thread.',
-                    [TotalRecords, TotalQ]);
-        RunOnMainThread(@HeadlessSyncFinished, 0);
-        end
-     else
-        begin
-        logger.Warn('Auto-sync: download produced %d records and %d QSOs - skipping replace.',
-                    [TotalRecords, TotalQ]);
-        if NewServerLogHandle <> feInvalidHandle then
-           begin
-           FileClose(NewServerLogHandle);
-           NewServerLogHandle := feInvalidHandle;
-           end;
-        HeadlessSyncMode := False;
-        end;
-     end;
+   Image.Free;
+   inherited Destroy;
 end;
 
-end.
+(* THE CONTEST, as the judge needs to know it. *)
+function CurrentCatchUpContext: TCatchUpContext;
+var
+   legacyNumber: integer;
+begin
+   Result.Peers := NetPeers;
+   Result.OurContestId := ContestId(Contest);
+   Result.OurHandle := Contest;
+   Result.OurIsLegacy := ContestLegacyNumber(Contest, legacyNumber);
+end;
 
+(* THE PLAN against the log as it is NOW. False, with nil, when the log's keys
+  cannot be read: a plan made without them would add what is already there. *)
+function MakePlan(aImage: TServerLogImage; out aPlan: TCatchUpPlan): boolean;
+var
+   keys: TQsoSessionKeys;
+   held: TServerQsoIndex;
+   i: integer;
+begin
+   Result := False;
+   aPlan := nil;
+
+   if not LogStoreCollectSessionKeys(keys) then
+      begin
+      Exit;
+      end;
+
+   held := TServerQsoIndex.Create;
+   try
+      for i := 0 to High(keys) do
+         begin
+         held.Add(Cardinal(keys[i].SessionId), Cardinal(keys[i].SessionSeq));
+         end;
+      aPlan := BuildCatchUpPlan(aImage, held, CurrentCatchUpContext);
+      Result := True;
+   finally
+      held.Free;
+   end;
+end;
+
+function CountMissingFromServer(aImage: TServerLogImage; out aMissing: integer): boolean;
+var
+   plan: TCatchUpPlan;
+begin
+   aMissing := 0;
+   Result := MakePlan(aImage, plan);
+   if Result then
+      begin
+      try
+         aMissing := plan.Count;
+         logger.Info('[Net] catch-up: %s', [CatchUpSummary(plan)]);
+      finally
+         plan.Free;
+      end;
+      end;
+end;
+
+function MergeServerLog(aImage: TServerLogImage; const aBackupDir: string;
+                        out aAdded, aSkippedContest: integer;
+                        out aWhy: string): boolean;
+var
+   plan: TCatchUpPlan;
+   appends: TLogQsoAppends;
+   facts: TQsoMyFacts;
+   rec: ContestExchange;
+   i, failedIndex: integer;
+   backupPath, backupReport, failure: string;
+begin
+   Result := False;
+   aAdded := 0;
+   aSkippedContest := 0;
+   aWhy := '';
+
+   if not MakePlan(aImage, plan) then
+      begin
+      aWhy := 'the log could not be read to find what it lacks';
+      Exit;
+      end;
+
+   try
+      logger.Info('[Net] catch-up: %s', [CatchUpSummary(plan)]);
+      aSkippedContest := plan.Skipped(cusOtherContest) +
+                         plan.Skipped(cusUnknownContest);
+
+      if plan.Count = 0 then
+         begin
+         Result := True;
+         Exit;
+         end;
+
+      (* A VERIFIED BACKUP FIRST, AND NO WRITE WITHOUT ONE. This only inserts, but
+        it inserts into the contest log from a file this station did not make. *)
+      if not LogStoreBackupBeforeCatchUp(aBackupDir, backupPath, backupReport) then
+         begin
+         aWhy := 'the backup of the log taken first failed -- ' + backupReport;
+         logger.Error('[Net] catch-up: not added: %s', [aWhy]);
+         Exit;
+         end;
+      logger.Info('[Net] catch-up: log backed up to %s', [backupPath]);
+
+      (* THE STATION IS OURS, ASSUMED: the V1 record carries no station of its
+        own, so each QSO is stamped with THIS station's values and marked so
+        (ruling D), exactly as a QSO that arrives live is. It stores no sent
+        exchange: we do not know what the author sent. *)
+      facts := LogStoreCurrentMyFacts;
+      facts.Source := mfsAssumed;
+
+      appends := TLogQsoAppends.Create;
+      try
+         for i := 0 to plan.Count - 1 do
+            begin
+            aImage.Row(plan.RowIndex(i), rec);
+            StampCaughtUp(rec, Contest);
+            appends.Add(rec, facts, '');
+            end;
+
+         if not LogStoreAppendQSOs(appends, failedIndex, failure) then
+            begin
+            aWhy := 'the QSOs could not be written to the log (' + failure + ')';
+            logger.Error('[Net] catch-up: not added: %s', [aWhy]);
+            Exit;
+            end;
+      finally
+         appends.Free;
+      end;
+
+      aAdded := plan.Count;
+      Result := True;
+   finally
+      plan.Free;
+   end;
+end;
+
+function AddServerLogToLog(aImage: TServerLogImage): boolean;
+var
+   added, skipped: integer;
+   why, notice: string;
+begin
+   Result := MergeServerLog(aImage, BackupDir, added, skipped, why);
+
+   if not Result then
+      begin
+      showwarning(SysUtils.Format(SCatchUpMergeFailed, [why]));
+      Exit;
+      end;
+
+   if added > 0 then
+      begin
+      (* The new rows are scored like any other import: the rescore walks the
+        whole log, recomputes dupes and multipliers in log order, and reloads
+        every display. *)
+      RescoreLog;
+      logger.Info('[Net] catch-up: %d QSO(s) added from the server', [added]);
+      end;
+
+   if (added > 0) or (skipped > 0) then
+      begin
+      notice := '';
+      if added > 0 then
+         begin
+         notice := SysUtils.Format(SNetCaughtUp, [added]);
+         end;
+      if skipped > 0 then
+         begin
+         if notice <> '' then
+            begin
+            notice := notice + ' ';
+            end;
+         notice := notice + SysUtils.Format(SCatchUpSkipped, [skipped]);
+         end;
+      QuickDisplay(notice);
+      end;
+end;
+
+(* -------------------------------------------------------------- the worker *)
+
+procedure CatchUpFetched(aData: PtrInt); forward;
+
+function CatchUpThread(aParameter: Pointer): DWORD; stdcall;
+var
+   job: TFetchJob;
+   declared: Int64;
+   why: string;
+begin
+   Result := 0;   (* the thread exit code -- see TF.TTR4WThreadStart *)
+   job := TFetchJob(aParameter);
+
+   try
+      job.Ok := FetchServerLog(job.Host, job.Port, job.Password,
+                               job.Image.Data, declared, why);
+      if job.Ok then
+         begin
+         job.Ok := job.Image.Accept(declared, why);
+         end;
+      job.Why := why;
+   except
+      on E: Exception do
+         begin
+         job.Ok := False;
+         job.Why := E.ClassName + ': ' + E.Message;
+         end;
+   end;
+
+   RunOnMainThread(@CatchUpFetched, PtrInt(job));
+end;
+
+(* ON CONNECT: ADD ON ITS OWN, OR ASK, OR SAY NOTHING.
+
+  Nothing is said when the log is already complete -- a link that comes up and
+  goes down all night would otherwise announce it every time. *)
+procedure DecideOnConnect(aImage: TServerLogImage);
+var
+   missing: integer;
+begin
+   if not CountMissingFromServer(aImage, missing) then
+      begin
+      logger.Error('[Net] catch-up: the log could not be read; nothing was added');
+      Exit;
+      end;
+
+   if missing = 0 then
+      begin
+      Exit;
+      end;
+
+   if not Settings.Server.AutoSynchronizeLogOnConnect then
+      begin
+      if YesOrNo(SysUtils.Format(SCatchUpAsk, [missing])) <> IDYES then
+         begin
+         logger.Info('[Net] catch-up: %d QSO(s) on the server were not added ' +
+                     '(the operator declined)', [missing]);
+         Exit;
+         end;
+      end;
+
+   AddServerLogToLog(aImage);
+end;
+
+(* IN THE WINDOW: SHOW WHAT WAS FETCHED and say how many the log lacks. The
+  image is the window's from here, until it is replaced or the window closes. *)
+procedure ShowFetchedInWindow(aJob: TFetchJob);
+var
+   missing: integer;
+begin
+   ReleaseServerLogImage;
+   GWindowImage := aJob.Image;
+   aJob.Image := nil;
+
+   SyncProgressHandler(SYNC_FIELD_RECORDS, GWindowImage.Count);
+   SyncProgressHandler(SYNC_FIELD_QSOS, GWindowImage.QsoCount);
+
+   if CountMissingFromServer(GWindowImage, missing) then
+      begin
+      if missing > 0 then
+         begin
+         SyncProgressHandler(SYNC_FIELD_ENABLE_REPLACE, missing);
+         end;
+      end
+   else
+      begin
+      logger.Error('[Net] catch-up: the log could not be read, so what it lacks ' +
+                   'is not known');
+      end;
+end;
+
+(* THE WORKER HAS FINISHED -- ON THE MAIN THREAD. *)
+procedure CatchUpFetched(aData: PtrInt);
+var
+   job: TFetchJob;
+begin
+   job := TFetchJob(aData);
+   try
+      if not job.Ok then
+         begin
+         logger.Error('[Net] catch-up: could not read the server log -- %s', [job.Why]);
+         if job.Origin = cuInWindow then
+            begin
+            if Assigned(SyncProgressHandler) then
+               begin
+               SyncProgressHandler(SYNC_FIELD_FAILED, 0);
+               end;
+            showwarning(TC_FAILEDTORECEIVESERVERLOG + LineEnding + job.Why);
+            end
+         else
+            begin
+            QuickDisplay(SysUtils.Format(SCatchUpFetchFailed, [job.Why]));
+            end;
+         Exit;
+         end;
+
+      logger.Info('[Net] catch-up: the server log holds %d record(s), %d QSO(s) ' +
+                  '(%d bytes)', [job.Image.Count, job.Image.QsoCount,
+                                 job.Image.Data.Size]);
+
+      if job.Origin = cuInWindow then
+         begin
+         (* The window may have been closed while the bytes came. *)
+         if Assigned(SyncProgressHandler) then
+            begin
+            ShowFetchedInWindow(job);
+            end;
+         end
+      else
+         begin
+         DecideOnConnect(job.Image);
+         end;
+   finally
+      GCatchUpBusy := False;
+      job.Free;
+   end;
+end;
+
+function StartServerCatchUp(aOrigin: TCatchUpOrigin): boolean;
+var
+   job: TFetchJob;
+begin
+   Result := False;
+
+   if GCatchUpBusy then
+      begin
+      logger.Info('[Net] catch-up: one is already under way');
+      Exit;
+      end;
+
+   if Contest = NoContest then
+      begin
+      logger.Info('[Net] catch-up: no contest is selected, so there is nothing ' +
+                  'to compare the server log with');
+      Exit;
+      end;
+
+   job := TFetchJob.Create;
+   job.Origin := aOrigin;
+   (* CAPTURED HERE, on the main thread: the worker reads no settings. AnsiString,
+     because Indy is built without UnicodeStrings and a string would be widened
+     and narrowed again. *)
+   job.Host := AnsiString(Settings.Server.Address);
+   job.Port := Settings.Server.Port + 1;
+   job.Password := ServerPasswordOnWire(AnsiString(Settings.Server.Password));
+   job.Image := TServerLogImage.Create;
+
+   GCatchUpBusy := True;
+   if not ThreadStarted(tCreateThread(CatchUpThread, GCatchUpThreadID, False, job)) then
+      begin
+      logger.Error('[Net] catch-up: could not start the download thread');
+      GCatchUpBusy := False;
+      job.Free;
+      Exit;
+      end;
+
+   Result := True;
+end;
+
+initialization
+
+finalization
+   FreeAndNil(GWindowImage);
+
+end.

@@ -17,7 +17,7 @@ You own the contest log. **It is SQLite, and has been since 2026-09-01.**
 | schema | `tr4w/src/domain/uLogSchema.pas` |
 | repository | `tr4w/src/uLogRepository.pas` |
 | the read seam — SQLite only, no source selection | `tr4w/src/uLogSource.pas` |
-| store, search, compare, notes, naming, config | `uLogStore.pas`, `uLogSearch.pas`, `uLogCompare.pas`, `uLogNote.pas`, `uLogNaming.pas`, `uLogConfig.pas` (**the Log4D layout, NOT the config table**) |
+| store, search, notes, naming, config | `uLogStore.pas`, `uLogSearch.pas`, `uLogNote.pas`, `uLogNaming.pas`, `uLogConfig.pas` (**the Log4D layout, NOT the config table**). (`uLogCompare.pas` was listed here and was never the store's: it was the multi-op Difference-in-logs dialog's seam, deleted with the dialog in Phase 1, C6.) |
 | which contest-scoped `config` rows are written, and which stored ones are statements | `uLogContestStatements.pas`, a leaf so the rules are unit-tested (`uTestLogContestStatements`) |
 | our station as it was for one QSO (the my_* columns, schema 3) | `tr4w/src/domain/uQsoMyFacts.pas`, a leaf (`uTestLogMyFacts`) |
 | import only | `uLogImport.pas`, `uLogBinaryFile.pas` |
@@ -86,8 +86,9 @@ other.
   caller passes the folder (`LogStoreBackupBeforeClear(BackupDir, ...)`), so
   a test hands in a scratch one; **never call `BackupDir` from a test** --
   the unit-test binary would create it under the real settings directory.
-- **Names never stack**: every trailing ` before clear <stamp>Z` of exactly
-  that shape, and every trailing ` periodic`, is removed from the log's name
+- **Names never stack**: every trailing ` before clear <stamp>Z` or ` before
+  catch-up <stamp>Z` of exactly that shape, and every trailing ` periodic`, is
+  removed from the log's name
   first -- ONE rule, `uLogBackup.LogBackupBaseName`, under both names.
   **A folder that cannot be made fails the backup** (no fallback beside the
   log); the test uses a file occupying the folder's name. Backups already
@@ -568,6 +569,45 @@ resend died. Now (design and threading: the `multi-op-network` agent):
   changes when the writer thread has written the bytes (`SettleServerProgress`).
   `tUSQ`/`tUSQE` are a recount from the log (`CountUnsentToServer`) after each
   settle, not increments.
+
+## QSOs THAT ARRIVE FROM THE MULTI-OP SERVER'S LOG ARE ADDED, NEVER REPLACED (Phase 1, C6, 2026-10-27)
+
+A station that comes up mid-contest fetches the server's log and adds what this
+log lacks (design, contest rule and threading: the `multi-op-network` agent and
+`uNetCatchUp`'s header). What it asks of the store:
+
+- **`TLogRepository.CollectSessionKeys` / `LogStoreCollectSessionKeys`**: every
+  `(session_id, session_seq)` the log holds, `(0, 0)` left out, in ONE read. The
+  merge plans against that set. Do not ask `HasQSOBySessionIds` per server record:
+  it scans the table (1.7 ms a miss on 11,800 rows) on the main thread. A read
+  that fails returns False and the merge does not run -- a plan made without the
+  keys would add what is already there.
+- **The write is `LogStoreAppendQSOs` -> `AppendBatch`, the ADIF import's path**:
+  one transaction, all or none (a refused record rolls everything back and the
+  store stays enabled -- the fault is the file's). It is NOT a new write path, so
+  the `TestEveryWriteWaitsForItsCommit` pin stays at 17. Each row goes through
+  `TLogQsoAppends.Add(rec, facts, '')` with `facts.Source := mfsAssumed` (this
+  station's values, marked so) and NO sent exchange, exactly what a peer's QSO
+  gets live. The record carries `ceContest := Contest`, `ceSendToServer = True`,
+  `ceNeedSendToServerAE = False`, so `idx_qso_unsent` never sees the row.
+- **The backup first is `LogStoreBackupBeforeCatchUp`**: a DATED, never-rotated
+  `<log> before catch-up <UTC stamp>Z.db` in `uAppPaths.BackupDir`, the same
+  verified snapshot as Clear Log's. It deliberately does NOT use the periodic slot
+  (that would rotate the operator's last periodic backup into `.bak`, and would
+  run even with BACKUP LOG FREQUENCY = 0). A failed backup means no write. One
+  routine serves both purposes: `LogStoreBackupBefore(aInfix, ...)` over
+  `LogStoreDatedBackupFileName`; Clear Log's name is unchanged byte for byte
+  (`LogStoreClearBackupFileName` is that rule with `CLEAR_BACKUP_INFIX`).
+  `uLogBackup.LogBackupBaseName` strips a trailing `before catch-up` stamp as it
+  does `before clear`, so names never stack across the two. A test hands in its
+  own folder and never calls `BackupDir`. Backups accumulate (no retention yet,
+  issue #98).
+- **Nothing here deletes or rewrites a row**, and nothing replaces the file. The
+  old `ReplaceLogByServerLog` (copy a downloaded `.TRW` over the log) is deleted.
+- **Appended at the END.** A caught-up QSO older than one logged here meanwhile is
+  still a later row, and `tUpdateLog`'s rescore walks log order, so the dupe tie
+  goes to the earlier ROW, not the earlier time. Same as a live peer QSO; recorded
+  here because a catch-up makes it likelier.
 
 ## The `config` table holds only what the operator STATED (2026-10-01)
 

@@ -1,5 +1,19 @@
 # Feature request: optional auto-synchronize on log mismatch
 
+> **STATUS 2026-10-27 (Phase 1, C6): the setting exists and still does what its name
+> says, but the mechanism described below is GONE.** `SERVER AUTO SYNCHRONIZE LOG ON
+> CONNECT` (default off) no longer compares CRC32s of two `.TRW` files or REPLACES the
+> local log with the server's. This station keeps no `.TRW`, and a replace would
+> destroy every QSO only it holds. Once per link, after the server's HELLO, the log is
+> fetched on the sync port and the QSOs this log lacks are ADDED, insert only, after a
+> verified backup (on: automatically; off: the operator is asked, with the count). The
+> "Difference in logs" dialog is deleted; Net > Synchronize opens the window that shows
+> the server log and adds what is missing. An edit another station made while this one
+> was away is not caught up. The design and the reasons:
+> `.claude/agents/multi-op-network.md` (Late catch-up) and the header of
+> `tr4w/src/uNetCatchUp.pas`. The text below is the original request, kept for its
+> reasoning.
+
 ## Context
 
 When a TR4W client (re)connects to TR4WServer and the local log's CRC32 differs

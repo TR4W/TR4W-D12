@@ -23,6 +23,99 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-27 -- A STATION THAT COMES UP LATE CATCHES UP FROM THE SERVER (Phase 1, C6)
+
+NY4I: *"Late catch-up has to be supported as it was ... to handle a station that
+comes up (reboots) in the middle of the contest."* D7 CRC32'd the `.TRW` at both
+ends and REPLACED the local log with the server's file. This build keeps no
+`.TRW`, so it does something different with the same operator-facing shape: once
+per link, after the server's HELLO, it **downloads the server's log on the second
+port and ADDS the QSOs it lacks -- insert only, after a verified backup, in one
+transaction, then a rescore**. With `SERVER AUTO SYNCHRONIZE LOG ON CONNECT` on it
+just does it; with it off the operator is asked, with the count. Net > Synchronize
+opens the window that shows the server's log and adds the same way. The unit tests
+drive the merge over a scratch SQLite log and the download against an in-process
+socket; `tools/netprobe --case catchup` (`--burst 200 --timeout 12`) proves the
+sync port of both real servers. They cannot run two programs, show the question,
+or see the log change under an operator. **WHAT YOU NEED:** `tr4wserver` (then
+TR4WServerPy, one at a time), stations A and B on the same LEGACY contest,
+`DEBUG LOG LEVEL = DEBUG`, **NETWORK AUTO CONNECT off**, a throwaway `SERVERLOG.TRW`
+deleted between runs, and a backup folder you can look in (the line
+`[Net] catch-up: log backed up to ...` names it).
+
+- [ ] **The reboot (the NY4I scenario).** Connect A and B; log 2 QSOs at A so both
+      have them. QUIT TR4W at B. Log 20 QSOs at A. Start B, open the same
+      contest, and at B log 2 QSOs with the link down (Net > Disconnect first if
+      it connected by itself), then Net > Connect. With the setting ON at B.
+      EXPECT: B's log holds 24 QSOs (2 + 20 + its 2), none twice, its QSO count and
+      score are A's plus its own; a notice "Caught up from the server: 20 QSO(s)
+      added."; B's own two reach A (the step-4 resend: "Resent to the server what
+      was logged while disconnected: 2 QSO(s), 0 edit(s)." -- the two notices share
+      one line, so read `tr4w.log`); `tr4w.log` at B has `[Net] catch-up: 20 to add`
+      and `[Net] catch-up: 20 QSO(s) added from the server`, no Error line.
+      A's log has B's two and 22+2 in all; the server's log has all of it once.
+- [ ] **Nothing owed afterwards.** `tr4w.log` at B (DEBUG): `still owed to the
+      server: 0 QSO(s), 0 edit(s)` -- the 20 arrived marked sent and clean, so
+      the resend never sends them back. Net > Disconnect and Connect at B again:
+      NO notice, `[Net] catch-up: 0 to add; 22 already in this log`, nothing sent.
+- [ ] **The question (setting OFF).** Repeat the reboot with the setting off.
+      EXPECT: B is ASKED "The server holds 20 QSO(s) that this log does not have.
+      Add them to this log now? ..." and nothing is added until Yes. Answer No: the
+      log is unchanged, `tr4w.log` says the operator declined, and the question
+      comes again on the next connect. Net > Synchronize afterwards still works
+      (next item).
+- [ ] **Net > Synchronize (the window).** At B, Net > Synchronize. EXPECT: a window
+      titled Synchronize log; Get server log fills the Received bytes / records /
+      QSOs counters and the grid with the server's QSOs (greyed if deleted); the
+      second button reads "Add 20 missing QSOs" and is enabled; clicking it closes
+      the window and the 20 appear in B's log with the notice. Get server log again
+      with nothing missing: the button stays grey. LOOK AT THE LAYOUT on Windows,
+      Mint and macOS: the window was widened to 860 and the buttons re-spaced; the
+      "Add ... QSOs" caption must not be clipped (the Spanish/German/Russian
+      catalogues have not been written for the two new captions yet).
+- [ ] **The backup, and that nothing is replaced.** After a catch-up, the backup
+      folder holds a NEW file `<log> before catch-up <date time>Z.db` (one per
+      catch-up that added something; never rotated), and `<log> periodic.db` and its
+      `.bak` are exactly as they were (check their times) -- also with BACKUP LOG
+      FREQUENCY = 0. Open the new file (Open Contest, or any SQLite viewer on a COPY)
+      and check it holds B's log as it was BEFORE the 20 were added. B's own two QSOs, logged offline, are still in B's
+      log with their original times and exchanges. Make the backup folder
+      unwritable (a file where the folder should be) and repeat: EXPECT a warning
+      "Nothing was added to the log: the backup of the log taken first failed ..."
+      and the log unchanged.
+- [ ] **A server log that was not cleared.** Run CQ WW CW on A and B, log 5 QSOs at
+      A. Without clearing the server, both stations change the contest to ARRL DX
+      CW (both announce the new contest). Restart B, connect. EXPECT: the 5 CQ WW
+      QSOs are NOT added; `tr4w.log` says `5 for another contest (first: <call>)`;
+      NOTHING is shown on screen (a complete log is silent), and the
+      notice "N QSO(s) on the server belong to another contest and were not added."
+      follows the "Caught up" one only when something else WAS added.
+      Then repeat with a by-id contest on both (a QSO party): with A connected its
+      QSOs are added (A announced the contest); stop A, restart B, connect: the
+      records of a departed author are added when their byte equals B's handle
+      (same build) -- and report what happens with two DIFFERENT builds (Windows
+      and Mint), where the byte differs and the QSOs are skipped as "contest not
+      known". That last one is the documented limit; say if it is acceptable.
+- [ ] **A long outage.** Log 200+ QSOs at A while B is down, start B. EXPECT: B's
+      window does not freeze during the download (3.76 MB for 10,000 QSOs, a
+      fraction of a second on a LAN), the add and the rescore finish in a few
+      seconds, the count is right. Note how long the rescore takes on a big log.
+- [ ] **DECISION: an edit made while B was away.** At A, edit the exchange of a QSO
+      B also holds while B is down; restart B and catch up. EXPECT (by design): B's
+      copy is NOT updated -- catch-up only adds. Live edits while B is up still
+      arrive. D7 picked up such an edit because it replaced the whole file. **Is
+      that acceptable until the row-level protocol, or must this wait?**
+- [ ] **The server is reachable but the sync port is not.** Block port+1 at the
+      server (firewall), connect B. EXPECT: the link stays up; a notice "Could not
+      read the server's log to catch up: could not connect to host:port ..." and an
+      Error line; Net > Synchronize shows a warning and the Get server log button
+      comes back.
+- [ ] **TR4WServerPy and Mint.** Repeat the first item against `python
+      tr4wserver.py --display`, and with B on Linux Mint (its backup folder is under
+      `~/.config/tr4w/backup`).
+
+---
+
 ## Added 2026-10-27 -- A STATION THAT LOST THE LINK CATCHES UP (Phase 1, C5)
 
 NY4I: a station that reboots or loses the link mid-contest must catch up --
@@ -54,8 +147,8 @@ Delete each server's `SERVERLOG.TRW` between runs.
       what was logged while disconnected: 5 QSO(s), 1 edit(s)`, no `[NetSend]`
       Warn or Error. The server log shows five `NET_QSOINFO` and one `NET_EDITEDQSO`.
 - [ ] **Nothing is owed afterwards.** `tr4w.log` at A (DEBUG) ends the catch-up
-      with `[Net] still owed to the server: 0 QSO(s), 0 edit(s)` (the log compare
-      window that would show the same two numbers is not reachable). Net >
+      with `[Net] still owed to the server: 0 QSO(s), 0 edit(s)` (no window shows
+      the two numbers any more). Net >
       Disconnect and Connect again at A. EXPECT: NO second notice, nothing resent
       (`tr4w.log` has no `resending` line for the second link).
 - [ ] **Reboot variant.** With A connected log nothing; Net > Disconnect at A;

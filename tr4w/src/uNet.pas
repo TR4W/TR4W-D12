@@ -42,7 +42,6 @@ uses
   utils_file,
   uTotal,
   uSpots,
-  uLogCompare,
   uIntercom,
   CfgCmd,
   //Country9,
@@ -352,7 +351,7 @@ function ConsumeNetBuffer(const i: integer; out aDesync: boolean): integer;
 
   WHAT IT REPLACES. CommitChangesInLocalLog read the binary .TRW with
   OpenLogFile / ReadLogFile, which this build no longer keeps, so it returned at
-  once; and its only caller was RunSyncThread, which nothing starts. A QSO
+  once; and its only caller was the log-sync thread, which nothing started. A QSO
   logged offline was never sent and nothing said so. It is gone.
 
   THE ROWS ARE THE LOG'S. sent_to_server = 0 marks a QSO the server has not been
@@ -386,6 +385,16 @@ type
 
 function ResendOfflineWork: TResendResult;
 procedure NetServiceResend;
+
+(* THE OTHER HALF OF CATCHING UP: WHAT THE OTHER STATIONS LOGGED WHILE THIS ONE
+  WAS AWAY (Phase 1, C6). Once per link, at the same moment as the resend (the
+  server's HELLO, at the end of the drain that handled it), the server's log is
+  fetched on its second port and the QSOs this log lacks are added, insert only
+  -- automatically with SERVER AUTO SYNCHRONIZE LOG ON CONNECT, otherwise after
+  asking. The rules, and why D7's CRC compare and replace could not be kept, are
+  uNetCatchUp's header; the fetch and the write are uGetServerLog's. A no-op
+  unless the HELLO made it due and the link is still up. *)
+procedure NetServiceCatchUp;
 
 (* Record what became of the QSO packets the writer thread has finished with,
   and bring tUSQ / tUSQE into line with the log. Main thread. The writer
@@ -479,7 +488,6 @@ var
   { THE LINK, over Indy.  Was `NetSocket: Cardinal` -- a raw Winsock handle
     that three other units tested for zero; ask NetIsConnected instead. }
   NetClient                             : TNetClient = nil;
-  LogSyncSocket                         : Cardinal;
   ConnectedwithServer                   : boolean;
 //  NetworkListViewhandle                 : HWND;
   TotalClients                          : integer;
@@ -572,6 +580,10 @@ var
     cleared when a link comes up. Main thread. *)
   GResendDue:        boolean = False;
   GResentThisLink:   boolean = False;
+  (* CATCHING UP FROM THE SERVER'S LOG (Phase 1, C6): due once the server's HELLO
+    has come on this link, started by NetServiceCatchUp at the end of the same
+    drain as the resend. Cleared when a link comes up. Main thread. *)
+  GCatchUpDue:       boolean = False;
   (* What became of the QSO packets: the writer thread reports, the main thread
     settles (uNetResend). *)
   GNetDelivery:      TNetDelivery = nil;
@@ -635,6 +647,7 @@ begin
            the drain that is handling this buffer has finished with it
            (NetServiceResend). *)
          GResendDue := True;
+         GCatchUpDue := True;
          end;
       Exit;
       end;
@@ -1171,6 +1184,9 @@ begin
      HELLO and the refusal that may follow it in one read are both acted on
      before any QSO is posted. *)
    NetServiceResend;
+   (* THEN what the others logged meanwhile is fetched. The order matters only
+     for the log: what this station sends is posted before it asks. *)
+   NetServiceCatchUp;
 end;
 
 procedure TNetDrainer.Settle(Data: PtrInt);
@@ -1398,6 +1414,7 @@ begin
      sent -- nothing can be reading them until the server has answered it. *)
    GResendDue := False;
    GResentThisLink := False;
+   GCatchUpDue := False;
    (* Cardinal(GetTickCount64) -- TRUNCATED DELIBERATELY. qiComputerID is a
      field of TNetQSOInformation, which is a PACKED RECORD SENT BETWEEN
      STATIONS, so its width is on the wire and is not ours to widen. The
@@ -1965,111 +1982,38 @@ end;
   that make one. The Net menu is always available; ApplyNetworkMenuState enables
   each row by the link's state. *)
 
-(* Said once per session -- see below. *)
-var
-  GLogCompareUnavailableReported: boolean = False;
-
 procedure ProcessServerLogInfo(s: PLogFileInformation);
 var
-  IdenticalLogs                         : boolean;
+  Records                               : Int64;
 begin
-  (* MULTI-OP LOG COMPARISON DOES NOT WORK, AND MUST NOT PRETEND TO -- B5.
+  (* THE SERVER'S LOG-COMPARE PACKET IS READ FOR ONE NUMBER AND ACTED ON FOR
+     NONE (Phase 1, C6, 2026-10-27).
 
-     HOW IT WORKED: both ends CRC32'd THE RAW BYTES OF THEIR OWN .TRW -- this
-     client through tUpdateLog(actGetCRC32) over a memory map, the server at
-     tr4wserverUnit:925 over its own file -- and the two numbers were compared,
-     with file length beside them.
+     HOW IT WORKED IN D7: both ends CRC32'd THE RAW BYTES OF THEIR OWN .TRW and
+     compared the two numbers; a difference meant "ask the operator" or, with
+     SERVER AUTO SYNCHRONIZE LOG ON CONNECT, "replace the log by the server's".
+     This station keeps no .TRW (the log is SQLite), the server still does, and
+     a REPLACE would destroy every QSO only this station holds. Neither half
+     survives.
 
-     Neither exists here now. There is no .TRW to hash and no file whose length
-     means anything, and tr4wserver still keeps its binary log, so even a new
-     digest computed at this end would have nothing on the other side to agree
-     with. This is not a port that has been deferred: "are these two logs the
-     same" belongs to the NEW MULTI-STATION PROTOCOL, which will ask it over
-     ROWS.
+     WHAT REPLACED IT is not a better comparison but no comparison: the station
+     fetches the server's log whenever the link comes up (NetServiceCatchUp) and
+     adds the QSOs it lacks, insert only (uNetCatchUp, uGetServerLog). The fetch
+     IS the comparison, and the answer is a count of missing QSOs, which no CRC
+     could give.
 
-     SO IT REFUSES RATHER THAN GUESSES. Both tempting shapes are wrong:
-
-       Reporting the logs IDENTICAL tells an operator their log matches the
-       server when nothing was compared -- silently skipping a synchronisation
-       they needed.
-
-       Reporting them DIFFERENT launches a full resynchronisation on every
-       connect, against a server log this build can no longer read.
-
-     Said once per session: a multi-op station connects and reconnects, and a
-     message per attempt is noise that gets ignored. *)
-  if not GLogCompareUnavailableReported then
+     So this arm only notes what the server says it holds, once per link, in the
+     log: that makes a catch-up that found nothing readable against a log the
+     server called empty (or the reverse) something a person can see. The size
+     counts the server's header record. The fields of the packet this station
+     used to fill in are not read by anything and are not written. *)
+  Records := 0;
+  if s^.liServerLogSize > SizeOfTLogHeader then
      begin
-     GLogCompareUnavailableReported := True;
-     if logger <> nil then
-        begin
-        logger.Error('[Net] LOG COMPARISON WITH THE SERVER IS UNAVAILABLE. It ' +
-                     'compared a CRC32 of the raw .TRW bytes at both ends, and ' +
-                     'this station no longer keeps a .TRW -- the log is SQLite. ' +
-                     'NOTHING HAS BEEN COMPARED; this is not a report that the ' +
-                     'logs match. Awaiting the new multi-station protocol.');
-        end;
+     Records := (Int64(s^.liServerLogSize) - SizeOfTLogHeader) div SizeOf(ContestExchange);
      end;
-
-  s^.liLocalCRC32 := 0;
-  s^.liLocalLogSize := 0;
-
-  (* True only so that nothing downstream acts on a comparison that did not
-     happen. The error above is what tells the operator. *)
-  IdenticalLogs := True;
-  begin
-
-//IdenticalLogs=
-//    if tUSQ <> 0 then IdenticalLogs := False;
-//    if tUSQE <> 0 then IdenticalLogs := False;
-
-    if not IdenticalLogs then
-       begin
-       // Issue #912: if SERVER AUTO SYNCHRONIZE LOG ON CONNECT is set, skip
-       // the "Difference in logs" dialog AND the GetServerLog dialog entirely
-       // and run the sync headlessly in a worker thread.  The replace happens
-       // on the UI thread via SendMessage (see WM_USER_HEADLESS_SYNC_REPLACE
-       // in tr4w.lpr) so LoadinLog's ListView access is thread-safe.
-       //
-       // Safety: only auto-sync when contests match (or server has no contest
-       // yet); otherwise fall through to the existing dialog so the operator
-       // sees the wrong-server warning.
-       if Settings.Server.AutoSynchronizeLogOnConnect and
-          ((s^.liContest = Contest) or (s^.liContest = NoContest)) then
-          begin
-          logger.Info('Auto-synchronizing local log from server (CRC mismatch: local %x, server %x)',
-                      [s^.liLocalCRC32, s^.liSeverCRC32]);
-          QuickDisplay(TC_AUTOSYNCHRONIZINGLOG);
-          { FileCreate is CREATE_ALWAYS -- create or truncate -- and returns
-            -1 for INVALID_HANDLE_VALUE. }
-          NewServerLogHandle := FileCreate(TR4W_SYN_FILENAME);
-          if NewServerLogHandle = THandle(-1) then
-             begin
-             logger.Error('Auto-sync: could not create %s', [TR4W_SYN_FILENAME]);
-             // Fall through to the existing dialog so the operator can react.
-             ShowLogCompare(s);
-             end
-          else
-             begin
-             HeadlessSyncMode := True;
-             if not ThreadStarted(LogSyncThreadID) then
-                begin
-                tCreateThread(RunSyncThread, LogSyncThreadID);
-                end;
-             end;
-          end
-       else
-          begin
-          ShowLogCompare(s);
-          end;
-       end
-    else
-       begin
-       QuickDisplay(TC_SERVERANDLOCALLOGSAREIDENTICAL);
-       end;
-
-  end;
-
+  logger.Info('[Net] the server says its log holds %d record(s) (%d bytes)',
+              [Records, s^.liServerLogSize]);
 end;
 
 (* THE ROW IS CREATED WHEN IT IS FIRST WRITTEN, not here.
@@ -2721,6 +2665,26 @@ begin
    ResendOfflineWork;
 end;
 
+procedure NetServiceCatchUp;
+begin
+   if not GCatchUpDue then
+      begin
+      Exit;
+      end;
+   GCatchUpDue := False;
+
+   (* THE SAME GUARDS AS THE RESEND: a station refused for its computer id has
+     been disowned by the server, and one whose link has already dropped has
+     nothing to ask. The fetch uses its own connection, but it is the link that
+     says this server is ours to trust. *)
+   if (not NetIsConnected) or (not FServerHelloSeen) or (FRefusedComputerID <> #0) then
+      begin
+      Exit;
+      end;
+
+   StartServerCatchUp(cuOnConnect);
+end;
+
 (* WHAT BECAME OF THE QSO PACKETS THE WRITER HAS FINISHED WITH, written down.
   Main thread. Flags only, in one transaction; a QSO whose bytes reached the
   socket is marked sent, an edit is cleared when every edit packet for it has,
@@ -2779,8 +2743,7 @@ begin
       tUSQ := unsent;
       tUSQE := dirty;
       (* THE ONLY PLACE THESE TWO NUMBERS CAN BE READ is this line: the log
-        compare window that shows them is reached only from a branch that never
-        runs (ProcessServerLogInfo compares nothing). *)
+        compare window that showed them is gone (Phase 1, C6). *)
       logger.Debug('[Net] still owed to the server: %d QSO(s), %d edit(s)',
                    [unsent, dirty]);
       end;

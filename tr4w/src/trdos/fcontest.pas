@@ -223,8 +223,9 @@ begin
      SetCharBuffer(TR4W_DOM_FILENAME, chosenStem + '.DOM');
      end;
 
-  SetCharBuffer(TR4W_SYN_FILENAME,
-                CharBufferText(TR4W_LOG_PATH_NAME) + 'SERVERLOG.TMP');
+  (* SERVERLOG.TMP IS GONE (Phase 1, C6): it was where a downloaded server log was
+    written before it replaced the .TRW. The download is held in memory now and
+    merged, and nothing is written beside the log. *)
   SetCharBuffer(TR4W_REMAININGMULTS_FILENAME,
                 CharBufferText(TR4W_LOG_PATH_NAME) + 'REMAININGMULTS.TXT');
 

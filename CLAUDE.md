@@ -1347,14 +1347,20 @@ ready: gate post-connect sends on link *stability*, not presence.
 centralised log, multipliers, dupe checking, serial-number lockout, time sync. Binary packet
 protocol with CRC32 (`src/utils/networkmessageutils.pas`).
 
-**MULTI-OP LOG COMPARISON DOES NOT WORK RIGHT NOW, AND SAYS SO.** It compared a CRC32 of the raw
-`.TRW` bytes at both ends; this station no longer keeps a `.TRW` and `tr4wserver` still does, so
-there is nothing to agree with. `uNet.ProcessServerLogInfo` **refuses rather than guesses** — it
-logs an error once per session and compares nothing. Reporting "identical" would tell an operator
-their log matches when nothing was checked; reporting "different" would resynchronise on every
-connect against a log this build cannot read. *"Are these two logs the same"* belongs to the new
-multi-station protocol, which will ask it over ROWS. This is known-broken during development, not a
-regression to diagnose.
+**THERE IS NO LOG COMPARISON ANY MORE, AND A LATE CATCH-UP REPLACED IT (Phase 1, C6, 2026-10-27).**
+D7 CRC32'd the raw `.TRW` at both ends and, on a difference, asked the operator or (with `SERVER
+AUTO SYNCHRONIZE LOG ON CONNECT`) REPLACED the log with the server's file. This station keeps no
+`.TRW`, and a replace would destroy every QSO only it holds, so both went. What a station that
+reboots mid-contest needs is "what do the others have that I lack": once per link, after the server's
+HELLO, it **fetches the server's log on the second port** (a worker thread; 3.76 MB for 10,000 QSOs,
+0.05 s on loopback) and the **main thread adds, INSERT-ONLY, every QSO this log lacks** — by
+`(ceQSOID1, ceQSOID2)`, never touching a row it has, after a verified backup, in one transaction,
+then a rescore. With the setting on that is automatic; off, the operator is asked with the count.
+Net > Synchronize opens the window that shows the server's log and adds the same way. A record's
+contest is judged by what its author announced, then by its byte; a record that cannot be placed
+is skipped and reported. **An edit another station made while this one was away is NOT caught up**
+(the server holds the edited record in place and nothing says which copy is newer) — that is the
+row-level protocol's. Detail: `.claude/agents/multi-op-network.md`, `uNetCatchUp.pas`'s header.
 
 **It is built by `FullBuild.ps1` as a normal step again (2026-08-29).** It had not compiled since
 2026-08-23: `a3c671cc` added a `TF` → `uCrashLog` edge so a fault on a worker thread would not be

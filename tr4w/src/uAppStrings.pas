@@ -342,6 +342,43 @@ resourcestring
       'Resent to the server what was logged while disconnected: %d QSO(s), ' +
       '%d edit(s).';
 
+   (* CATCHING UP FROM THE SERVER'S LOG (Phase 1, C6, 2026-10-27) -- the other
+     half of the above: a station that comes up in the middle of a contest asks
+     the server for what the others logged meanwhile. Nothing in this log is
+     changed or removed; QSOs it lacks are added. *)
+
+   (* Said when they have been added. %d: how many. *)
+   SNetCaughtUp =
+      'Caught up from the server: %d QSO(s) added.';
+
+   (* Said after the line above when the server's log also held QSOs for another
+     contest, which are never added. %d: how many. *)
+   SCatchUpSkipped =
+      '%d QSO(s) on the server belong to another contest and were not added.';
+
+   (* The question, when SERVER AUTO SYNCHRONIZE LOG ON CONNECT is off. %d: how
+     many QSOs the server holds that this log does not. *)
+   SCatchUpAsk =
+      'The server holds %d QSO(s) that this log does not have. Add them to ' +
+      'this log now? Nothing already in this log is changed or removed, and a ' +
+      'backup of the log is taken first.';
+
+   (* The server's log could not be read. %s: why. *)
+   SCatchUpFetchFailed =
+      'Could not read the server''s log to catch up: %s';
+
+   (* The QSOs were NOT added. %s: why. *)
+   SCatchUpMergeFailed =
+      'Nothing was added to the log: %s';
+
+   (* The Synchronize window's button: before the server's log has been read, and
+     once it has. %d: how many QSOs it would add. *)
+   SServerLogAdd =
+      'Add missing QSOs';
+
+   SServerLogAddMissing =
+      'Add %d missing QSO(s)';
+
    { --------------------------------------------------- verification checks - }
 
    (* Tools -> Run Verification Checks.  The window title names the thing an

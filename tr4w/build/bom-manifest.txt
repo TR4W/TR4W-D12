@@ -57,7 +57,6 @@ src\uHamScore.pas
 src\ui\lcl\uSettingsBinding.pas
 src\uInputQuery.pas
 src\uKeyerConfigStore.pas
-src\uLogCompare.pas
 src\uMessages.pas
 src\uMessagesList.pas
 src\uNewContest.pas

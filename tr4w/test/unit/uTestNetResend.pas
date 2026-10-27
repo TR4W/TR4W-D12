@@ -50,32 +50,15 @@ unit uTestNetResend;
 interface
 
 uses
-   Classes, SyncObjs, VC, uTR4WTestFramework;
+   Classes, SyncObjs, VC, uTR4WTestFramework, uTestNetSupport;
 
 type
-   TNetResendTests = class(TTestCase)
+   TNetResendTests = class(TNetStoreTestCase)
    public
       procedure RunAllTests; override;
 
    private
-      FDir: string;
-      FTrw: string;
-      FDb: string;
-      FSavedLogName: string;
-      FSavedSilent: boolean;
-      FSavedContest: TContestHandle;
-
-      (* The scratch store. *)
-      procedure OpenScratchStore;
-      procedure CloseScratchStore;
-      function AppendRow(const aCall: string; aId1, aId2: Cardinal;
-                         aSent, aDirty: boolean): ContestExchange;
-      function ReadFlags(aId1, aId2: Cardinal; out aSent, aDirty: boolean): boolean;
-      function RowSent(aId1, aId2: Cardinal): boolean;
-      function RowDirty(aId1, aId2: Cardinal): boolean;
-
       (* The link. *)
-      procedure FeedHello(const aStation: Byte; const aContestId: string);
       function WaitSettled(aCount: integer): boolean;
 
       (* uNetResend alone. *)
@@ -269,156 +252,6 @@ end;
 (* --------------------------------------------------------------------------- *)
 (* the scratch store and the link                                               *)
 (* --------------------------------------------------------------------------- *)
-
-procedure TNetResendTests.OpenScratchStore;
-const
-   SUFFIXES: array[0..3] of string = ('', '-wal', '-shm', '-journal');
-var
-   i: integer;
-begin
-   if FDir = '' then
-      begin
-      FDir := IncludeTrailingPathDelimiter(GetTempDir) +
-              'tr4w_netresend_' + IntToStr(GetProcessID);
-      ForceDirectories(FDir);
-      end;
-
-   (* THE STORE MUST START CLOSED, or EnsureOpen answers from whatever log an
-     earlier suite left open and nothing below is about this scratch one. *)
-   LogStoreClose;
-
-   FTrw := IncludeTrailingPathDelimiter(FDir) + 'resend.trw';
-   FDb := LogDatabaseFileName(FTrw);
-   for i := Low(SUFFIXES) to High(SUFFIXES) do
-      begin
-      if FileExists(FDb + SUFFIXES[i]) then
-         begin
-         DeleteFile(FDb + SUFFIXES[i]);
-         end;
-      end;
-
-   FSavedLogName := CharBufferText(TR4W_LOG_FILENAME);
-   SetCharBuffer(TR4W_LOG_FILENAME, FTrw);
-   (* No operator: a failure is a log line and a False, not a modal. *)
-   FSavedSilent := tSilentExport;
-   tSilentExport := True;
-   FSavedContest := Contest;
-   Contest := ContestHandleOf(ARRLDXCW);
-   (* A refusal an earlier suite left standing would silence the catch-up. *)
-   ForgetServerRefusal;
-
-   CheckTrue(LogStoreEnsureOpen, 'the scratch log opens (a new log, no .trw)');
-end;
-
-procedure TNetResendTests.CloseScratchStore;
-const
-   SUFFIXES: array[0..3] of string = ('', '-wal', '-shm', '-journal');
-var
-   i: integer;
-begin
-   LogStoreClose;
-   SetCharBuffer(TR4W_LOG_FILENAME, FSavedLogName);
-   tSilentExport := FSavedSilent;
-   Contest := FSavedContest;
-   for i := Low(SUFFIXES) to High(SUFFIXES) do
-      begin
-      if FileExists(FDb + SUFFIXES[i]) then
-         begin
-         DeleteFile(FDb + SUFFIXES[i]);
-         end;
-      end;
-   if (FDir <> '') and RemoveDir(FDir) then
-      begin
-      FDir := '';
-      end;
-end;
-
-(* One row, stored the way a QSO the operator logged is: as the caller made it,
-  with the flags it is to start with. Returns the record. *)
-function TNetResendTests.AppendRow(const aCall: string; aId1, aId2: Cardinal;
-                                   aSent, aDirty: boolean): ContestExchange;
-begin
-   Result := Default(ContestExchange);
-   Result.ceRecordKind := rkQSO;
-   Result.ceContest := Contest;
-   Result.Callsign := ShortString(aCall);
-   Result.ceQSOID1 := aId1;
-   Result.ceQSOID2 := aId2;
-   Result.ceSendToServer := aSent;
-   Result.ceNeedSendToServerAE := aDirty;
-   Result.Band := Band20;
-   Result.Mode := CW;
-   Result.Frequency := 14025000;
-   Result.tSysTime.qtYear := 26;
-   Result.tSysTime.qtMonth := 6;
-   Result.tSysTime.qtDay := 1;
-   Result.tSysTime.qtHour := 12;
-   Result.tSysTime.qtMinute := 30;
-   Result.tSysTime.qtSecond := 15;
-   CheckTrue(LogStoreAppendQSO(Result), 'row ' + aCall + ' is stored');
-end;
-
-function TNetResendTests.ReadFlags(aId1, aId2: Cardinal;
-                                   out aSent, aDirty: boolean): boolean;
-var
-   repo: TLogRepository;
-   rec: ContestExchange;
-begin
-   Result := False;
-   aSent := False;
-   aDirty := False;
-   repo := LogStoreRepository;
-   if repo = nil then
-      begin
-      Exit;
-      end;
-
-   repo.OpenSequentialRead;
-   try
-      while repo.ReadNext(rec) do
-         begin
-         if (rec.ceQSOID1 = aId1) and (rec.ceQSOID2 = aId2) then
-            begin
-            aSent := rec.ceSendToServer;
-            aDirty := rec.ceNeedSendToServerAE;
-            Result := True;
-            Break;
-            end;
-         end;
-   finally
-      repo.CloseSequentialRead;
-   end;
-end;
-
-function TNetResendTests.RowSent(aId1, aId2: Cardinal): boolean;
-var
-   dirty: boolean;
-begin
-   CheckTrue(ReadFlags(aId1, aId2, Result, dirty),
-             'row ' + IntToStr(aId1) + '/' + IntToStr(aId2) + ' is in the log');
-end;
-
-function TNetResendTests.RowDirty(aId1, aId2: Cardinal): boolean;
-var
-   sent: boolean;
-begin
-   CheckTrue(ReadFlags(aId1, aId2, sent, Result),
-             'row ' + IntToStr(aId1) + '/' + IntToStr(aId2) + ' is in the log');
-end;
-
-(* The server's HELLO (station 0), or a peer's, through the real arm. *)
-procedure TNetResendTests.FeedHello(const aStation: Byte; const aContestId: string);
-var
-   hello: THelloMessage;
-   desync: boolean;
-begin
-   CheckTrue(BuildHello(NET_PROTOCOL_VERSION, aStation, '5.0.99', aContestId, hello),
-             'the hello can be built');
-   THelloMessagePtr(@NetBuffer[1])^ := hello;
-   CheckEquals(SizeOf(THelloMessage), ConsumeNetBuffer(SizeOf(THelloMessage), desync),
-               'the whole hello was consumed');
-   CheckFalse(desync, 'and the stream stayed on a message boundary');
-end;
 
 (* Waits (5 s at most) until the stub has been asked to write aCount packets of
   any kind. A QSO packet's outcome is reported before the next write begins, so
@@ -1275,7 +1108,7 @@ begin
    CheckEquals(0, Pos('procedure CommitChangesInLocalLog', net),
                'uNet declares no CommitChangesInLocalLog');
    CheckEquals(0, Pos(LineEnding + '  CommitChangesInLocalLog;', sync),
-               'RunSyncThread does not call it');
+               'the sync unit does not call it');
    (* The implementation, not the declaration: its header is followed by the
      routine's var block. *)
    CheckEquals(0, Pos('rec.ceSendToServer :=',

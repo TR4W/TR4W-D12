@@ -128,8 +128,7 @@ var
   // one as a parameter (uDXClusterClient / uTelnet.ProcessDX).
   spotsBuffer                            : array[0..4096 * 5 - 1] of AnsiChar;
   NetBuffer                             : array[1..4096] of AnsiChar;
-  SyncNetBuffer                         : array[0..4096 - 1] of AnsiChar;
-  SYSERRORBUFFER                        : array[0..255] of AnsiChar;
+  SYSERRORBUFFER                       : array[0..255] of AnsiChar;
 
 
   FreqToPCharBuffer                     : array[0..15] of AnsiChar;

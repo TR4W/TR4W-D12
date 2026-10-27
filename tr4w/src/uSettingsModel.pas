@@ -1005,7 +1005,10 @@ type
         which is why the bound stops one short of the top of the range. *)
       property Port: TServerPort read FPort write FPort;
       (* Was ServerAutoSynchronizeLogOnConnect (issue #912) -- pull the
-        server's log as soon as this position connects. *)
+        server's log as soon as this position connects. Since Phase 1, C6
+        (2026-10-27) "pull" means ADD the QSOs this log lacks, insert only, and
+        never replace the log (uGetServerLog); with it off the operator is
+        asked, with the count, before anything is added. *)
       property AutoSynchronizeLogOnConnect: boolean
          read FAutoSynchronizeLogOnConnect write FAutoSynchronizeLogOnConnect;
       (* Was ServerPassword in uNet, a Str20 declared 'TR4WSERVER'.

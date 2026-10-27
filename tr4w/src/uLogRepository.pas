@@ -677,6 +677,13 @@ type
         pair (0, 0), which is every unnetworked row's. *)
       function HasQSOBySessionIds(aSessionId, aSessionSeq: Int64): boolean;
 
+      (* EVERY NETWORK KEY THE LOG HOLDS, in one read -- what a catch-up from the
+        server asks instead of HasQSOBySessionIds once per server record (that
+        one scans the table: 1.7 ms a miss on 11,800 rows, so a few thousand
+        records would cost seconds on the main thread). The pair (0, 0) is left
+        out: it names no QSO. Only reads. *)
+      function CollectSessionKeys: TQsoSessionKeys;
+
       (* WRITES THE TWO FLAGS AND NOTHING ELSE. aSent get sent_to_server = 1;
         aEditsDone get server_dirty = 0. Each is addressed by its network key,
         and a flag already in the state asked for is left alone. Answers how
@@ -2891,6 +2898,39 @@ begin
    finally
       q.Free;
    end;
+end;
+
+function TLogRepository.CollectSessionKeys: TQsoSessionKeys;
+var
+   q: TSQLQuery;
+   n: integer;
+begin
+   Result := nil;
+   n := 0;
+   q := NewReadQuery;
+   try
+      q.SQL.Text := 'SELECT session_id, session_seq FROM qso ' +
+                    'WHERE NOT (session_id = 0 AND session_seq = 0)';
+      q.Open;
+      try
+         while not q.EOF do
+            begin
+            if n = Length(Result) then
+               begin
+               SetLength(Result, (n * 2) + 256);
+               end;
+            Result[n].SessionId := q.Fields[0].AsLargeInt;
+            Result[n].SessionSeq := q.Fields[1].AsLargeInt;
+            Inc(n);
+            q.Next;
+            end;
+      finally
+         q.Close;
+      end;
+   finally
+      q.Free;
+   end;
+   SetLength(Result, n);
 end;
 
 function TLogRepository.MarkServerProgress(const aSent,

@@ -971,6 +971,151 @@ def case_resend(ctx):
          'PASS' if (a.alive(timeout) and b.alive(timeout)) else 'FAIL')
 
 
+def parse_log_compare(msg):
+   """(server CRC32, local CRC32, server log size, local log size, contest) of
+   the 19-byte LOGCOMPARE a server sends on admit. Only the server log size is
+   still meaningful: it is the size of the file the sync port will send."""
+   _id, server_crc, local_crc, server_size, local_size, contest = \
+      struct.unpack('<HIIIIB', msg)
+   return server_crc, local_crc, server_size, local_size, contest
+
+
+def records_of(data):
+   """The 376-byte records of a downloaded server log (the header is one slot
+   long), and whether the file is a whole number of them."""
+   body = data[CONTEST_EXCHANGE_SIZE:]
+   whole = len(body) % CONTEST_EXCHANGE_SIZE == 0
+   return ([body[i:i + CONTEST_EXCHANGE_SIZE]
+            for i in range(0, len(body) - CONTEST_EXCHANGE_SIZE + 1, CONTEST_EXCHANGE_SIZE)],
+           whole)
+
+
+def record_key(rec):
+   return struct.unpack_from('<II', rec, CE_QSOID1)
+
+
+def case_catchup(ctx):
+   """A station that comes up in the middle of a contest fetches the server's log
+   on the sync port and adds the QSOs it lacks (Phase 1, C6). From outside the
+   server that is: what a late joiner is and is not told on connect, and that the
+   download is exactly the file LOGCOMPARE announced, whole, in arrival order,
+   every QSO byte for byte, and the same twice. It speaks the client's own
+   framing (ten password bytes, a four-byte size, then that many bytes)."""
+   r = ctx.report
+   timeout = ctx.args.timeout
+   count = ctx.args.burst
+   a = ctx.probe('A', 1)
+   a.settle(0.5)
+
+   # --- A logs QSOs while nobody else is here -------------------------------
+   ours = []
+   blob = b''
+   for _ in range(count):
+      id1, id2 = ctx.next_ids()
+      exchange = build_exchange('K1CU%d' % (len(ours) % 10), id1, id2)
+      ours.append(exchange)
+      blob += build_qso(NET_QSOINFO_ID, exchange, 1, a.ordinal)
+   a.send(blob)
+   r.add('catchup', 'QSOs logged while the joiner is away', 'INFO', str(count))
+
+   # Wait until the server has them all, rather than for a fixed time.
+   keys = [record_key(e) for e in ours]
+   deadline = time.time() + timeout + 6
+   data = None
+   while time.time() < deadline:
+      data, why = fetch_server_log(ctx.args.host, ctx.args.port, ctx.args.password,
+                                   ctx.args.sync_timeout, ctx.args.sync_bytes)
+      if data is not None:
+         held, _ = records_of(data)
+         have = set(record_key(rec) for rec in held)
+         if all(k in have for k in keys):
+            break
+      time.sleep(0.3)
+   if data is None:
+      r.add('catchup', 'the server log can be downloaded on the sync port', 'FAIL', why)
+      return
+
+   # --- the late joiner arrives ----------------------------------------------
+   c = ctx.probe('C', 3)
+   admitted = c.settle(1.0)
+   announced = [data_ for found_id, data_ in admitted if found_id == NET_LOGCOMPARE_ID]
+   data, why = fetch_server_log(ctx.args.host, ctx.args.port, ctx.args.password,
+                                ctx.args.sync_timeout, ctx.args.sync_bytes)
+   if data is None:
+      r.add('catchup', 'the server log can be downloaded on the sync port', 'FAIL', why)
+      return
+   r.add('catchup', 'the server log can be downloaded on the sync port', 'PASS',
+         '%d bytes' % len(data))
+
+   if announced:
+      announced_size = parse_log_compare(announced[0])[2]
+      r.add('catchup', 'LOGCOMPARE announced the size of the file that was sent',
+            'PASS' if announced_size == len(data) else 'FAIL',
+            'announced %d, downloaded %d' % (announced_size, len(data)))
+   else:
+      r.add('catchup', 'LOGCOMPARE announced the size of the file that was sent',
+            'FAIL', 'no LOGCOMPARE on admit')
+
+   held, whole = records_of(data)
+   r.add('catchup', 'the file is a header and a whole number of records',
+         'PASS' if whole and len(data) >= CONTEST_EXCHANGE_SIZE else 'FAIL',
+         '%d bytes, %d records' % (len(data), len(held)))
+
+   by_key = {}
+   repeats = 0
+   for rec in held:
+      k = record_key(rec)
+      if k in by_key and k != (0, 0):
+         repeats += 1
+      by_key[k] = rec
+   missing = [k for k in keys if k not in by_key]
+   r.add('catchup', 'every QSO logged meanwhile is in the download',
+         'PASS' if not missing else 'FAIL',
+         '%d of %d present' % (count - len(missing), count))
+   different = [k for k, e in zip(keys, ours) if by_key.get(k) != e]
+   r.add('catchup', 'and each is byte for byte what was sent',
+         'PASS' if not different else 'FAIL', '%d differ' % len(different))
+   positions = [next((i for i, rec in enumerate(held) if record_key(rec) == k), -1)
+                for k in keys]
+   r.add('catchup', 'in the order they arrived',
+         'PASS' if positions == sorted(positions) and -1 not in positions else 'FAIL')
+   r.add('catchup', 'no QSO appears twice in the file',
+         'PASS' if repeats == 0 else 'FAIL', '%d repeated' % repeats)
+
+   # --- what the joiner is NOT told ------------------------------------------
+   r.add('catchup', 'the joiner is not sent the earlier QSOs on admit (so it must fetch)',
+         'PASS' if c.take(NET_QSOINFO_ID, 1.0) is None else 'FAIL')
+   latest = c.take(NET_HELLO_ID, timeout, where=hello_of(1))
+   r.add('catchup', 'it is told what contest the others announced (the judge needs it)',
+         'PASS' if latest and parse_hello(latest)[3] == ctx.args.contest else 'FAIL',
+         parse_hello(latest)[3] if latest else c.why_dead())
+
+   # --- the same twice, and an edit is in place ------------------------------
+   again, why = fetch_server_log(ctx.args.host, ctx.args.port, ctx.args.password,
+                                 ctx.args.sync_timeout, ctx.args.sync_bytes)
+   r.add('catchup', 'a second download is the same file',
+         'PASS' if again == data else 'FAIL', why)
+
+   edited = build_exchange('K1CUEDIT', keys[0][0], keys[0][1])
+   a.send(build_qso(NET_EDITEDQSO_ID, edited, 1, a.ordinal))
+   a.take(NET_SERVERMESSAGE_ID, timeout, SM_RECEIVED_UPDATED_QSO)
+   time.sleep(0.5)
+   after, why = fetch_server_log(ctx.args.host, ctx.args.port, ctx.args.password,
+                                 ctx.args.sync_timeout, ctx.args.sync_bytes)
+   if after is None:
+      r.add('catchup', 'an edit shows in the download', 'SKIP', why)
+   else:
+      held_after, _ = records_of(after)
+      same_size = len(after) == len(data)
+      in_place = (len(held_after) == len(held) and
+                  held_after[positions[0]] == edited)
+      r.add('catchup', "the server's copy of an edited QSO is the edited record, in place",
+            'PASS' if (same_size and in_place) else 'FAIL',
+            'size %d -> %d' % (len(data), len(after)))
+   r.add('catchup', 'both stations still connected',
+         'PASS' if (a.alive(timeout) and c.alive(timeout)) else 'FAIL')
+
+
 CASES = {
    'connect': case_connect,
    'spot': case_spot,
@@ -983,6 +1128,7 @@ CASES = {
    'time': case_time,
    'hello': case_hello,
    'resend': case_resend,
+   'catchup': case_catchup,
 }
 
 

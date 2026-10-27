@@ -1,6 +1,6 @@
 ---
 name: multi-op-network
-description: Multi-operator networking — TR4WServer, the client link, the binary packet protocol with CRC32, log synchronisation, serial-number lockout and time sync. Use for anything about multi-op, networked stations, the server, packet framing, or station-to-station log comparison.
+description: Multi-operator networking — TR4WServer, the client link, the binary packet protocol with CRC32, log synchronisation, serial-number lockout and time sync. Use for anything about multi-op, networked stations, the server, packet framing, or a station catching up from the server's log.
 tools: Read, Grep, Glob, Bash, Edit, Write
 model: sonnet
 ---
@@ -18,11 +18,13 @@ You own the link between stations at a multi-op.
 | the HELLO message, protocol version, per-station contest table | `tr4w/src/uNetHello.pas` |
 | the link as a state, the Net-menu rules, the startup rule, the observer list | `tr4w/src/uNetLink.pas` (a leaf: no sockets, no widget set) |
 | what each row still owes the server, when a flag may change, unique QSO ids (a leaf) | `tr4w/src/uNetResend.pas` |
-| which QSOs the in-tree server's log already holds (a leaf) | `tr4w/src/uServerQsoIndex.pas` |
+| a set of network keys: the in-tree server's held QSOs, and the keys this station's log holds when it catches up (a leaf) | `tr4w/src/uServerQsoIndex.pas` |
+| late catch-up: the server log as bytes, the judge of a record's contest, the plan of what to add (a leaf) | `tr4w/src/uNetCatchUp.pas` |
 | the Network window (a VIEW of the link) | `tr4w/src/ui/lcl/uNetworkForm.pas` |
 | a probe that speaks the protocol to any server | `tools/netprobe/` |
 | engine side | `tr4w/src/trdos/lognet.pas` |
-| server log sync | `tr4w/src/uGetServerLog.pas`, `src/ui/lcl/uServerLogForm.pas` |
+| late catch-up: the download thread, the insert-only merge, the on-connect decision | `tr4w/src/uGetServerLog.pas` |
+| Net > Synchronize: the window that shows the downloaded server log and adds what this log lacks | `src/ui/lcl/uServerLogForm.pas` |
 | CRC32 packets | `tr4w/src/utils/networkmessageutils.pas` |
 | analysis | `docs/TR4W_NETWORKING_ANALYSIS.md` — **read the provenance block first** |
 
@@ -30,18 +32,18 @@ You own the link between stations at a multi-op.
 against this tree and **do not hold**, and the V2 design in it is TR4QT's, not a
 plan for this repo.
 
-## Known-broken, deliberately
+## Log comparison is GONE, and a late catch-up replaced it (Phase 1, C6, 2026-10-27)
 
-**MULTI-OP LOG COMPARISON DOES NOT WORK AND SAYS SO.** It compared a CRC32 of raw
-`.TRW` bytes at both ends; this station no longer keeps a `.TRW` and the server
-still does. `uNet.ProcessServerLogInfo` **refuses rather than guesses** — it logs
-an error once per session and compares nothing.
-
-That is correct behaviour, not a regression to diagnose. Reporting "identical"
-would tell an operator their log matches when nothing was checked; reporting
-"different" would resynchronise on every connect against a log this build cannot
-read. *"Are these two logs the same"* belongs to the new multi-station protocol
-and will be asked over **rows**.
+There is **no comparison of two logs any more**, and no wish for one: it was a
+CRC32 of raw `.TRW` bytes at both ends, this station keeps no `.TRW`, and the
+server still does. (Until 2026-10-27 `ProcessServerLogInfo` **refused** to guess
+and logged an error once per session; that was right while nothing replaced it.)
+What a station that comes up in the middle of a contest needs is not "are these
+the same" but "what do the others have that I lack", and that is **fetch the
+server's log and insert what is missing** -- see *Late catch-up* below. The
+LOGCOMPARE packet still arrives on admit and is now only noted in the log (the
+server's record count). *"Are these two logs the same"* proper belongs to the new
+multi-station protocol and will be asked over **rows**.
 
 ## Network protocol 2: HELLO, and every contest travels (2026-10-27)
 
@@ -132,7 +134,7 @@ ordinal 1..26 (not the ASCII letter), and a duplicate computer id is refused
 with `SM_COMPUTERID_IN_USE`; its computer id is no longer taken from
 `TStationState`, which let a refused station take the id it was refused.
 
-The server's own log holds each sender's `ceContest` byte as it came (a by-id handle means nothing outside the program that wrote it), and the log-compare packet reads the first record's. Neither is judged; a late catch-up that reads that log must restamp, as the receive arms do.
+The server's own log holds each sender's `ceContest` byte as it came (a by-id handle means nothing outside the program that wrote it), and the log-compare packet reads the first record's. Neither is judged by the server. The late catch-up (below) reads that log and restamps, as the receive arms do, and judges each record's contest itself.
 
 ## The link belongs to the program, not to the Network window (2026-10-27)
 
@@ -219,16 +221,15 @@ wire or `uNet`. Detail: `docs/SQLITE_LOG_SCHEMA_PLAN.md` section 12h.
 
 ## Worker threads and the log-compare record (pointer audit P1/P2, 2026-10-16)
 
-`uNet.ConnectThread` and `uGetServerLog.RunSyncThread` are
-`function(aParameter: Pointer): DWORD; stdcall` (`TF.TTR4WThreadStart`) and
+`uNet.ConnectThread` and `uGetServerLog.CatchUpThread` (it was `RunSyncThread`)
+are `function(aParameter: Pointer): DWORD; stdcall` (`TF.TTR4WThreadStart`) and
 are started BARE -- `tCreateThread(ConnectThread, ...)`, never `@ConnectThread`,
 which Delphi mode passes unchecked (`Lint-TypedCodePointers`). They were
 parameterless procedures until 2026-10-16, which on i386 corrupted the
 thread's SEH chain head at exit (`docs/POINTER_AUDIT.md`, D2).
-`ShowLogCompare` takes `PLogFileInformation`, not an `lParam` filled with
-`integer(s)` -- that cut the pointer in half on x86_64.
-`Lint-PointerTruncation` keeps the integer form out. (The dialog is still
-unreachable: `ProcessServerLogInfo` compares nothing, as above.)
+(`ShowLogCompare`, which took the log-compare record by pointer, is gone with the
+dialog it opened; `Lint-PointerTruncation` still keeps the integer form out of
+the tree.)
 
 ## Outbound writes never run on the caller's thread (2026-10-24)
 
@@ -350,6 +351,121 @@ widget set; `uTestNetResend`) holds the decisions; `uNet` does the work.
   real queue and thread -- on a scratch SQLite log); `uTestLogRepository` (the
   selection, flag-only marking, and `MarkServerProgress` as the 17th write path).
   **The real two-station check is BENCH_QUEUE.**
+
+## Late catch-up from the server's log (Phase 1, C6, 2026-10-27)
+
+NY4I: *"Late catch-up has to be supported as it was ... to handle a station that
+comes up (reboots) in the middle of the contest."*
+
+**WHAT D7 DID** (the D7 tree at `C:\TR4W`, read-only): on admit the server sent
+`LOGCOMPARE` (`tr4wserver.dpr:421`, built at `tr4wserverUnit.pas:769-785`: size,
+first record's contest, CRC32 of `SERVERLOG.TRW`). `uNet.ProcessServerLogInfo`
+(`uNet.pas:863-926`) CRC32'd its own `.TRW` and compared (`:867-877`). **Equal:**
+"Server and local logs are identical" (`:922`). **Different:** with
+`SERVER AUTO SYNCHRONIZE LOG ON CONNECT` (issue #912, `uNet.pas:161`,
+`uCFG.pas:782`, default False) and a matching contest (or a server with none) it
+downloaded headlessly (`:893-915`), the worker `SendMessage`ing the main window
+(`uGetServerLog.pas:253-262`, `tr4w.dpr:253-262`) to run
+`ReplaceLogByServerLog(True)`; otherwise the "Difference in logs" dialog
+(`uLogCompare.pas:49-294`: size, records, CRC32, USQ, USQE, contest; Synchronize
+greyed when the contests differ `:249-251`; Clear all logs; Exit) and from its
+Synchronize the window (`uGetServerLog.pas:67-116`): Get server log (`:85-94`),
+then **"Create and use new log"** (`:97-100`). The Net menu row *Compare and
+synchronize logs* (`Tr4w.rc:448`, Ctrl+Alt+S, `MainUnit.pas:4146`) sent the
+sentinel and went the same way. The download (`RunSyncThread`,
+`uGetServerLog.pas:140-273`) first ran `CommitChangesInLocalLog` (`:155`), then
+read port+1 until the peer went quiet for 2 s, and **`ReplaceLogByServerLog`
+backed the `.TRW` up as `LOGBACKUP_nnn.TRW` and COPIED THE DOWNLOAD OVER IT**
+(`:118-138`). So D7 was REPLACE: an edit another station made while this one was
+away arrived with it, and any QSO only this station held was lost unless the
+resend at the start of the download had got it to the server first.
+
+**WHAT IT IS NOW** -- the operator-facing behaviour is kept, the mechanism is not:
+
+- **When.** Once per link, after the server's own HELLO, at the end of the same
+  drain as the resend (`HandleHelloReceived` sets `GCatchUpDue`,
+  `TNetDrainer.Drain` calls `NetServiceCatchUp` after `NetServiceResend`; the same
+  guards). The fetch is `uGetServerLog.StartServerCatchUp(cuOnConnect)`.
+- **How a station knows it is behind: it does not ask, it fetches.** The log is
+  376 bytes a QSO. Measured 2026-10-27 over loopback to the in-tree server: 10,000
+  QSOs = 3.76 MB in 0.05 s, 50,000 = 18.8 MB in 0.5 s; the plan over 20,000
+  records against 10,000 held took 110 ms. A count or id comparison would need the
+  same fetch to be sure (this log holds rows from other stations and its own
+  unsent ones, so equal counts prove nothing). The answer is a COUNT of server
+  QSOs this log lacks, which no CRC could give.
+- **Off the main thread: the transfer only.** `CatchUpThread` owns its own
+  connection and fills a `TServerLogImage` (uNetCatchUp) in memory; it reads NO
+  setting (the starter captures host, port and the password's wire form). The
+  comparison, the backup, the write and the rescore are the MAIN thread's, handed
+  over by `RunOnMainThread`. `FetchServerLog` reads exactly the stated size (D7
+  waited for 2 s of silence) and says how far it got when a read fails.
+- **What the operator sees.** `AutoSynchronizeLogOnConnect` on: the missing QSOs
+  are added (`SNetCaughtUp`, "Caught up from the server: N QSO(s) added."). Off:
+  asked, with the count (`SCatchUpAsk`). Nothing at all when the log is already
+  complete -- a link that flaps would otherwise announce it all night. A fetch that
+  fails is a notice (`SCatchUpFetchFailed`) and an Error line.
+- **Net > Synchronize** (`menu_getserverlog`) opens `TfrmServerLog`
+  (`ShowServerLogSync`): **Get server log** downloads and SHOWS the rows (the
+  virtual grid reads the image through `TryGetServerLogRow`), and the second
+  button, formerly *Create and use new log*, is **Add missing QSOs** -- the same
+  `AddServerLogToLog`. It replaces nothing. The Difference-in-logs dialog
+  (`uLogCompare`, `uLogCompareForm`) is DELETED, as are `ReplaceLogByServerLog`,
+  `RunSyncThread`, `HeadlessSyncMode`, `TR4W_SYN_FILENAME` (`SERVERLOG.TMP`),
+  `SyncNetBuffer`, `LogSyncSocket` and the form's dead "Sent records" field.
+- **The merge is INSERT-ONLY** (`MergeServerLog`): the plan is built HERE from the
+  keys the log holds at this moment (`TLogRepository.CollectSessionKeys`, one
+  read), so a QSO the live arm logged while the question was open is not added
+  twice. A server record whose `(ceQSOID1, ceQSOID2)` the log holds is left alone
+  and the row is never touched (pinned with a differing callsign); `(0, 0)` is
+  skipped; a pair twice in the file is added once. Then, only if there is
+  something to add: **a verified backup first** (`LogStoreBackupBeforeCatchUp`
+  into `uAppPaths.BackupDir`: a DATED, never-rotated `<log> before catch-up
+  <UTC stamp>Z.db`, like Clear Log's, NOT the periodic slot -- the operator's
+  last periodic backup is neither rotated into `.bak` nor touched, and it is
+  taken whatever BACKUP LOG FREQUENCY says; a log that cannot be backed up is
+  not written to), then ONE all-or-none transaction (`LogStoreAppendQSOs` ->
+  `AppendBatch`, the ADIF import's path), then `RescoreLog`. Every added row is
+  stamped by `StampCaughtUp`: THIS station's contest handle, `sent_to_server = 1`,
+  `server_dirty = 0` (so `ResendOfflineWork` never sends it back), and
+  `my_source = 'assumed'` with no `exchange_sent` (the V1 record carries neither
+  the peer's station nor its template). Deleted QSOs, notes and QTC records are
+  carried too. The log file is never replaced or deleted.
+- **WHICH CONTEST** (`JudgeServerRecord`, the unit header has the table): the
+  server is contest-agnostic and its log may not have been cleared. For a LEGACY
+  contest of ours the record's byte is definitive (the frozen number, the same on
+  every build). Otherwise the author (`ceComputerID`, a LETTER) is judged by what
+  its HELLO announced on this link (`JudgePeerContest`, by id string); an author
+  who is gone is judged by the byte, equal to our handle = ours. For a contest
+  registered BY ID that last rule is exact only between stations on the same
+  build: a record from a departed author whose byte differs is **skipped and
+  counted as unjudged** (`cusUnknownContest`), never imported. The log line names
+  every reason with the first call; the operator is told how many belong to
+  another contest (`SCatchUpSkipped`).
+- **EDITS ARE NOT CAUGHT UP.** The server's copy of an edited QSO is the edited
+  record in place (netprobe `catchup` pins it), and D7 got it by replacing the
+  file. Insert-only cannot tell which copy is newer: a record has no edit counter,
+  this station's own edit may still be on its way (the resend runs just before the
+  fetch), and overwriting could turn a newer local edit back into an older one.
+  An edit made while this station is UP still arrives live. The fix is the
+  row-level protocol, not a guess here. (A QSO is also appended at the END of the
+  log; the rescore runs in log order, so a catch-up QSO older than one this station
+  logged meanwhile can lose a dupe tie the server's order would have given it.)
+- **Settings/menu.** `SERVER AUTO SYNCHRONIZE LOG ON CONNECT` keeps its name and its
+  default (False); only what "synchronize" does changed. The Net menu row is still
+  `menu_getserverlog`, still needs a live link; its caption ("Compare and
+  synchronize logs") is the old English and is the i18n agent's to reword.
+- **Tests.** `uTestNetCatchUp` (the image, the judge for a legacy and a by-id
+  contest, the plan, the stamp, a 20,000-record timing, the merge over a scratch
+  SQLite log: absent rows in, present rows untouched, `(0, 0)`/other contest
+  skipped, flags and contest and `my_source`, backup first and no write without
+  one, idempotent, all-or-none on a refused record, a live-logged QSO not added
+  twice, and `FetchServerLog` against an in-process TIdTCPServer playing the sync
+  port: exact bytes, ten password bytes, a short transfer, an impossible size, a
+  server that is not there) over the shared base `uTestNetSupport`
+  (`TNetStoreTestCase`, lifted out of `uTestNetResend`). Five deliberate mutations
+  (legacy byte, held skip, sent flag, `(0, 0)`, backup failure ignored) were each
+  caught. `tools/netprobe` `--case catchup` against both servers. **The real
+  two-station reboot check is BENCH_QUEUE.**
 
 ## The transport, and its one sharp edge
 
