@@ -259,7 +259,7 @@ parse grid6 W1AW Band20/CW "599 FN31PR" | ok=FALSE err="Improper domestic QTH!! 
 parse grid.field W1AW Band20/CW "599 FN" | ok=FALSE err="Improper domestic QTH!! (FN not known)" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse rda.short UA3ABC Band20/CW "599 MO1" | ok=FALSE err="Improper domestic QTH!! (MO1 not known)" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=UA/29/Europe/UA3
 == totals
-totals.qsopoints = 33
+totals.qsopoints = 31
 totals.qtcs = 0
 totals.singleband = AllBands
 totals.qsos Band160 CW = 1
@@ -294,19 +294,18 @@ totals.mults Band160 Both = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band40 Digital = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band40 Both = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band20 CW = dom=1 dx=0 zone=0 pfx=0
-totals.mults Band20 Digital = dom=1 dx=0 zone=0 pfx=0
-totals.mults Band20 Phone = dom=2 dx=0 zone=0 pfx=0
-totals.mults Band20 Both = dom=4 dx=0 zone=0 pfx=0
+totals.mults Band20 Phone = dom=1 dx=0 zone=0 pfx=0
+totals.mults Band20 Both = dom=2 dx=0 zone=0 pfx=0
 totals.mults Band15 Phone = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band15 Both = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band2 Phone = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band2 Both = dom=1 dx=0 zone=0 pfx=0
 totals.mults AllBands CW = dom=2 dx=0 zone=0 pfx=0
-totals.mults AllBands Digital = dom=2 dx=0 zone=0 pfx=0
-totals.mults AllBands Phone = dom=4 dx=0 zone=0 pfx=0
-totals.mults AllBands Both = dom=8 dx=0 zone=0 pfx=0
-totals.totalscore = 264
-totals.cabrillo = CLAIMED-SCORE: 264
+totals.mults AllBands Digital = dom=1 dx=0 zone=0 pfx=0
+totals.mults AllBands Phone = dom=3 dx=0 zone=0 pfx=0
+totals.mults AllBands Both = dom=6 dx=0 zone=0 pfx=0
+totals.totalscore = 186
+totals.cabrillo = CLAIMED-SCORE: 186
 == initialexchange
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE
@@ -605,7 +604,7 @@ parse grid6 W1AW Band20/CW "599 FN31PR" | ok=FALSE err="Improper domestic QTH!! 
 parse grid.field W1AW Band20/CW "599 FN" | ok=FALSE err="Improper domestic QTH!! (FN not known)" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse rda.short UA3ABC Band20/CW "599 MO1" | ok=FALSE err="Improper domestic QTH!! (MO1 not known)" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=UA/29/Europe/UA3
 == totals
-totals.qsopoints = 33
+totals.qsopoints = 31
 totals.qtcs = 0
 totals.singleband = AllBands
 totals.qsos Band160 CW = 1
@@ -640,19 +639,18 @@ totals.mults Band160 Both = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band40 Digital = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band40 Both = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band20 CW = dom=1 dx=0 zone=0 pfx=0
-totals.mults Band20 Digital = dom=1 dx=0 zone=0 pfx=0
-totals.mults Band20 Phone = dom=2 dx=0 zone=0 pfx=0
-totals.mults Band20 Both = dom=4 dx=0 zone=0 pfx=0
+totals.mults Band20 Phone = dom=1 dx=0 zone=0 pfx=0
+totals.mults Band20 Both = dom=2 dx=0 zone=0 pfx=0
 totals.mults Band15 Phone = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band15 Both = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band2 Phone = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band2 Both = dom=1 dx=0 zone=0 pfx=0
 totals.mults AllBands CW = dom=2 dx=0 zone=0 pfx=0
-totals.mults AllBands Digital = dom=2 dx=0 zone=0 pfx=0
-totals.mults AllBands Phone = dom=4 dx=0 zone=0 pfx=0
-totals.mults AllBands Both = dom=8 dx=0 zone=0 pfx=0
-totals.totalscore = 264
-totals.cabrillo = CLAIMED-SCORE: 264
+totals.mults AllBands Digital = dom=1 dx=0 zone=0 pfx=0
+totals.mults AllBands Phone = dom=3 dx=0 zone=0 pfx=0
+totals.mults AllBands Both = dom=6 dx=0 zone=0 pfx=0
+totals.totalscore = 186
+totals.cabrillo = CLAIMED-SCORE: 186
 == initialexchange
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE
@@ -949,7 +947,7 @@ parse grid6 W1AW Band20/CW "599 FN31PR" | ok=FALSE err="Improper domestic QTH!! 
 parse grid.field W1AW Band20/CW "599 FN" | ok=FALSE err="Improper domestic QTH!! (FN not known)" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse rda.short UA3ABC Band20/CW "599 MO1" | ok=FALSE err="Improper domestic QTH!! (MO1 not known)" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=UA/29/Europe/UA3
 == totals
-totals.qsopoints = 45
+totals.qsopoints = 39
 totals.qtcs = 0
 totals.singleband = AllBands
 totals.qsos Band160 CW = 1
@@ -984,19 +982,18 @@ totals.mults Band160 Both = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band40 Digital = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band40 Both = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band20 CW = dom=1 dx=0 zone=0 pfx=0
-totals.mults Band20 Digital = dom=1 dx=0 zone=0 pfx=0
-totals.mults Band20 Phone = dom=2 dx=0 zone=0 pfx=0
-totals.mults Band20 Both = dom=4 dx=0 zone=0 pfx=0
+totals.mults Band20 Phone = dom=1 dx=0 zone=0 pfx=0
+totals.mults Band20 Both = dom=2 dx=0 zone=0 pfx=0
 totals.mults Band15 Phone = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band15 Both = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band2 Phone = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band2 Both = dom=1 dx=0 zone=0 pfx=0
 totals.mults AllBands CW = dom=2 dx=0 zone=0 pfx=0
-totals.mults AllBands Digital = dom=2 dx=0 zone=0 pfx=0
-totals.mults AllBands Phone = dom=4 dx=0 zone=0 pfx=0
-totals.mults AllBands Both = dom=8 dx=0 zone=0 pfx=0
-totals.totalscore = 360
-totals.cabrillo = CLAIMED-SCORE: 360
+totals.mults AllBands Digital = dom=1 dx=0 zone=0 pfx=0
+totals.mults AllBands Phone = dom=3 dx=0 zone=0 pfx=0
+totals.mults AllBands Both = dom=6 dx=0 zone=0 pfx=0
+totals.totalscore = 234
+totals.cabrillo = CLAIMED-SCORE: 234
 == initialexchange
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE

@@ -678,14 +678,16 @@ first output, so it asserts "same as the first run", never "correct". Look at
 the `us`, `us-host` (a party), `ve` and `dx` variants' set-up, scoring and
 export lines and check them against the rules.
 
-**One known matrix artifact (#137):** for a contest that counts multipliers
-per band and not per mode, the `totals` section counts a multiplier worked on
-CW and on phone on the same band TWICE (IARU-HF's, Ontario's and Quebec's
-records show it). The `totals` are reloaded from flags the matrix's scoring
-set one QSO at a time, so this is believed to be the matrix's, not the
-engine's -- live entry is pinned correct by Ontario's and Quebec's real-engine
-tests. Do not "fix" your class to match the matrix, and do not take the
-matrix's `totals.mults` as your claimed score. (Open: issue 137.)
+**The `scoring` section's multiplier flags are "new against an EMPTY sheet",
+by design; the `totals` are not (#137, 2026-10-27).** Each scoring line is the
+QSO scored as the first of its kind, so W1AW/CT on 20 m CW and 20 m phone both
+read `mult.dom=TRUE` there. The `totals` section RESCORES the log before it
+counts (`MainUnit.RescoreLog`, the Rescore command), so `totals.mults` is what
+an operator who logged those QSOs in that order would see -- a per-band
+multiplier counts once per band. Until #137 the totals were a plain reload of
+the empty-sheet flags and counted it once per mode; records frozen before
+that fix showed it. A record that ever says `totals MOVED BY A RESCORE` has
+totals a rescore disagrees with -- that is a defect, not a freeze.
 
 The PowerShell gates (1-3) cannot run where PowerShell is refused (an isolated
 worktree). If you could not run one, say which in your hand-back; do not report
@@ -904,7 +906,7 @@ VE3AAA/ON, `dx` DL1AAA), it records: `identity`; `setup` (every value set-up
 writes); `scoring` of synthetic QSOs; `export.adif` / `export.cabrillo` through
 the real exporters; `import` of those records and of synthetic foreign-logger
 ones; `parse` of typed exchanges through `ParametersOkay`; `keys` (more QSOs and
-exchanges, scored and parsed but not logged); `totals` after a reload; and
+exchanges, scored and parsed but not logged); `totals` after a rescore and reload; and
 `initialexchange` with the matrix's OWN `MATRIX-TRMASTER.DTA`, never the
 shipped one. The QSOs are stamped 12:xx UTC, so the run does not depend on the
 time of day. Read `run-contest-matrix.sh`'s header for the exact table.

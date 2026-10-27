@@ -48,6 +48,21 @@ is the only thing that sees points. **The contest matrix sees parsing** (its
 `parse` section, M5b: typed exchanges through `ParametersOkay` for every
 contest) -- "same as before", never "right".
 
+**`LoadinLog` TRUSTS STORED MULTIPLIER FLAGS; THE RESCORE RE-DERIVES THEM
+(measured 2026-10-27, issue #137).** `AddQSOToSheets` -> `mo.SetDmMult` /
+`SetZnMult` -> `IncrementTotals` counts EVERY stored flag, never asking whether
+the key is already on the sheet, so `MTotals` is exactly as right as the flags
+in the log. `tUpdateLog(actRescore)` empties the sheet and walks the log in
+order (`SetMultFlags` against the sheet so far, then `AddQSOToSheets`):
+a log with W1AW/CT stored as a new multiplier on 20 m CW, SSB and DIGITAL in
+IARU-HF came out of one `/RESCORE` with only the CW flag. The matrix's
+`scoring` lines are "new against an empty sheet" on purpose, so its `totals`
+section runs `RescoreLog` before counting, and writes `totals MOVED BY A
+RESCORE` if a second rescore disagrees. A path that stores flags without
+scoring in order must end in `RescoreLog`, not a bare `LoadinLog` --
+`ImportFromADIF`, `uEditQSO` and a network update (`uNet.ConsumeNetBuffer`)
+already do.
+
 So: **scoring, multiplier and exchange-parsing changes deserve real-contest
 testing.** The corpus is a strong net, not a proof. Say so in your report rather
 than presenting a green corpus as proof a scoring change is right.

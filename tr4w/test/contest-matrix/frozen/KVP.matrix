@@ -260,7 +260,7 @@ parse grid6 W1AW Band20/CW "599 FN31PR" | ok=FALSE err="Improper zone number!!" 
 parse grid.field W1AW Band20/CW "599 FN" | ok=FALSE err="Improper zone number!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse rda.short UA3ABC Band20/CW "599 MO1" | ok=FALSE err="Improper zone number!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/29/Europe/UA3
 == totals
-totals.qsopoints = 24
+totals.qsopoints = 20
 totals.qtcs = 0
 totals.singleband = AllBands
 totals.qsos Band160 CW = 1
@@ -317,8 +317,8 @@ totals.mults AllBands CW = dom=0 dx=0 zone=7 pfx=0
 totals.mults AllBands Digital = dom=0 dx=0 zone=2 pfx=0
 totals.mults AllBands Phone = dom=0 dx=0 zone=8 pfx=0
 totals.mults AllBands Both = dom=0 dx=0 zone=17 pfx=0
-totals.totalscore = 408
-totals.cabrillo = CLAIMED-SCORE: 408
+totals.totalscore = 340
+totals.cabrillo = CLAIMED-SCORE: 340
 == initialexchange
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE
@@ -618,7 +618,7 @@ parse grid6 W1AW Band20/CW "599 FN31PR" | ok=FALSE err="Improper zone number!!" 
 parse grid.field W1AW Band20/CW "599 FN" | ok=FALSE err="Improper zone number!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse rda.short UA3ABC Band20/CW "599 MO1" | ok=FALSE err="Improper zone number!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/29/Europe/UA3
 == totals
-totals.qsopoints = 24
+totals.qsopoints = 20
 totals.qtcs = 0
 totals.singleband = AllBands
 totals.qsos Band160 CW = 1
@@ -675,8 +675,8 @@ totals.mults AllBands CW = dom=0 dx=0 zone=7 pfx=0
 totals.mults AllBands Digital = dom=0 dx=0 zone=2 pfx=0
 totals.mults AllBands Phone = dom=0 dx=0 zone=8 pfx=0
 totals.mults AllBands Both = dom=0 dx=0 zone=17 pfx=0
-totals.totalscore = 408
-totals.cabrillo = CLAIMED-SCORE: 408
+totals.totalscore = 340
+totals.cabrillo = CLAIMED-SCORE: 340
 == initialexchange
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE
@@ -974,7 +974,7 @@ parse grid6 W1AW Band20/CW "599 FN31PR" | ok=FALSE err="Improper zone number!!" 
 parse grid.field W1AW Band20/CW "599 FN" | ok=FALSE err="Improper zone number!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse rda.short UA3ABC Band20/CW "599 MO1" | ok=FALSE err="Improper zone number!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/29/Europe/UA3
 == totals
-totals.qsopoints = 24
+totals.qsopoints = 20
 totals.qtcs = 0
 totals.singleband = AllBands
 totals.qsos Band160 CW = 1
@@ -1031,8 +1031,8 @@ totals.mults AllBands CW = dom=0 dx=0 zone=7 pfx=0
 totals.mults AllBands Digital = dom=0 dx=0 zone=2 pfx=0
 totals.mults AllBands Phone = dom=0 dx=0 zone=8 pfx=0
 totals.mults AllBands Both = dom=0 dx=0 zone=17 pfx=0
-totals.totalscore = 408
-totals.cabrillo = CLAIMED-SCORE: 408
+totals.totalscore = 340
+totals.cabrillo = CLAIMED-SCORE: 340
 == initialexchange
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE

@@ -109,9 +109,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
                frozen before the first parse arm moved, so every section
                above it kept its bytes.
 
-    totals     (M6) the log the scoring section wrote, RELOADED through the
-               path opening a contest takes (MainUnit.LoadinLog -- what
-               /EXPORT's start runs), then the totals the program computes
+    totals     (M6) the log the scoring section wrote, RESCORED and RELOADED
+               (MainUnit.RescoreLog, the Rescore command -- since issue 137;
+               a reload alone counted the scoring section's "new against an
+               empty sheet" flags), then the totals the program computes
                from it: the QSO points, the QTCs, the QSO and multiplier
                counts by band and mode, LogEdit.TotalScore -- the one score
                every display and export reads -- and the CLAIMED-SCORE: line
@@ -1141,7 +1142,11 @@ end;
   EACH QSO IS SCORED AGAINST AN EMPTY SHEET -- nothing is added to the dupe or
   multiplier sheets -- so every QSO is scored as the first of its kind and no
   record depends on the ones before it. The mult flags therefore read "would
-  be a new multiplier". The host-area QSO, where there is one, comes last. *)
+  be a new multiplier". The host-area QSO, where there is one, comes last.
+
+  THE LOG IS STORED WITH THOSE FLAGS, so it is NOT a log live entry would have
+  written -- the totals section rescores it before it counts anything (issue
+  137). *)
 procedure CaptureScoringAndLog;
 var
    i: integer;
@@ -2010,30 +2015,27 @@ begin
    end;
 end;
 
-(* THE TOTALS THE PROGRAM COMPUTES FROM THE LOG THE SCORING SECTION WROTE.
-
-  THE LOG IS RELOADED FIRST, through MainUnit.LoadinLog -- the routine that
-  opens a contest's log, and the one /EXPORT's start has run before it writes
-  a CLAIMED-SCORE. The scoring section appended its QSOs to the store without
-  passing through live entry, so until the reload the sheet and the counters
-  still describe the log as it was at start-up: empty. After it, they are what
-  an operator who reopened this log would see.
+(* THE TOTALS LINES, from what the session holds now -- one line per field,
+  as the record writes them.
 
   ONLY NON-ZERO CELLS of the QSO and multiplier tables are written, so a
   record stays readable. The multiplier counts are the four kinds the sheet
   keeps, in the order domestic/dx/zone/prefix. *)
-procedure CaptureTotals;
+procedure TotalsLines(aLines: TStrings);
+
+   procedure Field(const aName, aValue: string);
+   begin
+      aLines.Add(AnsiString(aName + ' = ' + aValue));
+   end;
+
 var
    b: BandType;
    m: ModeType;
-   cabrilloFile: string;
 begin
-   Emit('== totals');
-   LoadinLog;
-
-   EmitField('totals.qsopoints', IntToStr(TotalQSOPoints));
-   EmitField('totals.qtcs', IntToStr(TotalNumberQTCsProcessed));
-   EmitField('totals.singleband', EnumText(TypeInfo(BandType), Ord(SingleBand)));
+   aLines.Clear;
+   Field('totals.qsopoints', IntToStr(TotalQSOPoints));
+   Field('totals.qtcs', IntToStr(TotalNumberQTCsProcessed));
+   Field('totals.singleband', EnumText(TypeInfo(BandType), Ord(SingleBand)));
 
    for b := Low(BandType) to High(BandType) do
       begin
@@ -2041,10 +2043,10 @@ begin
          begin
          if QSOTotals[b, m] <> 0 then
             begin
-            EmitField(Format('totals.qsos %s %s',
-                             [EnumText(TypeInfo(BandType), Ord(b)),
-                              EnumText(TypeInfo(ModeType), Ord(m))]),
-                      IntToStr(QSOTotals[b, m]));
+            Field(Format('totals.qsos %s %s',
+                         [EnumText(TypeInfo(BandType), Ord(b)),
+                          EnumText(TypeInfo(ModeType), Ord(m))]),
+                  IntToStr(QSOTotals[b, m]));
             end;
          end;
       end;
@@ -2058,17 +2060,108 @@ begin
             (mo.MTotals[b, m, rmZone] <> 0)     or
             (mo.MTotals[b, m, rmPrefix] <> 0)   then
             begin
-            EmitField(Format('totals.mults %s %s',
-                             [EnumText(TypeInfo(BandType), Ord(b)),
-                              EnumText(TypeInfo(ModeType), Ord(m))]),
-                      Format('dom=%d dx=%d zone=%d pfx=%d',
-                             [mo.MTotals[b, m, rmDomestic], mo.MTotals[b, m, rmDX],
-                              mo.MTotals[b, m, rmZone], mo.MTotals[b, m, rmPrefix]]));
+            Field(Format('totals.mults %s %s',
+                         [EnumText(TypeInfo(BandType), Ord(b)),
+                          EnumText(TypeInfo(ModeType), Ord(m))]),
+                  Format('dom=%d dx=%d zone=%d pfx=%d',
+                         [mo.MTotals[b, m, rmDomestic], mo.MTotals[b, m, rmDX],
+                          mo.MTotals[b, m, rmZone], mo.MTotals[b, m, rmPrefix]]));
             end;
          end;
       end;
 
-   EmitField('totals.totalscore', IntToStr(TotalScore));
+   Field('totals.totalscore', IntToStr(TotalScore));
+end;
+
+(* THE FIRST LINE WHERE TWO SETS OF TOTALS DISAGREE, as "<before> -> <after>";
+  '' when they agree. A line one side lacks reads as "(none)". *)
+function FirstTotalsDifference(aBefore, aAfter: TStrings): string;
+var
+   i: integer;
+   n: integer;
+   before, after: string;
+begin
+   Result := '';
+   n := aBefore.Count;
+   if aAfter.Count > n then
+      begin
+      n := aAfter.Count;
+      end;
+   for i := 0 to n - 1 do
+      begin
+      before := '(none)';
+      after := '(none)';
+      if i < aBefore.Count then
+         begin
+         before := string(aBefore[i]);
+         end;
+      if i < aAfter.Count then
+         begin
+         after := string(aAfter[i]);
+         end;
+      if before <> after then
+         begin
+         Result := before + ' -> ' + after;
+         Exit;
+         end;
+      end;
+end;
+
+(* THE TOTALS THE PROGRAM COMPUTES FROM THE LOG THE SCORING SECTION WROTE.
+
+  THE LOG IS RESCORED AND RELOADED FIRST, through MainUnit.RescoreLog -- the
+  Rescore command: tUpdateLog(actRescore) walks the log in order against one
+  sheet, rewriting each QSO's multiplier flags, dupe and points; after it,
+  LoadinLog, the routine that opens a contest's log, rebuilds the totals from
+  what it wrote.
+
+  A RELOAD ALONE WAS NOT ENOUGH (issue 137, 2026-10-27). The scoring section
+  scores every QSO against an EMPTY sheet, so each one is stored as a new
+  multiplier, and LoadinLog trusts stored flags -- it counts every one. A
+  contest whose multiplier counts once per band then counted W1AW/CT on 20 m
+  CW and 20 m phone as two. The rescore stores what live entry would have
+  stored in this order, so the totals are what an operator who logged these
+  QSOs, or rescored this log, would see. The scoring section's own lines keep
+  their "first of its kind" flags; only the log behind the totals is
+  rescored. *)
+procedure CaptureTotals;
+var
+   cabrilloFile: string;
+   reported, again: TStringList;
+   i: integer;
+   moved: string;
+begin
+   Emit('== totals');
+   (* RESCORED, THEN RELOADED -- the Rescore command (issue 137). The scoring
+     section stored every QSO's flags as "new against an empty sheet", and
+     LoadinLog counts every stored flag, so a reload alone counted a per-band
+     multiplier once per mode it was worked on. *)
+   RescoreLog;
+
+   reported := TStringList.Create;
+   again := TStringList.Create;
+   try
+      TotalsLines(reported);
+      for i := 0 to reported.Count - 1 do
+         begin
+         Emit(string(reported[i]));
+         end;
+
+      (* THE TOTALS MUST BE THOSE OF A CORRECTLY SCORED LOG (issue 137): a
+        rescore walks the log in order against one sheet, so totals it moves
+        were not. WRITTEN ONLY WHEN IT FAILS, so no frozen record carries the
+        line and its appearance is a difference the compare reports. *)
+      RescoreLog;
+      TotalsLines(again);
+      moved := FirstTotalsDifference(reported, again);
+      if moved <> '' then
+         begin
+         Emit('totals MOVED BY A RESCORE -- first: ' + moved);
+         end;
+   finally
+      again.Free;
+      reported.Free;
+   end;
 
    cabrilloFile := '';
    try

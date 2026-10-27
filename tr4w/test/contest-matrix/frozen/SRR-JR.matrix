@@ -258,7 +258,7 @@ parse grid6 W1AW Band20/CW "599 FN31PR" | ok=FALSE err="" token="" pending="" ca
 parse grid.field W1AW Band20/CW "599 FN" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=0 exch=599 FN age=87 cty=K/8/NorthAmerica/W1 dxqth=K
 parse rda.short UA3ABC Band20/CW "599 MO1" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=0 exch=599 MO1 age=87 cty=R3A/29/Europe/UA3 dxqth=R3A
 == totals
-totals.qsopoints = 17
+totals.qsopoints = 15
 totals.qtcs = 0
 totals.singleband = AllBands
 totals.qsos Band160 CW = 1
@@ -288,17 +288,13 @@ totals.qsos AllBands CW = 7
 totals.qsos AllBands Digital = 2
 totals.qsos AllBands Phone = 8
 totals.qsos AllBands Both = 17
-totals.mults Band160 CW = dom=1 dx=1 zone=0 pfx=0
-totals.mults Band160 Both = dom=1 dx=1 zone=0 pfx=0
-totals.mults Band80 CW = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band80 Both = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band40 Digital = dom=1 dx=1 zone=0 pfx=0
+totals.mults Band160 CW = dom=1 dx=0 zone=0 pfx=0
+totals.mults Band160 Both = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band40 Phone = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band40 Both = dom=1 dx=2 zone=0 pfx=0
+totals.mults Band40 Both = dom=0 dx=1 zone=0 pfx=0
 totals.mults Band20 CW = dom=1 dx=2 zone=0 pfx=0
-totals.mults Band20 Digital = dom=1 dx=1 zone=0 pfx=0
-totals.mults Band20 Phone = dom=2 dx=3 zone=0 pfx=0
-totals.mults Band20 Both = dom=4 dx=6 zone=0 pfx=0
+totals.mults Band20 Phone = dom=1 dx=1 zone=0 pfx=0
+totals.mults Band20 Both = dom=2 dx=3 zone=0 pfx=0
 totals.mults Band15 CW = dom=0 dx=1 zone=0 pfx=0
 totals.mults Band15 Phone = dom=1 dx=1 zone=0 pfx=0
 totals.mults Band15 Both = dom=1 dx=2 zone=0 pfx=0
@@ -309,14 +305,11 @@ totals.mults Band30 CW = dom=0 dx=1 zone=0 pfx=0
 totals.mults Band30 Both = dom=0 dx=1 zone=0 pfx=0
 totals.mults Band6 Phone = dom=0 dx=1 zone=0 pfx=0
 totals.mults Band6 Both = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band2 Phone = dom=1 dx=1 zone=0 pfx=0
-totals.mults Band2 Both = dom=1 dx=1 zone=0 pfx=0
-totals.mults AllBands CW = dom=2 dx=7 zone=0 pfx=0
-totals.mults AllBands Digital = dom=2 dx=2 zone=0 pfx=0
-totals.mults AllBands Phone = dom=4 dx=8 zone=0 pfx=0
-totals.mults AllBands Both = dom=8 dx=17 zone=0 pfx=0
-totals.totalscore = 425
-totals.cabrillo = CLAIMED-SCORE: 425
+totals.mults AllBands CW = dom=2 dx=5 zone=0 pfx=0
+totals.mults AllBands Phone = dom=2 dx=5 zone=0 pfx=0
+totals.mults AllBands Both = dom=4 dx=10 zone=0 pfx=0
+totals.totalscore = 210
+totals.cabrillo = CLAIMED-SCORE: 210
 == initialexchange
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE
@@ -614,7 +607,7 @@ parse grid6 W1AW Band20/CW "599 FN31PR" | ok=FALSE err="" token="" pending="" ca
 parse grid.field W1AW Band20/CW "599 FN" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=0 exch=599 FN age=87 cty=K/8/NorthAmerica/W1 dxqth=K
 parse rda.short UA3ABC Band20/CW "599 MO1" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=0 exch=599 MO1 age=87 cty=R3A/29/Europe/UA3 dxqth=R3A
 == totals
-totals.qsopoints = 17
+totals.qsopoints = 15
 totals.qtcs = 0
 totals.singleband = AllBands
 totals.qsos Band160 CW = 1
@@ -644,17 +637,13 @@ totals.qsos AllBands CW = 7
 totals.qsos AllBands Digital = 2
 totals.qsos AllBands Phone = 8
 totals.qsos AllBands Both = 17
-totals.mults Band160 CW = dom=1 dx=1 zone=0 pfx=0
-totals.mults Band160 Both = dom=1 dx=1 zone=0 pfx=0
-totals.mults Band80 CW = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band80 Both = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band40 Digital = dom=1 dx=1 zone=0 pfx=0
+totals.mults Band160 CW = dom=1 dx=0 zone=0 pfx=0
+totals.mults Band160 Both = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band40 Phone = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band40 Both = dom=1 dx=2 zone=0 pfx=0
+totals.mults Band40 Both = dom=0 dx=1 zone=0 pfx=0
 totals.mults Band20 CW = dom=1 dx=2 zone=0 pfx=0
-totals.mults Band20 Digital = dom=1 dx=1 zone=0 pfx=0
-totals.mults Band20 Phone = dom=2 dx=3 zone=0 pfx=0
-totals.mults Band20 Both = dom=4 dx=6 zone=0 pfx=0
+totals.mults Band20 Phone = dom=1 dx=1 zone=0 pfx=0
+totals.mults Band20 Both = dom=2 dx=3 zone=0 pfx=0
 totals.mults Band15 CW = dom=0 dx=1 zone=0 pfx=0
 totals.mults Band15 Phone = dom=1 dx=1 zone=0 pfx=0
 totals.mults Band15 Both = dom=1 dx=2 zone=0 pfx=0
@@ -665,14 +654,11 @@ totals.mults Band30 CW = dom=0 dx=1 zone=0 pfx=0
 totals.mults Band30 Both = dom=0 dx=1 zone=0 pfx=0
 totals.mults Band6 Phone = dom=0 dx=1 zone=0 pfx=0
 totals.mults Band6 Both = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band2 Phone = dom=1 dx=1 zone=0 pfx=0
-totals.mults Band2 Both = dom=1 dx=1 zone=0 pfx=0
-totals.mults AllBands CW = dom=2 dx=7 zone=0 pfx=0
-totals.mults AllBands Digital = dom=2 dx=2 zone=0 pfx=0
-totals.mults AllBands Phone = dom=4 dx=8 zone=0 pfx=0
-totals.mults AllBands Both = dom=8 dx=17 zone=0 pfx=0
-totals.totalscore = 425
-totals.cabrillo = CLAIMED-SCORE: 425
+totals.mults AllBands CW = dom=2 dx=5 zone=0 pfx=0
+totals.mults AllBands Phone = dom=2 dx=5 zone=0 pfx=0
+totals.mults AllBands Both = dom=4 dx=10 zone=0 pfx=0
+totals.totalscore = 210
+totals.cabrillo = CLAIMED-SCORE: 210
 == initialexchange
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE
@@ -968,7 +954,7 @@ parse grid6 W1AW Band20/CW "599 FN31PR" | ok=FALSE err="" token="" pending="" ca
 parse grid.field W1AW Band20/CW "599 FN" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=0 exch=599 FN age=87 cty=K/8/NorthAmerica/W1 dxqth=K
 parse rda.short UA3ABC Band20/CW "599 MO1" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=0 exch=599 MO1 age=87 cty=R3A/29/Europe/UA3 dxqth=R3A
 == totals
-totals.qsopoints = 17
+totals.qsopoints = 15
 totals.qtcs = 0
 totals.singleband = AllBands
 totals.qsos Band160 CW = 1
@@ -998,17 +984,13 @@ totals.qsos AllBands CW = 7
 totals.qsos AllBands Digital = 2
 totals.qsos AllBands Phone = 8
 totals.qsos AllBands Both = 17
-totals.mults Band160 CW = dom=1 dx=1 zone=0 pfx=0
-totals.mults Band160 Both = dom=1 dx=1 zone=0 pfx=0
-totals.mults Band80 CW = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band80 Both = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band40 Digital = dom=1 dx=1 zone=0 pfx=0
+totals.mults Band160 CW = dom=1 dx=0 zone=0 pfx=0
+totals.mults Band160 Both = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band40 Phone = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band40 Both = dom=1 dx=2 zone=0 pfx=0
+totals.mults Band40 Both = dom=0 dx=1 zone=0 pfx=0
 totals.mults Band20 CW = dom=1 dx=2 zone=0 pfx=0
-totals.mults Band20 Digital = dom=1 dx=1 zone=0 pfx=0
-totals.mults Band20 Phone = dom=2 dx=3 zone=0 pfx=0
-totals.mults Band20 Both = dom=4 dx=6 zone=0 pfx=0
+totals.mults Band20 Phone = dom=1 dx=1 zone=0 pfx=0
+totals.mults Band20 Both = dom=2 dx=3 zone=0 pfx=0
 totals.mults Band15 CW = dom=0 dx=1 zone=0 pfx=0
 totals.mults Band15 Phone = dom=1 dx=1 zone=0 pfx=0
 totals.mults Band15 Both = dom=1 dx=2 zone=0 pfx=0
@@ -1019,14 +1001,11 @@ totals.mults Band30 CW = dom=0 dx=1 zone=0 pfx=0
 totals.mults Band30 Both = dom=0 dx=1 zone=0 pfx=0
 totals.mults Band6 Phone = dom=0 dx=1 zone=0 pfx=0
 totals.mults Band6 Both = dom=0 dx=1 zone=0 pfx=0
-totals.mults Band2 Phone = dom=1 dx=1 zone=0 pfx=0
-totals.mults Band2 Both = dom=1 dx=1 zone=0 pfx=0
-totals.mults AllBands CW = dom=2 dx=7 zone=0 pfx=0
-totals.mults AllBands Digital = dom=2 dx=2 zone=0 pfx=0
-totals.mults AllBands Phone = dom=4 dx=8 zone=0 pfx=0
-totals.mults AllBands Both = dom=8 dx=17 zone=0 pfx=0
-totals.totalscore = 425
-totals.cabrillo = CLAIMED-SCORE: 425
+totals.mults AllBands CW = dom=2 dx=5 zone=0 pfx=0
+totals.mults AllBands Phone = dom=2 dx=5 zone=0 pfx=0
+totals.mults AllBands Both = dom=4 dx=10 zone=0 pfx=0
+totals.totalscore = 210
+totals.cabrillo = CLAIMED-SCORE: 210
 == initialexchange
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE

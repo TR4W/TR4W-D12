@@ -259,7 +259,7 @@ parse grid6 W1AW Band20/CW "599 FN31PR" | ok=TRUE err="" token="" pending="" cal
 parse grid.field W1AW Band20/CW "599 FN" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=FN  exch=599 FN cty=K/8/NorthAmerica/W1
 parse rda.short UA3ABC Band20/CW "599 MO1" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=MO1  exch=599 MO1 cty=UA/29/Europe/UA3
 == totals
-totals.qsopoints = 170
+totals.qsopoints = 150
 totals.qtcs = 0
 totals.singleband = AllBands
 totals.qsos Band160 CW = 1
@@ -289,8 +289,8 @@ totals.qsos AllBands CW = 7
 totals.qsos AllBands Digital = 2
 totals.qsos AllBands Phone = 8
 totals.qsos AllBands Both = 17
-totals.totalscore = 170
-totals.cabrillo = CLAIMED-SCORE: 170
+totals.totalscore = 150
+totals.cabrillo = CLAIMED-SCORE: 150
 == initialexchange
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE
@@ -589,7 +589,7 @@ parse grid6 W1AW Band20/CW "599 FN31PR" | ok=TRUE err="" token="" pending="" cal
 parse grid.field W1AW Band20/CW "599 FN" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=FN  exch=599 FN cty=K/8/NorthAmerica/W1
 parse rda.short UA3ABC Band20/CW "599 MO1" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=MO1  exch=599 MO1 cty=UA/29/Europe/UA3
 == totals
-totals.qsopoints = 170
+totals.qsopoints = 150
 totals.qtcs = 0
 totals.singleband = AllBands
 totals.qsos Band160 CW = 1
@@ -619,8 +619,8 @@ totals.qsos AllBands CW = 7
 totals.qsos AllBands Digital = 2
 totals.qsos AllBands Phone = 8
 totals.qsos AllBands Both = 17
-totals.totalscore = 170
-totals.cabrillo = CLAIMED-SCORE: 170
+totals.totalscore = 150
+totals.cabrillo = CLAIMED-SCORE: 150
 == initialexchange
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE
@@ -917,7 +917,7 @@ parse grid6 W1AW Band20/CW "599 FN31PR" | ok=TRUE err="" token="" pending="" cal
 parse grid.field W1AW Band20/CW "599 FN" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=FN  exch=599 FN cty=K/8/NorthAmerica/W1
 parse rda.short UA3ABC Band20/CW "599 MO1" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=MO1  exch=599 MO1 cty=UA/29/Europe/UA3
 == totals
-totals.qsopoints = 170
+totals.qsopoints = 150
 totals.qtcs = 0
 totals.singleband = AllBands
 totals.qsos Band160 CW = 1
@@ -947,8 +947,8 @@ totals.qsos AllBands CW = 7
 totals.qsos AllBands Digital = 2
 totals.qsos AllBands Phone = 8
 totals.qsos AllBands Both = 17
-totals.totalscore = 170
-totals.cabrillo = CLAIMED-SCORE: 170
+totals.totalscore = 150
+totals.cabrillo = CLAIMED-SCORE: 150
 == initialexchange
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE
