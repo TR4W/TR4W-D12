@@ -67,6 +67,9 @@ type
       procedure Test_Mode_Digital_PSK_IsDG;
       procedure Test_Mode_Digital_JT65_IsDG;
 
+      (* FormatCabrilloModeDigitalAsRY -- every digital submode RY, FM PH *)
+      procedure Test_ModeDigitalAsRY_EveryDigitalSubmodeIsRY;
+
    public
       procedure RunAllTests; override;
    end;
@@ -234,6 +237,32 @@ begin
    CheckEquals('DG', string(FormatCabrilloMode(Digital, eJT65, False)), '');
 end;
 
+(* FormatCabrilloModeDigitalAsRY (lifted from the Delaware QSO Party,
+   2026-10-26; New Mexico's rules: "Modes are PH, CW, or RY. Use RY to
+   designate all digital modes."). EVERY ExtendedModeType of Digital is RY --
+   walked, so a submode added to VC is judged here -- where the plain
+   formatter writes DG for all but RTTY; FM is PH; CW and phone are the
+   plain formatter's. *)
+procedure TCabrilloFormatTests.Test_ModeDigitalAsRY_EveryDigitalSubmodeIsRY;
+var
+   ext: ExtendedModeType;
+begin
+   BeginTest('Test_ModeDigitalAsRY_EveryDigitalSubmodeIsRY');
+   for ext := Low(ExtendedModeType) to High(ExtendedModeType) do
+      begin
+      CheckEquals('RY', FormatCabrilloModeDigitalAsRY(Digital, ext),
+                  'digital submode ' + IntToStr(Ord(ext)) + ' is RY');
+      end;
+   CheckEquals('DG', FormatCabrilloMode(Digital, eFT8, False),
+               'the control: the plain formatter writes FT8 as DG');
+   CheckEquals('RY', FormatCabrilloModeDigitalAsRY(Digital, eFT8), 'FT8 is RY here');
+   CheckEquals('RY', FormatCabrilloModeDigitalAsRY(Digital, eFT4), 'and FT4');
+   CheckEquals('RY', FormatCabrilloModeDigitalAsRY(Digital, ePSK31), 'and PSK31');
+   CheckEquals('PH', FormatCabrilloModeDigitalAsRY(FM, eFM), 'FM is PH');
+   CheckEquals('PH', FormatCabrilloModeDigitalAsRY(Phone, eUSB), 'phone is PH');
+   CheckEquals('CW', FormatCabrilloModeDigitalAsRY(CW, eCW), 'CW is CW');
+end;
+
 // ---------------------------------------------------------------------------
 // Test runner
 // ---------------------------------------------------------------------------
@@ -263,6 +292,8 @@ begin
    Test_Mode_Digital_FT8_IsDG;
    Test_Mode_Digital_PSK_IsDG;
    Test_Mode_Digital_JT65_IsDG;
+
+   Test_ModeDigitalAsRY_EveryDigitalSubmodeIsRY;
 end;
 
 end.

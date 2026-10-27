@@ -184,12 +184,6 @@ uses
 type
    TContestNebraskaQP = class(TContestStateQSOPartyBase)
    private
-      (* THE "NO RARE-GRID TABLE" REPORT'S LATCH -- once per year per session,
-         not once per score. Main thread only, as the score is. *)
-      FReportedNoRareGridTable: boolean;
-      FReportedNoRareGridTableYear: integer;
-      procedure ReportNoRareGridTable(aYear: integer);
-
       (* THE RARE GRID BONUS -- the header. *)
       function RareGridBonus(const aTotals: TScoreTotals;
                              aView: TLoggedQSOView): longint;
@@ -643,7 +637,9 @@ begin
          year := LogContestYear(aTotals, aView);
          if not HasRareGridTable(year) then
             begin
-            ReportNoRareGridTable(year);
+            (* The party base's once-per-year Error (lifted 2026-10-26). *)
+            ReportNoTableForYear(logger, year, 'rare-grid list',
+                                 'the rare grid bonus', 'nebraskaqsoparty.com');
             Exit;
             end;
          yearKnown := True;
@@ -675,35 +671,6 @@ var
    rare: boolean;
 begin
    Result := NebraskaRareGrid(aYear, '', rare);
-end;
-
-(* AN ERROR, NOT A WARNING -- Idaho's reasoning: Log4D's root level defaults
-   to Error, and a claimed score that leaves out a bonus is worth an
-   operator's attention. Year 0 is a log that says nothing about its year. *)
-procedure TContestNebraskaQP.ReportNoRareGridTable(aYear: integer);
-begin
-   if FReportedNoRareGridTable and
-      (FReportedNoRareGridTableYear = aYear) then
-      begin
-      Exit;
-      end;
-   FReportedNoRareGridTable := True;
-   FReportedNoRareGridTableYear := aYear;
-
-   if aYear = 0 then
-      begin
-      logger.Error(
-         'Nebraska QSO Party: the log records no contest year (no start time and no dated QSO), ' +
-         'so the rare grid bonus cannot be decided and is NOT in the score.');
-      end
-   else
-      begin
-      logger.Error(Format(
-         'Nebraska QSO Party: TR4W has no rare-grid list for the %d contest, ' +
-         'so the rare grid bonus is NOT in the score. Each year''s list is the sponsor''s ' +
-         '(nebraskaqsoparty.com) and is added to uContestNebraskaQP.',
-         [aYear]));
-      end;
 end;
 
 (* THE STATION TEST -- a Nebraska entrant counts DXCC entities. *)

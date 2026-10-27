@@ -157,7 +157,17 @@ the target shape, the M-step migration order and the open questions.
   `SentLocation` / `LocationOrOwnCountry` (a DX entrant sends its own country,
   not "DX"), lifted from North Dakota when Oklahoma became the second user
   (2026-10-26), pinned by `uTestContestStateQSOPartyBase` through an
-  unregistered probe class.
+  unregistered probe class. Beside it since New Mexico (2026-10-26):
+  `ReportNoTableForYear(logger, year, table, rule, source)`, the
+  once-per-year "no table for this year" Error a year-table rule writes
+  (lifted from Idaho and Nebraska, which carried it word for word; the
+  caller passes its own unit logger, so tests capture by unit name). Two
+  leaf helpers came with it: `uCabrilloFormat.FormatCabrilloModeDigitalAsRY`
+  (every digital submode RY, FM PH -- Delaware and New Mexico) and
+  `uCabrilloExchange.CabrilloReceivedRSTDomesticQTHOrDX` ("DX" whenever the
+  record holds no `DomesticQTH`). **`CabrilloReceivedRSTQTHDX` tests
+  `QTHString`, so a DX station whose entity was TYPED exports an empty QTH
+  column** (non-literal `HisQTH` is `DomesticQTH`); Georgia uses it.
 - **`QSO POINT METHOD` IS RETIRED (M10 S2, 2026-10-14)**, with `EXCHANGE
   RECEIVED`, `INITIAL EXCHANGE` and the four multiplier commands -- names in
   `uCFG.RETIRED_COMMANDS`, no effect. The class decides all seven. The four

@@ -275,6 +275,7 @@ The five exchange statements must agree. These sets are in use:
 | RST + county/state/province, or DX -- **a DX entrant sends "DX"** | `RSTDomesticOrDXQTHExchange` | `ExchangeFieldsRSTQTH` | `ParseRSTDomesticOrDXQTH` | `ADIFSentRSTState` | `CabrilloSentRSTStateOrDX` / `CabrilloReceivedRSTQTHDX` | Georgia |
 | same, but a DX station's received QTH is written as sent | as above | as above | as above | as above | `CabrilloSentRSTState` / `CabrilloReceivedRSTQTHOrDXQTH` | Nebraska |
 | same, and **a DX entrant sends its own country prefix**, not "DX" (a state party) | as above | as above | as above | `ADIFSentRSTState(SentLocation(aMy), aQso)` | `CabrilloSentRSTState(SentLocation(aMy), ...)` / `CabrilloReceivedRSTQTHOrDXQTH`; `CQExchangeDefault` is `' 5NN ' + LocationOrOwnCountry(aStation.MyState, aStation.MyCountry)` -- both helpers are protected on `TContestStateQSOPartyBase` | North Dakota, Oklahoma |
+| same, but a DX entrant sends its entity ON THE AIR while the Cabrillo QTH column is only "county, state/province or DX" | as above | as above | as above | `ADIFSentRSTState(SentLocation(aMy), aQso)` (STX_STRING is what was transmitted) | `CabrilloSentRSTStateOrDX` / `CabrilloReceivedRSTDomesticQTHOrDX` (DX whenever the record holds no domestic QTH -- `CabrilloReceivedRSTQTHDX` writes a typed `599 LY` as an empty column); `CQExchangeDefault` with `LocationOrOwnCountry` | New Mexico |
 | RST + a code from your `.dom` only | `RSTDomesticQTHExchange` | `ExchangeFieldsRSTQTH` | `ParseRSTDomesticQTH` | `ADIFSentRSTState` | `CabrilloSentRSTState` / `CabrilloReceivedRSTQTH` | URC |
 | RST + serial | `RSTQSONumberExchange` | `ExchangeFieldsRSTQSONumber` | `ParseRSTQSONumber` | `ADIFSentRSTQSONumber` | `CabrilloSentRSTQSONumber` / `CabrilloReceivedRSTQSONumber` | `uContestBaltic` |
 | RST + zone | `RSTZoneExchange` | `ExchangeFieldsRSTZone` | `ParseRSTZone` | `ADIFSentRSTZone` | `CabrilloSentRSTZone` / `CabrilloReceivedRSTZone` | `uContestJIDXCW`, CQ WW |
@@ -581,7 +582,8 @@ read live against `Station` (`LOGEDIT.DoingDXMults` and its siblings).
 ### The final score
 
 `LOGEDIT.TotalScore` asks `FinalScore(aTotals, aView)` = `CombineScore` +
-`BonusPoints`, both non-virtual. Override the protected
+`BonusPoints`; `FinalScore` and `CombineScore` are non-virtual, `BonusPoints`
+is virtual. Override the protected
 `CombineWithMultipliers` (helpers `ContestPoints`, `SummedMultipliers`) for
 another formula; declare bonus stations in `GetBonusStations`
 (`CountsTowardBonus`, `CreditsBonusMode`; each station's `Scope` says how
@@ -591,7 +593,14 @@ and add `inherited`. **A bonus is decided over the whole log
 (`TLoggedQSOView`), never as a QSO is logged.** A whole-log rule reads each
 QSO's own station through `aView.MyFacts(i)`, not `Station.MyGrid`. A rule that
 changes by year asks `uContestBase.LogContestYear`, never the clock
-(`uContestIdahoQP`, `uContestNebraskaQP`). Pin in `uTestContestTotals`.
+(`uContestIdahoQP`, `uContestNebraskaQP`, `uContestNewMexicoQP`): one function
+states each year, a year with none pays nothing and a state party reports it
+once through the party base's `ReportNoTableForYear`, and a clock-reading
+test fails on the first run of a year with no table. A bonus STATION that
+pays only in some years cannot be declared data (`GetBonusStations` has no
+year): override `BonusPoints` and ask `BonusStationWorked` (New Mexico's
+W1AW/5). Pin in the contest's own test (a legacy contest's in
+`uTestContestTotals`).
 
 ### Display and reports
 

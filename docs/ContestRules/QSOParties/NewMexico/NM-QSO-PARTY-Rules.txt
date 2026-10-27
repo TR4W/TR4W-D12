@@ -1,0 +1,657 @@
+﻿New Mexico QSO Party Rules
+
+Source: http://www.newmexicoqsoparty.org/wp/wp-content/uploads/2026/04/NMQP_Forms.pdf (linked from https://www.newmexicoqsoparty.org/wp/details/rules/ as "2026's Rules and Document packet (Updated: 09 April)"); text by pdftotext -layout, bullets shown as '-'
+Fetched: 2026-10-26
+WA7BNM ID: 286 (https://www.contestcalendar.com/contestdetails.php?ref=286)
+Cabrillo Name: NM-QSO-PARTY
+ADIF Name: NM-QSO-PARTY
+The document states "2026 New Mexico QSO Party Form Packet", "Last modified: 09 April 2026".
+The rules page already heads itself "April 10, 2027 (8:00am-8:00pm MDT)"; no 2027 rules are published yet.
+The county table is the rules' own check sheet, below. NMQP_Forms.pdf is the document itself.
+
+==============================================================================
+
+ 2026 New Mexico QSO Party Form Packet
+
+                                   Last modified: 09 April 2026
+
+                 (Please verify that this is the latest revision prior to participating in the NMQP)
+
+2026 Change log:
+
+    · 24 March:
+              o Initial release
+              o Summary of new rules/revisions since 2025:
+                        - For 2026 only: New bonus points opportunity for working W1AW/5 during the
+                             New Mexico QSO Party
+                                  · NOTE: W1AW/5 will be on the air during the New Mexico QSO Party,
+                                       however it will only submit a check-log and not compete for standings or
+                                       awards.
+                        - New High Score - YL/XYL award
+                        - Removal of Outside New Mexico, Multi-Op category
+
+    · 09 April:
+              o Clarified rules around working W1AW/5 multiple times
+              o Reduced number of bonus points for working W1AW/5 from 500 to 250
+
+2026 New Mexico QSO Party County Map
+
+                                                                        Map Courtesy of Digital Map Store
+
+                             2026 New Mexico QSO Party Rules
+
+1. OBJECT:
+         - New Mexico stations: Work anyone for NM counties, states, provinces, and DX.
+         - Non-NM stations: Work NM stations for NM counties only.
+
+2. CONTEST PERIOD:
+         - Second Saturday of April, 8:00 MDT (1400 UTC) to 20:00 MDT (0200 UTC).
+         - Duration: 12 hours (full-time operation permitted).
+
+3. CONTEST BANDS AND SUGGESTED FREQUENCIES:
+         - Contest bands: 160-10 meters, plus 6 and 2 meters
+                    i. Not permitted: WARC bands, 60 meters, and bands above 2 meters
+         - Suggested frequencies (on or near):
+                    i. CW: 1820, 3550, 7045, 14050, 21050, 28050 kHz, 50.095 MHz, 144.09 MHz
+                    ii. Phone: 1850, 3815, 7260, 14280, 21380, 28380 kHz, 50.130 MHz, 144.20 MHz
+                        SSB, 146.52 MHz FM
+                   iii. Digital: Around each mode's customary calling frequencies
+                             1. Attention FT8/FT4 users: For an FT8/FT4 QSO to be valid, it must
+                                  include the required QSO exchange from both stations (see Section 6)
+                                  and be logged in the same format as QSOs in other modes. QSOs that
+                                  contain grid squares or signal reports instead of the required exchange
+                                  cannot be scored by the New Mexico QSO Party's automated scoring
+                                  software. Participants using FT8/FT4 must either use a mode that
+                                  supports the required exchange (such as JS8Call) or manually edit their
+                                  logs prior to submission by replacing signal reports with "599" and
+                                  converting grid squares to the appropriate state, province, or DXCC
+                                  entity.
+                   iv. New Mexico stations are encouraged to operate on/near these frequencies,
+                        especially at the top of each hour.
+
+4. CONTEST MODES:
+         - Phone, CW, digital (any computer-to-computer mode is considered digital)
+
+5. CLASSES:
+         - Single Operator. One person performs all operating and logging functions. Only one
+              (1) transmitted signal on the air at any time. All transmitters, receivers, and antennas
+              must lie within a 500-meter diameter circle. This includes portable (non-mobile)
+              stations.
+
+         - Multi-Operator (New Mexico stations only). More than one person performs operating
+              or logging functions. Only one signal per band per mode allowed at any time. All
+              transmitters, receivers, and antennas must lie within a 500-meter diameter circle. This
+              includes portable (non-mobile) stations.
+
+         - Mobile. Consistent with County Hunter rules
+              (https://www.marac.org/documents/award-rules.pdf), "making contacts using a radio in
+              or on a movable vehicle is a Mobile Operation. The vehicle does not have to be in
+              motion. The radio must be powered by the vehicle or other power source that is
+              contained in the vehicle and which is independent of all commercial or other outside
+              power sources. The vehicle must be capable of movement without having to
+              disconnect any wiring or antennas in order to move to another location. Examples of
+              vehicles that are capable of mobile operation include automobiles, trucks, RVs, trains,
+              bicycles, airplanes, and buses." All operations occur within the same vehicle. There are
+              two classes of mobile operation:
+                                                                                                                                Page 1 of 6
+
+                             2026 New Mexico QSO Party Rules
+
+                    i. Single Operator. One person performs all operating, logging, and driving
+                        functions. For safety reasons, participants should operate only when vehicle is
+                        not in motion.
+
+                    ii. Multi-Operator. More than one person performs operating, logging, and driving
+                        functions. For safety reasons, participants should operate only while there is a
+                        dedicated driver or while vehicle is not in motion.
+
+6. EXCHANGE:
+         - New Mexico stations: RS(T) + New Mexico county
+         - Non-New Mexico stations: RS(T) + State/Province/DXCC entity
+
+7. QSO POINTS:
+         - Each Phone contact = 1 point
+         - Each CW contact = 2 points
+         - Each Digital contact = 2 points
+
+8. MULTIPLIERS AND BONUSES:
+         - Power multiplier based on maximum power used:
+                    i. QRP (5 watts or less): x5
+                    ii. Low Power (> 5 - 150 watts): x2
+                   iii. High Power: (> 150 watts): x1
+
+         - Location Multipliers for New Mexico participants
+                    i. Multiply QSO points by total of each different NM county worked (up to 33),
+                        states worked (up to 50), Canadian provinces/territories worked (up to 13; see
+                        below) and DX entities worked.
+                             1. Alaska and Hawaii count as state multipliers only; District of Columbia
+                                  (DC) counts as Maryland.
+                             2. United States and Canada do not count as DX entity multipliers.
+                             3. Each multiplier may be counted ONLY ONCE, regardless of mode or
+                                  band.
+                    ii. List of Canadian Provinces and Territories: Alberta (AB), British Columbia (BC),
+                        Manitoba (MB), New Brunswick (NB), Newfoundland-Labrador (NL), Nova
+                        Scotia (NS), Ontario (ON), Prince-Edward Island (PE), Quebec (QC),
+                        Saskatchewan (SK), Northwest Territories (NT), Nunavut (NU), Yukon
+                        Territories (YT)
+
+         - Location Multipliers for Non-New Mexico Participants
+                    i. Multiply QSO points by total of each different NM county worked (up to 33).
+                    ii. Each multiplier may be counted ONLY ONCE regardless of mode or band.
+
+         - Mobile Operations Bonus (for New Mexico mobile stations only)
+                    i. Add an additional 5,000 points to the final score for every county from which at
+                        least 15 valid QSOs were made.
+
+         - W1AW/5 Bonus (new, for 2026 only)
+                    i. Add an additional 250 points to your final score for a valid contact with
+                        W1AW/5. Bonus points are valid for one (1) W1AW/5 QSO only, regardless of
+                        band, mode, or W1AW/5's county.
+                             1. Participants logging electronically: Enter a clear note in the Cabrillo
+                                  "soapbox" field to indicate that you worked W1AW/5 to claim this credit.
+                                  We will verify the QSO within your log data.
+
+                                                                                                                                Page 2 of 6
+
+                             2026 New Mexico QSO Party Rules
+
+                    ii. W1AW/5 may be on the air from multiple New Mexico counties. Stations may
+                        work W1AW/5 again on the same band and mode, only if W1AW/5 is operating
+                        from a different county than previous contacts. Each county activation is
+                        considered a new station for QSO point credit; however, the W1AW/5 bonus
+                        may be claimed only once.
+
+                   iii. W1AW/5 stations will include their New Mexico county as part of the standard
+                        exchange.
+                             · NOTE: W1AW/5 stations will not be competing for standings or awards
+                                  in the New Mexico QSO Party. They will only submit a check-log for
+                                  QSO verification purposes.
+
+9. SCORING:
+         - For non-mobile participants:
+              Total = (Sum of QSO points from all bands x power multiplier x location multiplier) +
+              W1AW/5 contact bonus
+
+         - For mobile participants:
+              Total = (Sum of QSO points from all bands and counties operated from x power
+              multiplier x running total of location multipliers) + Mobile operation bonus + W1AW/5
+              contact bonus
+                        (For example, if you work GA, NC, and BER from one county, and BER, IN, OH
+                        from the next county you operate from, your running total of location multipliers
+                        is five [5]. BER may only be counted as a multiplier once.)
+
+10. MISCELLANEOUS:
+         - Stations may be worked only once per mode, per band.
+                    i. For 2026 only, W1AW/5 may be worked multiple times on the same band and
+                        mode when operating from different New Mexico counties (see Section 8).
+                        Each county is considered a new station for QSO point credit.
+         - Complete exchange information must be received by each station for a complete QSO.
+         - All contacts must be made without the assistance of intermediary stations, such as
+              repeaters, digipeaters, satellites, etc.
+         - Spotting and self-spotting is permitted.
+         - County lines are defined as per County Hunter rules
+             (https://www.marac.org/documents/award-rules.pdf).
+         - A New Mexico mobile station that travels into a new county is considered to be a new
+              station and may be contacted again for point and multiplier credit. A New Mexico
+              mobile station that travels into a new county may contact other stations again for point
+              credit (however multipliers may still only be counted once).
+         - Consistent with County Hunter rules (https://www.marac.org/documents/award-
+              rules.pdf) "a stationary mobile may operate on a County Line and contacts with the
+              mobile can be used as credit for both counties." For reasons of safety and access,
+              contacts made within 50 meters of a county line are considered valid for county line
+              operations. Furthermore, "only one County Line at a time can be run for [New Mexico
+              QSO Party] credit. If the mobile is operating from the intersection of three or more USA
+              Counties, only two counties at a time may be counted for the same contact."
+
+11. SPECIAL CATEGORIES AND AWARDS:
+         - High Score - New Mexico Club award. A plaque, if sponsored, will be awarded to the
+              New Mexico amateur radio club with the highest aggregate score, based on the scored
+              logs submitted by its participating members. To receive credit for this award, the club
+              name must be clearly identified in each participant's submitted log (paper or
+
+                                                                                                                                Page 3 of 6
+
+                       2026 New Mexico QSO Party Rules
+
+    electronic). Each participant may list only one New Mexico club and must be a member
+    in good standing of that club at the time of the QSO Party.
+- Most Counties Activated by a New Mexico Club award. A plaque, if sponsored, will
+    be awarded to the New Mexico amateur radio club with the highest aggregate number
+    of counties activated, based on the counties activated by its participating members as
+    recorded in their submitted logs. A minimum of 15 QSOs must be made from a county
+    for it to count toward this award. To receive credit for this award, the club name must
+    be clearly identified in each participant's submitted log (paper or electronic). Each
+    participant may list only one New Mexico club and must be a member in good standing
+    of that club at the time of the QSO Party.
+
+- New Mexico Expedition Category: This special category is intended to encourage
+    participants to activate counties using temporary, field-deployed stations that are set up
+    specifically for the New Mexico QSO Party.
+          i. Eligibility and Qualification: To qualify as an Expedition station, the operator
+              must make at least 30 valid QSOs during the event. The station must be
+              assembled and operated specifically for the New Mexico QSO Party and must
+              not rely on a permanently installed station.
+          ii. Definition of an Expedition Station: An Expedition station is a portable (non-
+              mobile) station that is temporarily set up in the field for the purpose of
+              participating in the contest. This category is distinct from Mobile operations, as
+              all contacts are made from a fixed location rather than from within a moving or
+              self-contained vehicle.
+         iii. Operating Class and Scoring: The Expedition Category is a special
+              designation and not a separate operating class. Participants must still enter as
+              either Single Operator or Multi-Operator, as defined in Section 5. Expedition
+              stations will be scored and ranked within their selected operating class, and will
+              also be recognized separately among other Expedition participants.
+         iv. Identification in Logs: Stations wishing to be recognized in the Expedition
+              Category must clearly indicate this in their submitted logs. For electronic
+              submissions, this should be included in the Cabrillo "soapbox" field. For paper
+              logs, this should be clearly noted on the summary sheet.
+          v. Station Requirements and Restrictions: Expedition stations must not use
+              pre-existing stations, permanently installed antennas, or fixed radio facilities,
+              whether amateur or commercial. All equipment must be temporarily deployed
+              for the event. All equipment used for the Expedition must be powered by
+              sources that are independent of commercial power mains. Acceptable power
+              sources include batteries, generators, solar panels, fuel cells, wind generators,
+              or similar self-contained systems. All transmitters, receivers, and antennas
+              must be located within a 500-meter diameter circle, consistent with the
+              requirements for Single Operator and Multi-Operator stations.
+         vi. County Line Operations: Expedition stations may operate from a county line,
+              and contacts may be credited for both counties. For safety and practical access
+              considerations, stations located within 50 meters of a county boundary are
+              considered valid for county line operation. If operating from a location where
+              three or more counties meet, only two counties may be counted for any given
+              contact. Only one county line may be activated at a time.
+        vii. Relocation During the Event: An Expedition station may be disassembled,
+              moved, and reassembled in a different county or at a different county line
+              during the contest. In order for each location to qualify as a valid Expedition
+              activation, the station must meet the minimum requirement of 30 QSOs at that
+              location. When an Expedition station relocates to a new county, it is considered
+
+                                                                                                                     Page 4 of 6
+
+                             2026 New Mexico QSO Party Rules
+
+                        a new station for contact purposes. Other stations may work it again for QSO
+                        point credit. However, multipliers may still only be counted once, regardless of
+                        relocation.
+                 viii. Mobile Bonus Exclusion: Expedition stations are not eligible to receive Mobile
+                        Operations Bonus points.
+         - High Score - QRP award. A plaque, if sponsored, will be awarded to the highest-
+              scoring New Mexico single-operator station (excluding mobile bonus points) operating
+              at a power output of 5 watts or less for the entire contest.
+         - High Score - YL/XYL award. A plaque, if sponsored, will be awarded to the highest-
+              scoring female New Mexico single-operator station (excluding mobile bonus points).
+
+12. REPORTING:
+         - Cabrillo formatted electronic logs. A list of known logging applications that support
+              New Mexico QSO Party rules is available on the New Mexico QSO party website at
+              www.newmexicoqsoparty.org. Electronic logs must be submitted in proper Cabrillo
+              format (template included below). Electronic logs that are incomplete, not in proper
+              Cabrillo format, or late will be counted only as check logs.
+         - Paper logs. Valid paper logs must include (a) a completed check sheet; (b) completed
+              log sheets; and (c) a completed summary sheet. Only forms provided on the New
+              Mexico QSO party website at www.newmexicoqsoparty.org will be accepted. Paper
+              logs that are incomplete, illegible, or late will be counted only as check logs.
+         - Participant logs must be received no later than April 25, 2026 (two weeks following
+              the event).
+         - Electronic logs should be emailed to logs@newmexicoqsoparty.org
+         - Paper logs should be submitted via postal mail to:
+
+                                  New Mexico QSO Party
+                                  c/o Amateur Radio Caravan Club
+                                  PO Box 36365
+                                  Albuquerque, NM 87176-6365
+
+         - NMQP will strive to post final results on the New Mexico QSO Party website in the
+              June timeframe.
+
+13. AWARDS AND PARTICIPANT CERTIFICATES:
+         - Plaques will be awarded to first place winners of various categories. Winning Multi-Op
+              teams will receive a single plaque on behalf of their team. If a plaque for a particular
+              category does not have a sponsor by the time logs are scored, a color certificate will be
+              awarded instead. A list of available awards and sponsors is provided at
+              www.newmexicoqsoparty.org. Sponsorship of awards may be changed at the
+              discretion of the New Mexico QSO Party organizers based on contest category entries.
+         - Special awards may be made at the discretion of the New Mexico QSO Party
+              organizers.
+         - Participant certificates will be available online via the NMQP website for all stations
+              who submit their electronic or paper log by the submission deadline. Certificates will
+              become available when official results are posted to the NMQP website.
+
+                                                                                                                                Page 5 of 6
+
+                                        2026 New Mexico QSO Party Rules
+
+14. NEW MEXICO QSO PARTY PARTICIPATION AGREEMENT:
+         - By participating in the New Mexico QSO Party, you ("Participant"), along with any
+              individuals operating with you, agree to be bound by these rules, the regulations of
+              your applicable licensing authority, and the decisions of the New Mexico QSO Party
+              organizers. Participant further agrees to indemnify and hold harmless the New Mexico
+              QSO Party, its organizers, and its sponsors from any claims, damages, or liabilities
+              arising from or related to participation in the event. By engaging in any form of
+              participation, Participant acknowledges that they have read, understood, and agreed to
+              these terms.
+
+                      New Mexico QSO Party Cabrillo Log Format
+
+Log developers: Please utilize the following template to support the New Mexico QSO Party:
+
+                   --------INFO SENT-----          -------INFO RCVD------
+
+QSO: FREQ MO DATE  TIME CALL             RST QTH   CALL      RST QTH
+
+QSO: ***** ** YYYY-MM-DD NNNN ********   *** ****  ********  *** ****
+
+QSO: 14000 PH 2010-02-07 1501 KB5SXB/M   59 BER    NK5W      59 SAN
+
+- All QSO data should be space delimited for proper parsing.
+- Cabrillo version 2.0 or 3.0 welcome.
+- All dates/times are in UTC
+- Modes are PH, CW, or RY. Use RY to designate all digital modes.
+- QTH is three letter NM county abbreviation, or two-letter State/Province abbreviation, or "DX".
+- The ARRL-SECTION: tag (Cabrillo v2.0) and LOCATION: tag (Cabrillo v3.0) is used to
+
+    identify New Mexico stations for proper automated log checking and scoring. Cabrillo logs
+    generated for New Mexico stations should reflect ARRL-SECTION: NM or LOCATION: NM.
+    Cabrillo logs generated for non-NM stations should reflect their respective location (example:
+    ARRL-SECTION: EPA, LOCATION: PA, LOCATION: DX etc.).
+- Cabrillo log filenames are call.log, where "call" is the NMQP participant's callsign.
+
+Sample log:                              59 BER    NK5W      59 SAN
+                                         59 BER    WA5ZUP    59 SJU
+START-OF-LOG: v2.0                       59 BER    N5NA      59 LEA
+CONTEST: NM-QSO-PARTY                    59 BER    VE7RSV    59 BC
+CREATED-BY: GenLog v8.45                 599 BER   LY2ZZ     599 DX
+CALLSIGN: N5ZGT                          599 BER   W1AW      599 CT
+CATEGORY: SINGLE-OP LOW                  599 BER   W9WSW     599 BER
+ARRL-SECTION: NM                         599 BER   W5RMY     599 BER
+CLAIMED-SCORE: 192
+OPERATORS: N5ZGT
+NAME: BRIAN MILESHOSKY
+ADDRESS: PO BOX 20036
+ADDRESS: ALBUQUERQUE, NM
+ADDRESS: USA
+SOAPBOX: Sample NM station Cabrillo log
+QSO: 14000 PH 2010-02-07 1501 N5ZGT
+QSO: 7000 PH 2010-02-07 1503 N5ZGT
+QSO: 14000 PH 2010-02-07 1504 N5ZGT
+QSO: 14000 PH 2010-02-07 1505 N5ZGT
+QSO: 14000 CW 2010-02-07 1507 N5ZGT
+QSO: 14000 RY 2010-02-07 1511 N5ZGT
+QSO: 14000 CW 2010-02-07 1513 N5ZGT
+QSO: 14000 CW 2010-02-07 1515 N5ZGT
+END-OF-LOG:
+
+                                                                           Page 6 of 6
+
+                        2026 New Mexico QSO Party Check Sheet
+
+                Callsign: _______________________ Name: _______________________
+
+Enter the callsign of the first station that you worked within each county.
+
+Callsign        County      Abbreviation
+
+______________  Bernalillo  BER
+______________  Catron      CAT
+______________  Chaves      CHA
+______________  Cibola      CIB
+______________  Colfax      COL
+______________  Curry       CUR
+______________  De Baca     DEB
+______________  Dona Ana    DON
+______________  Eddy        EDD
+______________  Grant       GRA
+______________  Guadalupe   GUA
+______________  Harding     HAR
+______________  Hidalgo     HID
+______________  Lea         LEA
+______________  Lincoln     LIN
+______________  Los Alamos  LOS
+______________  Luna        LUN
+______________  McKinley    MCK
+______________  Mora        MOR
+______________  Otero       OTE
+______________  Quay        QUA
+______________  Rio Arriba  RIO
+______________  Roosevelt   ROO
+______________  San Juan    SJU
+______________  San Miguel  SMI
+______________  Sandoval    SAN
+______________  Santa Fe    SFE
+______________  Sierra      SIE
+______________  Socorro     SOC
+______________  Taos        TAO
+______________  Torrance    TOR
+______________  Union       UNI
+______________  Valencia    VAL
+
+                       2026 New Mexico QSO Party Check Sheet
+
+Enter the callsign of the first station that you worked within each US State and Canadian Province.
+
+Callsign        State          Callsign        State
+
+______________  Alabama        ______________  North Carolina
+______________  Alaska         ______________  North Dakota
+______________  Arizona        ______________  Ohio
+______________  Arkansas       ______________  Oklahoma
+______________  California     ______________  Oregon
+______________  Colorado       ______________  Pennsylvania
+______________  Connecticut    ______________  Rhode Island
+______________  Delaware       ______________  South Carolina
+______________  Florida        ______________  South Dakota
+______________  Georgia        ______________  Tennessee
+______________  Hawaii         ______________  Texas
+______________  Idaho          ______________  Utah
+______________  Illinois       ______________  Vermont
+______________  Indiana        ______________  Virginia
+______________  Iowa           ______________  Washington
+______________  Kansas         ______________  West Virginia
+______________  Kentucky       ______________  Wisconsin
+______________  Louisiana      ______________  Wyoming
+______________  Maine
+______________  Maryland / DC  Callsign        Canadian Province
+______________  Massachusetts  ______________  Alberta (AB)
+______________  Michigan       ______________  British Columbia (BC)
+______________  Minnesota      ______________  Manitoba (MB)
+______________  Mississippi    ______________  New Brunswick (NB)
+______________  Missouri       ______________  Newfoundland-Labrador (NL)
+______________  Montana        ______________  Nova Scotia (NS)
+______________  Nebraska       ______________  Ontario (ON)
+______________  Nevada         ______________  Prince-Edward Island (PE)
+______________  New Hampshire  ______________  Quebec (QC)
+______________  New Jersey     ______________  Saskatchewan (SK)
+______________  New Mexico     ______________  Northwest Territories (NT)
+______________  New York       ______________  Nunavut (NU)
+                               ______________  Yukon Territories (YT)
+
+                     2026 New Mexico QSO Party Check Sheet
+
+Enter the callsign of the first station that you worked within each DXCC entity
+         · See http://www.arrl.org/country-lists-prefixes for valid list of entities
+         · Hawaii and Alaska count only as state multipliers United States and Canada do not count
+              towards DX multiplier credit
+
+Callsign             DXCC entity         Callsign        DXCC entity
+
+_(Example: ZL3TIC)_  _(New Zealand)____  ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+______________       ______________      ______________  ______________
+
+                       2026 New Mexico QSO Party Log Sheet
+
+                Callsign: _______________________ Name: _______________________
+
+DATE BAND MODE  TIME   CALLSIGN             Sent                  Received
+
+S               (UTC)            RS(T) + State/NM County/  RS(T) + State/NM County/
+S                                     Province/Country          Province/Country
+S
+S
+S
+S
+S
+S
+S
+S
+S
+S
+S
+S
+S
+S
+S
+S
+S
+S
+S
+S
+S
+S
+S
+
+                                                           PAGE ____ of _____
+
+                  2026 New Mexico QSO Party Summary Sheet
+
+          NOTE: Participants submitting paper logs must include this form, county check sheet, and all log pages
+
+Call: ___________________________ Name: __________________________________________
+Address: _________________________________________________________________________
+City, State/Province, Postal code: _____________________________________________________
+Email address (for questions, if needed): ________________________________________________
+County (for NM stations only): ________________________________________________________
+Club (for NM stations only): __________________________________________________________
+
+Entry Class                  Power Class (check highest power used at any time during the event)
+
+ Single Operator              QRP (5 watts or less)
+ Multi-Operator (NM only)     Low Power (>5 - 150 watts)
+ NM Mobile, Single-Operator   High Power (Greater than 150 watts)
+ NM Mobile, Multi-Operator
+                              New Mexico Expedition Category (see rules for requirements)
+
+Scoring
+
+_____ Phone QSOs × 1 point each = ___________ points
+_____ CW QSOs × 2 points each = ___________ points
+_____ Digital QSOs × 2 points each = ___________ points
+
+                                                         _____________ total QSO points
+
+Multipliers
+
+Power (enter the multiplier corresponding to the highest power used during the event)
+
+QRP (5W or less)             = 5 _________
+
+Low Power (>5W - 150W)       = 2 _________
+
+High Power (Greater than 150W) = 1 _________
+
+                                                         _____________ power multiplier
+
+For Non-New Mexico Stations
+
+New Mexico counties: _________ (33 maximum)
+
+For New Mexico Stations
+
+New Mexico counties: _________ (33 maximum)
+States: _________ (50 maximum; DC counts as Maryland)
+Canadian Provinces: _________ (up to 13; see rules)
+DX entities*: _________
+
+                   * Hawaii and Alaska count only as state multipliers. The United States and
+                   Canada do not count as DX entity multipliers.
+
+                                                                        _____________ total S/P/C multipliers
+
+                             Summary sheet (for paper log submissions) - Page 1 of 3
+
+                  2026 New Mexico QSO Party Summary Sheet
+
+          NOTE: Participants submitting paper logs must include this form, county check sheet, and all log pages
+
+Mobile Operation Bonus Points (for NM stations only; does not apply to non-mobile participants)
+         Number of counties in which you made 15 or more NMQP QSOs: _______________
+         Multiply number of counties listed on previous line by 5,000: _______________
+                                                                            _____________ total mobile bonus points
+
+(New, for 2026 only) W1AW/5 Bonus Points (for any participant who works W1AW/5 during NMQP)
+         Add 250 bonus points for working W1AW/5 (bonus applies to only one QSO with W1AW/5):
+                                                                          _____________ total W1AW/5 bonus points
+
+Final Score
+For non-mobile participants:
+(Total QSO points __________ x Power multiplier __________ x Total S/P/C multipliers __________)
++ W1AW Bonus Points __________
+
+                                                                                                    = ____________________
+                                                                                                                     (Total Score)
+
+For mobile participants only:
+(Total QSO points __________ x Power multiplier __________ x Total S/P/C multipliers __________)
++ Total Mobile Operation Bonus Points __________ + W1AW Bonus Points __________
+
+                                                                                                    = ____________________
+                                                                                                                     (Total Score)
+
+Paper log submission
+         Paper logs, which must include this summary sheet and county check sheet, may be
+         submitted via postal mail to:
+                                       New Mexico QSO Party
+                                       c/o Amateur Radio Caravan Club
+                                       PO Box 36365
+                                       Albuquerque, NM 87176-6365
+         Logs must be received no later than April 25, 2026 (two weeks after the event).
+         Incomplete, illegible, or late logs will be counted only as check logs.
+
+                                                                         Summary sheet (for paper log submissions) - Page 2 of 3
+
+                  2026 New Mexico QSO Party Summary Sheet
+
+          NOTE: Participants submitting paper logs must include this form, county check sheet, and all log pages
+New Mexico QSO Party Participant Agreement
+By participating in the New Mexico QSO Party, you ("Participant"), along with any individuals
+operating with you, agree to be bound by these rules, the regulations of your applicable licensing
+authority, and the decisions of the New Mexico QSO Party organizers. Participant further agrees to
+indemnify and hold harmless the New Mexico QSO Party, its organizers, and its sponsors from any
+claims, damages, or liabilities arising from or related to participation in the event. By engaging in any
+form of participation, Participant acknowledges that they have read, understood, and agreed to these
+terms.
+New Mexico QSO Party Participant Certificates
+Participant certificates will be available online via the NMQP website for all stations who submit their
+electronic or paper log by the submission deadline. Certificates will be posted when official results are
+published on the NMQP website.
+
+                          Thank you for participating in the New Mexico QSO Party!
+
+                                                                         Summary sheet (for paper log submissions) - Page 3 of 3
+

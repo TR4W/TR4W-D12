@@ -933,7 +933,7 @@ begin
          end;
       CheckEquals(0, idaho.BonusPoints(Totals(0), view), 'a log with no year: no county bonus');
       CheckEquals(2, capture.Lines.Count, 'and that is reported too');
-      CheckTrue(Pos('no contest year', capture.Lines[1]) > 0, 'as no year: ' + capture.Lines[1]);
+      CheckTrue(Pos('no contest year', capture.Line(1)) > 0, 'as no year: ' + capture.Line(1));
    finally
       lg.RemoveAppender(keep);
       lg.Level := savedLevel;

@@ -23,6 +23,31 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-26 -- THE NEW MEXICO QSO PARTY (issue #125)
+
+A new by-id contest (`NM-QSO-PARTY`). Unit-tested (`uTestContestNewMexicoQP`,
+including a real-engine run for both entrants); nothing sees the screen, the
+multiplier windows or a written file.
+
+- [ ] **In New Mexico** (New Contest, MY STATE `BER`). Type `599 DC` for W3DC:
+      EXPECT the multiplier shown is **MD**; `599 NM`: a new multiplier (NM is
+      one of the 50 states). Work LY2ZZ `599 LY`: a new **DX** multiplier, and
+      the remaining-countries window lists DXCC entities but not K, VE, KH6 or
+      KL (KP4 is listed).
+- [ ] **The Cabrillo file** (summary window: CATEGORY-POWER, LOCATION `NM`).
+      EXPECT the writer refuses to start without LOCATION; LY2ZZ's line ends
+      `599 DX`, not `599 LY` or blank; an FT8 QSO's mode column is `RY`; an FM
+      QSO's is `PH`; `CLAIMED-SCORE` is points x multipliers x the power
+      multiplier (QRP 5, LOW 2, HIGH 1), plus 250 if W1AW/5 was worked.
+- [ ] **A DX entrant** (MY CALL LY2xxx, no MY STATE): EXPECT the CQ exchange
+      is `5NN LY` (what goes on the air), the ADIF `STX_STRING` carries `LY`,
+      and the Cabrillo sent column is `DX`.
+- [ ] **W1AW/5.** Work `W1AW/5` from two counties on one band and mode: two
+      QSOs, the bonus 250 once. Logged as `W1AW/5/BER` it is NOT paid today --
+      the base matches the bare call only (South Carolina's #111 fixes it).
+- [ ] **A county line of two.** `599 SOC/SIE` logs two QSOs; three counties
+      are refused.
+
 ## Added 2026-10-26 -- THE OKLAHOMA QSO PARTY (issue #126)
 
 A new by-id contest (`OK-QSO-PARTY`). Unit-tested (`uTestContestOklahomaQP`,

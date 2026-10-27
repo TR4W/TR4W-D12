@@ -49,6 +49,13 @@ type
       constructor Create(const aName: string); reintroduce;
       destructor Destroy; override;
       property Lines: TStringList read FLines;
+
+      (* LINE aIndex, or '' when there is none. Index Lines directly and a
+         report that was NOT written raises EStringListError -- which, in a
+         failing run, aborts the whole test binary with no summary and hides
+         every other result (found 2026-10-26, a fail-first mutation of the
+         New Mexico QSO Party's year rule). Ask Line instead. *)
+      function Line(aIndex: integer): string;
    end;
 
 implementation
@@ -70,6 +77,16 @@ end;
 procedure TCaptureAppender.DoAppend(const Message: string);
 begin
    FLines.Add(Message);
+end;
+
+function TCaptureAppender.Line(aIndex: integer): string;
+begin
+   Result := '';
+   if (aIndex >= 0) and
+      (aIndex < FLines.Count) then
+      begin
+      Result := FLines[aIndex];
+      end;
 end;
 
 end.

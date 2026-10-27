@@ -141,7 +141,7 @@ type
       function GetInStateDomesticFileName: string; override;
       function GetFlags: TContestFlags; override;
 
-      (* No county lines -- see the header. *)
+      (* County lines of up to two counties (NY4I) -- see the header. *)
       function GetCountyLineCountiesMax: integer; override;
 
       (* 1 point in every mode -- see the header. Protected, as on

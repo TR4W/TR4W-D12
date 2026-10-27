@@ -130,6 +130,16 @@ function FormatCabrilloFreq(band: BandType; freqHz: LongInt;
 function FormatCabrilloMode(mode: ModeType; extMode: ExtendedModeType;
                             modeOverridesToPhone: Boolean): string;
 
+(* EVERY DIGITAL SUBMODE IS 'RY', AND FM IS 'PH' -- the mode column of a
+   sponsor whose rules say "Modes are PH, CW, or RY. Use RY to designate all
+   digital modes" (the New Mexico QSO Party) or write every digital QSO as
+   RY (the Delaware QSO Party). Otherwise FormatCabrilloMode with FM as
+   phone. Lifted 2026-10-26 from Delaware's CabrilloModeString, word for
+   word, when New Mexico became its second user; a class calls it from its
+   own CabrilloModeString, so it names no contest. Pinned by
+   uTestCabrilloFormat. *)
+function FormatCabrilloModeDigitalAsRY(mode: ModeType; extMode: ExtendedModeType): string;
+
 implementation
 
 uses SysUtils;
@@ -180,6 +190,18 @@ begin
    else
       begin
       Result := tCabrilloModeString[mode];
+      end;
+end;
+
+function FormatCabrilloModeDigitalAsRY(mode: ModeType; extMode: ExtendedModeType): string;
+begin
+   if mode = Digital then
+      begin
+      Result := 'RY';
+      end
+   else
+      begin
+      Result := FormatCabrilloMode(mode, extMode, True);
       end;
 end;
 

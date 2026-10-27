@@ -140,6 +140,8 @@ interface
 
 uses
    VC,
+   (* TLogLogger -- ReportNoTableForYear writes to its caller's logger. *)
+   Log4D,
    uContestBase;
 
 const
@@ -160,6 +162,12 @@ const
 
 type
    TContestStateQSOPartyBase = class(TContestBase)
+   private
+      (* ReportNoTableForYear's latch: has this object reported, and for
+         which year. One latch per object -- every party that reports has
+         ONE year table. Main thread only, as the score is. *)
+      FReportedNoTableForYear: boolean;
+      FReportedNoTableYear: integer;
    protected
       (* IT IS ONE, AND THE CLASS SAYS SO RATHER THAN THE TABLE SAYING SO.
 
@@ -256,6 +264,36 @@ type
       class function LocationOrOwnCountry(const aLocation: string;
                                           const aCountry: CallString): string;
       function SentLocation(const aMy: TMyStationExchange): TMyStationExchange;
+
+      (* A RULE THAT CHANGES BY YEAR, ASKED FOR A YEAR IT HAS NO TABLE FOR,
+         SAYS SO -- a HELPER a party CALLS, never a rule this base applies.
+         Lifted 2026-10-26 from the Idaho QSO Party (its dormant-county
+         table, Q35) and the Nebraska QSO Party (its rare-grid list), which
+         carried the same latch word for word, when the New Mexico QSO Party
+         (its W1AW/5 bonus, "for 2026 only") became the third user.
+
+         THE YEAR IS THE CALLER'S: uContestBase.LogContestYear, the log's
+         year and never the clock. This only REPORTS: the caller pays
+         nothing for such a year, because there is no table to pay from.
+
+         ONE Error per year per object, however often the score is asked
+         (it is asked after every QSO); a different year reports again.
+         AN ERROR, NOT A WARNING: Log4D's root level defaults to Error, so a
+         Warn would not reach tr4w.log on a default station, and a claimed
+         score that leaves out a bonus is worth an operator's attention.
+         Written to aLogger -- the caller's unit logger, so the line names
+         the contest's unit as it always did.
+
+         Year 0 is a log that says nothing about its year (no start time and
+         no dated QSO). aTable names the table ("dormant-county bonus
+         table"), aRule what is left out ("the dormant-county bonus for
+         BUT"), aSource where each year's table comes from. Pinned by
+         uTestContestStateQSOPartyBase. *)
+      procedure ReportNoTableForYear(aLogger: TLogLogger;
+                                     aYear: integer;
+                                     const aTable: string;
+                                     const aRule: string;
+                                     const aSource: string);
    public
       property CountyLineCountiesMax: integer read GetCountyLineCountiesMax;
       property CountyLineAllowed: boolean read GetCountyLineAllowed;
@@ -468,6 +506,37 @@ function TContestStateQSOPartyBase.SentLocation(const aMy: TMyStationExchange): 
 begin
    Result := aMy;
    Result.MyState := LocationOrOwnCountry(aMy.MyState, Station.MyCountry);
+end;
+
+(* Once per year per object -- see the declaration. *)
+procedure TContestStateQSOPartyBase.ReportNoTableForYear(aLogger: TLogLogger;
+                                                         aYear: integer;
+                                                         const aTable: string;
+                                                         const aRule: string;
+                                                         const aSource: string);
+begin
+   if FReportedNoTableForYear and
+      (FReportedNoTableYear = aYear) then
+      begin
+      Exit;
+      end;
+   FReportedNoTableForYear := True;
+   FReportedNoTableYear := aYear;
+
+   if aYear = 0 then
+      begin
+      aLogger.Error(UnicodeFormat(
+         '%s: the log records no contest year (no start time and no dated QSO), ' +
+         'so %s cannot be decided and is NOT in the score.',
+         [DisplayName, aRule]));
+      end
+   else
+      begin
+      aLogger.Error(UnicodeFormat(
+         '%s: TR4W has no %s for the %d contest, so %s is NOT in the score. ' +
+         'Each year''s %s is the sponsor''s (%s) and is added to %s.',
+         [DisplayName, aTable, aYear, aRule, aTable, aSource, string(UnitName)]));
+      end;
 end;
 
 function TContestStateQSOPartyBase.StripsRoverCountyFromCall: boolean;

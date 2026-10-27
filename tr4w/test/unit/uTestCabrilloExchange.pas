@@ -54,6 +54,7 @@ type
       procedure Test_RSTAndContinent;
       procedure Test_RSTDomesticQTH_Else;
       procedure Test_RSTDomesticOrDXQTH;
+      procedure Test_RSTDomesticQTHOrDX;
       procedure Test_QSONumberAndZone;
       procedure Test_RSTZone;
       procedure Test_PreviousQSONumber_PnrCarry;
@@ -376,6 +377,35 @@ begin
    CheckEquals('599 GA     ', HisEx, 'RSTDomesticOrDXQTH HisEx');
 end;
 
+(* CabrilloReceivedRSTDomesticQTHOrDX (2026-10-26, the New Mexico QSO Party:
+   "QTH is three letter NM county abbreviation, or two-letter State/Province
+   abbreviation, or "DX"."): the exporter's HisQTH when the record carries a
+   DomesticQTH, else DX -- whatever was typed for a DX station. The control:
+   CabrilloReceivedRSTQTHDX, given the same typed DX QTH, writes the
+   exporter's (empty) HisQTH. *)
+procedure TCabrilloExchangeTests.Test_RSTDomesticQTHOrDX;
+var rx: ContestExchange; my: TMyStationExchange; pnr: integer; MyEx, HisEx: string;
+begin
+   BeginTest('Test_RSTDomesticQTHOrDX');
+   rx := EmptyRx;  rx.QTHString := 'SAN';  rx.DomesticQTH := 'SAN';  my := EmptyMy;  my.MyState := 'BER';  pnr := 0;
+   Fmt(CabrilloSentRSTStateOrDX, CabrilloReceivedRSTDomesticQTHOrDX, rx, my, '59', '59', 'SAN', '', 1, pnr, MyEx, HisEx);
+   CheckEquals('59  SAN    ', HisEx, 'a county received');
+   rx.QTHString := 'bc';  rx.DomesticQTH := 'BC';
+   Fmt(CabrilloSentRSTStateOrDX, CabrilloReceivedRSTDomesticQTHOrDX, rx, my, '59', '59', 'bc', '', 1, pnr, MyEx, HisEx);
+   CheckEquals('59  bc     ', HisEx, 'the exporter''s HisQTH, as it selected it');
+   rx.QTHString := 'LY';  rx.DomesticQTH := '';
+   Fmt(CabrilloSentRSTStateOrDX, CabrilloReceivedRSTDomesticQTHOrDX, rx, my, '599', '599', '', '', 1, pnr, MyEx, HisEx);
+   CheckEquals('599 DX     ', HisEx, 'a DX station that sent its entity is DX');
+   Fmt(CabrilloSentRSTStateOrDX, CabrilloReceivedRSTDomesticQTHOrDX, rx, my, '599', '599', 'LY', '', 1, pnr, MyEx, HisEx);
+   CheckEquals('599 DX     ', HisEx, 'even with LITERAL DOMESTIC QTH (HisQTH is what was typed)');
+   rx.QTHString := '';
+   Fmt(CabrilloSentRSTStateOrDX, CabrilloReceivedRSTDomesticQTHOrDX, rx, my, '599', '599', '', '', 1, pnr, MyEx, HisEx);
+   CheckEquals('599 DX     ', HisEx, 'nothing typed is DX');
+   rx.QTHString := 'LY';
+   Fmt(CabrilloSentRSTStateOrDX, CabrilloReceivedRSTQTHDX, rx, my, '599', '599', '', '', 1, pnr, MyEx, HisEx);
+   CheckEquals('599        ', HisEx, 'the control: the QTHString test leaves a typed DX QTH blank');
+end;
+
 procedure TCabrilloExchangeTests.Test_QSONumberAndZone;
 var rx: ContestExchange; my: TMyStationExchange; pnr: integer; MyEx, HisEx: string;
 begin
@@ -477,6 +507,7 @@ begin
    Test_RSTAndContinent;
    Test_RSTDomesticQTH_Else;
    Test_RSTDomesticOrDXQTH;
+   Test_RSTDomesticQTHOrDX;
    Test_QSONumberAndZone;
    Test_RSTZone;
    Test_PreviousQSONumber_PnrCarry;

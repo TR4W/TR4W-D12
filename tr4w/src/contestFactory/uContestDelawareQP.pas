@@ -235,7 +235,7 @@ uses
    uCabrilloExchange,
    uADIFExchange,
    uDXMultiplierKey,
-   uCabrilloFormat,   (* FormatCabrilloMode *)
+   uCabrilloFormat,   (* FormatCabrilloModeDigitalAsRY *)
    uContestRegistry;
 
 function DelawarePowerMultiplier(aPower: tCategoryPower): longint;
@@ -457,14 +457,9 @@ end;
 function TContestDelawareQP.CabrilloModeString(aMode: ModeType;
                                                aExtMode: ExtendedModeType): string;
 begin
-   if aMode = Digital then
-      begin
-      Result := 'RY';
-      end
-   else
-      begin
-      Result := FormatCabrilloMode(aMode, aExtMode, True);
-      end;
+   (* Every digital QSO is RY, FM is PH -- the shared helper, lifted from
+      here 2026-10-26. *)
+   Result := FormatCabrilloModeDigitalAsRY(aMode, aExtMode);
 end;
 
 function TContestDelawareQP.BonusPoints(const aTotals: TScoreTotals;

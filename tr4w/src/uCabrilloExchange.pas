@@ -379,6 +379,18 @@ function CabrilloReceivedRSTQTHOrDXQTH(const aMy: TMyStationExchange;
                                        const aQso: ContestExchange;
                                        const aCtx: TCabrilloQSOContext): string;
 
+(* RST and his-QTH when it is a DOMESTIC QTH -- one the session's table knew
+   when the QSO was logged, so the record carries a DomesticQTH -- else 'DX':
+   '%-3s %-7s'. For a sponsor whose QTH column is "county ... or two-letter
+   State/Province abbreviation, or "DX"" while a DX station SENDS its DXCC
+   entity on the air (the New Mexico QSO Party, 2026-10-26): what was typed
+   for such a station ("599 LY") is not written. CabrilloReceivedRSTQTHDX
+   tests QTHString instead, so a typed DX QTH there leaves the column as the
+   exporter's HisQTH -- empty unless LITERAL DOMESTIC QTH. *)
+function CabrilloReceivedRSTDomesticQTHOrDX(const aMy: TMyStationExchange;
+                                            const aQso: ContestExchange;
+                                            const aCtx: TCabrilloQSOContext): string;
+
 (* Zone, serial (the zone-and-serial shape): '  %-4u   %.3d'. *)
 function CabrilloReceivedZoneQSONumber(const aMy: TMyStationExchange;
                                        const aQso: ContestExchange;
@@ -933,6 +945,22 @@ begin
         end;
      end;
   Result := SysUtils.Format('%-3s %-7s', [aCtx.RSTReceived, qth]);
+end;
+
+function CabrilloReceivedRSTDomesticQTHOrDX(const aMy: TMyStationExchange;
+                                            const aQso: ContestExchange;
+                                            const aCtx: TCabrilloQSOContext): string;
+var
+  qth: string;
+begin
+  qth := aCtx.HisQTH;
+  if aQso.DomesticQTH = '' then
+     begin
+     qth := 'DX';
+     end;
+  (* UnicodeFormat: FPC 3.2.2's SysUtils.Format takes AnsiString, and this
+     unit's strings are UnicodeString -- no narrowing added. *)
+  Result := UnicodeFormat('%-3s %-7s', [aCtx.RSTReceived, qth]);
 end;
 
 function CabrilloReceivedZoneQSONumber(const aMy: TMyStationExchange;

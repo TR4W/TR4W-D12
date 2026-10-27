@@ -28,7 +28,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   class that states only the abstract host state and is never registered (no
   registry walk sees it). Each user's own test pins the outcome through its
   CQ exchange, Cabrillo and ADIF columns; this one pins the rule itself,
-  once, so a change to it is seen here by name. *)
+  once, so a change to it is seen here by name.
+
+  ReportNoTableForYear (2026-10-26): a year-table rule's once-per-year
+  Error, lifted from the Idaho and Nebraska QSO Parties when the New Mexico
+  QSO Party became its third user. Each user's own test pins its outcome
+  through its BonusPoints; this pins the latch and the two messages. *)
 unit uTestContestStateQSOPartyBase;
 
 {$I ..\..\src\tr4w.inc}
@@ -44,31 +49,47 @@ type
       procedure RunAllTests; override;
    private
       procedure Test_ADXEntrantSendsItsOwnCountry;
+      procedure Test_AYearWithNoTableIsReportedOncePerYear;
    end;
 
 implementation
 
 uses
    SysUtils,
+   Log4D,
    VC,
    uContestBase,
    uContestStateQSOPartyBase,
-   uTestContestObjects;
+   uTestContestObjects,
+   uTestLogCapture;
 
 type
-   (* A PARTY WITH NOTHING OF ITS OWN BUT A HOST STATE (abstract on the base),
-      exposing the two protected helpers. Never registered. *)
+   (* A PARTY WITH NOTHING OF ITS OWN BUT A HOST STATE (abstract on the base)
+      and a display name for the report's text, exposing the protected
+      helpers. Never registered. *)
    TSentLocationProbe = class(TContestStateQSOPartyBase)
    protected
       function GetHostState: string; override;
+      function GetDisplayName: string; override;
    public
       function Location(const aLocation: string; const aCountry: CallString): string;
       function Sent(const aMy: TMyStationExchange): TMyStationExchange;
+      procedure Report(aLogger: TLogLogger; aYear: integer);
    end;
 
 function TSentLocationProbe.GetHostState: string;
 begin
    Result := 'XX';
+end;
+
+function TSentLocationProbe.GetDisplayName: string;
+begin
+   Result := 'Probe QSO Party';
+end;
+
+procedure TSentLocationProbe.Report(aLogger: TLogLogger; aYear: integer);
+begin
+   ReportNoTableForYear(aLogger, aYear, 'probe table', 'the probe bonus', 'probe.example');
 end;
 
 function TSentLocationProbe.Location(const aLocation: string; const aCountry: CallString): string;
@@ -140,9 +161,68 @@ begin
    end;
 end;
 
+(* A YEAR-TABLE RULE WITH NO TABLE FOR THE LOG'S YEAR SAYS SO, ONCE PER YEAR
+   PER OBJECT: one Error naming the contest, the year, what is left out of
+   the score, where the table comes from and the unit to add it to; asked
+   again for that year, nothing; another year, another line; year 0 (a log
+   with no year) its own text. A second object has its own latch. Written to
+   the logger the caller hands in. *)
+procedure TContestStateQSOPartyBaseTests.Test_AYearWithNoTableIsReportedOncePerYear;
+var
+   capture: TCaptureAppender;
+   keep: ILogAppender;
+   lg: TLogLogger;
+   savedLevel: TLogLevel;
+   probe: TSentLocationProbe;
+   other: TSentLocationProbe;
+begin
+   BeginTest('Test_AYearWithNoTableIsReportedOncePerYear');
+   capture := TCaptureAppender.Create('capture');
+   keep := capture;
+   lg := TLogLogger.GetLogger('uTestContestStateQSOPartyBase.Probe');
+   savedLevel := lg.Level;
+   lg.Level := Log4D.Error;
+   lg.AddAppender(keep);
+   probe := TSentLocationProbe.Create(NoContest);
+   other := TSentLocationProbe.Create(NoContest);
+   try
+      probe.Report(lg, 2031);
+      CheckEquals(1, capture.Lines.Count, 'a year with no table is reported');
+      (* A substring: the appender's layout may frame the message. *)
+      CheckTrue(Pos('Probe QSO Party: TR4W has no probe table for the 2031 contest, so the probe bonus ' +
+                    'is NOT in the score. Each year''s probe table is the sponsor''s (probe.example) ' +
+                    'and is added to uTestContestStateQSOPartyBase.', capture.Line(0)) > 0,
+                'the contest, the year, the rule, the source and the unit: ' + capture.Line(0));
+
+      probe.Report(lg, 2031);
+      probe.Report(lg, 2031);
+      CheckEquals(1, capture.Lines.Count, 'once per year, however often the score is asked');
+
+      probe.Report(lg, 2032);
+      CheckEquals(2, capture.Lines.Count, 'another year is reported again');
+      CheckTrue(Pos('2032', capture.Line(1)) > 0, 'naming it: ' + capture.Line(1));
+
+      probe.Report(lg, 0);
+      CheckEquals(3, capture.Lines.Count, 'a log with no year is reported');
+      CheckTrue(Pos('Probe QSO Party: the log records no contest year (no start time and no dated QSO), ' +
+                    'so the probe bonus cannot be decided and is NOT in the score.', capture.Line(2)) > 0,
+                'as such: ' + capture.Line(2));
+
+      other.Report(lg, 2031);
+      CheckEquals(4, capture.Lines.Count, 'a second object has its own latch');
+   finally
+      lg.RemoveAppender(keep);
+      lg.Level := savedLevel;
+      keep := nil;
+      other.Free;
+      probe.Free;
+   end;
+end;
+
 procedure TContestStateQSOPartyBaseTests.RunAllTests;
 begin
    Test_ADXEntrantSendsItsOwnCountry;
+   Test_AYearWithNoTableIsReportedOncePerYear;
 end;
 
 end.

@@ -1,0 +1,39 @@
+New Mexico QSO Party -- the 33 New Mexico counties, each its own multiplier.
+Three-letter codes from the sponsor's county check sheet (2026 NMQP Form Packet, last modified 09 April 2026), fetched 2026-10-26.
+No county maps to the state: the rules count each NM county as a multiplier of its own for every entrant.
+No INCLUDE here: an out-of-state entrant's table holds only the counties (the host-area rule reads it).
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
+
+BER = BER,^Bernalillo
+CAT = CAT,^Catron
+CHA = CHA,^Chaves
+CIB = CIB,^Cibola
+COL = COL,^Colfax
+CUR = CUR,^Curry
+DEB = DEB,^De Baca
+DON = DON,^Dona Ana
+EDD = EDD,^Eddy
+GRA = GRA,^Grant
+GUA = GUA,^Guadalupe
+HAR = HAR,^Harding
+HID = HID,^Hidalgo
+LEA = LEA,^Lea
+LIN = LIN,^Lincoln
+LOS = LOS,^Los Alamos
+LUN = LUN,^Luna
+MCK = MCK,^McKinley
+MOR = MOR,^Mora
+OTE = OTE,^Otero
+QUA = QUA,^Quay
+RIO = RIO,^Rio Arriba
+ROO = ROO,^Roosevelt
+SAN = SAN,^Sandoval
+SFE = SFE,^Santa Fe
+SIE = SIE,^Sierra
+SJU = SJU,^San Juan
+SMI = SMI,^San Miguel
+SOC = SOC,^Socorro
+TAO = TAO,^Taos
+TOR = TOR,^Torrance
+UNI = UNI,^Union
+VAL = VAL,^Valencia

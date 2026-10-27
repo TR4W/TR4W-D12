@@ -146,7 +146,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     earliest QSO's date -- and never by today's clock, so a 2026 log rescored
     in 2029 still pays the 2026 list. A year with no table PAYS NO COUNTY
     BONUS, because there is no list to pay from, and SAYS SO: an Error in
-    tr4w.log naming the year, once per year per session (ReportNoTable). A
+    tr4w.log naming the year, once per year per session (the party base's
+    ReportNoTableForYear, lifted from here 2026-10-26). A
     silent zero would be a wrong claimed score nobody could see.
     TContestIdahoQP.HasDormantCountyTable is what the yearly pin test asks.
 
@@ -185,13 +186,6 @@ uses
 
 type
    TContestIdahoQP = class(TContestStateQSOPartyBase)
-   private
-      (* THE "NO TABLE" REPORT'S LATCH -- see ReportNoTable. The score is
-         asked after every QSO, so the Error is written once per year per
-         session, not once per QSO. Main thread only, as the score is. *)
-      FReportedNoTable: boolean;
-      FReportedNoTableYear: integer;
-      procedure ReportNoTable(aYear: integer; const aCounty: string);
    protected
       (* PROTECTED, MATCHING THE BASE -- callers use the property; descendants
          override the getter. *)
@@ -576,7 +570,10 @@ begin
    year := LogContestYear(aTotals, aView);
    if not IdahoBonusCountyPoints(year, county, countyBonus) then
       begin
-      ReportNoTable(year, county);
+      (* The party base's once-per-year Error (lifted 2026-10-26). *)
+      ReportNoTableForYear(logger, year, 'dormant-county bonus table',
+                           'the dormant-county bonus for ' + county,
+                           'idahoqsoparty.org/idaho_rovers.htm');
       Exit;
       end;
 
@@ -588,37 +585,6 @@ var
    points: longint;
 begin
    Result := IdahoBonusCountyPoints(aYear, '', points);
-end;
-
-(* AN ERROR, NOT A WARNING: Log4D's root level defaults to Error, so a Warn
-   would not reach tr4w.log on a default station, and a claimed score that
-   leaves out a bonus is worth an operator's attention. Year 0 is a log that
-   says nothing about its year (no start_time and no dated QSO). *)
-procedure TContestIdahoQP.ReportNoTable(aYear: integer; const aCounty: string);
-begin
-   if FReportedNoTable and
-      (FReportedNoTableYear = aYear) then
-      begin
-      Exit;
-      end;
-   FReportedNoTable := True;
-   FReportedNoTableYear := aYear;
-
-   if aYear = 0 then
-      begin
-      logger.Error(Format(
-         'Idaho QSO Party: the log records no contest year (no start time and no dated QSO), ' +
-         'so the dormant-county bonus for %s cannot be decided and is NOT in the score.',
-         [aCounty]));
-      end
-   else
-      begin
-      logger.Error(Format(
-         'Idaho QSO Party: TR4W has no dormant-county bonus table for the %d contest, ' +
-         'so the bonus for %s is NOT in the score. Each year''s table is the sponsor''s ' +
-         '(idahoqsoparty.org/idaho_rovers.htm) and is added to uContestIdahoQP.',
-         [aYear, aCounty]));
-      end;
 end;
 
 (* A DX MULTIPLIER AT EVERY STATION -- M11 S4 part 2, 2026-10-14: the trait
