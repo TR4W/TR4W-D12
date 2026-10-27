@@ -20,8 +20,10 @@
   TSpotRecord (a TDateTime inside it), and ContestExchange is naturally aligned
   too. Their size is therefore a compiler and target decision, not a property of
   the protocol. The literals below were measured on i386-win32. The unit tests
-  also run on the Linux and macOS CI jobs, so a different answer there fails
-  here, by name, which is the point of running them. *)
+  also run on the Linux CI job, where every literal held on x86_64 (dispatch
+  run 40486524295, 2026-10-27), so a different answer there fails here, by
+  name. The macOS job does not run the suite yet (issue 141), so aarch64 is
+  unmeasured. *)
 unit uTestNetWireSizes;
 
 {$I ..\..\src\tr4w.inc}
