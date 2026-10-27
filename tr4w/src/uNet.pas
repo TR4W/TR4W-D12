@@ -180,6 +180,28 @@ function SendToNet(var buf; Len: integer; aTag: Int64 = 0): integer;
   that did not open. *)
 procedure SendParameterToNetwork(const aCommand, aValue: string);
 
+(* THE FOUR RECORDS WHOSE ID WAS LOST (2026-10-27).
+
+  Each procedure owns one record and sets its id word on EVERY send, as
+  SendParameterToNetwork does, so an id cannot be forgotten by a caller or lost
+  with a window. A caller never holds the record. All four do nothing when the
+  link is down. The packets are posted like any other (SendToNet), so the guard
+  there still judges them.
+
+    SendDXSpotToNet            a spot, to the other positions (uSpots)
+    SendTimeSyncToNet          this station's UTC, for the others to set their clocks
+    SendIntercomToNet          one line of text to the other positions
+    SendSpotViaNetworkToNet    "send this spot text to your cluster" -- the
+                               spot form's path when no cluster is connected here *)
+procedure SendDXSpotToNet(const aSpot: TSpotRecord);
+procedure SendTimeSyncToNet;
+procedure SendIntercomToNet(const aText: string);
+procedure SendSpotViaNetworkToNet(const aSpotText: string);
+
+(* How many distinct refused (id, length) pairs SendToNet has reported on this
+  link. A test reads it; nothing else does. *)
+function NetSendRefusalsReported: integer;
+
 { IS THE MULTI-OP LINK UP?  Replaces `NetSocket <> 0`, which three other units
   were reading directly. }
 function NetIsConnected: boolean;
@@ -470,12 +492,14 @@ var
   MyStationState                        : TStationState        ;// = (ssID: NET_STATIONSTATUS_ID);
   NetSynQSOInformation                  : TNetSynQSOInformation;// = (qsID: NET_TAKESERVERQSO_ID);//262
   NetQSOInfoToSend                      : TNetQSOInformation   ;// = (qiID: NET_QSOINFO_ID);//264
-  NetDXSpot                             : TNetDXSpot           ;// = (dsID: NET_NETWORKDXSPOT_ID);//98
-  NetTimeSync                           : TNetTimeSync         ;// = (tsID: NET_TIMESYN_ID);//20
-  NetIntercomMessage                    : TIntercomMessage     ;// = (imID: NET_INTERCOMMESSAGE_ID);//84
+  (* NetDXSpot, NetTimeSync, NetIntercomMessage and SendSpotViaNetwork are no
+    longer global (2026-10-27). Their id initialisers were commented out when
+    the Network window stopped assigning them, and nothing else did, so every
+    one of those packets left with id 0 and the server dropped the link. Each
+    now lives in the implementation behind a Send...ToNet procedure that sets
+    its id on every send. *)
   ParameterToNetwork                    : TParameterToNetwork  ;// = (pnID: NET_PARAMETER_ID; );//514
-  SendSpotViaNetwork                    : TSendSpotViaNetwork  ;// = (vnID: NET_SPOTVIANETWORK_ID);//48
-  ServerMessage                         : TServerMessage        = (smID: NET_SERVERMESSAGE_ID);//8
+  ServerMessage                        : TServerMessage        = (smID: NET_SERVERMESSAGE_ID);//8
 {*)}
   NetThreadID                           : TThreadID;
   StatusArray                           : array[1..26] of TStationState;
@@ -588,6 +612,9 @@ var
     settles (uNetResend). *)
   GNetDelivery:      TNetDelivery = nil;
   GDuplicateQsos:    integer = 0;
+  (* Which refused outbound packets (SendToNet's guard) have been reported on
+    this link. Thread-safe; reset when a link comes up. *)
+  GSendRefusals:     TNetSendRefusals = nil;
 
 const
   (* An older server drops the link within a read or two of the HELLO; an
@@ -1407,6 +1434,7 @@ procedure NetBeginLinkSession;
 begin
    GPeers.Clear;
    ForgetPeerContestNotices;
+   GSendRefusals.Forget;
    FServerHelloSeen := False;
    (* AND NOTHING HAS BEEN CAUGHT UP YET: the QSOs logged while the last link
      was down go once the server's HELLO has come on THIS one. These are the
@@ -2340,6 +2368,92 @@ begin
       end;
 end;
 
+procedure SendDXSpotToNet(const aSpot: TSpotRecord);
+var
+   packet: TNetDXSpot;
+begin
+   if not NetIsConnected then
+      begin
+      Exit;
+      end;
+
+   (* A LOCAL, built whole: there is no earlier value for a tail to survive in,
+     and no global whose id someone has to remember to set. *)
+   packet := Default(TNetDXSpot);
+   packet.dsID := NET_NETWORKDXSPOT_ID;
+   packet.dsSpot := aSpot;
+   SendToNet(packet, SizeOf(packet));
+end;
+
+procedure SendTimeSyncToNet;
+var
+   packet: TNetTimeSync;
+begin
+   if not NetIsConnected then
+      begin
+      Exit;
+      end;
+
+   packet := Default(TNetTimeSync);
+   packet.tsID := NET_TIMESYN_ID;
+   (* WHAT GOES ON THE WIRE IS UNCHANGED: tsTime is the raw bytes of a packed
+     record, UTC, and the receiving arm range-checks it before it sets a clock.
+     See TF.FillSystemTimeUTC. *)
+   TF.FillSystemTimeUTC(packet.tsTime);
+   SendToNet(packet, SizeOf(packet));
+end;
+
+procedure SendIntercomToNet(const aText: string);
+var
+   packet: TIntercomMessage;
+begin
+   if (aText = '') or (not NetIsConnected) then
+      begin
+      Exit;
+      end;
+
+   (* imMessage is a ShortString inside a record sent as bytes: a fresh record
+     leaves no tail of an earlier, longer message behind, and the assignment
+     truncates at 80. *)
+   packet := Default(TIntercomMessage);
+   packet.imID := NET_INTERCOMMESSAGE_ID;
+   packet.imSender := Settings.Computer.Id;
+   packet.imMessage := ShortString(AnsiString(aText));
+   SendToNet(packet, SizeOf(packet));
+end;
+
+procedure SendSpotViaNetworkToNet(const aSpotText: string);
+var
+   packet: TSendSpotViaNetwork;
+   text: AnsiString;
+   i: integer;
+begin
+   if (aSpotText = '') or (not NetIsConnected) then
+      begin
+      Exit;
+      end;
+
+   (* vnMessage is a FIXED 46-byte array: the record starts zeroed, and the copy
+     stops one short of the end so the terminator survives. *)
+   packet := Default(TSendSpotViaNetwork);
+   packet.vnID := NET_SPOTVIANETWORK_ID;
+   text := AnsiString(aSpotText);
+   for i := 1 to Length(text) do
+      begin
+      if i > SizeOf(packet.vnMessage) - 1 then
+         begin
+         Break;
+         end;
+      packet.vnMessage[i - 1] := text[i];
+      end;
+   SendToNet(packet, SizeOf(packet));
+end;
+
+function NetSendRefusalsReported: integer;
+begin
+   Result := GSendRefusals.Count;
+end;
+
 (* WHAT A PACKET IS CALLED IN THE LOG.  Every record of this protocol opens
   with a Word id (VC: NET_*_ID); the one exception, NET_LOGINFO_MESSAGE, is a
   DWORD whose low word is not an id and falls through to the hex form. *)
@@ -2382,12 +2496,48 @@ end;
   later is reported through NetPacketLost (and a good one through
   NetPacketWritten, with aTag). *)
 function SendToNet(var buf; Len: integer; aTag: Int64 = 0): integer;
+var
+   id: Word;
 begin
-  Result := 0;
-  if NetIsConnected then
-     begin
-     Result := NetClient.Send(NetPacketKind(buf, Len), buf, Len, aTag);
-     end;
+   Result := 0;
+   if not NetIsConnected then
+      begin
+      Exit;
+      end;
+
+   (* THE GUARD (2026-10-27). This is the only caller of NetClient.Send, so it is
+     the one place every packet passes. A packet whose first Word is not an id
+     the framing table knows, or whose length is not that message's size, is
+     REFUSED: nothing is posted, the result is 0, and the first time each
+     distinct (id, length) is seen on a link an Error names it.
+
+     Why a refusal and not a pass-through: such a packet makes the server lose
+     the stream and drop the connection, and the reconnect then resends and
+     catches up, so one bad packet becomes a link that flaps once per send. That
+     is how every DX spot, time sync and intercom line behaved from 2026-08-25
+     (id 0, the right size). No caller sends a raw non-protocol buffer; the only
+     one that existed, LogNet.SendMultiMessage (K1EA network text), has no live
+     caller. There is deliberately no bypass. *)
+   id := 0;
+   if Len >= SizeOf(Word) then
+      begin
+      id := Word(buf);
+      end;
+
+   if not OutboundPacketIsWellFormed(id, Len) then
+      begin
+      if GSendRefusals.FirstSighting(id, Len) and (logger <> nil) then
+         begin
+         logger.Error('[Net] REFUSED to send a malformed packet: id %d ($%.4x), ' +
+                      '%d bytes (that id''s record is %d bytes; 0 = not a known ' +
+                      'id). Nothing was sent. A record sent with its id word ' +
+                      'unassigned looks exactly like this.',
+                      [id, id, Len, NetMessageSize(id)]);
+         end;
+      Exit;
+      end;
+
+   Result := NetClient.Send(NetPacketKind(buf, Len), buf, Len, aTag);
 end;
 
 function NetIsConnected: boolean;
@@ -2891,6 +3041,7 @@ initialization
   GNetLock    := SyncObjs.TCriticalSection.Create;
   GNetDrainer := TNetDrainer.Create;
   GPeers      := TNetPeers.Create;
+  GSendRefusals := TNetSendRefusals.Create;
   GNetDelivery := TNetDelivery.Create;
 
   (* OWNED HERE NOW, not created in uProgramMain's CreateEvent block with the
@@ -2908,6 +3059,7 @@ finalization
     the lock, or about to take it, when it goes. *)
   FreeAndNil(GNetDrainer);
   FreeAndNil(GPeers);
+  FreeAndNil(GSendRefusals);
   FreeAndNil(GNetDelivery);
   FreeAndNil(GNetLock);
   FreeAndNil(tNet_Event);

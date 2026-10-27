@@ -614,6 +614,7 @@ uses
    uTestNetWireSizes in 'uTestNetWireSizes.pas',
    uTestNetHello in 'uTestNetHello.pas',
    uTestNetResend in 'uTestNetResend.pas',
+   uTestNetClientPackets in 'uTestNetClientPackets.pas',
    uTestNetCatchUp in 'uTestNetCatchUp.pas',
    uTestNetLink in 'uTestNetLink.pas',
    uDXSpotParse         in '..\..\src\uDXSpotParse.pas',
@@ -1008,6 +1009,7 @@ begin
    RegisterSuite(TTestNetWireSizes.Create('NetWireSizes'));
    RegisterSuite(TTestNetHello.Create('NetHello'));
    RegisterSuite(TNetResendTests.Create('NetResend'));
+   RegisterSuite(TNetClientPacketTests.Create('NetClientPackets'));
    RegisterSuite(TNetCatchUpTests.Create('NetCatchUp'));
    RegisterSuite(TTestADIFExchange.Create('ADIFExchange'));
    RegisterSuite(TCallSignRoutinesTests.Create('CallSignRoutines'));

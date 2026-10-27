@@ -5172,8 +5172,7 @@ begin
            NET_TIMESYN_ID) range-checks the fields before it sets the clock. A
            different layout, or a local-time value, would be a silent
            cross-version protocol break rather than a visible failure. *)
-         TF.FillSystemTimeUTC(NetTimeSync.tsTime);
-         SendToNet(NetTimeSync, SizeOf(NetTimeSync));
+         SendTimeSyncToNet;
          end;
 
     menu_alt_flushlogtodisk:
@@ -5429,15 +5428,8 @@ begin
 
     menu_send_message:
       begin
-        NetIntercomMessage.imSender := Settings.Computer.Id;
-        FillChar(NetIntercomMessage.imMessage, SizeOf(NetIntercomMessage.imMessage), 0);
         tInputDialogLowerCase := True;
-        NetIntercomMessage.imMessage :=
-          QuickEditResponse(TC_MESSAGETOSENDVIANETWORK, 80);
-        if NetIntercomMessage.imMessage <> '' then
-           begin
-           SendToNet(NetIntercomMessage, SizeOf(NetIntercomMessage));
-           end;
+        SendIntercomToNet(QuickEditResponse(TC_MESSAGETOSENDVIANETWORK, 80));
       end;
 
     menu_ctrl_ct1bohscreen:

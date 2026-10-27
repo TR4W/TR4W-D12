@@ -528,6 +528,30 @@ kept tail, an unknown id, the sentinel cut at 1-3 bytes). **The record senders (
 a packed V1 record and that parameter is where its layout becomes the
 encoding (P14, skipped for V1).
 
+**Every packet the client sends is judged at `SendToNet`, and each record's id is set by
+its sender (2026-10-27).** From 2026-08-25 the DX spot, time sync, intercom line and
+spot-via-network left with a leading id of ZERO: four global records had their id
+initialisers commented out when the Network window (whose WM_INITDIALOG set them) became
+a form. The server cannot frame past an unknown id and drops the connection, so the link
+flapped once per spot (reconnect, resend, catch-up). Nothing saw it: netprobe builds its
+own packets, `uTestNetWireSizes` checks TYPES, and no test had ever read a byte the
+CLIENT wrote. **THE LESSON: every record the client sends must be captured from the
+client's own send path -- types and probes cannot see a missing id.**
+`uTestNetClientPackets` does that (real uNet, `TNetClient.CreateWithWriter`, a stub that
+keeps the bytes). The fix is two layers: (1) `uNet.SendDXSpotToNet`, `SendTimeSyncToNet`,
+`SendIntercomToNet`, `SendSpotViaNetworkToNet` each build a LOCAL record and set its id on
+every send (as `SendParameterToNetwork`, `SendStationStatus`, `SendMessageStatus` and
+`SendRecordToServer` always did) -- the four globals are gone, so a new caller cannot
+forget; (2) `SendToNet` refuses a packet whose first Word is not an id
+`uNetFraming.NetMessageSize` knows or whose length is not that size
+(`OutboundPacketIsWellFormed`), returns 0, and logs an Error once per distinct
+(id, length) per link (`TNetSendRefusals`, reset by `NetBeginLinkSession`). There is no
+bypass: the only raw send that existed, `LogNet.SendMultiMessage` (K1EA text), has no live
+caller, and the 4-byte log-info sentinel is not sent through `SendToNet`. **A new record
+type needs an entry in `NetMessageSize` before it can be sent at all.** Out of scope but
+real: `MyStationState` is one global written from the main and the radio polling thread, so
+the record can tear (the id is fine); `SendMessageStatus`'s local record is not zeroed.
+
 `tr4wserver.ini` belongs to a different program and is out of scope for the JSON
 settings work.
 

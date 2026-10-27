@@ -59,6 +59,29 @@ B = Mint), NETWORK AUTO CONNECT off, a throwaway log of the contest.
 Capture for any failure: `tr4w.log` from both stations (the `[Net]` lines),
 the server's log (`tr4wserver.log` or the Python `--log-file`), and the time.
 
+**Added 2026-10-27 after the first live link: DX SPOTS, TIME SYNC, INTERCOM AND
+SPOT-VIA-NETWORK (a defect found on the bench, fixed in the tree, UNPROVEN
+LIVE).** From 2026-08-25 until this fix the client sent all four with an id of
+ZERO, so a server (Python: "unknown or zero-size message ID 0"; `tr4wserver`
+since `429de246`) dropped the link on every one, and the reconnect, resend and
+catch-up ran once per spot. The unit tests (`uTestNetClientPackets`) now read
+the first Word and length of what the client's own senders write, but only a
+real link says the server keeps the connection. Run this with BOTH servers, after
+item 1:
+
+- [ ] **A spot crosses and the link stays up.** With a cluster connected at A
+      (or a spot added at A), watch B's band map. EXPECT the spot on B, no
+      `unknown or zero-size message ID` line in the server log, no
+      `Disconnecting client` after the spot, and `tr4w.log` at A with no
+      reconnect following it. 20 spots in a minute must not flap the link.
+- [ ] **Intercom, time sync, spot form.** Net > Send message from A (EXPECT it
+      at B), the time-sync menu row if the server allows it (EXPECT B's clock
+      set only if it permits, and the link stays up), and the Send Spot form
+      with no cluster connected at A (EXPECT B's cluster command gets the text).
+- [ ] **Nothing refused.** `tr4w.log` at either station has no
+      `REFUSED to send a malformed packet` line. If one appears it names the id
+      and size of a record that would have broken the link; capture it.
+
 ---
 
 ## Added 2026-10-27 -- A STATION THAT COMES UP LATE CATCHES UP FROM THE SERVER (Phase 1, C6)

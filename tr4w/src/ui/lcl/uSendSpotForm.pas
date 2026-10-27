@@ -81,7 +81,7 @@ uses
   LogStuff,     // CallWindowString
   LogEdit,      // VisibleLog.LastEntry
   LogRadio,     // ActiveRadioPtr
-  uNet,         // SendSpotViaNetwork, SendToNet
+  uNet,         // SendSpotViaNetworkToNet
   uTelnet,      // TelnetIsConnected, SendViaTelnetSocket
   MainUnit,     // logger
   Log4D;
@@ -157,7 +157,6 @@ end;
 procedure TfrmSendSpot.btnOKClick(Sender: TObject);
 var
   spot: AnsiString;
-  n: integer;
 begin
    // Byte-for-byte as the pointer version built it: 'DX', then each field with
    // exactly one leading space whether or not the field is empty.
@@ -172,21 +171,8 @@ begin
       end
    else
       begin
-      // The network record's message field is a FIXED 46-byte array and the
-      // original zeroed it before copying, so a shorter spot could not leave the
-      // tail of a longer one behind. Same here, and the copy is bounded at
-      // SizeOf - 1 so the terminator survives.
-      FillChar(SendSpotViaNetwork.vnMessage, SizeOf(SendSpotViaNetwork.vnMessage), 0);
-      n := Length(spot);
-      if n > SizeOf(SendSpotViaNetwork.vnMessage) - 1 then
-         begin
-         n := SizeOf(SendSpotViaNetwork.vnMessage) - 1;
-         end;
-      if n > 0 then
-         begin
-         Move(spot[1], SendSpotViaNetwork.vnMessage, n);
-         end;
-      SendToNet(SendSpotViaNetwork, SizeOf(SendSpotViaNetwork));
+      // uNet builds the fixed 46-byte record, sets its id and bounds the copy.
+      SendSpotViaNetworkToNet(spot);
       end;
 
    Close;

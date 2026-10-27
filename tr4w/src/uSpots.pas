@@ -322,8 +322,7 @@ begin
      (not SpotCallIsCQMarker(Spot.FCall))  and
      (NetIsConnected)                      then
      begin
-     NetDXSpot.dsSpot := Spot;
-     SendToNet(NetDXSpot, SizeOf(NetDXSpot));
+     SendDXSpotToNet(Spot);
      end;
 
 end;

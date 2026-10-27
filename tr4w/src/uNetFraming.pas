@@ -49,6 +49,7 @@ unit uNetFraming;
 interface
 
 uses
+   SyncObjs,    (* the refusal latch is touched from more than one thread *)
    VC,
    uNetHello;   (* THelloMessage -- the size of the first message *)
 
@@ -66,6 +67,43 @@ type
   0 IS THE IMPORTANT ANSWER.  It is what tells the caller it cannot advance,
   which is the difference between reporting a desync and spinning on it. }
 function NetMessageSize(const aId: word): integer;
+
+(* IS THIS A PACKET A STATION MAY PUT ON THE LINK?  (2026-10-27)
+
+  True only when aLen is at least the id Word, the id is one NetMessageSize
+  knows, and aLen is exactly that message's size. Every record this client
+  sends is a packed record that opens with its own id; one whose id was never
+  assigned goes out as 00 00, and the server cannot frame the stream past it
+  and drops the connection. That is what happened to every DX spot, time sync,
+  intercom line and spot-via-network from 2026-08-25: the types were right, the
+  sizes were right, and the id was zero. The check is made at the one funnel
+  (uNet.SendToNet) so a record added later cannot forget. *)
+function OutboundPacketIsWellFormed(const aId: word; const aLen: integer): boolean;
+
+type
+   (* WHICH REFUSED PACKETS HAVE ALREADY BEEN REPORTED.  A refused packet is
+     reported once per distinct (id, length) per link, not once per packet: the
+     station status goes out many times a second and one broken record would
+     otherwise fill the log. Thread-safe -- SendToNet is called from the main
+     thread and from the radio polling thread. *)
+   TNetSendRefusals = class
+   private
+      FLock: TCriticalSection;
+      FKeys: array of Int64;
+      FCount: integer;
+   public
+      constructor Create;
+      destructor Destroy; override;
+
+      (* True the FIRST time this (id, length) is seen since Forget. *)
+      function FirstSighting(const aId: word; const aLen: integer): boolean;
+
+      (* A new link: report again. *)
+      procedure Forget;
+
+      (* How many distinct (id, length) pairs have been reported. *)
+      function Count: integer;
+   end;
 
 (* Walks one received buffer.
 
@@ -165,6 +203,83 @@ begin
       // guessing a record for it would put a wrong size in the one table that
       // is supposed to be right.
       Result := 0;
+   end;
+end;
+
+function OutboundPacketIsWellFormed(const aId: word; const aLen: integer): boolean;
+var
+   size: integer;
+begin
+   Result := False;
+   if aLen < SizeOf(word) then
+      begin
+      Exit;
+      end;
+
+   size := NetMessageSize(aId);
+   Result := (size > 0) and (aLen = size);
+end;
+
+constructor TNetSendRefusals.Create;
+begin
+   inherited Create;
+   FLock := TCriticalSection.Create;
+end;
+
+destructor TNetSendRefusals.Destroy;
+begin
+   FLock.Free;
+   inherited Destroy;
+end;
+
+function TNetSendRefusals.FirstSighting(const aId: word; const aLen: integer): boolean;
+var
+   key: Int64;
+   i: integer;
+begin
+   (* The length goes in the low 32 bits as it is, so a negative length is a
+     distinct key rather than a collision with a large one. *)
+   key := (Int64(aId) shl 32) or Int64(Cardinal(aLen));
+   Result := True;
+   FLock.Enter;
+   try
+      for i := 0 to FCount - 1 do
+         begin
+         if FKeys[i] = key then
+            begin
+            Result := False;
+            Exit;
+            end;
+         end;
+
+      if FCount = Length(FKeys) then
+         begin
+         SetLength(FKeys, FCount + 8);
+         end;
+      FKeys[FCount] := key;
+      Inc(FCount);
+   finally
+      FLock.Leave;
+   end;
+end;
+
+procedure TNetSendRefusals.Forget;
+begin
+   FLock.Enter;
+   try
+      FCount := 0;
+   finally
+      FLock.Leave;
+   end;
+end;
+
+function TNetSendRefusals.Count: integer;
+begin
+   FLock.Enter;
+   try
+      Result := FCount;
+   finally
+      FLock.Leave;
    end;
 end;
 

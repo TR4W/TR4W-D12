@@ -717,10 +717,7 @@ procedure scSENDMESSAGE;
 begin
   if scFileName <> '' then
      begin
-     NetIntercomMessage.imSender := Settings.Computer.Id;
-     FillChar(NetIntercomMessage.imMessage, SizeOf(NetIntercomMessage.imMessage), 0);
-     NetIntercomMessage.imMessage := scFileName;
-     SendToNet(NetIntercomMessage, SizeOf(NetIntercomMessage));
+     SendIntercomToNet(scFileName);
      Exit;
      end;
   ProcessMenu(menu_send_message);
