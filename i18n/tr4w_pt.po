@@ -10020,3 +10020,13 @@ msgstr ""
 msgid "Add %d missing QSO(s)"
 msgstr ""
 
+#: uappstrings.snetmenuserverlog
+#, fuzzy
+msgid "Add missing QSOs from the server..."
+msgstr ""
+
+#: uappstrings.sserverlogtitle
+#, fuzzy
+msgid "Server log"
+msgstr ""
+
