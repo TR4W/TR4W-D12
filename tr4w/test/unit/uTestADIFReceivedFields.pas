@@ -147,7 +147,7 @@ begin
             end;
          Inc(i);
          end;
-      Result := Trim(StringReplace(names.Text, #13#10, ' ', [rfReplaceAll]));
+      Result := Trim(StringReplace(names.Text, LineEnding, ' ', [rfReplaceAll]));
    finally
       names.Free;
       end;
@@ -203,7 +203,7 @@ begin
          begin
          names.Add('AGE');
          end;
-      Result := Trim(StringReplace(names.Text, #13#10, ' ', [rfReplaceAll]));
+      Result := Trim(StringReplace(names.Text, LineEnding, ' ', [rfReplaceAll]));
    finally
       names.Free;
       end;

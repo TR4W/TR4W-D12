@@ -41,6 +41,7 @@ type
       FServer:    TIdTCPServer;
       FScript:    TStringList;    // lines the server sends, in order
       FSplitLine: string;         // if set, sent in two halves with a gap
+      FSecondHalf: TEvent;        // set by the test to release the second half
       FLock:      TCriticalSection;
       FReceived:  TStringList;    // lines the client handed us (reader thread)
       FPort:      Word;
@@ -137,7 +138,14 @@ begin
       half := Length(FSplitLine) div 2;
       AContext.Connection.IOHandler.Write(Copy(FSplitLine, 1, half),
                                           IndyTextEncoding_8Bit);
-      Sleep(150);
+      (* THE GAP IS THE TEST'S TO END, NOT A TIMER (issue #141).  A fixed
+        Sleep(150) against the test's own Sleep(80) look raced: the look starts
+        when Connect RETURNS, and on the Linux runner that was late enough for
+        the second half to be on the wire already, so "half a line must NOT be
+        emitted" failed on a client that was working.  The server now holds the
+        second half until the test has looked (10 s at the outside, so a test
+        that dies cannot park this thread). *)
+      FSecondHalf.WaitFor(10000);
       AContext.Connection.IOHandler.Write(
          Copy(FSplitLine, half + 1, MaxInt) + #13#10, IndyTextEncoding_8Bit);
       end;
@@ -279,24 +287,28 @@ begin
    FSplitLine := expected;
 
    FReceived.Clear;
+   FSecondHalf := TEvent.Create(nil, True, False, '');
    FPort := StartServer;
    client := TDXClusterClient.Create;
    try
       client.OnLine := OnClusterLine;
       CheckTrue(client.Connect('127.0.0.1', FPort), 'client connects to fixture');
 
-      // PROOF THAT THE SPLIT IS REAL.  The fixture writes the first half, waits
-      // 150 ms, then writes the rest.  Look during that gap: the first half is
-      // already on the client's socket, and if it produced a line then the two
-      // writes coalesced and this test would be passing for the wrong reason.
-      // Zero lines here means the reader genuinely held an incomplete line and
-      // reassembled it -- which is precisely what the old chunk reader could
-      // not do.
-      Sleep(80);
+      // PROOF THAT THE SPLIT IS REAL.  The fixture writes the first half and
+      // then WAITS for this test to release the rest.  Look during that wait:
+      // the first half is already on the client's socket, and if it produced a
+      // line then the two writes coalesced and this test would be passing for
+      // the wrong reason.  Zero lines here means the reader genuinely held an
+      // incomplete line and reassembled it -- which is precisely what the old
+      // chunk reader could not do.  400 ms is longer than the reader's own
+      // 250 ms idle poll, so the half-line also survives a poll that found
+      // nothing new.
+      Sleep(400);
       CheckEquals(0, ReceivedCount,
                   'half a line must NOT be emitted -- if it is, the reader is '
                   + 'still posting raw chunks');
 
+      FSecondHalf.SetEvent;
       CheckTrue(WaitForLines(1, 5000), 'the split line arrives');
       CheckEquals(1, ReceivedCount, 'ONE line, not two fragments');
       CheckEquals(expected, ReceivedLine(0), 'reassembled byte-identical');
@@ -305,8 +317,10 @@ begin
       CheckTrue(Pos('SM8NIO', ReceivedLine(0)) > 0,
                 'the spotted call survived the boundary');
    finally
+      FSecondHalf.SetEvent;       // never leave the server thread waiting
       client.Free;
       StopServer;
+      FreeAndNil(FSecondHalf);
    end;
 end;
 

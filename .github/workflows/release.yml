@@ -319,6 +319,10 @@ jobs:
   # currently fail exactly one test (the DX-cluster segment test, a 150 ms
   # gap against a 250 ms ReadTimeout), which is a margin rather than a
   # portability defect and reproduces on both.
+  # (STALE since issue #141, 2026-10-27: Linux had nineteen failing tests and a
+  # suite that crashed part-way. Its unit-test verdict is now a gate of its own,
+  # the last step of build-linux. macOS still SKIPs the suite: it has no
+  # display, and the SKIP is printed, not hidden.)
   # =================================================================
   build-linux:
     name: Linux (x86_64)
@@ -369,7 +373,18 @@ jobs:
           # guarded on a shell variable set by stage_app IN THE SAME PROCESS,
           # so a second run reported "there is no application binary to
           # package" with the binary sitting on disk.
+          #
+          # The stage table is deleted first: the runner keeps its workspace,
+          # and a stale row read as this run's verdict would make the unit-test
+          # gate below worse than no gate.
+          rm -f build-out/stage-results.tsv "$RUNNER_TEMP/linux-stage-results.tsv"
           sh tr4w/build/build-unix.sh || true
+          # KEPT OUT OF build-out: the later `build-unix.sh --symbols` step is
+          # its own invocation, and every invocation deletes and rewrites
+          # stage-results.tsv with ITS rows only, so by the time the unit-test
+          # gate runs the file holds just the symbols row (run 40495951500: the
+          # gate read "no row" for a suite that had recorded FAIL).
+          cp build-out/stage-results.tsv "$RUNNER_TEMP/linux-stage-results.tsv" || true
 
       - name: Locate tarball
         id: artifact
@@ -484,6 +499,36 @@ jobs:
         if: ${{ !cancelled() }}
         shell: bash
         run: sh tr4w/build/check-language-res.sh
+
+      # DID THE UNIT TESTS PASS? (GitHub issue #141)
+      #
+      # UNMASKED, LAST, AND READ FROM THE STAGE TABLE. The build step ends in
+      # `|| true`, so a red suite was only a row in build-unix.sh's summary and
+      # the job -- and the run -- reported success while nineteen tests failed
+      # and the suite crashed part-way. build-unix.sh now writes
+      # build-out/stage-results.tsv and judges the suite itself (a crash, an
+      # unexpected [FAIL], or a stale known-failure pin is a FAIL; a pinned
+      # known failure is reported and passes). This step fails unless the
+      # 'unit tests' row is PASS, so the job goes red -- AFTER the uploads, so
+      # it withholds no artifact (continue-on-error, the same ruling as the
+      # steps above). A SKIP is a failure here: this job's preflight guarantees
+      # xvfb, so there is no excuse for the suite not running.
+      - name: Gate -- the unit tests must have passed
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          results="$RUNNER_TEMP/linux-stage-results.tsv"
+          if [ ! -f "$results" ]; then
+            echo "::error::the build step left no stage table at $results, so the unit-test verdict is unknown."
+            exit 1
+          fi
+          status=$(awk -F '\t' '$2 ~ /^unit tests/ { print $1; exit }' "$results")
+          echo "unit tests stage: ${status:-no row}"
+          awk -F '\t' '$2 ~ /^unit tests/ { print "  " $1 "  " $2 "  " $3 }' "$results"
+          if [ "$status" != PASS ]; then
+            echo "::error::the Linux unit tests did not pass (stage row: ${status:-none}). See the 'Build (build-unix.sh)' step: every unexpected failure, a crash and any stale known-failure pin is listed there."
+            exit 1
+          fi
 
   build-macos:
     name: macOS (aarch64)

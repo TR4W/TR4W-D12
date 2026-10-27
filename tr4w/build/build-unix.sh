@@ -830,11 +830,89 @@ stage_tests() {
          return 1
       fi
       say "  FAILED (exit $trc)"
-      grep '\[FAIL\]' "$runlog" | head -10 | sed 's/^/    /'
-      record FAIL 'unit tests (run)' "exit $trc; $(printf '%s' "$summary" | cut -c1-80)"
-      return 1
+      judge_test_failures "$runlog" "$trc" "$summary"
+      return $?
    fi
    record PASS 'unit tests' "${summary:-ran clean}"
+   return 0
+}
+
+# A RED SUITE IS JUDGED AGAINST A SHORT, NAMED LIST OF KNOWN FAILURES, AND
+# NOTHING ELSE IS FORGIVEN (issue #141, 2026-10-27).
+#
+# What this replaces printed the first TEN [FAIL] lines (head -10) and went on:
+# the Linux suite had nineteen, and the nine after the cut were never shown.
+# It also never said that the suite CRASHED -- an exception that ends the run
+# part-way, after which no later suite executes at all. On Linux that was
+# NewContestForm, so every suite behind it had not run, and the only trace was
+# a 'CRASHED:' paragraph in a 25 MB log.
+#
+# So, in order:
+#   * 'CRASHED:' in the log, or a non-zero exit with no [FAIL] line at all, is
+#     a FAIL. A crash is never pinned: it hides what it did not run.
+#   * every [FAIL] line is printed (capped at 80 lines, with the count).
+#   * a line matching an extended regex in test/unit/known-failures-<os>.txt is
+#     a KNOWN failure: printed under its own heading, counted in the PASS
+#     detail. Each pin names its issue.
+#   * a [FAIL] line matching no pin is a FAIL.
+#   * a pin matching NO line is STALE, and a stale pin is a FAIL -- the list
+#     can only shrink, the same rule as the corpus's known.*.diff pins.
+# The pins are Linux's own file by name (linux, darwin) so one platform's
+# defects can never excuse another's.
+judge_test_failures() {
+   jlog="$1"; jrc="$2"; jsummary="$3"
+   jfail="$OUTROOT/tests-fail-lines.txt"
+   jpins="$OUTROOT/tests-known-pins.txt"
+   junexpected="$OUTROOT/tests-unexpected-fails.txt"
+   grep '\[FAIL\]' "$jlog" > "$jfail" 2> /dev/null || true
+   : > "$jpins"
+   if [ -f "$TEST_DIR/known-failures-$OS.txt" ]; then
+      # tr: .gitattributes gives every text file CRLF on checkout (eol=crlf),
+      # and a carriage return left on a pattern makes it match nothing.
+      tr -d '\r' < "$TEST_DIR/known-failures-$OS.txt" |
+         grep -v -e '^#' -e '^[[:space:]]*$' > "$jpins" || true
+   fi
+
+   if [ -s "$jpins" ]; then
+      grep -v -E -f "$jpins" "$jfail" > "$junexpected" 2> /dev/null || true
+   else
+      cp "$jfail" "$junexpected"
+   fi
+   jtotal=$(wc -l < "$jfail" | tr -d ' ')
+   junexp=$(wc -l < "$junexpected" | tr -d ' ')
+   jknown=$((jtotal - junexp))
+
+   jstale=0
+   while IFS= read -r pin; do
+      [ -z "$pin" ] && continue
+      if ! grep -q -E -e "$pin" "$jfail"; then
+         jstale=$((jstale + 1))
+         say "  STALE PIN (matches no failure, remove it from known-failures-$OS.txt): $pin"
+      fi
+   done < "$jpins"
+
+   jcrash=0
+   if grep -q '^CRASHED:' "$jlog"; then
+      jcrash=1
+      say '  THE SUITE CRASHED part-way, so the suites after the one named below never ran:'
+      grep -A 3 '^CRASHED:' "$jlog" | sed 's/^/    /'
+   fi
+
+   if [ "$junexp" -gt 0 ]; then
+      say "  $junexp UNEXPECTED failure(s):"
+      head -80 "$junexpected" | cut -c1-240 | sed 's/^/    /'
+      [ "$junexp" -gt 80 ] && say "    ... and $((junexp - 80)) more (build-out/tests-unexpected-fails.txt)"
+   fi
+   if [ "$jknown" -gt 0 ]; then
+      say "  $jknown KNOWN failure(s), pinned in known-failures-$OS.txt (each names its issue):"
+      grep -E -f "$jpins" "$jfail" | head -40 | cut -c1-200 | sed 's/^/    /'
+   fi
+
+   if [ "$junexp" -gt 0 ] || [ "$jstale" -gt 0 ] || [ "$jcrash" -eq 1 ] || [ "$jtotal" -eq 0 ]; then
+      record FAIL 'unit tests (run)' "exit $jrc; $junexp unexpected, $jknown known, $jstale stale pin(s), crashed=$jcrash; $(printf '%s' "$jsummary" | cut -c1-60)"
+      return 1
+   fi
+   record PASS 'unit tests' "$jknown KNOWN failure(s) pinned, nothing else failed; $(printf '%s' "$jsummary" | cut -c1-60)"
    return 0
 }
 

@@ -510,10 +510,15 @@ const
       '    server_dirty      INTEGER DEFAULT 0,  -- edited since; needs re-sending'#10 +
       '    sent_udp          INTEGER DEFAULT 0,  -- the UDP broadcast went out'#10 +
       '    udp_dirty         INTEGER DEFAULT 0,'#10 +
-      '    -- SCHEMA 3: THE REST OF OURS, AT THE MOMENT OF THIS QSO (tier 3),'#10 +
-      '    -- beside my_county / my_grid / my_state above. LAST, so a log'#10 +
-      '    -- migrated by ALTER TABLE ADD COLUMN has its columns in the same'#10 +
-      '    -- order as one created here. See LOG_V3_QSO_COLUMNS.'#10 +
+      (* NO COMMENT-ONLY LINE FROM HERE TO THE END OF THE TABLE (issue #141).
+        SQLite 3.42, and the Linux distro's own library after it, cannot
+        ALTER TABLE DROP COLUMN the last column of a table once a comment line
+        sits between it and the column before ("error in table qso after drop
+        column: incomplete input"; reproduced with the library alone, and the
+        Windows 3.53.4 copy is fine). The migration tests build a schema-2 log
+        by dropping the schema-3 columns in turn, which leaves exactly that
+        shape, so the notes on these columns follow the last one. Trailing
+        comments on a column's own line are fine. *)
       '    my_call           TEXT,               -- as signed, rover suffix included'#10 +
       '    my_section        TEXT,'#10 +
       '    my_park           TEXT,'#10 +
@@ -522,12 +527,17 @@ const
       '    my_continent      TEXT,'#10 +
       '    my_cq_zone        INTEGER,'#10 +
       '    my_itu_zone       INTEGER,'#10 +
-      '    -- WHERE THE my_* VALUES CAME FROM, and whether there are any.'#10 +
-      '    -- NULL: never captured (a row from before schema 3) -- a reader'#10 +
-      '    -- falls back to the session. Otherwise logged / assumed (a'#10 +
+      '    my_source         TEXT'#10 +
+      '    -- SCHEMA 3: THE REST OF OURS, AT THE MOMENT OF THIS QSO (tier 3),'#10 +
+      '    -- beside my_county / my_grid / my_state above: my_call .. my_source,'#10 +
+      '    -- LAST in the table, so a log migrated by ALTER TABLE ADD COLUMN has'#10 +
+      '    -- its columns in the same order as one created here. See'#10 +
+      '    -- LOG_V3_QSO_COLUMNS.'#10 +
+      '    -- my_source: WHERE THE my_* VALUES CAME FROM, and whether there'#10 +
+      '    -- are any. NULL: never captured (a row from before schema 3) -- a'#10 +
+      '    -- reader falls back to the session. Otherwise logged / assumed (a'#10 +
       '    -- multi-op peer''s QSO, stamped with this station''s values) /'#10 +
       '    -- imported / edited, and an empty my_* value means UNKNOWN.'#10 +
-      '    my_source         TEXT'#10 +
       ')',
 
       'CREATE INDEX idx_qso_at       ON qso(qso_at)',

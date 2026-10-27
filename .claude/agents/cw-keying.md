@@ -218,6 +218,15 @@ reference.
 (OTRSP switching and stereo); only the parallel transport went. Band-decoder
 output lapses until OTRSP AUX is wired.
 
+## There is no YCCC box off Windows (issue #141, 2026-10-27)
+
+`uYCCCSO2R`'s non-Windows arm has no HID: `YCCCSetActiveRadio` does nothing and
+`YCCCTxRadio` is documented as 1, so `KeyerYCCC.KeyedRadio` is radio 1 on Linux and
+macOS whatever it was told. `Test_EachKeyerStatesTheRadioItKeys` asked for radio 2
+and failed there; its YCCC half is `{$IFDEF WINDOWS}` now and the other arm pins the
+documented 1. Not a product defect: the box is never opened off Windows, so the
+chain never selects it.
+
 ## Oracle
 
 `.\tr4w\build\Build-Tests.ps1 -Run` covers CW framing and keyer logic, and

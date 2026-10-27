@@ -224,6 +224,26 @@ it. Pinned by `uTestStatusAndNotice`'s `Test_ARadioSpeedChangeIsDrawnOnTheMainTh
 (the SHIPPED polling thread over a probe radio) and
 `Test_ANoticeFromAWorkerThreadIsHandedOverWhole`.
 
+## Linux findings from issue #141 (2026-10-27)
+
+- **FindFirst masks are case-sensitive off Windows.** `uNewContestForm.PopulateFiles`
+  asked for `'*.CFG'`, so a lower-case `old.cfg` was never listed on Linux and the
+  .cfg migration path was invisible there; it crashed the whole Linux suite (a grid
+  index past the rows). It scans `*` once and judges the lower-cased extension.
+  Never put an extension in a FindFirst mask.
+- **THE STATUS STRIP CLIPS ITS TEXT ON GTK2, and this is a real defect.** The strip
+  paints in the system UI font (DejaVu Sans 14 px on the runner: 218 px for
+  "Failed to connect to DX Cluster", matched to the pixel against the font file;
+  Cantarell 11 on Mint), while the window, and so each of the 4 panels, is `ws * 46`
+  wide, a Windows-era scale that ignores the font. A 195 px panel holds "Connected to
+  DX Cluster" (173) and not "** DISCONNECTED from DX Cluster" (246). Nine
+  `StatusAndNotice` checks fail for it and are pinned in
+  `tr4w/test/unit/known-failures-linux.txt` until a design decision (size panels from
+  their text, or the font from the window). Do not "fix" the test.
+- `TStringList.Sort` is locale collation on Linux and ordinal on Windows; a test that
+  pins an order uses `CustomSort` with `CompareStr`. `TStringList.Text` joins with
+  `LineEnding`, not `#13#10`.
+
 ## Coordinate with
 
 Every other agent — each owns a window. `i18n` on any caption.

@@ -337,7 +337,7 @@ begin
       CheckTrue(perParty[ipNewEngland] > 0, 'New England has counties');
 
       keys.Clear;
-      CollectDomKeys('IN7QPNE.dom', 'in7qpne_cty.dom', keys, 0);
+      CollectDomKeys('in7qpne.dom', 'in7qpne_cty.dom', keys, 0);
       CheckTrue(keys.Count > 50, 'the in-area file''s states and provinces were read');
       for i := 0 to keys.Count - 1 do
          begin

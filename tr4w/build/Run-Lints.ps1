@@ -88,6 +88,11 @@ $lints = @(
    # ran it again until M10 S8 put it here (2026-10-14). No -SourceDir: it
    # takes the repository, and reads the classes, full.nsi and target\dom.
    @{ Name = 'Lint-DomCoverage';     Arg = $null;  NeedsFpc = $false; Extra = @('-Repo', $repoRoot) }
+   # A .dom A CLASS NAMES EXISTS WITH EXACTLY THAT CASE (issue #141). Windows
+   # cannot tell IDAHO.DOM from idaho.dom and Linux can; three unit tests failed
+   # on Linux for it while every Windows gate was green. Legacy upper-case
+   # names are pinned, loose INCLUDE lines ratcheted.
+   @{ Name = 'Lint-DomFileCase';     Arg = $null;  NeedsFpc = $false; Extra = @('-Repo', $repoRoot) }
    # The SAME defect one layer down. A config spelling table is bounded by its
    # enum, so its LENGTH is enforced and its CONTENTS are not -- and a repeated
    # word means GetValueFromArray hands back the FIRST ordinal and the second

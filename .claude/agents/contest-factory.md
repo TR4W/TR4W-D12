@@ -1209,6 +1209,20 @@ Rebuild the app first, and confirm TR4W is not running (`Get-Process -Name tr4w`
 or every set reports a false FAIL. **Run the corpus, read the result, then
 commit — never chain the run and `git commit` in one shell block.**
 
+## A `.dom` name and its file agree in CASE (issue #141, 2026-10-27)
+
+`IDAHO.DOM`, `IDAHO_CTY.DOM` and `IN7QPNE.dom` shipped while the classes named
+`idaho`, `idaho_cty` and `in7qpne`. The PROGRAM was never broken: every reader
+(`ShippedDomFilePath`, `DomFileInDirHasAlias`, `INCLUDE` following) goes through
+`uAppPaths.ExistingDataFile`, which matches case off Windows. Three unit tests used a
+bare `FileExists` and failed on Linux. The files are renamed to the classes' spelling
+(`git mv` through a temp name: Windows is case-insensitive) and
+`Lint-DomFileCase` gates it: a NEW class name or INCLUDE line must match its file
+exactly. Ten legacy upper-case class names (`S48P14DC`, `EUDX`, `GC`, `JIDX`,
+`NEQSOW1`, `NEQSO`, `OKOM`, `PACCPA`, `PACC`, `YOTA`) and 95 INCLUDE lines stay
+pinned, because changing a class literal changes a value saved settings and tests pin.
+**A new file in `target\dom` is lower case, always.**
+
 ## Coordinate with
 
 `contest-scoring` (the engine side of the same seam) · `log-database` (contest

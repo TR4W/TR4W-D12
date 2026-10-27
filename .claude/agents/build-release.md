@@ -337,6 +337,39 @@ operators".
   `Co-Authored-By` is fine. If one reaches the remote the fix is **forward-only**.
 - **`d12` is the only remote.** There is no `origin`.
 
+## The Linux unit-test stage is judged, and a crash is never forgiven (issue #141, 2026-10-27)
+
+The Linux job printed `FAIL unit tests (run)` and stayed green for weeks, and the
+printout was `head -10` of the `[FAIL]` lines, so nine more failures were never
+shown. Worse, the suite **CRASHED** part-way (`CRASHED: EGridException` in
+`NewContestForm`), so every suite after it had never run on Linux, and the only
+trace was a paragraph in a 25 MB log. Three things now stand:
+
+- **`build-unix.sh` `judge_test_failures`** prints every `[FAIL]` line, treats
+  `CRASHED:` as a FAIL (never pinnable), and judges the rest against
+  `tr4w/test/unit/known-failures-<os>.txt` (extended regexes, one per line, each
+  naming its issue). A line matching no pin is a FAIL; **a pin matching no line is
+  STALE and a FAIL** (the list only shrinks). The file is read through `tr -d '\r'`
+  because `.gitattributes` gives every text file CRLF on checkout.
+- **`release.yml` `build-linux` ends in `Gate -- the unit tests must have
+  passed`**, unmasked, reading **`$RUNNER_TEMP/linux-stage-results.tsv`**, the
+  copy the Build step saves right after `build-unix.sh` (both are deleted before
+  the build so a stale row cannot pass). NOT `build-out/stage-results.tsv`
+  itself: every `build-unix.sh` invocation rewrites that file with its own rows
+  only, and the later `--symbols` step leaves just the symbols row there (run
+  40495951500 read "no row"). It runs AFTER the uploads, so it reddens the
+  job and withholds no artifact; the job stays `continue-on-error`, so the
+  **workflow run still reads success -- read the job, not the run.**
+- **macOS still SKIPs the suite** (no display). To run it: a logged-in GUI
+  session on `mac-ci` with the runner started in it (a launchd agent, not a
+  daemon), or a headless widgetset (`nogui`/`customdrawn` for the tests only; the
+  tests drive real `TForm`s, so that is a port, not a flag). Neither is small.
+
+`Lint-DomFileCase` (in `Run-Lints.ps1`) holds every `.dom` a contest class names,
+and every `INCLUDE FILE` line, to the file's EXACT case; 10 class names and 95
+INCLUDE lines are upper case against lower-case files, pinned and ratcheted
+(`$LegacyNames`, `$INCLUDE_CEILING`). Windows cannot see this class of bug.
+
 ## Coordinate with
 
 Every agent — you are the gate they all pass through.

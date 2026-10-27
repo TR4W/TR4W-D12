@@ -481,6 +481,7 @@ var
       silently. *)
    base: string;
    pat: string;
+   ext: string;
 begin
    base := IncludeTrailingPathDelimiter(aDir);
    FBrowsedFile := '';
@@ -500,27 +501,29 @@ begin
 
          names is Sorted, so the two passes interleave by name rather than
          showing every .db and then every .cfg. *)
-      pat := base + '*.db';
+      (* ONE PASS OVER EVERY FILE, THE EXTENSION JUDGED HERE, NOT BY THE
+         PATTERN (issue #141). FindFirst's mask is case-sensitive off Windows,
+         so '*.CFG' listed no 'old.cfg' on Linux and the migration path above
+         was invisible there -- the grid showed one row fewer than the directory
+         held. Lower-casing the extension is the case-blind answer on every
+         platform. *)
+      pat := base + '*';
       if FindFirst(RawByteString(pat), faAnyFile, found) = 0 then
          begin
          repeat
             if (found.Attr and faDirectory) = 0 then
                begin
-               names.Add(found.Name);
-               end;
-         until FindNext(found) <> 0;
-         FindClose(found);
-         end;
-
-      pat := base + '*.CFG';
-      if FindFirst(RawByteString(pat), faAnyFile, found) = 0 then
-         begin
-         repeat
-            if (found.Attr and faDirectory) = 0 then
-               begin
-               if not FileExists(base + ChangeFileExt(found.Name, '.db')) then
+               ext := LowerCase(ExtractFileExt(found.Name));
+               if ext = '.db' then
                   begin
                   names.Add(found.Name);
+                  end
+               else if ext = '.cfg' then
+                  begin
+                  if not FileExists(base + ChangeFileExt(found.Name, '.db')) then
+                     begin
+                     names.Add(found.Name);
+                     end;
                   end;
                end;
          until FindNext(found) <> 0;

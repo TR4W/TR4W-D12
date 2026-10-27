@@ -844,13 +844,24 @@ begin
                 'CAT, swapped onto a radio whose CAT keying is off: nothing is keyed');
       Radio2.CWByCAT := True;
 
-      (* The box keys its TX radio, not the swap's. *)
+      (* The box keys its TX radio, not the swap's.  Only where the box exists:
+        off Windows uYCCCSO2R has no HID, YCCCSetActiveRadio does nothing and
+        YCCCTxRadio is documented as 1 -- the box is never opened there, so
+        radio 1 is the right answer and the test must not ask for 2 (issue
+        #141: it failed on Linux for that reason). *)
+{$IFDEF WINDOWS}
       KeyersSwapped := False;
       YCCCSetActiveRadio(2);
       CheckTrue(KeyerYCCC.KeyedRadio = @Radio2, 'YCCC switched to radio 2, not swapped: radio 2');
       KeyersSwapped := True;
       YCCCSetActiveRadio(1);
       CheckTrue(KeyerYCCC.KeyedRadio = @Radio1, 'YCCC switched to radio 1, swapped: radio 1');
+{$ELSE}
+      KeyersSwapped := False;
+      YCCCSetActiveRadio(2);
+      CheckTrue(KeyerYCCC.KeyedRadio = @Radio1,
+                'no YCCC box off Windows: radio 1 whatever it was told');
+{$ENDIF}
    finally
       YCCCSetActiveRadio(1);
       base.Free;

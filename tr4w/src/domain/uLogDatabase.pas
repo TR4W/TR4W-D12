@@ -1504,7 +1504,21 @@ begin
      (%5C) rather than turned into a "/" that would name another path. The
      RTL's DirectorySeparator says which, so no platform test is written
      here: it is '\' on Windows and '/' elsewhere. *)
+   (* NOT ExpandFileName OFF WINDOWS.  The RTL's AllowDirectorySeparators is
+     ['\','/'] on Unix too (rtl/unix/sysunixh.inc), so ExpandFileName turns a
+     backslash into "/" there and names another path: /home/op/a\b.db came back
+     /home/op/a/b.db (CI, issue #141) -- the very thing this routine's comment
+     says it prevents.  So each backslash is swapped for #1 (which no file name
+     holds) across the expansion and swapped back after it: the working
+     directory is still joined and "." and ".." still collapse, and the
+     backslash survives. *)
+{$IFDEF WINDOWS}
    path := UTF8Encode(ExpandFileName(aFileName));
+{$ELSE}
+   path := UTF8Encode(StringReplace(
+              ExpandFileName(StringReplace(aFileName, '\', #1, [rfReplaceAll])),
+              #1, '\', [rfReplaceAll]));
+{$ENDIF}
    Result := 'file://';
    if (Length(path) = 0) or
       ((path[1] <> '/') and (path[1] <> DirectorySeparator)) then

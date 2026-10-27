@@ -92,6 +92,16 @@ begin
       end;
 end;
 
+(* AN ORDINAL ORDER, because names.Sort is not one.  TStringList.Sort compares
+  with the platform's string collation: Windows ordered the names by code
+  point and Linux, through its locale, ignored the punctuation, so AUTO-CQ
+  and S&P landed in different places and the same vocabulary read as a
+  change (issue #141).  CompareStr is byte for byte on every platform. *)
+function OrdinalNameCompare(aList: TStringList; aIndex1, aIndex2: integer): integer;
+begin
+   Result := CompareStr(aList[aIndex1], aList[aIndex2]);
+end;
+
 
 procedure TSettingsModelTests.Test_DefaultsAreTheOnesTheGlobalsHad;
 var
@@ -1725,7 +1735,7 @@ begin
    try
       names := s.CommandNames;
       try
-         names.Sort;
+         names.CustomSort(OrdinalNameCompare);
          CheckEquals(EXPECTED, string(names.CommaText),
                      'the settings vocabulary changed -- if that is intended, '
                      + 'paste the actual list here AFTER checking each new name '

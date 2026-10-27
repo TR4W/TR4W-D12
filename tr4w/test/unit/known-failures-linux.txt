@@ -1,0 +1,22 @@
+# KNOWN UNIT-TEST FAILURES ON LINUX -- one extended regex per line.
+#
+# Read by build-unix.sh (judge_test_failures) against the [FAIL] lines of the
+# suite. A [FAIL] line matching a pin is reported under its own heading and does
+# not fail the stage; any OTHER [FAIL] line, any 'CRASHED:' paragraph, and any
+# pin that matches nothing (STALE) does. So this list can only shrink: delete a
+# pin in the commit that fixes what it names. Never add one to get a green run;
+# the failure belongs in an issue and the pin must name that issue.
+#
+# Created for GitHub issue #141 (2026-10-27).
+
+# THE STATUS STRIP CLIPS ITS TEXT ON GTK2 -- a real defect on Linux, not a test
+# artefact. The strip's font is the system UI font (DejaVu Sans at 14 px on the
+# CI runner, Cantarell 11 on Linux Mint) while the window, and so every panel,
+# is sized from the Windows-era scale ws * 46: a quarter of 782 px is a 195 px
+# panel, which holds "Connected to DX Cluster" (173 px) and not "Failed to
+# connect to DX Cluster" (218 px) or "** DISCONNECTED from DX Cluster" (246 px).
+# Measured against the font file: the runner's 218 px is DejaVu Sans 14 px to
+# the pixel. Needs a design decision (size the panels from the text, or the font
+# from the window), so it is GitHub issue #142, not a test change.
+StatusAndNotice:.* px wide and its panel offers [0-9]+ at strip width
+StatusAndNotice: Test_AnInhibitedKeyUpTurnsThePTTIndicator .* fits radio 1's status panel

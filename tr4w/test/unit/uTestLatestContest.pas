@@ -120,6 +120,9 @@ function TestLogHasColumn(aDb: TLogDatabase; const aTable, aColumn: string): boo
 implementation
 
 uses
+{$IFDEF UNIX}
+   BaseUnix,     (* fpMkdir, fpRmdir -- the awkward-path test, see there *)
+{$ENDIF}
    sqldb,        (* TSQLQuery -- TestLogHasColumn *)
    uLogSchema;   (* LOG_V3_QSO_COLUMNS and LOG_V4_MESSAGE_COLUMN -- DowngradeTestLog *)
 
@@ -652,9 +655,16 @@ begin
 
    dir := TempName('peek %41 #1 caf' + WideChar($00E9));
    {$IFDEF UNIX}
+   (* fpMkdir, NOT ForceDirectories: the RTL's AllowDirectorySeparators is
+     ['\','/'] on Unix (rtl/unix/sysunixh.inc), so ForceDirectories splits
+     'peek ... a\b?' at the backslash and never makes the one directory whose
+     name contains it -- which is the case this test exists for (issue #141).
+     The temporary root exists already (TempName's own directory). *)
    dir := dir + ' a\b?';
-   {$ENDIF}
+   fpMkdir(RawByteString(dir), &755);
+   {$ELSE}
    ForceDirectories(dir);
+   {$ENDIF}
    fn := IncludeTrailingPathDelimiter(dir) + 'cq ww %41.db';
    MakeLog(fn);
    CheckTrue(LogSidecarPresent(fn) = '', 'precondition: a closed log, nothing beside it');
@@ -672,7 +682,11 @@ begin
    CheckEquals('', LogSidecarPresent(fn), 'immutable: nothing left beside the log');
 
    Scrub(fn);
+   {$IFDEF UNIX}
+   fpRmdir(RawByteString(dir));
+   {$ELSE}
    RemoveDir(dir);
+   {$ENDIF}
 end;
 
 (* THE SAME PEEK THROUGH A REAL UNC NAME: this machine's own administrative
