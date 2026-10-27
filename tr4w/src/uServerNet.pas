@@ -91,6 +91,14 @@ type
         this connection sent (no HELLO first, or a protocol the server does not
         speak). The connection's own thread does the closing. *)
       FDrop:      boolean;
+      (* THE SERVER CLOSED THIS CONNECTION'S SOCKET (CloseConnection), or it has
+        been through SyncDrop. Either way its FHandle is a number the operating
+        system is free to hand to the NEXT connection - Windows reuses socket
+        handles at once - and ContextOf must not answer for it. Found by
+        netprobe's hello case: a station connecting right after a refused one
+        was matched to the refused one's dying context, the write to it failed,
+        and the newcomer was dropped without its 'TR4W' (about one run in four). *)
+      FClosed:    boolean;
       (* THE HANDLE AS IT WAS WHEN THE CLIENT WAS ADMITTED.
 
         Handle asks the CONNECTION for its binding, and by the time SyncDrop
@@ -121,6 +129,10 @@ type
       procedure SyncCheckPassword;
       procedure SyncParse;
       procedure SyncDrop;
+      (* Every close the server initiates goes through here, so the context says
+        it is closed in the same breath as the socket. *)
+      procedure CloseConnection;
+      property Closed: boolean read FClosed;
       constructor Create(AConnection: TIdTCPConnection; AYarn: TIdYarn;
                          AList: TIdContextThreadList = nil); override;
       destructor Destroy; override;
@@ -335,6 +347,13 @@ begin
       DeleteSocketFromArray(FHandle);
       DisplayClients;
       end;
+   FClosed := True;
+end;
+
+procedure TServerConn.CloseConnection;
+begin
+   FClosed := True;
+   Connection.Disconnect;
 end;
 
 { ------------------------------------------------------------- handlers -- }
@@ -377,7 +396,7 @@ begin
       got := Length(raw);
       if got <= 0 then
          begin
-         c.Connection.Disconnect;
+         c.CloseConnection;
          Exit;
          end;
 
@@ -396,7 +415,7 @@ begin
 
       if c.FRefused then
          begin
-         c.Connection.Disconnect;
+         c.CloseConnection;
          end;
       Exit;
       end;
@@ -456,7 +475,7 @@ begin
    if c.FDrop then
       begin
       c.FDrop := False;
-      c.Connection.Disconnect;
+      c.CloseConnection;
       Exit;
       end;
 
@@ -475,7 +494,7 @@ begin
       logger.Error('[Net] %s sent a message id the server does not know (%d); ' +
                    'the connection is dropped. Bytes from there: %s',
                    [c.FPeerIP, badId, HexOf(raw)]);
-      c.Connection.Disconnect;
+      c.CloseConnection;
       end;
 
    except
@@ -577,7 +596,7 @@ begin
       end;
    if got <= 0 then
       begin
-      c.Connection.Disconnect;
+      c.CloseConnection;
       Exit;
       end;
 
@@ -586,7 +605,7 @@ begin
    got := Length(raw);
    if got <= 0 then
       begin
-      c.Connection.Disconnect;
+      c.CloseConnection;
       Exit;
       end;
 
@@ -596,7 +615,7 @@ begin
 
    if c.FRefused then
       begin
-      c.Connection.Disconnect;
+      c.CloseConnection;
       Exit;
       end;
 
@@ -619,7 +638,7 @@ begin
          end;
    end;
 
-   c.Connection.Disconnect;
+   c.CloseConnection;
 end;
 
 { ------------------------------------------------------------- lifetime -- }
@@ -781,7 +800,8 @@ begin
    try
       for i := 0 to list.Count - 1 do
          begin
-         if TServerConn(list[i]).AdmittedHandle = aHandle then
+         if (TServerConn(list[i]).AdmittedHandle = aHandle) and
+            (not TServerConn(list[i]).Closed) then
             begin
             Result := TServerConn(list[i]);
             Exit;
@@ -851,7 +871,7 @@ begin
    c := ContextOf(aHandle);
    if c <> nil then
       begin
-      c.Connection.Disconnect;
+      c.CloseConnection;
       end;
 end;
 
