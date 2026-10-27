@@ -95,16 +95,18 @@ deleted between runs, and a backup folder you can look in (the line
       records of a departed author are added when their byte equals B's handle
       (same build) -- and report what happens with two DIFFERENT builds (Windows
       and Mint), where the byte differs and the QSOs are skipped as "contest not
-      known". That last one is the documented limit; say if it is acceptable.
+      known". That last one is the documented limit, ACCEPTED FOR NOW (NY4I,
+      2026-10-27); the fix is the contest's ADIF name in the shared record,
+      issue #146.
 - [ ] **A long outage.** Log 200+ QSOs at A while B is down, start B. EXPECT: B's
       window does not freeze during the download (3.76 MB for 10,000 QSOs, a
       fraction of a second on a LAN), the add and the rescore finish in a few
       seconds, the count is right. Note how long the rescore takes on a big log.
-- [ ] **DECISION: an edit made while B was away.** At A, edit the exchange of a QSO
+- [ ] **An edit made while B was away.** At A, edit the exchange of a QSO
       B also holds while B is down; restart B and catch up. EXPECT (by design): B's
       copy is NOT updated -- catch-up only adds. Live edits while B is up still
-      arrive. D7 picked up such an edit because it replaced the whole file. **Is
-      that acceptable until the row-level protocol, or must this wait?**
+      arrive. D7 picked up such an edit because it replaced the whole file.
+      DECIDED (NY4I, 2026-10-27): acceptable until the redesign, issue #146.
 - [ ] **The server is reachable but the sync port is not.** Block port+1 at the
       server (firewall), connect B. EXPECT: the link stays up; a notice "Could not
       read the server's log to catch up: could not connect to host:port ..." and an
