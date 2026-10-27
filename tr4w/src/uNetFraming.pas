@@ -88,6 +88,51 @@ function NextNetMessage(const aBuffer: array of Byte; const aLength: integer;
                         var aOffset: integer; out aId: word;
                         out aResult: TNetWalkResult): boolean;
 
+(* HOW MUCH OF A RECEIVED STREAM IS WHOLE MESSAGES, AND WHY THE REST STOPPED.
+
+  Returns the byte count, from the start of aBuffer, that is made of complete
+  messages only; aResult says what follows them: nwComplete (nothing), nwPartial
+  (the front of a known message -- KEEP IT, the next read completes it) or
+  nwUnknownId (aBadId; the stream cannot be framed past it, so the connection
+  has to be resynchronised or dropped, never re-parsed).
+
+  aAllowLogInfoRequest is for the SERVER's reading side: a client may send the
+  four-byte NET_LOGINFO_MESSAGE sentinel ("send me the log-compare packet"),
+  which has no Word id and no entry in NetMessageSize. Its low Word is not a
+  known id (pinned by a test), so reading it as one can never be ambiguous. *)
+function NetWholeBytes(const aBuffer: array of Byte; const aLength: integer;
+                       const aAllowLogInfoRequest: boolean;
+                       out aResult: TNetWalkResult; out aBadId: word): integer;
+
+type
+   (* ONE CONNECTION'S UNPARSED INPUT.
+
+     TCP divides the stream anywhere. The server used to parse each read as if
+     it were whole and lose the tail of whatever was cut -- measured 2026-10-27,
+     30 QSOs written in one send, 11 relayed and logged. This keeps the bytes
+     received and hands back only whole messages; the incomplete tail waits for
+     the next read. It knows nothing of sockets, so a test drives it with any
+     split of any stream. *)
+   TNetStreamBuffer = class
+   private
+      FData:  array of Byte;
+      FCount: integer;
+   public
+      procedure Append(const aBytes: array of Byte);
+
+      (* The whole-message prefix, as NetWholeBytes reports it. *)
+      function WholeBytes(const aAllowLogInfoRequest: boolean;
+                          out aResult: TNetWalkResult; out aBadId: word): integer;
+
+      (* Byte aIndex (0-based) of what is held. *)
+      function ByteAt(const aIndex: integer): Byte;
+
+      (* Drops the first aCount bytes; what follows becomes the front. *)
+      procedure Discard(const aCount: integer);
+
+      property Count: integer read FCount;
+   end;
+
 implementation
 
 function NetMessageSize(const aId: word): integer;
@@ -193,6 +238,129 @@ begin
 
    Inc(aOffset, size);
    Result := True;
+end;
+
+function NetWholeBytes(const aBuffer: array of Byte; const aLength: integer;
+                       const aAllowLogInfoRequest: boolean;
+                       out aResult: TNetWalkResult; out aBadId: word): integer;
+var
+   available: integer;
+   offset:    integer;       (* 1-based, as NextNetMessage wants it *)
+   remaining: integer;
+   at:        integer;
+   id:        word;
+   step:      TNetWalkResult;
+   sentinel:  Cardinal;
+begin
+   aResult := nwComplete;
+   aBadId := 0;
+   sentinel := NET_LOGINFO_MESSAGE;
+
+   available := aLength;
+   if available > Length(aBuffer) then
+      begin
+      available := Length(aBuffer);
+      end;
+
+   offset := 1;
+   while offset <= available do
+      begin
+      remaining := available - offset + 1;
+      at := offset - 1;
+
+      if aAllowLogInfoRequest and (remaining >= SizeOf(word)) and
+         ((word(aBuffer[at]) or (word(aBuffer[at + 1]) shl 8)) = Word(sentinel and $FFFF)) then
+         begin
+         if remaining < SizeOf(Cardinal) then
+            begin
+            aResult := nwPartial;
+            Break;
+            end;
+
+         if (word(aBuffer[at + 2]) or (word(aBuffer[at + 3]) shl 8)) = Word(sentinel shr 16) then
+            begin
+            Inc(offset, SizeOf(Cardinal));
+            Continue;
+            end;
+
+         aResult := nwUnknownId;
+         aBadId := Word(sentinel and $FFFF);
+         Break;
+         end;
+
+      if not NextNetMessage(aBuffer, available, offset, id, step) then
+         begin
+         aResult := step;
+         if step = nwUnknownId then
+            begin
+            aBadId := id;
+            end;
+         Break;
+         end;
+      end;
+
+   Result := offset - 1;
+end;
+
+(* ------------------------------------------------------- TNetStreamBuffer *)
+
+procedure TNetStreamBuffer.Append(const aBytes: array of Byte);
+var
+   i: integer;
+begin
+   if Length(aBytes) = 0 then
+      begin
+      Exit;
+      end;
+
+   if FCount + Length(aBytes) > Length(FData) then
+      begin
+      SetLength(FData, FCount + Length(aBytes));
+      end;
+
+   for i := 0 to High(aBytes) do
+      begin
+      FData[FCount + i] := aBytes[i];
+      end;
+   Inc(FCount, Length(aBytes));
+end;
+
+function TNetStreamBuffer.WholeBytes(const aAllowLogInfoRequest: boolean;
+                                     out aResult: TNetWalkResult;
+                                     out aBadId: word): integer;
+begin
+   Result := NetWholeBytes(FData, FCount, aAllowLogInfoRequest, aResult, aBadId);
+end;
+
+function TNetStreamBuffer.ByteAt(const aIndex: integer): Byte;
+begin
+   Result := 0;
+   if (aIndex >= 0) and (aIndex < FCount) then
+      begin
+      Result := FData[aIndex];
+      end;
+end;
+
+procedure TNetStreamBuffer.Discard(const aCount: integer);
+var
+   i: integer;
+begin
+   if aCount <= 0 then
+      begin
+      Exit;
+      end;
+
+   if aCount >= FCount then
+      begin
+      FCount := 0;
+      Exit;
+      end;
+
+   for i := aCount to FCount - 1 do
+      begin
+      FData[i - aCount] := FData[i];
+      end;
+   Dec(FCount, aCount);
 end;
 
 end.

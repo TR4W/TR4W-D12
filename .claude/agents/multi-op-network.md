@@ -157,6 +157,7 @@ and `Application.QueueAsyncCall`s a drain, so every message arm is unchanged.
 **The short tail is KEPT between reads — so an unrecognised message id must NOT
 be**, or the same bytes re-parse forever and the link wedges in silence.
 `ConsumeNetBuffer` reports that case and the drainer resynchronises loudly.
+(The server keeps its tail the same way -- see the C7 note near the end.)
 
 ## The console/LCL boundary — the only guard is the server build
 
@@ -183,13 +184,24 @@ step is.
 
 Real multi-op behaviour is bench-only — two machines, or it is unproven.
 
-**`uNetFraming.NextNetMessage` has no caller in the program** (found in
-pointer audit P12, 2026-10-18; no commit ever had `uNet` or the server call
-it). `uNet.ConsumeNetBuffer`'s walk asks only `NetMessageSize` and repeats the
-partial-message test itself, so `uTestNetFraming`'s walker pins cover a
-routine the link does not run. It takes an open array now and refuses to read
-past its buffer. Wire one in, or delete it, when the V1 walk is next touched —
-not as a side effect. **The record senders (`SendToNet`, `sSend`,
+**The in-tree server frames by `uNetFraming` too (C7, 2026-10-27).** Before it,
+`tr4wserver` parsed each read (at most 4096 bytes) as if it were whole, capped
+the walk at 25 passes and lost any incomplete tail: the probe measured 30 QSOs in
+one send -> 11 relayed AND logged. Now each `TServerConn` owns a
+`uNetFraming.TNetStreamBuffer`; `MainExecute` appends the read, takes
+`WholeBytes(True, ...)` (the whole-message prefix; True admits the 4-byte
+`NET_LOGINFO_MESSAGE` sentinel, whose low Word is pinned NOT to be a message id),
+hands only that to `ProcessClientBuffer`, and keeps the tail. An unknown id is an
+Error line with the bytes and the connection is DROPPED (the station reconnects).
+`ProcessClientBuffer`'s arms are verbatim; it gained an `else` that skips and
+Warns on an id the table knows but the server does not handle (1010, 1060), and
+the 25-pass cap became a "did not advance" guard. `NextNetMessage` has its first
+real caller (inside `NetWholeBytes`); the CLIENT's `ConsumeNetBuffer` still does
+its own walk over `NetMessageSize`. **The sync port reads what arrives, up to 50
+bytes** (D7's `recv(sock, buf, 50)` semantics): the old `ReadBytes(raw, 50)`
+waited for fifty when every client, D7 and this one, writes ten. Pins:
+`uTestNetFraming` (30 back-to-back, 1460-byte segments, a cut at every byte, a
+kept tail, an unknown id, the sentinel cut at 1-3 bytes). **The record senders (`SendToNet`, `sSend`,
 `SendToClient`) keep their untyped buffer on purpose**: each caller hands in
 a packed V1 record and that parameter is where its layout becomes the
 encoding (P14, skipped for V1).

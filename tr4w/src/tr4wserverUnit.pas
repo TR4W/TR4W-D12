@@ -54,6 +54,7 @@ uses
     Removing the two uses entries is therefore a real piece of work rather than
     a line edit, and it is written down here rather than half-done. *)
   VC,
+  uNetFraming,  // NetMessageSize -- the one size table the client parses with
   Log4D,        // server logging: InitServerLogger / logger, restored from the fork
   Version,      // TR4WSERVER_CURRENTVERSION, used by FullServerVersion below
   TF,
@@ -586,13 +587,15 @@ procedure ProcessClientBuffer(aSocket: Cardinal; aBytes: integer);
 label
   1, CheckBuffer;
 var
-  counter: Cardinal;
+  StepStart: integer;
+  SkipSize: integer;
 begin
         Bufindex := 0;
-        counter := 0;
         //            if br mod 5 <> 0 then MessageBox(ApplicationHandle, PChar(IntToStr(br)), 'recv', MB_YESNO or MB_ICONQUESTION or MB_TOPMOST or MB_DEFBUTTON2);
 
         CheckBuffer:
+
+        StepStart := Bufindex;
 
         case PWORD(@ServerBuffer[Bufindex])^ of
 
@@ -762,20 +765,44 @@ begin
 
             end;
 
+        else
+          begin
+            (* A message the framing table knows (a log-compare packet or a
+              take-server-QSO record) but that no client has any business
+              sending the server. It is SKIPPED by its size and said so; the
+              log-compare sentinel has no size here and is handled below. *)
+            SkipSize := NetMessageSize(PWORD(@ServerBuffer[Bufindex])^);
+            if SkipSize > 0 then
+               begin
+               logger.Warn('[Net] message id ' + IntToStr(PWORD(@ServerBuffer[Bufindex])^) +
+                 ' is not one the server handles -- skipped, ' + IntToStr(SkipSize) + ' bytes');
+               Bufindex := Bufindex + SkipSize;
+               end;
+          end;
+
         end;
 
-        if Bufindex = aBytes then goto 1;
+        if Bufindex >= aBytes then goto 1;
 
         if PDWORD(@ServerBuffer[Bufindex])^ = NET_LOGINFO_MESSAGE then
         begin
           SendLogFileInformation(aSocket);
           Bufindex := Bufindex + SizeOf(NET_LOGINFO_MESSAGE);
-          if Bufindex = aBytes then goto 1;
+          if Bufindex >= aBytes then goto 1;
         end;
 
-        inc(counter);
+        (* THE CALLER HANDS THIS A BUFFER OF WHOLE MESSAGES (uNetFraming), SO
+          EVERY PASS ADVANCES. The old cap of 25 passes silently discarded the
+          rest of a burst; what is left to guard against is only a pass that
+          advanced nothing, which would otherwise spin for ever. *)
+        if Bufindex = StepStart then
+           begin
+           logger.Error('[Net] the server buffer did not advance at offset ' +
+             IntToStr(Bufindex) + ' of ' + IntToStr(aBytes) + ' -- the rest is discarded');
+           goto 1;
+           end;
 
-        if counter < 25 then goto CheckBuffer;
+        goto CheckBuffer;
         1:
         DisplayRCVDBytes;
 

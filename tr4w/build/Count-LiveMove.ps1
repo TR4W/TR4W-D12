@@ -77,7 +77,7 @@ param(
 # five FillChar in uTestNetFraming became a zeroing loop.
 # 444 -> 443, 2026-10-25: uSuperCheckPartialFileUpload reads the Cabrillo file
 # as TBytes; the Move of file bytes into a UnicodeString went.
-$MOVE_CEILING = 443
+$MOVE_CEILING = 442
 # Floors for -Gate: the tree has ~800 Pascal files and several hundred live
 # calls, so fewer than these means the reader failed, not that the tree is clean.
 $FILE_FLOOR  = 300

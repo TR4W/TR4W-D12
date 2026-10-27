@@ -63,7 +63,8 @@ interface
 uses
    Classes, SysUtils, SyncObjs,
    IdContext, IdCustomTCPServer, IdTCPServer, IdGlobal, IdIOHandler,
-   IdTCPConnection, IdYarn, IdExceptionCore, IdException;
+   IdTCPConnection, IdYarn, IdExceptionCore, IdException,
+   uNetFraming;   (* TNetStreamBuffer -- one connection's unparsed input *)
 
 type
 
@@ -76,6 +77,10 @@ type
    TServerConn = class(TIdServerContext)
    private
       FWriteLock: TCriticalSection;
+      (* WHAT HAS ARRIVED AND IS NOT YET A WHOLE MESSAGE. TCP cuts the stream
+        anywhere; the incomplete tail waits here for the next read instead of
+        being parsed (and lost) as if it were whole. *)
+      FStream:    TNetStreamBuffer;
       FBuf:       array[0..4095] of AnsiChar;
       FLen:       integer;
       FPeerIP:    string;
@@ -228,10 +233,12 @@ constructor TServerConn.Create(AConnection: TIdTCPConnection; AYarn: TIdYarn;
 begin
    inherited Create(AConnection, AYarn, AList);
    FWriteLock := TCriticalSection.Create;
+   FStream := TNetStreamBuffer.Create;
 end;
 
 destructor TServerConn.Destroy;
 begin
+   FreeAndNil(FStream);
    FreeAndNil(FWriteLock);
    inherited Destroy;
 end;
@@ -345,6 +352,9 @@ var
    c:   TServerConn;
    got: integer;
    raw: TIdBytes;
+   room, whole, k: integer;
+   walk:  TNetWalkResult;
+   badId: word;
 begin
    c := TServerConn(AContext);
    try
@@ -392,9 +402,13 @@ begin
       begin
       Exit;
       end;
-   if got > SizeOf(c.FBuf) then
+   (* ROOM FOR THIS READ BESIDE THE TAIL ALREADY HELD. The tail is the front of
+     one message, so it is smaller than the largest message and room is never
+     zero; what Indy still holds is read on the next pass. *)
+   room := SizeOf(c.FBuf) - c.FStream.Count;
+   if got > room then
       begin
-      got := SizeOf(c.FBuf);
+      got := room;
       end;
 
    SetLength(raw, 0);
@@ -405,9 +419,6 @@ begin
       Exit;
       end;
 
-   c.FLen := got;
-   Move(raw[0], c.FBuf[0], got);
-
    { The wire trace sRecv used to write, now naming the station it came from. }
    logger.Debug('[Net] %d bytes from %s', [got, c.FPeerIP]);
    if logger.IsTraceEnabled then
@@ -415,7 +426,40 @@ begin
       logger.Trace('[Net] rx %s: %s', [c.FPeerIP, HexOf(raw)]);
       end;
 
-   TThread.Synchronize(nil, c.SyncParse);
+   (* PARSE WHOLE MESSAGES ONLY. What this read completed goes to the engine in
+     one piece; an incomplete tail stays in FStream for the next read. An id
+     nothing knows cannot be framed past, so the stream is dropped -- loudly --
+     rather than re-parsed for ever; the station reconnects on its own. *)
+   c.FStream.Append(raw);
+   whole := c.FStream.WholeBytes(True, walk, badId);
+   if whole > 0 then
+      begin
+      for k := 0 to whole - 1 do
+         begin
+         c.FBuf[k] := AnsiChar(c.FStream.ByteAt(k));
+         end;
+      c.FLen := whole;
+      TThread.Synchronize(nil, c.SyncParse);
+      c.FStream.Discard(whole);
+      end;
+
+   if walk = nwUnknownId then
+      begin
+      room := c.FStream.Count;
+      if room > 16 then
+         begin
+         room := 16;
+         end;
+      SetLength(raw, room);
+      for k := 0 to room - 1 do
+         begin
+         raw[k] := c.FStream.ByteAt(k);
+         end;
+      logger.Error('[Net] %s sent a message id the server does not know (%d); ' +
+                   'the connection is dropped. Bytes from there: %s',
+                   [c.FPeerIP, badId, HexOf(raw)]);
+      c.Connection.Disconnect;
+      end;
 
    except
       { A closed connection is ORDINARY and is not a fault: the client quit,
@@ -500,9 +544,27 @@ var
 begin
    c := TServerConn(AContext);
 
+   (* READ WHAT ARRIVES, UP TO 50 -- NOT EXACTLY 50.
+     D7's server did recv(socket, buffer, 50), which returns the bytes that
+     are there; the 50 is a ceiling (room for a 'GET / PASS...' form that
+     CorrectPassword also accepts). Every client, D7 and this one, writes TEN
+     bytes. ReadBytes(raw, 50) waited for fifty that never came, so the log
+     download stalled until the 15 s timeout (measured 2026-10-27). *)
    c.Connection.IOHandler.ReadTimeout := 15000;
+   c.Connection.IOHandler.CheckForDataOnSource(15000);
+   got := c.Connection.IOHandler.InputBuffer.Size;
+   if got > 50 then
+      begin
+      got := 50;
+      end;
+   if got <= 0 then
+      begin
+      c.Connection.Disconnect;
+      Exit;
+      end;
+
    SetLength(raw, 0);
-   c.Connection.IOHandler.ReadBytes(raw, 50, False);
+   c.Connection.IOHandler.ReadBytes(raw, got, False);
    got := Length(raw);
    if got <= 0 then
       begin

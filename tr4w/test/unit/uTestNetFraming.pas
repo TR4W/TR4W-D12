@@ -52,12 +52,20 @@ type
         the buffer ends and an over-stated length cannot carry it past. The
         untyped version would have read whatever memory came next. *)
       procedure Test_OverstatedLengthNeverReadsPastTheBuffer;
+
+      (* C7 (2026-10-27): the server keeps an incomplete tail per connection. *)
+      procedure Test_ThirtyBackToBackQSOsAreThirty;
+      procedure Test_BurstInSegmentsLosesNothing;
+      procedure Test_SplitAtEveryByteIsOneMessage;
+      procedure Test_TrailingPartialIsKept;
+      procedure Test_UnknownIdIsReportedNotReparsed;
+      procedure Test_LogInfoRequestOnlyWhenAllowed;
    end;
 
 implementation
 
 uses
-   VC, uNetFraming;
+   SysUtils, VC, uNetFraming;
 
 { A buffer the walker can be pointed at.  1-based like NetBuffer, which is what
   the real caller passes. }
@@ -386,8 +394,247 @@ begin
    Check(res = nwComplete, 'the buffer ended on a boundary');
 end;
 
+(* ---- the server's side: whole messages out of an arbitrarily cut stream ---- *)
+
+type
+   TWire = array of Byte;
+
+(* One message of this id: the id Word, then zeros, aCount of them end to end. *)
+function WireMessages(const aId: word; const aCount: integer): TWire;
+var
+   one, n, i: integer;
+begin
+   one := NetMessageSize(aId);
+   SetLength(Result, one * aCount);
+   for i := 0 to High(Result) do
+      begin
+      Result[i] := 0;
+      end;
+   for n := 0 to aCount - 1 do
+      begin
+      Result[n * one]     := Lo(aId);
+      Result[n * one + 1] := Hi(aId);
+      end;
+end;
+
+function WireSlice(const aWire: TWire; const aFrom, aCount: integer): TWire;
+var
+   i: integer;
+begin
+   SetLength(Result, aCount);
+   for i := 0 to aCount - 1 do
+      begin
+      Result[i] := aWire[aFrom + i];
+      end;
+end;
+
+(* What the server does with each read: append, take the whole messages, drop
+  them. Returns how many messages that was. *)
+function ServerPass(const aStream: TNetStreamBuffer; const aRead: TWire;
+                    const aLogInfo: boolean; out aResult: TNetWalkResult;
+                    out aBadId: word): integer;
+var
+   whole, offset: integer;
+   id: word;
+   walk: TNetWalkResult;
+   probe: TWire;
+   i: integer;
+begin
+   aStream.Append(aRead);
+   whole := aStream.WholeBytes(aLogInfo, aResult, aBadId);
+   SetLength(probe, whole);
+   for i := 0 to whole - 1 do
+      begin
+      probe[i] := aStream.ByteAt(i);
+      end;
+   Result := 0;
+   offset := 1;
+   while NextNetMessage(probe, whole, offset, id, walk) do
+      begin
+      Inc(Result);
+      end;
+   aStream.Discard(whole);
+end;
+
+(* THE MEASURED LOSS: 30 QSOs in one send, 11 relayed. *)
+procedure TTestNetFraming.Test_ThirtyBackToBackQSOsAreThirty;
+var
+   wire: TWire;
+   res: TNetWalkResult;
+   bad: word;
+begin
+   wire := WireMessages(NET_QSOINFO_ID, 30);
+   CheckEquals(30 * 384, NetWholeBytes(wire, Length(wire), False, res, bad),
+               'all thirty are whole');
+   Check(res = nwComplete, 'and the buffer ends on a boundary');
+end;
+
+(* The same thirty, delivered the way TCP does: 1460-byte segments, the server
+  reading at most its 4096-byte buffer. Nothing may be lost or doubled. *)
+procedure TTestNetFraming.Test_BurstInSegmentsLosesNothing;
+var
+   wire: TWire;
+   stream: TNetStreamBuffer;
+   res: TNetWalkResult;
+   bad: word;
+   at, n, total: integer;
+begin
+   wire := WireMessages(NET_QSOINFO_ID, 30);
+   stream := TNetStreamBuffer.Create;
+   try
+      total := 0;
+      at := 0;
+      while at < Length(wire) do
+         begin
+         n := Length(wire) - at;
+         if n > 1460 then
+            begin
+            n := 1460;
+            end;
+         Inc(total, ServerPass(stream, WireSlice(wire, at, n), False, res, bad));
+         Inc(at, n);
+         end;
+      CheckEquals(30, total, 'every message is parsed exactly once');
+      CheckEquals(0, stream.Count, 'and nothing is left over');
+   finally
+      stream.Free;
+   end;
+end;
+
+(* A message cut at EVERY byte boundary is one message once the rest arrives. *)
+procedure TTestNetFraming.Test_SplitAtEveryByteIsOneMessage;
+var
+   wire: TWire;
+   stream: TNetStreamBuffer;
+   res: TNetWalkResult;
+   bad: word;
+   cut, total: integer;
+begin
+   wire := WireMessages(NET_QSOINFO_ID, 1);
+   for cut := 1 to Length(wire) - 1 do
+      begin
+      stream := TNetStreamBuffer.Create;
+      try
+         total := ServerPass(stream, WireSlice(wire, 0, cut), False, res, bad);
+         CheckEquals(0, total, 'cut at ' + IntToStr(cut) + ': the front is not a message');
+         Check(res = nwPartial, 'cut at ' + IntToStr(cut) + ': it is kept as partial');
+         CheckEquals(cut, stream.Count, 'cut at ' + IntToStr(cut) + ': all of it is kept');
+         total := ServerPass(stream, WireSlice(wire, cut, Length(wire) - cut), False, res, bad);
+         CheckEquals(1, total, 'cut at ' + IntToStr(cut) + ': the rest completes it');
+         CheckEquals(0, stream.Count, 'cut at ' + IntToStr(cut) + ': nothing left');
+      finally
+         stream.Free;
+      end;
+      end;
+end;
+
+procedure TTestNetFraming.Test_TrailingPartialIsKept;
+var
+   wire: TWire;
+   stream: TNetStreamBuffer;
+   res: TNetWalkResult;
+   bad: word;
+begin
+   wire := WireMessages(NET_QSOINFO_ID, 3);
+   stream := TNetStreamBuffer.Create;
+   try
+      CheckEquals(2, ServerPass(stream, WireSlice(wire, 0, 2 * 384 + 100), False, res, bad),
+                  'two whole messages');
+      Check(res = nwPartial, 'then a partial third');
+      CheckEquals(100, stream.Count, 'its 100 bytes are kept');
+      CheckEquals(1, ServerPass(stream, WireSlice(wire, 2 * 384 + 100, 284), False, res, bad),
+                  'the third completes');
+      Check(res = nwComplete, 'and ends clean');
+   finally
+      stream.Free;
+   end;
+end;
+
+procedure TTestNetFraming.Test_UnknownIdIsReportedNotReparsed;
+var
+   wire, junk, all: TWire;
+   stream: TNetStreamBuffer;
+   res: TNetWalkResult;
+   bad: word;
+   i: integer;
+begin
+   wire := WireMessages(NET_COMPUTERID_ID, 1);
+   SetLength(junk, 8);
+   for i := 0 to 7 do
+      begin
+      junk[i] := 0;
+      end;
+   junk[0] := Lo(9999);
+   junk[1] := Hi(9999);
+   SetLength(all, Length(wire) + Length(junk));
+   for i := 0 to High(wire) do
+      begin
+      all[i] := wire[i];
+      end;
+   for i := 0 to High(junk) do
+      begin
+      all[Length(wire) + i] := junk[i];
+      end;
+
+   stream := TNetStreamBuffer.Create;
+   try
+      CheckEquals(1, ServerPass(stream, all, False, res, bad),
+                  'the message before the bad id is still delivered');
+      Check(res = nwUnknownId, 'and the unknown id is REPORTED');
+      CheckEquals(9999, bad, 'by number');
+      CheckEquals(8, stream.Count, 'the bad bytes are not consumed: the caller must drop the link');
+   finally
+      stream.Free;
+   end;
+end;
+
+procedure TTestNetFraming.Test_LogInfoRequestOnlyWhenAllowed;
+var
+   wire: TWire;
+   res: TNetWalkResult;
+   bad: word;
+   sentinel: Cardinal;
+   stream: TNetStreamBuffer;
+   cut: integer;
+begin
+   sentinel := NET_LOGINFO_MESSAGE;
+   Check(NetMessageSize(Word(sentinel and $FFFF)) = 0,
+         'the sentinel''s low Word must never be a message id');
+   SetLength(wire, 4);
+   wire[0] := Byte(sentinel);
+   wire[1] := Byte(sentinel shr 8);
+   wire[2] := Byte(sentinel shr 16);
+   wire[3] := Byte(sentinel shr 24);
+
+   CheckEquals(4, NetWholeBytes(wire, 4, True, res, bad), 'the server takes it');
+   Check(res = nwComplete, 'whole');
+   CheckEquals(0, NetWholeBytes(wire, 4, False, res, bad), 'a client link does not');
+   Check(res = nwUnknownId, 'it is an unknown id there');
+
+   for cut := 1 to 3 do
+      begin
+      stream := TNetStreamBuffer.Create;
+      try
+         CheckEquals(0, ServerPass(stream, WireSlice(wire, 0, cut), True, res, bad),
+                     'cut at ' + IntToStr(cut));
+         Check(res = nwPartial, 'a cut sentinel is partial, not unknown');
+         ServerPass(stream, WireSlice(wire, cut, 4 - cut), True, res, bad);
+         Check(res = nwComplete, 'completed');
+         CheckEquals(0, stream.Count, 'and consumed');
+      finally
+         stream.Free;
+      end;
+      end;
+end;
+
 procedure TTestNetFraming.RunAllTests;
 begin
+   Test_ThirtyBackToBackQSOsAreThirty;
+   Test_BurstInSegmentsLosesNothing;
+   Test_SplitAtEveryByteIsOneMessage;
+   Test_TrailingPartialIsKept;
+   Test_UnknownIdIsReportedNotReparsed;
+   Test_LogInfoRequestOnlyWhenAllowed;
    Test_OverstatedLengthNeverReadsPastTheBuffer;
    Test_ZeroLengthIsComplete;
    Test_OffsetZeroIsRefused;
