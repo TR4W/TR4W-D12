@@ -48,6 +48,11 @@ user-facing — no file paths or source-level jargon.
 
 ## 5.0.x — October 2026
 
+### 5.0.35 (2026-10-27) - NY4I
+
+- No operator-visible change. 5.0.34's macOS build did not compile; 5.0.35 is
+  the same program, built on all three platforms.
+
 ### 5.0.34 (2026-10-27) - NY4I
 
 #### Contests
