@@ -396,6 +396,18 @@ resourcestring
       'Enter your state or Canadian province if outside Ontario; leave it ' +
       'empty if you are DX (your country prefix is sent):';
 
+   (* THE QUEBEC QSO PARTY'S NEW CONTEST PROMPT -- #128, NY4I 2026-10-26: "A
+     translatable region prompt replaces the US 'county in state' wording".
+     The shared prompt reads "Enter your county if you are in QC state", and
+     a Quebec entrant's MY STATE is its administrative region code (MTL,
+     QUE, ...): one who types QC is set up OUTSIDE Quebec, silently. A DX
+     entrant states nothing and sends "DX" ("province, US state or DX for
+     other entities"). *)
+   SNewContestQuebecQPRegionOrLocation =
+      'Enter your Quebec administrative region code (e.g. MTL) if you are in ' +
+      'Quebec. Enter your state or Canadian province if outside Quebec; leave ' +
+      'it empty if you are DX (DX is sent):';
+
    (* --------------------------------------------- the contest UI (M9b) - *)
 
    (* AN INACTIVE CONTEST'S LINE IN THE NEW CONTEST DROP-DOWN. NY4I,

@@ -336,6 +336,7 @@ uses
    uContestOklahomaQP in '..\..\src\contestFactory\uContestOklahomaQP.pas',
    uContestNewMexicoQP in '..\..\src\contestFactory\uContestNewMexicoQP.pas',
    uContestOntarioQP in '..\..\src\contestFactory\uContestOntarioQP.pas',
+   uContestQuebecQP in '..\..\src\contestFactory\uContestQuebecQP.pas',
    uContestIN7QPNE in '..\..\src\contestFactory\uContestIN7QPNE.pas',
    uContestQCWA in '..\..\src\contestFactory\uContestQCWA.pas',
    uContestQCWAGolden in '..\..\src\contestFactory\uContestQCWAGolden.pas',
@@ -753,6 +754,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* The Ontario QSO Party, a new contest registered by its id
       (2026-10-26, #127). *)
    uTestContestOntarioQP in 'uTestContestOntarioQP.pas',
+   (* The Quebec QSO Party, a new contest registered by its id
+      (2026-10-26, #128). *)
+   uTestContestQuebecQP in 'uTestContestQuebecQP.pas',
    (* The party base's SentLocation / LocationOrOwnCountry -- a DX entrant
       sends its own country; lifted from North Dakota for Oklahoma. *)
    uTestContestStateQSOPartyBase in 'uTestContestStateQSOPartyBase.pas',
@@ -928,6 +932,7 @@ begin
    RegisterSuite(TContestOklahomaQPTests.Create('ContestOklahomaQP'));
    RegisterSuite(TContestNewMexicoQPTests.Create('ContestNewMexicoQP'));
    RegisterSuite(TContestOntarioQPTests.Create('ContestOntarioQP'));
+   RegisterSuite(TContestQuebecQPTests.Create('ContestQuebecQP'));
    RegisterSuite(TContestStateQSOPartyBaseTests.Create('ContestStateQSOPartyBase'));
    RegisterSuite(TContestNewEnglandQPTests.Create('ContestNewEnglandQP'));
    RegisterSuite(TContestMissouriQPTests.Create('ContestMissouriQP'));

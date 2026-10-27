@@ -373,9 +373,11 @@ matrix only says it is unchanged (A6). Pin, quoting the rule each test holds:
 6. **A party's host-area rule**: an out-of-state entrant's parse and score need
    a table that knows the host QTHs -- a `Station.IsDomesticQTH` stub
    (Georgia's `StubKnowsHostQTHs`) or `uTestContestObjects.WithHostAreaTable`.
-   Better, back it with the SHIPPED county file through
-   `LoadShippedDomFollowingIncludes`, so the test also proves the real data
-   (North Dakota's test does).
+   Better, back it with the SHIPPED county file, so the test also proves the
+   real data: `uTestQSOPartyRules.LoadCountyTable('<base>_cty.dom', True)`,
+   then `@CountyFileKnowsQTH` as the stub and `FreeCountyTable` in a
+   `finally` (North Dakota's, Oklahoma's, New Mexico's, Ontario's and
+   Quebec's tests do). Do not write a unit-local copy of it.
 7. **The final score** with a hand-built `TScoreTotals` and a `TLoggedQSOList`.
 8. **The data**: the `.dom` against the rules' own table; the in-state file's
    `INCLUDE` list and "no `=` in the header" as text.

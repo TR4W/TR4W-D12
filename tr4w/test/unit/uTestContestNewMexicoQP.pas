@@ -264,44 +264,6 @@ begin
    end;
 end;
 
-(* THE SHIPPED COUNTY FILE, THROUGH THE REAL LOADER, as an out-of-state
-   entrant's session loads it (MultipliersIsCounties True) -- with a
-   multiplier sheet of its own, so the load touches nothing another test
-   reads. GCountyTable is the table CountyFileKnowsQTH asks, the
-   TDomesticQTHTest the host-area rule is handed. *)
-var
-   GCountyTable: TDomQTHTable;
-   GSavedSheet: TMultsObject;
-   GSavedCounties: boolean;
-
-procedure LoadCountyTable(aCountiesAreMultipliers: boolean);
-begin
-   GSavedSheet := mo;
-   GSavedCounties := MultipliersIsCounties;
-   mo := TMultsObject.Create;
-   MultipliersIsCounties := aCountiesAreMultipliers;
-   GCountyTable := TDomQTHTable.Create;
-   LoadShippedDomFollowingIncludes(GCountyTable, 'newmexico_cty.dom', True, 0);
-end;
-
-procedure FreeCountyTable;
-begin
-   GCountyTable.Free;
-   GCountyTable := nil;
-   mo.Free;
-   mo := GSavedSheet;
-   MultipliersIsCounties := GSavedCounties;
-end;
-
-(* FindAlias is the table's exact lookup; its keys are stored upper-cased. *)
-function CountyFileKnowsQTH(const aQTH: string): boolean;
-var
-   entry: TDomQTHEntry;
-begin
-   Result := (GCountyTable <> nil) and
-             GCountyTable.FindAlias(UpperCase(Trim(aQTH)), entry);
-end;
-
 (* SCORE TOTALS with aPoints QSO points and aMults domestic multipliers. *)
 function Totals(aPoints: longint; aMults: longint): TScoreTotals;
 begin
@@ -740,7 +702,7 @@ var
 begin
    BeginTest('Test_NewMexicoOutOfStateWorksOnlyNewMexico');
    counties := TStringList.Create;
-   LoadCountyTable(True);
+   LoadCountyTable('newmexico_cty.dom', True);
    try
       (* EVERY ONE OF THE RULES' 33 COUNTIES is its own multiplier and a
          station this entrant may work. *)
@@ -750,7 +712,7 @@ begin
       for i := 0 to counties.Count - 1 do
          begin
          code := counties.Names[i];
-         CheckEquals(code, MultiplierOf(GCountyTable, code), code + ' is its own multiplier');
+         CheckEquals(code, MultiplierOf(CountyTable, code), code + ' is its own multiplier');
          CheckTrue(CountyFileKnowsQTH(code), code + ' is a New Mexico station');
          end;
 
@@ -1125,12 +1087,12 @@ begin
 
    (* AS AN NM STATION READS IT (MultipliersIsCounties False): still 33
       multipliers, not one -- "each different NM county worked". *)
-   LoadCountyTable(False);
+   LoadCountyTable('newmexico_cty.dom', False);
    try
       CheckEquals(33, mo.DomList.Count, 'in state, the 33 counties are 33 multipliers');
-      CheckEquals('BER', MultiplierOf(GCountyTable, 'BER'), 'Bernalillo counts as Bernalillo');
-      CheckEquals('', MultiplierOf(GCountyTable, 'NM'), 'no state is in the county file');
-      CheckEquals('', MultiplierOf(GCountyTable, 'AZ'), 'nor Arizona');
+      CheckEquals('BER', MultiplierOf(CountyTable, 'BER'), 'Bernalillo counts as Bernalillo');
+      CheckEquals('', MultiplierOf(CountyTable, 'NM'), 'no state is in the county file');
+      CheckEquals('', MultiplierOf(CountyTable, 'AZ'), 'nor Arizona');
    finally
       FreeCountyTable;
    end;

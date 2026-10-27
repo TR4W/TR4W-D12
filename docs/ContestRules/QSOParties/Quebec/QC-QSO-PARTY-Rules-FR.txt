@@ -1,0 +1,220 @@
+﻿Quebec QSO Party -- the sponsor's rules, FRENCH text ("Règlements Québec QSO Party")
+
+Source: https://quebecqsoparty.org/reglements-quebec-qso-party/
+Sponsor: Club Radio Amateur de l'Outaouais (CRAO). Event: Sunday 2026-04-19, 13:00-24:00 UTC.
+Fetched: 2026-10-26 with curl; the HTML reduced to text, one line per line of the page, as fetched.
+The page carries no revision number; it names the 2026 event (the 2021-12-11 footer date is WordPress's).
+The sponsor publishes the rules in English AND in French; neither says which governs. Both are kept here.
+WA7BNM ID: 53 (https://www.contestcalendar.com/contestdetails.php?ref=53, named in the rules themselves)
+Cabrillo Name: QC-QSO-PARTY (WA7BNM 53; the sponsor states no CONTEST: value)
+ADIF Name: QC-QSO-PARTY (ADIF 3.1.7 Contest_ID enumeration)
+Logs: Cabrillo, by the upload page https://quebecqsoparty.org/soumission-qso-qso-download/ (no e-mail route).
+NY4I's decisions: GitHub #128 (2026-10-26). The class is tr4w/src/contestFactory/uContestQuebecQP.pas.
+Where the English text differs (see QC-QSO-PARTY-Rules-EN.txt): "Une station mobile sur une limite
+entre deux zones de multiplicateurs" (two zones) against the English "2 or more administrative regions".
+This text also carries the only sample exchange ("You are Five-Nine from region Oscar Tango Sierra").
+
+==============================================================================
+Règlements Québec QSO Party – QSO Party du Québec
+ Skip to content
+QSO Party du Québec
+19 avril 2026 de 1300-2400 UTC - April 19th, 2026 1300-2400Z
+ Nouveau 2026
+ Nouvelles heures d’opérations — New operating times
+Nouveaux prix — New Awards
+Limite logs: 3 mai 2026 — Logs limit: May 3rd, 2026
+ Primary Navigation Menu
+ Menu
+ Accueil
+Home
+Règlements en français
+English Rules
+Soumission résultats
+Log Posting
+Journal
+Logging Software
+Annonces d’opération
+Spotting
+Résultats
+Results
+ Résultats 2025 – Results 2025
+ Résultats 2024 – Results 2024
+ Résultats 2023 – Results 2023
+ Résultats 2022 – Results 2022
+Prix
+Awards
+ Règlements Québec QSO Party
+Le Club Radio Amateur de l’Outaouais (CRAO) est fier de commanditer l’organisation du QSO party du Québec.
+Pour toute information veuillez écrire à QuebecQsoParty@groups.io 
+Motivation
+Organiser un événement radioamateur continental stimulant permettant aux amateurs du Québec de se rencontrer tout en mettant en vedette le Québec et ses grandes régions.
+Nous souhaitons aussi stimuler la participation des amateurs du Québec aux concours HF avec un événement à cadence plus lente et plus facile d’approche que les grands concours. Nous espérons que cet événement encouragera les opérateurs à augmenter leur présence sur les ondes HF et qu’ils pourront profiter d’une bonne propagation
+Date
+Le QSO Party du Québec se tiendra le dimanche 19 avril 2026 de 13:00 à 24:00 UTC, c’est-à-dire de 9h à 20h HAE.
+La date limite de soumission des logs est le 3 mai 2026 à 23:59 UTC.
+D’une manière générale, l’évenement se tiendra le dimanche de la troisième fin de semaine complète d’avril. Les dates à venir sont au https://www.contestcalendar.com/contestdetails.php?ref=53.
+Règlements
+QCQP est utilisé dans le texte pour QSO Party du Québec. 
+Le QCQP est ouvert pour les radioamateurs, quel que soit leur niveau de certification et le pays.
+VE2 est utilisé dans ce texte pour représenter toute station opérant sur le territoire du Québec. Les préfixes possibles sont VA2, VB2, VE2 et VX2.
+Toute station opérant sur le territoire du Québec en utilisant un préfixe d’un autre territoire doit utiliser le suffixe « /VE2 ». Par exemple « W2ABC/VE2 »
+Objectifs: 
+Stations VE2: Contacter le plus grand nombre de stations possible sur le plus grand nombre de bandes possible, partout dans le monde.
+Stations non-VE2: Contacter le plus grand nombre de stations VE2 possible sur le plus grand nombre de bandes possible.
+Fréquences: Toutes les bandes amateur entre 80 et 2m, à l’exception des bandes WARC
+Les fréquences suggérées pour stations mobiles et QRP sont:  
+HF BLU: 3.735, 3.835, 7.070, 7.260, 14.150, 14.265, 21.260, 21.300, 28.360
+HF CW: 3.530, 7.030, 14.030, 21.030, 28.030
+VHF CW: 50.090, 144.090
+VHF BLU: 50.130, 144.205
+VHF MF: 52.540, 146.550
+Modulation fréquence (MF): Permise mais l’usage de répétitrices est interdit pour tout contact ou pour solliciter des contacts. Conserver la fréquence d’appel simplex 146.520 MHz libre d’activités liées au concours. 
+Modes: 
+Phonie (BLU ou MF) et morse (CW). 
+Catégories:
+1
+Opérateurs multiples, tous modes, tous niveaux de puissance
+2
+Opérateur unique, QRP, tous modes, 5 W et moins
+3
+Opérateur unique, tous modes, 100 W et moins – basse puissance
+4
+Opérateur unique, tous modes, plus de 100 W – haute puissance
+5
+Opérateur unique, phonie, 100W et moins – basse puissance
+6
+Opérateur unique, phonie, plus de 100 W – haute puissance
+7
+Opérateur unique, CW, 100W et moins – basse puissance
+8
+Opérateur unique, CW, plus de 100 W – haute puissance
+9
+Mobile
+Une station mobile est une station qui se déplace entre les régions administratives du Québec avec un véhicule. L’opération peut avoir lieu en marche ou à l’arrêt. Les antennes peuvent être fixées sur le véhicule ou non mais tout l’équippement doit être transporté par le véhicule.
+Une station mobile sur une limite entre deux zones de multiplicateurs doit effectuer un contact indépendant, incluant l’échange d’information complet et un enregistrement séparé au journal des contacts, pour obtenir chaque multiplicateur.
+Les stations mobiles sont encouragées à utiliser le suffixe “/<Code de zone>” dans l’appel CQ pour différencier la station pour chaque zone d’appel. Par exemple “VE2xxx/MTL”.  Voir l’annexe I pour les codes de zones.
+L’opération d’une station à distance est permise pour les stations fixes. Le code de région utilisé sera celui de la station et non la position de l’opérateur.
+Tout l’équipement d’une station doit être compris dans un rayon de 500 mètres. 
+Appel:
+Phonie: « CQ Quebec QSO Party » ou « Quebec QSO Party » de Indicatif_station
+CW: « CQ QCQP de Indicatif_station
+CW mobile: « CQ QCQP de Indicatif_station/code_de_région« ; voir l’annexe I pour les codes de régions à 3 lettres.
+Échange lors d’un contact:
+Station VE2: Doit donner un rapport de signal et son propre code de région (voir liste Annexe I). Elle doit noter au journal le rapport de signal et le code de région, la province, l’état ou DX pour toute autre entitée de la station contactée.
+Station non-VE2: Doit donner un rapport de signal et sa province (annexe II), état (annexe II) ou DX pour toute autre entitée. Elle doit noter au journal le rapport de signal et la zone de multiplication de la station VE2 contactée.
+Exemple d’échange:
+VE2CRO: CQ Quebec QSO Party de Victor Echo Two Charlie Romeo Oscar
+KA1BCD: Kilo Alpha One Bravo Charlie Delta
+VE2CRO: Kilo Alpha One Bravo Charlie Delta thank you for the call. You are Five-Nine from region Oscar Tango Sierra. Back to you.
+KA1BCD: QSL, please take my Four Nine from New-York, November Yankee.
+VE2CRO: QSL thank you and good luck! 
+VE2CRO: CQ Quebec QSO Party de Victor Echo Two Charlie Romeo Oscar
+Pointage
+Contacts permis:
+Les stations VE2 cumulent des points pour des contacts avec toutes les stations 
+Les stations non-VE2 ne cumulent des points que pour les stations VE2
+Les stations mobiles peuvent refaire les mêmes contacts à partir d’une zone de multiplication différente et réclamer les points et multiplicateurs additionnels liés à ces contacts.
+Valeurs des contacts:
+1 point par QSO en phonie pour chaque bande de fréquence
+2 points par QSO en CW pour chaque bande de fréquence
+Une station peut être contactée 2 fois par bande, soit en phonie et en CW
+Un seul QSO par station, par bande et par mode fournit des points. Les QSOs supplémentaires ne sont pas pénalisés mais n’ont pas de valeur.
+Multiplicateurs:
+Pour toutes les stations, un point de multiplication est accordé pour chaque premier contact fait dans chaque zone de multiplication et pour chaque bande de fréquence utilisée avec ces zones. Il n’y a pas de points supplémentaires pour l’utilisation de plus d’un mode. 
+De plus, une station VE2, obtient un point de multiplication pour chaque premier contact avec une province ou territoire du Canada, État américain ou DX et pour chaque bande de fréquence utilisée pour ces territoires. Un seul point DX est accordé pour toute entitée hors Canada ou États-Unis.
+Les stations mobiles obtiennent le total des points de multiplication associés avec chaque zone activée.
+La liste des zones de multiplication du Québec et les abréviations sont disponibles à l’Annexe I.
+La liste des provinces et territoires du Canada avec leur abréviation est disponible à l’Annexe II.
+Le pointage total est:
+Pointage-QSO = (Total des points de QSO) * (Total des points de multiplications)
+Bonus:
+Les bonus sont ajoutés après le calcul du pointage-QSO
+Il n’y a pas de station bonus commencant en 2026
+Bonus aux stations mobiles:
+Une station mobile obtient 300 points de bonus pour chaque zone de multiplication VE2 activée si elle a réussi à faire un minimum de 3 contacts avec 3 stations différentes à partir de cette zone.
+Réseaux de signalisation “DX Spotting”
+L’utilisation de réseaux de signalisation est permis. Il est permis de se signaler soi-même sur un réseau.
+L’affichage d’un horaire d’opération et de la disponibilité des régions est encouragée sur https://quebecqsoparty.org/annonces-doperation-spotting/
+Prix et récompenses
+La liste des prix se trouve sur la page Prix et récompenses
+Un minimum de 2 QSOs est requis pour être éligible à la réception d’un prix ou un certificat de participation.
+Soumission du journal des contacts (“logs”)
+Le journal de contacts (logs) devra être soumis en format Cabrillo selon les instructions de la page https://quebecqsoparty.org/soumission-qso-qso-download/. La date limite de soumission est 14 jours suivant la date du concours. Les journaux de contact soumis après cette date seront considérés pour vérification (« Checklogs ») seulement.
+20. Prix par club, pour le Québec
+Le pointage par club est la somme des points de QSO soumis pour un même club. L’affiliation de club provient de la ligne « CLUB » du fichier Cabrillo et seuls les clubs membres de RAQI ou RAC seront considérés. La valeur des QSO est calculée d’après le paragraphe 16. Un multiplicateur additionnel de un (1) est utilisé pour les stations haute puissance et un multiplicateur de deux (2) pour les stations de puissance inférieure.
+21. Prix par région pour le Québec
+Ce prix récompense la meilleure station par région. Les station ayant déjà reçu un des 14 prix d’opération (par exemple: « Opérateur unique, tous modes, haute puissance ») seront exclues des prix par région. Les stations mobiles auront leur pointage répartis selon la région où ils auront été fait. Le pointage est calculé selon la même formule que le prix par club.
+Annexe I: Liste de zones de multiplicateurs 
+Zone de multiplication 
+Codes de régions pour échange
+1- Bas Saint-Laurent
+BSA
+2- Saguenay-Lac-Saint-Jean
+SLS
+3- Capitale-Nationale
+QUE
+4- Mauricie
+MAU
+5- Estrie
+ETE
+6- Montréal
+MTL
+7- Outaouais
+OTS
+8- Abitibi-Témiscamingue
+ATE
+9- Côte-Nord
+CND
+10- Nord-du-Québec
+NDQ
+11- Gaspésie-îles-de-la-Madeleine
+GIM
+12- Chaudière-Appalaches
+CAS
+13- Laval
+LVL
+14- Lanaudière
+LDE
+15- Laurentides
+LNS
+16- Montérégie
+MEE
+17- Centre-du-Québec
+CDQ
+Annexe II: Enregistrement des territoires hors-Québec
+Notez que la province du Québec n’est pas un territoire valide pour le Quebec QSO Party. Le territoire enregistré doit être la zone de multiplication de la station VE2 contactée (voir Annexe I).
+Les contacts avec les 50 états Américains continentaux doivent être enregistrés avec l’abréviation usuelle des états américains. Hawai HI (KH6), l’Alaska AK (KL7) et District of Columbia (DC) sont inclus dans la liste des états continentaux. Notez que KP2 et KP4 sont exclus.
+Tout autre territoire doit être enregistré sous l’abréviation DX.
+Les provinces et territoires canadiens devront être enregistrés selon le tableau ci-joint:
+Province
+Abréviation
+Terre-Neuve
+NF
+Labrador
+LB
+Île-du-Prince-Édouard
+PE
+Nouveau-Brunswick
+NB
+Nouvelle-Écosse
+NS
+Ontario
+ON
+Manitoba
+MB
+Saskatchewan
+SK
+Alberta
+AB
+Columbie-Britannique
+BC
+Territoires du Nord-Ouest
+NT
+Yukon
+YT
+Nunavut
+NU
+Northwest Territories
+NWT
+ 2021-12-11
+ Designed using Unos. Powered by WordPress. 

@@ -1,0 +1,25 @@
+Quebec QSO Party - the 17 administrative regions of Quebec (the rules Appendix I)
+Each region is its own multiplier for EVERY entrant, so no region maps to Qc
+The rules - For all stations, one multiplier point is given for each first contact made in each administrative region
+QC itself is not a valid entry (Appendix II), so nothing here answers to QC or VE2
+No INCLUDE here - an out-of-province entrant loads only this file, and the host-area rule reads it
+No line of this header may hold an equals sign - the reader takes any such line as an entry
+https://quebecqsoparty.org/rules-quebec-qso-party/
+
+BSA = BSA,^Bas-Saint-Laurent
+SLS = SLS,^Saguenay-Lac-Saint-Jean
+QUE = QUE,^Capitale-Nationale
+MAU = MAU,^Mauricie
+ETE = ETE,^Estrie
+MTL = MTL,^Montreal
+OTS = OTS,^Outaouais
+ATE = ATE,^Abitibi-Temiscamingue
+CND = CND,^Cote-Nord
+NDQ = NDQ,^Nord-du-Quebec
+GIM = GIM,^Gaspesie-Iles-de-la-Madeleine
+CAS = CAS,^Chaudiere-Appalaches
+LVL = LVL,^Laval
+LDE = LDE,^Lanaudiere
+LNS = LNS,^Laurentides
+MEE = MEE,^Monteregie
+CDQ = CDQ,^Centre-du-Quebec

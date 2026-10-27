@@ -1,0 +1,212 @@
+﻿Quebec QSO Party -- the sponsor's rules, ENGLISH text ("Rules Quebec QSO Party")
+
+Source: https://quebecqsoparty.org/rules-quebec-qso-party/
+Sponsor: Club Radio Amateur de l'Outaouais (CRAO). Event: Sunday 2026-04-19, 13:00-24:00 UTC.
+Fetched: 2026-10-26 with curl; the HTML reduced to text, one line per line of the page, as fetched.
+The page carries no revision number; it names the 2026 event (the 2021-12-11 footer date is WordPress's).
+The sponsor publishes the rules in English AND in French; neither says which governs. Both are kept here.
+WA7BNM ID: 53 (https://www.contestcalendar.com/contestdetails.php?ref=53, named in the rules themselves)
+Cabrillo Name: QC-QSO-PARTY (WA7BNM 53; the sponsor states no CONTEST: value)
+ADIF Name: QC-QSO-PARTY (ADIF 3.1.7 Contest_ID enumeration)
+Logs: Cabrillo, by the upload page https://quebecqsoparty.org/soumission-qso-qso-download/ (no e-mail route).
+NY4I's decisions: GitHub #128 (2026-10-26). The class is tr4w/src/contestFactory/uContestQuebecQP.pas.
+Where the French text differs (see QC-QSO-PARTY-Rules-FR.txt): the region-line rule says "deux
+zones" (two) where this text says "2 or more"; TR4W allows two (NY4I, #128, an open question there).
+
+==============================================================================
+Rules Quebec QSO Party – QSO Party du Québec
+ Skip to content
+QSO Party du Québec
+19 avril 2026 de 1300-2400 UTC - April 19th, 2026 1300-2400Z
+ Nouveau 2026
+ Nouvelles heures d’opérations — New operating times
+Nouveaux prix — New Awards
+Limite logs: 3 mai 2026 — Logs limit: May 3rd, 2026
+ Primary Navigation Menu
+ Menu
+ Accueil
+Home
+Règlements en français
+English Rules
+Soumission résultats
+Log Posting
+Journal
+Logging Software
+Annonces d’opération
+Spotting
+Résultats
+Results
+ Résultats 2025 – Results 2025
+ Résultats 2024 – Results 2024
+ Résultats 2023 – Results 2023
+ Résultats 2022 – Results 2022
+Prix
+Awards
+ Rules Quebec QSO Party
+Club Radio Amateur de l’Outaouais (CRAO) is proud to sponsor the Quebec QSO Party.
+For more information please contact QuebecQsoParty.groups.io
+Vision
+To organize an exciting amateur radio event where operators from the province of Quebec contact others from around the world and where the many administrative regions in the province are featured.
+To stimulate the participation of amateur operators from Quebec in HF contesting in a relaxed environment. We hope that this will help to get more operators on the air year round, provide them with an opportunity to hone their contesting skills and enable them to benefit from good propagation conditions.
+Date
+The Quebec QSO Party will be held on Sunday April 19th, 2026, from 13:00 to 24:00 UTC.
+The log submission deadline is May 3rd, 2026 at 23:59 UTC.
+Generaly speaking the event will be held on the Sunday of the third full weekend of April. Upcoming dates are listed on https://www.contestcalendar.com/contestdetails.php?ref=53.
+Rules
+QCQP is the abbreviation used for the Quebec QSO Party.
+The QCQP is open to all amateur radio operators world-wide regardless of the license class and world-wide.
+VE2 is used here for any station operating within the physical boundary of the province of Quebec. Possible prefixes are VA2, VB2, VE2 and VX2.
+Any station operating within the province of Quebec and using a prefix referencing some other territory shall use the “/VE2” suffix with its call sign. For instance « W2ABC/VE2 ».
+Objectives: 
+VE2 Stations: To contact as many amateur radio stations as possible on as many bands as possible, world-wide.
+Non-VE2 Stations: To make as many contacts with Quebec amateur radio stations as possible, on as many bands as possible.
+Frequencies: All amateur bands between 80 et 2 m, excepted WARC bands.
+Suggested Frequencies for Mobiles and/or QRP:  
+HF SSB: 3.735, 3.835, 7.070, 7.260, 14.150, 14.265, 21.260, 21.300, 28.360
+HF CW: 3.530, 7.030, 14.030, 21.030, 28.030
+VHF CW: 50.090, 144.090
+VHF SSB: 50.130, 144.205
+VHF FM: 52.540, 146.550
+Frequency Modulation: Is allowed but operators cannot use repeaters for either contest contacts or for soliciting contacts. Keep the FM Simplex calling frequency of 146.520 MHz clear.
+Modes: 
+Phone (SSB or FM) and Morse code (CW).
+Categories:
+1
+Multi-operator, mixed modes, all power levels
+2
+Single Operator QRP Mixed mode, 5 W or less
+3
+Single Operator Mixed Mode, 100 W or less – Low Power
+4
+Single Operator Mixed Mode, more than 100 W – High Power
+5
+Single Operator Phone only, 100 W or less – Low Power
+6
+Single Operator Phone only, more than 100 W – High Power
+7
+Single Operator CW only, 100 W or less – Low Power
+8
+Single Operator CW only, more than 100W – High Power
+9
+Mobile
+A mobile station is a station that travels between Quebec administrative regions in a vehicle. Such a station could be operating while stopped or while in motion, using antennas mounted on or off the vehicle. In all cases, equipment must be transported by the vehicle.
+If a mobile station is on a boundary between 2 or more administrative regions, a separate QSO and complete exchange must be made and logged for each administrative regions worked.
+Mobile stations are encouraged to sign “/ <region code>” as part of the CQ. For example “VE2xxx/MTL”. This way other operators can anticipate their moves to a new multiplier area.
+Remote operation is permitted in all fixed categories. When operating remote, send the region code where the transmitter is located.
+All equipment, including receivers, transmitters and antennas, must be located within a maximum diameter of 500m. 
+Calling CQ: 
+Phone: « CQ Quebec QSO Party » or « Quebec QSO Party » de Station_call
+CW: « CQ QCQP de Station_call
+CW mobile: « CQ QCQP de Station_call/region_code« ; See Appendix I for the region 3 letter region codes
+Contact Exchange:
+VE2 stations: Must send a signal report and their administrative region abbreviation (see Appendix I). They must log the received signal report as well as the province, US state or DX for other entities (see Appendix II).
+Non-VE2 stations: Must send a signal report and their province, US state or DX for other entities (see Appendix II). They must log the received signal report as well as the administrative region (see Appendix I) of the VE2 station.
+Scoring:
+Contacts allowed:
+The VE2 stations obtain points for contacts with all stations.
+Non-VE2 stations obtain points for contacts for VE2 stations only.
+Mobile stations are allowed to contact stations already contacted when calling from a new administrative region and they obtain additional points and multipliers for these new contacts.
+Contacts value
+1 point per QSO on phone on each frequency band
+2 points per QSO on CW on each frequency band
+A station can be contacted twice per band, once on phone and once on CW
+Only one QSO per station for each band and each mode can provide points. Additional logged QSOs have no value but are not penalized either.
+Multipliers:
+For all stations, one multiplier point is given for each first contact made in each administrative region, on each frequency band worked on these regions. No additional multipliers are given for working multiple modes.
+Additionally, a VE2 station is given one multiplier point for each first contact with a province or Canadian territory, US state or DX, for each band worked with these territories. Only one DX multiplier is given for entities worked outside of Canada or USA.
+Mobile stations are given the total of the multiplication points made in each administrative region activated.
+The list of the Quebec administrative regions with their abbreviations is available in Appendix I.
+The list of available Canada multipliers with their abbreviations is available in Appendix II.
+The total score is:
+QSO-score = (Total of the QSO points) * (Total of the multiplier points)
+Bonuses:
+Bonuses are added after the calculation of the QSO-score.
+Starting in 2026, there is no bonus station(s)
+Bonuses to mobile stations:
+Mobile stations add 300 bonus points for each Quebec administrative region activated. To earn the mobile/rover bonus a station must make at least three contacts with three different stations from the multiplier area.
+DX Spotting networks:
+The use of DX spotting networks is permitted. Self spotting is permitted.
+Posting an operation schedule and region availability is encouraged at https://quebecqsoparty.org/annonces-doperation-spotting/
+Awards
+The list of Awards is available on the Awards Page
+A minimum of 2 QSOs is required to be eligible for an Award or a Participation Certificate.
+Log Submission
+Log entries shall be submitted in Cabrillo format at https://quebecqsoparty.org/soumission-qso-qso-download/. Logs must be submitted no later than 14 days after the contest date. Logs received after the submission date will be treated as CHECKLOGS.
+20. Awards per club, inside Quebec
+The score per club is the sum of all the QSO points submitted for a given club. The club affiliation is taken from the « CLUB » line in the Cabrillo log file and only the clubs which are members of RAQI will be permitted. The QSO value is calculated per paragraph 16. A multiplier of one (1) is used for stations operating at High Power and a multiplier of two (2) is granted to stations working at a lower power level.
+21. Awards per region, inside Quebec
+This award is granted to the station having the highest score for each region. Stations which have already received one of the 14 operations awards (for example: « Single operator, all modes, high power ») will be excluded from the awards per region. Mobile stations will have their score attributed to the region in which they have been made. The score is calculated using the same method as the Award per club.
+Appendix I: List of Administrative Regions of Quebec
+Administrative Region
+Contest Exchange Region Codes
+1- Bas Saint-Laurent
+BSA
+2- Saguenay-Lac-Saint-Jean
+SLS
+3- National Capital
+QUE
+4- Mauricie
+MAU
+5- Estrie
+ETE
+6- Montreal
+MTL
+7- Outaouais
+OTS
+8- Abitibi-Temiscamingue
+ATE
+9- Cote-Nord
+CND
+10- Nord-du-Quebec
+NDQ
+11- Gaspesie-îles-de-la-Madeleine
+GIM
+12- Chaudiere-Appalaches
+CAS
+13- Laval
+LVL
+14- Lanaudiere
+LDE
+15- Laurentides
+LNS
+16- Monteregie
+MEE
+17- Centre-du-Quebec
+CDQ
+Appendix II: Logging of out of Quebec Territories
+Note that the Province of Quebec (QC) is not a valid territory entry for the Quebec QSO Party. Logging QSOs with VE2 stations must use the Quebec administrative region instead (see Appendix I).
+Contacts with the 50 continental US States shall be logged using the common state abbreviation. Hawaii HI (KH6), Alaska AK (KL7) and District of Columbia DC shall be included in the continental states but KP2 and KP4 are excluded.
+Other DXCC entities must be logged as DX.
+Canadian Provinces and territories shall be logged according to the table below:
+Province
+Abbreviation
+Newfoundland
+NF
+Labrador
+LB
+Prince Edward Island
+PE
+New Brunswick
+NB
+Nova Scotia
+NS
+Ontario
+ON
+Manitoba
+MB
+Saskatchewan
+SK
+Alberta
+AB
+British Columbia
+BC
+Northern Territories
+NT
+Yukon
+YT
+Nunavut
+NU
+Northwest Territories
+NWT
+ 2021-12-11
+ Designed using Unos. Powered by WordPress. 

@@ -1,0 +1,29 @@
+Entries for the Quebec QSO Party used by in-province (VE2) stations
+The 17 administrative regions (each its own multiplier), then the 50 US states and DC, the Canadian provinces and territories but Quebec, and one DX
+The rules - a VE2 station is given one multiplier point for each first contact with a province or Canadian territory, US state or DX
+The rules - Hawaii HI, Alaska AK and District of Columbia DC shall be included in the continental states (S51.DOM holds the 48, AK, HI and DC)
+Quebec is not a multiplier - the Province of Quebec QC is not a valid territory entry - so P12/P13 are NOT included
+P12/P13 also give Quebec the alias QUE, which is the Capitale-Nationale region code, and VE2, which would make the rover strip take W2ABC/VE2 as a region
+Newfoundland NF and Labrador LB are TWO multipliers in the rules Appendix II (NY4I, GitHub 128), so they are written here, not taken from P13 (one Nl)
+NT and NWT are one territory listed twice by the rules, so one multiplier (NY4I, GitHub 128)
+Other DXCC entities must be logged as DX - one DX multiplier, per band
+The region file comes FIRST so a region code always wins
+No line of this header may hold an equals sign - the reader takes any such line as an entry
+https://quebecqsoparty.org/rules-quebec-qso-party/
+
+INCLUDE FILE quebec_cty.dom
+INCLUDE FILE S51.DOM
+Nf = NF,^Newfoundland
+Lb = LB,^Labrador
+Pe = PE,^Prince Edward Island
+Nb = NB,^New Brunswick
+Ns = NS,^Nova Scotia
+On = ON,^Ontario
+Mb = MB,^Manitoba
+Sk = SK,^Saskatchewan
+Ab = AB,^Alberta
+Bc = BC,^British Columbia
+Nt = NT,NWT,^Northwest Territories
+Yt = YT,^Yukon
+Nu = NU,^Nunavut
+Dx = DX

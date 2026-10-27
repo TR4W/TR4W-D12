@@ -220,44 +220,6 @@ begin
    end;
 end;
 
-(* THE SHIPPED COUNTY FILE, THROUGH THE REAL LOADER, as an out-of-state
-   entrant's session loads it (MultipliersIsCounties True) -- with a
-   multiplier sheet of its own, so the load touches nothing another test
-   reads. GCountyTable is the table CountyFileKnowsQTH asks, the
-   TDomesticQTHTest the host-area rule is handed. *)
-var
-   GCountyTable: TDomQTHTable;
-   GSavedSheet: TMultsObject;
-   GSavedCounties: boolean;
-
-procedure LoadCountyTable(aCountiesAreMultipliers: boolean);
-begin
-   GSavedSheet := mo;
-   GSavedCounties := MultipliersIsCounties;
-   mo := TMultsObject.Create;
-   MultipliersIsCounties := aCountiesAreMultipliers;
-   GCountyTable := TDomQTHTable.Create;
-   LoadShippedDomFollowingIncludes(GCountyTable, 'northdakota_cty.dom', True, 0);
-end;
-
-procedure FreeCountyTable;
-begin
-   GCountyTable.Free;
-   GCountyTable := nil;
-   mo.Free;
-   mo := GSavedSheet;
-   MultipliersIsCounties := GSavedCounties;
-end;
-
-(* FindAlias is the table's exact lookup; its keys are stored upper-cased. *)
-function CountyFileKnowsQTH(const aQTH: string): boolean;
-var
-   entry: TDomQTHEntry;
-begin
-   Result := (GCountyTable <> nil) and
-             GCountyTable.FindAlias(UpperCase(Trim(aQTH)), entry);
-end;
-
 (* ---------------------------------------------------------------------------
    IDENTITY
    --------------------------------------------------------------------------- *)
@@ -624,7 +586,7 @@ var
    code: string;
 begin
    BeginTest('Test_NorthDakotaOutOfStateWorksOnlyNorthDakota');
-   LoadCountyTable(True);
+   LoadCountyTable('northdakota_cty.dom', True);
    try
       (* EVERY ONE OF THE 53 COUNTIES is its own multiplier and a station
          this entrant may work. *)
@@ -632,7 +594,7 @@ begin
       for i := Low(RULES_COUNTIES) to High(RULES_COUNTIES) do
          begin
          code := Copy(RULES_COUNTIES[i], 1, 3);
-         CheckEquals(code, MultiplierOf(GCountyTable, code), code + ' is its own multiplier');
+         CheckEquals(code, MultiplierOf(CountyTable, code), code + ' is its own multiplier');
          CheckTrue(CountyFileKnowsQTH(code), code + ' is a North Dakota station');
          end;
 
@@ -829,12 +791,12 @@ begin
 
    (* AS AN ND STATION READS IT (MultipliersIsCounties False): still 53
       multipliers, not one -- "the sum of ND Counties (53)". *)
-   LoadCountyTable(False);
+   LoadCountyTable('northdakota_cty.dom', False);
    try
       CheckEquals(53, mo.DomList.Count, 'in state, the 53 counties are 53 multipliers');
-      CheckEquals('CSS', MultiplierOf(GCountyTable, 'CSS'), 'Cass counts as Cass');
-      CheckEquals('', MultiplierOf(GCountyTable, 'ND'), 'no state is in the county file');
-      CheckEquals('', MultiplierOf(GCountyTable, 'MN'), 'nor Minnesota');
+      CheckEquals('CSS', MultiplierOf(CountyTable, 'CSS'), 'Cass counts as Cass');
+      CheckEquals('', MultiplierOf(CountyTable, 'ND'), 'no state is in the county file');
+      CheckEquals('', MultiplierOf(CountyTable, 'MN'), 'nor Minnesota');
    finally
       FreeCountyTable;
    end;

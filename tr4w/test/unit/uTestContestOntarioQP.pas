@@ -257,44 +257,6 @@ begin
    end;
 end;
 
-(* THE SHIPPED COUNTY FILE, THROUGH THE REAL LOADER, as an out-of-province
-   entrant's session loads it (MultipliersIsCounties True) -- with a
-   multiplier sheet of its own, so the load touches nothing another test
-   reads. GCountyTable is the table CountyFileKnowsQTH asks, the
-   TDomesticQTHTest the host-area rule and the rover strip are handed. *)
-var
-   GCountyTable: TDomQTHTable;
-   GSavedSheet: TMultsObject;
-   GSavedCounties: boolean;
-
-procedure LoadCountyTable(aCountiesAreMultipliers: boolean);
-begin
-   GSavedSheet := mo;
-   GSavedCounties := MultipliersIsCounties;
-   mo := TMultsObject.Create;
-   MultipliersIsCounties := aCountiesAreMultipliers;
-   GCountyTable := TDomQTHTable.Create;
-   LoadShippedDomFollowingIncludes(GCountyTable, 'ontario_cty.dom', True, 0);
-end;
-
-procedure FreeCountyTable;
-begin
-   GCountyTable.Free;
-   GCountyTable := nil;
-   mo.Free;
-   mo := GSavedSheet;
-   MultipliersIsCounties := GSavedCounties;
-end;
-
-(* FindAlias is the table's exact lookup; its keys are stored upper-cased. *)
-function CountyFileKnowsQTH(const aQTH: string): boolean;
-var
-   entry: TDomQTHEntry;
-begin
-   Result := (GCountyTable <> nil) and
-             GCountyTable.FindAlias(UpperCase(Trim(aQTH)), entry);
-end;
-
 (* An out-of-province entrant whose session table is the shipped county
    file (LoadCountyTable first). *)
 function OutOfProvinceStation: TStationContext;
@@ -486,7 +448,7 @@ var
    i: integer;
 begin
    BeginTest('Test_OntarioClubStationsScoreTen');
-   LoadCountyTable(True);
+   LoadCountyTable('ontario_cty.dom', True);
    try
       for i := Low(ON_CLUB_STATIONS) to High(ON_CLUB_STATIONS) do
          begin
@@ -666,9 +628,9 @@ begin
    end;
 
    (* And outside Ontario, where the county file alone is the table. *)
-   LoadCountyTable(True);
+   LoadCountyTable('ontario_cty.dom', True);
    try
-      CheckEquals('MAN', MultiplierOf(GCountyTable, 'MAN'), 'outside Ontario MAN is Manitoulin');
+      CheckEquals('MAN', MultiplierOf(CountyTable, 'MAN'), 'outside Ontario MAN is Manitoulin');
       CheckTrue(CountyFileKnowsQTH('MAN'), 'an Ontario station');
       CheckFalse(CountyFileKnowsQTH('MB'), 'Manitoba is not');
    finally
@@ -784,7 +746,7 @@ var
 begin
    BeginTest('Test_OntarioOutOfProvinceWorksOnlyOntario');
    list := TStringList.Create;
-   LoadCountyTable(True);
+   LoadCountyTable('ontario_cty.dom', True);
    try
       (* EVERY ONE OF THE SPONSOR'S 50 MULTIPLIERS is its own multiplier and
          a station this entrant may work. *)
@@ -794,7 +756,7 @@ begin
       for i := 0 to list.Count - 1 do
          begin
          code := list.Names[i];
-         CheckEquals(code, MultiplierOf(GCountyTable, code), code + ' is its own multiplier');
+         CheckEquals(code, MultiplierOf(CountyTable, code), code + ' is its own multiplier');
          CheckTrue(CountyFileKnowsQTH(code), code + ' is an Ontario station');
          end;
 
@@ -1007,12 +969,12 @@ begin
 
    (* AS AN ONTARIO STATION READS IT (MultipliersIsCounties False): still 50
       multipliers, not one. *)
-   LoadCountyTable(False);
+   LoadCountyTable('ontario_cty.dom', False);
    try
       CheckEquals(50, mo.DomList.Count, 'in Ontario, the 50 codes are 50 multipliers');
-      CheckEquals('TOR', MultiplierOf(GCountyTable, 'TOR'), 'Toronto counts as Toronto');
-      CheckEquals('', MultiplierOf(GCountyTable, 'ON'), 'no province is in the county file');
-      CheckEquals('', MultiplierOf(GCountyTable, 'NY'), 'nor a state');
+      CheckEquals('TOR', MultiplierOf(CountyTable, 'TOR'), 'Toronto counts as Toronto');
+      CheckEquals('', MultiplierOf(CountyTable, 'ON'), 'no province is in the county file');
+      CheckEquals('', MultiplierOf(CountyTable, 'NY'), 'nor a state');
    finally
       FreeCountyTable;
    end;

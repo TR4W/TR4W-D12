@@ -38,7 +38,9 @@ unit uTestQSOPartyRules;
 interface
 
 uses
-   VC;
+   VC,
+   (* TDomQTHTable -- CountyTable's type. *)
+   LogDom;
 
 (* THE MULTIPLIER aContest's IN-STATE FILE GIVES aAlias -- upper case, ''
    when the file does not know it. The file is the class's own
@@ -76,6 +78,24 @@ procedure RoverDupeAnswers(aContest: TContestHandle;
                            out aNewCountyIsDupe: boolean;
                            out aSameCountyIsDupe: boolean); overload;
 
+(* THE HOST'S SHIPPED COUNTY FILE, THROUGH THE REAL LOADER -- as an
+   out-of-state entrant's session loads it (aCountiesAreMultipliers True,
+   FCONTEST's MultipliersIsCounties) or as an in-state entrant reads the
+   same file (False) -- with a multiplier sheet of its own, so the load
+   touches nothing another test reads. While it is loaded, CountyTable is
+   the table and CountyFileKnowsQTH the TDomesticQTHTest a party's host-area
+   rule and the rover strip are handed (FindAlias, the table's exact
+   lookup). Pair every LoadCountyTable with FreeCountyTable in a finally; a
+   second load before the free raises.
+
+   LIFTED 2026-10-26 (the Quebec QSO Party, #128) from the North Dakota,
+   Oklahoma, New Mexico and Ontario tests, which carried it word for word but
+   for the file name; Quebec would have been the fifth copy. *)
+procedure LoadCountyTable(const aCountyFileName: string; aCountiesAreMultipliers: boolean);
+procedure FreeCountyTable;
+function CountyTable: TDomQTHTable;
+function CountyFileKnowsQTH(const aQTH: string): boolean;
+
 implementation
 
 uses
@@ -85,7 +105,6 @@ uses
    uCallsigns,
    uContestBase,
    uContestRegistry,
-   LogDom,
    LogEdit,
    (* Contest, the session's contest. *)
    PostUnit,
@@ -225,6 +244,57 @@ begin
       Settings.Qso.ByBand := savedByBand;
       Contest := savedContest;
    end;
+end;
+
+(* THE LOADED COUNTY FILE -- see the declaration. *)
+var
+   GCountyTable: TDomQTHTable;
+   GSavedSheet: TMultsObject;
+   GSavedCounties: boolean;
+
+procedure LoadCountyTable(const aCountyFileName: string; aCountiesAreMultipliers: boolean);
+begin
+   if GCountyTable <> nil then
+      begin
+      raise Exception.Create('LoadCountyTable(' + aCountyFileName
+                             + ') while a county table is loaded: FreeCountyTable first');
+      end;
+   GSavedSheet := mo;
+   GSavedCounties := MultipliersIsCounties;
+   mo := TMultsObject.Create;
+   MultipliersIsCounties := aCountiesAreMultipliers;
+   GCountyTable := TDomQTHTable.Create;
+   try
+      LoadShippedDomFollowingIncludes(GCountyTable, aCountyFileName, True, 0);
+   except
+      (* A missing file must not leave the sheet swapped: the caller's
+         finally is not yet entered. *)
+      FreeCountyTable;
+      raise;
+   end;
+end;
+
+procedure FreeCountyTable;
+begin
+   GCountyTable.Free;
+   GCountyTable := nil;
+   mo.Free;
+   mo := GSavedSheet;
+   MultipliersIsCounties := GSavedCounties;
+end;
+
+function CountyTable: TDomQTHTable;
+begin
+   Result := GCountyTable;
+end;
+
+(* FindAlias is the table's exact lookup; its keys are stored upper-cased. *)
+function CountyFileKnowsQTH(const aQTH: string): boolean;
+var
+   entry: TDomQTHEntry;
+begin
+   Result := (GCountyTable <> nil) and
+             GCountyTable.FindAlias(UpperCase(Trim(aQTH)), entry);
 end;
 
 end.

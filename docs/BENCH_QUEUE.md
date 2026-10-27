@@ -23,6 +23,42 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-27 -- THE QUEBEC QSO PARTY (issue #128)
+
+A new by-id contest (`QC-QSO-PARTY`), the third Canadian host on the party
+base. Unit-tested (`uTestContestQuebecQP`, including a real-engine run for
+both entrants); nothing sees the screen, the multiplier windows or a written
+file.
+
+- [ ] **The New Contest dialog.** Choose the Quebec QSO Party: EXPECT the
+      MY STATE comment asks for the administrative region code (e.g. MTL),
+      not "if you are in QC state". With MY STATE `MTL` the session is in
+      province; with `QC` it is OUTSIDE Quebec (no guard refuses it -- the
+      prompt is the only one).
+- [ ] **In Quebec** (MY STATE `MTL`). `599 QUE` is Capitale-Nationale (a
+      region), not Quebec; `599 QC` and `599 VE2` are refused. `599 NF` then
+      `599 LB`: TWO multipliers; `599 NL`: refused. `599 NT` then `599 NWT`:
+      one. `599 DC` then `599 MD`: two. DL1xxx `599 DX` then JA1xxx `599 DX`
+      on 20 m: ONE new multiplier; DX again on 40 m: a new one. `599 DL` is
+      refused ("must be logged as DX").
+- [ ] **Out of Quebec** (MY STATE `NY`). `599 MTL` takes; `599 NY` and a DX
+      station's `599 DX` are refused with "work QC stations only".
+      `W2ABC/VE2 599 GIM` takes and is located as Canada; `VE2xxx/LVL` is
+      VE2xxx in Laval.
+- [ ] **A region line.** `599 MTL/LVL` logs two QSOs; `599 MTL/LVL/LNS` is
+      refused (two regions -- the French rules' "deux zones"; the English
+      says "2 or more", open on #128).
+- [ ] **No 160 m.** A 160 m QSO is logged as an X-QSO (`X-QSO:` in the
+      Cabrillo), scoring nothing.
+- [ ] **The Cabrillo file.** CONTEST: `QC-QSO-PARTY`; a DX entrant (no MY
+      STATE) sends `599 DX` (not its prefix); FM is `FM`. The ADIF carries
+      STATE `QC` for a region, `NL` for NF and for LB, and no CNTY.
+- [ ] **File > Reports > 3830 Score** from a real log: one `Mults` column (no
+      3830 form was found for this contest).
+- [ ] **NOT BUILT (#133)**: a mobile entrant's re-work from a new region is
+      a dupe, its multipliers are one sheet, and there is no 300-point region
+      bonus. Expect a mobile's claimed score low.
+
 ## Added 2026-10-26 -- THE ONTARIO QSO PARTY (issue #127)
 
 A new by-id contest (`ON-QSO-PARTY`), the second Canadian host on the party

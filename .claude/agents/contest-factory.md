@@ -414,9 +414,12 @@ the target shape, the M-step migration order and the open questions.
   `RoverDupeAnswers`). Each takes a `TContestHandle` too (2026-10-26, the
   North Dakota QSO Party), as does `uTestContestObjects.Make`, so a by-id
   party reuses them; the `ContestType` forms delegate. A test that needs the
-  real COUNTY file as the host-area table loads it with
-  `uTestShippedDom.LoadShippedDomFollowingIncludes` behind its own
-  `TDomesticQTHTest` (`uTestContestNorthDakotaQP.CountyFileKnowsQTH`).
+  real COUNTY file as the host-area table calls
+  `uTestQSOPartyRules.LoadCountyTable('<base>_cty.dom', countiesAreMults)`
+  / `FreeCountyTable` (in a finally) and hands `@CountyFileKnowsQTH` as the
+  `TDomesticQTHTest`; `CountyTable` is the loaded table. Lifted 2026-10-27
+  (Quebec, #128) from North Dakota, Oklahoma, New Mexico and Ontario, which
+  carried it word for word but the file name -- never a unit-local copy.
 - **THE PREFIX MULTIPLIER KEY IS THE CLASS'S (M11 S3 part 1, 2026-10-14).**
   `PrefixMultiplierKey(aQso, out aKey: PrefixMultiplierString): boolean`
   (base False) is stated by the 32 prefix contests; `LOGEDIT.SetPrefix`
