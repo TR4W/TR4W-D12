@@ -9437,3 +9437,43 @@ msgstr ""
 msgid "Beep when keying a radio that will not transmit"
 msgstr ""
 
+#: uappstrings.scatchupask
+#, fuzzy
+msgid "The server holds %d QSO(s) that this log does not have. Add them to this log now? Nothing already in this log is changed or removed, and a backup of the log is taken first."
+msgstr ""
+
+#: uappstrings.scatchupfetchfailed
+#, fuzzy
+msgid "Could not read the server's log to catch up: %s"
+msgstr ""
+
+#: uappstrings.scatchupmergefailed
+#, fuzzy
+msgid "Nothing was added to the log: %s"
+msgstr ""
+
+#: uappstrings.scatchupskipped
+#, fuzzy
+msgid "%d QSO(s) on the server belong to another contest and were not added."
+msgstr ""
+
+#: uappstrings.snetcaughtup
+#, fuzzy
+msgid "Caught up from the server: %d QSO(s) added."
+msgstr ""
+
+#: uappstrings.snetresent
+#, fuzzy
+msgid "Resent to the server what was logged while disconnected: %d QSO(s), %d edit(s)."
+msgstr ""
+
+#: uappstrings.sserverlogadd
+#, fuzzy
+msgid "Add missing QSOs"
+msgstr ""
+
+#: uappstrings.sserverlogaddmissing
+#, fuzzy
+msgid "Add %d missing QSO(s)"
+msgstr ""
+
