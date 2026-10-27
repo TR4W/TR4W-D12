@@ -139,7 +139,6 @@ var
 implementation
 
 uses
-  uAppPaths,     // ShippedDomFilePath -- shipped data, whatever case
   ZoneCont,
   LogWind,
   MainUnit, LogSCP, {KK1L: DEBUG}
@@ -151,7 +150,10 @@ uses
   uContestFactory,
   (* The unit's own logger -- an INCLUDE the reader will not follow is
     reported, never skipped in silence (#88 round 3). *)
-  Log4D;
+  Log4D,
+  (* Where an INCLUDE FILE is looked for, the nesting bound, and the report
+    when one cannot be followed (#138). *)
+  uDomInclude;
 
 var
   (* THE TABLE A .dom IS BEING READ INTO. EnumDOMFILE is a line callback
@@ -163,6 +165,10 @@ var
   (* AND THE FILE, for the same reason -- so a warning names it. '' between
     reads. *)
   GLoadFileName: string = '';
+  (* HOW MANY READS ARE OPEN -- 1 inside a top-level file, 2 inside a file it
+    includes. EnumDOMFILE refuses an include past MAX_DOM_INCLUDE_DEPTH, so
+    a file that includes itself ends (#138). 0 between reads. *)
+  GLoadDepth: integer = 0;
   domLogger: TLogLogger;
 
 function DomLineIsAnUnfollowedInclude(const aLine: string): boolean;
@@ -401,23 +407,83 @@ begin
   PreviousFileName := GLoadFileName;
   GLoadTarget := Self;
   GLoadFileName := FileName;
+  Inc(GLoadDepth);
   try
      Enumerated := EnumerateLinesInFile(FileName, EnumDOMFILE, False);
   finally
+     Dec(GLoadDepth);
      GLoadTarget := PreviousTarget;
      GLoadFileName := PreviousFileName;
   end;
 
   if not Enumerated then
      begin
-     (* THE ONLY SETTING THAT NAMES A .DOM IS DOMESTIC FILENAME, so the
-       attribution is not a guess -- see TF.UnableToFindFileMessage. *)
-     UnableToFindFileMessage(FileName, 'DOMESTIC FILENAME');
+     (* THE ONLY SETTING THAT NAMES A TOP-LEVEL .DOM IS DOMESTIC FILENAME, so
+       the attribution is not a guess -- see TF.UnableToFindFileMessage. An
+       INCLUDEd file was named by a LINE, not by the setting: its caller,
+       FollowDomInclude, reports it with the file and the line (#138). *)
+     if not IncludedFile then
+        begin
+        UnableToFindFileMessage(FileName, 'DOMESTIC FILENAME');
+        end;
      Exit;
      end;
 
   //  NumberRemainingMults:=NumberRemainingMults;
   ReadDomQTHFile := True;
+end;
+
+(* FOLLOW ONE `INCLUDE FILE <name>` LINE OF THE FILE BEING READ -- or say why
+  not. Issue #138, 2026-10-27.
+
+  WHERE: beside the file that holds the line, then the shipped dom folder
+  (uDomInclude.ResolveDomInclude). D7 built '%sDOM\%s' from the program
+  directory, and the conversion that replaced its sprintf (c51dcc1d) had
+  dropped the backslash; uAppPaths.ShippedDomFilePath composed it after that,
+  against the WORKING directory -- the same place as the including file for
+  every shipped .dom, which is why only a file read from elsewhere saw it.
+
+  A FILE THAT CANNOT BE READ IS REPORTED, NAMING THE FILE THAT NAMES IT, THE
+  LINE AND EVERY PATH TRIED, and the rest of the file loads, as D7's loader
+  went on. It was reported as "could not find" plus "the name came from the
+  DOMESTIC FILENAME setting", which was wrong -- a line named it -- and in
+  the unit-test binary that report was a modal with nobody to dismiss it,
+  which hung the suite. The LogDom Error is unconditional; showwarning
+  decides whether an operator is there to see the dialog (interactive: yes,
+  as a missing DOMESTIC FILENAME already is; /EXPORT, /RESCORE, /MATRIX and
+  the tests: logged only).
+
+  A LINE PAST MAX_DOM_INCLUDE_DEPTH IS REPORTED AND NOT FOLLOWED, so an
+  include circle ends instead of exhausting the stack. *)
+procedure FollowDomInclude(const aLine, aName: string);
+var
+  path                                  : string;
+  tried                                 : string;
+  report                                : string;
+begin
+  report := '';
+  if GLoadDepth >= MAX_DOM_INCLUDE_DEPTH then
+     begin
+     report := DomIncludeTooDeepText(GLoadFileName, aLine);
+     end
+  else
+     begin
+     path := ResolveDomInclude(GLoadFileName, aName, tried);
+     if (path = '') or (not GLoadTarget.ReadDomQTHFile(path, True)) then
+        begin
+        if path <> '' then
+           begin
+           tried := path;
+           end;
+        report := DomIncludeNotReadText(GLoadFileName, aLine, tried);
+        end;
+     end;
+
+  if report <> '' then
+     begin
+     domLogger.Error(DomIncludeLogLine(report));
+     showwarning(report);
+     end;
 end;
 
 procedure EnumDOMFILE(FileString: PShortString);
@@ -428,7 +494,6 @@ label
 var
   DomQTHString, DomQTHName, Multiplier, TempString: ShortString; {: Str40;}
   DomName                               : Str40;
-  TempFileName                          : FileNameType;
   MultIndex                             : integer;
 begin
   GetRidOfPrecedingSpaces(FileString^);
@@ -440,15 +505,7 @@ begin
        re-read it from the ShortString's CHARACTERS -- @FileString^[n] -- and a
        ShortString has no terminator, so that read ran on until it met a zero
        byte belonging to something else. *)
-     (* THE dom DIRECTORY, WITH ITS SEPARATOR. D7 built this with
-       '%sDOM\%s'; the conversion that replaced the sprintf (c51dcc1d)
-       dropped the backslash, so 'INCLUDE FILE S50.DOM' asked for
-       <program dir>DOMS50.DOM -- which does not exist, and every .dom that
-       includes the states, provinces or Mexico loaded without them. FCONTEST's
-       in-state test had the same slip; all three dom readers compose the path
-       in one place now, uAppPaths.ShippedDomFilePath. *)
-     SetCharBuffer(TempFileName, ShippedDomFilePath(string(TempString)));
-     GLoadTarget.ReadDomQTHFile(CharBufferText(TempFileName), True);
+     FollowDomInclude(string(FileString^), string(TempString));
      end
   else if DomLineIsAnUnfollowedInclude(string(FileString^)) then
      begin

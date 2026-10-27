@@ -188,6 +188,21 @@ resourcestring
    SFileNameCameFromSetting =
       'The name came from the %s setting for this contest.';
 
+   (* AN INCLUDE FILE LINE IN A .dom THAT COULD NOT BE FOLLOWED -- issue
+     #138. The setting is the wrong attribution here: DOMESTIC FILENAME named
+     the file that holds the line, not the file the line names. So the
+     message names both files and the line. First %s the .dom holding the
+     line, second the line as written, third every path that was tried. *)
+   SDomIncludeNotRead =
+      'The domestic file %s names a file TR4W could not read, on the line "%s".' +
+      sLineBreak + sLineBreak +
+      'It was looked for here:' + sLineBreak + '%s' + sLineBreak + sLineBreak +
+      'The rest of the file was loaded; the entries in the missing file were not.';
+   (* First %s the .dom, %d the nesting limit, second %s the line. *)
+   SDomIncludeTooDeep =
+      'The domestic file %s nests INCLUDE FILE more than %d deep, on the line "%s". ' +
+      'That line was not followed: the files probably include one another in a circle.';
+
    { ------------------------------------------- the contest readiness check -
 
      ONE LINE PER GAP, AND EACH SAYS WHAT TR4W WILL DO INSTEAD. "MY COUNTRY is

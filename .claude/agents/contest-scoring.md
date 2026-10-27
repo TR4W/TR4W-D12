@@ -109,6 +109,19 @@ literal compare. `DomesticQTH` is non-empty exactly when the received QTH matche
 the contest's file; it is the "discrete value" NY4I asked for (Q45), where
 `DomMultQTH` is the shared catch-all.
 
+**`INCLUDE FILE <name>` IS LOOKED FOR BESIDE THE INCLUDING FILE, THEN IN THE
+SHIPPED `dom` FOLDER (issue #138, 2026-10-27; `uDomInclude.ResolveDomInclude`).**
+For every shipped `.dom` those are one place. One that cannot be read is an
+Error in the `LogDom` logger naming the file, the line and every path tried,
+plus `showwarning`; the rest of the file loads, as in D7. Nesting stops at
+`MAX_DOM_INCLUDE_DEPTH` (8), so a circle ends. **A warning in the unit-test
+binary is logged, never a dialog** (`VC.WarningsHaveNoOperator`, set by
+`tr4w_unit_tests.lpr`): before that, a missing include queued a modal and the
+first test that pumped messages (StatusAndNotice) hung the suite for ever.
+`Lint-DomCoverage` fails a shipped `INCLUDE FILE` naming a file not in
+`target\dom`. `uTestShippedDom.LoadShippedDomFollowingIncludes` still RAISES
+on a missing file, and an exception escaping a test aborts the whole run.
+
 **THE DUPE KEY IS THE CALL AS LOGGED -- PLUS, WHERE THE CONTEST SAYS SO, WHAT
 IT SENT (Q118, 2026-10-17).** `CALL/county` is its own key already (Q73,
 `uTestRoverDupeKey`). NY4I: *"New QSO per county"*, then *"All state parties"* --

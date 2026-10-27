@@ -461,7 +461,12 @@ begin
   // modal -- a MessageBox would block the run indefinitely (e.g. the ARRL10 /
   // Winter Field Day "LOCATION field is empty" check in PostUnit). The warning
   // is already in the log above; skip the modal in that mode.
-  if tSilentExport then Exit;
+  (* AND A RUN WITH NO OPERATOR AT ALL -- the unit tests (VC's
+    WarningsHaveNoOperator, issue #138). *)
+  if tSilentExport or WarningsHaveNoOperator then
+     begin
+     Exit;
+     end;
 
   (* THE THREAD GUARD LIVES HERE, not at the call sites, because at least one
     caller is not on the main thread: uRadioIcomBase warns about CI-V Transceive

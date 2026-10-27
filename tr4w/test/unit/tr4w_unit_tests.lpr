@@ -624,6 +624,7 @@ uses
    uTestWindowSnap      in 'uTestWindowSnap.pas',
    uAppPaths            in '..\..\src\uAppPaths.pas',
    uDomFileKeys         in '..\..\src\uDomFileKeys.pas',
+   uDomInclude          in '..\..\src\uDomInclude.pas',
    uContestNames        in '..\..\src\uContestNames.pas',
    uTLSTrust            in '..\..\src\utils\uTLSTrust.pas',
    uHTTPDownload        in '..\..\src\utils\uHTTPDownload.pas',
@@ -871,6 +872,12 @@ begin
    // No appender is configured: the loggers then discard output, which is
    // what a test run wants.  This is ONLY about the global being non-nil.
    logger := TLogLogger.GetLogger('TR4WUnitTests');
+
+   (* NOBODY IS HERE TO DISMISS A WARNING (issue #138). TF.showwarning opened
+     a modal -- or queued one, off the main thread -- and the first test that
+     pumped messages blocked the whole suite for ever. The warning is still
+     logged; a test that asserts one captures the log. *)
+   WarningsHaveNoOperator := True;
 
    WriteLn('=== TR4W Unit Tests ===');
    WriteLn('');

@@ -54,6 +54,10 @@ type
       procedure Test_ASecondLoadReplacesTheFirst;
       procedure Test_TheStoreKeepsTheListsRules;
       procedure Test_AnIncludeWithoutFileIsReportedNotSkipped;
+      procedure Test_AnIncludeResolvesBesideTheIncludingFile;
+      procedure Test_AShippedIncludeStillResolves;
+      procedure Test_AMissingIncludeIsReportedNotWaitedOn;
+      procedure Test_AnIncludeCycleEnds;
    end;
 
 implementation
@@ -66,7 +70,9 @@ uses
    LogDom,
    (* The loader's warning, captured (#88 round 3). *)
    Log4D,
-   uTestLogCapture;
+   uTestLogCapture,
+   (* ShippedDomDir -- the tree's dom folder. *)
+   uTestContestObjects;
 
 const
    MULT_Z = 'ZZRLD';
@@ -265,11 +271,224 @@ begin
    end;
 end;
 
+(* ---------------------------------------------------------------------------
+   INCLUDE FILE THROUGH THE REAL LOADER -- issue #138 (2026-10-27).
+
+   A real `INCLUDE FILE S50.DOM` planted in a county file HUNG the suite: the
+   loader looked for S50.DOM in the WORKING directory's dom folder (this
+   suite runs in tr4w/test/unit, which has none), and the missing file was
+   reported through TF.showwarning -- a modal MessageDlg, with nobody to
+   dismiss it. These tests read the real loader with NO silencing of their
+   own, so a regression to a modal hangs them again rather than passing
+   quietly: the suite runs with VC.WarningsHaveNoOperator set
+   (tr4w_unit_tests.lpr), which TF.showwarning reads -- the fix for that
+   half. Without it these tests hung the suite (the fail-first run).
+
+   Each test reads into a PRIVATE table and a PRIVATE sheet (EnumDOMFILE
+   writes every multiplier to mo.DomList), and captures the LogDom logger.
+   --------------------------------------------------------------------------- *)
+type
+   TDomIncludeFixture = class
+   private
+      FDir: string;
+      FFiles: TStringList;
+      FSavedSheet: TMultsObject;
+      FSavedCounties: boolean;
+      FLogger: TLogLogger;
+      FSavedLevel: TLogLevel;
+      FCapture: TCaptureAppender;
+      FKeep: ILogAppender;
+   public
+      Table: TDomQTHTable;
+      constructor Create(const aDirName: string);
+      destructor Destroy; override;
+      (* aName in this fixture's directory, holding aLines; its full path. *)
+      function Write(const aName: string; const aLines: array of string): string;
+      function Captured: TStringList;
+   end;
+
+constructor TDomIncludeFixture.Create(const aDirName: string);
+begin
+   inherited Create;
+   FDir := IncludeTrailingPathDelimiter(GetTempDir(False)) + aDirName + PathDelim;
+   ForceDirectories(FDir);
+   FFiles := TStringList.Create;
+   FSavedSheet := mo;
+   FSavedCounties := MultipliersIsCounties;
+   mo := TMultsObject.Create;
+   MultipliersIsCounties := False;
+   FCapture := TCaptureAppender.Create('capture');
+   FKeep := FCapture;
+   FLogger := TLogLogger.GetLogger('LogDom');
+   FSavedLevel := FLogger.Level;
+   FLogger.Level := Log4D.Warn;
+   FLogger.AddAppender(FKeep);
+   Table := TDomQTHTable.Create;
+end;
+
+destructor TDomIncludeFixture.Destroy;
+var
+   i: integer;
+begin
+   Table.Free;
+   FLogger.RemoveAppender(FKeep);
+   FLogger.Level := FSavedLevel;
+   FKeep := nil;
+   mo.Free;
+   mo := FSavedSheet;
+   MultipliersIsCounties := FSavedCounties;
+   for i := 0 to FFiles.Count - 1 do
+      begin
+      DeleteFile(FFiles[i]);
+      end;
+   FFiles.Free;
+   RemoveDir(FDir);
+   inherited Destroy;
+end;
+
+function TDomIncludeFixture.Write(const aName: string; const aLines: array of string): string;
+var
+   lines: TStringList;
+   i: integer;
+begin
+   Result := FDir + aName;
+   lines := TStringList.Create;
+   try
+      for i := Low(aLines) to High(aLines) do
+         begin
+         lines.Add(AnsiString(aLines[i]));
+         end;
+      lines.SaveToFile(AnsiString(Result));
+   finally
+      lines.Free;
+   end;
+   FFiles.Add(Result);
+end;
+
+function TDomIncludeFixture.Captured: TStringList;
+begin
+   Result := FCapture.Lines;
+end;
+
+(* AN INCLUDE IS LOOKED FOR BESIDE THE FILE THAT NAMES IT FIRST. In the
+   program the two are one place -- a shipped .dom is read from the dom
+   folder and includes its neighbours -- so nothing there changes; a .dom
+   read from anywhere else (this suite's temp copy, an operator's own file)
+   finds its neighbour instead of the working directory's dom folder. The
+   file is on disk in lower case and named in upper case, as the shipped
+   files are, which is the case-tolerant lookup's job on Linux. *)
+procedure TDomQTHTableReloadTests.Test_AnIncludeResolvesBesideTheIncludingFile;
+var
+   fixture: TDomIncludeFixture;
+   top: string;
+begin
+   BeginTest('Test_AnIncludeResolvesBesideTheIncludingFile');
+
+   fixture := TDomIncludeFixture.Create('tr4w_dom_include_sibling');
+   try
+      fixture.Write('tr4w_sibling.dom', [MULT_Q + ' = QQRA']);
+      top := fixture.Write('tr4w_top.dom', [MULT_Z + ' = ZZRA', 'INCLUDE FILE TR4W_SIBLING.DOM',
+                                            MULT_N + ' = NNRA']);
+      CheckTrue(fixture.Table.ReadDomQTHFile(top, False), 'the file loads');
+      CheckTrue(fixture.Table.HasPrefix('ZZRA'), 'its own entry before the include');
+      CheckTrue(fixture.Table.HasPrefix('QQRA'), 'the included file''s entry, found beside it');
+      CheckTrue(fixture.Table.HasPrefix('NNRA'), 'and its own entry after the include');
+      CheckEquals(0, fixture.Captured.Count, 'and nothing is reported: ' + fixture.Captured.Text);
+   finally
+      fixture.Free;
+   end;
+end;
+
+(* A SHIPPED FILE'S INCLUDES STILL RESOLVE through the real loader, two
+   levels deep: colorado.dom includes S50.DOM (which includes S48.DOM and
+   ALASKA.DOM), P13.DOM and COLORADO_CTY.DOM. Read by its full path from a
+   working directory with no dom folder -- the shape that hung. *)
+procedure TDomQTHTableReloadTests.Test_AShippedIncludeStillResolves;
+var
+   fixture: TDomIncludeFixture;
+begin
+   BeginTest('Test_AShippedIncludeStillResolves');
+
+   fixture := TDomIncludeFixture.Create('tr4w_dom_include_shipped');
+   try
+      CheckTrue(fixture.Table.ReadDomQTHFile(ShippedDomDir + 'colorado.dom', False),
+                'colorado.dom loads');
+      CheckTrue(fixture.Table.HasPrefix('TX'), 'Texas, from S48.DOM through S50.DOM');
+      CheckTrue(fixture.Table.HasPrefix('AK'), 'Alaska, from ALASKA.DOM through S50.DOM');
+      CheckTrue(fixture.Table.HasPrefix('NL'), 'Newfoundland and Labrador, from P13.DOM');
+      CheckTrue(fixture.Table.HasPrefix('ARA'), 'Arapahoe, from COLORADO_CTY.DOM');
+      CheckEquals(0, fixture.Captured.Count, 'and nothing is reported: ' + fixture.Captured.Text);
+   finally
+      fixture.Free;
+   end;
+end;
+
+(* A MISSING INCLUDED FILE IS REPORTED -- an Error naming the file that
+   names it, the line, and where it was looked for -- and the rest of the
+   file loads, as D7's loader went on. It is never a wait: this test
+   returning at all is half of what it pins. *)
+procedure TDomQTHTableReloadTests.Test_AMissingIncludeIsReportedNotWaitedOn;
+var
+   fixture: TDomIncludeFixture;
+   top: string;
+   text: string;
+begin
+   BeginTest('Test_AMissingIncludeIsReportedNotWaitedOn');
+
+   fixture := TDomIncludeFixture.Create('tr4w_dom_include_missing');
+   try
+      top := fixture.Write('tr4w_names_a_missing_file.dom',
+                           ['INCLUDE FILE TR4W_NO_SUCH_INCLUDE.DOM', MULT_Z + ' = ZZRA']);
+      CheckTrue(fixture.Table.ReadDomQTHFile(top, False), 'the file itself still loads');
+      CheckTrue(fixture.Table.HasPrefix('ZZRA'), 'with its entry after the include');
+      text := fixture.Captured.Text;
+      CheckEquals(1, fixture.Captured.Count, 'the missing file is reported once: ' + text);
+      CheckTrue(Pos('ERROR', UpperCase(text)) > 0, 'as an error: ' + text);
+      CheckTrue(Pos('tr4w_names_a_missing_file.dom', text) > 0, 'naming the file that names it: ' + text);
+      CheckTrue(Pos('"INCLUDE FILE TR4W_NO_SUCH_INCLUDE.DOM"', text) > 0, 'and the line: ' + text);
+      CheckTrue(Pos('dom' + PathDelim + 'TR4W_NO_SUCH_INCLUDE.DOM', text) > 0,
+                'and where it was looked for: ' + text);
+   finally
+      fixture.Free;
+   end;
+end;
+
+(* AN INCLUDE CYCLE ENDS. A file that includes itself re-entered the loader
+   until the stack ran out; nesting is bounded now, and the line that would
+   go deeper is reported, once, instead of followed. *)
+procedure TDomQTHTableReloadTests.Test_AnIncludeCycleEnds;
+var
+   fixture: TDomIncludeFixture;
+   top: string;
+   text: string;
+begin
+   BeginTest('Test_AnIncludeCycleEnds');
+
+   fixture := TDomIncludeFixture.Create('tr4w_dom_include_cycle');
+   try
+      top := fixture.Write('tr4w_cycle.dom', ['INCLUDE FILE TR4W_CYCLE.DOM', MULT_Z + ' = ZZRA']);
+      CheckTrue(fixture.Table.ReadDomQTHFile(top, False), 'the file loads');
+      CheckTrue(fixture.Table.HasPrefix('ZZRA'), 'with its entry');
+      text := fixture.Captured.Text;
+      CheckEquals(1, fixture.Captured.Count, 'the line that would go deeper is reported once: ' + text);
+      (* Any case: the deepest read is the INCLUDE's own spelling on
+         Windows, the file's on disk elsewhere. *)
+      CheckTrue(Pos('TR4W_CYCLE.DOM', UpperCase(text)) > 0, 'naming the file: ' + text);
+      CheckTrue(Pos('"INCLUDE FILE TR4W_CYCLE.DOM"', text) > 0, 'and the line: ' + text);
+   finally
+      fixture.Free;
+   end;
+end;
+
 procedure TDomQTHTableReloadTests.RunAllTests;
 begin
    Test_ASecondLoadReplacesTheFirst;
    Test_TheStoreKeepsTheListsRules;
    Test_AnIncludeWithoutFileIsReportedNotSkipped;
+   Test_AnIncludeResolvesBesideTheIncludingFile;
+   Test_AShippedIncludeStillResolves;
+   Test_AMissingIncludeIsReportedNotWaitedOn;
+   Test_AnIncludeCycleEnds;
 end;
 
 end.

@@ -174,7 +174,18 @@ foreach ($f in Get-ChildItem -Path $DomDir -File -Filter '*.dom')
       {
       $n++
       $trimmed = $line.TrimStart(' ', "`t")
-      if ($trimmed.StartsWith('INCLUDE FILE', [System.StringComparison]::Ordinal)) { continue }
+      if ($trimmed.StartsWith('INCLUDE FILE', [System.StringComparison]::Ordinal))
+         {
+         # #138 (2026-10-27): a followed include must name a file that ships
+         # beside it.  The loader reports a missing one at run time; this
+         # fails the build first, naming the file and the line.
+         $target = $trimmed.Substring('INCLUDE FILE'.Length).Trim()
+         if (($target -eq '') -or (-not $onDisk.Contains($target.ToLowerInvariant())))
+            {
+            [void]$includeProblems.Add("  $($f.Name) line ${n}: '$line' -- names '$target', which is not in target\dom")
+            }
+         continue
+         }
       $firstWord = ($trimmed -split ' ', 2)[0]
       if ($firstWord -ieq 'INCLUDE')
          {
@@ -186,9 +197,9 @@ foreach ($f in Get-ChildItem -Path $DomDir -File -Filter '*.dom')
 if ($includeProblems.Count -gt 0)
    {
    Write-Host ""
-   Write-Host "Lint-DomCoverage: $($includeProblems.Count) .dom line(s) name an INCLUDE the reader skips:" -ForegroundColor Red
+   Write-Host "Lint-DomCoverage: $($includeProblems.Count) .dom line(s) name an INCLUDE the reader skips or cannot find:" -ForegroundColor Red
    $includeProblems | ForEach-Object { Write-Host $_ -ForegroundColor Red }
-   Write-Host "  Write it as INCLUDE FILE <name>, upper case, or the file's states/provinces never load." -ForegroundColor Yellow
+   Write-Host "  Write it as INCLUDE FILE <name>, upper case, naming a file in target\dom, or the file's states/provinces never load." -ForegroundColor Yellow
    exit 1
    }
 

@@ -3158,6 +3158,15 @@ var
   TR4W_DOM_FILENAME                     : FileNameType;   // 4.100.2
   TR4W_CFG_FILENAME                     : FileNameType;
   tSilentExport                         : Boolean = False;   // batch /EXPORT: suppress preview + upload prompts
+  (* NOBODY IS THERE TO DISMISS A WARNING -- issue #138, 2026-10-27. Set by
+    the unit-test binary, read by TF.showwarning alone: the warning is logged
+    and no dialog is opened or queued. Not tSilentExport, which also means
+    "a batch run" to the log store's capture, the import and the Cabrillo
+    upload prompt, so a test that set it would stop exercising those. A
+    warning reached in a test was a modal with no operator: the first test
+    that pumped messages blocked for ever (a planted INCLUDE FILE, #138; the
+    v5.0.31 release run under xvfb). *)
+  WarningsHaveNoOperator                : Boolean = False;
   (* TR4W_RST_FILENAME DELETED 2026-09-12. The restart file is the
     session_state table in the contest database now; see
     DupeAndMultSheet.SaveRestartFile for what moved and what turned out to

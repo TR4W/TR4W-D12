@@ -71,6 +71,13 @@ uses
    blocks for ever under xvfb (the v5.0.31 release run). uTestContestGeorgiaQP
    records the same limit ("Its INCLUDEs cannot be followed here").
 
+   ~~THE LOADER CANNOT FOLLOW AN INCLUDE FILE FROM HERE~~ -- IT CAN SINCE
+   #138 (2026-10-27): it looks beside the including file first, so the
+   tree's files read by full path find their neighbours, and a warning in
+   this binary is logged, never a dialog (VC.WarningsHaveNoOperator). This
+   helper is kept because it also proves every named file exists before the
+   loader reads it, and answers the file's own INCLUDE FILE names.
+
    So the test follows them itself, and the REAL loader still reads every
    line of every real file: each file is cut at its INCLUDE FILE lines into
    segments, each segment is written to a temp copy and read by
@@ -149,8 +156,8 @@ begin
    path := ExistingDataFile(ShippedDomDir + aFileName);
    if not FileExists(path) then
       begin
-      raise Exception.Create('a shipped .dom is missing, so the loader would queue its '
-                             + '"could not find" warning: ' + path);
+      raise Exception.Create('a shipped .dom is missing (Lint-DomCoverage names the line '
+                             + 'that includes it): ' + path);
       end;
    lines := TStringList.Create;
    segment := TStringList.Create;
