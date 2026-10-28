@@ -9585,11 +9585,37 @@ msgstr ""
 
 #: uappstrings.snetmenuserverlog
 #, fuzzy
-msgid "Add missing QSOs from the server..."
+msgid "Synchronize with the server..."
 msgstr ""
 
 #: uappstrings.sserverlogtitle
 #, fuzzy
-msgid "Server log"
+msgid "Synchronize with the server"
+msgstr ""
+
+#: uappstrings.snetpushedtoserver
+#, fuzzy
+msgid "Sent to the server: %d QSO(s) it did not have."
+msgstr ""
+
+#: uappstrings.spushask
+#, fuzzy
+msgid "The server lacks %d QSO(s) of yours. Send them to the server now? Nothing in this log is changed, and the server ignores any QSO it already holds."
+msgstr ""
+
+#: tfrmserverlog.btnsendmissing.caption
+#: uappstrings.sserverlogsend
+#, fuzzy
+msgid "Send QSOs to the server"
+msgstr ""
+
+#: uappstrings.sserverlogsendcount
+#, fuzzy
+msgid "Send %d QSO(s) to the server"
+msgstr ""
+
+#: uappstrings.ssyncaskboth
+#, fuzzy
+msgid "The server holds %d QSO(s) this log lacks and lacks %d of yours. Add the first to this log and send the second to the server now? Nothing already in this log is changed or removed, and a backup of the log is taken first."
 msgstr ""
 
