@@ -41,6 +41,7 @@ interface
 
 uses
    Classes, SysUtils, IdTCPClient, IdGlobal, Log4D,
+   uHostResolve,
    uSpectrumTypes, uK4Spectrum;
 
 const
@@ -61,6 +62,7 @@ type
       FChunk: TBytes;              // reused read buffer; never reallocated per read
       FLinkUp: Boolean;
       FReconnectDelay: Integer;
+      FResolveReported: Boolean;   // the name was logged; cleared when it resolves
 
       procedure OpenLink;
       procedure CloseLink;
@@ -168,8 +170,27 @@ begin
 end;
 
 procedure TK4SpectrumThread.OpenLink;
+var
+   address: string;
+   why:     string;
 begin
-   FClient.Host := FHost;
+   (* THIS THREAD, which may wait on the C library: the name goes through the
+     platform resolver (uHostResolve, issue 148; Windows is unchanged). A name
+     that will not resolve is named in the log ONCE per run of failures -- the
+     loop is silent otherwise, because a radio that is off looks the same -- and
+     the failure then takes the ordinary back-off. *)
+   if not TryResolveHost(FHost, address, why) then
+      begin
+      if (not FResolveReported) and Assigned(FLogger) then
+         begin
+         FLogger.Warn('[%s spectrum] %s', [FRadioName, why]);
+         end;
+      FResolveReported := True;
+      raise EHostResolveError.Create(AnsiString(why));
+      end;
+   FResolveReported := False;
+
+   FClient.Host := AnsiString(address);
    FClient.Port := FPort;
    FClient.ConnectTimeout := CONNECT_TIMEOUT_MS;
    FClient.Connect;

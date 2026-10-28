@@ -555,6 +555,31 @@ the record can tear (the id is fine); `SendMessageStatus`'s local record is not 
 `tr4wserver.ini` belongs to a different program and is out of scope for the JSON
 settings work.
 
+## A host name goes through `uHostResolve` before Indy sees it (issue 148, 2026-10-28)
+
+The vendored Indy resolves a Unix name with FPC's netdb (hosts file, then its own
+DNS client against the resolv.conf stub), never the C library, so a `.local` (mDNS)
+name failed on Linux while `getent hosts` resolved it. `src/utils/uHostResolve.pas`
+(a leaf, no logger): on Unix it asks libc `gethostbyname` (Linux: FPC's `cnetdb`;
+macOS: declared in the unit, because `cnetdb` is not built for Darwin) and returns
+the IPv4 address; on Windows it returns the name untouched and calls nothing. A
+literal address, an IPv6 literal or an empty name never reaches libc. IPv4 only: a
+name with only an AAAA record fails, naming the host. **Call it only from a thread
+that may wait** -- the multi-op `ConnectThread` (`uNet.ResolveServerAddress`, which
+logs an Error once per name until `ForgetServerRefusal`), the catch-up worker
+(`FetchServerLog`, which resolves; the starter on the main thread only captures the
+name), the cluster connect thread, the radio polling thread (a network radio's
+Connect is deferred to it), the K4 spectrum thread, the DXKeeper sender thread. Log
+lines keep the NAME as typed. Not routed: NTP (its server comes from the Windows
+registry only). UDP broadcast destinations ARE routed, in the one transport
+`LogCfg.SendUDPPayload` (the dispatcher thread, PstRotator's `SendDirect` and the
+destination dialog's Test button all pass through it): the name is resolved at
+EVERY send, before `gUdpLock`, and DELIBERATELY NOT CACHED (NY4I: a stale address
+over UDP fails silently, and the OS resolvers cache with real TTLs). A failure
+raises out of the transport and `TUDPBroadcaster` contains it per destination, so
+the next one is still sent; the Test button's message carries the reason. The
+Test button resolves on the main thread, as Indy did before.
+
 ## Coordinate with
 
 `log-database` (row-level sync is the destination) · `contest-scoring` (dupes,

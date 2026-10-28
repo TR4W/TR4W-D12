@@ -5,7 +5,8 @@ interface
 
 uses
    IdTCPClient, IdComponent, IdTCPConnection,IdThreadComponent, IdExceptionCore, SysUtils,
-   Classes, StrUtils, Log4D, VC, Tree, IdException, IdStack, SyncObjs;
+   Classes, StrUtils, Log4D, VC, Tree, IdException, IdStack, SyncObjs,
+   uHostResolve;
 
 Type TProcessMsgRef = procedure (sMessage: string) of Object;
 
@@ -423,13 +424,20 @@ begin
       IndyLinkOwnHandler(socket, Self.OnLoggerStatus);
 
       try
+         (* WHATEVER THREAD CALLED CONNECTGUARDED -- the reading thread's
+           reconnect in production; no caller of the base Connect exists today
+           (integrations agent). It may wait on the C library, so a caller on
+           the main thread would block it. The name goes through the platform
+           resolver (uHostResolve, issue 148; Windows is unchanged); a failure
+           raises with the host in the message and is logged below. *)
+         socket.Host := AnsiString(ResolveHostForConnect(Self.loggerAddress));
          Self.DoSocketConnect;
          logger.Info('[TExternalLoggerBase.Connect] Connected successfully to external logger');
       except
          on E: Exception do
             begin
             Result := -3;
-            logger.Error('[TExternalLoggerBase.Connect] Exception when connecting to external logger (%s:%d]: %s', [socket.Host, socket.Port, E.Message]);
+            logger.Error('[TExternalLoggerBase.Connect] Exception when connecting to external logger (%s:%d]: %s', [Self.loggerAddress, socket.Port, E.Message]);
             if aRaiseOnFailure then
                begin
                raise;

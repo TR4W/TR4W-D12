@@ -117,6 +117,14 @@ HamScore were off, so the UDP broadcast ran inline on the Enter key to a destina
 named by HOST NAME. Indy resolves it on every send. The DNS cause is an inference (DNS
 client log was off); the fix does not depend on it.
 
+**UDP destinations resolve per send through the platform resolver (issue 148,
+2026-10-28):** `LogCfg.SendUDPPayload` calls `uHostResolve.ResolveHostForConnect`
+before `gUdpLock` and hands Indy the address (Windows: unchanged). Deliberately
+UNCACHED (NY4I: staleness over UDP is silent; the OS resolvers already cache with
+real TTLs). A failure raises and the broadcaster's per-destination containment logs
+it and moves on. The lookup is inside the timed region, so the slow-send warning
+still counts it.
+
 **Shape (NY4I):** the main thread builds an immutable `TQsoMessage` and `Post`s it,
 nothing more. `TQsoDispatcher` (own thread, bounded FIFO) fans each message to the
 `TQsoSink`s in order: UDP, external logger, HamScore. A sink that is slow (> 250 ms, Warn

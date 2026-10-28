@@ -167,6 +167,7 @@ uses SysUtils,
    uMainThread,  { RunOnMainThread -- the finished handoff, see CatchUpFetched }
    MainUnit,     // RescoreLog, YesOrNo, logger
    uNet,         // NetPeers, NetIsConnected
+   uHostResolve, // TryResolveHost -- the server's name, issue 148
    uNetClient,       (* ServerPasswordOnWire -- the one wire form *)
    uSettingsModel,   (* Settings.Server *)
    uAppStrings,
@@ -289,15 +290,27 @@ var
    Remaining: Int64;
    Take:      integer;
    Received:  Int64;
+   resolved:    string;
+   resolveWhy:  string;
 begin
    Result        := False;
    aDeclaredSize := 0;
    aWhy          := '';
    Received      := 0;
 
+   (* THE SERVER'S NAME, through the platform resolver (uHostResolve, issue 148;
+     Windows is unchanged). Here on the WORKER thread, which may wait on the
+     C library -- the starter captured the name on the main thread and resolves
+     nothing. The reason already names the host. *)
+   if not TryResolveHost(string(aHost), resolved, resolveWhy) then
+      begin
+      aWhy := resolveWhy;
+      Exit;
+      end;
+
    Client := TIdTCPClient.Create(nil);
    try
-      Client.Host           := aHost;
+      Client.Host           := AnsiString(resolved);
       Client.Port           := aPort;
       Client.ConnectTimeout := CONNECT_TIMEOUT_MS;
       Client.ReadTimeout    := IDLE_TIMEOUT_MS;

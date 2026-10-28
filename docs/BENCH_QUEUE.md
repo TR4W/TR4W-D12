@@ -246,6 +246,44 @@ Delete each server's `SERVERLOG.TRW` between runs.
 
 ---
 
+## Added 2026-10-28 -- A .local (mDNS) HOST NAME RESOLVES THROUGH THE C LIBRARY (issue 148)
+
+Every host name the operator types now goes through `uHostResolve`. On Linux
+and macOS it asks the C library (`gethostbyname`: /etc/hosts, DNS, mDNS, the
+machine's own configuration) and Indy is handed the IPv4 address; on Windows
+the name is passed on untouched. Only a machine with avahi and a real `.local`
+host can show the first two items.
+
+1. **Linux Mint, multi-op.** Server address `pi400.local` (the Pi that answers
+   `getent hosts pi400.local`), Net > Connect. The link comes up and the station
+   list fills in, as it does with the IP.
+2. **Linux Mint, a bad name.** Server address `nosuch.local`. `tr4w.log` shows
+   one Error line `[Net] could not resolve 'nosuch.local': ...` naming the
+   name, then only Debug lines on the retries; the Network window never says
+   Connected. Net > Connect again logs it once more.
+3. **Linux Mint, the other users of a name.** A DX cluster, a TCI radio, a K4 or
+   Kenwood LAN radio and an Icom LAN radio addressed by a `.local` name each
+   connect. A radio that will not resolve logs the name in its usual connect
+   failure line (the Icom and K4 spectrum paths log it once per run of failures).
+4. **Windows, unchanged.** The same server, cluster and radio entered by name
+   or IP behave as before; the log shows no resolver lines.
+5. **macOS, if a Mac is at hand.** `pi400.local` connects. This is the arm that
+   declares `gethostbyname` itself (cnetdb is not built for Darwin) and was not
+   compiled until the release workflow ran.
+6. **UDP destinations (Preferences, UDP).** A destination entered as
+   `pi400.local` delivers on Mint (the Test button says so, and a listener on
+   the Pi sees the datagram). A dead name (`dead.local`) logs
+   `[UDP] Send to dead.local:<port> failed: EHostResolveError - could not resolve
+   'dead.local': ...` and the next destination is still sent to; the only
+   stall is the lookup itself. Resolved at every send on purpose, never cached.
+   The Test button with a dead name shows "Could not send to dead.local:<port>
+   -- could not resolve 'dead.local': ...". On Windows the same destinations
+   behave as before.
+7. **A name with only an IPv6 address** (no A record) fails with "no IPv4
+   address" in the log rather than connecting; nothing here dials IPv6.
+
+---
+
 ## Added 2026-10-27 -- THE MULTI-OP LINK BELONGS TO THE PROGRAM, NOT THE NETWORK WINDOW
 
 NY4I: *"I never liked the idea that we only connected when the Network window

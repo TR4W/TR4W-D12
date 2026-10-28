@@ -59,7 +59,8 @@ interface
 uses
    Classes, SysUtils, IdTCPClient, IdGlobal, IdException, IdExceptionCore,
    IdStack,
-   uIndyLink,        // IndyLinkIsOpen / IndyLinkOwnHandler -- see ITS header
+   uHostResolve,     // ResolveHostForConnect -- issue 148
+   uIndyLink,       // IndyLinkIsOpen / IndyLinkOwnHandler -- see ITS header
    IdBuffer;   // TIdBuffer -- the non-destructive PeekByte in ReportPendingText
 
 type
@@ -379,7 +380,10 @@ begin
       end;
    FStopping := False;
    try
-      FTCP.Host := Host;
+      (* THE CONNECT THREAD (uTelnet), which may wait: the name goes through the
+        platform resolver (uHostResolve, issue 148; Windows is unchanged). A
+        failure raises with the host named, and the handler below reports it. *)
+      FTCP.Host := AnsiString(ResolveHostForConnect(Host));
       FTCP.Port := Port;
       FTCP.Connect;
       Result := True;

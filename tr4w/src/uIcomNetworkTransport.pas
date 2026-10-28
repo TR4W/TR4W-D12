@@ -62,6 +62,7 @@ uses
                      names for what WinSock's SOL_SOCKET, SO_RCVBUF and
                      SOCK_DGRAM used to supply here. *)
   uIcomNetworkTypes, uFactoryRadioBase, Log4D,
+  uHostResolve,
   utils_text;
 
 (* THE ws2_32.dll IMPORT IS GONE (2026-09-08). See SendRawPacket for what
@@ -86,7 +87,8 @@ type
   private
     // State
     FState: TIcomConnectionState;
-    FRadioAddress: string;           // IP address of radio
+    FRadioAddress: string;           // IP address of radio (the resolved address)
+    FResolveReported: Boolean;       // the unresolvable name was logged already
     FControlPort: Word;              // Default 50001
     FCivPort: Word;                  // Learned from radio during handshake
     FUsername: string;
@@ -706,8 +708,33 @@ end;
 
 function TIcomNetworkTransport.Connect(Address: string; Port: Word;
   Username, Password: string): Integer;
+var
+  dialAddress: string;
+  resolveWhy:  string;
 begin
   Result := 0;
+
+  (* THE RADIO'S NAME, through the platform resolver (uHostResolve, issue 148;
+    Windows is unchanged). BEFORE the lifecycle lock, so a slow C library cannot
+    hold Disconnect up, and on the POLLING thread (a network radio's Connect is
+    deferred to it). Every UDP packet below is addressed by the ADDRESS this
+    gives, which also stops Indy resolving the name again on each send. A name
+    that will not resolve is named once per run of failures. *)
+  if not TryResolveHost(Address, dialAddress, resolveWhy) then
+    begin
+    if not FResolveReported then
+       begin
+       logger.Error(LogPrefix + ' %s', [resolveWhy]);
+       end
+    else
+       begin
+       logger.Debug(LogPrefix + ' %s', [resolveWhy]);
+       end;
+    FResolveReported := True;
+    Result := -1;
+    Exit;
+    end;
+  FResolveReported := False;
 
   FLifecycleLock.Enter;
   try
@@ -723,7 +750,7 @@ begin
     without this leaks that socket and its listener thread. *)
   Disconnect;
 
-  FRadioAddress := Address;
+  FRadioAddress := dialAddress;
   FControlPort := Port;
   FUsername := Username;
   FPassword := Password;

@@ -59,6 +59,7 @@ interface
 uses
    SysUtils, Classes, SyncObjs,
    IdTCPClient, IdGlobal,
+   uHostResolve,
    uWebSocketFraming;
 
 type
@@ -259,7 +260,12 @@ begin
       end;
 
    try
-      FTCP.Host := FHost;
+      (* The radio's connect thread, which may wait: the name goes through the
+        platform resolver (uHostResolve, issue 148; Windows is unchanged). The
+        handshake below still sends FHost, the NAME as typed -- the Host header
+        is the name, only the socket is dialled by address. A failure raises
+        with the name in the message and the handler below logs it. *)
+      FTCP.Host := AnsiString(ResolveHostForConnect(FHost));
       FTCP.Port := FPort;
       FTCP.ConnectTimeout := 5000;
       FTCP.ReadTimeout := -1;          // reader thread blocks; liveness is by ping

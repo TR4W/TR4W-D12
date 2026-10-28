@@ -550,7 +550,8 @@ uses
   MainUnit,
   uAppStrings,   { SNetComputerIDInUse -- new UI text does not go in uTR4WStrings }
   uComputerID,   { the station-id rule and its two wire encodings }
-   uConfigValues;
+   uConfigValues,
+   uHostResolve;   { TryResolveHost -- a .local name through the C library, issue 148 }
 
 { THE ID THE SERVER REFUSED, in the ordinal form the wire uses, or #0.
 
@@ -1718,10 +1719,58 @@ end;
 
   Returns False for every failure; the caller shows TC_FAILEDTOCONNECTTO, which
   is what it did before. }
+var
+   (* THE SERVER NAME THAT COULD NOT BE RESOLVED, as the Error line has already
+     named it, under GNetLock (the connect thread sets it, ForgetServerRefusal
+     on the main thread clears it). The retry timer comes back every few
+     seconds: the first failure of a name is an Error, the rest are Debug. *)
+   FResolveFailedFor: string = '';
+
+(* RESOLVE THE SERVER'S NAME through the platform (uHostResolve; Windows is
+  unchanged). Runs on the CONNECT THREAD, never the main thread: the C library
+  can block for seconds. False names the host in the log and leaves the link
+  down, so the status line says "failed", never "connected". *)
+function ResolveServerAddress(out aAddress: string): boolean;
+var
+   why:   string;
+   first: boolean;
+begin
+   Result := TryResolveHost(Settings.Server.Address, aAddress, why);
+
+   GNetLock.Acquire;
+   try
+      if Result then
+         begin
+         FResolveFailedFor := '';
+         first := False;
+         end
+      else
+         begin
+         first := FResolveFailedFor <> Settings.Server.Address;
+         FResolveFailedFor := Settings.Server.Address;
+         end;
+   finally
+      GNetLock.Release;
+   end;
+
+   if not Result then
+      begin
+      if first then
+         begin
+         logger.Error('[Net] %s', [why]);
+         end
+      else
+         begin
+         logger.Debug('[Net] %s', [why]);
+         end;
+      end;
+end;
+
 function ConnectToTR4WServer: boolean;
 var
    err: string;
    wrongPassword: boolean;
+   serverAddress: string;
 begin
    if NetClient = nil then
       begin
@@ -1729,7 +1778,16 @@ begin
       AttachNetClient(NetClient);
       end;
 
-   Result := NetClient.Connect(Settings.Server.Address, Settings.Server.Port,
+   (* A name the platform cannot resolve is a failed attempt, and the Error line
+     above has named it. Indy is handed the ADDRESS this returns; the log lines
+     that follow still print Settings.Server.Address, the name as typed. *)
+   if not ResolveServerAddress(serverAddress) then
+      begin
+      Result := False;
+      Exit;
+      end;
+
+   Result := NetClient.Connect(serverAddress, Settings.Server.Port,
                                AnsiString(Settings.Server.Password),
                                err, wrongPassword);
    if Result then
@@ -2589,6 +2647,12 @@ procedure ForgetServerRefusal;
 begin
    FServerRefusedFor := '';
    FRefusedComputerID := #0;
+   GNetLock.Acquire;
+   try
+      FResolveFailedFor := '';   (* the operator asked again: name it again *)
+   finally
+      GNetLock.Release;
+   end;
 end;
 
 var

@@ -613,6 +613,7 @@ uses
    uTestNetFraming in 'uTestNetFraming.pas',
    uTestNetWireSizes in 'uTestNetWireSizes.pas',
    uTestNetHello in 'uTestNetHello.pas',
+   uTestHostResolve in 'uTestHostResolve.pas',
    uTestNetResend in 'uTestNetResend.pas',
    uTestNetClientPackets in 'uTestNetClientPackets.pas',
    uTestNetCatchUp in 'uTestNetCatchUp.pas',
@@ -1008,6 +1009,7 @@ begin
    RegisterSuite(TTestNetFraming.Create('NetFraming'));
    RegisterSuite(TTestNetWireSizes.Create('NetWireSizes'));
    RegisterSuite(TTestNetHello.Create('NetHello'));
+   RegisterSuite(THostResolveTests.Create('HostResolve'));
    RegisterSuite(TNetResendTests.Create('NetResend'));
    RegisterSuite(TNetClientPacketTests.Create('NetClientPackets'));
    RegisterSuite(TNetCatchUpTests.Create('NetCatchUp'));

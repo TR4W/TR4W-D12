@@ -111,6 +111,7 @@ uses
   uCFG,
   MainUnit,
   uRadioPolling,
+   uHostResolve,   // ResolveHostForConnect -- a UDP destination named by host, issue 148
    uUDPBroadcaster,
    uUDPBroadcastConfig,
    uTR4WConfigFile,
@@ -320,6 +321,8 @@ var
 // it is the ONLY place that knows both the socket and the broadcaster.
 procedure SendUDPPayload(const aAddress: string; const aPort: integer;
                          const aPayload: AnsiString);
+var
+   dialAddress: string;
 begin
    if udp = nil then
       begin
@@ -330,10 +333,23 @@ begin
      caller is the Test button of the UDP destination dialog (an operator
      asking a question, on the main thread), which therefore waits behind a
      send already in progress. *)
+   (* THE DESTINATION'S NAME, through the platform resolver at EVERY send
+     (uHostResolve, issue 148; Windows is unchanged, a literal address makes no
+     lookup). DELIBERATELY NOT CACHED (NY4I): a stale address over UDP fails
+     silently, and the operating system's resolvers already cache with real
+     TTLs. BEFORE the lock, because the lookup touches no shared state and a
+     slow one must not hold the Test button behind the dispatcher more than it
+     has to. A name that will not resolve raises, with the host in the message,
+     out of this transport: TUDPBroadcaster contains it per destination, logs it
+     with the address and port, and goes on to the next. The lookup is inside
+     the broadcaster's timed region, so its slow-send warning still means what it
+     says. *)
+   dialAddress := ResolveHostForConnect(aAddress);
+
    gUdpLock.Enter;
    try
       udp.BroadcastEnabled := True;
-      udp.Send(aAddress, aPort, aPayload);
+      udp.Send(dialAddress, aPort, aPayload);
    finally
       gUdpLock.Leave;
    end;

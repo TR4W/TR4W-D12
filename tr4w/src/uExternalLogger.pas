@@ -3,7 +3,7 @@ unit uExternalLogger;
 
 interface
 uses uExternalLoggerBase, StrUtils, SysUtils, Math, TF, VC, LOGSUBS2, LogWind, LogDupe, Tree, uCFG, PostUnit,
-     IdTCPClient, uQsoDispatcher;
+     IdTCPClient, uQsoDispatcher, uHostResolve;
 
 
 Type TExternalLogger = class(TExternalLoggerBase)
@@ -138,11 +138,15 @@ begin
    Result := False;
    client := TIdTCPClient.Create(nil);
    try
-      client.Host := Self.loggerAddress;
       client.Port := Self.loggerPort;
       client.ConnectTimeout := DXK_CONNECT_TIMEOUT_MS;
       client.ReadTimeout := DXK_READ_TIMEOUT_MS;
       try
+         (* THE SENDER THREAD, which may wait: the name goes through the
+           platform resolver (uHostResolve, issue 148; Windows is unchanged).
+           A name that will not resolve raises with the host in the message and
+           the handler below logs it with the others. *)
+         client.Host := AnsiString(ResolveHostForConnect(Self.loggerAddress));
          client.Connect;
          try
             client.IOHandler.WriteLn(cmd);

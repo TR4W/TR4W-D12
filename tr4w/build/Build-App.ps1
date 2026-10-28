@@ -428,7 +428,10 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # 1216 -> 1215, 2026-10-27: the server-log menu row and window title moved off
 # RC_SYNLOG/RC_SYNLOG2 onto uAppStrings resourcestrings; measured by the full
 # build of that work.
-$NARROW_CEILING = 1215
+# 1215 -> 1211, 2026-10-28: issue 148 -- the Indy Host assignments carry explicit
+# AnsiString casts, and the resolver's exception text is cast where it is raised;
+# measured by the full build of that work (1219 before the casts).
+$NARROW_CEILING = 1211
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

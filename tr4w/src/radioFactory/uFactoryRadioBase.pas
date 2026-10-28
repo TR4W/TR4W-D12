@@ -21,6 +21,7 @@ interface
 
 uses
   Classes, StrUtils, Log4D, uLogConfig, VC, Tree, IdException, IdStack, SyncObjs, uSerialPort, uRadioBand,
+   uHostResolve,   // ResolveHostForConnect -- a .local radio name, issue 148
    uCWFraming,   // TCWFrameRule / TCWProsign -- the CW traits a radio declares
    uSpectrumTypes,  // TSpectrumFrame / TSpectrumFrameProc -- the panadapter seam
    IdTCPClient, IdComponent, IdTCPConnection, IdThreadComponent, IdExceptionCore,
@@ -2061,13 +2062,21 @@ begin
 
           Sleep(100);  // Brief delay to ensure cleanup
 
-          logger.Debug('[TFactoryRadioBase.Connect] Attempting to connect to %s:%d', [socket.Host, socket.Port]);
+          logger.Debug('[TFactoryRadioBase.Connect] Attempting to connect to %s:%d', [Self.radioAddress, socket.Port]);
+          (* THE POLLING THREAD: a network radio's Connect is deferred to it
+            (logradio.SetUpRadioInterface), so waiting on the C library cannot
+            freeze the main thread. The name goes through the platform
+            resolver (uHostResolve, issue 148; Windows is unchanged). Indy is
+            handed the address; every log line keeps the NAME. A name that will
+            not resolve raises with the host in the message and the handler
+            below logs it, as it logs any failed attempt. *)
+          socket.Host := AnsiString(ResolveHostForConnect(Self.radioAddress));
           socket.Connect;
           logger.Info('[TFactoryRadioBase.Connect] Connected successfully to network radio');
       except
           on E: Exception do
              begin
-             logger.Error('[TFactoryRadioBase.Connect] Exception when connecting to radio (%s:%d]: %s', [socket.Host, socket.Port, E.Message]);
+             logger.Error('[TFactoryRadioBase.Connect] Exception when connecting to radio (%s:%d]: %s', [Self.radioAddress, socket.Port, E.Message]);
              // Try to disconnect to clear bad state for next attempt
              try
                 socket.Disconnect(False);   // False: no Connected probe -- see SocketIsConnected
