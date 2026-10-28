@@ -18,14 +18,15 @@ python tools/netprobe/netprobe.py --port 1061 --case spot
 
 | option | meaning |
 |---|---|
-| `--case` | `connect spot qso burst edit disc dup serial time hello resend catchup`, or `all` (default) |
+| `--case` | `connect spot qso burst edit disc dup serial time hello resend catchup restock`, or `all` (default) |
+| `--restock-big` | QSOs in the second, large round of the `restock` case (default 5000, 0 skips it) |
 | `--host`, `--port` | the main port; the log-sync port is `PORT + 1` |
 | `--password` | default `TR4WSERVER` (sent as ten NUL-padded bytes) |
 | `--label` | name printed on every result line |
 | `--timeout` | seconds to wait for any one message (default 3) |
 | `--expect-time` | `relay` or `none` to make `time` a pass/fail check; `any` (default) only reports |
 | `--sync-bytes` | bytes written as the password on the sync port (default 10, what the TR4W client writes) |
-| `--burst` | QSOs in the `burst`, `resend` and `catchup` cases (default 30) |
+| `--burst` | QSOs in the `burst`, `resend` and `catchup` cases, and in the first round of `restock` (default 30) |
 | `--contest` | the contest id the probes announce in their HELLO (default `ARRL-DX-CW`) |
 
 Output is one line per check, `RESULT <label> <case> <check>: PASS|FAIL|INFO|SKIP`.
@@ -48,6 +49,7 @@ Exit code 0 means no check failed, 1 means one did, 2 means a case could not run
 | `hello` | a HELLO; a second station joining; a contest change; then stations that break the handshake | the server answers with its own HELLO (protocol 2, id 0); a later joiner is told every station's LATEST contest, byte for byte; a change is relayed; COMPUTERID or a QSO sent first closes the connection and is relayed to nobody; protocol 1 and 3 get 8330 carrying 2 and are closed; a HELLO claiming a held id, or id 0 or 27, gets 8320 and is never announced |
 | `resend` | the catch-up of a station that was disconnected: a QSO, then the same QSO again as QSOINFO and as OFFLINEQSO; an OFFLINEQSO the server has never seen; two QSOs with ids (0, 0); an edit of a held QSO; then a whole burst sent twice | a QSO is stored once and relayed once however often it arrives (the pair `ceQSOID1`/`ceQSOID2` is the key); an OFFLINEQSO of a held QSO is still acknowledged (8300); a QSO with ids (0, 0) identifies nothing and is stored and relayed every time; an edit is always applied and relayed; the sender stays connected. Run it with `--burst 200` for the size of a long outage |
 | `catchup` | A logs `--burst` QSOs while nobody else is connected; C then connects late and downloads the server's log on the sync port exactly as the client's catch-up does (ten password bytes, a four-byte size, then that many bytes) | the size LOGCOMPARE announced on admit is the size of the file sent; the file is a header and a whole number of 376-byte records; every QSO is in it, byte for byte, in arrival order, once; a joiner is NOT sent the earlier QSOs on admit (which is why it must fetch) but IS told the contest the others announced; a second download is the same file; the server's copy of an edited QSO is the edited record in place (so an edit made while a station was away is not something an insert-only catch-up can pick up) |
+| `restock` | a server that lost its log, and a station that still has the QSOs: A sends `--burst` QSOs as OFFLINEQSO in one write, then the same again, then `--restock-big` (5000) the same way | every OFFLINEQSO is acknowledged (8300); a second connected station receives NONE of them (an OFFLINEQSO is stored and acknowledged, not relayed, so a restock does not flood the stations that are up); the log grows by exactly the set, byte for byte, once each and in order at the end of the file; sending the set again adds none and is still acknowledged; the time per QSO is reported. Against an empty server it is NY4I's case; against a used one the checks are relative |
 
 The log checks read the server's log through the sync port, the only way to see
 it from outside. If that download fails the log checks are reported as SKIP.

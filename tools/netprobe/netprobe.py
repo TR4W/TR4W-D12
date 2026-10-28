@@ -1116,6 +1116,133 @@ def case_catchup(ctx):
          'PASS' if (a.alive(timeout) and c.alive(timeout)) else 'FAIL')
 
 
+def count_acks(probe, wanted, wait):
+   """Wait up to `wait` seconds for `wanted` acknowledgements (8300) and return
+   how many have arrived."""
+   deadline = time.time() + wait
+   while time.time() < deadline and not probe.eof and probe.bad_id is None:
+      have = sum(1 for found_id, data in probe.inbox
+                 if found_id == NET_SERVERMESSAGE_ID and
+                 server_message_fields(data)[0] == SM_RECEIVED_UPDATED_QSO)
+      if have >= wanted:
+         break
+      probe.pump(0.1)
+   return sum(1 for found_id, data in probe.inbox
+              if found_id == NET_SERVERMESSAGE_ID and
+              server_message_fields(data)[0] == SM_RECEIVED_UPDATED_QSO)
+
+
+def forget_acks(probe):
+   probe.inbox = [item for item in probe.inbox
+                  if not (item[0] == NET_SERVERMESSAGE_ID and
+                          server_message_fields(item[1])[0] == SM_RECEIVED_UPDATED_QSO)]
+
+
+def restock_round(ctx, a, b, count, tag, big):
+   """One restock of `count` QSOs: a station whose log holds QSOs the server
+   lacks sends them all as OFFLINEQSO in one write. Checks that every one is
+   acknowledged, that nobody else is sent any (it is a restock, not news), that
+   the server's log grew by exactly those records, byte for byte, once each and
+   in order at the end of the file, and that sending the same set again adds
+   nothing."""
+   r = ctx.report
+   timeout = ctx.args.timeout
+   wait = timeout + 6 + count * 0.05
+
+   before = ctx.log_records()
+   ours = []
+   blob = b''
+   for i in range(count):
+      id1, id2 = ctx.next_ids()
+      exchange = build_exchange('K1%s%d' % (tag, i % 10), id1, id2)
+      ours.append(exchange)
+      blob += build_qso(NET_OFFLINEQSO_ID, exchange, 1, a.ordinal)
+   forget_acks(a)
+   b.inbox = [item for item in b.inbox if item[0] not in (NET_QSOINFO_ID, NET_OFFLINEQSO_ID)]
+
+   started = time.time()
+   a.send(blob)                       # ONE write: the server sees a coalesced read
+   acks = count_acks(a, count, wait)
+   took = time.time() - started
+   r.add(tag, 'bytes written in one send', 'INFO', '%d (%d QSOs)' % (len(blob), count))
+   r.add(tag, 'every OFFLINEQSO is acknowledged (8300)',
+         'PASS' if acks == count else 'FAIL',
+         '%d of %d in %.2f s (%.1f ms each)' % (acks, count, took, 1000.0 * took / max(count, 1)))
+
+   # NOT RELAYED: a restock must not flood the stations that are connected.
+   b.pump(1.0)
+   relayed = sum(1 for found_id, _ in b.inbox if found_id in (NET_QSOINFO_ID, NET_OFFLINEQSO_ID))
+   r.add(tag, 'a second connected station receives NONE of them (not relayed)',
+         'PASS' if relayed == 0 else 'FAIL', 'B received %d' % relayed)
+
+   # STORED WHOLE, ONCE EACH, IN ORDER.
+   deadline = time.time() + wait
+   after = None
+   while time.time() < deadline:
+      after = ctx.log_records()
+      if after is not None and before is not None and len(after) - len(before) >= count:
+         break
+      time.sleep(0.3)
+   if before is None or after is None:
+      r.add(tag, 'the download holds exactly the pushed records', 'SKIP', 'log not readable')
+   else:
+      added = after[len(before):]
+      r.add(tag, 'the server log grew by exactly %d records' % count,
+            'PASS' if len(added) == count else 'FAIL', 'grew by %d' % len(added))
+      r.add(tag, 'the new records are what was sent, byte for byte, in order',
+            'PASS' if added == ours else 'FAIL',
+            '%d of %d identical' % (sum(1 for x, y in zip(added, ours) if x == y), count))
+      keys = [record_key(rec) for rec in after]
+      repeated = len(keys) - len(set(k for k in keys if k != (0, 0))) - keys.count((0, 0))
+      r.add(tag, 'no QSO appears twice in the log', 'PASS' if repeated == 0 else 'FAIL',
+            '%d repeated' % repeated)
+
+   # THE SAME SET AGAIN ADDS NOTHING, and is still acknowledged.
+   held = after
+   forget_acks(a)
+   a.send(blob)
+   acks = count_acks(a, count, wait)
+   r.add(tag, 'the same set sent again is still acknowledged',
+         'PASS' if acks == count else 'FAIL', '%d of %d' % (acks, count))
+   time.sleep(0.5)
+   again = ctx.log_records()
+   grew = log_growth(held, again)
+   if grew is None:
+      r.add(tag, 'the same set sent again adds none', 'SKIP', 'log not readable')
+   else:
+      r.add(tag, 'the same set sent again adds none', 'PASS' if grew == 0 else 'FAIL',
+            'grew by %d' % grew)
+   b.pump(0.5)
+   relayed = sum(1 for found_id, _ in b.inbox if found_id in (NET_QSOINFO_ID, NET_OFFLINEQSO_ID))
+   r.add(tag, 'and still relays nothing', 'PASS' if relayed == 0 else 'FAIL',
+         'B received %d' % relayed)
+   r.add(tag, 'both stations still connected',
+         'PASS' if (a.alive(timeout) and b.alive(timeout)) else 'FAIL')
+
+
+def case_restock(ctx):
+   """A server that lost its log is restocked by a station that still has the
+   QSOs: the station's rows are already marked sent, so only the server's log
+   (fetched on the sync port) says what it lacks, and the station sends exactly
+   that as NET_OFFLINEQSO. The checks are about the SERVER: both servers store an
+   OFFLINEQSO, acknowledge it, do not relay it (so connected stations are not
+   flooded; a station that lacks some catches up on its next connect), and do not
+   store a pair they already hold. Run it against an empty server for NY4I's case;
+   against a used one the checks are relative (the log GROWS by exactly the set).
+   --burst QSOs in the first round, --restock-big in the second (0 skips it)."""
+   r = ctx.report
+   a = ctx.probe('A', 1)
+   b = ctx.probe('B', 2)
+   a.settle(0.5)
+   b.settle(0.5)
+   start = ctx.log_records()
+   r.add('restock', 'records in the server log at the start', 'INFO',
+         'unreadable' if start is None else str(len(start)))
+   restock_round(ctx, a, b, ctx.args.burst, 'restock', False)
+   if ctx.args.restock_big > 0:
+      restock_round(ctx, a, b, ctx.args.restock_big, 'restockbig', True)
+
+
 CASES = {
    'connect': case_connect,
    'spot': case_spot,
@@ -1129,6 +1256,7 @@ CASES = {
    'hello': case_hello,
    'resend': case_resend,
    'catchup': case_catchup,
+   'restock': case_restock,
 }
 
 
@@ -1162,6 +1290,8 @@ def parse_args(argv):
                   help='bytes written as the password on the sync port')
    p.add_argument('--burst', type=int, default=30,
                   help='QSOs in the burst case')
+   p.add_argument('--restock-big', type=int, default=5000,
+                  help='QSOs in the second, large round of the restock case (0 skips it)')
    p.add_argument('--contest', default='ARRL-DX-CW',
                   help='the contest id the probes announce in their HELLO')
    p.add_argument('--expect-time', choices=('relay', 'none', 'any'), default='any',

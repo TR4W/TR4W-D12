@@ -45,10 +45,17 @@ uses
       server holds QSOs this log lacks, SERVER AUTO SYNCHRONIZE LOG ON CONNECT
       adds them; with it off the operator is ASKED, with the count. Nothing is
       said when the log is already complete.
-    NET > ADD MISSING QSOs FROM THE SERVER opens the Server log window (uServerLogForm): Get server
+    NET > SYNCHRONIZE WITH THE SERVER opens the window (uServerLogForm): Get server
       log downloads and SHOWS the server's log, and the button that D7 called
       "Create and use new log" now ADDS the QSOs this log lacks. It no longer
-      replaces anything.
+      replaces anything. A second button SENDS the QSOs this log has that the
+      server lacks (a server that lost its log), as OFFLINEQSO.
+
+  BOTH DIRECTIONS COME FROM THE ONE DOWNLOAD (2026-10-28). The image answers
+    "what does the server have that I lack" (pull) and "what do I have that the
+    server lacks" (push, uNetCatchUp.TPushPlan). On connect they are decided
+    TOGETHER (uNetCatchUp.SyncOnConnect): with SERVER AUTO SYNCHRONIZE LOG ON
+    CONNECT both just happen; with it off the operator is asked ONCE.
 
   THE THREADS. The download is a worker (a socket read cannot be allowed to
   freeze the keyboard). It owns its own connection and only fills memory: no
@@ -102,6 +109,24 @@ function FetchServerLog(const aHost: AnsiString; aPort: integer;
 (* HOW MANY QSOS THE SERVER HOLDS THAT THIS LOG DOES NOT, without changing
   anything. False when the log could not be read. MAIN THREAD. *)
 function CountMissingFromServer(aImage: TServerLogImage; out aMissing: integer): boolean;
+
+(* THE OTHER DIRECTION (2026-10-28): WHAT THE SERVER LACKS OF THIS LOG.
+
+  MakePushPlan judges this log's rows against the image (uNetCatchUp.TPushPlan:
+  imports and owed rows are left out and counted, everything else the image does
+  not hold is kept) and answers the plan, which the caller frees. False, with
+  nil, when the log cannot be read. MAIN THREAD. Changes nothing.
+
+  CountPushableToServer is the count alone.
+
+  SendLogToServer makes the plan AGAIN from the log as it is now (an image shown
+  in a window can be minutes old), posts it as OFFLINEQSO (uNet.RestockServer: no
+  flag is written, the server does not relay it) and says so with ONE notice.
+  aSent is how many were posted. False when a guard refused or the link dropped
+  part way. MAIN THREAD. *)
+function MakePushPlan(aImage: TServerLogImage; out aPlan: TPushPlan): boolean;
+function CountPushableToServer(aImage: TServerLogImage; out aPush: integer): boolean;
+function SendLogToServer(aImage: TServerLogImage; out aSent: integer): boolean;
 
 (* HOW THE DOWNLOAD THREAD TALKS TO THE WINDOW.
 
@@ -157,6 +182,7 @@ const
   SYNC_FIELD_QSOS           = 3;   // the QSOs among them that count
   SYNC_FIELD_ENABLE_REPLACE = 4;   // the log lacks QSOs; the value is how many
   SYNC_FIELD_FAILED         = 5;   // the download failed; Get server log may be pressed again
+  SYNC_FIELD_ENABLE_SEND    = 6;   // this log has QSOs the server lacks; the value is how many
 
 implementation
 uses SysUtils,
@@ -466,6 +492,82 @@ begin
       end;
 end;
 
+(* THIS LOG'S ROWS THE SERVER MAY LACK, judged. The repository leaves out the
+  rows whose key the image holds (before it parses them); Consider judges the
+  rest. *)
+function MakePushPlan(aImage: TServerLogImage; out aPlan: TPushPlan): boolean;
+var
+   rows: TLogRowUpdates;
+   i: integer;
+begin
+   Result := False;
+   aPlan := TPushPlan.Create(aImage, NetResentThisLink);
+   rows := TLogRowUpdates.Create;
+   try
+      if not LogStoreCollectForServerRestock(rows, aPlan.ServerHolds) then
+         begin
+         FreeAndNil(aPlan);
+         Exit;
+         end;
+
+      for i := 0 to rows.Count - 1 do
+         begin
+         aPlan.Consider(rows.Row(i));
+         end;
+      Result := True;
+   finally
+      rows.Free;
+   end;
+end;
+
+function CountPushableToServer(aImage: TServerLogImage; out aPush: integer): boolean;
+var
+   plan: TPushPlan;
+begin
+   aPush := 0;
+   Result := MakePushPlan(aImage, plan);
+   if Result then
+      begin
+      try
+         aPush := plan.Count;
+         logger.Info('[Net] restock: %s', [PushSummary(plan)]);
+      finally
+         plan.Free;
+      end;
+      end;
+end;
+
+function SendLogToServer(aImage: TServerLogImage; out aSent: integer): boolean;
+var
+   plan: TPushPlan;
+begin
+   aSent := 0;
+   Result := False;
+
+   if not MakePushPlan(aImage, plan) then
+      begin
+      logger.Error('[Net] restock: the log could not be read; nothing was sent');
+      Exit;
+      end;
+
+   try
+      logger.Info('[Net] restock: %s', [PushSummary(plan)]);
+      if plan.Count = 0 then
+         begin
+         Result := True;
+         Exit;
+         end;
+
+      Result := RestockServer(plan, aSent);
+      if aSent > 0 then
+         begin
+         QuickDisplay(SysUtils.Format(SNetPushedToServer, [aSent]));
+         end;
+   finally
+      plan.Free;
+   end;
+end;
+
 function MergeServerLog(aImage: TServerLogImage; const aBackupDir: string;
                         out aAdded, aSkippedContest: integer;
                         out aWhy: string): boolean;
@@ -621,7 +723,8 @@ end;
   goes down all night would otherwise announce it every time. *)
 procedure DecideOnConnect(aImage: TServerLogImage);
 var
-   missing: integer;
+   missing, toSend, sent: integer;
+   question: string;
 begin
    if not CountMissingFromServer(aImage, missing) then
       begin
@@ -629,29 +732,75 @@ begin
       Exit;
       end;
 
-   if missing = 0 then
+   (* THE OTHER DIRECTION, from the same image: what this log has that the server
+     lacks (a server that lost its log). If the log cannot be read for it, the
+     pull still goes ahead on its own. *)
+   if not CountPushableToServer(aImage, toSend) then
       begin
-      Exit;
+      logger.Error('[Net] restock: the log could not be read; nothing was sent');
+      toSend := 0;
       end;
 
-   if not Settings.Server.AutoSynchronizeLogOnConnect then
+   (* A SEND THAT CANNOT GO IS NOT OFFERED: the link may have changed while the
+     log was being fetched, and the operator must not be asked to send
+     something the link would refuse. *)
+   if (toSend > 0) and (not NetCanRestock) then
       begin
-      if YesOrNo(SysUtils.Format(SCatchUpAsk, [missing])) <> IDYES then
+      logger.Info('[Net] restock: %d QSO(s) the server lacks, but the link is not ' +
+                  'usable now; they are planned again on the next link', [toSend]);
+      toSend := 0;
+      end;
+
+   (* ONE QUESTION FOR BOTH DIRECTIONS, or none (uNetCatchUp.SyncOnConnect). *)
+   case SyncOnConnect(missing, toSend, Settings.Server.AutoSynchronizeLogOnConnect) of
+      socNothing:
          begin
-         logger.Info('[Net] catch-up: %d QSO(s) on the server were not added ' +
-                     '(the operator declined)', [missing]);
+         Exit;
+         end;
+      socDoNow:
+         begin
+         question := '';
+         end;
+      socAskPull:
+         begin
+         question := SysUtils.Format(SCatchUpAsk, [missing]);
+         end;
+      socAskPush:
+         begin
+         question := SysUtils.Format(SPushAsk, [toSend]);
+         end;
+   else
+      begin
+      question := SysUtils.Format(SSyncAskBoth, [missing, toSend]);
+      end;
+   end;
+
+   if question <> '' then
+      begin
+      if YesOrNo(question) <> IDYES then
+         begin
+         logger.Info('[Net] catch-up: %d QSO(s) on the server were not added and ' +
+                     '%d of this log were not sent (the operator declined)',
+                     [missing, toSend]);
          Exit;
          end;
       end;
 
-   AddServerLogToLog(aImage);
+   if toSend > 0 then
+      begin
+      SendLogToServer(aImage, sent);
+      end;
+   if missing > 0 then
+      begin
+      AddServerLogToLog(aImage);
+      end;
 end;
 
 (* IN THE WINDOW: SHOW WHAT WAS FETCHED and say how many the log lacks. The
   image is the window's from here, until it is replaced or the window closes. *)
 procedure ShowFetchedInWindow(aJob: TFetchJob);
 var
-   missing: integer;
+   missing, toSend: integer;
 begin
    ReleaseServerLogImage;
    GWindowImage := aJob.Image;
@@ -671,6 +820,17 @@ begin
       begin
       logger.Error('[Net] catch-up: the log could not be read, so what it lacks ' +
                    'is not known');
+      end;
+
+   (* THE COUNT GOES TO THE WINDOW EITHER WAY; the window enables Send only while
+     the link is usable (uNet.NetCanRestock) and follows the link afterwards, so a
+     link that drops or comes back while the window is open changes the button. *)
+   if CountPushableToServer(GWindowImage, toSend) then
+      begin
+      if toSend > 0 then
+         begin
+         SyncProgressHandler(SYNC_FIELD_ENABLE_SEND, toSend);
+         end;
       end;
 end;
 

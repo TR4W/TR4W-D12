@@ -13,6 +13,12 @@
 > `.claude/agents/multi-op-network.md` (Late catch-up) and the header of
 > `tr4w/src/uNetCatchUp.pas`. The text below is the original request, kept for its
 > reasoning.
+>
+> **2026-10-28: THE DIRECTION IS TWO-WAY NOW.** The same fetch also finds the QSOs this
+> log has that the SERVER lacks (a server that lost its log) and sends them as
+> OFFLINEQSO (stored and acknowledged by both servers, not relayed). The setting
+> governs both: on, both just happen; off, ONE question covers both. Net > Synchronize
+> with the server has an Add and a Send button.
 
 ## Context
 

@@ -96,32 +96,6 @@ const
    (* The station-id 2 every test peer announces itself as. *)
    PEER = 2;
 
-type
-   (* A WRITER WITH NO SOCKET. Records each packet it was asked to write, and can
-     fail from the Nth write on or hold writes at a gate. Runs on the queue's
-     writer thread. *)
-   TStubLink = class
-   private
-      FLock: TCriticalSection;
-      FWritten: TStringList;
-      FLast: TNetQSOInformation;
-      FAttempts: integer;
-   public
-      (* The 1-based number of the write from which writes fail; 0 never. *)
-      FailFrom: integer;
-      (* When assigned, a write waits here (5 s at most) before it does anything. *)
-      Gate: TEvent;
-      constructor Create;
-      destructor Destroy; override;
-      function Write(const aBytes: TBytes): boolean;
-      function Attempts: integer;
-      (* One text per packet written: Q, E, O or S, then the QSO's key. *)
-      function WrittenText: string;
-      function WrittenCount: integer;
-      function CountOf(const aPrefix: string): integer;
-      function Last: TNetQSOInformation;
-   end;
-
 var
    gNotices: TStringList;
 
@@ -130,146 +104,9 @@ begin
    gNotices.Add(aText);
 end;
 
-constructor TStubLink.Create;
-begin
-   inherited Create;
-   FLock := TCriticalSection.Create;
-   FWritten := TStringList.Create;
-end;
-
-destructor TStubLink.Destroy;
-begin
-   FWritten.Free;
-   FLock.Free;
-   inherited Destroy;
-end;
-
-function TStubLink.Write(const aBytes: TBytes): boolean;
-var
-   id: Word;
-   kind: string;
-   pkt: NetQSOInformationPtr;
-begin
-   if Gate <> nil then
-      begin
-      Gate.WaitFor(5000);
-      end;
-
-   FLock.Enter;
-   try
-      Inc(FAttempts);
-      Result := (FailFrom = 0) or (FAttempts < FailFrom);
-      if not Result then
-         begin
-         Exit;
-         end;
-
-      id := Word(aBytes[0]) or (Word(aBytes[1]) shl 8);
-      case id of
-         NET_QSOINFO_ID:        kind := 'Q';
-         NET_EDITEDQSO_ID:      kind := 'E';
-         NET_OFFLINEQSO_ID:     kind := 'O';
-         NET_SERVERMESSAGE_ID:  kind := 'S';
-      else
-         kind := 'X';
-      end;
-
-      if (kind = 'Q') or (kind = 'E') or (kind = 'O') then
-         begin
-         pkt := NetQSOInformationPtr(@aBytes[0]);
-         FLast := pkt^;
-         FWritten.Add(kind + IntToStr(pkt^.qiInformation.ceQSOID1) + '/' +
-                      IntToStr(pkt^.qiInformation.ceQSOID2));
-         end
-      else
-         begin
-         FWritten.Add(kind);
-         end;
-   finally
-      FLock.Leave;
-   end;
-end;
-
-function TStubLink.Attempts: integer;
-begin
-   FLock.Enter;
-   try
-      Result := FAttempts;
-   finally
-      FLock.Leave;
-   end;
-end;
-
-function TStubLink.WrittenText: string;
-begin
-   FLock.Enter;
-   try
-      Result := FWritten.CommaText;
-   finally
-      FLock.Leave;
-   end;
-end;
-
-function TStubLink.WrittenCount: integer;
-begin
-   FLock.Enter;
-   try
-      Result := FWritten.Count;
-   finally
-      FLock.Leave;
-   end;
-end;
-
-function TStubLink.CountOf(const aPrefix: string): integer;
-var
-   i: integer;
-begin
-   Result := 0;
-   FLock.Enter;
-   try
-      for i := 0 to FWritten.Count - 1 do
-         begin
-         if Copy(FWritten[i], 1, Length(aPrefix)) = aPrefix then
-            begin
-            Inc(Result);
-            end;
-         end;
-   finally
-      FLock.Leave;
-   end;
-end;
-
-function TStubLink.Last: TNetQSOInformation;
-begin
-   FLock.Enter;
-   try
-      Result := FLast;
-   finally
-      FLock.Leave;
-   end;
-end;
-
 (* --------------------------------------------------------------------------- *)
 (* the scratch store and the link                                               *)
 (* --------------------------------------------------------------------------- *)
-
-(* Waits (5 s at most) until the stub has been asked to write aCount packets of
-  any kind. A QSO packet's outcome is reported before the next write begins, so
-  when the LAST packet is not a QSO or an edit this also means every outcome is
-  in. *)
-function WaitWrites(aLink: TStubLink; aCount: integer): boolean;
-var
-   started: QWord;
-begin
-   started := GetTickCount64;
-   repeat
-      Result := aLink.Attempts >= aCount;
-      if not Result then
-         begin
-         Sleep(5);
-         end;
-   until Result or (GetTickCount64 - started > 5000);
-end;
 
 (* Waits (5 s at most) until the writer thread has reported aCount QSO or edit
   packets, written or lost. The reports arrive just after the write returns. *)
@@ -1111,10 +948,12 @@ begin
                'the sync unit does not call it');
    (* The implementation, not the declaration: its header is followed by the
      routine's var block. *)
+   (* SendRecordToServer is a one-line delegate since the restock (2026-10-28);
+     the packet is built in PostQsoPacket. *)
    CheckEquals(0, Pos('rec.ceSendToServer :=',
-                      BodyOf(net, 'function SendRecordToServer(RecordType: Word; const rec: ' +
-                                  'ContestExchange): boolean;' + LineEnding + 'var')),
-               'SendRecordToServer does not write the record''s flag');
+                      BodyOf(net, 'function PostQsoPacket(')),
+               'PostQsoPacket (what SendRecordToServer posts through) does not ' +
+               'write the record''s flag');
    CheckTrue(Pos('NetServiceResend;', BodyOf(net, 'procedure TNetDrainer.Drain(')) > 0,
              'the drain services the catch-up after the buffer is handled');
    CheckTrue(Pos('GResendDue := True', BodyOf(net, 'procedure HandleHelloReceived(')) > 0,

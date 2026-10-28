@@ -617,6 +617,7 @@ uses
    uTestNetResend in 'uTestNetResend.pas',
    uTestNetClientPackets in 'uTestNetClientPackets.pas',
    uTestNetCatchUp in 'uTestNetCatchUp.pas',
+   uTestNetRestock in 'uTestNetRestock.pas',
    uTestNetLink in 'uTestNetLink.pas',
    uDXSpotParse         in '..\..\src\uDXSpotParse.pas',
    uSpotAge             in '..\..\src\uSpotAge.pas',
@@ -1013,6 +1014,7 @@ begin
    RegisterSuite(TNetResendTests.Create('NetResend'));
    RegisterSuite(TNetClientPacketTests.Create('NetClientPackets'));
    RegisterSuite(TNetCatchUpTests.Create('NetCatchUp'));
+   RegisterSuite(TNetRestockTests.Create('NetRestock'));
    RegisterSuite(TTestADIFExchange.Create('ADIFExchange'));
    RegisterSuite(TCallSignRoutinesTests.Create('CallSignRoutines'));
    RegisterSuite(TYaesuASCIITests.Create('YaesuASCII'));

@@ -76,6 +76,29 @@ unit uNetCatchUp;
       right for stations on the same build and cannot be better; the skipped
       count says how many were not judged, and the log names the first.
 
+  THE OTHER DIRECTION -- RESTOCKING THE SERVER (2026-10-28). The same download
+  answers the converse question: which of THIS log's QSOs does the server lack?
+  NY4I moved the server to a machine with no log; his station held 83 QSOs, all
+  already marked sent to the old server, and nothing would ever send them again
+  (the resend only sends rows still owed, and the catch-up only asks what the
+  SERVER has that this log lacks). The same happens after the server's Clear-all-
+  logs message or any restart that lost SERVERLOG.TRW. The push plan (TPushPlan)
+  is built from the image the catch-up already downloaded -- no second transfer:
+
+    - a row whose (ceQSOID1, ceQSOID2) the image holds is left alone;
+    - a row with both ids 0 (an import) names nothing on the wire: skipped and
+      counted;
+    - a row still OWED (sent_to_server = 0 or server_dirty = 1) is skipped and
+      counted: the resend sends it, as a QSOINFO the others also receive;
+    - everything else is pushed, INCLUDING the QSOs this station received from
+      other stations -- any station can restock the server. The key is the id
+      pair, not the author.
+
+  The rows go as NET_OFFLINEQSO_ID, which both servers STORE, ACK and do NOT
+  relay, so restocking does not flood the stations that are connected; a station
+  that lacks some catches up from the server's log on its next link. A server
+  that already holds a pair stores it once and still ACKs.
+
   A LEAF, like uNetHello and uNetResend: no sockets, no store, no widget set, so
   all of it is reachable from a unit test. The fetch is uGetServerLog's, the
   write is uLogStore's.
@@ -89,6 +112,7 @@ uses
    VC,
    uComputerID,
    uNetHello,
+   uNetResend,
    uServerQsoIndex;
 
 const
@@ -205,6 +229,74 @@ function CatchUpSummary(aPlan: TCatchUpPlan): string;
   sender's byte is never stored), and sent and clean -- it came from the server,
   so it is not owed back. *)
 procedure StampCaughtUp(var aRec: ContestExchange; const aOurHandle: TContestHandle);
+
+type
+   (* WHAT BECOMES OF ONE ROW OF THIS LOG when the server is restocked. *)
+   TPushVerdict = (
+      pvSend,          // the server lacks it: push it
+      pvNoIdentity,    // (0, 0): an import, it names nothing on the wire
+      pvOwed,          // the resend sends it (sent_to_server = 0 or server_dirty = 1)
+      pvServerHas,     // the server's log holds the pair
+      pvRepeated       // this log holds the pair twice; pushed once
+   );
+
+   (* THE ROWS OF THIS LOG THE SERVER LACKS, computed and not yet sent. Built from
+     the server image; fed this log's rows one at a time (Consider), so the log
+     is never held twice. Owns copies of the records it will send. *)
+   TPushPlan = class(TObject)
+   private
+      FServerKeys: TServerQsoIndex;
+      FTaken: TServerQsoIndex;
+      (* Not owned. See Create. *)
+      FResentThisLink: TServerQsoIndex;
+      FRows: array of ContestExchange;
+      FCount: integer;
+      FVerdicts: array[TPushVerdict] of integer;
+   public
+      (* aImage is the server's log; its pairs are read now and the image is not
+        kept. Every record counts, deleted ones and other contests' too: the
+        question is whether the server HOLDS the pair, not whether it is ours.
+        aResentThisLink (not owned, may be nil) is the set of pairs the resend
+        posted on THIS link: the fetch runs on its own connection and may have
+        been served before the server read them, and the writer may already have
+        marked them sent, so they would otherwise look like rows the server
+        lacks. They count as owed. *)
+      constructor Create(aImage: TServerLogImage;
+                         aResentThisLink: TServerQsoIndex = nil);
+      destructor Destroy; override;
+
+      (* Does the server's log hold this pair? The repository asks it before it
+        reads a row's other columns. False for (0, 0). *)
+      function ServerHolds(aSessionId, aSessionSeq: Int64): boolean;
+
+      (* Judge one row of this log, and keep it when the server lacks it. *)
+      function Consider(const aRec: ContestExchange): TPushVerdict;
+
+      (* Rows to send, and the row aN of them (0-based); a zeroed record outside
+        0..Count-1, as TServerLogImage.Row gives. *)
+      function Count: integer;
+      function Row(aN: integer): ContestExchange;
+
+      (* How many rows got each verdict. *)
+      function Verdicts(aVerdict: TPushVerdict): integer;
+   end;
+
+(* A one-line account for the log: how many to send, how many skipped and why. *)
+function PushSummary(aPlan: TPushPlan): string;
+
+type
+   (* WHAT THE STATION DOES ON CONNECT once it knows how many QSOs the server holds
+     that this log lacks (aPull) and how many of this log's the server lacks
+     (aPush). ONE decision for both directions, so the operator is asked once. *)
+   TSyncOnConnect = (
+      socNothing,    // both sides complete: say nothing
+      socDoNow,      // SERVER AUTO SYNCHRONIZE LOG ON CONNECT is on: just do it
+      socAskPull,    // ask: only the server has something to give
+      socAskPush,    // ask: only this log has something to give
+      socAskBoth     // ask once, covering both
+   );
+
+function SyncOnConnect(aPull, aPush: integer; aAutoSynchronize: boolean): TSyncOnConnect;
 
 implementation
 
@@ -501,6 +593,138 @@ begin
    aRec.ceContest := aOurHandle;
    aRec.ceSendToServer := True;
    aRec.ceNeedSendToServerAE := False;
+end;
+
+(* ------------------------------------------------------------ the push plan *)
+
+constructor TPushPlan.Create(aImage: TServerLogImage;
+                             aResentThisLink: TServerQsoIndex);
+var
+   i: integer;
+   rec: ContestExchange;
+begin
+   inherited Create;
+   FResentThisLink := aResentThisLink;
+   FServerKeys := TServerQsoIndex.Create;
+   FTaken := TServerQsoIndex.Create;
+   if aImage <> nil then
+      begin
+      for i := 0 to aImage.Count - 1 do
+         begin
+         aImage.Row(i, rec);
+         FServerKeys.Add(rec.ceQSOID1, rec.ceQSOID2);
+         end;
+      end;
+end;
+
+destructor TPushPlan.Destroy;
+begin
+   FTaken.Free;
+   FServerKeys.Free;
+   inherited Destroy;
+end;
+
+function TPushPlan.ServerHolds(aSessionId, aSessionSeq: Int64): boolean;
+begin
+   Result := FServerKeys.Contains(Cardinal(aSessionId), Cardinal(aSessionSeq));
+end;
+
+function TPushPlan.Consider(const aRec: ContestExchange): TPushVerdict;
+var
+   needs: TResendNeeds;
+begin
+   needs := ResendNeedsOf(aRec);
+
+   if not QsoHasNetworkIdentity(aRec) then
+      begin
+      Result := pvNoIdentity;
+      end
+   else if needs.NeedsQso or needs.NeedsEdit then
+      begin
+      Result := pvOwed;
+      end
+   else if (FResentThisLink <> nil) and
+           FResentThisLink.Contains(aRec.ceQSOID1, aRec.ceQSOID2) then
+      begin
+      Result := pvOwed;
+      end
+   else if FServerKeys.Contains(aRec.ceQSOID1, aRec.ceQSOID2) then
+      begin
+      Result := pvServerHas;
+      end
+   else if FTaken.Contains(aRec.ceQSOID1, aRec.ceQSOID2) then
+      begin
+      Result := pvRepeated;
+      end
+   else
+      begin
+      Result := pvSend;
+      FTaken.Add(aRec.ceQSOID1, aRec.ceQSOID2);
+      if FCount = Length(FRows) then
+         begin
+         SetLength(FRows, (FCount * 2) + 64);
+         end;
+      FRows[FCount] := aRec;
+      Inc(FCount);
+      end;
+
+   Inc(FVerdicts[Result]);
+end;
+
+function TPushPlan.Count: integer;
+begin
+   Result := FCount;
+end;
+
+function TPushPlan.Row(aN: integer): ContestExchange;
+begin
+   if (aN < 0) or (aN >= FCount) then
+      begin
+      Result := Default(ContestExchange);
+      Exit;
+      end;
+   Result := FRows[aN];
+end;
+
+function TPushPlan.Verdicts(aVerdict: TPushVerdict): integer;
+begin
+   Result := FVerdicts[aVerdict];
+end;
+
+function PushSummary(aPlan: TPushPlan): string;
+begin
+   Result := IntToStr(aPlan.Count) + ' to send; ' +
+             IntToStr(aPlan.Verdicts(pvNoIdentity)) + ' imported (no network identity) skipped; ' +
+             IntToStr(aPlan.Verdicts(pvOwed)) + ' still owed (the resend sends them) skipped';
+   if aPlan.Verdicts(pvRepeated) > 0 then
+      begin
+      Result := Result + '; ' + IntToStr(aPlan.Verdicts(pvRepeated)) +
+                ' repeated in this log';
+      end;
+end;
+
+function SyncOnConnect(aPull, aPush: integer; aAutoSynchronize: boolean): TSyncOnConnect;
+begin
+   if (aPull <= 0) and (aPush <= 0) then
+      begin
+      Result := socNothing;
+      end
+   else if aAutoSynchronize then
+      begin
+      Result := socDoNow;
+      end
+   else if (aPull > 0) and (aPush > 0) then
+      begin
+      Result := socAskBoth;
+      end
+   else if aPull > 0 then
+      begin
+      Result := socAskPull;
+      end
+   else
+      begin
+      Result := socAskPush;
+      end;
 end;
 
 end.

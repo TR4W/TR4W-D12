@@ -474,7 +474,7 @@ begin
    CheckEquals(0, Pos('SContestNotOnMultiOp =', stringsText), 'and the resourcestring');
 
    CheckTrue(Pos('NetQSOInfoToSend.qiSenderID := Ord(WireComputerID)', netText) > 0,
-             'every packet SendRecordToServer builds names its sender');
+             'every packet SendRecordToServer builds (and the restock) names its sender');
    helloAt := Pos('if not SendHello then', netText);
    CheckTrue(helloAt > 0, 'the connect path announces itself');
    CheckTrue((helloAt > 0) and

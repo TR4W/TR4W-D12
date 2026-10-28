@@ -205,6 +205,10 @@ type
 
    TQsoSessionKeys = array of TQsoSessionKey;
 
+   (* A QUESTION ABOUT A NETWORK KEY, asked before a row is read: does the caller
+     already have the QSO with this (session_id, session_seq)? *)
+   TQsoKeyTest = function(aSessionId, aSessionSeq: Int64): boolean of object;
+
    (* QSOS TO APPEND IN ONE TRANSACTION -- TLogRepository.AppendBatch.
 
       The ADIF import's batch (NY4I, 2026-10-14: all or nothing). Its rows
@@ -683,6 +687,17 @@ type
         records would cost seconds on the main thread). The pair (0, 0) is left
         out: it names no QSO. Only reads. *)
       function CollectSessionKeys: TQsoSessionKeys;
+
+      (* THE ROWS A RESTOCK OF THE MULTI-OP SERVER MAY NEED TO SEND (2026-10-28):
+        every row, oldest first, EXCEPT those whose network key aServerHolds says
+        the server already has -- asked from the key columns before the rest of
+        the row is read, so a log the server already holds costs one pass over
+        two integers a row and not a parse of every record. Rows with the pair
+        (0, 0) (imports) and rows still owed are returned too: judging them is
+        the caller's (uNetCatchUp.TPushPlan), which counts them. Answers how many
+        rows were appended to aInto. Only reads. *)
+      function CollectForServerRestock(aInto: TLogRowUpdates;
+                                       aServerHolds: TQsoKeyTest): integer;
 
       (* WRITES THE TWO FLAGS AND NOTHING ELSE. aSent get sent_to_server = 1;
         aEditsDone get server_dirty = 0. Each is addressed by its network key,
@@ -2931,6 +2946,42 @@ begin
       q.Free;
    end;
    SetLength(Result, n);
+end;
+
+function TLogRepository.CollectForServerRestock(aInto: TLogRowUpdates;
+                                                 aServerHolds: TQsoKeyTest): integer;
+var
+   q: TSQLQuery;
+   qso: ContestExchange;
+   sid, sseq: Int64;
+begin
+   Result := 0;
+   q := NewReadQuery;
+   try
+      q.SQL.Text := 'SELECT ' + QSO_COLUMNS + ', ' + ROW_ID_COLUMN +
+                    ' FROM qso ORDER BY id';
+      OpenQsoReader(q, True);
+      try
+         while not q.EOF do
+            begin
+            sid := q.Fields[Ord(qc_session_id)].AsLargeInt;
+            sseq := q.Fields[Ord(qc_session_seq)].AsLargeInt;
+            if ((sid = 0) and (sseq = 0)) or
+               (not Assigned(aServerHolds)) or
+               (not aServerHolds(sid, sseq)) then
+               begin
+               ReadRecord(q, qso);
+               aInto.Add(q.Fields[QSO_COLUMN_COUNT].AsLargeInt, qso);
+               Inc(Result);
+               end;
+            q.Next;
+            end;
+      finally
+         q.Close;
+      end;
+   finally
+      q.Free;
+   end;
 end;
 
 function TLogRepository.MarkServerProgress(const aSent,

@@ -20,9 +20,13 @@ unit uServerLogForm;
   THE SERVER-LOG SYNCHRONIZE WINDOW, AS AN LCL FORM.
 
   Dialog 73, and THE LAST Win32 dialog template in the program. It downloads the
-  multi-op server's log over a second socket, shows it arriving, and ADDS the
-  QSOs this log lacks. Reached from Net > Add missing QSOs from the server
-  (SNetMenuServerLog); its title is SServerLogTitle.
+  multi-op server's log over a second socket, shows it arriving, ADDS the QSOs
+  this log lacks, and SENDS the QSOs this log has that the server lacks (a server
+  that lost its log; 2026-10-28). Reached from Net > Synchronize with the server
+  (SNetMenuServerLog); its title is SServerLogTitle. The Send button shows its
+  count and is enabled only when there is something to send and the link is up;
+  it sends at once and stays disabled until the next Get server log. The Add
+  button still acts when the window closes.
 
   IT NO LONGER REPLACES ANYTHING (Phase 1, C6, 2026-10-27). In D7 the second
   button was "Create and use new log": it copied the downloaded file over the
@@ -85,6 +89,7 @@ type
     lblRecords: TLabel;
     btnGetLog: TButton;
     btnAddMissing: TButton;
+    btnSendMissing: TButton;
     chkShowContent: TCheckBox;
     btnClose: TButton;
     pnlLog: TPanel;
@@ -92,10 +97,14 @@ type
     procedure HandleClose(Sender: TObject; var Action: TCloseAction);
     procedure btnGetLogClick(Sender: TObject);
     procedure btnAddMissingClick(Sender: TObject);
+    procedure btnSendMissingClick(Sender: TObject);
     procedure btnCloseClick(Sender: TObject);
     procedure chkShowContentChange(Sender: TObject);
   private
     FAddMissing: boolean;
+    (* How many of this log's QSOs the last download showed the server lacks.
+      Send is enabled when it is above 0 AND the link can carry a restock now. *)
+    FPushCount: integer;
     (* The downloaded server log.  Built in code rather than in the .lfm: TLogGrid
       is not a registered designer component, and the main window's log is built
       the same way. *)
@@ -103,9 +112,18 @@ type
     procedure BuildLogGrid;
     procedure LogFetchRows(Sender: TObject; const aFirstIndex: Int64;
                            var aRows: array of TLogGridRow);
+    procedure UpdateSendButton;
+  public
+    destructor Destroy; override;
+
+    (* uNetLink's notification: the link came up, went down or changed. Send is
+      enabled only while the link can carry a restock, so it follows. *)
+    procedure LinkChanged(Sender: TObject);
+
     (* Progress from the download thread.  See the note on the worker thread in
       the unit header: this arrives queued and therefore runs on the main
-      thread. *)
+      thread. Public so a test can drive the buttons' states (a report is a field
+      and a value; nothing here is the thread's). *)
     procedure ApplySyncProgress(const aField, aValue: integer);
   end;
 
@@ -123,6 +141,8 @@ uses
   uAppStrings,        // SServerLogTitle, SServerLogAdd, SServerLogAddMissing
   MainUnit,           // LogRowTextFor, logger
   uContestRegistry,   // LoggedQSOIsXQSO -- a row greys an X-QSO (Q98 S1)
+  uNet,               // NetCanRestock
+  uNetLink,           // NetLinkObservers -- how Send follows the link
   VC,                 // ContestExchange
   Log4D;
 
@@ -143,10 +163,12 @@ begin
    lblRecordsCaption.Caption  := string(RC_RECVRECORDS);
    btnGetLog.Caption          := string(RC_GETSERVLOG);
    btnAddMissing.Caption      := SServerLogAdd;
+   btnSendMissing.Caption     := SServerLogSend;
    chkShowContent.Caption     := string(RC_SHOWSERVLOGC);
    btnClose.Caption           := string(CLOSE_WORD);
 
    FAddMissing := False;
+   FPushCount := 0;
 
    lblQSOs.Caption    := '0';
    lblBytes.Caption   := '0';
@@ -154,11 +176,16 @@ begin
 
    btnGetLog.Enabled     := True;
    btnAddMissing.Enabled := False;
+   UpdateSendButton;
    chkShowContent.Checked := showresverlogcontent;
 
    BuildLogGrid;
    // An earlier download is gone (HandleClose released it): show none.
    FLog.RecordCount := 0;
+
+   // Follow the link while the window is open; removed in HandleClose and in
+   // the destructor, so the link never holds a method of a form that is gone.
+   NetLinkObservers.Add(LinkChanged);
 
    // The thread reports here.  Set LAST, so a report cannot arrive before the
    // controls it names have been initialised.
@@ -171,6 +198,7 @@ begin
    // and a report arriving after this point must find no window to talk to
    // rather than a half-destroyed one.  ReportSyncProgress is a no-op on nil.
    SyncProgressHandler := nil;
+   NetLinkObservers.Remove(LinkChanged);
 
    // AFTER the window is gone, as the dialog did: LoadinLog repaints the main
    // window's own log, and it should not do that behind a dialog that is about
@@ -286,6 +314,13 @@ begin
          btnAddMissing.Caption := SysUtils.Format(SServerLogAddMissing, [aValue]);
          btnAddMissing.Enabled := True;
          end;
+      SYNC_FIELD_ENABLE_SEND:
+         begin
+         (* aValue is how many of this log's QSOs the server lacks. Reported only
+           while the link is up and only when there are some. *)
+         FPushCount := aValue;
+         UpdateSendButton;
+         end;
       SYNC_FIELD_FAILED:
          begin
          btnGetLog.Enabled := True;
@@ -298,6 +333,8 @@ begin
    btnGetLog.Enabled := False;
    btnAddMissing.Enabled := False;
    btnAddMissing.Caption := SServerLogAdd;
+   FPushCount := 0;
+   UpdateSendButton;
    lblBytes.Caption := '0';
 
    // A fetch that was not started (one is already under way, or no contest is
@@ -313,6 +350,56 @@ procedure TfrmServerLog.btnAddMissingClick(Sender: TObject);
 begin
    FAddMissing := True;
    Close;
+end;
+
+(* THE SEND BUTTON FOLLOWS TWO FACTS: the last download said the server lacks
+  some of this log's QSOs (FPushCount), and the link can carry a restock now
+  (uNet.NetCanRestock). Its caption shows the count while there is one. *)
+procedure TfrmServerLog.UpdateSendButton;
+begin
+   if FPushCount > 0 then
+      begin
+      btnSendMissing.Caption := SysUtils.Format(SServerLogSendCount, [FPushCount]);
+      btnSendMissing.Enabled := NetCanRestock;
+      end
+   else
+      begin
+      btnSendMissing.Caption := SServerLogSend;
+      btnSendMissing.Enabled := False;
+      end;
+end;
+
+procedure TfrmServerLog.LinkChanged(Sender: TObject);
+begin
+   UpdateSendButton;
+end;
+
+destructor TfrmServerLog.Destroy;
+begin
+   NetLinkObservers.Remove(LinkChanged);
+   inherited Destroy;
+end;
+
+(* SEND THIS LOG'S QSOs THE SERVER LACKS, now and without closing the window. The
+  plan is made again from the log as it is at this moment (SendLogToServer), and
+  the count is cleared afterwards: the image on show is the server's log as it
+  was, so a second plan from it would offer the same QSOs again. Get server log
+  makes a fresh image. A send that could not start (the link dropped since the
+  image was fetched) leaves the count, and the button follows the link. *)
+procedure TfrmServerLog.btnSendMissingClick(Sender: TObject);
+var
+   sent: integer;
+begin
+   if ServerLogWindowImage = nil then
+      begin
+      Exit;
+      end;
+
+   if SendLogToServer(ServerLogWindowImage, sent) or (sent > 0) then
+      begin
+      FPushCount := 0;
+      end;
+   UpdateSendButton;
 end;
 
 procedure TfrmServerLog.btnCloseClick(Sender: TObject);

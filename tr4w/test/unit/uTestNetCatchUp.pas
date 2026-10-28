@@ -74,8 +74,6 @@ type
       function StartServer: Word;
       procedure StopServer;
       function PayloadOf(aRecords: integer): TBytes;
-      (* A server log image: a header, then these records. *)
-      function NewImage(const aRecords: array of ContestExchange): TServerLogImage;
       (* A QSO as the server holds it, by author, with flags that are NOT the
         ones a caught-up row ends with, so the stamping is seen. *)
       function Rec(const aCall: string; aId1, aId2: Cardinal;
@@ -134,22 +132,6 @@ const
 function TNetCatchUpTests.PeerLetter: AnsiChar;
 begin
    Result := ComputerIDLetter(AnsiChar(PEER));
-end;
-
-function TNetCatchUpTests.NewImage(const aRecords: array of ContestExchange): TServerLogImage;
-var
-   header: TBytes;
-   i: integer;
-   why: string;
-begin
-   Result := TServerLogImage.Create;
-   SetLength(header, SizeOfTLogHeader);
-   Result.Data.WriteBuffer(header[0], SizeOfTLogHeader);
-   for i := Low(aRecords) to High(aRecords) do
-      begin
-      Result.Data.WriteBuffer(aRecords[i], SizeOf(ContestExchange));
-      end;
-   CheckTrue(Result.Accept(Result.Data.Size, why), 'the image is whole: ' + why);
 end;
 
 function TNetCatchUpTests.Rec(const aCall: string; aId1, aId2: Cardinal;

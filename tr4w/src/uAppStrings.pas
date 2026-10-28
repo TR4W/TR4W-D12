@@ -326,17 +326,20 @@ resourcestring
    SNetMenuReconnect  = 'Reconnect';
    SNetMenuShowWindow = 'Show Network window';
 
-   (* THE NET MENU ROW THAT OPENS THE SERVER-LOG WINDOW, AND THAT WINDOW'S TITLE
-     (2026-10-27). They replace RC_SYNLOG ("Compare and synchronize logs") and
-     RC_SYNLOG2 ("Synchronize log"): since the late catch-up the window only ADDS
-     the server's QSOs this log is missing -- it compares nothing and replaces
-     nothing. NEW KEYS rather than new English under the old ones, because the
-     catalogues translate by key and ignore the msgid, so a reworded RC_SYNLOG
-     would go on showing the old meaning in every reviewed language. The row
-     keeps its keystroke (Ctrl+Alt+S, uAccelerators, by menu_getserverlog). *)
-   SNetMenuServerLog = 'Add missing QSOs from the server...';
-   SServerLogTitle   = 'Server log';
-
+   (* THE NET MENU ROW THAT OPENS THE SYNCHRONIZE WINDOW, AND THAT WINDOW'S TITLE
+     (2026-10-27, reworded 2026-10-28). They replace RC_SYNLOG ("Compare and
+     synchronize logs") and RC_SYNLOG2 ("Synchronize log"): the window compares
+     nothing and replaces nothing. It works in BOTH directions: it ADDS the
+     server's QSOs this log is missing and SENDS the QSOs this log has that the
+     server lacks (a server that lost its log). The 2026-10-27 English ("Add
+     missing QSOs from the server...", "Server log") described half of it; the
+     keys are unchanged and their msgstr were still empty in every catalogue.
+     NEW KEYS rather than new English under the old ones, because the catalogues
+     translate by key and ignore the msgid, so a reworded RC_SYNLOG would go on
+     showing the old meaning in every reviewed language. The row keeps its
+     keystroke (Ctrl+Alt+S, uAccelerators, by menu_getserverlog). *)
+   SNetMenuServerLog = 'Synchronize with the server...';
+   SServerLogTitle   = 'Synchronize with the server';
    (* PEERS MUST BE ON THE SAME CONTEST -- Q110, NY4I 2026-10-18. A QSO from
      another station on a different contest is refused and this is the
      notice, raised once per station and contest per link. %s: the station
@@ -389,6 +392,36 @@ resourcestring
 
    SServerLogAddMissing =
       'Add %d missing QSO(s)';
+
+   (* RESTOCKING A SERVER THAT LOST ITS LOG (2026-10-28) -- the other direction of
+     the catch-up: this log holds QSOs the server does not. *)
+
+   (* Said when they have been posted. %d: how many. *)
+   SNetPushedToServer =
+      'Sent to the server: %d QSO(s) it did not have.';
+
+   (* The question when only this log has something to give and SERVER AUTO
+     SYNCHRONIZE LOG ON CONNECT is off. %d: how many QSOs. *)
+   SPushAsk =
+      'The server lacks %d QSO(s) of yours. Send them to the server now? ' +
+      'Nothing in this log is changed, and the server ignores any QSO it ' +
+      'already holds.';
+
+   (* The ONE question when both directions apply. %d: the server's QSOs this log
+     lacks, then this log's QSOs the server lacks. *)
+   SSyncAskBoth =
+      'The server holds %d QSO(s) this log lacks and lacks %d of yours. Add ' +
+      'the first to this log and send the second to the server now? Nothing ' +
+      'already in this log is changed or removed, and a backup of the log is ' +
+      'taken first.';
+
+   (* The Synchronize window's second button: before the server's log has been
+     read, and once it has. %d: how many QSOs it would send. *)
+   SServerLogSend =
+      'Send QSOs to the server';
+
+   SServerLogSendCount =
+      'Send %d QSO(s) to the server';
 
    { --------------------------------------------------- verification checks - }
 

@@ -36,7 +36,7 @@ unit uTestNetSupport;
 interface
 
 uses
-   Classes, VC, uTR4WTestFramework;
+   SysUtils, Classes, SyncObjs, VC, uTR4WTestFramework, uNetCatchUp;
 
 type
    TNetStoreTestCase = class(TTestCase)
@@ -47,6 +47,12 @@ type
       FSavedLogName: string;
       FSavedSilent: boolean;
       FSavedContest: TContestHandle;
+      (* The author (ceComputerID) AppendRow gives each row it stores; #0, which is
+        what a station's own QSO carries here, unless a test names another. *)
+      FRowAuthor: AnsiChar;
+
+      (* A server log image: a header, then these records. Checked whole. *)
+      function NewImage(const aRecords: array of ContestExchange): TServerLogImage;
 
       (* A new, empty scratch log, open, with the contest set to ARRL DX CW and
         any earlier refusal forgotten. *)
@@ -72,6 +78,38 @@ type
       procedure FeedHello(const aStation: Byte; const aContestId: string);
    end;
 
+type
+   (* A WRITER WITH NO SOCKET. Records each packet it was asked to write, and can
+     fail from the Nth write on or hold writes at a gate. Runs on the queue's
+     writer thread. *)
+   TStubLink = class
+   private
+      FLock: TCriticalSection;
+      FWritten: TStringList;
+      FLast: TNetQSOInformation;
+      FAttempts: integer;
+   public
+      (* The 1-based number of the write from which writes fail; 0 never. *)
+      FailFrom: integer;
+      (* When assigned, a write waits here (5 s at most) before it does anything. *)
+      Gate: TEvent;
+      constructor Create;
+      destructor Destroy; override;
+      function Write(const aBytes: TBytes): boolean;
+      function Attempts: integer;
+      (* One text per packet written: Q, E, O or S, then the QSO's key. *)
+      function WrittenText: string;
+      function WrittenCount: integer;
+      function CountOf(const aPrefix: string): integer;
+      function Last: TNetQSOInformation;
+   end;
+
+(* Waits (5 s at most) until the stub has been asked to write aCount packets of
+  any kind. A QSO packet's outcome is reported before the next write begins, so
+  when the LAST packet is not a QSO or an edit this also means every outcome is
+  in. *)
+function WaitWrites(aLink: TStubLink; aCount: integer): boolean;
+
 (* ONE NUMBER FROM ONE SQL STATEMENT, read from a log FILE on a connection of its
   own, read-only: how many rows a backup holds, what a row's my_source is. The
   live log is not asked, so what it says is what a second reader would see. *)
@@ -80,8 +118,145 @@ function ScalarOfLogFile(const aFileName, aSql: string): Int64;
 implementation
 
 uses
-   SysUtils, sqldb, FileUtil, utils_text, TF, uNet, uNetHello, uLogStore, uLogDatabase,
+   sqldb, FileUtil, utils_text, TF, uNet, uNetHello, uLogStore, uLogDatabase,
    uLogRepository, uContestRegistry, PostUnit;
+
+constructor TStubLink.Create;
+begin
+   inherited Create;
+   FLock := TCriticalSection.Create;
+   FWritten := TStringList.Create;
+end;
+
+destructor TStubLink.Destroy;
+begin
+   FWritten.Free;
+   FLock.Free;
+   inherited Destroy;
+end;
+
+function TStubLink.Write(const aBytes: TBytes): boolean;
+var
+   id: Word;
+   kind: string;
+   pkt: NetQSOInformationPtr;
+begin
+   if Gate <> nil then
+      begin
+      Gate.WaitFor(5000);
+      end;
+
+   FLock.Enter;
+   try
+      Inc(FAttempts);
+      Result := (FailFrom = 0) or (FAttempts < FailFrom);
+      if not Result then
+         begin
+         Exit;
+         end;
+
+      id := Word(aBytes[0]) or (Word(aBytes[1]) shl 8);
+      case id of
+         NET_QSOINFO_ID:        kind := 'Q';
+         NET_EDITEDQSO_ID:      kind := 'E';
+         NET_OFFLINEQSO_ID:     kind := 'O';
+         NET_SERVERMESSAGE_ID:  kind := 'S';
+      else
+         kind := 'X';
+      end;
+
+      if (kind = 'Q') or (kind = 'E') or (kind = 'O') then
+         begin
+         pkt := NetQSOInformationPtr(@aBytes[0]);
+         FLast := pkt^;
+         FWritten.Add(kind + IntToStr(pkt^.qiInformation.ceQSOID1) + '/' +
+                      IntToStr(pkt^.qiInformation.ceQSOID2));
+         end
+      else
+         begin
+         FWritten.Add(kind);
+         end;
+   finally
+      FLock.Leave;
+   end;
+end;
+
+function TStubLink.Attempts: integer;
+begin
+   FLock.Enter;
+   try
+      Result := FAttempts;
+   finally
+      FLock.Leave;
+   end;
+end;
+
+function TStubLink.WrittenText: string;
+begin
+   FLock.Enter;
+   try
+      Result := FWritten.CommaText;
+   finally
+      FLock.Leave;
+   end;
+end;
+
+function TStubLink.WrittenCount: integer;
+begin
+   FLock.Enter;
+   try
+      Result := FWritten.Count;
+   finally
+      FLock.Leave;
+   end;
+end;
+
+function TStubLink.CountOf(const aPrefix: string): integer;
+var
+   i: integer;
+begin
+   Result := 0;
+   FLock.Enter;
+   try
+      for i := 0 to FWritten.Count - 1 do
+         begin
+         if Copy(FWritten[i], 1, Length(aPrefix)) = aPrefix then
+            begin
+            Inc(Result);
+            end;
+         end;
+   finally
+      FLock.Leave;
+   end;
+end;
+
+function TStubLink.Last: TNetQSOInformation;
+begin
+   FLock.Enter;
+   try
+      Result := FLast;
+   finally
+      FLock.Leave;
+   end;
+end;
+
+(* Waits (5 s at most) until the stub has been asked to write aCount packets of
+  any kind. A QSO packet's outcome is reported before the next write begins, so
+  when the LAST packet is not a QSO or an edit this also means every outcome is
+  in. *)
+function WaitWrites(aLink: TStubLink; aCount: integer): boolean;
+var
+   started: QWord;
+begin
+   started := GetTickCount64;
+   repeat
+      Result := aLink.Attempts >= aCount;
+      if not Result then
+         begin
+         Sleep(5);
+         end;
+   until Result or (GetTickCount64 - started > 5000);
+end;
 
 function ScalarOfLogFile(const aFileName, aSql: string): Int64;
 var
@@ -142,6 +317,7 @@ begin
          end;
       end;
 
+   FRowAuthor := #0;
    FSavedLogName := CharBufferText(TR4W_LOG_FILENAME);
    SetCharBuffer(TR4W_LOG_FILENAME, FTrw);
    (* No operator: a failure is a log line and a False, not a modal. *)
@@ -179,6 +355,22 @@ begin
       end;
 end;
 
+function TNetStoreTestCase.NewImage(const aRecords: array of ContestExchange): TServerLogImage;
+var
+   header: TBytes;
+   i: integer;
+   why: string;
+begin
+   Result := TServerLogImage.Create;
+   SetLength(header, SizeOfTLogHeader);
+   Result.Data.WriteBuffer(header[0], SizeOfTLogHeader);
+   for i := Low(aRecords) to High(aRecords) do
+      begin
+      Result.Data.WriteBuffer(aRecords[i], SizeOf(ContestExchange));
+      end;
+   CheckTrue(Result.Accept(Result.Data.Size, why), 'the image is whole: ' + why);
+end;
+
 function TNetStoreTestCase.AppendRow(const aCall: string; aId1, aId2: Cardinal;
                                      aSent, aDirty: boolean): ContestExchange;
 begin
@@ -190,6 +382,7 @@ begin
    Result.ceQSOID2 := aId2;
    Result.ceSendToServer := aSent;
    Result.ceNeedSendToServerAE := aDirty;
+   Result.ceComputerID := FRowAuthor;
    Result.Band := Band20;
    Result.Mode := CW;
    Result.Frequency := 14025000;

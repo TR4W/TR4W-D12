@@ -1362,6 +1362,15 @@ is skipped and reported. **An edit another station made while this one was away 
 (the server holds the edited record in place and nothing says which copy is newer) — that is the
 row-level protocol's. Detail: `.claude/agents/multi-op-network.md`, `uNetCatchUp.pas`'s header.
 
+**THE CATCH-UP IS TWO-WAY (2026-10-28).** NY4I moved the server to a machine with no log and his
+83 QSOs, already marked sent, could never reach it: the resend sends only rows still owed. The
+same downloaded image now also says which of THIS log's QSOs the server lacks, and they are sent
+as `NET_OFFLINEQSO_ID` — which both servers store, acknowledge and do **not** relay, so connected
+stations are not flooded and no row's flag changes. Imports (both ids 0) and rows still owed are
+left out and counted. On connect the pull and the push are decided together (ONE question with the
+setting off, none with it on); Net > **Synchronize with the server** has an Add and a Send button.
+Detail: the `multi-op-network` agent, `uNetCatchUp.TPushPlan`, `tools/netprobe --case restock`.
+
 **It is built by `FullBuild.ps1` as a normal step again (2026-08-29).** It had not compiled since
 2026-08-23: `a3c671cc` added a `TF` → `uCrashLog` edge so a fault on a worker thread would not be
 silent, and `uCrashLog` used `Forms`, so the chain

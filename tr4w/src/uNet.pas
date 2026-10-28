@@ -39,6 +39,8 @@ uses
   uNetHello,     { THelloMessage, TNetPeers -- the first message on a link }
   uNetLink,      { TNetLinkState -- what the link is doing, and who is told }
   uNetResend,    { TNetDelivery -- what became of each QSO packet }
+  uNetCatchUp,   { TPushPlan -- the QSOs the server lacks, RestockServer }
+  uServerQsoIndex, { the pairs the resend posted on this link }
   utils_file,
   uTotal,
   uSpots,
@@ -418,6 +420,32 @@ procedure NetServiceResend;
   unless the HELLO made it due and the link is still up. *)
 procedure NetServiceCatchUp;
 
+(* THE THIRD HALF: RESTOCKING A SERVER THAT LOST ITS LOG (2026-10-28). The fetch
+  that catches this station up also shows which of THIS log's QSOs the server
+  lacks (uNetCatchUp.TPushPlan); this posts them. Each goes as NET_OFFLINEQSO_ID,
+  which both servers store, ACK and do NOT relay, so the stations that are
+  connected are not flooded. NO TAG: the rows are already sent_to_server = 1, so
+  no flag is written when the packets go (SettleServerProgress sees nothing to
+  settle). A link that drops half way needs no repair: the plan is made again
+  from the server's log on the next link.
+
+  The same guards as ResendOfflineWork, checked NOW because the fetch is
+  asynchronous and the link may have changed since it was asked for. aPosted is
+  how many were posted. True when the whole plan was posted; False when a guard
+  refused or the link went down part way (aPosted says how far). *)
+function RestockServer(aPlan: TPushPlan; out aPosted: integer): boolean;
+
+(* CAN A RESTOCK GO DOWN THE LINK RIGHT NOW? The link is up, the server has said
+  HELLO (it speaks this protocol) and has not refused this station's computer id
+  -- the guards ResendOfflineWork uses. The window enables its Send button by
+  it, the on-connect question is only asked when it holds, and RestockServer
+  checks it again at send time. *)
+function NetCanRestock: boolean;
+
+(* THE PAIRS THE RESEND POSTED ON THIS LINK, owed rows the server may not have
+  read yet. TPushPlan counts them as owed. Cleared when a link comes up. *)
+function NetResentThisLink: TServerQsoIndex;
+
 (* Record what became of the QSO packets the writer thread has finished with,
   and bring tUSQ / tUSQE into line with the log. Main thread. The writer
   schedules it; a test calls it. *)
@@ -612,6 +640,8 @@ var
   (* What became of the QSO packets: the writer thread reports, the main thread
     settles (uNetResend). *)
   GNetDelivery:      TNetDelivery = nil;
+  (* The pairs ResendOfflineWork posted on this link. Main thread. *)
+  GResentKeys:       TServerQsoIndex = nil;
   GDuplicateQsos:    integer = 0;
   (* Which refused outbound packets (SendToNet's guard) have been reported on
     this link. Thread-safe; reset when a link comes up. *)
@@ -1408,6 +1438,16 @@ begin
       Exit;
       end;
 
+   (* A QSO packet that was WRITTEN and carries no tag has no row to mark: the
+     restock's OFFLINEQSO (rows already sent) and a QSO with no network key. It
+     is not reported, so a push of thousands does not queue thousands of
+     outcomes for the main thread to read and discard. A failure is still
+     reported, so it is counted and logged. *)
+   if aWritten and (aTag = 0) then
+      begin
+      Exit;
+      end;
+
    if GNetDelivery.Report(aKind, aTag, aWritten) then
       begin
       if (Application <> nil) and (not Application.Terminated) then
@@ -1444,6 +1484,7 @@ begin
    GResendDue := False;
    GResentThisLink := False;
    GCatchUpDue := False;
+   GResentKeys.Clear;
    (* Cardinal(GetTickCount64) -- TRUNCATED DELIBERATELY. qiComputerID is a
      field of TNetQSOInformation, which is a PACKED RECORD SENT BETWEEN
      STATIONS, so its width is on the wire and is not ours to widen. The
@@ -2817,6 +2858,7 @@ begin
                begin
                Break;
                end;
+            GResentKeys.Add(rec.ceQSOID1, rec.ceQSOID2);
             Inc(Result.Qsos);
             end;
 
@@ -2827,6 +2869,7 @@ begin
                begin
                Break;
                end;
+            GResentKeys.Add(rec.ceQSOID1, rec.ceQSOID2);
             Inc(Result.Edits);
             end;
          end;
@@ -2948,8 +2991,9 @@ begin
 
    if lost > 0 then
       begin
-      logger.Warn('[Net] %d QSO packet(s) did not reach the server; their rows ' +
-                  'stay unsent and go again when the link is back', [lost]);
+      logger.Warn('[Net] %d QSO packet(s) did not reach the server; a logged ' +
+                  'QSO''s row stays unsent and goes again when the link is back, ' +
+                  'and a restock is planned again from the server''s log', [lost]);
       end;
 
    if LogStoreCountUnsentToServer(unsent, dirty) then
@@ -3004,9 +3048,11 @@ end;
   did, but cannot be marked afterwards; it is not owed after a link-up either.
 
   True means POSTED, not delivered. *)
-function SendRecordToServer(RecordType: Word; const rec: ContestExchange): boolean;
-var
-   tag: Int64;
+(* THE ONE PLACE A QSO OR EDIT PACKET IS BUILT AND POSTED. aTag is what the
+  writer hands back when the bytes are written (0 = nothing to settle: the
+  restock sends rows that are already marked sent). *)
+function PostQsoPacket(RecordType: Word; const rec: ContestExchange;
+                       aTag: Int64): boolean;
 begin
    Result := False;
    if not NetIsConnected then
@@ -3025,8 +3071,7 @@ begin
      this program. *)
    NetQSOInfoToSend.qiSenderID := Ord(WireComputerID);
 
-   tag := NetQsoTag(rec.ceQSOID1, rec.ceQSOID2);
-   if SendToNet(NetQSOInfoToSend, SizeOf(NetQSOInfoToSend), tag) <>
+   if SendToNet(NetQSOInfoToSend, SizeOf(NetQSOInfoToSend), aTag) <>
       SizeOf(NetQSOInfoToSend) then
       begin
       Exit;
@@ -3034,9 +3079,59 @@ begin
 
    if (RecordType = NET_EDITEDQSO_ID) and (GNetDelivery <> nil) then
       begin
-      GNetDelivery.EditPosted(tag);
+      GNetDelivery.EditPosted(aTag);
       end;
    Result := True;
+end;
+
+function SendRecordToServer(RecordType: Word; const rec: ContestExchange): boolean;
+begin
+   Result := PostQsoPacket(RecordType, rec,
+                           NetQsoTag(rec.ceQSOID1, rec.ceQSOID2));
+end;
+
+function NetResentThisLink: TServerQsoIndex;
+begin
+   Result := GResentKeys;
+end;
+
+function NetCanRestock: boolean;
+begin
+   Result := NetIsConnected and FServerHelloSeen and (FRefusedComputerID = #0);
+end;
+
+function RestockServer(aPlan: TPushPlan; out aPosted: integer): boolean;
+var
+   i: integer;
+begin
+   Result := False;
+   aPosted := 0;
+
+   if not NetCanRestock then
+      begin
+      logger.Info('[Net] restock: the link is not usable now; nothing was sent');
+      Exit;
+      end;
+
+   Result := True;
+   for i := 0 to aPlan.Count - 1 do
+      begin
+      if not PostQsoPacket(NET_OFFLINEQSO_ID, aPlan.Row(i), 0) then
+         begin
+         Result := False;
+         logger.Warn('[Net] restock: the link went down after %d of %d QSO(s); ' +
+                     'the rest are planned again from the server''s log on the ' +
+                     'next link', [aPosted, aPlan.Count]);
+         Break;
+         end;
+      Inc(aPosted);
+      end;
+
+   if aPosted > 0 then
+      begin
+      logger.Info('[Net] restock: %d QSO(s) the server did not have were posted ' +
+                  '(OFFLINEQSO: stored, acknowledged, not relayed)', [aPosted]);
+      end;
 end;
 
 procedure ShowServerMessage(ServMess: TServerMessage);
@@ -3107,6 +3202,7 @@ initialization
   GPeers      := TNetPeers.Create;
   GSendRefusals := TNetSendRefusals.Create;
   GNetDelivery := TNetDelivery.Create;
+  GResentKeys := TServerQsoIndex.Create;
 
   (* OWNED HERE NOW, not created in uProgramMain's CreateEvent block with the
     three CW/DVP events. It is this unit's signal and nothing outside uses it,
@@ -3125,6 +3221,7 @@ finalization
   FreeAndNil(GPeers);
   FreeAndNil(GSendRefusals);
   FreeAndNil(GNetDelivery);
+  FreeAndNil(GResentKeys);
   FreeAndNil(GNetLock);
   FreeAndNil(tNet_Event);
 

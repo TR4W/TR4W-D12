@@ -582,6 +582,16 @@ log lacks (design, contest rule and threading: the `multi-op-network` agent and
   it scans the table (1.7 ms a miss on 11,800 rows) on the main thread. A read
   that fails returns False and the merge does not run -- a plan made without the
   keys would add what is already there.
+- **`TLogRepository.CollectForServerRestock` / `LogStoreCollectForServerRestock`
+  (2026-10-28, the OTHER direction)**: every row, oldest first, EXCEPT those whose
+  network key a caller-supplied `TQsoKeyTest` (method pointer) says the server already
+  holds -- asked from the two key columns BEFORE `ReadRecord`, so a log the server
+  already has costs a pass over two integers a row and not a parse of every record.
+  Imports (0, 0) and owed rows are returned too: `uNetCatchUp.TPushPlan` judges and
+  counts them. A READ: it adds no write path (the pin stays 17), it uses
+  `NewReadQuery` and `OpenQsoReader`, and a failure returns False and the store
+  stays enabled. The pushed rows' flags are NOT written: they are already
+  `sent_to_server = 1`, and the send is untagged so nothing settles.
 - **The write is `LogStoreAppendQSOs` -> `AppendBatch`, the ADIF import's path**:
   one transaction, all or none (a refused record rolls everything back and the
   store stays enabled -- the fault is the file's). It is NOT a new write path, so

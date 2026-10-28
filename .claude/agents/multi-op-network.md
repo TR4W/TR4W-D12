@@ -19,7 +19,7 @@ You own the link between stations at a multi-op.
 | the link as a state, the Net-menu rules, the startup rule, the observer list | `tr4w/src/uNetLink.pas` (a leaf: no sockets, no widget set) |
 | what each row still owes the server, when a flag may change, unique QSO ids (a leaf) | `tr4w/src/uNetResend.pas` |
 | a set of network keys: the in-tree server's held QSOs, and the keys this station's log holds when it catches up (a leaf) | `tr4w/src/uServerQsoIndex.pas` |
-| late catch-up: the server log as bytes, the judge of a record's contest, the plan of what to add (a leaf) | `tr4w/src/uNetCatchUp.pas` |
+| late catch-up: the server log as bytes, the judge of a record's contest, the plan of what to add, and (2026-10-28) the push plan of what the server lacks and the one on-connect decision (a leaf) | `tr4w/src/uNetCatchUp.pas` |
 | the Network window (a VIEW of the link) | `tr4w/src/ui/lcl/uNetworkForm.pas` |
 | a probe that speaks the protocol to any server | `tools/netprobe/` |
 | engine side | `tr4w/src/trdos/lognet.pas` |
@@ -466,6 +466,81 @@ resend at the start of the download had got it to the server first.
   (legacy byte, held skip, sent flag, `(0, 0)`, backup failure ignored) were each
   caught. `tools/netprobe` `--case catchup` against both servers. **The real
   two-station reboot check is BENCH_QUEUE.**
+
+## A server that lost its log: the catch-up is TWO-WAY (the restock, 2026-10-28)
+
+NY4I moved TR4WServerPy to another machine with no log. His Windows station held 83
+QSOs already marked `sent_to_server = 1` (sent to the OLD server); the resend sends
+only rows still owed and the catch-up only asked what the SERVER has that this log
+lacks, so the new server stayed empty and nothing could push the log up. The same
+state follows the server's Clear-server-log or any restart that lost `SERVERLOG.TRW`.
+
+- **Detect, from the image the catch-up already downloads (no second transfer).**
+  `uNetCatchUp.TPushPlan.Create(image, resentThisLink)` indexes every pair the image
+  holds (deleted records and other contests' too: the question is whether the server
+  HOLDS the pair); `Consider(rec)` judges one row of this log: `pvNoIdentity` (both
+  ids 0, an import: counted), `pvOwed` (`ResendNeedsOf`, or a pair the resend posted on
+  THIS link -- the fetch is on its own connection and the writer may already have marked
+  them sent: counted), `pvServerHas`, `pvRepeated` (a pair twice in this log: once),
+  else `pvSend`. A QSO this station RECEIVED from another station is pushed like its
+  own -- any station can restock the server; the key is the pair, not the author.
+  `uGetServerLog.MakePushPlan` feeds it from `LogStoreCollectForServerRestock` (the
+  repository skips rows the image holds before parsing them -- see log-database).
+  **So the "still owed" count is only the owed rows the server LACKS**: an owed row the
+  server holds an older copy of (edited offline) is skipped by the repository and never
+  reaches the judge; the resend sends its edit as before.
+- **Send as `NET_OFFLINEQSO_ID`, NOT QSOINFO, through `uNet.RestockServer`.** Both
+  servers STORE an OFFLINEQSO and ACK it (8300) but do NOT relay it (read: in-tree
+  `tr4wserverUnit` OFFLINEQSO arm never calls `SendMessageToClients`; Python
+  `NET_OFFLINEQSO_ID` arm never calls `broadcast_to_clients`; `netprobe --case restock`
+  asserts a second connected probe receives nothing), and a pair already held is not
+  stored (still ACKed). So restocking never floods the connected stations; one that
+  lacks some catches up from the server's log on its next link. `RestockServer` posts
+  through the ONE packet builder (`PostQsoPacket`, the same as `SendRecordToServer`,
+  qiSenderID and the `SendToNet` guard included) with tag 0, re-checking the guards
+  (`NetIsConnected`, server HELLO seen, no refused id) at send time because the fetch is
+  asynchronous. **No flag is written and nothing is queued for the main thread:**
+  `ReportPacketOutcome` skips a WRITTEN tag-0 QSO packet (a failure is still reported).
+  A link that drops half way needs no repair: the plan is made again from the server's
+  log on the next link.
+- **One decision, one question.** `uNetCatchUp.SyncOnConnect(pull, push, auto)` ->
+  `socNothing | socDoNow | socAskPull | socAskPush | socAskBoth`;
+  `uGetServerLog.DecideOnConnect` asks AT MOST once (`SCatchUpAsk`, `SPushAsk`,
+  `SSyncAskBoth`) and does the push, then the pull. Nothing is said when both sides are
+  complete. `SNetPushedToServer` ("Sent to the server: %d QSO(s) it did not have.") is the
+  notice; the log lines are `[Net] restock: ...` with the counts.
+- **The window (Net > Synchronize with the server..., `uServerLogForm`).** After Get server
+  log the Add button (`SERVER ... N missing`) and a Send button (`SYNC_FIELD_ENABLE_SEND`,
+  "Send N QSO(s) to the server") appear independently; Send is offered only while the link is
+  up and sends AT ONCE, re-planning from the log at click time, and stays disabled until the
+  next Get server log (the image is the server's log as it WAS).
+- **The servers need no change.** Verified from source and by `netprobe --case restock`
+  against both. One difference worth knowing: the in-tree OFFLINEQSO arm stores nothing and
+  sends no ACK if `OpenServerLog(slOpenExisting)` fails (QSOINFO buffers instead); the file
+  is created at startup, so it matters only if SERVERLOG.TRW is deleted while it runs.
+- **Measured 2026-10-28.** Client (unit test `uTestNetRestock`, scratch SQLite log, stub
+  writer): the plan over a log the server already holds is 141 ms at 10,000 rows and 359 ms
+  at 20,000 (main thread, once per link, image index included); a 5,000-QSO push is
+  planned in 94 ms holding about 3.2 MB (the plan's copies of the rows), posted in under a
+  millisecond (the queue copies bytes) and drained by the stub immediately. Servers
+  (`netprobe --case restock`, `--restock-big 5000` in ONE write): TR4WServerPy
+  acknowledged 5,000 in 5.1 s (1 ms each); the in-tree `tr4wserver` in 213 s (42.6 ms each;
+  85 ms each for the first 200 in one run) -- its OFFLINEQSO arm opens the log twice and
+  flushes per record, and logs at trace level by default -- so a 5,000-QSO restock of
+  the in-tree server takes minutes, not seconds, and a probe's wait must be sized for it
+  (`count * 0.05 s`). Both stored every record whole, once each, in order, relayed none, and
+  held all 5,200 after a restart in the same directory. **ONE unexplained event:** in the
+  first of five in-tree runs the process was gone about 7 s into the 5,000 round (about 1,390
+  records stored), with no crash line in `tr4wserver.log` and no Windows error-reporting
+  event; four later runs, including one at `LOG LEVEL = ERROR`, did not reproduce it.
+  Not understood; watch for it on the bench (`$p.ExitCode` of the server process is the
+  first thing to read).
+- **Tests**: `uTestNetRestock` (the 83-row plan over a scratch store, idempotence, a partial
+  server, other stations' rows, a second plan after the push, resent-this-link keys, deleted
+  and repeated rows, the decision table, the posting over a stub writer, the unusable-link
+  refusal, the window's buttons and its layout read from the `.lfm`, source reads);
+  `TStubLink`, `WaitWrites` and `NewImage` now live in `uTestNetSupport`. **The real
+  two-station check is BENCH_QUEUE ("A SERVER THAT LOST ITS LOG").**
 
 ## The transport, and its one sharp edge
 

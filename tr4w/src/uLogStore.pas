@@ -189,6 +189,7 @@ type
    (* Re-exported, as TLogRowUpdates is, so a caller needs no uLogRepository. *)
    TQsoSessionKey = uLogRepository.TQsoSessionKey;
    TQsoSessionKeys = uLogRepository.TQsoSessionKeys;
+   TQsoKeyTest = uLogRepository.TQsoKeyTest;
 
 (* THE MULTI-OP SERVER'S BOOKKEEPING -- Phase 1, C5 (2026-10-27). See
   TLogRepository.CollectUnsentToServer for what "owed" means.
@@ -218,6 +219,13 @@ function LogStoreHasQSOBySessionIds(aSessionId, aSessionSeq: Int64): boolean;
   what the log holds must not insert, or it would add what is already there. A
   READ, so a failure is reported and the store stays enabled. *)
 function LogStoreCollectSessionKeys(out aKeys: TQsoSessionKeys): boolean;
+
+(* THE ROWS TO CONSIDER WHEN THE MULTI-OP SERVER IS RESTOCKED (2026-10-28), every
+  row except those aServerHolds says the server has. See
+  TLogRepository.CollectForServerRestock. False when the log cannot be read; a
+  READ, so a failure is reported and the store stays enabled. *)
+function LogStoreCollectForServerRestock(aInto: TLogRowUpdates;
+                                         aServerHolds: TQsoKeyTest): boolean;
 function LogStoreMarkServerProgress(const aSent, aEditsDone: TQsoSessionKeys): boolean;
 function LogStoreCountUnsentToServer(out aUnsent, aDirty: integer): boolean;
 
@@ -2384,6 +2392,36 @@ begin
             begin
             logger.Error('[LogStore] could not read the network keys of the ' +
                          'log: %s', [E.Message]);
+            end;
+         end;
+   end;
+end;
+
+function LogStoreCollectForServerRestock(aInto: TLogRowUpdates;
+                                         aServerHolds: TQsoKeyTest): boolean;
+var
+   rebuilt: boolean;
+begin
+   Result := False;
+   if GDisabled then
+      begin
+      Exit;
+      end;
+
+   try
+      if not EnsureOpen(rebuilt) then
+         begin
+         Exit;
+         end;
+      GRepository.CollectForServerRestock(aInto, aServerHolds);
+      Result := True;
+   except
+      on E: Exception do
+         begin
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] could not read the QSOs the multi-op server ' +
+                         'may lack: %s', [E.Message]);
             end;
          end;
    end;

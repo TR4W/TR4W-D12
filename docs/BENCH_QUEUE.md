@@ -84,6 +84,112 @@ item 1:
 
 ---
 
+## Added 2026-10-28 -- A SERVER THAT LOST ITS LOG (the restock; Phase 1 gap found on the bench)
+
+NY4I moved TR4WServerPy to another machine and it had NO log. His Windows TR4W held
+83 QSOs, all already sent to the old server (`sent_to_server = 1`), and nothing
+would ever send them again: the resend only sends rows still owed, and the late
+catch-up only asked which of the SERVER'S QSOs this log lacks. The same state
+follows the server's Clear-server-log or any restart that lost
+`SERVERLOG.TRW`. **Now the catch-up is two-way.** The server log it already
+downloads each link also says which of THIS log's QSOs the server lacks (a row
+whose `(ceQSOID1, ceQSOID2)` is not in the image; imports and still-owed rows are
+left out and counted), and they are sent as **OFFLINEQSO** -- both servers store
+it and acknowledge it but do NOT relay it, so the stations that are connected are
+not flooded; a station that lacks some catches up from the server's log on its
+next connect. No flag is written (the rows were already sent). The menu row and
+window are now **Net > Synchronize with the server...** (they were "Add missing
+QSOs from the server..." and "Server log" in the two sections below -- read those
+names as these). Unit tests: `uTestNetRestock` (the 83-row plan, idempotence, a
+partial server, rows received from other stations, the one question, the posting
+over a stub writer, the window's button following the link, its layout read from
+the `.lfm`); `tools/netprobe --case restock` proves both real servers. They cannot
+show the question, run two programs, or see a real server restart on a machine.
+**WHAT YOU NEED:** as the sections below -- stations A (Windows) and B (Mint),
+`DEBUG LOG LEVEL = DEBUG`, NETWORK AUTO CONNECT off, same LEGACY contest -- and a
+server you can empty and restart; **delete `SERVERLOG.TRW` first** (or start the
+Python server in a new directory) for the first item. Expect the in-tree
+`tr4wserver` to take MINUTES to store a large restock (about 40-85 ms a QSO, so
+5,000 is about 3.5 minutes; TR4WServerPy takes about 1 ms a QSO).
+
+- [ ] **NY4I's scenario.** At A alone, log 83 QSOs while connected to server S1 (so
+      all are marked sent), then Disconnect. Start a FRESH EMPTY server S2 (no
+      `SERVERLOG.TRW`), point A at it, **SERVER AUTO SYNCHRONIZE LOG ON CONNECT on**,
+      Net > Connect. EXPECT: no question; a notice "Sent to the server: 83 QSO(s) it
+      did not have."; `tr4w.log` at A has `[Net] restock: 83 to send; 0 imported
+      (no network identity) skipped; 0 still owed (the resend sends them) skipped`
+      and `[Net] restock: 83 QSO(s) the server did not have were posted (OFFLINEQSO:
+      stored, acknowledged, not relayed)`, no Error and no Warn; the server's
+      log shows 83 records (the display on the server window, or a download); A's log
+      is unchanged (83 rows, none gained, none lost, **no `sent_to_server` change** --
+      nothing to settle). Disconnect and Connect again: NO notice, `restock: 0 to
+      send`.
+- [ ] **Then B joins and catches up all 83.** Start B (Mint) on the same contest with
+      an empty log, connect with the setting on. EXPECT: "Caught up from the server:
+      83 QSO(s) added."; B's log holds the 83, once each, and its score equals A's.
+      The restock did not push them to B live (B was not connected during it, and an
+      OFFLINEQSO is never relayed) -- if B WAS connected during the restock, EXPECT B to
+      show nothing then and to get the 83 on its next connect.
+- [ ] **The question, one only (setting OFF).** Repeat the first item with the setting
+      off. EXPECT: ONE question, "The server lacks 83 QSO(s) of yours. Send them to the
+      server now? ..."; nothing is sent until Yes; No leaves everything alone, logs that
+      the operator declined, and asks again on the next connect. Then make BOTH apply:
+      with the server holding 10 QSOs A lacks (logged at B while A was away) and A
+      holding 83 the server lacks, connect A. EXPECT ONE dialog covering both
+      ("The server holds 10 QSO(s) this log lacks and lacks 83 of yours. ...");
+      never two dialogs; Yes does both (check both logs afterwards), No does neither.
+      When both sides are complete (a second connect): no dialog, no notice.
+- [ ] **The server's log is cleared while the stations keep theirs.** With A and B
+      connected and holding the same 20 QSOs, clear ONLY the server's log (the
+      server's own Clear server log, or the Python server's clear; NOT the Clear all
+      logs message, which clears every station's log too). Then at A, Net >
+      Synchronize with the server, Get server log: the server holds 0 and the window's
+      second button reads "Send 20 QSO(s) to the server". EXPECT the button enabled
+      only while the link is up (drop the link with the window open: it greys; bring
+      it back: it comes on), and clicking it sends at once (the window stays open,
+      the button goes grey, the notice "Sent to the server: 20 QSO(s) it did not have."
+      appears); Get server log again shows 20 and the button stays grey. B's log is
+      unchanged and shows nothing (an OFFLINEQSO is not relayed). Then Net > Clear all
+      logs and confirm every station still clears as before.
+- [ ] **A mid-send drop repairs itself.** With 1,000+ QSOs at A and a fresh empty server,
+      Connect and pull the cable (or stop the server) while it sends. EXPECT a Warn
+      `restock: the link went down after N of M QSO(s)`; on the next link A sends only
+      the rest (the plan is made again from the server's log): no duplicates, the server's
+      log ends at exactly the 1,000.
+- [ ] **The server keeps them across a restart.** After the first item stop S2 and start
+      it again in the same directory (both servers). EXPECT the log still holds the 83
+      and a station connecting now catches up all of them.
+- [ ] **Imports and owed rows are left alone.** Import an ADIF of 5 QSOs at A (no
+      network identity), log 2 QSOs with the link down, then connect to an EMPTY
+      server. EXPECT `restock: <n> to send; 5 imported ... skipped; 2 still owed ...
+      skipped` -- the 2 owed go as QSOINFO through the ordinary resend ("Resent to the
+      server what was logged while disconnected: 2 QSO(s)") and a second station sees
+      them live; the 5 imports are NOT on the server.
+- [ ] **Mint.** Repeat the first, third and sixth items with the Mint build as the
+      station holding the QSOs (B in that item), against `tr4wserver` and TR4WServerPy.
+      LOOK AT THE WINDOW LAYOUT on gtk2 (the wider font, issue 142): the Send button's
+      caption "Send 83 QSO(s) to the server" must not be clipped, and no two buttons
+      may overlap.
+- [ ] **The in-tree server stays up under a large restock.** One of five in-tree runs
+      on 2026-10-28 lost the server process about 7 s into a 5,000-QSO restock (no
+      crash line, no Windows error event; four later runs did not repeat it). Restock
+      5,000 into `tr4wserver` and read whether it is still running afterwards; if it
+      went, capture `tr4wserver.log` and the process exit code. ALSO EXPECT, and
+      write down: (a) many `write took over 250 ms` Warns in `tr4w.log` at the
+      restocking station (the real writer pushes the whole set into a server that
+      stores one every 40-85 ms; the unit tests and netprobe used writers that never
+      block); (b) that station's OWN live QSOs and status packets queue behind the
+      backlog on the same stream, so other stations see them minutes late with
+      `tr4wserver` and seconds late with TR4WServerPy; and (c) the operator is not
+      frozen meanwhile (the writes are off the main thread). No prompt and no pacing
+      for a large restock is deliberate (NY4I).
+- [ ] **What the counts mean.** The log's `restock:` line counts only rows the
+      server LACKS: a row the server already holds is never read, so an owed row the
+      server has an older copy of (edited offline) is not in "still owed ... skipped";
+      the resend sends its edit as before.
+
+---
+
 ## Added 2026-10-27 -- A STATION THAT COMES UP LATE CATCHES UP FROM THE SERVER (Phase 1, C6)
 
 NY4I: *"Late catch-up has to be supported as it was ... to handle a station that
