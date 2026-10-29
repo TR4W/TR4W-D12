@@ -9292,3 +9292,9 @@ msgstr ""
 msgid "Share DX spots around the network"
 msgstr ""
 
+#: tprefsform.lblhamscorehttpnote.caption
+#: uappstrings.shamscoreplainhttpnote
+#, fuzzy
+msgid "Plain http: your HamScore password is sent unencrypted. Use https://hamscore.com/postxml/ if the server supports it."
+msgstr ""
+

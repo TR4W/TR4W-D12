@@ -645,6 +645,15 @@ resourcestring
      go there; the status panel above carries it. *)
    STXInhibitedIndicator = 'INH';
 
+   (* ------------------------------------ Preferences, Online scoring - *)
+
+   (* THE NOTE UNDER THE HAMSCORE SERVICE URL, shown only while that URL is
+     plain http:// (uHTTPDownload.IsPlainHttpUrl). Nothing is refused; it says
+     what plain http costs and names the https alternative. Keep the URL as
+     written: it is an address, not prose. *)
+   SHamScorePlainHttpNote =
+      'Plain http: your HamScore password is sent unencrypted. Use https://hamscore.com/postxml/ if the server supports it.';
+
 implementation
 
 end.

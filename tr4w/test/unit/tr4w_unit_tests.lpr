@@ -594,6 +594,7 @@ uses
    uSettingsConvert in '..\..\src\uSettingsConvert.pas',
    uTestSettingsPrecedence in 'uTestSettingsPrecedence.pas',
    uTestTLSRefusal in 'uTestTLSRefusal.pas',
+   uTestPlainHttpUrl in 'uTestPlainHttpUrl.pas',
    uTestConfigDefaults in 'uTestConfigDefaults.pas',
    uTestTransverterOffset in 'uTestTransverterOffset.pas',
    uTestRadioSupportsCaps in 'uTestRadioSupportsCaps.pas',
@@ -1036,6 +1037,7 @@ begin
    RegisterSuite(TSettingsConvertTests.Create('SettingsConvert'));
    RegisterSuite(TSettingsPrecedenceTests.Create('SettingsPrecedence'));
    RegisterSuite(TTLSRefusalTests.Create('TLSRefusal'));
+   RegisterSuite(TPlainHttpUrlTests.Create('PlainHttpUrl'));
    RegisterSuite(TConfigDefaultsTests.Create('ConfigDefaults'));
    RegisterSuite(THamLibIDTests.Create('HamLibIDs'));
    RegisterSuite(TCWKeyerTests.Create('CWKeyer'));

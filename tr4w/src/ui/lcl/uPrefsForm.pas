@@ -421,6 +421,7 @@ type
       edtClusterCommand: TEdit;
       chkHamScoreEnable: TCheckBox;
       edtHamScoreURL: TEdit;
+      lblHamScoreHttpNote: TLabel;
       edtHamScoreUser: TEdit;
       edtHamScorePass: TEdit;
       chkHamScoreContact: TCheckBox;
@@ -627,6 +628,7 @@ type
       procedure chkSpeedSync2Change(Sender: TObject);
       procedure chkSO2RChange(Sender: TObject);
       procedure chkAutoConnectChange(Sender: TObject);
+      procedure edtHamScoreURLChange(Sender: TObject);
       procedure chkTCIServerChange(Sender: TObject);
       procedure cbxLogLevelChange(Sender: TObject);
       procedure btnBrowseMMTTYClick(Sender: TObject);
@@ -904,6 +906,7 @@ type
       // the operator which -- a refused entry must not close silently.
       procedure FillFromAllowedValues(const aCombo: TComboBox; const aCommand: string);
       procedure BuildBindings;
+      procedure ShowHamScorePlainHttpNote;
       procedure LoadClusterServerList;
       procedure ShowClusterDirectoryState;
       procedure LoadClusterList;
@@ -1249,6 +1252,7 @@ uses
    uPasswordReveal,     // AttachPasswordReveal -- the eye beside a password
    uSettingsModel,      // Settings.AllowedValuesForCommand -- the level list
    uAppStrings,         (* SBackupDestinationDialogTitle -- the folder chooser *)
+   uHTTPDownload,       (* IsPlainHttpUrl -- the HamScore URL's plain-http note *)
    VC;          // TR4W_TCI_DEBUG (the log-level names moved to uSettingsModel)
 
 var
@@ -1448,6 +1452,11 @@ begin
    // lookup is assigned, so this is a no-op and the designer is the UI.
    TranslateForm(Self);
    LogPhase(FTiming, 'TranslateForm');
+
+   (* The plain-http note's text is the resourcestring, so it is translated
+     whichever catalogue key a language carries; the .lfm holds the same
+     English for the designer. *)
+   lblHamScoreHttpNote.Caption := SHamScorePlainHttpNote;
 
    // In code as well as in the resource: losing these is invisible -- the form
    // still opens and still looks right, having silently stopped registering its
@@ -2471,6 +2480,7 @@ begin
       LogPhase(FTiming, '  Cluster list (DAT)');
       BuildBindings;
       FBindings.LoadAll;
+      ShowHamScorePlainHttpNote;
       LogPhase(FTiming, '  Bindings');
       LoadTCIPanel;
       LoadLoggingPanel;
@@ -4971,6 +4981,32 @@ end;
 procedure TPrefsForm.chkAutoConnectChange(Sender: TObject);
 begin
    CaptureProfileFields;
+end;
+
+(* A DESIGNED HANDLER OWNS ITS OWN Dirty: HookDirtyMarker leaves a control
+  that already has an OnChange alone, so without the MarkDirty an edit to the
+  URL would no longer arm Save. MarkDirty ignores the loading pass itself. *)
+procedure TPrefsForm.edtHamScoreURLChange(Sender: TObject);
+begin
+   ShowHamScorePlainHttpNote;
+   MarkDirty(Sender);
+end;
+
+(* THE PLAIN-HTTP NOTE UNDER THE HAMSCORE URL: shown while the URL is http://,
+  hidden otherwise. Asked on every keystroke and after the page loads, and it
+  only sets Visible -- it blocks nothing and marks nothing changed.
+
+  NIL-SAFE ON PURPOSE. Streaming the .lfm fires the edit's OnChange, and the
+  label is streamed AFTER the edit, so on that first call the field is still
+  nil. LoadStore calls this again once every value is in place. *)
+procedure TPrefsForm.ShowHamScorePlainHttpNote;
+begin
+   if (lblHamScoreHttpNote = nil) or
+      (edtHamScoreURL = nil)      then
+      begin
+      Exit;
+      end;
+   lblHamScoreHttpNote.Visible := IsPlainHttpUrl(edtHamScoreURL.Text);
 end;
 
 

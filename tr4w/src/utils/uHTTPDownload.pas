@@ -30,6 +30,17 @@ uses
   The caller owns the result. *)
 function CreateWireBodyStream(const aBody: string): TRawByteStringStream;
 
+(* DOES THIS URL SEND ITS REQUEST IN THE CLEAR? True when the text, trimmed,
+  starts with http:// in any case; False for https://, for any other scheme
+  and for no scheme at all.
+
+  It describes a URL an OPERATOR TYPED, which is why it trims: Preferences
+  shows a note while it is true, and the HamScore uploader logs a warning, and
+  both must agree. It is deliberately NOT what CheckScheme asks -- that gates a
+  real fetch of the exact string it is given and does not trim, so a URL with a
+  leading space is refused there rather than quietly repaired. *)
+function IsPlainHttpUrl(const aUrl: string): boolean;
+
 function DownloadFileToPath(const AURL, ATargetFile: string;
                             const AAllowInsecure: boolean = False): boolean; overload;
 // Downloads AURL to ATargetFile.  Returns True only if the file is on disk
@@ -211,6 +222,11 @@ begin
    Result := TRawByteStringStream.Create(ToWire(aBody));
 end;
 
+
+function IsPlainHttpUrl(const aUrl: string): boolean;
+begin
+   Result := UnicodeSameText(Copy(Trim(aUrl), 1, 7), 'http://');
+end;
 
 (* ONE PLACE THAT DECIDES WHETHER A URL MAY BE FETCHED, shared by all three
   verbs.  Returns True and sets AUseTLS when the request may proceed. *)

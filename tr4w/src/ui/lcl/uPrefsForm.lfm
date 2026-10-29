@@ -3327,12 +3327,23 @@ object PrefsForm: TPrefsForm
         Top = 68
         Width = 420
         AutoSize = False
-        TabOrder = 2
+        TabOrder = 1
+        OnChange = edtHamScoreURLChange
+      end
+      object lblHamScoreHttpNote: TLabel
+        Left = 160
+        Height = 51
+        Top = 94
+        Width = 472
+        AutoSize = False
+        Caption = 'Plain http: your HamScore password is sent unencrypted. Use https://hamscore.com/postxml/ if the server supports it.'
+        Visible = False
+        WordWrap = True
       end
       object lblHamScoreUser: TLabel
         Left = 12
         Height = 17
-        Top = 104
+        Top = 156
         Width = 140
         AutoSize = False
         Caption = 'Username:'
@@ -3340,15 +3351,15 @@ object PrefsForm: TPrefsForm
       object edtHamScoreUser: TEdit
         Left = 160
         Height = 22
-        Top = 100
+        Top = 152
         Width = 240
         AutoSize = False
-        TabOrder = 5
+        TabOrder = 2
       end
       object lblHamScorePass: TLabel
         Left = 12
         Height = 17
-        Top = 136
+        Top = 188
         Width = 140
         AutoSize = False
         Caption = 'Password:'
@@ -3356,26 +3367,26 @@ object PrefsForm: TPrefsForm
       object edtHamScorePass: TEdit
         Left = 160
         Height = 22
-        Top = 132
+        Top = 184
         Width = 240
         AutoSize = False
         EchoMode = emPassword
         PasswordChar = '*'
-        TabOrder = 1
+        TabOrder = 3
       end
       object chkHamScoreContact: TCheckBox
         Left = 12
         Height = 22
-        Top = 166
+        Top = 218
         Width = 460
         AutoSize = False
         Caption = 'Include contact information'
-        TabOrder = 3
+        TabOrder = 4
       end
       object lblScoreRestart: TLabel
         Left = 12
         Height = 34
-        Top = 196
+        Top = 248
         Width = 620
         AutoSize = False
         Caption = 'These take effect when TR4W next starts.'
@@ -3384,7 +3395,7 @@ object PrefsForm: TPrefsForm
       object lblScoreBoardHeading: TLabel
         Left = 12
         Height = 17
-        Top = 244
+        Top = 296
         Width = 400
         AutoSize = False
         Caption = 'Score board'
@@ -3394,7 +3405,7 @@ object PrefsForm: TPrefsForm
       object lblScorePostURL: TLabel
         Left = 12
         Height = 17
-        Top = 278
+        Top = 330
         Width = 140
         AutoSize = False
         Caption = 'Posting URL:'
@@ -3402,15 +3413,15 @@ object PrefsForm: TPrefsForm
       object edtScorePostURL: TEdit
         Left = 160
         Height = 22
-        Top = 274
+        Top = 326
         Width = 420
         AutoSize = False
-        TabOrder = 4
+        TabOrder = 5
       end
       object lblScoreReadURL: TLabel
         Left = 12
         Height = 17
-        Top = 310
+        Top = 362
         Width = 140
         AutoSize = False
         Caption = 'Reading URL:'
@@ -3418,7 +3429,7 @@ object PrefsForm: TPrefsForm
       object edtScoreReadURL: TEdit
         Left = 160
         Height = 22
-        Top = 306
+        Top = 358
         Width = 420
         AutoSize = False
         TabOrder = 6
@@ -3426,7 +3437,7 @@ object PrefsForm: TPrefsForm
       object lblScoreBoardHint: TLabel
         Left = 12
         Height = 51
-        Top = 340
+        Top = 392
         Width = 620
         AutoSize = False
         Caption = 'Where TR4W posts its score and where it reads other stations'' scores from.  The two are separate so a club board can be read while posting elsewhere.'
