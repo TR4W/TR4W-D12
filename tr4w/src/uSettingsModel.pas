@@ -187,7 +187,10 @@ type
 
        TSecretText          a password or token. Never written to the
                             settings file in the clear, never sent to a
-                            multi-op peer, masked in Preferences, and its
+                            multi-op peer, masked in Preferences, never
+                            stored in the contest log's config table (nor
+                            applied from one), never written to a log line
+                            or a converter report (ValueForLog), and its
                             case is preserved through the legacy import.
 
        TCaseSensitiveText   not a secret, but its capitalisation is the
@@ -197,9 +200,17 @@ type
      WHY A TYPE AND NOT A LIST. The alternative is a table of "which settings
      are secret" somewhere, and this tree has spent months deleting exactly
      that shape -- a hand-maintained list beside the thing it describes,
-     free to disagree with it. FOUR separate pieces of code need this answer
-     (the streamer, the importer, the multi-op sync and the Preferences
-     masking) and a list would be four chances to forget one.
+     free to disagree with it. Several separate pieces of code need this
+     answer -- the streamer, the importer, the multi-op sync, the Preferences
+     masking, the contest-log capture and its read (uLogContestStatements,
+     uLogStore), and the log lines and converter report (ValueForLog) -- and
+     a list would be one chance per consumer to forget one.
+
+     THE COUNT WAS "FOUR" UNTIL 2026-10-29, AND THE FIFTH WAS THE LEAK. The
+     contest-log capture walked every station setting and never asked, so
+     both passwords sat in the clear in every contest .db a station closed --
+     a file operators share. A NEW SINK OF SETTING VALUES (a file, the wire,
+     a log line) MUST ASK CommandIsSecret; that is the whole contract.
 
      MEASURED BEFORE IT WAS RELIED ON: FPC's RTTI reports the DECLARED type
      name for a distinct string type while the kind stays tkUString, so the
@@ -3882,6 +3893,12 @@ type
       *)
       function AllowedValuesForCommand(const aCommand: string): TArray<string>;
       function CommandIsSecret(const aCommand: string): boolean;
+      (* A VALUE AS IT MAY BE WRITTEN TO A LOG LINE OR A REPORT: aValue itself,
+        unless aCommand is secret, when it is '(secret, N characters)'. The
+        length is kept on purpose -- it is what tells a blank or stale
+        credential from a real one -- and is the same choice the radio
+        credential lines make. See TSecretText. *)
+      function ValueForLog(const aCommand, aValue: string): string;
       (* WHAT KIND OF CONTROL DOES THIS SETTING WANT?
 
         A check box for a boolean, a numbers-only box for an integer. Both
@@ -7026,6 +7043,18 @@ end;
 function TR4WSettings.CommandIsSecret(const aCommand: string): boolean;
 begin
    Result := IsSecretProperty(PropertyForCommand(aCommand));
+end;
+
+function TR4WSettings.ValueForLog(const aCommand, aValue: string): string;
+begin
+   if CommandIsSecret(aCommand) then
+      begin
+      Result := '(secret, ' + IntToStr(Length(aValue)) + ' characters)';
+      end
+   else
+      begin
+      Result := aValue;
+      end;
 end;
 
 function TR4WSettings.CommandIsBoolean(const aCommand: string): boolean;

@@ -707,12 +707,15 @@ begin
          (* NOT tr4w.ini, WHICH THIS LINE SAID UNTIL 2026-09-19 AND HAD NOT
            MEANT FOR A YEAR.  SetCFGCommandValue writes the property and
            settings\tr4w.json; nothing here has ever written the ini. *)
-         logger.Debug('[Config] %s = %s (applied and stored)', [aCommand, aValue]);
+         (* ValueForLog: a credential's value is never written to the log,
+           and DEBUG is the default level. *)
+         logger.Debug('[Config] %s = %s (applied and stored)',
+                      [aCommand, Settings.ValueForLog(aCommand, aValue)]);
          end
       else
          begin
          logger.Debug('[Config] %s = %s REJECTED by CheckCommand -- not applied, not stored',
-                      [aCommand, aValue]);
+                      [aCommand, Settings.ValueForLog(aCommand, aValue)]);
          end;
       end;
 end;
@@ -1376,9 +1379,11 @@ begin
       if (not Result) and (logger <> nil) then
          begin
          (* A value the property's type refuses -- reported, never swallowed.
-           The config file said something this setting cannot be. *)
+           The config file said something this setting cannot be. A
+           credential's value is never written to the log (ValueForLog). *)
          logger.Warn('[CheckCommand] "%s" = "%s" refused by the settings object',
-                     [Command, CustomCMD]);
+                     [Command, Settings.ValueForLog(string(Command),
+                                                    string(CustomCMD))]);
          end;
       Exit;
       end;

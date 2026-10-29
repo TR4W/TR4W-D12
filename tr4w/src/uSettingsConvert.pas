@@ -350,7 +350,11 @@ begin
             Continue;
             end;
 
-         aReport[i].OldValue := oldValue;
+         (* A CREDENTIAL'S VALUE NEVER REACHES THE REPORT (2026-10-29): it is
+           printed to a console that may be piped to a file or pasted into a
+           support email. Masked where the report is FILLED, so every consumer
+           is covered; the decisions below use the locals, not these. *)
+         aReport[i].OldValue := aSettings.ValueForLog(cmd, oldValue);
          if not aSettings.TryGetByCommand(cmd, current) then
             begin
             current := '';
@@ -369,7 +373,7 @@ begin
             begin
             after := '';
             end;
-         aReport[i].NewValue := after;
+         aReport[i].NewValue := aSettings.ValueForLog(cmd, after);
 
          if after = current then
             begin

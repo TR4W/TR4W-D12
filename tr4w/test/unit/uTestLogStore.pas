@@ -36,7 +36,12 @@ unit uTestLogStore;
   log holds no row once the program lets go of it, read by a connection
   that is not the store's; the clear is committed before the close; and a
   QSO deleted through Edit QSO is still flagged after a reopen and is
-  neither counted nor exported. *)
+  neither counted nor exported.
+
+  AND THAT THE LOG HOLDS NO CREDENTIAL (2026-10-29): the configuration capture
+  a new log runs wrote SERVER PASSWORD and HAMSCORE PASSWORD into its config
+  table in the clear. Through the real capture, with fake values, asked of the
+  table and of the file's bytes. *)
 
 {$I ..\..\src\tr4w.inc}
 
@@ -98,6 +103,7 @@ type
       procedure TestAClearedLogIsEmptyOnDiskAfterClose;
       procedure TestAClearIsCommittedBeforeTheLogIsClosed;
       procedure TestADeletedQSOStaysDeletedAndIsNotExported;
+      procedure TestANewLogCapturesNoCredential;
    public
       procedure RunAllTests; override;
    end;
@@ -109,6 +115,7 @@ uses
    uLogBinaryFile, uLogSource,
    sqldb,      (* TSQLQuery -- ScalarFromFile and ReadContestRow *)
    uLogNote,   (* SetNoteText -- a NOTE record, as MainUnit's note command makes *)
+   uSettingsModel,  (* Settings -- the two passwords the capture must not write *)
    PostUnit;   (* ExportToADIF -- the export a deleted QSO must not reach *)
 
 const
@@ -1360,6 +1367,57 @@ begin
    end;
 end;
 
+(* A NEW LOG'S CAPTURE WRITES NO CREDENTIAL -- 2026-10-29.
+
+  CaptureConfiguration walked every station setting into the config table,
+  so both passwords sat in the clear in every log a station made or closed,
+  and a contest file is something operators share. The open that makes a new
+  log runs that capture (EnsureOpen, "captured ... as the log was created"),
+  so this drives the real one: fake passwords in the settings object, a new
+  log, a close, and then the FILE -- the table through a connection of the
+  test's own, and the raw bytes, which no query can hide anything from. The
+  station-row count shows the capture really ran, so a zero below means
+  "written by nothing", not "nothing ran". *)
+procedure TLogStoreTests.TestANewLogCapturesNoCredential;
+const
+   FAKE_SERVER   = 'fake-server-not-a-password';
+   FAKE_HAMSCORE = 'fake-hamscore-not-a-password';
+   SQL_STATION_ROWS = 'SELECT COUNT(*) FROM config WHERE source = ''station''';
+   SQL_SECRET_ROWS  = 'SELECT COUNT(*) FROM config WHERE command IN ' +
+                      '(''SERVER PASSWORD'', ''HAMSCORE PASSWORD'')';
+var
+   savedServer, savedHamscore: string;
+   heldServer, heldHamscore: boolean;
+begin
+   BeginTest('a new log''s configuration capture writes no credential into the log');
+
+   PrepareMigration(FIXTURE_SET);
+   DeleteFile(FTrw);
+   savedServer := string(Settings.Server.Password);
+   savedHamscore := string(Settings.Hamscore.Password);
+   try
+      Settings.Server.Password := FAKE_SERVER;
+      Settings.Hamscore.Password := FAKE_HAMSCORE;
+      CheckTrue(LogStoreEnsureOpen, 'with no .TRW the open makes a new log, and captures');
+      LogStoreClose;
+
+      (* THE BYTES FIRST, before a read-only connection can leave a -wal. *)
+      heldServer := FileHoldsText(FDb, AnsiString(FAKE_SERVER));
+      heldHamscore := FileHoldsText(FDb, AnsiString(FAKE_HAMSCORE));
+      CheckFalse(heldServer, 'the SERVER PASSWORD value is nowhere in the file');
+      CheckFalse(heldHamscore, 'the HAMSCORE PASSWORD value is nowhere in the file');
+
+      CheckTrue(ScalarFromFile(FDb, SQL_STATION_ROWS) > 0,
+                'the capture ran: the log holds station rows');
+      CheckEquals(0, ScalarFromFile(FDb, SQL_SECRET_ROWS),
+                  'and no row names either credential');
+   finally
+      Settings.Server.Password := savedServer;
+      Settings.Hamscore.Password := savedHamscore;
+      Restore;
+   end;
+end;
+
 procedure TLogStoreTests.RunAllTests;
 begin
    TestTheClearBackupNameRule;
@@ -1381,6 +1439,7 @@ begin
    TestAClearedLogIsEmptyOnDiskAfterClose;
    TestAClearIsCommittedBeforeTheLogIsClosed;
    TestADeletedQSOStaysDeletedAndIsNotExported;
+   TestANewLogCapturesNoCredential;
 end;
 
 end.

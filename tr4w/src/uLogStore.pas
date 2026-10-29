@@ -1007,6 +1007,17 @@ begin
             Continue;
             end;
 
+         (* A CREDENTIAL IS NEVER CAPTURED -- 2026-10-29, and FIRST, ahead of
+           every scope test, so no arm below can write one. This walk wrote
+           HAMSCORE PASSWORD and SERVER PASSWORD into every log as 'station'
+           rows, in the clear, in a file operators share. A password is the
+           OS vault's. DeleteStoredSecrets, below, removes the rows an older
+           build left. See uLogContestStatements. *)
+         if Settings.CommandIsSecret(cmd) then
+            begin
+            Continue;
+            end;
+
          (* CONTEST IS NOT CAPTURED. NY4I, 2026-09-03: "the config row has
            outlived its usefulness since we can store that in the .db file."
 
@@ -1160,6 +1171,11 @@ begin
 
    (* THE FUNCTION-KEY MEMORIES, flagged where the operator edited them. *)
    CaptureMessageMemories(GRepository);
+
+   (* AND NO CREDENTIAL IS LEFT IN THE LOG, LAST, so it holds whatever wrote
+     above: a secret row an older build captured is deleted here, inside this
+     transaction, at the log's first clean close under this build. *)
+   DeleteStoredSecrets(Settings, GRepository);
 
    GRepository.Commit;
 
@@ -2599,6 +2615,9 @@ var
    dropped: TStringList;
    (* Stored rows naming a RETIRED command (M10 S2) -- reported, not applied. *)
    retired: TStringList;
+   (* Stored rows naming a SECRET command (2026-10-29) -- names only, never
+     the values; not applied, and deleted by the next capture. *)
+   secrets: TStringList;
    i: integer;
    cmd, val: string;
    renderable: boolean;
@@ -2625,6 +2644,7 @@ begin
       rows := TStringList.Create;
       dropped := TStringList.Create;
       retired := TStringList.Create;
+      secrets := TStringList.Create;
       try
          GRepository.LoadContestConfig(rows);
 
@@ -2647,8 +2667,21 @@ begin
            never reach CheckCommand, said ONCE per open with their values,
            and deleted by the next capture -- so a log reports them at most
            until its first clean close. *)
+         (* AND A CREDENTIAL'S ROW IS NEVER APPLIED -- 2026-10-29. An old log
+           can hold HAMSCORE PASSWORD or SERVER PASSWORD (as 'contest' when a
+           .cfg supplied it); applied, a stale password from a shared or
+           year-old file would overwrite the one in the OS vault. Set aside
+           here, named ONCE per open -- the value is never logged -- and
+           deleted by the next capture (DeleteStoredSecrets). *)
          KeepOnlyStatements(rows, LogHoldsStatementsOnly(GRepository), dropped,
-                            CommandIsRetired, retired);
+                            CommandIsRetired, retired, secrets);
+         if (secrets.Count > 0) and (logger <> nil) then
+            begin
+            logger.Warn('[LogStore] this log holds %d stored credential(s) -- ' +
+                        'not applied, the OS vault holds the password; ' +
+                        'deleted from the log at its next capture: %s',
+                        [secrets.Count, secrets.CommaText]);
+            end;
          if (dropped.Count > 0) and (logger <> nil) then
             begin
             logger.Info('[LogStore] %d stored contest setting(s) hold the ' +
@@ -3097,6 +3130,7 @@ begin
                end;
             end;
       finally
+         secrets.Free;
          retired.Free;
          dropped.Free;
          rows.Free;

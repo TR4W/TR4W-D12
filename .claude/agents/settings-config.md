@@ -106,7 +106,23 @@ that in both directions.
   them through `uCbrSum.CabrilloTagText`. A `_CATEGORY-*` key for these five
   in `tr4w.json`'s Cabrillo header store is inert. `SetCFGCommandValue` still
   drops a copy in the `commands/contest` bucket (a station default; Q-M2a).
-- **Credentials live in the OS vault**, not in settings.
+- **Credentials live in the OS vault**, not in settings. **And not in the
+  contest log, and not in a log line** (2026-10-29). A `TSecretText`
+  property is the mark; `TR4WSettings.CommandIsSecret` is the question. The
+  contest `.db`'s `config` table held HAMSCORE PASSWORD and SERVER PASSWORD
+  in the clear (`'station'` rows) because `uLogStore.CaptureConfiguration`
+  walked every station command and never asked. Now: the walk skips a secret
+  first, `uLogContestStatements.DeleteStoredSecrets` deletes any left by an
+  older build at the next capture (by NAME, because `LoadContestConfig`
+  returns only `'contest'` rows), and `KeepOnlyStatements` sets a secret row
+  aside in either era and hands back its name only, so an old log's stale
+  password never overwrites the vault's on open. `TR4WSettings.ValueForLog`
+  masks a secret's value as `(secret, N characters)` for log lines
+  (`uCFG.SetCFGCommandValue`, `CheckCommand`'s refusal) and the
+  `tr4wconvert` report. **A new sink of setting values — a file, the wire, a
+  log line — must ask `CommandIsSecret`.** A SQLite DELETE does not
+  overwrite the page, so a cleaned old log can still hold the bytes until
+  they are reused (no `secure_delete`).
 - **ONE HOME FOR THE LOG LEVEL: `Settings.Log.DebugLevel`** (default DEBUG,
   NY4I 2026-09-14). The radio store's `logging.level` is written only when an
   operator CHOSE a level; absent or `''` means **no opinion**, and

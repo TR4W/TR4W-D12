@@ -81,7 +81,19 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   MY GRID and the rest are written by CaptureStationFactRows, the contest's
   override as 'contest' while it stated one, else the station's value as
   'station'. Same rule as above, applied to a station fact: a 'contest' row
-  is a statement, and absence means the station decides. *)
+  is a statement, and absence means the station decides.
+
+  A CREDENTIAL IS NEVER IN THE LOG -- 2026-10-29. A TSecretText setting
+  (HAMSCORE PASSWORD, SERVER PASSWORD) lives in the OS vault and nowhere
+  else, and a contest file is something operators SHARE. The station walk in
+  CaptureConfiguration wrote every station setting's value, so both passwords
+  sat in the clear in every log a station closed. Now: the capture writes no
+  secret row and DELETES any that an older build left (DeleteStoredSecrets),
+  and the read sets aside a secret row in either era, by NAME only, so an old
+  log's stale password can never overwrite the vault's on open
+  (KeepOnlyStatements' aSecrets). The question is the settings object's --
+  TR4WSettings.CommandIsSecret, from the property's TYPE -- so no list of
+  secret names exists here to drift. *)
 unit uLogContestStatements;
 
 {$I tr4w.inc}
@@ -191,11 +203,30 @@ function StationFactRow(aSettings: TR4WSettings; const aCommand: string;
   nil -- the value included, so a real statement being set aside is visible
   and not only a placeholder (M10 S2). It goes to aRetired and NOT to
   aDropped: aDropped means "held the built-in default", which a retired
-  statement need not. *)
+  statement need not.
+
+  AND A SECRET COMMAND'S ROW (TR4WSettings.CommandIsSecret) IS ALWAYS
+  REMOVED, in both eras and whatever the other arguments say, and its NAME --
+  never its value -- is added to aSecrets when that is not nil. See the
+  header: a password is the vault's, and a stored one is a leak, not a
+  statement. *)
 procedure KeepOnlyStatements(aRows: TStrings; aStatementsOnly: boolean;
                              aDropped: TStrings;
                              aIsRetired: TCommandTest = nil;
-                             aRetired: TStrings = nil);
+                             aRetired: TStrings = nil;
+                             aSecrets: TStrings = nil);
+
+(* DELETE THE ROW OF EVERY SECRET COMMAND THE SETTINGS OBJECT NAMES, whatever
+  its source -- a 'station' row is never read back by LoadContestConfig, so
+  it has to be found by name, not from what the read returns. This is how a
+  log an older build wrote is cleaned: at its next capture. Does not commit;
+  the caller's capture is one transaction.
+
+  NOTE: a SQLite DELETE frees the page; it does not overwrite it. The old
+  bytes stay in the file's free pages (and the WAL) until SQLite reuses them,
+  so a log cleaned this way is not proof against a hex editor. *)
+procedure DeleteStoredSecrets(aSettings: TR4WSettings;
+                              aRepository: TLogRepository);
 
 implementation
 
@@ -226,8 +257,11 @@ begin
    (* A STATED VALUE THAT CANNOT BE WRITTEN DOWN IS DELETED, not kept: the
      renderer answers False only for a property kind it does not handle, and
      a stale row for it would be applied on reopen as though it were
-     current. *)
-   if aSettings.CommandIsStated(aCommand) and
+     current.
+
+     A SECRET IS DELETED, NEVER WRITTEN, even stated -- see the header. *)
+   if (not aSettings.CommandIsSecret(aCommand)) and
+      aSettings.CommandIsStated(aCommand) and
       aSettings.TryGetByCommand(aCommand, value) then
       begin
       aRepository.SaveConfigValue(AnsiString(aCommand), AnsiString(value),
@@ -310,6 +344,33 @@ begin
    aRepository.SaveSessionValue(AnsiString(STATEMENTS_ONLY_KEY), '1');
 end;
 
+procedure DeleteStoredSecrets(aSettings: TR4WSettings;
+                              aRepository: TLogRepository);
+var
+   names: TStringList;
+   i: integer;
+   cmd: string;
+begin
+   if (aSettings = nil) or (aRepository = nil) then
+      begin
+      Exit;
+      end;
+
+   names := aSettings.CommandNames;
+   try
+      for i := 0 to names.Count - 1 do
+         begin
+         cmd := string(names[i]);
+         if (cmd <> '') and aSettings.CommandIsSecret(cmd) then
+            begin
+            aRepository.DeleteConfigValue(AnsiString(cmd));
+            end;
+         end;
+   finally
+      names.Free;
+   end;
+end;
+
 function StationFactRow(aSettings: TR4WSettings; const aCommand: string;
                         out aValue, aSource: string): boolean;
 begin
@@ -374,7 +435,8 @@ end;
 procedure KeepOnlyStatements(aRows: TStrings; aStatementsOnly: boolean;
                              aDropped: TStrings;
                              aIsRetired: TCommandTest = nil;
-                             aRetired: TStrings = nil);
+                             aRetired: TStrings = nil;
+                             aSecrets: TStrings = nil);
 var
    defaults: TR4WSettings;
    i: integer;
@@ -406,17 +468,33 @@ begin
          end;
       end;
 
-   if aStatementsOnly then
-      begin
-      Exit;
-      end;
-
    (* A FRESH OBJECT IS THE CONSTRUCTOR DEFAULT, by definition, and asking it
      keeps this unit from holding a second list of what the defaults are. It
-     also answers which commands are contest-scoped, which does not depend on
-     values. *)
+     also answers which commands are contest-scoped and which are secret,
+     neither of which depends on values. Created before the era test, because
+     the secret rule below holds in both eras. *)
    defaults := TR4WSettings.Create;
    try
+      (* SECRETS, WHATEVER THE LOG'S ERA, and the NAME only: the value is the
+        thing that must not be repeated anywhere. *)
+      for i := aRows.Count - 1 downto 0 do
+         begin
+         cmd := string(aRows.Names[i]);
+         if (cmd <> '') and defaults.CommandIsSecret(cmd) then
+            begin
+            if aSecrets <> nil then
+               begin
+               aSecrets.Add(AnsiString(cmd));
+               end;
+            aRows.Delete(i);
+            end;
+         end;
+
+      if aStatementsOnly then
+         begin
+         Exit;
+         end;
+
       for i := aRows.Count - 1 downto 0 do
          begin
          cmd := string(aRows.Names[i]);

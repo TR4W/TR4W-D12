@@ -28,6 +28,13 @@ unit uTestLogContestStatements;
                   EITHER era, never applied, and deleted by the next capture
                   -- once, so a second capture finds nothing to do.
 
+    credentials   a row naming a TSecretText setting (SERVER PASSWORD,
+                  HAMSCORE PASSWORD) is deleted by the capture whatever its
+                  source, and set aside in either era on the read -- by
+                  NAME, never with its value -- so it is never applied over
+                  the vault's password (2026-10-29). The values used are
+                  obviously fake.
+
   RE-POINTED AT M10 S2 (2026-10-14). These tests used the seven as their
   examples, because they were the settings whose sentinels every old log
   carries. With those retired, the same rules are pinned on contest-scoped
@@ -75,6 +82,8 @@ type
       procedure Test_ACaptureThatFailsPartWayLeavesNothingOfItself;
       procedure Test_Q61_ACategoryChangeIsInTheLogAtOnce;
       procedure Test_Q61_AReopenedLogKeepsItsEntryDeclaration;
+      procedure Test_StoredCredentialRowsAreDeletedByTheCapture;
+      procedure Test_AStoredCredentialIsNeverApplied;
    public
       procedure RunAllTests; override;
    end;
@@ -122,6 +131,12 @@ const
      same order. *)
    RETIRED_SENTINELS: array[0..6] of string = (
       'NONE', 'UNKNOWN', 'NONE', 'NONE', 'NONE', 'NONE', 'NONE');
+
+   (* THE TWO CREDENTIALS, and values nobody could mistake for real ones. *)
+   SERVER_PASSWORD   = 'SERVER PASSWORD';
+   HAMSCORE_PASSWORD = 'HAMSCORE PASSWORD';
+   FAKE_STORED_PASSWORD = 'fake-stored-not-a-password';
+   FAKE_VAULT_PASSWORD  = 'fake-vault-not-a-password';
 
 function TLogContestStatementsTests.TempLogName(const aLeaf: string): string;
 begin
@@ -1144,6 +1159,162 @@ begin
    Scrub(fn);
 end;
 
+(* A CREDENTIAL'S ROW IS DELETED BY THE CAPTURE, WHATEVER ITS SOURCE --
+  2026-10-29. The leak this pins: CaptureConfiguration wrote both passwords
+  as 'station' rows. A 'station' row is never returned by LoadContestConfig,
+  so the count is asked of the WHOLE table (ConfigCount) -- StoredValue would
+  report a 'station' row absent whether it was deleted or not. *)
+procedure TLogContestStatementsTests.Test_StoredCredentialRowsAreDeletedByTheCapture;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   s: TR4WSettings;
+   fn: string;
+   found: boolean;
+begin
+   BeginTest('a stored credential row is deleted by the capture, whatever its source');
+   fn := TempLogName('secrets.db');
+   Scrub(fn);
+   s := TR4WSettings.Create;
+   db := TLogDatabase.Create;
+   try
+      (* THE PREMISE: both are secrets to the settings object. If either stops
+        being one, the rest of this test proves nothing. *)
+      CheckTrue(s.CommandIsSecret(SERVER_PASSWORD), 'SERVER PASSWORD is a secret');
+      CheckTrue(s.CommandIsSecret(HAMSCORE_PASSWORD), 'HAMSCORE PASSWORD is a secret');
+      CheckFalse(s.CommandIsSecret('MY CALL'), 'MY CALL is not');
+
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         (* AS AN OLDER BUILD LEFT THEM: one as the station walk wrote it, one
+           as a .cfg-supplied row would be. And a live row beside them. *)
+         repo.SaveConfigValue(AnsiString(SERVER_PASSWORD),
+                              AnsiString(FAKE_STORED_PASSWORD), 'station');
+         repo.SaveConfigValue(AnsiString(HAMSCORE_PASSWORD),
+                              AnsiString(FAKE_STORED_PASSWORD), 'contest');
+         repo.SaveConfigValue('MY CALL', 'N0TEST', 'contest');
+         repo.Commit;
+         CheckEquals(3, repo.ConfigCount, 'the log holds the three rows to begin with');
+
+         DeleteStoredSecrets(s, repo);
+         repo.Commit;
+         CheckEquals(1, repo.ConfigCount, 'both credential rows are gone, in either source');
+         StoredValue(repo, 'MY CALL', found);
+         CheckTrue(found, 'and the live row beside them is untouched');
+
+         (* AND THE MID-SESSION WRITE REFUSES ONE TOO: it writes nothing for a
+           secret, however it is asked. *)
+         CheckFalse(CaptureContestStatement(s, repo, SERVER_PASSWORD),
+                    'the one-command capture writes no credential row');
+         repo.Commit;
+         CheckEquals(1, repo.ConfigCount, 'and the table still holds only the live row');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+      s.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* A STORED CREDENTIAL IS NEVER APPLIED, IN EITHER ERA, AND ITS VALUE IS NEVER
+  HANDED BACK -- 2026-10-29. An old log's stale password must not overwrite
+  the one this station holds in its vault. The read sets the row aside and
+  returns the command's NAME only, which is all uLogStore logs. The apply is
+  ApplyRows -- the program's filter, then a by-name assignment of what is left
+  -- so the vault-side value surviving is the program's answer. *)
+procedure TLogContestStatementsTests.Test_AStoredCredentialIsNeverApplied;
+
+   procedure CheckEra(aStatementsOnly: boolean; const aEra: string);
+   var
+      rows, dropped, retired, secrets: TStringList;
+   begin
+      rows := TStringList.Create;
+      dropped := TStringList.Create;
+      retired := TStringList.Create;
+      secrets := TStringList.Create;
+      try
+         rows.Add(AnsiString(SERVER_PASSWORD + '=' + FAKE_STORED_PASSWORD));
+         rows.Add(AnsiString(HAMSCORE_PASSWORD + '=' + FAKE_STORED_PASSWORD));
+         rows.Add(AnsiString(CURSOR_POS + '=' + A_CURSOR_POS));
+
+         KeepOnlyStatements(rows, aStatementsOnly, dropped,
+                            CommandIsRetired, retired, secrets);
+
+         CheckEquals(2, secrets.Count, aEra + ': both credentials are set aside');
+         CheckTrue(secrets.IndexOf(AnsiString(SERVER_PASSWORD)) >= 0,
+                   aEra + ': SERVER PASSWORD is named');
+         CheckTrue(secrets.IndexOf(AnsiString(HAMSCORE_PASSWORD)) >= 0,
+                   aEra + ': HAMSCORE PASSWORD is named');
+         CheckTrue(Pos(AnsiString(FAKE_STORED_PASSWORD), secrets.Text) = 0,
+                   aEra + ': and the value is not handed back');
+         CheckEquals(0, retired.Count, aEra + ': neither is reported as retired');
+         CheckEquals(0, dropped.Count, aEra + ': nor as a built-in default');
+         CheckEquals(1, rows.Count, aEra + ': only the live statement is left');
+         if rows.Count = 1 then
+            begin
+            CheckEquals(AnsiString(CURSOR_POS), rows.Names[0],
+                        aEra + ': and it is the live one');
+            end;
+      finally
+         secrets.Free;
+         retired.Free;
+         dropped.Free;
+         rows.Free;
+      end;
+   end;
+
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   s: TR4WSettings;
+   fn: string;
+   rows: TStringList;
+begin
+   BeginTest('a stored credential is never applied, and its value is never handed back');
+   CheckEra(False, 'a log written before the rule');
+   CheckEra(True,  'a statements-only log');
+
+   (* WITH NO LIST TO RECEIVE THE NAMES IT IS STILL REMOVED -- the rule does
+     not depend on the caller asking. *)
+   rows := TStringList.Create;
+   try
+      rows.Add(AnsiString(SERVER_PASSWORD + '=' + FAKE_STORED_PASSWORD));
+      KeepOnlyStatements(rows, True, nil);
+      CheckEquals(0, rows.Count, 'a credential row is removed with no aSecrets list');
+   finally
+      rows.Free;
+   end;
+
+   (* THE APPLY, AGAINST A LOG THAT HOLDS ONE. *)
+   fn := TempLogName('secret-apply.db');
+   Scrub(fn);
+   s := TR4WSettings.Create;
+   db := TLogDatabase.Create;
+   try
+      s.Server.Password := FAKE_VAULT_PASSWORD;
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         repo.SaveConfigValue(AnsiString(SERVER_PASSWORD),
+                              AnsiString(FAKE_STORED_PASSWORD), 'contest');
+         repo.Commit;
+
+         ApplyRows(s, repo);
+         CheckEquals(FAKE_VAULT_PASSWORD, string(s.Server.Password),
+                     'the station''s password is not overwritten by the log''s');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+      s.Free;
+   end;
+   Scrub(fn);
+end;
+
 procedure TLogContestStatementsTests.RunAllTests;
 begin
    Test_ByNameIsAStatement_UnstatedIsNot;
@@ -1164,6 +1335,8 @@ begin
    Test_ACaptureThatFailsPartWayLeavesNothingOfItself;
    Test_Q61_ACategoryChangeIsInTheLogAtOnce;
    Test_Q61_AReopenedLogKeepsItsEntryDeclaration;
+   Test_StoredCredentialRowsAreDeletedByTheCapture;
+   Test_AStoredCredentialIsNeverApplied;
 
    if (FDir <> '') and DirectoryExists(FDir) then
       begin
