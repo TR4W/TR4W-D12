@@ -801,32 +801,21 @@ strong net, not a proof.
 
 ### Framework
 
-**THE UI IS LCL FORMS. ~~Direct Win32 API, no VCL forms~~ — that was true until
-2026-08 and is not now.** The program runs `Application.Run`; the hand-rolled
-`GetMessage` / `TranslateMessage` / `DispatchMessage` loop is gone.
-
-**EVERY tool window is a designed form.** Converted 2026-08-24/25: function keys,
-band map, stations, SCP/master, both dupe sheets, the five remaining-multiplier
-windows, PostScores, HamScore, Intercom, both radio panels, and
-Network — then **Telnet and MMTTY**, which this file listed as the last two
-holdouts until 2026-08-26. `uTelnetForm` and `uMMTTYForm` are in `tr4w.lpr`;
-the DX cluster window landed in `00e9a987`.
+**THE UI IS LCL FORMS, and every tool window is a designed form.** The program runs
+`Application.Run`; the hand-rolled `GetMessage` / `TranslateMessage` / `DispatchMessage`
+loop is gone. Hosting VCL forms alongside a Win32 loop was tried once (branch
+`Add-VCL-to-Program`, technique in
+[`docs/migration_interim_artifacts/VCL_WIN32_COEXISTENCE.md`](docs/migration_interim_artifacts/VCL_WIN32_COEXISTENCE.md));
+VCL is an abandoned path. State is held in **global variables** and Pascal **records**, with
+manual resource management.
 
 ### DO NOT WRITE A COUNT OR A LIST OF SURVIVORS HERE. MEASURE IT.
 
-This section stated `Lint-Win32Dialogs[ui]` was "at 748" and named **eight**
-hand-built Win32 dialogs as still live: `uAltP`, `uCbrSum`, `uErmak`,
-`uFileView`, `uLogEdit`, `uLogSearch`, `uQTCR`, `uQTCS`. By 2026-09-05 the
-count was 499, `uLogEdit` no longer existed, and **every one of those dialogs
-had been converted.** An agent read that list, repeated it to NY4I as current
-fact, and wasted his time — twice in one session. NY4I: *"stale info in
-CLAUDE.md wastes my time."*
-
-The [Overview](#overview) already says counts are not stated here because a
-stale count is believed. The same is true of a list of what is left, and more
-so: it decays every time someone finishes a conversion.
-
-**So ask the tree, and the answers take seconds:**
+A list of "what is still Win32" decays every time someone finishes a conversion. This file once
+named eight live hand-built dialogs; by the next week all eight were converted, and an agent
+repeated the list to NY4I as fact (*"stale info in CLAUDE.md wastes my time"*). The same happened
+three more times in four days, and once the REASON was wrong too: a **stale reason is worse than a
+stale count**, because a count invites re-measurement and a reason invites agreement. So ask the tree:
 
 ```powershell
 .\build\Lint-Win32Dialogs.ps1 -Group ui         # the count, per creation kind
@@ -838,158 +827,57 @@ so: it decays every time someone finishes a conversion.
 grep -rn "CreateModalDialog\|DialogBoxParam\|DialogBoxIndirect\|CreateWindowEx" tr4w/src --include='*.[pP][aA][sS]'
 ```
 
-**WHEN YOU DELETE OR CONVERT SOMETHING, FIX THIS FILE IN THE SAME COMMIT.** It
-is a map, and a map that describes a road removed last month is worse than no
-map — an agent trusts it, states it, and the reader has to catch it.
+**WHEN YOU DELETE OR CONVERT SOMETHING, FIX THIS FILE IN THE SAME COMMIT.** A map that describes a
+road removed last month is worse than no map. What remains on the Win32 count is either a REPORTED
+fallback kept until a log line proves it dead (`OpenTR4WWindow`, `MoveWindowTo`,
+`ShowModalOverWin32Parent`) or genuine platform code.
 
 ### Retiring a line: delete it, or mark it `//AGENT_DEPRECATED`
 
-A conversion leaves lines that are dead but still useful to read — the Win32
-call whose window is now an LCL control, next to the property that replaced it.
-**Deleting is the default.** Where the old code genuinely helps diagnose the new,
-comment it and mark it (NY4I, 2026-09-05):
+**Deleting is the default.** Where the old code genuinely helps diagnose the new (the Win32 call
+beside the property that replaced it), comment it and mark it:
 
 ```pascal
 //Windows.SetWindowTextA(QSONeedWindowsHandles1[Band], BandStringsArray[Band]); //AGENT_DEPRECATED
 ```
 
-**`Lint-Win32Dialogs` needs no teaching to skip these** — it counts CODE ONLY,
-because `build/PascalSource.psm1` strips comments and string literals first.
-Measured with a two-line fixture, one commented and one live: `CreateWindowEx`
-counted **1**, not 2.
+`Lint-Win32Dialogs` counts CODE ONLY (`build/PascalSource.psm1` strips comments and strings), so a
+ratchet that falls because work was HIDDEN looks identical to one that falls because work was
+DONE. `Lint-AgentDeprecated` closes that gap: a marker on live code fails the build, and every
+marked line is listed on each run. The marker is a staging post to deletion, not a destination.
 
-**Which is exactly why the marker earns its keep.** Comment-blind counting means
-commenting out *live* code lowers the Win32 numbers, and a ratchet that falls
-because work was HIDDEN looks identical to one that falls because work was DONE.
-`Lint-AgentDeprecated` closes that: a marked line must actually be commented out
-(a marker on live code fails the build), and every marked line is listed on each
-run so the pile stays visible and gets swept. They are a staging post on the way
-to deletion, not a destination.
+**Do not search `tr4w/src` alone for whether something still exists.** Five gitignored trees hold
+stale copies: `tr4w/src/backup/`, `tr4w/src/ui/lcl/backup/`, `tr4w/backup/` (the Lazarus IDE saves
+the previous revision there), `tr4w/src/graphify-out/` (a cache) and `.claude/worktrees/` (whole
+extra checkouts). The lints exclude them; a hand-run `grep` does not. `git ls-files` says whether a
+hit is tracked.
 
-**And do not search `tr4w/src` alone for whether something still exists.**
-There are **five** gitignored snapshot trees that can be days old, not the two
-this file listed until 2026-09-28:
+### Converting a window
 
-| | |
-|---|---|
-| `tr4w/src/backup/`, `tr4w/src/ui/lcl/backup/`, `tr4w/backup/` | the Lazarus IDE writes the PREVIOUS revision of every form and project file here on each save |
-| `tr4w/src/graphify-out/` | a cache |
-| `.claude/worktrees/` | whole additional checkouts of this repository |
-
-A search for `CreateQSONeedWindows` found it in `src/backup/MainUnit.pas` long
-after the live routine was deleted, and a 2026-09-28 search for a document
-citation returned a fourth copy of it out of `.claude/worktrees/mkdocs/`. **The
-lints exclude all of these** (`build/PascalSource.psm1` skips any `backup` path,
-`.gitignore` carries the rest); a hand-run `grep` does not. `git ls-files` is the
-cheap way to ask whether a hit is a tracked file at all.
-
-*Measured 2026-09-06:* **no UI window is built by hand any more.** The last
-one was the multi-op server-log sync list (`CreateEditableLog`, a
-`CreateWindowExW` of `WC_LISTVIEW`), and it is a `TLogGrid`. There are **no
-live `ListView_*` calls left.**
-
-~~and the only `CreateWindowEx` in the tree builds `uWinTimer`'s message-only
-window — platform code, not UI, as is `uIcomNetworkTransport`'s.~~ **BOTH
-HALVES OF THAT WERE FALSE BY 2026-09-07 AND IT STOOD UNTIL 2026-09-28.**
-`uWinTimer` had been DELETED on 2026-09-06, and `uIcomNetworkTransport` never
-contained a `CreateWindowEx` at all. **There is now no live `CreateWindowEx`
-anywhere in the tree** — the correction, with the measurement behind it, is
-already written down at `src/utils/uWin32Compat.pas` where `HWND_MESSAGE` used
-to be declared; read it there rather than re-arguing it here. It is the
-worked example of the rule two paragraphs down: the comment that kept the
-constant *recorded its only user's deletion* and then gave a second reason
-that was not true either.
-
-**DO NOT READ THAT AS "DONE" AND DO NOT CITE IT.** The commands above are the
-answer; this line is a worked example of running them, and it has been wrong
-the day after it was written four days running:
-
-| written | what it claimed was left | true the next day? |
-|---|---|---|
-| 2026-09-04 | eight hand-built dialogs, `uLogEdit` among them | no — `uLogEdit` did not exist |
-| 2026-09-05 | WinKeyer settings, the server log's list, `uErmak` | no — one of three |
-| 2026-09-06 (am) | the server log's list, *"deferred until the log moves to SQLite"* | **no, and the REASON was wrong too** |
-
-That last one is the instructive failure, because the count was right and the
-reasoning was not. NY4I: *"This does not make much sense. sqlite is already the
-database."* He was right on every clause — `docs/SQLITE_MIGRATION_TASKS.md`
-says **B4 is done and reads come from the database**; the main window's log had
-been a `TLogGrid` for days so nothing was "shared"; and the `ListView_*` count
-the deferral rested on was **34 mentions, 4 of them live**, not the ~150 the
-comment claimed. The window did not even show the contest log — it shows the
-*server's* log, arriving over a socket, so log storage was never relevant.
-
-**A stale REASON is worse than a stale count**, because a count invites a
-re-measurement and a reason invites agreement. The paragraph had been carried
-forward from a comment instead of being checked. Everything still on the Win32
-count is now either a REPORTED fallback kept until a log line proves it dead
-(`OpenTR4WWindow`, `MoveWindowTo`, `ShowModalOverWin32Parent`) or genuine
-platform code — and if you are about to repeat that sentence, run the commands
-first.
-
-The garbled-caption defect those dialogs shared is fixed: all five that set a
-title did it with `PWideChar(<resourcestring>)` — a POINTER CAST, not a
-conversion, so each showed "????????" (NY4I 2026-08-31; 16 caption bytes read
-as 8 UTF-16 units).
-
-The last `tDialogBox` template in use was **73**, the server-log synchronize
-window; it is
-`src/ui/lcl/uServerLogForm.pas`. `tDialogBox` has no live caller left. Two
-things that conversion is worth remembering for: a control id can be written by
-`SetDlgItemInt` from **any** unit holding the window handle — the 'sent records'
-field looked dead from `uGetServerLog` and its writer was in `uNet` — and a
-worker thread that used to poke dialog items must now marshal, which
-`uGetServerLog.ReportSyncProgress` does by `SendMessage` so the handler runs on
-the main thread.
-
-**A CONVERTED WINDOW LOSES ITS TRANSLATIONS, SILENTLY, AND EVERY CONVERSION UP
-TO 2026-08-29 DID.** `uServerLogForm` is the pattern to copy instead: its `.lfm`
-text is an explicit designer placeholder and `HandleShow` assigns every caption
-from the constant. The `RC_` names it uses had never been translatable at all —
-their text reached the screen from the compiled `.RES`, so `pas2res` left them
-out on purpose — and **naming them from Pascal is what promotes them**, because
-the generator emits every `RC_` a source file references. Run `pas2res` and then
-`po_merge` after a conversion.
-
-**NEVER run `pas2po` to pick up new strings.** It rebuilds a catalogue from the
-`TC_`/`RC_` tables alone and drops every `.lfm` and resourcestring key the
-Lazarus harvest contributed — measured 2026-08-29: **2,203 real translations
-destroyed across ten catalogues in one run**, with no warning and a clean exit.
-`po_merge --pot` is the additive tool and the only safe one; `pas2po` is for
-creating a *new* language.
-
-The underlying trap: the Win32 code assigned captions from `TC_`/`RC_`
-constants, which are what the `.po` catalogues translate (`ls i18n/tr4w_*.po` — the count is not
-written here; it said 16 while there were 22). A designed form carries its caption
-in the `.lfm`, and every conversion has re-typed the English there and left the
-constant behind. Telnet is the clearest case: the `.lfm` says
-`Caption = 'Connect'` while `TC_TELNET_CONNECT` sits in the catalogues with
-`es='Conectar'`, translated by a native speaker and now unreachable.
-
-Measured 2026-08-26: **469 `.lfm` captions ship as English and only 45 of 545
-are assigned at run time.** Nothing warns; nothing fails; the English simply
-shows in every language. When you convert a window, check whether the text you
-are typing already exists as a `TC_`/`RC_` constant — see
-[`docs/I18N_TS_EVALUATION.md`](../tr4w-i18n/docs/I18N_TS_EVALUATION.md) and the
-tooling in `c:/tr4w-i18n/tools/i18n`.
-
-The seam is `OpenTR4WWindow` (`MainUnit.pas`): an arm returning the form's
-`Handle` and setting `lclForm`, and that window's `WndProcAdr` line deleted. A
-form is positioned through `lclForm.BoundsRect`, **never** `SetWindowPos` — the
-LCL holds its own bounds and pushes the designed ones back down when it shows,
-which silently undid a restored position until 2026-08-25.
-
-Read [`docs/BANDMAP_LCL_DESIGN.md`](docs/BANDMAP_LCL_DESIGN.md) and the notes at
-the top of any `src/ui/lcl/` unit before converting another window; several
-record traps that no compiler catches (colour used as state, a `TLabel` having
-no window handle, a `TPanel` caption not wrapping).
-
-- A **proof-of-concept** for hosting VCL forms alongside the Win32 loop exists on branch
-  `Add-VCL-to-Program`; the technique is preserved in
-  [`docs/migration_interim_artifacts/VCL_WIN32_COEXISTENCE.md`](docs/migration_interim_artifacts/VCL_WIN32_COEXISTENCE.md).
-  Historical: VCL is an abandoned toolchain path, and the conversion is done.
-- Heavy use of **global variables** for state; Pascal **records** for most data structures; manual
-  resource management.
+- **The seam is `OpenTR4WWindow`** (`MainUnit.pas`): an arm returning the form's `Handle` and
+  setting `lclForm`, with that window's `WndProcAdr` line deleted.
+- **Position through `lclForm.BoundsRect`, never `SetWindowPos`.** The LCL holds its own bounds
+  and pushes the designed ones back when the form shows.
+- **A control id can be written from any unit holding the window handle** (`SetDlgItemInt`), so a
+  field that looks dead in one unit may be written in another. A worker thread that used to poke
+  dialog items must marshal to the main thread (`uGetServerLog.ReportSyncProgress` does).
+- Read [`docs/BANDMAP_LCL_DESIGN.md`](docs/BANDMAP_LCL_DESIGN.md) and the notes at the top of any
+  `src/ui/lcl/` unit first: several record traps no compiler catches (colour used as state, a
+  `TLabel` having no window handle, a `TPanel` caption not wrapping).
+- **A converted window loses its translations silently.** The Win32 code assigned captions from
+  `TC_`/`RC_` constants, which the `.po` catalogues translate; a designed form carries its caption
+  in the `.lfm`, and every conversion up to 2026-08-29 re-typed the English there and left the
+  constant behind (Telnet: `.lfm` says `'Connect'` while `TC_TELNET_CONNECT` has a native
+  Spanish `'Conectar'`, now unreachable). Measured 2026-08-26: 469 `.lfm` captions ship as English
+  and only 45 of 545 are assigned at run time. Nothing warns. **`uServerLogForm` is the pattern:**
+  its `.lfm` text is a designer placeholder and `HandleShow` assigns every caption from the
+  constant. `RC_` names become translatable only by being NAMED from Pascal, because the
+  generator emits every `RC_` a source file references. Run `pas2res`, then `po_merge`.
+- **NEVER run `pas2po` to pick up new strings.** It rebuilds a catalogue from the `TC_`/`RC_`
+  tables alone and drops every `.lfm` and resourcestring key the Lazarus harvest contributed
+  (2026-08-29: 2,203 translations destroyed across ten catalogues, clean exit). `po_merge --pot`
+  is the additive, safe tool; `pas2po` is only for creating a *new* language.
+- A `PWideChar(<resourcestring>)` is a POINTER CAST, not a conversion, and shows "????????".
 
 ### Key entry points
 
@@ -1345,178 +1233,52 @@ ready: gate post-connect sends on link *stability*, not presence.
 
 **TR4WServer** (`tr4w/tr4wserver/`, its own `.lpr`) is the TCP/IP server for multi-op stations:
 centralised log, multipliers, dupe checking, serial-number lockout, time sync. Binary packet
-protocol with CRC32 (`src/utils/networkmessageutils.pas`).
+protocol with CRC32 (`src/utils/networkmessageutils.pas`). Client side: `src/uNetClient.pas`,
+`src/uNet.pas`, `src/trdos/lognet.pas`, `src/uGetServerLog.pas`.
 
-**THERE IS NO LOG COMPARISON ANY MORE, AND A LATE CATCH-UP REPLACED IT (Phase 1, C6, 2026-10-27).**
-D7 CRC32'd the raw `.TRW` at both ends and, on a difference, asked the operator or (with `SERVER
-AUTO SYNCHRONIZE LOG ON CONNECT`) REPLACED the log with the server's file. This station keeps no
-`.TRW`, and a replace would destroy every QSO only it holds, so both went. What a station that
-reboots mid-contest needs is "what do the others have that I lack": once per link, after the server's
-HELLO, it **fetches the server's log on the second port** (a worker thread; 3.76 MB for 10,000 QSOs,
-0.05 s on loopback) and the **main thread adds, INSERT-ONLY, every QSO this log lacks** — by
-`(ceQSOID1, ceQSOID2)`, never touching a row it has, after a verified backup, in one transaction,
-then a rescore. With the setting on that is automatic; off, the operator is asked with the count.
-Net > Synchronize opens the window that shows the server's log and adds the same way. A record's
-contest is judged by what its author announced, then by its byte; a record that cannot be placed
-is skipped and reported. **An edit another station made while this one was away is NOT caught up**
-(the server holds the edited record in place and nothing says which copy is newer) — that is the
-row-level protocol's. Detail: `.claude/agents/multi-op-network.md`, `uNetCatchUp.pas`'s header.
+**The design and its traps live in `.claude/agents/multi-op-network.md` -- involve that agent and
+read it before touching any of this.** The rules worth knowing from here:
 
-**THE CATCH-UP IS TWO-WAY (2026-10-28).** NY4I moved the server to a machine with no log and his
-83 QSOs, already marked sent, could never reach it: the resend sends only rows still owed. The
-same downloaded image now also says which of THIS log's QSOs the server lacks, and they are sent
-as `NET_OFFLINEQSO_ID` — which both servers store, acknowledge and do **not** relay, so connected
-stations are not flooded and no row's flag changes. Imports (both ids 0) and rows still owed are
-left out and counted. On connect the pull and the push are decided together (ONE question with the
-setting off, none with it on); Net > **Synchronize with the server** has an Add and a Send button.
-Detail: the `multi-op-network` agent, `uNetCatchUp.TPushPlan`, `tools/netprobe --case restock`.
+- **There is no log comparison.** A station catches up from the server's log (insert-only, by
+  `(ceQSOID1, ceQSOID2)`, after a backup) and pushes the QSOs the server lacks (`NET_OFFLINEQSO_ID`,
+  stored but not relayed). Offline work resends from SQLite rows (`sent_to_server`,
+  `server_dirty`). Detail: `uNetCatchUp.pas`, `uNet.ResendOfflineWork`, `tools/netprobe`.
+- **The link belongs to the program, not the Network window** (`uNet`, `uNetLink`; Net menu
+  Connect/Disconnect/Reconnect; `NETWORK AUTO CONNECT`). The window is only a view.
+- **The link is Indy** (`TNetClient`), not Winsock. **Writes never run on the caller's thread**
+  (`uNetSendQueue`: one FIFO writer thread). Parsing runs on the main thread via
+  `Application.QueueAsyncCall`; an unrecognised message id must NOT be kept in the buffer, or the
+  same bytes re-parse forever and the link wedges silently.
+- **`tr4wserver` is an LCL program, not a console program** (since 2026-09-06; `Get-SearchPaths.ps1`
+  gives its target the LCL paths). **So nothing guards a unit growing a `Forms` dependency** --
+  that guard, the old LCL-free search path, is gone and nothing replaced it. `-SkipServer`'s only
+  cost is that the server is not in the build. It builds as a normal `FullBuild.ps1` step.
 
-**It is built by `FullBuild.ps1` as a normal step again (2026-08-29).** It had not compiled since
-2026-08-23: `a3c671cc` added a `TF` → `uCrashLog` edge so a fault on a worker thread would not be
-silent, and `uCrashLog` used `Forms`, so the chain
+#### Crash reporting (`uCrashLog`)
 
-    tr4wserver.lpr → tr4wserverUnit → TF → uCrashLog → Forms
-
-dragged the LCL into a console program whose search paths deliberately exclude it. **Nothing
-surfaced it for three days**, because that search path is the only guard on the boundary and it
-fires only on a full build — then `-SkipServer` kept it hidden for six more.
-
-**`uCrashLog` ALSO CARRIES A REGISTRATION POINT FOR SUBSYSTEM CONTEXT** (2026-09-24), and the
-arrow points the same way for the same reason: `RegisterCrashContext` lets a subsystem add what
-it knows to a crash record -- the DX cluster's last 200 lines are the first -- **without
-`uCrashLog` ever naming that subsystem**. A program that does not link it registers nothing.
-
-**There was no LCL conversion to wait for.** `uCrashLog` is split instead: it keeps the RTL
-reporter (`LogCaughtException`, `EarlyTrace`, `OnMainThread`, the `ExceptProc` hook) and links
-anywhere, and the two statements that need a widget set — `Application.OnException` and
-`Application.ShowException` — are `src/ui/lcl/uCrashLogLCL.pas`. A program with an LCL calls
-`InstallCrashLogLCL`, which installs both.
-
-**A CRASH REPORT NAMES THE BUILD IT CAME FROM ON BOTH PLATFORMS NOW, AND THE WINDOWS ANSWER IS
-NOT A CODEVIEW GUID.** The obvious analogue of Darwin's `LC_UUID` is the PE debug directory's
-`RSDS` record -- a GUID plus an age. **It does not exist in anything this tree builds:**
-`IMAGE_DIRECTORY_ENTRY_DEBUG` is `rva 0 size 0` in `target/tr4w.exe`, in `build-out`'s
-`tr4w_fpc.exe` and in `tr4wserver.exe`, because FPC emits DWARF or stabs and never CodeView. A
-reader looking for one would have reported "not found" on every build for ever.
-
-What the linker actually writes is a **`.gnu_debuglink`** section: the `.dbg` file's NAME and a
-**CRC32 of its contents**, which is the value FPC's own line-info reader checks. `uCrashLog`
-logs it from `ReportSymbolState` at startup, verified three ways against `objdump -s -j
-.gnu_debuglink` and `zlib.crc32` of the actual `.dbg`. Use it to pick the right
-`tr4w-<version>.dbg` out of an archive **before** sending one to an operator -- two builds of
-one version have different CRCs. Unlike `atos` on Darwin, a wrong `.dbg` here is **rejected**
-rather than resolved wrongly, so the CRC buys the choice, not the safety.
-
-**IT IS READ FROM THE FILE, NOT THE MAPPED IMAGE, AND THAT IS NOT A SHORTCUT.** A section whose
-name is too long for its eight name bytes carries only `/<offset>` there, and the COFF string
-table that offset indexes **lies in no section**, so it is never mapped and the name cannot be
-recovered from memory at all. `TFileStream` reads it -- no raw Win32 call, so there is nothing
-to justify.
-
-**And the reporter's own lines were invisible until 2026-09-27.** A 642 MB `tr4w.log` from an
-ordinary session contained **zero `[CRASH]` lines**: Log4D's root defaults to `Error` and
-`DEBUG LOG LEVEL` is applied to the root much later, so `InstallCrashLog`'s confirmation and the
-whole of `ReportSymbolState` had never once been written. `InstallCrashLog` now sets its own
-subtree's level, which also means **a crash report is no longer silenced by `DEBUG LOG LEVEL`**
--- the intent the unit already claimed for its `Fatal` lines.
-
-~~`tr4wserver` calls `InstallCrashLog` and now gets crash logging, which it never had.~~
-~~**IT DOES NOT, AND THAT SENTENCE WAS NEVER TRUE** (measured 2026-09-27) -- `InstallCrashLog`
-has no live caller anywhere in this tree.~~ **FIXED THE SAME DAY.** Both retractions are kept
-because the first claim was believed for weeks and the second for hours.
-
-**`tr4wserver` NOW INSTALLS IT, AND IT CALLS `InstallCrashLogLCL`, NOT `InstallCrashLog`.**
-The server is **not a console program** -- that premise was stale in this file, in
-`uCrashLogLCL`'s own header and in `uProgramMain`'s comment, all three now corrected. It has
-had a widget set since 2026-09-06: `tr4wserver.lpr` uses `Interfaces`, `Forms` and `Dialogs`,
-its window is a streamed `.lfm`, and `Get-SearchPaths.ps1` gives the **Server** target
-`src/ui/lcl` and the LCL units, saying so in its own header. `InstallCrashLog` alone would have
-installed **half** the reporting, because the LCL never lets a fault raised in its own
-event-handler code reach `ExceptProc`.
-
-**WHERE A SERVER CRASH GOES: `tr4wserver.log`, and no new file was needed.**
-`InitServerLogger` configures the **root** logger with this program's appender, and
-`uCrashLog` writes through `'TR4WDebugLog.CrashLog'`, which is additive and propagates to it.
-Two programs writing one `tr4w.log` would have been its own defect; nothing does.
-
-**WHEN: in the program body, after the single-instance lock and before
-`Application.Initialize`.** `InitServerLogger` moved out of `ServerStartUp` to make that
-possible, and both halves of the placement are load-bearing -- after the lock, because a second
-instance must not open the shared log; before `Application.Initialize`, because `ServerStartUp`
-does not run until the form has been created and shown, and this program has already exited
-twice with no window and nothing in any log.
-
-**`Lint-CrashLogInstalled` IS THE GATE, and the reason it exists is that nothing failed while
-the call was missing.** It reads the source and asserts a live -- not commented-out -- install
-call per shipping program, resolving one level through the `uses` clause (the application
-installs from `uProgramMain`). It fails closed: no `.lpr` found, a named program missing,
-`uCrashLog.pas` missing, or an unclassified `.lpr` outside `test/`, `tools/`, `build/` and
-`docs/` each **fail** rather than pass quietly.
-
-**THE UNIT-TEST BINARY IS REQUIRED TO INSTALL IT TOO, AND NOT FOR CRASH REPORTING.**
-The lint's first draft listed it as must-NOT-install and was wrong:
-`uTestStatusAndNotice.EnsureMainForm` calls `InstallCrashLog` on purpose, because
-**`InstallCrashLog` is what records the main thread id**, so `OnMainThread` is false everywhere
-until it runs -- every `uMainForm` guard reports "off the main thread",
-`SetElementText` defers every write and `SetStatusText` drops every one, silently. Something
-that looks purely diagnostic owns a fact the UI layer reads.
-
-The `{$IFDEF FPC}` that used to guard the LCL half was on the **wrong axis** and could not have
-helped: it asks which *compiler*, when the question is which *program* has a widget set. Both are
-FPC. No conditional can answer that — only the unit graph can, which is why the answer is a second
-unit.
-
-~~**`-SkipServer` now also warns that you have skipped the only guard on that boundary.**~~
-**RETRACTED 2026-09-28: THERE IS NO SUCH GUARD, AND THERE HAS NOT BEEN SINCE 2026-09-06.** The
-guard was the Server target's LCL-free search path, and `Get-SearchPaths.ps1` gave Server the LCL
-paths the day `tr4wserver` became an LCL application — see
-[the search-path section](#iterating). `FullBuild.ps1` printed the dead reason to the operator for
-three weeks and has been corrected with this file. **Nothing now catches a unit growing a `Forms`
-dependency**; `-SkipServer`'s real cost is simply that the server is not in the build.
-
-Client side: `src/uNetClient.pas`, `src/uNet.pas`, `src/trdos/lognet.pas`,
-`src/uGetServerLog.pas`.
-
-**THE CLIENT LINK IS INDY, NOT WINSOCK (2026-08-25).** `uNet` used to drive a raw
-socket and have Windows deliver its events as a WINDOW MESSAGE —
-`WSAAsyncSelect(NetSocket, <network window HWND>, WM_SOCK_NET, ...)` — so the
-network window *was* part of the transport and could not become a form.
-`TNetClient` (`src/uNetClient.pas`) owns the socket and the password handshake,
-modelled on `TDXClusterClient` but byte-oriented. `NetSocket` is gone; ask
-`NetIsConnected`.
-
-**WRITES NEVER RUN ON THE CALLER'S THREAD (2026-10-24).** Indy's `IOHandler.Write` has no
-timeout, so the old synchronous `TNetClient.Send` let a stalled server freeze the main
-thread. `Send` now copies the complete packet and posts it to `uNetSendQueue`; one writer
-thread sends in FIFO order, never drops, Warns on a write over 250 ms naming the packet
-kind, and a write stuck over 8 s is cut by the reader thread. `SendToNet` returns the count
-POSTED. Detail: `.claude/agents/multi-op-network.md`.
-
-**THE LINK BELONGS TO THE PROGRAM, NOT TO THE NETWORK WINDOW (2026-10-27).** It used to
-connect when the Network window was shown and drop when it was closed (NY4I: *"I never
-liked the idea that we only connected when the Network window was up."*). Now `uNet`
-owns it: the **Net menu** has Connect, Disconnect, Reconnect and Show Network window
-(rows enabled by the link's state, `uNetLink`), a retry timer runs while a link is
-wanted, and the setting `NETWORK AUTO CONNECT` (default off) connects at startup. The
-window is only a view: it subscribes to `uNetLink.NetLinkObservers`, redraws every
-station when shown, and starts and stops nothing. Detail:
-`.claude/agents/multi-op-network.md`.
-
-**A STATION THAT LOST THE LINK CATCHES UP (Phase 1, C5, 2026-10-27).** The QSOs and
-edits made while it was down are SQLite rows with `sent_to_server = 0` /
-`server_dirty = 1`; once per link, after the server's own HELLO, `uNet.ResendOfflineWork`
-posts them (as QSOINFO, which the servers relay -- not OFFLINEQSO, which they do not)
-from the main thread. A row is marked sent when the writer thread has WRITTEN its
-packet, never when it was merely posted, and both servers and the client ignore a
-QSO whose `(ceQSOID1, ceQSOID2)` they already hold. `CommitChangesInLocalLog`, which
-read the `.TRW`, is gone. Detail: `.claude/agents/multi-op-network.md`.
-
-Parsing still runs on the **main thread**: the reader appends bytes under a lock
-and `Application.QueueAsyncCall`s a drain, so every message arm is unchanged. The
-short tail is now KEPT between reads — which is why an unrecognised message id
-must **not** be, or the same bytes re-parse forever and the link wedges in
-silence. `ConsumeNetBuffer` reports that case and the drainer resynchronises
-loudly.
+- **`uCrashLog` is split by widget set.** It keeps the RTL reporter (`LogCaughtException`,
+  `EarlyTrace`, `OnMainThread`, the `ExceptProc` hook) and links anywhere; the statements needing
+  a widget set (`Application.OnException`, `ShowException`) are `src/ui/lcl/uCrashLogLCL.pas`.
+  **A program with an LCL -- the app AND `tr4wserver` -- calls `InstallCrashLogLCL`, not
+  `InstallCrashLog`**, because the LCL never lets a fault in its own event handlers reach
+  `ExceptProc`. An `{$IFDEF FPC}` cannot make this split: it asks which *compiler*, not which
+  *program* has a widget set. Only the unit graph can.
+- **`RegisterCrashContext`** lets a subsystem add to a crash record (the DX cluster's last 200
+  lines) without `uCrashLog` naming it.
+- **A report names its build.** Windows has NO CodeView `RSDS` record (the PE debug directory is
+  empty because FPC emits DWARF/stabs); the linker writes a **`.gnu_debuglink`** section: the
+  `.dbg` name plus a **CRC32** of its contents. `ReportSymbolState` logs it at startup; use it to
+  pick the right `tr4w-<version>.dbg` before sending one to an operator. It is read from the file
+  with `TFileStream` because a long section name's string table lies in no mapped section.
+- `InstallCrashLog` sets its own log subtree's level, so a crash report is not silenced by
+  `DEBUG LOG LEVEL`. A server crash goes to `tr4wserver.log` (the root logger's appender).
+- **Placement in `tr4wserver`: in the program body, after the single-instance lock and before
+  `Application.Initialize`** -- after the lock so a second instance does not open the shared log,
+  before `Initialize` because `ServerStartUp` has already exited twice with no window and no log.
+- **`Lint-CrashLogInstalled` gates it** (a live install call per shipping program; fails closed on
+  a missing `.lpr`, a missing `uCrashLog.pas` or an unclassified `.lpr`). **The unit-test binary
+  must install it too:** `InstallCrashLog` records the main thread id, so without it
+  `OnMainThread` is false everywhere and `SetElementText` / `SetStatusText` silently do nothing.
 
 ### 7. External logger integration
 
@@ -2069,184 +1831,81 @@ Two silent-corruption traps live here, and neither produces a compiler diagnosti
 
 ### Strings and buffers
 
-**THE DESTINATION IS NATIVE FPC/LAZARUS STRING HANDLING, WITH NO WIN32 ARTIFACTS
-LEFT** (NY4I, 2026-09-01): *"my goal here is for us to not have any artifacts of
-win32 string handling when we are done. So no PChar, string pointers, `s[1]` type
-stuff. All native FPC/LAZ."*
-
-That is a destination, not a rule you can apply blindly today -- `ShortString` is
-still the TRDOS core's currency and `PAnsiChar` is still correct at a real C
-boundary. What it means in practice, for new code:
+**THE DESTINATION IS NATIVE FPC/LAZARUS STRING HANDLING, WITH NO WIN32 ARTIFACTS LEFT** (NY4I,
+2026-09-01): no `PChar`, string pointers or `s[1]` tricks. It is a destination, not a rule to apply
+blindly today -- `ShortString` is still the TRDOS core's currency and `PAnsiChar` is still correct
+at a real C boundary. For new code:
 
 | instead of | write |
 |---|---|
 | `procedure F(var buf; size: integer)` | `procedure F(var buf: array of AnsiChar)` -- an open array carries its own bounds |
 | `PAnsiChar(@buf)` and pointer walking | index the open array; `Low`/`High` are real |
-| `Move(src[1], dst[1], n)` | plain assignment. `aRec.Name := someAnsiString` converts and truncates, and the compiler does it correctly |
-| ~~`ShortStringType(someAnsiString)`~~ | **RETRACTED -- see below. The cast IS a conversion.** |
+| `Move(src[1], dst[1], n)` | plain assignment. `aRec.Name := someAnsiString` converts and truncates correctly |
 | `AnsiString(aFixedCharArray)` | a NUL-aware helper. The cast takes the padding too |
 
-### THE `ShortString()` CAST IS A CONVERSION. THIS FILE SAID OTHERWISE FOR MONTHS AND WAS WRONG.
+**THE `ShortString()` CAST IS A CONVERSION** (an earlier version of this file said it was a pointer
+reinterpretation; that was false and led to a bogus defect report). Measured on FPC 3.2.2 /
+i386-win32 in this tree's mode (`{$MODE Delphi}` + `{$MODESWITCH UnicodeStrings}`):
+`ShortString(s)` and `short := s` emit the same conversion with byte-identical results, pinned by
+`tr4w/test/unit/uTestShortStringConversion.pas`. The only difference is a WARNING: the assignment
+raises "Implicit string type conversion with potential data loss", the cast suppresses it, and
+that count is a ratcheted build gate -- so rewriting casts as assignments RAISES the narrowing
+number while changing no behaviour. The rules that hold are about width and termination:
 
-The row above used to read *"the cast is not a conversion -- FPC reinterprets the string's POINTER as
-a ShortString"*, stated as fact. **It is false**, and the claim did real damage before anyone
-measured it: it had propagated into source comments in `uLogStore` and `uNewContestCommands`, and
-on 2026-09-24 it produced a confident report that `uRadioKenwoodLAN`'s credential assignment was
-corrupting LAN passwords — a defect that does not exist, for which NY4I approved a fix.
-**Those two comments were corrected and now record the retraction rather than the folklore**
-(checked 2026-09-28) — do not go looking for them to fix.
-
-**Measured against FPC 3.2.2 / i386-win32 in this tree's exact mode** (`{$MODE Delphi}` +
-`{$MODESWITCH UnicodeStrings}`, so `string` is `UnicodeString`): `ShortString(s)` and `short := s`
-emit the **same conversion** and produce **byte-identical** results — ASCII, non-ASCII, a source
-longer than the target, and a narrow `string[N]` alike. Pinned by
-`tr4w/test/unit/uTestShortStringConversion.pas`, so this cannot drift back into folklore.
-
-**The one real difference is a WARNING, and it cuts the other way.** The assignment raises
-*"Implicit string type conversion with potential data loss"*; the explicit cast suppresses it. That
-count is a ratcheted build gate, so rewriting casts as assignments **raises** the narrowing number
-while changing no behaviour at all.
-
-**What genuinely bit this tree was misattributed.** A `ShortString` has **no NUL terminator**, so
-`@s[1]` handed to something expecting a C string runs off the end into stale bytes — that is what
-corrupted a function-key memory (`uEditMessageForm`), and it is a fact about the *layout*, unaffected
-by how the value was produced. The cast was nearby, not guilty.
-
-**So the rules that survive are about width and termination, not syntax:**
-
-- a `ShortString` is not null-terminated — never hand `@s[1]` to a `PAnsiChar` parameter;
-- it truncates at its declared width **silently, in both spellings** — check the width, not the cast;
-- prefer the assignment where you *want* the narrowing warning; the cast where the narrowing is
-  deliberate and already bounded upstream.
-
-**Measured 2026-09-01, while writing the log mapper:** removing all of this from
-one new unit cost **nothing** -- the narrowing-conversion count stayed at exactly
-1429, because an `AnsiString` -> `ShortString` assignment is not a narrowing
-conversion, and the pointer version had already caused two crashes with no
-exception text (a pointer cast of an empty string, and an `openstring` parameter
-whose `High()` is 255 in Delphi mode, writing 255 bytes into a `string[3]`).
-
-**The genuine exceptions, which stay:** the Win32 `...A` entry points and
-byte-exact serial I/O. Those are transports. Everything above them passes
-strings.
+- a `ShortString` has **no NUL terminator** -- never hand `@s[1]` to a `PAnsiChar` parameter (that
+  is what corrupted a function-key memory in `uEditMessageForm`);
+- it truncates at its declared width **silently, in both spellings** -- check the width, not the cast;
+- an `openstring` parameter's `High()` is 255 in Delphi mode, so it can write 255 bytes into a
+  `string[3]`;
+- the genuine exceptions are the Win32 `...A` entry points and byte-exact serial I/O. Those are
+  transports; everything above them passes strings.
 
 ### THE RULE: PREFER THE FPC/LAZARUS CLASS. A RAW CALL CARRIES ITS JUSTIFICATION.
 
-NY4I, 2026-09-01:
+NY4I, 2026-09-01: *"You have to justify every raw call, as that thinking can cause cross-platform
+issues. You want to use the FPC/Laz classes and justify why if you cannot."* and *"You are also
+going to have to justify every PAnsiChar or PChar in use when this is all done."*
 
-> *"You have to justify every raw call, as that thinking can cause cross-platform
-> issues. You want to use the FPC/Laz classes and justify why if you cannot."*
-
-And:
-
-> *"You are also going to have to justify every PAnsiChar or PChar in use when
-> this is all done."*
-
-**This is a rule about REACHING FOR THINGS, not only about strings.** The failure
-mode is not ugliness -- it is that a raw call quietly assumes Windows. A
-hardcoded `'sqlite3.dll'` names a file that cannot exist on macOS or Linux; a PE
-header reader says nothing true about an ELF `.so`; `Windows.ReadFile` has no
-counterpart at all. Each of those is a cross-platform defect written in the
-present tense, and none of them fails today.
-
-**So: reach for the FPC or LCL class first. If you cannot, the reason goes in the
-code, beside the call.** "It was quicker" is not one. Three worked examples from
-the log-database work, all of which started as a raw call and did not need to be:
+A raw call quietly assumes Windows: a hardcoded `'sqlite3.dll'` names a file that cannot exist on
+macOS or Linux, and `Windows.ReadFile` has no counterpart at all. **Reach for the FPC or LCL class
+first; if you cannot, the reason goes in the code beside the call.** "It was quicker" is not one.
+Worked examples, each of which started as a raw call and did not need to be:
 
 | reached for | what was already there |
 |---|---|
-| `sqlite3_exec` for pragmas | `TSQLite3Connection.execsql` -- native `string`, owns the error handling. It is `protected`, so a descendant reaches it |
-| `Windows.ReadFile` for the binary log | `TFileStream`. The semantics that mattered (a short read is EOF) are expressible either way |
+| `sqlite3_exec` for pragmas | `TSQLite3Connection.execsql` -- native `string`, transaction-free, owns the error text. `TSQLConnection.ExecuteDirect` is the WRONG method (`sqldb.pp:1492` starts a transaction unconditionally); `execsql` is `protected`, so a descendant reaches it |
+| `Windows.ReadFile` for the binary log | `TFileStream` |
 | a hardcoded `'sqlite3.dll'` | FPC's own `{$IFDEF WINDOWS}` / `'libsqlite3.' + SharedSuffix` (`sqlite3.inc:28-30`) |
+
+**Before reaching for a C call, check whether the wrapper already has a method that does it.**
 
 ### AND NO NEW DIRECT CALLS INTO A DLL
 
-NY4I, 2026-09-01:
+NY4I, 2026-09-01: *"there should be no new direct calls to DLL files."* The sweep of existing
+bindings waits for the cross-platform work; the RULE starts now, because the cost of a new binding
+is paid later by whoever does that work. **A new `external '<something>.dll'`, or a new
+`LoadLibrary` / `GetProcAddress` pair, needs a reason in the code and is a decision, not a
+detail.** Ask first whether FPC, the LCL or an existing wrapper already does it.
 
-> *"One other item to sweep is any DLL usage. This can be saved until the
-> cross-platform step, but as long as our memory or CLAUDE.md retains that,
-> there should be no new direct calls to DLL files."*
+What the existing bindings are, by kind (**no counts here -- a naive `grep external` over-reports
+badly, so count properly or do not quote a number**):
 
-**The SWEEP waits for the cross-platform work. The RULE starts now**, because
-the cost of a new binding is paid later by whoever does that work, and it is
-always cheaper not to add one.
+- `winmm`: CW element timing (`LOGK1EA.tCWSleep`) and DVP WAV playback, all behind
+  `{$IFDEF WINDOWS}`. **Off Windows the CW half falls back to plain `Sleep` and will not key a
+  contest** -- a stated placeholder; see `docs/PLATFORM_CLOCK_ABSTRACTION.md` part 2.
+- `libhamlib`: all bindings go through one three-arm constant (`uHamLibDirect.pas`, `HAMLIB_LIB`).
+  **What is open is the other half:** HamLib is `dlopen`'d and its OWN dependencies resolve by the
+  loader's normal search, so bundling it needs its dependency tree collected.
+  `build-appimage.sh` collects `ldd` for the EXECUTABLE only, so HamLib is absent from the AppImage
+  and **every HamLib-backed radio is non-functional there**.
+- `user32`, `comdlg32` (the LCL has dialogs for all of it), `setupapi`, `hid`, `kernel32`,
+  `comctl32`, `ws2_32`, `shlwapi`, `msvcrt`: Win32 API, where the port replaces the FUNCTION.
+- **Gone:** the parallel port and `InpOut32` (2026-09-13; a YCCC SO2R box covers radio switching over
+  OTRSP, but BAND DECODER OUTPUT lapses until OTRSP AUX is wired), and the plug-in subsystem with
+  `tr4wSortLog.dll` (2026-09-16; sorting is `ORDER BY`). No binding in the tree needs elevation.
 
-So: **a new `external '<something>.dll'`, or a new `LoadLibrary` /
-`GetProcAddress` pair, needs a reason in the code and is a decision, not a
-detail.** Ask first whether FPC, the LCL or an existing wrapper already does it
--- that question has now answered itself three times in one day (see the table
-above).
-
-**Sized 2026-09-01, so the eventual sweep starts from a number.** 274 external
-declarations bound to a library:
-
-| bound to | count | what it means for cross-platform |
-|---|---:|---|
-| `winmm` (via `mmsyst`) | **GATED 2026-09-07, and audio capture is gone entirely** | It is CW element timing (`LOGK1EA.tCWSleep`, `timeBeginPeriod`) and DVP WAV playback (`sndPlaySoundA` + `timeSetEvent`), and nothing else -- the `waveIn` capture engine went with the MP3 recorder. Every remaining call and every `MMSystem` import is behind `{$IFDEF WINDOWS}`. The measurement is in [`docs/PLATFORM_CLOCK_ABSTRACTION.md`](docs/PLATFORM_CLOCK_ABSTRACTION.md) part 2; **the CW half's off-Windows fallback is plain `Sleep` and will not key a contest** -- that is a placeholder, stated as one in the code |
-| `libhamlib-4.dll` (`HAMLIB_DLL`) | 36 | **Only the NAME is Windows.** HamLib ships `.so` and `.dylib`; this is one constant, not a port |
-| `user32` | 15 | Win32 API |
-| `comdlg32` | 10 | Win32 API -- and the LCL has dialogs for all of it |
-| `setupapi` | 10 | Win32 API -- device enumeration |
-| ~~`InpOut32.dll`~~ | **0** | **GONE 2026-09-13, and so is the question it carried.** NY4I reconsidered: *"I have reconsidered on LPT ports. You can remove all references to them in the code."* The whole subsystem went -- `uIO.pas`, the three `GetProcAddress` bindings, `Parallel1..Parallel3` in `PortType`, the `PARALLEL n` spellings, the LPT dialog and its `Ctrl+Alt+L`. **The CAPABILITIES stayed**: a YCCC SO2R box does radio switching and stereo control over OTRSP, which is why only the transport was removed. The one thing with no YCCC equivalent yet is the BAND DECODER OUTPUT -- the box exposes no band data, so that lapses until OTRSP AUX is wired. This was the last binding that needed elevation and the last that was Windows-only by nature |
-| `hid` | 2 | Win32 API |
-| `kernel32`, `comctl32`, `ws2_32`, `shlwapi`, `msvcrt` | 7 | Win32 API |
-| ~~`Plugins/tr4wSortLog.dll`~~ | **0** | **GONE 2026-09-16 with the whole plug-in subsystem.** NY4I: *"Our database is in an sqlite database. why would we possibly need tr4wSortLog.dll any longer?"* and *"besides, that sounds like deadcode."* Both held. The installer never shipped it -- `full.nsi`'s two lines were commented out and there is no `Plugins` directory in `target` -- so the loader scanned for files that were never installed; and `RunPlugin` handed the plugin `TR4W_LOG_FILENAME`, the binary `.TRW`, which is **import-only** since the log moved to SQLite. Sorting is `ORDER BY` now. `Tmain`, `Ttr4wGetPlugin`, `RunPlugin`, `LoadInPlugins`, `PluginsArray`, `LoadedPlugins`, the 10700..10750 dispatch arm and the startup call all went with it -- and took MainUnit's last seven `PAnsiChar` mentions to zero |
-
-Plus **26 `LoadLibrary` / `GetProcAddress` sites**, ~~the largest groups in `MainUnit`, `uDialogs`
-and `uIO`~~ — **`uIO.pas` was deleted on 2026-09-13**, which the row above and the
-[Documentation map](#documentation-map) both say, so this sentence was naming a unit its own
-paragraph had already buried (corrected 2026-09-28). Do not take the unit list, or the 26, from
-here; see the re-measure warning below.
-
-**BOTH FIGURES IN THIS SECTION (274 and 26) ARE FROM 2026-09-01 AND ARE NOW
-LOW -- RE-MEASURE BEFORE CITING EITHER.** Three units that carried bindings have
-been deleted since (`uMP3Recorder` with its `lame_enc.dll`, and the hand-written
-Win32 headers `uCommctrl.pas` and `MMSystem.pas`, the latter an RTL duplicate).
-A naive `grep external` over-reports badly -- it matches the constants that hold
-DLL names and identifiers beginning "external" -- so count it properly or do not
-quote a number.
-
-**The shape of that work is already visible in the table**: most of it is Win32
-API where the port replaces the FUNCTION (`comdlg32` is LCL dialogs, `winmm` is
-sound and timers), one entry is a single constant wearing a Windows file name,
-and exactly one -- `InpOut32` -- was genuinely Windows-only and should have
-stayed behind a conditional. **It is deleted instead (2026-09-13)**, which is
-the better answer where it is available: there is now no binding in this tree
-that needs elevation, and none that is Windows-only by nature.
-
-#### HamLib is the worked example, and it is the EASY one
-
-NY4I, 2026-09-01: *"One obvious example is hamlib. TR4QT has a reference to
-interacting with hamlib on Windows, Mac and Linux. We may need the same helper
-class to abstract that for this program."*
-
-**TR4QT's answer is worth knowing because the calling code has NO platform
-knowledge in it at all.** `HamlibRadio.cpp` simply does
-`#include <hamlib/rig.h>`; the platform difference lives entirely in the build
-(`CMakeLists.txt:92-125`), which finds `libhamlib.dll.a` or `hamlib.lib` on
-Windows, `libhamlib.dylib` on macOS, and the system `/usr/include/hamlib` on
-Linux. **One place knows; nothing else does.**
-
-**~~It is deliberately NOT changed yet~~ -- DONE, and this passage was stale.**
-All the bindings go through one constant, and it has been a three-arm platform
-constant for some time (`uHamLibDirect.pas`, `HAMLIB_LIB`): `libhamlib-4.dll`
-on Windows, `libhamlib.4.dylib` on Darwin, `libhamlib.so.4` elsewhere. Do not
-cite this file for "only the NAME is Windows" -- read the unit.
-
-**WHAT IS ACTUALLY OPEN IS THE OTHER HALF, AND IT IS NOT A NAME.** HamLib is
-`dlopen`'d, and a `dlopen`'d library's OWN dependencies are resolved by the
-loader's normal search, which does not include the directory it was loaded
-from. So bundling HamLib needs its dependency tree collected too -- measured
-2026-09-19: `build-appimage.sh` collects `ldd` output for the EXECUTABLE only
-and does not recurse into a `dlopen`'d library, and HamLib is absent from the
-AppImage entirely, so **every HamLib-backed radio is non-functional there**.
-The `$ORIGIN` rpath is a consequence of shipping those libraries, not the task;
-it buys nothing for the tarball, which bundles no shared libraries at all.
-
-**The generalisation, when the sweep happens:** one unit that owns the NAME of
-every shipped library -- HamLib, SQLite, OpenSSL -- per platform, the
-way FPC's own `sqlite3.inc` does. That is the "helper class" above, and its value
-is that the answer is in one file rather than at 274 declarations.
+**The generalisation, when the sweep happens:** one unit that owns the NAME of every shipped
+library -- HamLib, SQLite, OpenSSL -- per platform, the way FPC's own `sqlite3.inc` does.
 
 **THE PChar AUDIT: COUNT IT, DO NOT QUOTE IT.**
 
@@ -2254,60 +1913,25 @@ is that the answer is in one file rather than at 274 declarations.
 .\tr4w\build\Count-LivePChar.ps1      # comment-aware; a raw grep over-reports by ~10x
 ```
 
-A table of `920 mentions across 112 units` stood here, measured 2026-09-01 with a caveat to
-re-measure. **The caveat did not work** -- the number was still being quoted on 2026-09-28, by
-which time the live figure was a small fraction of it and `MainUnit`, named in that era as a
-`PAnsiChar` hotspot, had **none at all**. So the table is gone and the command replaces it.
-
-The hand-written Win32 headers that made a large share of the old figure **inherent** are
-themselves gone: `uCommctrl.pas` and `MMSystem.pas` were deleted 2026-09-07/08 (the latter an RTL
-duplicate), leaving `HtmlHelp` as the only such header and **nothing** in the remainder that is
-inherent.
-
-That is the work, and it is not a sweep: each one is either a genuine transport
-boundary that keeps its `PChar` and gains a comment saying why, or it is a
-habit. The five log units (`uLogSchema`, `uLogDatabase`, `uLogBinaryFile`,
-`uLogRepository`, `uLogImport`) currently have **none of either**, which is the
-standard to hold new code to.
-
-**AND ONE THAT LOOKED GENUINE AND WAS NOT**, which is the more useful lesson.
-The log database first ran its connection-level pragmas through `sqlite3_exec`,
-justified as "the C API takes a `PAnsiChar` by definition". True of that
-function, and beside the point -- NY4I asked why, given
-`TSQLConnection.ExecuteDirect` takes a string.
-
-The answer was that `ExecuteDirect` is the **wrong method**, not that a C call
-was unavoidable. It cannot run those pragmas because `sqldb.pp:1492` starts a
-transaction unconditionally. But `TSQLite3Connection.execsql` is the
-connector's own transaction-free path -- what `BEGIN`/`COMMIT`/`ROLLBACK` go
-through -- takes a native `string`, and already owns the `PAnsiChar`, the error
-message and the `sqlite3_free`. It is `protected`, so a descendant reaches it,
-which is what `protected` is for.
-
-**Before reaching for a C call, check whether the wrapper already has a method
-that does it.** The replacement is shorter, raises a proper `EDatabaseError`
-carrying SQLite's own message, and left the five log units with **no `PChar` of
-any kind**.
+Each remaining one is either a genuine transport boundary that keeps its `PChar` and gains a
+comment saying why, or a habit to remove. The five log units (`uLogSchema`, `uLogDatabase`,
+`uLogBinaryFile`, `uLogRepository`, `uLogImport`) have **none of either**: the standard for new code.
 
 - **The program passes `string`s.** Pointers, lengths, `ZeroMemory` and `s[1]` belong *inside* the
   transport where the bytes are actually written. Prefer `Foo(const s: string)` over
   `Foo(p: PAnsiChar; len: DWORD)`.
-- **D12 binds generic Win32 names to the `W` variants.** A bare `@AnsiChar` buffer is an untyped
+- **Generic Win32 names bind to the `W` variants.** A bare `@AnsiChar` buffer is an untyped
   `Pointer`, so it compiles silently *even with warnings on*. Call the `...A` variant explicitly.
-  This is not theoretical: `GetPrivateProfileString` bound to `W`, wrote UTF-16 into an `AnsiChar`
-  buffer, and **TR4WServer rejected every client** (`1bea7af4`). **W1057 cannot see this class of
-  bug and neither can the linters** — any remaining `@buffer` passed to a *generic* Win32 name has to
-  be found by reading. Related: **Winsock signatures moved in both directions** between D7 and D12 —
-  `bind` went pointer → `var`, `accept` went `var` → pointer. There is no blanket rule; check each call.
+  `GetPrivateProfileString` bound to `W`, wrote UTF-16 into an `AnsiChar` buffer, and **TR4WServer
+  rejected every client** (`1bea7af4`). Neither W1057 nor the linters can see this class of bug:
+  find it by reading. Winsock signatures also moved in both directions between D7 and D12
+  (`bind` pointer → `var`, `accept` `var` → pointer); check each call.
 - `tr4w/build/Lint-PCharAnsi.ps1` **gates the build** and understands Pascal (block-comment state,
-  `{$IFDEF}` as live code, braces and `//` inside string literals). Its first run reported 5
-  violations of which all 5 were false — a linter that fires on commented-out code gets ignored, so
-  if you extend it, extend the fixture too.
-- **Serial binary I/O must be byte-exact** — `WriteBytes`/`ReadBytes`, never `WriteString`/
+  `{$IFDEF}` as live code, braces and `//` inside strings). A linter that fires on commented-out
+  code gets ignored, so if you extend it, extend the fixture too.
+- **Serial binary I/O must be byte-exact** -- `WriteBytes`/`ReadBytes`, never `WriteString`/
   `ReadString`. A CI-V or Yaesu-binary frame corrupted by string conversion fails silently.
-- `ShortString` remains in the TRDOS core; `PChar`/`PAnsiChar` at real Win32 and binary boundaries is
-  fine. The done-criterion is "no `PAnsiChar(AnsiString(...))` double-casts except at genuine
-  boundaries."
+- The done-criterion is "no `PAnsiChar(AnsiString(...))` double-casts except at genuine boundaries."
 
 ### Threading
 Radio threads (one per radio), external logger threads (`TReadingThread` / `TSenderThread`), WinKey
