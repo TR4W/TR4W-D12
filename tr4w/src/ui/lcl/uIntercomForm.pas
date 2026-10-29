@@ -41,7 +41,7 @@ uses
    VC,                { tw_INTERCOMWINDOW_INDEX }
    uIntercom,         { LoadIntercomHistory }
    MainUnit,          { CloseTR4WWindow, ProcessMenu }
-   uLCLFormHelpers;   { OwnFormByMainWindow }
+   uLCLFormHelpers;   // LeaveFormUnowned
 
 procedure TfrmIntercom.HandleCreate(Sender: TObject);
 begin
@@ -81,7 +81,7 @@ begin
       TR4WIntercomForm := TfrmIntercom.Create(nil);
       end;
 
-   OwnFormByMainWindow(TR4WIntercomForm);
+   LeaveFormUnowned(TR4WIntercomForm);
 
 end;
 

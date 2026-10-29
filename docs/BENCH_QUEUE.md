@@ -4740,3 +4740,60 @@ ANSWERS; they cannot press a key.
   That is the one-branch-at-a-time rule working. The pane arithmetic behind it
   was recounted 2026-08-18 and two branches now overflow; NY4I is rearranging the
   sections first, then it gets revisited.
+
+---
+
+## Issue #1 -- tool windows are no longer owned by the main window (2026-10-29)
+
+Every MODELESS tool window now calls `LeaveFormUnowned`
+(`uLCLFormHelpers`) instead of `OwnFormByMainWindow`: Telnet, band map,
+remaining mults, dupe sheet, stations, radio panel, panadapter, function
+keys, network, intercom, MMTTY, master, HamScore, post scores,
+Preferences and Log Search. Modal dialogs (Log Edit, About, the band
+plan, every `ShowModalOverWin32Parent` caller) keep `OwnFormByMainWindow`.
+Windows keeps an owned window above its owner at all times, which is why
+clicking the main window could not bring it forward. Not built or run when
+this was written.
+
+- [ ] **Click the main window and it rises.** Overlap the band map,
+  Telnet and a radio panel with the main window, then click the main
+  window. It comes to the front, above all three.
+- [ ] **Click a tool window and it rises** above the main window and
+  above the other tool windows.
+- [ ] **Minimize and restore the main window.** EXPECTED CHANGE: the
+  tool windows no longer minimize with it. They stay where they are.
+  Say whether that is acceptable on a contest desk.
+- [ ] **THE TRADE: switch to another program and back** (Alt-Tab, and
+  the taskbar button separately). Ownership was added to Preferences on
+  2026-08-23 and to Log Search for exactly this: unowned, coming back
+  raised only the main window and left the tool window buried behind it.
+  EXPECTED, from the code: the taskbar button raises only the main window
+  and the tool windows stay behind the other program. Confirm, and weigh
+  it against the click-to-raise fix. If it needs fixing, the follow-up is
+  an `Application.OnActivate` that brings the visible tool windows up
+  beneath the main window. That is NY4I's call, not part of this change.
+- [ ] **A modal stays above the main window.** Open the band plan from
+  Preferences (and Edit QSO from Log Search), switch to another program
+  and back. The modal is on top and not stranded behind the main window.
+  Also check whether the MAIN window jumps in front of Preferences or
+  Log Search when the modal opens. The modal is owned by the main window,
+  and activating it may raise its owner too (not verified). If it does,
+  the native follow-up is a modal owned by the form that opened it
+  (`Screen.ActiveForm`, which is what `pmAuto` resolves to).
+- [ ] **Panadapter auto-open does not take the caret.** Bring up the
+  spectrum link. Typing still goes to the call field. NOTE:
+  `ShowWithoutTakingFocus` brings the main window back to the front, so
+  an unowned panadapter that overlaps it now opens BEHIND the main
+  window. EXPECTED: it has no taskbar button and no Alt-Tab entry, so
+  one wholly behind the main window is reached only by moving the main
+  window or through TR4W's window list. Say whether that is acceptable.
+- [ ] **One taskbar entry for TR4W, and what Alt-Tab lists.** From the
+  LCL source, no extra buttons are expected on Windows. An unowned tool
+  window's real owner is the hidden Application window
+  (`win32wsforms.pp`, CreateHandle: stDefault with MainFormOnTaskBar
+  False), and that window is never shown because TR4W has no
+  `Application.MainForm`. So nothing sets `ShowInTaskBar`. Confirm there
+  is one taskbar button, and record what Alt-Tab shows. **On Linux
+  (gtk2)** every stDefault form already asks for a taskbar entry. Some
+  panels hide windows that are transient-for another window, so dropping
+  the transient-for may add entries there. Check on Mint.

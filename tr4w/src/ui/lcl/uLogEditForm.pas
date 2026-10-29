@@ -95,7 +95,7 @@ uses
    uEditQSO,
    uContestRegistry,  (* LoggedQSOIsXQSO -- a row greys an X-QSO, Q98 S1 *)
    uLCLFormHelpers,   (* SaveFormBounds / TryRestoreFormBounds *)
-   uMainForm;   (* TR4WMainForm -- this form's owner; see ShowLogEditForm *)
+   uMainForm;   (* was TR4WMainForm, the owner -- ShowModalOverWin32Parent owns it now; drop after a build proves name resolution does not depend on it *)
 
 var
    frmLogEdit: TfrmLogEdit = nil;
@@ -107,24 +107,12 @@ begin
       frmLogEdit := TfrmLogEdit.Create(Application);
       end;
 
-   (* THE MAIN WINDOW IS THIS FORM'S OWNER, AND SAYING SO IS WHAT KEEPS IT ON
-     TOP. ShowModalOverWin32Parent disables the parent -- which stops clicks --
-     but never establishes an OWNER relationship, so Windows does not know the
-     two belong together: switching to another program and back brought the
-     MAIN window forward and left this one behind it, still modal and now
-     invisible (NY4I, 2026-09-03).
-
-     PopupParent is the LCL's own way to say it, and it works because the main
-     window is a TForm now.
-
-     EVERY CONVERTED DIALOG SHOWN THIS WAY HAS THE SAME GAP. Fixing it in
-     ShowModalOverWin32Parent would fix all of them at once, but that helper
-     takes an HWND and would have to find the form behind it; recorded in the
-     bench queue rather than guessed at here. *)
-   if TR4WMainForm <> nil then
-      begin
-      frmLogEdit.PopupParent := TR4WMainForm;
-      end;
+   (* MODAL, SO OWNED BY THE MAIN WINDOW -- and ShowModalOverWin32Parent below
+     does that, as it does for every modal (OwnFormByMainWindow). Unowned, a
+     switch to another program and back left this window behind the main
+     one, still modal and invisible (NY4I, 2026-09-03). The hand-written
+     PopupParent that stood here duplicated the helper and is gone
+     (issue #1, 2026-10-29). *)
 
    (* BOUNDS BEFORE THE WINDOW IS SHOWN, AND ONLY THE FIRST TIME.
 

@@ -90,7 +90,7 @@ implementation
 uses
    VC,                { tw_STATIONS_INDEX }
    MainUnit,          { CloseTR4WWindow }
-   uLCLFormHelpers;   { OwnFormByMainWindow -- the LCL way to parent a tool window }
+   uLCLFormHelpers;   // LeaveFormUnowned -- a tool window has no owner form
 
 { One guard for every routine below, and it has to be BOTH tests.  The form is
   nil on the headless export path, and a TListView exists from the moment it is
@@ -422,11 +422,9 @@ begin
       TR4WStationsForm := TfrmStations.Create(nil);
       end;
 
-   // PARENTED THE LCL WAY -- PopupParent / pmExplicit, not
-   // SetWindowLongPtr(GWL_HWNDPARENT).  The same call the band map and the
-   // function-keys window use, and the reason this unit needs no Windows uses
-   // clause.
-   OwnFormByMainWindow(TR4WStationsForm);
+   // A TOOL WINDOW HAS NO OWNER FORM (issue #1).  The same call the band map
+   // and the function-keys window use.  See LeaveFormUnowned.
+   LeaveFormUnowned(TR4WStationsForm);
 
 end;
 

@@ -186,7 +186,7 @@ uses
    uEditQSO,
    uContestRegistry,  (* LoggedQSOIsXQSO -- a row greys an X-QSO, Q98 S1 *)
    uLCLFormHelpers,   (* SaveFormBounds / TryRestoreFormBounds *)
-   uMainForm;   (* TR4WMainForm -- this form's owner *)
+   uMainForm;   (* was TR4WMainForm, the owner -- unused since issue #1; drop it after a build proves name resolution does not depend on it *)
 
 var
    frmLogSearch: TfrmLogSearch = nil;
@@ -198,13 +198,12 @@ begin
       frmLogSearch := TfrmLogSearch.Create(Application);
       end;
 
-   (* THE MAIN WINDOW IS THE OWNER, so switching to another program and back
-     brings this forward with it instead of leaving it stranded behind the
-     main window -- the defect NY4I hit on the Log Edit window. *)
-   if TR4WMainForm <> nil then
-      begin
-      frmLogSearch.PopupParent := TR4WMainForm;
-      end;
+   (* NO OWNER FORM -- Search is modeless, and an owned window can never be
+     covered by its owner, so clicking the main window did not raise it
+     (issue #1). It was owned so that switching to another program and back
+     brought it forward with the main window; that is the trade the bench
+     judges. See LeaveFormUnowned. *)
+   LeaveFormUnowned(frmLogSearch);
 
    (* BOUNDS BEFORE Show, AND ONLY THE FIRST TIME.
 

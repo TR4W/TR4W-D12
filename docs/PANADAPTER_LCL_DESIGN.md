@@ -275,7 +275,7 @@ opened the legacy way. What may and may not be reused:
 | `CreateTR4WBandMapWindow: HWND` returning `Form.Handle` (`uBandMapForm.pas:874`) | **NO** — returns an HWND |
 | a branch in `OpenTR4WWindow` (`MainUnit.pas:5506`) | **NO** — stores `WndHandle: HWND`, ends in `SetWindowPos` |
 | `ShowModalOverWin32Parent` (`uLCLFormHelpers.pas:429`) | **NO** — `Windows.EnableWindow`; also irrelevant, this window is modeless |
-| `OwnFormByMainWindow` | **OK** — parents via LCL `PopupParent`/`pmExplicit`, not `GWL_HWNDPARENT` |
+| ~~`OwnFormByMainWindow`~~ `LeaveFormUnowned` | **OK** — HWND-free. Since issue #1 (2026-10-29) the panadapter has NO owner form, so the main window can be raised above it; `OwnFormByMainWindow` is for modal dialogs only |
 | `TWindowLayoutStore` (`uWindowLayoutStore.pas`) | **OK** — name-keyed JSON; HWND appears only in a comment about the record it replaced |
 
 So: a plain `TForm` descendant with a `.lfm`, shown with `Show`/`Hide`, geometry

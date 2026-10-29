@@ -239,9 +239,9 @@ uses
    uTR4WStrings,      { TC_CONFIGURE_ELLIPSIS, TC_NODXCLUSTERSDEFINED }
    MainUnit,          { CloseTR4WWindow }
    uPlatformFonts,    { MonospaceFontName -- see HandleShow }
-   uLCLFormHelpers;   { OwnFormByMainWindow -- the LCL way to parent a tool
-                        window; ApplyContentMinimumSize -- see
-                        ApplyMinimumSize }
+   uLCLFormHelpers;   (* LeaveFormUnowned -- a tool window has no owner
+                        form, issue #1; ApplyContentMinimumSize -- see
+                        ApplyMinimumSize *)
 
 var
    { Staging for the batched host list -- see TelnetBeginHostList.  Nil
@@ -297,7 +297,7 @@ begin
       TR4WTelnetForm := TfrmTelnet.Create(Application);
       end;
 
-   OwnFormByMainWindow(TR4WTelnetForm);
+   LeaveFormUnowned(TR4WTelnetForm);
 end;
 
 { THE TOOLBAR GLYPHS.

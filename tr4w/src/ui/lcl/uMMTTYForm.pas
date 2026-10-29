@@ -95,7 +95,7 @@ uses
    MainUnit,          { CloseTR4WWindow -- RichEditOperation is ours now }
    uPlatformProcess,  { RunWindowsUtility -- the only launcher, see MainUnit:49 }
    uMMTTY,            { the MMTTY record and its protocol }
-   uLCLFormHelpers;   { OwnFormByMainWindow }
+   uLCLFormHelpers;   // LeaveFormUnowned
 
 var
    (* PRIVATE TO THIS UNIT.  Was VC.RichEditObject -- a record in the tree's
@@ -173,7 +173,7 @@ begin
       TR4WMMTTYForm := TfrmMMTTY.Create(Application);
       end;
 
-   OwnFormByMainWindow(TR4WMMTTYForm);
+   LeaveFormUnowned(TR4WMMTTYForm);
 end;
 
 { WHAT WM_INITDIALOG DID.

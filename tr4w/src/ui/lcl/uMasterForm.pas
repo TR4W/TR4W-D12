@@ -71,7 +71,7 @@ implementation
 uses
    MainUnit,          { CloseTR4WWindow }
    LogWind,           { SCPDupeColor }
-   uLCLFormHelpers;   { OwnFormByMainWindow }
+   uLCLFormHelpers;   // LeaveFormUnowned
 
 const
    { The cell the Win32 list box was given: tLB_SETCOLUMNWIDTH(hwnddlg, 80),
@@ -179,7 +179,7 @@ begin
       TR4WMasterForm := TfrmMaster.Create(nil);
       end;
 
-   OwnFormByMainWindow(TR4WMasterForm);
+   LeaveFormUnowned(TR4WMasterForm);
 
 end;
 

@@ -298,7 +298,11 @@ it is what makes a 250 ms tick genuinely cheap rather than nominally cheap.
   and return type go with it. Nothing in this design should be read as endorsing
   the handle -- it is there so the band map can convert without also converting
   window-position persistence in the same commit.
-- The form is parented with `OwnFormByMainWindow`, as every converted form is.
+- ~~The form is parented with `OwnFormByMainWindow`, as every converted form is.~~
+  **Since issue #1 (2026-10-29) it calls `LeaveFormUnowned`, as every modeless
+  tool window does**: an owned window can never be covered by its owner, so
+  clicking the main window could not raise it. Only modal dialogs keep
+  `OwnFormByMainWindow`.
 - **`TuneRadioToSpot`, `DeleteSpotFromBandmap`, `GetBandMapBandModeFromFrequency`
   and `TuneDupeCheck` do not move.** They are program behaviour, not widgets; the
   form calls them. If the uses clause turns circular, use the

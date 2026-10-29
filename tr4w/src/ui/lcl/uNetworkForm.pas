@@ -255,7 +255,7 @@ begin
       TR4WNetworkForm := TfrmNetwork.Create(nil);
       end;
 
-   OwnFormByMainWindow(TR4WNetworkForm);
+   LeaveFormUnowned(TR4WNetworkForm);
 
 end;
 

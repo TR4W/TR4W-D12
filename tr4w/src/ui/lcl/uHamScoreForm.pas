@@ -56,7 +56,7 @@ uses
    VC,                { tw_HAMSCOREWINDOW_INDEX }
    MainUnit,          { CloseTR4WWindow, FrmSetFocus }
    uHamScore,         { the uploader -- snapshot and the two actions }
-   uLCLFormHelpers;   { OwnFormByMainWindow }
+   uLCLFormHelpers;   // LeaveFormUnowned
 
 procedure TfrmHamScore.HandleCreate(Sender: TObject);
 begin
@@ -144,7 +144,7 @@ begin
       TR4WHamScoreForm := TfrmHamScore.Create(nil);
       end;
 
-   OwnFormByMainWindow(TR4WHamScoreForm);
+   LeaveFormUnowned(TR4WHamScoreForm);
 
 end;
 

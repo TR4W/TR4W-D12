@@ -1314,20 +1314,16 @@ begin
          begin
          gPrefsForm := TPrefsForm.Create(nil);
 
-         // OWNED BY THE MAIN WINDOW, like every other form TR4W shows.
+         // NO OWNER FORM, like every other modeless tool window (issue #1,
+         // 2026-10-29).  Owned by the main window, Preferences could never be
+         // covered by it, so clicking the main window did not raise the main
+         // window.
          //
-         // Without this the form has no PopupParent, and PopupMode pmAuto
-         // resolves to Application.MainForm -- which is NIL here, because TR4W
-         // never calls Application.CreateForm.  So Preferences was a top-level
-         // window owned by nothing: switching to another program and back
-         // brought the MAIN window forward and left this one behind, and the
-         // operator had to reopen Preferences to see it again (NY4I,
-         // 2026-08-23).
-         //
-         // OwnFormByMainWindow sets PopupParent / pmExplicit, which is what
-         // makes a window follow its owner on activate and restore.  It is the
-         // same call the converted tool windows use.
-         OwnFormByMainWindow(gPrefsForm);
+         // THE TRADE, for the bench to judge: ownership was added here on
+         // 2026-08-23 because, unowned, switching to another program and back
+         // brought the MAIN window forward and left this one behind it (NY4I).
+         // See LeaveFormUnowned.
+         LeaveFormUnowned(gPrefsForm);
 
          LogPhase(sw, 'CONSTRUCT first open', True);
          end;

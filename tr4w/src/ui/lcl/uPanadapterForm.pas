@@ -351,7 +351,7 @@ function PanadapterWasOpen(const aSlot: integer): boolean;
 implementation
 
 uses
-   uLCLFormHelpers,     // OwnFormByMainWindow -- LCL PopupParent, not GWL_HWNDPARENT
+   uLCLFormHelpers,     // LeaveFormUnowned -- a tool window has no owner form
    Types,               // IntersectRect -- the RTL one, not Windows
    uWindowLayoutStore,  // the bounds, keyed by name
    uTR4WConfigFile,     // TR4WConfigFileName, Load/SaveWindowLayout
@@ -2139,11 +2139,10 @@ begin
       GPanForms[aSlot] := TfrmPanadapter.Create(nil);
       GPanForms[aSlot].FSlot := aSlot;   { before RestoreBounds -- it keys on it }
 
-      // Parents through the LCL's PopupParent, NOT GWL_HWNDPARENT.  This is
-      // the one helper in uLCLFormHelpers that is HWND-free;
-      // ShowModalOverWin32Parent is not, and is not wanted here anyway --
-      // the panadapter is modeless.
-      OwnFormByMainWindow(GPanForms[aSlot]);
+      // NO OWNER FORM -- the panadapter is a modeless tool window, so
+      // clicking the main window must be able to raise it (issue #1).  See
+      // LeaveFormUnowned.
+      LeaveFormUnowned(GPanForms[aSlot]);
       end;
 
    { NAME THE RADIO, the way the radio panel does -- "Panadapter - Radio 1

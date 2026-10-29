@@ -95,7 +95,7 @@ uses
    uSettingsModel,    (* Settings.RemainingMults.DisplayMode, and HiLight --
                         the type moved here with the setting *)
    uGradient,         { GradientRect -- the faded-multiplier fill }
-   uLCLFormHelpers;   { OwnFormByMainWindow }
+   uLCLFormHelpers;   // LeaveFormUnowned
 
 const
    CELL_HEIGHT = 16;
@@ -266,7 +266,7 @@ begin
       GForms[slot].FIndex := aIndex;
       end;
 
-   OwnFormByMainWindow(GForms[slot]);
+   LeaveFormUnowned(GForms[slot]);
 
 end;
 

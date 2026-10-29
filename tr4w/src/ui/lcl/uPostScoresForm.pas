@@ -57,7 +57,7 @@ uses
    uSettingsModel,    { Settings.Score.ReadingUrl }
    TF,                { OpenUrl }
    uGetScores,        { RunPOSTGetScoresThread }
-   uLCLFormHelpers;   { OwnFormByMainWindow }
+   uLCLFormHelpers;   // LeaveFormUnowned
 
 { ---------------------------------------------------- the cross-thread hop -- }
 
@@ -180,7 +180,7 @@ begin
       TR4WPostScoresForm := TfrmPostScores.Create(nil);
       end;
 
-   OwnFormByMainWindow(TR4WPostScoresForm);
+   LeaveFormUnowned(TR4WPostScoresForm);
 
 end;
 

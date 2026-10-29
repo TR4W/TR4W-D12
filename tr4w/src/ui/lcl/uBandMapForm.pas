@@ -148,7 +148,7 @@ implementation
 uses
    uSettingsModel,     // Settings.BandMap -- the eight display filters
   SysUtils,
-  uLCLFormHelpers,   { OwnFormByMainWindow -- the LCL way to parent a tool window }
+  uLCLFormHelpers,   // LeaveFormUnowned -- a tool window has no owner form
   uBandMapView,      { the seam this form fills in }
   uSpots,
   uBandmap,          { TuneRadioToSpot }
@@ -924,10 +924,9 @@ begin
       TR4WBandMapForm := TfrmBandMap.Create(nil);
       end;
 
-   // PARENTED THE LCL WAY -- PopupParent / pmExplicit, not
-   // SetWindowLongPtr(GWL_HWNDPARENT).  The same call the function-keys window
-   // uses, and the reason this unit needs no Windows uses clause.
-   OwnFormByMainWindow(TR4WBandMapForm);
+   // A TOOL WINDOW HAS NO OWNER FORM, so clicking the main window raises it
+   // above this one (issue #1).  See LeaveFormUnowned.
+   LeaveFormUnowned(TR4WBandMapForm);
 
    BandMapRefresh    := @BandMapRefreshImpl;
    BandMapSelected   := @BandMapSelectedImpl;

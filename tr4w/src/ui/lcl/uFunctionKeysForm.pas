@@ -112,7 +112,7 @@ implementation
 {$R *.lfm}
 
 uses
-  uLCLFormHelpers;   // OwnFormByMainWindow -- the LCL way to parent a tool window
+  uLCLFormHelpers;   // LeaveFormUnowned -- a tool window has no owner form
 
 procedure TfrmFunctionKeys.HandleShow(Sender: TObject);
 begin
@@ -281,12 +281,11 @@ begin
       f.FKeys[i].Tag := i;
       end;
 
-   // PARENTED THE LCL WAY.  CreateDialogParam took tr4whandle as the owner,
-   // which is what kept this window above the main one and off the taskbar.
-   // OwnFormByMainWindow does that with PopupParent / pmExplicit.  The first
-   // draft reached for SetWindowLongPtr(GWL_HWNDPARENT) -- Win32 surface added
-   // by the very change that exists to remove it.
-   OwnFormByMainWindow(f);
+   // NO OWNER FORM (issue #1).  CreateDialogParam took tr4whandle as the
+   // owner, which kept this window above the main one -- so clicking the main
+   // window could never bring it forward.  It stays off the taskbar unowned:
+   // see LeaveFormUnowned.
+   LeaveFormUnowned(f);
 
 end;
 

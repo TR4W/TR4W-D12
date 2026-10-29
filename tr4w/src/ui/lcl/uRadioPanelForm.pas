@@ -565,7 +565,8 @@ begin
       GForms[slot].CaptureDesign;
       end;
 
-   OwnFormByMainWindow(GForms[slot]);
+   // A TOOL WINDOW HAS NO OWNER FORM (issue #1).  See LeaveFormUnowned.
+   LeaveFormUnowned(GForms[slot]);
 
    { THE PANEL MAY NOT BE SHRUNK PAST ITS OWN READOUT.  It had no Constraints at
      all, so the window could be dragged down until the VFO frequencies were
@@ -573,8 +574,8 @@ begin
      contest dialog had about its category rows (NY4I, 2026-08-31).
 
      Derived from the controls rather than typed into the .lfm; see
-     ApplyContentMinimumSize.  After OwnFormByMainWindow, so the form has its
-     final frame when both terms are read. }
+     ApplyContentMinimumSize.  The owner decision above does not change the
+     frame, so the order of the two calls does not matter. }
 
    ApplyContentMinimumSize(GForms[slot]);
 

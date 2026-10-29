@@ -100,7 +100,7 @@ implementation
 uses
    MainUnit,          { CloseTR4WWindow }
    uDupesheet,        { VDColorsArray -- the district colours, unchanged }
-   uLCLFormHelpers;   { OwnFormByMainWindow }
+   uLCLFormHelpers;   // LeaveFormUnowned
 
 const
    { The design cell.  80 is the width the list box was given
@@ -246,9 +246,8 @@ begin
       GForms[slot].FIndex := aIndex;
       end;
 
-   // PARENTED THE LCL WAY -- PopupParent / pmExplicit, not
-   // SetWindowLongPtr(GWL_HWNDPARENT).
-   OwnFormByMainWindow(GForms[slot]);
+   // A TOOL WINDOW HAS NO OWNER FORM (issue #1).  See LeaveFormUnowned.
+   LeaveFormUnowned(GForms[slot]);
 
 end;
 

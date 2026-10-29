@@ -236,13 +236,12 @@ type
   some other reason. }
 function ShowModalOverWin32Parent(const aForm: TCustomForm): integer;
 
-{ MAKE THE TR4W MAIN WINDOW THE FORM'S OWNER, AND CENTRE OVER IT.
+{ MAKE THE TR4W MAIN WINDOW A MODAL DIALOG'S OWNER, AND CENTRE OVER IT.
 
   BOTH ARE THE SAME DEFECT, and it is a nil Application.MainForm.
-  CreateTR4WMainForm builds the main window with TTR4WMainForm.CreateNew(nil)
-  because Application.Run is never called and so Application.CreateForm -- the
-  thing that assigns Application.MainForm -- never runs either. Two consequences
-  nothing warns about:
+  CreateTR4WMainForm builds the main window itself, and Application.CreateForm
+  -- the thing that assigns Application.MainForm -- is never called. Two
+  consequences nothing warns about:
 
   1. OWNERSHIP. An LCL form is owned by the hidden Application window, not by
      TR4W's main window. The taskbar button belongs to the main form
@@ -252,6 +251,13 @@ function ShowModalOverWin32Parent(const aForm: TCustomForm): integer;
      to hunt for it (NY4I, 2026-08-21). PopupParent is the LCL's supported way
      to set GWL_HWNDPARENT; setting it by hand does not survive a handle
      recreation.
+
+     MODAL DIALOGS ONLY, since issue #1 (2026-10-29). An owned window is kept
+     above its owner by Windows, always: a tool window owned by the main window
+     could never be covered by it, so clicking the main window did not bring it
+     forward. Non-modal tool windows call LeaveFormUnowned instead. A modal
+     keeps this owner -- it must never fall behind the window it blocks
+     (b076fbbb). ShowModalOverWin32Parent applies it to every modal.
 
   2. CENTRING. Every converted dialog says Position = poMainFormCenter, and
      customform.inc:1265 silently degrades that to poScreenCenter when
@@ -274,13 +280,45 @@ function ShowModalOverWin32Parent(const aForm: TCustomForm): integer;
   activeform=frmPanadapter_1, activecontrol=cboPalette).
 
   Restoring activation afterwards, rather than showing with SW_SHOWNOACTIVATE,
-  keeps this HWND-free.  It does not fight the z-order either: these windows
-  are PopupParent-owned by the main window, so they stay above it and
-  re-activating the main form does not cover them. }
+  keeps this HWND-free.  IT DOES MOVE THE Z-ORDER: tool windows are not owned
+  by the main window since issue #1 (see LeaveFormUnowned), so bringing the
+  previous form back to the front puts it above the window just shown wherever
+  the two overlap.  An unowned tool window has no taskbar button and no
+  Alt-Tab entry, so one opened wholly behind the main window is reached only
+  by moving the main window or through TR4W's own window list. }
 procedure ShowWithoutTakingFocus(const aForm: TCustomForm);
 
 procedure OwnFormByMainWindow(const aForm: TCustomForm);
 procedure CentreOverMainWindow(const aForm: TCustomForm);
+
+(* A NON-MODAL TOOL WINDOW HAS NO OWNER FORM -- issue #1 (2026-10-29).
+
+  Windows keeps an owned window above its owner at all times. While the tool
+  windows were owned by the main window (OwnFormByMainWindow), clicking the
+  main window activated it and left every overlapping tool window on top of
+  it, which is not how a desktop application behaves. Unowned, each window
+  rises when clicked.
+
+  THIS IS THE LCL DEFAULT, so on a freshly created form it changes nothing. It
+  exists so the decision is stated at each call site, in one named place,
+  rather than read off the absence of an OwnFormByMainWindow call -- and so a
+  form that was owned earlier is released. Idempotent; singletons call it on
+  every show.
+
+  With PopupMode pmNone a non-modal form's real owner is the hidden
+  Application window (win32wsforms.pp, CreateHandle, stDefault with
+  MainFormOnTaskBar False). That window is never shown, because TR4W has no
+  Application.MainForm, so a tool window gets NO taskbar button of its own and
+  ShowInTaskBar needs no setting. gtk2 is different: there stDefault gives
+  every form a taskbar entry already, owned or not.
+
+  THE COST, to be judged on the bench: ownership was added to Preferences
+  (2026-08-23) and Log Search because switching to another program and back
+  raised only the main window. Unowned, the windows are back in that state.
+
+  MODALS MUST NOT CALL THIS. They keep OwnFormByMainWindow, through
+  ShowModalOverWin32Parent. *)
+procedure LeaveFormUnowned(const aForm: TCustomForm);
 
 (* WHERE A FORM WAS LAST TIME.
 
@@ -549,6 +587,21 @@ begin
 
    aForm.PopupParent := TR4WMainForm;
    aForm.PopupMode   := pmExplicit;
+end;
+
+procedure LeaveFormUnowned(const aForm: TCustomForm);
+begin
+   if aForm = nil then
+      begin
+      Exit;
+      end;
+
+   // Both, in this order: clearing PopupParent leaves the mode alone, and
+   // pmNone is what stops GetRealPopupParent nominating any owner form.
+   aForm.PopupParent := nil;
+   // Forms.pmNone, not pmNone: ComPortEnumerator's TPortMatchKind also has a
+   // member of that name, and a unit later in the uses clause wins.
+   aForm.PopupMode   := Forms.pmNone;
 end;
 
 procedure CentreOverMainWindow(const aForm: TCustomForm);

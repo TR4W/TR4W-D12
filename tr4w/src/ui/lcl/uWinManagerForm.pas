@@ -97,7 +97,8 @@ var
 
   which was correct while every tool window was a CreateDialogParam child of the
   main window: GetParent returned tr4whandle and the row went in.  They are LCL
-  FORMS now, OWNED through PopupParent rather than parented, so GetParent stops
+  FORMS now, not children of the main window (owned through PopupParent at the
+  time; since issue #1, 2026-10-29, not owned by it at all), so GetParent stops
   answering tr4whandle and every one of them fails the test.  Only the main
   window itself still matched -- which is exactly the one row that showed.
 
