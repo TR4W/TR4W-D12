@@ -40,6 +40,7 @@ type
       procedure Test_DefaultsAreTheOnesTheGlobalsHad;
       procedure Test_RoundTripsThroughJSON;
       procedure Test_AnAbsentKeyLeavesThePropertyAlone;
+      procedure Test_ShareSpotsDefaultsOnAndSurvivesAnOlderFile;
       procedure Test_LegacyImportReadsTheOldCommandSpellings;
       procedure Test_LegacyImportKeepsWhatItCannotRead;
       procedure Test_CommandNamesDeriveFromThePropertyPaths;
@@ -184,6 +185,53 @@ begin
                   'the key that was NOT there must not have been reset');
    finally
       s.Free;
+   end;
+end;
+
+(* NETWORK SHARE SPOTS (2026-10-29). Default TRUE is today's behaviour, so an
+  upgrade must not turn spot sharing off: a settings file written before the
+  setting existed carries no key, and the property must stay on. *)
+procedure TSettingsModelTests.Test_ShareSpotsDefaultsOnAndSurvivesAnOlderFile;
+var
+   a, b, c: TR4WSettings;
+   obj: TJSONObject;
+   value: string;
+begin
+   BeginTest('Network.ShareSpots: default on, absent key stays on, off round-trips');
+   a := TR4WSettings.Create;
+   b := TR4WSettings.Create;
+   c := TR4WSettings.Create;
+   try
+      CheckTrue(a.Network.ShareSpots, 'a new settings object shares spots');
+
+      obj := TJSONObject(TJSONObject.ParseJSONValue(
+                '{"Network":{"AutoConnect":true}}'));
+      CheckTrue(obj <> nil, 'the older file must parse');
+      try
+         a.FromJSON(obj);
+      finally
+         obj.Free;
+      end;
+      CheckTrue(a.Network.ShareSpots, 'a file with no shareSpots key leaves it on');
+
+      CheckTrue(a.TrySetByCommand('NETWORK SHARE SPOTS', 'FALSE'), 'set by command');
+      CheckFalse(a.Network.ShareSpots, 'the property took it');
+      CheckTrue(a.TryGetByCommand('NETWORK SHARE SPOTS', value), 'read by command');
+      CheckEquals('FALSE', value, 'and renders as FALSE');
+
+      obj := a.ToJSON;
+      try
+         b.FromJSON(obj);
+      finally
+         obj.Free;
+      end;
+      CheckFalse(b.Network.ShareSpots, 'off survives a save and a load');
+
+      CheckTrue(c.Network.ShareSpots, 'and a fresh object is still on');
+   finally
+      c.Free;
+      b.Free;
+      a.Free;
    end;
 end;
 
@@ -367,7 +415,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(294, names.Count,
+         CheckEquals(295, names.Count,
                      'one name per migrated setting, plus the eleven that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -391,7 +439,9 @@ begin
                      + ' radio will not radiate (new, no CFGCA row, issue'
                      + ' #97), 2026-10-26; 294 with NETWORK AUTO CONNECT,'
                      + ' connect to the multi-op server at startup (new, no'
-                     + ' CFGCA row), 2026-10-27');
+                     + ' CFGCA row), 2026-10-27; 295 with NETWORK SHARE'
+                     + ' SPOTS, whether DX spots are shared around the'
+                     + ' multi-op network (new, no CFGCA row), 2026-10-29');
       finally
          names.Free;
       end;
@@ -1601,6 +1651,7 @@ const
       + '"NAME FLAG ENABLE",'
       + '"NET STATUS UPDATE INTERVAL",'
       + '"NETWORK AUTO CONNECT",'
+      + '"NETWORK SHARE SPOTS",'
       + '"NO BORDER",'
       + '"NO CAPTION",'
       + '"NO COLUMN HEADER",'
@@ -2194,6 +2245,7 @@ begin
    Test_DefaultsAreTheOnesTheGlobalsHad;
    Test_RoundTripsThroughJSON;
    Test_AnAbsentKeyLeavesThePropertyAlone;
+   Test_ShareSpotsDefaultsOnAndSurvivesAnOlderFile;
    Test_LegacyImportReadsTheOldCommandSpellings;
    Test_LegacyImportKeepsWhatItCannotRead;
    Test_CommandNamesDeriveFromThePropertyPaths;

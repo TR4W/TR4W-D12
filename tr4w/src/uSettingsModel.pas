@@ -629,7 +629,7 @@ type
      THE MULTI-OP NETWORK, as this position behaves on it.
 
      NOT TComputerSettings, which is this position's IDENTITY -- the name and
-     id the other positions see. These four are policy: what arriving traffic
+     id the other positions see. These are policy: what arriving traffic
      is allowed to do to this log, what is announced, and how often.
 
      ALL FOUR CARRY AN ALIAS, because every one of the legacy names omits the
@@ -644,9 +644,29 @@ type
       FStatusUpdateInterval: TNetStatusInterval;
       FIntercomFileEnable: boolean;
       FAutoConnect: boolean;
+      FShareSpots: boolean;
    public
       constructor Create;
    published
+      (* NEW 2026-10-29 -- whether this station shares DX spots around the
+        multi-op network: it posts the spots its own cluster connection
+        receives AND accepts the ones the other stations post. Read at the
+        moment of each spot, so changing it takes effect at once.
+
+        TRUE is the default because that is what every connected station has
+        always done. FALSE makes the station independent of the network's
+        spots. The usual multi-op setup is ONE gateway computer on the
+        internet with the cluster connection and the other positions on a
+        private network with none: every station leaves this on, the gateway
+        posts and the others receive. A station with its own cluster that does
+        not want the others' spots turns it off.
+
+        DELIBERATELY NOT in uCFG.SHARED_WITH_PEERS: the stations are meant to
+        be able to differ, and a peer sync would force one value on all of
+        them. A spot a station asks another to send to ITS cluster (the Send
+        Spot form) is an explicit operator action and is not governed by this. *)
+      property ShareSpots: boolean
+         read FShareSpots write FShareSpots;
       (* NEW 2026-10-27 -- connect to the multi-op server when TR4W starts.
 
         The link belongs to the program, not to the Network window (NY4I:
@@ -4986,6 +5006,7 @@ begin
    FStatusUpdateInterval := 5000;
    FIntercomFileEnable   := False;
    FAutoConnect          := False;
+   FShareSpots           := True;
 end;
 
 constructor TWsjtxSettings.Create;

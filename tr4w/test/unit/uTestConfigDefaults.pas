@@ -176,6 +176,8 @@ begin
    CheckFalse(Settings.Network.MultiMultsOnly, 'MultiMultsOnly was False');
    CheckFalse(Settings.Network.IntercomFileEnable,
               'IntercomFileEnable was False');
+   CheckTrue(Settings.Network.ShareSpots,
+             'ShareSpots (2026-10-29) defaults True: every connected station always shared');
 end;
 
 procedure TConfigDefaultsTests.Test_OperatingAndPTTDefaults;

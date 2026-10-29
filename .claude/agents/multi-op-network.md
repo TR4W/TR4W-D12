@@ -655,6 +655,25 @@ raises out of the transport and `TUDPBroadcaster` contains it per destination, s
 the next one is still sent; the Test button's message carries the reason. The
 Test button resolves on the main thread, as Indy did before.
 
+## Sharing DX spots is a setting, per station (2026-10-29)
+
+`Settings.Network.ShareSpots` (`NETWORK SHARE SPOTS`, Preferences > Network,
+default **True** = the old behaviour). OFF means THIS station neither posts nor
+accepts spots: the send gate is in `uSpots.AddSpot` (before `SendDXSpotToNet`),
+the receive gate is the `NET_NETWORKDXSPOT_ID` arm in `uNet.ConsumeNetBuffer`,
+which skips `AddSpot` and `DisplayBandMap` but still lets the common
+`inc(Bufindex, MsgSize)` consume the packet (one Debug line per link,
+`GSpotShareNoted`). Both read the setting at the moment of the spot, so no
+restart. It is deliberately NOT in `SHARED_WITH_PEERS`: the usual setup is one
+gateway computer with the cluster and peers without, and stations must be free
+to differ. A received spot is added with `SendToNetwork` False, so a station
+never posts back what it was sent. **`SendSpotViaNetworkToNet` and its arm (the
+Send Spot form) are NOT governed by it**: explicit operator action; the servers
+hand it to the first OTHER station whose status says it has a cluster. Neither
+server was changed (both relay 1030 blindly to every other station). Tests:
+`uTestNetClientPackets` (`Test_SharingOffPostsNoSpot`,
+`Test_SharingOffIgnoresSpotsFromTheNetwork`), `uTestSettingsModel`.
+
 ## Coordinate with
 
 `log-database` (row-level sync is the destination) · `contest-scoring` (dupes,

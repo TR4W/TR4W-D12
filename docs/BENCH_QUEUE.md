@@ -88,6 +88,48 @@ item 1:
 
 ---
 
+## Added 2026-10-29 -- SHARE DX SPOTS AROUND THE NETWORK (NETWORK SHARE SPOTS)
+
+NY4I: one computer on the internet gets the cluster, the rest sit on a private
+network. New checkbox Preferences > Network, "Share DX spots around the network"
+(`Settings.Network.ShareSpots`, command `NETWORK SHARE SPOTS`), default ON (what
+every connected station already did). OFF = this station neither posts its
+cluster spots to the network nor accepts the network's. Read at each spot: no
+restart. It is NOT shared between stations (not in SHARED_WITH_PEERS).
+Needs two or three stations on one server (Windows, Mint).
+
+What the code gives, per station (post = own setting ON and own cluster
+connected; accept = own setting ON):
+
+| gateway (has the cluster) | peer (no cluster) | result |
+|---|---|---|
+| ON | ON | gateway posts, peer's band map gets the spots |
+| ON | OFF | gateway posts, peer drops them (one Debug line per link in tr4w.log) |
+| OFF | ON | gateway keeps its spots to itself, peer gets none |
+| OFF | OFF | both independent |
+
+- [ ] Gateway ON, peer ON: a spot from the gateway's cluster appears in the
+      peer's band map within a second; the peer does not post it back (the
+      gateway's band map shows it once).
+- [ ] Turn the PEER's box off while connected, no restart: the next gateway
+      spot does not reach the peer's band map; `tr4w.log` at Debug has
+      `spot from the network ignored: sharing is off` once for the link. The link
+      stays up and QSOs still flow (the packet is consumed, not an error).
+- [ ] Turn it back on: the next spot arrives.
+- [ ] Gateway OFF, peer ON: spots from the gateway's cluster do not reach the
+      peer; the gateway's own band map still shows them.
+- [ ] Both stations on their own cluster, both ON: each spot arrives twice at
+      each station (its own and the other's). Expected, not a bug: the spot store
+      merges by frequency, so the band map shows one row.
+- [ ] The Preferences > Network page: the new checkbox sits under "Connect to
+      the multi-op server when TR4W starts", the grey hint and the "Radio
+      sharing" heading moved down, nothing overlaps or clips.
+- [ ] LEFT ALONE, decide: the spot form's "send this spot to a station with a
+      cluster" (spot-via-network) is not governed by the checkbox. It is an
+      explicit operator action; the server hands it to the FIRST other station
+      whose status says it has a cluster, and that station posts it to its own
+      cluster whatever its own checkbox says.
+
 ## Added 2026-10-28 -- A SERVER THAT LOST ITS LOG (the restock; Phase 1 gap found on the bench)
 
 NY4I moved TR4WServerPy to another machine and it had NO log. His Windows TR4W held

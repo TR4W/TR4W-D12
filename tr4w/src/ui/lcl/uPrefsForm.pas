@@ -450,6 +450,7 @@ type
       chkMultiMultsOnly: TCheckBox;
       chkIntercomFile: TCheckBox;
       chkNetAutoConnect: TCheckBox;
+      chkNetShareSpots: TCheckBox;
 
       // --- Rotators (Tag = NAV_ROTATORS) --------------------------------------
       layRotators: TPanel;
@@ -5413,6 +5414,7 @@ begin
    FBindings.Bind(chkMultiMultsOnly,    'network.multiMultsOnly');
    FBindings.Bind(chkIntercomFile,      'network.intercomFile');
    FBindings.Bind(chkNetAutoConnect,    'network.autoConnect');
+   FBindings.Bind(chkNetShareSpots,     'network.shareSpots');
 
    // Operating - Online scoring
    FBindings.Bind(chkHamScoreEnable,  'scoring.hamscore.enable');

@@ -318,7 +318,12 @@ begin
   //   Windows.SetFocus(wh[mweCall]);
   // end;
 
+  (* Network.ShareSpots is read HERE, at the moment of the spot, so changing it
+    needs no restart.  A spot received from the network is added with
+    SendToNetwork False, which is why a station never posts back what it was
+    sent. *)
   if (SendToNetwork)                       and
+     (Settings.Network.ShareSpots)         and
      (not SpotCallIsCQMarker(Spot.FCall))  and
      (NetIsConnected)                      then
      begin

@@ -59,6 +59,8 @@ type
       procedure Test_TheRefusalLatchReportsEachPairOnce;
 
       procedure Test_ADxSpotLeavesWithItsIdAndItsSize;
+      procedure Test_SharingOffPostsNoSpot;
+      procedure Test_SharingOffIgnoresSpotsFromTheNetwork;
       procedure Test_ATimeSyncLeavesWithItsIdAndItsSize;
       procedure Test_AnIntercomLineLeavesWithItsIdAndItsSize;
       procedure Test_ASpotViaNetworkLeavesWithItsIdAndItsSize;
@@ -74,7 +76,7 @@ type
 implementation
 
 uses
-   SysUtils, uNet, uNetClient, uNetFraming, uSpots;
+   SysUtils, uNet, uNetClient, uNetFraming, uSpots, uSettingsModel, TF;
 
 type
    (* A WRITER WITH NO SOCKET that keeps every packet's bytes. Runs on the
@@ -277,6 +279,128 @@ begin
       CheckEquals($D9, bytes[4], 'frequency byte 3');
       CheckEquals(1, link.Count, 'and it is the only packet');
    finally
+      CloseLink(link);
+   end;
+end;
+
+(* NETWORK SHARE SPOTS, THE SEND GATE (2026-10-29). With sharing off the spot
+  still enters THIS station's list but nothing is posted. The proof that nothing
+  was posted is not a wait: an intercom line is posted AFTER the spot, the queue
+  is FIFO, and the first packet the writer receives must be that line. *)
+procedure TNetClientPacketTests.Test_SharingOffPostsNoSpot;
+var
+   link: TCaptureLink;
+   spot: TSpotRecord;
+   savedShare, savedSo2r, savedIe: boolean;
+begin
+   BeginTest('Network.ShareSpots off: a cluster spot is kept locally and not posted');
+   savedShare := Settings.Network.ShareSpots;
+   savedSo2r := Settings.BandMap.So2rDisplay;
+   savedIe := Settings.Operating.IeSwitch;
+   OpenLink(link);
+   try
+      Settings.BandMap.So2rDisplay := False;
+      Settings.Operating.IeSwitch := False;
+      spot := Default(TSpotRecord);
+      spot.FFrequency := 14267000;
+      spot.FCall := 'VE7OMT';
+      spot.FBand := Band20;
+      spot.FMode := CW;
+      spot.FSysTime := Now;
+
+      SpotsList.Clear;
+      Settings.Network.ShareSpots := False;
+      SpotsList.AddSpot(spot, True);
+      CheckEquals(1, SpotsList.Count, 'the spot is in this station''s own list');
+      SendIntercomToNet('marker');
+      CheckTrue(WaitPackets(link, 1), 'the marker was written');
+      CheckEquals(NET_INTERCOMMESSAGE_ID, IdOf(link.Packet(0)),
+                  'the first packet is the marker, so no spot went before it');
+      CheckEquals(1, link.Count, 'and nothing else was posted');
+
+      (* The same spot with sharing back on is posted: the gate is the setting. *)
+      Settings.Network.ShareSpots := True;
+      spot.FFrequency := 14268000;
+      spot.FCall := 'VE7OMU';
+      SpotsList.AddSpot(spot, True);
+      CheckTrue(WaitPackets(link, 2), 'the second spot was posted');
+      CheckEquals(NET_NETWORKDXSPOT_ID, IdOf(link.Packet(1)), 'it is a DX spot');
+      CheckEquals(NetMessageSize(NET_NETWORKDXSPOT_ID), Length(link.Packet(1)),
+                  'of 106 bytes');
+   finally
+      Settings.Network.ShareSpots := savedShare;
+      Settings.BandMap.So2rDisplay := savedSo2r;
+      Settings.Operating.IeSwitch := savedIe;
+      SpotsList.Clear;
+      CloseLink(link);
+   end;
+end;
+
+(* THE RECEIVE GATE. Two spots back to back in one buffer: with sharing off
+  both are consumed whole (no desync, the whole length reported) and neither
+  reaches the list; with it on both do. A spot taken from the network is added
+  with SendToNetwork False, so it is never posted back. *)
+procedure TNetClientPacketTests.Test_SharingOffIgnoresSpotsFromTheNetwork;
+var
+   link: TCaptureLink;
+   savedShare, savedSo2r, savedIe: boolean;
+
+   procedure FeedTwoSpots;
+   var
+      first, second: TNetDXSpotPtr;
+      desync: boolean;
+   begin
+      first := TNetDXSpotPtr(@NetBuffer[1]);
+      second := TNetDXSpotPtr(@NetBuffer[1 + SizeOf(TNetDXSpot)]);
+      first^ := Default(TNetDXSpot);
+      second^ := Default(TNetDXSpot);
+      first^.dsID := NET_NETWORKDXSPOT_ID;
+      first^.dsSpot.FFrequency := 14267000;
+      first^.dsSpot.FCall := 'VE7OMT';
+      first^.dsSpot.FBand := Band20;
+      first^.dsSpot.FMode := CW;
+      first^.dsSpot.FSysTime := Now;
+      second^.dsID := NET_NETWORKDXSPOT_ID;
+      second^.dsSpot.FFrequency := 21025000;
+      second^.dsSpot.FCall := 'K1ABC';
+      second^.dsSpot.FBand := Band15;
+      second^.dsSpot.FMode := CW;
+      second^.dsSpot.FSysTime := Now;
+      CheckEquals(2 * SizeOf(TNetDXSpot),
+                  ConsumeNetBuffer(2 * SizeOf(TNetDXSpot), desync),
+                  'both spots were consumed whole');
+      CheckFalse(desync, 'and the stream stayed on a message boundary');
+   end;
+
+begin
+   BeginTest('Network.ShareSpots off: spots from the network are consumed and ignored');
+   savedShare := Settings.Network.ShareSpots;
+   savedSo2r := Settings.BandMap.So2rDisplay;
+   savedIe := Settings.Operating.IeSwitch;
+   OpenLink(link);
+   try
+      Settings.BandMap.So2rDisplay := False;
+      Settings.Operating.IeSwitch := False;
+      SpotsList.Clear;
+
+      Settings.Network.ShareSpots := False;
+      FeedTwoSpots;
+      CheckEquals(0, SpotsList.Count, 'sharing off: neither spot reached the list');
+
+      Settings.Network.ShareSpots := True;
+      FeedTwoSpots;
+      CheckEquals(2, SpotsList.Count, 'sharing on: both spots reached the list');
+
+      SendIntercomToNet('marker');
+      CheckTrue(WaitPackets(link, 1), 'the marker was written');
+      CheckEquals(NET_INTERCOMMESSAGE_ID, IdOf(link.Packet(0)),
+                  'a received spot is never posted back');
+      CheckEquals(1, link.Count, 'nothing else was posted');
+   finally
+      Settings.Network.ShareSpots := savedShare;
+      Settings.BandMap.So2rDisplay := savedSo2r;
+      Settings.Operating.IeSwitch := savedIe;
+      SpotsList.Clear;
       CloseLink(link);
    end;
 end;
@@ -584,6 +708,8 @@ begin
    Test_TheRefusalLatchReportsEachPairOnce;
 
    Test_ADxSpotLeavesWithItsIdAndItsSize;
+   Test_SharingOffPostsNoSpot;
+   Test_SharingOffIgnoresSpotsFromTheNetwork;
    Test_ATimeSyncLeavesWithItsIdAndItsSize;
    Test_AnIntercomLineLeavesWithItsIdAndItsSize;
    Test_ASpotViaNetworkLeavesWithItsIdAndItsSize;

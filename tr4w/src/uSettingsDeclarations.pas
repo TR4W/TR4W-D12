@@ -340,6 +340,8 @@ begin
                          RS_NETWORK_INTERCOMFILE);
    RegisterModelSetting( 'network.autoConnect',               'NETWORK AUTO CONNECT',
                          RS_NETWORK_AUTOCONNECT);
+   RegisterModelSetting( 'network.shareSpots',                'NETWORK SHARE SPOTS',
+                         RS_NETWORK_SHARESPOTS);
 
    { Super Check Partial, band map and log files, 2026-08-15. }
    RegisterModelSetting( 'scp.possibleCalls',                 'POSSIBLE CALLS',

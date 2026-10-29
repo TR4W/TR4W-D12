@@ -2953,10 +2953,18 @@ object PrefsForm: TPrefsForm
         Caption = 'Connect to the multi-op server when TR4W starts'
         TabOrder = 8
       end
+      object chkNetShareSpots: TCheckBox
+        Left = 12
+        Height = 22
+        Top = 274
+        Width = 520
+        Caption = 'Share DX spots around the network'
+        TabOrder = 9
+      end
       object lblNetHint: TLabel
         Left = 12
         Height = 40
-        Top = 276
+        Top = 302
         Width = 620
         AutoSize = False
         Caption = 'TR4WServer runs on one machine and every operating position connects to it.  It holds the shared log, the multipliers and the serial numbers.'
@@ -2967,7 +2975,7 @@ object PrefsForm: TPrefsForm
       object lblRadioTCPHeading: TLabel
         Left = 12
         Height = 17
-        Top = 320
+        Top = 346
         Width = 400
         AutoSize = False
         Caption = 'Radio sharing'
@@ -2977,7 +2985,7 @@ object PrefsForm: TPrefsForm
       object lblRadioTCPPort: TLabel
         Left = 12
         Height = 17
-        Top = 354
+        Top = 380
         Width = 140
         AutoSize = False
         Caption = 'TCP port:'
@@ -2985,7 +2993,7 @@ object PrefsForm: TPrefsForm
       object edtRadioTCPPort: TEdit
         Left = 160
         Height = 22
-        Top = 350
+        Top = 376
         Width = 90
         AutoSize = False
         TabOrder = 7
@@ -2993,7 +3001,7 @@ object PrefsForm: TPrefsForm
       object lblRadioTCPHint: TLabel
         Left = 12
         Height = 51
-        Top = 382
+        Top = 408
         Width = 620
         AutoSize = False
         Caption = 'Lets another position read this station''s radio.  Takes effect when TR4W next starts.'

@@ -646,6 +646,10 @@ var
   (* Which refused outbound packets (SendToNet's guard) have been reported on
     this link. Thread-safe; reset when a link comes up. *)
   GSendRefusals:     TNetSendRefusals = nil;
+  (* A spot from the network was ignored on this link because Network.ShareSpots
+    is off: the Debug line is written once per link. Main thread (the drain);
+    reset when a link comes up. *)
+  GSpotShareNoted:   boolean = False;
 
 const
   (* An older server drops the link within a read or two of the HELLO; an
@@ -944,9 +948,26 @@ var
 
           NET_NETWORKDXSPOT_ID:
             begin
-              NetDXSpotPtr := @NetBuffer[Bufindex];
-              SpotsList.AddSpot(NetDXSpotPtr^.dsSpot, False);
-              DisplayBandMap;
+              (* SHARING OFF: this station does not take the network's spots.
+                The packet is still CONSUMED -- the common advance at the foot
+                of the loop moves past it -- and is not an error. Read at the
+                moment of the spot, so a change needs no restart. AddSpot is
+                called with SendToNetwork False, so a received spot is never
+                posted back. *)
+              if Settings.Network.ShareSpots then
+                 begin
+                 NetDXSpotPtr := @NetBuffer[Bufindex];
+                 SpotsList.AddSpot(NetDXSpotPtr^.dsSpot, False);
+                 DisplayBandMap;
+                 end
+              else
+                 begin
+                 if not GSpotShareNoted then
+                    begin
+                    GSpotShareNoted := True;
+                    logger.Debug('[Net] spot from the network ignored: sharing is off');
+                    end;
+                 end;
             end;
 
           NET_QSOINFO_ID:
@@ -1476,6 +1497,7 @@ begin
    GPeers.Clear;
    ForgetPeerContestNotices;
    GSendRefusals.Forget;
+   GSpotShareNoted := False;
    FServerHelloSeen := False;
    (* AND NOTHING HAS BEEN CAUGHT UP YET: the QSOs logged while the last link
      was down go once the server's HELLO has come on THIS one. These are the
