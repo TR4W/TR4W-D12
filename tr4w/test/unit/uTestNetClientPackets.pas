@@ -71,12 +71,16 @@ type
       procedure Test_TheGuardReportsEachBadPairOncePerLink;
 
       procedure Test_EverySenderGoesThroughItsHelper;
+
+      procedure Test_TheAnnouncedStationCarriesTheTypedCallsign;
+      procedure Test_TheConnectThreadDoesNotReadTheEntryField;
    end;
 
 implementation
 
 uses
-   SysUtils, uNet, uNetClient, uNetFraming, uSpots, uSettingsModel, TF;
+   SysUtils, Forms, StdCtrls, uNet, uNetClient, uNetFraming, uSpots,
+   uSettingsModel, uMainForm, uCrashLog, TF;
 
 type
    (* A WRITER WITH NO SOCKET that keeps every packet's bytes. Runs on the
@@ -702,8 +706,107 @@ begin
                              LineEnding + 'var')) > 0, 'the spot-via-network id is set');
 end;
 
+(* ISSUE 150. The status the server is sent when the link comes up must carry
+  the callsign the operator has typed. The connect thread used to build it and
+  read the entry field from a worker thread, where the guard refuses the read and
+  the callsign went out empty.
+
+  THE BYTES ARE CAPTURED FROM THE CLIENT'S OWN SEND PATH, with a real TEdit
+  standing in for the call window (the global the program reads is TR4WCallEdit).
+  The announcement runs here, on the main thread, as the drainer runs it. *)
+procedure TNetClientPacketTests.Test_TheAnnouncedStationCarriesTheTypedCallsign;
+var
+   link: TCaptureLink;
+   frm: TForm;
+   edit: TEdit;
+   savedEdit: TEdit;
+   bytes: TBytes;
+   st: ^TStationState;
+   i, found, statusPackets, lastIndex: integer;
+begin
+   BeginTest('the station announced at link-up carries the typed callsign');
+   InstallCrashLog;   (* records the main thread id; OnMainThread is false without it *)
+   if Application <> nil then
+      begin
+      Application.Initialize;
+      end;
+   savedEdit := TR4WCallEdit;
+   frm := TForm.CreateNew(nil);
+   OpenLink(link);
+   try
+      edit := TEdit.Create(frm);
+      edit.Parent := frm;
+      edit.Text := 'K1ABC';
+      edit.HandleNeeded;
+      TR4WCallEdit := edit;
+
+      NetAnnounceStation;
+
+      (* Every status type, the cluster state and the request for the others. *)
+      CheckTrue(WaitPackets(link, Ord(High(StationStatusType)) + 1 + 2),
+                'the whole announcement was written');
+      found := 0;
+      statusPackets := 0;
+      lastIndex := link.Count - 1;
+      for i := 0 to link.Count - 1 do
+         begin
+         bytes := link.Packet(i);
+         if IdOf(bytes) = NET_STATIONSTATUS_ID then
+            begin
+            Inc(statusPackets);
+            CheckEquals(SizeOf(TStationState), Length(bytes), 'a status is its full size');
+            st := @bytes[0];   (* the bytes read as the record, no copy *)
+            if st^.ssType = sstCallsign then
+               begin
+               Inc(found);
+               CheckEquals('K1ABC', string(PAnsiChar(@st^.ssCallsign[0])),
+                           'the callsign status carries what was typed');
+               end;
+            end;
+         end;
+      CheckEquals(1, found, 'exactly one callsign status');
+      CheckEquals(Ord(High(StationStatusType)) + 1, statusPackets, 'one status per type');
+      CheckEquals(NET_SERVERMESSAGE_ID, IdOf(link.Packet(lastIndex)),
+                  'and the request for the others'' statuses goes last');
+   finally
+      TR4WCallEdit := savedEdit;
+      CloseLink(link);
+      frm.Free;
+   end;
+end;
+
+(* The wiring half: nothing the connect thread runs may reach SendFullStationStatus
+  or the entry field. The thread schedules the announcement instead. *)
+procedure TNetClientPacketTests.Test_TheConnectThreadDoesNotReadTheEntryField;
+var
+   lines: TStringList;
+   text, body: string;
+   p, q: integer;
+begin
+   BeginTest('ConnectThread schedules the announcement and does not send statuses');
+   lines := TStringList.Create;
+   try
+      lines.LoadFromFile(AnsiString(ExpandFileName(ExtractFilePath(ParamStr(0)) +
+                         '..' + PathDelim + '..' + PathDelim + 'src' + PathDelim + 'uNet.pas')));
+      text := lines.Text;
+   finally
+      lines.Free;
+   end;
+   p := Pos('function ConnectThread(aParameter: Pointer): DWORD; stdcall;' + LineEnding + 'label', text);
+   CheckTrue(p > 0, 'ConnectThread is there');
+   body := Copy(text, p, Length(text));
+   q := Pos(LineEnding + 'end;', body);
+   CheckTrue(q > 0, 'and ends');
+   body := Copy(body, 1, q);
+   CheckEquals(0, Pos('SendFullStationStatus', body), 'it does not send the full status');
+   CheckEquals(0, Pos('SendStationStatus', body), 'nor any status');
+   CheckTrue(Pos('GNetDrainer.AnnounceStation', body) > 0, 'it hands the announcement to the main thread');
+end;
+
 procedure TNetClientPacketTests.RunAllTests;
 begin
+   Test_TheAnnouncedStationCarriesTheTypedCallsign;
+   Test_TheConnectThreadDoesNotReadTheEntryField;
    Test_AnId0RecordIsRefusedByTheLeafJudge;
    Test_TheRefusalLatchReportsEachPairOnce;
 

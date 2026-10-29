@@ -241,8 +241,12 @@ var
     thread and the connection belongs to its own. *)
   DropRequested                         : boolean = False;
   ServerLogOpened                       : boolean = False;
+  (* The log is kept open across a run of OFFLINEQSO packets (see
+    HoldServerLog). While True, OpenServerLog answers True and CloseServerLog
+    does nothing. *)
+  ServerLogHeld                         : boolean = False;
 
-  NetSynQSOInformation                  : TNetSynQSOInformation = (qsID: NET_TAKESERVERQSO_ID);
+  NetSynQSOInformation                 : TNetSynQSOInformation = (qsID: NET_TAKESERVERQSO_ID);
 
   TempLongBool                          : LongBool;
   CorrectPortNumber                     : LongBool;
@@ -370,6 +374,14 @@ function OpenServerLog(aMode: TServerLogOpenMode): boolean;
 { Open the log, creating it if it is not there -- see the body. }
 function OpenOrCreateServerLog: boolean;
 procedure CloseServerLog;
+(* KEEP THE LOG OPEN ACROSS A RUN OF OFFLINEQSO PACKETS (issue 149). A restock
+  is thousands of them in one write; each used to open the log twice and flush
+  it. HoldServerLog opens it once; until ReleaseServerLog, OpenServerLog is
+  satisfied by the open stream and CloseServerLog leaves it open. ReleaseServerLog
+  flushes ONCE and closes; it does nothing when no hold is in force, so it is
+  safe to call at any time. *)
+procedure HoldServerLog;
+procedure ReleaseServerLog;
 (* DOES THE SERVER LOG ALREADY HOLD THIS QSO -- the same (ceQSOID1, ceQSOID2)?
   Phase 1, C5: a station that was disconnected sends again what it logged
   meanwhile, and one that crashed sends some twice. False for the pair (0, 0),
@@ -635,6 +647,15 @@ begin
 
         StepStart := Bufindex;
 
+        (* THE HOLD ON THE LOG LASTS ONLY ACROSS CONSECUTIVE OFFLINEQSO
+          PACKETS (issue 149). Any other message, and the end of the read, sees
+          the log exactly as it did before the hold existed. At the top of the
+          first pass this also clears a hold an exception left behind. *)
+        if PWORD(@ServerBuffer[Bufindex])^ <> NET_OFFLINEQSO_ID then
+           begin
+           ReleaseServerLog;
+           end;
+
         (* NETWORK PROTOCOL 2: UNTIL A CONNECTION HAS SENT ITS HELLO, ANYTHING
           ELSE IS A REFUSAL. A 4.x station sends COMPUTERID first and is told
           nothing it could read; it is logged and dropped. Asked before the
@@ -711,6 +732,7 @@ begin
           NET_OFFLINEQSO_ID:
             begin
               ServerNewQSOPtr := @ServerBuffer[Bufindex];
+              HoldServerLog;
               (* A QSO THE LOG ALREADY HOLDS IS NOT STORED AGAIN, but it is
                 acknowledged: the sender asked, and it is told the server has it. *)
               if ServerHoldsQSO(ServerNewQSOPtr^.qiInformation) then
@@ -721,7 +743,8 @@ begin
               begin
                 ServerLog.Seek(0, soEnd);
                 ServerLog.WriteBuffer(ServerNewQSOPtr.qiInformation, SizeOf(ContestExchange));
-                FileFlush(ServerLog.Handle);
+                (* NO FLUSH HERE: the log is held open (above) and flushed once,
+                  when the run of OFFLINEQSO packets ends (ReleaseServerLog). *)
                 NoteQsoStored(ServerNewQSOPtr^.qiInformation);
                 DisplayServerLogSize;
                 CloseServerLog;
@@ -887,6 +910,7 @@ begin
 
         goto CheckBuffer;
         1:
+        ReleaseServerLog;
         DisplayRCVDBytes;
 
 end;
@@ -1039,7 +1063,13 @@ var
    name: string;
 begin
   Result := False;
-  if ServerLogOpened then Exit;
+  if ServerLogOpened then
+     begin
+     (* Open because it is held: the caller may use it. Open for any other
+       reason: a re-entrant open, refused as it always was. *)
+     Result := ServerLogHeld;
+     Exit;
+     end;
 
   (* CharBufferBytes, NOT CharBufferText. tr4wserver.lpr fills this buffer
     with SetCharBufferBytes(AnsiString(...)) -- system-codepage bytes, copied
@@ -1073,8 +1103,38 @@ end;
 
 procedure CloseServerLog;
 begin
+  if ServerLogHeld then
+     begin
+     Exit;
+     end;
   FreeAndNil(ServerLog);
   ServerLogOpened := False;
+end;
+
+procedure HoldServerLog;
+begin
+  if ServerLogHeld then
+     begin
+     Exit;
+     end;
+  if OpenServerLog(slOpenExisting) then
+     begin
+     ServerLogHeld := True;
+     end;
+end;
+
+procedure ReleaseServerLog;
+begin
+  if not ServerLogHeld then
+     begin
+     Exit;
+     end;
+  ServerLogHeld := False;
+  try
+     FileFlush(ServerLog.Handle);
+  finally
+     CloseServerLog;
+  end;
 end;
 
 function ServerHoldsQSO(const CE: ContestExchange): boolean;

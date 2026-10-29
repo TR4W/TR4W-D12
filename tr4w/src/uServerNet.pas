@@ -422,7 +422,15 @@ begin
 
    { Admitted: whatever has arrived, handed to the parser whole. }
    c.Connection.IOHandler.ReadTimeout := IdTimeoutDefault;
-   c.Connection.IOHandler.CheckForDataOnSource(250);
+   (* WAIT FOR DATA ONLY WHEN NONE IS WAITING (issue 149). A read takes at most
+     one buffer's worth (FBuf), so a burst leaves the rest in Indy's input
+     buffer; CheckForDataOnSource waits for NEW bytes on the socket even then,
+     so every pass over a backlog cost its full 250 ms (measured: a 5,000-QSO
+     restock, 94 reads per 1,000 QSOs, 25 ms per QSO = 265 ms per read). *)
+   if c.Connection.IOHandler.InputBuffer.Size = 0 then
+      begin
+      c.Connection.IOHandler.CheckForDataOnSource(250);
+      end;
    got := c.Connection.IOHandler.InputBuffer.Size;
    if got <= 0 then
       begin

@@ -477,6 +477,11 @@ procedure AttachNetClient(aClient: TNetClient);
 
 function SendRecordToServer(RecordType: Word; const rec: ContestExchange): boolean;
 procedure SendFullStationStatus;
+(* WHAT THIS STATION TELLS THE SERVER WHEN THE LINK COMES UP (issue 150): every
+  status, the cluster state and the request for the others' statuses. MAIN
+  THREAD ONLY -- the callsign status reads the entry field. ConnectThread does
+  not call it; it schedules it (TNetDrainer.AnnounceStation). *)
+procedure NetAnnounceStation;
 procedure SendSerialNumberChange(Status: TSerialNumberType);
 
 type
@@ -1242,6 +1247,8 @@ type
       procedure Drain(Data: PtrInt);
       procedure ReportDropped(Data: PtrInt);
       procedure LinkChanged(Data: PtrInt);
+      (* The connect thread asks the main thread to announce this station. *)
+      procedure AnnounceStation(Data: PtrInt);
       (* The writer thread has finished with QSO packets: record what became of
         them. See SettleServerProgress. *)
       procedure Settle(Data: PtrInt);
@@ -1382,6 +1389,11 @@ procedure TNetDrainer.LinkChanged(Data: PtrInt);
 begin
    ApplyNetworkMenuState;
    NetLinkObservers.Notify(nil);
+end;
+
+procedure TNetDrainer.AnnounceStation(Data: PtrInt);
+begin
+   NetAnnounceStation;
 end;
 
 procedure NetLinkChanged;
@@ -1913,11 +1925,14 @@ begin
         end
      else
         begin
-        SendFullStationStatus;
-        SendClientStatus;
-        ServerMessage.smMessage := SM_GETSTATUS_MESSAGE;
-        SendToNet(ServerMessage, SizeOf(ServerMessage));
- //     SendStationStatus;
+        (* NOT HERE: the callsign status reads the entry field, an LCL control,
+          and this is a worker thread (issue 150). The main thread announces
+          the station; the status senders ignore a link that has dropped by
+          then. Queued before the status line below, so it runs in order. *)
+        if (Application <> nil) and (not Application.Terminated) then
+           begin
+           Application.QueueAsyncCall(GNetDrainer.AnnounceStation, 0);
+           end;
         ShowConnectionStatus(TC_CONNECTEDTO);
         if FConnectLogState <> nclsConnected then
            begin
@@ -3182,8 +3197,15 @@ begin
   for s := Low(StationStatusType) to High(StationStatusType) do
      begin
      SendStationStatus(s);
-     Sleep(20);
      end;
+end;
+
+procedure NetAnnounceStation;
+begin
+   SendFullStationStatus;
+   SendClientStatus;
+   ServerMessage.smMessage := SM_GETSTATUS_MESSAGE;
+   SendToNet(ServerMessage, SizeOf(ServerMessage));
 end;
 
 procedure SendSerialNumberChange(Status: TSerialNumberType);
