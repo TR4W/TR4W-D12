@@ -69,11 +69,11 @@ the first Word and length of what the client's own senders write, but only a
 real link says the server keeps the connection. Run this with BOTH servers, after
 item 1:
 
-- [ ] **A spot crosses and the link stays up.** SERVER SIDE CONFIRMED 2026-10-29
-      from the server's own output (Mint on the cluster; six `RX NETWORKDXSPOT
-      (0x0406) 106B` lines, one 6 ms after the cluster line for AF4O; no drop, no
-      unknown id, `clients=2/26` through the whole capture). STILL TO LOOK AT: the
-      spot on the OTHER station's band map. With a cluster connected at A
+- [x] **A spot crosses and the link stays up -- CONFIRMED 2026-10-29, NY4I**
+  (Mint on the cluster, AF4O 14234: six `RX NETWORKDXSPOT (0x0406) 106B`
+  lines in the server's output, the AF4O one 6 ms after the cluster line; no
+  drop, no unknown id, `clients=2/26` throughout; and AF4O shows on the
+  Windows band map). With a cluster connected at A
   (or a spot added at A), watch B's band map. EXPECT the spot on B, no
   `unknown or zero-size message ID` line in the server log, no
   `Disconnecting client` after the spot, and `tr4w.log` at A with no
