@@ -112,7 +112,11 @@ Python server in a new directory) for the first item. Expect the in-tree
 `tr4wserver` to take MINUTES to store a large restock (about 40-85 ms a QSO, so
 5,000 is about 3.5 minutes; TR4WServerPy takes about 1 ms a QSO).
 
-- [ ] **NY4I's scenario.** At A alone, log 83 QSOs while connected to server S1 (so
+- [x] **NY4I's scenario -- OUTCOME CONFIRMED 2026-10-29, NY4I** (Windows A to an
+      empty TR4WServerPy on a Raspberry Pi, then Mint B: "it worked, mint has the
+      83 qsos"). Not reported, so still worth a look in `tr4w.log` on the next run:
+      the notice wording, the two `[Net] restock:` lines, no Error or Warn, and
+      NO notice on a second connect. At A alone, log 83 QSOs while connected to server S1 (so
       all are marked sent), then Disconnect. Start a FRESH EMPTY server S2 (no
       `SERVERLOG.TRW`), point A at it, **SERVER AUTO SYNCHRONIZE LOG ON CONNECT on**,
       Net > Connect. EXPECT: no question; a notice "Sent to the server: 83 QSO(s) it
@@ -124,7 +128,9 @@ Python server in a new directory) for the first item. Expect the in-tree
       is unchanged (83 rows, none gained, none lost, **no `sent_to_server` change** --
       nothing to settle). Disconnect and Connect again: NO notice, `restock: 0 to
       send`.
-- [ ] **Then B joins and catches up all 83.** Start B (Mint) on the same contest with
+- [x] **Then B joins and catches up all 83 -- CONFIRMED 2026-10-29, NY4I** (Mint,
+      the Linux AppImage of CI run 40755408814, server `pi400.local`: it holds the
+      83). Start B (Mint) on the same contest with
       an empty log, connect with the setting on. EXPECT: "Caught up from the server:
       83 QSO(s) added."; B's log holds the 83, once each, and its score equals A's.
       The restock did not push them to B live (B was not connected during it, and an
