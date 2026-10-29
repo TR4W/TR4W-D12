@@ -69,18 +69,22 @@ the first Word and length of what the client's own senders write, but only a
 real link says the server keeps the connection. Run this with BOTH servers, after
 item 1:
 
-- [ ] **A spot crosses and the link stays up.** With a cluster connected at A
-      (or a spot added at A), watch B's band map. EXPECT the spot on B, no
-      `unknown or zero-size message ID` line in the server log, no
-      `Disconnecting client` after the spot, and `tr4w.log` at A with no
-      reconnect following it. 20 spots in a minute must not flap the link.
+- [ ] **A spot crosses and the link stays up.** SERVER SIDE CONFIRMED 2026-10-29
+      from the server's own output (Mint on the cluster; six `RX NETWORKDXSPOT
+      (0x0406) 106B` lines, one 6 ms after the cluster line for AF4O; no drop, no
+      unknown id, `clients=2/26` through the whole capture). STILL TO LOOK AT: the
+      spot on the OTHER station's band map. With a cluster connected at A
+  (or a spot added at A), watch B's band map. EXPECT the spot on B, no
+  `unknown or zero-size message ID` line in the server log, no
+  `Disconnecting client` after the spot, and `tr4w.log` at A with no
+  reconnect following it. 20 spots in a minute must not flap the link.
 - [ ] **Intercom, time sync, spot form.** Net > Send message from A (EXPECT it
-      at B), the time-sync menu row if the server allows it (EXPECT B's clock
-      set only if it permits, and the link stays up), and the Send Spot form
-      with no cluster connected at A (EXPECT B's cluster command gets the text).
+  at B), the time-sync menu row if the server allows it (EXPECT B's clock
+  set only if it permits, and the link stays up), and the Send Spot form
+  with no cluster connected at A (EXPECT B's cluster command gets the text).
 - [ ] **Nothing refused.** `tr4w.log` at either station has no
-      `REFUSED to send a malformed packet` line. If one appears it names the id
-      and size of a record that would have broken the link; capture it.
+  `REFUSED to send a malformed packet` line. If one appears it names the id
+  and size of a record that would have broken the link; capture it.
 
 ---
 
@@ -113,86 +117,86 @@ Python server in a new directory) for the first item. Expect the in-tree
 5,000 is about 3.5 minutes; TR4WServerPy takes about 1 ms a QSO).
 
 - [x] **NY4I's scenario -- OUTCOME CONFIRMED 2026-10-29, NY4I** (Windows A to an
-      empty TR4WServerPy on a Raspberry Pi, then Mint B: "it worked, mint has the
-      83 qsos"). Not reported, so still worth a look in `tr4w.log` on the next run:
-      the notice wording, the two `[Net] restock:` lines, no Error or Warn, and
-      NO notice on a second connect. At A alone, log 83 QSOs while connected to server S1 (so
-      all are marked sent), then Disconnect. Start a FRESH EMPTY server S2 (no
-      `SERVERLOG.TRW`), point A at it, **SERVER AUTO SYNCHRONIZE LOG ON CONNECT on**,
-      Net > Connect. EXPECT: no question; a notice "Sent to the server: 83 QSO(s) it
-      did not have."; `tr4w.log` at A has `[Net] restock: 83 to send; 0 imported
-      (no network identity) skipped; 0 still owed (the resend sends them) skipped`
-      and `[Net] restock: 83 QSO(s) the server did not have were posted (OFFLINEQSO:
-      stored, acknowledged, not relayed)`, no Error and no Warn; the server's
-      log shows 83 records (the display on the server window, or a download); A's log
-      is unchanged (83 rows, none gained, none lost, **no `sent_to_server` change** --
-      nothing to settle). Disconnect and Connect again: NO notice, `restock: 0 to
-      send`.
+  empty TR4WServerPy on a Raspberry Pi, then Mint B: "it worked, mint has the
+  83 qsos"). Not reported, so still worth a look in `tr4w.log` on the next run:
+  the notice wording, the two `[Net] restock:` lines, no Error or Warn, and
+  NO notice on a second connect. At A alone, log 83 QSOs while connected to server S1 (so
+  all are marked sent), then Disconnect. Start a FRESH EMPTY server S2 (no
+  `SERVERLOG.TRW`), point A at it, **SERVER AUTO SYNCHRONIZE LOG ON CONNECT on**,
+  Net > Connect. EXPECT: no question; a notice "Sent to the server: 83 QSO(s) it
+  did not have."; `tr4w.log` at A has `[Net] restock: 83 to send; 0 imported
+  (no network identity) skipped; 0 still owed (the resend sends them) skipped`
+  and `[Net] restock: 83 QSO(s) the server did not have were posted (OFFLINEQSO:
+  stored, acknowledged, not relayed)`, no Error and no Warn; the server's
+  log shows 83 records (the display on the server window, or a download); A's log
+  is unchanged (83 rows, none gained, none lost, **no `sent_to_server` change** --
+  nothing to settle). Disconnect and Connect again: NO notice, `restock: 0 to
+  send`.
 - [x] **Then B joins and catches up all 83 -- CONFIRMED 2026-10-29, NY4I** (Mint,
-      the Linux AppImage of CI run 40755408814, server `pi400.local`: it holds the
-      83). Start B (Mint) on the same contest with
-      an empty log, connect with the setting on. EXPECT: "Caught up from the server:
-      83 QSO(s) added."; B's log holds the 83, once each, and its score equals A's.
-      The restock did not push them to B live (B was not connected during it, and an
-      OFFLINEQSO is never relayed) -- if B WAS connected during the restock, EXPECT B to
-      show nothing then and to get the 83 on its next connect.
+  the Linux AppImage of CI run 40755408814, server `pi400.local`: it holds the
+  83). Start B (Mint) on the same contest with
+  an empty log, connect with the setting on. EXPECT: "Caught up from the server:
+  83 QSO(s) added."; B's log holds the 83, once each, and its score equals A's.
+  The restock did not push them to B live (B was not connected during it, and an
+  OFFLINEQSO is never relayed) -- if B WAS connected during the restock, EXPECT B to
+  show nothing then and to get the 83 on its next connect.
 - [ ] **The question, one only (setting OFF).** Repeat the first item with the setting
-      off. EXPECT: ONE question, "The server lacks 83 QSO(s) of yours. Send them to the
-      server now? ..."; nothing is sent until Yes; No leaves everything alone, logs that
-      the operator declined, and asks again on the next connect. Then make BOTH apply:
-      with the server holding 10 QSOs A lacks (logged at B while A was away) and A
-      holding 83 the server lacks, connect A. EXPECT ONE dialog covering both
-      ("The server holds 10 QSO(s) this log lacks and lacks 83 of yours. ...");
-      never two dialogs; Yes does both (check both logs afterwards), No does neither.
-      When both sides are complete (a second connect): no dialog, no notice.
+  off. EXPECT: ONE question, "The server lacks 83 QSO(s) of yours. Send them to the
+  server now? ..."; nothing is sent until Yes; No leaves everything alone, logs that
+  the operator declined, and asks again on the next connect. Then make BOTH apply:
+  with the server holding 10 QSOs A lacks (logged at B while A was away) and A
+  holding 83 the server lacks, connect A. EXPECT ONE dialog covering both
+  ("The server holds 10 QSO(s) this log lacks and lacks 83 of yours. ...");
+  never two dialogs; Yes does both (check both logs afterwards), No does neither.
+  When both sides are complete (a second connect): no dialog, no notice.
 - [ ] **The server's log is cleared while the stations keep theirs.** With A and B
-      connected and holding the same 20 QSOs, clear ONLY the server's log (the
-      server's own Clear server log, or the Python server's clear; NOT the Clear all
-      logs message, which clears every station's log too). Then at A, Net >
-      Synchronize with the server, Get server log: the server holds 0 and the window's
-      second button reads "Send 20 QSO(s) to the server". EXPECT the button enabled
-      only while the link is up (drop the link with the window open: it greys; bring
-      it back: it comes on), and clicking it sends at once (the window stays open,
-      the button goes grey, the notice "Sent to the server: 20 QSO(s) it did not have."
-      appears); Get server log again shows 20 and the button stays grey. B's log is
-      unchanged and shows nothing (an OFFLINEQSO is not relayed). Then Net > Clear all
-      logs and confirm every station still clears as before.
+  connected and holding the same 20 QSOs, clear ONLY the server's log (the
+  server's own Clear server log, or the Python server's clear; NOT the Clear all
+  logs message, which clears every station's log too). Then at A, Net >
+  Synchronize with the server, Get server log: the server holds 0 and the window's
+  second button reads "Send 20 QSO(s) to the server". EXPECT the button enabled
+  only while the link is up (drop the link with the window open: it greys; bring
+  it back: it comes on), and clicking it sends at once (the window stays open,
+  the button goes grey, the notice "Sent to the server: 20 QSO(s) it did not have."
+  appears); Get server log again shows 20 and the button stays grey. B's log is
+  unchanged and shows nothing (an OFFLINEQSO is not relayed). Then Net > Clear all
+  logs and confirm every station still clears as before.
 - [ ] **A mid-send drop repairs itself.** With 1,000+ QSOs at A and a fresh empty server,
-      Connect and pull the cable (or stop the server) while it sends. EXPECT a Warn
-      `restock: the link went down after N of M QSO(s)`; on the next link A sends only
-      the rest (the plan is made again from the server's log): no duplicates, the server's
-      log ends at exactly the 1,000.
+  Connect and pull the cable (or stop the server) while it sends. EXPECT a Warn
+  `restock: the link went down after N of M QSO(s)`; on the next link A sends only
+  the rest (the plan is made again from the server's log): no duplicates, the server's
+  log ends at exactly the 1,000.
 - [ ] **The server keeps them across a restart.** After the first item stop S2 and start
-      it again in the same directory (both servers). EXPECT the log still holds the 83
-      and a station connecting now catches up all of them.
+  it again in the same directory (both servers). EXPECT the log still holds the 83
+  and a station connecting now catches up all of them.
 - [ ] **Imports and owed rows are left alone.** Import an ADIF of 5 QSOs at A (no
-      network identity), log 2 QSOs with the link down, then connect to an EMPTY
-      server. EXPECT `restock: <n> to send; 5 imported ... skipped; 2 still owed ...
-      skipped` -- the 2 owed go as QSOINFO through the ordinary resend ("Resent to the
-      server what was logged while disconnected: 2 QSO(s)") and a second station sees
-      them live; the 5 imports are NOT on the server.
+  network identity), log 2 QSOs with the link down, then connect to an EMPTY
+  server. EXPECT `restock: <n> to send; 5 imported ... skipped; 2 still owed ...
+  skipped` -- the 2 owed go as QSOINFO through the ordinary resend ("Resent to the
+  server what was logged while disconnected: 2 QSO(s)") and a second station sees
+  them live; the 5 imports are NOT on the server.
 - [ ] **Mint.** Repeat the first, third and sixth items with the Mint build as the
-      station holding the QSOs (B in that item), against `tr4wserver` and TR4WServerPy.
-      LOOK AT THE WINDOW LAYOUT on gtk2 (the wider font, issue 142): the Send button's
-      caption "Send 83 QSO(s) to the server" must not be clipped, and no two buttons
-      may overlap.
+  station holding the QSOs (B in that item), against `tr4wserver` and TR4WServerPy.
+  LOOK AT THE WINDOW LAYOUT on gtk2 (the wider font, issue 142): the Send button's
+  caption "Send 83 QSO(s) to the server" must not be clipped, and no two buttons
+  may overlap.
 - [ ] **The in-tree server stays up under a large restock.** One of five in-tree runs
-      on 2026-10-28 lost the server process about 7 s into a 5,000-QSO restock (no
-      crash line, no Windows error event; four later runs did not repeat it). Restock
-      5,000 into `tr4wserver` and read whether it is still running afterwards; if it
-      went, capture `tr4wserver.log` and the process exit code. ALSO EXPECT, and
-      write down: (a) many `write took over 250 ms` Warns in `tr4w.log` at the
-      restocking station (the real writer pushes the whole set into a server that
-      stores one every 40-85 ms; the unit tests and netprobe used writers that never
-      block); (b) that station's OWN live QSOs and status packets queue behind the
-      backlog on the same stream, so other stations see them minutes late with
-      `tr4wserver` and seconds late with TR4WServerPy; and (c) the operator is not
-      frozen meanwhile (the writes are off the main thread). No prompt and no pacing
-      for a large restock is deliberate (NY4I).
+  on 2026-10-28 lost the server process about 7 s into a 5,000-QSO restock (no
+  crash line, no Windows error event; four later runs did not repeat it). Restock
+  5,000 into `tr4wserver` and read whether it is still running afterwards; if it
+  went, capture `tr4wserver.log` and the process exit code. ALSO EXPECT, and
+  write down: (a) many `write took over 250 ms` Warns in `tr4w.log` at the
+  restocking station (the real writer pushes the whole set into a server that
+  stores one every 40-85 ms; the unit tests and netprobe used writers that never
+  block); (b) that station's OWN live QSOs and status packets queue behind the
+  backlog on the same stream, so other stations see them minutes late with
+  `tr4wserver` and seconds late with TR4WServerPy; and (c) the operator is not
+  frozen meanwhile (the writes are off the main thread). No prompt and no pacing
+  for a large restock is deliberate (NY4I).
 - [ ] **What the counts mean.** The log's `restock:` line counts only rows the
-      server LACKS: a row the server already holds is never read, so an owed row the
-      server has an older copy of (edited offline) is not in "still owed ... skipped";
-      the resend sends its edit as before.
+  server LACKS: a row the server already holds is never read, so an owed row the
+  server has an older copy of (edited offline) is not in "still owed ... skipped";
+  the resend sends its edit as before.
 
 ---
 
@@ -217,77 +221,77 @@ deleted between runs, and a backup folder you can look in (the line
 `[Net] catch-up: log backed up to ...` names it).
 
 - [ ] **The reboot (the NY4I scenario).** Connect A and B; log 2 QSOs at A so both
-      have them. QUIT TR4W at B. Log 20 QSOs at A. Start B, open the same
-      contest, and at B log 2 QSOs with the link down (Net > Disconnect first if
-      it connected by itself), then Net > Connect. With the setting ON at B.
-      EXPECT: B's log holds 24 QSOs (2 + 20 + its 2), none twice, its QSO count and
-      score are A's plus its own; a notice "Caught up from the server: 20 QSO(s)
-      added."; B's own two reach A (the step-4 resend: "Resent to the server what
-      was logged while disconnected: 2 QSO(s), 0 edit(s)." -- the two notices share
-      one line, so read `tr4w.log`); `tr4w.log` at B has `[Net] catch-up: 20 to add`
-      and `[Net] catch-up: 20 QSO(s) added from the server`, no Error line.
-      A's log has B's two and 22+2 in all; the server's log has all of it once.
+  have them. QUIT TR4W at B. Log 20 QSOs at A. Start B, open the same
+  contest, and at B log 2 QSOs with the link down (Net > Disconnect first if
+  it connected by itself), then Net > Connect. With the setting ON at B.
+  EXPECT: B's log holds 24 QSOs (2 + 20 + its 2), none twice, its QSO count and
+  score are A's plus its own; a notice "Caught up from the server: 20 QSO(s)
+  added."; B's own two reach A (the step-4 resend: "Resent to the server what
+  was logged while disconnected: 2 QSO(s), 0 edit(s)." -- the two notices share
+  one line, so read `tr4w.log`); `tr4w.log` at B has `[Net] catch-up: 20 to add`
+  and `[Net] catch-up: 20 QSO(s) added from the server`, no Error line.
+  A's log has B's two and 22+2 in all; the server's log has all of it once.
 - [ ] **Nothing owed afterwards.** `tr4w.log` at B (DEBUG): `still owed to the
-      server: 0 QSO(s), 0 edit(s)` -- the 20 arrived marked sent and clean, so
-      the resend never sends them back. Net > Disconnect and Connect at B again:
-      NO notice, `[Net] catch-up: 0 to add; 22 already in this log`, nothing sent.
+  server: 0 QSO(s), 0 edit(s)` -- the 20 arrived marked sent and clean, so
+  the resend never sends them back. Net > Disconnect and Connect at B again:
+  NO notice, `[Net] catch-up: 0 to add; 22 already in this log`, nothing sent.
 - [ ] **The question (setting OFF).** Repeat the reboot with the setting off.
-      EXPECT: B is ASKED "The server holds 20 QSO(s) that this log does not have.
-      Add them to this log now? ..." and nothing is added until Yes. Answer No: the
-      log is unchanged, `tr4w.log` says the operator declined, and the question
-      comes again on the next connect. Net > Add missing QSOs from the server afterwards still works
-      (next item).
+  EXPECT: B is ASKED "The server holds 20 QSO(s) that this log does not have.
+  Add them to this log now? ..." and nothing is added until Yes. Answer No: the
+  log is unchanged, `tr4w.log` says the operator declined, and the question
+  comes again on the next connect. Net > Add missing QSOs from the server afterwards still works
+  (next item).
 - [ ] **Net > Add missing QSOs from the server (the window).** At B, Net > Add missing QSOs from the server. EXPECT: a window
-      titled Server log; Get server log fills the Received bytes / records /
-      QSOs counters and the grid with the server's QSOs (greyed if deleted); the
-      second button reads "Add 20 missing QSOs" and is enabled; clicking it closes
-      the window and the 20 appear in B's log with the notice. Get server log again
-      with nothing missing: the button stays grey. LOOK AT THE LAYOUT on Windows,
-      Mint and macOS: the window was widened to 860 and the buttons re-spaced; the
-      "Add ... QSOs" caption must not be clipped (the Spanish/German/Russian
-      catalogues have not been written for the two new captions yet).
+  titled Server log; Get server log fills the Received bytes / records /
+  QSOs counters and the grid with the server's QSOs (greyed if deleted); the
+  second button reads "Add 20 missing QSOs" and is enabled; clicking it closes
+  the window and the 20 appear in B's log with the notice. Get server log again
+  with nothing missing: the button stays grey. LOOK AT THE LAYOUT on Windows,
+  Mint and macOS: the window was widened to 860 and the buttons re-spaced; the
+  "Add ... QSOs" caption must not be clipped (the Spanish/German/Russian
+  catalogues have not been written for the two new captions yet).
 - [ ] **The backup, and that nothing is replaced.** After a catch-up, the backup
-      folder holds a NEW file `<log> before catch-up <date time>Z.db` (one per
-      catch-up that added something; never rotated), and `<log> periodic.db` and its
-      `.bak` are exactly as they were (check their times) -- also with BACKUP LOG
-      FREQUENCY = 0. Open the new file (Open Contest, or any SQLite viewer on a COPY)
-      and check it holds B's log as it was BEFORE the 20 were added. B's own two QSOs, logged offline, are still in B's
-      log with their original times and exchanges. Make the backup folder
-      unwritable (a file where the folder should be) and repeat: EXPECT a warning
-      "Nothing was added to the log: the backup of the log taken first failed ..."
-      and the log unchanged.
+  folder holds a NEW file `<log> before catch-up <date time>Z.db` (one per
+  catch-up that added something; never rotated), and `<log> periodic.db` and its
+  `.bak` are exactly as they were (check their times) -- also with BACKUP LOG
+  FREQUENCY = 0. Open the new file (Open Contest, or any SQLite viewer on a COPY)
+  and check it holds B's log as it was BEFORE the 20 were added. B's own two QSOs, logged offline, are still in B's
+  log with their original times and exchanges. Make the backup folder
+  unwritable (a file where the folder should be) and repeat: EXPECT a warning
+  "Nothing was added to the log: the backup of the log taken first failed ..."
+  and the log unchanged.
 - [ ] **A server log that was not cleared.** Run CQ WW CW on A and B, log 5 QSOs at
-      A. Without clearing the server, both stations change the contest to ARRL DX
-      CW (both announce the new contest). Restart B, connect. EXPECT: the 5 CQ WW
-      QSOs are NOT added; `tr4w.log` says `5 for another contest (first: <call>)`;
-      NOTHING is shown on screen (a complete log is silent), and the
-      notice "N QSO(s) on the server belong to another contest and were not added."
-      follows the "Caught up" one only when something else WAS added.
-      Then repeat with a by-id contest on both (a QSO party): with A connected its
-      QSOs are added (A announced the contest); stop A, restart B, connect: the
-      records of a departed author are added when their byte equals B's handle
-      (same build) -- and report what happens with two DIFFERENT builds (Windows
-      and Mint), where the byte differs and the QSOs are skipped as "contest not
-      known". That last one is the documented limit, ACCEPTED FOR NOW (NY4I,
-      2026-10-27); the fix is the contest's ADIF name in the shared record,
-      issue #146.
+  A. Without clearing the server, both stations change the contest to ARRL DX
+  CW (both announce the new contest). Restart B, connect. EXPECT: the 5 CQ WW
+  QSOs are NOT added; `tr4w.log` says `5 for another contest (first: <call>)`;
+  NOTHING is shown on screen (a complete log is silent), and the
+  notice "N QSO(s) on the server belong to another contest and were not added."
+  follows the "Caught up" one only when something else WAS added.
+  Then repeat with a by-id contest on both (a QSO party): with A connected its
+  QSOs are added (A announced the contest); stop A, restart B, connect: the
+  records of a departed author are added when their byte equals B's handle
+  (same build) -- and report what happens with two DIFFERENT builds (Windows
+  and Mint), where the byte differs and the QSOs are skipped as "contest not
+  known". That last one is the documented limit, ACCEPTED FOR NOW (NY4I,
+  2026-10-27); the fix is the contest's ADIF name in the shared record,
+  issue #146.
 - [ ] **A long outage.** Log 200+ QSOs at A while B is down, start B. EXPECT: B's
-      window does not freeze during the download (3.76 MB for 10,000 QSOs, a
-      fraction of a second on a LAN), the add and the rescore finish in a few
-      seconds, the count is right. Note how long the rescore takes on a big log.
+  window does not freeze during the download (3.76 MB for 10,000 QSOs, a
+  fraction of a second on a LAN), the add and the rescore finish in a few
+  seconds, the count is right. Note how long the rescore takes on a big log.
 - [ ] **An edit made while B was away.** At A, edit the exchange of a QSO
-      B also holds while B is down; restart B and catch up. EXPECT (by design): B's
-      copy is NOT updated -- catch-up only adds. Live edits while B is up still
-      arrive. D7 picked up such an edit because it replaced the whole file.
-      DECIDED (NY4I, 2026-10-27): acceptable until the redesign, issue #146.
+  B also holds while B is down; restart B and catch up. EXPECT (by design): B's
+  copy is NOT updated -- catch-up only adds. Live edits while B is up still
+  arrive. D7 picked up such an edit because it replaced the whole file.
+  DECIDED (NY4I, 2026-10-27): acceptable until the redesign, issue #146.
 - [ ] **The server is reachable but the sync port is not.** Block port+1 at the
-      server (firewall), connect B. EXPECT: the link stays up; a notice "Could not
-      read the server's log to catch up: could not connect to host:port ..." and an
-      Error line; Net > Add missing QSOs from the server shows a warning and the Get server log button
-      comes back.
+  server (firewall), connect B. EXPECT: the link stays up; a notice "Could not
+  read the server's log to catch up: could not connect to host:port ..." and an
+  Error line; Net > Add missing QSOs from the server shows a warning and the Get server log button
+  comes back.
 - [ ] **TR4WServerPy and Mint.** Repeat the first item against `python
-      tr4wserver.py --display`, and with B on Linux Mint (its backup folder is under
-      `~/.config/tr4w/backup`).
+  tr4wserver.py --display`, and with B on Linux Mint (its backup folder is under
+  `~/.config/tr4w/backup`).
 
 ---
 
@@ -311,50 +315,50 @@ logs of that contest, **NETWORK AUTO CONNECT off**, `DEBUG LOG LEVEL = DEBUG`.
 Delete each server's `SERVERLOG.TRW` between runs.
 
 - [ ] **Drop the link, log 5 QSOs, edit 1, reconnect.** Connect A and B (Net >
-      Connect). At A: Net > Disconnect. Log FIVE QSOs at A, then edit one of
-      them (change its exchange). A's Network status reads disconnected. Net >
-      Connect at A. EXPECT: within a few seconds B's log holds ALL FIVE QSOs and the
-      edited exchange on the one that was edited, nothing twice (B's QSO count and
-      score moved by five); a notice at A reads "Resent to the server what was
-      logged while disconnected: 5 QSO(s), 1 edit(s)." (the edited QSO was never
-      sent either, so it travels as a QSO AND as an edit); B shows "Server log
-      changed: 5". `tr4w.log` at A: `[Net] resending
-      what was logged while disconnected: 5 QSO(s), 1 edit(s)`, no `[NetSend]`
-      Warn or Error. The server log shows five `NET_QSOINFO` and one `NET_EDITEDQSO`.
+  Connect). At A: Net > Disconnect. Log FIVE QSOs at A, then edit one of
+  them (change its exchange). A's Network status reads disconnected. Net >
+  Connect at A. EXPECT: within a few seconds B's log holds ALL FIVE QSOs and the
+  edited exchange on the one that was edited, nothing twice (B's QSO count and
+  score moved by five); a notice at A reads "Resent to the server what was
+  logged while disconnected: 5 QSO(s), 1 edit(s)." (the edited QSO was never
+  sent either, so it travels as a QSO AND as an edit); B shows "Server log
+  changed: 5". `tr4w.log` at A: `[Net] resending
+  what was logged while disconnected: 5 QSO(s), 1 edit(s)`, no `[NetSend]`
+  Warn or Error. The server log shows five `NET_QSOINFO` and one `NET_EDITEDQSO`.
 - [ ] **Nothing is owed afterwards.** `tr4w.log` at A (DEBUG) ends the catch-up
-      with `[Net] still owed to the server: 0 QSO(s), 0 edit(s)` (no window shows
-      the two numbers any more). Net >
-      Disconnect and Connect again at A. EXPECT: NO second notice, nothing resent
-      (`tr4w.log` has no `resending` line for the second link).
+  with `[Net] still owed to the server: 0 QSO(s), 0 edit(s)` (no window shows
+  the two numbers any more). Net >
+  Disconnect and Connect again at A. EXPECT: NO second notice, nothing resent
+  (`tr4w.log` has no `resending` line for the second link).
 - [ ] **Reboot variant.** With A connected log nothing; Net > Disconnect at A;
-      log 3 QSOs and edit one; QUIT TR4W at A; start TR4W at A, open the same
-      contest; Net > Connect. EXPECT: the same as above for three QSOs: B gets them
-      all, once each, and the edit lands. (The flags are in the log file, so they
-      survive the restart. Check that A did NOT resend anything it had sent before
-      it was disconnected: `tr4w.log` counts only the three.)
+  log 3 QSOs and edit one; QUIT TR4W at A; start TR4W at A, open the same
+  contest; Net > Connect. EXPECT: the same as above for three QSOs: B gets them
+  all, once each, and the edit lands. (The flags are in the log file, so they
+  survive the restart. Check that A did NOT resend anything it had sent before
+  it was disconnected: `tr4w.log` counts only the three.)
 - [ ] **A QSO is not "sent" until it is written.** With both connected, log a QSO
-      at A and at once pull A's network cable (or kill the server) so the write
-      cannot finish. EXPECT: after the link is reported lost the QSO is counted as
-      unsent at A (`still owed ... 1 QSO(s)` in `tr4w.log`), and when the link is back it reaches B exactly once.
-      If the cable was pulled just AFTER the write and B already had it, A may
-      send it again: B must not log it twice (`[Net] QSO ... is already in the
-      log; the copy that just arrived is ignored` at B).
+  at A and at once pull A's network cable (or kill the server) so the write
+  cannot finish. EXPECT: after the link is reported lost the QSO is counted as
+  unsent at A (`still owed ... 1 QSO(s)` in `tr4w.log`), and when the link is back it reaches B exactly once.
+  If the cable was pulled just AFTER the write and B already had it, A may
+  send it again: B must not log it twice (`[Net] QSO ... is already in the
+  log; the copy that just arrived is ignored` at B).
 - [ ] **An import is never sent.** Open a contest log that has imported QSOs
-      (ADIF or an old `.TRW`), Net > Connect. EXPECT: NO resend notice, nothing
-      reaches the server from the imported rows (`still owed ... 0 QSO(s)`).
+  (ADIF or an old `.TRW`), Net > Connect. EXPECT: NO resend notice, nothing
+  reaches the server from the imported rows (`still owed ... 0 QSO(s)`).
 - [ ] **A refused station does not push.** Start A with COMPUTER ID the same as
-      B's (B connected). EXPECT: A is refused (8320), A's QSOs logged while
-      disconnected stay UNSENT and no resend notice appears. Change A's id to
-      another letter and Connect: now they go.
+  B's (B connected). EXPECT: A is refused (8320), A's QSOs logged while
+  disconnected stay UNSENT and no resend notice appears. Change A's id to
+  another letter and Connect: now they go.
 - [ ] **A long outage.** Disconnect A and log a few hundred QSOs at A with the
-      link down (only QSOs LOGGED at A count; an ADIF import does not travel),
-      then reconnect. EXPECT: the main window never freezes while they go, all
-      arrive at B, and the notice names the count. In-tree `tr4wserver` relays
-      about 34 QSOs a second (200 in about 6 s), so B's log fills in over that long.
+  link down (only QSOs LOGGED at A count; an ADIF import does not travel),
+  then reconnect. EXPECT: the main window never freezes while they go, all
+  arrive at B, and the notice names the count. In-tree `tr4wserver` relays
+  about 34 QSOs a second (200 in about 6 s), so B's log fills in over that long.
 - [ ] **Python server.** Repeat the first item against TR4WServerPy
-      (`python tr4wserver.py --display`). EXPECT the same, and the server log says
-      `QSOINFO already in the server log - not stored, not relayed` for anything
-      sent twice.
+  (`python tr4wserver.py --display`). EXPECT the same, and the server log says
+  `QSOINFO already in the server log - not stored, not relayed` for anything
+  sent twice.
 
 ---
 
@@ -402,72 +406,73 @@ NY4I: *"I never liked the idea that we only connected when the Network window
 was up."* Until now the link was connected by showing the Network window and
 dropped by closing it. Now the program owns it: the **Net menu** has Connect,
 Disconnect, Reconnect and Show Network window, `NETWORK AUTO CONNECT` (Preferences
+
 > Network; default OFF) connects at startup, and the window is only a view.
-The unit tests reach the state table, the menu rows in every state, the refusal
-latch, the observer list and the window drawing the stations it was not open to
-see. They cannot connect. **WHAT YOU NEED:** `tr4wserver` (or the Python server)
-and TWO stations, A and B (Windows and Mint), both with a COMPUTER ID and the
-server address set, on the same contest. Start with NETWORK AUTO CONNECT off.
+> The unit tests reach the state table, the menu rows in every state, the refusal
+> latch, the observer list and the window drawing the stations it was not open to
+> see. They cannot connect. **WHAT YOU NEED:** `tr4wserver` (or the Python server)
+> and TWO stations, A and B (Windows and Mint), both with a COMPUTER ID and the
+> server address set, on the same contest. Start with NETWORK AUTO CONNECT off.
 
 - [ ] **Nothing connects by itself.** Start A. EXPECT: no connection attempt in
-      `tr4w.log` (`[Net] not connecting at startup (NETWORK AUTO CONNECT is off ...)`),
-      the status strip's Network panel is empty or "Disconnected from Network",
-      and the Net menu offers Connect and Show Network window only (Disconnect,
-      Reconnect, Set time, Send message, Add missing QSOs and the clear rows are grey).
+  `tr4w.log` (`[Net] not connecting at startup (NETWORK AUTO CONNECT is off ...)`),
+  the status strip's Network panel is empty or "Disconnected from Network",
+  and the Net menu offers Connect and Show Network window only (Disconnect,
+  Reconnect, Set time, Send message, Add missing QSOs and the clear rows are grey).
 - [ ] **Connect with the Network window CLOSED.** Net > Connect at A and at B,
-      never opening the window. EXPECT: the strip reads "Connected to Network";
-      Connect greys, Disconnect and Reconnect and the sending rows light.
+  never opening the window. EXPECT: the strip reads "Connected to Network";
+  Connect greys, Disconnect and Reconnect and the sending rows light.
 - [ ] **QSOs cross with the window closed.** Log at A, then at B, then the same
-      call on the same band and mode at both. EXPECT: each arrives at the other, and
-      the second is flagged a dupe. The Network window has not been opened once.
+  call on the same band and mode at both. EXPECT: each arrives at the other, and
+  the second is flagged a dupe. The Network window has not been opened once.
 - [ ] **Open the window mid-session.** Net > Show Network window (and again from
-      Windows > Network). EXPECT: BOTH stations are in the list at once with name,
-      id, band and frequency, QSO count and call, the title reads
-      `Network : Connected to <address>:<port>` -- without waiting for either
-      station to do anything. Log a QSO at B: A's row count moves.
+  Windows > Network). EXPECT: BOTH stations are in the list at once with name,
+  id, band and frequency, QSO count and call, the title reads
+  `Network : Connected to <address>:<port>` -- without waiting for either
+  station to do anything. Log a QSO at B: A's row count moves.
 - [ ] **Closing the window drops nothing.** Close it (Escape and the close box).
-      EXPECT: still connected, QSOs still cross, the strip still says connected.
-      Reopen: the list is right again. Show Network window while it is open
-      brings it forward and does not close it.
+  EXPECT: still connected, QSOs still cross, the strip still says connected.
+  Reopen: the list is right again. Show Network window while it is open
+  brings it forward and does not close it.
 - [ ] **Disconnect.** Net > Disconnect at B. EXPECT: B's strip reads
-      "** DISCONNECTED from Network", B's list is empty, A's row for B clears,
-      and B does NOT reconnect by itself. Connect, Disconnect and the rest of the
-      menu keep their greying right. Log at B while disconnected: nothing
-      reaches A until B connects again, and then it is resent (C5, below).
+  "** DISCONNECTED from Network", B's list is empty, A's row for B clears,
+  and B does NOT reconnect by itself. Connect, Disconnect and the rest of the
+  menu keep their greying right. Log at B while disconnected: nothing
+  reaches A until B connects again, and then it is resent (C5, below).
 - [ ] **Reconnect.** Net > Reconnect at B while connected. EXPECT: a clean drop
-      and a new link, both rows back, no dialog.
+  and a new link, both rows back, no dialog.
 - [ ] **Auto-reconnect without the window.** With the window closed and B
-      connected, stop the server, wait ten seconds, start it again. EXPECT: B
-      reconnects by itself within the retry interval (`NET STATUS UPDATE
-      INTERVAL`, 5 s by default), the strip goes disconnected, "Connecting" and
-      connected, with no dialog and no storm of log lines. Then Net > Disconnect
-      during an outage: the retries stop.
+  connected, stop the server, wait ten seconds, start it again. EXPECT: B
+  reconnects by itself within the retry interval (`NET STATUS UPDATE
+  INTERVAL`, 5 s by default), the strip goes disconnected, "Connecting" and
+  connected, with no dialog and no storm of log lines. Then Net > Disconnect
+  during an outage: the retries stop.
 - [ ] **A server that is not there.** Net > Connect with the server stopped.
-      EXPECT: the Disconnect item is lit while it retries (it stops the
-      retrying), one "Failed to connect" line in the log, not one per attempt.
+  EXPECT: the Disconnect item is lit while it retries (it stops the
+  retrying), one "Failed to connect" line in the log, not one per attempt.
 - [ ] **The refusal latch is re-armed by Connect.** Point B at an old server
-      (before protocol 2) or give B a computer id already in use. EXPECT: the
-      dialog ONCE, then silence (no retry every five seconds), the Net menu
-      offering Connect and Reconnect. Fix the cause and choose Net > Connect:
-      it is tried again and works. (Before this change the way back was
-      closing and reopening the Network window.)
+  (before protocol 2) or give B a computer id already in use. EXPECT: the
+  dialog ONCE, then silence (no retry every five seconds), the Net menu
+  offering Connect and Reconnect. Fix the cause and choose Net > Connect:
+  it is tried again and works. (Before this change the way back was
+  closing and reopening the Network window.)
 - [ ] **NETWORK AUTO CONNECT.** Turn it on in Preferences > Network, restart
-      B with the server up. EXPECT: connected a moment after the main window
-      appears, with the Network window never opened. Restart with the server
-      down: the retries run quietly and it connects when the server comes up.
-      With COMPUTER ID blank: no attempt at startup; Net > Connect opens
-      Preferences at COMPUTER ID instead of connecting.
+  B with the server up. EXPECT: connected a moment after the main window
+  appears, with the Network window never opened. Restart with the server
+  down: the retries run quietly and it connects when the server comes up.
+  With COMPUTER ID blank: no attempt at startup; Net > Connect opens
+  Preferences at COMPUTER ID instead of connecting.
 - [ ] **Restore.** Leave the Network window open, quit, relaunch with AUTO
-      CONNECT off. EXPECT: the window comes back showing the disconnected title and
-      an empty list, and nothing connects until you ask.
+  CONNECT off. EXPECT: the window comes back showing the disconnected title and
+  an empty list, and nothing connects until you ask.
 - [ ] **Preferences > Network layout.** The new checkbox ("Connect to the
-      multi-op server when TR4W starts") sits above the grey hint text without
-      overlapping it or the "Radio sharing" heading below, and (issue #142) the
-      Network panel in the status strip is not clipped.
+  multi-op server when TR4W starts") sits above the grey hint text without
+  overlapping it or the "Radio sharing" heading below, and (issue #142) the
+  Network panel in the status strip is not clipped.
 - [ ] **Quit while connected and while retrying.** Exit from each: no hang, no
-      error. Exit now disconnects first (`NetLinkShutdown` from `ExitProgram`):
-      after a quit while connected, the server logs the departure and the other
-      stations clear this station's row at once, not after a timeout.
+  error. Exit now disconnects first (`NetLinkShutdown` from `ExitProgram`):
+  after a quit while connected, the server logs the departure and the other
+  stations clear this station's row at once, not after a timeout.
 
 ---
 
@@ -479,33 +484,33 @@ both entrants); nothing sees the screen, the multiplier windows or a written
 file.
 
 - [ ] **The New Contest dialog.** Choose the Quebec QSO Party: EXPECT the
-      MY STATE comment asks for the administrative region code (e.g. MTL),
-      not "if you are in QC state". With MY STATE `MTL` the session is in
-      province; with `QC` it is OUTSIDE Quebec (no guard refuses it -- the
-      prompt is the only one).
+  MY STATE comment asks for the administrative region code (e.g. MTL),
+  not "if you are in QC state". With MY STATE `MTL` the session is in
+  province; with `QC` it is OUTSIDE Quebec (no guard refuses it -- the
+  prompt is the only one).
 - [ ] **In Quebec** (MY STATE `MTL`). `599 QUE` is Capitale-Nationale (a
-      region), not Quebec; `599 QC` and `599 VE2` are refused. `599 NF` then
-      `599 LB`: TWO multipliers; `599 NL`: refused. `599 NT` then `599 NWT`:
-      one. `599 DC` then `599 MD`: two. DL1xxx `599 DX` then JA1xxx `599 DX`
-      on 20 m: ONE new multiplier; DX again on 40 m: a new one. `599 DL` is
-      refused ("must be logged as DX").
+  region), not Quebec; `599 QC` and `599 VE2` are refused. `599 NF` then
+  `599 LB`: TWO multipliers; `599 NL`: refused. `599 NT` then `599 NWT`:
+  one. `599 DC` then `599 MD`: two. DL1xxx `599 DX` then JA1xxx `599 DX`
+  on 20 m: ONE new multiplier; DX again on 40 m: a new one. `599 DL` is
+  refused ("must be logged as DX").
 - [ ] **Out of Quebec** (MY STATE `NY`). `599 MTL` takes; `599 NY` and a DX
-      station's `599 DX` are refused with "work QC stations only".
-      `W2ABC/VE2 599 GIM` takes and is located as Canada; `VE2xxx/LVL` is
-      VE2xxx in Laval.
+  station's `599 DX` are refused with "work QC stations only".
+  `W2ABC/VE2 599 GIM` takes and is located as Canada; `VE2xxx/LVL` is
+  VE2xxx in Laval.
 - [ ] **A region line.** `599 MTL/LVL` logs two QSOs; `599 MTL/LVL/LNS` is
-      refused (two regions -- the French rules' "deux zones"; the English
-      says "2 or more", open on #128).
+  refused (two regions -- the French rules' "deux zones"; the English
+  says "2 or more", open on #128).
 - [ ] **No 160 m.** A 160 m QSO is logged as an X-QSO (`X-QSO:` in the
-      Cabrillo), scoring nothing.
+  Cabrillo), scoring nothing.
 - [ ] **The Cabrillo file.** CONTEST: `QC-QSO-PARTY`; a DX entrant (no MY
-      STATE) sends `599 DX` (not its prefix); FM is `FM`. The ADIF carries
-      STATE `QC` for a region, `NL` for NF and for LB, and no CNTY.
+  STATE) sends `599 DX` (not its prefix); FM is `FM`. The ADIF carries
+  STATE `QC` for a region, `NL` for NF and for LB, and no CNTY.
 - [ ] **File > Reports > 3830 Score** from a real log: one `Mults` column (no
-      3830 form was found for this contest).
+  3830 form was found for this contest).
 - [ ] **NOT BUILT (#133)**: a mobile entrant's re-work from a new region is
-      a dupe, its multipliers are one sheet, and there is no 300-point region
-      bonus. Expect a mobile's claimed score low.
+  a dupe, its multipliers are one sheet, and there is no 300-point region
+  bonus. Expect a mobile's claimed score low.
 
 ## Added 2026-10-26 -- THE ONTARIO QSO PARTY (issue #127)
 
@@ -515,29 +520,29 @@ both entrants); nothing sees the screen, the multiplier windows or a written
 file.
 
 - [ ] **The New Contest dialog.** Choose the Ontario QSO Party: EXPECT the
-      MY STATE comment asks for the Ontario county code (e.g. TOR), not "if
-      you are in ON state". With MY STATE `TOR` the session is in province;
-      with `ON` it is OUTSIDE Ontario (no guard refuses it -- the prompt is
-      the only one).
+  MY STATE comment asks for the Ontario county code (e.g. TOR), not "if
+  you are in ON state". With MY STATE `TOR` the session is in province;
+  with `ON` it is OUTSIDE Ontario (no guard refuses it -- the prompt is
+  the only one).
 - [ ] **In Ontario** (MY STATE `TOR`). Type `599 MAN` for VE3xxx: EXPECT the
-      multiplier is Manitoulin (MAN), not Manitoba; `599 MB` is Manitoba, a
-      second multiplier. `599 DC` then `599 MD`: TWO multipliers. `599 NF`
-      then `599 LB`: one (NL). `599 ON`: refused. Work DL1xxx `599 DL` on 20
-      and on 40 m: a new DX multiplier on EACH band; the remaining-countries
-      window lists DXCC countries but not K, VE, KH6 or KL.
+  multiplier is Manitoulin (MAN), not Manitoba; `599 MB` is Manitoba, a
+  second multiplier. `599 DC` then `599 MD`: TWO multipliers. `599 NF`
+  then `599 LB`: one (NL). `599 ON`: refused. Work DL1xxx `599 DL` on 20
+  and on 40 m: a new DX multiplier on EACH band; the remaining-countries
+  window lists DXCC countries but not K, VE, KH6 or KL.
 - [ ] **The club stations.** VE3CCO, VA3CCO, VE3ODX, VA3RAC, VE3RHQ score
-      10, also as `VE3CCO/TOR` (the rover strip); `VE3CCO/M` scores 2.
+  10, also as `VE3CCO/TOR` (the rover strip); `VE3CCO/M` scores 2.
 - [ ] **A county-line junction.** `599 TOR/YRK/PEL/DUR/HTN` logs five QSOs,
-      one per county; nothing is refused (no maximum).
+  one per county; nothing is refused (no maximum).
 - [ ] **The Cabrillo file.** EXPECT the writer refuses to start without
-      LOCATION (the sponsor scores in/out of province from ARRL-SECTION:
-      ONN, ONS, ONE or GH; DX outside North America); an FM QSO's mode is
-      `FM`; a DX entrant (no MY STATE) sends its own prefix (`599 DL`); the
-      ADIF carries STATE `ON` for a county and no CNTY.
+  LOCATION (the sponsor scores in/out of province from ARRL-SECTION:
+  ONN, ONS, ONE or GH; DX outside North America); an FM QSO's mode is
+  `FM`; a DX entrant (no MY STATE) sends its own prefix (`599 DL`); the
+  ADIF carries STATE `ON` for a county and no CNTY.
 - [ ] **File > Reports > 3830 Score** from a real log: one `Mults` column (no
-      3830 form was read for this contest).
+  3830 form was read for this contest).
 - [ ] **NOT BUILT (#133)**: a rover's claimed score is a fixed station's --
-      one multiplier sheet, no 300-point area bonus. Expect it low.
+  one multiplier sheet, no 300-point area bonus. Expect it low.
 
 ## Added 2026-10-26 -- THE NEW MEXICO QSO PARTY (issue #125)
 
@@ -546,23 +551,23 @@ including a real-engine run for both entrants); nothing sees the screen, the
 multiplier windows or a written file.
 
 - [ ] **In New Mexico** (New Contest, MY STATE `BER`). Type `599 DC` for W3DC:
-      EXPECT the multiplier shown is **MD**; `599 NM`: a new multiplier (NM is
-      one of the 50 states). Work LY2ZZ `599 LY`: a new **DX** multiplier, and
-      the remaining-countries window lists DXCC entities but not K, VE, KH6 or
-      KL (KP4 is listed).
+  EXPECT the multiplier shown is **MD**; `599 NM`: a new multiplier (NM is
+  one of the 50 states). Work LY2ZZ `599 LY`: a new **DX** multiplier, and
+  the remaining-countries window lists DXCC entities but not K, VE, KH6 or
+  KL (KP4 is listed).
 - [ ] **The Cabrillo file** (summary window: CATEGORY-POWER, LOCATION `NM`).
-      EXPECT the writer refuses to start without LOCATION; LY2ZZ's line ends
-      `599 DX`, not `599 LY` or blank; an FT8 QSO's mode column is `RY`; an FM
-      QSO's is `PH`; `CLAIMED-SCORE` is points x multipliers x the power
-      multiplier (QRP 5, LOW 2, HIGH 1), plus 250 if W1AW/5 was worked.
+  EXPECT the writer refuses to start without LOCATION; LY2ZZ's line ends
+  `599 DX`, not `599 LY` or blank; an FT8 QSO's mode column is `RY`; an FM
+  QSO's is `PH`; `CLAIMED-SCORE` is points x multipliers x the power
+  multiplier (QRP 5, LOW 2, HIGH 1), plus 250 if W1AW/5 was worked.
 - [ ] **A DX entrant** (MY CALL LY2xxx, no MY STATE): EXPECT the CQ exchange
-      is `5NN LY` (what goes on the air), the ADIF `STX_STRING` carries `LY`,
-      and the Cabrillo sent column is `DX`.
+  is `5NN LY` (what goes on the air), the ADIF `STX_STRING` carries `LY`,
+  and the Cabrillo sent column is `DX`.
 - [ ] **W1AW/5.** Work `W1AW/5` from two counties on one band and mode: two
-      QSOs, the bonus 250 once. Logged as `W1AW/5/BER` it is NOT paid today --
-      the base matches the bare call only (South Carolina's #111 fixes it).
+  QSOs, the bonus 250 once. Logged as `W1AW/5/BER` it is NOT paid today --
+  the base matches the bare call only (South Carolina's #111 fixes it).
 - [ ] **A county line of two.** `599 SOC/SIE` logs two QSOs; three counties
-      are refused.
+  are refused.
 
 ## Added 2026-10-26 -- THE OKLAHOMA QSO PARTY (issue #126)
 
@@ -573,26 +578,26 @@ with North Dakota); nothing sees the screen, the multiplier windows or a
 written file.
 
 - [ ] **In Oklahoma** (New Contest, MY STATE `MUS`). Type `599 DC` for W3DC:
-      EXPECT it is taken and the multiplier shown is **MD** ("DC counts as
-      Maryland"); `599 MD` afterwards is no new multiplier. Type `599 OK`:
-      a new multiplier (NY4I: OK stays a state). Work DL1xxx `599 DL`: a new
-      **DX** multiplier, and the remaining-countries window lists DXCC
-      countries but not K, VE, KH6 or KL.
+  EXPECT it is taken and the multiplier shown is **MD** ("DC counts as
+  Maryland"); `599 MD` afterwards is no new multiplier. Type `599 OK`:
+  a new multiplier (NY4I: OK stays a state). Work DL1xxx `599 DL`: a new
+  **DX** multiplier, and the remaining-countries window lists DXCC
+  countries but not K, VE, KH6 or KL.
 - [ ] **A mobile on a four-county line.** In Oklahoma, enter
-      `599 PIT/LAT/HAS/LEF` for one call: EXPECT FOUR QSOs in the log, one per
-      county, each scored. `599 PIT/LAT/HAS/LEF/MCU` is refused
-      ("too many counties", maximum 4) and nothing is logged.
+  `599 PIT/LAT/HAS/LEF` for one call: EXPECT FOUR QSOs in the log, one per
+  county, each scored. `599 PIT/LAT/HAS/LEF/MCU` is refused
+  ("too many counties", maximum 4) and nothing is logged.
 - [ ] **A DX entrant** (MY CALL DL1xxx, no MY STATE): EXPECT the CQ exchange
-      is `5NN DL`, and the Cabrillo QSO lines and the ADIF `STX_STRING` carry
-      `DL`, not `DX` (North Dakota the same -- its code moved to the party
-      base).
+  is `5NN DL`, and the Cabrillo QSO lines and the ADIF `STX_STRING` carry
+  `DL`, not `DX` (North Dakota the same -- its code moved to the party
+  base).
 - [ ] **Digital.** A JS8 or PSK QSO scores 3; an FT8 or FT4 QSO is a greyed
-      X-QSO. CW and PSK with the same station on one band are two QSOs.
+  X-QSO. CW and PSK with the same station on one band are two QSOs.
 - [ ] **The Cabrillo header.** The rules ask for one custom
-      `CATEGORY: OKLAHOMA MOBILE ...` line; TR4W writes `CATEGORY-*` tags.
-      Check okqp.contesting.com accepts the file as written (NY4I: bench).
+  `CATEGORY: OKLAHOMA MOBILE ...` line; TR4W writes `CATEGORY-*` tags.
+  Check okqp.contesting.com accepts the file as written (NY4I: bench).
 - [ ] **File > Reports > 3830 Score** from a real log: one `Mults` column,
-      as the 3830 form has (checked against the 2026 breakdown page).
+  as the 3830 form has (checked against the 2026 breakdown page).
 
 ## Added 2026-10-26 -- THE RADIO POLLER WRITES NO CONTROL (issue #108)
 
@@ -626,13 +631,13 @@ The name rule is unit-tested (`uTestLogDatabase`, `TestExportNames*`) and the
 corpus checks the bytes; the menu route and the SCP upload have not been run.
 
 - [ ] **The three names sort together.** Open a real contest log, e.g.
-      `CQ-WW-SSB 2026-10-19 NY4I.db`. File > Export ADIF, then Create Cabrillo.
-      EXPECT `CQ-WW-SSB 2026-10-19 NY4I.adi` and `CQ-WW-SSB 2026-10-19 NY4I.log`
-      beside the `.db`, in the log's folder, and no `NY4I.LOG`. Export a second
-      contest: it gets its own `.log`, the first is untouched.
+  `CQ-WW-SSB 2026-10-19 NY4I.db`. File > Export ADIF, then Create Cabrillo.
+  EXPECT `CQ-WW-SSB 2026-10-19 NY4I.adi` and `CQ-WW-SSB 2026-10-19 NY4I.log`
+  beside the `.db`, in the log's folder, and no `NY4I.LOG`. Export a second
+  contest: it gets its own `.log`, the first is untouched.
 - [ ] **SCP uploads the new file.** Answer Yes to the upload prompt after
-      Create Cabrillo. EXPECT the log line `...NY4I.log file uploaded to SCP`
-      naming the new file.
+  Create Cabrillo. EXPECT the log line `...NY4I.log file uploaded to SCP`
+  naming the new file.
 
 A sponsor that wants the call as the file name (Georgia QP, Russian DX) gets a
 manual rename by the operator. NY4I, 2026-10-26: no export option for it.
@@ -646,44 +651,44 @@ window (`uTestStatusAndNotice`). What no test can see is a real K4 and a real
 screen. Put the K4 in TX TEST mode (`TS1`) and keep tr4w.log open.
 
 - [x] **The INH display -- CONFIRMED 2026-10-26, NY4I** ("INH works nicely",
-      K4 in TX test mode, uncommitted phase 2 build). The split stands: `INH`
-      in the three-cell PTT box, the sentence on the status panel. The items
-      below that he did not report on stay open.
+  K4 in TX test mode, uncommitted phase 2 build). The split stands: `INH`
+  in the three-cell PTT box, the sentence on the status panel. The items
+  below that he did not report on stay open.
 - [ ] **Does a K4 in TX TEST report TX at all while its icon flashes?** Watch a
-      TRACE log during a long CQ (20 s or more) in test mode: does `TX;` (AI4
-      and up), `IF` with the TX flag, or a `TQ` answer say TRANSMITTING? If it
-      does NOT, a key-up TR4W started is never confirmed by the radio, and the
-      alert DROPS 3 s after the CQ starts (the wait in uTXInhibitView) while
-      the CQ is still going. Report which, network and serial.
+  TRACE log during a long CQ (20 s or more) in test mode: does `TX;` (AI4
+  and up), `IF` with the TX flag, or a `TQ` answer say TRANSMITTING? If it
+  does NOT, a key-up TR4W started is never confirmed by the radio, and the
+  alert DROPS 3 s after the CQ starts (the wait in uTXInhibitView) while
+  the CQ is still going. Report which, network and serial.
 - [ ] **F1 CQ turns the indicator red AT ONCE.** CW, F1. EXPECT the PTT box
-      (between USER INFO and OP MODE) to read `INH` on the alert colour, and
-      the radio's status panel (bottom strip, radio 1's quarter) to read
-      `TX INHIBITED: TX test mode`, as the CQ starts -- not a poll later. One
-      line in tr4w.log: `[TX inhibit] <radio> is keyed and reports TX
-      inhibited (TX test mode) -- no RF is going out`. Repeat on SSB with a DVK
-      message (F1 on a .WAV).
+  (between USER INFO and OP MODE) to read `INH` on the alert colour, and
+  the radio's status panel (bottom strip, radio 1's quarter) to read
+  `TX INHIBITED: TX test mode`, as the CQ starts -- not a poll later. One
+  line in tr4w.log: `[TX inhibit] <radio> is keyed and reports TX
+  inhibited (TX test mode) -- no RF is going out`. Repeat on SSB with a DVK
+  message (F1 on a .WAV).
 - [ ] **The footswitch does too.** Key from the K4's footswitch or mic PTT (TR4W
-      did not start it). EXPECT the same box and panel within about a poll.
-      Serial K4 at AI2: TX is learned from the poll, so note the delay.
+  did not start it). EXPECT the same box and panel within about a poll.
+  Serial K4 at AI2: TX is learned from the poll, so note the delay.
 - [ ] **It clears on unkey.** When the CQ ends, or the footswitch is released,
-      EXPECT the box back to `OFF` on its normal colour and the status panel
-      empty. Also take the K4 OUT of test mode mid-transmission: EXPECT it to
-      clear at once.
+  EXPECT the box back to `OFF` on its normal colour and the status panel
+  empty. Also take the K4 OUT of test mode mid-transmission: EXPECT it to
+  clear at once.
 - [ ] **One log line per key-up.** Send CQ three times (or AUTO-CQ). EXPECT
-      exactly three `[TX inhibit]` lines -- not one per poll.
+  exactly three `[TX inhibit]` lines -- not one per poll.
 - [ ] **The beep, when enabled.** Preferences, PTT: tick *Beep when keying a
-      radio that will not transmit* (`PTT TX INHIBIT BEEP`). BEEP ENABLE must
-      also be on -- it is the master cue every beep obeys. EXPECT one warning
-      beep per key-up and none with the box unticked.
+  radio that will not transmit* (`PTT TX INHIBIT BEEP`). BEEP ENABLE must
+  also be on -- it is the master cue every beep obeys. EXPECT one warning
+  beep per key-up and none with the box unticked.
 - [ ] **No dialog, ever**, and nothing at all while receiving in test mode.
 - [ ] **SO2R, keyers swapped (issue #97 review).** Two radios on CW-by-CAT,
-      radio 2 in test mode, send to the inactive radio (Ctrl-A or a dueling
-      CQ), then press SPACE in S&P with nothing in the call window (it sends
-      MY CALL through SendStringAndStop). EXPECT radio 2 to key it -- it used
-      to sit in radio 2's buffer unsent -- and the warning on radio 2's
-      status panel, not radio 1's.
+  radio 2 in test mode, send to the inactive radio (Ctrl-A or a dueling
+  CQ), then press SPACE in S&P with nothing in the call window (it sends
+  MY CALL through SendStringAndStop). EXPECT radio 2 to key it -- it used
+  to sit in radio 2's buffer unsent -- and the warning on radio 2's
+  status panel, not radio 1's.
 - [ ] **Out of test mode, nothing changes.** F1 CQ: `ON ` on radio 1's red, as
-      before, no status text, no log line.
+  before, no status text, no log line.
 
 ## Added 2026-10-26 -- K4 TX TEST MODE REACHES THE STATUS (issue #97 phase 1)
 
@@ -694,26 +699,26 @@ the evidence is the log (what a key-up SHOWS is the phase 2 entry above). Set DE
 the second item's raw lines).
 
 - [ ] **Does the K4 PUSH `TS` when test mode is toggled at the front panel?**
-      TR4W asks `TS;` at every link-up and then every 5 s, because whether the
-      radio sends it unsolicited under auto-info is UNKNOWN. Network K4 (AI5),
-      then serial K4 (AI2). Toggle TX TEST on and off at the rig several times,
-      a few seconds apart. EXPECT `[TX inhibit] ON -- the radio reports: TX
-      test mode` and `[TX inhibit] OFF` for each toggle. The QUESTION is the
-      delay: if every line lands within a fraction of a second of the toggle,
-      the K4 pushes it; if they land up to 5 s late, only the poll is finding
-      it. At TRACE, a pushed one shows `Received from radio: (TS1)` with no
-      `TS;` sent just before it. Report which, per transport -- if it is
-      pushed, the 5 s poll can go.
+  TR4W asks `TS;` at every link-up and then every 5 s, because whether the
+  radio sends it unsolicited under auto-info is UNKNOWN. Network K4 (AI5),
+  then serial K4 (AI2). Toggle TX TEST on and off at the rig several times,
+  a few seconds apart. EXPECT `[TX inhibit] ON -- the radio reports: TX
+  test mode` and `[TX inhibit] OFF` for each toggle. The QUESTION is the
+  delay: if every line lands within a fraction of a second of the toggle,
+  the K4 pushes it; if they land up to 5 s late, only the poll is finding
+  it. At TRACE, a pushed one shows `Received from radio: (TS1)` with no
+  `TS;` sent just before it. Report which, per transport -- if it is
+  pushed, the 5 s poll can go.
 - [ ] **How fast does the K4 report TX state?** Matters only for phase 2's
-      second trigger (keying from a footswitch or mic PTT, which TR4W did not
-      start). Key the K4 from the front panel / PTT, network and serial. At
-      TRACE, measure from the key-down to the `TX` line in `tr4w.log`, and
-      from key-up to `RX`. (Serial auto-info never reports a T/R transition
-      on a K3S, so on serial expect it to arrive only with the next `IF;`
-      poll -- note the delay you see.)
+  second trigger (keying from a footswitch or mic PTT, which TR4W did not
+  start). Key the K4 from the front panel / PTT, network and serial. At
+  TRACE, measure from the key-down to the `TX` line in `tr4w.log`, and
+  from key-up to `RX`. (Serial auto-info never reports a T/R transition
+  on a K3S, so on serial expect it to arrive only with the next `IF;`
+  poll -- note the delay you see.)
 - [ ] **No change to the frequency poll.** Serial K4 at a fast FREQUENCY POLL
-      RATE: EXPECT the VFO display to track the knob as before, and one `TS;`
-      roughly every 5 s in a TRACE log -- not one per `IF;`.
+  RATE: EXPECT the VFO display to track the knob as before, and one `TS;`
+  roughly every 5 s in a TRACE log -- not one per `IF;`.
 
 ## Added 2026-10-26 -- THE NEEDS STRIPS AFTER A QSO IS LOGGED (issue #100)
 
@@ -722,12 +727,12 @@ Unit-tested on the real form and sheets
 live LogContact path has not been run.
 
 - [ ] **A new multiplier drops its band from both strips.** CQ WW, S&P: type a
-      station in a country not yet worked, press Enter, log it on 20 m. EXPECT
-      "QSO needs for <call>" and "Mult needs for <call>" both to lose 20 at once,
-      before anything else is typed, and the other bands to stay.
+  station in a country not yet worked, press Enter, log it on 20 m. EXPECT
+  "QSO needs for <call>" and "Mult needs for <call>" both to lose 20 at once,
+  before anything else is typed, and the other bands to stay.
 - [ ] **Tail-ending keeps the NEXT call.** In a run, tail-end: with the next
-      station's call already in the strips, let the previous QSO log. EXPECT both
-      strips to keep naming the NEXT call, not the one just logged.
+  station's call already in the strips, let the previous QSO log. EXPECT both
+  strips to keep naming the NEXT call, not the one just logged.
 
 ## Added 2026-10-26 -- EXIT AND THE ICOM SPAN AT LINK-UP (issues #106, #107)
 
@@ -736,20 +741,20 @@ Unit-tested with a blocking fake radio and a real IC-9700 whose wire is a list
 not yet run against a radio.
 
 - [ ] **Exit with a network radio switched off: no 3 s pause.** K4 (or any
-      network radio) off, wait for its reconnect attempts in the log, then
-      exit. EXPECT TR4W to close at once; in `tr4w.log` EXPECT
-      `[ExitProgram] Shutting down` and `Freeing radio object` for that radio
-      within a fraction of a second, and NO `did not stop within` ERROR.
-      (NY4I's 2026-10-26 10:23:58 exit with the K4 off waited exactly 3 s.)
+  network radio) off, wait for its reconnect attempts in the log, then
+  exit. EXPECT TR4W to close at once; in `tr4w.log` EXPECT
+  `[ExitProgram] Shutting down` and `Freeing radio object` for that radio
+  within a fraction of a second, and NO `did not stop within` ERROR.
+  (NY4I's 2026-10-26 10:23:58 exit with the K4 off waited exactly 3 s.)
 - [ ] **The panadapter still comes back after exit.** Panadapter open, exit,
-      restart. EXPECT it to reopen: exit detaches it, it does not close it.
+  restart. EXPECT it to reopen: exit detaches it, it does not close it.
 - [ ] **Icom panadapter span known after startup.** Network IC-9700 (or
-      IC-7610/IC-705), panadapter open at shutdown. Start TR4W. EXPECT
-      `radio reports scope span <n> Hz` (TRACE) after the CI-V stream opens,
-      and the span buttons work at once, before the span is changed at the rig.
+  IC-7610/IC-705), panadapter open at shutdown. Start TR4W. EXPECT
+  `radio reports scope span <n> Hz` (TRACE) after the CI-V stream opens,
+  and the span buttons work at once, before the span is changed at the rig.
 - [ ] **Again after a reconnect.** Pull the radio's network cable and restore
-      it (or power-cycle). After it reconnects, EXPECT the span read again in
-      the log, once.
+  it (or power-cycle). After it reconnects, EXPECT the span read again in
+  the log, once.
 
 ## Added 2026-10-26 -- K4 STARTUP SENDS AND RADIO REBUILD (issues #99, #104)
 
@@ -757,20 +762,20 @@ Unit-tested against a loopback server and a blocking fake radio
 (`uTestRadioSocketNoRead`, `uTestRadioDestructors`); not yet run against a K4.
 
 - [ ] **The span is known without touching the rig.** Network K4, panadapter
-      open at shutdown. Start TR4W. EXPECT no `Cannot send command (#SPN;)` and
-      no `Cannot send command (KY ;RX;)` error in `tr4w.log`; EXPECT
-      `radio reports spectrum span <n> Hz` (TRACE) shortly after
-      `Network Radio connected`; and the span +/- buttons work at once, before
-      the span is changed at the rig.
+  open at shutdown. Start TR4W. EXPECT no `Cannot send command (#SPN;)` and
+  no `Cannot send command (KY ;RX;)` error in `tr4w.log`; EXPECT
+  `radio reports spectrum span <n> Hz` (TRACE) shortly after
+  `Network Radio connected`; and the span +/- buttons work at once, before
+  the span is changed at the rig.
 - [ ] **Again after a reconnect.** Power-cycle the K4 (or pull its network
-      cable and restore it). After it reconnects, change the span AT THE RIG
-      while TR4W is disconnected if you can, then press a span button: EXPECT it
-      to step from the rig's current span.
+  cable and restore it). After it reconnects, change the span AT THE RIG
+  while TR4W is disconnected if you can, then press a span button: EXPECT it
+  to step from the rig's current span.
 - [ ] **Reset Radio Ports with the K4 switched off.** Turn the K4 off, wait for
-      the reconnect attempts in the log, then Reset Radio Ports several times.
-      EXPECT no crash and no `did not stop within` ERROR; each reset logs
-      `Freeing radio object`. (The old 3 s wait was shorter than a 5 s connect
-      attempt, so this freed the radio under its polling thread.)
+  the reconnect attempts in the log, then Reset Radio Ports several times.
+  EXPECT no crash and no `did not stop within` ERROR; each reset logs
+  `Freeing radio object`. (The old 3 s wait was shorter than a 5 s connect
+  attempt, so this freed the radio under its polling thread.)
 
 ## Added 2026-10-25 -- THE PERIODIC BACKUP AND BACKUP DESTINATION (issue #98 step 2)
 
@@ -778,53 +783,53 @@ Unit-tested with real files and a fault-injecting file layer (`uTestBackupCopier
 `uTestLogStore`); nothing has run against a real share.
 
 - [ ] **The local backup moved.** With BACKUP LOG FREQUENCY = 5, log five QSOs.
-      EXPECT `settings\backup\<log> periodic.db` (beside `tr4w.json`), the status
-      line saying so, and NOTHING new beside the logs -- the Open dialog must not
-      list a backup. A second five gives `<log> periodic.db.bak`. Old
-      `logback.db` files are left where they are.
+  EXPECT `settings\backup\<log> periodic.db` (beside `tr4w.json`), the status
+  line saying so, and NOTHING new beside the logs -- the Open dialog must not
+  list a backup. A second five gives `<log> periodic.db.bak`. Old
+  `logback.db` files are left where they are.
 - [ ] **Your setting carried over.** Your `tr4w.json` says `BackupFileName:
-      "logback.db"`. EXPECT Preferences' "Copy to:" EMPTY (a bare name meant
-      beside the logs, which is now the local folder). Put `\\NAS2\Backups` (or a
-      Dropbox folder) there and press OK. EXPECT within a few seconds, on the
-      status line: "Backup destination ... is reachable.", and `tr4w.log`
-      `[BackupCopy] ... reachable`.
+  "logback.db"`. EXPECT Preferences' "Copy to:" EMPTY (a bare name meant
+  beside the logs, which is now the local folder). Put `\\NAS2\Backups` (or a
+  Dropbox folder) there and press OK. EXPECT within a few seconds, on the
+  status line: "Backup destination ... is reachable.", and `tr4w.log`
+  `[BackupCopy] ... reachable`.
 - [ ] **A copy arrives.** Five more QSOs. EXPECT `<log> periodic.db` in the
-      share, and no `.partial` left there; then `.bak` beside it after the next.
+  share, and no `.partial` left there; then `.bak` beside it after the next.
 - [ ] **The status line says where it went** (2026-10-25, after NY4I read the
-      local file's name as "the destination was ignored"). With the destination
-      set, press Backup Log (Alt-F). EXPECT first "Log backed up; copying to
-      <the destination folder> ..." (the folder, not the local file), then within
-      a few seconds "Backup copied to <the file in the share>.", with no beep,
-      and `[BackupCopy] copied and verified:` at INFO in `tr4w.log`. The same two
-      lines on a periodic backup. With "Copy to:" empty, EXPECT the old "Log
-      backed up to ..." and nothing after it.
+  local file's name as "the destination was ignored"). With the destination
+  set, press Backup Log (Alt-F). EXPECT first "Log backed up; copying to
+  <the destination folder> ..." (the folder, not the local file), then within
+  a few seconds "Backup copied to <the file in the share>.", with no beep,
+  and `[BackupCopy] copied and verified:` at INFO in `tr4w.log`. The same two
+  lines on a periodic backup. With "Copy to:" empty, EXPECT the old "Log
+  backed up to ..." and nothing after it.
 - [ ] **The share goes away.** Unplug or unshare it, log five QSOs. EXPECT ONE
-      status-line message and a beep ("Backups are NOT reaching ..."), one Error
-      line in `tr4w.log`, logging uninterrupted, and NO further message on later
-      backups. Restore the share and wait up to a minute WITHOUT logging. EXPECT
-      "Backups are reaching ... again".
+  status-line message and a beep ("Backups are NOT reaching ..."), one Error
+  line in `tr4w.log`, logging uninterrupted, and NO further message on later
+  backups. Restore the share and wait up to a minute WITHOUT logging. EXPECT
+  "Backups are reaching ... again".
 - [ ] **A hung share at exit.** With a copy in progress to a slow or hanging
-      share, close TR4W. EXPECT it to close within about two seconds, with
-      `[BackupCopy] shutdown: still copying ...` in `tr4w.log` if the copy was cut.
+  share, close TR4W. EXPECT it to close within about two seconds, with
+  `[BackupCopy] shutdown: still copying ...` in `tr4w.log` if the copy was cut.
 - [ ] **Caught up at start.** Make the share unreachable, log five QSOs, close,
-      restore the share, start TR4W. EXPECT the periodic backup copied at start
-      with no new QSO.
+  restore the share, start TR4W. EXPECT the periodic backup copied at start
+  with no new QSO.
 
 ## Added 2026-10-23 -- MODE NAMES SENT TO OTHER PROGRAMS (UDP, RADIOINFO, DXKEEPER)
 
 Unit-tested (`uTestN1MMMode`, `uTestUDPContactXml`); nothing sees a listener.
 
 - [ ] **UDP contact broadcast.** With a UDP listener (N1MM-format: Log4OM,
-      GridTracker, a scoreboard) log an SSB QSO on 40 m and one on 20 m with
-      the radio in plain SSB, and a QSO with the K4 in DATA A. EXPECT
-      `<mode>LSB</mode>`, `<mode>USB</mode>` and `<mode>RTTY</mode>` -- never
-      `SSB` or `DATA` -- and the listener logs each in the right mode.
+  GridTracker, a scoreboard) log an SSB QSO on 40 m and one on 20 m with
+  the radio in plain SSB, and a QSO with the K4 in DATA A. EXPECT
+  `<mode>LSB</mode>`, `<mode>USB</mode>` and `<mode>RTTY</mode>` -- never
+  `SSB` or `DATA` -- and the listener logs each in the right mode.
 - [ ] **N1MM RadioInfo.** Watch the RadioInfo packet while the radio is in
-      CW-R, FM-N or DATA. EXPECT `CW`, `FM` and `RTTY` (it sent `CW-R`, `FM-N`,
-      `DATA`, and `NoMode` for a radio with no extended mode).
+  CW-R, FM-N or DATA. EXPECT `CW`, `FM` and `RTTY` (it sent `CW-R`, `FM-N`,
+  `DATA`, and `NoMode` for a radio with no extended mode).
 - [ ] **DXKeeper external log.** Log an FT4 QSO and a DATA A QSO with the
-      external logger on. EXPECT DXKeeper records MODE MFSK / SUBMODE FT4, and
-      MODE RTTY; before, a DATA QSO went as MODE `DATA`.
+  external logger on. EXPECT DXKeeper records MODE MFSK / SUBMODE FT4, and
+  MODE RTTY; before, a DATA QSO went as MODE `DATA`.
 
 ## Added 2026-10-23 -- RTC 2026 RULES AND THE CLEARER IMPROPER-QTH MESSAGE
 
@@ -833,36 +838,36 @@ Unit-tested (`uTestContestRTC`, `uTestContestGeorgiaQP`,
 nothing sees the window.
 
 - [ ] **RTC, same station twice on one band.** Work DL1xxx on 20 m CW, then on
-      20 m SSB. EXPECT the SSB QSO is NOT a dupe and earns its distance
-      points, but its grid is NOT a new multiplier (grids count per band).
-      Work it again on 20 m CW: a dupe. A QSO on 80 m, or in FM or a digital
-      mode, is a greyed X-QSO.
+  20 m SSB. EXPECT the SSB QSO is NOT a dupe and earns its distance
+  points, but its grid is NOT a new multiplier (grids count per band).
+  Work it again on 20 m CW: a dupe. A QSO on 80 m, or in FM or a digital
+  mode, is a greyed X-QSO.
 - [ ] **Georgia, as an out-of-state entrant** (MY STATE outside GA), type
-      `599 CT` for W1AW. EXPECT the message reads
-      `Improper domestic QTH!! (CT: work GA stations only)` and **fits** the
-      main-window element (52 characters; the old longest form was 45). Type
-      `599 HARX`: `(HARX not in georgia_cty.dom)`.
+  `599 CT` for W1AW. EXPECT the message reads
+  `Improper domestic QTH!! (CT: work GA stations only)` and **fits** the
+  main-window element (52 characters; the old longest form was 45). Type
+  `599 HARX`: `(HARX not in georgia_cty.dom)`.
 - [ ] **A stated MY COUNTRY no longer shows on screen** in a refusal (it did as
-      `(MY COUNTRY = K)` in several QSO parties); it is still in `tr4w.log`. An
-      EMPTY MY COUNTRY in ARRL DX still shows `(MY COUNTRY is empty)`.
+  `(MY COUNTRY = K)` in several QSO parties); it is still in `tr4w.log`. An
+  EMPTY MY COUNTRY in ARRL DX still shows `(MY COUNTRY is empty)`.
 - [ ] **ARRL Field Day, a bad section.** Type `2A WSX` for W1AW. EXPECT
-      `Invalid ARRL Section (WSX not in arrlsect.dom)` (46 characters), the
-      caret after `WSX` as before (issue #1010). `2A` alone:
-      `Invalid ARRL Section (no QTH)`. Winter Field Day the same.
+  `Invalid ARRL Section (WSX not in arrlsect.dom)` (46 characters), the
+  caret after `WSX` as before (issue #1010). `2A` alone:
+  `Invalid ARRL Section (no QTH)`. Winter Field Day the same.
 - [ ] **RTC, serial 0 is refused everywhere.** Type `0 FN31`: EXPECT
-      `QSO number 0 is not valid in this contest.`, the caret after `0`, and
-      nothing logged. In Edit QSO, set a QSO's received (or sent) number to 0
-      and save: the same warning, the window stays open, nothing changes.
-      Import an ADIF with one RTC record whose SRX is 0: EXPECT the import
-      stops, names that record, and imports NOTHING.
+  `QSO number 0 is not valid in this contest.`, the caret after `0`, and
+  nothing logged. In Edit QSO, set a QSO's received (or sent) number to 0
+  and save: the same warning, the window stays open, nothing changes.
+  Import an ADIF with one RTC record whose SRX is 0: EXPECT the import
+  stops, names that record, and imports NOTHING.
 - [ ] **Q119, an out-of-area QSO that reaches the log is an X-QSO.** With
-      MY STATE outside Georgia, import (or receive from a peer) a GA QSO Party
-      QSO with W1AW `CT`. EXPECT it greyed as an X-QSO, scoring nothing, and
-      `X-QSO:` in the Cabrillo. A Georgia county QSO stays a plain `QSO:`.
+  MY STATE outside Georgia, import (or receive from a peer) a GA QSO Party
+  QSO with W1AW `CT`. EXPECT it greyed as an X-QSO, scoring nothing, and
+  `X-QSO:` in the Cabrillo. A Georgia county QSO stays a plain `QSO:`.
 - [ ] **Opening a log uses ITS OWN MY STATE.** With the station's MY STATE
-      FL, open a QSO party log made at a host county (the Michigan corpus log,
-      MY STATE `WAYN`). EXPECT it opens IN STATE: QSOs with DC/MD/VA/OH are
-      plain QSOs and score. Until this fix it opened out of state.
+  FL, open a QSO party log made at a host county (the Michigan corpus log,
+  MY STATE `WAYN`). EXPECT it opens IN STATE: QSOs with DC/MD/VA/OH are
+  plain QSOs and score. Until this fix it opened out of state.
 
 ## Added 2026-10-23 -- HAMSCORE RE-EMITS A STORED QSO FROM ITS RECORD (issue 95, review R6, Q13)
 
@@ -880,30 +885,30 @@ Needs a HamScore account (or the status window's queue count, if posting is
 off) and a contest HamScore accepts (RTC, or any RTC-capable contest).
 
 - [ ] **Just-logged is unchanged.** HAMSCORE ENABLE on. Log three QSOs as
-      your call and grid. In the HamScore window the queue grows by three and
-      the server shows each with your call and exchange, as before this change.
+  your call and grid. In the HamScore window the queue grows by three and
+  the server shows each with your call and exchange, as before this change.
 - [ ] **A changed session does not rewrite old QSOs.** Change MY CALL (or add
-      a /P) and MY GRID, and edit the CQ exchange (`CQ EXCHANGE CW`, e.g. add a
-      word). Log one more QSO: it carries the NEW call and exchange.
+  a /P) and MY GRID, and edit the CQ exchange (`CQ EXCHANGE CW`, e.g. add a
+  word). Log one more QSO: it carries the NEW call and exchange.
 - [ ] **Edit one OLD QSO** (Edit QSO, change only its callsign or its RST,
-      Save). HamScore shows that QSO still sent from the ORIGINAL call and grid
-      -- not the new ones -- with your correction applied. If you
-      change the "my station" fields in the editor and save, those corrections
-      are what HamScore shows.
+  Save). HamScore shows that QSO still sent from the ORIGINAL call and grid
+  -- not the new ones -- with your correction applied. If you
+  change the "my station" fields in the editor and save, those corrections
+  are what HamScore shows.
 - [ ] **Tools -> HamScore resync** (it wipes the server log and re-sends all
-      QSOs). Every QSO appears with the call and exchange it was logged with:
-      the first three as the original station, the fourth as the new one.
+  QSOs). Every QSO appears with the call and exchange it was logged with:
+  the first three as the original station, the fourth as the new one.
 - [ ] **Alt-Y twice** on the newest QSO (delete, then undelete). After the
-      undelete it reappears with its own recorded station.
+  undelete it reappears with its own recorded station.
 - [ ] **A log from before this build** (a QSO row that never recorded its
-      station -- a log written before schema 3, or migrated from a `.TRW`): resync sends today's call and exchange for it, as before. That is
-      the deliberate fallback, not a regression.
+  station -- a log written before schema 3, or migrated from a `.TRW`): resync sends today's call and exchange for it, as before. That is
+  the deliberate fallback, not a regression.
 - [ ] **Edit a SENT serial** (Edit QSO, change the sent number of one QSO,
-      Save). HamScore shows the NEW serial in that QSO's sent exchange (NY4I,
-      2026-10-23), and a Tools resync afterwards still shows it. The sent
-      exchange is rebuilt from the QSO's record and its recorded grid, as the
-      Cabrillo file does; the CQ exchange template is today's. An IMPORTED QSO
-      is the exception: it shows the sent text its file stated.
+  Save). HamScore shows the NEW serial in that QSO's sent exchange (NY4I,
+  2026-10-23), and a Tools resync afterwards still shows it. The sent
+  exchange is rebuilt from the QSO's record and its recorded grid, as the
+  Cabrillo file does; the CQ exchange template is today's. An IMPORTED QSO
+  is the exception: it shows the sent text its file stated.
 
 ## Added 2026-10-22 -- RUSSIAN DX 2027 RULES AND THE POPOV YOUTH CUP (Q97, Q131-Q136)
 
@@ -936,31 +941,31 @@ gate reaches is the live window, the log grids, the summary sheet and the far
 end of HamScore. Design 8.2v "S1 as built". Run in a CQ WW SSB log:
 
 - [ ] **A CW QSO in CQ WW SSB** (switch the radio or mode to CW, log a DX
-      station on 20 m). EXPECT: it is logged; its row in the log window is
-      GREYED as an X-QSO; 0 points; no multiplier is shown as new; the totals
-      window does not count it (the per-minute rate still does -- it counts
-      contacts); the NEXT QSO's sent serial is
-      one higher (it advances). Then work the SAME station on 20 m SSB:
-      EXPECT it is NOT called a dupe and DOES count as a new multiplier if
-      the country/zone was new.
+  station on 20 m). EXPECT: it is logged; its row in the log window is
+  GREYED as an X-QSO; 0 points; no multiplier is shown as new; the totals
+  window does not count it (the per-minute rate still does -- it counts
+  contacts); the NEXT QSO's sent serial is
+  one higher (it advances). Then work the SAME station on 20 m SSB:
+  EXPECT it is NOT called a dupe and DOES count as a new multiplier if
+  the country/zone was new.
 - [ ] **An off-band QSO** (log a phone QSO on 17 m, 12 m or 6 m). EXPECT the
-      same: greyed, 0 points, no multiplier, not a dupe of anything, no "new
-      multiplier" hint while on that band.
+  same: greyed, 0 points, no multiplier, not a dupe of anything, no "new
+  multiplier" hint while on that band.
 - [ ] **Edit the band of that QSO to 20 m** (Edit QSO). EXPECT the row turns
-      ordinary and the score includes it after the rescore -- nothing was
-      stored. Edit QSO's X-QSO checkbox stays UNCHECKED throughout: it is the
-      operator's statement only (the read-only "X-QSO by rule" caption is NOT
-      built -- 8.2v decision 8).
+  ordinary and the score includes it after the rescore -- nothing was
+  stored. Edit QSO's X-QSO checkbox stays UNCHECKED throughout: it is the
+  operator's statement only (the read-only "X-QSO by rule" caption is NOT
+  built -- 8.2v decision 8).
 - [ ] **Export**: the Cabrillo writes `X-QSO:` for those lines and the
-      CLAIMED-SCORE leaves them out; the ADIF carries
-      `<APP_TR4W_CLAIMEDQSO:1>0` on them only.
+  CLAIMED-SCORE leaves them out; the ADIF carries
+  `<APP_TR4W_CLAIMEDQSO:1>0` on them only.
 - [ ] **Summary sheet** (post-contest): QSO totals and points leave them out.
 - [ ] **Reopen the log**: totals, multipliers and the greyed rows are the
-      same as before closing.
+  same as before closing.
 - [ ] **HamScore**: an X-QSO goes up as an `X-QSO:` line -- does hamscore.com
-      leave it out of its counts? (design 8.2v question 7)
+  leave it out of its counts? (design 8.2v question 7)
 - [ ] **FM in CQ WW SSB is an X-QSO** (Q120(a) proposal, unanswered) -- say
-      if that is wrong.
+  if that is wrong.
 
 ## Added 2026-10-19 -- THE NEW CONTEST DIALOG: LAST CONTEST BUTTON AND THE LOG GRID
 
@@ -992,36 +997,37 @@ two server handshake slices (`uTestUtilsText`). What no gate reaches is the
 screen, the keyer and the multi-op handshake.
 
 - [ ] **CQ and NEW markers in the band map** (3.3). With the band map open and
-      a radio on a band: tune to a frequency and press the key that drops a CQ
-      marker (or call CQ so `CQ/ <number>` is created). EXPECT: a `CQ/ n` row
-      appears at that frequency, is NOT sent to the multi-op network
-      (`uSpots.AddSpot`), and clicking it tunes the radio but does NOT fill the
-      call window (`uBandmap`). A `NEW ` flag row behaves the same on click. A
-      normal spot beside it still fills the call window and still sends. The
-      Alt-D / VFO-spin call window ignores a CQ marker inside the guard band
-      (`DisplayCallsignOnThisFreq`, `TuneDupeCheck`, on the polling thread) and
-      shows the real spot next to it.
+  a radio on a band: tune to a frequency and press the key that drops a CQ
+  marker (or call CQ so `CQ/ <number>` is created). EXPECT: a `CQ/ n` row
+  appears at that frequency, is NOT sent to the multi-op network
+  (`uSpots.AddSpot`), and clicking it tunes the radio but does NOT fill the
+  call window (`uBandmap`). A `NEW ` flag row behaves the same on click. A
+  normal spot beside it still fills the call window and still sends. The
+  Alt-D / VFO-spin call window ignores a CQ marker inside the guard band
+  (`DisplayCallsignOnThisFreq`, `TuneDupeCheck`, on the polling thread) and
+  shows the real spot next to it.
 - [ ] **Multiplier refresh skips markers** (3.3). Change the multiplier mode
-      (or log a QSO that makes a spotted station a dupe) with a CQ marker on
-      the map: the marker row is untouched, ordinary spots change colour.
+  (or log a QSO that makes a spotted station a dupe) with a CQ marker on
+  the map: the marker row is untouched, ordinary spots change colour.
 - [ ] **WinKeyer opens** (3.4, `cw-keying`). Plug in a WinKeyer, start TR4W
-      with it enabled. EXPECT: the main window shows `WK2` / `WK3` and the
-      keyer's firmware version exactly as before (the version byte is read
-      into `wkREADBuffer[0]` after the buffer's first byte is cleared). A
-      WinKeyer that does not answer the host-open must still end with the
-      keyer reported closed, not a stale version.
+  with it enabled. EXPECT: the main window shows `WK2` / `WK3` and the
+  keyer's firmware version exactly as before (the version byte is read
+  into `wkREADBuffer[0]` after the buffer's first byte is cleared). A
+  WinKeyer that does not answer the host-open must still end with the
+  keyer reported closed, not a stale version.
 - [ ] **Server password handshake** (3.4, `multi-op-network`; automated only
-      for the slicing). With `tr4wserver` running with a password, connect a
-      client with the right password: it joins. Connect with a wrong one: it
-      is refused ("password" reply) and the server stays up. If a browser or
-      a `GET xxPASS...` style client is in use, the 11-byte offset form still
-      authenticates.
+  for the slicing). With `tr4wserver` running with a password, connect a
+  client with the right password: it joins. Connect with a wrong one: it
+  is refused ("password" reply) and the server stays up. If a browser or
+  a `GET xxPASS...` style client is in use, the 11-byte offset form still
+  authenticates.
 - [ ] **A command with an argument** (3.6, `uProcessCommand`). Put a command
-      with an `=` argument in a CW memory (a ctrl-C ... ctrl-D command such as
-      the `EXECUTE` one naming a config file, or one that sends text to the
-      cluster) and play it. EXPECT: the argument reaches the command intact.
-      The removed line wrote a NUL one byte past the argument; no live consumer
-      read it (the one that did is commented out), so nothing should differ.
+  with an `=` argument in a CW memory (a ctrl-C ... ctrl-D command such as
+  the `EXECUTE` one naming a config file, or one that sends text to the
+  cluster) and play it. EXPECT: the argument reaches the command intact.
+  The removed line wrote a NUL one byte past the argument; no live consumer
+  read it (the one that did is commented out), so nothing should differ.
+
 ## Added 2026-10-18 -- UNTYPED BYTE BUFFERS ARE OPEN ARRAYS (pointer audit P12)
 
 `GetCRC32`, `GetCRC16X25`, `SHA256Update`, `NextNetMessage`, the hex dumpers
@@ -1037,31 +1043,31 @@ built field by field by `wkValueListBytes` instead of being sent as the
 record's memory (pinned by `uTestWinKeyWire`). Set `DEBUG LOG LEVEL = TRACE`.
 
 - [ ] **Enable the WinKeyer and let it open.** EXPECT: `tr4w.log` shows
-      `[wkSendAdminCommand] B1=$00 B2=$04` (ECHO TEST) and then
-      `B1=$00 B2=$02` (HOST OPEN), and the main window names WK2/WK3 and its
-      version. No answer to the echo test means an admin command's bytes
-      changed.
+  `[wkSendAdminCommand] B1=$00 B2=$04` (ECHO TEST) and then
+  `B1=$00 B2=$02` (HOST OPEN), and the main window names WK2/WK3 and its
+  version. No answer to the echo test means an admin command's bytes
+  changed.
 - [ ] **The settings sent at open take effect before any change is made.**
-      Send a message straight away. EXPECT: the TR4W speed, the configured
-      sidetone pitch, and the configured paddle mode and swap. A wrong speed
-      or pitch at open (and right after a manual change) is a value-list
-      field out of order.
+  Send a message straight away. EXPECT: the TR4W speed, the configured
+  sidetone pitch, and the configured paddle mode and swap. A wrong speed
+  or pitch at open (and right after a manual change) is a value-list
+  field out of order.
 - [ ] **Send a message; change speed during it; PTT; Escape to clear.**
-      EXPECT: all as before (`wkSendByte`, `wkSendTwoBytes`, `wkTurnPTT` and
-      `wkClearBuffer` now pass `[b]` / `[B1, B2]`).
+  EXPECT: all as before (`wkSendByte`, `wkSendTwoBytes`, `wkTurnPTT` and
+  `wkClearBuffer` now pass `[b]` / `[B1, B2]`).
 - [ ] **Disable and re-enable the keyer.** EXPECT: `B1=$00 B2=$03` (HOST
-      CLOSE), then a clean re-open.
+  CLOSE), then a clean re-open.
 
 **Multi-op link** (multi-op-network). Two stations and `tr4wserver`. The
 server's `SendToClient` turns the record into bytes once and both writes and
 traces those; the wire format is unchanged (V1 is not being touched).
 
 - [ ] **Connect two clients and log a QSO on one.** EXPECT: it reaches the
-      other; neither `tr4w.log` nor `tr4wserver.log` reports an unrecognised
-      id or a desync.
+  other; neither `tr4w.log` nor `tr4wserver.log` reports an unrecognised
+  id or a desync.
 - [ ] **Server at TRACE.** EXPECT `[Net] rx <ip>:` and `[Net] tx <ip>:` lines
-      in the same shape as before: two upper-case hex digits and a space per
-      byte, at most 64 bytes, then `... (N more)`.
+  in the same shape as before: two upper-case hex digits and a space per
+  byte, at most 64 bytes, then `... (N more)`.
 
 **Single-instance lock** (serial-port-io; no hardware). The mutex name is a
 CRC of the install path's UTF-16 bytes, now taken with
@@ -1069,8 +1075,8 @@ CRC of the install path's UTF-16 bytes, now taken with
 `uTestCRC32.Test_UnicodeBytesAreTheCodeUnits`).
 
 - [ ] **Start the PREVIOUS release's exe, then this build's, from the SAME
-      directory.** EXPECT: the second is refused as a second instance. That
-      proves the name did not change between builds, which a test cannot.
+  directory.** EXPECT: the second is refused as a second instance. That
+  proves the name did not change between builds, which a test cannot.
 
 ---
 
@@ -1086,19 +1092,19 @@ Set up: an ARRL Digi log with MY GRID `EL88`. Two ADIF files: one with no MY_
 tags, and one whose records carry `<MY_GRIDSQUARE:4>JO65`.
 
 - [ ] **Import the file with no MY_ tags.** EXPECT: no question; the final
-      report ends "N QSO(s) named no station of ours and were given this
-      contest's." Edit QSO on one shows grid `EL88`; the claimed score is the
-      one EL88 gives.
+  report ends "N QSO(s) named no station of ours and were given this
+  contest's." Edit QSO on one shows grid `EL88`; the claimed score is the
+  one EL88 gives.
 - [ ] **Import the JO65 file.** EXPECT: before anything is written, a Yes/No
-      naming "MY_GRIDSQUARE", the record count, and a line
-      `MY_GRIDSQUARE: N QSO(s), e.g. JO65 (this contest: EL88)`. The wording
-      and line breaks must read right; it is new text.
+  naming "MY_GRIDSQUARE", the record count, and a line
+  `MY_GRIDSQUARE: N QSO(s), e.g. JO65 (this contest: EL88)`. The wording
+  and line breaks must read right; it is new text.
 - [ ] **Answer Yes.** EXPECT: Edit QSO shows `JO65`, and the score is the one
-      JO65 gives (measured headless: 522 against 231 for ARRL Digi's
-      reference).
+  JO65 gives (measured headless: 522 against 231 for ARRL Digi's
+  reference).
 - [ ] **Answer No (on a fresh log).** EXPECT: Edit QSO shows `EL88`.
 - [ ] **A file whose MY_ values match the contest's.** EXPECT: no question,
-      only "...the same as this contest's." in the report.
+  only "...the same as this contest's." in the report.
 
 ---
 
@@ -1116,12 +1122,12 @@ Set up: a New York QSO Party log, MY STATE out of state (e.g. `FL`), CW on
 
 - [ ] **Log plain `W2TZ` sending `KIN`.** It logs and scores.
 - [ ] **Type `W2TZ` again, same band and mode.** EXPECT: the call window shows
-      DUPE -- that is the ruling, not a defect.
+  DUPE -- that is the ruling, not a defect.
 - [ ] **Enter `STE` as the exchange and log it.** EXPECT: it is accepted, is
-      not marked a dupe, and scores (2 points on CW).
+  not marked a dupe, and scores (2 points on CW).
 - [ ] **`W2TZ` with `KIN` again.** EXPECT: a dupe, scoring 0.
 - [ ] **Rescore** (Tools > Rescore). EXPECT: the same marks -- KIN and STE
-      counted once each, the second KIN a dupe -- and the same score.
+  counted once each, the second KIN a dupe -- and the same score.
 - [ ] On 40 m, `W2TZ` is not a dupe in the call window at all.
 
 ## Added 2026-10-18 -- AN FM QSO NO LONGER CORRUPTS ITS CALL ON RESCORE (pointer audit P8 part A, `433c047f`)
@@ -1139,12 +1145,12 @@ before you start.
 
 - [ ] **Rescore** (Tools > Rescore).
 - [ ] **Open the dupe sheet (Alt-D)** on the band and mode the FM QSOs were
-      made on, and on phone. EXPECT: every call reads exactly as logged -- no
-      garbled or truncated callsigns -- and the FM QSOs are listed as PHONE.
+  made on, and on phone. EXPECT: every call reads exactly as logged -- no
+  garbled or truncated callsigns -- and the FM QSOs are listed as PHONE.
 - [ ] **Open the remaining-multiplier windows.** EXPECT: the multipliers
-      worked and needed are what they were before the rescore.
+  worked and needed are what they were before the rescore.
 - [ ] EXPECT: the score and multiplier counts are unchanged, and working an
-      FM-logged station again on phone, same band, is a dupe.
+  FM-logged station again on phone, same band, is a dupe.
 - [ ] Exit TR4W: nothing in `tr4w.log` at Error level from the rescore.
 
 ## Added 2026-10-17 -- THE CPU KEYER'S ELEMENT RING IS A FIELD (pointer audit P6, defect D4)
@@ -1162,38 +1168,38 @@ or a sidetone monitor you can hear. **A YCCC box's autosend characters go
 this way too**, so the same checks cover it.
 
 - [ ] **A message keys exactly as before.** F1 (CQ) and the exchange memory:
-      every character correct by ear, letter spacing and word spacing
-      unchanged, PTT drops at the end. Include a memory with `^` (half space)
-      and one with a speed change (Ctrl-F / Ctrl-S inside the memory) if you
-      use them.
+  every character correct by ear, letter spacing and word spacing
+  unchanged, PTT drops at the end. Include a memory with `^` (half space)
+  and one with a speed change (Ctrl-F / Ctrl-S inside the memory) if you
+  use them.
 - [ ] **Autosend, starting from a FRESH start of TR4W.** Before keying
-      anything else, put the call window in autosend and type a call: it
-      keys as you type. (The D4 crash needed the very first character into
-      the keyer to be a space, `^`, a control character or an unmapped one,
-      which the UI does not readily produce -- the unit test reached it and
-      reproduced the access violation; this checks the ordinary path.)
+  anything else, put the call window in autosend and type a call: it
+  keys as you type. (The D4 crash needed the very first character into
+  the keyer to be a space, `^`, a control character or an unmapped one,
+  which the UI does not readily produce -- the unit test reached it and
+  reproduced the access violation; this checks the ordinary path.)
 - [ ] **Farnsworth** (if you use it: FARNSWORTH ENABLE with a code speed
-      below FARNSWORTH SPEED): the character and word gaps stretch as before.
+  below FARNSWORTH SPEED): the character and word gaps stretch as before.
 - [ ] **Backspace while autosending** retracts the last unsent character, as
-      before -- and only that: it never brings back CW that was already sent
-      or flushed. **FIXED in this packet (NY4I, 2026-10-17):** when the ring
-      stood at slot 0, the retraction walk used to go round the whole OLD
-      ring and could resume keying stale CW. Rare for the same reason as
-      the Esc item below, so a clean run does not prove it -- the unit test
-      does -- but stale CW after a Backspace is now a defect: note the time
-      and send `tr4w.log`. **Esc** stops sending mid-message.
+  before -- and only that: it never brings back CW that was already sent
+  or flushed. **FIXED in this packet (NY4I, 2026-10-17):** when the ring
+  stood at slot 0, the retraction walk used to go round the whole OLD
+  ring and could resume keying stale CW. Rare for the same reason as
+  the Esc item below, so a clean run does not prove it -- the unit test
+  does -- but stale CW after a Backspace is now a defect: note the time
+  and send `tr4w.log`. **Esc** stops sending mid-message.
 - [ ] **A long run, with Esc.** Send forty or more CQs/exchanges in one
-      session -- the ring holds 2,047 elements and wraps, so this crosses the
-      wrap several times -- and press **Esc mid-message on a good number of
-      them**. Every message keys clean, and **every Esc stops sending
-      cleanly**: at most the element in progress finishes, then silence and
-      PTT off. **FIXED in this packet (NY4I, 2026-10-17):** `FlushCWBuffer`
-      used to wrap to `CWBufferSize`, not `CWBufferSize - 1`, so an Esc at
-      the moment the ring stood at slot 0 replayed up to 2,046 OLD elements
-      instead of stopping. That moment is rare (once per 2,047 elements), so
-      a clean run does not prove the fix -- the unit tests do -- but **a
-      burst of old CW after an Esc is now a defect**: note the time and send
-      `tr4w.log`.
+  session -- the ring holds 2,047 elements and wraps, so this crosses the
+  wrap several times -- and press **Esc mid-message on a good number of
+  them**. Every message keys clean, and **every Esc stops sending
+  cleanly**: at most the element in progress finishes, then silence and
+  PTT off. **FIXED in this packet (NY4I, 2026-10-17):** `FlushCWBuffer`
+  used to wrap to `CWBufferSize`, not `CWBufferSize - 1`, so an Esc at
+  the moment the ring stood at slot 0 replayed up to 2,046 OLD elements
+  instead of stopping. That moment is rare (once per 2,047 elements), so
+  a clean run does not prove the fix -- the unit tests do -- but **a
+  burst of old CW after an Esc is now a defect**: note the time and send
+  `tr4w.log`.
 - [ ] Exit TR4W: no `worker thread` exception line in `tr4w.log`.
 
 ## Added 2026-10-17 -- THE SPOT STORE IS A CLASS OVER A GENERIC LIST (pointer audit P8, part B)
@@ -1204,21 +1210,21 @@ decay, dupe and repaint bookkeeping). It cannot reach the band map window, the
 cluster, or the radio polling thread, which now takes the store's lock.
 
 - [ ] **Spots arrive, age and leave.** Connect to a cluster (Telnet window)
-      with the band map open. EXPECT: spots appear, in frequency order, within
-      a repaint tick of arriving; with `BAND MAP DECAY TIME` set to 2 they fall
-      off one at a time about two minutes after THEY arrived, not all in one
-      tick. The band map's delete removes the right row; its clear empties
-      the map and new spots still arrive afterwards.
+  with the band map open. EXPECT: spots appear, in frequency order, within
+  a repaint tick of arriving; with `BAND MAP DECAY TIME` set to 2 they fall
+  off one at a time about two minutes after THEY arrived, not all in one
+  tick. The band map's delete removes the right row; its clear empties
+  the map and new spots still arrive afterwards.
 - [ ] **Click-to-tune.** Click a spot: the radio tunes to that spot's
-      frequency and the call window fills (search-and-pounce). Spin the VFO
-      across a spot's frequency with the band map open: the call window shows
-      that spot's call inside the guard band and clears outside it. With
-      the Tune Alt-D option on and a second radio, tuning the INACTIVE radio onto a
-      spot fills the Alt-D call. These last two run on the radio polling
-      thread and are the paths that gained the lock -- watch for a stall or an
-      exception in `tr4w.log` while spots are arriving and being deleted.
+  frequency and the call window fills (search-and-pounce). Spin the VFO
+  across a spot's frequency with the band map open: the call window shows
+  that spot's call inside the guard band and clears outside it. With
+  the Tune Alt-D option on and a second radio, tuning the INACTIVE radio onto a
+  spot fills the Alt-D call. These last two run on the radio polling
+  thread and are the paths that gained the lock -- watch for a stall or an
+  exception in `tr4w.log` while spots are arriving and being deleted.
 - [ ] **Persistence.** Close and reopen TR4W with spots on the map: they come
-      back (SaveBandMap / LoadBandMap), still ordered, with their ages kept.
+  back (SaveBandMap / LoadBandMap), still ordered, with their ages kept.
 
 ---
 
@@ -1231,36 +1237,36 @@ contest matrix reaches the scoring; nothing reaches a live entry window or the
 running program's contest re-selection, and the corpus is blind to points.
 
 - [ ] **An edited CQ memory survives re-selecting the contest (Q9).** Open a
-      CQ WPX (or any serial-number) log; Alt-P, edit CQ F3 to something of
-      your own; then re-select the SAME contest the way an operator does
-      (a peer's CONTEST line, or the CONTEST setting applied again). EXPECT:
-      CQ F3 keeps your text, while the other memories set-up writes are
-      written as before. Then open a log of a DIFFERENT contest: its own CQ F3
-      default appears (your edit is not carried over). **Known, separate:** an
-      edited memory is still lost when TR4W restarts -- the log's `message`
-      table is written at close and never read back (reported with Q9).
+  CQ WPX (or any serial-number) log; Alt-P, edit CQ F3 to something of
+  your own; then re-select the SAME contest the way an operator does
+  (a peer's CONTEST line, or the CONTEST setting applied again). EXPECT:
+  CQ F3 keeps your text, while the other memories set-up writes are
+  written as before. Then open a log of a DIFFERENT contest: its own CQ F3
+  default appears (your edit is not carried over). **Known, separate:** an
+  edited memory is still lost when TR4W restarts -- the log's `message`
+  table is written at close and never read back (reported with Q9).
 - [ ] **Missouri's peak-hour bonus survives reopening (Q32).** In a Missouri
-      log, log a few 40 or 80 m QSOs with a logged time between 1400 and 1959
-      UTC (edit the time if it is not contest day), note the score, close and
-      reopen the log: the score is the SAME (it used to drop by the tally).
-      `/EXPORT`'s `CLAIMED-SCORE` matches the window.
+  log, log a few 40 or 80 m QSOs with a logged time between 1400 and 1959
+  UTC (edit the time if it is not contest day), note the score, close and
+  reopen the log: the score is the SAME (it used to drop by the tally).
+  `/EXPORT`'s `CLAIMED-SCORE` matches the window.
 - [ ] **A malformed grid has no distance (Q37).** In WWL or the Stew Perry, a
-      logged QSO whose grid is not a grid (import one, or edit one to `FN3`)
-      scores the no-distance points (1 in both) every time it is rescored, and
-      the beam-heading display shows nothing for it. A real grid still shows
-      its heading and distance.
+  logged QSO whose grid is not a grid (import one, or edit one to `FN3`)
+  scores the no-distance points (1 in both) every time it is rescored, and
+  the beam-heading display shows nothing for it. A real grid still shows
+  its heading and distance.
 - [ ] **A county rover is its own station (Q73).** In the Florida QSO Party,
-      work `NY4I/PIN`, then type `NY4I/HIL`: the call window does NOT say
-      dupe, and it logs. Type `NY4I/PIN` again on the same band and mode: it
-      IS a dupe. The same with `K1AR/NHHIL` then `K1AR/NHMER` in New England.
+  work `NY4I/PIN`, then type `NY4I/HIL`: the call window does NOT say
+  dupe, and it logs. Type `NY4I/PIN` again on the same band and mode: it
+  IS a dupe. The same with `K1AR/NHHIL` then `K1AR/NHMER` in New England.
 - [ ] **New England's county spellings (Q81).** Out of New England, the
-      New England QSO Party accepts `MEAND`, `CTCAP` and the old `ANDME`; of
-      the eight old Connecticut counties only the three in7qpne_cty.dom maps
-      onto a planning region are still typed (`HARCT` and `TOLCT` give
-      Capital, `NHVCT` Naugatuck) and `FAICT`, `LITCT`, `MIDCT`, `NLNCT`,
-      `WINCT` are refused; the remaining-multiplier window lists 68 counties
-      under the state-first names. Inside New England (MY STATE `ME`),
-      `MEAND` counts Maine.
+  New England QSO Party accepts `MEAND`, `CTCAP` and the old `ANDME`; of
+  the eight old Connecticut counties only the three in7qpne_cty.dom maps
+  onto a planning region are still typed (`HARCT` and `TOLCT` give
+  Capital, `NHVCT` Naugatuck) and `FAICT`, `LITCT`, `MIDCT`, `NLNCT`,
+  `WINCT` are refused; the remaining-multiplier window lists 68 counties
+  under the state-first names. Inside New England (MY STATE `ME`),
+  `MEAND` counts Maine.
 
 ---
 
@@ -1271,27 +1277,27 @@ matrix reaches the scoring; NOTHING reaches the New Contest dialog's window or a
 live entry window, and the corpus is blind to points.
 
 - [ ] **IN7QPNE is refused at New Contest for an in-area station (Q104).** Pick
-      IN7QPNE and type each of `IN`, `UT`, `ME`, `DE` (and one county, e.g.
-      `INADA`) into MY STATE. EXPECT: OK stays DISABLED and the comment under the
-      rows reads *"IN7QPNE is for stations outside Indiana, the 7th call area,
-      New England and Delaware. From UT, choose the 7th Call Area QSO Party
-      instead."* -- the 7QP for every 7th-area state, Indiana / New England /
-      Delaware QSO Party for the others. Then type `KS`: the prompt text comes
-      BACK in the comment and OK enables. Check the message fits the comment
-      area without clipping (it is longer than the prompt).
+  IN7QPNE and type each of `IN`, `UT`, `ME`, `DE` (and one county, e.g.
+  `INADA`) into MY STATE. EXPECT: OK stays DISABLED and the comment under the
+  rows reads *"IN7QPNE is for stations outside Indiana, the 7th call area,
+  New England and Delaware. From UT, choose the 7th Call Area QSO Party
+  instead."* -- the 7QP for every 7th-area state, Indiana / New England /
+  Delaware QSO Party for the others. Then type `KS`: the prompt text comes
+  BACK in the comment and OK enables. Check the message fits the comment
+  area without clipping (it is longer than the prompt).
 - [ ] **The UA4W Championship's prompt (Q71).** Pick it: the comment is the
-      translated `TC_ENTERYOURRDAIDORGRID` ("Enter your RDA ID (for UA1A
-      stations) or four digit grid square:" in English); in Russian it should be
-      the existing Russian text.
+  translated `TC_ENTERYOURRDAIDORGRID` ("Enter your RDA ID (for UA1A
+  stations) or four digit grid square:" in English); in Russian it should be
+  the existing Russian text.
 - [ ] **A 160 m contest scores nothing off 160 m (Q71).** In RSGB 1.8 MHz, ARRL
-      160 or CQ 160, log one QSO on 80 m: it is logged, scores 0, earns no
-      multiplier and is not a dupe on 160 m; the need-multiplier hint on 80 m
-      says nothing is needed.
+  160 or CQ 160, log one QSO on 80 m: it is logged, scores 0, earns no
+  multiplier and is not a dupe on 160 m; the need-multiplier hint on 80 m
+  says nothing is needed.
 - [ ] **Winter Field Day shows no DXCC multipliers (Q38).** The remaining-DX
-      window and the multiplier totals show none; the score is unchanged.
+  window and the multiplier totals show none; the score is unchanged.
 - [ ] **EUDX from outside the EU (Q45).** A W station working a European who
-      sends a ZONE scores 5 (3 on our continent, 2 for our own country), not
-      10; one who sends a region scores 10.
+  sends a ZONE scores 5 (3 on our continent, 2 for our own country), not
+  10; one who sends a region scores 10.
 
 ---
 
@@ -1307,50 +1313,50 @@ stations on a contest registered BY ID (any QSO party, e.g. `GA-QSO-PARTY`) and
 then on a legacy one.
 
 - [ ] **Connect, both stations, a by-id contest.** Select the same QSO party on
-      both, choose Net > Connect on each (the link no longer needs the Network
-      window; see the section above). EXPECT: connected; each station's
-      row on the other; `tr4w.log` has `[Net] server hello: network protocol 2`
-      and `[Net] station B announced contest "GA-QSO-PARTY"` (the other letter on
-      the other station). NO dialog.
+  both, choose Net > Connect on each (the link no longer needs the Network
+  window; see the section above). EXPECT: connected; each station's
+  row on the other; `tr4w.log` has `[Net] server hello: network protocol 2`
+  and `[Net] station B announced contest "GA-QSO-PARTY"` (the other letter on
+  the other station). NO dialog.
 - [ ] **A QSO crosses and is logged.** Log one at A. EXPECT at B: it appears in
-      B's log, scores, and the dupe sheet knows it -- ON A BY-ID CONTEST. Edit it
-      at A and Alt-Y delete another: both arrive. (`tr4w.log` at B: no
-      `REFUSED`.) The same on a legacy contest.
+  B's log, scores, and the dupe sheet knows it -- ON A BY-ID CONTEST. Edit it
+  at A and Alt-Y delete another: both arrive. (`tr4w.log` at B: no
+  `REFUSED`.) The same on a legacy contest.
 - [ ] **The two builds do not agree on the handle byte, and it does not matter.**
-      If the two stations' by-id handles differ (compare `handle` in a debug
-      build, or just link a different set of contests on one), the QSO still
-      arrives and carries B's own contest.
+  If the two stations' by-id handles differ (compare `handle` in a debug
+  build, or just link a different set of contests on one), the QSO still
+  arrives and carries B's own contest.
 - [ ] **A contest change is announced.** With both connected on contest X, change
-      A to contest Y (Preferences, or New Contest). EXPECT at A: `[Net] sent
-      hello` with Y; at B: `station A announced contest "Y"`. Log a QSO at A:
-      B refuses it (below). Change B to Y: the next QSO arrives.
+  A to contest Y (Preferences, or New Contest). EXPECT at A: `[Net] sent
+  hello` with Y; at B: `station A announced contest "Y"`. Log a QSO at A:
+  B refuses it (below). Change B to Y: the next QSO arrives.
 - [ ] **A peer on another contest is refused and reported, once** (this is Q110,
-      now by announcement). EXPECT at B: the QSO is NOT logged; one panel notice
-      "Station A is on Y, this station is on X -- ..."; one `REFUSED` Error line
-      per QSO; no second notice for the same station and contest until the link
-      is re-established.
+  now by announcement). EXPECT at B: the QSO is NOT logged; one panel notice
+  "Station A is on Y, this station is on X -- ..."; one `REFUSED` Error line
+  per QSO; no second notice for the same station and contest until the link
+  is re-established.
 - [ ] **A server from before protocol 2.** Point the station at an old
-      `tr4wserver.exe` (any build before this change) or the Python server at
-      tag `d7-protocol`. EXPECT: the connection closes at once, and ONE dialog
-      "The multi-op server closed the connection without answering. It is
-      probably older than this TR4W ..." -- not repeated every five seconds.
-      Net > Connect (or Reconnect) tries again; it is not retried by itself.
+  `tr4wserver.exe` (any build before this change) or the Python server at
+  tag `d7-protocol`. EXPECT: the connection closes at once, and ONE dialog
+  "The multi-op server closed the connection without answering. It is
+  probably older than this TR4W ..." -- not repeated every five seconds.
+  Net > Connect (or Reconnect) tries again; it is not retried by itself.
 - [ ] **A station from before protocol 2** (or the probe's `--case hello`)
-      against the NEW server: refused, the server log says `first message was not
-      HELLO ... a 4.x client?`.
+  against the NEW server: refused, the server log says `first message was not
+  HELLO ... a 4.x client?`.
 - [ ] **A mismatched protocol number** (hand edit, or run `netprobe` against a
-      patched server): the dialog says which end is behind and what to update.
+  patched server): the dialog says which end is behind and what to update.
 - [ ] **Duplicate computer id**, as before: the second station gets the
-      "Computer ID is already in use" dialog; the first is undisturbed. Then
-      stop the first and reconnect the second: accepted.
+  "Computer ID is already in use" dialog; the first is undisturbed. Then
+  stop the first and reconnect the second: accepted.
 - [ ] **A station that leaves is forgotten.** Net > Disconnect at B; at A the
-      row clears (this was broken against the Python server), and a QSO
-      forged under B's id is refused ("has not announced a contest").
+  row clears (this was broken against the Python server), and a QSO
+  forged under B's id is refused ("has not announced a contest").
 - [ ] **`<contestnr>` on the wire.** With a UDP listener (N1MM-format) on the
-      contact stream and a by-id contest selected, log a QSO: the datagram
-      carries a `<contestnr>` that is NOT a byte value (the id's derived number);
-      a legacy contest still carries its legacy number (the `ContestType`
-      ordinal -- compare with a capture from before this change).
+  contact stream and a by-id contest selected, log a QSO: the datagram
+  carries a `<contestnr>` that is NOT a byte value (the id's derived number);
+  a legacy contest still carries its legacy number (the `ContestType`
+  ordinal -- compare with a capture from before this change).
 
 ---
 
@@ -1362,13 +1368,13 @@ record's contest byte (the first item above covers it for by-id contests too).
 Unit tests feed the real receive arms but cannot log a QSO or show a panel.
 
 - [ ] **A QSO from a peer on another contest is refused and reported.** Station
-      A on contest X, station B on contest Y, both connected; log a QSO at B.
-      EXPECT at A: the QSO is NOT in A's log or totals; the quick-command panel
-      shows "Station B is on Y, this station is on X -- its QSOs are NOT being
-      logged here. ..." ; `tr4w.log` has one `[Net] NET_QSOINFO from station B
-      REFUSED` Error line naming both contests and the call. Log three more at
-      B: three more log lines, NO second panel notice. Edit one at B: a
-      `NET_EDITEDQSO ... REFUSED` line, still no second notice.
+  A on contest X, station B on contest Y, both connected; log a QSO at B.
+  EXPECT at A: the QSO is NOT in A's log or totals; the quick-command panel
+  shows "Station B is on Y, this station is on X -- its QSOs are NOT being
+  logged here. ..." ; `tr4w.log` has one `[Net] NET_QSOINFO from station B
+  REFUSED` Error line naming both contests and the call. Log three more at
+  B: three more log lines, NO second panel notice. Edit one at B: a
+  `NET_EDITEDQSO ... REFUSED` line, still no second notice.
 - [ ] **Same contest on both is unchanged**, and a reconnect re-arms the notice.
 
 ## Added 2026-10-16 -- 5.0.28 AND AFTER: WHAT THE GATES CANNOT SEE
@@ -1659,27 +1665,27 @@ Before you start, note the station's **MY ZONE** and **MY STATE** in
 Preferences > Station (zone 5 and FL here).
 
 - [ ] **New Contest > European HFC.** Its row is labelled `MY ZONE`, because
-      that contest sends the year licensed in the zone's place. Enter `3`.
-      OK. The CQ message (F1/F3) sends `599 3`.
+  that contest sends the year licensed in the zone's place. Enter `3`.
+  OK. The CQ message (F1/F3) sends `599 3`.
 - [ ] **During that contest, Preferences > Station > MY ZONE still shows the
-      station's zone (5).** Change something harmless on another page and
-      save, or toggle INSERT. Close TR4W. Open `settings\tr4w.json`:
-      `"Zone"` is still `"5"`.
+  station's zone (5).** Change something harmless on another page and
+  save, or toggle INSERT. Close TR4W. Open `settings\tr4w.json`:
+  `"Zone"` is still `"5"`.
 - [ ] **Log one QSO, close, and reopen the European HFC log.** Export
-      Cabrillo. The sent column carries `3`, because the log carries the
-      override. Also look at what F1/F3 send after the reopen. The contest
-      is set up before the log's rows are applied (Q68), so a message built
-      at set-up may show the station's 5. Note which one you see.
+  Cabrillo. The sent column carries `3`, because the log carries the
+  override. Also look at what F1/F3 send after the reopen. The contest
+  is set up before the log's rows are applied (Q68), so a message built
+  at set-up may show the station's 5. Note which one you see.
 - [ ] **New Contest > CQ WW (any mode).** Its exchange sends the
-      **station's** zone (5), not 3. That is NY4I's case: zone 3 was
-      for that one contest.
+  **station's** zone (5), not 3. That is NY4I's case: zone 3 was
+  for that one contest.
 - [ ] **New Contest > CQ WW RTTY.** Its row is MY STATE; enter `UT`. The CQ
-      exchange is `599 5 UT`, the same text it always built. In Preferences,
-      MY STATE is still `FL`.
+  exchange is `599 5 UT`, the same text it always built. In Preferences,
+  MY STATE is still `FL`.
 - [ ] **During the European HFC contest, change MY ZONE in Preferences to
-      4.** The contest still sends `599 3`, because its override wins for
-      that contest. Preferences does not say so; that is Q66. A later new CQ
-      WW contest sends 4.
+  4.** The contest still sends `599 3`, because its override wins for
+  that contest. Preferences does not say so; that is Q66. A later new CQ
+  WW contest sends 4.
 
 ---
 
@@ -1693,39 +1699,39 @@ n-fer and state/grid branches are proven only by `uTestContestPOTA`, which
 cannot press a key. One live activation covers all of it.
 
 - [ ] **New Contest**: the drop-down line now reads *"Parks on the Air(r)
-      Logging"* -- **a deliberate change** (it said *"POTA"*; design Q64). Choose
-      it: the box reads *"Activator"*; tick it -- the MY PARK row with the
-      comment *"Enter your POTA Park Reference Designator (WITH DASH e.g.
-      K-1234)"*; enter `US-0663`, OK. The log opens as POTA.
+  Logging"* -- **a deliberate change** (it said *"POTA"*; design Q64). Choose
+  it: the box reads *"Activator"*; tick it -- the MY PARK row with the
+  comment *"Enter your POTA Park Reference Designator (WITH DASH e.g.
+  K-1234)"*; enter `US-0663`, OK. The log opens as POTA.
 - [ ] **Set-up**: CW F1 is `CQ^POTA \ \ `, F2 `CQ^POTA CQ^POTA \ \ FD`, the
-      QSL message `73 \ EE`; WARC bands step; working the same call twice is
-      allowed (no dupe warning). The **Download POTA Parks** and **Repeat POTA
-      Parks (2nd Op)** menu rows are **visible**; open any other contest and
-      both are **hidden**.
+  QSL message `73 \ EE`; WARC bands step; working the same call twice is
+  allowed (no dupe warning). The **Download POTA Parks** and **Repeat POTA
+  Parks (2nd Op)** menu rows are **visible**; open any other contest and
+  both are **hidden**.
 - [ ] **Park entry**: type a call and `57 US-1234`; the park's NAME shows as
-      you type (with the park list loaded) and the QSO logs with QTH
-      `US-1234`. Abbreviations still normalise -- `1274` becomes `US-1274`
-      from MY PARK.
+  you type (with the park list loaded) and the QSO logs with QTH
+  `US-1234`. Abbreviations still normalise -- `1274` becomes `US-1274`
+  from MY PARK.
 - [ ] **The n-fer**: `57 US-1234 US-5678 US-9012` logs **three** rows, one per
-      park, as one contact (one QSO set, like a county line). Then **Repeat
-      POTA Parks (2nd Op)** pre-fills the three parks for a new call.
+  park, as one contact (one QSO set, like a county line). Then **Repeat
+  POTA Parks (2nd Op)** pre-fills the three parks for a new call.
 - [ ] **A hunter not in a park**: `57 PA` logs with the state; `57 FN31` with
-      the grid; a bare call with an empty exchange still logs.
+  the grid; a bare call with an empty exchange still logs.
 - [ ] **ADIF export** (File > Export ADIF), **with the POTA park list
-      loaded** (Download POTA Parks): every record has `<MY_SIG:4>POTA`,
-      `MY_SIG_INFO` and `MY_POTA_REF` = MY PARK, `MY_DXCC` (and `MY_STATE`
-      for a single-subdivision park) from MY PARK's row in the list -- a park
-      not in the list writes neither and warns once -- and **no
-      `CONTEST_ID`**. A park QSO: `SRX_STRING`, `SIG`, `SIG_INFO` and
-      `POTA_REF` = the park, one record per park of an n-fer. **`DXCC` is the
-      WORKED CALL's country** (Q62, `d6dd0208`), never the shape of what it
-      sent: a W hunter sending `PA` writes `<DXCC:3>291` and `<STATE:2>PA`; a
-      VE3 hunter writes `<DXCC:1>1`; `NY4I/VE7` is Canada. A grid QSO:
-      `<GRIDSQUARE:4>FN31`. No exchange field the POTA class does not declare
-      (`df4f028a`) -- no PRECEDENCE, CHECK, TEN_TEN, AGE or NAME.
+  loaded** (Download POTA Parks): every record has `<MY_SIG:4>POTA`,
+  `MY_SIG_INFO` and `MY_POTA_REF` = MY PARK, `MY_DXCC` (and `MY_STATE`
+  for a single-subdivision park) from MY PARK's row in the list -- a park
+  not in the list writes neither and warns once -- and **no
+  `CONTEST_ID`**. A park QSO: `SRX_STRING`, `SIG`, `SIG_INFO` and
+  `POTA_REF` = the park, one record per park of an n-fer. **`DXCC` is the
+  WORKED CALL's country** (Q62, `d6dd0208`), never the shape of what it
+  sent: a W hunter sending `PA` writes `<DXCC:3>291` and `<STATE:2>PA`; a
+  VE3 hunter writes `<DXCC:1>1`; `NY4I/VE7` is Canada. A grid QSO:
+  `<GRIDSQUARE:4>FN31`. No exchange field the POTA class does not declare
+  (`df4f028a`) -- no PRECEDENCE, CHECK, TEN_TEN, AGE or NAME.
 - [ ] **ADIF import**: re-import that file into a new POTA log; the parks come
-      back as each QSO's QTH, and a record carrying only `SIG=POTA` and
-      `SIG_INFO` (as another logger writes it) reads its park from there.
+  back as each QSO's QTH, and a record carrying only `SIG=POTA` and
+  `SIG_INFO` (as another logger writes it) reads its park from there.
 
 ---
 
@@ -1826,7 +1832,7 @@ One deliberate change is listed last.
     **RSGB 1.8 MHz** (*"I am in UK"*, tick for the district), the
     **UA4W Championship** (MY QTH, the RDA/grid comment);
   - **IN7QPNE** (its composite class since 2026-10-14; the base's prompt): the county-or-state comment naming *IN7QPNE*.
-  OK must still enable only when every offered row is filled.
+    OK must still enable only when every offered row is filled.
 - **The totals window** (`uTotal` reads `TotalsDisplay`): **IARU** labels the
   domestic row *HQ Mults* (by mode: *CW HQ* / *Ph HQ*); **Russian DX** and
   **RU3AX** *Oblasts*; **OZCHR teams** (QSO by mode, CW and phone both worked)
@@ -2426,13 +2432,13 @@ become "converted, therefore done".
 -- had drifted one row from the enum in `VC.pas`. It was missing `TS140` and
 carried a `TS530` the enum never had, so from that point on it was off by one:
 
-| the config said | the operator actually got | after the fix |
-|---|---|---|
-| `TS440` | TS-140 driver | TS-440 driver |
-| `TS450` | TS-440 driver | TS-450 driver |
-| `TS480` | TS-450 driver | TS-480 driver |
-| `TS530` | TS-480 driver | **no match** -- TR4W has no TS-530 driver |
-| `TS140` | no match at all | TS-140 driver |
+| the config said | the operator actually got | after the fix                             |
+| --------------- | ------------------------- | ----------------------------------------- |
+| `TS440`         | TS-140 driver             | TS-440 driver                             |
+| `TS450`         | TS-440 driver             | TS-450 driver                             |
+| `TS480`         | TS-450 driver             | TS-480 driver                             |
+| `TS530`         | TS-480 driver             | **no match** -- TR4W has no TS-530 driver |
+| `TS140`         | no match at all           | TS-140 driver                             |
 
 **Existing configs will behave differently after upgrading**, and for these four
 that means correctly rather than as before. Two things follow:
@@ -2492,11 +2498,11 @@ captions against a best of 536** -- Preferences never opened, and
 fixed six; re-running the remaining two fixed one; the last needed a third run.
 
 | pass | languages run | invalid |
-|---|---:|---:|
-| 1 | 21 | 9 |
-| 2 | 8 | 2 |
-| 3 | 2 | 1 |
-| 4 | 1 | 0 |
+| ---- | -------------:| -------:|
+| 1    | 21            | 9       |
+| 2    | 8             | 2       |
+| 3    | 2             | 1       |
+| 4    | 1             | 0       |
 
 **So the first-pass failure rate is about 40%, it is load-dependent rather than
 language-dependent** -- Spanish measured 59 in the bulk run and 523 alone, with
@@ -2587,17 +2593,17 @@ launch TR4W, enumerate every window and control, drive menu commands, type into
 fields and read the log back. Anything in the list below should be run by the
 agent BEFORE it reaches this file.
 
-| Question | Tool | Verified tonight |
-|---|---|---|
-| Does a dialog open at all? | `Invoke-MenuSmoke.ps1` | 8 commands, 7 windows |
-| Do Edit QSO's fields round-trip? | `Invoke-FieldCheck.ps1` | 69/69 |
-| Is a menu caption, id or shortcut right? | `Dump-Menu.ps1` | caught About reading "Check for Updates" |
-| Do accelerators collide? | `uTestAccelerators.Test_NoDuplicateKeystroke` (unit tests) | -- |
-| Did a window lose a control, or its size? | `Dump-WindowTree.ps1` + `Compare-WindowTree.ps1` | -- |
-| Does a translated caption still fit? | `Test-TextFit.ps1` | -- |
-| Does typing reach the right field? | `Test-Typing.ps1` | -- |
-| Does Preferences show every section? | `Test-PreferencesSections.ps1` | -- |
-| Did the program write what it claims? | read `target/tr4w.log` | proved the Spanish menu is not ours |
+| Question                                  | Tool                                                       | Verified tonight                         |
+| ----------------------------------------- | ---------------------------------------------------------- | ---------------------------------------- |
+| Does a dialog open at all?                | `Invoke-MenuSmoke.ps1`                                     | 8 commands, 7 windows                    |
+| Do Edit QSO's fields round-trip?          | `Invoke-FieldCheck.ps1`                                    | 69/69                                    |
+| Is a menu caption, id or shortcut right?  | `Dump-Menu.ps1`                                            | caught About reading "Check for Updates" |
+| Do accelerators collide?                  | `uTestAccelerators.Test_NoDuplicateKeystroke` (unit tests) | --                                       |
+| Did a window lose a control, or its size? | `Dump-WindowTree.ps1` + `Compare-WindowTree.ps1`           | --                                       |
+| Does a translated caption still fit?      | `Test-TextFit.ps1`                                         | --                                       |
+| Does typing reach the right field?        | `Test-Typing.ps1`                                          | --                                       |
+| Does Preferences show every section?      | `Test-PreferencesSections.ps1`                             | --                                       |
+| Did the program write what it claims?     | read `target/tr4w.log`                                     | proved the Spanish menu is not ours      |
 
 **What the agent still cannot do**, and what therefore belongs here: judge a
 COLOUR or a layout by eye; confirm a caret is visible; see flicker or timing;
@@ -2693,9 +2699,9 @@ are diagnostics that cost nothing to leave on.
   storage paths, and logs REJECTED values too. Change a few settings in
   Preferences and confirm the lines match what you did: [AGENT: Note this worked but I see two messages in the log as if we are going through this code twice: `28 Aug 2026 13:49:23.846 700244 [27180] debug TR4WDebugLog  - [Config] BAND MAP SIZE = 4 (stored in tr4w.json)`
   `28 Aug 2026 13:49:23.846 700244 [27180] debug TR4WDebugLog  - [Config] BAND MAP SIZE = 4 (stored in tr4w.json)`
-  
+
         [Config] BAND MAP DECAY TIME = 20 (stored in tr4w.json)
-  
+
 - [x] **`DEBUG LOG LEVEL = TRACE` now logs every MODIFIED keystroke the
   accelerator hook sees.** This is the instrument for the Ctrl+Shift+0
   question in section 34 -- press it and look for
@@ -2786,6 +2792,7 @@ headings are readable, the grid fills the window, and the position is remembered
 across openings. **What is still unrun is everything that WRITES:**
 
 - [x] It **opens** and shows one row per band with the three current values.
+
 - [ ] ~~Editing a cell and pressing **OK** writes `[BAND PLAN]` in `tr4w.ini` and
   the new values survive a restart.~~[AGENT: Nothing is suppose to write to the .ini so validate this is meant to be .json. You should also consider if this is something you can automatically test now that we figured out how you can run the program to test. IN fact, confirm there are not any  of the steps you added to this document for me to check that you could have checked.]~~
 
@@ -2798,6 +2805,7 @@ across openings. **What is still unrun is everything that WRITES:**
   tr4w.ini.
 
 - [ ] **Cancel changes nothing.**
+
 - [ ] A cell left **empty or non-numeric is skipped** — that band keeps its old
   value rather than becoming 0.
 
@@ -2857,7 +2865,6 @@ shorter name left the old tail behind, and nothing bounded the copy, so an
 11-character operator wrote past the field. Worth knowing:
 `Invoke-FieldCheck.ps1` reported 69/69 both before and after -- it proves a
 value survives the CONTROL, and this was the write to the RECORD.
-
 
 **Two defects came out of that pass -- F4 (the dialog is dirty before you touch
 it) and F5 (a bad callsign is accepted). Still open:**
@@ -3069,10 +3076,12 @@ POPULATED 4.x `tr4w.ini` you can restore -- an empty ini proves nothing.
 - [ ] **Accept the conversion, then restart.** Settings you had are in force
   and survive the restart -- try a drop-down (`ROW COUNT`), an integer
   (`AUTO-CQ DELAY TIME`), a check box and `DE ENABLE`.
+
 - [ ] **`HOUR DISPLAY`, `RATE DISPLAY`, `DUPE CHECK SOUND`**: set each in
   Preferences, confirm it takes effect and survives a restart. [AGENT (NY4I,
   earlier): I am changing these but do not see any evidence of a change on the
   main window]
+
 - [ ] **The band plan.** `tr4w.log` reads `[BandPlan] seeded N band(s) from
   tr4w.ini`, and the seeded values land on the RIGHT bands -- the seed
   re-derives each band from its frequency, the one thing that could put a
@@ -3080,16 +3089,21 @@ POPULATED 4.x `tr4w.ini` you can restore -- an empty ini proves nothing.
   restart: it sticks and shows under `bandPlan` in `tr4w.json`; a band with no
   values is ABSENT rather than three zeros. The band map still splits CW from
   phone on each band.
+
 - [ ] **A contest wins over the station.** A contest `.cfg` carrying
   `FREQUENCY MEMORY` lines, or naming a Cabrillo category such as
   `CATEGORY-POWER`, is in force over the station's value.
+
 - [ ] **Load a few real old contest `.cfg` files**: no "Invalid statement in
   config file" dialog, and no new `[Config] ... was REFUSED` lines.
+
 - [ ] **Hand-edit one setting in `settings\tr4w.json`** and confirm TR4W
   honours it on the next start.
+
 - [ ] **`tr4w.log` should be quiet.** `[ApplyStoredCommands] CFGCA refused "X"
   = "Y"` names a stored value TR4W would not accept. Worth one grep after a
   session.
+
 - [ ] **ACCENTED TEXT, IN A NON-ENGLISH CATALOGUE, AFTER TF.Format BECAME
   PASCAL (2026-09-07). UNVERIFIED, AND I INTRODUCED THE DOUBT.**
 
@@ -3394,12 +3408,16 @@ rather than a crash.
 - [ ] **The same shortcuts with a TOOL WINDOW focused.** The handler is
   application-wide by design, so Ctrl+Shift+1 should open the dupe sheet
   whether the callsign field or the band map has focus.
+
 - [ ] **Ctrl-C / V / X / A / Z in the DX cluster command field** must still
   paste and copy, NOT fire Execute Config File or Clear Mult Sheet
   (issue #23). This is now a focus test rather than a message test. [AGENT - ESCAPE closes the dxcluster without confirmation - That is too drastic a step. We should confirm. Also note that after this, when I selected the now unchecked DX Cluster from the Windows menu, the window did not appear. But looking at the menu again, it was checked. I had to select a now-checked DX cluster option for it to appear. Selecting the unchecked DX cluster in the window should ALWAYS show the window - goes for all others too]
+
 - [ ] **The numeric keypad as CW memories**, if you use them
   (`KEYPAD CW MEMORIES`). They fire whatever has focus.
+
 - [ ] **F10 does nothing**, as before -- it must not open the menu bar.
+
 - [ ] **QUICK QSL -- and a deliberate narrowing.** `\` and `=` still QSL while
   you are typing a callsign. They no longer fire while a TOOL WINDOW has
   focus: type a call, click into the band map, press `\` -- nothing happens,
@@ -3407,16 +3425,19 @@ rather than a crash.
   QuickQSL does nothing unless the call window has text, so it moved onto
   the entry fields. **If that edge case matters to you, say so** -- it can
   come back, at the cost of a `VkKeyScan` and a keyboard-layout assumption.
+
 - [ ] **A fault must not take the session down.** The recovery wrapper is an
   `AddOnExceptionHandler` now, same 10-faults-in-a-minute limit. Hard to
   provoke deliberately; what to watch for is the OPPOSITE failure -- a
   dialog appearing for an exception that used to be swallowed and logged.
   `grep AppException tr4w.log`.
+
 - [ ] **Shutdown.** `HamScoreShutdown` moved into `tr4w_ShutDown`. It was a
   `finally` below the message loop, which **could never have run**: TR4W
   exits through `ExitProcess`. So this is the first build in which the
   HamScore uploader is actually stopped cleanly -- watch for a hang or a
   delay on exit that was not there before.
+
 - [x] **Long soak.** Leave it running for a session with a cluster connected.
   The loop had its own fault recovery for a reason.
 
@@ -3597,6 +3618,7 @@ chosen because it proves the whole path with almost nothing to get wrong. The
 listener thread no longer names a widget.
 
 - [x] **Start WSJT-X: the indicator appears and goes green.**
+
 - [x] **Stop WSJT-X and the box stays RED. FIXED 2026-08-26, wants a look.**
   It used to disappear entirely, which NY4I reported and which was the same
   defect as the box staying red while the link was up: the indicator tracked
@@ -3620,11 +3642,14 @@ listener thread no longer names a widget.
   **Check:** enabled with WSJT-X down -> red box; start WSJT-X -> green
   within a heartbeat (~15 s) with no radios needed; untick WSJT-X ENABLED
   in Preferences -> box goes immediately, not at the next heartbeat.
+
 - [x] **Start TR4W with WSJT-X ALREADY RUNNING.** A heartbeat can arrive before
   the main form exists; InstallStateBridge brings the view into line once at
   install for exactly that case, and it is the half most likely to be wrong.
+
 - [ ] **It does not flicker.** A heartbeat arrives every few seconds and setting
   the state to what it already holds must notify nobody.
+
 - [x] **DISABLE WSJT-X IN PREFERENCES AND THE BOX GOES OUT. CONFIRMED
   2026-08-24 (NY4I): "restarted it, box goes out now."** First bench
   confirmation of the domain layer -- state object, notification, bridge and
@@ -3635,6 +3660,7 @@ listener thread no longer names a widget.
   it. The state is cleared in `Stop` now, before the sockets close and
   outside the `started` guard. **Re-enable and confirm it comes back green
   when the first heartbeat arrives -- not the moment the server binds.**
+
 - [x] **Saving Preferences with WSJT-X disabled no longer logs
   `JoinMulticastGroup called but UDP server not active`.** It fired on every
   Save. A warning that appears during correct operation is one people learn
@@ -3655,6 +3681,7 @@ listener thread no longer names a widget.
     refuses was previously discarded with nothing anywhere to say why, so a
     setting the operator typed could simply vanish. DEBUG rather than INFO
     because one OK on a Preferences page can write dozens of rows.
+
 - [x] **The WSJT-X indicator was too narrow for its own text. FIXED
   2026-08-26, WANTS A LOOK.** NY4I: *"The WSJTX letters are too big for the
   field."*
@@ -3698,13 +3725,13 @@ is no `uNet` test at all).
   appears, the framing is holding. **If it does, capture the log** -- it
   names the id and the offset, and it is the first evidence this program has
   ever produced for a class of loss that was previously invisible.
-**Not a defect, do not re-report:** `NET_MESSAGESTATE_ID` is sent and received
-only under `{$IF OZCR2008}`, and that is `False` -- so no shipping TR4W emits it
-and the missing receive arm cannot fire. It was briefly reported as live during
-this session and that was wrong: the `SetTimer` that would arm it is inside the
-same conditional (`uCWKeyerCPU.pas:87`). The residual hazard is cross-build
-only -- `tr4wserver` relays the id ungated, so a client compiled WITH the switch
-would feed standard clients something they cannot advance past.
+  **Not a defect, do not re-report:** `NET_MESSAGESTATE_ID` is sent and received
+  only under `{$IF OZCR2008}`, and that is `False` -- so no shipping TR4W emits it
+  and the missing receive arm cannot fire. It was briefly reported as live during
+  this session and that was wrong: the `SetTimer` that would arm it is inside the
+  same conditional (`uCWKeyerCPU.pas:87`). The residual hazard is cross-build
+  only -- `tr4wserver` relays the id ungated, so a client compiled WITH the switch
+  would feed standard clients something they cannot advance past.
 
 ### 42. Accelerators no longer reach past a modal dialog
 
@@ -4324,16 +4351,16 @@ window), against a server holding a log of a few hundred QSOs.
 **WHAT TO WATCH, in the order it can go wrong:**
 
 - [ ] **The byte count on the progress display climbs and finishes.** If it
-      sticks at 0, the password write or the size header is wrong.
+  sticks at 0, the password write or the size header is wrong.
 - [ ] **The record and QSO counts match what the server reports.** The size
-      check is `LogSize <> TotalBytes`; a mismatch shows *"failed to receive
-      server log"* and is the loudest symptom of a framing error.
+  check is `LogSize <> TotalBytes`; a mismatch shows *"failed to receive
+  server log"* and is the loudest symptom of a framing error.
 - [ ] **A log LARGER than 4096 bytes** -- that is one old `recv` buffer, so a
-      single-chunk transfer would prove almost nothing about the loop.
+  single-chunk transfer would prove almost nothing about the loop.
 - [ ] **The window does not hang for a station that is off.** Connect failures
-      are now REPORTED (`[SyncLog] connect to <host>:<port> failed`) where the
-      old path returned a bare False, so a wrong address and a refused
-      connection no longer look identical. Check `tr4w.log`.
+  are now REPORTED (`[SyncLog] connect to <host>:<port> failed`) where the
+  old path returned a bare False, so a wrong address and a refused
+  connection no longer look identical. Check `tr4w.log`.
 
 **TWO CHANGES THAT ARE NOT TRANSLATIONS**, because if this misbehaves they are
 the first places to look:
@@ -4418,7 +4445,7 @@ one does not prove the rest:
 
 - [ ] **a dupe** -- `Single`, 2000 Hz for 75 ms
 - [ ] **a new multiplier / congratulations** -- `BeepCongrats`, a five-tone
-      run from 500 Hz down to 300 and up to 800
+  run from 500 Hz down to 300 and up to 800
 - [ ] **a warning** -- `Warning`, 1500 Hz for 150 ms
 - [ ] **a prompt** -- `PromptBeep`, three pulses at 2000 Hz
 - [ ] **`QuickBeep`** -- 1000 Hz for 300 ms
@@ -4510,12 +4537,12 @@ Nothing here is a bench test. They need an answer, not a radio.
       SEND ENTER port=50001 -> 192.168.1.50:50001 len=16 thread=27312
                  mainthread=True inflight=1 active=True
 
-  | what you see | what it means |
-  |---|---|
-  | an `ENTER` with no matching `EXIT`, and the log stops | the deadlock. The line names the thread, whether it is the main one, and how many sends were already inside Indy |
-  | `SEND OVERLAP` | two or more threads inside the send at once -- the shape the original comment blamed |
-  | `mainthread=True` on the stuck one | exactly the case that comment named |
-  | `SLOW SEND: N ms` | Indy blocked but survived. The same contention, and far likelier to be caught than a full hang -- threshold is 20 ms, deliberately low |
+  | what you see                                          | what it means                                                                                                                          |
+  | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+  | an `ENTER` with no matching `EXIT`, and the log stops | the deadlock. The line names the thread, whether it is the main one, and how many sends were already inside Indy                       |
+  | `SEND OVERLAP`                                        | two or more threads inside the send at once -- the shape the original comment blamed                                                   |
+  | `mainthread=True` on the stuck one                    | exactly the case that comment named                                                                                                    |
+  | `SLOW SEND: N ms`                                     | Indy blocked but survived. The same contention, and far likelier to be caught than a full hang -- threshold is 20 ms, deliberately low |
 
   `FSendInFlight` is maintained with an interlocked increment and NOT under
   `FSendLock`, because the lock is what a deadlock would be waiting on: the
@@ -4585,62 +4612,69 @@ exchange**. The unit tests added alongside this work pin the contest classes'
 ANSWERS; they cannot press a key.
 
 - [ ] **Florida QSO Party now refuses a three-county exchange.** Type
-      `599 PIN/HIL/CIT` into the exchange window in FQP. Expected: the exchange
-      is refused with "Too many counties for this contest (maximum 2)!!" and
-      nothing is logged. Two counties (`599 PIN/HIL`) must still log TWO QSOs
-      sharing one serial number. **This is NEW behaviour** -- TR4W has never
-      enforced a county limit; NY4I chose it ("knowing and setting a limit makes
-      our edit checking of the exchange more robust").
+  `599 PIN/HIL/CIT` into the exchange window in FQP. Expected: the exchange
+  is refused with "Too many counties for this contest (maximum 2)!!" and
+  nothing is logged. Two counties (`599 PIN/HIL`) must still log TWO QSOs
+  sharing one serial number. **This is NEW behaviour** -- TR4W has never
+  enforced a county limit; NY4I chose it ("knowing and setting a limit makes
+  our edit checking of the exchange more robust").
+  
 
 - [ ] **Michigan QSO Party now refuses ANY county-line exchange.** `599 WAYN/OAK`
-      must be refused; `599 WAYN` must log normally. Michigan's rules: "No
-      station may claim simultaneous operation in more than one county, state,
-      or province." Also new behaviour.
+  must be refused; `599 WAYN` must log normally. Michigan's rules: "No
+  station may claim simultaneous operation in more than one county, state,
+  or province." Also new behaviour.
+  
 
 - [ ] **California QSO Party now refuses a FIVE-county exchange.** NY4I set the
-      maximum at four -- "4 since that is the intersection of 4 counties with
-      common 90 degree angle borders". `599 SLUI/MONT/ALAM/STAN` must log FOUR
-      QSOs sharing one serial; a fifth county must be refused. Also new
-      behaviour.
+  maximum at four -- "4 since that is the intersection of 4 counties with
+  common 90 degree angle borders". `599 SLUI/MONT/ALAM/STAN` must log FOUR
+  QSOs sharing one serial; a fifth county must be refused. Also new
+  behaviour.
+  
 
 - [ ] **Indiana QSO Party now refuses a THREE-county exchange.** Maximum two,
-      per NY4I. Two must still log two QSOs sharing one serial.
-
-      **California was this list's "unchanged" canary until 2026-09-29 and is
-      no longer usable as one** -- it now has a limit of its own. Use a party
-      that states NO maximum instead: Colorado, Minnesota, Missouri, Ohio,
-      Wisconsin, Tennessee, Texas or Arizona. All eight inherit
-      `CountyLineCountiesUnlimited`.
+  per NY4I. Two must still log two QSOs sharing one serial.
+  
+  **California was this list's "unchanged" canary until 2026-09-29 and is
+  no longer usable as one** -- it now has a limit of its own. Use a party
+  that states NO maximum instead: Colorado, Minnesota, Missouri, Ohio,
+  Wisconsin, Tennessee, Texas or Arizona. All eight inherit
+  `CountyLineCountiesUnlimited`.
+  
 
 - [ ] **Every QSO party WITHOUT an established maximum must be UNCHANGED.**
-      Spot-check one of the eight above with four counties; it must log four,
-      exactly as before. If it is refused, the unlimited default has been lost
-      -- which is the defect fixed on 2026-09-29, where a class of any kind
-      made the base answer 0 from ContestsArray's boolean and refuse a second
-      QTH.
+  Spot-check one of the eight above with four counties; it must log four,
+  exactly as before. If it is refused, the unlimited default has been lost
+  -- which is the defect fixed on 2026-09-29, where a class of any kind
+  made the base answer 0 from ContestsArray's boolean and refuse a second
+  QTH.
+  
 
 - [ ] **A contest that is NOT a QSO party must not be asked at all.** Arktika
-      Spring, ARRL Digital and ARRL Field Day each have a class now and none is
-      a QSO party; a multi-QTH exchange in any of them must behave exactly as
-      it did before they were moved. The unit tests assert they accept two;
-      only the bench can say what the operator sees.
+  Spring, ARRL Digital and ARRL Field Day each have a class now and none is
+  a QSO party; a multi-QTH exchange in any of them must behave exactly as
+  it did before they were moved. The unit tests assert they accept two;
+  only the bench can say what the operator sees.
+  
 
 - [ ] **ADIF STATE is the WORKED station's, decided per QSO by the contest
-      class** (Q76/Q89, `35986731`): a party county gives its state, a
-      state or province code gives itself where ADIF allows it, DX gives
-      none. Export from NYQP: an in-state county QSO carries `<STATE:2>NY`
-      and its `<CNTY>`; an out-of-state W station that sent `PA` carries
-      `<STATE:2>PA`; a DX QSO carries no STATE. **No corpus log covers
-      NYQP.**
+  class** (Q76/Q89, `35986731`): a party county gives its state, a
+  state or province code gives itself where ADIF allows it, DX gives
+  none. Export from NYQP: an in-state county QSO carries `<STATE:2>NY`
+  and its `<CNTY>`; an out-of-state W station that sent `PA` carries
+  `<STATE:2>PA`; a DX QSO carries no STATE. **No corpus log covers
+  NYQP.**
+  
 
 - [ ] **An edited memory survives a restart** (Q113, 5.0.29). Open a
-      contest, edit a CQ memory, an EX memory and an Alt-key memory (Alt-P),
-      change one button caption; close TR4W and reopen the same contest. All
-      four edits are back; an unedited key shows the contest's default.
-      Change MY STATE and reopen: the unedited defaults follow it, the edits
-      do not. The log says `function-key memory(ies) the operator edited
-      restored`. Then open the log in 5.0.28: it is refused (schema 4) --
-      expected, keep a copy if an older build must read it.
+  contest, edit a CQ memory, an EX memory and an Alt-key memory (Alt-P),
+  change one button caption; close TR4W and reopen the same contest. All
+  four edits are back; an unedited key shows the contest's default.
+  Change MY STATE and reopen: the unedited defaults follow it, the edits
+  do not. The log says `function-key memory(ies) the operator edited
+  restored`. Then open the log in 5.0.28: it is refused (schema 4) --
+  expected, keep a copy if an older build must read it.
 
 ---
 
