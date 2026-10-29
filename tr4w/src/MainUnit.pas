@@ -4016,6 +4016,24 @@ begin
     removing one by hand loses QSOs. The only safe disposal is the one SQLite
     documents: open the database and close it cleanly -- which, from this commit
     on, simply happens the next time that contest is opened. *)
+  (* STOP THE HAMSCORE UPLOADER WHILE THE LOGGER STILL EXISTS (issue #783).
+    The worker thread is not holding sockets when the process exits, which is the
+    point of waiting for it. This was a `finally` at the bottom of tr4w.lpr, below
+    the message loop, which never returns (the exit path is ExitProcess), so the
+    clean shutdown ran nowhere until it moved here.
+
+    IT WAS BELOW `FreeAndNil(logger)` FOR A WHILE, AND THE EXIT CRASHED (2026-10-29;
+    the mechanism below is read from the code and the log, not from a captured stack).
+    Log4D's hierarchy OWNS every logger and each child points at its parent, so
+    freeing `logger` leaves 'TR4WDebugLog.HamScore.Uploader' -- and the
+    uploader's last words, "Worker thread exiting" -- logging through a freed
+    parent. HamScoreShutdown's own first line, "Shutdown requested", did the same
+    on the main thread; it never reached the file, the exception skipped
+    ExitProcess, and the LCL was torn down under the process (c0000005 in
+    ThemeServices and TApplication.ReleaseComponents, reported only by Windows
+    because the logger was already gone). With HAMSCORE off the routine exited
+    before logging, which is why nothing happened until it was enabled. *)
+  HamScoreShutdown;
   (* THE BACKUP COPIER FIRST, BOUNDED (issue #98 step 2): it waits at most
     BACKUP_COPY_SHUTDOWN_MS for a copy to a share, and holds no SQLite object,
     so it never delays the log's close for long and never needs it. Before the
@@ -4028,13 +4046,7 @@ begin
      logger.Info('------------------------------Program shutdown----------------------------');
      FreeAndNil(logger);
      end;
-  // Issue #783 -- stop the HamScore RTC uploader cleanly so its worker thread
-  // is not holding sockets when the process exits.  This was a `finally` at the
-  // bottom of tr4w.lpr, below the message loop, which meant it only ran if the
-  // loop RETURNED -- and it never does: the exit path is ExitProcess, three
-  // lines below this one.  So the clean shutdown it exists to provide has never
-  // actually happened.  Here it does.
-  HamScoreShutdown;
+  // HamScoreShutdown is not here: it must run BEFORE the logger is freed. See above BackupCopyStop.
 
   (* NOTHING TO UNREGISTER. The matching RegisterClass in uProgramMain is gone
     (2026-09-06): it registered a window class that no CreateWindowEx names,
