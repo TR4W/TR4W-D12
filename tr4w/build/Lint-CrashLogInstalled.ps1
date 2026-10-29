@@ -117,7 +117,7 @@ $exemptRx = '\\test\\|\\tools\\|\\build\\|\\docs\\'
 # working copy, days out of date -- so their program files are not this tree's to
 # judge. CLAUDE.md makes the same point about src\backup and src\graphify-out:
 # a hand-run search finds them and every lint has to exclude them.
-$skipRx = '\\build-out\\|\\backup|\\graphify-out\\|\\dcu|\\worktrees\\'
+$skipRx = '\\build-out\\|\\backup|\\graphify-out\\|\\dcu|\\\.?worktrees\\'
 $allLpr = @(Get-ChildItem -LiteralPath $repoRoot -Recurse -File -Filter '*.lpr' `
                -ErrorAction SilentlyContinue |
             Where-Object { $_.FullName -notmatch $skipRx })

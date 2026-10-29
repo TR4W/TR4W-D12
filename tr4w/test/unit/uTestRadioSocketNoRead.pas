@@ -748,6 +748,29 @@ begin
       end;
 end;
 
+(* WAIT FOR A FREQUENCY THE READER HAS NOT PARSED YET.
+
+  The stream in the split-read test is "FA..;TS1;FB..;" and TX inhibit is set
+  the moment TS1 is parsed, which is BEFORE the FB behind it. Reading the VFO
+  B frequency as soon as WaitInhibited returns therefore raced the reading
+  thread: it passed when the machine was idle and failed when a build was
+  running beside it (Expected 7100000 but got 0). *)
+function WaitVFOBParsed(probe: TSocketNoReadProbe; AExpected: Integer;
+                         ATimeoutMs: Integer): Boolean;
+var
+   waited: Integer;
+begin
+   waited := 0;
+   Result := probe.frequency[nrVFOB] = AExpected;
+
+   while (not Result) and (waited <= ATimeoutMs) do
+      begin
+      Sleep(20);
+      Inc(waited, 20);
+      Result := probe.frequency[nrVFOB] = AExpected;
+      end;
+end;
+
 procedure TRadioSocketNoReadTests.Test_TXTestSplitAcrossReads_IsParsed;
 var
    probe: TSocketNoReadProbe;
@@ -778,7 +801,7 @@ begin
       probe.ReadTXInhibit(reason);
       CheckEquals('TX test mode', string(reason), 'with the radio''s words');
       CheckEquals(14100000, probe.frequency[nrVFOA], 'the FA before it was parsed');
-      CheckEquals(7100000, probe.frequency[nrVFOB], 'and the FB after it');
+      CheckTrue(WaitVFOBParsed(probe, 7100000, 3000), 'and the FB after it');
 
       PushFromRadio('RX;FA00014200000;TS');
       Sleep(150);
