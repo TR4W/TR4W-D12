@@ -3229,6 +3229,11 @@ begin
          HamScoreResyncFromScratch;    // enqueue <deletelog> -- only when asked
          end;
       SendFullLogToHamScore;           // enqueue every QSO from the log
+      (* QUEUEING SENDS NOTHING: the uploader posts once per cycle (two
+        minutes), so without this the operator is told "queueing" and then
+        sees no traffic until the next cycle, or never if TR4W is closed
+        first. The text it returns is the status window's, not needed here. *)
+      HamScorePushNow;
       end;
 end;
 
