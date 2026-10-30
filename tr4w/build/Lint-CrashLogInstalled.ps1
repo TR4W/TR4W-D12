@@ -118,9 +118,10 @@ $exemptRx = '\\test\\|\\tools\\|\\build\\|\\docs\\'
 # judge. CLAUDE.md makes the same point about src\backup and src\graphify-out:
 # a hand-run search finds them and every lint has to exclude them.
 $skipRx = '\\build-out\\|\\backup|\\graphify-out\\|\\dcu|\\\.?worktrees\\'
+# Match below this checkout: the checkout itself may live inside .worktrees.
 $allLpr = @(Get-ChildItem -LiteralPath $repoRoot -Recurse -File -Filter '*.lpr' `
                -ErrorAction SilentlyContinue |
-            Where-Object { $_.FullName -notmatch $skipRx })
+            Where-Object { $_.FullName.Substring($repoRoot.Length) -notmatch $skipRx })
 
 if ($allLpr.Count -eq 0)
    {
@@ -175,7 +176,7 @@ function Get-UsesUnitPaths
       $name = $tok.Groups[1].Value
       $hit  = Get-ChildItem -LiteralPath (Join-Path $tr4wDir 'src') -Recurse -File `
                  -Filter "$name.pas" -ErrorAction SilentlyContinue |
-              Where-Object { $_.FullName -notmatch $skipRx } |
+              Where-Object { $_.FullName.Substring($repoRoot.Length) -notmatch $skipRx } |
               Select-Object -First 1
       if ($hit) { [void]$paths.Add($hit.FullName) }
       }

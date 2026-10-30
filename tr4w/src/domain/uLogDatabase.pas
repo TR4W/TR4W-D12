@@ -1649,6 +1649,13 @@ begin
          ' ' + string(LOG_V4_MESSAGE_COLUMN.Declaration)));
       end;
 
+   if version < 5 then
+      begin
+      FConnection.ExecuteDirect(LOG_V5_DELIVERY_TABLE);
+      FConnection.ExecuteDirect(LOG_V5_DELIVERY_INDEX);
+      FConnection.ExecuteDirect(LOG_V5_DELIVERY_CONTACT_INDEX);
+      end;
+
    (* AND THE VERSION, IN THE SAME TRANSACTION, THEN ONE COMMIT (R5,
      2026-10-23). This committed the ALTERs and then stamped the version
      through ExecPragma, which ends the transaction around itself -- two

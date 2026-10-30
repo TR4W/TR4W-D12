@@ -704,6 +704,13 @@ type
       procedure FormShow(Sender: TObject);
       procedure FormClose(Sender: TObject; var Action: TCloseAction);
    private
+      FWRLApiKey, FWRLAccountId, FWRLLogbookId: string;
+      FLoggerLegacyStatus: string;
+      FWRLSetupButton: TButton;
+      procedure ConfigureWRLClick(Sender: TObject);
+      procedure LoggerTypeChanged(Sender: TObject);
+      procedure UpdateLoggerControls;
+   private
       // STATE, not controls: nothing here is streamed, so it keeps the F prefix
       // and stays private.
       FStore: TRadioConfigStore;
@@ -1249,7 +1256,7 @@ uses
                         // in with it; an LCL form calls the LCL form.
    uExternalLoggerBase, // ExternalLoggerTypeSA -- the logger-program list
    MainUnit,    // logger, and `appender` for the log file's real path
-   uPasswordReveal,     // AttachPasswordReveal -- the eye beside a password
+   uPasswordReveal, uWRLSetupForm, uExternalDelivery, uLogStore,
    uSettingsModel,      // Settings.AllowedValuesForCommand -- the level list
    uAppStrings,         (* SBackupDestinationDialogTitle -- the folder chooser *)
    uHTTPDownload,       (* IsPlainHttpUrl -- the HamScore URL's plain-http note *)
@@ -6654,7 +6661,22 @@ end;
 procedure TPrefsForm.LoadExternalSoftwarePanels;
 var
    loggerToken: string;
+   deliveryCounts: TDeliveryCounts;
 begin
+   FWRLApiKey := Settings.ExternalLogger.ApiKey;
+   FWRLAccountId := Settings.ExternalLogger.AccountId;
+   FWRLLogbookId := Settings.ExternalLogger.LogbookId;
+   if FWRLSetupButton = nil then
+      begin
+      FLoggerLegacyStatus := UTF8Decode(lblLoggerStatus.Caption);
+      FWRLSetupButton := TButton.Create(Self);
+      FWRLSetupButton.Parent := layExternalLogger;
+      FWRLSetupButton.SetBounds(160, 272, 340, 32);
+      FWRLSetupButton.Constraints.MinWidth := 340;
+      FWRLSetupButton.AutoSize := True;
+      FWRLSetupButton.Caption := SWRLSetup;
+      FWRLSetupButton.OnClick := ConfigureWRLClick;
+      end;
    { DXLab SpotCollector. LOADED AND SAVED HERE because the control lives on the
      DXLab page -- it was read by LoadClusterPanels while sitting on the DX
      Cluster page, which is how a control and the code that fills it come to
@@ -6673,6 +6695,7 @@ begin
    // not typed into the designer, where it would be a second copy that keeps
    // working while it drifts.  A populated combo also bakes itself into the
    // .fmx resource, which is how such a copy becomes permanent.
+   cbxLoggerType.OnChange := nil;
    cbxLoggerType.Items.BeginUpdate;
    try
       cbxLoggerType.Clear;
@@ -6686,12 +6709,33 @@ begin
    cbxLoggerType.ItemIndex := cbxLoggerType.Items.IndexOf(
       UpperCase(Trim(FStore.CommandValue('EXTERNAL LOGGER',
                      CFGCommandValueAsString('EXTERNAL LOGGER')))));
+   cbxLoggerType.OnChange := LoggerTypeChanged;
+   UpdateLoggerControls;
 
    chkLoggerEnabled.Checked := CommandBool('EXTERNAL LOGGER ENABLED');
    edtLoggerAddress.Text := FStore.CommandValue('EXTERNAL LOGGER ADDRESS',
                                CFGCommandValueAsString('EXTERNAL LOGGER ADDRESS'));
    edtLoggerPort.Text    := FStore.CommandValue('EXTERNAL LOGGER PORT',
                                CFGCommandValueAsString('EXTERNAL LOGGER PORT'));
+   if Settings.ExternalLogger.LoggerType = 'WRL' then
+      begin
+      lblLoggerStatus.Caption := SWRLStatusUnavailable;
+      if LogStoreRepository <> nil then
+         begin
+         try
+            deliveryCounts := ExternalDeliveryCounts(LogStoreRepository.Database.FileName, 'WRL');
+            lblLoggerStatus.Caption := Format(SWRLSummary, [deliveryCounts.Pending,
+               deliveryCounts.InFlight, deliveryCounts.Synced, deliveryCounts.Uncertain,
+               deliveryCounts.Failed]);
+         except
+            on E: Exception do
+               begin
+               (* This is a status read, never a reason to disable logging. *)
+               lblLoggerStatus.Caption := SWRLStatusUnavailable;
+               end;
+         end;
+         end;
+      end;
 
    edtMMTTYEngine.Text   := FStore.CommandValue('MMTTY ENGINE',
                                CFGCommandValueAsString('MMTTY ENGINE'));
@@ -6728,6 +6772,9 @@ end;
 
 procedure TPrefsForm.SaveExternalSoftwarePanels;
 begin
+   ApplyIfChanged('EXTERNAL LOGGER API KEY', FWRLApiKey);
+   ApplyIfChanged('EXTERNAL LOGGER ACCOUNT ID', FWRLAccountId);
+   ApplyIfChanged('EXTERNAL LOGGER LOGBOOK ID', FWRLLogbookId);
    SetCommandBool('SPOT COLLECTOR ENABLED',       chkSpotCollector.Checked);
    SetCommandBool('WSJT-X ENABLED',               chkWSJTXEnabled.Checked);
    SetCommandBool('WSJT-X RADIO CONTROL ENABLED', chkWSJTXRadioControl.Checked);
@@ -6745,6 +6792,52 @@ begin
    ApplyIfChanged('EXTERNAL LOGGER PORT',    Trim(edtLoggerPort.Text));
 
    ApplyIfChanged('MMTTY ENGINE', Trim(edtMMTTYEngine.Text));
+end;
+
+procedure TPrefsForm.ConfigureWRLClick(Sender: TObject);
+begin
+   if ConfigureWRL(FWRLApiKey, FWRLAccountId, FWRLLogbookId) then
+      begin
+      cbxLoggerType.ItemIndex := cbxLoggerType.Items.IndexOf('WRL');
+      lblLoggerStatus.Caption := SWRLRestart;
+      UpdateLoggerControls;
+      end;
+end;
+
+procedure TPrefsForm.LoggerTypeChanged(Sender: TObject);
+begin
+   if (cbxLoggerType.ItemIndex >= 0) and
+      (cbxLoggerType.Items[cbxLoggerType.ItemIndex] = 'WRL') and
+      ((FWRLApiKey = '') or (FWRLAccountId = '') or (FWRLLogbookId = '')) then
+      begin
+      ConfigureWRLClick(Sender);
+      if (FWRLApiKey = '') or (FWRLAccountId = '') or (FWRLLogbookId = '') then
+         begin
+         cbxLoggerType.ItemIndex := cbxLoggerType.Items.IndexOf('NONE');
+         end;
+      end;
+   UpdateLoggerControls;
+end;
+
+procedure TPrefsForm.UpdateLoggerControls;
+var
+   isWRL: boolean;
+begin
+   isWRL := (cbxLoggerType.ItemIndex >= 0) and
+      (cbxLoggerType.Items[cbxLoggerType.ItemIndex] = 'WRL');
+   edtLoggerAddress.Visible := not isWRL;
+   lblLoggerAddress.Visible := not isWRL;
+   edtLoggerPort.Visible := not isWRL;
+   lblLoggerPort.Visible := not isWRL;
+   FWRLSetupButton.Visible := isWRL;
+   if not isWRL then
+      begin
+      lblLoggerStatus.Caption := UTF8Encode(FLoggerLegacyStatus);
+      end
+   else if Settings.ExternalLogger.LoggerType <> 'WRL' then
+      begin
+      lblLoggerStatus.Caption := SWRLRestart;
+      end;
 end;
 
 procedure TPrefsForm.btnBrowseMMTTYClick(Sender: TObject);

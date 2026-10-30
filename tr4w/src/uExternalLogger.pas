@@ -45,7 +45,7 @@ Type TExternalLogger = class(TExternalLoggerBase)
       function LogQSO(ce: ContestExchange): integer;
       function DeleteQSO(ce: ContestExchange): integer;
       function ReplaceQSO(ce: ContestExchange): integer;   // Issue #957 -- edit = atomic delete + re-log
-      function LookupCallsign(ce:ContestExchange): integer;
+      function LookupCallsign(ce:ContestExchange): integer; override;
 
       (* THE SAME OPERATIONS, SPLIT AT THE THREAD BOUNDARY (2026-10-24).
 
@@ -55,9 +55,9 @@ Type TExternalLogger = class(TExternalLoggerBase)
         queue, so the QSO dispatcher thread calls it. LogQSO, DeleteQSO and
         ReplaceQSO are Prepare + Submit in a row. *)
       function PrepareOp(const aKind: TQsoMessageKind; const ce: ContestExchange;
-                         out aCommand1: string; out aCommand2: string): TQsoExternalOp;
+                         out aCommand1: string; out aCommand2: string): TQsoExternalOp; override;
       procedure SubmitOp(const aOp: TQsoExternalOp; const aCommand1: string;
-                         const aCommand2: string; const aDescription: string);
+                         const aCommand2: string; const aDescription: string); override;
 
 end;
 

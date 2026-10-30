@@ -57,7 +57,15 @@ uses
   uCabrilloFormat,
   // tCabrilloFreqString / tCabrilloModeString + per-field formatters (extracted from this unit, see uCabrilloFormat.pas)
   uSuperCheckPartialFileUpload,
-  uTR4WStrings;
+  uTR4WStrings, uQsoMyFacts;
+
+(* Shared by the file exporter and live external delivery. Runs on the main
+   thread: the contest owns interpretation, the destination owns encoding. *)
+function EmitContestSpecificTailForExport(const rec: ContestExchange;
+   const aMyFacts: TQsoMyFacts; const aSentExchange: AnsiString): string;
+
+function ADIFContactForExternal(const rec: ContestExchange;
+   const aMyFacts: TQsoMyFacts; const aSentExchange: AnsiString): string;
 
 type
   RateSheetType = array [ 1 .. 3, 0 .. 23, BandType, CW .. Both ] of integer;
@@ -430,9 +438,6 @@ const
 implementation
 
 uses
-  (* TQsoMyFacts -- each logged QSO's own station (log schema 3). FIRST, so
-    every unit below still wins any name it might share. *)
-  uQsoMyFacts,
   uEmbeddedTranslations,   // ActiveUILanguage -- see CabrilloLanguageTag
   uSettingsModel,          // Settings.My -- the station's own facts
   uCabrilloHeader,   // the Cabrillo header, from settings\tr4w.json not tr4w.ini
@@ -2640,6 +2645,20 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange;
      Result := Result + EmitADIFField( 'STATION_CALLSIGN', ExportCallFor( aMyFacts ) );
      end;
   end;
+
+function ADIFContactForExternal(const rec: ContestExchange;
+   const aMyFacts: TQsoMyFacts; const aSentExchange: AnsiString): string;
+var
+   savedTemp: ContestExchange;
+begin
+   savedTemp := TempRXData;
+   try
+      Result := uADIF.EmitADIFContact(rec, aMyFacts, aSentExchange,
+         @EmitContestSpecificTailForExport, ActiveContest(Contest));
+   finally
+      TempRXData := savedTemp;
+   end;
+end;
 
 procedure ExportToADIF;
   var

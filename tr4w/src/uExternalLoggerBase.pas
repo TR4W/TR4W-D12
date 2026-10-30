@@ -6,7 +6,7 @@ interface
 uses
    IdTCPClient, IdComponent, IdTCPConnection,IdThreadComponent, IdExceptionCore, SysUtils,
    Classes, StrUtils, Log4D, VC, Tree, IdException, IdStack, SyncObjs,
-   uHostResolve;
+   uHostResolve, uExternalLoggerService;
 
 Type TProcessMsgRef = procedure (sMessage: string) of Object;
 
@@ -61,7 +61,7 @@ function BoolToString(b: boolean): string;
 // Add property for IP address, port, type (tcp or udp but just implement tcp right now).
 // Add a connect and disconnect method
 
-Type ExternalLoggerType = (lt_NoExternalLogger, lt_DXKeeper, lt_ACLog, lt_HRD);
+Type ExternalLoggerType = (lt_NoExternalLogger, lt_DXKeeper, lt_ACLog, lt_HRD, lt_WRL);
 
 (* THE CONFIG-FILE TOKEN FOR EACH LOGGER, IN ORDINAL ORDER.
 
@@ -73,7 +73,7 @@ Type ExternalLoggerType = (lt_NoExternalLogger, lt_DXKeeper, lt_ACLog, lt_HRD);
   IT IS REGISTERED BY NAME so Lint-SpellingTables can still check it -- a
   duplicate or blank here would make a logger unreachable by name, which is
   exactly what that lint is for. *)
-const ExternalLoggerTypeSA                     : array[ExternalLoggerType] of string = ('NONE', 'DXKEEPER', 'ACLOG', 'HRD');
+const ExternalLoggerTypeSA                     : array[ExternalLoggerType] of string = ('NONE', 'DXKEEPER', 'ACLOG', 'HRD', 'WRL');
 
    // Reconnection configuration
    RECONNECT_INITIAL_DELAY = 1000;    // 1 second initial delay
@@ -101,7 +101,7 @@ Type
       constructor Create(AOwner: TExternalLoggerBase);
    end;
 
-   TExternalLoggerBase = class(TObject)
+   TExternalLoggerBase = class(TExternalLoggerService)
    private
       //socket: TIdTCPClient;
       //idThreadComponent   : TIdThreadComponent;
@@ -975,6 +975,3 @@ begin
 end;
 
 end.
-
-
- 

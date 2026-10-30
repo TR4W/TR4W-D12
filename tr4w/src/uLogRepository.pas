@@ -321,6 +321,7 @@ type
       procedure ExecuteKeptWrite(aStatement: TSQLQuery);
       procedure OpenQsoReader(aQuery: TSQLQuery; aTrailingRowId: boolean = False);
       procedure PrepareStatements;
+      procedure ReleaseStatements;
       procedure LoadContest;
       function LastInsertedRowId: Int64;
       procedure BindInto(aQuery: TSQLQuery; const aQso: ContestExchange;
@@ -854,6 +855,11 @@ type
         implementation for why that distinction matters. The caller commits. *)
       procedure DeleteAllQSOs;
       procedure Commit;
+      (* ROLLBACK TO can abort SQLite readers even after SQLDB closed their
+         datasets. Recreate cached statements before the next local operation;
+         preserves this repository's identity, row count and caller ownership.
+         Call only outside a sequential read/batch, after a savepoint rollback. *)
+      procedure ReprepareAfterSavepointRollback;
 
       property Database: TLogDatabase read FDatabase;
    end;
@@ -1647,17 +1653,32 @@ end;
 
 destructor TLogRepository.Destroy;
 begin
+   ReleaseStatements;
+   inherited Destroy;
+end;
+
+procedure TLogRepository.ReleaseStatements;
+begin
    (* Before the prepared statements: it holds an open result set on the
       same connection. *)
    CloseSequentialRead;
-   FInsert.Free;
-   FSelect.Free;
-   FSelectById.Free;
-   FSelectRange.Free;
-   FRowIdAtIndex.Free;
-   FUpdate.Free;
-   FUpdateMyFacts.Free;
-   inherited Destroy;
+   FreeAndNil(FInsert);
+   FreeAndNil(FSelect);
+   FreeAndNil(FSelectById);
+   FreeAndNil(FSelectRange);
+   FreeAndNil(FRowIdAtIndex);
+   FreeAndNil(FUpdate);
+   FreeAndNil(FUpdateMyFacts);
+end;
+
+procedure TLogRepository.ReprepareAfterSavepointRollback;
+begin
+   if FInBatch or (FCursor <> nil) then
+      begin
+      raise ELogRepositoryError.Create('Cannot reprepare during a sequential read or batch');
+      end;
+   ReleaseStatements;
+   PrepareStatements;
 end;
 
 (* A QUERY THAT ONLY READS. Every SELECT in this unit is made here.

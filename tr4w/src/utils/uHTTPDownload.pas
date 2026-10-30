@@ -107,7 +107,7 @@ function HttpGetText(const AURL: string;
 // never shows up in a test and shows up in a contest.
 
 type
-   THttpPost = class
+   THttpRequest = class
    (* ONE POST, DESCRIBED BY AN OBJECT RATHER THAN BY NINE PARAMETERS.
 
      The three POST callers in this program want overlapping but different
@@ -130,11 +130,15 @@ type
    public
       (* the request *)
       URL:            string;
+      Method:         string;
       Body:           string;
       ContentType:    string;
       UserAgent:      string;
       Username:       string;   (* basic auth is sent when this is not '' *)
       Password:       string;
+      BearerToken:    string;
+      FollowRedirects: boolean;
+      MaxResponseBytes: Int64;  (* 0 = unlimited, retained for existing POST callers *)
       AcceptEncoding: string;
       AllowInsecure:  boolean;  (* the caller accepts an http:// URL *)
       ConnectMs:      integer;
@@ -144,9 +148,18 @@ type
       Response:       string;
       StatusCode:     integer;
       FailReason:     string;   (* '' when Send returned True *)
+      RetryAfter:     string;
+      RequestId:      string;
 
       constructor Create(const aURL: string);
-      function Send: boolean;
+      function Send: boolean; virtual;
+   end;
+
+   (* Existing POST callers keep their API and defaults. REST callers use the
+      same transport, TLS verification and encoding, with an explicit method. *)
+   THttpPost = class(THttpRequest)
+   public
+      constructor Create(const aURL: string);
    end;
 
 implementation
@@ -160,6 +173,22 @@ uses
    uSettingsRegistry,
    uAppStrings,
    Log4D;
+
+type
+   TBoundedHttpResponse = class(TRawByteStringStream)
+   public
+      Limit: Int64;
+      function Write(const Buffer; Count: LongInt): LongInt; override;
+   end;
+
+function TBoundedHttpResponse.Write(const Buffer; Count: LongInt): LongInt;
+begin
+   if (Limit > 0) and (Int64(Count) > Limit - Position) then
+      begin
+      raise EStreamError.Create('HTTP response exceeds the configured size limit');
+      end;
+   Result := inherited Write(Buffer, Count);
+end;
 
 (*
   THE TRANSPORT IS FPC'S CLIENT, NOT INDY, AND ONLY HERE.
@@ -541,10 +570,13 @@ begin
    end;
 end;
 
-constructor THttpPost.Create(const aURL: string);
+constructor THttpRequest.Create(const aURL: string);
 begin
    inherited Create;
    URL         := aURL;
+   Method      := 'POST';
+   FollowRedirects := False;
+   MaxResponseBytes := 1024 * 1024;
    ContentType := 'application/x-www-form-urlencoded';
    UserAgent   := 'TR4W';
    ConnectMs   := 15000;
@@ -552,17 +584,34 @@ begin
    StatusCode  := 0;
 end;
 
-function THttpPost.Send: boolean;
+constructor THttpPost.Create(const aURL: string);
+begin
+   inherited Create(aURL);
+   FollowRedirects := True;
+   MaxResponseBytes := 0;
+end;
+
+function THttpRequest.Send: boolean;
 var
    http:    TFPHTTPClient;
    useTLS:  boolean;
    bodyIn:  TRawByteStringStream;
-   bodyOut: TRawByteStringStream;
+   bodyOut: TBoundedHttpResponse;
 begin
    Result     := False;
    Response   := '';
    FailReason := '';
    StatusCode := 0;
+   RetryAfter := '';
+   RequestId := '';
+
+   if (BearerToken <> '') and
+      ((Pos('https://', LowerCase(URL)) <> 1) or FollowRedirects or
+       (Pos(#13, BearerToken) > 0) or (Pos(#10, BearerToken) > 0)) then
+      begin
+      FailReason := 'Bearer authentication requires HTTPS without redirects and a valid token';
+      Exit;
+      end;
 
    if not CheckScheme(URL, AllowInsecure, useTLS, FailReason) then
       begin
@@ -572,6 +621,7 @@ begin
    http := TFPHTTPClient.Create(nil);
    try
       ApplyDefaults(http, UserAgent, ConnectMs, IOMs);
+      http.AllowRedirect := FollowRedirects;
       if useTLS then
          begin
          if not ApplyTLSVerification(http, URL, FailReason) then
@@ -583,6 +633,10 @@ begin
       if ContentType <> '' then
          begin
          http.AddHeader('Content-Type', ToWire(ContentType));
+         end;
+      if BearerToken <> '' then
+         begin
+         http.AddHeader('Authorization', ToWire('Bearer ' + BearerToken));
          end;
       if AcceptEncoding <> '' then
          begin
@@ -597,16 +651,19 @@ begin
          end;
 
       bodyIn  := CreateWireBodyStream(Body);
-      bodyOut := TRawByteStringStream.Create('');
+      bodyOut := TBoundedHttpResponse.Create('');
+      bodyOut.Limit := MaxResponseBytes;
       try
          try
             http.RequestBody := bodyIn;
-            http.Post(ToWire(URL), bodyOut);
+            http.HTTPMethod(ToWire(Method), ToWire(URL), bodyOut, []);
             (* Post allows EVERY status code (HTTPMethod's allowed list is
               empty), so a 400 does not raise: Send returns True, StatusCode
               holds 400 and Response holds the server's own explanation. *)
             Response   := FromWire(bodyOut.DataString);
             StatusCode := http.ResponseStatusCode;
+            RetryAfter := FromWire(http.GetHeader(http.ResponseHeaders, 'Retry-After'));
+            RequestId := FromWire(http.GetHeader(http.ResponseHeaders, 'X-Request-Id'));
             Result     := True;
          except
             on E: Exception do
@@ -616,9 +673,18 @@ begin
                  anyway (0 when the server never answered), so a caller can
                  tell "the server said no" from "the server was not there". *)
                StatusCode := http.ResponseStatusCode;
-               logger.Error('[Download] POST %s failed: %s: %s',
-                            [URL, E.ClassName, E.Message]);
-               FailReason := DescribeFailure(E);
+               if BearerToken <> '' then
+                  begin
+                  (* Never include server-controlled exception text or a URL in
+                     diagnostics for a credential-bearing request. *)
+                  FailReason := 'Authenticated HTTP request failed (' + E.ClassName + ')';
+                  end
+               else
+                  begin
+                  logger.Error('[Download] %s %s failed: %s: %s',
+                               [Method, URL, E.ClassName, E.Message]);
+                  FailReason := DescribeFailure(E);
+                  end;
                end;
          end;
       finally

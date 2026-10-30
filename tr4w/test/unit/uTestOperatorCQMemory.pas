@@ -328,7 +328,7 @@ var
    repo: TLogRepository;
 begin
    BeginTest('Test_Q113_AnEditedMemorySurvivesARestart');
-   CheckEquals(4, LOG_SCHEMA_VERSION, 'the schema that carries message.edited');
+   CheckTrue(LOG_SCHEMA_VERSION >= 4, 'the schema carries message.edited');
    fn := TempLog('edited.db');
    SaveProgramMemories;
    try

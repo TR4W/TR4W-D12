@@ -446,6 +446,10 @@ function ExportADIFToString(const records: TContestExchangeArray;
                             tailEmitter: TContestTailEmitter;
                             aContest: TContestBase = nil): string; overload;
 
+function EmitADIFContact(const rec: ContestExchange; const aFacts: TQsoMyFacts;
+                         const aSent: AnsiString; tailEmitter: TContestTailEmitter;
+                         aContest: TContestBase): string;
+
 // THE SAME, WITH EACH RECORD'S OWN STATION -- aMyFacts[i] is records[i]'s,
 // and is what EmitADIFMyStationFields writes after the tail. Shorter than
 // records, or nil, means the records past its end were never captured.
@@ -2643,6 +2647,19 @@ begin
                                 aContest);
 end;
 
+function EmitADIFContact(const rec: ContestExchange; const aFacts: TQsoMyFacts;
+                         const aSent: AnsiString; tailEmitter: TContestTailEmitter;
+                         aContest: TContestBase): string;
+begin
+   Result := EmitADIFRecord(rec, aContest);
+   if Assigned(tailEmitter) then
+      begin
+      Result := Result + tailEmitter(rec, aFacts, aSent);
+      end;
+   Result := Result + EmitADIFMyStationFields(rec, aFacts, Result);
+   Result := Result + '<EOR>'#13#10;
+end;
+
 function ExportADIFToString(const records: TContestExchangeArray;
                             const aMyFacts: TQsoMyFactsArray;
                             const aSentExchanges: TSentExchangeArray;
@@ -2653,7 +2670,6 @@ var
    i : Integer;
    facts: TQsoMyFacts;
    sent: AnsiString;
-   body: string;
 begin
    Result := EmitADIFHeader(programVersion);
    for i := 0 to High(records) do
@@ -2669,15 +2685,7 @@ begin
          sent := aSentExchanges[i];
          end;
 
-      body := EmitADIFRecord(records[i], aContest);
-      if Assigned(tailEmitter) then
-         begin
-         body := body + tailEmitter(records[i], facts, sent);
-         end;
-      (* AFTER THE TAIL, so the contest's own fields win any tag both would
-        write, and a never-captured row's line is byte for byte what it was. *)
-      body := body + EmitADIFMyStationFields(records[i], facts, body);
-      Result := Result + body + '<EOR>'#13#10;
+      Result := Result + EmitADIFContact(records[i], facts, sent, tailEmitter, aContest);
       end;
 end;
 
