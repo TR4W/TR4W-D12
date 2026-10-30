@@ -654,6 +654,23 @@ resourcestring
    SHamScorePlainHttpNote =
       'Plain http: your HamScore password is sent unencrypted. Use https://hamscore.com/postxml/ if the server supports it.';
 
+   (* ------------------------------------------- HamScore resync (Tools) - *)
+
+   (* THE TOOLS MENU ITEM AND THE STATUS WINDOW'S BUTTON for the same action.
+     It was "Resync from log". The ellipsis is because it opens a dialog; the
+     dialog is where the optional delete is spelled out. *)
+   SHamScoreResyncCaption = 'Re-send Log to HamScore...';
+
+   (* THE DIALOG (MainUnit.HamScoreResyncWithConfirmation). %s is the contest's
+     id as HamScore receives it (the <deletelog><contest> value). Nothing here
+     claims the server de-duplicates: the code only shows that a re-sent QSO
+     carries its original ID, the way an edit does. *)
+   SHamScoreResyncBody =
+      'Re-send only: uploads every QSO in this log again, each with its original ID. Nothing is deleted on the HamScore server, so a QSO you have deleted from this log will still be there.' + #10#10 +
+      'Delete and re-send: first deletes the HamScore server''s log for this contest (%s), then uploads every QSO. This cannot be undone on the server, and scores on the HamScore site are empty or incomplete until the upload finishes. Use it when the server shows QSOs that are no longer in this log.';
+   SHamScoreResyncOnly = 'Re-send only';
+   SHamScoreResyncDeleteFirst = 'Delete and re-send';
+
 implementation
 
 end.

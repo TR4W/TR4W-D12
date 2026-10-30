@@ -457,6 +457,11 @@ procedure TimeApplet(i: Cardinal);
   name is a single function again. *)
 function YesOrNo(const Text: string): integer;
 function YesOrNo2(const Text: string): integer;
+(* THE ONLY ROUTE TO A HAMSCORE RE-SEND. A three-button dialog: Re-send only,
+  Delete and re-send (the only path that sends <deletelog>), Cancel (default
+  and Escape; queues nothing). Both the Tools menu and the status window's
+  button come here. True when a re-send was queued. *)
+function HamScoreResyncWithConfirmation: boolean;
 (* PTTOffWhenStopWAV IS GONE (2026-09-07). It was a Win32 TIMERPROC that
   nothing ever registered -- no SetTimer, no timeSetEvent, anywhere in the tree
   -- so the PTT it was meant to drop after a WAV finished was never dropped by
@@ -3197,6 +3202,36 @@ begin
       end;
 end;
 
+function HamScoreResyncWithConfirmation: boolean;
+var
+   answer: TModalResult;
+begin
+   (* THREE CHOICES, CANCEL IS BOTH THE DEFAULT AND THE ESCAPE.  Nothing is
+     queued and no status text shown unless the operator picks one of the first
+     two.  QuestionDlg's custom caption is a string FOLLOWING its result, and its
+     parser only reads ansi/short strings, never a UnicodeString -- so every
+     caption and the body go through LclText (UTF-8).  The results are compared,
+     never read by position, because GTK draws the buttons in the other order.
+     mrOk = re-send only, mrYes = delete first. *)
+   answer := QuestionDlg('TR4W',
+                         LclText(Format(SHamScoreResyncBody,
+                                        [HamScoreResyncContestId])),
+                         mtConfirmation,
+                         [mrOk,     LclText(SHamScoreResyncOnly),
+                          mrYes,    LclText(SHamScoreResyncDeleteFirst),
+                          mrCancel, 'IsDefault', 'IsCancel'], 0);
+   Result := (answer = mrOk) or (answer = mrYes);
+   if Result then
+      begin
+      QuickDisplay(TC_HAMSCOREQUEUEINGFULLLOGRESYNC);
+      if answer = mrYes then
+         begin
+         HamScoreResyncFromScratch;    // enqueue <deletelog> -- only when asked
+         end;
+      SendFullLogToHamScore;           // enqueue every QSO from the log
+      end;
+end;
+
 function TuneOnFreqFromCallWindow: boolean;
 var
   TempFreq: Cardinal;
@@ -5778,9 +5813,7 @@ begin
 
     menu_hamscore_resync:                 // Issue #783 Phase 3
       begin
-      QuickDisplay(TC_HAMSCOREQUEUEINGFULLLOGRESYNC);
-      HamScoreResyncFromScratch;       // enqueue <deletelog>
-      SendFullLogToHamScore;           // enqueue every QSO from the binary log
+      HamScoreResyncWithConfirmation;
       end;
 
     menu_spmode_ortab:

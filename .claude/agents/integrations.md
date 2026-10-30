@@ -158,6 +158,16 @@ naming the sink; the broadcaster also names address:port) or raises is contained
   means a sink is stuck: do not free what it uses.
 - **Not a sink:** multi-op `SendRecordToServer` (multi-op-network; ordering and serial
   lockout).
+- **HamScore re-send is the ONLY path to `<deletelog>`, and it asks (2026-10-29).**
+  `MainUnit.HamScoreResyncWithConfirmation` (Tools menu AND the status window's
+  button) shows a `QuestionDlg`: Re-send only / Delete and re-send / Cancel (default
+  and Escape). Only "Delete and re-send" calls `HamScoreResyncFromScratch`. The
+  button used to queue the `<deletelog>` alone, no prompt and no re-upload. NOT
+  KNOWN: what the real server does with a re-sent QSO (replace or duplicate) --
+  the code only shows the original `<ID>` is sent, and the comment at
+  `HamScoreOnEdit` says the server tells new from edit by ID-already-seen;
+  no RTC spec is in the repo. `QuestionDlg` custom captions must be ansi strings
+  (`LclText`), never a UnicodeString, or its parser raises.
 - **Their own threads stay:** the external logger's `TSenderThread` does connect-per-
   command with retry/backoff; the HamScore uploader batches on a 2-minute cycle with
   retry. Neither exists merely to get off the main thread.

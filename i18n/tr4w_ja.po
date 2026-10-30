@@ -10055,3 +10055,23 @@ msgstr ""
 msgid "Plain http: your HamScore password is sent unencrypted. Use https://hamscore.com/postxml/ if the server supports it."
 msgstr ""
 
+#: uappstrings.shamscoreresynccaption
+#, fuzzy
+msgid "Re-send Log to HamScore..."
+msgstr ""
+
+#: uappstrings.shamscoreresyncbody
+#, fuzzy
+msgid "Re-send only: uploads every QSO in this log again, each with its original ID. Nothing is deleted on the HamScore server, so a QSO you have deleted from this log will still be there.\n\nDelete and re-send: first deletes the HamScore server's log for this contest (%s), then uploads every QSO. This cannot be undone on the server, and scores on the HamScore site are empty or incomplete until the upload finishes. Use it when the server shows QSOs that are no longer in this log."
+msgstr ""
+
+#: uappstrings.shamscoreresynconly
+#, fuzzy
+msgid "Re-send only"
+msgstr ""
+
+#: uappstrings.shamscoreresyncdeletefirst
+#, fuzzy
+msgid "Delete and re-send"
+msgstr ""
+

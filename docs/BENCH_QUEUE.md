@@ -4826,3 +4826,30 @@ this was written.
   (gtk2)** every stDefault form already asks for a taskbar entry. Some
   panels hide windows that are transient-for another window, so dropping
   the transient-for may add entries there. Check on Mint.
+
+## Added 2026-10-29 -- HAMSCORE "RE-SEND LOG" ASKS BEFORE IT DELETES (NY4I, RTC test)
+
+The Tools item formerly "HamScore: Resync log from scratch" sent `<deletelog>`
+with no warning. It is now **Tools -> Re-send Log to HamScore...** and opens a
+three-button dialog; the status window's button (same caption) opens the same
+dialog. Before this, that button queued ONLY the `<deletelog>` and never
+re-uploaded. Needs a HamScore account (or the queue count with posting off).
+
+- [ ] **Dialog look and buttons** on Windows, Mint (gtk2) and macOS: buttons
+  "Re-send only", "Delete and re-send", Cancel; the body reads as two
+  paragraphs and the long text wraps without clipping. GTK draws the buttons
+  in the other order -- the answer must follow the caption, not the position.
+- [ ] **Enter and Escape both Cancel.** Open the dialog, press Enter: nothing is
+  queued and the status line does not say "queueing". Same for Escape and for
+  closing the window.
+- [ ] **Re-send only**: the queue grows by one per QSO and no `<deletelog>` goes
+  out (tr4w.log / the HamScore mock `tr4w/test/hamscore_mock.py`). Against the
+  REAL server: does a re-sent QSO replace the existing one or duplicate it?
+  The code only shows the QSO carries its original `<ID>`; nothing in the repo
+  says what the server does. Record the answer here and in the dialog text.
+- [ ] **Delete and re-send**: `<deletelog>` first, then every QSO; the contest
+  named in the dialog is the contest id in the `<deletelog>` body.
+- [ ] **Delete a QSO locally, then "Re-send only"**: it stays on the server
+  (the dialog says so); "Delete and re-send" removes it.
+- [ ] **Button caption** in the status window reads "Re-send Log to HamScore..."
+  and fits its button (width 250) in a non-English language.

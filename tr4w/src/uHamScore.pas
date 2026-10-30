@@ -226,10 +226,14 @@ type
 
 function HamScoreStatusSnapshot: THamScoreStatus;
 
-// The two buttons.  Each returns the line to show the operator, so the caller
+// The Push Now button.  Returns the line to show the operator, so the caller
 // does not have to know what the uploader did with the request.
+// (The Resync button has no function here: it is MainUnit.
+// HamScoreResyncWithConfirmation, because it deletes the server's log and must ask.)
 function HamScorePushNow: string;
-function HamScoreResyncQueued: string;
+
+// The contest id a <deletelog> would carry -- what the resync warning names.
+function HamScoreResyncContestId: string;
 
 const
   HAMSCORE_REFRESH_MS = 1000;   // the window's tick -- queue depth moves fast
@@ -859,8 +863,8 @@ begin
        // Future: trigger a full resync flow.  For now, log and retain so a
        // manual Tools-menu resync remains the operator's escape hatch.
        FLogger.Warn('[HamScore] Server requested ResyncLog -- retaining queue, ' +
-         'use Tools menu HamScore Resync to comply');
-       SetCycleStatus('ResyncLog requested -- use Tools menu Resync');
+         'use Tools menu "Re-send Log to HamScore..." to comply');
+       SetCycleStatus('ResyncLog requested -- use Tools menu Re-send Log to HamScore');
        RestorePending(snapshot);
        snapshot := nil;
        Exit;
@@ -1146,14 +1150,9 @@ begin
   Result := 'Push Now signaled -- cycle will run shortly';
 end;
 
-function HamScoreResyncQueued: string;
+function HamScoreResyncContestId: string;
 begin
-  // UNCHANGED LIMITATION, carried over with its explanation: this only enqueues
-  // the <deletelog>.  Walking the full log lives behind the Tools menu, because
-  // SendFullLogToHamScore cannot be reached from here without a circular
-  // reference.
-  HamScoreResyncFromScratch;
-  Result := '<deletelog> queued -- use Tools menu Resync to enqueue all QSOs';
+  Result := ContestIdentity(Contest).ADIFContestId;
 end;
 
 end.

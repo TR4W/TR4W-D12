@@ -743,7 +743,7 @@ begin
    Inc(i); T_MENU_ARRAY[i].mrText := RC_RESET_RADIO_PORTS;
    Inc(i); T_MENU_ARRAY[i].mrText := 'Download POTA Parks';
    Inc(i); T_MENU_ARRAY[i].mrText := 'Repeat POTA Parks (2nd Op)';
-   Inc(i); T_MENU_ARRAY[i].mrText := 'HamScore: Resync log from scratch';
+   Inc(i); T_MENU_ARRAY[i].mrText := SHamScoreResyncCaption;
    Inc(i); T_MENU_ARRAY[i].mrText := 'Edit Cabrillo Summary...';
    Inc(i); T_MENU_ARRAY[i].mrText := 'Run Verification Checks...';
    Inc(i); T_MENU_ARRAY[i].mrText := '-';

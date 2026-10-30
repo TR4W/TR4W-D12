@@ -85,9 +85,9 @@ object frmHamScore: TfrmHamScore
     Left = 148
     Height = 25
     Top = 233
-    Width = 130
+    Width = 250
     Anchors = [akLeft, akBottom]
-    Caption = 'Resync from log'
+    Caption = 'Re-send Log to HamScore...'
     TabOrder = 2
     OnClick = ResyncClick
   end

@@ -55,7 +55,9 @@ implementation
 uses
    VC,                { tw_HAMSCOREWINDOW_INDEX }
    MainUnit,          { CloseTR4WWindow, FrmSetFocus }
-   uHamScore,         { the uploader -- snapshot and the two actions }
+   uHamScore,         { the uploader -- snapshot and Push Now }
+   uAppStrings,       { SHamScoreResyncCaption }
+   uTR4WStrings,      { TC_HAMSCOREQUEUEINGFULLLOGRESYNC }
    uLCLFormHelpers;   // LeaveFormUnowned
 
 procedure TfrmHamScore.HandleCreate(Sender: TObject);
@@ -65,6 +67,11 @@ begin
    Constraints.MinHeight := HAMSCORE_MIN_HEIGHT;
 
    tmrRefresh.Interval := HAMSCORE_REFRESH_MS;
+
+   // From the resourcestring, not the .lfm: the .lfm key still carries the
+   // translations of the old caption "Resync from log", and streaming would
+   // apply them to the new button. Assigning here (after streaming) wins.
+   btnResync.Caption := SHamScoreResyncCaption;
 end;
 
 procedure TfrmHamScore.HandleShow(Sender: TObject);
@@ -133,7 +140,12 @@ end;
 
 procedure TfrmHamScore.ResyncClick(Sender: TObject);
 begin
-   memStatus.Text := HamScoreResyncQueued;
+   // The same confirmed flow as the Tools menu. This button used to queue ONLY
+   // the <deletelog>, with no prompt and no re-upload, leaving the server empty.
+   if HamScoreResyncWithConfirmation then
+      begin
+      memStatus.Text := TC_HAMSCOREQUEUEINGFULLLOGRESYNC;
+      end;
    FrmSetFocus;
 end;
 
