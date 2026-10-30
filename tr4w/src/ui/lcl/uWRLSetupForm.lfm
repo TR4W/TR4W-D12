@@ -1,0 +1,138 @@
+object WRLSetupForm: TWRLSetupForm
+   Left = 300
+   Height = 380
+   Top = 200
+   Width = 620
+   BorderStyle = bsDialog
+   Caption = 'World Radio League'
+   ClientHeight = 380
+   ClientWidth = 620
+   OnCloseQuery = CanClose
+   Position = poOwnerFormCenter
+   LCLVersion = '4.0.0.0'
+   object lblApiKey: TLabel
+      Left = 16
+      Height = 20
+      Top = 12
+      Width = 580
+      AutoSize = False
+      Caption = 'API key:'
+   end
+   object FKey: TEdit
+      Left = 16
+      Height = 26
+      Top = 36
+      Width = 580
+      OnChange = KeyChanged
+      PasswordChar = '*'
+      TabOrder = 0
+   end
+   object FValidate: TButton
+      AutoSize = True
+      Constraints.MinWidth = 300
+      Left = 16
+      Height = 30
+      Top = 72
+      Width = 300
+      Caption = 'Validate key and load logbooks'
+      OnClick = ValidateClick
+      TabOrder = 1
+   end
+   object lblLogbook: TLabel
+      Left = 16
+      Height = 20
+      Top = 115
+      Width = 580
+      AutoSize = False
+      Caption = 'Destination logbook:'
+   end
+   object FBooks: TComboBox
+      Left = 16
+      Height = 28
+      Top = 139
+      Width = 580
+      Style = csDropDownList
+      TabOrder = 2
+   end
+   object lblNewName: TLabel
+      Left = 16
+      Height = 20
+      Top = 180
+      Width = 580
+      AutoSize = False
+      Caption = 'New logbook name:'
+   end
+   object FNewName: TEdit
+      AnchorSideRight.Control = FCreate
+      AnchorSideRight.Side = asrTop
+      Anchors = [akTop, akLeft, akRight]
+      BorderSpacing.Right = 14
+      Left = 16
+      Height = 26
+      Top = 204
+      Width = 350
+      MaxLength = 100
+      TabOrder = 3
+   end
+   object FCreate: TButton
+      AutoSize = True
+      Constraints.MinWidth = 216
+      AnchorSideRight.Control = Owner
+      AnchorSideRight.Side = asrBottom
+      Anchors = [akTop, akRight]
+      BorderSpacing.Right = 24
+      Left = 380
+      Height = 30
+      Top = 202
+      Width = 216
+      Caption = 'Create logbook'
+      Enabled = False
+      OnClick = CreateClick
+      TabOrder = 4
+   end
+   object FStatus: TLabel
+      Left = 16
+      Height = 64
+      Top = 246
+      Width = 580
+      AutoSize = False
+      WordWrap = True
+   end
+   object FUse: TButton
+      AutoSize = True
+      Constraints.MinWidth = 210
+      AnchorSideRight.Control = btnCancel
+      AnchorSideRight.Side = asrTop
+      Anchors = [akTop, akRight]
+      BorderSpacing.Right = 16
+      Left = 240
+      Height = 30
+      Top = 330
+      Width = 210
+      Caption = 'Use this logbook'
+      Enabled = False
+      OnClick = UseClick
+      TabOrder = 5
+   end
+   object btnCancel: TButton
+      AutoSize = True
+      Constraints.MinWidth = 130
+      AnchorSideRight.Control = Owner
+      AnchorSideRight.Side = asrBottom
+      Anchors = [akTop, akRight]
+      BorderSpacing.Right = 24
+      Left = 466
+      Height = 30
+      Top = 330
+      Width = 130
+      Cancel = True
+      Caption = 'Cancel'
+      ModalResult = 2
+      TabOrder = 6
+   end
+   object FTimer: TTimer
+      Enabled = False
+      Interval = 100
+      OnTimer = Tick
+   end
+end

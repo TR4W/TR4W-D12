@@ -250,7 +250,7 @@ uses
   Log4D,
   uFactoryRadioBase,
   uRadioBand,
-  uExternalLogger,
+  uExternalLoggerService,
   IdURI
   ,
   uTR4WStrings,
@@ -282,7 +282,7 @@ var
   Second: Boolean = False;
   Third: Boolean = False;
   wsjtx: TWSJTXServer;
-  externalLogger: TExternalLogger;
+  externalLogger: TExternalLoggerService;
   // saveLastADIFName / saveLastContest cache moved to uADIF.pas with
   // GetContestByADIFName (Issue #887).
   logger: TLogLogger;

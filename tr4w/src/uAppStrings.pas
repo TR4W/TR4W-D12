@@ -31,6 +31,23 @@ unit uAppStrings;
 interface
 
 resourcestring
+   SWRLSetup = 'Set up World Radio League...';
+   SWRLTitle = 'World Radio League';
+   SWRLApiKey = 'API key:';
+   SWRLValidate = 'Validate key and load logbooks';
+   SWRLLogbook = 'Destination logbook:';
+   SWRLNewLogbook = 'New logbook name:';
+   SWRLCreate = 'Create logbook';
+   SWRLUse = 'Use this logbook';
+   SWRLCancel = 'Cancel';
+   SWRLWorking = 'Contacting World Radio League...';
+   SWRLReady = 'Key validated. Select a logbook, or create one.';
+   SWRLFailure = 'WRL could not complete the request: %s';
+   SWRLUncertain = 'WRL may have saved the request. Reload the logbooks before trying to create it again.';
+   SWRLRestart = 'WRL is configured. Apply these settings and restart TR4W to use this logbook.';
+   SWRLSummary = 'WRL delivery: pending %d; sending %d; up to date %d; uncertain %d; failed %d. Reopen Preferences to refresh.';
+   SWRLStatusUnavailable = 'WRL delivery status is unavailable for the current log.';
+   SWRLDeliveryIssue = 'World Radio League delivery needs attention. %s. Local logging continues; check the TR4W log and WRL delivery records.';
    { ---------------------------------------------- retiring the legacy ini - }
 
    // Shown ONCE, after the settings have been carried into settings\tr4w.json.

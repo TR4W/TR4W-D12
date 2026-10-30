@@ -324,8 +324,8 @@ begin
      and are held nowhere else. This assertion is EXHAUSTIVE on purpose:
      a table added without a thought here is a table nobody decided to
      add. *)
-   CheckEquals('config contest message qso session_state ', found,
-               'the log holds exactly the five tables the schema declares');
+   CheckEquals('config contest external_delivery message qso session_state ', found,
+               'the log holds exactly the tables the schema declares');
    Scrub(fn);
 end;
 

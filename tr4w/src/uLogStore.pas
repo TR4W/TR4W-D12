@@ -259,6 +259,8 @@ function LogStoreRepository: TLogRepository;
 
 function LogStoreIsUsable: boolean;
 
+procedure LogStoreStartExternalDelivery;
+
 (* TWO SEAMS FOR THE TEST PROGRAM, AND ONLY FOR IT (2026-10-23). The program
   never assigns or calls either.
 
@@ -596,6 +598,24 @@ begin
    else
       begin
       Result := GRepository;
+      end;
+end;
+
+procedure LogStoreStartExternalDelivery;
+begin
+   if (externalLogger <> nil) and (GDatabase <> nil) and not GDisabled then
+      begin
+      try
+         externalLogger.AfterLogCommit(GDatabase);
+      except
+         on E: Exception do
+            begin
+            (* The QSO commit has succeeded. A worker-start failure cannot
+               turn that success into an alleged local save failure. *)
+            logger.Error('[ExternalLogger] Could not start delivery (%s); pending work remains on disk',
+               [E.ClassName]);
+            end;
+      end;
       end;
 end;
 
@@ -1913,6 +1933,7 @@ end;
 function LogStoreAppendQSO(const aQso: ContestExchange): boolean;
 var
    rebuilt: boolean;
+   rowId: Int64;
 begin
    (* FALSE UNTIL A COMMIT SAYS OTHERWISE. Every exit below that is not a
      completed commit leaves it here, which is the only default that cannot
@@ -2002,7 +2023,11 @@ begin
 
       (* The same grouping rule the importer uses -- a county line logged
         live must relate its rows exactly as an imported one does. *)
-      GRepository.SaveQSOGroupingByExchangeId(aQso);
+      rowId := GRepository.SaveQSOGroupingByExchangeId(aQso);
+      if externalLogger <> nil then
+         begin
+         externalLogger.CaptureSavedQso(GDatabase, GRepository, rowId, True);
+         end;
 
       (* PER QSO, not batched -- section 9b. An operator who loses power should
         lose at most the contact in progress.
@@ -2016,6 +2041,7 @@ begin
       (* AND ONLY NOW. *)
       GLastAppendedMyFacts := GPendingMyFacts;
       Result := True;
+      LogStoreStartExternalDelivery;
    except
       on E: Exception do
          begin
@@ -2061,7 +2087,12 @@ begin
          end;
 
       GRepository.UpdateQSO(rowId, aQso);
+      if externalLogger <> nil then
+         begin
+         externalLogger.CaptureSavedQso(GDatabase, GRepository, rowId, False);
+         end;
       GRepository.Commit;
+      LogStoreStartExternalDelivery;
    except
       on E: Exception do
          begin
@@ -2130,7 +2161,12 @@ begin
          begin
          GRepository.UpdateQSOMyFacts(rowId, aFacts);
          end;
+      if externalLogger <> nil then
+         begin
+         externalLogger.CaptureSavedQso(GDatabase, GRepository, rowId, False);
+         end;
       GRepository.Commit;
+      LogStoreStartExternalDelivery;
    except
       on E: Exception do
          begin
@@ -3271,6 +3307,10 @@ end;
 
 procedure LogStoreClose;
 begin
+   if externalLogger <> nil then
+      begin
+      externalLogger.LogClosed;
+      end;
    CaptureConfigurationOnClose;
    FreeAndNil(GRepository);
    FreeAndNil(GDatabase);

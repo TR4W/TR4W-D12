@@ -7,15 +7,14 @@ unit uExternalLoggerFactory;
   Purpose: Centralized creation of external logger instances based on logger type
 
   Usage:
-    var logger: TExternalLoggerBase;
+    var logger: TExternalLoggerService;
     logger := TExternalLoggerFactory.CreateLogger(lt_DXKeeper, 'localhost', 52001, @MyProcessMsg);
-    logger.Connect;
 }
 
 interface
 
 uses
-   uExternalLoggerBase, uExternalLogger, SysUtils;
+   uExternalLoggerBase, uExternalLoggerService, uExternalLogger, SysUtils;
 
 type
    TExternalLoggerFactory = class
@@ -25,7 +24,7 @@ type
       class function CreateLogger(loggerType: ExternalLoggerType;
                                    address: string;
                                    port: integer;
-                                   msgCallback: TProcessMsgRef): TExternalLoggerBase;
+                                   msgCallback: TProcessMsgRef): TExternalLoggerService;
       class function GetSupportedLoggers: string;
       class function IsLoggerSupported(loggerType: ExternalLoggerType): boolean;
       (* THE CONFIG-FILE TOKEN FOR A TYPE, AND BACK.
@@ -60,7 +59,7 @@ procedure StartExternalLoggerFromSettings;
 implementation
 
 uses
-   Log4D,
+   Log4D, uWRLExternalLogger, uLogStore,
    MainUnit,          (* externalLogger -- the process-wide instance *)
    uSettingsModel;    (* Settings.ExternalLogger, and the vocabulary *)
 
@@ -70,7 +69,7 @@ var
 class function TExternalLoggerFactory.CreateLogger(loggerType: ExternalLoggerType;
                                                     address: string;
                                                     port: integer;
-                                                    msgCallback: TProcessMsgRef): TExternalLoggerBase;
+                                                    msgCallback: TProcessMsgRef): TExternalLoggerService;
 var
    extLogger: TExternalLogger;
 begin
@@ -80,6 +79,12 @@ begin
                [LoggerTypeToString(loggerType), address, port]);
 
    case loggerType of
+      lt_WRL:
+         begin
+         Result := TWRLExternalLogger.Create(Settings.ExternalLogger.AccountId,
+            Settings.ExternalLogger.LogbookId, Settings.ExternalLogger.ApiKey,
+            Settings.Computer.Id, Settings.ExternalLogger.Enabled);
+         end;
       lt_NoExternalLogger:
          begin
          raise EExternalLoggerFactoryException.Create('Cannot create logger of type NoExternalLogger');
@@ -131,6 +136,7 @@ begin
       lt_DXKeeper:          Result := 'DXKeeper';
       lt_ACLog:             Result := 'ACLog';
       lt_HRD:               Result := 'Ham Radio Deluxe';
+      lt_WRL:               Result := 'World Radio League';
    else
       Result := 'Unknown';
    end;
@@ -165,13 +171,14 @@ begin
    Result := 'Supported external loggers:'#13#10 +
              '  - DXKeeper (implemented)'#13#10 +
              '  - ACLog (planned)'#13#10 +
-             '  - Ham Radio Deluxe / HRD (planned)';
+             '  - Ham Radio Deluxe / HRD (planned)'#13#10 +
+             '  - World Radio League (WRL)';
 end;
 
 class function TExternalLoggerFactory.IsLoggerSupported(loggerType: ExternalLoggerType): boolean;
 begin
    // Currently only DXKeeper is fully implemented
-   Result := (loggerType = lt_DXKeeper);
+   Result := loggerType in [lt_DXKeeper, lt_WRL];
 end;
 
 procedure StartExternalLoggerFromSettings;
@@ -185,9 +192,9 @@ begin
       Exit;
       end;
 
-   externalLogger := TExternalLogger.Create(chosen);
-   externalLogger.loggerPort    := Settings.ExternalLogger.Port;
-   externalLogger.loggerAddress := Settings.ExternalLogger.Address;
+   externalLogger := TExternalLoggerFactory.CreateLogger(chosen,
+      Settings.ExternalLogger.Address, Settings.ExternalLogger.Port, nil);
+   LogStoreStartExternalDelivery;
 end;
 
 (* The vocabulary the settings model offers and refuses by -- the subsystem's

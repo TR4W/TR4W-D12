@@ -212,7 +212,9 @@ const
      memories the OPERATOR edited, so those, and only those, come back when
      the log is opened (LOG_V4_MESSAGE_COLUMN). The same consequence as 3: a
      log a schema-4 build has opened is refused by every earlier build. *)
-   LOG_SCHEMA_VERSION = 4;
+   (* 5: durable external-logger delivery, scoped to destination and contact.
+      As with earlier versions, older builds refuse a migrated database. *)
+   LOG_SCHEMA_VERSION = 5;
 
 type
    (* A COLUMN A MIGRATION ADDS to an existing table. *)
@@ -257,7 +259,31 @@ const
      the build's narrowing ceiling counts and which would be silently lossy if
      any of this were ever not ASCII.  SQL keywords and our own column names
      are ASCII by construction, so AnsiString is both correct and free. *)
-   LOG_SCHEMA_STATEMENTS: array[0..11] of AnsiString = (
+   LOG_V5_DELIVERY_TABLE =
+      'CREATE TABLE IF NOT EXISTS external_delivery (' +
+      'logger TEXT NOT NULL, account TEXT NOT NULL, logbook TEXT NOT NULL, ' +
+      'contact TEXT NOT NULL, remote_id TEXT NOT NULL DEFAULT '''', ' +
+      'revision INTEGER NOT NULL, confirmed_revision INTEGER NOT NULL DEFAULT 0, ' +
+      'payload TEXT NOT NULL, confirmed_payload TEXT NOT NULL DEFAULT '''', ' +
+      'deleted INTEGER NOT NULL DEFAULT 0, ' +
+      'state TEXT NOT NULL CHECK(state IN ' +
+      '(''pending'',''inflight'',''synced'',''uncertain'',''failed'')), ' +
+      'flight_revision INTEGER NOT NULL DEFAULT 0, ' +
+      'flight_payload TEXT NOT NULL DEFAULT '''', ' +
+      'flight_deleted INTEGER NOT NULL DEFAULT 0, ' +
+      'next_attempt INTEGER NOT NULL DEFAULT 0, ' +
+      'error_code TEXT NOT NULL DEFAULT '''', request_id TEXT NOT NULL DEFAULT '''', ' +
+      'PRIMARY KEY(logger, account, logbook, contact))';
+
+   LOG_V5_DELIVERY_INDEX =
+      'CREATE INDEX IF NOT EXISTS idx_external_delivery_pending ' +
+      'ON external_delivery(logger, account, next_attempt) WHERE state = ''pending''';
+
+   LOG_V5_DELIVERY_CONTACT_INDEX =
+      'CREATE INDEX IF NOT EXISTS idx_external_delivery_contact ' +
+      'ON external_delivery(contact, logger)';
+
+   LOG_SCHEMA_STATEMENTS: array[0..14] of AnsiString = (
 
       (* ONE ROW.  This is the log's own identity and its entry declaration,
         frozen when the log is created (tier 2). *)
@@ -636,7 +662,10 @@ const
       '    -- a setting -- the contest builds its defaults afresh each time.'#10 +
       '    edited    INTEGER NOT NULL DEFAULT 0,'#10 +
       '    PRIMARY KEY (kind, mode, key_id)'#10 +
-      ')'
+      ')',
+      LOG_V5_DELIVERY_TABLE,
+      LOG_V5_DELIVERY_INDEX,
+      LOG_V5_DELIVERY_CONTACT_INDEX
    );
 
 implementation

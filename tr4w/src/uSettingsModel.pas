@@ -1133,6 +1133,8 @@ type
      rather than a migration of one. *)
    TExternalLoggerSettings = class(TSettingsGroup)
    private
+      FApiKey: TSecretText;
+      FAccountId, FLogbookId: string;
       FAddress: string;
       FPort: integer;
       FEnabled: boolean;
@@ -1161,6 +1163,9 @@ type
       property Port: integer read FPort write FPort;
       // Was ExternalLoggerEnabled.
       property Enabled: boolean read FEnabled write FEnabled;
+      property ApiKey: TSecretText read FApiKey write FApiKey;
+      property AccountId: string read FAccountId write FAccountId;
+      property LogbookId: string read FLogbookId write FLogbookId;
    end;
 
    (* THE DXLAB SPOT COLLECTOR BRIDGE.  One setting; the group exists because
