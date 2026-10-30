@@ -81,6 +81,7 @@ type
       procedure Test_CaptureDeletesRetiredRowsOnce;
       procedure Test_ACaptureThatFailsPartWayLeavesNothingOfItself;
       procedure Test_Q61_ACategoryChangeIsInTheLogAtOnce;
+      procedure Test_ABlankCategoryRoundTripsThroughTheLog;
       procedure Test_Q61_AReopenedLogKeepsItsEntryDeclaration;
       procedure Test_StoredCredentialRowsAreDeletedByTheCapture;
       procedure Test_AStoredCredentialIsNeverApplied;
@@ -1057,6 +1058,83 @@ begin
    Scrub(fn);
 end;
 
+(* A BLANK CATEGORY IS A STATEMENT AND COMES BACK BLANK (NY4I, 2026-10-29:
+  none of the CATEGORY-* fields is required). Each of the six enum categories
+  is set to '' -- its UNSET member -- written the way the summary window
+  writes it, and read back by a fresh settings object the way the program
+  does. Blank differs from every constructor default, so even an unmarked log
+  keeps the row as a statement rather than dropping it as a sentinel. *)
+procedure TLogContestStatementsTests.Test_ABlankCategoryRoundTripsThroughTheLog;
+const
+   COMMANDS: array[0..5] of string = (
+      'CATEGORY-ASSISTED', 'CATEGORY-BAND', 'CATEGORY-MODE',
+      'CATEGORY-OPERATOR', 'CATEGORY-POWER', 'CATEGORY-TRANSMITTER');
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   s, back: TR4WSettings;
+   fn: string;
+   found: boolean;
+   v: string;
+   i: integer;
+begin
+   BeginTest('a blank category round-trips through the log');
+   fn := TempLogName('blankcategories.db');
+   Scrub(fn);
+   s := TR4WSettings.Create;
+   back := TR4WSettings.Create;
+   try
+      db := TLogDatabase.Create;
+      try
+         db.CreateNew(fn);
+         repo := TLogRepository.Create(db);
+         try
+            for i := Low(COMMANDS) to High(COMMANDS) do
+               begin
+               CheckTrue(s.TrySetByCommand(COMMANDS[i], ''),
+                         COMMANDS[i] + ' takes a blank');
+               CheckTrue(CaptureContestStatement(s, repo, COMMANDS[i]),
+                         COMMANDS[i] + ' blank is written');
+               repo.Commit;
+               end;
+         finally
+            repo.Free;
+         end;
+      finally
+         db.Free;
+      end;
+
+      db := TLogDatabase.Create;
+      try
+         db.Open(fn);
+         repo := TLogRepository.Create(db);
+         try
+            ApplyRows(back, repo);
+            for i := Low(COMMANDS) to High(COMMANDS) do
+               begin
+               v := StoredValue(repo, COMMANDS[i], found);
+               CheckTrue(found, COMMANDS[i] + ': the blank row is in the log');
+               CheckEquals('', v, COMMANDS[i] + ': stored blank');
+               CheckTrue(back.TryGetByCommand(COMMANDS[i], v), COMMANDS[i] + ' reads back');
+               CheckEquals('', v, COMMANDS[i] + ' is blank on reopen');
+               CheckTrue(back.CommandIsStated(COMMANDS[i]),
+                         COMMANDS[i] + ': blank is the operator''s statement again');
+               end;
+            CheckTrue(back.Contest.CategoryPower = cpUNSET, 'POWER is cpUNSET');
+            CheckTrue(back.Contest.CategoryTransmitter = ctUNSET, 'TRANSMITTER is ctUNSET');
+         finally
+            repo.Free;
+         end;
+      finally
+         db.Free;
+      end;
+   finally
+      back.Free;
+      s.Free;
+   end;
+   Scrub(fn);
+end;
+
 (* The contest row's declaration, as 'call|assisted|mode|name'. *)
 function DeclarationOnFile(aDatabase: TLogDatabase): string;
 var
@@ -1334,6 +1412,7 @@ begin
    Test_CaptureDeletesRetiredRowsOnce;
    Test_ACaptureThatFailsPartWayLeavesNothingOfItself;
    Test_Q61_ACategoryChangeIsInTheLogAtOnce;
+   Test_ABlankCategoryRoundTripsThroughTheLog;
    Test_Q61_AReopenedLogKeepsItsEntryDeclaration;
    Test_StoredCredentialRowsAreDeletedByTheCapture;
    Test_AStoredCredentialIsNeverApplied;

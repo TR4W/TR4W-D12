@@ -314,13 +314,28 @@ type
      spellings are matched BY POSITION, so moving the table cannot change
      which word an operator's file means; correcting it would be a separate,
      deliberate decision with a log-format consequence. *)
-   tCategoryAssisted = (caNONASSISTED, caASSISTED);
+   (* EVERY CATEGORY MAY BE LEFT UNSET -- NY4I, 2026-10-29: "NONE of the
+     CATEGORY-* fields is strictly required". The *UNSET member is that
+     choice. Its spelling is '' and the Cabrillo header then writes the bare
+     tag (CATEGORY-POWER:), see uCbrSum.CabrilloHeaderTagLine.
+
+     LAST, NEVER FIRST, and that is load-bearing. The constructor leaves each
+     category at ordinal 0, which is the default every contest exports (HIGH,
+     NON-ASSISTED, ALL, CW, SINGLE-OP, ONE), and TStationContext notes that a
+     FillChar'd station scores as cpHIGH. A first member would make UNSET the
+     default of every contest. The value is persisted by its SPELLING (the
+     contest log's config rows, a peer's parameter), never by ordinal, so
+     appending renumbers nothing that is stored.
+
+     NOT caNONE: that name is TCloseAction's in Forms. *)
+   tCategoryAssisted = (caNONASSISTED, caASSISTED, caUNSET);
    tCategoryBand = (cbALL, cb160M, cb80M, cb40M, cb20M, cb15M, cb10M, cb6M,
-                    cb2M, cb222, cb432, cb902, cb12G);
-   tCategoryMode = (cmCW, cmDIGITAL, cmRTTY, cmSSB, cmMIXED, cmFM);
-   tCategoryOperator = (coSINGLEOP, coMULTIOP, coCHECKLOG);
-   tCategoryPower = (cpHIGH, cpLOW, cpQRP);
-   tCategoryTransmitter = (ctONE, ctTWO, ctLIMITED, ctUNLIMITED, ctSWL);
+                    cb2M, cb222, cb432, cb902, cb12G, cbUNSET);
+   tCategoryMode = (cmCW, cmDIGITAL, cmRTTY, cmSSB, cmMIXED, cmFM, cmUNSET);
+   tCategoryOperator = (coSINGLEOP, coMULTIOP, coCHECKLOG, coUNSET);
+   tCategoryPower = (cpHIGH, cpLOW, cpQRP, cpUNSET);
+   tCategoryTransmitter = (ctONE, ctTWO, ctLIMITED, ctUNLIMITED, ctSWL,
+                           ctUNSET);
 
    (* Was PossibleCallActionType in trdos/logscp.pas. *)
    PossibleCallActionType = (AnyCall, OnlyCallsWithNames, LogOnly);
@@ -4128,24 +4143,28 @@ function LogLevelSpelling(const aLevel: tLogLevels): string;
   between `TR4WSettings = class;` and the class that completes it ENDS the
   type section, and FPC requires a forward class to be completed in the SAME
   section. This tree has lost a build to exactly that. *)
+  (* THE LAST SPELLING OF EACH IS '' -- the *UNSET member, "no category
+    stated" (see the types). Lint-SpellingTables accepts a blank in these six
+    tables at the LAST ordinal only: an empty value meaning "unset" is the
+    point here, not an accident. *)
 const
    tCategoryAssistedSA: array[tCategoryAssisted] of string =
-      ('NON-ASSISTED', 'ASSISTED');
+      ('NON-ASSISTED', 'ASSISTED', '');
    tCategoryBandSA: array[tCategoryBand] of string =
       ('ALL', '160M', '80M', '40M', '20M', '15M', '10M', '6M', '2M',
-       '222', '432', '902', '1.2G');
+       '222', '432', '902', '1.2G', '');
    (* THE KNOWN SWAP IS PRESERVED: cmDIGITAL spells 'RTTY' and cmRTTY spells
      'DIGI'. VC's own comment called it a follow-up; correcting it changes
      what an operator's existing file means, so it is a deliberate decision
      with a log-format consequence rather than a side effect of this move. *)
    tCategoryModeSA: array[tCategoryMode] of string =
-      ('CW', 'RTTY', 'DIGI', 'SSB', 'MIXED', 'FM');
+      ('CW', 'RTTY', 'DIGI', 'SSB', 'MIXED', 'FM', '');
    tCategoryOperatorSA: array[tCategoryOperator] of string =
-      ('SINGLE-OP', 'MULTI-OP', 'CHECKLOG');
+      ('SINGLE-OP', 'MULTI-OP', 'CHECKLOG', '');
    tCategoryPowerSA: array[tCategoryPower] of string =
-      ('HIGH', 'LOW', 'QRP');
+      ('HIGH', 'LOW', 'QRP', '');
    tCategoryTransmitterSA: array[tCategoryTransmitter] of string =
-      ('ONE', 'TWO', 'LIMITED', 'UNLIMITED', 'SWL');
+      ('ONE', 'TWO', 'LIMITED', 'UNLIMITED', 'SWL', '');
 
 function Settings: TR4WSettings;
 procedure FreeSettings;

@@ -296,6 +296,15 @@ multipliers, CTY.DAT, band lookup and CRC32.
   (`MapModeForRTC`, dead since RTC 3.0) is deleted. The summary sheet asks
   `SummarySheet` and the hour report `ReportsRunningScore`. The corpus sees the
   header for its Winter Field Day and General QSO sets; nothing else does.
+- **A BLANK CATEGORY-* STILL WRITES ITS LINE, BARE (2026-10-29, NY4I).**
+  `uCbrSum.CabrilloHeaderTagLine` is the one rule: `TAG: value`, or
+  `CATEGORY-OVERLAY:` (no trailing space) for any of the nine category tags
+  with no value; every other blank tag is still left out. So a station that
+  never stored `_CATEGORY-TIME` now gets a bare `CATEGORY-TIME:` line. Every
+  category list ends in a blank "no category" item (`CategoryValuesFor`), and
+  the summary window saves a chosen blank (it used to keep the old value). The
+  corpus is unaffected: `golden_diff.py` drops the header except CLAIMED-SCORE,
+  and every `rescored.cbr` already has all nine lines with values.
 - **THE OPERATOR LIST IS ONE ROUTINE, `uOperatorList` (2026-10-25, NY4I, CQ WW SSB
   multi-op).** `OperatorListFromLog` (most contacts first; ties alphabetical, a TOTAL
   order; no TStringList sort, whose quicksort pivot is random) is what

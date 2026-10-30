@@ -433,9 +433,15 @@ begin
   { The row's LABEL is the command name and its field is the value, which is
     why the label is read back rather than held in a parallel array. A row the
     contest never asked for is empty and is skipped. }
+  (* A CATEGORY ROW IS QUEUED EVEN WHEN BLANK. Its blank item is a choice --
+    "no category", the *UNSET member (NY4I, 2026-10-29) -- and skipping it
+    would leave the setting's default in force instead. The six are the rows
+    InitialCommandsSA2 names; the per-contest rows are not, and a blank one
+    is still one the contest never asked for. *)
   for i := 1 to CSAS do
      begin
-     if Trim(frmNewContest.RowText(i)) = '' then
+     if (Trim(frmNewContest.RowText(i)) = '') and
+        (InitialCommandsSA2[i] = '') then
         begin
         Continue;
         end;

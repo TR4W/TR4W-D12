@@ -75,6 +75,16 @@ $known = @{
 # STRING setting -- a value, not a spelling that selects an enum ordinal.
 $generated = @('RadioTypeTokensA', 'LanguageVocabulary')
 
+# A BLANK THAT MEANS "UNSET", ACCEPTED AT THE LAST ORDINAL ONLY (2026-10-29).
+# NY4I: none of the Cabrillo CATEGORY-* fields is required, so each category
+# enum ends in an *UNSET member spelled '' (uSettingsModel), and the header then
+# writes the bare tag. There an empty value SELECTING that member is the
+# meaning, not the accident this lint guards against. Only the LAST entry may be
+# blank: a blank anywhere else in these tables still fails, as does a second.
+$blankLastIsUnset = @('tCategoryAssistedSA', 'tCategoryBandSA', 'tCategoryModeSA',
+                      'tCategoryOperatorSA', 'tCategoryPowerSA',
+                      'tCategoryTransmitterSA')
+
 # The floor. A lint that resolves nothing and reports success is worse than no
 # lint, and this one reaches its subjects through two layers of parsing, so it
 # states how many it MUST find.
@@ -310,6 +320,10 @@ foreach ($name in @($wanted | Sort-Object))
 
       if ($key -eq '')
          {
+         if (($blankLastIsUnset -contains $name) -and ($index -eq ($lits.Count - 1)))
+            {
+            continue
+            }
          $findings += "$name ordinal $index is BLANK -- an empty config value would select it"
          continue
          }

@@ -63,6 +63,7 @@ type
       procedure Test_WAGFrequencyWarning;
       procedure Test_CategoryPowerChange;
       procedure Test_Q61_CategoriesAreOneValueEach;
+      procedure Test_EveryCategoryMayBeBlank;
       procedure Test_OnlyCQWWHasASixtyMinuteBreak;
       procedure Test_AGapCountsUpToTheBreak;
    end;
@@ -482,8 +483,14 @@ begin
       text that is no power changes nothing and keeps the current one. *)
    change := DecideCategoryPowerChange(cpHIGH, ' qrp ', 5, got);
    CheckTrue((change = cpcSetAndRescore) and (got = cpQRP), 'a lower-case, padded QRP is QRP');
+   (* AN EMPTY ROW IS THE BLANK "no power" CHOICE NOW (2026-10-29), not "no
+      change": '' is cpUNSET's spelling. The window guards "nothing selected"
+      by the row's item index before asking. *)
    change := DecideCategoryPowerChange(cpLOW, '', 5, got);
-   CheckTrue((change = cpcUnchanged) and (got = cpLOW), 'an empty row changes nothing');
+   CheckTrue((change = cpcSetAndRescore) and (got = cpUNSET),
+             'an empty row chooses UNSET, and rescores a logged contest');
+   change := DecideCategoryPowerChange(cpUNSET, '', 5, got);
+   CheckTrue((change = cpcUnchanged) and (got = cpUNSET), 'UNSET over UNSET changes nothing');
    change := DecideCategoryPowerChange(cpLOW, 'KILOWATT', 5, got);
    CheckTrue((change = cpcUnchanged) and (got = cpLOW), 'a value that is no power changes nothing');
 end;
@@ -530,8 +537,11 @@ begin
                'ALL -> 40M');
    CheckEquals(-1, CategoryChoiceIndex(tCategoryOperatorSA, Ord(coSINGLEOP), 'MULTI-OP-2'),
                'an ERMAK value no setting can hold changes nothing');
-   CheckEquals(-1, CategoryChoiceIndex(tCategoryBandSA, Ord(cbALL), ''),
-               'an empty row changes nothing');
+   (* '' IS THE BLANK "no band" CHOICE NOW (2026-10-29), cbUNSET's spelling. *)
+   CheckEquals(Ord(cbUNSET), CategoryChoiceIndex(tCategoryBandSA, Ord(cbALL), ''),
+               'an empty row chooses UNSET');
+   CheckEquals(-1, CategoryChoiceIndex(tCategoryBandSA, Ord(cbUNSET), ''),
+               'UNSET over UNSET changes nothing');
 
    (* THE CLOSED WINDOW. The test program never opens it. *)
    CheckFalse(CabrilloSummaryIsOpen, 'the summary window is not open');
@@ -557,6 +567,148 @@ begin
       Settings.Contest.CategoryMode := savedMode;
       Settings.Contest.CategoryOperator := savedOperator;
       Settings.Contest.CategoryPower := savedPower;
+   end;
+end;
+
+(* ------------------------------------------------------------------------ *)
+(* EVERY CATEGORY-* MAY BE BLANK -- NY4I, 2026-10-29                         *)
+(* ------------------------------------------------------------------------ *)
+
+(* "NONE of the CATEGORY-* fields is strictly required", and a blank one still
+  writes its header line, bare: 'CATEGORY-OVERLAY:'.
+
+  FOUR HALVES, ALL WITHOUT A FORM:
+    * the six enum settings take '' by name and give '' back (the *UNSET
+      member), and a fresh settings object still holds every old default --
+      so no contest's export moves;
+    * the header line: the bare tag for a blank category, 'TAG: value'
+      otherwise, nothing for any other blank tag;
+    * every category list the two windows are filled from ends in exactly
+      one '', after the values it always offered;
+    * a closed summary window answers '' for a blank enum category. *)
+procedure TContestUITests.Test_EveryCategoryMayBeBlank;
+const
+   COMMANDS: array[0..5] of string = (
+      'CATEGORY-ASSISTED', 'CATEGORY-BAND', 'CATEGORY-MODE',
+      'CATEGORY-OPERATOR', 'CATEGORY-POWER', 'CATEGORY-TRANSMITTER');
+   (* The constructor's -- what every contest exported before, unchanged. *)
+   DEFAULTS: array[0..5] of string = (
+      'NON-ASSISTED', 'ALL', 'CW', 'SINGLE-OP', 'HIGH', 'ONE');
+   (* The nine tags, their names, and the FIRST value each list offered
+      before the blank -- still first. *)
+   CATEGORY_TAGS: array[0..8] of CabrilloTags = (
+      ctCategoryAssisted, ctCategoryBand, ctCategoryMode, ctCategoryOperator,
+      ctCategoryPower, ctCategoryStation, ctCategoryTime,
+      ctCategoryTransmitter, ctCategoryOverlay);
+   CATEGORY_NAMES: array[0..8] of string = (
+      'CATEGORY-ASSISTED', 'CATEGORY-BAND', 'CATEGORY-MODE',
+      'CATEGORY-OPERATOR', 'CATEGORY-POWER', 'CATEGORY-STATION',
+      'CATEGORY-TIME', 'CATEGORY-TRANSMITTER', 'CATEGORY-OVERLAY');
+   FIRST_VALUES: array[0..8] of string = (
+      'NON-ASSISTED', 'ALL', 'CW', 'SINGLE-OP', 'HIGH', 'DISTRIBUTED',
+      '6-HOURS', 'ONE', 'CLASSIC');
+var
+   s: TR4WSettings;
+   i, j, blanks: integer;
+   v: string;
+   values: TArray<string>;
+   savedPower: tCategoryPower;
+   savedBand: tCategoryBand;
+begin
+   BeginTest('Test_EveryCategoryMayBeBlank');
+
+   s := TR4WSettings.Create;
+   try
+      for i := Low(COMMANDS) to High(COMMANDS) do
+         begin
+         CheckTrue(s.TryGetByCommand(COMMANDS[i], v), COMMANDS[i] + ' reads');
+         CheckEquals(DEFAULTS[i], v, COMMANDS[i] + ': the default is unchanged');
+
+         CheckTrue(s.TrySetByCommand(COMMANDS[i], ''), COMMANDS[i] + ' takes a blank');
+         CheckTrue(s.TryGetByCommand(COMMANDS[i], v), COMMANDS[i] + ' reads back');
+         CheckEquals('', v, COMMANDS[i] + ' is blank');
+         CheckTrue(s.CommandIsStated(COMMANDS[i]),
+                   COMMANDS[i] + ': a blank is the operator''s statement');
+
+         CheckTrue(s.TrySetByCommand(COMMANDS[i], DEFAULTS[i]),
+                   COMMANDS[i] + ' goes back to its default');
+         CheckTrue(s.TryGetByCommand(COMMANDS[i], v), COMMANDS[i] + ' reads again');
+         CheckEquals(DEFAULTS[i], v, COMMANDS[i] + ': a blank is not sticky');
+         end;
+
+      CheckTrue(s.TrySetByCommand('CATEGORY-POWER', ''), 'POWER blank');
+      CheckTrue(s.Contest.CategoryPower = cpUNSET, 'blank is cpUNSET');
+      CheckTrue(s.TrySetByCommand('CATEGORY-BAND', '   '), 'BAND spaces');
+      CheckTrue(s.Contest.CategoryBand = cbUNSET, 'spaces are blank too');
+      CheckFalse(s.TrySetByCommand('CATEGORY-MODE', 'TELEPATHY'),
+                 'a word that is no mode is still refused');
+   finally
+      s.Free;
+   end;
+
+   (* THE HEADER LINE, exactly as written to the file. *)
+   for i := Low(CATEGORY_TAGS) to High(CATEGORY_TAGS) do
+      begin
+      CheckTrue(CabrilloTagIsCategory(CATEGORY_TAGS[i]),
+                CATEGORY_NAMES[i] + ' is a category');
+      CheckEquals(CATEGORY_NAMES[i] + ':' + #13#10,
+                  CabrilloHeaderTagLine(CATEGORY_TAGS[i], ''),
+                  CATEGORY_NAMES[i] + ' blank: the bare tag, no trailing space');
+      end;
+   CheckEquals('CATEGORY-OVERLAY: CLASSIC' + #13#10,
+               CabrilloHeaderTagLine(ctCategoryOverlay, 'CLASSIC'),
+               'a value is written as it always was');
+   CheckEquals('CATEGORY-POWER: HIGH' + #13#10,
+               CabrilloHeaderTagLine(ctCategoryPower, 'HIGH'),
+               'POWER with a value');
+   CheckFalse(CabrilloTagIsCategory(ctClub), 'CLUB is not a category');
+   CheckEquals('', CabrilloHeaderTagLine(ctClub, ''),
+               'any other blank tag writes nothing, as before');
+   CheckEquals('LOCATION: FL' + #13#10, CabrilloHeaderTagLine(ctLocation, 'FL'),
+               'any other tag with a value');
+
+   (* THE LISTS: the old values first, in their old places, then one ''. *)
+   for i := Low(CATEGORY_TAGS) to High(CATEGORY_TAGS) do
+      begin
+      values := CategoryValuesFor(CATEGORY_TAGS[i]);
+      CheckTrue(Length(values) >= 2, CATEGORY_NAMES[i] + ' offers a list');
+      if Length(values) < 2 then
+         begin
+         Continue;
+         end;
+      CheckEquals(FIRST_VALUES[i], values[0],
+                  CATEGORY_NAMES[i] + ': the first value is where it was');
+      CheckEquals('', values[High(values)], CATEGORY_NAMES[i] + ' ends in the blank');
+      blanks := 0;
+      for j := 0 to High(values) do
+         begin
+         if values[j] = '' then
+            begin
+            Inc(blanks);
+            end;
+         end;
+      CheckEquals(1, blanks, CATEGORY_NAMES[i] + ' has exactly one blank');
+      end;
+   CheckEquals(Ord(High(tCategoryPower)) + 1, Length(CategoryValuesFor(ctCategoryPower)),
+               'POWER: one item per member, so a row''s index is the ordinal');
+   CheckEquals(NumberOverlayCategories + 1, Length(CategoryValuesFor(ctCategoryOverlay)),
+               'OVERLAY: PostUnit''s list plus the blank');
+
+   (* A CLOSED WINDOW ANSWERS THE SETTING, blank included. *)
+   CheckFalse(CabrilloSummaryIsOpen, 'the summary window is not open');
+   savedPower := Settings.Contest.CategoryPower;
+   savedBand := Settings.Contest.CategoryBand;
+   try
+      Settings.Contest.CategoryPower := cpUNSET;
+      Settings.Contest.CategoryBand := cbUNSET;
+      CheckEquals('', CabrilloTagText(ctCategoryPower), 'blank POWER answers ''''');
+      CheckEquals('', CabrilloTagText(ctCategoryBand), 'blank BAND answers ''''');
+      CheckEquals('CATEGORY-POWER:' + #13#10,
+                  CabrilloHeaderTagLine(ctCategoryPower, CabrilloTagText(ctCategoryPower)),
+                  'and the export writes the bare tag for it');
+   finally
+      Settings.Contest.CategoryPower := savedPower;
+      Settings.Contest.CategoryBand := savedBand;
    end;
 end;
 
@@ -637,6 +789,7 @@ begin
    Test_WAGFrequencyWarning;
    Test_CategoryPowerChange;
    Test_Q61_CategoriesAreOneValueEach;
+   Test_EveryCategoryMayBeBlank;
    Test_OnlyCQWWHasASixtyMinuteBreak;
    Test_AGapCountsUpToTheBreak;
 end;

@@ -906,8 +906,13 @@ begin
       end;
 end;
 
-{ The six CATEGORY-* choices. Each list is the contest-INDEPENDENT set of legal
-  values for that Cabrillo header, so it is filled once and never rebuilt. }
+(* The six CATEGORY-* choices. Each list is the contest-INDEPENDENT set of legal
+  values for that Cabrillo header, so it is filled once and never rebuilt.
+
+  EACH ENDS IN A BLANK "no category" ITEM -- the enum's UNSET member, whose
+  spelling is '' (NY4I, 2026-10-29: none of the CATEGORY-* fields is
+  required). It comes from the loop below with no code of its own; LAST, so
+  item 0 is still each contest's default. *)
 procedure TfrmNewContest.FillCategories;
 var
    a:  tCategoryAssisted;
@@ -943,8 +948,10 @@ begin
       FRows[9].Choice.Items.Add(tCategoryTransmitterSA[tx]);
       end;
 
-   { CB_SETCURSEL 0 on each: a Cabrillo CATEGORY- header with no value is not
-     legal, so there is no empty state to offer. }
+   (* CB_SETCURSEL 0 on each: the first value is the default. This said a
+     CATEGORY- header with no value is not legal; it is (NY4I, 2026-10-29),
+     and the blank item at the END of each list offers it. The default is
+     unchanged. *)
    for i := FIRST_CHOICE_ROW to High(FRows) do
       begin
       if FRows[i].Choice.Items.Count > 0 then

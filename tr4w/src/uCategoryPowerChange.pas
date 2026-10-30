@@ -74,10 +74,15 @@ function DecideCategoryPowerChange(aCurrent: tCategoryPower;
   aSpellings is the category's spelling table (tCategoryAssistedSA and the
   rest), aCurrent the ordinal of the value in force, aChosen what the row
   shows. The index of the chosen spelling, matched without case or spaces;
-  -1 when the text is no spelling at all (an empty row, or one of ERMAK's
-  extra values such as MULTI-OP-2, which no setting can hold) or is the value
-  already in force -- so closing the window re-saves nothing and makes no
-  statement the operator did not make.
+  -1 when the text is no spelling at all (one of ERMAK's extra values such as
+  MULTI-OP-2, which no setting can hold) or is the value already in force --
+  so closing the window re-saves nothing and makes no statement the operator
+  did not make.
+
+  EMPTY TEXT IS A SPELLING NOW, NOT "NO CHANGE" (2026-10-29): it is the
+  *UNSET member's, the blank "no category" choice, so '' answers that
+  member's index. A row with NOTHING selected must therefore not be asked --
+  the summary window checks the row's item index first.
 
   ASSISTED, BAND, MODE and OPERATOR use this alone: none of them changes a
   QSO's points, so a change is a set and never a rescore. (MODE does change
@@ -104,7 +109,9 @@ begin
    Result := cpcUnchanged;
 
    (* BY THE SPELLINGS THE ROW OFFERS -- tCategoryPowerSA, the table it is
-     filled from. Anything else (an empty row) changes nothing. *)
+     filled from. Anything else changes nothing; '' is cpUNSET's spelling,
+     so an empty row chooses "no power stated" (scored as each contest's
+     own "no power indicated" rule -- every power case falls to HIGH). *)
    idx := CategoryChoiceIndex(tCategoryPowerSA, Ord(aCurrent), aChosen);
    if idx < 0 then
       begin

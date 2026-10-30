@@ -299,6 +299,9 @@ begin
          begin
          TComboBox(FRow[ctCategoryOverlay]).Items.Add(AnsiString(ErmakOverlayCategory[i]));
          end;
+      (* AND THE BLANK "no overlay" CHOICE, LAST, which the Clear above took
+        out with the standard list -- see uCbrSum.CategoryValuesFor. *)
+      TComboBox(FRow[ctCategoryOverlay]).Items.Add('');
       end;
 end;
 
@@ -350,7 +353,16 @@ begin
               OVERLAY.  By TEXT, because that is what was stored. }
             saved := AnsiString(HeaderValue(section,
                                     CabrilloTagsArray[tag].ctrTag));
-            if saved <> '' then
+            if saved = '' then
+               begin
+               (* NOTHING STORED IS "NO CATEGORY" -- the blank choice every
+                 category list ends in (uCbrSum.CategoryValuesFor), and what
+                 the export writes for it: the bare tag. Selected, so the row
+                 shows the answer the header will give. *)
+               TComboBox(FRow[tag]).ItemIndex :=
+                  TComboBox(FRow[tag]).Items.IndexOf('');
+               end
+            else
                begin
                idx := TComboBox(FRow[tag]).Items.IndexOf(saved);
                if idx >= 0 then
@@ -418,11 +430,20 @@ begin
 
          value := TagText(tag);
 
-         { GetDlgItemTextA returned a length and the old code only wrote when it
+         (* GetDlgItemTextA returned a length and the old code only wrote when it
            was non-zero, so an emptied field kept its previous value.  That is
-           preserved: clearing a header field here has never removed it, and
-           making it do so is a behaviour change for the bench, not for a port. }
-         if value <> '' then
+           preserved for a typed field: clearing a header field here has never
+           removed it. *)
+         (* EXCEPT A CHOSEN BLANK CATEGORY (NY4I, 2026-10-29). Each category
+           list ends in a blank "no category" item, and choosing it must
+           stick, or the row reverts on the next open and the export writes
+           the old value. A drop-down with an item selected is a choice; one
+           with nothing selected and no text is still "left alone". Writing ''
+           removes the key, which HeaderValue answers as '' -- the same
+           thing. *)
+         if (value <> '') or
+            ((FRow[tag] is TComboBox) and
+             (TComboBox(FRow[tag]).ItemIndex >= 0)) then
             begin
             SetHeaderValue(section, CabrilloTagsArray[tag].ctrTag,
                            string(value));
@@ -448,6 +469,12 @@ var
    chosen: tCategoryPower;
    change: TCategoryPowerChange;
 begin
+   (* Nothing selected changes nothing -- see CommitCategory. *)
+   if TagItemIndex(ctCategoryPower) < 0 then
+      begin
+      Exit;
+      end;
+
    change := DecideCategoryPowerChange(Settings.Contest.CategoryPower,
                                        string(TagText(ctCategoryPower)),
                                        QSOTotals[AllBands, Both],
@@ -491,6 +518,14 @@ procedure TfrmCabrilloSummary.CommitCategory(const aTag: CabrilloTags;
 var
    idx: integer;
 begin
+   (* NOTHING SELECTED CHANGES NOTHING. The blank "no category" item is a
+     spelling now (the *UNSET member's ''), so the empty text of a row with
+     NO item selected would otherwise read as choosing it. *)
+   if TagItemIndex(aTag) < 0 then
+      begin
+      Exit;
+      end;
+
    idx := CategoryChoiceIndex(aSpellings, aCurrent, string(TagText(aTag)));
    if idx < 0 then
       begin

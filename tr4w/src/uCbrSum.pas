@@ -124,8 +124,28 @@ type
 
   THE SIX THAT ARE SETTINGS COME FROM THE SETTINGS TABLES, so the dialog, the
   drop-down and the refusal read one vocabulary. The other three are Cabrillo
-  header vocabularies with no setting behind them and come from PostUnit. *)
+  header vocabularies with no setting behind them and come from PostUnit.
+
+  EVERY CATEGORY LIST ENDS IN '' -- "no category stated" (NY4I, 2026-10-29:
+  none of the CATEGORY-* fields is required). For the five settings it is the
+  *UNSET member's own spelling; for the four PostUnit lists it is added here,
+  so PostUnit's const arrays and their Number* counts are untouched. LAST, so
+  a drop-down's positions still match the enum's ordinals. *)
 function CategoryValuesFor(const aTag: CabrilloTags): TArray<string>;
+
+(* IS THIS ONE OF THE NINE CATEGORY-* TAGS? Their header line is written even
+  when the value is blank; every other tag's is left out when blank. *)
+function CabrilloTagIsCategory(const aTag: CabrilloTags): boolean;
+
+(* ONE HEADER LINE, CR LF ENDED, OR '' FOR "WRITE NOTHING".
+
+  A value gives 'TAG: value'. A BLANK CATEGORY gives the bare tag and colon --
+  'CATEGORY-OVERLAY:', no trailing space -- because the operator chose "no
+  category" and the sponsor still reads the line (NY4I, 2026-10-29). Any other
+  blank tag (CLUB, EMAIL, ...) gives '', as it always has. OPERATORS is not
+  written through this: PostUnit continues it over several lines. *)
+function CabrilloHeaderTagLine(const aTag: CabrilloTags;
+                               const aValue: string): string;
 
 const
  // 4.72.8 allow most tags to save to tr4w.ini in settings, allowing preload
@@ -215,6 +235,15 @@ begin
       end;
 end;
 
+(* A PostUnit header vocabulary with the blank "no category" choice after it.
+  The five setting tables carry theirs already, as the *UNSET spelling. *)
+function ValuesWithBlank(const aTable: array of string): TArray<string>;
+begin
+   Result := ValuesOf(aTable);
+   SetLength(Result, Length(Result) + 1);
+   Result[High(Result)] := '';
+end;
+
 function CategoryValuesFor(const aTag: CabrilloTags): TArray<string>;
 begin
    (* NOT EVERY LISTED TAG HAS ONE. The old table stopped at ctCategoryOverlay
@@ -230,14 +259,42 @@ begin
       ctCategoryPower:       Result := ValuesOf(tCategoryPowerSA);
       (* THE TRANSMITTER LIST CAME FROM PostUnit, NOT FROM THE SETTINGS TABLE,
         and it still does. The two are identical today -- ONE, TWO, LIMITED,
-        UNLIMITED, SWL -- but they are separate statements of the vocabulary
-        and merging them is a decision about the Cabrillo header, not a
-        side effect of removing a pointer. *)
-      ctCategoryTransmitter: Result := ValuesOf(TransmitterCategory);
-      ctCategoryStation:     Result := ValuesOf(StationCategory);
-      ctCategoryTime:        Result := ValuesOf(TimeCategory);
-      ctCategoryOverlay:     Result := ValuesOf(OverlayCategory);
+        UNLIMITED, SWL, then the blank -- but they are separate statements of
+        the vocabulary and merging them is a decision about the Cabrillo
+        header, not a side effect of removing a pointer. *)
+      ctCategoryTransmitter: Result := ValuesWithBlank(TransmitterCategory);
+      ctCategoryStation:     Result := ValuesWithBlank(StationCategory);
+      ctCategoryTime:        Result := ValuesWithBlank(TimeCategory);
+      ctCategoryOverlay:     Result := ValuesWithBlank(OverlayCategory);
    end;
+end;
+
+function CabrilloTagIsCategory(const aTag: CabrilloTags): boolean;
+begin
+   Result := aTag in [ctCategoryAssisted..ctCategoryOverlay];
+end;
+
+function CabrilloHeaderTagLine(const aTag: CabrilloTags;
+                               const aValue: string): string;
+var
+   tagName: string;
+begin
+   (* THE TAG WITHOUT ITS LEADING '_', which marks each entry in
+     CabrilloTagsArray. *)
+   tagName := Copy(CabrilloTagsArray[aTag].ctrTag, 2, MaxInt);
+
+   if aValue <> '' then
+      begin
+      Result := tagName + ': ' + aValue + #13#10;
+      end
+   else if CabrilloTagIsCategory(aTag) then
+      begin
+      Result := tagName + ':' + #13#10;
+      end
+   else
+      begin
+      Result := '';
+      end;
 end;
 
 // Both header sections live in settings\tr4w.json: [REPORT] moved 2026-08-16

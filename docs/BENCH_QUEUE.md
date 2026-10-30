@@ -88,6 +88,35 @@ item 1:
 
 ---
 
+## Added 2026-10-29 -- EVERY CATEGORY-* MAY BE BLANK (NY4I)
+
+NY4I: none of the CATEGORY-* fields is required. Every category drop-down, in
+the New Contest dialog (six rows) and the Edit Cabrillo Summary window (nine
+rows), now ends in a BLANK item. Choosing it exports the bare tag, e.g.
+`CATEGORY-OVERLAY:` with nothing after it. The blank item has an EMPTY caption;
+no gate can judge whether that is visible enough on each widget set.
+
+- [ ] Windows, Linux (gtk2) and macOS: open each drop-down. Is the blank item at
+      the END of the list visible and selectable (not a zero-height row)? If it
+      is not usable, the fallback is a visible `(none)` caption mapped back to
+      `''` -- say so, that is a small change plus a translatable string.
+- [ ] Edit Cabrillo Summary: choose blank for OVERLAY, TIME and STATION, close,
+      reopen. Each still shows blank (it used to keep the previous value).
+- [ ] Same window: choose blank for POWER with QSOs logged. The log rescores
+      (blank power scores as HIGH in every power-multiplier contest), and the
+      notice names an empty power -- does it read acceptably?
+- [ ] New Contest: choose blank for CATEGORY-POWER and CATEGORY-ASSISTED,
+      create the contest, export Cabrillo: `CATEGORY-POWER:` and
+      `CATEGORY-ASSISTED:` lines, no trailing space. Close and reopen the
+      contest, then export again: they are still blank.
+- [ ] A contest whose header stated `CATEGORY-OVERLAY: CLASSIC` before this
+      build still writes it.
+- [ ] Note: a station that never stored STATION, TIME, TRANSMITTER or OVERLAY
+      in the summary window now gets bare lines for them. Absent and "none"
+      are the same thing in the header store. Acceptable to sponsors' robots?
+
+---
+
 ## Added 2026-10-29 -- SHARE DX SPOTS AROUND THE NETWORK (NETWORK SHARE SPOTS)
 
 NY4I: one computer on the internet gets the cluster, the rest sit on a private

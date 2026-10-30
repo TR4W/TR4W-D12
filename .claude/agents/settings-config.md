@@ -145,6 +145,22 @@ that in both directions.
   two lists are kept in step by hand and drifted (eleven groups leaked, one
   created twice); `uTestSettingsFreshInstall` measures the heap across builds.
 
+## Every CATEGORY-* may be blank: the `*UNSET` member (2026-10-29)
+
+NY4I: none of the Cabrillo CATEGORY-* fields is required. Each of the six
+category enums (`tCategoryAssisted` ... `tCategoryTransmitter`) ends in an
+`*UNSET` member (`caUNSET`, `cbUNSET`, `cmUNSET`, `coUNSET`, `cpUNSET`,
+`ctUNSET`; not `caNONE`, which is `TCloseAction`'s) whose spelling is `''`.
+**It is LAST on purpose**: the constructor leaves each category at ordinal 0,
+the default every contest exports, so a first member would blank every
+contest. The value is stored by SPELLING (log rows, a peer), never by
+ordinal. `TrySetByCommand(cmd, '')` selects it, `TryGetByCommand` answers `''`,
+and `Lint-SpellingTables` accepts a blank in exactly these six tables at the
+LAST ordinal only (`$blankLastIsUnset`). **`CategoryChoiceIndex('')` now
+answers the UNSET index, not -1**, so a window must not ask it for a row with
+nothing selected (the summary form checks the item index first). Every power
+rule scores `cpUNSET` as HIGH (each `case` has an `else`).
+
 ## A former name whose VALUE meant something else (2026-10-25)
 
 `BACKUP LOG FILE NAME` named a FILE; it is now the second name

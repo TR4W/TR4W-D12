@@ -56,6 +56,7 @@ type
       procedure TestConfiguredStationDoesNotOverrideAClubCall;
       procedure TestFirstRunWithNoSettingsFile;
       procedure TestNothingQueuedDoesNothing;
+      procedure TestABlankCategoryIsApplied;
    public
       procedure RunAllTests; override;
    end;
@@ -291,6 +292,50 @@ begin
               'and nothing is marked as the contest''s');
 end;
 
+(* A BLANK CATEGORY ROW IS A CHOICE (NY4I, 2026-10-29). SaveNewContest queues
+  a CATEGORY-* row even when its blank "no category" item is chosen; applied,
+  it is the UNSET member, stated and marked as the contest's -- not the
+  default left in force, which is what skipping the row did. *)
+procedure TNewContestCommandsTests.TestABlankCategoryIsApplied;
+var
+   savedPower: tCategoryPower;
+   savedTransmitter: tCategoryTransmitter;
+begin
+   BeginTest('a blank category chosen in New Contest is applied as the ' +
+             'contest''s, not dropped');
+
+   FFile := IncludeTrailingPathDelimiter(GetTempDir) +
+            Format('tr4w-newcontest-blank-%d.json', [Random(1000000000)]);
+   (* Contest-scoped, so RunAllTests' snapshot does not cover them. *)
+   savedPower := Settings.Contest.CategoryPower;
+   savedTransmitter := Settings.Contest.CategoryTransmitter;
+   try
+      Settings.Contest.CategoryPower := cpHIGH;
+      Settings.Contest.CategoryTransmitter := ctONE;
+
+      ClearNewContestChoices;
+      QueueNewContestCommand('CATEGORY-POWER', '');
+      QueueNewContestCommand('CATEGORY-TRANSMITTER', '');
+      CheckTrue(HasNewContestChoices, 'a blank row is queued');
+      ClearContestCFGCommands;
+      CheckEquals(2, ApplyNewContestChoices(FFile), 'both blanks are accepted');
+
+      CheckTrue(Settings.Contest.CategoryPower = cpUNSET, 'POWER is UNSET');
+      CheckTrue(Settings.Contest.CategoryTransmitter = ctUNSET, 'TRANSMITTER is UNSET');
+      CheckEquals('', CFGCommandValueAsString('CATEGORY-POWER'),
+                  'and reads back blank');
+      CheckTrue(Settings.CommandIsStated('CATEGORY-POWER'),
+                'a blank is the operator''s statement, so the log keeps it');
+      CheckTrue(CommandCameFromContestCFG('CATEGORY-POWER'),
+                'marked as the CONTEST''S');
+   finally
+      Settings.Contest.CategoryPower := savedPower;
+      Settings.Contest.CategoryTransmitter := savedTransmitter;
+      Settings.SetCommandStated('CATEGORY-POWER', False);
+      Settings.SetCommandStated('CATEGORY-TRANSMITTER', False);
+   end;
+end;
+
 procedure TNewContestCommandsTests.RunAllTests;
 var
    snapshot: TJSONObject;
@@ -327,6 +372,11 @@ begin
       end;
       try
          TestNothingQueuedDoesNothing;
+      finally
+         Scrub;
+      end;
+      try
+         TestABlankCategoryIsApplied;
       finally
          Scrub;
       end;

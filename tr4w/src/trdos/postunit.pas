@@ -2901,22 +2901,22 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
 
       for TempTag := Low( CabrilloTags ) to High( CabrilloTags ) do
          begin
-         if ErmakSpecification then
-           if TempTag = ctOperators then
-              begin
-              Continue;
-              end;
+         if ErmakSpecification and ( TempTag = ctOperators ) then
+            begin
+            Continue;
+            end;
 
          GetCabrilloTagText( TempTag );
-         // if TempBuffer2[0] = #0 then Continue;
-         if TempTag = ctOperators then
-           begin;
-           end
-         else
-           if TempBuffer2[ 0 ] = #0 then
-              begin
-              Continue;
-              end;
+         (* A BLANK TAG IS LEFT OUT -- EXCEPT A CATEGORY, whose bare line is
+           written: no CATEGORY-* field is required, and "none" is a choice
+           the header still states (NY4I, 2026-10-29). See
+           uCbrSum.CabrilloHeaderTagLine. *)
+         if ( TempTag <> ctOperators ) and
+            ( TempBuffer2[ 0 ] = #0 ) and
+            ( not CabrilloTagIsCategory( TempTag ) ) then
+            begin
+            Continue;
+            end;
 
          (* THE TAG WITHOUT ITS LEADING '_'. This was @...ctrTag[ 1 ] -- ctrTag was
            a PAnsiChar constant, so [ 1 ] was its SECOND character, and the pointer
@@ -2945,9 +2945,12 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
             end
          else
             begin
-            // Issue #998: %s=tag(tagName), %s=value(TempBuffer2).
-            sWriteFileFromString( tReportFileWrite, sysutils.Format( '%s: %s'#13#10,
-               [ tagName, CharBufferText( TempBuffer2 ) ] ) );
+            (* 'TAG: value', or the bare 'CATEGORY-X:' for a blank category --
+              the one rule, unit tested (uTestContestUI). Was
+              Format('%s: %s'#13#10), Issue #998. *)
+            sWriteFileFromString( tReportFileWrite,
+               AnsiString( CabrilloHeaderTagLine( TempTag,
+                                                  CharBufferText( TempBuffer2 ) ) ) );
             end;
          end;
 
