@@ -194,7 +194,12 @@ begin
 
    externalLogger := TExternalLoggerFactory.CreateLogger(chosen,
       Settings.ExternalLogger.Address, Settings.ExternalLogger.Port, nil);
-   LogStoreStartExternalDelivery;
+   (* ~~LogStoreStartExternalDelivery~~ stood here until 2026-10-31, and this
+     runs BEFORE the main window loads the log: the WRL worker opened its own
+     connection and wrote while the main thread was still reading the log in
+     and writing its session state, and the main thread's write failed
+     (tr4w.log, 10:39:27). The delivery now starts in uProgramMain once the
+     log is loaded, after every headless exit. *)
 end;
 
 (* The vocabulary the settings model offers and refuses by -- the subsystem's

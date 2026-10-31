@@ -701,6 +701,46 @@ resourcestring
    SHamScoreResyncOnly = 'Re-send only';
    SHamScoreResyncDeleteFirst = 'Delete and re-send';
 
+   (* ---------------------------------------- a locked contest log (2026-10-31) - *)
+
+   (* THE STARTUP DIALOG (uLogStore.AskAboutALockedLog). %s is the log's file,
+     then one of the two "held" sentences below. The three captions are the
+     buttons; the answer is read by modal result, never by position. NOTHING
+     here may offer to delete the -wal or -shm: they can hold committed QSOs. *)
+   SLogLockedTitle = 'Contest log is locked';
+   SLogLockedBody =
+      'TR4W cannot open the contest log for writing:' + #10 + '%s' + #10#10 +
+      '%s' + #10#10 +
+      'To fix it: close the other TR4W (look for one stopped at an error ' +
+      'dialog, or end it in the Task Manager), or pause the backup, sync or ' +
+      'antivirus tool that has the file, then choose Retry.' + #10#10 +
+      'Open read-only lets you view and export the log, but NO QSO CAN BE ' +
+      'LOGGED until TR4W is restarted with the log unlocked.';
+   SLogLockedHeldHere = 'This TR4W''s own background connection is holding it: %s.';
+   SLogLockedHeldElsewhere =
+      'Another program is holding it -- most likely another TR4W, or one that ' +
+      'crashed and is still waiting at an error dialog; or a backup, cloud ' +
+      'sync (OneDrive, Dropbox) or antivirus program reading the file.';
+   SLogLockedRetry = 'Retry';
+   SLogLockedReadOnly = 'Open read-only (no logging)';
+   SLogLockedQuit = 'Quit TR4W';
+
+   (* Shown once, the first time a read-only session refuses a write. %s is the
+     log's file. *)
+   SLogReadOnlyRefused =
+      'This contest log was opened READ-ONLY because it was locked:' + #10 +
+      '%s' + #10#10 +
+      'Nothing can be saved to it -- NO QSO IS BEING LOGGED. Close what holds ' +
+      'the log and restart TR4W to log again.';
+
+   (* A write that met a locked log after every retry (uLogStore.Disable). %s
+     says what was being written ("appending a QSO"). *)
+   SLogBusyNotSaved =
+      'The contest log was locked by another program while %s, so that change ' +
+      'was NOT saved. The log itself is not damaged and TR4W keeps it open.' +
+      #10#10 + 'If this was a QSO, it is still in the entry window: log it ' +
+      'again. If this keeps happening, run Tools > Run Verification Checks.';
+
 implementation
 
 end.

@@ -2579,6 +2579,13 @@ begin
     destination missed it, copied now rather than at the next QSO. *)
   BackupCopyStart(BackupDir, LogStorePeriodicBackupPath(BackupDir));
 
+  (* THE EXTERNAL LOGGER'S DELIVERY (the WRL worker, its own connection to
+    the log) -- HERE, for the same two reasons, and the second is the one
+    that mattered: the log is open, loaded and its session state written, so
+    the junior connection cannot meet the main thread mid-load (2026-10-31).
+    A batch run never starts one. *)
+  LogStoreStartExternalDelivery;
+
   // Load POTA parks database off the UI thread (file may be ~3 MB / 50k entries).
   // TPOTALoadThread parses the CSV and posts WM_POTA_LOAD_DONE when done.
   LoadPOTAParksAsync(BackgroundEvents.PotaParksParsed);

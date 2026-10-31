@@ -4871,3 +4871,42 @@ none. Needs a log with WRL delivery set up (or rows written by hand).
 - [ ] **It does not dirty the dialog.** Open and Escape: no save prompt, and
   Save stays disabled.
 - [ ] **The time is UTC** and matches when WRL last answered (`tr4w.log`).
+
+## Added 2026-10-31 -- A LOCKED CONTEST LOG: THE STARTUP DIALOG, READ-ONLY, AND THE WATCHDOG
+
+Both failures in tr4w.log of 2026-10-31 (the startup crash at 10:39:27 and
+"the configuration could not be recorded on close" at 10:43:25) were a write
+from a stale sqldb read snapshot after the WRL worker committed
+(SQLITE_BUSY_SNAPSHOT, which no busy timeout cures). The unit tests pin that
+(uTestLogLocking, uTestLogStore). What only a real run can judge:
+
+- [ ] **No crash, no lost QSO with WRL enabled.** Start TR4W on a log with WRL
+  delivery set up and log a dozen QSOs quickly. tr4w.log has no
+  `database is locked`, no `THE LOG WAS LOCKED`, and the WRL worker starts AFTER
+  the log is loaded (its first `[WRL]` line follows the `[EditableLog]` lines).
+  Close: no `could not be recorded on close`.
+- [ ] **The startup dialog on a really locked log.** Lock the log from outside
+  (e.g. open the `sqlite3` shell on `<log>.db`, run `BEGIN IMMEDIATE;` and
+  leave it open), then start TR4W. After about 2 s a warning box titled "Contest log is
+  locked" names the file and the likely causes, with three buttons.
+- [ ] **Retry** with the lock still held asks again; release the lock, Retry
+  again: the log opens normally and QSOs log.
+- [ ] **Open read-only (no logging)**: the log shows and can be exported; trying
+  to log a QSO shows "QSO NOT LOGGED" with a beep, and ONE box saying the log
+  is read-only (not one per QSO). The WRL worker does not start. Close: nothing
+  is written (no `recorded on exit` line).
+- [ ] **Quit TR4W** ends the program cleanly (exit code 1, `operator chose Quit`
+  in tr4w.log). Escape and the window's close button also Quit.
+- [ ] **The box on gtk2 (Mint) and Cocoa (macOS)**: the body wraps without
+  clipping and the three captions fit. GTK draws the buttons in the other
+  order -- the action must follow the caption, not the position.
+- [ ] **Nothing ever offers to delete the -wal or -shm**, and after any of the
+  above they are still beside the log until TR4W closes it.
+- [ ] **Tools > Run Verification Checks** has "Contest log is not locked": it
+  passes on an ordinary session and reports the -wal/-shm as expected; with
+  the outside lock held it FAILS and says another program holds the write
+  lock; the watchdog intervention count is 0 in a normal session.
+- [ ] **The watchdog under real WRL traffic.** A normal session logs no
+  `[LogWatchdog]` line at all. (A stalled worker cannot be provoked without a
+  debugger; if one is ever seen, the lines go: asked to roll back, interrupted,
+  stopping its owner, then "starting a new one" -- and logging carries on.)

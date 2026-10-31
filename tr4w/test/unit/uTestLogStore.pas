@@ -104,6 +104,18 @@ type
       procedure TestAClearIsCommittedBeforeTheLogIsClosed;
       procedure TestADeletedQSOStaysDeletedAndIsNotExported;
       procedure TestANewLogCapturesNoCredential;
+      (* A LOCKED LOG (2026-10-31) -- see uTestLogLocking for the database
+        half. *)
+      procedure TestAQSOAfterAnotherConnectionCommitsIsLogged;
+      procedure TestALockedLogDegradesWithoutRaising;
+      procedure TestALockedLogAtOpenOffersReadOnly;
+      procedure TestALockedLogAtOpenHeadlessStandsDown;
+      (* A raw connection on FDb holding the write lock, and its release. *)
+      function HoldWriteLock: TObject;
+      procedure ReleaseWriteLock(var aHolder: TObject);
+      (* Something the session state holds is changed, so SaveRestartFile
+        has a row to write rather than finding its cache current. *)
+      procedure TouchSessionState;
    public
       procedure RunAllTests; override;
    end;
@@ -116,6 +128,9 @@ uses
    sqldb,      (* TSQLQuery -- ScalarFromFile and ReadContestRow *)
    uLogNote,   (* SetNoteText -- a NOTE record, as MainUnit's note command makes *)
    uSettingsModel,  (* Settings -- the two passwords the capture must not write *)
+   sqlite3conn,     (* sofReadWrite -- the lock holder's connection *)
+   LOGWIND,         (* LastCQFrequency -- a session-state value to change *)
+   LogStuff,        (* Sheet -- DupeAndMultSheet.SaveRestartFile *)
    PostUnit;   (* ExportToADIF -- the export a deleted QSO must not reach *)
 
 const
@@ -125,6 +140,30 @@ const
    SQL_ALL_ROWS     = 'SELECT COUNT(*) FROM qso';
    SQL_NOTE_ROWS    = 'SELECT COUNT(*) FROM qso WHERE record_kind = ''NOTE''';
    SQL_DELETED_ROWS = 'SELECT COUNT(*) FROM qso WHERE deleted <> 0';
+
+(* THE LOCKED-LOG SEAMS, as plain routines because the store's hooks are
+  plain procedure types. *)
+var
+   GLockedAsks: integer = 0;
+   GNotices: integer = 0;
+
+function AnswerRetryThenReadOnly(const aFileName, aDetail: string): TLogLockedChoice;
+begin
+   Inc(GLockedAsks);
+   if GLockedAsks = 1 then
+      begin
+      Result := llcRetry;
+      end
+   else
+      begin
+      Result := llcReadOnly;
+      end;
+end;
+
+procedure CountNotice(const aText: RawByteString);
+begin
+   Inc(GNotices);
+end;
 
 procedure TLogStoreTests.PrepareMigration(const aSet: string);
 var
@@ -1418,6 +1457,327 @@ begin
    end;
 end;
 
+function TLogStoreTests.HoldWriteLock: TObject;
+var
+   holder: TLogConnection;
+begin
+   holder := TLogConnection.Create(nil);
+   holder.DatabaseName := AnsiString(FDb);
+   holder.OpenFlags := [sofReadWrite];
+   holder.Open;
+   holder.ExecutePragma('BEGIN IMMEDIATE');
+   Result := holder;
+end;
+
+procedure TLogStoreTests.ReleaseWriteLock(var aHolder: TObject);
+begin
+   if aHolder <> nil then
+      begin
+      TLogConnection(aHolder).ExecutePragma('ROLLBACK');
+      FreeAndNil(aHolder);
+      end;
+end;
+
+procedure TLogStoreTests.TouchSessionState;
+begin
+   LastCQFrequency := LastCQFrequency + 1;
+end;
+
+(* THE DEFECT OF 2026-10-31, AT THE STORE. The store reads (a grid range),
+  sqldb leaves that read transaction open, another connection commits -- as
+  the WRL worker does after every delivery -- and the store then writes. On
+  the old code the write failed at once with SQLITE_BUSY_SNAPSHOT: the QSO
+  append disabled the store for the session, and the session-state save
+  raised out of SaveRestartFile, which at startup took the program down. *)
+procedure TLogStoreTests.TestAQSOAfterAnotherConnectionCommitsIsLogged;
+var
+   binary, log: TStringList;
+   last, fresh: ContestExchange;
+   other: TLogDatabase;
+   failure: string;
+
+   (* AS LoadinLog DOES AT STARTUP: the whole log walked through the
+     sequential cursor, then the count the grid is given. Both are per-call
+     statements, so sqldb begins a transaction for them and leaves it open.
+     (The grid's range read is a KEPT statement and runs outside one --
+     which is why this pin does not use it.) *)
+   procedure ReadTheWayStartupDoes;
+   var
+      rec: ContestExchange;
+   begin
+      if LogSourceOpen then
+         begin
+         while LogSourceNext(rec) do
+            begin
+            end;
+         LogSourceClose;
+         end;
+      LogSourceRecordCount;
+   end;
+
+   procedure AnotherConnectionCommits(const aKey: string);
+   begin
+      other := TLogDatabase.Create;
+      try
+         other.BusyTimeoutMs := 20;
+         other.Open(FDb);
+         other.Connection.ExecuteDirect(UTF8Encode(
+            'INSERT OR REPLACE INTO session_state(key, value) VALUES (''' +
+            aKey + ''', ''1'')'));
+         other.Transaction.Commit;
+      finally
+         FreeAndNil(other);
+      end;
+   end;
+
+begin
+   BeginTest('a QSO and the session state are saved after another connection commits');
+
+   PrepareMigration(FIXTURE_SET);
+   binary := TStringList.Create;
+   log := TStringList.Create;
+   try
+      ReadBinaryLog(binary, last);
+      CheckTrue(LogStoreEnsureOpen, 'the open migrates the log');
+
+      ReadTheWayStartupDoes;
+      CheckTrue(LogStoreRepository.Database.Transaction.Active,
+                'the read left its transaction open, as sqldb does');
+      AnotherConnectionCommits('test.other.1');
+
+      fresh := last;
+      fresh.Callsign := NEW_CALL;
+      fresh.id := 'test-logstore-stale-snapshot-qso';
+      CheckTrue(LogStoreAppendQSO(fresh),
+                'the QSO is logged although its read snapshot was older than a commit');
+      CheckTrue(LogStoreIsUsable, 'and the store is still usable');
+
+      ReadTheWayStartupDoes;
+      CheckTrue(LogStoreRepository.Database.Transaction.Active,
+                'the second read left its transaction open too');
+      AnotherConnectionCommits('test.other.2');
+      TouchSessionState;
+      failure := '';
+      try
+         Sheet.SaveRestartFile;
+      except
+         on E: Exception do
+            begin
+            failure := E.ClassName + ': ' + E.Message;
+            end;
+      end;
+      CheckEquals('', failure, 'the session-state save does not raise');
+      CheckEquals(integer(LastCQFrequency),
+                  integer(ScalarFromFile(FDb, 'SELECT CAST(value AS INTEGER) FROM ' +
+                  'session_state WHERE key = ''lastCQ.frequency''')),
+                  'and it was written');
+
+      LogStoreClose;
+      ReadLogCalls(log);
+      CheckEquals(binary.Count + 1, log.Count, 'the log holds the new QSO');
+   finally
+      log.Free;
+      binary.Free;
+      Restore;
+   end;
+end;
+
+(* (a) AND (d): A WRITE LOCK HELD BY ANOTHER CONNECTION. Reads go on; a QSO is
+  refused, never acknowledged, and the store stays open; the session-state
+  and the close-time configuration saves degrade to a warning; the
+  verification check reports the lock. Released, everything works again. *)
+procedure TLogStoreTests.TestALockedLogDegradesWithoutRaising;
+var
+   binary, log: TStringList;
+   last, fresh: ContestExchange;
+   rows: array[0..9] of ContestExchange;
+   holder: TObject;
+   failure, report: string;
+   n: integer;
+begin
+   BeginTest('a held write lock: reads go on, writes degrade, nothing raises, the check reports it');
+
+   LogStoreBusyTimeoutMs := 20;
+   PrepareMigration(FIXTURE_SET);
+   binary := TStringList.Create;
+   log := TStringList.Create;
+   holder := nil;
+   try
+      ReadBinaryLog(binary, last);
+      CheckTrue(LogStoreEnsureOpen, 'the open migrates the log');
+      CheckTrue(LogStoreCheckLockState(report), 'unlocked, the check passes: ' + report);
+
+      holder := HoldWriteLock;
+
+      failure := '';
+      n := 0;
+      try
+         n := LogSourceReadRange(0, rows);
+      except
+         on E: Exception do
+            begin
+            failure := E.ClassName + ': ' + E.Message;
+            end;
+      end;
+      CheckEquals('', failure, 'a read does not raise');
+      CheckEquals(Length(rows), n, 'and reads the rows');
+
+      fresh := last;
+      fresh.Callsign := NEW_CALL;
+      fresh.id := 'test-logstore-locked-qso';
+      CheckFalse(LogStoreAppendQSO(fresh), 'the QSO is refused, not acknowledged');
+      CheckTrue(LogStoreIsUsable, 'and the store is NOT disabled');
+
+      (* With an operator: told, but not once per refused write. *)
+      tSilentExport := False;
+      LogStoreFailureNotice := @CountNotice;
+      GNotices := 0;
+      CheckFalse(LogStoreAppendQSO(fresh), 'a second QSO is refused');
+      CheckFalse(LogStoreAppendQSO(fresh), 'and a third');
+      CheckEquals(1, GNotices, 'one "not saved" notice for both');
+      tSilentExport := True;
+      LogStoreFailureNotice := nil;
+
+      TouchSessionState;
+      failure := '';
+      try
+         Sheet.SaveRestartFile;
+      except
+         on E: Exception do
+            begin
+            failure := E.ClassName + ': ' + E.Message;
+            end;
+      end;
+      CheckEquals('', failure, 'the session-state save does not raise');
+
+      CheckFalse(LogStoreCheckLockState(report), 'the check reports the lock');
+      CheckTrue(Pos('holds the log''s write lock', report) > 0,
+                'naming the write lock: ' + report);
+
+      (* The close-time configuration capture runs only interactively. *)
+      tSilentExport := False;
+      LogStoreFailureNotice := @CountNotice;
+      failure := '';
+      try
+         LogStoreClose;
+      except
+         on E: Exception do
+            begin
+            failure := E.ClassName + ': ' + E.Message;
+            end;
+      end;
+      tSilentExport := True;
+      LogStoreFailureNotice := nil;
+      CheckEquals('', failure, 'the close, and its configuration save, do not raise');
+
+      ReleaseWriteLock(holder);
+      CheckTrue(LogStoreEnsureOpen, 'released: the log opens');
+      CheckTrue(LogStoreAppendQSO(fresh), 'and the QSO is logged now');
+      CheckTrue(LogStoreCheckLockState(report), 'and the check passes: ' + report);
+      LogStoreClose;
+      ReadLogCalls(log);
+      CheckEquals(binary.Count + 1, log.Count, 'exactly one copy of the QSO');
+   finally
+      tSilentExport := True;
+      LogStoreFailureNotice := nil;
+      ReleaseWriteLock(holder);
+      LogStoreBusyTimeoutMs := 0;
+      log.Free;
+      binary.Free;
+      Restore;
+   end;
+end;
+
+(* THE STARTUP DIALOG'S CHOICES, through the store's seam: a locked log is
+  asked about, Retry asks again, Read-only opens it -- readable, and every
+  write refused with ONE notice. *)
+procedure TLogStoreTests.TestALockedLogAtOpenOffersReadOnly;
+var
+   binary: TStringList;
+   last, fresh: ContestExchange;
+   rows: array[0..9] of ContestExchange;
+   holder: TObject;
+begin
+   BeginTest('a log locked at open: asked, Retry asks again, Read-only reads and refuses writes');
+
+   LogStoreBusyTimeoutMs := 20;
+   PrepareMigration(FIXTURE_SET);
+   binary := TStringList.Create;
+   holder := nil;
+   try
+      ReadBinaryLog(binary, last);
+      CheckTrue(LogStoreEnsureOpen, 'the first open migrates the log');
+      LogStoreClose;
+
+      holder := HoldWriteLock;
+      GLockedAsks := 0;
+      GNotices := 0;
+      LogStoreLockedQuestion := @AnswerRetryThenReadOnly;
+      LogStoreFailureNotice := @CountNotice;
+      tSilentExport := False;
+
+      CheckTrue(LogStoreEnsureOpen, 'the locked log opens -- read-only');
+      CheckEquals(2, GLockedAsks, 'asked, Retry, asked again');
+      CheckTrue(LogStoreIsReadOnly, 'and it is read-only');
+      CheckEquals(Length(rows), LogSourceReadRange(0, rows), 'it can be read');
+
+      fresh := last;
+      fresh.Callsign := NEW_CALL;
+      fresh.id := 'test-logstore-readonly-qso';
+      CheckFalse(LogStoreAppendQSO(fresh), 'no QSO can be logged');
+      CheckFalse(LogStoreAppendQSO(fresh), 'nor a second');
+      CheckEquals(1, GNotices, 'the operator is told once');
+      CheckTrue(LogStoreIsUsable, 'the store is open for reading');
+   finally
+      tSilentExport := True;
+      LogStoreLockedQuestion := nil;
+      LogStoreFailureNotice := nil;
+      ReleaseWriteLock(holder);
+      LogStoreBusyTimeoutMs := 0;
+      LogStoreForgetFailureForTests;
+      binary.Free;
+      Restore;
+   end;
+end;
+
+(* HEADLESS, A LOCKED LOG AT OPEN FAILS THE OPEN AND STANDS THE STORE DOWN --
+  once. It is never asked about, and it must not be re-opened (probe, wait and
+  all) by every later store call of a batch run. *)
+procedure TLogStoreTests.TestALockedLogAtOpenHeadlessStandsDown;
+var
+   holder: TObject;
+   started, elapsed: QWord;
+begin
+   BeginTest('headless, a log locked at open fails once and is not re-probed by later calls');
+
+   LogStoreBusyTimeoutMs := 300;
+   PrepareMigration(FIXTURE_SET);
+   holder := nil;
+   try
+      CheckTrue(LogStoreEnsureOpen, 'the first open migrates the log');
+      LogStoreClose;
+
+      holder := HoldWriteLock;
+      GLockedAsks := 0;
+      LogStoreLockedQuestion := @AnswerRetryThenReadOnly;
+      CheckFalse(LogStoreEnsureOpen, 'the locked open fails');
+      CheckEquals(0, GLockedAsks, 'and nobody was asked');
+
+      started := GetTickCount64;
+      CheckFalse(LogStoreEnsureOpen, 'a later call fails too');
+      elapsed := GetTickCount64 - started;
+      CheckTrue(elapsed < 150, 'at once, with no second probe (' +
+                IntToStr(elapsed) + ' ms)');
+   finally
+      LogStoreLockedQuestion := nil;
+      ReleaseWriteLock(holder);
+      LogStoreBusyTimeoutMs := 0;
+      (* The failed open disabled the store; every later suite needs it back. *)
+      LogStoreForgetFailureForTests;
+      Restore;
+   end;
+end;
+
 procedure TLogStoreTests.RunAllTests;
 begin
    TestTheClearBackupNameRule;
@@ -1440,6 +1800,10 @@ begin
    TestAClearIsCommittedBeforeTheLogIsClosed;
    TestADeletedQSOStaysDeletedAndIsNotExported;
    TestANewLogCapturesNoCredential;
+   TestAQSOAfterAnotherConnectionCommitsIsLogged;
+   TestALockedLogDegradesWithoutRaising;
+   TestALockedLogAtOpenOffersReadOnly;
+   TestALockedLogAtOpenHeadlessStandsDown;
 end;
 
 end.

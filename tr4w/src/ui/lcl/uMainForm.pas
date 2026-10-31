@@ -851,6 +851,7 @@ uses
       for TGridOptions (TR4WEditableLogSetGridLines). *)
    uMainThreadWork,    // RequestMainThreadJob -- the colour sweep, coalesced
    uLogSource,         // the virtual log list reads through the seam
+   uLogDatabase,       // SQLiteIsBusy -- TR4WEditableLogRefreshCount on a busy log
    uConfigValues,      // Config.ShowGridLines
    MainUnit;           // LogRowTextFor, Config -- see CreateTR4WEditableLog
 
@@ -3242,7 +3243,30 @@ begin
          end;
       end;
 
-   n := LogSourceRecordCount;
+   (* A LOG THAT CANNOT BE READ JUST NOW LEAVES THE GRID AS IT WAS
+     (2026-10-31). In WAL mode a read is not blocked by another connection's
+     write, but SQLite can still answer busy (a WAL recovery, a checkpoint
+     restart), and an unhandled exception here takes the program down. The
+     count stays what the grid had; the next refresh -- the next QSO or
+     repaint -- asks again. *)
+   try
+      n := LogSourceRecordCount;
+   except
+      on E: Exception do
+         begin
+         if not SQLiteIsBusy(E) then
+            begin
+            raise;
+            end;
+         if logger <> nil then
+            begin
+            logger.Warn('[EditableLog] the log could not be counted just now (%s -- %s); ' +
+                        'the grid keeps %d row(s) until the next refresh',
+                        [E.ClassName, E.Message, TR4WEditableLog.RecordCount]);
+            end;
+         Exit;
+         end;
+   end;
 
    (* WHAT THE LOG SAYS versus what the grid is showing, every time a QSO is
      logged. One line, because "the contact did not appear" has three

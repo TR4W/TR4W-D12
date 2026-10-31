@@ -663,6 +663,10 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestLogStore        in 'uTestLogStore.pas',
    uLogDatabase         in '..\..\src\domain\uLogDatabase.pas',
    uTestLogDatabase     in 'uTestLogDatabase.pas',
+   (* A locked log: the busy classifier, the lock probe, the stale-snapshot
+      write, the WRL worker's rollback and the watchdog (2026-10-31). *)
+   uLogConnectionWatch  in '..\..\src\domain\uLogConnectionWatch.pas',
+   uTestLogLocking      in 'uTestLogLocking.pas',
    uLogBackup           in '..\..\src\domain\uLogBackup.pas',
    uTestLogBackup       in 'uTestLogBackup.pas',
    uBackupCopier        in '..\..\src\domain\uBackupCopier.pas',
@@ -1088,6 +1092,7 @@ begin
    RegisterSuite(TTestWindowSnap.Create('WindowSnap'));
    RegisterSuite(TLogBinaryFileTests.Create('LogBinaryFile'));
    RegisterSuite(TLogDatabaseTests.Create('LogDatabase'));
+   RegisterSuite(TLogLockingTests.Create('LogLocking'));
    RegisterSuite(TLogBackupTests.Create('LogBackup'));
    RegisterSuite(TBackupCopierTests.Create('BackupCopier'));
    RegisterSuite(TBackupDestinationSettingTests.Create('BackupDestinationSetting'));

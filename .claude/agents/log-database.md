@@ -12,6 +12,7 @@ You own the contest log. **It is SQLite, and has been since 2026-09-01.**
 | | |
 |---|---|
 | database + pragmas + integrity | `tr4w/src/domain/uLogDatabase.pas` |
+| the watchdog over every SECOND connection (the WRL worker's) | `tr4w/src/domain/uLogConnectionWatch.pas`, a leaf; its timer is in `uWRLExternalLogger.pas`; tests in `test/unit/uTestLogLocking.pas` |
 | backup orchestration (stage, verify, `.bak`, publish) | `tr4w/src/domain/uLogBackup.pas` — `LogStoreBackup` is a thin caller; tests in `test/unit/uTestLogBackup.pas` |
 | the copy to BACKUP DESTINATION (worker thread, file I/O only) | `tr4w/src/domain/uBackupCopier.pas`, glue `tr4w/src/uBackupCopyService.pas`; tests in `test/unit/uTestBackupCopier.pas` |
 | schema | `tr4w/src/domain/uLogSchema.pas` |
@@ -646,6 +647,87 @@ connection.
   the newest `last_sent` is shown.
 - **`DowngradeTestLog` to below 5 drops `external_delivery`** (it did not, so a
   "schema-4" fixture still had the v5 table).
+
+## A LOCKED LOG: THE STALE SNAPSHOT, THE BUSY WAIT, THE DIALOG, THE WATCHDOG (2026-10-31)
+
+NY4I: the log belongs to TR4W; the database must never get in the way of
+logging; delivery is the junior partner. tr4w.log 2026-10-31: an unhandled
+`database is locked` on the main thread at startup (10:39:27), and `the
+configuration could not be recorded on close` (10:43:25) with the worker
+ALREADY STOPPED.
+
+- **THE CAUSE WAS NOT A MISSING TIMEOUT. IT WAS `SQLITE_BUSY_SNAPSHOT` (517).**
+  Measured (Python's sqlite3 and `uTestLogLocking`): a connection whose read
+  transaction began before another connection committed CANNOT upgrade it to a
+  write; SQLite fails it AT ONCE, a 2 s busy timeout or not. sqldb begins a
+  transaction when a statement PREPARES and never ends it, so after a per-call
+  read (the startup walk, a count, a search) the main connection holds an old
+  snapshot. A KEPT statement (the grid's `FSelectRange`) runs outside one -- a
+  pin that reads through the grid proves nothing (it was tried, and passed on
+  the broken code).
+- **`uLogStore.BeginMainWrite` is the cure: `GDatabase.EndTransaction` (now
+  public) before every main-thread write** -- each write entry, the close
+  capture, and `SaveRestartFile` through `LogStoreReadyToWrite`. Not in a batch
+  and not with the sequential cursor open (`TLogRepository.SequentialReadOpen`,
+  new). It COMMITS what is pending, as `BeginBatchUpdate` already did.
+- **A BUSY WRITE IS RETRIED AND THEN REFUSED, NEVER A DISABLED STORE.** The
+  append is `LogStoreAppendQSO` -> `AppendQSOOnce` x `LOG_WRITE_ATTEMPTS` (3),
+  each rolled back (`RollBackAfterBusy`, which also invalidates the record
+  count). `Disable` has a busy branch, FOR A WRITE TO AN OPEN LOG ONLY
+  (`GRepository` assigned): roll back, log every time, a notice
+  (`SLogBusyNotSaved`) at most once a minute, the store STAYS OPEN. A failed
+  OPEN still stands the store down -- left "not disabled", every later store
+  call re-opened, probe and wait included (pinned headless). Before this, one delivery commit
+  between a read and a QSO disabled the store for the session. In WAL a busy
+  failure comes before the transaction's first write, so a rollback loses
+  nothing; that is not true in rollback-journal mode (a cache spill), where
+  only the busy wait applies.
+- **ONE busy classifier: `uLogDatabase.SQLiteIsBusy(E)` (codes 5 and 6, extended
+  included), by CODE.** `TLogConnection.ExecutePragma` now raises
+  `ESQLDatabaseError` with `sqlite3_extended_errcode` (FPC's own `sqlite3dyn`,
+  no new binding), and `ELogDatabaseError.SQLiteCode` carries it through the
+  re-wraps. uWRLWorker's private copy is deleted.
+- **Every connection gets `busy_timeout` FIRST in `ApplyPragmas`**:
+  `LOG_BUSY_TIMEOUT_MS` = 2000 for the main one, `TLogDatabase.BusyTimeoutMs`
+  to change it before Open (the worker 1000, tests 20; the store's test seam is
+  `LogStoreBusyTimeoutMs`). **The `PRAGMA busy_timeout = 250` that
+  `TWRLExternalLogger.AfterLogCommit` set on the MAIN connection is deleted** --
+  it was its only wait, and it lowered it.
+- **The worker starts after the log is loaded** (`uProgramMain`, beside
+  `BackupCopyStart`, after every headless Halt); it used to start from
+  `StartExternalLoggerFromSettings`, before `CreateMainWindow` loaded the log.
+- **A LOCKED LOG AT OPEN ASKS** (`OpenExistingLog`): `ProbeLogWriteLock`
+  (a raw `TLogConnection`, `BEGIN IMMEDIATE` + `ROLLBACK`, no create flag),
+  then `QuestionDlg` Retry / Open read-only / Quit, compared by modal result.
+  A busy failure of the `Open` itself (a lock taken after the probe) is asked
+  about the same way.
+  Test seam `LogStoreLockedQuestion`; headless never asks. Quit is `Halt(1)`.
+  **NEVER offer or do a delete of `-wal`/`-shm`.** The holding process is not
+  named: that needs the Restart Manager, a new DLL binding.
+- **READ-ONLY (`GReadOnly`, `LogStoreIsReadOnly`)**: `OpenReadOnly`, no
+  `CheckWritable`, no worker, no close capture, no contest-row correction;
+  every write entry calls `RefuseReadOnly` (one notice per session,
+  `SLogReadOnlyRefused`; the append returns False). An older-schema log cannot
+  be opened read-only (its upgrade is a write) and says so.
+- **THE WATCHDOG (`uLogConnectionWatch`)**: a SECONDARY connection's
+  `TLogConnection.Watch` is told of BEGIN/COMMIT/ROLLBACK and its handle by
+  overrides of sqldb's own hooks (`StartDBTransaction`, `Commit`, `RollBack`,
+  `DoInternalConnect/Disconnect` -- AnsiString parameters, or they do not
+  override). `RunLogWatchdog` (1 s TTimer in `uWRLExternalLogger`): past
+  `LOG_WATCH_THRESHOLD_MS` (3 s) ask the owner to roll back; + grace (2 s)
+  `sqlite3_interrupt`; + another grace, `OnGiveUp` (the owner stops the worker,
+  frees it when `Finished`, starts a new one). **Measured: interrupt ends a
+  running statement, NOT a busy wait and NOT an idle transaction**, hence the
+  three steps. The main connection is NOT watched (it always holds a read
+  transaction). Never close another thread's connection from the main thread.
+- **Tools > Run Verification Checks: "Contest log is not locked"**
+  (`LogStoreCheckLockState`): overdue transactions by name, the probe, the
+  sidecars (looked at BEFORE the probe; expected while open, never removed),
+  the intervention count.
+- **Not done**: `CheckWritable` loses the busy code into its report, so a lock
+  taken between the probe and that write still disables the store as
+  "not writable". The worker does not restart itself after a busy failure at
+  ITS open (it stops; the next QSO's `AfterLogCommit` only Wakes it).
 
 ## The `config` table holds only what the operator STATED (2026-10-01)
 

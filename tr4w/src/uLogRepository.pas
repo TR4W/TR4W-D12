@@ -316,7 +316,6 @@ type
          refuses rather than committing what that rollback left behind. *)
       FInBatch: boolean;
 
-      procedure InvalidateRecordCount;
       function NewReadQuery: TSQLQuery;
       procedure ExecuteKeptWrite(aStatement: TSQLQuery);
       procedure OpenQsoReader(aQuery: TSQLQuery; aTrailingRowId: boolean = False);
@@ -820,6 +819,15 @@ type
       procedure AppendBatch(aQsos: TLogQsoAppends;
                             out aFailedIndex: integer);
       property InBatch: boolean read FInBatch;
+
+      (* True while OpenSequentialRead's cursor is open. A commit then would
+        close it under its reader, so uLogStore's BeginMainWrite asks. *)
+      function SequentialReadOpen: boolean;
+
+      (* Forget the cached record count. Public since 2026-10-31: uLogStore
+        calls it after rolling back a write that met a busy log, so a count
+        is never taken from a transaction that did not happen. *)
+      procedure InvalidateRecordCount;
 
       (* QSO ROWS WITH NO EXCHANGE ID. Reads only.
 
@@ -1669,6 +1677,11 @@ begin
    FreeAndNil(FRowIdAtIndex);
    FreeAndNil(FUpdate);
    FreeAndNil(FUpdateMyFacts);
+end;
+
+function TLogRepository.SequentialReadOpen: boolean;
+begin
+   Result := FCursor <> nil;
 end;
 
 procedure TLogRepository.ReprepareAfterSavepointRollback;

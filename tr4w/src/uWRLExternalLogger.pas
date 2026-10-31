@@ -5,7 +5,7 @@ interface
 
 uses
    VC, uQsoDispatcher, uExternalLoggerService, uLogDatabase, uLogRepository,
-   uWRLWorker;
+   uWRLWorker, uLogConnectionWatch, ExtCtrls;
 
 type
    TWRLExternalLogger = class(TExternalLoggerService)
@@ -16,8 +16,20 @@ type
       FWorker: TWRLWorker;
       FReported: boolean;
       FLocalNotice: string;
+      (* THE WATCHDOG (uLogConnectionWatch) -- a main-thread LCL timer, 1 s,
+        alive while a worker is. It lives HERE because this is the only owner
+        of a secondary connection, and its last resort (stop the worker,
+        start another) is this owner's to take. *)
+      FWatchdog: TTimer;
+      (* A worker the watchdog gave up on: asked to stop, not yet exited. It
+        is freed, and a new one started, once it has (never waited for on the
+        main thread -- it may be stuck in the very statement that stalled). *)
+      FStalled: TWRLWorker;
       procedure QueueDeliveryNotice;
       procedure ShowDeliveryNotice(aData: PtrInt);
+      procedure StartWorker;
+      procedure WatchdogTick(Sender: TObject);
+      procedure WorkerStalled(aWatch: TLogConnectionWatch);
    public
       constructor Create(const aAccount, aLogbook, aApiKey: string;
                          aComputerId: AnsiChar; aEnabled: boolean);
@@ -219,19 +231,81 @@ begin
       begin
       LogClosed;
       end;
-   if FWorker = nil then
+   if (FWorker = nil) and (FStalled = nil) then
       begin
-      (* SQLite has one writer. Worker metadata transactions are short and
-         never span HTTP; allow a bounded local-lock wait rather than treating
-         a concurrent state update as loss of the contest log. This setting
-         belongs to this connection only and vanishes on close. *)
-      aDatabase.Connection.ExecutePragma('PRAGMA busy_timeout = 250');
+      (* ~~PRAGMA busy_timeout = 250 on the MAIN connection~~ stood here until
+        2026-10-31. It was the main connection's only busy wait, set only
+        after its first commit, and it LOWERED that wait for the rest of the
+        session. Every connection now gets its wait at open
+        (TLogDatabase.BusyTimeoutMs; LOG_BUSY_TIMEOUT_MS for the main one),
+        and the worker, the junior partner, a shorter one of its own. *)
       FFileName := aDatabase.FileName;
-      FWorker := TWRLWorker.Create(FFileName, FAccount, FApiKey);
-      FWorker.OnNotice := QueueDeliveryNotice;
-      FWorker.Start;
+      StartWorker;
       end;
-   FWorker.Wake;
+   if FWorker <> nil then
+      begin
+      FWorker.Wake;
+      end;
+end;
+
+procedure TWRLExternalLogger.StartWorker;
+begin
+   FWorker := TWRLWorker.Create(FFileName, FAccount, FApiKey);
+   FWorker.OnNotice := QueueDeliveryNotice;
+   FWorker.Watch.OnGiveUp := WorkerStalled;
+   if FWatchdog = nil then
+      begin
+      FWatchdog := TTimer.Create(nil);
+      FWatchdog.Interval := 1000;
+      FWatchdog.OnTimer := WatchdogTick;
+      end;
+   FWatchdog.Enabled := True;
+   FWorker.Start;
+end;
+
+procedure TWRLExternalLogger.WatchdogTick(Sender: TObject);
+var
+   events: TLogWatchEvents;
+   i: integer;
+begin
+   events := RunLogWatchdog(GetTickCount64);
+   for i := 0 to High(events) do
+      begin
+      TLogLogger.GetLogger('WRL').Warn('[LogWatchdog] %s', [events[i]]);
+      end;
+
+   (* THE LAST RESORT'S SECOND HALF: the stopped worker has exited, so its
+     connection is closed and its lock gone. Pending deliveries are durable
+     in external_delivery, so a new worker simply carries on. *)
+   if (FStalled <> nil) and FStalled.Finished then
+      begin
+      FreeAndNil(FStalled);
+      if FFileName <> '' then
+         begin
+         TLogLogger.GetLogger('WRL').Warn('[LogWatchdog] the stalled WRL worker has ' +
+            'exited; starting a new one');
+         StartWorker;
+         FWorker.Wake;
+         end;
+      end;
+end;
+
+procedure TWRLExternalLogger.WorkerStalled(aWatch: TLogConnectionWatch);
+begin
+   (* On the main thread, from the watchdog. The worker is NOT waited for
+     here: it may be inside the statement that will not finish, and the main
+     thread is the operator's. It is asked to stop, and the tick above frees
+     it once it has. Its connection is never closed from this thread --
+     sqldb objects belong to the thread that made them. *)
+   if (FWorker = nil) or (aWatch <> FWorker.Watch) then
+      begin
+      Exit;
+      end;
+   TLogLogger.GetLogger('WRL').Error('[LogWatchdog] the WRL worker''s transaction will ' +
+      'not end; stopping the worker. Pending deliveries remain in the log.');
+   FWorker.RequestStop;
+   FStalled := FWorker;
+   FWorker := nil;
 end;
 
 procedure TWRLExternalLogger.QueueDeliveryNotice;
@@ -274,7 +348,26 @@ end;
 
 procedure TWRLExternalLogger.LogClosed;
 begin
+   FreeAndNil(FWatchdog);
    FreeAndNil(FWorker);
+   (* A worker the watchdog gave up on is freed only if it has exited.
+     Otherwise it is left, not waited for: freeing it would block the close
+     on the statement that stalled it. It holds a connection that the
+     process's exit releases. *)
+   if FStalled <> nil then
+      begin
+      if FStalled.Finished then
+         begin
+         FreeAndNil(FStalled);
+         end
+      else
+         begin
+         TLogLogger.GetLogger('WRL').Error('[LogWatchdog] a stalled WRL worker had ' +
+            'not exited by the close; left running');
+         FStalled.ForgetOwner;
+         FStalled := nil;
+         end;
+      end;
    Application.RemoveAsyncCalls(Self);
    FFileName := '';
    FPaused := False;

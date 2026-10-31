@@ -374,6 +374,7 @@ uses
   (* The contest database replaced the .RST restart file -- see
     SaveRestartFile. IMPLEMENTATION-section, so no interface cycle. *)
   uLogStore,
+  uLogDatabase,     // SQLiteIsBusy -- SaveRestartFile's retry on a busy log
   uLogRepository,   // AnsiToCharArray -- NUL-padded, not a cast
   TypInfo,          // enum names, so an inserted band cannot shift a value
   uNet,
@@ -1177,24 +1178,12 @@ procedure DupeAndMultSheet.SaveRestartFile;
          end;
    end;
 
-var
-   b: BandType;
-   m: ModeType;
-   op: string;
-begin
-   (* Nil when nothing has opened the log, or when a failure disabled it. The
-     session position is worth exactly nothing without the log it describes, so
-     there is no fallback to reach for. *)
-   if LogStoreRepository = nil then
-      begin
-      Exit;
-      end;
-
-   if GLastWritten = nil then
-      begin
-      GLastWritten := TStringList.Create;
-      GLastWritten.CaseSensitive := False;
-      end;
+   procedure WriteAll;
+   var
+      b: BandType;
+      m: ModeType;
+      op: string;
+   begin
    GSessionDirty := False;
 
    PutEnum('radio1.band', TypeInfo(BandType), Ord(Radio1.BandMemory));
@@ -1232,6 +1221,59 @@ begin
    if GSessionDirty then
       begin
       LogStoreRepository.Commit;
+      end;
+   end;
+
+var
+   attempt: integer;
+begin
+   (* Nil when nothing has opened the log, or when a failure disabled it. The
+     session position is worth exactly nothing without the log it describes, so
+     there is no fallback to reach for. *)
+   if LogStoreRepository = nil then
+      begin
+      Exit;
+      end;
+
+   if GLastWritten = nil then
+      begin
+      GLastWritten := TStringList.Create;
+      GLastWritten.CaseSensitive := False;
+      end;
+
+   (* NEVER AN UNHANDLED EXCEPTION, AND TRIED AGAIN WHEN THE LOG IS BUSY
+     (2026-10-31). This write ran with no handler at all: at 10:39:27 it met
+     the WRL worker's commit from a stale read snapshot (see uLogStore's
+     BeginMainWrite) and the "database is locked" took the program down at
+     startup. LogStoreReadyToWrite ends that snapshot first; a busy failure is
+     rolled back and tried again; and any failure that remains is a logged
+     warning -- as the note above says, losing this costs where the cursor
+     was, never a contact. GLastWritten is emptied after a failure, because it
+     would otherwise describe rows the rollback took away, and the next save
+     would skip them. *)
+   for attempt := 1 to LOG_WRITE_ATTEMPTS do
+      begin
+      if not LogStoreReadyToWrite then
+         begin
+         Exit;
+         end;
+      try
+         WriteAll;
+         Exit;
+      except
+         on E: Exception do
+            begin
+            LogStoreAbandonWrite;
+            GLastWritten.Clear;
+            if (not SQLiteIsStaleSnapshot(E)) or (attempt = LOG_WRITE_ATTEMPTS) then
+               begin
+               logger.Warn('[Session] the session state was not saved: %s -- %s. ' +
+                           'QSOs are unaffected; it is saved again at the next QSO.',
+                           [E.ClassName, E.Message]);
+               Exit;
+               end;
+            end;
+      end;
       end;
 end;
 
@@ -1572,6 +1614,13 @@ begin
 
 
 end;
+
+(* SaveRestartFile's cache of what it last wrote, made on its first call. Freed
+  here so the checked unit-test run (heaptrc) sees no leak once a test saves
+  the session state; the interactive program leaves through ExitProcess and
+  never runs this, which costs nothing. *)
+finalization
+   FreeAndNil(GLastWritten);
 
 end.
 

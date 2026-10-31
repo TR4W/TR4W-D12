@@ -290,6 +290,71 @@ var
 
 procedure LogStoreForgetFailureForTests;
 
+(* A LOG THAT IS LOCKED WHEN IT IS OPENED (2026-10-31).
+
+  NY4I: if at startup the log is locked, that is fatal for that open -- warn,
+  suggest how to fix it, and offer a choice. EnsureOpen probes the log's
+  write lock before opening it (ProbeLogWriteLock, waiting
+  LOG_BUSY_TIMEOUT_MS) and, when another connection holds it, asks:
+
+    llcRetry     probe again;
+    llcReadOnly  open the log READ-ONLY for this session: it can be viewed
+                 and exported, and NO QSO CAN BE LOGGED -- every write entry
+                 here refuses (LogStoreIsReadOnly) and says so;
+    llcQuit      end the program (Halt(1), as the other startup refusals).
+
+  The default asks with a native dialog (AskAboutALockedLog). A test assigns
+  LogStoreLockedQuestion to answer instead. A headless run (tSilentExport) is
+  never asked: the open fails, logged, as any other failed open.
+
+  NEVER OFFERED, NEVER DONE: deleting the -wal or -shm. They can hold
+  committed QSOs that are not yet in the .db. *)
+type
+   TLogLockedChoice = (llcRetry, llcReadOnly, llcQuit);
+   TLogLockedQuestion = function(const aFileName, aDetail: string): TLogLockedChoice;
+
+var
+   LogStoreLockedQuestion: TLogLockedQuestion = nil;
+
+   (* The busy wait the store's own connection is opened with, in ms; 0 (the
+     program's value, never changed) means TLogDatabase's default,
+     LOG_BUSY_TIMEOUT_MS. A test sets a few ms, so a held lock costs it
+     milliseconds per attempt rather than seconds. Read at open. *)
+   LogStoreBusyTimeoutMs: integer = 0;
+
+(* True when this session's log was opened read-only (the operator's answer to
+  a locked log). Nothing is written to it; LogStoreAppendQSO returns False. *)
+function LogStoreIsReadOnly: boolean;
+
+(* BEFORE A WRITE ON THE MAIN CONNECTION FROM OUTSIDE THIS UNIT
+  (DupeAndMultSheet.SaveRestartFile writes through LogStoreRepository).
+  False when nothing may be written (no log, disabled, read-only). Otherwise
+  ends a read transaction sqldb left open -- see BeginMainWrite -- and
+  returns True. *)
+function LogStoreReadyToWrite: boolean;
+
+(* After a write from outside this unit failed: roll back what it began, so
+  the next write starts clean. Never raises. *)
+procedure LogStoreAbandonWrite;
+
+(* How many times a main-thread write is tried when the log is busy, before
+  it is refused. *)
+const
+   LOG_WRITE_ATTEMPTS = 3;
+
+(* TOOLS > RUN VERIFICATION CHECKS: IS THE LOG LOCKED?
+
+  Reports, and never changes anything (it never removes a sidecar):
+    - every secondary connection (the WRL worker) whose transaction has been
+      open longer than LOG_WATCH_THRESHOLD_MS, by name;
+    - whether something else holds the write lock: a short BEGIN IMMEDIATE on
+      a throwaway connection, released at once (ProbeLogWriteLock);
+    - the -wal and -shm beside the log, which are EXPECTED while TR4W has it
+      open and are information, not a failure;
+    - the watchdog's interventions this session.
+  False when a lock is held or a transaction is overdue. *)
+function LogStoreCheckLockState(out aReport: string): boolean;
+
 (* APPLIES THE CONTEST CONFIGURATION THE LOG CARRIES -- phase E2.
 
   NY4I: "when done, the .cfg file should not be necessary."
@@ -537,6 +602,11 @@ uses
       continent, MY CQ ZONE); TStationContext is uContestBase's.
       ctyGetITUZone -- MY ITU ZONE when the operator stated none. *)
    SysUtils, Classes,
+   (* THE LOCKED-LOG DIALOG (2026-10-31): QuestionDlg and mtWarning, the
+     modal results, its captions, the watchdog's registry, and the schema
+     version a read-only open needs. Early in the list on purpose -- every
+     unit below still wins a name they share. *)
+   Forms, Controls, Dialogs, uAppStrings, uLogConnectionWatch, uLogSchema,
    DateUtils, (* LocalTimeToUniversal -- the UTC stamp in a pre-clear backup's name *)
    Contnrs,   (* TObjectList -- the edited memories RestoreEditedMessageMemories reads *)
    uContestBase, uContestFactory, uCTYDAT,
@@ -592,6 +662,21 @@ var
 
    GTriedToOpen: boolean = False;
 
+   (* THE OPERATOR CHOSE "OPEN READ-ONLY" FOR A LOCKED LOG (LogStoreIsReadOnly).
+     And whether the one-time notice that a write was refused has been shown. *)
+   GReadOnly: boolean = False;
+   GReadOnlyRefusalShown: boolean = False;
+
+   (* When the last "the log was locked, not saved" notice was shown
+     (GetTickCount64; 0 = never) -- Disable's busy branch shows at most one a
+     minute. *)
+   GLastBusyNotice: QWord = 0;
+
+const
+   BUSY_NOTICE_INTERVAL_MS = 60000;
+
+var
+
    (* OUR STATION AS THE LAST COMMITTED APPEND RECORDED IT -- see
      LogStoreLastAppendedMyFacts -- and the one being written. *)
    GLastAppendedMyFacts: TQsoMyFacts;
@@ -613,7 +698,11 @@ end;
 
 procedure LogStoreStartExternalDelivery;
 begin
-   if (externalLogger <> nil) and (GDatabase <> nil) and not GDisabled then
+   (* NOT FOR A READ-ONLY LOG: a worker would open its own connection and
+     write, to a log the operator has just been told is locked. GReadOnly is
+     read directly: LogStoreIsReadOnly is declared further down. *)
+   if (externalLogger <> nil) and (GDatabase <> nil) and not GDisabled and
+      not GReadOnly then
       begin
       try
          externalLogger.AfterLogCommit(GDatabase);
@@ -652,8 +741,270 @@ procedure LogStoreForgetFailureForTests;
 begin
    GDisabled := False;
    GTriedToOpen := False;
+   GReadOnly := False;
+   GReadOnlyRefusalShown := False;
+   GLastBusyNotice := 0;
    FreeAndNil(GRepository);
    FreeAndNil(GDatabase);
+end;
+
+function LogStoreIsReadOnly: boolean;
+begin
+   Result := GReadOnly and (GDatabase <> nil);
+end;
+
+(* A READ-ONLY SESSION REFUSES EVERY WRITE, AND SAYS SO. True when the write
+  must not happen. Logged each time; put in front of the operator once,
+  because each refused QSO is already reported by its caller (the "QSO NOT
+  LOGGED" line and the beep). *)
+function RefuseReadOnly(const aWhat: string): boolean;
+begin
+   Result := LogStoreIsReadOnly;
+   if not Result then
+      begin
+      Exit;
+      end;
+   if logger <> nil then
+      begin
+      logger.Warn('[LogStore] the log was opened READ-ONLY; not %s', [aWhat]);
+      end;
+   if (not GReadOnlyRefusalShown) and (not tSilentExport) then
+      begin
+      GReadOnlyRefusalShown := True;
+      ShowFailureNotice(LclText(Format(SLogReadOnlyRefused, [GDatabase.FileName])));
+      end;
+end;
+
+(* BEFORE EVERY WRITE ON THE MAIN CONNECTION: END THE READ TRANSACTION sqldb
+  LEFT OPEN (2026-10-31).
+
+  THE DEFECT IT FIXES, measured. sqldb begins a transaction when a statement
+  PREPARES and does not end it, so after a per-call read -- the startup walk
+  of the log, a record count, a search -- the main connection sits in a read
+  transaction holding an old snapshot. (The grid's range read is a kept
+  statement and runs outside one; uTestLogStore's pin uses the walk.) Once the
+  WRL worker commits anything, the main connection's next write fails AT ONCE
+  with SQLITE_BUSY_SNAPSHOT ("database is locked"), whatever the busy
+  timeout, because the old snapshot cannot become a write. That is what failed
+  at 10:39:27 (the startup session-state write after the log load) and at
+  10:43:25 (the close capture, with the worker already stopped), and what
+  would have failed the next QSO after any delivery -- and a failed QSO used to
+  disable the store for the session.
+
+  Committing first gives the write a current snapshot. Not inside a batch
+  (that is its own transaction) and not with the sequential cursor open (a
+  commit closes it under its reader); in both cases the caller already ended
+  the implicit transaction when it began. *)
+procedure BeginMainWrite;
+begin
+   if (GDatabase <> nil) and (GRepository <> nil) and
+      (not GRepository.InBatch) and (not GRepository.SequentialReadOpen) then
+      begin
+      GDatabase.EndTransaction;
+      end;
+end;
+
+(* AFTER A BUSY FAILURE: undo what the attempt began. In WAL mode a busy
+  failure can only come before this transaction's first write (holding the
+  write lock, a connection is never busy), so nothing committed-to-be is
+  lost; the cached record count is forgotten anyway. Never raises. *)
+procedure RollBackAfterBusy;
+begin
+   try
+      if (GDatabase <> nil) and GDatabase.IsOpen then
+         begin
+         GDatabase.Rollback;
+         end;
+   except
+      on E: Exception do
+         begin
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] rolling back after a busy log failed too: %s -- %s',
+                         [E.ClassName, E.Message]);
+            end;
+         end;
+   end;
+   if GRepository <> nil then
+      begin
+      GRepository.InvalidateRecordCount;
+      end;
+end;
+
+function LogStoreReadyToWrite: boolean;
+begin
+   (* Read-only refuses SILENTLY here: the session state is where the cursor
+     was, not the operator's data, and it is saved at load and per QSO -- a
+     notice for it would be noise. *)
+   Result := LogStoreIsUsable and (not LogStoreIsReadOnly);
+   if Result then
+      begin
+      BeginMainWrite;
+      end;
+end;
+
+procedure LogStoreAbandonWrite;
+begin
+   RollBackAfterBusy;
+end;
+
+(* THE LOCKED-LOG QUESTION, natively. The answer is read by MODAL RESULT,
+  never by button position: GTK draws the buttons in the other order (see
+  MainUnit.YesOrNo). QuestionDlg's custom captions follow their result and
+  must be UTF-8 ansi strings, hence LclText. Escape or closing the box is
+  Quit: nothing proceeds on a log nobody decided about. *)
+function AskAboutALockedLog(const aFileName, aDetail: string): TLogLockedChoice;
+var
+   answer: TModalResult;
+begin
+   answer := QuestionDlg(LclText(SLogLockedTitle),
+                         LclText(Format(SLogLockedBody, [aFileName, aDetail])),
+                         mtWarning,
+                         [mrRetry,  LclText(SLogLockedRetry), 'IsDefault',
+                          mrIgnore, LclText(SLogLockedReadOnly),
+                          mrAbort,  LclText(SLogLockedQuit), 'IsCancel'], 0);
+   if answer = mrRetry then
+      begin
+      Result := llcRetry;
+      end
+   else if answer = mrIgnore then
+      begin
+      Result := llcReadOnly;
+      end
+   else
+      begin
+      Result := llcQuit;
+      end;
+end;
+
+(* The store connection's busy wait: LogStoreBusyTimeoutMs when a test set
+  one, else the database's own default. Before Open; GDatabase exists. *)
+procedure ApplyStoreBusyTimeout;
+begin
+   if LogStoreBusyTimeoutMs > 0 then
+      begin
+      GDatabase.BusyTimeoutMs := LogStoreBusyTimeoutMs;
+      end;
+end;
+
+(* OPEN AN EXISTING LOG, ASKING FIRST IF IT IS LOCKED. GDatabase exists and is
+  closed. Leaves GReadOnly saying how it was opened. Raises what Open raises;
+  in a headless run a locked log raises (busy-coded) rather than asking. *)
+procedure OpenExistingLog(const aDbName: string);
+var
+   probe: TLogLockProbe;
+   detail, holders, said: string;
+   choice: TLogLockedChoice;
+begin
+   GReadOnly := False;
+   GReadOnlyRefusalShown := False;
+   repeat
+      probe := ProbeLogWriteLock(aDbName, GDatabase.BusyTimeoutMs, detail);
+      if probe <> llpHeld then
+         begin
+         (* Free, or the probe itself failed -- the open reports that failure
+           better than the probe can. A lock taken BETWEEN the probe and the
+           open (its pragmas or a migration meet it) comes back here as a
+           held lock, so it is asked about too rather than disabling the
+           store. Anything else raises, as it always did. *)
+         try
+            GDatabase.Open(aDbName);
+            Exit;
+         except
+            on E: Exception do
+               begin
+               if not SQLiteIsBusy(E) then
+                  begin
+                  raise;
+                  end;
+               GDatabase.Close;
+               detail := E.Message;
+               end;
+         end;
+         end;
+
+      (* WHO? Inside this process only a registered secondary connection can
+        hold it; anything else is another process. Naming that process would
+        need the Restart Manager on Windows, a new DLL binding, so it is not
+        done; the dialog names the likely ones instead. *)
+      holders := LogWatchLongTransactions(GetTickCount64, 0);
+      if holders <> '' then
+         begin
+         said := Format(SLogLockedHeldHere, [holders]);
+         end
+      else
+         begin
+         said := SLogLockedHeldElsewhere;
+         end;
+      if logger <> nil then
+         begin
+         logger.Error('[LogStore] %s IS LOCKED: another connection held its write ' +
+                      'lock for more than %d ms (%s). %s',
+                      [aDbName, GDatabase.BusyTimeoutMs, detail, said]);
+         end;
+
+      if tSilentExport then
+         begin
+         (* NOT busy-coded, on purpose: a failed OPEN stands the store down
+           (Disable), exactly as before. Coded busy, every later store call
+           would open, probe and wait again, for the rest of a batch run. *)
+         raise ELogDatabaseError.CreateFmt(
+            'The contest log "%s" is locked by another connection: %s',
+            [aDbName, detail]);
+         end;
+
+      if Assigned(LogStoreLockedQuestion) then
+         begin
+         choice := LogStoreLockedQuestion(aDbName, said);
+         end
+      else
+         begin
+         choice := AskAboutALockedLog(aDbName, said);
+         end;
+
+      case choice of
+         llcRetry:
+            begin
+            if logger <> nil then
+               begin
+               logger.Info('[LogStore] the operator chose Retry for the locked log');
+               end;
+            end;
+         llcReadOnly:
+            begin
+            GReadOnly := True;
+            end;
+         llcQuit:
+            begin
+            if logger <> nil then
+               begin
+               logger.Error('[LogStore] the operator chose Quit for the locked log %s',
+                            [aDbName]);
+               end;
+            (* As the other startup refusals (uProgramMain): a failed start. *)
+            Halt(1);
+            end;
+      end;
+   until GReadOnly;
+
+   GDatabase.OpenReadOnly(aDbName);
+   (* AN OLDER LOG CANNOT BE READ THIS WAY: bringing it to this schema is a
+     write, and the repository's column checks would refuse every read. *)
+   if GDatabase.SchemaVersion < LOG_SCHEMA_VERSION then
+      begin
+      GReadOnly := False;
+      raise ELogDatabaseError.CreateFmt(
+         'The contest log "%s" was written by an older TR4W and must be ' +
+         'upgraded before it can be used, which is a write -- so it cannot be ' +
+         'opened read-only while it is locked. Close whatever holds it and ' +
+         'start TR4W again.', [aDbName]);
+      end;
+   if logger <> nil then
+      begin
+      logger.Warn('[LogStore] %s opened READ-ONLY at the operator''s choice: it ' +
+                  'can be viewed and exported, and NO QSO CAN BE LOGGED this session',
+                  [aDbName]);
+      end;
 end;
 
 (* Report once and stand down.  Called from every except block here. *)
@@ -678,6 +1029,46 @@ end;
   the radio knows to stop and fix it before working anybody else. *)
 procedure Disable(const aWhere: string; E: Exception);
 begin
+   (* A BUSY LOG IS NOT A BROKEN ONE (2026-10-31). Another connection held
+     the write lock past every retry and wait, so NOTHING of this write
+     reached the log -- and the log itself is fine. Disabling the store for
+     the rest of the session over a lock would end the contest log for good
+     over a moment's contention -- one delivery commit could cause exactly
+     that before BeginMainWrite. So: rolled back, logged, the operator told that
+     this change was not saved, and the store stays open for the next one.
+     Unless a batch's rollback itself failed (InBatch still True): that is a
+     transaction nobody can account for, and the store stands down as for
+     any other failure.
+
+     ONLY FOR A WRITE TO AN OPEN LOG (GRepository assigned). A failed OPEN
+     stands down as it always did: OpenExistingLog's dialog is the retry for
+     an open, and an open that stayed "not disabled" would be re-tried --
+     probe, wait and all -- by every later store call.
+
+     THE NOTICE IS RATE-LIMITED, the log line is not: the multi-op bookkeeping
+     writes on network events, and a lock held for a minute must not stack up
+     modals mid-contest. A refused QSO is still announced per QSO by its
+     caller (the "QSO NOT LOGGED" line and the beep). *)
+   if SQLiteIsBusy(E) and (GRepository <> nil) and (not GRepository.InBatch) then
+      begin
+      RollBackAfterBusy;
+      if logger <> nil then
+         begin
+         logger.Error('[LogStore] THE LOG WAS LOCKED while %s: %s -- %s. NOTHING ' +
+                      'of it was written. The log is not damaged and stays open; ' +
+                      'the next write tries again.',
+                      [aWhere, E.ClassName, E.Message]);
+         end;
+      if (not tSilentExport) and
+         ((GLastBusyNotice = 0) or
+          (GetTickCount64 - GLastBusyNotice >= BUSY_NOTICE_INTERVAL_MS)) then
+         begin
+         GLastBusyNotice := GetTickCount64;
+         ShowFailureNotice(LclText(Format(SLogBusyNotSaved, [aWhere])));
+         end;
+      Exit;
+      end;
+
    if not GDisabled then
       begin
       GDisabled := True;
@@ -1346,10 +1737,13 @@ begin
          time, and never again -- because after it the database exists. That is
          not reconciliation; nothing is being kept in step. *)
       GDatabase := TLogDatabase.Create;
+      ApplyStoreBusyTimeout;
 
       if FileExists(dbName) then
          begin
-         GDatabase.Open(dbName);
+         (* Probed first, and the operator asked if it is locked: Retry,
+           Read-only, or Quit (2026-10-31). *)
+         OpenExistingLog(dbName);
          end
       else if BinaryLogHasRecords then
          begin
@@ -1366,6 +1760,7 @@ begin
             end;
          aRebuilt := True;
          GDatabase := TLogDatabase.Create;
+         ApplyStoreBusyTimeout;
          GDatabase.Open(dbName);
          end
       else
@@ -1449,7 +1844,14 @@ begin
         continuing would be the silent downgrade this tree keeps deleting: the
         operator would log a contest into a file that cannot accept it, and
         find out at the end. *)
-      writable := GDatabase.CheckWritable;
+      (* NOT ASKED OF A LOG THE OPERATOR CHOSE TO OPEN READ-ONLY: it is
+        locked, and its connection cannot write by construction. *)
+      writable.Ok := True;
+      writable.Report := '';
+      if not GReadOnly then
+         begin
+         writable := GDatabase.CheckWritable;
+         end;
       if not writable.Ok then
          begin
          if logger <> nil then
@@ -1627,6 +2029,11 @@ begin
          begin
          Exit;
          end;
+      if RefuseReadOnly('clearing the log') then
+         begin
+         Exit;
+         end;
+      BeginMainWrite;
       GRepository.DeleteAllQSOs;
       GRepository.Commit;
       Result := True;
@@ -1940,7 +2347,12 @@ begin
       end;
 end;
 
-function LogStoreAppendQSO(const aQso: ContestExchange): boolean;
+(* ONE ATTEMPT AT LogStoreAppendQSO. aBusy comes back True when the log was
+  busy and this was not the last attempt: the attempt has been rolled back
+  and may be run again. Every other failure goes to Disable as it always has
+  (whose busy branch handles the last attempt's). *)
+function AppendQSOOnce(const aQso: ContestExchange; aLastAttempt: boolean;
+                       out aBusy: boolean): boolean;
 var
    rebuilt: boolean;
    rowId: Int64;
@@ -1949,6 +2361,7 @@ begin
      completed commit leaves it here, which is the only default that cannot
      acknowledge a QSO nobody wrote. *)
    Result := False;
+   aBusy := False;
 
    if GDisabled then
       begin
@@ -1960,6 +2373,14 @@ begin
          begin
          Exit;
          end;
+
+      if RefuseReadOnly('logging a QSO') then
+         begin
+         Exit;
+         end;
+
+      (* A CURRENT SNAPSHOT BEFORE THE FIRST WRITE -- see BeginMainWrite. *)
+      BeginMainWrite;
 
       (* AN APPEND ALWAYS INSERTS, WHETHER OR NOT THIS CALL MIGRATED THE LOG.
 
@@ -2055,9 +2476,46 @@ begin
    except
       on E: Exception do
          begin
-         Disable('appending a QSO', E);
+         if SQLiteIsStaleSnapshot(E) and (not aLastAttempt) and
+            ((GRepository = nil) or (not GRepository.InBatch)) then
+            begin
+            if logger <> nil then
+               begin
+               logger.Warn('[LogStore] the log was busy appending %s: %s -- trying again',
+                           [aQso.Callsign, E.Message]);
+               end;
+            RollBackAfterBusy;
+            aBusy := True;
+            end
+         else
+            begin
+            Disable('appending a QSO', E);
+            end;
          end;
    end;
+end;
+
+(* TRIED AGAIN, WHOLE, IF THE LOG IS BUSY (2026-10-31). In WAL mode a busy
+  failure comes before the transaction's first write, so an attempt is rolled
+  back with nothing lost and run again from the top -- SetNextMyFacts and
+  SetNextSentExchange included, which a save clears. After the last attempt
+  the QSO is REFUSED, never lost: it stays in the entry fields, the caller
+  shows "QSO NOT LOGGED" and beeps, and Disable's busy branch tells the
+  operator and keeps the store open for the next one. *)
+function LogStoreAppendQSO(const aQso: ContestExchange): boolean;
+var
+   attempt: integer;
+   busy: boolean;
+begin
+   Result := False;
+   for attempt := 1 to LOG_WRITE_ATTEMPTS do
+      begin
+      Result := AppendQSOOnce(aQso, attempt = LOG_WRITE_ATTEMPTS, busy);
+      if Result or (not busy) then
+         begin
+         Exit;
+         end;
+      end;
 end;
 
 function LogStoreLastAppendedMyFacts: TQsoMyFacts;
@@ -2080,6 +2538,11 @@ begin
          begin
          Exit;
          end;
+      if RefuseReadOnly('rewriting the newest QSO') then
+         begin
+         Exit;
+         end;
+      BeginMainWrite;
 
       (* ~~"if rebuilt then Exit"~~ stood here until 2026-10-17, on the
         reasoning that the caller had already written this rewrite to the
@@ -2129,6 +2592,11 @@ begin
          begin
          Exit;
          end;
+      if RefuseReadOnly('rewriting a QSO') then
+         begin
+         Exit;
+         end;
+      BeginMainWrite;
       (* A REBUILD USED TO MEAN "THE EDIT IS ALREADY IN THE BINARY LOG", AND
         THAT STOPPED BEING TRUE. This exited here on the reasoning that the
         caller wrote to the .TRW before calling and the rebuild had just
@@ -2283,6 +2751,11 @@ begin
       Exit;
       end;
 
+   if RefuseReadOnly('rewriting QSOs') then
+      begin
+      Exit;
+      end;
+
    (* NOT EnsureOpen. The row ids came from a read of THIS open log; a log
      opened or rebuilt now would be a different set of rows, and writing
      these ids into it would be wrong rather than late. *)
@@ -2346,6 +2819,11 @@ begin
          aFailure := 'the contest log could not be opened. See tr4w.log.';
          Exit;
          end;
+      if RefuseReadOnly('importing QSOs') then
+         begin
+         aFailure := 'the contest log was opened read-only. See tr4w.log.';
+         Exit;
+         end;
 
       if aQsos.Count = 0 then
          begin
@@ -2393,6 +2871,11 @@ begin
          begin
          Exit;
          end;
+      if RefuseReadOnly('rewriting a QSO from the network') then
+         begin
+         Exit;
+         end;
+      BeginMainWrite;
 
       (* False when the pair is unset or matches nothing, and that is not an
         error -- it means this station has no such QSO. *)
@@ -2549,6 +3032,11 @@ begin
          begin
          Exit;
          end;
+      if RefuseReadOnly('recording what the server was sent') then
+         begin
+         Exit;
+         end;
+      BeginMainWrite;
       GRepository.MarkServerProgress(aSent, aEditsDone);
       GRepository.Commit;
       Result := True;
@@ -2631,6 +3119,11 @@ begin
          begin
          Exit;
          end;
+      if RefuseReadOnly('recording a contest setting') then
+         begin
+         Exit;
+         end;
+      BeginMainWrite;
 
       (* A FUNCTION-KEY MEMORY IS A CONTEST-SCOPED STATEMENT TOO (R2,
         2026-10-23): the log's message table is per contest, and an edit is
@@ -2938,7 +3431,8 @@ begin
            NOTHING IS OVERWRITTEN. The arm above owns the case where the table
            already answered; this one runs only when it did not. *)
          else if (GRepository.LogContest = NoContest) and
-                 (Contest <> NoContest) then
+                 (Contest <> NoContest) and
+                 (not GReadOnly) then   (* a read-only log is never corrected *)
             begin
             GRepository.SetContest(Contest);
             (* See the note beside the stamp in EnsureOpen: SetContest does not
@@ -2981,7 +3475,8 @@ begin
            already scoring with. *)
          else if (Contest <> NoContest) and
                  (GRepository.LogContest <> Contest) and
-                 CommandCameFromContestCFG('CONTEST') then
+                 CommandCameFromContestCFG('CONTEST') and
+                 (not GReadOnly) then   (* a read-only log is never corrected *)
             begin
             if logger <> nil then
                begin
@@ -3308,6 +3803,8 @@ end;
   (Q61) and an accepted function-key memory edit (R2, 2026-10-23). For those
   this capture is reconciliation, and rewrites what is already there. *)
 procedure CaptureConfigurationOnClose;
+var
+   attempt: integer;
 begin
    (* A BATCH EXPORT DOES NOT REWRITE THE LOG IT IS EXPORTING.
 
@@ -3333,25 +3830,158 @@ begin
       begin
       Exit;
       end;
-   try
-      (* AND THIS ONE IS NOT A CONVERSION. It runs on every clean exit of an
-        interactive session and records what the session ENDED with, so an
-        operator checking whether the import re-ran can tell the two apart by
-        the reason rather than by the line number. *)
-      CaptureConfiguration('recorded on exit -- the settings this session ended with');
-   except
-      on E: Exception do
+   if LogStoreIsReadOnly then
+      begin
+      if logger <> nil then
          begin
-         (* Reported, not raised: this runs while shutting down, and a failure
-            to record a setting must not stop the program closing its log. *)
-         if logger <> nil then
+         logger.Info('[LogStore] the log was opened read-only, so the configuration ' +
+                     'is not recorded on close');
+         end;
+      Exit;
+      end;
+
+   (* TRIED LOG_WRITE_ATTEMPTS TIMES WHEN THE LOG IS BUSY, after ending the
+     read transaction sqldb left open (BeginMainWrite) -- the stale snapshot
+     that failed at 10:43:25 on 2026-10-31 with the worker already stopped.
+     Then a warning, and the program closes: QSOs are committed as they are
+     made, and only this session's setting changes go unrecorded. *)
+   for attempt := 1 to LOG_WRITE_ATTEMPTS do
+      begin
+      try
+         BeginMainWrite;
+         (* AND THIS ONE IS NOT A CONVERSION. It runs on every clean exit of an
+           interactive session and records what the session ENDED with, so an
+           operator checking whether the import re-ran can tell the two apart by
+           the reason rather than by the line number. *)
+         CaptureConfiguration('recorded on exit -- the settings this session ended with');
+         Exit;
+      except
+         on E: Exception do
             begin
-            logger.Error('[LogStore] the configuration could not be recorded ' +
-                         'on close: %s -- %s. QSOs are unaffected.',
-                         [E.ClassName, E.Message]);
+            (* Reported, not raised: this runs while shutting down, and a failure
+               to record a setting must not stop the program closing its log. *)
+            if SQLiteIsBusy(E) then
+               begin
+               RollBackAfterBusy;
+               (* Only a stale snapshot is worth another try; a lock that
+                 outlasted the busy wait is not, and closing must not freeze. *)
+               if (attempt = LOG_WRITE_ATTEMPTS) or
+                  (not SQLiteIsStaleSnapshot(E)) then
+                  begin
+                  if logger <> nil then
+                     begin
+                     logger.Warn('[LogStore] the configuration was not recorded on ' +
+                                 'close: the log stayed locked (%s). QSOs are ' +
+                                 'unaffected; this session''s setting changes are ' +
+                                 'not in the log.', [E.Message]);
+                     end;
+                  Exit;
+                  end;
+               end
+            else
+               begin
+               if logger <> nil then
+                  begin
+                  logger.Error('[LogStore] the configuration could not be recorded ' +
+                               'on close: %s -- %s. QSOs are unaffected.',
+                               [E.ClassName, E.Message]);
+                  end;
+               RollBackAfterBusy;
+               Exit;
+               end;
+            end;
+      end;
+      end;
+end;
+
+function LogStoreCheckLockState(out aReport: string): boolean;
+var
+   dbName, sidecars, overdue, detail: string;
+   probe: TLogLockProbe;
+   i: integer;
+begin
+   Result := True;
+   aReport := '';
+   if (GDatabase = nil) or (not GDatabase.IsOpen) then
+      begin
+      aReport := 'No contest log is open, so there is no lock to check.';
+      Exit;
+      end;
+   dbName := GDatabase.FileName;
+
+   (* THE SIDECARS FIRST: a probe connection that is the last to close can
+     checkpoint and remove the -wal, and this reports what was there. *)
+   sidecars := '';
+   for i := Low(LOG_SIDECAR_SUFFIXES) to High(LOG_SIDECAR_SUFFIXES) do
+      begin
+      if FileExists(dbName + LOG_SIDECAR_SUFFIXES[i]) then
+         begin
+         sidecars := sidecars + ' ' + LOG_SIDECAR_SUFFIXES[i];
+         end;
+      end;
+
+   overdue := LogWatchLongTransactions(GetTickCount64, LOG_WATCH_THRESHOLD_MS);
+   if overdue <> '' then
+      begin
+      Result := False;
+      aReport := aReport + 'A transaction has been open longer than ' +
+                 IntToStr(LOG_WATCH_THRESHOLD_MS div 1000) + ' s: ' + overdue +
+                 '. The watchdog is dealing with it.' + sLineBreak;
+      end
+   else
+      begin
+      aReport := aReport + 'No TR4W connection has a transaction open longer than ' +
+                 IntToStr(LOG_WATCH_THRESHOLD_MS div 1000) + ' s.' + sLineBreak;
+      end;
+
+   (* A SHORT WAIT, not the open's: a check must not freeze the window. *)
+   probe := ProbeLogWriteLock(dbName, 250, detail);
+   case probe of
+      llpFree:
+         begin
+         aReport := aReport + 'Nothing else holds the log''s write lock.' + sLineBreak;
+         end;
+      llpHeld:
+         begin
+         Result := False;
+         if overdue <> '' then
+            begin
+            aReport := aReport + 'The write lock is held -- by the connection named above.' +
+                       sLineBreak;
+            end
+         else
+            begin
+            aReport := aReport + 'Another program holds the log''s write lock: another ' +
+                       'TR4W (perhaps one stopped at a crash dialog), or a backup, sync ' +
+                       'or antivirus tool. QSOs cannot be logged until it lets go.' +
+                       sLineBreak;
             end;
          end;
+      llpUnknown:
+         begin
+         Result := False;
+         aReport := aReport + 'The lock could not be probed: ' + detail + sLineBreak;
+         end;
    end;
+
+   if sidecars <> '' then
+      begin
+      aReport := aReport + 'Beside the log:' + sidecars + '. Expected while TR4W has ' +
+                 'the log open; they can hold committed QSOs, and are never removed.' +
+                 sLineBreak;
+      end
+   else
+      begin
+      aReport := aReport + 'No -wal or -shm beside the log.' + sLineBreak;
+      end;
+
+   aReport := aReport + 'Watchdog interventions this session: ' +
+              IntToStr(LogWatchInterventionCount) + '.';
+   if LogStoreIsReadOnly then
+      begin
+      aReport := aReport + sLineBreak + 'This session opened the log READ-ONLY: ' +
+                 'no QSO can be logged.';
+      end;
 end;
 
 procedure LogStoreClose;

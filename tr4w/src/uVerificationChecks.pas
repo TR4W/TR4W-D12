@@ -99,7 +99,7 @@ implementation
 
 uses
    SysUtils,
-   uLogStore;   // LogStoreCheckIntegrity and LogStoreCheckExchangeIds
+   uLogStore;   // LogStoreCheckIntegrity, LogStoreCheckExchangeIds, LogStoreCheckLockState
 
 type
    TRegisteredCheck = record
@@ -183,10 +183,24 @@ begin
 end;
 
 
+(* THE THIRD CHECK: IS THE LOG LOCKED? (NY4I, 2026-10-31: the lock checks
+  belong here as well as at startup.) A transaction left open by a TR4W
+  connection, a write lock held by another program, the -wal/-shm beside the
+  log (reported, never removed) and the watchdog's interventions this session.
+  The same lock-state questions the startup dialog and the watchdog ask --
+  uLogStore.LogStoreCheckLockState composes them; nothing is computed here. *)
+function CheckContestLogLockState(out aDetail: string): boolean;
+begin
+   Result := LogStoreCheckLockState(aDetail);
+end;
+
+
 initialization
    RegisterVerificationCheck('Contest log database integrity',
                              @CheckContestLogIntegrity);
    RegisterVerificationCheck('Every QSO has an exchange id',
                              @CheckContestLogExchangeIds);
+   RegisterVerificationCheck('Contest log is not locked',
+                             @CheckContestLogLockState);
 
 end.

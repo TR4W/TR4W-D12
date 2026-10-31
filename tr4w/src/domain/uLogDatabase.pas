@@ -60,7 +60,71 @@ unit uLogDatabase;
 interface
 
 uses
-   Classes, SysUtils, db, sqldb, sqlite3conn;
+   Classes, SysUtils, db, sqldb, sqlite3conn,
+   uLogConnectionWatch;   (* a secondary connection's watchdog record *)
+
+const
+   (* HOW LONG A CONNECTION WAITS FOR ANOTHER ONE'S WRITE LOCK: 2 s.
+
+     SET ON EVERY CONNECTION AT OPEN (ApplyPragmas, first statement) -- until
+     2026-10-31 the main connection had NONE until the first commit after
+     the WRL worker started, so a write meeting the worker's lock failed at
+     once. Two seconds, because a worker transaction is milliseconds and a
+     QSO waiting two seconds on the main thread is still a QSO logged, where
+     failing is not; a lock held longer than that is not contention, it is
+     a stuck holder, and the watchdog (uLogConnectionWatch, 3 s) and the
+     startup dialog deal with that. A secondary connection, the junior
+     partner, sets a shorter wait through TLogDatabase.BusyTimeoutMs.
+
+     WHAT A BUSY TIMEOUT CANNOT DO, measured 2026-10-31: a connection whose
+     read transaction began BEFORE another connection committed cannot
+     upgrade it to a write. SQLite fails that write AT ONCE with
+     SQLITE_BUSY_SNAPSHOT (517), timeout or not, because waiting cannot make
+     the old snapshot current. sqldb leaves a read transaction open after
+     every read through a statement it prepared for that call (a kept,
+     prepared-once statement runs outside one), so this is the main
+     connection's ordinary state after the startup walk; the cure is
+     to end it before writing (TLogDatabase.EndTransaction, called by
+     uLogStore's BeginMainWrite). That, not a missing timeout, is what failed
+     on 2026-10-31 at startup and at close. *)
+   LOG_BUSY_TIMEOUT_MS = 2000;
+
+type
+   (* What a short write-lock probe found -- see ProbeLogWriteLock. *)
+   TLogLockProbe = (llpFree, llpHeld, llpUnknown);
+
+(* IS THIS A "THE DATABASE IS LOCKED" FAILURE? SQLITE_BUSY (5) or
+  SQLITE_LOCKED (6), extended codes included (BUSY_SNAPSHOT 517, BUSY_RECOVERY
+  261, ...). Asked of the CODE, never the message text, so it holds in every
+  language SQLite might one day speak. Recognises ESQLDatabaseError (every
+  sqldb statement, and TLogConnection.ExecutePragma since 2026-10-31) and
+  ELogDatabaseError, which carries the code through this unit's re-wraps.
+  ONE COPY: uWRLWorker had its own until 2026-10-31. *)
+function SQLiteIsBusy(E: Exception): boolean;
+
+(* IS THIS THE STALE-SNAPSHOT FAILURE, SQLITE_BUSY_SNAPSHOT (517)? It fails
+  at once, so trying again costs nothing once the read transaction has been
+  ended (uLogStore.BeginMainWrite). Any OTHER busy failure has already waited
+  the whole busy timeout, so trying again only doubles the freeze: the main
+  thread gives up after ONE wait (NY4I, 2026-10-31: cap it at 2 s). *)
+function SQLiteIsStaleSnapshot(E: Exception): boolean;
+
+(* The SQLite extended result code an exception carries; 0 when none. *)
+function SQLiteErrorCode(E: Exception): integer;
+
+(* CAN A WRITER TAKE THIS LOG NOW? A throwaway connection, no pragmas but the
+  busy wait, BEGIN IMMEDIATE and an immediate ROLLBACK: it holds the write
+  lock for no measurable time and writes nothing. llpHeld means another
+  connection -- another thread or another process -- holds the write lock
+  for longer than aWaitMs; llpUnknown means the probe itself failed (aDetail
+  says why). Never opens a missing file (no create flag).
+
+  NOTE: on a read-only FILE, BEGIN IMMEDIATE succeeds (measured 2026-09-17,
+  see CheckWritable), so llpFree says "not locked", never "writable".
+  And a connection's close can checkpoint and remove the -wal when it is the
+  last one, so a caller that wants to report the sidecars looks first. *)
+function ProbeLogWriteLock(const aFileName: string; aWaitMs: integer;
+                           out aDetail: string): TLogLockProbe;
 
 (* THE DATABASE THAT BELONGS TO A BINARY LOG -- beside it, same name, '.db'.
 
@@ -108,7 +172,12 @@ const
 function LogSidecarPresent(const aDatabase: string): string;
 
 type
-   ELogDatabaseError = class(Exception);
+   (* SQLiteCode: the extended result code of the failure it wraps, 0 when
+     none -- kept so SQLiteIsBusy can answer through a re-wrap. *)
+   ELogDatabaseError = class(Exception)
+   public
+      SQLiteCode: integer;
+   end;
 
    (* A CONNECTION THAT CAN RUN A CONNECTION-LEVEL PRAGMA.
 
@@ -140,10 +209,37 @@ type
      ExecuteDirect takes a string; the answer was that ExecuteDirect is the
      wrong method, not that a C call was unavoidable. *)
    TLogConnection = class(TSQLite3Connection)
+   private
+      FWatch: TLogConnectionWatch;
+      procedure SetWatch(aWatch: TLogConnectionWatch);
+   protected
+      (* THE WATCHDOG'S EYES (2026-10-31). sqldb's own transaction and
+        connection hooks, overridden so a watched connection reports its
+        transactions and its handle without any caller having to remember.
+        AnsiString, not string: sqldb is compiled without the Unicode
+        modeswitch, so its `string` is AnsiString and a UnicodeString here
+        would not override. Unwatched (FWatch = nil, the main connection),
+        each is exactly the inherited method. *)
+      procedure DoInternalConnect; override;
+      procedure DoInternalDisconnect; override;
+      function StartDBTransaction(trans: TSQLHandle; aParams: AnsiString): boolean; override;
+      function Commit(trans: TSQLHandle): boolean; override;
+      function RollBack(trans: TSQLHandle): boolean; override;
    public
       (* ANSISTRING, matching execsql's own parameter exactly. Declaring it
-        `string` -- which tr4w.inc makes UTF-16 -- narrows on every call. *)
+        `string` -- which tr4w.inc makes UTF-16 -- narrows on every call.
+
+        RAISES ESQLDatabaseError CARRYING SQLite's EXTENDED CODE since
+        2026-10-31. execsql raises a plain EDatabaseError with the message
+        only, so "database is locked" from a pragma, BEGIN or COMMIT could not
+        be told from any other failure without matching text. The message is
+        unchanged; ESQLDatabaseError descends from EDatabaseError, so every
+        existing handler still matches. *)
       procedure ExecutePragma(const aSQL: AnsiString);
+
+      (* The watch this connection reports to; nil (the default) for none.
+        Set by the owning thread, before or after Open. *)
+      property Watch: TLogConnectionWatch read FWatch write SetWatch;
    end;
 
    (* The outcome of CheckIntegrity.  A record and not a boolean because the
@@ -170,6 +266,7 @@ type
       (* Opened by OpenToPeek's immutable branch: the connection names a
         file: URI. *)
       FImmutable: boolean;
+      FBusyTimeoutMs: integer;
 
       (* Both open paths refuse a missing file with the same sentence. One
         copy, because two would drift. *)
@@ -195,13 +292,22 @@ type
       (* The connection-level pragmas, executed BENEATH sqldb.  See its
         implementation: they cannot be set through sqldb at all. *)
       procedure ExecPragmaRaw(const aPragma: AnsiString);
-
-      (* SQLDB OPENS A TRANSACTION IMPLICITLY ON THE FIRST STATEMENT, and it does
-        not close it. *)
-      procedure EndTransaction;
    public
       constructor Create;
       destructor Destroy; override;
+
+      (* SQLDB OPENS A TRANSACTION IMPLICITLY ON THE FIRST STATEMENT, and it does
+        not close it -- so commit whatever is open. A no-op when none is.
+
+        PUBLIC SINCE 2026-10-31, for the main connection's writes: a read
+        transaction left open by sqldb holds a snapshot, and a write from an
+        old snapshot fails at once with SQLITE_BUSY_SNAPSHOT once another
+        connection has committed (see LOG_BUSY_TIMEOUT_MS). Ending it first
+        gives the write a current snapshot. It COMMITS: anything written and
+        not yet committed is committed with it, which is the precedent
+        TLogRepository.BeginBatchUpdate set. Commit closes the datasets on the
+        transaction, so it must not run with a sequential cursor open. *)
+      procedure EndTransaction;
 
       (* Create a NEW log and apply the schema.  REFUSES an existing file: a
         contest log is the operator's only copy of a weekend, and "create"
@@ -401,6 +507,12 @@ type
 
       property Connection: TLogConnection read FConnection;
       property Transaction: TSQLTransaction read FTransaction;
+
+      (* The busy wait this connection is given at open, in ms. Defaults to
+        LOG_BUSY_TIMEOUT_MS; a secondary connection sets less (it is the
+        junior partner and retries itself), a test sets a few ms so nothing
+        sleeps. Read at open: set it before Open. *)
+      property BusyTimeoutMs: integer read FBusyTimeoutMs write FBusyTimeoutMs;
    end;
 
 (* The architecture of a Windows PE file -- 'i386', 'x86-64', 'ARM64', an
@@ -466,11 +578,13 @@ const
 implementation
 
 uses
-   uLogSchema, uAppPaths
-{$IFNDEF WINDOWS}
-   , sqlite3dyn      // SQLiteDefaultLibrary -- see the initialization section
-{$ENDIF}
-   ;
+   uLogSchema, uAppPaths,
+   (* SQLiteDefaultLibrary off Windows -- see the initialization section --
+     and, on every platform since 2026-10-31, sqlite3_extended_errcode for
+     ExecutePragma. FPC's OWN binding, the one sqlite3conn's checkerror calls
+     for exactly this; already loaded whenever a connection is open, so it is
+     not a new DLL binding. *)
+   sqlite3dyn;
 
 function LogDatabaseFileName(const aBinaryLogPath: string): string;
 begin
@@ -488,8 +602,156 @@ end;
 
 procedure TLogConnection.ExecutePragma(const aSQL: AnsiString);
 begin
-   (* One line, and the whole point: `execsql` is protected on the ancestor. *)
-   execsql(aSQL);
+   (* `execsql` is protected on the ancestor, which is the whole point of
+     this class. Its failure carries the message only, so the code is read
+     back here the way the connector's own checkerror reads it. '%s' as the
+     format, never the message itself: SQLite's text may contain a '%'. *)
+   try
+      execsql(aSQL);
+   except
+      on E: EDatabaseError do
+         begin
+         raise ESQLDatabaseError.CreateFmt('%s', [E.Message], nil,
+            sqlite3_extended_errcode(Handle), '');
+         end;
+   end;
+end;
+
+procedure TLogConnection.SetWatch(aWatch: TLogConnectionWatch);
+begin
+   if (FWatch <> nil) and Connected then
+      begin
+      FWatch.Detach;
+      end;
+   FWatch := aWatch;
+   if (FWatch <> nil) and Connected then
+      begin
+      FWatch.Attach(Handle);
+      end;
+end;
+
+procedure TLogConnection.DoInternalConnect;
+begin
+   inherited DoInternalConnect;
+   if FWatch <> nil then
+      begin
+      FWatch.Attach(Handle);
+      end;
+end;
+
+procedure TLogConnection.DoInternalDisconnect;
+begin
+   (* DETACHED FIRST, under the watch's lock, so a watchdog interrupt can
+     never reach a handle sqlite3_close is about to free. *)
+   if FWatch <> nil then
+      begin
+      FWatch.Detach;
+      end;
+   inherited DoInternalDisconnect;
+end;
+
+function TLogConnection.StartDBTransaction(trans: TSQLHandle;
+                                           aParams: AnsiString): boolean;
+begin
+   Result := inherited StartDBTransaction(trans, aParams);
+   if FWatch <> nil then
+      begin
+      FWatch.TransactionBegan;
+      end;
+end;
+
+function TLogConnection.Commit(trans: TSQLHandle): boolean;
+begin
+   (* Ended only when the COMMIT succeeded: a failed one leaves the
+     transaction open, and the watch must go on seeing it. *)
+   Result := inherited Commit(trans);
+   if FWatch <> nil then
+      begin
+      FWatch.TransactionEnded;
+      end;
+end;
+
+function TLogConnection.RollBack(trans: TSQLHandle): boolean;
+begin
+   Result := inherited RollBack(trans);
+   if FWatch <> nil then
+      begin
+      FWatch.TransactionEnded;
+      end;
+end;
+
+function SQLiteErrorCode(E: Exception): integer;
+begin
+   Result := 0;
+   if E is ESQLDatabaseError then
+      begin
+      Result := ESQLDatabaseError(E).ErrorCode;
+      end
+   else if E is ELogDatabaseError then
+      begin
+      Result := ELogDatabaseError(E).SQLiteCode;
+      end;
+end;
+
+function SQLiteIsBusy(E: Exception): boolean;
+var
+   primary: integer;
+begin
+   (* The primary code is the low byte of the extended one. *)
+   primary := SQLiteErrorCode(E) and $FF;
+   Result := (primary = SQLITE_BUSY) or (primary = SQLITE_LOCKED);
+end;
+
+function SQLiteIsStaleSnapshot(E: Exception): boolean;
+const
+   (* SQLITE_BUSY (5) | (2 shl 8): sqlite3dyn does not name the extended code. *)
+   SQLITE_BUSY_SNAPSHOT = 517;
+begin
+   Result := SQLiteErrorCode(E) = SQLITE_BUSY_SNAPSHOT;
+end;
+
+function ProbeLogWriteLock(const aFileName: string; aWaitMs: integer;
+                           out aDetail: string): TLogLockProbe;
+var
+   probe: TLogConnection;
+begin
+   aDetail := '';
+   if not FileExists(aFileName) then
+      begin
+      Result := llpUnknown;
+      aDetail := Format('There is no log at "%s".', [aFileName]);
+      Exit;
+      end;
+
+   probe := TLogConnection.Create(nil);
+   try
+      (* UTF-8, as OpenConnection explains. READ-WRITE WITHOUT CREATE, so a
+        file deleted since the check above is not re-made empty. *)
+      probe.DatabaseName := AnsiString(aFileName);
+      probe.OpenFlags := [sofReadWrite];
+      try
+         probe.Open;
+         probe.ExecutePragma(AnsiString(Format('PRAGMA busy_timeout = %d', [aWaitMs])));
+         probe.ExecutePragma('BEGIN IMMEDIATE');
+         probe.ExecutePragma('ROLLBACK');
+         Result := llpFree;
+      except
+         on E: Exception do
+            begin
+            aDetail := E.Message;
+            if SQLiteIsBusy(E) then
+               begin
+               Result := llpHeld;
+               end
+            else
+               begin
+               Result := llpUnknown;
+               end;
+            end;
+      end;
+   finally
+      probe.Free;
+   end;
 end;
 
 (* ---------------------------------------------------------------------------
@@ -860,6 +1122,8 @@ end;
   called sqlite3_open.  Everything else in this unit still goes through sqldb;
   this is the narrow exception, not a pattern to copy. *)
 procedure TLogDatabase.ExecPragmaRaw(const aPragma: AnsiString);
+var
+   wrapped: ELogDatabaseError;
 begin
    try
       FConnection.ExecutePragma(aPragma);
@@ -867,12 +1131,14 @@ begin
       (* execsql raises EDatabaseError carrying SQLite's own message. Re-raised
         with the file and the statement, because "Safety level may not be
         changed inside a transaction" is a sentence about SQLite, not about
-        which log would not open. *)
+        which log would not open. The CODE goes with it (SQLiteIsBusy). *)
       on E: Exception do
          begin
-         raise ELogDatabaseError.CreateFmt(
+         wrapped := ELogDatabaseError.CreateFmt(
             'The contest log "%s" would not accept "%s": %s',
             [FFileName, aPragma, E.Message]);
+         wrapped.SQLiteCode := SQLiteErrorCode(E);
+         raise wrapped;
          end;
    end;
 end;
@@ -919,6 +1185,12 @@ procedure TLogDatabase.ApplyPragmas;
 begin
    (* ORDER MATTERS: every pragma here runs before any sqldb statement has
      opened a transaction. See ExecPragmaRaw. *)
+   (* THE BUSY WAIT FIRST, on every kind of connection: journal_mode = WAL
+     below, and CheckWritable's write after it, are exactly what meet
+     another connection's lock at startup. Per-connection, writes nothing.
+     See LOG_BUSY_TIMEOUT_MS for the value and what it cannot cure. *)
+   ExecPragmaRaw(AnsiString(Format('PRAGMA busy_timeout = %d', [FBusyTimeoutMs])));
+
    (* PER-CONNECTION AND WRITES NOTHING, so it is applied on a read-only
      connection too. foreign_key_check does not depend on it, but reading the
      flag back is this routine's own guard against the pragma mechanism having
@@ -1296,6 +1568,7 @@ begin
    FConnection := TLogConnection.Create(nil);
    FTransaction := TSQLTransaction.Create(nil);
    FConnection.Transaction := FTransaction;
+   FBusyTimeoutMs := LOG_BUSY_TIMEOUT_MS;
 end;
 
 destructor TLogDatabase.Destroy;
@@ -1312,6 +1585,8 @@ begin
 end;
 
 procedure TLogDatabase.OpenConnection(const aFileName: string);
+var
+   wrapped: ELogDatabaseError;
 begin
    (* EXPLICIT, and UTF-8 is not merely acceptable here -- it is what SQLite
      specifies. sqlite3_open takes a UTF-8 filename, and DefaultSystemCodePage
@@ -1348,11 +1623,13 @@ begin
          begin
          (* The diagnosis is APPENDED to the original message, never substituted
            for it: our guess about the cause must not hide what actually
-           failed. *)
-         raise ELogDatabaseError.CreateFmt(
+           failed. The code is kept (SQLiteIsBusy). *)
+         wrapped := ELogDatabaseError.CreateFmt(
             'Could not open the contest log "%s". %s: %s'#13#10#13#10'%s',
             [aFileName, E.ClassName, E.Message,
              DiagnoseLogOpenFailure(aFileName)]);
+         wrapped.SQLiteCode := SQLiteErrorCode(E);
+         raise wrapped;
          end;
    end;
    FFileName := aFileName;
