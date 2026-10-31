@@ -51,9 +51,12 @@ type
       FAccountId, FChosenId: string;
       FBookIds: array of string;
       FCancelRequested: boolean;
-      procedure StartTask(const aNewName: string);
+      FQuiet: boolean;
+      procedure StartTask(const aNewName: string; aQuiet: boolean = False);
       procedure SetBusy(aBusy: boolean);
+      procedure ClearBooks;
    public
+      procedure LoadStoredKey;
       constructor Create(aOwner: TComponent); override;
       destructor Destroy; override;
    end;
@@ -224,19 +227,38 @@ begin
    FTimer.Enabled := aBusy;
 end;
 
+(* The list belongs to the key it was loaded with: a different key must
+   not offer the old key's logbooks. *)
+procedure TWRLSetupForm.ClearBooks;
+begin
+   FBooks.Items.Clear;
+   FBooks.ItemIndex := -1;
+   SetLength(FBookIds, 0);
+   FUse.Enabled := False;
+end;
+
 procedure TWRLSetupForm.KeyChanged(Sender: TObject);
 begin
    FAccountId := '';
-   FUse.Enabled := False;
+   ClearBooks;
    FCreate.Enabled := False;
 end;
 
-procedure TWRLSetupForm.StartTask(const aNewName: string);
+(* Called once by ConfigureWRL after the stored key is in the edit. The same
+   task as the Validate button, but a failure is silent: no status text, an
+   empty list. The form's CanClose / destructor already wait for the task. *)
+procedure TWRLSetupForm.LoadStoredKey;
+begin
+   StartTask('', True);
+end;
+
+procedure TWRLSetupForm.StartTask(const aNewName: string; aQuiet: boolean);
 begin
    if (FTask <> nil) or (Trim(FKey.Text) = '') then
       begin
       Exit;
       end;
+   FQuiet := aQuiet;
    FTask := TWRLSetupTask.Create(Trim(UTF8Decode(FKey.Text)), aNewName);
    FStatus.Caption := SWRLWorking;
    SetBusy(True);
@@ -276,12 +298,20 @@ begin
    FTimer.Enabled := False;
    if FTask.ErrorCode <> '' then
       begin
-      FStatus.Caption := Format(SWRLFailure, [UTF8Encode(FTask.ErrorCode)]);
-      if FTask.Uncertain then
+      if FQuiet then
          begin
-         FStatus.Caption := SWRLUncertain;
+         FStatus.Caption := '';
+         end
+      else
+         begin
+         FStatus.Caption := Format(SWRLFailure, [UTF8Encode(FTask.ErrorCode)]);
+         if FTask.Uncertain then
+            begin
+            FStatus.Caption := SWRLUncertain;
+            end;
          end;
       FAccountId := '';
+      ClearBooks;
       end
    else
       begin
@@ -331,6 +361,7 @@ begin
    try
       dialog.FKey.Text := UTF8Encode(aApiKey);
       dialog.FChosenId := aLogbookId;
+      dialog.LoadStoredKey;
       Result := dialog.ShowModal = mrOK;
       if Result then
          begin

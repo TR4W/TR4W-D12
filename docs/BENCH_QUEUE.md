@@ -4910,3 +4910,4 @@ from a stale sqldb read snapshot after the WRL worker committed
   `[LogWatchdog]` line at all. (A stalled worker cannot be provoked without a
   debugger; if one is ever seen, the lines go: asked to roll back, interrupted,
   stopping its owner, then "starting a new one" -- and logging carries on.)
+- [ ] **WRL setup form loads logbooks on open and drops them with the key.** Open it with a saved key: the Destination logbook list fills with no button press, the UI stays responsive, and the saved logbook is selected. Disconnect the network and open it: no dialog, empty list, blank status. Close it immediately after opening (Cancel while loading): it closes once the request ends, no crash. Edit one character of the key: the list empties and Use this logbook greys. Validate a wrong key: INVALID_KEY shows, the list stays empty, Use stays disabled.
