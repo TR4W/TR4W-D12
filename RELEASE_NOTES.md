@@ -48,6 +48,21 @@ user-facing — no file paths or source-level jargon.
 
 ## 5.0.x — October 2026
 
+### 5.0.36 (2026-10-31) - NY4I
+
+#### External logging
+
+- New external logger: World Radio League. Each new QSO is sent as you log it,
+  and edits and deletes follow. Delivery survives a restart or a network outage.
+  Pick it in Preferences > External Logger, then restart TR4W.
+- Edit QSO shows which external logger a QSO went to and when it was last sent.
+
+#### Reliability
+
+- A locked contest log can no longer crash startup or stop logging. If another
+  program holds the log, TR4W offers Retry, Open read-only, or Quit.
+- Tools > Run Verification Checks now reports whether the log is locked.
+
 ### 5.0.35 (2026-10-27) - NY4I
 
 - No operator-visible change. 5.0.34's macOS build did not compile; 5.0.35 is
