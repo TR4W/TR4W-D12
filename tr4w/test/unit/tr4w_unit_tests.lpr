@@ -1094,6 +1094,7 @@ begin
    RegisterSuite(TLogDatabaseTests.Create('LogDatabase'));
    RegisterSuite(TLogLockingTests.Create('LogLocking'));
    RegisterSuite(TLogBackupTests.Create('LogBackup'));
+   RegisterSuite(TPeriodicBackupDueTests.Create('PeriodicBackupDue'));
    RegisterSuite(TBackupCopierTests.Create('BackupCopier'));
    RegisterSuite(TBackupDestinationSettingTests.Create('BackupDestinationSetting'));
    RegisterSuite(TBackupCopyNoticeTests.Create('BackupCopyNotice'));

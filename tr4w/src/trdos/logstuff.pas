@@ -649,6 +649,10 @@ procedure ReviewBackCopyFiles;
 procedure RotorControl(Heading: integer);
 
 procedure BackupLogNow;
+(* ONE QSO HAS JUST BEEN WRITTEN TO THE LOG: count it, and take the periodic
+  backup when BACKUP LOG FREQUENCY of them have been logged since the last
+  one. LogContact calls it once per record it writes. *)
+procedure CountQsoTowardPeriodicBackup;
 procedure SayHello(Call: CallString);
 procedure SayName(Call: CallString);
 procedure SendMultiInfoMessage(Band: BandType; Mode: ModeType; Message: Str80);
@@ -775,6 +779,8 @@ uses uNet,
   (* BackupCopySubmit -- the periodic backup's copy to BACKUP DESTINATION,
     off this thread (issue #98 step 2). *)
   uBackupCopyService,
+  (* PeriodicBackupDue -- when the periodic backup is due (2026-10-31). *)
+  uLogBackup,
   Classes; // TStringList — used by ProcessRSTAndDomesticQTHExchange
 
 (* THE CONTEST THAT PARSES AND VALIDATES AN EXCHANGE -- M5b, 2026-10-02.
@@ -5635,19 +5641,38 @@ end;
   one 'logback.db' every contest overwrote beside the logs, where the Open
   dialog listed it as a contest. So there is no file name to set any more, and
   an empty one no longer switches the backup off: BACKUP LOG FREQUENCY = 0
-  does that (logsubs2 asks it), and the Backup Log menu always backs up.
+  does that (CountQsoTowardPeriodicBackup asks it), and the Backup Log menu
+  always backs up.
 
   THEN, IF BACKUP DESTINATION NAMES A FOLDER, the verified local file is
   queued for it (uBackupCopyService). That copy runs on its own thread; this
   one only queues.
 
   THE LOCAL SNAPSHOT IS STILL SYNCHRONOUS ON THE MAIN THREAD -- local disk, a
-  VACUUM INTO and a verification. Moving it off is a later step of #98. *)
+  VACUUM INTO and a verification. Moving it off is a later step of #98.
+
+  EVERY CALL RESTARTS THE PERIODIC COUNT (QsosLoggedSinceBackup := 0), from
+  the periodic trigger and the Backup Log menu alike, and whether the backup
+  succeeded or FAILED. Resetting on a failure is deliberate: a missing backup
+  folder or a full disk would otherwise retry this synchronous snapshot, with
+  its beep and error line, on every QSO that follows. It retries N QSOs
+  later instead, as the old trigger did. *)
+
+(* THE QSOs LOGGED SINCE THE LAST PERIODIC BACKUP WAS TAKEN (2026-10-31).
+  Only CountQsoTowardPeriodicBackup adds to it and only BackupLogNow resets
+  it. A rescore, a reload or a delete does not touch it: it counts records
+  WRITTEN, which none of those changes. It starts at 0 each session, so on a
+  resumed log the first periodic backup comes N QSOs into the session, not at
+  the next multiple of N in the log's total. *)
+var
+  QsosLoggedSinceBackup: integer = 0;
+
 procedure BackupLogNow;
 var
   path, report, destination, why: string;
   queued: boolean;
 begin
+  QsosLoggedSinceBackup := 0;
   (* THE REPORT IS THE ROUTINE'S OUTPUT, success or failure, and it names the
     file either way -- a periodic backup runs unattended and the only place an
     operator will ever see it is this line. The "Saving to" line that stood
@@ -5666,6 +5691,18 @@ begin
      QuickDisplay(AnsiString(report));
      logger.Error('[Backup] %s', [report]);
      DoABeep(Warning);
+     end;
+end;
+
+(* EVERY RECORD LogContact WRITES COUNTS -- an X-QSO, a dupe and a peer's QSO
+  from the multi-op network included, because a backup protects what is
+  written, not what scores. The rule is uLogBackup.PeriodicBackupDue; the
+  reset is BackupLogNow's. *)
+procedure CountQsoTowardPeriodicBackup;
+begin
+  if PeriodicBackupDue(QsosLoggedSinceBackup, Settings.Log.BackupFrequency) then
+     begin
+     BackupLogNow;
      end;
 end;
 

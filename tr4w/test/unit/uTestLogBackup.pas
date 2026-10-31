@@ -63,6 +63,26 @@ type
       procedure RunAllTests; override;
    end;
 
+   (* WHEN THE PERIODIC BACKUP IS DUE -- uLogBackup.PeriodicBackupDue, the
+     rule behind logstuff.CountQsoTowardPeriodicBackup (2026-10-31). The tests
+     play BackupLogNow's part themselves: when the rule says due, they set the
+     count to 0, which is all BackupLogNow does to it. *)
+   TPeriodicBackupDueTests = class(TTestCase)
+   private
+      FSinceBackup: integer;
+      (* Log aCount QSOs at aFrequency and answer the 1-based numbers of the
+        ones that backed up, as '5,10'. *)
+      function LogQsos(aCount, aFrequency: integer): string;
+   protected
+      procedure TestFrequencyZeroNeverBacksUp;
+      procedure TestFiveBacksUpOnTheFifthAndTenth;
+      procedure TestAMenuBackupRestartsTheCount;
+      procedure TestATotalThatGoesDownDoesNotFireEarly;
+      procedure TestLoweringTheFrequencyBelowTheCountFiresNext;
+   public
+      procedure RunAllTests; override;
+   end;
+
 implementation
 
 uses
@@ -1025,6 +1045,86 @@ begin
       begin
       RemoveDir(FDir);
       end;
+end;
+
+(* TPeriodicBackupDueTests *)
+
+function TPeriodicBackupDueTests.LogQsos(aCount, aFrequency: integer): string;
+var
+   i: integer;
+begin
+   Result := '';
+   for i := 1 to aCount do
+      begin
+      if PeriodicBackupDue(FSinceBackup, aFrequency) then
+         begin
+         (* What BackupLogNow does to the count. *)
+         FSinceBackup := 0;
+         if Result <> '' then
+            begin
+            Result := Result + ',';
+            end;
+         Result := Result + IntToStr(i);
+         end;
+      end;
+end;
+
+procedure TPeriodicBackupDueTests.TestFrequencyZeroNeverBacksUp;
+begin
+   BeginTest('BACKUP LOG FREQUENCY 0 never backs up, and leaves the count alone');
+   FSinceBackup := 0;
+   CheckEquals('', LogQsos(100, 0), 'no QSO backs up');
+   CheckEquals(0, FSinceBackup, 'the count did not move');
+end;
+
+procedure TPeriodicBackupDueTests.TestFiveBacksUpOnTheFifthAndTenth;
+begin
+   BeginTest('frequency 5 backs up on the 5th and 10th QSO logged');
+   FSinceBackup := 0;
+   CheckEquals('5,10', LogQsos(12, 5), 'the QSOs that backed up');
+   CheckEquals(2, FSinceBackup, 'two logged since the last one');
+end;
+
+procedure TPeriodicBackupDueTests.TestAMenuBackupRestartsTheCount;
+begin
+   BeginTest('a Backup Log menu backup restarts the count');
+   FSinceBackup := 0;
+   CheckEquals('', LogQsos(3, 5), 'three QSOs, no backup yet');
+   (* The menu calls BackupLogNow, which sets the count to 0. *)
+   FSinceBackup := 0;
+   CheckEquals('5', LogQsos(5, 5), 'the next backup is 5 QSOs after the menu one');
+end;
+
+procedure TPeriodicBackupDueTests.TestATotalThatGoesDownDoesNotFireEarly;
+begin
+   (* THE CASE SEEN LIVE, 2026-10-31. Frequency 5: the 5th QSO backed up,
+     W4UB was then marked X-QSO and deleted and a rescore dropped
+     QSOTotals[AllBands, Both] from 5 to 4, so under the old modulo the 6th
+     QSO made the total 5 again and backed up a second time. The count is
+     not a total, and nothing a rescore does reaches it. *)
+   BeginTest('a QSO total that goes down does not bring the next backup forward');
+   FSinceBackup := 0;
+   CheckEquals('5', LogQsos(5, 5), 'the 5th QSO backs up');
+   (* The rescore: it rebuilds QSOTotals and touches nothing here. *)
+   CheckEquals('', LogQsos(1, 5), 'the 6th QSO does not');
+   CheckEquals('4', LogQsos(4, 5), 'the next is the 10th QSO, 4 later');
+end;
+
+procedure TPeriodicBackupDueTests.TestLoweringTheFrequencyBelowTheCountFiresNext;
+begin
+   BeginTest('lowering the frequency below the count backs up on the next QSO');
+   FSinceBackup := 0;
+   CheckEquals('', LogQsos(7, 10), 'seven at 10, no backup');
+   CheckEquals('1', LogQsos(1, 5), 'the next QSO at 5 backs up');
+end;
+
+procedure TPeriodicBackupDueTests.RunAllTests;
+begin
+   TestFrequencyZeroNeverBacksUp;
+   TestFiveBacksUpOnTheFifthAndTenth;
+   TestAMenuBackupRestartsTheCount;
+   TestATotalThatGoesDownDoesNotFireEarly;
+   TestLoweringTheFrequencyBelowTheCountFiresNext;
 end;
 
 end.

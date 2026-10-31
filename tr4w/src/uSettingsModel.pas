@@ -2108,8 +2108,10 @@ type
         carries an alias. *)
       property LookForRstSent: boolean
          read FLookForRstSent write FLookForRstSent;
-      (* Was BackupLogFrequency -- write a backup every N QSOs, 0 for never.
-        The command is BACKUP LOG FREQUENCY, which puts the group second. *)
+      (* Was BackupLogFrequency -- write a backup every N QSOs logged since
+        the last backup (counted per session; logstuff
+        CountQsoTowardPeriodicBackup), 0 for never. The command is BACKUP LOG
+        FREQUENCY, which puts the group second. *)
       property BackupFrequency: TBackupLogFrequency
          read FBackupFrequency write FBackupFrequency;
       (* Was BeepEvery10QSOs. The digits are what stops this deriving: the

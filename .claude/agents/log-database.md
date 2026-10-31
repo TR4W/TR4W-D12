@@ -104,6 +104,17 @@ other.
   beside the logs. **BACKUP LOG FREQUENCY = 0 is the off switch**; an empty
   name no longer is (there is no name). Still SYNCHRONOUS on the main thread
   -- local disk; moving the snapshot off is a later #98 step.
+- **THE TRIGGER IS A COUNT OF QSOs LOGGED SINCE THE LAST BACKUP, NOT
+  `QSOTotals mod N` (2026-10-31).** QSOTotals is a score total (no X-QSO, no
+  deleted QSO, rebuilt by a rescore), so it went DOWN and fired a second
+  backup one QSO after the first (live: frequency 5, W4UB X-QSO'd). Now
+  `LogContact` calls `logstuff.CountQsoTowardPeriodicBackup` once per record
+  written (X-QSOs, dupes and peer QSOs included; notes go elsewhere and do
+  not count); the rule is `uLogBackup.PeriodicBackupDue` (`>=`, 0 = never),
+  pinned by `uTestLogBackup.TPeriodicBackupDueTests`. **Only `BackupLogNow`
+  resets the count**, menu or periodic, success or FAILURE (a failure retries
+  N QSOs later, not every QSO). Rescore/reload never touch it; it starts at 0
+  each session.
 - **Copy**: `BACKUP DESTINATION` (`Settings.Log.BackupDestination`, a
   FOLDER, '' = local only) replaced `BACKUP LOG FILE NAME`, which is now its
   second name; a value under the old name is converted by NAME

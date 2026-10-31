@@ -1829,12 +1829,13 @@ begin
      begin
      QuickBeep;
      end;
-  if Settings.Log.BackupFrequency > 0 then
-    if QSOTotals[AllBands, Both] > 0 then
-      if QSOTotals[AllBands, Both] mod Settings.Log.BackupFrequency = 0 then
-         begin
-         BackupLogNow;
-         end;
+  (* THE PERIODIC BACKUP COUNTS QSOs LOGGED, NOT THE SCORE TOTAL (2026-10-31).
+    It asked QSOTotals[AllBands, Both] mod BACKUP LOG FREQUENCY, and QSOTotals
+    leaves out an X-QSO and a deleted QSO and is rebuilt by a rescore, so it
+    can go DOWN and fire again one QSO after the last backup. Reached once per
+    record written: tAddQSOToLog has succeeded above, and the goto 1 lands
+    before this line. *)
+  CountQsoTowardPeriodicBackup;
   if Settings.Log.UpdateRestartFile then
      begin
      Sheet.SaveRestartFile;

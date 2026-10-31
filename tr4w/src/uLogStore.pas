@@ -523,8 +523,9 @@ function LogStorePeriodicBackupFileName(const aLogFile, aBackupDir: string): str
   file exists is the caller's question. *)
 function LogStorePeriodicBackupPath(const aBackupDir: string): string;
 
-(* THE PERIODIC BACKUP, every BACKUP LOG FREQUENCY QSOs and from the Backup
-  Log menu: LogStoreBackup to LogStorePeriodicBackupFileName of the live log,
+(* THE PERIODIC BACKUP, every BACKUP LOG FREQUENCY QSOs logged since the last
+  one (uLogBackup.PeriodicBackupDue) and from the Backup Log menu:
+  LogStoreBackup to LogStorePeriodicBackupFileName of the live log,
   in aBackupDir (the program passes uAppPaths.BackupDir; a test its own).
   aPath is the file it was written to, set either way.
 

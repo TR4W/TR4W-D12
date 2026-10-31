@@ -108,6 +108,27 @@ const
   came from. Anything that merely CONTAINS the words keeps them. *)
 function LogBackupBaseName(const aLogFile: string): string;
 
+(* IS THE PERIODIC BACKUP DUE? ONE MORE QSO HAS JUST BEEN LOGGED.
+
+  aLoggedSinceBackup is the count of QSOs logged since the last periodic
+  backup was TAKEN; this adds the one just logged and answers whether it has
+  reached aFrequency (BACKUP LOG FREQUENCY). It does NOT reset the count:
+  that is the backup's job (logstuff.BackupLogNow sets it to 0), so a backup
+  from the Backup Log menu restarts the count exactly as a periodic one does,
+  and there is one owner of the reset.
+
+  aFrequency 0 is "never": the answer is False and the count is left alone.
+  The comparison is >=, not =, so lowering the frequency below a count already
+  reached backs up on the next QSO instead of never.
+
+  IT REPLACED "QSOTotals mod BackupFrequency = 0" (2026-10-31). QSOTotals is a
+  SCORE total: it leaves out an X-QSO and a deleted QSO and is rebuilt by
+  every rescore, so it can go down, and the modulo then fired again one QSO
+  after the last backup (seen live: frequency 5, W4UB marked X-QSO, a second
+  backup on the 6th record). A count of QSOs logged cannot go down. *)
+function PeriodicBackupDue(var aLoggedSinceBackup: integer;
+   aFrequency: integer): boolean;
+
 implementation
 
 uses
@@ -218,6 +239,18 @@ begin
          stripped := True;
          end;
    until not stripped;
+end;
+
+function PeriodicBackupDue(var aLoggedSinceBackup: integer;
+   aFrequency: integer): boolean;
+begin
+   Result := False;
+   if aFrequency <= 0 then
+      begin
+      Exit;
+      end;
+   inc(aLoggedSinceBackup);
+   Result := aLoggedSinceBackup >= aFrequency;
 end;
 
 function StagedBackupIsSound(const aPath: string; out aWhy: string): boolean;
