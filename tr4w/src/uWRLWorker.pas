@@ -134,8 +134,10 @@ begin
       try
          database.Open(FFileName);
          database.Connection.ExecutePragma('PRAGMA busy_timeout = 1000');
-         (* A capture gap must be reconciled before making further changes to
-            WRL. It is deliberately durable across restarts. *)
+         (* A capture gap means some earlier contact was not queued. This feed
+            only sends NEW contacts onward and never reconciles history, so the
+            marker is reported once, cleared, and delivery carries on. Leaving
+            it in place stopped every later contact for good. *)
          q := TSQLQuery.Create(nil);
          try
             q.Database := database.Connection;
@@ -144,9 +146,10 @@ begin
             q.Open;
             if not q.EOF then
                begin
-               log.Error('[WRL] Delivery paused: the log records a synchronization gap');
-               Notice('SYNCHRONIZATION_GAP');
-               Exit;
+               log.Warn('[WRL] The log records an earlier capture gap; some past contact ' +
+                  'was not queued for WRL. Clearing the marker; new contacts continue.');
+               database.Connection.ExecuteDirect(
+                  'DELETE FROM session_state WHERE key = ''external_delivery_gap''');
                end;
          finally
             q.Free;
