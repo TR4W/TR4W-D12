@@ -227,6 +227,7 @@ uses
   uWinKey,
   uPrefsSearch,
   uConfigValues,
+  uKeychain,      // SetKeychainNotice -- where a vault failure is reported
   uCrashLog,
   uCrashLogLCL,
   (* The log carries its own contest configuration -- phase E2. *)
@@ -917,6 +918,31 @@ end;
   duplicating any of them here would create a second opinion that drifts from
   the first. This states what is on disk and lets the log line up with what
   follows. *)
+(*
+  WHERE THE KEYCHAIN REPORTS A FAILURE: a vault that is locked, missing or
+  refusing. Until 2026-10-31 nothing was assigned, so every such report went
+  nowhere -- harmless on Windows, where the vault is always there, and not
+  harmless on macOS and Linux, where a locked keychain is ordinary.
+
+  ITS OWN LOGGER WITH ITS OWN LEVEL, the device the startup banner uses: the
+  settings load asks for the first secret before DEBUG LOG LEVEL is applied,
+  while the root is still at Error, and a warning written then would be
+  discarded. The message names the setting and never carries the value --
+  uKeychain's rule.
+*)
+procedure KeychainNoticeToLog(const aName, aMessage: string);
+begin
+   if aName = '' then
+      begin
+      TLogLogger.GetLogger('TR4WDebugLog.Keychain').Warn('[Keychain] ' + aMessage);
+      end
+   else
+      begin
+      TLogLogger.GetLogger('TR4WDebugLog.Keychain').Warn('[Keychain] ' + aName
+                                                       + ' ' + aMessage);
+      end;
+end;
+
 procedure ReportConfigurationSources;
 var
    jsonPath: string;
@@ -943,6 +969,12 @@ begin
    logger.Info('[Convert]   contest .cfg  : %s (%s)',
                [cfgPath,
                 BoolToStr(SysUtils.FileExists(cfgPath), 'present', 'absent')]);
+   (* WHERE A PASSWORD WILL GO. On Linux asking loads libsecret, and a
+     library that will not load is reported through the keychain notice
+     right here, before the settings load asks for the first secret. *)
+   logger.Info('[Convert]   secret store  : %s (%s)',
+               [ActiveKeychainName,
+                BoolToStr(KeychainAvailable, 'available', 'UNAVAILABLE')]);
 
    (* THE HEADLINE, so nobody has to read three lines and work it out. The
      settings file being absent is what makes a run a conversion: everything
@@ -1424,6 +1456,11 @@ begin
    // now, from its own program body.  See the uCrashLogLCL header
    // for why the LCL half is a second unit and not a define.
    InstallCrashLogLCL;
+
+   (* THE KEYCHAIN'S REPORTS GO TO THE LOG, from before the first secret is
+     read. See KeychainNoticeToLog. *)
+   TLogLogger.GetLogger('TR4WDebugLog.Keychain').Level := Log4D.Warn;
+   SetKeychainNotice(KeychainNoticeToLog);
 
    (* A LOG FILE TR4W CANNOT OPEN IS NOT A REASON TO STOP.  The appender used to
      raise here, before the crash handler above existed, so the process ended

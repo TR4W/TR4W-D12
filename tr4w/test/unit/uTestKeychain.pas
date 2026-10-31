@@ -34,6 +34,9 @@ type
       procedure TestRoundTrip;
       procedure TestMixedCaseSurvives;
       procedure TestNonAsciiSurvives;
+      procedure TestStoringAgainReplaces;
+      procedure TestCaseOfTheNameDoesNotMatter;
+      procedure TestALockedVaultIsReportedAsLocked;
       procedure TestClearingRemovesItFromTheVault;
       procedure TestAMissingSecretIsRefusedNotGuessed;
       procedure TestForgetRemovesWithoutStoring;
@@ -99,6 +102,51 @@ begin
    Result := ksUnavailable;
 end;
 
+(*
+  A VAULT THAT IS THERE BUT LOCKED -- a macOS keychain or a Secret Service
+  collection whose unlock prompt the operator dismissed. Available answers
+  True, as both real backends do: "is there a vault" must not prompt.
+*)
+type
+   TLockedKeychain = class(TKeychainBackend)
+   public
+      function Name: string; override;
+      function Available: boolean; override;
+      function WriteSecret(const aName, aValue: string): TKeychainStatus;
+         override;
+      function ReadSecret(const aName: string;
+                          out aValue: string): TKeychainStatus; override;
+      function DeleteSecret(const aName: string): TKeychainStatus; override;
+   end;
+
+function TLockedKeychain.Name: string;
+begin
+   Result := 'memory1';
+end;
+
+function TLockedKeychain.Available: boolean;
+begin
+   Result := True;
+end;
+
+function TLockedKeychain.WriteSecret(const aName,
+                                     aValue: string): TKeychainStatus;
+begin
+   Result := ksLocked;
+end;
+
+function TLockedKeychain.ReadSecret(const aName: string;
+                                    out aValue: string): TKeychainStatus;
+begin
+   aValue := '';
+   Result := ksLocked;
+end;
+
+function TLockedKeychain.DeleteSecret(const aName: string): TKeychainStatus;
+begin
+   Result := ksLocked;
+end;
+
 var
    GNoticeCount: integer = 0;
    GLastNoticeName: string = '';
@@ -135,6 +183,66 @@ begin
    CheckTrue(StoreSecret(SECRET_NAME, 'MiXeD-CaSe-Pw'), 'stored');
    CheckTrue(FetchSecret(SECRET_NAME, back), 'read back');
    CheckEquals('MiXeD-CaSe-Pw', back, 'exactly as typed');
+end;
+
+procedure TKeychainTests.TestStoringAgainReplaces;
+var
+   back: string;
+begin
+   (* EVERY SAVE STORES AGAIN. A backend that added a second entry, or kept
+     the first, would hand back a password the operator has since changed.
+     The macOS backend updates first for exactly this reason. *)
+   BeginTest('storing a secret again replaces the old value');
+   InstallTestKeychain;
+
+   CheckTrue(StoreSecret(SECRET_NAME, 'first'), 'the first value stores');
+   CheckTrue(StoreSecret(SECRET_NAME, 'second'), 'the second value stores');
+   CheckTrue(FetchSecret(SECRET_NAME, back), 'it reads back');
+   CheckEquals('second', back, 'and it is the newer value');
+end;
+
+procedure TKeychainTests.TestCaseOfTheNameDoesNotMatter;
+var
+   back: string;
+begin
+   (* EVERY BACKEND FOLDS THE NAME. Windows does it itself; macOS and Linux
+     upper-case the account so the three agree. The test vault pins the
+     same contract. *)
+   BeginTest('the name of a secret is not case-sensitive');
+   InstallTestKeychain;
+
+   CheckTrue(StoreSecret('Wrl.ApiKey', 'k1'), 'stored under one spelling');
+   CheckTrue(FetchSecret('WRL.APIKEY', back), 'read under another');
+   CheckEquals('k1', back, 'and it is the same secret');
+end;
+
+procedure TKeychainTests.TestALockedVaultIsReportedAsLocked;
+var
+   back: string;
+begin
+   (* NY4I: A LOCKED VAULT IS REPORTED AS A LOCKED VAULT, not as a missing
+     one and not by quietly storing somewhere weaker. The operator can fix
+     "locked"; the log has to say which it was. *)
+   BeginTest('a locked vault is reported as locked, and nothing is stored');
+
+   GNoticeCount := 0;
+   GLastNoticeText := '';
+   SetKeychainNotice(@RecordNotice);
+   RegisterKeychainBackend(TLockedKeychain.Create);
+   try
+      CheckFalse(StoreSecret(SECRET_NAME, 'Hunter2'), 'nothing is stored');
+      CheckEquals(1, GNoticeCount, 'it is reported once');
+      CheckTrue(Pos('locked', GLastNoticeText) > 0, 'and the notice says locked');
+      CheckTrue(Pos('Hunter2', GLastNoticeText) = 0,
+                'and does not carry the value');
+
+      CheckFalse(FetchSecret(SECRET_NAME, back), 'a read is refused');
+      CheckEquals('', back, 'with nothing handed back');
+      CheckTrue(Pos('locked', GLastNoticeText) > 0, 'and that says locked too');
+   finally
+      SetKeychainNotice(nil);
+      InstallTestKeychain;
+   end;
 end;
 
 procedure TKeychainTests.TestNonAsciiSurvives;
@@ -263,6 +371,9 @@ begin
    TestRoundTrip;
    TestMixedCaseSurvives;
    TestNonAsciiSurvives;
+   TestStoringAgainReplaces;
+   TestCaseOfTheNameDoesNotMatter;
+   TestALockedVaultIsReportedAsLocked;
    TestClearingRemovesItFromTheVault;
    TestAMissingSecretIsRefusedNotGuessed;
    TestForgetRemovesWithoutStoring;

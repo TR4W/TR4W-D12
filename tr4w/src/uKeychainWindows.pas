@@ -103,8 +103,9 @@ unit uKeychainWindows;
 
   SO THE CONDITIONAL IS REAL HERE, not a pretence: on Windows this unit is
   exactly what it was, and everywhere else it is an empty unit that registers
-  nothing -- which leaves uKeychain's portable scheme as the only backend,
-  which is precisely the behaviour the note above promises.
+  nothing. uKeychainMac and uKeychainLinux are the same shape the other way
+  round. (This note used to say the empty unit left "uKeychain's portable
+  scheme" as the backend; that cipher was deleted, and there is no fallback.)
 
   THE ALTERNATIVE IS A PROGRAM FILE PER PLATFORM, and that is a bigger
   decision than a credential store: `tr4w.lpr` is where "which units are
@@ -303,9 +304,8 @@ end;
 
 {$IFDEF WINDOWS}
 initialization
-   (* LAST ONE INSTALLED WINS THE WRITING, and uKeychain's own portable
-     scheme is still registered -- so a settings file written before this
-     existed, or on another platform, still reads. *)
+   (* LAST ONE INSTALLED WINS. On Windows this is the only backend the
+     program lists that registers anything. *)
    RegisterKeychainBackend(TWindowsKeychain.Create);
 {$ENDIF}
 

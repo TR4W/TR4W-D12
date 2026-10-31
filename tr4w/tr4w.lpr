@@ -257,10 +257,14 @@ uContestFileKind in 'src\domain\uContestFileKind.pas',
   uPrefsSearch in 'src\uPrefsSearch.pas',
   uConfigValues in 'src\uConfigValues.pas',
   uKeychain in 'src\uKeychain.pas',
-  (* THE WINDOWS CREDENTIAL MANAGER, and it is in THIS list and no other.
-    Being listed is what installs it -- see the unit. A Linux or macOS
-    program simply does not name it and gets the portable scheme. *)
+  (* THE THREE OS VAULTS. Being listed is what installs one -- see each
+    unit. All three are listed because this is the one program file for
+    every platform; each is an empty unit except on its own platform, so
+    exactly one registers. NOT in the unit-test program: the tests install
+    an in-memory vault and must never touch the machine's real one. *)
   uKeychainWindows in 'src\uKeychainWindows.pas',
+  uKeychainMac in 'src\uKeychainMac.pas',
+  uKeychainLinux in 'src\uKeychainLinux.pas',
   uCrashLog in 'src\uCrashLog.pas',
   uCrashLogLCL in 'src\ui\lcl\uCrashLogLCL.pas',
   uPasswordReveal in 'src\ui\lcl\uPasswordReveal.pas',

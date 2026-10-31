@@ -4911,3 +4911,62 @@ from a stale sqldb read snapshot after the WRL worker committed
   debugger; if one is ever seen, the lines go: asked to roll back, interrupted,
   stopping its owner, then "starting a new one" -- and logging carries on.)
 - [ ] **WRL setup form loads logbooks on open and drops them with the key.** Open it with a saved key: the Destination logbook list fills with no button press, the UI stays responsive, and the saved logbook is selected. Disconnect the network and open it: no dialog, empty list, blank status. Close it immediately after opening (Cancel while loading): it closes once the request ends, no crash. Edit one character of the key: the list empties and Use this logbook greys. Validate a wrong key: INVALID_KEY shows, the list stays empty, Use stays disabled.
+
+## Added 2026-10-31 -- THE OS VAULT ON macOS AND LINUX (WRL key, HamScore and server passwords)
+
+`uKeychainMac` (Security.framework, login keychain) and `uKeychainLinux`
+(libsecret, loaded at run time) are new. Nothing on Windows can compile them
+for real, let alone run them, so everything here is unverified. Each entry is
+service `TR4W/v1`, account the setting's path UPPER-CASED, label
+`TR4W/<setting>`. Use `DEBUG LOG LEVEL = DEBUG`; the lines to read are
+`[Convert]   secret store  :` (startup) and any `[Keychain]` warning.
+
+**Mint (gtk2), GNOME Keyring or the desktop's own Secret Service**
+
+- [ ] **Store, restart, read.** Enter a WRL API key, save, quit. The startup
+  line says `libsecret1 (available)`. Restart: the WRL setup form shows the
+  key without asking, and `settings/tr4w.json` has `ApiKeyRef` and no `ApiKey`.
+  Seahorse ("Passwords and Keys") lists `TR4W/<path>` under Login.
+- [ ] **Change and clear.** Change the key and restart: the new one is read.
+  Clear it and save: the entry is gone from Seahorse.
+- [ ] **A locked collection.** Lock the Login keyring in Seahorse, then save a
+  changed key. The desktop asks to unlock. Unlock: it stores. Dismiss: tr4w.log
+  has `[Keychain] ... the secret store is locked`, nothing is in Seahorse, and
+  the key is asked for again next session. **Record exactly what was logged**:
+  the code assumes a dismissed prompt comes back as "failed, no error" or as
+  G_IO_ERROR_CANCELLED. If it comes back as "not found" instead, a locked read
+  cannot be told from a missing entry, and the unit header says so.
+- [ ] **Autologin (keyring locked at start).** With a key stored, log in
+  through autologin so the Login keyring stays locked, and start TR4W. The
+  settings load reads the key BEFORE the main window, so an unlock prompt may
+  appear with no TR4W window behind it -- note whether it does, on every
+  start. Dismiss it, then change any setting (a save): **check Seahorse that
+  the stored key is still there.** A known defect (settings-config agent,
+  "Known gap") says it will be deleted or orphaned; this is the run that
+  measures it.
+- [ ] **Headless / no Secret Service.** Run from an ssh session with no
+  `DBUS_SESSION_BUS_ADDRESS` (or with gnome-keyring stopped). TR4W must start,
+  log one `[Keychain]` warning naming the Secret Service error, and say
+  `unavailable` rather than crash or hang. **Time the first save**: a D-Bus
+  activation timeout could block the UI for ~25 s, and that would need fixing.
+- [ ] **No libsecret at all** (a VM without `libsecret-1-0`): one warning naming
+  `libsecret-1.so.0`, the startup line says `UNAVAILABLE`, and nothing else
+  changes.
+- [ ] **The AppImage and the tarball both.** The AppImage bundles glib; check
+  that the HOST's libsecret loads beside it (the startup line says
+  `available`). If it says `lacks <symbol>` or `could not be loaded`, the
+  bundling decision in the build-release report applies.
+
+**macOS (Developer ID signed bundle, then an ad-hoc local build)**
+
+- [ ] **Store, restart, read** as above. Keychain Access -> login ->
+  Passwords lists `TR4W/<path>`. No prompt from the signed build.
+- [ ] **Update to the next signed release and read.** Store with release N,
+  install N+1, start: the key is read with NO "wants to use your confidential
+  information" prompt (same Developer ID). An ad-hoc build DOES prompt; that is
+  macOS asking and is expected.
+- [ ] **A locked keychain.** Lock the login keychain (Keychain Access ->
+  File -> Lock Keychain "login"), then save a changed key. macOS asks to
+  unlock. Cancel: tr4w.log has `[Keychain] ... is locked` and
+  `macOS keychain status -128` (or -25308); nothing is stored.
+- [ ] **Clear removes it** from Keychain Access.

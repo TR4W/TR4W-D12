@@ -123,6 +123,32 @@ that in both directions.
   log line — must ask `CommandIsSecret`.** A SQLite DELETE does not
   overwrite the page, so a cleaned old log can still hold the bytes until
   they are reused (no `secure_delete`).
+- **THE VAULT EXISTS ON ALL THREE PLATFORMS (2026-10-31)**, behind one
+  interface, `uKeychain`: `uKeychainWindows` (Credential Manager),
+  `uKeychainMac` (Security.framework SecItem, the LOGIN keychain -- never the
+  data-protection keychain, which needs an entitlement the Developer ID
+  signing does not have) and `uKeychainLinux` (libsecret, **dlopen'd lazily**
+  on the first secret operation; the library names are its const block and
+  nowhere else). All three are listed in `tr4w.lpr` and each is an empty unit
+  off its own platform; **none is in the unit-test program**, which installs
+  the in-memory vault so a test never touches a real one. Every backend keys
+  `TR4W/v1` + the setting path **upper-cased** (Windows folds case itself, the
+  other two fold it on the way in). **`ksLocked` is its own status**, so a
+  locked keychain or a dismissed unlock prompt is logged as "locked", not
+  "unavailable"; neither writes anything weaker. **`SetKeychainNotice` had no
+  caller until this date** -- every vault report went nowhere; `uProgramMain`
+  now sends them to `TR4WDebugLog.Keychain` at Warn (its own level, because
+  the first secret is read before DEBUG LOG LEVEL is applied). Real-run
+  checks: `docs/BENCH_QUEUE.md`. **Known gap, not fixed:** a secret that
+  cannot be READ at startup (vault locked) leaves the property empty, and the
+  next save treats empty as "cleared": it asks the vault to DELETE the entry
+  and writes no `<Name>Ref`. Unlocked by then, the stored key is deleted;
+  still locked, the entry is orphaned. Either way it is lost. The radio and
+  cluster passwords (`uRadioConfigStore`'s Store/Fetch pair) have the same
+  shape. Rare on Windows, ordinary on macOS/Linux (Mint with autologin leaves
+  the keyring locked); the fix
+  belongs in `uKeychain` (remember names that failed to read this session and
+  keep their reference) and changes Windows behaviour, so it awaits NY4I.
 - **ONE HOME FOR THE LOG LEVEL: `Settings.Log.DebugLevel`** (default DEBUG,
   NY4I 2026-09-14). The radio store's `logging.level` is written only when an
   operator CHOSE a level; absent or `''` means **no opinion**, and

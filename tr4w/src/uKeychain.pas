@@ -83,13 +83,25 @@ unit uKeychain;
   THE BACKENDS
   ------------------------------------------------------------------------
 
-  Windows   Credential Manager           uKeychainWindows   -- built
-  macOS     Keychain Services            uKeychainMac       -- not yet
-  Linux     Secret Service / libsecret   uKeychainLinux     -- not yet
+  Windows   Credential Manager           uKeychainWindows   JwaWinCred (FPC)
+  macOS     Keychain Services (SecItem)  uKeychainMac       Security.framework
+  Linux     Secret Service / libsecret   uKeychainLinux     libsecret-1.so.0,
+                                                            loaded at run time
 
-  A backend is installed by BEING LISTED in the program's unit list. Nothing
+  A backend is installed by BEING LISTED in the program's unit list. All
+  three are listed in tr4w.lpr, and each is an empty unit on the other two
+  platforms, because this tree has one program file for all of them. Nothing
   selects one at run time, so a platform that has none gets the honest answer
   from KeychainAvailable rather than a silent substitute.
+
+  EVERY BACKEND KEYS AN ENTRY THE SAME WAY: the 'TR4W/v1' namespace plus the
+  setting's name UPPER-CASED. Windows folds case itself (measured, see
+  uKeychainWindows); the macOS keychain and the Secret Service do not, so
+  those two fold it on the way in to keep the three identical.
+
+  A LOCKED VAULT IS ITS OWN ANSWER, ksLocked, so the log can say "locked"
+  rather than "unavailable" -- an operator can fix the first and not the
+  second. Either way nothing is written anywhere weaker.
 
   The tests install an in-memory backend, so a test run never reads or writes
   the machine's real vault.
@@ -124,7 +136,9 @@ type
    TKeychainStatus = (
       ksOk,             (* stored, fetched or removed as asked *)
       ksNotFound,       (* no such secret -- an ordinary first run *)
-      ksUnavailable,    (* no vault on this platform, or it is locked *)
+      ksUnavailable,    (* no vault on this platform, or it cannot be reached *)
+      ksLocked,         (* the vault is there but locked, or the operator
+                          dismissed the unlock prompt *)
       ksAccessDenied,   (* the vault is there and said no *)
       ksError           (* anything else, and it is reported *)
    );
@@ -167,6 +181,11 @@ procedure RegisterKeychainBackend(const aBackend: TKeychainBackend);
 
 (* Where this unit reports a failure. See TKeychainNotice. *)
 procedure SetKeychainNotice(const aNotice: TKeychainNotice);
+
+(* FOR A BACKEND: report a detail only the backend knows -- a library that
+  would not load, a platform error number, the store's own error text. It
+  goes to the same notice. The same rule binds it: NEVER the value. *)
+procedure ReportKeychainDetail(const aName, aMessage: string);
 
 (* IS THERE A VAULT AT ALL? False on a platform with no backend and on one
   whose keyring is locked or absent. A caller that needs to explain why a
@@ -231,13 +250,19 @@ begin
       end;
 end;
 
+procedure ReportKeychainDetail(const aName, aMessage: string);
+begin
+   Report(aName, aMessage);
+end;
+
 (* For the notice text. Not translated: it goes to the log, not the screen. *)
 function StatusText(const aStatus: TKeychainStatus): string;
 begin
    case aStatus of
       ksOk:           Result := 'succeeded';
       ksNotFound:     Result := 'holds no such secret';
-      ksUnavailable:  Result := 'is unavailable or locked';
+      ksUnavailable:  Result := 'is unavailable';
+      ksLocked:       Result := 'is locked';
       ksAccessDenied: Result := 'refused access';
    else
       Result := 'failed';
@@ -312,8 +337,10 @@ begin
 
    if GActive = nil then
       begin
-      (* NO VAULT ON THIS PLATFORM YET -- macOS and Linux, today. The value
-        is NOT written anywhere weaker: see the unit header. *)
+      (* NO BACKEND IN THIS BUILD -- a platform none of the three units
+        covers. The value is NOT written anywhere weaker: see the unit
+        header. A backend that is listed but cannot reach its vault answers
+        ksUnavailable below instead. *)
       Report(aName, 'cannot be saved: this build has no secret store for '
                     + 'this platform, so the value is kept for this session '
                     + 'only and will be asked for again.');
