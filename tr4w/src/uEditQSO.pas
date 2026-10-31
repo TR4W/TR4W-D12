@@ -134,6 +134,8 @@ uses
   uLogStore,
   (* TQsoMyFacts -- our station as recorded for the QSO being edited. *)
   uQsoMyFacts,
+  (* TDeliveryStatus -- the read-only external-logger delivery line. *)
+  uExternalDelivery,
   (* Which store a log READ comes from -- step B4/B5. *)
   uLogSource,
    uPlatformProcess,   // RunProgram / RunWindowsUtility -- the only launchers
@@ -184,6 +186,7 @@ var
   bt: BandType;
   extMode: ExtendedModeType;
   qsoWhen: TDateTime;
+  delivery: TDeliveryStatus;
 begin
    Result := False;
 
@@ -399,6 +402,12 @@ begin
      fields, not as today's values. *)
    LogStoreReadMyFactsAtIndex(IndexOfItemInLogForEdit, EditableMyFacts);
    EditQSOShowMyFacts(EditableMyFacts);
+
+   (* WHERE AN EXTERNAL LOGGER STANDS WITH THIS QSO -- read-only, and shown
+     only when the QSO has a delivery row. Read on every load and the line
+     hidden when there is none, because the form is reused across QSOs. *)
+   LogStoreReadDeliveryAtIndex(IndexOfItemInLogForEdit, delivery);
+   EditQSOShowDelivery(delivery);
 
    Result := True;
 end;

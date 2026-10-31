@@ -52,7 +52,8 @@ interface
 uses
    VC,
    uLogRepository,   (* TLogRepository -- see LogStoreRepository *)
-   uQsoMyFacts;      (* TQsoMyFacts -- the editor's read and write below *)
+   uQsoMyFacts,      (* TQsoMyFacts -- the editor's read and write below *)
+   uExternalDelivery; (* TDeliveryStatus -- LogStoreReadDeliveryAtIndex *)
 
 (* PUT A QSO IN THE LOG, AND SAY WHETHER IT IS ACTUALLY THERE.
 
@@ -110,6 +111,15 @@ procedure LogStoreUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExcha
   Never raises. *)
 function LogStoreReadMyFactsAtIndex(aRecordIndex: Int64;
                                     out aFacts: TQsoMyFacts): boolean;
+
+(* THE EXTERNAL-LOGGER DELIVERY of the QSO at a record position -- the
+  read-only line Edit QSO shows (uExternalDelivery.ExternalDeliveryStatusOfQso,
+  read through its own read-only connection so it sees what the delivery
+  worker has committed). False, with Logger = '', when the QSO has no
+  delivery row, the log is not usable, or the read fails; a failure is
+  logged and the store stays enabled. Never raises. *)
+function LogStoreReadDeliveryAtIndex(aRecordIndex: Int64;
+                                     out aStatus: TDeliveryStatus): boolean;
 
 type
    (* Re-exported so a caller can collect rows for LogStoreUpdateQSOsByRowId
@@ -2220,6 +2230,45 @@ begin
          if logger <> nil then
             begin
             logger.Error('[LogStore] could not read our station for record ' +
+                         '%d: %s', [aRecordIndex, E.Message]);
+            end;
+         end;
+   end;
+end;
+
+function LogStoreReadDeliveryAtIndex(aRecordIndex: Int64;
+                                     out aStatus: TDeliveryStatus): boolean;
+var
+   rowId: Int64;
+   rebuilt: boolean;
+begin
+   Result := False;
+   aStatus := Default(TDeliveryStatus);
+   if GDisabled then
+      begin
+      Exit;
+      end;
+
+   try
+      if not EnsureOpen(rebuilt) then
+         begin
+         Exit;
+         end;
+      rowId := GRepository.RowIdAtIndex(aRecordIndex);
+      if rowId <= 0 then
+         begin
+         Exit;
+         end;
+      Result := ExternalDeliveryStatusOfQso(GDatabase.FileName, rowId, aStatus);
+   except
+      on E: Exception do
+         begin
+         (* A READ, so the store stays enabled: the editor hides the line. *)
+         aStatus := Default(TDeliveryStatus);
+         Result := False;
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] could not read the delivery of record ' +
                          '%d: %s', [aRecordIndex, E.Message]);
             end;
          end;

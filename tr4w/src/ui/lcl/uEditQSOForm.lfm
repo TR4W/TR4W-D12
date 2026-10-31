@@ -1,12 +1,12 @@
 object frmEditQSO: TfrmEditQSO
   Left = 0
-  Height = 498
+  Height = 519
   Top = 0
   Width = 584
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   Caption = 'Edit QSO'
-  ClientHeight = 498
+  ClientHeight = 519
   ClientWidth = 584
   Position = poMainFormCenter
   LCLVersion = '4.8.0.0'
@@ -807,5 +807,16 @@ object frmEditQSO: TfrmEditQSO
       TabOrder = 7
       OnChange = FieldChanged
     end
+  end
+  object lblDelivery: TLabel
+    Left = 8
+    Height = 17
+    Top = 494
+    Width = 568
+    AutoSize = False
+    Caption = 'External logger delivery'
+    Layout = tlCenter
+    ShowAccelChar = False
+    Visible = False
   end
 end

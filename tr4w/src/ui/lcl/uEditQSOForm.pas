@@ -81,7 +81,8 @@ uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, DateTimePicker,
   LCLType,
   uTR4WStrings,
-  uQsoMyFacts;   // TQsoMyFacts -- our station as recorded for the QSO
+  uQsoMyFacts,   // TQsoMyFacts -- our station as recorded for the QSO
+  uExternalDelivery;  // TDeliveryStatus -- the read-only delivery line
 
 type
   TfrmEditQSO = class(TForm)
@@ -115,6 +116,11 @@ type
       lblMyCQZone, lblMyITUZone: TLabel;
     edtMyCall, edtMyGrid, edtMyState, edtMyCounty, edtMySection, edtMyPark,
       edtMyCQZone, edtMyITUZone: TEdit;
+
+    // WHERE AN EXTERNAL LOGGER STANDS WITH THIS QSO -- read-only, by name,
+    // through EditQSOShowDelivery. A label: it raises no OnChange, so it can
+    // never enable Save, which is this dialog's dirty flag.
+    lblDelivery: TLabel;
 
     btnSave, btnCancel: TButton;
 
@@ -235,6 +241,13 @@ procedure EditQSOCloseForm;
 // continent) and the source are carried through untouched.
 procedure EditQSOShowMyFacts(const aFacts: TQsoMyFacts);
 function  EditQSOReadMyFacts(const aShown: TQsoMyFacts): TQsoMyFacts;
+
+// THE EXTERNAL-LOGGER DELIVERY LINE, under the our-station group. Shown only
+// when the QSO has a delivery row (aStatus.Logger <> ''), hidden otherwise,
+// and the form's height follows it. A no-op when the form is not up.
+procedure EditQSOShowDelivery(const aStatus: TDeliveryStatus);
+// What that line says -- pure, so the tests pin every state.
+function  EditQSODeliveryText(const aStatus: TDeliveryStatus): string;
 // The window a message box should be parented on. 0 when the form is not up,
 // which is what MessageBox wants for "no owner" anyway.
 
@@ -268,6 +281,10 @@ implementation
 {$R *.lfm}
 
 uses
+  // FIRST, so every unit below still wins any name it shares (this tree
+  // resolves a name to the LAST unit declaring it).
+  uAppStrings,        // SEditQSODelivery* -- the delivery line
+  DateUtils,          // UnixToDateTime -- the delivery line's time
   uEditQSO,           // the load and save halves, which stayed put
   uLCLFormHelpers,    // ShowModalOverWin32Parent -- every caller is still Win32
   MainUnit,           // logger
@@ -587,6 +604,93 @@ begin
    // An empty or unreadable zone is unknown, 0 -- never a guess.
    Result.CQZone := StrToIntDef(Trim(frmEditQSO.edtMyCQZone.Text), 0);
    Result.ITUZone := StrToIntDef(Trim(frmEditQSO.edtMyITUZone.Text), 0);
+end;
+
+// --------------------------------------------- the external-logger delivery
+// The stored state words (uLogSchema's CHECK) in the operator's words -- the
+// same ones the Preferences delivery summary uses. A state this build does
+// not know is shown as stored rather than hidden.
+function DeliveryStateText(const aStatus: TDeliveryStatus): string;
+begin
+   if aStatus.State = 'pending' then
+      begin
+      Result := SEditQSODeliveryPending;
+      end
+   else if aStatus.State = 'inflight' then
+      begin
+      Result := SEditQSODeliverySending;
+      end
+   else if aStatus.State = 'synced' then
+      begin
+      Result := SEditQSODeliverySynced;
+      end
+   else if aStatus.State = 'uncertain' then
+      begin
+      Result := SEditQSODeliveryUncertain;
+      end
+   else if aStatus.State = 'failed' then
+      begin
+      if aStatus.ErrorCode <> '' then
+         begin
+         Result := UnicodeFormat(SEditQSODeliveryFailedWithCode, [aStatus.ErrorCode]);
+         end
+      else
+         begin
+         Result := SEditQSODeliveryFailed;
+         end;
+      end
+   else
+      begin
+      Result := aStatus.State;
+      end;
+end;
+
+// LastSent is Unix seconds UTC; UnixToDateTime converts nothing by default,
+// so the time shown is UTC and says so. The colon is QUOTED: a bare ':' in
+// FormatDateTime is the locale's TimeSeparator, which is '.' on some
+// stations, and a UTC stamp should read the same everywhere.
+function EditQSODeliveryText(const aStatus: TDeliveryStatus): string;
+var
+  sent: string;
+begin
+   if aStatus.LastSent > 0 then
+      begin
+      sent := UnicodeFormat(SEditQSODeliveryLastSent,
+         [string(FormatDateTime('yyyy-mm-dd hh":"nn',
+                                DateUtils.UnixToDateTime(aStatus.LastSent)))]);
+      end
+   else
+      begin
+      sent := SEditQSODeliveryNeverSent;
+      end;
+   Result := UnicodeFormat(SEditQSODeliveryLine,
+                           [aStatus.Logger, DeliveryStateText(aStatus), sent]);
+end;
+
+procedure EditQSOShowDelivery(const aStatus: TDeliveryStatus);
+var
+  bottom: integer;
+begin
+   if frmEditQSO = nil then
+      begin
+      Exit;
+      end;
+
+   // SET EVERY TIME, shown or hidden: the form is hidden on close and reused,
+   // so a line left from the previous QSO would otherwise describe this one.
+   frmEditQSO.lblDelivery.Visible := aStatus.Logger <> '';
+   bottom := frmEditQSO.grpMyStation.Top + frmEditQSO.grpMyStation.Height;
+   if frmEditQSO.lblDelivery.Visible then
+      begin
+      // UTF8Encode: the LCL's caption is a UTF-8 AnsiString, and an implicit
+      // UTF-16 to Ansi conversion is a narrowing the build counts.
+      frmEditQSO.lblDelivery.Caption := UTF8Encode(EditQSODeliveryText(aStatus));
+      bottom := frmEditQSO.lblDelivery.Top + frmEditQSO.lblDelivery.Height;
+      end;
+
+   // The designed margin below the group (498 - 490), kept under whichever
+   // control is last, so a QSO without a delivery row gets no empty band.
+   frmEditQSO.ClientHeight := bottom + 8;
 end;
 
 // ------------------------------------------------------------------- the form

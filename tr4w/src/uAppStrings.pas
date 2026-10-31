@@ -48,6 +48,19 @@ resourcestring
    SWRLSummary = 'WRL delivery: pending %d; sending %d; up to date %d; uncertain %d; failed %d. Reopen Preferences to refresh.';
    SWRLStatusUnavailable = 'WRL delivery status is unavailable for the current log.';
    SWRLDeliveryIssue = 'World Radio League delivery needs attention. %s. Local logging continues; check the TR4W log and WRL delivery records.';
+
+   // EDIT QSO -- the read-only external-logger delivery line under "Our
+   // station for this QSO". Line: logger, state, then the sent clause.
+   // Example: "External logger WRL: up to date. Last sent 2026-10-31 14:05 UTC"
+   SEditQSODeliveryLine      = 'External logger %s: %s. %s';
+   SEditQSODeliveryLastSent  = 'Last sent %s UTC';
+   SEditQSODeliveryNeverSent = 'Not sent yet';
+   SEditQSODeliveryPending   = 'pending';
+   SEditQSODeliverySending   = 'sending';
+   SEditQSODeliverySynced    = 'up to date';
+   SEditQSODeliveryUncertain = 'uncertain';
+   SEditQSODeliveryFailed    = 'failed';
+   SEditQSODeliveryFailedWithCode = 'failed (%s)';
    { ---------------------------------------------- retiring the legacy ini - }
 
    // Shown ONCE, after the settings have been carried into settings\tr4w.json.

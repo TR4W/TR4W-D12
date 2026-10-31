@@ -273,7 +273,23 @@ const
       'flight_deleted INTEGER NOT NULL DEFAULT 0, ' +
       'next_attempt INTEGER NOT NULL DEFAULT 0, ' +
       'error_code TEXT NOT NULL DEFAULT '''', request_id TEXT NOT NULL DEFAULT '''', ' +
+      'last_sent INTEGER NOT NULL DEFAULT 0, ' +
       'PRIMARY KEY(logger, account, logbook, contact))';
+
+   (* external_delivery.last_sent -- WHEN THE DESTINATION LAST ANSWERED for
+     this contact, Unix seconds UTC; 0 = never. Written by
+     TExternalDelivery.Complete on a confirmed or a failed outcome (the
+     server took the request and said yes or no); a retry or an uncertain
+     outcome leaves it alone. Edit QSO shows it.
+
+     ADDED INSIDE SCHEMA 5, NOT AS A 6 (2026-10-31). Schema 5 had not been
+     released when the column arrived, so the number did not move; but logs
+     a development build had already stamped 5 exist, so MigrateSchema asks
+     for this column even when user_version is current, and adds it where it
+     is missing. The last column of LOG_V5_DELIVERY_TABLE, so ADD COLUMN gives
+     such a log the same shape as a new one. *)
+   LOG_V5_DELIVERY_LAST_SENT_COLUMN: TLogAddedColumn = (
+      Name: 'last_sent'; Declaration: 'INTEGER NOT NULL DEFAULT 0');
 
    LOG_V5_DELIVERY_INDEX =
       'CREATE INDEX IF NOT EXISTS idx_external_delivery_pending ' +

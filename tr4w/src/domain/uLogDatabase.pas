@@ -1568,9 +1568,28 @@ var
    i: integer;
    missing: array of integer;
    messageEditedMissing: boolean;
+   lastSentMissing: boolean;
 begin
    version := PragmaAsInteger('PRAGMA user_version');
-   if version >= LOG_SCHEMA_VERSION then
+
+   (* external_delivery.last_sent ARRIVED INSIDE SCHEMA 5 (see
+     LOG_V5_DELIVERY_LAST_SENT_COLUMN), so a log already stamped 5 may lack
+     it, and this is asked BEFORE the "already current" exit below. Only a
+     log that HAS the table can lack the column: below 5 the table is created
+     further down, column and all. Asked first, like the v3 and v4 questions,
+     so the migration stays one transaction. *)
+   lastSentMissing := False;
+   if version >= 5 then
+      begin
+      lastSentMissing :=
+         (PragmaAsString('SELECT name FROM pragma_table_info(''external_delivery'') ' +
+                         'WHERE name = ''logger''') <> '') and
+         (PragmaAsString(UTF8Encode('SELECT name FROM pragma_table_info(''external_delivery'') ' +
+                         'WHERE name = ''' + string(LOG_V5_DELIVERY_LAST_SENT_COLUMN.Name) +
+                         '''')) = '');
+      end;
+
+   if (version >= LOG_SCHEMA_VERSION) and not lastSentMissing then
       begin
       Exit;
       end;
@@ -1654,6 +1673,16 @@ begin
       FConnection.ExecuteDirect(LOG_V5_DELIVERY_TABLE);
       FConnection.ExecuteDirect(LOG_V5_DELIVERY_INDEX);
       FConnection.ExecuteDirect(LOG_V5_DELIVERY_CONTACT_INDEX);
+      end;
+
+   (* A schema-5 log from before last_sent: 0 in every existing row, which is
+     "never answered" -- true of what this log can say. *)
+   if lastSentMissing then
+      begin
+      FConnection.ExecuteDirect(UTF8Encode(
+         'ALTER TABLE external_delivery ADD COLUMN ' +
+         string(LOG_V5_DELIVERY_LAST_SENT_COLUMN.Name) + ' ' +
+         string(LOG_V5_DELIVERY_LAST_SENT_COLUMN.Declaration)));
       end;
 
    (* AND THE VERSION, IN THE SAME TRANSACTION, THEN ONE COMMIT (R5,

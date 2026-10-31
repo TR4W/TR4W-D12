@@ -99,6 +99,7 @@ procedure ScrubTestLog(const aFileName: string);
   the current schema, then EVERY addition made after aToVersion is removed
   and user_version is stamped aToVersion:
 
+    v5  the external_delivery table
     v4  message.edited
     v3  the LOG_V3_QSO_COLUMNS, from index aFirstV3Dropped on (pass
         Low(LOG_V3_QSO_COLUMNS) for a genuine schema-2 file; a later index
@@ -169,6 +170,11 @@ begin
    db := TLogDatabase.Create;
    try
       db.Open(aFileName);
+      if aToVersion < 5 then
+         begin
+         (* Its two indexes go with it. *)
+         db.Connection.ExecuteDirect('DROP TABLE external_delivery');
+         end;
       if aToVersion < 4 then
          begin
          db.Connection.ExecuteDirect(UTF8Encode('ALTER TABLE message DROP COLUMN ' +

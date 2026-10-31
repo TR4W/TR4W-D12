@@ -619,6 +619,34 @@ log lacks (design, contest rule and threading: the `multi-op-network` agent and
   goes to the earlier ROW, not the earlier time. Same as a live peer QSO; recorded
   here because a catch-up makes it likelier.
 
+## SCHEMA 5: `external_delivery`, AND ITS `last_sent` (WRL, 2026-10-31)
+
+Durable external-logger delivery, one row per (logger, account, logbook,
+contact); `contact` is the QSO's `guid`. Repo access is
+`src/domain/uExternalDelivery.pas`; the worker (`uWRLWorker`) owns its OWN
+connection.
+
+- **`last_sent` (Unix UTC seconds, 0 = never) ARRIVED INSIDE SCHEMA 5, NOT AS
+  A 6.** Schema 5 was unreleased, but development logs were already stamped 5,
+  so `MigrateSchema` asks for the column BEFORE its "already current" exit
+  (only when the table exists) and ALTERs it in. An added column after a
+  release still bumps the version, as v3/v4 did. Pinned by
+  `uTestWRLDelivery.TestLastSentMigration` (old DDL as a literal, user_version
+  5, migrated columns equal a fresh log's, second open a no-op).
+- **Written only by `Complete`, on doConfirmed and doFailed** (the server
+  answered), with SQLite's `strftime('%s','now')` -- UTC by construction, so no
+  caller passes a time. Inside the guarded UPDATE, so a stale completion
+  cannot move it. `Enqueue` never touches it.
+- **Edit QSO reads it through `LogStoreReadDeliveryAtIndex` ->
+  `ExternalDeliveryStatusOfQso`, on a SHORT-LIVED `OpenReadOnly` connection,
+  NOT the store's.** The store's connection can be holding a read transaction
+  from an earlier read (sqldb keeps one open until a commit), and that snapshot
+  would not show what the worker committed since. Same reason as
+  `ExternalDeliveryCounts`. Several destinations for one contact: the one with
+  the newest `last_sent` is shown.
+- **`DowngradeTestLog` to below 5 drops `external_delivery`** (it did not, so a
+  "schema-4" fixture still had the v5 table).
+
 ## The `config` table holds only what the operator STATED (2026-10-01)
 
 For a contest-scoped setting, a row means the operator stated it, and a

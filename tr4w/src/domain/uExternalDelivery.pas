@@ -24,9 +24,26 @@ type
       Pending, InFlight, Synced, Uncertain, Failed: Int64;
    end;
 
+   (* ONE QSO'S DELIVERY, as Edit QSO shows it -- a value, so nothing of sqldb
+     leaves this unit. Logger = '' means the QSO has no delivery row.
+     LastSent is Unix seconds UTC, 0 when the destination never answered. *)
+   TDeliveryStatus = record
+      Logger, State, ErrorCode: string;
+      LastSent: Int64;
+   end;
+
 (* An on-demand, read-only snapshot. Never commits a caller's live connection
    or leaves a WAL reader pinned while Preferences is open. *)
 function ExternalDeliveryCounts(const aFileName, aLogger: string): TDeliveryCounts;
+
+(* The delivery of qso row aRowId -- TExternalDelivery.StatusOfQso, through its
+  own short-lived read-only connection for the same reason as the counts: the
+  caller's live connection may hold a read transaction from an earlier read,
+  and its snapshot would not show what the worker has written since. False,
+  with Logger = '', when the QSO has no delivery row. Raises if the file will
+  not open. *)
+function ExternalDeliveryStatusOfQso(const aFileName: string; aRowId: Int64;
+                                     out aStatus: TDeliveryStatus): boolean;
 
 type
 
@@ -52,6 +69,13 @@ type
                          aNextAttempt: Int64);
       procedure RecoverInterrupted(const aLogger, aAccount: string);
       function NextAttempt(const aLogger, aAccount: string): Int64;
+      (* The delivery of the qso row aRowId, joined through qso.guid (the
+         contact key). The key allows more than one destination row per
+         contact, though CaptureSavedQso keeps edits on the first binding, so
+         a second row today comes only from a hand edit or future code; the
+         one answered most recently is returned. False, with Logger = '',
+         when none. *)
+      function StatusOfQso(aRowId: Int64; out aStatus: TDeliveryStatus): boolean;
    end;
 
 implementation
@@ -59,6 +83,14 @@ implementation
 const
    KEY_WHERE = 'logger = :logger AND account = :account ' +
       'AND logbook = :logbook AND contact = :contact';
+
+   (* WHEN THE DESTINATION ANSWERED: confirmed or failed, the two outcomes in
+     which the server took the request and said yes or no. A retry (often no
+     answer at all) and an uncertain outcome leave last_sent alone. SQLite's
+     own clock, which is Unix seconds UTC, so no caller passes a time and no
+     local-time conversion can creep in. Part of Complete's guarded UPDATE,
+     so a stale completion moves it no more than it moves the state. *)
+   LAST_SENT_NOW = ', last_sent = CAST(strftime(''%s'', ''now'') AS INTEGER)';
 
 function ExternalDeliveryCounts(const aFileName, aLogger: string): TDeliveryCounts;
 var
@@ -90,6 +122,25 @@ begin
       Result.Failed := q.FieldByName('failed').AsLargeInt;
    finally
       q.Free;
+      database.Free;
+   end;
+end;
+
+function ExternalDeliveryStatusOfQso(const aFileName: string; aRowId: Int64;
+                                     out aStatus: TDeliveryStatus): boolean;
+var
+   database: TLogDatabase;
+   delivery: TExternalDelivery;
+begin
+   aStatus := Default(TDeliveryStatus);
+   database := TLogDatabase.Create;
+   delivery := nil;
+   try
+      database.OpenReadOnly(aFileName);
+      delivery := TExternalDelivery.Create(database);
+      Result := delivery.StatusOfQso(aRowId, aStatus);
+   finally
+      delivery.Free;
       database.Free;
    end;
 end;
@@ -227,7 +278,8 @@ begin
          begin
          stateSQL := 'CASE WHEN revision = flight_revision THEN ''synced'' ELSE ''pending'' END';
          confirmationSQL := ', confirmed_revision = flight_revision, ' +
-            'confirmed_payload = :confirmed_payload, flight_payload = ''''';
+            'confirmed_payload = :confirmed_payload, flight_payload = ''''' +
+            LAST_SENT_NOW;
          if aJob.Deleted then
             begin
             remoteId := '';
@@ -244,6 +296,7 @@ begin
       doFailed:
          begin
          stateSQL := 'CASE WHEN revision > flight_revision THEN ''pending'' ELSE ''failed'' END';
+         confirmationSQL := LAST_SENT_NOW;
          end;
    end;
    q := KeyedQuery(UTF8Encode('UPDATE external_delivery SET state = ' + stateSQL +
@@ -299,6 +352,32 @@ begin
       if not q.FieldByName('due').IsNull then
          begin
          Result := q.FieldByName('due').AsLargeInt;
+         end;
+   finally
+      q.Free;
+   end;
+end;
+
+function TExternalDelivery.StatusOfQso(aRowId: Int64;
+                                       out aStatus: TDeliveryStatus): boolean;
+var
+   q: TSQLQuery;
+begin
+   aStatus := Default(TDeliveryStatus);
+   q := Query('SELECT d.logger, d.state, d.error_code, d.last_sent ' +
+      'FROM external_delivery d JOIN qso ON qso.guid = d.contact ' +
+      'WHERE qso.id = :id ' +
+      'ORDER BY d.last_sent DESC, d.logger, d.account, d.logbook LIMIT 1');
+   try
+      q.ParamByName('id').AsLargeInt := aRowId;
+      q.Open;
+      Result := not q.EOF;
+      if Result then
+         begin
+         aStatus.Logger := UTF8Decode(q.Fields[0].AsUTF8String);
+         aStatus.State := UTF8Decode(q.Fields[1].AsUTF8String);
+         aStatus.ErrorCode := UTF8Decode(q.Fields[2].AsUTF8String);
+         aStatus.LastSent := q.Fields[3].AsLargeInt;
          end;
    finally
       q.Free;

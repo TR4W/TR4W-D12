@@ -4853,3 +4853,21 @@ re-uploaded. Needs a HamScore account (or the queue count with posting off).
   (the dialog says so); "Delete and re-send" removes it.
 - [ ] **Button caption** in the status window reads "Re-send Log to HamScore..."
   and fits its button (width 250) in a non-English language.
+
+## Added 2026-10-31 -- EDIT QSO SHOWS WHERE AN EXTERNAL LOGGER STANDS (WRL)
+
+Edit QSO has a read-only line under "Our station for this QSO" when the QSO
+has an `external_delivery` row, e.g. `External logger WRL: up to date. Last
+sent 2026-10-31 14:05 UTC`. Hidden, and the window no taller, when it has
+none. Needs a log with WRL delivery set up (or rows written by hand).
+
+- [ ] **Edit QSO delivery line looks right on Windows, Mint (gtk2) and macOS**:
+  one line, left-aligned with the group above it, not clipped at the bottom of
+  the window, and the window has no empty band below the group for a QSO with
+  no delivery row.
+- [ ] **It follows the QSO.** Open a delivered QSO, close, open a QSO with no
+  row: the line is gone. A failed delivery shows its code, e.g.
+  `failed (BAD_CALL)`; a never-answered one says `Not sent yet`.
+- [ ] **It does not dirty the dialog.** Open and Escape: no save prompt, and
+  Save stays disabled.
+- [ ] **The time is UTC** and matches when WRL last answered (`tr4w.log`).
