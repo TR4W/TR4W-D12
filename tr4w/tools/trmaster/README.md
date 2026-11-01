@@ -29,6 +29,12 @@ changes).
   TTL for names / 30-day for no-name results**. `--cache-only` regenerates the
   CSV from cache with no API calls. **Skips cleanly** (empty CSV, exit 0) with no
   QRZ subscription, so a future maintainer without QRZ can still build.
+  With `--geo-out` it also keeps each operator's **grid, state, county and lat/lon
+  from the same response** (no extra calls) and writes `CALL,GRID,SECTION` for
+  `trmaster_build.py --geo-csv`. See [Grid and section](#grid-and-section-from-qrz).
+- **`qrz_geo.py`**, **`county_section.py`** — the pure halves of that: a QRZ cache
+  entry → grid + section, and state + county → ARRL/RAC section. Tests:
+  `python -I test_qrz_geo.py`, `python -I test_county_section.py`.
 
 ## Quick start (monthly)
 
@@ -103,6 +109,8 @@ Name precedence, highest → lowest: **CWops > FOC > history > seed > QRZ**.
 4. FOC → `FOC` # + Name (roster name wins over history)
 5. HSC → `User2` (HSC #)
 6. `--names-csv` (QRZ) fills any remaining nameless call
+7. `--geo-csv` (QRZ) fills an **empty** `Grid` / `Section` slot; a value already in the
+   seed is curated and is never overwritten
 
 Calls present only in the SCP source stay **bare** — still work for Super Check
 Partial, just no prefill.
@@ -130,12 +138,44 @@ refreshed live each run; QRZ names grow via the cache. Re-baseline the seed
 Supplied by NY4I (2026-11-01); it rarely changes. A state or province maps either
 straight to its section (`"OH": "OH"`) or, for the nine whose sections split inside
 the state (CA, FL, MA, NJ, NY, ON, PA, TX, WA), county by county
-(`"CA": {"Alameda": "EB", ...}`). Nothing reads it yet: it is the crosswalk for filling
-the `.DTA`'s Section slot from a QRZ county. QRZ's county spelling will need matching
-to these names (case, "St."/"Saint", "County" suffix) once real QRZ data is in hand.
-`python check_county_sections.py` checks that every section it names is one
-`target/dom/arrlsect.dom` accepts. Turn it into a Pascal unit only if the program
-itself ever needs the lookup at run time.
+(`"CA": {"Alameda": "EB", ...}`). `county_section.py` reads it: QRZ's county spelling
+is matched to these names (case, "St."/"Saint"/"Ste.", "County"/"Parish"/"Borough"
+suffix, hyphens, accents) and a split state with an unmatched county gives **no
+section, never a guess**. `python check_county_sections.py` checks that every section
+it names is one `target/dom/arrlsect.dom` accepts. Turn it into a Pascal unit only if
+the program itself ever needs the lookup at run time.
+
+## Grid and section from QRZ
+
+One `.DTA` serves 4.x and 5.x: the record already has a **Grid (^G, string[6])** and
+a **Section (^A, string[5])** slot, and the 4.x and 5.x `logscp.pas` decode both the
+same way (verified 2026-11-01; the shipped file simply never carried them). Nothing
+in the record layout changes.
+
+```
+python trmaster_names_qrz.py --dta _work\TRMASTER_new.DTA --all ^
+    --out _work\qrz_names.csv --geo-out _work\qrz_geo.csv --limit 2000 --sleep 0.2
+python trmaster_build.py ... --names-csv _work\qrz_names.csv --geo-csv _work\qrz_geo.csv
+```
+
+Run the resolver with `python` (not `-I`): it imports its sibling modules.
+
+- **`--all` is needed** to resolve calls that already have a name; without it the
+  resolver only visits nameless calls.
+- **Grid** is QRZ's `<grid>`, stored Maidenhead style (`EL88`, `EL88ab`), never longer
+  than 6; if QRZ has none the 4-character square is derived from its lat/lon.
+- **Section** is the county crosswalk above, for a US/Canada/US-territory country only.
+  QRZ gives no county for Canada, so the Ontario calls (a split province) get **no
+  section** by design.
+- **Cache freshness:** names are unchanged. Geo has its own stamp (`geo_ts`,
+  `--geo-max-age-days`, default 365). An entry cached before this change has none and
+  is re-fetched **only** when `--geo-out` is given, so a names-only run never spends a
+  lookup on geo.
+- **Measured 2026-11-01 on 300 calls** (230 US, 35 VE, 35 other): US grid 228/230, county
+  228/230, section 228/230 (the 2 misses were not on QRZ); VE grid 35/35, section
+  22/35 (the 13 Ontario calls); all 296 grids QRZ supplied were 6 characters; no US
+  county failed to match the crosswalk. About 0.53 s per call at `--sleep 0.2`, so a
+  full ~67k pass is roughly 10 hours: run it in `--limit` batches, the cache accumulates.
 
 ## `_work/`
 

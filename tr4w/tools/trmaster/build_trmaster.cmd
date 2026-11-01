@@ -10,8 +10,9 @@ REM    1. download supercheckpartial SCP.DB (MASTER.DTA + CWops auto-download)
 REM    2. build pass 1: MASTER universe + curated seed/rosters + callsign-history
 REM       name files, US/UK/CA QRZ-verified prune  ->  identifies the calls that
 REM       STILL need names (history already names ~24k, so QRZ has far fewer)
-REM    3. QRZ name resolver fills the still-bare calls (cached; cheap on re-runs)
-REM    4. build pass 2: same inputs + the QRZ names  ->  TRMASTER.DTA
+REM    3. QRZ resolver fills the still-bare names and collects grid + ARRL section
+REM       (cached; cheap on re-runs)
+REM    4. build pass 2: same inputs + the QRZ names, grids, sections -> TRMASTER.DTA
 REM
 REM  Inputs that carry history (back these up; see README):
 REM    seed\TRMASTER_seed.DTA                  curated names / FOC / HSC / orphans
@@ -29,6 +30,7 @@ set "SEED=seed\TRMASTER_seed.DTA"
 set "OUT=TRMASTER.DTA"
 set "SCPDB=%WORK%\SCP.DB"
 set "NAMES=%WORK%\qrz_names.csv"
+set "GEO=%WORK%\qrz_geo.csv"
 set "QRZ_LIMIT=5000"
 set "CWOPS_URL=https://docs.google.com/spreadsheets/d/1Ew8b1WAorFRCixGRsr031atxmS0SsycvmOczS_fDqzc/export?format=csv"
 
@@ -59,14 +61,18 @@ echo [2/4] build pass 1 (universe + rosters + prune) ...
 
 REM --- 3. QRZ name resolution for the bare calls (skips cleanly if no creds) --
 echo [3/4] QRZ name lookups (limit %QRZ_LIMIT%) ...
-"%PYTHON%" trmaster_names_qrz.py --dta "%OUT%" --out "%NAMES%" ^
-    --limit %QRZ_LIMIT% --sleep 0.2 || goto :error
+REM     --all + --geo-out also collects each call's grid and section from the same
+REM     QRZ response.  A call cached before geo was kept is re-fetched once, so
+REM     the first runs spend their limit on that; re-run until it stops growing.
+"%PYTHON%" trmaster_names_qrz.py --dta "%OUT%" --all --out "%NAMES%" ^
+    --geo-out "%GEO%" --limit %QRZ_LIMIT% --sleep 0.2 || goto :error
 
 REM --- 4. final build with names --------------------------------------------
 echo [4/4] build pass 2 (with QRZ names) ...
 "%PYTHON%" trmaster_build.py --out "%OUT%" --existing "%SEED%" ^
     --download-master --cwops-url "%CWOPS_URL%" %HISTORY% ^
-    --prune-qrz-unverified "%SCPDB%" --names-csv "%NAMES%" || goto :error
+    --prune-qrz-unverified "%SCPDB%" --names-csv "%NAMES%" ^
+    --geo-csv "%GEO%" || goto :error
 
 echo.
 echo Done.  Built:  %~dp0%OUT%

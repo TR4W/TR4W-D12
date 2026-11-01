@@ -181,6 +181,37 @@ def load_names_csv(path):
     return out
 
 
+GRID_RE = re.compile(r"^[A-R]{2}[0-9]{2}([a-x]{2})?$")
+
+
+def load_geo_csv(path):
+    """Optional geo source from trmaster_names_qrz.py --geo-out:
+    'CALL,GRID,SECTION' -> {CALL: {'Grid': ..., 'Section': ...}}.
+
+    A value is kept only if it fits the slot it is going into -- Grid is a
+    4 or 6 character Maidenhead square (string[6]), Section at most 5
+    printable characters (string[5]) -- so a bad row cannot put a long or
+    control-character value into a record the 4.x reader would then split.
+    """
+    out = {}
+    if not path or not os.path.exists(path):
+        return out
+    with open(path, newline="", encoding="utf-8", errors="replace") as f:
+        for row in csv.reader(f):
+            if not row or not valid_call(row[0].strip().upper()):
+                continue
+            rec = {}
+            if len(row) > 1 and GRID_RE.match(row[1].strip()):
+                rec["Grid"] = row[1].strip()
+            if len(row) > 2:
+                sec = row[2].strip().upper()
+                if 0 < len(sec) <= 5 and sec.isalnum():
+                    rec["Section"] = sec
+            if rec:
+                out[row[0].strip().upper()] = rec
+    return out
+
+
 def resolve_history_files(patterns):
     """Resolve each --history-glob pattern to the single NEWEST matching file.
 
@@ -237,10 +268,13 @@ def load_history_names(paths):
 
 # --- merge ------------------------------------------------------------------
 
-def merge(universe, existing, history, cwops, foc, hsc, names):
+def merge(universe, existing, history, cwops, foc, hsc, names, geo=None):
     """Build {CALL: fields} by the documented precedence.
 
     Name precedence (high -> low): CWops > FOC > history > seed(existing) > QRZ.
+
+    Grid and Section come only from `geo` (QRZ) and only into an EMPTY slot:
+    a value already in the seed is curated and is never overwritten.
 
     History calls, like the CWops/FOC/HSC rosters, expand the call universe
     (curated active participants) and are therefore never pruned.
@@ -275,6 +309,11 @@ def merge(universe, existing, history, cwops, foc, hsc, names):
         # 6. name resolver (QRZ) fills any call still nameless
         if not f.get("Name") and call in names:
             f["Name"] = names[call]
+        # 7. geo (QRZ grid + county-derived section) fills empty slots only
+        if geo and call in geo:
+            for slot in ("Grid", "Section"):
+                if not f.get(slot) and geo[call].get(slot):
+                    f[slot] = geo[call][slot]
         out[call] = f
     return out
 
@@ -283,7 +322,7 @@ def census(calls, label):
     def has(fld):
         return sum(1 for v in calls.values() if v.get(fld))
     log(f"=== {label}: {len(calls)} calls ===")
-    for fld in ("Name", "User1", "FOC", "User2"):
+    for fld in ("Name", "User1", "FOC", "User2", "Grid", "Section"):
         log(f"    {fld:6}: {has(fld)}")
     log(f"    bare (no name): {sum(1 for v in calls.values() if not v.get('Name'))}")
 
@@ -310,6 +349,8 @@ def main(argv=None):
                     help="explicit callsign-history file (repeatable; order = "
                          "priority; applied before --history-glob results).")
     ap.add_argument("--names-csv", help="name source CSV (CALL,NAME) from FCC/QRZ")
+    ap.add_argument("--geo-csv", help="grid/section source CSV (CALL,GRID,SECTION) "
+                    "from trmaster_names_qrz.py --geo-out")
     ap.add_argument("--prune-qrz-unverified", metavar="SCP.DB",
                     help="drop universe calls that SCP.DB marks NOT QRZ-verified "
                          "(removes lapsed/unverifiable calls; curated CWops/FOC/"
@@ -376,7 +417,10 @@ def main(argv=None):
     log(f"  name-resolver names: {len(names)}")
 
     # 3. merge + write
-    merged = merge(universe, existing, history, cwops, foc, hsc, names)
+    geo = load_geo_csv(args.geo_csv)
+    log(f"  geo (grid/section) entries: {len(geo)}")
+
+    merged = merge(universe, existing, history, cwops, foc, hsc, names, geo)
     census(merged, "merged")
     size = tc.write_dta(args.out, merged)
     log(f"\nwrote {args.out}: {size} bytes")

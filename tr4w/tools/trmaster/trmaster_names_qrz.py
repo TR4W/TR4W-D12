@@ -14,6 +14,19 @@ the **nickname** field (e.g. "Tom") over the formal first name `fname`
 ("Thomas") — nickname is what gets sent in CW exchanges.  Misses are cached so
 they are not retried.
 
+The same response also carries the operator's grid, state, county and lat/lon.
+Those are kept in the cache entry (no extra QRZ calls) and, with --geo-out,
+written as CALL,GRID,SECTION for trmaster_build.py --geo-csv, which fills the
+TRMASTER.DTA Grid and Section slots (see qrz_geo.py / county_section.py).
+
+CACHE FRESHNESS.  Name freshness is unchanged (named entries --max-age-days,
+no-name entries --miss-max-age-days, confirmed clubs never).  The geo fields
+have their own stamp, `geo_ts`, written whenever an entry is fetched by this
+version, and they expire on --geo-max-age-days (default 365: an address moves
+slowly).  An entry cached by an older version has no `geo_ts`: it is fine for
+names, and is re-fetched ONLY when --geo-out is asked for.  A run without
+--geo-out therefore never spends a lookup on geo.
+
 QRZ is optional.  If the credentials file / [qrz] section is missing (e.g. a
 future maintainer without a QRZ subscription), this prints a notice and exits 0
 without producing names — the merge step then simply leaves those calls bare.
@@ -24,6 +37,13 @@ batches so the cache accumulates across runs):
   python trmaster_names_qrz.py --dta _work/TRMASTER_new.DTA \
       --out _work/qrz_names.csv --limit 2000
   python trmaster_build.py ... --names-csv _work/qrz_names.csv
+
+Grid and section as well (resolve EVERY call, not only the nameless ones):
+
+  python trmaster_names_qrz.py --dta _work/TRMASTER_new.DTA --all \
+      --out _work/qrz_names.csv --geo-out _work/qrz_geo.csv --limit 2000
+  python trmaster_build.py ... --names-csv _work/qrz_names.csv \
+      --geo-csv _work/qrz_geo.csv
 """
 
 import argparse
@@ -40,6 +60,8 @@ import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 
+import county_section
+import qrz_geo
 import trmaster_codec as tc
 
 
@@ -90,7 +112,8 @@ class QRZNameClient:
     """Minimal QRZ XML client that keeps nickname/fname; JSON name cache."""
 
     def __init__(self, username, password, cache_path,
-                 hit_max_age_days=180, miss_max_age_days=30):
+                 hit_max_age_days=180, miss_max_age_days=30,
+                 geo_max_age_days=365):
         self._user = username
         self._pass = password
         self._cache_path = cache_path
@@ -102,6 +125,7 @@ class QRZNameClient:
         # case a call gets licensed or its QRZ profile gains a name. 0 = never.
         self._hit_max_secs = int(hit_max_age_days) * 86400
         self._miss_max_secs = int(miss_max_age_days) * 86400
+        self._geo_max_secs = int(geo_max_age_days) * 86400
         if os.path.isfile(cache_path):
             try:
                 with open(cache_path, encoding="utf-8") as f:   # must match save()
@@ -156,10 +180,26 @@ class QRZNameClient:
             return True   # 0 = never expire
         return (self._now - int(entry.get("ts", 0))) <= ttl
 
-    def needs_lookup(self, call):
-        """True if this call is not cached, or its cache entry is stale."""
+    def _geo_fresh(self, entry):
+        """Has this entry been fetched by a version that keeps geo, recently?
+
+        No `geo_ts` = cached before the geo fields existed, so it holds none.
+        """
+        if "geo_ts" not in entry:
+            return False
+        if self._geo_max_secs <= 0:
+            return True   # 0 = never expire
+        return (self._now - int(entry["geo_ts"])) <= self._geo_max_secs
+
+    def needs_lookup(self, call, want_geo=False):
+        """True if this call is not cached, or its cache entry is stale.
+
+        With want_geo the entry must also carry fresh geo; without it the geo
+        stamp is ignored, so a names-only run never pays for geo."""
         e = self._cache.get(call.upper().strip())
-        return e is None or not self._fresh(e)
+        if e is None or not self._fresh(e):
+            return True
+        return want_geo and not self._geo_fresh(e)
 
     @staticmethod
     def _ns(root):
@@ -247,19 +287,23 @@ class QRZNameClient:
                 return toks[0]
         return ""
 
-    def name(self, call):
-        """Return on-air name for call ('' if none), using/refreshing the cache.
+    def lookup(self, call, want_geo=False):
+        """Return the cache entry for call, fetching it if absent or stale.
 
-        A cached entry is reused unless it is stale (older than max-age-days).
-        Both hits and misses are stamped with 'ts' so the TTL applies uniformly.
+        A cached entry is reused unless it is stale (older than max-age-days),
+        or want_geo is set and it carries no fresh geo.  Both hits and misses
+        are stamped with 'ts' so the TTL applies uniformly; every fetch also
+        stamps 'geo_ts', a miss included (a call QRZ does not know has no geo,
+        and that answer is as good as any other for the TTL).
         """
         key = call.upper().strip()
         e = self._cache.get(key)
-        if e is not None and self._fresh(e):
-            return e.get("name", "")
+        if e is not None and not self.needs_lookup(key, want_geo):
+            return e
         fields = self._api(key)
         if fields is None:
-            entry = {"name": "", "ts": self._now}          # cached miss
+            entry = {"name": "", "ts": self._now,          # cached miss
+                     "geo_ts": self._now}
         else:
             entry = {
                 "name": self._name_from(fields),
@@ -267,11 +311,22 @@ class QRZNameClient:
                 "fname": fields.get("fname", ""),
                 "qname": fields.get("name", ""),   # QRZ entity/last/org field
                 "country": fields.get("country", ""),
+                "grid": fields.get("grid", ""),
+                # QRZ's `state` is the US state or the Canadian province.
+                "state": fields.get("state", ""),
+                "county": fields.get("county", ""),
+                "lat": fields.get("lat", ""),
+                "lon": fields.get("lon", ""),
                 "ts": self._now,
+                "geo_ts": self._now,
             }
         self._cache[key] = entry
         self._dirty = True
-        return entry.get("name", "")
+        return entry
+
+    def name(self, call):
+        """Return on-air name for call ('' if none), using/refreshing the cache."""
+        return self.lookup(call).get("name", "")
 
 
 def candidate_calls(args):
@@ -306,6 +361,12 @@ def main(argv=None):
                     help="re-look-up NAMED entries older than this (0 = never expire)")
     ap.add_argument("--miss-max-age-days", type=int, default=30,
                     help="re-look-up NO-NAME entries older than this (0 = never expire)")
+    ap.add_argument("--geo-out", metavar="CSV",
+                    help="also write CALL,GRID,SECTION here (for trmaster_build.py "
+                         "--geo-csv); entries cached before geo was kept are "
+                         "re-fetched once")
+    ap.add_argument("--geo-max-age-days", type=int, default=365,
+                    help="re-look-up entries whose geo is older than this (0 = never expire)")
     ap.add_argument("--save-every", type=int, default=50,
                     help="flush cache to disk every N new lookups (kill-safety)")
     ap.add_argument("--cache-only", action="store_true",
@@ -319,13 +380,19 @@ def main(argv=None):
             "or proceed without QRZ — calls stay bare.)")
         # write an empty CSV so downstream --names-csv is happy
         open(args.out, "w").close()
+        if args.geo_out:
+            open(args.geo_out, "w").close()
         return 0
 
     cand = candidate_calls(args)
     log(f"candidates: {len(cand)} call(s)")
     client = QRZNameClient(creds[0], creds[1], os.path.expanduser(args.cache),
                            hit_max_age_days=args.max_age_days,
-                           miss_max_age_days=args.miss_max_age_days)
+                           miss_max_age_days=args.miss_max_age_days,
+                           geo_max_age_days=args.geo_max_age_days)
+    want_geo = bool(args.geo_out)
+    table = county_section.CountySectionTable() if want_geo else None
+    geo_rows = []
 
     # Show the cumulative cache state up front -- this is the real "how far along
     # the backfill is" number (it grows across runs toward the candidate count),
@@ -339,7 +406,7 @@ def main(argv=None):
     new_lookups = 0
     try:
         for call in cand:
-            will_query = client.needs_lookup(call)
+            will_query = client.needs_lookup(call, want_geo)
             if will_query:
                 if args.cache_only:
                     continue                       # cache-only: skip uncached
@@ -347,13 +414,17 @@ def main(argv=None):
                     continue
                 new_lookups += 1
             try:
-                nm = client.name(call)
+                entry = client.lookup(call, want_geo)
             except Exception as e:   # network/API hiccup: stop, keep what we have
                 log(f"  stopping at {call}: {e}")
                 break
-            nm = ascii_fold(nm)
+            nm = ascii_fold(entry.get("name", ""))
             if nm:
                 rows.append((call, nm))
+            if want_geo and "geo_ts" in entry:
+                grid, section, _src = qrz_geo.geo_from_entry(entry, table)
+                if grid or section:
+                    geo_rows.append((call, grid, section))
             if will_query:
                 # heartbeat so a long silent run shows it's alive and progressing
                 if new_lookups % 100 == 0:
@@ -370,6 +441,13 @@ def main(argv=None):
         w = csv.writer(f)
         for call, nm in rows:
             w.writerow([call, nm])
+
+    if want_geo:
+        with open(args.geo_out, "w", newline="", encoding="utf-8") as f:
+            w = csv.writer(f)
+            for row in geo_rows:
+                w.writerow(row)
+        log(f"resolved geo: {len(geo_rows)}   wrote {args.geo_out}")
 
     log(f"resolved names: {len(rows)}   new QRZ lookups: {new_lookups}   "
         f"cache size: {len(client._cache)}")
