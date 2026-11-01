@@ -3114,6 +3114,7 @@ end;
 procedure OneSecondTick;
 begin
   UpdateTimeAndRateDisplays(True, True);
+  HamScoreScoreTick;   { builds the score the HamScore uploader posts -- see uHamScore }
 
 {$IF tDebugMode}
   // Windows.SetWindowTextA(tr4whandle, inttopchar({GetHeapStatus.TotalFree}AllocMemSize));

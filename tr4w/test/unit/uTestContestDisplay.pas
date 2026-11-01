@@ -1573,6 +1573,7 @@ var
    obj: TContestBase;
    m: RemainingMultiplierType;
    who: string;
+   expectedLabel: string;
 begin
    BeginTest('Test_OperatingAidsAndScorePosting');
    identities := IdentitiesToWalk;
@@ -1609,9 +1610,16 @@ begin
                       who + ' allows every aid');
             for m := Low(RemainingMultiplierType) to High(RemainingMultiplierType) do
                begin
-               CheckEquals(BASE_LABELS[m], obj.ScorePostingMultiplierType(m, False),
+               (* A grid-square contest labels its domestic multiplier
+                  gridsquare, by its own trait; every other label is the base's. *)
+               expectedLabel := BASE_LABELS[m];
+               if (m = rmDomestic) and obj.HasGridSquareMultiplier then
+                  begin
+                  expectedLabel := 'gridsquare';
+                  end;
+               CheckEquals(expectedLabel, obj.ScorePostingMultiplierType(m, False),
                            who + ' labels');
-               CheckEquals(BASE_LABELS[m], obj.ScorePostingMultiplierType(m, True),
+               CheckEquals(expectedLabel, obj.ScorePostingMultiplierType(m, True),
                            who + ' labels, all modes');
                end;
             end;

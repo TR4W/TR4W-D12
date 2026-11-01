@@ -5998,6 +5998,14 @@ const
       ('', 'state', 'country', 'zone', 'prefix');
 begin
    Result := LABELS[aKind];
+   (* A CONTEST WHOSE DOMESTIC MULTIPLIER IS A GRID SQUARE (RTC, the ARRL VHF
+     contests) says so itself, through its own trait, and the scorer's type
+     list has the word: gridsquare. 'state' told it a grid was a state
+     (RTC, 2026-11-01). *)
+   if (aKind = rmDomestic) and HasGridSquareMultiplier then
+      begin
+      Result := 'gridsquare';
+      end;
 end;
 
 function TContestBase.GetTotalsDisplay: TTotalsDisplay;

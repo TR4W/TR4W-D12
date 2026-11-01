@@ -41,6 +41,31 @@ rename this "## Unreleased" to "### X.X.X (YYYY-MM-DD) — HANDLE", move it unde
 appropriate month group below, and bump tr4w/src/Version.pas to match.
 -->
 
+### Online scoring: the dynamicresults breakdown counted each multiplier four times - NY4I
+
+#### Breakdown rows (`uScoreBreakdown`, `uGetScores`) — RTC 2026
+
+- **One row set**: `BuildDynamicResultsXml` wrote every (band, mode) slot the multiplier sheet
+  keeps, so 8 grids on 20 m CW were posted as 20/CW, 20/ALL, total/CW and total/ALL; the scorer
+  reported 16 raw multipliers (20/CW + 20/ALL). `uScoreBreakdown.BuildBreakdownXml` emits the
+  real band/mode rows and one `total`/`ALL` summary (qso once, point once, each mult type once).
+  The totals are a parameter, so `uTestScoreBreakdown` drives it without a session.
+- **Labels from the contest**: the private `RTCMultStr` table is gone; the `type=` label is
+  `TContestBase.ScorePostingMultiplierType`, the hook the UDP score builder already used.
+  The base now returns `gridsquare` for `rmDomestic` when `HasGridSquareMultiplier` (RTC, the
+  ARRL VHF contests), so the UDP builder's labels change for those contests too.
+- **Points were never posted, and the worker read live state**: `BuildDynamicResultsXml` ran on
+  the HamScore worker and read `QSOPointTotals` (filled only by `PostUnit.CalculateTotals`, which
+  re-reads the log and which the UDP path alone called), `mo.MTotals` and the score from a second
+  thread. The score is now built on the MAIN thread (`uHamScore.HamScoreScoreTick`, called from
+  `OneSecondTick`: `CalculateTotals` then `BuildDynamicResultsXml`) and handed to the uploader as a
+  finished string (`SetScoreXml`, under the queue lock); `BuildPayload` only reads it.
+  `uScoreBreakdown.ScoreRebuildDue` decides when: a logged, edited or deleted QSO rebuilds at the
+  next tick if 5 s have passed since the last rebuild (a burst coalesces), and 30 s without a
+  change rebuilds anyway. So a post can lag a QSO by at most about 6 s, and the timestamp is at
+  most 30 s old. The scoreboard poster's own thread (`CreateConnectionAndSendReportToGetScores`)
+  still calls `BuildDynamicResultsXml` off the main thread and is unchanged.
+
 ### Network protocol 2: HELLO, and every contest travels the multi-op link - NY4I
 
 **The multi-op wire changed; a 4.x (D7) station never joins a 5.x network.** A

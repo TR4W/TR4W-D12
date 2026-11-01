@@ -276,6 +276,8 @@ uses
    uOperatorList in '..\..\src\uOperatorList.pas',
    uTestOperatorList in 'uTestOperatorList.pas',
    uTestScore3830Report in 'uTestScore3830Report.pas',
+   uScoreBreakdown in '..\..\src\uScoreBreakdown.pas',
+   uTestScoreBreakdown in 'uTestScoreBreakdown.pas',
    uTestRadioDestructors in 'uTestRadioDestructors.pas',
    uTestAllSettings in 'uTestAllSettings.pas',
    uTestCWFraming in 'uTestCWFraming.pas',
@@ -1052,6 +1054,7 @@ begin
    RegisterSuite(TSCPUploadTests.Create('SCPUpload'));
    RegisterSuite(TOperatorListTests.Create('OperatorList'));
    RegisterSuite(TScore3830ReportTests.Create('Score3830Report'));
+   RegisterSuite(TScoreBreakdownTests.Create('ScoreBreakdown'));
    RegisterSuite(TRadioDestructorTests.Create('RadioDestructors'));
    RegisterSuite(TCWFramingTests.Create('CWFraming'));
    RegisterSuite(TContestFactoryTests.Create('ContestFactory'));

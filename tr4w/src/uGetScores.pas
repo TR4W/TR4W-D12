@@ -92,6 +92,7 @@ uses
   uCabrilloHeader,   // the Cabrillo header, from settings\tr4w.json
   uSettingsModel,    // Settings.My.ResolvedItuZone
   uContestRegistry,  // ContestIdentity -- the contest's ADIF id
+  uScoreBreakdown,   // BuildBreakdownXml -- the <breakdown> rows
   FCONTEST;          // SentMyState -- the state sent, design 7.11 (M9a)
 
 procedure RunPOSTGetScoresThread;
@@ -281,9 +282,7 @@ var
   TempBand:     BandType;
   TempMode:     ModeType;
   m:            RemainingMultiplierType;
-  BandStr:      string;
-  nTotal:       Integer;
-  nQSOs:        Integer;
+  totals:       TBreakdownTotals;
   sContest:     string;
   ts:           string;
   sClub:        string;
@@ -294,13 +293,7 @@ var
   sGrid4:       string;
   sZone:        string;
   qth:          string;
-const
-  RTCMultStr:   array[RemainingMultiplierType] of string = ('', 'state', 'country', 'zone', 'prefix');
-  RTCModeStr:   array[ModeType] of string = ('CW', 'DIGI', 'PH', 'ALL', '', '');
 begin
-  nTotal := 0;
-  nQSOs  := 0;
-
   (* The contest's ADIF id, asked of the contest -- M1. *)
   sContest := ContestIdentity(Contest).ADIFContestId;
 
@@ -434,79 +427,27 @@ begin
      Result := Result + AnsiString('<qth>' + qth + '</qth>');
      end;
 
-  Result := Result + AnsiString('<breakdown>');
-
-  // Per-band/mode <qso> rows + <total>.
-  for TempBand := Band160 to AllBands do
-     begin
-     for TempMode := CW to Phone do
-        begin
-        if QSOTotals[TempBand, TempMode] = 0 then Continue;
-
-        if TempBand = AllBands then
-           begin
-           BandStr := 'total';
-           nQSOs   := nTotal;
-           end
-        else
-           begin
-           BandStr := string(BandStringsArrayWithOutSpaces[TempBand]);
-           nQSOs   := QSOTotals[TempBand, TempMode];
-           nTotal  := nTotal + nQSOs;
-           end;
-
-        Result := Result + AnsiString(Format(
-          '<qso band="%s" mode="%s">%d</qso>',
-          [BandStr, RTCModeStr[TempMode], nQSOs]));
-        end;
-     end;
-
-  Result := Result + AnsiString(Format(
-    '<qso band="total" mode="ALL">%d</qso>', [nQSOs]));
-
-  // Per-band/mode <mult> rows.
+  (* THE ROWS ARE uScoreBreakdown'S: the real (band, mode) rows and one
+    total/ALL summary, each multiplier labelled by the contest. This used to
+    write every (band, mode) combination the multiplier sheet keeps, so the
+    scorer saw each count four times (RTC, 2026-11-01). The totals are
+    copied out of the globals here because the row builder takes them as a
+    parameter. *)
   for TempBand := Band160 to AllBands do
      begin
      for TempMode := CW to Both do
         begin
-        for m := Succ(Low(RemainingMultiplierType)) to High(RemainingMultiplierType) do
+        totals.QSOs[TempBand, TempMode]   := QSOTotals[TempBand, TempMode];
+        totals.Points[TempBand, TempMode] := QSOPointTotals[TempBand, TempMode];
+        for m := Low(RemainingMultiplierType) to High(RemainingMultiplierType) do
            begin
-           if mo.MTotals[TempBand, TempMode, m] = 0 then Continue;
-
-           if TempBand = AllBands then
-              begin
-              BandStr := 'total'
-              end
-           else
-              begin
-              BandStr := string(BandStringsArrayWithOutSpaces[TempBand]);
-              end;
-
-           Result := Result + AnsiString(Format(
-             '<mult band="%s" mode="%s" type="%s">%d</mult>',
-             [BandStr, RTCModeStr[TempMode], RTCMultStr[m],
-              mo.MTotals[TempBand, TempMode, m]]));
+           totals.Mults[TempBand, TempMode, m] := mo.MTotals[TempBand, TempMode, m];
            end;
         end;
      end;
 
-  // Per-band <point> totals + grand total -- issue #930.  Mirrors the WRTC
-  // UDP emitter in LOGSUBS2 (SendScoreToUDP) which uses QSOPointTotals.
-  for TempBand := Band160 to AllBands do
-     begin
-     if QSOPointTotals[TempBand, Both] = 0 then Continue;
-     if TempBand = AllBands then
-        begin
-        BandStr := 'total'
-        end
-     else
-        begin
-        BandStr := string(BandStringsArrayWithOutSpaces[TempBand]);
-        end;
-     Result := Result + AnsiString(Format(
-        '<point band="%s" mode="ALL">%d</point>',
-        [BandStr, QSOPointTotals[TempBand, Both]]));
-     end;
+  Result := Result + AnsiString('<breakdown>') +
+            BuildBreakdownXml(totals, ContestIdentity(Contest));
 
   tGetSystemTime;
   ts := SystemTimeToString(UTC);

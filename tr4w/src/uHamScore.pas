@@ -116,6 +116,7 @@ type
     // reads/writes go through FQueueLock so we never tear a multi-byte field.
     FLastCycleTime:   TDateTime;     // time the most recent cycle completed
     FLastCycleStatus: string;        // human-readable last-cycle outcome
+    FScoreXml:        AnsiString;    // the finished <dynamicresults>, built on the main thread; under FQueueLock
 
     function  TakePendingSnapshot: TList;     // moves FPending to a local list, replaces with new empty list
     procedure RestorePending(snapshot: TList); // puts un-CFMed contacts back at the head of FPending
@@ -133,6 +134,8 @@ type
     procedure   Enqueue(contact: TRTCContact);   // takes ownership
     procedure   RequestStop;
     procedure   PushNow;                         // wake the worker for an immediate cycle
+    procedure   SetScoreXml(const AXml: AnsiString);   // main thread
+    function    GetScoreXml: AnsiString;               // worker thread
 
     // Read-only status accessors for the Phase 4 dialog (thread-safe snapshot).
     function    GetPendingCount: Integer;
@@ -205,6 +208,15 @@ procedure HamScoreSubmit(const aDelete: Boolean;
    CTY tables). *)
 function HamScoreUploaderRunning: Boolean;
 
+(* THE POSTED SCORE IS BUILT ON THE MAIN THREAD, and the worker only posts the
+   finished string.  Building it reads the score, the multiplier totals and the
+   point totals, and the point totals exist only after PostUnit.CalculateTotals
+   has re-read the log -- which the worker must not do (one SQLite connection,
+   one contest object).  Read from the worker they were zero, so a post went out
+   with a score and no <point> rows (RTC 2026, NY4I).  OneSecondTick calls the
+   tick; the QSO hooks mark the score changed. *)
+procedure HamScoreScoreTick;
+
 // Tools-menu entry point (Phase 3): wipe the server-side log and re-send
 // every QSO from the current binary log file.
 procedure HamScoreResyncFromScratch;
@@ -255,6 +267,7 @@ uses
   TF,                // CreateButton, CreateStatic
   MainUnit,          // CloseTR4WWindow, DefTR4WProc, FrmSetFocus (impl/impl cycle is OK)
   uGetScores,        // BuildDynamicResultsXml (added by this PR)
+  uScoreBreakdown,   // ScoreRebuildDue -- when the posted score is rebuilt
   uExchangeBuilder,  // Shared SentExchange / RxExchange canonical builders
   uCabrillo,         // BuildSingleQsoCabrilloLine (RTC 3.0 -- issue #920)
   PostUnit,          // Contest global (RTC 3.0 deletelog needs contest name)
@@ -266,6 +279,9 @@ const
 var
   Uploader: THamScoreUploader = nil;
   ModuleLogger: TLogLogger = nil;
+  (* MAIN THREAD ONLY -- HamScoreScoreTick and the Prepare hooks. *)
+  ScoreChanged: Boolean = True;     { true at start-up: build the first one on the first tick }
+  ScoreBuiltAtMs: QWord = 0;
 
 function GetModuleLogger: TLogLogger;
 begin
@@ -519,6 +535,26 @@ begin
      end;
 end;
 
+procedure THamScoreUploader.SetScoreXml(const AXml: AnsiString);
+begin
+  FQueueLock.Acquire;
+  try
+    FScoreXml := AXml;
+  finally
+    FQueueLock.Release;
+  end;
+end;
+
+function THamScoreUploader.GetScoreXml: AnsiString;
+begin
+  FQueueLock.Acquire;
+  try
+    Result := FScoreXml;
+  finally
+    FQueueLock.Release;
+  end;
+end;
+
 procedure THamScoreUploader.SetCycleStatus(const status: string);
 begin
   FQueueLock.Acquire;
@@ -637,19 +673,14 @@ var
 begin
   hadQSOs := (snapshot <> nil) and (snapshot.Count > 0);
 
-  // Build the dynamicresults fragment fresh every cycle (snapshot of current
-  // score totals).  Falls back to a minimal shell if uGetScores can't be
-  // called -- we still want the post to be valid XML.
-  try
-    dynResults := uGetScores.BuildDynamicResultsXml;
-  except
-    on E: Exception do
-       begin
-       FLogger.Warn('[HamScore] dynamicresults build failed: %s -- sending shell',
-         [E.Message]);
-       dynResults := '<dynamicresults></dynamicresults>';
-       end;
-  end;
+  // The dynamicresults fragment was built on the MAIN thread (HamScoreScoreTick)
+  // and this takes the finished string.  Nothing has been built yet in the
+  // first seconds after start-up: send a minimal shell, still valid XML.
+  dynResults := GetScoreXml;
+  if dynResults = '' then
+     begin
+     dynResults := '<dynamicresults></dynamicresults>';
+     end;
 
   // RTC 3.0 (issue #920): wrap the whole post -- <dynamicresults> and any
   // <contactinfo>/<contactdelete>/<deletelog> siblings -- in a single <rtc>
@@ -1020,6 +1051,7 @@ procedure HamScorePrepareInfo(const RXData: ContestExchange;
 begin
   aBody := '';
   if Uploader = nil then Exit;
+  ScoreChanged := True;   { the score moved whether or not this QSO is uploaded }
   if not ContactInfoUploadAllowed(RXData) then Exit;
   aBody := RenderContactBody(rckInfo, RXData, aFacts, aRecordedSent);
 end;
@@ -1029,8 +1061,32 @@ procedure HamScorePrepareDelete(const RXData: ContestExchange;
 begin
   aBody := '';
   if Uploader = nil then Exit;
+  ScoreChanged := True;
   if not ContactInfoUploadAllowed(RXData) then Exit;
   aBody := RenderDeleteBody(AnsiString(RXData.id));
+end;
+
+procedure HamScoreScoreTick;
+var
+  nowMs: QWord;
+begin
+  if Uploader = nil then Exit;
+  nowMs := GetTickCount64;
+  if not ScoreRebuildDue(ScoreChanged, Int64(nowMs - ScoreBuiltAtMs)) then Exit;
+  ScoreChanged := False;
+  ScoreBuiltAtMs := nowMs;
+  try
+    (* Re-reads the log -- the call the UDP score path makes, from the main
+      thread, and the one thing that fills QSOPointTotals. *)
+    CalculateTotals;
+    Uploader.SetScoreXml(uGetScores.BuildDynamicResultsXml);
+  except
+    on E: Exception do
+       begin
+       GetModuleLogger.Warn('[HamScore] dynamicresults build failed: %s -- keeping the last one',
+         [E.Message]);
+       end;
+  end;
 end;
 
 procedure HamScoreSubmit(const aDelete: Boolean;
