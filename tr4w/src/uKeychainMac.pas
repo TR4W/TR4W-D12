@@ -55,8 +55,19 @@ unit uKeychainMac;
       has NO SecItem functions and none of the kSec* attribute keys --
       checked against packages/univint/src, not assumed. The LCL has no
       credential store. So the four SecItem functions and the keys are
-      declared here, in the same shape univint uses for its own (external
-      name '_symbol', with the framework linked by directive).
+      declared here, with the framework linked by directive.
+
+    * THE NAMES ARE SPELLED TWO WAYS, AND THAT IS NOT A TYPO. A cdecl
+      function's external name gets Darwin's C prefix '_' from FPC itself,
+      so it is written WITHOUT one ('SecItemAdd' links as _SecItemAdd). An
+      external VARIABLE gets no prefix, so it is written WITH one
+      ('_kSecClass'). univint writes '_' on its functions too, but it is
+      compiled under {$calling mwpascal}, which adds no prefix -- copying
+      its spelling onto a cdecl declaration gave __SecItemAdd and an
+      undefined-symbol link failure (FPC 3.2.2 aarch64-darwin, CI run
+      41243138359). Both spellings were then measured on mac-ci with a
+      probe that linked, ran, and read every key back as its framework
+      string (kSecClass = "class", kSecAttrService = "svce", ...).
 
     * EVERYTHING ELSE IS univint's. Dictionaries, strings, data and
       CFRelease come from MacOSAll, which the Cocoa widget set already
@@ -131,17 +142,18 @@ var kSecReturnData: CFStringRef; external name '_kSecReturnData';
 var kSecMatchLimit: CFStringRef; external name '_kSecMatchLimit';
 var kSecMatchLimitOne: CFStringRef; external name '_kSecMatchLimitOne';
 
+(* No leading '_' on these four: cdecl adds it. See the unit header. *)
 function SecItemAdd(aAttributes: CFDictionaryRef;
                     aResult: Pointer): OSStatus;
-   cdecl; external name '_SecItemAdd';
+   cdecl; external name 'SecItemAdd';
 function SecItemCopyMatching(aQuery: CFDictionaryRef;
                              aResult: Pointer): OSStatus;
-   cdecl; external name '_SecItemCopyMatching';
+   cdecl; external name 'SecItemCopyMatching';
 function SecItemUpdate(aQuery: CFDictionaryRef;
                        aAttributesToUpdate: CFDictionaryRef): OSStatus;
-   cdecl; external name '_SecItemUpdate';
+   cdecl; external name 'SecItemUpdate';
 function SecItemDelete(aQuery: CFDictionaryRef): OSStatus;
-   cdecl; external name '_SecItemDelete';
+   cdecl; external name 'SecItemDelete';
 
 type
    TMacKeychain = class(TKeychainBackend)
