@@ -231,15 +231,20 @@ it. Pinned by `uTestStatusAndNotice`'s `Test_ARadioSpeedChangeIsDrawnOnTheMainTh
   .cfg migration path was invisible there; it crashed the whole Linux suite (a grid
   index past the rows). It scans `*` once and judges the lower-cased extension.
   Never put an extension in a FindFirst mask.
-- **THE STATUS STRIP CLIPS ITS TEXT ON GTK2, and this is a real defect.** The strip
-  paints in the system UI font (DejaVu Sans 14 px on the runner: 218 px for
-  "Failed to connect to DX Cluster", matched to the pixel against the font file;
-  Cantarell 11 on Mint), while the window, and so each of the 4 panels, is `ws * 46`
-  wide, a Windows-era scale that ignores the font. A 195 px panel holds "Connected to
-  DX Cluster" (173) and not "** DISCONNECTED from DX Cluster" (246). Nine
-  `StatusAndNotice` checks fail for it and are pinned in
-  `tr4w/test/unit/known-failures-linux.txt` until a design decision (size panels from
-  their text, or the font from the window). Do not "fix" the test.
+- **THE STATUS STRIP HAS ITS OWN FITTED FONT (issue #142).** It used to paint in the
+  system UI font while each of its 4 panels is a quarter of `ws * 46`, a scale that
+  ignores the font: on the gtk2 runner (DejaVu Sans 14 px) "** DISCONNECTED from DX
+  Cluster" was 246 px against 187 px of room, and nine `StatusAndNotice` checks
+  failed. NY4I chose the font, not the panels or the wording (2026-11-01):
+  `uMainForm.ApplyStatusStripFont` sets the window's face (`Settings.Font.Face`),
+  regular, starting at 9 pt (today's Windows size, never larger), and steps down a
+  pixel at a time until the widest connection status of either subsystem fits the
+  narrowest panel. It runs when the form streams (`Loaded`, with
+  `MainUnit.MainWindowLayoutWidth`) and in `MakeMainWindowResizeable`, and logs
+  `[Layout] status strip font: ...`. A `TStatusPanel` has no font of its own, so the
+  strip's font is the only native lever; reshuffling panel widths cannot work
+  (the four panels need more than the strip has). The test is unchanged and the
+  Linux pins are gone. Do not "fix" the test.
 - `TStringList.Sort` is locale collation on Linux and ordinal on Windows; a test that
   pins an order uses `CustomSort` with `CompareStr`. `TStringList.Text` joins with
   `LineEnding`, not `#13#10`.

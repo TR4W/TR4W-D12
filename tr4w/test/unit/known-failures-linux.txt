@@ -8,15 +8,7 @@
 # the failure belongs in an issue and the pin must name that issue.
 #
 # Created for GitHub issue #141 (2026-10-27).
-
-# THE STATUS STRIP CLIPS ITS TEXT ON GTK2 -- a real defect on Linux, not a test
-# artefact. The strip's font is the system UI font (DejaVu Sans at 14 px on the
-# CI runner, Cantarell 11 on Linux Mint) while the window, and so every panel,
-# is sized from the Windows-era scale ws * 46: a quarter of 782 px is a 195 px
-# panel, which holds "Connected to DX Cluster" (173 px) and not "Failed to
-# connect to DX Cluster" (218 px) or "** DISCONNECTED from DX Cluster" (246 px).
-# Measured against the font file: the runner's 218 px is DejaVu Sans 14 px to
-# the pixel. Needs a design decision (size the panels from the text, or the font
-# from the window), so it is GitHub issue #142, not a test change.
-StatusAndNotice:.* px wide and its panel offers [0-9]+ at strip width
-StatusAndNotice: Test_AnInhibitedKeyUpTurnsThePTTIndicator .* fits radio 1's status panel
+#
+# EMPTY NOW. Its last two pins (the status strip clipping on gtk2, issue #142)
+# were deleted with the fix: uMainForm.ApplyStatusStripFont gives the strip one
+# font sized to hold its longest status.

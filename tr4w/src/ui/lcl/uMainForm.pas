@@ -296,6 +296,11 @@ type
     FDragging:       boolean;
     FDragMouseOrigin: TPoint;   // screen position of the pointer when it went down
     FDragFormOrigin:  TPoint;   // Left/Top of the form at that same moment
+  protected
+    (* After streaming: the status strip gets its fitted font here, so a
+      form that is only streamed -- as the unit tests do -- carries it too.
+      See ApplyStatusStripFont. *)
+    procedure Loaded; override;
   public
     (* The editable log's row supply and its double-click. See uLogGrid. *)
     procedure MainLogFetchRows(Sender: TObject; const aFirstIndex: Int64;
@@ -716,6 +721,28 @@ procedure FreeDeferralTarget(var aTarget: TObject);
   MakeMainWindowResizeable calls it once when the real client width is known. *)
 procedure LayOutStatusPanels;
 
+(* GIVE THE STRIP ONE FONT THAT HOLDS ITS LONGEST STATUS (issue #142).
+
+  The panels are a quarter of a strip that is 46 * ws wide, a number that
+  knows nothing of the system UI font -- and the strip painted in that font.
+  On Windows (Segoe UI 9) "** DISCONNECTED from DX Cluster" was 187 px against
+  187 px of room at ws = 17; on the gtk2 runner (DejaVu Sans 14 px) it was 246
+  and clipped, with three others.
+
+  SO THE STRIP CARRIES AN EXPLICIT FONT: the main window's face at regular
+  weight, starting at 9 pt -- today's Windows size, never larger -- and one
+  pixel smaller at a time until the widest of the four connection prefixes,
+  for both subsystems, fits the narrowest panel of a strip aWidth wide.
+  Measured, not tabled, because which face a font name resolves to is the
+  platform's business (Arial is Liberation Sans or DejaVu on Linux).
+  Measured on Windows at ws = 17, 2026-11-01: Arial at 12 px makes that
+  status 200 px, so the strip is Arial 11 px and it is 167.
+
+  A TStatusPanel has no font of its own, so the strip's font is the only
+  native lever. Called when the form streams (with MainWindowLayoutWidth) and
+  from MakeMainWindowResizeable with the real width; logged once each time. *)
+procedure ApplyStatusStripFont(const aBar: TStatusBar; const aStripWidth: integer);
+
 (* PUT A NOTICE UP AND RESTART ITS 30 S WIPE.  Any thread.
 
   An EMPTY notice clears the panel and STOPS the timer rather than arming one:
@@ -853,6 +880,9 @@ uses
    uLogSource,         // the virtual log list reads through the seam
    uLogDatabase,       // SQLiteIsBusy -- TR4WEditableLogRefreshCount on a busy log
    uConfigValues,      // Config.ShowGridLines
+   uSettingsModel,     // Settings.Font.Face -- the strip's face, ApplyStatusStripFont
+   uTR4WStrings,       // TC_CONNECTINGTO and siblings -- what the strip must hold
+   uPanelUpdate,       // StatusSubsystemName -- the name each status ends with
    MainUnit;           // LogRowTextFor, Config -- see CreateTR4WEditableLog
 
 (* WHY THIS FORM'S MESSAGE HANDLERS ARE KEYED ON LM_, NOT WM_.
@@ -1724,6 +1754,7 @@ begin
      and the panels keep the .lfm's four hand-typed widths.  A layout step that
      only runs when a number happened to differ is a layout step that is wrong
      on one machine in four. *)
+   ApplyStatusStripFont(TR4WMainForm.sbStatus, aClientWidth);
    LayOutStatusPanels;
 end;
 
@@ -1917,6 +1948,123 @@ begin
      pixels, and those pixels are a gap at the right edge that no amount of
      rounding in the loop removes. *)
    bar.Panels[bar.Panels.Count - 1].Width := bar.Width - used;
+end;
+
+procedure ApplyStatusStripFont(const aBar: TStatusBar; const aStripWidth: integer);
+const
+   (* Today's Windows strip: Segoe UI 9 pt, 12 px at 96 DPI. Set in POINTS
+     so it scales with the screen the way the system font did. *)
+   START_POINTS = 9;
+   (* Below this the text stops being worth showing; at the floor a long
+     status clips rather than turning to dots. *)
+   FLOOR_PX = 8;
+   (* The panel's own inset, both sides. The widget set owns the real figure;
+     8 is the allowance uTestStatusAndNotice uses, an under-estimate of the
+     room, so this errs towards a smaller font. *)
+   PANEL_TEXT_INSET = 8;
+var
+   probe:    TBitmap;
+   room:     integer;
+   px:       integer;
+   widest:   string;
+   widestPx: integer;
+   face:     string;
+
+   (* The widest connection status either subsystem panel can be given, at
+     the probe's current font -- the same four prefixes uTelnet and uNet
+     write, each followed by StatusSubsystemName. *)
+   procedure MeasureWidest;
+   var
+      owner:  TStatusOwner;
+      i:      integer;
+      prefix: string;
+      text:   string;
+      w:      integer;
+   begin
+      widest := '';
+      widestPx := 0;
+      for owner := stoCluster to stoNetwork do
+         begin
+         for i := 0 to 3 do
+            begin
+            case i of
+               0:
+                  begin
+                  prefix := TC_CONNECTINGTO;
+                  end;
+               1:
+                  begin
+                  prefix := TC_CONNECTEDTO;
+                  end;
+               2:
+                  begin
+                  prefix := TC_FAILEDTOCONNECTTO;
+                  end;
+               else
+                  begin
+                  prefix := TC_DISCONNECTEDFROM;
+                  end;
+               end;
+            text := prefix + StatusSubsystemName(owner);
+            w := probe.Canvas.TextWidth(LclText(text));
+            if w > widestPx then
+               begin
+               widestPx := w;
+               widest := text;
+               end;
+            end;
+         end;
+   end;
+
+begin
+   if (aBar = nil) or (aBar.Panels.Count = 0) or (aStripWidth <= 0) then
+      begin
+      Exit;
+      end;
+
+   (* The NARROWEST panel: LayOutStatusPanels gives every panel but the last
+     Width div Count, and the last the remainder, which is never less. *)
+   room := aStripWidth div aBar.Panels.Count - PANEL_TEXT_INSET;
+
+   face := Settings.Font.Face;
+   if face <> '' then
+      begin
+      aBar.Font.Name := LclText(face);
+      end;
+   aBar.Font.Style := [];
+   aBar.Font.Size := START_POINTS;
+
+   probe := TBitmap.Create;
+   try
+      probe.Canvas.Font.Assign(aBar.Font);
+      px := Abs(probe.Canvas.Font.Height);
+      MeasureWidest;
+
+      while (widestPx > room) and (px > FLOOR_PX) do
+         begin
+         px := px - 1;
+         probe.Canvas.Font.Height := -px;
+         MeasureWidest;
+         end;
+
+      aBar.Font.Height := -px;
+   finally
+      probe.Free;
+   end;
+
+   if logger <> nil then
+      begin
+      logger.Info('[Layout] status strip font: %s %d px for a %d px strip; ' +
+                  'widest status "%s" is %d px, panel room %d px',
+                  [string(aBar.Font.Name), px, aStripWidth, widest, widestPx,
+                   room]);
+      end;
+end;
+
+procedure TTR4WMainForm.Loaded;
+begin
+   inherited Loaded;
+   ApplyStatusStripFont(sbStatus, MainWindowLayoutWidth);
 end;
 
 procedure TTR4WMainForm.StatusBarResize(Sender: TObject);

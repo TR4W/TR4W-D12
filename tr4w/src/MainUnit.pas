@@ -549,6 +549,12 @@ procedure CreateFonts;
 //procedure CreateMWFonts;
 function MainFontCellHeight: integer;
 procedure ApplyMainFontTo(aFont: TFont);
+(* THE MAIN WINDOW'S SCALE STEP, ws, AND THE CLIENT WIDTH IT GIVES (46 * ws).
+  Stated once: SetWindowSize assigns ws and MainWindowChildsWidth from these,
+  and the status strip sizes its font from the width before SetWindowSize has
+  run (uMainForm.ApplyStatusStripFont, called when the form streams). *)
+function MainWindowScale: integer;
+function MainWindowLayoutWidth: integer;
 //function DrawEdit(lParam: lParam; wParam: wParam): Cardinal;
 procedure ProcessMenu(menuID: integer);
 procedure ProcessTAB(lowparam: Word);
@@ -4728,7 +4734,7 @@ begin
     and the LCL fixes that for us: MakeMainWindowResizeable sets
     Constraints.MinHeight from the height it just took, so the restore clamps
     up rather than opening a window whose strip sits on the bottom panel row. *)
-  MakeMainWindowResizeable(ws * 46,
+  MakeMainWindowResizeable(MainWindowChildsWidth,
                            6 + EditableLogHeight + ws * 14 + MainStatusBarHeight);
   AnchorMainWindowControls;
 
@@ -8810,12 +8816,22 @@ begin
         // LogEnsureVisible;
 end;
 
+function MainWindowScale: integer;
+begin
+   Result := Settings.MainWindow.WindowSize + 12;
+end;
+
+function MainWindowLayoutWidth: integer;
+begin
+   Result := 46 * MainWindowScale;
+end;
+
 procedure SetWindowSize;
 //const
 // ewh : array[1 + 12..15 + 12] of REAL = (12.6, 13.7, 13.7, 15.7, 16.8, 18, 18, 20, 20.6, 20.6, 22.8, 23.8, 23.8, 25.8, 25.75);
 begin
 
-  ws := Settings.MainWindow.WindowSize + 12;
+  ws := MainWindowScale;
 
   ws2 := ws div 4;
   // EditableLogWindowHeight := //Trunc((Settings.MainWindow.RowCount + 1) * ewh[ws]) + 1;
@@ -8861,7 +8877,7 @@ begin
   //col10 := col9 + 4 * ws;
   //col11 := col10 + 2 * ws {50};
 
-  MainWindowChildsWidth := 46 * ws; //col11 + ws * 2; //MainWindowWidth - 8+8;
+  MainWindowChildsWidth := MainWindowLayoutWidth; //col11 + ws * 2; //MainWindowWidth - 8+8;
   MainWindowWidth := MainWindowChildsWidth + 7;
 
   MainWindowEditHeight := ((ws * 3) div 2) - 1 {ws + 4};
