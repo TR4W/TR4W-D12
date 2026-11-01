@@ -4941,9 +4941,13 @@ service `TR4W/v1`, account the setting's path UPPER-CASED, label
   settings load reads the key BEFORE the main window, so an unlock prompt may
   appear with no TR4W window behind it -- note whether it does, on every
   start. Dismiss it, then change any setting (a save): **check Seahorse that
-  the stored key is still there.** A known defect (settings-config agent,
-  "Known gap") says it will be deleted or orphaned; this is the run that
-  measures it.
+  the stored key is still there**, that `settings/tr4w.json` still has
+  `ApiKeyRef`, and that tr4w.log has `[Keychain] ... was not removed: it
+  could not be read this session`. Unlock and restart: the key is read.
+  (Fixed 2026-11-01 in `uKeychain`: a name whose read failed is not deleted
+  by an empty save. It relies on the dismissed prompt reading as locked or
+  failed -- if the read came back as "not found", the key IS deleted, and
+  that is the finding to record.)
 - [ ] **Headless / no Secret Service.** Run from an ssh session with no
   `DBUS_SESSION_BUS_ADDRESS` (or with gnome-keyring stopped). TR4W must start,
   log one `[Keychain]` warning naming the Secret Service error, and say

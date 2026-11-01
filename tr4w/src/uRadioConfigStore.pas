@@ -2486,7 +2486,10 @@ end;
 
   An empty password is a REMOVAL: StoreSecret deletes the entry and answers
   False, so no reference is written and nothing is left behind for someone
-  to find later.
+  to find later -- UNLESS this session could not read that entry (a vault
+  locked at startup). Then the empty value is the failed read, not a choice:
+  StoreSecret keeps the entry and answers True, and the reference is written
+  so the next session can still find it. See uKeychain.StoreSecret.
 *)
 procedure AddProtectedPassword(const aTarget: TJSONObject;
                                const aMember, aSecretName, aPlain: string);

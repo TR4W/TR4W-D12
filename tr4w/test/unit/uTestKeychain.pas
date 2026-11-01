@@ -26,9 +26,41 @@ unit uTestKeychain;
 interface
 
 uses
-   uTR4WTestFramework;
+   Classes,
+   uTR4WTestFramework,
+   uKeychain;
 
 type
+   (*
+     A VAULT LOCKED AT STARTUP AND UNLOCKED BY THE TIME OF THE SAVE -- the
+     shape of the defect the unreadable-secret tests pin. It holds real
+     entries; FailReads makes ReadSecret answer ksLocked while writes and
+     deletes still work, so a test can tell "the delete was refused by the
+     vault" from "the delete was never asked for". A vault whose delete also
+     fails (TLockedKeychain) would let such a test pass with no fix at all.
+
+     IN THE INTERFACE so the radio configuration store's suite uses this one
+     rather than a copy. Registering it hands it to uKeychain, which frees
+     it when the next vault with the same name is installed.
+   *)
+   TReadLockedKeychain = class(TKeychainBackend)
+   private
+      FItems: TStringList;
+   public
+      FailReads: boolean;
+      constructor Create;
+      destructor Destroy; override;
+      function Name: string; override;
+      function Available: boolean; override;
+      function WriteSecret(const aName, aValue: string): TKeychainStatus;
+         override;
+      function ReadSecret(const aName: string;
+                          out aValue: string): TKeychainStatus; override;
+      function DeleteSecret(const aName: string): TKeychainStatus; override;
+      (* Is the entry there, asked without going through ReadSecret. *)
+      function Holds(const aName: string): boolean;
+   end;
+
    TKeychainTests = class(TTestCase)
    protected
       procedure TestRoundTrip;
@@ -42,6 +74,11 @@ type
       procedure TestForgetRemovesWithoutStoring;
       procedure TestNoVaultIsReportedAndNotDowngraded;
       procedure TestTheValueIsNeverInTheNotice;
+      procedure TestAnUnreadableSecretSurvivesAnEmptySave;
+      procedure TestTheNameOfAnUnreadableSecretIsFolded;
+      procedure TestAReadableSecretIsStillDeletedByAnEmptySave;
+      procedure TestANewValueAfterAFailedReadStoresAndClears;
+      procedure TestForgetRemovesEvenAnUnreadableSecret;
       procedure TestAvailabilityIsAnswerable;
    public
       procedure RunAllTests; override;
@@ -50,8 +87,7 @@ type
 implementation
 
 uses
-   SysUtils,
-   uKeychain;
+   SysUtils;
 
 const
    SECRET_NAME = 'Hamscore.Password';
@@ -145,6 +181,77 @@ end;
 function TLockedKeychain.DeleteSecret(const aName: string): TKeychainStatus;
 begin
    Result := ksLocked;
+end;
+
+constructor TReadLockedKeychain.Create;
+begin
+   inherited Create;
+   FItems := TStringList.Create;
+   FItems.CaseSensitive := False;
+   FailReads := False;
+end;
+
+destructor TReadLockedKeychain.Destroy;
+begin
+   FItems.Free;
+   inherited Destroy;
+end;
+
+function TReadLockedKeychain.Name: string;
+begin
+   Result := 'memory1';
+end;
+
+function TReadLockedKeychain.Available: boolean;
+begin
+   Result := True;
+end;
+
+function TReadLockedKeychain.WriteSecret(const aName,
+                                         aValue: string): TKeychainStatus;
+begin
+   FItems.Values[AnsiString(aName)] := AnsiString(aValue);
+   Result := ksOk;
+end;
+
+function TReadLockedKeychain.ReadSecret(const aName: string;
+                                        out aValue: string): TKeychainStatus;
+var
+   idx: integer;
+begin
+   aValue := '';
+   if FailReads then
+      begin
+      Result := ksLocked;
+      Exit;
+      end;
+   idx := FItems.IndexOfName(AnsiString(aName));
+   if idx < 0 then
+      begin
+      Result := ksNotFound;
+      Exit;
+      end;
+   aValue := string(FItems.ValueFromIndex[idx]);
+   Result := ksOk;
+end;
+
+function TReadLockedKeychain.DeleteSecret(const aName: string): TKeychainStatus;
+var
+   idx: integer;
+begin
+   idx := FItems.IndexOfName(AnsiString(aName));
+   if idx < 0 then
+      begin
+      Result := ksNotFound;
+      Exit;
+      end;
+   FItems.Delete(idx);
+   Result := ksOk;
+end;
+
+function TReadLockedKeychain.Holds(const aName: string): boolean;
+begin
+   Result := FItems.IndexOfName(AnsiString(aName)) >= 0;
 end;
 
 var
@@ -356,6 +463,162 @@ begin
    end;
 end;
 
+procedure TKeychainTests.TestAnUnreadableSecretSurvivesAnEmptySave;
+var
+   vault: TReadLockedKeychain;
+   back: string;
+begin
+   (* THE DEFECT. A keyring locked at startup (Mint with autologin) leaves
+     the setting empty; the next save used to hand that empty value to
+     StoreSecret, which DELETED the stored key. The empty value was the
+     failed read, not the operator's choice. *)
+   BeginTest('a secret this session could not read survives an empty save');
+
+   GNoticeCount := 0;
+   GLastNoticeText := '';
+   SetKeychainNotice(@RecordNotice);
+   vault := TReadLockedKeychain.Create;
+   RegisterKeychainBackend(vault);
+   try
+      CheckTrue(StoreSecret(SECRET_NAME, 'Hunter2'), 'stored to begin with');
+
+      vault.FailReads := True;
+      CheckFalse(FetchSecret(SECRET_NAME, back), 'the startup read fails');
+      CheckEquals('', back, 'and the setting reads empty');
+
+      (* The vault unlocks before the save, so a delete WOULD succeed. *)
+      vault.FailReads := False;
+      GNoticeCount := 0;
+      CheckTrue(StoreSecret(SECRET_NAME, ''),
+                'the empty save answers True, so the reference is kept');
+      CheckTrue(vault.Holds(SECRET_NAME), 'and the entry was not deleted');
+      CheckEquals(1, GNoticeCount, 'it is reported');
+      CheckTrue(Pos('not removed', GLastNoticeText) > 0,
+                'saying the entry was kept');
+      CheckTrue(Pos('Hunter2', GLastNoticeText) = 0,
+                'and not carrying the value');
+
+      CheckTrue(FetchSecret(SECRET_NAME, back), 'the next read works');
+      CheckEquals('Hunter2', back, 'and it is the original key');
+   finally
+      SetKeychainNotice(nil);
+      InstallTestKeychain;
+   end;
+end;
+
+procedure TKeychainTests.TestTheNameOfAnUnreadableSecretIsFolded;
+var
+   vault: TReadLockedKeychain;
+   back: string;
+begin
+   (* THE SAVER BUILDS THE NAME AND THE LOADER MAY READ IT FROM A FILE, so
+     the two spellings can differ. Every backend folds case, and so must the
+     record of which names failed. *)
+   BeginTest('a failed read protects the name in any spelling');
+
+   vault := TReadLockedKeychain.Create;
+   RegisterKeychainBackend(vault);
+   try
+      CheckTrue(StoreSecret('Wrl.ApiKey', 'k1'), 'stored');
+      vault.FailReads := True;
+      CheckFalse(FetchSecret('Wrl.ApiKey', back), 'the read fails');
+      vault.FailReads := False;
+      CheckTrue(StoreSecret('WRL.APIKEY', ''), 'an empty save in another case');
+      CheckTrue(vault.Holds('Wrl.ApiKey'), 'still keeps the entry');
+   finally
+      InstallTestKeychain;
+   end;
+end;
+
+procedure TKeychainTests.TestAReadableSecretIsStillDeletedByAnEmptySave;
+var
+   vault: TReadLockedKeychain;
+   back: string;
+begin
+   (* THE ORDINARY CASE IS UNCHANGED, including Windows': a secret that was
+     read, or that the vault positively does not have, is removed by an
+     empty save exactly as before. A read that failed and then WORKED is the
+     same as one that worked. *)
+   BeginTest('a secret that was read is still removed by an empty save');
+
+   vault := TReadLockedKeychain.Create;
+   RegisterKeychainBackend(vault);
+   try
+      CheckTrue(StoreSecret(SECRET_NAME, 'Hunter2'), 'stored');
+
+      vault.FailReads := True;
+      CheckFalse(FetchSecret(SECRET_NAME, back), 'a read fails');
+      vault.FailReads := False;
+      CheckTrue(FetchSecret(SECRET_NAME, back), 'and a later read works');
+
+      CheckFalse(StoreSecret(SECRET_NAME, ''), 'so clearing stores nothing');
+      CheckFalse(vault.Holds(SECRET_NAME), 'and the entry is removed');
+
+      (* "Not found" is an answer, not a failure: nothing is protected. *)
+      CheckFalse(FetchSecret('Nothing.Stored.Here', back), 'absent');
+      CheckFalse(StoreSecret('Nothing.Stored.Here', ''),
+                 'and an empty save of it is still a plain no-op');
+   finally
+      InstallTestKeychain;
+   end;
+end;
+
+procedure TKeychainTests.TestANewValueAfterAFailedReadStoresAndClears;
+var
+   vault: TReadLockedKeychain;
+   back: string;
+begin
+   (* TYPING A NEW VALUE IS A CHOICE, so it is stored -- and it ends the
+     protection, because the vault now holds what the operator gave. *)
+   BeginTest('a new value after a failed read is stored and ends the exception');
+
+   vault := TReadLockedKeychain.Create;
+   RegisterKeychainBackend(vault);
+   try
+      CheckTrue(StoreSecret(SECRET_NAME, 'first'), 'stored');
+      vault.FailReads := True;
+      CheckFalse(FetchSecret(SECRET_NAME, back), 'the read fails');
+      vault.FailReads := False;
+
+      CheckTrue(StoreSecret(SECRET_NAME, 'second'), 'the new value stores');
+      CheckTrue(FetchSecret(SECRET_NAME, back), 'and reads back');
+      CheckEquals('second', back, 'as the new value');
+
+      vault.FailReads := True;
+      CheckFalse(FetchSecret(SECRET_NAME, back), 'reads fail again');
+      vault.FailReads := False;
+      CheckTrue(StoreSecret(SECRET_NAME, 'third'), 'a new value stores again');
+      CheckFalse(StoreSecret(SECRET_NAME, ''),
+                 'and with the exception ended, clearing is a removal');
+      CheckFalse(vault.Holds(SECRET_NAME), 'so the entry is gone');
+   finally
+      InstallTestKeychain;
+   end;
+end;
+
+procedure TKeychainTests.TestForgetRemovesEvenAnUnreadableSecret;
+var
+   vault: TReadLockedKeychain;
+   back: string;
+begin
+   (* DELETING A RADIO OR A CLUSTER FROM ITS LIBRARY IS AN INSTRUCTION, not a
+     side effect of an empty field, so it removes the entry regardless. *)
+   BeginTest('forgetting a secret removes it even after a failed read');
+
+   vault := TReadLockedKeychain.Create;
+   RegisterKeychainBackend(vault);
+   try
+      CheckTrue(StoreSecret(SECRET_NAME, 'Hunter2'), 'stored');
+      vault.FailReads := True;
+      CheckFalse(FetchSecret(SECRET_NAME, back), 'the read fails');
+      vault.FailReads := False;
+      CheckTrue(ForgetSecret(SECRET_NAME), 'forgotten');
+      CheckFalse(vault.Holds(SECRET_NAME), 'and the entry is gone');
+   finally
+      InstallTestKeychain;
+   end;
+end;
+
 procedure TKeychainTests.TestAvailabilityIsAnswerable;
 begin
    (* A caller that has to explain why a password cannot be saved needs to
@@ -379,6 +642,11 @@ begin
    TestForgetRemovesWithoutStoring;
    TestNoVaultIsReportedAndNotDowngraded;
    TestTheValueIsNeverInTheNotice;
+   TestAnUnreadableSecretSurvivesAnEmptySave;
+   TestTheNameOfAnUnreadableSecretIsFolded;
+   TestAReadableSecretIsStillDeletedByAnEmptySave;
+   TestANewValueAfterAFailedReadStoresAndClears;
+   TestForgetRemovesEvenAnUnreadableSecret;
    TestAvailabilityIsAnswerable;
 end;
 

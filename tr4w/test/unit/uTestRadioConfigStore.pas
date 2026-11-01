@@ -35,6 +35,8 @@ uses
      because ANOTHER suite had installed one first and the backend is a unit
      global: a pass that depended on the order the suites happen to run in. *)
    uKeychain,
+   (* TReadLockedKeychain, shared rather than copied. *)
+   uTestKeychain,
    // For the render-then-seed round trip.  The store and the renderer are two
    // halves of one conversation and were tested only separately, which is how
    // they came to disagree about how a network radio is spelled.
@@ -75,6 +77,7 @@ type
       procedure Test_NetworkPasswordComesBackFromTheVault;
       procedure Test_LegacyPlaintextPasswordIsReadThenMovedToTheVault;
       procedure Test_DeletingARadioRemovesItsPassword;
+      procedure Test_AnUnreadablePasswordKeepsItsReference;
       procedure Test_NoVaultMeansNoPasswordAnywhere;
       procedure Test_ClusterPasswordGoesToTheVaultToo;
       procedure Test_TCISectionRoundTrips;
@@ -825,6 +828,63 @@ begin
                  'the password went with the radio');
    finally
       store.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_AnUnreadablePasswordKeepsItsReference;
+var
+   vault: TReadLockedKeychain;
+   store: TRadioConfigStore;
+   radio: TRadioDefinition;
+   root, saved: TJSONObject;
+   err, reference, fetched: string;
+begin
+   BeginTest('Test_AnUnreadablePasswordKeepsItsReference');
+   (* THE LOCKED-AT-STARTUP DEFECT, END TO END. The keyring is locked when
+     the library loads, so the password reads empty; it unlocks before the
+     next save. That save must neither delete the stored password nor drop
+     its reference -- this store looks a password up ONLY through the
+     reference, so a dropped one orphans the entry for good. *)
+   vault := TReadLockedKeychain.Create;
+   RegisterKeychainBackend(vault);
+   root := nil;
+   saved := nil;
+   try
+      store := TRadioConfigStore.Create;
+      try
+         radio := TRadioDefinition.Create;
+         radio.Name := 'K4 Remote';
+         radio.NetworkPassword := 'p@ss w0rd!';
+         CheckTrue(store.AddRadio(radio, err), 'added: ' + err);
+         root := store.SaveToJSON;
+      finally
+         store.Free;
+      end;
+      reference := PasswordRefIn(root);
+      CheckTrue(reference <> '', 'the password reached the vault');
+
+      vault.FailReads := True;
+      store := TRadioConfigStore.Create;
+      try
+         store.LoadFromJSON(root);
+         CheckEquals('', store.FindRadio('K4 Remote').NetworkPassword,
+                     'a locked read leaves the password empty');
+
+         vault.FailReads := False;
+         saved := store.SaveToJSON;
+      finally
+         store.Free;
+      end;
+
+      CheckEquals(reference, PasswordRefIn(saved),
+                  'the save keeps the reference');
+      CheckTrue(vault.Holds(reference), 'and does not delete the entry');
+      CheckTrue(FetchSecret(reference, fetched), 'which reads once unlocked');
+      CheckEquals('p@ss w0rd!', fetched, 'as the original password');
+   finally
+      saved.Free;
+      root.Free;
+      InstallTestKeychain;
    end;
 end;
 
@@ -2621,6 +2681,7 @@ begin
    Test_NetworkPasswordComesBackFromTheVault;
    Test_LegacyPlaintextPasswordIsReadThenMovedToTheVault;
    Test_DeletingARadioRemovesItsPassword;
+   Test_AnUnreadablePasswordKeepsItsReference;
    Test_NoVaultMeansNoPasswordAnywhere;
    Test_ClusterPasswordGoesToTheVaultToo;
    Test_TCISectionRoundTrips;

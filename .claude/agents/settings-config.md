@@ -139,16 +139,23 @@ that in both directions.
   caller until this date** -- every vault report went nowhere; `uProgramMain`
   now sends them to `TR4WDebugLog.Keychain` at Warn (its own level, because
   the first secret is read before DEBUG LOG LEVEL is applied). Real-run
-  checks: `docs/BENCH_QUEUE.md`. **Known gap, not fixed:** a secret that
-  cannot be READ at startup (vault locked) leaves the property empty, and the
-  next save treats empty as "cleared": it asks the vault to DELETE the entry
-  and writes no `<Name>Ref`. Unlocked by then, the stored key is deleted;
-  still locked, the entry is orphaned. Either way it is lost. The radio and
-  cluster passwords (`uRadioConfigStore`'s Store/Fetch pair) have the same
-  shape. Rare on Windows, ordinary on macOS/Linux (Mint with autologin leaves
-  the keyring locked); the fix
-  belongs in `uKeychain` (remember names that failed to read this session and
-  keep their reference) and changes Windows behaviour, so it awaits NY4I.
+  checks: `docs/BENCH_QUEUE.md`. **A SECRET THIS SESSION COULD NOT READ IS
+  NOT DELETED BY AN EMPTY SAVE (fixed 2026-11-01, NY4I approved).** A vault
+  locked at startup (Mint autologin) left the property empty, and the next
+  save's `StoreSecret(name, '')` deleted the stored key and wrote no
+  `<Name>Ref`. Now `uKeychain` remembers, by UPPER-CASED name, every
+  `FetchSecret` that failed with anything but `ksNotFound`; an empty
+  `StoreSecret` for such a name leaves the entry alone, reports it, and
+  answers **True** so the caller keeps writing the Ref (the radio store finds
+  a password ONLY through its Ref). A successful or not-found read, a
+  successful non-empty store, `ForgetSecret` (always deletes) or a new
+  backend clears the mark. No call site changed. **Cost, deliberate:** an
+  operator who clears such a field in the same session keeps the old entry;
+  the notice says so. **Does NOT cover a backend that reports a locked read
+  as `ksNotFound`** -- the Linux dismissed-prompt case is unmeasured (bench
+  queue). The remembered list is main-thread only and unlocked; every caller
+  is the settings load/save or the radio store. Pinned in `uTestKeychain`
+  (`TReadLockedKeychain`, shared with `uTestRadioConfigStore`).
 - **ONE HOME FOR THE LOG LEVEL: `Settings.Log.DebugLevel`** (default DEBUG,
   NY4I 2026-09-14). The radio store's `logging.level` is written only when an
   operator CHOSE a level; absent or `''` means **no opinion**, and

@@ -205,6 +205,21 @@ function ActiveKeychainName: string;
 
   AN EMPTY SECRET REMOVES IT. There is nothing to keep, and leaving the old
   value behind would let an operator who deleted a password still find it.
+  It answers False, because nothing is stored and no reference is wanted.
+
+  EXCEPT WHEN THIS SESSION COULD NOT READ IT. If FetchSecret failed for this
+  name with anything but "not found" -- a vault locked at startup, a
+  dismissed unlock prompt, an error -- the empty value is what the failed
+  read left behind, not what the operator chose. Deleting would destroy a
+  key nobody asked to remove. So the entry is LEFT ALONE, the fact is
+  reported, and the answer is True: the entry is still there and the caller
+  must keep writing its reference, or a store that looks a secret up only
+  through its reference (the radio library) would never find it again.
+
+  The cost, stated: an operator who deliberately clears such a field in the
+  same session keeps the old value in the vault; the notice says so. A
+  successful read of the name, a non-empty store, or ForgetSecret ends the
+  exception.
 *)
 function StoreSecret(const aName, aPlain: string): boolean;
 
@@ -216,7 +231,9 @@ function StoreSecret(const aName, aPlain: string): boolean;
 function FetchSecret(const aName: string; out aPlain: string): boolean;
 
 (* Remove one, without storing anything. For a setting being cleared by
-  something other than a save. *)
+  something other than a save -- a radio or cluster definition deleted from
+  its library. It removes the entry even when this session could not read
+  it: deleting the definition is an explicit instruction. *)
 function ForgetSecret(const aName: string): boolean;
 
 (* FOR TESTS ONLY. Installs an in-memory vault, so a suite can pin the round
@@ -236,6 +253,54 @@ var
    GBackends: TBackendList;
    GActive: TKeychainBackend = nil;
    GNotice: TKeychainNotice = nil;
+
+   (*
+     THE NAMES THIS SESSION FAILED TO READ, for any reason but "not found".
+     See StoreSecret in the interface for why they matter.
+
+     HELD UPPER-CASED, which is how every backend keys an entry (see the unit
+     header), so a name built by the saver and the same name read from the
+     settings file match whatever their spelling.
+
+     MAIN THREAD ONLY, and not locked. The only callers are the settings
+     object's load and save and the radio configuration store, all on the
+     main thread; a caller on another thread would need a lock here first.
+   *)
+   GUnreadable: TStringList = nil;
+
+function UnreadableIndex(const aName: string): integer;
+begin
+   if GUnreadable = nil then
+      begin
+      Result := -1;
+      Exit;
+      end;
+   Result := GUnreadable.IndexOf(AnsiString(UpperCase(aName)));
+end;
+
+procedure RememberUnreadable(const aName: string);
+begin
+   if UnreadableIndex(aName) >= 0 then
+      begin
+      Exit;
+      end;
+   if GUnreadable = nil then
+      begin
+      GUnreadable := TStringList.Create;
+      end;
+   GUnreadable.Add(AnsiString(UpperCase(aName)));
+end;
+
+procedure ForgetUnreadable(const aName: string);
+var
+   idx: integer;
+begin
+   idx := UnreadableIndex(aName);
+   if idx >= 0 then
+      begin
+      GUnreadable.Delete(idx);
+      end;
+end;
 
 procedure SetKeychainNotice(const aNotice: TKeychainNotice);
 begin
@@ -276,6 +341,14 @@ begin
    if aBackend = nil then
       begin
       Exit;
+      end;
+
+   (* A NEW VAULT MAKES THE OLD READ FAILURES MEANINGLESS -- they were about
+     a different store. In the program this runs before any read; in the
+     tests it keeps one test's failures out of the next. *)
+   if GUnreadable <> nil then
+      begin
+      GUnreadable.Clear;
       end;
 
    (* REGISTERING A SCHEME TWICE REPLACES IT, so a unit that re-registers
@@ -323,6 +396,19 @@ begin
       begin
       (* CLEARED MEANS REMOVED, and a vault that does not have it is not an
         error -- clearing something already absent is a no-op, not a fault. *)
+      if (GActive <> nil) and (UnreadableIndex(aName) >= 0) then
+         begin
+         (* BUT NOT WHEN THE EMPTY VALUE IS ONLY WHAT A FAILED READ LEFT.
+           See the interface comment. The entry is kept and so is its
+           reference. *)
+         Report(aName, 'was not removed: it could not be read this session, '
+                       + 'so the empty value may be the failed read rather '
+                       + 'than a choice. The stored entry is kept. To remove '
+                       + 'it, clear the field again after a session in which '
+                       + 'the secret store is unlocked.');
+         Result := True;
+         Exit;
+         end;
       if GActive <> nil then
          begin
          status := GActive.DeleteSecret(aName);
@@ -350,6 +436,9 @@ begin
    status := GActive.WriteSecret(aName, aPlain);
    if status = ksOk then
       begin
+      (* The operator's new value replaced whatever could not be read, so
+        an empty store from here on is a real removal again. *)
+      ForgetUnreadable(aName);
       Result := True;
       Exit;
       end;
@@ -375,6 +464,20 @@ begin
 
    status := GActive.ReadSecret(aName, aPlain);
    Result := status = ksOk;
+
+   (* WHETHER AN EMPTY SAVE MAY DELETE THIS NAME LATER. A read that worked,
+     or a vault that positively has no such entry, leaves nothing to
+     protect. Anything else -- locked, refused, an error -- may be hiding a
+     real entry, so remember it. *)
+   if status in [ksOk, ksNotFound] then
+      begin
+      ForgetUnreadable(aName);
+      end
+   else
+      begin
+      RememberUnreadable(aName);
+      end;
+
    if not Result then
       begin
       (* NOTHING PLAUSIBLE IS HANDED BACK. A revoked credential and a file
@@ -399,6 +502,10 @@ begin
       end;
    status := GActive.DeleteSecret(aName);
    Result := status in [ksOk, ksNotFound];
+   if Result then
+      begin
+      ForgetUnreadable(aName);
+      end;
 end;
 
 (* ===================================================================== *)
@@ -494,5 +601,9 @@ procedure InstallTestKeychain;
 begin
    RegisterKeychainBackend(TMemoryKeychain.Create);
 end;
+
+finalization
+   GUnreadable.Free;
+   GUnreadable := nil;
 
 end.
