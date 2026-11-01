@@ -125,6 +125,18 @@ Caveat: FOC/HSC are frozen at the seed snapshot (no live roster feed); CWops is
 refreshed live each run; QRZ names grow via the cache. Re-baseline the seed
 (`copy target → seed`) only as a deliberate choice.
 
+## `arrl-sections-counties.json` — county to ARRL/RAC section
+
+Supplied by NY4I (2026-11-01); it rarely changes. A state or province maps either
+straight to its section (`"OH": "OH"`) or, for the nine whose sections split inside
+the state (CA, FL, MA, NJ, NY, ON, PA, TX, WA), county by county
+(`"CA": {"Alameda": "EB", ...}`). Nothing reads it yet: it is the crosswalk for filling
+the `.DTA`'s Section slot from a QRZ county. QRZ's county spelling will need matching
+to these names (case, "St."/"Saint", "County" suffix) once real QRZ data is in hand.
+`python check_county_sections.py` checks that every section it names is one
+`target/dom/arrlsect.dom` accepts. Turn it into a Pascal unit only if the program
+itself ever needs the lookup at run time.
+
 ## `_work/`
 
 Scratch dir for downloads + caches; git-ignored. Never commit downloaded data.
