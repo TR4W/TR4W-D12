@@ -1,6 +1,6 @@
 # The installer, and what it is allowed to decide
 
-**Status:** PART BUILT. **The `.pkg` is built, signed and shipped alongside the
+**Status (checked 2026-11-01):** PART BUILT. **The Windows NSIS installer (`tr4w/build/full.nsi`) exists and ships**: it has a components page (optional sections such as the domestic multiplier files, TRMASTER.DTA and cty.dat), a directory page and an install page; it does not ask for a call sign or write `tr4w.json` (rg for `tr4w.json` and call sign in the script finds only comments and an unrelated folder name). **The `.pkg` is built, signed and shipped alongside the
 `.dmg` as of 2026-09-28** -- `mac-sign.sh pkg`, wired into `build-unix.sh`'s
 packaging stage and uploaded by `release.yml`. It installs
 `/Applications/TR4W.app` and asks nothing; **the optional-components pane of

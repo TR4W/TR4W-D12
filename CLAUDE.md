@@ -343,7 +343,9 @@ shaped as they are, not for status. **The live task list is
 
 The honest gate on radios is **one verified rig per protocol family**, not 100 rigs. Verified:
 Elecraft serial, Elecraft network, Kenwood serial, Icom serial, Flex CAT, Yaesu binary (FT-1000MP,
-2026-08-09 — first proof of that family). **Unproven: Icom LAN, Yaesu ASCII, HamLib.** Track that in
+2026-08-09 — first proof of that family). **Icom LAN: the link is proven on TWO models only** —
+IC-7760 and IC-9700, a 7 h 52 m soak under FPC on 2026-09-27; CW, PTT and split over LAN, and every
+other LAN Icom, are not. **Unproven: Yaesu ASCII, HamLib.** Track that in
 [`docs/RADIO_BENCH_STATUS.md`](docs/RADIO_BENCH_STATUS.md). **Those results were obtained under
 Delphi**; the Elecraft K4 (network), K3S (serial) and **Yaesu FT-1000MP (binary, 2026-08-31)** have since been re-confirmed against the FPC
 binary, the rest have not.
@@ -1452,7 +1454,7 @@ Read the specific doc before acting in its area — these are current and this f
 | **Band map -> LCL (read before touching `uBandmap`/`uSpots`)** | **`docs/BANDMAP_LCL_DESIGN.md`** |
 | **I18N: resourcestrings, .po and where every string lives** | **`docs/I18N_PLAN.md`** |
 | **Which `.lfm` captions actually reach the screen** | **`docs/migration_interim_artifacts/CAPTION_REVIEW.md`** (archived — the measurement was consumed by the `.lfm` harvest) — every design-time caption in `src/ui/lcl`, marked `wired` (assigned at run time, so the `.lfm` text is a placeholder) or `SHIPS` (the English in the `.lfm` is what an operator sees). This is the measurement behind "469 captions ship as English" |
-| **Adding a language (recipe; step 6 is a known gap)** | **`docs/ADDING_A_LANGUAGE.md`** |
+| **Adding a language (recipe; step 6 was closed, see its status block)** | **`docs/ADDING_A_LANGUAGE.md`** |
 | **Running the i18n scripts** | **`docs/I18N_TOOLS.md`** |
 | **Sending a language to a translator / taking it back** | **`docs/TRANSLATION_HANDOFF.md`** |
 | **What the translator receives** | `docs/TRANSLATOR_GUIDE.md` |

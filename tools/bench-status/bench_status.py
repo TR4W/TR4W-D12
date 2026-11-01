@@ -22,11 +22,25 @@ TR4W_ROOT = r"C:\tr4w-d12"
 FACTORY_DIR = os.path.join(TR4W_ROOT, r"tr4w\src\radioFactory")
 DOC = os.path.join(TR4W_ROOT, r"docs\RADIO_BENCH_STATUS.md")
 
-# Registration forms, mirroring tr4w/build/Lint-RadioRegistry.ps1: the ctor is
-# an anonymous function containing no string literals, so for the enum forms the
-# FIRST quoted literal is the display name.
+# Registration forms, mirroring tr4w/build/Lint-RadioRegistry.ps1 -- which is
+# the gate, so the two must agree on the count:
+#   RegisterRadio(<enum>, <ctor>, '<display>', ...);
+#   RegisterHamLibOnlyRadio(<enum>, <ctor>, '<display>', ...);
+#   RegisterRadioById('<id>', <ctor>, '<display>', ...);
+# The ctor is a named function containing no string literals, so for the enum
+# forms the FIRST quoted literal is the display name, and for the ById form the
+# first is the id and the SECOND is the display name.
+#
+# 2026-11-01: this used to keep a match only if its arguments contained the
+# word "function" -- the anonymous-method ctor form that the FPC portability
+# work replaced with named functions.  From then on it parsed ZERO
+# registrations (and stopped at its own floor check), and it never matched the
+# ById form at all, so the footer it last wrote went stale and string-id radios
+# could only be added by hand.  The lint had the same defect and fixed it by
+# keying on a property of Pascal instead: a DECLARATION separates parameters
+# with ';', a CALL separates arguments with ','.
 CALL = re.compile(
-   r"Register(?:HamLibOnly)?Radio\s*\(\s*(?P<enum>[A-Za-z_][A-Za-z0-9_]*)\s*,(?P<rest>.*?)\)\s*;",
+   r"Register(?:HamLibOnly)?Radio(?P<byid>ById)?\s*\((?P<args>.*?)\)\s*;",
    re.S)
 
 
@@ -45,13 +59,21 @@ def registered_radios():
       with open(os.path.join(FACTORY_DIR, name), encoding="utf-8", errors="replace") as f:
          body = strip_comments(f.read())
       for m in CALL.finditer(body):
-         rest = m.group("rest")
-         if "function" not in rest:          # a declaration/forward, not a call
+         args = m.group("args")
+         if ";" in args:                     # a declaration/forward, not a call
             continue
-         lits = re.findall(r"'([^']*)'", rest)
-         if not lits:
-            continue
-         found[m.group("enum")] = (lits[0], name)
+         lits = re.findall(r"'([^']*)'", args)
+         if m.group("byid"):
+            if len(lits) < 2:
+               continue
+            # The Enum column carries "<id> (string id)" for a radio with no
+            # enum member.  That spelling is also the KEY existing_rows() reads
+            # back, so it must not change, or the row's test report is lost.
+            found["%s (string id)" % lits[0]] = (lits[1], name)
+         else:
+            if not lits:
+               continue
+            found[args.split(",")[0].strip()] = (lits[0], name)
    return found
 
 
@@ -113,7 +135,7 @@ def main():
    L.append('"connects" and "CW, split and RIT verified" are very different claims.')
    L.append("")
    L.append("**Why this matters here:** the legacy radio path is kept only until bench")
-   L.append("coverage makes its deletion safe (see `docs/tr4w-migration-strategy.md`).")
+   L.append("coverage makes its deletion safe (see `docs/migration_interim_artifacts/tr4w-migration-strategy.md`).")
    L.append("This table is the gate on that decision.")
    L.append("")
    L.append("| Radio | Enum | Tested | By | Notes |")
@@ -126,7 +148,9 @@ def main():
    L.append("_%d registered radios; %d with a test report._" % (len(radios), done))
    L.append("")
 
-   with open(DOC, "w", encoding="utf-8") as f:
+   # CRLF stated explicitly: the document is CRLF like every tracked source
+   # file here, and the platform default would write LF off Windows.
+   with open(DOC, "w", encoding="utf-8", newline="\r\n") as f:
       f.write("\n".join(L))
    print("%d radios, %d tested -> %s" % (len(radios), done, DOC))
 

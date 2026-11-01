@@ -30,7 +30,9 @@ python tools\i18n\po_merge.py --pot tr4w\languages\tr4w_laz.pot --apply
 ### 2. Seed the untranslated entries (optional)
 
 Gives the translator a first draft to correct rather than a blank column. Everything
-it writes stays marked "Needs work", so none of it can reach the program unreviewed.
+it writes stays marked "Needs work" in the `.po`. ~~so none of it can reach the program
+unreviewed~~: since 2026-09-21 (NY4I) the build ships "Needs work" entries as well, so a
+seeded draft **does** reach the screen until a translator corrects it.
 
 Needs LibreTranslate running on `http://localhost:5000`.
 
@@ -145,7 +147,7 @@ cd tr4w\target
 The log in `tr4w\target\tr4w.log` says which catalogue was used:
 
 ```
-UI language: "pl" from the embedded catalogue
+UI language: "pl" selected by <source>, loaded from the embedded catalogue
 UI language: none loaded; using the compiled-in English
 ```
 
@@ -158,16 +160,24 @@ resource built from it should never disagree in history.
 
 ## Things that will bite
 
-**A `.po` beside the exe overrides the embedded one.** `languages\<lang>\tr4w.po` next
-to `tr4w_fpc.exe` wins. That is deliberate — it lets a corrected translation be dropped
+**A loose `.po` overrides the embedded one.** `languages\<lang>\tr4w.po` wins. On Windows
+it is looked for under the **working directory** (`uAppPaths.DataFilePath`), not next to
+`tr4w_fpc.exe`, so with the recipe above that means `tr4w\target\languages\`. It also
+keeps the run-time fuzzy gate, so it shows reviewed entries only. That is deliberate — it lets a corrected translation be dropped
 onto an installation without a rebuild — but during testing it means you can be looking
 at a stale file and not know. The log line says which was used; read it.
 
-**Not everything on screen is translatable yet.** Tool-window titles come from the
-Win32 menu rather than the form, so they stay English until the `RC_` constants become
-resourcestrings. Roughly twenty entries. If a translator asks why their work on a
-window title has not appeared, that is why — see
-[`ADDING_A_LANGUAGE.md`](ADDING_A_LANGUAGE.md) section 6.
+**Not everything on screen is translatable yet.** ~~Tool-window titles come from the
+Win32 menu ... stay English until the `RC_` constants become resourcestrings.~~ Those
+titles now come from `TMainMenu` captions, which are resourcestrings. That is shown from
+the code; nobody has yet checked it on a running screen. What still stays English:
+- An `.lfm` caption added since the form was last saved in the Lazarus IDE. It is in no
+  catalogue (issue #145).
+- A new resourcestring that has not been merged into the catalogues yet.
+
+If a translator asks why a string never appears in their file, it is one of those two.
+See [`ADDING_A_LANGUAGE.md`](ADDING_A_LANGUAGE.md) section 6 and
+[`I18N_PLAN.md`](I18N_PLAN.md), *Open tooling issues*.
 
 **Renaming an identifier orphans its translation in every language.** The key is the
 name, not the English. Rewording the English is safe — the entry goes "Needs work" and

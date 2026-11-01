@@ -3,8 +3,14 @@
 Step by step. Read [`I18N_PLAN.md`](I18N_PLAN.md) first for *why* it is shaped this way;
 this document is the recipe.
 
-**Status 2026-08-26.** Steps 1–5 are proven in the real binary. **Step 6 does not work
-yet** and is written up honestly below rather than left for the next person to discover.
+~~**Status 2026-08-26.** Steps 1–5 are proven in the real binary. **Step 6 does not work
+yet**~~
+
+**Status 2026-11-01.** Steps 1–6 hold. The gap that step 6 described is closed, as
+shown from the code (see section 6): tool-window titles come from menu captions, and those
+captions are now resourcestrings. Nobody has yet looked at a translated title on a running
+screen to confirm it. One known gap remains for form captions: a caption added after the
+form was last saved in the Lazarus IDE reaches no catalogue (issue #145).
 
 ---
 
@@ -31,25 +37,29 @@ and `tr4w/languages/tr4w_laz.pot` for the `.lfm` captions. English's name in Pre
 catalogue entry -- `pofile.is_translatable` is the rule, and `po_merge` and `pas2po` both ask
 it. The form keeps its `.lfm` text, which is what an untranslated property shows anyway.
 
-The strings live in two mechanisms, and both end up in the same `.po`.
+The strings live in two mechanisms, and both end up in the same `.po`. The templates are:
 
-```bash
-# the legacy TC_/RC_ tables -> .po
-python tools/i18n/pas2po.py
+- **`.lfm` captions and the generated `uTR4WStrings`:** `tr4w/languages/tr4w_laz.pot`,
+  which the Lazarus IDE regenerates when it resaves forms (issue #145 covers what it misses).
+- **New resourcestrings (`uAppStrings`):** a scratch `.pot` made by
+  `C:\Lazarus\tools\updatepofiles.exe` from the `.rsj` that FPC writes on every build.
+  **Build first**, or you are extracting a stale table. The exact recipe is in
+  `I18N_TOOLS.md`, *Refresh the catalogues*. Never point `updatepofiles` at `tr4w_laz.pot`.
 
-# resourcestrings -> .po, via the compiler's own table
-rstconv -i build-out/app-i386-win32/uAppStrings.rsj -o uAppStrings.po -f po
-```
-
-`rstconv.exe` ships with FPC (`C:\FPC\3.2.2\bin\i386-Win32`). It reads the `.rsj` the
-compiler writes beside the object file — **build first**, or you are extracting a stale
-table.
+~~`python tools/i18n/pas2po.py`~~ and ~~`rstconv ... -o uAppStrings.po -f po`~~ stood here.
+The first is the destructive whole-catalogue rebuild, which now refuses. The second writes
+a catalogue directly instead of a template that `po_merge` can apply.
 
 ## 2. Add the language
 
 ```bash
 python tools/i18n/pas2po.py --new-lang <LANG> --code <xx>   # writes i18n/tr4w_<xx>.po, all fuzzy
+python tools/i18n/po_merge.py --pot tr4w/languages/tr4w_laz.pot --apply   # THEN the form + resourcestring half
 ```
+
+**Both lines, in that order.** `pas2po --new-lang` writes only the `TC_` table. Without the
+merge, the new language silently lacks every form string. Then merge any scratch `.pot`
+of resourcestrings newer than `tr4w_laz.pot`, as in step 1.
 
 ~~`python tools/i18n/pas2po.py`~~ with no `--new-lang` rebuilds EVERY catalogue from the
 `TC_`/`RC_` tables alone, which deletes the `.lfm` and resourcestring entries (2,203
@@ -68,8 +78,10 @@ The code is what `SetDefaultLang` matches and what the directory is named.
 python tools/i18n/mt_seed.py --lang es
 ```
 
-`mt_seed` touches **only entries that are both fuzzy and empty**, its output stays fuzzy,
-and `po2pas.py` skips fuzzy entries. Clearing the fuzzy flag is a human's review.
+`mt_seed` touches **only empty entries**. ~~both fuzzy and empty~~: Poedit strips the flag
+from an empty entry, so emptiness is the whole condition. A `# mt-seed: skip -- <reason>`
+comment keeps an entry out for good (see `I18N_TOOLS.md`). Its output stays fuzzy, and
+`po2pas.py` skips fuzzy entries. Clearing the fuzzy flag is a human's review.
 
 **It no longer keeps the entry out of the BUILD, though** (2026-09-21, NY4I): the embedded
 catalogue ships fuzzy entries with the flag stripped so the languages can be exercised while
@@ -90,17 +102,25 @@ reviewed twice.
 
 ## 5. Install and run it
 
-The catalogue is found **relative to the EXECUTABLE, not the working directory.** This is
-the single most likely reason a correct translation appears to do nothing.
+**The catalogue is EMBEDDED in the executable** (`tr4w/res/tr4w_languages.res`, RCDATA
+`TR4W_<CODE>`). `Build-App.ps1` regenerates it whenever an `i18n/tr4w_*.po` changes
+(2026-10-16). So installing a language means building, and then committing the `.res`
+together with its `.res.inputs`. Nothing needs to be copied beside the exe.
+
+~~The catalogue is found relative to the EXECUTABLE~~. That was `SetDefaultLang`'s rule
+(2026-08). A **loose** file still wins over the embedded copy, for testing or as a patch,
+but it is located by `uAppPaths.DataFilePath`:
 
 ```
-<dir containing tr4w.exe>/languages/<code>/tr4w.po
-<dir containing tr4w.exe>/locale/<code>/tr4w.po      (also searched)
+languages/<code>/tr4w.po     Windows: the WORKING directory
+                             macOS:   TR4W.app/Contents/Resources/
+                             Linux:   /usr/share/tr4w/, else the binary's directory
 ```
 
-The file name is pinned to `tr4w.po` in `uProgramMain`, not defaulted, because the default
-is the *executable's* name — the shipped `tr4w.exe` and the developer's `tr4w_fpc.exe`
-would look for different files.
+~~`locale/<code>/tr4w.po` (also searched)~~: only `languages/` is searched. A loose file
+is read by LazUtils with its run-time fuzzy gate intact, so it shows reviewed entries only.
+A stale one silently hides the embedded catalogue, which makes it the likeliest reason a
+correct translation appears to do nothing.
 
 ```powershell
 tr4w.exe mycontest.cfg --lang es
@@ -111,17 +131,19 @@ The precedence is `--lang`, then the **Language** setting (Preferences › Appea
 drop-down on its own: the list is read from the catalogues embedded in the binary, so
 there is nothing to add by hand.
 
-Check the log. It says which it loaded, and says so when it loaded nothing:
+Check the log. It says which it loaded, and says so when it loaded nothing
+(`uEmbeddedTranslations`, `uProgramMain`):
 
 ```
-UI language: loaded translations for "es"
-UI language: no translation loaded; using the compiled-in English
+UI language: "es" selected by <source>, loaded from the embedded catalogue
+UI language: "es" selected by <source>, loaded from <path> (overriding the embedded catalogue)
+UI language: none loaded; using the compiled-in English
 ```
 
 An absent `.po` is not an error — English is the compiled-in default — so without that line
 a missing or misnamed catalogue is indistinguishable from a working English build.
 
-### Verified
+### Verified (2026-08, with a loose file under `SetDefaultLang`)
 
 With one entry translated in `languages/es/tr4w.po`:
 
@@ -134,8 +156,28 @@ no --lang   SIniRetireTitle = Old settings file
 
 ## 6. Form captions
 
-**They translate. The child controls translate today; the tool-window TITLES do not, and the
-reason is not the translation mechanism.**
+**They translate. Since 2026-09-07 that includes the tool-window titles, as shown from
+the code. Nobody has yet confirmed a translated title on a running screen.**
+
+**Current state (2026-11-01).** The title is still set from the window's menu row:
+`OpenTR4WWindow` does `lclForm.Caption := TCaption(menuTitle)`, where
+`menuTitle := MenuCaption(10199 + Ord(ID))`. But the menu has been a **`TMainMenu`** since
+`de8e1ccf` (2026-09-07), and `uMenu.InitializeMenuText` fills its captions from
+resourcestrings (`T_MENU_ARRAY[i].mrText := RC_FKEYS`). The `TC_`/`RC_` constants have been
+resourcestrings in `uTR4WStrings` since `1ee6b50f` (2026-08-27). `uProgramMain` calls
+`InitializeMenuText` *after* `LoadEmbeddedTranslation`, so the menu row, and with it the
+title, carries the translated text. The catalogues carry the key (`#: utr4wstrings.rc_fkeys`).
+The fix proposed below ("convert `RC_FKEYS` and its siblings to resourcestrings") is
+therefore made. The menu/title sync it was meant to preserve is preserved.
+
+What remains open for form captions is **issue #145**. A caption reaches the template only
+through the `.lrj` that the IDE writes when it saves a form. So a control added since the
+last save is in no catalogue and shows in English everywhere. Example: `uPrefsForm`'s
+`lblLanguage`.
+
+The rest of this section is the **2026-08-26 investigation, kept as history**. Its code
+snippets (`GetMenuStringW`, `HMENU`, "no `TMainMenu` in the tree") no longer describe the
+tree.
 
 ### What works
 
@@ -181,7 +223,7 @@ last time, `TControl.SetCaption` compares and does nothing, and the native title
 was written before -- so the operator saw "Radio 1" on every reopen. Title and menu item are
 meant to stay in step.
 
-### The fix is already in the plan
+### ~~The fix is already in the plan~~ The fix is made (see the current state above)
 
 **Convert `RC_FKEYS` and its siblings to resourcestrings.** They are among the 163
 code-reachable `RC_` constants listed in [`I18N_PLAN.md`](I18N_PLAN.md). Once the menu text is
@@ -194,8 +236,10 @@ recorded, worthwhile, and much larger -- and doing it *after* the constants are 
 means it inherits translated captions instead of having to redo them.
 
 **Consequence for translators:** the `.lfm` caption of a tool window is dead text. It is in the
-catalogue because Lazarus extracted it, and translating it changes nothing until the `RC_`
-conversion lands. Roughly twenty entries.
+catalogue because Lazarus extracted it, but the title on screen is the menu row's text. That
+is the `RC_` entry, which now translates. Some catalogues file both keys on one entry
+(`#: tfrmfunctionkeys.caption utr4wstrings:rc_fkeys`). ~~translating it changes nothing
+until the `RC_` conversion lands~~.
 
 ### What was eliminated getting here
 
@@ -233,9 +277,16 @@ enabled i18n"**, which saves every form once. All 37 units must also carry
 `ComponentName`/`ResourceBaseClass` in the `.lpi` first -- only 19 did, and the IDE extracts
 captions only from units it knows are forms.
 
+**This is still true, and it is issue #145.** Until a harvest that does not need the IDE
+exists, every new or renamed `.lfm` caption needs either an IDE resave or a key added by
+hand to a merge template (as was done for `chkNetAutoConnect`, `74a50e27`). Resourcestrings
+do not have this problem: `updatepofiles` on the `.rsj` is enough (`docs/I18N_TOOLS.md`).
+
 ## Gotchas
 
-* **`.po` beside the EXE.** Not the working directory. Cost the first attempt.
+* ~~**`.po` beside the EXE.** Not the working directory.~~ The catalogue is embedded. A
+  loose override is found through `uAppPaths.DataFilePath`, which on Windows is the working
+  directory (section 5).
 * **Never rename an identifier.** It is the translation key; a rename orphans the
   translation in every language, silently. Rewording the *English* is safe — the entry goes
   `#, fuzzy` and a translator re-checks it.

@@ -275,8 +275,11 @@ independent reference.
 
 **Bench status is the honest gate: one verified rig per protocol family.**
 Verified under Delphi: Elecraft serial/network, Kenwood serial, Icom serial, Flex
-CAT, Yaesu binary. Re-confirmed under FPC: K4, K3S, FT-1000MP. **Unproven: Icom
-LAN, Yaesu ASCII, HamLib.** Keep `docs/RADIO_BENCH_STATUS.md` current.
+CAT, Yaesu binary. Re-confirmed under FPC: K4, K3S, FT-1000MP. **Icom LAN: the
+link is proven on TWO models only** -- IC-7760 and IC-9700, a 7 h 52 m soak under
+FPC on 2026-09-27 (transport as of `38fd77b5`; changed since, not re-soaked); CW,
+PTT and split over LAN, and every other LAN Icom, are not. **Unproven: Yaesu
+ASCII, HamLib.** Keep `docs/RADIO_BENCH_STATUS.md` current.
 
 ## Coordinate with
 

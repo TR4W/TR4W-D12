@@ -225,8 +225,8 @@ rather than approving on faith. Hand the build to whoever does have the hardware
 ## 5. When to update `Version.pas`
 
 `src/Version.pas` is the single source of truth for the version string. The CI
-release workflow extracts `TR4W_CURRENTVERSION_NUMBER` and refuses to build if it
-doesn't match the tag (with the `-all` suffix stripped). So getting the timing
+release workflow extracts `TR4W_CURRENTVERSION_NUMBER` and, on a tag push, fails
+the build job if it doesn't match the tag (a trailing `-all` is stripped first). So getting the timing
 right matters.
 
 There are two patterns. Pick the one that fits the situation:
@@ -238,7 +238,7 @@ Use this when the feature PR is intended to be the next release.
 1. On the feature branch, as part of the PR's commits, bump
    `TR4W_CURRENTVERSION_NUMBER` and `TR4W_CURRENTVERSIONDATE`.
 2. PR gets reviewed + merged to `main` normally.
-3. After merge, **immediately** tag `main` (see [section 6](#6-tagging-for-an-english-only-release)).
+3. After merge, **immediately** tag `main` (see [section 6](#6-tagging-a-release)).
    The bumped version is already on `main`; no separate bump step.
 
 Pro: one PR, atomic. The version-bump diff and the changes that justify it travel
@@ -255,8 +255,10 @@ Use this when:
 - Several PRs have already merged since the last release and none of them carried
   a bump, OR
 - You're cutting a release at a point not aligned with any single PR (e.g.,
-  monthly cadence), OR
-- A `-all` tag follows an English `vX.Y.Z` release: bump version, push, tag.
+  monthly cadence).
+
+(A `-all` tag following an English release is gone: there is no all-languages
+build. See the retired section 7.)
 
 Steps -- runs **directly on the default branch**, no branch, no PR:
 
@@ -286,25 +288,30 @@ branch + PR.
 - **Don't bump and then forget to tag.** A bumped `Version.pas` on `main` with no
   matching tag means the EXE built locally claims version N+1 but there's no
   corresponding release artifact anywhere.
-- **Don't reuse a version.** Once `v4.147.18` is tagged and published, the next
-  release is `v4.147.19` or `v4.148.0` -- not a re-tag of `v4.147.18`. Bump it
+- **Don't reuse a version.** Once `v5.0.35` is tagged and published, the next
+  release is `v5.0.36` or `v5.1.0` -- not a re-tag of `v5.0.35`. Bump it
   again.
 
 ### Version-number conventions
 
-- **Patch bumps** (`4.147.17` -> `4.147.18`): bug fixes, small features, the
+The line is 5.0.x (current: see `Version.pas`); in practice nearly every release
+is a patch bump.
+
+- **Patch bumps** (`5.0.35` -> `5.0.36`): bug fixes, small features, the
   default for most releases.
-- **Minor bumps** (`4.147.x` -> `4.148.0`): notable feature additions, new radio
+- **Minor bumps** (`5.0.x` -> `5.1.0`): notable feature additions, new radio
   support, new contest additions.
-- **Major bumps** (`4.x.y` -> `5.0.0`): reserved; not currently planned.
+- **Major bumps** (`5.x.y` -> `6.0.0`): reserved; not currently planned.
 - **Date** (`TR4W_CURRENTVERSIONDATE`): update to the current "Month, Year" of the
   release.
 
 ---
 
-## 6. Tagging for an English-only release
+## 6. Tagging a release
 
-This is the **normal** release path. Use it for the vast majority of releases.
+This is the **normal** release path, and the only one: there is one English build
+(the section title used to say "English-only" when a second, all-languages path
+existed).
 
 **Precondition:** `Version.pas` on the default branch reflects the version you're
 about to tag. If not, do [section 5](#5-when-to-update-versionpas) first.
@@ -321,20 +328,21 @@ about to tag. If not, do [section 5](#5-when-to-update-versionpas) first.
    git -C . show HEAD:tr4w/src/Version.pas | findstr CURRENTVERSION_NUMBER
    ```
    You should see exactly the version you're about to tag, e.g.
-   `TR4W_CURRENTVERSION_NUMBER = '4.147.18'`.
+   `TR4W_CURRENTVERSION_NUMBER = '5.0.36'`.
 
-3. **Create the tag and push it.**
+3. **Create the tag and push it.** (`utils\TagIt.cmd 5.0.36` does the same with the checks
+   described in the TL;DR.)
 
    Annotated tag (recommended -- carries a message and a tagger date):
    ```
-   git tag -a v4.147.18 -m "TR4W v4.147.18"
-   git push d12 v4.147.18
+   git tag -a v5.0.36 -m "TR4W v5.0.36"
+   git push d12 v5.0.36
    ```
 
    Lightweight tag (also works, no message):
    ```
-   git tag v4.147.18
-   git push d12 v4.147.18
+   git tag v5.0.36
+   git push d12 v5.0.36
    ```
 
    To push **all** local tags at once (rarely needed):
@@ -342,46 +350,75 @@ about to tag. If not, do [section 5](#5-when-to-update-versionpas) first.
    git push d12 --tags
    ```
 
-4. **CI fires.** `.github/workflows/release.yml` matches `v4.*.*` and runs three
-   jobs in sequence:
-   - **build** (Windows runner): compiles, UPX-compresses, runs `makensis`,
-     uploads `tr4w_setup_4.147.18.exe` as a workflow artifact.
-   - **virustotal-scan** (Linux runner): downloads the installer, uploads it to
-     VirusTotal, polls for completion, generates `virustotal-report.md`. Fails
-     the pipeline if any installer hits the threshold
-     (`VT_MALICIOUS_THRESHOLD = 8`), which blocks the release job. An emergency
-     `skip_virustotal` input is available on the `workflow_dispatch` trigger.
-   - **release** (Linux runner): only runs on tag push. Downloads both
-     artifacts, creates a **draft** GitHub Release with auto-generated
-     changelog, the installer, AND the VT report attached.
+4. **CI fires.** `.github/workflows/release.yml` triggers on a tag matching
+   `v[0-9]*.*.*` (deliberately major-agnostic) and on `workflow_dispatch`, and on
+   nothing else. Every job runs on a self-hosted lab runner; nothing runs on a
+   GitHub-hosted server. The jobs:
+   - **build** (`win-ci`): extracts the version from `Version.pas`; on a tag push
+     it fails if the tag (a trailing `-all` stripped) does not equal
+     `TR4W_CURRENTVERSION_NUMBER`; runs `FullBuild.ps1 -BuildInstaller` (lints,
+     unit tests, app, tr4wserver, NSIS); uploads `tr4w_setup_<version>.exe` and
+     `tr4w-<version>.dbg` (the debug symbols) as artifacts.
+   - **build-linux** (`linux-ci`) and **build-macos** (`mac-ci`): both
+     `needs: build`, so they run after it, in parallel with each other. They run
+     `build-unix.sh` and produce the tarball and AppImage (Linux) and the signed,
+     notarized `.dmg`, tarball and `.pkg` plus `.dSYM`s (macOS). Both are
+     `continue-on-error` and the release job's `if:` does not consult their
+     results, so a Unix failure never withholds the Windows installer. They are
+     in the release job's `needs:` so it waits for them. The Linux job ends in a
+     unit-test gate that reddens that job (read the job, not the run).
+   - **virustotal-scan** (`win-ci`): downloads the installer, scans it, writes
+     `virustotal-report.md`. Fails if the installer reaches
+     `VT_MALICIOUS_THRESHOLD` (8 malicious detections), which blocks the release
+     job. The `skip_virustotal` input exists on `workflow_dispatch` for
+     emergencies.
+   - **release** (`win-ci`): runs only when `github.event_name == 'push'` (a tag),
+     and only if build and virustotal-scan succeeded. It downloads the
+     artifacts, generates notes scoped to the previous tag, and creates a
+     **draft** GitHub Release with the installer, the `.dbg`, the VT report and
+     whichever Linux/macOS artifacts exist. A missing optional artifact is
+     reported by name, not fatal (`fail_on_unmatched_files: false`).
+
+   **A `workflow_dispatch` run builds all three platforms and creates NO release**
+   (the release job is skipped). See [section 8](#8-ad-hoc-full-builds-without-a-release----and-this-is-how-you-verify-a-platform).
+
+   **`version-guard.yml` is separate:** it runs on every PR and every push to
+   `main`, builds nothing, and only asserts that `tr4w/src/Version.pas` exists
+   and its version constant parses. The tag-versus-`Version.pas` match is
+   checked only by `release.yml`.
 
 5. **Watch the run.** GitHub Actions tab, or:
    ```
    gh run watch
    ```
-   English-only build is ~3-5 min.
+   Run times vary with runner queue time (there is one Windows runner); a
+   dispatch run on 2026-10-31/11-01 took roughly 16 minutes for the Windows
+   build job, then about 4 minutes for the scan and each Unix job.
 
 6. **Review and publish the draft release.**
    - Open the draft on GitHub.
    - Edit the auto-generated notes -- highlight headline changes, call out radio
      additions, breaking changes, contest additions.
-   - Verify the installer is attached.
-   - **Publish.** This emails watchers and makes the release public.
+   - Verify the installer is attached (and note which optional Linux/macOS
+     artifacts the release job reported absent, if any).
+   - **Publish.** This emails watchers and makes the release public. A green
+     pipeline is a build-and-publish result; tr4w.net still serves 4.x.
 
 ### Fixing a mis-tag
 
 If you tagged the wrong commit (or tagged before bumping `Version.pas`):
 
 ```
-git push --delete d12 v4.147.18    # remove tag from remote
-git tag -d v4.147.18                  # remove tag locally
+git push --delete d12 v5.0.36    # remove tag from remote
+git tag -d v5.0.36                  # remove tag locally
 # fix the underlying issue (bump Version.pas, push, etc.)
-git tag v4.147.18
-git push d12 v4.147.18
+git tag v5.0.36
+git push d12 v5.0.36
 ```
 
 This is safe as long as the draft release hasn't been published yet. Once
-published, prefer cutting a new version instead of force-retagging.
+published, prefer cutting a new version instead of force-retagging. Versions are
+cheap: bumping and re-tagging is usually easier than fighting a rerun.
 
 ---
 
@@ -404,7 +441,7 @@ published, prefer cutting a new version instead of force-retagging.
 ~~appreciated by international contesters who don't want to muddle through English~~
 ~~menus.~~
 
-~~Same as [section 6](#6-tagging-for-an-english-only-release) except:~~
+~~Same as [section 6](#6-tagging-a-release) except:~~
 
 ~~- **Tag with `-all` suffix:** `v4.147.18-all` instead of `v4.147.18`.~~
 ~~- CI detects the `-all` suffix and runs `FullBuild.ps1 -AllLanguages~~

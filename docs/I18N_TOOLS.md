@@ -190,7 +190,7 @@ cd tr4w\target
 `tr4w\target\tr4w.log` says which catalogue was used:
 
 ```
-UI language: "pl" from the embedded catalogue
+UI language: "pl" selected by <source>, loaded from the embedded catalogue
 UI language: none loaded; using the compiled-in English
 ```
 
@@ -214,9 +214,12 @@ captions in German Preferences alone.**
 Three things about it are worth knowing, because each one produced a wrong answer
 before it was understood:
 
-- **It defuzzes first, into the exe's own directory.** The shipping catalogue has
-  every "Needs work" entry dropped, so against it almost nothing is translated and
-  nothing can overrun. The defuzzed copy is for measurement only — the words in it
+- **It defuzzes first, into the exe's own directory.** ~~The shipping catalogue has
+  every "Needs work" entry dropped~~. That premise has been stale since 2026-09-21: the
+  embedded catalogue ships "Needs work" entries too. Note also that `po_defuzz --install`
+  writes beside the exe, while on Windows a loose file is looked for under the working
+  directory. Whether the sweep's copy is the one actually loaded has not been checked;
+  the log line says which was used. The defuzzed copy is for measurement only — the words in it
   are unreviewed machine output. *Layout truth, not language truth.*
 - **It measures from inside the program**, not by walking the window tree. A `TLabel`
   is a `TGraphicControl` with no window handle, and most captions in the converted
@@ -267,7 +270,7 @@ is in `i18n\languages.json` and `--lang FIN` is enough.
 | `po2pas.py` | `.po` → language tables; refuses anything still "Needs work" |
 | `pas2res.py` | English tables → `uTR4WStrings.pas` resourcestrings |
 | `po_rekey.py` | adds the run-time identifier beside the `msgctxt` key |
-| `po_prune.py` | marks entries obsolete when their key leaves the source |
+| `po_prune.py` | marks entries obsolete when their key leaves the source. **Do not run it on the real catalogues (issue #144):** it knows only `TC_`/`RC_` keys, so it would obsolete 2,168 live `.lfm`/resourcestring entries, and `po_merge --apply` then deletes every `#~` block |
 | `ini2po.py` | help INIs ⟷ `.po` |
 | `po_defuzz.py` | a copy with the "Needs work" flags removed, for testing only |
 | `salvage_lossy.py` | recovers what it can from a lang file that decodes under no codepage (CHN) |
@@ -279,16 +282,26 @@ is in `i18n\languages.json` and `--lang FIN` is enough.
 
 ## If something looks wrong
 
-**A translation does not appear.** Almost always still marked "Needs work" — the
-program refuses those deliberately. Check in Poedit.
+**A translation does not appear.** ~~Almost always still marked "Needs work" — the
+program refuses those deliberately.~~ Since 2026-09-21 "Needs work" entries ship, so check
+these instead:
+- Was the `.res` rebuilt and committed? `res\tr4w_languages.res.inputs` must match.
+- Is a loose `languages\<lang>\tr4w.po` overriding the embedded copy? A loose file keeps
+  the fuzzy gate.
+- Is the string in the catalogue at all? A caption added since the last IDE save is not
+  (issue #145), and new resourcestrings are not until they are merged.
 
 **Nothing at all appears.** Check the log line above. If it says the language loaded and
-you still see English, you are probably looking at strings that are not translatable
-yet — the 383 `TC_` set and the tool-window titles. See
-[`ADDING_A_LANGUAGE.md`](ADDING_A_LANGUAGE.md).
+you still see English, the string is probably in no catalogue: see the issue #145 case
+above, and the `po_merge` step under *Refresh the catalogues*. ~~the 383 `TC_` set and the
+tool-window titles~~. Both have been translatable since the `uTR4WStrings` cut-over
+(2026-08-27) and the `TMainMenu` (2026-09-07). See
+[`ADDING_A_LANGUAGE.md`](ADDING_A_LANGUAGE.md) section 6.
 
-**A stale translation appears.** A `.po` beside the exe overrides the embedded one:
-check for `build-out\app-i386-win32\languages\<lang>\tr4w.po` and delete it.
+**A stale translation appears.** A loose `.po` overrides the embedded one. On Windows it
+is looked for under the **working directory** (`uAppPaths.DataFilePath`), so with the
+recipe above check `tr4w\target\languages\<lang>\tr4w.po` and delete it.
+~~`build-out\app-i386-win32\languages\<lang>\tr4w.po`~~
 
 **`unknown LANG`** — the three-letter name is not registered. Pass `--code` once, as in
 *Add a new language* above.

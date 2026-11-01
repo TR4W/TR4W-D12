@@ -6,6 +6,13 @@ pass are deleted from here; if the result is interesting it goes into the
 document that owns the area (`RADIO_BENCH_STATUS.md`, `D12_HARDWARE_TEST_PLAN.md`,
 `CW_Keyer_Factory_Plan.md`) rather than accumulating here.
 
+**Triage, 2026-11-01.** All 423 open items were classified against the tree and the
+git history for the 5.x release (`RELEASE_ROADMAP_5X.md`). Nothing was ticked: no open
+item has citable confirmation from NY4I. Four were found stale and are marked `[-]`
+(withdrawn, with the reason on the line); delete them when you next edit this file.
+The list of what NY4I still has to check, by release gate, is
+`BENCH_CHECKLIST_NY4I.md`. Plain-bullet sections with no checkbox were not counted.
+
 **"Does it open" is meant to be covered by a gate.** `Invoke-MenuSmoke.ps1`
 drives the converted dialogs and is meant to fail when one does not produce a
 window -- but see the DISTRUST item below: on 2026-08-29 it reported success
@@ -2738,7 +2745,7 @@ replaced 494 lines of `NewContestDlgProc`.
   surface being retired. Cause unknown; likely the control's own first paint
   before any rows exist, which redraw suppression cannot touch.
 
-- [ ] **15 unreferenced routines in `TF.pas` and `uDialogs.pas`** --
+- [-] **15 unreferenced routines in `TF.pas` and `uDialogs.pas`** --  **[WITHDRAWN 2026-11-01: SelectColor/SelectFolder/SaveFileDlg/TR4W_OFNHookProc gone: rg finds none; uDialogs.pas:30-42 records removal.]**
   `SelectColor`, `SelectFolder`, `SaveFileDlg`, `TR4W_OFNHookProc` (referenced
   only from a commented-out `lpfnHook` assignment, so the hook is never
   installed) and others. Two automated attempts to remove them broke on a
@@ -2864,7 +2871,7 @@ across openings. **What is still unrun is everything that WRITES:**
 
 - [x] It **opens** and shows one row per band with the three current values.
 
-- [ ] ~~Editing a cell and pressing **OK** writes `[BAND PLAN]` in `tr4w.ini` and
+- [-] ~~Editing a cell and pressing **OK** writes `[BAND PLAN]` in `tr4w.ini` and  **[WITHDRAWN 2026-11-01: Struck-through; ANSWERED at 2870: band plan lives in tr4w.json, ini step out of date.]**
   the new values survive a restart.~~[AGENT: Nothing is suppose to write to the .ini so validate this is meant to be .json. You should also consider if this is something you can automatically test now that we figured out how you can run the program to test. IN fact, confirm there are not any  of the steps you added to this document for me to check that you could have checked.]~~
 
   **ANSWERED 2026-08-28 -- it is JSON, and this step is out of date.** The band
@@ -3175,7 +3182,7 @@ POPULATED 4.x `tr4w.ini` you can restore -- an empty ini proves nothing.
   = "Y"` names a stored value TR4W would not accept. Worth one grep after a
   session.
 
-- [ ] **ACCENTED TEXT, IN A NON-ENGLISH CATALOGUE, AFTER TF.Format BECAME
+- [-] **ACCENTED TEXT, IN A NON-ENGLISH CATALOGUE, AFTER TF.Format BECAME  **[WITHDRAWN 2026-11-01: TF C-sprintf facade/uCFormat gone 2026-09-14 (TF.pas:332 note); premise of WinAnsi->Format doubt removed. Spanish glance optional.]**
   PASCAL (2026-09-07). UNVERIFIED, AND I INTRODUCED THE DOUBT.**
 
   73 call sites in 27 units pass `PAnsiChar(WinAnsi(TC_SOMETHING))` as the
@@ -4180,7 +4187,7 @@ edits one, deletes one, or opens a log window.
 
 ### DECISIONS FIRST -- these are yours, not bench runs
 
-- [ ] **MULTI-OP SYNCHRONISATION DOES NOT WORK, ON PURPOSE.** Log comparison
+- [-] **MULTI-OP SYNCHRONISATION DOES NOT WORK, ON PURPOSE.** Log comparison  **[WITHDRAWN 2026-11-01: Question answered: no log comparison now, catch-up is insert-only from server log (CLAUDE.md sec 6; commit 02fa68d9; memory next-multi-op-network-revival).]**
   CRC32'd the raw bytes of the `.TRW` at both ends. There is no `.TRW` here, and
   **`tr4wserver` still keeps one**, so even a new digest computed at this end
   would have nothing to agree with. It now REPORTS, once per session, that

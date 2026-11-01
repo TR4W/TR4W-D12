@@ -43,7 +43,7 @@ Worksheet, which settles the last open part -- see the end of the entry.
 (details in each entry)**
 
 - **No change -- today already matches D7:** Q27 SAC (a Russian station is not workable), Q88 NA Sprint files, Q95 Croatian / CW Open zones, Q106(6) P13's `LA`, Q114 ALRS (a grid), Q122 PY0S/PY0T stay DX, Q123 RF Cup Digital (no mode limit), Q124 OZCHR 1/1/3/5, Q125 Ukraine Championship, Q126 the five unidentified contests, Q23 Cup RF, Q26 WAG (empty QTH), Q112 peers and Rescore.
-- **To build:** Q47 bound the three read-past-the-end shapes; ~~Q113 edited memories survive a restart (as D7)~~ (built 2026-10-23); ~~Q119 a host-area-refused QSO is an X-QSO~~ (built 2026-10-23); Q120 bands and modes (D7's "every band and mode" where no unambiguous rule, ARRL Digi excludes RTTY by its current rules); Q127 GAGARIN-CUP -> `GC` only.
+- **To build:** ~~Q47 bound the three read-past-the-end shapes~~ (built 2026-10-23, `a8a499db`); ~~Q113 edited memories survive a restart (as D7)~~ (built 2026-10-23); ~~Q119 a host-area-refused QSO is an X-QSO~~ (built 2026-10-23); Q120 bands and modes (D7's "every band and mode" where no unambiguous rule, ARRL Digi excludes RTTY by its current rules); ~~Q127 GAGARIN-CUP -> `GC` only~~ (built 2026-10-23, `a8a499db`).
 - **Parked:** Q101 ([#94](https://github.com/TR4W/TR4W-D12/issues/94)), Q137 ([#93](https://github.com/TR4W/TR4W-D12/issues/93)) -- not D7/D12 work; Q128, Q129 -- i18n after contestFactory.
 - **Built earlier from the sponsors' rules:** Q97, Q131-Q136, Q138 (`722690bf`).
 

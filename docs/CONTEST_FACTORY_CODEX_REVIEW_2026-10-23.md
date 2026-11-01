@@ -207,9 +207,19 @@ unfreed (ceiling); contest matrix 188 identical; factory 13 identical; corpus
 | R5 / Follow-up B | `user_version` is stamped inside the ALTERs' transaction, one commit. `TestAMigrationIsOneCommit` counts commit frames in the `-wal` after a 2->4 open. The earlier failed-migration test is kept; its comment says it cannot tell old from new. | the old commit-then-stamp: "Expected 1 but got 2" |
 | Follow-up C | `MemoryKeyId` is `KeyId(Char(Ord(aKey)))` (moved to LogCW). The transient `Char(aKey)` the reviewer saw was almost certainly a mutation run (M4) caught mid-run. | M4 |
 
-**Still open:** R1 (Q119/Q120 with the `q98-s1-cqww` merge, plus the
+~~**Still open:** R1 (Q119/Q120 with the `q98-s1-cqww` merge, plus the
 host-area predicate added to `QSOIsXQSO` and its tests -- the merge alone
-does not do it); R3's legacy `.cfg` + database ordering.
+does not do it); R3's legacy `.cfg` + database ordering.~~
+
+**Status (re-checked 2026-11-01 against git log and the tree):** **R1 is
+closed.** `q98-s1-cqww` merged as `47f85440` (2026-10-23: `UsesBand` /
+`UsesMode`, `QSOIsXQSO`, CQ WW SSB Phone only), and the host-area term
+followed in `41ccbc48` the same day (`QSOIsOffContest` asks
+`not CreditsWorkedStation(aQso)` of an object that `HasStation`; tests in
+`uTestHostAreaRule` and `uTestContestGeorgiaQP`, matrix re-frozen for the 25
+parties with that reason). R2, R4, R5 and R3's replay test closed in `4160c247`; R6 in `9e52ff16`
+(#95). **Still open:** R3's legacy `.cfg` + database start-up ordering -- no
+later commit found that covers it.
 
 ### R6 landed (#95)
 

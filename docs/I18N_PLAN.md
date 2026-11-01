@@ -1,8 +1,17 @@
 # TR4W internationalisation — the plan and the decisions behind it
 
-**Status 2026-08-26.** The mechanism is proven end to end; the content is not moved.
-This is the single place the i18n decisions live. Where it summarises something, the
-tooling in `c:/tr4w-i18n/tools/i18n` and its README are authoritative.
+~~**Status 2026-08-26.** The mechanism is proven end to end; the content is not moved.~~
+
+**Status 2026-11-01.** One binary carries every language. The `TC_`/`RC_` constants have
+been resourcestrings since `1ee6b50f` (2026-08-27). The `.lfm` captions are harvested into
+the catalogues. 21 catalogues are embedded in the executable, and the build regenerates them
+(2026-10-16). Unreviewed (fuzzy) entries ship as well (2026-09-21). What is **not** done is
+the human review. See [Catalogue state](#catalogue-state-2026-11-01) and
+[Open tooling issues](#open-tooling-issues).
+
+This is the single place the i18n decisions live. Where it summarises something, the tooling
+in **`tools/i18n/`** (in this tree, with its `README.md`) is authoritative. It is no longer a
+separate worktree: ~~`c:/tr4w-i18n`, branch `i18n-ts-poc`~~.
 
 ---
 
@@ -64,10 +73,16 @@ pass used Qt Linguist `.ts`; it worked but needed a conversion step in the build
 | **UI strings** (~640, 16 langs, ~1 MB) | **embedded in the exe** | needed at startup before any file I/O; small; changes only when code changes; a missing file would mean a silently English UI |
 | **Help text** (10 langs, 2.2 MB) | **`.po` beside the exe** | read on demand; twice the size of everything else; updated on its own cadence — a wording fix should not need a rebuild |
 
-Measured 2026-08-26: the exe is 5.6 MB with one language. All sixteen catalogues add
+Measured 2026-08-26 (historical, sixteen catalogues and ~640 strings): the exe is 5.6 MB with one language. All sixteen catalogues add
 **1.4 MB raw, or 1.0 MB** trimmed of `#.` notes and the `pas2po` source references (which
 end in a line number and no run time reads). **6.6 MB covers sixteen languages** where
 today 5.6 MB covers one and nine languages means nine builds.
+
+**Measured 2026-11-01:** `tr4w/res/tr4w_languages.res` is **5,171,624 bytes**. It holds 21
+TR4W catalogues of about 1,390 entries each, with fuzzy entries included, plus the Lazarus
+`lclstrconsts` catalogues that `Make-LanguageRes.ps1` embeds next to them. Re-measure with
+`ls -l tr4w/res/tr4w_languages.res`. The 2026-08-26 figures above are from a corpus
+roughly a third of today's size.
 
 Lazarus supports the embedded path directly — `TPOFile.Create(AStream)`, whose own comment
 reads *"when loading from internal resource Full needs to be False"*.
@@ -150,6 +165,13 @@ silently find nothing and look like a translation bug.
 
 ## Where the strings are
 
+**HISTORICAL. This was measured 2026-08-26, before the cut-over and the `.lfm` harvest.**
+It is kept because it is the reasoning behind the plan. It is not today's state.
+Today's counts are in [Catalogue state](#catalogue-state-2026-11-01). Since this was
+measured, the `TC_` table and the code-reachable `RC_` were generated into `uTR4WStrings`
+as resourcestrings, and that unit is in the build (`rg -c "^\s+RC_\w+\s*=" tr4w/src/uTR4WStrings.pas` gave 171 and `TC_` gave 472 on
+2026-11-01). The `.lfm` row was harvested (step 8).
+
 Measured 2026-08-26. Roughly **1,070** user-facing strings in three places, of which
 **381** are translated.
 
@@ -169,8 +191,9 @@ declaring a `resourcestring` for one would translate nothing. `res/Tr4w.rc` `#in
 `hotkeys.h` and `DEF.H`, **neither of which exists in this repo**, so the `.rc` cannot be
 rebuilt to fix it there either.
 
-They belong to Win32 dialogs still loaded from the `.res` — 69 `DialogBox`/`CreateDialog`
-call sites remain. **When a dialog becomes an LCL form its text moves into the `.lfm` and
+They belong to Win32 dialogs still loaded from the `.res`. ~~69 `DialogBox`/`CreateDialog`
+call sites remain~~: that 2026-08-26 count is not restated. Measure what is left with
+`tr4w/build/Lint-Win32Dialogs.ps1 -Group ui`. **When a dialog becomes an LCL form its text moves into the `.lfm` and
 its `RC_` entry retires by itself.** `RC_` is therefore not a separate workstream; it is a
 by-product of finishing the dialog conversion.
 
@@ -198,17 +221,25 @@ be a hand-rolled version of what the framework does.
 
 ## The tooling
 
-In `c:/tr4w-i18n/tools/i18n`, on branch `i18n-ts-poc`. Nothing in the build depends on it.
+In **`tools/i18n/`** in this tree. ~~`c:/tr4w-i18n/tools/i18n`, on branch `i18n-ts-poc`.
+Nothing in the build depends on it.~~ The build still runs none of these Python scripts.
+What it does run is `tr4w/build/Make-LanguageRes.ps1`, through
+`tr4w/build/LanguageResStamp.ps1`, from `Build-App.ps1` and `Build-Tests.ps1`. That happens
+whenever the sha256 stamp in `tr4w/res/tr4w_languages.res.inputs` no longer matches the
+`i18n/tr4w_*.po` files or the generator (2026-10-16). `build/check-language-res.sh` fails
+a Linux or macOS build whose committed `.res` is stale. `Run-Lints.ps1` runs the CRLF lint
+over `tools/`. The table below is not the complete list; `docs/I18N_TOOLS.md` has all of
+them, including `po_merge`, `po_lint`, `po_dedupe`, `po_defuzz` and `salvage_lossy`.
 
 | tool | does |
 |---|---|
 | `pasconsts.py` | the shared line-oriented parser for the language fragments |
 | `pofile.py` | minimal `.po` reader/writer — `msgctxt`, `#,fuzzy`, `#.`, `#:`, `#~`; keeps `# ` and `#|` lines and the header. A rewrite is byte-identical except where a caller changed an entry (`test_pofile.py`) |
-| `pas2po.py` | language tables → `.po` |
+| `pas2po.py` | language tables → `.po`. **`--new-lang` only. NEVER use it to pick up new strings**: that dropped 2,203 translations on 2026-08-29. Use `po_merge --pot` |
 | `po2pas.py` | `.po` → language tables, *surgical*; `--verify` proves byte-identical round-trip |
 | `po_rekey.py` | adds the `#:` run-time identifier beside the `msgctxt` key |
 | `pas2res.py` | English tables → `uTR4WStrings.pas`, 546 resourcestrings |
-| `po_prune.py` | marks entries obsolete when their key leaves the source |
+| `po_prune.py` | marks entries obsolete when their key leaves the source. **Unsafe on the real catalogues, issue #144** (see below) |
 | `ini2po.py` | help INIs ⟷ `.po`, plus `--todo --write-doc` |
 | `mt_seed.py` | libretranslate seeding |
 
@@ -219,24 +250,100 @@ what gets it past LazUtils' run-time gate (`translations.pas:1223`, *"Load trans
 if it exists and is NOT fuzzy"*). Run it with `-ReviewedOnly` to put both gates back.
 
 **The `.po` files are untouched and the flag still means what it meant.** `mt_seed.py`
-touches only entries that are *both fuzzy and empty* and its output stays fuzzy;
+touches only **empty** entries. ~~*both fuzzy and empty*~~ was the old rule; Poedit strips
+the flag from empty entries, so emptiness alone is the condition. An entry can be kept out
+with a `# mt-seed: skip -- <reason>` comment (`docs/I18N_TOOLS.md`). Its output stays fuzzy;
 `po2pas.py` still skips fuzzy entries. Clearing the flag is still a human's review --
 what changed is only what the BUILD does with an unreviewed entry, and it changed
 because the languages are under review and NY4I needs to see them on a screen.
 
-### Translation state, 2026-08-26
+### ~~Translation state, 2026-08-26~~
 
-417 strings per language. `#, fuzzy` means machine-filled and unreviewed:
+~~417 strings per language~~. The 2026-08-26 table (es 1 fuzzy, de 101, pl 85, ...) was
+taken before the `.lfm` harvest more than tripled the corpus. It is replaced by the table
+below. ~~**Extract the captions before handing anything to translators.**~~ That has been
+done (step 8).
 
-| | languages |
-|---|---|
-| essentially unreviewed (~400+ fuzzy) | fr, ja, ko, nl, pt, it |
-| partial review (29–101 fuzzy) | de 101, pl 85, ro 78, uk 74, ru 69, mn 41, cs 39, sr 29 |
-| done | es (1) |
+### Catalogue state, 2026-11-01
 
-**Extract the captions before handing anything to translators.** The corpus goes from 417 to
-~880 once `.lfm` captions are in. Hand them over now and they review 417 strings, then get a
-second batch of 459 in the same dialogs they already looked at.
+Measured on `main` at `0371650c`, from `i18n/tr4w_*.po` as committed. Re-measure from the
+repo root (bash):
+
+```bash
+for f in i18n/tr4w_*.po; do
+   m=$(rg -c '^msgid ' $f)                       # minus 1 for the header entry
+   z=$(rg -c '^#, .*fuzzy' $f)                    # the header carries no fuzzy flag
+   e=$(rg -c -U '^msgstr ""\r?\n\r?$' $f)         # single-line empty msgstr only
+   o=$(rg -c '^#~ msgid ' $f)
+   echo "$f $((m-1)) ${z:-0} ${e:-0} ${o:-0}"
+done
+```
+
+Or, for the fuzzy column alone, in either shell: `rg -c '^#, fuzzy' i18n -g 'tr4w_*.po'`.
+It gives the same numbers.
+
+| catalogue | entries (msgid) | fuzzy | empty msgstr | obsolete `#~` |
+|---|---:|---:|---:|---:|
+| cs | 1393 | 903 | 53 | 0 |
+| da | 1393 | 1392 | 55 | 0 |
+| de | 1393 | 970 | 53 | 0 |
+| el | 1393 | 1392 | 55 | 0 |
+| es | 1393 | 857 | 51 | 0 |
+| fi | 1393 | 1392 | 55 | 0 |
+| fr | 1393 | 1391 | 53 | 0 |
+| it | 1393 | 1374 | 53 | 0 |
+| ja | 1393 | 1392 | 54 | 0 |
+| ko | 1393 | 1392 | 54 | 0 |
+| mn | 1393 | 910 | 847 | 0 |
+| nl | 1393 | 1392 | 54 | 0 |
+| pl | 2285 | 1609 | 52 | 0 |
+| pt | 1393 | 1392 | 54 | 0 |
+| pt_BR | 1393 | 1392 | 55 | 0 |
+| ro | 1393 | 943 | 53 | 0 |
+| ru | 1393 | 910 | 53 | 0 |
+| sr | 1393 | 889 | 847 | 0 |
+| sv | 1393 | 1392 | 55 | 0 |
+| uk | 1393 | 905 | 52 | 0 |
+| zh_CN | 1389 | 1388 | 55 | 0 |
+
+The columns are raw counts. `entries - fuzzy` is **not** the reviewed count, because a
+non-fuzzy entry can still be empty. `fuzzy` means unreviewed. Since 2026-09-21 those entries
+ship anyway, by NY4I's decision; the flag is the review record, not a gate. **Do not defuzz
+to make this table look better.** `zh_CN` in particular holds salvaged text that must stay
+fuzzy (see `.claude/agents/i18n.md`). `tr4w/res/tr4w_languages.res.inputs` matched all 21
+catalogues and both generator scripts on the same date, so the committed `.res` is current.
+
+**The review pass is planned, not started.** NY4I, 2026-10-22: i18n will be reviewed, with
+Weblate, *after the contest factory is complete*. The factory has been in `main` since
+5.0.30. That is not the same as complete, so the trigger has not fired. Until then
+catalogue questions are parked. A change that adds strings still adds them to every
+catalogue, so a build never loses a caption.
+
+### Open tooling issues
+
+- **#144: there is no safe way to retire a string that has left the code.**
+  `po_prune.py` decides "dead" from the `TC_`/`RC_` tables alone. Its dry run would have
+  marked **2,168 live entries** obsolete: every `.lfm` and resourcestring key, 391 of them
+  in Polish. It was not applied. Even if it had been, `po_merge --apply` **deletes every
+  `#~` block** by design, so a reviewed translation that was marked obsolete would be gone
+  at the next merge. `po_merge` also leaves a live entry in place after its resourcestring
+  has been removed. **Do not run `po_prune.py` on the real catalogues** until #144 is fixed.
+  The one retirement so far (`SContestNotOnMultiOp`, `069fe64c`) was done by a targeted
+  script that writes through `pofile`'s lossless writer.
+- **#145: `.lfm` captions added since the last IDE save reach no catalogue.** A form's
+  captions reach the template through the `.lrj` that only the Lazarus IDE writes, and only
+  when it saves the form. So a control added or renamed since then has no key. Example:
+  `uPrefsForm.lfm` `lblLanguage` / `lblLanguageHint`, whose `.lrj` dates from 2026-08-31.
+  Those captions show in English in every language. The fix that is needed is a harvest
+  from the `.lfm` files that does not depend on the IDE. This is the same silent loss as the
+  469 captions above, seen from the template's side.
+- **New resourcestrings not yet in any catalogue (2026-11-01).** `src/uAppStrings.pas`
+  declares 33 strings in the `SEditQSODelivery*`, `SLogLocked*` and `SWRL*` families. None
+  of them appears in any `i18n/*.po` or in `tr4w/languages/`; checked with
+  `rg -c -i "seditqsodelivery|sloglocked|swrl" i18n tr4w/languages`, which finds nothing.
+  They show in English in every language until they are merged. The recipe needs no IDE:
+  `updatepofiles` on the `.rsj` into a scratch `.pot`, then `po_merge --pot`. See
+  `docs/I18N_TOOLS.md`.
 
 ---
 
@@ -265,6 +372,15 @@ no --lang   SIniRetireTitle = Old settings file
 **The `.po` is found relative to the EXECUTABLE, not the working directory.** The first
 attempt failed with the catalogue in `target/` while the dev binary ran from `build-out`.
 
+> **That was true of `SetDefaultLang` at the time, and it is not how it works now.** The
+> catalogue is embedded (step 5). A loose `languages/<code>/tr4w.po` still overrides the
+> embedded copy, but it is located by `uAppPaths.DataFilePath`
+> (`uEmbeddedTranslations.LanguageFilePath`). On Windows that is the **working
+> directory**, on macOS the bundle's `Contents/Resources`, and on Linux `/usr/share/tr4w/`
+> or the binary's directory. Only `languages/` is searched. The log line now reads
+> `UI language: "<code>" selected by <source>, loaded from the embedded catalogue`, or
+> `..., loaded from <path> (overriding the embedded catalogue)`.
+
 ---
 
 ## What is left
@@ -275,10 +391,14 @@ attempt failed with the catalogue in `target/` while the dev binary ran from `bu
 | 2 | rekey the catalogues | **done** — 6,656 refs, 16 languages, no translation changed |
 | 3 | generate `uTR4WStrings.pas` | **done** — 546 strings, compiles, `.rsj` verified |
 | 4 | load a `.po` at run time | **done** — `5d7f449f`, proven above |
-| 5 | switch to embedded catalogues | **done** — `fe88ad0f`, 514 KB for 16 languages, exe 5.62 → 6.13 MB |
-| 6 | language as a TR4W setting | open — the seam is in `uEmbeddedTranslations.ResolveLang` |
-| 7 | cut `VC.pas` over to `uTR4WStrings` | open — **see the hazard below**; this is what makes the 383 `TC_` strings translatable |
-| 8 | `.lfm` captions → `.po` | **done** — 561 harvested, merged into all 16 |
+| 5 | switch to embedded catalogues | **done** — `fe88ad0f`, 514 KB for 16 languages, exe 5.62 → 6.13 MB (2026-08 figures; see above for today's `.res`) |
+| 5a | the build regenerates the `.res` | **done 2026-10-16** — sha256 stamp in `res/tr4w_languages.res.inputs`; `check-language-res.sh` on Unix |
+| 5b | unreviewed (fuzzy) entries ship | **done 2026-09-21** (NY4I) — `Make-LanguageRes.ps1 -ReviewedOnly` restores the gate |
+| 6 | language as a TR4W setting | **done 2026-09-19** — `Settings.Display.Language` / `DISPLAY LANGUAGE`; see above |
+| 7 | cut `VC.pas` over to `uTR4WStrings` | **done** — `1ee6b50f`, 2026-08-27; the `{$INCLUDE}` of the language tables is gone from `VC.pas` |
+| 8 | `.lfm` captions → `.po` | **done** — 561 harvested, merged into all 16; captions added after the last IDE save are not (issue #145) |
+| 8a | retiring a removed string safely | open — issue #144 |
+| 8b | the Weblate review pass | planned, after the contest factory is complete (NY4I, 2026-10-22) |
 | 9 | help `.po` + a help pane on settings leaves | open — greenfield; INI housekeeping first |
 | 10 | a lint so new English cannot get in | open |
 | 11 | catalogue validation | **done** — `tools/i18n/po_lint.py`, found 9 defects in the inherited translations |
@@ -308,7 +428,10 @@ before any human touched the file.
 So: whole messages stay whole, and the check is what protects them. Revisit only if a
 translator actually loses a break that the lint does not catch.
 
-### The cut-over hazard (step 7)
+### The cut-over hazard (step 7) — HISTORICAL, the cut-over was made in `1ee6b50f`
+
+Kept for the reasoning only. `VC.pas` now `uses uTR4WStrings`, and its comment records why
+68 units gained that unit in their uses clause.
 
 `uTR4WStrings` declares `TC_WAGWarn` and 545 others **that `VC.pas` already declares as
 consts** from the language table. With both in scope the winner is decided by uses-order,

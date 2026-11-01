@@ -1,5 +1,7 @@
 # Bench test plan — 2026-08-01
 
+> **Status 2026-11-01: a DELPHI-ERA record, kept as history.** Written against the `delphi12` branch and Delphi 12 builds, before the 2026-08-13 move to FPC; its results have not been re-run under FPC unless `docs/RADIO_BENCH_STATUS.md` says so. Current per-radio status is `docs/RADIO_BENCH_STATUS.md`; what is waiting for a bench run is `docs/BENCH_QUEUE.md`.
+
 Everything below landed on `delphi12` between 2026-07-31 and 2026-08-01. It all
 builds clean (`/t:Build`, full 457k-line rebuild), passes 1403 unit tests, and
 the golden corpus is at its baseline of 22 passed / 0 failed / 4

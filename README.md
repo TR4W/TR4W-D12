@@ -198,12 +198,19 @@ Honest status, measured rather than hoped:
 
 - the **application**, **tr4wserver** and a **tarball** all build natively on
   x86_64 Linux
-- **19,883 of 19,884 unit tests pass** there; the one failure is a timing
-  assumption in a test fixture, not a defect in the program
-- the **application, server and an `.app` and .pkg file bundle all build on macOS/aarch64**
-  -- see [Building on macOS](#building-on-macos). The unit tests link and run
-  there, and stop partway on an access violation in the log repository that has
-  no counterpart on Windows or Linux; that is the next thing to chase
+- **All 407,672 unit assertions pass on Linux, 0 failed** (CI run 41279930661,
+  a `workflow_dispatch` of `release.yml` on 2026-11-01, v5.0.36; that run built
+  and gated all three platforms green and created no release). The Linux job
+  fails if the suite fails or crashes; a known-failure list pins any
+  exceptions, and it was not needed in that run
+- the **application, server, `.dmg`, `.pkg` and tarball all build, sign and
+  notarize on macOS/aarch64** -- see [Building on macOS](#building-on-macos).
+  **The macOS unit tests are not run in CI**: the test binary compiles and
+  links there, but the stage is SKIPPED because the runner has no display (run
+  41279930661, 2026-11-01). An earlier note here said the suite stops partway on
+  an access violation in the log repository; as of 2026-11-01 that is
+  **unverified since September** -- nothing has run the suite on macOS since,
+  so it is neither confirmed nor ruled out
 - **ARM is untested.** Nothing obvious blocks it; nothing has tried it
 - **Linux runs, as of 2026-09-20.** The AppImage was run on Linux Mint 22.3 --
   not the machine that built it -- reached the UI, and connected to an Elecraft
@@ -220,7 +227,7 @@ Honest status, measured rather than hoped:
   No. TRLinux is a separate project with its own lineage as a Linux port of N6TR’s DOS TRlog. TR4W is its own cross-platform application and development line.
 
 - Are the Mac and Linux versions native?
-  Yes -- and as of 2026-09-08 **both** build. The FreePascal/Lazarus migration is done, that hurdle is behind us, and the application, the server and a distributable artifact all build natively on **x86_64 Linux** (a tarball) and on **macOS / Apple Silicon** (a `TR4W.app` bundle). Almost every unit test passes on Linux; the macOS suite links and runs. **The Linux GUI has been run** -- NY4I reached the UI from the AppImage on Linux Mint 22.3 on 2026-09-20 and connected to an Elecraft K4 over Ethernet. **ARM is untested.** Running this on Mac and Linux is why this port even exists. See [Building on Linux](#building-on-linux) and [Building on macOS](#building-on-macos), and ["Where this actually stands"](#where-this-actually-stands) for the honest, current status -- that section is maintained; this answer is not.
+  Yes -- and as of 2026-09-08 **both** build. The FreePascal/Lazarus migration is done, that hurdle is behind us, and the application, the server and a distributable artifact all build natively on **x86_64 Linux** (a tarball) and on **macOS / Apple Silicon** (a `TR4W.app` bundle). The Linux unit tests all pass in CI (as of 2026-11-01); the macOS suite links but is not run there (no display). **The Linux GUI has been run** -- NY4I reached the UI from the AppImage on Linux Mint 22.3 on 2026-09-20 and connected to an Elecraft K4 over Ethernet. **ARM is untested.** Running this on Mac and Linux is why this port even exists. See [Building on Linux](#building-on-linux) and [Building on macOS](#building-on-macos), and ["Where this actually stands"](#where-this-actually-stands) for the honest, current status -- that section is maintained; this answer is not.
 
   TR4W was originally a native Win32 API [Petzold](https://en.wikipedia.org/wiki/Charles_Petzold) app. Even running in Delphi, it did not use the VCL at all. It used far too mush assembler code in the program. There may have been a time and place for that but it is long gone. Every single day we take steps to remove native Win32, hwnd references and other non-FreePascal/Lazarus tools as that is how we get true cross-platform. Not a WINE compatibility layer for Linux and not running on Parallels for the Mac. NY4I uses a Mac as his daily driver and Howie N4AF uses Linux. We will call it done when we can run this on a pi400 Raspberry Pi and a simple MacBook Air. 
 

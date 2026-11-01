@@ -1,5 +1,7 @@
 # TR4W modernization roadmap
 
+> **2026-11-01 BANNER.** The release gate list now lives in [`RELEASE_ROADMAP_5X.md`](RELEASE_ROADMAP_5X.md); where the two disagree about what stands between this tree and a public 5.x, that file wins. **The measurements in this file are of 2026-09-17** unless a line says otherwise. On 2026-11-01 only the figures that have a re-measure command written beside them were refreshed (the bench count, the contest-factory unit count, the outside-the-factory branch count); the plans, phases and week structure were NOT rewritten and may be overtaken. Nothing here has been marked done without a commit hash.
+
 **One document. It replaces eleven.** Everything that was tracking the port —
 `ROADMAP.md`, `D12_MIGRATION_ROADMAP.md`, `PHASE_INVENTORIES.md`, the two
 radio-factory design notes, the CFG-array set, the toolchain SWOT, the spike
@@ -62,10 +64,10 @@ phase rather than pooled at the end.
 | `{$IFDEF WINDOWS}` gates | **128** | grep |
 | Radio registrations | **101**, no collisions | `build/Lint-RadioRegistry.ps1` |
 | Radios with any bench report | **~6 of 101** | `docs/RADIO_BENCH_STATUS.md` |
-| Contest factory units | **23** (≈19 contest classes + base/registry/factory) | `ls tr4w/src/contestFactory` |
+| Contest factory units | **208** files in the directory, **195** of them with a `RegisterContest` call (2026-11-01; was 23 on 2026-09-17) | `ls tr4w/src/contestFactory \| wc -l` and `rg -c RegisterContest tr4w/src/contestFactory \| wc -l` |
 | `ContestType` enum members | **189** | `VC.pas` |
-| **Contest-identity branches outside the factory** | **92** across 12 units | see §5.3 |
-| `BENCH_QUEUE.md` | **176 open**, 121 done, 6 open sections | `grep -c '^- \[ \]'` |
+| **Contest-identity branches outside the factory** | **23** table rows (0 scoring, 0 dupe, 0 multiplier; generated 2026-10-18 at `1e4e1975`; was 92 on 2026-09-17, counted differently - see §5.3) | `docs/CONTEST_RULES_OUTSIDE_FACTORY.md` section 1.2; regenerate with `python tools/contest-rules-inventory/generate.py` |
+| `BENCH_QUEUE.md` | **418 open**, 94 done (2026-11-01; was 176 open, 121 done) | `rg -c '^- \[ \]' docs/BENCH_QUEUE.md` and `rg -c '^- \[x\]' docs/BENCH_QUEUE.md` (`^\s*- \[ \]`, with indented items, also gives 418) |
 | Open issues | **75** D12 (68 inherited, **7** `Modern Delphi`) · **68** TR4W | `gh issue list` |
 | Recent velocity | **1,117** non-merge commits / 28 days | `git log --since` |
 
@@ -479,6 +481,14 @@ triaged with a real counter; HPTimer measurement half merged with tests.
 
 ## 5. Week 3 — the contest factory
 
+> **2026-11-01: THIS SECTION PREDATES THE MIGRATION.** Per the header of
+> [`CONTEST_FACTORY_M10_PLAN.md`](CONTEST_FACTORY_M10_PLAN.md) (*"M10 COMPLETE
+> (2026-10-14, S9f on top of `144cfe44`)"*), M0-M10 are done: the legacy scoring `case`,
+> the point method as a concept and the contest tables are deleted. Per
+> [`CONTEST_FACTORY_M11_PLAN.md`](CONTEST_FACTORY_M11_PLAN.md) line 18, **M11 S1, S8 and
+> S9e part 2 are not built**. Read those two plans for status; the phase list and the
+> measurements below are the 2026-09-17 plan, kept for the reasoning.
+
 This is the largest remaining architectural block and the one with a live
 GitHub issue: **TR4W-D12 #10, "Rework the way new contests are implemented."**
 
@@ -524,6 +534,12 @@ only once every selectable contest has the capability.
 - [ ] Build the lint with an allowlist that must shrink on every migration.
 
 ### 5.3 What that gate costs today — measured 2026-09-17
+
+> **2026-11-01:** the figures below are the 2026-09-17 count. The generated
+> `CONTEST_RULES_OUTSIDE_FACTORY.md` (section 1.2, generated 2026-10-18 at `1e4e1975`) now
+> lists **23** rows outside the factory: 0 scoring, 0 dupe, 0 multiplier, 14 exchange
+> parsing, 7 Cabrillo, 1 ADIF import, 1 ADIF export. It is a different method (table rows by
+> shape, not a raw branch count), so 92 to 23 is not a like-for-like fall.
 
 **92 contest-identity branches across 12 units** outside the factory
 (17 `case ... of`, 75 `if Contest = / in [...]`):
@@ -635,7 +651,7 @@ log a QSO without editing a file by hand.
 
 ## 7. Bench — runs across all four weeks, and is the real gate
 
-**176 open items in `BENCH_QUEUE.md`.** Nothing in this section is provable by
+**418 open items in `BENCH_QUEUE.md`** (2026-11-01, `rg -c '^\s*- \[ \]' docs/BENCH_QUEUE.md`; was 176 on 2026-09-17). Nothing in this section is provable by
 code review, and bench findings have repeatedly been the only thing to catch a
 whole class of defect — the FT-1000MP frame decoding broke entirely under FPC
 from a `Chr()` vs `Char()` codepage change that no build could have caught.
@@ -667,6 +683,16 @@ its items are decisions, not checks). The Chinese catalogue needs BA4WI.
 ## 8. Decisions owed from NY4I
 
 These block work and none can be resolved by reading code.
+
+> **2026-11-01: decisions 1-4 (multi-op) are partly overtaken by Phase 1.** Per the
+> multi-op revival notes (memory `next-multi-op-network-revival`, 2026-10-29): protocol 2
+> starts with a HELLO message and a 4.x/D7 client is deliberately refused (`e1ccd2a0`);
+> catch-up is a fetch of the server log with an INSERT-ONLY merge, with no log comparison
+> or digest (`02fa68d9`); a station pushes the QSOs the server lacks (`eb552d35`). So #4
+> (digest, mixed 4.x/5.x) is moot as stated. #3 is not answered by those notes: both
+> TR4WServerPy and the in-tree `tr4wserver` were exercised, and neither is stated to be
+> the destination. #1 (Win32 and Win64 peers) and #2 (`ExitProcess` vs `Halt`) are not
+> addressed by Phase 1. Redesign is issue #146. Not re-verified against the code.
 
 | # | decision | blocks |
 |---|---|---|
