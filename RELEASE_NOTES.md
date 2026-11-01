@@ -44,6 +44,29 @@ month group below, and bump tr4w/src/Version.pas to match. Keep entries
 user-facing — no file paths or source-level jargon.
 -->
 
+#### Credentials
+
+- On macOS and Linux, saved passwords and API keys (World Radio League, radio
+  and cluster passwords) are now kept in the system keychain, as they already
+  are in Windows Credential Manager, and not in the settings file. On Linux
+  this uses the desktop's secret service (GNOME Keyring or KWallet). If none is
+  available, or it is locked, TR4W says so in the log rather than storing a
+  password in a weaker place.
+
+#### External logging
+
+- World Radio League setup: if a key is already saved, your logbooks load as
+  soon as the form opens, so you no longer have to press Validate first.
+- World Radio League setup: if a key is rejected, or you edit it, the logbook
+  list is cleared. It no longer keeps showing logbooks from the previous key.
+
+#### Logging
+
+- The periodic backup now counts QSOs logged since the last backup, so a
+  Backup Frequency of 5 backs up after every 5 QSOs logged. Before, it
+  followed the running QSO total, so deleting a QSO or rescoring the log could
+  trigger a backup early. The Backup Log menu item also restarts the count.
+
 ---
 
 ## 5.0.x — October 2026

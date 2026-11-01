@@ -72,6 +72,26 @@ appropriate month group below, and bump tr4w/src/Version.pas to match.
   version, contest id relayed, duplicate id) and sends HELLO first; TR4WServerPy
   (separate repository) passes the same cases.
 
+### Periodic backup counts QSOs logged, not the log total (`src/domain/uLogBackup.pas`, `src/trdos/logstuff.pas`, `logsubs2.pas`) - NY4I
+
+- **Cause:** `LogContact` backed up when `QSOTotals[AllBands, Both] mod BackupFrequency = 0`. That total counts only QSOs that count toward totals, and it is rebuilt on rescore or reload. A QSO later marked X-QSO or deleted dropped the total, so the next record crossed the multiple again and fired a second backup. The log showed backups at 5 and 6 records.
+- **Fix:** `PeriodicBackupDue(var aLoggedSinceBackup; aFrequency)` in `uLogBackup` is a pure rule: add one, due when the count reaches the frequency, and frequency 0 never fires. The counter `QsosLoggedSinceBackup` is private to `logstuff`. `CountQsoTowardPeriodicBackup`, called from `logsubs2.LogContact`, advances it. Only `BackupLogNow` resets it, including after a failed backup, so the periodic path and the Backup Log menu share one reset.
+- Every record `LogContact` writes counts (X-QSOs, dupes, peer QSOs); notes do not. The count starts at 0 each session, and rescore and reload cannot touch it.
+- **Tests:** `TPeriodicBackupDueTests` in `uTestLogBackup`.
+
+### WRL setup form loads logbooks on open and clears them on a bad key (`src/ui/lcl/uWRLSetupForm.pas`) - NY4I
+
+- **`LoadStoredKey`** runs when the form opens and calls `StartTask('', True)`. The `aQuiet` parameter and `FQuiet` field keep the automatic load from raising an error dialog.
+- **`ClearBooks`** runs on any failed validation and when the key text is edited, so the destination list cannot outlive the key that produced it.
+
+### macOS and Linux secret stores (`src/uKeychainMac.pas`, `src/uKeychainLinux.pas`, `src/uKeychain.pas`, `src/uProgramMain.pas`) - NY4I
+
+- **`uKeychainMac`:** Security.framework SecItem, generic password, service `TR4W/v1`, in the login keychain. CoreFoundation comes from FPC's `MacOSAll`; only the four SecItem functions and nine `kSec*` keys are declared by hand, with `{$MODESWITCH CVAR}`.
+- **`uKeychainLinux`:** libsecret loaded through `dynlibs` on first use, with the non-varargs `secret_password_storev_sync`, `lookupv_sync` and `clearv_sync`. The attribute table is a GHashTable built from `libglib-2.0.so.0`. Library names are in one const block, so a missing library is a reported status and not a link error.
+- **`uKeychain`:** new status `ksLocked` and `ReportKeychainDetail`. A missing library, no secret service or a locked vault is reported, with no weaker storage and no plaintext fallback. `SetKeychainNotice` is wired in `uProgramMain` to the `TR4WDebugLog.Keychain` logger at Warn, and `ReportConfigurationSources` logs `secret store : <name> (available/UNAVAILABLE)`.
+- **Known defect, not fixed here:** if the vault is locked at load, the setting stays empty and the next save calls `StoreSecret(name, '')`, which deletes the stored entry. The radio and cluster passwords in `uRadioConfigStore` have the same shape. Proposed fix, in `uKeychain` only: remember names whose read failed with anything other than not-found, and skip the delete for them.
+- **Build:** the new units are in `tr4w.lpr` but not in `tr4w_unit_tests.lpr`. An in-memory test vault already existed, and three tests were added in `uTestKeychain`. The two `Count-LiveMove` sites the new units introduced were removed instead of raising the ceiling (a copy loop in `TMacKeychain.ReadSecret`, `Default(TSecretSchema)` in `InitSchema`).
+
 ---
 
 ## 5.0.x — October 2026
