@@ -52,6 +52,10 @@ user-facing — no file paths or source-level jargon.
   this uses the desktop's secret service (GNOME Keyring or KWallet). If none is
   available, or it is locked, TR4W says so in the log rather than storing a
   password in a weaker place.
+- If the keychain is locked when TR4W starts (for example, a Linux login
+  without the keyring unlocked), a saved key is no longer lost. Before, saving
+  settings in that session could delete it. The entry is left alone, and the
+  log says it could not be read.
 
 #### External logging
 
@@ -66,6 +70,16 @@ user-facing — no file paths or source-level jargon.
   Backup Frequency of 5 backs up after every 5 QSOs logged. Before, it
   followed the running QSO total, so deleting a QSO or rescoring the log could
   trigger a backup early. The Backup Log menu item also restarts the count.
+
+#### Usability
+
+- The window for opening an existing contest or starting a new one now fills
+  its left pane. When no last contest was available, the contest list and the
+  Browse button stayed narrow, so the Year, Call and Last columns were clipped.
+- The main window's status line (radio, cluster and network messages) now uses
+  the window's font, sized so the longest connection message fits its panel. It
+  was clipped on Linux. On Windows the text is a little smaller, in Arial
+  instead of Segoe UI.
 
 ---
 
