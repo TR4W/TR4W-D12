@@ -147,17 +147,18 @@ type
        than growing again. *)
     FFileGridGrow: integer;
     (* The grid's designed width, read once at creation -- what the growth
-       is measured from, since the anchors do not re-lay the grid out until
-       the form shows. *)
+       is measured from. Read here because the grid is alClient (.lfm) and
+       the LCL does not align the children of a form that is not yet visible,
+       so until the form shows its Width is still the designed one -- and
+       after, it is the group's. *)
     FFileGridDesigned: integer;
     FBrowsedFile: string;    (* set only when Browse... was used *)
-    { The designed geometry of the bottom of gbExisting, captured once so
-      LayoutLatestButton is idempotent and survives a resize. See it. }
-    FLatestMargin: integer;      { gbExisting client bottom -> button bottom }
-    FLatestHeight: integer;      { the designed height, used as a floor }
-    FGapBrowse:    integer;      { Browse bottom -> Latest top }
-    FGapList:      integer;      (* grid bottom -> Browse top *)
-    FGeometry:     boolean;      { the four above have been captured }
+    (* The button's designed height, captured once and used as a floor:
+       LayoutLatestButton writes Height, so reading it again would measure
+       its own output. Everything else about the bottom of gbExisting is the
+       .lfm's Align and BorderSpacing. *)
+    FLatestHeight: integer;
+    FGeometry:     boolean;      (* FLatestHeight has been captured *)
     (* THE LAST CONTEST, as its log describes it -- owned here, nil when there
        is none. The button's caption is COMPOSED from it on every layout, never
        read back from the button, so a second layout starts from the whole
@@ -172,6 +173,8 @@ type
     procedure CaptureGeometry;
 
     procedure ApplyMinimumSize;
+    function  LatestRoomWidth: integer;
+    function  LatestRoomHeight(aMinList: integer): integer;
     procedure LayoutLatestButton;
     procedure ReassertLatestCaption;
     function  WrappedTextHeight(const aText: TCaption; const aWidth: integer): integer;
@@ -253,6 +256,7 @@ implementation
 
 uses
   SysUtils,
+  Math,             (* Max -- how AlignControls combines facing spacings *)
   Types,            (* TPoint -- the grid cell under the mouse *)
   LCLType,          (* VK_DOWN, SM_CXVSCROLL *)
   LCLIntf,          (* GetSystemMetrics -- the LCL's, on every widget set *)
@@ -419,19 +423,23 @@ begin
 
      So the earlier pass computes a single line however long the text is,
      clamps to the designed height and changes nothing. It is left in place
-     because it still does the other half of the job -- showing or hiding the
-     button and handing its space back to the file list -- and because deleting
-     it would leave the dialog unsized for anything that captions the button
-     while it is already open.
+     because deleting it would leave the dialog unsized for anything that
+     captions the button while it is already open. (Showing or hiding the
+     button is ShowLatest's; a hidden alBottom control takes no room, so the
+     file list gets the space back from the LCL, not from code.)
 
-     NOTE WHAT THIS IS NOT. The first attempt at this assumed the akBottom
-     anchors were reverting the geometry on show; the log said Top and Height
-     were untouched at 388/44 both times, because nothing had ever grown them.
-     Do not reintroduce an anchor workaround.
+     WHERE THE BUTTON SITS IS NOT THIS CALL'S BUSINESS. The grid, Browse and
+     the button are aligned (.lfm: alClient, alBottom, alBottom), so the LCL
+     places them and stretches them across the group however wide SizeFileGrid
+     made it. Until 2026-11-01 they were anchored and this routine wrote their
+     Top and Height -- and with no Last Contest that write re-based the
+     akRight anchors against a group that had already grown, leaving the grid
+     and Browse at their designed 276 px inside a ~640 px group. Do not put
+     position arithmetic back.
 
-     Calling it twice is safe: every value it writes derives from the geometry
+     Calling it twice is safe: the height it writes derives from the height
      captured once from the .lfm and from the current caption, never from the
-     controls' present Top and Height. }
+     button's present Height. }
    ReassertLatestCaption;
    LayoutLatestButton;
    ApplyMinimumSize;
@@ -653,7 +661,7 @@ end;
 
   IDEMPOTENT: the growth is held in FFileGridGrow and applied as a
   difference, so a second fill neither grows the form again nor needs the
-  anchored grid to have been laid out (it is not, until the form shows). *)
+  aligned grid to have been laid out (it is not, until the form shows). *)
 procedure TfrmNewContest.SizeFileGrid;
 const
    (* The grid's frame, both sides together; generous, as LIST_CHROME is. *)
@@ -1106,27 +1114,16 @@ begin
       end;
 end;
 
-{ The designed spacing at the bottom of gbExisting, read ONCE from the .lfm.
-
-  CAPTURED RATHER THAN HARD-CODED so the designer stays the single source of
-  the layout -- move a control in the .lfm and this follows. Captured ONCE
-  because LayoutLatestButton rewrites Top and Height, so reading them again
-  afterwards would measure this routine's own output and drift a little further
-  every time the button is re-captioned.
-
-  The margin is held against the group box's CLIENT HEIGHT, not as an absolute
-  Top, because all three controls are akBottom-anchored and move when the form
-  is resized. }
+(* The button's designed height, read ONCE from the .lfm -- the floor
+  LayoutLatestButton never sizes below. Once, because that routine rewrites
+  Height, and reading it again would measure its own output. *)
 procedure TfrmNewContest.CaptureGeometry;
 begin
    if FGeometry then
       begin
       Exit;
       end;
-   FLatestMargin := gbExisting.ClientHeight - (btnLatest.Top + btnLatest.Height);
    FLatestHeight := btnLatest.Height;
-   FGapBrowse    := btnLatest.Top - (btnBrowse.Top + btnBrowse.Height);
-   FGapList      := btnBrowse.Top - (grdFiles.Top + grdFiles.Height);
    FGeometry     := True;
 end;
 
@@ -1148,7 +1145,42 @@ begin
              (WidestLine(caption) <= FFitInner);
 end;
 
-(* SIZE THE BUTTON TO ITS TEXT, and take the difference out of the file list.
+(* THE WIDTH AND HEIGHT THE LATEST BUTTON MAY HAVE, from the GROUP it is
+  aligned in and the .lfm's spacing -- never from the button's own bounds.
+  The LCL aligns the children of a form that is not yet visible later, so
+  before the first layout btnLatest.Width is still the designed 276 px however
+  wide the group has grown; measuring the caption against that would cut it
+  down to fit a button a third of its real width.
+
+  The side space is the larger of the group's ChildSizing.LeftRightSpacing and
+  the button's own BorderSpacing, and the gap between two aligned neighbours
+  the larger of their facing spacings: that is how TWinControl.AlignControls
+  combines them (AdjustBorderSpace takes the maximum). *)
+function TfrmNewContest.LatestRoomWidth: integer;
+begin
+   Result := gbExisting.ClientWidth
+             - Max(gbExisting.ChildSizing.LeftRightSpacing,
+                   btnLatest.BorderSpacing.GetSideSpace(akLeft))
+             - Max(gbExisting.ChildSizing.LeftRightSpacing,
+                   btnLatest.BorderSpacing.GetSideSpace(akRight));
+end;
+
+(* The tallest the button may grow and still leave the file list aMinList
+  pixels: the group's client height less every other thing stacked in it. *)
+function TfrmNewContest.LatestRoomHeight(aMinList: integer): integer;
+begin
+   Result := gbExisting.ClientHeight
+             - btnLatest.BorderSpacing.GetSideSpace(akBottom)
+             - Max(btnLatest.BorderSpacing.GetSideSpace(akTop),
+                   btnBrowse.BorderSpacing.GetSideSpace(akBottom))
+             - btnBrowse.Height
+             - Max(btnBrowse.BorderSpacing.GetSideSpace(akTop),
+                   grdFiles.BorderSpacing.GetSideSpace(akBottom))
+             - grdFiles.BorderSpacing.GetSideSpace(akTop)
+             - aMinList;
+end;
+
+(* SIZE THE BUTTON TO ITS TEXT; the file list gives up the difference.
 
   The caption is up to three lines -- the label, the contest and its year, and
   the call and file name (uLatestContest) -- or, when the log cannot describe
@@ -1157,9 +1189,10 @@ end;
   third was silently clipped (NY4I, 2026-08-31: a path ending in
   \2026 wwdigi ny4i\wwdigi.cfg lost its last line).
 
-  GROWS UPWARD, because the button is anchored to the bottom of the group box
-  and the operator's eye is on it there. Browse moves up by the same amount and
-  the list absorbs it.
+  GROWS UPWARD, because the button is aligned to the bottom of the group box
+  (alBottom) and the operator's eye is on it there. Only its Height is
+  written: the LCL moves Browse (alBottom) up by the same amount and the list
+  (alClient) absorbs it.
 
   THE LIST HAS A FLOOR. Growth is capped so the file list keeps MIN_LIST pixels
   -- an unbounded caption would otherwise consume the very list this dialog
@@ -1168,9 +1201,11 @@ end;
   altogether, and only then the end of the contest name -- never its year, and
   never the label.
 
-  IDEMPOTENT: every value is derived from the captured design geometry and the
-  caption composed afresh from FLatest, never from the controls' present Top
-  and Height or the button's present caption. *)
+  IDEMPOTENT: every value is derived from the captured design height, the
+  group's size and the caption composed afresh from FLatest, never from the
+  button's present Height or caption. With no latest file there is nothing to
+  do: the button is hidden (ShowLatest), and a hidden alBottom control takes
+  no room. *)
 procedure TfrmNewContest.LayoutLatestButton;
 const
    MIN_LIST   = 120;
@@ -1179,7 +1214,7 @@ var
      caption is TCaption, so a plain string local converts on every read and
      every write. Hold the caption in the type the control uses. *)
    text: TCaption;
-   avail, needed, capHeight, bottom: integer;
+   avail, needed, capHeight: integer;
    inner, widest: integer;
 begin
    (* INITIALISED, because the debug line at the bottom reads both whatever
@@ -1193,19 +1228,11 @@ begin
 
    CaptureGeometry;
 
-   bottom := gbExisting.ClientHeight - FLatestMargin;
-
-   if (not btnLatest.Visible) or
-      (FLatest = nil) then
+   if btnLatest.Visible and
+      (FLatest <> nil) then
       begin
-      (* No latest file: hand the space back rather than leaving a hole. *)
-      capHeight := 0;
-      end
-   else
-      begin
-      avail := bottom - FGapBrowse - btnBrowse.Height - FGapList
-                      - grdFiles.Top - MIN_LIST;
-      inner := btnLatest.Width - LATEST_TEXT_INSET;
+      avail := LatestRoomHeight(MIN_LIST);
+      inner := LatestRoomWidth - LATEST_TEXT_INSET;
 
       (* COMPOSED AND CUT DOWN TO FIT in one place -- see uLatestContest for
         the order things are given up in. *)
@@ -1237,22 +1264,15 @@ begin
          end;
 
       btnLatest.Height := capHeight;
-      btnLatest.Top    := bottom - capHeight;
-      capHeight        := capHeight + FGapBrowse;
       end;
-
-   btnBrowse.Top   := bottom - capHeight - btnBrowse.Height;
-   grdFiles.Height := btnBrowse.Top - FGapList - grdFiles.Top;
 
    if logger.IsDebugEnabled then
       begin
-      logger.Debug('[NewContest] latest button: client=%d bottom=%d needed=%d ' +
-                   'avail=%d widest=%d inner=%d -> Top=%d Height=%d ' +
-                   '(browse Top=%d, list Height=%d)',
-                   [gbExisting.ClientHeight, bottom, needed, avail,
-                    widest, inner,
-                    btnLatest.Top, btnLatest.Height, btnBrowse.Top,
-                    grdFiles.Height]);
+      logger.Debug('[NewContest] latest button: client=%dx%d visible=%d needed=%d ' +
+                   'avail=%d widest=%d inner=%d -> Height=%d',
+                   [gbExisting.ClientWidth, gbExisting.ClientHeight,
+                    Ord(btnLatest.Visible), needed, avail,
+                    widest, inner, btnLatest.Height]);
       end;
 end;
 
@@ -1306,7 +1326,18 @@ begin
       btnLatest.Hint     := UTF8Encode(FLatest.FileName);
       btnLatest.ShowHint := True;
       (* The caption is LayoutLatestButton's to write: it alone has measured
-        the room. *)
+        the room.
+
+        BELOW BROWSE BEFORE IT IS SHOWN. Two alBottom controls are stacked by
+        their CURRENT bottoms (TWinControl.CreateControlAlignList: the lower
+        one goes nearest the edge), and a hidden button is not aligned, so it
+        keeps the Top it had while Browse moved down into its place. Shown
+        again from there, it would sort ABOVE Browse. The .lfm order is
+        right the first time; this keeps it right after a hide. *)
+      if not btnLatest.Visible then
+         begin
+         btnLatest.Top := btnBrowse.Top + btnBrowse.Height;
+         end;
       btnLatest.Visible  := True;
       end
    else

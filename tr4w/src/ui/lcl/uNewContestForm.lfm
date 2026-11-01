@@ -20,6 +20,7 @@ object frmNewContest: TfrmNewContest
     Width = 300
     Anchors = [akTop, akLeft, akBottom]
     Caption = 'Open an existing configuration'
+    ChildSizing.LeftRightSpacing = 10
     ClientHeight = 448
     ClientWidth = 296
     TabOrder = 0
@@ -28,7 +29,9 @@ object frmNewContest: TfrmNewContest
       Height = 328
       Top = 8
       Width = 276
-      Anchors = [akTop, akLeft, akRight, akBottom]
+      Align = alClient
+      BorderSpacing.Top = 8
+      BorderSpacing.Bottom = 8
       ColCount = 6
       FixedCols = 0
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRowSelect, goThumbTracking, goSmoothScroll, goCellHints]
@@ -45,7 +48,8 @@ object frmNewContest: TfrmNewContest
       Height = 30
       Top = 344
       Width = 276
-      Anchors = [akLeft, akRight, akBottom]
+      Align = alBottom
+      BorderSpacing.Bottom = 14
       Caption = 'Browse...'
       TabOrder = 1
       OnClick = btnBrowseClick
@@ -55,7 +59,8 @@ object frmNewContest: TfrmNewContest
       Height = 44
       Top = 388
       Width = 276
-      Anchors = [akLeft, akRight, akBottom]
+      Align = alBottom
+      BorderSpacing.Bottom = 16
       Caption = 'Last Contest'
       TabOrder = 2
       OnClick = btnLatestClick

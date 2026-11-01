@@ -85,7 +85,12 @@ type
       procedure Test_LogsSortNewestLastQSOFirst;
       procedure Test_TheGridListsInTheSortedOrder;
       procedure Test_EnterOpensTheSelectedLog;
+      (* 2026-11-01: the left pane fills the group the file grid widened,
+        with and without a Last Contest. *)
+      procedure Test_TheLeftPaneFillsTheGrownGroup;
    private
+      (* Lays out one path of the left pane on a SHOWN form -- see the test. *)
+      procedure CheckLeftPaneFills(const aDir: string; aWithLatest: boolean);
       (* A fresh, empty directory for one test's logs. *)
       function NewFilesDir(const aName: string): string;
       procedure RemoveFilesDir(const aDir: string);
@@ -1497,6 +1502,138 @@ begin
    end;
 end;
 
+(* THE LEFT PANE FILLS THE GROUP THE FILE GRID WIDENED -- on BOTH paths.
+
+  NY4I's defect, 2026-11-01: with NO Last Contest, the grid and Browse stayed
+  at their designed 276 px inside a group SizeFileGrid had widened to ~640, and
+  the columns clipped. With a Last Contest the dialog looked right, so the
+  developer's own machine never showed it. Each path gets a FRESH form,
+  because that is how the program uses it: ShowLatest runs once, before show.
+
+  THE FORM IS SHOWN, OFF SCREEN, AND THAT IS THE ONLY WAY TO TEST THIS. The
+  LCL lays out the children of a form that is not visible LATER
+  (TControl.AutoSizeDelayed is True while the form's IsControlVisible is
+  False), so a form that is only streamed reports its designed bounds whatever
+  its layout would do, and every other test here says nothing about
+  alignment. Positioned left of every monitor and kept out of the task bar,
+  shown, read and hidden without the message loop running to paint it.
+
+  NOT EXERCISED, rather than passed, when the work area leaves no room to grow
+  (the CI service session): the defect needs the group to have grown. *)
+procedure TNewContestFormTests.CheckLeftPaneFills(const aDir: string;
+                                                  aWithLatest: boolean);
+const
+   (* The .lfm's side margins inside gbExisting. *)
+   SIDE = 10;
+var
+   frm: TfrmNewContest;
+   path, where: string;
+   g0, inner: integer;
+begin
+   if aWithLatest then
+      begin
+      path := 'with a Last Contest';
+      end
+   else
+      begin
+      path := 'with no Last Contest';
+      end;
+
+   frm := NewForm;
+   try
+      g0 := frm.gbExisting.Width;
+      frm.PopulateFiles(aDir);
+      if frm.gbExisting.Width <= g0 then
+         begin
+         WriteLn('  [NewContest] left pane ', path, ': NOT EXERCISED -- the work area (',
+                 Screen.WorkAreaWidth, ' px) left the group no room to grow');
+         Exit;
+         end;
+
+      (* What uNewContest.PrepareForm does, in its order. *)
+      if aWithLatest then
+         begin
+         frm.ShowLatest('Last contest, Alt+&A:',
+                        TLatestContest.Create(aDir + 'a rather long file name for a contest log 2026.db'));
+         end
+      else
+         begin
+         frm.ShowLatest('', nil);
+         end;
+
+      frm.Position      := poDesigned;
+      frm.ShowInTaskBar := stNever;
+      frm.Left          := Screen.DesktopLeft - frm.Width - 200;
+      frm.Top           := Screen.DesktopTop;
+      frm.Show;
+      try
+         inner := frm.gbExisting.ClientWidth - 2 * SIDE;
+         where := ' (' + path + '; group client ' + IntToStr(frm.gbExisting.ClientWidth) +
+                  ' px, grown from ' + IntToStr(g0) + ')';
+
+         CheckEquals(SIDE, frm.grdFiles.Left, 'the grid keeps its left margin' + where);
+         CheckEquals(inner, frm.grdFiles.Width, 'the grid fills the group' + where);
+         CheckEquals(SIDE, frm.btnBrowse.Left, 'Browse keeps its left margin' + where);
+         CheckEquals(inner, frm.btnBrowse.Width, 'Browse fills the group' + where);
+         CheckTrue(frm.grdFiles.Top + frm.grdFiles.Height < frm.btnBrowse.Top,
+                   'the grid sits above Browse' + where);
+
+         if aWithLatest then
+            begin
+            CheckTrue(frm.btnLatest.Visible, 'the Last Contest button is shown' + where);
+            CheckEquals(SIDE, frm.btnLatest.Left, 'Last Contest keeps its left margin' + where);
+            CheckEquals(inner, frm.btnLatest.Width, 'Last Contest fills the group' + where);
+            CheckTrue(frm.btnBrowse.Top + frm.btnBrowse.Height < frm.btnLatest.Top,
+                      'Browse sits above Last Contest' + where);
+            CheckTrue(frm.btnLatest.Top + frm.btnLatest.Height < frm.gbExisting.ClientHeight,
+                      'and Last Contest is inside the group' + where);
+            end
+         else
+            begin
+            CheckFalse(frm.btnLatest.Visible, 'no Last Contest button' + where);
+            (* Its space is handed back: Browse is the lowest control, within
+              a bottom margin rather than a button's height of the edge. *)
+            CheckTrue(frm.gbExisting.ClientHeight - (frm.btnBrowse.Top + frm.btnBrowse.Height) <= 20,
+                      'Browse takes the button''s place at the bottom (gap ' +
+                      IntToStr(frm.gbExisting.ClientHeight -
+                               (frm.btnBrowse.Top + frm.btnBrowse.Height)) + ' px)' + where);
+
+            (* AND SHOWN AGAIN, the button goes back BELOW Browse: alBottom
+              stacks by the controls' current bottoms, and the hidden button
+              kept the Top it had while Browse moved down into its place. *)
+            frm.ShowLatest('Last contest, Alt+&A:',
+                           TLatestContest.Create(aDir + 'a rather long file name for a contest log 2026.db'));
+            CheckTrue(frm.btnBrowse.Top + frm.btnBrowse.Height < frm.btnLatest.Top,
+                      'shown after a hide, Last Contest is below Browse again' + where);
+            CheckEquals(inner, frm.btnLatest.Width, 'and fills the group' + where);
+            CheckEquals(inner, frm.grdFiles.Width, 'and the grid still does' + where);
+            end;
+      finally
+         frm.Hide;
+      end;
+   finally
+      frm.Free;
+   end;
+end;
+
+procedure TNewContestFormTests.Test_TheLeftPaneFillsTheGrownGroup;
+var
+   dir: string;
+begin
+   BeginTest('Test_TheLeftPaneFillsTheGrownGroup');
+
+   dir := NewFilesDir('leftpane');
+   MakeTestContestLog(dir + 'a rather long file name for a contest log 2026.db',
+                      ContestFromName('CQ-WW-SSB'), 'NY4I');
+   MakeTestContestLog(dir + 'b.db', ContestFromName('NE-QSO-PARTY'), 'W1AW');
+   try
+      CheckLeftPaneFills(dir, False);
+      CheckLeftPaneFills(dir, True);
+   finally
+      RemoveFilesDir(dir);
+   end;
+end;
+
 procedure TNewContestFormTests.RunAllTests;
 begin
    Test_TheCaptionFunctionNamesTheBuild;
@@ -1524,6 +1661,7 @@ begin
    Test_LogsSortNewestLastQSOFirst;
    Test_TheGridListsInTheSortedOrder;
    Test_EnterOpensTheSelectedLog;
+   Test_TheLeftPaneFillsTheGrownGroup;
 end;
 
 end.
