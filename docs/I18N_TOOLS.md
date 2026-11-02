@@ -361,6 +361,7 @@ is in `i18n\languages.json` and `--lang FIN` is enough.
 | `pofile.py`, `pasconsts.py` | shared readers — not run directly. `pofile` rewrites losslessly |
 | `test_pofile.py` | the gate on that: every catalogue must read and write back byte-identical |
 | `test_is_translatable.py` | pins `pofile.is_translatable`, and that no catalogue holds an entry that is not language |
+| `test_mnemonic_vectors.py` | runs the `place` rows of `tr4w/test/unit/fixtures/mnemonic_vectors.txt` through `mt_seed.place_accelerator`; the Pascal `uMnemonics.AssignMnemonics` (`uTestMnemonics`) runs the same file, so the two placement rules cannot drift unseen. Run by hand, like the rest |
 
 ---
 

@@ -1,0 +1,143 @@
+# MNEMONIC (Alt+letter) TEST VECTORS -- shared by two implementations.
+#
+#   Pascal  tr4w/src/uMnemonics.pas, AssignMnemonics      (uTestMnemonics)
+#   Python  tools/i18n/mt_seed.py, place_accelerator      (test_mnemonic_vectors.py)
+#
+# UTF-8, no BOM. Fields are separated by '|', which no caption here contains;
+# nothing is trimmed, so a leading space in a caption is part of it. Blank
+# lines and lines starting with '#' are ignored.
+#
+# place|<lang>|<english letter>|<caption>|<expected>
+#     ONE caption, nothing reserved, no '&' in the caption except a literal
+#     '&&'. BOTH implementations must give <expected>. Only rows where the
+#     English letter is in the translation belong here: when it is not,
+#     mt_seed leaves the caption without a marker and AssignMnemonics falls
+#     back to another letter -- a deliberate difference, pinned in a set below.
+#     <lang> is what mt_seed is told; AssignMnemonics ignores it and decides
+#     CJK by the caption's script, so a CJK <lang> must have a CJK caption.
+#
+# set|<name>|<reserved letters, or ->
+# item|<english letter, or - when the English has no '&'>|<caption>|<expected>
+# end
+#     One group of captions -- one form, one menu -- for AssignMnemonics only.
+#     uTestMnemonics also runs every row and every set a second time over its
+#     own output and requires no change.
+
+# --- single captions: both implementations --------------------------------
+
+place|es|C|Copiar|&Copiar
+place|it|a|Seleziona tutto|Selezion&a tutto
+place|it|R|Esegui i controlli|Esegui i cont&rolli
+place|sv|k|Kör kontroller|&Kör kontroller
+place|de|D|Datei öffnen|&Datei öffnen
+place|es|o|Opciones de color|&Opciones de color
+place|it|s|Sono in %s|&Sono in %s
+place|fr|F|Fichier %d|&Fichier %d
+place|en|a|A && B|&A && B
+place|en|a|Q && a|Q && &a
+place|ja|C|コピー|コピー(&C)
+place|ja|s|保存...|保存(&S)...
+place|ja|S|保存…|保存(&S)…
+place|ja|C|閉じる：|閉じる(&C)：
+place|zh-Hans|c|复制|复制(&C)
+place|ko|c|닫기:|닫기(&C):
+
+# --- groups: AssignMnemonics only ------------------------------------------
+
+set|a reserved letter is skipped|C
+item|C|Copiar|C&opiar
+end
+
+set|reserved letters are matched in any case|c
+item|C|Copiar|C&opiar
+end
+
+set|two items, one letter: the lower index wins|-
+item|C|Copiar|&Copiar
+item|C|Cerrar|C&errar
+end
+
+set|the LCL buttons on a Spanish form hold S and N|SN
+item|S|Salvar|S&alvar
+item|C|Cancelar|&Cancelar
+end
+
+set|no free letter means no marker|AB
+item|X|Ab|Ab
+end
+
+set|no free A..Z means no CJK marker|ABCDEFGHIJKLMNOPQRSTUVWXYZ
+item|C|コピー|コピー
+end
+
+set|an empty caption stays empty|-
+item|S||
+end
+
+set|an item with no English marker is untouched, and its letter is taken|-
+item|-|Fish && &chips here|Fish && &chips here
+item|C|Cancel|C&ancel
+end
+
+set|a translator's sound marker is kept|-
+item|S|&Guardar|&Guardar
+item|a|Selezion&a tutto|Selezion&a tutto
+end
+
+set|a kept marker beats a later item's assignment|-
+item|S|Guardar|G&uardar
+item|G|&Grabar|&Grabar
+end
+
+set|a marker on a reserved letter is moved|G
+item|S|&Guardar|G&uardar
+end
+
+set|a second marker is removed|-
+item|A|&Abrir &archivo|&Abrir archivo
+end
+
+set|IsAccel parse: '&&&X' marks X (po_lint sees no lone '&' here)|-
+item|X|&&&Xenon|&&&Xenon
+end
+
+set|IsAccel parse: '& ' marks a space, which is not a mnemonic|-
+item|S|& Salvar| &Salvar
+end
+
+set|IsAccel parse: an '&' in the last position marks nothing|-
+item|S|Salvar&|&Salvar
+end
+
+set|the English letter is absent: fall back to a word start (mt_seed gives none)|-
+item|F|Файл|&Файл
+end
+
+set|a %-specifier blocks its letter: fall back (mt_seed gives none)|-
+item|s|in %s|&in %s
+end
+
+set|the character after '&&' is blocked: fall back (mt_seed gives none)|-
+item|B|A &&B|&A &&B
+end
+
+set|a digit is used when the English chose one|-
+item|1|Radio 1|Radio &1
+end
+
+set|CJK: a taken English letter falls back to A..Z|-
+item|C|コピー|コピー(&C)
+item|C|切り取り|切り取り(&A)
+end
+
+set|CJK: an existing group on a taken letter is replaced|C
+item|C|コピー(&C)|コピー(&A)
+end
+
+set|CJK: the replaced group takes its leading space with it|C
+item|C|保存 (&C)|保存(&A)
+end
+
+set|CJK: a marker on a kana is not a key, so it is replaced|-
+item|C|コ&ピー|コピー(&C)
+end
